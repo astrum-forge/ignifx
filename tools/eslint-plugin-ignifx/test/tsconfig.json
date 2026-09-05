@@ -1,0 +1,16 @@
+{
+  // Discovery shim, not a build project (ADR-0009, "Phase 0 integration"). Type-aware Oxlint
+  // resolves the nearest `tsconfig.json` per file; `../tsconfig.json` covers only `src`, so without
+  // this file the rule tests would be checked against the workspace root config and lose
+  // `types: ["node"]`. `pnpm --filter eslint-plugin-ignifx run typecheck` still builds
+  // `../tsconfig.test.json`; this project emits nothing, so the two never write to the same place.
+  "extends": "../tsconfig.test.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "emitDeclarationOnly": false,
+    "noEmit": true
+  },
+  "include": ["."]
+}

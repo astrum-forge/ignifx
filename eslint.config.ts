@@ -3,7 +3,8 @@ import { createTypeScriptImportResolver } from "eslint-import-resolver-typescrip
 import { flatConfigs as importXConfigs } from "eslint-plugin-import-x";
 import { configs as jsdocConfigs } from "eslint-plugin-jsdoc";
 import { configs as tsConfigs } from "typescript-eslint";
-import type { ESLint, Linter, Rule } from "eslint";
+import ignifx from "eslint-plugin-ignifx";
+import type { ESLint, Linter } from "eslint";
 
 /**
  * ESLint runs only the rules Oxlint lacks (coding standards §6): JSDoc completeness, import
@@ -12,37 +13,6 @@ import type { ESLint, Linter, Rule } from "eslint";
  * ADR-0007: typescript-eslint resolves the `typescript` alias, which points at
  * `@typescript/typescript6` — the TS 6 programmatic API — not at the TS 7 native compiler.
  */
-
-/**
- * Builds a placeholder rule. The real implementations land in Phase 1 (engineering plan).
- *
- * @param description - What the finished rule will enforce.
- * @returns A rule module that reports nothing.
- */
-function placeholder(description: string): Rule.RuleModule {
-  return {
-    meta: {
-      type: "problem",
-      docs: { description: `${description} (implemented in Phase 1)` },
-      schema: [],
-    },
-    create: () => ({}),
-  };
-}
-
-const ignifxPlugin: ESLint.Plugin = {
-  meta: { name: "eslint-plugin-ignifx", version: "0.0.0" },
-  rules: {
-    "no-lite-outside-adapter": placeholder("@babylonjs/lite may only be imported from src/lite/**"),
-    "no-module-side-effects": placeholder("modules must not execute code at import time"),
-    "no-async-lifecycle": placeholder("lifecycle callbacks must not be async"),
-    "signal-connect-owner": placeholder("Signal.connect inside a Script must pass an owner"),
-    "no-entity-find-in-src": placeholder("entity.find() is allowed only in tests, examples and tools"),
-    "schema-field-shadowing": placeholder("class fields must not shadow schema field names"),
-    "error-code-format": placeholder("IgnifxError codes match IGX-#### in a registered range"),
-    "no-console": placeholder("console calls are allowed only in the logging sink"),
-  },
-};
 
 const config: Linter.Config[] = [
   {
@@ -63,9 +33,20 @@ const config: Linter.Config[] = [
   {
     name: "ignifx/gap-rules",
     files: ["**/*.ts", "**/*.mts"],
-    plugins: { ignifx: ignifxPlugin },
+    plugins: {
+      // typescript-eslint types a rule against its own `RuleContext` and a config against its own
+      // `FlatConfig.Config`; ESLint 10's `RuleDefinition` and `ConfigObject` do not structurally
+      // accept either, even though the runtime object is exactly what ESLint expects and loads.
+      // This is the boundary between two typings of one object (coding standards §5.2), and the
+      // only way across it is an assertion.
+      // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- see above.
+      ignifx: ignifx as unknown as ESLint.Plugin,
+    },
     settings: {
       "import-x/resolver-next": [createTypeScriptImportResolver({ alwaysTryTypes: true })],
+      // TSDoc and API Extractor require `@typeParam`; the plugin's default preference would
+      // rewrite it to JSDoc's `@template` (CONSTITUTION.md §5.4).
+      jsdoc: { tagNamePreference: { template: "typeParam" } },
     },
     rules: {
       // Oxlint owns everything typescript-eslint's recommended set duplicates.
@@ -143,14 +124,14 @@ const config: Linter.Config[] = [
   },
   {
     name: "ignifx/node-scripts",
-    files: ["scripts/**/*.{ts,mjs}"],
+    files: ["**/scripts/**/*.{ts,mjs}"],
     languageOptions: {
       globals: { console: "readonly", process: "readonly" },
     },
   },
   {
     name: "ignifx/tests-and-tooling",
-    files: ["**/test/**/*.ts", "**/*.test.ts", "scripts/**/*.{ts,mjs}", "**/*.config.ts", "eslint.config.ts"],
+    files: ["**/test/**/*.ts", "**/*.test.ts", "**/scripts/**/*.{ts,mjs}", "**/*.config.ts", "eslint.config.ts"],
     rules: {
       "jsdoc/require-jsdoc": "off",
       "jsdoc/require-description": "off",

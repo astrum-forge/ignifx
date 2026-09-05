@@ -1,0 +1,19 @@
+{
+  // Type-checks the plugin sources. `eslint.config.ts` imports `src/index.ts` directly (Node strips
+  // the types), so this project emits nothing that anyone consumes: `outDir` is a scratch directory
+  // and `emitDeclarationOnly` keeps `tsc --build` a type-checker, matching `packages/*`.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./.tsbuild",
+    "tsBuildInfoFile": "./.tsbuild/tsconfig.tsbuildinfo",
+    "emitDeclarationOnly": true,
+    // The plugin publishes no declarations, so the `isolatedDeclarations` discipline that keeps
+    // `packages/*` d.ts emit independent of the TypeScript API buys nothing here; rule modules would
+    // have to restate `RuleModule<…>` generics that `ESLintUtils.RuleCreator` already infers.
+    "isolatedDeclarations": false,
+    "types": ["node"],
+    "lib": ["ES2023"]
+  },
+  "include": ["src"]
+}

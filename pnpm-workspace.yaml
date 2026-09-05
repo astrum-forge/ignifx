@@ -3,12 +3,14 @@ packages:
   - "templates/*"
   - "examples/*"
   - "website"
+  - "tools/*"
 
 # Shared version pins. CONSTITUTION.md §4.6: @babylonjs/lite is pinned EXACTLY.
 # ADR-0007: `typescript` is the TS 6 shim that API-dependent tools resolve;
 # `typescript-native` is the TS 7 native compiler used by `tsc --build`.
 catalog:
   "@arethetypeswrong/cli": ^0.18.5
+  "@babylonjs/havok": ^1.3.14
   "@babylonjs/lite": 1.27.0
   "@changesets/cli": ^3.0.2
   "@eslint/js": ^10.0.1
@@ -18,6 +20,8 @@ catalog:
   "@microsoft/api-extractor": ^7.59.0
   "@types/node": ^24.13.3
   "@types/webxr": ^0.5.0
+  "@typescript-eslint/rule-tester": ^8.69.0
+  "@typescript-eslint/utils": ^8.69.0
   "@vitest/browser-playwright": ^5.0.0
   "@vitest/coverage-v8": ^5.0.0
   "@webgpu/types": ^0.1.72

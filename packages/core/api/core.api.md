@@ -6,65 +6,1900 @@
 
 import { EngineContext } from '@babylonjs/lite';
 import { SceneContext } from '@babylonjs/lite';
+import { SceneNode } from '@babylonjs/lite';
 
 // @public
-export function createHeadlessRuntime(): HeadlessRuntime;
+export interface App {
+    readonly coroutines: CoroutineHost;
+    readonly diagnostics: Diagnostics;
+    dispose(): void;
+    readonly isHeadless: boolean;
+    readonly isRunning: boolean;
+    readonly lite: AppLiteHandles;
+    readonly log: Logger;
+    readonly onError: Signal<ErrorReport>;
+    pause(): void;
+    readonly platform: PlatformInfo;
+    registerComponents(types: readonly ConcreteComponentType[]): void;
+    resume(): void;
+    readonly services: ServiceRegistry;
+    readonly settings: AppSettings;
+    start(): Promise<void>;
+    step(deltaSeconds: number): void;
+    stop(): void;
+    readonly time: Time;
+    readonly version: string;
+    readonly world: World;
+}
 
 // @public
-export function createRenderEngine(canvas: RenderSurface): Promise<RenderRuntime>;
+export interface AppLiteHandles {
+    readonly engine: LiteEngine;
+    readonly scene: LiteScene;
+}
 
 // @public
-export function disposeHeadlessRuntime(runtime: HeadlessRuntime): void;
+export function applyInit<S extends Schema>(target: FieldsOf<S>, schema: S, init: PartialFieldsOf<S>): FieldsOf<S>;
 
 // @public
-export function disposeRenderEngine(runtime: RenderRuntime): void;
+export function approximately(a: number, b: number, epsilon?: number): boolean;
 
 // @public
-export const ErrorCode: {
-    readonly webGpuUnavailable: "IGX-0001";
-    readonly invalidRuntime: "IGX-0002";
+export interface AppSettings {
+    readonly layers: LayersSettings;
+    section<S>(name: string): S;
+    readonly sortingLayers: SortingLayersSettings;
+    readonly time: TimeSettings;
+}
+
+// @public
+export function array<T>(item: FieldDefinition<T>, defaultValue?: readonly T[], options?: FieldOptions): FieldDefinition<T[]>;
+
+// @public
+export interface ArrayFieldSpec {
+    readonly item: FieldDefinition<unknown>;
+    readonly kind: "array";
+}
+
+// @public
+export function assertNever(value: never, what: string): never;
+
+// @public
+export function asset<A>(type: AssetTypeToken<A>, options?: FieldOptions): FieldDefinition<AssetRefValue<A> | null>;
+
+// @public
+export interface AssetFieldSpec {
+    readonly assetType: AssetTypeToken<unknown>;
+    readonly kind: "asset";
+    readonly typeName: string | null;
+}
+
+// @public
+export interface AssetRefValue<A> {
+    readonly address: string;
+    readonly assetOf?: A;
+    readonly type?: string;
+}
+
+// @public
+export interface AssetTypeToken<A> {
+    readonly assetType?: string;
+    readonly prototype: A;
+}
+
+// @public
+export function bool(defaultValue?: boolean, options?: FieldOptions): FieldDefinition<boolean>;
+
+// @public
+export interface BoolFieldSpec {
+    readonly kind: "bool";
+}
+
+// @public
+export function canonicalizeNumber(value: number): number;
+
+// @public
+export function clamp(value: number, min: number, max: number): number;
+
+// @public
+export function clamp01(value: number): number;
+
+// @public
+export interface Clock {
+    nowMs(): number;
+}
+
+// @public
+export class Color {
+    constructor(r?: number, g?: number, b?: number, a?: number);
+    a: number;
+    b: number;
+    static black(): Color;
+    clone(): Color;
+    copyFrom(c: ColorLike): this;
+    equalsWithEpsilon(c: ColorLike, epsilon?: number): boolean;
+    static equalsWithEpsilon(a: ColorLike, b: ColorLike, epsilon?: number): boolean;
+    static from(c: ColorLike): Color;
+    static fromHex(hex: string): Color | null;
+    static fromHexToRef(hex: string, out: Color): boolean;
+    static fromSrgb(r: number, g: number, b: number, a?: number): Color;
+    static fromSrgbToRef<TOut extends Color>(r: number, g: number, b: number, a: number, out: TOut): TOut;
+    g: number;
+    lerp(target: ColorLike, t: number): this;
+    static lerpToRef<TOut extends Color>(a: ColorLike, b: ColorLike, t: number, out: TOut): TOut;
+    static linearToSrgb(channel: number): number;
+    multiply(c: ColorLike): this;
+    static multiplyToRef<TOut extends Color>(a: ColorLike, b: ColorLike, out: TOut): TOut;
+    r: number;
+    scaleRgb(factor: number): this;
+    static scaleRgbToRef<TOut extends Color>(c: ColorLike, factor: number, out: TOut): TOut;
+    set(r: number, g: number, b: number, a: number): this;
+    static srgbToLinear(channel: number): number;
+    toArray(out: Float32Array, offset?: number): Float32Array;
+    toHex(): string;
+    toSrgbToRef<TOut extends Color>(out: TOut): TOut;
+    static transparent(): Color;
+    static white(): Color;
+}
+
+// @public
+export function color(defaultValue?: ColorLike | string, options?: FieldOptions): FieldDefinition<ColorLike>;
+
+// @public
+export interface ColorFieldSpec {
+    readonly kind: "color";
+}
+
+// @public
+export interface ColorLike {
+    readonly a: number;
+    readonly b: number;
+    readonly g: number;
+    readonly r: number;
+}
+
+// @public
+export abstract class Component implements SignalOwner {
+    constructor();
+    get app(): App;
+    static define<const S extends Schema>(schema: S): ComponentDefinition<S>;
+    destroy(): void;
+    get enabled(): boolean;
+    set enabled(value: boolean);
+    get entity(): Entity;
+    getComponent<T extends Component>(type: ComponentType<T>): T | null;
+    get handle(): ComponentHandle;
+    get isDestroyed(): boolean;
+    get isEnabledInHierarchy(): boolean;
+    get onDestroyed(): Signal<Component>;
+    requireComponent<T extends Component>(type: ComponentType<T>): T;
+    get transform(): Transform;
+    get uid(): string;
+    get world(): World;
+}
+
+// @public
+export interface Component {
+    // Warning: (ae-forgotten-export) The symbol "ComponentInternals" needs to be exported by the entry point index.d.ts
+    //
+    // @internal
+    [COMPONENT_INTERNALS]: ComponentInternals;
+}
+
+// @public
+export interface ComponentClassInfo {
+    readonly allowMultiple: boolean;
+    readonly ancestors: readonly ComponentType[];
+    readonly classIndex: number;
+    readonly isScript: boolean;
+    readonly requires: readonly ComponentType[];
+    readonly schema: Schema | null;
+    readonly script: ScriptClassInfo | null;
+    readonly trackedFields: readonly string[];
+    readonly type: ComponentType;
+    readonly typeId: string | null;
+}
+
+// @public
+export type ComponentDefinition<S extends Schema> = (abstract new () => Component & FieldsOf<S>) & {
+    readonly prototype: Component & FieldsOf<S>;
+    readonly schema: S;
 };
 
 // @public
-export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
+export type ComponentHandle = number & {
+    readonly __brand: "ComponentHandle";
+};
 
 // @public
-export interface HeadlessRuntime {
-    readonly isDisposed: boolean;
-    readonly lite: LiteHeadlessHandles;
+export interface ComponentHooks {
+    onAttach?(): void;
+    onDetach?(): void;
 }
+
+// @public
+export type ComponentInit<T extends Component> = { readonly [K in keyof T as K extends keyof Component ? never : NonNullable<T[K]> extends ((...args: never[]) => unknown) ? never : K]?: T[K]; };
+
+// @public
+export function componentRef<C>(type: ComponentTypeToken<C>, options?: FieldOptions): FieldDefinition<C | null>;
+
+// @public
+export interface ComponentRefFieldSpec {
+    readonly componentType: ComponentTypeToken<unknown>;
+    readonly kind: "componentRef";
+}
+
+// @public
+export class ComponentRegistry {
+    describe(type: ComponentType): ComponentClassInfo;
+    get(typeId: string): ComponentType | null;
+    isRegistered(type: ComponentType): boolean;
+    register(type: ConcreteComponentType, typeId?: string): ComponentClassInfo;
+    registerAll(types: readonly ConcreteComponentType[]): void;
+    requireTypeId(type: ComponentType): string;
+    get size(): number;
+}
+
+// @public
+export interface ComponentStatics {
+    readonly allowMultiple?: boolean;
+    readonly requires?: readonly ComponentType[];
+    readonly schema?: Schema;
+    readonly typeId?: string;
+}
+
+// @public
+export interface ComponentType<T extends Component = Component> extends ComponentStatics {
+    readonly prototype: T;
+}
+
+// @public
+export interface ComponentTypeToken<C> {
+    readonly prototype: C;
+    readonly typeId?: string;
+}
+
+// @public
+export interface ConcreteComponentType<T extends Component = Component> extends ComponentType<T> {
+    new (): T;
+}
+
+// @public
+export interface ConnectOptions {
+    readonly deferred?: boolean;
+    readonly once?: boolean;
+    readonly owner?: SignalOwner;
+}
+
+// @public
+export interface ConsoleLike {
+    debug(...data: readonly unknown[]): void;
+    error(...data: readonly unknown[]): void;
+    info(...data: readonly unknown[]): void;
+    warn(...data: readonly unknown[]): void;
+}
+
+// @public
+export interface ConsoleSinkOptions {
+    readonly target?: ConsoleLike;
+}
+
+// @public
+export const CORE_ERROR_MESSAGES: Readonly<Record<CoreErrorCode, string>>;
+
+// @public
+export const CoreErrorCode: {
+    readonly mutationAfterDestroy: "IGX-0101";
+    readonly destroyImmediateInCallback: "IGX-0102";
+    readonly deferredSignalWithoutScheduler: "IGX-0103";
+    readonly signalHandlerThrew: "IGX-0104";
+    readonly stepOutsideHeadless: "IGX-0105";
+    readonly appDisposed: "IGX-0106";
+    readonly appNotReady: "IGX-0107";
+    readonly invalidTimeValue: "IGX-0108";
+    readonly requiredComponentMissing: "IGX-0201";
+    readonly multipleComponentsNotAllowed: "IGX-0202";
+    readonly duplicateComponentTypeId: "IGX-0203";
+    readonly componentTypeIdMissing: "IGX-0204";
+    readonly transformIsNotRemovable: "IGX-0205";
+    readonly componentNotAttached: "IGX-0206";
+    readonly sceneNotLoaded: "IGX-0301";
+    readonly sceneInstanceCycle: "IGX-0302";
+    readonly unknownLayer: "IGX-0303";
+    readonly duplicateLayerName: "IGX-0304";
+    readonly tooManyLayers: "IGX-0305";
+    readonly parentingCycle: "IGX-0306";
+    readonly appPropertyAlreadyDefined: "IGX-0401";
+    readonly extensionRequiresCycle: "IGX-0402";
+    readonly extensionMissing: "IGX-0403";
+    readonly extensionEngineMismatch: "IGX-0404";
+    readonly serviceNotRegistered: "IGX-0405";
+    readonly duplicateExtensionName: "IGX-0406";
+    readonly unknownSettingsSection: "IGX-0407";
+    readonly invalidSettings: "IGX-0408";
+    readonly assetNotLoaded: "IGX-0501";
+    readonly assetLoadAborted: "IGX-0502";
+    readonly assetAppDisposed: "IGX-0503";
+    readonly nonFiniteNumber: "IGX-0601";
+    readonly unresolvedReference: "IGX-0602";
+    readonly unsupportedFormatVersion: "IGX-0603";
+    readonly instanceHashMismatch: "IGX-0604";
+    readonly schemaTypeMismatch: "IGX-0605";
+    readonly schemaOutOfRange: "IGX-0606";
+    readonly schemaUnknownField: "IGX-0607";
+    readonly webGpuUnavailable: "IGX-0701";
+    readonly invalidRuntime: "IGX-0702";
+    readonly cryptoUnavailable: "IGX-1401";
+    readonly duplicateErrorCode: "IGX-1501";
+    readonly malformedErrorCode: "IGX-1502";
+    readonly duplicateDiagnosticsGroup: "IGX-1503";
+    readonly unknownDiagnosticsCounter: "IGX-1504";
+    readonly unreachableCase: "IGX-1505";
+};
+
+// @public
+export type CoreErrorCode = (typeof CoreErrorCode)[keyof typeof CoreErrorCode];
+
+// @public
+export const coreExtension: (options?: void) => Extension;
+
+// @public
+export type Coroutine = Generator<CoroutineYield, void, unknown>;
+
+// @public
+export interface CoroutineHandle {
+    readonly isDone: boolean;
+    readonly isRunning: boolean;
+}
+
+// @public
+export interface CoroutineHost {
+    cancelAll(owner: Script): void;
+    setPaused(owner: Script, paused: boolean): void;
+    start(owner: Script, routine: Coroutine): CoroutineHandle;
+    stop(handle: CoroutineHandle): void;
+    stopAll(owner: Script): void;
+}
+
+// @public
+export type CoroutineYield = null | undefined | WaitInstruction | CoroutineHandle | Promise<unknown>;
+
+// @public
+export function createApp(options?: CreateAppOptions): Promise<App>;
+
+// @public
+export interface CreateAppOptions {
+    readonly canvas?: RenderSurface;
+    readonly clock?: Clock;
+    readonly extensions?: readonly Extension[];
+    readonly headless?: boolean;
+    readonly logLevel?: LogThreshold;
+    readonly logSink?: LogSink;
+    readonly mode?: ErrorFormatMode;
+    readonly settings?: SettingsInput;
+}
+
+// @public
+export function createConsoleSink(options?: ConsoleSinkOptions): LogSink;
+
+// @public
+export function createCryptoRandom(): RandomSource;
+
+// @public
+export function createDefaults<S extends Schema>(schema: S): FieldsOf<S>;
+
+// @public
+export function createDiagnosticsGroup(name: string, counterNames: readonly string[]): DiagnosticsGroup;
+
+// @public
+export interface CreateEntityOptions {
+    readonly parent?: Entity;
+    readonly position?: Vec3Like;
+    readonly rotation?: QuatLike;
+    readonly scene?: SceneInstance;
+}
+
+// @public
+export function createErrorCodeRegistry(): ErrorCodeRegistry;
+
+// @public
+export function createFrameSample(): FrameSample;
+
+// @public
+export function createLayerTable(names?: readonly string[]): LayerTable;
+
+// @public
+export function createLogger(options: LoggerOptions): Logger;
+
+// @public
+export function createManualClock(startMs?: number): ManualClock;
+
+// @public
+export function createMemorySink(limit?: number): MemorySink;
+
+// @public
+export function createPerformanceClock(): Clock;
+
+// @public
+export function createSeededRandom(seed: number): RandomSource;
+
+// @public
+export function createServiceKey<T>(name: string): ServiceNameKey<T>;
+
+// @public
+export function createUlidFactory(options?: UlidFactoryOptions): () => string;
+
+// @public
+export function curve(defaultValue?: CurveValue, options?: FieldOptions): FieldDefinition<CurveValue>;
+
+// @public
+export interface CurveFieldSpec {
+    readonly kind: "curve";
+}
+
+// @public
+export type CurveKey = readonly [time: number, value: number, inTangent: number, outTangent: number];
+
+// @public
+export interface CurveValue {
+    readonly keys: readonly CurveKey[];
+}
+
+// @public
+export function custom<T>(codec: CustomFieldCodec<T>, options?: FieldOptions): FieldDefinition<T>;
+
+// @public
+export interface CustomFieldCodec<T> {
+    createDefault(): T;
+    deserialize(json: JsonValue): T;
+    readonly jsonSchema?: JsonObject;
+    serialize(value: T): JsonValue;
+}
+
+// @public
+export interface CustomFieldSpec {
+    readonly codec: CustomFieldCodec<unknown>;
+    readonly kind: "custom";
+}
+
+// @public
+export function decodeProps<S extends Schema>(schema: S, json: JsonObject, references: ReferenceDecoder): DecodeResult<FieldsOf<S>>;
+
+// @public
+export interface DecodeResult<T> {
+    readonly issues: readonly SchemaIssue[];
+    readonly value: T;
+}
+
+// @public
+export function decodeValue<T>(field: FieldDefinition<T>, json: JsonValue, references: ReferenceDecoder): DecodeResult<T>;
+
+// @public
+export const DEFAULT_LAYER = 0;
+
+// @public
+export const DEFAULT_MEMORY_SINK_LIMIT = 200;
+
+// @public
+export interface DeferredQueue {
+    enqueue(callback: () => void): void;
+}
+
+// @public
+export function defineExtension<O = void>(factory: (options: O) => Extension): (options?: O) => Extension;
+
+// @public
+export function defineSchema<S extends Schema>(fields: S): S;
+
+// @public
+export const DEG_TO_RAD: number;
+
+// @public
+export function degToRad(degrees: number): number;
+
+// @public
+export function deltaAngleDegrees(fromDegrees: number, toDegrees: number): number;
+
+// @public
+export function describeSchema(typeId: string, schema: Schema, meta?: SchemaDescriptionMeta): SchemaDescription;
+
+// @public
+export class Diagnostics {
+    constructor(options?: DiagnosticsOptions);
+    beginFrame(rawDeltaMs: number): void;
+    clearHistory(): void;
+    endFrame(): void;
+    readonly frame: FrameSample;
+    group(name: string): DiagnosticsGroup | null;
+    get groups(): readonly DiagnosticsGroup[];
+    readonly historyCapacity: number;
+    get historyLength(): number;
+    readonly isDevelopment: boolean;
+    profile(name: string): ProfileScope;
+    readFrame(offset: number, out: FrameSample): FrameSample;
+    registerGroup(name: string, counterNames: readonly string[]): DiagnosticsGroup;
+}
+
+// @public
+export interface DiagnosticsGroup {
+    add(index: number, delta: number): void;
+    readonly counterNames: readonly string[];
+    get(index: number): number;
+    index(counter: string): number;
+    readonly name: string;
+    reset(): void;
+    set(index: number, value: number): void;
+}
+
+// @public
+export interface DiagnosticsOptions {
+    readonly development?: boolean;
+    readonly historyLength?: number;
+    readonly now?: () => number;
+}
+
+// @public
+export type Disconnect = () => void;
+
+// @public
+export function encodeProps<S extends Schema>(schema: S, props: PartialFieldsOf<S>, references: ReferenceEncoder, issues?: SchemaIssue[]): JsonObject;
+
+// @public
+export function encodeValue<T>(field: FieldDefinition<T>, value: T, references: ReferenceEncoder, issues?: SchemaIssue[]): JsonValue;
+
+// @public
+export class Entity {
+    // Warning: (ae-forgotten-export) The symbol "WorldHost" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "LiteSceneNode" needs to be exported by the entry point index.d.ts
+    //
+    // @internal
+    constructor(host: WorldHost, handle: EntityHandle, uid: string, node: LiteSceneNode, name: string, scene: SceneInstance);
+    get active(): boolean;
+    set active(value: boolean);
+    get activeInHierarchy(): boolean;
+    addComponent<T extends Component>(type: ConcreteComponentType<T>, init?: ComponentInit<T>): T;
+    get children(): readonly Entity[];
+    get components(): readonly Component[];
+    destroy(): void;
+    destroyImmediate(): void;
+    find(path: string): Entity | null;
+    findChild(predicate: (entity: Entity) => boolean, deep?: boolean): Entity | null;
+    getComponent<T extends Component>(type: ComponentType<T>): T | null;
+    getComponentInChildren<T extends Component>(type: ComponentType<T>, includeInactive?: boolean): T | null;
+    getComponentInParent<T extends Component>(type: ComponentType<T>): T | null;
+    getComponents<T extends Component>(type: ComponentType<T>): T[];
+    getComponentsInChildren<T extends Component>(type: ComponentType<T>, includeInactive?: boolean): T[];
+    get handle(): EntityHandle;
+    hasComponent(type: ComponentType): boolean;
+    isDescendantOf(other: Entity): boolean;
+    get isDestroyed(): boolean;
+    get isStatic(): boolean;
+    set isStatic(value: boolean);
+    get layer(): number;
+    set layer(value: number);
+    get name(): string;
+    set name(value: string);
+    get onActiveChanged(): Signal<boolean>;
+    get onChildAdded(): Signal<Entity>;
+    get onChildRemoved(): Signal<Entity>;
+    get onDestroyed(): Signal<Entity>;
+    get onParentChanged(): Signal<Entity | null>;
+    get parent(): Entity | null;
+    removeComponent(component: Component): void;
+    requireComponent<T extends Component>(type: ComponentType<T>): T;
+    root(): Entity;
+    get scene(): SceneInstance;
+    setParent(parent: Entity | null, options?: SetParentOptions): void;
+    get tags(): TagSet;
+    get transform(): Transform;
+    get uid(): string;
+    get world(): World;
+}
+
+// @public
+export interface Entity {
+    // Warning: (ae-forgotten-export) The symbol "EntityInternals" needs to be exported by the entry point index.d.ts
+    //
+    // @internal
+    [ENTITY_INTERNALS]: EntityInternals;
+}
+
+// @public
+export type EntityHandle = number & {
+    readonly __brand: "EntityHandle";
+};
+
+// @public
+export function entityRef<E = unknown>(options?: FieldOptions): FieldDefinition<E | null>;
+
+// @public
+export interface EntityRefFieldSpec {
+    readonly kind: "entityRef";
+}
+
+// @public
+export interface EnumFieldSpec {
+    readonly kind: "enum";
+    readonly values: readonly string[];
+}
+
+// @public
+export function enumOf<const T extends string>(values: readonly T[], defaultValue: NoInfer<T>, options?: FieldOptions): FieldDefinition<T>;
+
+// @public
+export const EPSILON: number;
+
+// @public
+export type ErrorCode = `IGX-${number}`;
+
+// @public
+export interface ErrorCodeDescription {
+    readonly code: ErrorCode;
+    readonly message: string;
+    readonly owner: string;
+}
+
+// @public
+export interface ErrorCodeRegistry {
+    describe(code: string): ErrorCodeDescription | null;
+    isRegistered(code: string): boolean;
+    register(codes: Readonly<Record<string, string>>, owner: string): void;
+}
+
+// @public
+export type ErrorContext = Readonly<Record<string, string | number | boolean | null>>;
+
+// @public
+export type ErrorFormatMode = "development" | "production";
+
+// @public
+export const ErrorRange: {
+    readonly lifecycle: "01";
+    readonly components: "02";
+    readonly scenes: "03";
+    readonly extensions: "04";
+    readonly assets: "05";
+    readonly serialization: "06";
+    readonly rendering: "07";
+    readonly input: "08";
+    readonly physics: "09";
+    readonly audio: "10";
+    readonly twoD: "11";
+    readonly threeD: "12";
+    readonly ui: "13";
+    readonly platform: "14";
+    readonly devtools: "15";
+};
+
+// @public
+export type ErrorRange = (typeof ErrorRange)[keyof typeof ErrorRange];
+
+// @public
+export interface ErrorReport {
+    readonly component: Component | null;
+    readonly entity: Entity | null;
+    readonly error: unknown;
+    readonly phase: Phase | null;
+    readonly source: "lifecycle" | "coroutine" | "system" | "extension" | "asset";
+}
+
+// @public
+export interface Extension {
+    dispose?(app: App): void;
+    readonly engine?: string;
+    readonly name: string;
+    onStart?(app: App): void | Promise<void>;
+    onStop?(app: App): void;
+    readonly optional?: readonly string[];
+    register(ctx: ExtensionContext): void | Promise<void>;
+    readonly requires?: readonly string[];
+    readonly version: string;
+}
+
+// @public
+export interface ExtensionContext {
+    readonly app: App;
+    defineAppProperty(name: string, getter: () => unknown): void;
+    readonly log: Logger;
+    onDispose(callback: () => void): void;
+    registerComponent(type: ConcreteComponentType, options?: RegisterComponentOptions): void;
+    registerComponents(types: readonly ConcreteComponentType[]): void;
+    registerErrorCodes(codes: Readonly<Record<string, string>>): void;
+    registerService<T>(key: ServiceKey<T>, instance: T): void;
+    registerSettings<S>(section: string, schema: Schema, defaults: S): void;
+    registerSystem(system: System, options: RegisterSystemOptions): void;
+    require<T>(key: ServiceKey<T>): T;
+    settings<S>(section: string): S;
+    tryGet<T>(key: ServiceKey<T>): T | null;
+}
+
+// @public
+export function f32(defaultValue?: number, options?: FieldOptions): FieldDefinition<number>;
+
+// @public
+export function f64(defaultValue?: number, options?: FieldOptions): FieldDefinition<number>;
+
+// @public
+export interface FieldDefinition<T> {
+    createDefault(): T;
+    readonly kind: FieldKind;
+    readonly options: FieldOptions;
+    readonly spec: FieldSpec;
+}
+
+// @public
+export const FieldKind: {
+    readonly f32: "f32";
+    readonly f64: "f64";
+    readonly i32: "i32";
+    readonly u32: "u32";
+    readonly bool: "bool";
+    readonly str: "str";
+    readonly vec2: "vec2";
+    readonly vec3: "vec3";
+    readonly vec4: "vec4";
+    readonly quat: "quat";
+    readonly color: "color";
+    readonly enum: "enum";
+    readonly entityRef: "entityRef";
+    readonly componentRef: "componentRef";
+    readonly asset: "asset";
+    readonly array: "array";
+    readonly record: "record";
+    readonly map: "map";
+    readonly optional: "optional";
+    readonly layerMask: "layerMask";
+    readonly curve: "curve";
+    readonly custom: "custom";
+};
+
+// @public
+export type FieldKind = (typeof FieldKind)[keyof typeof FieldKind];
+
+// @public
+export interface FieldOptions {
+    readonly group?: string;
+    readonly hidden?: boolean;
+    readonly max?: number;
+    readonly min?: number;
+    readonly readonly?: boolean;
+    readonly step?: number;
+    readonly tooltip?: string;
+    readonly transient?: boolean;
+}
+
+// @public
+export type FieldsOf<S extends Schema> = { -readonly [K in keyof S]: S[K] extends FieldDefinition<infer T> ? T : never; };
+
+// @public
+export type FieldSpec = NumberFieldSpec | BoolFieldSpec | StringFieldSpec | VectorFieldSpec | ColorFieldSpec | EnumFieldSpec | EntityRefFieldSpec | ComponentRefFieldSpec | AssetFieldSpec | ArrayFieldSpec | RecordFieldSpec | MapFieldSpec | OptionalFieldSpec | LayerMaskFieldSpec | CurveFieldSpec | CustomFieldSpec;
+
+// @public
+export function formatErrorMessage(code: ErrorCode, message: string, context: ErrorContext, hint: string | null, mode: ErrorFormatMode): string;
+
+// @public
+export const FRAME_HISTORY_LENGTH = 300;
+
+// @public
+export interface FrameSample {
+    coroutinesResumed: number;
+    readonly cpuMs: Float64Array;
+    destroyed: number;
+    droppedMs: number;
+    fixedSteps: number;
+    frame: number;
+    rawDeltaMs: number;
+    scriptsUpdated: number;
+}
+
+// @public
+export interface FrameState {
+    readonly isInsideCallback: boolean;
+    readonly isInsideFixedStep: boolean;
+}
+
+// @public
+export function generateUlid(random?: RandomSource, now?: () => number): string;
+
+// @public
+export function i32(defaultValue?: number, options?: FieldOptions): FieldDefinition<number>;
 
 // @public
 export class IgnifxError extends Error {
-    constructor(code: ErrorCode, message: string, options?: ErrorOptions);
+    constructor(code: ErrorCode, message: string, options?: IgnifxErrorOptions);
     readonly code: ErrorCode;
+    readonly context: ErrorContext;
+    readonly hint: string | null;
 }
+
+// @public
+export interface IgnifxErrorOptions extends ErrorOptions {
+    readonly context?: ErrorContext;
+    readonly hint?: string | null;
+    readonly mode?: ErrorFormatMode;
+}
+
+// @public
+export const INVALID_HANDLE = 0;
+
+// @public
+export function inverseLerp(a: number, b: number, value: number): number;
+
+// @public
+export function isIgnifxError(value: unknown): value is IgnifxError;
+
+// @public
+export function isUlid(value: string): boolean;
+
+// @public
+export function isValidErrorCode(code: string): code is ErrorCode;
+
+// Warning: (ae-internal-missing-underscore) The name "isValidLayer" should be prefixed with an underscore because the declaration is marked as @internal
+//
+// @internal
+export function isValidLayer(layer: number): boolean;
 
 // @public
 export function isWebGpuAvailable(): boolean;
 
 // @public
-export interface LiteHeadlessHandles {
-    readonly engine: EngineContext;
-    readonly scene: SceneContext;
+export type JsonArray = readonly JsonValue[];
+
+// @public
+export type JsonObject = {
+    readonly [key: string]: JsonValue;
+};
+
+// @public
+export type JsonSchemaObject = JsonObject;
+
+// @public
+export type JsonValue = string | number | boolean | null | JsonArray | JsonObject;
+
+// @public
+export class LayerMask {
+    constructor(bits: number);
+    readonly bits: number;
+    static everything(): LayerMask;
+    static fromBits(bits: number): LayerMask;
+    static fromNames(table: LayerTable, names: readonly string[]): LayerMask;
+    has(layer: number): boolean;
+    intersects(other: LayerMask): boolean;
+    static nothing(): LayerMask;
+    static of(...layers: readonly number[]): LayerMask;
+    toNames(table: LayerTable): string[];
+    with(layer: number): LayerMask;
+    without(layer: number): LayerMask;
 }
 
 // @public
-export interface LiteRenderHandles {
-    readonly engine: EngineContext;
+export function layerMask(defaultValue?: readonly string[], options?: FieldOptions): FieldDefinition<readonly string[]>;
+
+// @public
+export interface LayerMaskFieldSpec {
+    readonly kind: "layerMask";
 }
 
 // @public
-export interface RenderRuntime {
-    readonly isDisposed: boolean;
-    readonly lite: LiteRenderHandles;
+export interface LayersSettings {
+    readonly layers: readonly string[];
+}
+
+// @public
+export class LayerTable {
+    // @internal
+    constructor(names: readonly string[]);
+    get count(): number;
+    has(name: string): boolean;
+    indexOf(name: string): number;
+    mask(...names: readonly string[]): LayerMask;
+    nameOf(index: number): string | null;
+    get names(): readonly string[];
+    requireIndex(name: string): number;
+}
+
+// @public
+export function lerp(a: number, b: number, t: number): number;
+
+// @public
+export function lerpAngleDegrees(fromDegrees: number, toDegrees: number, t: number): number;
+
+// @public
+export type LiteEngine = EngineContext;
+
+// @public
+export type LiteScene = SceneContext;
+
+// @public
+export const LOG_LEVEL_SEVERITY: Readonly<Record<LogThreshold, number>>;
+
+// @public
+export interface Logger {
+    child(scope: string): Logger;
+    debug(message: string, ...data: readonly unknown[]): void;
+    error(message: string, ...data: readonly unknown[]): void;
+    info(message: string, ...data: readonly unknown[]): void;
+    isEnabled(level: LogLevel): boolean;
+    readonly level: LogThreshold;
+    readonly scope: string | null;
+    setLevel(level: LogThreshold): void;
+    warn(message: string, ...data: readonly unknown[]): void;
+    warnOnce(key: string, message: string, ...data: readonly unknown[]): void;
+}
+
+// @public
+export interface LoggerOptions {
+    readonly level?: LogThreshold;
+    readonly now?: () => number;
+    readonly scope?: string | null;
+    readonly sink: LogSink;
+}
+
+// @public
+export const LogLevel: {
+    readonly debug: "debug";
+    readonly info: "info";
+    readonly warn: "warn";
+    readonly error: "error";
+};
+
+// @public
+export type LogLevel = (typeof LogLevel)[keyof typeof LogLevel];
+
+// @public
+export interface LogRecord {
+    readonly data: readonly unknown[];
+    readonly level: LogLevel;
+    readonly message: string;
+    readonly scope: string | null;
+    readonly timeMs: number;
+}
+
+// @public
+export interface LogSink {
+    write(record: LogRecord): void;
+}
+
+// @public
+export type LogThreshold = LogLevel | "silent";
+
+// @public
+export interface ManualClock extends Clock {
+    advance(milliseconds: number): void;
+    set(milliseconds: number): void;
+}
+
+// @public
+export function map<T>(value: FieldDefinition<T>, options?: FieldOptions): FieldDefinition<Record<string, T>>;
+
+// @public
+export interface MapFieldSpec {
+    readonly kind: "map";
+    readonly value: FieldDefinition<unknown>;
+}
+
+// @public
+export class Mat4 {
+    constructor();
+    clone(): Mat4;
+    static compose(position: Vec3Like, rotation: QuatLike, scale: Vec3Like): Mat4;
+    static composeToRef(position: Vec3Like, rotation: QuatLike, scale: Vec3Like, out: Mat4): Mat4;
+    copyFrom(m: Mat4Like): this;
+    static decomposeToRef(m: Mat4Like, outPosition: MutableVec3, outRotation: MutableQuat, outScale: MutableVec3): boolean;
+    determinant(): number;
+    static determinant(m: Mat4Like): number;
+    readonly elements: Mat4Elements;
+    equalsWithEpsilon(m: Mat4Like, epsilon?: number): boolean;
+    static equalsWithEpsilon(a: Mat4Like, b: Mat4Like, epsilon?: number): boolean;
+    static from(m: Mat4Like): Mat4;
+    static fromQuat(q: QuatLike): Mat4;
+    static fromQuatToRef(q: QuatLike, out: Mat4): Mat4;
+    static getRotationToRef<TOut extends MutableQuat>(m: Mat4Like, out: TOut): TOut;
+    static getScaleToRef<TOut extends MutableVec3>(m: Mat4Like, out: TOut): TOut;
+    static getTranslationToRef<TOut extends MutableVec3>(m: Mat4Like, out: TOut): TOut;
+    identity(): this;
+    static identity(): Mat4;
+    invert(): boolean;
+    static invertToRef(m: Mat4Like, out: Mat4): boolean;
+    static lookAtLH(eye: Vec3Like, target: Vec3Like, up: Vec3Like): Mat4;
+    static lookAtLHToRef(eye: Vec3Like, target: Vec3Like, up: Vec3Like, out: Mat4): Mat4;
+    multiply(m: Mat4Like): this;
+    static multiply(a: Mat4Like, b: Mat4Like): Mat4;
+    static multiplyToRef(a: Mat4Like, b: Mat4Like, out: Mat4): Mat4;
+    static orthoLH(width: number, height: number, near: number, far: number): Mat4;
+    static orthoLHToRef(width: number, height: number, near: number, far: number, out: Mat4): Mat4;
+    static orthoOffCenterLHToRef(left: number, right: number, bottom: number, top: number, near: number, far: number, out: Mat4): Mat4;
+    static perspectiveLH(fovDegrees: number, aspect: number, near: number, far: number): Mat4;
+    static perspectiveLHToRef(fovDegrees: number, aspect: number, near: number, far: number, out: Mat4): Mat4;
+    static scaling(x: number, y: number, z: number): Mat4;
+    static scalingToRef(x: number, y: number, z: number, out: Mat4): Mat4;
+    static transformDirectionToRef<TOut extends MutableVec3>(m: Mat4Like, direction: Vec3Like, out: TOut): TOut;
+    static transformPointToRef<TOut extends MutableVec3>(m: Mat4Like, point: Vec3Like, out: TOut): TOut;
+    static translation(x: number, y: number, z: number): Mat4;
+    static translationToRef(x: number, y: number, z: number, out: Mat4): Mat4;
+    transpose(): this;
+    static transposeToRef(m: Mat4Like, out: Mat4): Mat4;
+}
+
+// @public
+export const MAT4_IDENTITY: Mat4Like;
+
+// @public
+export type Mat4Elements = Float32Array & {
+    readonly length: 16;
+};
+
+// @public
+export interface Mat4Like {
+    readonly [index: number]: number;
+    readonly length: 16;
+}
+
+// @public
+export const MAX_LAYERS = 32;
+
+// @public
+export const MAX_ULID_TIME_MS: number;
+
+// @public
+export interface MemorySink extends LogSink {
+    at(index: number): LogRecord | null;
+    clear(): void;
+    readonly length: number;
+    readonly limit: number;
+    toArray(): readonly LogRecord[];
+}
+
+// @public
+export function moveTowards(current: number, target: number, maxDelta: number): number;
+
+// @public
+export interface MutableQuat {
+    copyFrom(q: QuatLike): void;
+    set(x: number, y: number, z: number, w: number): void;
+    w: number;
+    x: number;
+    y: number;
+    z: number;
+}
+
+// @public
+export interface MutableVec2 {
+    copyFrom(v: Vec2Like): void;
+    set(x: number, y: number): void;
+    x: number;
+    y: number;
+}
+
+// @public
+export interface MutableVec3 {
+    copyFrom(v: Vec3Like): void;
+    set(x: number, y: number, z: number): void;
+    x: number;
+    y: number;
+    z: number;
+}
+
+// @public
+export interface MutableVec4 {
+    copyFrom(v: Vec4Like): void;
+    set(x: number, y: number, z: number, w: number): void;
+    w: number;
+    x: number;
+    y: number;
+    z: number;
+}
+
+// @public
+export interface NumberFieldSpec {
+    readonly kind: "f32" | "f64" | "i32" | "u32";
+}
+
+// @public
+export function optional<T>(inner: FieldDefinition<T>, options?: FieldOptions): FieldDefinition<T | null>;
+
+// @public
+export interface OptionalFieldSpec {
+    readonly inner: FieldDefinition<unknown>;
+    readonly kind: "optional";
+}
+
+// @public
+export type PartialFieldsOf<S extends Schema> = { [K in keyof FieldsOf<S>]?: FieldsOf<S>[K] | undefined; };
+
+// @public
+export const Phase: {
+    readonly EndOfFrame: 0;
+    readonly PreUpdate: 1;
+    readonly FixedUpdate: 2;
+    readonly Update: 3;
+    readonly PostUpdate: 4;
+    readonly PreRender: 5;
+};
+
+// @public
+export type Phase = (typeof Phase)[keyof typeof Phase];
+
+// @public
+export const PHASE_COUNT = 6;
+
+// @public
+export const PHASE_NAMES: readonly string[];
+
+// @public
+export type PhaseIndex = 0 | 1 | 2 | 3 | 4 | 5;
+
+// @public
+export const PHASES: readonly Phase[];
+
+// @public
+export function pingPong(t: number, length: number): number;
+
+// @public
+export interface PlatformInfo {
+    readonly kind: PlatformKind;
+}
+
+// @public
+export type PlatformKind = "browser" | "node";
+
+// @public
+export interface ProfileScope {
+    readonly durationMs: number;
+    end(): void;
+}
+
+// @public
+export class Quat {
+    constructor(x?: number, y?: number, z?: number, w?: number);
+    static angleDegrees(a: QuatLike, b: QuatLike): number;
+    clone(): Quat;
+    conjugate(): this;
+    static conjugateToRef<TOut extends MutableQuat>(q: QuatLike, out: TOut): TOut;
+    copyFrom(q: QuatLike): this;
+    dot(q: QuatLike): number;
+    static dot(a: QuatLike, b: QuatLike): number;
+    equalsWithEpsilon(q: QuatLike, epsilon?: number): boolean;
+    static equalsWithEpsilon(a: QuatLike, b: QuatLike, epsilon?: number): boolean;
+    static from(q: QuatLike): Quat;
+    static fromAxisAngle(axis: Vec3Like, degrees: number): Quat;
+    static fromAxisAngleToRef<TOut extends MutableQuat>(axis: Vec3Like, degrees: number, out: TOut): TOut;
+    static fromEulerDegrees(xDegrees: number, yDegrees: number, zDegrees: number): Quat;
+    static fromEulerDegreesToRef<TOut extends MutableQuat>(xDegrees: number, yDegrees: number, zDegrees: number, out: TOut): TOut;
+    static fromEulerRadians(xRadians: number, yRadians: number, zRadians: number): Quat;
+    static fromEulerRadiansToRef<TOut extends MutableQuat>(xRadians: number, yRadians: number, zRadians: number, out: TOut): TOut;
+    static fromRotationMatrix(m: Mat4Like): Quat;
+    static fromRotationMatrixToRef<TOut extends MutableQuat>(m: Mat4Like, out: TOut): TOut;
+    identity(): this;
+    static identity(): Quat;
+    invert(): this;
+    static invertToRef<TOut extends MutableQuat>(q: QuatLike, out: TOut): TOut;
+    length(): number;
+    lengthSquared(): number;
+    static lookRotation(forward: Vec3Like, up?: Vec3Like): Quat;
+    static lookRotationToRef<TOut extends MutableQuat>(forward: Vec3Like, up: Vec3Like, out: TOut): TOut;
+    multiply(q: QuatLike): this;
+    static multiply(a: QuatLike, b: QuatLike): Quat;
+    static multiplyToRef<TOut extends MutableQuat>(a: QuatLike, b: QuatLike, out: TOut): TOut;
+    normalize(): this;
+    static normalizeToRef<TOut extends MutableQuat>(q: QuatLike, out: TOut): TOut;
+    static rotateVectorToRef<TOut extends MutableVec3>(q: QuatLike, v: Vec3Like, out: TOut): TOut;
+    set(x: number, y: number, z: number, w: number): this;
+    static slerp(a: QuatLike, b: QuatLike, t: number): Quat;
+    static slerpToRef<TOut extends MutableQuat>(a: QuatLike, b: QuatLike, t: number, out: TOut): TOut;
+    toArray(out: Float32Array, offset?: number): Float32Array;
+    static toEulerDegreesToRef<TOut extends MutableVec3>(q: QuatLike, out: TOut): TOut;
+    static toEulerRadiansToRef<TOut extends MutableVec3>(q: QuatLike, out: TOut): TOut;
+    w: number;
+    x: number;
+    y: number;
+    z: number;
+}
+
+// @public
+export function quat(defaultValue?: QuatLike, options?: FieldOptions): FieldDefinition<QuatLike>;
+
+// @public
+export const QUAT_IDENTITY: QuatLike;
+
+// @public
+export interface QuatLike {
+    readonly w: number;
+    readonly x: number;
+    readonly y: number;
+    readonly z: number;
+}
+
+// @public
+export const RAD_TO_DEG: number;
+
+// @public
+export function radToDeg(radians: number): number;
+
+// @public
+export interface RandomSource {
+    fillBytes(bytes: Uint8Array<ArrayBuffer>): void;
+}
+
+// @public
+export function record<S extends Schema>(fields: S, options?: FieldOptions): FieldDefinition<FieldsOf<S>>;
+
+// @public
+export interface RecordFieldSpec {
+    readonly fields: Schema;
+    readonly kind: "record";
+}
+
+// @public
+export interface ReferenceDecoder {
+    component(uid: string): unknown;
+    entity(uid: string): unknown;
+}
+
+// @public
+export interface ReferenceEncoder {
+    componentUid(value: unknown): string | null;
+    entityUid(value: unknown): string | null;
+}
+
+// @public
+export interface RegisterComponentOptions {
+    readonly typeId?: string;
+}
+
+// @public
+export interface RegisterSystemOptions {
+    readonly order?: number;
+    readonly phase: Phase;
 }
 
 // @public
 export type RenderSurface = HTMLCanvasElement | OffscreenCanvas;
 
 // @public
-export function stepHeadless(runtime: HeadlessRuntime, deltaSeconds: number): void;
+export function repeat(t: number, length: number): number;
+
+// @public
+export const RESERVED_LAYER_NAMES: readonly string[];
+
+// @public
+export function resetFrameSample(sample: FrameSample): FrameSample;
+
+// @public
+export class SceneInstance {
+    // @internal
+    constructor(uid: string, name: string, persistent: boolean);
+    // @internal
+    addRoot(entity: Entity): void;
+    get asset(): null;
+    get isLoaded(): boolean;
+    readonly name: string;
+    get onUnloading(): Signal;
+    persistent: boolean;
+    // @internal
+    removeRoot(entity: Entity): void;
+    get roots(): readonly Entity[];
+    readonly uid: string;
+}
+
+// @public
+export type Schema = Readonly<Record<string, FieldDefinition<unknown>>>;
+
+// @public
+export interface SchemaDescription {
+    readonly description?: string;
+    readonly fields: Readonly<Record<string, SchemaFieldDescription>>;
+    readonly format: string;
+    readonly title: string;
+}
+
+// @public
+export interface SchemaDescriptionMeta {
+    readonly description?: string;
+    readonly format?: string;
+    readonly title?: string;
+}
+
+// @public
+export interface SchemaFieldDescription {
+    readonly default?: JsonValue;
+    readonly description?: string;
+    readonly kind: FieldKind;
+}
+
+// @public
+export interface SchemaIssue {
+    readonly code: SchemaIssueCode;
+    readonly message: string;
+    readonly path: string;
+}
+
+// @public
+export const SchemaIssueCode: {
+    readonly nonFiniteNumber: "IGX-0601";
+    readonly unresolvedReference: "IGX-0602";
+    readonly typeMismatch: "IGX-0605";
+    readonly outOfRange: "IGX-0606";
+    readonly unknownField: "IGX-0607";
+};
+
+// @public
+export type SchemaIssueCode = (typeof SchemaIssueCode)[keyof typeof SchemaIssueCode];
+
+// @public
+export abstract class Script extends Component {
+    static override define<const S extends Schema>(schema: S): ScriptDefinition<S>;
+    startCoroutine(routine: Coroutine): CoroutineHandle;
+    stopAllCoroutines(): void;
+    stopCoroutine(handle: CoroutineHandle): void;
+}
+
+// @public
+export interface ScriptCallbacks {
+    awake?(): void;
+    fixedUpdate?(dt: number): void;
+    lateUpdate?(dt: number): void;
+    onApplicationFocus?(focused: boolean): void;
+    onApplicationPause?(paused: boolean): void;
+    onCollisionEnter?(collision: unknown): void;
+    onCollisionExit?(collision: unknown): void;
+    onCollisionStay?(collision: unknown): void;
+    onDestroy?(): void;
+    onDisable?(): void;
+    onEnable?(): void;
+    onTriggerEnter?(trigger: unknown): void;
+    onTriggerExit?(trigger: unknown): void;
+    start?(): void;
+    update?(dt: number): void;
+}
+
+// @public
+export interface ScriptClassInfo {
+    readonly callbacks: number;
+    readonly executionOrder: number;
+    readonly updateWhenPaused: boolean;
+}
+
+// @public
+export type ScriptDefinition<S extends Schema> = (abstract new () => Script & FieldsOf<S>) & {
+    readonly prototype: Script & FieldsOf<S>;
+    readonly schema: S;
+};
+
+// @public
+export interface ScriptStatics extends ComponentStatics {
+    readonly executionOrder?: number;
+    readonly updateWhenPaused?: boolean;
+}
+
+// @public
+export type ServiceClassKey<T> = abstract new (...args: never[]) => T;
+
+// @public
+export type ServiceKey<T> = ServiceClassKey<T> | ServiceNameKey<T>;
+
+// @public
+export interface ServiceNameKey<T> {
+    readonly serviceName: string;
+    readonly serviceOf?: T;
+}
+
+// @public
+export interface ServiceRegistry {
+    get<T>(key: ServiceKey<T>): T;
+    has(key: ServiceKey<unknown>): boolean;
+    tryGet<T>(key: ServiceKey<T>): T | null;
+}
+
+// @public
+export interface SetParentOptions {
+    readonly worldPositionStays?: boolean;
+}
+
+// @public
+export type SettingsInput = Readonly<Record<string, unknown>>;
+
+// @public
+export function sign(value: number): number;
+
+// @public
+export class Signal<T = void> implements SignalLike<T> {
+    constructor(options?: SignalOptions<T>);
+    clear(): void;
+    connect(handler: SignalHandler<T>, options?: ConnectOptions): Disconnect;
+    get connectionCount(): number;
+    disconnect(handler: SignalHandler<T>): void;
+    emit(value: T): void;
+}
+
+// @public
+export type SignalHandler<T> = (value: T) => void;
+
+// @public
+export interface SignalLike<T = void> {
+    connect(handler: SignalHandler<T>, options?: ConnectOptions): Disconnect;
+    readonly connectionCount: number;
+}
+
+// @public
+export interface SignalOptions<T> {
+    readonly deferredQueue?: DeferredQueue;
+    readonly onHandlerError?: (error: unknown, signal: Signal<T>) => void;
+}
+
+// @public
+export interface SignalOwner {
+    readonly isDestroyed: boolean;
+    readonly onDestroyed: SignalLike<unknown>;
+}
+
+// @public
+export function smoothStep(edge0: number, edge1: number, x: number): number;
+
+// @public
+export interface SortingLayersSettings {
+    readonly sortingLayers: readonly string[];
+}
+
+// @public
+export function str(defaultValue?: string, options?: FieldOptions): FieldDefinition<string>;
+
+// @public
+export interface StringFieldSpec {
+    readonly kind: "str";
+}
+
+// @public
+export interface System {
+    dispose?(): void;
+    readonly name: string;
+    onWorldCreated?(world: World): void;
+    onWorldDisposed?(world: World): void;
+    update?(ctx: SystemContext): void;
+}
+
+// @public
+export interface SystemContext {
+    readonly dt: number;
+    readonly phase: Phase;
+    readonly time: Time;
+    readonly world: World;
+}
+
+// @public
+export class TagSet {
+    [Symbol.iterator](): IterableIterator<string>;
+    // Warning: (ae-forgotten-export) The symbol "TagSetObserver" needs to be exported by the entry point index.d.ts
+    //
+    // @internal
+    constructor(observer?: TagSetObserver);
+    add(tag: string): this;
+    // @internal
+    clear(): void;
+    delete(tag: string): boolean;
+    has(tag: string): boolean;
+    get size(): number;
+    values(): IterableIterator<string>;
+}
+
+// @public
+export const THIRD_PARTY_ERROR_PREFIX = "9";
+
+// @public
+export interface Time {
+    readonly deltaTime: number;
+    fixedDeltaTime: number;
+    readonly fixedStepAlpha: number;
+    readonly fixedTime: number;
+    readonly frameCount: number;
+    readonly inFixedStep: boolean;
+    maximumDeltaTime: number;
+    paused: boolean;
+    readonly realtimeSinceStartup: number;
+    readonly time: number;
+    timeScale: number;
+    readonly unscaledDeltaTime: number;
+    readonly unscaledTime: number;
+}
+
+// @public
+export interface TimeSettings {
+    readonly fixedDeltaTime?: number;
+    readonly maximumDeltaTime?: number;
+    readonly timeScale?: number;
+}
+
+// @public
+export function toJsonSchema(schema: Schema): JsonSchemaObject;
+
+// @public
+export class Transform extends Component {
+    constructor();
+    static allowMultiple: boolean;
+    override destroy(): void;
+    override get enabled(): boolean;
+    override set enabled(value: boolean);
+    get eulerAngles(): Vec3;
+    set eulerAngles(value: Vec3Like);
+    eulerAnglesToRef<TOut extends MutableVec3>(out: TOut): TOut;
+    get forward(): Vec3;
+    forwardToRef<TOut extends MutableVec3>(out: TOut): TOut;
+    inverseTransformDirection(world: Vec3Like, out?: MutableVec3): MutableVec3;
+    inverseTransformPoint(world: Vec3Like, out?: MutableVec3): MutableVec3;
+    get lite(): LiteSceneNode;
+    get localEulerAngles(): Vec3;
+    set localEulerAngles(value: Vec3Like);
+    localEulerAnglesToRef<TOut extends MutableVec3>(out: TOut): TOut;
+    get localMatrix(): Mat4Like;
+    get localPosition(): MutableVec3;
+    get localPosition2D(): Vec2;
+    set localPosition2D(value: Vec2);
+    get localRotation(): MutableQuat;
+    get localScale(): MutableVec3;
+    get localScale2D(): Vec2;
+    set localScale2D(value: Vec2);
+    lookAt(target: Vec3Like, up?: Vec3Like): void;
+    get lossyScale(): Vec3;
+    lossyScaleToRef<TOut extends MutableVec3>(out: TOut): TOut;
+    get position(): Vec3;
+    set position(value: Vec3Like);
+    get position2D(): Vec2;
+    set position2D(value: Vec2);
+    positionToRef<TOut extends MutableVec3>(out: TOut): TOut;
+    get right(): Vec3;
+    rightToRef<TOut extends MutableVec3>(out: TOut): TOut;
+    rotate(eulerDegrees: Vec3Like, space?: "local" | "world"): void;
+    rotateAround(point: Vec3Like, axis: Vec3Like, degrees: number): void;
+    get rotation(): Quat;
+    set rotation(value: QuatLike);
+    get rotation2D(): number;
+    set rotation2D(degrees: number);
+    rotationToRef<TOut extends MutableQuat>(out: TOut): TOut;
+    setPositionAndRotation(position: Vec3Like, rotation: QuatLike): void;
+    transformDirection(local: Vec3Like, out?: MutableVec3): MutableVec3;
+    transformPoint(local: Vec3Like, out?: MutableVec3): MutableVec3;
+    translate(delta: Vec3Like, space?: "local" | "world"): void;
+    static typeId: string;
+    get up(): Vec3;
+    upToRef<TOut extends MutableVec3>(out: TOut): TOut;
+    get worldMatrix(): Mat4Like;
+    get worldMatrixVersion(): number;
+}
+
+// @public
+export interface Transform {
+    // @internal
+    [TRANSFORM_NODE]: LiteSceneNode | null;
+}
+
+// @public
+export function u32(defaultValue?: number, options?: FieldOptions): FieldDefinition<number>;
+
+// @public
+export interface UlidFactoryOptions {
+    readonly now?: () => number;
+    readonly random?: RandomSource;
+}
+
+// @public
+export function validateProps(schema: Schema, props: Readonly<Record<string, unknown>>, path?: string): readonly SchemaIssue[];
+
+// @public
+export function validateValue(field: FieldDefinition<unknown>, value: unknown, path?: string): readonly SchemaIssue[];
+
+// @public
+export class Vec2 {
+    constructor(x?: number, y?: number);
+    add(v: Vec2Like): this;
+    static add(a: Vec2Like, b: Vec2Like): Vec2;
+    addScaled(v: Vec2Like, scale: number): this;
+    static addToRef<TOut extends MutableVec2>(a: Vec2Like, b: Vec2Like, out: TOut): TOut;
+    clone(): Vec2;
+    copyFrom(v: Vec2Like): this;
+    cross(v: Vec2Like): number;
+    static cross(a: Vec2Like, b: Vec2Like): number;
+    distance(v: Vec2Like): number;
+    static distance(a: Vec2Like, b: Vec2Like): number;
+    distanceSquared(v: Vec2Like): number;
+    dot(v: Vec2Like): number;
+    static dot(a: Vec2Like, b: Vec2Like): number;
+    equalsWithEpsilon(v: Vec2Like, epsilon?: number): boolean;
+    static equalsWithEpsilon(a: Vec2Like, b: Vec2Like, epsilon?: number): boolean;
+    static from(v: Vec2Like): Vec2;
+    length(): number;
+    static length(v: Vec2Like): number;
+    lengthSquared(): number;
+    static lengthSquared(v: Vec2Like): number;
+    lerp(target: Vec2Like, t: number): this;
+    static lerp(a: Vec2Like, b: Vec2Like, t: number): Vec2;
+    static lerpToRef<TOut extends MutableVec2>(a: Vec2Like, b: Vec2Like, t: number, out: TOut): TOut;
+    multiply(v: Vec2Like): this;
+    static multiplyToRef<TOut extends MutableVec2>(a: Vec2Like, b: Vec2Like, out: TOut): TOut;
+    negate(): this;
+    static negateToRef<TOut extends MutableVec2>(v: Vec2Like, out: TOut): TOut;
+    normalize(): this;
+    static normalize(v: Vec2Like): Vec2;
+    static normalizeToRef<TOut extends MutableVec2>(v: Vec2Like, out: TOut): TOut;
+    static one(): Vec2;
+    scale(scale: number): this;
+    static scale(v: Vec2Like, scale: number): Vec2;
+    static scaleToRef<TOut extends MutableVec2>(v: Vec2Like, scale: number, out: TOut): TOut;
+    set(x: number, y: number): this;
+    subtract(v: Vec2Like): this;
+    static subtract(a: Vec2Like, b: Vec2Like): Vec2;
+    static subtractToRef<TOut extends MutableVec2>(a: Vec2Like, b: Vec2Like, out: TOut): TOut;
+    toArray(out: Float32Array, offset?: number): Float32Array;
+    x: number;
+    y: number;
+    static zero(): Vec2;
+}
+
+// @public
+export function vec2(defaultValue?: Vec2Like, options?: FieldOptions): FieldDefinition<Vec2Like>;
+
+// @public
+export const VEC2_ONE: Vec2Like;
+
+// @public
+export const VEC2_ZERO: Vec2Like;
+
+// @public
+export interface Vec2Like {
+    readonly x: number;
+    readonly y: number;
+}
+
+// @public
+export class Vec3 {
+    constructor(x?: number, y?: number, z?: number);
+    add(v: Vec3Like): this;
+    static add(a: Vec3Like, b: Vec3Like): Vec3;
+    addScaled(v: Vec3Like, scale: number): this;
+    static addToRef<TOut extends MutableVec3>(a: Vec3Like, b: Vec3Like, out: TOut): TOut;
+    static backward(): Vec3;
+    clone(): Vec3;
+    copyFrom(v: Vec3Like): this;
+    cross(v: Vec3Like): this;
+    static cross(a: Vec3Like, b: Vec3Like): Vec3;
+    static crossToRef<TOut extends MutableVec3>(a: Vec3Like, b: Vec3Like, out: TOut): TOut;
+    distance(v: Vec3Like): number;
+    static distance(a: Vec3Like, b: Vec3Like): number;
+    distanceSquared(v: Vec3Like): number;
+    static distanceSquared(a: Vec3Like, b: Vec3Like): number;
+    dot(v: Vec3Like): number;
+    static dot(a: Vec3Like, b: Vec3Like): number;
+    static down(): Vec3;
+    equalsWithEpsilon(v: Vec3Like, epsilon?: number): boolean;
+    static equalsWithEpsilon(a: Vec3Like, b: Vec3Like, epsilon?: number): boolean;
+    static forward(): Vec3;
+    static from(v: Vec3Like): Vec3;
+    static left(): Vec3;
+    length(): number;
+    static length(v: Vec3Like): number;
+    lengthSquared(): number;
+    static lengthSquared(v: Vec3Like): number;
+    lerp(target: Vec3Like, t: number): this;
+    static lerp(a: Vec3Like, b: Vec3Like, t: number): Vec3;
+    static lerpToRef<TOut extends MutableVec3>(a: Vec3Like, b: Vec3Like, t: number, out: TOut): TOut;
+    static maxToRef<TOut extends MutableVec3>(a: Vec3Like, b: Vec3Like, out: TOut): TOut;
+    static minToRef<TOut extends MutableVec3>(a: Vec3Like, b: Vec3Like, out: TOut): TOut;
+    multiply(v: Vec3Like): this;
+    static multiplyToRef<TOut extends MutableVec3>(a: Vec3Like, b: Vec3Like, out: TOut): TOut;
+    negate(): this;
+    static negateToRef<TOut extends MutableVec3>(v: Vec3Like, out: TOut): TOut;
+    normalize(): this;
+    static normalize(v: Vec3Like): Vec3;
+    static normalizeToRef<TOut extends MutableVec3>(v: Vec3Like, out: TOut): TOut;
+    static one(): Vec3;
+    static right(): Vec3;
+    scale(scale: number): this;
+    static scale(v: Vec3Like, scale: number): Vec3;
+    static scaleToRef<TOut extends MutableVec3>(v: Vec3Like, scale: number, out: TOut): TOut;
+    set(x: number, y: number, z: number): this;
+    subtract(v: Vec3Like): this;
+    static subtract(a: Vec3Like, b: Vec3Like): Vec3;
+    static subtractToRef<TOut extends MutableVec3>(a: Vec3Like, b: Vec3Like, out: TOut): TOut;
+    toArray(out: Float32Array, offset?: number): Float32Array;
+    static transformCoordinatesToRef<TOut extends MutableVec3>(v: Vec3Like, m: Mat4Like, out: TOut): TOut;
+    static transformNormalToRef<TOut extends MutableVec3>(v: Vec3Like, m: Mat4Like, out: TOut): TOut;
+    static up(): Vec3;
+    x: number;
+    y: number;
+    z: number;
+    static zero(): Vec3;
+}
+
+// @public
+export function vec3(defaultValue?: Vec3Like, options?: FieldOptions): FieldDefinition<Vec3Like>;
+
+// @public
+export const VEC3_BACKWARD: Vec3Like;
+
+// @public
+export const VEC3_DOWN: Vec3Like;
+
+// @public
+export const VEC3_FORWARD: Vec3Like;
+
+// @public
+export const VEC3_LEFT: Vec3Like;
+
+// @public
+export const VEC3_ONE: Vec3Like;
+
+// @public
+export const VEC3_RIGHT: Vec3Like;
+
+// @public
+export const VEC3_UP: Vec3Like;
+
+// @public
+export const VEC3_ZERO: Vec3Like;
+
+// @public
+export interface Vec3Like {
+    readonly x: number;
+    readonly y: number;
+    readonly z: number;
+}
+
+// @public
+export class Vec4 {
+    constructor(x?: number, y?: number, z?: number, w?: number);
+    add(v: Vec4Like): this;
+    static add(a: Vec4Like, b: Vec4Like): Vec4;
+    static addToRef<TOut extends MutableVec4>(a: Vec4Like, b: Vec4Like, out: TOut): TOut;
+    clone(): Vec4;
+    copyFrom(v: Vec4Like): this;
+    dot(v: Vec4Like): number;
+    static dot(a: Vec4Like, b: Vec4Like): number;
+    equalsWithEpsilon(v: Vec4Like, epsilon?: number): boolean;
+    static equalsWithEpsilon(a: Vec4Like, b: Vec4Like, epsilon?: number): boolean;
+    static from(v: Vec4Like): Vec4;
+    length(): number;
+    static length(v: Vec4Like): number;
+    lengthSquared(): number;
+    static lengthSquared(v: Vec4Like): number;
+    lerp(target: Vec4Like, t: number): this;
+    static lerp(a: Vec4Like, b: Vec4Like, t: number): Vec4;
+    static lerpToRef<TOut extends MutableVec4>(a: Vec4Like, b: Vec4Like, t: number, out: TOut): TOut;
+    multiply(v: Vec4Like): this;
+    static multiplyToRef<TOut extends MutableVec4>(a: Vec4Like, b: Vec4Like, out: TOut): TOut;
+    negate(): this;
+    static negateToRef<TOut extends MutableVec4>(v: Vec4Like, out: TOut): TOut;
+    normalize(): this;
+    static normalize(v: Vec4Like): Vec4;
+    static normalizeToRef<TOut extends MutableVec4>(v: Vec4Like, out: TOut): TOut;
+    static one(): Vec4;
+    scale(scale: number): this;
+    static scale(v: Vec4Like, scale: number): Vec4;
+    static scaleToRef<TOut extends MutableVec4>(v: Vec4Like, scale: number, out: TOut): TOut;
+    set(x: number, y: number, z: number, w: number): this;
+    subtract(v: Vec4Like): this;
+    static subtract(a: Vec4Like, b: Vec4Like): Vec4;
+    static subtractToRef<TOut extends MutableVec4>(a: Vec4Like, b: Vec4Like, out: TOut): TOut;
+    toArray(out: Float32Array, offset?: number): Float32Array;
+    w: number;
+    x: number;
+    y: number;
+    z: number;
+    static zero(): Vec4;
+}
+
+// @public
+export function vec4(defaultValue?: Vec4Like, options?: FieldOptions): FieldDefinition<Vec4Like>;
+
+// @public
+export interface Vec4Like {
+    readonly w: number;
+    readonly x: number;
+    readonly y: number;
+    readonly z: number;
+}
+
+// @public
+export interface VectorFieldSpec {
+    readonly components: 2 | 3 | 4;
+    readonly kind: "vec2" | "vec3" | "vec4" | "quat";
+}
+
+// @public
+export const VERSION = "0.0.0";
+
+// @public
+export function waitFixedUpdate(): WaitInstruction;
+
+// @public
+export interface WaitInstruction {
+    readonly kind: "seconds" | "secondsRealtime" | "fixedUpdate" | "until" | "while";
+    readonly predicate?: () => boolean;
+    readonly seconds?: number;
+}
+
+// @public
+export function waitSeconds(seconds: number): WaitInstruction;
+
+// @public
+export function waitSecondsRealtime(seconds: number): WaitInstruction;
+
+// @public
+export function waitUntil(predicate: () => boolean): WaitInstruction;
+
+// @public
+export function waitWhile(predicate: () => boolean): WaitInstruction;
+
+// @public
+export class World implements WorldHost {
+    // Warning: (ae-forgotten-export) The symbol "CreateWorldOptions" needs to be exported by the entry point index.d.ts
+    //
+    // @internal
+    constructor(options: CreateWorldOptions);
+    get activeScene(): SceneInstance;
+    set activeScene(scene: SceneInstance);
+    // @internal
+    allocateComponentHandle(component: Component): ComponentHandle;
+    get app(): App;
+    components<T extends Component>(type: ComponentType<T>): readonly T[];
+    createEntity(name?: string, options?: CreateEntityOptions): Entity;
+    // @internal
+    createSignal<T>(): Signal<T>;
+    dispose(): void;
+    findAllByName(name: string): Entity[];
+    findByName(name: string): Entity | null;
+    findByTag(tag: string): readonly Entity[];
+    // Warning: (ae-forgotten-export) The symbol "FrameStateController" needs to be exported by the entry point index.d.ts
+    //
+    // @internal
+    get frameState(): FrameStateController;
+    getEntity(uid: string): Entity | null;
+    getEntityByHandle(handle: EntityHandle): Entity | null;
+    get isDisposed(): boolean;
+    get layers(): LayerTable;
+    // Warning: (ae-forgotten-export) The symbol "WorldInternals" needs to be exported by the entry point index.d.ts
+    //
+    // @internal
+    get lifecycle(): WorldInternals;
+    get lite(): {
+        readonly scene: LiteScene;
+        readonly simulationScene: null;
+    };
+    // @internal
+    moveToScene(entity: Entity, scene: SceneInstance): void;
+    // @internal
+    nextSerial(): number;
+    // @internal
+    nextUid(): string;
+    // @internal
+    notifyEntityCreated(entity: Entity): void;
+    // @internal
+    notifyEntityDestroyed(entity: Entity): void;
+    // @internal
+    notifyTagChanged(entity: Entity, tag: string, added: boolean): void;
+    get onEntityCreated(): Signal<Entity>;
+    get onEntityDestroyed(): Signal<Entity>;
+    get onSceneLoaded(): Signal<SceneInstance>;
+    get onSceneUnloaded(): Signal<SceneInstance>;
+    // Warning: (ae-forgotten-export) The symbol "ReferenceTracker" needs to be exported by the entry point index.d.ts
+    //
+    // @internal
+    get references(): ReferenceTracker;
+    get registry(): ComponentRegistry;
+    // @internal
+    releaseComponentHandle(handle: ComponentHandle): void;
+    // @internal
+    releaseEntity(entity: Entity): void;
+    // @internal
+    reportError(report: ErrorReport): void;
+    get scenes(): readonly SceneInstance[];
+    // Warning: (ae-forgotten-export) The symbol "ComponentStore" needs to be exported by the entry point index.d.ts
+    //
+    // @internal
+    get store(): ComponentStore;
+    get world(): World;
+}
+
+// @public
+export function wrapAngleDegrees(degrees: number): number;
 
 // (No @packageDocumentation comment for this package)
 

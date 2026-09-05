@@ -14,7 +14,7 @@ Precedence when documents conflict: constitution → standards → architecture 
 
 ## Status
 
-Phase 0 (Foundation) was delivered on 2026-09-05 and awaits owner review; Phase 1 (Kernel) is next. No packages are published. Every `@ignifx/*` package exists as an empty skeleton except `@ignifx/core`, which holds only the Phase 0 toolchain-spike adapter (`createHeadlessRuntime`, `createRenderEngine`) that Phase 1 replaces with the real kernel.
+Phase 1 (Kernel) was delivered on 2026-09-05 and awaits owner review; Phase 2 (Rendering and assets) is next. No packages are published. `@ignifx/core` now holds the kernel — `createApp`, the extension host, `Time` and the phase scheduler, `World`/`SceneInstance`/`Entity`/`Transform`, `Component`/`Script` with schemas and coroutines, `Signal`, layers, math, and the `IGX-####` error space — and the `ignifx` umbrella re-exports it. The Phase 0 spike API (`createHeadlessRuntime`, `createRenderEngine`) is gone. Every other `@ignifx/*` package is still an empty skeleton.
 
 ## Commands
 

@@ -1,102 +1,44 @@
-import { createEngine, disposeEngine, type EngineContext } from "@babylonjs/lite";
-import { ErrorCode, IgnifxError } from "../errors.js";
-import { isWebGpuAvailable, type RenderSurface } from "../webgpu.js";
+import { createEngine, disposeEngine } from "@babylonjs/lite";
+import type { LiteEngine } from "./scene.js";
+import type { RenderSurface } from "../platform/webgpu.js";
 
 /**
- * Rendering half of the Babylon Lite adapter. Everything here needs a real GPU, so it is exercised
- * by the Vitest `browser` project (`*.browser.test.ts`) rather than the node project.
+ * The GPU half of the Babylon Lite adapter: the two calls that need a real WebGPU device. They are
+ * unreachable from Node, so this file is the one the root Vitest coverage config excludes
+ * (`vitest.config.ts`); everything the null engine can exercise lives in `./engine.ts`,
+ * `./scene.ts`, `./loop.ts`, and `./node.ts`.
+ *
+ * Coverage comes from the Vitest `browser` project (`*.browser.test.ts`) instead.
  */
 
 /**
- * Babylon Lite objects behind a rendering runtime.
+ * Creates a Babylon Lite WebGPU engine bound to a canvas.
  *
  * @remarks
- * Unstable, for the same reason as `LiteHeadlessHandles`: Lite ships breaking changes in minor
- * releases and this escape hatch carries no stability guarantee.
- *
- * @public
- */
-export interface LiteRenderHandles {
-  /** The Lite WebGPU engine bound to the canvas. Lite's engine is also its primary surface. */
-  readonly engine: EngineContext;
-}
-
-/**
- * A WebGPU engine bound to a canvas. Release it with {@link disposeRenderEngine}.
- *
- * @public
- */
-export interface RenderRuntime {
-  /** The unstable Babylon Lite escape hatch. */
-  readonly lite: LiteRenderHandles;
-  /** Whether {@link disposeRenderEngine} has already run. */
-  readonly isDisposed: boolean;
-}
-
-class RenderRuntimeImpl implements RenderRuntime {
-  readonly #engine: EngineContext;
-  #isDisposed = false;
-
-  constructor(engine: EngineContext) {
-    this.#engine = engine;
-  }
-
-  get lite(): LiteRenderHandles {
-    return { engine: this.#engine };
-  }
-
-  get isDisposed(): boolean {
-    return this.#isDisposed;
-  }
-
-  dispose(): void {
-    if (this.#isDisposed) {
-      return;
-    }
-    this.#isDisposed = true;
-    disposeEngine(this.#engine);
-  }
-}
-
-/**
- * Creates a WebGPU engine bound to `canvas`. The capability probe runs first so that an unsupported
- * browser produces an ignifx error with code `IGX-0001` instead of an opaque Babylon Lite failure.
+ * The WebGPU capability gate runs in `./engine.ts` *before* this is called, so an unsupported
+ * browser produces `IGX-0701` rather than an opaque Lite failure (`CONSTITUTION.md` §1.1).
  *
  * @param canvas - The canvas or offscreen canvas to render into.
- * @returns A runtime owning the engine.
- * @throws IgnifxError with code `IGX-0001` when WebGPU is unavailable.
+ * @returns The engine. Lite's engine is also its primary surface.
  *
- * @example
- * ```ts
- * const runtime = await createRenderEngine(document.querySelector("canvas"));
- * disposeRenderEngine(runtime);
- * ```
- *
- * @public
+ * @internal
  */
-export async function createRenderEngine(canvas: RenderSurface): Promise<RenderRuntime> {
-  if (!isWebGpuAvailable()) {
-    throw new IgnifxError(
-      ErrorCode.webGpuUnavailable,
-      "WebGPU is not available in this environment. ignifx renders only through WebGPU; " +
-        "check isWebGpuAvailable() before creating an engine.",
-    );
-  }
-  const engine = await createEngine(canvas);
-  return new RenderRuntimeImpl(engine);
+export async function createWebGpuEngine(canvas: RenderSurface): Promise<LiteEngine> {
+  return createEngine(canvas);
 }
 
 /**
- * Releases the engine owned by a rendering runtime. Calling it twice is a no-op.
+ * Releases a WebGPU engine and the device behind it.
  *
- * @param runtime - A runtime from {@link createRenderEngine}.
- * @throws IgnifxError with code `IGX-0002` when the object was not created by ignifx.
+ * @remarks
+ * Only ever called for a WebGPU engine: `disposeEngine` unconditionally reaches for
+ * `surface._context` and `engine._device`, neither of which a null engine has, so calling it on one
+ * throws (ADR-0009 Validation). The headless path disposes its scene and stops there.
  *
- * @public
+ * @param engine - The engine to release.
+ *
+ * @internal
  */
-export function disposeRenderEngine(runtime: RenderRuntime): void {
-  if (!(runtime instanceof RenderRuntimeImpl)) {
-    throw new IgnifxError(ErrorCode.invalidRuntime, "This object was not created by createRenderEngine().");
-  }
-  runtime.dispose();
+export function disposeWebGpuEngine(engine: LiteEngine): void {
+  disposeEngine(engine);
 }

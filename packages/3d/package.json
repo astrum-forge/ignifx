@@ -29,7 +29,7 @@
   "scripts": {
     "build": "tsdown",
     "typecheck": "tsc --build tsconfig.json tsconfig.test.json",
-    "test": "vitest run --project node",
+    "test": "vitest run --project node --root ../.. packages/3d",
     "api-report": "api-extractor run --verbose",
     "docs:api": "typedoc",
     "api-report:update": "api-extractor run --local --verbose",

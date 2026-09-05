@@ -65,7 +65,7 @@ Findings:
 ### Babylon Lite 1.27.0 findings
 
 - `disposeEngine(engine)` is **not** safe for a null engine. `createNullEngine()` returns an engine that is its own surface with no `_context` and no `_device`, while `disposeEngine` unconditionally calls `surface._context.unconfigure()` and `engine._device.destroy()`. The headless adapter therefore disposes only the scene, which is the complete teardown for a GPU-free engine.
-- `createEngine(canvas)` throws Lite error 46 when `requestAdapter()` returns null, so the adapter runs its own capability probe first and raises `IgnifxError` `IGX-0001` instead.
+- `createEngine(canvas)` throws Lite error 46 when `requestAdapter()` returns null, so the adapter runs its own capability probe first and raises `IgnifxError` `IGX-0001` instead (renumbered to `IGX-0701`, the rendering range, when Phase 1 introduced the error registry).
 - `runHeadlessSteps(engine, scene, steps, deltaMs?)` exists alongside `stepScene` and is a candidate for the Phase 1 fixed-step loop.
 
 ### Timings

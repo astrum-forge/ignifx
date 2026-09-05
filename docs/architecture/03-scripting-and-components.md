@@ -10,6 +10,11 @@ The scripting model is the part of ignifx users touch most. It follows Unity's c
 
 ```ts
 abstract class Component {
+  // The statics below document the SHAPE a component class may declare; they are not members of
+  // `Component`. They are read structurally off the class through `ComponentStatics` (and
+  // `ScriptStatics` for §2's two), which `ComponentType`/`ConcreteComponentType` intersect, and the
+  // registry resolves each one once per class with the default shown — see the note under §2.
+  // A subclass therefore writes a plain `static typeId = "mygame/Mover"`, with no `override`.
   static readonly typeId: string; // required for serializable components, e.g. "mygame/Mover"
   static readonly schema?: Schema; // serialized fields; see §3
   static readonly requires?: readonly ComponentType[]; // auto-added and validated on attach
@@ -27,10 +32,13 @@ abstract class Component {
   destroy(): void;
   getComponent<T extends Component>(type: ComponentType<T>): T | null; // sugar for entity.getComponent
   requireComponent<T extends Component>(type: ComponentType<T>): T;
+}
 
-  // Hooks available to every component (systems-owned components use these; scripts use the lifecycle in §2)
-  protected onAttach?(): void; // after fields are assigned, before awake; may run while entity is inactive
-  protected onDetach?(): void; // just before removal, after onDestroy
+// Hooks available to every component (systems-owned components use these; scripts use the lifecycle in §2).
+// Declared as an interface a class may `implements`, not as members of `Component` — see the note under §2.
+interface ComponentHooks {
+  onAttach?(): void; // after fields are assigned, before awake; may run while entity is inactive
+  onDetach?(): void; // just before removal, after onDestroy
 }
 ```
 
@@ -44,6 +52,14 @@ abstract class Script extends Component {
   static executionOrder: number = 0; // lower runs first within a phase
   static updateWhenPaused: boolean = false;
 
+  startCoroutine(routine: Coroutine): CoroutineHandle;
+  stopCoroutine(handle: CoroutineHandle): void;
+  stopAllCoroutines(): void;
+}
+
+// The callback signatures. A script MAY write `class Mover extends Script implements ScriptCallbacks`
+// to have TypeScript check them; the scheduler finds implemented callbacks by prototype inspection.
+interface ScriptCallbacks {
   awake?(): void;
   onEnable?(): void;
   start?(): void;
@@ -59,13 +75,10 @@ abstract class Script extends Component {
   onTriggerExit?(t: TriggerEvent): void;
   onApplicationPause?(paused: boolean): void;
   onApplicationFocus?(focused: boolean): void;
-
-  startCoroutine(routine: Coroutine): CoroutineHandle;
-  stopCoroutine(handle: CoroutineHandle): void;
-  stopAllCoroutines(): void;
 }
 ```
 
+- **Why the callbacks are an interface, not members of `Script`.** The coding standards (§3, which outrank this document per `CONSTITUTION.md` §10.1) turn on `noImplicitOverride`. Any declaration of `update` on the base class — optional method, `declare` field, or interface merge — would make every game script's `update` an override and force the `override` keyword on every callback in every game. Keeping the signatures on `ScriptCallbacks` (and the component hooks on `ComponentHooks`) costs nothing at runtime, keeps the examples in §3 valid as written, and still gives full signature checking to scripts that opt in with `implements`. The same reasoning applies to the statics listed in §1 and §2: `typeId`, `schema`, `requires`, `allowMultiple`, `executionOrder`, and `updateWhenPaused` are not declared on `Component` or `Script` either — their shape lives on the `ComponentStatics`/`ScriptStatics` interfaces that `ComponentType` and `ConcreteComponentType` intersect, so a class satisfies them structurally with a plain `static typeId = "mygame/Mover"`, and `ComponentRegistry` reads each one once per class and applies the defaults.
 - The scheduler detects which callbacks a class implements once per class (prototype inspection at registration) and only iterates scripts that implement a given callback. An empty `update() {}` therefore costs a call; not defining it costs nothing.
 - Callback timing and guarantees are defined in `01-lifecycle-and-time.md` §4. Callbacks are ordinary methods; `this` is the script.
 - Scripts reach engine services through `this.app` (`this.app.time`, `this.app.input`, `this.app.audio`, …). Extensions add typed properties to `App` via module augmentation (§7), so `this.app.physics` is fully typed when `@ignifx/physics` is installed and a compile error when it is not.

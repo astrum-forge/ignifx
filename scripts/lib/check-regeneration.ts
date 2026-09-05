@@ -2,10 +2,11 @@
  * The `regeneration-diff` and `migrations-guard` checks
  * (`docs/architecture/16-docs-harness-and-skill.md` §4, `CONSTITUTION.md` §4.2).
  */
-import { readdirSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { failed, passed, summarize } from "./check-result.ts";
-import { exists } from "./fs-tree.ts";
+import { exists, listFilesRecursive } from "./fs-tree.ts";
 import { runCommand, tailLines } from "./run.ts";
 import type { CheckResult, HarnessContext } from "./check-result.ts";
 
@@ -27,13 +28,58 @@ function apiReportDirectories(repositoryRoot: string): readonly string[] {
 }
 
 /**
- * Runs the three generators and fails when the committed output differs from the regenerated one.
+ * Generated files under a directory (recursively), excluding the hand-written READMEs.
  *
- * @param context - The tree being inspected.
- * @returns The check result.
+ * @param root - Absolute repository root.
+ * @param directories - Repository-relative directories holding generated output.
+ * @returns Repository-relative file paths, sorted.
  */
-export function checkRegeneration(context: HarnessContext): CheckResult {
-  const root = context.repositoryRoot;
+function generatedFiles(root: string, directories: readonly string[]): readonly string[] {
+  const files: string[] = [];
+  for (const directory of directories) {
+    const absolute = path.join(root, directory);
+    if (!exists(absolute)) {
+      continue;
+    }
+    for (const file of listFilesRecursive(absolute, ".md")) {
+      if (path.basename(file) !== "README.md") {
+        files.push(path.relative(root, file).split(path.sep).join("/"));
+      }
+    }
+    for (const file of listFilesRecursive(absolute, ".json")) {
+      files.push(path.relative(root, file).split(path.sep).join("/"));
+    }
+  }
+  return files.toSorted((left, right) => left.localeCompare(right));
+}
+
+/**
+ * Snapshots the content of every generated file so a regeneration can be compared against it.
+ *
+ * @param root - Absolute repository root.
+ * @param files - Repository-relative file paths.
+ * @returns A map of file → content hash.
+ */
+function snapshot(root: string, files: readonly string[]): ReadonlyMap<string, string> {
+  const hashes = new Map<string, string>();
+  for (const file of files) {
+    hashes.set(
+      file,
+      createHash("sha256")
+        .update(readFileSync(path.join(root, file)))
+        .digest("hex"),
+    );
+  }
+  return hashes;
+}
+
+/**
+ * Runs the three generators in order.
+ *
+ * @param root - Absolute repository root.
+ * @returns A failed check result when a generator exits non-zero, otherwise `null`.
+ */
+function runGenerators(root: string): CheckResult | null {
   const generators: readonly (readonly [string, readonly string[]])[] = [
     ["pnpm", ["docs:api"]],
     ["node", [path.join("scripts", "docs-schemas.ts")]],
@@ -50,28 +96,54 @@ export function checkRegeneration(context: HarnessContext): CheckResult {
       );
     }
   }
+  return null;
+}
+
+/**
+ * Runs the three generators and fails when the tree's generated output differs from a fresh
+ * regeneration. The comparison is against the working tree as it was before the generators ran —
+ * not against git HEAD — so a locally regenerated, not-yet-committed file counts as up to date,
+ * while a stale committed file (the CI case) is caught.
+ *
+ * @param context - The tree being inspected.
+ * @returns The check result.
+ */
+export function checkRegeneration(context: HarnessContext): CheckResult {
+  const root = context.repositoryRoot;
   // Only generated output is compared: the hand-written concepts pages and the two READMEs are
   // edited by people and must not fail this check (16-docs-harness-and-skill.md §1).
-  const paths = [
+  const directories = [
     "skills/ignifx/references/api",
     "skills/ignifx/references/formats",
     "skills/ignifx/references/recipes",
-    ":(exclude)skills/ignifx/references/formats/README.md",
-    ":(exclude)skills/ignifx/references/recipes/README.md",
     ...apiReportDirectories(root),
   ];
-  const diff = runCommand("git", ["diff", "--exit-code", "--stat", "--", ...paths], root);
-  if (diff.code === 0) {
-    const generatedPaths = paths.filter((entry) => !entry.startsWith(":(exclude)"));
-    return passed("regeneration-diff", `${String(generatedPaths.length)} generated paths clean`, [
-      "note: `git diff` sees tracked files only; output that has never been committed cannot drift",
-    ]);
+  const before = snapshot(root, generatedFiles(root, directories));
+  const failure = runGenerators(root);
+  if (failure !== null) {
+    return failure;
   }
-  return failed("regeneration-diff", "committed output differs from regenerated output", [
-    ...summarize(
-      diff.output.split("\n").filter((line) => line.trim() !== ""),
-      20,
-    ),
+  const afterFiles = generatedFiles(root, directories);
+  const after = snapshot(root, afterFiles);
+  const drifted: string[] = [];
+  for (const [file, hash] of after) {
+    const previous = before.get(file);
+    if (previous === undefined) {
+      drifted.push(`${file} (new)`);
+    } else if (previous !== hash) {
+      drifted.push(file);
+    }
+  }
+  for (const file of before.keys()) {
+    if (!after.has(file)) {
+      drifted.push(`${file} (removed)`);
+    }
+  }
+  if (drifted.length === 0) {
+    return passed("regeneration-diff", `${String(afterFiles.length)} generated files up to date`);
+  }
+  return failed("regeneration-diff", "generated output differs from a fresh regeneration", [
+    ...summarize(drifted, 20),
     "fix: commit the regenerated files (never hand-edit them — coding standards §15)",
   ]);
 }

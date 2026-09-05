@@ -171,7 +171,8 @@ interface Transform extends Component {
   rotateAround(point: Vec3Like, axis: Vec3Like, degrees: number): void;
   lookAt(target: Vec3Like, up?: Vec3Like): void;
   setPositionAndRotation(position: Vec3Like, rotation: QuatLike): void;
-  transformPoint(local: Vec3Like, out?: MutableVec3): Vec3; transformDirection(...); inverseTransformPoint(...); inverseTransformDirection(...);
+  transformPoint(local: Vec3Like, out?: MutableVec3): MutableVec3; // returns `out`, or a fresh Vec3 when omitted
+  transformDirection(...); inverseTransformPoint(...); inverseTransformDirection(...);
 
   // 2D conveniences (Y up; Z is depth)
   position2D: Vec2; localPosition2D: Vec2; rotation2D: number /* degrees about +Z */; localScale2D: Vec2;
@@ -200,7 +201,7 @@ interface Transform extends Component {
 
 ## 7. Layers and tags
 
-- **Layers** are 32 slots. Names live in project settings (`ignifx.config.ts` → `layers: ["Default", "Ground", "Player", ...]`); slots 0–7 are reserved for engine defaults (`Default`, `TransparentFX`, `IgnoreRaycast`, `Water`, `UI`, and three reserved). Layers drive physics collision matrices and raycast masks now, and camera culling masks after 1.0. `LayerMask.of("Player", "Enemy")` builds bitmasks. Files store layers by **name**, never by index, so reordering the list is safe; an unknown name loads as `Default` with diagnostic `IGX-0303`, and `ignifx rename-layer <old> <new>` rewrites files.
+- **Layers** are 32 slots. Names live in project settings (`ignifx.config.ts` → `layers: ["Default", "Ground", "Player", ...]`); slots 0–7 are reserved for engine defaults (`Default`, `TransparentFX`, `IgnoreRaycast`, `Water`, `UI`, and three reserved). Layers drive physics collision matrices and raycast masks now, and camera culling masks after 1.0. `world.layers.mask("Player", "Enemy")` builds a bitmask from names (the form scripts use); `LayerMask.of(...slots)` takes slot numbers and `LayerMask.fromNames(table, names)` is the standalone equivalent. Files store layers by **name**, never by index, so reordering the list is safe; an unknown name loads as `Default` with diagnostic `IGX-0303`, and `ignifx rename-layer <old> <new>` rewrites files.
 - **Tags** are free-form strings on a set; the world indexes them for `findByTag`. Tags are for grouping and lookup, never for behaviour dispatch.
 - 2D **sorting layers** are a separate ordered list in project settings (`11-2d-toolkit.md`).
 
@@ -222,7 +223,7 @@ class Signal<T = void> {
 - `deferred: true` queues delivery to the next `EndOfFrame` phase (Godot's `CONNECT_DEFERRED`).
 - `owner` auto-disconnects the handler when the owner is destroyed. Scripts should always pass `owner: this`; the linter flags `connect` calls inside scripts without an owner.
 - Convention: **call down, signal up**. A parent calls methods on children it owns; a child emits signals that parents subscribe to. There is no `sendMessage`/broadcast-by-name facility (Unity lesson).
-- Engine-wide events live on `app.events` as typed signals (`app.events.onSceneLoaded`, etc.); extensions add their own via module augmentation.
+- Engine-wide events live on `app.events` as typed signals (`app.events.onSceneLoaded`, etc.); extensions add their own via module augmentation. Phase 1 ships the world-level signals only (`world.onEntityCreated`, `onEntityDestroyed`, `onSceneLoaded`, `onSceneUnloaded`); `app.events` arrives with the asset and scene loading of Phase 2.
 
 ## 9. Queries for systems
 

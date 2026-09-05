@@ -91,6 +91,8 @@ Exit criteria
 - Two apps can run in one process (no globals).
 - API report and generated `references/api/core.md` committed; entry `SKILL.md` documents `createApp`, `Entity`, `Script`, `Time`, `Signal` with compiling examples.
 
+Status (2026-09-05): delivered in the working tree and awaiting owner review. Met locally: the lifecycle suites (`packages/core/test/lifecycle/**`) encode the frame order and the activation/enabling/destruction rules of `01-lifecycle-and-time.md` §3–§6 and pass headless; the S1.3 determinism test reproduces hash `7b79fbda` across Node and Chromium (ADR-0003 Validation, `packages/core/test/determinism/**`); the coroutine semantics suite passes; `pnpm test` runs 1,132 tests in 79 files with 97.5% line and 92.1% branch coverage, over the 90% core floor `vitest.config.ts` enforces; `packages/core/test/app/app.test.ts` proves two apps run independently in one process; `packages/core/api/core.api.md` and the generated `skills/ignifx/references/api/core.md` are committed, and the entry `SKILL.md` documents `createApp`, `Entity`, `Script`, `Time`, and `Signal` with examples the documentation harness compiles. Outstanding until CI runs: every exit criterion re-verified on GitHub Actions (Linux WebGPU flags still unverified, ADR-0009), and the browser project on a non-macOS runner.
+
 ### Phase 2 · Rendering and assets (4–5 wk) → 0.2
 
 Spikes

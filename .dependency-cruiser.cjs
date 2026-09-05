@@ -121,10 +121,12 @@ module.exports = {
       comment:
         "Circular dependencies make module initialisation order undefined and package dependencies " +
         "unresolvable. Forbidden between modules and between packages " +
-        "(docs/architecture/00-overview.md §2.1).",
+        "(docs/architecture/00-overview.md §2.1). Cycles that exist only through `import type` edges " +
+        "are erased by the compiler and carry no initialisation order, so they are allowed: the " +
+        "scene graph's mutually-referential types (Entity ↔ Component ↔ World ↔ App) need them.",
       severity: "error",
       from: { path: "^packages/[^/]+/(src|test)/" },
-      to: { circular: true },
+      to: { circular: true, viaOnly: { dependencyTypesNot: ["type-only"] } },
     },
     {
       name: "no-lite-outside-adapter",
@@ -134,7 +136,8 @@ module.exports = {
       severity: "error",
       from: {
         path: "^packages/[^/]+/(src|test)/",
-        pathNot: "^packages/[^/]+/src/lite/",
+        // The adapter's own compatibility tests verify Lite directly (coding standards §10).
+        pathNot: ["^packages/[^/]+/src/lite/", "^packages/[^/]+/test/lite/"],
       },
       to: { path: "@babylonjs/lite" },
     },
@@ -146,7 +149,7 @@ module.exports = {
       severity: "error",
       from: {
         path: "^packages/[^/]+/(src|test)/",
-        pathNot: "^packages/[^/]+/src/lite/",
+        pathNot: ["^packages/[^/]+/src/lite/", "^packages/[^/]+/test/lite/"],
       },
       to: { path: ["@babylonjs/havok", "@dimforge/rapier"] },
     },
@@ -172,8 +175,9 @@ module.exports = {
     tsConfig: { fileName: "tsconfig.json" },
 
     // Standards §4 requires `import type`; without this, type-only edges are invisible and a
-    // layering violation expressed as a type import would slip through.
-    tsPreCompilationDeps: true,
+    // layering violation expressed as a type import would slip through. "specify" additionally
+    // labels each edge `type-only` when it is, which `no-circular` uses to ignore erased cycles.
+    tsPreCompilationDeps: "specify",
 
     enhancedResolveOptions: {
       // Every package is ESM with an `exports` map (standards §4), so resolution has to honour it.

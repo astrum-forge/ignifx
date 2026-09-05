@@ -42,6 +42,7 @@
     "dependency-cruiser": "catalog:",
     "eslint": "catalog:",
     "eslint-import-resolver-typescript": "catalog:",
+    "eslint-plugin-ignifx": "workspace:*",
     "eslint-plugin-import-x": "catalog:",
     "eslint-plugin-jsdoc": "catalog:",
     "lefthook": "catalog:",

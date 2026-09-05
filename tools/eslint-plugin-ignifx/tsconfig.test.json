@@ -1,0 +1,21 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "./.tsbuild-test",
+    "tsBuildInfoFile": "./.tsbuild-test/tsconfig.tsbuildinfo",
+    "emitDeclarationOnly": true,
+    "declarationMap": false,
+    "isolatedDeclarations": false,
+    // The tests import the rules across the project boundary (`../src/rules/*.ts`). Rewriting those
+    // specifiers would be unsafe — the two projects' outputs do not sit in the same relative
+    // position as their inputs (TS2878) — and nothing here is emitted as JavaScript anyway, so the
+    // `.ts` extensions are simply left alone.
+    "rewriteRelativeImportExtensions": false,
+    "allowImportingTsExtensions": true,
+    "types": ["node"],
+    "lib": ["ES2023"]
+  },
+  "include": ["test"],
+  "references": [{ "path": "./tsconfig.json" }]
+}

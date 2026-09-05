@@ -13,6 +13,7 @@
     { "path": "./packages/devtools" },
     { "path": "./packages/vite-plugin" },
     { "path": "./packages/cli" },
-    { "path": "./packages/ignifx" }
+    { "path": "./packages/ignifx" },
+    { "path": "./tools/eslint-plugin-ignifx" }
   ]
 }

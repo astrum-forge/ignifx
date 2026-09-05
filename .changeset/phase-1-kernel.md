@@ -1,0 +1,12 @@
+---
+"@ignifx/core": minor
+"ignifx": minor
+---
+
+Phase 1 kernel: the ignifx runtime core
+
+`@ignifx/core` now ships the engine kernel, and the `ignifx` umbrella re-exports all of it: `createApp` with the `App` contract (start/stop/pause/resume/dispose, headless `step`, services, frozen project settings, `onError`, diagnostics, logging, platform info) and the extension host (`Extension`, `ExtensionContext`, `defineExtension`, `coreExtension`, topologically ordered registration with engine-range checks, services, app-property definition, settings sections, error-code registration); `Time`, the six-phase scheduler with its fixed-timestep loop, lifecycle flushes, destroy queue, and generator coroutines (`waitSeconds`, `waitSecondsRealtime`, `waitFixedUpdate`, `waitUntil`, `waitWhile`); `World`, `SceneInstance`, `Entity`, `Transform`, `Component`, `Script`, the `ScriptCallbacks`/`ComponentHooks` signature interfaces, `Component.define`/`Script.define` with the full schema field-kind set, component registration and `typeId`s, `Signal`, `TagSet`, `LayerTable`/`LayerMask`; the math module (`Vec2`, `Vec3`, `Vec4`, `Quat`, `Mat4`, `Color`, scalar helpers) with allocation-free `ToRef` variants structurally compatible with Babylon Lite's interfaces; and `IgnifxError` with the `IGX-####` code space (`CoreErrorCode`, `ErrorRange`). Documentation lands with it: the entry Agent Skill documents `createApp`, `Entity`, `Script`, `Time`, and `Signal` with examples the harness compiles, plus concept references for the lifecycle, scene graph, scripting, and extensions, and a gotcha list. Component and script statics (`typeId`, `schema`, `requires`, `allowMultiple`, `executionOrder`, `updateWhenPaused`) are declared structurally on the new `ComponentStatics`/`ScriptStatics` interfaces rather than on the `Component`/`Script` classes, so a subclass writes a plain `static typeId = "mygame/Mover"` with no `override` modifier under `noImplicitOverride`; `ComponentRegistry` reads each one once per class and supplies the defaults.
+
+**Breaking**
+
+The Phase 0 toolchain-spike API is removed: `createHeadlessRuntime`, `createRenderEngine`, and the other spike exports no longer exist. Use `createApp({ headless: true })` for a GPU-free app driven by `app.step(dt)`, and `createApp({ canvas })` for a rendering app started with `await app.start()`. Pre-1.0 breaking changes ship without a deprecation window (`CONSTITUTION.md` §4.2).

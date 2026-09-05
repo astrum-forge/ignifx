@@ -26,8 +26,8 @@ interface ExtensionContext {
   readonly app: App;
   readonly log: Logger;
 
-  registerComponent(type: ComponentType, options?: { typeId?: string }): void;
-  registerComponents(types: readonly ComponentType[]): void;
+  registerComponent(type: ConcreteComponentType, options?: { typeId?: string }): void; // constructible classes only
+  registerComponents(types: readonly ConcreteComponentType[]): void;
   registerSystem(system: System, options: { phase: Phase; order?: number }): void;
   registerService<T>(key: ServiceKey<T>, instance: T): void;
   defineAppProperty(name: string, getter: () => unknown): void; // pairs with module augmentation of App
@@ -38,7 +38,7 @@ interface ExtensionContext {
   onDispose(callback: () => void): void;
 
   require<T>(key: ServiceKey<T>): T; // service registered by an earlier extension; throws IGX-0405 if absent
-  tryGet<T>(key: ServiceKey<T>): T | undefined;
+  tryGet<T>(key: ServiceKey<T>): T | null; // `null` for absence (coding standards §5.5)
   settings<S>(section: string): S; // resolved project settings for a registered section
 }
 

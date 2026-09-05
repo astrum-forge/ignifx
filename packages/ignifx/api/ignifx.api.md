@@ -4,45 +4,783 @@
 
 ```ts
 
-import { createHeadlessRuntime } from '@ignifx/core';
-import { createRenderEngine } from '@ignifx/core';
-import { disposeHeadlessRuntime } from '@ignifx/core';
-import { disposeRenderEngine } from '@ignifx/core';
+import { App } from '@ignifx/core';
+import { AppLiteHandles } from '@ignifx/core';
+import { applyInit } from '@ignifx/core';
+import { approximately } from '@ignifx/core';
+import { AppSettings } from '@ignifx/core';
+import { array } from '@ignifx/core';
+import { ArrayFieldSpec } from '@ignifx/core';
+import { assertNever } from '@ignifx/core';
+import { asset } from '@ignifx/core';
+import { AssetFieldSpec } from '@ignifx/core';
+import { AssetRefValue } from '@ignifx/core';
+import { AssetTypeToken } from '@ignifx/core';
+import { bool } from '@ignifx/core';
+import { BoolFieldSpec } from '@ignifx/core';
+import { canonicalizeNumber } from '@ignifx/core';
+import { clamp } from '@ignifx/core';
+import { clamp01 } from '@ignifx/core';
+import { Clock } from '@ignifx/core';
+import { Color } from '@ignifx/core';
+import { color } from '@ignifx/core';
+import { ColorFieldSpec } from '@ignifx/core';
+import { ColorLike } from '@ignifx/core';
+import { Component } from '@ignifx/core';
+import { ComponentClassInfo } from '@ignifx/core';
+import { ComponentDefinition } from '@ignifx/core';
+import { ComponentHandle } from '@ignifx/core';
+import { ComponentHooks } from '@ignifx/core';
+import { ComponentInit } from '@ignifx/core';
+import { componentRef } from '@ignifx/core';
+import { ComponentRefFieldSpec } from '@ignifx/core';
+import { ComponentRegistry } from '@ignifx/core';
+import { ComponentStatics } from '@ignifx/core';
+import { ComponentType } from '@ignifx/core';
+import { ComponentTypeToken } from '@ignifx/core';
+import { ConcreteComponentType } from '@ignifx/core';
+import { ConnectOptions } from '@ignifx/core';
+import { ConsoleLike } from '@ignifx/core';
+import { ConsoleSinkOptions } from '@ignifx/core';
+import { CORE_ERROR_MESSAGES } from '@ignifx/core';
+import { CoreErrorCode } from '@ignifx/core';
+import { coreExtension } from '@ignifx/core';
+import { Coroutine } from '@ignifx/core';
+import { CoroutineHandle } from '@ignifx/core';
+import { CoroutineHost } from '@ignifx/core';
+import { CoroutineYield } from '@ignifx/core';
+import { createApp } from '@ignifx/core';
+import { CreateAppOptions } from '@ignifx/core';
+import { createConsoleSink } from '@ignifx/core';
+import { createCryptoRandom } from '@ignifx/core';
+import { createDefaults } from '@ignifx/core';
+import { createDiagnosticsGroup } from '@ignifx/core';
+import { CreateEntityOptions } from '@ignifx/core';
+import { createErrorCodeRegistry } from '@ignifx/core';
+import { createFrameSample } from '@ignifx/core';
+import { createLayerTable } from '@ignifx/core';
+import { createLogger } from '@ignifx/core';
+import { createManualClock } from '@ignifx/core';
+import { createMemorySink } from '@ignifx/core';
+import { createPerformanceClock } from '@ignifx/core';
+import { createSeededRandom } from '@ignifx/core';
+import { createServiceKey } from '@ignifx/core';
+import { createUlidFactory } from '@ignifx/core';
+import { curve } from '@ignifx/core';
+import { CurveFieldSpec } from '@ignifx/core';
+import { CurveKey } from '@ignifx/core';
+import { CurveValue } from '@ignifx/core';
+import { custom } from '@ignifx/core';
+import { CustomFieldCodec } from '@ignifx/core';
+import { CustomFieldSpec } from '@ignifx/core';
+import { decodeProps } from '@ignifx/core';
+import { DecodeResult } from '@ignifx/core';
+import { decodeValue } from '@ignifx/core';
+import { DEFAULT_LAYER } from '@ignifx/core';
+import { DEFAULT_MEMORY_SINK_LIMIT } from '@ignifx/core';
+import { DeferredQueue } from '@ignifx/core';
+import { defineExtension } from '@ignifx/core';
+import { defineSchema } from '@ignifx/core';
+import { DEG_TO_RAD } from '@ignifx/core';
+import { degToRad } from '@ignifx/core';
+import { deltaAngleDegrees } from '@ignifx/core';
+import { describeSchema } from '@ignifx/core';
+import { Diagnostics } from '@ignifx/core';
+import { DiagnosticsGroup } from '@ignifx/core';
+import { DiagnosticsOptions } from '@ignifx/core';
+import { Disconnect } from '@ignifx/core';
+import { encodeProps } from '@ignifx/core';
+import { encodeValue } from '@ignifx/core';
+import { Entity } from '@ignifx/core';
+import { EntityHandle } from '@ignifx/core';
+import { entityRef } from '@ignifx/core';
+import { EntityRefFieldSpec } from '@ignifx/core';
+import { EnumFieldSpec } from '@ignifx/core';
+import { enumOf } from '@ignifx/core';
+import { EPSILON } from '@ignifx/core';
 import { ErrorCode } from '@ignifx/core';
-import { HeadlessRuntime } from '@ignifx/core';
+import { ErrorCodeDescription } from '@ignifx/core';
+import { ErrorCodeRegistry } from '@ignifx/core';
+import { ErrorContext } from '@ignifx/core';
+import { ErrorFormatMode } from '@ignifx/core';
+import { ErrorRange } from '@ignifx/core';
+import { ErrorReport } from '@ignifx/core';
+import { Extension } from '@ignifx/core';
+import { ExtensionContext } from '@ignifx/core';
+import { f32 } from '@ignifx/core';
+import { f64 } from '@ignifx/core';
+import { FieldDefinition } from '@ignifx/core';
+import { FieldKind } from '@ignifx/core';
+import { FieldOptions } from '@ignifx/core';
+import { FieldsOf } from '@ignifx/core';
+import { FieldSpec } from '@ignifx/core';
+import { formatErrorMessage } from '@ignifx/core';
+import { FRAME_HISTORY_LENGTH } from '@ignifx/core';
+import { FrameSample } from '@ignifx/core';
+import { FrameState } from '@ignifx/core';
+import { generateUlid } from '@ignifx/core';
+import { i32 } from '@ignifx/core';
 import { IgnifxError } from '@ignifx/core';
+import { IgnifxErrorOptions } from '@ignifx/core';
+import { INVALID_HANDLE } from '@ignifx/core';
+import { inverseLerp } from '@ignifx/core';
+import { isIgnifxError } from '@ignifx/core';
+import { isUlid } from '@ignifx/core';
+import { isValidErrorCode } from '@ignifx/core';
+import { isValidLayer } from '@ignifx/core';
 import { isWebGpuAvailable } from '@ignifx/core';
-import { LiteHeadlessHandles } from '@ignifx/core';
-import { LiteRenderHandles } from '@ignifx/core';
-import { RenderRuntime } from '@ignifx/core';
+import { JsonArray } from '@ignifx/core';
+import { JsonObject } from '@ignifx/core';
+import { JsonSchemaObject } from '@ignifx/core';
+import { JsonValue } from '@ignifx/core';
+import { LayerMask } from '@ignifx/core';
+import { layerMask } from '@ignifx/core';
+import { LayerMaskFieldSpec } from '@ignifx/core';
+import { LayersSettings } from '@ignifx/core';
+import { LayerTable } from '@ignifx/core';
+import { lerp } from '@ignifx/core';
+import { lerpAngleDegrees } from '@ignifx/core';
+import { LiteEngine } from '@ignifx/core';
+import { LiteScene } from '@ignifx/core';
+import { LOG_LEVEL_SEVERITY } from '@ignifx/core';
+import { Logger } from '@ignifx/core';
+import { LoggerOptions } from '@ignifx/core';
+import { LogLevel } from '@ignifx/core';
+import { LogRecord } from '@ignifx/core';
+import { LogSink } from '@ignifx/core';
+import { LogThreshold } from '@ignifx/core';
+import { ManualClock } from '@ignifx/core';
+import { map } from '@ignifx/core';
+import { MapFieldSpec } from '@ignifx/core';
+import { Mat4 } from '@ignifx/core';
+import { MAT4_IDENTITY } from '@ignifx/core';
+import { Mat4Elements } from '@ignifx/core';
+import { Mat4Like } from '@ignifx/core';
+import { MAX_LAYERS } from '@ignifx/core';
+import { MAX_ULID_TIME_MS } from '@ignifx/core';
+import { MemorySink } from '@ignifx/core';
+import { moveTowards } from '@ignifx/core';
+import { MutableQuat } from '@ignifx/core';
+import { MutableVec2 } from '@ignifx/core';
+import { MutableVec3 } from '@ignifx/core';
+import { MutableVec4 } from '@ignifx/core';
+import { NumberFieldSpec } from '@ignifx/core';
+import { optional } from '@ignifx/core';
+import { OptionalFieldSpec } from '@ignifx/core';
+import { PartialFieldsOf } from '@ignifx/core';
+import { Phase } from '@ignifx/core';
+import { PHASE_COUNT } from '@ignifx/core';
+import { PHASE_NAMES } from '@ignifx/core';
+import { PhaseIndex } from '@ignifx/core';
+import { PHASES } from '@ignifx/core';
+import { pingPong } from '@ignifx/core';
+import { PlatformInfo } from '@ignifx/core';
+import { PlatformKind } from '@ignifx/core';
+import { ProfileScope } from '@ignifx/core';
+import { Quat } from '@ignifx/core';
+import { quat } from '@ignifx/core';
+import { QUAT_IDENTITY } from '@ignifx/core';
+import { QuatLike } from '@ignifx/core';
+import { RAD_TO_DEG } from '@ignifx/core';
+import { radToDeg } from '@ignifx/core';
+import { RandomSource } from '@ignifx/core';
+import { record } from '@ignifx/core';
+import { RecordFieldSpec } from '@ignifx/core';
+import { ReferenceDecoder } from '@ignifx/core';
+import { ReferenceEncoder } from '@ignifx/core';
+import { RegisterComponentOptions } from '@ignifx/core';
+import { RegisterSystemOptions } from '@ignifx/core';
 import { RenderSurface } from '@ignifx/core';
-import { stepHeadless } from '@ignifx/core';
+import { repeat } from '@ignifx/core';
+import { RESERVED_LAYER_NAMES } from '@ignifx/core';
+import { resetFrameSample } from '@ignifx/core';
+import { SceneInstance } from '@ignifx/core';
+import { Schema } from '@ignifx/core';
+import { SchemaDescription } from '@ignifx/core';
+import { SchemaDescriptionMeta } from '@ignifx/core';
+import { SchemaFieldDescription } from '@ignifx/core';
+import { SchemaIssue } from '@ignifx/core';
+import { SchemaIssueCode } from '@ignifx/core';
+import { Script } from '@ignifx/core';
+import { ScriptCallbacks } from '@ignifx/core';
+import { ScriptClassInfo } from '@ignifx/core';
+import { ScriptDefinition } from '@ignifx/core';
+import { ScriptStatics } from '@ignifx/core';
+import { ServiceClassKey } from '@ignifx/core';
+import { ServiceKey } from '@ignifx/core';
+import { ServiceNameKey } from '@ignifx/core';
+import { ServiceRegistry } from '@ignifx/core';
+import { SetParentOptions } from '@ignifx/core';
+import { SettingsInput } from '@ignifx/core';
+import { sign } from '@ignifx/core';
+import { Signal } from '@ignifx/core';
+import { SignalHandler } from '@ignifx/core';
+import { SignalLike } from '@ignifx/core';
+import { SignalOptions } from '@ignifx/core';
+import { SignalOwner } from '@ignifx/core';
+import { smoothStep } from '@ignifx/core';
+import { SortingLayersSettings } from '@ignifx/core';
+import { str } from '@ignifx/core';
+import { StringFieldSpec } from '@ignifx/core';
+import { System } from '@ignifx/core';
+import { SystemContext } from '@ignifx/core';
+import { TagSet } from '@ignifx/core';
+import { THIRD_PARTY_ERROR_PREFIX } from '@ignifx/core';
+import { Time } from '@ignifx/core';
+import { TimeSettings } from '@ignifx/core';
+import { toJsonSchema } from '@ignifx/core';
+import { Transform } from '@ignifx/core';
+import { u32 } from '@ignifx/core';
+import { UlidFactoryOptions } from '@ignifx/core';
+import { validateProps } from '@ignifx/core';
+import { validateValue } from '@ignifx/core';
+import { Vec2 } from '@ignifx/core';
+import { vec2 } from '@ignifx/core';
+import { VEC2_ONE } from '@ignifx/core';
+import { VEC2_ZERO } from '@ignifx/core';
+import { Vec2Like } from '@ignifx/core';
+import { Vec3 } from '@ignifx/core';
+import { vec3 } from '@ignifx/core';
+import { VEC3_BACKWARD } from '@ignifx/core';
+import { VEC3_DOWN } from '@ignifx/core';
+import { VEC3_FORWARD } from '@ignifx/core';
+import { VEC3_LEFT } from '@ignifx/core';
+import { VEC3_ONE } from '@ignifx/core';
+import { VEC3_RIGHT } from '@ignifx/core';
+import { VEC3_UP } from '@ignifx/core';
+import { VEC3_ZERO } from '@ignifx/core';
+import { Vec3Like } from '@ignifx/core';
+import { Vec4 } from '@ignifx/core';
+import { vec4 } from '@ignifx/core';
+import { Vec4Like } from '@ignifx/core';
+import { VectorFieldSpec } from '@ignifx/core';
+import { VERSION } from '@ignifx/core';
+import { waitFixedUpdate } from '@ignifx/core';
+import { WaitInstruction } from '@ignifx/core';
+import { waitSeconds } from '@ignifx/core';
+import { waitSecondsRealtime } from '@ignifx/core';
+import { waitUntil } from '@ignifx/core';
+import { waitWhile } from '@ignifx/core';
+import { World } from '@ignifx/core';
+import { wrapAngleDegrees } from '@ignifx/core';
 
-export { createHeadlessRuntime }
+export { App }
 
-export { createRenderEngine }
+export { AppLiteHandles }
 
-export { disposeHeadlessRuntime }
+export { applyInit }
 
-export { disposeRenderEngine }
+export { approximately }
+
+export { AppSettings }
+
+export { array }
+
+export { ArrayFieldSpec }
+
+export { assertNever }
+
+export { asset }
+
+export { AssetFieldSpec }
+
+export { AssetRefValue }
+
+export { AssetTypeToken }
+
+export { bool }
+
+export { BoolFieldSpec }
+
+export { canonicalizeNumber }
+
+export { clamp }
+
+export { clamp01 }
+
+export { Clock }
+
+export { Color }
+
+export { color }
+
+export { ColorFieldSpec }
+
+export { ColorLike }
+
+export { Component }
+
+export { ComponentClassInfo }
+
+export { ComponentDefinition }
+
+export { ComponentHandle }
+
+export { ComponentHooks }
+
+export { ComponentInit }
+
+export { componentRef }
+
+export { ComponentRefFieldSpec }
+
+export { ComponentRegistry }
+
+export { ComponentStatics }
+
+export { ComponentType }
+
+export { ComponentTypeToken }
+
+export { ConcreteComponentType }
+
+export { ConnectOptions }
+
+export { ConsoleLike }
+
+export { ConsoleSinkOptions }
+
+export { CORE_ERROR_MESSAGES }
+
+export { CoreErrorCode }
+
+export { coreExtension }
+
+export { Coroutine }
+
+export { CoroutineHandle }
+
+export { CoroutineHost }
+
+export { CoroutineYield }
+
+export { createApp }
+
+export { CreateAppOptions }
+
+export { createConsoleSink }
+
+export { createCryptoRandom }
+
+export { createDefaults }
+
+export { createDiagnosticsGroup }
+
+export { CreateEntityOptions }
+
+export { createErrorCodeRegistry }
+
+export { createFrameSample }
+
+export { createLayerTable }
+
+export { createLogger }
+
+export { createManualClock }
+
+export { createMemorySink }
+
+export { createPerformanceClock }
+
+export { createSeededRandom }
+
+export { createServiceKey }
+
+export { createUlidFactory }
+
+export { curve }
+
+export { CurveFieldSpec }
+
+export { CurveKey }
+
+export { CurveValue }
+
+export { custom }
+
+export { CustomFieldCodec }
+
+export { CustomFieldSpec }
+
+export { decodeProps }
+
+export { DecodeResult }
+
+export { decodeValue }
+
+export { DEFAULT_LAYER }
+
+export { DEFAULT_MEMORY_SINK_LIMIT }
+
+export { DeferredQueue }
+
+export { defineExtension }
+
+export { defineSchema }
+
+export { DEG_TO_RAD }
+
+export { degToRad }
+
+export { deltaAngleDegrees }
+
+export { describeSchema }
+
+export { Diagnostics }
+
+export { DiagnosticsGroup }
+
+export { DiagnosticsOptions }
+
+export { Disconnect }
+
+export { encodeProps }
+
+export { encodeValue }
+
+export { Entity }
+
+export { EntityHandle }
+
+export { entityRef }
+
+export { EntityRefFieldSpec }
+
+export { EnumFieldSpec }
+
+export { enumOf }
+
+export { EPSILON }
 
 export { ErrorCode }
 
-export { HeadlessRuntime }
+export { ErrorCodeDescription }
+
+export { ErrorCodeRegistry }
+
+export { ErrorContext }
+
+export { ErrorFormatMode }
+
+export { ErrorRange }
+
+export { ErrorReport }
+
+export { Extension }
+
+export { ExtensionContext }
+
+export { f32 }
+
+export { f64 }
+
+export { FieldDefinition }
+
+export { FieldKind }
+
+export { FieldOptions }
+
+export { FieldsOf }
+
+export { FieldSpec }
+
+export { formatErrorMessage }
+
+export { FRAME_HISTORY_LENGTH }
+
+export { FrameSample }
+
+export { FrameState }
+
+export { generateUlid }
+
+export { i32 }
 
 export { IgnifxError }
 
+export { IgnifxErrorOptions }
+
+export { INVALID_HANDLE }
+
+export { inverseLerp }
+
+export { isIgnifxError }
+
+export { isUlid }
+
+export { isValidErrorCode }
+
+export { isValidLayer }
+
 export { isWebGpuAvailable }
 
-export { LiteHeadlessHandles }
+export { JsonArray }
 
-export { LiteRenderHandles }
+export { JsonObject }
 
-export { RenderRuntime }
+export { JsonSchemaObject }
+
+export { JsonValue }
+
+export { LayerMask }
+
+export { layerMask }
+
+export { LayerMaskFieldSpec }
+
+export { LayersSettings }
+
+export { LayerTable }
+
+export { lerp }
+
+export { lerpAngleDegrees }
+
+export { LiteEngine }
+
+export { LiteScene }
+
+export { LOG_LEVEL_SEVERITY }
+
+export { Logger }
+
+export { LoggerOptions }
+
+export { LogLevel }
+
+export { LogRecord }
+
+export { LogSink }
+
+export { LogThreshold }
+
+export { ManualClock }
+
+export { map }
+
+export { MapFieldSpec }
+
+export { Mat4 }
+
+export { MAT4_IDENTITY }
+
+export { Mat4Elements }
+
+export { Mat4Like }
+
+export { MAX_LAYERS }
+
+export { MAX_ULID_TIME_MS }
+
+export { MemorySink }
+
+export { moveTowards }
+
+export { MutableQuat }
+
+export { MutableVec2 }
+
+export { MutableVec3 }
+
+export { MutableVec4 }
+
+export { NumberFieldSpec }
+
+export { optional }
+
+export { OptionalFieldSpec }
+
+export { PartialFieldsOf }
+
+export { Phase }
+
+export { PHASE_COUNT }
+
+export { PHASE_NAMES }
+
+export { PhaseIndex }
+
+export { PHASES }
+
+export { pingPong }
+
+export { PlatformInfo }
+
+export { PlatformKind }
+
+export { ProfileScope }
+
+export { Quat }
+
+export { quat }
+
+export { QUAT_IDENTITY }
+
+export { QuatLike }
+
+export { RAD_TO_DEG }
+
+export { radToDeg }
+
+export { RandomSource }
+
+export { record }
+
+export { RecordFieldSpec }
+
+export { ReferenceDecoder }
+
+export { ReferenceEncoder }
+
+export { RegisterComponentOptions }
+
+export { RegisterSystemOptions }
 
 export { RenderSurface }
 
-export { stepHeadless }
+export { repeat }
+
+export { RESERVED_LAYER_NAMES }
+
+export { resetFrameSample }
+
+export { SceneInstance }
+
+export { Schema }
+
+export { SchemaDescription }
+
+export { SchemaDescriptionMeta }
+
+export { SchemaFieldDescription }
+
+export { SchemaIssue }
+
+export { SchemaIssueCode }
+
+export { Script }
+
+export { ScriptCallbacks }
+
+export { ScriptClassInfo }
+
+export { ScriptDefinition }
+
+export { ScriptStatics }
+
+export { ServiceClassKey }
+
+export { ServiceKey }
+
+export { ServiceNameKey }
+
+export { ServiceRegistry }
+
+export { SetParentOptions }
+
+export { SettingsInput }
+
+export { sign }
+
+export { Signal }
+
+export { SignalHandler }
+
+export { SignalLike }
+
+export { SignalOptions }
+
+export { SignalOwner }
+
+export { smoothStep }
+
+export { SortingLayersSettings }
+
+export { str }
+
+export { StringFieldSpec }
+
+export { System }
+
+export { SystemContext }
+
+export { TagSet }
+
+export { THIRD_PARTY_ERROR_PREFIX }
+
+export { Time }
+
+export { TimeSettings }
+
+export { toJsonSchema }
+
+export { Transform }
+
+export { u32 }
+
+export { UlidFactoryOptions }
+
+export { validateProps }
+
+export { validateValue }
+
+export { Vec2 }
+
+export { vec2 }
+
+export { VEC2_ONE }
+
+export { VEC2_ZERO }
+
+export { Vec2Like }
+
+export { Vec3 }
+
+export { vec3 }
+
+export { VEC3_BACKWARD }
+
+export { VEC3_DOWN }
+
+export { VEC3_FORWARD }
+
+export { VEC3_LEFT }
+
+export { VEC3_ONE }
+
+export { VEC3_RIGHT }
+
+export { VEC3_UP }
+
+export { VEC3_ZERO }
+
+export { Vec3Like }
+
+export { Vec4 }
+
+export { vec4 }
+
+export { Vec4Like }
+
+export { VectorFieldSpec }
+
+export { VERSION }
+
+export { waitFixedUpdate }
+
+export { WaitInstruction }
+
+export { waitSeconds }
+
+export { waitSecondsRealtime }
+
+export { waitUntil }
+
+export { waitWhile }
+
+export { World }
+
+export { wrapAngleDegrees }
 
 // (No @packageDocumentation comment for this package)
 

@@ -34,7 +34,7 @@ Packaging: `electron-vite` for dev/build (main, preload, renderer projects) and 
 
 ## 4. Browser
 
-- Capability page: templates ship a static fallback (`webgpu-unsupported.html` content) shown when `createApp` rejects with `WebGpuUnavailableError`.
+- Capability page: templates ship a static fallback (`webgpu-unsupported.html` content) shown when `createApp` rejects with `IgnifxError` code `IGX-0701` (WebGPU unavailable).
 - Headers: `SharedArrayBuffer` is not required by the MVP (no threaded physics), so no COOP/COEP headers are needed; if a future extension needs them the Vite plugin adds dev-server headers and documents hosting requirements.
 - Mobile: supported where WebGPU is (Chrome Android on qualifying GPUs, Safari 26+); touch input and `VirtualJoystick` cover controls; `resolutionScale` and `maxDevicePixelRatio` handle performance.
 

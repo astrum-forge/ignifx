@@ -24,7 +24,7 @@
   "scripts": {
     "build": "tsdown",
     "typecheck": "tsc --build tsconfig.json tsconfig.test.json",
-    "test": "vitest run --project node",
+    "test": "vitest run --project node --root ../.. packages/core",
     "api-report": "api-extractor run --verbose",
     "docs:api": "typedoc",
     "api-report:update": "api-extractor run --local --verbose",
@@ -35,6 +35,7 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "catalog:",
+    "@babylonjs/havok": "catalog:",
     "@microsoft/api-extractor": "catalog:",
     "@types/webxr": "catalog:",
     "@webgpu/types": "catalog:",

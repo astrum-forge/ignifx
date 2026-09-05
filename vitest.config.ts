@@ -23,7 +23,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "lcov"],
-      include: ["packages/*/src/**/*.ts"],
+      include: ["packages/*/src/**/*.ts", "tools/*/src/**/*.ts"],
       // GPU-only adapter files cannot be reached from Node. They are covered by the `browser`
       // project (`*.browser.test.ts`); measuring them in the unit run would report a number no
       // unit test can move.
@@ -48,7 +48,7 @@ export default defineConfig({
         test: {
           name: "node",
           environment: "node",
-          include: ["packages/*/test/**/*.test.ts"],
+          include: ["packages/*/test/**/*.test.ts", "tools/*/test/**/*.test.ts"],
           exclude: ["**/*.browser.test.ts", "**/node_modules/**", "**/dist/**"],
         },
       },
