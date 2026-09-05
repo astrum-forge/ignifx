@@ -8,7 +8,7 @@
  */
 
 // app — the root object, the frame phases, and the contracts extensions implement.
-export { createApp, type CreateAppOptions } from "./app/app.js";
+export { createApp, type AssetsCreateOptions, type CreateAppOptions } from "./app/app.js";
 export {
   createServiceKey,
   PHASE_NAMES,
@@ -38,8 +38,42 @@ export {
   type Time,
   type TimeSettings,
   type WaitInstruction,
+  type AppEvents,
+  type DeviceLostInfo,
 } from "./app/types.js";
 export { VERSION } from "./app/version.js";
+
+// assets — addressed, reference-counted, asynchronous loading (`app.assets`).
+export { assetRef, isAssetRef } from "./assets/asset-ref.js";
+export { ASSET_DIAGNOSTICS_COUNTERS, ASSET_DIAGNOSTICS_GROUP } from "./assets/assets-service.js";
+export { binaryAssetLoader, jsonAssetLoader, textAssetLoader } from "./assets/generic-loaders.js";
+export {
+  ASSET_MANIFEST_FORMAT,
+  ASSET_MANIFEST_VERSION,
+  createAssetManifest,
+  DEFAULT_ASSET_ROOT,
+  EMPTY_ASSET_MANIFEST,
+} from "./assets/manifest.js";
+export { DEFAULT_ASSET_CONCURRENCY } from "./assets/request-queue.js";
+export {
+  AssetLoadError,
+  type AssetHandle,
+  type AssetLoader,
+  type AssetLoadErrorOptions,
+  type AssetManifest,
+  type AssetManifestEntry,
+  type AssetProgress,
+  type AssetRef,
+  type Assets,
+  type AssetsSettings,
+  type AssetState,
+  type AssetTypeDefinition,
+  type BatchHandle,
+  type FetchLike,
+  type LoaderContext,
+  type LoadOptions,
+  type RegisterAssetOptions,
+} from "./assets/types.js";
 
 // component — the base class, the registry, and the class metadata the engine derives once.
 export { ComponentRegistry, type ComponentClassInfo, type ScriptClassInfo } from "./component/component-registry.js";
@@ -71,7 +105,7 @@ export {
 } from "./diagnostics/frame-sample.js";
 
 // entity — the scene-graph node.
-export { Entity, type SetParentOptions } from "./entity/entity.js";
+export { Entity, type EntityPrefabLink, type SetParentOptions } from "./entity/entity.js";
 
 // errors — the code space, the error type, and the per-app code registry.
 export {
@@ -119,8 +153,12 @@ export {
   RESERVED_LAYER_NAMES,
 } from "./layers/layer-table.js";
 
-// lite — the two type aliases the `app.lite` escape hatch needs. Nothing else crosses the boundary.
+// lite — the type aliases the `app.lite` and `component.lite` escape hatches name in their
+// signatures. Nothing else crosses the boundary: these are handles, not an API.
+export type { LiteCamera } from "./lite/camera.js";
+export type { AdapterLight as LiteLight } from "./lite/light.js";
 export type { LiteEngine, LiteScene } from "./lite/scene.js";
+export type { LiteShadowGenerator } from "./lite/shadow.js";
 
 // log — levels, the logger front end, and the sinks.
 export { createConsoleSink, type ConsoleLike, type ConsoleSinkOptions } from "./log/console-sink.js";
@@ -182,8 +220,149 @@ export { Vec4 } from "./math/vec4.js";
 export type { PlatformInfo, PlatformKind } from "./platform/platform.js";
 export { isWebGpuAvailable, type RenderSurface } from "./platform/webgpu.js";
 
+// render — the components, assets, loaders, and service that expose Babylon Lite's renderer.
+export { Camera, createRay, type CameraProjection, type Ray, type RayVector } from "./render/camera.js";
+export {
+  ENVIRONMENT_ASSET_TYPE,
+  ENVIRONMENT_FILE_EXTENSION,
+  ENVIRONMENT_FILE_EXTENSIONS,
+  ENVIRONMENT_FILE_FORMAT,
+  ENVIRONMENT_FORMAT_VERSION,
+  EnvironmentAsset,
+  environmentDefinition,
+  type EnvironmentAssetLiteHandles,
+  type EnvironmentDefinition,
+} from "./render/environment-asset.js";
+export {
+  Environment,
+  type EnvironmentFogMode,
+  type EnvironmentFogSettings,
+  type ImageProcessingSettings,
+  type ToneMappingCurve,
+} from "./render/environment.js";
+export { FONT_ASSET_TYPE, FONT_FILE_EXTENSIONS, FontAsset, type FontAssetLiteHandles } from "./render/font-asset.js";
+export { Light, type LightShadowSettings, type LightType, type ShadowTechniqueName } from "./render/light.js";
+export { createEnvironmentLoader } from "./render/loaders/environment-loader.js";
+export { createFontLoader } from "./render/loaders/font-loader.js";
+export { createMaterialLoader } from "./render/loaders/material-loader.js";
+export { createModelLoader } from "./render/loaders/model-loader.js";
+export { createTextureLoader } from "./render/loaders/texture-loader.js";
+export {
+  createMaterialAsset,
+  MATERIAL_ALPHA_MODE_NAMES,
+  MATERIAL_ASSET_TYPE,
+  MATERIAL_FILE_EXTENSION,
+  MATERIAL_FILE_FORMAT,
+  MATERIAL_FORMAT_VERSION,
+  MATERIAL_KINDS,
+  MaterialAsset,
+  PBR_TEXTURE_SLOTS,
+  pbrMaterialDefinition,
+  STANDARD_TEXTURE_SLOTS,
+  standardMaterialDefinition,
+  type MaterialAlphaModeName,
+  type MaterialAssetLiteHandles,
+  type MaterialDefinition,
+  type MaterialKind,
+  type PbrMaterialDefinition,
+  type StandardMaterialDefinition,
+} from "./render/material-asset.js";
+export {
+  MESH_ASSET_TYPE,
+  MeshAsset,
+  type BoxMeshOptions,
+  type CapsuleMeshOptions,
+  type CylinderMeshOptions,
+  type GroundMeshOptions,
+  type MeshAssetLiteHandles,
+  type MeshGeometryData,
+  type PlaneMeshOptions,
+  type SphereMeshOptions,
+  type TorusMeshOptions,
+} from "./render/mesh-asset.js";
+export { MeshRenderer } from "./render/mesh-renderer.js";
+export {
+  MODEL_ASSET_TYPE,
+  MODEL_FILE_EXTENSIONS,
+  ModelAsset,
+  type ModelAssetLiteHandles,
+  type ModelInstantiation,
+} from "./render/model-asset.js";
+export { Model } from "./render/model.js";
+export {
+  PostProcessStack,
+  type BloomEffectSettings,
+  type ImageProcessingEffectSettings,
+  type SmaaEffectSettings,
+} from "./render/post-process-stack.js";
+export {
+  RENDER_DIAGNOSTICS_COUNTERS,
+  RENDER_DIAGNOSTICS_GROUP,
+  type RenderCapture,
+  type Renderer,
+  type RenderingFeature,
+  type RenderPick,
+  type RenderPickOptions,
+  type RenderTaskTiming,
+  type RenderTaskTimings,
+} from "./render/renderer.js";
+export {
+  CANVAS_ALPHA_MODES,
+  DEFAULT_BRDF_LUT_ADDRESS,
+  defaultRenderingSettings,
+  RENDERING_SETTINGS_SECTION,
+  type CanvasAlphaMode,
+  type RenderingFeatureSettings,
+  type RenderingSettings,
+} from "./render/rendering-settings.js";
+export { describeEnvironmentFileFormat, describeMaterialFileFormat, describeSchemas } from "./render/schemas.js";
+export {
+  TEXTURE_ASSET_TYPE,
+  TextureAsset,
+  type TextureAssetLiteHandles,
+  type TextureImportOptions,
+} from "./render/texture-asset.js";
+
 // scene — scene instances (`world.scenes`).
 export { SceneInstance } from "./scene/scene-instance.js";
+
+// serialization — the scene/prefab file format, its loader, and the round trip through it.
+export {
+  assertSceneDependenciesLoaded,
+  instantiateScene,
+  type InstantiateSceneOptions,
+  type SceneBuildResult,
+  type SceneLoadIssue,
+} from "./serialization/load.js";
+export { parseOverridePath, type EntityOverrideField, type OverridePath } from "./serialization/overrides.js";
+export { computeSceneHash, createSceneAsset, type SceneAsset } from "./serialization/scene-asset.js";
+export {
+  describeSceneFileFormat,
+  isSceneFileHeader,
+  SCENE_ASSET_TYPE,
+  SCENE_FILE_EXTENSIONS,
+  SCENE_FILE_FORMAT,
+  SCENE_FORMAT_VERSION,
+  sceneFileJsonSchema,
+  stringifySceneFile,
+  type SceneFile,
+  type SceneFileAssetRef,
+  type SceneFileComponent,
+  type SceneFileEntity,
+  type SceneFileInstance,
+  type SceneFileOverride,
+  type SceneFileTransform,
+} from "./serialization/scene-file.js";
+export { createSceneLoader, type SceneLoaderOptions } from "./serialization/scene-loader.js";
+export {
+  serializeComponent,
+  serializeEntity,
+  serializeScene,
+  type SerializeIssue,
+  type SerializeSceneOptions,
+} from "./serialization/serialize.js";
+export { UidRemap } from "./serialization/uid-remap.js";
+export { validateSceneFile, type SceneFileIssue } from "./serialization/validate.js";
 
 // schema — the declarative field system that replaces decorators (ADR-0004).
 export {
@@ -293,4 +472,21 @@ export { createManualClock, createPerformanceClock, type Clock, type ManualClock
 export { Transform } from "./transform/transform.js";
 
 // world — the running simulation.
-export { World, type CreateEntityOptions } from "./world/world.js";
+export { World, type CreateEntityOptions, type InstantiateOptions, type LoadSceneOptions } from "./world/world.js";
+
+// Types and name tables referenced by public signatures (API Extractor ae-forgotten-export).
+// The `Lite*` aliases are the unstable escape-hatch types (CONSTITUTION.md §3.4).
+export type { LiteFont } from "./lite/font.js";
+export type { LiteEnvironmentTextures } from "./lite/gpu/environment.js";
+export type { LiteAnimationGroup, LiteAssetContainer, LiteSkeleton } from "./lite/gpu/gltf.js";
+export type { LiteMesh } from "./lite/gpu/mesh.js";
+export type { LiteTexture2D } from "./lite/gpu/texture.js";
+export type { LiteMaterial, LitePbrMaterial, LiteStandardMaterial, MaterialAlphaMode } from "./lite/material.js";
+export type { LiteSceneNode } from "./lite/node.js";
+export type { LoadProgress } from "./world/world.js";
+export { TONE_MAPPING_NAMES } from "./lite/gpu/environment.js";
+export { SHADOW_TECHNIQUES } from "./lite/shadow.js";
+export { PROJECTIONS } from "./render/camera.js";
+export { FOG_MODE_NAMES } from "./render/environment.js";
+export { LIGHT_TYPES } from "./render/light.js";
+export { MATERIAL_ALPHA_MODES } from "./lite/material.js";

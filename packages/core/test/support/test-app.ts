@@ -1,8 +1,12 @@
+import { AppEventsImpl } from "../../src/app/events.js";
+import { AssetsImpl } from "../../src/assets/assets-service.js";
 import { Diagnostics } from "../../src/diagnostics/diagnostics.js";
 import { CoreErrorCode } from "../../src/errors/error-codes.js";
 import { IgnifxError } from "../../src/errors/ignifx-error.js";
 import { createLogger } from "../../src/log/logger.js";
 import { createMemorySink } from "../../src/log/memory-sink.js";
+import { RendererImpl } from "../../src/render/renderer.js";
+import { defaultRenderingSettings } from "../../src/render/rendering-settings.js";
 import { Signal } from "../../src/signal/signal.js";
 import type {
   App,
@@ -155,6 +159,9 @@ export class TestApp implements App {
   readonly settings: AppSettings;
   readonly onError = new Signal<ErrorReport>();
   readonly coroutines = new RecordingCoroutineHost();
+  readonly assets: AssetsImpl;
+  readonly events: AppEventsImpl;
+  readonly renderer: RendererImpl;
   readonly isHeadless = true;
   readonly version = "0.0.0-test";
   readonly platform: PlatformInfo = { kind: "node" };
@@ -169,7 +176,10 @@ export class TestApp implements App {
   constructor(engine: LiteEngine, scene: LiteScene, layers: readonly string[]) {
     this.log = createLogger({ sink: createMemorySink() });
     this.settings = new TestSettings(layers);
+    this.assets = new AssetsImpl({ app: this, diagnostics: this.diagnostics });
+    this.events = new AppEventsImpl(() => {});
     this.#lite = { engine, scene };
+    this.renderer = new RendererImpl(this, defaultRenderingSettings());
     this.onError.connect((report) => {
       this.errors.push(report);
     });

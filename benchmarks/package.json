@@ -1,0 +1,23 @@
+{
+  "name": "ignifx-benchmarks",
+  "version": "0.0.0",
+  "private": true,
+  "description": "ignifx benchmark scenes with committed frame-time, heap-growth and bundle-size baselines (CONSTITUTION.md §6.4).",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "bench": "vitest bench --root .. benchmarks",
+    "test": "vitest run --project node --root .. benchmarks",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@ignifx/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@webgpu/types": "catalog:",
+    "typescript-native": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  }
+}

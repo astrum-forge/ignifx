@@ -1,8 +1,10 @@
 import type { Entity } from "./entity.js";
+import type { AssetHandle } from "../assets/types.js";
 import type { Component } from "../component/component.js";
 import type { EntityHandle } from "../handles/handle.js";
 import type { LiteSceneNode } from "../lite/node.js";
 import type { SceneInstance } from "../scene/scene-instance.js";
+import type { SceneAsset } from "../serialization/scene-asset.js";
 import type { Signal } from "../signal/signal.js";
 import type { TagSet } from "../tags/tag-set.js";
 import type { Transform } from "../transform/transform.js";
@@ -20,6 +22,41 @@ import type { WorldHost } from "../world/world-host.js";
  * @internal
  */
 export const ENTITY_INTERNALS: unique symbol = Symbol("ignifx.entity.internals");
+
+/**
+ * Where an entity came from, for the entities a scene file's `instance` entry produced. The scene
+ * loader fills it in; `Entity.prefab` and the serializer's override diffing read it
+ * (`docs/architecture/02-scene-graph.md` §6, `06-serialization-and-scene-format.md` §5).
+ *
+ * @internal
+ */
+export interface EntityOrigin {
+  /** The uid the entity carries in the scene file that declared it, which overrides address. */
+  readonly sourceUid: string;
+  /**
+   * The instance root this entity sits *inside*, or `null` when the scene file declared it
+   * directly. An instance root is inside its own parent instance, if any, not inside itself.
+   */
+  readonly instanceRoot: Entity | null;
+  /** Set when this entity *is* the root of an instance. */
+  readonly instanced: EntityInstanceLink | null;
+  /** Expanded component uid to the uid that component carries in the file that declared it. */
+  readonly componentSourceUids: ReadonlyMap<string, string>;
+}
+
+/**
+ * The instanced scene an instance root stands for.
+ *
+ * @internal
+ */
+export interface EntityInstanceLink {
+  /** The address of the instanced scene. */
+  readonly address: string;
+  /** The handle it was loaded through, when the asset service resolved one. */
+  readonly asset: AssetHandle<SceneAsset> | null;
+  /** The scene value, so the serializer can diff current state against it. */
+  readonly scene: SceneAsset;
+}
 
 /**
  * The engine-owned state of one entity.
@@ -45,6 +82,11 @@ export interface EntityInternals {
   name: string;
   /** The scene instance that owns the entity. */
   scene: SceneInstance;
+  /**
+   * Where the entity came from when a scene file's `instance` entry produced it, or `null` for an
+   * entity a scene declared itself or code created (`docs/architecture/02-scene-graph.md` §6).
+   */
+  origin: EntityOrigin | null;
   /** The parent, or `null` for a root. */
   parent: Entity | null;
   /** The children, in creation order. */

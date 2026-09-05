@@ -1,0 +1,22 @@
+{
+  "name": "ignifx-visual-tests",
+  "version": "0.0.0",
+  "private": true,
+  "description": "ignifx visual regression tests: Playwright goldens per example and benchmark scene (coding standards §10).",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test:visual": "playwright test",
+    "test:visual:update": "playwright test --update-snapshots"
+  },
+  "devDependencies": {
+    "@ignifx/core": "workspace:*",
+    "@ignifx/vite-plugin": "workspace:*",
+    "@types/node": "catalog:",
+    "@webgpu/types": "catalog:",
+    "playwright": "catalog:",
+    "typescript-native": "catalog:",
+    "vite": "catalog:"
+  }
+}

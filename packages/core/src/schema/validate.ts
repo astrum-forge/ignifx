@@ -173,8 +173,12 @@ function validateInto(field: FieldDefinition<unknown>, value: unknown, path: str
       if (value === null) {
         return;
       }
+      // Structural on purpose: the runtime value is an `AssetHandle`, which the schema layer must
+      // not import (coding standards §4), and a tool that reads a file without an app holds the
+      // plain `{ address, type? }` form instead. Both carry a string `address`, which is the only
+      // thing this layer can check.
       if (!isPlainObject(value)) {
-        issues.push(issue(SchemaIssueCode.typeMismatch, path, `expected an asset reference or null.`));
+        issues.push(issue(SchemaIssueCode.typeMismatch, path, `expected a loaded asset handle or null.`));
         return;
       }
       if (typeof value["address"] !== "string") {

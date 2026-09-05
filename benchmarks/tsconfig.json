@@ -1,0 +1,16 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "isolatedDeclarations": false,
+    "resolveJsonModule": true,
+    "moduleDetection": "force",
+    "types": ["node", "@webgpu/types"]
+  },
+  "include": ["scenes", "scripts", "*.ts"]
+}

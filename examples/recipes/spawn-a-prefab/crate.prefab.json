@@ -1,0 +1,26 @@
+{
+  "format": "ignifx.scene",
+  "formatVersion": 1,
+  "name": "Crate",
+  "entities": [
+    {
+      "uid": "01J9Z6M7E5S3A0V2Q4R8T1Y6WX",
+      "name": "Crate",
+      "parent": null,
+      "tags": ["pickup"],
+      "transform": { "position": [0, 0.5, 0], "rotation": [0, 0, 0, 1], "scale": [1, 1, 1] },
+      "components": [
+        {
+          "uid": "01J9Z6M7E6B4C1D3E5F7G9H2JK",
+          "type": "ignifx/Model",
+          "props": { "model": { "$asset": "models/crate.glb" }, "castShadows": true }
+        },
+        {
+          "uid": "01J9Z6M7E7D5F2G4H6J8K0M3NP",
+          "type": "recipes/Bobber",
+          "props": { "speed": 1.5 }
+        }
+      ]
+    }
+  ]
+}

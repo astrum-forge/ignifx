@@ -1,0 +1,483 @@
+{
+  "generatedBy": "pnpm docs:schemas",
+  "ignifxVersion": "0.0.0",
+  "schemas": {
+    "ignifx/Camera": {
+      "title": "Camera",
+      "format": "components",
+      "description": "The camera an entity renders the world through; the entity's transform is the view.",
+      "package": "packages/core",
+      "fields": {
+        "projection": {
+          "kind": "enum",
+          "default": "\"perspective\"",
+          "description": "Perspective, or a flat orthographic view."
+        },
+        "fov": {
+          "kind": "f32",
+          "default": "60",
+          "description": "Vertical field of view, in degrees."
+        },
+        "orthographicSize": {
+          "kind": "f32",
+          "default": "5",
+          "description": "Half the visible height, in metres."
+        },
+        "near": {
+          "kind": "f32",
+          "default": "0.1",
+          "description": "Near clip plane, in metres."
+        },
+        "far": {
+          "kind": "f32",
+          "default": "1000",
+          "description": "Far clip plane, in metres."
+        },
+        "viewport": {
+          "kind": "record",
+          "default": "{\"x\":0,\"y\":0,\"width\":1,\"height\":1}",
+          "description": "Normalized viewport; y is measured from the bottom."
+        },
+        "clearColor": {
+          "kind": "optional",
+          "default": "null",
+          "description": "Overrides the scene clear colour while this camera renders."
+        },
+        "priority": {
+          "kind": "i32",
+          "default": "0",
+          "description": "The enabled camera with the highest priority renders."
+        }
+      }
+    },
+    "ignifx/Environment": {
+      "title": "Environment",
+      "format": "components",
+      "description": "The world's image-based lighting, skybox, fog, image processing, and clear colour.",
+      "package": "packages/core",
+      "fields": {
+        "environment": {
+          "kind": "asset",
+          "default": "null",
+          "description": "The .env image-based lighting to install."
+        },
+        "rotation": {
+          "kind": "f32",
+          "default": "0",
+          "description": "Rotation of the environment around world Y, in degrees."
+        },
+        "blur": {
+          "kind": "f32",
+          "default": "0",
+          "description": "How blurred the specular reflection is."
+        },
+        "skybox": {
+          "kind": "record",
+          "default": "{\"enabled\":true,\"size\":20}",
+          "description": "The background the environment draws."
+        },
+        "fog": {
+          "kind": "record",
+          "default": "{\"mode\":\"none\",\"color\":[0.784314,0.784314,0.784314,1],\"density\":0.01,\"start\":10,\"end\":100}",
+          "description": "Distance fog."
+        },
+        "imageProcessing": {
+          "kind": "record",
+          "default": "{\"exposure\":1,\"contrast\":1,\"toneMapping\":\"none\"}",
+          "description": "Exposure, contrast, and tone mapping. Recompiles PBR pipelines when it changes."
+        },
+        "clearColor": {
+          "kind": "color",
+          "default": "[0,0,0,1]",
+          "description": "The colour the scene is cleared to, in sRGB."
+        }
+      }
+    },
+    "ignifx/environment-file": {
+      "title": "Environment file",
+      "format": "ignifx.environment",
+      "description": "An image-based lighting environment, its BRDF lookup table, and its skybox.",
+      "package": "packages/core",
+      "fields": {
+        "format": {
+          "kind": "str",
+          "default": "\"ignifx.environment\"",
+          "description": "Always \"ignifx.environment\"."
+        },
+        "formatVersion": {
+          "kind": "u32",
+          "default": "1",
+          "description": "The file format version; 1 before ignifx 1.0."
+        },
+        "environment": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": "The .env address holding the prefiltered cube map."
+        },
+        "brdfLut": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": "The RGBD BRDF table; empty takes rendering.brdfLut."
+        },
+        "skybox": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": "A .dds or .env skybox address; empty for none."
+        },
+        "skyboxSize": {
+          "kind": "f32",
+          "default": "20",
+          "description": "The skybox cube's size, in metres."
+        },
+        "skyboxEnabled": {
+          "kind": "bool",
+          "default": "true",
+          "description": "Whether a skybox is drawn at all."
+        },
+        "blur": {
+          "kind": "f32",
+          "default": "0",
+          "description": "How blurred the specular reflection is, 0 to 1."
+        },
+        "rotation": {
+          "kind": "f32",
+          "default": "0",
+          "description": "Rotation around world Y, in degrees."
+        }
+      }
+    },
+    "ignifx/Light": {
+      "title": "Light",
+      "format": "components",
+      "description": "A directional, point, spot, or hemispheric light, with optional shadow casting.",
+      "package": "packages/core",
+      "fields": {
+        "type": {
+          "kind": "enum",
+          "default": "\"directional\"",
+          "description": "Which kind of light this is."
+        },
+        "color": {
+          "kind": "color",
+          "default": "[1,1,1,1]",
+          "description": "The light's sRGB colour."
+        },
+        "intensity": {
+          "kind": "f32",
+          "default": "1",
+          "description": "How bright the light is."
+        },
+        "range": {
+          "kind": "f32",
+          "default": "10",
+          "description": "Distance at which a point or spot light reaches zero."
+        },
+        "spotAngle": {
+          "kind": "f32",
+          "default": "45",
+          "description": "A spot light's full cone angle, in degrees."
+        },
+        "spotExponent": {
+          "kind": "f32",
+          "default": "2",
+          "description": "A spot light's falloff exponent; higher is sharper."
+        },
+        "groundColor": {
+          "kind": "color",
+          "default": "[0,0,0,1]",
+          "description": "A hemispheric light's sRGB colour from below."
+        },
+        "shadows": {
+          "kind": "record",
+          "default": "{\"enabled\":false,\"technique\":\"pcf\",\"mapSize\":1024,\"bias\":0.00005,\"normalBias\":0,\"darkness\":0,\"cascades\":4,\"maxDistance\":0}",
+          "description": "Shadow casting; point and hemispheric lights cannot cast (IGX-0703)."
+        },
+        "includeOnly": {
+          "kind": "array",
+          "default": "[]",
+          "description": "Light only these entities' renderers."
+        },
+        "exclude": {
+          "kind": "array",
+          "default": "[]",
+          "description": "Never light these entities' renderers."
+        }
+      }
+    },
+    "ignifx/material-file": {
+      "title": "Material file",
+      "format": "ignifx.material",
+      "description": "A PBR or Standard material: colours in sRGB, factors unitless, textures as { \"$asset\": … } references.",
+      "package": "packages/core",
+      "fields": {
+        "format": {
+          "kind": "str",
+          "default": "\"ignifx.material\"",
+          "description": "Always \"ignifx.material\"."
+        },
+        "formatVersion": {
+          "kind": "u32",
+          "default": "1",
+          "description": "The file format version; 1 before ignifx 1.0."
+        },
+        "type": {
+          "kind": "enum",
+          "default": "\"pbr\"",
+          "description": "The material family: pbr, standard, shader. \"shader\" arrives in Phase 7."
+        },
+        "name": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": "A human-readable name; glTF overrides match on it."
+        },
+        "baseColor": {
+          "kind": "color",
+          "default": "[1,1,1,1]",
+          "description": "PBR: sRGB base colour and alpha."
+        },
+        "metallic": {
+          "kind": "f32",
+          "default": "1",
+          "description": "PBR: metallic factor, 0 to 1."
+        },
+        "roughness": {
+          "kind": "f32",
+          "default": "1",
+          "description": "PBR: roughness factor, 0 to 1."
+        },
+        "normalScale": {
+          "kind": "f32",
+          "default": "1",
+          "description": "PBR: normal map strength."
+        },
+        "emissive": {
+          "kind": "color",
+          "default": "[0,0,0,1]",
+          "description": "sRGB emissive colour."
+        },
+        "occlusionStrength": {
+          "kind": "f32",
+          "default": "1",
+          "description": "PBR: how strongly occlusion darkens."
+        },
+        "alphaMode": {
+          "kind": "enum",
+          "default": "\"opaque\"",
+          "description": "How alpha is read: opaque, mask, blend."
+        },
+        "alphaCutoff": {
+          "kind": "f32",
+          "default": "0.5",
+          "description": "The cutoff a \"mask\" material discards below."
+        },
+        "alpha": {
+          "kind": "f32",
+          "default": "1",
+          "description": "Overall material alpha, 0 to 1."
+        },
+        "doubleSided": {
+          "kind": "bool",
+          "default": "false",
+          "description": "Whether back faces are drawn."
+        },
+        "unlit": {
+          "kind": "bool",
+          "default": "false",
+          "description": "Whether lighting is skipped entirely."
+        },
+        "environmentIntensity": {
+          "kind": "f32",
+          "default": "1",
+          "description": "PBR: environment map contribution."
+        },
+        "diffuse": {
+          "kind": "color",
+          "default": "[1,1,1,1]",
+          "description": "Standard: sRGB diffuse colour."
+        },
+        "specular": {
+          "kind": "color",
+          "default": "[1,1,1,1]",
+          "description": "Standard: sRGB specular colour."
+        },
+        "specularPower": {
+          "kind": "f32",
+          "default": "64",
+          "description": "Standard: specular exponent."
+        },
+        "baseColorTexture": {
+          "kind": "asset",
+          "default": "null",
+          "description": "PBR: the base colour map (sRGB)."
+        },
+        "metallicRoughnessTexture": {
+          "kind": "asset",
+          "default": "null",
+          "description": "PBR: the packed ORM map."
+        },
+        "normalTexture": {
+          "kind": "asset",
+          "default": "null",
+          "description": "The tangent-space normal map."
+        },
+        "emissiveTexture": {
+          "kind": "asset",
+          "default": "null",
+          "description": "The emissive map (sRGB)."
+        },
+        "occlusionTexture": {
+          "kind": "asset",
+          "default": "null",
+          "description": "PBR: a separate occlusion map."
+        },
+        "diffuseTexture": {
+          "kind": "asset",
+          "default": "null",
+          "description": "Standard: the diffuse map (sRGB)."
+        },
+        "specularTexture": {
+          "kind": "asset",
+          "default": "null",
+          "description": "Standard: the specular map."
+        },
+        "opacityTexture": {
+          "kind": "asset",
+          "default": "null",
+          "description": "Standard: the opacity map."
+        }
+      }
+    },
+    "ignifx/MeshRenderer": {
+      "title": "MeshRenderer",
+      "format": "components",
+      "description": "Draws one clone of a mesh asset with a material.",
+      "package": "packages/core",
+      "fields": {
+        "mesh": {
+          "kind": "asset",
+          "default": "null",
+          "description": "The geometry template to clone."
+        },
+        "materials": {
+          "kind": "array",
+          "default": "[]",
+          "description": "One per submesh; empty uses the default material."
+        },
+        "castShadows": {
+          "kind": "bool",
+          "default": "true",
+          "description": "Whether this mesh is rendered into shadow maps."
+        },
+        "receiveShadows": {
+          "kind": "bool",
+          "default": "true",
+          "description": "Whether shadow maps darken this mesh."
+        },
+        "renderOrder": {
+          "kind": "i32",
+          "default": "0",
+          "description": "Sort key within the opaque or transparent phase; lower draws first."
+        },
+        "pickable": {
+          "kind": "bool",
+          "default": "true",
+          "description": "Whether picking considers this mesh at all."
+        }
+      }
+    },
+    "ignifx/Model": {
+      "title": "Model",
+      "format": "components",
+      "description": "One instance of a loaded glTF, cloned under the entity's node.",
+      "package": "packages/core",
+      "fields": {
+        "model": {
+          "kind": "asset",
+          "default": "null",
+          "description": "The glTF template to instantiate."
+        },
+        "materialOverrides": {
+          "kind": "map",
+          "default": "{}",
+          "description": "Replaces a glTF material, by its name."
+        },
+        "castShadows": {
+          "kind": "bool",
+          "default": "true",
+          "description": "Whether the instance is rendered into shadow maps."
+        },
+        "receiveShadows": {
+          "kind": "bool",
+          "default": "true",
+          "description": "Whether shadow maps darken the instance."
+        },
+        "pickable": {
+          "kind": "bool",
+          "default": "true",
+          "description": "Whether picking considers the instance at all."
+        }
+      }
+    },
+    "ignifx/PostProcessStack": {
+      "title": "PostProcessStack",
+      "format": "components",
+      "description": "Bloom, SMAA, and image processing, inserted into the scene's frame graph.",
+      "package": "packages/core",
+      "fields": {
+        "bloom": {
+          "kind": "record",
+          "default": "{\"enabled\":false,\"order\":0,\"weight\":0.15,\"kernel\":64,\"threshold\":0.9,\"exposure\":1,\"scale\":0.5}",
+          "description": "Bloom."
+        },
+        "smaa": {
+          "kind": "record",
+          "default": "{\"enabled\":false,\"order\":1,\"threshold\":0.05,\"maxSearchSteps\":16,\"diagonalDetection\":false,\"cornerDetection\":false}",
+          "description": "SMAA anti-aliasing. Needs a single-sample source."
+        },
+        "imageProcessing": {
+          "kind": "record",
+          "default": "{\"enabled\":false,\"order\":2}",
+          "description": "Exposure, contrast, and tone mapping as a pass — the alternative to Environment."
+        }
+      }
+    },
+    "ignifx/scene-file": {
+      "title": "Scene file",
+      "format": "ignifx.scene",
+      "description": "A level or a prefab: a tree of entities with components, instanced scenes, and overrides. One format for both (ADR-0005).",
+      "package": "packages/core",
+      "fields": {
+        "format": {
+          "kind": "str",
+          "default": "\"ignifx.scene\"",
+          "description": "Always \"ignifx.scene\"."
+        },
+        "formatVersion": {
+          "kind": "u32",
+          "default": "1",
+          "description": "The file format version; 1 before ignifx 1.0."
+        },
+        "engineVersion": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": "The @ignifx/core version that wrote the file."
+        },
+        "name": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": "The scene's name."
+        },
+        "settings": {
+          "kind": "map",
+          "default": "{}",
+          "description": "Scene-level values interpreted by systems."
+        },
+        "entities": {
+          "kind": "array",
+          "default": "[]",
+          "description": "Every entity, in tree order."
+        }
+      }
+    }
+  }
+}

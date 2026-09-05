@@ -43,6 +43,6 @@ export interface PlatformInfo {
  * @internal
  */
 export function detectPlatform(): PlatformInfo {
-  const isBrowser = globalThis.document !== undefined && globalThis.window !== undefined;
+  const isBrowser = "document" in globalThis && "window" in globalThis;
   return Object.freeze({ kind: isBrowser ? "browser" : "node" });
 }

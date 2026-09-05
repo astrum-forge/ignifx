@@ -19,7 +19,7 @@ describe("crypto random source", () => {
     expect(Array.from(first)).not.toEqual(Array.from(second));
   });
 
-  it("throws IGX-1401 when the host has no Web Crypto", () => {
+  it("throws IGX-1420 when the host has no Web Crypto", () => {
     const original = Object.getOwnPropertyDescriptor(globalThis, "crypto");
     Object.defineProperty(globalThis, "crypto", { value: undefined, configurable: true });
     try {
@@ -36,11 +36,11 @@ describe("crypto random source", () => {
     }
   });
 
-  it("throws IGX-1401 when getRandomValues is missing", () => {
+  it("throws IGX-1420 when getRandomValues is missing", () => {
     const original = Object.getOwnPropertyDescriptor(globalThis, "crypto");
     Object.defineProperty(globalThis, "crypto", { value: {}, configurable: true });
     try {
-      expect(() => createCryptoRandom()).toThrow(/IGX-1401/u);
+      expect(() => createCryptoRandom()).toThrow(/IGX-1420/u);
     } finally {
       if (original !== undefined) {
         Object.defineProperty(globalThis, "crypto", original);

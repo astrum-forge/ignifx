@@ -5,6 +5,7 @@
 ```ts
 
 import { App } from '@ignifx/core';
+import { AppEvents } from '@ignifx/core';
 import { AppLiteHandles } from '@ignifx/core';
 import { applyInit } from '@ignifx/core';
 import { approximately } from '@ignifx/core';
@@ -12,13 +13,41 @@ import { AppSettings } from '@ignifx/core';
 import { array } from '@ignifx/core';
 import { ArrayFieldSpec } from '@ignifx/core';
 import { assertNever } from '@ignifx/core';
+import { assertSceneDependenciesLoaded } from '@ignifx/core';
 import { asset } from '@ignifx/core';
+import { ASSET_DIAGNOSTICS_COUNTERS } from '@ignifx/core';
+import { ASSET_DIAGNOSTICS_GROUP } from '@ignifx/core';
+import { ASSET_MANIFEST_FORMAT } from '@ignifx/core';
+import { ASSET_MANIFEST_VERSION } from '@ignifx/core';
 import { AssetFieldSpec } from '@ignifx/core';
+import { AssetHandle } from '@ignifx/core';
+import { AssetLoader } from '@ignifx/core';
+import { AssetLoadError } from '@ignifx/core';
+import { AssetLoadErrorOptions } from '@ignifx/core';
+import { AssetManifest } from '@ignifx/core';
+import { AssetManifestEntry } from '@ignifx/core';
+import { AssetProgress } from '@ignifx/core';
+import { AssetRef } from '@ignifx/core';
+import { assetRef } from '@ignifx/core';
 import { AssetRefValue } from '@ignifx/core';
+import { Assets } from '@ignifx/core';
+import { AssetsCreateOptions } from '@ignifx/core';
+import { AssetsSettings } from '@ignifx/core';
+import { AssetState } from '@ignifx/core';
+import { AssetTypeDefinition } from '@ignifx/core';
 import { AssetTypeToken } from '@ignifx/core';
+import { BatchHandle } from '@ignifx/core';
+import { binaryAssetLoader } from '@ignifx/core';
+import { BloomEffectSettings } from '@ignifx/core';
 import { bool } from '@ignifx/core';
 import { BoolFieldSpec } from '@ignifx/core';
+import { BoxMeshOptions } from '@ignifx/core';
+import { Camera } from '@ignifx/core';
+import { CameraProjection } from '@ignifx/core';
 import { canonicalizeNumber } from '@ignifx/core';
+import { CANVAS_ALPHA_MODES } from '@ignifx/core';
+import { CanvasAlphaMode } from '@ignifx/core';
+import { CapsuleMeshOptions } from '@ignifx/core';
 import { clamp } from '@ignifx/core';
 import { clamp01 } from '@ignifx/core';
 import { Clock } from '@ignifx/core';
@@ -38,6 +67,7 @@ import { ComponentRegistry } from '@ignifx/core';
 import { ComponentStatics } from '@ignifx/core';
 import { ComponentType } from '@ignifx/core';
 import { ComponentTypeToken } from '@ignifx/core';
+import { computeSceneHash } from '@ignifx/core';
 import { ConcreteComponentType } from '@ignifx/core';
 import { ConnectOptions } from '@ignifx/core';
 import { ConsoleLike } from '@ignifx/core';
@@ -51,20 +81,30 @@ import { CoroutineHost } from '@ignifx/core';
 import { CoroutineYield } from '@ignifx/core';
 import { createApp } from '@ignifx/core';
 import { CreateAppOptions } from '@ignifx/core';
+import { createAssetManifest } from '@ignifx/core';
 import { createConsoleSink } from '@ignifx/core';
 import { createCryptoRandom } from '@ignifx/core';
 import { createDefaults } from '@ignifx/core';
 import { createDiagnosticsGroup } from '@ignifx/core';
 import { CreateEntityOptions } from '@ignifx/core';
+import { createEnvironmentLoader } from '@ignifx/core';
 import { createErrorCodeRegistry } from '@ignifx/core';
+import { createFontLoader } from '@ignifx/core';
 import { createFrameSample } from '@ignifx/core';
 import { createLayerTable } from '@ignifx/core';
 import { createLogger } from '@ignifx/core';
 import { createManualClock } from '@ignifx/core';
+import { createMaterialAsset } from '@ignifx/core';
+import { createMaterialLoader } from '@ignifx/core';
 import { createMemorySink } from '@ignifx/core';
+import { createModelLoader } from '@ignifx/core';
 import { createPerformanceClock } from '@ignifx/core';
+import { createRay } from '@ignifx/core';
+import { createSceneAsset } from '@ignifx/core';
+import { createSceneLoader } from '@ignifx/core';
 import { createSeededRandom } from '@ignifx/core';
 import { createServiceKey } from '@ignifx/core';
+import { createTextureLoader } from '@ignifx/core';
 import { createUlidFactory } from '@ignifx/core';
 import { curve } from '@ignifx/core';
 import { CurveFieldSpec } from '@ignifx/core';
@@ -73,30 +113,55 @@ import { CurveValue } from '@ignifx/core';
 import { custom } from '@ignifx/core';
 import { CustomFieldCodec } from '@ignifx/core';
 import { CustomFieldSpec } from '@ignifx/core';
+import { CylinderMeshOptions } from '@ignifx/core';
 import { decodeProps } from '@ignifx/core';
 import { DecodeResult } from '@ignifx/core';
 import { decodeValue } from '@ignifx/core';
+import { DEFAULT_ASSET_CONCURRENCY } from '@ignifx/core';
+import { DEFAULT_ASSET_ROOT } from '@ignifx/core';
+import { DEFAULT_BRDF_LUT_ADDRESS } from '@ignifx/core';
 import { DEFAULT_LAYER } from '@ignifx/core';
 import { DEFAULT_MEMORY_SINK_LIMIT } from '@ignifx/core';
+import { defaultRenderingSettings } from '@ignifx/core';
 import { DeferredQueue } from '@ignifx/core';
 import { defineExtension } from '@ignifx/core';
 import { defineSchema } from '@ignifx/core';
 import { DEG_TO_RAD } from '@ignifx/core';
 import { degToRad } from '@ignifx/core';
 import { deltaAngleDegrees } from '@ignifx/core';
+import { describeEnvironmentFileFormat } from '@ignifx/core';
+import { describeMaterialFileFormat } from '@ignifx/core';
+import { describeSceneFileFormat } from '@ignifx/core';
 import { describeSchema } from '@ignifx/core';
+import { describeSchemas } from '@ignifx/core';
+import { DeviceLostInfo } from '@ignifx/core';
 import { Diagnostics } from '@ignifx/core';
 import { DiagnosticsGroup } from '@ignifx/core';
 import { DiagnosticsOptions } from '@ignifx/core';
 import { Disconnect } from '@ignifx/core';
+import { EMPTY_ASSET_MANIFEST } from '@ignifx/core';
 import { encodeProps } from '@ignifx/core';
 import { encodeValue } from '@ignifx/core';
 import { Entity } from '@ignifx/core';
 import { EntityHandle } from '@ignifx/core';
+import { EntityOverrideField } from '@ignifx/core';
+import { EntityPrefabLink } from '@ignifx/core';
 import { entityRef } from '@ignifx/core';
 import { EntityRefFieldSpec } from '@ignifx/core';
 import { EnumFieldSpec } from '@ignifx/core';
 import { enumOf } from '@ignifx/core';
+import { Environment } from '@ignifx/core';
+import { ENVIRONMENT_ASSET_TYPE } from '@ignifx/core';
+import { ENVIRONMENT_FILE_EXTENSION } from '@ignifx/core';
+import { ENVIRONMENT_FILE_EXTENSIONS } from '@ignifx/core';
+import { ENVIRONMENT_FILE_FORMAT } from '@ignifx/core';
+import { ENVIRONMENT_FORMAT_VERSION } from '@ignifx/core';
+import { EnvironmentAsset } from '@ignifx/core';
+import { EnvironmentAssetLiteHandles } from '@ignifx/core';
+import { EnvironmentDefinition } from '@ignifx/core';
+import { environmentDefinition } from '@ignifx/core';
+import { EnvironmentFogMode } from '@ignifx/core';
+import { EnvironmentFogSettings } from '@ignifx/core';
 import { EPSILON } from '@ignifx/core';
 import { ErrorCode } from '@ignifx/core';
 import { ErrorCodeDescription } from '@ignifx/core';
@@ -109,27 +174,42 @@ import { Extension } from '@ignifx/core';
 import { ExtensionContext } from '@ignifx/core';
 import { f32 } from '@ignifx/core';
 import { f64 } from '@ignifx/core';
+import { FetchLike } from '@ignifx/core';
 import { FieldDefinition } from '@ignifx/core';
 import { FieldKind } from '@ignifx/core';
 import { FieldOptions } from '@ignifx/core';
 import { FieldsOf } from '@ignifx/core';
 import { FieldSpec } from '@ignifx/core';
+import { FOG_MODE_NAMES } from '@ignifx/core';
+import { FONT_ASSET_TYPE } from '@ignifx/core';
+import { FONT_FILE_EXTENSIONS } from '@ignifx/core';
+import { FontAsset } from '@ignifx/core';
+import { FontAssetLiteHandles } from '@ignifx/core';
 import { formatErrorMessage } from '@ignifx/core';
 import { FRAME_HISTORY_LENGTH } from '@ignifx/core';
 import { FrameSample } from '@ignifx/core';
 import { FrameState } from '@ignifx/core';
 import { generateUlid } from '@ignifx/core';
+import { GroundMeshOptions } from '@ignifx/core';
 import { i32 } from '@ignifx/core';
 import { IgnifxError } from '@ignifx/core';
 import { IgnifxErrorOptions } from '@ignifx/core';
+import { ImageProcessingEffectSettings } from '@ignifx/core';
+import { ImageProcessingSettings } from '@ignifx/core';
+import { InstantiateOptions } from '@ignifx/core';
+import { instantiateScene } from '@ignifx/core';
+import { InstantiateSceneOptions } from '@ignifx/core';
 import { INVALID_HANDLE } from '@ignifx/core';
 import { inverseLerp } from '@ignifx/core';
+import { isAssetRef } from '@ignifx/core';
 import { isIgnifxError } from '@ignifx/core';
+import { isSceneFileHeader } from '@ignifx/core';
 import { isUlid } from '@ignifx/core';
 import { isValidErrorCode } from '@ignifx/core';
 import { isValidLayer } from '@ignifx/core';
 import { isWebGpuAvailable } from '@ignifx/core';
 import { JsonArray } from '@ignifx/core';
+import { jsonAssetLoader } from '@ignifx/core';
 import { JsonObject } from '@ignifx/core';
 import { JsonSchemaObject } from '@ignifx/core';
 import { JsonValue } from '@ignifx/core';
@@ -140,8 +220,30 @@ import { LayersSettings } from '@ignifx/core';
 import { LayerTable } from '@ignifx/core';
 import { lerp } from '@ignifx/core';
 import { lerpAngleDegrees } from '@ignifx/core';
+import { Light } from '@ignifx/core';
+import { LIGHT_TYPES } from '@ignifx/core';
+import { LightShadowSettings } from '@ignifx/core';
+import { LightType } from '@ignifx/core';
+import { LiteAnimationGroup } from '@ignifx/core';
+import { LiteAssetContainer } from '@ignifx/core';
+import { LiteCamera } from '@ignifx/core';
 import { LiteEngine } from '@ignifx/core';
+import { LiteEnvironmentTextures } from '@ignifx/core';
+import { LiteFont } from '@ignifx/core';
+import { LiteLight } from '@ignifx/core';
+import { LiteMaterial } from '@ignifx/core';
+import { LiteMesh } from '@ignifx/core';
+import { LitePbrMaterial } from '@ignifx/core';
 import { LiteScene } from '@ignifx/core';
+import { LiteSceneNode } from '@ignifx/core';
+import { LiteShadowGenerator } from '@ignifx/core';
+import { LiteSkeleton } from '@ignifx/core';
+import { LiteStandardMaterial } from '@ignifx/core';
+import { LiteTexture2D } from '@ignifx/core';
+import { LoaderContext } from '@ignifx/core';
+import { LoadOptions } from '@ignifx/core';
+import { LoadProgress } from '@ignifx/core';
+import { LoadSceneOptions } from '@ignifx/core';
 import { LOG_LEVEL_SEVERITY } from '@ignifx/core';
 import { Logger } from '@ignifx/core';
 import { LoggerOptions } from '@ignifx/core';
@@ -156,9 +258,33 @@ import { Mat4 } from '@ignifx/core';
 import { MAT4_IDENTITY } from '@ignifx/core';
 import { Mat4Elements } from '@ignifx/core';
 import { Mat4Like } from '@ignifx/core';
+import { MATERIAL_ALPHA_MODE_NAMES } from '@ignifx/core';
+import { MATERIAL_ALPHA_MODES } from '@ignifx/core';
+import { MATERIAL_ASSET_TYPE } from '@ignifx/core';
+import { MATERIAL_FILE_EXTENSION } from '@ignifx/core';
+import { MATERIAL_FILE_FORMAT } from '@ignifx/core';
+import { MATERIAL_FORMAT_VERSION } from '@ignifx/core';
+import { MATERIAL_KINDS } from '@ignifx/core';
+import { MaterialAlphaMode } from '@ignifx/core';
+import { MaterialAlphaModeName } from '@ignifx/core';
+import { MaterialAsset } from '@ignifx/core';
+import { MaterialAssetLiteHandles } from '@ignifx/core';
+import { MaterialDefinition } from '@ignifx/core';
+import { MaterialKind } from '@ignifx/core';
 import { MAX_LAYERS } from '@ignifx/core';
 import { MAX_ULID_TIME_MS } from '@ignifx/core';
 import { MemorySink } from '@ignifx/core';
+import { MESH_ASSET_TYPE } from '@ignifx/core';
+import { MeshAsset } from '@ignifx/core';
+import { MeshAssetLiteHandles } from '@ignifx/core';
+import { MeshGeometryData } from '@ignifx/core';
+import { MeshRenderer } from '@ignifx/core';
+import { Model } from '@ignifx/core';
+import { MODEL_ASSET_TYPE } from '@ignifx/core';
+import { MODEL_FILE_EXTENSIONS } from '@ignifx/core';
+import { ModelAsset } from '@ignifx/core';
+import { ModelAssetLiteHandles } from '@ignifx/core';
+import { ModelInstantiation } from '@ignifx/core';
 import { moveTowards } from '@ignifx/core';
 import { MutableQuat } from '@ignifx/core';
 import { MutableVec2 } from '@ignifx/core';
@@ -167,16 +293,24 @@ import { MutableVec4 } from '@ignifx/core';
 import { NumberFieldSpec } from '@ignifx/core';
 import { optional } from '@ignifx/core';
 import { OptionalFieldSpec } from '@ignifx/core';
+import { OverridePath } from '@ignifx/core';
+import { parseOverridePath } from '@ignifx/core';
 import { PartialFieldsOf } from '@ignifx/core';
+import { PBR_TEXTURE_SLOTS } from '@ignifx/core';
+import { PbrMaterialDefinition } from '@ignifx/core';
+import { pbrMaterialDefinition } from '@ignifx/core';
 import { Phase } from '@ignifx/core';
 import { PHASE_COUNT } from '@ignifx/core';
 import { PHASE_NAMES } from '@ignifx/core';
 import { PhaseIndex } from '@ignifx/core';
 import { PHASES } from '@ignifx/core';
 import { pingPong } from '@ignifx/core';
+import { PlaneMeshOptions } from '@ignifx/core';
 import { PlatformInfo } from '@ignifx/core';
 import { PlatformKind } from '@ignifx/core';
+import { PostProcessStack } from '@ignifx/core';
 import { ProfileScope } from '@ignifx/core';
+import { PROJECTIONS } from '@ignifx/core';
 import { Quat } from '@ignifx/core';
 import { quat } from '@ignifx/core';
 import { QUAT_IDENTITY } from '@ignifx/core';
@@ -184,17 +318,49 @@ import { QuatLike } from '@ignifx/core';
 import { RAD_TO_DEG } from '@ignifx/core';
 import { radToDeg } from '@ignifx/core';
 import { RandomSource } from '@ignifx/core';
+import { Ray } from '@ignifx/core';
+import { RayVector } from '@ignifx/core';
 import { record } from '@ignifx/core';
 import { RecordFieldSpec } from '@ignifx/core';
 import { ReferenceDecoder } from '@ignifx/core';
 import { ReferenceEncoder } from '@ignifx/core';
+import { RegisterAssetOptions } from '@ignifx/core';
 import { RegisterComponentOptions } from '@ignifx/core';
 import { RegisterSystemOptions } from '@ignifx/core';
+import { RENDER_DIAGNOSTICS_COUNTERS } from '@ignifx/core';
+import { RENDER_DIAGNOSTICS_GROUP } from '@ignifx/core';
+import { RenderCapture } from '@ignifx/core';
+import { Renderer } from '@ignifx/core';
+import { RENDERING_SETTINGS_SECTION } from '@ignifx/core';
+import { RenderingFeature } from '@ignifx/core';
+import { RenderingFeatureSettings } from '@ignifx/core';
+import { RenderingSettings } from '@ignifx/core';
+import { RenderPick } from '@ignifx/core';
+import { RenderPickOptions } from '@ignifx/core';
 import { RenderSurface } from '@ignifx/core';
+import { RenderTaskTiming } from '@ignifx/core';
+import { RenderTaskTimings } from '@ignifx/core';
 import { repeat } from '@ignifx/core';
 import { RESERVED_LAYER_NAMES } from '@ignifx/core';
 import { resetFrameSample } from '@ignifx/core';
+import { SCENE_ASSET_TYPE } from '@ignifx/core';
+import { SCENE_FILE_EXTENSIONS } from '@ignifx/core';
+import { SCENE_FILE_FORMAT } from '@ignifx/core';
+import { SCENE_FORMAT_VERSION } from '@ignifx/core';
+import { SceneAsset } from '@ignifx/core';
+import { SceneBuildResult } from '@ignifx/core';
+import { SceneFile } from '@ignifx/core';
+import { SceneFileAssetRef } from '@ignifx/core';
+import { SceneFileComponent } from '@ignifx/core';
+import { SceneFileEntity } from '@ignifx/core';
+import { SceneFileInstance } from '@ignifx/core';
+import { SceneFileIssue } from '@ignifx/core';
+import { sceneFileJsonSchema } from '@ignifx/core';
+import { SceneFileOverride } from '@ignifx/core';
+import { SceneFileTransform } from '@ignifx/core';
 import { SceneInstance } from '@ignifx/core';
+import { SceneLoaderOptions } from '@ignifx/core';
+import { SceneLoadIssue } from '@ignifx/core';
 import { Schema } from '@ignifx/core';
 import { SchemaDescription } from '@ignifx/core';
 import { SchemaDescriptionMeta } from '@ignifx/core';
@@ -206,33 +372,56 @@ import { ScriptCallbacks } from '@ignifx/core';
 import { ScriptClassInfo } from '@ignifx/core';
 import { ScriptDefinition } from '@ignifx/core';
 import { ScriptStatics } from '@ignifx/core';
+import { serializeComponent } from '@ignifx/core';
+import { serializeEntity } from '@ignifx/core';
+import { SerializeIssue } from '@ignifx/core';
+import { serializeScene } from '@ignifx/core';
+import { SerializeSceneOptions } from '@ignifx/core';
 import { ServiceClassKey } from '@ignifx/core';
 import { ServiceKey } from '@ignifx/core';
 import { ServiceNameKey } from '@ignifx/core';
 import { ServiceRegistry } from '@ignifx/core';
 import { SetParentOptions } from '@ignifx/core';
 import { SettingsInput } from '@ignifx/core';
+import { SHADOW_TECHNIQUES } from '@ignifx/core';
+import { ShadowTechniqueName } from '@ignifx/core';
 import { sign } from '@ignifx/core';
 import { Signal } from '@ignifx/core';
 import { SignalHandler } from '@ignifx/core';
 import { SignalLike } from '@ignifx/core';
 import { SignalOptions } from '@ignifx/core';
 import { SignalOwner } from '@ignifx/core';
+import { SmaaEffectSettings } from '@ignifx/core';
 import { smoothStep } from '@ignifx/core';
 import { SortingLayersSettings } from '@ignifx/core';
+import { SphereMeshOptions } from '@ignifx/core';
+import { STANDARD_TEXTURE_SLOTS } from '@ignifx/core';
+import { StandardMaterialDefinition } from '@ignifx/core';
+import { standardMaterialDefinition } from '@ignifx/core';
 import { str } from '@ignifx/core';
 import { StringFieldSpec } from '@ignifx/core';
+import { stringifySceneFile } from '@ignifx/core';
 import { System } from '@ignifx/core';
 import { SystemContext } from '@ignifx/core';
 import { TagSet } from '@ignifx/core';
+import { textAssetLoader } from '@ignifx/core';
+import { TEXTURE_ASSET_TYPE } from '@ignifx/core';
+import { TextureAsset } from '@ignifx/core';
+import { TextureAssetLiteHandles } from '@ignifx/core';
+import { TextureImportOptions } from '@ignifx/core';
 import { THIRD_PARTY_ERROR_PREFIX } from '@ignifx/core';
 import { Time } from '@ignifx/core';
 import { TimeSettings } from '@ignifx/core';
 import { toJsonSchema } from '@ignifx/core';
+import { TONE_MAPPING_NAMES } from '@ignifx/core';
+import { ToneMappingCurve } from '@ignifx/core';
+import { TorusMeshOptions } from '@ignifx/core';
 import { Transform } from '@ignifx/core';
 import { u32 } from '@ignifx/core';
+import { UidRemap } from '@ignifx/core';
 import { UlidFactoryOptions } from '@ignifx/core';
 import { validateProps } from '@ignifx/core';
+import { validateSceneFile } from '@ignifx/core';
 import { validateValue } from '@ignifx/core';
 import { Vec2 } from '@ignifx/core';
 import { vec2 } from '@ignifx/core';
@@ -266,6 +455,8 @@ import { wrapAngleDegrees } from '@ignifx/core';
 
 export { App }
 
+export { AppEvents }
+
 export { AppLiteHandles }
 
 export { applyInit }
@@ -280,19 +471,75 @@ export { ArrayFieldSpec }
 
 export { assertNever }
 
+export { assertSceneDependenciesLoaded }
+
 export { asset }
+
+export { ASSET_DIAGNOSTICS_COUNTERS }
+
+export { ASSET_DIAGNOSTICS_GROUP }
+
+export { ASSET_MANIFEST_FORMAT }
+
+export { ASSET_MANIFEST_VERSION }
 
 export { AssetFieldSpec }
 
+export { AssetHandle }
+
+export { AssetLoader }
+
+export { AssetLoadError }
+
+export { AssetLoadErrorOptions }
+
+export { AssetManifest }
+
+export { AssetManifestEntry }
+
+export { AssetProgress }
+
+export { AssetRef }
+
+export { assetRef }
+
 export { AssetRefValue }
 
+export { Assets }
+
+export { AssetsCreateOptions }
+
+export { AssetsSettings }
+
+export { AssetState }
+
+export { AssetTypeDefinition }
+
 export { AssetTypeToken }
+
+export { BatchHandle }
+
+export { binaryAssetLoader }
+
+export { BloomEffectSettings }
 
 export { bool }
 
 export { BoolFieldSpec }
 
+export { BoxMeshOptions }
+
+export { Camera }
+
+export { CameraProjection }
+
 export { canonicalizeNumber }
+
+export { CANVAS_ALPHA_MODES }
+
+export { CanvasAlphaMode }
+
+export { CapsuleMeshOptions }
 
 export { clamp }
 
@@ -332,6 +579,8 @@ export { ComponentType }
 
 export { ComponentTypeToken }
 
+export { computeSceneHash }
+
 export { ConcreteComponentType }
 
 export { ConnectOptions }
@@ -358,6 +607,8 @@ export { createApp }
 
 export { CreateAppOptions }
 
+export { createAssetManifest }
+
 export { createConsoleSink }
 
 export { createCryptoRandom }
@@ -368,7 +619,11 @@ export { createDiagnosticsGroup }
 
 export { CreateEntityOptions }
 
+export { createEnvironmentLoader }
+
 export { createErrorCodeRegistry }
+
+export { createFontLoader }
 
 export { createFrameSample }
 
@@ -378,13 +633,27 @@ export { createLogger }
 
 export { createManualClock }
 
+export { createMaterialAsset }
+
+export { createMaterialLoader }
+
 export { createMemorySink }
 
+export { createModelLoader }
+
 export { createPerformanceClock }
+
+export { createRay }
+
+export { createSceneAsset }
+
+export { createSceneLoader }
 
 export { createSeededRandom }
 
 export { createServiceKey }
+
+export { createTextureLoader }
 
 export { createUlidFactory }
 
@@ -402,15 +671,25 @@ export { CustomFieldCodec }
 
 export { CustomFieldSpec }
 
+export { CylinderMeshOptions }
+
 export { decodeProps }
 
 export { DecodeResult }
 
 export { decodeValue }
 
+export { DEFAULT_ASSET_CONCURRENCY }
+
+export { DEFAULT_ASSET_ROOT }
+
+export { DEFAULT_BRDF_LUT_ADDRESS }
+
 export { DEFAULT_LAYER }
 
 export { DEFAULT_MEMORY_SINK_LIMIT }
+
+export { defaultRenderingSettings }
 
 export { DeferredQueue }
 
@@ -424,7 +703,17 @@ export { degToRad }
 
 export { deltaAngleDegrees }
 
+export { describeEnvironmentFileFormat }
+
+export { describeMaterialFileFormat }
+
+export { describeSceneFileFormat }
+
 export { describeSchema }
+
+export { describeSchemas }
+
+export { DeviceLostInfo }
 
 export { Diagnostics }
 
@@ -434,6 +723,8 @@ export { DiagnosticsOptions }
 
 export { Disconnect }
 
+export { EMPTY_ASSET_MANIFEST }
+
 export { encodeProps }
 
 export { encodeValue }
@@ -442,6 +733,10 @@ export { Entity }
 
 export { EntityHandle }
 
+export { EntityOverrideField }
+
+export { EntityPrefabLink }
+
 export { entityRef }
 
 export { EntityRefFieldSpec }
@@ -449,6 +744,30 @@ export { EntityRefFieldSpec }
 export { EnumFieldSpec }
 
 export { enumOf }
+
+export { Environment }
+
+export { ENVIRONMENT_ASSET_TYPE }
+
+export { ENVIRONMENT_FILE_EXTENSION }
+
+export { ENVIRONMENT_FILE_EXTENSIONS }
+
+export { ENVIRONMENT_FILE_FORMAT }
+
+export { ENVIRONMENT_FORMAT_VERSION }
+
+export { EnvironmentAsset }
+
+export { EnvironmentAssetLiteHandles }
+
+export { EnvironmentDefinition }
+
+export { environmentDefinition }
+
+export { EnvironmentFogMode }
+
+export { EnvironmentFogSettings }
 
 export { EPSILON }
 
@@ -474,6 +793,8 @@ export { f32 }
 
 export { f64 }
 
+export { FetchLike }
+
 export { FieldDefinition }
 
 export { FieldKind }
@@ -483,6 +804,16 @@ export { FieldOptions }
 export { FieldsOf }
 
 export { FieldSpec }
+
+export { FOG_MODE_NAMES }
+
+export { FONT_ASSET_TYPE }
+
+export { FONT_FILE_EXTENSIONS }
+
+export { FontAsset }
+
+export { FontAssetLiteHandles }
 
 export { formatErrorMessage }
 
@@ -494,17 +825,33 @@ export { FrameState }
 
 export { generateUlid }
 
+export { GroundMeshOptions }
+
 export { i32 }
 
 export { IgnifxError }
 
 export { IgnifxErrorOptions }
 
+export { ImageProcessingEffectSettings }
+
+export { ImageProcessingSettings }
+
+export { InstantiateOptions }
+
+export { instantiateScene }
+
+export { InstantiateSceneOptions }
+
 export { INVALID_HANDLE }
 
 export { inverseLerp }
 
+export { isAssetRef }
+
 export { isIgnifxError }
+
+export { isSceneFileHeader }
 
 export { isUlid }
 
@@ -515,6 +862,8 @@ export { isValidLayer }
 export { isWebGpuAvailable }
 
 export { JsonArray }
+
+export { jsonAssetLoader }
 
 export { JsonObject }
 
@@ -536,9 +885,53 @@ export { lerp }
 
 export { lerpAngleDegrees }
 
+export { Light }
+
+export { LIGHT_TYPES }
+
+export { LightShadowSettings }
+
+export { LightType }
+
+export { LiteAnimationGroup }
+
+export { LiteAssetContainer }
+
+export { LiteCamera }
+
 export { LiteEngine }
 
+export { LiteEnvironmentTextures }
+
+export { LiteFont }
+
+export { LiteLight }
+
+export { LiteMaterial }
+
+export { LiteMesh }
+
+export { LitePbrMaterial }
+
 export { LiteScene }
+
+export { LiteSceneNode }
+
+export { LiteShadowGenerator }
+
+export { LiteSkeleton }
+
+export { LiteStandardMaterial }
+
+export { LiteTexture2D }
+
+export { LoaderContext }
+
+export { LoadOptions }
+
+export { LoadProgress }
+
+export { LoadSceneOptions }
 
 export { LOG_LEVEL_SEVERITY }
 
@@ -568,11 +961,59 @@ export { Mat4Elements }
 
 export { Mat4Like }
 
+export { MATERIAL_ALPHA_MODE_NAMES }
+
+export { MATERIAL_ALPHA_MODES }
+
+export { MATERIAL_ASSET_TYPE }
+
+export { MATERIAL_FILE_EXTENSION }
+
+export { MATERIAL_FILE_FORMAT }
+
+export { MATERIAL_FORMAT_VERSION }
+
+export { MATERIAL_KINDS }
+
+export { MaterialAlphaMode }
+
+export { MaterialAlphaModeName }
+
+export { MaterialAsset }
+
+export { MaterialAssetLiteHandles }
+
+export { MaterialDefinition }
+
+export { MaterialKind }
+
 export { MAX_LAYERS }
 
 export { MAX_ULID_TIME_MS }
 
 export { MemorySink }
+
+export { MESH_ASSET_TYPE }
+
+export { MeshAsset }
+
+export { MeshAssetLiteHandles }
+
+export { MeshGeometryData }
+
+export { MeshRenderer }
+
+export { Model }
+
+export { MODEL_ASSET_TYPE }
+
+export { MODEL_FILE_EXTENSIONS }
+
+export { ModelAsset }
+
+export { ModelAssetLiteHandles }
+
+export { ModelInstantiation }
 
 export { moveTowards }
 
@@ -590,7 +1031,17 @@ export { optional }
 
 export { OptionalFieldSpec }
 
+export { OverridePath }
+
+export { parseOverridePath }
+
 export { PartialFieldsOf }
+
+export { PBR_TEXTURE_SLOTS }
+
+export { PbrMaterialDefinition }
+
+export { pbrMaterialDefinition }
 
 export { Phase }
 
@@ -604,11 +1055,17 @@ export { PHASES }
 
 export { pingPong }
 
+export { PlaneMeshOptions }
+
 export { PlatformInfo }
 
 export { PlatformKind }
 
+export { PostProcessStack }
+
 export { ProfileScope }
+
+export { PROJECTIONS }
 
 export { Quat }
 
@@ -624,6 +1081,10 @@ export { radToDeg }
 
 export { RandomSource }
 
+export { Ray }
+
+export { RayVector }
+
 export { record }
 
 export { RecordFieldSpec }
@@ -632,11 +1093,37 @@ export { ReferenceDecoder }
 
 export { ReferenceEncoder }
 
+export { RegisterAssetOptions }
+
 export { RegisterComponentOptions }
 
 export { RegisterSystemOptions }
 
+export { RENDER_DIAGNOSTICS_COUNTERS }
+
+export { RENDER_DIAGNOSTICS_GROUP }
+
+export { RenderCapture }
+
+export { Renderer }
+
+export { RENDERING_SETTINGS_SECTION }
+
+export { RenderingFeature }
+
+export { RenderingFeatureSettings }
+
+export { RenderingSettings }
+
+export { RenderPick }
+
+export { RenderPickOptions }
+
 export { RenderSurface }
+
+export { RenderTaskTiming }
+
+export { RenderTaskTimings }
 
 export { repeat }
 
@@ -644,7 +1131,41 @@ export { RESERVED_LAYER_NAMES }
 
 export { resetFrameSample }
 
+export { SCENE_ASSET_TYPE }
+
+export { SCENE_FILE_EXTENSIONS }
+
+export { SCENE_FILE_FORMAT }
+
+export { SCENE_FORMAT_VERSION }
+
+export { SceneAsset }
+
+export { SceneBuildResult }
+
+export { SceneFile }
+
+export { SceneFileAssetRef }
+
+export { SceneFileComponent }
+
+export { SceneFileEntity }
+
+export { SceneFileInstance }
+
+export { SceneFileIssue }
+
+export { sceneFileJsonSchema }
+
+export { SceneFileOverride }
+
+export { SceneFileTransform }
+
 export { SceneInstance }
+
+export { SceneLoaderOptions }
+
+export { SceneLoadIssue }
 
 export { Schema }
 
@@ -668,6 +1189,16 @@ export { ScriptDefinition }
 
 export { ScriptStatics }
 
+export { serializeComponent }
+
+export { serializeEntity }
+
+export { SerializeIssue }
+
+export { serializeScene }
+
+export { SerializeSceneOptions }
+
 export { ServiceClassKey }
 
 export { ServiceKey }
@@ -679,6 +1210,10 @@ export { ServiceRegistry }
 export { SetParentOptions }
 
 export { SettingsInput }
+
+export { SHADOW_TECHNIQUES }
+
+export { ShadowTechniqueName }
 
 export { sign }
 
@@ -692,19 +1227,41 @@ export { SignalOptions }
 
 export { SignalOwner }
 
+export { SmaaEffectSettings }
+
 export { smoothStep }
 
 export { SortingLayersSettings }
 
+export { SphereMeshOptions }
+
+export { STANDARD_TEXTURE_SLOTS }
+
+export { StandardMaterialDefinition }
+
+export { standardMaterialDefinition }
+
 export { str }
 
 export { StringFieldSpec }
+
+export { stringifySceneFile }
 
 export { System }
 
 export { SystemContext }
 
 export { TagSet }
+
+export { textAssetLoader }
+
+export { TEXTURE_ASSET_TYPE }
+
+export { TextureAsset }
+
+export { TextureAssetLiteHandles }
+
+export { TextureImportOptions }
 
 export { THIRD_PARTY_ERROR_PREFIX }
 
@@ -714,13 +1271,23 @@ export { TimeSettings }
 
 export { toJsonSchema }
 
+export { TONE_MAPPING_NAMES }
+
+export { ToneMappingCurve }
+
+export { TorusMeshOptions }
+
 export { Transform }
 
 export { u32 }
 
+export { UidRemap }
+
 export { UlidFactoryOptions }
 
 export { validateProps }
+
+export { validateSceneFile }
 
 export { validateValue }
 

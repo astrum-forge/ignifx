@@ -50,20 +50,44 @@ export function createHeadlessScene(): HeadlessScene {
 }
 
 /**
- * Creates a scene with Lite's default render task on the given WebGPU engine — the scene a world
- * actually draws.
+ * Creates the scene a world actually draws, with or without Lite's default render task.
  *
  * @remarks
  * The engine comes from `createRenderEngine` in `./render.ts`; this module deliberately does not
  * create engines, so the WebGPU capability probe stays in one place.
  *
+ * `defaultRenderTask` is the one thing about a scene that cannot be changed afterwards: the task is
+ * built inside `createSceneContext` with its render target baked in, and Lite exposes no handle to
+ * it (`./gpu/render-path.ts`). A project that declares `rendering.features.postProcessing` gets no
+ * default task and `installOffscreenRenderPath` builds the replacement.
+ *
  * @param engine - A WebGPU engine.
+ * @param options - Scene options.
+ * @param options.offscreen - `true` to omit the default render task, for the offscreen path.
  * @returns The scene. Register it and start the loop with `startRenderLoop`.
  *
  * @internal
  */
-export function createRenderScene(engine: EngineContext): SceneContext {
-  return createSceneContext(engine, { defaultRenderTask: true });
+export function createRenderScene(engine: EngineContext, options?: { readonly offscreen?: boolean }): SceneContext {
+  return createSceneContext(engine, { defaultRenderTask: options?.offscreen !== true });
+}
+
+/**
+ * How many lights a scene currently holds.
+ *
+ * @remarks
+ * `SceneContext.lights` is a plain array Lite appends to in `addToScene`, so reading its length
+ * needs no device. The renderer consults it before installing warm-up probes: a probe registered
+ * into a scene with **no** lights leaves every later mesh of that family undrawn (measured on
+ * SwiftShader 2026-09-05; see `test/render/warm-up.browser.test.ts`).
+ *
+ * @param scene - The scene to read.
+ * @returns The light count.
+ *
+ * @internal
+ */
+export function sceneLightCount(scene: SceneContext): number {
+  return scene.lights.length;
 }
 
 /**

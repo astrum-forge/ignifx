@@ -1,10 +1,13 @@
 import { CoreErrorCode } from "../errors/error-codes.js";
 import { IgnifxError } from "../errors/ignifx-error.js";
 import { isWebGpuAvailable } from "../platform/webgpu.js";
+import { installOffscreenRenderPath } from "./gpu/render-path.js";
 import { createWebGpuEngine, disposeWebGpuEngine } from "./render.js";
 import { createHeadlessScene, createRenderScene, disposeSceneOnly } from "./scene.js";
+import type { ScenePresenter } from "./gpu/render-path.js";
 import type { LiteEngine, LiteScene } from "./scene.js";
 import type { RenderSurface } from "../platform/webgpu.js";
+import type { EngineOptions } from "@babylonjs/lite";
 
 /**
  * The engine/scene pair an app is built on, and the WebGPU capability gate in front of it
@@ -23,6 +26,11 @@ export interface EngineHandles {
   readonly scene: LiteScene;
   /** `true` when the engine is the null engine and there is nothing to present to. */
   readonly isHeadless: boolean;
+  /**
+   * The offscreen render path, when the project declared `rendering.features.postProcessing`;
+   * `null` when the scene renders straight into the swapchain the way Lite does by default.
+   */
+  readonly presenter: ScenePresenter | null;
 }
 
 /**
@@ -59,22 +67,42 @@ export function assertWebGpuAvailable(): void {
  */
 export function createHeadlessEngine(): EngineHandles {
   const headless = createHeadlessScene();
-  return { engine: headless.engine, scene: headless.scene, isHeadless: true };
+  return { engine: headless.engine, scene: headless.scene, isHeadless: true, presenter: null };
 }
 
 /**
  * Builds a WebGPU engine bound to a canvas and the render scene a world draws into.
  *
+ * @remarks
+ * `postProcessing` is decided here rather than in `app.start()` with the other rendering features,
+ * because it chooses between two frame graphs and a frame graph is built inside `createSceneContext`
+ * (`./gpu/render-path.ts`). Everything else about it — the `PostProcessStack` component, the
+ * `IGX-0710` guard — hangs off that one decision.
+ *
  * @param canvas - The canvas or offscreen canvas to render into.
- * @returns The engine and scene.
+ * @param options - Device and surface options; see `createWebGpuEngine`.
+ * @param features - Which render path to build.
+ * @param features.postProcessing - `true` to render into an offscreen target and composite it.
+ * @returns The engine, the scene, and the presenter when there is one.
  * @throws IgnifxError with code `IGX-0701` when WebGPU is unavailable.
  *
  * @internal
  */
-export async function createRenderEngine(canvas: RenderSurface): Promise<EngineHandles> {
+export async function createRenderEngine(
+  canvas: RenderSurface,
+  options?: EngineOptions,
+  features?: { readonly postProcessing?: boolean },
+): Promise<EngineHandles> {
   assertWebGpuAvailable();
-  const engine = await createWebGpuEngine(canvas);
-  return { engine, scene: createRenderScene(engine), isHeadless: false };
+  const engine = await createWebGpuEngine(canvas, options);
+  const offscreen = features?.postProcessing === true;
+  const scene = createRenderScene(engine, { offscreen });
+  return {
+    engine,
+    scene,
+    isHeadless: false,
+    presenter: offscreen ? installOffscreenRenderPath(engine, scene) : null,
+  };
 }
 
 /**

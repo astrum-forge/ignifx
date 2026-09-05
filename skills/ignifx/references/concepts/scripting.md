@@ -81,7 +81,8 @@ schema is a file-format change, which before 1.0 simply invalidates old files (`
 
 ## 4. Value encoding
 
-What each kind becomes in a scene file (the format itself arrives in Phase 2):
+What each kind becomes in a scene file. The full format, with instances and overrides, is in
+[`../formats/scene.md`](../formats/scene.md).
 
 | Kind                       | JSON                                                                                        |
 | -------------------------- | ------------------------------------------------------------------------------------------- |
@@ -97,6 +98,12 @@ What each kind becomes in a scene file (the format itself arrives in Phase 2):
 | `optional`                 | the inner encoding or `null`                                                                |
 | `layerMask`                | array of layer names, so renames survive                                                    |
 | `curve` / `custom`         | `{ "keys": [[t, v, inTangent, outTangent], …] }` / whatever the codec's `serialize` returns |
+
+The **runtime** value of an `asset()` field is the loaded `AssetHandle`, not the address: the scene
+loader resolves every reference before it writes the props, so `awake` can read `this.mesh.value`
+straight away. The field never owns the reference count — the scene instance that loaded the asset
+releases it — and an in-code (`memory:`) asset serializes as `null` with `IGX-0602`. See
+[`assets.md`](assets.md) §4.
 
 ## 5. Coroutines
 

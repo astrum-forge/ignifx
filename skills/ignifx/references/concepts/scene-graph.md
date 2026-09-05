@@ -1,7 +1,7 @@
 # Scene graph
 
-`World`, `SceneInstance`, `Entity`, `Transform`, tags, layers, and signals as the Phase 1 kernel
-ships them. Rationale in `docs/architecture/02-scene-graph.md`.
+`World`, `SceneInstance`, `Entity`, `Transform`, tags, layers, signals, and — since Phase 2 — scene
+files, prefabs, and instancing. Rationale in `docs/architecture/02-scene-graph.md`.
 
 ```
 World ──▶ SceneInstance ──▶ Entity (roots) ──▶ Entity (children) ──▶ Component
@@ -21,22 +21,65 @@ World ──▶ SceneInstance ──▶ Entity (roots) ──▶ Entity (childre
 | `scenes`                                                                      | `readonly SceneInstance[]`    | Every loaded instance                                            |
 | `layers`                                                                      | `LayerTable`                  | Names resolved from the `layers` settings section                |
 | `registry`                                                                    | `ComponentRegistry`           | `typeId` ↔ class, and the derived class metadata                 |
-| `onEntityCreated` / `onEntityDestroyed` / `onSceneLoaded` / `onSceneUnloaded` | `Signal<…>`                   | World-level events                                               |
+| `loadScene(ref, options?)`                                                    | `Promise<SceneInstance>`      | Loads a `.scene.json` and everything it references               |
+| `unloadScene(instance)`                                                       | `Promise<void>`               | Destroys its entities and releases its asset handles             |
+| `instantiate(asset, options?)` / `instantiateAsync(ref, options?)`            | `Entity` / `Promise<Entity>`  | Stamps out a prefab; answers with one root entity                |
+| `moveEntityToScene(entity, instance)`                                         | `void`                        | Moves a **root** and its subtree; `IGX-0309` for a child         |
+| `mainCamera`                                                                  | `Camera \| null`              | The enabled camera with the highest `priority`                   |
+| `raycastRender(ray, options?)`                                                | `RenderPick \| null`          | Synchronous CPU pick against renderable meshes                   |
+| `onEntityCreated` / `onEntityDestroyed` / `onSceneLoaded` / `onSceneUnloaded` | `Signal<…>`                   | World-level events, also mirrored on `app.events`                |
 | `lite`                                                                        | `{ scene, simulationScene }`  | Unstable escape hatch; `simulationScene` is `null` until physics |
 
-Scene files, `loadScene`, `instantiate`, and prefabs arrive in Phase 2. Today every app starts with
-one implicit, persistent `SceneInstance` named `"default"`, so `createEntity` works immediately.
+Every app starts with one implicit, **persistent** `SceneInstance` named `"default"`, so
+`createEntity` works immediately and entities created in code survive a `"single"` scene load.
 
-## 2. `SceneInstance`
+## 2. Scenes, prefabs, and instancing
 
-`uid`, `name`, `roots`, `isLoaded`, `persistent`, `onUnloading`, and `asset` (always `null` until
-scene assets exist). Instances are created by the kernel; a game reads them off `world.scenes`.
+A scene file and a prefab file are the same format, `ignifx.scene` (ADR-0005): `.scene.json` is a
+level, `.prefab.json` is a thing you stamp out. Fields in
+[`../formats/ignifx.scene.md`](../formats/ignifx.scene.md); structure and overrides in
+[`../formats/scene.md`](../formats/scene.md).
+
+```ts
+import { createApp } from "@ignifx/core";
+import type { SceneAsset } from "@ignifx/core";
+
+const app = await createApp({ headless: true });
+
+// "single" (the default) unloads every non-persistent instance first; "additive" keeps them.
+const level = await app.world.loadScene("levels/level01.scene.json", { mode: "additive" });
+level.persistent = true;
+
+// A prefab is a loaded SceneAsset, stamped out synchronously.
+const prefab = await app.assets.loadAsync<SceneAsset>("prefabs/enemy.prefab.json");
+const enemy = app.world.instantiate(prefab.value, { position: { x: 4, y: 0, z: 2 } });
+app.log.info("spawned", enemy.name, "into", level.name);
+prefab.release();
+```
+
+- **`loadScene(ref, options?)`** — `mode` (`"single" | "additive"`), `signal`, `onProgress`,
+  `setActive` (defaults to `true` for a single load, `false` for an additive one), and
+  `strictInstanceHashes`. The asset and every dependency it names are loaded **before** the first
+  entity exists, which is what lets `awake` read an `asset()` field; construction then happens in one
+  synchronous block, and `awake`/`onEnable` run before the promise settles. An abort is `IGX-0502`.
+- **`instantiate(asset, options?)`** — `parent`, `scene`, `name`, `position`, `rotation`,
+  `worldSpace`, `strictInstanceHashes`. Synchronous, because a `SceneAsset` arrives with its
+  dependencies loaded. A file with one root answers with that root; a file with several gets a
+  container entity named after the scene, so the call always answers with exactly one entity. Every
+  entity gets a fresh uid and an `entity.prefab` link. `instantiateAsync(ref)` loads first.
+- **`SceneInstance`** — `uid`, `name`, `roots`, `isLoaded`, `persistent`, `settings`,
+  `onUnloading`, `asset` (the `AssetHandle<SceneAsset>` it was built from, or `null`), and `remap`
+  (the file-uid → runtime-object table, a `UidRemap`). Instances are created by the kernel and the
+  loader; a game reads them off `world.scenes` and sets `world.activeScene`.
+- **Saving** — `serializeScene(instanceOrRoots, options?)` produces a `SceneFile`;
+  `stringifySceneFile(file)` renders it, `validateSceneFile(value)` checks one, and
+  `computeSceneHash(file)` is what instance hashes compare against.
 
 ## 3. `Entity`
 
 | Group      | Members                                                                                                                                                                                                                                           |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Identity   | `uid` (ULID, stable across files), `handle` (dense, invalid after destroy), `name`, `world`, `scene`, `transform`                                                                                                                                 |
+| Identity   | `uid` (ULID, stable across files), `handle` (dense, invalid after destroy), `name`, `world`, `scene`, `transform`, `prefab` (the instance link, or `null`)                                                                                        |
 | Hierarchy  | `parent`, `children`, `setParent(parent, { worldPositionStays })`, `root()`, `isDescendantOf(other)`, `findChild(predicate, deep?)`, `find(path)`                                                                                                 |
 | Components | `addComponent(Type, init?)`, `getComponent(Type)`, `requireComponent(Type)`, `getComponents(Type)`, `getComponentInChildren`, `getComponentsInChildren`, `getComponentInParent`, `hasComponent(Type)`, `removeComponent(component)`, `components` |
 | State      | `active`, `activeInHierarchy`, `isStatic`, `layer`, `tags`, `isDestroyed`                                                                                                                                                                         |

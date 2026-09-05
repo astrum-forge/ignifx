@@ -1,3 +1,4 @@
+import { AssetsImpl } from "../assets/assets-service.js";
 import { ComponentRegistry } from "../component/component-registry.js";
 import { componentInternals } from "../component/internals.js";
 import { CoroutineHostImpl } from "../coroutine/coroutine-host.js";
@@ -12,10 +13,15 @@ import { createLayerTable } from "../layers/layer-table.js";
 import { ScriptCallbackKind } from "../lifecycle/callbacks.js";
 import { createFrameState } from "../lifecycle/frame-state.js";
 import { createHeadlessEngine, createRenderEngine, disposeEngineHandles } from "../lite/engine.js";
-import { registerFrameCallback, startRenderLoop, stopRenderLoop, unregisterFrameCallback } from "../lite/loop.js";
+import { enableSceneDeviceLossRecovery } from "../lite/gpu/device-loss.js";
+import { registerFrameCallback, startEngineLoop, stopRenderLoop, unregisterFrameCallback } from "../lite/loop.js";
+import { enableLiteErrorDecoding, toLiteEngineOptions } from "../lite/render-diagnostics.js";
+import { applyRenderingFeatures, registerRenderScene } from "../lite/render-features.js";
 import { createConsoleSink } from "../log/console-sink.js";
 import { createLogger } from "../log/logger.js";
 import { detectPlatform } from "../platform/platform.js";
+import { RendererService, rendererInternals } from "../render/renderer.js";
+import { toRendererOptions, toSurfaceFormat, RENDERING_SETTINGS_SECTION } from "../render/rendering-settings.js";
 import { EndOfFrameQueue } from "../scheduler/deferred-queue.js";
 import { Scheduler } from "../scheduler/scheduler.js";
 import { SettingsStore } from "../settings/settings-store.js";
@@ -23,9 +29,11 @@ import { Signal } from "../signal/signal.js";
 import { createPerformanceClock } from "../time/clock.js";
 import { TimeImpl } from "../time/time.js";
 import { createWorld } from "../world/world.js";
+import { AppEventsImpl } from "./events.js";
 import { PHASE_NAMES, Phase } from "./types.js";
 import { VERSION } from "./version.js";
 import type { App, AppLiteHandles, AppSettings, ErrorReport, Extension, System } from "./types.js";
+import type { AssetManifest, AssetsSettings, FetchLike } from "../assets/types.js";
 import type { ConcreteComponentType } from "../component/component-type.js";
 import type { ErrorFormatMode } from "../errors/ignifx-error.js";
 import type { ScriptCallbackKind as ScriptCallbackKindValue } from "../lifecycle/callbacks.js";
@@ -35,6 +43,9 @@ import type { LogSink, LogThreshold } from "../log/log-level.js";
 import type { Logger } from "../log/logger.js";
 import type { PlatformInfo } from "../platform/platform.js";
 import type { RenderSurface } from "../platform/webgpu.js";
+import type { Renderer } from "../render/renderer.js";
+import type { RenderingSettings } from "../render/rendering-settings.js";
+import type { SceneInstance } from "../scene/scene-instance.js";
 import type { Script } from "../script/script.js";
 import type { SettingsInput } from "../settings/settings-input.js";
 import type { Clock } from "../time/clock.js";
@@ -65,6 +76,18 @@ import type { World } from "../world/world.js";
 const MILLISECONDS_PER_SECOND = 1000;
 
 /**
+ * The asset options {@link CreateAppOptions.assets} carries.
+ *
+ * @public
+ */
+export interface AssetsCreateOptions {
+  /** The address-to-URL table. Defaults to an empty manifest rooted at the `assets` setting. */
+  readonly manifest?: AssetManifest;
+  /** The `fetch` every asset read goes through. Defaults to `globalThis.fetch`. */
+  readonly fetch?: FetchLike;
+}
+
+/**
  * Options accepted by {@link createApp}.
  *
  * @example
@@ -93,6 +116,22 @@ export interface CreateAppOptions {
    */
   readonly settings?: SettingsInput;
   /**
+   * The asset service's construction options
+   * (`docs/architecture/05-assets-and-loading.md` §7). The manifest normally arrives from
+   * `@ignifx/vite-plugin`; tests and Electron tooling pass it here.
+   *
+   * @remarks
+   * The `assets` **settings** section configures the root, the concurrency limit, the collector
+   * delay, and the retry count. The manifest and the injected `fetch` are not settings: neither
+   * survives schema validation, so they are creation options instead.
+   */
+  readonly assets?: AssetsCreateOptions;
+  /**
+   * The `fetch` the asset service reads through, as a shorthand for `assets.fetch`. Defaults to
+   * `globalThis.fetch`; headless tests pass a fake so responses are deterministic.
+   */
+  readonly fetch?: FetchLike;
+  /**
    * The wall clock behind `time.realtimeSinceStartup` and the development phase timings. Defaults
    * to `performance.now()`; headless tests pass {@link createManualClock}.
    */
@@ -118,6 +157,10 @@ interface ResolvedAppOptions {
   readonly canvas: RenderSurface | null;
   /** Project settings. */
   readonly settings: SettingsInput;
+  /** The address-to-URL table, or `null` to start from the empty manifest. */
+  readonly manifest: AssetManifest | null;
+  /** The injected `fetch`, or `null` to use the host's. */
+  readonly fetch: FetchLike | null;
   /** The wall clock. */
   readonly clock: Clock;
   /** The build mode. */
@@ -147,6 +190,12 @@ class AppImpl implements App {
 
   /** Every failure the engine caught at a boundary rather than rethrowing. */
   readonly onError: Signal<ErrorReport>;
+
+  /** Addressed, reference-counted asset loading. */
+  readonly assets: AssetsImpl;
+
+  /** Engine-wide events. */
+  readonly events: AppEventsImpl;
 
   /** The coroutine scheduler. */
   readonly coroutines: CoroutineHostImpl;
@@ -183,6 +232,8 @@ class AppImpl implements App {
   #handles: EngineHandles | null = null;
 
   #frameCallback: FrameCallbackHandle | null = null;
+
+  #deviceLoss: { disable(): void } | null = null;
 
   #isLoopRunning = false;
 
@@ -236,6 +287,15 @@ class AppImpl implements App {
       onHandlerError: (error: unknown): void => {
         this.log.error("An app.onError handler threw.", error);
       },
+    });
+    this.events = new AppEventsImpl((error: unknown): void => {
+      this.log.error("An app.events handler threw.", error);
+    });
+    this.assets = new AssetsImpl({
+      app: this,
+      diagnostics: this.diagnostics,
+      ...(options.fetch === null ? {} : { fetch: options.fetch }),
+      ...(options.manifest === null ? {} : { manifest: options.manifest }),
     });
     this.#deferred = new EndOfFrameQueue((error: unknown): void => {
       this.#report({ error, source: "system", phase: Phase.EndOfFrame, entity: null, component: null });
@@ -301,6 +361,26 @@ class AppImpl implements App {
       });
     }
     return world;
+  }
+
+  /**
+   * Surface sizing, material warm-up, GPU picking, screenshots, and the render diagnostics
+   * (`docs/architecture/07-rendering.md` §1, §3, §5).
+   *
+   * @returns The rendering service.
+   * @throws IgnifxError with code `IGX-0106` when the app has been disposed, or `IGX-0107` when it
+   * is read from inside an extension's `register` hook, before the core extension has built it.
+   */
+  get renderer(): Renderer {
+    this.#assertUsable("app.renderer");
+    const found = this.services.tryGet(RendererService);
+    if (found === null) {
+      throw new IgnifxError(CoreErrorCode.appNotReady, "app.renderer is not available until createApp() resolves.", {
+        context: { member: "app.renderer" },
+        hint: "The core extension builds it from the rendering settings; touch it in onStart().",
+      });
+    }
+    return found;
   }
 
   /**
@@ -379,9 +459,11 @@ class AppImpl implements App {
         context: { member: "app.start()" },
       });
     }
+    await this.#registerRenderScene(handles);
     this.#frameCallback = registerFrameCallback(handles.scene, this.#onLiteFrame);
     this.#isLoopRunning = true;
-    await startRenderLoop(handles.engine, handles.scene);
+    rendererInternals(this.renderer).setLoopRunning(true);
+    await startEngineLoop(handles.engine);
   }
 
   /** Stops the frame loop without disposing anything, then runs `onStop` in reverse order. */
@@ -401,13 +483,20 @@ class AppImpl implements App {
       return;
     }
     this.#stopInternal();
-    this.#isDisposed = true;
+    // The world is disposed **before** the app is marked disposed: destroying an entity runs its
+    // components' `onDetach`, and a render component's teardown reaches `app.renderer`, which
+    // refuses to answer a disposed app (`IGX-0106`). Marking first would turn one teardown into a
+    // cascade of caught failures.
     this.#world?.dispose();
+    this.#isDisposed = true;
     this.#host.dispose();
     this.coroutines.dispose();
     this.#deferred.clear();
     this.#scheduler.dispose();
+    this.#deviceLoss?.disable();
+    this.#deviceLoss = null;
     this.services.clear();
+    this.events.clear();
     const handles = this.#handles;
     if (handles !== null) {
       disposeEngineHandles(handles);
@@ -463,8 +552,26 @@ class AppImpl implements App {
     }
     await this.#host.register(list);
     this.#settings.freeze();
+    this.assets.applySettings(this.#settings.section<AssetsSettings>("assets"));
+    const rendering = this.#settings.section<RenderingSettings>(RENDERING_SETTINGS_SECTION);
+    if (this.#mode === "development") {
+      // §5: development builds decode Lite's numeric error codes to prose. It is process-global and
+      // idempotent, and it needs no device, so it runs before the engine exists.
+      enableLiteErrorDecoding();
+    }
     const canvas = this.#canvas;
-    this.#handles = canvas === null ? createHeadlessEngine() : await createRenderEngine(canvas);
+    const renderer = rendererInternals(this.renderer);
+    this.#handles =
+      canvas === null
+        ? createHeadlessEngine()
+        : await createRenderEngine(canvas, this.#engineOptions(rendering), {
+            // §1.1: the render path is a frame-graph decision, so it is made when the scene is
+            // created rather than in `start()` with the opt-ins that only change what is compiled.
+            postProcessing: renderer.renderingFeatures.postProcessing,
+          });
+    this.assets.attachEngine(this.#handles.engine);
+    renderer.attachHandles(this.#handles.engine, this.#handles.scene, this.#handles.presenter);
+    this.#enableDeviceLossRecovery(rendering);
     const time = this.#settings.time;
     this.time.applySettings(time.fixedDeltaTime, time.maximumDeltaTime, time.timeScale);
     const world = createWorld({
@@ -476,10 +583,90 @@ class AppImpl implements App {
       deferredQueue: this.#deferred,
     });
     this.#world = world;
+    // `app.events` is the one place a script subscribes to engine-wide events
+    // (`docs/architecture/02-scene-graph.md` §8); the world keeps its own signals and the app
+    // forwards them, so neither surface has to know about the other.
+    world.onSceneLoaded.connect((scene: SceneInstance): void => {
+      this.events.onSceneLoaded.emit(scene);
+    });
+    world.onSceneUnloaded.connect((scene: SceneInstance): void => {
+      this.events.onSceneUnloaded.emit(scene);
+    });
     this.#scheduler.attachWorld(world);
     if (this.#mode === "development") {
       this.log.debug(`ignifx ${VERSION} ready with ${String(this.#host.extensions.length)} extensions.`);
     }
+  }
+
+  /**
+   * Maps the `rendering` settings section onto the options `createEngine` takes.
+   *
+   * @param rendering - The resolved section.
+   * @returns The engine and surface options.
+   */
+  #engineOptions(rendering: RenderingSettings): Record<string, unknown> {
+    const options: Record<string, unknown> = {
+      ...toLiteEngineOptions(toRendererOptions(rendering, 1), hostDevicePixelRatio()),
+    };
+    const format = toSurfaceFormat(rendering);
+    if (format !== null) {
+      options["format"] = format;
+    }
+    return options;
+  }
+
+  /**
+   * Turns on Babylon Lite's device-loss recovery and fans its callbacks out to `app.events`
+   * (`docs/architecture/07-rendering.md` §4).
+   *
+   * @remarks
+   * It runs immediately after the engine is created and before any resource exists, which is
+   * Lite's requirement: the capture that stamps a *recovery source* onto a texture is installed by
+   * this call, so a texture created earlier has nothing to rebuild from
+   * (`src/lite/gpu/device-loss.ts`).
+   *
+   * @param rendering - The resolved section, for the `deviceLostRecovery` feature flag.
+   */
+  #enableDeviceLossRecovery(rendering: RenderingSettings): void {
+    const handles = this.#handles;
+    if (handles === null || handles.isHeadless || !rendering.features.deviceLostRecovery) {
+      return;
+    }
+    this.#deviceLoss = enableSceneDeviceLossRecovery(handles.engine, {
+      onLost: (info: GPUDeviceLostInfo): void => {
+        this.events.emitDeviceLost({ reason: info.reason, message: info.message });
+      },
+      onRecovered: (): void => {
+        this.events.emitDeviceRecovered();
+      },
+      onRecoveryFailed: (error: unknown): void => {
+        this.events.emitDeviceRecoveryFailed(error);
+      },
+    });
+  }
+
+  /**
+   * Applies the rendering feature opt-ins, warms the material families, and registers the render
+   * scene — in the order `docs/architecture/07-rendering.md` §1.1 and ADR-0014 require.
+   *
+   * @param handles - The engine and scene.
+   * @returns A promise that settles once the scene is registered.
+   */
+  async #registerRenderScene(handles: EngineHandles): Promise<void> {
+    const renderer = rendererInternals(this.renderer);
+    const features = renderer.renderingFeatures;
+    await applyRenderingFeatures(handles.engine, handles.scene, features);
+    // §1.1: what exists before `registerScene` is compiled by it. One reconciliation puts the
+    // world's cameras, lights, and meshes into the Lite scene first, so a game that loaded its
+    // scene before starting registers with its content — and the warm-up has lights to compile
+    // against.
+    const world = this.#world;
+    if (world !== null) {
+      renderer.syncBeforeRegister(world);
+    }
+    renderer.warmUpAtStart();
+    await registerRenderScene(handles.scene, { shadows: features.shadows });
+    renderer.markSceneRegistered();
   }
 
   /** Stops the Lite loop, detaches the browser listeners, and runs `onStop` in reverse order. */
@@ -487,6 +674,7 @@ class AppImpl implements App {
     const handles = this.#handles;
     if (this.#isLoopRunning && handles !== null) {
       stopRenderLoop(handles.engine);
+      rendererInternals(this.renderer).setLoopRunning(false);
     }
     this.#isLoopRunning = false;
     if (this.#frameCallback !== null) {
@@ -516,7 +704,7 @@ class AppImpl implements App {
     if (this.platform.kind !== "browser") {
       return;
     }
-    if (globalThis.document === undefined || globalThis.window === undefined) {
+    if (!("document" in globalThis) || !("window" in globalThis)) {
       return;
     }
     const host = globalThis.document;
@@ -599,6 +787,15 @@ class AppImpl implements App {
 }
 
 /**
+ * The host's device pixel ratio, or `1` on a host that has no `window` — a worker, or Node.
+ *
+ * @returns The ratio.
+ */
+function hostDevicePixelRatio(): number {
+  return "devicePixelRatio" in globalThis ? globalThis.devicePixelRatio : 1;
+}
+
+/**
  * Creates a game (`docs/architecture/00-overview.md` §1, `04-extensions.md` §2).
  *
  * @remarks
@@ -630,6 +827,8 @@ export async function createApp(options: CreateAppOptions = {}): Promise<App> {
   const app = new AppImpl({
     canvas,
     settings: options.settings ?? {},
+    manifest: options.assets?.manifest ?? null,
+    fetch: options.assets?.fetch ?? options.fetch ?? null,
     clock: options.clock ?? createPerformanceClock(),
     mode: options.mode ?? "development",
     logSink: options.logSink ?? createConsoleSink(),

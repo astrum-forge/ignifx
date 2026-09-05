@@ -169,7 +169,35 @@ async function loadModule(
 }
 
 /**
+ * Reads a package's schema registry from its module namespace. Two forms are accepted: a `schemas`
+ * object, or a `describeSchemas()` function that returns one. The function form exists because a
+ * registry built by calls at module scope would violate the import-time purity rule
+ * (`CONSTITUTION.md` §3.5, `ignifx/no-module-side-effects`); packages build it on demand instead.
+ *
+ * @param namespace - The imported module namespace.
+ * @returns The raw registry, or `undefined` when the package exports neither form.
+ */
+function readRegistry(namespace: Record<string, unknown>): unknown {
+  const describe: unknown = namespace["describeSchemas"];
+  if (typeof describe === "function") {
+    // A function-typed `unknown` is callable once narrowed; `Reflect.apply` keeps the call typed
+    // without asserting a signature the module never declared.
+    return Reflect.apply(describe, namespace, []);
+  }
+  if (Object.hasOwn(namespace, "schemas")) {
+    return namespace["schemas"];
+  }
+  return undefined;
+}
+
+/**
  * Imports every candidate package and collects the schemas they export.
+ *
+ * One `typeId` is documented once. The `ignifx` umbrella re-exports `describeSchemas` from
+ * `@ignifx/core`, so discovery by convention sees the same nine records twice and, without this,
+ * every table would be rendered twice on its formats page. The first package to declare a type id
+ * wins, which — candidates arriving in directory order — is the package that owns it rather than
+ * the umbrella that re-exports it.
  *
  * @param candidates - Packages whose `dist/index.js` exists.
  * @returns The normalized schemas plus any import or validation failures.
@@ -178,16 +206,27 @@ export async function collectSchemas(candidates: readonly SchemaCandidate[]): Pr
   const loaded = await Promise.all(candidates.map((candidate) => loadModule(candidate)));
   const schemas: SchemaDoc[] = [];
   const errors: string[] = [];
+  const seen = new Set<string>();
   for (const entry of loaded) {
     if (entry.error !== null) {
       errors.push(entry.error);
       continue;
     }
     const namespace = asRecord(entry.namespace);
-    if (namespace === null || !Object.hasOwn(namespace, "schemas")) {
+    if (namespace === null) {
       continue;
     }
-    schemas.push(...normalizeRegistry(entry.directory, namespace["schemas"], errors));
+    const registry = readRegistry(namespace);
+    if (registry === undefined) {
+      continue;
+    }
+    for (const schema of normalizeRegistry(entry.directory, registry, errors)) {
+      if (seen.has(schema.typeId)) {
+        continue;
+      }
+      seen.add(schema.typeId);
+      schemas.push(schema);
+    }
   }
   return { schemas: schemas.toSorted((left, right) => left.typeId.localeCompare(right.typeId)), errors };
 }

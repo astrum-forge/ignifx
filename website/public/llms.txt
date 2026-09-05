@@ -2,9 +2,10 @@
 
 > A code-first TypeScript game engine for the web, built on Babylon Lite (WebGPU only). Runs in WebGPU-capable browsers and in Electron. Designed for indie 2D (top-down, side-scrolling) and 3D (third-person, first-person) games, with a Unity-style script lifecycle, Godot-style scenes and signals, and first-class documentation for AI coding agents.
 
-Planning phase — no packages are published yet, and this file is a Phase 0 placeholder. It is
-populated with generated API references, recipes, and file-format pages in Phase 11 of
-`docs/plan/engineering-plan.md`; until then the links below are the whole index.
+Pre-release — no packages are published yet. The engine covers the kernel, rendering, and assets
+(Phase 2 of `docs/plan/engineering-plan.md`); input, physics, audio, and the 2D/3D/UI toolkits
+follow. The generated per-package API references are added in Phase 11; until then the links below
+are the whole index.
 
 Start with SKILL.md: it is the entry point for agents (`CONSTITUTION.md` §5.1) and links onward to
 `references/` for concepts, recipes, and formats. The engine name is always written lowercase, as
@@ -16,8 +17,33 @@ Start with SKILL.md: it is the entry point for agents (`CONSTITUTION.md` §5.1) 
 - [Architecture overview](https://raw.githubusercontent.com/astrum-forge/ignifx/main/docs/architecture/00-overview.md): Package layout, dependency direction, runtime model, and what is in scope for 1.0.
 - [CONSTITUTION.md](https://raw.githubusercontent.com/astrum-forge/ignifx/main/CONSTITUTION.md): The numbered rules that govern the project — principles, architecture tenets, versioning, documentation, process.
 
+## Concepts
+
+- [Lifecycle and time](https://raw.githubusercontent.com/astrum-forge/ignifx/main/skills/ignifx/references/concepts/lifecycle.md): Frame order, script callbacks, pausing, headless stepping, the `Time` service.
+- [Scene graph](https://raw.githubusercontent.com/astrum-forge/ignifx/main/skills/ignifx/references/concepts/scene-graph.md): World, scene instances, entities, transforms, prefabs, tags, layers, signals.
+- [Scripting](https://raw.githubusercontent.com/astrum-forge/ignifx/main/skills/ignifx/references/concepts/scripting.md): Components, schema-declared fields, `typeId` registration, value encoding, coroutines.
+- [Rendering](https://raw.githubusercontent.com/astrum-forge/ignifx/main/skills/ignifx/references/concepts/rendering.md): Camera, Light, MeshRenderer, Model, Environment, PostProcessStack, `app.renderer`, feature opt-ins, picking, device loss.
+- [Assets](https://raw.githubusercontent.com/astrum-forge/ignifx/main/skills/ignifx/references/concepts/assets.md): Addresses, the manifest, reference-counted handles, `app.assets`, loaders, hot reload.
+- [Extensions](https://raw.githubusercontent.com/astrum-forge/ignifx/main/skills/ignifx/references/concepts/extensions.md): The extension contract, `ExtensionContext`, registration order, settings sections.
+
+## File formats
+
+- [Scene and prefab files](https://raw.githubusercontent.com/astrum-forge/ignifx/main/skills/ignifx/references/formats/scene.md): `.scene.json` / `.prefab.json` — entities, components, instances, overrides, loading order.
+- [Scene file fields](https://raw.githubusercontent.com/astrum-forge/ignifx/main/skills/ignifx/references/formats/ignifx.scene.md): Generated table of the `ignifx.scene` top-level fields.
+- [Material files](https://raw.githubusercontent.com/astrum-forge/ignifx/main/skills/ignifx/references/formats/material.md): `.material.json` — PBR and Standard families, texture slots, alpha modes.
+- [Material file fields](https://raw.githubusercontent.com/astrum-forge/ignifx/main/skills/ignifx/references/formats/ignifx.material.md): Generated table of the `ignifx.material` fields.
+- [Environment file fields](https://raw.githubusercontent.com/astrum-forge/ignifx/main/skills/ignifx/references/formats/ignifx.environment.md): Generated table of the `ignifx.environment` fields.
+- [Component fields](https://raw.githubusercontent.com/astrum-forge/ignifx/main/skills/ignifx/references/formats/components.md): Generated table of every built-in component's serialized fields and defaults.
+- [Schema bundle](https://raw.githubusercontent.com/astrum-forge/ignifx/main/skills/ignifx/references/formats/ignifx.schemas.json): Every schema above in one JSON document, for tools and validators.
+
+## Recipes
+
+- [Load a model](https://raw.githubusercontent.com/astrum-forge/ignifx/main/skills/ignifx/references/recipes/load-a-model.md): Load a `.glb` and show it with a `Model` component.
+- [Spawn a prefab](https://raw.githubusercontent.com/astrum-forge/ignifx/main/skills/ignifx/references/recipes/spawn-a-prefab.md): Load a `.prefab.json` as a `SceneAsset` and stamp copies of it out.
+
 ## Optional
 
+- [Gotchas](https://raw.githubusercontent.com/astrum-forge/ignifx/main/skills/ignifx/references/gotchas.md): Every known trap with its replacement and its `IGX-####` code.
 - [AGENTS.md](https://raw.githubusercontent.com/astrum-forge/ignifx/main/AGENTS.md): Repository mechanics for agents and contributors working *on* the engine rather than *with* it.
 - [Coding standards](https://raw.githubusercontent.com/astrum-forge/ignifx/main/docs/standards/coding-standards.md): Toolchain, TypeScript configuration, lint, naming, testing, and pull-request rules.
 - [Engineering plan](https://raw.githubusercontent.com/astrum-forge/ignifx/main/docs/plan/engineering-plan.md): The phased plan from empty repository to 1.0, including when this file gets its generated content.

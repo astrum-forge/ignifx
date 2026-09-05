@@ -57,6 +57,18 @@ export const moverSchema = {
   stats: record({ hp: i32(10), armor: f32(0) }),
 };
 
+/** A stand-in for a loaded `AssetHandle`, structural on the two members the codec reads. */
+export interface FakeAssetHandle {
+  readonly address: string;
+  readonly type: string;
+  readonly state: "loaded";
+}
+
+/** Builds a stand-in handle the asset resolver answers with. */
+export function fakeAssetHandle(address: string, type: string): FakeAssetHandle {
+  return { address, type, state: "loaded" };
+}
+
 /** Builds fake reference resolvers over a fixed set of entities and components. */
 export function fakeReferences(
   entities: readonly FakeEntity[],
@@ -75,6 +87,7 @@ export function fakeReferences(
     decoder: {
       entity: (uid) => entityByUid.get(uid) ?? null,
       component: (uid) => componentByUid.get(uid) ?? null,
+      asset: (address, type) => fakeAssetHandle(address, type ?? "unknown"),
     },
   };
 }

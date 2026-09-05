@@ -110,13 +110,41 @@ jobs:
 
   test-visual:
     name: test-visual
-    # Standards §12 step 3: required on main, opt-in on pull requests. The job exists now so the
-    # required-check name is stable; goldens arrive with the renderer in Phase 2.
-    if: github.event_name == 'push'
+    # Standards §12 step 3: required on main, opt-in on pull requests. `push` covers main (the `on:`
+    # block has no other push branch) and merge_group covers the queue, so the required check still
+    # reports there; a pull request opts in with the `visual` label. Goldens are one image per scene
+    # with no platform segment, so this job compares a Linux SwiftShader render against a macOS one
+    # (tests/visual/README.md) — the per-scene maxDiffPixelRatio is what absorbs the difference.
+    if: >-
+      github.event_name == 'push' || github.event_name == 'merge_group' ||
+      (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'visual'))
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
-      - run: echo "no visual tests yet (Phase 2)"
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+
+      # The full Chromium build, not chrome-headless-shell: the shell has no compositor and loses
+      # the WebGPU device after a few presented frames (tests/visual/playwright.config.ts).
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      # `pnpm build` first, so the previews Playwright starts serve a production build of both
+      # examples rather than rebuilding @ignifx/core inside the webServer timeout.
+      - run: pnpm build
+
+      - run: pnpm test:visual
+
+      - name: Upload the failing renders
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: visual-diffs
+          path: |
+            tests/visual/test-results/**
+            tests/visual/playwright-report/**
+          if-no-files-found: warn
+          retention-days: 14
 
   build:
     name: build
@@ -132,11 +160,14 @@ jobs:
   bundle-size:
     name: bundle-size
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
-      # CONSTITUTION.md §6.4 makes bundle ceilings a test. There is nothing to measure until the
-      # templates and benchmarks/baselines.json exist (Phase 2), so this reports green by design.
-      - run: echo "baselines arrive in Phase 2"
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      # @ignifx/core has to be built before an example can bundle it.
+      - run: pnpm build
+      # CONSTITUTION.md §6.4: the ceiling in benchmarks/baselines.json is a test, not a report.
+      - run: pnpm bundle-size
 
   api-report:
     name: api-report

@@ -141,6 +141,25 @@ export async function startRenderLoop(engine: EngineContext, scene: SceneContext
 }
 
 /**
+ * Starts Lite's requestAnimationFrame render loop on a scene that is **already** registered.
+ *
+ * @remarks
+ * {@link startRenderLoop} registers the scene for you, which is the right call for a test harness.
+ * An app cannot use it: `docs/architecture/07-rendering.md` §1 and §1.1 require the feature opt-ins
+ * and the material warm-up to happen before registration, and registration itself has to choose
+ * between `registerScene` and `registerSceneWithShadowSupport`. `app.start()` therefore calls
+ * `registerRenderScene` from `./render-features.ts` itself and then this.
+ *
+ * @param engine - The WebGPU engine to start.
+ * @returns A promise that resolves once the first frame has been rendered.
+ *
+ * @internal
+ */
+export async function startEngineLoop(engine: EngineContext): Promise<void> {
+  await startEngine(engine);
+}
+
+/**
  * Stops Lite's render loop. Safe to call when the loop is not running.
  *
  * @param engine - The engine whose loop should stop.

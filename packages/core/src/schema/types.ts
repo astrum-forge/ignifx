@@ -123,9 +123,16 @@ export interface AssetTypeToken<A> {
 }
 
 /**
- * The value an `asset()` field holds. In Phase 1 a field stores the *address*, not the loaded
- * handle: the assets service that turns an address into `AssetHandle<A>` arrives in Phase 2
- * (`docs/architecture/05-assets-and-loading.md` §3).
+ * The plain, serializable form of an asset reference: what `{ "$asset": … }` decodes to before the
+ * asset service turns it into a handle, and what a tool that reads a scene file without an app
+ * works with (`docs/architecture/05-assets-and-loading.md` §2).
+ *
+ * @remarks
+ * It is **not** the runtime value of an `asset()` field. Since Phase 2 that value is
+ * `AssetHandle<A> | null`: a component receives the handle already loaded
+ * (`docs/architecture/05-assets-and-loading.md` §3), so `this.mesh?.value` reaches the asset with no
+ * second lookup. The two shapes overlap on `address`/`type`, which is why the encoder accepts
+ * either.
  *
  * @typeParam A - The asset value type this reference points at. It is a compile-time marker only:
  * `assetOf` is never assigned at runtime and is never serialized. It exists so that

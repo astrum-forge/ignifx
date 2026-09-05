@@ -6,7 +6,7 @@ By [Astrum Forge Studios](https://astrumforge.com) · [ignifx.com](https://ignif
 
 ## Status
 
-**Phase 1 (Kernel) complete; nothing published yet.** `@ignifx/core` holds the runtime kernel — `createApp` and the extension host, `Time` and the six-phase scheduler with its fixed-timestep loop, `World`/`SceneInstance`/`Entity`/`Transform`, `Component`/`Script` with schema-declared fields and generator coroutines, `Signal`, tags and layers, the math module, and the `IGX-####` error space — and the `ignifx` umbrella re-exports it. Nothing renders yet: cameras, meshes, materials, and the asset system arrive in Phase 2. The other twelve `@ignifx/*` packages are still skeletons. See [`CONTRIBUTING.md`](CONTRIBUTING.md) to get started.
+**Phase 2 (Rendering and assets) complete; nothing published yet.** `@ignifx/core` holds the runtime kernel — `createApp` and the extension host, `Time` and the six-phase scheduler with its fixed-timestep loop, `World`/`SceneInstance`/`Entity`/`Transform`, `Component`/`Script` with schema-declared fields and generator coroutines, `Signal`, tags and layers, the math module, and the `IGX-####` error space — and, on top of it, the Babylon Lite render adapter with `Camera`, `Light`, `MeshRenderer`, `Model`, `Environment` and `PostProcessStack`, the reference-counted asset service behind `app.assets`, and the `ignifx.scene` file format with prefabs, instances and overrides. `@ignifx/vite-plugin` generates the asset manifest and validates the JSON formats at build time, and the `ignifx` umbrella re-exports the core. Input, physics, audio, and the 2D/3D/UI toolkits arrive in Phases 3 onwards; those ten `@ignifx/*` packages are still skeletons. See [`CONTRIBUTING.md`](CONTRIBUTING.md) to get started.
 
 | Document                                                                   | Purpose                                                                                                                                                                          |
 | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -18,12 +18,12 @@ By [Astrum Forge Studios](https://astrumforge.com) · [ignifx.com](https://ignif
 | [`skills/ignifx/SKILL.md`](skills/ignifx/SKILL.md)                         | The Agent Skill that ships with the engine                                                                                                                                       |
 | [`AGENTS.md`](AGENTS.md)                                                   | Entry point for agents and contributors                                                                                                                                          |
 
-## Today (Phase 1)
+## Today
 
-Everything below compiles against `@ignifx/core` as it stands. The app runs, the script ticks, the transform moves — there is simply nothing on screen yet.
+Everything below compiles against `@ignifx/core` as it stands: a camera, a shadow-casting light, a spinning PBR cube, on screen.
 
 ```ts
-import { Script, createApp, f32 } from "@ignifx/core";
+import { Camera, Light, MeshAsset, MeshRenderer, Script, createApp, f32 } from "@ignifx/core";
 import type { ScriptCallbacks } from "@ignifx/core";
 
 class Spinner extends Script.define({ speed: f32(90) }) implements ScriptCallbacks {
@@ -34,40 +34,43 @@ class Spinner extends Script.define({ speed: f32(90) }) implements ScriptCallbac
   }
 }
 
-const app = await createApp({ headless: true });
+const canvas = document.querySelector("canvas");
+if (!(canvas instanceof HTMLCanvasElement)) {
+  throw new Error("ignifx needs a <canvas> element on the page.");
+}
+
+const app = await createApp({ canvas, settings: { rendering: { features: { shadows: true } } } });
 app.registerComponents([Spinner]);
+
+const eye = app.world.createEntity("Main Camera");
+eye.transform.localPosition.set(0, 2.5, -4.5);
+eye.transform.lookAt({ x: 0, y: 0.6, z: 0 });
+eye.addComponent(Camera, { fov: 55 });
+
+const sun = app.world.createEntity("Sun");
+sun.transform.lookAt({ x: 0, y: -1, z: 0.5 });
+sun.addComponent(Light, { type: "directional", intensity: 3 });
+
 const cube = app.world.createEntity("Cube");
+cube.addComponent(MeshRenderer, { mesh: MeshAsset.box(app, { size: 1.3 }) });
 cube.addComponent(Spinner, { speed: 120 });
 
 await app.start();
-app.step(1 / 60);
 ```
 
-## Planned shape (Phase 2, once rendering and assets land)
+Continuing from that app, loading a level and stamping out a prefab:
 
 ```ts
-import { createApp, Script, MeshRenderer, MeshAsset, f32 } from "@ignifx/core";
-import { input } from "@ignifx/input";
-import { physics } from "@ignifx/physics";
-
-class Spinner extends Script.define({ speed: f32(90) }) {
-  static typeId = "demo/Spinner";
-  update(dt: number): void {
-    this.transform.rotate({ x: 0, y: this.speed * dt, z: 0 });
-  }
-}
-
-const app = await createApp({ canvas, extensions: [input(), physics()] });
-app.registerComponents([Spinner]);
-const cube = app.world.createEntity("Cube");
-cube.addComponent(MeshRenderer, { mesh: MeshAsset.box() });
-cube.addComponent(Spinner);
-await app.start();
+const level = await app.world.loadScene("levels/level01.scene.json");
+const enemy = await app.world.instantiateAsync("prefabs/enemy.prefab.json", { position: { x: 4, y: 0, z: 2 } });
+app.log.info("loaded", level.name, "and spawned", enemy.name);
 ```
 
-## Repository layout (planned)
+Runnable versions live in [`examples/`](examples/), and the compiled recipes behind the Agent Skill's recipe pages are in [`examples/recipes/`](examples/recipes/).
 
-`packages/` published `@ignifx/*` packages · `templates/` starter games · `examples/` recipes · `website/` public site (separate deploy) · `docs/` governing documents · `skills/` agent skills.
+## Repository layout
+
+`packages/` published `@ignifx/*` packages · `templates/` starter games (planned) · `examples/` runnable apps and the compiled recipes · `benchmarks/` frame-time and heap baselines · `tests/visual/` golden images · `website/` public site (separate deploy) · `docs/` governing documents · `skills/` agent skills.
 
 ## License
 

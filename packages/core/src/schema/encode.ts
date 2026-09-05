@@ -1,3 +1,4 @@
+import { isMemoryAddress } from "../assets/address.js";
 import { assertNever } from "../errors/ignifx-error.js";
 import {
   COLOR_CHANNELS,
@@ -57,6 +58,21 @@ export interface ReferenceDecoder {
    * @returns The component, or `null` when the uid is unknown.
    */
   component(uid: string): unknown;
+  /**
+   * Resolves an asset address to the loaded handle an `asset()` field should hold
+   * (`docs/architecture/05-assets-and-loading.md` §3).
+   *
+   * @remarks
+   * The scene loader answers from the dependency handles the `SceneAsset` already retains, so the
+   * field never starts a load of its own and never owns a reference count. A resolver that returns
+   * `null` — an address nothing loaded — makes the field `null` and adds an `IGX-0602` issue.
+   *
+   * @param address - The address the file carries, fragment included.
+   * @param type - The asset type the field or the file declared, or `null` when the address's
+   * extension identifies it on its own.
+   * @returns The handle, or `null` when nothing loaded stands at that address.
+   */
+  asset(address: string, type: string | null): unknown;
 }
 
 /**
@@ -242,11 +258,25 @@ function encodeInto(
         return null;
       }
       if (!isPlainObject(value) || typeof value["address"] !== "string") {
-        return unrepresentable(issues, path, `expected an asset reference with a string address, or null.`);
+        return unrepresentable(issues, path, `expected a loaded asset handle, or null.`);
+      }
+      const address = value["address"];
+      if (isMemoryAddress(address)) {
+        // An in-code asset (`Assets.register`, `MeshAsset.box`, `MaterialAsset.pbr`) names no file,
+        // so there is nothing a reader could resolve the address against. Writing it would produce
+        // a file that loads with a dangling reference; writing `null` and saying so does not.
+        issues.push(
+          issue(
+            SchemaIssueCode.unresolvedReference,
+            path,
+            `the asset was created in code (${address}) and has no file to reference.`,
+          ),
+        );
+        return null;
       }
       const declared = value["type"];
       const typeName = typeof declared === "string" ? declared : spec.typeName;
-      return typeName === null ? { $asset: value["address"] } : { $asset: value["address"], type: typeName };
+      return typeName === null ? { $asset: address } : { $asset: address, type: typeName };
     }
     case "array": {
       if (!isArray(value)) {
@@ -475,9 +505,17 @@ function decodeInto(
       if (!isPlainObject(json) || typeof json["$asset"] !== "string") {
         return rejected(field, issues, path, `expected { "$asset": "<address>" } or null.`);
       }
+      const address = json["$asset"];
       const declared = json["type"];
       const typeName = typeof declared === "string" ? declared : spec.typeName;
-      return typeName === null ? { address: json["$asset"] } : { address: json["$asset"], type: typeName };
+      const handle = references.asset(address, typeName);
+      if (handle === null || handle === undefined) {
+        issues.push(
+          issue(SchemaIssueCode.unresolvedReference, path, `no loaded asset stands at the address "${address}".`),
+        );
+        return null;
+      }
+      return handle;
     }
     case "array": {
       if (!isArray(json)) {

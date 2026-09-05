@@ -12,12 +12,14 @@ import { Transform } from "../transform/transform.js";
 import { resolvePath } from "./entity-path.js";
 import { ENTITY_INTERNALS, entityInternals } from "./internals.js";
 import type { EntityInternals } from "./internals.js";
+import type { AssetHandle } from "../assets/types.js";
 import type { ComponentInit, ComponentType, ConcreteComponentType } from "../component/component-type.js";
 import type { Component } from "../component/component.js";
 import type { EntityHandle } from "../handles/handle.js";
 import type { LiteSceneNode } from "../lite/node.js";
 import type { SceneInstance } from "../scene/scene-instance.js";
 import type { Schema } from "../schema/types.js";
+import type { SceneAsset } from "../serialization/scene-asset.js";
 import type { TagSetObserver } from "../tags/tag-set.js";
 import type { WorldHost } from "../world/world-host.js";
 import type { World } from "../world/world.js";
@@ -81,6 +83,7 @@ export class Entity {
       transform: null,
       name,
       scene,
+      origin: null,
       parent: null,
       children: [],
       components: [],
@@ -280,6 +283,41 @@ export class Entity {
       );
     }
     internals.isStatic = value;
+  }
+
+  /**
+   * The prefab link for an entity a scene file's `instance` entry produced
+   * (`docs/architecture/02-scene-graph.md` §6). It is set on the instance root and on every entity
+   * the instanced scene contributed, so tooling can show where an object came from.
+   *
+   * @remarks
+   * The engine keeps no live link back to the prefab after load: editing the instanced scene does
+   * not update loaded instances, and "apply changes to prefab" is editor work, post-1.0. The link
+   * exists so that saving re-emits the subtree as an `instance` entry with recomputed overrides
+   * (`06-serialization-and-scene-format.md` §5) rather than as plain entities.
+   *
+   * @returns The link, or `null` for an entity the scene declared itself or code created.
+   *
+   * @example
+   * ```ts
+   * const link = enemy.prefab;
+   * if (link !== null && link.instanceRoot === enemy) {
+   *   app.log.info(`${enemy.name} is the root of an instance of ${link.address}`);
+   * }
+   * ```
+   */
+  get prefab(): EntityPrefabLink | null {
+    const origin = entityInternals(this).origin;
+    if (origin === null) {
+      return null;
+    }
+    const own = origin.instanced;
+    if (own !== null) {
+      return { asset: own.asset, address: own.address, instanceRoot: this };
+    }
+    const root = origin.instanceRoot;
+    const link = root === null ? null : (entityInternals(root).origin?.instanced ?? null);
+    return link === null || root === null ? null : { asset: link.asset, address: link.address, instanceRoot: root };
   }
 
   /**
@@ -765,7 +803,24 @@ export interface Entity {
 }
 
 /**
- * Options accepted by `Entity.setParent`.
+ * The prefab link `Entity.prefab` returns for an entity a scene file's `instance` entry produced
+ * (`docs/architecture/02-scene-graph.md` §6).
+ *
+ * @public
+ */
+export interface EntityPrefabLink {
+  /** The handle the instanced scene was loaded through, or `null` when no asset service resolved one. */
+  readonly asset: AssetHandle<SceneAsset> | null;
+  /** The address of the instanced scene. */
+  readonly address: string;
+  /** The entity the `instance` entry sat on — the root of this instance. */
+  readonly instanceRoot: Entity;
+}
+
+/**
+ * Options accepted by `Entity.setParent`. Written as code rather than as a documentation link
+ * because `Entity` is a class and an interface at once: an unqualified reference is ambiguous to
+ * API Extractor, and the qualified form it asks for is unresolvable to TypeDoc.
  *
  * @public
  */

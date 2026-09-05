@@ -1,6 +1,7 @@
 import { createEngine, disposeEngine } from "@babylonjs/lite";
 import type { LiteEngine } from "./scene.js";
 import type { RenderSurface } from "../platform/webgpu.js";
+import type { EngineOptions } from "@babylonjs/lite";
 
 /**
  * The GPU half of the Babylon Lite adapter: the two calls that need a real WebGPU device. They are
@@ -19,12 +20,15 @@ import type { RenderSurface } from "../platform/webgpu.js";
  * browser produces `IGX-0701` rather than an opaque Lite failure (`CONSTITUTION.md` §1.1).
  *
  * @param canvas - The canvas or offscreen canvas to render into.
+ * @param options - Device and surface options, mapped from the ignifx renderer block by
+ * `toLiteEngineOptions` in `./render-diagnostics.ts`. Omit them for Lite's own defaults (4x MSAA,
+ * opaque, unclamped device pixel ratio).
  * @returns The engine. Lite's engine is also its primary surface.
  *
  * @internal
  */
-export async function createWebGpuEngine(canvas: RenderSurface): Promise<LiteEngine> {
-  return createEngine(canvas);
+export async function createWebGpuEngine(canvas: RenderSurface, options?: EngineOptions): Promise<LiteEngine> {
+  return createEngine(canvas, options);
 }
 
 /**

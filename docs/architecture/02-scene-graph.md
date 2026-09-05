@@ -232,6 +232,6 @@ class Signal<T = void> {
 
 ## 10. Identity and metadata bridging
 
-- `entity.uid` is generated with ULID on creation and preserved by files. Loading the same scene twice (two instances) generates _fresh_ uids per instance for runtime entities while keeping the _file-local_ uids for override addressing; the mapping is stored on the `SceneInstance`.
+- `entity.uid` is generated with ULID on creation and preserved by files. A scene's own entities adopt their file uids when those are free in the world (a fresh ULID on collision); every entity produced by an `instance` entry gets a fresh runtime uid while the _file-local_ uids stay valid for override addressing; the mapping is stored on the `SceneInstance`.
 - Every Lite node created by ignifx gets `metadata.ignifx = { entity: EntityHandle, component?: ComponentHandle }` so Lite picking results and physics bodies map back to entities.
 - File references (`$entity`, `$component`) never cross scene files. Runtime links between scene instances (a persistent HUD scene reading the gameplay scene's player) use `world.findByTag`, `world.getEntity(uid)` for persistent scenes with known uids, or, preferably, a script in a persistent scene that registers itself in `app.services` (documented as the `cross-scene-links` recipe).

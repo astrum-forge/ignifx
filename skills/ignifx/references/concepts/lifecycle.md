@@ -1,7 +1,7 @@
 # Lifecycle and time
 
 When things happen in a frame, which callbacks a `Script` may implement, and how a headless app is
-stepped. Engine `0.0.0` (Phase 1 kernel); rationale in `docs/architecture/01-lifecycle-and-time.md`.
+stepped. Engine `0.0.0`; rationale in `docs/architecture/01-lifecycle-and-time.md`.
 
 ## 1. Frame order
 
@@ -11,7 +11,9 @@ ascending, creation order ascending)`.
 
 1. **EndOfFrame** — `Phase.EndOfFrame` systems; deferred signal handlers queued last frame.
 2. **Time begins** — `unscaledDeltaTime = min(rawDelta, maximumDeltaTime)`, `deltaTime = unscaledDeltaTime * timeScale`, `frameCount` increments.
-3. **PreUpdate** — `Phase.PreUpdate` systems.
+3. **PreUpdate** — `Phase.PreUpdate` systems. The asset service delivers everything that finished
+   loading since the previous frame here (`ignifx/asset-delivery`, order −900): handle states flip
+   and `handle.promise` settles at this one point, never mid-phase.
 4. **Lifecycle flush A** — `awake()` for components attached since the last flush that are effectively enabled, then `onEnable()` for components that just became effectively enabled.
 5. **Fixed loop** — while the accumulator holds a whole step: `Phase.FixedUpdate` systems with `order < 0`, `fixedUpdate(fixedDeltaTime)` on scripts, `Phase.FixedUpdate` systems with `order >= 0`, then coroutines waiting on `waitFixedUpdate()`. Skipped entirely while `time.paused` is `true`.
 6. **Lifecycle flush B** — `start()` for effectively enabled scripts that have never started.
@@ -19,7 +21,8 @@ ascending, creation order ascending)`.
 8. **PostUpdate** — `Phase.PostUpdate` systems (animation lands here in a later phase).
 9. **LateUpdate** — `lateUpdate(deltaTime)` on scripts.
 10. **Destroy flush** — tracked `entityRef`/`componentRef` fields pointing at doomed objects are nulled, then `onDisable()` and `onDestroy()` run for everything queued this frame, children before parents and, within an entity, components in attach order.
-11. **PreRender** — `Phase.PreRender` systems; the browser then renders.
+11. **PreRender** — `Phase.PreRender` systems, ending with `ignifx/render-sync` (order 900), which
+    reconciles the render components with the Lite scene; the browser then renders.
 
 Only steps 5, 7 and 9 are skipped while the app is paused (step 5 unconditionally): every other phase keeps running, so a pause screen still renders.
 
@@ -68,7 +71,9 @@ runs, so menus and pause screens render normally.
 
 ## 5. Headless stepping
 
-`createApp({ headless: true })` uses Babylon Lite's null engine and renders nothing. `app.step(dt)`
+`createApp({ headless: true })` uses Babylon Lite's null engine and renders nothing: GPU work is
+skipped, `MeshRenderer`/`Model` keep their state without touching the scene, and screenshots reject
+with `IGX-0707` (see [`rendering.md`](rendering.md) §7). `app.step(dt)`
 runs one frame with `rawDelta = dt`; it throws `IGX-0105` on a rendering app and `IGX-0106` on a
 disposed one. A constant `dt` equal to `time.fixedDeltaTime` runs exactly one fixed step per call,
 which is what makes a headless run reproduce across Node and Chromium.

@@ -63,7 +63,7 @@ export const weather: (options?: void) => Extension = defineExtension<void>(() =
 `defineExtension(factory)` wraps a factory so a game writes `weather()` in the `extensions` array.
 Nothing runs at module import time (`CONSTITUTION.md` §3.5).
 
-## 2. `ExtensionContext`, Phase 1 surface
+## 2. `ExtensionContext`
 
 | Member                                                              | Purpose                                                                      |
 | ------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
@@ -75,11 +75,18 @@ Nothing runs at module import time (`CONSTITUTION.md` §3.5).
 | `registerSettings(section, schema, defaults)`                       | Declares one project-settings section                                        |
 | `settings<S>(section)`                                              | The resolved section, readable inside the same `register` call               |
 | `require(key)` / `tryGet(key)`                                      | A service an earlier extension registered; `require` throws `IGX-0405`       |
+| `registerAssetType({ type, extensions })`                           | Claims an asset type name and the extensions that imply it                   |
+| `registerAssetLoader(loader)`                                       | The `AssetLoader` for that type; a second one is `IGX-0506`                  |
+| `requireRenderingFeature(feature)`                                  | Declares a Babylon Lite opt-in the extension needs; too late is `IGX-0704`   |
 | `registerErrorCodes(codes)`                                         | `IGX-####` → message template, in the extension's own range                  |
 | `onDispose(callback)`                                               | Teardown hook run with the app                                               |
 
-Asset types and loaders (`registerAssetType`, `registerAssetLoader`) arrive with the asset system in
-Phase 2. An extension may not register a Babylon Lite frame callback, add a phase, or replace a core
+`requireRenderingFeature` works because registration happens **before** `app.start()` applies the
+opt-ins and registers the render scene; the same call afterwards throws `IGX-0704`. The features are
+`shadows`, `skeletons`, `boneControl`, `stencil`, `lightmaps`, `materialPlugins`, `asyncPipelines`,
+and `deviceLostRecovery` ([`rendering.md`](rendering.md) §4).
+
+An extension may not register a Babylon Lite frame callback, add a phase, or replace a core
 service; cross-extension work goes through services and signals.
 
 ## 3. Registration order and its errors
@@ -93,14 +100,16 @@ service; cross-extension work goes through services and signals.
 
 ## 4. Settings sections
 
-`createApp({ settings })` takes the object `ignifx.config.ts` will supply from Phase 2. The kernel
-registers three sections:
+`createApp({ settings })` takes the object `ignifx.config.ts` supplies through
+`import.meta.env.IGNIFX_CONFIG` (`@ignifx/vite-plugin`). The kernel registers five sections:
 
-| Section         | Shape                                                | Defaults                                                       |
-| --------------- | ---------------------------------------------------- | -------------------------------------------------------------- |
-| `layers`        | `{ layers: string[] }`                               | `["Default", "TransparentFX", "IgnoreRaycast", "Water", "UI"]` |
-| `sortingLayers` | `{ sortingLayers: string[] }`                        | `["Default"]`                                                  |
-| `time`          | `{ fixedDeltaTime?, maximumDeltaTime?, timeScale? }` | `1/60`, `0.1`, `1`                                             |
+| Section         | Shape                                                                | Defaults                                                       |
+| --------------- | -------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `layers`        | `{ layers: string[] }`                                               | `["Default", "TransparentFX", "IgnoreRaycast", "Water", "UI"]` |
+| `sortingLayers` | `{ sortingLayers: string[] }`                                        | `["Default"]`                                                  |
+| `time`          | `{ fixedDeltaTime?, maximumDeltaTime?, timeScale? }`                 | `1/60`, `0.1`, `1`                                             |
+| `assets`        | `{ root, preload, concurrency, gcDelay, retries }`                   | `"assets"`, `[]`, `6`, `5`, `2`                                |
+| `rendering`     | `{ features, msaaSamples, alphaMode, srgb, clearColor, brdfLut, … }` | see [`rendering.md`](rendering.md) §4                          |
 
 A section whose schema has exactly one field may be written as that field's value, so
 `layers: ["Default", "Player"]` and `layers: { layers: ["Default", "Player"] }` are the same. A
@@ -132,7 +141,10 @@ Game code that must work whether or not the extension is installed uses the unty
 
 ## 6. What the core extension contributes
 
-`coreExtension()` registers `Transform` and the `layers`, `sortingLayers`, and `time` settings
-sections. Its error codes are pre-loaded into the registry rather than registered, so registering
-`CORE_ERROR_MESSAGES` a second time is `IGX-1501`. `Camera`, `Light`, `MeshRenderer`, the asset
-loaders, and the `assets` and `rendering` sections join it in Phase 2.
+`coreExtension()` registers the five settings sections above; the components `Transform`, `Camera`,
+`Light`, `MeshRenderer`, `Model`, `Environment`, and `PostProcessStack`; the `app.renderer` service;
+the core asset loaders (texture, model, scene, material, environment, font, json, text, binary); the
+`ignifx/asset-delivery` system in `PreUpdate` and the `ignifx/render-sync` system in `PreRender`; and
+it starts the manifest groups listed in `assets.preload` during `app.start()`. Its error codes are
+pre-loaded into the registry rather than registered, so registering `CORE_ERROR_MESSAGES` a second
+time is `IGX-1501`.

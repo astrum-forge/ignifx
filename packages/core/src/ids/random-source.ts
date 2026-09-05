@@ -26,7 +26,7 @@ export interface RandomSource {
  * Creates the production random source, backed by Web Crypto.
  *
  * @returns A source that fills buffers with `crypto.getRandomValues`.
- * @throws IgnifxError with code `IGX-1401` when the host exposes no Web Crypto implementation.
+ * @throws IgnifxError with code `IGX-1420` when the host exposes no Web Crypto implementation.
  *
  * @example
  * ```ts

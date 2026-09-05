@@ -33,6 +33,10 @@ const DEFAULT_ALLOW_CALLEES = [
   "defineExtension",
   "defineConfig",
   "defineSchema",
+  // `createServiceKey` returns `Object.freeze({ serviceName })` and nothing else, and its own TSDoc
+  // (`packages/core/src/app/types.ts`) documents a module-scope `export const` as the way to
+  // declare a service key. It is a declarative constant, not an import-time side effect.
+  "createServiceKey",
   "Component.define",
   "Script.define",
 ] as const;

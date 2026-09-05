@@ -170,6 +170,25 @@ export class ComponentRegistry {
   }
 
   /**
+   * Every class registered under a type id, paired with that id, in registration order.
+   *
+   * @remarks
+   * The scene-file JSON Schema generator
+   * (`docs/architecture/06-serialization-and-scene-format.md` §8) walks it to narrow
+   * `components[].props` per `typeId`. Classes described but never registered are not listed:
+   * only a registered class can appear in a file.
+   *
+   * @returns A freshly allocated array of `[typeId, class]` pairs.
+   */
+  registrations(): readonly (readonly [typeId: string, type: ComponentType])[] {
+    const pairs: (readonly [string, ComponentType])[] = [];
+    for (const [typeId, type] of this.#byTypeId) {
+      pairs.push([typeId, type]);
+    }
+    return pairs;
+  }
+
+  /**
    * Reports whether a class was registered explicitly.
    *
    * @param type - The component class.

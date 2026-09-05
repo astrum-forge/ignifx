@@ -72,7 +72,7 @@ tests/visual/            Playwright visual regression (goldens) — GPU job
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "target": "es2023",
-    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "lib": ["ES2023", "ESNext.Disposable", "DOM", "DOM.Iterable"],
     "types": ["@webgpu/types"],
     "skipLibCheck": true,
     "composite": true,

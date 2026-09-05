@@ -14,11 +14,11 @@ Precedence when documents conflict: constitution → standards → architecture 
 
 ## Status
 
-Phase 1 (Kernel) was delivered on 2026-09-05 and awaits owner review; Phase 2 (Rendering and assets) is next. No packages are published. `@ignifx/core` now holds the kernel — `createApp`, the extension host, `Time` and the phase scheduler, `World`/`SceneInstance`/`Entity`/`Transform`, `Component`/`Script` with schemas and coroutines, `Signal`, layers, math, and the `IGX-####` error space — and the `ignifx` umbrella re-exports it. The Phase 0 spike API (`createHeadlessRuntime`, `createRenderEngine`) is gone. Every other `@ignifx/*` package is still an empty skeleton.
+Phase 2 (Rendering and assets) was delivered on 2026-09-06 and awaits owner review; Phase 3 (Input) is next. No packages are published. `@ignifx/core` holds the Phase 1 kernel — `createApp`, the extension host, `Time` and the phase scheduler, `World`/`SceneInstance`/`Entity`/`Transform`, `Component`/`Script` with schemas and coroutines, `Signal`, layers, math, the `IGX-####` error space — plus the Phase 2 layer: `Camera`, `Light`, `MeshRenderer`, `Model`, `Environment`, `PostProcessStack` and the Babylon Lite render adapter, `app.renderer` and the `rendering` settings section, `app.assets` with reference-counted handles and the core loaders, the `ignifx.scene` file format with instances and overrides, and `app.events`. `@ignifx/vite-plugin` ships the build-time half: manifest, sidecars, JSON Schema validation, HMR. The `ignifx` umbrella re-exports the core. `examples/hello-cube` and `examples/gltf-viewer` are real apps; `examples/recipes/*` are the compiled sources behind the skill's recipe pages. Every other `@ignifx/*` package is still an empty skeleton.
 
 ## Commands
 
-Use Node 24 (`.nvmrc`); dependency-cruiser refuses to run on Node 25. `pnpm install` · `pnpm dev` · `pnpm check` (format, lint, typecheck, unit tests, API report, docs harness) · `pnpm test` · `pnpm test:browser` · `pnpm build` · `pnpm pack-check` · `pnpm deps` · `pnpm docs:api` · `pnpm docs:harness` · `pnpm changeset`. See `CONTRIBUTING.md`.
+Use Node 24 (`.nvmrc`); dependency-cruiser refuses to run on Node 25. `pnpm install` · `pnpm dev` · `pnpm check` (format, lint, typecheck, unit tests, API report, docs harness) · `pnpm test` · `pnpm test:browser` · `pnpm build` · `pnpm pack-check` · `pnpm deps` · `pnpm docs:api` · `pnpm docs:schemas` · `pnpm docs:recipes` · `pnpm docs:harness` · `pnpm changeset`. See `CONTRIBUTING.md`.
 
 ## Non-negotiable rules for agents
 

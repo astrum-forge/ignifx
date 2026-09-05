@@ -2,7 +2,6 @@ import { SchemaIssueCode, throwSchemaError } from "./issues.js";
 import { createDefaults } from "./schema.js";
 import { FieldKind } from "./types.js";
 import type {
-  AssetRefValue,
   AssetTypeToken,
   ComponentTypeToken,
   CurveKey,
@@ -14,6 +13,7 @@ import type {
   FieldsOf,
   Schema,
 } from "./types.js";
+import type { AssetHandle } from "../assets/types.js";
 import type { ColorLike, QuatLike, Vec2Like, Vec3Like, Vec4Like } from "../math/types.js";
 
 /**
@@ -349,9 +349,26 @@ export function componentRef<C>(type: ComponentTypeToken<C>, options?: FieldOpti
 }
 
 /**
- * Declares a reference to an addressable asset. In Phase 1 the field holds the *address*; the
- * loaded handle arrives with the assets service in Phase 2
+ * Declares a reference to an addressable asset. The **runtime** value is the loaded
+ * {@link AssetHandle}, not an address: a component's `asset()` fields are resolved before its props
+ * are written, so `awake` can already read `this.mesh.value`
  * (`docs/architecture/05-assets-and-loading.md` §3).
+ *
+ * @remarks
+ * Files store the address instead — `{ "$asset": "models/hero.glb", "type"?: "model" }`
+ * (`06-serialization-and-scene-format.md` §3). Encoding reads `handle.address`; decoding hands that
+ * address to the `asset` resolver of the `ReferenceDecoder` the scene loader supplies, which answers
+ * with the handle the scene already retains. Two consequences game code sees:
+ *
+ * - An address the resolver cannot answer decodes to `null` and reports `IGX-0602`; the component
+ *   keeps working with a missing asset rather than failing the whole scene.
+ * - An **in-code** asset — anything from `Assets.register`, which includes `MeshAsset.box(…)` and
+ *   `createMaterialAsset(app, pbrMaterialDefinition({ … }))` — lives at a `memory:` address that names no file, so serializing a
+ *   component that holds one writes `null` and reports the loss. Save the asset as a file when it
+ *   has to survive a round trip.
+ *
+ * The field does **not** retain the handle: the scene instance that loaded it owns the reference
+ * count and releases it on unload.
  *
  * @typeParam A - The asset type the reference points at, inferred from the class.
  * @param type - The asset class the field may point at.
@@ -360,14 +377,19 @@ export function componentRef<C>(type: ComponentTypeToken<C>, options?: FieldOpti
  *
  * @example
  * ```ts
- * clip: asset(AudioClip); // AssetRefValue<AudioClip> | null
+ * class Hero extends Component.define({ clip: asset(AudioClip) }) {
+ *   static typeId = "mygame/Hero";
+ *   awake(): void {
+ *     this.clip?.value.play();
+ *   }
+ * }
  * ```
  *
  * @public
  */
-export function asset<A>(type: AssetTypeToken<A>, options?: FieldOptions): FieldDefinition<AssetRefValue<A> | null> {
+export function asset<A>(type: AssetTypeToken<A>, options?: FieldOptions): FieldDefinition<AssetHandle<A> | null> {
   const typeName = type.assetType ?? null;
-  return field({ kind: FieldKind.asset, assetType: type, typeName }, options, (): AssetRefValue<A> | null => null);
+  return field({ kind: FieldKind.asset, assetType: type, typeName }, options, (): AssetHandle<A> | null => null);
 }
 
 /**

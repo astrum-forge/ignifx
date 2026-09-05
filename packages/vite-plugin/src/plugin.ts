@@ -1,0 +1,564 @@
+/**
+ * The plugin itself: manifest generation, project-config injection, validation, extension public
+ * assets, the virtual modules, and the HMR channel
+ * (`docs/architecture/05-assets-and-loading.md` §7, `04-extensions.md` §4–§5,
+ * `15-devtools-and-diagnostics.md` §5).
+ */
+
+import { createReadStream } from "node:fs";
+import { readFile } from "node:fs/promises";
+import { basename, isAbsolute, relative, resolve } from "node:path";
+import { hashedAddress, isSidecarFileName, META_SUFFIX } from "./asset-types.js";
+import { VitePluginError, VitePluginErrorCode } from "./errors.js";
+import { collectExtensionPublicAssets } from "./extension-assets.js";
+import { findIgnifxConfigFile, IGNIFX_CONFIG_DEFINE_KEY, loadIgnifxConfig } from "./ignifx-config.js";
+import { addressFromRelativePath, buildManifest, scanAssetRoot, serializeManifest } from "./manifest.js";
+import { resolvePluginOptions } from "./options.js";
+import { formatValidationProblem, validateJsonAssets } from "./validate.js";
+import {
+  ASSET_CHANGED_EVENT,
+  manifestModuleSource,
+  RESOLVED_MANIFEST_MODULE_ID,
+  RESOLVED_SCRIPTS_MODULE_ID,
+  resolveVirtualModuleId,
+  scriptsModuleSource,
+} from "./virtual-modules.js";
+import type { ExtensionPublicAsset } from "./extension-assets.js";
+import type { JsonObject } from "./json.js";
+import type { AssetManifest, ScannedAsset } from "./manifest.js";
+import type { IgnifxPluginOptions } from "./options.js";
+import type { ValidationProblem } from "./validate.js";
+import type { AssetChangedPayload } from "./virtual-modules.js";
+import type { ConfigEnv, Plugin, ViteDevServer } from "vite";
+
+/**
+ * The plugin's name, as it appears in Vite logs and in `PLUGIN_ERROR` diagnostics.
+ *
+ * @public
+ */
+export const PLUGIN_NAME = "ignifx";
+
+/** Content types for the file kinds an extension may publish; anything else is served as bytes. */
+const CONTENT_TYPES = {
+  ".wasm": "application/wasm",
+  ".json": "application/json",
+  ".js": "text/javascript",
+  ".data": "application/octet-stream",
+  ".ttf": "font/ttf",
+  ".otf": "font/otf",
+  ".woff2": "font/woff2",
+} as const;
+
+/** What an extension file of an unrecognised kind is served as. */
+const DEFAULT_CONTENT_TYPE = "application/octet-stream";
+
+/**
+ * Picks the content type for a served extension asset.
+ *
+ * @param fileName - The file's name.
+ * @returns The content type header value.
+ */
+function contentTypeFor(fileName: string): string {
+  const lastDot = fileName.lastIndexOf(".");
+  const extension = lastDot === -1 ? "" : fileName.slice(lastDot).toLowerCase();
+  for (const [suffix, contentType] of Object.entries(CONTENT_TYPES)) {
+    if (suffix === extension) {
+      return contentType;
+    }
+  }
+  return DEFAULT_CONTENT_TYPE;
+}
+
+/** One file a build writes into the public path. */
+interface OutputFile {
+  /** The path inside `build.outDir`. */
+  readonly fileName: string;
+  /** The source file it was read from, recorded so watch mode re-runs on a change. */
+  readonly filePath: string;
+  /** The bytes to write. */
+  readonly source: Uint8Array;
+}
+
+/**
+ * Renders a caught value for a log line, keeping the `IGX-####` code when there is one.
+ *
+ * @param error - The caught value.
+ * @returns A one-line description.
+ */
+function describeError(error: unknown): string {
+  if (error instanceof VitePluginError) {
+    return `${error.code} ${error.message}`;
+  }
+  return error instanceof Error ? error.message : String(error);
+}
+
+/**
+ * Marks the generated manifest module stale so that importers pick the new one up.
+ *
+ * @param server - The dev server.
+ */
+function invalidateManifestModule(server: ViteDevServer): void {
+  const module = server.moduleGraph.getModuleById(RESOLVED_MANIFEST_MODULE_ID);
+  if (module !== undefined) {
+    server.moduleGraph.invalidateModule(module);
+  }
+}
+
+/**
+ * Renders every validation problem as one multi-line build error.
+ *
+ * @param problems - The problems to report.
+ * @returns The message.
+ */
+function validationFailureMessage(problems: readonly ValidationProblem[]): string {
+  const heading = `${String(problems.length)} ignifx asset file${problems.length === 1 ? "" : "s"} failed validation:`;
+  return [heading, ...problems.map((problem) => `  ${formatValidationProblem(problem)}`)].join("\n");
+}
+
+/**
+ * The plugin's own API object, reachable through Vite's `plugin.api`.
+ *
+ * @remarks
+ * Watcher callbacks are synchronous, so the rescan a file change triggers runs detached. Anything
+ * that needs to observe the result — a test, or another plugin that reads the served manifest —
+ * waits for it here instead of guessing at a delay.
+ *
+ * @public
+ */
+export interface IgnifxPluginApi {
+  /**
+   * Waits until the plugin has finished reacting to every file-system event seen so far.
+   *
+   * @returns A promise that settles once the queue of watcher work is empty.
+   */
+  whenIdle(): Promise<void>;
+}
+
+/**
+ * The ignifx Vite plugin.
+ *
+ * @remarks
+ * What it does, in the order the hooks run:
+ *
+ * - `config` resolves `ignifx.config.ts` and injects it as `import.meta.env.IGNIFX_CONFIG`
+ *   (`docs/architecture/04-extensions.md` §5).
+ * - `buildStart` scans the asset root, hashes every file, reads `.meta.json` sidecars, and
+ *   validates every format-headed JSON file. A validation failure fails the build.
+ * - `virtual:ignifx/manifest` and `virtual:ignifx/scripts` are served from `resolveId`/`load`.
+ * - In development the manifest is also served from `/<manifestFileName>`, the asset root is
+ *   watched, and every change is announced on the `ignifx:asset-changed` HMR channel; editing the
+ *   project config triggers a full reload.
+ * - `generateBundle` emits every asset under `<outDir>/<publicPath>` with a content-hashed,
+ *   immutable-cacheable name, copies each extension's `ignifx.assets.public` files unhashed next to
+ *   them, and writes the manifest with the hashed URLs.
+ *
+ * @param options - Plugin options and their documented defaults; see {@link IgnifxPluginOptions}.
+ * @returns The Vite plugin, to be listed in `vite.config.ts`.
+ * @throws A {@link VitePluginError} with code `IGX-0555` when an option is outside its domain.
+ *
+ * @example
+ * ```ts
+ * // vite.config.ts
+ * import { defineConfig } from "vite";
+ * import { ignifx } from "@ignifx/vite-plugin";
+ *
+ * export default defineConfig({
+ *   plugins: [ignifx({ assetRoot: "assets" })],
+ * });
+ * ```
+ *
+ * @public
+ */
+export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginApi> {
+  const settings = resolvePluginOptions(options);
+
+  let root = process.cwd();
+  let base = "/";
+  let command: ConfigEnv["command"] = "serve";
+  let configFilePath: string | null = null;
+  let configDependencies: readonly string[] = [];
+  let assets: readonly ScannedAsset[] = [];
+  let problems: readonly ValidationProblem[] = [];
+  let extensionAssets: readonly ExtensionPublicAsset[] = [];
+  let scanned = false;
+  let pendingWork: Promise<void> = Promise.resolve();
+
+  /**
+   * The absolute asset root.
+   *
+   * @returns The configured asset root resolved against the Vite root.
+   */
+  function assetRootPath(): string {
+    return resolve(root, settings.assetRoot);
+  }
+
+  /**
+   * The base URL with a guaranteed trailing slash, so URLs concatenate cleanly.
+   *
+   * @returns The normalized base.
+   */
+  function normalizedBase(): string {
+    if (base === "") {
+      return "/";
+    }
+    return base.endsWith("/") ? base : `${base}/`;
+  }
+
+  /**
+   * The development URL of an address.
+   *
+   * @remarks
+   * An asset root inside the Vite root is served by Vite's static handler at its root-relative
+   * path. An asset root outside it is served through Vite's `/@fs/` prefix, which is the documented
+   * way to reach a file the root does not contain.
+   *
+   * @param address - The asset address.
+   * @returns The URL the dev server serves it from.
+   */
+  function developmentUrl(address: string): string {
+    const relativePath = relative(root, assetRootPath());
+    if (relativePath === "") {
+      return `${normalizedBase()}${address}`;
+    }
+    if (relativePath.startsWith("..") || isAbsolute(relativePath)) {
+      return `${normalizedBase()}@fs${assetRootPath().replaceAll("\\", "/")}/${address}`;
+    }
+    return `${normalizedBase()}${addressFromRelativePath(relativePath)}/${address}`;
+  }
+
+  /**
+   * The production URL of an asset, which carries its content hash.
+   *
+   * @param asset - The scanned asset.
+   * @returns The immutable-cacheable URL.
+   */
+  function productionUrl(asset: ScannedAsset): string {
+    return `${normalizedBase()}${settings.publicPath}${hashedAddress(asset.address, asset.hash)}`;
+  }
+
+  /**
+   * The manifest for the assets scanned so far, with URLs for the current command.
+   *
+   * @returns The manifest.
+   */
+  function currentManifest(): AssetManifest {
+    return buildManifest(assets, settings.assetRoot, (asset) =>
+      command === "build" ? productionUrl(asset) : developmentUrl(asset.address),
+    );
+  }
+
+  /**
+   * Rescans the asset root and revalidates it.
+   *
+   * @remarks
+   * A missing asset root is a warning rather than a failure: a project that has not created
+   * `assets/` yet still builds, with an empty manifest.
+   *
+   * @param warn - Where to send the "no asset root" warning.
+   */
+  async function refresh(warn: (message: string) => void): Promise<void> {
+    try {
+      assets = await scanAssetRoot({ assetRoot: assetRootPath(), hashLength: settings.hashLength });
+    } catch (error) {
+      if (!(error instanceof VitePluginError) || error.code !== VitePluginErrorCode.assetRootMissing) {
+        throw error;
+      }
+      assets = [];
+      warn(`${error.code} ${error.message}`);
+    }
+    problems = settings.validate ? await validateJsonAssets(assets, settings.schemas) : [];
+    scanned = true;
+  }
+
+  /**
+   * Scans once, lazily, for hooks that may run before `buildStart` in some Vite modes.
+   *
+   * @param warn - Where to send the "no asset root" warning.
+   */
+  async function ensureScanned(warn: (message: string) => void): Promise<void> {
+    if (!scanned) {
+      await refresh(warn);
+    }
+  }
+
+  /**
+   * Reports validation problems to a running dev server: once in the terminal, once as the browser
+   * error overlay.
+   *
+   * @param server - The dev server.
+   */
+  function reportToDevServer(server: ViteDevServer): void {
+    if (problems.length === 0) {
+      return;
+    }
+    const message = validationFailureMessage(problems);
+    server.config.logger.error(`[${PLUGIN_NAME}] ${message}`, { timestamp: true });
+    server.ws.send({ type: "error", err: { message, stack: "", plugin: PLUGIN_NAME } });
+  }
+
+  /**
+   * Reports whether a changed file is the project config or something it imported.
+   *
+   * @param file - The absolute path of the changed file.
+   * @returns `true` when the change must trigger a full reload.
+   */
+  function isProjectConfigFile(file: string): boolean {
+    if (configFilePath !== null && file === configFilePath) {
+      return true;
+    }
+    return configDependencies.some((dependency) => resolve(root, dependency) === file);
+  }
+
+  /**
+   * Handles one watcher event under the asset root or on the project config.
+   *
+   * @param server - The dev server.
+   * @param file - The path the watcher reported.
+   * @param kind - What happened to the file.
+   */
+  async function handleWatchEvent(
+    server: ViteDevServer,
+    file: string,
+    kind: AssetChangedPayload["kind"],
+  ): Promise<void> {
+    const absolute = resolve(file);
+    if (isProjectConfigFile(absolute)) {
+      server.config.logger.info(`[${PLUGIN_NAME}] project config changed, reloading`, { timestamp: true });
+      server.ws.send({ type: "full-reload", path: "*" });
+      return;
+    }
+
+    const relativePath = relative(assetRootPath(), absolute);
+    if (relativePath === "" || relativePath.startsWith("..") || isAbsolute(relativePath)) {
+      return;
+    }
+    let address = addressFromRelativePath(relativePath);
+    if (address.split("/").some((segment) => segment.startsWith("."))) {
+      return;
+    }
+    let changeKind = kind;
+    if (isSidecarFileName(basename(address))) {
+      // A sidecar is metadata for the asset next to it, so the asset is what changed.
+      address = address.slice(0, -META_SUFFIX.length);
+      changeKind = "changed";
+    }
+
+    await refresh((message) => {
+      server.config.logger.warn(`[${PLUGIN_NAME}] ${message}`, { timestamp: true });
+    });
+    invalidateManifestModule(server);
+
+    const payload: AssetChangedPayload = { address, kind: changeKind, url: developmentUrl(address) };
+    server.ws.send({ type: "custom", event: ASSET_CHANGED_EVENT, data: payload });
+    reportToDevServer(server);
+  }
+
+  /**
+   * Reads every file a build writes into the public path and checks for name collisions.
+   *
+   * @remarks
+   * Assets are hashed; an extension's `ignifx.assets.public` files are not, because a WASM loader
+   * locates its binary by name (`docs/architecture/05-assets-and-loading.md` §7). The reads run
+   * together rather than one per emit, so a large asset tree is bounded by the file system rather
+   * than by round trips.
+   *
+   * @returns One entry per file, in emit order.
+   * @throws A {@link VitePluginError} with code `IGX-0552` when two files would build to one name.
+   */
+  async function collectOutputFiles(): Promise<readonly OutputFile[]> {
+    extensionAssets = await collectExtensionPublicAssets(root);
+    const planned = [
+      ...assets.map((asset) => ({
+        fileName: `${settings.publicPath}${hashedAddress(asset.address, asset.hash)}`,
+        filePath: asset.filePath,
+        owner: asset.address,
+      })),
+      ...extensionAssets.map((file) => ({
+        fileName: `${settings.publicPath}${file.fileName}`,
+        filePath: file.filePath,
+        owner: `the public asset of "${file.packageName}"`,
+      })),
+    ];
+
+    const owners = new Map<string, string>();
+    for (const entry of planned) {
+      const owner = owners.get(entry.fileName);
+      if (owner !== undefined) {
+        throw new VitePluginError(
+          VitePluginErrorCode.duplicateOutputFile,
+          `"${owner}" and ${entry.owner} both build to "${entry.fileName}"; rename one of them.`,
+        );
+      }
+      owners.set(entry.fileName, entry.owner);
+    }
+
+    const sources = await Promise.all(planned.map((entry) => readFile(entry.filePath)));
+    return planned.map((entry, index) => ({
+      fileName: entry.fileName,
+      filePath: entry.filePath,
+      source: sources[index] ?? new Uint8Array(),
+    }));
+  }
+
+  /**
+   * Subscribes to one watcher event.
+   *
+   * @remarks
+   * Watcher callbacks are synchronous, so the rescan is queued behind the previous one: that keeps
+   * two rapid saves from interleaving two scans, and `api.whenIdle()` gives callers something to
+   * await instead of a delay (coding standards §8).
+   *
+   * @param server - The dev server.
+   * @param event - The chokidar event to listen for.
+   * @param kind - The change kind that event means.
+   */
+  function watchFor(
+    server: ViteDevServer,
+    event: "add" | "change" | "unlink",
+    kind: AssetChangedPayload["kind"],
+  ): void {
+    server.watcher.on(event, (file: string) => {
+      pendingWork = pendingWork
+        .then(() => handleWatchEvent(server, file, kind))
+        .catch((error: unknown) => {
+          server.config.logger.error(`[${PLUGIN_NAME}] ${describeError(error)}`, { timestamp: true });
+        });
+    });
+  }
+
+  /**
+   * Serves the development manifest and the extension public assets.
+   *
+   * @param server - The dev server.
+   */
+  function installMiddleware(server: ViteDevServer): void {
+    const manifestPath = `${normalizedBase()}${settings.manifestFileName}`;
+    const publicPrefix = `${normalizedBase()}${settings.publicPath}`;
+    server.middlewares.use((request, response, next) => {
+      const url = (request.url ?? "").split("?")[0] ?? "";
+      if (url === manifestPath) {
+        response.setHeader("Content-Type", "application/json");
+        response.end(serializeManifest(currentManifest()));
+        return;
+      }
+      if (url.startsWith(publicPrefix)) {
+        const wanted = decodeURIComponent(url.slice(publicPrefix.length));
+        const file = extensionAssets.find((candidate) => candidate.fileName === wanted);
+        if (file !== undefined) {
+          response.setHeader("Content-Type", contentTypeFor(file.fileName));
+          createReadStream(file.filePath).pipe(response);
+          return;
+        }
+      }
+      next();
+    });
+  }
+
+  return {
+    name: PLUGIN_NAME,
+    api: {
+      async whenIdle(): Promise<void> {
+        let previous = pendingWork;
+        await previous;
+        while (pendingWork !== previous) {
+          previous = pendingWork;
+          // Draining a queue is sequential by definition: each await is what lets whatever was
+          // enqueued during the previous one settle, so `Promise.all` cannot express it.
+          // oxlint-disable-next-line no-await-in-loop -- see above.
+          await previous;
+        }
+      },
+    },
+    // The virtual modules and the injected config must be visible to every other plugin's
+    // transform, so this plugin resolves before the normal tier.
+    enforce: "pre",
+
+    async config(userConfig, env) {
+      command = env.command;
+      root = resolve(process.cwd(), userConfig.root ?? ".");
+      const file =
+        settings.configFile === false
+          ? null
+          : settings.configFile === null
+            ? await findIgnifxConfigFile(root)
+            : resolve(root, settings.configFile);
+      const loaded = await loadIgnifxConfig(file, root, env);
+      configFilePath = loaded.path;
+      configDependencies = loaded.dependencies;
+      const projectConfig: JsonObject = loaded.config;
+      return { define: { [IGNIFX_CONFIG_DEFINE_KEY]: JSON.stringify(projectConfig) } };
+    },
+
+    configResolved(resolvedConfig) {
+      root = resolvedConfig.root;
+      base = resolvedConfig.base;
+      command = resolvedConfig.command;
+    },
+
+    async buildStart() {
+      await refresh((message) => {
+        this.warn(message);
+      });
+      if (command === "build" && problems.length > 0) {
+        this.error(validationFailureMessage(problems));
+      }
+    },
+
+    resolveId(id) {
+      return resolveVirtualModuleId(id);
+    },
+
+    async load(id) {
+      if (id === RESOLVED_MANIFEST_MODULE_ID) {
+        await ensureScanned((message) => {
+          this.warn(message);
+        });
+        return manifestModuleSource(currentManifest());
+      }
+      if (id === RESOLVED_SCRIPTS_MODULE_ID) {
+        return scriptsModuleSource(settings.scriptsPattern);
+      }
+      return null;
+    },
+
+    async configureServer(server) {
+      extensionAssets = await collectExtensionPublicAssets(root);
+      installMiddleware(server);
+
+      server.watcher.add(assetRootPath());
+      watchFor(server, "add", "added");
+      watchFor(server, "change", "changed");
+      watchFor(server, "unlink", "removed");
+
+      await refresh((message) => {
+        server.config.logger.warn(`[${PLUGIN_NAME}] ${message}`, { timestamp: true });
+      });
+      reportToDevServer(server);
+    },
+
+    async generateBundle() {
+      await ensureScanned((message) => {
+        this.warn(message);
+      });
+      if (problems.length > 0) {
+        this.error(validationFailureMessage(problems));
+      }
+
+      const outputs = await collectOutputFiles();
+      for (const file of outputs) {
+        this.emitFile({
+          type: "asset",
+          fileName: file.fileName,
+          originalFileName: file.filePath,
+          source: file.source,
+        });
+      }
+
+      this.emitFile({
+        type: "asset",
+        fileName: settings.manifestFileName,
+        source: serializeManifest(currentManifest()),
+      });
+    },
+  };
+}

@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "isolatedDeclarations": false,
+    "moduleDetection": "force",
+    "types": ["@webgpu/types"],
+    "paths": {
+      "@ignifx/*": ["../../packages/*/src/index.ts"],
+      "ignifx": ["../../packages/ignifx/src/index.ts"]
+    }
+  },
+  "include": ["*/main.ts"]
+}

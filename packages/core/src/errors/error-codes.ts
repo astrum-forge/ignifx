@@ -92,6 +92,12 @@ export type ErrorCode = `IGX-${number}`;
  * });
  * ```
  *
+ * @remarks
+ * Code blocks reserved for other first-party packages, which cannot import this table
+ * (`docs/architecture/00-overview.md` §2): `@ignifx/cli` owns `IGX-1401`–`IGX-1419`;
+ * `@ignifx/vite-plugin` owns `IGX-0550`–`IGX-0599` and `IGX-0650`–`IGX-0699`. Core allocates its
+ * own codes from the bottom of each range and, in the platform range, from `IGX-1420` upward.
+ *
  * @public
  */
 export const CoreErrorCode = {
@@ -135,6 +141,12 @@ export const CoreErrorCode = {
   tooManyLayers: "IGX-0305",
   /** Reparenting an entity under its own descendant would make the scene tree cyclic. */
   parentingCycle: "IGX-0306",
+  /** A scene file names a component `typeId` that no extension has registered. */
+  unknownComponentTypeId: "IGX-0307",
+  /** A file handed to the scene loader does not carry the `ignifx.scene` format header. */
+  notASceneFile: "IGX-0308",
+  /** An operation that only accepts a scene root was given an entity that has a parent. */
+  entityIsNotSceneRoot: "IGX-0309",
   /** Two extensions defined the same app property. */
   appPropertyAlreadyDefined: "IGX-0401",
   /** The `requires` graph of the registered extensions contains a cycle. */
@@ -157,6 +169,12 @@ export const CoreErrorCode = {
   assetLoadAborted: "IGX-0502",
   /** An asset promise outlived the app that owned it. */
   assetAppDisposed: "IGX-0503",
+  /** No registered loader claims the address's type or extension. */
+  assetNoLoader: "IGX-0504",
+  /** An asset load failed after its last retry. */
+  assetLoadFailed: "IGX-0505",
+  /** Two loaders were registered for the same asset type. */
+  duplicateAssetLoader: "IGX-0506",
   /** A serialized number was `NaN` or infinite. */
   nonFiniteNumber: "IGX-0601",
   /** A serialized `$entity`/`$component` reference could not be resolved. */
@@ -171,12 +189,32 @@ export const CoreErrorCode = {
   schemaOutOfRange: "IGX-0606",
   /** A schema declaration or a property bag named a field the schema does not declare. */
   schemaUnknownField: "IGX-0607",
+  /** A scene file failed structural validation against the generated scene-file JSON Schema. */
+  sceneFileInvalid: "IGX-0608",
+  /** An instance override declares a `path` the override grammar does not accept. */
+  invalidOverridePath: "IGX-0609",
   /** WebGPU is not available in the current environment. */
   webGpuUnavailable: "IGX-0701",
   /** A runtime handle was used after disposal, or was not created by ignifx. */
   invalidRuntime: "IGX-0702",
+  /** Shadows were requested from a light kind Babylon Lite cannot shadow. */
+  shadowsUnsupportedForLight: "IGX-0703",
+  /** A rendering feature opt-in was requested after the render scene had been registered. */
+  renderingFeatureTooLate: "IGX-0704",
+  /** A second `Environment` was enabled in one world; the most recent one wins. */
+  multipleEnvironments: "IGX-0705",
+  /** A world rendered with no enabled camera, so nothing was drawn. */
+  noEnabledCamera: "IGX-0706",
+  /** A screenshot was requested with no render loop running, so no frame will ever be presented. */
+  screenshotNeedsRenderLoop: "IGX-0707",
+  /** A material file declares a family this build cannot construct. */
+  unsupportedMaterialKind: "IGX-0708",
+  /** An asset file does not carry the format header its loader requires. */
+  invalidAssetFile: "IGX-0709",
+  /** A `PostProcessStack` was attached without the `postProcessing` rendering feature. */
+  postProcessingFeatureOff: "IGX-0710",
   /** The host exposes no Web Crypto implementation. */
-  cryptoUnavailable: "IGX-1401",
+  cryptoUnavailable: "IGX-1420",
   /** An error code was registered twice. */
   duplicateErrorCode: "IGX-1501",
   /** An error code does not match `IGX-####` in a known range. */
@@ -224,6 +262,9 @@ export const CORE_ERROR_MESSAGES: Readonly<Record<CoreErrorCode, string>> = {
   "IGX-0304": "The layer name {layer} is declared twice.",
   "IGX-0305": "The project settings declare {count} layers; at most {limit} fit in the 32 slots.",
   "IGX-0306": "{entity} cannot be parented to {parent}, which is inside its own subtree.",
+  "IGX-0307": "{typeId} is not a registered component type.",
+  "IGX-0308": "{file} is not an ignifx scene file.",
+  "IGX-0309": "{entity} is not a scene root; only roots can move between scene instances.",
   "IGX-0401": "The app property {property} is already defined by {owner}.",
   "IGX-0402": "The extension requires graph contains a cycle: {cycle}.",
   "IGX-0403": "{extension} requires {required}, which is not registered.",
@@ -235,6 +276,9 @@ export const CORE_ERROR_MESSAGES: Readonly<Record<CoreErrorCode, string>> = {
   "IGX-0501": "The asset {asset} has no value yet because it is still loading.",
   "IGX-0502": "Loading {asset} was aborted.",
   "IGX-0503": "The app that owned the asset {asset} was disposed before loading finished.",
+  "IGX-0504": "No loader is registered for {asset}.",
+  "IGX-0505": "Loading {asset} from {url} failed after {attempts} attempts.",
+  "IGX-0506": "A loader for the asset type {type} is already registered.",
   "IGX-0601": "{field} must be a finite number.",
   "IGX-0602": "The reference {reference} in {scene} could not be resolved.",
   "IGX-0603": "{file} declares format version {version}, which this build cannot read.",
@@ -242,9 +286,19 @@ export const CORE_ERROR_MESSAGES: Readonly<Record<CoreErrorCode, string>> = {
   "IGX-0605": "{field} has the wrong type for a {kind} field.",
   "IGX-0606": "{field} is outside the declared value domain.",
   "IGX-0607": "{field} is not a field this schema declares.",
+  "IGX-0608": "{file} does not match the scene file schema.",
+  "IGX-0609": "{path} is not a valid instance override path.",
   "IGX-0701": "WebGPU is not available in this environment.",
   "IGX-0702": "This handle was already disposed, or was not created by ignifx.",
-  "IGX-1401": "This host does not expose Web Crypto.",
+  "IGX-0703": "Babylon Lite has no shadow generator for a {lightType} light.",
+  "IGX-0704": "The rendering feature {feature} must be enabled before the scene is registered.",
+  "IGX-0705": "{entity} enabled a second Environment in this world; the most recent one wins.",
+  "IGX-0706": "This world has no enabled camera, so nothing is drawn.",
+  "IGX-0707": "captureScreenshot() needs a running render loop; a headless app never presents a frame.",
+  "IGX-0708": "{asset} declares the material kind {kind}, which this build cannot construct.",
+  "IGX-0709": "{file} is not an {format} file.",
+  "IGX-0710": "{entity} attached a PostProcessStack, but rendering.features.postProcessing is off.",
+  "IGX-1420": "This host does not expose Web Crypto.",
   "IGX-1501": "The error code {code} is already registered by {owner}.",
   "IGX-1502": "{code} is not a valid IGX-#### code in a known range.",
   "IGX-1503": "The diagnostics group {group} is already registered.",

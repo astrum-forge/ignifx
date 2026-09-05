@@ -4,15 +4,35 @@
 
 ```ts
 
+import { AnimationGroup } from '@babylonjs/lite';
+import { AssetContainer } from '@babylonjs/lite';
+import { DirectionalLight } from '@babylonjs/lite';
 import { EngineContext } from '@babylonjs/lite';
+import { EnvironmentTextures } from '@babylonjs/lite';
+import { Font } from '@babylonjs/lite';
+import { FreeCamera } from '@babylonjs/lite';
+import { HemisphericLight } from '@babylonjs/lite';
+import { Material } from '@babylonjs/lite';
+import { Mesh } from '@babylonjs/lite';
+import { PbrMaterialProps } from '@babylonjs/lite';
+import { PickingInfo } from '@babylonjs/lite';
+import { PointLight } from '@babylonjs/lite';
+import { RenderTarget } from '@babylonjs/lite';
 import { SceneContext } from '@babylonjs/lite';
 import { SceneNode } from '@babylonjs/lite';
+import { ShadowGenerator } from '@babylonjs/lite';
+import { Skeleton } from '@babylonjs/lite';
+import { SpotLight } from '@babylonjs/lite';
+import { StandardMaterialProps } from '@babylonjs/lite';
+import { Texture2D } from '@babylonjs/lite';
 
 // @public
 export interface App {
+    readonly assets: Assets;
     readonly coroutines: CoroutineHost;
     readonly diagnostics: Diagnostics;
     dispose(): void;
+    readonly events: AppEvents;
     readonly isHeadless: boolean;
     readonly isRunning: boolean;
     readonly lite: AppLiteHandles;
@@ -21,6 +41,7 @@ export interface App {
     pause(): void;
     readonly platform: PlatformInfo;
     registerComponents(types: readonly ConcreteComponentType[]): void;
+    readonly renderer: Renderer;
     resume(): void;
     readonly services: ServiceRegistry;
     readonly settings: AppSettings;
@@ -30,6 +51,15 @@ export interface App {
     readonly time: Time;
     readonly version: string;
     readonly world: World;
+}
+
+// @public
+export interface AppEvents {
+    readonly onDeviceLost: SignalLike<DeviceLostInfo>;
+    readonly onDeviceRecovered: SignalLike;
+    readonly onDeviceRecoveryFailed: SignalLike<unknown>;
+    readonly onSceneLoaded: SignalLike<SceneInstance>;
+    readonly onSceneUnloaded: SignalLike<SceneInstance>;
 }
 
 // @public
@@ -65,7 +95,22 @@ export interface ArrayFieldSpec {
 export function assertNever(value: never, what: string): never;
 
 // @public
-export function asset<A>(type: AssetTypeToken<A>, options?: FieldOptions): FieldDefinition<AssetRefValue<A> | null>;
+export function assertSceneDependenciesLoaded(asset: SceneAsset): void;
+
+// @public
+export function asset<A>(type: AssetTypeToken<A>, options?: FieldOptions): FieldDefinition<AssetHandle<A> | null>;
+
+// @public
+export const ASSET_DIAGNOSTICS_COUNTERS: readonly string[];
+
+// @public
+export const ASSET_DIAGNOSTICS_GROUP = "assets";
+
+// @public
+export const ASSET_MANIFEST_FORMAT = "ignifx.manifest";
+
+// @public
+export const ASSET_MANIFEST_VERSION = 1;
 
 // @public
 export interface AssetFieldSpec {
@@ -75,6 +120,82 @@ export interface AssetFieldSpec {
 }
 
 // @public
+export interface AssetHandle<T = unknown> {
+    [Symbol.dispose](): void;
+    readonly address: string;
+    readonly error: AssetLoadError | null;
+    readonly onReplaced: SignalLike<T>;
+    readonly progress: number;
+    readonly promise: Promise<T>;
+    readonly refCount: number;
+    release(): void;
+    retain(): this;
+    readonly state: AssetState;
+    readonly type: string;
+    readonly value: T;
+}
+
+// @public
+export interface AssetLoader<T = unknown> {
+    readonly extensions: readonly string[];
+    load(ctx: LoaderContext): Promise<T>;
+    parseFragment?(fragment: string, value: T): unknown;
+    reload?(ctx: LoaderContext, previous: T): Promise<T>;
+    readonly type: string;
+    unload?(value: T, ctx: LoaderContext): void;
+}
+
+// @public
+export class AssetLoadError extends IgnifxError {
+    constructor(code: ErrorCode, message: string, options: AssetLoadErrorOptions);
+    readonly address: string;
+    readonly url: string;
+}
+
+// @public
+export interface AssetLoadErrorOptions extends IgnifxErrorOptions {
+    readonly address: string;
+    readonly url: string;
+}
+
+// @public
+export interface AssetManifest {
+    readonly entries: readonly AssetManifestEntry[];
+    readonly format: "ignifx.manifest";
+    readonly formatVersion: 1;
+    readonly root: string;
+}
+
+// @public
+export interface AssetManifestEntry {
+    readonly address: string;
+    readonly bytes?: number;
+    readonly groups?: readonly string[];
+    readonly hash?: string;
+    readonly meta?: JsonObject;
+    readonly type?: string;
+    readonly url: string;
+}
+
+// @public
+export interface AssetProgress {
+    readonly bytesLoaded: number;
+    readonly bytesTotal: number;
+    readonly loaded: number;
+    readonly total: number;
+}
+
+// @public
+export interface AssetRef<T = unknown> {
+    readonly address: string;
+    readonly assetOf?: T;
+    readonly type?: string;
+}
+
+// @public
+export function assetRef<T = unknown>(address: string, type?: string): AssetRef<T>;
+
+// @public
 export interface AssetRefValue<A> {
     readonly address: string;
     readonly assetOf?: A;
@@ -82,9 +203,74 @@ export interface AssetRefValue<A> {
 }
 
 // @public
+export interface Assets {
+    gc(): void;
+    gcDelay: number;
+    get<T>(address: string): AssetHandle<T> | null;
+    load<T>(ref: AssetRef<T> | string, options?: LoadOptions): AssetHandle<T>;
+    loadAll(refs: readonly (AssetRef | string)[], options?: LoadOptions): BatchHandle;
+    loadAsync<T>(ref: AssetRef<T> | string, options?: LoadOptions): Promise<AssetHandle<T>>;
+    readonly manifest: AssetManifest;
+    readonly onProgress: SignalLike<AssetProgress>;
+    preloadGroup(group: string, options?: LoadOptions): BatchHandle;
+    register<T>(value: T, options: RegisterAssetOptions): AssetHandle<T>;
+    registerLoader(loader: AssetLoader): void;
+    registerType(type: AssetTypeDefinition): void;
+    release(handleOrAddress: AssetHandle | string): void;
+    resolveUrl(address: string): string;
+}
+
+// @public
+export interface AssetsCreateOptions {
+    readonly fetch?: FetchLike;
+    readonly manifest?: AssetManifest;
+}
+
+// @public
+export interface AssetsSettings {
+    readonly concurrency: number;
+    readonly gcDelay: number;
+    readonly preload: readonly string[];
+    readonly retries: number;
+    readonly root: string;
+}
+
+// @public
+export type AssetState = "loading" | "loaded" | "failed" | "released";
+
+// @public
+export interface AssetTypeDefinition {
+    readonly extensions: readonly string[];
+    readonly type: string;
+}
+
+// @public
 export interface AssetTypeToken<A> {
     readonly assetType?: string;
     readonly prototype: A;
+}
+
+// @public
+export interface BatchHandle {
+    cancel(): void;
+    readonly handles: readonly AssetHandle[];
+    readonly progress: number;
+    readonly promise: Promise<void>;
+    release(): void;
+}
+
+// @public
+export const binaryAssetLoader: AssetLoader<ArrayBuffer>;
+
+// @public
+export interface BloomEffectSettings {
+    enabled: boolean;
+    exposure: number;
+    kernel: number;
+    order: number;
+    scale: number;
+    threshold: number;
+    weight: number;
 }
 
 // @public
@@ -96,7 +282,75 @@ export interface BoolFieldSpec {
 }
 
 // @public
+export interface BoxMeshOptions {
+    readonly depth?: number;
+    readonly height?: number;
+    readonly size?: number;
+    readonly width?: number;
+}
+
+// @public
+export class Camera extends Component implements ComponentHooks {
+    constructor();
+    static allowMultiple: boolean;
+    // (undocumented)
+    clearColor: ColorLike | null;
+    // (undocumented)
+    far: number;
+    // (undocumented)
+    fov: number;
+    getProjectionMatrix(out: Mat4): Mat4;
+    getViewMatrix(out: Mat4): Mat4;
+    get lite(): {
+        readonly camera: LiteCamera | null;
+    };
+    // (undocumented)
+    near: number;
+    onAttach(): void;
+    onDetach(): void;
+    // (undocumented)
+    orthographicSize: number;
+    // (undocumented)
+    priority: number;
+    // (undocumented)
+    projection: CameraProjection;
+    static schema: Schema;
+    screenToRay(x: number, y: number, out?: Ray): Ray | null;
+    screenToWorldPoint(x: number, y: number, distance: number, out: MutableVec3): MutableVec3 | null;
+    // Warning: (ae-forgotten-export) The symbol "RendererImpl" needs to be exported by the entry point index.d.ts
+    //
+    // @internal
+    sync(renderer: RendererImpl): void;
+    static typeId: string;
+    // (undocumented)
+    viewport: {
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+    };
+    viewportToWorldPoint(u: number, v: number, distance: number, out: MutableVec3): MutableVec3 | null;
+    worldToScreen(point: Vec3Like, out: MutableVec3): boolean;
+}
+
+// @public
+export type CameraProjection = (typeof PROJECTIONS)[number];
+
+// @public
 export function canonicalizeNumber(value: number): number;
+
+// @public
+export const CANVAS_ALPHA_MODES: readonly ["opaque", "premultiplied"];
+
+// @public
+export type CanvasAlphaMode = (typeof CANVAS_ALPHA_MODES)[number];
+
+// @public
+export interface CapsuleMeshOptions {
+    readonly height?: number;
+    readonly radius?: number;
+    readonly tessellation?: number;
+}
 
 // @public
 export function clamp(value: number, min: number, max: number): number;
@@ -236,6 +490,7 @@ export class ComponentRegistry {
     isRegistered(type: ComponentType): boolean;
     register(type: ConcreteComponentType, typeId?: string): ComponentClassInfo;
     registerAll(types: readonly ConcreteComponentType[]): void;
+    registrations(): readonly (readonly [typeId: string, type: ComponentType])[];
     requireTypeId(type: ComponentType): string;
     get size(): number;
 }
@@ -258,6 +513,9 @@ export interface ComponentTypeToken<C> {
     readonly prototype: C;
     readonly typeId?: string;
 }
+
+// @public
+export function computeSceneHash(file: SceneFile): Promise<string>;
 
 // @public
 export interface ConcreteComponentType<T extends Component = Component> extends ComponentType<T> {
@@ -309,6 +567,9 @@ export const CoreErrorCode: {
     readonly duplicateLayerName: "IGX-0304";
     readonly tooManyLayers: "IGX-0305";
     readonly parentingCycle: "IGX-0306";
+    readonly unknownComponentTypeId: "IGX-0307";
+    readonly notASceneFile: "IGX-0308";
+    readonly entityIsNotSceneRoot: "IGX-0309";
     readonly appPropertyAlreadyDefined: "IGX-0401";
     readonly extensionRequiresCycle: "IGX-0402";
     readonly extensionMissing: "IGX-0403";
@@ -320,6 +581,9 @@ export const CoreErrorCode: {
     readonly assetNotLoaded: "IGX-0501";
     readonly assetLoadAborted: "IGX-0502";
     readonly assetAppDisposed: "IGX-0503";
+    readonly assetNoLoader: "IGX-0504";
+    readonly assetLoadFailed: "IGX-0505";
+    readonly duplicateAssetLoader: "IGX-0506";
     readonly nonFiniteNumber: "IGX-0601";
     readonly unresolvedReference: "IGX-0602";
     readonly unsupportedFormatVersion: "IGX-0603";
@@ -327,9 +591,19 @@ export const CoreErrorCode: {
     readonly schemaTypeMismatch: "IGX-0605";
     readonly schemaOutOfRange: "IGX-0606";
     readonly schemaUnknownField: "IGX-0607";
+    readonly sceneFileInvalid: "IGX-0608";
+    readonly invalidOverridePath: "IGX-0609";
     readonly webGpuUnavailable: "IGX-0701";
     readonly invalidRuntime: "IGX-0702";
-    readonly cryptoUnavailable: "IGX-1401";
+    readonly shadowsUnsupportedForLight: "IGX-0703";
+    readonly renderingFeatureTooLate: "IGX-0704";
+    readonly multipleEnvironments: "IGX-0705";
+    readonly noEnabledCamera: "IGX-0706";
+    readonly screenshotNeedsRenderLoop: "IGX-0707";
+    readonly unsupportedMaterialKind: "IGX-0708";
+    readonly invalidAssetFile: "IGX-0709";
+    readonly postProcessingFeatureOff: "IGX-0710";
+    readonly cryptoUnavailable: "IGX-1420";
     readonly duplicateErrorCode: "IGX-1501";
     readonly malformedErrorCode: "IGX-1502";
     readonly duplicateDiagnosticsGroup: "IGX-1503";
@@ -369,15 +643,20 @@ export function createApp(options?: CreateAppOptions): Promise<App>;
 
 // @public
 export interface CreateAppOptions {
+    readonly assets?: AssetsCreateOptions;
     readonly canvas?: RenderSurface;
     readonly clock?: Clock;
     readonly extensions?: readonly Extension[];
+    readonly fetch?: FetchLike;
     readonly headless?: boolean;
     readonly logLevel?: LogThreshold;
     readonly logSink?: LogSink;
     readonly mode?: ErrorFormatMode;
     readonly settings?: SettingsInput;
 }
+
+// @public
+export function createAssetManifest(entries: readonly AssetManifestEntry[], root?: string): AssetManifest;
 
 // @public
 export function createConsoleSink(options?: ConsoleSinkOptions): LogSink;
@@ -393,14 +672,22 @@ export function createDiagnosticsGroup(name: string, counterNames: readonly stri
 
 // @public
 export interface CreateEntityOptions {
+    readonly active?: boolean;
     readonly parent?: Entity;
     readonly position?: Vec3Like;
     readonly rotation?: QuatLike;
     readonly scene?: SceneInstance;
+    readonly uid?: string;
 }
 
 // @public
+export function createEnvironmentLoader(): AssetLoader<EnvironmentAsset>;
+
+// @public
 export function createErrorCodeRegistry(): ErrorCodeRegistry;
+
+// @public
+export function createFontLoader(): AssetLoader<FontAsset>;
 
 // @public
 export function createFrameSample(): FrameSample;
@@ -415,16 +702,37 @@ export function createLogger(options: LoggerOptions): Logger;
 export function createManualClock(startMs?: number): ManualClock;
 
 // @public
+export function createMaterialAsset(app: App, definition: MaterialDefinition, textures: readonly AssetHandle<TextureAsset>[]): AssetHandle<MaterialAsset>;
+
+// @public
+export function createMaterialLoader(): AssetLoader<MaterialAsset>;
+
+// @public
 export function createMemorySink(limit?: number): MemorySink;
 
 // @public
+export function createModelLoader(): AssetLoader<ModelAsset>;
+
+// @public
 export function createPerformanceClock(): Clock;
+
+// @public
+export function createRay(): Ray;
+
+// @public
+export function createSceneAsset(address: string, file: SceneFile, dependencies?: readonly AssetHandle[]): Promise<SceneAsset>;
+
+// @public
+export function createSceneLoader(options?: SceneLoaderOptions): AssetLoader<SceneAsset>;
 
 // @public
 export function createSeededRandom(seed: number): RandomSource;
 
 // @public
 export function createServiceKey<T>(name: string): ServiceNameKey<T>;
+
+// @public
+export function createTextureLoader(): AssetLoader<TextureAsset>;
 
 // @public
 export function createUlidFactory(options?: UlidFactoryOptions): () => string;
@@ -463,6 +771,15 @@ export interface CustomFieldSpec {
 }
 
 // @public
+export interface CylinderMeshOptions {
+    readonly diameter?: number;
+    readonly diameterBottom?: number;
+    readonly diameterTop?: number;
+    readonly height?: number;
+    readonly tessellation?: number;
+}
+
+// @public
 export function decodeProps<S extends Schema>(schema: S, json: JsonObject, references: ReferenceDecoder): DecodeResult<FieldsOf<S>>;
 
 // @public
@@ -475,10 +792,22 @@ export interface DecodeResult<T> {
 export function decodeValue<T>(field: FieldDefinition<T>, json: JsonValue, references: ReferenceDecoder): DecodeResult<T>;
 
 // @public
+export const DEFAULT_ASSET_CONCURRENCY = 6;
+
+// @public
+export const DEFAULT_ASSET_ROOT = "assets";
+
+// @public
+export const DEFAULT_BRDF_LUT_ADDRESS = "environments/brdf-lut.png";
+
+// @public
 export const DEFAULT_LAYER = 0;
 
 // @public
 export const DEFAULT_MEMORY_SINK_LIMIT = 200;
+
+// @public
+export function defaultRenderingSettings(): RenderingSettings;
 
 // @public
 export interface DeferredQueue {
@@ -501,7 +830,25 @@ export function degToRad(degrees: number): number;
 export function deltaAngleDegrees(fromDegrees: number, toDegrees: number): number;
 
 // @public
+export function describeEnvironmentFileFormat(): SchemaDescription;
+
+// @public
+export function describeMaterialFileFormat(): SchemaDescription;
+
+// @public
+export function describeSceneFileFormat(): SchemaDescription;
+
+// @public
 export function describeSchema(typeId: string, schema: Schema, meta?: SchemaDescriptionMeta): SchemaDescription;
+
+// @public
+export function describeSchemas(): Readonly<Record<string, SchemaDescription>>;
+
+// @public
+export interface DeviceLostInfo {
+    readonly message: string;
+    readonly reason: string | null;
+}
 
 // @public
 export class Diagnostics {
@@ -542,6 +889,9 @@ export interface DiagnosticsOptions {
 export type Disconnect = () => void;
 
 // @public
+export const EMPTY_ASSET_MANIFEST: AssetManifest;
+
+// @public
 export function encodeProps<S extends Schema>(schema: S, props: PartialFieldsOf<S>, references: ReferenceEncoder, issues?: SchemaIssue[]): JsonObject;
 
 // @public
@@ -550,7 +900,6 @@ export function encodeValue<T>(field: FieldDefinition<T>, value: T, references: 
 // @public
 export class Entity {
     // Warning: (ae-forgotten-export) The symbol "WorldHost" needs to be exported by the entry point index.d.ts
-    // Warning: (ae-forgotten-export) The symbol "LiteSceneNode" needs to be exported by the entry point index.d.ts
     //
     // @internal
     constructor(host: WorldHost, handle: EntityHandle, uid: string, node: LiteSceneNode, name: string, scene: SceneInstance);
@@ -585,6 +934,7 @@ export class Entity {
     get onDestroyed(): Signal<Entity>;
     get onParentChanged(): Signal<Entity | null>;
     get parent(): Entity | null;
+    get prefab(): EntityPrefabLink | null;
     removeComponent(component: Component): void;
     requireComponent<T extends Component>(type: ComponentType<T>): T;
     root(): Entity;
@@ -610,6 +960,16 @@ export type EntityHandle = number & {
 };
 
 // @public
+export type EntityOverrideField = "name" | "active" | "static" | "layer" | "tags";
+
+// @public
+export interface EntityPrefabLink {
+    readonly address: string;
+    readonly asset: AssetHandle<SceneAsset> | null;
+    readonly instanceRoot: Entity;
+}
+
+// @public
 export function entityRef<E = unknown>(options?: FieldOptions): FieldDefinition<E | null>;
 
 // @public
@@ -625,6 +985,93 @@ export interface EnumFieldSpec {
 
 // @public
 export function enumOf<const T extends string>(values: readonly T[], defaultValue: NoInfer<T>, options?: FieldOptions): FieldDefinition<T>;
+
+// @public
+export class Environment extends Component implements ComponentHooks {
+    constructor();
+    static allowMultiple: boolean;
+    // (undocumented)
+    blur: number;
+    // (undocumented)
+    clearColor: ColorLike;
+    // (undocumented)
+    environment: AssetHandle<EnvironmentAsset> | null;
+    // (undocumented)
+    fog: EnvironmentFogSettings;
+    // (undocumented)
+    imageProcessing: ImageProcessingSettings;
+    get installed(): EnvironmentAsset | null;
+    onAttach(): void;
+    onDetach(): void;
+    // (undocumented)
+    rotation: number;
+    static schema: Schema;
+    // (undocumented)
+    skybox: {
+        enabled: boolean;
+        size: number;
+    };
+    // @internal
+    sync(renderer: RendererImpl): void;
+    static typeId: string;
+}
+
+// @public
+export const ENVIRONMENT_ASSET_TYPE = "environment";
+
+// @public
+export const ENVIRONMENT_FILE_EXTENSION = ".environment.json";
+
+// @public
+export const ENVIRONMENT_FILE_EXTENSIONS: readonly string[];
+
+// @public
+export const ENVIRONMENT_FILE_FORMAT = "ignifx.environment";
+
+// @public
+export const ENVIRONMENT_FORMAT_VERSION = 1;
+
+// @public
+export class EnvironmentAsset {
+    // @internal
+    constructor(address: string, definition: EnvironmentDefinition, brdfUrl: string, textures: LiteEnvironmentTextures | null);
+    readonly address: string;
+    static assetType: string;
+    readonly brdfUrl: string;
+    readonly definition: EnvironmentDefinition;
+    get lite(): EnvironmentAssetLiteHandles;
+}
+
+// @public
+export interface EnvironmentAssetLiteHandles {
+    readonly textures: LiteEnvironmentTextures | null;
+}
+
+// @public
+export interface EnvironmentDefinition {
+    readonly blur: number;
+    readonly brdfLut: string;
+    readonly environment: string;
+    readonly rotation: number;
+    readonly skybox: string;
+    readonly skyboxEnabled: boolean;
+    readonly skyboxSize: number;
+}
+
+// @public
+export function environmentDefinition(overrides?: Partial<EnvironmentDefinition>): EnvironmentDefinition;
+
+// @public
+export type EnvironmentFogMode = (typeof FOG_MODE_NAMES)[number];
+
+// @public
+export interface EnvironmentFogSettings {
+    color: ColorLike;
+    density: number;
+    end: number;
+    mode: EnvironmentFogMode;
+    start: number;
+}
 
 // @public
 export const EPSILON: number;
@@ -702,6 +1149,8 @@ export interface ExtensionContext {
     defineAppProperty(name: string, getter: () => unknown): void;
     readonly log: Logger;
     onDispose(callback: () => void): void;
+    registerAssetLoader(loader: AssetLoader): void;
+    registerAssetType(type: AssetTypeDefinition): void;
     registerComponent(type: ConcreteComponentType, options?: RegisterComponentOptions): void;
     registerComponents(types: readonly ConcreteComponentType[]): void;
     registerErrorCodes(codes: Readonly<Record<string, string>>): void;
@@ -709,6 +1158,7 @@ export interface ExtensionContext {
     registerSettings<S>(section: string, schema: Schema, defaults: S): void;
     registerSystem(system: System, options: RegisterSystemOptions): void;
     require<T>(key: ServiceKey<T>): T;
+    requireRenderingFeature(feature: RenderingFeature): void;
     settings<S>(section: string): S;
     tryGet<T>(key: ServiceKey<T>): T | null;
 }
@@ -718,6 +1168,9 @@ export function f32(defaultValue?: number, options?: FieldOptions): FieldDefinit
 
 // @public
 export function f64(defaultValue?: number, options?: FieldOptions): FieldDefinition<number>;
+
+// @public
+export type FetchLike = typeof globalThis.fetch;
 
 // @public
 export interface FieldDefinition<T> {
@@ -775,6 +1228,30 @@ export type FieldsOf<S extends Schema> = { -readonly [K in keyof S]: S[K] extend
 export type FieldSpec = NumberFieldSpec | BoolFieldSpec | StringFieldSpec | VectorFieldSpec | ColorFieldSpec | EnumFieldSpec | EntityRefFieldSpec | ComponentRefFieldSpec | AssetFieldSpec | ArrayFieldSpec | RecordFieldSpec | MapFieldSpec | OptionalFieldSpec | LayerMaskFieldSpec | CurveFieldSpec | CustomFieldSpec;
 
 // @public
+export const FOG_MODE_NAMES: readonly ["none", "linear", "exp", "exp2"];
+
+// @public
+export const FONT_ASSET_TYPE = "font";
+
+// @public
+export const FONT_FILE_EXTENSIONS: readonly string[];
+
+// @public
+export class FontAsset {
+    // @internal
+    constructor(address: string, font: LiteFont, byteLength: number);
+    readonly address: string;
+    static assetType: string;
+    readonly byteLength: number;
+    get lite(): FontAssetLiteHandles;
+}
+
+// @public
+export interface FontAssetLiteHandles {
+    readonly font: LiteFont;
+}
+
+// @public
 export function formatErrorMessage(code: ErrorCode, message: string, context: ErrorContext, hint: string | null, mode: ErrorFormatMode): string;
 
 // @public
@@ -802,6 +1279,14 @@ export interface FrameState {
 export function generateUlid(random?: RandomSource, now?: () => number): string;
 
 // @public
+export interface GroundMeshOptions {
+    readonly height?: number;
+    readonly subdivisions?: number;
+    readonly uvScale?: readonly [number, number];
+    readonly width?: number;
+}
+
+// @public
 export function i32(defaultValue?: number, options?: FieldOptions): FieldDefinition<number>;
 
 // @public
@@ -820,13 +1305,56 @@ export interface IgnifxErrorOptions extends ErrorOptions {
 }
 
 // @public
+export interface ImageProcessingEffectSettings {
+    enabled: boolean;
+    order: number;
+}
+
+// @public
+export interface ImageProcessingSettings {
+    contrast: number;
+    exposure: number;
+    toneMapping: ToneMappingCurve;
+}
+
+// @public
+export interface InstantiateOptions {
+    readonly name?: string;
+    readonly parent?: Entity | null;
+    readonly position?: Vec3Like;
+    readonly rotation?: QuatLike;
+    readonly scene?: SceneInstance;
+    readonly strictInstanceHashes?: boolean;
+    readonly worldSpace?: boolean;
+}
+
+// @public
+export function instantiateScene(world: World, asset: SceneAsset, options?: InstantiateSceneOptions): SceneBuildResult;
+
+// @public
+export interface InstantiateSceneOptions {
+    readonly asInstance?: boolean;
+    readonly assetHandle?: AssetHandle<SceneAsset> | null;
+    readonly parent?: Entity | null;
+    readonly rootEntity?: Entity | null;
+    readonly scene?: SceneInstance;
+    readonly strictInstanceHashes?: boolean;
+}
+
+// @public
 export const INVALID_HANDLE = 0;
 
 // @public
 export function inverseLerp(a: number, b: number, value: number): number;
 
 // @public
+export function isAssetRef(value: unknown): value is AssetRef;
+
+// @public
 export function isIgnifxError(value: unknown): value is IgnifxError;
+
+// @public
+export function isSceneFileHeader(value: unknown): boolean;
 
 // @public
 export function isUlid(value: string): boolean;
@@ -844,6 +1372,9 @@ export function isWebGpuAvailable(): boolean;
 
 // @public
 export type JsonArray = readonly JsonValue[];
+
+// @public
+export const jsonAssetLoader: AssetLoader;
 
 // @public
 export type JsonObject = {
@@ -905,10 +1436,151 @@ export function lerp(a: number, b: number, t: number): number;
 export function lerpAngleDegrees(fromDegrees: number, toDegrees: number, t: number): number;
 
 // @public
+export class Light extends Component implements ComponentHooks {
+    constructor();
+    static allowMultiple: boolean;
+    // (undocumented)
+    color: ColorLike;
+    // (undocumented)
+    exclude: (Entity | null)[];
+    // (undocumented)
+    groundColor: ColorLike;
+    // (undocumented)
+    includeOnly: (Entity | null)[];
+    // (undocumented)
+    intensity: number;
+    get isCastingShadows(): boolean;
+    get lite(): {
+        readonly light: LiteLight | null;
+        readonly shadowGenerator: LiteShadowGenerator | null;
+    };
+    onAttach(): void;
+    onDetach(): void;
+    // (undocumented)
+    range: number;
+    static schema: Schema;
+    // @internal
+    setShadowCasters(casters: readonly LiteMesh[]): void;
+    // (undocumented)
+    shadows: LightShadowSettings;
+    // (undocumented)
+    spotAngle: number;
+    // (undocumented)
+    spotExponent: number;
+    // @internal
+    sync(renderer: RendererImpl): boolean;
+    // (undocumented)
+    type: LightType;
+    static typeId: string;
+}
+
+// @public
+export const LIGHT_TYPES: readonly ["directional", "point", "spot", "hemispheric"];
+
+// @public
+export interface LightShadowSettings {
+    bias: number;
+    cascades: number;
+    darkness: number;
+    enabled: boolean;
+    mapSize: number;
+    maxDistance: number;
+    normalBias: number;
+    technique: ShadowTechniqueName;
+}
+
+// @public
+export type LightType = (typeof LIGHT_TYPES)[number];
+
+// @beta
+export type LiteAnimationGroup = AnimationGroup;
+
+// @public
+export type LiteAssetContainer = AssetContainer;
+
+// @public
+export type LiteCamera = FreeCamera;
+
+// @public
 export type LiteEngine = EngineContext;
 
 // @public
+export type LiteEnvironmentTextures = EnvironmentTextures;
+
+// @public
+export type LiteFont = Font;
+
+// @public
+export type LiteLight = DirectionalLight | PointLight | SpotLight | HemisphericLight;
+
+// @public
+export type LiteMaterial = Material;
+
+// @public
+export type LiteMesh = Mesh;
+
+// @public
+export type LitePbrMaterial = PbrMaterialProps;
+
+// @public
 export type LiteScene = SceneContext;
+
+// @public
+export type LiteSceneNode = SceneNode;
+
+// @public
+export type LiteShadowGenerator = ShadowGenerator;
+
+// @beta
+export type LiteSkeleton = Skeleton;
+
+// @public
+export type LiteStandardMaterial = StandardMaterialProps;
+
+// @public
+export type LiteTexture2D = Texture2D;
+
+// @public
+export interface LoaderContext {
+    readonly address: string;
+    readonly app: App;
+    fetchBytes(): Promise<ArrayBuffer>;
+    fetchJson<J = unknown>(): Promise<J>;
+    fetchText(): Promise<string>;
+    readonly fragment: string | null;
+    readonly lite: {
+        readonly engine: LiteEngine;
+    };
+    loadDependency<D>(ref: AssetRef<D> | string, options?: LoadOptions): Promise<AssetHandle<D>>;
+    readonly meta: JsonObject | null;
+    reportProgress(fraction: number): void;
+    readonly signal: AbortSignal;
+    readonly type: string;
+    readonly url: string;
+}
+
+// @public
+export interface LoadOptions {
+    readonly onProgress?: (fraction: number) => void;
+    readonly priority?: number;
+    readonly signal?: AbortSignal;
+    readonly type?: string;
+}
+
+// @public
+export interface LoadProgress {
+    readonly address: string;
+    readonly fraction: number;
+}
+
+// @public
+export interface LoadSceneOptions {
+    readonly mode?: "single" | "additive";
+    readonly onProgress?: (progress: LoadProgress) => void;
+    readonly setActive?: boolean;
+    readonly signal?: AbortSignal;
+    readonly strictInstanceHashes?: boolean;
+}
 
 // @public
 export const LOG_LEVEL_SEVERITY: Readonly<Record<LogThreshold, number>>;
@@ -1036,6 +1708,66 @@ export interface Mat4Like {
 }
 
 // @public
+export const MATERIAL_ALPHA_MODE_NAMES: readonly MaterialAlphaModeName[];
+
+// Warning: (ae-internal-missing-underscore) The name "MATERIAL_ALPHA_MODES" should be prefixed with an underscore because the declaration is marked as @internal
+//
+// @internal
+export const MATERIAL_ALPHA_MODES: readonly ["opaque", "mask", "blend"];
+
+// @public
+export const MATERIAL_ASSET_TYPE = "material";
+
+// @public
+export const MATERIAL_FILE_EXTENSION = ".material.json";
+
+// @public
+export const MATERIAL_FILE_FORMAT = "ignifx.material";
+
+// @public
+export const MATERIAL_FORMAT_VERSION = 1;
+
+// @public
+export const MATERIAL_KINDS: readonly ["pbr", "standard", "shader"];
+
+// Warning: (ae-internal-missing-underscore) The name "MaterialAlphaMode" should be prefixed with an underscore because the declaration is marked as @internal
+//
+// @internal
+export type MaterialAlphaMode = (typeof MATERIAL_ALPHA_MODES)[number];
+
+// Warning: (ae-incompatible-release-tags) The symbol "MaterialAlphaModeName" is marked as @public, but its signature references "MaterialAlphaMode" which is marked as @internal
+//
+// @public
+export type MaterialAlphaModeName = MaterialAlphaMode;
+
+// @public
+export class MaterialAsset {
+    // @internal
+    constructor(definition: MaterialDefinition, material: LitePbrMaterial | LiteStandardMaterial, textures: readonly AssetHandle<TextureAsset>[]);
+    static assetType: string;
+    clone(app: App): AssetHandle<MaterialAsset>;
+    readonly definition: MaterialDefinition;
+    get kind(): MaterialKind;
+    get lite(): MaterialAssetLiteHandles;
+    get name(): string;
+    setAlpha(alpha: number): void;
+    setBaseColor(color: ColorLike): void;
+    setMetallicRoughness(metallic: number, roughness: number): void;
+    readonly textures: readonly AssetHandle<TextureAsset>[];
+}
+
+// @public
+export interface MaterialAssetLiteHandles {
+    readonly material: LiteMaterial;
+}
+
+// @public
+export type MaterialDefinition = PbrMaterialDefinition | StandardMaterialDefinition;
+
+// @public
+export type MaterialKind = (typeof MATERIAL_KINDS)[number];
+
+// @public
 export const MAX_LAYERS = 32;
 
 // @public
@@ -1048,6 +1780,145 @@ export interface MemorySink extends LogSink {
     readonly length: number;
     readonly limit: number;
     toArray(): readonly LogRecord[];
+}
+
+// @public
+export const MESH_ASSET_TYPE = "mesh";
+
+// @public
+export class MeshAsset {
+    [Symbol.dispose](): void;
+    // @internal
+    constructor(name: string, mesh: LiteMesh | null, scene: LiteScene | null);
+    static assetType: string;
+    static box(app: App, options?: BoxMeshOptions): AssetHandle<MeshAsset>;
+    static capsule(app: App, options?: CapsuleMeshOptions): AssetHandle<MeshAsset>;
+    static cylinder(app: App, options?: CylinderMeshOptions): AssetHandle<MeshAsset>;
+    dispose(): void;
+    static fromData(app: App, name: string, data: MeshGeometryData): AssetHandle<MeshAsset>;
+    static ground(app: App, options?: GroundMeshOptions): AssetHandle<MeshAsset>;
+    get isDisposed(): boolean;
+    get lite(): MeshAssetLiteHandles;
+    readonly name: string;
+    static plane(app: App, options?: PlaneMeshOptions): AssetHandle<MeshAsset>;
+    static sphere(app: App, options?: SphereMeshOptions): AssetHandle<MeshAsset>;
+    static torus(app: App, options?: TorusMeshOptions): AssetHandle<MeshAsset>;
+}
+
+// @public
+export interface MeshAssetLiteHandles {
+    readonly mesh: LiteMesh | null;
+}
+
+// @public
+export interface MeshGeometryData {
+    readonly indices: Uint32Array;
+    readonly normals: Float32Array;
+    readonly positions: Float32Array;
+    readonly uvs?: Float32Array;
+}
+
+// @public
+export class MeshRenderer extends Component implements ComponentHooks {
+    constructor();
+    static allowMultiple: boolean;
+    // (undocumented)
+    castShadows: boolean;
+    // @internal
+    collectCasters(out: LiteMesh[]): void;
+    // @internal
+    consumeCasterChange(): boolean;
+    get isVisible(): boolean;
+    get lite(): {
+        readonly mesh: LiteSceneNode | null;
+    };
+    // (undocumented)
+    materials: (AssetHandle<MaterialAsset> | null)[];
+    // (undocumented)
+    mesh: AssetHandle<MeshAsset> | null;
+    onAttach(): void;
+    onDetach(): void;
+    // (undocumented)
+    pickable: boolean;
+    // (undocumented)
+    receiveShadows: boolean;
+    // (undocumented)
+    renderOrder: number;
+    static schema: Schema;
+    // @internal
+    sync(renderer: RendererImpl): boolean;
+    static typeId: string;
+}
+
+// @public
+export class Model extends Component implements ComponentHooks {
+    constructor();
+    static allowMultiple: boolean;
+    // @beta
+    get animations(): readonly LiteAnimationGroup[];
+    attachToNode(nodeName: string, entity: Entity): boolean;
+    // (undocumented)
+    castShadows: boolean;
+    // @internal
+    collectCasters(out: LiteMesh[]): void;
+    // @internal
+    consumeCasterChange(): boolean;
+    get lite(): {
+        readonly root: LiteSceneNode | null;
+    };
+    // (undocumented)
+    materialOverrides: Record<string, AssetHandle<MaterialAsset> | null>;
+    // (undocumented)
+    model: AssetHandle<ModelAsset> | null;
+    get nodes(): ReadonlyMap<string, LiteSceneNode>;
+    onAttach(): void;
+    onDetach(): void;
+    // (undocumented)
+    pickable: boolean;
+    // (undocumented)
+    receiveShadows: boolean;
+    static schema: Schema;
+    // @beta
+    get skeletons(): readonly LiteSkeleton[];
+    // @internal
+    sync(renderer: RendererImpl): boolean;
+    static typeId: string;
+}
+
+// @public
+export const MODEL_ASSET_TYPE = "model";
+
+// @public
+export const MODEL_FILE_EXTENSIONS: readonly string[];
+
+// @public
+export class ModelAsset {
+    [Symbol.dispose](): void;
+    // @internal
+    constructor(address: string, container: LiteAssetContainer | null, animations: readonly LiteAnimationGroup[], skeletons: readonly LiteSkeleton[], scene: LiteScene | null);
+    readonly address: string;
+    // @beta
+    readonly animations: readonly LiteAnimationGroup[];
+    static assetType: string;
+    dispose(): void;
+    get instanceCount(): number;
+    instantiate(parent: LiteSceneNode | null): ModelInstantiation | null;
+    get lite(): ModelAssetLiteHandles;
+    releaseInstance(): void;
+    retainInstance(): void;
+    // @beta
+    readonly skeletons: readonly LiteSkeleton[];
+}
+
+// @public
+export interface ModelAssetLiteHandles {
+    readonly container: LiteAssetContainer | null;
+}
+
+// @public
+export interface ModelInstantiation {
+    readonly nodes: ReadonlyMap<string, LiteSceneNode>;
+    readonly root: LiteSceneNode;
 }
 
 // @public
@@ -1105,7 +1976,65 @@ export interface OptionalFieldSpec {
 }
 
 // @public
+export type OverridePath = {
+    readonly kind: "entity";
+    readonly entity: string;
+} | {
+    readonly kind: "entityField";
+    readonly entity: string;
+    readonly field: EntityOverrideField;
+} | {
+    readonly kind: "transform";
+    readonly entity: string;
+    readonly channel: keyof SceneFileTransform;
+} | {
+    readonly kind: "componentList";
+    readonly entity: string;
+} | {
+    readonly kind: "component";
+    readonly entity: string;
+    readonly component: string;
+} | {
+    readonly kind: "componentField";
+    readonly entity: string;
+    readonly component: string;
+} | {
+    readonly kind: "prop";
+    readonly entity: string;
+    readonly component: string;
+    readonly steps: readonly string[];
+};
+
+// @public
+export function parseOverridePath(path: string): OverridePath;
+
+// @public
 export type PartialFieldsOf<S extends Schema> = { [K in keyof FieldsOf<S>]?: FieldsOf<S>[K] | undefined; };
+
+// @public
+export const PBR_TEXTURE_SLOTS: readonly string[];
+
+// @public
+export interface PbrMaterialDefinition {
+    readonly alpha: number;
+    readonly alphaCutoff: number;
+    readonly alphaMode: MaterialAlphaModeName;
+    readonly baseColor: ColorLike;
+    readonly doubleSided: boolean;
+    readonly emissive: ColorLike;
+    readonly environmentIntensity: number;
+    readonly kind: "pbr";
+    readonly metallic: number;
+    readonly name: string;
+    readonly normalScale: number;
+    readonly occlusionStrength: number;
+    readonly roughness: number;
+    readonly textures: Readonly<Record<string, string>>;
+    readonly unlit: boolean;
+}
+
+// @public
+export function pbrMaterialDefinition(overrides?: Partial<Omit<PbrMaterialDefinition, "kind">>): PbrMaterialDefinition;
 
 // @public
 export const Phase: {
@@ -1136,6 +2065,13 @@ export const PHASES: readonly Phase[];
 export function pingPong(t: number, length: number): number;
 
 // @public
+export interface PlaneMeshOptions {
+    readonly height?: number;
+    readonly size?: number;
+    readonly width?: number;
+}
+
+// @public
 export interface PlatformInfo {
     readonly kind: PlatformKind;
 }
@@ -1144,10 +2080,34 @@ export interface PlatformInfo {
 export type PlatformKind = "browser" | "node";
 
 // @public
+export class PostProcessStack extends Component implements ComponentHooks {
+    constructor();
+    static allowMultiple: boolean;
+    // (undocumented)
+    bloom: BloomEffectSettings;
+    // (undocumented)
+    imageProcessing: ImageProcessingEffectSettings;
+    onAttach(): void;
+    onDetach(): void;
+    // @internal
+    plannedChain(): readonly string[];
+    static schema: Schema;
+    // (undocumented)
+    smaa: SmaaEffectSettings;
+    // @internal
+    sync(renderer: RendererImpl): void;
+    get taskCount(): number;
+    static typeId: string;
+}
+
+// @public
 export interface ProfileScope {
     readonly durationMs: number;
     end(): void;
 }
+
+// @public
+export const PROJECTIONS: readonly ["perspective", "orthographic"];
 
 // @public
 export class Quat {
@@ -1222,6 +2182,20 @@ export interface RandomSource {
 }
 
 // @public
+export interface Ray {
+    readonly direction: RayVector;
+    length: number;
+    readonly origin: RayVector;
+}
+
+// @public
+export interface RayVector {
+    x: number;
+    y: number;
+    z: number;
+}
+
+// @public
 export function record<S extends Schema>(fields: S, options?: FieldOptions): FieldDefinition<FieldsOf<S>>;
 
 // @public
@@ -1232,6 +2206,7 @@ export interface RecordFieldSpec {
 
 // @public
 export interface ReferenceDecoder {
+    asset(address: string, type: string | null): unknown;
     component(uid: string): unknown;
     entity(uid: string): unknown;
 }
@@ -1240,6 +2215,12 @@ export interface ReferenceDecoder {
 export interface ReferenceEncoder {
     componentUid(value: unknown): string | null;
     entityUid(value: unknown): string | null;
+}
+
+// @public
+export interface RegisterAssetOptions {
+    readonly address?: string;
+    readonly type: string;
 }
 
 // @public
@@ -1254,7 +2235,96 @@ export interface RegisterSystemOptions {
 }
 
 // @public
+export const RENDER_DIAGNOSTICS_COUNTERS: readonly string[];
+
+// @public
+export const RENDER_DIAGNOSTICS_GROUP = "render";
+
+// @public
+export interface RenderCapture {
+    readonly data: Uint8ClampedArray;
+    readonly height: number;
+    readonly width: number;
+}
+
+// @public
+export interface Renderer {
+    captureScreenshot(): Promise<RenderCapture>;
+    readonly drawCalls: number;
+    readonly features: Readonly<RenderingFeatureSettings>;
+    readonly gpuFrameTimeMs: number;
+    pickAsync(x: number, y: number, options?: RenderPickOptions): Promise<RenderPick | null>;
+    pixelRatio: number;
+    profileTasks: boolean;
+    requireFeature(feature: RenderingFeature): void;
+    resolutionScale: number;
+    setSize(width: number, height: number): void;
+    taskTimings(): RenderTaskTimings;
+    warmUp(materials: readonly MaterialAsset[]): void;
+}
+
+// @public
+export const RENDERING_SETTINGS_SECTION = "rendering";
+
+// @public
+export type RenderingFeature = keyof RenderingFeatureSettings;
+
+// @public
+export interface RenderingFeatureSettings {
+    readonly asyncPipelines: boolean;
+    readonly boneControl: boolean;
+    readonly deviceLostRecovery: boolean;
+    readonly lightmaps: boolean;
+    readonly materialPlugins: boolean;
+    readonly postProcessing: boolean;
+    readonly shadows: boolean;
+    readonly skeletons: boolean;
+    readonly stencil: boolean;
+}
+
+// @public
+export interface RenderingSettings {
+    readonly alphaMode: CanvasAlphaMode;
+    readonly brdfLut: string;
+    readonly clearColor: ColorLike;
+    readonly features: RenderingFeatureSettings;
+    readonly format: string;
+    readonly maxDevicePixelRatio: number;
+    readonly msaaSamples: number;
+    readonly requiredLimits: Readonly<Record<string, number>>;
+    readonly srgb: boolean;
+    readonly useFloatingOrigin: boolean;
+    readonly useHighPrecisionMatrix: boolean;
+}
+
+// @public
+export interface RenderPick {
+    readonly component: Component | null;
+    readonly distance: number;
+    readonly entity: Entity;
+    readonly normal: readonly [number, number, number] | null;
+    readonly point: readonly [number, number, number] | null;
+}
+
+// @public
+export interface RenderPickOptions {
+    readonly filter?: (entity: Entity) => boolean;
+}
+
+// @public
 export type RenderSurface = HTMLCanvasElement | OffscreenCanvas;
+
+// @public
+export interface RenderTaskTiming {
+    readonly durationMs: number;
+    readonly name: string;
+}
+
+// @public
+export interface RenderTaskTimings {
+    readonly status: string;
+    readonly tasks: readonly RenderTaskTiming[];
+}
 
 // @public
 export function repeat(t: number, length: number): number;
@@ -1266,20 +2336,137 @@ export const RESERVED_LAYER_NAMES: readonly string[];
 export function resetFrameSample(sample: FrameSample): FrameSample;
 
 // @public
+export const SCENE_ASSET_TYPE = "scene";
+
+// @public
+export const SCENE_FILE_EXTENSIONS: readonly string[];
+
+// @public
+export const SCENE_FILE_FORMAT = "ignifx.scene";
+
+// @public
+export const SCENE_FORMAT_VERSION = 1;
+
+// @public
+export interface SceneAsset {
+    readonly address: string;
+    readonly dependencies: readonly AssetHandle[];
+    readonly file: SceneFile;
+    readonly hash: string;
+}
+
+// @public
+export interface SceneBuildResult {
+    readonly issues: readonly SceneLoadIssue[];
+    readonly remap: UidRemap;
+    readonly roots: readonly Entity[];
+}
+
+// @public
+export interface SceneFile {
+    readonly engineVersion?: string;
+    readonly entities: readonly SceneFileEntity[];
+    readonly format: string;
+    readonly formatVersion: number;
+    readonly name: string;
+    readonly settings?: JsonObject;
+}
+
+// @public
+export interface SceneFileAssetRef {
+    readonly $asset: string;
+    readonly type?: string;
+}
+
+// @public
+export interface SceneFileComponent {
+    readonly enabled?: boolean;
+    readonly props?: JsonObject;
+    readonly schemaVersion?: number;
+    readonly type: string;
+    readonly uid: string;
+}
+
+// @public
+export interface SceneFileEntity {
+    readonly active?: boolean;
+    readonly components?: readonly SceneFileComponent[];
+    readonly instance?: SceneFileInstance;
+    readonly layer?: string;
+    readonly name: string;
+    readonly parent: string | null;
+    readonly static?: boolean;
+    readonly tags?: readonly string[];
+    readonly transform: SceneFileTransform;
+    readonly uid: string;
+}
+
+// @public
+export interface SceneFileInstance {
+    readonly hash?: string;
+    readonly overrides?: readonly SceneFileOverride[];
+    readonly scene: SceneFileAssetRef;
+}
+
+// @public
+export interface SceneFileIssue {
+    readonly message: string;
+    readonly path: string;
+}
+
+// @public
+export function sceneFileJsonSchema(registry: ComponentRegistry): JsonObject;
+
+// @public
+export interface SceneFileOverride {
+    readonly op?: "replace" | "remove" | "add";
+    readonly path: string;
+    readonly value?: JsonValue;
+}
+
+// @public
+export interface SceneFileTransform {
+    readonly position: readonly [number, number, number];
+    readonly rotation: readonly [number, number, number, number];
+    readonly scale: readonly [number, number, number];
+}
+
+// @public
 export class SceneInstance {
     // @internal
     constructor(uid: string, name: string, persistent: boolean);
     // @internal
     addRoot(entity: Entity): void;
-    get asset(): null;
+    get asset(): AssetHandle<SceneAsset> | null;
     get isLoaded(): boolean;
     readonly name: string;
     get onUnloading(): Signal;
     persistent: boolean;
+    get remap(): UidRemap | null;
     // @internal
     removeRoot(entity: Entity): void;
     get roots(): readonly Entity[];
+    // @internal
+    setAsset(asset: AssetHandle<SceneAsset> | null): void;
+    // @internal
+    setLoaded(isLoaded: boolean): void;
+    // @internal
+    setRemap(remap: UidRemap | null): void;
+    // @internal
+    setSettings(settings: JsonObject | null): void;
+    get settings(): JsonObject | null;
     readonly uid: string;
+}
+
+// @public
+export interface SceneLoaderOptions {
+    readonly validate?: boolean;
+}
+
+// @public
+export interface SceneLoadIssue {
+    readonly code: string;
+    readonly message: string;
 }
 
 // @public
@@ -1373,6 +2560,30 @@ export interface ScriptStatics extends ComponentStatics {
 }
 
 // @public
+export function serializeComponent(component: Component, references?: ReferenceEncoder, onIssue?: (issue: SerializeIssue) => void): SceneFileComponent;
+
+// @public
+export function serializeEntity(entity: Entity, references?: ReferenceEncoder): SceneFileEntity;
+
+// @public
+export interface SerializeIssue {
+    readonly code: string;
+    readonly message: string;
+}
+
+// @public
+export function serializeScene(source: SceneInstance | readonly Entity[], options?: SerializeSceneOptions): SceneFile;
+
+// @public
+export interface SerializeSceneOptions {
+    readonly engineVersion?: string | null;
+    readonly flatten?: boolean;
+    readonly name?: string;
+    readonly onIssue?: (issue: SerializeIssue) => void;
+    readonly settings?: JsonObject | null;
+}
+
+// @public
 export type ServiceClassKey<T> = abstract new (...args: never[]) => T;
 
 // @public
@@ -1398,6 +2609,16 @@ export interface SetParentOptions {
 
 // @public
 export type SettingsInput = Readonly<Record<string, unknown>>;
+
+// Warning: (ae-internal-missing-underscore) The name "SHADOW_TECHNIQUES" should be prefixed with an underscore because the declaration is marked as @internal
+//
+// @internal
+export const SHADOW_TECHNIQUES: readonly ["esm", "pcf", "csm"];
+
+// Warning: (ae-incompatible-release-tags) The symbol "ShadowTechniqueName" is marked as @public, but its signature references "SHADOW_TECHNIQUES" which is marked as @internal
+//
+// @public
+export type ShadowTechniqueName = (typeof SHADOW_TECHNIQUES)[number];
 
 // @public
 export function sign(value: number): number;
@@ -1434,6 +2655,16 @@ export interface SignalOwner {
 }
 
 // @public
+export interface SmaaEffectSettings {
+    cornerDetection: boolean;
+    diagonalDetection: boolean;
+    enabled: boolean;
+    maxSearchSteps: number;
+    order: number;
+    threshold: number;
+}
+
+// @public
 export function smoothStep(edge0: number, edge1: number, x: number): number;
 
 // @public
@@ -1442,12 +2673,42 @@ export interface SortingLayersSettings {
 }
 
 // @public
+export interface SphereMeshOptions {
+    readonly diameter?: number;
+    readonly segments?: number;
+}
+
+// @public
+export const STANDARD_TEXTURE_SLOTS: readonly string[];
+
+// @public
+export interface StandardMaterialDefinition {
+    readonly alpha: number;
+    readonly alphaCutoff: number;
+    readonly diffuse: ColorLike;
+    readonly doubleSided: boolean;
+    readonly emissive: ColorLike;
+    readonly kind: "standard";
+    readonly name: string;
+    readonly specular: ColorLike;
+    readonly specularPower: number;
+    readonly textures: Readonly<Record<string, string>>;
+    readonly unlit: boolean;
+}
+
+// @public
+export function standardMaterialDefinition(overrides?: Partial<Omit<StandardMaterialDefinition, "kind">>): StandardMaterialDefinition;
+
+// @public
 export function str(defaultValue?: string, options?: FieldOptions): FieldDefinition<string>;
 
 // @public
 export interface StringFieldSpec {
     readonly kind: "str";
 }
+
+// @public
+export function stringifySceneFile(file: SceneFile): string;
 
 // @public
 export interface System {
@@ -1483,6 +2744,42 @@ export class TagSet {
 }
 
 // @public
+export const textAssetLoader: AssetLoader<string>;
+
+// @public
+export const TEXTURE_ASSET_TYPE = "texture";
+
+// @public
+export class TextureAsset {
+    // @internal
+    constructor(address: string, texture: LiteTexture2D | null, options: TextureImportOptions);
+    readonly address: string;
+    static assetType: string;
+    get isReleased(): boolean;
+    get lite(): TextureAssetLiteHandles;
+    readonly options: TextureImportOptions;
+    releaseGpu(): boolean;
+    retainGpu(): void;
+}
+
+// @public
+export interface TextureAssetLiteHandles {
+    readonly texture: LiteTexture2D | null;
+}
+
+// @public
+export interface TextureImportOptions {
+    readonly addressModeU: string;
+    readonly addressModeV: string;
+    readonly invertY: boolean;
+    readonly magFilter: string;
+    readonly minFilter: string;
+    readonly mipMaps: boolean;
+    readonly premultiplyAlpha: boolean;
+    readonly srgb: boolean;
+}
+
+// @public
 export const THIRD_PARTY_ERROR_PREFIX = "9";
 
 // @public
@@ -1511,6 +2808,23 @@ export interface TimeSettings {
 
 // @public
 export function toJsonSchema(schema: Schema): JsonSchemaObject;
+
+// Warning: (ae-internal-missing-underscore) The name "TONE_MAPPING_NAMES" should be prefixed with an underscore because the declaration is marked as @internal
+//
+// @internal
+export const TONE_MAPPING_NAMES: readonly ["none", "standard", "aces", "neutral"];
+
+// Warning: (ae-incompatible-release-tags) The symbol "ToneMappingCurve" is marked as @public, but its signature references "TONE_MAPPING_NAMES" which is marked as @internal
+//
+// @public
+export type ToneMappingCurve = (typeof TONE_MAPPING_NAMES)[number];
+
+// @public
+export interface TorusMeshOptions {
+    readonly diameter?: number;
+    readonly tessellation?: number;
+    readonly thickness?: number;
+}
 
 // @public
 export class Transform extends Component {
@@ -1576,6 +2890,19 @@ export interface Transform {
 export function u32(defaultValue?: number, options?: FieldOptions): FieldDefinition<number>;
 
 // @public
+export class UidRemap {
+    // @internal
+    addComponent(fileUid: string, component: Component): void;
+    // @internal
+    addEntity(fileUid: string, entity: Entity): void;
+    clear(): void;
+    component(fileUid: string): Component | null;
+    entity(fileUid: string): Entity | null;
+    entries(): IterableIterator<readonly [string, Entity]>;
+    get size(): number;
+}
+
+// @public
 export interface UlidFactoryOptions {
     readonly now?: () => number;
     readonly random?: RandomSource;
@@ -1583,6 +2910,9 @@ export interface UlidFactoryOptions {
 
 // @public
 export function validateProps(schema: Schema, props: Readonly<Record<string, unknown>>, path?: string): readonly SchemaIssue[];
+
+// @public
+export function validateSceneFile(value: unknown): readonly SceneFileIssue[];
 
 // @public
 export function validateValue(field: FieldDefinition<unknown>, value: unknown, path?: string): readonly SchemaIssue[];
@@ -1851,8 +3181,11 @@ export class World implements WorldHost {
     //
     // @internal
     get frameState(): FrameStateController;
+    getComponentByHandle(handle: ComponentHandle): Component | null;
     getEntity(uid: string): Entity | null;
     getEntityByHandle(handle: EntityHandle): Entity | null;
+    instantiate(scene: SceneAsset, options?: InstantiateOptions): Entity;
+    instantiateAsync(scene: AssetRef<SceneAsset> | string, options?: InstantiateOptions): Promise<Entity>;
     get isDisposed(): boolean;
     get layers(): LayerTable;
     // Warning: (ae-forgotten-export) The symbol "WorldInternals" needs to be exported by the entry point index.d.ts
@@ -1863,6 +3196,9 @@ export class World implements WorldHost {
         readonly scene: LiteScene;
         readonly simulationScene: null;
     };
+    loadScene(scene: AssetRef<SceneAsset> | string, options?: LoadSceneOptions): Promise<SceneInstance>;
+    get mainCamera(): Camera | null;
+    moveEntityToScene(entity: Entity, scene: SceneInstance): void;
     // @internal
     moveToScene(entity: Entity, scene: SceneInstance): void;
     // @internal
@@ -1879,6 +3215,7 @@ export class World implements WorldHost {
     get onEntityDestroyed(): Signal<Entity>;
     get onSceneLoaded(): Signal<SceneInstance>;
     get onSceneUnloaded(): Signal<SceneInstance>;
+    raycastRender(ray: Ray, options?: RenderPickOptions): RenderPick | null;
     // Warning: (ae-forgotten-export) The symbol "ReferenceTracker" needs to be exported by the entry point index.d.ts
     //
     // @internal
@@ -1891,10 +3228,13 @@ export class World implements WorldHost {
     // @internal
     reportError(report: ErrorReport): void;
     get scenes(): readonly SceneInstance[];
+    // @internal
+    setMainCamera(camera: Camera | null): void;
     // Warning: (ae-forgotten-export) The symbol "ComponentStore" needs to be exported by the entry point index.d.ts
     //
     // @internal
     get store(): ComponentStore;
+    unloadScene(instance: SceneInstance): Promise<void>;
     get world(): World;
 }
 

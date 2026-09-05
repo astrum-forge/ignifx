@@ -1,0 +1,43 @@
+{
+  "recordedOn": "2026-09-06",
+  "machine": "macOS 25.5 arm64 (Apple Silicon), Node 25.2.1, Vitest 5.0.0, @babylonjs/lite 1.27.0",
+  "notes": "Frame times are reported, not asserted: they are one machine's ops/sec and exist so a human can see whether a change moved the curve. Heap and bundle numbers ARE asserted, by alloc.test.ts and bundle-size.test.ts.",
+  "frameTime": {
+    "hello-cube": {
+      "entities": 4,
+      "hz": 1412553.06,
+      "meanMs": 0.0007,
+      "rmePercent": 0.09
+    },
+    "thousand-entities": {
+      "entities": 1002,
+      "hz": 6211.89,
+      "meanMs": 0.1624,
+      "rmePercent": 0.53
+    }
+  },
+  "heap": {
+    "hello-cube": {
+      "steps": 600,
+      "measuredBytes": 104088,
+      "ceilingBytes": 262144,
+      "note": "Four runs measured -186960, 60688, 60744 and 104088 bytes after a 600-step warm-up. The ceiling is 2.5x the largest."
+    },
+    "thousand-entities": {
+      "steps": 600,
+      "measuredBytes": 9072,
+      "ceilingBytes": 65536,
+      "note": "Three runs measured exactly 9072 bytes. 2x headroom would be 18144; the ceiling is 64 KiB because heapUsed is a whole-process number that a different V8 build can shift, and 64 KiB is still 16x under the 1 MB the standards imply and three orders of magnitude under one small object per entity per frame."
+    }
+  },
+  "bundles": {
+    "examples/hello-cube": {
+      "gzipBytes": 270551,
+      "ceilingBytes": 298000,
+      "totalGzipBytes": 497963,
+      "rawTotalBytes": 1602754,
+      "chunkCount": 294,
+      "note": "gzipBytes is the entry chunk, which is what a first load actually fetches; totalGzipBytes sums all 294 emitted chunks, almost all of them dynamically imported Lite features this scene never reaches. The ceiling is the measurement x 1.1. The plan's Phase 2 target of 250 KB gzipped is NOT met: the entry chunk is 270551 bytes, 20551 over."
+    }
+  }
+}

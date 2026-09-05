@@ -11,10 +11,12 @@ import type {
   ServiceKey,
   System,
 } from "../app/types.js";
+import type { AssetLoader, AssetTypeDefinition } from "../assets/types.js";
 import type { ComponentRegistry } from "../component/component-registry.js";
 import type { ConcreteComponentType } from "../component/component-type.js";
 import type { ErrorCodeRegistry } from "../errors/error-code-registry.js";
 import type { Logger } from "../log/logger.js";
+import type { RenderingFeature } from "../render/renderer.js";
 import type { Scheduler } from "../scheduler/scheduler.js";
 import type { Schema } from "../schema/types.js";
 import type { SettingsStore } from "../settings/settings-store.js";
@@ -149,6 +151,37 @@ export class ExtensionContextImpl implements ExtensionContext {
    */
   registerService<T>(key: ServiceKey<T>, instance: T): void {
     this.#services.set(key, instance);
+  }
+
+  /**
+   * Declares an asset type whose loader is registered separately, or not at all
+   * (`docs/architecture/04-extensions.md` §1).
+   *
+   * @param type - The type name and the extensions that select it.
+   */
+  registerAssetType(type: AssetTypeDefinition): void {
+    this.app.assets.registerType(type);
+  }
+
+  /**
+   * Registers an asset loader (`docs/architecture/05-assets-and-loading.md` §5).
+   *
+   * @param loader - The loader, which also declares the extensions that select its type.
+   * @throws IgnifxError with code `IGX-0506` when another extension already owns the type.
+   */
+  registerAssetLoader(loader: AssetLoader): void {
+    this.app.assets.registerLoader(loader);
+  }
+
+  /**
+   * Declares that this extension needs a rendering feature switched on
+   * (`docs/architecture/07-rendering.md` §1.1).
+   *
+   * @param feature - The feature the extension needs.
+   * @throws IgnifxError with code `IGX-0704` when the render scene has already been registered.
+   */
+  requireRenderingFeature(feature: RenderingFeature): void {
+    this.app.renderer.requireFeature(feature);
   }
 
   /**

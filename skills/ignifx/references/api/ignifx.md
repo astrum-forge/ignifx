@@ -4,11 +4,850 @@
 phase lands, the standard extensions (`docs/architecture/00-overview.md` §2). Every symbol is
 re-exported by name — no `export *` (coding standards §4).
 
-Only the core surface exists today. The input, physics, physics-2d, audio, 2d, 3d, and ui
-re-exports and the one-call `createGame()` arrive with the phases of
+Only the core surface exists today, which after Phase 2 includes the render components, the GPU
+asset loaders, and the scene serialization surface. The input, physics, physics-2d, audio, 2d,
+3d, and ui re-exports and the one-call `createGame()` arrive with the phases of
 `docs/plan/engineering-plan.md` that populate those packages.
 
 ## Classes
+
+### AssetLoadError
+
+The failure an [AssetHandle.promise](#promise) rejects with
+(`docs/architecture/05-assets-and-loading.md` §9). Its `code` is one of `IGX-0502` (aborted),
+`IGX-0503` (the app was disposed), `IGX-0504` (no loader), or `IGX-0505` (the load failed after
+every retry, with the last failure as `cause`).
+
+#### Example
+
+```ts
+try {
+  await app.assets.loadAsync("levels/1.scene.json");
+} catch (error) {
+  if (error instanceof AssetLoadError) {
+    app.log.error("{address} failed from {url}", error.address, error.url);
+  }
+}
+```
+
+#### Extends
+
+- [`IgnifxError`](#ignifxerror)
+
+#### Constructors
+
+##### Constructor
+
+> **new AssetLoadError**(`code`, `message`, `options`): [`AssetLoadError`](#assetloaderror)
+
+Creates an asset failure.
+
+###### Parameters
+
+###### code
+
+`` `IGX-${number}` ``
+
+The `IGX-05xx` code.
+
+###### message
+
+`string`
+
+The actionable development sentence.
+
+###### options
+
+[`AssetLoadErrorOptions`](#assetloaderroroptions)
+
+The address and URL, plus the standard `context`, `hint`, and `cause`.
+
+###### Returns
+
+[`AssetLoadError`](#assetloaderror)
+
+###### Overrides
+
+[`IgnifxError`](#ignifxerror).[`constructor`](#constructor-8)
+
+#### Properties
+
+##### address
+
+> `readonly` **address**: `string`
+
+The address that failed.
+
+##### cause?
+
+> `optional` **cause?**: `unknown`
+
+###### Inherited from
+
+[`IgnifxError`](#ignifxerror).[`cause`](#cause-2)
+
+##### code
+
+> `readonly` **code**: `` `IGX-${number}` ``
+
+The stable diagnostic code for this failure.
+
+###### Inherited from
+
+[`IgnifxError`](#ignifxerror).[`code`](#code-2)
+
+##### context
+
+> `readonly` **context**: [`ErrorContext`](#errorcontext)
+
+Identifiers that locate the failure (entity uid, component type id, asset key, …).
+
+###### Inherited from
+
+[`IgnifxError`](#ignifxerror).[`context`](#context-2)
+
+##### hint
+
+> `readonly` **hint**: `string` \| `null`
+
+One sentence telling the developer how to fix it, or `null` when there is nothing to add.
+
+###### Inherited from
+
+[`IgnifxError`](#ignifxerror).[`hint`](#hint-2)
+
+##### message
+
+> **message**: `string`
+
+###### Inherited from
+
+[`IgnifxError`](#ignifxerror).[`message`](#message-3)
+
+##### name
+
+> **name**: `string`
+
+###### Inherited from
+
+[`IgnifxError`](#ignifxerror).[`name`](#name-4)
+
+##### stack?
+
+> `optional` **stack?**: `string`
+
+###### Inherited from
+
+[`IgnifxError`](#ignifxerror).[`stack`](#stack-1)
+
+##### url
+
+> `readonly` **url**: `string`
+
+The URL it resolved to.
+
+***
+
+### Camera
+
+The camera an entity renders the world through (`docs/architecture/07-rendering.md` §2.1).
+
+#### Remarks
+
+A world renders through the enabled camera with the highest `priority`; ties break on creation
+order. A world with no enabled camera draws nothing and logs `IGX-0706` once.
+
+#### Example
+
+```ts
+const eye = world.createEntity("Main Camera", { position: { x: 0, y: 2, z: -6 } });
+eye.addComponent(Camera, { fov: 50, near: 0.05 });
+```
+
+#### Extends
+
+- [`Component`](#abstract-component)
+
+#### Implements
+
+- [`ComponentHooks`](#componenthooks)
+
+#### Constructors
+
+##### Constructor
+
+> **new Camera**(): [`Camera`](#camera)
+
+Applies the schema defaults, exactly as `Component.define` would.
+
+###### Returns
+
+[`Camera`](#camera)
+
+###### Overrides
+
+[`Component`](#abstract-component).[`constructor`](#constructor-3)
+
+#### Properties
+
+##### allowMultiple
+
+> `static` **allowMultiple**: `boolean`
+
+At most one camera per entity: two views from one transform would be the same view.
+
+##### clearColor
+
+> **clearColor**: [`ColorLike`](#colorlike) \| `null`
+
+##### far
+
+> **far**: `number`
+
+##### fov
+
+> **fov**: `number`
+
+##### near
+
+> **near**: `number`
+
+##### orthographicSize
+
+> **orthographicSize**: `number`
+
+##### priority
+
+> **priority**: `number`
+
+##### projection
+
+> **projection**: `"perspective"` \| `"orthographic"`
+
+##### schema
+
+> `static` **schema**: [`Schema`](#schema-10)
+
+The serialized field declarations (ADR-0004).
+
+##### typeId
+
+> `static` **typeId**: `string`
+
+The namespaced registration id.
+
+##### viewport
+
+> **viewport**: `object`
+
+###### height
+
+> **height**: `number`
+
+###### width
+
+> **width**: `number`
+
+###### x
+
+> **x**: `number`
+
+###### y
+
+> **y**: `number`
+
+#### Accessors
+
+##### app
+
+###### Get Signature
+
+> **get** **app**(): [`App`](#app)
+
+The app that owns the world.
+
+###### Returns
+
+[`App`](#app)
+
+The app.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`app`](#app-2)
+
+##### enabled
+
+###### Get Signature
+
+> **get** **enabled**(): `boolean`
+
+The component's own enabled flag; `true` by default. Setting it runs the enable or disable
+transition (`docs/architecture/01-lifecycle-and-time.md` §6): `onDisable` runs immediately,
+`awake`/`onEnable` run in the next lifecycle flush — or immediately and nested when the change
+happens inside a callback.
+
+###### Returns
+
+`boolean`
+
+`true` when the component's own flag is set.
+
+###### Set Signature
+
+> **set** **enabled**(`value`): `void`
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`enabled`](#enabled-2)
+
+##### entity
+
+###### Get Signature
+
+> **get** **entity**(): [`Entity`](#entity-2)
+
+The entity this component is attached to.
+
+###### Returns
+
+[`Entity`](#entity-2)
+
+The owning entity.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`entity`](#entity-1)
+
+##### handle
+
+###### Get Signature
+
+> **get** **handle**(): [`ComponentHandle`](#componenthandle-1)
+
+The dense runtime handle; invalid after destruction.
+
+###### Returns
+
+[`ComponentHandle`](#componenthandle-1)
+
+The handle.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`handle`](#handle-1)
+
+##### isDestroyed
+
+###### Get Signature
+
+> **get** **isDestroyed**(): `boolean`
+
+`true` from the moment `destroy()` is called, long before the destroy flush runs.
+
+###### Returns
+
+`boolean`
+
+`true` once the component has been queued for destruction.
+
+Whether the owner has already been destroyed.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-1)
+
+##### isEnabledInHierarchy
+
+###### Get Signature
+
+> **get** **isEnabledInHierarchy**(): `boolean`
+
+`true` when the component's own flag is set **and** its entity is active in the hierarchy.
+
+###### Returns
+
+`boolean`
+
+`true` when the component is effectively enabled.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-1)
+
+##### lite
+
+###### Get Signature
+
+> **get** **lite**(): `object`
+
+The Babylon Lite camera this component owns. Unstable escape hatch
+(`docs/architecture/00-overview.md` §3).
+
+###### Returns
+
+`object`
+
+The camera, or `null` before the component is attached.
+
+###### camera
+
+> `readonly` **camera**: `FreeCamera` \| `null`
+
+##### onDestroyed
+
+###### Get Signature
+
+> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+Emitted once when the component is destroyed, in the destroy flush. Connecting with
+`{ owner: this }` elsewhere uses it to detach handlers automatically
+(`docs/architecture/02-scene-graph.md` §8).
+
+###### Returns
+
+[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+The signal. It is created on first access, so a component nobody listens to allocates
+nothing.
+
+Emitted once when the owner is destroyed; the signal uses it to detach the handler.
+
+###### Remarks
+
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
+`docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
+invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-1)
+
+##### transform
+
+###### Get Signature
+
+> **get** **transform**(): [`Transform`](#transform-10)
+
+The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
+
+###### Returns
+
+[`Transform`](#transform-10)
+
+The entity's transform.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`transform`](#transform-1)
+
+##### uid
+
+###### Get Signature
+
+> **get** **uid**(): `string`
+
+The stable ULID; the key files use to reference this component.
+
+###### Returns
+
+`string`
+
+The identifier.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`uid`](#uid-1)
+
+##### world
+
+###### Get Signature
+
+> **get** **world**(): [`World`](#world-12)
+
+The world the entity belongs to.
+
+###### Returns
+
+[`World`](#world-12)
+
+The world.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`world`](#world-2)
+
+#### Methods
+
+##### define()
+
+> `static` **define**\<`S`\>(`schema`): [`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+Declares a component's serialized fields and returns the base class to extend (ADR-0004,
+`docs/architecture/03-scripting-and-components.md` §3). The returned class exposes every field
+as a typed instance property, applies the defaults in its constructor, and carries the schema
+for the serializer, the inspector, and the docs harness.
+
+###### Type Parameters
+
+###### S
+
+`S` *extends* `Readonly`\<`Record`\<`string`, [`FieldDefinition`](#fielddefinition)\<`unknown`\>\>\>
+
+The schema being declared.
+
+###### Parameters
+
+###### schema
+
+`S`
+
+The field definitions, keyed by the property name they become.
+
+###### Returns
+
+[`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+An abstract class to extend.
+
+###### Throws
+
+IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
+with a `Component`/`Script` member.
+
+###### Example
+
+```ts
+class Spinner extends Component.define({
+  degreesPerSecond: f32(90, { min: -360, max: 360 }),
+  axis: vec3({ x: 0, y: 1, z: 0 }),
+}) {
+  static typeId = "mygame/Spinner";
+}
+```
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`define`](#define-1)
+
+##### destroy()
+
+> **destroy**(): `void`
+
+Queues this component for destruction. It stays usable until the destroy flush of the current
+frame, but reports `isDestroyed === true` immediately
+(`docs/architecture/01-lifecycle-and-time.md` §6). Calling it twice is a no-op.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`destroy`](#destroy-1)
+
+##### getComponent()
+
+> **getComponent**\<`T`\>(`type`): `T` \| `null`
+
+Finds another component on the same entity — sugar for `this.entity.getComponent`.
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class; matching is by class identity **and** inheritance.
+
+###### Returns
+
+`T` \| `null`
+
+The first match in attach order, or `null`.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-1)
+
+##### getProjectionMatrix()
+
+> **getProjectionMatrix**(`out`): [`Mat4`](#mat4)
+
+Copies the camera's projection matrix into `out`.
+
+###### Parameters
+
+###### out
+
+[`Mat4`](#mat4)
+
+A 4x4 matrix that receives the result, column-major.
+
+###### Returns
+
+[`Mat4`](#mat4)
+
+`out`, for chaining.
+
+##### getViewMatrix()
+
+> **getViewMatrix**(`out`): [`Mat4`](#mat4)
+
+Copies the camera's view matrix — the inverse of its world matrix — into `out`.
+
+###### Parameters
+
+###### out
+
+[`Mat4`](#mat4)
+
+A 4x4 matrix that receives the result, column-major.
+
+###### Returns
+
+[`Mat4`](#mat4)
+
+`out`, for chaining.
+
+##### onAttach()
+
+> **onAttach**(): `void`
+
+Creates the Lite camera and parents it under the entity's node.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-1)
+
+##### onDetach()
+
+> **onDetach**(): `void`
+
+Drops the Lite camera.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+A Lite camera holds no GPU resource and is never added to the scene — only assigned to
+`scene.camera` — so breaking the parent link and forgetting it is the whole teardown. The
+`PreRender` system re-picks the main camera on the next frame and clears `scene.camera` when
+this was the last one.
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-1)
+
+##### requireComponent()
+
+> **requireComponent**\<`T`\>(`type`): `T`
+
+Finds another component on the same entity, requiring it to be there — the supported way to
+link components (`docs/architecture/03-scripting-and-components.md` §8).
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class.
+
+###### Returns
+
+`T`
+
+The first match in attach order.
+
+###### Throws
+
+IgnifxError with code `IGX-0201` when the entity has no such component.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-1)
+
+##### screenToRay()
+
+> **screenToRay**(`x`, `y`, `out?`): [`Ray`](#ray) \| `null`
+
+Builds a world-space ray through a point on the canvas.
+
+###### Parameters
+
+###### x
+
+`number`
+
+The CSS pixel x, from the canvas's left edge.
+
+###### y
+
+`number`
+
+The CSS pixel y, from the canvas's top edge.
+
+###### out?
+
+[`Ray`](#ray)
+
+The ray to fill; a fresh one is allocated when omitted.
+
+###### Returns
+
+[`Ray`](#ray) \| `null`
+
+`out`, or `null` when the view-projection matrix is singular — a zero-sized viewport,
+or a camera that is not attached.
+
+###### Example
+
+```ts
+const ray = camera.screenToRay(event.offsetX, event.offsetY);
+const hit = ray === null ? null : world.raycastRender(ray);
+```
+
+##### screenToWorldPoint()
+
+> **screenToWorldPoint**(`x`, `y`, `distance`, `out`): [`MutableVec3`](#mutablevec3) \| `null`
+
+The world-space point a canvas pixel maps to at a given distance along the view ray.
+
+###### Parameters
+
+###### x
+
+`number`
+
+The CSS pixel x, from the canvas's left edge.
+
+###### y
+
+`number`
+
+The CSS pixel y, from the canvas's top edge.
+
+###### distance
+
+`number`
+
+How far along the ray to travel, in metres.
+
+###### out
+
+[`MutableVec3`](#mutablevec3)
+
+Receives the point.
+
+###### Returns
+
+[`MutableVec3`](#mutablevec3) \| `null`
+
+`out`, or `null` when no ray could be built.
+
+##### viewportToWorldPoint()
+
+> **viewportToWorldPoint**(`u`, `v`, `distance`, `out`): [`MutableVec3`](#mutablevec3) \| `null`
+
+The world-space point a **normalized** viewport coordinate maps to.
+
+###### Parameters
+
+###### u
+
+`number`
+
+The horizontal coordinate, `0` at the viewport's left edge and `1` at its right.
+
+###### v
+
+`number`
+
+The vertical coordinate, `0` at the **bottom** edge and `1` at the top, matching
+Babylon's viewport convention.
+
+###### distance
+
+`number`
+
+How far along the ray to travel, in metres.
+
+###### out
+
+[`MutableVec3`](#mutablevec3)
+
+Receives the point.
+
+###### Returns
+
+[`MutableVec3`](#mutablevec3) \| `null`
+
+`out`, or `null` when no ray could be built.
+
+##### worldToScreen()
+
+> **worldToScreen**(`point`, `out`): `boolean`
+
+Projects a world-space point onto the canvas.
+
+###### Parameters
+
+###### point
+
+[`Vec3Like`](#vec3like)
+
+The world-space point.
+
+###### out
+
+[`MutableVec3`](#mutablevec3)
+
+Receives the pixel position in `x`/`y` — measured from the viewport's top left —
+and the clip depth in `z`, which is `1` at the near plane and `0` at the far plane because
+Lite's projection is reverse-depth.
+
+###### Returns
+
+`boolean`
+
+`true` when the point is in front of the camera; `false` when it is behind it, in which
+case `out` holds a mirrored projection and should be ignored.
+
+***
 
 ### Color
 
@@ -763,8 +1602,14 @@ class Health extends Component.define({ maximum: f32(100) }) {
 
 #### Extended by
 
+- [`Camera`](#camera)
+- [`Environment`](#environment)
+- [`Light`](#light)
+- [`MeshRenderer`](#meshrenderer)
+- [`Model`](#model)
+- [`PostProcessStack`](#postprocessstack)
 - [`Script`](#abstract-script)
-- [`Transform`](#transform-3)
+- [`Transform`](#transform-10)
 
 #### Implements
 
@@ -833,13 +1678,13 @@ happens inside a callback.
 
 ###### Get Signature
 
-> **get** **entity**(): [`Entity`](#entity-1)
+> **get** **entity**(): [`Entity`](#entity-2)
 
 The entity this component is attached to.
 
 ###### Returns
 
-[`Entity`](#entity-1)
+[`Entity`](#entity-2)
 
 The owning entity.
 
@@ -875,7 +1720,7 @@ Whether the owner has already been destroyed.
 
 ###### Implementation of
 
-[`SignalOwner`](#signalowner).[`isDestroyed`](#isdestroyed-3)
+[`SignalOwner`](#signalowner).[`isDestroyed`](#isdestroyed-9)
 
 ##### isEnabledInHierarchy
 
@@ -895,7 +1740,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -903,7 +1748,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -912,26 +1757,26 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
 
 ###### Implementation of
 
-[`SignalOwner`](#signalowner).[`onDestroyed`](#ondestroyed-3)
+[`SignalOwner`](#signalowner).[`onDestroyed`](#ondestroyed-9)
 
 ##### transform
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-3)
+> **get** **transform**(): [`Transform`](#transform-10)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-3)
+[`Transform`](#transform-10)
 
 The entity's transform.
 
@@ -953,13 +1798,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-6)
+> **get** **world**(): [`World`](#world-12)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-6)
+[`World`](#world-12)
 
 The world.
 
@@ -1238,6 +2083,25 @@ The component classes.
 ###### Returns
 
 `void`
+
+##### registrations()
+
+> **registrations**(): readonly readonly \[`string`, [`ComponentType`](#componenttype-1)\<[`Component`](#abstract-component)\>\][]
+
+Every class registered under a type id, paired with that id, in registration order.
+
+###### Returns
+
+readonly readonly \[`string`, [`ComponentType`](#componenttype-1)\<[`Component`](#abstract-component)\>\][]
+
+A freshly allocated array of `[typeId, class]` pairs.
+
+###### Remarks
+
+The scene-file JSON Schema generator
+(`docs/architecture/06-serialization-and-scene-format.md` §8) walks it to narrow
+`components[].props` per `typeId`. Classes described but never registered are not listed:
+only a registered class can appear in a file.
 
 ##### requireTypeId()
 
@@ -1591,13 +2455,13 @@ The own flag.
 
 ###### Get Signature
 
-> **get** **children**(): readonly [`Entity`](#entity-1)[]
+> **get** **children**(): readonly [`Entity`](#entity-2)[]
 
 The children, in creation order. The array is live; treat it as read-only.
 
 ###### Returns
 
-readonly [`Entity`](#entity-1)[]
+readonly [`Entity`](#entity-2)[]
 
 The live child list.
 
@@ -1735,14 +2599,14 @@ The name.
 
 ###### Get Signature
 
-> **get** **onActiveChanged**(): [`Signal`](#signal)\<`boolean`\>
+> **get** **onActiveChanged**(): [`Signal`](#signal-3)\<`boolean`\>
 
 Emitted with the new value when the entity's **own** active flag changes. An ancestor's change
 does not emit it; read `activeInHierarchy` for the effective state.
 
 ###### Returns
 
-[`Signal`](#signal)\<`boolean`\>
+[`Signal`](#signal-3)\<`boolean`\>
 
 The signal, created on first access.
 
@@ -1750,13 +2614,13 @@ The signal, created on first access.
 
 ###### Get Signature
 
-> **get** **onChildAdded**(): [`Signal`](#signal)\<[`Entity`](#entity-1)\>
+> **get** **onChildAdded**(): [`Signal`](#signal-3)\<[`Entity`](#entity-2)\>
 
 Emitted after a child is added, whether by creation or by reparenting.
 
 ###### Returns
 
-[`Signal`](#signal)\<[`Entity`](#entity-1)\>
+[`Signal`](#signal-3)\<[`Entity`](#entity-2)\>
 
 The signal, created on first access.
 
@@ -1764,13 +2628,13 @@ The signal, created on first access.
 
 ###### Get Signature
 
-> **get** **onChildRemoved**(): [`Signal`](#signal)\<[`Entity`](#entity-1)\>
+> **get** **onChildRemoved**(): [`Signal`](#signal-3)\<[`Entity`](#entity-2)\>
 
 Emitted after a child is removed.
 
 ###### Returns
 
-[`Signal`](#signal)\<[`Entity`](#entity-1)\>
+[`Signal`](#signal-3)\<[`Entity`](#entity-2)\>
 
 The signal, created on first access.
 
@@ -1778,14 +2642,14 @@ The signal, created on first access.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal)\<[`Entity`](#entity-1)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Entity`](#entity-2)\>
 
 Emitted in the destroy flush, after the entity's components have run `onDestroy`. `Signal`'s
 `{ owner }` option uses it to detach handlers automatically.
 
 ###### Returns
 
-[`Signal`](#signal)\<[`Entity`](#entity-1)\>
+[`Signal`](#signal-3)\<[`Entity`](#entity-2)\>
 
 The signal, created on first access.
 
@@ -1793,13 +2657,13 @@ The signal, created on first access.
 
 ###### Get Signature
 
-> **get** **onParentChanged**(): [`Signal`](#signal)\<[`Entity`](#entity-1) \| `null`\>
+> **get** **onParentChanged**(): [`Signal`](#signal-3)\<[`Entity`](#entity-2) \| `null`\>
 
 Emitted with the new parent after this entity is reparented.
 
 ###### Returns
 
-[`Signal`](#signal)\<[`Entity`](#entity-1) \| `null`\>
+[`Signal`](#signal-3)\<[`Entity`](#entity-2) \| `null`\>
 
 The signal, created on first access.
 
@@ -1807,15 +2671,47 @@ The signal, created on first access.
 
 ###### Get Signature
 
-> **get** **parent**(): [`Entity`](#entity-1) \| `null`
+> **get** **parent**(): [`Entity`](#entity-2) \| `null`
 
 The parent entity, or `null` when the entity is a root of its scene.
 
 ###### Returns
 
-[`Entity`](#entity-1) \| `null`
+[`Entity`](#entity-2) \| `null`
 
 The parent, or `null`.
+
+##### prefab
+
+###### Get Signature
+
+> **get** **prefab**(): [`EntityPrefabLink`](#entityprefablink) \| `null`
+
+The prefab link for an entity a scene file's `instance` entry produced
+(`docs/architecture/02-scene-graph.md` §6). It is set on the instance root and on every entity
+the instanced scene contributed, so tooling can show where an object came from.
+
+###### Remarks
+
+The engine keeps no live link back to the prefab after load: editing the instanced scene does
+not update loaded instances, and "apply changes to prefab" is editor work, post-1.0. The link
+exists so that saving re-emits the subtree as an `instance` entry with recomputed overrides
+(`06-serialization-and-scene-format.md` §5) rather than as plain entities.
+
+###### Example
+
+```ts
+const link = enemy.prefab;
+if (link !== null && link.instanceRoot === enemy) {
+  app.log.info(`${enemy.name} is the root of an instance of ${link.address}`);
+}
+```
+
+###### Returns
+
+[`EntityPrefabLink`](#entityprefablink) \| `null`
+
+The link, or `null` for an entity the scene declared itself or code created.
 
 ##### scene
 
@@ -1849,13 +2745,13 @@ The tag set.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-3)
+> **get** **transform**(): [`Transform`](#transform-10)
 
 The entity's transform. Every entity has one; it can be neither removed nor disabled.
 
 ###### Returns
 
-[`Transform`](#transform-3)
+[`Transform`](#transform-10)
 
 The transform.
 
@@ -1877,13 +2773,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-6)
+> **get** **world**(): [`World`](#world-12)
 
 The world that owns the entity.
 
 ###### Returns
 
-[`World`](#world-6)
+[`World`](#world-12)
 
 The world.
 
@@ -1967,7 +2863,7 @@ destroying an object the engine is still iterating would be unsound; use `destro
 
 ##### find()
 
-> **find**(`path`): [`Entity`](#entity-1) \| `null`
+> **find**(`path`): [`Entity`](#entity-2) \| `null`
 
 Resolves a path relative to this entity — `"Body/Arm.L"`, `"../Sibling"`, `"/Root/Child"`.
 
@@ -1982,7 +2878,7 @@ The path. A leading `/` resolves from the roots of this entity's scene instance;
 
 ###### Returns
 
-[`Entity`](#entity-1) \| `null`
+[`Entity`](#entity-2) \| `null`
 
 The entity, or `null` when the path resolves to nothing.
 
@@ -1994,7 +2890,7 @@ fields or `requireComponent` to link objects (`docs/architecture/02-scene-graph.
 
 ##### findChild()
 
-> **findChild**(`predicate`, `deep?`): [`Entity`](#entity-1) \| `null`
+> **findChild**(`predicate`, `deep?`): [`Entity`](#entity-2) \| `null`
 
 Finds a descendant satisfying a predicate.
 
@@ -2015,7 +2911,7 @@ direct children only.
 
 ###### Returns
 
-[`Entity`](#entity-1) \| `null`
+[`Entity`](#entity-2) \| `null`
 
 The first match, or `null`.
 
@@ -2205,7 +3101,7 @@ Reports whether this entity is anywhere below another in the tree.
 
 ###### other
 
-[`Entity`](#entity-1)
+[`Entity`](#entity-2)
 
 The candidate ancestor.
 
@@ -2272,13 +3168,13 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ##### root()
 
-> **root**(): [`Entity`](#entity-1)
+> **root**(): [`Entity`](#entity-2)
 
 The topmost ancestor.
 
 ###### Returns
 
-[`Entity`](#entity-1)
+[`Entity`](#entity-2)
 
 The root of this entity's branch, which is this entity when it has no parent.
 
@@ -2292,7 +3188,7 @@ Moves the entity under a new parent, or to the root of its scene.
 
 ###### parent
 
-[`Entity`](#entity-1) \| `null`
+[`Entity`](#entity-2) \| `null`
 
 The new parent, or `null` to detach to the scene root.
 
@@ -2322,6 +3218,606 @@ gun.setParent(hand, { worldPositionStays: false });     // keeps its local offse
 
 ***
 
+### Environment
+
+The world's lighting environment (`docs/architecture/07-rendering.md` §2.5).
+
+#### Example
+
+```ts
+const studio = await app.assets.loadAsync<EnvironmentAsset>("environments/studio.env");
+world.createEntity("Environment").addComponent(Environment, {
+  environment: studio.retain(),
+  imageProcessing: { exposure: 1.2, contrast: 1, toneMapping: "aces" },
+});
+```
+
+#### Extends
+
+- [`Component`](#abstract-component)
+
+#### Implements
+
+- [`ComponentHooks`](#componenthooks)
+
+#### Constructors
+
+##### Constructor
+
+> **new Environment**(): [`Environment`](#environment)
+
+Applies the schema defaults, exactly as `Component.define` would.
+
+###### Returns
+
+[`Environment`](#environment)
+
+###### Overrides
+
+[`Component`](#abstract-component).[`constructor`](#constructor-3)
+
+#### Properties
+
+##### allowMultiple
+
+> `static` **allowMultiple**: `boolean`
+
+One per entity, and effectively one per world: the fields are all scene state.
+
+##### blur
+
+> **blur**: `number`
+
+##### clearColor
+
+> **clearColor**: [`ColorLike`](#colorlike)
+
+##### environment
+
+> **environment**: [`AssetHandle`](#assethandle)\<[`EnvironmentAsset`](#environmentasset)\> \| `null`
+
+##### fog
+
+> **fog**: [`EnvironmentFogSettings`](#environmentfogsettings)
+
+##### imageProcessing
+
+> **imageProcessing**: [`ImageProcessingSettings`](#imageprocessingsettings)
+
+##### rotation
+
+> **rotation**: `number`
+
+##### schema
+
+> `static` **schema**: [`Schema`](#schema-10)
+
+The serialized field declarations (ADR-0004).
+
+##### skybox
+
+> **skybox**: `object`
+
+###### enabled
+
+> **enabled**: `boolean`
+
+###### size
+
+> **size**: `number`
+
+##### typeId
+
+> `static` **typeId**: `string`
+
+The namespaced registration id.
+
+#### Accessors
+
+##### app
+
+###### Get Signature
+
+> **get** **app**(): [`App`](#app)
+
+The app that owns the world.
+
+###### Returns
+
+[`App`](#app)
+
+The app.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`app`](#app-2)
+
+##### enabled
+
+###### Get Signature
+
+> **get** **enabled**(): `boolean`
+
+The component's own enabled flag; `true` by default. Setting it runs the enable or disable
+transition (`docs/architecture/01-lifecycle-and-time.md` §6): `onDisable` runs immediately,
+`awake`/`onEnable` run in the next lifecycle flush — or immediately and nested when the change
+happens inside a callback.
+
+###### Returns
+
+`boolean`
+
+`true` when the component's own flag is set.
+
+###### Set Signature
+
+> **set** **enabled**(`value`): `void`
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`enabled`](#enabled-2)
+
+##### entity
+
+###### Get Signature
+
+> **get** **entity**(): [`Entity`](#entity-2)
+
+The entity this component is attached to.
+
+###### Returns
+
+[`Entity`](#entity-2)
+
+The owning entity.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`entity`](#entity-1)
+
+##### handle
+
+###### Get Signature
+
+> **get** **handle**(): [`ComponentHandle`](#componenthandle-1)
+
+The dense runtime handle; invalid after destruction.
+
+###### Returns
+
+[`ComponentHandle`](#componenthandle-1)
+
+The handle.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`handle`](#handle-1)
+
+##### installed
+
+###### Get Signature
+
+> **get** **installed**(): [`EnvironmentAsset`](#environmentasset) \| `null`
+
+The environment asset this component installed, once it has loaded.
+
+###### Returns
+
+[`EnvironmentAsset`](#environmentasset) \| `null`
+
+The asset, or `null` when none is loaded.
+
+##### isDestroyed
+
+###### Get Signature
+
+> **get** **isDestroyed**(): `boolean`
+
+`true` from the moment `destroy()` is called, long before the destroy flush runs.
+
+###### Returns
+
+`boolean`
+
+`true` once the component has been queued for destruction.
+
+Whether the owner has already been destroyed.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-1)
+
+##### isEnabledInHierarchy
+
+###### Get Signature
+
+> **get** **isEnabledInHierarchy**(): `boolean`
+
+`true` when the component's own flag is set **and** its entity is active in the hierarchy.
+
+###### Returns
+
+`boolean`
+
+`true` when the component is effectively enabled.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-1)
+
+##### onDestroyed
+
+###### Get Signature
+
+> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+Emitted once when the component is destroyed, in the destroy flush. Connecting with
+`{ owner: this }` elsewhere uses it to detach handlers automatically
+(`docs/architecture/02-scene-graph.md` §8).
+
+###### Returns
+
+[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+The signal. It is created on first access, so a component nobody listens to allocates
+nothing.
+
+Emitted once when the owner is destroyed; the signal uses it to detach the handler.
+
+###### Remarks
+
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
+`docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
+invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-1)
+
+##### transform
+
+###### Get Signature
+
+> **get** **transform**(): [`Transform`](#transform-10)
+
+The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
+
+###### Returns
+
+[`Transform`](#transform-10)
+
+The entity's transform.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`transform`](#transform-1)
+
+##### uid
+
+###### Get Signature
+
+> **get** **uid**(): `string`
+
+The stable ULID; the key files use to reference this component.
+
+###### Returns
+
+`string`
+
+The identifier.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`uid`](#uid-1)
+
+##### world
+
+###### Get Signature
+
+> **get** **world**(): [`World`](#world-12)
+
+The world the entity belongs to.
+
+###### Returns
+
+[`World`](#world-12)
+
+The world.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`world`](#world-2)
+
+#### Methods
+
+##### define()
+
+> `static` **define**\<`S`\>(`schema`): [`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+Declares a component's serialized fields and returns the base class to extend (ADR-0004,
+`docs/architecture/03-scripting-and-components.md` §3). The returned class exposes every field
+as a typed instance property, applies the defaults in its constructor, and carries the schema
+for the serializer, the inspector, and the docs harness.
+
+###### Type Parameters
+
+###### S
+
+`S` *extends* `Readonly`\<`Record`\<`string`, [`FieldDefinition`](#fielddefinition)\<`unknown`\>\>\>
+
+The schema being declared.
+
+###### Parameters
+
+###### schema
+
+`S`
+
+The field definitions, keyed by the property name they become.
+
+###### Returns
+
+[`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+An abstract class to extend.
+
+###### Throws
+
+IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
+with a `Component`/`Script` member.
+
+###### Example
+
+```ts
+class Spinner extends Component.define({
+  degreesPerSecond: f32(90, { min: -360, max: 360 }),
+  axis: vec3({ x: 0, y: 1, z: 0 }),
+}) {
+  static typeId = "mygame/Spinner";
+}
+```
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`define`](#define-1)
+
+##### destroy()
+
+> **destroy**(): `void`
+
+Queues this component for destruction. It stays usable until the destroy flush of the current
+frame, but reports `isDestroyed === true` immediately
+(`docs/architecture/01-lifecycle-and-time.md` §6). Calling it twice is a no-op.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`destroy`](#destroy-1)
+
+##### getComponent()
+
+> **getComponent**\<`T`\>(`type`): `T` \| `null`
+
+Finds another component on the same entity — sugar for `this.entity.getComponent`.
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class; matching is by class identity **and** inheritance.
+
+###### Returns
+
+`T` \| `null`
+
+The first match in attach order, or `null`.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-1)
+
+##### onAttach()
+
+> **onAttach**(): `void`
+
+Records that the component exists; the scene is written on the first sync.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-1)
+
+##### onDetach()
+
+> **onDetach**(): `void`
+
+Leaves the scene as it is.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+Lite offers no "unload environment": `loadEnvironment` installs textures and a skybox and has
+no inverse. Rather than pretend otherwise, removing an `Environment` leaves what it installed
+in place until another one replaces it — which is also what "the most recently enabled wins"
+implies. The `PreRender` system re-picks the winner on the next frame.
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-1)
+
+##### requireComponent()
+
+> **requireComponent**\<`T`\>(`type`): `T`
+
+Finds another component on the same entity, requiring it to be there — the supported way to
+link components (`docs/architecture/03-scripting-and-components.md` §8).
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class.
+
+###### Returns
+
+`T`
+
+The first match in attach order.
+
+###### Throws
+
+IgnifxError with code `IGX-0201` when the entity has no such component.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-1)
+
+***
+
+### EnvironmentAsset
+
+A loaded image-based lighting environment (`docs/architecture/07-rendering.md` §2.5).
+
+#### Example
+
+```ts
+const studio = await app.assets.loadAsync<EnvironmentAsset>("environments/studio.env");
+world.createEntity("Env").addComponent(Environment, { environment: studio.retain() });
+```
+
+#### Properties
+
+##### address
+
+> `readonly` **address**: `string`
+
+The address the environment was loaded from.
+
+##### assetType
+
+> `static` **assetType**: `string`
+
+The type name the asset service registers environments under.
+
+##### brdfUrl
+
+> `readonly` **brdfUrl**: `string`
+
+The URL Lite fetched the BRDF lookup table from, or empty when the load was headless.
+
+##### definition
+
+> `readonly` **definition**: [`EnvironmentDefinition`](#environmentdefinition-3)
+
+What the file declared, with the defaults filled in.
+
+#### Accessors
+
+##### lite
+
+###### Get Signature
+
+> **get** **lite**(): [`EnvironmentAssetLiteHandles`](#environmentassetlitehandles)
+
+The Babylon Lite objects the asset owns. Unstable escape hatch.
+
+###### Returns
+
+[`EnvironmentAssetLiteHandles`](#environmentassetlitehandles)
+
+The GPU handles, or `null` under a headless app.
+
+***
+
+### FontAsset
+
+A parsed font file (`docs/architecture/05-assets-and-loading.md` §5).
+
+#### Example
+
+```ts
+const inter = await app.assets.loadAsync<FontAsset>("fonts/inter.ttf");
+inter.value.address; // "fonts/inter.ttf"
+```
+
+#### Properties
+
+##### address
+
+> `readonly` **address**: `string`
+
+The address the font was loaded from.
+
+##### assetType
+
+> `static` **assetType**: `string`
+
+The type name the asset service registers fonts under.
+
+##### byteLength
+
+> `readonly` **byteLength**: `number`
+
+How many bytes the file held, for diagnostics.
+
+#### Accessors
+
+##### lite
+
+###### Get Signature
+
+> **get** **lite**(): [`FontAssetLiteHandles`](#fontassetlitehandles)
+
+The Babylon Lite objects the asset owns. Unstable escape hatch.
+
+###### Returns
+
+[`FontAssetLiteHandles`](#fontassetlitehandles)
+
+The parsed font.
+
+***
+
 ### IgnifxError
 
 The error every ignifx API throws for misuse (`CONSTITUTION.md` §3.9). It always carries a stable
@@ -2343,6 +3839,10 @@ try {
 #### Extends
 
 - `Error`
+
+#### Extended by
+
+- [`AssetLoadError`](#assetloaderror)
 
 #### Constructors
 
@@ -2875,6 +4375,527 @@ The slot index.
 IgnifxError with code `IGX-0303` when the project does not declare the name. Scene
 loading* is more forgiving: an unknown name in a file resolves to `Default` with the same code
 reported as a diagnostic (`docs/architecture/02-scene-graph.md` §7).
+
+***
+
+### Light
+
+A light source (`docs/architecture/07-rendering.md` §2.2).
+
+#### Remarks
+
+The entity's transform defines the light: a directional or spot light points along the entity's
+local `+Z`, a point light sits at its origin, and a hemispheric light's sky direction is its local
+`+Y`.
+
+#### Example
+
+```ts
+const sun = world.createEntity("Sun");
+sun.transform.lookAt({ x: 0, y: 0, z: 0 });
+sun.addComponent(Light, { type: "directional", intensity: 3, shadows: { enabled: true } });
+```
+
+#### Extends
+
+- [`Component`](#abstract-component)
+
+#### Implements
+
+- [`ComponentHooks`](#componenthooks)
+
+#### Constructors
+
+##### Constructor
+
+> **new Light**(): [`Light`](#light)
+
+Applies the schema defaults, exactly as `Component.define` would.
+
+###### Returns
+
+[`Light`](#light)
+
+###### Overrides
+
+[`Component`](#abstract-component).[`constructor`](#constructor-3)
+
+#### Properties
+
+##### allowMultiple
+
+> `static` **allowMultiple**: `boolean`
+
+At most one light per entity: two lights from one transform want two entities.
+
+##### color
+
+> **color**: [`ColorLike`](#colorlike)
+
+##### exclude
+
+> **exclude**: ([`Entity`](#entity-2) \| `null`)[]
+
+##### groundColor
+
+> **groundColor**: [`ColorLike`](#colorlike)
+
+##### includeOnly
+
+> **includeOnly**: ([`Entity`](#entity-2) \| `null`)[]
+
+##### intensity
+
+> **intensity**: `number`
+
+##### range
+
+> **range**: `number`
+
+##### schema
+
+> `static` **schema**: [`Schema`](#schema-10)
+
+The serialized field declarations (ADR-0004).
+
+##### shadows
+
+> **shadows**: [`LightShadowSettings`](#lightshadowsettings)
+
+##### spotAngle
+
+> **spotAngle**: `number`
+
+##### spotExponent
+
+> **spotExponent**: `number`
+
+##### type
+
+> **type**: `"directional"` \| `"point"` \| `"spot"` \| `"hemispheric"`
+
+##### typeId
+
+> `static` **typeId**: `string`
+
+The namespaced registration id.
+
+#### Accessors
+
+##### app
+
+###### Get Signature
+
+> **get** **app**(): [`App`](#app)
+
+The app that owns the world.
+
+###### Returns
+
+[`App`](#app)
+
+The app.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`app`](#app-2)
+
+##### enabled
+
+###### Get Signature
+
+> **get** **enabled**(): `boolean`
+
+The component's own enabled flag; `true` by default. Setting it runs the enable or disable
+transition (`docs/architecture/01-lifecycle-and-time.md` §6): `onDisable` runs immediately,
+`awake`/`onEnable` run in the next lifecycle flush — or immediately and nested when the change
+happens inside a callback.
+
+###### Returns
+
+`boolean`
+
+`true` when the component's own flag is set.
+
+###### Set Signature
+
+> **set** **enabled**(`value`): `void`
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`enabled`](#enabled-2)
+
+##### entity
+
+###### Get Signature
+
+> **get** **entity**(): [`Entity`](#entity-2)
+
+The entity this component is attached to.
+
+###### Returns
+
+[`Entity`](#entity-2)
+
+The owning entity.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`entity`](#entity-1)
+
+##### handle
+
+###### Get Signature
+
+> **get** **handle**(): [`ComponentHandle`](#componenthandle-1)
+
+The dense runtime handle; invalid after destruction.
+
+###### Returns
+
+[`ComponentHandle`](#componenthandle-1)
+
+The handle.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`handle`](#handle-1)
+
+##### isCastingShadows
+
+###### Get Signature
+
+> **get** **isCastingShadows**(): `boolean`
+
+Whether this light currently casts shadows — which needs the `shadows` rendering feature, a
+light kind Lite can shadow, and `shadows.enabled`.
+
+###### Returns
+
+`boolean`
+
+`true` when a shadow generator is attached.
+
+##### isDestroyed
+
+###### Get Signature
+
+> **get** **isDestroyed**(): `boolean`
+
+`true` from the moment `destroy()` is called, long before the destroy flush runs.
+
+###### Returns
+
+`boolean`
+
+`true` once the component has been queued for destruction.
+
+Whether the owner has already been destroyed.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-1)
+
+##### isEnabledInHierarchy
+
+###### Get Signature
+
+> **get** **isEnabledInHierarchy**(): `boolean`
+
+`true` when the component's own flag is set **and** its entity is active in the hierarchy.
+
+###### Returns
+
+`boolean`
+
+`true` when the component is effectively enabled.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-1)
+
+##### lite
+
+###### Get Signature
+
+> **get** **lite**(): `object`
+
+The Babylon Lite light this component owns. Unstable escape hatch
+(`docs/architecture/00-overview.md` §3).
+
+###### Returns
+
+`object`
+
+The light and its shadow generator, either of which may be `null`.
+
+###### light
+
+> `readonly` **light**: [`LiteLight`](#litelight) \| `null`
+
+###### shadowGenerator
+
+> `readonly` **shadowGenerator**: `ShadowGenerator` \| `null`
+
+##### onDestroyed
+
+###### Get Signature
+
+> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+Emitted once when the component is destroyed, in the destroy flush. Connecting with
+`{ owner: this }` elsewhere uses it to detach handlers automatically
+(`docs/architecture/02-scene-graph.md` §8).
+
+###### Returns
+
+[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+The signal. It is created on first access, so a component nobody listens to allocates
+nothing.
+
+Emitted once when the owner is destroyed; the signal uses it to detach the handler.
+
+###### Remarks
+
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
+`docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
+invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-1)
+
+##### transform
+
+###### Get Signature
+
+> **get** **transform**(): [`Transform`](#transform-10)
+
+The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
+
+###### Returns
+
+[`Transform`](#transform-10)
+
+The entity's transform.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`transform`](#transform-1)
+
+##### uid
+
+###### Get Signature
+
+> **get** **uid**(): `string`
+
+The stable ULID; the key files use to reference this component.
+
+###### Returns
+
+`string`
+
+The identifier.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`uid`](#uid-1)
+
+##### world
+
+###### Get Signature
+
+> **get** **world**(): [`World`](#world-12)
+
+The world the entity belongs to.
+
+###### Returns
+
+[`World`](#world-12)
+
+The world.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`world`](#world-2)
+
+#### Methods
+
+##### define()
+
+> `static` **define**\<`S`\>(`schema`): [`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+Declares a component's serialized fields and returns the base class to extend (ADR-0004,
+`docs/architecture/03-scripting-and-components.md` §3). The returned class exposes every field
+as a typed instance property, applies the defaults in its constructor, and carries the schema
+for the serializer, the inspector, and the docs harness.
+
+###### Type Parameters
+
+###### S
+
+`S` *extends* `Readonly`\<`Record`\<`string`, [`FieldDefinition`](#fielddefinition)\<`unknown`\>\>\>
+
+The schema being declared.
+
+###### Parameters
+
+###### schema
+
+`S`
+
+The field definitions, keyed by the property name they become.
+
+###### Returns
+
+[`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+An abstract class to extend.
+
+###### Throws
+
+IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
+with a `Component`/`Script` member.
+
+###### Example
+
+```ts
+class Spinner extends Component.define({
+  degreesPerSecond: f32(90, { min: -360, max: 360 }),
+  axis: vec3({ x: 0, y: 1, z: 0 }),
+}) {
+  static typeId = "mygame/Spinner";
+}
+```
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`define`](#define-1)
+
+##### destroy()
+
+> **destroy**(): `void`
+
+Queues this component for destruction. It stays usable until the destroy flush of the current
+frame, but reports `isDestroyed === true` immediately
+(`docs/architecture/01-lifecycle-and-time.md` §6). Calling it twice is a no-op.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`destroy`](#destroy-1)
+
+##### getComponent()
+
+> **getComponent**\<`T`\>(`type`): `T` \| `null`
+
+Finds another component on the same entity — sugar for `this.entity.getComponent`.
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class; matching is by class identity **and** inheritance.
+
+###### Returns
+
+`T` \| `null`
+
+The first match in attach order, or `null`.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-1)
+
+##### onAttach()
+
+> **onAttach**(): `void`
+
+Records that the component exists; the Lite light is built on the first sync.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-1)
+
+##### onDetach()
+
+> **onDetach**(): `void`
+
+Removes the light from the scene and releases its shadow generator.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-1)
+
+##### requireComponent()
+
+> **requireComponent**\<`T`\>(`type`): `T`
+
+Finds another component on the same entity, requiring it to be there — the supported way to
+link components (`docs/architecture/03-scripting-and-components.md` §8).
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class.
+
+###### Returns
+
+`T`
+
+The first match in attach order.
+
+###### Throws
+
+IgnifxError with code `IGX-0201` when the entity has no such component.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-1)
 
 ***
 
@@ -4041,6 +6062,2198 @@ The matrix to write; may alias `m`.
 
 ***
 
+### MaterialAsset
+
+A material a `MeshRenderer` or a `Model` draws with
+(`docs/architecture/07-rendering.md` §2.6).
+
+#### Remarks
+
+Materials are shared: many renderers reference one asset, and editing it changes all of them.
+[MaterialAsset.clone](#clone-2) is the per-renderer variation escape hatch — it rebuilds the Lite
+material from the same declaration, so the copy starts identical and drifts on its own.
+
+#### Example
+
+```ts
+const gold = await app.assets.loadAsync<MaterialAsset>("materials/gold.material.json");
+using warm = gold.value.clone(app);
+warm.value.setBaseColor({ r: 1, g: 0.6, b: 0.2, a: 1 });
+```
+
+#### Properties
+
+##### assetType
+
+> `static` **assetType**: `string`
+
+The type name the asset service registers materials under.
+
+##### definition
+
+> `readonly` **definition**: [`MaterialDefinition`](#materialdefinition)
+
+The declaration this material was built from; [MaterialAsset.clone](#clone-2) replays it.
+
+##### textures
+
+> `readonly` **textures**: readonly [`AssetHandle`](#assethandle)\<[`TextureAsset`](#textureasset)\>[]
+
+The texture handles the material samples, in slot order. It does not own them.
+
+#### Accessors
+
+##### kind
+
+###### Get Signature
+
+> **get** **kind**(): `"standard"` \| `"pbr"` \| `"shader"`
+
+The material family.
+
+###### Returns
+
+`"standard"` \| `"pbr"` \| `"shader"`
+
+`"pbr"` or `"standard"`.
+
+##### lite
+
+###### Get Signature
+
+> **get** **lite**(): [`MaterialAssetLiteHandles`](#materialassetlitehandles)
+
+The Babylon Lite objects the asset owns. Unstable escape hatch.
+
+###### Returns
+
+[`MaterialAssetLiteHandles`](#materialassetlitehandles)
+
+The Lite material.
+
+##### name
+
+###### Get Signature
+
+> **get** **name**(): `string`
+
+The material's human-readable name.
+
+###### Returns
+
+`string`
+
+The declared name.
+
+#### Methods
+
+##### clone()
+
+> **clone**(`app`): [`AssetHandle`](#assethandle)\<[`MaterialAsset`](#materialasset)\>
+
+Builds an independent copy of this material from the same declaration — the per-renderer
+variation path of `docs/architecture/07-rendering.md` §2.6.
+
+###### Parameters
+
+###### app
+
+[`App`](#app)
+
+The app whose asset service publishes the copy.
+
+###### Returns
+
+[`AssetHandle`](#assethandle)\<[`MaterialAsset`](#materialasset)\>
+
+The copy's handle, with one holder — the caller.
+
+###### Remarks
+
+The copy shares the original's *textures* (they are addressed assets, and the handles are
+retained by whoever loaded them) and nothing else: it is a second Lite material in the same
+family, so it costs no extra shader compilation.
+
+##### setAlpha()
+
+> **setAlpha**(`alpha`): `void`
+
+Replaces the material's overall alpha.
+
+###### Parameters
+
+###### alpha
+
+`number`
+
+The new alpha, 0 to 1.
+
+###### Returns
+
+`void`
+
+##### setBaseColor()
+
+> **setBaseColor**(`color`): `void`
+
+Replaces the base colour — the PBR `baseColorFactor`, or a Standard material's `diffuseColor`.
+
+###### Parameters
+
+###### color
+
+[`ColorLike`](#colorlike)
+
+The new sRGB colour. Alpha is used by PBR and ignored by Standard, which carries
+its own `alpha`.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+The colour is sRGB, like every colour in ignifx's public API; the linear value the shader reads
+is derived here. The change marks the material's uniform block dirty, which is the cheap path:
+no pipeline is recompiled (`src/lite/material.ts`).
+
+##### setMetallicRoughness()
+
+> **setMetallicRoughness**(`metallic`, `roughness`): `void`
+
+Replaces the metallic and roughness factors of a `"pbr"` material. A Standard material has
+neither, so the call is ignored.
+
+###### Parameters
+
+###### metallic
+
+`number`
+
+The metallic factor, 0 to 1.
+
+###### roughness
+
+`number`
+
+The roughness factor, 0 to 1.
+
+###### Returns
+
+`void`
+
+***
+
+### MeshAsset
+
+A geometry template a `MeshRenderer` draws (`docs/architecture/07-rendering.md` §2.3).
+
+#### Remarks
+
+Build one with a primitive factory or [MeshAsset.fromData](#fromdata); each returns the handle the
+`MeshRenderer.mesh` field takes. A mesh that came from a file arrives as part of a `ModelAsset`
+instead — a glTF is a tree of meshes, materials, and animations, not one buffer.
+
+#### Example
+
+```ts
+using box = MeshAsset.box(app, { size: 2 });
+const cube = app.world.createEntity("Cube");
+cube.addComponent(MeshRenderer, { mesh: box.retain() });
+```
+
+#### Properties
+
+##### assetType
+
+> `static` **assetType**: `string`
+
+The type name the asset service registers meshes under.
+
+##### name
+
+> `readonly` **name**: `string`
+
+A human-readable name, used in diagnostics and as the Lite mesh's name.
+
+#### Accessors
+
+##### isDisposed
+
+###### Get Signature
+
+> **get** **isDisposed**(): `boolean`
+
+Whether the template's GPU buffers have been released.
+
+###### Returns
+
+`boolean`
+
+`true` once [MeshAsset.dispose](#dispose-4) has run.
+
+##### lite
+
+###### Get Signature
+
+> **get** **lite**(): [`MeshAssetLiteHandles`](#meshassetlitehandles)
+
+The Babylon Lite objects the asset owns. Unstable escape hatch
+(`docs/architecture/00-overview.md` §3).
+
+###### Returns
+
+[`MeshAssetLiteHandles`](#meshassetlitehandles)
+
+The template mesh, or `null` under a headless app.
+
+#### Methods
+
+##### \[dispose\]()
+
+> **\[dispose\]**(): `void`
+
+Releases the template when the asset leaves a `using` block.
+
+###### Returns
+
+`void`
+
+##### box()
+
+> `static` **box**(`app`, `options?`): [`AssetHandle`](#assethandle)\<[`MeshAsset`](#meshasset)\>
+
+Creates a box template and publishes it.
+
+###### Parameters
+
+###### app
+
+[`App`](#app)
+
+The app whose engine uploads the geometry and whose asset service holds the handle.
+
+###### options?
+
+[`BoxMeshOptions`](#boxmeshoptions)
+
+A uniform `size`, or per-axis dimensions.
+
+###### Returns
+
+[`AssetHandle`](#assethandle)\<[`MeshAsset`](#meshasset)\>
+
+The handle, with one holder — the caller.
+
+###### Example
+
+```ts
+const box = MeshAsset.box(app, { width: 2, height: 1, depth: 3 });
+```
+
+##### capsule()
+
+> `static` **capsule**(`app`, `options?`): [`AssetHandle`](#assethandle)\<[`MeshAsset`](#meshasset)\>
+
+Creates a capsule template standing along Y and publishes it.
+
+###### Parameters
+
+###### app
+
+[`App`](#app)
+
+The app that owns the engine and the asset service.
+
+###### options?
+
+[`CapsuleMeshOptions`](#capsulemeshoptions)
+
+Total height, radius, and tessellation.
+
+###### Returns
+
+[`AssetHandle`](#assethandle)\<[`MeshAsset`](#meshasset)\>
+
+The handle, with one holder.
+
+##### cylinder()
+
+> `static` **cylinder**(`app`, `options?`): [`AssetHandle`](#assethandle)\<[`MeshAsset`](#meshasset)\>
+
+Creates a cylinder template standing along Y and publishes it.
+
+###### Parameters
+
+###### app
+
+[`App`](#app)
+
+The app that owns the engine and the asset service.
+
+###### options?
+
+[`CylinderMeshOptions`](#cylindermeshoptions)
+
+Height, diameters, and tessellation.
+
+###### Returns
+
+[`AssetHandle`](#assethandle)\<[`MeshAsset`](#meshasset)\>
+
+The handle, with one holder.
+
+##### dispose()
+
+> **dispose**(): `void`
+
+Releases the template's GPU buffers.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+Lite exports no mesh disposer: a mesh's buffers are freed when it leaves its last scene, so the
+adapter adds the template to a scene and takes it straight out again
+(`src/lite/gpu/mesh.ts`). Clones still in a scene keep the shared buffers alive; what the
+template loses is the ability to be cloned again. Calling it twice is a no-op, and it is a
+no-op under a headless app, which has no buffers.
+
+##### fromData()
+
+> `static` **fromData**(`app`, `name`, `data`): [`AssetHandle`](#assethandle)\<[`MeshAsset`](#meshasset)\>
+
+Creates a template from raw vertex data and publishes it.
+
+###### Parameters
+
+###### app
+
+[`App`](#app)
+
+The app that owns the engine and the asset service.
+
+###### name
+
+`string`
+
+A human-readable name.
+
+###### data
+
+[`MeshGeometryData`](#meshgeometrydata)
+
+Positions, normals, indices, and optional texture coordinates. Lite keeps
+references to the arrays; do not mutate them afterwards.
+
+###### Returns
+
+[`AssetHandle`](#assethandle)\<[`MeshAsset`](#meshasset)\>
+
+The handle, with one holder.
+
+###### Example
+
+```ts
+const triangle = MeshAsset.fromData(app, "triangle", {
+  positions: Float32Array.from([0, 0, 0, 1, 0, 0, 0, 1, 0]),
+  normals: Float32Array.from([0, 0, -1, 0, 0, -1, 0, 0, -1]),
+  indices: Uint32Array.from([0, 1, 2]),
+});
+```
+
+##### ground()
+
+> `static` **ground**(`app`, `options?`): [`AssetHandle`](#assethandle)\<[`MeshAsset`](#meshasset)\>
+
+Creates a subdivided grid in the XZ plane and publishes it.
+
+###### Parameters
+
+###### app
+
+[`App`](#app)
+
+The app that owns the engine and the asset service.
+
+###### options?
+
+[`GroundMeshOptions`](#groundmeshoptions)
+
+Width, depth, subdivisions, and UV scale.
+
+###### Returns
+
+[`AssetHandle`](#assethandle)\<[`MeshAsset`](#meshasset)\>
+
+The handle, with one holder.
+
+##### plane()
+
+> `static` **plane**(`app`, `options?`): [`AssetHandle`](#assethandle)\<[`MeshAsset`](#meshasset)\>
+
+Creates a quad template in the XY plane and publishes it.
+
+###### Parameters
+
+###### app
+
+[`App`](#app)
+
+The app that owns the engine and the asset service.
+
+###### options?
+
+[`PlaneMeshOptions`](#planemeshoptions)
+
+A uniform `size`, or width and height.
+
+###### Returns
+
+[`AssetHandle`](#assethandle)\<[`MeshAsset`](#meshasset)\>
+
+The handle, with one holder.
+
+##### sphere()
+
+> `static` **sphere**(`app`, `options?`): [`AssetHandle`](#assethandle)\<[`MeshAsset`](#meshasset)\>
+
+Creates a sphere template and publishes it.
+
+###### Parameters
+
+###### app
+
+[`App`](#app)
+
+The app that owns the engine and the asset service.
+
+###### options?
+
+[`SphereMeshOptions`](#spheremeshoptions)
+
+Diameter and ring count.
+
+###### Returns
+
+[`AssetHandle`](#assethandle)\<[`MeshAsset`](#meshasset)\>
+
+The handle, with one holder.
+
+##### torus()
+
+> `static` **torus**(`app`, `options?`): [`AssetHandle`](#assethandle)\<[`MeshAsset`](#meshasset)\>
+
+Creates a torus template in the XZ plane and publishes it.
+
+###### Parameters
+
+###### app
+
+[`App`](#app)
+
+The app that owns the engine and the asset service.
+
+###### options?
+
+[`TorusMeshOptions`](#torusmeshoptions)
+
+Diameter, thickness, and tessellation.
+
+###### Returns
+
+[`AssetHandle`](#assethandle)\<[`MeshAsset`](#meshasset)\>
+
+The handle, with one holder.
+
+***
+
+### MeshRenderer
+
+Draws a mesh asset with a material (`docs/architecture/07-rendering.md` §2.3).
+
+#### Example
+
+```ts
+using box = MeshAsset.box(app, { size: 1 });
+const cube = world.createEntity("Cube");
+cube.addComponent(MeshRenderer, { mesh: box.retain(), castShadows: true });
+```
+
+#### Extends
+
+- [`Component`](#abstract-component)
+
+#### Implements
+
+- [`ComponentHooks`](#componenthooks)
+
+#### Constructors
+
+##### Constructor
+
+> **new MeshRenderer**(): [`MeshRenderer`](#meshrenderer)
+
+Applies the schema defaults, exactly as `Component.define` would.
+
+###### Returns
+
+[`MeshRenderer`](#meshrenderer)
+
+###### Overrides
+
+[`Component`](#abstract-component).[`constructor`](#constructor-3)
+
+#### Properties
+
+##### allowMultiple
+
+> `static` **allowMultiple**: `boolean`
+
+Several renderers on one entity draw several meshes from one transform, which is useful.
+
+##### castShadows
+
+> **castShadows**: `boolean`
+
+##### materials
+
+> **materials**: ([`AssetHandle`](#assethandle)\<[`MaterialAsset`](#materialasset)\> \| `null`)[]
+
+##### mesh
+
+> **mesh**: [`AssetHandle`](#assethandle)\<[`MeshAsset`](#meshasset)\> \| `null`
+
+##### pickable
+
+> **pickable**: `boolean`
+
+##### receiveShadows
+
+> **receiveShadows**: `boolean`
+
+##### renderOrder
+
+> **renderOrder**: `number`
+
+##### schema
+
+> `static` **schema**: [`Schema`](#schema-10)
+
+The serialized field declarations (ADR-0004).
+
+##### typeId
+
+> `static` **typeId**: `string`
+
+The namespaced registration id.
+
+#### Accessors
+
+##### app
+
+###### Get Signature
+
+> **get** **app**(): [`App`](#app)
+
+The app that owns the world.
+
+###### Returns
+
+[`App`](#app)
+
+The app.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`app`](#app-2)
+
+##### enabled
+
+###### Get Signature
+
+> **get** **enabled**(): `boolean`
+
+The component's own enabled flag; `true` by default. Setting it runs the enable or disable
+transition (`docs/architecture/01-lifecycle-and-time.md` §6): `onDisable` runs immediately,
+`awake`/`onEnable` run in the next lifecycle flush — or immediately and nested when the change
+happens inside a callback.
+
+###### Returns
+
+`boolean`
+
+`true` when the component's own flag is set.
+
+###### Set Signature
+
+> **set** **enabled**(`value`): `void`
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`enabled`](#enabled-2)
+
+##### entity
+
+###### Get Signature
+
+> **get** **entity**(): [`Entity`](#entity-2)
+
+The entity this component is attached to.
+
+###### Returns
+
+[`Entity`](#entity-2)
+
+The owning entity.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`entity`](#entity-1)
+
+##### handle
+
+###### Get Signature
+
+> **get** **handle**(): [`ComponentHandle`](#componenthandle-1)
+
+The dense runtime handle; invalid after destruction.
+
+###### Returns
+
+[`ComponentHandle`](#componenthandle-1)
+
+The handle.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`handle`](#handle-1)
+
+##### isDestroyed
+
+###### Get Signature
+
+> **get** **isDestroyed**(): `boolean`
+
+`true` from the moment `destroy()` is called, long before the destroy flush runs.
+
+###### Returns
+
+`boolean`
+
+`true` once the component has been queued for destruction.
+
+Whether the owner has already been destroyed.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-1)
+
+##### isEnabledInHierarchy
+
+###### Get Signature
+
+> **get** **isEnabledInHierarchy**(): `boolean`
+
+`true` when the component's own flag is set **and** its entity is active in the hierarchy.
+
+###### Returns
+
+`boolean`
+
+`true` when the component is effectively enabled.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-1)
+
+##### isVisible
+
+###### Get Signature
+
+> **get** **isVisible**(): `boolean`
+
+Whether the mesh is currently drawn: its own `enabled` flag and its entity's
+`activeInHierarchy`, materialised onto Lite's `visible`.
+
+###### Returns
+
+`boolean`
+
+`true` when the clone is visible.
+
+##### lite
+
+###### Get Signature
+
+> **get** **lite**(): `object`
+
+The Babylon Lite mesh this renderer draws. Unstable escape hatch
+(`docs/architecture/00-overview.md` §3).
+
+###### Returns
+
+`object`
+
+The clone, or `null` when there is nothing to draw.
+
+###### mesh
+
+> `readonly` **mesh**: `SceneNode` \| `null`
+
+##### onDestroyed
+
+###### Get Signature
+
+> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+Emitted once when the component is destroyed, in the destroy flush. Connecting with
+`{ owner: this }` elsewhere uses it to detach handlers automatically
+(`docs/architecture/02-scene-graph.md` §8).
+
+###### Returns
+
+[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+The signal. It is created on first access, so a component nobody listens to allocates
+nothing.
+
+Emitted once when the owner is destroyed; the signal uses it to detach the handler.
+
+###### Remarks
+
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
+`docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
+invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-1)
+
+##### transform
+
+###### Get Signature
+
+> **get** **transform**(): [`Transform`](#transform-10)
+
+The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
+
+###### Returns
+
+[`Transform`](#transform-10)
+
+The entity's transform.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`transform`](#transform-1)
+
+##### uid
+
+###### Get Signature
+
+> **get** **uid**(): `string`
+
+The stable ULID; the key files use to reference this component.
+
+###### Returns
+
+`string`
+
+The identifier.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`uid`](#uid-1)
+
+##### world
+
+###### Get Signature
+
+> **get** **world**(): [`World`](#world-12)
+
+The world the entity belongs to.
+
+###### Returns
+
+[`World`](#world-12)
+
+The world.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`world`](#world-2)
+
+#### Methods
+
+##### define()
+
+> `static` **define**\<`S`\>(`schema`): [`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+Declares a component's serialized fields and returns the base class to extend (ADR-0004,
+`docs/architecture/03-scripting-and-components.md` §3). The returned class exposes every field
+as a typed instance property, applies the defaults in its constructor, and carries the schema
+for the serializer, the inspector, and the docs harness.
+
+###### Type Parameters
+
+###### S
+
+`S` *extends* `Readonly`\<`Record`\<`string`, [`FieldDefinition`](#fielddefinition)\<`unknown`\>\>\>
+
+The schema being declared.
+
+###### Parameters
+
+###### schema
+
+`S`
+
+The field definitions, keyed by the property name they become.
+
+###### Returns
+
+[`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+An abstract class to extend.
+
+###### Throws
+
+IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
+with a `Component`/`Script` member.
+
+###### Example
+
+```ts
+class Spinner extends Component.define({
+  degreesPerSecond: f32(90, { min: -360, max: 360 }),
+  axis: vec3({ x: 0, y: 1, z: 0 }),
+}) {
+  static typeId = "mygame/Spinner";
+}
+```
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`define`](#define-1)
+
+##### destroy()
+
+> **destroy**(): `void`
+
+Queues this component for destruction. It stays usable until the destroy flush of the current
+frame, but reports `isDestroyed === true` immediately
+(`docs/architecture/01-lifecycle-and-time.md` §6). Calling it twice is a no-op.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`destroy`](#destroy-1)
+
+##### getComponent()
+
+> **getComponent**\<`T`\>(`type`): `T` \| `null`
+
+Finds another component on the same entity — sugar for `this.entity.getComponent`.
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class; matching is by class identity **and** inheritance.
+
+###### Returns
+
+`T` \| `null`
+
+The first match in attach order, or `null`.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-1)
+
+##### onAttach()
+
+> **onAttach**(): `void`
+
+Nothing to do at attach: the clone is built on the first sync, once `mesh` has been decoded.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-1)
+
+##### onDetach()
+
+> **onDetach**(): `void`
+
+Removes the clone from the scene, releasing its share of the template's buffers.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-1)
+
+##### requireComponent()
+
+> **requireComponent**\<`T`\>(`type`): `T`
+
+Finds another component on the same entity, requiring it to be there — the supported way to
+link components (`docs/architecture/03-scripting-and-components.md` §8).
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class.
+
+###### Returns
+
+`T`
+
+The first match in attach order.
+
+###### Throws
+
+IgnifxError with code `IGX-0201` when the entity has no such component.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-1)
+
+***
+
+### Model
+
+One instance of a loaded model (`docs/architecture/07-rendering.md` §2.4).
+
+#### Example
+
+```ts
+const hero = await app.assets.loadAsync<ModelAsset>("models/hero.glb");
+const entity = world.createEntity("Hero");
+const model = entity.addComponent(Model, { model: hero.retain() });
+model.attachToNode("hand.R", sword);
+```
+
+#### Extends
+
+- [`Component`](#abstract-component)
+
+#### Implements
+
+- [`ComponentHooks`](#componenthooks)
+
+#### Constructors
+
+##### Constructor
+
+> **new Model**(): [`Model`](#model)
+
+Applies the schema defaults, exactly as `Component.define` would.
+
+###### Returns
+
+[`Model`](#model)
+
+###### Overrides
+
+[`Component`](#abstract-component).[`constructor`](#constructor-3)
+
+#### Properties
+
+##### allowMultiple
+
+> `static` **allowMultiple**: `boolean`
+
+One model per entity: a second instance under the same transform wants its own entity.
+
+##### castShadows
+
+> **castShadows**: `boolean`
+
+##### materialOverrides
+
+> **materialOverrides**: `Record`\<`string`, [`AssetHandle`](#assethandle)\<[`MaterialAsset`](#materialasset)\> \| `null`\>
+
+##### model
+
+> **model**: [`AssetHandle`](#assethandle)\<[`ModelAsset`](#modelasset)\> \| `null`
+
+##### pickable
+
+> **pickable**: `boolean`
+
+##### receiveShadows
+
+> **receiveShadows**: `boolean`
+
+##### schema
+
+> `static` **schema**: [`Schema`](#schema-10)
+
+The serialized field declarations (ADR-0004).
+
+##### typeId
+
+> `static` **typeId**: `string`
+
+The namespaced registration id.
+
+#### Accessors
+
+##### animations
+
+###### Get Signature
+
+> **get** **animations**(): readonly `AnimationGroup`[]
+
+**`Beta`**
+
+The clips the file declared.
+
+###### Remarks
+
+Unstable: these are Lite's own animation groups, and ignifx does not advance them in Phase 2
+(ADR-0003 — `@ignifx/3d`'s animator owns playback).
+
+###### Returns
+
+readonly `AnimationGroup`[]
+
+The clips, in load order.
+
+##### app
+
+###### Get Signature
+
+> **get** **app**(): [`App`](#app)
+
+The app that owns the world.
+
+###### Returns
+
+[`App`](#app)
+
+The app.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`app`](#app-2)
+
+##### enabled
+
+###### Get Signature
+
+> **get** **enabled**(): `boolean`
+
+The component's own enabled flag; `true` by default. Setting it runs the enable or disable
+transition (`docs/architecture/01-lifecycle-and-time.md` §6): `onDisable` runs immediately,
+`awake`/`onEnable` run in the next lifecycle flush — or immediately and nested when the change
+happens inside a callback.
+
+###### Returns
+
+`boolean`
+
+`true` when the component's own flag is set.
+
+###### Set Signature
+
+> **set** **enabled**(`value`): `void`
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`enabled`](#enabled-2)
+
+##### entity
+
+###### Get Signature
+
+> **get** **entity**(): [`Entity`](#entity-2)
+
+The entity this component is attached to.
+
+###### Returns
+
+[`Entity`](#entity-2)
+
+The owning entity.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`entity`](#entity-1)
+
+##### handle
+
+###### Get Signature
+
+> **get** **handle**(): [`ComponentHandle`](#componenthandle-1)
+
+The dense runtime handle; invalid after destruction.
+
+###### Returns
+
+[`ComponentHandle`](#componenthandle-1)
+
+The handle.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`handle`](#handle-1)
+
+##### isDestroyed
+
+###### Get Signature
+
+> **get** **isDestroyed**(): `boolean`
+
+`true` from the moment `destroy()` is called, long before the destroy flush runs.
+
+###### Returns
+
+`boolean`
+
+`true` once the component has been queued for destruction.
+
+Whether the owner has already been destroyed.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-1)
+
+##### isEnabledInHierarchy
+
+###### Get Signature
+
+> **get** **isEnabledInHierarchy**(): `boolean`
+
+`true` when the component's own flag is set **and** its entity is active in the hierarchy.
+
+###### Returns
+
+`boolean`
+
+`true` when the component is effectively enabled.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-1)
+
+##### lite
+
+###### Get Signature
+
+> **get** **lite**(): `object`
+
+The Babylon Lite objects this instance owns. Unstable escape hatch
+(`docs/architecture/00-overview.md` §3).
+
+###### Returns
+
+`object`
+
+The cloned root, or `null` when there is nothing instantiated.
+
+###### root
+
+> `readonly` **root**: `SceneNode` \| `null`
+
+##### nodes
+
+###### Get Signature
+
+> **get** **nodes**(): `ReadonlyMap`\<`string`, `SceneNode`\>
+
+The glTF nodes of this instance, by their names in the file.
+
+###### Remarks
+
+The map is the instance's own, so two `Model`s of one asset never hand out each other's nodes.
+It is empty until the asset is loaded, and under a headless app.
+
+###### Returns
+
+`ReadonlyMap`\<`string`, `SceneNode`\>
+
+The nodes, keyed by glTF node name.
+
+##### onDestroyed
+
+###### Get Signature
+
+> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+Emitted once when the component is destroyed, in the destroy flush. Connecting with
+`{ owner: this }` elsewhere uses it to detach handlers automatically
+(`docs/architecture/02-scene-graph.md` §8).
+
+###### Returns
+
+[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+The signal. It is created on first access, so a component nobody listens to allocates
+nothing.
+
+Emitted once when the owner is destroyed; the signal uses it to detach the handler.
+
+###### Remarks
+
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
+`docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
+invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-1)
+
+##### skeletons
+
+###### Get Signature
+
+> **get** **skeletons**(): readonly `Skeleton`[]
+
+**`Beta`**
+
+The skeletons the file declared. Empty unless the `boneControl` rendering feature was on before
+the asset loaded.
+
+###### Returns
+
+readonly `Skeleton`[]
+
+The skeletons.
+
+##### transform
+
+###### Get Signature
+
+> **get** **transform**(): [`Transform`](#transform-10)
+
+The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
+
+###### Returns
+
+[`Transform`](#transform-10)
+
+The entity's transform.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`transform`](#transform-1)
+
+##### uid
+
+###### Get Signature
+
+> **get** **uid**(): `string`
+
+The stable ULID; the key files use to reference this component.
+
+###### Returns
+
+`string`
+
+The identifier.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`uid`](#uid-1)
+
+##### world
+
+###### Get Signature
+
+> **get** **world**(): [`World`](#world-12)
+
+The world the entity belongs to.
+
+###### Returns
+
+[`World`](#world-12)
+
+The world.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`world`](#world-2)
+
+#### Methods
+
+##### attachToNode()
+
+> **attachToNode**(`nodeName`, `entity`): `boolean`
+
+Parents an entity under one of the model's glTF nodes — the "weapon in hand" case
+(`docs/architecture/07-rendering.md` §2.4).
+
+###### Parameters
+
+###### nodeName
+
+`string`
+
+The glTF node name, as the file spells it.
+
+###### entity
+
+[`Entity`](#entity-2)
+
+The entity to attach.
+
+###### Returns
+
+`boolean`
+
+`true` when the node exists and the entity was attached.
+
+###### Remarks
+
+The entity keeps its **local** transform, so it lands at the node's origin and then follows it
+for free: Lite composes `parentWorld × local` on every read, so a bone attachment costs no
+per-frame work at all. Detach by re-parenting the entity in the ordinary way.
+
+###### Example
+
+```ts
+model.attachToNode("hand.R", sword);
+```
+
+##### define()
+
+> `static` **define**\<`S`\>(`schema`): [`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+Declares a component's serialized fields and returns the base class to extend (ADR-0004,
+`docs/architecture/03-scripting-and-components.md` §3). The returned class exposes every field
+as a typed instance property, applies the defaults in its constructor, and carries the schema
+for the serializer, the inspector, and the docs harness.
+
+###### Type Parameters
+
+###### S
+
+`S` *extends* `Readonly`\<`Record`\<`string`, [`FieldDefinition`](#fielddefinition)\<`unknown`\>\>\>
+
+The schema being declared.
+
+###### Parameters
+
+###### schema
+
+`S`
+
+The field definitions, keyed by the property name they become.
+
+###### Returns
+
+[`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+An abstract class to extend.
+
+###### Throws
+
+IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
+with a `Component`/`Script` member.
+
+###### Example
+
+```ts
+class Spinner extends Component.define({
+  degreesPerSecond: f32(90, { min: -360, max: 360 }),
+  axis: vec3({ x: 0, y: 1, z: 0 }),
+}) {
+  static typeId = "mygame/Spinner";
+}
+```
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`define`](#define-1)
+
+##### destroy()
+
+> **destroy**(): `void`
+
+Queues this component for destruction. It stays usable until the destroy flush of the current
+frame, but reports `isDestroyed === true` immediately
+(`docs/architecture/01-lifecycle-and-time.md` §6). Calling it twice is a no-op.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`destroy`](#destroy-1)
+
+##### getComponent()
+
+> **getComponent**\<`T`\>(`type`): `T` \| `null`
+
+Finds another component on the same entity — sugar for `this.entity.getComponent`.
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class; matching is by class identity **and** inheritance.
+
+###### Returns
+
+`T` \| `null`
+
+The first match in attach order, or `null`.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-1)
+
+##### onAttach()
+
+> **onAttach**(): `void`
+
+Nothing to do at attach: the instance is built on the first sync, once `model` is decoded.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-1)
+
+##### onDetach()
+
+> **onDetach**(): `void`
+
+Removes the instance from the scene and gives back its share of the template's buffers.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-1)
+
+##### requireComponent()
+
+> **requireComponent**\<`T`\>(`type`): `T`
+
+Finds another component on the same entity, requiring it to be there — the supported way to
+link components (`docs/architecture/03-scripting-and-components.md` §8).
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class.
+
+###### Returns
+
+`T`
+
+The first match in attach order.
+
+###### Throws
+
+IgnifxError with code `IGX-0201` when the entity has no such component.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-1)
+
+***
+
+### ModelAsset
+
+A loaded glTF or GLB file (`docs/architecture/05-assets-and-loading.md` §5).
+
+#### Example
+
+```ts
+const hero = await app.assets.loadAsync<ModelAsset>("models/hero.glb");
+hero.value.animations.map((clip) => clip.name);
+```
+
+#### Properties
+
+##### address
+
+> `readonly` **address**: `string`
+
+The address the model was loaded from.
+
+##### animations
+
+> `readonly` **animations**: readonly `AnimationGroup`[]
+
+**`Beta`**
+
+The clips the file declared, stripped from the container so Lite never ticks them.
+
+###### Remarks
+
+Unstable: these are Lite's own animation groups, handed on to `@ignifx/3d`'s animator, and they
+are excluded from the stability guarantees of `CONSTITUTION.md` Article IV. A `Model` re-binds
+them per instance when the animation system lands; in Phase 2 they are read-only metadata.
+
+##### assetType
+
+> `static` **assetType**: `string`
+
+The type name the asset service registers models under.
+
+##### skeletons
+
+> `readonly` **skeletons**: readonly `Skeleton`[]
+
+**`Beta`**
+
+The skeletons the file declared. Empty unless the `boneControl` rendering feature was on before
+the load, because Lite builds them only then (`index.d.ts` 653).
+
+#### Accessors
+
+##### instanceCount
+
+###### Get Signature
+
+> **get** **instanceCount**(): `number`
+
+How many `Model` components currently hold a copy of this template.
+
+###### Returns
+
+`number`
+
+The live instance count.
+
+##### lite
+
+###### Get Signature
+
+> **get** **lite**(): [`ModelAssetLiteHandles`](#modelassetlitehandles)
+
+The Babylon Lite objects the asset owns. Unstable escape hatch.
+
+###### Returns
+
+[`ModelAssetLiteHandles`](#modelassetlitehandles)
+
+The template container, or `null` under a headless app.
+
+#### Methods
+
+##### \[dispose\]()
+
+> **\[dispose\]**(): `void`
+
+Releases the template when the asset leaves a `using` block.
+
+###### Returns
+
+`void`
+
+##### dispose()
+
+> **dispose**(): `void`
+
+Releases the template's GPU resources.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+The container was never added to a scene, so the round trip `removeFromScene` needs is the same
+one `MeshAsset.dispose` performs: this hands it to the scene and takes it straight back out,
+which drops its share of every buffer. Clones still in a scene keep theirs. Calling it twice is
+a no-op, and it is a no-op under a headless app.
+
+##### instantiate()
+
+> **instantiate**(`parent`): [`ModelInstantiation`](#modelinstantiation) \| `null`
+
+Clones the template under an entity's node.
+
+###### Parameters
+
+###### parent
+
+`SceneNode` \| `null`
+
+The entity's transform node, or `null` for world space.
+
+###### Returns
+
+[`ModelInstantiation`](#modelinstantiation) \| `null`
+
+The cloned root and its named nodes, or `null` when there is nothing to clone — a
+headless app, or a file that declared only lights.
+
+##### releaseInstance()
+
+> **releaseInstance**(): `void`
+
+Records that one fewer `Model` holds a copy. Releasing below zero is a no-op.
+
+###### Returns
+
+`void`
+
+##### retainInstance()
+
+> **retainInstance**(): `void`
+
+Records that one more `Model` holds a copy.
+
+###### Returns
+
+`void`
+
+***
+
+### PostProcessStack
+
+One instance of a post-process chain, attached to the main camera's entity
+(`docs/architecture/07-rendering.md` §2.7).
+
+#### Example
+
+```ts
+cameraEntity.addComponent(PostProcessStack, {
+  bloom: { enabled: true, threshold: 0.85, weight: 0.4 },
+  smaa: { enabled: true },
+});
+```
+
+#### Extends
+
+- [`Component`](#abstract-component)
+
+#### Implements
+
+- [`ComponentHooks`](#componenthooks)
+
+#### Constructors
+
+##### Constructor
+
+> **new PostProcessStack**(): [`PostProcessStack`](#postprocessstack)
+
+Applies the schema defaults, exactly as `Component.define` would.
+
+###### Returns
+
+[`PostProcessStack`](#postprocessstack)
+
+###### Overrides
+
+[`Component`](#abstract-component).[`constructor`](#constructor-3)
+
+#### Properties
+
+##### allowMultiple
+
+> `static` **allowMultiple**: `boolean`
+
+One chain per camera entity; a second would fight the first for the swapchain.
+
+##### bloom
+
+> **bloom**: [`BloomEffectSettings`](#bloomeffectsettings)
+
+##### imageProcessing
+
+> **imageProcessing**: [`ImageProcessingEffectSettings`](#imageprocessingeffectsettings)
+
+##### schema
+
+> `static` **schema**: [`Schema`](#schema-10)
+
+The serialized field declarations (ADR-0004).
+
+##### smaa
+
+> **smaa**: [`SmaaEffectSettings`](#smaaeffectsettings)
+
+##### typeId
+
+> `static` **typeId**: `string`
+
+The namespaced registration id.
+
+#### Accessors
+
+##### app
+
+###### Get Signature
+
+> **get** **app**(): [`App`](#app)
+
+The app that owns the world.
+
+###### Returns
+
+[`App`](#app)
+
+The app.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`app`](#app-2)
+
+##### enabled
+
+###### Get Signature
+
+> **get** **enabled**(): `boolean`
+
+The component's own enabled flag; `true` by default. Setting it runs the enable or disable
+transition (`docs/architecture/01-lifecycle-and-time.md` §6): `onDisable` runs immediately,
+`awake`/`onEnable` run in the next lifecycle flush — or immediately and nested when the change
+happens inside a callback.
+
+###### Returns
+
+`boolean`
+
+`true` when the component's own flag is set.
+
+###### Set Signature
+
+> **set** **enabled**(`value`): `void`
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`enabled`](#enabled-2)
+
+##### entity
+
+###### Get Signature
+
+> **get** **entity**(): [`Entity`](#entity-2)
+
+The entity this component is attached to.
+
+###### Returns
+
+[`Entity`](#entity-2)
+
+The owning entity.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`entity`](#entity-1)
+
+##### handle
+
+###### Get Signature
+
+> **get** **handle**(): [`ComponentHandle`](#componenthandle-1)
+
+The dense runtime handle; invalid after destruction.
+
+###### Returns
+
+[`ComponentHandle`](#componenthandle-1)
+
+The handle.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`handle`](#handle-1)
+
+##### isDestroyed
+
+###### Get Signature
+
+> **get** **isDestroyed**(): `boolean`
+
+`true` from the moment `destroy()` is called, long before the destroy flush runs.
+
+###### Returns
+
+`boolean`
+
+`true` once the component has been queued for destruction.
+
+Whether the owner has already been destroyed.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-1)
+
+##### isEnabledInHierarchy
+
+###### Get Signature
+
+> **get** **isEnabledInHierarchy**(): `boolean`
+
+`true` when the component's own flag is set **and** its entity is active in the hierarchy.
+
+###### Returns
+
+`boolean`
+
+`true` when the component is effectively enabled.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-1)
+
+##### onDestroyed
+
+###### Get Signature
+
+> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+Emitted once when the component is destroyed, in the destroy flush. Connecting with
+`{ owner: this }` elsewhere uses it to detach handlers automatically
+(`docs/architecture/02-scene-graph.md` §8).
+
+###### Returns
+
+[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+The signal. It is created on first access, so a component nobody listens to allocates
+nothing.
+
+Emitted once when the owner is destroyed; the signal uses it to detach the handler.
+
+###### Remarks
+
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
+`docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
+invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-1)
+
+##### taskCount
+
+###### Get Signature
+
+> **get** **taskCount**(): `number`
+
+How many frame-graph tasks the stack has recorded.
+
+###### Returns
+
+`number`
+
+The task count; `0` before the chain is built, under a headless app, and when the
+`postProcessing` rendering feature is off.
+
+##### transform
+
+###### Get Signature
+
+> **get** **transform**(): [`Transform`](#transform-10)
+
+The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
+
+###### Returns
+
+[`Transform`](#transform-10)
+
+The entity's transform.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`transform`](#transform-1)
+
+##### uid
+
+###### Get Signature
+
+> **get** **uid**(): `string`
+
+The stable ULID; the key files use to reference this component.
+
+###### Returns
+
+`string`
+
+The identifier.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`uid`](#uid-1)
+
+##### world
+
+###### Get Signature
+
+> **get** **world**(): [`World`](#world-12)
+
+The world the entity belongs to.
+
+###### Returns
+
+[`World`](#world-12)
+
+The world.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`world`](#world-2)
+
+#### Methods
+
+##### define()
+
+> `static` **define**\<`S`\>(`schema`): [`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+Declares a component's serialized fields and returns the base class to extend (ADR-0004,
+`docs/architecture/03-scripting-and-components.md` §3). The returned class exposes every field
+as a typed instance property, applies the defaults in its constructor, and carries the schema
+for the serializer, the inspector, and the docs harness.
+
+###### Type Parameters
+
+###### S
+
+`S` *extends* `Readonly`\<`Record`\<`string`, [`FieldDefinition`](#fielddefinition)\<`unknown`\>\>\>
+
+The schema being declared.
+
+###### Parameters
+
+###### schema
+
+`S`
+
+The field definitions, keyed by the property name they become.
+
+###### Returns
+
+[`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+An abstract class to extend.
+
+###### Throws
+
+IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
+with a `Component`/`Script` member.
+
+###### Example
+
+```ts
+class Spinner extends Component.define({
+  degreesPerSecond: f32(90, { min: -360, max: 360 }),
+  axis: vec3({ x: 0, y: 1, z: 0 }),
+}) {
+  static typeId = "mygame/Spinner";
+}
+```
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`define`](#define-1)
+
+##### destroy()
+
+> **destroy**(): `void`
+
+Queues this component for destruction. It stays usable until the destroy flush of the current
+frame, but reports `isDestroyed === true` immediately
+(`docs/architecture/01-lifecycle-and-time.md` §6). Calling it twice is a no-op.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`destroy`](#destroy-1)
+
+##### getComponent()
+
+> **getComponent**\<`T`\>(`type`): `T` \| `null`
+
+Finds another component on the same entity — sugar for `this.entity.getComponent`.
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class; matching is by class identity **and** inheritance.
+
+###### Returns
+
+`T` \| `null`
+
+The first match in attach order, or `null`.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-1)
+
+##### onAttach()
+
+> **onAttach**(): `void`
+
+Nothing to do at attach: the chain is built on the first sync that wants an effect.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-1)
+
+##### onDetach()
+
+> **onDetach**(): `void`
+
+Disables and disposes every task the stack recorded.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-1)
+
+##### requireComponent()
+
+> **requireComponent**\<`T`\>(`type`): `T`
+
+Finds another component on the same entity, requiring it to be there — the supported way to
+link components (`docs/architecture/03-scripting-and-components.md` §8).
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class.
+
+###### Returns
+
+`T`
+
+The first match in attach order.
+
+###### Throws
+
+IgnifxError with code `IGX-0201` when the entity has no such component.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-1)
+
+***
+
 ### Quat
 
 A rotation, stored as a unit quaternion. Quaternions are how ignifx stores every rotation:
@@ -5204,9 +9417,10 @@ it was loaded from, or the world's active scene when it was created in code.
 
 #### Remarks
 
-Phase 1 ships the implicit `"default"` instance only. `asset` is therefore always `null` and
-`isLoaded` always `true`; scene loading, additive loads, and unloading arrive in Phase 2
-(`docs/plan/engineering-plan.md`).
+The implicit `"default"` instance every app starts with has no asset and is always loaded.
+An instance created by `world.loadScene` carries the handle it was built from and reports
+`isLoaded === false` only while its entities are being constructed — a window no game code can
+observe, because construction is one synchronous block (`docs/architecture/02-scene-graph.md` §2).
 
 #### Example
 
@@ -5241,16 +9455,16 @@ The instance id, distinct from the address of the asset it was loaded from.
 
 ###### Get Signature
 
-> **get** **asset**(): `null`
+> **get** **asset**(): [`AssetHandle`](#assethandle)\<[`SceneAsset`](#sceneasset)\> \| `null`
 
 The asset this instance was loaded from.
 
 ###### Returns
 
-`null`
+[`AssetHandle`](#assethandle)\<[`SceneAsset`](#sceneasset)\> \| `null`
 
-Always `null` in Phase 1: the implicit default scene has no asset, and scene loading
-has not landed yet.
+The handle `world.loadScene` retained on the instance's behalf, or `null` for the
+implicit default scene and for instances created in code.
 
 ##### isLoaded
 
@@ -5258,41 +9472,73 @@ has not landed yet.
 
 > **get** **isLoaded**(): `boolean`
 
-Whether every entity of the instance has been constructed.
+Whether every entity of the instance has been constructed and its references resolved.
 
 ###### Returns
 
 `boolean`
 
-Always `true` in Phase 1.
+`true` once construction has finished; `false` only during it.
 
 ##### onUnloading
 
 ###### Get Signature
 
-> **get** **onUnloading**(): [`Signal`](#signal)
+> **get** **onUnloading**(): [`Signal`](#signal-3)
 
 Emitted just before the instance is unloaded, while its entities are still valid.
 
 ###### Returns
 
-[`Signal`](#signal)
+[`Signal`](#signal-3)
 
 The signal.
+
+##### remap
+
+###### Get Signature
+
+> **get** **remap**(): [`UidRemap`](#uidremap) \| `null`
+
+The file-local uid to runtime object table of this instance
+(`docs/architecture/02-scene-graph.md` §10). Two instances of one scene have two tables, which
+is what keeps their `$entity`/`$component` references apart.
+
+###### Returns
+
+[`UidRemap`](#uidremap) \| `null`
+
+The table, or `null` for an instance that was not built from a file.
 
 ##### roots
 
 ###### Get Signature
 
-> **get** **roots**(): readonly [`Entity`](#entity-1)[]
+> **get** **roots**(): readonly [`Entity`](#entity-2)[]
 
 The instance's root entities — the ones with no parent — in creation order.
 
 ###### Returns
 
-readonly [`Entity`](#entity-1)[]
+readonly [`Entity`](#entity-2)[]
 
 The live root list. Its identity is stable for the instance's lifetime.
+
+##### settings
+
+###### Get Signature
+
+> **get** **settings**(): [`JsonObject`](#jsonobject) \| `null`
+
+The scene-level values the file carried — environment, clear colour, 2D mode flags, physics
+overrides (`docs/architecture/06-serialization-and-scene-format.md` §2). The core keeps them as
+plain JSON; the systems that understand a key read it from here.
+
+###### Returns
+
+[`JsonObject`](#jsonobject) \| `null`
+
+The block, or `null` for an instance that was not built from a file.
 
 ***
 
@@ -5351,7 +9597,7 @@ Creates a component. The engine constructs components; game code never calls `ne
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`constructor`](#constructor-1)
+[`Component`](#abstract-component).[`constructor`](#constructor-3)
 
 #### Accessors
 
@@ -5371,7 +9617,7 @@ The app.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`app`](#app-1)
+[`Component`](#abstract-component).[`app`](#app-2)
 
 ##### enabled
 
@@ -5406,25 +9652,25 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled)
+[`Component`](#abstract-component).[`enabled`](#enabled-2)
 
 ##### entity
 
 ###### Get Signature
 
-> **get** **entity**(): [`Entity`](#entity-1)
+> **get** **entity**(): [`Entity`](#entity-2)
 
 The entity this component is attached to.
 
 ###### Returns
 
-[`Entity`](#entity-1)
+[`Entity`](#entity-2)
 
 The owning entity.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`entity`](#entity)
+[`Component`](#abstract-component).[`entity`](#entity-1)
 
 ##### handle
 
@@ -5442,7 +9688,7 @@ The handle.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`handle`](#handle)
+[`Component`](#abstract-component).[`handle`](#handle-1)
 
 ##### isDestroyed
 
@@ -5462,7 +9708,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed)
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-1)
 
 ##### isEnabledInHierarchy
 
@@ -5480,13 +9726,13 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy)
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-1)
 
 ##### onDestroyed
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -5494,7 +9740,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -5503,32 +9749,32 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed)
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-1)
 
 ##### transform
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-3)
+> **get** **transform**(): [`Transform`](#transform-10)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-3)
+[`Transform`](#transform-10)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`transform`](#transform)
+[`Component`](#abstract-component).[`transform`](#transform-1)
 
 ##### uid
 
@@ -5546,25 +9792,25 @@ The identifier.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`uid`](#uid)
+[`Component`](#abstract-component).[`uid`](#uid-1)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-6)
+> **get** **world**(): [`World`](#world-12)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-6)
+[`World`](#world-12)
 
 The world.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`world`](#world-1)
+[`Component`](#abstract-component).[`world`](#world-2)
 
 #### Methods
 
@@ -5612,7 +9858,7 @@ class Patrol extends Script.define({ waypoints: array(vec3()), speed: f32(3) }) 
 
 ###### Overrides
 
-[`Component`](#abstract-component).[`define`](#define)
+[`Component`](#abstract-component).[`define`](#define-1)
 
 ##### destroy()
 
@@ -5628,7 +9874,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`destroy`](#destroy)
+[`Component`](#abstract-component).[`destroy`](#destroy-1)
 
 ##### getComponent()
 
@@ -5660,7 +9906,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`getComponent`](#getcomponent)
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-1)
 
 ##### requireComponent()
 
@@ -5697,7 +9943,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`requireComponent`](#requirecomponent)
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-1)
 
 ##### startCoroutine()
 
@@ -5813,7 +10059,7 @@ health.onDied.connect((entity) => this.spawnLoot(entity), { owner: this, once: t
 
 ##### Constructor
 
-> **new Signal**\<`T`\>(`options?`): [`Signal`](#signal)\<`T`\>
+> **new Signal**\<`T`\>(`options?`): [`Signal`](#signal-3)\<`T`\>
 
 Creates a signal.
 
@@ -5828,7 +10074,7 @@ supplied by the app for engine signals; a signal a script owns usually needs nei
 
 ###### Returns
 
-[`Signal`](#signal)\<`T`\>
+[`Signal`](#signal-3)\<`T`\>
 
 #### Accessors
 
@@ -6069,6 +10315,99 @@ An iterator over the tags.
 
 ***
 
+### TextureAsset
+
+A loaded 2D texture (`docs/architecture/05-assets-and-loading.md` §5).
+
+#### Example
+
+```ts
+const albedo = await app.assets.loadAsync<TextureAsset>("textures/hero-albedo.png");
+albedo.value.options.srgb; // what the .meta.json sidecar asked for
+```
+
+#### Properties
+
+##### address
+
+> `readonly` **address**: `string`
+
+The address the texture was loaded from.
+
+##### assetType
+
+> `static` **assetType**: `string`
+
+The type name the asset service registers textures under.
+
+##### options
+
+> `readonly` **options**: [`TextureImportOptions`](#textureimportoptions)
+
+The resolved import options, sidecar values merged onto the defaults.
+
+#### Accessors
+
+##### isReleased
+
+###### Get Signature
+
+> **get** **isReleased**(): `boolean`
+
+Whether the GPU texture has been given up.
+
+###### Returns
+
+`boolean`
+
+`true` once [TextureAsset.releaseGpu](#releasegpu) has run.
+
+##### lite
+
+###### Get Signature
+
+> **get** **lite**(): [`TextureAssetLiteHandles`](#textureassetlitehandles)
+
+The Babylon Lite objects the asset owns. Unstable escape hatch.
+
+###### Returns
+
+[`TextureAssetLiteHandles`](#textureassetlitehandles)
+
+The GPU texture, or `null` under a headless app.
+
+#### Methods
+
+##### releaseGpu()
+
+> **releaseGpu**(): `boolean`
+
+Gives up the asset's share of the GPU texture, destroying it when it was the last one. Calling
+it twice is a no-op, and it is a no-op under a headless app.
+
+###### Returns
+
+`boolean`
+
+`true` when this call destroyed the underlying `GPUTexture`.
+
+##### retainGpu()
+
+> **retainGpu**(): `void`
+
+Claims an extra share of the GPU texture, so releasing the asset does not destroy it.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+Only needed when a Lite object has to outlive the asset that loaded it. Ordinary sharing goes
+through `ctx.loadDependency`, which counts the asset handle instead.
+
+***
+
 ### Transform
 
 The view over an entity's Babylon Lite `SceneNode`
@@ -6106,17 +10445,17 @@ class Follow extends Script implements ScriptCallbacks {
 
 ##### Constructor
 
-> **new Transform**(): [`Transform`](#transform-3)
+> **new Transform**(): [`Transform`](#transform-10)
 
 Creates an unbound transform. The entity constructor binds it to a Lite node immediately.
 
 ###### Returns
 
-[`Transform`](#transform-3)
+[`Transform`](#transform-10)
 
 ###### Overrides
 
-[`Component`](#abstract-component).[`constructor`](#constructor-1)
+[`Component`](#abstract-component).[`constructor`](#constructor-3)
 
 #### Properties
 
@@ -6150,7 +10489,7 @@ The app.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`app`](#app-1)
+[`Component`](#abstract-component).[`app`](#app-2)
 
 ##### enabled
 
@@ -6195,25 +10534,25 @@ happens inside a callback.
 
 ###### Overrides
 
-[`Component`](#abstract-component).[`enabled`](#enabled)
+[`Component`](#abstract-component).[`enabled`](#enabled-2)
 
 ##### entity
 
 ###### Get Signature
 
-> **get** **entity**(): [`Entity`](#entity-1)
+> **get** **entity**(): [`Entity`](#entity-2)
 
 The entity this component is attached to.
 
 ###### Returns
 
-[`Entity`](#entity-1)
+[`Entity`](#entity-2)
 
 The owning entity.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`entity`](#entity)
+[`Component`](#abstract-component).[`entity`](#entity-1)
 
 ##### eulerAngles
 
@@ -6274,7 +10613,7 @@ The handle.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`handle`](#handle)
+[`Component`](#abstract-component).[`handle`](#handle-1)
 
 ##### isDestroyed
 
@@ -6294,7 +10633,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed)
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-1)
 
 ##### isEnabledInHierarchy
 
@@ -6312,7 +10651,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy)
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-1)
 
 ##### lite
 
@@ -6495,7 +10834,7 @@ A freshly allocated vector. Use `Transform.lossyScaleToRef` in hot code.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -6503,7 +10842,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -6512,14 +10851,14 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed)
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-1)
 
 ##### position
 
@@ -6652,19 +10991,19 @@ The angle in degrees.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-3)
+> **get** **transform**(): [`Transform`](#transform-10)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-3)
+[`Transform`](#transform-10)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`transform`](#transform)
+[`Component`](#abstract-component).[`transform`](#transform-1)
 
 ##### uid
 
@@ -6682,7 +11021,7 @@ The identifier.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`uid`](#uid)
+[`Component`](#abstract-component).[`uid`](#uid-1)
 
 ##### up
 
@@ -6702,19 +11041,19 @@ A freshly allocated vector. Use `Transform.upToRef` in hot code.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-6)
+> **get** **world**(): [`World`](#world-12)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-6)
+[`World`](#world-12)
 
 The world.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`world`](#world-1)
+[`Component`](#abstract-component).[`world`](#world-2)
 
 ##### worldMatrix
 
@@ -6804,7 +11143,7 @@ class Spinner extends Component.define({
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`define`](#define)
+[`Component`](#abstract-component).[`define`](#define-1)
 
 ##### destroy()
 
@@ -6822,7 +11161,7 @@ IgnifxError with code `IGX-0205`. Destroy the entity instead.
 
 ###### Overrides
 
-[`Component`](#abstract-component).[`destroy`](#destroy)
+[`Component`](#abstract-component).[`destroy`](#destroy-1)
 
 ##### eulerAnglesToRef()
 
@@ -6906,7 +11245,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`getComponent`](#getcomponent)
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-1)
 
 ##### inverseTransformDirection()
 
@@ -7097,7 +11436,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`requireComponent`](#requirecomponent)
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-1)
 
 ##### rightToRef()
 
@@ -7339,6 +11678,111 @@ The vector to write.
 `TOut`
 
 `out`, normalised.
+
+***
+
+### UidRemap
+
+The per-instance mapping from the uids a scene file carries to the runtime objects built from it
+(`docs/architecture/02-scene-graph.md` §10). Loading the same scene twice produces two remaps, so
+two instances of one prefab never resolve each other's references.
+
+#### Remarks
+
+The "file uid" side of the table is the uid an entity carries in the *expanded* file — the same
+uid for entities declared by the scene itself, and a freshly minted one for each copy an
+`instance` entry expands, because a prefab instanced twice would otherwise contribute the same
+uid twice.
+
+#### Constructors
+
+##### Constructor
+
+> **new UidRemap**(): [`UidRemap`](#uidremap)
+
+###### Returns
+
+[`UidRemap`](#uidremap)
+
+#### Accessors
+
+##### size
+
+###### Get Signature
+
+> **get** **size**(): `number`
+
+How many entities the remap holds.
+
+###### Returns
+
+`number`
+
+The entity count.
+
+#### Methods
+
+##### clear()
+
+> **clear**(): `void`
+
+Drops every entry; the scene instance calls it on unload.
+
+###### Returns
+
+`void`
+
+##### component()
+
+> **component**(`fileUid`): [`Component`](#abstract-component) \| `null`
+
+Resolves a file uid to its component.
+
+###### Parameters
+
+###### fileUid
+
+`string`
+
+The uid read from the file.
+
+###### Returns
+
+[`Component`](#abstract-component) \| `null`
+
+The component, or `null` when the file declares no such component.
+
+##### entity()
+
+> **entity**(`fileUid`): [`Entity`](#entity-2) \| `null`
+
+Resolves a file uid to its entity.
+
+###### Parameters
+
+###### fileUid
+
+`string`
+
+The uid read from the file.
+
+###### Returns
+
+[`Entity`](#entity-2) \| `null`
+
+The entity, or `null` when the file declares no such entity.
+
+##### entries()
+
+> **entries**(): `IterableIterator`\<readonly \[`string`, [`Entity`](#entity-2)\]\>
+
+Every entity the remap holds, in the order the file declared them.
+
+###### Returns
+
+`IterableIterator`\<readonly \[`string`, [`Entity`](#entity-2)\]\>
+
+The live iterator over `[fileUid, entity]` pairs.
 
 ***
 
@@ -10707,7 +15151,7 @@ The app.
 
 > **get** **isDisposed**(): `boolean`
 
-`true` once [World.dispose](#dispose-3) has run.
+`true` once [World.dispose](#dispose-8) has run.
 
 ###### Returns
 
@@ -10756,17 +15200,44 @@ The render scene, and the physics simulation scene once `@ignifx/physics` create
 
 > `readonly` **simulationScene**: `null`
 
+##### mainCamera
+
+###### Get Signature
+
+> **get** **mainCamera**(): [`Camera`](#camera) \| `null`
+
+The camera this world renders through: the enabled [Camera](#camera) with the highest `priority`
+(`docs/architecture/07-rendering.md` §2.1).
+
+###### Remarks
+
+The `PreRender` render-sync system chooses it and assigns it to the Lite scene, so the value is
+the one the **last rendered frame** used, not a live query. A world with no enabled camera
+renders nothing and logs `IGX-0706` once.
+
+###### Example
+
+```ts
+const ray = world.mainCamera?.screenToRay(event.offsetX, event.offsetY) ?? null;
+```
+
+###### Returns
+
+[`Camera`](#camera) \| `null`
+
+The main camera, or `null` when the world has none.
+
 ##### onEntityCreated
 
 ###### Get Signature
 
-> **get** **onEntityCreated**(): [`Signal`](#signal)\<[`Entity`](#entity-1)\>
+> **get** **onEntityCreated**(): [`Signal`](#signal-3)\<[`Entity`](#entity-2)\>
 
 Emitted for every entity the world creates.
 
 ###### Returns
 
-[`Signal`](#signal)\<[`Entity`](#entity-1)\>
+[`Signal`](#signal-3)\<[`Entity`](#entity-2)\>
 
 The signal.
 
@@ -10774,13 +15245,13 @@ The signal.
 
 ###### Get Signature
 
-> **get** **onEntityDestroyed**(): [`Signal`](#signal)\<[`Entity`](#entity-1)\>
+> **get** **onEntityDestroyed**(): [`Signal`](#signal-3)\<[`Entity`](#entity-2)\>
 
 Emitted for every entity the destroy flush releases.
 
 ###### Returns
 
-[`Signal`](#signal)\<[`Entity`](#entity-1)\>
+[`Signal`](#signal-3)\<[`Entity`](#entity-2)\>
 
 The signal.
 
@@ -10788,13 +15259,13 @@ The signal.
 
 ###### Get Signature
 
-> **get** **onSceneLoaded**(): [`Signal`](#signal)\<[`SceneInstance`](#sceneinstance)\>
+> **get** **onSceneLoaded**(): [`Signal`](#signal-3)\<[`SceneInstance`](#sceneinstance)\>
 
 Emitted when a scene instance finishes loading. Never fires before Phase 2.
 
 ###### Returns
 
-[`Signal`](#signal)\<[`SceneInstance`](#sceneinstance)\>
+[`Signal`](#signal-3)\<[`SceneInstance`](#sceneinstance)\>
 
 The signal.
 
@@ -10802,13 +15273,13 @@ The signal.
 
 ###### Get Signature
 
-> **get** **onSceneUnloaded**(): [`Signal`](#signal)\<[`SceneInstance`](#sceneinstance)\>
+> **get** **onSceneUnloaded**(): [`Signal`](#signal-3)\<[`SceneInstance`](#sceneinstance)\>
 
 Emitted when a scene instance is unloaded. Never fires before Phase 2.
 
 ###### Returns
 
-[`Signal`](#signal)\<[`SceneInstance`](#sceneinstance)\>
+[`Signal`](#signal-3)\<[`SceneInstance`](#sceneinstance)\>
 
 The signal.
 
@@ -10848,13 +15319,13 @@ The live scene list.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-6)
+> **get** **world**(): [`World`](#world-12)
 
 The world itself; `WorldHost` names it so entities can reach it.
 
 ###### Returns
 
-[`World`](#world-6)
+[`World`](#world-12)
 
 This world.
 
@@ -10896,7 +15367,7 @@ The live list. O(1) to obtain, stable within a phase, and never allocated per ca
 
 ##### createEntity()
 
-> **createEntity**(`name?`, `options?`): [`Entity`](#entity-1)
+> **createEntity**(`name?`, `options?`): [`Entity`](#entity-2)
 
 Creates an entity with a transform and a Lite node.
 
@@ -10916,7 +15387,7 @@ The parent, the owning scene, and an initial world position and rotation.
 
 ###### Returns
 
-[`Entity`](#entity-1)
+[`Entity`](#entity-2)
 
 The new entity, already active and registered.
 
@@ -10939,7 +15410,7 @@ index. The Lite scene itself belongs to the app and is left alone.
 
 ##### findAllByName()
 
-> **findAllByName**(`name`): [`Entity`](#entity-1)[]
+> **findAllByName**(`name`): [`Entity`](#entity-2)[]
 
 Every entity with a name, depth-first from the roots of every scene.
 
@@ -10953,13 +15424,13 @@ The name to match exactly.
 
 ###### Returns
 
-[`Entity`](#entity-1)[]
+[`Entity`](#entity-2)[]
 
 A freshly allocated array; empty when nothing matches.
 
 ##### findByName()
 
-> **findByName**(`name`): [`Entity`](#entity-1) \| `null`
+> **findByName**(`name`): [`Entity`](#entity-2) \| `null`
 
 The first entity with a name, depth-first from the roots of every scene.
 
@@ -10973,7 +15444,7 @@ The name to match exactly.
 
 ###### Returns
 
-[`Entity`](#entity-1) \| `null`
+[`Entity`](#entity-2) \| `null`
 
 The first match, or `null`.
 
@@ -10985,7 +15456,7 @@ convenience, not a lookup the engine itself uses
 
 ##### findByTag()
 
-> **findByTag**(`tag`): readonly [`Entity`](#entity-1)[]
+> **findByTag**(`tag`): readonly [`Entity`](#entity-2)[]
 
 Every entity carrying a tag.
 
@@ -10999,7 +15470,7 @@ The tag.
 
 ###### Returns
 
-readonly [`Entity`](#entity-1)[]
+readonly [`Entity`](#entity-2)[]
 
 The live list of tagged entities. A tag nothing carries yields a shared frozen empty
 array.
@@ -11011,9 +15482,29 @@ and as entities are destroyed, so this is O(1) to obtain and allocates nothing. 
 **live** and its identity is stable for the tag's lifetime in this world, so it can be cached
 in `awake`; treat it as read-only.
 
+##### getComponentByHandle()
+
+> **getComponentByHandle**(`handle`): [`Component`](#abstract-component) \| `null`
+
+Resolves a dense component handle.
+
+###### Parameters
+
+###### handle
+
+[`ComponentHandle`](#componenthandle-1)
+
+The handle, as a Lite node's `metadata.ignifx` tag carries it.
+
+###### Returns
+
+[`Component`](#abstract-component) \| `null`
+
+The component, or `null` when the handle is stale.
+
 ##### getEntity()
 
-> **getEntity**(`uid`): [`Entity`](#entity-1) \| `null`
+> **getEntity**(`uid`): [`Entity`](#entity-2) \| `null`
 
 Looks an entity up by its stable identifier.
 
@@ -11027,13 +15518,13 @@ The ULID.
 
 ###### Returns
 
-[`Entity`](#entity-1) \| `null`
+[`Entity`](#entity-2) \| `null`
 
 The entity, or `null` when nothing in this world carries that uid.
 
 ##### getEntityByHandle()
 
-> **getEntityByHandle**(`handle`): [`Entity`](#entity-1) \| `null`
+> **getEntityByHandle**(`handle`): [`Entity`](#entity-2) \| `null`
 
 Resolves a dense runtime handle.
 
@@ -11047,10 +15538,249 @@ The handle.
 
 ###### Returns
 
-[`Entity`](#entity-1) \| `null`
+[`Entity`](#entity-2) \| `null`
 
 The entity, or `null` when the handle is stale — a handle kept across a destroy never
 resolves to whatever entity recycled the slot.
+
+##### instantiate()
+
+> **instantiate**(`scene`, `options?`): [`Entity`](#entity-2)
+
+Instantiates a loaded scene asset as a prefab (ADR-0005) and answers with its root.
+
+###### Parameters
+
+###### scene
+
+[`SceneAsset`](#sceneasset)
+
+The loaded scene asset.
+
+###### options?
+
+[`InstantiateOptions`](#instantiateoptions)
+
+Parent, owning instance, name, and initial placement.
+
+###### Returns
+
+[`Entity`](#entity-2)
+
+The instance root.
+
+###### Remarks
+
+Synchronous, because a `SceneAsset` carries its dependencies already loaded. Every entity gets
+a fresh uid and an `Entity.prefab` link (`02-scene-graph.md` §6, §10). A file with exactly one
+root answers with that root; a file with several gets a container entity named after the scene,
+so the call always answers with one entity.
+
+`awake` follows the same rule as `addComponent`: queued for the frame's lifecycle flush, or run
+nested and synchronously when `instantiate` is called from inside a callback
+(`01-lifecycle-and-time.md` §4).
+
+###### Throws
+
+IgnifxError with code `IGX-0301` when a scene the file instances is not loaded, and
+`IGX-0302` when instancing would nest a scene inside itself.
+
+###### Example
+
+```ts
+const enemy = world.instantiate(enemyPrefab, { position: { x: 4, y: 0, z: 2 } });
+```
+
+##### instantiateAsync()
+
+> **instantiateAsync**(`scene`, `options?`): `Promise`\<[`Entity`](#entity-2)\>
+
+Loads a scene asset and instantiates it (`docs/architecture/02-scene-graph.md` §2).
+
+###### Parameters
+
+###### scene
+
+`string` \| [`AssetRef`](#assetref-3)\<[`SceneAsset`](#sceneasset)\>
+
+The scene address, or a reference carrying one.
+
+###### options?
+
+[`InstantiateOptions`](#instantiateoptions)
+
+Parent, owning instance, name, and initial placement.
+
+###### Returns
+
+`Promise`\<[`Entity`](#entity-2)\>
+
+The instance root, once the asset and its dependencies have loaded.
+
+###### Example
+
+```ts
+const enemy = await world.instantiateAsync("prefabs/enemy.prefab.json");
+```
+
+##### loadScene()
+
+> **loadScene**(`scene`, `options?`): `Promise`\<[`SceneInstance`](#sceneinstance)\>
+
+Loads a scene file and builds its entities (`docs/architecture/02-scene-graph.md` §2).
+
+###### Parameters
+
+###### scene
+
+`string` \| [`AssetRef`](#assetref-3)\<[`SceneAsset`](#sceneasset)\>
+
+The scene address, or a reference carrying one.
+
+###### options?
+
+[`LoadSceneOptions`](#loadsceneoptions)
+
+The mode, cancellation, progress, and whether to make the result active.
+
+###### Returns
+
+`Promise`\<[`SceneInstance`](#sceneinstance)\>
+
+The instance, once every entity exists, every reference is resolved, and `awake` has
+run.
+
+###### Remarks
+
+`"single"` (the default) unloads every instance that is not `persistent` first — the implicit
+`"default"` scene is persistent, so entities created in code survive. The asset and everything
+it references are loaded before a single entity is created, which is what lets `asset()` fields
+be usable in `awake` (`06-serialization-and-scene-format.md` §4 step 2).
+
+Construction happens in one synchronous block once the asset is in memory, so nothing observes
+a half-built scene; `awake` and `onEnable` then run in tree order, through the world's own
+lifecycle flush, before the returned promise settles. A component queued for `awake` by
+something else earlier in the frame is flushed with it — the flush drains the whole queue, as
+it does in the frame.
+
+###### Throws
+
+IgnifxError with code `IGX-0502` when `options.signal` aborts, and whatever the asset
+system throws for a missing or malformed file.
+
+###### Example
+
+```ts
+const level = await world.loadScene("levels/level01.scene.json", { mode: "additive" });
+```
+
+##### moveEntityToScene()
+
+> **moveEntityToScene**(`entity`, `scene`): `void`
+
+Moves a root entity and its subtree to another scene instance
+(`docs/architecture/02-scene-graph.md` §6). This is the per-object equivalent of marking a
+whole instance `persistent`.
+
+###### Parameters
+
+###### entity
+
+[`Entity`](#entity-2)
+
+The entity to move; it must be a root.
+
+###### scene
+
+[`SceneInstance`](#sceneinstance)
+
+The instance that will own it.
+
+###### Returns
+
+`void`
+
+###### Throws
+
+IgnifxError with code `IGX-0309` when the entity has a parent — a child follows its
+parent's instance, so reparent it first — and `IGX-0101` when it has been destroyed.
+
+###### Example
+
+```ts
+world.moveEntityToScene(player, world.scenes[0]);
+```
+
+##### raycastRender()
+
+> **raycastRender**(`ray`, `options?`): [`RenderPick`](#renderpick) \| `null`
+
+Casts a ray against every renderable mesh in the world, on the CPU
+(`docs/architecture/07-rendering.md` §3).
+
+###### Parameters
+
+###### ray
+
+[`Ray`](#ray)
+
+The ray to cast.
+
+###### options?
+
+[`RenderPickOptions`](#renderpickoptions)
+
+An entity filter.
+
+###### Returns
+
+[`RenderPick`](#renderpick) \| `null`
+
+What was hit, or `null` for a miss.
+
+###### Remarks
+
+Distinct from a physics raycast (`09-physics.md` §5): this hits **render** geometry, including
+meshes that carry no collider, and it ignores visibility — a hidden mesh still occludes, which
+is Lite's documented behaviour (`src/lite/picking.ts`). It reads each mesh's CPU vertex copy, so
+a mesh built from a GPU-only path is silently skipped and `app.renderer.pickAsync` is the exact
+answer.
+
+###### Example
+
+```ts
+const hit = world.raycastRender(camera.screenToRay(x, y) ?? createRay());
+```
+
+##### unloadScene()
+
+> **unloadScene**(`instance`): `Promise`\<`void`\>
+
+Unloads a scene instance: `onUnloading` fires while its entities are still valid, its roots are
+destroyed through the normal destroy path (children before parents, `onDisable` then
+`onDestroy`), and the assets it held are released
+(`docs/architecture/02-scene-graph.md` §3).
+
+###### Parameters
+
+###### instance
+
+[`SceneInstance`](#sceneinstance)
+
+The instance to unload. Unloading the implicit `"default"` scene, or an
+instance this world does not own, does nothing.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the destroy flush has run.
+
+###### Example
+
+```ts
+await world.unloadScene(level);
+```
 
 ## Interfaces
 
@@ -11079,6 +15809,12 @@ class Menu extends Script {
 
 #### Properties
 
+##### assets
+
+> `readonly` **assets**: [`Assets`](#assets-1)
+
+Addressed, reference-counted asset loading (`docs/architecture/05-assets-and-loading.md` §4).
+
 ##### coroutines
 
 > `readonly` **coroutines**: [`CoroutineHost`](#coroutinehost)
@@ -11090,6 +15826,12 @@ The coroutine scheduler.
 > `readonly` **diagnostics**: [`Diagnostics`](#diagnostics-1)
 
 Per-frame counters and profiling scopes.
+
+##### events
+
+> `readonly` **events**: [`AppEvents`](#appevents-1)
+
+Engine-wide events (`docs/architecture/02-scene-graph.md` §8).
 
 ##### isHeadless
 
@@ -11117,7 +15859,7 @@ The app-scoped logger.
 
 ##### onError
 
-> `readonly` **onError**: [`Signal`](#signal)\<[`ErrorReport`](#errorreport)\>
+> `readonly` **onError**: [`Signal`](#signal-3)\<[`ErrorReport`](#errorreport)\>
 
 Every failure the engine caught at a boundary rather than rethrowing.
 
@@ -11127,6 +15869,13 @@ Every failure the engine caught at a boundary rather than rethrowing.
 
 Where the app is running (`docs/architecture/14-platform-electron.md` §1). Phase 1 answers only
 `kind`; the rest of §1's surface arrives with `@ignifx/electron`.
+
+##### renderer
+
+> `readonly` **renderer**: [`Renderer`](#renderer-1)
+
+Surface sizing, material warm-up, GPU picking, screenshots, and the render diagnostics
+(`docs/architecture/07-rendering.md` §1, §3, §5).
 
 ##### services
 
@@ -11154,7 +15903,7 @@ The `@ignifx/core` version this app was built from.
 
 ##### world
 
-> `readonly` **world**: [`World`](#world-6)
+> `readonly` **world**: [`World`](#world-12)
 
 The running simulation.
 
@@ -11253,6 +16002,56 @@ Stops the frame loop without disposing anything.
 ###### Returns
 
 `void`
+
+***
+
+### AppEvents
+
+The engine-wide events reached as `app.events` (`docs/architecture/02-scene-graph.md` §8,
+`07-rendering.md` §4). Extensions add their own signals through declaration merging, the same way
+they add app properties.
+
+#### Example
+
+```ts
+class Hud extends Script {
+  onEnable(): void {
+    this.app.events.onSceneLoaded.connect((scene) => this.rebuild(scene), { owner: this });
+  }
+}
+```
+
+#### Properties
+
+##### onDeviceLost
+
+> `readonly` **onDeviceLost**: [`SignalLike`](#signallike)\<[`DeviceLostInfo`](#devicelostinfo)\>
+
+The WebGPU device was lost; rendering is suspended while Lite rebuilds it.
+
+##### onDeviceRecovered
+
+> `readonly` **onDeviceRecovered**: [`SignalLike`](#signallike)
+
+The WebGPU device and its resources were rebuilt.
+
+##### onDeviceRecoveryFailed
+
+> `readonly` **onDeviceRecoveryFailed**: [`SignalLike`](#signallike)\<`unknown`\>
+
+Recovery failed; the payload is whatever the recovery path reported.
+
+##### onSceneLoaded
+
+> `readonly` **onSceneLoaded**: [`SignalLike`](#signallike)\<[`SceneInstance`](#sceneinstance)\>
+
+A scene instance and its entities exist.
+
+##### onSceneUnloaded
+
+> `readonly` **onSceneUnloaded**: [`SignalLike`](#signallike)\<[`SceneInstance`](#sceneinstance)\>
+
+A scene instance is about to be unloaded and its entities destroyed.
 
 ***
 
@@ -11386,11 +16185,530 @@ The `type` discriminator written into files, or `null` when the address is unamb
 
 ***
 
+### AssetHandle
+
+The reference-counted handle every load returns
+(`docs/architecture/05-assets-and-loading.md` §3). Handles are shared: two loads of the same
+`(address, type)` return the same object with `refCount` incremented, and each `load` must be
+paired with exactly one [AssetHandle.release](#release).
+
+#### Remarks
+
+A handle never becomes an invalid object. After the last holder releases it and the collector
+has run, `state` is `"released"` and reading `value` throws `IGX-0501`; loading the same address
+again starts a fresh load and returns a fresh handle.
+
+#### Example
+
+```ts
+const model = app.assets.load<ModelAsset>("models/hero.glb");
+// In a coroutine: `yield model.promise` resumes on the first Update after delivery.
+await model.promise;
+model.release();
+```
+
+#### Type Parameters
+
+##### T
+
+`T` = `unknown`
+
+The loaded value type.
+
+#### Properties
+
+##### address
+
+> `readonly` **address**: `string`
+
+The address this handle was requested under, fragment included.
+
+##### error
+
+> `readonly` **error**: [`AssetLoadError`](#assetloaderror) \| `null`
+
+Why the load failed, or `null` when it has not.
+
+##### onReplaced
+
+> `readonly` **onReplaced**: [`SignalLike`](#signallike)\<`T`\>
+
+Emitted at delivery when hot reload replaced the value; `value` is already the new one.
+
+##### progress
+
+> `readonly` **progress**: `number`
+
+How far along the load is, in `[0, 1]`; bytes-weighted when the sizes are known.
+
+##### promise
+
+> `readonly` **promise**: `Promise`\<`T`\>
+
+Resolves with [AssetHandle.value](#value) at delivery, or rejects with an [AssetLoadError](#assetloaderror).
+
+##### refCount
+
+> `readonly` **refCount**: `number`
+
+How many holders the handle has.
+
+##### state
+
+> `readonly` **state**: [`AssetState`](#assetstate)
+
+Where the handle is in its life.
+
+##### type
+
+> `readonly` **type**: `string`
+
+The asset type the loader is registered under, for example `"model"`.
+
+##### value
+
+> `readonly` **value**: `T`
+
+The loaded value.
+
+###### Throws
+
+IgnifxError with code `IGX-0501` unless `state` is `"loaded"`.
+
+#### Methods
+
+##### \[dispose\]()
+
+> **\[dispose\]**(): `void`
+
+Releases one holder when the handle leaves a `using` block — exactly [AssetHandle.release](#release)
+(`docs/architecture/05-assets-and-loading.md` §3).
+
+###### Returns
+
+`void`
+
+###### Example
+
+```ts
+using icon = app.assets.load<TextureAsset>("ui/icon.png");
+await icon.promise;
+```
+
+##### release()
+
+> **release**(): `void`
+
+Removes a holder. At zero the asset is unloaded after `assets.gcDelay` seconds.
+
+###### Returns
+
+`void`
+
+##### retain()
+
+> **retain**(): `this`
+
+Adds a holder.
+
+###### Returns
+
+`this`
+
+This handle, so a retain reads inline.
+
+***
+
+### AssetLoader
+
+How one asset type is turned into a value
+(`docs/architecture/05-assets-and-loading.md` §5). Loaders are pure with respect to the world:
+they produce values and never create entities.
+
+#### Example
+
+```ts
+const jsonLoader: AssetLoader<unknown> = {
+  type: "json",
+  extensions: [".json"],
+  load: (ctx) => ctx.fetchJson(),
+};
+```
+
+#### Type Parameters
+
+##### T
+
+`T` = `unknown`
+
+The value the loader produces.
+
+#### Properties
+
+##### extensions
+
+> `readonly` **extensions**: readonly `string`[]
+
+The address suffixes that select this loader, each with its leading dot.
+
+##### type
+
+> `readonly` **type**: `string`
+
+The type name the loader is registered under, for example `"texture"`.
+
+#### Methods
+
+##### load()
+
+> **load**(`ctx`): `Promise`\<`T`\>
+
+Produces the value.
+
+###### Parameters
+
+###### ctx
+
+[`LoaderContext`](#loadercontext)
+
+The address, the fetch helpers, and the abort signal.
+
+###### Returns
+
+`Promise`\<`T`\>
+
+The loaded value.
+
+##### parseFragment()?
+
+> `optional` **parseFragment**(`fragment`, `value`): `unknown`
+
+Extracts a sub-asset named by an address fragment, such as `#animation:Run`.
+
+###### Parameters
+
+###### fragment
+
+`string`
+
+The text after `#`.
+
+###### value
+
+`T`
+
+The base address's value.
+
+###### Returns
+
+`unknown`
+
+The sub-asset.
+
+###### Remarks
+
+Declaring it is what makes `models/hero.glb#animation:Run` load the base address once and share
+it: the fragment handle retains the base handle and its value is whatever this returns. A
+loader that does not declare it is invoked with the fragment in [LoaderContext.fragment](#fragment)
+and owns the whole address itself.
+
+##### reload()?
+
+> `optional` **reload**(`ctx`, `previous`): `Promise`\<`T`\>
+
+Re-produces the value in development hot reload. Defaults to unload plus load.
+
+###### Parameters
+
+###### ctx
+
+[`LoaderContext`](#loadercontext)
+
+The context for the new load.
+
+###### previous
+
+`T`
+
+The value being replaced.
+
+###### Returns
+
+`Promise`\<`T`\>
+
+The new value.
+
+##### unload()?
+
+> `optional` **unload**(`value`, `ctx`): `void`
+
+Releases whatever the value owns — GPU buffers, audio nodes, object URLs.
+
+###### Parameters
+
+###### value
+
+`T`
+
+The value [AssetLoader.load](#load) produced.
+
+###### ctx
+
+[`LoaderContext`](#loadercontext)
+
+The same context the load ran with.
+
+###### Returns
+
+`void`
+
+***
+
+### AssetLoadErrorOptions
+
+Options accepted by [AssetLoadError](#assetloaderror).
+
+#### Extends
+
+- [`IgnifxErrorOptions`](#ignifxerroroptions)
+
+#### Properties
+
+##### address
+
+> `readonly` **address**: `string`
+
+The address that failed.
+
+##### cause?
+
+> `optional` **cause?**: `unknown`
+
+###### Inherited from
+
+[`IgnifxErrorOptions`](#ignifxerroroptions).[`cause`](#cause-3)
+
+##### context?
+
+> `readonly` `optional` **context?**: `Readonly`\<`Record`\<`string`, `string` \| `number` \| `boolean` \| `null`\>\>
+
+Identifiers that locate the failure. Defaults to an empty record.
+
+###### Inherited from
+
+[`IgnifxErrorOptions`](#ignifxerroroptions).[`context`](#context-3)
+
+##### hint?
+
+> `readonly` `optional` **hint?**: `string` \| `null`
+
+One sentence telling the developer what to do about it. Defaults to `null`.
+
+###### Inherited from
+
+[`IgnifxErrorOptions`](#ignifxerroroptions).[`hint`](#hint-3)
+
+##### mode?
+
+> `readonly` `optional` **mode?**: [`ErrorFormatMode`](#errorformatmode)
+
+How verbose `message` should be. Defaults to `"development"`.
+
+###### Inherited from
+
+[`IgnifxErrorOptions`](#ignifxerroroptions).[`mode`](#mode-3)
+
+##### url
+
+> `readonly` **url**: `string`
+
+The URL it resolved to.
+
+***
+
+### AssetManifest
+
+The address-to-URL table generated by `@ignifx/vite-plugin`
+(`docs/architecture/05-assets-and-loading.md` §7).
+
+#### Properties
+
+##### entries
+
+> `readonly` **entries**: readonly [`AssetManifestEntry`](#assetmanifestentry)[]
+
+Every addressed file.
+
+##### format
+
+> `readonly` **format**: `"ignifx.manifest"`
+
+The file's format discriminator.
+
+##### formatVersion
+
+> `readonly` **formatVersion**: `1`
+
+The format version this build can read.
+
+##### root
+
+> `readonly` **root**: `string`
+
+The asset root every relative address is resolved against.
+
+***
+
+### AssetManifestEntry
+
+One address in the manifest (`docs/architecture/05-assets-and-loading.md` §7).
+
+#### Properties
+
+##### address
+
+> `readonly` **address**: `string`
+
+The address game code asks for.
+
+##### bytes?
+
+> `readonly` `optional` **bytes?**: `number`
+
+The byte size, when the build knows it; it makes progress bytes-weighted.
+
+##### groups?
+
+> `readonly` `optional` **groups?**: readonly `string`[]
+
+The group labels this entry belongs to, such as `"boot"` or `"level1"`.
+
+##### hash?
+
+> `readonly` `optional` **hash?**: `string`
+
+The content hash, for cache validation.
+
+##### meta?
+
+> `readonly` `optional` **meta?**: [`JsonObject`](#jsonobject)
+
+The `.meta.json` sidecar the build read for this address, verbatim
+(`docs/architecture/05-assets-and-loading.md` §7). Loaders read the sub-object they own — the
+texture loader reads `meta.texture`, the model loader reads `meta.model` — and ignore the rest,
+so one sidecar can carry options for several tools.
+
+###### Example
+
+```json
+{ "groups": ["level1"], "texture": { "srgb": true, "mipMaps": false } }
+```
+
+##### type?
+
+> `readonly` `optional` **type?**: `string`
+
+The asset type, when the extension does not identify it.
+
+##### url
+
+> `readonly` **url**: `string`
+
+The URL to fetch, usually content-hashed in production builds.
+
+***
+
+### AssetProgress
+
+The aggregate payload of [Assets.onProgress](#onprogress): how the current batch of work is going
+(`docs/architecture/05-assets-and-loading.md` §4).
+
+#### Properties
+
+##### bytesLoaded
+
+> `readonly` **bytesLoaded**: `number`
+
+Bytes received so far.
+
+##### bytesTotal
+
+> `readonly` **bytesTotal**: `number`
+
+Bytes expected, as far as the manifest and the response headers say.
+
+##### loaded
+
+> `readonly` **loaded**: `number`
+
+How many of the loads in flight have settled.
+
+##### total
+
+> `readonly` **total**: `number`
+
+How many loads are in the current run.
+
+***
+
+### AssetRef
+
+The serializable form of an asset reference (`docs/architecture/05-assets-and-loading.md` §2).
+It is a plain object so that it survives `JSON.stringify` and the schema codec unchanged; the way
+to turn one into a handle is `app.assets.load(ref)`, never a method on the reference.
+
+#### Example
+
+```ts
+const hero: AssetRef<ModelAsset> = assetRef("models/hero.glb");
+const handle = app.assets.load(hero);
+```
+
+#### Type Parameters
+
+##### T
+
+`T` = `unknown`
+
+The loaded value type this reference points at. It is a compile-time marker only:
+`assetOf` is never assigned at runtime and is never serialized. It exists so that
+`AssetRef<TextureAsset>` and `AssetRef<ModelAsset>` are different types.
+
+#### Properties
+
+##### address
+
+> `readonly` **address**: `string`
+
+The address, for example `models/hero.glb` or `sprites/ui.atlas.json#frame:button_idle`.
+
+##### assetOf?
+
+> `readonly` `optional` **assetOf?**: `T`
+
+Compile-time marker for the loaded value type; never present at runtime.
+
+##### type?
+
+> `readonly` `optional` **type?**: `string`
+
+The asset type name, when the address alone does not identify it.
+
+***
+
 ### AssetRefValue
 
-The value an `asset()` field holds. In Phase 1 a field stores the *address*, not the loaded
-handle: the assets service that turns an address into `AssetHandle<A>` arrives in Phase 2
-(`docs/architecture/05-assets-and-loading.md` §3).
+The plain, serializable form of an asset reference: what `{ "$asset": … }` decodes to before the
+asset service turns it into a handle, and what a tool that reads a scene file without an app
+works with (`docs/architecture/05-assets-and-loading.md` §2).
+
+#### Remarks
+
+It is **not** the runtime value of an `asset()` field. Since Phase 2 that value is
+`AssetHandle<A> | null`: a component receives the handle already loaded
+(`docs/architecture/05-assets-and-loading.md` §3), so `this.mesh?.value` reaches the asset with no
+second lookup. The two shapes overlap on `address`/`type`, which is why the encoder accepts
+either.
 
 #### Type Parameters
 
@@ -11421,6 +16739,441 @@ Compile-time marker for the asset type; never present at runtime.
 > `readonly` `optional` **type?**: `string`
 
 The asset type name, when the address alone does not identify it.
+
+***
+
+### Assets
+
+The asset service, reached as `app.assets`
+(`docs/architecture/05-assets-and-loading.md` §4).
+
+#### Example
+
+```ts
+const batch = app.assets.loadAll(["ui/font.ttf", "sprites/hero.png"]);
+app.assets.onProgress.connect((p) => bar.set(p.loaded / p.total));
+await batch.promise;
+```
+
+#### Properties
+
+##### gcDelay
+
+> **gcDelay**: `number`
+
+How many seconds a zero-reference asset stays cached. `0` unloads at the next delivery.
+
+##### manifest
+
+> `readonly` **manifest**: [`AssetManifest`](#assetmanifest)
+
+The address-to-URL table, empty until a build supplies one.
+
+##### onProgress
+
+> `readonly` **onProgress**: [`SignalLike`](#signallike)\<[`AssetProgress`](#assetprogress)\>
+
+Emitted at delivery whenever the aggregate progress of the loads in flight changed.
+
+#### Methods
+
+##### gc()
+
+> **gc**(): `void`
+
+Unloads every zero-reference asset now, without waiting for [Assets.gcDelay](#gcdelay).
+
+###### Returns
+
+`void`
+
+##### get()
+
+> **get**\<`T`\>(`address`): [`AssetHandle`](#assethandle)\<`T`\> \| `null`
+
+Looks a cached handle up without changing its reference count.
+
+###### Type Parameters
+
+###### T
+
+`T`
+
+The loaded value type.
+
+###### Parameters
+
+###### address
+
+`string`
+
+The address, fragment included.
+
+###### Returns
+
+[`AssetHandle`](#assethandle)\<`T`\> \| `null`
+
+The handle, or `null` when the address is not cached.
+
+##### load()
+
+> **load**\<`T`\>(`ref`, `options?`): [`AssetHandle`](#assethandle)\<`T`\>
+
+Requests an asset and returns its handle immediately.
+
+###### Type Parameters
+
+###### T
+
+`T`
+
+The loaded value type.
+
+###### Parameters
+
+###### ref
+
+`string` \| [`AssetRef`](#assetref-3)\<`T`\>
+
+The address, or a reference carrying one.
+
+###### options?
+
+[`LoadOptions`](#loadoptions)
+
+Priority, type, progress, and cancellation.
+
+###### Returns
+
+[`AssetHandle`](#assethandle)\<`T`\>
+
+The shared handle, with one more holder.
+
+###### Remarks
+
+Completion is delivered in the `PreUpdate` phase of a later frame, never mid-phase: `state`
+flips and `promise` settles at that one point
+(`docs/architecture/01-lifecycle-and-time.md` §3 step 2).
+
+An `options.signal` abort drops *this* request's hold. It aborts the shared load only when no
+other request is still interested in it; a load two scripts asked for keeps going when one of
+them cancels, and the shared handle still resolves.
+
+###### Throws
+
+IgnifxError with code `IGX-0504` when no loader claims the address, or `IGX-0106` when
+the app has been disposed.
+
+##### loadAll()
+
+> **loadAll**(`refs`, `options?`): [`BatchHandle`](#batchhandle)
+
+Requests several assets as one batch.
+
+###### Parameters
+
+###### refs
+
+readonly (`string` \| [`AssetRef`](#assetref-3)\<`unknown`\>)[]
+
+The addresses or references.
+
+###### options?
+
+[`LoadOptions`](#loadoptions)
+
+Priority, type, progress, and cancellation, applied to every member.
+
+###### Returns
+
+[`BatchHandle`](#batchhandle)
+
+The batch.
+
+##### loadAsync()
+
+> **loadAsync**\<`T`\>(`ref`, `options?`): `Promise`\<[`AssetHandle`](#assethandle)\<`T`\>\>
+
+Requests an asset and waits for the same delivery point [Assets.load](#load-1) settles at.
+
+###### Type Parameters
+
+###### T
+
+`T`
+
+The loaded value type.
+
+###### Parameters
+
+###### ref
+
+`string` \| [`AssetRef`](#assetref-3)\<`T`\>
+
+The address, or a reference carrying one.
+
+###### options?
+
+[`LoadOptions`](#loadoptions)
+
+Priority, type, progress, and cancellation.
+
+###### Returns
+
+`Promise`\<[`AssetHandle`](#assethandle)\<`T`\>\>
+
+The handle, once it has loaded.
+
+##### preloadGroup()
+
+> **preloadGroup**(`group`, `options?`): [`BatchHandle`](#batchhandle)
+
+Loads every manifest entry carrying a group label.
+
+###### Parameters
+
+###### group
+
+`string`
+
+The label, such as `"boot"`.
+
+###### options?
+
+[`LoadOptions`](#loadoptions)
+
+Priority, progress, and cancellation.
+
+###### Returns
+
+[`BatchHandle`](#batchhandle)
+
+The batch; empty when the manifest knows no such group.
+
+##### register()
+
+> **register**\<`T`\>(`value`, `options`): [`AssetHandle`](#assethandle)\<`T`\>
+
+Publishes a value built in code as an asset, so an `asset()` field can hold it
+(`docs/architecture/05-assets-and-loading.md` §3). This is what `MeshAsset.box(…)` and
+`MaterialAsset.pbr(…)` return.
+
+###### Type Parameters
+
+###### T
+
+`T`
+
+The value type.
+
+###### Parameters
+
+###### value
+
+`T`
+
+The already-built value.
+
+###### options
+
+[`RegisterAssetOptions`](#registerassetoptions)
+
+The asset type it is registered under, and an explicit address to publish it
+at instead of the generated one.
+
+###### Returns
+
+[`AssetHandle`](#assethandle)\<`T`\>
+
+The handle, with one holder.
+
+###### Remarks
+
+The handle is created already `loaded`, under a synthetic `memory:<type>/<ulid>` address, with
+one holder — the caller. It plays by the ordinary rules from there: `retain`/`release` count,
+the collector unloads it `gcDelay` seconds after the last holder lets go, and the registered
+type's loader `unload` runs then if one exists. Because the address names no file, serializing
+a component that references it writes `null` and reports the loss.
+
+###### Example
+
+```ts
+using box = app.assets.register(mesh, { type: "mesh" });
+```
+
+##### registerLoader()
+
+> **registerLoader**(`loader`): `void`
+
+Registers a loader. Extensions normally call `ctx.registerAssetLoader` instead.
+
+###### Parameters
+
+###### loader
+
+[`AssetLoader`](#assetloader)
+
+The loader.
+
+###### Returns
+
+`void`
+
+###### Throws
+
+IgnifxError with code `IGX-0506` when the type is already registered.
+
+##### registerType()
+
+> **registerType**(`type`): `void`
+
+Declares an asset type that has no loader yet.
+
+###### Parameters
+
+###### type
+
+[`AssetTypeDefinition`](#assettypedefinition)
+
+The type name and the extensions that select it.
+
+###### Returns
+
+`void`
+
+##### release()
+
+> **release**(`handleOrAddress`): `void`
+
+Removes one holder from a handle, by object or by address.
+
+###### Parameters
+
+###### handleOrAddress
+
+`string` \| [`AssetHandle`](#assethandle)\<`unknown`\>
+
+The handle, or the address it was requested under.
+
+###### Returns
+
+`void`
+
+##### resolveUrl()
+
+> **resolveUrl**(`address`): `string`
+
+Resolves an address to the URL the service fetches.
+
+###### Parameters
+
+###### address
+
+`string`
+
+The address; the fragment is stripped.
+
+###### Returns
+
+`string`
+
+The manifest's URL for the address, or `<root>/<address>`.
+
+***
+
+### AssetsCreateOptions
+
+The asset options [CreateAppOptions.assets](#assets-2) carries.
+
+#### Properties
+
+##### fetch?
+
+> `readonly` `optional` **fetch?**: (`input`, `init?`) => `Promise`\<`Response`\>
+
+The `fetch` every asset read goes through. Defaults to `globalThis.fetch`.
+
+[MDN Reference](https://developer.mozilla.org/docs/Web/API/Window/fetch)
+
+###### Parameters
+
+###### input
+
+`RequestInfo` \| `URL`
+
+###### init?
+
+`RequestInit`
+
+###### Returns
+
+`Promise`\<`Response`\>
+
+##### manifest?
+
+> `readonly` `optional` **manifest?**: [`AssetManifest`](#assetmanifest)
+
+The address-to-URL table. Defaults to an empty manifest rooted at the `assets` setting.
+
+***
+
+### AssetsSettings
+
+The `assets` project settings section
+(`docs/architecture/04-extensions.md` §5, `05-assets-and-loading.md` §4).
+
+#### Properties
+
+##### concurrency
+
+> `readonly` **concurrency**: `number`
+
+How many fetches may be in flight at once. Defaults to `6`.
+
+##### gcDelay
+
+> `readonly` **gcDelay**: `number`
+
+How many seconds a zero-reference asset stays cached. Defaults to `5`.
+
+##### preload
+
+> `readonly` **preload**: readonly `string`[]
+
+Manifest group labels loaded during `app.start()`. Defaults to none.
+
+##### retries
+
+> `readonly` **retries**: `number`
+
+How many times a failed fetch is retried. Defaults to `2`.
+
+##### root
+
+> `readonly` **root**: `string`
+
+The asset root relative addresses resolve against. Defaults to `"assets"`.
+
+***
+
+### AssetTypeDefinition
+
+An asset type declared without a loader, so that addresses resolve to a type before the loader
+that reads them is registered (`docs/architecture/04-extensions.md` §1).
+
+#### Properties
+
+##### extensions
+
+> `readonly` **extensions**: readonly `string`[]
+
+The address suffixes that select it, each with its leading dot.
+
+##### type
+
+> `readonly` **type**: `string`
+
+The type name, for example `"texture"`.
 
 ***
 
@@ -11455,6 +17208,105 @@ The instance shape the token names.
 
 ***
 
+### BatchHandle
+
+A group of loads requested together
+(`docs/architecture/05-assets-and-loading.md` §4).
+
+#### Properties
+
+##### handles
+
+> `readonly` **handles**: readonly [`AssetHandle`](#assethandle)\<`unknown`\>[]
+
+The handles the batch retains.
+
+##### progress
+
+> `readonly` **progress**: `number`
+
+The mean of the batch's handle progresses, in `[0, 1]`.
+
+##### promise
+
+> `readonly` **promise**: `Promise`\<`void`\>
+
+Settles once every handle in the batch has settled; rejects with the first failure.
+
+#### Methods
+
+##### cancel()
+
+> **cancel**(): `void`
+
+Aborts every load the batch started and releases it.
+
+###### Returns
+
+`void`
+
+##### release()
+
+> **release**(): `void`
+
+Releases every handle the batch retains. Calling it twice is a no-op.
+
+###### Returns
+
+`void`
+
+***
+
+### BloomEffectSettings
+
+The `bloom` record a `PostProcessStack` declares (`docs/architecture/07-rendering.md` §2.7).
+
+#### Properties
+
+##### enabled
+
+> **enabled**: `boolean`
+
+Whether the glow pass runs.
+
+##### exposure
+
+> **exposure**: `number`
+
+An exposure applied while extracting highlights.
+
+##### kernel
+
+> **kernel**: `number`
+
+The blur kernel width, in pixels.
+
+##### order
+
+> **order**: `number`
+
+Position in the chain; lower runs first.
+
+##### scale
+
+> **scale**: `number`
+
+The fraction of full resolution the blur runs at.
+
+##### threshold
+
+> **threshold**: `number`
+
+The luminance above which a pixel glows.
+
+##### weight
+
+> **weight**: `number`
+
+How strongly the glow is mixed back in.
+
+***
+
 ### BoolFieldSpec
 
 Kind-specific data for `bool`.
@@ -11466,6 +17318,70 @@ Kind-specific data for `bool`.
 > `readonly` **kind**: `"bool"`
 
 The boolean kind.
+
+***
+
+### BoxMeshOptions
+
+How [MeshAsset.box](#box) sizes its box, in metres. Give `size` for a cube, or the three
+dimensions.
+
+#### Properties
+
+##### depth?
+
+> `readonly` `optional` **depth?**: `number`
+
+Size along Z, overriding `size`.
+
+##### height?
+
+> `readonly` `optional` **height?**: `number`
+
+Size along Y, overriding `size`.
+
+##### size?
+
+> `readonly` `optional` **size?**: `number`
+
+Edge length on every axis.
+
+##### width?
+
+> `readonly` `optional` **width?**: `number`
+
+Size along X, overriding `size`.
+
+***
+
+### CapsuleMeshOptions
+
+How [MeshAsset.capsule](#capsule) sizes its capsule, which stands along Y.
+
+#### Remarks
+
+`height` is the **total** height including both caps, the same convention `@ignifx/physics` uses
+for a capsule collider, so one pair of numbers describes both.
+
+#### Properties
+
+##### height?
+
+> `readonly` `optional` **height?**: `number`
+
+Total height including both caps, in metres.
+
+##### radius?
+
+> `readonly` `optional` **radius?**: `number`
+
+Radius of the body and the caps.
+
+##### tessellation?
+
+> `readonly` `optional` **tessellation?**: `number`
+
+Radial segment count.
 
 ***
 
@@ -11774,7 +17690,7 @@ The component instance type the token stands for.
 
 ###### Inherited from
 
-[`ComponentStatics`](#componentstatics).[`allowMultiple`](#allowmultiple-1)
+[`ComponentStatics`](#componentstatics).[`allowMultiple`](#allowmultiple-2)
 
 ##### prototype
 
@@ -11800,7 +17716,7 @@ The serialized field declarations, set by `Component.define` / `Script.define`.
 
 ###### Inherited from
 
-[`ComponentStatics`](#componentstatics).[`schema`](#schema-1)
+[`ComponentStatics`](#componentstatics).[`schema`](#schema-2)
 
 ##### typeId?
 
@@ -11812,7 +17728,7 @@ derived from the class name, so minification and renames cannot change a file's 
 
 ###### Inherited from
 
-[`ComponentStatics`](#componentstatics).[`typeId`](#typeid-1)
+[`ComponentStatics`](#componentstatics).[`typeId`](#typeid-2)
 
 ***
 
@@ -11892,7 +17808,7 @@ schema defaults, then from the file or the `init` object.
 
 ###### Inherited from
 
-[`ComponentType`](#componenttype-1).[`allowMultiple`](#allowmultiple-2)
+[`ComponentType`](#componenttype-1).[`allowMultiple`](#allowmultiple-3)
 
 ##### prototype
 
@@ -11922,7 +17838,7 @@ The serialized field declarations, set by `Component.define` / `Script.define`.
 
 ###### Inherited from
 
-[`ComponentType`](#componenttype-1).[`schema`](#schema-2)
+[`ComponentType`](#componenttype-1).[`schema`](#schema-3)
 
 ##### typeId?
 
@@ -11934,7 +17850,7 @@ derived from the class name, so minification and renames cannot change a file's 
 
 ###### Inherited from
 
-[`ComponentType`](#componenttype-1).[`typeId`](#typeid-2)
+[`ComponentType`](#componenttype-1).[`typeId`](#typeid-3)
 
 ***
 
@@ -12209,6 +18125,20 @@ await app.start();
 
 #### Properties
 
+##### assets?
+
+> `readonly` `optional` **assets?**: [`AssetsCreateOptions`](#assetscreateoptions)
+
+The asset service's construction options
+(`docs/architecture/05-assets-and-loading.md` §7). The manifest normally arrives from
+`@ignifx/vite-plugin`; tests and Electron tooling pass it here.
+
+###### Remarks
+
+The `assets` **settings** section configures the root, the concurrency limit, the collector
+delay, and the retry count. The manifest and the injected `fetch` are not settings: neither
+survives schema validation, so they are creation options instead.
+
 ##### canvas?
 
 > `readonly` `optional` **canvas?**: [`RenderSurface`](#rendersurface)
@@ -12227,6 +18157,29 @@ to `performance.now()`; headless tests pass [createManualClock](#createmanualclo
 > `readonly` `optional` **extensions?**: readonly [`Extension`](#extension)[]
 
 The extensions to register, after the implicit core extension.
+
+##### fetch?
+
+> `readonly` `optional` **fetch?**: (`input`, `init?`) => `Promise`\<`Response`\>
+
+The `fetch` the asset service reads through, as a shorthand for `assets.fetch`. Defaults to
+`globalThis.fetch`; headless tests pass a fake so responses are deterministic.
+
+[MDN Reference](https://developer.mozilla.org/docs/Web/API/Window/fetch)
+
+###### Parameters
+
+###### input
+
+`RequestInfo` \| `URL`
+
+###### init?
+
+`RequestInit`
+
+###### Returns
+
+`Promise`\<`Response`\>
 
 ##### headless?
 
@@ -12273,9 +18226,21 @@ Options accepted by [World.createEntity](#createentity).
 
 #### Properties
 
+##### active?
+
+> `readonly` `optional` **active?**: `boolean`
+
+The entity's own `active` flag at creation. Defaults to `true`.
+
+###### Remarks
+
+Scene loading passes `false` so that no component can `awake` before the whole scene exists and
+its references are resolved (`docs/architecture/01-lifecycle-and-time.md` §4), then sets the
+file's value in tree order once construction is complete.
+
 ##### parent?
 
-> `readonly` `optional` **parent?**: [`Entity`](#entity-1)
+> `readonly` `optional` **parent?**: [`Entity`](#entity-2)
 
 The parent to attach the new entity to; `undefined` makes it a root of its scene.
 
@@ -12296,6 +18261,19 @@ The initial world rotation.
 > `readonly` `optional` **scene?**: [`SceneInstance`](#sceneinstance)
 
 The owning scene instance; defaults to the parent's scene, or `world.activeScene`.
+
+##### uid?
+
+> `readonly` `optional` **uid?**: `string`
+
+The uid to adopt instead of a freshly minted ULID.
+
+###### Remarks
+
+Scene loading passes the uid the file carries, which is what makes save → load → save
+byte-identical (`docs/architecture/06-serialization-and-scene-format.md` §1). A uid another
+entity of this world already holds is ignored and a fresh one minted, so two instances of one
+scene never collide (`02-scene-graph.md` §10).
 
 ***
 
@@ -12426,6 +18404,44 @@ The custom kind.
 
 ***
 
+### CylinderMeshOptions
+
+How [MeshAsset.cylinder](#cylinder) sizes its cylinder, which stands along Y.
+
+#### Properties
+
+##### diameter?
+
+> `readonly` `optional` **diameter?**: `number`
+
+Diameter of both ends.
+
+##### diameterBottom?
+
+> `readonly` `optional` **diameterBottom?**: `number`
+
+Diameter of the bottom cap, overriding `diameter`.
+
+##### diameterTop?
+
+> `readonly` `optional` **diameterTop?**: `number`
+
+Diameter of the top cap, overriding `diameter` — a cone is `diameterTop: 0`.
+
+##### height?
+
+> `readonly` `optional` **height?**: `number`
+
+Height along Y, in metres.
+
+##### tessellation?
+
+> `readonly` `optional` **tessellation?**: `number`
+
+Radial segment count.
+
+***
+
 ### DecodeResult
 
 What decoding produced: a value that is always usable — the field's default when the JSON could
@@ -12479,6 +18495,27 @@ The delivery to run.
 ###### Returns
 
 `void`
+
+***
+
+### DeviceLostInfo
+
+What Babylon Lite reported when the WebGPU device was lost
+(`docs/architecture/07-rendering.md` §4).
+
+#### Properties
+
+##### message
+
+> `readonly` **message**: `string`
+
+The human-readable message.
+
+##### reason
+
+> `readonly` **reason**: `string` \| `null`
+
+The `GPUDeviceLostInfo.reason` string, or `null` when the host gave none.
 
 ***
 
@@ -12579,7 +18616,7 @@ The counter name.
 
 `number`
 
-The index to pass to [DiagnosticsGroup.get](#get-1), `set`, and `add`.
+The index to pass to [DiagnosticsGroup.get](#get-2), `set`, and `add`.
 
 ###### Throws
 
@@ -12653,6 +18690,33 @@ has it and `Date.now` otherwise; tests pass a counter so timings are determinist
 
 ***
 
+### EntityPrefabLink
+
+The prefab link `Entity.prefab` returns for an entity a scene file's `instance` entry produced
+(`docs/architecture/02-scene-graph.md` §6).
+
+#### Properties
+
+##### address
+
+> `readonly` **address**: `string`
+
+The address of the instanced scene.
+
+##### asset
+
+> `readonly` **asset**: [`AssetHandle`](#assethandle)\<[`SceneAsset`](#sceneasset)\> \| `null`
+
+The handle the instanced scene was loaded through, or `null` when no asset service resolved one.
+
+##### instanceRoot
+
+> `readonly` **instanceRoot**: [`Entity`](#entity-2)
+
+The entity the `instance` entry sat on — the root of this instance.
+
+***
+
 ### EntityRefFieldSpec
 
 Kind-specific data for `entityRef`.
@@ -12684,6 +18748,116 @@ The enumeration kind.
 > `readonly` **values**: readonly `string`[]
 
 Every accepted string value, in declaration order.
+
+***
+
+### EnvironmentAssetLiteHandles
+
+The Babylon Lite objects an [EnvironmentAsset](#environmentasset) owns. Unstable escape hatch
+(`docs/architecture/00-overview.md` §3).
+
+#### Properties
+
+##### textures
+
+> `readonly` **textures**: `EnvironmentTextures` \| `null`
+
+The GPU-resident cube map, BRDF table, samplers, and harmonics, or `null` under a headless app.
+
+***
+
+### EnvironmentDefinition
+
+What an `.environment.json` declares, or what an `.env` address implies
+(`docs/architecture/06-serialization-and-scene-format.md` §6).
+
+#### Remarks
+
+The description file exists so a project can pin the skybox and the BRDF table next to the IBL
+rather than repeating them on every `Environment` component. Loading a bare `.env` address
+produces the same shape with everything but `environment` left at its default.
+
+#### Properties
+
+##### blur
+
+> `readonly` **blur**: `number`
+
+How blurred the specular reflection is, 0 to 1.
+
+##### brdfLut
+
+> `readonly` **brdfLut**: `string`
+
+The RGBD BRDF lookup table, or empty to take `rendering.brdfLut`.
+
+##### environment
+
+> `readonly` **environment**: `string`
+
+The `.env` file holding the prefiltered specular cube map and its spherical harmonics.
+
+##### rotation
+
+> `readonly` **rotation**: `number`
+
+Rotation around the world Y axis, in degrees.
+
+##### skybox
+
+> `readonly` **skybox**: `string`
+
+A `.dds` or `.env` skybox, or empty for none.
+
+##### skyboxEnabled
+
+> `readonly` **skyboxEnabled**: `boolean`
+
+Whether a skybox is drawn at all.
+
+##### skyboxSize
+
+> `readonly` **skyboxSize**: `number`
+
+The skybox cube's size, in metres. Lite defaults to 20.
+
+***
+
+### EnvironmentFogSettings
+
+The `fog` record an `Environment` declares (`docs/architecture/07-rendering.md` §2.5).
+
+#### Properties
+
+##### color
+
+> **color**: [`ColorLike`](#colorlike)
+
+The fog's sRGB colour.
+
+##### density
+
+> **density**: `number`
+
+Density, for the exponential modes.
+
+##### end
+
+> **end**: `number`
+
+Where linear fog reaches full strength, in metres.
+
+##### mode
+
+> **mode**: `"none"` \| `"linear"` \| `"exp"` \| `"exp2"`
+
+The falloff, or `"none"` to disable fog.
+
+##### start
+
+> **start**: `number`
+
+Where linear fog begins, in metres.
 
 ***
 
@@ -12821,7 +18995,7 @@ The component involved, or `null` when the failure is not component-scoped.
 
 ##### entity
 
-> `readonly` **entity**: [`Entity`](#entity-1) \| `null`
+> `readonly` **entity**: [`Entity`](#entity-2) \| `null`
 
 The entity involved, or `null` when the failure is not entity-scoped.
 
@@ -13030,6 +19204,47 @@ The teardown to run.
 
 `void`
 
+##### registerAssetLoader()
+
+> **registerAssetLoader**(`loader`): `void`
+
+Registers an asset loader (`docs/architecture/05-assets-and-loading.md` §5).
+
+###### Parameters
+
+###### loader
+
+[`AssetLoader`](#assetloader)
+
+The loader, which also declares the extensions that select its type.
+
+###### Returns
+
+`void`
+
+###### Throws
+
+IgnifxError with code `IGX-0506` when another extension already owns the type.
+
+##### registerAssetType()
+
+> **registerAssetType**(`type`): `void`
+
+Declares an asset type whose loader is registered separately, or not at all, so that addresses
+with its extensions resolve to a type (`docs/architecture/04-extensions.md` §1).
+
+###### Parameters
+
+###### type
+
+[`AssetTypeDefinition`](#assettypedefinition)
+
+The type name and the extensions that select it.
+
+###### Returns
+
+`void`
+
 ##### registerComponent()
 
 > **registerComponent**(`type`, `options?`): `void`
@@ -13146,7 +19361,7 @@ The section name as it appears in `ignifx.config.ts`.
 
 ###### schema
 
-[`Schema`](#schema-4)
+[`Schema`](#schema-10)
 
 The schema the section is validated against.
 
@@ -13215,6 +19430,45 @@ The instance.
 ###### Throws
 
 IgnifxError with code `IGX-0405` when the service is not registered.
+
+##### requireRenderingFeature()
+
+> **requireRenderingFeature**(`feature`): `void`
+
+Declares that this extension needs a rendering feature switched on
+(`docs/architecture/07-rendering.md` §1.1).
+
+###### Parameters
+
+###### feature
+
+keyof [`RenderingFeatureSettings`](#renderingfeaturesettings)
+
+The feature the extension needs.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+Babylon Lite compiles its shader permutations and records its frame graph inside
+`registerScene`, so every feature that changes what gets compiled has to be on before that
+call. `register` runs before `app.start()` does it, so this is a *declaration* there: the
+feature is switched on whether or not the project listed it. After the scene is registered it
+is a refusal instead.
+
+###### Throws
+
+IgnifxError with code `IGX-0704` when the render scene has already been registered.
+
+###### Example
+
+```ts
+register(ctx: ExtensionContext): void {
+  ctx.requireRenderingFeature("skeletons");
+}
+```
 
 ##### settings()
 
@@ -13399,6 +19653,21 @@ Excludes the field from saved games and scene files; it always takes its default
 
 ***
 
+### FontAssetLiteHandles
+
+The Babylon Lite objects a [FontAsset](#fontasset) owns. Unstable escape hatch
+(`docs/architecture/00-overview.md` §3).
+
+#### Properties
+
+##### font
+
+> `readonly` **font**: `Font`
+
+The parsed font. Present in headless mode too: parsing needs no device.
+
+***
+
 ### FrameSample
 
 One frame's counters.
@@ -13486,6 +19755,39 @@ and whether `destroyImmediate` is legal.
 
 ***
 
+### GroundMeshOptions
+
+How [MeshAsset.ground](#ground) sizes and subdivides its grid, which lies in the XZ plane facing
+`+Y`.
+
+#### Properties
+
+##### height?
+
+> `readonly` `optional` **height?**: `number`
+
+Size along Z, in metres.
+
+##### subdivisions?
+
+> `readonly` `optional` **subdivisions?**: `number`
+
+Quads per side.
+
+##### uvScale?
+
+> `readonly` `optional` **uvScale?**: readonly \[`number`, `number`\]
+
+UV multiplier, for tiling a texture across the grid.
+
+##### width?
+
+> `readonly` `optional` **width?**: `number`
+
+Size along X, in metres.
+
+***
+
 ### IgnifxErrorOptions
 
 Options accepted by [IgnifxError](#ignifxerror). Extends the standard `ErrorOptions`, so `cause` keeps
@@ -13494,6 +19796,10 @@ the original failure when an error is wrapped.
 #### Extends
 
 - `ErrorOptions`
+
+#### Extended by
+
+- [`AssetLoadErrorOptions`](#assetloaderroroptions)
 
 #### Properties
 
@@ -13525,6 +19831,154 @@ How verbose `message` should be. Defaults to `"development"`.
 
 ***
 
+### ImageProcessingEffectSettings
+
+The `imageProcessing` record a `PostProcessStack` declares
+(`docs/architecture/07-rendering.md` §2.7).
+
+#### Properties
+
+##### enabled
+
+> **enabled**: `boolean`
+
+Whether a full-screen grading pass runs.
+
+##### order
+
+> **order**: `number`
+
+Position in the chain; lower runs first.
+
+***
+
+### ImageProcessingSettings
+
+The `imageProcessing` record an `Environment` declares
+(`docs/architecture/07-rendering.md` §2.5).
+
+#### Properties
+
+##### contrast
+
+> **contrast**: `number`
+
+Contrast multiplier.
+
+##### exposure
+
+> **exposure**: `number`
+
+Exposure multiplier.
+
+##### toneMapping
+
+> **toneMapping**: `"none"` \| `"standard"` \| `"aces"` \| `"neutral"`
+
+The tone-mapping curve.
+
+***
+
+### InstantiateOptions
+
+Options accepted by [World.instantiate](#instantiate-1) and [World.instantiateAsync](#instantiateasync)
+(`docs/architecture/02-scene-graph.md` §2).
+
+#### Properties
+
+##### name?
+
+> `readonly` `optional` **name?**: `string`
+
+Renames the instance root.
+
+##### parent?
+
+> `readonly` `optional` **parent?**: [`Entity`](#entity-2) \| `null`
+
+The parent to attach the instance root to; `null` or omitted makes it a root.
+
+##### position?
+
+> `readonly` `optional` **position?**: [`Vec3Like`](#vec3like)
+
+Places the instance root.
+
+##### rotation?
+
+> `readonly` `optional` **rotation?**: [`QuatLike`](#quatlike)
+
+Rotates the instance root.
+
+##### scene?
+
+> `readonly` `optional` **scene?**: [`SceneInstance`](#sceneinstance)
+
+The instance that owns the new entities; defaults to the parent's, else `world.activeScene`.
+
+##### strictInstanceHashes?
+
+> `readonly` `optional` **strictInstanceHashes?**: `boolean`
+
+`true` turns an `IGX-0604` instance hash mismatch from a logged warning into a throw.
+
+##### worldSpace?
+
+> `readonly` `optional` **worldSpace?**: `boolean`
+
+`true` reads `position`/`rotation` as world values; `false` (the default) as local ones.
+
+***
+
+### InstantiateSceneOptions
+
+Options accepted by [instantiateScene](#instantiatescene).
+
+#### Properties
+
+##### asInstance?
+
+> `readonly` `optional` **asInstance?**: `boolean`
+
+`true` treats the whole file as one instance: every entity gets a fresh uid and an
+`Entity.prefab` link. This is what `world.instantiate` does; `world.loadScene` leaves it off so
+that the scene's own entities keep the uids the file gave them
+(`docs/architecture/02-scene-graph.md` §10).
+
+##### assetHandle?
+
+> `readonly` `optional` **assetHandle?**: [`AssetHandle`](#assethandle)\<[`SceneAsset`](#sceneasset)\> \| `null`
+
+The handle the scene was loaded through, recorded on `Entity.prefab` when `asInstance`.
+
+##### parent?
+
+> `readonly` `optional` **parent?**: [`Entity`](#entity-2) \| `null`
+
+The entity the scene's roots attach to; `null` or omitted makes them roots of `scene`.
+
+##### rootEntity?
+
+> `readonly` `optional` **rootEntity?**: [`Entity`](#entity-2) \| `null`
+
+The entity that stands for the instance when `asInstance` is set and the file has more or fewer
+than one root. `world.instantiate` creates it and passes it as both `parent` and `rootEntity`,
+so that the call still answers with one entity.
+
+##### scene?
+
+> `readonly` `optional` **scene?**: [`SceneInstance`](#sceneinstance)
+
+The instance that owns the new entities; defaults to the parent's, else `world.activeScene`.
+
+##### strictInstanceHashes?
+
+> `readonly` `optional` **strictInstanceHashes?**: `boolean`
+
+`true` turns an `IGX-0604` hash mismatch from a diagnostic into a throw.
+
+***
+
 ### LayerMaskFieldSpec
 
 Kind-specific data for `layerMask`.
@@ -13551,6 +20005,354 @@ The `layers` project settings section (`docs/architecture/04-extensions.md` §5,
 > `readonly` **layers**: readonly `string`[]
 
 The project's layer names in declaration order.
+
+***
+
+### LightShadowSettings
+
+The `shadows` record a `Light` declares (`docs/architecture/07-rendering.md` §2.2).
+
+#### Properties
+
+##### bias
+
+> **bias**: `number`
+
+Depth bias applied while sampling.
+
+##### cascades
+
+> **cascades**: `number`
+
+Cascade count, CSM only; Lite clamps it to four.
+
+##### darkness
+
+> **darkness**: `number`
+
+How dark a fully shadowed texel is: `0` is black, `1` is unshadowed.
+
+##### enabled
+
+> **enabled**: `boolean`
+
+Whether this light casts shadows.
+
+##### mapSize
+
+> **mapSize**: `number`
+
+Shadow map resolution, in texels per side.
+
+##### maxDistance
+
+> **maxDistance**: `number`
+
+The distance beyond which nothing is shadowed, in metres; `0` takes Lite's default.
+
+##### normalBias
+
+> **normalBias**: `number`
+
+Offset along the surface normal, PCF only.
+
+##### technique
+
+> **technique**: `"esm"` \| `"pcf"` \| `"csm"`
+
+The technique; spot lights ignore it and always use PCF, the only one Lite offers them.
+
+***
+
+### LoaderContext
+
+What a loader is handed for one load
+(`docs/architecture/05-assets-and-loading.md` §5).
+
+#### Remarks
+
+The three `fetch*` methods share one code path: the bytes are streamed through the service's
+priority queue, counted into the handle's progress, and aborted with [LoaderContext.signal](#signal).
+A loader that reaches the network any other way loses progress, cancellation, and retries.
+
+#### Properties
+
+##### address
+
+> `readonly` **address**: `string`
+
+The address being loaded, fragment included.
+
+##### app
+
+> `readonly` **app**: [`App`](#app)
+
+The app the load belongs to.
+
+##### fragment
+
+> `readonly` **fragment**: `string` \| `null`
+
+The `#fragment` part of the address, or `null` when it carries none.
+
+##### lite
+
+> `readonly` **lite**: `object`
+
+Unstable Babylon Lite escape hatch for GPU loaders (`docs/architecture/00-overview.md` §3).
+
+###### engine
+
+> `readonly` **engine**: `EngineContext`
+
+##### meta
+
+> `readonly` **meta**: [`JsonObject`](#jsonobject) \| `null`
+
+The `.meta.json` sidecar the build recorded for this address, or `null` when the manifest lists
+none (`docs/architecture/05-assets-and-loading.md` §7).
+
+###### Remarks
+
+Read the sub-object your loader owns and ignore the rest: one sidecar carries options for
+several tools, and `groups` in it belongs to the manifest generator, not to a loader.
+
+###### Example
+
+```ts
+const srgb = asRecord(ctx.meta?.["texture"])?.["srgb"] === true;
+```
+
+##### signal
+
+> `readonly` **signal**: `AbortSignal`
+
+Aborted when the request is cancelled or the app is disposed.
+
+##### type
+
+> `readonly` **type**: `string`
+
+The asset type the loader is registered under.
+
+##### url
+
+> `readonly` **url**: `string`
+
+The URL the address resolved to, fragment stripped.
+
+#### Methods
+
+##### fetchBytes()
+
+> **fetchBytes**(): `Promise`\<`ArrayBuffer`\>
+
+Fetches the address as bytes, with progress and cancellation.
+
+###### Returns
+
+`Promise`\<`ArrayBuffer`\>
+
+The response body.
+
+##### fetchJson()
+
+> **fetchJson**\<`J`\>(): `Promise`\<`J`\>
+
+Fetches the address and parses it as JSON.
+
+###### Type Parameters
+
+###### J
+
+`J` = `unknown`
+
+The parsed shape, as the loader declares it.
+
+###### Returns
+
+`Promise`\<`J`\>
+
+The parsed body.
+
+##### fetchText()
+
+> **fetchText**(): `Promise`\<`string`\>
+
+Fetches the address as UTF-8 text.
+
+###### Returns
+
+`Promise`\<`string`\>
+
+The decoded body.
+
+##### loadDependency()
+
+> **loadDependency**\<`D`\>(`ref`, `options?`): `Promise`\<[`AssetHandle`](#assethandle)\<`D`\>\>
+
+Loads another asset as a dependency of this one: its progress counts into this load and the
+retain it takes is released when this asset is unloaded.
+
+###### Type Parameters
+
+###### D
+
+`D`
+
+The dependency's loaded value type.
+
+###### Parameters
+
+###### ref
+
+`string` \| [`AssetRef`](#assetref-3)\<`D`\>
+
+The dependency's address or reference.
+
+###### options?
+
+[`LoadOptions`](#loadoptions)
+
+Priority, type, progress, and cancellation.
+
+###### Returns
+
+`Promise`\<[`AssetHandle`](#assethandle)\<`D`\>\>
+
+The dependency's handle, once it has been delivered.
+
+##### reportProgress()
+
+> **reportProgress**(`fraction`): `void`
+
+Reports progress for loaders that cannot express it in bytes.
+
+###### Parameters
+
+###### fraction
+
+`number`
+
+How far along the load is, in `[0, 1]`.
+
+###### Returns
+
+`void`
+
+***
+
+### LoadOptions
+
+Options accepted by every load entry point of [Assets](#assets-1).
+
+#### Properties
+
+##### onProgress?
+
+> `readonly` `optional` **onProgress?**: (`fraction`) => `void`
+
+Called at delivery whenever this request's progress changed.
+
+###### Parameters
+
+###### fraction
+
+`number`
+
+How far along the load is, in `[0, 1]`.
+
+###### Returns
+
+`void`
+
+##### priority?
+
+> `readonly` `optional` **priority?**: `number`
+
+Higher runs first; ties break in request order. Defaults to `0`.
+
+##### signal?
+
+> `readonly` `optional` **signal?**: `AbortSignal`
+
+Aborts this request. Whether it aborts the shared load is documented on [Assets.load](#load-1).
+
+##### type?
+
+> `readonly` `optional` **type?**: `string`
+
+The asset type, when the address's extension does not identify it.
+
+***
+
+### LoadProgress
+
+How far a scene load has got, as `world.loadScene`'s `onProgress` reports it.
+
+#### Properties
+
+##### address
+
+> `readonly` **address**: `string`
+
+The address being loaded.
+
+##### fraction
+
+> `readonly` **fraction**: `number`
+
+How far along, in `[0, 1]`, counting every dependency the scene pulls in.
+
+***
+
+### LoadSceneOptions
+
+Options accepted by [World.loadScene](#loadscene) (`docs/architecture/02-scene-graph.md` §2).
+
+#### Properties
+
+##### mode?
+
+> `readonly` `optional` **mode?**: `"single"` \| `"additive"`
+
+`"single"` (the default) unloads every instance that is not `persistent` first; `"additive"`
+keeps them.
+
+##### onProgress?
+
+> `readonly` `optional` **onProgress?**: (`progress`) => `void`
+
+Called as the scene and its dependencies load.
+
+###### Parameters
+
+###### progress
+
+[`LoadProgress`](#loadprogress)
+
+###### Returns
+
+`void`
+
+##### setActive?
+
+> `readonly` `optional` **setActive?**: `boolean`
+
+Makes the loaded instance `world.activeScene`. Defaults to `true` for a `"single"` load and
+`false` for an additive one, which is what "the level you just loaded owns new entities" means.
+
+##### signal?
+
+> `readonly` `optional` **signal?**: `AbortSignal`
+
+Cancels the load; an abort after the asset arrived still rejects with `IGX-0502`.
+
+##### strictInstanceHashes?
+
+> `readonly` `optional` **strictInstanceHashes?**: `boolean`
+
+`true` turns an `IGX-0604` instance hash mismatch from a logged warning into a throw.
 
 ***
 
@@ -14005,6 +20807,21 @@ Always exactly 16.
 
 ***
 
+### MaterialAssetLiteHandles
+
+The Babylon Lite objects a [MaterialAsset](#materialasset) owns. Unstable escape hatch
+(`docs/architecture/00-overview.md` §3).
+
+#### Properties
+
+##### material
+
+> `readonly` **material**: `Material`
+
+The Lite material. Present in headless mode too: a material is plain data.
+
+***
+
 ### MemorySink
 
 A [LogSink](#logsink-1) that keeps the most recent records in a fixed-size ring buffer. Used by the
@@ -14095,6 +20912,93 @@ The record to write.
 ###### Inherited from
 
 [`LogSink`](#logsink-1).[`write`](#write)
+
+***
+
+### MeshAssetLiteHandles
+
+The Babylon Lite objects a [MeshAsset](#meshasset) owns. Unstable escape hatch
+(`docs/architecture/00-overview.md` §3).
+
+#### Properties
+
+##### mesh
+
+> `readonly` **mesh**: `Mesh` \| `null`
+
+The template mesh, or `null` under a headless app, which uploads no geometry.
+
+***
+
+### MeshGeometryData
+
+Raw vertex data for [MeshAsset.fromData](#fromdata).
+
+#### Remarks
+
+Lite keeps references to these arrays rather than copying them — they are what its CPU ray pick
+and its bounds read (`lib/mesh/mesh-factories.js`) — so a caller must not mutate them afterwards.
+
+#### Properties
+
+##### indices
+
+> `readonly` **indices**: `Uint32Array`
+
+Three indices per triangle.
+
+##### normals
+
+> `readonly` **normals**: `Float32Array`
+
+Three floats per vertex, one normal each.
+
+##### positions
+
+> `readonly` **positions**: `Float32Array`
+
+Three floats per vertex.
+
+##### uvs?
+
+> `readonly` `optional` **uvs?**: `Float32Array`\<`ArrayBufferLike`\>
+
+Two floats per vertex, or omitted for a mesh with no texture coordinates.
+
+***
+
+### ModelAssetLiteHandles
+
+The Babylon Lite objects a [ModelAsset](#modelasset) owns. Unstable escape hatch
+(`docs/architecture/00-overview.md` §3).
+
+#### Properties
+
+##### container
+
+> `readonly` **container**: `AssetContainer` \| `null`
+
+The template container, or `null` under a headless app.
+
+***
+
+### ModelInstantiation
+
+One instantiated copy of a model, as a `Model` component holds it.
+
+#### Properties
+
+##### nodes
+
+> `readonly` **nodes**: `ReadonlyMap`\<`string`, `SceneNode`\>
+
+Every named node in the clone, keyed by its glTF node name.
+
+##### root
+
+> `readonly` **root**: `SceneNode`
+
+The cloned container root, parented under the entity's node.
 
 ***
 
@@ -14480,6 +21384,130 @@ The optional kind.
 
 ***
 
+### PbrMaterialDefinition
+
+The properties a `"pbr"` material declares. Every colour is sRGB; every factor is unitless.
+
+#### Properties
+
+##### alpha
+
+> `readonly` **alpha**: `number`
+
+Overall material alpha, 0 to 1.
+
+##### alphaCutoff
+
+> `readonly` **alphaCutoff**: `number`
+
+The cutoff below which a `"mask"` material discards a fragment.
+
+##### alphaMode
+
+> `readonly` **alphaMode**: `"opaque"` \| `"mask"` \| `"blend"`
+
+How the alpha channel is interpreted.
+
+##### baseColor
+
+> `readonly` **baseColor**: [`ColorLike`](#colorlike)
+
+sRGB base colour and alpha, multiplied with the base colour texture.
+
+##### doubleSided
+
+> `readonly` **doubleSided**: `boolean`
+
+Whether back faces are drawn.
+
+##### emissive
+
+> `readonly` **emissive**: [`ColorLike`](#colorlike)
+
+sRGB emissive colour.
+
+##### environmentIntensity
+
+> `readonly` **environmentIntensity**: `number`
+
+How strongly the environment map contributes.
+
+##### kind
+
+> `readonly` **kind**: `"pbr"`
+
+The family discriminator.
+
+##### metallic
+
+> `readonly` **metallic**: `number`
+
+Metallic factor, 0 to 1.
+
+##### name
+
+> `readonly` **name**: `string`
+
+A human-readable name; glTF material overrides match on it.
+
+##### normalScale
+
+> `readonly` **normalScale**: `number`
+
+Normal map strength.
+
+##### occlusionStrength
+
+> `readonly` **occlusionStrength**: `number`
+
+How strongly ambient occlusion darkens the surface, 0 to 1.
+
+##### roughness
+
+> `readonly` **roughness**: `number`
+
+Roughness factor, 0 to 1.
+
+##### textures
+
+> `readonly` **textures**: `Readonly`\<`Record`\<`string`, `string`\>\>
+
+The addresses of the textures the material samples, by slot; absent slots are unset.
+
+##### unlit
+
+> `readonly` **unlit**: `boolean`
+
+Whether lighting is skipped entirely.
+
+***
+
+### PlaneMeshOptions
+
+How [MeshAsset.plane](#plane) sizes its quad, which lies in the XY plane facing `-Z`.
+
+#### Properties
+
+##### height?
+
+> `readonly` `optional` **height?**: `number`
+
+Height, overriding `size`.
+
+##### size?
+
+> `readonly` `optional` **size?**: `number`
+
+Edge length on both axes, in metres.
+
+##### width?
+
+> `readonly` `optional` **width?**: `number`
+
+Width, overriding `size`.
+
+***
+
 ### PlatformInfo
 
 What the kernel knows about the host.
@@ -14518,7 +21546,7 @@ outside development builds `profile` returns a shared scope that does nothing at
 > `readonly` **durationMs**: `number`
 
 How long the scope was open, in milliseconds of the diagnostics clock. Valid between
-[ProfileScope.end](#end) and the next [Diagnostics.profile](#profile) call at the same nesting
+[ProfileScope.end](#end-1) and the next [Diagnostics.profile](#profile) call at the same nesting
 depth, because scopes are pooled. Always `0` outside development builds.
 
 #### Methods
@@ -14601,6 +21629,70 @@ by the linter's reference-value rule.
 
 ***
 
+### Ray
+
+A world-space ray, as `Camera.screenToRay` produces and `world.raycastRender` consumes
+(`docs/architecture/07-rendering.md` §3).
+
+#### Remarks
+
+Both vectors are written in place, so a picking loop reuses one ray and allocates nothing
+(coding standards §7).
+
+#### Properties
+
+##### direction
+
+> `readonly` **direction**: [`RayVector`](#rayvector)
+
+The unit direction it travels in.
+
+##### length
+
+> **length**: `number`
+
+How far it reaches, in metres.
+
+##### origin
+
+> `readonly` **origin**: [`RayVector`](#rayvector)
+
+Where the ray starts, in world space.
+
+***
+
+### RayVector
+
+A writable `{ x, y, z }` a ray's origin and direction are stated in.
+
+#### Remarks
+
+Deliberately the minimal shape rather than the math module's `MutableVec3`: the engine's `Vec3`,
+a plain object literal, and a live view over a Lite node all satisfy it, so nothing has to be
+converted to build or read a ray.
+
+#### Properties
+
+##### x
+
+> **x**: `number`
+
+The x component.
+
+##### y
+
+> **y**: `number`
+
+The y component.
+
+##### z
+
+> **z**: `number`
+
+The z component.
+
+***
+
 ### RecordFieldSpec
 
 Kind-specific data for `record`.
@@ -14609,7 +21701,7 @@ Kind-specific data for `record`.
 
 ##### fields
 
-> `readonly` **fields**: [`Schema`](#schema-4)
+> `readonly` **fields**: [`Schema`](#schema-10)
 
 The sub-fields, in declaration order.
 
@@ -14626,6 +21718,40 @@ The record kind.
 How the loader turns a uid read from a file back into a live entity or component.
 
 #### Methods
+
+##### asset()
+
+> **asset**(`address`, `type`): `unknown`
+
+Resolves an asset address to the loaded handle an `asset()` field should hold
+(`docs/architecture/05-assets-and-loading.md` §3).
+
+###### Parameters
+
+###### address
+
+`string`
+
+The address the file carries, fragment included.
+
+###### type
+
+`string` \| `null`
+
+The asset type the field or the file declared, or `null` when the address's
+extension identifies it on its own.
+
+###### Returns
+
+`unknown`
+
+The handle, or `null` when nothing loaded stands at that address.
+
+###### Remarks
+
+The scene loader answers from the dependency handles the `SceneAsset` already retains, so the
+field never starts a load of its own and never owns a reference count. A resolver that returns
+`null` — an address nothing loaded — makes the field `null` and adds an `IGX-0602` issue.
 
 ##### component()
 
@@ -14719,6 +21845,27 @@ The uid, or `null` when the target is not part of the file being written.
 
 ***
 
+### RegisterAssetOptions
+
+Options accepted by [Assets.register](#register).
+
+#### Properties
+
+##### address?
+
+> `readonly` `optional` **address?**: `string`
+
+The address to publish it at. Defaults to a generated `memory:<type>/<ulid>`; pass one only to
+make an in-code asset reachable by name from `app.assets.get`.
+
+##### type
+
+> `readonly` **type**: `string`
+
+The asset type the value is published under, for example `"mesh"` or `"material"`.
+
+***
+
 ### RegisterComponentOptions
 
 Options accepted by `ExtensionContext.registerComponent`.
@@ -14750,6 +21897,904 @@ Ascending order within the phase; core uses `[-1000, 1000]`, extensions `[1001, 
 > `readonly` **phase**: [`Phase`](#phase-2)
 
 Which phase the system runs in.
+
+***
+
+### RenderCapture
+
+A captured frame (`docs/architecture/07-rendering.md` §5).
+
+#### Remarks
+
+Tightly packed RGBA8, four bytes per pixel, row-major with the **top** row first — the layout
+`ImageData` wants. Alpha is forced to 255 because the swapchain is presented opaque, and the
+values are the final presented 8-bit colours, so comparing two captures compares what the player
+saw.
+
+#### Properties
+
+##### data
+
+> `readonly` **data**: `Uint8ClampedArray`
+
+`width * height * 4` bytes of RGBA8.
+
+##### height
+
+> `readonly` **height**: `number`
+
+The capture height, in device pixels.
+
+##### width
+
+> `readonly` **width**: `number`
+
+The capture width, in device pixels.
+
+***
+
+### Renderer
+
+The rendering service, reached as `app.renderer`
+(`docs/architecture/07-rendering.md` §1, §3, §5).
+
+#### Example
+
+```ts
+app.renderer.resolutionScale = 0.75;
+const hit = await app.renderer.pickAsync(event.offsetX, event.offsetY);
+hit?.entity.name;
+```
+
+#### Properties
+
+##### drawCalls
+
+> `readonly` **drawCalls**: `number`
+
+GPU draw calls in the last rendered frame. `0` under a headless app.
+
+##### features
+
+> `readonly` **features**: `Readonly`\<[`RenderingFeatureSettings`](#renderingfeaturesettings)\>
+
+Which rendering features are on. Read-only once `app.start()` has registered the scene.
+
+##### gpuFrameTimeMs
+
+> `readonly` **gpuFrameTimeMs**: `number`
+
+How long the last measured frame took on the GPU, in milliseconds. `0` until timing is on.
+
+##### pixelRatio
+
+> **pixelRatio**: `number`
+
+The clamp on the device pixel ratio the swapchain is sized at; `0` does not clamp. Writing it
+resizes the backing store before the next frame.
+
+##### profileTasks
+
+> **profileTasks**: `boolean`
+
+Whether per-task GPU timings are collected. Off by default; it costs timestamp queries.
+
+##### resolutionScale
+
+> **resolutionScale**: `number`
+
+A live quality multiplier on the resolution, clamped to 0.25–1 and implemented by lowering the
+effective device pixel ratio (`docs/architecture/07-rendering.md` §1).
+
+#### Methods
+
+##### captureScreenshot()
+
+> **captureScreenshot**(): `Promise`\<[`RenderCapture`](#rendercapture)\>
+
+Captures the next presented frame (`docs/architecture/07-rendering.md` §5).
+
+###### Returns
+
+`Promise`\<[`RenderCapture`](#rendercapture)\>
+
+The frame, as tightly packed RGBA8 with the top row first.
+
+###### Throws
+
+IgnifxError with code `IGX-0707` when no render loop is running, because the capture
+would never settle.
+
+##### pickAsync()
+
+> **pickAsync**(`x`, `y`, `options?`): `Promise`\<[`RenderPick`](#renderpick) \| `null`\>
+
+Picks the object under one CSS pixel of the canvas, exactly, on the GPU
+(`docs/architecture/07-rendering.md` §3).
+
+###### Parameters
+
+###### x
+
+`number`
+
+The CSS pixel x, from the canvas's left edge.
+
+###### y
+
+`number`
+
+The CSS pixel y, from the canvas's top edge.
+
+###### options?
+
+[`RenderPickOptions`](#renderpickoptions)
+
+An entity filter.
+
+###### Returns
+
+`Promise`\<[`RenderPick`](#renderpick) \| `null`\>
+
+What was hit, or `null` for a miss.
+
+###### Remarks
+
+Picks are serialised per app: Lite's picker owns one set of staging buffers and chains each
+call onto the previous one's promise. A headless app has no picker and always misses.
+
+##### requireFeature()
+
+> **requireFeature**(`feature`): `void`
+
+Declares that a rendering feature must be on — what an extension calls from `register`
+(`docs/architecture/07-rendering.md` §1.1).
+
+###### Parameters
+
+###### feature
+
+keyof [`RenderingFeatureSettings`](#renderingfeaturesettings)
+
+The feature the caller needs.
+
+###### Returns
+
+`void`
+
+###### Throws
+
+IgnifxError with code `IGX-0704` when the render scene has already been registered, at
+which point Lite has compiled what it is going to compile.
+
+##### setSize()
+
+> **setSize**(`width`, `height`): `void`
+
+Sets the swapchain's backing-store size explicitly, in device pixels — the `OffscreenCanvas`
+path (`docs/architecture/07-rendering.md` §1).
+
+###### Parameters
+
+###### width
+
+`number`
+
+The width, in device pixels.
+
+###### height
+
+`number`
+
+The height, in device pixels.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+On a laid-out DOM canvas the size survives exactly one frame: Lite's render loop re-reads the
+layout size at the start of every frame. Use [Renderer.pixelRatio](#pixelratio) there instead.
+
+##### taskTimings()
+
+> **taskTimings**(): [`RenderTaskTimings`](#rendertasktimings)
+
+The latest per-task GPU timing snapshot. Check `status` before reading `tasks`.
+
+###### Returns
+
+[`RenderTaskTimings`](#rendertasktimings)
+
+The snapshot.
+
+##### warmUp()
+
+> **warmUp**(`materials`): `void`
+
+Compiles the material families of the given materials now, so a mesh that uses one of them
+later draws on the next frame instead of several frames after that (ADR-0014).
+
+###### Parameters
+
+###### materials
+
+readonly [`MaterialAsset`](#materialasset)[]
+
+The materials whose families must be compiled.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+`app.start()` already does this for every material in the `boot` preload group. Call it by hand
+for a spawn-heavy game that loads a material mid-level and wants to pay the cost at a moment of
+its choosing.
+
+***
+
+### RenderingFeatureSettings
+
+The rendering features a project switches on (`docs/architecture/07-rendering.md` §1.1). Every one
+of them changes what Lite compiles at `registerScene`, so they are declared up front and a late
+toggle is `IGX-0704`.
+
+#### Properties
+
+##### asyncPipelines
+
+> `readonly` **asyncPipelines**: `boolean`
+
+Compile shader pipelines asynchronously instead of blocking the first draw.
+
+##### boneControl
+
+> `readonly` **boneControl**: `boolean`
+
+Build the glTF loader's skeleton handles, needed before loading a skinned asset.
+
+##### deviceLostRecovery
+
+> `readonly` **deviceLostRecovery**: `boolean`
+
+Rebuild scenes and their resources after the WebGPU device is lost.
+
+##### lightmaps
+
+> `readonly` **lightmaps**: `boolean`
+
+Load the PBR lightmap fragment extension.
+
+##### materialPlugins
+
+> `readonly` **materialPlugins**: `boolean`
+
+Install the material plugin bridges and the scene hook they need.
+
+##### postProcessing
+
+> `readonly` **postProcessing**: `boolean`
+
+Render the scene into an offscreen target and composite it, so a `PostProcessStack` has
+something it is allowed to sample. Off by default: it costs one full-screen blit per frame.
+
+##### shadows
+
+> `readonly` **shadows**: `boolean`
+
+Register the scene with a shadow pass, so a `Light` can cast.
+
+##### skeletons
+
+> `readonly` **skeletons**: `boolean`
+
+Compile the Standard pipeline's skinning fragment, for skinned meshes.
+
+##### stencil
+
+> `readonly` **stencil**: `boolean`
+
+Install stencil resolvers on the PBR, Standard, and Shader pipelines.
+
+***
+
+### RenderingSettings
+
+The resolved `rendering` settings section
+(`docs/architecture/04-extensions.md` §5, `07-rendering.md` §1).
+
+#### Example
+
+```ts
+const app = await createApp({
+  canvas,
+  settings: { rendering: { features: { shadows: true }, msaaSamples: 1 } },
+});
+```
+
+#### Properties
+
+##### alphaMode
+
+> `readonly` **alphaMode**: `"opaque"` \| `"premultiplied"`
+
+How the canvas composites with the page. `"premultiplied"` lets HTML show through.
+
+##### brdfLut
+
+> `readonly` **brdfLut**: `string`
+
+The address of the RGBD BRDF lookup table `loadEnvironment` requires.
+
+##### clearColor
+
+> `readonly` **clearColor**: [`ColorLike`](#colorlike)
+
+The colour the scene is cleared to each frame, in sRGB.
+
+###### Remarks
+
+Applied to the render scene as it is created, which makes it the floor of a three-step
+precedence (`docs/architecture/07-rendering.md` §2.1, §2.5): `Camera.clearColor` on the main
+camera wins whenever it is not `null`, an `Environment.clearColor` wins over this setting, and
+this setting wins over Babylon Lite's own mid grey.
+
+##### features
+
+> `readonly` **features**: [`RenderingFeatureSettings`](#renderingfeaturesettings)
+
+The feature opt-ins, applied during `app.start()` before the scene is registered.
+
+##### format
+
+> `readonly` **format**: `string`
+
+An explicit swapchain texture format; empty means Lite's own choice. Never an `*-srgb` one.
+
+##### maxDevicePixelRatio
+
+> `readonly` **maxDevicePixelRatio**: `number`
+
+Clamp on the device pixel ratio the swapchain is sized at. `0` means "do not clamp".
+
+##### msaaSamples
+
+> `readonly` **msaaSamples**: `number`
+
+MSAA sample count for the main pass. WebGPU allows 1 or 4; anything else is read as 4.
+
+##### requiredLimits
+
+> `readonly` **requiredLimits**: `Readonly`\<`Record`\<`string`, `number`\>\>
+
+Extra WebGPU device limits to request, such as a larger `maxColorAttachmentBytesPerSample`.
+
+##### srgb
+
+> `readonly` **srgb**: `boolean`
+
+Render through an sRGB swapchain view so alpha blending is gamma-correct.
+
+##### useFloatingOrigin
+
+> `readonly` **useFloatingOrigin**: `boolean`
+
+Eye-relative upload for large-world coordinates. Requires `useHighPrecisionMatrix`.
+
+##### useHighPrecisionMatrix
+
+> `readonly` **useHighPrecisionMatrix**: `boolean`
+
+Float64 intermediate precision for world matrices, for large worlds.
+
+***
+
+### RenderPick
+
+What a GPU pick found (`docs/architecture/07-rendering.md` §3).
+
+#### Properties
+
+##### component
+
+> `readonly` **component**: [`Component`](#abstract-component) \| `null`
+
+The component that created the mesh, when it was not the entity's own transform.
+
+##### distance
+
+> `readonly` **distance**: `number`
+
+How far along the ray the hit is, in metres.
+
+##### entity
+
+> `readonly` **entity**: [`Entity`](#entity-2)
+
+The entity that owns the mesh the ray hit.
+
+##### normal
+
+> `readonly` **normal**: readonly \[`number`, `number`, `number`\] \| `null`
+
+The world-space surface normal, or `null` unless detailed picking is on.
+
+##### point
+
+> `readonly` **point**: readonly \[`number`, `number`, `number`\] \| `null`
+
+The world-space hit point, or `null` unless detailed picking is on.
+
+***
+
+### RenderPickOptions
+
+How a GPU pick is restricted (`docs/architecture/07-rendering.md` §3).
+
+#### Properties
+
+##### filter?
+
+> `readonly` `optional` **filter?**: (`entity`) => `boolean`
+
+Restricts the pick to the entities this accepts. A rejected entity neither occludes nor
+returns, which is what makes a "pick only the pickups" query exact rather than approximate.
+
+###### Parameters
+
+###### entity
+
+[`Entity`](#entity-2)
+
+The candidate.
+
+###### Returns
+
+`boolean`
+
+`true` to consider the entity.
+
+***
+
+### RenderTaskTiming
+
+One frame-graph task's measured GPU time (`docs/architecture/07-rendering.md` §5).
+
+#### Properties
+
+##### durationMs
+
+> `readonly` **durationMs**: `number`
+
+How long the task took on the GPU, in milliseconds.
+
+##### name
+
+> `readonly` **name**: `string`
+
+The task's name in the frame graph: `"shadow"`, `"scene"`, or a post-process task's own.
+
+***
+
+### RenderTaskTimings
+
+A per-task GPU timing snapshot (`docs/architecture/07-rendering.md` §5).
+
+#### Properties
+
+##### status
+
+> `readonly` **status**: `string`
+
+Whether the numbers mean anything: `"unsupported"` on a device with no timestamp queries — the
+CI software adapter is one — `"disabled"` until `profileTasks` is on, `"pending"` until the
+first readback lands, `"error"` when it failed, `"ok"` otherwise.
+
+##### tasks
+
+> `readonly` **tasks**: readonly [`RenderTaskTiming`](#rendertasktiming)[]
+
+The tasks, in frame execution order. Empty unless `status` is `"ok"`.
+
+***
+
+### SceneAsset
+
+What the scene loader produces for a `*.scene.json` or `*.prefab.json` address: the parsed file,
+every asset it pulled in, and the content hash instance overrides are recorded against
+(`docs/architecture/05-assets-and-loading.md` §2, `06-serialization-and-scene-format.md` §2).
+
+#### Remarks
+
+The handles are already loaded and retained by the asset. That is what lets
+`world.instantiate(sceneAsset)` be synchronous: everything the file references — textures,
+materials, and the scene assets its `instance` entries name — is in memory by the time the
+`SceneAsset` exists (`02-scene-graph.md` §2).
+
+#### Properties
+
+##### address
+
+> `readonly` **address**: `string`
+
+The address the asset was loaded from.
+
+##### dependencies
+
+> `readonly` **dependencies**: readonly [`AssetHandle`](#assethandle)\<`unknown`\>[]
+
+Every asset the file references, already loaded, in resolution order.
+
+##### file
+
+> `readonly` **file**: [`SceneFile`](#scenefile)
+
+The parsed, validated file.
+
+##### hash
+
+> `readonly` **hash**: `string`
+
+The content hash of [SceneAsset.file](#file), as `sha256:<hex>`.
+
+***
+
+### SceneBuildResult
+
+What [instantiateScene](#instantiatescene) produced.
+
+#### Properties
+
+##### issues
+
+> `readonly` **issues**: readonly [`SceneLoadIssue`](#sceneloadissue)[]
+
+Every recoverable problem, in discovery order.
+
+##### remap
+
+> `readonly` **remap**: [`UidRemap`](#uidremap)
+
+The file-local uid to runtime object table (`docs/architecture/02-scene-graph.md` §10).
+
+##### roots
+
+> `readonly` **roots**: readonly [`Entity`](#entity-2)[]
+
+The entities that ended up parentless within the built subtree, in file order.
+
+***
+
+### SceneFile
+
+A whole scene or prefab file (`docs/architecture/06-serialization-and-scene-format.md` §2).
+
+#### Example
+
+```ts
+const file = serializeScene(world.activeScene);
+await app.storage.write("save.scene.json", stringifySceneFile(file));
+```
+
+#### Properties
+
+##### engineVersion?
+
+> `readonly` `optional` **engineVersion?**: `string`
+
+The `@ignifx/core` version that wrote the file; informational.
+
+##### entities
+
+> `readonly` **entities**: readonly [`SceneFileEntity`](#scenefileentity)[]
+
+Every entity, in tree order.
+
+##### format
+
+> `readonly` **format**: `string`
+
+Always [SCENE\_FILE\_FORMAT](#scene_file_format).
+
+##### formatVersion
+
+> `readonly` **formatVersion**: `number`
+
+Always [SCENE\_FORMAT\_VERSION](#scene_format_version) for files this build writes.
+
+##### name
+
+> `readonly` **name**: `string`
+
+The scene's name.
+
+##### settings?
+
+> `readonly` `optional` **settings?**: [`JsonObject`](#jsonobject)
+
+Scene-level values interpreted by systems (environment, clear colour, physics overrides).
+
+***
+
+### SceneFileAssetRef
+
+A serialized asset reference: `{ "$asset": "<address>", "type"?: "<type>" }`
+(`docs/architecture/06-serialization-and-scene-format.md` §3).
+
+#### Properties
+
+##### $asset
+
+> `readonly` **$asset**: `string`
+
+The address the asset is registered under.
+
+##### type?
+
+> `readonly` `optional` **type?**: `string`
+
+The asset type name, written only when the address extension does not identify it.
+
+***
+
+### SceneFileComponent
+
+One component of one entity.
+
+#### Properties
+
+##### enabled?
+
+> `readonly` `optional` **enabled?**: `boolean`
+
+Omitted when `true`, the default.
+
+##### props?
+
+> `readonly` `optional` **props?**: [`JsonObject`](#jsonobject)
+
+Values in the component schema's declaration order (§3).
+
+##### schemaVersion?
+
+> `readonly` `optional` **schemaVersion?**: `number`
+
+Written only when the class's `schemaVersion` differs from `1` (§7).
+
+##### type
+
+> `readonly` **type**: `string`
+
+The component class's registered `typeId`.
+
+##### uid
+
+> `readonly` **uid**: `string`
+
+ULID, unique within the file.
+
+***
+
+### SceneFileEntity
+
+One entity of a scene file. Entities appear in tree order — parents before children, siblings in
+`children` order — and `parent` names the uid of the parent, or `null` for a root.
+
+#### Properties
+
+##### active?
+
+> `readonly` `optional` **active?**: `boolean`
+
+Omitted when `true`, the default.
+
+##### components?
+
+> `readonly` `optional` **components?**: readonly [`SceneFileComponent`](#scenefilecomponent)[]
+
+The entity's own components; on an instance root, the ones added on top of the instance.
+
+##### instance?
+
+> `readonly` `optional` **instance?**: [`SceneFileInstance`](#scenefileinstance)
+
+Present only on instance roots.
+
+##### layer?
+
+> `readonly` `optional` **layer?**: `string`
+
+The layer **name**, omitted when `"Default"`. Names, never indices, so reordering is safe.
+
+##### name
+
+> `readonly` **name**: `string`
+
+The display name.
+
+##### parent
+
+> `readonly` **parent**: `string` \| `null`
+
+The parent's uid, or `null` for a root.
+
+##### static?
+
+> `readonly` `optional` **static?**: `boolean`
+
+Omitted when `false`, the default.
+
+##### tags?
+
+> `readonly` `optional` **tags?**: readonly `string`[]
+
+The tags, omitted when empty.
+
+##### transform
+
+> `readonly` **transform**: [`SceneFileTransform`](#scenefiletransform)
+
+Always present.
+
+##### uid
+
+> `readonly` **uid**: `string`
+
+ULID, unique within the file.
+
+***
+
+### SceneFileInstance
+
+The `instance` entry that turns an entity into the root of an instanced scene — what other
+engines call a prefab instance (ADR-0005).
+
+#### Properties
+
+##### hash?
+
+> `readonly` `optional` **hash?**: `string`
+
+The content hash of that asset at save time; a mismatch reports `IGX-0604`.
+
+##### overrides?
+
+> `readonly` `optional` **overrides?**: readonly [`SceneFileOverride`](#scenefileoverride)[]
+
+The patches applied to the instanced entities, in order.
+
+##### scene
+
+> `readonly` **scene**: [`SceneFileAssetRef`](#scenefileassetref)
+
+The scene asset to instance.
+
+***
+
+### SceneFileIssue
+
+One structural problem in a scene file.
+
+#### Properties
+
+##### message
+
+> `readonly` **message**: `string`
+
+An actionable description.
+
+##### path
+
+> `readonly` **path**: `string`
+
+Where the problem is, in JSON-pointer-like notation, for example `entities/3/transform`.
+
+***
+
+### SceneFileOverride
+
+One override patch applied to an instanced scene, addressed by the *instanced* file's uids
+(`docs/architecture/06-serialization-and-scene-format.md` §2).
+
+#### Remarks
+
+`op` defaults to `"replace"`, which is why the common case is the two-key
+`{ path, value }` object shown in the format document.
+
+#### Properties
+
+##### op?
+
+> `readonly` `optional` **op?**: `"replace"` \| `"remove"` \| `"add"`
+
+`"replace"` (the default) patches a value, `"remove"` deletes a component, `"add"` appends one.
+
+##### path
+
+> `readonly` **path**: `string`
+
+The path into the instanced file; see [parseOverridePath](#parseoverridepath).
+
+##### value?
+
+> `readonly` `optional` **value?**: [`JsonValue`](#jsonvalue)
+
+The new value, for `"replace"` and `"add"`.
+
+***
+
+### SceneFileTransform
+
+An entity's local transform, always present in the file and always three plain number arrays
+(`docs/architecture/06-serialization-and-scene-format.md` §2).
+
+#### Remarks
+
+The values are **local** — relative to `parent` — because the file already stores the tree and
+local values are the ones that survive a parent being moved. The document says only "arrays
+`[x, y, z]`, `[x, y, z, w]`, `[x, y, z]`"; this is the reading that round trips.
+
+#### Properties
+
+##### position
+
+> `readonly` **position**: readonly \[`number`, `number`, `number`\]
+
+Local position, `[x, y, z]`, in metres.
+
+##### rotation
+
+> `readonly` **rotation**: readonly \[`number`, `number`, `number`, `number`\]
+
+Local rotation quaternion, `[x, y, z, w]`.
+
+##### scale
+
+> `readonly` **scale**: readonly \[`number`, `number`, `number`\]
+
+Local scale, `[x, y, z]`.
+
+***
+
+### SceneLoaderOptions
+
+Options accepted by [createSceneLoader](#createsceneloader).
+
+#### Properties
+
+##### validate?
+
+> `readonly` `optional` **validate?**: `boolean`
+
+`true` (the default) validates every file against the scene format before building anything,
+reporting `IGX-0608` with the issue list. Production builds may switch it off once the content
+has been validated at build time by the Vite plugin
+(`docs/architecture/06-serialization-and-scene-format.md` §8).
+
+***
+
+### SceneLoadIssue
+
+One recoverable problem found while a scene was being built. Nothing here stops the load: a file
+degrades one field, one reference, or one layer rather than failing whole
+(`docs/architecture/06-serialization-and-scene-format.md` §4).
+
+#### Properties
+
+##### code
+
+> `readonly` **code**: `string`
+
+The diagnostic code, for example `IGX-0602` or `IGX-0303`.
+
+##### message
+
+> `readonly` **message**: `string`
+
+The actionable sentence.
 
 ***
 
@@ -15175,7 +23220,7 @@ optional for the reason given on [ComponentStatics](#componentstatics).
 
 ###### Inherited from
 
-[`ComponentStatics`](#componentstatics).[`allowMultiple`](#allowmultiple-1)
+[`ComponentStatics`](#componentstatics).[`allowMultiple`](#allowmultiple-2)
 
 ##### executionOrder?
 
@@ -15202,7 +23247,7 @@ The serialized field declarations, set by `Component.define` / `Script.define`.
 
 ###### Inherited from
 
-[`ComponentStatics`](#componentstatics).[`schema`](#schema-1)
+[`ComponentStatics`](#componentstatics).[`schema`](#schema-2)
 
 ##### typeId?
 
@@ -15214,7 +23259,7 @@ derived from the class name, so minification and renames cannot change a file's 
 
 ###### Inherited from
 
-[`ComponentStatics`](#componentstatics).[`typeId`](#typeid-1)
+[`ComponentStatics`](#componentstatics).[`typeId`](#typeid-2)
 
 ##### updateWhenPaused?
 
@@ -15222,6 +23267,79 @@ derived from the class name, so minification and renames cannot change a file's 
 
 When `true`, the script still receives `update`/`lateUpdate` while `app.pause()` is in effect.
 Defaults to `false`.
+
+***
+
+### SerializeIssue
+
+One problem found while writing a file. Serialization is total — it always produces valid JSON —
+so a problem means one value was written as `null` or one link was dropped, never that the save
+failed (`docs/architecture/06-serialization-and-scene-format.md` §3).
+
+#### Properties
+
+##### code
+
+> `readonly` **code**: `string`
+
+The diagnostic code, for example `IGX-0602`.
+
+##### message
+
+> `readonly` **message**: `string`
+
+The actionable sentence.
+
+***
+
+### SerializeSceneOptions
+
+Options accepted by [serializeScene](#serializescene).
+
+#### Properties
+
+##### engineVersion?
+
+> `readonly` `optional` **engineVersion?**: `string` \| `null`
+
+Overrides the recorded `engineVersion`; `null` omits it, which is what byte-stable tests use.
+
+##### flatten?
+
+> `readonly` `optional` **flatten?**: `boolean`
+
+`true` writes every entity of an instanced subtree as a plain entity instead of one `instance`
+entry with computed overrides (`docs/architecture/06-serialization-and-scene-format.md` §5).
+Flattened files no longer track the prefab and their uids are the runtime ones, which differ
+per load.
+
+##### name?
+
+> `readonly` `optional` **name?**: `string`
+
+Overrides the file's `name`; defaults to the instance's name, or `"scene"`.
+
+##### onIssue?
+
+> `readonly` `optional` **onIssue?**: (`issue`) => `void`
+
+Receives every problem found, in discovery order.
+
+###### Parameters
+
+###### issue
+
+[`SerializeIssue`](#serializeissue)
+
+###### Returns
+
+`void`
+
+##### settings?
+
+> `readonly` `optional` **settings?**: [`JsonObject`](#jsonobject) \| `null`
+
+Overrides the file's `settings` block; defaults to the instance's.
 
 ***
 
@@ -15346,7 +23464,9 @@ The instance, or `null` when it is not registered.
 
 ### SetParentOptions
 
-Options accepted by `Entity.setParent`.
+Options accepted by `Entity.setParent`. Written as code rather than as a documentation link
+because `Entity` is a class and an interface at once: an unqualified reference is ambiguous to
+API Extractor, and the qualified form it asks for is unresolvable to TypeDoc.
 
 #### Properties
 
@@ -15362,7 +23482,7 @@ Options accepted by `Entity.setParent`.
 
 ### SignalLike
 
-The read-only half of a [Signal](#signal): what a public API exposes when callers may subscribe but
+The read-only half of a [Signal](#signal-3): what a public API exposes when callers may subscribe but
 must not emit, where `T` is the payload the signal emits.
 
 #### Example
@@ -15419,7 +23539,7 @@ A function that detaches the handler.
 
 ### SignalOptions
 
-Options for the [Signal](#signal) constructor, where `T` is the payload the signal emits.
+Options for the [Signal](#signal-3) constructor, where `T` is the payload the signal emits.
 
 #### Type Parameters
 
@@ -15451,7 +23571,7 @@ passes a reporter that routes to `app.onError`. It must not throw.
 
 ###### signal
 
-[`Signal`](#signal)\<`T`\>
+[`Signal`](#signal-3)\<`T`\>
 
 ###### Returns
 
@@ -15482,10 +23602,54 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
+
+***
+
+### SmaaEffectSettings
+
+The `smaa` record a `PostProcessStack` declares (`docs/architecture/07-rendering.md` §2.7).
+
+#### Properties
+
+##### cornerDetection
+
+> **cornerDetection**: `boolean`
+
+Whether corner patterns are attenuated.
+
+##### diagonalDetection
+
+> **diagonalDetection**: `boolean`
+
+Whether 45-degree patterns are detected.
+
+##### enabled
+
+> **enabled**: `boolean`
+
+Whether subpixel morphological anti-aliasing runs.
+
+##### maxSearchSteps
+
+> **maxSearchSteps**: `number`
+
+How far the pattern search runs along an edge, in pixels.
+
+##### order
+
+> **order**: `number`
+
+Position in the chain; lower runs first.
+
+##### threshold
+
+> **threshold**: `number`
+
+The luma difference that counts as an edge.
 
 ***
 
@@ -15500,6 +23664,101 @@ The `sortingLayers` project settings section, consumed by the 2D toolkit.
 > `readonly` **sortingLayers**: readonly `string`[]
 
 The project's sorting-layer names, back to front.
+
+***
+
+### SphereMeshOptions
+
+How [MeshAsset.sphere](#sphere) tessellates its sphere.
+
+#### Properties
+
+##### diameter?
+
+> `readonly` `optional` **diameter?**: `number`
+
+Diameter on every axis, in metres. Lite defaults to 1.
+
+##### segments?
+
+> `readonly` `optional` **segments?**: `number`
+
+Ring count; higher is smoother. Lite defaults to 32.
+
+***
+
+### StandardMaterialDefinition
+
+The properties a `"standard"` material declares — the cheap non-PBR path
+(`docs/architecture/07-rendering.md` §2.6).
+
+#### Properties
+
+##### alpha
+
+> `readonly` **alpha**: `number`
+
+Overall material alpha, 0 to 1.
+
+##### alphaCutoff
+
+> `readonly` **alphaCutoff**: `number`
+
+The cutoff below which a fragment is discarded. `0` disables the alpha test.
+
+##### diffuse
+
+> `readonly` **diffuse**: [`ColorLike`](#colorlike)
+
+sRGB diffuse colour.
+
+##### doubleSided
+
+> `readonly` **doubleSided**: `boolean`
+
+Whether back faces are drawn.
+
+##### emissive
+
+> `readonly` **emissive**: [`ColorLike`](#colorlike)
+
+sRGB emissive colour.
+
+##### kind
+
+> `readonly` **kind**: `"standard"`
+
+The family discriminator.
+
+##### name
+
+> `readonly` **name**: `string`
+
+A human-readable name.
+
+##### specular
+
+> `readonly` **specular**: [`ColorLike`](#colorlike)
+
+sRGB specular colour.
+
+##### specularPower
+
+> `readonly` **specularPower**: `number`
+
+Specular exponent; higher values give a tighter highlight.
+
+##### textures
+
+> `readonly` **textures**: `Readonly`\<`Record`\<`string`, `string`\>\>
+
+The addresses of the textures the material samples, by slot.
+
+##### unlit
+
+> `readonly` **unlit**: `boolean`
+
+Whether lighting is skipped entirely.
 
 ***
 
@@ -15567,7 +23826,7 @@ Called once when the world the system belongs to has been created.
 
 ###### world
 
-[`World`](#world-6)
+[`World`](#world-12)
 
 The new world.
 
@@ -15585,7 +23844,7 @@ Called once when the world the system belongs to is being disposed.
 
 ###### world
 
-[`World`](#world-6)
+[`World`](#world-12)
 
 The world going away.
 
@@ -15640,9 +23899,92 @@ The app clock.
 
 ##### world
 
-> `readonly` **world**: [`World`](#world-6)
+> `readonly` **world**: [`World`](#world-12)
 
 The world the system operates on.
+
+***
+
+### TextureAssetLiteHandles
+
+The Babylon Lite objects a [TextureAsset](#textureasset) owns. Unstable escape hatch
+(`docs/architecture/00-overview.md` §3).
+
+#### Properties
+
+##### texture
+
+> `readonly` **texture**: `Texture2D` \| `null`
+
+The GPU texture, or `null` under a headless app.
+
+***
+
+### TextureImportOptions
+
+The import options a texture's `.meta.json` sidecar can declare, under its `texture` key
+(`docs/architecture/05-assets-and-loading.md` §7).
+
+#### Remarks
+
+They are the sampler and decode options, not scene state: two materials that sample one address
+get one texture with one set of options, because the cache is keyed by address.
+
+#### Example
+
+```json
+{ "texture": { "srgb": true, "addressModeU": "clamp-to-edge" } }
+```
+
+#### Properties
+
+##### addressModeU
+
+> `readonly` **addressModeU**: `string`
+
+Address mode along U.
+
+##### addressModeV
+
+> `readonly` **addressModeV**: `string`
+
+Address mode along V.
+
+##### invertY
+
+> `readonly` **invertY**: `boolean`
+
+Flip the image vertically at upload. Lite defaults to `true`, matching Babylon.js.
+
+##### magFilter
+
+> `readonly` **magFilter**: `string`
+
+Magnification filter.
+
+##### minFilter
+
+> `readonly` **minFilter**: `string`
+
+Minification filter.
+
+##### mipMaps
+
+> `readonly` **mipMaps**: `boolean`
+
+Generate a mip chain. Lite defaults to `true`.
+
+##### premultiplyAlpha
+
+> `readonly` **premultiplyAlpha**: `boolean`
+
+Premultiply alpha at decode time; for atlases drawn with a premultiplied blend pipeline.
+
+##### srgb
+
+> `readonly` **srgb**: `boolean`
+
+Decode to linear on sample (`rgba8unorm-srgb`). Base colour and emissive want it; data maps must not.
 
 ***
 
@@ -15767,6 +24109,32 @@ The initial frame-delta clamp in seconds. Defaults to `0.1`.
 > `readonly` `optional` **timeScale?**: `number`
 
 The initial time scale. Defaults to `1`.
+
+***
+
+### TorusMeshOptions
+
+How [MeshAsset.torus](#torus) sizes its ring, which lies in the XZ plane.
+
+#### Properties
+
+##### diameter?
+
+> `readonly` `optional` **diameter?**: `number`
+
+Outer diameter, in metres.
+
+##### tessellation?
+
+> `readonly` `optional` **tessellation?**: `number`
+
+Segment count around the ring.
+
+##### thickness?
+
+> `readonly` `optional` **thickness?**: `number`
+
+Tube thickness, in metres.
 
 ***
 
@@ -15925,6 +24293,31 @@ How long to wait, for the two timed kinds.
 
 ## Type Aliases
 
+### AssetState
+
+> **AssetState** = `"loading"` \| `"loaded"` \| `"failed"` \| `"released"`
+
+Where an [AssetHandle](#assethandle) is in its life
+(`docs/architecture/05-assets-and-loading.md` §3).
+
+***
+
+### CameraProjection
+
+> **CameraProjection** = *typeof* [`PROJECTIONS`](#projections)\[`number`\]
+
+The union of the camera projections.
+
+***
+
+### CanvasAlphaMode
+
+> **CanvasAlphaMode** = *typeof* [`CANVAS_ALPHA_MODES`](#canvas_alpha_modes)\[`number`\]
+
+The union of the canvas alpha modes.
+
+***
+
 ### ComponentDefinition
 
 > **ComponentDefinition**\<`S`\> = () => [`Component`](#abstract-component) & [`FieldsOf`](#fieldsof)\<`S`\> & `object`
@@ -15952,7 +24345,7 @@ able to write a plain `static typeId` without the `override` keyword.
 
 ##### S
 
-`S` *extends* [`Schema`](#schema-4)
+`S` *extends* [`Schema`](#schema-10)
 
 The schema the class was defined from.
 
@@ -16035,7 +24428,7 @@ One key of an animation curve: time, value, incoming tangent, outgoing tangent
 
 > **Disconnect** = () => `void`
 
-Detaches a handler from a [Signal](#signal). Calling it more than once is a no-op.
+Detaches a handler from a [Signal](#signal-3). Calling it more than once is a no-op.
 
 #### Returns
 
@@ -16068,6 +24461,22 @@ handle can be stored in a `Float64Array` or written into Lite's node metadata un
 const handle: EntityHandle = entity.handle;
 world.getEntityByHandle(handle)?.destroy();
 ```
+
+***
+
+### EntityOverrideField
+
+> **EntityOverrideField** = `"name"` \| `"active"` \| `"static"` \| `"layer"` \| `"tags"`
+
+The entity properties an override may patch directly.
+
+***
+
+### EnvironmentFogMode
+
+> **EnvironmentFogMode** = *typeof* [`FOG_MODE_NAMES`](#fog_mode_names)\[`number`\]
+
+The union of the fog modes.
 
 ***
 
@@ -16119,6 +24528,16 @@ The union of the two-digit subsystem prefixes declared by `ErrorRange`.
 
 ***
 
+### FetchLike
+
+> **FetchLike** = *typeof* `globalThis.fetch`
+
+The `fetch` implementation the service performs every read through
+(`docs/architecture/05-assets-and-loading.md` §8). Injecting it is how headless tests supply
+deterministic responses and how a Node app maps addresses onto `fs` (Phase 9).
+
+***
+
 ### FieldKind
 
 > **FieldKind** = *typeof* [`FieldKind`](#fieldkind)\[keyof *typeof* [`FieldKind`](#fieldkind)\]
@@ -16139,7 +24558,7 @@ what gives `this.speed` its `number` type inside a component declared with
 
 ##### S
 
-`S` *extends* [`Schema`](#schema-4)
+`S` *extends* [`Schema`](#schema-10)
 
 The schema to project.
 
@@ -16205,6 +24624,56 @@ a `Date`, a `Map`, or an `undefined` into a file (coding standards §5.2 bans `a
 
 ***
 
+### LightType
+
+> **LightType** = *typeof* [`LIGHT_TYPES`](#light_types)\[`number`\]
+
+The union of the light kinds.
+
+***
+
+### LiteAnimationGroup
+
+> **LiteAnimationGroup** = `AnimationGroup`
+
+**`Beta`**
+
+A Babylon Lite animation clip, re-exported under an ignifx name. `Model.animations` hands these
+to `@ignifx/3d`'s animator, which owns advancement (ADR-0003).
+
+#### Remarks
+
+Unstable; excluded from the stability guarantees of `CONSTITUTION.md` Article IV.
+
+***
+
+### LiteAssetContainer
+
+> **LiteAssetContainer** = `AssetContainer`
+
+The Babylon Lite asset container a `ModelAsset` holds, re-exported under an ignifx name
+(`CONSTITUTION.md` §3.4, coding standards §4).
+
+#### Remarks
+
+Unstable; excluded from the stability guarantees of `CONSTITUTION.md` Article IV.
+
+***
+
+### LiteCamera
+
+> **LiteCamera** = `FreeCamera`
+
+The Babylon Lite camera an ignifx `Camera` component owns, re-exported under an ignifx name so
+feature code can name the type without importing `@babylonjs/lite` (`CONSTITUTION.md` §3.4,
+coding standards §4).
+
+#### Remarks
+
+Unstable; excluded from the stability guarantees of `CONSTITUTION.md` Article IV.
+
+***
+
 ### LiteEngine
 
 > **LiteEngine** = `EngineContext`
@@ -16220,12 +24689,163 @@ is excluded from the stability guarantees of `CONSTITUTION.md` Article IV.
 
 ***
 
+### LiteEnvironmentTextures
+
+> **LiteEnvironmentTextures** = `EnvironmentTextures`
+
+The GPU-resident image-based-lighting textures `loadEnvironment` resolves to, re-exported under an
+ignifx name (`CONSTITUTION.md` §3.4, coding standards §4).
+
+#### Remarks
+
+Unstable; excluded from the stability guarantees of `CONSTITUTION.md` Article IV.
+
+***
+
+### LiteFont
+
+> **LiteFont** = `Font`
+
+The Babylon Lite font handle a `FontAsset` wraps, re-exported under an ignifx name so feature code
+can name the type without importing `@babylonjs/lite` (`CONSTITUTION.md` §3.4, coding
+standards §4).
+
+#### Remarks
+
+Unstable: it is Lite's own type, reachable only through documented `.lite` escape hatches, and it
+is excluded from the stability guarantees of `CONSTITUTION.md` Article IV.
+
+***
+
+### LiteLight
+
+> **LiteLight** = `DirectionalLight` \| `PointLight` \| `SpotLight` \| `HemisphericLight`
+
+The Lite light kinds an ignifx `Light` component can own, re-exported under an ignifx name so
+feature code can name the type without importing `@babylonjs/lite` (`CONSTITUTION.md` §3.4,
+coding standards §4). The barrel exports it as `LiteLight`, the name `Light.lite.light` reads by.
+
+#### Remarks
+
+Unstable; excluded from the stability guarantees of `CONSTITUTION.md` Article IV.
+
+***
+
+### LiteMaterial
+
+> **LiteMaterial** = `Material`
+
+The Babylon Lite material a `MaterialAsset` owns, re-exported under an ignifx name
+(`CONSTITUTION.md` §3.4, coding standards §4).
+
+#### Remarks
+
+Unstable; excluded from the stability guarantees of `CONSTITUTION.md` Article IV.
+
+***
+
+### LiteMesh
+
+> **LiteMesh** = `Mesh`
+
+The Babylon Lite mesh a `MeshAsset` template and a `MeshRenderer` clone are, re-exported under an
+ignifx name so feature code can name the type without importing `@babylonjs/lite`
+(`CONSTITUTION.md` §3.4, coding standards §4).
+
+#### Remarks
+
+Unstable: it is Lite's own type, reachable only through documented `.lite` escape hatches, and it
+is excluded from the stability guarantees of `CONSTITUTION.md` Article IV.
+
+***
+
+### LitePbrMaterial
+
+> **LitePbrMaterial** = `PbrMaterialProps`
+
+A Babylon Lite physically based material, re-exported under an ignifx name.
+
+#### Remarks
+
+Unstable; excluded from the stability guarantees of `CONSTITUTION.md` Article IV.
+
+***
+
 ### LiteScene
 
 > **LiteScene** = `SceneContext`
 
 The Babylon Lite scene a world renders into (or simulates on), re-exported under an ignifx name
 for the same reason as [LiteEngine](#liteengine).
+
+#### Remarks
+
+Unstable; excluded from the stability guarantees of `CONSTITUTION.md` Article IV.
+
+***
+
+### LiteSceneNode
+
+> **LiteSceneNode** = `SceneNode`
+
+The Babylon Lite node an ignifx `Transform` wraps, re-exported under an ignifx name so that
+feature code can name the type without importing `@babylonjs/lite`
+(`CONSTITUTION.md` §3.4, coding standards §4).
+
+#### Remarks
+
+Unstable: it is Lite's type, reachable only through documented `.lite` escape hatches, and it is
+excluded from the stability guarantees of `CONSTITUTION.md` Article IV.
+
+***
+
+### LiteShadowGenerator
+
+> **LiteShadowGenerator** = `ShadowGenerator`
+
+The Babylon Lite shadow generator a `Light` owns, re-exported under an ignifx name
+(`CONSTITUTION.md` §3.4, coding standards §4).
+
+#### Remarks
+
+Unstable; excluded from the stability guarantees of `CONSTITUTION.md` Article IV.
+
+***
+
+### LiteSkeleton
+
+> **LiteSkeleton** = `Skeleton`
+
+**`Beta`**
+
+A Babylon Lite skeleton, re-exported under an ignifx name. Present on a container only when
+`enableBoneControl()` ran before the load (`index.d.ts` 653).
+
+#### Remarks
+
+Unstable; excluded from the stability guarantees of `CONSTITUTION.md` Article IV.
+
+***
+
+### LiteStandardMaterial
+
+> **LiteStandardMaterial** = `StandardMaterialProps`
+
+A Babylon Lite Babylon-Standard material, re-exported under an ignifx name.
+
+#### Remarks
+
+Unstable; excluded from the stability guarantees of `CONSTITUTION.md` Article IV.
+
+***
+
+### LiteTexture2D
+
+> **LiteTexture2D** = `Texture2D`
+
+The Babylon Lite texture a `TextureAsset` wraps, re-exported under an ignifx name so feature code
+can name the type without importing `@babylonjs/lite` (`CONSTITUTION.md` §3.4, coding
+standards §4).
 
 #### Remarks
 
@@ -16266,6 +24886,53 @@ and therefore what makes it accepted anywhere Babylon Lite wants a `Mat4`.
 
 ***
 
+### MaterialAlphaModeName
+
+> **MaterialAlphaModeName** = `MaterialAlphaMode`
+
+How a material interprets its alpha channel, in glTF's vocabulary.
+
+***
+
+### MaterialDefinition
+
+> **MaterialDefinition** = [`PbrMaterialDefinition`](#pbrmaterialdefinition-3) \| [`StandardMaterialDefinition`](#standardmaterialdefinition-3)
+
+The parsed body of a `.material.json`, discriminated by `kind`.
+
+***
+
+### MaterialKind
+
+> **MaterialKind** = *typeof* [`MATERIAL_KINDS`](#material_kinds)\[`number`\]
+
+The union of the material families.
+
+***
+
+### OverridePath
+
+> **OverridePath** = \{ `entity`: `string`; `kind`: `"entity"`; \} \| \{ `entity`: `string`; `field`: [`EntityOverrideField`](#entityoverridefield); `kind`: `"entityField"`; \} \| \{ `channel`: keyof [`SceneFileTransform`](#scenefiletransform); `entity`: `string`; `kind`: `"transform"`; \} \| \{ `entity`: `string`; `kind`: `"componentList"`; \} \| \{ `component`: `string`; `entity`: `string`; `kind`: `"component"`; \} \| \{ `component`: `string`; `entity`: `string`; `kind`: `"componentField"`; \} \| \{ `component`: `string`; `entity`: `string`; `kind`: `"prop"`; `steps`: readonly `string`[]; \}
+
+The parsed form of an instance override `path`
+(`docs/architecture/06-serialization-and-scene-format.md` §2). Every path starts with the uid of
+an entity **of the instanced file**, so a path survives the per-instance uid remap
+(`02-scene-graph.md` §10).
+
+The grammar, in the order the parser tries it:
+
+```text
+<uid>                                              → entity      (whole entity, "remove" only)
+<uid>/name | active | static | layer | tags        → entityField
+<uid>/transform/position | rotation | scale        → transform
+<uid>/components                                   → componentList ("add" only)
+<uid>/components/<uid>                             → component   ("remove" only)
+<uid>/components/<uid>/enabled                     → componentField
+<uid>/components/<uid>/props/<field>[/<key>…]      → prop
+```
+
+***
+
 ### PartialFieldsOf
 
 > **PartialFieldsOf**\<`S`\> = `{ [K in keyof FieldsOf<S>]?: FieldsOf<S>[K] }`
@@ -16278,7 +24945,7 @@ mean "take the schema default" here, so both are accepted (`applyInit`, `encodeP
 
 ##### S
 
-`S` *extends* [`Schema`](#schema-4)
+`S` *extends* [`Schema`](#schema-10)
 
 The schema to project.
 
@@ -16314,6 +24981,15 @@ agent would be worse than saying `"browser"`.
 
 ***
 
+### RenderingFeature
+
+> **RenderingFeature** = keyof [`RenderingFeatureSettings`](#renderingfeaturesettings)
+
+A rendering feature a project or an extension asks for
+(`docs/architecture/07-rendering.md` §1.1).
+
+***
+
 ### RenderSurface
 
 > **RenderSurface** = `HTMLCanvasElement` \| `OffscreenCanvas`
@@ -16345,7 +25021,7 @@ The union of diagnostic codes this module reports.
 
 > **ScriptDefinition**\<`S`\> = () => [`Script`](#abstract-script) & [`FieldsOf`](#fieldsof)\<`S`\> & `object`
 
-The abstract base class [Script.define](#define-1) returns: a `Script` that also carries every field
+The abstract base class [Script.define](#define-7) returns: a `Script` that also carries every field
 the schema declares, typed.
 
 #### Type Declaration
@@ -16368,7 +25044,7 @@ to write a plain `static typeId` or `static executionOrder` without the `overrid
 
 ##### S
 
-`S` *extends* [`Schema`](#schema-4)
+`S` *extends* [`Schema`](#schema-10)
 
 The schema the class was defined from.
 
@@ -16444,11 +25120,19 @@ const app = await createApp({
 
 ***
 
+### ShadowTechniqueName
+
+> **ShadowTechniqueName** = *typeof* `SHADOW_TECHNIQUES`\[`number`\]
+
+The union of the shadow techniques a directional light can use.
+
+***
+
 ### SignalHandler
 
 > **SignalHandler**\<`T`\> = (`value`) => `void`
 
-A listener attached to a [Signal](#signal).
+A listener attached to a [Signal](#signal-3).
 
 #### Type Parameters
 
@@ -16466,7 +25150,64 @@ A listener attached to a [Signal](#signal).
 
 `void`
 
+***
+
+### ToneMappingCurve
+
+> **ToneMappingCurve** = *typeof* `TONE_MAPPING_NAMES`\[`number`\]
+
+The union of the tone-mapping curves.
+
 ## Variables
+
+### ASSET\_DIAGNOSTICS\_COUNTERS
+
+> `const` **ASSET\_DIAGNOSTICS\_COUNTERS**: readonly `string`[]
+
+The counters the `assets` diagnostics group publishes, in index order.
+
+***
+
+### ASSET\_DIAGNOSTICS\_GROUP
+
+> `const` **ASSET\_DIAGNOSTICS\_GROUP**: `"assets"` = `"assets"`
+
+The diagnostics group name (`docs/architecture/15-devtools-and-diagnostics.md` §3).
+
+***
+
+### ASSET\_MANIFEST\_FORMAT
+
+> `const` **ASSET\_MANIFEST\_FORMAT**: `"ignifx.manifest"` = `"ignifx.manifest"`
+
+The manifest format discriminator, written into `assets.manifest.json`.
+
+***
+
+### ASSET\_MANIFEST\_VERSION
+
+> `const` **ASSET\_MANIFEST\_VERSION**: `1` = `1`
+
+The only manifest format version this build reads.
+
+***
+
+### binaryAssetLoader
+
+> `const` **binaryAssetLoader**: [`AssetLoader`](#assetloader)\<`ArrayBuffer`\>
+
+Raw bytes, for `.bin` and `.wasm` addresses — the path `ignifx.assets.public` binaries such as
+Havok's WASM take (`docs/architecture/05-assets-and-loading.md` §7).
+
+***
+
+### CANVAS\_ALPHA\_MODES
+
+> `const` **CANVAS\_ALPHA\_MODES**: readonly \[`"opaque"`, `"premultiplied"`\]
+
+The canvas alpha modes Lite accepts, in the order the inspector lists them.
+
+***
 
 ### CORE\_ERROR\_MESSAGES
 
@@ -16518,6 +25259,18 @@ An asset promise outlived the app that owned it.
 
 An asset load was aborted through its `AbortSignal`.
 
+##### assetLoadFailed
+
+> `readonly` **assetLoadFailed**: `"IGX-0505"`
+
+An asset load failed after its last retry.
+
+##### assetNoLoader
+
+> `readonly` **assetNoLoader**: `"IGX-0504"`
+
+No registered loader claims the address's type or extension.
+
 ##### assetNotLoaded
 
 > `readonly` **assetNotLoaded**: `"IGX-0501"`
@@ -16538,7 +25291,7 @@ A component without a `typeId` was serialized.
 
 ##### cryptoUnavailable
 
-> `readonly` **cryptoUnavailable**: `"IGX-1401"`
+> `readonly` **cryptoUnavailable**: `"IGX-1420"`
 
 The host exposes no Web Crypto implementation.
 
@@ -16553,6 +25306,12 @@ A signal handler asked for deferred delivery on a signal that has no scheduler.
 > `readonly` **destroyImmediateInCallback**: `"IGX-0102"`
 
 `destroyImmediate()` was called from inside a lifecycle callback.
+
+##### duplicateAssetLoader
+
+> `readonly` **duplicateAssetLoader**: `"IGX-0506"`
+
+Two loaders were registered for the same asset type.
 
 ##### duplicateComponentTypeId
 
@@ -16584,6 +25343,12 @@ Two extensions were registered under the same name.
 
 Two layer slots were given the same name.
 
+##### entityIsNotSceneRoot
+
+> `readonly` **entityIsNotSceneRoot**: `"IGX-0309"`
+
+An operation that only accepts a scene root was given an entity that has a parent.
+
 ##### extensionEngineMismatch
 
 > `readonly` **extensionEngineMismatch**: `"IGX-0404"`
@@ -16607,6 +25372,18 @@ The `requires` graph of the registered extensions contains a cycle.
 > `readonly` **instanceHashMismatch**: `"IGX-0604"`
 
 A scene instance's override hash does not match the scene file it was recorded against.
+
+##### invalidAssetFile
+
+> `readonly` **invalidAssetFile**: `"IGX-0709"`
+
+An asset file does not carry the format header its loader requires.
+
+##### invalidOverridePath
+
+> `readonly` **invalidOverridePath**: `"IGX-0609"`
+
+An instance override declares a `path` the override grammar does not accept.
 
 ##### invalidRuntime
 
@@ -16638,11 +25415,23 @@ An error code does not match `IGX-####` in a known range.
 
 A second instance of a component type that does not allow multiples was added.
 
+##### multipleEnvironments
+
+> `readonly` **multipleEnvironments**: `"IGX-0705"`
+
+A second `Environment` was enabled in one world; the most recent one wins.
+
 ##### mutationAfterDestroy
 
 > `readonly` **mutationAfterDestroy**: `"IGX-0101"`
 
 An entity, component, or app was used after it had been destroyed or disposed.
+
+##### noEnabledCamera
+
+> `readonly` **noEnabledCamera**: `"IGX-0706"`
+
+A world rendered with no enabled camera, so nothing was drawn.
 
 ##### nonFiniteNumber
 
@@ -16650,17 +25439,41 @@ An entity, component, or app was used after it had been destroyed or disposed.
 
 A serialized number was `NaN` or infinite.
 
+##### notASceneFile
+
+> `readonly` **notASceneFile**: `"IGX-0308"`
+
+A file handed to the scene loader does not carry the `ignifx.scene` format header.
+
 ##### parentingCycle
 
 > `readonly` **parentingCycle**: `"IGX-0306"`
 
 Reparenting an entity under its own descendant would make the scene tree cyclic.
 
+##### postProcessingFeatureOff
+
+> `readonly` **postProcessingFeatureOff**: `"IGX-0710"`
+
+A `PostProcessStack` was attached without the `postProcessing` rendering feature.
+
+##### renderingFeatureTooLate
+
+> `readonly` **renderingFeatureTooLate**: `"IGX-0704"`
+
+A rendering feature opt-in was requested after the render scene had been registered.
+
 ##### requiredComponentMissing
 
 > `readonly` **requiredComponentMissing**: `"IGX-0201"`
 
 A component declared through `requires` is missing from the entity.
+
+##### sceneFileInvalid
+
+> `readonly` **sceneFileInvalid**: `"IGX-0608"`
+
+A scene file failed structural validation against the generated scene-file JSON Schema.
 
 ##### sceneInstanceCycle
 
@@ -16692,11 +25505,23 @@ A value had the wrong JavaScript or JSON type for its schema field kind.
 
 A schema declaration or a property bag named a field the schema does not declare.
 
+##### screenshotNeedsRenderLoop
+
+> `readonly` **screenshotNeedsRenderLoop**: `"IGX-0707"`
+
+A screenshot was requested with no render loop running, so no frame will ever be presented.
+
 ##### serviceNotRegistered
 
 > `readonly` **serviceNotRegistered**: `"IGX-0405"`
 
 `ctx.require()` asked for a service that no earlier extension registered.
+
+##### shadowsUnsupportedForLight
+
+> `readonly` **shadowsUnsupportedForLight**: `"IGX-0703"`
+
+Shadows were requested from a light kind Babylon Lite cannot shadow.
 
 ##### signalHandlerThrew
 
@@ -16721,6 +25546,12 @@ The project settings declare more layer names than the 32 available slots.
 > `readonly` **transformIsNotRemovable**: `"IGX-0205"`
 
 `Transform` was removed or disabled; every entity must keep exactly one enabled transform.
+
+##### unknownComponentTypeId
+
+> `readonly` **unknownComponentTypeId**: `"IGX-0307"`
+
+A scene file names a component `typeId` that no extension has registered.
 
 ##### unknownDiagnosticsCounter
 
@@ -16758,6 +25589,12 @@ A serialized `$entity`/`$component` reference could not be resolved.
 
 A scene, prefab, or manifest declares a format version this build cannot read.
 
+##### unsupportedMaterialKind
+
+> `readonly` **unsupportedMaterialKind**: `"IGX-0708"`
+
+A material file declares a family this build cannot construct.
+
 ##### webGpuUnavailable
 
 > `readonly` **webGpuUnavailable**: `"IGX-0701"`
@@ -16771,6 +25608,13 @@ throw new IgnifxError(CoreErrorCode.mutationAfterDestroy, "The entity has been d
   context: { entity: entity.uid },
 });
 ```
+
+#### Remarks
+
+Code blocks reserved for other first-party packages, which cannot import this table
+(`docs/architecture/00-overview.md` §2): `@ignifx/cli` owns `IGX-1401`–`IGX-1419`;
+`@ignifx/vite-plugin` owns `IGX-0550`–`IGX-0599` and `IGX-0650`–`IGX-0699`. Core allocates its
+own codes from the bottom of each range and, in the platform range, from `IGX-1420` upward.
 
 ***
 
@@ -16802,6 +25646,30 @@ const extensions = [coreExtension(), physics(), input()];
 
 ***
 
+### DEFAULT\_ASSET\_CONCURRENCY
+
+> `const` **DEFAULT\_ASSET\_CONCURRENCY**: `6` = `6`
+
+The concurrency limit an unconfigured queue uses (§4).
+
+***
+
+### DEFAULT\_ASSET\_ROOT
+
+> `const` **DEFAULT\_ASSET\_ROOT**: `"assets"` = `"assets"`
+
+The asset root a project gets when it configures none (§2).
+
+***
+
+### DEFAULT\_BRDF\_LUT\_ADDRESS
+
+> `const` **DEFAULT\_BRDF\_LUT\_ADDRESS**: `"environments/brdf-lut.png"` = `"environments/brdf-lut.png"`
+
+The BRDF lookup table address an `Environment` uses when neither it nor the project names one.
+
+***
+
 ### DEFAULT\_LAYER
 
 > `const` **DEFAULT\_LAYER**: `0` = `0`
@@ -16823,6 +25691,55 @@ How many records [createMemorySink](#creatememorysink) keeps when no limit is gi
 > `const` **DEG\_TO\_RAD**: `number`
 
 Multiplier that converts degrees to radians.
+
+***
+
+### EMPTY\_ASSET\_MANIFEST
+
+> `const` **EMPTY\_ASSET\_MANIFEST**: [`AssetManifest`](#assetmanifest)
+
+The manifest an app uses until a build supplies one.
+
+***
+
+### ENVIRONMENT\_ASSET\_TYPE
+
+> `const` **ENVIRONMENT\_ASSET\_TYPE**: `"environment"` = `"environment"`
+
+The asset type environments are registered under.
+
+***
+
+### ENVIRONMENT\_FILE\_EXTENSION
+
+> `const` **ENVIRONMENT\_FILE\_EXTENSION**: `".environment.json"` = `".environment.json"`
+
+The address suffix that selects the environment *description* file.
+
+***
+
+### ENVIRONMENT\_FILE\_EXTENSIONS
+
+> `const` **ENVIRONMENT\_FILE\_EXTENSIONS**: readonly `string`[]
+
+The address suffixes that select the environment loader.
+
+***
+
+### ENVIRONMENT\_FILE\_FORMAT
+
+> `const` **ENVIRONMENT\_FILE\_FORMAT**: `"ignifx.environment"` = `"ignifx.environment"`
+
+The `format` header an `.environment.json` carries
+(`docs/architecture/06-serialization-and-scene-format.md` §6).
+
+***
+
+### ENVIRONMENT\_FORMAT\_VERSION
+
+> `const` **ENVIRONMENT\_FORMAT\_VERSION**: `1` = `1`
+
+The only `.environment.json` `formatVersion` this build reads.
 
 ***
 
@@ -17088,6 +26005,30 @@ A 4D vector.
 
 ***
 
+### FOG\_MODE\_NAMES
+
+> `const` **FOG\_MODE\_NAMES**: readonly \[`"none"`, `"linear"`, `"exp"`, `"exp2"`\]
+
+The `as const` name table behind the public union of the same name.
+
+***
+
+### FONT\_ASSET\_TYPE
+
+> `const` **FONT\_ASSET\_TYPE**: `"font"` = `"font"`
+
+The asset type fonts are registered under.
+
+***
+
+### FONT\_FILE\_EXTENSIONS
+
+> `const` **FONT\_FILE\_EXTENSIONS**: readonly `string`[]
+
+The address suffixes that select the font loader.
+
+***
+
 ### FRAME\_HISTORY\_LENGTH
 
 > `const` **FRAME\_HISTORY\_LENGTH**: `300` = `300`
@@ -17103,6 +26044,35 @@ what the devtools graphs plot (`docs/architecture/15-devtools-and-diagnostics.md
 
 The handle value that never resolves. Allocated handles always carry a generation of at least
 one, so zero is unreachable and doubles as "no handle".
+
+***
+
+### jsonAssetLoader
+
+> `const` **jsonAssetLoader**: [`AssetLoader`](#assetloader)
+
+Parsed JSON, for `.json` addresses.
+
+#### Remarks
+
+The value is whatever the file contained; a loader that needs certainty about its shape validates
+it with a schema (`docs/architecture/06-serialization-and-scene-format.md` §8). Longer suffixes
+win the extension match, so registering a `.scene.json` loader takes those addresses away from
+this one without any ordering rule.
+
+#### Example
+
+```ts
+const config = app.assets.load<{ readonly hp: number }>("data/player.json");
+```
+
+***
+
+### LIGHT\_TYPES
+
+> `const` **LIGHT\_TYPES**: readonly \[`"directional"`, `"point"`, `"spot"`, `"hemispheric"`\]
+
+The `as const` name table behind the public union of the same name.
 
 ***
 
@@ -17169,6 +26139,55 @@ Mat4.transformPointToRef(MAT4_IDENTITY, point, out); // copies the point
 
 ***
 
+### MATERIAL\_ALPHA\_MODE\_NAMES
+
+> `const` **MATERIAL\_ALPHA\_MODE\_NAMES**: readonly [`MaterialAlphaModeName`](#materialalphamodename)[]
+
+The alpha modes a material may declare, in the order the inspector lists them.
+
+***
+
+### MATERIAL\_ASSET\_TYPE
+
+> `const` **MATERIAL\_ASSET\_TYPE**: `"material"` = `"material"`
+
+The asset type materials are registered under.
+
+***
+
+### MATERIAL\_FILE\_EXTENSION
+
+> `const` **MATERIAL\_FILE\_EXTENSION**: `".material.json"` = `".material.json"`
+
+The address suffix that selects the material loader.
+
+***
+
+### MATERIAL\_FILE\_FORMAT
+
+> `const` **MATERIAL\_FILE\_FORMAT**: `"ignifx.material"` = `"ignifx.material"`
+
+The `format` header every `.material.json` carries.
+
+***
+
+### MATERIAL\_FORMAT\_VERSION
+
+> `const` **MATERIAL\_FORMAT\_VERSION**: `1` = `1`
+
+The only `.material.json` `formatVersion` this build reads.
+
+***
+
+### MATERIAL\_KINDS
+
+> `const` **MATERIAL\_KINDS**: readonly \[`"pbr"`, `"standard"`, `"shader"`\]
+
+The material families `.material.json` can declare
+(`docs/architecture/07-rendering.md` §2.6).
+
+***
+
 ### MAX\_LAYERS
 
 > `const` **MAX\_LAYERS**: `32` = `32`
@@ -17183,6 +26202,38 @@ How many layer slots exist. One bit each, in a 32-bit mask.
 
 The largest timestamp a ULID can encode, in milliseconds since the Unix epoch. Readings beyond it
 are clamped rather than producing a malformed identifier.
+
+***
+
+### MESH\_ASSET\_TYPE
+
+> `const` **MESH\_ASSET\_TYPE**: `"mesh"` = `"mesh"`
+
+The asset type primitives are registered under.
+
+***
+
+### MODEL\_ASSET\_TYPE
+
+> `const` **MODEL\_ASSET\_TYPE**: `"model"` = `"model"`
+
+The asset type models are registered under.
+
+***
+
+### MODEL\_FILE\_EXTENSIONS
+
+> `const` **MODEL\_FILE\_EXTENSIONS**: readonly `string`[]
+
+The address suffixes that select the model loader.
+
+***
+
+### PBR\_TEXTURE\_SLOTS
+
+> `const` **PBR\_TEXTURE\_SLOTS**: readonly `string`[]
+
+The texture slots a `"pbr"` material may name, in the order the loader resolves them.
 
 ***
 
@@ -17272,6 +26323,14 @@ Every phase in frame order, for loops that walk them all.
 
 ***
 
+### PROJECTIONS
+
+> `const` **PROJECTIONS**: readonly \[`"perspective"`, `"orthographic"`\]
+
+The `as const` name table behind the public union of the same name.
+
+***
+
 ### QUAT\_IDENTITY
 
 > `const` **QUAT\_IDENTITY**: [`QuatLike`](#quatlike)
@@ -17289,12 +26348,73 @@ Multiplier that converts radians to degrees.
 
 ***
 
+### RENDER\_DIAGNOSTICS\_COUNTERS
+
+> `const` **RENDER\_DIAGNOSTICS\_COUNTERS**: readonly `string`[]
+
+The counters the `render` diagnostics group publishes, in index order.
+
+***
+
+### RENDER\_DIAGNOSTICS\_GROUP
+
+> `const` **RENDER\_DIAGNOSTICS\_GROUP**: `"render"` = `"render"`
+
+The render diagnostics group name (`docs/architecture/15-devtools-and-diagnostics.md` §3).
+
+***
+
+### RENDERING\_SETTINGS\_SECTION
+
+> `const` **RENDERING\_SETTINGS\_SECTION**: `"rendering"` = `"rendering"`
+
+The name the `rendering` project settings section is registered under.
+
+***
+
 ### RESERVED\_LAYER\_NAMES
 
 > `const` **RESERVED\_LAYER\_NAMES**: readonly `string`[]
 
 The names of the eight engine-reserved slots, in slot order. They always occupy slots 0–7,
 whether or not the project lists them (`docs/architecture/02-scene-graph.md` §7).
+
+***
+
+### SCENE\_ASSET\_TYPE
+
+> `const` **SCENE\_ASSET\_TYPE**: `"scene"` = `"scene"`
+
+The asset type name the scene loader registers under.
+
+***
+
+### SCENE\_FILE\_EXTENSIONS
+
+> `const` **SCENE\_FILE\_EXTENSIONS**: readonly `string`[]
+
+The file extensions the scene loader claims.
+
+***
+
+### SCENE\_FILE\_FORMAT
+
+> `const` **SCENE\_FILE\_FORMAT**: `"ignifx.scene"` = `"ignifx.scene"`
+
+The `format` discriminator every scene and prefab file carries
+(`docs/architecture/06-serialization-and-scene-format.md` §2). Levels (`*.scene.json`) and
+prefabs (`*.prefab.json`) share it: a prefab is a scene instanced inside another scene
+(ADR-0005), not a second file type.
+
+***
+
+### SCENE\_FORMAT\_VERSION
+
+> `const` **SCENE\_FORMAT\_VERSION**: `1` = `1`
+
+The `formatVersion` this build writes and is the only one it can read. Before 1.0 the number
+stays `1` and an incompatible change invalidates files rather than migrating them
+(`CONSTITUTION.md` §4.2); a file declaring anything else is rejected with `IGX-0603`.
 
 ***
 
@@ -17338,6 +26458,30 @@ A property was supplied that the schema does not declare.
 > `readonly` **unresolvedReference**: `"IGX-0602"`
 
 An entity or component reference could not be resolved to a uid.
+
+***
+
+### STANDARD\_TEXTURE\_SLOTS
+
+> `const` **STANDARD\_TEXTURE\_SLOTS**: readonly `string`[]
+
+The texture slots a `"standard"` material may name.
+
+***
+
+### textAssetLoader
+
+> `const` **textAssetLoader**: [`AssetLoader`](#assetloader)\<`string`\>
+
+UTF-8 text, for `.txt`, `.md`, and `.csv` addresses.
+
+***
+
+### TEXTURE\_ASSET\_TYPE
+
+> `const` **TEXTURE\_ASSET\_TYPE**: `"texture"` = `"texture"`
+
+The asset type textures are registered under.
 
 ***
 
@@ -17626,12 +26770,39 @@ switch (level) {
 
 ***
 
+### assertSceneDependenciesLoaded()
+
+> **assertSceneDependenciesLoaded**(`asset`): `void`
+
+Checks that every scene a file instances — at any depth — is among the loaded dependencies, which
+is what makes `world.instantiate` safe to be synchronous
+(`docs/architecture/02-scene-graph.md` §2).
+
+#### Parameters
+
+##### asset
+
+[`SceneAsset`](#sceneasset)
+
+The scene to check.
+
+#### Returns
+
+`void`
+
+#### Throws
+
+IgnifxError with code `IGX-0301` naming the first instanced scene that is not loaded.
+
+***
+
 ### asset()
 
-> **asset**\<`A`\>(`type`, `options?`): [`FieldDefinition`](#fielddefinition)\<[`AssetRefValue`](#assetrefvalue)\<`A`\> \| `null`\>
+> **asset**\<`A`\>(`type`, `options?`): [`FieldDefinition`](#fielddefinition)\<[`AssetHandle`](#assethandle)\<`A`\> \| `null`\>
 
-Declares a reference to an addressable asset. In Phase 1 the field holds the *address*; the
-loaded handle arrives with the assets service in Phase 2
+Declares a reference to an addressable asset. The **runtime** value is the loaded
+[AssetHandle](#assethandle), not an address: a component's `asset()` fields are resolved before its props
+are written, so `awake` can already read `this.mesh.value`
 (`docs/architecture/05-assets-and-loading.md` §3).
 
 #### Type Parameters
@@ -17658,14 +26829,80 @@ Inspector and serializer metadata.
 
 #### Returns
 
-[`FieldDefinition`](#fielddefinition)\<[`AssetRefValue`](#assetrefvalue)\<`A`\> \| `null`\>
+[`FieldDefinition`](#fielddefinition)\<[`AssetHandle`](#assethandle)\<`A`\> \| `null`\>
 
 The field definition.
+
+#### Remarks
+
+Files store the address instead — `{ "$asset": "models/hero.glb", "type"?: "model" }`
+(`06-serialization-and-scene-format.md` §3). Encoding reads `handle.address`; decoding hands that
+address to the `asset` resolver of the `ReferenceDecoder` the scene loader supplies, which answers
+with the handle the scene already retains. Two consequences game code sees:
+
+- An address the resolver cannot answer decodes to `null` and reports `IGX-0602`; the component
+  keeps working with a missing asset rather than failing the whole scene.
+- An **in-code** asset — anything from `Assets.register`, which includes `MeshAsset.box(…)` and
+  `createMaterialAsset(app, pbrMaterialDefinition({ … }))` — lives at a `memory:` address that names no file, so serializing a
+  component that holds one writes `null` and reports the loss. Save the asset as a file when it
+  has to survive a round trip.
+
+The field does **not** retain the handle: the scene instance that loaded it owns the reference
+count and releases it on unload.
 
 #### Example
 
 ```ts
-clip: asset(AudioClip); // AssetRefValue<AudioClip> | null
+class Hero extends Component.define({ clip: asset(AudioClip) }) {
+  static typeId = "mygame/Hero";
+  awake(): void {
+    this.clip?.value.play();
+  }
+}
+```
+
+***
+
+### assetRef()
+
+> **assetRef**\<`T`\>(`address`, `type?`): [`AssetRef`](#assetref-3)\<`T`\>
+
+Builds an asset reference.
+
+#### Type Parameters
+
+##### T
+
+`T` = `unknown`
+
+The loaded value type the reference points at; a compile-time marker only.
+
+#### Parameters
+
+##### address
+
+`string`
+
+The address, fragment included.
+
+##### type?
+
+`string`
+
+The asset type, when the extension does not identify it.
+
+#### Returns
+
+[`AssetRef`](#assetref-3)\<`T`\>
+
+A frozen reference, safe to hold as a module constant.
+
+#### Example
+
+```ts
+const hero = assetRef<ModelAsset>("models/hero.glb");
+const run = assetRef<AnimationClip>("models/hero.glb#animation:Run");
+const handle = app.assets.load(hero);
 ```
 
 ***
@@ -17875,6 +27112,40 @@ follow: componentRef(Camera); // Camera | null
 
 ***
 
+### computeSceneHash()
+
+> **computeSceneHash**(`file`): `Promise`\<`string`\>
+
+The content hash of a scene file: SHA-256 over the canonical JSON text, so two saves of the same
+state hash the same and an edited prefab does not
+(`docs/architecture/06-serialization-and-scene-format.md` §2).
+
+#### Parameters
+
+##### file
+
+[`SceneFile`](#scenefile)
+
+The file to hash.
+
+#### Returns
+
+`Promise`\<`string`\>
+
+The hash as `sha256:<64 lowercase hex digits>`.
+
+#### Throws
+
+IgnifxError with code `IGX-1420` when the host exposes no Web Crypto `subtle`.
+
+#### Example
+
+```ts
+const hash = await computeSceneHash(serializeScene(instance)); // "sha256:9f2c…"
+```
+
+***
+
 ### createApp()
 
 > **createApp**(`options?`): `Promise`\<[`App`](#app)\>
@@ -17916,6 +27187,42 @@ const player = app.world.createEntity("Player");
 player.addComponent(Mover);
 app.step(1 / 60);
 app.dispose();
+```
+
+***
+
+### createAssetManifest()
+
+> **createAssetManifest**(`entries`, `root?`): [`AssetManifest`](#assetmanifest)
+
+Builds a manifest from a list of entries — what a test, a tool, or a hand-written config uses in
+place of the generated file.
+
+#### Parameters
+
+##### entries
+
+readonly [`AssetManifestEntry`](#assetmanifestentry)[]
+
+The addressed files.
+
+##### root?
+
+`string`
+
+The asset root relative addresses resolve against. Defaults to `"assets"`.
+
+#### Returns
+
+[`AssetManifest`](#assetmanifest)
+
+The manifest.
+
+#### Example
+
+```ts
+const manifest = createAssetManifest([{ address: "data/x.json", url: "assets/data/x.abc123.json" }]);
+const app = await createApp({ headless: true, assets: { manifest } });
 ```
 
 ***
@@ -17963,7 +27270,7 @@ A source that fills buffers with `crypto.getRandomValues`.
 
 #### Throws
 
-IgnifxError with code `IGX-1401` when the host exposes no Web Crypto implementation.
+IgnifxError with code `IGX-1420` when the host exposes no Web Crypto implementation.
 
 #### Example
 
@@ -18040,6 +27347,26 @@ The group.
 
 ***
 
+### createEnvironmentLoader()
+
+> **createEnvironmentLoader**(): [`AssetLoader`](#assetloader)\<[`EnvironmentAsset`](#environmentasset)\>
+
+Builds the loader for `.env`, `.hdr`, `.dds`, and `.environment.json` addresses.
+
+#### Returns
+
+[`AssetLoader`](#assetloader)\<[`EnvironmentAsset`](#environmentasset)\>
+
+The loader to register with `ctx.registerAssetLoader`.
+
+#### Example
+
+```ts
+ctx.registerAssetLoader(createEnvironmentLoader());
+```
+
+***
+
 ### createErrorCodeRegistry()
 
 > **createErrorCodeRegistry**(): [`ErrorCodeRegistry`](#errorcoderegistry)
@@ -18058,6 +27385,26 @@ A registry owned by one app.
 const registry = createErrorCodeRegistry();
 registry.register({ "IGX-9001": "The {thing} was not spawned." }, "game/spawner");
 registry.describe("IGX-0701")?.message; // "WebGPU is not available in this environment."
+```
+
+***
+
+### createFontLoader()
+
+> **createFontLoader**(): [`AssetLoader`](#assetloader)\<[`FontAsset`](#fontasset)\>
+
+Builds the loader for `.ttf` and `.otf` addresses.
+
+#### Returns
+
+[`AssetLoader`](#assetloader)\<[`FontAsset`](#fontasset)\>
+
+The loader to register with `ctx.registerAssetLoader`.
+
+#### Example
+
+```ts
+ctx.registerAssetLoader(createFontLoader());
 ```
 
 ***
@@ -18181,6 +27528,66 @@ clock.nowMs(); // 1016.666…
 
 ***
 
+### createMaterialAsset()
+
+> **createMaterialAsset**(`app`, `definition`, `textures`): [`AssetHandle`](#assethandle)\<[`MaterialAsset`](#materialasset)\>
+
+Builds a Lite material from a declaration and publishes it as an in-memory asset.
+
+#### Parameters
+
+##### app
+
+[`App`](#app)
+
+The app whose asset service publishes it.
+
+##### definition
+
+[`MaterialDefinition`](#materialdefinition)
+
+The declaration.
+
+##### textures
+
+readonly [`AssetHandle`](#assethandle)\<[`TextureAsset`](#textureasset)\>[]
+
+The texture handles the declaration's slots resolved to, in slot order.
+
+#### Returns
+
+[`AssetHandle`](#assethandle)\<[`MaterialAsset`](#materialasset)\>
+
+The handle, with one holder — the caller.
+
+#### Example
+
+```ts
+using red = createMaterialAsset(app, pbrMaterialDefinition({ name: "red", baseColor: { r: 1, g: 0, b: 0, a: 1 } }), []);
+```
+
+***
+
+### createMaterialLoader()
+
+> **createMaterialLoader**(): [`AssetLoader`](#assetloader)\<[`MaterialAsset`](#materialasset)\>
+
+Builds the loader for `.material.json` addresses.
+
+#### Returns
+
+[`AssetLoader`](#assetloader)\<[`MaterialAsset`](#materialasset)\>
+
+The loader to register with `ctx.registerAssetLoader`.
+
+#### Example
+
+```ts
+ctx.registerAssetLoader(createMaterialLoader());
+```
+
+***
+
 ### createMemorySink()
 
 > **createMemorySink**(`limit?`): [`MemorySink`](#memorysink)
@@ -18213,6 +27620,26 @@ sink.at(0)?.level; // "warn"
 
 ***
 
+### createModelLoader()
+
+> **createModelLoader**(): [`AssetLoader`](#assetloader)\<[`ModelAsset`](#modelasset)\>
+
+Builds the loader for `.glb` and `.gltf` addresses.
+
+#### Returns
+
+[`AssetLoader`](#assetloader)\<[`ModelAsset`](#modelasset)\>
+
+The loader to register with `ctx.registerAssetLoader`.
+
+#### Example
+
+```ts
+ctx.registerAssetLoader(createModelLoader());
+```
+
+***
+
 ### createPerformanceClock()
 
 > **createPerformanceClock**(): [`Clock`](#clock)
@@ -18224,6 +27651,108 @@ Creates the default clock: `performance.now()` where the host has it, `Date.now(
 [`Clock`](#clock)
 
 A clock reading the host's monotonic timer.
+
+***
+
+### createRay()
+
+> **createRay**(): [`Ray`](#ray)
+
+Creates a reusable ray at the origin pointing along `+Z`.
+
+#### Returns
+
+[`Ray`](#ray)
+
+A fresh ray. **Allocates** — make one per call site, not per frame.
+
+#### Example
+
+```ts
+const ray = createRay();
+camera.screenToRay(event.offsetX, event.offsetY, ray);
+```
+
+***
+
+### createSceneAsset()
+
+> **createSceneAsset**(`address`, `file`, `dependencies?`): `Promise`\<[`SceneAsset`](#sceneasset)\>
+
+Builds a `SceneAsset` from a file that is already in memory — the shape the loader returns, and
+the one tests and tools use when there is no asset service in play.
+
+#### Parameters
+
+##### address
+
+`string`
+
+The address the asset stands at.
+
+##### file
+
+[`SceneFile`](#scenefile)
+
+The parsed file.
+
+##### dependencies?
+
+readonly [`AssetHandle`](#assethandle)\<`unknown`\>[]
+
+Every asset the file references, already loaded.
+
+#### Returns
+
+`Promise`\<[`SceneAsset`](#sceneasset)\>
+
+The asset, with its content hash computed.
+
+#### Example
+
+```ts
+const prefab = await createSceneAsset("prefabs/enemy.prefab.json", enemyFile, []);
+```
+
+***
+
+### createSceneLoader()
+
+> **createSceneLoader**(`options?`): [`AssetLoader`](#assetloader)\<[`SceneAsset`](#sceneasset)\>
+
+The `AssetLoader` for `*.scene.json` and `*.prefab.json`
+(`docs/architecture/06-serialization-and-scene-format.md` §4 steps 1 and 2, ADR-0005 — one
+loader for levels and prefabs).
+
+#### Parameters
+
+##### options?
+
+[`SceneLoaderOptions`](#sceneloaderoptions)
+
+Whether to validate.
+
+#### Returns
+
+[`AssetLoader`](#assetloader)\<[`SceneAsset`](#sceneasset)\>
+
+The loader to register with `ctx.registerAssetLoader`.
+
+#### Remarks
+
+The loader does everything the file needs *before* the world sees it: parse, check the header and
+the format version, validate the structure, then resolve every `$asset` it can find — in
+`settings`, in every component's `props`, and in every `instance.scene`, recursively through the
+scene assets those pull in. The resulting `SceneAsset` therefore carries a fully loaded
+dependency set, which is what makes `world.instantiate` synchronous
+(`02-scene-graph.md` §2).
+
+#### Example
+
+```ts
+ctx.registerAssetLoader(createSceneLoader());
+const level = await app.assets.loadAsync<SceneAsset>("levels/level01.scene.json");
+```
 
 ***
 
@@ -18295,6 +27824,26 @@ The key. It is a plain frozen object, so it is safe at module scope.
 ```ts
 export const StorageService: ServiceKey<Storage> = createServiceKey<Storage>("storage");
 ctx.registerService(StorageService, new LocalStorage());
+```
+
+***
+
+### createTextureLoader()
+
+> **createTextureLoader**(): [`AssetLoader`](#assetloader)\<[`TextureAsset`](#textureasset)\>
+
+Builds the loader for `.png`, `.jpg`, `.jpeg`, `.webp`, `.ktx2`, and `.basis` addresses.
+
+#### Returns
+
+[`AssetLoader`](#assetloader)\<[`TextureAsset`](#textureasset)\>
+
+The loader to register with `ctx.registerAssetLoader`.
+
+#### Example
+
+```ts
+ctx.registerAssetLoader(createTextureLoader());
 ```
 
 ***
@@ -18514,6 +28063,30 @@ decodeValue(vec3(), [1, 2, 3], references); // { value: { x: 1, y: 2, z: 3 }, is
 
 ***
 
+### defaultRenderingSettings()
+
+> **defaultRenderingSettings**(): [`RenderingSettings`](#renderingsettings)
+
+The settings a project that declares no `rendering` section runs with: every feature off, Lite's
+own swapchain defaults, and an unclamped device pixel ratio.
+
+#### Returns
+
+[`RenderingSettings`](#renderingsettings)
+
+A fresh, complete section. It is built on demand rather than frozen at module scope
+because `requiredLimits` and `clearColor` are mutable objects a caller must not share
+(`CONSTITUTION.md` §3.5).
+
+#### Example
+
+```ts
+const defaults = defaultRenderingSettings();
+defaults.features.shadows; // false
+```
+
+***
+
 ### defineExtension()
 
 > **defineExtension**\<`O`\>(`factory`): (`options?`) => [`Extension`](#extension)
@@ -18670,6 +28243,52 @@ deltaAngleDegrees(350, 10); // 20, not -340
 
 ***
 
+### describeEnvironmentFileFormat()
+
+> **describeEnvironmentFileFormat**(): [`SchemaDescription`](#schemadescription)
+
+Describes the `ignifx.environment` file format
+(`docs/architecture/06-serialization-and-scene-format.md` §6, `07-rendering.md` §2.5).
+
+#### Returns
+
+[`SchemaDescription`](#schemadescription)
+
+The description of the top-level file fields.
+
+***
+
+### describeMaterialFileFormat()
+
+> **describeMaterialFileFormat**(): [`SchemaDescription`](#schemadescription)
+
+Describes the `ignifx.material` file format
+(`docs/architecture/06-serialization-and-scene-format.md` §6, `07-rendering.md` §2.6).
+
+#### Returns
+
+[`SchemaDescription`](#schemadescription)
+
+The description of the top-level file fields.
+
+***
+
+### describeSceneFileFormat()
+
+> **describeSceneFileFormat**(): [`SchemaDescription`](#schemadescription)
+
+The docs-harness description of the scene file format
+(`scripts/README.md`, "Schema discovery convention"), so `pnpm docs:schemas` can render
+`references/formats/scene.md` beside the component pages.
+
+#### Returns
+
+[`SchemaDescription`](#schemadescription)
+
+The description of the top-level file fields.
+
+***
+
 ### describeSchema()
 
 > **describeSchema**(`typeId`, `schema`, `meta?`): [`SchemaDescription`](#schemadescription)
@@ -18689,7 +28308,7 @@ The component's namespaced registration id, for example `mygame/Mover`.
 
 ##### schema
 
-[`Schema`](#schema-4)
+[`Schema`](#schema-10)
 
 The component's declared fields.
 
@@ -18711,6 +28330,27 @@ The description entry.
 export const schemas = {
   "mygame/Mover": describeSchema("mygame/Mover", moverSchema, { description: "Moves an entity." }),
 };
+```
+
+***
+
+### describeSchemas()
+
+> **describeSchemas**(): `Readonly`\<`Record`\<`string`, [`SchemaDescription`](#schemadescription)\>\>
+
+Describes every component and file format this package declares, for the documentation harness.
+
+#### Returns
+
+`Readonly`\<`Record`\<`string`, [`SchemaDescription`](#schemadescription)\>\>
+
+The records, keyed by namespaced type id.
+
+#### Example
+
+```ts
+const schemas = describeSchemas();
+schemas["ignifx/Camera"].fields["fov"].default; // 60
 ```
 
 ***
@@ -18917,6 +28557,34 @@ mode: enumOf(["walk", "run"] as const, "walk");
 
 ***
 
+### environmentDefinition()
+
+> **environmentDefinition**(`overrides?`): [`EnvironmentDefinition`](#environmentdefinition-3)
+
+Fills in an environment declaration's defaults.
+
+#### Parameters
+
+##### overrides?
+
+`Partial`\<[`EnvironmentDefinition`](#environmentdefinition-3)\>
+
+The properties the file or the caller set.
+
+#### Returns
+
+[`EnvironmentDefinition`](#environmentdefinition-3)
+
+A complete declaration.
+
+#### Example
+
+```ts
+environmentDefinition({ environment: "environments/studio.env", skyboxEnabled: false });
+```
+
+***
+
 ### f32()
 
 > **f32**(`defaultValue?`, `options?`): [`FieldDefinition`](#fielddefinition)\<`number`\>
@@ -19109,6 +28777,66 @@ The field definition.
 
 ***
 
+### instantiateScene()
+
+> **instantiateScene**(`world`, `asset`, `options?`): [`SceneBuildResult`](#scenebuildresult)
+
+Builds the entities of a scene asset into a world — steps 3 to 6 of the loading algorithm
+(`docs/architecture/06-serialization-and-scene-format.md` §4). It is synchronous and does no I/O:
+every asset the file references is already loaded, which is what a `SceneAsset` guarantees.
+
+#### Parameters
+
+##### world
+
+[`World`](#world-12)
+
+The world to build into.
+
+##### asset
+
+[`SceneAsset`](#sceneasset)
+
+The scene to build.
+
+##### options?
+
+[`InstantiateSceneOptions`](#instantiatesceneoptions)
+
+Where to attach the result, and how to treat instance hashes.
+
+#### Returns
+
+[`SceneBuildResult`](#scenebuildresult)
+
+The roots, the uid table, and every recoverable problem.
+
+#### Remarks
+
+The mechanism that keeps `awake` honest is worth stating, because §4 step 6 and
+`01-lifecycle-and-time.md` §4 state only the outcome. Entities are created with `active: false`,
+so the enable transition computes "not effectively enabled" and queues nothing. Components are
+attached with their schema defaults, then every component's props are decoded — that is where
+`entityRef` and `componentRef` resolve, through a table that by then holds the whole scene. Only
+then does a last pass write each entity's file `active` value in tree order, which is what queues
+`awake` and `onEnable`, parents before children. Nothing observes the half-built scene, because
+all of this runs in one synchronous block.
+
+#### Throws
+
+IgnifxError with code `IGX-0302` on an instance cycle, `IGX-0307` when the file names an
+unregistered component type, and `IGX-0604` when `strictInstanceHashes` is set and a recorded
+instance hash does not match.
+
+#### Example
+
+```ts
+const built = instantiateScene(world, sceneAsset, { scene: world.activeScene });
+const player = built.remap.entity("01J9Z6M7E5S3A0V2Q4R8T1Y6WX");
+```
+
+***
+
 ### inverseLerp()
 
 > **inverseLerp**(`a`, `b`, `value`): `number`
@@ -19143,6 +28871,34 @@ The interpolant, clamped into `[0, 1]`. Returns 0 when `a` and `b` are equal.
 
 ***
 
+### isAssetRef()
+
+> **isAssetRef**(`value`): `value is AssetRef<unknown>`
+
+Reports whether a value is an asset reference rather than a plain address.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The candidate.
+
+#### Returns
+
+`value is AssetRef<unknown>`
+
+`true` when the value is an object with a string `address`.
+
+#### Example
+
+```ts
+const address = isAssetRef(input) ? input.address : input;
+```
+
+***
+
 ### isIgnifxError()
 
 > **isIgnifxError**(`value`): `value is IgnifxError`
@@ -19173,6 +28929,30 @@ app.onError.connect((report) => {
   }
 });
 ```
+
+***
+
+### isSceneFileHeader()
+
+> **isSceneFileHeader**(`value`): `boolean`
+
+Reports whether a parsed JSON value carries the `ignifx.scene` header. It is the cheap check the
+loader runs before anything else, so a `.json` asset handed to the wrong loader fails with
+`IGX-0308` rather than a confusing field error.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The parsed JSON.
+
+#### Returns
+
+`boolean`
+
+`true` when the value is an object whose `format` is [SCENE\_FILE\_FORMAT](#scene_file_format).
 
 ***
 
@@ -19517,6 +29297,67 @@ nickname: optional(str()); // string | null
 
 ***
 
+### parseOverridePath()
+
+> **parseOverridePath**(`path`): [`OverridePath`](#overridepath)
+
+Parses an override path.
+
+#### Parameters
+
+##### path
+
+`string`
+
+The `path` string from the file.
+
+#### Returns
+
+[`OverridePath`](#overridepath)
+
+The parsed path.
+
+#### Throws
+
+IgnifxError with code `IGX-0609` when the path does not match the grammar.
+
+#### Example
+
+```ts
+parseOverridePath("01J…ROOT/components/01J…AI/props/aggression");
+// { kind: "prop", entity: "01J…ROOT", component: "01J…AI", steps: ["aggression"] }
+```
+
+***
+
+### pbrMaterialDefinition()
+
+> **pbrMaterialDefinition**(`overrides?`): [`PbrMaterialDefinition`](#pbrmaterialdefinition-3)
+
+Fills in a PBR declaration's defaults, so callers name only what they mean to change.
+
+#### Parameters
+
+##### overrides?
+
+`Partial`\<`Omit`\<[`PbrMaterialDefinition`](#pbrmaterialdefinition-3), `"kind"`\>\>
+
+The properties to set.
+
+#### Returns
+
+[`PbrMaterialDefinition`](#pbrmaterialdefinition-3)
+
+A complete declaration.
+
+#### Example
+
+```ts
+pbrMaterialDefinition({ name: "gold", metallic: 1, roughness: 0.25 });
+```
+
+***
+
 ### pingPong()
 
 > **pingPong**(`t`, `length`): `number`
@@ -19701,6 +29542,170 @@ The same sample, so it can be used as an expression.
 
 ***
 
+### sceneFileJsonSchema()
+
+> **sceneFileJsonSchema**(`registry`): [`JsonObject`](#jsonobject)
+
+The draft 2020-12 JSON Schema for a scene file, with `components[].props` narrowed per registered
+component `typeId` (`docs/architecture/06-serialization-and-scene-format.md` §8). The Vite plugin
+and the `ignifx schemas` CLI command emit this into `ignifx.schemas.json`, which drives
+build-time validation and editor autocompletion.
+
+#### Parameters
+
+##### registry
+
+[`ComponentRegistry`](#componentregistry)
+
+The component table whose registered classes narrow `props`. Classes without a
+schema contribute a `type` match with a free-form `props` object.
+
+#### Returns
+
+[`JsonObject`](#jsonobject)
+
+The schema document.
+
+#### Example
+
+```ts
+const schema = sceneFileJsonSchema(app.world.registry);
+await writeFile("ignifx.schemas.json", JSON.stringify(schema, null, 2));
+```
+
+***
+
+### serializeComponent()
+
+> **serializeComponent**(`component`, `references?`, `onIssue?`): [`SceneFileComponent`](#scenefilecomponent)
+
+Writes one component as a file record, for tooling and tests.
+
+#### Parameters
+
+##### component
+
+[`Component`](#abstract-component)
+
+The component to write.
+
+##### references?
+
+[`ReferenceEncoder`](#referenceencoder)
+
+How entity and component references resolve to uids.
+
+##### onIssue?
+
+(`issue`) => `void`
+
+Receives problems found while encoding props.
+
+#### Returns
+
+[`SceneFileComponent`](#scenefilecomponent)
+
+The component record.
+
+#### Throws
+
+IgnifxError with code `IGX-0204` when the component's class declares no `typeId`.
+
+#### Example
+
+```ts
+expect(serializeComponent(mover).props).toEqual({ speed: 5 });
+```
+
+***
+
+### serializeEntity()
+
+> **serializeEntity**(`entity`, `references?`): [`SceneFileEntity`](#scenefileentity)
+
+Writes one entity as a file record, for tooling and tests
+(`docs/architecture/06-serialization-and-scene-format.md` §5).
+
+#### Parameters
+
+##### entity
+
+[`Entity`](#entity-2)
+
+The entity to write.
+
+##### references?
+
+[`ReferenceEncoder`](#referenceencoder)
+
+How entity and component references resolve to uids; by default every
+reference resolves to the target's own uid, which is what an inspector wants.
+
+#### Returns
+
+[`SceneFileEntity`](#scenefileentity)
+
+The entity record.
+
+#### Remarks
+
+The entity is written on its own: its `parent` is whatever its runtime parent's uid is, its
+instanced subtree is not consulted, and references to objects outside it become `null`.
+
+#### Example
+
+```ts
+expect(serializeEntity(player).transform.position).toEqual([0, 1, 0]);
+```
+
+***
+
+### serializeScene()
+
+> **serializeScene**(`source`, `options?`): [`SceneFile`](#scenefile)
+
+Writes a scene instance, or a set of entities, as a scene file object
+(`docs/architecture/06-serialization-and-scene-format.md` §5).
+
+#### Parameters
+
+##### source
+
+[`SceneInstance`](#sceneinstance) \| readonly [`Entity`](#entity-2)[]
+
+The instance to write, or the entities to write as a file's roots.
+
+##### options?
+
+[`SerializeSceneOptions`](#serializesceneoptions)
+
+Flattening, naming, and the issue collector.
+
+#### Returns
+
+[`SceneFile`](#scenefile)
+
+The file object.
+
+#### Remarks
+
+Everything about the output is fixed so that two saves of the same state are byte-identical:
+entities appear in tree order, object keys in the canonical order of §1, numbers rounded by
+[canonicalizeNumber](#canonicalizenumber), props in their schema's declaration order, and properties equal to
+their default (`active`, `static`, `layer`, `tags`, `enabled`) omitted. Pass the result to
+`stringifySceneFile` for the canonical text.
+
+An entity that came from an `instance` entry is re-emitted as one — with overrides recomputed by
+diffing its current state against the instanced scene — unless `flatten` is set.
+
+#### Example
+
+```ts
+const text = stringifySceneFile(serializeScene(world.activeScene));
+```
+
+***
+
 ### sign()
 
 > **sign**(`value`): `number`
@@ -19766,6 +29771,28 @@ smoothStep(0, 1, 0.5); // 0.5, but with zero slope at 0 and 1
 
 ***
 
+### standardMaterialDefinition()
+
+> **standardMaterialDefinition**(`overrides?`): [`StandardMaterialDefinition`](#standardmaterialdefinition-3)
+
+Fills in a Standard declaration's defaults.
+
+#### Parameters
+
+##### overrides?
+
+`Partial`\<`Omit`\<[`StandardMaterialDefinition`](#standardmaterialdefinition-3), `"kind"`\>\>
+
+The properties to set.
+
+#### Returns
+
+[`StandardMaterialDefinition`](#standardmaterialdefinition-3)
+
+A complete declaration.
+
+***
+
 ### str()
 
 > **str**(`defaultValue?`, `options?`): [`FieldDefinition`](#fielddefinition)\<`string`\>
@@ -19794,6 +29821,37 @@ The field definition.
 
 ***
 
+### stringifySceneFile()
+
+> **stringifySceneFile**(`file`): `string`
+
+Writes a scene file as the canonical UTF-8 JSON text: two-space indentation, keys in the order
+the serializer built them, numbers already canonicalized by
+[canonicalizeNumber](#canonicalizenumber). Two saves of the same state produce byte-identical text
+(`docs/architecture/06-serialization-and-scene-format.md` §1).
+
+#### Parameters
+
+##### file
+
+[`SceneFile`](#scenefile)
+
+The file object, normally from `serializeScene`.
+
+#### Returns
+
+`string`
+
+The JSON text, without a trailing newline.
+
+#### Example
+
+```ts
+stringifySceneFile(serializeScene(instance)) === stringifySceneFile(serializeScene(instance));
+```
+
+***
+
 ### toJsonSchema()
 
 > **toJsonSchema**(`schema`): [`JsonObject`](#jsonobject)
@@ -19806,7 +29864,7 @@ editor autocompletion (`docs/architecture/06-serialization-and-scene-format.md` 
 
 ##### schema
 
-[`Schema`](#schema-4)
+[`Schema`](#schema-10)
 
 The schema to convert.
 
@@ -19859,7 +29917,7 @@ as `IGX-0607`; names the caller omits are legal, because omitted props take sche
 
 ##### schema
 
-[`Schema`](#schema-4)
+[`Schema`](#schema-10)
 
 The schema to check against.
 
@@ -19880,6 +29938,49 @@ A property path prefix used when reporting issues; defaults to the empty path.
 readonly [`SchemaIssue`](#schemaissue)[]
 
 Every problem found, in discovery order; empty when the props are valid.
+
+***
+
+### validateSceneFile()
+
+> **validateSceneFile**(`value`): readonly [`SceneFileIssue`](#scenefileissue)[]
+
+Validates a parsed JSON value against the scene file format
+(`docs/architecture/06-serialization-and-scene-format.md` §2).
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The parsed JSON.
+
+#### Returns
+
+readonly [`SceneFileIssue`](#scenefileissue)[]
+
+Every problem found, in discovery order; empty when the value is a valid scene file.
+
+#### Remarks
+
+The checks mirror [sceneFileJsonSchema](#scenefilejsonschema) clause for clause — required keys, value types,
+tuple lengths, uid uniqueness, and the `parent` and override shapes — and are hand-written
+because the engine ships no JSON Schema runtime and takes no dependency to gain one
+(`CONSTITUTION.md` §2.3). The generated document remains the artefact the Vite plugin and editors
+validate against; this is the same rule set, executable at load time.
+
+Component `props` are *not* checked here: `decodeProps` already reports every field problem with
+a schema issue code, per field, which is more precise than a document-level match.
+
+#### Example
+
+```ts
+const issues = validateSceneFile(JSON.parse(text));
+if (issues.length > 0) {
+  throw new IgnifxError(CoreErrorCode.sceneFileInvalid, issues[0].message);
+}
+```
 
 ***
 

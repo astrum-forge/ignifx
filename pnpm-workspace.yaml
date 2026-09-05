@@ -4,6 +4,8 @@ packages:
   - "examples/*"
   - "website"
   - "tools/*"
+  - "benchmarks"
+  - "tests/visual"
 
 # Shared version pins. CONSTITUTION.md §4.6: @babylonjs/lite is pinned EXACTLY.
 # ADR-0007: `typescript` is the TS 6 shim that API-dependent tools resolve;

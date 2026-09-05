@@ -21,7 +21,15 @@ import {
   vec3,
 } from "../../src/schema/field-kinds.js";
 import { applyInit, createDefaults } from "../../src/schema/schema.js";
-import { AudioClip, Camera, FakeEntity, fakeReferences, forgedField, moverSchema } from "./mover-fixture.js";
+import {
+  AudioClip,
+  Camera,
+  FakeEntity,
+  fakeAssetHandle,
+  fakeReferences,
+  forgedField,
+  moverSchema,
+} from "./mover-fixture.js";
 import type { SchemaIssue } from "../../src/schema/issues.js";
 
 const target = new FakeEntity("01ENTITY");
@@ -100,18 +108,25 @@ describe("encodeValue", () => {
   });
 
   it("tags asset references and carries the type discriminator", () => {
-    expect(encodeValue(asset(AudioClip), { address: "audio/hit.wav" }, encoder)).toEqual({
+    expect(encodeValue(asset(AudioClip), fakeAssetHandle("audio/hit.wav", "audio") as never, encoder)).toEqual({
       $asset: "audio/hit.wav",
       type: "audio",
     });
     class Mesh {
       vertices = 0;
     }
-    expect(encodeValue(asset(Mesh), { address: "models/hero.glb" }, encoder)).toEqual({
+    expect(encodeValue(asset(Mesh), { address: "models/hero.glb" } as never, encoder)).toEqual({
       $asset: "models/hero.glb",
     });
     expect(encodeValue(asset(AudioClip), null, encoder)).toBeNull();
     expect(encodeValue(asset(AudioClip), { address: 1 } as never, encoder)).toBeNull();
+  });
+
+  it("writes null for an in-code asset and reports the loss as IGX-0602", () => {
+    const issues: SchemaIssue[] = [];
+    const inCode = fakeAssetHandle("memory:mesh/1", "mesh");
+    expect(encodeValue(asset(AudioClip), inCode as never, encoder, issues)).toBeNull();
+    expect(issues.map((found) => found.code)).toEqual(["IGX-0602"]);
   });
 
   it("writes arrays, records, and optionals", () => {
@@ -224,18 +239,24 @@ describe("decodeValue", () => {
     expect(decodeValue(entityRef(), { nope: 1 }, decoder).issues.map((found) => found.code)).toEqual(["IGX-0605"]);
   });
 
-  it("rebuilds asset references, keeping the declared type", () => {
-    expect(decodeValue(asset(AudioClip), { $asset: "audio/hit.wav" }, decoder).value).toEqual({
-      address: "audio/hit.wav",
-      type: "audio",
-    });
+  it("resolves asset references to the handle the scene already loaded", () => {
+    expect(decodeValue(asset(AudioClip), { $asset: "audio/hit.wav" }, decoder).value).toEqual(
+      fakeAssetHandle("audio/hit.wav", "audio"),
+    );
     class Mesh {
       vertices = 0;
     }
-    expect(decodeValue(asset(Mesh), { $asset: "models/hero.glb" }, decoder).value).toEqual({
-      address: "models/hero.glb",
-    });
+    expect(decodeValue(asset(Mesh), { $asset: "models/hero.glb" }, decoder).value).toEqual(
+      fakeAssetHandle("models/hero.glb", "unknown"),
+    );
     expect(decodeValue(asset(AudioClip), null, decoder).value).toBeNull();
+  });
+
+  it("reports an address nothing loaded as IGX-0602 and yields null", () => {
+    const empty = { entity: () => null, component: () => null, asset: () => null };
+    const decoded = decodeValue(asset(AudioClip), { $asset: "audio/hit.wav" }, empty);
+    expect(decoded.value).toBeNull();
+    expect(decoded.issues.map((found) => found.code)).toEqual(["IGX-0602"]);
   });
 
   it("reads optionals, maps, and custom fields", () => {
@@ -277,7 +298,7 @@ describe("round trips", () => {
       mode: "run",
       target,
       follow,
-      clip: { address: "audio/hit.wav" },
+      clip: fakeAssetHandle("audio/hit.wav", "audio") as never,
       waypoints: [
         { x: 1, y: 0, z: 0 },
         { x: 2, y: 0, z: 0 },

@@ -1,7 +1,8 @@
 # Gotchas
 
-Traps in the Phase 1 kernel (engine `0.0.0`), each with its replacement and, where one exists, the
-error code you will see. The ten most common are repeated in `../SKILL.md`.
+Traps in the engine as it stands (`0.0.0`, rendering and assets included), each with its replacement
+and, where one exists, the error code you will see. The ten most common are repeated in
+`../SKILL.md`.
 
 ## App and platform
 
@@ -94,8 +95,78 @@ error code you will see. The ten most common are repeated in `../SKILL.md`.
 31. **Do not use `NaN` or `Infinity` in a serialized field.** Encoding rejects them with
     `IGX-0601`; numbers are canonicalized to six decimal places so files round-trip byte-identically.
 
+## Rendering
+
+32. **Do not turn a rendering feature on after `app.start()`.** Babylon Lite applies `shadows`,
+    `postProcessing`, `skeletons`, `boneControl`, `stencil`, `lightmaps`, `materialPlugins`,
+    `asyncPipelines`, and `deviceLostRecovery` only before the scene is registered, and every one of
+    them is `false` by default. Declare them in `settings.rendering.features`, or from an extension
+    with `ctx.requireRenderingFeature(name)`; afterwards it throws `IGX-0704`. A light with
+    `shadows.enabled = true` and no `shadows` feature simply gets no shadow pass.
+33. **Do not expect a mesh spawned at runtime to be visible on the next frame.** A material family
+    that did not exist when the scene was registered takes Lite's runtime build path: spike S2.2
+    measured **3 extra frames** before the mesh appeared, against 0–2 when the family had been warmed
+    and 0 when a mesh of that family was already drawn. `app.start()` warms the `boot` preload group;
+    call `app.renderer.warmUp(materials)` for anything you load later (ADR-0014).
+34. **Do not put two `Environment` components in one world.** The most recently enabled one wins and
+    the world logs `IGX-0705` once. There is one image-based lighting setup per world.
+35. **Do not ask a point or hemispheric light for shadows.** Lite has no cube-shadow generator, so
+    `shadows.enabled` on either throws `IGX-0703`. Cast from a directional or spot light.
+36. **Do not forget an enabled `Camera`.** A world without one renders nothing and logs `IGX-0706`
+    once. The enabled camera with the highest `priority` wins; ties break on creation order.
+37. **Do not expect `MeshRenderer.materials[1]` to draw.** This Lite version has one material per
+    mesh: index 0 is used, later entries are accepted and ignored, and an empty array draws with the
+    default material. The array shape is kept so files survive submesh support landing.
+38. **Do not `await app.renderer.captureScreenshot()` without a running render loop.** A frame has
+    to be presented, so a headless app — or a stopped one — rejects with `IGX-0707`.
+39. **Do not write a colour as a hex string in settings or a file.** `"#101014"` is only ever a
+    schema _default_. A settings value is a colour object (`{ r, g, b, a }`, sRGB 0–1) and a file
+    value is `[r, g, b, a]`; anything else is `IGX-0408` or `IGX-0605`.
+40. **Do not attach a `PostProcessStack` without `features.postProcessing`.** It is declared at app
+    start like the other features, because it picks the scene's whole render path: a post-process
+    effect has to sample what the scene drew, a WebGPU canvas texture cannot be sampled, and so the
+    scene is rendered into an offscreen target instead. Without the feature the stack logs
+    `IGX-0710` once and does nothing. Two more rules for a stack you do enable: `imageProcessing` is
+    always applied last whatever its `order`, and an effect once recorded is switched off rather
+    than removed — `stack.enabled = false` bypasses the chain and brings the plain scene back.
+41. **Do not point a `Light` by writing to the Lite light.** The entity's transform is the light: a
+    directional or spot light shines along the entity's forward (`+Z`) axis, a point or spot light
+    sits at its position, and a hemispheric light's sky direction is the entity's up (`+Y`) axis.
+    Use `entity.transform.lookAt(target)`. The Lite light is deliberately unparented and ignifx
+    rewrites its pose from the entity every frame the entity moves, so anything you write onto
+    `light.lite.light.direction` is overwritten.
+42. **Do not assume device loss is recoverable.** Even with `features.deviceLostRecovery` on, Lite
+    cannot rebuild PCF/CSM shadow generators or glTF `EXT_lights_image_based` environments, so a
+    scene using either reaches `app.events.onDeviceRecoveryFailed`. Offer a page reload.
+
+## Assets
+
+43. **Do not call `load` without a matching `release`.** Handles are shared and reference-counted:
+    two loads of one address answer with the same handle. `using handle = app.assets.load(…)` or an
+    explicit `release()` — and a zero-reference asset is only unloaded after `assets.gcDelay`
+    seconds (default 5).
+44. **Do not read `handle.value` while the state is not `"loaded"`.** It throws `IGX-0501`. Await
+    `handle.promise`, `yield handle.promise` in a coroutine, or check `handle.state` first.
+45. **Do not expect a load to land mid-frame.** Completed loads are delivered by one system in
+    `PreUpdate`, so a state flip you asked for during `update` is observable on the **next** frame,
+    at one consistent point. That is deliberate: "is this ready?" has one answer per frame.
+46. **Do not release the handle an `asset()` field holds.** The field never owned the reference —
+    the scene instance that loaded the asset releases it on unload. Release only what your own code
+    loaded or built.
+47. **Do not expect an in-code asset to survive a save.** `MeshAsset.box(app)`,
+    `createMaterialAsset(app, …)`, and anything from `Assets.register` live at a `memory:` address
+    that names no file, so serializing a component holding one writes `null` and reports `IGX-0602`.
+    Write a `.material.json` or ship a `.glb` when it has to round-trip.
+48. **Do not look for a mesh file format.** There is none: geometry is a primitive built in code or
+    part of a `ModelAsset`. A `"mesh"` address fails with `IGX-0504`.
+49. **Do not load a scene before registering the components it names.** An unknown `typeId` is
+    `IGX-0307` and the entity is built without that component. Call `app.registerComponents([...])`
+    first — `virtual:ignifx/scripts` from `@ignifx/vite-plugin` generates the list for you.
+50. **Do not hand-write a `memory:` address, and do not assume an address is a URL.** Addresses are
+    resolved through the manifest; `app.assets.resolveUrl(address)` is what a loader fetches.
+
 ## Not here yet
 
-32. **Do not write scene or prefab JSON yet.** The scene format, assets, `MeshRenderer`, cameras,
-    and lights arrive in Phase 2. Nothing renders in Phase 1: entities, transforms, scripts, and the
-    frame loop are the whole surface.
+51. **Do not reach for input, physics, audio, sprites, tilemaps, or UI yet.** They arrive in Phases
+    3 onwards. `onCollisionEnter`/`onTriggerEnter` are declared on `ScriptCallbacks` but nothing
+    delivers them, and `world.lite.simulationScene` is `null` until physics lands.

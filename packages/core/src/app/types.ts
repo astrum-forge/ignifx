@@ -1,3 +1,4 @@
+import type { AssetLoader, AssetTypeDefinition, Assets } from "../assets/types.js";
 import type { ConcreteComponentType } from "../component/component-type.js";
 import type { Component } from "../component/component.js";
 import type { Diagnostics } from "../diagnostics/diagnostics.js";
@@ -5,9 +6,11 @@ import type { Entity } from "../entity/entity.js";
 import type { LiteEngine, LiteScene } from "../lite/scene.js";
 import type { Logger } from "../log/logger.js";
 import type { PlatformInfo } from "../platform/platform.js";
+import type { Renderer, RenderingFeature } from "../render/renderer.js";
+import type { SceneInstance } from "../scene/scene-instance.js";
 import type { Schema } from "../schema/types.js";
 import type { Script } from "../script/script.js";
-import type { Signal } from "../signal/signal.js";
+import type { Signal, SignalLike } from "../signal/signal.js";
 import type { World } from "../world/world.js";
 
 /**
@@ -476,6 +479,48 @@ export interface AppLiteHandles {
 }
 
 /**
+ * What Babylon Lite reported when the WebGPU device was lost
+ * (`docs/architecture/07-rendering.md` §4).
+ *
+ * @public
+ */
+export interface DeviceLostInfo {
+  /** The `GPUDeviceLostInfo.reason` string, or `null` when the host gave none. */
+  readonly reason: string | null;
+  /** The human-readable message. */
+  readonly message: string;
+}
+
+/**
+ * The engine-wide events reached as `app.events` (`docs/architecture/02-scene-graph.md` §8,
+ * `07-rendering.md` §4). Extensions add their own signals through declaration merging, the same way
+ * they add app properties.
+ *
+ * @example
+ * ```ts
+ * class Hud extends Script {
+ *   onEnable(): void {
+ *     this.app.events.onSceneLoaded.connect((scene) => this.rebuild(scene), { owner: this });
+ *   }
+ * }
+ * ```
+ *
+ * @public
+ */
+export interface AppEvents {
+  /** A scene instance and its entities exist. */
+  readonly onSceneLoaded: SignalLike<SceneInstance>;
+  /** A scene instance is about to be unloaded and its entities destroyed. */
+  readonly onSceneUnloaded: SignalLike<SceneInstance>;
+  /** The WebGPU device was lost; rendering is suspended while Lite rebuilds it. */
+  readonly onDeviceLost: SignalLike<DeviceLostInfo>;
+  /** The WebGPU device and its resources were rebuilt. */
+  readonly onDeviceRecovered: SignalLike;
+  /** Recovery failed; the payload is whatever the recovery path reported. */
+  readonly onDeviceRecoveryFailed: SignalLike<unknown>;
+}
+
+/**
  * The root object of a game and the surface a script sees through `this.app`
  * (`docs/architecture/00-overview.md` §1). There are no globals: every engine service is reached
  * from here, or from the `entity`/`world` a script belongs to (`CONSTITUTION.md` §3.6).
@@ -502,6 +547,15 @@ export interface App {
   readonly time: Time;
   /** The running simulation. */
   readonly world: World;
+  /** Addressed, reference-counted asset loading (`docs/architecture/05-assets-and-loading.md` §4). */
+  readonly assets: Assets;
+  /** Engine-wide events (`docs/architecture/02-scene-graph.md` §8). */
+  readonly events: AppEvents;
+  /**
+   * Surface sizing, material warm-up, GPU picking, screenshots, and the render diagnostics
+   * (`docs/architecture/07-rendering.md` §1, §3, §5).
+   */
+  readonly renderer: Renderer;
   /** The app-scoped logger. */
   readonly log: Logger;
   /** Per-frame counters and profiling scopes. */
@@ -635,6 +689,42 @@ export interface ExtensionContext {
    * @param instance - The service.
    */
   registerService<T>(key: ServiceKey<T>, instance: T): void;
+  /**
+   * Declares an asset type whose loader is registered separately, or not at all, so that addresses
+   * with its extensions resolve to a type (`docs/architecture/04-extensions.md` §1).
+   *
+   * @param type - The type name and the extensions that select it.
+   */
+  registerAssetType(type: AssetTypeDefinition): void;
+  /**
+   * Registers an asset loader (`docs/architecture/05-assets-and-loading.md` §5).
+   *
+   * @param loader - The loader, which also declares the extensions that select its type.
+   * @throws IgnifxError with code `IGX-0506` when another extension already owns the type.
+   */
+  registerAssetLoader(loader: AssetLoader): void;
+  /**
+   * Declares that this extension needs a rendering feature switched on
+   * (`docs/architecture/07-rendering.md` §1.1).
+   *
+   * @remarks
+   * Babylon Lite compiles its shader permutations and records its frame graph inside
+   * `registerScene`, so every feature that changes what gets compiled has to be on before that
+   * call. `register` runs before `app.start()` does it, so this is a *declaration* there: the
+   * feature is switched on whether or not the project listed it. After the scene is registered it
+   * is a refusal instead.
+   *
+   * @param feature - The feature the extension needs.
+   * @throws IgnifxError with code `IGX-0704` when the render scene has already been registered.
+   *
+   * @example
+   * ```ts
+   * register(ctx: ExtensionContext): void {
+   *   ctx.requireRenderingFeature("skeletons");
+   * }
+   * ```
+   */
+  requireRenderingFeature(feature: RenderingFeature): void;
   /**
    * Defines a property on `App`, pairing with a module augmentation of the `App` interface.
    *

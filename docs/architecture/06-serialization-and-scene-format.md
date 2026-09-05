@@ -141,11 +141,11 @@ All share the `format`/`formatVersion` header and JSON Schema validation:
 
 ## 7. Versioning and migration
 
-- `formatVersion` is an integer per format. Before 1.0 it stays `1` and incompatible changes simply invalidate files (`CONSTITUTION.md` §4.2); the loader reports `IGX-0603` with the offending component and field.
+- `formatVersion` is an integer per format. Before 1.0 it stays `1` and incompatible changes simply invalidate files (`CONSTITUTION.md` §4.2); the loader reports `IGX-0603` for an unknown `formatVersion` and `IGX-0608` with the offending path for a file that fails structural validation.
 - After 1.0, a format bump ships with a migration function registered by the owning extension (`registerFileMigration(format, from, to, fn)`) and a document in `docs/migrations/`. Loaders migrate in memory; tooling (`ignifx migrate`) rewrites files.
 - Components version their schema independently with `static schemaVersion = 1` and `static migrate(fromVersion, props)`. The file records the schema version per component only when it differs from `1`, keeping files terse.
 - Layer and sorting-layer names in files are validated against `ignifx.config.ts` by the Vite plugin at build time and by the loader at runtime; `ignifx rename-layer` and `ignifx rename-sorting-layer` rewrite files when settings change.
 
 ## 8. Generated JSON Schemas
 
-The Vite plugin (and `ignifx schemas` CLI command) emits `ignifx.schemas.json` from every registered component schema and file format. These schemas drive build-time validation, editor autocompletion, and are linked from the Agent Skill so that agents can author scene files without guessing field names.
+`pnpm docs:schemas` (the docs harness, from `describeSchemas()` exports) and later the `ignifx schemas` CLI command emit `ignifx.schemas.json` from every registered component schema and file format; the Vite plugin consumes those schemas (`ignifx({ schemas })`) — it cannot produce them, since it does not depend on the engine. These schemas drive build-time validation, editor autocompletion, and are linked from the Agent Skill so that agents can author scene files without guessing field names.

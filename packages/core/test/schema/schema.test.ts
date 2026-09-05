@@ -3,8 +3,9 @@ import { f32, str } from "../../src/schema/field-kinds.js";
 import { applyInit, createDefaults, defineSchema } from "../../src/schema/schema.js";
 import { moverSchema } from "./mover-fixture.js";
 import type { AudioClip, Camera, FakeEntity } from "./mover-fixture.js";
+import type { AssetHandle } from "../../src/assets/types.js";
 import type { ColorLike, Vec3Like } from "../../src/math/types.js";
-import type { AssetRefValue, FieldsOf, PartialFieldsOf } from "../../src/schema/types.js";
+import type { FieldsOf, PartialFieldsOf } from "../../src/schema/types.js";
 
 describe("FieldsOf", () => {
   it("projects the Mover schema onto the property types Script.define exposes", () => {
@@ -19,7 +20,7 @@ describe("FieldsOf", () => {
       mode: "walk" | "run";
       target: FakeEntity | null;
       follow: Camera | null;
-      clip: AssetRefValue<AudioClip> | null;
+      clip: AssetHandle<AudioClip> | null;
       waypoints: Vec3Like[];
       stats: { hp: number; armor: number };
     }>();

@@ -25,8 +25,9 @@ import {
 } from "../../src/schema/field-kinds.js";
 import { AudioClip, Camera } from "./mover-fixture.js";
 import type { FakeEntity } from "./mover-fixture.js";
+import type { AssetHandle } from "../../src/assets/types.js";
 import type { ColorLike, QuatLike, Vec2Like, Vec3Like, Vec4Like } from "../../src/math/types.js";
-import type { AssetRefValue, CurveValue, FieldDefinition } from "../../src/schema/types.js";
+import type { CurveValue, FieldDefinition } from "../../src/schema/types.js";
 
 describe("scalar field kinds", () => {
   it("defaults every numeric kind to zero and reports its own kind", () => {
@@ -158,7 +159,7 @@ describe("reference field kinds", () => {
 
   it("infers the referenced type from the class token", () => {
     expectTypeOf(componentRef(Camera)).toEqualTypeOf<FieldDefinition<Camera | null>>();
-    expectTypeOf(asset(AudioClip)).toEqualTypeOf<FieldDefinition<AssetRefValue<AudioClip> | null>>();
+    expectTypeOf(asset(AudioClip)).toEqualTypeOf<FieldDefinition<AssetHandle<AudioClip> | null>>();
     expectTypeOf(entityRef<FakeEntity>()).toEqualTypeOf<FieldDefinition<FakeEntity | null>>();
   });
 

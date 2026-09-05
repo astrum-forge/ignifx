@@ -8,15 +8,15 @@ ignifx does not render; Babylon Lite does. This document defines the components 
 
 ## 1. Engine and surface
 
-- `createApp({ canvas })` runs a capability check (`navigator.gpu` present and `requestAdapter()` succeeds) and then `createEngine(canvas, options)`. Failure rejects with `WebGpuUnavailableError` (`IGX-0701`) carrying a reason (`no-navigator-gpu`, `no-adapter`, `device-failed`, `context-failed`). Templates catch it and show a static "WebGPU required" page.
-- Engine options exposed by `createApp`: `msaaSamples` (1 or 4, default 4), `powerPreference`, `alphaMode`, `srgb`, `maxDevicePixelRatio` (default `Infinity`, i.e. native DPR), `useHighPrecisionMatrix`/`useFloatingOrigin` (large worlds; off by default), `requiredLimits`.
-- Sizing: Lite re-reads `clientWidth × clientHeight × devicePixelRatio` at the start of every frame (`resizeEngine`). ignifx exposes `app.renderer.pixelRatio` (maps to `maxDevicePixelRatio`) and `app.renderer.resolutionScale` (0.25–1, implemented by lowering `maxDevicePixelRatio`); for `OffscreenCanvas` it exposes `app.renderer.setSize(w, h)` (`setSurfaceSize`).
+- `createApp({ canvas })` runs a capability check (`navigator.gpu` present and `requestAdapter()` succeeds) and then `createEngine(canvas, options)`. Failure rejects with `IgnifxError` code `IGX-0701` carrying a reason in `context` (`no-navigator-gpu`, `no-adapter`, `device-failed`, `context-failed`). Templates catch it and show a static "WebGPU required" page.
+- Engine options exposed by `createApp`: `msaaSamples` (1 or 4, default 4), `alphaMode`, `srgb`, `format`, `maxDevicePixelRatio` (default `Infinity`, i.e. native DPR), `useHighPrecisionMatrix`/`useFloatingOrigin` (large worlds; off by default), `requiredLimits`.
+- Sizing: Lite re-reads `clientWidth × clientHeight × devicePixelRatio` at the start of every frame (`resizeEngine`). ignifx exposes `app.renderer.pixelRatio` (maps to `maxDevicePixelRatio`) and `app.renderer.resolutionScale` (0.25–1, implemented by lowering `maxDevicePixelRatio`); for `OffscreenCanvas` it exposes `app.renderer.setSize(w, h)` (`setSurfaceSize`; on a laid-out DOM canvas Lite re-reads the layout size next frame, so `setSize` is an `OffscreenCanvas`-only API). Lite always requests a `high-performance` adapter; there is no `powerPreference` option.
 - One render scene per world (`createSceneContext(engine)`), registered in `app.start()` via `registerScene` (or `registerSceneWithShadowSupport` when any shadow-casting light exists at start; the adapter picks the right call).
 - Multiple surfaces (`createSurface`) and worker rendering are post-1.0.
 
 ### 1.1 Feature opt-ins are declared up front
 
-Lite enables many features only through explicit calls that must happen **before `registerScene`** (its deferred-builder drain). Process- or scene-global opt-ins: `enableStandardSkeleton()`, `enableMaterialStencil()`, `enablePbrLightmap()` (async), `enableMaterialPlugins(scene)`, `enableAsyncShaderPipelineCompilation`, `enableBoneControl()` (before loading skinned assets), `enableGltfCameras()`, and the `enableDeviceLost*Recovery` family (before creating resources). ignifx therefore takes a `rendering.features` block in `ignifx.config.ts`/`createApp` (`{ shadows, skeletons, boneControl, stencil, lightmaps, materialPlugins, asyncPipelines, deviceLostRecovery }`), applies the corresponding calls during `app.start()` before `registerScene`, and rejects late toggles with `IGX-0704`. Extensions declare the features they need through `ctx.requireRenderingFeature(name)` at registration. Per-object opt-ins (`enableThinInstanceGpuCulling(mesh, enabled)`, `setAlphaToCoverage(target, enabled)`) are `MeshRenderer`/material fields that the adapter applies when it creates the Lite object, before that object is registered.
+Lite enables many features only through explicit calls that must happen **before `registerScene`** (its deferred-builder drain). Process- or scene-global opt-ins: `enableStandardSkeleton()`, `enableMaterialStencil()`, `enablePbrLightmap()` (async), `enableMaterialPlugins(scene)`, `enableAsyncShaderPipelineCompilation`, `enableBoneControl()` (before loading skinned assets), `enableGltfCameras()`, and the `enableDeviceLost*Recovery` family (before creating resources). ignifx therefore takes a `rendering.features` block in `ignifx.config.ts`/`createApp` (`{ shadows, postProcessing, skeletons, boneControl, stencil, lightmaps, materialPlugins, asyncPipelines, deviceLostRecovery }`), applies the corresponding calls during `app.start()` before `registerScene`, and rejects late toggles with `IGX-0704`. Two of those names are not `enable*` calls at all: `shadows` picks `registerSceneWithShadowSupport` over `registerScene`, and `postProcessing` picks the scene's whole render path at `createSceneContext` (§2.7) — earlier than the rest, because a frame graph is built there and Lite exposes no way to retarget its render task afterwards. Extensions declare the features they need through `ctx.requireRenderingFeature(name)` at registration. Per-object opt-ins (`enableThinInstanceGpuCulling(mesh, enabled)`, `setAlphaToCoverage(target, enabled)`) are `MeshRenderer`/material fields that the adapter applies when it creates the Lite object, before that object is registered.
 
 Entities added after `registerScene` go through Lite's runtime material-swap path, which compiles new material families asynchronously (a mesh may appear a few frames after `addToScene`). The adapter pre-registers the material families of every asset in the `boot` preload group before `registerScene`, and `app.renderer.warmUp(materials)` exists for spawn-heavy games.
 
@@ -35,7 +35,8 @@ Entities added after `registerScene` go through Lite's runtime material-swap pat
 | `priority`         | number, default 0                                        | main camera = highest priority enabled camera                                                     |
 | `cullingMask`      | layer mask, default all                                  | post-1.0 (Lite render task mesh lists)                                                            |
 
-- Implementation: a Lite `FreeCamera` (`createFreeCamera({0,0,0}, {0,0,1})`) parented to the entity's node so the entity's transform defines the view; `world.mainCamera` sets `scene.camera`. A world with no enabled camera renders nothing and logs `IGX-0702` once.
+- Implementation: a Lite `FreeCamera` (`createFreeCamera({0,0,0}, {0,0,1})`) parented to the entity's node so the entity's transform defines the view; `world.mainCamera` sets `scene.camera`. A world with no enabled camera renders nothing and logs `IGX-0706` once.
+- **Clear-colour precedence.** There is one `scene.clearColor` and three things that may write it, so they are ranked, strongest first: (1) `Camera.clearColor` on the **main** camera, when it is not `null` — the sync system writes it every frame that camera renders; (2) `Environment.clearColor` of the winning environment, written whenever the field changes (§2.5); (3) the `rendering.clearColor` setting, written once as the render scene is created, before any frame has run; (4) Babylon Lite's own default, a mid grey, which only code that bypasses `createApp` ever sees — ignifx's own default for the setting is opaque black. Every one of those is stored as sRGB `[r,g,b,a]` and decoded to linear on the way to Lite. A camera whose `clearColor` goes back to `null` does **not** restore the setting: `null` means "leave the scene's clear colour alone".
 - Methods: `screenToRay(x, y)` (CSS pixels → world `Ray`), `worldToScreen(point, out?)`, `screenToWorldPoint(x, y, distance)`, `viewportToWorldPoint`, `getProjectionMatrix()` (via Lite `getProjectionMatrix(camera, aspect)`), `getViewMatrix()`.
 - Cinemachine-style rigs live in `@ignifx/3d` and `@ignifx/2d` as scripts that drive the camera entity's transform; the `Camera` component itself has no follow logic.
 
@@ -43,8 +44,8 @@ Entities added after `registerScene` go through Lite's runtime material-swap pat
 
 | Field                                                                                                          | Lite                                                                                                                                                                                            |
 | -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `type`: `"directional"` \| `"point"` \| `"spot"` \| `"hemispheric"`                                            | `createDirectionalLight` / `createPointLight` / `createSpotLight` / `createHemisphericLight`, parented to the node with local direction `+Z` and local position `0`                             |
-| `color` (sRGB), `intensity`                                                                                    | `diffuse`/`specular` (linear) and `intensity`                                                                                                                                                   |
+| `type`: `"directional"` \| `"point"` \| `"spot"` \| `"hemispheric"`                                            | `createDirectionalLight` / `createPointLight` / `createSpotLight` / `createHemisphericLight`, **unparented**; the entity's world pose is written onto the light each frame it moves             |
+| `color` (sRGB), `intensity`                                                                                    | `diffuse`/`specular` (linear) and `intensity`; hemispheric lights use `diffuseColor`/`specularColor`                                                                                            |
 | `range` (point/spot)                                                                                           | `range`                                                                                                                                                                                         |
 | `spotAngle` (degrees, full cone), `spotExponent`                                                               | `angle` (radians), `exponent`                                                                                                                                                                   |
 | `groundColor` (hemispheric)                                                                                    | `groundColor`                                                                                                                                                                                   |
@@ -52,6 +53,8 @@ Entities added after `registerScene` go through Lite's runtime material-swap pat
 | `includeOnly` / `exclude` (entity refs)                                                                        | `includedOnlyMeshIds` / `excludedMeshIds`                                                                                                                                                       |
 
 - Point-light shadows and area lights are not available in Lite; the schema rejects `shadows.enabled` on point lights (`IGX-0703`).
+- **A light is not parented in Lite.** Every other render component mirrors its entity by parenting a Lite object under the entity's node; a light cannot, because Lite reads its pose from two places that only agree when there is no parent. The shader takes the light's direction from `worldMatrix[8..10]`, which Lite composes as `parentWorld × localMatrixFromDirection(direction, position)`; the shadow frustum is fitted from `direction`/`position` **directly**. Parenting the light and writing a world direction onto it rotated it twice; parenting it and leaving the local direction alone made it shade one way and cast another. Both were visible in the Phase 2 visual goldens (ADR-0002, "Corrections after the visual suite").
+- **The adapter writes the entity's world pose onto the light instead**, in each frame the entity's `worldMatrixVersion` moved: the world forward axis for a directional or spot light, the world **up** axis for a hemispheric light's sky direction, and the world position for anything that has one. That write is also the only "this light moved" signal Lite has — the lights UBO re-uploads only when a light's own observables are written.
 - Changing light topology (adding a shadow caster light after start) triggers `rebuildSceneRenderables`; the adapter batches this to once per frame.
 
 ### 2.3 `MeshRenderer`
@@ -67,9 +70,10 @@ class MeshRenderer extends Component.define({
 }) {}
 ```
 
+- `materials` keeps its array shape for the day Lite exposes submesh materials; in Lite 1.27.0 a `Mesh` has one `material`, so index 0 is used and the rest are ignored.
 - A `MeshAsset` holds a template Lite `Mesh` (geometry uploaded once). Each `MeshRenderer` clones the template (`cloneTransformNode`, which shallow-clones meshes and shares GPU buffers) and parents the clone to the entity node, then `addToScene`. Removing the component calls `removeFromScene` on the clone; the template's buffers stay alive while the asset is retained (Lite ref-counts shared geometry).
 - Primitives: `MeshAsset.box(options)`, `.sphere`, `.plane`, `.ground`, `.cylinder`, `.capsule`, `.torus`, `.fromData(positions, normals, indices, uvs)` (Lite `createBox`, `createSphere`, … `createMeshFromData`). Primitive assets created in code are owned by the caller and released with `dispose()`/`using`.
-- Shadow casting is expressed through Lite's per-generator caster lists (`setShadowTaskCasterMeshes`); the adapter maintains those lists from `castShadows`.
+- Shadow casting is expressed through Lite's per-generator caster lists (`setShadowTaskCasterMeshes`); the adapter maintains those lists from `castShadows`. It rebuilds them only in a frame that owes no `rebuildSceneRenderables`: Lite's shadow task records a render pass over the caster meshes and looks each caster material's build group up in the scene, and a caster whose material family the scene has not registered yet throws inside the frame. So a caster added at runtime joins the lists on the frame after its renderable rebuild has resolved.
 - `visible` is derived from `entity.activeInHierarchy && component.enabled` (`mesh.visible`); never remove a mesh from the scene to hide it (Lite disposes a mesh leaving its last scene).
 
 ### 2.4 `Model`
@@ -92,10 +96,11 @@ class Model extends Component.define({
 - Instantiation clones the asset's container root (`cloneTransformNode`) under the entity node and `addToScene`s it; animation groups are duplicated per instance. The instanced Lite subtree is opaque: it is not expanded into entities in the MVP (an `expandToEntities()` tool is planned for tooling after 1.0). `attachToNode` covers the common "weapon in hand" case.
 - glTF cameras and lights inside models are ignored unless `importLights`/`importCameras` are enabled on the asset's `.meta.json`.
 - The adapter strips `animationGroups` from the container before `addToScene` so that Lite does not tick them; ignifx's animation system owns advancement (`01-lifecycle-and-time.md` §3).
+- **`castShadows` and `receiveShadows` cover the whole instantiated subtree**, and mean exactly what they mean on a `MeshRenderer` (§2.3). Every mesh in the clone is collected **once**, when the subtree is instantiated — its shape is fixed from then on — and that list is what the model contributes to `setShadowTaskCasterMeshes` while it casts, and what `receiveShadows` is written across (Lite's `receiveShadows` is per mesh). A hidden model casts nothing, for the same reason a hidden `MeshRenderer` does. Instantiating a model, showing or hiding it, and flipping `castShadows` each report a caster change and rebuild the lists that frame; destroying one cannot report anything — the component has left the world's list — so its teardown raises the renderer's "caster set may have moved" flag and the next frame rebuilds.
 
 ### 2.5 `Environment`
 
-One per world (the most recently enabled wins; the adapter warns on two). Fields: `environment: asset(EnvironmentAsset)` (IBL `.env`/`.hdr`), `skybox: { enabled, url/asset, size, blur }`, `rotation` (degrees, Y), `fog: { mode: "none" | "linear" | "exp" | "exp2", color, density, start, end }`, `imageProcessing: { exposure, contrast, toneMapping: "standard" | "aces" | "neutral" | "none" }`, `clearColor`, `ambientColor`. Maps to `loadEnvironment`, `loadSkybox`, `setEnvironmentRotation`, `setEnvironmentBlur`, `scene.fog`, `setSceneImageProcessing`, `scene.clearColor`.
+One per world (the most recently enabled wins; the adapter logs `IGX-0705` once while two are enabled). Its `clearColor` is written only when the field changes, which is what leaves the `rendering.clearColor` setting standing in a world whose environment never touches its own, and what keeps the main camera's per-frame override above it (§2.1). Fields: `environment: asset(EnvironmentAsset)` (IBL `.env`/`.hdr`), `skybox: { enabled, url/asset, size, blur }`, `rotation` (degrees, Y), `fog: { mode: "none" | "linear" | "exp" | "exp2", color, density, start, end }`, `imageProcessing: { exposure, contrast, toneMapping: "standard" | "aces" | "neutral" | "none" }`, `clearColor` (`ambientColor` arrives with the 3D toolkit in Phase 7). Maps to `loadEnvironment`, `loadSkybox`, `setEnvironmentRotation`, `setEnvironmentBlur`, `scene.fog`, `setSceneImageProcessing`, `scene.clearColor`.
 
 ### 2.6 Materials
 
@@ -108,7 +113,20 @@ One per world (the most recently enabled wins; the adapter warns on two). Fields
 
 ### 2.7 `PostProcessStack`
 
-Attached to the main camera entity. Ordered list of effects; each maps to a Lite post-process task inserted into the scene frame graph with `addTaskAfter`: `bloom`, `depthOfField`, `chromaticAberration`, `smaa`, `taa`, `imageProcessing` (exposure/contrast/tone mapping when not using `Environment`), `screenSpaceContactShadows`, `ssgi`. MVP ships `bloom`, `smaa`, `imageProcessing`; the rest follow in Phase 7.
+Attached to the main camera entity. Ordered list of effects; each maps to a Lite post-process task appended to the scene frame graph with `addTask`, which puts it after the render pass: `bloom`, `depthOfField`, `chromaticAberration`, `smaa`, `taa`, `imageProcessing` (exposure/contrast/tone mapping when not using `Environment`), `screenSpaceContactShadows`, `ssgi`. MVP ships `bloom`, `smaa`, `imageProcessing`; the rest follow in Phase 7.
+
+**Post-processing is a feature opt-in and renders through an offscreen target.** A chain can never sample the swapchain: `createSurface` configures the canvas context with no `usage`, so its texture is `RENDER_ATTACHMENT` only and binding it as a source fails WebGPU validation, rejecting the whole frame — a black page, which is exactly what the first round of visual goldens showed. So a project that wants a `PostProcessStack` declares `rendering.features.postProcessing` (§1.1). With it on, the render scene is created with `defaultRenderTask: false` and ignifx builds its own frame graph:
+
+```text
+[shadow] → scene ──→ sceneColor ──→ present ──→ swapchain
+                         └─ a PostProcessStack appends its effects here, and disables present
+```
+
+- `sceneColor` is an offscreen, single-sample colour target — resolved from the MSAA target through the render task's `rst` when MSAA is on — and it carries the `TEXTURE_BINDING` the swapchain lacks.
+- `present` is a copy task that composites `sceneColor` onto the swapchain. It always runs unless a chain is writing the swapchain itself, so the frame is never lost: an empty chain, a chain with every effect off, and a disabled stack all present the plain scene.
+- Every target is sized by the surface, so a canvas resize reallocates them through the frame-graph rebuild Lite already does; the chain handles no resize itself.
+- `imageProcessing` is always recorded **last**, whatever `order` says: Lite's task writes the swapchain unconditionally and takes no target, so nothing can read what it produced.
+- A `PostProcessStack` attached without the feature logs `IGX-0710` once and is inert. The feature costs one full-screen blit per frame while no chain is recorded, which is why it is off by default.
 
 ## 3. Picking
 
@@ -118,13 +136,13 @@ Attached to the main camera entity. Ordered list of effects; each maps to a Lite
 
 ## 4. Device loss
 
-- `createApp` enables `enableDeviceLostSceneRecovery`, and the 2D/UI extensions enable `enableDeviceLostSpriteRecovery` / `enableDeviceLostTextRecovery` **before** creating resources (Lite requirement).
+- `createApp` enables `enableDeviceLostSceneRecovery` when `rendering.features.deviceLostRecovery` is on (every feature is opt-in), and the 2D/UI extensions enable `enableDeviceLostSpriteRecovery` / `enableDeviceLostTextRecovery` **before** creating resources (Lite requirement).
 - Callbacks fan out to `app.events.onDeviceLost`, `onDeviceRecovered`, `onDeviceRecoveryFailed`. Lite cannot recover PCF/CSM shadows or glTF `EXT_lights_image_based` environments today; when those are in use, recovery is expected to fail and templates offer a reload. This is tracked as an upstream item.
 
 ## 5. Diagnostics and tools
 
 - `app.diagnostics.render`: `drawCalls` (`engine.drawCallCount`), `gpuFrameTimeMs` (with `setGpuTimingEnabled`), per-task GPU timings (`getRenderTaskGpuTimings`) when `renderer.profileTasks` is on.
-- `app.renderer.captureScreenshot()` → `captureScreenshot(engine)`.
+- `app.renderer.captureScreenshot()` → `captureScreenshot(engine)`; it settles only while the render loop is running (a frame must be presented), so headless apps get `IGX-0707`.
 - Development builds call `enableErrorDecoding()`; production builds lazy-import `decodeError` in `app.onError`.
 
 ## 6. Headless behaviour
