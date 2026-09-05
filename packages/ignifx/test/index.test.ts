@@ -348,12 +348,59 @@ const expectedAudioExports = [
   "parseWavHeader",
 ];
 
+// The @ignifx/physics value surface (same describeSchemas rule as the other extensions).
+const expectedPhysicsExports = [
+  "BODY_TYPES",
+  "BoxCollider",
+  "CAPSULE_DIRECTIONS",
+  "COLLISION_EVENT_MODES",
+  "COLLISION_IDENTITY_MODES",
+  "CapsuleCollider",
+  "CharacterController",
+  "Collider",
+  "CylinderCollider",
+  "HAVOK_WASM_AUTO",
+  "HeightfieldCollider",
+  "INTERPOLATION_MODES",
+  "KINEMATIC_SYNC_MODES",
+  "MeshCollider",
+  "PHYSICS_DIAGNOSTICS_COUNTERS",
+  "PHYSICS_DIAGNOSTICS_GROUP",
+  "PHYSICS_ERROR_MESSAGES",
+  "PHYSICS_MATERIAL_ASSET_TYPE",
+  "PHYSICS_MATERIAL_FILE_EXTENSION",
+  "PHYSICS_MATERIAL_FILE_FORMAT",
+  "PHYSICS_MATERIAL_FORMAT_VERSION",
+  "PHYSICS_SETTINGS_SECTION",
+  "PhysicsErrorCode",
+  "PhysicsMaterial",
+  "PhysicsService",
+  "Rigidbody",
+  "SUPPORT_STATES",
+  "SphereCollider",
+  "colliderFields",
+  "createPhysicsMaterialLoader",
+  "defaultPhysicsSettings",
+  "describePhysicsMaterialFileFormat",
+  "parsePhysicsMaterial",
+  "physics",
+  "physicsError",
+  "physicsSettingsSchema",
+];
+
 describe("ignifx barrel", () => {
   it("imports without executing anything and re-exports the whole @ignifx/core value surface", () => {
     // Compared as sets: the key order of a namespace object is not part of the contract.
     expect(new Set(Object.keys(barrel))).toEqual(
-      new Set([...expectedExports, ...expectedInputExports, ...expectedAudioExports]),
+      new Set([...expectedExports, ...expectedInputExports, ...expectedAudioExports, ...expectedPhysicsExports]),
     );
+  });
+
+  it("re-exports the @ignifx/physics value surface by name", () => {
+    const keys = new Set(Object.keys(barrel));
+    for (const name of expectedPhysicsExports) {
+      expect(keys.has(name)).toBe(true);
+    }
   });
 
   it("re-exports the @ignifx/audio value surface by name", () => {

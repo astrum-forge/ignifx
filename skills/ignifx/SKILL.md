@@ -23,12 +23,12 @@ toolkits arrive in later phases.
 
 | Item                | Value                                                                                                                                                          |
 | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Engine version      | unreleased (`0.0.0`); `@ignifx/core`, `@ignifx/input`, `@ignifx/audio`, `@ignifx/vite-plugin`, and the `ignifx` umbrella                                       |
+| Engine version      | unreleased (`0.0.0`); `@ignifx/core`, `@ignifx/input`, `@ignifx/audio`, `@ignifx/physics`, `@ignifx/vite-plugin`, and the `ignifx` umbrella                    |
 | Babylon Lite        | 1.27.0 (pinned; do not call Lite APIs directly outside adapter code)                                                                                           |
 | Node / pnpm         | 24 LTS / 11                                                                                                                                                    |
 | Browser requirement | WebGPU (Chrome/Edge 113+, Safari 26+, Firefox 141+ Windows / 145+ Apple Silicon); Electron needs `--enable-unsafe-webgpu` (handled by `@ignifx/electron`)      |
 | Headless            | Node 24, no GPU: `createApp({ headless: true })` plus `app.step(dt)`                                                                                           |
-| Extensions          | `createApp({ canvas, extensions: [input(), audio()] })` — `input()` adds `app.input`, `audio()` adds `app.audio`; both re-exported from `ignifx`               |
+| Extensions          | `createApp({ canvas, extensions: [input(), audio(), physics()] })` — each adds its `app.<name>` service; all re-exported from `ignifx`                         |
 | Build               | Vite 8 with `ignifx()` from `@ignifx/vite-plugin`: asset manifest, `.meta.json` sidecars, JSON validation, HMR                                                 |
 | Commands            | `pnpm dev` · `pnpm test` · `pnpm typecheck` · `pnpm build` · `pnpm check` (all gates) · `node scripts/check-webgpu.mjs` · `node scripts/new-script.mjs <Name>` |
 
@@ -138,10 +138,11 @@ app.dispose();
 
 Extensions register in `createApp({ extensions })`; each adds an `app.<name>` service, scripts, asset types, and a settings section, and has a subsystem skill with the detail. Everything below is also re-exported from `ignifx`. Headless apps drive input with `simulate` and advance audio playback by the frame delta, so both are testable without a device.
 
-| Package (factory)           | Adds                                                                                                                                                                 | Skill                                  |
-| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| `@ignifx/input` (`input()`) | `app.input`, `PlayerInput`, `.input.json` actions (`inputactions`), the `input` settings section                                                                     | `packages/input/skills/input/SKILL.md` |
-| `@ignifx/audio` (`audio()`) | `app.audio` (buses, one-shots, unlock), `AudioSource`, `AudioListener`, `MusicPlayer`, `.audio.json` buses (`audiobuses`), `audioclip`, the `audio` settings section | `packages/audio/skills/audio/SKILL.md` |
+| Package (factory)               | Adds                                                                                                                                                                                                                                                                                                      | Skill                                      |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `@ignifx/input` (`input()`)     | `app.input`, `PlayerInput`, `.input.json` actions (`inputactions`), the `input` settings section                                                                                                                                                                                                          | `packages/input/skills/input/SKILL.md`     |
+| `@ignifx/audio` (`audio()`)     | `app.audio` (buses, one-shots, unlock), `AudioSource`, `AudioListener`, `MusicPlayer`, `.audio.json` buses (`audiobuses`), `audioclip`, the `audio` settings section                                                                                                                                      | `packages/audio/skills/audio/SKILL.md`     |
+| `@ignifx/physics` (`physics()`) | `app.physics`: 3D rigid bodies on Havok — `Rigidbody`, box/sphere/capsule/cylinder/mesh/heightfield colliders, triggers, `CharacterController`, the layer matrix, raycasts and shape queries, render interpolation; simulates on its own null-engine scene stepped by the fixed loop, so it runs headless | `packages/physics/skills/physics/SKILL.md` |
 
 ```ts
 import { audio, AudioClip, AudioSource, createApp, defineInputActions, input } from "ignifx";
@@ -315,7 +316,7 @@ Callbacks are not members of `Script`; implement the ones you need, optionally w
 | `onDisable()`                                               | Synchronously at the transition, and in the destroy flush        | Every transition   |
 | `onDestroy()`                                               | Destroy flush, after the tracked references are nulled           | Once               |
 | `onApplicationPause(paused)`, `onApplicationFocus(focused)` | Visibility and focus changes                                     | Per transition     |
-| `onCollisionEnter/Stay/Exit`, `onTriggerEnter/Exit`         | Declared now; delivered by `@ignifx/physics` later               | Per event          |
+| `onCollisionEnter/Stay/Exit`, `onTriggerEnter/Exit`         | After the fixed step, by `@ignifx/physics` (see its skill)       | Per event          |
 
 Statics (`static typeId`, `requires`, `allowMultiple`, `executionOrder`, `updateWhenPaused`) and callbacks are written plainly with no `override`: they are not members of `Component`/`Script`; the class-token types match them structurally (`ComponentStatics`, `ScriptStatics`) and the registry applies the defaults.
 
@@ -422,23 +423,24 @@ first two digits are the area.
 
 ## File formats
 
-| Page                                                                        | Covers                                                         |
-| --------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| [`formats/scene.md`](references/formats/scene.md)                           | `.scene.json` / `.prefab.json`: entities, instances, overrides |
-| [`formats/ignifx.scene.md`](references/formats/ignifx.scene.md)             | The scene file's top-level fields (generated)                  |
-| [`formats/material.md`](references/formats/material.md)                     | `.material.json`: PBR and Standard, texture slots              |
-| [`formats/ignifx.material.md`](references/formats/ignifx.material.md)       | The material file's fields (generated)                         |
-| [`formats/ignifx.environment.md`](references/formats/ignifx.environment.md) | `.environment.json`: IBL, BRDF table, skybox (generated)       |
-| [`formats/inputactions.md`](references/formats/inputactions.md)             | `.input.json`: maps, actions, paths, composites, processors    |
-| [`formats/ignifx.audiobuses.md`](references/formats/ignifx.audiobuses.md)   | `.audio.json`: the bus tree (`Master` root, volumes, children) |
-| [`formats/components.md`](references/formats/components.md)                 | Every built-in component's fields and defaults (generated)     |
-| [`formats/ignifx.schemas.json`](references/formats/ignifx.schemas.json)     | All of the above bundled, for tools and validators             |
+| Page                                                                                | Covers                                                         |
+| ----------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| [`formats/scene.md`](references/formats/scene.md)                                   | `.scene.json` / `.prefab.json`: entities, instances, overrides |
+| [`formats/ignifx.scene.md`](references/formats/ignifx.scene.md)                     | The scene file's top-level fields (generated)                  |
+| [`formats/material.md`](references/formats/material.md)                             | `.material.json`: PBR and Standard, texture slots              |
+| [`formats/ignifx.material.md`](references/formats/ignifx.material.md)               | The material file's fields (generated)                         |
+| [`formats/ignifx.environment.md`](references/formats/ignifx.environment.md)         | `.environment.json`: IBL, BRDF table, skybox (generated)       |
+| [`formats/inputactions.md`](references/formats/inputactions.md)                     | `.input.json`: maps, actions, paths, composites, processors    |
+| [`formats/ignifx.audiobuses.md`](references/formats/ignifx.audiobuses.md)           | `.audio.json`: the bus tree (`Master` root, volumes, children) |
+| [`formats/ignifx.physicsmaterial.md`](references/formats/ignifx.physicsmaterial.md) | `.physicsmaterial.json`: friction, restitution, combine rules  |
+| [`formats/components.md`](references/formats/components.md)                         | Every built-in component's fields and defaults (generated)     |
+| [`formats/ignifx.schemas.json`](references/formats/ignifx.schemas.json)             | All of the above bundled, for tools and validators             |
 
 `assets.manifest.json` (format `ignifx.manifest`, version 1) and the `.meta.json` sidecar are
 documented in `@ignifx/vite-plugin`'s `README.md`, together with `virtual:ignifx/manifest` and
 `virtual:ignifx/scripts`.
 
-## Gotchas (top 11)
+## Gotchas (top 12)
 
 1. **Rendering features are declared before `app.start()`.** `shadows`, `postProcessing`,
    `skeletons`, `stencil`, `deviceLostRecovery` and the rest are `false` by default and refused
@@ -467,6 +469,7 @@ documented in `@ignifx/vite-plugin`'s `README.md`, together with `virtual:ignifx
 10. **Degrees in the public API; world getters allocate.** A radian API carries a `Rad` suffix, and
     `transform.position`/`.forward`/… allocate — use `positionToRef(out)` in hot paths.
 11. **Browsers start audio locked.** `app.audio.state` is `"locked"` until a user gesture or `app.audio.unlock()`; plays made before then are queued, not lost. Headless apps are never locked.
+12. **Physics needs a completed fixed step and, by default, has no collision identities.** Queries throw `IGX-0902` before the first step; `collision.other` is `null` unless `physics({ collisionIdentities: "internal" })` is on, so triggers are the default gameplay mechanism; `MeshCollider` needs a GPU app.
 
 The full list, with error codes, is in [`references/gotchas.md`](references/gotchas.md).
 
@@ -476,15 +479,15 @@ None (pre-1.0: no deprecation window; breaking changes are listed in the changel
 
 ## Where to look next
 
-| Topic                                 | Read                                                                                                                                                                              |
-| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Frame order, callbacks, `Time`        | [`references/concepts/lifecycle.md`](references/concepts/lifecycle.md)                                                                                                            |
-| World, entities, scenes, prefabs      | [`references/concepts/scene-graph.md`](references/concepts/scene-graph.md)                                                                                                        |
-| Components, schemas, coroutines       | [`references/concepts/scripting.md`](references/concepts/scripting.md)                                                                                                            |
-| Cameras, lights, meshes, the renderer | [`references/concepts/rendering.md`](references/concepts/rendering.md)                                                                                                            |
-| Addresses, handles, loaders           | [`references/concepts/assets.md`](references/concepts/assets.md)                                                                                                                  |
-| Extensions, services, settings        | [`references/concepts/extensions.md`](references/concepts/extensions.md)                                                                                                          |
-| Every exact signature                 | [`api/core.md`](references/api/core.md) · [`api/input.md`](references/api/input.md) · [`api/audio.md`](references/api/audio.md) · the subsystem skills under `packages/*/skills/` |
-| Design rationale                      | `docs/architecture/`, `docs/adr/`                                                                                                                                                 |
+| Topic                                 | Read                                                                                                                                                                                                                              |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Frame order, callbacks, `Time`        | [`references/concepts/lifecycle.md`](references/concepts/lifecycle.md)                                                                                                                                                            |
+| World, entities, scenes, prefabs      | [`references/concepts/scene-graph.md`](references/concepts/scene-graph.md)                                                                                                                                                        |
+| Components, schemas, coroutines       | [`references/concepts/scripting.md`](references/concepts/scripting.md)                                                                                                                                                            |
+| Cameras, lights, meshes, the renderer | [`references/concepts/rendering.md`](references/concepts/rendering.md)                                                                                                                                                            |
+| Addresses, handles, loaders           | [`references/concepts/assets.md`](references/concepts/assets.md)                                                                                                                                                                  |
+| Extensions, services, settings        | [`references/concepts/extensions.md`](references/concepts/extensions.md)                                                                                                                                                          |
+| Every exact signature                 | [`api/core.md`](references/api/core.md) · [`api/input.md`](references/api/input.md) · [`api/audio.md`](references/api/audio.md) · [`api/physics.md`](references/api/physics.md) · the subsystem skills under `packages/*/skills/` |
+| Design rationale                      | `docs/architecture/`, `docs/adr/`                                                                                                                                                                                                 |
 
 `docs/migrations/` exists only after 1.0.

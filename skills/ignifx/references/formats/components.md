@@ -30,6 +30,19 @@ A sound attached to an entity: which clip, which bus, how loud, how many at once
 | `cone` | `record` | `{"innerAngle":360,"outerAngle":360,"outerVolume":0}` | Directionality of a spatial source; 360/360 is omnidirectional. |
 | `pan` | `f32` | `0` | Stereo pan of a non-spatial source. |
 
+## BoxCollider (`ignifx/BoxCollider`)
+
+A box collision shape, sized in local units and scaled by the entity.
+
+| Field | Kind | Default | Description |
+|---|---|---|---|
+| `center` | `vec3` | `[0,0,0]` |  |
+| `isTrigger` | `bool` | `false` |  |
+| `material` | `asset` | `null` |  |
+| `inlineMaterial` | `optional` | `null` |  |
+| `layerOverride` | `str` | `""` |  |
+| `size` | `vec3` | `[1,1,1]` |  |
+
 ## Camera (`ignifx/Camera`)
 
 The camera an entity renders the world through; the entity's transform is the view.
@@ -45,6 +58,49 @@ The camera an entity renders the world through; the entity's transform is the vi
 | `clearColor` | `optional` | `null` | Overrides the scene clear colour while this camera renders. |
 | `priority` | `i32` | `0` | The enabled camera with the highest priority renders. |
 
+## CapsuleCollider (`ignifx/CapsuleCollider`)
+
+A capsule collision shape standing along X, Y, or Z.
+
+| Field | Kind | Default | Description |
+|---|---|---|---|
+| `center` | `vec3` | `[0,0,0]` |  |
+| `isTrigger` | `bool` | `false` |  |
+| `material` | `asset` | `null` |  |
+| `inlineMaterial` | `optional` | `null` |  |
+| `layerOverride` | `str` | `""` |  |
+| `radius` | `f32` | `0.5` |  |
+| `height` | `f32` | `2` |  |
+| `direction` | `enum` | `"y"` |  |
+
+## CharacterController (`ignifx/CharacterController`)
+
+A kinematic capsule with collide-and-slide, support detection, and body pushing.
+
+| Field | Kind | Default | Description |
+|---|---|---|---|
+| `radius` | `f32` | `0.4` |  |
+| `height` | `f32` | `1.8` |  |
+| `center` | `vec3` | `[0,0,0]` |  |
+| `slopeLimit` | `f32` | `45` |  |
+| `skinWidth` | `f32` | `0.05` |  |
+| `pushStrength` | `f32` | `1` |  |
+| `interpolation` | `enum` | `"interpolate"` |  |
+
+## CylinderCollider (`ignifx/CylinderCollider`)
+
+A cylinder collision shape standing along Y.
+
+| Field | Kind | Default | Description |
+|---|---|---|---|
+| `center` | `vec3` | `[0,0,0]` |  |
+| `isTrigger` | `bool` | `false` |  |
+| `material` | `asset` | `null` |  |
+| `inlineMaterial` | `optional` | `null` |  |
+| `layerOverride` | `str` | `""` |  |
+| `radius` | `f32` | `0.5` |  |
+| `height` | `f32` | `2` |  |
+
 ## Environment (`ignifx/Environment`)
 
 The world's image-based lighting, skybox, fog, image processing, and clear colour.
@@ -58,6 +114,22 @@ The world's image-based lighting, skybox, fog, image processing, and clear colou
 | `fog` | `record` | `{"mode":"none","color":[0.784314,0.784314,0.784314,1],"density":0.01,"start":10,"end":100}` | Distance fog. |
 | `imageProcessing` | `record` | `{"exposure":1,"contrast":1,"toneMapping":"none"}` | Exposure, contrast, and tone mapping. Recompiles PBR pipelines when it changes. |
 | `clearColor` | `color` | `[0,0,0,1]` | The colour the scene is cleared to, in sRGB. |
+
+## HeightfieldCollider (`ignifx/HeightfieldCollider`)
+
+A terrain collision shape built from a regular grid of height samples.
+
+| Field | Kind | Default | Description |
+|---|---|---|---|
+| `center` | `vec3` | `[0,0,0]` |  |
+| `isTrigger` | `bool` | `false` |  |
+| `material` | `asset` | `null` |  |
+| `inlineMaterial` | `optional` | `null` |  |
+| `layerOverride` | `str` | `""` |  |
+| `heights` | `array` | `[]` |  |
+| `samplesX` | `u32` | `2` |  |
+| `samplesZ` | `u32` | `2` |  |
+| `size` | `vec3` | `[1,1,1]` |  |
 
 ## Light (`ignifx/Light`)
 
@@ -75,6 +147,21 @@ A directional, point, spot, or hemispheric light, with optional shadow casting.
 | `shadows` | `record` | `{"enabled":false,"technique":"pcf","mapSize":1024,"bias":0.00005,"normalBias":0,"darkness":0,"cascades":4,"maxDistance":0}` | Shadow casting; point and hemispheric lights cannot cast (IGX-0703). |
 | `includeOnly` | `array` | `[]` | Light only these entities' renderers. |
 | `exclude` | `array` | `[]` | Never light these entities' renderers. |
+
+## MeshCollider (`ignifx/MeshCollider`)
+
+A triangle-mesh or convex-hull shape built from real geometry; needs a GPU app.
+
+| Field | Kind | Default | Description |
+|---|---|---|---|
+| `center` | `vec3` | `[0,0,0]` |  |
+| `isTrigger` | `bool` | `false` |  |
+| `material` | `asset` | `null` |  |
+| `inlineMaterial` | `optional` | `null` |  |
+| `layerOverride` | `str` | `""` |  |
+| `mesh` | `asset` | `null` |  |
+| `convex` | `bool` | `false` |  |
+| `includeChildren` | `bool` | `true` |  |
 
 ## MeshRenderer (`ignifx/MeshRenderer`)
 
@@ -135,3 +222,30 @@ Bloom, SMAA, and image processing, inserted into the scene's frame graph.
 | `bloom` | `record` | `{"enabled":false,"order":0,"weight":0.15,"kernel":64,"threshold":0.9,"exposure":1,"scale":0.5}` | Bloom. |
 | `smaa` | `record` | `{"enabled":false,"order":1,"threshold":0.05,"maxSearchSteps":16,"diagonalDetection":false,"cornerDetection":false}` | SMAA anti-aliasing. Needs a single-sample source. |
 | `imageProcessing` | `record` | `{"enabled":false,"order":2}` | Exposure, contrast, and tone mapping as a pass — the alternative to Environment. |
+
+## Rigidbody (`ignifx/Rigidbody`)
+
+Makes an entity's colliders a dynamic, kinematic, or static Havok body.
+
+| Field | Kind | Default | Description |
+|---|---|---|---|
+| `bodyType` | `enum` | `"dynamic"` |  |
+| `mass` | `f32` | `1` |  |
+| `startAsleep` | `bool` | `false` |  |
+| `freezeRotation` | `record` | `{"x":false,"y":false,"z":false}` |  |
+| `interpolation` | `enum` | `"interpolate"` |  |
+| `collisionEvents` | `enum` | `"auto"` |  |
+| `kinematicSync` | `enum` | `"teleport"` |  |
+
+## SphereCollider (`ignifx/SphereCollider`)
+
+A sphere collision shape; the largest scale axis wins.
+
+| Field | Kind | Default | Description |
+|---|---|---|---|
+| `center` | `vec3` | `[0,0,0]` |  |
+| `isTrigger` | `bool` | `false` |  |
+| `material` | `asset` | `null` |  |
+| `inlineMaterial` | `optional` | `null` |  |
+| `layerOverride` | `str` | `""` |  |
+| `radius` | `f32` | `0.5` |  |

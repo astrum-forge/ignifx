@@ -30,29 +30,41 @@ Per frame in `PreRender` (order −500): for every `Rigidbody` with `interpolati
 
 ### 2.1 `Rigidbody`
 
-| Field                                                    | Default                                                                                                                                                     | Lite                                                                                                  |
-| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `bodyType`: `"dynamic"` \| `"kinematic"` \| `"static"`   | `"dynamic"`                                                                                                                                                 | `PhysicsMotionType.DYNAMIC` / `ANIMATED` / `STATIC` (`createPhysicsBody`, `setPhysicsBodyMotionType`) |
-| `mass`                                                   | 1                                                                                                                                                           | `setPhysicsBodyMass` (0 for static)                                                                   |
-| `startAsleep`                                            | false                                                                                                                                                       | `createPhysicsBody(..., startsAsleep)`                                                                |
-| `freezeRotation`: `{ x, y, z }`                          | all false                                                                                                                                                   | `lockPhysicsBodyRotationAxes` / `unlockPhysicsBodyRotationAxes`                                       |
-| `interpolation`: `"none"` \| `"interpolate"`             | `"interpolate"` for dynamic                                                                                                                                 | ignifx (§1)                                                                                           |
-| `collisionEvents`                                        | auto (true when any script on the entity implements `onCollision*`; recomputed on every `addComponent`/`removeComponent` on the entity and pushed to Havok) | `setPhysicsBodyCollisionEventsEnabled`                                                                |
-| `kinematicSync`: `"teleport"` \| `"velocity"`            | `"teleport"`                                                                                                                                                | `setPhysicsBodyPrestepType(TELEPORT/ACTION)`                                                          |
-| `linearVelocity`, `angularVelocity` (runtime)            | —                                                                                                                                                           | `get/setPhysicsBodyLinearVelocity`, `get/setPhysicsBodyAngularVelocity`                               |
-| `addForce(force, point?)`, `addImpulse(impulse, point?)` | —                                                                                                                                                           | `applyPhysicsBodyForce`, `applyPhysicsBodyImpulse`                                                    |
-| `teleport(position, rotation)`                           | —                                                                                                                                                           | `setPhysicsBodyTransform`                                                                             |
-| `velocityLimits`                                         | world default                                                                                                                                               | `setPhysicsVelocityLimits`                                                                            |
+| Field                                                    | Default                                                                                                                                              | Lite                                                                                                  |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `bodyType`: `"dynamic"` \| `"kinematic"` \| `"static"`   | `"dynamic"`                                                                                                                                          | `PhysicsMotionType.DYNAMIC` / `ANIMATED` / `STATIC` (`createPhysicsBody`, `setPhysicsBodyMotionType`) |
+| `mass`                                                   | 1                                                                                                                                                    | `setPhysicsBodyMass` (0 for static)                                                                   |
+| `startAsleep`                                            | false                                                                                                                                                | `createPhysicsBody(..., startsAsleep)`                                                                |
+| `freezeRotation`: `{ x, y, z }`                          | all false                                                                                                                                            | `lockPhysicsBodyRotationAxes` / `unlockPhysicsBodyRotationAxes`                                       |
+| `interpolation`: `"none"` \| `"interpolate"`             | `"interpolate"` for dynamic                                                                                                                          | ignifx (§1)                                                                                           |
+| `collisionEvents`: `"auto"` \| `"on"` \| `"off"`         | `"auto"` — enabled when any script on the entity implements `onCollision*`, recomputed on every `addComponent`/`removeComponent` and pushed to Havok | `setPhysicsBodyCollisionEventsEnabled`                                                                |
+| `kinematicSync`: `"teleport"` \| `"velocity"`            | `"teleport"`                                                                                                                                         | `setPhysicsBodyPrestepType(TELEPORT/ACTION)`                                                          |
+| `linearVelocity`, `angularVelocity` (runtime)            | —                                                                                                                                                    | `get/setPhysicsBodyLinearVelocity`, `get/setPhysicsBodyAngularVelocity`                               |
+| `addForce(force, point?)`, `addImpulse(impulse, point?)` | —                                                                                                                                                    | `applyPhysicsBodyForce`, `applyPhysicsBodyImpulse`                                                    |
+| `teleport(position, rotation)`                           | —                                                                                                                                                    | `setPhysicsBodyTransform`                                                                             |
 
-Not available in Lite 1.27.0 and therefore absent from the schema (tracked as upstream requests): per-body linear/angular damping, per-body gravity factor, sleep thresholds, and explicit `wakeUp()`. Gravity is per world (`setPhysicsGravity`) with optional regional gravity for planetary setups.
+Not available in Lite 1.27.0 and therefore absent from the schema (tracked as upstream requests):
+per-body linear/angular damping, per-body gravity factor, sleep thresholds, explicit `wakeUp()`, and
+**per-body velocity limits** — `setPhysicsVelocityLimits` is per world (`index.d.ts` 10880), so the
+clamps live in the `physics` settings section (§6) and there is no `Rigidbody.velocityLimits` field.
+
+A body's entity must be a **root** entity. Lite's post-step sync writes `node.position` and
+`node.rotationQuaternion`, which are the node's _local_ values (`lib/physics/havok.js`,
+`_syncBodyToNode`), so a parented body would be simulated in its parent's space; the extension
+reports `IGX-0907` and simulates it anyway rather than silently misplacing it. Gravity is per world (`setPhysicsGravity`) with optional regional gravity for planetary setups.
 
 ### 2.2 Colliders
 
-`BoxCollider { size, center }`, `SphereCollider { radius, center }`, `CapsuleCollider { radius, height, center, direction }`, `CylinderCollider { radius, height, center }`, `MeshCollider { mesh?: asset(MeshAsset) | null (uses the entity's MeshRenderer/Model), convex: bool(false), includeChildren: bool(true) }`, `HeightfieldCollider { heights, size }`. Shared fields: `isTrigger`, `material: asset(PhysicsMaterial) | inline { friction, restitution, staticFriction }`, `layerOverride: layer | null`.
+`BoxCollider { size, center }`, `SphereCollider { radius, center }`, `CapsuleCollider { radius, height, center, direction }`, `CylinderCollider { radius, height, center }`, `MeshCollider { mesh?: asset(MeshAsset) | null (uses the entity's MeshRenderer/Model), convex: bool(false), includeChildren: bool(true) }`, `HeightfieldCollider { heights, samplesX, samplesZ, size }` (Lite's explicit sample-grid path; its `groundMesh` path reads `mesh._cpuPositions` and needs a GPU). Shared fields: `center`, `isTrigger`, `material: asset(PhysicsMaterial)`,
+`inlineMaterial: { friction, staticFriction, restitution } | null`, and `layerOverride: string` (a
+layer **name**; `""` means "use `entity.layer`"). A schema field has exactly one kind (ADR-0004), so
+the asset-or-inline union is two fields: the asset wins, the inline record is the fallback, and
+`physics.defaultMaterial` is the last resort.
 
 - Lite mapping: `createPhysicsShape(world, { type: PhysicsShapeType.*, parameters })`, `setPhysicsShapeIsTrigger`, `setPhysicsShapeMaterial`, `setPhysicsShapeFilterMembershipMask`/`CollideMask`, `setPhysicsBodyShape`. Several colliders on one entity form a `CONTAINER` shape (`addPhysicsShapeChild`).
 - An entity with colliders but no `Rigidbody` gets an implicit **static** body that is placed once and does not follow later transform changes; a development diagnostic (`IGX-0901`) fires if such an entity's `worldMatrixVersion` changes. Anything that moves needs a kinematic `Rigidbody`. Colliders on child entities attach to the nearest ancestor `Rigidbody` (compound bodies) in Phase 4b; the MVP supports same-entity compounds.
-- Shape sizes are authored in local units and scaled by the entity's lossy scale at creation; scale changes after creation require `collider.rebuild()`.
+- Shape sizes are authored in local units and scaled by the entity's lossy scale at creation; scale changes after creation require `collider.rebuild()`. A negative scale mirrors geometry, which Havok cannot represent, so the shape uses the magnitude.
+- **`MeshCollider` needs a GPU app.** Lite documents mesh and convex-hull shapes as unsupported on the null engine (`index.d.ts`, `createNullEngine`), and a headless `MeshAsset` uploads no geometry, so a headless mesh collider reports `IGX-0906` instead of building an empty shape.
 
 ### 2.3 `CharacterController`
 
@@ -81,6 +93,8 @@ class CharacterController extends Component.define({
 ```
 
 - The controller owns the entity's world position: after each step it writes `getPosition()` into the transform. Rotation stays user-controlled. With `interpolation: "interpolate"` (the default) the controller keeps the previous and current step positions and the `PreRender` system writes the interpolated position exactly as for `Rigidbody`, restoring the authoritative position at the start of each fixed step, so player characters do not judder above the fixed rate.
+- `pushStrength` **scales** Lite's `characterStrength`, whose default is `1e38` — effectively infinite — so `pushStrength: 1` means "Lite's default", not "one newton".
+- `supportState` comes from a `checkSupport` probe the step system runs once per step with a **unit** gravity direction (handing Lite the full 9.81 m/s² vector makes the probe overshoot). Lite's `PhysicsCharacterController.staticFriction` defaults to `0`, so a bare controller pressed against _any_ incline keeps a residual down-slope velocity and the probe classifies it as `sliding`; `slopeLimit` still decides what the character can climb. The toolkit controllers add the friction and gravity handling that make `supportState` read the way Unity's does.
 - Step offset (stairs) is not a Lite feature; the 3D toolkit's `ThirdPersonController`/`FirstPersonController` implement a step probe with `shapeCast` (Phase 7).
 - Gravity is applied by the toolkit controllers through `checkSupport` + `integrate`, so a bare `CharacterController` is purely kinematic.
 
@@ -96,30 +110,59 @@ class CharacterController extends Component.define({
 
 ## 4. Events
 
-- **Triggers:** `onPhysicsTriggerBodies` gives `bodyA`/`bodyB`; the adapter resolves bodies to entities and delivers `onTriggerEnter`/`onTriggerExit` to scripts on both entities with `TriggerEvent { other: Entity, otherCollider, self }`.
+- **Triggers:** `onPhysicsTriggerBodies` gives `bodyA`/`bodyB`; the adapter resolves bodies to entities and delivers `onTriggerEnter`/`onTriggerExit` to scripts on both entities with `TriggerEvent { other: Entity | null, otherCollider, self }`. Lite reports no _shape_ identity, only a body, so `otherCollider` is the other entity's first collider.
 - **Collisions:** `onPhysicsCollision` currently reports `type`, `point`, `normal`, `impulse` **without body identities**. Delivering `onCollisionEnter/Stay/Exit` to the right entities requires one of:
   1. an upstream addition `onPhysicsCollisionBodies` (mirrors the trigger API) — the preferred path; Phase 4 includes the pull request; or
   2. an adapter-internal drain that reads Havok's collision event buffer through the world's internal handles (same offsets Lite uses). This deliberately crosses the adapter boundary and is therefore governed by its own waiver, ADR-0013: opt-in through `physics({ collisionIdentities: "internal" })`, guarded by a version-pinned layout test, and removed the release after upstream support lands.
-     The plan carries this as risk R-4. Until one path ships, trigger events (which carry identities) are the documented mechanism for gameplay reactions, and `onCollision*` callbacks deliver contact data with `other` set to `null`.
-- `Collision { other: Entity, otherCollider, contacts: [{ point, normal, impulse }], relativeVelocity? }`. Contacts are pooled and only valid during the callback.
+     The plan carries this as risk R-4. Phase 4 checked: `onPhysicsCollisionBodies` does not exist in the pinned version, so ADR-0013 is active and the drain ships behind the flag. Until upstream lands, trigger events (which carry identities) are the documented mechanism for gameplay reactions, and in the default `"upstream"` mode a collision event — which carries no identity at all — is delivered with `other === null` to **every** entity that opted into collision events, because there is nothing to route it by.
+- `Collision { other: Entity | null, otherCollider, self, contacts: [{ point, normal, impulse }], relativeVelocity }`. The `Collision`, its `contacts`, and the `TriggerEvent` are all pooled and only valid during the callback. `relativeVelocity` is `null` whenever the identities are unavailable.
 
 ## 5. Queries (`app.physics`)
 
 ```ts
-raycast(origin, direction, maxDistance, options?: { layerMask?, hitTriggers? }): RaycastHit | null    // physicsRaycast
+raycast(origin, direction, maxDistance?, options?: { layerMask?, hitTriggers? }): RaycastHit | null  // physicsRaycast
 shapeCast(shape, from, to, options?): ShapeCastHit | null                                          // shapeCast
-overlap(shape, position, rotation?, options?): Entity[]                                             // shapeProximity
+overlap(shape, position, rotation?, options?): readonly Entity[]                                    // bounds index
+distanceToNearest(shape, position, maxDistance, options?): number                                   // shapeProximity
 ```
 
-`RaycastHit { entity, collider, point, normal, distance, triangleIndex }`. Queries require at least one completed step (Lite builds the broadphase on the first step); calling earlier returns `null` with a development warning.
+`shape` is a description — `{ kind: "sphere" | "box" | "capsule", … }` — that the service turns into
+a temporary Havok shape for the call.
+
+`RaycastHit { entity, collider, point, normal, distance, triangleIndex }`. Queries require at least
+one completed step (Lite builds the broadphase on the first step); calling earlier throws
+`IGX-0902`.
+
+**Identity is only available for rays.** Lite 1.27.0 reports a body for `physicsRaycast` alone:
+`ShapeCastResult` and `ShapeProximityResult` carry points and normals but no body, and
+`shapeProximity`'s collector has capacity `1`, so it can never list more than one hit. So
+`shapeCast` runs Lite's sweep for the geometry and resolves `entity` against the extension's own
+body-bounds index, and `overlap` is answered entirely from that index — the entities whose world
+bounding box the query shape's bounding box intersects. Both are bounds-accurate rather than
+shape-accurate until an upstream API lands, and `overlap` returns a **reused** array.
 
 ## 6. Settings
 
-`physics: { gravity: [0, -9.81, 0], collisionMatrix, defaultMaterial, velocityLimits: { linear, angular }, interpolation: true, havokWasm: "auto" | url }`. `fixedDeltaTime` is shared with `time` settings.
+`physics: { gravity: [0, -9.81, 0], collisionMatrix, defaultMaterial, velocityLimits: { linear, angular }, interpolation: true, havokWasm: "auto" | url }`. `fixedDeltaTime` is shared with `time` settings and read from `app.time` on every step.
+
+`velocityLimits` defaults to `{ linear: 0, angular: 0 }`, where `0` means "leave Havok's own default
+alone". A layer that appears as a key in `collisionMatrix` collides only with the layers it lists; a
+layer that appears nowhere collides with everything, and Havok tests a pair in both directions, so
+one side refusing is enough to block it.
 
 ## 7. Loading Havok
 
-`@babylonjs/havok` (peer dependency) exports `HavokPhysics({ locateFile })`. The Vite plugin copies `HavokPhysics.wasm` to the public assets (manifest `assets.public`), and the extension loads it in `onStart` (or lazily on first `Rigidbody` when `physics({ lazy: true })`). Headless tests load the same WASM in Node.
+`@babylonjs/havok` (peer dependency) exports `HavokPhysics(options)`. Its ESM build hard-codes
+`ENVIRONMENT_IS_WEB` and `fetch`es the binary, so `locateFile` cannot help under Node; the extension
+therefore always obtains the **bytes** first and passes Emscripten's `wasmBinary`.
+
+The Vite plugin copies `HavokPhysics.wasm` into the public asset path from the package's
+`ignifx.assets.public` list, unhashed and **by base name**, and the default asset root is that same
+directory — so the address is the bare `"HavokPhysics.wasm"` and
+`app.assets.resolveUrl("HavokPhysics.wasm")` is the URL. Under Node, where nothing serves that
+address, the loader falls back to reading the binary out of the installed `@babylonjs/havok`
+package, so `app.isHeadless` only changes _where the bytes come from_. The world is created in
+`onStart`; there is no `lazy` option.
 
 ## 8. Determinism
 
@@ -128,7 +171,11 @@ overlap(shape, position, rotation?, options?): Entity[]                         
 
 ## 9. Debugging
 
-`@ignifx/devtools` toggles Lite's `createPhysicsViewer` (wireframe bodies/constraints on the render scene) and shows step counts, body counts, and event counts from `app.diagnostics.physics`.
+`app.physics.debugViewer.enabled` toggles Lite's `createPhysicsViewer` (wireframe bodies on the
+render scene); `@ignifx/devtools` wires the UI in Phase 10 and shows the `physics` diagnostics group
+(`bodies`, `activeBodies`, `stepsThisFrame`, `collisionEvents`, `triggerEvents`, `queries`,
+`stepMs`). The viewer builds a `Mesh` per body, so it needs a GPU device and is a no-op with a
+warning on a headless app.
 
 ## 10. 2D physics
 

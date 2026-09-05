@@ -85,6 +85,7 @@ export class ExtensionHost implements ExtensionContextHost {
   readonly #sorted: Extension[] = [];
 
   readonly #disposers: (() => void)[] = [];
+  #isDisposing = false;
 
   readonly #properties = new Set<string>();
 
@@ -186,6 +187,7 @@ export class ExtensionHost implements ExtensionContextHost {
 
   /** Runs every `dispose` hook and `onDispose` callback in reverse order, guarded. */
   dispose(): void {
+    this.#isDisposing = true;
     const app = this.#options.app;
     for (let index = this.#sorted.length - 1; index >= 0; index -= 1) {
       const extension = this.#sorted[index];
@@ -206,6 +208,15 @@ export class ExtensionHost implements ExtensionContextHost {
       }
     }
     this.#disposers.length = 0;
+  }
+
+  /**
+   * Whether {@link ExtensionHost.dispose} has begun, for the context's dispose-time checks.
+   *
+   * @returns `true` from the first line of `dispose()` onwards.
+   */
+  get isDisposing(): boolean {
+    return this.#isDisposing;
   }
 
   /**

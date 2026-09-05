@@ -88,6 +88,36 @@ describe("collectExtensionPublicAssets", () => {
     ]);
   });
 
+  it("resolves a node_modules/ path inside the extension's own dependencies (pnpm layout)", async () => {
+    const root = await createFixtureTree({
+      "node_modules/@ignifx/physics/package.json": packageJson({
+        name: "@ignifx/physics",
+        ignifx: { assets: { public: ["node_modules/@babylonjs/havok/lib/esm/HavokPhysics.wasm"] } },
+      }),
+      "node_modules/@ignifx/physics/node_modules/@babylonjs/havok/lib/esm/HavokPhysics.wasm": "nested",
+    });
+    const files = await collectExtensionPublicAssets(root);
+    expect(files).toHaveLength(1);
+    expect(files[0]?.fileName).toBe("HavokPhysics.wasm");
+    expect(files[0]?.filePath.endsWith("@ignifx/physics/node_modules/@babylonjs/havok/lib/esm/HavokPhysics.wasm")).toBe(
+      true,
+    );
+  });
+
+  it("falls back to a hoisted dependency when the extension has no nested node_modules", async () => {
+    const root = await createFixtureTree({
+      "node_modules/@ignifx/physics/package.json": packageJson({
+        name: "@ignifx/physics",
+        ignifx: { assets: { public: ["node_modules/@babylonjs/havok/lib/esm/HavokPhysics.wasm"] } },
+      }),
+      "node_modules/@babylonjs/havok/lib/esm/HavokPhysics.wasm": "hoisted",
+    });
+    const files = await collectExtensionPublicAssets(root);
+    expect(files).toHaveLength(1);
+    expect(files[0]?.filePath.endsWith("node_modules/@babylonjs/havok/lib/esm/HavokPhysics.wasm")).toBe(true);
+    expect(files[0]?.filePath.includes("@ignifx/physics/node_modules")).toBe(false);
+  });
+
   it("fails with IGX-0553 when a declared file does not exist", async () => {
     const root = await createFixtureTree({
       "node_modules/@ignifx/physics/package.json": packageJson({

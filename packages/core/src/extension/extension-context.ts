@@ -44,6 +44,8 @@ export interface ExtensionContextHost {
    * @param callback - The teardown.
    */
   addDisposer(callback: () => void): void;
+  /** Whether the app is being disposed, in which case the world is already gone. */
+  readonly isDisposing: boolean;
 }
 
 /**
@@ -268,6 +270,12 @@ export class ExtensionContextImpl implements ExtensionContext {
    * @throws IgnifxError with code `IGX-0410` when the world already has a different one.
    */
   setSimulationScene(scene: LiteScene | null): void {
+    if (scene === null && this.#host.isDisposing) {
+      // `App.dispose()` disposes the world before the extensions, and `World.dispose()` clears the
+      // simulation scene itself, so a clear from an extension's `dispose` has nothing left to do —
+      // and `app.world` would refuse the disposed app with `IGX-0106`.
+      return;
+    }
     this.app.world.setSimulationScene(scene);
   }
 

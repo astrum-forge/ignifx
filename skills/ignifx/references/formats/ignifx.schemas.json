@@ -130,6 +130,44 @@
         }
       }
     },
+    "ignifx/BoxCollider": {
+      "title": "BoxCollider",
+      "format": "components",
+      "description": "A box collision shape, sized in local units and scaled by the entity.",
+      "package": "packages/physics",
+      "fields": {
+        "center": {
+          "kind": "vec3",
+          "default": "[0,0,0]",
+          "description": ""
+        },
+        "isTrigger": {
+          "kind": "bool",
+          "default": "false",
+          "description": ""
+        },
+        "material": {
+          "kind": "asset",
+          "default": "null",
+          "description": ""
+        },
+        "inlineMaterial": {
+          "kind": "optional",
+          "default": "null",
+          "description": ""
+        },
+        "layerOverride": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": ""
+        },
+        "size": {
+          "kind": "vec3",
+          "default": "[1,1,1]",
+          "description": ""
+        }
+      }
+    },
     "ignifx/Camera": {
       "title": "Camera",
       "format": "components",
@@ -175,6 +213,140 @@
           "kind": "i32",
           "default": "0",
           "description": "The enabled camera with the highest priority renders."
+        }
+      }
+    },
+    "ignifx/CapsuleCollider": {
+      "title": "CapsuleCollider",
+      "format": "components",
+      "description": "A capsule collision shape standing along X, Y, or Z.",
+      "package": "packages/physics",
+      "fields": {
+        "center": {
+          "kind": "vec3",
+          "default": "[0,0,0]",
+          "description": ""
+        },
+        "isTrigger": {
+          "kind": "bool",
+          "default": "false",
+          "description": ""
+        },
+        "material": {
+          "kind": "asset",
+          "default": "null",
+          "description": ""
+        },
+        "inlineMaterial": {
+          "kind": "optional",
+          "default": "null",
+          "description": ""
+        },
+        "layerOverride": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": ""
+        },
+        "radius": {
+          "kind": "f32",
+          "default": "0.5",
+          "description": ""
+        },
+        "height": {
+          "kind": "f32",
+          "default": "2",
+          "description": ""
+        },
+        "direction": {
+          "kind": "enum",
+          "default": "\"y\"",
+          "description": ""
+        }
+      }
+    },
+    "ignifx/CharacterController": {
+      "title": "CharacterController",
+      "format": "components",
+      "description": "A kinematic capsule with collide-and-slide, support detection, and body pushing.",
+      "package": "packages/physics",
+      "fields": {
+        "radius": {
+          "kind": "f32",
+          "default": "0.4",
+          "description": ""
+        },
+        "height": {
+          "kind": "f32",
+          "default": "1.8",
+          "description": ""
+        },
+        "center": {
+          "kind": "vec3",
+          "default": "[0,0,0]",
+          "description": ""
+        },
+        "slopeLimit": {
+          "kind": "f32",
+          "default": "45",
+          "description": ""
+        },
+        "skinWidth": {
+          "kind": "f32",
+          "default": "0.05",
+          "description": ""
+        },
+        "pushStrength": {
+          "kind": "f32",
+          "default": "1",
+          "description": ""
+        },
+        "interpolation": {
+          "kind": "enum",
+          "default": "\"interpolate\"",
+          "description": ""
+        }
+      }
+    },
+    "ignifx/CylinderCollider": {
+      "title": "CylinderCollider",
+      "format": "components",
+      "description": "A cylinder collision shape standing along Y.",
+      "package": "packages/physics",
+      "fields": {
+        "center": {
+          "kind": "vec3",
+          "default": "[0,0,0]",
+          "description": ""
+        },
+        "isTrigger": {
+          "kind": "bool",
+          "default": "false",
+          "description": ""
+        },
+        "material": {
+          "kind": "asset",
+          "default": "null",
+          "description": ""
+        },
+        "inlineMaterial": {
+          "kind": "optional",
+          "default": "null",
+          "description": ""
+        },
+        "layerOverride": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": ""
+        },
+        "radius": {
+          "kind": "f32",
+          "default": "0.5",
+          "description": ""
+        },
+        "height": {
+          "kind": "f32",
+          "default": "2",
+          "description": ""
         }
       }
     },
@@ -271,6 +443,59 @@
           "kind": "f32",
           "default": "0",
           "description": "Rotation around world Y, in degrees."
+        }
+      }
+    },
+    "ignifx/HeightfieldCollider": {
+      "title": "HeightfieldCollider",
+      "format": "components",
+      "description": "A terrain collision shape built from a regular grid of height samples.",
+      "package": "packages/physics",
+      "fields": {
+        "center": {
+          "kind": "vec3",
+          "default": "[0,0,0]",
+          "description": ""
+        },
+        "isTrigger": {
+          "kind": "bool",
+          "default": "false",
+          "description": ""
+        },
+        "material": {
+          "kind": "asset",
+          "default": "null",
+          "description": ""
+        },
+        "inlineMaterial": {
+          "kind": "optional",
+          "default": "null",
+          "description": ""
+        },
+        "layerOverride": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": ""
+        },
+        "heights": {
+          "kind": "array",
+          "default": "[]",
+          "description": ""
+        },
+        "samplesX": {
+          "kind": "u32",
+          "default": "2",
+          "description": ""
+        },
+        "samplesZ": {
+          "kind": "u32",
+          "default": "2",
+          "description": ""
+        },
+        "size": {
+          "kind": "vec3",
+          "default": "[1,1,1]",
+          "description": ""
         }
       }
     },
@@ -503,6 +728,54 @@
         }
       }
     },
+    "ignifx/MeshCollider": {
+      "title": "MeshCollider",
+      "format": "components",
+      "description": "A triangle-mesh or convex-hull shape built from real geometry; needs a GPU app.",
+      "package": "packages/physics",
+      "fields": {
+        "center": {
+          "kind": "vec3",
+          "default": "[0,0,0]",
+          "description": ""
+        },
+        "isTrigger": {
+          "kind": "bool",
+          "default": "false",
+          "description": ""
+        },
+        "material": {
+          "kind": "asset",
+          "default": "null",
+          "description": ""
+        },
+        "inlineMaterial": {
+          "kind": "optional",
+          "default": "null",
+          "description": ""
+        },
+        "layerOverride": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": ""
+        },
+        "mesh": {
+          "kind": "asset",
+          "default": "null",
+          "description": ""
+        },
+        "convex": {
+          "kind": "bool",
+          "default": "false",
+          "description": ""
+        },
+        "includeChildren": {
+          "kind": "bool",
+          "default": "true",
+          "description": ""
+        }
+      }
+    },
     "ignifx/MeshRenderer": {
       "title": "MeshRenderer",
       "format": "components",
@@ -622,6 +895,44 @@
         }
       }
     },
+    "ignifx/physicsmaterial-file": {
+      "title": "Physics material file",
+      "format": "ignifx.physicsmaterial",
+      "description": "A surface's friction and bounciness, referenced by a collider's material field.",
+      "package": "packages/physics",
+      "fields": {
+        "format": {
+          "kind": "str",
+          "default": "\"ignifx.physicsmaterial\"",
+          "description": "Always \"ignifx.physicsmaterial\"."
+        },
+        "formatVersion": {
+          "kind": "u32",
+          "default": "1",
+          "description": "The file format version; 1 before ignifx 1.0."
+        },
+        "name": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": "A human-readable name; defaults to the address."
+        },
+        "friction": {
+          "kind": "f32",
+          "default": "0.6",
+          "description": "The dynamic friction coefficient."
+        },
+        "staticFriction": {
+          "kind": "f32",
+          "default": "0.6",
+          "description": "The static friction coefficient; defaults to friction."
+        },
+        "restitution": {
+          "kind": "f32",
+          "default": "0",
+          "description": "How much approach speed is returned, 0 to 1."
+        }
+      }
+    },
     "ignifx/PlayerInput": {
       "title": "PlayerInput",
       "format": "components",
@@ -668,6 +979,49 @@
         }
       }
     },
+    "ignifx/Rigidbody": {
+      "title": "Rigidbody",
+      "format": "components",
+      "description": "Makes an entity's colliders a dynamic, kinematic, or static Havok body.",
+      "package": "packages/physics",
+      "fields": {
+        "bodyType": {
+          "kind": "enum",
+          "default": "\"dynamic\"",
+          "description": ""
+        },
+        "mass": {
+          "kind": "f32",
+          "default": "1",
+          "description": ""
+        },
+        "startAsleep": {
+          "kind": "bool",
+          "default": "false",
+          "description": ""
+        },
+        "freezeRotation": {
+          "kind": "record",
+          "default": "{\"x\":false,\"y\":false,\"z\":false}",
+          "description": ""
+        },
+        "interpolation": {
+          "kind": "enum",
+          "default": "\"interpolate\"",
+          "description": ""
+        },
+        "collisionEvents": {
+          "kind": "enum",
+          "default": "\"auto\"",
+          "description": ""
+        },
+        "kinematicSync": {
+          "kind": "enum",
+          "default": "\"teleport\"",
+          "description": ""
+        }
+      }
+    },
     "ignifx/scene-file": {
       "title": "Scene file",
       "format": "ignifx.scene",
@@ -703,6 +1057,44 @@
           "kind": "array",
           "default": "[]",
           "description": "Every entity, in tree order."
+        }
+      }
+    },
+    "ignifx/SphereCollider": {
+      "title": "SphereCollider",
+      "format": "components",
+      "description": "A sphere collision shape; the largest scale axis wins.",
+      "package": "packages/physics",
+      "fields": {
+        "center": {
+          "kind": "vec3",
+          "default": "[0,0,0]",
+          "description": ""
+        },
+        "isTrigger": {
+          "kind": "bool",
+          "default": "false",
+          "description": ""
+        },
+        "material": {
+          "kind": "asset",
+          "default": "null",
+          "description": ""
+        },
+        "inlineMaterial": {
+          "kind": "optional",
+          "default": "null",
+          "description": ""
+        },
+        "layerOverride": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": ""
+        },
+        "radius": {
+          "kind": "f32",
+          "default": "0.5",
+          "description": ""
         }
       }
     }

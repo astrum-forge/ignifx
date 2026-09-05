@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { Phase, PhysicsCallbackName, Script, ScriptCallbackKind, Transform } from "../../src/index.js";
+import { defineExtension, Phase, PhysicsCallbackName, Script, ScriptCallbackKind, Transform } from "../../src/index.js";
 import { createHeadlessScene, disposeSceneOnly } from "../../src/lite/scene.js";
 import { str } from "../../src/schema/field-kinds.js";
 import { createTestApp } from "../support/app-harness.js";
@@ -346,6 +346,42 @@ describe("ComponentRegistry.implementsCallback", () => {
 });
 
 describe("ExtensionContext.setSimulationScene", () => {
+  it("tolerates a clear from an extension's dispose, after the world is gone", async () => {
+    const simulation = createHeadlessScene();
+    let cleared = false;
+    let context: ExtensionContext | null = null;
+    const ext = defineExtension(() => ({
+      name: "test/simulation",
+      version: "1.0.0",
+      engine: ">=0.0.0",
+      requires: ["@ignifx/core"],
+      register(ctx: ExtensionContext): void {
+        context = ctx;
+      },
+      onStart(): void {
+        context?.setSimulationScene(simulation.scene);
+      },
+      dispose(): void {
+        // The TSDoc on the hook says `null` clears it "from the extension's dispose".
+        context?.setSimulationScene(null);
+        cleared = true;
+      },
+    }));
+    const harness = await createTestApp({ extensions: [ext()] });
+    try {
+      await harness.app.start();
+      expect(harness.world.lite.simulationScene).toBe(simulation.scene);
+      expect(() => {
+        harness.app.dispose();
+      }).not.toThrow();
+      expect(cleared).toBe(true);
+      // A teardown failure would be reported through the log at error level.
+      expect(harness.log.filter((line) => /error/i.test(line))).toEqual([]);
+    } finally {
+      disposeSceneOnly(simulation.scene);
+    }
+  });
+
   it("publishes, keeps, and clears the simulation scene", async () => {
     const { harness, ctx } = await build();
     const first = createHeadlessScene();

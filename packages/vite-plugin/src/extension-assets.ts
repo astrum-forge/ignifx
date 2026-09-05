@@ -1,4 +1,51 @@
 /**
+ * Resolves a declared public-asset path to an absolute file path.
+ *
+ * @remarks
+ * A path that begins with `node_modules/` names a file inside one of the extension's own
+ * dependencies (`@ignifx/physics` declares Havok's `.wasm` that way). pnpm links that dependency
+ * into the extension's own `node_modules`, but a hoisting package manager installs it beside the
+ * extension instead, so the path is tried against the extension's directory and then each ancestor
+ * in turn; the nearest existing file wins. Any other path is relative to the extension's directory.
+ * When nothing matches, the path relative to the extension is returned so that the `IGX-0553`
+ * message names the declared location.
+ *
+ * @param directory - The installed extension's directory.
+ * @param relativePath - The path as declared in `ignifx.assets.public`.
+ * @returns The absolute path to check and copy.
+ */
+async function resolveDeclaredPath(directory: string, relativePath: string): Promise<string> {
+  const direct = join(directory, relativePath);
+  if (!relativePath.startsWith("node_modules/")) {
+    return direct;
+  }
+  const candidates: string[] = [];
+  for (let current = directory; ; current = dirname(current)) {
+    candidates.push(join(current, relativePath));
+    if (dirname(current) === current) {
+      break;
+    }
+  }
+  const existing = await Promise.all(candidates.map((candidate) => isExistingFile(candidate)));
+  const nearest = candidates.find((_, index) => existing[index] === true);
+  return nearest ?? direct;
+}
+
+/**
+ * Whether a path exists and is a regular file.
+ *
+ * @param filePath - The absolute path.
+ * @returns `true` for a file; `false` for anything else, including a missing path.
+ */
+async function isExistingFile(filePath: string): Promise<boolean> {
+  try {
+    return (await stat(filePath)).isFile();
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Discovery of the static files extension packages need served verbatim
  * (`docs/architecture/04-extensions.md` §4, `05-assets-and-loading.md` §7).
  *
@@ -193,6 +240,27 @@ async function assertIsFile(packageName: string, relativePath: string, filePath:
 }
 
 /**
+ * Keeps the nearest installation of each package name: listings are ordered nearest first, so the
+ * first occurrence of a name wins and later duplicates are dropped.
+ *
+ * @param listings - One package listing per `node_modules` directory, nearest first.
+ * @returns The de-duplicated packages, in discovery order.
+ */
+function nearestInstallations(listings: readonly (readonly InstalledPackage[])[]): InstalledPackage[] {
+  const seen = new Set<string>();
+  const unique: InstalledPackage[] = [];
+  for (const listing of listings) {
+    for (const installed of listing) {
+      if (!seen.has(installed.packageName)) {
+        seen.add(installed.packageName);
+        unique.push(installed);
+      }
+    }
+  }
+  return unique;
+}
+
+/**
  * Collects every file declared by an installed extension's `ignifx.assets.public`.
  *
  * @remarks
@@ -216,18 +284,7 @@ async function assertIsFile(packageName: string, relativePath: string, filePath:
  */
 export async function collectExtensionPublicAssets(root: string): Promise<readonly ExtensionPublicAsset[]> {
   const listings = await Promise.all(nodeModulesDirectories(root).map((directory) => listPackages(directory)));
-
-  // Nearest first: the first installation of a name wins, and later duplicates are dropped.
-  const seen = new Set<string>();
-  const unique: InstalledPackage[] = [];
-  for (const listing of listings) {
-    for (const installed of listing) {
-      if (!seen.has(installed.packageName)) {
-        seen.add(installed.packageName);
-        unique.push(installed);
-      }
-    }
-  }
+  const unique = nearestInstallations(listings);
 
   const declared = await Promise.all(
     unique.map(async (installed) => ({
@@ -235,13 +292,13 @@ export async function collectExtensionPublicAssets(root: string): Promise<readon
       paths: await readPublicAssetPaths(installed.packageName, installed.directory),
     })),
   );
-  const candidates = declared.flatMap(({ installed, paths }) =>
-    paths.map((relativePath) => ({
-      packageName: installed.packageName,
-      relativePath,
-      filePath: join(installed.directory, relativePath),
-      fileName: basename(join(installed.directory, relativePath)),
-    })),
+  const candidates = await Promise.all(
+    declared.flatMap(({ installed, paths }) =>
+      paths.map(async (relativePath) => {
+        const filePath = await resolveDeclaredPath(installed.directory, relativePath);
+        return { packageName: installed.packageName, relativePath, filePath, fileName: basename(filePath) };
+      }),
+    ),
   );
   await Promise.all(
     candidates.map((candidate) => assertIsFile(candidate.packageName, candidate.relativePath, candidate.filePath)),

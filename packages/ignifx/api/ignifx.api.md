@@ -97,8 +97,11 @@ import { BindingContext } from '@ignifx/input';
 import { BindingDefinition } from '@ignifx/input';
 import { BindingResolver } from '@ignifx/input';
 import { BloomEffectSettings } from '@ignifx/core';
+import { BODY_TYPES } from '@ignifx/physics';
+import { BodyType } from '@ignifx/physics';
 import { bool } from '@ignifx/core';
 import { BoolFieldSpec } from '@ignifx/core';
+import { BoxCollider } from '@ignifx/physics';
 import { BoxMeshOptions } from '@ignifx/core';
 import { buildControls } from '@ignifx/input';
 import { Camera } from '@ignifx/core';
@@ -106,12 +109,24 @@ import { CameraProjection } from '@ignifx/core';
 import { canonicalizeNumber } from '@ignifx/core';
 import { CANVAS_ALPHA_MODES } from '@ignifx/core';
 import { CanvasAlphaMode } from '@ignifx/core';
+import { CAPSULE_DIRECTIONS } from '@ignifx/physics';
+import { CapsuleCollider } from '@ignifx/physics';
+import { CapsuleDirection } from '@ignifx/physics';
 import { CapsuleMeshOptions } from '@ignifx/core';
+import { CharacterCollision } from '@ignifx/physics';
+import { CharacterController } from '@ignifx/physics';
 import { clamp } from '@ignifx/core';
 import { clamp01 } from '@ignifx/core';
 import { clearOverrides } from '@ignifx/input';
 import { Clock } from '@ignifx/core';
 import { collectOverrides } from '@ignifx/input';
+import { Collider } from '@ignifx/physics';
+import { colliderFields } from '@ignifx/physics';
+import { Collision } from '@ignifx/physics';
+import { COLLISION_EVENT_MODES } from '@ignifx/physics';
+import { COLLISION_IDENTITY_MODES } from '@ignifx/physics';
+import { CollisionEventMode } from '@ignifx/physics';
+import { CollisionIdentityMode } from '@ignifx/physics';
 import { Color } from '@ignifx/core';
 import { color } from '@ignifx/core';
 import { ColorFieldSpec } from '@ignifx/core';
@@ -136,6 +151,7 @@ import { ConcreteComponentType } from '@ignifx/core';
 import { ConnectOptions } from '@ignifx/core';
 import { ConsoleLike } from '@ignifx/core';
 import { ConsoleSinkOptions } from '@ignifx/core';
+import { ContactPoint } from '@ignifx/physics';
 import { ControlDescriptor } from '@ignifx/input';
 import { ControlKind } from '@ignifx/input';
 import { controlPath } from '@ignifx/input';
@@ -180,6 +196,7 @@ import { createModelLoader } from '@ignifx/core';
 import { createMouseDevice } from '@ignifx/input';
 import { createNavigatorGamepadReader } from '@ignifx/input';
 import { createPerformanceClock } from '@ignifx/core';
+import { createPhysicsMaterialLoader } from '@ignifx/physics';
 import { createPointerDevice } from '@ignifx/input';
 import { createRay } from '@ignifx/core';
 import { createSceneAsset } from '@ignifx/core';
@@ -198,6 +215,7 @@ import { CurveValue } from '@ignifx/core';
 import { custom } from '@ignifx/core';
 import { CustomFieldCodec } from '@ignifx/core';
 import { CustomFieldSpec } from '@ignifx/core';
+import { CylinderCollider } from '@ignifx/physics';
 import { CylinderMeshOptions } from '@ignifx/core';
 import { decodeProps } from '@ignifx/core';
 import { DecodeResult } from '@ignifx/core';
@@ -212,6 +230,7 @@ import { DEFAULT_PAUSABLE_BUSES } from '@ignifx/audio';
 import { DEFAULT_SOUND_BUS } from '@ignifx/audio';
 import { defaultAudioSettings } from '@ignifx/audio';
 import { defaultInputSettings } from '@ignifx/input';
+import { defaultPhysicsSettings } from '@ignifx/physics';
 import { defaultRenderingSettings } from '@ignifx/core';
 import { DeferredQueue } from '@ignifx/core';
 import { defineExtension } from '@ignifx/core';
@@ -225,6 +244,7 @@ import { describeEnvironmentFileFormat } from '@ignifx/core';
 import { describeInputActionsFormat } from '@ignifx/input';
 import { describeInputSchemas } from '@ignifx/input';
 import { describeMaterialFileFormat } from '@ignifx/core';
+import { describePhysicsMaterialFileFormat } from '@ignifx/physics';
 import { describeSceneFileFormat } from '@ignifx/core';
 import { describeSchema } from '@ignifx/core';
 import { describeSchemas } from '@ignifx/core';
@@ -287,6 +307,7 @@ import { formatErrorMessage } from '@ignifx/core';
 import { FRAME_HISTORY_LENGTH } from '@ignifx/core';
 import { FrameSample } from '@ignifx/core';
 import { FrameState } from '@ignifx/core';
+import { FreezeRotation } from '@ignifx/physics';
 import { GAMEPAD_REMAPS } from '@ignifx/input';
 import { GAMEPAD_SLOTS } from '@ignifx/input';
 import { gamepadControlNames } from '@ignifx/input';
@@ -297,10 +318,12 @@ import { GamepadRemap } from '@ignifx/input';
 import { GamepadSnapshot } from '@ignifx/input';
 import { generateUlid } from '@ignifx/core';
 import { GroundMeshOptions } from '@ignifx/core';
+import { HAVOK_WASM_AUTO } from '@ignifx/physics';
 import { HeadlessBackend } from '@ignifx/audio';
 import { HeadlessBackendOptions } from '@ignifx/audio';
 import { HeadlessBus } from '@ignifx/audio';
 import { HeadlessSound } from '@ignifx/audio';
+import { HeightfieldCollider } from '@ignifx/physics';
 import { i32 } from '@ignifx/core';
 import { IgnifxError } from '@ignifx/core';
 import { IgnifxErrorOptions } from '@ignifx/core';
@@ -347,6 +370,8 @@ import { instantiateScene } from '@ignifx/core';
 import { InstantiateSceneOptions } from '@ignifx/core';
 import { InteractiveRebindOptions } from '@ignifx/input';
 import { InteractiveRebindResult } from '@ignifx/input';
+import { INTERPOLATION_MODES } from '@ignifx/physics';
+import { InterpolationMode } from '@ignifx/physics';
 import { INVALID_HANDLE } from '@ignifx/core';
 import { inverseLerp } from '@ignifx/core';
 import { isAssetRef } from '@ignifx/core';
@@ -363,6 +388,8 @@ import { JsonSchemaObject } from '@ignifx/core';
 import { JsonValue } from '@ignifx/core';
 import { keyboardControlNames } from '@ignifx/input';
 import { keyCodeControlNames } from '@ignifx/input';
+import { KINEMATIC_SYNC_MODES } from '@ignifx/physics';
+import { KinematicSyncMode } from '@ignifx/physics';
 import { LayerMask } from '@ignifx/core';
 import { layerMask } from '@ignifx/core';
 import { LayerMaskFieldSpec } from '@ignifx/core';
@@ -433,6 +460,7 @@ import { MemorySink } from '@ignifx/core';
 import { MESH_ASSET_TYPE } from '@ignifx/core';
 import { MeshAsset } from '@ignifx/core';
 import { MeshAssetLiteHandles } from '@ignifx/core';
+import { MeshCollider } from '@ignifx/physics';
 import { MeshGeometryData } from '@ignifx/core';
 import { MeshRenderer } from '@ignifx/core';
 import { Model } from '@ignifx/core';
@@ -461,6 +489,7 @@ import { parseComposite } from '@ignifx/input';
 import { parseControlPath } from '@ignifx/input';
 import { ParsedControlPath } from '@ignifx/input';
 import { parseOverridePath } from '@ignifx/core';
+import { parsePhysicsMaterial } from '@ignifx/physics';
 import { parseProcessor } from '@ignifx/input';
 import { parseProcessors } from '@ignifx/input';
 import { parseWavHeader } from '@ignifx/audio';
@@ -473,7 +502,27 @@ import { PHASE_COUNT } from '@ignifx/core';
 import { PHASE_NAMES } from '@ignifx/core';
 import { PhaseIndex } from '@ignifx/core';
 import { PHASES } from '@ignifx/core';
+import { physics } from '@ignifx/physics';
+import { PHYSICS_DIAGNOSTICS_COUNTERS } from '@ignifx/physics';
+import { PHYSICS_DIAGNOSTICS_GROUP } from '@ignifx/physics';
+import { PHYSICS_ERROR_MESSAGES } from '@ignifx/physics';
+import { PHYSICS_MATERIAL_ASSET_TYPE } from '@ignifx/physics';
+import { PHYSICS_MATERIAL_FILE_EXTENSION } from '@ignifx/physics';
+import { PHYSICS_MATERIAL_FILE_FORMAT } from '@ignifx/physics';
+import { PHYSICS_MATERIAL_FORMAT_VERSION } from '@ignifx/physics';
+import { PHYSICS_SETTINGS_SECTION } from '@ignifx/physics';
 import { PhysicsCallbackName } from '@ignifx/core';
+import { PhysicsDebugViewer } from '@ignifx/physics';
+import { physicsError } from '@ignifx/physics';
+import { PhysicsErrorCode } from '@ignifx/physics';
+import { PhysicsErrorOptions } from '@ignifx/physics';
+import { PhysicsLiteHandles } from '@ignifx/physics';
+import { PhysicsMaterial } from '@ignifx/physics';
+import { PhysicsMaterialValues } from '@ignifx/physics';
+import { PhysicsOptions } from '@ignifx/physics';
+import { PhysicsService } from '@ignifx/physics';
+import { PhysicsSettings } from '@ignifx/physics';
+import { physicsSettingsSchema } from '@ignifx/physics';
 import { pingPong } from '@ignifx/core';
 import { pinToDeviceSlot } from '@ignifx/input';
 import { PlaneMeshOptions } from '@ignifx/core';
@@ -492,10 +541,13 @@ import { Quat } from '@ignifx/core';
 import { quat } from '@ignifx/core';
 import { QUAT_IDENTITY } from '@ignifx/core';
 import { QuatLike } from '@ignifx/core';
+import { QueryOptions } from '@ignifx/physics';
+import { QueryShape } from '@ignifx/physics';
 import { RAD_TO_DEG } from '@ignifx/core';
 import { radToDeg } from '@ignifx/core';
 import { RandomSource } from '@ignifx/core';
 import { Ray } from '@ignifx/core';
+import { RaycastHit } from '@ignifx/physics';
 import { RayVector } from '@ignifx/core';
 import { record } from '@ignifx/core';
 import { RecordFieldSpec } from '@ignifx/core';
@@ -521,6 +573,8 @@ import { repeat } from '@ignifx/core';
 import { RESERVED_LAYER_NAMES } from '@ignifx/core';
 import { resetFrameSample } from '@ignifx/core';
 import { resolveGamepadRemap } from '@ignifx/input';
+import { Rigidbody } from '@ignifx/physics';
+import { RigidbodyLiteHandles } from '@ignifx/physics';
 import { SCENE_ASSET_TYPE } from '@ignifx/core';
 import { SCENE_FILE_EXTENSIONS } from '@ignifx/core';
 import { SCENE_FILE_FORMAT } from '@ignifx/core';
@@ -564,6 +618,7 @@ import { SetParentOptions } from '@ignifx/core';
 import { SettingsInput } from '@ignifx/core';
 import { SHADOW_TECHNIQUES } from '@ignifx/core';
 import { ShadowTechniqueName } from '@ignifx/core';
+import { ShapeCastHit } from '@ignifx/physics';
 import { sign } from '@ignifx/core';
 import { Signal } from '@ignifx/core';
 import { SignalHandler } from '@ignifx/core';
@@ -577,6 +632,7 @@ import { smoothStep } from '@ignifx/core';
 import { SortingLayersSettings } from '@ignifx/core';
 import { SoundInstance } from '@ignifx/audio';
 import { SoundVoice } from '@ignifx/audio';
+import { SphereCollider } from '@ignifx/physics';
 import { SphereMeshOptions } from '@ignifx/core';
 import { STANDARD_TEXTURE_SLOTS } from '@ignifx/core';
 import { StandardMaterialDefinition } from '@ignifx/core';
@@ -584,6 +640,8 @@ import { standardMaterialDefinition } from '@ignifx/core';
 import { str } from '@ignifx/core';
 import { StringFieldSpec } from '@ignifx/core';
 import { stringifySceneFile } from '@ignifx/core';
+import { SUPPORT_STATES } from '@ignifx/physics';
+import { SupportStateName } from '@ignifx/physics';
 import { System } from '@ignifx/core';
 import { SystemContext } from '@ignifx/core';
 import { TagSet } from '@ignifx/core';
@@ -602,6 +660,7 @@ import { TorusMeshOptions } from '@ignifx/core';
 import { TOUCH_SLOTS } from '@ignifx/input';
 import { touchControlNames } from '@ignifx/input';
 import { Transform } from '@ignifx/core';
+import { TriggerEvent } from '@ignifx/physics';
 import { u32 } from '@ignifx/core';
 import { UidRemap } from '@ignifx/core';
 import { UlidFactoryOptions } from '@ignifx/core';
@@ -629,6 +688,7 @@ import { Vec4 } from '@ignifx/core';
 import { vec4 } from '@ignifx/core';
 import { Vec4Like } from '@ignifx/core';
 import { VectorFieldSpec } from '@ignifx/core';
+import { VelocityLimitSettings } from '@ignifx/physics';
 import { VERSION } from '@ignifx/core';
 import { VibrationActuatorLike } from '@ignifx/input';
 import { VibrationEffectParameters } from '@ignifx/input';
@@ -833,9 +893,15 @@ export { BindingResolver }
 
 export { BloomEffectSettings }
 
+export { BODY_TYPES }
+
+export { BodyType }
+
 export { bool }
 
 export { BoolFieldSpec }
+
+export { BoxCollider }
 
 export { BoxMeshOptions }
 
@@ -851,7 +917,17 @@ export { CANVAS_ALPHA_MODES }
 
 export { CanvasAlphaMode }
 
+export { CAPSULE_DIRECTIONS }
+
+export { CapsuleCollider }
+
+export { CapsuleDirection }
+
 export { CapsuleMeshOptions }
+
+export { CharacterCollision }
+
+export { CharacterController }
 
 export { clamp }
 
@@ -862,6 +938,20 @@ export { clearOverrides }
 export { Clock }
 
 export { collectOverrides }
+
+export { Collider }
+
+export { colliderFields }
+
+export { Collision }
+
+export { COLLISION_EVENT_MODES }
+
+export { COLLISION_IDENTITY_MODES }
+
+export { CollisionEventMode }
+
+export { CollisionIdentityMode }
 
 export { Color }
 
@@ -910,6 +1000,8 @@ export { ConnectOptions }
 export { ConsoleLike }
 
 export { ConsoleSinkOptions }
+
+export { ContactPoint }
 
 export { ControlDescriptor }
 
@@ -999,6 +1091,8 @@ export { createNavigatorGamepadReader }
 
 export { createPerformanceClock }
 
+export { createPhysicsMaterialLoader }
+
 export { createPointerDevice }
 
 export { createRay }
@@ -1035,6 +1129,8 @@ export { CustomFieldCodec }
 
 export { CustomFieldSpec }
 
+export { CylinderCollider }
+
 export { CylinderMeshOptions }
 
 export { decodeProps }
@@ -1063,6 +1159,8 @@ export { defaultAudioSettings }
 
 export { defaultInputSettings }
 
+export { defaultPhysicsSettings }
+
 export { defaultRenderingSettings }
 
 export { DeferredQueue }
@@ -1088,6 +1186,8 @@ export { describeInputActionsFormat }
 export { describeInputSchemas }
 
 export { describeMaterialFileFormat }
+
+export { describePhysicsMaterialFileFormat }
 
 export { describeSceneFileFormat }
 
@@ -1213,6 +1313,8 @@ export { FrameSample }
 
 export { FrameState }
 
+export { FreezeRotation }
+
 export { GAMEPAD_REMAPS }
 
 export { GAMEPAD_SLOTS }
@@ -1233,6 +1335,8 @@ export { generateUlid }
 
 export { GroundMeshOptions }
 
+export { HAVOK_WASM_AUTO }
+
 export { HeadlessBackend }
 
 export { HeadlessBackendOptions }
@@ -1240,6 +1344,8 @@ export { HeadlessBackendOptions }
 export { HeadlessBus }
 
 export { HeadlessSound }
+
+export { HeightfieldCollider }
 
 export { i32 }
 
@@ -1333,6 +1439,10 @@ export { InteractiveRebindOptions }
 
 export { InteractiveRebindResult }
 
+export { INTERPOLATION_MODES }
+
+export { InterpolationMode }
+
 export { INVALID_HANDLE }
 
 export { inverseLerp }
@@ -1364,6 +1474,10 @@ export { JsonValue }
 export { keyboardControlNames }
 
 export { keyCodeControlNames }
+
+export { KINEMATIC_SYNC_MODES }
+
+export { KinematicSyncMode }
 
 export { LayerMask }
 
@@ -1505,6 +1619,8 @@ export { MeshAsset }
 
 export { MeshAssetLiteHandles }
 
+export { MeshCollider }
+
 export { MeshGeometryData }
 
 export { MeshRenderer }
@@ -1561,6 +1677,8 @@ export { ParsedControlPath }
 
 export { parseOverridePath }
 
+export { parsePhysicsMaterial }
+
 export { parseProcessor }
 
 export { parseProcessors }
@@ -1585,7 +1703,47 @@ export { PhaseIndex }
 
 export { PHASES }
 
+export { physics }
+
+export { PHYSICS_DIAGNOSTICS_COUNTERS }
+
+export { PHYSICS_DIAGNOSTICS_GROUP }
+
+export { PHYSICS_ERROR_MESSAGES }
+
+export { PHYSICS_MATERIAL_ASSET_TYPE }
+
+export { PHYSICS_MATERIAL_FILE_EXTENSION }
+
+export { PHYSICS_MATERIAL_FILE_FORMAT }
+
+export { PHYSICS_MATERIAL_FORMAT_VERSION }
+
+export { PHYSICS_SETTINGS_SECTION }
+
 export { PhysicsCallbackName }
+
+export { PhysicsDebugViewer }
+
+export { physicsError }
+
+export { PhysicsErrorCode }
+
+export { PhysicsErrorOptions }
+
+export { PhysicsLiteHandles }
+
+export { PhysicsMaterial }
+
+export { PhysicsMaterialValues }
+
+export { PhysicsOptions }
+
+export { PhysicsService }
+
+export { PhysicsSettings }
+
+export { physicsSettingsSchema }
 
 export { pingPong }
 
@@ -1623,6 +1781,10 @@ export { QUAT_IDENTITY }
 
 export { QuatLike }
 
+export { QueryOptions }
+
+export { QueryShape }
+
 export { RAD_TO_DEG }
 
 export { radToDeg }
@@ -1630,6 +1792,8 @@ export { radToDeg }
 export { RandomSource }
 
 export { Ray }
+
+export { RaycastHit }
 
 export { RayVector }
 
@@ -1680,6 +1844,10 @@ export { RESERVED_LAYER_NAMES }
 export { resetFrameSample }
 
 export { resolveGamepadRemap }
+
+export { Rigidbody }
+
+export { RigidbodyLiteHandles }
 
 export { SCENE_ASSET_TYPE }
 
@@ -1767,6 +1935,8 @@ export { SHADOW_TECHNIQUES }
 
 export { ShadowTechniqueName }
 
+export { ShapeCastHit }
+
 export { sign }
 
 export { Signal }
@@ -1793,6 +1963,8 @@ export { SoundInstance }
 
 export { SoundVoice }
 
+export { SphereCollider }
+
 export { SphereMeshOptions }
 
 export { STANDARD_TEXTURE_SLOTS }
@@ -1806,6 +1978,10 @@ export { str }
 export { StringFieldSpec }
 
 export { stringifySceneFile }
+
+export { SUPPORT_STATES }
+
+export { SupportStateName }
 
 export { System }
 
@@ -1842,6 +2018,8 @@ export { TOUCH_SLOTS }
 export { touchControlNames }
 
 export { Transform }
+
+export { TriggerEvent }
 
 export { u32 }
 
@@ -1896,6 +2074,8 @@ export { vec4 }
 export { Vec4Like }
 
 export { VectorFieldSpec }
+
+export { VelocityLimitSettings }
 
 export { VERSION }
 
