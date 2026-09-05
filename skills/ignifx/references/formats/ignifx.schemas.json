@@ -2,6 +2,134 @@
   "generatedBy": "pnpm docs:schemas",
   "ignifxVersion": "0.0.0",
   "schemas": {
+    "ignifx/audiobuses-file": {
+      "title": "Audio buses file",
+      "format": "ignifx.audiobuses",
+      "description": "The project's mixer tree: named buses, each routed into a bus declared before it. The first entry is the root.",
+      "package": "packages/audio",
+      "fields": {
+        "format": {
+          "kind": "str",
+          "default": "\"ignifx.audiobuses\"",
+          "description": "Always \"ignifx.audiobuses\"."
+        },
+        "formatVersion": {
+          "kind": "u32",
+          "default": "1",
+          "description": "The file format version; 1 before ignifx 1.0."
+        },
+        "buses": {
+          "kind": "array",
+          "default": "[]",
+          "description": "The buses, parents before children; the first entry is the root."
+        },
+        "buses[].name": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": "The bus name game code routes by, for example \"SFX\"."
+        },
+        "buses[].parent": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": "The bus this one outputs into; empty for the root."
+        },
+        "buses[].volume": {
+          "kind": "f32",
+          "default": "1",
+          "description": "The bus's own linear gain, 0 to 1."
+        },
+        "buses[].pausable": {
+          "kind": "bool",
+          "default": "null",
+          "description": "Whether app.pause() pauses this bus; omitted defers to audio.pausableBuses."
+        }
+      }
+    },
+    "ignifx/AudioListener": {
+      "title": "AudioListener",
+      "format": "components",
+      "description": "The ears spatial audio is heard from; usually on the main camera entity.",
+      "package": "packages/audio",
+      "fields": {}
+    },
+    "ignifx/AudioSource": {
+      "title": "AudioSource",
+      "format": "components",
+      "description": "A sound attached to an entity: which clip, which bus, how loud, how many at once, and how it behaves in 3D.",
+      "package": "packages/audio",
+      "fields": {
+        "clip": {
+          "kind": "asset",
+          "default": "null",
+          "description": "The sound to play."
+        },
+        "bus": {
+          "kind": "str",
+          "default": "\"SFX\"",
+          "description": "Which mixer bus this source routes into."
+        },
+        "volume": {
+          "kind": "f32",
+          "default": "1",
+          "description": "The sound's own linear gain."
+        },
+        "pitch": {
+          "kind": "f32",
+          "default": "1",
+          "description": "Playback rate; takes effect on the next play()."
+        },
+        "loop": {
+          "kind": "bool",
+          "default": "false",
+          "description": "Whether instances repeat instead of ending."
+        },
+        "playOnAwake": {
+          "kind": "bool",
+          "default": "false",
+          "description": "Play once as soon as the entity comes alive."
+        },
+        "maxInstances": {
+          "kind": "i32",
+          "default": "8",
+          "description": "How many may sound at once; the oldest is stolen."
+        },
+        "spatial": {
+          "kind": "bool",
+          "default": "false",
+          "description": "Position the sound in 3D instead of in the stereo field."
+        },
+        "minDistance": {
+          "kind": "f32",
+          "default": "1",
+          "description": "Distance below which no attenuation is applied."
+        },
+        "maxDistance": {
+          "kind": "f32",
+          "default": "50",
+          "description": "Maximum distance, used by the linear model."
+        },
+        "rolloff": {
+          "kind": "f32",
+          "default": "1",
+          "description": "How steeply the sound falls off with distance."
+        },
+        "distanceModel": {
+          "kind": "enum",
+          "default": "\"inverse\"",
+          "description": "Which attenuation curve to use."
+        },
+        "cone": {
+          "kind": "record",
+          "default": "{\"innerAngle\":360,\"outerAngle\":360,\"outerVolume\":0}",
+          "description": "Directionality of a spatial source; 360/360 is omnidirectional."
+        },
+        "pan": {
+          "kind": "f32",
+          "default": "0",
+          "description": "Stereo pan of a non-spatial source."
+        }
+      }
+    },
     "ignifx/Camera": {
       "title": "Camera",
       "format": "components",
@@ -443,6 +571,54 @@
           "kind": "bool",
           "default": "true",
           "description": "Whether picking considers the instance at all."
+        }
+      }
+    },
+    "ignifx/MusicPlayer": {
+      "title": "MusicPlayer",
+      "format": "components",
+      "description": "A playlist of music tracks with crossfading, routed to the Music bus.",
+      "package": "packages/audio",
+      "fields": {
+        "playlist": {
+          "kind": "array",
+          "default": "[]",
+          "description": "The tracks, in the order they are played."
+        },
+        "bus": {
+          "kind": "str",
+          "default": "\"Music\"",
+          "description": "Which mixer bus the music routes into."
+        },
+        "volume": {
+          "kind": "f32",
+          "default": "1",
+          "description": "The gain a track fades up to."
+        },
+        "playOnAwake": {
+          "kind": "bool",
+          "default": "false",
+          "description": "Start the first playlist entry as soon as the entity is alive."
+        },
+        "autoAdvance": {
+          "kind": "bool",
+          "default": "true",
+          "description": "Crossfade to the next track when one ends."
+        },
+        "loopPlaylist": {
+          "kind": "bool",
+          "default": "true",
+          "description": "Wrap to the first track after the last one."
+        },
+        "loopTrack": {
+          "kind": "bool",
+          "default": "false",
+          "description": "Repeat the current track instead of ending it."
+        },
+        "crossfadeSeconds": {
+          "kind": "f32",
+          "default": "1.5",
+          "description": "How long a crossfade takes, in seconds."
         }
       }
     },

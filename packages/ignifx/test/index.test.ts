@@ -307,10 +307,60 @@ const expectedInputExports = [
   "validateInputActions",
 ];
 
+// The @ignifx/audio value surface (same VERSION/describeSchemas rule as input).
+const expectedAudioExports = [
+  "AUDIO_ASSET_TYPE",
+  "AUDIO_BUSES_ASSET_TYPE",
+  "AUDIO_BUSES_FILE_EXTENSION",
+  "AUDIO_BUSES_FORMAT",
+  "AUDIO_BUSES_FORMAT_VERSION",
+  "AUDIO_DIAGNOSTICS_COUNTERS",
+  "AUDIO_DIAGNOSTICS_GROUP",
+  "AUDIO_DISTANCE_MODELS",
+  "AUDIO_ERROR_MESSAGES",
+  "AUDIO_FILE_EXTENSIONS",
+  "AUDIO_PUMP_ORDER",
+  "AUDIO_SETTINGS_SECTION",
+  "AudioBusesAsset",
+  "AudioClip",
+  "AudioErrorCode",
+  "AudioListener",
+  "AudioService",
+  "AudioSource",
+  "DEFAULT_AUDIO_BUSES",
+  "DEFAULT_PAUSABLE_BUSES",
+  "DEFAULT_SOUND_BUS",
+  "HeadlessBackend",
+  "HeadlessBus",
+  "HeadlessSound",
+  "MusicPlayer",
+  "SoundVoice",
+  "WebAudioBackend",
+  "audio",
+  "audioError",
+  "audioSettingsSchema",
+  "createAudioBusesLoader",
+  "createAudioClipLoader",
+  "createWebAudioBackend",
+  "defaultAudioSettings",
+  "describeAudioBusesFormat",
+  "parseAudioBusesFile",
+  "parseWavHeader",
+];
+
 describe("ignifx barrel", () => {
   it("imports without executing anything and re-exports the whole @ignifx/core value surface", () => {
     // Compared as sets: the key order of a namespace object is not part of the contract.
-    expect(new Set(Object.keys(barrel))).toEqual(new Set([...expectedExports, ...expectedInputExports]));
+    expect(new Set(Object.keys(barrel))).toEqual(
+      new Set([...expectedExports, ...expectedInputExports, ...expectedAudioExports]),
+    );
+  });
+
+  it("re-exports the @ignifx/audio value surface by name", () => {
+    const keys = new Set(Object.keys(barrel));
+    for (const name of expectedAudioExports) {
+      expect(keys.has(name)).toBe(true);
+    }
   });
 
   it("re-exports the @ignifx/input value surface by name", () => {

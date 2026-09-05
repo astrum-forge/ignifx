@@ -38,7 +38,13 @@ export default defineConfig({
       // can move. `src/lite/gpu/**` is the adapter's device-only half (Phase 2, R1) and
       // `src/render/gpu/**` is the render layer's, under the same rule: a module lives there when
       // every line of it needs `engine._device`.
-      exclude: ["packages/*/src/lite/render.ts", "packages/*/src/lite/gpu/**", "packages/*/src/render/gpu/**"],
+      exclude: [
+        "packages/*/src/lite/render.ts",
+        "packages/*/src/lite/gpu/**",
+        "packages/*/src/render/gpu/**",
+        // `src/lite/web/**` is an adapter's browser-only half (Web Audio), under the same rule as gpu/**.
+        "packages/*/src/lite/web/**",
+      ],
       // CONSTITUTION.md §6.2: 80% floor everywhere, 90% for core. The glob entry keeps the core
       // floor in place once packages that only owe 80% are added.
       thresholds: {

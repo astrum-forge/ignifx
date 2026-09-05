@@ -44,6 +44,52 @@ import { AssetsSettings } from '@ignifx/core';
 import { AssetState } from '@ignifx/core';
 import { AssetTypeDefinition } from '@ignifx/core';
 import { AssetTypeToken } from '@ignifx/core';
+import { audio } from '@ignifx/audio';
+import { AUDIO_ASSET_TYPE } from '@ignifx/audio';
+import { AUDIO_BUSES_ASSET_TYPE } from '@ignifx/audio';
+import { AUDIO_BUSES_FILE_EXTENSION } from '@ignifx/audio';
+import { AUDIO_BUSES_FORMAT } from '@ignifx/audio';
+import { AUDIO_BUSES_FORMAT_VERSION } from '@ignifx/audio';
+import { AUDIO_DIAGNOSTICS_COUNTERS } from '@ignifx/audio';
+import { AUDIO_DIAGNOSTICS_GROUP } from '@ignifx/audio';
+import { AUDIO_DISTANCE_MODELS } from '@ignifx/audio';
+import { AUDIO_ERROR_MESSAGES } from '@ignifx/audio';
+import { AUDIO_FILE_EXTENSIONS } from '@ignifx/audio';
+import { AUDIO_PUMP_ORDER } from '@ignifx/audio';
+import { AUDIO_SETTINGS_SECTION } from '@ignifx/audio';
+import { AudioBackend } from '@ignifx/audio';
+import { AudioBackendContext } from '@ignifx/audio';
+import { AudioBackendKind } from '@ignifx/audio';
+import { AudioBackendState } from '@ignifx/audio';
+import { AudioBus } from '@ignifx/audio';
+import { AudioBusDefinition } from '@ignifx/audio';
+import { AudioBusesAsset } from '@ignifx/audio';
+import { AudioClip } from '@ignifx/audio';
+import { AudioClipInit } from '@ignifx/audio';
+import { AudioClipLiteHandles } from '@ignifx/audio';
+import { AudioClipLoaderOptions } from '@ignifx/audio';
+import { AudioConeSettings } from '@ignifx/audio';
+import { AudioDecoder as AudioDecoder_2 } from '@ignifx/audio';
+import { AudioDistanceModel } from '@ignifx/audio';
+import { audioError } from '@ignifx/audio';
+import { AudioErrorCode } from '@ignifx/audio';
+import { AudioErrorOptions } from '@ignifx/audio';
+import { AudioListener as AudioListener_2 } from '@ignifx/audio';
+import { AudioLiteHandles } from '@ignifx/audio';
+import { AudioOptions } from '@ignifx/audio';
+import { AudioService } from '@ignifx/audio';
+import { AudioServiceLiteHandles } from '@ignifx/audio';
+import { AudioServiceOptions } from '@ignifx/audio';
+import { AudioServiceState } from '@ignifx/audio';
+import { AudioSettings } from '@ignifx/audio';
+import { audioSettingsSchema } from '@ignifx/audio';
+import { AudioSource } from '@ignifx/audio';
+import { BackendBus } from '@ignifx/audio';
+import { BackendBusRequest } from '@ignifx/audio';
+import { BackendPlayRequest } from '@ignifx/audio';
+import { BackendSound } from '@ignifx/audio';
+import { BackendSoundRequest } from '@ignifx/audio';
+import { BackendSpatialRequest } from '@ignifx/audio';
 import { BatchHandle } from '@ignifx/core';
 import { binaryAssetLoader } from '@ignifx/core';
 import { Binding } from '@ignifx/input';
@@ -110,6 +156,9 @@ import { CoroutineYield } from '@ignifx/core';
 import { createApp } from '@ignifx/core';
 import { CreateAppOptions } from '@ignifx/core';
 import { createAssetManifest } from '@ignifx/core';
+import { createAudioBusesLoader } from '@ignifx/audio';
+import { createAudioClipLoader } from '@ignifx/audio';
+import { CreateBusOptions } from '@ignifx/audio';
 import { createConsoleSink } from '@ignifx/core';
 import { createCryptoRandom } from '@ignifx/core';
 import { createDefaults } from '@ignifx/core';
@@ -140,6 +189,7 @@ import { createServiceKey } from '@ignifx/core';
 import { createTextureLoader } from '@ignifx/core';
 import { createTouchDevice } from '@ignifx/input';
 import { createUlidFactory } from '@ignifx/core';
+import { createWebAudioBackend } from '@ignifx/audio';
 import { Cursor } from '@ignifx/input';
 import { curve } from '@ignifx/core';
 import { CurveFieldSpec } from '@ignifx/core';
@@ -154,9 +204,13 @@ import { DecodeResult } from '@ignifx/core';
 import { decodeValue } from '@ignifx/core';
 import { DEFAULT_ASSET_CONCURRENCY } from '@ignifx/core';
 import { DEFAULT_ASSET_ROOT } from '@ignifx/core';
+import { DEFAULT_AUDIO_BUSES } from '@ignifx/audio';
 import { DEFAULT_BRDF_LUT_ADDRESS } from '@ignifx/core';
 import { DEFAULT_LAYER } from '@ignifx/core';
 import { DEFAULT_MEMORY_SINK_LIMIT } from '@ignifx/core';
+import { DEFAULT_PAUSABLE_BUSES } from '@ignifx/audio';
+import { DEFAULT_SOUND_BUS } from '@ignifx/audio';
+import { defaultAudioSettings } from '@ignifx/audio';
 import { defaultInputSettings } from '@ignifx/input';
 import { defaultRenderingSettings } from '@ignifx/core';
 import { DeferredQueue } from '@ignifx/core';
@@ -166,6 +220,7 @@ import { defineSchema } from '@ignifx/core';
 import { DEG_TO_RAD } from '@ignifx/core';
 import { degToRad } from '@ignifx/core';
 import { deltaAngleDegrees } from '@ignifx/core';
+import { describeAudioBusesFormat } from '@ignifx/audio';
 import { describeEnvironmentFileFormat } from '@ignifx/core';
 import { describeInputActionsFormat } from '@ignifx/input';
 import { describeInputSchemas } from '@ignifx/input';
@@ -242,6 +297,10 @@ import { GamepadRemap } from '@ignifx/input';
 import { GamepadSnapshot } from '@ignifx/input';
 import { generateUlid } from '@ignifx/core';
 import { GroundMeshOptions } from '@ignifx/core';
+import { HeadlessBackend } from '@ignifx/audio';
+import { HeadlessBackendOptions } from '@ignifx/audio';
+import { HeadlessBus } from '@ignifx/audio';
+import { HeadlessSound } from '@ignifx/audio';
 import { i32 } from '@ignifx/core';
 import { IgnifxError } from '@ignifx/core';
 import { IgnifxErrorOptions } from '@ignifx/core';
@@ -317,6 +376,8 @@ import { LightShadowSettings } from '@ignifx/core';
 import { LightType } from '@ignifx/core';
 import { LiteAnimationGroup } from '@ignifx/core';
 import { LiteAssetContainer } from '@ignifx/core';
+import { LiteAudioBus } from '@ignifx/audio';
+import { LiteAudioEngine } from '@ignifx/audio';
 import { LiteCamera } from '@ignifx/core';
 import { LiteEngine } from '@ignifx/core';
 import { LiteEnvironmentTextures } from '@ignifx/core';
@@ -329,7 +390,11 @@ import { LiteScene } from '@ignifx/core';
 import { LiteSceneNode } from '@ignifx/core';
 import { LiteShadowGenerator } from '@ignifx/core';
 import { LiteSkeleton } from '@ignifx/core';
+import { LiteSoundBuffer } from '@ignifx/audio';
+import { LiteSpatialTarget } from '@ignifx/audio';
 import { LiteStandardMaterial } from '@ignifx/core';
+import { LiteStaticSound } from '@ignifx/audio';
+import { LiteStreamingSound } from '@ignifx/audio';
 import { LiteTexture2D } from '@ignifx/core';
 import { LoaderContext } from '@ignifx/core';
 import { LoadOptions } from '@ignifx/core';
@@ -378,20 +443,27 @@ import { ModelAssetLiteHandles } from '@ignifx/core';
 import { ModelInstantiation } from '@ignifx/core';
 import { mouseControlNames } from '@ignifx/input';
 import { moveTowards } from '@ignifx/core';
+import { MusicPlayer } from '@ignifx/audio';
+import { MusicPlayOptions } from '@ignifx/audio';
+import { MusicStopOptions } from '@ignifx/audio';
 import { MutableQuat } from '@ignifx/core';
 import { MutableVec2 } from '@ignifx/core';
 import { MutableVec3 } from '@ignifx/core';
 import { MutableVec4 } from '@ignifx/core';
 import { NumberFieldSpec } from '@ignifx/core';
+import { OneShotOptions } from '@ignifx/audio';
+import { OneShotVolume } from '@ignifx/audio';
 import { optional } from '@ignifx/core';
 import { OptionalFieldSpec } from '@ignifx/core';
 import { OverridePath } from '@ignifx/core';
+import { parseAudioBusesFile } from '@ignifx/audio';
 import { parseComposite } from '@ignifx/input';
 import { parseControlPath } from '@ignifx/input';
 import { ParsedControlPath } from '@ignifx/input';
 import { parseOverridePath } from '@ignifx/core';
 import { parseProcessor } from '@ignifx/input';
 import { parseProcessors } from '@ignifx/input';
+import { parseWavHeader } from '@ignifx/audio';
 import { PartialFieldsOf } from '@ignifx/core';
 import { PBR_TEXTURE_SLOTS } from '@ignifx/core';
 import { PbrMaterialDefinition } from '@ignifx/core';
@@ -408,6 +480,7 @@ import { PlaneMeshOptions } from '@ignifx/core';
 import { PlatformInfo } from '@ignifx/core';
 import { PlatformKind } from '@ignifx/core';
 import { PlayerInput } from '@ignifx/input';
+import { PlayOptions } from '@ignifx/audio';
 import { PointerLock } from '@ignifx/input';
 import { PointerLockSettings } from '@ignifx/input';
 import { PostProcessStack } from '@ignifx/core';
@@ -502,6 +575,8 @@ import { SimulatedValue } from '@ignifx/input';
 import { SmaaEffectSettings } from '@ignifx/core';
 import { smoothStep } from '@ignifx/core';
 import { SortingLayersSettings } from '@ignifx/core';
+import { SoundInstance } from '@ignifx/audio';
+import { SoundVoice } from '@ignifx/audio';
 import { SphereMeshOptions } from '@ignifx/core';
 import { STANDARD_TEXTURE_SLOTS } from '@ignifx/core';
 import { StandardMaterialDefinition } from '@ignifx/core';
@@ -558,12 +633,16 @@ import { VERSION } from '@ignifx/core';
 import { VibrationActuatorLike } from '@ignifx/input';
 import { VibrationEffectParameters } from '@ignifx/input';
 import { VirtualDevice } from '@ignifx/input';
+import { VoiceHost } from '@ignifx/audio';
+import { VoiceRequest } from '@ignifx/audio';
 import { waitFixedUpdate } from '@ignifx/core';
 import { WaitInstruction } from '@ignifx/core';
 import { waitSeconds } from '@ignifx/core';
 import { waitSecondsRealtime } from '@ignifx/core';
 import { waitUntil } from '@ignifx/core';
 import { waitWhile } from '@ignifx/core';
+import { WavHeader } from '@ignifx/audio';
+import { WebAudioBackend } from '@ignifx/audio';
 import { World } from '@ignifx/core';
 import { WorldLiteHandles } from '@ignifx/core';
 import { wrapAngleDegrees } from '@ignifx/core';
@@ -647,6 +726,98 @@ export { AssetState }
 export { AssetTypeDefinition }
 
 export { AssetTypeToken }
+
+export { audio }
+
+export { AUDIO_ASSET_TYPE }
+
+export { AUDIO_BUSES_ASSET_TYPE }
+
+export { AUDIO_BUSES_FILE_EXTENSION }
+
+export { AUDIO_BUSES_FORMAT }
+
+export { AUDIO_BUSES_FORMAT_VERSION }
+
+export { AUDIO_DIAGNOSTICS_COUNTERS }
+
+export { AUDIO_DIAGNOSTICS_GROUP }
+
+export { AUDIO_DISTANCE_MODELS }
+
+export { AUDIO_ERROR_MESSAGES }
+
+export { AUDIO_FILE_EXTENSIONS }
+
+export { AUDIO_PUMP_ORDER }
+
+export { AUDIO_SETTINGS_SECTION }
+
+export { AudioBackend }
+
+export { AudioBackendContext }
+
+export { AudioBackendKind }
+
+export { AudioBackendState }
+
+export { AudioBus }
+
+export { AudioBusDefinition }
+
+export { AudioBusesAsset }
+
+export { AudioClip }
+
+export { AudioClipInit }
+
+export { AudioClipLiteHandles }
+
+export { AudioClipLoaderOptions }
+
+export { AudioConeSettings }
+
+export { AudioDecoder_2 as AudioDecoder }
+
+export { AudioDistanceModel }
+
+export { audioError }
+
+export { AudioErrorCode }
+
+export { AudioErrorOptions }
+
+export { AudioListener_2 as AudioListener }
+
+export { AudioLiteHandles }
+
+export { AudioOptions }
+
+export { AudioService }
+
+export { AudioServiceLiteHandles }
+
+export { AudioServiceOptions }
+
+export { AudioServiceState }
+
+export { AudioSettings }
+
+export { audioSettingsSchema }
+
+export { AudioSource }
+
+export { BackendBus }
+
+export { BackendBusRequest }
+
+export { BackendPlayRequest }
+
+export { BackendSound }
+
+export { BackendSoundRequest }
+
+export { BackendSpatialRequest }
 
 export { BatchHandle }
 
@@ -780,6 +951,12 @@ export { CreateAppOptions }
 
 export { createAssetManifest }
 
+export { createAudioBusesLoader }
+
+export { createAudioClipLoader }
+
+export { CreateBusOptions }
+
 export { createConsoleSink }
 
 export { createCryptoRandom }
@@ -840,6 +1017,8 @@ export { createTouchDevice }
 
 export { createUlidFactory }
 
+export { createWebAudioBackend }
+
 export { Cursor }
 
 export { curve }
@@ -868,11 +1047,19 @@ export { DEFAULT_ASSET_CONCURRENCY }
 
 export { DEFAULT_ASSET_ROOT }
 
+export { DEFAULT_AUDIO_BUSES }
+
 export { DEFAULT_BRDF_LUT_ADDRESS }
 
 export { DEFAULT_LAYER }
 
 export { DEFAULT_MEMORY_SINK_LIMIT }
+
+export { DEFAULT_PAUSABLE_BUSES }
+
+export { DEFAULT_SOUND_BUS }
+
+export { defaultAudioSettings }
 
 export { defaultInputSettings }
 
@@ -891,6 +1078,8 @@ export { DEG_TO_RAD }
 export { degToRad }
 
 export { deltaAngleDegrees }
+
+export { describeAudioBusesFormat }
 
 export { describeEnvironmentFileFormat }
 
@@ -1044,6 +1233,14 @@ export { generateUlid }
 
 export { GroundMeshOptions }
 
+export { HeadlessBackend }
+
+export { HeadlessBackendOptions }
+
+export { HeadlessBus }
+
+export { HeadlessSound }
+
 export { i32 }
 
 export { IgnifxError }
@@ -1194,6 +1391,10 @@ export { LiteAnimationGroup }
 
 export { LiteAssetContainer }
 
+export { LiteAudioBus }
+
+export { LiteAudioEngine }
+
 export { LiteCamera }
 
 export { LiteEngine }
@@ -1218,7 +1419,15 @@ export { LiteShadowGenerator }
 
 export { LiteSkeleton }
 
+export { LiteSoundBuffer }
+
+export { LiteSpatialTarget }
+
 export { LiteStandardMaterial }
+
+export { LiteStaticSound }
+
+export { LiteStreamingSound }
 
 export { LiteTexture2D }
 
@@ -1316,6 +1525,12 @@ export { mouseControlNames }
 
 export { moveTowards }
 
+export { MusicPlayer }
+
+export { MusicPlayOptions }
+
+export { MusicStopOptions }
+
 export { MutableQuat }
 
 export { MutableVec2 }
@@ -1326,11 +1541,17 @@ export { MutableVec4 }
 
 export { NumberFieldSpec }
 
+export { OneShotOptions }
+
+export { OneShotVolume }
+
 export { optional }
 
 export { OptionalFieldSpec }
 
 export { OverridePath }
+
+export { parseAudioBusesFile }
 
 export { parseComposite }
 
@@ -1343,6 +1564,8 @@ export { parseOverridePath }
 export { parseProcessor }
 
 export { parseProcessors }
+
+export { parseWavHeader }
 
 export { PartialFieldsOf }
 
@@ -1375,6 +1598,8 @@ export { PlatformInfo }
 export { PlatformKind }
 
 export { PlayerInput }
+
+export { PlayOptions }
 
 export { PointerLock }
 
@@ -1564,6 +1789,10 @@ export { smoothStep }
 
 export { SortingLayersSettings }
 
+export { SoundInstance }
+
+export { SoundVoice }
+
 export { SphereMeshOptions }
 
 export { STANDARD_TEXTURE_SLOTS }
@@ -1676,6 +1905,10 @@ export { VibrationEffectParameters }
 
 export { VirtualDevice }
 
+export { VoiceHost }
+
+export { VoiceRequest }
+
 export { waitFixedUpdate }
 
 export { WaitInstruction }
@@ -1687,6 +1920,10 @@ export { waitSecondsRealtime }
 export { waitUntil }
 
 export { waitWhile }
+
+export { WavHeader }
+
+export { WebAudioBackend }
 
 export { World }
 

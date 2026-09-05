@@ -21,17 +21,16 @@ toolkits arrive in later phases.
 
 ## Environment
 
-| Item                | Value                                                                                                                                                     |
-| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Engine version      | unreleased (`0.0.0`); `@ignifx/core`, `@ignifx/input`, `@ignifx/vite-plugin`, and the `ignifx` umbrella                                                   |
-| Babylon Lite        | 1.27.0 (pinned; do not call Lite APIs directly outside adapter code)                                                                                      |
-| Node / pnpm         | 24 LTS / 11                                                                                                                                               |
-| Browser requirement | WebGPU (Chrome/Edge 113+, Safari 26+, Firefox 141+ Windows / 145+ Apple Silicon); Electron needs `--enable-unsafe-webgpu` (handled by `@ignifx/electron`) |
-| Headless            | Node 24, no GPU: `createApp({ headless: true })` plus `app.step(dt)`                                                                                      |
-| Extensions          | `createApp({ canvas, extensions: [input()] })` — `input()` from `@ignifx/input` (or from `ignifx`) adds `app.input`                                       |
-| Build               | Vite 8 with `ignifx()` from `@ignifx/vite-plugin`: asset manifest, `.meta.json` sidecars, JSON validation, HMR                                            |
-| Commands            | `pnpm dev` · `pnpm test` · `pnpm typecheck` · `pnpm build` · `pnpm check` (all gates)                                                                     |
-| Helper scripts      | `node scripts/check-webgpu.mjs` · `node scripts/new-script.mjs <Name>`                                                                                    |
+| Item                | Value                                                                                                                                                          |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Engine version      | unreleased (`0.0.0`); `@ignifx/core`, `@ignifx/input`, `@ignifx/audio`, `@ignifx/vite-plugin`, and the `ignifx` umbrella                                       |
+| Babylon Lite        | 1.27.0 (pinned; do not call Lite APIs directly outside adapter code)                                                                                           |
+| Node / pnpm         | 24 LTS / 11                                                                                                                                                    |
+| Browser requirement | WebGPU (Chrome/Edge 113+, Safari 26+, Firefox 141+ Windows / 145+ Apple Silicon); Electron needs `--enable-unsafe-webgpu` (handled by `@ignifx/electron`)      |
+| Headless            | Node 24, no GPU: `createApp({ headless: true })` plus `app.step(dt)`                                                                                           |
+| Extensions          | `createApp({ canvas, extensions: [input(), audio()] })` — `input()` adds `app.input`, `audio()` adds `app.audio`; both re-exported from `ignifx`               |
+| Build               | Vite 8 with `ignifx()` from `@ignifx/vite-plugin`: asset manifest, `.meta.json` sidecars, JSON validation, HMR                                                 |
+| Commands            | `pnpm dev` · `pnpm test` · `pnpm typecheck` · `pnpm build` · `pnpm check` (all gates) · `node scripts/check-webgpu.mjs` · `node scripts/new-script.mjs <Name>` |
 
 ## Mental model
 
@@ -70,9 +69,8 @@ import {
 } from "@ignifx/core";
 import type { ScriptCallbacks } from "@ignifx/core";
 
-/** Spins its entity around Y. `speed` is a serialized field, in degrees per second. */
 class Spinner extends Script.define({ speed: f32(90) }) implements ScriptCallbacks {
-  static typeId = "demo/Spinner";
+  static typeId = "demo/Spinner"; // `speed` is a serialized field, degrees per second
 
   update(dt: number): void {
     this.transform.rotate({ x: 0, y: this.speed * dt, z: 0 });
@@ -92,19 +90,16 @@ const eye = app.world.createEntity("Main Camera");
 eye.transform.localPosition.set(0, 2.5, -4.5);
 eye.transform.lookAt({ x: 0, y: 0.6, z: 0 });
 eye.addComponent(Camera, { fov: 55, far: 100 });
-
 const sun = app.world.createEntity("Sun");
 sun.transform.localPosition.set(3, 6, -2);
 sun.transform.lookAt({ x: 0, y: 0, z: 0 });
 const light = sun.addComponent(Light, { type: "directional", intensity: 3 });
 light.shadows.enabled = true;
-
 const ground = app.world.createEntity("Ground");
 ground.addComponent(MeshRenderer, {
   mesh: MeshAsset.ground(app, { width: 20, height: 20 }),
   castShadows: false,
 });
-
 const ember = createMaterialAsset(
   app,
   pbrMaterialDefinition({ name: "ember", baseColor: { r: 0.93, g: 0.42, b: 0.16, a: 1 }, roughness: 0.35 }),
@@ -114,7 +109,6 @@ const cube = app.world.createEntity("Cube");
 cube.transform.localPosition.set(0, 0.65, 0);
 cube.addComponent(MeshRenderer, { mesh: MeshAsset.box(app, { size: 1.3 }), materials: [ember] });
 cube.addComponent(Spinner, { speed: 120 });
-
 await app.start();
 ```
 
@@ -122,20 +116,16 @@ The same game logic without a GPU, which is how tests and tools run it:
 
 ```ts
 import { Script, createApp, createManualClock, f32 } from "@ignifx/core";
-
 class Spinner extends Script.define({ speed: f32(90) }) {
   static typeId = "demo/Spinner";
-
   update(dt: number): void {
     this.transform.rotate({ x: 0, y: this.speed * dt, z: 0 });
   }
 }
-
 const app = await createApp({ headless: true, clock: createManualClock() });
 app.registerComponents([Spinner]);
 const cube = app.world.createEntity("Cube");
 cube.addComponent(Spinner);
-
 await app.start();
 for (let frame = 0; frame < 600; frame += 1) {
   app.step(1 / 60); // ten seconds, one fixed step per call
@@ -144,18 +134,28 @@ app.log.info("spun to", cube.transform.localEulerAngles.y);
 app.dispose();
 ```
 
-### Adding input
+### Adding extensions
 
-`input()` from `@ignifx/input` adds `app.input`, `PlayerInput`, the `inputactions` asset type, and the `input` settings section; detail in `packages/input/skills/input/SKILL.md`.
+Extensions register in `createApp({ extensions })`; each adds an `app.<name>` service, scripts, asset types, and a settings section, and has a subsystem skill with the detail. Everything below is also re-exported from `ignifx`. Headless apps drive input with `simulate` and advance audio playback by the frame delta, so both are testable without a device.
+
+| Package (factory)           | Adds                                                                                                                                                                 | Skill                                  |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| `@ignifx/input` (`input()`) | `app.input`, `PlayerInput`, `.input.json` actions (`inputactions`), the `input` settings section                                                                     | `packages/input/skills/input/SKILL.md` |
+| `@ignifx/audio` (`audio()`) | `app.audio` (buses, one-shots, unlock), `AudioSource`, `AudioListener`, `MusicPlayer`, `.audio.json` buses (`audiobuses`), `audioclip`, the `audio` settings section | `packages/audio/skills/audio/SKILL.md` |
 
 ```ts
-import { createApp, defineInputActions, input } from "ignifx";
+import { audio, AudioClip, AudioSource, createApp, defineInputActions, input } from "ignifx";
+const app = await createApp({ headless: true, extensions: [input(), audio()] });
 const jump = { name: "jump", bindings: [{ path: "<Keyboard>/space" }] };
-const app = await createApp({ headless: true, extensions: [input()] });
 app.input.loadActions(defineInputActions({ maps: [{ name: "Player", actions: [jump] }] }));
+const clip = app.assets.load<AudioClip>("sfx/jump.wav");
+await clip.promise; // settles as soon as it loads: the app is not running yet
+const source = app.world.createEntity("Player").addComponent(AudioSource, { clip, bus: "SFX" });
+await app.start();
 app.input.simulate({ "<Keyboard>/space": 1 });
-app.step(1 / 60);
-app.input.actions.get("jump").wasPressedThisFrame; // true for the whole frame
+app.step(1 / 60); // the source awakes; `jump.wasPressedThisFrame` now holds for this whole frame
+source.play({ volume: 0.8 }); // in a browser, queued (not lost) while app.audio.state is "locked"
+app.audio.bus("SFX").volume = 0.5;
 ```
 
 ## Core APIs
@@ -264,7 +264,7 @@ Full page: [`references/concepts/assets.md`](references/concepts/assets.md).
 `AssetHandle<T>`: `address`, `type`, `state`, `value` (`IGX-0501` unless loaded), `promise`,
 `progress`, `error`, `refCount`, `retain()`, `release()`, `[Symbol.dispose]()`, `onReplaced`.
 `LoadOptions`: `signal`, `priority`, `type`, `onProgress`. **Every `load` needs one `release`**, and
-completed loads are delivered in `PreUpdate`, so a handle's state flips on the next frame.
+while the app runs, loads deliver in `PreUpdate` (state flips next frame); before `app.start()` they settle at once, so preload, `await`, then start.
 
 An `asset(TypeToken)` schema field holds the **loaded handle**; the file stores
 `{ "$asset": "<address>" }`. The scene loader resolves every reference before writing props, so
@@ -317,10 +317,7 @@ Callbacks are not members of `Script`; implement the ones you need, optionally w
 | `onApplicationPause(paused)`, `onApplicationFocus(focused)` | Visibility and focus changes                                     | Per transition     |
 | `onCollisionEnter/Stay/Exit`, `onTriggerEnter/Exit`         | Declared now; delivered by `@ignifx/physics` later               | Per event          |
 
-Statics on a script class are written plainly — `static typeId`, `requires`, `allowMultiple`,
-`executionOrder`, `updateWhenPaused` — with no `override` keyword. They are not members of
-`Component`/`Script`; the class-token types match them structurally (`ComponentStatics`,
-`ScriptStatics`) and the registry applies the defaults. Callbacks take no `override` either.
+Statics (`static typeId`, `requires`, `allowMultiple`, `executionOrder`, `updateWhenPaused`) and callbacks are written plainly with no `override`: they are not members of `Component`/`Script`; the class-token types match them structurally (`ComponentStatics`, `ScriptStatics`) and the registry applies the defaults.
 
 ### Schema kinds
 
@@ -398,11 +395,7 @@ export const demo: (options?: void) => Extension = defineExtension<void>(() => (
 }));
 ```
 
-`ExtensionContext` offers `app`, `log`, `registerComponent(s)`, `registerSystem`, `registerService`,
-`defineAppProperty`, `registerSettings`, `settings`, `require`, `tryGet`, `registerAssetType`,
-`registerAssetLoader`, `requireRenderingFeature`, `registerErrorCodes`, and `onDispose`.
-Registration order errors: `IGX-0402` (`requires` cycle), `IGX-0403` (missing), `IGX-0404` (engine
-range), `IGX-0406` (duplicate name), `IGX-0401` (app property defined twice).
+`ExtensionContext` offers `app`, `log`, `registerComponent(s)`, `registerSystem`, `registerService`, `defineAppProperty`, `registerSettings`, `settings`, `require`, `tryGet`, `registerAssetType`, `registerAssetLoader`, `requireRenderingFeature`, `registerErrorCodes`, and `onDispose`. Registration errors: `IGX-0402` (`requires` cycle), `IGX-0403` (missing), `IGX-0404` (engine range), `IGX-0406` (duplicate name), `IGX-0401` (app property defined twice).
 
 ### Errors
 
@@ -418,18 +411,14 @@ first two digits are the area.
 | `04xx` | Extensions, services, settings | `14xx`–`15xx` | Platform, devtools                 |
 | `05xx` | Assets                         | `9xxx`        | Third-party extensions             |
 
-`CoreErrorCode` names every code the kernel throws and `CORE_ERROR_MESSAGES` holds their templates.
-Runtime failures inside callbacks, coroutines, systems, extensions, and the asset pipeline are
-reported through `app.onError` as an `ErrorReport` rather than thrown at the caller.
+`CoreErrorCode` names every kernel code; `CORE_ERROR_MESSAGES` holds the templates. Runtime failures inside callbacks, coroutines, systems, extensions, and the asset pipeline reach `app.onError` as an `ErrorReport` rather than being thrown at the caller.
 
 ## Recipes
 
-Generated from `examples/recipes/`, so the code compiles.
-
-| Recipe                                                   | Task                                                               |
-| -------------------------------------------------------- | ------------------------------------------------------------------ |
-| [`load-a-model`](references/recipes/load-a-model.md)     | Load a `.glb` and show it with a `Model` component                 |
-| [`spawn-a-prefab`](references/recipes/spawn-a-prefab.md) | Load a `.prefab.json` as a `SceneAsset` and stamp copies of it out |
+| Recipe (generated from `examples/recipes/`, so it compiles) | Task                                                               |
+| ----------------------------------------------------------- | ------------------------------------------------------------------ |
+| [`load-a-model`](references/recipes/load-a-model.md)        | Load a `.glb` and show it with a `Model` component                 |
+| [`spawn-a-prefab`](references/recipes/spawn-a-prefab.md)    | Load a `.prefab.json` as a `SceneAsset` and stamp copies of it out |
 
 ## File formats
 
@@ -441,6 +430,7 @@ Generated from `examples/recipes/`, so the code compiles.
 | [`formats/ignifx.material.md`](references/formats/ignifx.material.md)       | The material file's fields (generated)                         |
 | [`formats/ignifx.environment.md`](references/formats/ignifx.environment.md) | `.environment.json`: IBL, BRDF table, skybox (generated)       |
 | [`formats/inputactions.md`](references/formats/inputactions.md)             | `.input.json`: maps, actions, paths, composites, processors    |
+| [`formats/ignifx.audiobuses.md`](references/formats/ignifx.audiobuses.md)   | `.audio.json`: the bus tree (`Master` root, volumes, children) |
 | [`formats/components.md`](references/formats/components.md)                 | Every built-in component's fields and defaults (generated)     |
 | [`formats/ignifx.schemas.json`](references/formats/ignifx.schemas.json)     | All of the above bundled, for tools and validators             |
 
@@ -448,7 +438,7 @@ Generated from `examples/recipes/`, so the code compiles.
 documented in `@ignifx/vite-plugin`'s `README.md`, together with `virtual:ignifx/manifest` and
 `virtual:ignifx/scripts`.
 
-## Gotchas (top 10)
+## Gotchas (top 11)
 
 1. **Rendering features are declared before `app.start()`.** `shadows`, `postProcessing`,
    `skeletons`, `stencil`, `deviceLostRecovery` and the rest are `false` by default and refused
@@ -460,9 +450,10 @@ documented in `@ignifx/vite-plugin`'s `README.md`, together with `virtual:ignifx
    group; use `app.renderer.warmUp(materials)` for anything loaded later (ADR-0014).
 3. **One `Environment` per world** (a second logs `IGX-0705`), **point and hemispheric lights cast
    no shadows** (`IGX-0703`), and **a world with no enabled camera renders nothing** (`IGX-0706`).
-4. **Assets are delivered in `PreUpdate`.** A handle's `state` flips and its `promise` settles at
-   that one point, so a load requested in `update` is ready on the _next_ frame at the earliest.
-   `handle.value` throws `IGX-0501` until then.
+4. **Assets are delivered in `PreUpdate` once the app runs.** A load requested in `update` is ready
+   on the _next_ frame at the earliest, and `handle.value` throws `IGX-0501` until then. In a
+   headless test that has called `app.start()`, nothing settles until you `app.step()`; `await`
+   loads _before_ `start()` instead, where they settle as they finish.
 5. **Pair every `load` with a `release`.** Handles are shared and reference-counted; `using` works.
    An `asset()` field is not a holder — the scene instance that loaded the asset releases it.
 6. **`active = false` hides, `destroy()` removes.** Lite disposes a mesh removed from its last
@@ -475,6 +466,7 @@ documented in `@ignifx/vite-plugin`'s `README.md`, together with `virtual:ignifx
    with `IGX-0701` when no adapter is available.
 10. **Degrees in the public API; world getters allocate.** A radian API carries a `Rad` suffix, and
     `transform.position`/`.forward`/… allocate — use `positionToRef(out)` in hot paths.
+11. **Browsers start audio locked.** `app.audio.state` is `"locked"` until a user gesture or `app.audio.unlock()`; plays made before then are queued, not lost. Headless apps are never locked.
 
 The full list, with error codes, is in [`references/gotchas.md`](references/gotchas.md).
 
@@ -484,15 +476,15 @@ None (pre-1.0: no deprecation window; breaking changes are listed in the changel
 
 ## Where to look next
 
-| Topic                                 | Read                                                                                                                         |
-| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| Frame order, callbacks, `Time`        | [`references/concepts/lifecycle.md`](references/concepts/lifecycle.md)                                                       |
-| World, entities, scenes, prefabs      | [`references/concepts/scene-graph.md`](references/concepts/scene-graph.md)                                                   |
-| Components, schemas, coroutines       | [`references/concepts/scripting.md`](references/concepts/scripting.md)                                                       |
-| Cameras, lights, meshes, the renderer | [`references/concepts/rendering.md`](references/concepts/rendering.md)                                                       |
-| Addresses, handles, loaders           | [`references/concepts/assets.md`](references/concepts/assets.md)                                                             |
-| Extensions, services, settings        | [`references/concepts/extensions.md`](references/concepts/extensions.md)                                                     |
-| Every exact signature                 | [`api/core.md`](references/api/core.md) · [`api/input.md`](references/api/input.md) · `packages/input/skills/input/SKILL.md` |
-| Design rationale                      | `docs/architecture/`, `docs/adr/`                                                                                            |
+| Topic                                 | Read                                                                                                                                                                              |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Frame order, callbacks, `Time`        | [`references/concepts/lifecycle.md`](references/concepts/lifecycle.md)                                                                                                            |
+| World, entities, scenes, prefabs      | [`references/concepts/scene-graph.md`](references/concepts/scene-graph.md)                                                                                                        |
+| Components, schemas, coroutines       | [`references/concepts/scripting.md`](references/concepts/scripting.md)                                                                                                            |
+| Cameras, lights, meshes, the renderer | [`references/concepts/rendering.md`](references/concepts/rendering.md)                                                                                                            |
+| Addresses, handles, loaders           | [`references/concepts/assets.md`](references/concepts/assets.md)                                                                                                                  |
+| Extensions, services, settings        | [`references/concepts/extensions.md`](references/concepts/extensions.md)                                                                                                          |
+| Every exact signature                 | [`api/core.md`](references/api/core.md) · [`api/input.md`](references/api/input.md) · [`api/audio.md`](references/api/audio.md) · the subsystem skills under `packages/*/skills/` |
+| Design rationale                      | `docs/architecture/`, `docs/adr/`                                                                                                                                                 |
 
 `docs/migrations/` exists only after 1.0.

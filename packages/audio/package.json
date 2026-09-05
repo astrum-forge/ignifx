@@ -37,8 +37,10 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "catalog:",
+    "@babylonjs/lite": "catalog:",
     "@ignifx/core": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
+    "@types/node": "catalog:",
     "@types/webxr": "catalog:",
     "@webgpu/types": "catalog:",
     "publint": "catalog:",
@@ -49,6 +51,7 @@
     "vitest": "catalog:"
   },
   "peerDependencies": {
+    "@babylonjs/lite": "catalog:",
     "@ignifx/core": "workspace:*"
   },
   "ignifx": {
