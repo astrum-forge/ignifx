@@ -163,6 +163,10 @@ export const CoreErrorCode = {
   unknownSettingsSection: "IGX-0407",
   /** A project settings section did not validate against the schema its extension registered. */
   invalidSettings: "IGX-0408",
+  /** An extension dispatched a physics callback from outside the fixed loop. */
+  physicsCallbackOutsideFixedStep: "IGX-0409",
+  /** A second, different simulation scene was handed to a world that already has one. */
+  simulationSceneAlreadySet: "IGX-0410",
   /** An asset's value was read before the asset finished loading. */
   assetNotLoaded: "IGX-0501",
   /** An asset load was aborted through its `AbortSignal`. */
@@ -273,6 +277,8 @@ export const CORE_ERROR_MESSAGES: Readonly<Record<CoreErrorCode, string>> = {
   "IGX-0406": "The extension name {extension} is registered twice.",
   "IGX-0407": "{section} is not a registered settings section.",
   "IGX-0408": "The {section} settings section is invalid: {issues}.",
+  "IGX-0409": "Physics callbacks are dispatched inside the fixed loop only; {callback} was not.",
+  "IGX-0410": "A world has one simulation scene, and this world already has a different one.",
   "IGX-0501": "The asset {asset} has no value yet because it is still loading.",
   "IGX-0502": "Loading {asset} was aborted.",
   "IGX-0503": "The app that owned the asset {asset} was disposed before loading finished.",

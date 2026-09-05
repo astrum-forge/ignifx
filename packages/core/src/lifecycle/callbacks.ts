@@ -130,3 +130,60 @@ export function readCallback(target: object, name: string): CallbackFunction | n
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return value as CallbackFunction;
 }
+
+/**
+ * The physics callbacks an extension may deliver through `ExtensionContext.dispatchScriptCallback`,
+ * named rather than numbered (`docs/architecture/09-physics.md` §4). The ordinals in
+ * `ScriptCallbackKind` are engine plumbing and may be renumbered; these five names are the
+ * contract `@ignifx/physics` is written against.
+ *
+ * @example
+ * ```ts
+ * ctx.dispatchScriptCallback(entity, PhysicsCallbackName.onTriggerEnter, event);
+ * ```
+ *
+ * @beta
+ */
+export const PhysicsCallbackName = {
+  /** `onCollisionEnter(collision)`. */
+  onCollisionEnter: "onCollisionEnter",
+  /** `onCollisionStay(collision)`. */
+  onCollisionStay: "onCollisionStay",
+  /** `onCollisionExit(collision)`. */
+  onCollisionExit: "onCollisionExit",
+  /** `onTriggerEnter(trigger)`. */
+  onTriggerEnter: "onTriggerEnter",
+  /** `onTriggerExit(trigger)`. */
+  onTriggerExit: "onTriggerExit",
+} as const;
+
+/**
+ * The union of the physics callback names.
+ *
+ * @beta
+ */
+export type PhysicsCallbackName = (typeof PhysicsCallbackName)[keyof typeof PhysicsCallbackName];
+
+/**
+ * The ordinal each physics callback name stands for, resolved from a frozen table so that a
+ * dispatch never looks a callback up by string on a per-script path (coding standards §7).
+ */
+const PHYSICS_CALLBACK_KINDS: Readonly<Record<PhysicsCallbackName, ScriptCallbackKind>> = Object.freeze({
+  onCollisionEnter: ScriptCallbackKind.onCollisionEnter,
+  onCollisionStay: ScriptCallbackKind.onCollisionStay,
+  onCollisionExit: ScriptCallbackKind.onCollisionExit,
+  onTriggerEnter: ScriptCallbackKind.onTriggerEnter,
+  onTriggerExit: ScriptCallbackKind.onTriggerExit,
+});
+
+/**
+ * Resolves a physics callback name to its `ScriptCallbackKind` ordinal, once per dispatch.
+ *
+ * @param name - The callback name an extension asked for.
+ * @returns The ordinal, which is also the bit index in `ScriptClassInfo.callbacks`.
+ *
+ * @internal
+ */
+export function physicsCallbackKind(name: PhysicsCallbackName): ScriptCallbackKind {
+  return PHYSICS_CALLBACK_KINDS[name];
+}

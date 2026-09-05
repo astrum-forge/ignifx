@@ -1,5 +1,6 @@
 import { CoreErrorCode } from "../errors/error-codes.js";
 import { IgnifxError } from "../errors/ignifx-error.js";
+import { physicsCallbackKind, type PhysicsCallbackName } from "../lifecycle/callbacks.js";
 import { serviceKeyName } from "./service-registry.js";
 import type { ServiceRegistryImpl } from "./service-registry.js";
 import type {
@@ -14,7 +15,9 @@ import type {
 import type { AssetLoader, AssetTypeDefinition } from "../assets/types.js";
 import type { ComponentRegistry } from "../component/component-registry.js";
 import type { ConcreteComponentType } from "../component/component-type.js";
+import type { Entity } from "../entity/entity.js";
 import type { ErrorCodeRegistry } from "../errors/error-code-registry.js";
+import type { LiteScene } from "../lite/scene.js";
 import type { Logger } from "../log/logger.js";
 import type { RenderingFeature } from "../render/renderer.js";
 import type { Scheduler } from "../scheduler/scheduler.js";
@@ -219,6 +222,53 @@ export class ExtensionContextImpl implements ExtensionContext {
    */
   registerErrorCodes(codes: Readonly<Record<string, string>>): void {
     this.#errorCodes.register(codes, this.#extension.name);
+  }
+
+  /**
+   * Delivers one physics callback to every implementing script on an entity, through the world's
+   * single guarded call site (`docs/architecture/09-physics.md` §4).
+   *
+   * @param entity - The entity whose scripts should receive the callback.
+   * @param kind - Which physics callback to deliver.
+   * @param argument - The collision or trigger event the callback receives.
+   * @throws IgnifxError with code `IGX-0409` in development when called outside the fixed loop.
+   */
+  dispatchScriptCallback(entity: Entity, kind: PhysicsCallbackName, argument: unknown): void {
+    const app = this.app;
+    if (!app.time.inFixedStep && app.diagnostics.isDevelopment) {
+      throw new IgnifxError(
+        CoreErrorCode.physicsCallbackOutsideFixedStep,
+        `${this.#extension.name} dispatched ${kind} outside a fixed step.`,
+        {
+          context: { callback: kind, extension: this.#extension.name },
+          hint: "Dispatch physics callbacks from a system registered in Phase.FixedUpdate.",
+        },
+      );
+    }
+    app.world.lifecycle.dispatchToEntity(entity, physicsCallbackKind(kind), argument);
+  }
+
+  /**
+   * Whether any script on an entity implements a physics callback, whatever its `enabled` state
+   * (`docs/architecture/09-physics.md` §2.1).
+   *
+   * @param entity - The entity to inspect.
+   * @param kind - Which physics callback.
+   * @returns `true` when at least one script on the entity implements it.
+   */
+  entityImplements(entity: Entity, kind: PhysicsCallbackName): boolean {
+    return this.app.world.lifecycle.entityImplements(entity, physicsCallbackKind(kind));
+  }
+
+  /**
+   * Publishes the scene this extension simulates in as `world.lite.simulationScene`
+   * (`docs/architecture/09-physics.md` §1).
+   *
+   * @param scene - The simulation scene, or `null` to clear it.
+   * @throws IgnifxError with code `IGX-0410` when the world already has a different one.
+   */
+  setSimulationScene(scene: LiteScene | null): void {
+    this.app.world.setSimulationScene(scene);
   }
 
   /**

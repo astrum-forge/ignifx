@@ -208,6 +208,48 @@ export class LifecycleQueue implements WorldInternals {
   }
 
   /**
+   * Delivers one callback to every effectively-enabled script on one entity, in component order.
+   *
+   * @param entity - The entity to deliver to.
+   * @param kind - Which callback.
+   * @param argument - The callback's single argument.
+   */
+  dispatchToEntity(entity: Entity, kind: ScriptCallbackKind, argument: unknown): void {
+    const internals = entityInternals(entity);
+    if (internals.isDestroyed || !internals.activeInHierarchy) {
+      return;
+    }
+    const components = internals.components;
+    // Measured once: a script attached by a handler joins the entity only after this dispatch, the
+    // same rule `forEachScript` applies to the sorted lists.
+    const count = components.length;
+    for (let index = 0; index < count; index += 1) {
+      const component = components[index];
+      if (component !== undefined && canReceiveDispatch(component, kind)) {
+        this.invokeCallback(component, kind, argument);
+      }
+    }
+  }
+
+  /**
+   * Whether any script on an entity implements a callback, whatever its `enabled` state.
+   *
+   * @param entity - The entity to inspect.
+   * @param kind - Which callback.
+   * @returns `true` when at least one of the entity's live scripts implements it.
+   */
+  entityImplements(entity: Entity, kind: ScriptCallbackKind): boolean {
+    const components = entityInternals(entity).components;
+    for (let index = 0; index < components.length; index += 1) {
+      const component = components[index];
+      if (component !== undefined && declaresCallback(component, kind)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * Invokes one callback on one component, guarded. This is the only place in the engine that calls
    * game code for a lifecycle or frame callback.
    *
@@ -576,11 +618,13 @@ export class LifecycleQueue implements WorldInternals {
     this.#host.releaseComponentHandle(state.handle);
     const entity = state.entity;
     if (entity !== null) {
-      const siblings = entityInternals(entity).components;
+      const entityState = entityInternals(entity);
+      const siblings = entityState.components;
       const at = siblings.indexOf(component);
       if (at >= 0) {
         siblings.splice(at, 1);
       }
+      entityState.onComponentRemoved?.emit(component);
     }
     try {
       readCallback(component, "onDetach")?.call(component);
@@ -599,6 +643,31 @@ export class LifecycleQueue implements WorldInternals {
  */
 function isGone(state: ComponentInternals): boolean {
   return state.isDestroyed || state.isReleased;
+}
+
+/**
+ * Whether a component still on an entity implements a callback and is not on its way out.
+ *
+ * @param component - The component.
+ * @param kind - The callback ordinal.
+ * @returns `true` when the component's class implements the callback.
+ */
+function declaresCallback(component: Component, kind: ScriptCallbackKind): boolean {
+  const state = componentInternals(component);
+  const info = state.info;
+  return info !== null && !isGone(state) && implementsCallback(info.script, kind);
+}
+
+/**
+ * Whether a component should receive a per-entity dispatch: effectively enabled, not destroyed, and
+ * implementing the callback.
+ *
+ * @param component - The component.
+ * @param kind - The callback ordinal.
+ * @returns `true` when the callback must be delivered to it.
+ */
+function canReceiveDispatch(component: Component, kind: ScriptCallbackKind): boolean {
+  return componentInternals(component).isEnabledNow && declaresCallback(component, kind);
 }
 
 /** Shared empty dispatch list for a kind that has none. */

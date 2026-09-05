@@ -1,6 +1,11 @@
 import { CoreErrorCode } from "../errors/error-codes.js";
 import { IgnifxError } from "../errors/ignifx-error.js";
-import { SCRIPT_CALLBACK_COUNT, SCRIPT_CALLBACK_NAMES, readCallback } from "../lifecycle/callbacks.js";
+import {
+  SCRIPT_CALLBACK_COUNT,
+  SCRIPT_CALLBACK_NAMES,
+  readCallback,
+  type ScriptCallbackKind,
+} from "../lifecycle/callbacks.js";
 import { Script } from "../script/script.js";
 import { Component } from "./component.js";
 import type { ComponentType, ConcreteComponentType, ScriptStatics } from "./component-type.js";
@@ -197,6 +202,25 @@ export class ComponentRegistry {
   isRegistered(type: ComponentType): boolean {
     const id = readStatics(type).typeId;
     return id !== undefined && this.#byTypeId.get(id) === type;
+  }
+
+  /**
+   * Reports whether a component class implements a script callback, from the bit mask the registry
+   * computed when it first described the class. Extension authors use it to decide once per class
+   * what a per-frame path would otherwise have to rediscover
+   * (`docs/architecture/04-extensions.md` §3).
+   *
+   * @param type - The component class. A plain (non-`Script`) class always answers `false`.
+   * @param kind - The callback ordinal.
+   * @returns `true` when the class implements the callback.
+   *
+   * @example
+   * ```ts
+   * registry.implementsCallback(Explode, ScriptCallbackKind.onCollisionEnter); // true
+   * ```
+   */
+  implementsCallback(type: ComponentType, kind: ScriptCallbackKind): boolean {
+    return implementsCallback(this.describe(type).script, kind);
   }
 
   /**

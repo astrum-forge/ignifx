@@ -153,6 +153,9 @@ export {
   RESERVED_LAYER_NAMES,
 } from "./layers/layer-table.js";
 
+// lifecycle — the callback table and the physics callback names extensions dispatch by.
+export { PhysicsCallbackName, ScriptCallbackKind } from "./lifecycle/callbacks.js";
+
 // lite — the type aliases the `app.lite` and `component.lite` escape hatches name in their
 // signatures. Nothing else crosses the boundary: these are handles, not an API.
 export type { LiteCamera } from "./lite/camera.js";
@@ -472,7 +475,13 @@ export { createManualClock, createPerformanceClock, type Clock, type ManualClock
 export { Transform } from "./transform/transform.js";
 
 // world — the running simulation.
-export { World, type CreateEntityOptions, type InstantiateOptions, type LoadSceneOptions } from "./world/world.js";
+export {
+  World,
+  type CreateEntityOptions,
+  type InstantiateOptions,
+  type LoadSceneOptions,
+  type WorldLiteHandles,
+} from "./world/world.js";
 
 // Types and name tables referenced by public signatures (API Extractor ae-forgotten-export).
 // The `Lite*` aliases are the unstable escape-hatch types (CONSTITUTION.md §3.4).

@@ -99,6 +99,8 @@ export class Entity {
       onChildRemoved: null,
       onParentChanged: null,
       onActiveChanged: null,
+      onComponentAdded: null,
+      onComponentRemoved: null,
       onDestroyed: null,
     };
     tagNode(node, { entity: handle });
@@ -372,6 +374,34 @@ export class Entity {
     const internals = entityInternals(this);
     internals.onActiveChanged ??= internals.host.createSignal<boolean>();
     return internals.onActiveChanged;
+  }
+
+  /**
+   * Emitted with each component attached to this entity, synchronously at the end of
+   * `addComponent`, after the component's `onAttach` has run
+   * (`docs/architecture/02-scene-graph.md` §8). Extensions that key work off an entity's component
+   * set — the physics extension recomputing `Rigidbody.collisionEvents`, say — listen here rather
+   * than polling `entity.components`. Costs nothing until something connects.
+   *
+   * @returns The signal, created on first access.
+   */
+  get onComponentAdded(): Signal<Component> {
+    const internals = entityInternals(this);
+    internals.onComponentAdded ??= internals.host.createSignal<Component>();
+    return internals.onComponentAdded;
+  }
+
+  /**
+   * Emitted with each component the destroy flush removes from this entity, after it has left
+   * `entity.components` and before its `onDetach` runs. Removal is deferred, so this fires in the
+   * destroy flush rather than inside `removeComponent`.
+   *
+   * @returns The signal, created on first access.
+   */
+  get onComponentRemoved(): Signal<Component> {
+    const internals = entityInternals(this);
+    internals.onComponentRemoved ??= internals.host.createSignal<Component>();
+    return internals.onComponentRemoved;
   }
 
   /**
@@ -766,6 +796,7 @@ export class Entity {
     host.store.add(component, info);
     host.references.watch(component);
     readCallback(component, "onAttach")?.call(component);
+    internals.onComponentAdded?.emit(component);
   }
 
   /**

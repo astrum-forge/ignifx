@@ -3,6 +3,7 @@ import type { ConcreteComponentType } from "../component/component-type.js";
 import type { Component } from "../component/component.js";
 import type { Diagnostics } from "../diagnostics/diagnostics.js";
 import type { Entity } from "../entity/entity.js";
+import type { PhysicsCallbackName } from "../lifecycle/callbacks.js";
 import type { LiteEngine, LiteScene } from "../lite/scene.js";
 import type { Logger } from "../log/logger.js";
 import type { PlatformInfo } from "../platform/platform.js";
@@ -749,6 +750,62 @@ export interface ExtensionContext {
    * @param codes - `IGX-####` to one-line message template.
    */
   registerErrorCodes(codes: Readonly<Record<string, string>>): void;
+  /**
+   * Delivers one physics callback to every script on an entity that implements it, for extension
+   * authors (`docs/architecture/09-physics.md` §4). The scheduler stays the only thing that calls a
+   * script callback: this routes through the same guarded call site the frame loop uses
+   * (`03-scripting-and-components.md` §6).
+   *
+   * @remarks
+   * Delivery is synchronous and in component order, to effectively-enabled scripts only; a
+   * destroyed or inactive entity receives nothing. A handler that throws is reported to
+   * `app.onError` with `source: "lifecycle"` and the running phase, and the remaining scripts still
+   * receive the callback. Nothing is allocated per call.
+   *
+   * @param entity - The entity whose scripts should receive the callback.
+   * @param kind - Which physics callback to deliver.
+   * @param argument - The single argument the callback receives — a collision or a trigger event.
+   * @throws IgnifxError with code `IGX-0409` in development when called from outside the fixed
+   * loop, where `01-lifecycle-and-time.md` §3 says these callbacks never run. Production builds
+   * deliver it anyway rather than losing the event.
+   *
+   * @example
+   * ```ts
+   * for (let index = 0; index < events.length; index += 1) {
+   *   ctx.dispatchScriptCallback(events[index].entity, PhysicsCallbackName.onTriggerEnter, events[index]);
+   * }
+   * ```
+   *
+   * @beta
+   */
+  dispatchScriptCallback(entity: Entity, kind: PhysicsCallbackName, argument: unknown): void;
+  /**
+   * Whether any script on an entity implements a physics callback, for extension authors. This is
+   * what `Rigidbody.collisionEvents` auto-detection asks (`09-physics.md` §2.1).
+   *
+   * @remarks
+   * The answer ignores `enabled`, so it stays stable while scripts are toggled and only changes
+   * when a component is added or removed — the two moments the physics extension recomputes it.
+   * Components already queued for destruction do not count.
+   *
+   * @param entity - The entity to inspect.
+   * @param kind - Which physics callback.
+   * @returns `true` when at least one script on the entity implements it.
+   *
+   * @beta
+   */
+  entityImplements(entity: Entity, kind: PhysicsCallbackName): boolean;
+  /**
+   * Publishes the scene an extension simulates in as `world.lite.simulationScene`, for extension
+   * authors (`docs/architecture/09-physics.md` §1, `02-scene-graph.md` §2).
+   *
+   * @param scene - The simulation scene, or `null` to clear it from the extension's `dispose`.
+   * @throws IgnifxError with code `IGX-0410` when the world already has a different simulation
+   * scene.
+   *
+   * @beta
+   */
+  setSimulationScene(scene: LiteScene | null): void;
   /**
    * Registers a callback that runs when the app is disposed.
    *

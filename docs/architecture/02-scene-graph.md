@@ -221,6 +221,7 @@ class Signal<T = void> {
 ```
 
 - `deferred: true` queues delivery to the next `EndOfFrame` phase (Godot's `CONNECT_DEFERRED`).
+- `entity.onComponentAdded` / `entity.onComponentRemoved` emit when the entity's component set changes: `onComponentAdded` synchronously at the end of `addComponent`, after `onAttach`; `onComponentRemoved` in the destroy flush, once the component has left `entity.components`. Both are created on first access; extensions use them to react to scripts being attached (`09-physics.md` §2.1).
 - `owner` auto-disconnects the handler when the owner is destroyed. Scripts should always pass `owner: this`; the linter flags `connect` calls inside scripts without an owner.
 - Convention: **call down, signal up**. A parent calls methods on children it owns; a child emits signals that parents subscribe to. There is no `sendMessage`/broadcast-by-name facility (Unity lesson).
 - Engine-wide events live on `app.events` as typed signals (`app.events.onSceneLoaded`, etc.); extensions add their own via module augmentation. Phase 1 ships the world-level signals only (`world.onEntityCreated`, `onEntityDestroyed`, `onSceneLoaded`, `onSceneUnloaded`); `app.events` arrives with the asset and scene loading of Phase 2.

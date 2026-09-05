@@ -37,10 +37,18 @@ interface ExtensionContext {
   registerErrorCodes(codes: Record<string, string>): void; // IGX-#### → message template
   onDispose(callback: () => void): void;
 
+  // Physics callbacks (@beta, for extension authors; see 09-physics.md §1, §2.1, §4).
+  dispatchScriptCallback(entity: Entity, kind: PhysicsCallbackName, argument: unknown): void; // routed through the scheduler's guarded call site
+  entityImplements(entity: Entity, kind: PhysicsCallbackName): boolean; // ignores `enabled`; drives Rigidbody.collisionEvents auto-detection
+  setSimulationScene(scene: LiteScene | null): void; // publishes world.lite.simulationScene; throws IGX-0410 on a second, different scene
+
   require<T>(key: ServiceKey<T>): T; // service registered by an earlier extension; throws IGX-0405 if absent
   tryGet<T>(key: ServiceKey<T>): T | null; // `null` for absence (coding standards §5.5)
   settings<S>(section: string): S; // resolved project settings for a registered section
 }
+
+type PhysicsCallbackName =
+  "onCollisionEnter" | "onCollisionStay" | "onCollisionExit" | "onTriggerEnter" | "onTriggerExit";
 
 function defineExtension<O = void>(factory: (options: O) => Extension): (options?: O) => Extension;
 ```
@@ -92,7 +100,7 @@ const app = await createApp({
 2. Extensions are topologically sorted by `requires` (and `optional` edges when the optional extension is present). A `requires` cycle throws `IGX-0402`; a missing required extension throws `IGX-0403`; a duplicate name throws `IGX-0406`. `optional` edges that would form a cycle (two extensions optionally integrating with each other, as `physics` and `devtools` do) are dropped with a development note; the two then register in list order and must resolve each other lazily in `onStart` via `ctx.tryGet`.
 3. `engine` ranges are checked against the core version: mismatch throws in development, warns in production (`IGX-0404`).
 4. `register` runs in sorted order and may be `async` (for example to fetch a WASM binary), but heavy work should go in `onStart` so that registration stays fast and side-effect free.
-5. After all `register` calls, the Lite engine and render scene are created (or the null engine in headless mode), the world is created, and settings are frozen. `onStart` hooks then run in order during `app.start()`.
+5. After all `register` calls, the Lite engine and render scene are created (or the null engine in headless mode), the world is created, and settings are frozen. `onStart` hooks then run in order during `app.start()`. `onStart` runs before the frame loop starts, so awaiting an asset handle there deadlocks (assets are delivered in a stepped frame's `PreUpdate`): start the load in `onStart` and install the value at delivery.
 6. `onStop` and `dispose` run in reverse order.
 
 Extensions never execute code at module import time (`CONSTITUTION.md` §3.5). Everything happens inside `register`/`onStart`.
@@ -109,6 +117,7 @@ Extensions never execute code at module import time (`CONSTITUTION.md` §3.5). E
 | Error codes             | `registerErrorCodes`                                                      | Namespaced ranges are assigned in `docs/standards/coding-standards.md` |
 | Devtools panels         | via the devtools service, when present (`optional: ["@ignifx/devtools"]`) | `15-devtools-and-diagnostics.md`                                       |
 | Agent documentation     | `skills/<name>/SKILL.md` in the package                                   | `16-docs-harness-and-skill.md`                                         |
+| Physics callbacks       | `dispatchScriptCallback`, `entityImplements`, `setSimulationScene`        | routed through the scheduler; `09-physics.md` §4                       |
 
 An extension **cannot**: register frame callbacks with Babylon Lite directly, add phases, replace core services, or reach into another extension's internals. Cross-extension integration goes through services (`ctx.require`) and signals.
 

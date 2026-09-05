@@ -58,6 +58,12 @@ export class World implements WorldHost {
 
   readonly #scene: LiteScene;
 
+  /**
+   * The object `world.lite` hands out. It is allocated once and updated in place, so reading the
+   * escape hatch every frame allocates nothing (coding standards §7).
+   */
+  readonly #lite: { scene: LiteScene; simulationScene: LiteScene | null };
+
   readonly #frameState: FrameStateController;
 
   readonly #layers: LayerTable;
@@ -110,6 +116,7 @@ export class World implements WorldHost {
   constructor(options: CreateWorldOptions) {
     this.#app = options.app;
     this.#scene = options.scene;
+    this.#lite = { scene: options.scene, simulationScene: null };
     this.#frameState = options.frameState;
     this.#layers = options.layers ?? createLayerTable();
     this.#registry = options.registry ?? new ComponentRegistry();
@@ -280,10 +287,34 @@ export class World implements WorldHost {
    * Babylon Lite objects the world owns. Unstable escape hatch
    * (`docs/architecture/00-overview.md` §3).
    *
-   * @returns The render scene, and the physics simulation scene once `@ignifx/physics` creates one.
+   * @returns The render scene, and the physics simulation scene once an extension has set one. The
+   * object is the same one on every read and is updated in place; do not retain a copy of its
+   * fields.
    */
-  get lite(): { readonly scene: LiteScene; readonly simulationScene: null } {
-    return { scene: this.#scene, simulationScene: null };
+  get lite(): WorldLiteHandles {
+    return this.#lite;
+  }
+
+  /**
+   * Points `world.lite.simulationScene` at the scene an extension simulates in, or clears it
+   * (`docs/architecture/09-physics.md` §1, `02-scene-graph.md` §2). Reached by extension authors
+   * through `ExtensionContext.setSimulationScene`.
+   *
+   * @param scene - The simulation scene, or `null` to clear it in the extension's `dispose`.
+   * @throws IgnifxError with code `IGX-0410` when a different simulation scene is already set.
+   *
+   * @internal
+   */
+  setSimulationScene(scene: LiteScene | null): void {
+    const current = this.#lite.simulationScene;
+    if (scene !== null && current !== null && current !== scene) {
+      throw new IgnifxError(
+        CoreErrorCode.simulationSceneAlreadySet,
+        "This world already has a different simulation scene; a world has one simulation scene.",
+        { hint: "Clear it with setSimulationScene(null) before handing the world another one." },
+      );
+    }
+    this.#lite.simulationScene = scene;
   }
 
   /**
@@ -777,6 +808,7 @@ export class World implements WorldHost {
       return;
     }
     this.#isDisposed = true;
+    this.#lite.simulationScene = null;
     this.#lifecycle.disposeWorld();
     this.#byUid.clear();
     this.#byTag.clear();
@@ -973,6 +1005,23 @@ export class World implements WorldHost {
 
 /** Shared empty result for a tag nothing carries, so `findByTag` never allocates. */
 const EMPTY_ENTITIES: readonly Entity[] = Object.freeze([]);
+
+/**
+ * Babylon Lite objects a world owns. Unstable escape hatch
+ * (`docs/architecture/00-overview.md` §3, `02-scene-graph.md` §2); excluded from the stability
+ * guarantees of `CONSTITUTION.md` Article IV.
+ *
+ * @public
+ */
+export interface WorldLiteHandles {
+  /** The Lite scene the world's entities are rendered from. */
+  readonly scene: LiteScene;
+  /**
+   * The scene a physics extension steps its simulation in (`docs/architecture/09-physics.md` §1),
+   * or `null` when no extension has set one.
+   */
+  readonly simulationScene: LiteScene | null;
+}
 
 /**
  * Options accepted by {@link World.createEntity}.

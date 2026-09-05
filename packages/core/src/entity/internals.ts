@@ -118,6 +118,10 @@ export interface EntityInternals {
   /** Lazily created. */
   onActiveChanged: Signal<boolean> | null;
   /** Lazily created. */
+  onComponentAdded: Signal<Component> | null;
+  /** Lazily created. */
+  onComponentRemoved: Signal<Component> | null;
+  /** Lazily created. */
   onDestroyed: Signal<Entity> | null;
 }
 

@@ -487,6 +487,7 @@ export interface ComponentRefFieldSpec {
 export class ComponentRegistry {
     describe(type: ComponentType): ComponentClassInfo;
     get(typeId: string): ComponentType | null;
+    implementsCallback(type: ComponentType, kind: ScriptCallbackKind): boolean;
     isRegistered(type: ComponentType): boolean;
     register(type: ConcreteComponentType, typeId?: string): ComponentClassInfo;
     registerAll(types: readonly ConcreteComponentType[]): void;
@@ -578,6 +579,8 @@ export const CoreErrorCode: {
     readonly duplicateExtensionName: "IGX-0406";
     readonly unknownSettingsSection: "IGX-0407";
     readonly invalidSettings: "IGX-0408";
+    readonly physicsCallbackOutsideFixedStep: "IGX-0409";
+    readonly simulationSceneAlreadySet: "IGX-0410";
     readonly assetNotLoaded: "IGX-0501";
     readonly assetLoadAborted: "IGX-0502";
     readonly assetAppDisposed: "IGX-0503";
@@ -931,6 +934,8 @@ export class Entity {
     get onActiveChanged(): Signal<boolean>;
     get onChildAdded(): Signal<Entity>;
     get onChildRemoved(): Signal<Entity>;
+    get onComponentAdded(): Signal<Component>;
+    get onComponentRemoved(): Signal<Component>;
     get onDestroyed(): Signal<Entity>;
     get onParentChanged(): Signal<Entity | null>;
     get parent(): Entity | null;
@@ -1147,6 +1152,10 @@ export interface Extension {
 export interface ExtensionContext {
     readonly app: App;
     defineAppProperty(name: string, getter: () => unknown): void;
+    // @beta
+    dispatchScriptCallback(entity: Entity, kind: PhysicsCallbackName, argument: unknown): void;
+    // @beta
+    entityImplements(entity: Entity, kind: PhysicsCallbackName): boolean;
     readonly log: Logger;
     onDispose(callback: () => void): void;
     registerAssetLoader(loader: AssetLoader): void;
@@ -1159,6 +1168,8 @@ export interface ExtensionContext {
     registerSystem(system: System, options: RegisterSystemOptions): void;
     require<T>(key: ServiceKey<T>): T;
     requireRenderingFeature(feature: RenderingFeature): void;
+    // @beta
+    setSimulationScene(scene: LiteScene | null): void;
     settings<S>(section: string): S;
     tryGet<T>(key: ServiceKey<T>): T | null;
 }
@@ -2061,6 +2072,18 @@ export type PhaseIndex = 0 | 1 | 2 | 3 | 4 | 5;
 // @public
 export const PHASES: readonly Phase[];
 
+// @beta
+export const PhysicsCallbackName: {
+    readonly onCollisionEnter: "onCollisionEnter";
+    readonly onCollisionStay: "onCollisionStay";
+    readonly onCollisionExit: "onCollisionExit";
+    readonly onTriggerEnter: "onTriggerEnter";
+    readonly onTriggerExit: "onTriggerExit";
+};
+
+// @beta
+export type PhysicsCallbackName = (typeof PhysicsCallbackName)[keyof typeof PhysicsCallbackName];
+
 // @public
 export function pingPong(t: number, length: number): number;
 
@@ -2520,6 +2543,28 @@ export abstract class Script extends Component {
     stopAllCoroutines(): void;
     stopCoroutine(handle: CoroutineHandle): void;
 }
+
+// @public
+export const ScriptCallbackKind: {
+    readonly awake: 0;
+    readonly onEnable: 1;
+    readonly start: 2;
+    readonly onDisable: 3;
+    readonly onDestroy: 4;
+    readonly fixedUpdate: 5;
+    readonly update: 6;
+    readonly lateUpdate: 7;
+    readonly onCollisionEnter: 8;
+    readonly onCollisionStay: 9;
+    readonly onCollisionExit: 10;
+    readonly onTriggerEnter: 11;
+    readonly onTriggerExit: 12;
+    readonly onApplicationPause: 13;
+    readonly onApplicationFocus: 14;
+};
+
+// @public
+export type ScriptCallbackKind = (typeof ScriptCallbackKind)[keyof typeof ScriptCallbackKind];
 
 // @public
 export interface ScriptCallbacks {
@@ -3192,10 +3237,7 @@ export class World implements WorldHost {
     //
     // @internal
     get lifecycle(): WorldInternals;
-    get lite(): {
-        readonly scene: LiteScene;
-        readonly simulationScene: null;
-    };
+    get lite(): WorldLiteHandles;
     loadScene(scene: AssetRef<SceneAsset> | string, options?: LoadSceneOptions): Promise<SceneInstance>;
     get mainCamera(): Camera | null;
     moveEntityToScene(entity: Entity, scene: SceneInstance): void;
@@ -3230,12 +3272,20 @@ export class World implements WorldHost {
     get scenes(): readonly SceneInstance[];
     // @internal
     setMainCamera(camera: Camera | null): void;
+    // @internal
+    setSimulationScene(scene: LiteScene | null): void;
     // Warning: (ae-forgotten-export) The symbol "ComponentStore" needs to be exported by the entry point index.d.ts
     //
     // @internal
     get store(): ComponentStore;
     unloadScene(instance: SceneInstance): Promise<void>;
     get world(): World;
+}
+
+// @public
+export interface WorldLiteHandles {
+    readonly scene: LiteScene;
+    readonly simulationScene: LiteScene | null;
 }
 
 // @public

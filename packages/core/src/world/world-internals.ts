@@ -79,6 +79,40 @@ export interface WorldInternals {
   invokeCallback(component: Component, kind: ScriptCallbackKind, argument?: unknown): void;
 
   /**
+   * Delivers one callback to every effectively-enabled script on a single entity, in component
+   * order, through {@link WorldInternals.invokeCallback}. This is what
+   * `ExtensionContext.dispatchScriptCallback` routes through, so a physics extension never calls a
+   * script callback itself (`docs/architecture/03-scripting-and-components.md` §6,
+   * `04-extensions.md` §1).
+   *
+   * @remarks
+   * A destroyed entity, or one that is not active in the hierarchy, receives nothing. The entity's
+   * component list is measured once, so a script attached by a handler is not called during the
+   * same dispatch — the rule {@link WorldInternals.forEachScript} follows for the sorted lists.
+   * Nothing is allocated on the steady path.
+   *
+   * @param entity - The entity to deliver to.
+   * @param kind - Which callback.
+   * @param argument - The callback's single argument.
+   */
+  dispatchToEntity(entity: Entity, kind: ScriptCallbackKind, argument: unknown): void;
+
+  /**
+   * Whether any script on an entity implements a callback, whatever its `enabled` state.
+   *
+   * @remarks
+   * Enable state is deliberately ignored: the physics extension recomputes `Rigidbody`
+   * `collisionEvents` when a component is added or removed (`09-physics.md` §2.1), and that answer
+   * must not flip every time a script is toggled. Components already queued for destruction do not
+   * count, so the answer is correct inside an `Entity.onComponentRemoved` handler.
+   *
+   * @param entity - The entity to inspect.
+   * @param kind - Which callback.
+   * @returns `true` when at least one of the entity's scripts implements it.
+   */
+  entityImplements(entity: Entity, kind: ScriptCallbackKind): boolean;
+
+  /**
    * Tells the world which phase is running, so a failure reported through `app.onError` names it.
    * The scheduler sets it on entering a phase and clears it on leaving.
    *

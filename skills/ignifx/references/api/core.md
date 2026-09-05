@@ -2011,6 +2011,41 @@ The namespaced id.
 
 The class, or `null` when nothing is registered under the id.
 
+##### implementsCallback()
+
+> **implementsCallback**(`type`, `kind`): `boolean`
+
+Reports whether a component class implements a script callback, from the bit mask the registry
+computed when it first described the class. Extension authors use it to decide once per class
+what a per-frame path would otherwise have to rediscover
+(`docs/architecture/04-extensions.md` §3).
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)
+
+The component class. A plain (non-`Script`) class always answers `false`.
+
+###### kind
+
+[`ScriptCallbackKind`](#scriptcallbackkind-1)
+
+The callback ordinal.
+
+###### Returns
+
+`boolean`
+
+`true` when the class implements the callback.
+
+###### Example
+
+```ts
+registry.implementsCallback(Explode, ScriptCallbackKind.onCollisionEnter); // true
+```
+
 ##### isRegistered()
 
 > **isRegistered**(`type`): `boolean`
@@ -2631,6 +2666,40 @@ Emitted after a child is removed.
 ###### Returns
 
 [`Signal`](#signal-3)\<[`Entity`](#entity-2)\>
+
+The signal, created on first access.
+
+##### onComponentAdded
+
+###### Get Signature
+
+> **get** **onComponentAdded**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+Emitted with each component attached to this entity, synchronously at the end of
+`addComponent`, after the component's `onAttach` has run
+(`docs/architecture/02-scene-graph.md` §8). Extensions that key work off an entity's component
+set — the physics extension recomputing `Rigidbody.collisionEvents`, say — listen here rather
+than polling `entity.components`. Costs nothing until something connects.
+
+###### Returns
+
+[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+The signal, created on first access.
+
+##### onComponentRemoved
+
+###### Get Signature
+
+> **get** **onComponentRemoved**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+Emitted with each component the destroy flush removes from this entity, after it has left
+`entity.components` and before its `onDetach` runs. Removal is deferred, so this fires in the
+destroy flush rather than inside `removeComponent`.
+
+###### Returns
+
+[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
 
 The signal, created on first access.
 
@@ -15177,24 +15246,18 @@ The layer table.
 
 ###### Get Signature
 
-> **get** **lite**(): `object`
+> **get** **lite**(): [`WorldLiteHandles`](#worldlitehandles)
 
 Babylon Lite objects the world owns. Unstable escape hatch
 (`docs/architecture/00-overview.md` §3).
 
 ###### Returns
 
-`object`
+[`WorldLiteHandles`](#worldlitehandles)
 
-The render scene, and the physics simulation scene once `@ignifx/physics` creates one.
-
-###### scene
-
-> `readonly` **scene**: `SceneContext`
-
-###### simulationScene
-
-> `readonly` **simulationScene**: `null`
+The render scene, and the physics simulation scene once an extension has set one. The
+object is the same one on every read and is updated in place; do not retain a copy of its
+fields.
 
 ##### mainCamera
 
@@ -19182,6 +19245,97 @@ Returns the value each time the property is read.
 
 IgnifxError with code `IGX-0401` when the property is already defined.
 
+##### dispatchScriptCallback()
+
+> **dispatchScriptCallback**(`entity`, `kind`, `argument`): `void`
+
+**`Beta`**
+
+Delivers one physics callback to every script on an entity that implements it, for extension
+authors (`docs/architecture/09-physics.md` §4). The scheduler stays the only thing that calls a
+script callback: this routes through the same guarded call site the frame loop uses
+(`03-scripting-and-components.md` §6).
+
+###### Parameters
+
+###### entity
+
+[`Entity`](#entity-2)
+
+The entity whose scripts should receive the callback.
+
+###### kind
+
+[`PhysicsCallbackName`](#physicscallbackname-1)
+
+Which physics callback to deliver.
+
+###### argument
+
+`unknown`
+
+The single argument the callback receives — a collision or a trigger event.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+Delivery is synchronous and in component order, to effectively-enabled scripts only; a
+destroyed or inactive entity receives nothing. A handler that throws is reported to
+`app.onError` with `source: "lifecycle"` and the running phase, and the remaining scripts still
+receive the callback. Nothing is allocated per call.
+
+###### Throws
+
+IgnifxError with code `IGX-0409` in development when called from outside the fixed
+loop, where `01-lifecycle-and-time.md` §3 says these callbacks never run. Production builds
+deliver it anyway rather than losing the event.
+
+###### Example
+
+```ts
+for (let index = 0; index < events.length; index += 1) {
+  ctx.dispatchScriptCallback(events[index].entity, PhysicsCallbackName.onTriggerEnter, events[index]);
+}
+```
+
+##### entityImplements()
+
+> **entityImplements**(`entity`, `kind`): `boolean`
+
+**`Beta`**
+
+Whether any script on an entity implements a physics callback, for extension authors. This is
+what `Rigidbody.collisionEvents` auto-detection asks (`09-physics.md` §2.1).
+
+###### Parameters
+
+###### entity
+
+[`Entity`](#entity-2)
+
+The entity to inspect.
+
+###### kind
+
+[`PhysicsCallbackName`](#physicscallbackname-1)
+
+Which physics callback.
+
+###### Returns
+
+`boolean`
+
+`true` when at least one script on the entity implements it.
+
+###### Remarks
+
+The answer ignores `enabled`, so it stays stable while scripts are toggled and only changes
+when a component is added or removed — the two moments the physics extension recomputes it.
+Components already queued for destruction do not count.
+
 ##### onDispose()
 
 > **onDispose**(`callback`): `void`
@@ -19465,6 +19619,32 @@ register(ctx: ExtensionContext): void {
   ctx.requireRenderingFeature("skeletons");
 }
 ```
+
+##### setSimulationScene()
+
+> **setSimulationScene**(`scene`): `void`
+
+**`Beta`**
+
+Publishes the scene an extension simulates in as `world.lite.simulationScene`, for extension
+authors (`docs/architecture/09-physics.md` §1, `02-scene-graph.md` §2).
+
+###### Parameters
+
+###### scene
+
+`SceneContext` \| `null`
+
+The simulation scene, or `null` to clear it from the extension's `dispose`.
+
+###### Returns
+
+`void`
+
+###### Throws
+
+IgnifxError with code `IGX-0410` when the world already has a different simulation
+scene.
 
 ##### settings()
 
@@ -24287,6 +24467,29 @@ The condition, for the two predicate kinds.
 
 How long to wait, for the two timed kinds.
 
+***
+
+### WorldLiteHandles
+
+Babylon Lite objects a world owns. Unstable escape hatch
+(`docs/architecture/00-overview.md` §3, `02-scene-graph.md` §2); excluded from the stability
+guarantees of `CONSTITUTION.md` Article IV.
+
+#### Properties
+
+##### scene
+
+> `readonly` **scene**: `SceneContext`
+
+The Lite scene the world's entities are rendered from.
+
+##### simulationScene
+
+> `readonly` **simulationScene**: `SceneContext` \| `null`
+
+The scene a physics extension steps its simulation in (`docs/architecture/09-physics.md` §1),
+or `null` when no extension has set one.
+
 ## Type Aliases
 
 ### AssetState
@@ -24963,6 +25166,16 @@ A slot in [FrameSample.cpuMs](#cpums). The kernel's `Phase` ordinals index this 
 
 ***
 
+### PhysicsCallbackName
+
+> **PhysicsCallbackName** = *typeof* [`PhysicsCallbackName`](#physicscallbackname)\[keyof *typeof* [`PhysicsCallbackName`](#physicscallbackname)\]
+
+**`Beta`**
+
+The union of the physics callback names.
+
+***
+
 ### PlatformKind
 
 > **PlatformKind** = `"browser"` \| `"node"`
@@ -25010,6 +25223,14 @@ order is the canonical key order used when writing files
 > **SchemaIssueCode** = *typeof* [`SchemaIssueCode`](#schemaissuecode-1)\[keyof *typeof* [`SchemaIssueCode`](#schemaissuecode-1)\]
 
 The union of diagnostic codes this module reports.
+
+***
+
+### ScriptCallbackKind
+
+> **ScriptCallbackKind** = *typeof* [`ScriptCallbackKind`](#scriptcallbackkind)\[keyof *typeof* [`ScriptCallbackKind`](#scriptcallbackkind)\]
+
+The union of script callback ordinals.
 
 ***
 
@@ -25447,6 +25668,12 @@ A file handed to the scene loader does not carry the `ignifx.scene` format heade
 
 Reparenting an entity under its own descendant would make the scene tree cyclic.
 
+##### physicsCallbackOutsideFixedStep
+
+> `readonly` **physicsCallbackOutsideFixedStep**: `"IGX-0409"` = `"IGX-0409"`
+
+An extension dispatched a physics callback from outside the fixed loop.
+
 ##### postProcessingFeatureOff
 
 > `readonly` **postProcessingFeatureOff**: `"IGX-0710"` = `"IGX-0710"`
@@ -25524,6 +25751,12 @@ Shadows were requested from a light kind Babylon Lite cannot shadow.
 > `readonly` **signalHandlerThrew**: `"IGX-0104"` = `"IGX-0104"`
 
 A signal handler threw and no handler-error reporter was installed.
+
+##### simulationSceneAlreadySet
+
+> `readonly` **simulationSceneAlreadySet**: `"IGX-0410"` = `"IGX-0410"`
+
+A second, different simulation scene was handed to a world that already has one.
 
 ##### stepOutsideHeadless
 
@@ -26319,6 +26552,57 @@ Every phase in frame order, for loops that walk them all.
 
 ***
 
+### PhysicsCallbackName
+
+> `const` **PhysicsCallbackName**: `object`
+
+**`Beta`**
+
+The physics callbacks an extension may deliver through `ExtensionContext.dispatchScriptCallback`,
+named rather than numbered (`docs/architecture/09-physics.md` §4). The ordinals in
+`ScriptCallbackKind` are engine plumbing and may be renumbered; these five names are the
+contract `@ignifx/physics` is written against.
+
+#### Type Declaration
+
+##### onCollisionEnter
+
+> `readonly` **onCollisionEnter**: `"onCollisionEnter"` = `"onCollisionEnter"`
+
+`onCollisionEnter(collision)`.
+
+##### onCollisionExit
+
+> `readonly` **onCollisionExit**: `"onCollisionExit"` = `"onCollisionExit"`
+
+`onCollisionExit(collision)`.
+
+##### onCollisionStay
+
+> `readonly` **onCollisionStay**: `"onCollisionStay"` = `"onCollisionStay"`
+
+`onCollisionStay(collision)`.
+
+##### onTriggerEnter
+
+> `readonly` **onTriggerEnter**: `"onTriggerEnter"` = `"onTriggerEnter"`
+
+`onTriggerEnter(trigger)`.
+
+##### onTriggerExit
+
+> `readonly` **onTriggerExit**: `"onTriggerExit"` = `"onTriggerExit"`
+
+`onTriggerExit(trigger)`.
+
+#### Example
+
+```ts
+ctx.dispatchScriptCallback(entity, PhysicsCallbackName.onTriggerEnter, event);
+```
+
+***
+
 ### PROJECTIONS
 
 > `const` **PROJECTIONS**: readonly \[`"perspective"`, `"orthographic"`\]
@@ -26454,6 +26738,107 @@ A property was supplied that the schema does not declare.
 > `readonly` **unresolvedReference**: `"IGX-0602"` = `"IGX-0602"`
 
 An entity or component reference could not be resolved to a uid.
+
+***
+
+### ScriptCallbackKind
+
+> `const` **ScriptCallbackKind**: `object`
+
+Every script callback, numbered. The first five are driven by the lifecycle flushes; the rest are
+dispatched from a phase and therefore get a sorted dispatch list.
+
+#### Type Declaration
+
+##### awake
+
+> `readonly` **awake**: `0` = `0`
+
+`awake()` — once, when the script first becomes effectively enabled.
+
+##### fixedUpdate
+
+> `readonly` **fixedUpdate**: `5` = `5`
+
+`fixedUpdate(dt)` — once per fixed step.
+
+##### lateUpdate
+
+> `readonly` **lateUpdate**: `7` = `7`
+
+`lateUpdate(dt)` — once per frame, after animation.
+
+##### onApplicationFocus
+
+> `readonly` **onApplicationFocus**: `14` = `14`
+
+`onApplicationFocus(focused)`.
+
+##### onApplicationPause
+
+> `readonly` **onApplicationPause**: `13` = `13`
+
+`onApplicationPause(paused)`.
+
+##### onCollisionEnter
+
+> `readonly` **onCollisionEnter**: `8` = `8`
+
+`onCollisionEnter(collision)`.
+
+##### onCollisionExit
+
+> `readonly` **onCollisionExit**: `10` = `10`
+
+`onCollisionExit(collision)`.
+
+##### onCollisionStay
+
+> `readonly` **onCollisionStay**: `9` = `9`
+
+`onCollisionStay(collision)`.
+
+##### onDestroy
+
+> `readonly` **onDestroy**: `4` = `4`
+
+`onDestroy()` — once, in the destroy flush.
+
+##### onDisable
+
+> `readonly` **onDisable**: `3` = `3`
+
+`onDisable()` — on every transition off, including just before destruction.
+
+##### onEnable
+
+> `readonly` **onEnable**: `1` = `1`
+
+`onEnable()` — on every transition to effectively enabled.
+
+##### onTriggerEnter
+
+> `readonly` **onTriggerEnter**: `11` = `11`
+
+`onTriggerEnter(trigger)`.
+
+##### onTriggerExit
+
+> `readonly` **onTriggerExit**: `12` = `12`
+
+`onTriggerExit(trigger)`.
+
+##### start
+
+> `readonly` **start**: `2` = `2`
+
+`start()` — once, in flush B of the first frame the script is effectively enabled.
+
+##### update
+
+> `readonly` **update**: `6` = `6`
+
+`update(dt)` — once per frame.
 
 ***
 
