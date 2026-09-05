@@ -287,7 +287,7 @@ A prefab and a level are one format, `ignifx.scene` (ADR-0005). `SceneInstance` 
 
 ### `app.renderer` and the `rendering` settings
 
-`pixelRatio`, `resolutionScale`, `setSize(w, h)` (`OffscreenCanvas` only), `features`,
+`surface` (the canvas, `null` headless), `pixelRatio`, `resolutionScale`, `setSize(w, h)` (`OffscreenCanvas` only), `features`,
 `requireFeature(name)`, `warmUp(materials)`, `pickAsync(x, y, options?)`, `captureScreenshot()`,
 `drawCalls`, `gpuFrameTimeMs`, `profileTasks`, `taskTimings()`.
 

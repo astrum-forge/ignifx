@@ -1,0 +1,27 @@
+{
+  "name": "ignifx-template-2d-topdown",
+  "version": "0.0.0",
+  "private": true,
+  "description": "ignifx template: a top-down 2D game with a tilemap, a character controller, input schemes, and audio.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@ignifx/2d": "workspace:*",
+    "@ignifx/audio": "workspace:*",
+    "@ignifx/core": "workspace:*",
+    "@ignifx/input": "workspace:*",
+    "@ignifx/physics-2d": "workspace:*"
+  },
+  "devDependencies": {
+    "@ignifx/vite-plugin": "workspace:*",
+    "@webgpu/types": "catalog:",
+    "typescript-native": "catalog:",
+    "vite": "catalog:"
+  }
+}

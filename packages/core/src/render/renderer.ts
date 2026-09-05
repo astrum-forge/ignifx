@@ -44,6 +44,7 @@ import type { LitePickInfo } from "../lite/picking.js";
 import type { RenderingFeatureName, RenderingFeatures } from "../lite/render-features.js";
 import type { LiteEngine, LiteScene } from "../lite/scene.js";
 import type { ColorLike } from "../math/types.js";
+import type { RenderSurface } from "../platform/webgpu.js";
 import type { World } from "../world/world.js";
 
 /**
@@ -231,6 +232,14 @@ export interface Renderer {
   profileTasks: boolean;
   /** Which rendering features are on. Read-only once `app.start()` has registered the scene. */
   readonly features: Readonly<RenderingFeatureSettings>;
+  /**
+   * The canvas the app draws into, or `null` under a headless app.
+   *
+   * @remarks
+   * An extension that adds a second rendering context — `@ignifx/2d`'s sprite renderer — creates it
+   * on this surface and registers it after the render scene (`07-rendering.md` §1).
+   */
+  readonly surface: RenderSurface | null;
   /** GPU draw calls in the last rendered frame. `0` under a headless app. */
   readonly drawCalls: number;
   /** How long the last measured frame took on the GPU, in milliseconds. `0` until timing is on. */
@@ -417,6 +426,15 @@ export class RendererImpl implements Renderer {
    */
   get isHeadless(): boolean {
     return this.#app.isHeadless;
+  }
+
+  /**
+   * The canvas the app draws into.
+   *
+   * @returns The surface, or `null` under the null engine.
+   */
+  get surface(): RenderSurface | null {
+    return this.isHeadless ? null : this.engine.canvas;
   }
 
   /**

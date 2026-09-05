@@ -160,6 +160,15 @@ const config: Linter.Config[] = [
       "ignifx/no-module-side-effects": "off",
     },
   },
+  {
+    // Templates are applications too: `create-ignifx` copies one as the user's starting point.
+    name: "ignifx/templates",
+    files: ["templates/**/*.ts"],
+    rules: {
+      "jsdoc/require-jsdoc": "off",
+      "ignifx/no-module-side-effects": "off",
+    },
+  },
 ];
 
 export default config;

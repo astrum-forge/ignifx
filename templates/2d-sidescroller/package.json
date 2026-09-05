@@ -1,0 +1,27 @@
+{
+  "name": "ignifx-template-2d-sidescroller",
+  "version": "0.0.0",
+  "private": true,
+  "description": "ignifx template: a pixel-perfect 2D side-scroller with parallax, slopes, one-way platforms, and a reference platformer controller.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@ignifx/2d": "workspace:*",
+    "@ignifx/audio": "workspace:*",
+    "@ignifx/core": "workspace:*",
+    "@ignifx/input": "workspace:*",
+    "@ignifx/physics-2d": "workspace:*"
+  },
+  "devDependencies": {
+    "@ignifx/vite-plugin": "workspace:*",
+    "@webgpu/types": "catalog:",
+    "typescript-native": "catalog:",
+    "vite": "catalog:"
+  }
+}

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ignifx — 2d-sidescroller</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #0b0f18;
+        color: #e8ecf4;
+        font:
+          14px/1.5 system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
+      }
+
+      #game {
+        display: block;
+        width: 100vw;
+        height: 100vh;
+      }
+
+      #unsupported {
+        display: none;
+        position: absolute;
+        inset: 0;
+        place-content: center;
+        padding: 2rem;
+        text-align: center;
+      }
+
+      #unsupported h1 {
+        font-size: 1.25rem;
+        font-weight: 600;
+      }
+
+      body[data-webgpu="unavailable"] #game {
+        display: none;
+      }
+
+      body[data-webgpu="unavailable"] #unsupported {
+        display: grid;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+    <div id="unsupported" role="alert">
+      <h1>This browser cannot run ignifx</h1>
+      <p>
+        ignifx renders through WebGPU only. Use Chrome or Edge 113+, Safari 26+, or Firefox 141+ on Windows / 145+ on
+        Apple Silicon.
+      </p>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

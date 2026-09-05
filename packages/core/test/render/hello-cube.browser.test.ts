@@ -66,6 +66,11 @@ describe("a box, a material, a light, and a camera", () => {
     expect(scene.harness.world.lite.scene.camera).toBe(scene.camera.lite.camera);
   });
 
+  it("exposes the canvas it draws into as renderer.surface", async () => {
+    const scene = await buildCubeScene();
+    expect(scene.harness.app.renderer.surface).toBe(scene.harness.canvas);
+  });
+
   it("registers the scene, which closes the rendering feature gate", async () => {
     const scene = await buildCubeScene();
     expect(scene.harness.renderer.isSceneRegistered).toBe(true);

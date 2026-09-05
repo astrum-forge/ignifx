@@ -35,8 +35,12 @@
     "api-report:update": "api-extractor run --local --verbose",
     "pack-check": "publint && attw --pack . --profile esm-only"
   },
+  "dependencies": {
+    "@dimforge/rapier2d-compat": "^0.20.0"
+  },
   "devDependencies": {
     "@arethetypeswrong/cli": "catalog:",
+    "@ignifx/2d": "workspace:*",
     "@ignifx/core": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
     "@types/webxr": "catalog:",
@@ -49,15 +53,21 @@
     "vitest": "catalog:"
   },
   "peerDependencies": {
+    "@ignifx/2d": "workspace:*",
     "@ignifx/core": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@ignifx/2d": {
+      "optional": true
+    }
   },
   "ignifx": {
     "extension": true,
     "engine": ">=0.0.0 <1.0.0",
-    "requires": [
+    "requires": [],
+    "optional": [
       "@ignifx/2d"
     ],
-    "optional": [],
     "capabilities": [],
     "skill": "./skills/physics-2d/SKILL.md"
   }

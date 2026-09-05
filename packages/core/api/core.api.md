@@ -2282,6 +2282,7 @@ export interface Renderer {
     requireFeature(feature: RenderingFeature): void;
     resolutionScale: number;
     setSize(width: number, height: number): void;
+    readonly surface: RenderSurface | null;
     taskTimings(): RenderTaskTimings;
     warmUp(materials: readonly MaterialAsset[]): void;
 }

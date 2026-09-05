@@ -132,6 +132,8 @@ describe("surface sizing", () => {
   it("never lets the pixel-ratio clamp go negative, and starts from the settings block", async () => {
     harness = await createRenderHarness({ settings: { rendering: { maxDevicePixelRatio: 2 } } });
     expect(harness.app.renderer.pixelRatio).toBe(2);
+    // Headless apps have no canvas to composite onto.
+    expect(harness.app.renderer.surface).toBeNull();
     harness.app.renderer.pixelRatio = -1;
     expect(harness.app.renderer.pixelRatio).toBe(0);
   });

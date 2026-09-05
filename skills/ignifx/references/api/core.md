@@ -22162,6 +22162,17 @@ Whether per-task GPU timings are collected. Off by default; it costs timestamp q
 A live quality multiplier on the resolution, clamped to 0.25–1 and implemented by lowering the
 effective device pixel ratio (`docs/architecture/07-rendering.md` §1).
 
+##### surface
+
+> `readonly` **surface**: [`RenderSurface`](#rendersurface) \| `null`
+
+The canvas the app draws into, or `null` under a headless app.
+
+###### Remarks
+
+An extension that adds a second rendering context — `@ignifx/2d`'s sprite renderer — creates it
+on this surface and registers it after the render scene (`07-rendering.md` §1).
+
 #### Methods
 
 ##### captureScreenshot()
