@@ -228,7 +228,10 @@ describe("the navigator gamepad reader", () => {
 describe("the event queue", () => {
   it("recycles pending entries when it is cleared", () => {
     const queue = new InputEventQueue();
-    queue.push("keydown", "keyup");
+    // Two pushes, one entry each (`push` takes a single kind).
+    for (const kind of ["keydown", "keyup"] as const) {
+      queue.push(kind);
+    }
     expect(queue.pendingCount).toBe(2);
     queue.clear();
     expect(queue.pendingCount).toBe(0);
