@@ -58,7 +58,7 @@ describe("the assets settings section", () => {
       { address: "data/a.json", url: "u/a", groups: ["boot"] },
       { address: "data/b.json", url: "u/b", groups: ["later"] },
     ]);
-    const h = await createAssetHarness({ manifest, settings: { assets: { preload: ["boot"] } } });
+    const h = await createAssetHarness({ manifest, start: false, settings: { assets: { preload: ["boot"] } } });
     expect(h.net.requests).toHaveLength(0);
     await h.app.start();
     expect(h.net.urls).toEqual(["u/a"]);
@@ -74,6 +74,7 @@ describe("the assets settings section", () => {
     const manifest = createAssetManifest([{ address: "data/a.json", url: "u/a", groups: ["boot"] }]);
     const h = await createAssetHarness({
       manifest,
+      start: false,
       settings: { assets: { preload: ["boot"], retries: 0 } },
     });
     await h.app.start();

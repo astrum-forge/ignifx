@@ -103,6 +103,8 @@ export const ASSET_DIAGNOSTICS_COUNTERS: readonly string[] = Object.freeze([
 
 /** Separates the type from the address in a cache key. A type name never contains it. */
 const KEY_SEPARATOR = "::";
+/** Wall-clock unit for the idle retry timer. */
+const MILLISECONDS_PER_SECOND = 1000;
 
 /** What the delivery queue carries from a settled load to the next `PreUpdate`. */
 type DeliveryItem =
@@ -704,7 +706,8 @@ export class AssetsImpl implements Assets, AssetHandleHost, LoaderContextHost {
 
   /**
    * Drains the delivery queue, advances the retry and collector timers, and publishes progress and
-   * counters. `AssetDeliverySystem` calls it once per frame in `PreUpdate`.
+   * counters. `AssetDeliverySystem` calls it once per frame in `PreUpdate`; while the app is not
+   * running, `#enqueueDelivery` delivers as loads finish instead.
    *
    * @param deltaSeconds - Scaled seconds since the previous frame; the collector's clock.
    * @param unscaledDeltaSeconds - Unscaled seconds since the previous frame; the retry clock.
@@ -948,9 +951,21 @@ export class AssetsImpl implements Assets, AssetHandleHost, LoaderContextHost {
     }
     handle.interested -= 1;
     handle.release();
-    if (handle.interested <= 0) {
-      handle.abort();
+    if (handle.interested > 0) {
+      return;
     }
+    if (handle.retryRemaining !== NO_TIMER) {
+      // Aborted while waiting out a retry backoff: no attempt is in flight to observe the abort, so
+      // the retry is cancelled here and the handle fails as aborted (`IGX-0502`).
+      handle.retryRemaining = NO_TIMER;
+      const index = this.#retrying.indexOf(handle);
+      if (index !== -1) {
+        this.#retrying.splice(index, 1);
+      }
+      this.#enqueueDelivery({ kind: "failed", handle, error: this.#abortError(handle) });
+      return;
+    }
+    handle.abort();
   }
 
   /**
@@ -969,10 +984,10 @@ export class AssetsImpl implements Assets, AssetHandleHost, LoaderContextHost {
         return;
       }
       if (controller.signal.aborted) {
-        this.#delivery.push({ kind: "failed", handle, error: this.#abortError(handle) });
+        this.#enqueueDelivery({ kind: "failed", handle, error: this.#abortError(handle) });
         return;
       }
-      this.#delivery.push({ kind: "loaded", handle, value });
+      this.#enqueueDelivery({ kind: "loaded", handle, value });
     } catch (error) {
       if (!this.#isDisposed) {
         this.#onAttemptFailed(handle, controller, error);
@@ -1002,7 +1017,7 @@ export class AssetsImpl implements Assets, AssetHandleHost, LoaderContextHost {
         // released once the new one exists, so a failed reload leaves the asset working.
         this.#runUnload(handle, previous);
       }
-      this.#delivery.push({ kind: "replaced", handle, value });
+      this.#enqueueDelivery({ kind: "replaced", handle, value });
     } catch (error) {
       this.#report(error);
     } finally {
@@ -1050,16 +1065,19 @@ export class AssetsImpl implements Assets, AssetHandleHost, LoaderContextHost {
    */
   #onAttemptFailed(handle: AssetHandleImpl, controller: AbortController, error: unknown): void {
     if (controller.signal.aborted) {
-      this.#delivery.push({ kind: "failed", handle, error: this.#abortError(handle) });
+      this.#enqueueDelivery({ kind: "failed", handle, error: this.#abortError(handle) });
       return;
     }
     if (handle.attempt < this.#retries) {
       handle.attempt += 1;
       handle.retryRemaining = ASSET_RETRY_BASE_SECONDS * 2 ** (handle.attempt - 1);
       this.#retrying.push(handle);
+      if (!this.#app.isRunning) {
+        this.#armIdleRetry(handle);
+      }
       return;
     }
-    this.#delivery.push({
+    this.#enqueueDelivery({
       kind: "failed",
       handle,
       error: new AssetLoadError(
@@ -1088,6 +1106,46 @@ export class AssetsImpl implements Assets, AssetHandleHost, LoaderContextHost {
       url: handle.url,
       context: { asset: handle.address },
     });
+  }
+
+  /**
+   * Queues a completed load, a failure, or a reload for delivery. While the loop is running the
+   * queue drains once per frame in `PreUpdate`. Before `app.start()` and after `app.stop()` there is
+   * no frame to wait for, so the item is delivered at once — a game can `await` its preloads and
+   * then start, and a headless test can `await` a handle without stepping
+   * (`05-assets-and-loading.md` §4).
+   *
+   * @param item - What to deliver.
+   */
+  #enqueueDelivery(item: DeliveryItem): void {
+    this.#delivery.push(item);
+    if (!this.#app.isRunning) {
+      this.#drainDelivery();
+      this.#publishProgress();
+      this.#publishCounters();
+    }
+  }
+
+  /**
+   * Runs a retry's backoff on the wall clock, because before `app.start()` no frame advances the
+   * retry timer. The frame ticker (`#tickRetries`) and this timer guard each other through
+   * `retryRemaining`: whichever fires first sets it to `NO_TIMER`, and the other stands down; an
+   * abort during the backoff resets it too (`#abortRequest`), so the timer then does nothing.
+   *
+   * @param handle - The handle whose backoff is counting down.
+   */
+  #armIdleRetry(handle: AssetHandleImpl): void {
+    setTimeout(() => {
+      if (this.#isDisposed || handle.retryRemaining === NO_TIMER) {
+        return;
+      }
+      handle.retryRemaining = NO_TIMER;
+      const index = this.#retrying.indexOf(handle);
+      if (index !== -1) {
+        this.#retrying.splice(index, 1);
+      }
+      void this.#runLoad(handle);
+    }, handle.retryRemaining * MILLISECONDS_PER_SECOND);
   }
 
   /** Applies every settled load of the last frame, at the one point §4 allows. */

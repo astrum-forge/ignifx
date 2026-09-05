@@ -76,7 +76,7 @@ interface BatchHandle {
 
 - `load` returns immediately so that scripts can request in `awake` and check `state` later, or `yield handle.promise` in a coroutine.
 - Requests are scheduled through a priority queue with a concurrency limit (default 6 concurrent fetches; configurable per platform). Cancellation via `AbortSignal` aborts the fetch and marks the handle `failed` with `AssetLoadError` code `IGX-0502` (aborted); refcounts still apply.
-- Completed loads are delivered on the main thread in the `PreUpdate` phase of the next frame (never mid-phase), so `state` changes are observable at a consistent point. `promise` resolves at that time.
+- Completed loads are delivered on the main thread in the `PreUpdate` phase of the next frame (never mid-phase), so `state` changes are observable at a consistent point. `promise` resolves at that time. While the app is not running — before `app.start()` and after `app.stop()` — there is no frame to wait for, so a completed load is delivered as soon as it finishes: a game can `await` its preloads and then start, and a headless test can `await` a handle without stepping. Retry backoff before `start()` runs on the wall clock for the same reason. (Amended 2026-09-06: the previous wording made a load awaited before `start()` wait forever.)
 
 ## 5. Loaders
 

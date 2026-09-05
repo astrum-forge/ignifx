@@ -60,8 +60,9 @@ Two `load` calls for one address answer with the **same handle**, refcount incre
 through a priority queue with a concurrency limit (default 6) and retry twice on a network failure.
 The `assets` settings section sets `root`, `preload`, `concurrency`, `gcDelay`, and `retries`.
 
-**Completed loads are delivered in `PreUpdate`**, by the `ignifx/asset-delivery` system, and nowhere
-else: a handle's `state` flips and its `promise` settles at one point per frame, so "is this ready?"
+**Completed loads are delivered in `PreUpdate`** while the app is running, by the
+`ignifx/asset-delivery` system; before `app.start()` (and after `app.stop()`) there is no frame to
+wait for, so a completed load settles at once — preload, `await`, then start. Once running: a handle's `state` flips and its `promise` settles at one point per frame, so "is this ready?"
 has one answer for the whole frame.
 
 ## 4. `asset()` fields

@@ -35,7 +35,8 @@ const light = sun.addComponent(Light, { type: "directional", intensity: 3 });
 light.shadows.enabled = true;
 light.shadows.technique = "pcf";
 
-// `loadAsync` settles in the `PreUpdate` phase of a frame, so `handle.value` is safe below.
+// The app is not running yet, so `loadAsync` settles as soon as the file is decoded and `handle.value`
+// is safe below; once `app.start()` has run, loads settle in the `PreUpdate` phase of a frame.
 const hero: AssetHandle<ModelAsset> = await app.assets.loadAsync<ModelAsset>("models/hero.glb");
 
 const actor = app.world.createEntity("Hero");

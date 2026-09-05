@@ -24,6 +24,11 @@ export interface AssetHarnessOptions {
   readonly loaders?: readonly AssetLoader[];
   /** Extra extensions. */
   readonly extensions?: readonly Extension[];
+  /**
+   * Whether to call `app.start()` before returning. Defaults to `true`, so delivery waits for
+   * `PreUpdate` as in a running game; tests of the pre-start behaviour pass `false`.
+   */
+  readonly start?: boolean;
 }
 
 /** A headless app whose asset service is driven entirely by the test. */
@@ -80,6 +85,12 @@ export async function createAssetHarness(options?: AssetHarnessOptions): Promise
   const loaders = options?.loaders ?? [];
   for (const loader of loaders) {
     app.assets.registerLoader(loader);
+  }
+  // Started, so that delivery waits for `PreUpdate` the way it does in a running game; before
+  // `app.start()` a completed load settles at once (`05-assets-and-loading.md` §4), which
+  // `idle-delivery.test.ts` covers on its own app.
+  if (options?.start !== false) {
+    await app.start();
   }
   const step = (deltaSeconds: number = STEP): void => {
     clock.advance(deltaSeconds * MILLISECONDS_PER_SECOND);
