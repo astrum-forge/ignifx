@@ -1,3 +1,4 @@
+import { VERSION as coreVersion } from "@ignifx/core";
 import { describe, expect, it } from "vitest";
 import * as barrel from "../src/index.js";
 
@@ -225,11 +226,102 @@ const expectedExports = [
   "SHADOW_TECHNIQUES",
   "TONE_MAPPING_NAMES",
   "MATERIAL_ALPHA_MODES",
+  "PhysicsCallbackName",
+  "ScriptCallbackKind",
+];
+
+// The @ignifx/input value surface. `VERSION` and `describeSchemas` are deliberately absent: both
+// names already belong to @ignifx/core, and the umbrella keeps the core meaning (src/index.ts).
+const expectedInputExports = [
+  "ANY_KEY_CONTROL",
+  "ActionMap",
+  "ActionVector",
+  "Binding",
+  "CompositeKind",
+  "ControlKind",
+  "ControlSchemes",
+  "Cursor",
+  "DEVICE_KINDS",
+  "DeviceKind",
+  "GAMEPAD_REMAPS",
+  "GAMEPAD_SLOTS",
+  "GamepadDevice",
+  "INPUT_ACTIONS_ASSET_TYPE",
+  "INPUT_ACTIONS_FILE_EXTENSIONS",
+  "INPUT_ACTIONS_FORMAT",
+  "INPUT_ACTIONS_FORMAT_VERSION",
+  "INPUT_DIAGNOSTICS_COUNTERS",
+  "INPUT_DIAGNOSTICS_GROUP",
+  "INPUT_ERROR_MESSAGES",
+  "INPUT_OVERRIDES_FORMAT",
+  "INPUT_OVERRIDES_FORMAT_VERSION",
+  "INPUT_RESOLVE_ORDER",
+  "INPUT_SETTINGS_SECTION",
+  "InputAction",
+  "InputActionSet",
+  "InputActionsAsset",
+  "InputActionsView",
+  "InputDevice",
+  "InputDevices",
+  "InputErrorCode",
+  "InputService",
+  "PlayerInput",
+  "PointerLock",
+  "ProcessorKind",
+  "TOUCH_SLOTS",
+  "VirtualDevice",
+  "applyOverrides",
+  "applyProcessors",
+  "buildControls",
+  "clearOverrides",
+  "collectOverrides",
+  "compositeIsVector",
+  "compositeParts",
+  "controlPath",
+  "controlSlotCount",
+  "createInputActionsLoader",
+  "createKeyboardDevice",
+  "createMouseDevice",
+  "createNavigatorGamepadReader",
+  "createPointerDevice",
+  "createTouchDevice",
+  "defaultInputSettings",
+  "defineInputActions",
+  "describeInputActionsFormat",
+  "describeInputSchemas",
+  "gamepadControlNames",
+  "input",
+  "inputActionsJsonSchema",
+  "inputError",
+  "inputSettingsSchema",
+  "keyCodeControlNames",
+  "keyboardControlNames",
+  "mouseControlNames",
+  "parseComposite",
+  "parseControlPath",
+  "parseProcessor",
+  "parseProcessors",
+  "pinToDeviceSlot",
+  "resolveGamepadRemap",
+  "touchControlNames",
+  "validateInputActions",
 ];
 
 describe("ignifx barrel", () => {
   it("imports without executing anything and re-exports the whole @ignifx/core value surface", () => {
     // Compared as sets: the key order of a namespace object is not part of the contract.
-    expect(new Set(Object.keys(barrel))).toEqual(new Set(expectedExports));
+    expect(new Set(Object.keys(barrel))).toEqual(new Set([...expectedExports, ...expectedInputExports]));
+  });
+
+  it("re-exports the @ignifx/input value surface by name", () => {
+    const keys = new Set(Object.keys(barrel));
+    for (const name of expectedInputExports) {
+      expect(keys.has(name)).toBe(true);
+    }
+  });
+
+  it("keeps the core meaning of the two names both packages export", () => {
+    expect(barrel.VERSION).toBe(coreVersion);
+    expect(Object.keys(barrel.describeSchemas())).toContain("ignifx/Camera");
   });
 });

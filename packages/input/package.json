@@ -56,7 +56,13 @@
     "engine": ">=0.0.0 <1.0.0",
     "requires": [],
     "optional": [],
-    "capabilities": [],
+    "capabilities": [
+      "components",
+      "systems",
+      "services",
+      "settings",
+      "assets"
+    ],
     "skill": "./skills/input/SKILL.md"
   }
 }

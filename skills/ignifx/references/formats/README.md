@@ -12,6 +12,8 @@ pages beside them are maintained alongside `docs/architecture/06-serialization-a
 | [`material.md`](material.md)                     | prose     | `.material.json`: PBR and Standard, texture slots                   |
 | [`ignifx.material.md`](ignifx.material.md)       | generated | The material file's fields                                          |
 | [`ignifx.environment.md`](ignifx.environment.md) | generated | `.environment.json`: IBL, BRDF table, skybox                        |
+| [`inputactions.md`](inputactions.md)             | prose     | `.input.json`: maps, actions, binding paths, composites, processors |
+| [`ignifx.inputactions.md`](ignifx.inputactions.md) | generated | The input actions file's top-level fields                         |
 | [`components.md`](components.md)                 | generated | Every built-in component's serialized fields and defaults           |
 | [`ignifx.schemas.json`](ignifx.schemas.json)     | generated | All of the above in one bundle, for tools and validators            |
 
@@ -19,5 +21,5 @@ The asset **manifest** (`assets.manifest.json`, format `ignifx.manifest`, versio
 `@ignifx/vite-plugin`; its entries and `.meta.json` sidecars are documented in that package's
 `README.md`.
 
-Formats that arrive with later phases — atlas, tilemap, input actions, animator — are listed in
+Formats that arrive with later phases — atlas, tilemap, animator, audio buses — are listed in
 `docs/architecture/06-serialization-and-scene-format.md` §6.

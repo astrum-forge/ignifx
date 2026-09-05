@@ -73,6 +73,16 @@ One instance of a loaded glTF, cloned under the entity's node.
 | `receiveShadows` | `bool` | `true` | Whether shadow maps darken the instance. |
 | `pickable` | `bool` | `true` | Whether picking considers the instance at all. |
 
+## PlayerInput (`ignifx/PlayerInput`)
+
+Binds an entity to an input actions document and one device slot, for local multiplayer.
+
+| Field | Kind | Default | Description |
+|---|---|---|---|
+| `actions` | `asset` | `null` |  |
+| `deviceSlot` | `i32` | `0` |  |
+| `scheme` | `str` | `""` |  |
+
 ## PostProcessStack (`ignifx/PostProcessStack`)
 
 Bloom, SMAA, and image processing, inserted into the scene's frame graph.

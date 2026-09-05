@@ -4,10 +4,18 @@
 
 ```ts
 
+import { ActionDefinition } from '@ignifx/input';
+import { ActionMap } from '@ignifx/input';
+import { ActionMapDefinition } from '@ignifx/input';
+import { ActionSetOptions } from '@ignifx/input';
+import { ActionVector } from '@ignifx/input';
+import { ANY_KEY_CONTROL } from '@ignifx/input';
 import { App } from '@ignifx/core';
 import { AppEvents } from '@ignifx/core';
 import { AppLiteHandles } from '@ignifx/core';
 import { applyInit } from '@ignifx/core';
+import { applyOverrides } from '@ignifx/input';
+import { applyProcessors } from '@ignifx/input';
 import { approximately } from '@ignifx/core';
 import { AppSettings } from '@ignifx/core';
 import { array } from '@ignifx/core';
@@ -38,10 +46,15 @@ import { AssetTypeDefinition } from '@ignifx/core';
 import { AssetTypeToken } from '@ignifx/core';
 import { BatchHandle } from '@ignifx/core';
 import { binaryAssetLoader } from '@ignifx/core';
+import { Binding } from '@ignifx/input';
+import { BindingContext } from '@ignifx/input';
+import { BindingDefinition } from '@ignifx/input';
+import { BindingResolver } from '@ignifx/input';
 import { BloomEffectSettings } from '@ignifx/core';
 import { bool } from '@ignifx/core';
 import { BoolFieldSpec } from '@ignifx/core';
 import { BoxMeshOptions } from '@ignifx/core';
+import { buildControls } from '@ignifx/input';
 import { Camera } from '@ignifx/core';
 import { CameraProjection } from '@ignifx/core';
 import { canonicalizeNumber } from '@ignifx/core';
@@ -50,7 +63,9 @@ import { CanvasAlphaMode } from '@ignifx/core';
 import { CapsuleMeshOptions } from '@ignifx/core';
 import { clamp } from '@ignifx/core';
 import { clamp01 } from '@ignifx/core';
+import { clearOverrides } from '@ignifx/input';
 import { Clock } from '@ignifx/core';
+import { collectOverrides } from '@ignifx/input';
 import { Color } from '@ignifx/core';
 import { color } from '@ignifx/core';
 import { ColorFieldSpec } from '@ignifx/core';
@@ -67,11 +82,24 @@ import { ComponentRegistry } from '@ignifx/core';
 import { ComponentStatics } from '@ignifx/core';
 import { ComponentType } from '@ignifx/core';
 import { ComponentTypeToken } from '@ignifx/core';
+import { compositeIsVector } from '@ignifx/input';
+import { CompositeKind } from '@ignifx/input';
+import { compositeParts } from '@ignifx/input';
 import { computeSceneHash } from '@ignifx/core';
 import { ConcreteComponentType } from '@ignifx/core';
 import { ConnectOptions } from '@ignifx/core';
 import { ConsoleLike } from '@ignifx/core';
 import { ConsoleSinkOptions } from '@ignifx/core';
+import { ControlDescriptor } from '@ignifx/input';
+import { ControlKind } from '@ignifx/input';
+import { controlPath } from '@ignifx/input';
+import { ControlRef } from '@ignifx/input';
+import { ControlSchemeDefinition } from '@ignifx/input';
+import { ControlSchemes } from '@ignifx/input';
+import { controlSlotCount } from '@ignifx/input';
+import { ControlSpec } from '@ignifx/input';
+import { ControlTouchHandler } from '@ignifx/input';
+import { ControlValue } from '@ignifx/input';
 import { CORE_ERROR_MESSAGES } from '@ignifx/core';
 import { CoreErrorCode } from '@ignifx/core';
 import { coreExtension } from '@ignifx/core';
@@ -91,6 +119,8 @@ import { createEnvironmentLoader } from '@ignifx/core';
 import { createErrorCodeRegistry } from '@ignifx/core';
 import { createFontLoader } from '@ignifx/core';
 import { createFrameSample } from '@ignifx/core';
+import { createInputActionsLoader } from '@ignifx/input';
+import { createKeyboardDevice } from '@ignifx/input';
 import { createLayerTable } from '@ignifx/core';
 import { createLogger } from '@ignifx/core';
 import { createManualClock } from '@ignifx/core';
@@ -98,14 +128,19 @@ import { createMaterialAsset } from '@ignifx/core';
 import { createMaterialLoader } from '@ignifx/core';
 import { createMemorySink } from '@ignifx/core';
 import { createModelLoader } from '@ignifx/core';
+import { createMouseDevice } from '@ignifx/input';
+import { createNavigatorGamepadReader } from '@ignifx/input';
 import { createPerformanceClock } from '@ignifx/core';
+import { createPointerDevice } from '@ignifx/input';
 import { createRay } from '@ignifx/core';
 import { createSceneAsset } from '@ignifx/core';
 import { createSceneLoader } from '@ignifx/core';
 import { createSeededRandom } from '@ignifx/core';
 import { createServiceKey } from '@ignifx/core';
 import { createTextureLoader } from '@ignifx/core';
+import { createTouchDevice } from '@ignifx/input';
 import { createUlidFactory } from '@ignifx/core';
+import { Cursor } from '@ignifx/input';
 import { curve } from '@ignifx/core';
 import { CurveFieldSpec } from '@ignifx/core';
 import { CurveKey } from '@ignifx/core';
@@ -122,23 +157,31 @@ import { DEFAULT_ASSET_ROOT } from '@ignifx/core';
 import { DEFAULT_BRDF_LUT_ADDRESS } from '@ignifx/core';
 import { DEFAULT_LAYER } from '@ignifx/core';
 import { DEFAULT_MEMORY_SINK_LIMIT } from '@ignifx/core';
+import { defaultInputSettings } from '@ignifx/input';
 import { defaultRenderingSettings } from '@ignifx/core';
 import { DeferredQueue } from '@ignifx/core';
 import { defineExtension } from '@ignifx/core';
+import { defineInputActions } from '@ignifx/input';
 import { defineSchema } from '@ignifx/core';
 import { DEG_TO_RAD } from '@ignifx/core';
 import { degToRad } from '@ignifx/core';
 import { deltaAngleDegrees } from '@ignifx/core';
 import { describeEnvironmentFileFormat } from '@ignifx/core';
+import { describeInputActionsFormat } from '@ignifx/input';
+import { describeInputSchemas } from '@ignifx/input';
 import { describeMaterialFileFormat } from '@ignifx/core';
 import { describeSceneFileFormat } from '@ignifx/core';
 import { describeSchema } from '@ignifx/core';
 import { describeSchemas } from '@ignifx/core';
+import { DEVICE_KINDS } from '@ignifx/input';
+import { DeviceKind } from '@ignifx/input';
 import { DeviceLostInfo } from '@ignifx/core';
 import { Diagnostics } from '@ignifx/core';
 import { DiagnosticsGroup } from '@ignifx/core';
 import { DiagnosticsOptions } from '@ignifx/core';
 import { Disconnect } from '@ignifx/core';
+import { DomSource } from '@ignifx/input';
+import { DomTarget } from '@ignifx/input';
 import { EMPTY_ASSET_MANIFEST } from '@ignifx/core';
 import { encodeProps } from '@ignifx/core';
 import { encodeValue } from '@ignifx/core';
@@ -189,6 +232,14 @@ import { formatErrorMessage } from '@ignifx/core';
 import { FRAME_HISTORY_LENGTH } from '@ignifx/core';
 import { FrameSample } from '@ignifx/core';
 import { FrameState } from '@ignifx/core';
+import { GAMEPAD_REMAPS } from '@ignifx/input';
+import { GAMEPAD_SLOTS } from '@ignifx/input';
+import { gamepadControlNames } from '@ignifx/input';
+import { GamepadDevice } from '@ignifx/input';
+import { GamepadLike } from '@ignifx/input';
+import { GamepadReader } from '@ignifx/input';
+import { GamepadRemap } from '@ignifx/input';
+import { GamepadSnapshot } from '@ignifx/input';
 import { generateUlid } from '@ignifx/core';
 import { GroundMeshOptions } from '@ignifx/core';
 import { i32 } from '@ignifx/core';
@@ -196,9 +247,47 @@ import { IgnifxError } from '@ignifx/core';
 import { IgnifxErrorOptions } from '@ignifx/core';
 import { ImageProcessingEffectSettings } from '@ignifx/core';
 import { ImageProcessingSettings } from '@ignifx/core';
+import { input } from '@ignifx/input';
+import { INPUT_ACTIONS_ASSET_TYPE } from '@ignifx/input';
+import { INPUT_ACTIONS_FILE_EXTENSIONS } from '@ignifx/input';
+import { INPUT_ACTIONS_FORMAT } from '@ignifx/input';
+import { INPUT_ACTIONS_FORMAT_VERSION } from '@ignifx/input';
+import { INPUT_DIAGNOSTICS_COUNTERS } from '@ignifx/input';
+import { INPUT_DIAGNOSTICS_GROUP } from '@ignifx/input';
+import { INPUT_ERROR_MESSAGES } from '@ignifx/input';
+import { INPUT_OVERRIDES_FORMAT } from '@ignifx/input';
+import { INPUT_OVERRIDES_FORMAT_VERSION } from '@ignifx/input';
+import { INPUT_RESOLVE_ORDER } from '@ignifx/input';
+import { INPUT_SETTINGS_SECTION } from '@ignifx/input';
+import { InputAction } from '@ignifx/input';
+import { InputActionEvent } from '@ignifx/input';
+import { InputActionsAsset } from '@ignifx/input';
+import { InputActionsDefinition } from '@ignifx/input';
+import { InputActionSet } from '@ignifx/input';
+import { InputActionSignal } from '@ignifx/input';
+import { InputActionsInput } from '@ignifx/input';
+import { inputActionsJsonSchema } from '@ignifx/input';
+import { InputActionsView } from '@ignifx/input';
+import { InputActionType } from '@ignifx/input';
+import { InputDevice } from '@ignifx/input';
+import { InputDevices } from '@ignifx/input';
+import { inputError } from '@ignifx/input';
+import { InputErrorCode } from '@ignifx/input';
+import { InputErrorOptions } from '@ignifx/input';
+import { InputEventRecord } from '@ignifx/input';
+import { InputEventType } from '@ignifx/input';
+import { InputOptions } from '@ignifx/input';
+import { InputOverrideEntry } from '@ignifx/input';
+import { InputOverridesJson } from '@ignifx/input';
+import { InputService } from '@ignifx/input';
+import { InputServiceOptions } from '@ignifx/input';
+import { InputSettings } from '@ignifx/input';
+import { inputSettingsSchema } from '@ignifx/input';
 import { InstantiateOptions } from '@ignifx/core';
 import { instantiateScene } from '@ignifx/core';
 import { InstantiateSceneOptions } from '@ignifx/core';
+import { InteractiveRebindOptions } from '@ignifx/input';
+import { InteractiveRebindResult } from '@ignifx/input';
 import { INVALID_HANDLE } from '@ignifx/core';
 import { inverseLerp } from '@ignifx/core';
 import { isAssetRef } from '@ignifx/core';
@@ -213,6 +302,8 @@ import { jsonAssetLoader } from '@ignifx/core';
 import { JsonObject } from '@ignifx/core';
 import { JsonSchemaObject } from '@ignifx/core';
 import { JsonValue } from '@ignifx/core';
+import { keyboardControlNames } from '@ignifx/input';
+import { keyCodeControlNames } from '@ignifx/input';
 import { LayerMask } from '@ignifx/core';
 import { layerMask } from '@ignifx/core';
 import { LayerMaskFieldSpec } from '@ignifx/core';
@@ -285,6 +376,7 @@ import { MODEL_FILE_EXTENSIONS } from '@ignifx/core';
 import { ModelAsset } from '@ignifx/core';
 import { ModelAssetLiteHandles } from '@ignifx/core';
 import { ModelInstantiation } from '@ignifx/core';
+import { mouseControlNames } from '@ignifx/input';
 import { moveTowards } from '@ignifx/core';
 import { MutableQuat } from '@ignifx/core';
 import { MutableVec2 } from '@ignifx/core';
@@ -294,7 +386,12 @@ import { NumberFieldSpec } from '@ignifx/core';
 import { optional } from '@ignifx/core';
 import { OptionalFieldSpec } from '@ignifx/core';
 import { OverridePath } from '@ignifx/core';
+import { parseComposite } from '@ignifx/input';
+import { parseControlPath } from '@ignifx/input';
+import { ParsedControlPath } from '@ignifx/input';
 import { parseOverridePath } from '@ignifx/core';
+import { parseProcessor } from '@ignifx/input';
+import { parseProcessors } from '@ignifx/input';
 import { PartialFieldsOf } from '@ignifx/core';
 import { PBR_TEXTURE_SLOTS } from '@ignifx/core';
 import { PbrMaterialDefinition } from '@ignifx/core';
@@ -304,11 +401,18 @@ import { PHASE_COUNT } from '@ignifx/core';
 import { PHASE_NAMES } from '@ignifx/core';
 import { PhaseIndex } from '@ignifx/core';
 import { PHASES } from '@ignifx/core';
+import { PhysicsCallbackName } from '@ignifx/core';
 import { pingPong } from '@ignifx/core';
+import { pinToDeviceSlot } from '@ignifx/input';
 import { PlaneMeshOptions } from '@ignifx/core';
 import { PlatformInfo } from '@ignifx/core';
 import { PlatformKind } from '@ignifx/core';
+import { PlayerInput } from '@ignifx/input';
+import { PointerLock } from '@ignifx/input';
+import { PointerLockSettings } from '@ignifx/input';
 import { PostProcessStack } from '@ignifx/core';
+import { Processor } from '@ignifx/input';
+import { ProcessorKind } from '@ignifx/input';
 import { ProfileScope } from '@ignifx/core';
 import { PROJECTIONS } from '@ignifx/core';
 import { Quat } from '@ignifx/core';
@@ -343,6 +447,7 @@ import { RenderTaskTimings } from '@ignifx/core';
 import { repeat } from '@ignifx/core';
 import { RESERVED_LAYER_NAMES } from '@ignifx/core';
 import { resetFrameSample } from '@ignifx/core';
+import { resolveGamepadRemap } from '@ignifx/input';
 import { SCENE_ASSET_TYPE } from '@ignifx/core';
 import { SCENE_FILE_EXTENSIONS } from '@ignifx/core';
 import { SCENE_FILE_FORMAT } from '@ignifx/core';
@@ -368,6 +473,7 @@ import { SchemaFieldDescription } from '@ignifx/core';
 import { SchemaIssue } from '@ignifx/core';
 import { SchemaIssueCode } from '@ignifx/core';
 import { Script } from '@ignifx/core';
+import { ScriptCallbackKind } from '@ignifx/core';
 import { ScriptCallbacks } from '@ignifx/core';
 import { ScriptClassInfo } from '@ignifx/core';
 import { ScriptDefinition } from '@ignifx/core';
@@ -391,6 +497,8 @@ import { SignalHandler } from '@ignifx/core';
 import { SignalLike } from '@ignifx/core';
 import { SignalOptions } from '@ignifx/core';
 import { SignalOwner } from '@ignifx/core';
+import { SimulatedEvent } from '@ignifx/input';
+import { SimulatedValue } from '@ignifx/input';
 import { SmaaEffectSettings } from '@ignifx/core';
 import { smoothStep } from '@ignifx/core';
 import { SortingLayersSettings } from '@ignifx/core';
@@ -416,10 +524,13 @@ import { toJsonSchema } from '@ignifx/core';
 import { TONE_MAPPING_NAMES } from '@ignifx/core';
 import { ToneMappingCurve } from '@ignifx/core';
 import { TorusMeshOptions } from '@ignifx/core';
+import { TOUCH_SLOTS } from '@ignifx/input';
+import { touchControlNames } from '@ignifx/input';
 import { Transform } from '@ignifx/core';
 import { u32 } from '@ignifx/core';
 import { UidRemap } from '@ignifx/core';
 import { UlidFactoryOptions } from '@ignifx/core';
+import { validateInputActions } from '@ignifx/input';
 import { validateProps } from '@ignifx/core';
 import { validateSceneFile } from '@ignifx/core';
 import { validateValue } from '@ignifx/core';
@@ -444,6 +555,9 @@ import { vec4 } from '@ignifx/core';
 import { Vec4Like } from '@ignifx/core';
 import { VectorFieldSpec } from '@ignifx/core';
 import { VERSION } from '@ignifx/core';
+import { VibrationActuatorLike } from '@ignifx/input';
+import { VibrationEffectParameters } from '@ignifx/input';
+import { VirtualDevice } from '@ignifx/input';
 import { waitFixedUpdate } from '@ignifx/core';
 import { WaitInstruction } from '@ignifx/core';
 import { waitSeconds } from '@ignifx/core';
@@ -451,7 +565,20 @@ import { waitSecondsRealtime } from '@ignifx/core';
 import { waitUntil } from '@ignifx/core';
 import { waitWhile } from '@ignifx/core';
 import { World } from '@ignifx/core';
+import { WorldLiteHandles } from '@ignifx/core';
 import { wrapAngleDegrees } from '@ignifx/core';
+
+export { ActionDefinition }
+
+export { ActionMap }
+
+export { ActionMapDefinition }
+
+export { ActionSetOptions }
+
+export { ActionVector }
+
+export { ANY_KEY_CONTROL }
 
 export { App }
 
@@ -460,6 +587,10 @@ export { AppEvents }
 export { AppLiteHandles }
 
 export { applyInit }
+
+export { applyOverrides }
+
+export { applyProcessors }
 
 export { approximately }
 
@@ -521,6 +652,14 @@ export { BatchHandle }
 
 export { binaryAssetLoader }
 
+export { Binding }
+
+export { BindingContext }
+
+export { BindingDefinition }
+
+export { BindingResolver }
+
 export { BloomEffectSettings }
 
 export { bool }
@@ -528,6 +667,8 @@ export { bool }
 export { BoolFieldSpec }
 
 export { BoxMeshOptions }
+
+export { buildControls }
 
 export { Camera }
 
@@ -545,7 +686,11 @@ export { clamp }
 
 export { clamp01 }
 
+export { clearOverrides }
+
 export { Clock }
+
+export { collectOverrides }
 
 export { Color }
 
@@ -579,6 +724,12 @@ export { ComponentType }
 
 export { ComponentTypeToken }
 
+export { compositeIsVector }
+
+export { CompositeKind }
+
+export { compositeParts }
+
 export { computeSceneHash }
 
 export { ConcreteComponentType }
@@ -588,6 +739,26 @@ export { ConnectOptions }
 export { ConsoleLike }
 
 export { ConsoleSinkOptions }
+
+export { ControlDescriptor }
+
+export { ControlKind }
+
+export { controlPath }
+
+export { ControlRef }
+
+export { ControlSchemeDefinition }
+
+export { ControlSchemes }
+
+export { controlSlotCount }
+
+export { ControlSpec }
+
+export { ControlTouchHandler }
+
+export { ControlValue }
 
 export { CORE_ERROR_MESSAGES }
 
@@ -627,6 +798,10 @@ export { createFontLoader }
 
 export { createFrameSample }
 
+export { createInputActionsLoader }
+
+export { createKeyboardDevice }
+
 export { createLayerTable }
 
 export { createLogger }
@@ -641,7 +816,13 @@ export { createMemorySink }
 
 export { createModelLoader }
 
+export { createMouseDevice }
+
+export { createNavigatorGamepadReader }
+
 export { createPerformanceClock }
+
+export { createPointerDevice }
 
 export { createRay }
 
@@ -655,7 +836,11 @@ export { createServiceKey }
 
 export { createTextureLoader }
 
+export { createTouchDevice }
+
 export { createUlidFactory }
+
+export { Cursor }
 
 export { curve }
 
@@ -689,11 +874,15 @@ export { DEFAULT_LAYER }
 
 export { DEFAULT_MEMORY_SINK_LIMIT }
 
+export { defaultInputSettings }
+
 export { defaultRenderingSettings }
 
 export { DeferredQueue }
 
 export { defineExtension }
+
+export { defineInputActions }
 
 export { defineSchema }
 
@@ -705,6 +894,10 @@ export { deltaAngleDegrees }
 
 export { describeEnvironmentFileFormat }
 
+export { describeInputActionsFormat }
+
+export { describeInputSchemas }
+
 export { describeMaterialFileFormat }
 
 export { describeSceneFileFormat }
@@ -712,6 +905,10 @@ export { describeSceneFileFormat }
 export { describeSchema }
 
 export { describeSchemas }
+
+export { DEVICE_KINDS }
+
+export { DeviceKind }
 
 export { DeviceLostInfo }
 
@@ -722,6 +919,10 @@ export { DiagnosticsGroup }
 export { DiagnosticsOptions }
 
 export { Disconnect }
+
+export { DomSource }
+
+export { DomTarget }
 
 export { EMPTY_ASSET_MANIFEST }
 
@@ -823,6 +1024,22 @@ export { FrameSample }
 
 export { FrameState }
 
+export { GAMEPAD_REMAPS }
+
+export { GAMEPAD_SLOTS }
+
+export { gamepadControlNames }
+
+export { GamepadDevice }
+
+export { GamepadLike }
+
+export { GamepadReader }
+
+export { GamepadRemap }
+
+export { GamepadSnapshot }
+
 export { generateUlid }
 
 export { GroundMeshOptions }
@@ -837,11 +1054,87 @@ export { ImageProcessingEffectSettings }
 
 export { ImageProcessingSettings }
 
+export { input }
+
+export { INPUT_ACTIONS_ASSET_TYPE }
+
+export { INPUT_ACTIONS_FILE_EXTENSIONS }
+
+export { INPUT_ACTIONS_FORMAT }
+
+export { INPUT_ACTIONS_FORMAT_VERSION }
+
+export { INPUT_DIAGNOSTICS_COUNTERS }
+
+export { INPUT_DIAGNOSTICS_GROUP }
+
+export { INPUT_ERROR_MESSAGES }
+
+export { INPUT_OVERRIDES_FORMAT }
+
+export { INPUT_OVERRIDES_FORMAT_VERSION }
+
+export { INPUT_RESOLVE_ORDER }
+
+export { INPUT_SETTINGS_SECTION }
+
+export { InputAction }
+
+export { InputActionEvent }
+
+export { InputActionsAsset }
+
+export { InputActionsDefinition }
+
+export { InputActionSet }
+
+export { InputActionSignal }
+
+export { InputActionsInput }
+
+export { inputActionsJsonSchema }
+
+export { InputActionsView }
+
+export { InputActionType }
+
+export { InputDevice }
+
+export { InputDevices }
+
+export { inputError }
+
+export { InputErrorCode }
+
+export { InputErrorOptions }
+
+export { InputEventRecord }
+
+export { InputEventType }
+
+export { InputOptions }
+
+export { InputOverrideEntry }
+
+export { InputOverridesJson }
+
+export { InputService }
+
+export { InputServiceOptions }
+
+export { InputSettings }
+
+export { inputSettingsSchema }
+
 export { InstantiateOptions }
 
 export { instantiateScene }
 
 export { InstantiateSceneOptions }
+
+export { InteractiveRebindOptions }
+
+export { InteractiveRebindResult }
 
 export { INVALID_HANDLE }
 
@@ -870,6 +1163,10 @@ export { JsonObject }
 export { JsonSchemaObject }
 
 export { JsonValue }
+
+export { keyboardControlNames }
+
+export { keyCodeControlNames }
 
 export { LayerMask }
 
@@ -1015,6 +1312,8 @@ export { ModelAssetLiteHandles }
 
 export { ModelInstantiation }
 
+export { mouseControlNames }
+
 export { moveTowards }
 
 export { MutableQuat }
@@ -1033,7 +1332,17 @@ export { OptionalFieldSpec }
 
 export { OverridePath }
 
+export { parseComposite }
+
+export { parseControlPath }
+
+export { ParsedControlPath }
+
 export { parseOverridePath }
+
+export { parseProcessor }
+
+export { parseProcessors }
 
 export { PartialFieldsOf }
 
@@ -1053,7 +1362,11 @@ export { PhaseIndex }
 
 export { PHASES }
 
+export { PhysicsCallbackName }
+
 export { pingPong }
+
+export { pinToDeviceSlot }
 
 export { PlaneMeshOptions }
 
@@ -1061,7 +1374,17 @@ export { PlatformInfo }
 
 export { PlatformKind }
 
+export { PlayerInput }
+
+export { PointerLock }
+
+export { PointerLockSettings }
+
 export { PostProcessStack }
+
+export { Processor }
+
+export { ProcessorKind }
 
 export { ProfileScope }
 
@@ -1131,6 +1454,8 @@ export { RESERVED_LAYER_NAMES }
 
 export { resetFrameSample }
 
+export { resolveGamepadRemap }
+
 export { SCENE_ASSET_TYPE }
 
 export { SCENE_FILE_EXTENSIONS }
@@ -1181,6 +1506,8 @@ export { SchemaIssueCode }
 
 export { Script }
 
+export { ScriptCallbackKind }
+
 export { ScriptCallbacks }
 
 export { ScriptClassInfo }
@@ -1226,6 +1553,10 @@ export { SignalLike }
 export { SignalOptions }
 
 export { SignalOwner }
+
+export { SimulatedEvent }
+
+export { SimulatedValue }
 
 export { SmaaEffectSettings }
 
@@ -1277,6 +1608,10 @@ export { ToneMappingCurve }
 
 export { TorusMeshOptions }
 
+export { TOUCH_SLOTS }
+
+export { touchControlNames }
+
 export { Transform }
 
 export { u32 }
@@ -1284,6 +1619,8 @@ export { u32 }
 export { UidRemap }
 
 export { UlidFactoryOptions }
+
+export { validateInputActions }
 
 export { validateProps }
 
@@ -1333,6 +1670,12 @@ export { VectorFieldSpec }
 
 export { VERSION }
 
+export { VibrationActuatorLike }
+
+export { VibrationEffectParameters }
+
+export { VirtualDevice }
+
 export { waitFixedUpdate }
 
 export { WaitInstruction }
@@ -1346,6 +1689,8 @@ export { waitUntil }
 export { waitWhile }
 
 export { World }
+
+export { WorldLiteHandles }
 
 export { wrapAngleDegrees }
 

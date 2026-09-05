@@ -3,10 +3,15 @@
  * phase lands, the standard extensions (`docs/architecture/00-overview.md` §2). Every symbol is
  * re-exported by name — no `export *` (coding standards §4).
  *
- * Only the core surface exists today, which after Phase 2 includes the render components, the GPU
- * asset loaders, and the scene serialization surface. The input, physics, physics-2d, audio, 2d,
- * 3d, and ui re-exports and the one-call `createGame()` arrive with the phases of
+ * Phase 2 added the render components, the GPU asset loaders, and the scene serialization surface;
+ * Phase 3 adds the whole of `@ignifx/input`. The physics, physics-2d, audio, 2d, 3d, and ui
+ * re-exports and the one-call `createGame()` arrive with the phases of
  * `docs/plan/engineering-plan.md` that populate those packages.
+ *
+ * Two `@ignifx/input` exports are deliberately **not** re-exported, because `@ignifx/core` already
+ * owns the name: `VERSION` (the umbrella reports the core version) and `describeSchemas` (the
+ * documentation harness reads each package's own entry point, so nothing is lost). Reach them as
+ * `@ignifx/input`'s own exports when a tool needs them.
  *
  * @packageDocumentation
  */
@@ -465,3 +470,123 @@ export type {
   MaterialAlphaMode,
 } from "@ignifx/core";
 export { MATERIAL_ALPHA_MODES } from "@ignifx/core";
+
+// @ignifx/input — devices, action maps, bindings, control schemes, pointer lock, and rebinding.
+export {
+  type ActionDefinition,
+  ActionMap,
+  type ActionMapDefinition,
+  type ActionSetOptions,
+  ActionVector,
+  ANY_KEY_CONTROL,
+  applyOverrides,
+  applyProcessors,
+  Binding,
+  type BindingContext,
+  type BindingDefinition,
+  type BindingResolver,
+  buildControls,
+  clearOverrides,
+  collectOverrides,
+  compositeIsVector,
+  CompositeKind,
+  compositeParts,
+  type ControlDescriptor,
+  ControlKind,
+  controlPath,
+  type ControlRef,
+  type ControlSchemeDefinition,
+  ControlSchemes,
+  controlSlotCount,
+  type ControlSpec,
+  type ControlTouchHandler,
+  type ControlValue,
+  createInputActionsLoader,
+  createKeyboardDevice,
+  createMouseDevice,
+  createNavigatorGamepadReader,
+  createPointerDevice,
+  createTouchDevice,
+  Cursor,
+  defaultInputSettings,
+  defineInputActions,
+  describeInputActionsFormat,
+  describeInputSchemas,
+  DEVICE_KINDS,
+  DeviceKind,
+  type DomSource,
+  type DomTarget,
+  GAMEPAD_REMAPS,
+  GAMEPAD_SLOTS,
+  gamepadControlNames,
+  GamepadDevice,
+  type GamepadLike,
+  type GamepadReader,
+  type GamepadRemap,
+  type GamepadSnapshot,
+  input,
+  INPUT_ACTIONS_ASSET_TYPE,
+  INPUT_ACTIONS_FILE_EXTENSIONS,
+  INPUT_ACTIONS_FORMAT,
+  INPUT_ACTIONS_FORMAT_VERSION,
+  INPUT_DIAGNOSTICS_COUNTERS,
+  INPUT_DIAGNOSTICS_GROUP,
+  INPUT_ERROR_MESSAGES,
+  INPUT_OVERRIDES_FORMAT,
+  INPUT_OVERRIDES_FORMAT_VERSION,
+  INPUT_RESOLVE_ORDER,
+  INPUT_SETTINGS_SECTION,
+  InputAction,
+  type InputActionEvent,
+  InputActionsAsset,
+  type InputActionsDefinition,
+  InputActionSet,
+  type InputActionSignal,
+  type InputActionsInput,
+  inputActionsJsonSchema,
+  InputActionsView,
+  type InputActionType,
+  InputDevice,
+  InputDevices,
+  inputError,
+  InputErrorCode,
+  type InputErrorOptions,
+  type InputEventRecord,
+  type InputEventType,
+  type InputOptions,
+  type InputOverrideEntry,
+  type InputOverridesJson,
+  InputService,
+  type InputServiceOptions,
+  type InputSettings,
+  inputSettingsSchema,
+  type InteractiveRebindOptions,
+  type InteractiveRebindResult,
+  keyboardControlNames,
+  keyCodeControlNames,
+  mouseControlNames,
+  parseComposite,
+  parseControlPath,
+  type ParsedControlPath,
+  parseProcessor,
+  parseProcessors,
+  pinToDeviceSlot,
+  PlayerInput,
+  PointerLock,
+  type PointerLockSettings,
+  type Processor,
+  ProcessorKind,
+  resolveGamepadRemap,
+  type SimulatedEvent,
+  type SimulatedValue,
+  TOUCH_SLOTS,
+  touchControlNames,
+  validateInputActions,
+  type VibrationActuatorLike,
+  type VibrationEffectParameters,
+  VirtualDevice,
+} from "@ignifx/input";
+
+// Kernel hooks for extension authors (Phase 4 preparation)
+export { PhysicsCallbackName, ScriptCallbackKind } from "@ignifx/core";
+export type { WorldLiteHandles } from "@ignifx/core";

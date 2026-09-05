@@ -23,11 +23,12 @@ toolkits arrive in later phases.
 
 | Item                | Value                                                                                                                                                     |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Engine version      | unreleased (`0.0.0`); `@ignifx/core`, `@ignifx/vite-plugin`, and the `ignifx` umbrella                                                                    |
+| Engine version      | unreleased (`0.0.0`); `@ignifx/core`, `@ignifx/input`, `@ignifx/vite-plugin`, and the `ignifx` umbrella                                                   |
 | Babylon Lite        | 1.27.0 (pinned; do not call Lite APIs directly outside adapter code)                                                                                      |
 | Node / pnpm         | 24 LTS / 11                                                                                                                                               |
 | Browser requirement | WebGPU (Chrome/Edge 113+, Safari 26+, Firefox 141+ Windows / 145+ Apple Silicon); Electron needs `--enable-unsafe-webgpu` (handled by `@ignifx/electron`) |
 | Headless            | Node 24, no GPU: `createApp({ headless: true })` plus `app.step(dt)`                                                                                      |
+| Extensions          | `createApp({ canvas, extensions: [input()] })` — `input()` from `@ignifx/input` (or from `ignifx`) adds `app.input`                                       |
 | Build               | Vite 8 with `ignifx()` from `@ignifx/vite-plugin`: asset manifest, `.meta.json` sidecars, JSON validation, HMR                                            |
 | Commands            | `pnpm dev` · `pnpm test` · `pnpm typecheck` · `pnpm build` · `pnpm check` (all gates)                                                                     |
 | Helper scripts      | `node scripts/check-webgpu.mjs` · `node scripts/new-script.mjs <Name>`                                                                                    |
@@ -141,6 +142,20 @@ for (let frame = 0; frame < 600; frame += 1) {
 }
 app.log.info("spun to", cube.transform.localEulerAngles.y);
 app.dispose();
+```
+
+### Adding input
+
+`input()` from `@ignifx/input` adds `app.input`, `PlayerInput`, the `inputactions` asset type, and the `input` settings section; detail in `packages/input/skills/input/SKILL.md`.
+
+```ts
+import { createApp, defineInputActions, input } from "ignifx";
+const jump = { name: "jump", bindings: [{ path: "<Keyboard>/space" }] };
+const app = await createApp({ headless: true, extensions: [input()] });
+app.input.loadActions(defineInputActions({ maps: [{ name: "Player", actions: [jump] }] }));
+app.input.simulate({ "<Keyboard>/space": 1 });
+app.step(1 / 60);
+app.input.actions.get("jump").wasPressedThisFrame; // true for the whole frame
 ```
 
 ## Core APIs
@@ -425,6 +440,7 @@ Generated from `examples/recipes/`, so the code compiles.
 | [`formats/material.md`](references/formats/material.md)                     | `.material.json`: PBR and Standard, texture slots              |
 | [`formats/ignifx.material.md`](references/formats/ignifx.material.md)       | The material file's fields (generated)                         |
 | [`formats/ignifx.environment.md`](references/formats/ignifx.environment.md) | `.environment.json`: IBL, BRDF table, skybox (generated)       |
+| [`formats/inputactions.md`](references/formats/inputactions.md)             | `.input.json`: maps, actions, paths, composites, processors    |
 | [`formats/components.md`](references/formats/components.md)                 | Every built-in component's fields and defaults (generated)     |
 | [`formats/ignifx.schemas.json`](references/formats/ignifx.schemas.json)     | All of the above bundled, for tools and validators             |
 
@@ -468,15 +484,15 @@ None (pre-1.0: no deprecation window; breaking changes are listed in the changel
 
 ## Where to look next
 
-| Topic                                 | Read                                                                       |
-| ------------------------------------- | -------------------------------------------------------------------------- |
-| Frame order, callbacks, `Time`        | [`references/concepts/lifecycle.md`](references/concepts/lifecycle.md)     |
-| World, entities, scenes, prefabs      | [`references/concepts/scene-graph.md`](references/concepts/scene-graph.md) |
-| Components, schemas, coroutines       | [`references/concepts/scripting.md`](references/concepts/scripting.md)     |
-| Cameras, lights, meshes, the renderer | [`references/concepts/rendering.md`](references/concepts/rendering.md)     |
-| Addresses, handles, loaders           | [`references/concepts/assets.md`](references/concepts/assets.md)           |
-| Extensions, services, settings        | [`references/concepts/extensions.md`](references/concepts/extensions.md)   |
-| Every exact signature                 | [`references/api/core.md`](references/api/core.md)                         |
-| Design rationale                      | `docs/architecture/`, `docs/adr/`                                          |
+| Topic                                 | Read                                                                                                                         |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Frame order, callbacks, `Time`        | [`references/concepts/lifecycle.md`](references/concepts/lifecycle.md)                                                       |
+| World, entities, scenes, prefabs      | [`references/concepts/scene-graph.md`](references/concepts/scene-graph.md)                                                   |
+| Components, schemas, coroutines       | [`references/concepts/scripting.md`](references/concepts/scripting.md)                                                       |
+| Cameras, lights, meshes, the renderer | [`references/concepts/rendering.md`](references/concepts/rendering.md)                                                       |
+| Addresses, handles, loaders           | [`references/concepts/assets.md`](references/concepts/assets.md)                                                             |
+| Extensions, services, settings        | [`references/concepts/extensions.md`](references/concepts/extensions.md)                                                     |
+| Every exact signature                 | [`api/core.md`](references/api/core.md) · [`api/input.md`](references/api/input.md) · `packages/input/skills/input/SKILL.md` |
+| Design rationale                      | `docs/architecture/`, `docs/adr/`                                                                                            |
 
 `docs/migrations/` exists only after 1.0.

@@ -146,6 +146,34 @@
         }
       }
     },
+    "ignifx/inputactions-file": {
+      "title": "Input actions file",
+      "format": "ignifx.inputactions",
+      "description": "Action maps, their actions, the bindings that feed them, and the control schemes that group devices.",
+      "package": "packages/input",
+      "fields": {
+        "format": {
+          "kind": "str",
+          "default": "\"ignifx.inputactions\"",
+          "description": "Always \"ignifx.inputactions\"."
+        },
+        "formatVersion": {
+          "kind": "u32",
+          "default": "1",
+          "description": "The file format version; 1 before ignifx 1.0."
+        },
+        "controlSchemes": {
+          "kind": "array",
+          "default": "[]",
+          "description": "Named device groups: { \"name\": \"Gamepad\", \"devices\": [\"Gamepad\"] }."
+        },
+        "maps": {
+          "kind": "array",
+          "default": "[]",
+          "description": "Action maps: { \"name\": \"Player\", \"enabled\": true, \"actions\": [ … ] }."
+        }
+      }
+    },
     "ignifx/Light": {
       "title": "Light",
       "format": "components",
@@ -415,6 +443,29 @@
           "kind": "bool",
           "default": "true",
           "description": "Whether picking considers the instance at all."
+        }
+      }
+    },
+    "ignifx/PlayerInput": {
+      "title": "PlayerInput",
+      "format": "components",
+      "description": "Binds an entity to an input actions document and one device slot, for local multiplayer.",
+      "package": "packages/input",
+      "fields": {
+        "actions": {
+          "kind": "asset",
+          "default": "null",
+          "description": ""
+        },
+        "deviceSlot": {
+          "kind": "i32",
+          "default": "0",
+          "description": ""
+        },
+        "scheme": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": ""
         }
       }
     },
