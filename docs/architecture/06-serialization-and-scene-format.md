@@ -34,10 +34,24 @@
       "tags": ["player"],
       "transform": { "position": [0, 1, 0], "rotation": [0, 0, 0, 1], "scale": [1, 1, 1] },
       "components": [
-        { "uid": "01J9Z6M7E5S3A0V2Q4R8T1Y6WY", "type": "ignifx/MeshRenderer", "enabled": true,
-          "props": { "mesh": { "$asset": "models/hero.glb#mesh:Body" }, "materials": [{ "$asset": "materials/hero.material.json" }] } },
-        { "uid": "01J9Z6M7E5S3A0V2Q4R8T1Y6WZ", "type": "mygame/Mover",
-          "props": { "speed": 5, "target": { "$entity": "01J9Z6M7E5S3A0V2Q4R8T1Y6X0" }, "follow": { "$component": "01J9Z6M7E5S3A0V2Q4R8T1Y6X1" } } }
+        {
+          "uid": "01J9Z6M7E5S3A0V2Q4R8T1Y6WY",
+          "type": "ignifx/MeshRenderer",
+          "enabled": true,
+          "props": {
+            "mesh": { "$asset": "models/hero.glb#mesh:Body" },
+            "materials": [{ "$asset": "materials/hero.material.json" }]
+          }
+        },
+        {
+          "uid": "01J9Z6M7E5S3A0V2Q4R8T1Y6WZ",
+          "type": "mygame/Mover",
+          "props": {
+            "speed": 5,
+            "target": { "$entity": "01J9Z6M7E5S3A0V2Q4R8T1Y6X0" },
+            "follow": { "$component": "01J9Z6M7E5S3A0V2Q4R8T1Y6X1" }
+          }
+        }
       ]
     },
     {
@@ -51,7 +65,11 @@
         "overrides": [
           { "path": "01J9Z…ROOT/components/01J9Z…AI/props/aggression", "value": 0.9 },
           { "op": "remove", "path": "01J9Z…ROOT/components/01J9Z…DEBUG" },
-          { "op": "add", "path": "01J9Z…ROOT/components", "value": { "uid": "01J9Z…NEW", "type": "mygame/Loot", "props": { "table": { "$asset": "data/loot.json" } } } }
+          {
+            "op": "add",
+            "path": "01J9Z…ROOT/components",
+            "value": { "uid": "01J9Z…NEW", "type": "mygame/Loot", "props": { "table": { "$asset": "data/loot.json" } } }
+          }
         ]
       }
     }
@@ -61,32 +79,32 @@
 
 Field rules:
 
-- `uid`: ULID string; unique within the file. Instanced scenes keep their *own* uids; overrides address them by path.
+- `uid`: ULID string; unique within the file. Instanced scenes keep their _own_ uids; overrides address them by path.
 - `parent`: uid of the parent entity or `null`. Sibling order is the order of appearance in `entities`.
 - `active`, `static`, `layer`, `tags`, `enabled`: omitted when equal to defaults (`true`, `false`, `"Default"`, `[]`, `true`). `layer` is a layer **name** resolved against project settings at load; an unknown name resolves to `Default` with `IGX-0303`.
 - `transform`: always present; arrays `[x, y, z]`, `[x, y, z, w]`, `[x, y, z]`.
 - `components[i].props`: values according to the component's schema (§3). Omitted props take schema defaults.
 - `instance`: present only on instance roots. An instance root may also carry its own `components` (added to the instanced root entity) and `transform` (applied to the instance root). `instance.hash` records the content hash of the instanced scene asset at save time; a mismatch at load logs `IGX-0604` by default or fails when the loader option `strictInstanceHashes` is set, so save games notice prefab changes instead of silently reinterpreting overrides.
-- `settings`: scene-level values interpreted by systems (environment, clear color, 2D mode flags, physics overrides). Only the *first* loaded scene's settings apply in additive loads unless a setting is marked `mergeable`.
+- `settings`: scene-level values interpreted by systems (environment, clear color, 2D mode flags, physics overrides). Only the _first_ loaded scene's settings apply in additive loads unless a setting is marked `mergeable`.
 
 ## 3. Value encoding
 
-| Schema kind | JSON |
-|---|---|
-| `f32 f64 i32 u32` | number |
-| `bool` | boolean |
-| `str` | string |
-| `vec2 vec3 vec4 quat` | array of numbers |
-| `color` | `[r, g, b, a]` in sRGB 0–1 |
-| `enumOf` | the string value |
-| `entityRef` | `{ "$entity": "<uid>" }` or `null` |
-| `componentRef` | `{ "$component": "<uid>" }` or `null` |
-| `asset` | `{ "$asset": "<address>", "type"?: "<type>" }` or `null` |
-| `array` | array |
-| `record` / `map` | object |
-| `layerMask` | array of layer names (not bit values, so renames survive) |
-| `curve` | `{ "keys": [[t, v, inTangent, outTangent], …] }` |
-| `custom` | whatever the field's `serialize` returns; must be JSON |
+| Schema kind           | JSON                                                      |
+| --------------------- | --------------------------------------------------------- |
+| `f32 f64 i32 u32`     | number                                                    |
+| `bool`                | boolean                                                   |
+| `str`                 | string                                                    |
+| `vec2 vec3 vec4 quat` | array of numbers                                          |
+| `color`               | `[r, g, b, a]` in sRGB 0–1                                |
+| `enumOf`              | the string value                                          |
+| `entityRef`           | `{ "$entity": "<uid>" }` or `null`                        |
+| `componentRef`        | `{ "$component": "<uid>" }` or `null`                     |
+| `asset`               | `{ "$asset": "<address>", "type"?: "<type>" }` or `null`  |
+| `array`               | array                                                     |
+| `record` / `map`      | object                                                    |
+| `layerMask`           | array of layer names (not bit values, so renames survive) |
+| `curve`               | `{ "keys": [[t, v, inTangent, outTangent], …] }`          |
+| `custom`              | whatever the field's `serialize` returns; must be JSON    |
 
 Numbers are canonicalized before writing: `x = Math.round(x * 1e6) / 1e6`, `-0` becomes `0`, and the value is emitted with JavaScript's shortest round-trip representation (`String(x)`), integers without a fraction. Loading stores the canonical value and the rule is idempotent, so save → load → save is byte-identical. `NaN`/`Infinity` are rejected (`IGX-0601`).
 
@@ -109,17 +127,17 @@ Numbers are canonicalized before writing: `x = Math.round(x * 1e6) / 1e6`, `-0` 
 
 All share the `format`/`formatVersion` header and JSON Schema validation:
 
-| Format | Extension | Owner |
-|---|---|---|
-| `ignifx.material` | `.material.json` | core |
-| `ignifx.environment` | `.environment.json` | core |
-| `ignifx.spriteatlas` | `.atlas.json` | `@ignifx/2d` |
-| `ignifx.spriteanimation` | `.spriteanim.json` | `@ignifx/2d` |
-| `ignifx.tilemap` | `.tilemap.json` (import from Tiled `.tmj` / LDtk `.ldtk`) | `@ignifx/2d` |
-| `ignifx.inputactions` | `.input.json` | `@ignifx/input` |
-| `ignifx.animator` | `.animator.json` | `@ignifx/3d` |
-| `ignifx.audiobuses` | `.audio.json` | `@ignifx/audio` |
-| `ignifx.manifest` | `assets.manifest.json` | vite plugin |
+| Format                   | Extension                                                 | Owner           |
+| ------------------------ | --------------------------------------------------------- | --------------- |
+| `ignifx.material`        | `.material.json`                                          | core            |
+| `ignifx.environment`     | `.environment.json`                                       | core            |
+| `ignifx.spriteatlas`     | `.atlas.json`                                             | `@ignifx/2d`    |
+| `ignifx.spriteanimation` | `.spriteanim.json`                                        | `@ignifx/2d`    |
+| `ignifx.tilemap`         | `.tilemap.json` (import from Tiled `.tmj` / LDtk `.ldtk`) | `@ignifx/2d`    |
+| `ignifx.inputactions`    | `.input.json`                                             | `@ignifx/input` |
+| `ignifx.animator`        | `.animator.json`                                          | `@ignifx/3d`    |
+| `ignifx.audiobuses`      | `.audio.json`                                             | `@ignifx/audio` |
+| `ignifx.manifest`        | `assets.manifest.json`                                    | vite plugin     |
 
 ## 7. Versioning and migration
 

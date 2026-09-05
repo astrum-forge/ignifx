@@ -1,0 +1,61 @@
+{
+  "name": "ignifx",
+  "version": "0.0.0",
+  "description": "ignifx umbrella package: re-exports @ignifx/core and the standard extensions, and ships the ignifx Agent Skill.",
+  "keywords": [
+    "ignifx"
+  ],
+  "homepage": "https://ignifx.com",
+  "license": "Apache-2.0",
+  "author": "Astrum Forge Studios",
+  "files": [
+    "dist",
+    "skills"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsdown",
+    "prepack": "node scripts/copy-skill.ts",
+    "typecheck": "tsc --build tsconfig.json tsconfig.test.json && tsc --project scripts/tsconfig.json",
+    "test": "vitest run --project node",
+    "api-report": "api-extractor run --verbose",
+    "docs:api": "typedoc",
+    "api-report:update": "api-extractor run --local --verbose",
+    "pack-check": "publint && attw --pack . --profile esm-only"
+  },
+  "dependencies": {
+    "@ignifx/2d": "workspace:*",
+    "@ignifx/3d": "workspace:*",
+    "@ignifx/audio": "workspace:*",
+    "@ignifx/core": "workspace:*",
+    "@ignifx/input": "workspace:*",
+    "@ignifx/physics": "workspace:*",
+    "@ignifx/physics-2d": "workspace:*",
+    "@ignifx/ui": "workspace:*"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "catalog:",
+    "@microsoft/api-extractor": "catalog:",
+    "@types/node": "catalog:",
+    "@types/webxr": "catalog:",
+    "@webgpu/types": "catalog:",
+    "publint": "catalog:",
+    "tsdown": "catalog:",
+    "typedoc": "catalog:",
+    "typedoc-plugin-markdown": "catalog:",
+    "typescript-native": "catalog:",
+    "vitest": "catalog:"
+  }
+}

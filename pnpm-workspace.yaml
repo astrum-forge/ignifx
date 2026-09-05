@@ -1,0 +1,62 @@
+packages:
+  - "packages/*"
+  - "templates/*"
+  - "examples/*"
+  - "website"
+
+# Shared version pins. CONSTITUTION.md §4.6: @babylonjs/lite is pinned EXACTLY.
+# ADR-0007: `typescript` is the TS 6 shim that API-dependent tools resolve;
+# `typescript-native` is the TS 7 native compiler used by `tsc --build`.
+catalog:
+  "@arethetypeswrong/cli": ^0.18.5
+  "@babylonjs/lite": 1.27.0
+  "@changesets/cli": ^3.0.2
+  "@eslint/js": ^10.0.1
+  "@commitlint/cli": ^21.2.2
+  "@commitlint/config-conventional": ^21.2.2
+  "@commitlint/types": ^21.2.0
+  "@microsoft/api-extractor": ^7.59.0
+  "@types/node": ^24.13.3
+  "@types/webxr": ^0.5.0
+  "@vitest/browser-playwright": ^5.0.0
+  "@vitest/coverage-v8": ^5.0.0
+  "@webgpu/types": ^0.1.72
+  dependency-cruiser: ^18.2.0
+  eslint: ^10.10.0
+  eslint-import-resolver-typescript: ^4.4.5
+  eslint-plugin-import-x: ^4.17.1
+  eslint-plugin-jsdoc: ^64.3.5
+  lefthook: ^2.1.12
+  lint-staged: ^17.4.1
+  oxfmt: ^0.66.0
+  oxlint: ^1.81.0
+  oxlint-tsgolint: ^7.0.2001
+  playwright: ^1.63.0
+  prettier: ^3.9.6
+  publint: ^0.3.24
+  tsdown: ^0.23.0
+  turbo: ^2.10.12
+  typedoc: ^0.28.20
+  typedoc-plugin-markdown: ^4.13.0
+  typescript: npm:@typescript/typescript6@6.0.2
+  typescript-eslint: ^8.69.0
+  typescript-native: npm:typescript@7.0.2
+  vite: ^8.2.2
+  vitest: ^5.0.0
+
+# CONSTITUTION.md §9.3 / standards §13: only listed packages may run install scripts.
+# `minimumReleaseAge` is intentionally left at pnpm's default.
+allowBuilds:
+  esbuild: true
+  lefthook: true
+  playwright: true
+  unrs-resolver: true
+
+minimumReleaseAgeExclude:
+  - "@changesets/apply-release-plan@8.1.0"
+  - "@changesets/cli@3.0.2"
+  - "@changesets/git@4.0.1"
+  - "@changesets/read@1.0.1"
+  - eslint@10.10.0
+  - playwright-core@1.63.0
+  - playwright@1.63.0

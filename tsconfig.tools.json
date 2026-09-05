@@ -1,0 +1,18 @@
+{
+  // Repository-level configuration files and scripts. They are not published, so `isolatedDeclarations`
+  // and `composite` do not apply; the point is to type-check them at all — a mistyped option in
+  // `vitest.config.ts` is otherwise invisible until a test silently runs with the wrong browser flags.
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "isolatedDeclarations": false,
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "types": ["node"]
+  },
+  "include": ["*.config.ts", "scripts/**/*.ts"],
+  "exclude": ["packages/**", "node_modules"]
+}

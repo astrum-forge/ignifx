@@ -1,0 +1,7 @@
+# @ignifx/vite-plugin
+
+`@ignifx/vite-plugin` public barrel: asset manifest generation, scene and prefab JSON validation,
+WASM and asset handling, and HMR hooks (`docs/architecture/00-overview.md` §2).
+
+The package is deliberately empty; Phase 2 of `docs/plan/engineering-plan.md` populates it
+with explicit named re-exports (coding standards §4).

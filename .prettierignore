@@ -1,0 +1,16 @@
+# Prettier formats Markdown only (coding standards §6); oxfmt owns every other language.
+node_modules/
+dist/
+coverage/
+.turbo/
+.tsbuild/
+.tsbuild-test/
+# Generated Markdown is never hand-formatted (standards §15).
+# Pack-time copy of the entry skill inside the umbrella package (packages/ignifx/.gitignore).
+packages/ignifx/skills/
+packages/*/api/*.api.md
+skills/ignifx/references/api/
+skills/ignifx/references/formats/
+skills/ignifx/references/recipes/
+**/CHANGELOG.md
+.changeset/*.md

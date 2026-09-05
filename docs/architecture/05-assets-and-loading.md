@@ -26,15 +26,15 @@ interface AssetHandle<T> {
   readonly address: string;
   readonly type: string;
   readonly state: "loading" | "loaded" | "failed" | "released";
-  readonly value: T;                    // throws IGX-0501 unless state === "loaded"
-  readonly promise: Promise<T>;         // resolves with value, rejects with AssetLoadError
-  readonly progress: number;            // 0..1; bytes-weighted when sizes are known
+  readonly value: T; // throws IGX-0501 unless state === "loaded"
+  readonly promise: Promise<T>; // resolves with value, rejects with AssetLoadError
+  readonly progress: number; // 0..1; bytes-weighted when sizes are known
   readonly error: AssetLoadError | null;
   readonly refCount: number;
-  retain(): this;                       // +1
-  release(): void;                      // -1; at 0 the asset is unloaded (after `assets.gcDelay`)
-  [Symbol.dispose](): void;             // == release(); enables `using`
-  readonly onReplaced: Signal<T>;       // hot reload delivered a new value; `value` already updated
+  retain(): this; // +1
+  release(): void; // -1; at 0 the asset is unloaded (after `assets.gcDelay`)
+  [Symbol.dispose](): void; // == release(); enables `using`
+  readonly onReplaced: Signal<T>; // hot reload delivered a new value; `value` already updated
 }
 ```
 
@@ -46,21 +46,32 @@ interface AssetHandle<T> {
 
 ```ts
 interface Assets {
-  load<T>(ref: AssetRef<T> | string, options?: LoadOptions): AssetHandle<T>;      // synchronous return, async completion
+  load<T>(ref: AssetRef<T> | string, options?: LoadOptions): AssetHandle<T>; // synchronous return, async completion
   loadAsync<T>(ref: AssetRef<T> | string, options?: LoadOptions): Promise<AssetHandle<T>>;
   loadAll(refs: readonly (AssetRef | string)[], options?: LoadOptions): BatchHandle;
-  preloadGroup(group: string, options?: LoadOptions): BatchHandle;                // manifest label
-  get<T>(address: string): AssetHandle<T> | null;                                 // no refcount change
+  preloadGroup(group: string, options?: LoadOptions): BatchHandle; // manifest label
+  get<T>(address: string): AssetHandle<T> | null; // no refcount change
   release(handleOrAddress: AssetHandle | string): void;
-  gc(): void;                                   // unload zero-ref assets now
-  gcDelay: number;                              // seconds a zero-ref asset stays cached; default 5 (0 = immediate)
+  gc(): void; // unload zero-ref assets now
+  gcDelay: number; // seconds a zero-ref asset stays cached; default 5 (0 = immediate)
   resolveUrl(address: string): string;
-  registerLoader(loader: AssetLoader): void;    // normally via ExtensionContext
+  registerLoader(loader: AssetLoader): void; // normally via ExtensionContext
   readonly manifest: AssetManifest;
   readonly onProgress: Signal<{ loaded: number; total: number; bytesLoaded: number; bytesTotal: number }>;
 }
-interface LoadOptions { signal?: AbortSignal; priority?: number; type?: string; onProgress?: (p: number) => void }
-interface BatchHandle { readonly promise: Promise<void>; readonly progress: number; readonly handles: readonly AssetHandle[]; release(): void; cancel(): void }
+interface LoadOptions {
+  signal?: AbortSignal;
+  priority?: number;
+  type?: string;
+  onProgress?: (p: number) => void;
+}
+interface BatchHandle {
+  readonly promise: Promise<void>;
+  readonly progress: number;
+  readonly handles: readonly AssetHandle[];
+  release(): void;
+  cancel(): void;
+}
 ```
 
 - `load` returns immediately so that scripts can request in `awake` and check `state` later, or `yield handle.promise` in a coroutine.
@@ -71,34 +82,39 @@ interface BatchHandle { readonly promise: Promise<void>; readonly progress: numb
 
 ```ts
 interface AssetLoader<T = unknown> {
-  readonly type: string;                        // "texture", "model", "scene", "audio", …
-  readonly extensions: readonly string[];       // [".png", ".jpg", ".ktx2"]
+  readonly type: string; // "texture", "model", "scene", "audio", …
+  readonly extensions: readonly string[]; // [".png", ".jpg", ".ktx2"]
   load(ctx: LoaderContext): Promise<T>;
-  unload?(value: T, ctx: LoaderContext): void;  // release GPU/audio resources
-  reload?(ctx: LoaderContext, previous: T): Promise<T>;   // hot reload; default = unload + load
-  parseFragment?(fragment: string, value: T): unknown;    // "#animation:Run"
+  unload?(value: T, ctx: LoaderContext): void; // release GPU/audio resources
+  reload?(ctx: LoaderContext, previous: T): Promise<T>; // hot reload; default = unload + load
+  parseFragment?(fragment: string, value: T): unknown; // "#animation:Run"
 }
 interface LoaderContext {
-  readonly address: string; readonly url: string; readonly fragment: string | null;
-  readonly app: App; readonly signal: AbortSignal;
-  fetchBytes(): Promise<ArrayBuffer>; fetchText(): Promise<string>; fetchJson<J>(): Promise<J>;   // with progress + abort
-  loadDependency<D>(ref: AssetRef<D> | string): Promise<AssetHandle<D>>;   // counted against this asset
+  readonly address: string;
+  readonly url: string;
+  readonly fragment: string | null;
+  readonly app: App;
+  readonly signal: AbortSignal;
+  fetchBytes(): Promise<ArrayBuffer>;
+  fetchText(): Promise<string>;
+  fetchJson<J>(): Promise<J>; // with progress + abort
+  loadDependency<D>(ref: AssetRef<D> | string): Promise<AssetHandle<D>>; // counted against this asset
   reportProgress(fraction: number): void;
-  readonly lite: { readonly engine: EngineContext };                       // unstable escape hatch for Lite loaders
+  readonly lite: { readonly engine: EngineContext }; // unstable escape hatch for Lite loaders
 }
 ```
 
 Core loaders (registered by the core extension):
 
-| Type | Extensions | Produces | Notes |
-|---|---|---|---|
-| `texture` | `.png .jpg .jpeg .webp .ktx2 .basis` | `TextureAsset` (wraps Lite `Texture2D`) | Options via sidecar `.meta.json` (sRGB, mipmaps, filtering, premultiply) |
-| `model` | `.glb .gltf` | `ModelAsset` (Lite `AssetContainer` template + node/animation/material index) | `.glb` is fetched as bytes (progress, abort); `.gltf` with external files is passed as URL to Lite |
-| `scene` | `.scene.json .prefab.json` | `SceneAsset` (validated file + resolved dependency handles) | Loads all referenced assets as dependencies |
-| `material` | `.material.json` | `MaterialAsset` | PBR/Standard/Shader definitions |
-| `environment` | `.env .hdr .dds` | `EnvironmentAsset` | IBL + optional skybox |
-| `font` | `.ttf .otf` | `FontAsset` (Lite `Font`) | For world/HUD text |
-| `json`, `text`, `binary` | `.json`, `.txt .md .csv`, `.bin .wasm` | parsed JSON / string / `ArrayBuffer` | Generic |
+| Type                     | Extensions                             | Produces                                                                      | Notes                                                                                              |
+| ------------------------ | -------------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `texture`                | `.png .jpg .jpeg .webp .ktx2 .basis`   | `TextureAsset` (wraps Lite `Texture2D`)                                       | Options via sidecar `.meta.json` (sRGB, mipmaps, filtering, premultiply)                           |
+| `model`                  | `.glb .gltf`                           | `ModelAsset` (Lite `AssetContainer` template + node/animation/material index) | `.glb` is fetched as bytes (progress, abort); `.gltf` with external files is passed as URL to Lite |
+| `scene`                  | `.scene.json .prefab.json`             | `SceneAsset` (validated file + resolved dependency handles)                   | Loads all referenced assets as dependencies                                                        |
+| `material`               | `.material.json`                       | `MaterialAsset`                                                               | PBR/Standard/Shader definitions                                                                    |
+| `environment`            | `.env .hdr .dds`                       | `EnvironmentAsset`                                                            | IBL + optional skybox                                                                              |
+| `font`                   | `.ttf .otf`                            | `FontAsset` (Lite `Font`)                                                     | For world/HUD text                                                                                 |
+| `json`, `text`, `binary` | `.json`, `.txt .md .csv`, `.bin .wasm` | parsed JSON / string / `ArrayBuffer`                                          | Generic                                                                                            |
 
 Extensions add: `audio` (`.mp3 .ogg .wav`; `@ignifx/audio`), `spriteatlas` (`.atlas.json` + image; `@ignifx/2d`), `tilemap` (`.tilemap.json`; Tiled `.tmj` and LDtk `.ldtk` are converted by `ignifx import tilemap` first; `@ignifx/2d`), `inputactions` (`.input.json`; `@ignifx/input`), `animator` (`.animator.json`; `@ignifx/3d`).
 

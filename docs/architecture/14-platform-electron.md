@@ -12,8 +12,11 @@
 
 ```ts
 interface Storage {
-  get<T>(key: string): Promise<T | null>; set<T>(key: string, value: T): Promise<void>; delete(key: string): Promise<void>; keys(prefix?: string): Promise<string[]>;
-  namespace(name: string): Storage;      // "saves", "settings", "input-overrides"
+  get<T>(key: string): Promise<T | null>;
+  set<T>(key: string, value: T): Promise<void>;
+  delete(key: string): Promise<void>;
+  keys(prefix?: string): Promise<string[]>;
+  namespace(name: string): Storage; // "saves", "settings", "input-overrides"
 }
 ```
 
@@ -41,11 +44,11 @@ Packaging: `electron-vite` for dev/build (main, preload, renderer projects) and 
 
 ## 6. Supported matrix (to be re-verified at each release)
 
-| Platform | Status |
-|---|---|
-| Chrome / Edge 113+ (desktop) | Supported |
-| Safari 26+ (macOS 26, iOS/iPadOS 26) | Supported |
-| Firefox 141+ Windows, 145+ macOS Apple Silicon | Supported; Linux/Android Firefox pending upstream WebGPU |
-| Chrome Android 121+ (Android 12+, Qualcomm/ARM GPUs) | Supported, reduced budgets |
-| Electron 44+ (current stable) | Supported with the flags above; Linux best-effort |
-| Node 24 LTS (headless) | Supported |
+| Platform                                             | Status                                                   |
+| ---------------------------------------------------- | -------------------------------------------------------- |
+| Chrome / Edge 113+ (desktop)                         | Supported                                                |
+| Safari 26+ (macOS 26, iOS/iPadOS 26)                 | Supported                                                |
+| Firefox 141+ Windows, 145+ macOS Apple Silicon       | Supported; Linux/Android Firefox pending upstream WebGPU |
+| Chrome Android 121+ (Android 12+, Qualcomm/ARM GPUs) | Supported, reduced budgets                               |
+| Electron 44+ (current stable)                        | Supported with the flags above; Linux best-effort        |
+| Node 24 LTS (headless)                               | Supported                                                |

@@ -12,9 +12,9 @@ World ──owns──▶ SceneInstance ──owns──▶ Entity (roots) ─�
                                                           └──always has──▶ Transform ──wraps──▶ Babylon Lite SceneNode
 ```
 
-- The **World** owns every entity. Entities belong to exactly one `SceneInstance` (the scene file they were loaded from, or the *active scene* for entities created in code).
+- The **World** owns every entity. Entities belong to exactly one `SceneInstance` (the scene file they were loaded from, or the _active scene_ for entities created in code).
 - **Parent/child** is a tree: an entity has at most one parent; roots have `parent === null`. Reparenting across scene instances moves the entity's ownership to the new parent's scene.
-- **Transform** is a component that exists on every entity, cannot be removed, and is a *view* over the entity's Babylon Lite `SceneNode`. There is no second copy of position/rotation/scale anywhere in ignifx: physics, animation, and scripts all read and write the same node (Lite's Havok integration and animation write node TRS directly, which is why ignifx must not cache its own copy).
+- **Transform** is a component that exists on every entity, cannot be removed, and is a _view_ over the entity's Babylon Lite `SceneNode`. There is no second copy of position/rotation/scale anywhere in ignifx: physics, animation, and scripts all read and write the same node (Lite's Havok integration and animation write node TRS directly, which is why ignifx must not cache its own copy).
 
 ## 2. `World`
 
@@ -22,21 +22,24 @@ World ──owns──▶ SceneInstance ──owns──▶ Entity (roots) ─�
 interface World {
   readonly app: App;
   readonly scenes: readonly SceneInstance[];
-  activeScene: SceneInstance;                       // default owner for entities created in code
+  activeScene: SceneInstance; // default owner for entities created in code
 
-  createEntity(name?: string, options?: { parent?: Entity; scene?: SceneInstance; position?: Vec3Like; rotation?: QuatLike }): Entity;
+  createEntity(
+    name?: string,
+    options?: { parent?: Entity; scene?: SceneInstance; position?: Vec3Like; rotation?: QuatLike },
+  ): Entity;
   getEntity(uid: string): Entity | null;
   getEntityByHandle(handle: EntityHandle): Entity | null;
-  findByName(name: string): Entity | null;           // first match, depth-first; prototyping only
+  findByName(name: string): Entity | null; // first match, depth-first; prototyping only
   findAllByName(name: string): Entity[];
-  findByTag(tag: string): readonly Entity[];         // indexed, O(1) to obtain, live read-only view
+  findByTag(tag: string): readonly Entity[]; // indexed, O(1) to obtain, live read-only view
   components<T extends Component>(type: ComponentType<T>): readonly T[]; // live per-type registry used by systems
 
   loadScene(scene: AssetRef<SceneAsset> | string, options?: LoadSceneOptions): Promise<SceneInstance>;
   unloadScene(instance: SceneInstance): Promise<void>;
-  instantiate(scene: SceneAsset, options?: InstantiateOptions): Entity;             // scene asset already loaded
+  instantiate(scene: SceneAsset, options?: InstantiateOptions): Entity; // scene asset already loaded
   instantiateAsync(scene: AssetRef<SceneAsset> | string, options?: InstantiateOptions): Promise<Entity>;
-  moveEntityToScene(entity: Entity, scene: SceneInstance): void;                    // roots only
+  moveEntityToScene(entity: Entity, scene: SceneInstance): void; // roots only
 
   readonly onSceneLoaded: Signal<SceneInstance>;
   readonly onSceneUnloaded: Signal<SceneInstance>;
@@ -46,8 +49,20 @@ interface World {
   readonly lite: { readonly scene: SceneContext; readonly simulationScene: SceneContext | null }; // unstable escape hatch
 }
 
-interface LoadSceneOptions { mode?: "single" | "additive"; signal?: AbortSignal; onProgress?: (p: LoadProgress) => void; setActive?: boolean }
-interface InstantiateOptions { parent?: Entity | null; scene?: SceneInstance; name?: string; position?: Vec3Like; rotation?: QuatLike; worldSpace?: boolean }
+interface LoadSceneOptions {
+  mode?: "single" | "additive";
+  signal?: AbortSignal;
+  onProgress?: (p: LoadProgress) => void;
+  setActive?: boolean;
+}
+interface InstantiateOptions {
+  parent?: Entity | null;
+  scene?: SceneInstance;
+  name?: string;
+  position?: Vec3Like;
+  rotation?: QuatLike;
+  worldSpace?: boolean;
+}
 ```
 
 - `mode: "single"` (default) unloads every scene instance except those marked `persistent` (see §6) before loading. `"additive"` keeps existing scenes.
@@ -58,12 +73,12 @@ interface InstantiateOptions { parent?: Entity | null; scene?: SceneInstance; na
 
 ```ts
 interface SceneInstance {
-  readonly uid: string;              // instance id, distinct from the asset address
-  readonly asset: AssetHandle<SceneAsset> | null;   // null for the implicit default scene
+  readonly uid: string; // instance id, distinct from the asset address
+  readonly asset: AssetHandle<SceneAsset> | null; // null for the implicit default scene
   readonly name: string;
   readonly roots: readonly Entity[];
   readonly isLoaded: boolean;
-  persistent: boolean;               // survives "single" loads (Unity DontDestroyOnLoad equivalent, at scene granularity)
+  persistent: boolean; // survives "single" loads (Unity DontDestroyOnLoad equivalent, at scene granularity)
   readonly onUnloading: Signal<void>;
 }
 ```
@@ -75,24 +90,24 @@ interface SceneInstance {
 
 ```ts
 interface Entity {
-  readonly uid: string;              // ULID; stable across save/load; key for references in files
-  readonly handle: EntityHandle;     // dense runtime id; invalid after destroy
+  readonly uid: string; // ULID; stable across save/load; key for references in files
+  readonly handle: EntityHandle; // dense runtime id; invalid after destroy
   name: string;
   readonly world: World;
   readonly scene: SceneInstance;
   readonly transform: Transform;
   readonly parent: Entity | null;
   readonly children: readonly Entity[];
-  active: boolean;                   // own flag
+  active: boolean; // own flag
   readonly activeInHierarchy: boolean;
-  layer: number;                     // 0..31; see §7
-  readonly tags: TagSet;             // add(tag) / has(tag) / delete(tag) / values()
+  layer: number; // 0..31; see §7
+  readonly tags: TagSet; // add(tag) / has(tag) / delete(tag) / values()
   readonly isDestroyed: boolean;
-  readonly isStatic: boolean;        // hint: transform will not change after awake (batching, physics static)
+  readonly isStatic: boolean; // hint: transform will not change after awake (batching, physics static)
 
   // hierarchy
-  setParent(parent: Entity | null, options?: { worldPositionStays?: boolean }): void;   // default true
-  find(path: string): Entity | null;             // "Body/Arm.L", "../Sibling"; prototyping and tooling only
+  setParent(parent: Entity | null, options?: { worldPositionStays?: boolean }): void; // default true
+  find(path: string): Entity | null; // "Body/Arm.L", "../Sibling"; prototyping and tooling only
   findChild(predicate: (e: Entity) => boolean, deep?: boolean): Entity | null;
   isDescendantOf(other: Entity): boolean;
   root(): Entity;
@@ -100,13 +115,13 @@ interface Entity {
   // components
   addComponent<T extends Component>(type: ComponentType<T>, init?: ComponentInit<T>): T;
   getComponent<T extends Component>(type: ComponentType<T>): T | null;
-  requireComponent<T extends Component>(type: ComponentType<T>): T;          // throws IGX-0201
+  requireComponent<T extends Component>(type: ComponentType<T>): T; // throws IGX-0201
   getComponents<T extends Component>(type: ComponentType<T>): T[];
   getComponentInChildren<T extends Component>(type: ComponentType<T>, includeInactive?: boolean): T | null;
   getComponentsInChildren<T extends Component>(type: ComponentType<T>, includeInactive?: boolean): T[];
   getComponentInParent<T extends Component>(type: ComponentType<T>): T | null;
   hasComponent(type: ComponentType): boolean;
-  removeComponent(component: Component): void;   // queues destroy of that component
+  removeComponent(component: Component): void; // queues destroy of that component
   readonly components: readonly Component[];
 
   destroy(): void;
@@ -179,7 +194,7 @@ interface Transform extends Component {
 ## 6. Scenes as assets, prefabs as instanced scenes
 
 - A scene file (`06-serialization-and-scene-format.md`) describes a tree of entities. There is one file format for levels and prefabs (ADR-0005); the `.prefab.json` suffix is a convention for scenes meant to be instantiated many times.
-- An entity in a scene file may be an **instance** of another scene asset: `{"instance": {"scene": "prefabs/enemy.prefab.json", "overrides": [...]}}`. On load the instanced scene's entities are created under that entity, and overrides (property patches addressed by the *instanced* file's entity/component uids) are applied. Nested instances are allowed to any depth; cycles are rejected (`IGX-0302`).
+- An entity in a scene file may be an **instance** of another scene asset: `{"instance": {"scene": "prefabs/enemy.prefab.json", "overrides": [...]}}`. On load the instanced scene's entities are created under that entity, and overrides (property patches addressed by the _instanced_ file's entity/component uids) are applied. Nested instances are allowed to any depth; cycles are rejected (`IGX-0302`).
 - At runtime, `Entity.prefab` (`{ asset, instanceRoot }`) identifies entities that came from an instance, so tooling can show the link. The engine itself does not maintain a live link back to the prefab after load; "apply changes to prefab" is editor work, post-1.0.
 - `persistent` scene instances model Unity's `DontDestroyOnLoad`; moving a single entity between scenes uses `moveEntityToScene`.
 
@@ -193,9 +208,14 @@ interface Transform extends Component {
 
 ```ts
 class Signal<T = void> {
-  connect(handler: (value: T) => void, options?: { once?: boolean; deferred?: boolean; owner?: Component | Entity }): Disconnect;
+  connect(
+    handler: (value: T) => void,
+    options?: { once?: boolean; deferred?: boolean; owner?: Component | Entity },
+  ): Disconnect;
   emit(value: T): void;
-  disconnect(handler): void; clear(): void; readonly connectionCount: number;
+  disconnect(handler): void;
+  clear(): void;
+  readonly connectionCount: number;
 }
 ```
 
@@ -211,6 +231,6 @@ class Signal<T = void> {
 
 ## 10. Identity and metadata bridging
 
-- `entity.uid` is generated with ULID on creation and preserved by files. Loading the same scene twice (two instances) generates *fresh* uids per instance for runtime entities while keeping the *file-local* uids for override addressing; the mapping is stored on the `SceneInstance`.
+- `entity.uid` is generated with ULID on creation and preserved by files. Loading the same scene twice (two instances) generates _fresh_ uids per instance for runtime entities while keeping the _file-local_ uids for override addressing; the mapping is stored on the `SceneInstance`.
 - Every Lite node created by ignifx gets `metadata.ignifx = { entity: EntityHandle, component?: ComponentHandle }` so Lite picking results and physics bodies map back to entities.
 - File references (`$entity`, `$component`) never cross scene files. Runtime links between scene instances (a persistent HUD scene reading the gameplay scene's player) use `world.findByTag`, `world.getEntity(uid)` for persistent scenes with known uids, or, preferably, a script in a persistent scene that registers itself in `app.services` (documented as the `cross-scene-links` recipe).

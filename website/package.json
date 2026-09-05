@@ -1,0 +1,18 @@
+{
+  "name": "@ignifx/website",
+  "version": "0.0.0",
+  "private": true,
+  "description": "ignifx.com public site (Vite + TypeScript SPA, deployed separately).",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "typescript-native": "catalog:",
+    "vite": "catalog:"
+  }
+}

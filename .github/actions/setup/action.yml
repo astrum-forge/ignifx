@@ -1,0 +1,24 @@
+name: Setup ignifx workspace
+description: >
+  Installs pnpm and Node, restores the pnpm store cache, and installs the workspace with a frozen
+  lockfile (CONSTITUTION.md §9.4). Every ci.yml/release.yml/website.yml job starts with this.
+
+runs:
+  using: composite
+  steps:
+    # pnpm must be on PATH before setup-node, because `cache: pnpm` shells out to the package
+    # manager to find its store. No `version:` input — the action reads `packageManager` from
+    # package.json (pnpm 11.17.0), which keeps CI and local installs on one version.
+    - uses: pnpm/action-setup@v6
+
+    # Node comes from .nvmrc (24 LTS, coding standards §1). setup-node auto-enables its cache only
+    # for npm projects, so `cache: pnpm` has to be explicit; it caches the pnpm store, not
+    # node_modules, keyed on pnpm-lock.yaml.
+    - uses: actions/setup-node@v7
+      with:
+        node-version-file: .nvmrc
+        cache: pnpm
+
+    - name: Install dependencies
+      shell: bash
+      run: pnpm install --frozen-lockfile

@@ -24,16 +24,16 @@ Entities added after `registerScene` go through Lite's runtime material-swap pat
 
 ### 2.1 `Camera`
 
-| Field | Type / default | Lite mapping |
-|---|---|---|
-| `projection` | `"perspective"` \| `"orthographic"`; default perspective | `enableOrthographicCamera` / `disableOrthographicCamera` |
-| `fov` | vertical degrees, default 60 | `camera.fov` (radians) |
-| `orthographicSize` | half-height in world units, default 5 | `camera.ortho.halfHeight` |
-| `near`, `far` | 0.1, 1000 | `nearPlane`, `farPlane` |
-| `viewport` | `{x, y, width, height}` normalized, default full | `camera.viewport` (`NormalizedViewport`; y measured from the bottom, per `resolveCameraViewport`) |
-| `clearColor` | `[r,g,b,a]`, default from scene settings | `scene.clearColor` (main camera only) |
-| `priority` | number, default 0 | main camera = highest priority enabled camera |
-| `cullingMask` | layer mask, default all | post-1.0 (Lite render task mesh lists) |
+| Field              | Type / default                                           | Lite mapping                                                                                      |
+| ------------------ | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `projection`       | `"perspective"` \| `"orthographic"`; default perspective | `enableOrthographicCamera` / `disableOrthographicCamera`                                          |
+| `fov`              | vertical degrees, default 60                             | `camera.fov` (radians)                                                                            |
+| `orthographicSize` | half-height in world units, default 5                    | `camera.ortho.halfHeight`                                                                         |
+| `near`, `far`      | 0.1, 1000                                                | `nearPlane`, `farPlane`                                                                           |
+| `viewport`         | `{x, y, width, height}` normalized, default full         | `camera.viewport` (`NormalizedViewport`; y measured from the bottom, per `resolveCameraViewport`) |
+| `clearColor`       | `[r,g,b,a]`, default from scene settings                 | `scene.clearColor` (main camera only)                                                             |
+| `priority`         | number, default 0                                        | main camera = highest priority enabled camera                                                     |
+| `cullingMask`      | layer mask, default all                                  | post-1.0 (Lite render task mesh lists)                                                            |
 
 - Implementation: a Lite `FreeCamera` (`createFreeCamera({0,0,0}, {0,0,1})`) parented to the entity's node so the entity's transform defines the view; `world.mainCamera` sets `scene.camera`. A world with no enabled camera renders nothing and logs `IGX-0702` once.
 - Methods: `screenToRay(x, y)` (CSS pixels → world `Ray`), `worldToScreen(point, out?)`, `screenToWorldPoint(x, y, distance)`, `viewportToWorldPoint`, `getProjectionMatrix()` (via Lite `getProjectionMatrix(camera, aspect)`), `getViewMatrix()`.
@@ -41,15 +41,15 @@ Entities added after `registerScene` go through Lite's runtime material-swap pat
 
 ### 2.2 `Light`
 
-| Field | Lite |
-|---|---|
-| `type`: `"directional"` \| `"point"` \| `"spot"` \| `"hemispheric"` | `createDirectionalLight` / `createPointLight` / `createSpotLight` / `createHemisphericLight`, parented to the node with local direction `+Z` and local position `0` |
-| `color` (sRGB), `intensity` | `diffuse`/`specular` (linear) and `intensity` |
-| `range` (point/spot) | `range` |
-| `spotAngle` (degrees, full cone), `spotExponent` | `angle` (radians), `exponent` |
-| `groundColor` (hemispheric) | `groundColor` |
+| Field                                                                                                          | Lite                                                                                                                                                                                            |
+| -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `type`: `"directional"` \| `"point"` \| `"spot"` \| `"hemispheric"`                                            | `createDirectionalLight` / `createPointLight` / `createSpotLight` / `createHemisphericLight`, parented to the node with local direction `+Z` and local position `0`                             |
+| `color` (sRGB), `intensity`                                                                                    | `diffuse`/`specular` (linear) and `intensity`                                                                                                                                                   |
+| `range` (point/spot)                                                                                           | `range`                                                                                                                                                                                         |
+| `spotAngle` (degrees, full cone), `spotExponent`                                                               | `angle` (radians), `exponent`                                                                                                                                                                   |
+| `groundColor` (hemispheric)                                                                                    | `groundColor`                                                                                                                                                                                   |
 | `shadows`: `{ enabled, technique: "esm" \| "pcf" \| "csm", mapSize, bias, normalBias, cascades, maxDistance }` | `createEsmDirectionalShadowGenerator` / `createPcfDirectionalShadowGenerator` / `createCsmDirectionalShadowGenerator` / `createPcfSpotlightShadowGenerator` assigned to `light.shadowGenerator` |
-| `includeOnly` / `exclude` (entity refs) | `includedOnlyMeshIds` / `excludedMeshIds` |
+| `includeOnly` / `exclude` (entity refs)                                                                        | `includedOnlyMeshIds` / `excludedMeshIds`                                                                                                                                                       |
 
 - Point-light shadows and area lights are not available in Lite; the schema rejects `shadows.enabled` on point lights (`IGX-0703`).
 - Changing light topology (adding a shadow caster light after start) triggers `rebuildSceneRenderables`; the adapter batches this to once per frame.
@@ -58,7 +58,7 @@ Entities added after `registerScene` go through Lite's runtime material-swap pat
 
 ```ts
 class MeshRenderer extends Component.define({
-  mesh: asset(MeshAsset),                 // "models/hero.glb#mesh:Body" or a primitive created in code
+  mesh: asset(MeshAsset), // "models/hero.glb#mesh:Body" or a primitive created in code
   materials: array(asset(MaterialAsset)), // one per submesh; empty → default material
   castShadows: bool(true),
   receiveShadows: bool(true),
@@ -77,13 +77,15 @@ class MeshRenderer extends Component.define({
 ```ts
 class Model extends Component.define({
   model: asset(ModelAsset),
-  materialOverrides: map(asset(MaterialAsset)),   // by material name
-  castShadows: bool(true), receiveShadows: bool(true), pickable: bool(true),
+  materialOverrides: map(asset(MaterialAsset)), // by material name
+  castShadows: bool(true),
+  receiveShadows: bool(true),
+  pickable: bool(true),
 }) {
-  readonly nodes: ReadonlyMap<string, LiteNodeView>;   // glTF node name → transform-like view (position/rotation/scale)
-  readonly animations: readonly AnimationGroup[];      // Lite groups, re-bound per instance; consumed by @ignifx/3d Animator
+  readonly nodes: ReadonlyMap<string, LiteNodeView>; // glTF node name → transform-like view (position/rotation/scale)
+  readonly animations: readonly AnimationGroup[]; // Lite groups, re-bound per instance; consumed by @ignifx/3d Animator
   readonly skeletons: readonly Skeleton[];
-  attachToNode(nodeName: string, entity: Entity): void;   // parents the entity's node under a glTF node (bone attachments)
+  attachToNode(nodeName: string, entity: Entity): void; // parents the entity's node under a glTF node (bone attachments)
 }
 ```
 
@@ -101,7 +103,7 @@ One per world (the most recently enabled wins; the adapter warns on two). Fields
   - `"type": "pbr"` → `createPbrMaterial(props)`: `baseColor`, `baseColorTexture`, `metallic`, `roughness`, `metallicRoughnessTexture`, `normalTexture`, `emissive`, `emissiveTexture`, `occlusionTexture`, `alphaMode` (`opaque|mask|blend`), `alphaCutoff`, `doubleSided`, `unlit`, plus opt-in extensions (`clearcoat`, `sheen`, `transmission`, `anisotropy`, `iridescence`) that the adapter enables only when present so unused shader code is tree-shaken.
   - `"type": "standard"` → `createStandardMaterial()` + `setStandard*Texture` setters.
   - `"type": "shader"` → `createShaderMaterial` with a WGSL asset and a declared uniform/texture layout.
-- Materials are shared: many renderers reference one asset. Per-renderer variation uses material *instances* (`MaterialAsset.clone()`, an ignifx-level copy of the material props that creates a new Lite material) or per-instance colors via thin instances (post-MVP).
+- Materials are shared: many renderers reference one asset. Per-renderer variation uses material _instances_ (`MaterialAsset.clone()`, an ignifx-level copy of the material props that creates a new Lite material) or per-instance colors via thin instances (post-MVP).
 - Property changes after the scene is registered go through Lite's dirty mechanism (`markMaterialUboDirty` / opt-in `enableMaterialTracking`); the adapter marks dirty on setter calls.
 
 ### 2.7 `PostProcessStack`
@@ -131,15 +133,15 @@ Under the null engine, `MeshRenderer`/`Model` skip GPU work: the template mesh h
 
 ## 7. Disposal order
 
-`app.dispose()` runs: stop engine → `onStop` hooks → unload scene instances (component `onDestroy`, `removeFromScene`) → extension `dispose` in reverse order (physics disposes its Havok world *before* the scenes are disposed: Lite's physics documentation warns that the step callback must be removed before the native world is released, which `disposePhysics` does, and ignifx orders it first so no scene callback can fire against a released world; audio disposes its engine independently) → `disposeScene(renderScene)` → release texture handles through Lite's resource pool (`acquireTexture`/`releaseTexture`; `Texture2D` has no dispose of its own) → `disposeEngine`. Lite does not cascade physics or audio disposal from scene disposal; ignifx does.
+`app.dispose()` runs: stop engine → `onStop` hooks → unload scene instances (component `onDestroy`, `removeFromScene`) → extension `dispose` in reverse order (physics disposes its Havok world _before_ the scenes are disposed: Lite's physics documentation warns that the step callback must be removed before the native world is released, which `disposePhysics` does, and ignifx orders it first so no scene callback can fire against a released world; audio disposes its engine independently) → `disposeScene(renderScene)` → release texture handles through Lite's resource pool (`acquireTexture`/`releaseTexture`; `Texture2D` has no dispose of its own) → `disposeEngine`. Lite does not cascade physics or audio disposal from scene disposal; ignifx does.
 
 ## 8. Known Lite gaps that shape this document
 
-| Gap | Handling |
-|---|---|
-| No GUI system | `@ignifx/ui` uses DOM overlays and Lite text layers (`13-ui.md`) |
-| No point-light shadows, area lights, reflection probes (local IBL probes exist) | Schema-level rejection; documented |
-| Single active camera per scene | `priority` selects; multi-camera post-1.0 via render tasks |
-| No layer masks on cameras | `cullingMask` deferred |
-| Mesh disposal on last-scene removal | hide via visibility; only `destroy` removes |
-| Frequent breaking changes | adapter boundary + pinned version + compatibility test suite |
+| Gap                                                                             | Handling                                                         |
+| ------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| No GUI system                                                                   | `@ignifx/ui` uses DOM overlays and Lite text layers (`13-ui.md`) |
+| No point-light shadows, area lights, reflection probes (local IBL probes exist) | Schema-level rejection; documented                               |
+| Single active camera per scene                                                  | `priority` selects; multi-camera post-1.0 via render tasks       |
+| No layer masks on cameras                                                       | `cullingMask` deferred                                           |
+| Mesh disposal on last-scene removal                                             | hide via visibility; only `destroy` removes                      |
+| Frequent breaking changes                                                       | adapter boundary + pinned version + compatibility test suite     |

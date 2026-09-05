@@ -1,0 +1,20 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "./.tsbuild-test",
+    // TS 7 writes the build info next to the config by default; keeping it inside the scratch
+    // directory means deleting that one directory really does force a rebuild.
+    "tsBuildInfoFile": "./.tsbuild-test/tsconfig.tsbuildinfo",
+    "emitDeclarationOnly": true,
+    "declarationMap": false,
+    // Tests are not part of the public surface, so they are exempt from isolatedDeclarations
+    // (coding standards §3 applies that flag to keep `src` declaration-emittable without the TS API).
+    "isolatedDeclarations": false,
+    // `src` drops DOM (this is a Node tool); the test project keeps the base libs because the
+    // Vitest type surface references DOM types.
+    "types": ["node"]
+  },
+  "include": ["test"],
+  "references": [{ "path": "./tsconfig.json" }]
+}

@@ -1,0 +1,32 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", ":semanticCommits", ":semanticCommitScope(repo)"],
+  "timezone": "Australia/Melbourne",
+  "schedule": ["before 6am on monday"],
+  "prConcurrentLimit": 3,
+  "rangeStrategy": "bump",
+  "minimumReleaseAge": "1 day",
+  "lockFileMaintenance": { "enabled": true, "schedule": ["before 6am on monday"] },
+  "packageRules": [
+    {
+      "description": "CONSTITUTION.md §4.6 — @babylonjs/lite is pinned exactly and bumped only by a deliberate, reviewed pull request.",
+      "matchPackageNames": ["@babylonjs/lite", "@babylonjs/havok"],
+      "enabled": false
+    },
+    {
+      "description": "ADR-0007 — the TypeScript pair moves together and is reviewed by hand.",
+      "matchPackageNames": ["typescript", "typescript-native", "@typescript/typescript6"],
+      "groupName": "typescript",
+      "automerge": false
+    },
+    {
+      "matchDepTypes": ["devDependencies"],
+      "groupName": "dev tooling",
+      "matchUpdateTypes": ["minor", "patch"]
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "groupName": "github actions"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/core" },
+    { "path": "./packages/input" },
+    { "path": "./packages/physics" },
+    { "path": "./packages/physics-2d" },
+    { "path": "./packages/audio" },
+    { "path": "./packages/2d" },
+    { "path": "./packages/3d" },
+    { "path": "./packages/ui" },
+    { "path": "./packages/electron" },
+    { "path": "./packages/devtools" },
+    { "path": "./packages/vite-plugin" },
+    { "path": "./packages/cli" },
+    { "path": "./packages/ignifx" }
+  ]
+}

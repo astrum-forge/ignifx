@@ -9,7 +9,7 @@ metadata:
 
 # ignifx
 
-> **Scaffold notice.** ignifx is in the planning phase; no package has been released. Sections marked *(populated in Phase N)* are filled by the engineering plan's phases (`docs/plan/engineering-plan.md`). Everything in this file must describe only the current release once one exists (`CONSTITUTION.md` Article V).
+> **Scaffold notice.** ignifx is in the planning phase; no package has been released. Sections marked _(populated in Phase N)_ are filled by the engineering plan's phases (`docs/plan/engineering-plan.md`). Everything in this file must describe only the current release once one exists (`CONSTITUTION.md` Article V).
 
 ## What this is / when to use
 
@@ -17,13 +17,13 @@ ignifx is a code-first TypeScript game engine for browsers and Electron. It rend
 
 ## Environment
 
-| Item | Value |
-|---|---|
-| Engine version | *(populated at release)* |
-| Babylon Lite | 1.27.0 (pinned; do not call Lite APIs directly outside adapter code) |
-| Node / pnpm | 24 LTS / 11 |
+| Item                | Value                                                                                                                                                     |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Engine version      | _(populated at release)_                                                                                                                                  |
+| Babylon Lite        | 1.27.0 (pinned; do not call Lite APIs directly outside adapter code)                                                                                      |
+| Node / pnpm         | 24 LTS / 11                                                                                                                                               |
 | Browser requirement | WebGPU (Chrome/Edge 113+, Safari 26+, Firefox 141+ Windows / 145+ Apple Silicon); Electron needs `--enable-unsafe-webgpu` (handled by `@ignifx/electron`) |
-| Commands | `pnpm dev` · `pnpm test` · `pnpm typecheck` · `pnpm check` (all gates) |
+| Commands            | `pnpm dev` · `pnpm test` · `pnpm typecheck` · `pnpm check` (all gates)                                                                                    |
 
 ## Mental model
 
@@ -37,7 +37,7 @@ Frame: PreUpdate → awake/onEnable → [fixedUpdate × N + physics] → start �
 - Units: metres, seconds, degrees. Left-handed, Y up, +Z forward. 2D is Y up with pixels-per-unit.
 - Unity mapping: GameObject → `Entity`, MonoBehaviour → `Script`, prefab → instanced scene. Godot mapping: Node → `Entity`, PackedScene → scene asset, signal → `Signal`.
 
-## First app *(populated in Phase 1; shape fixed by docs/architecture)*
+## First app _(populated in Phase 1; shape fixed by docs/architecture)_
 
 ```ts ignore-check
 // ignore-check: packages are not published yet; the tag is removed in Phase 1 when this compiles in the harness.
@@ -46,7 +46,9 @@ import { input } from "@ignifx/input";
 
 class Spinner extends Script.define({ speed: f32(90) }) {
   static typeId = "demo/Spinner";
-  update(dt: number) { this.transform.rotate({ x: 0, y: this.speed * dt, z: 0 }); }
+  update(dt: number) {
+    this.transform.rotate({ x: 0, y: this.speed * dt, z: 0 });
+  }
 }
 
 const app = await createApp({ canvas: document.querySelector("canvas")!, extensions: [input()] });
@@ -57,32 +59,32 @@ cube.addComponent(Spinner);
 await app.start();
 ```
 
-## Core APIs *(tables generated from references/api in Phase 11)*
+## Core APIs _(tables generated from references/api in Phase 11)_
 
-| Area | Read |
-|---|---|
-| Lifecycle and time | `references/concepts/lifecycle.md` |
+| Area                         | Read                                 |
+| ---------------------------- | ------------------------------------ |
+| Lifecycle and time           | `references/concepts/lifecycle.md`   |
 | Entities, transforms, scenes | `references/concepts/scene-graph.md` |
-| Scripts, schemas, coroutines | `references/concepts/scripting.md` |
-| Assets and loading | `references/concepts/assets.md` |
-| Extensions | `references/concepts/extensions.md` |
-| Generated API | `references/api/<package>.md` |
+| Scripts, schemas, coroutines | `references/concepts/scripting.md`   |
+| Assets and loading           | `references/concepts/assets.md`      |
+| Extensions                   | `references/concepts/extensions.md`  |
+| Generated API                | `references/api/<package>.md`        |
 
-## Recipes *(populated from examples/recipes in Phase 11)*
+## Recipes _(populated from examples/recipes in Phase 11)_
 
 | Recipe | Description |
-|---|---|
-| — | — |
+| ------ | ----------- |
+| —      | —           |
 
 ## File formats
 
-| Format | Reference |
-|---|---|
-| Scene / prefab (`ignifx.scene`) | `references/formats/scene.md` |
-| Material, atlas, tilemap, input actions, animator, audio buses | `references/formats/*.md` |
-| JSON Schemas | `ignifx.schemas.json` (generated) |
+| Format                                                         | Reference                         |
+| -------------------------------------------------------------- | --------------------------------- |
+| Scene / prefab (`ignifx.scene`)                                | `references/formats/scene.md`     |
+| Material, atlas, tilemap, input actions, animator, audio buses | `references/formats/*.md`         |
+| JSON Schemas                                                   | `ignifx.schemas.json` (generated) |
 
-## Gotchas (top 10) *(seeded from architecture decisions; verified per release)*
+## Gotchas (top 10) _(seeded from architecture decisions; verified per release)_
 
 1. WebGPU only: `createApp` rejects with `WebGpuUnavailableError` when unsupported; show a fallback page.
 2. Hide entities with `active = false`; never remove a mesh from the Lite scene to hide it (Lite disposes it permanently).

@@ -1,0 +1,24 @@
+# ignifx
+
+> A code-first TypeScript game engine for the web, built on Babylon Lite (WebGPU only). Runs in WebGPU-capable browsers and in Electron. Designed for indie 2D (top-down, side-scrolling) and 3D (third-person, first-person) games, with a Unity-style script lifecycle, Godot-style scenes and signals, and first-class documentation for AI coding agents.
+
+Planning phase — no packages are published yet, and this file is a Phase 0 placeholder. It is
+populated with generated API references, recipes, and file-format pages in Phase 11 of
+`docs/plan/engineering-plan.md`; until then the links below are the whole index.
+
+Start with SKILL.md: it is the entry point for agents (`CONSTITUTION.md` §5.1) and links onward to
+`references/` for concepts, recipes, and formats. The engine name is always written lowercase, as
+`ignifx` (`CONSTITUTION.md` §1.5).
+
+## Docs
+
+- [SKILL.md](https://raw.githubusercontent.com/astrum-forge/ignifx/main/skills/ignifx/SKILL.md): The Agent Skill that ships with the engine — install, first app, core concepts, recipes index, gotchas.
+- [Architecture overview](https://raw.githubusercontent.com/astrum-forge/ignifx/main/docs/architecture/00-overview.md): Package layout, dependency direction, runtime model, and what is in scope for 1.0.
+- [CONSTITUTION.md](https://raw.githubusercontent.com/astrum-forge/ignifx/main/CONSTITUTION.md): The numbered rules that govern the project — principles, architecture tenets, versioning, documentation, process.
+
+## Optional
+
+- [AGENTS.md](https://raw.githubusercontent.com/astrum-forge/ignifx/main/AGENTS.md): Repository mechanics for agents and contributors working *on* the engine rather than *with* it.
+- [Coding standards](https://raw.githubusercontent.com/astrum-forge/ignifx/main/docs/standards/coding-standards.md): Toolchain, TypeScript configuration, lint, naming, testing, and pull-request rules.
+- [Engineering plan](https://raw.githubusercontent.com/astrum-forge/ignifx/main/docs/plan/engineering-plan.md): The phased plan from empty repository to 1.0, including when this file gets its generated content.
+- [Repository](https://github.com/astrum-forge/ignifx): Source, issues, and releases.

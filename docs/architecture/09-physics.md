@@ -30,19 +30,19 @@ Per frame in `PreRender` (order −500): for every `Rigidbody` with `interpolati
 
 ### 2.1 `Rigidbody`
 
-| Field | Default | Lite |
-|---|---|---|
-| `bodyType`: `"dynamic"` \| `"kinematic"` \| `"static"` | `"dynamic"` | `PhysicsMotionType.DYNAMIC` / `ANIMATED` / `STATIC` (`createPhysicsBody`, `setPhysicsBodyMotionType`) |
-| `mass` | 1 | `setPhysicsBodyMass` (0 for static) |
-| `startAsleep` | false | `createPhysicsBody(..., startsAsleep)` |
-| `freezeRotation`: `{ x, y, z }` | all false | `lockPhysicsBodyRotationAxes` / `unlockPhysicsBodyRotationAxes` |
-| `interpolation`: `"none"` \| `"interpolate"` | `"interpolate"` for dynamic | ignifx (§1) |
-| `collisionEvents` | auto (true when any script on the entity implements `onCollision*`; recomputed on every `addComponent`/`removeComponent` on the entity and pushed to Havok) | `setPhysicsBodyCollisionEventsEnabled` |
-| `kinematicSync`: `"teleport"` \| `"velocity"` | `"teleport"` | `setPhysicsBodyPrestepType(TELEPORT/ACTION)` |
-| `linearVelocity`, `angularVelocity` (runtime) | — | `get/setPhysicsBodyLinearVelocity`, `get/setPhysicsBodyAngularVelocity` |
-| `addForce(force, point?)`, `addImpulse(impulse, point?)` | — | `applyPhysicsBodyForce`, `applyPhysicsBodyImpulse` |
-| `teleport(position, rotation)` | — | `setPhysicsBodyTransform` |
-| `velocityLimits` | world default | `setPhysicsVelocityLimits` |
+| Field                                                    | Default                                                                                                                                                     | Lite                                                                                                  |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `bodyType`: `"dynamic"` \| `"kinematic"` \| `"static"`   | `"dynamic"`                                                                                                                                                 | `PhysicsMotionType.DYNAMIC` / `ANIMATED` / `STATIC` (`createPhysicsBody`, `setPhysicsBodyMotionType`) |
+| `mass`                                                   | 1                                                                                                                                                           | `setPhysicsBodyMass` (0 for static)                                                                   |
+| `startAsleep`                                            | false                                                                                                                                                       | `createPhysicsBody(..., startsAsleep)`                                                                |
+| `freezeRotation`: `{ x, y, z }`                          | all false                                                                                                                                                   | `lockPhysicsBodyRotationAxes` / `unlockPhysicsBodyRotationAxes`                                       |
+| `interpolation`: `"none"` \| `"interpolate"`             | `"interpolate"` for dynamic                                                                                                                                 | ignifx (§1)                                                                                           |
+| `collisionEvents`                                        | auto (true when any script on the entity implements `onCollision*`; recomputed on every `addComponent`/`removeComponent` on the entity and pushed to Havok) | `setPhysicsBodyCollisionEventsEnabled`                                                                |
+| `kinematicSync`: `"teleport"` \| `"velocity"`            | `"teleport"`                                                                                                                                                | `setPhysicsBodyPrestepType(TELEPORT/ACTION)`                                                          |
+| `linearVelocity`, `angularVelocity` (runtime)            | —                                                                                                                                                           | `get/setPhysicsBodyLinearVelocity`, `get/setPhysicsBodyAngularVelocity`                               |
+| `addForce(force, point?)`, `addImpulse(impulse, point?)` | —                                                                                                                                                           | `applyPhysicsBodyForce`, `applyPhysicsBodyImpulse`                                                    |
+| `teleport(position, rotation)`                           | —                                                                                                                                                           | `setPhysicsBodyTransform`                                                                             |
+| `velocityLimits`                                         | world default                                                                                                                                               | `setPhysicsVelocityLimits`                                                                            |
 
 Not available in Lite 1.27.0 and therefore absent from the schema (tracked as upstream requests): per-body linear/angular damping, per-body gravity factor, sleep thresholds, and explicit `wakeUp()`. Gravity is per world (`setPhysicsGravity`) with optional regional gravity for planetary setups.
 
@@ -60,20 +60,23 @@ Wraps Lite's `PhysicsCharacterController` (kinematic capsule with collide-and-sl
 
 ```ts
 class CharacterController extends Component.define({
-  radius: f32(0.4), height: f32(1.8), center: vec3(),
-  slopeLimit: f32(45),            // degrees → maxSlopeCosine
-  skinWidth: f32(0.05),           // keepDistance
-  pushStrength: f32(1),           // characterStrength scale
+  radius: f32(0.4),
+  height: f32(1.8),
+  center: vec3(),
+  slopeLimit: f32(45), // degrees → maxSlopeCosine
+  skinWidth: f32(0.05), // keepDistance
+  pushStrength: f32(1), // characterStrength scale
   interpolation: enumOf(["none", "interpolate"] as const, "interpolate"),
 }) {
-  move(displacement: Vec3Like): void;          // call in fixedUpdate; collide-and-slide (moveWithCollisions)
-  setVelocity(v: Vec3Like): void; readonly velocity: Vec3;
-  readonly isGrounded: boolean;                // supportedState === SUPPORTED
+  move(displacement: Vec3Like): void; // call in fixedUpdate; collide-and-slide (moveWithCollisions)
+  setVelocity(v: Vec3Like): void;
+  readonly velocity: Vec3;
+  readonly isGrounded: boolean; // supportedState === SUPPORTED
   readonly supportState: "unsupported" | "sliding" | "supported";
   readonly groundNormal: Vec3;
-  setHeight(height: number, preserveFeet?: boolean): void;   // crouch (setShapeOptions)
+  setHeight(height: number, preserveFeet?: boolean): void; // crouch (setShapeOptions)
   teleport(position: Vec3Like): void;
-  readonly onCollided: Signal<CharacterCollision>;            // dynamic bodies pushed (onTriggerCollisionObservable)
+  readonly onCollided: Signal<CharacterCollision>; // dynamic bodies pushed (onTriggerCollisionObservable)
 }
 ```
 
@@ -97,7 +100,7 @@ class CharacterController extends Component.define({
 - **Collisions:** `onPhysicsCollision` currently reports `type`, `point`, `normal`, `impulse` **without body identities**. Delivering `onCollisionEnter/Stay/Exit` to the right entities requires one of:
   1. an upstream addition `onPhysicsCollisionBodies` (mirrors the trigger API) — the preferred path; Phase 4 includes the pull request; or
   2. an adapter-internal drain that reads Havok's collision event buffer through the world's internal handles (same offsets Lite uses). This deliberately crosses the adapter boundary and is therefore governed by its own waiver, ADR-0013: opt-in through `physics({ collisionIdentities: "internal" })`, guarded by a version-pinned layout test, and removed the release after upstream support lands.
-  The plan carries this as risk R-4. Until one path ships, trigger events (which carry identities) are the documented mechanism for gameplay reactions, and `onCollision*` callbacks deliver contact data with `other` set to `null`.
+     The plan carries this as risk R-4. Until one path ships, trigger events (which carry identities) are the documented mechanism for gameplay reactions, and `onCollision*` callbacks deliver contact data with `other` set to `null`.
 - `Collision { other: Entity, otherCollider, contacts: [{ point, normal, impulse }], relativeVelocity? }`. Contacts are pooled and only valid during the callback.
 
 ## 5. Queries (`app.physics`)
@@ -120,7 +123,7 @@ overlap(shape, position, rotation?, options?): Entity[]                         
 
 ## 8. Determinism
 
-- Fixed step, fixed iteration order (bodies are stepped by Havok; ignifx dispatches events in Havok's order), no wall-clock reads. Same inputs + same build ⇒ identical results **on the same platform and browser engine**; replays rely on this. Cross-platform bit-exactness is tested on Linux, macOS, and Windows in CI from Phase 4 but is *not* guaranteed (WASM engines may differ in transcendental math and FMA usage); a lockstep networking design after 1.0 must budget for that (risk R-14).
+- Fixed step, fixed iteration order (bodies are stepped by Havok; ignifx dispatches events in Havok's order), no wall-clock reads. Same inputs + same build ⇒ identical results **on the same platform and browser engine**; replays rely on this. Cross-platform bit-exactness is tested on Linux, macOS, and Windows in CI from Phase 4 but is _not_ guaranteed (WASM engines may differ in transcendental math and FMA usage); a lockstep networking design after 1.0 must budget for that (risk R-14).
 - Body creation order affects Havok's internal ordering; scene loading is deterministic (tree order), and scripts creating bodies at runtime must do so from deterministic callbacks (`fixedUpdate`), not from asset-load promises, when determinism matters.
 
 ## 9. Debugging

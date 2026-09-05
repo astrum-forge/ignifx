@@ -22,23 +22,29 @@ InputService (app.input)
 
 ```ts
 interface InputAction {
-  readonly name: string; readonly map: ActionMap;
+  readonly name: string;
+  readonly map: ActionMap;
   readonly type: "button" | "axis" | "vector2";
   enabled: boolean;
-  readonly value: boolean | number | Vec2;     // typed accessors below avoid unions
-  readonly isPressed: boolean;                 // button: held; axis/vector2: magnitude > pressPoint
+  readonly value: boolean | number | Vec2; // typed accessors below avoid unions
+  readonly isPressed: boolean; // button: held; axis/vector2: magnitude > pressPoint
   readonly wasPressedThisFrame: boolean;
   readonly wasReleasedThisFrame: boolean;
-  readonly axis: number;                       // for "axis"
-  readonly vector: Vec2;                       // for "vector2" (readonly live view)
-  readonly onStarted: Signal<InputActionEvent>;   // first actuation
+  readonly axis: number; // for "axis"
+  readonly vector: Vec2; // for "vector2" (readonly live view)
+  readonly onStarted: Signal<InputActionEvent>; // first actuation
   readonly onPerformed: Signal<InputActionEvent>; // value changed / button pressed
-  readonly onCanceled: Signal<InputActionEvent>;  // returned to rest
+  readonly onCanceled: Signal<InputActionEvent>; // returned to rest
   readonly bindings: readonly Binding[];
 }
-interface ActionMap { readonly name: string; enabled: boolean; readonly actions: ReadonlyMap<string, InputAction>; get(name): InputAction }
-app.input.actions.get("move")            // searches enabled maps; throws IGX-0801 when unknown
-app.input.actions.map("UI").enabled = true
+interface ActionMap {
+  readonly name: string;
+  enabled: boolean;
+  readonly actions: ReadonlyMap<string, InputAction>;
+  get(name): InputAction;
+}
+app.input.actions.get("move"); // searches enabled maps; throws IGX-0801 when unknown
+app.input.actions.map("UI").enabled = true;
 ```
 
 - Maps group actions by context (`"Player"`, `"UI"`, `"Vehicle"`); enabling/disabling a map is how games switch contexts. Actions inside disabled maps read as released.
@@ -48,34 +54,69 @@ app.input.actions.map("UI").enabled = true
 
 Binding paths follow the Unity Input System shape: `"<Device>/control"`.
 
-| Device | Example paths |
-|---|---|
-| Keyboard (physical `KeyboardEvent.code`) | `<Keyboard>/w`, `<Keyboard>/space`, `<Keyboard>/shiftLeft`, `<Keyboard>/anyKey` |
-| Mouse | `<Mouse>/leftButton`, `<Mouse>/rightButton`, `<Mouse>/middleButton`, `<Mouse>/position`, `<Mouse>/delta`, `<Mouse>/scroll` |
-| Pointer (mouse+pen+touch primary) | `<Pointer>/press`, `<Pointer>/position`, `<Pointer>/delta` |
-| Touch | `<Touch>/primaryTouch/press`, `<Touch>/touch0/position`, `<Touch>/touchCount` |
-| Gamepad (standard mapping) | `<Gamepad>/leftStick`, `<Gamepad>/rightStick`, `<Gamepad>/buttonSouth`, `<Gamepad>/leftTrigger`, `<Gamepad>/dpad/up`, `<Gamepad>/start` |
+| Device                                   | Example paths                                                                                                                           |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Keyboard (physical `KeyboardEvent.code`) | `<Keyboard>/w`, `<Keyboard>/space`, `<Keyboard>/shiftLeft`, `<Keyboard>/anyKey`                                                         |
+| Mouse                                    | `<Mouse>/leftButton`, `<Mouse>/rightButton`, `<Mouse>/middleButton`, `<Mouse>/position`, `<Mouse>/delta`, `<Mouse>/scroll`              |
+| Pointer (mouse+pen+touch primary)        | `<Pointer>/press`, `<Pointer>/position`, `<Pointer>/delta`                                                                              |
+| Touch                                    | `<Touch>/primaryTouch/press`, `<Touch>/touch0/position`, `<Touch>/touchCount`                                                           |
+| Gamepad (standard mapping)               | `<Gamepad>/leftStick`, `<Gamepad>/rightStick`, `<Gamepad>/buttonSouth`, `<Gamepad>/leftTrigger`, `<Gamepad>/dpad/up`, `<Gamepad>/start` |
 
 Composites: `2DVector` (up/down/left/right → `vector2`), `1DAxis` (negative/positive → `axis`), `ButtonWithModifier` (modifier + button). Processors: `deadzone(min, max)` (radial for sticks), `invert`, `scale(x[, y])`, `clamp`, `normalize`. Interactions (`hold`, `tap`, `multiTap`) are Phase 3 stretch goals.
 
 ```json
 {
-  "format": "ignifx.inputactions", "formatVersion": 1,
+  "format": "ignifx.inputactions",
+  "formatVersion": 1,
   "controlSchemes": [
     { "name": "KeyboardMouse", "devices": ["Keyboard", "Mouse"] },
     { "name": "Gamepad", "devices": ["Gamepad"] },
     { "name": "Touch", "devices": ["Touch"] }
   ],
   "maps": [
-    { "name": "Player", "actions": [
-      { "name": "move", "type": "vector2", "bindings": [
-        { "composite": "2DVector", "up": "<Keyboard>/w", "down": "<Keyboard>/s", "left": "<Keyboard>/a", "right": "<Keyboard>/d", "scheme": "KeyboardMouse" },
-        { "path": "<Gamepad>/leftStick", "processors": ["deadzone(0.15)"], "scheme": "Gamepad" }
-      ]},
-      { "name": "jump", "type": "button", "bindings": [ { "path": "<Keyboard>/space" }, { "path": "<Gamepad>/buttonSouth" } ] },
-      { "name": "look", "type": "vector2", "bindings": [ { "path": "<Mouse>/delta", "processors": ["scale(0.1)"] }, { "path": "<Gamepad>/rightStick", "processors": ["deadzone(0.2)", "scale(3)"] } ] }
-    ]},
-    { "name": "UI", "actions": [ { "name": "submit", "type": "button", "bindings": [ { "path": "<Keyboard>/enter" }, { "path": "<Gamepad>/buttonSouth" } ] } ] }
+    {
+      "name": "Player",
+      "actions": [
+        {
+          "name": "move",
+          "type": "vector2",
+          "bindings": [
+            {
+              "composite": "2DVector",
+              "up": "<Keyboard>/w",
+              "down": "<Keyboard>/s",
+              "left": "<Keyboard>/a",
+              "right": "<Keyboard>/d",
+              "scheme": "KeyboardMouse"
+            },
+            { "path": "<Gamepad>/leftStick", "processors": ["deadzone(0.15)"], "scheme": "Gamepad" }
+          ]
+        },
+        {
+          "name": "jump",
+          "type": "button",
+          "bindings": [{ "path": "<Keyboard>/space" }, { "path": "<Gamepad>/buttonSouth" }]
+        },
+        {
+          "name": "look",
+          "type": "vector2",
+          "bindings": [
+            { "path": "<Mouse>/delta", "processors": ["scale(0.1)"] },
+            { "path": "<Gamepad>/rightStick", "processors": ["deadzone(0.2)", "scale(3)"] }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "UI",
+      "actions": [
+        {
+          "name": "submit",
+          "type": "button",
+          "bindings": [{ "path": "<Keyboard>/enter" }, { "path": "<Gamepad>/buttonSouth" }]
+        }
+      ]
+    }
   ]
 }
 ```

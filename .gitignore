@@ -1,0 +1,24 @@
+node_modules/
+dist/
+coverage/
+.turbo/
+*.tsbuildinfo
+.tsbuild/
+.tsbuild-test/
+
+# API Extractor scratch output (only api/*.api.md is committed)
+temp/
+etc/temp/
+
+# Playwright / Vitest browser output
+test-results/
+playwright-report/
+blob-report/
+.playwright/
+.vitest/
+
+# Local editor and OS noise
+.DS_Store
+*.local
+.vscode/*
+!.vscode/extensions.json

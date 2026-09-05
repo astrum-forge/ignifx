@@ -1,0 +1,17 @@
+{
+  // Discovery shim, not a build project. Oxlint/tsgolint resolve the nearest `tsconfig.json` for
+  // each file; `../tsconfig.json` covers only `src`, so without this file the test sources would be
+  // type-checked against the workspace root config and lose `types: ["node"]`, which makes every
+  // `node:*` import an error type and trips the type-aware `no-unsafe-*` rules.
+  // `pnpm --filter @ignifx/cli run typecheck` still builds `../tsconfig.test.json`; this one emits
+  // nothing so the two never write to the same place.
+  "extends": "../tsconfig.test.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "emitDeclarationOnly": false,
+    "noEmit": true
+  },
+  "include": ["."]
+}

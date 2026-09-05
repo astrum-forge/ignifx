@@ -22,15 +22,15 @@ ignifx maps its 2D world (metres, **+Y up**, Z ignored for drawing) onto this:
 
 ### 2.1 `Camera2D`
 
-| Field | Default | Notes |
-|---|---|---|
-| `orthographicSize` (half-height, units) | 5 | zoom = viewportHeightPx / (2·size·PPU) |
-| `pixelPerfect` | false | snaps zoom to integers and camera position to whole pixels; sets `SpriteSampling: "nearest"` per atlas |
-| `referenceResolution` `[w, h]` | `[640, 360]` | with `pixelPerfect`, chooses the integer zoom that fits |
-| `bounds` `{ min, max }` \| null | null | camera limits (Godot `limit_*`) |
-| `follow` (entity ref), `followDamping`, `followOffset`, `deadZone` | — | smooth follow with dead zone (a built-in script, `Camera2DFollow`, is the reference implementation) |
-| `clearColor` | scene settings | `SpriteRendererOptions.clearValue` |
-| `priority` | 0 | highest enabled wins |
+| Field                                                              | Default        | Notes                                                                                                  |
+| ------------------------------------------------------------------ | -------------- | ------------------------------------------------------------------------------------------------------ |
+| `orthographicSize` (half-height, units)                            | 5              | zoom = viewportHeightPx / (2·size·PPU)                                                                 |
+| `pixelPerfect`                                                     | false          | snaps zoom to integers and camera position to whole pixels; sets `SpriteSampling: "nearest"` per atlas |
+| `referenceResolution` `[w, h]`                                     | `[640, 360]`   | with `pixelPerfect`, chooses the integer zoom that fits                                                |
+| `bounds` `{ min, max }` \| null                                    | null           | camera limits (Godot `limit_*`)                                                                        |
+| `follow` (entity ref), `followDamping`, `followOffset`, `deadZone` | —              | smooth follow with dead zone (a built-in script, `Camera2DFollow`, is the reference implementation)    |
+| `clearColor`                                                       | scene settings | `SpriteRendererOptions.clearValue`                                                                     |
+| `priority`                                                         | 0              | highest enabled wins                                                                                   |
 
 `screenToWorld(x, y)` / `worldToScreen(point)` use `sprite2DScreenToWorldToRef`/`sprite2DWorldToScreenToRef` plus the PPU conversion. `Camera2D` also configures the surface `maxDevicePixelRatio` for pixel-art (integer DPR).
 
@@ -38,12 +38,14 @@ ignifx maps its 2D world (metres, **+Y up**, Z ignored for drawing) onto this:
 
 ```ts
 class SpriteRenderer extends Component.define({
-  sprite: asset(SpriteAsset),             // "sprites/hero.atlas.json#frame:idle_0" or an image address (single-frame atlas)
+  sprite: asset(SpriteAsset), // "sprites/hero.atlas.json#frame:idle_0" or an image address (single-frame atlas)
   color: color("#ffffffff"),
-  flipX: bool(false), flipY: bool(false),
-  sortingLayer: str("Default"), orderInLayer: i32(0),
+  flipX: bool(false),
+  flipY: bool(false),
+  sortingLayer: str("Default"),
+  orderInLayer: i32(0),
   blend: enumOf(["alpha", "premultiplied", "additive", "multiply", "opaque"] as const, "alpha"),
-  pivotOverride: optional(vec2()),         // defaults to the frame's pivot
+  pivotOverride: optional(vec2()), // defaults to the frame's pivot
 }) {}
 ```
 

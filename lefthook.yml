@@ -1,0 +1,11 @@
+# Git hooks (coding standards §6, §11). Install with `pnpm lefthook install`.
+pre-commit:
+  parallel: false
+  commands:
+    lint-staged:
+      run: pnpm exec lint-staged
+
+commit-msg:
+  commands:
+    commitlint:
+      run: pnpm exec commitlint --edit {1}

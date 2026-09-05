@@ -2,43 +2,43 @@
 
 **Status:** Design standard (pre-1.0) · **Package:** `@ignifx/core` · **Related:** ADR-0003, `03-scripting-and-components.md`, `09-physics.md`
 
-This document is the single definition of *when things happen*. Extensions plug into the phases defined here; they never invent their own loop (`CONSTITUTION.md` §3.2).
+This document is the single definition of _when things happen_. Extensions plug into the phases defined here; they never invent their own loop (`CONSTITUTION.md` §3.2).
 
 ---
 
 ## 1. Who drives the loop
 
-| Mode | Driver | How a frame starts |
-|---|---|---|
-| Browser / Electron | Babylon Lite's `startEngine(engine)` requestAnimationFrame loop | Lite calls the one `onBeforeRender(renderScene, cb)` callback ignifx registered; `cb(deltaMs)` runs the whole ignifx frame, then returns so Lite records and submits the GPU frame |
-| Headless (tests, servers, tools) | `app.step(deltaSeconds)` called by user code | ignifx runs the same frame function; Lite's null engine and `stepScene` are used only for the physics simulation scene |
-| Worker (post-MVP) | Same as browser with an `OffscreenCanvas` | unchanged |
+| Mode                             | Driver                                                          | How a frame starts                                                                                                                                                                 |
+| -------------------------------- | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Browser / Electron               | Babylon Lite's `startEngine(engine)` requestAnimationFrame loop | Lite calls the one `onBeforeRender(renderScene, cb)` callback ignifx registered; `cb(deltaMs)` runs the whole ignifx frame, then returns so Lite records and submits the GPU frame |
+| Headless (tests, servers, tools) | `app.step(deltaSeconds)` called by user code                    | ignifx runs the same frame function; Lite's null engine and `stepScene` are used only for the physics simulation scene                                                             |
+| Worker (post-MVP)                | Same as browser with an `OffscreenCanvas`                       | unchanged                                                                                                                                                                          |
 
 Rules:
 
-- ignifx registers **exactly one** Lite before-render callback on the render scene per world. All ignifx work happens inside it, in the order of §3. Extensions never call `onBeforeRender` themselves. (The physics simulation scene carries Lite's own Havok step callback, which ignifx *drives* through `stepScene` and never registers; see `09-physics.md` §1.)
-- Because Lite runs callbacks registered *later* first, the world registers its callback after every extension has finished `register()` and before `startEngine`; the adapter asserts this in development builds.
+- ignifx registers **exactly one** Lite before-render callback on the render scene per world. All ignifx work happens inside it, in the order of §3. Extensions never call `onBeforeRender` themselves. (The physics simulation scene carries Lite's own Havok step callback, which ignifx _drives_ through `stepScene` and never registers; see `09-physics.md` §1.)
+- Because Lite runs callbacks registered _later_ first, the world registers its callback after every extension has finished `register()` and before `startEngine`; the adapter asserts this in development builds.
 - `app.start()` applies rendering feature opt-ins, runs extension `onStart` hooks, then awaits `registerScene(renderScene)` (or `registerSceneWithShadowSupport`) and `startEngine(engine)`; `app.stop()` calls `stopEngine`. `app.dispose()` follows the order in `07-rendering.md` §7 (physics before scene, audio independently).
 
 ## 2. The `Time` service (`app.time`)
 
 All values are **seconds** unless the name ends in `Ms`.
 
-| Property | Meaning | Default |
-|---|---|---|
-| `deltaTime` | Scaled time since the previous frame; what `update`/`lateUpdate` receive | — |
-| `unscaledDeltaTime` | Wall-clock frame delta after the `maximumDeltaTime` clamp | — |
-| `fixedDeltaTime` | Size of one fixed step; what `fixedUpdate` receives | `1/60` |
-| `timeScale` | Multiplier applied to `unscaledDeltaTime` to produce `deltaTime`; `0` freezes scaled time and fixed steps | `1` |
-| `maximumDeltaTime` | Upper clamp on a frame delta. Larger real gaps (tab switch, breakpoint) are dropped, so the game slows instead of spiralling | `0.1` |
-| `time` | Scaled seconds since `app.start()` | — |
-| `unscaledTime` | Unscaled seconds since `app.start()` | — |
-| `fixedTime` | Scaled seconds advanced by fixed steps so far | — |
-| `realtimeSinceStartup` | `performance.now()`-based wall clock since app creation, unaffected by pause | — |
-| `frameCount` | Number of frames started | `0` |
-| `inFixedStep` | `true` while `fixedUpdate` and physics run | `false` |
-| `fixedStepAlpha` | `accumulator / fixedDeltaTime` after the fixed loop, in `[0, 1)`; used for interpolation | — |
-| `paused` | When `true`, phases `FixedUpdate`…`LateUpdate` skip scripts unless the script sets `static updateWhenPaused = true`; unscaled time keeps running | `false` |
+| Property               | Meaning                                                                                                                                          | Default |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------- |
+| `deltaTime`            | Scaled time since the previous frame; what `update`/`lateUpdate` receive                                                                         | —       |
+| `unscaledDeltaTime`    | Wall-clock frame delta after the `maximumDeltaTime` clamp                                                                                        | —       |
+| `fixedDeltaTime`       | Size of one fixed step; what `fixedUpdate` receives                                                                                              | `1/60`  |
+| `timeScale`            | Multiplier applied to `unscaledDeltaTime` to produce `deltaTime`; `0` freezes scaled time and fixed steps                                        | `1`     |
+| `maximumDeltaTime`     | Upper clamp on a frame delta. Larger real gaps (tab switch, breakpoint) are dropped, so the game slows instead of spiralling                     | `0.1`   |
+| `time`                 | Scaled seconds since `app.start()`                                                                                                               | —       |
+| `unscaledTime`         | Unscaled seconds since `app.start()`                                                                                                             | —       |
+| `fixedTime`            | Scaled seconds advanced by fixed steps so far                                                                                                    | —       |
+| `realtimeSinceStartup` | `performance.now()`-based wall clock since app creation, unaffected by pause                                                                     | —       |
+| `frameCount`           | Number of frames started                                                                                                                         | `0`     |
+| `inFixedStep`          | `true` while `fixedUpdate` and physics run                                                                                                       | `false` |
+| `fixedStepAlpha`       | `accumulator / fixedDeltaTime` after the fixed loop, in `[0, 1)`; used for interpolation                                                         | —       |
+| `paused`               | When `true`, phases `FixedUpdate`…`LateUpdate` skip scripts unless the script sets `static updateWhenPaused = true`; unscaled time keeps running | `false` |
 
 Setting `fixedDeltaTime` at runtime is allowed between frames only (a set during a frame takes effect at the next frame start). The physics extension mirrors it into `setPhysicsTimestep`.
 
@@ -94,32 +94,32 @@ RETURN to Lite → frame graph executes and the frame is presented (no render in
 Notes:
 
 - **Why physics is split around `fixedUpdate`.** Scripts write forces, velocities, and `CharacterController.move()` requests in `fixedUpdate`; the physics system then steps once with `fixedDeltaTime`; collision and trigger callbacks fire immediately after that step, still inside the fixed loop, so a script can react in the same step.
-- **Why animation sits between `update` and `lateUpdate`.** `lateUpdate` is where camera follow logic and bone-relative attachments read final poses. This matches Unity. Babylon Lite would otherwise advance glTF animation *after* our callback; the adapter therefore detaches animation groups from Lite's scene-owned ticking and advances them itself (`12-3d-toolkit.md` §Animator).
+- **Why animation sits between `update` and `lateUpdate`.** `lateUpdate` is where camera follow logic and bone-relative attachments read final poses. This matches Unity. Babylon Lite would otherwise advance glTF animation _after_ our callback; the adapter therefore detaches animation groups from Lite's scene-owned ticking and advances them itself (`12-3d-toolkit.md` §Animator).
 - **Destroy before render** matches Unity: an entity destroyed during frame N is not drawn in frame N.
 - The fixed loop is bounded by `maximumDeltaTime`; with defaults, at most six fixed steps run per frame. Dropped time is reported in diagnostics.
 - The accumulator snaps to the nearest multiple of `fixedDeltaTime` whenever it is within `1e-6 × fixedDeltaTime` of one, so floating-point drift never produces a spurious zero- or double-step frame.
 
 ## 4. Script callbacks
 
-| Callback | When | Runs how often |
-|---|---|---|
-| `awake()` | Right after the component is attached to an entity that is active in the hierarchy inside a loaded world. During scene load, after **all** entities and components of that scene instance are constructed and deserialized, in tree order (parents before children, siblings in file order). Scene-load references are guaranteed resolved. | Once per component |
-| `onEnable()` | After `awake`, and whenever the component becomes effectively enabled (`component.enabled && entity.activeInHierarchy`) | Every transition |
-| `start()` | In the first frame in which the component is effectively enabled, in flush B (after the fixed loop, before `update`) | Once per component |
-| `fixedUpdate(dt)` | Each fixed step, `dt === time.fixedDeltaTime` | 0…N per frame |
-| `update(dt)` | Each frame, `dt === time.deltaTime` | Once per frame |
-| `lateUpdate(dt)` | Each frame after animation | Once per frame |
-| `onDisable()` | When the component stops being effectively enabled, including just before destruction and when the app stops | Every transition |
-| `onDestroy()` | In the destroy flush of the frame in which `destroy()` was called (or immediately for `destroyImmediate`) | Once |
-| `onCollisionEnter/Stay/Exit(collision)` | Inside the fixed loop after the physics step, on scripts attached to either entity involved | Per contact event |
-| `onTriggerEnter/Exit(other)` | Same timing, for trigger shapes | Per overlap event |
-| `onApplicationPause(paused)` | When the document becomes hidden/visible (browser) or the window is minimized/restored (Electron) | Per transition |
-| `onApplicationFocus(focused)` | On window focus change | Per transition |
+| Callback                                | When                                                                                                                                                                                                                                                                                                                                        | Runs how often     |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| `awake()`                               | Right after the component is attached to an entity that is active in the hierarchy inside a loaded world. During scene load, after **all** entities and components of that scene instance are constructed and deserialized, in tree order (parents before children, siblings in file order). Scene-load references are guaranteed resolved. | Once per component |
+| `onEnable()`                            | After `awake`, and whenever the component becomes effectively enabled (`component.enabled && entity.activeInHierarchy`)                                                                                                                                                                                                                     | Every transition   |
+| `start()`                               | In the first frame in which the component is effectively enabled, in flush B (after the fixed loop, before `update`)                                                                                                                                                                                                                        | Once per component |
+| `fixedUpdate(dt)`                       | Each fixed step, `dt === time.fixedDeltaTime`                                                                                                                                                                                                                                                                                               | 0…N per frame      |
+| `update(dt)`                            | Each frame, `dt === time.deltaTime`                                                                                                                                                                                                                                                                                                         | Once per frame     |
+| `lateUpdate(dt)`                        | Each frame after animation                                                                                                                                                                                                                                                                                                                  | Once per frame     |
+| `onDisable()`                           | When the component stops being effectively enabled, including just before destruction and when the app stops                                                                                                                                                                                                                                | Every transition   |
+| `onDestroy()`                           | In the destroy flush of the frame in which `destroy()` was called (or immediately for `destroyImmediate`)                                                                                                                                                                                                                                   | Once               |
+| `onCollisionEnter/Stay/Exit(collision)` | Inside the fixed loop after the physics step, on scripts attached to either entity involved                                                                                                                                                                                                                                                 | Per contact event  |
+| `onTriggerEnter/Exit(other)`            | Same timing, for trigger shapes                                                                                                                                                                                                                                                                                                             | Per overlap event  |
+| `onApplicationPause(paused)`            | When the document becomes hidden/visible (browser) or the window is minimized/restored (Electron)                                                                                                                                                                                                                                           | Per transition     |
+| `onApplicationFocus(focused)`           | On window focus change                                                                                                                                                                                                                                                                                                                      | Per transition     |
 
 Guarantees and constraints:
 
 - A callback never runs on a component whose entity is inactive in the hierarchy, and never on a component whose `enabled` is `false`, except `onDisable`/`onDestroy`.
-- For the hierarchy present when a scene instance loads (or a prefab is instantiated), `awake` runs in tree order: an entity's components in component order, and a parent's `awake` calls finish before its children's start. Entities or components created *from inside* a callback are the documented exception: their `awake` runs nested and synchronously, before the creating callback returns. `start` order follows script `executionOrder`, then creation order. Do not depend on `start` order between unrelated scripts; use signals or explicit initialization instead.
+- For the hierarchy present when a scene instance loads (or a prefab is instantiated), `awake` runs in tree order: an entity's components in component order, and a parent's `awake` calls finish before its children's start. Entities or components created _from inside_ a callback are the documented exception: their `awake` runs nested and synchronously, before the creating callback returns. `start` order follows script `executionOrder`, then creation order. Do not depend on `start` order between unrelated scripts; use signals or explicit initialization instead.
 - Adding a component from inside a callback runs that component's `awake` immediately (synchronously) if its entity is active; its `start` waits for the next flush B.
 - Calling `destroy()` from inside any callback is safe; the object stays valid until the destroy flush of the current frame. `isDestroyed` becomes `true` immediately.
 - Callbacks receive `dt` in seconds. Never read `app.time.deltaTime` inside `fixedUpdate` for integration; use the argument.
@@ -132,13 +132,15 @@ Frame-sequenced logic uses generator coroutines resumed synchronously by the sch
 class Door extends Script {
   *open() {
     this.audio.play("creak");
-    yield waitSeconds(0.5);                // scaled time
+    yield waitSeconds(0.5); // scaled time
     this.transform.localPosition.y += 2;
-    yield;                                 // next frame, after update()
+    yield; // next frame, after update()
     yield waitUntil(() => this.player.isFar());
     yield waitFixedUpdate();
   }
-  onEnable() { this.startCoroutine(this.open()); }
+  onEnable() {
+    this.startCoroutine(this.open());
+  }
 }
 ```
 
@@ -166,7 +168,7 @@ class Door extends Script {
 ```ts
 const app = await createApp({ headless: true, extensions: [physics()] });
 await app.start();
-for (let i = 0; i < 600; i++) app.step(1 / 60);   // deterministic: rawDelta = 1/60 each call
+for (let i = 0; i < 600; i++) app.step(1 / 60); // deterministic: rawDelta = 1/60 each call
 ```
 
 - `app.step(dt)` runs §3 with `rawDelta = dt` and no render. Because of the accumulator snapping rule (§3 notes), a fixed `dt` equal to `fixedDeltaTime` runs exactly one fixed step per call.

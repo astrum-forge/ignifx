@@ -10,27 +10,27 @@ These standards are enforced by tooling wherever possible. Where a rule cannot b
 
 Versions are pinned in `pnpm-workspace.yaml` (`catalog:`) and `.nvmrc`; this table records the baseline chosen on 2026-09-05 and is updated by tooling-upgrade pull requests.
 
-| Concern | Tool | Baseline | Notes |
-|---|---|---|---|
-| Language | TypeScript | 7.0.x (native compiler) | `tsc --build` for type-checking and project references |
-| Compiler API shim | `@typescript/typescript6` | 6.0.x | Aliased as `typescript` for tools that still need the programmatic API (typescript-eslint, TypeDoc, API Extractor, knip). Dropped when TS 7.1's API lands (ADR-0007) |
-| Runtime | Node.js | 24 LTS (`>=24.20`) | Move to 26 LTS after 2026-10-28 |
-| Package manager | pnpm | 11.x | Installed by the CI action, not Corepack (Corepack is leaving Node) |
-| Task runner | Turborepo | 2.x | `turbo.json` tasks with remote cache |
-| Bundler (apps/site) | Vite | 8.x (Rolldown) | Vite has no dependency on the TypeScript package |
-| Library build | tsdown | 0.23+ | `isolatedDeclarations: true` → declaration emit without the TS API |
-| Tests | Vitest 5 + `@vitest/browser-playwright` | 5.x / Playwright 1.63+ | Headless (Node) and real-Chrome WebGPU projects |
-| Lint | Oxlint + tsgolint (type-aware) | 1.81+ | Primary linter; TS 7-native |
-| Lint (gap filler) | ESLint 10 + typescript-eslint 8 (+ `eslint-plugin-jsdoc`, `eslint-plugin-import-x`) | via TS6 alias | Only for rules Oxlint lacks and for the custom ignifx rules (§6.5) |
-| Format | oxfmt (Prettier fallback for Markdown) | 0.66+ | 2 spaces, double quotes, semicolons, trailing commas, 120 columns |
-| API reports | `@microsoft/api-extractor` | 7.59+ (TS6 alias) | `api/<pkg>.api.md` committed |
-| API docs | TypeDoc + `typedoc-plugin-markdown` | 0.28+ (TS6 alias) | Generates skill references |
-| Versioning | Changesets | 3.x | Fixed versioning across `@ignifx/*` |
-| Hooks | lefthook + lint-staged + commitlint | — | Conventional Commits |
-| Dependencies | Renovate | — | Grouped, weekly; Lite pinned exact |
-| Desktop | Electron 44+ with electron-vite + electron-builder | — | Quarterly major bump |
-| Package checks | publint, `@arethetypeswrong/cli` | — | On every build |
-| WebGPU types | `@webgpu/types` | 0.1.72+ | Required; TypeScript's bundled WebGPU declarations are still partial |
+| Concern             | Tool                                                                                | Baseline                                                              | Notes                                                                                                                                                                     |
+| ------------------- | ----------------------------------------------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Language            | TypeScript                                                                          | 7.0.x (native compiler)                                               | `tsc --build` for type-checking and project references                                                                                                                    |
+| Compiler API shim   | `@typescript/typescript6`                                                           | 6.0.x                                                                 | Aliased as `typescript` for tools that still need the programmatic API (typescript-eslint, TypeDoc, dependency-cruiser, knip). Dropped when TS 7.1's API lands (ADR-0007) |
+| Runtime             | Node.js                                                                             | 24 LTS (`>=24.20`)                                                    | Move to 26 LTS after 2026-10-28                                                                                                                                           |
+| Package manager     | pnpm                                                                                | 11.x                                                                  | Installed by the CI action, not Corepack (Corepack is leaving Node)                                                                                                       |
+| Task runner         | Turborepo                                                                           | 2.x                                                                   | `turbo.json` tasks with remote cache                                                                                                                                      |
+| Bundler (apps/site) | Vite                                                                                | 8.x (Rolldown)                                                        | Vite has no dependency on the TypeScript package                                                                                                                          |
+| Library build       | tsdown                                                                              | 0.23+                                                                 | `isolatedDeclarations: true` → declaration emit without the TS API                                                                                                        |
+| Tests               | Vitest 5 + `@vitest/browser-playwright`                                             | 5.x / Playwright 1.63+                                                | Headless (Node) and real-Chrome WebGPU projects                                                                                                                           |
+| Lint                | Oxlint + tsgolint (type-aware)                                                      | 1.81+                                                                 | Primary linter; TS 7-native                                                                                                                                               |
+| Lint (gap filler)   | ESLint 10 + typescript-eslint 8 (+ `eslint-plugin-jsdoc`, `eslint-plugin-import-x`) | via TS6 alias                                                         | Only for rules Oxlint lacks and for the custom ignifx rules (§6.5)                                                                                                        |
+| Format              | oxfmt (Prettier fallback for Markdown)                                              | 0.66+                                                                 | 2 spaces, double quotes, semicolons, trailing commas, 120 columns                                                                                                         |
+| API reports         | `@microsoft/api-extractor`                                                          | 7.59+ (bundles its own TypeScript 5.9; the alias is irrelevant to it) | `api/<pkg>.api.md` committed                                                                                                                                              |
+| API docs            | TypeDoc + `typedoc-plugin-markdown`                                                 | 0.28+ (TS6 alias)                                                     | Generates skill references                                                                                                                                                |
+| Versioning          | Changesets                                                                          | 3.x                                                                   | Fixed versioning across `@ignifx/*`                                                                                                                                       |
+| Hooks               | lefthook + lint-staged + commitlint                                                 | —                                                                     | Conventional Commits                                                                                                                                                      |
+| Dependencies        | Renovate                                                                            | —                                                                     | Grouped, weekly; Lite pinned exact                                                                                                                                        |
+| Desktop             | Electron 44+ with electron-vite + electron-builder                                  | —                                                                     | Quarterly major bump                                                                                                                                                      |
+| Package checks      | publint, `@arethetypeswrong/cli`                                                    | —                                                                     | On every build                                                                                                                                                            |
+| WebGPU types        | `@webgpu/types`                                                                     | 0.1.72+                                                               | Required; TypeScript's bundled WebGPU declarations are still partial                                                                                                      |
 
 `pnpm check` runs format check, lint, typecheck, unit tests, API report, and docs harness locally and is the pre-push gate.
 
@@ -79,20 +79,21 @@ tests/visual/            Playwright visual regression (goldens) — GPU job
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "rewriteRelativeImportExtensions": true
-  }
+    "rewriteRelativeImportExtensions": true,
+  },
 }
 ```
 
-- Each package sets `rootDir: "./src"`, `outDir: "./dist"`, and its `types` explicitly (TS 7 defaults `types` to `[]`): browser packages `["@webgpu/types"]`, Node tooling `["node"]`, Electron main `["node", "electron"]`.
+- Each package sets `rootDir: "./src"` and its `types` explicitly; `dist/` is written by tsdown only, and `tsc --build` type-checks with `emitDeclarationOnly` into `.tsbuild/` (`.tsbuild-test/` for tests) so the two never clobber each other (ADR-0009 Validation). Packages set `types` (TS 7 defaults `types` to `[]`): browser packages `["@webgpu/types"]`, Node tooling `["node"]`, Electron main `["node", "electron"]`.
 - Apps and the website use `module: "preserve"` + `moduleResolution: "bundler"`; published packages keep `nodenext`.
 - `target` is reviewed each release against the supported browser matrix; it never floats with the compiler default.
 - `erasableSyntaxOnly` bans enums, namespaces, and parameter properties (§5.3). `isolatedDeclarations` requires explicit return types on exported functions (§5.2).
+- Type-aware linting (Oxlint + tsgolint) checks each file against the nearest `tsconfig.json`. A package whose tests import Node built-ins adds a non-emitting `test/tsconfig.json` shim (`extends: "../tsconfig.test.json"`, `noEmit`, `composite: false`) so the linter sees `types: ["node"]`; repository scripts have `scripts/tsconfig.json` for the same reason. `tsc --build` keeps using `tsconfig.json` + `tsconfig.test.json` (ADR-0009 Validation).
 
 ## 4. Modules and packages
 
 - **ESM only.** `"type": "module"`, explicit `.js` extensions in relative imports (rewritten from `.ts` by the compiler), no CommonJS output.
-- **One public barrel per package** (`src/index.ts`) with explicit named re-exports; no `export *`. Subpath exports only for platform entry points (`@ignifx/electron/main`, `/preload`, `ignifx/config`).
+- **One public barrel per package** (`src/index.ts`) with explicit named re-exports; no `export *`. Subpath exports only for platform entry points (`@ignifx/electron/main`, `/preload`, `ignifx/config`) plus `./package.json`, which tooling reads for the `ignifx` manifest.
 - **No default exports** except configuration files (`ignifx.config.ts`, `vite.config.ts`).
 - **No import-time side effects** (`CONSTITUTION.md` §3.5). Module scope holds only declarations and immutable constants (typed-array constants are fine). Lazily create caches inside functions.
 - **`sideEffects: false`** in every package; a lint rule flags top-level calls.
@@ -105,19 +106,19 @@ tests/visual/            Playwright visual regression (goldens) — GPU job
 
 ### 5.1 Naming
 
-| Thing | Convention | Example |
-|---|---|---|
-| Files, directories | kebab-case | `scene-instance.ts`, `sprite-sync-system.ts` |
-| Classes, interfaces, types, components | PascalCase, no `I` prefix | `SceneInstance`, `MeshRenderer` |
-| Functions, methods, variables, fields | camelCase | `loadScene`, `fixedDeltaTime` |
-| True constants | UPPER_SNAKE_CASE | `MAX_LAYERS` |
-| Component type ids | `<package-or-game>/<Name>` | `ignifx/MeshRenderer`, `mygame/Mover` |
-| Error codes | `IGX-####` in the ranges of `15-devtools-and-diagnostics.md` §1 | `IGX-0501` |
-| Booleans | Computed properties and query methods take an `is`/`has`/`can`/`should` prefix; schema-declared toggle fields are plain adjectives or verbs | `isGrounded`, `hasComponent` · `enabled`, `castShadows`, `loop` |
-| Signals | `on` + past-tense event | `onDestroyed`, `onSceneLoaded` |
-| Units | seconds, metres, degrees in public APIs; suffix when not (`Ms`, `Px`, `Rad`) | `fixedDeltaTime`, `positionPx`, `fromEulerRad` |
-| Async functions | no `Async` suffix (return type says it) | `loadScene(): Promise<…>` |
-| Private members | `#field` for true privates; `_field` only for adapter-internal Lite mirrors | `#handles` |
+| Thing                                  | Convention                                                                                                                                  | Example                                                         |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| Files, directories                     | kebab-case                                                                                                                                  | `scene-instance.ts`, `sprite-sync-system.ts`                    |
+| Classes, interfaces, types, components | PascalCase, no `I` prefix                                                                                                                   | `SceneInstance`, `MeshRenderer`                                 |
+| Functions, methods, variables, fields  | camelCase                                                                                                                                   | `loadScene`, `fixedDeltaTime`                                   |
+| True constants                         | UPPER_SNAKE_CASE                                                                                                                            | `MAX_LAYERS`                                                    |
+| Component type ids                     | `<package-or-game>/<Name>`                                                                                                                  | `ignifx/MeshRenderer`, `mygame/Mover`                           |
+| Error codes                            | `IGX-####` in the ranges of `15-devtools-and-diagnostics.md` §1                                                                             | `IGX-0501`                                                      |
+| Booleans                               | Computed properties and query methods take an `is`/`has`/`can`/`should` prefix; schema-declared toggle fields are plain adjectives or verbs | `isGrounded`, `hasComponent` · `enabled`, `castShadows`, `loop` |
+| Signals                                | `on` + past-tense event                                                                                                                     | `onDestroyed`, `onSceneLoaded`                                  |
+| Units                                  | seconds, metres, degrees in public APIs; suffix when not (`Ms`, `Px`, `Rad`)                                                                | `fixedDeltaTime`, `positionPx`, `fromEulerRad`                  |
+| Async functions                        | no `Async` suffix (return type says it)                                                                                                     | `loadScene(): Promise<…>`                                       |
+| Private members                        | `#field` for true privates; `_field` only for adapter-internal Lite mirrors                                                                 | `#handles`                                                      |
 
 ### 5.2 Type safety
 
@@ -157,16 +158,16 @@ tests/visual/            Playwright visual regression (goldens) — GPU job
 - **Oxlint** runs the `correctness`, `suspicious`, `perf`, and `pedantic` categories plus type-aware rules through tsgolint (`no-floating-promises`, `no-misused-promises`, `no-unnecessary-condition`, `strict-boolean-expressions`, `switch-exhaustiveness-check`, `restrict-template-expressions`, `no-unsafe-*`).
 - **ESLint (TS6 alias)** runs a small config for `eslint-plugin-jsdoc` (public API documentation completeness), `eslint-plugin-import-x` cycle/ordering rules, and the ignifx custom rules:
 
-| Rule | Enforces |
-|---|---|
-| `ignifx/no-lite-outside-adapter` | §4 adapter boundary |
-| `ignifx/no-module-side-effects` | §4 no import-time side effects |
-| `ignifx/no-async-lifecycle` | `async awake/start/update…` are errors |
-| `ignifx/signal-connect-owner` | `Signal.connect` inside a `Script` passes `owner` |
-| `ignifx/no-entity-find-in-src` | `entity.find("…")` is allowed only in tests, examples, and tools; the rule flags it anywhere else |
-| `ignifx/schema-field-shadowing` | class fields named like schema fields |
-| `ignifx/error-code-format` | `IgnifxError` codes match `IGX-####` and a registered range |
-| `ignifx/no-console` | console calls outside the log sink |
+| Rule                             | Enforces                                                                                          |
+| -------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `ignifx/no-lite-outside-adapter` | §4 adapter boundary                                                                               |
+| `ignifx/no-module-side-effects`  | §4 no import-time side effects                                                                    |
+| `ignifx/no-async-lifecycle`      | `async awake/start/update…` are errors                                                            |
+| `ignifx/signal-connect-owner`    | `Signal.connect` inside a `Script` passes `owner`                                                 |
+| `ignifx/no-entity-find-in-src`   | `entity.find("…")` is allowed only in tests, examples, and tools; the rule flags it anywhere else |
+| `ignifx/schema-field-shadowing`  | class fields named like schema fields                                                             |
+| `ignifx/error-code-format`       | `IgnifxError` codes match `IGX-####` and a registered range                                       |
+| `ignifx/no-console`              | console calls outside the log sink                                                                |
 
 - Lint and format run on staged files through lefthook; CI runs them on the whole tree. A rule can be disabled inline only with a justification comment.
 
@@ -191,7 +192,7 @@ tests/visual/            Playwright visual regression (goldens) — GPU job
 ## 9. Documentation
 
 - Every exported symbol has TSDoc: summary sentence, `@param`/`@returns` where not obvious, `@example` for anything non-trivial, and exactly one release tag (`@public`, `@beta`, `@alpha`, `@internal`). `@deprecated` includes the replacement and the version it will be removed in (post-1.0 only).
-- Comments explain *why*, not *what*. No commented-out code.
+- Comments explain _why_, not _what_. No commented-out code.
 - A change to public API updates: TSDoc, the package's `api/*.api.md` (regenerated), `skills/**` (entry or subsystem skill), and a changeset. The docs harness (`docs/architecture/16-docs-harness-and-skill.md`) blocks otherwise.
 - Architecture decisions go in `docs/adr/NNNN-title.md` using the template in `docs/adr/0000-template.md`.
 - Before 1.0 nothing is written under `docs/migrations/` (`CONSTITUTION.md` §4.2); CI fails if a file appears there while the version is `0.x`.

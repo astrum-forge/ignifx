@@ -1,0 +1,56 @@
+# Deploys website/ (the ignifx.com public site) separately from the packages (standards §12).
+#
+# Hosting for ignifx.com is NOT decided. This is the GitHub Pages default: it needs no account,
+# no token and no secret, and it is the cheapest thing that proves the build artefact is
+# deployable. Swapping it for another host means replacing the two Pages actions below with that
+# host's deploy step; nothing else in the repository depends on this choice.
+name: Website
+
+on:
+  push:
+    branches: [main]
+    paths: ["website/**"]
+  workflow_dispatch:
+
+# One deployment at a time, and never cancel one in flight — a cancelled deploy can leave the
+# site half-published.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+
+      - run: pnpm --filter @ignifx/website build
+
+      - name: Upload the site as a Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: website/dist
+
+  deploy:
+    name: deploy
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      # Required by deploy-pages: it writes the Pages deployment and authenticates with OIDC.
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

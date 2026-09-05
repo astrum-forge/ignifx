@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    // tsdown owns `dist/` (the published bundle + isolatedDeclarations d.ts). `tsc --build` is a
+    // type-checker here, so its project-reference output goes to a scratch directory instead;
+    // pointing both at `dist/` makes whichever runs last clobber the other.
+    "outDir": "./.tsbuild",
+    // TS 7 writes the build info next to the config by default; keeping it inside the scratch
+    // directory means deleting that one directory really does force a rebuild.
+    "tsBuildInfoFile": "./.tsbuild/tsconfig.tsbuildinfo",
+    "emitDeclarationOnly": true,
+    "types": ["node"]
+  },
+  "include": ["src"]
+}

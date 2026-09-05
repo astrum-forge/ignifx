@@ -2,7 +2,7 @@
 
 **Status:** Ratified draft v1 (2026-09-05) · **Owner:** Astrum Forge Studios · **Precedence:** highest
 
-This document governs how ignifx is designed, built, documented, released, and changed. It is short on purpose. Anything that is a *rule* lives here; anything that is a *how-to* lives in the standards and architecture documents that this constitution ranks below itself (see Article X).
+This document governs how ignifx is designed, built, documented, released, and changed. It is short on purpose. Anything that is a _rule_ lives here; anything that is a _how-to_ lives in the standards and architecture documents that this constitution ranks below itself (see Article X).
 
 Clauses are numbered `§A.n` so that pull requests, ADRs, and reviews can cite them.
 

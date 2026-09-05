@@ -1,0 +1,47 @@
+{
+  "name": "@ignifx/vite-plugin",
+  "version": "0.0.0",
+  "description": "ignifx Vite plugin: asset manifest generation, scene/prefab JSON validation, WASM/asset handling, HMR hooks.",
+  "keywords": [
+    "ignifx"
+  ],
+  "homepage": "https://ignifx.com",
+  "license": "Apache-2.0",
+  "author": "Astrum Forge Studios",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --build tsconfig.json tsconfig.test.json",
+    "test": "vitest run --project node",
+    "api-report": "api-extractor run --verbose",
+    "docs:api": "typedoc",
+    "api-report:update": "api-extractor run --local --verbose",
+    "pack-check": "publint && attw --pack . --profile esm-only"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "catalog:",
+    "@microsoft/api-extractor": "catalog:",
+    "@types/node": "catalog:",
+    "publint": "catalog:",
+    "tsdown": "catalog:",
+    "typedoc": "catalog:",
+    "typedoc-plugin-markdown": "catalog:",
+    "typescript-native": "catalog:",
+    "vitest": "catalog:"
+  }
+}

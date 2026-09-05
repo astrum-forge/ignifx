@@ -1,0 +1,8 @@
+# Markdown is formatted by Prettier, not oxfmt (coding standards §6). Prettier is not wired up in
+# Phase 0, so Markdown is simply not machine-formatted yet.
+**/*.md
+
+# Generated or vendored files are never hand-formatted.
+pnpm-lock.yaml
+**/api/*.api.md
+skills/ignifx/references/api/**

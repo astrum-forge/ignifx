@@ -10,27 +10,27 @@ The scripting model is the part of ignifx users touch most. It follows Unity's c
 
 ```ts
 abstract class Component {
-  static readonly typeId: string;                 // required for serializable components, e.g. "mygame/Mover"
-  static readonly schema?: Schema;                // serialized fields; see §3
-  static readonly requires?: readonly ComponentType[];   // auto-added and validated on attach
-  static readonly allowMultiple: boolean = true;  // false → one per entity (IGX-0202 on violation)
+  static readonly typeId: string; // required for serializable components, e.g. "mygame/Mover"
+  static readonly schema?: Schema; // serialized fields; see §3
+  static readonly requires?: readonly ComponentType[]; // auto-added and validated on attach
+  static readonly allowMultiple: boolean = true; // false → one per entity (IGX-0202 on violation)
 
   readonly uid: string;
   readonly entity: Entity;
   readonly transform: Transform;
   readonly world: World;
   readonly app: App;
-  enabled: boolean;                               // own flag; default true
-  readonly isEnabledInHierarchy: boolean;         // enabled && entity.activeInHierarchy
+  enabled: boolean; // own flag; default true
+  readonly isEnabledInHierarchy: boolean; // enabled && entity.activeInHierarchy
   readonly isDestroyed: boolean;
 
   destroy(): void;
-  getComponent<T extends Component>(type: ComponentType<T>): T | null;   // sugar for entity.getComponent
+  getComponent<T extends Component>(type: ComponentType<T>): T | null; // sugar for entity.getComponent
   requireComponent<T extends Component>(type: ComponentType<T>): T;
 
   // Hooks available to every component (systems-owned components use these; scripts use the lifecycle in §2)
-  protected onAttach?(): void;     // after fields are assigned, before awake; may run while entity is inactive
-  protected onDetach?(): void;     // just before removal, after onDestroy
+  protected onAttach?(): void; // after fields are assigned, before awake; may run while entity is inactive
+  protected onDetach?(): void; // just before removal, after onDestroy
 }
 ```
 
@@ -41,7 +41,7 @@ abstract class Component {
 
 ```ts
 abstract class Script extends Component {
-  static executionOrder: number = 0;               // lower runs first within a phase
+  static executionOrder: number = 0; // lower runs first within a phase
   static updateWhenPaused: boolean = false;
 
   awake?(): void;
@@ -52,8 +52,11 @@ abstract class Script extends Component {
   lateUpdate?(dt: number): void;
   onDisable?(): void;
   onDestroy?(): void;
-  onCollisionEnter?(c: Collision): void; onCollisionStay?(c: Collision): void; onCollisionExit?(c: Collision): void;
-  onTriggerEnter?(t: TriggerEvent): void; onTriggerExit?(t: TriggerEvent): void;
+  onCollisionEnter?(c: Collision): void;
+  onCollisionStay?(c: Collision): void;
+  onCollisionExit?(c: Collision): void;
+  onTriggerEnter?(t: TriggerEvent): void;
+  onTriggerExit?(t: TriggerEvent): void;
   onApplicationPause?(paused: boolean): void;
   onApplicationFocus?(focused: boolean): void;
 
@@ -72,7 +75,21 @@ abstract class Script extends Component {
 Serialized fields are declared with a schema passed to `Script.define` / `Component.define`. The returned base class carries the field types, applies defaults in the constructor, and attaches the schema for the serializer, the inspector, and the docs harness. No decorators, no reflection (ADR-0004).
 
 ```ts
-import { Script, f32, i32, bool, str, vec3, color, enumOf, entityRef, componentRef, asset, array, record } from "@ignifx/core";
+import {
+  Script,
+  f32,
+  i32,
+  bool,
+  str,
+  vec3,
+  color,
+  enumOf,
+  entityRef,
+  componentRef,
+  asset,
+  array,
+  record,
+} from "@ignifx/core";
 import { AudioClip } from "@ignifx/audio";
 
 export class Mover extends Script.define({
@@ -84,16 +101,16 @@ export class Mover extends Script.define({
   offset: vec3({ x: 0, y: 1, z: 0 }),
   tint: color("#ffffff"),
   mode: enumOf(["walk", "run"] as const, "walk"),
-  target: entityRef(),                 // Entity | null, resolved by uid at load
-  follow: componentRef(Camera),        // Camera | null
-  clip: asset(AudioClip),              // AssetRef<AudioClip>; loaded with the scene (see 05-assets-and-loading.md)
+  target: entityRef(), // Entity | null, resolved by uid at load
+  follow: componentRef(Camera), // Camera | null
+  clip: asset(AudioClip), // AssetRef<AudioClip>; loaded with the scene (see 05-assets-and-loading.md)
   waypoints: array(vec3()),
   stats: record({ hp: i32(10), armor: f32(0) }),
 }) {
   static typeId = "mygame/Mover";
 
   update(dt: number) {
-    this.transform.translate({ x: 0, y: 0, z: this.speed * dt });   // `speed` is typed number
+    this.transform.translate({ x: 0, y: 0, z: this.speed * dt }); // `speed` is typed number
   }
 }
 ```
@@ -119,13 +136,15 @@ class Spawner extends Script {
   *spawnLoop() {
     while (true) {
       const enemy = this.world.instantiate(this.enemyPrefab.value, { position: this.transform.position });
-      const asset = yield this.app.assets.load(this.nextWave);   // promise → resumes on first Update after settle
+      const asset = yield this.app.assets.load(this.nextWave); // promise → resumes on first Update after settle
       yield waitSeconds(2);
       yield waitUntil(() => enemy.isDestroyed);
-      yield;                                                    // next frame
+      yield; // next frame
     }
   }
-  start() { this.startCoroutine(this.spawnLoop()); }
+  start() {
+    this.startCoroutine(this.spawnLoop());
+  }
 }
 ```
 
@@ -138,12 +157,17 @@ class Spawner extends Script {
 ```ts
 interface System {
   readonly name: string;
-  update?(ctx: SystemContext): void;              // called in the registered phase
+  update?(ctx: SystemContext): void; // called in the registered phase
   onWorldCreated?(world: World): void;
   onWorldDisposed?(world: World): void;
   dispose?(): void;
 }
-interface SystemContext { readonly world: World; readonly time: Time; readonly phase: Phase; readonly dt: number }
+interface SystemContext {
+  readonly world: World;
+  readonly time: Time;
+  readonly phase: Phase;
+  readonly dt: number;
+}
 
 ctx.registerSystem(new SpriteSyncSystem(), { phase: Phase.PreRender, order: 100 });
 ```
@@ -159,7 +183,9 @@ Extensions expose services on `App` through declaration merging:
 ```ts
 // in @ignifx/input
 declare module "@ignifx/core" {
-  interface App { readonly input: InputService }
+  interface App {
+    readonly input: InputService;
+  }
 }
 ```
 
@@ -179,5 +205,5 @@ declare module "@ignifx/core" {
 
 - String-based messaging (`sendMessage`, name-based dispatch).
 - Global singletons for game state; use a persistent scene with a `GameState` script, or `app.services`.
-- Mutating `transform` from `onCollision*` callbacks of the *other* entity's script; each script manages its own entity.
+- Mutating `transform` from `onCollision*` callbacks of the _other_ entity's script; each script manages its own entity.
 - Long-running work in `update`; move to coroutines, systems, or workers.

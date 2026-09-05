@@ -10,14 +10,14 @@ An extension is the unit of optional functionality. Input, physics, audio, the 2
 
 ```ts
 interface Extension {
-  readonly name: string;                     // unique; the npm package name for published extensions ("@ignifx/physics"), "game/<name>" for in-game ones
-  readonly version: string;                  // semver of the extension itself
-  readonly engine?: string;                  // semver range of @ignifx/core this extension supports; checked at registration
-  readonly requires?: readonly string[];     // extensions that must be registered before this one
-  readonly optional?: readonly string[];     // extensions this one integrates with when present (registered before it if present)
+  readonly name: string; // unique; the npm package name for published extensions ("@ignifx/physics"), "game/<name>" for in-game ones
+  readonly version: string; // semver of the extension itself
+  readonly engine?: string; // semver range of @ignifx/core this extension supports; checked at registration
+  readonly requires?: readonly string[]; // extensions that must be registered before this one
+  readonly optional?: readonly string[]; // extensions this one integrates with when present (registered before it if present)
 
-  register(ctx: ExtensionContext): void | Promise<void>;   // declare components, systems, services, loaders, settings
-  onStart?(app: App): void | Promise<void>;                // after every extension registered and the Lite engine exists; before the first frame
+  register(ctx: ExtensionContext): void | Promise<void>; // declare components, systems, services, loaders, settings
+  onStart?(app: App): void | Promise<void>; // after every extension registered and the Lite engine exists; before the first frame
   onStop?(app: App): void;
   dispose?(app: App): void;
 }
@@ -30,16 +30,16 @@ interface ExtensionContext {
   registerComponents(types: readonly ComponentType[]): void;
   registerSystem(system: System, options: { phase: Phase; order?: number }): void;
   registerService<T>(key: ServiceKey<T>, instance: T): void;
-  defineAppProperty(name: string, getter: () => unknown): void;      // pairs with module augmentation of App
+  defineAppProperty(name: string, getter: () => unknown): void; // pairs with module augmentation of App
   registerAssetType(type: AssetTypeDefinition): void;
   registerAssetLoader(loader: AssetLoader): void;
-  registerSettings<S>(section: string, schema: Schema<S>, defaults: S): void;   // project settings section
-  registerErrorCodes(codes: Record<string, string>): void;         // IGX-#### → message template
+  registerSettings<S>(section: string, schema: Schema<S>, defaults: S): void; // project settings section
+  registerErrorCodes(codes: Record<string, string>): void; // IGX-#### → message template
   onDispose(callback: () => void): void;
 
-  require<T>(key: ServiceKey<T>): T;          // service registered by an earlier extension; throws IGX-0405 if absent
+  require<T>(key: ServiceKey<T>): T; // service registered by an earlier extension; throws IGX-0405 if absent
   tryGet<T>(key: ServiceKey<T>): T | undefined;
-  settings<S>(section: string): S;            // resolved project settings for a registered section
+  settings<S>(section: string): S; // resolved project settings for a registered section
 }
 
 function defineExtension<O = void>(factory: (options: O) => Extension): (options?: O) => Extension;
@@ -56,7 +56,14 @@ export const physics = defineExtension<PhysicsOptions>((options = {}) => ({
   requires: ["@ignifx/core"],
   register(ctx) {
     ctx.registerSettings("physics", PhysicsSettingsSchema, defaultPhysicsSettings);
-    ctx.registerComponents([Rigidbody, BoxCollider, SphereCollider, CapsuleCollider, MeshCollider, CharacterController]);
+    ctx.registerComponents([
+      Rigidbody,
+      BoxCollider,
+      SphereCollider,
+      CapsuleCollider,
+      MeshCollider,
+      CharacterController,
+    ]);
     const service = new PhysicsService(ctx.app, { ...ctx.settings("physics"), ...options });
     ctx.registerService(PhysicsService, service);
     ctx.defineAppProperty("physics", () => service);
@@ -64,8 +71,12 @@ export const physics = defineExtension<PhysicsOptions>((options = {}) => ({
     ctx.registerSystem(service.stepSystem, { phase: Phase.FixedUpdate, order: 100 });
     ctx.registerSystem(service.interpolationSystem, { phase: Phase.PreRender, order: -500 });
   },
-  async onStart(app) { await service.loadHavok(); },
-  dispose(app) { service.dispose(); },
+  async onStart(app) {
+    await service.loadHavok();
+  },
+  dispose(app) {
+    service.dispose();
+  },
 }));
 
 // game code
@@ -88,16 +99,16 @@ Extensions never execute code at module import time (`CONSTITUTION.md` §3.5). E
 
 ## 3. What an extension can contribute
 
-| Contribution | API | Notes |
-|---|---|---|
-| Components and scripts | `registerComponent(s)` | Makes `typeId`s known to the serializer and inspector |
-| Systems | `registerSystem` | Phase and order; see `03-scripting-and-components.md` §6 |
-| Services | `registerService` + `defineAppProperty` + module augmentation | The typed entry point scripts use (`app.input`) |
-| Asset types and loaders | `registerAssetType`, `registerAssetLoader` | `05-assets-and-loading.md` |
-| Project settings | `registerSettings` | Validated from `ignifx.config.ts` |
-| Error codes | `registerErrorCodes` | Namespaced ranges are assigned in `docs/standards/coding-standards.md` |
-| Devtools panels | via the devtools service, when present (`optional: ["@ignifx/devtools"]`) | `15-devtools-and-diagnostics.md` |
-| Agent documentation | `skills/<name>/SKILL.md` in the package | `16-docs-harness-and-skill.md` |
+| Contribution            | API                                                                       | Notes                                                                  |
+| ----------------------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Components and scripts  | `registerComponent(s)`                                                    | Makes `typeId`s known to the serializer and inspector                  |
+| Systems                 | `registerSystem`                                                          | Phase and order; see `03-scripting-and-components.md` §6               |
+| Services                | `registerService` + `defineAppProperty` + module augmentation             | The typed entry point scripts use (`app.input`)                        |
+| Asset types and loaders | `registerAssetType`, `registerAssetLoader`                                | `05-assets-and-loading.md`                                             |
+| Project settings        | `registerSettings`                                                        | Validated from `ignifx.config.ts`                                      |
+| Error codes             | `registerErrorCodes`                                                      | Namespaced ranges are assigned in `docs/standards/coding-standards.md` |
+| Devtools panels         | via the devtools service, when present (`optional: ["@ignifx/devtools"]`) | `15-devtools-and-diagnostics.md`                                       |
+| Agent documentation     | `skills/<name>/SKILL.md` in the package                                   | `16-docs-harness-and-skill.md`                                         |
 
 An extension **cannot**: register frame callbacks with Babylon Lite directly, add phases, replace core services, or reach into another extension's internals. Cross-extension integration goes through services (`ctx.require`) and signals.
 
@@ -141,7 +152,10 @@ export default defineConfig({
   layers: ["Default", "Ground", "Player", "Enemy", "Projectile"],
   sortingLayers: ["Background", "Default", "Foreground", "UI"],
   time: { fixedDeltaTime: 1 / 60, maximumDeltaTime: 0.1 },
-  physics: { gravity: [0, -9.81, 0], collisionMatrix: { Player: ["Ground", "Enemy"], Projectile: ["Enemy", "Ground"] } },
+  physics: {
+    gravity: [0, -9.81, 0],
+    collisionMatrix: { Player: ["Ground", "Enemy"], Projectile: ["Enemy", "Ground"] },
+  },
   input: { actions: "./input/default.input.json" },
   assets: { root: "./assets", preload: ["boot"] },
 });

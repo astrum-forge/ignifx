@@ -1,0 +1,44 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "stream",
+  "globalDependencies": ["tsconfig.base.json", ".nvmrc"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
+    "typecheck": {
+      "dependsOn": ["^typecheck"],
+      "outputs": [".tsbuild/**", ".tsbuild-test/**"]
+    },
+    "lint": {
+      "dependsOn": ["^lint"],
+      "outputs": []
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**"]
+    },
+    "test:browser": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "api-report": {
+      "dependsOn": ["build"],
+      "outputs": []
+    },
+    "docs:api": {
+      "dependsOn": ["build"],
+      "outputs": [],
+      "cache": false
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "pack-check": {
+      "dependsOn": ["build"],
+      "outputs": []
+    }
+  }
+}

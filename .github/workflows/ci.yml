@@ -1,0 +1,207 @@
+# The gate every pull request has to clear. One job per numbered check in
+# docs/standards/coding-standards.md §12, so a red job names the rule it broke.
+#
+# All jobs are independent and run in parallel: Turborepo rebuilds what a task needs
+# (`turbo.json` dependsOn), which is cheaper than serialising the workflow behind one build job.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  # Required checks have to report in the merge queue too, and merge_group is a separate event
+  # from pull_request — without this the queue would wait forever on checks that never run.
+  merge_group:
+
+# One run per ref. github.head_ref is only set for pull_request, hence the fallback; for
+# merge_group, github.ref is unique per merge group, so queued runs never cancel each other.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  format:
+    name: format
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: pnpm format:check
+
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      # oxlint --type-aware, then ESLint for the rules Oxlint lacks (standards §6).
+      - run: pnpm lint
+
+  typecheck:
+    name: typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: pnpm typecheck
+
+  test-unit:
+    name: test-unit
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      # Vitest `node` project on Lite's null engine, with the coverage floors of
+      # CONSTITUTION.md §6.2 enforced as thresholds in vitest.config.ts.
+      - run: pnpm test
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-lcov
+          path: coverage/lcov.info
+          # `warn`, not `error`: when the suite fails there may be no lcov file, and a second red
+          # step would only hide the real failure.
+          if-no-files-found: warn
+          retention-days: 14
+
+  test-browser:
+    name: test-browser
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      # The Chromium build is the variable that decides whether WebGPU works on a GPU-less runner,
+      # so it is printed before the suite runs rather than guessed at afterwards.
+      - name: Report the Chromium build under test
+        run: |
+          CHROMIUM="$(node -e "console.log(require('playwright').chromium.executablePath())")"
+          echo "Playwright Chromium: ${CHROMIUM}"
+          "${CHROMIUM}" --version || echo "could not query the Chromium build directly"
+
+      # Chromium flags live in vitest.config.ts, not here. ADR-0009 "Validation (2026-09-05)"
+      # measured them on macOS arm64 only: `--enable-unsafe-webgpu --use-webgpu-adapter=swiftshader`
+      # yields a SwiftShader adapter there, and adding `--enable-features=Vulkan --use-angle=vulkan`
+      # breaks it. Linux is UNVERIFIED. This job is the plan's Phase 0 exit criterion ("browser test
+      # job proves WebGPU is available in CI"), so it must not be continue-on-error: if it goes red,
+      # the flags are wrong and the fix belongs in vitest.config.ts, not in a suppression here.
+      - run: pnpm test:browser
+
+      - name: WebGPU-in-CI note
+        if: failure()
+        run: |
+          echo "::warning title=WebGPU on Linux is unverified::The Chromium flags in vitest.config.ts"
+          echo "(--enable-unsafe-webgpu --use-webgpu-adapter=swiftshader) were measured on macOS arm64"
+          echo "only; see docs/adr/0009-monorepo-tooling.md, 'WebGPU flags (S0.1)'. If requestAdapter()"
+          echo "returned null here, try adding --enable-features=Vulkan --use-angle=vulkan for Linux"
+          echo "(they must stay off for macOS) and record the result in ADR-0009 before merging."
+
+  test-visual:
+    name: test-visual
+    # Standards §12 step 3: required on main, opt-in on pull requests. The job exists now so the
+    # required-check name is stable; goldens arrive with the renderer in Phase 2.
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - run: echo "no visual tests yet (Phase 2)"
+
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: pnpm build
+      # publint + @arethetypeswrong/cli on the packed tarball (standards §12 step 4).
+      - run: pnpm pack-check
+
+  bundle-size:
+    name: bundle-size
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # CONSTITUTION.md §6.4 makes bundle ceilings a test. There is nothing to measure until the
+      # templates and benchmarks/baselines.json exist (Phase 2), so this reports green by design.
+      - run: echo "baselines arrive in Phase 2"
+
+  api-report:
+    name: api-report
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      # API Extractor fails on any drift from the committed api/*.api.md (CONSTITUTION.md §4.5).
+      - run: pnpm api-report
+
+  docs-harness:
+    name: docs-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      # CONSTITUTION.md §5.2/§5.5: examples compile and the skill matches the current API. On a
+      # pull request the harness also runs its two diff-based gates (api-report-gate, freshness)
+      # against the base commit; the `docs-not-needed` label waives the skill-change half of the
+      # API-report gate (16-docs-harness-and-skill.md §4), with the justification in the PR body.
+      - run: pnpm docs:harness -- ${{ github.event_name == 'pull_request' && format('--base {0}', github.event.pull_request.base.sha) || '' }} ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'docs-not-needed') && '--allow-docs-not-needed' || '' }}
+      - run: pnpm docs:api
+      # Generated documentation is committed and never hand-edited (standards §15). A diff here
+      # means someone changed the public API without regenerating the references in the same PR.
+      - name: Fail on generated-docs drift
+        run: git diff --exit-code -- skills/ignifx/references/api 'packages/*/api'
+
+  deps:
+    name: deps
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      # dependency-cruiser: no cycles, and the layering of
+      # docs/architecture/00-overview.md §2.1 (standards §12 step 6).
+      - run: pnpm deps
+
+  migrations-guard:
+    name: migrations-guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      # CONSTITUTION.md §4.2 / standards §15: no migration documents are written before 1.0.
+      # docs/migrations/README.md is the placeholder that explains why the directory is empty.
+      - name: No migration documents before 1.0
+        run: |
+          set -euo pipefail
+          if [ ! -d docs/migrations ]; then
+            echo "docs/migrations/ does not exist — nothing to guard"
+            exit 0
+          fi
+          version="$(node -p "require('./packages/core/package.json').version")"
+          echo "engine version: ${version}"
+          case "${version}" in
+            0.*) ;;
+            *) echo "version is 1.0 or later — migration documents are now required (§4.4)."; exit 0 ;;
+          esac
+          stray="$(find docs/migrations -type f ! -name 'README.md' -print)"
+          if [ -n "${stray}" ]; then
+            echo "::error title=CONSTITUTION.md §4.2::No migration documents are written before 1.0."
+            echo "${stray}"
+            exit 1
+          fi
+          echo "docs/migrations/ holds only README.md — OK"

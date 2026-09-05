@@ -1,0 +1,18 @@
+{
+  // Type-aware linting needs a project that actually contains these files: the root `tsconfig.json`
+  // is a solution file (`files: []`), so without this Oxlint's type-aware pass analyses `scripts/**`
+  // with no `@types/node` and no `noUncheckedIndexedAccess`. `tsconfig.tools.json` type-checks the
+  // same files for `pnpm typecheck`; this project exists for the linters.
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "isolatedDeclarations": false,
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "types": ["node"]
+  },
+  "include": ["**/*.ts"]
+}

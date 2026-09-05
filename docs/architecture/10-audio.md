@@ -10,18 +10,24 @@ Babylon Lite ships a complete Web Audio engine (a port of Babylon's Audio V2): e
 
 ```ts
 interface AudioService {
-  readonly state: "locked" | "running" | "suspended" | "interrupted" | "closed";   // Lite AudioEngineState plus "locked" (created, never unlocked)
-  unlock(): Promise<void>;                     // unlockAudioEngineAsync; also called automatically on the first user gesture
-  masterVolume: number;                        // setMasterVolume/getMasterVolume
-  readonly buses: ReadonlyMap<string, AudioBus>;   // "Master", "Music", "SFX", "UI", "Voice" by default (createAudioBusAsync)
-  bus(name: string): AudioBus;                 // throws IGX-1001 when unknown
+  readonly state: "locked" | "running" | "suspended" | "interrupted" | "closed"; // Lite AudioEngineState plus "locked" (created, never unlocked)
+  unlock(): Promise<void>; // unlockAudioEngineAsync; also called automatically on the first user gesture
+  masterVolume: number; // setMasterVolume/getMasterVolume
+  readonly buses: ReadonlyMap<string, AudioBus>; // "Master", "Music", "SFX", "UI", "Voice" by default (createAudioBusAsync)
+  bus(name: string): AudioBus; // throws IGX-1001 when unknown
   createBus(name: string, options?: { parent?: string; volume?: number }): Promise<AudioBus>;
-  playOneShot(clip: AudioClip | AssetRef<AudioClip>, options?: PlayOptions): SoundInstance;   // fire-and-forget on the SFX bus
-  readonly listener: AudioListener | null;     // active listener component
+  playOneShot(clip: AudioClip | AssetRef<AudioClip>, options?: PlayOptions): SoundInstance; // fire-and-forget on the SFX bus
+  readonly listener: AudioListener | null; // active listener component
   readonly onStateChanged: Signal<AudioService["state"]>;
-  readonly lite: { readonly engine: AudioEngine };     // unstable escape hatch
+  readonly lite: { readonly engine: AudioEngine }; // unstable escape hatch
 }
-interface AudioBus { readonly name: string; volume: number; muted: boolean; setVolume(v: number, rampSeconds?: number): void; readonly lite: LiteAudioBus }
+interface AudioBus {
+  readonly name: string;
+  volume: number;
+  muted: boolean;
+  setVolume(v: number, rampSeconds?: number): void;
+  readonly lite: LiteAudioBus;
+}
 ```
 
 - The engine is created in `onStart` (`createAudioEngineAsync({ resumeOnInteraction: true, resumeOnPause: true })`). Browsers require a user gesture before audio plays; Lite resumes on the first click/tap automatically and `unlock()` exists for explicit prompts ("tap to start"). Until unlocked, `play()` calls are queued per source (configurable: `audio({ queueWhileLocked: true })`).
@@ -41,23 +47,35 @@ class AudioSource extends Component.define({
   clip: asset(AudioClip),
   bus: str("SFX"),
   volume: f32(1, { min: 0, max: 1 }),
-  pitch: f32(1, { min: 0.1, max: 4 }),          // playbackRate
+  pitch: f32(1, { min: 0.1, max: 4 }), // playbackRate
   loop: bool(false),
   playOnAwake: bool(false),
   maxInstances: i32(8),
-  spatial: bool(false),                          // 3D positional audio (enableSpatial)
-  minDistance: f32(1), maxDistance: f32(50), rolloff: f32(1),
+  spatial: bool(false), // 3D positional audio (enableSpatial)
+  minDistance: f32(1),
+  maxDistance: f32(50),
+  rolloff: f32(1),
   distanceModel: enumOf(["linear", "inverse", "exponential"] as const, "inverse"),
   cone: record({ innerAngle: f32(360), outerAngle: f32(360), outerVolume: f32(0) }),
-  pan: f32(0, { min: -1, max: 1 }),              // stereo pan for non-spatial sources (enableStereo/setStereoPan)
+  pan: f32(0, { min: -1, max: 1 }), // stereo pan for non-spatial sources (enableStereo/setStereoPan)
 }) {
-  play(options?: PlayOptions): SoundInstance;    // new instance per call (playSound), subject to maxInstances
+  play(options?: PlayOptions): SoundInstance; // new instance per call (playSound), subject to maxInstances
   playOneShot(clip: AudioClip, volume?: number): SoundInstance;
-  stop(fadeSeconds?: number): void; pause(): void; resume(): void;
-  readonly isPlaying: boolean; readonly instanceCount: number;
+  stop(fadeSeconds?: number): void;
+  pause(): void;
+  resume(): void;
+  readonly isPlaying: boolean;
+  readonly instanceCount: number;
   readonly onEnded: Signal<void>;
 }
-interface PlayOptions { volume?: number; pitch?: number; loop?: boolean; delay?: number; startOffset?: number; duration?: number }
+interface PlayOptions {
+  volume?: number;
+  pitch?: number;
+  loop?: boolean;
+  delay?: number;
+  startOffset?: number;
+  duration?: number;
+}
 ```
 
 - Spatial sources attach to the entity's transform node through Lite's `attachedTo` (`attachSpatialTarget`), so position and orientation follow automatically; `updateSpatialAudio(engine)` is pumped once per frame in `PreRender` (auto-update is disabled to keep the pump in a defined phase).

@@ -1,0 +1,59 @@
+{
+  "name": "@ignifx/cli",
+  "version": "0.0.0",
+  "description": "create-ignifx: scaffolds an ignifx project by copying a template directory.",
+  "keywords": [
+    "cli",
+    "create-ignifx",
+    "game-engine",
+    "ignifx",
+    "scaffold",
+    "template",
+    "webgpu"
+  ],
+  "homepage": "https://ignifx.com",
+  "license": "Apache-2.0",
+  "author": "Astrum Forge Studios",
+  "bin": {
+    "create-ignifx": "./dist/bin.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --build tsconfig.json tsconfig.test.json",
+    "test": "vitest run --project node",
+    "api-report": "api-extractor run --verbose",
+    "docs:api": "typedoc",
+    "api-report:update": "api-extractor run --local --verbose",
+    "pack-check": "publint && attw --pack . --profile esm-only"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "catalog:",
+    "@microsoft/api-extractor": "catalog:",
+    "@types/node": "catalog:",
+    "publint": "catalog:",
+    "tsdown": "catalog:",
+    "typedoc": "catalog:",
+    "typedoc-plugin-markdown": "catalog:",
+    "typescript-native": "catalog:",
+    "vitest": "catalog:"
+  },
+  "engines": {
+    "node": ">=24.20"
+  }
+}
