@@ -15,7 +15,7 @@
 
 ## 3. Diagnostics (`app.diagnostics`)
 
-A frame-sampled, allocation-free set of counters grouped by subsystem (`frame`, `render`, `physics`, `assets`, `input`, `audio`, `twoD`, `animation`) plus per-phase CPU timings in development. Consumers read the latest sample; a ring buffer of the last 300 frames supports graphs.
+A frame-sampled, allocation-free set of counters grouped by subsystem (`frame`, `render`, `physics`, `assets`, `input`, `audio`, `twoD`, `animation`) plus per-phase CPU timings in development — where "development" means `createApp({ mode })` is `"development"`, the default in every build including `vite build`, until a game passes `mode: import.meta.env.PROD ? "production" : "development"`. Consumers read the latest sample; a ring buffer of the last 300 frames supports graphs. Extensions and games add groups with `registerGroup(name, counterNames)` (`IGX-1503` on a duplicate) or `groupOrRegister(name, counterNames)`, which returns an existing group as first registered — counters are indexed, so a live group never grows.
 
 ## 4. Devtools overlay (`@ignifx/devtools`)
 

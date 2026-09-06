@@ -32,14 +32,15 @@ import type { ColorLike } from "../math/types.js";
  *   renderer". This module is that boundary: `baseColor`, `emissive`, `diffuse`, and `specular` are
  *   decoded here and handed to the adapter linear. Factors that are not colours — `metallic`,
  *   `roughness`, `alpha` — are unitless and pass through.
- * - **`"type": "shader"` is Phase 7.** §2.6 lists it, and Lite's `createShaderMaterial` exists, but
- *   its declaration takes a WGSL attribute/uniform/sampler layout whose shape is Lite's own
- *   (`ShaderMaterialOptions`, `index.d.ts`); publishing that verbatim would put a Lite type in the
- *   public API, which `CONSTITUTION.md` §3.4 forbids, and mirroring it is a design job of its own.
- *   A file that declares it is rejected with `IGX-0708` naming the phase.
- * - **PBR extensions (`clearcoat`, `sheen`, `transmission`, …) are Phase 7** for the same reason:
- *   each is a sub-record with its own textures, and §2.6 wants them opt-in so unused shader code is
- *   tree-shaken. The loader reports an unknown top-level key rather than silently dropping it.
+ * - **`"type": "shader"` is not implemented.** §2.6 lists it, and Lite's `createShaderMaterial`
+ *   exists, but its declaration takes a WGSL attribute/uniform/sampler layout whose shape is Lite's
+ *   own (`ShaderMaterialOptions`, `index.d.ts`); publishing that verbatim would put a Lite type in
+ *   the public API, which `CONSTITUTION.md` §3.4 forbids, and mirroring it is a design job of its
+ *   own that no delivered phase took on. A file that declares it is rejected with `IGX-0708`.
+ * - **PBR extensions (`clearcoat`, `sheen`, `transmission`, …) are not implemented** for the same
+ *   reason: each is a sub-record with its own textures, and §2.6 wants them opt-in so unused shader
+ *   code is tree-shaken. The loader reports an unknown top-level key rather than silently dropping
+ *   it.
  *
  * ## Headless
  *
@@ -504,7 +505,7 @@ export function standardMaterialDefinition(
  *
  * @param kind - The `type` the file declared.
  * @param address - The address, for the message.
- * @throws IgnifxError with code `IGX-0708` for `"shader"`, which Phase 7 owns.
+ * @throws IgnifxError with code `IGX-0708` for `"shader"`, which no build has implemented.
  *
  * @internal
  */
@@ -517,7 +518,7 @@ export function assertMaterialKindSupported(kind: MaterialKind, address: string)
     `${address} declares a shader material, which this build cannot construct.`,
     {
       context: { asset: address, kind },
-      hint: 'WGSL materials arrive in Phase 7; declare "pbr" or "standard" for now.',
+      hint: 'WGSL materials are not implemented; declare "pbr" or "standard".',
     },
   );
 }

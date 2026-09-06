@@ -1,6 +1,8 @@
+import { buildFrameGraphTask, getFrameGraph } from "@babylonjs/lite";
 import { describe, expect, it } from "vitest";
 import {
   disableGpuTiming,
+  enableLiteErrorDecoding,
   readDrawCallCount,
   readGpuFrameTimeMs,
   resolveMaxDevicePixelRatio,
@@ -97,5 +99,35 @@ describe("counters on the null engine", () => {
       disableGpuTiming(engine);
     }).not.toThrow();
     expect(readGpuFrameTimeMs(engine)).toBe(0);
+  });
+});
+
+describe("Lite's error-message decoder", () => {
+  /**
+   * The decoder is installed through a **dynamic** import of `src/lite/error-decoding.ts`
+   * (`07-rendering.md` §5). Its 43 KB message table would otherwise sit in the entry chunk of every
+   * build, because `createApp`'s `mode` defaults to `"development"` and no bundler can prove the
+   * call away — measured on `examples/hello-cube`, whose entry chunk carried the table and dropped
+   * 10,790 gzipped bytes when it stopped.
+   *
+   * `enableErrorDecoding` is process-global and idempotent, so these decode rather than count.
+   * `buildFrameGraphTask` on a task the graph does not hold is Lite error 94, and it needs no
+   * device.
+   */
+  it("decodes a numeric Lite code to prose once it has been awaited", async () => {
+    await enableLiteErrorDecoding();
+    const { scene } = createHeadlessScene();
+    expect(() => {
+      buildFrameGraphTask(getFrameGraph(scene), { name: "ignifx:not-in-this-graph" } as never);
+    }).toThrow(/task is not registered in this graph/u);
+  });
+
+  it("is idempotent, and the decoded message carries the failing task's name", async () => {
+    await enableLiteErrorDecoding();
+    await enableLiteErrorDecoding();
+    const { scene } = createHeadlessScene();
+    expect(() => {
+      buildFrameGraphTask(getFrameGraph(scene), { name: "ignifx:probe" } as never);
+    }).toThrow(/ignifx:probe/u);
   });
 });

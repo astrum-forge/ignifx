@@ -20,8 +20,8 @@ import type { Schema } from "../schema/types.js";
  * neither is inspectable without extra tooling. Three optional records with an `order` each is the
  * simplest shape that round-trips through `encodeProps`/`decodeProps` unchanged, shows up in the
  * inspector with real field names and tooltips, and still lets a project reorder the chain. The
- * cost is that adding a fourth effect in Phase 7 adds a fourth record rather than a new list entry;
- * that is a schema addition, which the format already tolerates.
+ * cost is that a fourth effect would add a fourth record rather than a new list entry; that is a
+ * schema addition, which the format already tolerates.
  *
  * ## It needs `rendering.features.postProcessing`, declared at app start
  *
@@ -116,6 +116,12 @@ export interface ImageProcessingEffectSettings {
  * One instance of a post-process chain, attached to the main camera's entity
  * (`docs/architecture/07-rendering.md` §2.7).
  *
+ * @remarks
+ * The stack may be attached and configured either **before** or after `app.start()`. Before start
+ * the chain's frame-graph tasks are appended and recorded by the scene registration `start()` runs;
+ * after start they are recorded on the spot. Either way the first frame the canvas presents already
+ * carries the effects.
+ *
  * @example
  * ```ts
  * cameraEntity.addComponent(PostProcessStack, {
@@ -182,6 +188,13 @@ export class PostProcessStack extends Component implements ComponentHooks {
    * Builds the chain the first time any effect is enabled, and switches individual effects on and
    * off after that. The `PreRender` system calls it.
    *
+   * @remarks
+   * It is also called once by `app.start()`, through `renderer.syncBeforeRegister`, which is what
+   * makes a stack configured **before** `start()` work: at that point the scene's frame graph has
+   * not been built, so the chain appends its tasks and lets `registerScene` record them
+   * (`PostProcessChain`'s `isFrameGraphBuilt`). Recording them early instead binds a scene colour
+   * that no task has allocated yet and Lite rejects the whole frame with error 107.
+   *
    * @param renderer - The rendering service, for the engine and the scene.
    *
    * @internal
@@ -195,7 +208,13 @@ export class PostProcessStack extends Component implements ComponentHooks {
       const requests = this.#requests(renderer.settings.srgb);
       const presenter = renderer.presenter;
       if (!renderer.isHeadless && presenter !== null) {
-        this.#chain = new PostProcessChain(renderer.engine, renderer.scene, presenter, requests);
+        this.#chain = new PostProcessChain(
+          renderer.engine,
+          renderer.scene,
+          presenter,
+          requests,
+          renderer.isSceneRegistered,
+        );
       }
       this.#warnAboutFeature(renderer, requests.length);
       return;

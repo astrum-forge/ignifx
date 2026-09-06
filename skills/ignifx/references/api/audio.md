@@ -1101,6 +1101,12 @@ One voice is kept per clip-and-bus pair and reused, so a hundred coins in a seco
 Web Audio sub-graph and a hundred instances, with the oldest stolen past sixteen. The clip must
 already be loaded; an `asset()` field hands you exactly that.
 
+This is the **wider** of the two one-shot calls: it takes [OneShotOptions](#oneshotoptions), which is `bus`
+plus all of `PlayOptions`. `AudioSource.playOneShot(clip, { volume })` is the narrow form — it
+supplies the source's bus and accepts a gain and nothing else
+(`docs/architecture/10-audio.md` §3, "Corrections"). Neither form is spatial; a positional sound
+is `play()` on a spatial `AudioSource`.
+
 ###### Example
 
 ```ts
@@ -1881,10 +1887,21 @@ The gain for this one play.
 
 The sound.
 
+###### Remarks
+
+The options are **not** the service form's: this takes [OneShotVolume](#oneshotvolume) — `{ volume }` and
+nothing else — and supplies the source's own `bus`. `app.audio.playOneShot(clip, options)` takes
+`OneShotOptions`, which is `bus` plus all of `PlayOptions` (`pitch`, `loop`, `delay`,
+`startOffset`, `duration`); reach for that one when a one-shot needs more than a gain. Either
+way the voice is non-spatial and shared per `(clip, bus)`, so a positional impact is `play()` on
+a spatial `AudioSource`, not a one-shot.
+
 ###### Example
 
 ```ts
 this.source.playOneShot(this.impact.value, { volume: 0.5 });
+// More than a gain? Use the service, and name the bus yourself:
+this.app.audio.playOneShot(this.impact.value, { bus: this.source.bus, pitch: 1.2 });
 ```
 
 ##### requireComponent()
@@ -5841,7 +5858,16 @@ Linear gain for this play; defaults to the source's `volume`.
 
 ### OneShotVolume
 
-Options accepted by [AudioSource.playOneShot](#playoneshot-1).
+Options accepted by [AudioSource.playOneShot](#playoneshot-1): a gain and nothing else.
+
+#### Remarks
+
+Deliberately narrower than the `OneShotOptions` the service form takes
+(`docs/architecture/10-audio.md` §3, "Corrections"). The component form exists to fire a second
+clip **through this source's bus**, so `bus` is not a caller's choice, and everything else in
+`PlayOptions` — `pitch`, `loop`, `delay`, `startOffset`, `duration` — describes a sound the
+source would then have no handle on. A one-shot that needs more than a gain is
+`app.audio.playOneShot(clip, options)`, which takes `bus` plus all of `PlayOptions`.
 
 #### Properties
 
@@ -5849,7 +5875,7 @@ Options accepted by [AudioSource.playOneShot](#playoneshot-1).
 
 > `readonly` `optional` **volume?**: `number`
 
-Linear gain for this one play.
+Linear gain for this one play, multiplying the source's own `volume`. Defaults to `1`.
 
 ***
 

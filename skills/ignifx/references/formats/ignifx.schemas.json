@@ -1273,7 +1273,7 @@
         "type": {
           "kind": "enum",
           "default": "\"pbr\"",
-          "description": "The material family: pbr, standard, shader. \"shader\" arrives in Phase 7."
+          "description": "The material family: pbr, standard, shader. \"shader\" is declared but not implemented; it is rejected with IGX-0708."
         },
         "name": {
           "kind": "str",
@@ -2202,7 +2202,7 @@
     "ignifx/spriteanimation-file": {
       "title": "Sprite animation",
       "format": "ignifx.spriteanimation",
-      "description": "Clips of atlas frames with a rate, a loop flag, and frame events.",
+      "description": "Clips of atlas frames with a rate, a loop flag, and frame events. A clip names its frames either as an explicit `frames` list of atlas frame names, played in the order written and free to skip around the sheet, or as a `from`/`to` pair — and that pair is an **inclusive range over atlas indices**, not two endpoints joined by name: every index between the two is played, in atlas order, so a range whose endpoints are not adjacent in the sheet plays whatever the packer put between them. Use `frames` for a run that is not contiguous.",
       "package": "packages/2d",
       "fields": {
         "format": {
@@ -2223,7 +2223,7 @@
         "clips": {
           "kind": "array",
           "default": "[]",
-          "description": "The clips; the first is the default."
+          "description": "The clips; the first is the default. Each is a record of name (str, what SpriteAnimator.play takes), frames (array of atlas frame names in play order, which need not be adjacent), from/to (str: an INCLUSIVE range over atlas INDICES used when frames is empty — every index between the two endpoints is played, in atlas order, so a range over non-adjacent frames plays everything in between; to before from plays it backwards), fps (f32, default 12), loop (bool, default true) and events (array of { frame: u32 index within the clip, not the atlas; name: str })."
         }
       }
     },
@@ -2289,7 +2289,7 @@
         "frames": {
           "kind": "array",
           "default": "[]",
-          "description": "The frames, in the order they are indexed."
+          "description": "The frames, in the order they are indexed. Each is a record of name (str, what #frame: addresses), x/y (f32, the top-left corner in image pixels), w/h (f32, the size in image pixels), pivot (vec2 in [0,1] of the frame; [0,0] is top-left) and sourceSize (vec2, the untrimmed size when the packer trimmed the frame)."
         }
       }
     },

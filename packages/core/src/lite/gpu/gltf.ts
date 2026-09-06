@@ -1,4 +1,4 @@
-import { addToScene, cloneTransformNode, loadGltf, removeFromScene } from "@babylonjs/lite";
+import { addToScene, cloneTransformNode, removeFromScene } from "@babylonjs/lite";
 import type { AnimationGroup, AssetContainer, EngineContext, SceneContext, SceneNode, Skeleton } from "@babylonjs/lite";
 
 /**
@@ -10,7 +10,9 @@ import type { AnimationGroup, AssetContainer, EngineContext, SceneContext, Scene
  *
  * ## What a container holds (verified against `@babylonjs/lite@1.27.0`)
  *
- * `loadGltf(engine, source)` (`index.d.ts` 6821) takes a URL, an `ArrayBuffer`, or a `Blob` and
+ * `loadGltf(engine, source)` (`index.d.ts` 6821) — reached through the dynamically imported
+ * `./gltf-source.ts`, so that a game which loads no model carries no glTF parser — takes a URL, an
+ * `ArrayBuffer`, or a `Blob` and
  * resolves to an `AssetContainer` (`index.d.ts` 653) whose `entities` is `[rootTransformNode]` for
  * glTF. The ignifx asset layer fetches the bytes itself — that is where progress reporting and
  * `AbortSignal` support live (`docs/architecture/05-assets-and-loading.md`) — and hands Lite an
@@ -95,8 +97,9 @@ export interface ModelInstance {
  *
  * @internal
  */
-export function loadGltfFromBytes(engine: EngineContext, bytes: ArrayBuffer): Promise<AssetContainer> {
-  return loadGltf(engine, bytes);
+export async function loadGltfFromBytes(engine: EngineContext, bytes: ArrayBuffer): Promise<AssetContainer> {
+  const module = await import("./gltf-source.js");
+  return module.loadGltfSource(engine, bytes);
 }
 
 /**
@@ -112,8 +115,9 @@ export function loadGltfFromBytes(engine: EngineContext, bytes: ArrayBuffer): Pr
  *
  * @internal
  */
-export function loadGltfFromUrl(engine: EngineContext, url: string): Promise<AssetContainer> {
-  return loadGltf(engine, url);
+export async function loadGltfFromUrl(engine: EngineContext, url: string): Promise<AssetContainer> {
+  const module = await import("./gltf-source.js");
+  return module.loadGltfSource(engine, url);
 }
 
 /**

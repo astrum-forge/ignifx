@@ -197,6 +197,35 @@ describe("counter groups", () => {
     }
   });
 
+  it("registers on the first groupOrRegister and returns the same group on the next", () => {
+    const diagnostics = new Diagnostics();
+    const first = diagnostics.groupOrRegister("game", ["enemiesAlive"]);
+    const second = diagnostics.groupOrRegister("game", ["enemiesAlive"]);
+    expect(second).toBe(first);
+    expect(diagnostics.groups).toEqual([first]);
+  });
+
+  it("hands groupOrRegister the group registerGroup already made", () => {
+    const diagnostics = new Diagnostics();
+    const group = diagnostics.registerGroup("render", ["drawCalls"]);
+    expect(diagnostics.groupOrRegister("render", ["drawCalls"])).toBe(group);
+  });
+
+  it("ignores the counter names of a groupOrRegister that finds an existing group", () => {
+    // Counters are indexed, so growing a group under a subsystem that already holds indices into it
+    // would renumber them. The later names are dropped, and asking for one raises IGX-1504.
+    const diagnostics = new Diagnostics();
+    diagnostics.registerGroup("game", ["enemiesAlive"]);
+    const group = diagnostics.groupOrRegister("game", ["wavesCleared"]);
+    expect(group.counterNames).toEqual(["enemiesAlive"]);
+    try {
+      group.index("wavesCleared");
+      expect.unreachable();
+    } catch (error) {
+      expect(isIgnifxError(error) && error.code).toBe(CoreErrorCode.unknownDiagnosticsCounter);
+    }
+  });
+
   it("keeps two apps' counters apart", () => {
     const first = new Diagnostics();
     const second = new Diagnostics();

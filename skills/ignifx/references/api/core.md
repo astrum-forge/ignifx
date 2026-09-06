@@ -2264,7 +2264,9 @@ How many frames the history can hold.
 
 > `readonly` **isDevelopment**: `boolean`
 
-Whether per-phase timings and User Timing entries are being recorded.
+Whether per-phase timings and User Timing entries are being recorded — that is, whether the app
+was created with `mode: "development"`, which is the default in every build. Read it before
+trusting `FrameSample.cpuMs`.
 
 #### Accessors
 
@@ -2358,6 +2360,53 @@ The group name.
 The group, or `null` when no subsystem registered it — an absent group is expected
 absence, not a failure (coding standards §5.5).
 
+##### groupOrRegister()
+
+> **groupOrRegister**(`name`, `counterNames`): [`DiagnosticsGroup`](#diagnosticsgroup-1)
+
+Looks a counter group up by name and registers it if no subsystem has yet — the idiom for code
+that may run more than once (`docs/architecture/15-devtools-and-diagnostics.md` §3).
+
+###### Parameters
+
+###### name
+
+`string`
+
+The group name.
+
+###### counterNames
+
+readonly `string`[]
+
+The counter names to register with, used only on the first call.
+
+###### Returns
+
+[`DiagnosticsGroup`](#diagnosticsgroup-1)
+
+The existing group, or the newly registered one.
+
+###### Remarks
+
+`registerGroup` throws `IGX-1503` on a duplicate name, which is right for an extension that
+registers its group once at `register()` time and wrong for a script: a script's `awake` runs
+once per instance, and a scene reload runs it again, so `group(name) ?? registerGroup(name, …)`
+had to be written out by hand at every call site. This is that expression, with one difference
+worth knowing: when the group already exists it is returned **as it was registered**, and
+`counterNames` is ignored rather than merged — Lite-style counter arrays are indexed, and
+growing one under a subsystem that already holds indices into it would silently renumber its
+counters. A caller that then asks for a counter the first registration did not declare gets
+`IGX-1504` from [DiagnosticsGroup.index](#index), which names the group and the counter.
+
+###### Example
+
+```ts
+// In a Script's `awake`, which runs once per instance and again after a scene reload.
+const counters = this.app.diagnostics.groupOrRegister("game", ["enemiesAlive", "wavesCleared"]);
+this.enemiesAlive = counters.index("enemiesAlive");
+```
+
 ##### profile()
 
 > **profile**(`name`): [`ProfileScope`](#profilescope)
@@ -2447,6 +2496,12 @@ The counter names, in the order their indices are assigned.
 [`DiagnosticsGroup`](#diagnosticsgroup-1)
 
 The group, whose indices are resolved once with [DiagnosticsGroup.index](#index).
+
+###### Remarks
+
+A second registration of the same name is a mistake, not a merge, so it throws. A script that
+cannot know whether it is the first instance to run — a gameplay counter shared by every enemy,
+a group that survives a scene reload — asks for [Diagnostics.groupOrRegister](#grouporregister) instead.
 
 ###### Throws
 
@@ -7673,8 +7728,8 @@ The clips the file declared.
 
 ###### Remarks
 
-Unstable: these are Lite's own animation groups, and ignifx does not advance them in Phase 2
-(ADR-0003 — `@ignifx/3d`'s animator owns playback).
+Unstable: these are Lite's own animation groups, and core does not advance them
+(ADR-0003 — `@ignifx/3d`'s `Animator` owns playback).
 
 ###### Returns
 
@@ -8184,9 +8239,9 @@ The clips the file declared, stripped from the container so Lite never ticks the
 
 ###### Remarks
 
-Unstable: these are Lite's own animation groups, handed on to `@ignifx/3d`'s animator, and they
-are excluded from the stability guarantees of `CONSTITUTION.md` Article IV. A `Model` re-binds
-them per instance when the animation system lands; in Phase 2 they are read-only metadata.
+Unstable: these are Lite's own animation groups, handed on to `@ignifx/3d`'s `Animator`, and
+they are excluded from the stability guarantees of `CONSTITUTION.md` Article IV. To core they
+are read-only metadata: nothing here advances or re-binds them.
 
 ##### assetType
 
@@ -8309,6 +8364,13 @@ Records that one more `Model` holds a copy.
 
 One instance of a post-process chain, attached to the main camera's entity
 (`docs/architecture/07-rendering.md` §2.7).
+
+#### Remarks
+
+The stack may be attached and configured either **before** or after `app.start()`. Before start
+the chain's frame-graph tasks are appended and recorded by the scene registration `start()` runs;
+after start they are recorded on the spot. Either way the first frame the canvas presents already
+carries the effects.
 
 #### Example
 
@@ -15747,10 +15809,10 @@ The running simulation: the entity registry, the scene instances, and the lifecy
 
 #### Remarks
 
-Phase 1 ships the subset that needs no asset system: entity creation, queries, the implicit
-`"default"` scene, and the lifecycle. `loadScene`, `unloadScene`, `instantiate`,
-`instantiateAsync`, and `moveEntityToScene` arrive in Phase 2, and `onSceneLoaded`/
-`onSceneUnloaded` exist here but never fire until then.
+The world owns entity creation, queries, the implicit `"default"` scene, and the lifecycle, plus
+the scene operations that need the asset service — `loadScene`, `unloadScene`, `instantiate`,
+`instantiateAsync`, `moveEntityToScene` — and the `onSceneLoaded`/`onSceneUnloaded` signals they
+raise.
 
 #### Example
 
@@ -15924,7 +15986,7 @@ The signal.
 
 > **get** **onSceneLoaded**(): [`Signal`](#signal-3)\<[`SceneInstance`](#sceneinstance)\>
 
-Emitted when a scene instance finishes loading. Never fires before Phase 2.
+Emitted when a scene instance finishes loading.
 
 ###### Returns
 
@@ -15938,7 +16000,7 @@ The signal.
 
 > **get** **onSceneUnloaded**(): [`Signal`](#signal-3)\<[`SceneInstance`](#sceneinstance)\>
 
-Emitted when a scene instance is unloaded. Never fires before Phase 2.
+Emitted when a scene instance is unloaded.
 
 ###### Returns
 
@@ -18944,16 +19006,29 @@ Where `app.log` writes. Defaults to the console sink.
 > `readonly` `optional` **mode?**: [`ErrorFormatMode`](#errorformatmode)
 
 `"development"` turns on per-phase CPU timings, full error messages, and the strict half of
-every rule `04-extensions.md` §2 relaxes in production. Defaults to `"development"`; the Vite
-plugin sets it from the build mode in Phase 2.
+every rule `04-extensions.md` §2 relaxes in production.
+
+###### Remarks
+
+Defaults to `"development"`, and **nothing else ever changes it**: neither `@ignifx/vite-plugin`
+nor a template overrides it, so a production `vite build` of a game that passes no `mode` runs
+in development mode — full error text, `performance.mark`/`measure` entries, and
+`FrameSample.cpuMs` filled in. That is deliberate: the mode decides how the *engine* reports
+itself, and only the game knows whether its shipped build wants that. Pass it from the bundler's
+own flag to opt out — `mode: import.meta.env.PROD ? "production" : "development"`.
+
+###### Default Value
+
+`"development"`
 
 ##### settings?
 
 > `readonly` `optional` **settings?**: `Readonly`\<`Record`\<`string`, `unknown`\>\>
 
 Project settings, as `ignifx.config.ts` would supply them
-(`docs/architecture/04-extensions.md` §5). The Vite plugin injects the resolved config in
-Phase 2; tests and Electron tooling pass it here.
+(`docs/architecture/04-extensions.md` §5). `@ignifx/vite-plugin` injects the resolved
+`ignifx.config.ts` as the `import.meta.env.IGNIFX_CONFIG` literal, which a game passes straight
+in here; tests and Electron tooling pass their own object instead.
 
 ##### storage?
 
@@ -19413,8 +19488,10 @@ Options for the [Diagnostics](#diagnostics-1) constructor.
 
 > `readonly` `optional` **development?**: `boolean`
 
-Whether this is a development build. Per-phase CPU timings and `performance.mark`/`measure`
-entries are only produced when it is `true`. Defaults to `false`.
+Whether the app runs in development mode. Per-phase CPU timings and
+`performance.mark`/`measure` entries are only produced when it is `true`. Defaults to `false`
+here; `createApp` passes `mode === "development"`, and that `mode` itself defaults to
+`"development"` in every build — a bundler's production flag does not change it.
 
 ##### historyLength?
 
@@ -20569,8 +20646,17 @@ How many coroutines were resumed this frame.
 
 > `readonly` **cpuMs**: `Float64Array`
 
-CPU milliseconds per phase, indexed by [PhaseIndex](#phaseindex). Always [PHASE\_COUNT](#phase_count) long and
-only filled in development builds.
+CPU milliseconds per phase, indexed by [PhaseIndex](#phaseindex). Always [PHASE\_COUNT](#phase_count) long, and
+filled only while the app is in development mode — every entry is `0` otherwise.
+
+###### Remarks
+
+"Development mode" is `createApp({ mode })`, and nothing else. It is **not** the bundler's mode:
+`mode` defaults to `"development"` and no ignifx tooling overrides it, so a `vite build` of a
+game that never passes `mode` still records these timings. A project that wants them gone from
+its shipped build passes `mode: "production"` itself — for example
+`createApp({ mode: import.meta.env.PROD ? "production" : "development" })` — and a probe that
+reads `cpuMs` then reports zeros.
 
 ##### destroyed
 
@@ -21486,6 +21572,11 @@ The logging front end reached as `app.log` and, per extension, as `ctx.log`
 Calls below the current threshold return before any record is built, so a disabled `debug()` costs
 one numeric comparison. The rest parameter itself is still materialised by the JavaScript engine,
 so per-frame call sites guard with [Logger.isEnabled](#isenabled) instead (coding standards §7).
+
+**A message is not a format string.** It is written to the sink verbatim and the extras are
+appended beside it, the way `console.warn(message, ...data)` does; nothing substitutes into it, so
+a `{placeholder}` token is printed literally. Pass values as extras
+(`log.info("hero z:", z)`), never as tokens inside the message.
 
 #### Example
 
@@ -26350,7 +26441,9 @@ The union of the two-digit subsystem prefixes declared by `ErrorRange`.
 
 The `fetch` implementation the service performs every read through
 (`docs/architecture/05-assets-and-loading.md` §8). Injecting it is how headless tests supply
-deterministic responses and how a Node app maps addresses onto `fs` (Phase 9).
+deterministic responses and how a Node app maps addresses onto `fs`. A packaged Electron build
+needs no injection: `@ignifx/electron` serves `dist/` over `ignifx://`, which the renderer's own
+`fetch` reaches.
 
 ***
 
@@ -29881,7 +29974,8 @@ The root logger; call [Logger.child](#child) for scoped loggers.
 
 ```ts
 const log = createLogger({ sink: createConsoleSink(), level: "debug" });
-log.child("assets").warnOnce("missing-atlas", "No atlas for sprite {id}.");
+// A message is not a format string — nothing substitutes into it. Pass values as extras.
+log.child("assets").warnOnce("missing-atlas", "No atlas for sprite:", spriteId);
 ```
 
 ***
@@ -31448,8 +31542,8 @@ Declares a set of layers. Layers are stored by *name*, not by bit value, so rena
 project settings does not silently repoint existing files
 (`docs/architecture/06-serialization-and-scene-format.md` §3).
 
-The value type is a read-only array of names in Phase 1; the kernel's `LayerMask` class arrives
-with the layer registry and will satisfy the same structural shape.
+The field's value is a read-only array of names. The kernel's `LayerMask` satisfies the same
+structural shape, so a component may hold either.
 
 #### Parameters
 

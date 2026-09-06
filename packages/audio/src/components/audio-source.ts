@@ -49,12 +49,20 @@ import type { AssetHandle, Disconnect, Schema, ScriptCallbacks, SignalLike } fro
  */
 
 /**
- * Options accepted by {@link AudioSource.playOneShot}.
+ * Options accepted by {@link AudioSource.playOneShot}: a gain and nothing else.
+ *
+ * @remarks
+ * Deliberately narrower than the `OneShotOptions` the service form takes
+ * (`docs/architecture/10-audio.md` §3, "Corrections"). The component form exists to fire a second
+ * clip **through this source's bus**, so `bus` is not a caller's choice, and everything else in
+ * `PlayOptions` — `pitch`, `loop`, `delay`, `startOffset`, `duration` — describes a sound the
+ * source would then have no handle on. A one-shot that needs more than a gain is
+ * `app.audio.playOneShot(clip, options)`, which takes `bus` plus all of `PlayOptions`.
  *
  * @public
  */
 export interface OneShotVolume {
-  /** Linear gain for this one play. */
+  /** Linear gain for this one play, multiplying the source's own `volume`. Defaults to `1`. */
   readonly volume?: number;
 }
 
@@ -302,6 +310,14 @@ export class AudioSource extends Script implements ScriptCallbacks {
    * Plays another clip once through this source's bus, without disturbing what this source is
    * playing (`docs/architecture/10-audio.md` §3).
    *
+   * @remarks
+   * The options are **not** the service form's: this takes {@link OneShotVolume} — `{ volume }` and
+   * nothing else — and supplies the source's own `bus`. `app.audio.playOneShot(clip, options)` takes
+   * `OneShotOptions`, which is `bus` plus all of `PlayOptions` (`pitch`, `loop`, `delay`,
+   * `startOffset`, `duration`); reach for that one when a one-shot needs more than a gain. Either
+   * way the voice is non-spatial and shared per `(clip, bus)`, so a positional impact is `play()` on
+   * a spatial `AudioSource`, not a one-shot.
+   *
    * @param clip - The clip to play.
    * @param options - The gain for this one play.
    * @returns The sound.
@@ -309,6 +325,8 @@ export class AudioSource extends Script implements ScriptCallbacks {
    * @example
    * ```ts
    * this.source.playOneShot(this.impact.value, { volume: 0.5 });
+   * // More than a gain? Use the service, and name the bus yourself:
+   * this.app.audio.playOneShot(this.impact.value, { bus: this.source.bus, pitch: 1.2 });
    * ```
    */
   playOneShot(clip: AudioClip, options?: OneShotVolume): SoundInstance {

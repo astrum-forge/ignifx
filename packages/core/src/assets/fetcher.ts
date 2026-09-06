@@ -8,8 +8,10 @@ import type { FetchLike } from "./types.js";
  * Decision the documents leave open: **`fetch` is the only I/O.** §8 says headless runs use "fetch
  * for URLs and Node file reads for paths", but a second code path would mean loaders behaving
  * differently per host, which §8's own last sentence forbids ("so loaders do not branch on
- * platform"). A Node app that needs files therefore passes a `fetch` that maps them onto `fs`
- * (Phase 9 ships one); tests pass a fake. Nothing here imports `node:fs`.
+ * platform"). A Node app that needs files therefore passes a `fetch` of its own that maps them
+ * onto `fs`; tests pass a fake. A packaged desktop build does not need one — `@ignifx/electron`
+ * registers the `ignifx://` scheme with `supportFetchAPI`, so the renderer's ordinary `fetch`
+ * reaches `dist/` (`14-platform-electron.md` §3). Nothing here imports `node:fs`.
  *
  * Progress is bytes-weighted whenever a size is known — from the manifest entry, else from
  * `Content-Length` — and the body is read chunk by chunk so the counter moves during the download

@@ -39,8 +39,10 @@ export interface ProfileScope {
  */
 export interface DiagnosticsOptions {
   /**
-   * Whether this is a development build. Per-phase CPU timings and `performance.mark`/`measure`
-   * entries are only produced when it is `true`. Defaults to `false`.
+   * Whether the app runs in development mode. Per-phase CPU timings and
+   * `performance.mark`/`measure` entries are only produced when it is `true`. Defaults to `false`
+   * here; `createApp` passes `mode === "development"`, and that `mode` itself defaults to
+   * `"development"` in every build — a bundler's production flag does not change it.
    */
   readonly development?: boolean;
   /**
@@ -149,7 +151,11 @@ export class Diagnostics {
    */
   readonly frame: FrameSample = createFrameSample();
 
-  /** Whether per-phase timings and User Timing entries are being recorded. */
+  /**
+   * Whether per-phase timings and User Timing entries are being recorded — that is, whether the app
+   * was created with `mode: "development"`, which is the default in every build. Read it before
+   * trusting `FrameSample.cpuMs`.
+   */
   readonly isDevelopment: boolean;
 
   /** How many frames the history can hold. */
@@ -305,6 +311,11 @@ export class Diagnostics {
   /**
    * Registers a subsystem's counter group.
    *
+   * @remarks
+   * A second registration of the same name is a mistake, not a merge, so it throws. A script that
+   * cannot know whether it is the first instance to run — a gameplay counter shared by every enemy,
+   * a group that survives a scene reload — asks for {@link Diagnostics.groupOrRegister} instead.
+   *
    * @param name - The group name, unique within this app.
    * @param counterNames - The counter names, in the order their indices are assigned.
    * @returns The group, whose indices are resolved once with {@link DiagnosticsGroup.index}.
@@ -333,6 +344,36 @@ export class Diagnostics {
    */
   group(name: string): DiagnosticsGroup | null {
     return this.#groupsByName.get(name) ?? null;
+  }
+
+  /**
+   * Looks a counter group up by name and registers it if no subsystem has yet — the idiom for code
+   * that may run more than once (`docs/architecture/15-devtools-and-diagnostics.md` §3).
+   *
+   * @remarks
+   * `registerGroup` throws `IGX-1503` on a duplicate name, which is right for an extension that
+   * registers its group once at `register()` time and wrong for a script: a script's `awake` runs
+   * once per instance, and a scene reload runs it again, so `group(name) ?? registerGroup(name, …)`
+   * had to be written out by hand at every call site. This is that expression, with one difference
+   * worth knowing: when the group already exists it is returned **as it was registered**, and
+   * `counterNames` is ignored rather than merged — Lite-style counter arrays are indexed, and
+   * growing one under a subsystem that already holds indices into it would silently renumber its
+   * counters. A caller that then asks for a counter the first registration did not declare gets
+   * `IGX-1504` from {@link DiagnosticsGroup.index}, which names the group and the counter.
+   *
+   * @param name - The group name.
+   * @param counterNames - The counter names to register with, used only on the first call.
+   * @returns The existing group, or the newly registered one.
+   *
+   * @example
+   * ```ts
+   * // In a Script's `awake`, which runs once per instance and again after a scene reload.
+   * const counters = this.app.diagnostics.groupOrRegister("game", ["enemiesAlive", "wavesCleared"]);
+   * this.enemiesAlive = counters.index("enemiesAlive");
+   * ```
+   */
+  groupOrRegister(name: string, counterNames: readonly string[]): DiagnosticsGroup {
+    return this.#groupsByName.get(name) ?? this.registerGroup(name, counterNames);
   }
 
   /**

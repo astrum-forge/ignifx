@@ -83,9 +83,23 @@ not reported because the rule cannot see what they hold.
 
 `02-scene-graph.md` §4, `03-scripting-and-components.md` §8. Reports `<expr>.find(<string>)` — a
 string literal or a template literal — in files matching `include` (default `**/src/**`) and not
-matching `exclude` (default tests, `examples/`, `tools/`, `scripts/`). The string-literal argument
-is what separates `Entity.find(path)` from `Array.prototype.find(callback)` without type
-information; `entity.find(pathVariable)` is therefore a known false negative.
+matching `exclude` (default tests, `examples/`, `tools/`). The string-literal argument is what
+separates `Entity.find(path)` from `Array.prototype.find(callback)` without type information;
+`entity.find(pathVariable)` is therefore a known false negative.
+
+Two exemptions keep the by-name lookups out of it, because ESLint runs here without type
+information (`eslint.config.ts` uses typescript-eslint's non-type-checked config, so no rule can ask
+what the receiver is): an array-literal receiver is skipped, and so is any receiver whose **last
+identifier** is in `allowedReceivers` (default `actions`, `assets`). That is what makes
+`app.input.actions.find("jump")` — the documented way to resolve an `InputAction` — legal in a game
+script. The match is on the whole tail identifier, so `uiActions.find("Body/Arm.L")` is still
+reported.
+
+`scripts/` was removed from the default `exclude` in the same change: it was meant to exempt the
+repository's own tooling under `/scripts/`, but the glob matched any `scripts` segment at any depth
+and so exempted `templates/*/src/scripts/**`, which is precisely where the rule is supposed to
+apply. Repository tooling needs no exemption — `include` is `**/src/**`, and no `scripts/` directory
+in this workspace lives under a `src/`.
 
 ### schema-field-shadowing
 

@@ -21,8 +21,8 @@ import type { LiteScene } from "../lite/scene.js";
  * `addToScene` would register a container's `animationGroups` with Lite's own animation manager and
  * install a before-render hook for them. ADR-0003 says ignifx owns every clock, so the loader
  * removes them from the container the moment it is loaded and the asset keeps them
- * ({@link ModelAsset.animations}). Phase 2 exposes them and advances nothing; `@ignifx/3d`'s
- * animator is what plays them.
+ * ({@link ModelAsset.animations}). Core exposes them and advances nothing; `@ignifx/3d`'s
+ * `Animator` is what plays them.
  *
  * ## Instance counting
  *
@@ -98,9 +98,9 @@ export class ModelAsset {
    * The clips the file declared, stripped from the container so Lite never ticks them.
    *
    * @remarks
-   * Unstable: these are Lite's own animation groups, handed on to `@ignifx/3d`'s animator, and they
-   * are excluded from the stability guarantees of `CONSTITUTION.md` Article IV. A `Model` re-binds
-   * them per instance when the animation system lands; in Phase 2 they are read-only metadata.
+   * Unstable: these are Lite's own animation groups, handed on to `@ignifx/3d`'s `Animator`, and
+   * they are excluded from the stability guarantees of `CONSTITUTION.md` Article IV. To core they
+   * are read-only metadata: nothing here advances or re-binds them.
    *
    * @beta
    */

@@ -206,7 +206,9 @@ Generated reference: `skills/ignifx/references/formats/`.
   top-left. Address one frame with `"2d/hero.atlas.json#frame:idle_0"`.
 - **`.spriteanim.json`** (`ignifx.spriteanimation`) — `atlas` plus
   `clips: [{ name, frames | from/to, fps, loop, events }]`. An event's `frame` is the index **within
-  the clip**.
+  the clip**. `frames` is a list of frame names played in the order written and may skip around the
+  sheet; `from`/`to` is an **inclusive range over atlas indices**, so every frame between the two
+  endpoints plays — use `frames` when the run is not contiguous in the atlas.
 - **`.tilemap.json`** (`ignifx.tilemap`) — tile size, `cellSize` in metres, tilesets with colliders
   and animations, layers of tile ids (dense or RLE, **top row first**), and an objects layer in
   world metres.

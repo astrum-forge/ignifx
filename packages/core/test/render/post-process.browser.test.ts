@@ -48,10 +48,15 @@ afterEach(() => {
  * @param options - Scene options.
  * @param options.postProcessing - Whether the `postProcessing` rendering feature is declared.
  * @param options.msaaSamples - The MSAA sample count the surface is created with.
+ * @param options.beforeStart - Runs after the world is built and before `app.start()`.
  * @returns The running app.
  */
 async function buildScene(
-  options: { readonly postProcessing?: boolean; readonly msaaSamples?: number } = {},
+  options: {
+    readonly postProcessing?: boolean;
+    readonly msaaSamples?: number;
+    readonly beforeStart?: (running: BrowserApp) => void;
+  } = {},
 ): Promise<BrowserApp> {
   const running = await createBrowserApp({
     size: SIZE,
@@ -78,6 +83,7 @@ async function buildScene(
     [],
   );
   running.world.createEntity("Cube").addComponent(MeshRenderer, { mesh, materials: [material] });
+  options.beforeStart?.(running);
   await running.start();
   await running.advance(SETTLE_FRAMES * 2);
   return running;
@@ -321,5 +327,90 @@ describe("resizing the canvas under a chain", () => {
     expect(running.canvas.width).toBeGreaterThan(SIZE);
     expect(await centreLuminance(running)).toBeGreaterThan(BLACK * 4);
     expect(running.errors).toEqual([]);
+  });
+});
+
+describe("a stack configured before app.start()", () => {
+  /**
+   * Before `start()` the scene's frame graph has never been built, so the offscreen scene colour
+   * owns no GPU texture yet. Recording an effect against it there raised Lite error 107 —
+   * `PostProcessTask "ignifx:bloom-extract-highlights": sourceTexture has no color texture` — and
+   * WebGPU rejected the frame, which is a black page. The chain now appends its tasks and lets
+   * `registerScene`'s own `frameGraph.build()` record them, in array order, after the scene task.
+   */
+
+  /**
+   * Builds the scene with a `PostProcessStack` attached and tuned before `app.start()`.
+   *
+   * @param options - Scene options.
+   * @param options.postProcessing - Whether the `postProcessing` rendering feature is declared.
+   * @param options.tune - Configures the stack, before the app starts.
+   * @returns The running app and the stack it carries. The stack is held in a box rather than a
+   * `let`, because a value assigned only inside a callback narrows to `never` afterwards.
+   */
+  async function buildSceneWithStack(options: {
+    readonly postProcessing?: boolean;
+    readonly tune: (stack: PostProcessStack) => void;
+  }): Promise<{ readonly running: BrowserApp; readonly stack: PostProcessStack }> {
+    const box: { stack: PostProcessStack | null } = { stack: null };
+    const running = await buildScene({
+      ...(options.postProcessing === undefined ? {} : { postProcessing: options.postProcessing }),
+      beforeStart: (app) => {
+        const stack = app.world.createEntity("Post").addComponent(PostProcessStack);
+        options.tune(stack);
+        box.stack = stack;
+      },
+    });
+    const { stack } = box;
+    if (stack === null) {
+      throw new Error("the stack was never built");
+    }
+    return { running, stack };
+  }
+
+  it("records bloom and presents a lit frame, with no error", async () => {
+    const { running, stack } = await buildSceneWithStack({
+      tune: (post) => {
+        post.bloom.enabled = true;
+        post.bloom.threshold = 0.2;
+        post.bloom.weight = 1;
+        post.bloom.kernel = 64;
+        post.bloom.scale = 1;
+      },
+    });
+
+    expect(stack.taskCount).toBe(1);
+    expect(await centreLuminance(running)).toBeGreaterThan(BLACK * 4);
+    expect(await cornerLuminance(running)).toBeGreaterThan(0);
+    expect(running.errors).toEqual([]);
+    expect(running.log.toArray().filter((record) => record.level === "error")).toEqual([]);
+  });
+
+  it("records a bloom + SMAA chain in order and still presents", async () => {
+    const { running, stack } = await buildSceneWithStack({
+      tune: (post) => {
+        post.bloom.enabled = true;
+        post.smaa.enabled = true;
+      },
+    });
+
+    expect(stack.plannedChain()).toEqual(["bloom", "smaa"]);
+    expect(stack.taskCount).toBe(2);
+    expect(await centreLuminance(running)).toBeGreaterThan(BLACK * 4);
+    expect(running.errors).toEqual([]);
+  });
+
+  it("still logs IGX-0710 once when the feature was never declared", async () => {
+    const { running, stack } = await buildSceneWithStack({
+      postProcessing: false,
+      tune: (post) => {
+        post.bloom.enabled = true;
+      },
+    });
+    await running.advance(SETTLE_FRAMES * 2);
+
+    expect(stack.taskCount).toBe(0);
+    expect(running.log.toArray().filter((record) => record.message.includes("IGX-0710"))).toHaveLength(1);
+    expect(await centreLuminance(running)).toBeGreaterThan(BLACK * 4);
   });
 });

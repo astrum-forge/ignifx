@@ -13,8 +13,8 @@ import type { ModelAsset } from "../model-asset.js";
  * priority queue, and the retry policy live (§5). A `.glb` is one file, so this is lossless.
  *
  * A `.gltf` with **external** buffers and images is the one case where it is not: Lite would have to
- * resolve those relative URLs itself, which it can only do when it did the fetching. Phase 2 loads
- * the container from bytes either way and therefore supports self-contained `.gltf` files and
+ * resolve those relative URLs itself, which it can only do when it did the fetching. This loader
+ * loads the container from bytes either way and therefore supports self-contained `.gltf` files and
  * `.glb`; a `.gltf` with siblings fails inside Lite and surfaces as `IGX-0505`. `.glb` is what the
  * asset pipeline produces, and the fix — passing the URL through for that one shape — is a
  * three-line change whenever a project needs it.

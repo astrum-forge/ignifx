@@ -1,4 +1,4 @@
-import { enableErrorDecoding, setGpuTimingEnabled } from "@babylonjs/lite";
+import { setGpuTimingEnabled } from "@babylonjs/lite";
 import type { EngineContext, EngineOptions } from "@babylonjs/lite";
 
 /**
@@ -25,14 +25,23 @@ import type { EngineContext, EngineOptions } from "@babylonjs/lite";
  * numeric code (`docs/architecture/07-rendering.md` §5).
  *
  * @remarks
- * Development only: the decoder is a lookup table Lite would otherwise leave out of the bundle, and
- * §5 asks production builds to lazy-import `decodeError` from `app.onError` instead. The call is
- * process-global and idempotent, and it needs no device.
+ * Development only, and **dynamically imported** so that it is development-only in bytes as well as
+ * in behaviour: the decoder is a 43 KB lookup table, `createApp`'s `mode` defaults to
+ * `"development"`, and a static import therefore put the table in the entry chunk of every
+ * production build too (measured on `examples/hello-cube`). `./error-decoding.ts` exists to be that
+ * chunk. The call is process-global and idempotent, and it needs no device.
+ *
+ * It is awaited rather than fired and forgotten, so that a Lite error raised at any point after
+ * `createApp` resolves reports prose — a decoder installed a round trip later would leave the first
+ * failures reading `#107`.
+ *
+ * @returns A promise that settles once the decoder is installed.
  *
  * @internal
  */
-export function enableLiteErrorDecoding(): void {
-  enableErrorDecoding();
+export async function enableLiteErrorDecoding(): Promise<void> {
+  const module = await import("./error-decoding.js");
+  module.installLiteErrorDecoder();
 }
 
 /**

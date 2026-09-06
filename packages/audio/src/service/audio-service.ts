@@ -421,6 +421,12 @@ export class AudioService implements VoiceHost {
    * Web Audio sub-graph and a hundred instances, with the oldest stolen past sixteen. The clip must
    * already be loaded; an `asset()` field hands you exactly that.
    *
+   * This is the **wider** of the two one-shot calls: it takes {@link OneShotOptions}, which is `bus`
+   * plus all of `PlayOptions`. `AudioSource.playOneShot(clip, { volume })` is the narrow form — it
+   * supplies the source's bus and accepts a gain and nothing else
+   * (`docs/architecture/10-audio.md` §3, "Corrections"). Neither form is spatial; a positional sound
+   * is `play()` on a spatial `AudioSource`.
+   *
    * @param clip - The clip to play.
    * @param options - Per-play overrides, and the bus to route through.
    * @returns The sound, so a caller that wants to can stop or fade it.

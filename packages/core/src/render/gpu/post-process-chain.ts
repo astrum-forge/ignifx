@@ -62,6 +62,8 @@ export class PostProcessChain {
 
   readonly #presenter: ScenePresenter;
 
+  readonly #isFrameGraphBuilt: boolean;
+
   /**
    * Records the requested effects into a scene's frame graph.
    *
@@ -70,14 +72,20 @@ export class PostProcessChain {
    * @param presenter - The offscreen render path: the colour the chain reads, and the compositing
    * blit it takes over from.
    * @param effects - The enabled effects, first to last.
+   * @param isFrameGraphBuilt - Whether the scene has been registered. A chain built **before**
+   * registration only appends its tasks; `registerScene`'s own `frameGraph.build()` records them,
+   * in array order, once the scene render task has allocated the colour they read. Recording them
+   * there and then would raise Lite error 107 instead — see {@link appendPostProcessTask}.
    */
   constructor(
     engine: LiteEngine,
     scene: LiteScene,
     presenter: ScenePresenter,
     effects: readonly PostProcessEffectRequest[],
+    isFrameGraphBuilt: boolean,
   ) {
     this.#presenter = presenter;
+    this.#isFrameGraphBuilt = isFrameGraphBuilt;
     const ordered = imageProcessingLast(effects);
     if (ordered.length === 0) {
       return;
@@ -159,7 +167,7 @@ export class PostProcessChain {
    * @param task - The task.
    */
   #record(scene: LiteScene, task: LitePostProcessTask): void {
-    appendPostProcessTask(scene, task);
+    appendPostProcessTask(scene, task, this.#isFrameGraphBuilt);
     this.#tasks.push(task);
   }
 

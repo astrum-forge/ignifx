@@ -121,8 +121,9 @@ export interface CreateAppOptions {
   readonly extensions?: readonly Extension[];
   /**
    * Project settings, as `ignifx.config.ts` would supply them
-   * (`docs/architecture/04-extensions.md` §5). The Vite plugin injects the resolved config in
-   * Phase 2; tests and Electron tooling pass it here.
+   * (`docs/architecture/04-extensions.md` §5). `@ignifx/vite-plugin` injects the resolved
+   * `ignifx.config.ts` as the `import.meta.env.IGNIFX_CONFIG` literal, which a game passes straight
+   * in here; tests and Electron tooling pass their own object instead.
    */
   readonly settings?: SettingsInput;
   /**
@@ -154,8 +155,17 @@ export interface CreateAppOptions {
   readonly clock?: Clock;
   /**
    * `"development"` turns on per-phase CPU timings, full error messages, and the strict half of
-   * every rule `04-extensions.md` §2 relaxes in production. Defaults to `"development"`; the Vite
-   * plugin sets it from the build mode in Phase 2.
+   * every rule `04-extensions.md` §2 relaxes in production.
+   *
+   * @remarks
+   * Defaults to `"development"`, and **nothing else ever changes it**: neither `@ignifx/vite-plugin`
+   * nor a template overrides it, so a production `vite build` of a game that passes no `mode` runs
+   * in development mode — full error text, `performance.mark`/`measure` entries, and
+   * `FrameSample.cpuMs` filled in. That is deliberate: the mode decides how the *engine* reports
+   * itself, and only the game knows whether its shipped build wants that. Pass it from the bundler's
+   * own flag to opt out — `mode: import.meta.env.PROD ? "production" : "development"`.
+   *
+   * @defaultValue `"development"`
    */
   readonly mode?: ErrorFormatMode;
   /** Where `app.log` writes. Defaults to the console sink. */
@@ -604,8 +614,10 @@ class AppImpl implements App {
     const rendering = this.#settings.section<RenderingSettings>(RENDERING_SETTINGS_SECTION);
     if (this.#mode === "development") {
       // §5: development builds decode Lite's numeric error codes to prose. It is process-global and
-      // idempotent, and it needs no device, so it runs before the engine exists.
-      enableLiteErrorDecoding();
+      // idempotent, and it needs no device, so it runs before the engine exists. The await is a
+      // dynamic import of the decoder's 43 KB message table, which is what keeps that table out of
+      // a production entry chunk (`../lite/error-decoding.ts`).
+      await enableLiteErrorDecoding();
     }
     const canvas = this.#canvas;
     const renderer = rendererInternals(this.renderer);

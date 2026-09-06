@@ -48,7 +48,13 @@ export function describeSpriteAnimationFormat(): SchemaDescription {
   return describeSchema("ignifx/spriteanimation-file", spriteAnimationFileSchema(), {
     title: "Sprite animation",
     format: SPRITE_ANIMATION_FORMAT,
-    description: "Clips of atlas frames with a rate, a loop flag, and frame events.",
+    description:
+      "Clips of atlas frames with a rate, a loop flag, and frame events. A clip names its frames " +
+      "either as an explicit `frames` list of atlas frame names, played in the order written and " +
+      "free to skip around the sheet, or as a `from`/`to` pair — and that pair is an **inclusive " +
+      "range over atlas indices**, not two endpoints joined by name: every index between the two is " +
+      "played, in atlas order, so a range whose endpoints are not adjacent in the sheet plays " +
+      "whatever the packer put between them. Use `frames` for a run that is not contiguous.",
   });
 }
 

@@ -1,4 +1,17 @@
 {
+  // The recipes are compiled the way the documentation harness compiles the skill's code blocks:
+  // against the **built** declaration files of each package, never against `packages/*/src`. Both
+  // programs have to agree, because `pnpm docs:recipes` turns these files into the pages
+  // `pnpm docs:harness` then type-checks (`scripts/lib/check-examples.ts`).
+  //
+  // Pointing `paths` at `packages/*/src/index.ts` pulled every extension's `declare module` app
+  // augmentation into core's own program, so core's `AppImpl` no longer satisfied the `App` it is
+  // declared to implement and `tsc` reported six errors in code the recipes do not even import
+  // ("Class 'AppImpl' incorrectly implements interface 'App'"). A `dist/index.d.ts` carries the
+  // augmentation without carrying core's implementation, which is the shape a consumer sees.
+  //
+  // Consequence: `pnpm build` has to have run. That is already true of `pnpm check`, which builds
+  // first, and of the harness, which refuses to run against missing builds.
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "noEmit": true,
@@ -10,8 +23,8 @@
     "moduleDetection": "force",
     "types": ["@webgpu/types"],
     "paths": {
-      "@ignifx/*": ["../../packages/*/src/index.ts"],
-      "ignifx": ["../../packages/ignifx/src/index.ts"]
+      "@ignifx/*": ["../../packages/*/dist/index.d.ts"],
+      "ignifx": ["../../packages/ignifx/dist/index.d.ts"]
     }
   },
   "include": ["*/main.ts"]

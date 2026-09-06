@@ -411,7 +411,9 @@ export interface RegisterAssetOptions {
 /**
  * The `fetch` implementation the service performs every read through
  * (`docs/architecture/05-assets-and-loading.md` §8). Injecting it is how headless tests supply
- * deterministic responses and how a Node app maps addresses onto `fs` (Phase 9).
+ * deterministic responses and how a Node app maps addresses onto `fs`. A packaged Electron build
+ * needs no injection: `@ignifx/electron` serves `dist/` over `ignifx://`, which the renderer's own
+ * `fetch` reaches.
  *
  * @public
  */

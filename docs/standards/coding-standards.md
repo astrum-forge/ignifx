@@ -158,16 +158,16 @@ tests/visual/            Playwright visual regression (goldens) — GPU job
 - **Oxlint** runs the `correctness`, `suspicious`, `perf`, and `pedantic` categories plus type-aware rules through tsgolint (`no-floating-promises`, `no-misused-promises`, `no-unnecessary-condition`, `strict-boolean-expressions`, `switch-exhaustiveness-check`, `restrict-template-expressions`, `no-unsafe-*`).
 - **ESLint (TS6 alias)** runs a small config for `eslint-plugin-jsdoc` (public API documentation completeness), `eslint-plugin-import-x` cycle/ordering rules, and the ignifx custom rules:
 
-| Rule                             | Enforces                                                                                          |
-| -------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `ignifx/no-lite-outside-adapter` | §4 adapter boundary                                                                               |
-| `ignifx/no-module-side-effects`  | §4 no import-time side effects                                                                    |
-| `ignifx/no-async-lifecycle`      | `async awake/start/update…` are errors                                                            |
-| `ignifx/signal-connect-owner`    | `Signal.connect` inside a `Script` passes `owner`                                                 |
-| `ignifx/no-entity-find-in-src`   | `entity.find("…")` is allowed only in tests, examples, and tools; the rule flags it anywhere else |
-| `ignifx/schema-field-shadowing`  | class fields named like schema fields                                                             |
-| `ignifx/error-code-format`       | `IgnifxError` codes match `IGX-####` and a registered range                                       |
-| `ignifx/no-console`              | console calls outside the log sink                                                                |
+| Rule                             | Enforces                                                                                                                                                                                                               |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ignifx/no-lite-outside-adapter` | §4 adapter boundary                                                                                                                                                                                                    |
+| `ignifx/no-module-side-effects`  | §4 no import-time side effects                                                                                                                                                                                         |
+| `ignifx/no-async-lifecycle`      | `async awake/start/update…` are errors                                                                                                                                                                                 |
+| `ignifx/signal-connect-owner`    | `Signal.connect` inside a `Script` passes `owner`                                                                                                                                                                      |
+| `ignifx/no-entity-find-in-src`   | `entity.find("…")` is allowed only in tests, examples, and tools; the rule flags it anywhere else under `src/`, except on receivers named in `allowedReceivers` (`actions`, `assets` by default) and on array literals |
+| `ignifx/schema-field-shadowing`  | class fields named like schema fields                                                                                                                                                                                  |
+| `ignifx/error-code-format`       | `IgnifxError` codes match `IGX-####` and a registered range                                                                                                                                                            |
+| `ignifx/no-console`              | console calls outside the log sink                                                                                                                                                                                     |
 
 - Lint and format run on staged files through lefthook; CI runs them on the whole tree. The hook formats and _reports_ lint but never auto-fixes: an autofix at commit time rewrites code that already passed `pnpm check`, and the breakage then surfaces one commit later (`.lintstagedrc.mjs` records two such cases). Files a generator writes are skipped by the hook and formatted by their generator. A rule can be disabled inline only with a justification comment.
 

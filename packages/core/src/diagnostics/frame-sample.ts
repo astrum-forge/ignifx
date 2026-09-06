@@ -46,8 +46,16 @@ export interface FrameSample {
   /** How many entities and components were destroyed in this frame's flush. */
   destroyed: number;
   /**
-   * CPU milliseconds per phase, indexed by {@link PhaseIndex}. Always {@link PHASE_COUNT} long and
-   * only filled in development builds.
+   * CPU milliseconds per phase, indexed by {@link PhaseIndex}. Always {@link PHASE_COUNT} long, and
+   * filled only while the app is in development mode — every entry is `0` otherwise.
+   *
+   * @remarks
+   * "Development mode" is `createApp({ mode })`, and nothing else. It is **not** the bundler's mode:
+   * `mode` defaults to `"development"` and no ignifx tooling overrides it, so a `vite build` of a
+   * game that never passes `mode` still records these timings. A project that wants them gone from
+   * its shipped build passes `mode: "production"` itself — for example
+   * `createApp({ mode: import.meta.env.PROD ? "production" : "development" })` — and a probe that
+   * reads `cpuMs` then reports zeros.
    */
   readonly cpuMs: Float64Array;
 }

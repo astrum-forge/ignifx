@@ -39,10 +39,11 @@ import type { Schema } from "../schema/types.js";
  * - **The clone's Lite `id` is the entity's uid.** Lite's light include/exclude lists match on
  *   `Mesh.id` strings (`lib/render/lights-ubo.js`), and §2.2 maps `Light.includeOnly` onto them
  *   from *entity* references. The uid is the one identifier both sides can name.
- * - **`materials` beyond the first is accepted and ignored in Phase 2.** §2.3 says "one per
- *   submesh", but Lite's `Mesh.material` is a single value and Lite has no submesh material list in
- *   1.27.0. The field keeps its array shape so files do not have to change when submeshes land; the
- *   renderer uses index 0, or the default material when the array is empty.
+ * - **`materials` beyond the first is accepted and ignored.** §2.3 says "one per submesh", but
+ *   Lite's `Mesh.material` is a single value and Lite has no submesh material list in 1.27.0, so
+ *   there is nothing for the extra entries to drive. The field keeps its array shape so files do
+ *   not have to change if submeshes land; the renderer uses index 0, or the default material when
+ *   the array is empty.
  *
  * ## Headless
  *

@@ -189,3 +189,18 @@ and, where one exists, the error code you will see. The eighteen most common are
     unnecessary, it trips `typescript/no-unsafe-type-assertion` under the engine's lint settings. The payloads arrive only when
     `physics()` or `physics2d()` is registered; without either, nothing calls them and
     `world.lite.simulationScene` is `null`.
+
+## Diagnostics and builds
+
+54. **Do not call `app.diagnostics.registerGroup` from a script.** A second registration of a name
+    throws `IGX-1503`, and a script's `awake` runs once per instance and again after a scene reload.
+    Use `app.diagnostics.groupOrRegister(name, counterNames)`, which registers on the first call and
+    hands back the same group afterwards. The counter names of a later call are ignored — counters
+    are indexed, so a group cannot grow under a subsystem already holding indices into it — and
+    asking that group for a counter it never declared throws `IGX-1504`.
+55. **Do not assume a production build turns development mode off.** `createApp`'s `mode` defaults
+    to `"development"` and nothing overrides it — not the Vite plugin, not `vite build`. So a shipped
+    game still formats full error messages, writes `performance.mark`/`measure` entries, and fills
+    `FrameSample.cpuMs`. That is often what you want while a game is young; when it is not, pass the
+    mode yourself: `createApp({ mode: import.meta.env.PROD ? "production" : "development" })`. Read
+    `app.diagnostics.isDevelopment` before trusting `cpuMs`, which is all zeros in production mode.

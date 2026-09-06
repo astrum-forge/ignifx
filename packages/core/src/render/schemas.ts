@@ -100,7 +100,7 @@ export function describeMaterialFileFormat(): SchemaDescription {
       type: {
         kind: "enum",
         default: "pbr",
-        description: `The material family: ${MATERIAL_KINDS.join(", ")}. "shader" arrives in Phase 7.`,
+        description: `The material family: ${MATERIAL_KINDS.join(", ")}. "shader" is declared but not implemented; it is rejected with IGX-0708.`,
       },
       name: { kind: "str", default: "", description: "A human-readable name; glTF overrides match on it." },
       baseColor: { kind: "color", default: [1, 1, 1, 1], description: "PBR: sRGB base colour and alpha." },

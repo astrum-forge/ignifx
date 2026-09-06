@@ -54,16 +54,38 @@ export interface SpriteAnimationEvent {
 /**
  * One clip: an ordered run of atlas frames with a rate and a loop flag.
  *
+ * @remarks
+ * A clip names its frames one of two ways, and they mean different things.
+ *
+ * - `frames` is an explicit **list of frame names**, played in the order written. Anything the
+ *   atlas does not carry is dropped, and the frames need not be adjacent in the atlas.
+ * - `from`/`to` is an **index range over the atlas**, not a pair of endpoints joined by name. Both
+ *   names are resolved to their atlas indices and *every index between them is played*, in atlas
+ *   order, endpoints included. So a range whose endpoints are not adjacent in the sheet plays
+ *   whatever the packer happened to put between them — a `from: "run_0"`, `to: "run_5"` over an
+ *   atlas ordered `run_0, idle_0, run_1, …` plays `idle_0` too. Use `frames` whenever the run is
+ *   not contiguous in the atlas.
+ * - `to` before `from` is legal and plays the range backwards.
+ *
  * @public
  */
 export interface SpriteClipDefinition {
   /** The clip's name, unique within the document; what `SpriteAnimator.play` takes. */
   readonly name: string;
-  /** The atlas frame names, in play order. Empty when `from`/`to` name a range instead. */
+  /**
+   * The atlas frame names, in play order; they need not be adjacent in the atlas. Absent or empty
+   * when `from`/`to` name a range instead.
+   */
   readonly frames?: readonly string[];
-  /** The first frame of a contiguous atlas range, when `frames` is absent. */
+  /**
+   * The atlas frame whose **index** starts the range, when `frames` is absent. The clip plays every
+   * atlas index from here to `to`, so the two must bracket a contiguous run in the sheet.
+   */
   readonly from?: string;
-  /** The last frame of a contiguous atlas range, inclusive. */
+  /**
+   * The atlas frame whose **index** ends the range, inclusive. An index below `from`'s plays the
+   * range backwards.
+   */
   readonly to?: string;
   /** Frames per second. Defaults to `12`. */
   readonly fps?: number;
@@ -171,6 +193,12 @@ export function defineSpriteAnimation(input: SpriteAnimationInput, address = "<i
 
 /**
  * Resolves a clip's frame names into atlas frame indices.
+ *
+ * @remarks
+ * `frames` resolves name by name and skips what the atlas does not carry. `from`/`to` resolves both
+ * endpoints to atlas **indices** and walks every index between them — ascending or descending — so
+ * a range over non-adjacent frames plays everything the packer put in between
+ * ({@link SpriteClipDefinition}).
  *
  * @param clip - The clip to resolve.
  * @param indexOf - Maps an atlas frame name to its index, or `-1` when the atlas has no such frame.

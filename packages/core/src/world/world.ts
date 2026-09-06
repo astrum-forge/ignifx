@@ -38,10 +38,10 @@ import type { DeferredQueue } from "../signal/signal.js";
  * (`docs/architecture/02-scene-graph.md` §2). One world per app in the MVP.
  *
  * @remarks
- * Phase 1 ships the subset that needs no asset system: entity creation, queries, the implicit
- * `"default"` scene, and the lifecycle. `loadScene`, `unloadScene`, `instantiate`,
- * `instantiateAsync`, and `moveEntityToScene` arrive in Phase 2, and `onSceneLoaded`/
- * `onSceneUnloaded` exist here but never fire until then.
+ * The world owns entity creation, queries, the implicit `"default"` scene, and the lifecycle, plus
+ * the scene operations that need the asset service — `loadScene`, `unloadScene`, `instantiate`,
+ * `instantiateAsync`, `moveEntityToScene` — and the `onSceneLoaded`/`onSceneUnloaded` signals they
+ * raise.
  *
  * @example
  * ```ts
@@ -266,7 +266,7 @@ export class World implements WorldHost {
   }
 
   /**
-   * Emitted when a scene instance finishes loading. Never fires before Phase 2.
+   * Emitted when a scene instance finishes loading.
    *
    * @returns The signal.
    */
@@ -275,7 +275,7 @@ export class World implements WorldHost {
   }
 
   /**
-   * Emitted when a scene instance is unloaded. Never fires before Phase 2.
+   * Emitted when a scene instance is unloaded.
    *
    * @returns The signal.
    */

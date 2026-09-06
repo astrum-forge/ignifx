@@ -891,6 +891,7 @@ export class Diagnostics {
     endFrame(): void;
     readonly frame: FrameSample;
     group(name: string): DiagnosticsGroup | null;
+    groupOrRegister(name: string, counterNames: readonly string[]): DiagnosticsGroup;
     get groups(): readonly DiagnosticsGroup[];
     readonly historyCapacity: number;
     get historyLength(): number;

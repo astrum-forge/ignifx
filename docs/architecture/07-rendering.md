@@ -126,6 +126,7 @@ Attached to the main camera entity. Ordered list of effects; each maps to a Lite
 - `present` is a copy task that composites `sceneColor` onto the swapchain. It always runs unless a chain is writing the swapchain itself, so the frame is never lost: an empty chain, a chain with every effect off, and a disabled stack all present the plain scene.
 - Every target is sized by the surface, so a canvas resize reallocates them through the frame-graph rebuild Lite already does; the chain handles no resize itself.
 - `imageProcessing` is always recorded **last**, whatever `order` says: Lite's task writes the swapchain unconditionally and takes no target, so nothing can read what it produced.
+- A `PostProcessStack` may be configured before `app.start()`: its chain is appended to Lite's frame graph without recording while the scene is unregistered, and `registerScene`'s own `frameGraph.build()` then records it after the scene task (recording earlier failed with Lite error 107, "sourceTexture has no color texture", until 2026-09-07).
 - A `PostProcessStack` attached without the feature logs `IGX-0710` once and is inert. The feature costs one full-screen blit per frame while no chain is recorded, which is why it is off by default.
 
 ## 3. Picking
@@ -143,7 +144,7 @@ Attached to the main camera entity. Ordered list of effects; each maps to a Lite
 
 - `app.diagnostics.render`: `drawCalls` (`engine.drawCallCount`), `gpuFrameTimeMs` (with `setGpuTimingEnabled`), per-task GPU timings (`getRenderTaskGpuTimings`) when `renderer.profileTasks` is on.
 - `app.renderer.captureScreenshot()` → `captureScreenshot(engine)`; it settles only while the render loop is running (a frame must be presented), so headless apps get `IGX-0707`.
-- Development builds call `enableErrorDecoding()`; production builds lazy-import `decodeError` in `app.onError`.
+- Every build reaches Lite's error decoder through a dynamic import (`packages/core/src/lite/error-decoding.ts`), awaited during renderer initialisation: the decoder and Lite's 44 KB message table are one reachability set, and because `createApp({ mode })` defaults to `"development"` in every build, a static import would put the table in every production entry chunk (it did, until 2026-09-07; splitting it saved 10.8 KB gzipped in `hello-cube`). There is no separate `decodeError` path.
 
 ## 6. Headless behaviour
 

@@ -31,21 +31,21 @@ import type { Schema } from "../schema/types.js";
  *
  * ## Decisions the documents left open
  *
- * - **glTF cameras and lights are ignored, and Phase 2 has no way to ask otherwise.** §2.4 says
+ * - **glTF cameras and lights are ignored, and there is no way to ask otherwise.** §2.4 says
  *   they are imported only when `importLights`/`importCameras` are set in the asset's
  *   `.meta.json`. Lite gates cameras behind a process-global `enableGltfCameras()` that must run
  *   before the **first** load (`src/lite/render-features.ts`), so a per-asset sidecar flag cannot
  *   decide it: whichever asset loads first would fix the answer for every later one. Rather than
- *   ship a flag that silently means "whatever the first model wanted", Phase 2 imports neither and
- *   the adapter keeps `enableGltfCameraImport` ready for the phase that adds a project-level
- *   setting. Lights inside a container are shallow-copied by Lite's own clone and are not added to
+ *   ship a flag that silently means "whatever the first model wanted", ignifx imports neither and
+ *   the adapter keeps `enableGltfCameraImport` ready for a project-level setting that no delivered
+ *   phase has added. Lights inside a container are shallow-copied by Lite's own clone and are not added to
  *   the scene by ignifx, so they never light anything.
  * - **`materialOverrides` matches on the glTF material *name*.** §2.4 says "by material name",
- *   which is the only stable identifier a glTF gives a material. Phase 2 records the map and
+ *   which is the only stable identifier a glTF gives a material. The component records the map and
  *   applies it to the nodes whose material carries that name; a name nothing matches is ignored.
  * - **`animations` are exposed, not advanced.** ADR-0003 gives every clock to ignifx, so the
  *   loader strips the clips off the container and this component republishes them. Playing them is
- *   `@ignifx/3d`'s animator; in Phase 2 they are read-only metadata, and the property is `@beta`
+ *   `@ignifx/3d`'s `Animator`; to core they are read-only metadata, and the property is `@beta`
  *   because its element type is Lite's.
  *
  * ## Shadows are the whole subtree, decided once
@@ -152,8 +152,8 @@ export class Model extends Component implements ComponentHooks {
    * The clips the file declared.
    *
    * @remarks
-   * Unstable: these are Lite's own animation groups, and ignifx does not advance them in Phase 2
-   * (ADR-0003 — `@ignifx/3d`'s animator owns playback).
+   * Unstable: these are Lite's own animation groups, and core does not advance them
+   * (ADR-0003 — `@ignifx/3d`'s `Animator` owns playback).
    *
    * @returns The clips, in load order.
    *

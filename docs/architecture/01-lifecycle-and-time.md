@@ -177,4 +177,4 @@ for (let i = 0; i < 600; i++) app.step(1 / 60); // deterministic: rawDelta = 1/6
 
 ## 9. Diagnostics emitted by the loop
 
-`app.diagnostics.frame` publishes, per frame: `rawDeltaMs`, `droppedMs`, `fixedSteps`, `scriptsUpdated`, `coroutinesResumed`, `destroyed`, and per-phase CPU time in development builds. Lite supplies `drawCallCount` and `gpuFrameTimeMs` (when GPU timing is enabled).
+`app.diagnostics.frame` publishes, per frame: `rawDeltaMs`, `droppedMs`, `fixedSteps`, `scriptsUpdated`, `coroutinesResumed`, `destroyed`, and per-phase CPU time when `createApp({ mode })` is `"development"` — which is the default in every build, `vite build` included, until a game passes `mode: import.meta.env.PROD ? "production" : "development"`. Lite supplies `drawCallCount` and `gpuFrameTimeMs` (when GPU timing is enabled).

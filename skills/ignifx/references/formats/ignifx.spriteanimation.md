@@ -4,11 +4,11 @@
 
 ## Sprite animation (`ignifx/spriteanimation-file`)
 
-Clips of atlas frames with a rate, a loop flag, and frame events.
+Clips of atlas frames with a rate, a loop flag, and frame events. A clip names its frames either as an explicit `frames` list of atlas frame names, played in the order written and free to skip around the sheet, or as a `from`/`to` pair — and that pair is an **inclusive range over atlas indices**, not two endpoints joined by name: every index between the two is played, in atlas order, so a range whose endpoints are not adjacent in the sheet plays whatever the packer put between them. Use `frames` for a run that is not contiguous.
 
 | Field | Kind | Default | Description |
 |---|---|---|---|
 | `format` | `str` | `"ignifx.spriteanimation"` | Always ignifx.spriteanimation. |
 | `formatVersion` | `u32` | `1` | The document version this build reads. |
 | `atlas` | `str` | `""` | The .atlas.json address, relative to this document. |
-| `clips` | `array` | `[]` | The clips; the first is the default. |
+| `clips` | `array` | `[]` | The clips; the first is the default. Each is a record of name (str, what SpriteAnimator.play takes), frames (array of atlas frame names in play order, which need not be adjacent), from/to (str: an INCLUSIVE range over atlas INDICES used when frames is empty — every index between the two endpoints is played, in atlas order, so a range over non-adjacent frames plays everything in between; to before from plays it backwards), fps (f32, default 12), loop (bool, default true) and events (array of { frame: u32 index within the clip, not the atlas; name: str }). |

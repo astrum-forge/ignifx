@@ -284,7 +284,8 @@ export function createImageProcessingPass(engine: EngineContext, scene: SceneCon
 
 /**
  * Appends a post-process task to a scene's frame graph, after the render pass and after every task
- * appended before it, and records it so it runs from the next frame.
+ * appended before it, and — on a scene whose frame graph has already been built — records it so it
+ * runs from the next frame.
  *
  * @remarks
  * `addTask` only puts the task in the array; its passes are recorded when the frame graph is built.
@@ -292,14 +293,28 @@ export function createImageProcessingPass(engine: EngineContext, scene: SceneCon
  * what makes a task added to a live scene take effect without rebuilding — and reallocating — every
  * other task's resources.
  *
+ * **Recording is legal only after the graph has been built once.** A task's `record()` binds its
+ * `sourceTexture`'s colour view, and a `RenderTarget` created by `createRenderTarget` owns no GPU
+ * texture until the task that *writes* it has recorded (`buildRenderTarget` inside the render
+ * task's `record`, `lib/frame-graph/render-task.js` 80-89). Before `registerScene` nothing has
+ * recorded, so the offscreen scene colour is still empty and `createPostProcessGpuState` raises
+ * Lite error 107 — `PostProcessTask "…": sourceTexture has no color texture`
+ * (`lib/frame-graph/post-process-task.js` 80-84). `registerScene` ends with `frameGraph.build()`
+ * (`lib/scene/scene-core.js` 245-262), which records every task in array order, so a task appended
+ * before registration is recorded there, in the right order, for free.
+ *
  * @param scene - The scene whose frame graph to extend.
  * @param task - The task to append.
+ * @param isFrameGraphBuilt - Whether the scene has been registered, and therefore whether the task
+ * has to be recorded now. Defaults to `true`, which is the live-scene case.
  *
  * @internal
  */
-export function appendPostProcessTask(scene: SceneContext, task: Task): void {
+export function appendPostProcessTask(scene: SceneContext, task: Task, isFrameGraphBuilt = true): void {
   addTask(scene, task);
-  buildFrameGraphTask(getFrameGraph(scene), task);
+  if (isFrameGraphBuilt) {
+    buildFrameGraphTask(getFrameGraph(scene), task);
+  }
 }
 
 /**

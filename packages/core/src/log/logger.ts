@@ -9,6 +9,11 @@ import { LOG_LEVEL_SEVERITY, LogLevel, type LogRecord, type LogSink, type LogThr
  * one numeric comparison. The rest parameter itself is still materialised by the JavaScript engine,
  * so per-frame call sites guard with {@link Logger.isEnabled} instead (coding standards §7).
  *
+ * **A message is not a format string.** It is written to the sink verbatim and the extras are
+ * appended beside it, the way `console.warn(message, ...data)` does; nothing substitutes into it, so
+ * a `{placeholder}` token is printed literally. Pass values as extras
+ * (`log.info("hero z:", z)`), never as tokens inside the message.
+ *
  * @example
  * ```ts
  * const log = app.log.child("physics");
@@ -245,7 +250,8 @@ class LoggerImpl implements Logger {
  * @example
  * ```ts
  * const log = createLogger({ sink: createConsoleSink(), level: "debug" });
- * log.child("assets").warnOnce("missing-atlas", "No atlas for sprite {id}.");
+ * // A message is not a format string — nothing substitutes into it. Pass values as extras.
+ * log.child("assets").warnOnce("missing-atlas", "No atlas for sprite:", spriteId);
  * ```
  *
  * @public

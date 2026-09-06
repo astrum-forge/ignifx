@@ -61,7 +61,7 @@ class SpriteRenderer extends Component.define({
 
 ### 2.4 `SpriteAnimator`
 
-- `.spriteanim.json` (`ignifx.spriteanimation`): clips `{ name, frames: ["idle_0", …] | range, fps, loop, events: [{ frame, name }] }`. Aseprite tags import directly.
+- `.spriteanim.json` (`ignifx.spriteanimation`): clips `{ name, frames: ["idle_0", …] | range, fps, loop, events: [{ frame, name }] }`. A range's `from`/`to` name two atlas frames and the clip plays every atlas **index** between them inclusive, ascending or descending — not a pair of endpoints joined by name, so non-adjacent frames need an explicit list. Aseprite tags import directly.
 - Component fields: `animations: asset(SpriteAnimationAsset)`, `defaultClip`, `playOnAwake`, `speed`. Methods: `play(clip, { restart })`, `stop()`, `pause()`, `frame`, `isPlaying`, `onClipEnded: Signal<string>`, `onEvent: Signal<string>`.
 - Implemented on ignifx's animation clock (advanced in `PostUpdate`), writing `setSprite2DFrame`, rather than Lite's `SpriteAnimationManager`, so that `timeScale`, pause, and frame events work uniformly with 3D animation.
 

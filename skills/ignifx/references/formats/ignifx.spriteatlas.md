@@ -13,4 +13,4 @@ An image plus the frame rectangles inside it, in pixels with a top-left origin.
 | `image` | `str` | `""` | The image address, relative to this document. |
 | `sampling` | `enum` | `"linear"` | Min/mag filter; nearest for pixel art. |
 | `premultipliedAlpha` | `bool` | `false` | Whether the image's RGB is already multiplied by its alpha. |
-| `frames` | `array` | `[]` | The frames, in the order they are indexed. |
+| `frames` | `array` | `[]` | The frames, in the order they are indexed. Each is a record of name (str, what #frame: addresses), x/y (f32, the top-left corner in image pixels), w/h (f32, the size in image pixels), pivot (vec2 in [0,1] of the frame; [0,0] is top-left) and sourceSize (vec2, the untrimmed size when the packer trimmed the frame). |

@@ -590,8 +590,8 @@ export class RendererImpl implements Renderer {
    * What the ADR actually measured makes the deadlock unnecessary. Lite stamps **every** PBR
    * material in the process with one `_buildGroup` singleton, and every Standard material with
    * another, so the unit that has to exist at `registerScene` is the *family*, not the asset: "there
-   * are four families to worry about, not one per asset". This warms the two families a Phase 2
-   * app can produce, plus any material already in the cache, which reaches the ADR's outcome — a
+   * are four families to worry about, not one per asset". This warms the two families core can
+   * produce, plus any material already in the cache, which reaches the ADR's outcome — a
    * mesh added later takes the synchronous rebuild path — with two degenerate triangles and no
    * ordering problem.
    *

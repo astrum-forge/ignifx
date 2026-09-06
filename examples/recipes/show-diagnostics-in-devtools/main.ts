@@ -31,8 +31,7 @@ class WaveCounter extends Script implements ScriptCallbacks {
 
   awake(): void {
     // One owner registers the group; anything else asks for it by name.
-    const group =
-      this.app.diagnostics.group("game") ?? this.app.diagnostics.registerGroup("game", ["spawned", "alive"]);
+    const group = this.app.diagnostics.groupOrRegister("game", ["spawned", "alive"]);
     this.#spawnedIndex = group.index("spawned");
     this.#aliveIndex = group.index("alive");
     this.#group = group;

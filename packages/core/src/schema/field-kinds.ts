@@ -485,8 +485,8 @@ export function optional<T>(inner: FieldDefinition<T>, options?: FieldOptions): 
  * project settings does not silently repoint existing files
  * (`docs/architecture/06-serialization-and-scene-format.md` §3).
  *
- * The value type is a read-only array of names in Phase 1; the kernel's `LayerMask` class arrives
- * with the layer registry and will satisfy the same structural shape.
+ * The field's value is a read-only array of names. The kernel's `LayerMask` satisfies the same
+ * structural shape, so a component may hold either.
  *
  * @param defaultValue - The names a new component starts with; defaults to empty.
  * @param options - Inspector and serializer metadata.

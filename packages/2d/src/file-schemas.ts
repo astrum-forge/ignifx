@@ -42,7 +42,13 @@ export function spriteAtlasFileSchema(): Schema {
         sourceSize: vec2({ x: 0, y: 0 }, { tooltip: "The untrimmed size, when the packer trimmed the frame." }),
       }),
       [],
-      { tooltip: "The frames, in the order they are indexed." },
+      {
+        tooltip:
+          "The frames, in the order they are indexed. Each is a record of " +
+          "name (str, what #frame: addresses), x/y (f32, the top-left corner in image pixels), " +
+          "w/h (f32, the size in image pixels), pivot (vec2 in [0,1] of the frame; [0,0] is top-left) " +
+          "and sourceSize (vec2, the untrimmed size when the packer trimmed the frame).",
+      },
     ),
   });
 }
@@ -62,9 +68,17 @@ export function spriteAnimationFileSchema(): Schema {
     clips: array(
       record({
         name: str("", { tooltip: "The clip's name; what SpriteAnimator.play takes." }),
-        frames: array(str(), [], { tooltip: "Atlas frame names, in play order." }),
-        from: str("", { tooltip: "The first frame of a contiguous atlas range, when frames is empty." }),
-        to: str("", { tooltip: "The last frame of the range, inclusive." }),
+        frames: array(str(), [], {
+          tooltip: "Atlas frame names, in play order; they need not be adjacent in the atlas.",
+        }),
+        from: str("", {
+          tooltip:
+            "The atlas frame whose INDEX starts the range, when frames is empty. " +
+            "Every atlas index between from and to is played, so the two must bracket a contiguous run.",
+        }),
+        to: str("", {
+          tooltip: "The atlas frame whose INDEX ends the range, inclusive; an index below from plays it backwards.",
+        }),
         fps: f32(12, { min: Number.EPSILON, tooltip: "Frames per second." }),
         loop: bool(true, { tooltip: "Whether the clip restarts at its end." }),
         events: array(
@@ -77,7 +91,17 @@ export function spriteAnimationFileSchema(): Schema {
         ),
       }),
       [],
-      { tooltip: "The clips; the first is the default." },
+      {
+        tooltip:
+          "The clips; the first is the default. Each is a record of " +
+          "name (str, what SpriteAnimator.play takes), " +
+          "frames (array of atlas frame names in play order, which need not be adjacent), " +
+          "from/to (str: an INCLUSIVE range over atlas INDICES used when frames is empty — every index " +
+          "between the two endpoints is played, in atlas order, so a range over non-adjacent frames plays " +
+          "everything in between; to before from plays it backwards), " +
+          "fps (f32, default 12), loop (bool, default true) and " +
+          "events (array of { frame: u32 index within the clip, not the atlas; name: str }).",
+      },
     ),
   });
 }

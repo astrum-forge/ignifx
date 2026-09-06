@@ -10,7 +10,7 @@ A PBR or Standard material: colours in sRGB, factors unitless, textures as { "$a
 |---|---|---|---|
 | `format` | `str` | `"ignifx.material"` | Always "ignifx.material". |
 | `formatVersion` | `u32` | `1` | The file format version; 1 before ignifx 1.0. |
-| `type` | `enum` | `"pbr"` | The material family: pbr, standard, shader. "shader" arrives in Phase 7. |
+| `type` | `enum` | `"pbr"` | The material family: pbr, standard, shader. "shader" is declared but not implemented; it is rejected with IGX-0708. |
 | `name` | `str` | `""` | A human-readable name; glTF overrides match on it. |
 | `baseColor` | `color` | `[1,1,1,1]` | PBR: sRGB base colour and alpha. |
 | `metallic` | `f32` | `1` | PBR: metallic factor, 0 to 1. |
