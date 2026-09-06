@@ -46,9 +46,12 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "catalog:",
     "@ignifx/core": "workspace:*",
+    "@ignifx/input": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
     "@types/webxr": "catalog:",
     "@webgpu/types": "catalog:",
+    "electron": "catalog:",
+    "playwright": "catalog:",
     "publint": "catalog:",
     "tsdown": "catalog:",
     "typedoc": "catalog:",
@@ -57,13 +60,21 @@
     "vitest": "catalog:"
   },
   "peerDependencies": {
-    "@ignifx/core": "workspace:*"
+    "@ignifx/core": "workspace:*",
+    "electron": "catalog:"
+  },
+  "peerDependenciesMeta": {
+    "electron": {
+      "optional": true
+    }
   },
   "ignifx": {
     "extension": true,
     "engine": ">=0.0.0 <1.0.0",
     "requires": [],
-    "optional": [],
+    "optional": [
+      "@ignifx/input"
+    ],
     "capabilities": [],
     "skill": "./skills/electron/SKILL.md"
   }

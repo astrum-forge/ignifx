@@ -28,6 +28,10 @@ catalog:
   "@vitest/coverage-v8": ^5.0.0
   "@webgpu/types": ^0.1.72
   dependency-cruiser: ^18.2.0
+  electron: ^44.2.0
+  electron-builder: ^26.15.3
+  # 6.0.0-beta.1 (2026-04) is the first electron-vite that declares Vite 8; 5.x stops at Vite 7.
+  electron-vite: 6.0.0-beta.1
   eslint: ^10.10.0
   eslint-import-resolver-typescript: ^4.4.5
   eslint-plugin-import-x: ^4.17.1
@@ -53,10 +57,15 @@ catalog:
 # CONSTITUTION.md §9.3 / standards §13: only listed packages may run install scripts.
 # `minimumReleaseAge` is intentionally left at pnpm's default.
 allowBuilds:
+  electron: true
+  # Windows Squirrel installer tooling pulled in by electron-builder; its install script downloads
+  # binaries we never run here (NSIS is the Windows target), so it is declared ignored.
+  electron-winstaller: false
   esbuild: true
   lefthook: true
   playwright: true
   unrs-resolver: true
+
 
 minimumReleaseAgeExclude:
   - "@changesets/apply-release-plan@8.1.0"

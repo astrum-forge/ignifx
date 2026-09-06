@@ -20,8 +20,12 @@
     "@ignifx/ui": "workspace:*"
   },
   "devDependencies": {
+    "@ignifx/electron": "workspace:*",
     "@ignifx/vite-plugin": "workspace:*",
     "@webgpu/types": "catalog:",
+    "electron": "catalog:",
+    "electron-builder": "catalog:",
+    "electron-vite": "catalog:",
     "typescript-native": "catalog:",
     "vite": "catalog:"
   }
