@@ -1,0 +1,28 @@
+{
+  "name": "ignifx-template-3d-third-person",
+  "version": "0.0.0",
+  "private": true,
+  "description": "ignifx template: a third-person 3D game with a character controller, follow camera, animator, and navigation.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@ignifx/3d": "workspace:*",
+    "@ignifx/audio": "workspace:*",
+    "@ignifx/core": "workspace:*",
+    "@ignifx/input": "workspace:*",
+    "@ignifx/physics": "workspace:*",
+    "@ignifx/ui": "workspace:*"
+  },
+  "devDependencies": {
+    "@ignifx/vite-plugin": "workspace:*",
+    "@webgpu/types": "catalog:",
+    "typescript-native": "catalog:",
+    "vite": "catalog:"
+  }
+}

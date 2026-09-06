@@ -37,7 +37,11 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "catalog:",
+    "@babylonjs/havok": "catalog:",
+    "@babylonjs/lite": "catalog:",
     "@ignifx/core": "workspace:*",
+    "@ignifx/input": "workspace:*",
+    "@ignifx/physics": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
     "@types/webxr": "catalog:",
     "@webgpu/types": "catalog:",
@@ -49,13 +53,17 @@
     "vitest": "catalog:"
   },
   "peerDependencies": {
-    "@ignifx/core": "workspace:*"
+    "@babylonjs/lite": "catalog:",
+    "@ignifx/core": "workspace:*",
+    "@ignifx/input": "workspace:*",
+    "@ignifx/physics": "workspace:*"
   },
   "ignifx": {
     "extension": true,
     "engine": ">=0.0.0 <1.0.0",
     "requires": [
-      "@ignifx/physics"
+      "@ignifx/physics",
+      "@ignifx/input"
     ],
     "optional": [],
     "capabilities": [],

@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "isolatedDeclarations": false,
+    "moduleDetection": "force",
+    "types": ["@webgpu/types", "vite/client"]
+  },
+  "include": ["src", "vite.config.ts", "ignifx.config.ts"]
+}

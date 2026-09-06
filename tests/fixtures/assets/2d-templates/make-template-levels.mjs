@@ -10,9 +10,8 @@
 // cell (0, 0) is the bottom-left of the map in a +Y-up world.
 import { Buffer } from "node:buffer";
 import { writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { join } from "node:path";
 import process from "node:process";
-import { fileURLToPath } from "node:url";
 import { rng } from "./png.mjs";
 
 const HERE = import.meta.dirname;

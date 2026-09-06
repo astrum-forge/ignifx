@@ -11,9 +11,8 @@
 // camera from sampling the neighbouring frame at a frame edge.
 import { Buffer } from "node:buffer";
 import { mkdirSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { join } from "node:path";
 import process from "node:process";
-import { fileURLToPath } from "node:url";
 import { Canvas, encodePng, encodeWav, rng } from "./png.mjs";
 
 const HERE = import.meta.dirname;

@@ -169,7 +169,7 @@ tests/visual/            Playwright visual regression (goldens) — GPU job
 | `ignifx/error-code-format`       | `IgnifxError` codes match `IGX-####` and a registered range                                       |
 | `ignifx/no-console`              | console calls outside the log sink                                                                |
 
-- Lint and format run on staged files through lefthook; CI runs them on the whole tree. A rule can be disabled inline only with a justification comment.
+- Lint and format run on staged files through lefthook; CI runs them on the whole tree. The hook formats and _reports_ lint but never auto-fixes: an autofix at commit time rewrites code that already passed `pnpm check`, and the breakage then surfaces one commit later (`.lintstagedrc.mjs` records two such cases). Files a generator writes are skipped by the hook and formatted by their generator. A rule can be disabled inline only with a justification comment.
 
 ## 7. Performance rules for runtime code
 

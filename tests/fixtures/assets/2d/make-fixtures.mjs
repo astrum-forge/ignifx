@@ -4,8 +4,7 @@
 import { Buffer } from "node:buffer";
 import { deflateSync } from "node:zlib";
 import { writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 
 const HERE = import.meta.dirname;
 
