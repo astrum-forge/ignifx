@@ -48,10 +48,7 @@ export class BoxCollider2D extends Collider2D {
 }
 
 // @public
-export type Capsule2DDirection = (typeof CAPSULE_2D_DIRECTIONS)[number];
-
-// @public
-export const CAPSULE_2D_DIRECTIONS: readonly ["x", "y"];
+export const CAPSULE_DIRECTIONS_2D: readonly ["x", "y"];
 
 // @public
 export class CapsuleCollider2D extends Collider2D {
@@ -59,7 +56,7 @@ export class CapsuleCollider2D extends Collider2D {
     // @internal
     collectShapes(scale: Vec2Like, out: CollectedShape2D[]): void;
     // (undocumented)
-    direction: Capsule2DDirection;
+    direction: CapsuleDirection2D;
     // (undocumented)
     height: number;
     // (undocumented)
@@ -67,6 +64,9 @@ export class CapsuleCollider2D extends Collider2D {
     static schema: Schema;
     static typeId: string;
 }
+
+// @public
+export type CapsuleDirection2D = (typeof CAPSULE_DIRECTIONS_2D)[number];
 
 // @public
 export const CHARACTER_SHAPES_2D: readonly ["capsule", "box"];

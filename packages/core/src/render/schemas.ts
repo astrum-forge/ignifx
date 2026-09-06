@@ -1,15 +1,11 @@
+import { MATERIAL_ALPHA_MODES } from "../lite/material.js";
 import { describeSchema } from "../schema/describe.js";
 import { describeSceneFileFormat } from "../serialization/scene-file.js";
 import { Camera } from "./camera.js";
 import { ENVIRONMENT_FILE_FORMAT, ENVIRONMENT_FORMAT_VERSION } from "./environment-asset.js";
 import { Environment } from "./environment.js";
 import { Light } from "./light.js";
-import {
-  MATERIAL_ALPHA_MODE_NAMES,
-  MATERIAL_FILE_FORMAT,
-  MATERIAL_FORMAT_VERSION,
-  MATERIAL_KINDS,
-} from "./material-asset.js";
+import { MATERIAL_FILE_FORMAT, MATERIAL_FORMAT_VERSION, MATERIAL_KINDS } from "./material-asset.js";
 import { MeshRenderer } from "./mesh-renderer.js";
 import { Model } from "./model.js";
 import { PostProcessStack } from "./post-process-stack.js";
@@ -112,7 +108,7 @@ export function describeMaterialFileFormat(): SchemaDescription {
       alphaMode: {
         kind: "enum",
         default: "opaque",
-        description: `How alpha is read: ${MATERIAL_ALPHA_MODE_NAMES.join(", ")}.`,
+        description: `How alpha is read: ${MATERIAL_ALPHA_MODES.join(", ")}.`,
       },
       alphaCutoff: { kind: "f32", default: 0.5, description: 'The cutoff a "mask" material discards below.' },
       alpha: { kind: "f32", default: 1, description: "Overall material alpha, 0 to 1." },

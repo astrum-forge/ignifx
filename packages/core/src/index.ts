@@ -160,14 +160,7 @@ export { createUlidFactory, generateUlid, isUlid, MAX_ULID_TIME_MS, type UlidFac
 
 // layers — the 32 layer slots and the masks built from them.
 export { LayerMask } from "./layers/layer-mask.js";
-export {
-  createLayerTable,
-  DEFAULT_LAYER,
-  isValidLayer,
-  LayerTable,
-  MAX_LAYERS,
-  RESERVED_LAYER_NAMES,
-} from "./layers/layer-table.js";
+export { createLayerTable, DEFAULT_LAYER, LayerTable, MAX_LAYERS, RESERVED_LAYER_NAMES } from "./layers/layer-table.js";
 
 // lifecycle — the callback table and the physics callback names extensions dispatch by.
 export { PhysicsCallbackName, ScriptCallbackKind } from "./lifecycle/callbacks.js";
@@ -275,7 +268,6 @@ export { createModelLoader } from "./render/loaders/model-loader.js";
 export { createTextureLoader } from "./render/loaders/texture-loader.js";
 export {
   createMaterialAsset,
-  MATERIAL_ALPHA_MODE_NAMES,
   MATERIAL_ASSET_TYPE,
   MATERIAL_FILE_EXTENSION,
   MATERIAL_FILE_FORMAT,
@@ -286,7 +278,6 @@ export {
   pbrMaterialDefinition,
   STANDARD_TEXTURE_SLOTS,
   standardMaterialDefinition,
-  type MaterialAlphaModeName,
   type MaterialAssetLiteHandles,
   type MaterialDefinition,
   type MaterialKind,
@@ -529,7 +520,7 @@ export type { LiteEnvironmentTextures } from "./lite/gpu/environment.js";
 export type { LiteAnimationGroup, LiteAssetContainer, LiteSkeleton } from "./lite/gpu/gltf.js";
 export type { LiteMesh } from "./lite/gpu/mesh.js";
 export type { LiteTexture2D } from "./lite/gpu/texture.js";
-export type { LiteMaterial, LitePbrMaterial, LiteStandardMaterial, MaterialAlphaMode } from "./lite/material.js";
+export type { LiteMaterial, LitePbrMaterial, LiteStandardMaterial } from "./lite/material.js";
 export type { LiteSceneNode } from "./lite/node.js";
 export type { LoadProgress } from "./world/world.js";
 export { TONE_MAPPING_NAMES } from "./lite/gpu/environment.js";
@@ -537,4 +528,4 @@ export { SHADOW_TECHNIQUES } from "./lite/shadow.js";
 export { PROJECTIONS } from "./render/camera.js";
 export { FOG_MODE_NAMES } from "./render/environment.js";
 export { LIGHT_TYPES } from "./render/light.js";
-export { MATERIAL_ALPHA_MODES } from "./lite/material.js";
+export { MATERIAL_ALPHA_MODES, type MaterialAlphaMode } from "./lite/material.js";

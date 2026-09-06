@@ -1455,7 +1455,7 @@ The state's name.
 
 ###### options?
 
-[`PlayStateOptions`](#playstateoptions)
+[`AnimatorPlayOptions`](#animatorplayoptions)
 
 The layer and the crossfade length.
 
@@ -4958,7 +4958,7 @@ Marks the entity's body for a rebuild, which removes this collider from it.
 > **rebuild**(): `void`
 
 Rebuilds the entity's body and shapes at the start of the next fixed step. Call it after
-changing a size, a centre, `isTrigger`, or the entity's scale.
+changing a size, a `center`, `isTrigger`, or the entity's scale.
 
 ###### Returns
 
@@ -7925,7 +7925,7 @@ Marks the entity's body for a rebuild, which removes this collider from it.
 > **rebuild**(): `void`
 
 Rebuilds the entity's body and shapes at the start of the next fixed step. Call it after
-changing a size, a centre, `isTrigger`, or the entity's scale.
+changing a size, a `center`, `isTrigger`, or the entity's scale.
 
 ###### Returns
 
@@ -10780,7 +10780,7 @@ Marks the entity's body for a rebuild, which removes this collider from it.
 > **rebuild**(): `void`
 
 Rebuilds the entity's body and shapes at the start of the next fixed step. Call it after
-changing a size, a centre, `isTrigger`, or the entity's scale.
+changing a size, a `center`, `isTrigger`, or the entity's scale.
 
 ###### Returns
 
@@ -13379,7 +13379,7 @@ Marks the entity's body for a rebuild, which removes this collider from it.
 > **rebuild**(): `void`
 
 Rebuilds the entity's body and shapes at the start of the next fixed step. Call it after
-changing a size, a centre, `isTrigger`, or the entity's scale.
+changing a size, a `center`, `isTrigger`, or the entity's scale.
 
 ###### Returns
 
@@ -18822,7 +18822,7 @@ Marks the entity's body for a rebuild, which removes this collider from it.
 > **rebuild**(): `void`
 
 Rebuilds the entity's body and shapes at the start of the next fixed step. Call it after
-changing a size, a centre, `isTrigger`, or the entity's scale.
+changing a size, a `center`, `isTrigger`, or the entity's scale.
 
 ###### Returns
 
@@ -26478,7 +26478,7 @@ Marks the entity's body for a rebuild, which removes this collider from it.
 > **rebuild**(): `void`
 
 Rebuilds the entity's body and shapes at the start of the next fixed step. Call it after
-changing a size, a centre, `isTrigger`, or the entity's scale.
+changing a size, a `center`, `isTrigger`, or the entity's scale.
 
 ###### Returns
 
@@ -35139,27 +35139,27 @@ The quaternion to write.
 
 `out`.
 
-##### fromEulerRadians()
+##### fromEulerRad()
 
-> `static` **fromEulerRadians**(`xRadians`, `yRadians`, `zRadians`): [`Quat`](#quat-4)
+> `static` **fromEulerRad**(`xRad`, `yRad`, `zRad`): [`Quat`](#quat-4)
 
 Builds a rotation from Euler angles in radians, in intrinsic XYZ order.
 
 ###### Parameters
 
-###### xRadians
+###### xRad
 
 `number`
 
 Rotation about X, in radians.
 
-###### yRadians
+###### yRad
 
 `number`
 
 Rotation about Y, in radians.
 
-###### zRadians
+###### zRad
 
 `number`
 
@@ -35171,9 +35171,9 @@ Rotation about Z, in radians.
 
 A new quaternion. **Allocates.**
 
-##### fromEulerRadiansToRef()
+##### fromEulerRadToRef()
 
-> `static` **fromEulerRadiansToRef**\<`TOut`\>(`xRadians`, `yRadians`, `zRadians`, `out`): `TOut`
+> `static` **fromEulerRadToRef**\<`TOut`\>(`xRad`, `yRad`, `zRad`, `out`): `TOut`
 
 Writes a rotation built from Euler radians into `out`. This is Babylon Lite's `eulerToQuat`
 (`lib/math/quat-euler.js`) element for element, so a rotation built here means the same thing
@@ -35187,19 +35187,19 @@ to Lite's node hierarchy.
 
 ###### Parameters
 
-###### xRadians
+###### xRad
 
 `number`
 
 Rotation about X, in radians.
 
-###### yRadians
+###### yRad
 
 `number`
 
 Rotation about Y, in radians.
 
-###### zRadians
+###### zRad
 
 `number`
 
@@ -35785,9 +35785,9 @@ The vector to write; `x` is pitch, `y` is yaw, `z` is roll, all in degrees.
 
 `out`.
 
-##### toEulerRadiansToRef()
+##### toEulerRadToRef()
 
-> `static` **toEulerRadiansToRef**\<`TOut`\>(`q`, `out`): `TOut`
+> `static` **toEulerRadToRef**\<`TOut`\>(`q`, `out`): `TOut`
 
 Writes a rotation's Euler angles in radians into `out`, in intrinsic XYZ order. This is Babylon
 Lite's `quatToEulerXYZ` (`lib/math/quat-euler.js`) line for line, including its behaviour near
@@ -39577,7 +39577,7 @@ Marks the entity's body for a rebuild, which removes this collider from it.
 > **rebuild**(): `void`
 
 Rebuilds the entity's body and shapes at the start of the next fixed step. Call it after
-changing a size, a centre, `isTrigger`, or the entity's scale.
+changing a size, a `center`, `isTrigger`, or the entity's scale.
 
 ###### Returns
 
@@ -53619,7 +53619,7 @@ A world-space offset added to the entity's position before projecting, in metres
 
 > **referenceDistance**: `number`
 
-The distance at which [WorldAnchor.scaleWithDistance](#scalewithdistance) produces a scale of `1`, in metres.
+The distance at which [WorldAnchor.scaleWithDistance](#scalewithdistance-1) produces a scale of `1`, in metres.
 
 ##### scaleWithDistance
 
@@ -55320,6 +55320,92 @@ The control scheme to keep; `""` keeps every binding whatever its tag.
 
 ***
 
+### AnchorInput
+
+Everything [computeAnchorPlacement](#computeanchorplacement) reads.
+
+#### Properties
+
+##### clampToScreen
+
+> `readonly` **clampToScreen**: `boolean`
+
+Whether the element is kept inside the overlay's bounds.
+
+##### distance
+
+> `readonly` **distance**: `number`
+
+How far the point is from the camera, in metres.
+
+##### hideWhenBehindCamera
+
+> `readonly` **hideWhenBehindCamera**: `boolean`
+
+Whether the element is hidden when the point is behind the camera.
+
+##### inFront
+
+> `readonly` **inFront**: `boolean`
+
+Whether the point is in front of the camera.
+
+##### mapping
+
+> `readonly` **mapping**: [`UiPixelMapping`](#uipixelmapping)
+
+The render-target-pixel to UI-unit conversion.
+
+##### maxScale
+
+> `readonly` **maxScale**: `number`
+
+The largest scale distance scaling may produce.
+
+##### minScale
+
+> `readonly` **minScale**: `number`
+
+The smallest scale distance scaling may produce.
+
+##### referenceDistance
+
+> `readonly` **referenceDistance**: `number`
+
+The distance at which [AnchorInput.scaleWithDistance](#scalewithdistance) produces a scale of `1`.
+
+##### scaleWithDistance
+
+> `readonly` **scaleWithDistance**: `boolean`
+
+Whether the element shrinks with distance.
+
+##### screenX
+
+> `readonly` **screenX**: `number`
+
+The projected x, in render-target pixels.
+
+##### screenY
+
+> `readonly` **screenY**: `number`
+
+The projected y, in render-target pixels.
+
+##### viewHeight
+
+> `readonly` **viewHeight**: `number`
+
+The overlay root's height, in UI units.
+
+##### viewWidth
+
+> `readonly` **viewWidth**: `number`
+
+The overlay root's width, in UI units.
+
+***
+
 ### AnchorPlacement
 
 Where the element goes, written in place so the per-frame path allocates nothing.
@@ -55648,7 +55734,8 @@ The value it starts at. Ignored for `trigger`, which always starts clear.
 
 ### AnimatorPlayOptions
 
-What [Animator.play](#play) accepts.
+What [AnimatorStateMachine.play](#play-1) and [Animator.play](#play) accept. `Animator.play` forwards
+the object through unchanged, so the two take one type.
 
 #### Properties
 
@@ -67389,26 +67476,6 @@ Linear gain for this play; defaults to the source's `volume`.
 
 ***
 
-### PlayStateOptions
-
-What [AnimatorStateMachine.play](#play-1) accepts.
-
-#### Properties
-
-##### layer?
-
-> `readonly` `optional` **layer?**: `string`
-
-Which layer to play on; the base layer when omitted.
-
-##### transitionSeconds?
-
-> `readonly` `optional` **transitionSeconds?**: `number`
-
-How long to crossfade for, in seconds. `0` — the default — cuts.
-
-***
-
 ### PluralNode
 
 A `{name, plural, …}` selection.
@@ -72942,7 +73009,7 @@ export default defineConfig({
 > `readonly` **layers**: readonly `string`[]
 
 The layers created eagerly, back to front. Declaring them here is what makes their stacking
-order independent of the order the game happens to call [UiHost.layer](#layer-15) in.
+order independent of the order the game happens to call [UiHost.layer](#layer-14) in.
 
 ##### referenceResolution
 
@@ -72994,38 +73061,6 @@ The canvas's backing-store height, in device pixels — `canvas.height`.
 > `readonly` **deviceWidth**: `number`
 
 The canvas's backing-store width, in device pixels — `canvas.width`.
-
-***
-
-### UiSystemOptions
-
-What the system is built with.
-
-#### Properties
-
-##### app
-
-> `readonly` **app**: [`App`](#app-1)
-
-The app, for the render surface's size and the Lite scene.
-
-##### host
-
-> `readonly` **host**: [`UiHost`](#uihost)
-
-The overlay host, for the layout the anchors are placed in.
-
-##### i18n
-
-> `readonly` **i18n**: [`I18nService`](#i18nservice)
-
-The localization service `i18nKey` is resolved through.
-
-##### runtime
-
-> `readonly` **runtime**: `TextRuntime`
-
-The text renderer's life.
 
 ***
 
@@ -73757,19 +73792,19 @@ The union of the canvas alpha modes.
 
 ***
 
-### Capsule2DDirection
-
-> **Capsule2DDirection** = *typeof* [`CAPSULE_2D_DIRECTIONS`](#capsule_2d_directions)\[`number`\]
-
-The union of [CAPSULE\_2D\_DIRECTIONS](#capsule_2d_directions).
-
-***
-
 ### CapsuleDirection
 
 > **CapsuleDirection** = *typeof* [`CAPSULE_DIRECTIONS`](#capsule_directions)\[`number`\]
 
 The union of [CAPSULE\_DIRECTIONS](#capsule_directions).
+
+***
+
+### CapsuleDirection2D
+
+> **CapsuleDirection2D** = *typeof* [`CAPSULE_DIRECTIONS_2D`](#capsule_directions_2d)\[`number`\]
+
+The union of [CAPSULE\_DIRECTIONS\_2D](#capsule_directions_2d).
 
 ***
 
@@ -74957,11 +74992,11 @@ and therefore what makes it accepted anywhere Babylon Lite wants a `Mat4`.
 
 ***
 
-### MaterialAlphaModeName
+### MaterialAlphaMode
 
-> **MaterialAlphaModeName** = `MaterialAlphaMode`
+> **MaterialAlphaMode** = *typeof* [`MATERIAL_ALPHA_MODES`](#material_alpha_modes)\[`number`\]
 
-How a material interprets its alpha channel, in glTF's vocabulary.
+The union of the alpha modes a material can declare.
 
 ***
 
@@ -75323,7 +75358,7 @@ const app = await createApp({
 
 ### ShadowTechniqueName
 
-> **ShadowTechniqueName** = *typeof* `SHADOW_TECHNIQUES`\[`number`\]
+> **ShadowTechniqueName** = *typeof* [`SHADOW_TECHNIQUES`](#shadow_techniques)\[`number`\]
 
 The union of the shadow techniques a directional light can use.
 
@@ -75674,7 +75709,7 @@ Builds the entities a tilemap's objects layer describes.
 
 ### ToneMappingCurve
 
-> **ToneMappingCurve** = *typeof* `TONE_MAPPING_NAMES`\[`number`\]
+> **ToneMappingCurve** = *typeof* [`TONE_MAPPING_NAMES`](#tone_mapping_names)\[`number`\]
 
 The union of the tone-mapping curves.
 
@@ -76183,19 +76218,19 @@ The canvas alpha modes Lite accepts, in the order the inspector lists them.
 
 ***
 
-### CAPSULE\_2D\_DIRECTIONS
-
-> `const` **CAPSULE\_2D\_DIRECTIONS**: readonly \[`"x"`, `"y"`\]
-
-The axis a 2D capsule stands along.
-
-***
-
 ### CAPSULE\_DIRECTIONS
 
 > `const` **CAPSULE\_DIRECTIONS**: readonly \[`"x"`, `"y"`, `"z"`\]
 
 The axis a capsule stands along.
+
+***
+
+### CAPSULE\_DIRECTIONS\_2D
+
+> `const` **CAPSULE\_DIRECTIONS\_2D**: readonly \[`"x"`, `"y"`\]
+
+The axis a 2D capsule stands along.
 
 ***
 
@@ -78418,11 +78453,12 @@ Mat4.transformPointToRef(MAT4_IDENTITY, point, out); // copies the point
 
 ***
 
-### MATERIAL\_ALPHA\_MODE\_NAMES
+### MATERIAL\_ALPHA\_MODES
 
-> `const` **MATERIAL\_ALPHA\_MODE\_NAMES**: readonly [`MaterialAlphaModeName`](#materialalphamodename)[]
+> `const` **MATERIAL\_ALPHA\_MODES**: readonly \[`"opaque"`, `"mask"`, `"blend"`\]
 
-The alpha modes a material may declare, in the order the inspector lists them.
+How a material's alpha channel is interpreted, in glTF's vocabulary, in the order the inspector
+lists them (`docs/architecture/07-rendering.md` §2.4).
 
 ***
 
@@ -79340,6 +79376,14 @@ dispatched from a phase and therefore get a sorted dispatch list.
 
 ***
 
+### SHADOW\_TECHNIQUES
+
+> `const` **SHADOW\_TECHNIQUES**: readonly \[`"esm"`, `"pcf"`, `"csm"`\]
+
+The shadow techniques Lite offers, in the order `docs/architecture/07-rendering.md` §2.2 lists them.
+
+***
+
 ### SORTING\_LAYER\_ORDER\_STEP
 
 > `const` **SORTING\_LAYER\_ORDER\_STEP**: `1000` = `1e3`
@@ -79754,6 +79798,14 @@ The WGSL body of the built-in `tint` effect.
 Multiplies the sampled texel by `fx.params.rgb` and scales its alpha by `fx.params.a`, which is
 a per-layer tint that a per-sprite `color` cannot express — every sprite in the layer fades
 together, in one uniform write, rather than in one instance write each.
+
+***
+
+### TONE\_MAPPING\_NAMES
+
+> `const` **TONE\_MAPPING\_NAMES**: readonly \[`"none"`, `"standard"`, `"aces"`, `"neutral"`\]
+
+The tone-mapping curves `docs/architecture/07-rendering.md` §2.5 exposes.
 
 ***
 
@@ -81453,7 +81505,7 @@ Computes where an anchored element goes this frame.
 
 ##### input
 
-`AnchorInput`
+[`AnchorInput`](#anchorinput)
 
 The projection, the flags, and the conversion.
 

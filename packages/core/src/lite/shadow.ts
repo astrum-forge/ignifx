@@ -56,7 +56,7 @@ export type LiteShadowGenerator = ShadowGenerator;
 /**
  * The shadow techniques Lite offers, in the order `docs/architecture/07-rendering.md` §2.2 lists them.
  *
- * @internal
+ * @public
  */
 export const SHADOW_TECHNIQUES = ["esm", "pcf", "csm"] as const;
 

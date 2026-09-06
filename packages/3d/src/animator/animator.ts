@@ -3,7 +3,7 @@ import { AnimatorMixer } from "../lite/gpu/animation-mixer.js";
 import { AnimatorAsset } from "./animator-asset.js";
 import { AnimatorStateMachine } from "./state-machine.js";
 import type { AnimatorDefinition } from "./definition.js";
-import type { StateChange } from "./state-machine.js";
+import type { AnimatorPlayOptions, StateChange } from "./state-machine.js";
 import type { LiteAnimationManager } from "../lite/types.js";
 import type { AssetHandle, ComponentHooks, Schema } from "@ignifx/core";
 
@@ -20,18 +20,6 @@ import type { AssetHandle, ComponentHooks, Schema } from "@ignifx/core";
  * A headless app therefore runs the *whole* state machine — transitions fire, events fire,
  * `currentState` moves — and simply poses nothing. A game's animation logic is testable in CI.
  */
-
-/**
- * What {@link Animator.play} accepts.
- *
- * @public
- */
-export interface AnimatorPlayOptions {
-  /** Which layer to play on; the state's own layer when omitted. */
-  readonly layer?: string;
-  /** How long to crossfade for, in seconds. `0` — the default — cuts. */
-  readonly transitionSeconds?: number;
-}
 
 /**
  * Builds the `Animator` field declarations.

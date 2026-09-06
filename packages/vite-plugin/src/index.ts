@@ -57,7 +57,7 @@ export {
 export {
   addressFromRelativePath,
   ASSET_MANIFEST_FORMAT,
-  ASSET_MANIFEST_FORMAT_VERSION,
+  ASSET_MANIFEST_VERSION,
   buildManifest,
   DEFAULT_HASH_LENGTH,
   scanAssetRoot,
@@ -78,7 +78,7 @@ export {
 export { ignifx, PLUGIN_NAME, type IgnifxPluginApi } from "./plugin.js";
 export {
   formatValidationProblem,
-  requiresFormatHeader,
+  isFormatHeaderRequired,
   validateJsonAsset,
   validateJsonAssets,
   type FormatHeader,

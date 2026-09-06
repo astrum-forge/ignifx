@@ -16,7 +16,7 @@ skills/ignifx/
   SKILL.md                             the entry skill (≤ 500 lines): what ignifx is, install, first app, core concepts, recipe index, gotchas, pointers
   references/
     concepts/*.md                      lifecycle, scene-graph, scripting, assets, serialization, extensions (curated, API-level, short)
-    api/<package>.md                   GENERATED from .d.ts (TypeDoc markdown), one file per package, public API only, no @deprecated members
+    api/<package>.md                   GENERATED from .d.ts (TypeDoc markdown), one file per package entry point (electron adds electron-main.md and electron-preload.md), public API only, no @deprecated members
     recipes/*.md                       task-oriented, runnable examples ("spawn a prefab", "third-person camera", "tilemap collision")
     formats/*.md                       scene, prefab, material, atlas, tilemap, input, animator — with links to generated JSON Schemas
     gotchas.md                         known traps (mesh removal disposes, unlock audio, WebGPU only, Lite escape hatches are unstable)
@@ -51,7 +51,7 @@ Subsystem skills use the same ten sections, with the subsystem's components, ser
 
 ## 3. Generation
 
-- `pnpm docs:api` runs TypeDoc (markdown plugin) per package into `skills/ignifx/references/api/<package>.md`, filtered to `@public`/`@beta` members, excluding `@internal` and `@deprecated`. Output is committed; CI regenerates and fails on diff ("docs drift").
+- `pnpm docs:api` runs TypeDoc (markdown plugin) per package entry point into `skills/ignifx/references/api/<package>.md` (subpath entries get their own page: `electron-main.md`, `electron-preload.md`), filtered to `@public`/`@beta` members, excluding `@internal` and `@deprecated`. Output is committed; CI regenerates and fails on diff ("docs drift").
 - `pnpm docs:schemas` emits `ignifx.schemas.json` (all component schemas + file formats) and the `references/formats/*.md` tables from the same source of truth.
 - `pnpm docs:recipes` extracts every recipe from `examples/recipes/<name>/` (real, compiled TypeScript files with a leading doc comment) into `references/recipes/<name>.md`, so recipe text can never disagree with code that compiles. It writes only those pages, and fails when a recipe has no row in the hand-written `references/recipes/README.md`.
 - `pnpm docs:llms` writes `website/public/llms.txt` from the tree: the entry skill, every `references/{concepts,recipes,formats,api}/*.md`, `references/gotchas.md`, and every subsystem skill, as `llms.txt`-convention markdown. Titles come from each page's `#` heading and the one-liners from its first paragraph, so the file states nothing a person has to remember to update. `scripts/lib/llms-index.ts` and `website/README.md` carry the repository-path → URL mapping.

@@ -35,9 +35,7 @@ import { Vec2Like } from '@ignifx/core';
 import { Vec3Like } from '@ignifx/core';
 import { World } from '@ignifx/core';
 
-// Warning: (ae-internal-missing-underscore) The name "AnchorInput" should be prefixed with an underscore because the declaration is marked as @internal
-//
-// @internal
+// @public
 export interface AnchorInput {
     readonly clampToScreen: boolean;
     readonly distance: number;
@@ -68,13 +66,6 @@ export interface ArgumentNode {
     readonly name: string;
 }
 
-// Warning: (ae-internal-missing-underscore) The name "asDomCanvas" should be prefixed with an underscore because the declaration is marked as @internal
-//
-// @internal
-export function asDomCanvas(surface: unknown): HTMLCanvasElement | null;
-
-// Warning: (ae-incompatible-release-tags) The symbol "computeAnchorPlacement" is marked as @public, but its signature references "AnchorInput" which is marked as @internal
-//
 // @public
 export function computeAnchorPlacement(input: AnchorInput, out: AnchorPlacement): AnchorPlacement;
 
@@ -176,6 +167,8 @@ export class HudText extends TextComponent implements ComponentHooks {
     order: number;
     position: Vec2Like;
     static schema: Schema;
+    // Warning: (ae-forgotten-export) The symbol "TextRuntime" needs to be exported by the entry point index.d.ts
+    //
     // @internal
     sync(runtime: TextRuntime, i18n: I18nService | null, targetWidth: number, targetHeight: number): void;
     static typeId: string;
@@ -195,6 +188,8 @@ export const I18N_FORMAT_VERSION = 1;
 
 // @public
 export class I18nService {
+    // Warning: (ae-forgotten-export) The symbol "I18nServiceOptions" needs to be exported by the entry point index.d.ts
+    //
     // @internal
     constructor(options: I18nServiceOptions);
     get availableLocales(): readonly string[];
@@ -210,14 +205,6 @@ export class I18nService {
     set locale(value: string);
     get onLocaleChanged(): SignalLike<string>;
     t(key: string, params?: MessageParams): string;
-}
-
-// Warning: (ae-internal-missing-underscore) The name "I18nServiceOptions" should be prefixed with an underscore because the declaration is marked as @internal
-//
-// @internal
-export interface I18nServiceOptions {
-    readonly locale: string;
-    readonly log: Logger;
 }
 
 // @public
@@ -487,11 +474,6 @@ export function progressFraction(progress: AssetProgress): number;
 // @public
 export function renderMessage(pattern: MessagePattern, params: MessageParams, select: PluralSelector): string;
 
-// Warning: (ae-internal-missing-underscore) The name "resolveDomTarget" should be prefixed with an underscore because the declaration is marked as @internal
-//
-// @internal
-export function resolveDomTarget(surface: unknown): UiDomTarget | null;
-
 // @public
 export function resolveMenuChoices(values: MenuChoiceValues): readonly string[];
 
@@ -542,29 +524,6 @@ export { TextMetrics_2 as TextMetrics }
 export interface TextNode {
     readonly kind: "text";
     readonly value: string;
-}
-
-// Warning: (ae-internal-missing-underscore) The name "TextRuntime" should be prefixed with an underscore because the declaration is marked as @internal
-//
-// @internal
-export class TextRuntime {
-    constructor(options: TextRuntimeOptions);
-    addLayer(layer: LiteTextLayer): void;
-    dispose(): void;
-    ensureRenderer(): void;
-    get layerCount(): number;
-    removeLayer(layer: LiteTextLayer): void;
-    get renderer(): LiteTextRenderer | null;
-}
-
-// Warning: (ae-internal-missing-underscore) The name "TextRuntimeOptions" should be prefixed with an underscore because the declaration is marked as @internal
-//
-// @internal
-export interface TextRuntimeOptions {
-    readonly attachLayer: (renderer: LiteTextRenderer, layer: LiteTextLayer) => void;
-    readonly createRenderer: (() => LiteTextRenderer) | null;
-    readonly destroyRenderer: (renderer: LiteTextRenderer) => void;
-    readonly detachLayer: (renderer: LiteTextRenderer, layer: LiteTextLayer) => boolean;
 }
 
 // @public
@@ -689,6 +648,8 @@ export interface UiErrorOptions {
 
 // @public
 export class UiHost {
+    // Warning: (ae-forgotten-export) The symbol "UiHostOptions" needs to be exported by the entry point index.d.ts
+    //
     // @internal
     constructor(options: UiHostOptions);
     // @internal
@@ -711,17 +672,6 @@ export class UiHost {
     set scaling(value: UiScalingMode);
     get visible(): boolean;
     set visible(value: boolean);
-}
-
-// Warning: (ae-internal-missing-underscore) The name "UiHostOptions" should be prefixed with an underscore because the declaration is marked as @internal
-//
-// @internal
-export interface UiHostOptions {
-    readonly log: Logger;
-    readonly resolveTarget: () => UiDomTarget | null;
-    readonly setInputFocus: (value: boolean) => void;
-    readonly setInputPointer: (value: boolean) => void;
-    readonly settings: UiSettings;
 }
 
 // @public
@@ -797,20 +747,13 @@ export interface UiSurfaceMetrics {
 
 // @public
 export class UiSystem implements System {
+    // Warning: (ae-forgotten-export) The symbol "UiSystemOptions" needs to be exported by the entry point index.d.ts
+    //
     // @internal
     constructor(options: UiSystemOptions);
     readonly name = "ignifx/ui-sync";
     onWorldCreated(_world: World): void;
     update(ctx: SystemContext): void;
-}
-
-// @public
-export interface UiSystemOptions {
-    readonly app: App;
-    readonly host: UiHost;
-    readonly i18n: I18nService;
-    // Warning: (ae-incompatible-release-tags) The symbol "runtime" is marked as @public, but its signature references "TextRuntime" which is marked as @internal
-    readonly runtime: TextRuntime;
 }
 
 // @public

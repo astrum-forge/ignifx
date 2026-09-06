@@ -1484,11 +1484,6 @@ export function isUlid(value: string): boolean;
 // @public
 export function isValidErrorCode(code: string): code is ErrorCode;
 
-// Warning: (ae-internal-missing-underscore) The name "isValidLayer" should be prefixed with an underscore because the declaration is marked as @internal
-//
-// @internal
-export function isValidLayer(layer: number): boolean;
-
 // @public
 export function isWebGpuAvailable(): boolean;
 
@@ -1831,11 +1826,6 @@ export interface Mat4Like {
 }
 
 // @public
-export const MATERIAL_ALPHA_MODE_NAMES: readonly MaterialAlphaModeName[];
-
-// Warning: (ae-internal-missing-underscore) The name "MATERIAL_ALPHA_MODES" should be prefixed with an underscore because the declaration is marked as @internal
-//
-// @internal
 export const MATERIAL_ALPHA_MODES: readonly ["opaque", "mask", "blend"];
 
 // @public
@@ -1853,15 +1843,8 @@ export const MATERIAL_FORMAT_VERSION = 1;
 // @public
 export const MATERIAL_KINDS: readonly ["pbr", "standard", "shader"];
 
-// Warning: (ae-internal-missing-underscore) The name "MaterialAlphaMode" should be prefixed with an underscore because the declaration is marked as @internal
-//
-// @internal
-export type MaterialAlphaMode = (typeof MATERIAL_ALPHA_MODES)[number];
-
-// Warning: (ae-incompatible-release-tags) The symbol "MaterialAlphaModeName" is marked as @public, but its signature references "MaterialAlphaMode" which is marked as @internal
-//
 // @public
-export type MaterialAlphaModeName = MaterialAlphaMode;
+export type MaterialAlphaMode = (typeof MATERIAL_ALPHA_MODES)[number];
 
 // @public
 export class MaterialAsset {
@@ -2155,7 +2138,7 @@ export const PBR_TEXTURE_SLOTS: readonly string[];
 export interface PbrMaterialDefinition {
     readonly alpha: number;
     readonly alphaCutoff: number;
-    readonly alphaMode: MaterialAlphaModeName;
+    readonly alphaMode: MaterialAlphaMode;
     readonly baseColor: ColorLike;
     readonly doubleSided: boolean;
     readonly emissive: ColorLike;
@@ -2291,8 +2274,8 @@ export class Quat {
     static fromAxisAngleToRef<TOut extends MutableQuat>(axis: Vec3Like, degrees: number, out: TOut): TOut;
     static fromEulerDegrees(xDegrees: number, yDegrees: number, zDegrees: number): Quat;
     static fromEulerDegreesToRef<TOut extends MutableQuat>(xDegrees: number, yDegrees: number, zDegrees: number, out: TOut): TOut;
-    static fromEulerRadians(xRadians: number, yRadians: number, zRadians: number): Quat;
-    static fromEulerRadiansToRef<TOut extends MutableQuat>(xRadians: number, yRadians: number, zRadians: number, out: TOut): TOut;
+    static fromEulerRad(xRad: number, yRad: number, zRad: number): Quat;
+    static fromEulerRadToRef<TOut extends MutableQuat>(xRad: number, yRad: number, zRad: number, out: TOut): TOut;
     static fromRotationMatrix(m: Mat4Like): Quat;
     static fromRotationMatrixToRef<TOut extends MutableQuat>(m: Mat4Like, out: TOut): TOut;
     identity(): this;
@@ -2314,7 +2297,7 @@ export class Quat {
     static slerpToRef<TOut extends MutableQuat>(a: QuatLike, b: QuatLike, t: number, out: TOut): TOut;
     toArray(out: Float32Array, offset?: number): Float32Array;
     static toEulerDegreesToRef<TOut extends MutableVec3>(q: QuatLike, out: TOut): TOut;
-    static toEulerRadiansToRef<TOut extends MutableVec3>(q: QuatLike, out: TOut): TOut;
+    static toEulerRadToRef<TOut extends MutableVec3>(q: QuatLike, out: TOut): TOut;
     w: number;
     x: number;
     y: number;
@@ -2804,13 +2787,9 @@ export interface SetParentOptions {
 // @public
 export type SettingsInput = Readonly<Record<string, unknown>>;
 
-// Warning: (ae-internal-missing-underscore) The name "SHADOW_TECHNIQUES" should be prefixed with an underscore because the declaration is marked as @internal
-//
-// @internal
+// @public
 export const SHADOW_TECHNIQUES: readonly ["esm", "pcf", "csm"];
 
-// Warning: (ae-incompatible-release-tags) The symbol "ShadowTechniqueName" is marked as @public, but its signature references "SHADOW_TECHNIQUES" which is marked as @internal
-//
 // @public
 export type ShadowTechniqueName = (typeof SHADOW_TECHNIQUES)[number];
 
@@ -3045,13 +3024,9 @@ export interface TimeSettings {
 // @public
 export function toJsonSchema(schema: Schema): JsonSchemaObject;
 
-// Warning: (ae-internal-missing-underscore) The name "TONE_MAPPING_NAMES" should be prefixed with an underscore because the declaration is marked as @internal
-//
-// @internal
+// @public
 export const TONE_MAPPING_NAMES: readonly ["none", "standard", "aces", "neutral"];
 
-// Warning: (ae-incompatible-release-tags) The symbol "ToneMappingCurve" is marked as @public, but its signature references "TONE_MAPPING_NAMES" which is marked as @internal
-//
 // @public
 export type ToneMappingCurve = (typeof TONE_MAPPING_NAMES)[number];
 

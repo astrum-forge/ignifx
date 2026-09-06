@@ -46,11 +46,11 @@ export { createAnimatorLoader } from "./animator/loader.js";
 export {
   AnimatorStateMachine,
   DEFAULT_CLIP_LENGTH,
+  type AnimatorPlayOptions,
   type ClipWeight,
-  type PlayStateOptions,
   type StateChange,
 } from "./animator/state-machine.js";
-export { Animator, type AnimatorPlayOptions } from "./animator/animator.js";
+export { Animator } from "./animator/animator.js";
 export { THREE_D_ANIMATION_ORDER, ThreeDAnimationSystem } from "./animator/animation-system.js";
 
 // camera — the orbit rig and the "which camera is the main one" rule.

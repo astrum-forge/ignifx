@@ -14,9 +14,10 @@ import {
   standardMaterialDefinition,
 } from "../material-asset.js";
 import type { AssetHandle, AssetLoader, LoaderContext } from "../../assets/types.js";
+import type { MaterialAlphaMode } from "../../lite/material.js";
 import type { ColorLike } from "../../math/types.js";
 import type { JsonValue } from "../../schema/json.js";
-import type { MaterialAlphaModeName, MaterialAsset, MaterialDefinition, MaterialKind } from "../material-asset.js";
+import type { MaterialAsset, MaterialDefinition, MaterialKind } from "../material-asset.js";
 import type { TextureAsset } from "../texture-asset.js";
 
 /**
@@ -269,7 +270,7 @@ function readStandard(file: Record<string, unknown>, textures: Record<string, st
  * @param file - The file body.
  * @returns The declared mode, or `"opaque"`.
  */
-function readAlphaMode(file: Record<string, unknown>): MaterialAlphaModeName {
+function readAlphaMode(file: Record<string, unknown>): MaterialAlphaMode {
   const value = file["alphaMode"];
   return value === "mask" || value === "blend" ? value : "opaque";
 }

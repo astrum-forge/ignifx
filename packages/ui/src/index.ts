@@ -13,9 +13,9 @@
 import "./augmentation.js";
 
 // dom — the overlay host, its layers, the scaling arithmetic, the stylesheet, and focus routing.
-export { asDomCanvas, resolveDomTarget, type UiDomTarget } from "./dom/dom-target.js";
+export type { UiDomTarget } from "./dom/dom-target.js";
 export { isEditableElement, UI_FOCUS_ATTRIBUTE } from "./dom/focus.js";
-export { UiHost, type UiHostOptions } from "./dom/host.js";
+export { UiHost } from "./dom/host.js";
 export { UiLayer, type UiLayerOptions } from "./dom/layer.js";
 export {
   computeUiLayout,
@@ -33,7 +33,7 @@ export { UI_ERROR_MESSAGES, uiError, UiErrorCode, type UiErrorOptions } from "./
 export { ui, type UiOptions } from "./extension.js";
 
 // i18n — the localization service, the `ignifx.i18n` document, and its message grammar.
-export { I18nService, type I18nServiceOptions } from "./i18n/i18n-service.js";
+export { I18nService } from "./i18n/i18n-service.js";
 export { createLocaleLoader } from "./i18n/loader.js";
 export {
   describeLocaleFileFormat,
@@ -95,7 +95,6 @@ export {
 } from "./text/hud-layout.js";
 export { HudText } from "./text/hud-text.js";
 export { TEXT_ALIGNMENTS, TextComponent, type TextAlignment } from "./text/text-component.js";
-export { TextRuntime, type TextRuntimeOptions } from "./text/text-runtime.js";
 export { WorldText } from "./text/world-text.js";
 export { WorldText2D } from "./text/world-text-2d.js";
 
@@ -138,5 +137,5 @@ export { stickAxis, VirtualJoystick, type VirtualJoystickOptions } from "./widge
 
 // world — the entity-to-element anchor and the `PreRender` system that drives everything.
 export { computeAnchorPlacement, type AnchorInput, type AnchorPlacement } from "./world/anchor-math.js";
-export { UI_SYNC_ORDER, UiSystem, type UiSystemOptions } from "./world/ui-system.js";
+export { UI_SYNC_ORDER, UiSystem } from "./world/ui-system.js";
 export { WorldAnchor } from "./world/world-anchor.js";

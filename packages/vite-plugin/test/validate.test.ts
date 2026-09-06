@@ -4,7 +4,7 @@ import { VitePluginErrorCode } from "../src/errors.js";
 import { scanAssetRoot } from "../src/manifest.js";
 import {
   formatValidationProblem,
-  requiresFormatHeader,
+  isFormatHeaderRequired,
   validateJsonAsset,
   validateJsonAssets,
 } from "../src/validate.js";
@@ -28,7 +28,7 @@ const SCENE_SCHEMA: JsonSchemaProvider = {
   },
 };
 
-describe("requiresFormatHeader", () => {
+describe("isFormatHeaderRequired", () => {
   it.each([
     ["levels/a.scene.json", true],
     ["prefabs/a.prefab.json", true],
@@ -37,7 +37,7 @@ describe("requiresFormatHeader", () => {
     ["data/loot.json", false],
     ["sprites/hero.png", false],
   ] as const)("%s → %s", (address, expected) => {
-    expect(requiresFormatHeader(address)).toBe(expected);
+    expect(isFormatHeaderRequired(address)).toBe(expected);
   });
 });
 

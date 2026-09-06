@@ -6,7 +6,7 @@
 
 ## 1. Errors
 
-- `IgnifxError extends Error` with `code: "IGX-####"`, `context` (entity/component/asset identifiers), and `hint`. Development builds format the full message; production builds keep the code and context. Ranges: `01xx` lifecycle, `02xx` components, `03xx` scenes, `04xx` extensions, `05xx` assets, `06xx` serialization, `07xx` rendering, `08xx` input, `09xx` physics, `10xx` audio, `11xx` 2D, `12xx` 3D, `13xx` UI, `14xx` platform, `15xx` devtools, `9xxx` reserved for third parties.
+- `IgnifxError extends Error` with `code: "IGX-####"`, `context` (entity/component/asset identifiers), and `hint`. Development builds format the full message; production builds keep the code and context. Ranges: `01xx` lifecycle, `02xx` components, `03xx` scenes, `04xx` extensions, `05xx` assets, `06xx` serialization, `07xx` rendering, `08xx` input, `09xx` physics, `10xx` audio, `11xx` 2D, `12xx` 3D, `13xx` UI, `14xx` platform — split by owner: `IGX-1401`–`1419` `@ignifx/cli` (scaffolding), `IGX-1420`–`1459` core platform and storage, `IGX-1460`–`1499` `@ignifx/electron` — `15xx` devtools (`IGX-1500`–`1549` core diagnostics, `IGX-1550`–`1599` `@ignifx/devtools`), `9xxx` reserved for third parties.
 - `app.onError: Signal<ErrorReport>` receives every error thrown from a lifecycle callback, coroutine, system, or asset loader, with the source identified; the default handler logs and, in development, shows an overlay. Babylon Lite coded errors are decoded (`enableErrorDecoding` in dev; lazy `decodeError` in prod).
 
 ## 2. Logging

@@ -149,6 +149,12 @@ export const HOST_CONTRACT_VERSION = "1.0.0";
 export const HOST_WINDOW_EVENT_CHANNEL = "ignifx:window-event";
 
 // @public
+export interface HostFileFilter {
+    readonly extensions: readonly string[];
+    readonly name: string;
+}
+
+// @public
 export interface HostHandlerOptions {
     readonly entry?: string;
     readonly externalProtocols?: readonly string[];
@@ -163,7 +169,6 @@ export interface HostOpenDialogOptions {
     readonly defaultPath?: string;
     readonly directories?: boolean;
     readonly files?: boolean;
-    // Warning: (ae-forgotten-export) The symbol "HostFileFilter" needs to be exported by the entry point main.d.ts
     readonly filters?: readonly HostFileFilter[];
     readonly multiple?: boolean;
     readonly title?: string;

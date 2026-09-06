@@ -113,7 +113,6 @@ const expectedExports = [
   "isSceneFileHeader",
   "isUlid",
   "isValidErrorCode",
-  "isValidLayer",
   "isWebGpuAvailable",
   "jsonAssetLoader",
   "LayerMask",
@@ -127,7 +126,6 @@ const expectedExports = [
   "map",
   "Mat4",
   "MAT4_IDENTITY",
-  "MATERIAL_ALPHA_MODE_NAMES",
   "MATERIAL_ASSET_TYPE",
   "MATERIAL_FILE_EXTENSION",
   "MATERIAL_FILE_FORMAT",
@@ -406,7 +404,7 @@ const expectedPhysicsExports = [
 const expectedPhysics2DExports = [
   "BODY_TYPES_2D",
   "BoxCollider2D",
-  "CAPSULE_2D_DIRECTIONS",
+  "CAPSULE_DIRECTIONS_2D",
   "CHARACTER_SHAPES_2D",
   "COLLISION_EVENT_MODES_2D",
   "COMBINE_RULES",
@@ -566,7 +564,6 @@ const expectedUiExports = [
   "LocaleAsset",
   "TEXT_ALIGNMENTS",
   "TextComponent",
-  "TextRuntime",
   "Toast",
   "UI_CLASS_NAMES",
   "UI_CSS_VARIABLES",
@@ -586,7 +583,6 @@ const expectedUiExports = [
   "WorldAnchor",
   "WorldText",
   "WorldText2D",
-  "asDomCanvas",
   "computeAnchorPlacement",
   "computeHudPlacement",
   "computePivotPlacement",
@@ -604,7 +600,6 @@ const expectedUiExports = [
   "pixelMapping",
   "progressFraction",
   "renderMessage",
-  "resolveDomTarget",
   "stickAxis",
   "ui",
   "uiError",
@@ -701,7 +696,7 @@ const expectedElectronExports = [
   "isCompatibleHostVersion",
 ];
 
-// The @ignifx/devtools value surface (VERSION stays core's, asDomCanvas stays ui's).
+// The @ignifx/devtools value surface (VERSION stays core's).
 const expectedDevtoolsExports = [
   "DEFAULT_DEVTOOLS_LOG_LIMIT",
   "DEVTOOLS_CLASS_NAMES",
@@ -724,7 +719,6 @@ const expectedDevtoolsExports = [
   "devtools",
   "devtoolsError",
   "devtoolsSettingsSchema",
-  "resolveDevtoolsTarget",
 ];
 
 describe("ignifx barrel", () => {

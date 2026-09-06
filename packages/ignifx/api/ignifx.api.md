@@ -50,7 +50,6 @@ import { AppSettings } from '@ignifx/core';
 import { ArgumentNode } from '@ignifx/ui';
 import { array } from '@ignifx/core';
 import { ArrayFieldSpec } from '@ignifx/core';
-import { asDomCanvas } from '@ignifx/ui';
 import { AsepriteAnimationImportOptions } from '@ignifx/2d';
 import { asepriteFrameName } from '@ignifx/2d';
 import { AsepriteImportOptions } from '@ignifx/2d';
@@ -155,12 +154,12 @@ import { cameraRelativeToRef } from '@ignifx/3d';
 import { canonicalizeNumber } from '@ignifx/core';
 import { CANVAS_ALPHA_MODES } from '@ignifx/core';
 import { CanvasAlphaMode } from '@ignifx/core';
-import { Capsule2DDirection } from '@ignifx/physics-2d';
-import { CAPSULE_2D_DIRECTIONS } from '@ignifx/physics-2d';
 import { CAPSULE_DIRECTIONS } from '@ignifx/physics';
+import { CAPSULE_DIRECTIONS_2D } from '@ignifx/physics-2d';
 import { CapsuleCollider } from '@ignifx/physics';
 import { CapsuleCollider2D } from '@ignifx/physics-2d';
 import { CapsuleDirection } from '@ignifx/physics';
+import { CapsuleDirection2D } from '@ignifx/physics-2d';
 import { CapsuleMeshOptions } from '@ignifx/core';
 import { CHARACTER_SHAPES_2D } from '@ignifx/physics-2d';
 import { CharacterCollision } from '@ignifx/physics';
@@ -380,7 +379,6 @@ import { DevtoolsPanelHandle } from '@ignifx/devtools';
 import { DevtoolsPanelName } from '@ignifx/devtools';
 import { DevtoolsPosition } from '@ignifx/devtools';
 import { DevtoolsService } from '@ignifx/devtools';
-import { DevtoolsServiceOptions } from '@ignifx/devtools';
 import { DevtoolsSettings } from '@ignifx/devtools';
 import { devtoolsSettingsSchema } from '@ignifx/devtools';
 import { Diagnostics } from '@ignifx/core';
@@ -520,7 +518,6 @@ import { I18N_FILE_EXTENSIONS } from '@ignifx/ui';
 import { I18N_FORMAT } from '@ignifx/ui';
 import { I18N_FORMAT_VERSION } from '@ignifx/ui';
 import { I18nService } from '@ignifx/ui';
-import { I18nServiceOptions } from '@ignifx/ui';
 import { i32 } from '@ignifx/core';
 import { IGNIFX_HOST_AUTHORITY } from '@ignifx/electron';
 import { IGNIFX_ORIGIN } from '@ignifx/electron';
@@ -591,7 +588,6 @@ import { isIgnifxError } from '@ignifx/core';
 import { isSceneFileHeader } from '@ignifx/core';
 import { isUlid } from '@ignifx/core';
 import { isValidErrorCode } from '@ignifx/core';
-import { isValidLayer } from '@ignifx/core';
 import { isWebGpuAvailable } from '@ignifx/core';
 import { JsonArray } from '@ignifx/core';
 import { jsonAssetLoader } from '@ignifx/core';
@@ -690,7 +686,6 @@ import { Mat4 } from '@ignifx/core';
 import { MAT4_IDENTITY } from '@ignifx/core';
 import { Mat4Elements } from '@ignifx/core';
 import { Mat4Like } from '@ignifx/core';
-import { MATERIAL_ALPHA_MODE_NAMES } from '@ignifx/core';
 import { MATERIAL_ALPHA_MODES } from '@ignifx/core';
 import { MATERIAL_ASSET_TYPE } from '@ignifx/core';
 import { MATERIAL_FILE_EXTENSION } from '@ignifx/core';
@@ -698,7 +693,6 @@ import { MATERIAL_FILE_FORMAT } from '@ignifx/core';
 import { MATERIAL_FORMAT_VERSION } from '@ignifx/core';
 import { MATERIAL_KINDS } from '@ignifx/core';
 import { MaterialAlphaMode } from '@ignifx/core';
-import { MaterialAlphaModeName } from '@ignifx/core';
 import { MaterialAsset } from '@ignifx/core';
 import { MaterialAssetLiteHandles } from '@ignifx/core';
 import { MaterialDefinition } from '@ignifx/core';
@@ -843,7 +837,6 @@ import { PlatformOs } from '@ignifx/core';
 import { PlayClipOptions } from '@ignifx/2d';
 import { PlayerInput } from '@ignifx/input';
 import { PlayOptions } from '@ignifx/audio';
-import { PlayStateOptions } from '@ignifx/3d';
 import { PluralNode } from '@ignifx/ui';
 import { PluralSelector } from '@ignifx/ui';
 import { PointerLock } from '@ignifx/input';
@@ -899,8 +892,6 @@ import { REQUIRED_HOST_MEMBERS } from '@ignifx/electron';
 import { RESERVED_LAYER_NAMES } from '@ignifx/core';
 import { resetFrameSample } from '@ignifx/core';
 import { resolveClipFrames } from '@ignifx/2d';
-import { resolveDevtoolsTarget } from '@ignifx/devtools';
-import { resolveDomTarget } from '@ignifx/ui';
 import { resolveEase } from '@ignifx/core';
 import { resolveGamepadRemap } from '@ignifx/input';
 import { resolveMenuChoices } from '@ignifx/ui';
@@ -1048,8 +1039,6 @@ import { textAssetLoader } from '@ignifx/core';
 import { TextComponent } from '@ignifx/ui';
 import { TextMetrics as TextMetrics_2 } from '@ignifx/ui';
 import { TextNode } from '@ignifx/ui';
-import { TextRuntime } from '@ignifx/ui';
-import { TextRuntimeOptions } from '@ignifx/ui';
 import { TEXTURE_ASSET_TYPE } from '@ignifx/core';
 import { TextureAsset } from '@ignifx/core';
 import { TextureAssetLiteHandles } from '@ignifx/core';
@@ -1161,7 +1150,6 @@ import { uiError } from '@ignifx/ui';
 import { UiErrorCode } from '@ignifx/ui';
 import { UiErrorOptions } from '@ignifx/ui';
 import { UiHost } from '@ignifx/ui';
-import { UiHostOptions } from '@ignifx/ui';
 import { UiLayer } from '@ignifx/ui';
 import { UiLayerOptions } from '@ignifx/ui';
 import { UiLayout } from '@ignifx/ui';
@@ -1172,7 +1160,6 @@ import { UiSettings } from '@ignifx/ui';
 import { uiSettingsSchema } from '@ignifx/ui';
 import { UiSurfaceMetrics } from '@ignifx/ui';
 import { UiSystem } from '@ignifx/ui';
-import { UiSystemOptions } from '@ignifx/ui';
 import { UlidFactoryOptions } from '@ignifx/core';
 import { UnavailableDesktop } from '@ignifx/electron';
 import { validateInputActions } from '@ignifx/input';
@@ -1325,8 +1312,6 @@ export { ArgumentNode }
 export { array }
 
 export { ArrayFieldSpec }
-
-export { asDomCanvas }
 
 export { AsepriteAnimationImportOptions }
 
@@ -1536,17 +1521,17 @@ export { CANVAS_ALPHA_MODES }
 
 export { CanvasAlphaMode }
 
-export { Capsule2DDirection }
-
-export { CAPSULE_2D_DIRECTIONS }
-
 export { CAPSULE_DIRECTIONS }
+
+export { CAPSULE_DIRECTIONS_2D }
 
 export { CapsuleCollider }
 
 export { CapsuleCollider2D }
 
 export { CapsuleDirection }
+
+export { CapsuleDirection2D }
 
 export { CapsuleMeshOptions }
 
@@ -1986,8 +1971,6 @@ export { DevtoolsPosition }
 
 export { DevtoolsService }
 
-export { DevtoolsServiceOptions }
-
 export { DevtoolsSettings }
 
 export { devtoolsSettingsSchema }
@@ -2266,8 +2249,6 @@ export { I18N_FORMAT_VERSION }
 
 export { I18nService }
 
-export { I18nServiceOptions }
-
 export { i32 }
 
 export { IGNIFX_HOST_AUTHORITY }
@@ -2407,8 +2388,6 @@ export { isSceneFileHeader }
 export { isUlid }
 
 export { isValidErrorCode }
-
-export { isValidLayer }
 
 export { isWebGpuAvailable }
 
@@ -2606,8 +2585,6 @@ export { Mat4Elements }
 
 export { Mat4Like }
 
-export { MATERIAL_ALPHA_MODE_NAMES }
-
 export { MATERIAL_ALPHA_MODES }
 
 export { MATERIAL_ASSET_TYPE }
@@ -2621,8 +2598,6 @@ export { MATERIAL_FORMAT_VERSION }
 export { MATERIAL_KINDS }
 
 export { MaterialAlphaMode }
-
-export { MaterialAlphaModeName }
 
 export { MaterialAsset }
 
@@ -2912,8 +2887,6 @@ export { PlayerInput }
 
 export { PlayOptions }
 
-export { PlayStateOptions }
-
 export { PluralNode }
 
 export { PluralSelector }
@@ -3023,10 +2996,6 @@ export { RESERVED_LAYER_NAMES }
 export { resetFrameSample }
 
 export { resolveClipFrames }
-
-export { resolveDevtoolsTarget }
-
-export { resolveDomTarget }
 
 export { resolveEase }
 
@@ -3322,10 +3291,6 @@ export { TextMetrics_2 as TextMetrics }
 
 export { TextNode }
 
-export { TextRuntime }
-
-export { TextRuntimeOptions }
-
 export { TEXTURE_ASSET_TYPE }
 
 export { TextureAsset }
@@ -3548,8 +3513,6 @@ export { UiErrorOptions }
 
 export { UiHost }
 
-export { UiHostOptions }
-
 export { UiLayer }
 
 export { UiLayerOptions }
@@ -3569,8 +3532,6 @@ export { uiSettingsSchema }
 export { UiSurfaceMetrics }
 
 export { UiSystem }
-
-export { UiSystemOptions }
 
 export { UlidFactoryOptions }
 

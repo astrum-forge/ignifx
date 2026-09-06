@@ -88,6 +88,7 @@ export {
   IGNIFX_ORIGIN,
   IGNIFX_SCHEME,
   QUOTA_MESSAGE_PREFIX,
+  type HostFileFilter,
   type HostOpenDialogOptions,
   type HostOpenDialogResult,
   type HostPaths,

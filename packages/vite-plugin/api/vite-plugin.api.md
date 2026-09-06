@@ -20,7 +20,7 @@ export const ASSET_CHANGED_EVENT = "ignifx:asset-changed";
 export const ASSET_MANIFEST_FORMAT = "ignifx.manifest";
 
 // @public
-export const ASSET_MANIFEST_FORMAT_VERSION = 1;
+export const ASSET_MANIFEST_VERSION = 1;
 
 // @public
 export const ASSET_TYPE_BY_EXTENSION: {
@@ -74,7 +74,7 @@ export interface AssetChangedPayload {
 export interface AssetManifest {
     readonly entries: readonly AssetManifestEntry[];
     readonly format: typeof ASSET_MANIFEST_FORMAT;
-    readonly formatVersion: typeof ASSET_MANIFEST_FORMAT_VERSION;
+    readonly formatVersion: typeof ASSET_MANIFEST_VERSION;
     readonly root: string;
 }
 
@@ -174,6 +174,9 @@ export interface IgnifxPluginOptions {
 }
 
 // @public
+export function isFormatHeaderRequired(address: string): boolean;
+
+// @public
 export function isJsonArray(value: JsonValue): value is JsonArray;
 
 // @public
@@ -222,9 +225,6 @@ export function parseJsonValue(text: string): JsonValue;
 
 // @public
 export const PLUGIN_NAME = "ignifx";
-
-// @public
-export function requiresFormatHeader(address: string): boolean;
 
 // @public
 export const RESOLVED_MANIFEST_MODULE_ID: string;

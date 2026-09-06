@@ -104,7 +104,7 @@ export function formatValidationProblem(problem: ValidationProblem): string {
  *
  * @public
  */
-export function requiresFormatHeader(address: string): boolean {
+export function isFormatHeaderRequired(address: string): boolean {
   const lastSlash = address.lastIndexOf("/");
   const { extension } = splitAssetFileName(address.slice(lastSlash + 1));
   return extension.endsWith(".json") && extension !== ".json";
@@ -198,7 +198,7 @@ export function validateJsonAsset(
     return [{ address, filePath, pointer: "", message: header, code: VitePluginErrorCode.missingFormatHeader }];
   }
   if (header === null) {
-    if (!requiresFormatHeader(address)) {
+    if (!isFormatHeaderRequired(address)) {
       return [];
     }
     return [

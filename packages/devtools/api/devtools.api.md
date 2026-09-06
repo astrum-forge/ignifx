@@ -17,11 +17,6 @@ import { Schema } from '@ignifx/core';
 import { SignalLike } from '@ignifx/core';
 import { System } from '@ignifx/core';
 
-// Warning: (ae-internal-missing-underscore) The name "asDomCanvas" should be prefixed with an underscore because the declaration is marked as @internal
-//
-// @internal
-export function asDomCanvas(surface: unknown): HTMLCanvasElement | null;
-
 // @public
 export function createDevtoolsLogSink(options?: DevtoolsLogSinkOptions): DevtoolsLogSink;
 
@@ -163,6 +158,8 @@ export type DevtoolsPosition = (typeof DEVTOOLS_POSITIONS)[number];
 
 // @public
 export class DevtoolsService {
+    // Warning: (ae-forgotten-export) The symbol "DevtoolsServiceOptions" needs to be exported by the entry point index.d.ts
+    //
     // @internal
     constructor(options: DevtoolsServiceOptions);
     close(): void;
@@ -187,17 +184,6 @@ export class DevtoolsService {
     toggle(): void;
 }
 
-// Warning: (ae-internal-missing-underscore) The name "DevtoolsServiceOptions" should be prefixed with an underscore because the declaration is marked as @internal
-//
-// @internal
-export interface DevtoolsServiceOptions {
-    readonly app: App;
-    readonly logSink: DevtoolsLogSink | null;
-    readonly registerSystem: (system: System) => void;
-    readonly resolveTarget?: () => DevtoolsDomTarget | null;
-    readonly settings: DevtoolsSettings;
-}
-
 // @public
 export interface DevtoolsSettings {
     readonly opacity: number;
@@ -210,11 +196,6 @@ export interface DevtoolsSettings {
 
 // @public
 export function devtoolsSettingsSchema(): Schema;
-
-// Warning: (ae-internal-missing-underscore) The name "resolveDevtoolsTarget" should be prefixed with an underscore because the declaration is marked as @internal
-//
-// @internal
-export function resolveDevtoolsTarget(surface: unknown): DevtoolsDomTarget | null;
 
 // @public
 export const TEXT_REFRESH_HZ = 10;

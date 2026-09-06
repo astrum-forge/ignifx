@@ -28,6 +28,7 @@ export {
   HOST_GLOBAL_NAME,
   HOST_WINDOW_EVENT_CHANNEL,
   type HostDialogs,
+  type HostFileFilter,
   type HostOpenDialogOptions,
   type HostOpenDialogResult,
   type HostPaths,

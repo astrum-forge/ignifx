@@ -5,7 +5,6 @@ import {
   createPbrMaterialFromProps,
   createStandardMaterialFromProps,
   markMaterialDirty,
-  MATERIAL_ALPHA_MODES,
   setMaterialAlpha,
   setPbrBaseColor,
   setPbrMetallicRoughness,
@@ -93,20 +92,6 @@ export const MATERIAL_KINDS = ["pbr", "standard", "shader"] as const;
 export type MaterialKind = (typeof MATERIAL_KINDS)[number];
 
 /**
- * How a material interprets its alpha channel, in glTF's vocabulary.
- *
- * @public
- */
-export type MaterialAlphaModeName = MaterialAlphaMode;
-
-/**
- * The alpha modes a material may declare, in the order the inspector lists them.
- *
- * @public
- */
-export const MATERIAL_ALPHA_MODE_NAMES: readonly MaterialAlphaModeName[] = MATERIAL_ALPHA_MODES;
-
-/**
  * The properties a `"pbr"` material declares. Every colour is sRGB; every factor is unitless.
  *
  * @public
@@ -129,7 +114,7 @@ export interface PbrMaterialDefinition {
   /** How strongly ambient occlusion darkens the surface, 0 to 1. */
   readonly occlusionStrength: number;
   /** How the alpha channel is interpreted. */
-  readonly alphaMode: MaterialAlphaModeName;
+  readonly alphaMode: MaterialAlphaMode;
   /** The cutoff below which a `"mask"` material discards a fragment. */
   readonly alphaCutoff: number;
   /** Overall material alpha, 0 to 1. */

@@ -52,7 +52,7 @@ describe("Quat rotation conventions", () => {
     const euler = Quat.fromEulerDegrees(0, 90, 0);
     const axisAngle = Quat.fromAxisAngle(VEC3_UP, 90);
     expect(euler.equalsWithEpsilon(axisAngle)).toBe(true);
-    expect(Quat.fromEulerRadians(0, Math.PI / 2, 0).equalsWithEpsilon(euler)).toBe(true);
+    expect(Quat.fromEulerRad(0, Math.PI / 2, 0).equalsWithEpsilon(euler)).toBe(true);
   });
 
   it("writes the identity for a zero-length axis", () => {
@@ -79,7 +79,7 @@ describe("Quat rotation conventions", () => {
 
   it("clamps the Y angle at the pole instead of returning NaN", () => {
     const out = new Vec3();
-    Quat.toEulerRadiansToRef(Quat.fromEulerDegrees(0, 90, 0), out);
+    Quat.toEulerRadToRef(Quat.fromEulerDegrees(0, 90, 0), out);
     expect(out.y).toBeCloseTo(Math.PI / 2, 9);
     expect(Number.isNaN(out.x)).toBe(false);
   });
@@ -257,7 +257,7 @@ describe("Quat ToRef aliasing", () => {
     const radians = new Vec3();
     const q = Quat.fromEulerDegrees(0, 90, 0);
     expect(Quat.toEulerDegreesToRef(q, degrees)).toBe(degrees);
-    expect(Quat.toEulerRadiansToRef(q, radians)).toBe(radians);
+    expect(Quat.toEulerRadToRef(q, radians)).toBe(radians);
     expect(degrees.y).toBeCloseTo(90, 6);
     expect(radians.y).toBeCloseTo(Math.PI / 2, 6);
   });

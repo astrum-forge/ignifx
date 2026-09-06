@@ -54,9 +54,10 @@ import type {
 export const UI_SYNC_ORDER = 1100;
 
 /**
- * What the system is built with.
+ * What the system is built with. Only `uiExtension` builds one, through `UiSystem`'s `@internal`
+ * constructor.
  *
- * @public
+ * @internal
  */
 export interface UiSystemOptions {
   /** The app, for the render surface's size and the Lite scene. */

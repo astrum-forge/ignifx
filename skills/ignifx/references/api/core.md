@@ -9305,27 +9305,27 @@ The quaternion to write.
 
 `out`.
 
-##### fromEulerRadians()
+##### fromEulerRad()
 
-> `static` **fromEulerRadians**(`xRadians`, `yRadians`, `zRadians`): [`Quat`](#quat-4)
+> `static` **fromEulerRad**(`xRad`, `yRad`, `zRad`): [`Quat`](#quat-4)
 
 Builds a rotation from Euler angles in radians, in intrinsic XYZ order.
 
 ###### Parameters
 
-###### xRadians
+###### xRad
 
 `number`
 
 Rotation about X, in radians.
 
-###### yRadians
+###### yRad
 
 `number`
 
 Rotation about Y, in radians.
 
-###### zRadians
+###### zRad
 
 `number`
 
@@ -9337,9 +9337,9 @@ Rotation about Z, in radians.
 
 A new quaternion. **Allocates.**
 
-##### fromEulerRadiansToRef()
+##### fromEulerRadToRef()
 
-> `static` **fromEulerRadiansToRef**\<`TOut`\>(`xRadians`, `yRadians`, `zRadians`, `out`): `TOut`
+> `static` **fromEulerRadToRef**\<`TOut`\>(`xRad`, `yRad`, `zRad`, `out`): `TOut`
 
 Writes a rotation built from Euler radians into `out`. This is Babylon Lite's `eulerToQuat`
 (`lib/math/quat-euler.js`) element for element, so a rotation built here means the same thing
@@ -9353,19 +9353,19 @@ to Lite's node hierarchy.
 
 ###### Parameters
 
-###### xRadians
+###### xRad
 
 `number`
 
 Rotation about X, in radians.
 
-###### yRadians
+###### yRad
 
 `number`
 
 Rotation about Y, in radians.
 
-###### zRadians
+###### zRad
 
 `number`
 
@@ -9951,9 +9951,9 @@ The vector to write; `x` is pitch, `y` is yaw, `z` is roll, all in degrees.
 
 `out`.
 
-##### toEulerRadiansToRef()
+##### toEulerRadToRef()
 
-> `static` **toEulerRadiansToRef**\<`TOut`\>(`q`, `out`): `TOut`
+> `static` **toEulerRadToRef**\<`TOut`\>(`q`, `out`): `TOut`
 
 Writes a rotation's Euler angles in radians into `out`, in intrinsic XYZ order. This is Babylon
 Lite's `quatToEulerXYZ` (`lib/math/quat-euler.js`) line for line, including its behaviour near
@@ -26820,11 +26820,11 @@ and therefore what makes it accepted anywhere Babylon Lite wants a `Mat4`.
 
 ***
 
-### MaterialAlphaModeName
+### MaterialAlphaMode
 
-> **MaterialAlphaModeName** = `MaterialAlphaMode`
+> **MaterialAlphaMode** = *typeof* [`MATERIAL_ALPHA_MODES`](#material_alpha_modes)\[`number`\]
 
-How a material interprets its alpha channel, in glTF's vocabulary.
+The union of the alpha modes a material can declare.
 
 ***
 
@@ -27082,7 +27082,7 @@ const app = await createApp({
 
 ### ShadowTechniqueName
 
-> **ShadowTechniqueName** = *typeof* `SHADOW_TECHNIQUES`\[`number`\]
+> **ShadowTechniqueName** = *typeof* [`SHADOW_TECHNIQUES`](#shadow_techniques)\[`number`\]
 
 The union of the shadow techniques a directional light can use.
 
@@ -27189,7 +27189,7 @@ a UTF-8 byte array are indistinguishable once written.
 
 ### ToneMappingCurve
 
-> **ToneMappingCurve** = *typeof* `TONE_MAPPING_NAMES`\[`number`\]
+> **ToneMappingCurve** = *typeof* [`TONE_MAPPING_NAMES`](#tone_mapping_names)\[`number`\]
 
 The union of the tone-mapping curves.
 
@@ -28356,11 +28356,12 @@ Mat4.transformPointToRef(MAT4_IDENTITY, point, out); // copies the point
 
 ***
 
-### MATERIAL\_ALPHA\_MODE\_NAMES
+### MATERIAL\_ALPHA\_MODES
 
-> `const` **MATERIAL\_ALPHA\_MODE\_NAMES**: readonly [`MaterialAlphaModeName`](#materialalphamodename)[] = `MATERIAL_ALPHA_MODES`
+> `const` **MATERIAL\_ALPHA\_MODES**: readonly \[`"opaque"`, `"mask"`, `"blend"`\]
 
-The alpha modes a material may declare, in the order the inspector lists them.
+How a material's alpha channel is interpreted, in glTF's vocabulary, in the order the inspector
+lists them (`docs/architecture/07-rendering.md` §2.4).
 
 ***
 
@@ -28861,6 +28862,14 @@ dispatched from a phase and therefore get a sorted dispatch list.
 
 ***
 
+### SHADOW\_TECHNIQUES
+
+> `const` **SHADOW\_TECHNIQUES**: readonly \[`"esm"`, `"pcf"`, `"csm"`\]
+
+The shadow techniques Lite offers, in the order `docs/architecture/07-rendering.md` §2.2 lists them.
+
+***
+
 ### STANDARD\_TEXTURE\_SLOTS
 
 > `const` **STANDARD\_TEXTURE\_SLOTS**: readonly `string`[]
@@ -28905,6 +28914,14 @@ The asset type textures are registered under.
 
 The first digit of the range reserved for extensions published outside the `@ignifx` scope
 (`IGX-9000` through `IGX-9999`). First-party subsystems never allocate here.
+
+***
+
+### TONE\_MAPPING\_NAMES
+
+> `const` **TONE\_MAPPING\_NAMES**: readonly \[`"none"`, `"standard"`, `"aces"`, `"neutral"`\]
+
+The tone-mapping curves `docs/architecture/07-rendering.md` §2.5 exposes.
 
 ***
 

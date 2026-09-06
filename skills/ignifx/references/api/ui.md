@@ -3252,7 +3252,7 @@ A world-space offset added to the entity's position before projecting, in metres
 
 > **referenceDistance**: `number`
 
-The distance at which [WorldAnchor.scaleWithDistance](#scalewithdistance) produces a scale of `1`, in metres.
+The distance at which [WorldAnchor.scaleWithDistance](#scalewithdistance-1) produces a scale of `1`, in metres.
 
 ##### scaleWithDistance
 
@@ -4848,6 +4848,92 @@ The resolved string.
 
 ## Interfaces
 
+### AnchorInput
+
+Everything [computeAnchorPlacement](#computeanchorplacement) reads.
+
+#### Properties
+
+##### clampToScreen
+
+> `readonly` **clampToScreen**: `boolean`
+
+Whether the element is kept inside the overlay's bounds.
+
+##### distance
+
+> `readonly` **distance**: `number`
+
+How far the point is from the camera, in metres.
+
+##### hideWhenBehindCamera
+
+> `readonly` **hideWhenBehindCamera**: `boolean`
+
+Whether the element is hidden when the point is behind the camera.
+
+##### inFront
+
+> `readonly` **inFront**: `boolean`
+
+Whether the point is in front of the camera.
+
+##### mapping
+
+> `readonly` **mapping**: [`UiPixelMapping`](#uipixelmapping)
+
+The render-target-pixel to UI-unit conversion.
+
+##### maxScale
+
+> `readonly` **maxScale**: `number`
+
+The largest scale distance scaling may produce.
+
+##### minScale
+
+> `readonly` **minScale**: `number`
+
+The smallest scale distance scaling may produce.
+
+##### referenceDistance
+
+> `readonly` **referenceDistance**: `number`
+
+The distance at which [AnchorInput.scaleWithDistance](#scalewithdistance) produces a scale of `1`.
+
+##### scaleWithDistance
+
+> `readonly` **scaleWithDistance**: `boolean`
+
+Whether the element shrinks with distance.
+
+##### screenX
+
+> `readonly` **screenX**: `number`
+
+The projected x, in render-target pixels.
+
+##### screenY
+
+> `readonly` **screenY**: `number`
+
+The projected y, in render-target pixels.
+
+##### viewHeight
+
+> `readonly` **viewHeight**: `number`
+
+The overlay root's height, in UI units.
+
+##### viewWidth
+
+> `readonly` **viewWidth**: `number`
+
+The overlay root's width, in UI units.
+
+***
+
 ### AnchorPlacement
 
 Where the element goes, written in place so the per-frame path allocates nothing.
@@ -6227,38 +6313,6 @@ The canvas's backing-store width, in device pixels — `canvas.width`.
 
 ***
 
-### UiSystemOptions
-
-What the system is built with.
-
-#### Properties
-
-##### app
-
-> `readonly` **app**: `App`
-
-The app, for the render surface's size and the Lite scene.
-
-##### host
-
-> `readonly` **host**: [`UiHost`](#uihost)
-
-The overlay host, for the layout the anchors are placed in.
-
-##### i18n
-
-> `readonly` **i18n**: [`I18nService`](#i18nservice)
-
-The localization service `i18nKey` is resolved through.
-
-##### runtime
-
-> `readonly` **runtime**: `TextRuntime`
-
-The text renderer's life.
-
-***
-
 ### VirtualButtonOptions
 
 What `new VirtualButton(app, options)` accepts.
@@ -7051,7 +7105,7 @@ Computes where an anchored element goes this frame.
 
 ##### input
 
-`AnchorInput`
+[`AnchorInput`](#anchorinput)
 
 The projection, the flags, and the conversion.
 

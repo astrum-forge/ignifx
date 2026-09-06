@@ -279,7 +279,7 @@ Always [ASSET\_MANIFEST\_FORMAT](#asset_manifest_format).
 
 > `readonly` **formatVersion**: `1`
 
-Always [ASSET\_MANIFEST\_FORMAT\_VERSION](#asset_manifest_format_version) before 1.0.
+Always [ASSET\_MANIFEST\_VERSION](#asset_manifest_version) before 1.0.
 
 ##### root
 
@@ -876,9 +876,9 @@ The `format` header every generated manifest carries
 
 ***
 
-### ASSET\_MANIFEST\_FORMAT\_VERSION
+### ASSET\_MANIFEST\_VERSION
 
-> `const` **ASSET\_MANIFEST\_FORMAT\_VERSION**: `1` = `1`
+> `const` **ASSET\_MANIFEST\_VERSION**: `1` = `1`
 
 The manifest format version. It stays `1` for the whole `0.x` line (`CONSTITUTION.md` §4.2).
 
@@ -1633,6 +1633,36 @@ export default defineConfig({
 
 ***
 
+### isFormatHeaderRequired()
+
+> **isFormatHeaderRequired**(`address`): `boolean`
+
+Reports whether a JSON file must carry a `format`/`formatVersion` header.
+
+#### Parameters
+
+##### address
+
+`string`
+
+The asset address.
+
+#### Returns
+
+`boolean`
+
+`true` when a missing header is an error.
+
+#### Remarks
+
+Every ignifx file format is a two-segment JSON extension — `.scene.json`, `.prefab.json`,
+`.material.json`, `.atlas.json`, `.input.json`, and the rest of the table in
+`docs/architecture/06-serialization-and-scene-format.md` §6 — so a two-segment name is the signal
+that a header is expected. A plain `.json` file is game data and is validated only when it
+happens to declare a header of its own.
+
+***
+
 ### isJsonArray()
 
 > **isJsonArray**(`value`): `value is JsonArray`
@@ -1889,36 +1919,6 @@ asserting them (coding standards §5.2).
 #### Throws
 
 A `SyntaxError` when the text is not JSON; callers turn that into a diagnostic.
-
-***
-
-### requiresFormatHeader()
-
-> **requiresFormatHeader**(`address`): `boolean`
-
-Reports whether a JSON file must carry a `format`/`formatVersion` header.
-
-#### Parameters
-
-##### address
-
-`string`
-
-The asset address.
-
-#### Returns
-
-`boolean`
-
-`true` when a missing header is an error.
-
-#### Remarks
-
-Every ignifx file format is a two-segment JSON extension — `.scene.json`, `.prefab.json`,
-`.material.json`, `.atlas.json`, `.input.json`, and the rest of the table in
-`docs/architecture/06-serialization-and-scene-format.md` §6 — so a two-segment name is the signal
-that a header is expected. A plain `.json` file is game data and is validated only when it
-happens to declare a header of its own.
 
 ***
 

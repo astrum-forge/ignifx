@@ -94,7 +94,7 @@ export abstract class Collider extends Component implements ComponentHooks {
 
   /**
    * Rebuilds the entity's body and shapes at the start of the next fixed step. Call it after
-   * changing a size, a centre, `isTrigger`, or the entity's scale.
+   * changing a size, a `center`, `isTrigger`, or the entity's scale.
    *
    * @example
    * ```ts

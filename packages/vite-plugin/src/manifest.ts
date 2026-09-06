@@ -29,7 +29,7 @@ export const ASSET_MANIFEST_FORMAT = "ignifx.manifest";
  *
  * @public
  */
-export const ASSET_MANIFEST_FORMAT_VERSION = 1;
+export const ASSET_MANIFEST_VERSION = 1;
 
 /**
  * One asset in the manifest.
@@ -61,8 +61,8 @@ export interface AssetManifestEntry {
 export interface AssetManifest {
   /** Always {@link ASSET_MANIFEST_FORMAT}. */
   readonly format: typeof ASSET_MANIFEST_FORMAT;
-  /** Always {@link ASSET_MANIFEST_FORMAT_VERSION} before 1.0. */
-  readonly formatVersion: typeof ASSET_MANIFEST_FORMAT_VERSION;
+  /** Always {@link ASSET_MANIFEST_VERSION} before 1.0. */
+  readonly formatVersion: typeof ASSET_MANIFEST_VERSION;
   /** The asset root the addresses are relative to, as configured, `/`-separated. */
   readonly root: string;
   /** Every asset, sorted by address so two builds of the same tree produce the same bytes. */
@@ -294,7 +294,7 @@ export function buildManifest(
   }
   return {
     format: ASSET_MANIFEST_FORMAT,
-    formatVersion: ASSET_MANIFEST_FORMAT_VERSION,
+    formatVersion: ASSET_MANIFEST_VERSION,
     root,
     entries,
   };

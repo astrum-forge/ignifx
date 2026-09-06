@@ -225,4 +225,4 @@ None (pre-1.0: no deprecation window; breaking changes are listed in the changel
 
 ## Where to look next
 
-`skills/ignifx/SKILL.md` for the engine entry skill · `docs/architecture/14-platform-electron.md` for the design · `docs/adr/0018-electron-tooling.md` for what the S9.1 spike measured, and for what is still unverified.
+`skills/ignifx/SKILL.md` for the engine entry skill · `references/api/electron.md`, `references/api/electron-main.md` and `references/api/electron-preload.md` for every exact signature of the three entry points · `docs/architecture/14-platform-electron.md` for the design · `docs/adr/0018-electron-tooling.md` for what the S9.1 spike measured, and for what is still unverified.

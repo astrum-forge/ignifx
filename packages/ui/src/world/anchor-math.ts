@@ -29,7 +29,7 @@ import type { UiPixelMapping } from "../dom/scaling.js";
 /**
  * Everything {@link computeAnchorPlacement} reads.
  *
- * @internal
+ * @public
  */
 export interface AnchorInput {
   /** The projected x, in render-target pixels. */

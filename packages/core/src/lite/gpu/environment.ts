@@ -78,7 +78,7 @@ export type FogMode = keyof typeof FOG_MODES;
 /**
  * The tone-mapping curves `docs/architecture/07-rendering.md` §2.5 exposes.
  *
- * @internal
+ * @public
  */
 export const TONE_MAPPING_NAMES = ["none", "standard", "aces", "neutral"] as const;
 

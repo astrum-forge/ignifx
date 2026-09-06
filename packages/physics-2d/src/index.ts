@@ -17,12 +17,12 @@ export {
 export { collider2DFields, Collider2D, COMBINE_RULES, type CombineRule } from "./components/collider.js";
 export {
   BoxCollider2D,
-  CAPSULE_2D_DIRECTIONS,
+  CAPSULE_DIRECTIONS_2D,
   CapsuleCollider2D,
   CircleCollider2D,
   EdgeCollider2D,
   PolygonCollider2D,
-  type Capsule2DDirection,
+  type CapsuleDirection2D,
 } from "./components/colliders.js";
 export {
   BODY_TYPES_2D,

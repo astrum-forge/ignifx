@@ -28,14 +28,14 @@ const QUARTER_TURN = Math.PI / 2;
  *
  * @public
  */
-export const CAPSULE_2D_DIRECTIONS = ["x", "y"] as const;
+export const CAPSULE_DIRECTIONS_2D = ["x", "y"] as const;
 
 /**
- * The union of {@link CAPSULE_2D_DIRECTIONS}.
+ * The union of {@link CAPSULE_DIRECTIONS_2D}.
  *
  * @public
  */
-export type Capsule2DDirection = (typeof CAPSULE_2D_DIRECTIONS)[number];
+export type CapsuleDirection2D = (typeof CAPSULE_DIRECTIONS_2D)[number];
 
 /**
  * An axis-aligned box collider, sized in local metres.
@@ -146,7 +146,7 @@ export class CapsuleCollider2D extends Collider2D {
 
   declare height: number;
 
-  declare direction: Capsule2DDirection;
+  declare direction: CapsuleDirection2D;
 
   /** Applies this collider's defaults on top of the shared ones. */
   constructor() {
@@ -296,7 +296,7 @@ function capsuleSchema(): Schema {
     ...collider2DFields(),
     radius: f32(0.25, { min: 0 }),
     height: f32(1, { min: 0 }),
-    direction: enumOf(CAPSULE_2D_DIRECTIONS, "y"),
+    direction: enumOf(CAPSULE_DIRECTIONS_2D, "y"),
   });
 }
 

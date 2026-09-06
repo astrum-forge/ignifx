@@ -5930,11 +5930,11 @@ The union of [BODY\_TYPES\_2D](#body_types_2d).
 
 ***
 
-### Capsule2DDirection
+### CapsuleDirection2D
 
-> **Capsule2DDirection** = *typeof* [`CAPSULE_2D_DIRECTIONS`](#capsule_2d_directions)\[`number`\]
+> **CapsuleDirection2D** = *typeof* [`CAPSULE_DIRECTIONS_2D`](#capsule_directions_2d)\[`number`\]
 
-The union of [CAPSULE\_2D\_DIRECTIONS](#capsule_2d_directions).
+The union of [CAPSULE\_DIRECTIONS\_2D](#capsule_directions_2d).
 
 ***
 
@@ -5986,9 +5986,9 @@ How a 2D body moves.
 
 ***
 
-### CAPSULE\_2D\_DIRECTIONS
+### CAPSULE\_DIRECTIONS\_2D
 
-> `const` **CAPSULE\_2D\_DIRECTIONS**: readonly \[`"x"`, `"y"`\]
+> `const` **CAPSULE\_DIRECTIONS\_2D**: readonly \[`"x"`, `"y"`\]
 
 The axis a 2D capsule stands along.
 

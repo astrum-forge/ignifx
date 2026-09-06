@@ -5,7 +5,7 @@ import { VitePluginErrorCode } from "../src/errors.js";
 import {
   addressFromRelativePath,
   ASSET_MANIFEST_FORMAT,
-  ASSET_MANIFEST_FORMAT_VERSION,
+  ASSET_MANIFEST_VERSION,
   buildManifest,
   scanAssetRoot,
   serializeManifest,
@@ -131,7 +131,7 @@ describe("buildManifest", () => {
   it("carries the format header the runtime looks for", () => {
     const manifest = buildManifest([], "assets", () => "");
     expect(manifest.format).toBe(ASSET_MANIFEST_FORMAT);
-    expect(manifest.formatVersion).toBe(ASSET_MANIFEST_FORMAT_VERSION);
+    expect(manifest.formatVersion).toBe(ASSET_MANIFEST_VERSION);
     expect(manifest.root).toBe("assets");
     expect(manifest.entries).toEqual([]);
   });

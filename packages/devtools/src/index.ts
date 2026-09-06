@@ -13,7 +13,7 @@
 import "./augmentation.js";
 
 // dom — the overlay's DOM target and the one stylesheet it injects.
-export { asDomCanvas, resolveDevtoolsTarget, type DevtoolsDomTarget } from "./dom/dom-target.js";
+export type { DevtoolsDomTarget } from "./dom/dom-target.js";
 export { DEVTOOLS_CLASS_NAMES, DEVTOOLS_STYLE_ELEMENT_ID } from "./dom/styles.js";
 
 // errors — the `IGX-155x` code space this package owns.
@@ -41,7 +41,6 @@ export {
   DEVTOOLS_SAMPLE_ORDER,
   DevtoolsService,
   type DevtoolsPanelHandle,
-  type DevtoolsServiceOptions,
 } from "./service.js";
 
 // settings — the `devtools` project settings section.

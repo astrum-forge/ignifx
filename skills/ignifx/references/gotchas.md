@@ -84,7 +84,7 @@ and, where one exists, the error code you will see. The eighteen most common are
     `worldPositionStays: true`; pass `false` to keep local values instead.
 26. **Do not assume radians.** Every public angle is in degrees (`rotate`, `eulerAngles`,
     `rotation2D`, `Quat.fromEulerDegrees`); a radian API always carries a `Rad` suffix
-    (`Quat.fromEulerRadians`, `Quat.toEulerRadiansToRef`).
+    (`Quat.fromEulerRad`, `Quat.toEulerRadToRef`).
 
 ## Components, schemas, signals
 

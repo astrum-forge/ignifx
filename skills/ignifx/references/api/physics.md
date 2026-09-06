@@ -511,7 +511,7 @@ Marks the entity's body for a rebuild, which removes this collider from it.
 > **rebuild**(): `void`
 
 Rebuilds the entity's body and shapes at the start of the next fixed step. Call it after
-changing a size, a centre, `isTrigger`, or the entity's scale.
+changing a size, a `center`, `isTrigger`, or the entity's scale.
 
 ###### Returns
 
@@ -1100,7 +1100,7 @@ Marks the entity's body for a rebuild, which removes this collider from it.
 > **rebuild**(): `void`
 
 Rebuilds the entity's body and shapes at the start of the next fixed step. Call it after
-changing a size, a centre, `isTrigger`, or the entity's scale.
+changing a size, a `center`, `isTrigger`, or the entity's scale.
 
 ###### Returns
 
@@ -2208,7 +2208,7 @@ Marks the entity's body for a rebuild, which removes this collider from it.
 > **rebuild**(): `void`
 
 Rebuilds the entity's body and shapes at the start of the next fixed step. Call it after
-changing a size, a centre, `isTrigger`, or the entity's scale.
+changing a size, a `center`, `isTrigger`, or the entity's scale.
 
 ###### Returns
 
@@ -2780,7 +2780,7 @@ Marks the entity's body for a rebuild, which removes this collider from it.
 > **rebuild**(): `void`
 
 Rebuilds the entity's body and shapes at the start of the next fixed step. Call it after
-changing a size, a centre, `isTrigger`, or the entity's scale.
+changing a size, a `center`, `isTrigger`, or the entity's scale.
 
 ###### Returns
 
@@ -3375,7 +3375,7 @@ Marks the entity's body for a rebuild, which removes this collider from it.
 > **rebuild**(): `void`
 
 Rebuilds the entity's body and shapes at the start of the next fixed step. Call it after
-changing a size, a centre, `isTrigger`, or the entity's scale.
+changing a size, a `center`, `isTrigger`, or the entity's scale.
 
 ###### Returns
 
@@ -3974,7 +3974,7 @@ Marks the entity's body for a rebuild, which removes this collider from it.
 > **rebuild**(): `void`
 
 Rebuilds the entity's body and shapes at the start of the next fixed step. Call it after
-changing a size, a centre, `isTrigger`, or the entity's scale.
+changing a size, a `center`, `isTrigger`, or the entity's scale.
 
 ###### Returns
 
@@ -5657,7 +5657,7 @@ Marks the entity's body for a rebuild, which removes this collider from it.
 > **rebuild**(): `void`
 
 Rebuilds the entity's body and shapes at the start of the next fixed step. Call it after
-changing a size, a centre, `isTrigger`, or the entity's scale.
+changing a size, a `center`, `isTrigger`, or the entity's scale.
 
 ###### Returns
 

@@ -73,12 +73,13 @@ export interface StateChange {
 }
 
 /**
- * What {@link AnimatorStateMachine.play} accepts.
+ * What {@link AnimatorStateMachine.play} and {@link Animator.play} accept. `Animator.play` forwards
+ * the object through unchanged, so the two take one type.
  *
  * @public
  */
-export interface PlayStateOptions {
-  /** Which layer to play on; the base layer when omitted. */
+export interface AnimatorPlayOptions {
+  /** Which layer to play on; the state's own layer when omitted. */
   readonly layer?: string;
   /** How long to crossfade for, in seconds. `0` — the default — cuts. */
   readonly transitionSeconds?: number;
@@ -355,7 +356,7 @@ export class AnimatorStateMachine {
    * @param options - The layer and the crossfade length.
    * @throws IgnifxError with code `IGX-1202` when the state is not declared.
    */
-  play(state: string, options?: PlayStateOptions): void {
+  play(state: string, options?: AnimatorPlayOptions): void {
     const target = this.#states.get(state);
     if (target === undefined) {
       throw unknownState(state);

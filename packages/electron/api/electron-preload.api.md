@@ -41,12 +41,17 @@ export interface HostDialogs {
 }
 
 // @public
+export interface HostFileFilter {
+    readonly extensions: readonly string[];
+    readonly name: string;
+}
+
+// @public
 export interface HostOpenDialogOptions {
     readonly buttonLabel?: string;
     readonly defaultPath?: string;
     readonly directories?: boolean;
     readonly files?: boolean;
-    // Warning: (ae-forgotten-export) The symbol "HostFileFilter" needs to be exported by the entry point preload.d.ts
     readonly filters?: readonly HostFileFilter[];
     readonly multiple?: boolean;
     readonly title?: string;

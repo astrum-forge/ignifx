@@ -111,7 +111,7 @@ the entity's Lite `SceneNode`, so there is no second copy of position, rotation,
 | Matrices         | `worldMatrix`, `worldMatrixVersion` (bumps whenever the world matrix changes), `lite` (unstable)                                                        |
 
 Units are metres, seconds, and **degrees**; a radian-valued API always carries a `Rad` suffix
-(`Quat.fromEulerRadians`). The space is left-handed, Y up, +Z forward. Writing a world-space setter
+(`Quat.fromEulerRad`). The space is left-handed, Y up, +Z forward. Writing a world-space setter
 decomposes against the parent's world matrix, so hot code writes local values.
 
 ## 5. Tags and layers

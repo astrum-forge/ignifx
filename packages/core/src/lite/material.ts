@@ -85,16 +85,17 @@ export type LiteStandardMaterial = StandardMaterialProps;
 const DEFAULT_ALPHA_CUTOFF = 0.5;
 
 /**
- * How a material's alpha channel is interpreted, in glTF's vocabulary.
+ * How a material's alpha channel is interpreted, in glTF's vocabulary, in the order the inspector
+ * lists them (`docs/architecture/07-rendering.md` §2.4).
  *
- * @internal
+ * @public
  */
 export const MATERIAL_ALPHA_MODES = ["opaque", "mask", "blend"] as const;
 
 /**
  * The union of the alpha modes a material can declare.
  *
- * @internal
+ * @public
  */
 export type MaterialAlphaMode = (typeof MATERIAL_ALPHA_MODES)[number];
 

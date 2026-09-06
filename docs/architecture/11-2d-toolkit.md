@@ -22,15 +22,14 @@ ignifx maps its 2D world (metres, **+Y up**, Z ignored for drawing) onto this. O
 
 ### 2.1 `Camera2D`
 
-| Field                                                              | Default        | Notes                                                                                                  |
-| ------------------------------------------------------------------ | -------------- | ------------------------------------------------------------------------------------------------------ |
-| `orthographicSize` (half-height, units)                            | 5              | zoom = viewportHeightPx / (2·size·PPU)                                                                 |
-| `pixelPerfect`                                                     | false          | snaps zoom to integers and camera position to whole pixels; sets `SpriteSampling: "nearest"` per atlas |
-| `referenceResolution` `[w, h]`                                     | `[640, 360]`   | with `pixelPerfect`, chooses the integer zoom that fits                                                |
-| `bounds` `{ min, max }` \| null                                    | null           | camera limits (Godot `limit_*`)                                                                        |
-| `follow` (entity ref), `followDamping`, `followOffset`, `deadZone` | —              | smooth follow with dead zone (a built-in script, `Camera2DFollow`, is the reference implementation)    |
-| `clearColor`                                                       | scene settings | `SpriteRendererOptions.clearValue`                                                                     |
-| `priority`                                                         | 0              | highest enabled wins                                                                                   |
+| Field                                                              | Default      | Notes                                                                                                  |
+| ------------------------------------------------------------------ | ------------ | ------------------------------------------------------------------------------------------------------ |
+| `orthographicSize` (half-height, units)                            | 5            | zoom = viewportHeightPx / (2·size·PPU)                                                                 |
+| `pixelPerfect`                                                     | false        | snaps zoom to integers and camera position to whole pixels; sets `SpriteSampling: "nearest"` per atlas |
+| `referenceResolution` `[w, h]`                                     | `[640, 360]` | with `pixelPerfect`, chooses the integer zoom that fits                                                |
+| `boundsMin` / `boundsMax` `{ x, y }` \| null                       | null         | camera limits (Godot `limit_*`), as two flat fields                                                    |
+| `follow` (entity ref), `followDamping`, `followOffset`, `deadZone` | —            | smooth follow with dead zone (a built-in script, `Camera2DFollow`, is the reference implementation)    |
+| `priority`                                                         | 0            | highest enabled wins                                                                                   |
 
 `screenToWorld(x, y)` / `worldToScreen(point)` use `sprite2DScreenToWorldToRef`/`sprite2DWorldToScreenToRef` plus the PPU conversion. `Camera2D` also configures the surface `maxDevicePixelRatio` for pixel-art (integer DPR).
 

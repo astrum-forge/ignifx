@@ -257,19 +257,19 @@ export class Quat {
     zDegrees: number,
     out: TOut,
   ): TOut {
-    return Quat.fromEulerRadiansToRef(degToRad(xDegrees), degToRad(yDegrees), degToRad(zDegrees), out);
+    return Quat.fromEulerRadToRef(degToRad(xDegrees), degToRad(yDegrees), degToRad(zDegrees), out);
   }
 
   /**
    * Builds a rotation from Euler angles in radians, in intrinsic XYZ order.
    *
-   * @param xRadians - Rotation about X, in radians.
-   * @param yRadians - Rotation about Y, in radians.
-   * @param zRadians - Rotation about Z, in radians.
+   * @param xRad - Rotation about X, in radians.
+   * @param yRad - Rotation about Y, in radians.
+   * @param zRad - Rotation about Z, in radians.
    * @returns A new quaternion. **Allocates.**
    */
-  static fromEulerRadians(xRadians: number, yRadians: number, zRadians: number): Quat {
-    return Quat.fromEulerRadiansToRef(xRadians, yRadians, zRadians, new Quat());
+  static fromEulerRad(xRad: number, yRad: number, zRad: number): Quat {
+    return Quat.fromEulerRadToRef(xRad, yRad, zRad, new Quat());
   }
 
   /**
@@ -277,24 +277,19 @@ export class Quat {
    * (`lib/math/quat-euler.js`) element for element, so a rotation built here means the same thing
    * to Lite's node hierarchy.
    *
-   * @param xRadians - Rotation about X, in radians.
-   * @param yRadians - Rotation about Y, in radians.
-   * @param zRadians - Rotation about Z, in radians.
+   * @param xRad - Rotation about X, in radians.
+   * @param yRad - Rotation about Y, in radians.
+   * @param zRad - Rotation about Z, in radians.
    * @param out - The quaternion to write.
    * @returns `out`.
    */
-  static fromEulerRadiansToRef<TOut extends MutableQuat>(
-    xRadians: number,
-    yRadians: number,
-    zRadians: number,
-    out: TOut,
-  ): TOut {
-    const cx = Math.cos(xRadians * 0.5);
-    const sx = Math.sin(xRadians * 0.5);
-    const cy = Math.cos(yRadians * 0.5);
-    const sy = Math.sin(yRadians * 0.5);
-    const cz = Math.cos(zRadians * 0.5);
-    const sz = Math.sin(zRadians * 0.5);
+  static fromEulerRadToRef<TOut extends MutableQuat>(xRad: number, yRad: number, zRad: number, out: TOut): TOut {
+    const cx = Math.cos(xRad * 0.5);
+    const sx = Math.sin(xRad * 0.5);
+    const cy = Math.cos(yRad * 0.5);
+    const sy = Math.sin(yRad * 0.5);
+    const cz = Math.cos(zRad * 0.5);
+    const sz = Math.sin(zRad * 0.5);
     out.set(
       sx * cy * cz + cx * sy * sz,
       cx * sy * cz - sx * cy * sz,
@@ -313,7 +308,7 @@ export class Quat {
    * @returns `out`.
    */
   static toEulerDegreesToRef<TOut extends MutableVec3>(q: QuatLike, out: TOut): TOut {
-    Quat.toEulerRadiansToRef(q, out);
+    Quat.toEulerRadToRef(q, out);
     out.set(radToDeg(out.x), radToDeg(out.y), radToDeg(out.z));
     return out;
   }
@@ -328,7 +323,7 @@ export class Quat {
    * @param out - The vector to write, in radians.
    * @returns `out`.
    */
-  static toEulerRadiansToRef<TOut extends MutableVec3>(q: QuatLike, out: TOut): TOut {
+  static toEulerRadToRef<TOut extends MutableVec3>(q: QuatLike, out: TOut): TOut {
     const qx = q.x;
     const qy = q.y;
     const qz = q.z;
