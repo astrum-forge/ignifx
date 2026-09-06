@@ -285,21 +285,23 @@ Status (2026-09-07): delivered on `main`. Met locally: all four templates carry 
 
 ## 7. MVP checklist (what "feature complete" means)
 
-- [ ] `createApp`, extensions, settings, headless mode
-- [ ] Entity/Component/Script lifecycle exactly as `01-lifecycle-and-time.md`
-- [ ] Scene format v1 with instances/overrides; save/load round trip
-- [ ] Assets with refcounts, progress, cancellation, manifest, hot reload
-- [ ] Rendering: cameras (persp/ortho), lights + shadows, meshes, glTF models, materials, environment, post stack (bloom/SMAA/tone), picking, device loss
-- [ ] Input action maps across keyboard/mouse/gamepad/touch, pointer lock, rebinding
-- [ ] Physics 3D with interpolation, triggers/collisions, character controller, queries
-- [ ] Audio buses, spatial sources, music
-- [ ] 2D: camera, sprites, animation, atlases, tilemaps, parallax, Y-sort, pixel-perfect, 2D physics
-- [ ] 3D: character and camera rigs, Animator, navigation
-- [ ] UI overlay host, anchors, text, virtual controls, i18n
-- [ ] Storage; Electron package and desktop templates
-- [ ] Devtools overlay and hot reload
-- [ ] Docs harness enforced; entry + subsystem skills; llms.txt; website shell with content
-- [ ] Four templates, examples gallery, benchmarks with baselines
+Ticked 2026-09-07 against the phase status lines above; "feature complete" here means delivered on `main` and gated, not released.
+
+- [x] `createApp`, extensions, settings, headless mode — Phase 1
+- [x] Entity/Component/Script lifecycle exactly as `01-lifecycle-and-time.md` — Phase 1
+- [x] Scene format v1 with instances/overrides; save/load round trip — Phase 2; template saves in Phase 12
+- [x] Assets with refcounts, progress, cancellation, manifest, hot reload — Phases 2 and 10
+- [x] Rendering: cameras (persp/ortho), lights + shadows, meshes, glTF models, materials, environment, post stack (bloom/SMAA/tone), picking, device loss — Phase 2; post stack before `start()` fixed in hardening
+- [x] Input action maps across keyboard/mouse/gamepad/touch, pointer lock, rebinding — Phase 3; rebinding screens in Phase 12
+- [x] Physics 3D with interpolation, triggers/collisions, character controller, queries — Phase 4
+- [x] Audio buses, spatial sources, music — Phase 5
+- [x] 2D: camera, sprites, animation, atlases, tilemaps, parallax, Y-sort, pixel-perfect, 2D physics — Phase 6
+- [x] 3D: character and camera rigs, Animator, navigation — Phase 7
+- [x] UI overlay host, anchors, text, virtual controls, i18n — Phase 8; `Menu`/`MenuStack` in hardening
+- [x] Storage; Electron package and desktop templates — Phase 9; security review in hardening
+- [x] Devtools overlay and hot reload — Phase 10
+- [x] Docs harness enforced; entry + subsystem skills; llms.txt; website shell with content — Phases 11 and 12
+- [x] Four templates, examples gallery, benchmarks with baselines — Phase 12
 
 ## 8. Post-1.0 roadmap (not committed)
 
