@@ -1,0 +1,31 @@
+{
+  "format": "ignifx.tilemap",
+  "formatVersion": 1,
+  "tileWidth": 16,
+  "tileHeight": 16,
+  "cellSize": 1,
+  "width": 8,
+  "height": 4,
+  "tilesets": [
+    {
+      "name": "terrain",
+      "atlas": "tiles.atlas.json",
+      "firstId": 1,
+      "tiles": [
+        { "id": 0, "frame": "ground_top", "collider": { "kind": "box", "x": 0, "y": 0, "width": 1, "height": 1 } },
+        { "id": 1, "frame": "dirt", "collider": { "kind": "box", "x": 0, "y": 0, "width": 1, "height": 1 } },
+        { "id": 2, "frame": "grass" }
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "name": "Terrain",
+      "sortingLayer": "Terrain",
+      "orderInLayer": 0,
+      "collision": true,
+      "tiles": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2]
+    }
+  ],
+  "objects": [{ "type": "spawn", "name": "Player", "x": 1.5, "y": 3, "width": 1, "height": 1, "properties": {} }]
+}

@@ -1,0 +1,72 @@
+/**
+ * Load a tilemap and give it collision
+ *
+ * Three components share the work. `Tilemap` owns the `.tilemap.json` — the grid, the tilesets and
+ * the per-tile colliders; `TilemapRenderer` draws it from an atlas, in chunks it culls; and
+ * `TilemapCollider2D` turns `tilemap.collisionData` into Rapier shapes. The collision data is merged
+ * per chunk into as few polygons as the tiles allow, so a wall is one shape, not one per cell.
+ *
+ * The link between the two is the data's `version`: 2D physics re-reads it every fixed step and
+ * rebuilds the shapes when it changes, so `tilemap.setTile(...)` reaches physics with no
+ * subscription of your own.
+ *
+ * Cell `(0, 0)` is the **bottom-left** of the map, because the world is +Y up — but the file stores
+ * its rows **top first**, like every editor, and the loader flips them. `worldToCell` speaks cells
+ * and is exact; tiles carry no component, so `app.twoD.pickAt` never returns one.
+ *
+ * The file's objects layer is spawned through factories registered by `type`; register them before
+ * the map loads. Every `sortingLayer` a layer names must exist in the core `sortingLayers` setting,
+ * or the layer reports `IGX-1107`.
+ *
+ * `level.tilemap.json` beside this file is what `2d/level.tilemap.json` resolves to.
+ */
+import { Tilemap, TilemapRenderer, twoD } from "@ignifx/2d";
+import { Vec2, createApp } from "@ignifx/core";
+import { TilemapCollider2D, physics2d } from "@ignifx/physics-2d";
+import type { SpriteAtlasAsset, TileObjectContext, TilemapAsset } from "@ignifx/2d";
+import type { Entity } from "@ignifx/core";
+
+const canvas = document.querySelector("canvas");
+if (!(canvas instanceof HTMLCanvasElement)) {
+  throw new Error("ignifx renders into a <canvas> element.");
+}
+
+const app = await createApp({
+  canvas,
+  settings: {
+    assets: { root: "assets" },
+    sortingLayers: { sortingLayers: ["Background", "Terrain", "Default"] },
+  },
+  extensions: [twoD({ pixelsPerUnit: 16 }), physics2d()],
+});
+
+// The objects layer of the file spawns through these, by `type`; register before the map loads.
+app.twoD.registerTileObjectFactory("spawn", (context: TileObjectContext): Entity | null => {
+  const player = context.world.createEntity(context.name);
+  player.transform.position2D = new Vec2(context.position.x, context.position.y);
+  return player;
+});
+
+const map = await app.assets.loadAsync<TilemapAsset>("2d/level.tilemap.json");
+const tiles = await app.assets.loadAsync<SpriteAtlasAsset>("2d/tiles.atlas.json");
+
+const level = app.world.createEntity("Level");
+const tilemap = level.addComponent(Tilemap, { chunkSize: 16 });
+tilemap.map = map;
+level.addComponent(TilemapRenderer, { sortingLayer: "Terrain", cullChunks: true }).atlas = tiles;
+
+// One static body for the whole level: the collider reads the merged polygons the tilemap built.
+level.addComponent(TilemapCollider2D).collisionData = tilemap.collisionData;
+
+await app.start();
+
+// Digging a hole re-merges the chunk and bumps `collisionData.version`; physics rebuilds it.
+const cell = tilemap.worldToCell({ x: 2.5, y: 0.5 }, new Vec2());
+tilemap.setTile(0, cell.x, cell.y, 0);
+app.log.info("tile under the player:", tilemap.getTile(0, cell.x, cell.y));
+
+window.addEventListener("pagehide", () => {
+  map.release();
+  tiles.release();
+  app.dispose();
+});

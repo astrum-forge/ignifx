@@ -1,0 +1,87 @@
+/**
+ * Play a positional one-shot and a music loop
+ *
+ * The mixer is a tree of named buses declared in a `.audio.json`: every sound plays on one, and a
+ * bus's volume multiplies through its children. `app.pause()` pauses the buses marked `pausable`,
+ * which is how a pause menu keeps its own clicks audible while the world goes quiet.
+ *
+ * A one-shot in the world is an `AudioSource` with `spatial: true` on a positioned entity: the pump
+ * hands Babylon Lite the entity's world matrix every frame, so the sound follows it. `playOneShot`
+ * overlaps rather than restarting, up to `maxInstances`, past which the oldest instance is stolen.
+ *
+ * Music is a `MusicPlayer`: two voices during a crossfade, on the `Music` bus. A fade in or out is a
+ * tween on the bus (`app.tweens` interpolates any numeric property, on the game clock), or
+ * `bus.setVolume(value, rampSeconds)` for a ramp the audio graph runs itself.
+ *
+ * Nothing is audible before a user gesture: `app.audio.state` reads `"locked"` until `unlock()` runs
+ * inside a real click handler. Plays made before then are queued, not lost. Note also that
+ * `clip.duration` is `null` for `.mp3`, `.ogg`, `.webm` and `.flac` under Node — use `.wav` in tests
+ * — and that changing `clip`, `bus`, `loop`, `maxInstances` or `spatial` rebuilds the voice and
+ * stops what is playing.
+ *
+ * `game.audio.json` beside this file is what `audio/game.audio.json` resolves to.
+ */
+import { AudioListener, AudioSource, MusicPlayer, audio } from "@ignifx/audio";
+import { createApp } from "@ignifx/core";
+import type { AudioClip } from "@ignifx/audio";
+
+const canvas = document.querySelector("canvas");
+if (!(canvas instanceof HTMLCanvasElement)) {
+  throw new Error("ignifx renders into a <canvas> element.");
+}
+
+const app = await createApp({
+  canvas,
+  settings: { assets: { root: "assets" } },
+  extensions: [audio({ buses: "audio/game.audio.json", masterVolume: 0.9 })],
+});
+
+// Awaited before `app.start()`: a completed load settles at once instead of waiting for a frame.
+const torch = await app.assets.loadAsync<AudioClip>("sfx/torch.wav");
+const theme = await app.assets.loadAsync<AudioClip>("music/theme.ogg");
+
+// The ears usually live on the camera entity; the listener enabled last takes them.
+app.world.createEntity("Main Camera").addComponent(AudioListener);
+
+const brazier = app.world.createEntity("Brazier");
+brazier.transform.localPosition.set(6, 1, 0);
+const crackle = brazier.addComponent(AudioSource, {
+  clip: torch,
+  bus: "SFX",
+  spatial: true,
+  maxInstances: 4,
+  minDistance: 2,
+  maxDistance: 40,
+  distanceModel: "inverse",
+});
+
+// A long track streams instead of decoding: mark it in its `.meta.json` sidecar, not here.
+const music = app.world.createEntity("Music").addComponent(MusicPlayer, { crossfadeSeconds: 3, loopTrack: true });
+
+await app.start();
+
+// A real gesture. Until it resolves, both plays below are held on their sources, in order.
+canvas.addEventListener(
+  "click",
+  () => {
+    void app.audio.unlock();
+  },
+  { once: true },
+);
+
+// `AudioSource.playOneShot` takes a volume and nothing else; pitch is a field, and Babylon Lite
+// fixes an instance's playback rate when it starts, so it applies to the *next* play.
+crackle.pitch = 0.95 + Math.random() * 0.1;
+crackle.playOneShot(torch.value, { volume: 0.6 });
+music.play(theme.value, { fadeIn: 2 });
+
+// Duck the music while something loud happens, then bring it back. One property, one tween.
+const musicBus = app.audio.bus("Music");
+app.tweens.to(musicBus, { volume: 0.2 }, { duration: 0.3, ease: "quadOut" });
+app.tweens.to(musicBus, { volume: 0.6 }, { duration: 1.2, delay: 1.5, ease: "quadIn" });
+
+window.addEventListener("pagehide", () => {
+  torch.release();
+  theme.release();
+  app.dispose();
+});

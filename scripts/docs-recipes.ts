@@ -12,6 +12,8 @@
  *   title, the rest is the body, and the leading ` * ` markers are stripped;
  * - everything after that comment is the recipe code, emitted as a fenced `ts` block, which the
  *   harness then type-checks like any other example;
+ * - a recipe whose first line after the doc comment is `// docs:run` is emitted as `ts run`
+ *   instead, so `examples-run` executes it under Node; the directive itself is consumed here;
  * - the code is capped at 80 lines (§5 "one recipe = one task, ≤ 80 lines").
  *
  * Output is `skills/ignifx/references/recipes/<name>.md`, one file per directory. The script only

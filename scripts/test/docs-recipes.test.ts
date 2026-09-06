@@ -16,17 +16,21 @@ const MAIN_TS = `/**
 export const answer = 42;
 `;
 
+/** The same recipe, asking the harness to execute its block. */
+const MAIN_TS_RUN = MAIN_TS.replace("*/\n", "*/\n// docs:run\n");
+
 /**
  * Writes a tree holding one recipe, optionally with an index that lists it.
  *
  * @param indexRow - Whether `references/recipes/README.md` gets a row for the recipe.
+ * @param source - The `main.ts` to write.
  * @returns Absolute path to the tree.
  */
-function writeTree(indexRow: boolean): string {
+function writeTree(indexRow: boolean, source: string = MAIN_TS): string {
   const root = mkdtempSync(path.join(tmpdir(), "ignifx-recipes-fixture-"));
   trees.push(root);
   mkdirSync(path.join(root, "examples", "recipes", "spawn-a-prefab"), { recursive: true });
-  writeFileSync(path.join(root, "examples", "recipes", "spawn-a-prefab", "main.ts"), MAIN_TS, "utf8");
+  writeFileSync(path.join(root, "examples", "recipes", "spawn-a-prefab", "main.ts"), source, "utf8");
   const output = path.join(root, "skills", "ignifx", "references", "recipes");
   mkdirSync(output, { recursive: true });
   const index = `# Recipes\n\n| Recipe | Task |\n|---|---|\n${
@@ -64,6 +68,18 @@ describe("docs:recipes", () => {
     );
     expect(page).toContain("# Spawn a prefab");
     expect(page).toContain("```ts");
+  });
+
+  it("emits a `ts run` block when the recipe carries the run directive", () => {
+    const root = writeTree(true, MAIN_TS_RUN);
+    expect(generate(root).code).toBe(0);
+    const page = readFileSync(
+      path.join(root, "skills", "ignifx", "references", "recipes", "spawn-a-prefab.md"),
+      "utf8",
+    );
+    expect(page).toContain("```ts run");
+    // The directive is consumed: it never reaches the page.
+    expect(page).not.toContain("docs:run");
   });
 
   it("fails when the recipe has no row in the index", () => {

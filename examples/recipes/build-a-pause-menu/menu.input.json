@@ -1,0 +1,47 @@
+{
+  "format": "ignifx.inputactions",
+  "formatVersion": 1,
+  "controlSchemes": [
+    { "name": "KeyboardMouse", "devices": ["Keyboard", "Mouse"] },
+    { "name": "Gamepad", "devices": ["Gamepad"] }
+  ],
+  "maps": [
+    {
+      "name": "Player",
+      "enabled": true,
+      "actions": [
+        {
+          "name": "pause",
+          "type": "button",
+          "bindings": [{ "path": "<Keyboard>/escape" }, { "path": "<Gamepad>/start" }]
+        }
+      ]
+    },
+    {
+      "name": "UI",
+      "enabled": false,
+      "actions": [
+        {
+          "name": "navigate",
+          "type": "vector2",
+          "bindings": [
+            { "path": "<Gamepad>/leftStick", "processors": ["deadzone(0.4)"], "scheme": "Gamepad" },
+            {
+              "composite": "2DVector",
+              "up": "<Keyboard>/arrowUp",
+              "down": "<Keyboard>/arrowDown",
+              "left": "<Keyboard>/arrowLeft",
+              "right": "<Keyboard>/arrowRight",
+              "scheme": "KeyboardMouse"
+            }
+          ]
+        },
+        {
+          "name": "back",
+          "type": "button",
+          "bindings": [{ "path": "<Keyboard>/escape" }, { "path": "<Gamepad>/buttonEast" }]
+        }
+      ]
+    }
+  ]
+}

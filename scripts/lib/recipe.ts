@@ -7,6 +7,16 @@ import { readText } from "./fs-tree.ts";
 /** Cap on the lines of code one recipe may contain (16-docs-harness-and-skill.md §5). */
 export const RECIPE_MAX_CODE_LINES = 80;
 
+/**
+ * Directive a recipe puts on the first line after its doc comment to have the harness **execute**
+ * the page's block, not only type-check it (`scripts/README.md`, "Executable examples").
+ *
+ * It is a line comment rather than a doc-comment tag because `jsdoc/check-tag-names` rejects any
+ * tag outside the TSDoc set the repository declares in `eslint.config.ts`. The line is consumed by
+ * the generator, so it never reaches the page and never counts against the 80-line cap.
+ */
+export const RECIPE_RUN_DIRECTIVE = "// docs:run";
+
 /** A recipe extracted from `examples/recipes/<name>/main.ts`. */
 export interface Recipe {
   /** Directory name, used for the output file name. */
@@ -17,6 +27,8 @@ export interface Recipe {
   readonly prose: string;
   /** The recipe source, with the leading doc comment removed. */
   readonly code: string;
+  /** Whether the block is tagged `ts run`, so `examples-run` executes it. */
+  readonly run: boolean;
   /** Repository-relative path of the source file. */
   readonly source: string;
 }
@@ -63,7 +75,9 @@ export function extractRecipe(name: string, file: string): RecipeResult {
   if (title === "") {
     return { recipe: null, errors: ["the leading doc comment must start with a one-line title"] };
   }
-  const code = source.slice(end + 2).trim();
+  const body = source.slice(end + 2).trim();
+  const run = body.startsWith(RECIPE_RUN_DIRECTIVE);
+  const code = run ? body.slice(RECIPE_RUN_DIRECTIVE.length).trim() : body;
   if (code === "") {
     return { recipe: null, errors: ["there is no code after the leading doc comment"] };
   }
@@ -73,7 +87,7 @@ export function extractRecipe(name: string, file: string): RecipeResult {
     return { recipe: null, errors: [`recipe is too long (${detail}); split it into two recipes`] };
   }
   return {
-    recipe: { name, title, prose: bodyLines.join("\n").trim(), code, source: `examples/recipes/${name}/main.ts` },
+    recipe: { name, title, prose: bodyLines.join("\n").trim(), code, run, source: `examples/recipes/${name}/main.ts` },
     errors: [],
   };
 }
@@ -89,6 +103,6 @@ export function renderRecipePage(recipe: Recipe): string {
   if (recipe.prose !== "") {
     lines.push(recipe.prose, "");
   }
-  lines.push("```ts", recipe.code, "```", "", `Source: \`${recipe.source}\``);
+  lines.push(recipe.run ? "```ts run" : "```ts", recipe.code, "```", "", `Source: \`${recipe.source}\``);
   return `${lines.join("\n")}\n`;
 }

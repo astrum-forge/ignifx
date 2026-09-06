@@ -66,7 +66,11 @@ One recipe is one directory, `examples/recipes/<name>/`, with `main.ts` as its e
 first block comment in `main.ts` is the prose — its first line is the title — and everything after
 it is the code, emitted as a fenced `ts` block that the harness then type-checks. The code is capped
 at 80 lines (`16-docs-harness-and-skill.md` §5); a longer recipe fails with the line count and the
-instruction to split it. `examples/recipes/` is not a workspace package: it carries its own
+instruction to split it. A recipe whose first line after the doc comment is `// docs:run` is emitted
+as a `ts run` block instead, so `examples-run` executes it; the directive is consumed by the
+generator, never reaches the page, and does not count against the cap. It is a line comment rather
+than a doc-comment tag because `jsdoc/check-tag-names` rejects tags outside the TSDoc set
+`eslint.config.ts` declares. `examples/recipes/` is not a workspace package: it carries its own
 `tsconfig.json` mapping `@ignifx/*` at the package sources, so the linters have a program to use,
 and the harness compiles the extracted block against the built `dist/` instead. The generator writes
 `<name>.md` only, never the hand-written `recipes/README.md` — so it fails when a recipe has no row

@@ -112,7 +112,7 @@ cube.addComponent(Spinner, { speed: 120 });
 await app.start();
 ```
 
-Without a GPU — how tests and tools run it — `createApp({ headless: true, clock: createManualClock() })`, then `app.step(1 / 60)` per frame and `app.dispose()`; the extensions example below is exactly that shape.
+Without a GPU — how tests and tools run it — `createApp({ headless: true, clock: createManualClock() })`, then `app.step(1 / 60)` per frame and `app.dispose()`; the extensions example below is exactly that shape. Pump frames rather than stepping a big delta (`app.step(dt)` is clamped by `time.maximumDeltaTime`, `0.1` s), and expect one `IGX-0706` warning from a world with no `Camera` — harmless headless, and `logLevel: "error"` silences it.
 
 ### Adding extensions
 
@@ -403,11 +403,19 @@ first two digits are the area.
 
 ## Recipes
 
-| Recipe (generated from `examples/recipes/`, so it compiles)                | Task                                                                           |
-| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| [`load-a-model`](references/recipes/load-a-model.md)                       | Load a `.glb` and show it with a `Model` component                             |
-| [`spawn-a-prefab`](references/recipes/spawn-a-prefab.md)                   | Load a `.prefab.json` as a `SceneAsset` and stamp copies of it out             |
-| [`spawn-a-prefab-on-click`](references/recipes/spawn-a-prefab-on-click.md) | Raycast from the camera on a click and instantiate a physics prefab at the hit |
+| Recipe (generated from `examples/recipes/`, so it compiles)                              | Task                                                                           |
+| ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| [`load-a-model`](references/recipes/load-a-model.md)                                     | Load a `.glb` and show it with a `Model` component                             |
+| [`spawn-a-prefab`](references/recipes/spawn-a-prefab.md)                                 | Load a `.prefab.json` as a `SceneAsset` and stamp copies of it out             |
+| [`spawn-a-prefab-on-click`](references/recipes/spawn-a-prefab-on-click.md)               | Raycast from the camera on a click and instantiate a physics prefab at the hit |
+| [`bind-an-action-and-read-it`](references/recipes/bind-an-action-and-read-it.md)         | Build an action document with two control schemes and read it in `update`      |
+| [`character-controller-3d`](references/recipes/character-controller-3d.md)               | Walk and jump a `CharacterController` in `fixedUpdate`, with coyote time       |
+| [`platformer-controller-2d`](references/recipes/platformer-controller-2d.md)             | Run and jump a `CharacterController2D` with autostep and snap-to-ground        |
+| [`animate-a-sprite-from-an-atlas`](references/recipes/animate-a-sprite-from-an-atlas.md) | Play a clip from a `.spriteanim.json` and flip the sprite by direction         |
+| [`play-a-one-shot-and-a-loop`](references/recipes/play-a-one-shot-and-a-loop.md)         | Play a positional one-shot on a bus and fade a music loop with a tween         |
+| [`build-a-pause-menu`](references/recipes/build-a-pause-menu.md)                         | Pause the app, swap action maps, and drive a `Dialog` by keyboard and pad      |
+
+All sixteen — tweens, saves, rebinding, tilemaps, physics queries, the third-person camera rig, devtools counters — are indexed in [`references/recipes/README.md`](references/recipes/README.md).
 
 ## File formats
 

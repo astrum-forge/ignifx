@@ -1,0 +1,39 @@
+{
+  "format": "ignifx.inputactions",
+  "formatVersion": 1,
+  "controlSchemes": [
+    { "name": "KeyboardMouse", "devices": ["Keyboard", "Mouse"] },
+    { "name": "Gamepad", "devices": ["Gamepad"] }
+  ],
+  "maps": [
+    {
+      "name": "Player",
+      "enabled": true,
+      "actions": [
+        {
+          "name": "move",
+          "type": "vector2",
+          "bindings": [
+            {
+              "composite": "2DVector",
+              "up": "<Keyboard>/w",
+              "down": "<Keyboard>/s",
+              "left": "<Keyboard>/a",
+              "right": "<Keyboard>/d",
+              "scheme": "KeyboardMouse"
+            },
+            { "path": "<Gamepad>/leftStick", "processors": ["deadzone(0.15)"], "scheme": "Gamepad" }
+          ]
+        },
+        {
+          "name": "jump",
+          "type": "button",
+          "bindings": [
+            { "path": "<Keyboard>/space", "scheme": "KeyboardMouse" },
+            { "path": "<Gamepad>/buttonSouth", "scheme": "Gamepad" }
+          ]
+        }
+      ]
+    }
+  ]
+}
