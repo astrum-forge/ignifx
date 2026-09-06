@@ -118,8 +118,12 @@ export interface ComponentTypeToken<C> {
 export interface AssetTypeToken<A> {
   /** The asset type name written into files when the extension is ambiguous. */
   readonly assetType?: string;
-  /** The instance shape the token names. */
-  readonly prototype: A;
+  /**
+   * The instance shape the token names. A class token carries it for free; a plain token for an
+   * asset that has no class (a scene, a prefab) leaves it out and fixes `A` through its annotation —
+   * see `SceneAssetToken`. Nothing reads it at runtime.
+   */
+  readonly prototype?: A;
 }
 
 /**

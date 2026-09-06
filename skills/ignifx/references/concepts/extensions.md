@@ -6,7 +6,7 @@ settings, and error codes with one app. Core features are extensions too. Ration
 
 ## 1. The contract
 
-```ts
+```ts run
 import { Phase, defineExtension } from "@ignifx/core";
 import type { App, Extension, ExtensionContext, System, SystemContext } from "@ignifx/core";
 
@@ -118,7 +118,7 @@ in production), and a value that fails its schema throws `IGX-0408` (production 
 defaults with a warning). Read a section back with `app.settings.section<S>(name)`, or the typed
 `app.settings.layers` / `.sortingLayers` / `.time`.
 
-```ts
+```ts run
 import { createApp } from "@ignifx/core";
 
 const app = await createApp({

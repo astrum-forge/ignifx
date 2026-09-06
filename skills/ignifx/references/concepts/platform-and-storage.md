@@ -17,7 +17,7 @@ Populated once, during `createApp`. Read it; never write it.
 | `locale`                         | BCP 47 tag, `"en-AU"`                                                      |
 | `reducedMotion`                  | `true` when the operating system asks for reduced motion                   |
 
-```ts
+```ts run
 import { createApp } from "@ignifx/core";
 
 const app = await createApp({ headless: true });
@@ -35,7 +35,7 @@ app.dispose();
 Five calls, asynchronous on every backend. Values are JSON, or bytes: a `Blob`, an `ArrayBuffer`, or
 any typed array is stored as octets and **reads back as a `Uint8Array`**.
 
-```ts
+```ts run
 import { createApp } from "@ignifx/core";
 
 interface AudioSettings {
@@ -66,7 +66,7 @@ up to 512 characters, and backends encode them for you.
 A save is a scene file: `serializeScene` out, `app.storage` in the middle, `instantiateScene` back.
 Numbers are canonicalized on the way in, so saving the same state twice produces the same bytes.
 
-```ts
+```ts run
 import { createApp, createSceneAsset, instantiateScene, serializeScene } from "@ignifx/core";
 import type { SceneFile } from "@ignifx/core";
 

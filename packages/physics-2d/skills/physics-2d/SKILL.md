@@ -31,7 +31,7 @@ A world uses **either** `physics()` **or** `physics2d()`. Registering both throw
   game that draws its own graphics can use 2D physics on its own.
 - Register it like any extension; nothing happens at import time.
 
-```ts
+```ts run
 import { createApp } from "@ignifx/core";
 import { physics2d } from "@ignifx/physics-2d";
 
@@ -77,7 +77,7 @@ per fixed step:
 
 ## First app
 
-```ts
+```ts run
 import { createApp } from "@ignifx/core";
 import { BoxCollider2D, physics2d, Rigidbody2D } from "@ignifx/physics-2d";
 
@@ -132,7 +132,7 @@ and `rapier` (the unstable escape hatch). Full signatures:
 
 ### A trigger zone
 
-```ts
+```ts run
 import { Script } from "@ignifx/core";
 import type { ScriptCallbacks } from "@ignifx/core";
 import type { TriggerEvent2D } from "@ignifx/physics-2d";
@@ -155,7 +155,7 @@ Rapier reports both colliders, so 2D has none of the identity gaps 3D physics do
 
 ### Platformer movement
 
-```ts
+```ts run
 import { Script, Vec2 } from "@ignifx/core";
 import type { ScriptCallbacks } from "@ignifx/core";
 import { CharacterController2D } from "@ignifx/physics-2d";
@@ -189,7 +189,7 @@ the script owns the vertical velocity, coyote time, and variable jump height.
 
 ### A raycast
 
-```ts
+```ts run
 import { createApp } from "@ignifx/core";
 import { BoxCollider2D, physics2d } from "@ignifx/physics-2d";
 
@@ -207,7 +207,7 @@ if (hit !== null) {
 
 ### Tilemap collision
 
-```ts
+```ts run
 import { createApp } from "@ignifx/core";
 import { physics2d, TilemapCollider2D } from "@ignifx/physics-2d";
 

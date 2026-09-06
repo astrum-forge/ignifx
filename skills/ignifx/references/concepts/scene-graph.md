@@ -144,7 +144,7 @@ emits a signal its parent connects to. There is no name-based broadcast.
 
 Building a hierarchy and reading a world position without allocating:
 
-```ts
+```ts run
 import { Vec3, createApp } from "@ignifx/core";
 
 const app = await createApp({ headless: true });
@@ -164,7 +164,7 @@ app.log.info("hand at", worldPosition.x, worldPosition.y, worldPosition.z);
 
 Connecting a signal with an owner, so it disconnects itself:
 
-```ts
+```ts run
 import { Script } from "@ignifx/core";
 import type { Entity, ScriptCallbacks } from "@ignifx/core";
 

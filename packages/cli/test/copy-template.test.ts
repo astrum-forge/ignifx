@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -112,17 +112,30 @@ describe("copyTemplate", () => {
   });
 
   it("skips the default ignore list at every depth", async () => {
-    expect(DEFAULT_IGNORED_ENTRIES).toEqual(["node_modules", "dist", ".turbo"]);
+    expect(DEFAULT_IGNORED_ENTRIES).toEqual(["node_modules", "dist", ".turbo", "out", "release", "coverage"]);
     await writeFileAt(join(templateDir, "node_modules", "left-pad", "index.js"), "");
     await writeFileAt(join(templateDir, "dist", "bundle.js"), "");
     await writeFileAt(join(templateDir, "src", ".turbo", "log.txt"), "");
+    await writeFileAt(join(templateDir, "out", "main", "index.js"), "");
+    await writeFileAt(join(templateDir, "release", "mac-arm64", "Game.app", "Contents", "Info.plist"), "");
 
     const result = await copyTemplate({ templateDir, targetDir });
 
     expect(result.files.some((file) => file.includes("node_modules"))).toBe(false);
     expect(result.files.some((file) => file.includes("dist"))).toBe(false);
     expect(result.files.some((file) => file.includes(".turbo"))).toBe(false);
+    expect(result.files.some((file) => file.startsWith("out/") || file.startsWith("release/"))).toBe(false);
     await expect(readdir(targetDir)).resolves.not.toContain("node_modules");
+  });
+
+  it("skips symlinks instead of following them, which is what a built Electron .app leaves behind", async () => {
+    await writeFileAt(join(templateDir, "vendor", "real", "lib.js"), "export const lib = 1;\n");
+    await symlink(join(templateDir, "vendor", "real"), join(templateDir, "vendor", "linked"), "dir");
+    await symlink(join(templateDir, "vendor", "real", "lib.js"), join(templateDir, "vendor", "lib-link.js"));
+    const result = await copyTemplate({ templateDir, targetDir });
+    expect(result.files).toContain("vendor/real/lib.js");
+    expect(result.files.some((file) => file.includes("linked") || file.includes("lib-link"))).toBe(false);
+    await expect(readdir(join(targetDir, "vendor"))).resolves.toEqual(["real"]);
   });
 
   it("honours a caller-supplied ignore list", async () => {

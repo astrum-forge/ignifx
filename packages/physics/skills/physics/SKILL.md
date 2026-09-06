@@ -28,7 +28,7 @@ through, or has to be asked "what is under the crosshair".
   binary out of the installed `@babylonjs/havok` package, so a headless test needs no setup.
 - Register it like any extension; nothing happens at import time.
 
-```ts
+```ts run
 import { createApp, physics } from "ignifx";
 
 const app = await createApp({ headless: true, extensions: [physics()] });
@@ -73,7 +73,7 @@ per fixed step:
 
 ## First app
 
-```ts
+```ts run
 import { BoxCollider, createApp, physics, Rigidbody } from "ignifx";
 
 const app = await createApp({ headless: true, extensions: [physics()] });
@@ -147,7 +147,7 @@ Gravity is **not** applied for you — a bare controller is purely kinematic.
 
 ### A trigger volume
 
-```ts
+```ts run
 import { BoxCollider, createApp, physics, Rigidbody, Script } from "ignifx";
 import type { ScriptCallbacks, TriggerEvent } from "ignifx";
 
@@ -181,7 +181,7 @@ for (let step = 0; step < 120; step += 1) {
 
 ### A raycast under the crosshair
 
-```ts
+```ts run
 import { BoxCollider, createApp, LayerMask, physics } from "ignifx";
 
 const app = await createApp({ headless: true, extensions: [physics()] });
@@ -199,7 +199,7 @@ if (hit !== null) {
 
 ### Layers that ignore each other
 
-```ts
+```ts run
 // ignifx.config.ts
 export default {
   layers: ["Default", "Ground", "Ghost"],

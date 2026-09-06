@@ -15,13 +15,14 @@
  * - the code is capped at 80 lines (§5 "one recipe = one task, ≤ 80 lines").
  *
  * Output is `skills/ignifx/references/recipes/<name>.md`, one file per directory. The script only
- * writes those files, so the hand-written `recipes/README.md` survives regeneration.
+ * writes those files, so the hand-written `recipes/README.md` survives regeneration — and because
+ * it survives, it can go stale, so the run fails when a recipe has no row in that index.
  *
  * Options: `--root <dir>` runs against a tree other than the repository (used by the tests).
  */
 import path from "node:path";
 import { parseArguments } from "./lib/args.ts";
-import { exists, listDirectories, writeGeneratedFile } from "./lib/fs-tree.ts";
+import { exists, listDirectories, readText, writeGeneratedFile } from "./lib/fs-tree.ts";
 import { log, logError } from "./lib/log.ts";
 import { extractRecipe, renderRecipePage, RECIPE_MAX_CODE_LINES } from "./lib/recipe.ts";
 import { repositoryRoot } from "./lib/workspace.ts";
@@ -38,7 +39,7 @@ function main(): number {
   const outputDirectory = path.join(root, "skills", "ignifx", "references", "recipes");
 
   const errors: string[] = [];
-  let written = 0;
+  const written: string[] = [];
   for (const name of listDirectories(recipesDirectory)) {
     const entry = path.join(recipesDirectory, name, "main.ts");
     if (!exists(entry)) {
@@ -54,7 +55,17 @@ function main(): number {
       continue;
     }
     writeGeneratedFile(path.join(outputDirectory, `${name}.md`), renderRecipePage(recipe.recipe));
-    written += 1;
+    written.push(name);
+  }
+
+  const index = path.join(outputDirectory, "README.md");
+  if (exists(index)) {
+    const source = readText(index);
+    for (const name of written) {
+      if (!source.includes(`](${name}.md)`)) {
+        errors.push(`examples/recipes/${name}: no row in references/recipes/README.md — add one`);
+      }
+    }
   }
 
   if (errors.length > 0) {
@@ -64,7 +75,7 @@ function main(): number {
     logError(`docs:recipes — recipe code is capped at ${String(RECIPE_MAX_CODE_LINES)} lines`);
     return 1;
   }
-  log(`docs:recipes — ${String(written)} ${written === 1 ? "recipe" : "recipes"}`);
+  log(`docs:recipes — ${String(written.length)} ${written.length === 1 ? "recipe" : "recipes"}`);
   return 0;
 }
 

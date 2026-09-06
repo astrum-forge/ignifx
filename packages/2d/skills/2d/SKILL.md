@@ -181,7 +181,7 @@ if (canvas instanceof HTMLCanvasElement) {
 
 ### Picking a sprite under the pointer
 
-```ts
+```ts run
 import { Script } from "ignifx";
 
 export class ClickToSelect extends Script {

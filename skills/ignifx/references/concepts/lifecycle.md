@@ -103,7 +103,7 @@ Writing zero or a negative `fixedDeltaTime`/`maximumDeltaTime` throws `IGX-0108`
 
 A script implements only the callbacks it needs, and reports them through a `Signal`:
 
-```ts
+```ts run
 import { Script, Signal } from "@ignifx/core";
 import type { ScriptCallbacks } from "@ignifx/core";
 
@@ -129,7 +129,7 @@ export class LifecycleProbe extends Script implements ScriptCallbacks {
 
 A deterministic headless loop, the shape every unit test uses:
 
-```ts
+```ts run
 import { Script, createApp, createManualClock, f32 } from "@ignifx/core";
 
 class Drift extends Script.define({ speed: f32(1) }) {

@@ -258,11 +258,22 @@ jobs:
       # against the base commit; the `docs-not-needed` label waives the skill-change half of the
       # API-report gate (16-docs-harness-and-skill.md §4), with the justification in the PR body.
       - run: pnpm docs:harness -- ${{ github.event_name == 'pull_request' && format('--base {0}', github.event.pull_request.base.sha) || '' }} ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'docs-not-needed') && '--allow-docs-not-needed' || '' }}
+      # Every generator, not just docs:api: the drift step below covers everything they write.
       - run: pnpm docs:api
+      - run: pnpm docs:schemas
+      - run: pnpm docs:recipes
+      - run: pnpm docs:llms
       # Generated documentation is committed and never hand-edited (standards §15). A diff here
-      # means someone changed the public API without regenerating the references in the same PR.
+      # means someone changed the public API, a component schema, a recipe, or a skill page without
+      # regenerating the references in the same PR.
       - name: Fail on generated-docs drift
-        run: git diff --exit-code -- skills/ignifx/references/api 'packages/*/api'
+        run: |
+          git diff --exit-code -- \
+            skills/ignifx/references/api \
+            skills/ignifx/references/formats \
+            skills/ignifx/references/recipes \
+            website/public/llms.txt \
+            'packages/*/api'
 
   deps:
     name: deps

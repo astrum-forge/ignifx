@@ -10,7 +10,6 @@ import { runCommand } from "./run.ts";
 import type { CheckResult, HarnessContext } from "./check-result.ts";
 
 const API_REPORT = /^packages\/([^/]+)\/api\/.+\.api\.md$/u;
-const PACKAGE_SOURCE = /^packages\/([^/]+)\/src\/.+$/u;
 
 /**
  * Lists the repository-relative paths that differ from a base ref.
@@ -68,7 +67,7 @@ export function checkApiReportGate(context: HarnessContext): CheckResult {
 }
 
 /**
- * Runs the `freshness` check: a package whose `src/` changed must ship a regenerated API reference.
+ * Runs the `freshness` check: a package whose API report changed must ship a regenerated API reference.
  *
  * @param context - The tree being inspected.
  * @returns The check result.
@@ -82,9 +81,12 @@ export function checkFreshness(context: HarnessContext): CheckResult {
   if (changed === null) {
     return failed("freshness", `could not diff against \`${base}\``);
   }
+  // "The package's last public change" (16 §4) is the API report changing, not any `src/` edit: a
+  // refactor that leaves the public surface identical regenerates to the very same reference, so
+  // keying on `src/` reported it stale for nothing (found in Phase 11).
   const touched = new Set<string>();
   for (const file of changed) {
-    const match = PACKAGE_SOURCE.exec(file);
+    const match = API_REPORT.exec(file);
     if (match !== null && match[1] !== undefined) {
       touched.add(match[1]);
     }
@@ -96,7 +98,7 @@ export function checkFreshness(context: HarnessContext): CheckResult {
       continue;
     }
     if (!changed.includes(reference)) {
-      stale.push(`${reference} was not regenerated although packages/${directory}/src/ changed`);
+      stale.push(`${reference} was not regenerated although packages/${directory}/api/ changed`);
     }
   }
   if (stale.length > 0) {
@@ -105,5 +107,5 @@ export function checkFreshness(context: HarnessContext): CheckResult {
       "fix: run `pnpm docs:api`",
     ]);
   }
-  return passed("freshness", `${String(touched.size)} packages changed against ${base}, references current`);
+  return passed("freshness", `${String(touched.size)} API reports changed against ${base}, references current`);
 }

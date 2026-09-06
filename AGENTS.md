@@ -14,11 +14,15 @@ Precedence when documents conflict: constitution → standards → architecture 
 
 ## Status
 
-Phases 3 (Input), 4 (3D physics), 5 (Audio), 6 (2D toolkit, 2D physics, 2D templates), 7 (3D toolkit, core tweens, 3D templates), 8 (UI), 9 (platform, storage, Electron, desktop templates), and 10 (devtools, script hot reload) were delivered on 2026-09-06; Phase 11 (docs harness and skill completion) is next. No packages are published. `@ignifx/core` holds the Phase 1 kernel — `createApp`, the extension host, `Time` and the phase scheduler, `World`/`SceneInstance`/`Entity`/`Transform`, `Component`/`Script` with schemas and coroutines, `Signal`, layers, math, the `IGX-####` error space — plus the Phase 2 layer: `Camera`, `Light`, `MeshRenderer`, `Model`, `Environment`, `PostProcessStack` and the Babylon Lite render adapter, `app.renderer` and the `rendering` settings section, `app.assets` with reference-counted handles and the core loaders, the `ignifx.scene` file format with instances and overrides, and `app.events`. `@ignifx/vite-plugin` ships the build-time half: manifest, sidecars, JSON Schema validation, HMR. `@ignifx/input` holds the Phase 3 layer: `app.input` with its devices, action maps, bindings, composites and processors, control schemes, pointer lock and cursor, the `ignifx.inputactions` asset, runtime rebinding, `PlayerInput`, and the headless `simulate` API. The `ignifx` umbrella re-exports the core and input surfaces. `examples/hello-cube` and `examples/gltf-viewer` are real apps; `examples/recipes/*` are the compiled sources behind the skill's recipe pages. Every other `@ignifx/*` package is still an empty skeleton.
+Phases 0–11 of `docs/plan/engineering-plan.md` were delivered on `main` between 2026-09-05 and 2026-09-06; Phase 12 (templates polish, examples gallery, website content, benchmarks) is next. No packages are published. Every `@ignifx/*` package is real: `core` (kernel, rendering, assets, scene format, tweens, platform, storage, hot reload), `vite-plugin` (manifest, sidecars, validation, HMR, `virtual:ignifx/*` with shipped `client` types), `input`, `physics` (Havok), `audio`, `2d`, `physics-2d` (Rapier), `3d`, `ui`, `electron`, `devtools`, `cli` (`create-ignifx`, with `--desktop`), and the `ignifx` umbrella that re-exports all of them. `templates/*` are the four playable templates with desktop variants and visual goldens; `examples/hello-cube` and `examples/gltf-viewer` are real apps; `examples/recipes/*` are the compiled sources behind the skill's recipe pages.
 
 ## Commands
 
-Use Node 24 (`.nvmrc`); dependency-cruiser refuses to run on Node 25. `pnpm install` · `pnpm dev` · `pnpm check` (format, lint, typecheck, unit tests, API report, docs harness) · `pnpm test` · `pnpm test:browser` · `pnpm build` · `pnpm pack-check` · `pnpm deps` · `pnpm docs:api` · `pnpm docs:schemas` · `pnpm docs:recipes` · `pnpm docs:harness` · `pnpm changeset`. See `CONTRIBUTING.md`.
+Use Node 24 (`.nvmrc`); dependency-cruiser refuses to run on Node 25. `pnpm install` · `pnpm dev` · `pnpm check` (format, lint, typecheck, unit tests, API report, docs harness) · `pnpm test` · `pnpm test:browser` · `pnpm build` · `pnpm pack-check` · `pnpm deps` · `pnpm docs:api` · `pnpm docs:schemas` · `pnpm docs:recipes` · `pnpm docs:llms` · `pnpm docs:harness` · `pnpm changeset`. See `CONTRIBUTING.md`.
+
+## Using the skill
+
+The entry skill is `skills/ignifx/SKILL.md`; subsystem skills sit at `packages/<name>/skills/<name>/SKILL.md`. In this repository Claude Code discovers it through the `.claude/skills/ignifx` symlink. In another project, copy `skills/ignifx/` into `.claude/skills/`, or — once the umbrella is published, which ships `skills/` — run `npx skills add astrumforge/ignifx`.
 
 ## Non-negotiable rules for agents
 
@@ -28,6 +32,16 @@ Use Node 24 (`.nvmrc`); dependency-cruiser refuses to run on Node 25. `pnpm inst
 - Never write under `docs/migrations/` while the version is `0.x`; never hand-edit generated files.
 - Verify any Babylon Lite claim against the pinned version's `index.d.ts`, not against memory or Lite's prose docs (they disagree in places).
 - Run `pnpm check` before opening a pull request and paste the result. Humans approve merges.
+
+## Repository lessons every agent should know
+
+- A package with tests needs `packages/<name>/test/tsconfig.json` (copy `packages/core/test/tsconfig.json`), or the type-aware linter types Node built-ins as `error`.
+- The pre-commit hook formats and reports lint; it never auto-fixes, and it skips generator-written template documents. Run `pnpm lint` after committing anyway.
+- Never pipe `git commit` through `head`: the hook prints every staged path and an early exit aborts the commit. Commitlint scopes are a fixed list (see `CONTRIBUTING.md`).
+- API Extractor's non-local `api-report` fails on warnings; run it, not only `api-report:update`, before claiming a package is green. `pnpm docs:harness` regenerates every generated page in place — use `--no-regenerate` while another agent is editing a package.
+- Asset loads awaited before `app.start()` settle as soon as they finish; after `start()` they settle in `PreUpdate`, so a headless test must `app.step()`. Systems keep running while the app is paused with a non-zero `dt`; an animating system checks `time.paused` itself.
+- The engine speaks backing-store pixels everywhere (`canvas.width`/`height`): `Camera.worldToScreen`, `pickAsync`, `<Pointer>/position`. DOM code converts.
+- Skill examples are compiled by the harness; run yours once in Node before shipping them (the `ts run` tag makes the harness do it).
 
 ## Layout
 

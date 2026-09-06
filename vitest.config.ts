@@ -71,7 +71,14 @@ export default defineConfig({
         test: {
           name: "node",
           environment: "node",
-          include: ["packages/*/test/**/*.test.ts", "tools/*/test/**/*.test.ts", "benchmarks/**/*.test.ts"],
+          include: [
+            "packages/*/test/**/*.test.ts",
+            "tools/*/test/**/*.test.ts",
+            // The documentation harness (`scripts/**`) is tooling, not a package, so its tests
+            // live beside it rather than under `packages/`.
+            "scripts/test/**/*.test.ts",
+            "benchmarks/**/*.test.ts",
+          ],
           exclude: ["**/*.browser.test.ts", "**/node_modules/**", "**/dist/**"],
         },
       },

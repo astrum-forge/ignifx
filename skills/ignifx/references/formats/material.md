@@ -69,7 +69,7 @@ A material does not need a file. `pbrMaterialDefinition(overrides?)` and
 `standardMaterialDefinition(overrides?)` build a `MaterialDefinition`, and
 `createMaterialAsset(app, definition, textures)` publishes it at a `memory:` address:
 
-```ts
+```ts run
 import { createApp, createMaterialAsset, pbrMaterialDefinition } from "@ignifx/core";
 
 const app = await createApp({ headless: true });

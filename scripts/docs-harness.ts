@@ -4,14 +4,14 @@
  * (`docs/architecture/16-docs-harness-and-skill.md` §4, `CONSTITUTION.md` §5.2 and §5.5).
  *
  * Each rule is a named check that prints one line and either passes, fails, or reports itself as
- * skipped; the process exits 1 if any check failed. Checks implemented at the Phase 0 skeleton
- * level:
+ * skipped; the process exits 1 if any check failed. The checks:
  *
  * | Check | What it enforces |
  * |---|---|
- * | `skill-lint` | SKILL.md size, frontmatter, links, `references/` nesting, deprecation and migration rules |
+ * | `skill-lint` | SKILL.md size, frontmatter, section template, links, nesting, deprecation, migration, wording and import rules |
  * | `examples-compile` | every fenced `ts` block in the skills type-checks against the built packages |
- * | `regeneration-diff` | `docs:api` + `docs:schemas` + `docs:recipes` reproduce the committed output |
+ * | `examples-run` | every block tagged `ts run` executes under Node and exits 0 |
+ * | `regeneration-diff` | `docs:api` + `docs:schemas` + `docs:recipes` + `docs:llms` reproduce the committed output |
  * | `migrations-guard` | `docs/migrations/` holds only `README.md` while the version is `0.x` |
  * | `api-report-gate` | a changed `api/*.api.md` ships with a changeset and a skill update |
  * | `freshness` | a package whose `src/` changed ships a regenerated `references/api/<pkg>.md` |
@@ -26,7 +26,7 @@
  */
 import path from "node:path";
 import { parseArguments } from "./lib/args.ts";
-import { checkExamplesCompile } from "./lib/check-examples.ts";
+import { checkExamplesCompile, checkExamplesRun } from "./lib/check-examples.ts";
 import { checkApiReportGate, checkFreshness } from "./lib/check-pull-request.ts";
 import { checkMigrationsGuard, checkRegeneration } from "./lib/check-regeneration.ts";
 import { skipped } from "./lib/check-result.ts";
@@ -75,6 +75,7 @@ function main(): number {
   const results: CheckResult[] = [
     checkSkillLint(context, roots),
     checkExamplesCompile(context, roots),
+    checkExamplesRun(context, roots),
     parsed.flags.has("no-regenerate")
       ? skipped("regeneration-diff", "SKIPPED (--no-regenerate)")
       : checkRegeneration(context),

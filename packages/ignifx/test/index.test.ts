@@ -241,6 +241,7 @@ const expectedExports = [
   "MemoryStorageBackend",
   "NAMESPACE_SEGMENT_MAX_LENGTH",
   "STORAGE_KEY_MAX_LENGTH",
+  "SceneAssetToken",
 ];
 
 // The @ignifx/input value surface. `VERSION` and `describeSchemas` are deliberately absent: both

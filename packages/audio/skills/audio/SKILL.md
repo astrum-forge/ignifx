@@ -147,7 +147,7 @@ Lite cannot back. Two `play()` calls on one source return the same object with `
 
 ### Play a footstep with random pitch, eight at a time
 
-```ts
+```ts run
 import { Script } from "@ignifx/core";
 import type { ScriptCallbacks } from "@ignifx/core";
 import { AudioSource } from "@ignifx/audio";
@@ -304,7 +304,7 @@ A clip streams instead of decoding when its `.meta.json` sidecar says so:
 - **Do not** load a five-minute track as a static clip. Mark it streaming; it plays from a media
   element rather than decoding into memory.
 - **Do not** put an `AudioListener` on more than one enabled entity and expect a particular one to
-  win: the most recently enabled listener takes the ears.
+  win: the listener enabled last takes the ears.
 - **Do not** call `app.audio.bus("Ambience")` for a bus the tree does not declare — that is
   `IGX-1001`. Declare it in `.audio.json`, in `audio({ defaultBuses })`, or with `createBus`.
 - **Do not** await an `.audio.json` load in `onStart`: delivery needs a frame. Sources created

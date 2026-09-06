@@ -163,7 +163,9 @@ Everything but `isElectron` and `versions` rejects with `IGX-1462` in a browser 
 
 Unchanged API, different backend: `userData/<namespace>/<encoded key>.json` (or `.bin`), written through a temporary file and a `rename` so a crash leaves the whole old value or the whole new one. The names are byte-identical to `@ignifx/core`'s Node file backend, so the same save file reads back outside Electron.
 
-## Building and shipping
+## Recipes
+
+### Building and shipping
 
 | Command              | Does                                                                    |
 | -------------------- | ----------------------------------------------------------------------- |
@@ -174,6 +176,10 @@ Unchanged API, different backend: `userData/<namespace>/<encoded key>.json` (or 
 Add `--mac`, `--win`, or `--linux` to `electron-builder` for a real installer, on a runner of that platform: cross-compilation is not available for most targets. Code signing, notarization, and auto-update are documented after 1.0.
 
 **Per-OS caveats.** macOS arm64 is verified end to end. Windows is NSIS (Squirrel needs `electron-winstaller`, whose install script this repository does not allow) and is **configuration only** — written, never built. Linux is likewise configuration only; it needs `enable-features=Vulkan`, which `applyWebGpuSwitches` appends, and a display (`xvfb-run`) on CI.
+
+## File formats
+
+None of its own. It serves whatever `@ignifx/vite-plugin` built — the manifest and the content-hashed assets — over `ignifx://`, unchanged.
 
 ## Gotchas
 
@@ -187,10 +193,6 @@ Add `--mac`, `--win`, or `--linux` to `electron-builder` for a real installer, o
 | Importing `@ignifx/electron/main` from the renderer. It pulls `electron` and Node built-ins into a bundle that has neither.                                                                                    | Import the root `@ignifx/electron` in the renderer; `/main` and `/preload` belong to their own processes.                             |
 | Expecting `webContents.getWebPreferences()`. It does not exist in Electron 44.                                                                                                                                 | `getLastWebPreferences()` exists at runtime (though not in `electron.d.ts`), or assert `windowOptionsFor(...)` — it is pure.          |
 | Scaffolding with `--desktop` you did not want. The three Electron build tools are large binary downloads.                                                                                                      | Leave `--desktop` off; the scaffold stays browser-only and `electron()` is still there, inert.                                        |
-
-## File formats
-
-None of its own. It serves whatever `@ignifx/vite-plugin` built — the manifest and the content-hashed assets — over `ignifx://`, unchanged.
 
 ## Deprecated (current window)
 

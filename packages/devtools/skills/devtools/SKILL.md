@@ -83,7 +83,7 @@ debug line, and `panel(name)`, `select(entity)` and the signals behave normally.
 A complete headless program. `app.devtools.open()` does nothing without a canvas, which is the
 point: the same code is the same code in a test.
 
-```ts
+```ts run
 import { createApp, f32, Script } from "ignifx";
 import { devtools } from "@ignifx/devtools";
 
@@ -143,7 +143,7 @@ over them.
 Everything on the Stats panel comes from `app.diagnostics`, so a test or a HUD can read the same
 values without opening anything.
 
-```ts
+```ts run
 import { createApp } from "ignifx";
 import { devtools } from "@ignifx/devtools";
 
@@ -168,7 +168,7 @@ app.dispose();
 `app.log`'s sink is fixed when the app is built, so the game installs the sink and hands the _same
 object_ to both calls.
 
-```ts
+```ts run
 import { createApp } from "ignifx";
 import { createDevtoolsLogSink, devtools } from "@ignifx/devtools";
 
@@ -185,7 +185,7 @@ app.dispose();
 
 ### Open a specific panel on a key of your own
 
-```ts
+```ts run
 import { createApp } from "ignifx";
 import { devtools } from "@ignifx/devtools";
 

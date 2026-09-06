@@ -65,11 +65,27 @@ The `assets` settings section sets `root`, `preload`, `concurrency`, `gcDelay`, 
 wait for, so a completed load settles at once — preload, `await`, then start. Once running: a handle's `state` flips and its `promise` settles at one point per frame, so "is this ready?"
 has one answer for the whole frame.
 
+A Node app has no `fetch` for project files, so it brings its own:
+
+```ts run
+import { readFile } from "node:fs/promises";
+import { pathToFileURL } from "node:url";
+import { createApp } from "@ignifx/core";
+import type { FetchLike } from "@ignifx/core";
+
+// How a Node app loads real project files: resolve each asset URL under the project directory.
+const projectRoot = pathToFileURL(`${process.cwd()}/`);
+const fetchFromDisk: FetchLike = async (url) => new Response(await readFile(new URL(String(url), projectRoot)));
+
+const app = await createApp({ headless: true, fetch: fetchFromDisk });
+app.dispose();
+```
+
 ## 4. `asset()` fields
 
 The runtime value of an `asset()` schema field is the **loaded handle**, not an address:
 
-```ts
+```ts run
 import { Component, MeshAsset, MeshRenderer, asset, createApp } from "@ignifx/core";
 
 class Pickup extends Component.define({ mesh: asset(MeshAsset) }) {
@@ -90,6 +106,9 @@ box.release(); // one release for the one factory call; the fields never held a 
 app.dispose();
 ```
 
+- `asset()` takes a class token (`asset(MeshAsset)`); for an asset with no class — a scene or
+  prefab — pass `SceneAssetToken`: `prefab: asset(SceneAssetToken)`. A
+  `{ "$asset": "props/crate.prefab.json" }` prop in a scene file fills it.
 - A scene loader resolves every `{ "$asset": … }` in the file **before** the components' props are
   written, so `awake` can already read `this.mesh.value`.
 - The field does not own the reference count: the scene instance that loaded the asset releases it

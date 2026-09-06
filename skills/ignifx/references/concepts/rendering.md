@@ -84,7 +84,7 @@ node, so an entity that moved is already where it should be.
 
 The `rendering` settings section is read once, at `createApp`:
 
-```ts
+```ts run
 import { createApp } from "@ignifx/core";
 
 const app = await createApp({
@@ -156,6 +156,10 @@ Under `createApp({ headless: true })` there is no device: `MeshAsset` factories 
 resolves to `null`, and `captureScreenshot()` rejects with `IGX-0707`. Transforms, component state,
 scene loading, and `world.raycastRender` still work, which is why tests assert on component state
 rather than on Lite scene contents.
+
+The headless backing store is 1×1 pixel: `screenToRay`/`worldToScreen` still work, but the whole
+screen is the unit square, so a centre-screen click is
+`app.input.simulate({ "<Pointer>/position": { x: 0.5, y: 0.5 } })`.
 
 ## 8. Device loss
 

@@ -10,6 +10,16 @@ export interface CommandResult {
   readonly code: number;
   /** Standard output and standard error, concatenated in that order. */
   readonly output: string;
+  /** Whether the process was killed because it outlived `timeoutMs`. */
+  readonly timedOut: boolean;
+  /** Wall-clock duration in milliseconds, rounded to the nearest millisecond. */
+  readonly durationMs: number;
+}
+
+/** Optional limits for {@link runCommand}. */
+export interface RunOptions {
+  /** Kill the child after this many milliseconds; omitted means no limit. */
+  readonly timeoutMs?: number;
 }
 
 /**
@@ -18,15 +28,26 @@ export interface CommandResult {
  * @param command - Executable to run.
  * @param args - Arguments for the executable.
  * @param cwd - Working directory for the child process.
- * @returns The exit code and captured output.
+ * @param options - Optional limits, currently only a timeout.
+ * @returns The exit code, captured output, timeout flag and duration.
  * @throws When the executable could not be spawned at all.
  */
-export function runCommand(command: string, args: readonly string[], cwd: string): CommandResult {
-  const result = spawnSync(command, [...args], { cwd, encoding: "utf8" });
-  if (result.error !== undefined) {
+export function runCommand(command: string, args: readonly string[], cwd: string, options?: RunOptions): CommandResult {
+  const started = process.hrtime.bigint();
+  const timeout = options?.timeoutMs;
+  const result = spawnSync(command, [...args], {
+    cwd,
+    encoding: "utf8",
+    ...(timeout === undefined ? {} : { timeout, killSignal: "SIGKILL" as const }),
+  });
+  const durationMs = Math.round(Number(process.hrtime.bigint() - started) / 1e6);
+  // `spawnSync` reports a timeout as `status: null` plus a killing signal, and only sets `error`
+  // when the executable could not be started at all — so the two cases have to be told apart here.
+  const timedOut = timeout !== undefined && result.status === null && result.signal !== null;
+  if (result.error !== undefined && !timedOut) {
     throw new Error(`failed to run \`${command} ${args.join(" ")}\`: ${result.error.message}`);
   }
-  return { code: result.status ?? -1, output: `${result.stdout}${result.stderr}` };
+  return { code: result.status ?? -1, output: `${result.stdout}${result.stderr}`, timedOut, durationMs };
 }
 
 /**

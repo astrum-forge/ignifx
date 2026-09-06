@@ -251,7 +251,7 @@ export interface AssetTypeDefinition {
 // @public
 export interface AssetTypeToken<A> {
     readonly assetType?: string;
-    readonly prototype: A;
+    readonly prototype?: A;
 }
 
 // @public
@@ -2522,6 +2522,9 @@ export interface SceneAsset {
     readonly file: SceneFile;
     readonly hash: string;
 }
+
+// @public
+export const SceneAssetToken: AssetTypeToken<SceneAsset>;
 
 // @public
 export interface SceneBuildResult {

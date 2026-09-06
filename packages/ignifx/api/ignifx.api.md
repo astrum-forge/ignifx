@@ -894,6 +894,7 @@ import { SCENE_FILE_EXTENSIONS } from '@ignifx/core';
 import { SCENE_FILE_FORMAT } from '@ignifx/core';
 import { SCENE_FORMAT_VERSION } from '@ignifx/core';
 import { SceneAsset } from '@ignifx/core';
+import { SceneAssetToken } from '@ignifx/core';
 import { SceneBuildResult } from '@ignifx/core';
 import { SceneFile } from '@ignifx/core';
 import { SceneFileAssetRef } from '@ignifx/core';
@@ -2988,6 +2989,8 @@ export { SCENE_FILE_FORMAT }
 export { SCENE_FORMAT_VERSION }
 
 export { SceneAsset }
+
+export { SceneAssetToken }
 
 export { SceneBuildResult }
 

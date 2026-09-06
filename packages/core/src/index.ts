@@ -362,7 +362,7 @@ export {
   type SceneLoadIssue,
 } from "./serialization/load.js";
 export { parseOverridePath, type EntityOverrideField, type OverridePath } from "./serialization/overrides.js";
-export { computeSceneHash, createSceneAsset, type SceneAsset } from "./serialization/scene-asset.js";
+export { computeSceneHash, createSceneAsset, type SceneAsset, SceneAssetToken } from "./serialization/scene-asset.js";
 export {
   describeSceneFileFormat,
   isSceneFileHeader,

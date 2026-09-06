@@ -1,0 +1,27 @@
+{
+  "format": "ignifx.scene",
+  "formatVersion": 1,
+  "name": "Crate",
+  "entities": [
+    {
+      "uid": "01JQ8YV3K7CRATE0000000000A",
+      "name": "Crate",
+      "parent": null,
+      "transform": { "position": [0, 0, 0], "rotation": [0, 0, 0, 1], "scale": [1, 1, 1] },
+      "components": [
+        {
+          "uid": "01JQ8YV3K7CRATE0000000000B",
+          "type": "ignifx/MeshRenderer",
+          "props": { "materials": [{ "$asset": "materials/crate.material.json" }] }
+        },
+        {
+          "uid": "01JQ8YV3K7CRATE0000000000C",
+          "type": "ignifx/BoxCollider",
+          "props": { "size": [0.6, 0.6, 0.6] }
+        },
+        { "uid": "01JQ8YV3K7CRATE0000000000D", "type": "ignifx/Rigidbody", "props": { "mass": 4 } },
+        { "uid": "01JQ8YV3K7CRATE0000000000E", "type": "recipes/CrateMesh", "props": { "size": 0.6 } }
+      ]
+    }
+  ]
+}

@@ -69,7 +69,7 @@ app.input (InputService)
 
 ## First app
 
-```ts
+```ts run
 import { createApp, defineInputActions, input, Script } from "ignifx";
 
 const actions = defineInputActions({
@@ -127,24 +127,24 @@ app.input.actions.get("jump").wasPressedThisFrame; // true, for the whole frame
 
 ### `app.input`
 
-| Member                                                         | What it does                                                    |
-| -------------------------------------------------------------- | --------------------------------------------------------------- |
-| `actions.get(name)`                                            | Action from the **enabled** maps; `IGX-0801` when unknown       |
-| `actions.find(name)` / `actions.map(name)`                     | Tolerant lookup / one map by name (`IGX-0804`)                  |
-| `loadActions(assetOrDefinition)`                               | Installs a document's maps, merging by map name                 |
-| `devices` / `gamepads`                                         | The device table; `gamepads[i].rumble(intensity, seconds)`      |
-| `events`                                                       | The frame's raw events, in arrival order (records are recycled) |
-| `currentScheme` / `onControlSchemeChanged`                     | The active control scheme                                       |
-| `onDeviceConnected` / `onDeviceDisconnected`                   | Gamepad slots filling and emptying                              |
-| `uiHasFocus`                                                   | While `true`, keyboard actions read as released                 |
-| `pressPoint` / `strictSchemes`                                 | Runtime knobs, defaulted from the settings section              |
-| `pointerLock.request()/exit()/locked/onChange`                 | Pointer lock; `<Mouse>/delta` keeps reporting while locked      |
-| `cursor.visible`                                               | `cursor: none` on the canvas                                    |
-| `simulate(values)` / `simulateEvent(event)`                    | Headless and test input, through the same pipeline              |
-| `releaseAll()`                                                 | Queues what `blur` queues, so nothing stays stuck               |
-| `performInteractiveRebind(action, options?)`                   | Listens for the next control and writes an override             |
-| `saveOverrides()` / `loadOverrides(json)` / `clearOverrides()` | Override persistence                                            |
-| `createActionSet(source, options?)`                            | A private copy of the maps pinned to one gamepad slot           |
+| Member                                                         | What it does                                                                                                                                                                                                                                 |
+| -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `actions.get(name)`                                            | Action from the **enabled** maps; `IGX-0801` when unknown                                                                                                                                                                                    |
+| `actions.find(name)` / `actions.map(name)`                     | Tolerant lookup / one map by name (`IGX-0804`)                                                                                                                                                                                               |
+| `loadActions(assetOrDefinition)`                               | Installs a document's maps, merging by map name                                                                                                                                                                                              |
+| `devices` / `gamepads`                                         | The device table; `gamepads[i].rumble(intensity, seconds)`. For gameplay, bind a `vector2` action to `<Pointer>/position` and read `action.vector`; `devices.resolve(path)` / `control(name)` / `valueAt(offset)` are the raw path for tools |
+| `events`                                                       | The frame's raw events, in arrival order (records are recycled)                                                                                                                                                                              |
+| `currentScheme` / `onControlSchemeChanged`                     | The active control scheme                                                                                                                                                                                                                    |
+| `onDeviceConnected` / `onDeviceDisconnected`                   | Gamepad slots filling and emptying                                                                                                                                                                                                           |
+| `uiHasFocus`                                                   | While `true`, keyboard actions read as released                                                                                                                                                                                              |
+| `pressPoint` / `strictSchemes`                                 | Runtime knobs, defaulted from the settings section                                                                                                                                                                                           |
+| `pointerLock.request()/exit()/locked/onChange`                 | Pointer lock; `<Mouse>/delta` keeps reporting while locked                                                                                                                                                                                   |
+| `cursor.visible`                                               | `cursor: none` on the canvas                                                                                                                                                                                                                 |
+| `simulate(values)` / `simulateEvent(event)`                    | Headless and test input, through the same pipeline                                                                                                                                                                                           |
+| `releaseAll()`                                                 | Queues what `blur` queues, so nothing stays stuck                                                                                                                                                                                            |
+| `performInteractiveRebind(action, options?)`                   | Listens for the next control and writes an override                                                                                                                                                                                          |
+| `saveOverrides()` / `loadOverrides(json)` / `clearOverrides()` | Override persistence                                                                                                                                                                                                                         |
+| `createActionSet(source, options?)`                            | A private copy of the maps pinned to one gamepad slot                                                                                                                                                                                        |
 
 ### `InputAction`
 

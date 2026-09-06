@@ -15,9 +15,9 @@ ignifx is a code-first TypeScript game engine for browsers and Electron. It rend
 through WebGPU via Babylon Lite (`@babylonjs/lite`), and it is designed for indie 2D (top-down,
 side-scrolling) and 3D (third-person, first-person) games. Use this skill whenever you write or
 modify code, scenes, or assets for an ignifx project. The engine covers the kernel (app, frame loop,
-entities, transforms, components, scripts, schemas, coroutines, signals, layers, math) **and**
-rendering, assets, and the scene/prefab file format; input, physics, audio, and the 2D/3D/UI
-toolkits arrive in later phases.
+entities, transforms, components, scripts, schemas, coroutines, signals, layers, math), rendering,
+assets, the scene/prefab format, input, 3D and 2D physics, audio, the 2D and 3D toolkits, UI,
+Electron, and devtools; each subsystem has its own skill (see "Adding extensions").
 
 ## Environment
 
@@ -130,14 +130,14 @@ Extensions register in `createApp({ extensions })`; each adds an `app.<name>` se
 | `@ignifx/physics` (`physics()`)      | `app.physics`: 3D rigid bodies on Havok — `Rigidbody`, box/sphere/capsule/cylinder/mesh/heightfield colliders, triggers, `CharacterController`, the layer matrix, raycasts and shape queries, render interpolation; simulates on its own null-engine scene stepped by the fixed loop, so it runs headless                                                                                                   | `packages/physics/skills/physics/SKILL.md`       |
 | `@ignifx/physics-2d` (`physics2d()`) | `app.physics2d`: 2D physics on Rapier — `Rigidbody2D`, box/circle/capsule/polygon/edge/tilemap colliders, triggers, `CharacterController2D` with slopes, autostep, snap-to-ground and one-way platforms, 2D queries; runs headless (the WebAssembly is inlined)                                                                                                                                             | `packages/physics-2d/skills/physics-2d/SKILL.md` |
 
-```ts
-import { audio, AudioClip, AudioSource, createApp, defineInputActions, input } from "ignifx";
+```ts run
+import { audio, AudioSource, createApp, defineInputActions, input } from "ignifx";
 const app = await createApp({ headless: true, extensions: [input(), audio()] });
 const jump = { name: "jump", bindings: [{ path: "<Keyboard>/space" }] };
 app.input.loadActions(defineInputActions({ maps: [{ name: "Player", actions: [jump] }] }));
-const clip = app.assets.load<AudioClip>("sfx/jump.wav");
-await clip.promise; // settles as soon as it loads: the app is not running yet
-const source = app.world.createEntity("Player").addComponent(AudioSource, { clip, bus: "SFX" });
+// A clip comes from `app.assets.load<AudioClip>("sfx/jump.wav")`, awaited before `start()` so it
+// settles without a frame; it is left out here because this block is executed by the docs harness.
+const source = app.world.createEntity("Player").addComponent(AudioSource, { bus: "SFX" });
 await app.start();
 app.input.simulate({ "<Keyboard>/space": 1 });
 app.step(1 / 60); // the source awakes; `jump.wasPressedThisFrame` now holds for this whole frame
@@ -196,16 +196,16 @@ app.audio.bus("SFX").volume = 0.5;
 
 ### `Transform`
 
-| Kind             | Members                                                                                                                                   | Cost                    |
-| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
-| Local live views | `localPosition`, `localRotation`, `localScale`                                                                                            | free; mutate in place   |
-| Local values     | `localEulerAngles`, `localMatrix`, `localPosition2D`, `localScale2D`                                                                      | getter allocates        |
-| World getters    | `position`, `rotation`, `eulerAngles`, `lossyScale`, `forward`, `right`, `up`                                                             | **allocates each call** |
-| World `ToRef`    | `positionToRef`, `rotationToRef`, `eulerAnglesToRef`, `localEulerAnglesToRef`, `lossyScaleToRef`, `forwardToRef`, `rightToRef`, `upToRef` | allocation-free         |
-| Operations       | `translate`, `rotate`, `rotateAround`, `lookAt`, `setPositionAndRotation`                                                                 | degrees                 |
-| Spaces           | `transformPoint`, `transformDirection`, `inverseTransformPoint`, `inverseTransformDirection`                                              | optional `out`          |
-| 2D               | `position2D`, `localPosition2D`, `rotation2D`, `localScale2D`                                                                             | degrees about +Z        |
-| Matrices         | `worldMatrix`, `worldMatrixVersion`, `lite`                                                                                               | lazily recomputed       |
+| Kind             | Members                                                                                                                                   | Cost                                                                                                                                 |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Local live views | `localPosition`, `localRotation`, `localScale`                                                                                            | free; mutate in place                                                                                                                |
+| Local values     | `localEulerAngles`, `localMatrix`, `localPosition2D`, `localScale2D`                                                                      | getter allocates                                                                                                                     |
+| World getters    | `position`, `rotation`, `eulerAngles`, `lossyScale`, `forward`, `right`, `up`                                                             | **allocates each call**                                                                                                              |
+| World `ToRef`    | `positionToRef`, `rotationToRef`, `eulerAnglesToRef`, `localEulerAnglesToRef`, `lossyScaleToRef`, `forwardToRef`, `rightToRef`, `upToRef` | allocation-free; `out` must be a `Vec3` (written through `out.set`), not a `{ x, y, z }` literal — `Vec3Like` is an input-only shape |
+| Operations       | `translate`, `rotate`, `rotateAround`, `lookAt`, `setPositionAndRotation`                                                                 | degrees                                                                                                                              |
+| Spaces           | `transformPoint`, `transformDirection`, `inverseTransformPoint`, `inverseTransformDirection`                                              | optional `out`                                                                                                                       |
+| 2D               | `position2D`, `localPosition2D`, `rotation2D`, `localScale2D`                                                                             | degrees about +Z                                                                                                                     |
+| Matrices         | `worldMatrix`, `worldMatrixVersion`, `lite`                                                                                               | lazily recomputed                                                                                                                    |
 
 ### Rendering components
 
@@ -269,7 +269,8 @@ An `asset(TypeToken)` schema field holds the **loaded handle**; the file stores
 | `stringifySceneFile`, `validateSceneFile`, `computeSceneHash` | Write, check, and hash a file                                        |
 
 A prefab and a level are one format, `ignifx.scene` (ADR-0005). `SceneInstance` carries `uid`,
-`name`, `roots`, `isLoaded`, `persistent`, `settings`, `asset`, `remap`, `onUnloading`.
+`name`, `roots`, `isLoaded`, `persistent`, `settings`, `asset`, `remap`, `onUnloading`. A file cannot
+name a code-built primitive — see [`references/formats/scene.md`](references/formats/scene.md).
 
 ### `app.renderer` and the `rendering` settings
 
@@ -366,7 +367,7 @@ last (`min`, `max`, `step`, `tooltip`, `group`, `hidden`, `readonly`, `transient
 
 ### `defineExtension`
 
-```ts
+```ts run
 import { Phase, defineExtension } from "@ignifx/core";
 import type { Extension, ExtensionContext } from "@ignifx/core";
 
@@ -402,10 +403,11 @@ first two digits are the area.
 
 ## Recipes
 
-| Recipe (generated from `examples/recipes/`, so it compiles) | Task                                                               |
-| ----------------------------------------------------------- | ------------------------------------------------------------------ |
-| [`load-a-model`](references/recipes/load-a-model.md)        | Load a `.glb` and show it with a `Model` component                 |
-| [`spawn-a-prefab`](references/recipes/spawn-a-prefab.md)    | Load a `.prefab.json` as a `SceneAsset` and stamp copies of it out |
+| Recipe (generated from `examples/recipes/`, so it compiles)                | Task                                                                           |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| [`load-a-model`](references/recipes/load-a-model.md)                       | Load a `.glb` and show it with a `Model` component                             |
+| [`spawn-a-prefab`](references/recipes/spawn-a-prefab.md)                   | Load a `.prefab.json` as a `SceneAsset` and stamp copies of it out             |
+| [`spawn-a-prefab-on-click`](references/recipes/spawn-a-prefab-on-click.md) | Raycast from the camera on a click and instantiate a physics prefab at the hit |
 
 ## File formats
 

@@ -26,7 +26,16 @@ export const DEFAULT_TEMPLATE_RENAMES: Readonly<Record<string, string>> = {
  *
  * @public
  */
-export const DEFAULT_IGNORED_ENTRIES: readonly string[] = ["node_modules", "dist", ".turbo"];
+export const DEFAULT_IGNORED_ENTRIES: readonly string[] = [
+  "node_modules",
+  "dist",
+  ".turbo",
+  // Desktop build output (`electron-vite build` and `electron-builder`), which a template checkout
+  // that has been built carries next to its sources.
+  "out",
+  "release",
+  "coverage",
+];
 
 /**
  * Entries that belong to a template's **desktop** variant and are skipped unless the scaffold asked
@@ -399,6 +408,12 @@ async function copyDirectory(
       const source = join(sourceDir, entry.name);
       const destination = join(destinationDir, targetName);
 
+      if (entry.isSymbolicLink()) {
+        // A template never ships a symlink; the ones a checkout grows (a packaged Electron `.app`'s
+        // framework links under `release/`) are build output, and `copyFile` on a link to a
+        // directory fails with `ENOTSUP`. Skip rather than follow or recreate.
+        return;
+      }
       if (entry.isDirectory()) {
         await copyDirectory(source, destination, relativePath, context, files);
       } else {

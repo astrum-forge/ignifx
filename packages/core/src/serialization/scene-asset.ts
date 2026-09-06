@@ -1,8 +1,9 @@
 import { CoreErrorCode } from "../errors/error-codes.js";
 import { IgnifxError } from "../errors/ignifx-error.js";
-import { stringifySceneFile } from "./scene-file.js";
+import { stringifySceneFile, SCENE_ASSET_TYPE } from "./scene-file.js";
 import type { SceneFile } from "./scene-file.js";
 import type { AssetHandle } from "../assets/types.js";
+import type { AssetTypeToken } from "../schema/types.js";
 
 /**
  * What the scene loader produces for a `*.scene.json` or `*.prefab.json` address: the parsed file,
@@ -27,6 +28,28 @@ export interface SceneAsset {
   /** The content hash of {@link SceneAsset.file}, as `sha256:<hex>`. */
   readonly hash: string;
 }
+
+/**
+ * The `asset()` token for a scene or prefab field. `SceneAsset` is an interface, so it cannot be
+ * passed to `asset()` the way a class such as `MeshAsset` can; this token names the type instead:
+ *
+ * ```ts
+ * class Spawner extends Script.define({ prefab: asset(SceneAssetToken) }) {
+ *   static typeId = "game/Spawner";
+ *   spawn(): void {
+ *     const value = this.prefab?.value;
+ *     if (value !== undefined) {
+ *       this.app.world.instantiate(value, { position: this.transform.position });
+ *     }
+ *   }
+ * }
+ * ```
+ *
+ * In a scene file the field is written as `{ "$asset": "props/crate.prefab.json" }`.
+ *
+ * @public
+ */
+export const SceneAssetToken: AssetTypeToken<SceneAsset> = Object.freeze({ assetType: SCENE_ASSET_TYPE });
 
 /** The hash algorithm and the prefix it is written under. */
 const HASH_ALGORITHM = "SHA-256";

@@ -21,7 +21,7 @@ empty `update() {}` costs a call per frame while not declaring it costs nothing.
 `Script.define(schema)` / `Component.define(schema)` return a base class carrying the field types,
 applying a fresh default per instance, and holding the schema for the serializer and the inspector.
 
-```ts
+```ts run
 import { Component, Script, array, componentRef, entityRef, enumOf, f32, i32, vec3 } from "@ignifx/core";
 import type { Entity, ScriptCallbacks } from "@ignifx/core";
 
@@ -109,7 +109,7 @@ releases it — and an in-code (`memory:`) asset serializes as `null` with `IGX-
 
 Frame-sequenced logic uses generators resumed by the scheduler, never `async` methods (a promise continuation would run after the whole frame, outside every phase). `Coroutine` is `Generator<CoroutineYield, void, unknown>`.
 
-```ts
+```ts run
 import { Script, waitFixedUpdate, waitSeconds, waitUntil } from "@ignifx/core";
 import type { Coroutine, ScriptCallbacks } from "@ignifx/core";
 
@@ -149,7 +149,7 @@ export class Door extends Script implements ScriptCallbacks {
 `app.tweens` moves a value over time on ignifx's clock, so a coroutine that hand-rolls a lerp is
 almost always the wrong shape. It lives in core, so both toolkits use it.
 
-```ts
+```ts run
 import { createApp } from "ignifx";
 
 const app = await createApp({ headless: true });
@@ -207,7 +207,7 @@ it works headlessly with no bundler). Two policies, chosen per class:
 | `"patch"` (default) | The prototype is swapped: same objects, every field value kept, coroutines still running, **no** lifecycle callback re-run. Statics are re-read, so a changed `executionOrder` reorders dispatch.                                      |
 | `"recreate"`        | Each instance is serialized through its schema, destroyed (`onDisable`, `onDestroy`), and rebuilt from the new class with the same uid and position — so `awake`, `onEnable`, and `start` run again, and its coroutines are cancelled. |
 
-```ts
+```ts run
 import { createApp, f32, Script } from "@ignifx/core";
 
 class Mover extends Script.define({ speed: f32(1) }) {

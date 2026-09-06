@@ -108,7 +108,7 @@ and, where one exists, the error code you will see. The ten most common are repe
     measured **3 extra frames** before the mesh appeared, against 0–2 when the family had been warmed
     and 0 when a mesh of that family was already drawn. `app.start()` warms the `boot` preload group;
     call `app.renderer.warmUp(materials)` for anything you load later (ADR-0014).
-34. **Do not put two `Environment` components in one world.** The most recently enabled one wins and
+34. **Do not put two `Environment` components in one world.** The one enabled last wins and
     the world logs `IGX-0705` once. There is one image-based lighting setup per world.
 35. **Do not ask a point or hemispheric light for shadows.** Lite has no cube-shadow generator, so
     `shadows.enabled` on either throws `IGX-0703`. Cast from a directional or spot light.

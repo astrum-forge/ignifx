@@ -23,11 +23,13 @@ import {
   vec3,
   vec4,
 } from "../../src/schema/field-kinds.js";
+import { SceneAssetToken } from "../../src/serialization/scene-asset.js";
 import { AudioClip, Camera } from "./mover-fixture.js";
 import type { FakeEntity } from "./mover-fixture.js";
 import type { AssetHandle } from "../../src/assets/types.js";
 import type { ColorLike, QuatLike, Vec2Like, Vec3Like, Vec4Like } from "../../src/math/types.js";
 import type { CurveValue, FieldDefinition } from "../../src/schema/types.js";
+import type { SceneAsset } from "../../src/serialization/scene-asset.js";
 
 describe("scalar field kinds", () => {
   it("defaults every numeric kind to zero and reports its own kind", () => {
@@ -165,6 +167,12 @@ describe("reference field kinds", () => {
 
   it("takes the file type discriminator from the asset class", () => {
     expect(asset(AudioClip).spec).toMatchObject({ typeName: "audio" });
+  });
+
+  it("accepts a plain token for an asset that has no class, such as a scene or prefab", () => {
+    expect(asset(SceneAssetToken).createDefault()).toBeNull();
+    expect(asset(SceneAssetToken).spec).toMatchObject({ typeName: "scene" });
+    expectTypeOf(asset(SceneAssetToken)).toEqualTypeOf<FieldDefinition<AssetHandle<SceneAsset> | null>>();
   });
 
   it("records no type discriminator when the asset class declares none", () => {

@@ -66,7 +66,7 @@ is the enabled `Camera` with the highest `priority`. Every rig, billboard, and L
 
 A character that walks, an orbit camera that follows it, and a floor. Compiles and runs headlessly.
 
-```ts
+```ts run
 import { Camera, createApp } from "ignifx";
 import { BoxCollider, CharacterController, Rigidbody, physics } from "@ignifx/physics";
 import { input } from "@ignifx/input";
@@ -228,7 +228,7 @@ clip, in `[0, 1]`, and fires once per loop crossing.
 `app.tweens` is core, not this package, and it is what to reach for instead of a coroutine that
 lerps by hand.
 
-```ts
+```ts run
 import { createApp } from "ignifx";
 
 const app = await createApp({ headless: true });
@@ -250,7 +250,7 @@ app.log.info("halfway: {progress}", tween.progress);
 
 ### A companion that walks to the player
 
-```ts
+```ts run
 import { createApp } from "ignifx";
 import { input } from "@ignifx/input";
 import { physics } from "@ignifx/physics";
@@ -279,7 +279,7 @@ answers `false`. Wait for `surface.onBaked`, or simply call it again next frame.
 
 ### Level of detail and billboards
 
-```ts
+```ts run
 import { MeshRenderer, createApp } from "ignifx";
 import { input } from "@ignifx/input";
 import { physics } from "@ignifx/physics";

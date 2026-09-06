@@ -56621,11 +56621,13 @@ The asset value type the token stands for.
 
 The asset type name written into files when the extension is ambiguous.
 
-##### prototype
+##### prototype?
 
-> `readonly` **prototype**: `A`
+> `readonly` `optional` **prototype?**: `A`
 
-The instance shape the token names.
+The instance shape the token names. A class token carries it for free; a plain token for an
+asset that has no class (a scene, a prefab) leaves it out and fixes `A` through its annotation —
+see `SceneAssetToken`. Nothing reads it at runtime.
 
 ***
 
@@ -77568,6 +77570,29 @@ prefabs (`*.prefab.json`) share it: a prefab is a scene instanced inside another
 The `formatVersion` this build writes and is the only one it can read. Before 1.0 the number
 stays `1` and an incompatible change invalidates files rather than migrating them
 (`CONSTITUTION.md` §4.2); a file declaring anything else is rejected with `IGX-0603`.
+
+***
+
+### SceneAssetToken
+
+> `const` **SceneAssetToken**: [`AssetTypeToken`](#assettypetoken)\<[`SceneAsset`](#sceneasset)\>
+
+The `asset()` token for a scene or prefab field. `SceneAsset` is an interface, so it cannot be
+passed to `asset()` the way a class such as `MeshAsset` can; this token names the type instead:
+
+```ts
+class Spawner extends Script.define({ prefab: asset(SceneAssetToken) }) {
+  static typeId = "game/Spawner";
+  spawn(): void {
+    const value = this.prefab?.value;
+    if (value !== undefined) {
+      this.app.world.instantiate(value, { position: this.transform.position });
+    }
+  }
+}
+```
+
+In a scene file the field is written as `{ "$asset": "props/crate.prefab.json" }`.
 
 ***
 

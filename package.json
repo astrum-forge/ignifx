@@ -23,6 +23,7 @@
     "docs:api": "turbo run docs:api",
     "docs:schemas": "node scripts/docs-schemas.ts",
     "docs:recipes": "node scripts/docs-recipes.ts",
+    "docs:llms": "node scripts/docs-llms.ts",
     "docs:harness": "node scripts/docs-harness.ts",
     "deps": "depcruise --config .dependency-cruiser.cjs packages",
     "changeset": "changeset",

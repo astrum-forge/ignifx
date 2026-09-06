@@ -480,6 +480,8 @@ export {
   type HotReloadPolicy,
   type HotReloadReport,
   type HotReloadStatics,
+  // Scene/prefab token for `asset()` fields (Phase 11)
+  SceneAssetToken,
 } from "@ignifx/core";
 
 // Phase 2 game-facing types that were missing from the barrel

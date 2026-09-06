@@ -27,15 +27,19 @@ function apiReportDirectories(repositoryRoot: string): readonly string[] {
     .toSorted((left, right) => left.localeCompare(right));
 }
 
+/** Generated files that are not `.md`/`.json` under a generated directory. */
+const GENERATED_FILES = ["website/public/llms.txt"] as const;
+
 /**
- * Generated files under a directory (recursively), excluding the hand-written READMEs.
+ * Generated files under a directory (recursively), excluding the hand-written READMEs, plus the
+ * individually named generated files of {@link GENERATED_FILES}.
  *
  * @param root - Absolute repository root.
  * @param directories - Repository-relative directories holding generated output.
  * @returns Repository-relative file paths, sorted.
  */
-function generatedFiles(root: string, directories: readonly string[]): readonly string[] {
-  const files: string[] = [];
+export function generatedFiles(root: string, directories: readonly string[]): readonly string[] {
+  const files: string[] = GENERATED_FILES.filter((file) => exists(path.join(root, file)));
   for (const directory of directories) {
     const absolute = path.join(root, directory);
     if (!exists(absolute)) {
@@ -74,7 +78,7 @@ function snapshot(root: string, files: readonly string[]): ReadonlyMap<string, s
 }
 
 /**
- * Runs the three generators in order.
+ * Runs the generators in order.
  *
  * @param root - Absolute repository root.
  * @returns A failed check result when a generator exits non-zero, otherwise `null`.
@@ -84,6 +88,7 @@ function runGenerators(root: string): CheckResult | null {
     ["pnpm", ["docs:api"]],
     ["node", [path.join("scripts", "docs-schemas.ts")]],
     ["node", [path.join("scripts", "docs-recipes.ts")]],
+    ["node", [path.join("scripts", "docs-llms.ts")]],
   ];
   for (const [command, args] of generators) {
     const result = runCommand(command, args, root);
@@ -100,7 +105,7 @@ function runGenerators(root: string): CheckResult | null {
 }
 
 /**
- * Runs the three generators and fails when the tree's generated output differs from a fresh
+ * Runs the generators and fails when the tree's generated output differs from a fresh
  * regeneration. The comparison is against the working tree as it was before the generators ran —
  * not against git HEAD — so a locally regenerated, not-yet-committed file counts as up to date,
  * while a stale committed file (the CI case) is caught.

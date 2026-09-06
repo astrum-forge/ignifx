@@ -1,14 +1,19 @@
 /**
  * The `skill-lint` check of the documentation harness
- * (`docs/architecture/16-docs-harness-and-skill.md` §4): frontmatter validity, size, link health,
- * `references/` nesting, deprecation placement, and the migration-pointer rule.
+ * (`docs/architecture/16-docs-harness-and-skill.md` §4). One function per rule:
+ * `checkSkillHeader` (size, frontmatter), `checkSectionOrder` and `checkDeprecatedSection` (§2's
+ * template, in `skill-template.ts`), `checkLinks`, `checkNesting`, `checkDeprecations`,
+ * `checkMigrationPointer`, `checkTimePhrases` (§5's stale wording) and `checkImportPaths` (§5's
+ * exact import paths). Each appends to one `problems` list, so a run reports every problem at once.
  */
 import path from "node:path";
 import { failed, passed, summarize } from "./check-result.ts";
 import { parseFrontmatter } from "./frontmatter.ts";
 import { exists, readText } from "./fs-tree.ts";
 import { extractRelativeLinks, extractSections, sectionAt, stripFencedBlocks } from "./markdown.ts";
+import { collectSkillExamples } from "./skill-examples.ts";
 import { displayPath, listSkillMarkdown } from "./skill-files.ts";
+import { checkDeprecatedSection, checkSectionOrder } from "./skill-template.ts";
 import type { CheckResult, HarnessContext } from "./check-result.ts";
 import type { SkillRoot } from "./skill-files.ts";
 
@@ -174,6 +179,79 @@ function checkMigrationPointer(root: SkillRoot, file: string, label: string, sou
 }
 
 /**
+ * Phrasings that go stale the moment a release ships (§5: versions are stated explicitly).
+ * A line may keep one by carrying {@link TIME_PHRASE_ALLOW}, which is how prose about runtime
+ * behaviour ("the most recently enabled listener wins") stays legal.
+ */
+const TIME_PHRASES = ["recently", "new in", "now supports", "currently"] as const;
+
+/** Comment that waives {@link TIME_PHRASES} for the line it appears on. */
+const TIME_PHRASE_ALLOW = "<!-- lint-allow: time-phrase -->";
+
+/** Import specifiers an example may use (§5: exact import paths, never pseudo-code). */
+const ALLOWED_IMPORT_PREFIXES = ["@ignifx/", "node:", "virtual:ignifx/", "vite/"] as const;
+
+/** Import specifiers an example may use verbatim. */
+const ALLOWED_IMPORTS = new Set(["ignifx", "vite"]);
+
+const IMPORT_LINE = /(?:from|import)\s+["'](?<specifier>[^"']+)["']/u;
+
+/**
+ * Checks that no skill page uses phrasing that dates itself.
+ *
+ * @param label - Path to show in messages.
+ * @param source - File contents.
+ * @param problems - Collector the function appends messages to.
+ */
+function checkTimePhrases(label: string, source: string, problems: string[]): void {
+  for (const [index, line] of stripFencedBlocks(source).split("\n").entries()) {
+    if (line.includes(TIME_PHRASE_ALLOW)) {
+      continue;
+    }
+    const lower = line.toLowerCase();
+    for (const phrase of TIME_PHRASES) {
+      if (!new RegExp(`\\b${phrase}\\b`, "u").test(lower)) {
+        continue;
+      }
+      problems.push(
+        `${label}:${String(index + 1)}: time-sensitive phrasing "${phrase}" (§5: state the version instead);` +
+          ` put ${TIME_PHRASE_ALLOW} on the line when the wording describes runtime behaviour`,
+      );
+    }
+  }
+}
+
+/**
+ * Checks that every example imports a specifier a reader can type verbatim.
+ *
+ * Relative paths and unknown bare packages are the two ways an example stops being copy-pasteable:
+ * `./player.ts` only exists in the document's imagination, and a third-party package is a
+ * dependency the reader has not been told to install. A block that shows one on purpose — the
+ * Electron main-process entry point, say — opts out with `ts ignore-check`.
+ *
+ * @param context - The tree being inspected.
+ * @param roots - The skills found in that tree.
+ * @param problems - Collector the function appends messages to.
+ */
+function checkImportPaths(context: HarnessContext, roots: readonly SkillRoot[], problems: string[]): void {
+  for (const example of collectSkillExamples(context, roots).examples) {
+    for (const [index, line] of example.code.split("\n").entries()) {
+      const specifier = IMPORT_LINE.exec(line)?.groups?.["specifier"];
+      if (specifier === undefined) {
+        continue;
+      }
+      if (ALLOWED_IMPORTS.has(specifier) || ALLOWED_IMPORT_PREFIXES.some((prefix) => specifier.startsWith(prefix))) {
+        continue;
+      }
+      problems.push(
+        `${example.label}:${String(example.line + index + 1)}: example imports "${specifier}";` +
+          " §5 allows ignifx, @ignifx/*, vite, virtual:ignifx/* and node:* — tag the block `ts ignore-check` otherwise",
+      );
+    }
+  }
+}
+
+/**
  * Runs the `skill-lint` check.
  *
  * @param context - The tree being inspected.
@@ -184,8 +262,12 @@ export function checkSkillLint(context: HarnessContext, roots: readonly SkillRoo
   const problems: string[] = [];
   const files = listSkillMarkdown(roots);
   for (const root of roots) {
+    const source = readText(root.skillFile);
     checkSkillHeader(root, context.releaseVersion, problems);
+    checkSectionOrder(root, source, problems);
+    checkDeprecatedSection(root, source, context.releaseVersion, problems);
   }
+  checkImportPaths(context, roots, problems);
   for (const file of files) {
     const root = roots.find((candidate) => file.startsWith(`${candidate.directory}${path.sep}`));
     if (root === undefined) {
@@ -198,6 +280,7 @@ export function checkSkillLint(context: HarnessContext, roots: readonly SkillRoo
     if (!file.includes(GENERATED_SEGMENT)) {
       checkDeprecations(label, source, problems);
       checkMigrationPointer(root, file, label, source, problems);
+      checkTimePhrases(label, source, problems);
     }
   }
   const versions = acceptedVersions(context.releaseVersion)
