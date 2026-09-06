@@ -95,7 +95,8 @@ export type ErrorCode = `IGX-${number}`;
  * @remarks
  * Code blocks reserved for other first-party packages, which cannot import this table
  * (`docs/architecture/00-overview.md` §2): `@ignifx/cli` owns `IGX-1401`–`IGX-1419`; `@ignifx/electron`
- * owns `IGX-1460`–`IGX-1499` (core's own platform codes therefore stop at `IGX-1459`);
+ * owns `IGX-1460`–`IGX-1499` (core's own platform codes therefore stop at `IGX-1459`); `@ignifx/devtools`
+ * owns `IGX-1550`–`IGX-1599` (core's own devtools-range codes stop at `IGX-1549`);
  * `@ignifx/vite-plugin` owns `IGX-0550`–`IGX-0599` and `IGX-0650`–`IGX-0699`. Core allocates its
  * own codes from the bottom of each range and, in the platform range, from `IGX-1420` upward —
  * which is where `app.platform` and `app.storage` live, because storage is a *platform* service:

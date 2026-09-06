@@ -504,9 +504,27 @@ importers:
       '@arethetypeswrong/cli':
         specifier: 'catalog:'
         version: 0.18.5
+      '@babylonjs/havok':
+        specifier: 'catalog:'
+        version: 1.3.14
+      '@ignifx/audio':
+        specifier: workspace:*
+        version: link:../audio
       '@ignifx/core':
         specifier: workspace:*
         version: link:../core
+      '@ignifx/input':
+        specifier: workspace:*
+        version: link:../input
+      '@ignifx/physics':
+        specifier: workspace:*
+        version: link:../physics
+      '@ignifx/physics-2d':
+        specifier: workspace:*
+        version: link:../physics-2d
+      '@ignifx/ui':
+        specifier: workspace:*
+        version: link:../ui
       '@microsoft/api-extractor':
         specifier: 'catalog:'
         version: 7.59.0(@types/node@26.4.1)

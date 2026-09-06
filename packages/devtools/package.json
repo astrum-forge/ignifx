@@ -37,7 +37,13 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "catalog:",
+    "@babylonjs/havok": "catalog:",
+    "@ignifx/audio": "workspace:*",
     "@ignifx/core": "workspace:*",
+    "@ignifx/input": "workspace:*",
+    "@ignifx/physics": "workspace:*",
+    "@ignifx/physics-2d": "workspace:*",
+    "@ignifx/ui": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
     "@types/webxr": "catalog:",
     "@webgpu/types": "catalog:",
@@ -49,13 +55,41 @@
     "vitest": "catalog:"
   },
   "peerDependencies": {
-    "@ignifx/core": "workspace:*"
+    "@ignifx/audio": "workspace:*",
+    "@ignifx/core": "workspace:*",
+    "@ignifx/input": "workspace:*",
+    "@ignifx/physics": "workspace:*",
+    "@ignifx/physics-2d": "workspace:*",
+    "@ignifx/ui": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@ignifx/audio": {
+      "optional": true
+    },
+    "@ignifx/input": {
+      "optional": true
+    },
+    "@ignifx/physics": {
+      "optional": true
+    },
+    "@ignifx/physics-2d": {
+      "optional": true
+    },
+    "@ignifx/ui": {
+      "optional": true
+    }
   },
   "ignifx": {
     "extension": true,
     "engine": ">=0.0.0 <1.0.0",
     "requires": [],
-    "optional": [],
+    "optional": [
+      "@ignifx/audio",
+      "@ignifx/input",
+      "@ignifx/physics",
+      "@ignifx/physics-2d",
+      "@ignifx/ui"
+    ],
     "capabilities": [],
     "skill": "./skills/devtools/SKILL.md"
   }
