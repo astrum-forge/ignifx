@@ -14,6 +14,14 @@ import type { PlaywrightTestConfig } from "playwright/test";
  * `--use-webgpu-adapter=swiftshader` pins the software adapter so a golden does not depend on the
  * host GPU, which is what standards §10 asks of CI.
  *
+ * On Linux those two flags are not enough: the adapter and device come up, but the first present
+ * to a canvas destroys the device (`A valid external Instance reference no longer exists`, measured
+ * 2026-09-06 in Playwright's `v1.63.0-noble` image, arm64, and on GitHub's ubuntu runner). Routing
+ * SwiftShader through Vulkan and ANGLE — `--enable-features=Vulkan --use-vulkan=swiftshader
+ * --use-angle=swiftshader` — keeps it alive; `--use-angle=vulkan` alone does not, and the Vulkan
+ * flags return a null adapter on macOS (ADR-0009, "WebGPU flags"), hence the platform switch in
+ * `chromiumArgs`. `vitest.config.ts` carries the same switch; change both together.
+ *
  * ## One golden per scene, not one per platform
  *
  * Playwright's default `snapshotPathTemplate` puts `{platform}` in the path, which would mean a
@@ -75,6 +83,18 @@ function preview(packageName: string, port: number): PreviewServer {
   };
 }
 
+/** Chromium flags for a SwiftShader WebGPU adapter; see the module comment for the Linux half. */
+const chromiumArgs: readonly string[] =
+  process.platform === "linux"
+    ? [
+        "--enable-unsafe-webgpu",
+        "--use-webgpu-adapter=swiftshader",
+        "--enable-features=Vulkan",
+        "--use-vulkan=swiftshader",
+        "--use-angle=swiftshader",
+      ]
+    : ["--enable-unsafe-webgpu", "--use-webgpu-adapter=swiftshader"];
+
 const config: PlaywrightTestConfig = defineConfig({
   testDir: "./tests",
   fullyParallel: false,
@@ -94,7 +114,7 @@ const config: PlaywrightTestConfig = defineConfig({
     deviceScaleFactor: 1,
     trace: "retain-on-failure",
     launchOptions: {
-      args: ["--enable-unsafe-webgpu", "--use-webgpu-adapter=swiftshader"],
+      args: chromiumArgs,
     },
   },
   webServer: [

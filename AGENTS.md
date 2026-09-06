@@ -18,7 +18,7 @@ Phases 0–11 of `docs/plan/engineering-plan.md` were delivered on `main` betwee
 
 ## Commands
 
-Use Node 24 (`.nvmrc`); dependency-cruiser refuses to run on Node 25. `pnpm install` · `pnpm dev` · `pnpm check` (format, lint, typecheck, unit tests, API report, docs harness) · `pnpm test` · `pnpm test:browser` · `pnpm build` · `pnpm pack-check` · `pnpm deps` · `pnpm docs:api` · `pnpm docs:schemas` · `pnpm docs:recipes` · `pnpm docs:llms` · `pnpm docs:harness` · `pnpm changeset`. See `CONTRIBUTING.md`.
+Use Node 24 (`.nvmrc`); dependency-cruiser refuses to run on Node 25. `pnpm install` · `pnpm dev` · `pnpm check` (build, then format, lint, typecheck, unit tests, API report, docs harness) · `pnpm test` · `pnpm test:browser` · `pnpm build` · `pnpm pack-check` · `pnpm deps` · `pnpm docs:api` · `pnpm docs:schemas` · `pnpm docs:recipes` · `pnpm docs:llms` · `pnpm docs:harness` · `pnpm changeset`. See `CONTRIBUTING.md`.
 
 ## Using the skill
 

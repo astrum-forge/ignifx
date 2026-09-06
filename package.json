@@ -28,7 +28,7 @@
     "deps": "depcruise --config .dependency-cruiser.cjs packages",
     "changeset": "changeset",
     "release": "pnpm build && pnpm exec changeset publish",
-    "check": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run api-report && pnpm run docs:harness"
+    "check": "pnpm run build && pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run api-report && pnpm run docs:harness"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "catalog:",

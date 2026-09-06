@@ -32,7 +32,7 @@ Versions are pinned in `pnpm-workspace.yaml` (`catalog:`) and `.nvmrc`; this tab
 | Package checks      | publint, `@arethetypeswrong/cli`                                                    | —                                                                     | On every build                                                                                                                                                            |
 | WebGPU types        | `@webgpu/types`                                                                     | 0.1.72+                                                               | Required; TypeScript's bundled WebGPU declarations are still partial                                                                                                      |
 
-`pnpm check` runs format check, lint, typecheck, unit tests, API report, and docs harness locally and is the pre-push gate.
+`pnpm check` builds the workspace (turbo-cached), then runs format check, lint, typecheck, unit tests, API report, and docs harness locally and is the pre-push gate. The build comes first because workspace packages resolve through `exports` to `dist/`; without it, type-aware lint and typecheck see every `@ignifx/*` import as `error`.
 
 ## 2. Repository layout
 

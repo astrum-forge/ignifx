@@ -39,6 +39,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
+      # Workspace packages resolve through their `exports` to `dist/`, so anything that types or
+      # imports `@ignifx/*` needs the built output first (turbo caches it); a fresh checkout has
+      # none, and a missing dist surfaces as thousands of `error`-typed lint findings or TS2307.
+      - run: pnpm build
       # oxlint --type-aware, then ESLint for the rules Oxlint lacks (standards §6).
       - run: pnpm lint
 
@@ -49,6 +53,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
+      # Workspace packages resolve through their `exports` to `dist/`, so anything that types or
+      # imports `@ignifx/*` needs the built output first (turbo caches it); a fresh checkout has
+      # none, and a missing dist surfaces as thousands of `error`-typed lint findings or TS2307.
+      - run: pnpm build
       - run: pnpm typecheck
 
   test-unit:
@@ -58,6 +66,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
+      # Workspace packages resolve through their `exports` to `dist/`, so anything that types or
+      # imports `@ignifx/*` needs the built output first (turbo caches it); a fresh checkout has
+      # none, and a missing dist surfaces as thousands of `error`-typed lint findings or TS2307.
+      - run: pnpm build
       # Vitest `node` project on Lite's null engine, with the coverage floors of
       # CONSTITUTION.md §6.2 enforced as thresholds in vitest.config.ts.
       - run: pnpm test
@@ -91,12 +103,17 @@ jobs:
           echo "Playwright Chromium: ${CHROMIUM}"
           "${CHROMIUM}" --version || echo "could not query the Chromium build directly"
 
-      # Chromium flags live in vitest.config.ts, not here. ADR-0009 "Validation (2026-09-05)"
-      # measured them on macOS arm64 only: `--enable-unsafe-webgpu --use-webgpu-adapter=swiftshader`
-      # yields a SwiftShader adapter there, and adding `--enable-features=Vulkan --use-angle=vulkan`
-      # breaks it. Linux is UNVERIFIED. This job is the plan's Phase 0 exit criterion ("browser test
-      # job proves WebGPU is available in CI"), so it must not be continue-on-error: if it goes red,
-      # the flags are wrong and the fix belongs in vitest.config.ts, not in a suppression here.
+      # Chromium flags live in vitest.config.ts, not here, and switch on the platform: the base pair
+      # `--enable-unsafe-webgpu --use-webgpu-adapter=swiftshader` everywhere, plus
+      # `--enable-features=Vulkan --use-vulkan=swiftshader --use-angle=swiftshader` on Linux, where
+      # the base pair alone loses the device at the first canvas present (ADR-0009, "WebGPU flags on
+      # Linux (2026-09-06)"). This job is the plan's Phase 0 exit criterion ("browser test job proves
+      # WebGPU is available in CI"), so it must not be continue-on-error: if it goes red, the flags
+      # are wrong and the fix belongs in vitest.config.ts, not in a suppression here.
+      # Workspace packages resolve through their `exports` to `dist/`, so anything that types or
+      # imports `@ignifx/*` needs the built output first (turbo caches it); a fresh checkout has
+      # none, and a missing dist surfaces as thousands of `error`-typed lint findings or TS2307.
+      - run: pnpm build
       - run: pnpm test:browser
 
       - name: WebGPU-in-CI note
@@ -257,6 +274,10 @@ jobs:
       # pull request the harness also runs its two diff-based gates (api-report-gate, freshness)
       # against the base commit; the `docs-not-needed` label waives the skill-change half of the
       # API-report gate (16-docs-harness-and-skill.md §4), with the justification in the PR body.
+      # Workspace packages resolve through their `exports` to `dist/`, so anything that types or
+      # imports `@ignifx/*` needs the built output first (turbo caches it); a fresh checkout has
+      # none, and a missing dist surfaces as thousands of `error`-typed lint findings or TS2307.
+      - run: pnpm build
       - run: pnpm docs:harness -- ${{ github.event_name == 'pull_request' && format('--base {0}', github.event.pull_request.base.sha) || '' }} ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'docs-not-needed') && '--allow-docs-not-needed' || '' }}
       # Every generator, not just docs:api: the drift step below covers everything they write.
       - run: pnpm docs:api

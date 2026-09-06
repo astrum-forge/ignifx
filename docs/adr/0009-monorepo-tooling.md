@@ -62,6 +62,21 @@ Findings:
 - The Linux combination named in the plan (`--enable-features=Vulkan --use-angle=vulkan`) **breaks** WebGPU on macOS. The committed configuration is therefore `--enable-unsafe-webgpu --use-webgpu-adapter=swiftshader`, which pins the software adapter that coding standards §10 requires of CI and is verified working here; the Ubuntu CI job should start from the same two flags and add `--enable-features=Vulkan --use-angle=vulkan` only if a hardware adapter is wanted.
 - WebGPU needs a secure context: no adapter is handed out on `about:blank`, only on `http://127.0.0.1`/localhost or https.
 
+### WebGPU flags on Linux (2026-09-06)
+
+The first CI runs on GitHub's `ubuntu-latest` failed every visual golden: the examples reported `unsupported` and the templates failed their first GPU allocation (`createBuffer … too large for the implementation when mappedAtCreation == true`) or asset load (`IGX-0505`). Reproduced in `mcr.microsoft.com/playwright:v1.63.0-noble` (Chromium 1243, arm64) with a bare page that requests the device the engine requests, configures the canvas, and presents cleared frames:
+
+| Flags (all with `--enable-unsafe-webgpu --use-webgpu-adapter=swiftshader`)  | Adapter | Device | First present                                                                                                   |
+| --------------------------------------------------------------------------- | ------- | ------ | --------------------------------------------------------------------------------------------------------------- |
+| none added                                                                  | ok      | ok     | **device destroyed**, `onSubmittedWorkDone` rejects with "A valid external Instance reference no longer exists" |
+| `--enable-features=Vulkan --use-angle=vulkan`                               | null    | —      | —                                                                                                               |
+| `--enable-features=Vulkan --use-vulkan=swiftshader`                         | ok      | ok     | **device destroyed**                                                                                            |
+| `--enable-features=Vulkan --use-vulkan=swiftshader --use-angle=swiftshader` | ok      | ok     | alive through three presented frames                                                                            |
+| `--use-angle=swiftshader`                                                   | ok      | ok     | **device destroyed**                                                                                            |
+| `--disable-gpu-sandbox`                                                     | ok      | ok     | **device destroyed**                                                                                            |
+
+MSAA (1× or 4×) and the canvas format (`rgba8unorm`, the Linux preferred format, or `bgra8unorm`) made no difference. Unit-style browser tests that never present to a canvas pass with the base flags on Linux, which is why `test-browser` was green while `test-visual` was red. Decision: `vitest.config.ts` and `tests/visual/playwright.config.ts` add `--enable-features=Vulkan --use-vulkan=swiftshader --use-angle=swiftshader` when `process.platform === "linux"` and keep the base pair elsewhere (the Vulkan flags still return a null adapter on macOS). With those flags the visual suite passed all 13 GPU-backed tests in the same image (arm64; 11 desktop-only tests skipped), every scene within its existing tolerance against the macOS goldens, so one golden per scene stays viable.
+
 ### Babylon Lite 1.27.0 findings
 
 - `disposeEngine(engine)` is **not** safe for a null engine. `createNullEngine()` returns an engine that is its own surface with no `_context` and no `_device`, while `disposeEngine` unconditionally calls `surface._context.unconfigure()` and `engine._device.destroy()`. The headless adapter therefore disposes only the scene, which is the complete teardown for a GPU-free engine.

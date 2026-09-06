@@ -35,8 +35,11 @@ pnpm install            # installs the workspace and the git hooks (lefthook)
 pnpm check              # the full local gate; must be green before you push
 ```
 
-`pnpm check` runs format check, lint, typecheck, unit tests with coverage, the API report and the
-documentation harness — the same things CI runs, in the same order (standards §12).
+`pnpm check` builds the workspace first (turbo-cached, so a no-op on a warm tree), then runs format
+check, lint, typecheck, unit tests with coverage, the API report and the documentation harness — the
+same things CI runs, in the same order (standards §12). The build is not optional: packages resolve
+through `exports` to `dist/`, and on a fresh clone every `@ignifx/*` import is an `error` type
+until it exists.
 
 ## Everyday commands
 

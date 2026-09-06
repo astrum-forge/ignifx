@@ -10,8 +10,12 @@ import { defineConfig } from "vitest/config";
  * (2026-09-05): `--enable-unsafe-webgpu` alone is enough to get `navigator.gpu` **and** an adapter;
  * `--use-webgpu-adapter=swiftshader` pins the software adapter so results do not depend on the
  * host GPU, which is what coding standards §10 requires of CI. Adding `--enable-features=Vulkan`
- * and `--use-angle=vulkan` — the documented Linux combination — makes `requestAdapter()` return
- * `null` on macOS, so those two flags belong in the Linux CI job, not here.
+ * and `--use-angle=vulkan` — the combination the plan named for Linux — makes `requestAdapter()`
+ * return `null` on macOS. On Linux (measured 2026-09-06, Playwright's `v1.63.0-noble` image and
+ * GitHub's ubuntu runner) the two base flags give an adapter and a device, but the first present
+ * to a canvas destroys the device; `--enable-features=Vulkan --use-vulkan=swiftshader
+ * --use-angle=swiftshader` keeps it alive, so `chromiumArgs` below switches on the platform.
+ * `tests/visual/playwright.config.ts` carries the same switch; change both together (ADR-0009).
  *
  * WebGPU also needs a secure context: an adapter is only handed out on `http://127.0.0.1`/https
  * pages, never on `about:blank`.
@@ -27,6 +31,18 @@ import { defineConfig } from "vitest/config";
  *
  * `coverage` is a root-level option in Vitest 5 — it is ignored inside `projects[].test`.
  */
+/** Chromium flags for a SwiftShader WebGPU adapter; the Linux half is explained above. */
+const chromiumArgs: readonly string[] =
+  process.platform === "linux"
+    ? [
+        "--enable-unsafe-webgpu",
+        "--use-webgpu-adapter=swiftshader",
+        "--enable-features=Vulkan",
+        "--use-vulkan=swiftshader",
+        "--use-angle=swiftshader",
+      ]
+    : ["--enable-unsafe-webgpu", "--use-webgpu-adapter=swiftshader"];
+
 export default defineConfig({
   test: {
     coverage: {
@@ -98,7 +114,7 @@ export default defineConfig({
               // `launchOptions`, not `launch` — the provider silently ignores unknown keys.
               launchOptions: {
                 channel: "chromium",
-                args: ["--enable-unsafe-webgpu", "--use-webgpu-adapter=swiftshader"],
+                args: chromiumArgs,
               },
             }),
             instances: [{ browser: "chromium" }],
