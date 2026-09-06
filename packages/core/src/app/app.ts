@@ -20,12 +20,17 @@ import { applyRenderingFeatures, registerRenderScene } from "../lite/render-feat
 import { createConsoleSink } from "../log/console-sink.js";
 import { createLogger } from "../log/logger.js";
 import { detectPlatform } from "../platform/platform.js";
+import { probeWebGpuInfo } from "../platform/web/adapter-probe.js";
 import { RendererService, rendererInternals } from "../render/renderer.js";
 import { toRendererOptions, toSurfaceFormat, RENDERING_SETTINGS_SECTION } from "../render/rendering-settings.js";
 import { EndOfFrameQueue } from "../scheduler/deferred-queue.js";
 import { Scheduler } from "../scheduler/scheduler.js";
 import { SettingsStore } from "../settings/settings-store.js";
 import { Signal } from "../signal/signal.js";
+import { MemoryStorageBackend } from "../storage/memory-backend.js";
+import { createFileStorageBackend } from "../storage/node/file-backend.js";
+import { StorageImpl } from "../storage/storage.js";
+import { IndexedDbStorageBackend } from "../storage/web/indexeddb-backend.js";
 import { createPerformanceClock } from "../time/clock.js";
 import { TimeImpl } from "../time/time.js";
 import { TweensImpl } from "../tween/tweens.js";
@@ -42,13 +47,15 @@ import type { EngineHandles } from "../lite/engine.js";
 import type { FrameCallbackHandle } from "../lite/loop.js";
 import type { LogSink, LogThreshold } from "../log/log-level.js";
 import type { Logger } from "../log/logger.js";
-import type { PlatformInfo } from "../platform/platform.js";
+import type { PlatformInfoImpl, PlatformKind } from "../platform/platform.js";
 import type { RenderSurface } from "../platform/webgpu.js";
 import type { Renderer } from "../render/renderer.js";
 import type { RenderingSettings } from "../render/rendering-settings.js";
 import type { SceneInstance } from "../scene/scene-instance.js";
 import type { Script } from "../script/script.js";
 import type { SettingsInput } from "../settings/settings-input.js";
+import type { StorageBackend } from "../storage/backend.js";
+import type { FileStorageOptions } from "../storage/node/file-backend.js";
 import type { Clock } from "../time/clock.js";
 import type { World } from "../world/world.js";
 
@@ -117,6 +124,12 @@ export interface CreateAppOptions {
    */
   readonly settings?: SettingsInput;
   /**
+   * Where `app.storage` puts things (`docs/architecture/14-platform-electron.md` §2). Pass a
+   * {@link StorageBackend} to install one, or `{ directory }` to write a directory tree under Node.
+   * Defaults to IndexedDB in a browser and to an in-memory store everywhere else.
+   */
+  readonly storage?: StorageBackend | FileStorageOptions;
+  /**
    * The asset service's construction options
    * (`docs/architecture/05-assets-and-loading.md` §7). The manifest normally arrives from
    * `@ignifx/vite-plugin`; tests and Electron tooling pass it here.
@@ -164,6 +177,10 @@ interface ResolvedAppOptions {
   readonly fetch: FetchLike | null;
   /** The wall clock. */
   readonly clock: Clock;
+  /** The host description, already probed. */
+  readonly platform: PlatformInfoImpl;
+  /** Where `app.storage` persists values. */
+  readonly storage: StorageBackend;
   /** The build mode. */
   readonly mode: ErrorFormatMode;
   /** Where `app.log` writes. */
@@ -211,7 +228,10 @@ class AppImpl implements App {
   readonly version: string = VERSION;
 
   /** Where the app is running. */
-  readonly platform: PlatformInfo;
+  readonly platform: PlatformInfoImpl;
+
+  /** Settings, save games, and input rebindings. */
+  readonly storage: StorageImpl;
 
   readonly #canvas: RenderSurface | null;
 
@@ -280,7 +300,8 @@ class AppImpl implements App {
     this.#clock = options.clock;
     this.#mode = options.mode;
     this.isHeadless = options.canvas === null;
-    this.platform = detectPlatform();
+    this.platform = options.platform;
+    this.storage = new StorageImpl(options.storage);
     const development = options.mode === "development";
     this.log = createLogger({ sink: options.logSink, level: options.logLevel });
     this.diagnostics = new Diagnostics({ development, now: (): number => this.#clock.nowMs() });
@@ -503,6 +524,7 @@ class AppImpl implements App {
     this.#deviceLoss = null;
     this.services.clear();
     this.events.clear();
+    this.storage.backend.dispose?.();
     const handles = this.#handles;
     if (handles !== null) {
       disposeEngineHandles(handles);
@@ -575,6 +597,11 @@ class AppImpl implements App {
             // created rather than in `start()` with the opt-ins that only change what is compiled.
             postProcessing: renderer.renderingFeatures.postProcessing,
           });
+    if (canvas !== null) {
+      // §1: the report describes the host's adapter, not Lite's device — see `../platform/platform.ts`.
+      // A headless app never asks, so `platform.webgpu` stays `null` there.
+      this.platform.setWebGpu(await probeWebGpuInfo());
+    }
     this.assets.attachEngine(this.#handles.engine);
     renderer.attachHandles(this.#handles.engine, this.#handles.scene, this.#handles.presenter);
     this.#enableDeviceLossRecovery(rendering);
@@ -802,6 +829,35 @@ function hostDevicePixelRatio(): number {
 }
 
 /**
+ * Chooses the storage backend `app.storage` writes through.
+ *
+ * @remarks
+ * `docs/architecture/14-platform-electron.md` §2 lists IndexedDB for the browser, the file system
+ * for Electron, and memory for headless. Electron is not decided here: its renderer is a browser
+ * until `@ignifx/electron` finds its preload bridge, and it swaps the backend in at that point
+ * (`storageInternals`). So the default is IndexedDB wherever there is a document, and memory
+ * wherever there is not.
+ *
+ * @param option - What `createApp` was given: a backend, a directory, or nothing.
+ * @param kind - The detected host kind.
+ * @returns The backend to install.
+ *
+ * @example
+ * ```ts
+ * await resolveStorageBackend({ directory: "./.saves" }, "node");
+ * ```
+ */
+async function resolveStorageBackend(
+  option: StorageBackend | FileStorageOptions | undefined,
+  kind: PlatformKind,
+): Promise<StorageBackend> {
+  if (option === undefined) {
+    return kind === "node" ? new MemoryStorageBackend() : new IndexedDbStorageBackend();
+  }
+  return "directory" in option ? createFileStorageBackend(option) : option;
+}
+
+/**
  * Creates a game (`docs/architecture/00-overview.md` §1, `04-extensions.md` §2).
  *
  * @remarks
@@ -830,8 +886,11 @@ function hostDevicePixelRatio(): number {
 export async function createApp(options: CreateAppOptions = {}): Promise<App> {
   const wantsHeadless = options.headless ?? options.canvas === undefined;
   const canvas = wantsHeadless ? null : (options.canvas ?? null);
+  const platform = detectPlatform();
   const app = new AppImpl({
     canvas,
+    platform,
+    storage: await resolveStorageBackend(options.storage, platform.kind),
     settings: options.settings ?? {},
     manifest: options.assets?.manifest ?? null,
     fetch: options.assets?.fetch ?? options.fetch ?? null,

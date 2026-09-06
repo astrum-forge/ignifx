@@ -4238,6 +4238,23 @@ The new acceleration vector, in metres per second squared.
 
 `void`
 
+##### hasStepped
+
+###### Get Signature
+
+> **get** **hasStepped**(): `boolean`
+
+Whether at least one fixed step has completed, which is when Havok has built its broadphase and
+queries become legal (`09-physics.md` §5). A script that queries from `lateUpdate` or `update`
+checks this on the first frame, where the fixed loop may not have run yet, instead of catching
+`IGX-0902`.
+
+###### Returns
+
+`boolean`
+
+`true` once the first step has run.
+
 ##### lite
 
 ###### Get Signature

@@ -40,6 +40,7 @@
     "@ignifx/3d": "workspace:*",
     "@ignifx/audio": "workspace:*",
     "@ignifx/core": "workspace:*",
+    "@ignifx/electron": "workspace:*",
     "@ignifx/input": "workspace:*",
     "@ignifx/physics": "workspace:*",
     "@ignifx/physics-2d": "workspace:*",

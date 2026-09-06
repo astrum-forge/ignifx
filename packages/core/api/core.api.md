@@ -48,6 +48,7 @@ export interface App {
     start(): Promise<void>;
     step(deltaSeconds: number): void;
     stop(): void;
+    readonly storage: Storage_2;
     readonly time: Time;
     readonly tweens: Tweens;
     readonly version: string;
@@ -610,6 +611,12 @@ export const CoreErrorCode: {
     readonly invalidAssetFile: "IGX-0709";
     readonly postProcessingFeatureOff: "IGX-0710";
     readonly cryptoUnavailable: "IGX-1420";
+    readonly storageInvalidNamespace: "IGX-1421";
+    readonly storageInvalidKey: "IGX-1422";
+    readonly storageValueNotSerializable: "IGX-1423";
+    readonly storageQuotaExceeded: "IGX-1424";
+    readonly storageBackendFailed: "IGX-1425";
+    readonly storageValueCorrupt: "IGX-1426";
     readonly duplicateErrorCode: "IGX-1501";
     readonly malformedErrorCode: "IGX-1502";
     readonly duplicateDiagnosticsGroup: "IGX-1503";
@@ -659,6 +666,7 @@ export interface CreateAppOptions {
     readonly logSink?: LogSink;
     readonly mode?: ErrorFormatMode;
     readonly settings?: SettingsInput;
+    readonly storage?: StorageBackend | FileStorageOptions;
 }
 
 // @public
@@ -691,6 +699,9 @@ export function createEnvironmentLoader(): AssetLoader<EnvironmentAsset>;
 
 // @public
 export function createErrorCodeRegistry(): ErrorCodeRegistry;
+
+// @public
+export function createFileStorageBackend(options: FileStorageOptions): Promise<StorageBackend>;
 
 // @public
 export function createFontLoader(): AssetLoader<FontAsset>;
@@ -811,6 +822,9 @@ export const DEFAULT_LAYER = 0;
 
 // @public
 export const DEFAULT_MEMORY_SINK_LIMIT = 200;
+
+// @public
+export const DEFAULT_STORAGE_NAMESPACE = "default";
 
 // @public
 export function defaultRenderingSettings(): RenderingSettings;
@@ -1254,6 +1268,11 @@ export type FieldsOf<S extends Schema> = { -readonly [K in keyof S]: S[K] extend
 export type FieldSpec = NumberFieldSpec | BoolFieldSpec | StringFieldSpec | VectorFieldSpec | ColorFieldSpec | EnumFieldSpec | EntityRefFieldSpec | ComponentRefFieldSpec | AssetFieldSpec | ArrayFieldSpec | RecordFieldSpec | MapFieldSpec | OptionalFieldSpec | LayerMaskFieldSpec | CurveFieldSpec | CustomFieldSpec;
 
 // @public
+export interface FileStorageOptions {
+    readonly directory: string;
+}
+
+// @public
 export const FOG_MODE_NAMES: readonly ["none", "linear", "exp", "exp2"];
 
 // @public
@@ -1276,6 +1295,11 @@ export class FontAsset {
 export interface FontAssetLiteHandles {
     readonly font: LiteFont;
 }
+
+// Warning: (ae-internal-missing-underscore) The name "forceRendererDeviceLossForTesting" should be prefixed with an underscore because the declaration is marked as @internal
+//
+// @internal
+export function forceRendererDeviceLossForTesting(renderer: Renderer): void;
 
 // @public
 export function formatErrorMessage(code: ErrorCode, message: string, context: ErrorContext, hint: string | null, mode: ErrorFormatMode): string;
@@ -1303,6 +1327,14 @@ export interface FrameState {
 
 // @public
 export function generateUlid(random?: RandomSource, now?: () => number): string;
+
+// @public
+export interface GpuAdapterInfo {
+    readonly architecture: string;
+    readonly description: string;
+    readonly device: string;
+    readonly vendor: string;
+}
 
 // @public
 export interface GroundMeshOptions {
@@ -1341,6 +1373,17 @@ export interface ImageProcessingSettings {
     contrast: number;
     exposure: number;
     toneMapping: ToneMappingCurve;
+}
+
+// @public
+export class IndexedDbStorageBackend implements StorageBackend {
+    clear(namespace: string): Promise<void>;
+    delete(namespace: string, key: string): Promise<void>;
+    dispose(): void;
+    get(namespace: string, key: string): Promise<StoredValue | null>;
+    keys(namespace: string, prefix?: string): Promise<readonly string[]>;
+    readonly name = "indexeddb";
+    set(namespace: string, key: string, value: StoredValue): Promise<void>;
 }
 
 // @public
@@ -1809,6 +1852,17 @@ export interface MemorySink extends LogSink {
 }
 
 // @public
+export class MemoryStorageBackend implements StorageBackend {
+    clear(namespace: string): Promise<void>;
+    delete(namespace: string, key: string): Promise<void>;
+    dispose(): void;
+    get(namespace: string, key: string): Promise<StoredValue | null>;
+    keys(namespace: string, prefix?: string): Promise<readonly string[]>;
+    readonly name = "memory";
+    set(namespace: string, key: string, value: StoredValue): Promise<void>;
+}
+
+// @public
 export const MESH_ASSET_TYPE = "mesh";
 
 // @public
@@ -1988,6 +2042,9 @@ export interface MutableVec4 {
 }
 
 // @public
+export const NAMESPACE_SEGMENT_MAX_LENGTH = 64;
+
+// @public
 export interface NumberFieldSpec {
     readonly kind: "f32" | "f64" | "i32" | "u32";
 }
@@ -2111,11 +2168,27 @@ export interface PlaneMeshOptions {
 
 // @public
 export interface PlatformInfo {
+    readonly hasGamepads: boolean;
+    readonly hasPointerLock: boolean;
+    readonly isMobile: boolean;
     readonly kind: PlatformKind;
+    readonly locale: string;
+    readonly os: PlatformOs;
+    readonly reducedMotion: boolean;
+    readonly webgpu: WebGpuInfo | null;
 }
 
+// Warning: (ae-forgotten-export) The symbol "PlatformInfoImpl" needs to be exported by the entry point index.d.ts
+// Warning: (ae-internal-missing-underscore) The name "platformInternals" should be prefixed with an underscore because the declaration is marked as @internal
+//
+// @internal
+export function platformInternals(platform: PlatformInfo): PlatformInfoImpl;
+
 // @public
-export type PlatformKind = "browser" | "node";
+export type PlatformKind = "browser" | "electron" | "node";
+
+// @public
+export type PlatformOs = "macos" | "windows" | "linux" | "ios" | "android" | "unknown";
 
 // @public
 export class PostProcessStack extends Component implements ComponentHooks {
@@ -2764,6 +2837,48 @@ export interface StandardMaterialDefinition {
 export function standardMaterialDefinition(overrides?: Partial<Omit<StandardMaterialDefinition, "kind">>): StandardMaterialDefinition;
 
 // @public
+interface Storage_2 {
+    delete(key: string): Promise<void>;
+    get<T>(key: string): Promise<T | null>;
+    keys(prefix?: string): Promise<readonly string[]>;
+    namespace(name: string): Storage_2;
+    set<T>(key: string, value: T): Promise<void>;
+}
+export { Storage_2 as Storage }
+
+// @public
+export const STORAGE_KEY_MAX_LENGTH = 512;
+
+// @public
+export interface StorageBackend {
+    clear(namespace: string): Promise<void>;
+    delete(namespace: string, key: string): Promise<void>;
+    dispose?(): void;
+    get(namespace: string, key: string): Promise<StoredValue | null>;
+    keys(namespace: string, prefix?: string): Promise<readonly string[]>;
+    readonly name: string;
+    set(namespace: string, key: string, value: StoredValue): Promise<void>;
+}
+
+// Warning: (ae-forgotten-export) The symbol "StorageImpl" needs to be exported by the entry point index.d.ts
+// Warning: (ae-internal-missing-underscore) The name "storageInternals" should be prefixed with an underscore because the declaration is marked as @internal
+//
+// @internal
+export function storageInternals(storage: Storage_2): StorageImpl;
+
+// @public
+export type StoredValue = {
+    readonly kind: "json";
+    readonly json: string;
+} | {
+    readonly kind: "bytes";
+    readonly bytes: Uint8Array;
+};
+
+// @public
+export type StoredValueKind = "json" | "bytes";
+
+// @public
 export function str(defaultValue?: string, options?: FieldOptions): FieldDefinition<string>;
 
 // @public
@@ -3280,6 +3395,13 @@ export function waitUntil(predicate: () => boolean): WaitInstruction;
 
 // @public
 export function waitWhile(predicate: () => boolean): WaitInstruction;
+
+// @public
+export interface WebGpuInfo {
+    readonly adapterInfo: GpuAdapterInfo;
+    readonly features: readonly string[];
+    readonly limits: Readonly<Record<string, number>>;
+}
 
 // @public
 export class World implements WorldHost {

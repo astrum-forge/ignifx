@@ -23,6 +23,13 @@ const config: Linter.Config[] = [
       "**/node_modules/**",
       "**/coverage/**",
       "**/.turbo/**",
+      // Electron desktop build output: `out/**` is what `electron-vite build` writes and
+      // `release/**` what `electron-builder` writes. Both are bundled JavaScript, and linting them
+      // reports tens of thousands of JSDoc failures against code nobody wrote.
+      "**/out/**",
+      "**/release/**",
+      // The pack-time copy of `templates/*`, rebuilt by `packages/cli`'s `prepack`.
+      "packages/cli/templates/**",
     ],
   },
   jsConfigs.recommended,

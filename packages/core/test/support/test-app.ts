@@ -5,9 +5,12 @@ import { CoreErrorCode } from "../../src/errors/error-codes.js";
 import { IgnifxError } from "../../src/errors/ignifx-error.js";
 import { createLogger } from "../../src/log/logger.js";
 import { createMemorySink } from "../../src/log/memory-sink.js";
+import { detectPlatform } from "../../src/platform/platform.js";
 import { RendererImpl } from "../../src/render/renderer.js";
 import { defaultRenderingSettings } from "../../src/render/rendering-settings.js";
 import { Signal } from "../../src/signal/signal.js";
+import { MemoryStorageBackend } from "../../src/storage/memory-backend.js";
+import { StorageImpl } from "../../src/storage/storage.js";
 import { TweensImpl } from "../../src/tween/tweens.js";
 import type {
   App,
@@ -29,6 +32,7 @@ import type { LiteEngine, LiteScene } from "../../src/lite/scene.js";
 import type { Logger } from "../../src/log/logger.js";
 import type { PlatformInfo } from "../../src/platform/platform.js";
 import type { Script } from "../../src/script/script.js";
+import type { Storage } from "../../src/storage/storage.js";
 import type { World } from "../../src/world/world.js";
 
 /**
@@ -166,7 +170,8 @@ export class TestApp implements App {
   readonly renderer: RendererImpl;
   readonly isHeadless = true;
   readonly version = "0.0.0-test";
-  readonly platform: PlatformInfo = { kind: "node" };
+  readonly platform: PlatformInfo = detectPlatform();
+  readonly storage: Storage = new StorageImpl(new MemoryStorageBackend());
   readonly errors: ErrorReport[] = [];
 
   isRunning = false;

@@ -94,9 +94,13 @@ export type ErrorCode = `IGX-${number}`;
  *
  * @remarks
  * Code blocks reserved for other first-party packages, which cannot import this table
- * (`docs/architecture/00-overview.md` §2): `@ignifx/cli` owns `IGX-1401`–`IGX-1419`;
+ * (`docs/architecture/00-overview.md` §2): `@ignifx/cli` owns `IGX-1401`–`IGX-1419`; `@ignifx/electron`
+ * owns `IGX-1460`–`IGX-1499` (core's own platform codes therefore stop at `IGX-1459`);
  * `@ignifx/vite-plugin` owns `IGX-0550`–`IGX-0599` and `IGX-0650`–`IGX-0699`. Core allocates its
- * own codes from the bottom of each range and, in the platform range, from `IGX-1420` upward.
+ * own codes from the bottom of each range and, in the platform range, from `IGX-1420` upward —
+ * which is where `app.platform` and `app.storage` live, because storage is a *platform* service:
+ * the same three calls resolve to IndexedDB, a directory, or the Electron bridge depending only on
+ * the host, so a failure is a platform failure and not a serialization or asset one.
  *
  * @public
  */
@@ -223,6 +227,18 @@ export const CoreErrorCode = {
   postProcessingFeatureOff: "IGX-0710",
   /** The host exposes no Web Crypto implementation. */
   cryptoUnavailable: "IGX-1420",
+  /** A storage namespace name is not a legal namespace segment. */
+  storageInvalidNamespace: "IGX-1421",
+  /** A storage key is empty, too long, or contains a control character. */
+  storageInvalidKey: "IGX-1422",
+  /** A value handed to `app.storage.set` has no JSON form. */
+  storageValueNotSerializable: "IGX-1423",
+  /** The storage backend refused a write because the host is out of quota or disk space. */
+  storageQuotaExceeded: "IGX-1424",
+  /** The storage backend failed for a reason the engine cannot classify. */
+  storageBackendFailed: "IGX-1425",
+  /** A stored value could not be read back; the store was damaged or written by something else. */
+  storageValueCorrupt: "IGX-1426",
   /** An error code was registered twice. */
   duplicateErrorCode: "IGX-1501",
   /** An error code does not match `IGX-####` in a known range. */
@@ -311,6 +327,12 @@ export const CORE_ERROR_MESSAGES: Readonly<Record<CoreErrorCode, string>> = {
   "IGX-0709": "{file} is not an {format} file.",
   "IGX-0710": "{entity} attached a PostProcessStack, but rendering.features.postProcessing is off.",
   "IGX-1420": "This host does not expose Web Crypto.",
+  "IGX-1421": "{namespace} is not a valid storage namespace.",
+  "IGX-1422": "That storage key is empty, too long, or contains a control character.",
+  "IGX-1423": "The value stored at {key} has no JSON form.",
+  "IGX-1424": "The {backend} storage backend has no quota left for {operation}.",
+  "IGX-1425": "The {backend} storage backend could not {operation}.",
+  "IGX-1426": "The value stored at {key} could not be read back.",
   "IGX-1501": "The error code {code} is already registered by {owner}.",
   "IGX-1502": "{code} is not a valid IGX-#### code in a known range.",
   "IGX-1503": "The diagnostics group {group} is already registered.",

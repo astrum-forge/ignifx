@@ -158,6 +158,69 @@ jobs:
       # publint + @arethetypeswrong/cli on the packed tarball (standards §12 step 4).
       - run: pnpm pack-check
 
+  desktop-build:
+    # Phase 9's packaging gate: the desktop variant of a template has to build, and then package,
+    # on every platform ignifx claims. It is a matrix because `electron-builder` cannot
+    # cross-compile most targets — a macOS app needs macOS, and a Windows installer needs Windows —
+    # so "it builds" is only a claim about the runner it ran on.
+    #
+    # `--dir` on purpose: it produces an unpacked, runnable application without invoking any
+    # platform installer tooling or any signing identity, which is what makes this job green on a
+    # bare runner. Real installers (`--mac`, `--win`, `--linux`) and signing are a release concern,
+    # documented after 1.0 (docs/adr/0018-electron-tooling.md).
+    #
+    # The Electron suite runs on macOS only, and that is a stated gap rather than an oversight: it
+    # is the one platform where this has been verified end to end (ADR-0018, S9.1). The Linux leg
+    # needs a display, hence `xvfb-run`; it builds and packages but does not run the suite.
+    name: desktop-build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      # One platform failing should not hide what the other two did.
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+
+      # `@ignifx/*` first: the desktop build bundles them, and `electron-vite` will not build a
+      # renderer whose workspace dependencies have no `dist/`.
+      - run: pnpm build
+
+      - name: Build the desktop bundles
+        run: pnpm --filter ignifx-template-3d-third-person run build:desktop
+
+      - name: Package an unpacked, unsigned app
+        run: pnpm --filter ignifx-template-3d-third-person run dist:desktop
+        env:
+          # Nothing is signed here, and electron-builder should not go looking for a certificate.
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+      - name: Report what was packaged
+        shell: bash
+        run: |
+          echo "release/ contents:"
+          ls -la templates/3d-third-person/release/ || true
+          du -sh templates/3d-third-person/release/* 2>/dev/null || true
+
+      # Verified on macOS arm64 only (ADR-0018). Windows is configuration; Linux builds here but
+      # its WebGPU path is unverified, so neither runs the suite.
+      - name: Run the Electron suite
+        if: runner.os == 'macOS'
+        run: pnpm --filter ignifx-visual-tests run test:desktop
+
+      - name: Upload the failing runs
+        if: failure() && runner.os == 'macOS'
+        uses: actions/upload-artifact@v7
+        with:
+          name: desktop-traces-${{ matrix.os }}
+          path: |
+            tests/visual/test-results/**
+            tests/visual/playwright-report/**
+          if-no-files-found: warn
+          retention-days: 14
+
   bundle-size:
     name: bundle-size
     runs-on: ubuntu-latest

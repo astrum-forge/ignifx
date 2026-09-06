@@ -45,7 +45,7 @@ const ALLOWED_IMPORTS = {
   // Layer 3 — platform, tooling and the umbrella.
   electron: ["core"],
   devtools: ["core"],
-  ignifx: ["core", "input", "physics", "physics-2d", "audio", "2d", "3d", "ui"],
+  ignifx: ["core", "input", "physics", "physics-2d", "audio", "2d", "3d", "ui", "electron"],
 
   // Build-time tooling: no runtime coupling to the engine at all.
   "vite-plugin": [],

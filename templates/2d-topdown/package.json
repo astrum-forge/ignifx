@@ -5,11 +5,15 @@
   "description": "ignifx template: a top-down 2D game with a tilemap, a character controller, input schemes, and audio.",
   "license": "Apache-2.0",
   "type": "module",
+  "main": "out/main/index.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "dev:desktop": "electron-vite dev",
+    "build:desktop": "electron-vite build",
+    "dist:desktop": "electron-builder --dir --config electron-builder.yml",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.desktop.json"
   },
   "dependencies": {
     "@ignifx/2d": "workspace:*",

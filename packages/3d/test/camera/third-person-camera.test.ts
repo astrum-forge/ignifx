@@ -62,6 +62,21 @@ describe("ThirdPersonCamera", () => {
     harness.dispose();
   });
 
+  it("does not query physics on a frame before the first fixed step", async () => {
+    const harness = await createThreeDApp();
+    const reports: unknown[] = [];
+    harness.app.onError.connect((report) => {
+      reports.push(report);
+    });
+    buildRig(harness);
+    // A frame shorter than a fixed step: `lateUpdate` runs, `fixedUpdate` does not, Havok has not
+    // stepped. Before the guard this threw `IGX-0902` into the lifecycle boundary every start-up.
+    harness.step(1 / 600);
+    expect(harness.app.physics.hasStepped).toBe(false);
+    expect(reports).toEqual([]);
+    harness.dispose();
+  });
+
   it("keeps the full boom when collision is switched off", async () => {
     const harness = await createThreeDApp();
     const { rig } = buildRig(harness);

@@ -1675,7 +1675,7 @@ The address and URL, plus the standard `context`, `hint`, and `cause`.
 
 ###### Overrides
 
-[`IgnifxError`](#ignifxerror).[`constructor`](#constructor-42)
+[`IgnifxError`](#ignifxerror).[`constructor`](#constructor-44)
 
 #### Properties
 
@@ -1691,7 +1691,7 @@ The address that failed.
 
 ###### Inherited from
 
-[`IgnifxError`](#ignifxerror).[`cause`](#cause-3)
+[`IgnifxError`](#ignifxerror).[`cause`](#cause-4)
 
 ##### code
 
@@ -1711,7 +1711,7 @@ Identifiers that locate the failure (entity uid, component type id, asset key, �
 
 ###### Inherited from
 
-[`IgnifxError`](#ignifxerror).[`context`](#context-3)
+[`IgnifxError`](#ignifxerror).[`context`](#context-4)
 
 ##### hint
 
@@ -1721,7 +1721,7 @@ One sentence telling the developer how to fix it, or `null` when there is nothin
 
 ###### Inherited from
 
-[`IgnifxError`](#ignifxerror).[`hint`](#hint-3)
+[`IgnifxError`](#ignifxerror).[`hint`](#hint-4)
 
 ##### message
 
@@ -1737,7 +1737,7 @@ One sentence telling the developer how to fix it, or `null` when there is nothin
 
 ###### Inherited from
 
-[`IgnifxError`](#ignifxerror).[`name`](#name-22)
+[`IgnifxError`](#ignifxerror).[`name`](#name-24)
 
 ##### stack?
 
@@ -1949,7 +1949,7 @@ Creates a component. The engine constructs components; game code never calls `ne
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`constructor`](#constructor-77)
+[`Script`](#abstract-script).[`constructor`](#constructor-81)
 
 #### Properties
 
@@ -3076,7 +3076,7 @@ Applies the schema defaults, exactly as `Script.define` would.
 
 ###### Overrides
 
-[`Script`](#abstract-script).[`constructor`](#constructor-77)
+[`Script`](#abstract-script).[`constructor`](#constructor-81)
 
 #### Properties
 
@@ -4258,7 +4258,7 @@ The name diagnostics and error reports use.
 
 ###### Implementation of
 
-[`System`](#system).[`name`](#name-45)
+[`System`](#system).[`name`](#name-50)
 
 #### Methods
 
@@ -6914,7 +6914,7 @@ Creates a component. The engine constructs components; game code never calls `ne
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`constructor`](#constructor-77)
+[`Script`](#abstract-script).[`constructor`](#constructor-81)
 
 #### Properties
 
@@ -14374,6 +14374,207 @@ The asset's values, the inline values, or the fallback.
 
 ***
 
+### ElectronStorageBackend
+
+`app.storage`'s desktop backend: the preload bridge, wearing core's `StorageBackend` interface.
+
+#### Example
+
+```ts
+const backend = new ElectronStorageBackend(window.ignifxHost);
+await backend.set("saves", "slot1", { kind: "json", json: '{"level":3}' });
+```
+
+#### Implements
+
+- [`StorageBackend`](#storagebackend)
+
+#### Constructors
+
+##### Constructor
+
+> **new ElectronStorageBackend**(`host`): [`ElectronStorageBackend`](#electronstoragebackend)
+
+Builds a backend over a bridge.
+
+###### Parameters
+
+###### host
+
+[`IgnifxHost`](#ignifxhost)
+
+The validated `window.ignifxHost`.
+
+###### Returns
+
+[`ElectronStorageBackend`](#electronstoragebackend)
+
+#### Properties
+
+##### name
+
+> `readonly` **name**: `string`
+
+The identifier that appears in error context.
+
+###### Implementation of
+
+[`StorageBackend`](#storagebackend).[`name`](#name-49)
+
+#### Methods
+
+##### clear()
+
+> **clear**(`namespace`): `Promise`\<`void`\>
+
+Removes every value of one namespace.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the namespace is empty.
+
+###### Implementation of
+
+[`StorageBackend`](#storagebackend).[`clear`](#clear-6)
+
+##### delete()
+
+> **delete**(`namespace`, `key`): `Promise`\<`void`\>
+
+Removes one value.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path.
+
+###### key
+
+`string`
+
+The key inside it.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the value is gone.
+
+###### Implementation of
+
+[`StorageBackend`](#storagebackend).[`delete`](#delete-5)
+
+##### get()
+
+> **get**(`namespace`, `key`): `Promise`\<[`StoredValue`](#storedvalue) \| `null`\>
+
+Reads one value.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path.
+
+###### key
+
+`string`
+
+The key inside it.
+
+###### Returns
+
+`Promise`\<[`StoredValue`](#storedvalue) \| `null`\>
+
+The stored value, or `null` when the namespace has no such key.
+
+###### Implementation of
+
+[`StorageBackend`](#storagebackend).[`get`](#get-11)
+
+##### keys()
+
+> **keys**(`namespace`, `prefix?`): `Promise`\<readonly `string`[]\>
+
+Lists the keys of one namespace.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path.
+
+###### prefix?
+
+`string`
+
+When given, only keys starting with it are returned.
+
+###### Returns
+
+`Promise`\<readonly `string`[]\>
+
+The matching keys, sorted ascending; `[]` for an unknown namespace.
+
+###### Implementation of
+
+[`StorageBackend`](#storagebackend).[`keys`](#keys-6)
+
+##### set()
+
+> **set**(`namespace`, `key`, `value`): `Promise`\<`void`\>
+
+Writes one value, replacing whatever was there.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path.
+
+###### key
+
+`string`
+
+The key inside it.
+
+###### value
+
+[`StoredValue`](#storedvalue)
+
+The JSON text or the octets to persist.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the value is durable.
+
+###### Implementation of
+
+[`StorageBackend`](#storagebackend).[`set`](#set-13)
+
+***
+
 ### Entity
 
 A node of the scene tree (`docs/architecture/02-scene-graph.md` §4). Every entity has a stable
@@ -15830,7 +16031,7 @@ Applies the schema defaults, exactly as `Component.define` would.
 
 ###### Overrides
 
-[`Script`](#abstract-script).[`constructor`](#constructor-77)
+[`Script`](#abstract-script).[`constructor`](#constructor-81)
 
 #### Properties
 
@@ -16669,7 +16870,7 @@ The slot index, `0` through `3`.
 
 ###### Overrides
 
-[`InputDevice`](#inputdevice).[`constructor`](#constructor-46)
+[`InputDevice`](#inputdevice).[`constructor`](#constructor-49)
 
 #### Properties
 
@@ -18341,6 +18542,244 @@ The asset's values, the inline values, or the fallback.
 
 ***
 
+### HostDesktop
+
+The `Desktop` a desktop build gets: every call forwarded over the preload bridge.
+
+#### Implements
+
+- [`Desktop`](#desktop-1)
+
+#### Constructors
+
+##### Constructor
+
+> **new HostDesktop**(`host`): [`HostDesktop`](#hostdesktop)
+
+Builds a desktop service over a bridge.
+
+###### Parameters
+
+###### host
+
+[`IgnifxHost`](#ignifxhost)
+
+The validated `window.ignifxHost`.
+
+###### Returns
+
+[`HostDesktop`](#hostdesktop)
+
+#### Properties
+
+##### isElectron
+
+> `readonly` **isElectron**: `boolean`
+
+Always `true`.
+
+###### Implementation of
+
+[`Desktop`](#desktop-1).[`isElectron`](#iselectron)
+
+##### onWindowEvent
+
+> `readonly` **onWindowEvent**: [`SignalLike`](#signallike)\<[`HostWindowEvent`](#hostwindowevent)\>
+
+The host window's lifecycle events.
+
+###### Implementation of
+
+[`Desktop`](#desktop-1).[`onWindowEvent`](#onwindowevent)
+
+##### versions
+
+> `readonly` **versions**: [`HostVersions`](#hostversions) \| `null`
+
+What the bridge reported at load time.
+
+###### Implementation of
+
+[`Desktop`](#desktop-1).[`versions`](#versions)
+
+#### Methods
+
+##### dispose()
+
+> **dispose**(): `void`
+
+Removes the window-event subscription and clears the signal. Safe to call twice.
+
+###### Returns
+
+`void`
+
+##### isFullscreen()
+
+> **isFullscreen**(): `Promise`\<`boolean`\>
+
+Reports whether the window is full screen.
+
+###### Returns
+
+`Promise`\<`boolean`\>
+
+`true` when it is.
+
+###### Implementation of
+
+[`Desktop`](#desktop-1).[`isFullscreen`](#isfullscreen)
+
+##### openExternal()
+
+> **openExternal**(`url`): `Promise`\<`void`\>
+
+Opens a URL in the user's browser or mail client.
+
+###### Parameters
+
+###### url
+
+`string`
+
+The absolute URL to open.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the OS accepted it.
+
+###### Implementation of
+
+[`Desktop`](#desktop-1).[`openExternal`](#openexternal)
+
+##### paths()
+
+> **paths**(): `Promise`\<[`HostPaths`](#hostpaths)\>
+
+Resolves the platform directories.
+
+###### Returns
+
+`Promise`\<[`HostPaths`](#hostpaths)\>
+
+The directories the host reported.
+
+###### Implementation of
+
+[`Desktop`](#desktop-1).[`paths`](#paths)
+
+##### quit()
+
+> **quit**(): `Promise`\<`void`\>
+
+Closes the window and quits the application.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the quit has been requested.
+
+###### Implementation of
+
+[`Desktop`](#desktop-1).[`quit`](#quit)
+
+##### setFullscreen()
+
+> **setFullscreen**(`fullscreen`): `Promise`\<`void`\>
+
+Enters or leaves full screen.
+
+###### Parameters
+
+###### fullscreen
+
+`boolean`
+
+`true` to enter, `false` to leave.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the host applied it.
+
+###### Implementation of
+
+[`Desktop`](#desktop-1).[`setFullscreen`](#setfullscreen)
+
+##### setWindowTitle()
+
+> **setWindowTitle**(`title`): `Promise`\<`void`\>
+
+Sets the window title.
+
+###### Parameters
+
+###### title
+
+`string`
+
+The new title.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the host applied it.
+
+###### Implementation of
+
+[`Desktop`](#desktop-1).[`setWindowTitle`](#setwindowtitle)
+
+##### showOpenDialog()
+
+> **showOpenDialog**(`options?`): `Promise`\<[`HostOpenDialogResult`](#hostopendialogresult)\>
+
+Shows a modal open dialog over the game window.
+
+###### Parameters
+
+###### options?
+
+[`HostOpenDialogOptions`](#hostopendialogoptions)
+
+What the dialog offers.
+
+###### Returns
+
+`Promise`\<[`HostOpenDialogResult`](#hostopendialogresult)\>
+
+What the user chose.
+
+###### Implementation of
+
+[`Desktop`](#desktop-1).[`showOpenDialog`](#showopendialog)
+
+##### watchWindowEvents()
+
+> **watchWindowEvents**(`listener`): `void`
+
+Subscribes to the host's window lifecycle events and re-emits them on
+[HostDesktop.onWindowEvent](#onwindowevent-1).
+
+###### Parameters
+
+###### listener
+
+(`event`) => `void`
+
+Called with each event name before the signal is emitted, so `electron()`
+can map `focus` and `blur` onto `onApplicationFocus`.
+
+###### Returns
+
+`void`
+
+***
+
 ### HudText
 
 Pixel-space HUD text.
@@ -18377,7 +18816,7 @@ Builds a HUD label with the schema's defaults.
 
 ###### Overrides
 
-[`TextComponent`](#abstract-textcomponent).[`constructor`](#constructor-86)
+[`TextComponent`](#abstract-textcomponent).[`constructor`](#constructor-90)
 
 #### Properties
 
@@ -19261,6 +19700,210 @@ One sentence telling the developer how to fix it, or `null` when there is nothin
 
 ***
 
+### IndexedDbStorageBackend
+
+A store backed by the browser's IndexedDB.
+
+#### Example
+
+```ts
+const app = await createApp({ canvas, storage: new IndexedDbStorageBackend() });
+```
+
+#### Implements
+
+- [`StorageBackend`](#storagebackend)
+
+#### Constructors
+
+##### Constructor
+
+> **new IndexedDbStorageBackend**(): [`IndexedDbStorageBackend`](#indexeddbstoragebackend)
+
+###### Returns
+
+[`IndexedDbStorageBackend`](#indexeddbstoragebackend)
+
+#### Properties
+
+##### name
+
+> `readonly` **name**: `"indexeddb"` = `"indexeddb"`
+
+The identifier that appears in error context.
+
+###### Implementation of
+
+[`StorageBackend`](#storagebackend).[`name`](#name-49)
+
+#### Methods
+
+##### clear()
+
+> **clear**(`namespace`): `Promise`\<`void`\>
+
+Empties one namespace.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the transaction commits.
+
+###### Implementation of
+
+[`StorageBackend`](#storagebackend).[`clear`](#clear-6)
+
+##### delete()
+
+> **delete**(`namespace`, `key`): `Promise`\<`void`\>
+
+Removes one value.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path.
+
+###### key
+
+`string`
+
+The key.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the transaction commits.
+
+###### Implementation of
+
+[`StorageBackend`](#storagebackend).[`delete`](#delete-5)
+
+##### dispose()
+
+> **dispose**(): `void`
+
+Closes the connection. The next call opens a new one.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`StorageBackend`](#storagebackend).[`dispose`](#dispose-20)
+
+##### get()
+
+> **get**(`namespace`, `key`): `Promise`\<[`StoredValue`](#storedvalue) \| `null`\>
+
+Reads one value.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path.
+
+###### key
+
+`string`
+
+The key.
+
+###### Returns
+
+`Promise`\<[`StoredValue`](#storedvalue) \| `null`\>
+
+The value, or `null`.
+
+###### Implementation of
+
+[`StorageBackend`](#storagebackend).[`get`](#get-11)
+
+##### keys()
+
+> **keys**(`namespace`, `prefix?`): `Promise`\<readonly `string`[]\>
+
+Lists one namespace's keys.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path.
+
+###### prefix?
+
+`string`
+
+An optional key prefix.
+
+###### Returns
+
+`Promise`\<readonly `string`[]\>
+
+The matching keys, in ascending order.
+
+###### Implementation of
+
+[`StorageBackend`](#storagebackend).[`keys`](#keys-6)
+
+##### set()
+
+> **set**(`namespace`, `key`, `value`): `Promise`\<`void`\>
+
+Writes one value.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path.
+
+###### key
+
+`string`
+
+The key.
+
+###### value
+
+[`StoredValue`](#storedvalue)
+
+The value.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the transaction commits.
+
+###### Implementation of
+
+[`StorageBackend`](#storagebackend).[`set`](#set-13)
+
+***
+
 ### InputAction
 
 One input action (`docs/architecture/08-input.md` §2).
@@ -19585,7 +20228,7 @@ The set's maps, keyed by name.
 
 > **get** **isDisposed**(): `boolean`
 
-Whether [InputActionSet.dispose](#dispose-8) has run.
+Whether [InputActionSet.dispose](#dispose-10) has run.
 
 ###### Returns
 
@@ -21788,7 +22431,7 @@ The fraction.
 
 > **bindTo**(`assets`): [`Disconnect`](#disconnect)
 
-Follows an asset service's aggregate progress until [LoadingScreen.dispose](#dispose-9) or a second
+Follows an asset service's aggregate progress until [LoadingScreen.dispose](#dispose-11) or a second
 call to this method.
 
 ###### Parameters
@@ -22403,7 +23046,7 @@ The name diagnostics and error reports use.
 
 ###### Implementation of
 
-[`System`](#system).[`name`](#name-45)
+[`System`](#system).[`name`](#name-50)
 
 #### Methods
 
@@ -23776,6 +24419,210 @@ The roughness factor, 0 to 1.
 
 ***
 
+### MemoryStorageBackend
+
+A store that lives as long as the app does.
+
+#### Example
+
+```ts
+const app = await createApp({ storage: new MemoryStorageBackend() });
+```
+
+#### Implements
+
+- [`StorageBackend`](#storagebackend)
+
+#### Constructors
+
+##### Constructor
+
+> **new MemoryStorageBackend**(): [`MemoryStorageBackend`](#memorystoragebackend)
+
+###### Returns
+
+[`MemoryStorageBackend`](#memorystoragebackend)
+
+#### Properties
+
+##### name
+
+> `readonly` **name**: `"memory"` = `"memory"`
+
+The identifier that appears in error context.
+
+###### Implementation of
+
+[`StorageBackend`](#storagebackend).[`name`](#name-49)
+
+#### Methods
+
+##### clear()
+
+> **clear**(`namespace`): `Promise`\<`void`\>
+
+Empties one namespace.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the namespace is empty.
+
+###### Implementation of
+
+[`StorageBackend`](#storagebackend).[`clear`](#clear-6)
+
+##### delete()
+
+> **delete**(`namespace`, `key`): `Promise`\<`void`\>
+
+Removes one value.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path.
+
+###### key
+
+`string`
+
+The key.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the value is gone.
+
+###### Implementation of
+
+[`StorageBackend`](#storagebackend).[`delete`](#delete-5)
+
+##### dispose()
+
+> **dispose**(): `void`
+
+Drops every namespace.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`StorageBackend`](#storagebackend).[`dispose`](#dispose-20)
+
+##### get()
+
+> **get**(`namespace`, `key`): `Promise`\<[`StoredValue`](#storedvalue) \| `null`\>
+
+Reads one value.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path.
+
+###### key
+
+`string`
+
+The key.
+
+###### Returns
+
+`Promise`\<[`StoredValue`](#storedvalue) \| `null`\>
+
+A copy of the stored value, or `null`.
+
+###### Implementation of
+
+[`StorageBackend`](#storagebackend).[`get`](#get-11)
+
+##### keys()
+
+> **keys**(`namespace`, `prefix?`): `Promise`\<readonly `string`[]\>
+
+Lists one namespace's keys.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path.
+
+###### prefix?
+
+`string`
+
+An optional key prefix.
+
+###### Returns
+
+`Promise`\<readonly `string`[]\>
+
+The matching keys, sorted ascending.
+
+###### Implementation of
+
+[`StorageBackend`](#storagebackend).[`keys`](#keys-6)
+
+##### set()
+
+> **set**(`namespace`, `key`, `value`): `Promise`\<`void`\>
+
+Writes one value.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path, created on demand.
+
+###### key
+
+`string`
+
+The key.
+
+###### value
+
+[`StoredValue`](#storedvalue)
+
+The value to copy in.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the value is stored.
+
+###### Implementation of
+
+[`StorageBackend`](#storagebackend).[`set`](#set-13)
+
+***
+
 ### MeshAsset
 
 A geometry template a `MeshRenderer` draws (`docs/architecture/07-rendering.md` §2.3).
@@ -23822,7 +24669,7 @@ Whether the template's GPU buffers have been released.
 
 `boolean`
 
-`true` once [MeshAsset.dispose](#dispose-11) has run.
+`true` once [MeshAsset.dispose](#dispose-14) has run.
 
 ##### lite
 
@@ -25966,7 +26813,7 @@ Applies the schema defaults, exactly as `Script.define` would.
 
 ###### Overrides
 
-[`Script`](#abstract-script).[`constructor`](#constructor-77)
+[`Script`](#abstract-script).[`constructor`](#constructor-81)
 
 #### Properties
 
@@ -26845,7 +27692,7 @@ The name diagnostics and error reports use.
 
 ###### Implementation of
 
-[`System`](#system).[`name`](#name-45)
+[`System`](#system).[`name`](#name-50)
 
 #### Methods
 
@@ -29809,6 +30656,23 @@ The new acceleration vector, in metres per second squared.
 
 `void`
 
+##### hasStepped
+
+###### Get Signature
+
+> **get** **hasStepped**(): `boolean`
+
+Whether at least one fixed step has completed, which is when Havok has built its broadphase and
+queries become legal (`09-physics.md` §5). A script that queries from `lateUpdate` or `update`
+checks this on the first frame, where the fixed loop may not have run yet, instead of catching
+`IGX-0902`.
+
+###### Returns
+
+`boolean`
+
+`true` once the first step has run.
+
 ##### lite
 
 ###### Get Signature
@@ -30088,7 +30952,7 @@ Applies the schema defaults, exactly as `Component.define` would.
 
 ###### Overrides
 
-[`Script`](#abstract-script).[`constructor`](#constructor-77)
+[`Script`](#abstract-script).[`constructor`](#constructor-81)
 
 #### Properties
 
@@ -32255,7 +33119,7 @@ Applies the schema defaults, exactly as `Component.define` would.
 
 ###### Overrides
 
-[`Script`](#abstract-script).[`constructor`](#constructor-77)
+[`Script`](#abstract-script).[`constructor`](#constructor-81)
 
 #### Properties
 
@@ -35352,7 +36216,7 @@ Applies the schema defaults, exactly as `Component.define` would.
 
 ###### Overrides
 
-[`Script`](#abstract-script).[`constructor`](#constructor-77)
+[`Script`](#abstract-script).[`constructor`](#constructor-81)
 
 #### Properties
 
@@ -40595,7 +41459,7 @@ Applies the schema defaults, exactly as `Component.define` would.
 
 ###### Overrides
 
-[`Script`](#abstract-script).[`constructor`](#constructor-77)
+[`Script`](#abstract-script).[`constructor`](#constructor-81)
 
 #### Properties
 
@@ -41253,7 +42117,7 @@ Applies the schema defaults, exactly as `Component.define` would.
 
 ###### Overrides
 
-[`Script`](#abstract-script).[`constructor`](#constructor-77)
+[`Script`](#abstract-script).[`constructor`](#constructor-81)
 
 #### Properties
 
@@ -41935,7 +42799,7 @@ The name diagnostics and error reports use.
 
 ###### Implementation of
 
-[`System`](#system).[`name`](#name-45)
+[`System`](#system).[`name`](#name-50)
 
 #### Methods
 
@@ -45497,7 +46361,7 @@ The name diagnostics and error reports use.
 
 ###### Implementation of
 
-[`System`](#system).[`name`](#name-45)
+[`System`](#system).[`name`](#name-50)
 
 #### Methods
 
@@ -45868,7 +46732,7 @@ The name diagnostics and error reports use.
 
 ###### Implementation of
 
-[`System`](#system).[`name`](#name-45)
+[`System`](#system).[`name`](#name-50)
 
 #### Methods
 
@@ -46458,7 +47322,7 @@ The name diagnostics and error reports use.
 
 ###### Implementation of
 
-[`System`](#system).[`name`](#name-45)
+[`System`](#system).[`name`](#name-50)
 
 #### Methods
 
@@ -46511,6 +47375,210 @@ The world, clock, phase, and delta.
 ###### Implementation of
 
 [`System`](#system).[`update`](#update-10)
+
+***
+
+### UnavailableDesktop
+
+The `Desktop` a browser build gets: `isElectron === false`, and every call refused.
+
+#### Remarks
+
+A refusing implementation rather than an absent property, because the alternative — leaving
+`app.desktop` undefined outside Electron — turns a portable game's every desktop call into an
+optional-chaining exercise and hides the mistake of calling one unconditionally.
+
+#### Implements
+
+- [`Desktop`](#desktop-1)
+
+#### Constructors
+
+##### Constructor
+
+> **new UnavailableDesktop**(): [`UnavailableDesktop`](#unavailabledesktop)
+
+###### Returns
+
+[`UnavailableDesktop`](#unavailabledesktop)
+
+#### Properties
+
+##### isElectron
+
+> `readonly` **isElectron**: `boolean`
+
+Always `false`.
+
+###### Implementation of
+
+[`Desktop`](#desktop-1).[`isElectron`](#iselectron)
+
+##### onWindowEvent
+
+> `readonly` **onWindowEvent**: [`SignalLike`](#signallike)\<[`HostWindowEvent`](#hostwindowevent)\>
+
+Never emits: a browser build has no host window to report on.
+
+###### Implementation of
+
+[`Desktop`](#desktop-1).[`onWindowEvent`](#onwindowevent)
+
+##### versions
+
+> `readonly` **versions**: [`HostVersions`](#hostversions) \| `null`
+
+Always `null`.
+
+###### Implementation of
+
+[`Desktop`](#desktop-1).[`versions`](#versions)
+
+#### Methods
+
+##### isFullscreen()
+
+> **isFullscreen**(): `Promise`\<`boolean`\>
+
+Refuses.
+
+###### Returns
+
+`Promise`\<`boolean`\>
+
+Never; the promise rejects with `IGX-1462`.
+
+###### Implementation of
+
+[`Desktop`](#desktop-1).[`isFullscreen`](#isfullscreen)
+
+##### openExternal()
+
+> **openExternal**(`_url`): `Promise`\<`void`\>
+
+Refuses.
+
+###### Parameters
+
+###### \_url
+
+`string`
+
+Ignored.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+Never; the promise rejects with `IGX-1462`.
+
+###### Implementation of
+
+[`Desktop`](#desktop-1).[`openExternal`](#openexternal)
+
+##### paths()
+
+> **paths**(): `Promise`\<[`HostPaths`](#hostpaths)\>
+
+Refuses.
+
+###### Returns
+
+`Promise`\<[`HostPaths`](#hostpaths)\>
+
+Never; the promise rejects with `IGX-1462`.
+
+###### Implementation of
+
+[`Desktop`](#desktop-1).[`paths`](#paths)
+
+##### quit()
+
+> **quit**(): `Promise`\<`void`\>
+
+Refuses.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+Never; the promise rejects with `IGX-1462`.
+
+###### Implementation of
+
+[`Desktop`](#desktop-1).[`quit`](#quit)
+
+##### setFullscreen()
+
+> **setFullscreen**(`_fullscreen`): `Promise`\<`void`\>
+
+Refuses.
+
+###### Parameters
+
+###### \_fullscreen
+
+`boolean`
+
+Ignored.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+Never; the promise rejects with `IGX-1462`.
+
+###### Implementation of
+
+[`Desktop`](#desktop-1).[`setFullscreen`](#setfullscreen)
+
+##### setWindowTitle()
+
+> **setWindowTitle**(`_title`): `Promise`\<`void`\>
+
+Refuses.
+
+###### Parameters
+
+###### \_title
+
+`string`
+
+Ignored.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+Never; the promise rejects with `IGX-1462`.
+
+###### Implementation of
+
+[`Desktop`](#desktop-1).[`setWindowTitle`](#setwindowtitle)
+
+##### showOpenDialog()
+
+> **showOpenDialog**(`_options?`): `Promise`\<[`HostOpenDialogResult`](#hostopendialogresult)\>
+
+Refuses.
+
+###### Parameters
+
+###### \_options?
+
+[`HostOpenDialogOptions`](#hostopendialogoptions)
+
+Ignored.
+
+###### Returns
+
+`Promise`\<[`HostOpenDialogResult`](#hostopendialogresult)\>
+
+Never; the promise rejects with `IGX-1462`.
+
+###### Implementation of
+
+[`Desktop`](#desktop-1).[`showOpenDialog`](#showopendialog)
 
 ***
 
@@ -49926,7 +50994,7 @@ Builds an empty virtual device.
 
 ###### Overrides
 
-[`InputDevice`](#inputdevice).[`constructor`](#constructor-46)
+[`InputDevice`](#inputdevice).[`constructor`](#constructor-49)
 
 #### Properties
 
@@ -50822,7 +51890,7 @@ The app.
 
 > **get** **isDisposed**(): `boolean`
 
-`true` once [World.dispose](#dispose-22) has run.
+`true` once [World.dispose](#dispose-26) has run.
 
 ###### Returns
 
@@ -51974,7 +53042,7 @@ Builds a sign with the schema's defaults.
 
 ###### Overrides
 
-[`TextComponent`](#abstract-textcomponent).[`constructor`](#constructor-86)
+[`TextComponent`](#abstract-textcomponent).[`constructor`](#constructor-90)
 
 #### Properties
 
@@ -52585,7 +53653,7 @@ Builds a floating label with the schema's defaults.
 
 ###### Overrides
 
-[`TextComponent`](#abstract-textcomponent).[`constructor`](#constructor-86)
+[`TextComponent`](#abstract-textcomponent).[`constructor`](#constructor-90)
 
 #### Properties
 
@@ -53724,6 +54792,18 @@ one-shots, and the listener.
 
 The coroutine scheduler.
 
+##### desktop
+
+> `readonly` **desktop**: [`Desktop`](#desktop-1)
+
+The desktop service (`docs/architecture/14-platform-electron.md` §3): full screen, the window
+title, quitting, the open dialog, external links, and the host window's lifecycle events.
+
+###### Remarks
+
+Always defined once `electron()` is registered. In a browser build every method rejects with
+`IGX-1462` and `isElectron` is `false`.
+
 ##### diagnostics
 
 > `readonly` **diagnostics**: [`Diagnostics`](#diagnostics-1)
@@ -53803,8 +54883,8 @@ Every failure the engine caught at a boundary rather than rethrowing.
 
 > `readonly` **platform**: [`PlatformInfo`](#platforminfo)
 
-Where the app is running (`docs/architecture/14-platform-electron.md` §1). Phase 1 answers only
-`kind`; the rest of §1's surface arrives with `@ignifx/electron`.
+Where the app is running, what it is running on, and what its WebGPU adapter offers
+(`docs/architecture/14-platform-electron.md` §1).
 
 ##### renderer
 
@@ -53824,6 +54904,15 @@ Services registered by extensions.
 > `readonly` **settings**: [`AppSettings`](#appsettings-1)
 
 Resolved project settings.
+
+##### storage
+
+> `readonly` **storage**: [`Storage`](#storage-4)
+
+The asynchronous key-value store settings, save games, and input rebindings live in
+(`docs/architecture/14-platform-electron.md` §2). The backend is chosen from
+[PlatformInfo.kind](#kind-24) — IndexedDB in a browser, memory under Node — unless `createApp` was
+given one.
 
 ##### time
 
@@ -54527,7 +55616,7 @@ The address that failed.
 
 ###### Inherited from
 
-[`IgnifxErrorOptions`](#ignifxerroroptions).[`cause`](#cause-4)
+[`IgnifxErrorOptions`](#ignifxerroroptions).[`cause`](#cause-5)
 
 ##### context?
 
@@ -54537,7 +55626,7 @@ Identifiers that locate the failure. Defaults to an empty record.
 
 ###### Inherited from
 
-[`IgnifxErrorOptions`](#ignifxerroroptions).[`context`](#context-4)
+[`IgnifxErrorOptions`](#ignifxerroroptions).[`context`](#context-5)
 
 ##### hint?
 
@@ -54547,7 +55636,7 @@ One sentence telling the developer what to do about it. Defaults to `null`.
 
 ###### Inherited from
 
-[`IgnifxErrorOptions`](#ignifxerroroptions).[`hint`](#hint-4)
+[`IgnifxErrorOptions`](#ignifxerroroptions).[`hint`](#hint-5)
 
 ##### mode?
 
@@ -57918,6 +59007,14 @@ Project settings, as `ignifx.config.ts` would supply them
 (`docs/architecture/04-extensions.md` §5). The Vite plugin injects the resolved config in
 Phase 2; tests and Electron tooling pass it here.
 
+##### storage?
+
+> `readonly` `optional` **storage?**: [`StorageBackend`](#storagebackend) \| [`FileStorageOptions`](#filestorageoptions)
+
+Where `app.storage` puts things (`docs/architecture/14-platform-electron.md` §2). Pass a
+[StorageBackend](#storagebackend) to install one, or `{ directory }` to write a directory tree under Node.
+Defaults to IndexedDB in a browser and to an in-memory store everywhere else.
+
 ***
 
 ### CreateBusOptions
@@ -58221,6 +59318,192 @@ The delivery to run.
 ###### Returns
 
 `void`
+
+***
+
+### Desktop
+
+The desktop service reached as `app.desktop`.
+
+#### Example
+
+```ts
+class PauseMenu extends Script {
+  async toggleFullscreen(): Promise<void> {
+    if (this.app.desktop.isElectron) {
+      await this.app.desktop.setFullscreen(!(await this.app.desktop.isFullscreen()));
+    }
+  }
+}
+```
+
+#### Properties
+
+##### isElectron
+
+> `readonly` **isElectron**: `boolean`
+
+Whether a preload bridge was found — that is, whether this really is a desktop build.
+
+###### Remarks
+
+The one member that works everywhere. Everything else rejects with `IGX-1462` when this is
+`false`.
+
+##### onWindowEvent
+
+> `readonly` **onWindowEvent**: [`SignalLike`](#signallike)\<[`HostWindowEvent`](#hostwindowevent)\>
+
+The host window's lifecycle events, as the main process reports them.
+
+###### Remarks
+
+This signal is the **only** source of `minimize` and `restore` in an Electron renderer.
+Measured on Electron 44.2.0 / macOS arm64 (S9.1): minimising, restoring, and blurring the
+window fired the matching `BrowserWindow` events in the main process and delivered **nothing**
+to the page — no `visibilitychange`, no window `focus`/`blur`, and `document.hidden` stayed
+`false` throughout. `electron()` turns `focus` and `blur` into `onApplicationFocus`, which
+needs no `document` reading; `minimize` and `restore` have no `onApplicationPause` path today,
+so a game that must pause on minimise subscribes here.
+
+###### Example
+
+```ts
+app.desktop.onWindowEvent.connect((event) => {
+  if (event === "minimize") {
+    app.time.timeScale = 0;
+  }
+}, { owner: this });
+```
+
+##### versions
+
+> `readonly` **versions**: [`HostVersions`](#hostversions) \| `null`
+
+The Electron, Chromium, and Node versions, or `null` in a browser build.
+
+#### Methods
+
+##### isFullscreen()
+
+> **isFullscreen**(): `Promise`\<`boolean`\>
+
+Reports whether the window is full screen.
+
+###### Returns
+
+`Promise`\<`boolean`\>
+
+`true` when it is.
+
+##### openExternal()
+
+> **openExternal**(`url`): `Promise`\<`void`\>
+
+Opens a URL in the user's browser or mail client.
+
+###### Parameters
+
+###### url
+
+`string`
+
+The absolute URL to open.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the OS accepted it.
+
+###### Remarks
+
+The main process checks the protocol against an allow-list — `https:` and `mailto:` by default
+— and rejects with `IGX-1464` for anything else, rather than silently doing nothing.
+
+##### paths()
+
+> **paths**(): `Promise`\<[`HostPaths`](#hostpaths)\>
+
+Resolves the platform directories.
+
+###### Returns
+
+`Promise`\<[`HostPaths`](#hostpaths)\>
+
+The directories the host reported.
+
+##### quit()
+
+> **quit**(): `Promise`\<`void`\>
+
+Closes the window and quits the application.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the quit has been requested.
+
+##### setFullscreen()
+
+> **setFullscreen**(`fullscreen`): `Promise`\<`void`\>
+
+Enters or leaves full screen.
+
+###### Parameters
+
+###### fullscreen
+
+`boolean`
+
+`true` to enter, `false` to leave.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the host applied it.
+
+##### setWindowTitle()
+
+> **setWindowTitle**(`title`): `Promise`\<`void`\>
+
+Sets the window title.
+
+###### Parameters
+
+###### title
+
+`string`
+
+The new title.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the host applied it.
+
+##### showOpenDialog()
+
+> **showOpenDialog**(`options?`): `Promise`\<[`HostOpenDialogResult`](#hostopendialogresult)\>
+
+Shows a modal open dialog over the game window.
+
+###### Parameters
+
+###### options?
+
+[`HostOpenDialogOptions`](#hostopendialogoptions)
+
+What the dialog offers.
+
+###### Returns
+
+`Promise`\<[`HostOpenDialogResult`](#hostopendialogresult)\>
+
+What the user chose.
 
 ***
 
@@ -58531,6 +59814,71 @@ The document `visibilitychange` and `pointerlockchange` are read from.
 > `readonly` **window**: `Window`
 
 The window keyboard events and `blur` are read from.
+
+***
+
+### ElectronErrorOptions
+
+Options accepted by [electronError](#electronerror): the same subset of `IgnifxErrorOptions` this package
+uses.
+
+#### Properties
+
+##### cause?
+
+> `readonly` `optional` **cause?**: `unknown`
+
+The failure being wrapped, when there is one.
+
+##### context?
+
+> `readonly` `optional` **context?**: `Readonly`\<`Record`\<`string`, `string` \| `number` \| `boolean` \| `null`\>\>
+
+Identifiers that locate the failure.
+
+##### hint?
+
+> `readonly` `optional` **hint?**: `string`
+
+One sentence telling the developer what to do about it.
+
+***
+
+### ElectronOptions
+
+What `electron()` accepts.
+
+#### Properties
+
+##### applicationEvents?
+
+> `readonly` `optional` **applicationEvents?**: `boolean`
+
+Whether the host's `focus` and `blur` events are delivered as `onApplicationFocus`.
+
+###### Default Value
+
+`true`
+
+##### hostScope?
+
+> `readonly` `optional` **hostScope?**: `unknown`
+
+Where to look for the bridge. Tests pass a fake global; a game never sets this.
+
+###### Default Value
+
+`globalThis`
+
+##### storage?
+
+> `readonly` `optional` **storage?**: `boolean`
+
+Whether the file-system storage backend replaces whatever `createApp` installed.
+
+###### Default Value
+
+`true`
 
 ***
 
@@ -59614,6 +60962,22 @@ Excludes the field from saved games and scene files; it always takes its default
 
 ***
 
+### FileStorageOptions
+
+Options accepted by [createFileStorageBackend](#createfilestoragebackend).
+
+#### Properties
+
+##### directory
+
+> `readonly` **directory**: `string`
+
+The root directory. It is created on first write, together with every namespace directory
+under it. Under Electron this is `app.getPath("userData")`; in a test it is a temporary
+directory.
+
+***
+
 ### FontAssetLiteHandles
 
 The Babylon Lite objects a [FontAsset](#fontasset) owns. Unstable escape hatch
@@ -59846,6 +61210,44 @@ The pad's `mapping`: `"standard"`, `"xr-standard"`, or `""`.
 
 ***
 
+### GpuAdapterInfo
+
+Who made the GPU, as WebGPU reports it.
+
+#### Remarks
+
+Browsers deliberately blur these strings — most return an empty `architecture` and `device` on
+the default, non-`unmaskHints` path — so treat every field as a hint for a bug report rather than
+as something to branch on.
+
+#### Properties
+
+##### architecture
+
+> `readonly` **architecture**: `string`
+
+The GPU family, `"metal-3"`; `""` when the browser withholds it.
+
+##### description
+
+> `readonly` **description**: `string`
+
+A human-readable summary; `""` when the browser withholds it.
+
+##### device
+
+> `readonly` **device**: `string`
+
+The specific device; `""` when the browser withholds it.
+
+##### vendor
+
+> `readonly` **vendor**: `string`
+
+The GPU vendor, `"apple"` or `"nvidia"`; `""` when the browser withholds it.
+
+***
+
 ### GridAtlasImportOptions
 
 What [gridAtlas](#gridatlas) needs to cut an evenly spaced sheet into frames.
@@ -59987,6 +61389,471 @@ can be tested without a browser. Defaults to `false`.
 
 ***
 
+### HostDialogs
+
+The dialogs the bridge exposes.
+
+#### Methods
+
+##### showOpenDialog()
+
+> **showOpenDialog**(`options?`): `Promise`\<[`HostOpenDialogResult`](#hostopendialogresult)\>
+
+Shows a modal open dialog over the game window.
+
+###### Parameters
+
+###### options?
+
+[`HostOpenDialogOptions`](#hostopendialogoptions)
+
+What the dialog offers.
+
+###### Returns
+
+`Promise`\<[`HostOpenDialogResult`](#hostopendialogresult)\>
+
+What the user chose.
+
+***
+
+### HostFileFilter
+
+One file-type row of an open dialog.
+
+#### Properties
+
+##### extensions
+
+> `readonly` **extensions**: readonly `string`[]
+
+Extensions without a leading dot, for example `["sav", "json"]`.
+
+##### name
+
+> `readonly` **name**: `string`
+
+The row's label, for example `"Saved games"`.
+
+***
+
+### HostOpenDialogOptions
+
+What `HostDialogs.showOpenDialog` accepts. A deliberate subset of Electron's
+`OpenDialogOptions` (`electron.d.ts` 15318): everything here is a plain value, so nothing about
+the main process leaks into the renderer's types.
+
+#### Properties
+
+##### buttonLabel?
+
+> `readonly` `optional` **buttonLabel?**: `string`
+
+The confirm button's label.
+
+##### defaultPath?
+
+> `readonly` `optional` **defaultPath?**: `string`
+
+The directory the dialog opens in.
+
+##### directories?
+
+> `readonly` `optional` **directories?**: `boolean`
+
+Whether directories may be chosen. Defaults to `false`.
+
+##### files?
+
+> `readonly` `optional` **files?**: `boolean`
+
+Whether files may be chosen. Defaults to `true`.
+
+##### filters?
+
+> `readonly` `optional` **filters?**: readonly [`HostFileFilter`](#hostfilefilter)[]
+
+The file-type rows.
+
+##### multiple?
+
+> `readonly` `optional` **multiple?**: `boolean`
+
+Whether more than one entry may be chosen. Defaults to `false`.
+
+##### title?
+
+> `readonly` `optional` **title?**: `string`
+
+The dialog's title, where the platform shows one.
+
+***
+
+### HostOpenDialogResult
+
+What an open dialog returned.
+
+#### Properties
+
+##### canceled
+
+> `readonly` **canceled**: `boolean`
+
+Whether the user dismissed the dialog.
+
+##### paths
+
+> `readonly` **paths**: readonly `string`[]
+
+The absolute paths chosen; empty when the dialog was dismissed.
+
+***
+
+### HostPaths
+
+The directories a desktop build is allowed to know about, resolved once at startup.
+
+#### Remarks
+
+Read-only strings, not handles: a game that wants to *write* somewhere uses `app.storage`, which
+goes through the same bridge and cannot escape `userData`.
+
+#### Properties
+
+##### appData
+
+> `readonly` **appData**: `string`
+
+The platform's roaming application-data directory.
+
+##### appPath
+
+> `readonly` **appPath**: `string`
+
+The directory the packaged application resources were loaded from.
+
+##### documents
+
+> `readonly` **documents**: `string`
+
+The current user's documents directory, or `""` where the platform has none.
+
+##### downloads
+
+> `readonly` **downloads**: `string`
+
+The current user's downloads directory, or `""` where the platform has none.
+
+##### home
+
+> `readonly` **home**: `string`
+
+The current user's home directory.
+
+##### temp
+
+> `readonly` **temp**: `string`
+
+The platform's temporary directory.
+
+##### userData
+
+> `readonly` **userData**: `string`
+
+The per-user, per-app directory Electron gives the app; where `app.storage` lives.
+
+***
+
+### HostShell
+
+The shell half of the bridge.
+
+#### Methods
+
+##### openExternal()
+
+> **openExternal**(`url`): `Promise`\<`void`\>
+
+Opens a URL in the user's browser or mail client.
+
+###### Parameters
+
+###### url
+
+`string`
+
+The absolute URL to open.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the OS accepted it.
+
+###### Remarks
+
+The main process checks the protocol against an allow-list before handing it to the OS; a
+refusal rejects rather than silently doing nothing.
+
+***
+
+### HostStorage
+
+The storage half of the bridge. Namespaces and keys arrive already validated by the `Storage`
+facade, so the main process treats a key as opaque text and encodes it for the file system.
+
+#### Methods
+
+##### clear()
+
+> **clear**(`namespace`): `Promise`\<`void`\>
+
+Removes every value of one namespace.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the namespace is empty.
+
+##### delete()
+
+> **delete**(`namespace`, `key`): `Promise`\<`void`\>
+
+Removes one value.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path.
+
+###### key
+
+`string`
+
+The key inside that namespace.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the value is gone.
+
+##### get()
+
+> **get**(`namespace`, `key`): `Promise`\<[`HostStoredValue`](#hoststoredvalue) \| `null`\>
+
+Reads one value.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path.
+
+###### key
+
+`string`
+
+The key inside that namespace.
+
+###### Returns
+
+`Promise`\<[`HostStoredValue`](#hoststoredvalue) \| `null`\>
+
+The stored value, or `null` when there is none.
+
+##### keys()
+
+> **keys**(`namespace`, `prefix?`): `Promise`\<readonly `string`[]\>
+
+Lists the keys of one namespace.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path.
+
+###### prefix?
+
+`string`
+
+When given, only keys that start with this string are returned.
+
+###### Returns
+
+`Promise`\<readonly `string`[]\>
+
+The matching keys, sorted ascending.
+
+##### set()
+
+> **set**(`namespace`, `key`, `value`): `Promise`\<`void`\>
+
+Writes one value, replacing whatever was there.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path.
+
+###### key
+
+`string`
+
+The key inside that namespace.
+
+###### value
+
+[`HostStoredValue`](#hoststoredvalue)
+
+The JSON text or the octets to persist.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the value is durable.
+
+***
+
+### HostVersions
+
+The runtime versions the bridge reports, read from `process.versions` in the preload script.
+
+#### Properties
+
+##### chrome
+
+> `readonly` **chrome**: `string`
+
+The Chromium version.
+
+##### electron
+
+> `readonly` **electron**: `string`
+
+The Electron version, for example `"44.2.0"`.
+
+##### node
+
+> `readonly` **node**: `string`
+
+The Node version bundled with Electron.
+
+***
+
+### HostWindow
+
+The window controls the bridge exposes.
+
+#### Methods
+
+##### isFullscreen()
+
+> **isFullscreen**(): `Promise`\<`boolean`\>
+
+Reports whether the window is full screen.
+
+###### Returns
+
+`Promise`\<`boolean`\>
+
+`true` when it is.
+
+##### onEvent()
+
+> **onEvent**(`listener`): () => `void`
+
+Subscribes to the window lifecycle events the main process forwards.
+
+###### Parameters
+
+###### listener
+
+(`event`) => `void`
+
+Called with each event name.
+
+###### Returns
+
+A function that unsubscribes.
+
+() => `void`
+
+##### quit()
+
+> **quit**(): `Promise`\<`void`\>
+
+Closes the window and quits the application.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the quit has been requested.
+
+##### setFullscreen()
+
+> **setFullscreen**(`fullscreen`): `Promise`\<`void`\>
+
+Enters or leaves full screen.
+
+###### Parameters
+
+###### fullscreen
+
+`boolean`
+
+`true` to enter, `false` to leave.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the main process has applied it.
+
+##### setTitle()
+
+> **setTitle**(`title`): `Promise`\<`void`\>
+
+Sets the window's title.
+
+###### Parameters
+
+###### title
+
+`string`
+
+The new title.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the main process has applied it.
+
+***
+
 ### HudPlacement
 
 A layer position, written in place so the per-frame path allocates nothing.
@@ -60103,6 +61970,79 @@ One sentence telling the developer what to do about it. Defaults to `null`.
 > `readonly` `optional` **mode?**: [`ErrorFormatMode`](#errorformatmode)
 
 How verbose `message` should be. Defaults to `"development"`.
+
+***
+
+### IgnifxHost
+
+`window.ignifxHost`: everything the preload script exposes to the renderer
+(`docs/architecture/14-platform-electron.md` §3).
+
+#### Remarks
+
+Every member is a function or a plain value. No `ipcRenderer`, no `Electron` object, and nothing
+with a prototype the renderer could walk back to Node — `contextBridge` would refuse most of that
+anyway, and the ones it would allow are exactly the ones `CONSTITUTION.md` §9.2 forbids.
+
+#### Example
+
+```ts
+if (window.ignifxHost !== undefined) {
+  const { userData } = await window.ignifxHost.paths();
+}
+```
+
+#### Properties
+
+##### dialogs
+
+> `readonly` **dialogs**: [`HostDialogs`](#hostdialogs)
+
+Native dialogs.
+
+##### shell
+
+> `readonly` **shell**: [`HostShell`](#hostshell)
+
+The OS shell.
+
+##### storage
+
+> `readonly` **storage**: [`HostStorage`](#hoststorage)
+
+Reference-counted key/value storage under `userData`.
+
+##### version
+
+> `readonly` **version**: `string`
+
+The [HOST\_CONTRACT\_VERSION](#host_contract_version) this bridge was built from.
+
+##### versions
+
+> `readonly` **versions**: [`HostVersions`](#hostversions)
+
+The Electron, Chromium, and Node versions the app is running on.
+
+##### window
+
+> `readonly` **window**: [`HostWindow`](#hostwindow)
+
+Window controls and window lifecycle events.
+
+#### Methods
+
+##### paths()
+
+> **paths**(): `Promise`\<[`HostPaths`](#hostpaths)\>
+
+Resolves the platform directories.
+
+###### Returns
+
+`Promise`\<[`HostPaths`](#hostpaths)\>
+
+The directories, resolved by the main process.
 
 ***
 
@@ -62869,23 +64809,68 @@ Width, overriding `size`.
 
 ### PlatformInfo
 
-What the kernel knows about the host.
+What the kernel knows about the host, reached as `app.platform`.
 
 #### Example
 
 ```ts
-if (app.platform.kind === "browser") {
-  document.title = "playing";
+if (app.platform.isMobile) {
+  app.renderer.resolutionScale = 0.75;
+}
+if (app.platform.reducedMotion) {
+  disableScreenShake();
 }
 ```
 
 #### Properties
 
+##### hasGamepads
+
+> `readonly` **hasGamepads**: `boolean`
+
+`true` when the host implements the Gamepad API.
+
+##### hasPointerLock
+
+> `readonly` **hasPointerLock**: `boolean`
+
+`true` when the host implements the Pointer Lock API.
+
+##### isMobile
+
+> `readonly` **isMobile**: `boolean`
+
+`true` on a phone or a tablet.
+
 ##### kind
 
 > `readonly` **kind**: [`PlatformKind`](#platformkind)
 
-Whether the app runs in a document or in a bare JavaScript runtime.
+Whether the app runs in a document, in an Electron renderer, or in a bare JavaScript runtime.
+
+##### locale
+
+> `readonly` **locale**: `string`
+
+The host's BCP 47 language tag, `"en-AU"`. Never empty.
+
+##### os
+
+> `readonly` **os**: [`PlatformOs`](#platformos)
+
+The operating system, or `"unknown"` when the host does not say.
+
+##### reducedMotion
+
+> `readonly` **reducedMotion**: `boolean`
+
+`true` when the user asked their system for reduced motion.
+
+##### webgpu
+
+> `readonly` **webgpu**: [`WebGpuInfo`](#webgpuinfo) \| `null`
+
+What WebGPU offers, or `null` in a headless app and on a host with no WebGPU.
 
 ***
 
@@ -66258,6 +68243,378 @@ The state's name.
 
 ***
 
+### Storage
+
+The store reached as `app.storage`, and as `app.storage.namespace(name)`.
+
+#### Remarks
+
+Values are JSON, or binary: a `Blob`, an `ArrayBuffer`, or any typed array is stored as octets
+and read back as a `Uint8Array`. Numbers inside JSON values are canonicalized the way scene files
+canonicalize them (`docs/architecture/06-serialization-and-scene-format.md` §2), so writing the
+same state twice produces the same bytes.
+
+Reads and writes are asynchronous on every backend, including the in-memory one, so that game
+code written against a test app keeps working on IndexedDB.
+
+#### Example
+
+```ts
+const settings = app.storage.namespace("settings");
+await settings.set("audio", { master: 0.8, music: 0.5 });
+const audio = await settings.get<{ master: number; music: number }>("audio");
+```
+
+#### Methods
+
+##### delete()
+
+> **delete**(`key`): `Promise`\<`void`\>
+
+Removes one value.
+
+###### Parameters
+
+###### key
+
+`string`
+
+The key.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the value is gone. Deleting an absent key is a no-op.
+
+###### Throws
+
+IgnifxError with code `IGX-1422` when the key is invalid, or `IGX-1425` when the
+backend fails.
+
+##### get()
+
+> **get**\<`T`\>(`key`): `Promise`\<`T` \| `null`\>
+
+Reads one value.
+
+###### Type Parameters
+
+###### T
+
+`T`
+
+What the caller declares the key holds; unchecked, as for `JSON.parse`.
+
+###### Parameters
+
+###### key
+
+`string`
+
+The key, 1–512 characters with no control characters.
+
+###### Returns
+
+`Promise`\<`T` \| `null`\>
+
+The value, or `null` when the key was never written.
+
+###### Throws
+
+IgnifxError with code `IGX-1422` when the key is invalid, `IGX-1426` when the stored
+value cannot be read back, or `IGX-1425` when the backend fails.
+
+##### keys()
+
+> **keys**(`prefix?`): `Promise`\<readonly `string`[]\>
+
+Lists this namespace's keys.
+
+###### Parameters
+
+###### prefix?
+
+`string`
+
+When given, only keys that start with this string are returned.
+
+###### Returns
+
+`Promise`\<readonly `string`[]\>
+
+The keys, sorted ascending. Keys of nested namespaces are not included.
+
+###### Throws
+
+IgnifxError with code `IGX-1425` when the backend fails.
+
+##### namespace()
+
+> **namespace**(`name`): [`Storage`](#storage-4)
+
+Narrows to a child namespace — `"saves"`, `"settings"`, `"input-overrides"`.
+
+###### Parameters
+
+###### name
+
+`string`
+
+1–64 characters of `A`–`Z`, `a`–`z`, `0`–`9`, `.`, `_`, `-`; not `.` or `..`.
+
+###### Returns
+
+[`Storage`](#storage-4)
+
+The child store, which shares this store's backend and sees none of its keys.
+
+###### Throws
+
+IgnifxError with code `IGX-1421` when the name is not a legal namespace segment.
+
+##### set()
+
+> **set**\<`T`\>(`key`, `value`): `Promise`\<`void`\>
+
+Writes one value, replacing whatever was there.
+
+###### Type Parameters
+
+###### T
+
+`T`
+
+The value's type.
+
+###### Parameters
+
+###### key
+
+`string`
+
+The key, 1–512 characters with no control characters.
+
+###### value
+
+`T`
+
+A JSON value, a `Blob`, an `ArrayBuffer`, or a typed array.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the value is durable.
+
+###### Throws
+
+IgnifxError with code `IGX-1422` when the key is invalid, `IGX-1423` when the value has
+no JSON form, `IGX-1424` when the host is out of quota, or `IGX-1425` when the backend fails.
+
+***
+
+### StorageBackend
+
+Where `app.storage` actually puts things (`docs/architecture/14-platform-electron.md` §2).
+
+#### Remarks
+
+**The contract.** Implementations may assume all of the following, because the `Storage` facade
+guarantees them before every call:
+
+1. `namespace` is a non-empty `/`-joined path of segments; each segment is 1–64 characters of
+   `A`–`Z`, `a`–`z`, `0`–`9`, `.`, `_`, or `-`, and no segment is `.` or `..`. A backend that maps
+   namespaces onto a hierarchy (directories, object stores) must encode each segment so that two
+   namespaces differing only in case cannot collide on a case-insensitive file system.
+2. `key` is 1–512 characters, contains no C0 or C1 control character, and is otherwise arbitrary
+   Unicode — including `/`, `..`, `:`, and characters Windows forbids in file names. Keys are
+   opaque: a backend never interprets a key's structure, and `keys(namespace, prefix)` is a plain
+   string-prefix filter, not a path walk.
+3. Namespaces are **scopes, not prefixes**: `get("saves", "a")` and `get("saves/coop", "a")` name
+   two different values, and neither appears in the other's `keys()` listing.
+
+Implementations must guarantee all of the following:
+
+4. `get` resolves `null` for an absent key — absence is not an error.
+5. `set` replaces any existing value under the same `(namespace, key)`, whatever its kind, and
+   is atomic against a crash: a reader either sees the whole previous value or the whole new one,
+   never a partial write. `delete` on an absent key resolves without error.
+6. `keys` resolves the keys of one namespace, filtered by `prefix` when it is given, sorted
+   ascending with the default `Array.prototype.sort` comparison (UTF-16 code unit order). An
+   unknown namespace lists as `[]` rather than throwing.
+7. `clear` removes every key of one namespace and leaves other namespaces untouched. Clearing an
+   unknown namespace resolves without error.
+8. Every rejection is an `IgnifxError` carrying a code from the storage block: `IGX-1424` when the
+   host is out of quota, `IGX-1426` when a stored value cannot be read back, and `IGX-1425` for
+   every other backend failure, with the underlying failure as `cause`. Backends never reject with
+   a raw `DOMException` or a Node `SystemError`.
+9. Every method is safe to call concurrently. Two `set` calls on the same key may land in either
+   order, but neither may leave the store damaged.
+
+#### Example
+
+```ts
+const backend: StorageBackend = new MemoryStorageBackend();
+await backend.set("saves", "slot1", { kind: "json", json: '{"level":3}' });
+await backend.keys("saves"); // ["slot1"]
+```
+
+#### Properties
+
+##### name
+
+> `readonly` **name**: `string`
+
+A short, stable identifier for this backend — `"memory"`, `"file"`, `"indexeddb"`,
+`"electron-file"`. It appears in error context so a failure names the store it came from.
+
+#### Methods
+
+##### clear()
+
+> **clear**(`namespace`): `Promise`\<`void`\>
+
+Removes every value of one namespace.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the namespace is empty; an unknown namespace is a no-op.
+
+##### delete()
+
+> **delete**(`namespace`, `key`): `Promise`\<`void`\>
+
+Removes one value.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path.
+
+###### key
+
+`string`
+
+The key inside that namespace.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the value is gone; removing an absent key is a no-op.
+
+##### dispose()?
+
+> `optional` **dispose**(): `void`
+
+Releases whatever the backend holds open — an IndexedDB connection, a file handle, a bridge
+subscription. Called from `app.dispose()`. Disposing twice is a no-op, and a backend that holds
+nothing may omit the method entirely.
+
+###### Returns
+
+`void`
+
+##### get()
+
+> **get**(`namespace`, `key`): `Promise`\<[`StoredValue`](#storedvalue) \| `null`\>
+
+Reads one value.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path.
+
+###### key
+
+`string`
+
+The key inside that namespace.
+
+###### Returns
+
+`Promise`\<[`StoredValue`](#storedvalue) \| `null`\>
+
+The stored value, or `null` when the namespace has no such key.
+
+##### keys()
+
+> **keys**(`namespace`, `prefix?`): `Promise`\<readonly `string`[]\>
+
+Lists the keys of one namespace.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path.
+
+###### prefix?
+
+`string`
+
+When given, only keys that start with this string are returned.
+
+###### Returns
+
+`Promise`\<readonly `string`[]\>
+
+The matching keys, sorted ascending; `[]` for an unknown namespace.
+
+##### set()
+
+> **set**(`namespace`, `key`, `value`): `Promise`\<`void`\>
+
+Writes one value, replacing whatever was there.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path, created on demand.
+
+###### key
+
+`string`
+
+The key inside that namespace.
+
+###### value
+
+[`StoredValue`](#storedvalue)
+
+The JSON text or the octets to persist.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the value is durable.
+
+***
+
 ### StringFieldSpec
 
 Kind-specific data for `str`.
@@ -68717,6 +71074,32 @@ Samples per second per channel.
 
 ***
 
+### WebGpuInfo
+
+What the host's WebGPU adapter offers.
+
+#### Properties
+
+##### adapterInfo
+
+> `readonly` **adapterInfo**: [`GpuAdapterInfo`](#gpuadapterinfo)
+
+Who made the adapter.
+
+##### features
+
+> `readonly` **features**: readonly `string`[]
+
+The optional features the adapter supports, sorted ascending.
+
+##### limits
+
+> `readonly` **limits**: `Readonly`\<`Record`\<`string`, `number`\>\>
+
+The adapter's limits, by their WebGPU names.
+
+***
+
 ### WorldBox
 
 A caller-owned world-space box, so reading the camera's bounds allocates nothing.
@@ -69152,6 +71535,14 @@ The union of the named easing curves.
 
 ***
 
+### ElectronErrorCode
+
+> **ElectronErrorCode** = *typeof* [`ElectronErrorCode`](#electronerrorcode)\[keyof *typeof* [`ElectronErrorCode`](#electronerrorcode)\]
+
+The union of the codes the `ElectronErrorCode` table declares.
+
+***
+
 ### EntityHandle
 
 > **EntityHandle** = `number` & `object`
@@ -69306,6 +71697,74 @@ How one frame's pads are read. Injecting it is what makes the mapping testable i
 #### Returns
 
 readonly ([`GamepadLike`](#gamepadlike) \| `null`)[]
+
+***
+
+### HostChannel
+
+> **HostChannel** = *typeof* [`HOST_CHANNELS`](#host_channels)\[keyof *typeof* [`HOST_CHANNELS`](#host_channels)\]
+
+The union of the channel names [HOST\_CHANNELS](#host_channels) declares.
+
+***
+
+### HostStoredValue
+
+> **HostStoredValue** = \{ `json`: `string`; `kind`: `"json"`; \} \| \{ `bytes`: `Uint8Array`; `kind`: `"bytes"`; \}
+
+A stored value as it crosses the bridge: the wire form of `@ignifx/core`'s `StoredValue`
+(`docs/architecture/14-platform-electron.md` §2).
+
+#### Union Members
+
+##### Type Literal
+
+\{ `json`: `string`; `kind`: `"json"`; \}
+
+###### json
+
+> `readonly` **json**: `string`
+
+The canonical JSON text of the value.
+
+###### kind
+
+> `readonly` **kind**: `"json"`
+
+Discriminant: this value is JSON text.
+
+***
+
+##### Type Literal
+
+\{ `bytes`: `Uint8Array`; `kind`: `"bytes"`; \}
+
+###### bytes
+
+> `readonly` **bytes**: `Uint8Array`
+
+The octets. May be empty.
+
+###### kind
+
+> `readonly` **kind**: `"bytes"`
+
+Discriminant: this value is a byte array.
+
+***
+
+### HostWindowEvent
+
+> **HostWindowEvent** = `"minimize"` \| `"restore"` \| `"focus"` \| `"blur"` \| `"enter-full-screen"` \| `"leave-full-screen"`
+
+The window lifecycle events the main process forwards to the renderer.
+
+#### Remarks
+
+`minimize`/`restore` and `focus`/`blur` are the four `14-platform-electron.md` §3 names; the
+full-screen pair is carried too because `app.desktop.setFullscreen` is asynchronous and a game
+that wants to reflect the state in its own menu needs to hear about the platform's own
+full-screen gesture as well.
 
 ***
 
@@ -70110,15 +72569,23 @@ The union of the codes the `PhysicsErrorCode` table declares.
 
 ### PlatformKind
 
-> **PlatformKind** = `"browser"` \| `"node"`
+> **PlatformKind** = `"browser"` \| `"electron"` \| `"node"`
 
 Where an app is running.
 
+***
+
+### PlatformOs
+
+> **PlatformOs** = `"macos"` \| `"windows"` \| `"linux"` \| `"ios"` \| `"android"` \| `"unknown"`
+
+Which operating system the host runs, as far as it will admit.
+
 #### Remarks
 
-`"electron"` is deliberately absent until the Electron extension can detect it reliably: an
-Electron renderer is a browser as far as the kernel is concerned, and guessing from the user
-agent would be worse than saying `"browser"`.
+`"unknown"` is a real answer, not a failure: a locked-down browser that freezes its user agent
+and exposes no `navigator.userAgentData` genuinely does not say, and code that branches on the
+operating system has to have a default anyway.
 
 ***
 
@@ -70358,6 +72825,81 @@ How a sprite's colour combines with what is already in the framebuffer
 > **SpriteEffectKind** = *typeof* [`SPRITE_EFFECT_KINDS`](#sprite_effect_kinds)\[`number`\]
 
 Which shader a `SpriteLayerEffect` installs.
+
+***
+
+### StoredValue
+
+> **StoredValue** = \{ `json`: `string`; `kind`: `"json"`; \} \| \{ `bytes`: `Uint8Array`; `kind`: `"bytes"`; \}
+
+A value as a backend sees it: opaque JSON text, or opaque octets.
+
+#### Union Members
+
+##### Type Literal
+
+\{ `json`: `string`; `kind`: `"json"`; \}
+
+###### json
+
+> `readonly` **json**: `string`
+
+The canonical JSON text of the value. Never `undefined`, never empty.
+
+###### kind
+
+> `readonly` **kind**: `"json"`
+
+Discriminant: this value is JSON text.
+
+***
+
+##### Type Literal
+
+\{ `bytes`: `Uint8Array`; `kind`: `"bytes"`; \}
+
+###### bytes
+
+> `readonly` **bytes**: `Uint8Array`
+
+The octets. May be empty.
+
+###### kind
+
+> `readonly` **kind**: `"bytes"`
+
+Discriminant: this value is a byte array.
+
+#### Remarks
+
+The two members are a discriminated union on their `kind`, so a backend switches once
+and the compiler proves both arms are handled. Backends must round-trip both members exactly: the
+`json` string that comes back from [StorageBackend.get](#get-11) has to be the same string that went
+into [StorageBackend.set](#set-13), and the `bytes` have to be byte-identical and the same length. A
+backend may copy the bytes (IndexedDB's structured clone does) but must never alias the caller's
+buffer after `set` resolves.
+
+#### Example
+
+```ts
+const value: StoredValue = { kind: "json", json: '{"volume":0.8}' };
+await backend.set("settings", "audio", value);
+```
+
+***
+
+### StoredValueKind
+
+> **StoredValueKind** = `"json"` \| `"bytes"`
+
+Which of the two representations a stored value uses.
+
+#### Remarks
+
+`"json"` carries text produced by the facade's canonical `JSON.stringify`; `"bytes"` carries the
+raw octets of a `Blob`, `ArrayBuffer`, or `Uint8Array` the caller handed to `set`. The kind is
+stored alongside the payload — a backend that loses it cannot round-trip, because JSON text and
+a UTF-8 byte array are indistinguishable once written.
 
 ***
 
@@ -71549,6 +74091,42 @@ A second, different simulation scene was handed to a world that already has one.
 
 `app.step()` was called while Babylon Lite's render loop was driving the frames.
 
+##### storageBackendFailed
+
+> `readonly` **storageBackendFailed**: `"IGX-1425"`
+
+The storage backend failed for a reason the engine cannot classify.
+
+##### storageInvalidKey
+
+> `readonly` **storageInvalidKey**: `"IGX-1422"`
+
+A storage key is empty, too long, or contains a control character.
+
+##### storageInvalidNamespace
+
+> `readonly` **storageInvalidNamespace**: `"IGX-1421"`
+
+A storage namespace name is not a legal namespace segment.
+
+##### storageQuotaExceeded
+
+> `readonly` **storageQuotaExceeded**: `"IGX-1424"`
+
+The storage backend refused a write because the host is out of quota or disk space.
+
+##### storageValueCorrupt
+
+> `readonly` **storageValueCorrupt**: `"IGX-1426"`
+
+A stored value could not be read back; the store was damaged or written by something else.
+
+##### storageValueNotSerializable
+
+> `readonly` **storageValueNotSerializable**: `"IGX-1423"`
+
+A value handed to `app.storage.set` has no JSON form.
+
 ##### tooManyLayers
 
 > `readonly` **tooManyLayers**: `"IGX-0305"`
@@ -71632,9 +74210,13 @@ throw new IgnifxError(CoreErrorCode.mutationAfterDestroy, "The entity has been d
 #### Remarks
 
 Code blocks reserved for other first-party packages, which cannot import this table
-(`docs/architecture/00-overview.md` §2): `@ignifx/cli` owns `IGX-1401`–`IGX-1419`;
+(`docs/architecture/00-overview.md` §2): `@ignifx/cli` owns `IGX-1401`–`IGX-1419`; `@ignifx/electron`
+owns `IGX-1460`–`IGX-1499` (core's own platform codes therefore stop at `IGX-1459`);
 `@ignifx/vite-plugin` owns `IGX-0550`–`IGX-0599` and `IGX-0650`–`IGX-0699`. Core allocates its
-own codes from the bottom of each range and, in the platform range, from `IGX-1420` upward.
+own codes from the bottom of each range and, in the platform range, from `IGX-1420` upward —
+which is where `app.platform` and `app.storage` live, because storage is a *platform* service:
+the same three calls resolve to IndexedDB, a directory, or the Electron bridge depending only on
+the host, so a failure is a platform failure and not a serialization or asset one.
 
 ***
 
@@ -71789,6 +74371,21 @@ The bus `app.audio.playOneShot` and a fresh `AudioSource` route into.
 
 ***
 
+### DEFAULT\_STORAGE\_NAMESPACE
+
+> `const` **DEFAULT\_STORAGE\_NAMESPACE**: `"default"` = `"default"`
+
+The namespace `app.storage` itself reads and writes before `namespace(name)` is called.
+
+#### Remarks
+
+Every backend call carries a namespace, so the root storage needs a name of its own rather than
+an empty string that each backend would have to special-case. `"default"` is a legal namespace
+name, which means a game that writes `app.storage.namespace("default")` reaches the same values —
+intentionally, since the two are the same store.
+
+***
+
 ### DEG\_TO\_RAD
 
 > `const` **DEG\_TO\_RAD**: `number`
@@ -71870,6 +74467,119 @@ Every named easing curve, keyed by the name `TweenOptions.ease` accepts.
 
 ```ts
 const halfway = EASINGS.cubicInOut(0.5); // 0.5
+```
+
+***
+
+### electron
+
+> `const` **electron**: (`options?`) => [`Extension`](#extension)
+
+The `@ignifx/electron` extension factory.
+
+#### Parameters
+
+##### options?
+
+[`ElectronOptions`](#electronoptions)
+
+The three switches in [ElectronOptions](#electronoptions); a game passes none.
+
+#### Returns
+
+[`Extension`](#extension)
+
+The extension descriptor to pass to `createApp`.
+
+#### Example
+
+```ts
+import { createApp } from "@ignifx/core";
+import { electron } from "@ignifx/electron";
+
+const app = await createApp({
+  canvas,
+  extensions: [physics(), input(), audio(), electron()],
+});
+app.desktop.isElectron; // true in a desktop build, false in a browser tab
+```
+
+***
+
+### ELECTRON\_ERROR\_MESSAGES
+
+> `const` **ELECTRON\_ERROR\_MESSAGES**: `Readonly`\<`Record`\<`string`, `string`\>\>
+
+The one-line message template of every code, as `ExtensionContext.registerErrorCodes` wants it.
+Context keys appear in braces, matching the core table's convention.
+
+***
+
+### ELECTRON\_STORAGE\_BACKEND\_NAME
+
+> `const` **ELECTRON\_STORAGE\_BACKEND\_NAME**: `"electron-file"` = `"electron-file"`
+
+The name this backend reports, as `StorageBackend.name` requires.
+
+***
+
+### ElectronErrorCode
+
+> `const` **ElectronErrorCode**: `object`
+
+Every diagnostic code `@ignifx/electron` can throw, keyed by an intention-revealing name so call
+sites read as prose and the compiler catches typos (coding standards §5.2).
+
+#### Type Declaration
+
+##### externalUrlRefused
+
+> `readonly` **externalUrlRefused**: `"IGX-1464"`
+
+`openExternal` was handed a URL whose protocol is not on the allow-list.
+
+##### hostCallFailed
+
+> `readonly` **hostCallFailed**: `"IGX-1463"`
+
+The main process refused an IPC request, or the handler threw.
+
+##### hostContractIncomplete
+
+> `readonly` **hostContractIncomplete**: `"IGX-1461"`
+
+`window.ignifxHost` exists but is missing a method the renderer needs.
+
+##### hostUnavailable
+
+> `readonly` **hostUnavailable**: `"IGX-1462"`
+
+`app.desktop` was used on an app whose Electron extension found no host bridge.
+
+##### hostVersionMismatch
+
+> `readonly` **hostVersionMismatch**: `"IGX-1460"`
+
+`window.ignifxHost` exists but announces a major version this build cannot talk to.
+
+##### invalidWindowOptions
+
+> `readonly` **invalidWindowOptions**: `"IGX-1466"`
+
+`createGameWindow` was given options that cannot be honoured together.
+
+##### protocolPathEscaped
+
+> `readonly` **protocolPathEscaped**: `"IGX-1465"`
+
+An `ignifx://` request resolved outside the directory the protocol serves.
+
+#### Example
+
+```ts
+throw electronError(ElectronErrorCode.hostVersionMismatch, "The preload bridge is too old.", {
+  context: { host: "2.0.0", expected: "1.x" },
+});
 ```
 
 ***
@@ -72251,6 +74961,132 @@ The value [PhysicsSettings.havokWasm](#havokwasm) carries when the address comes
 
 ***
 
+### HOST\_CHANNELS
+
+> `const` **HOST\_CHANNELS**: `object`
+
+The IPC channel names the preload script invokes and the main process handles.
+
+#### Type Declaration
+
+##### dialogsShowOpen
+
+> `readonly` **dialogsShowOpen**: `"ignifx:dialogs.showOpenDialog"`
+
+`dialogs.showOpenDialog(options)`.
+
+##### paths
+
+> `readonly` **paths**: `"ignifx:paths"`
+
+`paths()`.
+
+##### shellOpenExternal
+
+> `readonly` **shellOpenExternal**: `"ignifx:shell.openExternal"`
+
+`shell.openExternal(url)`.
+
+##### storageClear
+
+> `readonly` **storageClear**: `"ignifx:storage.clear"`
+
+`storage.clear(namespace)`.
+
+##### storageDelete
+
+> `readonly` **storageDelete**: `"ignifx:storage.delete"`
+
+`storage.delete(namespace, key)`.
+
+##### storageGet
+
+> `readonly` **storageGet**: `"ignifx:storage.get"`
+
+`storage.get(namespace, key)`.
+
+##### storageKeys
+
+> `readonly` **storageKeys**: `"ignifx:storage.keys"`
+
+`storage.keys(namespace, prefix)`.
+
+##### storageSet
+
+> `readonly` **storageSet**: `"ignifx:storage.set"`
+
+`storage.set(namespace, key, value)`.
+
+##### windowIsFullscreen
+
+> `readonly` **windowIsFullscreen**: `"ignifx:window.isFullscreen"`
+
+`window.isFullscreen()`.
+
+##### windowQuit
+
+> `readonly` **windowQuit**: `"ignifx:window.quit"`
+
+`window.quit()`.
+
+##### windowSetFullscreen
+
+> `readonly` **windowSetFullscreen**: `"ignifx:window.setFullscreen"`
+
+`window.setFullscreen(fullscreen)`.
+
+##### windowSetTitle
+
+> `readonly` **windowSetTitle**: `"ignifx:window.setTitle"`
+
+`window.setTitle(title)`.
+
+#### Remarks
+
+One flat `as const` table rather than a nested one: the values are what both processes must agree
+on literally, and a flat table is what a `switch` over channels can be exhaustive against
+(coding standards §5.2).
+
+***
+
+### HOST\_CONTRACT\_MAJOR
+
+> `const` **HOST\_CONTRACT\_MAJOR**: `1` = `1`
+
+The major component of [HOST\_CONTRACT\_VERSION](#host_contract_version), which is what compatibility is decided on.
+
+***
+
+### HOST\_CONTRACT\_VERSION
+
+> `const` **HOST\_CONTRACT\_VERSION**: `"1.0.0"` = `"1.0.0"`
+
+The version of this contract that the preload bridge announces as `window.ignifxHost.version`.
+
+#### Remarks
+
+Semver over the *bridge*, not over the package: the renderer refuses a host whose major differs
+from its own, because a preload script from a different install is the one thing a packaged app
+can genuinely end up with (an `asar` from a previous build, a partially applied update).
+
+***
+
+### HOST\_GLOBAL\_NAME
+
+> `const` **HOST\_GLOBAL\_NAME**: `"ignifxHost"` = `"ignifxHost"`
+
+The property `contextBridge` exposes the host under.
+
+***
+
+### HOST\_WINDOW\_EVENT\_CHANNEL
+
+> `const` **HOST\_WINDOW\_EVENT\_CHANNEL**: `"ignifx:window-event"` = `"ignifx:window-event"`
+
+The one main-to-renderer channel: window lifecycle events, pushed rather than polled.
+
+***
+
 ### HUD\_ANCHORS
 
 > `const` **HUD\_ANCHORS**: readonly \[`"topLeft"`, `"top"`, `"topRight"`, `"left"`, `"center"`, `"right"`, `"bottomLeft"`, `"bottom"`, `"bottomRight"`\]
@@ -72290,6 +75126,36 @@ The `format` discriminator every translation document carries.
 The `formatVersion` this build writes and is the only one it can read. Before 1.0 the number
 stays `1` and an incompatible change invalidates files rather than migrating them
 (`CONSTITUTION.md` §4.2); a file declaring anything else is rejected with `IGX-1302`.
+
+***
+
+### IGNIFX\_HOST\_AUTHORITY
+
+> `const` **IGNIFX\_HOST\_AUTHORITY**: `"app"` = `"app"`
+
+The authority the packaged renderer is served under, so the whole origin reads
+`ignifx://app`.
+
+#### Remarks
+
+A privileged `standard` scheme has a real origin, and a real origin is what makes `'self'` in the
+Content-Security-Policy mean "the packaged app" rather than nothing at all.
+
+***
+
+### IGNIFX\_ORIGIN
+
+> `const` **IGNIFX\_ORIGIN**: `string`
+
+The origin the packaged renderer runs on: `ignifx://app`.
+
+***
+
+### IGNIFX\_SCHEME
+
+> `const` **IGNIFX\_SCHEME**: `"ignifx"` = `"ignifx"`
+
+The `ignifx://` scheme the packaged renderer is served from.
 
 ***
 
@@ -72750,6 +75616,14 @@ The asset type models are registered under.
 > `const` **MODEL\_FILE\_EXTENSIONS**: readonly `string`[]
 
 The address suffixes that select the model loader.
+
+***
+
+### NAMESPACE\_SEGMENT\_MAX\_LENGTH
+
+> `const` **NAMESPACE\_SEGMENT\_MAX\_LENGTH**: `64` = `64`
+
+The longest one segment of a namespace path may be.
 
 ***
 
@@ -73302,6 +76176,23 @@ wanted, and call `Quat.identity()` when you need one you can write to.
 
 ***
 
+### QUOTA\_MESSAGE\_PREFIX
+
+> `const` **QUOTA\_MESSAGE\_PREFIX**: `"IGNIFX_STORAGE_QUOTA: "` = `"IGNIFX_STORAGE_QUOTA: "`
+
+The marker a main-process quota failure is re-thrown with, so the renderer can tell `IGX-1424`
+from `IGX-1425` after the error has crossed IPC.
+
+#### Remarks
+
+Electron flattens an error thrown inside `ipcMain.handle` down to its message by the time it
+reaches the renderer: neither a `code` property nor the prototype survives the trip. A prefix on
+the message does, and it is the only channel available without wrapping every reply in an
+envelope. It lives in the contract module because both processes have to agree on the string, and
+this is the one module both of them import.
+
+***
+
 ### RAD\_TO\_DEG
 
 > `const` **RAD\_TO\_DEG**: `number`
@@ -73331,6 +76222,19 @@ The render diagnostics group name (`docs/architecture/15-devtools-and-diagnostic
 > `const` **RENDERING\_SETTINGS\_SECTION**: `"rendering"` = `"rendering"`
 
 The name the `rendering` project settings section is registered under.
+
+***
+
+### REQUIRED\_HOST\_MEMBERS
+
+> `const` **REQUIRED\_HOST\_MEMBERS**: readonly `string`[]
+
+The members [assertHostContract](#asserthostcontract) requires, as `"path.name"` strings.
+
+#### Remarks
+
+Checked by name rather than by counting: a bridge from a newer minor version has members this
+build does not know about, and that is fine; a bridge missing one this build calls is not.
 
 ***
 
@@ -73631,6 +76535,50 @@ The fragment prefix that addresses one frame: `"sprites/hero.atlas.json#frame:id
 > `const` **STANDARD\_TEXTURE\_SLOTS**: readonly `string`[]
 
 The texture slots a `"standard"` material may name.
+
+***
+
+### STORAGE\_BACKEND\_FAILED\_CODE
+
+> `const` **STORAGE\_BACKEND\_FAILED\_CODE**: `"IGX-1425"` = `"IGX-1425"`
+
+`IGX-1425` — the backend failed for any other reason.
+
+***
+
+### STORAGE\_KEY\_MAX\_LENGTH
+
+> `const` **STORAGE\_KEY\_MAX\_LENGTH**: `512` = `512`
+
+The longest a storage key may be.
+
+#### Remarks
+
+512 UTF-16 code units is comfortably below the ~255 *byte* file-name limit once percent-encoding
+has expanded the key, which is why the file backend hashes nothing and truncates nothing: a key
+that passes this check always encodes to a name a file system accepts.
+
+***
+
+### STORAGE\_QUOTA\_CODE
+
+> `const` **STORAGE\_QUOTA\_CODE**: `"IGX-1424"` = `"IGX-1424"`
+
+`IGX-1424` — the host is out of quota.
+
+#### Remarks
+
+Quoted as a literal because `@ignifx/core`'s `CoreErrorCode` table is not reachable from an
+extension by design (`04-extensions.md` §3): an extension owns its own codes and is handed
+core's as documented constants.
+
+***
+
+### STORAGE\_VALUE\_CORRUPT\_CODE
+
+> `const` **STORAGE\_VALUE\_CORRUPT\_CODE**: `"IGX-1426"` = `"IGX-1426"`
+
+`IGX-1426` — a stored value could not be read back.
 
 ***
 
@@ -74794,6 +77742,48 @@ The normalised frame name.
 ```ts
 asepriteFrameName("hero (idle) 0.aseprite"); // "hero_idle_0"
 asepriteFrameName("hero_0.png"); // "hero_0"
+```
+
+***
+
+### assertHostContract()
+
+> **assertHostContract**(`host`): `void`
+
+Checks that a bridge is one this build can talk to.
+
+#### Parameters
+
+##### host
+
+[`IgnifxHost`](#ignifxhost)
+
+The bridge found on the window.
+
+#### Returns
+
+`void`
+
+#### Remarks
+
+Two checks, and they fail differently on purpose. A **major** version mismatch (`IGX-1460`) means
+the preload script and the renderer bundle came from different installs — a partially applied
+update, a stale `asar` — and the message says so. A **missing member** (`IGX-1461`) means the
+bridge is the right generation but incomplete, which is what a hand-written preload script that
+forgot `exposeIgnifxHost()` and rolled its own looks like.
+
+#### Throws
+
+An `IgnifxError` with code `IGX-1460` when the major versions differ, or `IGX-1461` when a
+member this build calls is absent.
+
+#### Example
+
+```ts
+const host = findIgnifxHost();
+if (host !== null) {
+  assertHostContract(host);
+}
 ```
 
 ***
@@ -76056,6 +79046,45 @@ A registry owned by one app.
 const registry = createErrorCodeRegistry();
 registry.register({ "IGX-9001": "The {thing} was not spawned." }, "game/spawner");
 registry.describe("IGX-0701")?.message; // "WebGPU is not available in this environment."
+```
+
+***
+
+### createFileStorageBackend()
+
+> **createFileStorageBackend**(`options`): `Promise`\<[`StorageBackend`](#storagebackend)\>
+
+Builds a storage backend over a directory (`docs/architecture/14-platform-electron.md` §5).
+
+#### Parameters
+
+##### options
+
+[`FileStorageOptions`](#filestorageoptions)
+
+The root directory.
+
+#### Returns
+
+`Promise`\<[`StorageBackend`](#storagebackend)\>
+
+The backend.
+
+#### Remarks
+
+Node only: the factory loads `node:fs/promises` and rejects on a host that has none. It is what
+`createApp({ storage: { directory } })` calls, and it is exported so that tooling — `ignifx bake`,
+a future authoritative server — can build one without an app.
+
+#### Throws
+
+IgnifxError with code `IGX-1425` when the host exposes no `node:fs/promises`.
+
+#### Example
+
+```ts
+const app = await createApp({ headless: true, storage: { directory: "./.saves" } });
+await app.storage.namespace("saves").set("slot1", { level: 3 });
 ```
 
 ***
@@ -77790,6 +80819,48 @@ describeTwoDSchemas()["ignifx/Camera2D"].fields["orthographicSize"].default; // 
 
 ***
 
+### electronError()
+
+> **electronError**(`code`, `message`, `options?`): [`IgnifxError`](#ignifxerror)
+
+Builds an `IgnifxError` carrying one of this package's codes.
+
+#### Parameters
+
+##### code
+
+[`ElectronErrorCode`](#electronerrorcode-1)
+
+The code from the `ElectronErrorCode` table.
+
+##### message
+
+`string`
+
+The actionable development sentence.
+
+##### options?
+
+[`ElectronErrorOptions`](#electronerroroptions)
+
+Context identifiers, a remedy hint, and the wrapped cause.
+
+#### Returns
+
+[`IgnifxError`](#ignifxerror)
+
+The error to throw or to reject with.
+
+#### Example
+
+```ts
+throw electronError(ElectronErrorCode.externalUrlRefused, "file: links are not opened.", {
+  context: { url: "file:///etc/passwd" },
+});
+```
+
+***
+
 ### encodeProps()
 
 > **encodeProps**\<`S`\>(`schema`, `props`, `references`, `issues?`): [`JsonObject`](#jsonobject)
@@ -78151,6 +81222,43 @@ fieldInstancesToRecord([{ __identifier: "facing", __type: "String", __value: "le
 
 ***
 
+### findIgnifxHost()
+
+> **findIgnifxHost**(`scope?`): [`IgnifxHost`](#ignifxhost) \| `null`
+
+Finds the preload bridge on a global scope.
+
+#### Parameters
+
+##### scope?
+
+`unknown`
+
+The global to look on; defaults to `globalThis`. Tests pass a fake.
+
+#### Returns
+
+[`IgnifxHost`](#ignifxhost) \| `null`
+
+The bridge, or `null` when there is none.
+
+#### Remarks
+
+The absence of a bridge is not an error: the same renderer bundle runs in a browser tab, in a
+headless Node test, and in an Electron window, and only the third has one. `electron()` logs one
+debug line and stays inert in the other two.
+
+#### Example
+
+```ts
+const host = findIgnifxHost();
+if (host === null) {
+  // a browser build
+}
+```
+
+***
+
 ### findTileset()
 
 > **findTileset**(`map`, `tileId`): [`TilesetDefinition`](#tilesetdefinition) \| `null`
@@ -78381,6 +81489,40 @@ const atlas = gridAtlas({
 });
 atlas.frames.map((frame) => frame.name); // ["terrain_0", "terrain_1", "terrain_2", "terrain_3"]
 ```
+
+***
+
+### hostCallError()
+
+> **hostCallError**(`channel`, `error`): `Error`
+
+Turns a rejection that came back over IPC into an `IgnifxError` naming the channel.
+
+#### Parameters
+
+##### channel
+
+`string`
+
+The bridge member that failed, for example `"storage.set"`.
+
+##### error
+
+`unknown`
+
+What the invoke rejected with.
+
+#### Returns
+
+`Error`
+
+The error to reject with.
+
+#### Remarks
+
+Electron flattens an error thrown inside `ipcMain.handle` to its message by the time it reaches
+the renderer, so nothing but the text survives. Wrapping it keeps the original as `cause` and
+gives the failure a code a game can branch on.
 
 ***
 
@@ -78920,6 +82062,41 @@ The candidate.
 
 ```ts
 const address = isAssetRef(input) ? input.address : input;
+```
+
+***
+
+### isCompatibleHostVersion()
+
+> **isCompatibleHostVersion**(`version`): `boolean`
+
+Reports whether a bridge's announced version is one this build can talk to.
+
+#### Parameters
+
+##### version
+
+`string`
+
+The value of `window.ignifxHost.version`.
+
+#### Returns
+
+`boolean`
+
+`true` when the majors match.
+
+#### Remarks
+
+Major equality, nothing else: a bridge with a newer minor has methods this renderer does not
+call, and a bridge with an older minor is caught by the per-member check in
+`renderer/host.ts` rather than by the version string.
+
+#### Example
+
+```ts
+isCompatibleHostVersion("1.4.0"); // true
+isCompatibleHostVersion("2.0.0"); // false
 ```
 
 ***

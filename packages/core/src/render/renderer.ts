@@ -2,6 +2,7 @@ import { createServiceKey } from "../app/types.js";
 import { CoreErrorCode } from "../errors/error-codes.js";
 import { IgnifxError } from "../errors/ignifx-error.js";
 import { toComponentHandle, toEntityHandle } from "../handles/handle.js";
+import { forceDeviceLossForTesting } from "../lite/gpu/device-loss.js";
 import { setSceneClearColor } from "../lite/gpu/environment.js";
 import { disposeScenePicker } from "../lite/gpu/picker.js";
 import { setSurfaceSizePx } from "../lite/gpu/render-diagnostics-gpu.js";
@@ -438,6 +439,20 @@ export class RendererImpl implements Renderer {
    */
   get surface(): RenderSurface | null {
     return this.isHeadless ? null : this.engine.canvas;
+  }
+
+  /**
+   * Destroys the GPU device the way a real loss would, so that recovery runs — for tests and probes.
+   *
+   * @remarks
+   * Reached through `rendererInternals(app.renderer)`; a game never calls it. It throws when no
+   * recovery strategy is enabled (`rendering.features.deviceLostRecovery` is off) or under the null
+   * engine, which has no device to lose.
+   *
+   * @internal
+   */
+  forceDeviceLossForTesting(): void {
+    forceDeviceLossForTesting(this.engine);
   }
 
   /**
@@ -967,4 +982,20 @@ export function rendererInternals(renderer: Renderer): RendererImpl {
     context: { member: "app.renderer" },
     hint: "Reach the service through the app that created it.",
   });
+}
+
+/**
+ * Destroys a renderer's GPU device the way a real loss would, so that recovery runs — for tests and
+ * probes that live outside `@ignifx/core` and may not import Babylon Lite (`CONSTITUTION.md` §3.4).
+ *
+ * @remarks
+ * It throws when `rendering.features.deviceLostRecovery` is off, or under the null engine, which
+ * has no device to lose.
+ *
+ * @param renderer - The app's renderer.
+ *
+ * @internal
+ */
+export function forceRendererDeviceLossForTesting(renderer: Renderer): void {
+  rendererInternals(renderer).forceDeviceLossForTesting();
 }

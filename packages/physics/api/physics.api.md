@@ -352,6 +352,7 @@ export class PhysicsService {
     distanceToNearest(shape: QueryShape, position: Vec3Like, maxDistance: number, options?: QueryOptions): number;
     get gravity(): Vec3;
     set gravity(value: Vec3Like);
+    get hasStepped(): boolean;
     isDebugViewerEnabled(): boolean;
     get lite(): PhysicsLiteHandles;
     overlap(shape: QueryShape, position: Vec3Like, rotation?: Quat, options?: QueryOptions): readonly Entity[];

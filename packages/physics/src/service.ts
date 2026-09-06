@@ -376,6 +376,18 @@ export class PhysicsService {
   }
 
   /**
+   * Whether at least one fixed step has completed, which is when Havok has built its broadphase and
+   * queries become legal (`09-physics.md` §5). A script that queries from `lateUpdate` or `update`
+   * checks this on the first frame, where the fixed loop may not have run yet, instead of catching
+   * `IGX-0902`.
+   *
+   * @returns `true` once the first step has run.
+   */
+  get hasStepped(): boolean {
+    return this.#rt().hasStepped;
+  }
+
+  /**
    * Refuses a query that ran before Havok built its broadphase (`09-physics.md` §5).
    *
    * @param query - The query name, for the diagnostic.

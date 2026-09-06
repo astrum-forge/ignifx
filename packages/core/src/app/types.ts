@@ -12,6 +12,7 @@ import type { SceneInstance } from "../scene/scene-instance.js";
 import type { Schema } from "../schema/types.js";
 import type { Script } from "../script/script.js";
 import type { Signal, SignalLike } from "../signal/signal.js";
+import type { Storage } from "../storage/storage.js";
 import type { Tweens } from "../tween/tweens.js";
 import type { World } from "../world/world.js";
 
@@ -579,10 +580,17 @@ export interface App {
   /** The `@ignifx/core` version this app was built from. */
   readonly version: string;
   /**
-   * Where the app is running (`docs/architecture/14-platform-electron.md` §1). Phase 1 answers only
-   * `kind`; the rest of §1's surface arrives with `@ignifx/electron`.
+   * Where the app is running, what it is running on, and what its WebGPU adapter offers
+   * (`docs/architecture/14-platform-electron.md` §1).
    */
   readonly platform: PlatformInfo;
+  /**
+   * The asynchronous key-value store settings, save games, and input rebindings live in
+   * (`docs/architecture/14-platform-electron.md` §2). The backend is chosen from
+   * {@link PlatformInfo.kind} — IndexedDB in a browser, memory under Node — unless `createApp` was
+   * given one.
+   */
+  readonly storage: Storage;
   /** Unstable Babylon Lite escape hatch (`docs/architecture/00-overview.md` §3). */
   readonly lite: AppLiteHandles;
   /** The coroutine scheduler. */

@@ -14,3 +14,6 @@ skills/ignifx/references/formats/
 skills/ignifx/references/recipes/
 **/CHANGELOG.md
 .changeset/*.md
+# Electron desktop build output (see .oxfmtignore).
+templates/*/out/
+templates/*/release/

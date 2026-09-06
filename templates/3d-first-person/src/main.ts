@@ -12,6 +12,7 @@ import {
   Model,
   pbrMaterialDefinition,
 } from "@ignifx/core";
+import { electron } from "@ignifx/electron";
 import { input, INPUT_ACTIONS_ASSET_TYPE } from "@ignifx/input";
 import { CharacterController, physics } from "@ignifx/physics";
 import { I18N_ASSET_TYPE, ui } from "@ignifx/ui";
@@ -259,7 +260,12 @@ async function main(): Promise<AppStatus> {
       assets: { manifest },
       // `threeD()` requires `physics()` and `input()` to be registered before it, and `ui()` finds
       // `@ignifx/input`'s focus flags structurally at registration time.
-      extensions: [physics(), input(), audio(), threeD(), ui()],
+      // `electron()` is registered in **both** builds. Without a preload bridge it is inert — one
+      // debug line, and an `app.desktop` that answers `isElectron === false` — so the browser build
+      // is unchanged and the desktop build needs no second entry point. It goes first because it
+      // only requires core, and because `app.storage` should be the file backend before any other
+      // extension reads a setting from it.
+      extensions: [electron(), physics(), input(), audio(), threeD(), ui()],
     });
   } catch (error) {
     // IGX-0701 is the one failure a shipped game must handle itself: the browser has no WebGPU and

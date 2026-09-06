@@ -12,7 +12,12 @@ export default defineConfig({
     // The colour behind the level. There is no skybox in this template, so it is also the horizon.
     clearColor: { r: 0.055, g: 0.067, b: 0.094, a: 1 },
     msaaSamples: 4,
-    features: { shadows: true },
+    // `deviceLostRecovery` is on because this template is the one the desktop suite drives, and a
+    // desktop game is exactly where a lost device is worth surviving: a laptop waking from sleep, a
+    // GPU driver update, an external display unplugged. Recovery has to be enabled **before any
+    // resource exists** — the capture that stamps a rebuild source onto every texture is installed
+    // by that call — which is why it is a startup setting rather than something a script turns on.
+    features: { shadows: true, deviceLostRecovery: true },
   },
 
   time: { fixedDeltaTime: 1 / 60 },

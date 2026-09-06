@@ -25,6 +25,9 @@ export {
   DEFAULT_DEPENDENCY_RANGE,
   DEFAULT_IGNORED_ENTRIES,
   DEFAULT_TEMPLATE_RENAMES,
+  DESKTOP_ONLY_DEPENDENCIES,
+  DESKTOP_ONLY_ENTRIES,
+  DESKTOP_SCRIPT_SUFFIX,
   type CopyTemplateOptions,
   type CopyTemplateResult,
 } from "./copy-template.js";

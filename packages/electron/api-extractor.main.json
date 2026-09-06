@@ -1,0 +1,24 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
+  "mainEntryPointFilePath": "<projectFolder>/dist/main.d.ts",
+  "bundledPackages": [],
+  "apiReport": {
+    "enabled": true,
+    "reportFolder": "<projectFolder>/api",
+    "reportTempFolder": "<projectFolder>/temp/main",
+    "reportFileName": "electron-main.api.md"
+  },
+  "docModel": { "enabled": false },
+  "dtsRollup": { "enabled": false },
+  "tsdocMetadata": { "enabled": false },
+  "messages": {
+    "compilerMessageReporting": { "default": { "logLevel": "warning" } },
+    "extractorMessageReporting": {
+      "default": { "logLevel": "warning" },
+      "ae-missing-release-tag": { "logLevel": "error" },
+      // ESLint's jsdoc/require-jsdoc wants the doc on the setter; API Extractor wants it on the getter.
+      "ae-setter-with-docs": { "logLevel": "none" }
+    },
+    "tsdocMessageReporting": { "default": { "logLevel": "warning" } }
+  }
+}

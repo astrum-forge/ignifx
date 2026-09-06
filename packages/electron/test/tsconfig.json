@@ -1,0 +1,16 @@
+{
+  // Discovery shim for the type-aware linter, not a build project (coding standards §3, ADR-0009
+  // "Phase 0 integration"). Oxlint/tsgolint resolve the nearest `tsconfig.json` per file; without
+  // this one, test files would be checked against the workspace root config and lose
+  // `types: ["node"]` and `noUncheckedIndexedAccess`. `pnpm --filter @ignifx/electron run typecheck`
+  // still builds `../tsconfig.test.json`; this file emits nothing.
+  "extends": "../tsconfig.test.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "emitDeclarationOnly": false,
+    "noEmit": true
+  },
+  "include": ["."]
+}

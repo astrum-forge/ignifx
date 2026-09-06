@@ -54,6 +54,7 @@ import { asDomCanvas } from '@ignifx/ui';
 import { AsepriteAnimationImportOptions } from '@ignifx/2d';
 import { asepriteFrameName } from '@ignifx/2d';
 import { AsepriteImportOptions } from '@ignifx/2d';
+import { assertHostContract } from '@ignifx/electron';
 import { assertNever } from '@ignifx/core';
 import { assertSceneDependenciesLoaded } from '@ignifx/core';
 import { asset } from '@ignifx/core';
@@ -250,6 +251,7 @@ import { createDiagnosticsGroup } from '@ignifx/core';
 import { CreateEntityOptions } from '@ignifx/core';
 import { createEnvironmentLoader } from '@ignifx/core';
 import { createErrorCodeRegistry } from '@ignifx/core';
+import { createFileStorageBackend } from '@ignifx/core';
 import { createFontLoader } from '@ignifx/core';
 import { createFrameSample } from '@ignifx/core';
 import { createInputActionsLoader } from '@ignifx/input';
@@ -310,6 +312,7 @@ import { DEFAULT_PIXELS_PER_UNIT } from '@ignifx/2d';
 import { DEFAULT_REFERENCE_RESOLUTION } from '@ignifx/2d';
 import { DEFAULT_SORTING_LAYER } from '@ignifx/2d';
 import { DEFAULT_SOUND_BUS } from '@ignifx/audio';
+import { DEFAULT_STORAGE_NAMESPACE } from '@ignifx/core';
 import { defaultAudioSettings } from '@ignifx/audio';
 import { defaultInputSettings } from '@ignifx/input';
 import { defaultPhysics2DSettings } from '@ignifx/physics-2d';
@@ -345,6 +348,7 @@ import { describeSpriteAnimationFormat } from '@ignifx/2d';
 import { describeSpriteAtlasFormat } from '@ignifx/2d';
 import { describeTilemapFormat } from '@ignifx/2d';
 import { describeTwoDSchemas } from '@ignifx/2d';
+import { Desktop } from '@ignifx/electron';
 import { DEVICE_KINDS } from '@ignifx/input';
 import { DeviceKind } from '@ignifx/input';
 import { DeviceLostInfo } from '@ignifx/core';
@@ -362,6 +366,14 @@ import { EasingFunction } from '@ignifx/core';
 import { EasingName } from '@ignifx/core';
 import { EASINGS } from '@ignifx/core';
 import { EdgeCollider2D } from '@ignifx/physics-2d';
+import { electron } from '@ignifx/electron';
+import { ELECTRON_ERROR_MESSAGES } from '@ignifx/electron';
+import { ELECTRON_STORAGE_BACKEND_NAME } from '@ignifx/electron';
+import { electronError } from '@ignifx/electron';
+import { ElectronErrorCode } from '@ignifx/electron';
+import { ElectronErrorOptions } from '@ignifx/electron';
+import { ElectronOptions } from '@ignifx/electron';
+import { ElectronStorageBackend } from '@ignifx/electron';
 import { EMPTY_ASSET_MANIFEST } from '@ignifx/core';
 import { EMPTY_TILE_ID } from '@ignifx/2d';
 import { encodeProps } from '@ignifx/core';
@@ -406,6 +418,8 @@ import { FieldKind } from '@ignifx/core';
 import { FieldOptions } from '@ignifx/core';
 import { FieldsOf } from '@ignifx/core';
 import { FieldSpec } from '@ignifx/core';
+import { FileStorageOptions } from '@ignifx/core';
+import { findIgnifxHost } from '@ignifx/electron';
 import { findTileset } from '@ignifx/2d';
 import { findVirtualDevice } from '@ignifx/ui';
 import { FirstPersonController } from '@ignifx/3d';
@@ -428,6 +442,7 @@ import { GamepadReader } from '@ignifx/input';
 import { GamepadRemap } from '@ignifx/input';
 import { GamepadSnapshot } from '@ignifx/input';
 import { generateUlid } from '@ignifx/core';
+import { GpuAdapterInfo } from '@ignifx/core';
 import { gridAtlas } from '@ignifx/2d';
 import { GridAtlasImportOptions } from '@ignifx/2d';
 import { GroundMeshOptions } from '@ignifx/core';
@@ -437,6 +452,25 @@ import { HeadlessBackendOptions } from '@ignifx/audio';
 import { HeadlessBus } from '@ignifx/audio';
 import { HeadlessSound } from '@ignifx/audio';
 import { HeightfieldCollider } from '@ignifx/physics';
+import { HOST_CHANNELS } from '@ignifx/electron';
+import { HOST_CONTRACT_MAJOR } from '@ignifx/electron';
+import { HOST_CONTRACT_VERSION } from '@ignifx/electron';
+import { HOST_GLOBAL_NAME } from '@ignifx/electron';
+import { HOST_WINDOW_EVENT_CHANNEL } from '@ignifx/electron';
+import { hostCallError } from '@ignifx/electron';
+import { HostChannel } from '@ignifx/electron';
+import { HostDesktop } from '@ignifx/electron';
+import { HostDialogs } from '@ignifx/electron';
+import { HostFileFilter } from '@ignifx/electron';
+import { HostOpenDialogOptions } from '@ignifx/electron';
+import { HostOpenDialogResult } from '@ignifx/electron';
+import { HostPaths } from '@ignifx/electron';
+import { HostShell } from '@ignifx/electron';
+import { HostStorage } from '@ignifx/electron';
+import { HostStoredValue } from '@ignifx/electron';
+import { HostVersions } from '@ignifx/electron';
+import { HostWindow } from '@ignifx/electron';
+import { HostWindowEvent } from '@ignifx/electron';
 import { HUD_ANCHORS } from '@ignifx/ui';
 import { HudAnchor } from '@ignifx/ui';
 import { HudPlacement } from '@ignifx/ui';
@@ -449,8 +483,12 @@ import { I18N_FORMAT_VERSION } from '@ignifx/ui';
 import { I18nService } from '@ignifx/ui';
 import { I18nServiceOptions } from '@ignifx/ui';
 import { i32 } from '@ignifx/core';
+import { IGNIFX_HOST_AUTHORITY } from '@ignifx/electron';
+import { IGNIFX_ORIGIN } from '@ignifx/electron';
+import { IGNIFX_SCHEME } from '@ignifx/electron';
 import { IgnifxError } from '@ignifx/core';
 import { IgnifxErrorOptions } from '@ignifx/core';
+import { IgnifxHost } from '@ignifx/electron';
 import { ImageProcessingEffectSettings } from '@ignifx/core';
 import { ImageProcessingSettings } from '@ignifx/core';
 import { importAsepriteAnimations } from '@ignifx/2d';
@@ -458,6 +496,7 @@ import { importAsepriteAtlas } from '@ignifx/2d';
 import { importLdtkLevel } from '@ignifx/2d';
 import { importTexturePackerAtlas } from '@ignifx/2d';
 import { importTiledMap } from '@ignifx/2d';
+import { IndexedDbStorageBackend } from '@ignifx/core';
 import { input } from '@ignifx/input';
 import { INPUT_ACTIONS_ASSET_TYPE } from '@ignifx/input';
 import { INPUT_ACTIONS_FILE_EXTENSIONS } from '@ignifx/input';
@@ -506,6 +545,7 @@ import { InterpolationMode2D } from '@ignifx/physics-2d';
 import { INVALID_HANDLE } from '@ignifx/core';
 import { inverseLerp } from '@ignifx/core';
 import { isAssetRef } from '@ignifx/core';
+import { isCompatibleHostVersion } from '@ignifx/electron';
 import { isEditableElement } from '@ignifx/ui';
 import { isFullCellSolid } from '@ignifx/2d';
 import { isIgnifxError } from '@ignifx/core';
@@ -627,6 +667,7 @@ import { MaterialKind } from '@ignifx/core';
 import { MAX_LAYERS } from '@ignifx/core';
 import { MAX_ULID_TIME_MS } from '@ignifx/core';
 import { MemorySink } from '@ignifx/core';
+import { MemoryStorageBackend } from '@ignifx/core';
 import { mergeTileCollisions } from '@ignifx/2d';
 import { MESH_ASSET_TYPE } from '@ignifx/core';
 import { MeshAsset } from '@ignifx/core';
@@ -652,6 +693,7 @@ import { MutableQuat } from '@ignifx/core';
 import { MutableVec2 } from '@ignifx/core';
 import { MutableVec3 } from '@ignifx/core';
 import { MutableVec4 } from '@ignifx/core';
+import { NAMESPACE_SEGMENT_MAX_LENGTH } from '@ignifx/core';
 import { NAV_OBSTACLE_SHAPES } from '@ignifx/3d';
 import { NAVIGATION_ORDER } from '@ignifx/3d';
 import { NavigationService } from '@ignifx/3d';
@@ -739,6 +781,7 @@ import { PlaneMeshOptions } from '@ignifx/core';
 import { PlatformInfo } from '@ignifx/core';
 import { PlatformKind } from '@ignifx/core';
 import { PlatformMover } from '@ignifx/3d';
+import { PlatformOs } from '@ignifx/core';
 import { PlayClipOptions } from '@ignifx/2d';
 import { PlayerInput } from '@ignifx/input';
 import { PlayOptions } from '@ignifx/audio';
@@ -763,6 +806,7 @@ import { QuatLike } from '@ignifx/core';
 import { QueryOptions } from '@ignifx/physics';
 import { QueryOptions2D } from '@ignifx/physics-2d';
 import { QueryShape } from '@ignifx/physics';
+import { QUOTA_MESSAGE_PREFIX } from '@ignifx/electron';
 import { RAD_TO_DEG } from '@ignifx/core';
 import { radToDeg } from '@ignifx/core';
 import { RandomSource } from '@ignifx/core';
@@ -793,6 +837,7 @@ import { RenderSurface } from '@ignifx/core';
 import { RenderTaskTiming } from '@ignifx/core';
 import { RenderTaskTimings } from '@ignifx/core';
 import { repeat } from '@ignifx/core';
+import { REQUIRED_HOST_MEMBERS } from '@ignifx/electron';
 import { RESERVED_LAYER_NAMES } from '@ignifx/core';
 import { resetFrameSample } from '@ignifx/core';
 import { resolveClipFrames } from '@ignifx/2d';
@@ -917,6 +962,14 @@ import { StandardMaterialDefinition } from '@ignifx/core';
 import { standardMaterialDefinition } from '@ignifx/core';
 import { StateChange } from '@ignifx/3d';
 import { stickAxis } from '@ignifx/ui';
+import { Storage as Storage_2 } from '@ignifx/core';
+import { STORAGE_BACKEND_FAILED_CODE } from '@ignifx/electron';
+import { STORAGE_KEY_MAX_LENGTH } from '@ignifx/core';
+import { STORAGE_QUOTA_CODE } from '@ignifx/electron';
+import { STORAGE_VALUE_CORRUPT_CODE } from '@ignifx/electron';
+import { StorageBackend } from '@ignifx/core';
+import { StoredValue } from '@ignifx/core';
+import { StoredValueKind } from '@ignifx/core';
 import { str } from '@ignifx/core';
 import { StringFieldSpec } from '@ignifx/core';
 import { stringifySceneFile } from '@ignifx/core';
@@ -1056,6 +1109,7 @@ import { UiSurfaceMetrics } from '@ignifx/ui';
 import { UiSystem } from '@ignifx/ui';
 import { UiSystemOptions } from '@ignifx/ui';
 import { UlidFactoryOptions } from '@ignifx/core';
+import { UnavailableDesktop } from '@ignifx/electron';
 import { validateInputActions } from '@ignifx/input';
 import { validateProps } from '@ignifx/core';
 import { validateSceneFile } from '@ignifx/core';
@@ -1102,6 +1156,7 @@ import { waitUntil } from '@ignifx/core';
 import { waitWhile } from '@ignifx/core';
 import { WavHeader } from '@ignifx/audio';
 import { WebAudioBackend } from '@ignifx/audio';
+import { WebGpuInfo } from '@ignifx/core';
 import { World } from '@ignifx/core';
 import { WORLD_FORWARD } from '@ignifx/3d';
 import { WorldAnchor } from '@ignifx/ui';
@@ -1213,6 +1268,8 @@ export { AsepriteAnimationImportOptions }
 export { asepriteFrameName }
 
 export { AsepriteImportOptions }
+
+export { assertHostContract }
 
 export { assertNever }
 
@@ -1606,6 +1663,8 @@ export { createEnvironmentLoader }
 
 export { createErrorCodeRegistry }
 
+export { createFileStorageBackend }
+
 export { createFontLoader }
 
 export { createFrameSample }
@@ -1726,6 +1785,8 @@ export { DEFAULT_SORTING_LAYER }
 
 export { DEFAULT_SOUND_BUS }
 
+export { DEFAULT_STORAGE_NAMESPACE }
+
 export { defaultAudioSettings }
 
 export { defaultInputSettings }
@@ -1796,6 +1857,8 @@ export { describeTilemapFormat }
 
 export { describeTwoDSchemas }
 
+export { Desktop }
+
 export { DEVICE_KINDS }
 
 export { DeviceKind }
@@ -1829,6 +1892,22 @@ export { EasingName }
 export { EASINGS }
 
 export { EdgeCollider2D }
+
+export { electron }
+
+export { ELECTRON_ERROR_MESSAGES }
+
+export { ELECTRON_STORAGE_BACKEND_NAME }
+
+export { electronError }
+
+export { ElectronErrorCode }
+
+export { ElectronErrorOptions }
+
+export { ElectronOptions }
+
+export { ElectronStorageBackend }
 
 export { EMPTY_ASSET_MANIFEST }
 
@@ -1918,6 +1997,10 @@ export { FieldsOf }
 
 export { FieldSpec }
 
+export { FileStorageOptions }
+
+export { findIgnifxHost }
+
 export { findTileset }
 
 export { findVirtualDevice }
@@ -1962,6 +2045,8 @@ export { GamepadSnapshot }
 
 export { generateUlid }
 
+export { GpuAdapterInfo }
+
 export { gridAtlas }
 
 export { GridAtlasImportOptions }
@@ -1979,6 +2064,44 @@ export { HeadlessBus }
 export { HeadlessSound }
 
 export { HeightfieldCollider }
+
+export { HOST_CHANNELS }
+
+export { HOST_CONTRACT_MAJOR }
+
+export { HOST_CONTRACT_VERSION }
+
+export { HOST_GLOBAL_NAME }
+
+export { HOST_WINDOW_EVENT_CHANNEL }
+
+export { hostCallError }
+
+export { HostChannel }
+
+export { HostDesktop }
+
+export { HostDialogs }
+
+export { HostFileFilter }
+
+export { HostOpenDialogOptions }
+
+export { HostOpenDialogResult }
+
+export { HostPaths }
+
+export { HostShell }
+
+export { HostStorage }
+
+export { HostStoredValue }
+
+export { HostVersions }
+
+export { HostWindow }
+
+export { HostWindowEvent }
 
 export { HUD_ANCHORS }
 
@@ -2004,9 +2127,17 @@ export { I18nServiceOptions }
 
 export { i32 }
 
+export { IGNIFX_HOST_AUTHORITY }
+
+export { IGNIFX_ORIGIN }
+
+export { IGNIFX_SCHEME }
+
 export { IgnifxError }
 
 export { IgnifxErrorOptions }
+
+export { IgnifxHost }
 
 export { ImageProcessingEffectSettings }
 
@@ -2021,6 +2152,8 @@ export { importLdtkLevel }
 export { importTexturePackerAtlas }
 
 export { importTiledMap }
+
+export { IndexedDbStorageBackend }
 
 export { input }
 
@@ -2117,6 +2250,8 @@ export { INVALID_HANDLE }
 export { inverseLerp }
 
 export { isAssetRef }
+
+export { isCompatibleHostVersion }
 
 export { isEditableElement }
 
@@ -2360,6 +2495,8 @@ export { MAX_ULID_TIME_MS }
 
 export { MemorySink }
 
+export { MemoryStorageBackend }
+
 export { mergeTileCollisions }
 
 export { MESH_ASSET_TYPE }
@@ -2409,6 +2546,8 @@ export { MutableVec2 }
 export { MutableVec3 }
 
 export { MutableVec4 }
+
+export { NAMESPACE_SEGMENT_MAX_LENGTH }
 
 export { NAV_OBSTACLE_SHAPES }
 
@@ -2584,6 +2723,8 @@ export { PlatformKind }
 
 export { PlatformMover }
 
+export { PlatformOs }
+
 export { PlayClipOptions }
 
 export { PlayerInput }
@@ -2631,6 +2772,8 @@ export { QueryOptions }
 export { QueryOptions2D }
 
 export { QueryShape }
+
+export { QUOTA_MESSAGE_PREFIX }
 
 export { RAD_TO_DEG }
 
@@ -2691,6 +2834,8 @@ export { RenderTaskTiming }
 export { RenderTaskTimings }
 
 export { repeat }
+
+export { REQUIRED_HOST_MEMBERS }
 
 export { RESERVED_LAYER_NAMES }
 
@@ -2939,6 +3084,22 @@ export { standardMaterialDefinition }
 export { StateChange }
 
 export { stickAxis }
+
+export { Storage_2 as Storage }
+
+export { STORAGE_BACKEND_FAILED_CODE }
+
+export { STORAGE_KEY_MAX_LENGTH }
+
+export { STORAGE_QUOTA_CODE }
+
+export { STORAGE_VALUE_CORRUPT_CODE }
+
+export { StorageBackend }
+
+export { StoredValue }
+
+export { StoredValueKind }
 
 export { str }
 
@@ -3218,6 +3379,8 @@ export { UiSystemOptions }
 
 export { UlidFactoryOptions }
 
+export { UnavailableDesktop }
+
 export { validateInputActions }
 
 export { validateProps }
@@ -3309,6 +3472,8 @@ export { waitWhile }
 export { WavHeader }
 
 export { WebAudioBackend }
+
+export { WebGpuInfo }
 
 export { World }
 

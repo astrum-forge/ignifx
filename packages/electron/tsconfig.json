@@ -10,7 +10,10 @@
     // directory means deleting that one directory really does force a rebuild.
     "tsBuildInfoFile": "./.tsbuild/tsconfig.tsbuildinfo",
     "emitDeclarationOnly": true,
-    "types": ["@webgpu/types"]
+    // `src/main/**` and `src/preload/**` are Node/Electron code (the only place `electron` may be
+    // imported); `src/renderer/**` is browser code. One program covers both, so the `types` list is
+    // the union — `electron.d.ts` itself opens with `/// <reference types="node" />`.
+    "types": ["@webgpu/types", "node"]
   },
   "include": ["src"]
 }

@@ -29,7 +29,20 @@ const source = join(repoRoot, "templates");
 const destination = join(packageRoot, "templates");
 
 /** Build and tooling output a template checkout may hold locally but must never be published. */
-const IGNORED = new Set(["node_modules", "dist", ".turbo", ".tsbuild", ".tsbuild-test", "coverage"]);
+const IGNORED = new Set([
+  "node_modules",
+  "dist",
+  ".turbo",
+  ".tsbuild",
+  ".tsbuild-test",
+  "coverage",
+  // The desktop variant's build output: `out/` is what `electron-vite build` writes and `release/`
+  // is what `electron-builder` writes. A checkout that has run `pnpm dist:desktop` holds a
+  // 300 MB unpacked application under `release/`, and none of it belongs in the tarball — a
+  // scaffolded project builds its own.
+  "out",
+  "release",
+]);
 
 /**
  * Reads the flat `catalog:` block of `pnpm-workspace.yaml`.

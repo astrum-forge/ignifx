@@ -594,6 +594,9 @@ importers:
       '@ignifx/core':
         specifier: workspace:*
         version: link:../core
+      '@ignifx/electron':
+        specifier: workspace:*
+        version: link:../electron
       '@ignifx/input':
         specifier: workspace:*
         version: link:../input

@@ -4005,6 +4005,210 @@ One sentence telling the developer how to fix it, or `null` when there is nothin
 
 ***
 
+### IndexedDbStorageBackend
+
+A store backed by the browser's IndexedDB.
+
+#### Example
+
+```ts
+const app = await createApp({ canvas, storage: new IndexedDbStorageBackend() });
+```
+
+#### Implements
+
+- [`StorageBackend`](#storagebackend)
+
+#### Constructors
+
+##### Constructor
+
+> **new IndexedDbStorageBackend**(): [`IndexedDbStorageBackend`](#indexeddbstoragebackend)
+
+###### Returns
+
+[`IndexedDbStorageBackend`](#indexeddbstoragebackend)
+
+#### Properties
+
+##### name
+
+> `readonly` **name**: `"indexeddb"` = `"indexeddb"`
+
+The identifier that appears in error context.
+
+###### Implementation of
+
+[`StorageBackend`](#storagebackend).[`name`](#name-17)
+
+#### Methods
+
+##### clear()
+
+> **clear**(`namespace`): `Promise`\<`void`\>
+
+Empties one namespace.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the transaction commits.
+
+###### Implementation of
+
+[`StorageBackend`](#storagebackend).[`clear`](#clear-4)
+
+##### delete()
+
+> **delete**(`namespace`, `key`): `Promise`\<`void`\>
+
+Removes one value.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path.
+
+###### key
+
+`string`
+
+The key.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the transaction commits.
+
+###### Implementation of
+
+[`StorageBackend`](#storagebackend).[`delete`](#delete-3)
+
+##### dispose()
+
+> **dispose**(): `void`
+
+Closes the connection. The next call opens a new one.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`StorageBackend`](#storagebackend).[`dispose`](#dispose-9)
+
+##### get()
+
+> **get**(`namespace`, `key`): `Promise`\<[`StoredValue`](#storedvalue) \| `null`\>
+
+Reads one value.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path.
+
+###### key
+
+`string`
+
+The key.
+
+###### Returns
+
+`Promise`\<[`StoredValue`](#storedvalue) \| `null`\>
+
+The value, or `null`.
+
+###### Implementation of
+
+[`StorageBackend`](#storagebackend).[`get`](#get-7)
+
+##### keys()
+
+> **keys**(`namespace`, `prefix?`): `Promise`\<readonly `string`[]\>
+
+Lists one namespace's keys.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path.
+
+###### prefix?
+
+`string`
+
+An optional key prefix.
+
+###### Returns
+
+`Promise`\<readonly `string`[]\>
+
+The matching keys, in ascending order.
+
+###### Implementation of
+
+[`StorageBackend`](#storagebackend).[`keys`](#keys-4)
+
+##### set()
+
+> **set**(`namespace`, `key`, `value`): `Promise`\<`void`\>
+
+Writes one value.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path.
+
+###### key
+
+`string`
+
+The key.
+
+###### value
+
+[`StoredValue`](#storedvalue)
+
+The value.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the transaction commits.
+
+###### Implementation of
+
+[`StorageBackend`](#storagebackend).[`set`](#set-11)
+
+***
+
 ### LayerMask
 
 An immutable set of layer slots.
@@ -6315,6 +6519,210 @@ The roughness factor, 0 to 1.
 
 ***
 
+### MemoryStorageBackend
+
+A store that lives as long as the app does.
+
+#### Example
+
+```ts
+const app = await createApp({ storage: new MemoryStorageBackend() });
+```
+
+#### Implements
+
+- [`StorageBackend`](#storagebackend)
+
+#### Constructors
+
+##### Constructor
+
+> **new MemoryStorageBackend**(): [`MemoryStorageBackend`](#memorystoragebackend)
+
+###### Returns
+
+[`MemoryStorageBackend`](#memorystoragebackend)
+
+#### Properties
+
+##### name
+
+> `readonly` **name**: `"memory"` = `"memory"`
+
+The identifier that appears in error context.
+
+###### Implementation of
+
+[`StorageBackend`](#storagebackend).[`name`](#name-17)
+
+#### Methods
+
+##### clear()
+
+> **clear**(`namespace`): `Promise`\<`void`\>
+
+Empties one namespace.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the namespace is empty.
+
+###### Implementation of
+
+[`StorageBackend`](#storagebackend).[`clear`](#clear-4)
+
+##### delete()
+
+> **delete**(`namespace`, `key`): `Promise`\<`void`\>
+
+Removes one value.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path.
+
+###### key
+
+`string`
+
+The key.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the value is gone.
+
+###### Implementation of
+
+[`StorageBackend`](#storagebackend).[`delete`](#delete-3)
+
+##### dispose()
+
+> **dispose**(): `void`
+
+Drops every namespace.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`StorageBackend`](#storagebackend).[`dispose`](#dispose-9)
+
+##### get()
+
+> **get**(`namespace`, `key`): `Promise`\<[`StoredValue`](#storedvalue) \| `null`\>
+
+Reads one value.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path.
+
+###### key
+
+`string`
+
+The key.
+
+###### Returns
+
+`Promise`\<[`StoredValue`](#storedvalue) \| `null`\>
+
+A copy of the stored value, or `null`.
+
+###### Implementation of
+
+[`StorageBackend`](#storagebackend).[`get`](#get-7)
+
+##### keys()
+
+> **keys**(`namespace`, `prefix?`): `Promise`\<readonly `string`[]\>
+
+Lists one namespace's keys.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path.
+
+###### prefix?
+
+`string`
+
+An optional key prefix.
+
+###### Returns
+
+`Promise`\<readonly `string`[]\>
+
+The matching keys, sorted ascending.
+
+###### Implementation of
+
+[`StorageBackend`](#storagebackend).[`keys`](#keys-4)
+
+##### set()
+
+> **set**(`namespace`, `key`, `value`): `Promise`\<`void`\>
+
+Writes one value.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path, created on demand.
+
+###### key
+
+`string`
+
+The key.
+
+###### value
+
+[`StoredValue`](#storedvalue)
+
+The value to copy in.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the value is stored.
+
+###### Implementation of
+
+[`StorageBackend`](#storagebackend).[`set`](#set-11)
+
+***
+
 ### MeshAsset
 
 A geometry template a `MeshRenderer` draws (`docs/architecture/07-rendering.md` §2.3).
@@ -6361,7 +6769,7 @@ Whether the template's GPU buffers have been released.
 
 `boolean`
 
-`true` once [MeshAsset.dispose](#dispose-4) has run.
+`true` once [MeshAsset.dispose](#dispose-6) has run.
 
 ##### lite
 
@@ -15374,7 +15782,7 @@ The app.
 
 > **get** **isDisposed**(): `boolean`
 
-`true` once [World.dispose](#dispose-8) has run.
+`true` once [World.dispose](#dispose-11) has run.
 
 ###### Returns
 
@@ -16084,8 +16492,8 @@ Every failure the engine caught at a boundary rather than rethrowing.
 
 > `readonly` **platform**: [`PlatformInfo`](#platforminfo)
 
-Where the app is running (`docs/architecture/14-platform-electron.md` §1). Phase 1 answers only
-`kind`; the rest of §1's surface arrives with `@ignifx/electron`.
+Where the app is running, what it is running on, and what its WebGPU adapter offers
+(`docs/architecture/14-platform-electron.md` §1).
 
 ##### renderer
 
@@ -16105,6 +16513,15 @@ Services registered by extensions.
 > `readonly` **settings**: [`AppSettings`](#appsettings-1)
 
 Resolved project settings.
+
+##### storage
+
+> `readonly` **storage**: [`Storage`](#storage-2)
+
+The asynchronous key-value store settings, save games, and input rebindings live in
+(`docs/architecture/14-platform-electron.md` §2). The backend is chosen from
+[PlatformInfo.kind](#kind-16) — IndexedDB in a browser, memory under Node — unless `createApp` was
+given one.
 
 ##### time
 
@@ -18442,6 +18859,14 @@ Project settings, as `ignifx.config.ts` would supply them
 (`docs/architecture/04-extensions.md` §5). The Vite plugin injects the resolved config in
 Phase 2; tests and Electron tooling pass it here.
 
+##### storage?
+
+> `readonly` `optional` **storage?**: [`StorageBackend`](#storagebackend) \| [`FileStorageOptions`](#filestorageoptions)
+
+Where `app.storage` puts things (`docs/architecture/14-platform-electron.md` §2). Pass a
+[StorageBackend](#storagebackend) to install one, or `{ directory }` to write a directory tree under Node.
+Defaults to IndexedDB in a browser and to an in-memory store everywhere else.
+
 ***
 
 ### CreateEntityOptions
@@ -19994,6 +20419,22 @@ Excludes the field from saved games and scene files; it always takes its default
 
 ***
 
+### FileStorageOptions
+
+Options accepted by [createFileStorageBackend](#createfilestoragebackend).
+
+#### Properties
+
+##### directory
+
+> `readonly` **directory**: `string`
+
+The root directory. It is created on first write, together with every namespace directory
+under it. Under Electron this is `app.getPath("userData")`; in a test it is a temporary
+directory.
+
+***
+
 ### FontAssetLiteHandles
 
 The Babylon Lite objects a [FontAsset](#fontasset) owns. Unstable escape hatch
@@ -20093,6 +20534,44 @@ and whether `destroyImmediate` is legal.
 > `readonly` **isInsideFixedStep**: `boolean`
 
 `true` while the fixed loop is running (`time.inFixedStep`).
+
+***
+
+### GpuAdapterInfo
+
+Who made the GPU, as WebGPU reports it.
+
+#### Remarks
+
+Browsers deliberately blur these strings — most return an empty `architecture` and `device` on
+the default, non-`unmaskHints` path — so treat every field as a hint for a bug report rather than
+as something to branch on.
+
+#### Properties
+
+##### architecture
+
+> `readonly` **architecture**: `string`
+
+The GPU family, `"metal-3"`; `""` when the browser withholds it.
+
+##### description
+
+> `readonly` **description**: `string`
+
+A human-readable summary; `""` when the browser withholds it.
+
+##### device
+
+> `readonly` **device**: `string`
+
+The specific device; `""` when the browser withholds it.
+
+##### vendor
+
+> `readonly` **vendor**: `string`
+
+The GPU vendor, `"apple"` or `"nvidia"`; `""` when the browser withholds it.
 
 ***
 
@@ -21851,23 +22330,68 @@ Width, overriding `size`.
 
 ### PlatformInfo
 
-What the kernel knows about the host.
+What the kernel knows about the host, reached as `app.platform`.
 
 #### Example
 
 ```ts
-if (app.platform.kind === "browser") {
-  document.title = "playing";
+if (app.platform.isMobile) {
+  app.renderer.resolutionScale = 0.75;
+}
+if (app.platform.reducedMotion) {
+  disableScreenShake();
 }
 ```
 
 #### Properties
 
+##### hasGamepads
+
+> `readonly` **hasGamepads**: `boolean`
+
+`true` when the host implements the Gamepad API.
+
+##### hasPointerLock
+
+> `readonly` **hasPointerLock**: `boolean`
+
+`true` when the host implements the Pointer Lock API.
+
+##### isMobile
+
+> `readonly` **isMobile**: `boolean`
+
+`true` on a phone or a tablet.
+
 ##### kind
 
 > `readonly` **kind**: [`PlatformKind`](#platformkind)
 
-Whether the app runs in a document or in a bare JavaScript runtime.
+Whether the app runs in a document, in an Electron renderer, or in a bare JavaScript runtime.
+
+##### locale
+
+> `readonly` **locale**: `string`
+
+The host's BCP 47 language tag, `"en-AU"`. Never empty.
+
+##### os
+
+> `readonly` **os**: [`PlatformOs`](#platformos)
+
+The operating system, or `"unknown"` when the host does not say.
+
+##### reducedMotion
+
+> `readonly` **reducedMotion**: `boolean`
+
+`true` when the user asked their system for reduced motion.
+
+##### webgpu
+
+> `readonly` **webgpu**: [`WebGpuInfo`](#webgpuinfo) \| `null`
+
+What WebGPU offers, or `null` in a headless app and on a host with no WebGPU.
 
 ***
 
@@ -24117,6 +24641,378 @@ Whether lighting is skipped entirely.
 
 ***
 
+### Storage
+
+The store reached as `app.storage`, and as `app.storage.namespace(name)`.
+
+#### Remarks
+
+Values are JSON, or binary: a `Blob`, an `ArrayBuffer`, or any typed array is stored as octets
+and read back as a `Uint8Array`. Numbers inside JSON values are canonicalized the way scene files
+canonicalize them (`docs/architecture/06-serialization-and-scene-format.md` §2), so writing the
+same state twice produces the same bytes.
+
+Reads and writes are asynchronous on every backend, including the in-memory one, so that game
+code written against a test app keeps working on IndexedDB.
+
+#### Example
+
+```ts
+const settings = app.storage.namespace("settings");
+await settings.set("audio", { master: 0.8, music: 0.5 });
+const audio = await settings.get<{ master: number; music: number }>("audio");
+```
+
+#### Methods
+
+##### delete()
+
+> **delete**(`key`): `Promise`\<`void`\>
+
+Removes one value.
+
+###### Parameters
+
+###### key
+
+`string`
+
+The key.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the value is gone. Deleting an absent key is a no-op.
+
+###### Throws
+
+IgnifxError with code `IGX-1422` when the key is invalid, or `IGX-1425` when the
+backend fails.
+
+##### get()
+
+> **get**\<`T`\>(`key`): `Promise`\<`T` \| `null`\>
+
+Reads one value.
+
+###### Type Parameters
+
+###### T
+
+`T`
+
+What the caller declares the key holds; unchecked, as for `JSON.parse`.
+
+###### Parameters
+
+###### key
+
+`string`
+
+The key, 1–512 characters with no control characters.
+
+###### Returns
+
+`Promise`\<`T` \| `null`\>
+
+The value, or `null` when the key was never written.
+
+###### Throws
+
+IgnifxError with code `IGX-1422` when the key is invalid, `IGX-1426` when the stored
+value cannot be read back, or `IGX-1425` when the backend fails.
+
+##### keys()
+
+> **keys**(`prefix?`): `Promise`\<readonly `string`[]\>
+
+Lists this namespace's keys.
+
+###### Parameters
+
+###### prefix?
+
+`string`
+
+When given, only keys that start with this string are returned.
+
+###### Returns
+
+`Promise`\<readonly `string`[]\>
+
+The keys, sorted ascending. Keys of nested namespaces are not included.
+
+###### Throws
+
+IgnifxError with code `IGX-1425` when the backend fails.
+
+##### namespace()
+
+> **namespace**(`name`): [`Storage`](#storage-2)
+
+Narrows to a child namespace — `"saves"`, `"settings"`, `"input-overrides"`.
+
+###### Parameters
+
+###### name
+
+`string`
+
+1–64 characters of `A`–`Z`, `a`–`z`, `0`–`9`, `.`, `_`, `-`; not `.` or `..`.
+
+###### Returns
+
+[`Storage`](#storage-2)
+
+The child store, which shares this store's backend and sees none of its keys.
+
+###### Throws
+
+IgnifxError with code `IGX-1421` when the name is not a legal namespace segment.
+
+##### set()
+
+> **set**\<`T`\>(`key`, `value`): `Promise`\<`void`\>
+
+Writes one value, replacing whatever was there.
+
+###### Type Parameters
+
+###### T
+
+`T`
+
+The value's type.
+
+###### Parameters
+
+###### key
+
+`string`
+
+The key, 1–512 characters with no control characters.
+
+###### value
+
+`T`
+
+A JSON value, a `Blob`, an `ArrayBuffer`, or a typed array.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the value is durable.
+
+###### Throws
+
+IgnifxError with code `IGX-1422` when the key is invalid, `IGX-1423` when the value has
+no JSON form, `IGX-1424` when the host is out of quota, or `IGX-1425` when the backend fails.
+
+***
+
+### StorageBackend
+
+Where `app.storage` actually puts things (`docs/architecture/14-platform-electron.md` §2).
+
+#### Remarks
+
+**The contract.** Implementations may assume all of the following, because the `Storage` facade
+guarantees them before every call:
+
+1. `namespace` is a non-empty `/`-joined path of segments; each segment is 1–64 characters of
+   `A`–`Z`, `a`–`z`, `0`–`9`, `.`, `_`, or `-`, and no segment is `.` or `..`. A backend that maps
+   namespaces onto a hierarchy (directories, object stores) must encode each segment so that two
+   namespaces differing only in case cannot collide on a case-insensitive file system.
+2. `key` is 1–512 characters, contains no C0 or C1 control character, and is otherwise arbitrary
+   Unicode — including `/`, `..`, `:`, and characters Windows forbids in file names. Keys are
+   opaque: a backend never interprets a key's structure, and `keys(namespace, prefix)` is a plain
+   string-prefix filter, not a path walk.
+3. Namespaces are **scopes, not prefixes**: `get("saves", "a")` and `get("saves/coop", "a")` name
+   two different values, and neither appears in the other's `keys()` listing.
+
+Implementations must guarantee all of the following:
+
+4. `get` resolves `null` for an absent key — absence is not an error.
+5. `set` replaces any existing value under the same `(namespace, key)`, whatever its kind, and
+   is atomic against a crash: a reader either sees the whole previous value or the whole new one,
+   never a partial write. `delete` on an absent key resolves without error.
+6. `keys` resolves the keys of one namespace, filtered by `prefix` when it is given, sorted
+   ascending with the default `Array.prototype.sort` comparison (UTF-16 code unit order). An
+   unknown namespace lists as `[]` rather than throwing.
+7. `clear` removes every key of one namespace and leaves other namespaces untouched. Clearing an
+   unknown namespace resolves without error.
+8. Every rejection is an `IgnifxError` carrying a code from the storage block: `IGX-1424` when the
+   host is out of quota, `IGX-1426` when a stored value cannot be read back, and `IGX-1425` for
+   every other backend failure, with the underlying failure as `cause`. Backends never reject with
+   a raw `DOMException` or a Node `SystemError`.
+9. Every method is safe to call concurrently. Two `set` calls on the same key may land in either
+   order, but neither may leave the store damaged.
+
+#### Example
+
+```ts
+const backend: StorageBackend = new MemoryStorageBackend();
+await backend.set("saves", "slot1", { kind: "json", json: '{"level":3}' });
+await backend.keys("saves"); // ["slot1"]
+```
+
+#### Properties
+
+##### name
+
+> `readonly` **name**: `string`
+
+A short, stable identifier for this backend — `"memory"`, `"file"`, `"indexeddb"`,
+`"electron-file"`. It appears in error context so a failure names the store it came from.
+
+#### Methods
+
+##### clear()
+
+> **clear**(`namespace`): `Promise`\<`void`\>
+
+Removes every value of one namespace.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the namespace is empty; an unknown namespace is a no-op.
+
+##### delete()
+
+> **delete**(`namespace`, `key`): `Promise`\<`void`\>
+
+Removes one value.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path.
+
+###### key
+
+`string`
+
+The key inside that namespace.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the value is gone; removing an absent key is a no-op.
+
+##### dispose()?
+
+> `optional` **dispose**(): `void`
+
+Releases whatever the backend holds open — an IndexedDB connection, a file handle, a bridge
+subscription. Called from `app.dispose()`. Disposing twice is a no-op, and a backend that holds
+nothing may omit the method entirely.
+
+###### Returns
+
+`void`
+
+##### get()
+
+> **get**(`namespace`, `key`): `Promise`\<[`StoredValue`](#storedvalue) \| `null`\>
+
+Reads one value.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path.
+
+###### key
+
+`string`
+
+The key inside that namespace.
+
+###### Returns
+
+`Promise`\<[`StoredValue`](#storedvalue) \| `null`\>
+
+The stored value, or `null` when the namespace has no such key.
+
+##### keys()
+
+> **keys**(`namespace`, `prefix?`): `Promise`\<readonly `string`[]\>
+
+Lists the keys of one namespace.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path.
+
+###### prefix?
+
+`string`
+
+When given, only keys that start with this string are returned.
+
+###### Returns
+
+`Promise`\<readonly `string`[]\>
+
+The matching keys, sorted ascending; `[]` for an unknown namespace.
+
+##### set()
+
+> **set**(`namespace`, `key`, `value`): `Promise`\<`void`\>
+
+Writes one value, replacing whatever was there.
+
+###### Parameters
+
+###### namespace
+
+`string`
+
+The namespace path, created on demand.
+
+###### key
+
+`string`
+
+The key inside that namespace.
+
+###### value
+
+[`StoredValue`](#storedvalue)
+
+The JSON text or the octets to persist.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the value is durable.
+
+***
+
 ### StringFieldSpec
 
 Kind-specific data for `str`.
@@ -24808,6 +25704,32 @@ The condition, for the two predicate kinds.
 > `readonly` `optional` **seconds?**: `number`
 
 How long to wait, for the two timed kinds.
+
+***
+
+### WebGpuInfo
+
+What the host's WebGPU adapter offers.
+
+#### Properties
+
+##### adapterInfo
+
+> `readonly` **adapterInfo**: [`GpuAdapterInfo`](#gpuadapterinfo)
+
+Who made the adapter.
+
+##### features
+
+> `readonly` **features**: readonly `string`[]
+
+The optional features the adapter supports, sorted ascending.
+
+##### limits
+
+> `readonly` **limits**: `Readonly`\<`Record`\<`string`, `number`\>\>
+
+The adapter's limits, by their WebGPU names.
 
 ***
 
@@ -25550,15 +26472,23 @@ The union of the physics callback names.
 
 ### PlatformKind
 
-> **PlatformKind** = `"browser"` \| `"node"`
+> **PlatformKind** = `"browser"` \| `"electron"` \| `"node"`
 
 Where an app is running.
 
+***
+
+### PlatformOs
+
+> **PlatformOs** = `"macos"` \| `"windows"` \| `"linux"` \| `"ios"` \| `"android"` \| `"unknown"`
+
+Which operating system the host runs, as far as it will admit.
+
 #### Remarks
 
-`"electron"` is deliberately absent until the Electron extension can detect it reliably: an
-Electron renderer is a browser as far as the kernel is concerned, and guessing from the user
-agent would be worse than saying `"browser"`.
+`"unknown"` is a real answer, not a failure: a locked-down browser that freezes its user agent
+and exposes no `navigator.userAgentData` genuinely does not say, and code that branches on the
+operating system has to have a default anyway.
 
 ***
 
@@ -25738,6 +26668,81 @@ A listener attached to a [Signal](#signal-3).
 #### Returns
 
 `void`
+
+***
+
+### StoredValue
+
+> **StoredValue** = \{ `json`: `string`; `kind`: `"json"`; \} \| \{ `bytes`: `Uint8Array`; `kind`: `"bytes"`; \}
+
+A value as a backend sees it: opaque JSON text, or opaque octets.
+
+#### Union Members
+
+##### Type Literal
+
+\{ `json`: `string`; `kind`: `"json"`; \}
+
+###### json
+
+> `readonly` **json**: `string`
+
+The canonical JSON text of the value. Never `undefined`, never empty.
+
+###### kind
+
+> `readonly` **kind**: `"json"`
+
+Discriminant: this value is JSON text.
+
+***
+
+##### Type Literal
+
+\{ `bytes`: `Uint8Array`; `kind`: `"bytes"`; \}
+
+###### bytes
+
+> `readonly` **bytes**: `Uint8Array`
+
+The octets. May be empty.
+
+###### kind
+
+> `readonly` **kind**: `"bytes"`
+
+Discriminant: this value is a byte array.
+
+#### Remarks
+
+The two members are a discriminated union on their `kind`, so a backend switches once
+and the compiler proves both arms are handled. Backends must round-trip both members exactly: the
+`json` string that comes back from [StorageBackend.get](#get-7) has to be the same string that went
+into [StorageBackend.set](#set-11), and the `bytes` have to be byte-identical and the same length. A
+backend may copy the bytes (IndexedDB's structured clone does) but must never alias the caller's
+buffer after `set` resolves.
+
+#### Example
+
+```ts
+const value: StoredValue = { kind: "json", json: '{"volume":0.8}' };
+await backend.set("settings", "audio", value);
+```
+
+***
+
+### StoredValueKind
+
+> **StoredValueKind** = `"json"` \| `"bytes"`
+
+Which of the two representations a stored value uses.
+
+#### Remarks
+
+`"json"` carries text produced by the facade's canonical `JSON.stringify`; `"bytes"` carries the
+raw octets of a `Blob`, `ArrayBuffer`, or `Uint8Array` the caller handed to `set`. The kind is
+stored alongside the payload — a backend that loses it cannot round-trip, because JSON text and
+a UTF-8 byte array are indistinguishable once written.
 
 ***
 
@@ -26203,6 +27208,42 @@ A second, different simulation scene was handed to a world that already has one.
 
 `app.step()` was called while Babylon Lite's render loop was driving the frames.
 
+##### storageBackendFailed
+
+> `readonly` **storageBackendFailed**: `"IGX-1425"` = `"IGX-1425"`
+
+The storage backend failed for a reason the engine cannot classify.
+
+##### storageInvalidKey
+
+> `readonly` **storageInvalidKey**: `"IGX-1422"` = `"IGX-1422"`
+
+A storage key is empty, too long, or contains a control character.
+
+##### storageInvalidNamespace
+
+> `readonly` **storageInvalidNamespace**: `"IGX-1421"` = `"IGX-1421"`
+
+A storage namespace name is not a legal namespace segment.
+
+##### storageQuotaExceeded
+
+> `readonly` **storageQuotaExceeded**: `"IGX-1424"` = `"IGX-1424"`
+
+The storage backend refused a write because the host is out of quota or disk space.
+
+##### storageValueCorrupt
+
+> `readonly` **storageValueCorrupt**: `"IGX-1426"` = `"IGX-1426"`
+
+A stored value could not be read back; the store was damaged or written by something else.
+
+##### storageValueNotSerializable
+
+> `readonly` **storageValueNotSerializable**: `"IGX-1423"` = `"IGX-1423"`
+
+A value handed to `app.storage.set` has no JSON form.
+
 ##### tooManyLayers
 
 > `readonly` **tooManyLayers**: `"IGX-0305"` = `"IGX-0305"`
@@ -26286,9 +27327,13 @@ throw new IgnifxError(CoreErrorCode.mutationAfterDestroy, "The entity has been d
 #### Remarks
 
 Code blocks reserved for other first-party packages, which cannot import this table
-(`docs/architecture/00-overview.md` §2): `@ignifx/cli` owns `IGX-1401`–`IGX-1419`;
+(`docs/architecture/00-overview.md` §2): `@ignifx/cli` owns `IGX-1401`–`IGX-1419`; `@ignifx/electron`
+owns `IGX-1460`–`IGX-1499` (core's own platform codes therefore stop at `IGX-1459`);
 `@ignifx/vite-plugin` owns `IGX-0550`–`IGX-0599` and `IGX-0650`–`IGX-0699`. Core allocates its
-own codes from the bottom of each range and, in the platform range, from `IGX-1420` upward.
+own codes from the bottom of each range and, in the platform range, from `IGX-1420` upward —
+which is where `app.platform` and `app.storage` live, because storage is a *platform* service:
+the same three calls resolve to IndexedDB, a directory, or the Electron bridge depending only on
+the host, so a failure is a platform failure and not a serialization or asset one.
 
 ***
 
@@ -26357,6 +27402,21 @@ The slot every entity starts on, and the fallback for an unknown name in a file.
 > `const` **DEFAULT\_MEMORY\_SINK\_LIMIT**: `200` = `200`
 
 How many records [createMemorySink](#creatememorysink) keeps when no limit is given.
+
+***
+
+### DEFAULT\_STORAGE\_NAMESPACE
+
+> `const` **DEFAULT\_STORAGE\_NAMESPACE**: `"default"` = `"default"`
+
+The namespace `app.storage` itself reads and writes before `namespace(name)` is called.
+
+#### Remarks
+
+Every backend call carries a namespace, so the root storage needs a name of its own rather than
+an empty string that each backend would have to special-case. `"default"` is a legal namespace
+name, which means a game that writes `app.storage.namespace("default")` reaches the same values —
+intentionally, since the two are the same store.
 
 ***
 
@@ -26926,6 +27986,14 @@ The address suffixes that select the model loader.
 
 ***
 
+### NAMESPACE\_SEGMENT\_MAX\_LENGTH
+
+> `const` **NAMESPACE\_SEGMENT\_MAX\_LENGTH**: `64` = `64`
+
+The longest one segment of a namespace path may be.
+
+***
+
 ### PBR\_TEXTURE\_SLOTS
 
 > `const` **PBR\_TEXTURE\_SLOTS**: readonly `string`[]
@@ -27315,6 +28383,20 @@ dispatched from a phase and therefore get a sorted dispatch list.
 > `const` **STANDARD\_TEXTURE\_SLOTS**: readonly `string`[]
 
 The texture slots a `"standard"` material may name.
+
+***
+
+### STORAGE\_KEY\_MAX\_LENGTH
+
+> `const` **STORAGE\_KEY\_MAX\_LENGTH**: `512` = `512`
+
+The longest a storage key may be.
+
+#### Remarks
+
+512 UTF-16 code units is comfortably below the ~255 *byte* file-name limit once percent-encoding
+has expanded the key, which is why the file backend hashes nothing and truncates nothing: a key
+that passes this check always encodes to a name a file system accepts.
 
 ***
 
@@ -28264,6 +29346,45 @@ A registry owned by one app.
 const registry = createErrorCodeRegistry();
 registry.register({ "IGX-9001": "The {thing} was not spawned." }, "game/spawner");
 registry.describe("IGX-0701")?.message; // "WebGPU is not available in this environment."
+```
+
+***
+
+### createFileStorageBackend()
+
+> **createFileStorageBackend**(`options`): `Promise`\<[`StorageBackend`](#storagebackend)\>
+
+Builds a storage backend over a directory (`docs/architecture/14-platform-electron.md` §5).
+
+#### Parameters
+
+##### options
+
+[`FileStorageOptions`](#filestorageoptions)
+
+The root directory.
+
+#### Returns
+
+`Promise`\<[`StorageBackend`](#storagebackend)\>
+
+The backend.
+
+#### Remarks
+
+Node only: the factory loads `node:fs/promises` and rejects on a host that has none. It is what
+`createApp({ storage: { directory } })` calls, and it is exported so that tooling — `ignifx bake`,
+a future authoritative server — can build one without an app.
+
+#### Throws
+
+IgnifxError with code `IGX-1425` when the host exposes no `node:fs/promises`.
+
+#### Example
+
+```ts
+const app = await createApp({ headless: true, storage: { directory: "./.saves" } });
+await app.storage.namespace("saves").set("slot1", { level: 3 });
 ```
 
 ***

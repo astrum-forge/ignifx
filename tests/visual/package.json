@@ -2,13 +2,14 @@
   "name": "ignifx-visual-tests",
   "version": "0.0.0",
   "private": true,
-  "description": "ignifx visual regression tests: Playwright goldens per example and benchmark scene (coding standards §10).",
+  "description": "ignifx visual regression tests: Playwright goldens per example and benchmark scene (coding standards §10), plus the Electron desktop suite.",
   "license": "Apache-2.0",
   "type": "module",
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test:visual": "playwright test",
-    "test:visual:update": "playwright test --update-snapshots"
+    "test:visual:update": "playwright test --update-snapshots",
+    "test:desktop": "playwright test --config playwright.desktop.config.ts"
   },
   "devDependencies": {
     "@ignifx/core": "workspace:*",

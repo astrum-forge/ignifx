@@ -243,6 +243,21 @@ it publishes. Pass `null` to copy `package.json` byte for byte.
 
 [DEFAULT\_DEPENDENCY\_RANGE](#default_dependency_range)
 
+##### desktop?
+
+> `readonly` `optional` **desktop?**: `boolean`
+
+Whether the template's desktop variant is copied.
+
+###### Remarks
+
+`false` skips [DESKTOP\_ONLY\_ENTRIES](#desktop_only_entries) and strips the desktop scripts and dependencies from
+the copied `package.json`; `true` copies the template whole. This is what `--desktop` sets.
+
+###### Default Value
+
+`false`
+
 ##### ignore?
 
 > `readonly` `optional` **ignore?**: readonly `string`[]
@@ -329,6 +344,13 @@ sorted lexicographically. Directories are not listed.
 A parsed `create-ignifx` invocation.
 
 #### Properties
+
+##### desktop
+
+> `readonly` **desktop**: `boolean`
+
+Whether `--desktop` was given, which copies the template's Electron variant
+(`docs/architecture/14-platform-electron.md` §3).
 
 ##### overwrite
 
@@ -497,6 +519,47 @@ ships its templates inside an npm package.
 
 ***
 
+### DESKTOP\_ONLY\_DEPENDENCIES
+
+> `const` **DESKTOP\_ONLY\_DEPENDENCIES**: readonly `string`[]
+
+The `devDependencies` a template declares only for its desktop variant, removed from a
+browser-only scaffold.
+
+#### Remarks
+
+`@ignifx/electron` is deliberately **not** on this list. A template's `src/main.ts` registers
+`electron()` unconditionally — the extension is inert without a preload bridge, which is what
+gives one renderer bundle both builds — so removing the package would break the browser scaffold
+it was meant to slim down. What is removed is the three build tools, which are large binary
+downloads a browser game never runs.
+
+***
+
+### DESKTOP\_ONLY\_ENTRIES
+
+> `const` **DESKTOP\_ONLY\_ENTRIES**: readonly `string`[]
+
+Entries that belong to a template's **desktop** variant and are skipped unless the scaffold asked
+for one (`docs/architecture/14-platform-electron.md` §3).
+
+#### Remarks
+
+A browser-only project should not carry them, and not only for tidiness: `electron` and
+`electron-builder` are large binary downloads that a browser game never runs, and an
+`electron.vite.config.ts` in a project with no `desktop/` directory is a config that names files
+that are not there.
+
+***
+
+### DESKTOP\_SCRIPT\_SUFFIX
+
+> `const` **DESKTOP\_SCRIPT\_SUFFIX**: `":desktop"` = `":desktop"`
+
+The suffix marking a `package.json` script that belongs to the desktop variant.
+
+***
+
 ### TEMPLATE\_ROOT\_CANDIDATES
 
 > `const` **TEMPLATE\_ROOT\_CANDIDATES**: readonly `string`[]
@@ -555,10 +618,11 @@ The relative paths of the files written, sorted.
 
 #### Remarks
 
-The template tree is copied verbatim apart from three things: the `rename` map, the `ignore`
-list, and `package.json`, whose `workspace:` dependency specifiers are rewritten to
-`dependencyRange` so that the generated project installs from the registry. Symbolic links are
-followed and written as regular files, which is what a scaffolded project wants.
+The template tree is copied verbatim apart from four things: the `rename` map, the `ignore`
+list, `package.json` — whose `workspace:` dependency specifiers are rewritten to
+`dependencyRange` so that the generated project installs from the registry — and the desktop
+variant, which is skipped unless `desktop` is `true`. Symbolic links are followed and written as
+regular files, which is what a scaffolded project wants.
 
 #### Throws
 
@@ -599,19 +663,21 @@ The parsed command with defaults applied.
 
 #### Remarks
 
-`--desktop` is accepted by the parser so that the failure is a clear "not yet" rather than an
-"unknown option"; Electron templates land in Phase 9 of the engineering plan.
+`--desktop` copies the template's Electron variant — its `desktop/` directory,
+`electron.vite.config.ts`, `electron-builder.yml`, and the `*:desktop` scripts and dependencies
+that go with them. Without it the scaffold is browser-only, which is what keeps a browser game
+from downloading an Electron binary it never runs.
 
 #### Throws
 
 A [CliError](#clierror) with code `IGX-1403` when the command line is unparseable, the target
-directory is missing, extra positionals are given, or `--desktop` is requested.
+directory is missing, or extra positionals are given.
 
 #### Example
 
 ```ts
-const command = parseArgs(["my-game", "--template", "3d-first-person"]);
-// { targetDir: "my-game", template: "3d-first-person", overwrite: false }
+const command = parseArgs(["my-game", "--template", "3d-first-person", "--desktop"]);
+// { targetDir: "my-game", template: "3d-first-person", overwrite: false, desktop: true }
 ```
 
 ***

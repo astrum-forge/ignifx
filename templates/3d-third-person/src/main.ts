@@ -11,12 +11,14 @@ import {
 } from "@ignifx/3d";
 import { audio, AUDIO_ASSET_TYPE, AUDIO_BUSES_ASSET_TYPE, AudioListener } from "@ignifx/audio";
 import { Camera, createApp, isIgnifxError, Model } from "@ignifx/core";
+import { electron } from "@ignifx/electron";
 import { input, INPUT_ACTIONS_ASSET_TYPE } from "@ignifx/input";
 import { CharacterController, physics } from "@ignifx/physics";
 import { I18N_ASSET_TYPE, ui } from "@ignifx/ui";
 // A Vite virtual module the plugin serves; the declaration is in src/vite-env.d.ts.
 // eslint-disable-next-line import-x/no-unresolved -- see above.
 import { manifest } from "virtual:ignifx/manifest";
+import { installDesktopProbe } from "./desktop-probe.js";
 import { createGameUi, hasTouch } from "./game-ui.js";
 import { buildLevel } from "./level.js";
 import { Companion } from "./scripts/companion.js";
@@ -329,7 +331,12 @@ async function main(): Promise<AppStatus> {
       assets: { manifest },
       // Order matters twice: `threeD()` requires `physics()` and `input()` to be registered before
       // it, and `ui()` finds `@ignifx/input`'s focus flags structurally at registration time.
-      extensions: [physics(), input(), audio(), threeD(), ui()],
+      // `electron()` is registered in **both** builds. Without a preload bridge it is inert — one
+      // debug line, and an `app.desktop` that answers `isElectron === false` — so the browser build
+      // is unchanged and the desktop build needs no second entry point. It goes first because it
+      // only requires core, and because `app.storage` should be the file backend before any other
+      // extension reads a setting from it.
+      extensions: [electron(), physics(), input(), audio(), threeD(), ui()],
     });
   } catch (error) {
     // IGX-0701 is the one failure a shipped game must handle itself: the browser has no WebGPU and
@@ -424,6 +431,12 @@ async function main(): Promise<AppStatus> {
   }
 
   gameUi.loading.hide();
+
+  // A test-only hook, and only under `?probe=1`: `tests/visual/tests/desktop.spec.ts` uses it for
+  // the Phase 9 device-loss exit criterion. See `src/desktop-probe.ts`.
+  if (flags.get("probe") === "1") {
+    installDesktopProbe(app, world.level.crates);
+  }
 
   await app.start();
   await settle(SETTLE_FRAMES);

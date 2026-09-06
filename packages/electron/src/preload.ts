@@ -1,16 +1,41 @@
 /**
  * `@ignifx/electron/preload` public barrel: the typed, versioned bridge exposed to the renderer
- * through `contextBridge` as `window.ignifxHost` — storage, paths, window controls, dialogs, and
- * version (`docs/architecture/14-platform-electron.md` §3).
+ * through `contextBridge` as `window.ignifxHost` — storage, paths, window controls, dialogs, the
+ * shell, and the contract version (`docs/architecture/14-platform-electron.md` §3).
  *
- * The entry is deliberately empty; Phase 9 of `docs/plan/engineering-plan.md` populates it. It
- * touches no Electron or Node API yet, which is why the package still type-checks against the
- * browser `types` list (coding standards §3).
+ * A desktop app's preload entry is two lines:
+ *
+ * ```ts
+ * // desktop/preload.ts
+ * import { exposeIgnifxHost } from "@ignifx/electron/preload";
+ *
+ * exposeIgnifxHost();
+ * ```
+ *
+ * **That file has to be built to CommonJS.** A sandboxed preload script cannot be an ES module —
+ * measured on Electron 44.2.0 / macOS arm64, an `.mjs` preload under `sandbox: true` left
+ * `window.ignifxHost` undefined with no error anywhere — and `CONSTITUTION.md` §9.2 fixes
+ * `sandbox: true`. The templates' `electron.vite.config.ts` builds the preload with
+ * `format: "cjs"` and an `index.cjs` file name for exactly this reason.
  *
  * @packageDocumentation
  */
 
-// The empty specifier is what makes a barrel with no exports a module under `isolatedModules`;
-// it disappears with the first re-export.
-// oxlint-disable-next-line unicorn/require-module-specifiers
-export {};
+export { createIgnifxHost, exposeIgnifxHost, readHostVersions } from "./preload/bridge.js";
+export {
+  HOST_CHANNELS,
+  HOST_CONTRACT_VERSION,
+  HOST_GLOBAL_NAME,
+  HOST_WINDOW_EVENT_CHANNEL,
+  type HostDialogs,
+  type HostOpenDialogOptions,
+  type HostOpenDialogResult,
+  type HostPaths,
+  type HostShell,
+  type HostStorage,
+  type HostStoredValue,
+  type HostVersions,
+  type HostWindow,
+  type HostWindowEvent,
+  type IgnifxHost,
+} from "./host-contract.js";

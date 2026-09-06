@@ -42,7 +42,9 @@ describe("detectPlatform", () => {
     expect(detectPlatform().kind).toBe("browser");
   });
 
-  it("returns a frozen record", () => {
-    expect(Object.isFrozen(detectPlatform())).toBe(true);
+  it("returns a mutable record, so `@ignifx/electron` can correct `kind`", () => {
+    // Phase 1 froze the record; Phase 9 gave it `setKind`/`setWebGpu` behind `platformInternals`,
+    // which `docs/architecture/14-platform-electron.md` §3 requires of the renderer extension.
+    expect(Object.isFrozen(detectPlatform())).toBe(false);
   });
 });

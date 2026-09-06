@@ -249,3 +249,116 @@ describe("copyTemplate", () => {
     );
   });
 });
+
+/**
+ * Adds a desktop variant to a fixture template.
+ *
+ * @param directory - The template being extended.
+ */
+async function addDesktopVariant(directory: string): Promise<void> {
+  await mkdir(join(directory, "desktop"), { recursive: true });
+  await writeFile(join(directory, "desktop", "main.ts"), "export const main = 1;\n", "utf8");
+  await writeFile(join(directory, "desktop", "preload.ts"), "export const preload = 1;\n", "utf8");
+  await writeFile(join(directory, "electron.vite.config.ts"), "export default {};\n", "utf8");
+  await writeFile(join(directory, "electron-builder.yml"), "appId: com.example.game\n", "utf8");
+  await writeFile(
+    join(directory, "_package.json"),
+    `${JSON.stringify(
+      {
+        name: "game",
+        scripts: {
+          dev: "vite",
+          build: "vite build",
+          "dev:desktop": "electron-vite dev",
+          "dist:desktop": "electron-builder --dir",
+        },
+        dependencies: { "@ignifx/core": "workspace:*" },
+        devDependencies: {
+          "@ignifx/electron": "workspace:*",
+          "@ignifx/vite-plugin": "workspace:*",
+          electron: "catalog:",
+          "electron-builder": "catalog:",
+          "electron-vite": "catalog:",
+          vite: "catalog:",
+        },
+      },
+      null,
+      2,
+    )}\n`,
+    "utf8",
+  );
+}
+
+describe("the desktop variant", () => {
+  it("is left out by default, files and all", async () => {
+    await addDesktopVariant(templateDir);
+    const target = join(workspace, "browser-game");
+
+    const result = await copyTemplate({ templateDir, targetDir: target });
+
+    expect(result.files).not.toContain("desktop/main.ts");
+    expect(result.files).not.toContain("desktop/preload.ts");
+    expect(result.files).not.toContain("electron.vite.config.ts");
+    expect(result.files).not.toContain("electron-builder.yml");
+    expect(result.files).toContain("src/main.ts");
+  });
+
+  it("is copied whole with desktop: true", async () => {
+    await addDesktopVariant(templateDir);
+    const target = join(workspace, "desktop-game");
+
+    const result = await copyTemplate({ templateDir, targetDir: target, desktop: true });
+
+    expect(result.files).toContain("desktop/main.ts");
+    expect(result.files).toContain("desktop/preload.ts");
+    expect(result.files).toContain("electron.vite.config.ts");
+    expect(result.files).toContain("electron-builder.yml");
+  });
+
+  it("strips the desktop scripts and dependencies from a browser-only scaffold", async () => {
+    await addDesktopVariant(templateDir);
+    const target = join(workspace, "browser-game");
+
+    await copyTemplate({ templateDir, targetDir: target });
+    const manifest: unknown = JSON.parse(await readFile(join(target, "package.json"), "utf8"));
+    const document = manifest as {
+      scripts: Record<string, string>;
+      devDependencies: Record<string, string>;
+    };
+
+    expect(Object.keys(document.scripts)).toEqual(["dev", "build"]);
+    // A browser game must not download an Electron binary it never runs — but it keeps
+    // `@ignifx/electron`, because `src/main.ts` registers the (inert) `electron()` extension in
+    // both builds.
+    expect(Object.keys(document.devDependencies)).toEqual(["@ignifx/electron", "@ignifx/vite-plugin", "vite"]);
+  });
+
+  it("keeps them with desktop: true, workspace ranges rewritten as usual", async () => {
+    await addDesktopVariant(templateDir);
+    const target = join(workspace, "desktop-game");
+
+    await copyTemplate({ templateDir, targetDir: target, desktop: true, dependencyRange: "^9.9.9" });
+    const document = JSON.parse(await readFile(join(target, "package.json"), "utf8")) as {
+      scripts: Record<string, string>;
+      devDependencies: Record<string, string>;
+    };
+
+    expect(document.scripts["dev:desktop"]).toBe("electron-vite dev");
+    expect(document.scripts["dist:desktop"]).toBe("electron-builder --dir");
+    expect(document.devDependencies["@ignifx/electron"]).toBe("^9.9.9");
+    expect(document.devDependencies["electron"]).toBe("catalog:");
+  });
+
+  it("still applies the _gitignore rename in both modes", async () => {
+    await addDesktopVariant(templateDir);
+    await writeFile(join(templateDir, "_gitignore"), "dist\nnode_modules\n", "utf8");
+
+    const browser = await copyTemplate({ templateDir, targetDir: join(workspace, "a") });
+    const desktop = await copyTemplate({ templateDir, targetDir: join(workspace, "b"), desktop: true });
+
+    expect(browser.files).toContain(".gitignore");
+    expect(browser.files).not.toContain("_gitignore");
+    expect(desktop.files).toContain(".gitignore");
+    expect(desktop.files).not.toContain("_gitignore");
+  });
+});

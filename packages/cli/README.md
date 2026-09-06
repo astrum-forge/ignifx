@@ -13,7 +13,29 @@ create-ignifx <target-dir> [--template <name>] [--overwrite] [--desktop]
 - `--template` defaults to `2d-topdown`.
 - `--overwrite` allows writing into a directory that already has contents; without it a non-empty
   target fails with `IGX-1401`.
-- `--desktop` is parsed but rejected: Electron variants arrive in Phase 9 of the engineering plan.
+- `--desktop` also copies the template's Electron variant: its `desktop/` directory,
+  `electron.vite.config.ts`, `electron-builder.yml`, and the `*:desktop` scripts and the
+  `electron` / `electron-vite` / `electron-builder` / `@ignifx/electron` dev dependencies that go
+  with them. Without it the scaffold is browser-only, and those four entries and the scripts are
+  stripped from the copied `package.json` — a browser game should not download an Electron binary
+  it never runs.
+
+## Desktop projects
+
+```sh
+npx @ignifx/cli my-game --template 3d-third-person --desktop
+cd my-game && pnpm install
+```
+
+| Script               | What it does                                                                                                                                               |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm dev:desktop`   | `electron-vite dev` — the game in an Electron window, with hot reload in the renderer.                                                                     |
+| `pnpm build:desktop` | `electron-vite build` — the main, preload, and renderer bundles into `out/`.                                                                               |
+| `pnpm dist:desktop`  | `electron-builder --dir` — an **unpacked, unsigned** app in `release/`. Add `--mac`, `--win`, or `--linux` to build an installer for one platform instead. |
+
+Cross-platform packaging needs the target OS (or a CI runner for it): `electron-builder` can only
+produce a macOS `.dmg` on macOS, and a Windows installer needs Windows for anything but the NSIS
+target. Code signing and auto-update are documented after 1.0.
 
 ## Templates
 

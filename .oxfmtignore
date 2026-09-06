@@ -12,3 +12,8 @@ skills/ignifx/references/api/**
 # line each — a formatter would put every integer on its own.
 templates/*/assets/*.atlas.json
 templates/*/assets/level.tilemap.json
+
+# Electron desktop build output. `templates/*/out/**` is bundled JavaScript from `electron-vite`
+# and `templates/*/release/**` is a packaged application; neither is hand-written.
+templates/*/out/**
+templates/*/release/**

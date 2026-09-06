@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  // The desktop half of the project: the Electron **main** and **preload** entries, plus the build
+  // config that produces them. It is a separate project from `tsconfig.json` because the two halves
+  // have different globals — `desktop/**` is Node and Electron with no DOM, `src/**` is the browser
+  // with no Node — and one `lib`/`types` list cannot describe both without letting each half reach
+  // for APIs it will not have at runtime.
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "erasableSyntaxOnly": true,
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "moduleDetection": "force",
+    "target": "es2023",
+    "lib": ["ES2023"],
+    "types": ["node"],
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": ["desktop", "electron.vite.config.ts"]
+}

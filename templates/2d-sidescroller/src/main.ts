@@ -16,6 +16,7 @@ import {
 } from "@ignifx/2d";
 import { audio, AUDIO_ASSET_TYPE, AUDIO_BUSES_ASSET_TYPE } from "@ignifx/audio";
 import { createApp, isIgnifxError, Vec2 } from "@ignifx/core";
+import { electron } from "@ignifx/electron";
 import { INPUT_ACTIONS_ASSET_TYPE, input } from "@ignifx/input";
 import { CharacterController2D, CircleCollider2D, physics2d, TilemapCollider2D } from "@ignifx/physics-2d";
 import { ui } from "@ignifx/ui";
@@ -307,7 +308,12 @@ async function main(): Promise<AppStatus> {
       // module rather than fetching `assets.manifest.json` means the table is in the bundle, so
       // the first asset request needs no round trip.
       assets: { manifest },
-      extensions: [twoD(), physics2d(), input(), audio(), ui()],
+      // `electron()` is registered in **both** builds. Without a preload bridge it is inert — one
+      // debug line, and an `app.desktop` that answers `isElectron === false` — so the browser build
+      // is unchanged and the desktop build needs no second entry point. It goes first because it
+      // only requires core, and because `app.storage` should be the file backend before any other
+      // extension reads a setting from it.
+      extensions: [electron(), twoD(), physics2d(), input(), audio(), ui()],
     });
   } catch (error) {
     // IGX-0701: the browser has no WebGPU, and ignifx has no fallback renderer (ADR-0001).

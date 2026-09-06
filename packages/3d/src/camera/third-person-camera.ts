@@ -254,7 +254,9 @@ export class ThirdPersonCamera extends Script {
       this.#currentDistance = this.distance;
     }
     const target = this.target;
-    if (!this.collisionEnabled || target === null || target.isDestroyed) {
+    // On the very first frame the fixed loop may not have run yet, and a physics query before Havok's
+    // first step is `IGX-0902`; `hasStepped` is the supported way to wait it out (`09-physics.md` §5).
+    if (!this.collisionEnabled || target === null || target.isDestroyed || !this.app.physics.hasStepped) {
       this.#currentDistance = this.distance;
       return;
     }

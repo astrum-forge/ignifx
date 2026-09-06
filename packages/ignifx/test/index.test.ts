@@ -235,6 +235,12 @@ const expectedExports = [
   "TWEEN_VALUE_KINDS",
   "Tween",
   "resolveEase",
+  "createFileStorageBackend",
+  "DEFAULT_STORAGE_NAMESPACE",
+  "IndexedDbStorageBackend",
+  "MemoryStorageBackend",
+  "NAMESPACE_SEGMENT_MAX_LENGTH",
+  "STORAGE_KEY_MAX_LENGTH",
 ];
 
 // The @ignifx/input value surface. `VERSION` and `describeSchemas` are deliberately absent: both
@@ -658,6 +664,35 @@ const expectedThreeDExports = [
   "yawFromDirection",
 ];
 
+// The @ignifx/electron value surface (VERSION stays core's).
+const expectedElectronExports = [
+  "ELECTRON_ERROR_MESSAGES",
+  "ELECTRON_STORAGE_BACKEND_NAME",
+  "ElectronErrorCode",
+  "ElectronStorageBackend",
+  "HOST_CHANNELS",
+  "HOST_CONTRACT_MAJOR",
+  "HOST_CONTRACT_VERSION",
+  "HOST_GLOBAL_NAME",
+  "HOST_WINDOW_EVENT_CHANNEL",
+  "HostDesktop",
+  "IGNIFX_HOST_AUTHORITY",
+  "IGNIFX_ORIGIN",
+  "IGNIFX_SCHEME",
+  "QUOTA_MESSAGE_PREFIX",
+  "REQUIRED_HOST_MEMBERS",
+  "STORAGE_BACKEND_FAILED_CODE",
+  "STORAGE_QUOTA_CODE",
+  "STORAGE_VALUE_CORRUPT_CODE",
+  "UnavailableDesktop",
+  "assertHostContract",
+  "electron",
+  "electronError",
+  "findIgnifxHost",
+  "hostCallError",
+  "isCompatibleHostVersion",
+];
+
 describe("ignifx barrel", () => {
   it("imports without executing anything and re-exports the whole @ignifx/core value surface", () => {
     // Compared as sets: the key order of a namespace object is not part of the contract.
@@ -671,8 +706,16 @@ describe("ignifx barrel", () => {
         ...expectedTwoDExports,
         ...expectedUiExports,
         ...expectedThreeDExports,
+        ...expectedElectronExports,
       ]),
     );
+  });
+
+  it("re-exports the @ignifx/electron value surface by name", () => {
+    const keys = new Set(Object.keys(barrel));
+    for (const name of expectedElectronExports) {
+      expect(keys.has(name)).toBe(true);
+    }
   });
 
   it("re-exports the @ignifx/3d value surface by name", () => {

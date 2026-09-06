@@ -53,7 +53,12 @@ afterEach(async () => {
 
 describe("parseArgs", () => {
   it("defaults the template to 2d-topdown and overwrite to false", () => {
-    expect(parseArgs(["my-game"])).toEqual({ targetDir: "my-game", template: "2d-topdown", overwrite: false });
+    expect(parseArgs(["my-game"])).toEqual({
+      targetDir: "my-game",
+      template: "2d-topdown",
+      overwrite: false,
+      desktop: false,
+    });
     expect(DEFAULT_TEMPLATE).toBe("2d-topdown");
   });
 
@@ -62,6 +67,7 @@ describe("parseArgs", () => {
       targetDir: "my-game",
       template: "3d-first-person",
       overwrite: true,
+      desktop: false,
     });
   });
 
@@ -69,16 +75,14 @@ describe("parseArgs", () => {
     expect(parseArgs(["--template", "2d-sidescroller", "my-game"]).targetDir).toBe("my-game");
   });
 
-  it("reports --desktop as unavailable until Phase 9", () => {
-    expect(() => parseArgs(["my-game", "--desktop"])).toThrow(CliError);
-    try {
-      parseArgs(["my-game", "--desktop"]);
-      expect.unreachable("parseArgs should have thrown");
-    } catch (error) {
-      expect(error).toBeInstanceOf(CliError);
-      expect((error as CliError).code).toBe(CliErrorCode.invalidArguments);
-      expect((error as CliError).message).toMatch(/Phase 9/u);
-    }
+  it("reads --desktop, which asks for the template's Electron variant", () => {
+    expect(parseArgs(["my-game", "--desktop"])).toEqual({
+      targetDir: "my-game",
+      template: "2d-topdown",
+      overwrite: false,
+      desktop: true,
+    });
+    expect(parseArgs(["my-game"]).desktop).toBe(false);
   });
 
   it("reports a missing target directory with the usage line", () => {
@@ -305,5 +309,48 @@ describe("scaffolding the 2d-topdown template", () => {
     expect(result.files).toEqual(expect.arrayContaining(["public/parallax.png", "assets/coin.spriteanim.json"]));
     const manifest = await readFile(join(target, "package.json"), "utf8");
     expect(manifest).not.toContain("workspace:");
+  });
+});
+
+describe("runCreate --desktop", () => {
+  /** Adds a desktop variant to the fixture template. */
+  async function addDesktopVariant(): Promise<void> {
+    const templateDir = join(templatesRoot, DEFAULT_TEMPLATE);
+    await mkdir(join(templateDir, "desktop"), { recursive: true });
+    await writeFile(join(templateDir, "desktop", "main.ts"), "export const main = 1;\n", "utf8");
+    await writeFile(join(templateDir, "electron.vite.config.ts"), "export default {};\n", "utf8");
+    await writeFile(join(templateDir, "electron-builder.yml"), "appId: com.example.game\n", "utf8");
+  }
+
+  it("leaves the desktop variant out without the flag", async () => {
+    await addDesktopVariant();
+    const lines: string[] = [];
+
+    const result = await runCreate([join(workspace, "browser-game")], {
+      stdout: (line) => lines.push(line),
+      stderr: (line) => lines.push(line),
+      templatesRoot,
+    });
+
+    expect(result.files).not.toContain("desktop/main.ts");
+    expect(lines.some((line) => line.includes("desktop variant"))).toBe(false);
+    expect(lines.some((line) => line.includes("dev:desktop"))).toBe(false);
+  });
+
+  it("includes it with the flag, and says how to run it", async () => {
+    await addDesktopVariant();
+    const lines: string[] = [];
+
+    const result = await runCreate([join(workspace, "desktop-game"), "--desktop"], {
+      stdout: (line) => lines.push(line),
+      stderr: (line) => lines.push(line),
+      templatesRoot,
+    });
+
+    expect(result.files).toContain("desktop/main.ts");
+    expect(result.files).toContain("electron.vite.config.ts");
+    expect(result.files).toContain("electron-builder.yml");
+    expect(lines.some((line) => line.includes("desktop variant"))).toBe(true);
+    expect(lines.some((line) => line.includes("pnpm dev:desktop"))).toBe(true);
   });
 });

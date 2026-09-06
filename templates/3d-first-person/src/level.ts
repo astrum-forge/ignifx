@@ -150,7 +150,9 @@ export function buildLevel(app: App, materials: LevelMaterials): Level {
   sun.transform.lookAt({ x: 0, y: 0, z: 0 });
   const light = sun.addComponent(Light, { type: "directional", intensity: 2.9 });
   light.shadows.enabled = true;
-  light.shadows.technique = "pcf";
+  // ESM, not PCF: Babylon Lite can rebuild ESM shadow maps after a lost device (`lib/shadow/shadow-recovery.js`
+  // refuses every other technique), and a desktop build must survive a GPU reset (Phase 9).
+  light.shadows.technique = "esm";
   light.shadows.mapSize = 1024;
   light.shadows.normalBias = 0.02;
 

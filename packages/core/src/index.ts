@@ -219,8 +219,15 @@ export {
 } from "./math/vec3.js";
 export { Vec4 } from "./math/vec4.js";
 
-// platform — the WebGPU probe and the minimal host description.
-export type { PlatformInfo, PlatformKind } from "./platform/platform.js";
+// platform — the host description and the WebGPU probe.
+export {
+  platformInternals,
+  type GpuAdapterInfo,
+  type PlatformInfo,
+  type PlatformKind,
+  type PlatformOs,
+  type WebGpuInfo,
+} from "./platform/platform.js";
 export { isWebGpuAvailable, type RenderSurface } from "./platform/webgpu.js";
 
 // render — the components, assets, loaders, and service that expose Babylon Lite's renderer.
@@ -299,6 +306,7 @@ export {
   type SmaaEffectSettings,
 } from "./render/post-process-stack.js";
 export {
+  forceRendererDeviceLossForTesting,
   RENDER_DIAGNOSTICS_COUNTERS,
   RENDER_DIAGNOSTICS_GROUP,
   type RenderCapture,
@@ -464,6 +472,14 @@ export {
   type SignalOptions,
   type SignalOwner,
 } from "./signal/signal.js";
+
+// storage — `app.storage`, its backends, and the contract `@ignifx/electron` implements.
+export type { StorageBackend, StoredValue, StoredValueKind } from "./storage/backend.js";
+export { MemoryStorageBackend } from "./storage/memory-backend.js";
+export { DEFAULT_STORAGE_NAMESPACE, NAMESPACE_SEGMENT_MAX_LENGTH, STORAGE_KEY_MAX_LENGTH } from "./storage/names.js";
+export { createFileStorageBackend, type FileStorageOptions } from "./storage/node/file-backend.js";
+export { storageInternals, type Storage } from "./storage/storage.js";
+export { IndexedDbStorageBackend } from "./storage/web/indexeddb-backend.js";
 
 // tags — the per-entity tag set behind `world.findByTag`.
 export { TagSet } from "./tags/tag-set.js";

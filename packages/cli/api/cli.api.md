@@ -26,6 +26,7 @@ export function copyTemplate(options: CopyTemplateOptions): Promise<CopyTemplate
 // @public
 export interface CopyTemplateOptions {
     readonly dependencyRange?: string | null;
+    readonly desktop?: boolean;
     readonly ignore?: readonly string[];
     readonly overwrite?: boolean;
     readonly projectName?: string | null;
@@ -42,6 +43,7 @@ export interface CopyTemplateResult {
 
 // @public
 export interface CreateCommand {
+    readonly desktop: boolean;
     readonly overwrite: boolean;
     readonly targetDir: string;
     readonly template: string;
@@ -65,6 +67,15 @@ export const DEFAULT_TEMPLATE = "2d-topdown";
 
 // @public
 export const DEFAULT_TEMPLATE_RENAMES: Readonly<Record<string, string>>;
+
+// @public
+export const DESKTOP_ONLY_DEPENDENCIES: readonly string[];
+
+// @public
+export const DESKTOP_ONLY_ENTRIES: readonly string[];
+
+// @public
+export const DESKTOP_SCRIPT_SUFFIX = ":desktop";
 
 // @public
 export function parseArgs(argv: readonly string[]): CreateCommand;

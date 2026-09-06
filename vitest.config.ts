@@ -44,6 +44,12 @@ export default defineConfig({
         "packages/*/src/render/gpu/**",
         // `src/lite/web/**` is an adapter's browser-only half (Web Audio), under the same rule as gpu/**.
         "packages/*/src/lite/web/**",
+        // `src/platform/web/**` (the WebGPU adapter probe behind `app.platform.webgpu`) and
+        // `src/storage/web/**` (the IndexedDB storage backend) are browser-only halves under the
+        // same rule: every line of them needs `navigator.gpu` or `indexedDB`. Both are covered by
+        // the `browser` project (`packages/core/test/platform/*.browser.test.ts`).
+        "packages/*/src/platform/web/**",
+        "packages/*/src/storage/web/**",
       ],
       // CONSTITUTION.md §6.2: 80% floor everywhere, 90% for core. The glob entry keeps the core
       // floor in place once packages that only owe 80% are added.

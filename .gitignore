@@ -10,6 +10,11 @@ coverage/
 temp/
 etc/temp/
 
+# Electron desktop build output: `out/` is what `electron-vite build` writes and `release/` is what
+# `electron-builder` writes (a 300 MB unpacked application, for `--dir` on macOS).
+out/
+release/
+
 # Playwright / Vitest browser output
 test-results/
 playwright-report/

@@ -32,6 +32,11 @@ export interface CreateCommand {
   readonly template: string;
   /** Whether `--overwrite` was given, allowing a non-empty target directory. */
   readonly overwrite: boolean;
+  /**
+   * Whether `--desktop` was given, which copies the template's Electron variant
+   * (`docs/architecture/14-platform-electron.md` §3).
+   */
+  readonly desktop: boolean;
 }
 
 /**
@@ -75,18 +80,20 @@ function messageOf(error: unknown): string {
  * Parses a `create-ignifx` command line.
  *
  * @remarks
- * `--desktop` is accepted by the parser so that the failure is a clear "not yet" rather than an
- * "unknown option"; Electron templates land in Phase 9 of the engineering plan.
+ * `--desktop` copies the template's Electron variant — its `desktop/` directory,
+ * `electron.vite.config.ts`, `electron-builder.yml`, and the `*:desktop` scripts and dependencies
+ * that go with them. Without it the scaffold is browser-only, which is what keeps a browser game
+ * from downloading an Electron binary it never runs.
  *
  * @param argv - Arguments after the executable and script name, as `process.argv.slice(2)` gives them.
  * @returns The parsed command with defaults applied.
  * @throws A {@link CliError} with code `IGX-1403` when the command line is unparseable, the target
- * directory is missing, extra positionals are given, or `--desktop` is requested.
+ * directory is missing, or extra positionals are given.
  *
  * @example
  * ```ts
- * const command = parseArgs(["my-game", "--template", "3d-first-person"]);
- * // { targetDir: "my-game", template: "3d-first-person", overwrite: false }
+ * const command = parseArgs(["my-game", "--template", "3d-first-person", "--desktop"]);
+ * // { targetDir: "my-game", template: "3d-first-person", overwrite: false, desktop: true }
  * ```
  *
  * @public
@@ -111,13 +118,6 @@ export function parseArgs(argv: readonly string[]): CreateCommand {
     throw new CliError(CliErrorCode.invalidArguments, `${messageOf(error)}\n${USAGE}`, { cause: error });
   }
 
-  if (values.desktop === true) {
-    throw new CliError(
-      CliErrorCode.invalidArguments,
-      "--desktop is not available until Phase 9. Scaffold a browser project and add Electron later.",
-    );
-  }
-
   const [targetDir, ...extra] = positionals;
   if (targetDir === undefined || targetDir === "") {
     throw new CliError(CliErrorCode.invalidArguments, `Missing <target-dir>.\n${USAGE}`);
@@ -133,6 +133,7 @@ export function parseArgs(argv: readonly string[]): CreateCommand {
     targetDir,
     template: values.template ?? DEFAULT_TEMPLATE,
     overwrite: values.overwrite ?? false,
+    desktop: values.desktop ?? false,
   };
 }
 
@@ -240,13 +241,18 @@ export async function runCreate(argv: readonly string[], io: CreateIo): Promise<
   const command = parseArgs(argv);
   const templateDir = await resolveTemplateDir(command.template, io.templatesRoot);
 
-  io.stdout(`Creating an ignifx project in "${command.targetDir}" from template "${command.template}".`);
+  const variant = command.desktop ? " (desktop variant)" : "";
+  io.stdout(`Creating an ignifx project in "${command.targetDir}" from template "${command.template}"${variant}.`);
   const result = await copyTemplate({
     templateDir,
     targetDir: command.targetDir,
     overwrite: command.overwrite,
+    desktop: command.desktop,
   });
   io.stdout(`Wrote ${String(result.files.length)} files.`);
   io.stdout(`Next: cd ${command.targetDir} && pnpm install && pnpm dev`);
+  if (command.desktop) {
+    io.stdout("Desktop: pnpm dev:desktop · pnpm build:desktop · pnpm dist:desktop");
+  }
   return result;
 }

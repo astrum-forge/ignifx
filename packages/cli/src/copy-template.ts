@@ -29,6 +29,50 @@ export const DEFAULT_TEMPLATE_RENAMES: Readonly<Record<string, string>> = {
 export const DEFAULT_IGNORED_ENTRIES: readonly string[] = ["node_modules", "dist", ".turbo"];
 
 /**
+ * Entries that belong to a template's **desktop** variant and are skipped unless the scaffold asked
+ * for one (`docs/architecture/14-platform-electron.md` §3).
+ *
+ * @remarks
+ * A browser-only project should not carry them, and not only for tidiness: `electron` and
+ * `electron-builder` are large binary downloads that a browser game never runs, and an
+ * `electron.vite.config.ts` in a project with no `desktop/` directory is a config that names files
+ * that are not there.
+ *
+ * @public
+ */
+export const DESKTOP_ONLY_ENTRIES: readonly string[] = Object.freeze([
+  "desktop",
+  "electron.vite.config.ts",
+  "electron-builder.yml",
+]);
+
+/**
+ * The `devDependencies` a template declares only for its desktop variant, removed from a
+ * browser-only scaffold.
+ *
+ * @remarks
+ * `@ignifx/electron` is deliberately **not** on this list. A template's `src/main.ts` registers
+ * `electron()` unconditionally — the extension is inert without a preload bridge, which is what
+ * gives one renderer bundle both builds — so removing the package would break the browser scaffold
+ * it was meant to slim down. What is removed is the three build tools, which are large binary
+ * downloads a browser game never runs.
+ *
+ * @public
+ */
+export const DESKTOP_ONLY_DEPENDENCIES: readonly string[] = Object.freeze([
+  "electron",
+  "electron-builder",
+  "electron-vite",
+]);
+
+/**
+ * The suffix marking a `package.json` script that belongs to the desktop variant.
+ *
+ * @public
+ */
+export const DESKTOP_SCRIPT_SUFFIX = ":desktop";
+
+/**
  * The version a scaffolded project's `@ignifx/*` dependencies are pinned to.
  *
  * @remarks
@@ -100,6 +144,16 @@ export interface CopyTemplateOptions {
    */
   readonly projectName?: string | null;
   /**
+   * Whether the template's desktop variant is copied.
+   *
+   * @remarks
+   * `false` skips {@link DESKTOP_ONLY_ENTRIES} and strips the desktop scripts and dependencies from
+   * the copied `package.json`; `true` copies the template whole. This is what `--desktop` sets.
+   *
+   * @defaultValue `false`
+   */
+  readonly desktop?: boolean;
+  /**
    * Signal that cancels the copy (coding standards §8). An already-aborted signal rejects with
    * the signal's reason before anything is written.
    *
@@ -162,6 +216,7 @@ interface CopyContext {
   readonly signal: AbortSignal | null;
   readonly dependencyRange: string | null;
   readonly projectName: string | null;
+  readonly desktop: boolean;
 }
 
 /**
@@ -234,6 +289,41 @@ function rewriteWorkspaceRanges(document: unknown, range: string): boolean {
 }
 
 /**
+ * Removes the desktop scripts and dependencies from a parsed `package.json`, in place.
+ *
+ * @param document - The parsed document; anything that is not an object is left alone.
+ * @returns `true` when at least one entry was removed.
+ */
+function stripDesktopEntries(document: unknown): boolean {
+  if (!isRecord(document)) {
+    return false;
+  }
+  let changed = false;
+  const scripts: unknown = document["scripts"];
+  if (isRecord(scripts)) {
+    for (const name of Object.keys(scripts)) {
+      if (name.endsWith(DESKTOP_SCRIPT_SUFFIX)) {
+        delete scripts[name];
+        changed = true;
+      }
+    }
+  }
+  for (const blockName of DEPENDENCY_BLOCKS) {
+    const entries: unknown = document[blockName];
+    if (!isRecord(entries)) {
+      continue;
+    }
+    for (const name of DESKTOP_ONLY_DEPENDENCIES) {
+      if (name in entries) {
+        delete entries[name];
+        changed = true;
+      }
+    }
+  }
+  return changed;
+}
+
+/**
  * Copies one file, rewriting a `package.json`'s workspace dependencies on the way through.
  *
  * @param source - The file to read.
@@ -244,7 +334,7 @@ function rewriteWorkspaceRanges(document: unknown, range: string): boolean {
  */
 async function copyOne(source: string, destination: string, targetName: string, context: CopyContext): Promise<void> {
   const { dependencyRange: range, projectName } = context;
-  if (targetName !== "package.json" || (range === null && projectName === null)) {
+  if (targetName !== "package.json" || (range === null && projectName === null && context.desktop)) {
     await copyFile(source, destination);
     return;
   }
@@ -261,6 +351,9 @@ async function copyOne(source: string, destination: string, targetName: string, 
   let changed = range !== null && rewriteWorkspaceRanges(document, range);
   if (projectName !== null && isRecord(document) && document["name"] !== projectName) {
     document["name"] = projectName;
+    changed = true;
+  }
+  if (!context.desktop && stripDesktopEntries(document)) {
     changed = true;
   }
   if (!changed) {
@@ -320,10 +413,11 @@ async function copyDirectory(
  * Copies a template directory recursively into a target directory.
  *
  * @remarks
- * The template tree is copied verbatim apart from three things: the `rename` map, the `ignore`
- * list, and `package.json`, whose `workspace:` dependency specifiers are rewritten to
- * `dependencyRange` so that the generated project installs from the registry. Symbolic links are
- * followed and written as regular files, which is what a scaffolded project wants.
+ * The template tree is copied verbatim apart from four things: the `rename` map, the `ignore`
+ * list, `package.json` — whose `workspace:` dependency specifiers are rewritten to
+ * `dependencyRange` so that the generated project installs from the registry — and the desktop
+ * variant, which is skipped unless `desktop` is `true`. Symbolic links are followed and written as
+ * regular files, which is what a scaffolded project wants.
  *
  * @param options - Source, destination, and the documented defaults in {@link CopyTemplateOptions}.
  * @returns The relative paths of the files written, sorted.
@@ -367,12 +461,14 @@ export async function copyTemplate(options: CopyTemplateOptions): Promise<CopyTe
     );
   }
 
+  const desktop = options.desktop ?? false;
   const context: CopyContext = {
     renames: new Map(Object.entries(options.rename ?? DEFAULT_TEMPLATE_RENAMES)),
-    ignored: new Set(options.ignore ?? DEFAULT_IGNORED_ENTRIES),
+    ignored: new Set([...(options.ignore ?? DEFAULT_IGNORED_ENTRIES), ...(desktop ? [] : DESKTOP_ONLY_ENTRIES)]),
     signal,
     dependencyRange: options.dependencyRange === undefined ? DEFAULT_DEPENDENCY_RANGE : options.dependencyRange,
     projectName: options.projectName === undefined ? projectNameFor(targetDir) : options.projectName,
+    desktop,
   };
   const files: string[] = [];
   await copyDirectory(templateDir, targetDir, "", context, files);

@@ -1,0 +1,59 @@
+# electron-builder configuration (docs/architecture/14-platform-electron.md §3).
+#
+# Everything here is **unsigned**. Code signing and notarization need credentials that belong to the
+# person shipping the game, not to the template, and auto-update is documented after 1.0.
+#
+#   pnpm build:desktop   electron-vite build       -> out/{main,preload,renderer}
+#   pnpm dist:desktop    electron-builder --dir    -> release/<platform>-unpacked, unsigned
+#
+# `--dir` is what the template's script runs: it produces a runnable unpacked app without invoking
+# any platform installer tooling, so it works on any machine and in CI. Add a platform flag to build
+# an installer instead — `--mac`, `--win`, or `--linux` — on a runner of that platform.
+
+appId: com.astrumforge.ignifx.topdown
+productName: ignifx Top Down
+copyright: Copyright (c) Astrum Forge Studios
+
+directories:
+  output: release
+  buildResources: build
+
+# Only the built output and the manifest ship. The renderer's sources, the assets `@ignifx/vite-plugin`
+# already hashed into `out/renderer`, and every dev dependency stay out of the app.
+files:
+  - out/**
+  - package.json
+
+# `asar: true` packs the app into one archive: it is faster to read on Windows, and it stops a
+# casual edit of the shipped JavaScript.
+asar: true
+
+# The renderer is served over `ignifx://` from `out/renderer`, which `desktop/main.ts` resolves
+# relative to `out/main`. Nothing is unpacked, because nothing needs a real path on disk — the
+# WebAssembly `@ignifx/physics` loads is fetched through the protocol like any other asset.
+
+mac:
+  category: public.app-category.games
+  target:
+    - target: dir
+      arch: [arm64, x64]
+  # Unsigned: `identity: null` stops electron-builder looking for a certificate and failing.
+  identity: null
+  hardenedRuntime: false
+  gatekeeperAssess: false
+
+win:
+  # NSIS, not Squirrel. `electron-winstaller` (Squirrel) has an install script that downloads a
+  # toolchain, and this repository does not allow install scripts, so Squirrel installers are
+  # configuration only and untested here. NSIS needs no install script.
+  target:
+    - target: dir
+      arch: [x64, arm64]
+  # `signAndEditExecutable: false` keeps an unsigned Windows build from needing `rcedit`/`osslsigncode`.
+  signAndEditExecutable: false
+
+linux:
+  category: Game
+  target:
+    - target: dir
+      arch: [x64, arm64]
