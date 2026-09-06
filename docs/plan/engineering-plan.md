@@ -217,6 +217,8 @@ Exit criteria: all harness checks enforced (not advisory) in CI; SKILL.md at mos
 
 Deliverables: polish of the four templates (art, audio, menus, settings/rebinding screens, save/load); `examples/` gallery (≥ 12 recipes); `benchmarks/` scenes with baselines (frame time, bundle size per template); website content pages (features, getting started, docs links, gallery) still on the plain Vite SPA (visual design remains a later task per the brief).
 
+Website hosting and design (owner requirement, 2026-09-06): the public site is hosted on **Cloudflare Pages**, connected directly to this repository and built by Cloudflare on every push to `main`. It must therefore build with **one command from the repository root** — `pnpm --filter @ignifx/website build` — into a static output directory, `website/dist`, with Node from `.nvmrc` (24) and pnpm from `packageManager`/`pnpm-lock.yaml`; no server runtime is assumed (Pages Functions only if a later ADR asks for them), SPA routing through a `website/public/_redirects` file, security headers through `website/public/_headers`, and `website.yml` in CI builds and typechecks the site as a check rather than deploying it. Design and UI/UX quality are a first-class deliverable of this phase, not a follow-up: the site gets a deliberate visual system (typography, colour, spacing, motion), responsive layouts, accessible navigation and contrast, fast first paint, and a reviewed information architecture for the docs, skill, templates and examples it presents.
+
 Exit criteria: bundle ceilings and frame budgets recorded and enforced; website deploys from `website.yml`; getting-started page verified by following it on a clean machine.
 
 ### Hardening and 1.0 (4–6 wk)

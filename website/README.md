@@ -7,3 +7,11 @@ Not a workspace package that is published; it consumes `@ignifx/*` from the work
 ## Commands
 
 `pnpm --filter @ignifx/website dev` · `build` · `preview` · `typecheck`. The site makes no third-party requests: no analytics, no web fonts, no CDN (`CONSTITUTION.md` §9.1).
+
+## Hosting
+
+The site is hosted on Cloudflare Pages, connected to this repository and built on every push to
+`main`. Pages settings: build command `pnpm --filter @ignifx/website build` (run from the repository
+root), output directory `website/dist`, Node from `.nvmrc`. The output is static; add
+`public/_redirects` for SPA routes and `public/_headers` for security headers when the site gains
+content (Phase 12 of `docs/plan/engineering-plan.md`).
