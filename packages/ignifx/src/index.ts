@@ -471,6 +471,15 @@ export {
   type StoredValue,
   type StoredValueKind,
   type WebGpuInfo,
+  // Hot reload (Phase 10)
+  type ComponentReplacement,
+  type HotReloadHost,
+  type HotReloadKind,
+  type HotReloadModule,
+  type HotReloadOptions,
+  type HotReloadPolicy,
+  type HotReloadReport,
+  type HotReloadStatics,
 } from "@ignifx/core";
 
 // Phase 2 game-facing types that were missing from the barrel
@@ -1229,3 +1238,40 @@ export {
   type HostWindowEvent,
   type IgnifxHost,
 } from "@ignifx/electron";
+
+// @ignifx/devtools — the debug overlay, its panels, the inspector, the Console sink, the `devtools` settings.
+// `VERSION` and `asDomCanvas` are deliberately absent: those names belong to @ignifx/core and @ignifx/ui here.
+export {
+  DEFAULT_DEVTOOLS_LOG_LIMIT,
+  DEVTOOLS_CLASS_NAMES,
+  DEVTOOLS_ERROR_LIMIT,
+  DEVTOOLS_ERROR_MESSAGES,
+  DEVTOOLS_HOT_RELOAD_LIMIT,
+  DEVTOOLS_LAYER_Z_INDEX,
+  DEVTOOLS_LOG_LEVELS,
+  DEVTOOLS_PANEL_NAMES,
+  DEVTOOLS_POSITIONS,
+  DEVTOOLS_SAMPLE_ORDER,
+  DEVTOOLS_SETTINGS_SECTION,
+  DEVTOOLS_STYLE_ELEMENT_ID,
+  DEVTOOLS_UI_LAYER,
+  DevtoolsErrorCode,
+  DevtoolsService,
+  TEXT_REFRESH_HZ,
+  createDevtoolsLogSink,
+  defaultDevtoolsSettings,
+  devtools,
+  devtoolsError,
+  devtoolsSettingsSchema,
+  resolveDevtoolsTarget,
+  type DevtoolsDomTarget,
+  type DevtoolsErrorOptions,
+  type DevtoolsLogSink,
+  type DevtoolsLogSinkOptions,
+  type DevtoolsOptions,
+  type DevtoolsPanelHandle,
+  type DevtoolsPanelName,
+  type DevtoolsPosition,
+  type DevtoolsServiceOptions,
+  type DevtoolsSettings,
+} from "@ignifx/devtools";

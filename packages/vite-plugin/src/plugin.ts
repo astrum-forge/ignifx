@@ -516,7 +516,10 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
         return manifestModuleSource(currentManifest());
       }
       if (id === RESOLVED_SCRIPTS_MODULE_ID) {
-        return scriptsModuleSource(settings.scriptsPattern);
+        // The HMR client is emitted for `vite dev` only, so a production bundle carries neither the
+        // accept handler nor an `import.meta.hot` reference
+        // (`docs/architecture/15-devtools-and-diagnostics.md` §5).
+        return scriptsModuleSource(settings.scriptsPattern, { hot: command !== "build" });
       }
       return null;
     },

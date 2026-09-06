@@ -196,3 +196,56 @@ app.step(0.4);
 | Sequence with coroutines; compose small scripts with `requires`         | `async awake()`, one large script, or a global singleton |
 | Move long work into a coroutine, a system, or a worker                  | looping over everything in `update`                      |
 | Move a value with `app.tweens.to(...)`                                  | a coroutine that lerps by hand on `deltaTime`            |
+
+## 8. Hot reload
+
+`app.hotReload` swaps script classes in a running game (`@ignifx/vite-plugin` drives it in `vite dev`;
+it works headlessly with no bundler). Two policies, chosen per class:
+
+| `static hotReload`  | What happens to live instances                                                                                                                                                                                                         |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `"patch"` (default) | The prototype is swapped: same objects, every field value kept, coroutines still running, **no** lifecycle callback re-run. Statics are re-read, so a changed `executionOrder` reorders dispatch.                                      |
+| `"recreate"`        | Each instance is serialized through its schema, destroyed (`onDisable`, `onDestroy`), and rebuilt from the new class with the same uid and position — so `awake`, `onEnable`, and `start` run again, and its coroutines are cancelled. |
+
+```ts
+import { createApp, f32, Script } from "@ignifx/core";
+
+class Mover extends Script.define({ speed: f32(1) }) {
+  static typeId = "mygame/Mover";
+  travelled = 0;
+  update(dt: number): void {
+    this.travelled += this.speed * dt;
+  }
+}
+
+// What Vite hands the engine after the file is edited: the same typeId, a new class.
+class NextMover extends Script.define({ speed: f32(1) }) {
+  static typeId = "mygame/Mover";
+  travelled = 0;
+  update(dt: number): void {
+    this.travelled += this.speed * dt * 2;
+  }
+}
+
+const app = await createApp({ headless: true });
+app.registerComponents([Mover]);
+const mover = app.world.createEntity("Player").addComponent(Mover, { speed: 3 });
+app.step(1 / 60);
+
+const report = app.hotReload.apply([{ types: [NextMover] }]);
+app.log.info(report.kind, report.typeIds, mover.travelled); // "patch" ["mygame/Mover"] 0.05
+app.dispose();
+```
+
+- Wire a real game up in one line: `import { acceptHotReload, scripts } from "virtual:ignifx/scripts"`,
+  then `app.registerComponents(scripts)` and `acceptHotReload(app)`. In a production build
+  `acceptHotReload` is an empty function and none of the client ships.
+- **Change a field layout → `static hotReload = "recreate"`.** A patched instance keeps whatever its
+  old constructor assigned, so a new field would read `undefined`. The engine notices anyway: a
+  `"patch"` class whose schema shape changed is re-created with an `IGX-0207` warning.
+- `static onHotReload(previous)` runs once on the **new** class, with the class it replaces, for
+  class-level transient state. It is not per instance: under `"patch"` the instances are the same
+  objects, and under `"recreate"` their state comes from the schema by design.
+- `apply` is a flush-time operation: calling it from inside a lifecycle callback is `IGX-0208`.
+  `app.hotReload.reloadScene(instance)` rebuilds one scene from its file, and
+  `createApp({ hotReload: { reloadScenes: true } })` does it whenever a scene file changes.

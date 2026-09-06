@@ -136,7 +136,7 @@ tests/visual/            Playwright visual regression (goldens) — GPU job
 - Class inheritance deeper than `Component → Script → your subclass`; prefer composition and `requires`.
 - `async` lifecycle callbacks; `Promise`-based frame sequencing (ADR-0010).
 - Getters that allocate on hot paths without a `ToRef` alternative (§7).
-- `Object.defineProperty` tricks, prototype mutation (except the single `ExtensionContext.defineAppProperty` call site and the devtools hot-reload patcher), `eval`/`new Function`.
+- `Object.defineProperty` tricks, prototype mutation (except the single `ExtensionContext.defineAppProperty` call site and core's hot-reload patcher, `packages/core/src/hot-reload/patch.ts`), `eval`/`new Function`.
 
 ### 5.4 Classes and functions
 

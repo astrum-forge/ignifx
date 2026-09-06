@@ -85,7 +85,7 @@ export function createTestWorld(options?: TestWorldOptions): TestWorld {
     layers: createLayerTable(layerNames),
     ...(options?.ulid === undefined ? {} : { ulid: options.ulid }),
   });
-  app.bindWorld(world);
+  app.bindWorld(world, frameState.state);
   const log = sinkOf(world);
   const lifecycle = world.lifecycle;
   return {

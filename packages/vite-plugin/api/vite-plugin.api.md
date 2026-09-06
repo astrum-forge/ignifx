@@ -284,10 +284,18 @@ export interface SchemaViolation {
 }
 
 // @public
+export const SCRIPTS_HOT_RELOAD_EXPORT = "acceptHotReload";
+
+// @public
 export const SCRIPTS_MODULE_ID = "virtual:ignifx/scripts";
 
 // @public
-export function scriptsModuleSource(pattern: string): string;
+export interface ScriptsModuleOptions {
+    readonly hot?: boolean;
+}
+
+// @public
+export function scriptsModuleSource(pattern: string, options?: ScriptsModuleOptions): string;
 
 // @public
 export function serializeManifest(manifest: AssetManifest): string;

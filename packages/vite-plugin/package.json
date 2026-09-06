@@ -9,7 +9,8 @@
   "license": "Apache-2.0",
   "author": "Astrum Forge Studios",
   "files": [
-    "dist"
+    "dist",
+    "client.d.ts"
   ],
   "type": "module",
   "sideEffects": false,
@@ -17,6 +18,9 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./client": {
+      "types": "./client.d.ts"
     },
     "./package.json": "./package.json"
   },
@@ -35,6 +39,7 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "catalog:",
+    "@ignifx/core": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
     "@types/node": "catalog:",
     "publint": "catalog:",
@@ -46,6 +51,12 @@
     "vitest": "catalog:"
   },
   "peerDependencies": {
+    "@ignifx/core": "workspace:*",
     "vite": "catalog:"
+  },
+  "peerDependenciesMeta": {
+    "@ignifx/core": {
+      "optional": true
+    }
   }
 }

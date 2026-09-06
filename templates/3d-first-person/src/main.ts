@@ -16,9 +16,9 @@ import { electron } from "@ignifx/electron";
 import { input, INPUT_ACTIONS_ASSET_TYPE } from "@ignifx/input";
 import { CharacterController, physics } from "@ignifx/physics";
 import { I18N_ASSET_TYPE, ui } from "@ignifx/ui";
-// A Vite virtual module the plugin serves; the declaration is in src/vite-env.d.ts.
-// eslint-disable-next-line import-x/no-unresolved -- see above.
+// Vite virtual modules the plugin serves, typed by `@ignifx/vite-plugin/client`.
 import { manifest } from "virtual:ignifx/manifest";
+import { acceptHotReload, scripts } from "virtual:ignifx/scripts";
 import { createGameUi, hasTouch } from "./game-ui.js";
 import { buildLevel } from "./level.js";
 import { AttachToHand } from "./scripts/attach-to-hand.js";
@@ -277,7 +277,13 @@ async function main(): Promise<AppStatus> {
     throw error;
   }
 
-  app.registerComponents([Interactor, AttachToHand, PauseMenu, HudLine]);
+  // Every class under `src/scripts/**` with a `static typeId`, from the plugin's virtual registry; in
+
+  // development the registry hot-reloads edited scripts through `app.hotReload` (`"patch"` by default).
+
+  app.registerComponents(scripts);
+
+  acceptHotReload(app);
 
   const strings = app.assets.load<LocaleAsset>("strings.i18n.json", STRINGS);
   await strings.promise;

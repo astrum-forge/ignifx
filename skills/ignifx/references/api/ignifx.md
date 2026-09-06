@@ -1691,7 +1691,7 @@ The address that failed.
 
 ###### Inherited from
 
-[`IgnifxError`](#ignifxerror).[`cause`](#cause-4)
+[`IgnifxError`](#ignifxerror).[`cause`](#cause-5)
 
 ##### code
 
@@ -1711,7 +1711,7 @@ Identifiers that locate the failure (entity uid, component type id, asset key, �
 
 ###### Inherited from
 
-[`IgnifxError`](#ignifxerror).[`context`](#context-4)
+[`IgnifxError`](#ignifxerror).[`context`](#context-5)
 
 ##### hint
 
@@ -1721,7 +1721,7 @@ One sentence telling the developer how to fix it, or `null` when there is nothin
 
 ###### Inherited from
 
-[`IgnifxError`](#ignifxerror).[`hint`](#hint-4)
+[`IgnifxError`](#ignifxerror).[`hint`](#hint-5)
 
 ##### message
 
@@ -1737,7 +1737,7 @@ One sentence telling the developer how to fix it, or `null` when there is nothin
 
 ###### Inherited from
 
-[`IgnifxError`](#ignifxerror).[`name`](#name-24)
+[`IgnifxError`](#ignifxerror).[`name`](#name-25)
 
 ##### stack?
 
@@ -4258,7 +4258,7 @@ The name diagnostics and error reports use.
 
 ###### Implementation of
 
-[`System`](#system).[`name`](#name-50)
+[`System`](#system).[`name`](#name-51)
 
 #### Methods
 
@@ -12660,6 +12660,44 @@ The scene-file JSON Schema generator
 `components[].props` per `typeId`. Classes described but never registered are not listed:
 only a registered class can appear in a file.
 
+##### replace()
+
+> **replace**(`type`): [`ComponentReplacement`](#componentreplacement)
+
+Swaps the class registered under a `typeId` for a replacement, for script hot reload
+(`docs/architecture/15-devtools-and-diagnostics.md` §5). The previous class's cached info is
+dropped and the replacement inherits its `classIndex`, so per-class bookkeeping indexed by that
+number stays valid across a reload.
+
+###### Parameters
+
+###### type
+
+[`ConcreteComponentType`](#concretecomponenttype)
+
+The replacement class. It must declare the `typeId` it replaces.
+
+###### Returns
+
+[`ComponentReplacement`](#componentreplacement)
+
+The freshly built info for the replacement, and the class it replaced.
+
+###### Remarks
+
+Additive and hot-reload-only: nothing on the normal path replaces a registration, and
+`register` still refuses to bind one id to two classes (`IGX-0203`).
+
+###### Throws
+
+IgnifxError with code `IGX-0204` when the replacement declares no `typeId`.
+
+###### Example
+
+```ts
+const { previous } = registry.replace(NextMover);
+```
+
 ##### requireTypeId()
 
 > **requireTypeId**(`type`): `string`
@@ -13404,6 +13442,225 @@ The asset's values, the inline values, or the fallback.
 
 ***
 
+### DevtoolsService
+
+The devtools overlay's controller, reached as `app.devtools`.
+
+#### Example
+
+```ts
+app.devtools.open();
+app.devtools.panel("inspector").show();
+app.devtools.select(app.world.findByName("Player"));
+```
+
+#### Accessors
+
+##### isOpen
+
+###### Get Signature
+
+> **get** **isOpen**(): `boolean`
+
+Whether the overlay is up.
+
+###### Returns
+
+`boolean`
+
+`true` between [DevtoolsService.open](#open) and [DevtoolsService.close](#close).
+
+##### isSceneReloadDelegated
+
+###### Get Signature
+
+> **get** **isSceneReloadDelegated**(): `boolean`
+
+Whether `app.hotReload` is already re-instantiating scene instances, in which case
+[DevtoolsService.reloadScenes](#reloadscenes-1) deliberately does nothing rather than reloading twice.
+
+###### Returns
+
+`boolean`
+
+`true` when core's own `hotReload.reloadScenes` is on.
+
+##### onClosed
+
+###### Get Signature
+
+> **get** **onClosed**(): [`SignalLike`](#signallike)
+
+Emitted after the overlay closed.
+
+###### Returns
+
+[`SignalLike`](#signallike)
+
+The signal.
+
+##### onOpened
+
+###### Get Signature
+
+> **get** **onOpened**(): [`SignalLike`](#signallike)
+
+Emitted after the overlay opened.
+
+###### Returns
+
+[`SignalLike`](#signallike)
+
+The signal.
+
+##### onSelectionChanged
+
+###### Get Signature
+
+> **get** **onSelectionChanged**(): [`SignalLike`](#signallike)\<[`Entity`](#entity-19) \| `null`\>
+
+Emitted whenever [DevtoolsService.select](#select) changes the selection.
+
+###### Returns
+
+[`SignalLike`](#signallike)\<[`Entity`](#entity-19) \| `null`\>
+
+The signal.
+
+##### panels
+
+###### Get Signature
+
+> **get** **panels**(): readonly [`DevtoolsPanelHandle`](#devtoolspanelhandle)[]
+
+Every panel this build carries, in tab order.
+
+###### Returns
+
+readonly [`DevtoolsPanelHandle`](#devtoolspanelhandle)[]
+
+The handles.
+
+##### reloadScenes
+
+###### Get Signature
+
+> **get** **reloadScenes**(): `boolean`
+
+Whether a scene file that changes on disk re-instantiates its live scene instances
+(`docs/architecture/15-devtools-and-diagnostics.md` §5).
+
+###### Returns
+
+`boolean`
+
+`true` while scene reload is on.
+
+###### Set Signature
+
+> **set** **reloadScenes**(`value`): `void`
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+##### selected
+
+###### Get Signature
+
+> **get** **selected**(): [`Entity`](#entity-19) \| `null`
+
+The entity the Inspector panel is showing.
+
+###### Returns
+
+[`Entity`](#entity-19) \| `null`
+
+The entity, or `null`.
+
+#### Methods
+
+##### close()
+
+> **close**(): `void`
+
+Closes the overlay, disposing its DOM and every subscription it installed.
+
+###### Returns
+
+`void`
+
+##### open()
+
+> **open**(): `void`
+
+Opens the overlay. On a headless app — or on any app with no DOM canvas — it is a documented
+no-op with one debug line (`docs/architecture/07-rendering.md` §6).
+
+###### Returns
+
+`void`
+
+##### panel()
+
+> **panel**(`name`): [`DevtoolsPanelHandle`](#devtoolspanelhandle)
+
+Returns a handle to one panel.
+
+###### Parameters
+
+###### name
+
+`string`
+
+The panel name, one of `DEVTOOLS_PANEL_NAMES`.
+
+###### Returns
+
+[`DevtoolsPanelHandle`](#devtoolspanelhandle)
+
+The handle.
+
+###### Throws
+
+IgnifxError with code `IGX-1552` when no panel is registered under the name.
+
+##### select()
+
+> **select**(`entity`): `void`
+
+Selects an entity for the Inspector panel.
+
+###### Parameters
+
+###### entity
+
+[`Entity`](#entity-19) \| `null`
+
+The entity, or `null` to clear the selection.
+
+###### Returns
+
+`void`
+
+##### toggle()
+
+> **toggle**(): `void`
+
+Opens the overlay when it is closed and closes it when it is open.
+
+###### Returns
+
+`void`
+
+***
+
 ### Diagnostics
 
 The frame-sampled counters reached as `app.diagnostics`
@@ -13735,7 +13992,7 @@ The signal.
 
 > **get** **onDismissed**(): [`SignalLike`](#signallike)
 
-Emitted after [Dialog.hide](#hide), whatever caused it.
+Emitted after [Dialog.hide](#hide-1), whatever caused it.
 
 ###### Returns
 
@@ -14419,7 +14676,7 @@ The identifier that appears in error context.
 
 ###### Implementation of
 
-[`StorageBackend`](#storagebackend).[`name`](#name-49)
+[`StorageBackend`](#storagebackend).[`name`](#name-50)
 
 #### Methods
 
@@ -14445,7 +14702,7 @@ A promise that settles once the namespace is empty.
 
 ###### Implementation of
 
-[`StorageBackend`](#storagebackend).[`clear`](#clear-6)
+[`StorageBackend`](#storagebackend).[`clear`](#clear-7)
 
 ##### delete()
 
@@ -16892,7 +17149,7 @@ The device family this device belongs to.
 
 ###### Inherited from
 
-[`InputDevice`](#inputdevice).[`kind`](#kind-17)
+[`InputDevice`](#inputdevice).[`kind`](#kind-18)
 
 #### Accessors
 
@@ -18840,7 +19097,7 @@ One HUD label per entity; a second belongs on a second entity.
 
 > **anchor**: `"topLeft"` \| `"top"` \| `"topRight"` \| `"left"` \| `"center"` \| `"right"` \| `"bottomLeft"` \| `"bottom"` \| `"bottomRight"`
 
-Which point of the render target [HudText.position](#position-1) is measured from.
+Which point of the render target [HudText.position](#position-3) is measured from.
 
 ##### color
 
@@ -18910,7 +19167,7 @@ The whole-block alpha multiplier.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`opacity`](#opacity-1)
+[`TextComponent`](#abstract-textcomponent).[`opacity`](#opacity-3)
 
 ##### order
 
@@ -19734,7 +19991,7 @@ The identifier that appears in error context.
 
 ###### Implementation of
 
-[`StorageBackend`](#storagebackend).[`name`](#name-49)
+[`StorageBackend`](#storagebackend).[`name`](#name-50)
 
 #### Methods
 
@@ -19760,7 +20017,7 @@ A promise that settles once the transaction commits.
 
 ###### Implementation of
 
-[`StorageBackend`](#storagebackend).[`clear`](#clear-6)
+[`StorageBackend`](#storagebackend).[`clear`](#clear-7)
 
 ##### delete()
 
@@ -22388,7 +22645,7 @@ Whether the screen is shown.
 
 > **get** **onDismissed**(): [`SignalLike`](#signallike)
 
-Emitted after [LoadingScreen.hide](#hide-1), whatever caused it.
+Emitted after [LoadingScreen.hide](#hide-2), whatever caused it.
 
 ###### Returns
 
@@ -23046,7 +23303,7 @@ The name diagnostics and error reports use.
 
 ###### Implementation of
 
-[`System`](#system).[`name`](#name-50)
+[`System`](#system).[`name`](#name-51)
 
 #### Methods
 
@@ -24453,7 +24710,7 @@ The identifier that appears in error context.
 
 ###### Implementation of
 
-[`StorageBackend`](#storagebackend).[`name`](#name-49)
+[`StorageBackend`](#storagebackend).[`name`](#name-50)
 
 #### Methods
 
@@ -24479,7 +24736,7 @@ A promise that settles once the namespace is empty.
 
 ###### Implementation of
 
-[`StorageBackend`](#storagebackend).[`clear`](#clear-6)
+[`StorageBackend`](#storagebackend).[`clear`](#clear-7)
 
 ##### delete()
 
@@ -27692,7 +27949,7 @@ The name diagnostics and error reports use.
 
 ###### Implementation of
 
-[`System`](#system).[`name`](#name-50)
+[`System`](#system).[`name`](#name-51)
 
 #### Methods
 
@@ -42799,7 +43056,7 @@ The name diagnostics and error reports use.
 
 ###### Implementation of
 
-[`System`](#system).[`name`](#name-50)
+[`System`](#system).[`name`](#name-51)
 
 #### Methods
 
@@ -46361,7 +46618,7 @@ The name diagnostics and error reports use.
 
 ###### Implementation of
 
-[`System`](#system).[`name`](#name-50)
+[`System`](#system).[`name`](#name-51)
 
 #### Methods
 
@@ -46732,7 +46989,7 @@ The name diagnostics and error reports use.
 
 ###### Implementation of
 
-[`System`](#system).[`name`](#name-50)
+[`System`](#system).[`name`](#name-51)
 
 #### Methods
 
@@ -46942,7 +47199,7 @@ detached canvas — the three cases in which every other member is a no-op.
 
 `boolean`
 
-`true` when [UiHost.root](#root-5) is an element.
+`true` when [UiHost.root](#root-6) is an element.
 
 ##### keyboardHasFocus
 
@@ -47322,7 +47579,7 @@ The name diagnostics and error reports use.
 
 ###### Implementation of
 
-[`System`](#system).[`name`](#name-50)
+[`System`](#system).[`name`](#name-51)
 
 #### Methods
 
@@ -51016,7 +51273,7 @@ The device family this device belongs to.
 
 ###### Inherited from
 
-[`InputDevice`](#inputdevice).[`kind`](#kind-17)
+[`InputDevice`](#inputdevice).[`kind`](#kind-18)
 
 #### Accessors
 
@@ -53148,7 +53405,7 @@ The whole-block alpha multiplier.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`opacity`](#opacity-1)
+[`TextComponent`](#abstract-textcomponent).[`opacity`](#opacity-3)
 
 ##### pixelsPerUnit
 
@@ -53753,7 +54010,7 @@ The whole-block alpha multiplier.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`opacity`](#opacity-1)
+[`TextComponent`](#abstract-textcomponent).[`opacity`](#opacity-3)
 
 ##### order
 
@@ -54804,6 +55061,13 @@ title, quitting, the open dialog, external links, and the host window's lifecycl
 Always defined once `electron()` is registered. In a browser build every method rejects with
 `IGX-1462` and `isElectron` is `false`.
 
+##### devtools
+
+> `readonly` **devtools**: [`DevtoolsService`](#devtoolsservice)
+
+The devtools overlay (`docs/architecture/15-devtools-and-diagnostics.md` §4): open and close,
+the nine panels, and the inspector's selection.
+
 ##### diagnostics
 
 > `readonly` **diagnostics**: [`Diagnostics`](#diagnostics-1)
@@ -54815,6 +55079,13 @@ Per-frame counters and profiling scopes.
 > `readonly` **events**: [`AppEvents`](#appevents-1)
 
 Engine-wide events (`docs/architecture/02-scene-graph.md` §8).
+
+##### hotReload
+
+> `readonly` **hotReload**: [`HotReloadHost`](#hotreloadhost)
+
+Script and scene hot reload (`docs/architecture/15-devtools-and-diagnostics.md` §5). The Vite
+plugin's HMR client drives it in development; it works headlessly with no bundler at all.
 
 ##### i18n
 
@@ -54911,7 +55182,7 @@ Resolved project settings.
 
 The asynchronous key-value store settings, save games, and input rebindings live in
 (`docs/architecture/14-platform-electron.md` §2). The backend is chosen from
-[PlatformInfo.kind](#kind-24) — IndexedDB in a browser, memory under Node — unless `createApp` was
+[PlatformInfo.kind](#kind-25) — IndexedDB in a browser, memory under Node — unless `createApp` was
 given one.
 
 ##### time
@@ -55616,7 +55887,7 @@ The address that failed.
 
 ###### Inherited from
 
-[`IgnifxErrorOptions`](#ignifxerroroptions).[`cause`](#cause-5)
+[`IgnifxErrorOptions`](#ignifxerroroptions).[`cause`](#cause-6)
 
 ##### context?
 
@@ -55626,7 +55897,7 @@ Identifiers that locate the failure. Defaults to an empty record.
 
 ###### Inherited from
 
-[`IgnifxErrorOptions`](#ignifxerroroptions).[`context`](#context-5)
+[`IgnifxErrorOptions`](#ignifxerroroptions).[`context`](#context-6)
 
 ##### hint?
 
@@ -55636,7 +55907,7 @@ One sentence telling the developer what to do about it. Defaults to `null`.
 
 ###### Inherited from
 
-[`IgnifxErrorOptions`](#ignifxerroroptions).[`hint`](#hint-5)
+[`IgnifxErrorOptions`](#ignifxerroroptions).[`hint`](#hint-6)
 
 ##### mode?
 
@@ -56184,6 +56455,26 @@ Removes one holder from a handle, by object or by address.
 `string` \| [`AssetHandle`](#assethandle)\<`unknown`\>
 
 The handle, or the address it was requested under.
+
+###### Returns
+
+`void`
+
+##### reload()
+
+> **reload**(`address`): `void`
+
+Reloads a loaded asset from its source, delivering the new value through `onReplaced` the way a
+development hot reload does (`docs/architecture/05-assets-and-loading.md` §7); a handle that is
+not loaded is left alone. The Vite plugin's HMR channel and the devtools Assets panel call it.
+
+###### Parameters
+
+###### address
+
+`string`
+
+The asset's address.
 
 ###### Returns
 
@@ -58209,6 +58500,27 @@ The component-reference kind.
 
 ***
 
+### ComponentReplacement
+
+What [ComponentRegistry.replace](#replace) swapped, for the hot-reload path that has to re-file every
+live instance of the class that went away.
+
+#### Properties
+
+##### info
+
+> `readonly` **info**: [`ComponentClassInfo`](#componentclassinfo)
+
+The replacement's freshly built info.
+
+##### previous
+
+> `readonly` **previous**: [`ComponentType`](#componenttype-1)\<[`Component`](#abstract-component)\> \| `null`
+
+The class registered under the id before, or `null` when nothing was.
+
+***
+
 ### ComponentStatics
 
 The static members a component class may declare, as *structural*, optional properties
@@ -58494,7 +58806,7 @@ Disconnect the handler automatically when this object is destroyed.
 
 ### ConsoleLike
 
-The part of the host `console` a [LogSink](#logsink-1) needs. Declaring it keeps the sink testable and
+The part of the host `console` a [LogSink](#logsink-2) needs. Declaring it keeps the sink testable and
 keeps ignifx off the DOM `Console` type, which Node's console does not implement in full.
 
 #### Methods
@@ -58978,6 +59290,14 @@ Run on Babylon Lite's null engine with no render surface
 (`docs/architecture/01-lifecycle-and-time.md` §8). Defaults to `true` when no `canvas` is
 given, so `createApp({})` is a headless app.
 
+##### hotReload?
+
+> `readonly` `optional` **hotReload?**: [`HotReloadOptions`](#hotreloadoptions)
+
+Script and scene hot reload (`docs/architecture/15-devtools-and-diagnostics.md` §5).
+`app.hotReload.apply` always works; the only thing to configure is whether a changed scene file
+rebuilds the live instances built from it.
+
 ##### logLevel?
 
 > `readonly` `optional` **logLevel?**: [`LogThreshold`](#logthreshold)
@@ -58987,7 +59307,7 @@ prints nothing at startup; pass `"debug"` to see the kernel's own diagnostics.
 
 ##### logSink?
 
-> `readonly` `optional` **logSink?**: [`LogSink`](#logsink-1)
+> `readonly` `optional` **logSink?**: [`LogSink`](#logsink-2)
 
 Where `app.log` writes. Defaults to the console sink.
 
@@ -59525,6 +59845,363 @@ The human-readable message.
 > `readonly` **reason**: `string` \| `null`
 
 The `GPUDeviceLostInfo.reason` string, or `null` when the host gave none.
+
+***
+
+### DevtoolsDomTarget
+
+The DOM objects one app's overlay is built in.
+
+#### Properties
+
+##### canvas
+
+> `readonly` **canvas**: `HTMLCanvasElement`
+
+The canvas the overlay is positioned over.
+
+##### document
+
+> `readonly` **document**: `Document`
+
+The document the overlay's elements and its stylesheet are created in.
+
+##### window
+
+> `readonly` **window**: `Window`
+
+The window the toggle key and resize events are read from.
+
+***
+
+### DevtoolsErrorOptions
+
+Options accepted by [devtoolsError](#devtoolserror): the same subset of `IgnifxErrorOptions` this package
+uses.
+
+#### Properties
+
+##### cause?
+
+> `readonly` `optional` **cause?**: `unknown`
+
+The failure being wrapped, when there is one.
+
+##### context?
+
+> `readonly` `optional` **context?**: `Readonly`\<`Record`\<`string`, `string` \| `number` \| `boolean` \| `null`\>\>
+
+Identifiers that locate the failure.
+
+##### hint?
+
+> `readonly` `optional` **hint?**: `string`
+
+One sentence telling the developer what to do about it.
+
+***
+
+### DevtoolsLogSink
+
+A `LogSink` that keeps the most recent records for the Console panel and, optionally,
+forwards each one to a second sink so the browser console keeps working.
+
+#### Example
+
+```ts
+const sink = createDevtoolsLogSink({ limit: 500 });
+const app = await createApp({ headless: true, logSink: sink, extensions: [devtools({ logSink: sink })] });
+```
+
+#### Extends
+
+- [`LogSink`](#logsink-2)
+
+#### Properties
+
+##### length
+
+> `readonly` **length**: `number`
+
+How many records are currently retained, never more than [DevtoolsLogSink.limit](#limit).
+
+##### limit
+
+> `readonly` **limit**: `number`
+
+The maximum number of records retained.
+
+#### Methods
+
+##### at()
+
+> **at**(`index`): [`LogRecord`](#logrecord) \| `null`
+
+Reads one retained record.
+
+###### Parameters
+
+###### index
+
+`number`
+
+`0` is the oldest retained record, `length - 1` the newest.
+
+###### Returns
+
+[`LogRecord`](#logrecord) \| `null`
+
+The record, or `null` when the index is out of range.
+
+##### clear()
+
+> **clear**(): `void`
+
+Drops every retained record.
+
+###### Returns
+
+`void`
+
+##### query()
+
+> **query**(`level`, `search`, `out`, `max`): [`LogRecord`](#logrecord)[]
+
+Copies the records that pass a level threshold and a case-insensitive substring search, newest
+first, into a caller-owned array.
+
+###### Parameters
+
+###### level
+
+[`LogThreshold`](#logthreshold)
+
+The lowest severity to keep; `"silent"` keeps nothing.
+
+###### search
+
+`string`
+
+A substring matched against the scope and the message; `""` matches everything.
+
+###### out
+
+[`LogRecord`](#logrecord)[]
+
+The array to fill. It is truncated first, so one array serves every refresh.
+
+###### max
+
+`number`
+
+How many records to copy at most.
+
+###### Returns
+
+[`LogRecord`](#logrecord)[]
+
+The same `out` array.
+
+##### write()
+
+> **write**(`record`): `void`
+
+Writes one record. Called synchronously from the logging call site, so implementations must be
+cheap and must not throw.
+
+###### Parameters
+
+###### record
+
+[`LogRecord`](#logrecord)
+
+The record to write.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`LogSink`](#logsink-2).[`write`](#write-1)
+
+***
+
+### DevtoolsLogSinkOptions
+
+What [createDevtoolsLogSink](#createdevtoolslogsink) accepts.
+
+#### Properties
+
+##### limit?
+
+> `readonly` `optional` **limit?**: `number`
+
+How many records to retain. Defaults to [DEFAULT\_DEVTOOLS\_LOG\_LIMIT](#default_devtools_log_limit).
+
+##### tee?
+
+> `readonly` `optional` **tee?**: [`LogSink`](#logsink-2)
+
+A second sink every record is also written to — the console sink, in a normal game.
+
+***
+
+### DevtoolsOptions
+
+What `devtools()` accepts. Every field that names a settings value overrides the matching
+`devtools` section value, which is the shape `04-extensions.md` §1 shows for `physics()`.
+
+#### Properties
+
+##### logSink?
+
+> `readonly` `optional` **logSink?**: [`DevtoolsLogSink`](#devtoolslogsink)
+
+The sink the Console panel reads its log lines from. By default the extension creates one and
+adds it to `app.log` with `Logger.addSink`, so log lines appear without any wiring; pass your own
+to share it with something else (a `tee` to the console, a file sink) or to size its buffer.
+
+##### opacity?
+
+> `readonly` `optional` **opacity?**: `number`
+
+The overlay's background opacity, `0`–`1`.
+
+##### openOnStart?
+
+> `readonly` `optional` **openOnStart?**: `boolean`
+
+Whether the overlay is open the moment the app starts.
+
+##### panels?
+
+> `readonly` `optional` **panels?**: readonly `string`[]
+
+The panels to show, in tab order.
+
+##### position?
+
+> `readonly` `optional` **position?**: `"top"` \| `"left"` \| `"right"` \| `"bottom"`
+
+The canvas edge the overlay docks to.
+
+##### reloadScenes?
+
+> `readonly` `optional` **reloadScenes?**: `boolean`
+
+Whether a changed scene file re-instantiates its live scene instances.
+
+##### toggleKey?
+
+> `readonly` `optional` **toggleKey?**: `string`
+
+The `KeyboardEvent.code` that toggles the overlay. Defaults to `"Backquote"`.
+
+***
+
+### DevtoolsPanelHandle
+
+One panel, as `app.devtools.panel(name)` hands it out.
+
+#### Properties
+
+##### name
+
+> `readonly` **name**: `string`
+
+The panel's name.
+
+##### title
+
+> `readonly` **title**: `string`
+
+The tab label.
+
+##### visible
+
+> `readonly` **visible**: `boolean`
+
+Whether the panel's tab is shown.
+
+#### Methods
+
+##### hide()
+
+> **hide**(): `void`
+
+Hides the panel's tab; the neighbouring tab takes over when it was the visible one.
+
+###### Returns
+
+`void`
+
+##### show()
+
+> **show**(): `void`
+
+Shows the panel's tab and brings it to the front.
+
+###### Returns
+
+`void`
+
+***
+
+### DevtoolsSettings
+
+The resolved `devtools` settings section.
+
+#### Example
+
+```ts
+// ignifx.config.ts
+export default defineConfig({
+  devtools: { toggleKey: "F1", openOnStart: true, panels: ["stats", "console"] },
+});
+```
+
+#### Properties
+
+##### opacity
+
+> `readonly` **opacity**: `number`
+
+The overlay's background opacity, `0`–`1`. Defaults to `0.92`.
+
+##### openOnStart
+
+> `readonly` **openOnStart**: `boolean`
+
+Whether the overlay is open the moment the app starts. Defaults to `false`.
+
+##### panels
+
+> `readonly` **panels**: readonly `string`[]
+
+The panels to show, in tab order. Names outside [DEVTOOLS\_PANEL\_NAMES](#devtools_panel_names) are ignored.
+Defaults to every panel in the documented order.
+
+##### position
+
+> `readonly` **position**: `"top"` \| `"left"` \| `"right"` \| `"bottom"`
+
+The canvas edge the overlay docks to. Defaults to `"right"`.
+
+##### reloadScenes
+
+> `readonly` **reloadScenes**: `boolean`
+
+Whether a `SceneAsset` that hot-reloads re-instantiates its live scene instances
+(`15-devtools-and-diagnostics.md` §5). Defaults to `false`.
+
+##### toggleKey
+
+> `readonly` **toggleKey**: `string`
+
+The `KeyboardEvent.code` that toggles the overlay. Defaults to `"Backquote"` — the backtick
+`15-devtools-and-diagnostics.md` §4 names. The listener is a raw `keydown` on the document, so
+the key works with or without `@ignifx/input` (`08-input.md` §5).
 
 ***
 
@@ -61854,6 +62531,210 @@ A promise that settles once the main process has applied it.
 
 ***
 
+### HotReloadHost
+
+The app's hot-reload service, reached as `app.hotReload`
+(`docs/architecture/15-devtools-and-diagnostics.md` §5). It works with no Vite and no browser:
+`@ignifx/vite-plugin` generates a client that calls [HotReloadHost.apply](#apply), and a headless
+test calls it directly.
+
+#### Example
+
+```ts
+const report = app.hotReload.apply([{ types: [NextMover] }]);
+console.log(report.kind, report.typeIds, report.instances);
+```
+
+#### Properties
+
+##### onApplied
+
+> `readonly` **onApplied**: [`SignalLike`](#signallike)\<[`HotReloadReport`](#hotreloadreport)\>
+
+Emitted once per completed [HotReloadHost.apply](#apply) or
+[HotReloadHost.reloadScene](#reloadscene) with the report that call returns.
+
+##### reloadScenes
+
+> `readonly` **reloadScenes**: `boolean`
+
+Whether a changed scene file re-instantiates the live scene instances built from it, set with
+`createApp({ hotReload: { reloadScenes: true } })`. Off by default, because rebuilding a scene
+throws away everything the running game has done to it.
+
+#### Methods
+
+##### apply()
+
+> **apply**(`modules`): [`HotReloadReport`](#hotreloadreport)
+
+Applies replaced component classes to the running app.
+
+###### Parameters
+
+###### modules
+
+readonly [`HotReloadModule`](#hotreloadmodule)[]
+
+The replaced modules and the classes they export.
+
+###### Returns
+
+[`HotReloadReport`](#hotreloadreport)
+
+What was reloaded.
+
+###### Throws
+
+IgnifxError with code `IGX-0208` when called from inside a lifecycle callback, where a
+half-swapped world would be observable.
+
+##### reloadScene()
+
+> **reloadScene**(`instance`): `Promise`\<[`SceneInstance`](#sceneinstance)\>
+
+Rebuilds one scene instance from its asset's current value, honouring the file's instance
+overrides wherever their paths still resolve.
+
+###### Parameters
+
+###### instance
+
+[`SceneInstance`](#sceneinstance)
+
+The instance to rebuild. It is unloaded and a fresh one takes its place.
+
+###### Returns
+
+`Promise`\<[`SceneInstance`](#sceneinstance)\>
+
+The new instance.
+
+###### Throws
+
+IgnifxError with code `IGX-0209` when the instance was not built from a scene asset.
+
+***
+
+### HotReloadModule
+
+One replaced module's worth of component classes, as the HMR client hands them over. Classes the
+app has never seen are registered; classes whose `typeId` is already registered to a different
+class are reloaded under their policy; classes that are already the registered ones are skipped.
+
+#### Properties
+
+##### types
+
+> `readonly` **types**: readonly [`ConcreteComponentType`](#concretecomponenttype)\<[`Component`](#abstract-component)\>[]
+
+Every component or script class the replaced module exports.
+
+***
+
+### HotReloadOptions
+
+The `hotReload` section of `createApp`'s options.
+
+#### Properties
+
+##### reloadScenes?
+
+> `readonly` `optional` **reloadScenes?**: `boolean`
+
+Sets [HotReloadHost.reloadScenes](#reloadscenes-3). Defaults to `false`.
+
+***
+
+### HotReloadReport
+
+What one hot reload did, for logs, tests, and the devtools overlay.
+
+#### Properties
+
+##### durationMs
+
+> `readonly` **durationMs**: `number`
+
+How long the operation took, in milliseconds.
+
+##### errors
+
+> `readonly` **errors**: readonly `unknown`[]
+
+Everything that threw on the way; the reload continues past each one.
+
+##### instances
+
+> `readonly` **instances**: `number`
+
+How many live component instances were swapped or re-created, or entities rebuilt for a scene.
+
+##### kind
+
+> `readonly` **kind**: [`HotReloadKind`](#hotreloadkind)
+
+Which of the three operations this report describes.
+
+##### typeIds
+
+> `readonly` **typeIds**: readonly `string`[]
+
+The `typeId`s actually reloaded, in the order they were applied; empty when nothing changed.
+
+***
+
+### HotReloadStatics
+
+The statics a component or script class may declare to steer its own hot reload
+(`docs/architecture/15-devtools-and-diagnostics.md` §5). Structural and optional, for the reason
+given on `ComponentStatics`: a member declared on the `Component` base class would force the
+`override` keyword on every `static hotReload = "recreate"` under `noImplicitOverride`.
+
+#### Example
+
+```ts
+class Inventory extends Script.define({ slots: u32(4) }) {
+  static typeId = "mygame/Inventory";
+  static hotReload = "recreate" as const;
+}
+```
+
+#### Properties
+
+##### hotReload?
+
+> `readonly` `optional` **hotReload?**: [`HotReloadPolicy`](#hotreloadpolicy)
+
+The policy for this class; defaults to `"patch"`.
+
+#### Methods
+
+##### onHotReload()?
+
+> `optional` **onHotReload**(`previous`): `void`
+
+Runs once on the **new** class after every live instance of it has been swapped or re-created,
+with the class that was registered before as `previous`. It is the seam for class-level
+transient state — a cache keyed off the old class, a static counter — and it is deliberately
+not per instance: under `"patch"` the instances are the very same objects, so there is
+nothing to copy across (PlayCanvas's `swap(old)` exists only because it re-instantiates), and
+under `"recreate"` per-instance state is re-derived from the schema by design.
+
+###### Parameters
+
+###### previous
+
+[`ConcreteComponentType`](#concretecomponenttype)
+
+The class this one replaces.
+
+###### Returns
+
+`void`
+
+***
+
 ### HudPlacement
 
 A layer position, written in place so the per-frame path allocates nothing.
@@ -63216,6 +64097,29 @@ The dotted scope prefix of this logger, or `null` for the root.
 
 #### Methods
 
+##### addSink()
+
+> **addSink**(`sink`): () => `void`
+
+Adds a second sink that receives every record this logger tree writes, alongside the one
+`createApp({ logSink })` installed. Children share the list, so a sink added on `app.log` sees
+`ctx.log` records too. This is how `@ignifx/devtools` fills its Console panel without the game
+wiring anything.
+
+###### Parameters
+
+###### sink
+
+[`LogSink`](#logsink-2)
+
+The sink to add.
+
+###### Returns
+
+A function that removes it again.
+
+() => `void`
+
 ##### child()
 
 > **child**(`scope`): [`Logger`](#logger)
@@ -63436,7 +64340,7 @@ The root scope. Defaults to `null`.
 
 ##### sink
 
-> `readonly` **sink**: [`LogSink`](#logsink-1)
+> `readonly` **sink**: [`LogSink`](#logsink-2)
 
 Where records go.
 
@@ -63444,7 +64348,7 @@ Where records go.
 
 ### LogRecord
 
-One line of log output, as handed to a [LogSink](#logsink-1).
+One line of log output, as handed to a [LogSink](#logsink-2).
 
 #### Properties
 
@@ -63488,6 +64392,7 @@ in tests. A sink is passed to [createLogger](#createlogger) and is never discove
 #### Extended by
 
 - [`MemorySink`](#memorysink)
+- [`DevtoolsLogSink`](#devtoolslogsink)
 
 #### Methods
 
@@ -63647,13 +64552,13 @@ The Lite material. Present in headless mode too: a material is plain data.
 
 ### MemorySink
 
-A [LogSink](#logsink-1) that keeps the most recent records in a fixed-size ring buffer. Used by the
+A [LogSink](#logsink-2) that keeps the most recent records in a fixed-size ring buffer. Used by the
 devtools console panel, which needs scrollback without unbounded growth, and by unit tests, which
 assert on what was logged.
 
 #### Extends
 
-- [`LogSink`](#logsink-1)
+- [`LogSink`](#logsink-2)
 
 #### Properties
 
@@ -63661,7 +64566,7 @@ assert on what was logged.
 
 > `readonly` **length**: `number`
 
-How many records are currently retained, never more than [MemorySink.limit](#limit).
+How many records are currently retained, never more than [MemorySink.limit](#limit-2).
 
 ##### limit
 
@@ -63734,7 +64639,7 @@ The record to write.
 
 ###### Inherited from
 
-[`LogSink`](#logsink-1).[`write`](#write)
+[`LogSink`](#logsink-2).[`write`](#write-1)
 
 ***
 
@@ -69828,7 +70733,7 @@ What `new Toast(app.ui, options)` accepts.
 
 > `readonly` `optional` **duration?**: `number`
 
-How long a message stays up, in seconds, unless [Toast.show](#show-2) overrides it.
+How long a message stays up, in seconds, unless [Toast.show](#show-3) overrides it.
 
 ##### layer?
 
@@ -71493,6 +72398,30 @@ The union of the device families.
 
 ***
 
+### DevtoolsErrorCode
+
+> **DevtoolsErrorCode** = *typeof* [`DevtoolsErrorCode`](#devtoolserrorcode)\[keyof *typeof* [`DevtoolsErrorCode`](#devtoolserrorcode)\]
+
+The union of the codes the `DevtoolsErrorCode` table declares.
+
+***
+
+### DevtoolsPanelName
+
+> **DevtoolsPanelName** = *typeof* [`DEVTOOLS_PANEL_NAMES`](#devtools_panel_names)\[`number`\]
+
+The union of the nine panel names.
+
+***
+
+### DevtoolsPosition
+
+> **DevtoolsPosition** = *typeof* [`DEVTOOLS_POSITIONS`](#devtools_positions)\[`number`\]
+
+The edge of the canvas the overlay is docked to.
+
+***
+
 ### Disconnect
 
 > **Disconnect** = () => `void`
@@ -71765,6 +72694,31 @@ The window lifecycle events the main process forwards to the renderer.
 full-screen pair is carried too because `app.desktop.setFullscreen` is asynchronous and a game
 that wants to reflect the state in its own menu needs to hear about the platform's own
 full-screen gesture as well.
+
+***
+
+### HotReloadKind
+
+> **HotReloadKind** = `"patch"` \| `"recreate"` \| `"scene"`
+
+What one [HotReloadReport](#hotreloadreport) describes: a prototype swap, a destroy-and-rebuild of component
+instances, or a scene instance rebuilt from its file.
+
+***
+
+### HotReloadPolicy
+
+> **HotReloadPolicy** = `"patch"` \| `"recreate"`
+
+What a class asks the engine to do with its live instances when its module is replaced
+(`docs/architecture/15-devtools-and-diagnostics.md` §5).
+
+#### Remarks
+
+`"patch"` is the default and the one to reach for while iterating on logic: the live instances
+keep their identity and every field value, and no lifecycle callback re-runs. `"recreate"` is
+required when the *field layout* changes, because a patched instance keeps whatever properties
+its constructor assigned and a renamed or added field would read `undefined`.
 
 ***
 
@@ -73905,6 +74859,18 @@ An extension declares a `requires` entry that was never registered.
 
 The `requires` graph of the registered extensions contains a cycle.
 
+##### hotReloadInsideCallback
+
+> `readonly` **hotReloadInsideCallback**: `"IGX-0208"`
+
+`app.hotReload.apply()` was called from inside a lifecycle callback.
+
+##### hotReloadSchemaChanged
+
+> `readonly` **hotReloadSchemaChanged**: `"IGX-0207"`
+
+A hot-reloaded class kept the `"patch"` policy while its schema shape changed.
+
 ##### instanceHashMismatch
 
 > `readonly` **instanceHashMismatch**: `"IGX-0604"`
@@ -74036,6 +75002,12 @@ Instantiating a scene would place an instance inside itself.
 > `readonly` **sceneNotLoaded**: `"IGX-0301"`
 
 A scene was instantiated before it had finished loading.
+
+##### sceneNotReloadable
+
+> `readonly` **sceneNotReloadable**: `"IGX-1506"`
+
+`app.hotReload.reloadScene()` was given an instance that was not built from a scene asset.
 
 ##### schemaOutOfRange
 
@@ -74306,6 +75278,16 @@ How long a clip whose length nobody has declared is assumed to be, in seconds.
 
 ***
 
+### DEFAULT\_DEVTOOLS\_LOG\_LIMIT
+
+> `const` **DEFAULT\_DEVTOOLS\_LOG\_LIMIT**: `500` = `500`
+
+How many records [createDevtoolsLogSink](#createdevtoolslogsink) keeps when no limit is given. Five hundred lines
+is about a screenful of scrollback at the Console panel's row height and costs a few tens of
+kilobytes.
+
+***
+
 ### DEFAULT\_LAYER
 
 > `const` **DEFAULT\_LAYER**: `0` = `0`
@@ -74446,6 +75428,310 @@ Up to ten simultaneous touches.
 > `readonly` **virtual**: `"Virtual"`
 
 A synthetic device fed by on-screen controls.
+
+***
+
+### devtools
+
+> `const` **devtools**: (`options?`) => [`Extension`](#extension)
+
+The `@ignifx/devtools` extension factory.
+
+#### Parameters
+
+##### options?
+
+[`DevtoolsOptions`](#devtoolsoptions)
+
+Overrides for the `devtools` settings section, plus the Console panel's sink.
+
+#### Returns
+
+[`Extension`](#extension)
+
+The extension descriptor to pass to `createApp`.
+
+#### Example
+
+```ts
+const app = await createApp({ canvas, extensions: [devtools({ toggleKey: "F1" })] });
+app.devtools.open();
+```
+
+***
+
+### DEVTOOLS\_CLASS\_NAMES
+
+> `const` **DEVTOOLS\_CLASS\_NAMES**: `object`
+
+Every class name the overlay writes, so a game that wants to restyle the panels has names to
+target and the source has no string literals scattered through it.
+
+#### Type Declaration
+
+##### body
+
+> `readonly` **body**: `"ignifx-devtools-body"`
+
+The panel body under the tab strip.
+
+##### button
+
+> `readonly` **button**: `"ignifx-devtools-button"`
+
+A small push button.
+
+##### canvas
+
+> `readonly` **canvas**: `"ignifx-devtools-canvas"`
+
+The timeline canvas.
+
+##### heading
+
+> `readonly` **heading**: `"ignifx-devtools-heading"`
+
+A section heading inside a panel.
+
+##### input
+
+> `readonly` **input**: `"ignifx-devtools-input"`
+
+A text input, number input, or select.
+
+##### label
+
+> `readonly` **label**: `"ignifx-devtools-label"`
+
+The label half of a row.
+
+##### line
+
+> `readonly` **line**: `"ignifx-devtools-line"`
+
+One console line.
+
+##### node
+
+> `readonly` **node**: `"ignifx-devtools-node"`
+
+A tree row in the scene panel.
+
+##### nodeSelected
+
+> `readonly` **nodeSelected**: `"ignifx-devtools-node-selected"`
+
+The selected tree row.
+
+##### panel
+
+> `readonly` **panel**: `"ignifx-devtools-panel"`
+
+One panel's own container.
+
+##### root
+
+> `readonly` **root**: `"ignifx-devtools"`
+
+The overlay root, docked to one edge of the canvas.
+
+##### row
+
+> `readonly` **row**: `"ignifx-devtools-row"`
+
+A label/value row.
+
+##### tab
+
+> `readonly` **tab**: `"ignifx-devtools-tab"`
+
+One tab button.
+
+##### tabActive
+
+> `readonly` **tabActive**: `"ignifx-devtools-tab-active"`
+
+The active tab button.
+
+##### tabs
+
+> `readonly` **tabs**: `"ignifx-devtools-tabs"`
+
+The tab strip along the top of the root.
+
+##### toolbar
+
+> `readonly` **toolbar**: `"ignifx-devtools-toolbar"`
+
+A toolbar strip inside a panel.
+
+##### value
+
+> `readonly` **value**: `"ignifx-devtools-value"`
+
+The value half of a row.
+
+***
+
+### DEVTOOLS\_ERROR\_LIMIT
+
+> `const` **DEVTOOLS\_ERROR\_LIMIT**: `50` = `50`
+
+How many `app.onError` reports the Console panel retains while the overlay is open. Reports that
+arrive while it is closed are not retained: a closed overlay holds no subscription.
+
+***
+
+### DEVTOOLS\_ERROR\_MESSAGES
+
+> `const` **DEVTOOLS\_ERROR\_MESSAGES**: `Readonly`\<`Record`\<`string`, `string`\>\>
+
+The one-line message template of every code, as `ExtensionContext.registerErrorCodes` wants it.
+Context keys appear in braces, matching the core table's convention.
+
+***
+
+### DEVTOOLS\_HOT\_RELOAD\_LIMIT
+
+> `const` **DEVTOOLS\_HOT\_RELOAD\_LIMIT**: `20` = `20`
+
+How many `app.hotReload` reports the Console and Stats panels retain
+(`docs/architecture/15-devtools-and-diagnostics.md` §5).
+
+***
+
+### DEVTOOLS\_LAYER\_Z\_INDEX
+
+> `const` **DEVTOOLS\_LAYER\_Z\_INDEX**: `1000000` = `1e6`
+
+The `z-index` the `app.ui` devtools layer is created at: above every layer a game is likely to
+declare, so the overlay is never behind a HUD.
+
+***
+
+### DEVTOOLS\_LOG\_LEVELS
+
+> `const` **DEVTOOLS\_LOG\_LEVELS**: readonly [`LogLevel`](#loglevel-2)[]
+
+The levels the Console panel's filter offers, lowest first.
+
+***
+
+### DEVTOOLS\_PANEL\_NAMES
+
+> `const` **DEVTOOLS\_PANEL\_NAMES**: readonly \[`"stats"`, `"scene"`, `"inspector"`, `"assets"`, `"input"`, `"audio"`, `"physics"`, `"console"`, `"timeline"`\]
+
+Every panel name, in the order `15-devtools-and-diagnostics.md` §4 lists them. The `panels`
+setting is a re-ordering — and, by omission, a filter — of this list.
+
+***
+
+### DEVTOOLS\_POSITIONS
+
+> `const` **DEVTOOLS\_POSITIONS**: readonly \[`"right"`, `"left"`, `"top"`, `"bottom"`\]
+
+Where the overlay is docked against the canvas.
+
+***
+
+### DEVTOOLS\_SAMPLE\_ORDER
+
+> `const` **DEVTOOLS\_SAMPLE\_ORDER**: `9000` = `9e3`
+
+The `Phase.PreRender` order the sampler runs at: after every renderer, 2D, UI and audio system,
+and inside the `[1001, 9999]` band `docs/architecture/04-extensions.md` gives extensions.
+
+***
+
+### DEVTOOLS\_SETTINGS\_SECTION
+
+> `const` **DEVTOOLS\_SETTINGS\_SECTION**: `"devtools"` = `"devtools"`
+
+The section name as it appears in `ignifx.config.ts`.
+
+***
+
+### DEVTOOLS\_STYLE\_ELEMENT\_ID
+
+> `const` **DEVTOOLS\_STYLE\_ELEMENT\_ID**: `"ignifx-devtools-styles"` = `"ignifx-devtools-styles"`
+
+The id of the injected `<style>` element.
+
+***
+
+### DEVTOOLS\_UI\_LAYER
+
+> `const` **DEVTOOLS\_UI\_LAYER**: `"devtools"` = `"devtools"`
+
+The name of the `app.ui` layer the overlay mounts into when `@ignifx/ui` is registered. A game
+that wants to style or hide the overlay reaches it as `app.ui.layer(DEVTOOLS_UI_LAYER)`.
+
+***
+
+### DevtoolsErrorCode
+
+> `const` **DevtoolsErrorCode**: `object`
+
+Every diagnostic code `@ignifx/devtools` can throw or log, keyed by an intention-revealing name
+so call sites read as prose and the compiler catches typos (coding standards §5.2).
+
+#### Type Declaration
+
+##### assetReloadUnsupported
+
+> `readonly` **assetReloadUnsupported**: `"IGX-1555"`
+
+The Assets panel's reload button was pressed on an asset service with no reload entry point.
+
+##### duplicateExtension
+
+> `readonly` **duplicateExtension**: `"IGX-1550"`
+
+A second `devtools()` extension was registered on one app.
+
+##### fieldWriteFailed
+
+> `readonly` **fieldWriteFailed**: `"IGX-1554"`
+
+An inspector write could not be decoded into the field's value type.
+
+##### headlessNoOp
+
+> `readonly` **headlessNoOp**: `"IGX-1551"`
+
+A DOM-only member was reached on a host with no document, and did nothing.
+
+##### pickUnavailable
+
+> `readonly` **pickUnavailable**: `"IGX-1557"`
+
+"Select in world" was used on an app whose renderer cannot pick.
+
+##### readonlyField
+
+> `readonly` **readonlyField**: `"IGX-1553"`
+
+An inspector write targeted a field the schema marks `readonly` or `hidden`.
+
+##### sceneReloadUnsupported
+
+> `readonly` **sceneReloadUnsupported**: `"IGX-1556"`
+
+`reloadScenes` is on but neither core nor `app.hotReload` can re-instantiate a scene.
+
+##### unknownPanel
+
+> `readonly` **unknownPanel**: `"IGX-1552"`
+
+`app.devtools.panel(name)` was given a name no panel is registered under.
+
+#### Example
+
+```ts
+throw devtoolsError(DevtoolsErrorCode.unknownPanel, "scene-graph is not a devtools panel.", {
+  context: { panel: "scene-graph" },
+});
+```
 
 ***
 
@@ -76596,6 +77882,15 @@ How the character is supported by whatever is under it.
 > `const` **TEXT\_ALIGNMENTS**: readonly \[`"left"`, `"center"`, `"right"`\]
 
 The alignments Lite's default layout supports (`index.d.ts` 12826-12827).
+
+***
+
+### TEXT\_REFRESH\_HZ
+
+> `const` **TEXT\_REFRESH\_HZ**: `10` = `10`
+
+How often a text panel is rewritten, in hertz — §4's *"throttled"* rate. A panel that declares
+`perFrame` — the Timeline graph — ignores it.
 
 ***
 
@@ -78891,7 +80186,7 @@ ctx.registerAssetLoader(createAudioClipLoader({ decoder: () => service.decoder()
 
 ### createConsoleSink()
 
-> **createConsoleSink**(`options?`): [`LogSink`](#logsink-1)
+> **createConsoleSink**(`options?`): [`LogSink`](#logsink-2)
 
 Creates the default log sink: one console line per record, prefixed with the logger scope and
 routed to the console method matching the record's level.
@@ -78906,7 +80201,7 @@ An alternative console, for tests and for the Electron main process.
 
 #### Returns
 
-[`LogSink`](#logsink-1)
+[`LogSink`](#logsink-2)
 
 A sink for [createLogger](#createlogger).
 
@@ -78976,6 +80271,36 @@ A new object holding one default per declared field.
 const a = createDefaults(moverSchema);
 const b = createDefaults(moverSchema);
 a.offset === b.offset; // false — each call allocates
+```
+
+***
+
+### createDevtoolsLogSink()
+
+> **createDevtoolsLogSink**(`options?`): [`DevtoolsLogSink`](#devtoolslogsink)
+
+Creates the Console panel's sink.
+
+#### Parameters
+
+##### options?
+
+[`DevtoolsLogSinkOptions`](#devtoolslogsinkoptions)
+
+The retention limit and the sink to tee to.
+
+#### Returns
+
+[`DevtoolsLogSink`](#devtoolslogsink)
+
+The sink, to pass to both `createApp({ logSink })` and `devtools({ logSink })`.
+
+#### Example
+
+```ts
+const sink = createDevtoolsLogSink();
+sink.write({ level: "warn", scope: "physics", message: "no collider", data: [], timeMs: 0 });
+sink.length; // 1
 ```
 
 ***
@@ -79362,7 +80687,7 @@ below one are clamped to one.
 
 [`MemorySink`](#memorysink)
 
-The sink, with the retained records readable through [MemorySink.at](#at).
+The sink, with the retained records readable through [MemorySink.at](#at-1).
 
 #### Example
 
@@ -80081,6 +81406,20 @@ The values used for everything a project omits.
 [`AudioSettings`](#audiosettings)
 
 The default `audio` section.
+
+***
+
+### defaultDevtoolsSettings()
+
+> **defaultDevtoolsSettings**(): [`DevtoolsSettings`](#devtoolssettings)
+
+The values used for everything a project omits.
+
+#### Returns
+
+[`DevtoolsSettings`](#devtoolssettings)
+
+The default `devtools` section.
 
 ***
 
@@ -80817,6 +82156,62 @@ The records, keyed by namespaced type id.
 ```ts
 describeTwoDSchemas()["ignifx/Camera2D"].fields["orthographicSize"].default; // 5
 ```
+
+***
+
+### devtoolsError()
+
+> **devtoolsError**(`code`, `message`, `options?`): [`IgnifxError`](#ignifxerror)
+
+Builds an `IgnifxError` carrying one of this package's codes.
+
+#### Parameters
+
+##### code
+
+[`DevtoolsErrorCode`](#devtoolserrorcode-1)
+
+The code from the `DevtoolsErrorCode` table.
+
+##### message
+
+`string`
+
+The actionable development sentence.
+
+##### options?
+
+[`DevtoolsErrorOptions`](#devtoolserroroptions)
+
+Context identifiers, a remedy hint, and the wrapped cause.
+
+#### Returns
+
+[`IgnifxError`](#ignifxerror)
+
+The error to throw or to report.
+
+#### Example
+
+```ts
+throw devtoolsError(DevtoolsErrorCode.unknownPanel, "physics2d is not a devtools panel.", {
+  context: { panel: "physics2d" },
+});
+```
+
+***
+
+### devtoolsSettingsSchema()
+
+> **devtoolsSettingsSchema**(): [`Schema`](#schema-41)
+
+The schema the `devtools` section is validated against.
+
+#### Returns
+
+[`Schema`](#schema-41)
+
+The schema, built fresh so no module holds state (`CONSTITUTION.md` §3.5).
 
 ***
 

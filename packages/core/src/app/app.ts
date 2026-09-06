@@ -9,6 +9,7 @@ import { IgnifxError } from "../errors/ignifx-error.js";
 import { coreExtension } from "../extension/core-extension.js";
 import { ExtensionHost } from "../extension/host.js";
 import { ServiceRegistryImpl } from "../extension/service-registry.js";
+import { HotReloadHostImpl } from "../hot-reload/hot-reload-host.js";
 import { createLayerTable } from "../layers/layer-table.js";
 import { ScriptCallbackKind } from "../lifecycle/callbacks.js";
 import { createFrameState } from "../lifecycle/frame-state.js";
@@ -42,6 +43,7 @@ import type { App, AppLiteHandles, AppSettings, ErrorReport, Extension, System }
 import type { AssetManifest, AssetsSettings, FetchLike } from "../assets/types.js";
 import type { ConcreteComponentType } from "../component/component-type.js";
 import type { ErrorFormatMode } from "../errors/ignifx-error.js";
+import type { HotReloadOptions } from "../hot-reload/contract.js";
 import type { ScriptCallbackKind as ScriptCallbackKindValue } from "../lifecycle/callbacks.js";
 import type { EngineHandles } from "../lite/engine.js";
 import type { FrameCallbackHandle } from "../lite/loop.js";
@@ -163,6 +165,12 @@ export interface CreateAppOptions {
    * prints nothing at startup; pass `"debug"` to see the kernel's own diagnostics.
    */
   readonly logLevel?: LogThreshold;
+  /**
+   * Script and scene hot reload (`docs/architecture/15-devtools-and-diagnostics.md` §5).
+   * `app.hotReload.apply` always works; the only thing to configure is whether a changed scene file
+   * rebuilds the live instances built from it.
+   */
+  readonly hotReload?: HotReloadOptions;
 }
 
 /** The options after {@link createApp} has applied its defaults. */
@@ -186,6 +194,8 @@ interface ResolvedAppOptions {
   /** Where `app.log` writes. */
   readonly logSink: LogSink;
   readonly logLevel: LogThreshold;
+  /** Whether a changed scene file rebuilds its live instances. */
+  readonly reloadScenes: boolean;
 }
 
 /**
@@ -220,6 +230,9 @@ class AppImpl implements App {
 
   /** The app-wide tween list, advanced by the core extension's `PostUpdate` system. */
   readonly tweens: TweensImpl;
+
+  /** Script and scene hot reload. */
+  readonly hotReload: HotReloadHostImpl;
 
   /** `true` when the app runs on Lite's null engine with no render surface. */
   readonly isHeadless: boolean;
@@ -308,6 +321,13 @@ class AppImpl implements App {
     this.time = new TimeImpl(options.clock);
     this.tweens = new TweensImpl();
     this.services = new ServiceRegistryImpl();
+    this.hotReload = new HotReloadHostImpl({
+      app: this,
+      frameState: this.#frameState.state,
+      log: this.log,
+      now: (): number => this.#clock.nowMs(),
+      reloadScenes: options.reloadScenes,
+    });
     this.#settings = new SettingsStore(options.settings, options.mode, this.log);
     this.onError = new Signal<ErrorReport>({
       onHandlerError: (error: unknown): void => {
@@ -616,6 +636,7 @@ class AppImpl implements App {
       deferredQueue: this.#deferred,
     });
     this.#world = world;
+    this.hotReload.attachWorld(world);
     // `app.events` is the one place a script subscribes to engine-wide events
     // (`docs/architecture/02-scene-graph.md` §8); the world keeps its own signals and the app
     // forwards them, so neither surface has to know about the other.
@@ -898,6 +919,7 @@ export async function createApp(options: CreateAppOptions = {}): Promise<App> {
     mode: options.mode ?? "development",
     logSink: options.logSink ?? createConsoleSink(),
     logLevel: options.logLevel ?? "info",
+    reloadScenes: options.hotReload?.reloadScenes ?? false,
   });
   await app.initialize(options.extensions ?? []);
   return app;

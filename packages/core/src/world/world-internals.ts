@@ -1,4 +1,5 @@
 import type { Phase } from "../app/types.js";
+import type { ScriptClassInfo } from "../component/component-registry.js";
 import type { Component } from "../component/component.js";
 import type { Entity } from "../entity/entity.js";
 import type { ScriptCallbackKind } from "../lifecycle/callbacks.js";
@@ -111,6 +112,18 @@ export interface WorldInternals {
    * @returns `true` when at least one of the entity's scripts implements it.
    */
   entityImplements(entity: Entity, kind: ScriptCallbackKind): boolean;
+
+  /**
+   * Re-files an effectively-enabled script in the sorted dispatch lists after script hot reload
+   * swapped its class (`docs/architecture/15-devtools-and-diagnostics.md` §5). No callback runs: the
+   * script leaves the lists its previous class was filed in and joins the ones its new class
+   * implements, at its new `executionOrder`.
+   *
+   * @param component - The component whose class was replaced. A plain component is ignored.
+   * @param previous - The class info the component was filed under.
+   * @param next - The class info it is filed under now, already written to its engine state.
+   */
+  rebindDispatch(component: Component, previous: ScriptClassInfo | null, next: ScriptClassInfo | null): void;
 
   /**
    * Tells the world which phase is running, so a failure reported through `app.onError` names it.

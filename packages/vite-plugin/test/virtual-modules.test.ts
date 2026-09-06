@@ -9,6 +9,7 @@ import {
   RESOLVED_MANIFEST_MODULE_ID,
   RESOLVED_SCRIPTS_MODULE_ID,
   resolveVirtualModuleId,
+  SCRIPTS_HOT_RELOAD_EXPORT,
   SCRIPTS_MODULE_ID,
   scriptsModuleSource,
 } from "../src/virtual-modules.js";
@@ -89,6 +90,12 @@ describe("scriptsModuleSource", () => {
     expect(source).toContain("export const scripts = registry;");
   });
 
+  it("emits no HMR client by default, so a build carries none of it", () => {
+    expect(source).toContain("export function acceptHotReload()");
+    expect(source).not.toContain("import.meta.hot");
+    expect(source).not.toContain("hotReload.apply");
+  });
+
   it("evaluates to the classes that declare a typeId", () => {
     // The generated body is exercised directly with a stand-in for `import.meta.glob`, which proves
     // the filtering and ordering rather than only the text of the module.
@@ -109,5 +116,75 @@ describe("scriptsModuleSource", () => {
       }
     }
     expect(registry.map((entry) => entry.typeId)).toEqual(["mygame/Spinner", "mygame/Mover"]);
+  });
+});
+
+describe("scriptsModuleSource with the HMR client", () => {
+  const source = scriptsModuleSource("/src/scripts/*.ts", { hot: true });
+
+  it("self-accepts so Vite hands it the replacement registry", () => {
+    expect(source).toContain("const hot = import.meta.hot;");
+    expect(source).toContain("hot.accept((next) => {");
+  });
+
+  it("keeps the subscribed apps in import.meta.hot.data, which survives the swap", () => {
+    expect(source).toContain("hot.data.ignifxHotReload ??= { apps: new Set() }");
+    expect(source).toContain(`export function ${SCRIPTS_HOT_RELOAD_EXPORT}(app) {`);
+    expect(source).toContain("state.apps.add(app);");
+    expect(source).toContain("state.apps.delete(app);");
+  });
+
+  it("diffs the two registries by typeId and hands the new one to app.hotReload.apply", () => {
+    expect(source).toContain("const before = new Set(scripts.map((type) => type.typeId));");
+    expect(source).toContain("if (!before.delete(type.typeId)) {");
+    expect(source).toContain("const removed = [...before];");
+    expect(source).toContain("const report = app.hotReload.apply([{ types: next.scripts }]);");
+    expect(source).toContain('console.info("[ignifx] script hot reload", {');
+  });
+
+  it("still exports the registry the game registers at startup", () => {
+    expect(source).toContain("export const scripts = registry;");
+  });
+});
+
+/**
+ * The added and removed `typeId`s between two registries, exactly as the generated handler derives
+ * them.
+ *
+ * @param before - The registry the module held before the update.
+ * @param after - The registry the replacement module exports.
+ * @returns What was added and what disappeared.
+ */
+function diff(
+  before: readonly string[],
+  after: readonly string[],
+): { readonly added: readonly string[]; readonly removed: readonly string[] } {
+  const remaining = new Set(before);
+  const added: string[] = [];
+  for (const typeId of after) {
+    if (!remaining.delete(typeId)) {
+      added.push(typeId);
+    }
+  }
+  return { added, removed: [...remaining] };
+}
+
+describe("the HMR client's diff, as the generated body computes it", () => {
+  it("reports a new file's class as added", () => {
+    expect(diff(["mygame/Mover"], ["mygame/Mover", "mygame/Spinner"])).toEqual({
+      added: ["mygame/Spinner"],
+      removed: [],
+    });
+  });
+
+  it("reports a deleted class as removed", () => {
+    expect(diff(["mygame/Mover", "mygame/Spinner"], ["mygame/Mover"])).toEqual({
+      added: [],
+      removed: ["mygame/Spinner"],
+    });
+  });
+
+  it("reports nothing when only the class bodies changed", () => {
+    expect(diff(["mygame/Mover"], ["mygame/Mover"])).toEqual({ added: [], removed: [] });
   });
 });

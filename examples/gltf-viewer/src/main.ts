@@ -13,8 +13,7 @@ import {
   pbrMaterialDefinition,
   PostProcessStack,
 } from "@ignifx/core";
-// A Vite virtual module the plugin serves; the declaration is in src/vite-env.d.ts.
-// eslint-disable-next-line import-x/no-unresolved -- see above.
+// Vite virtual modules the plugin serves, typed by `@ignifx/vite-plugin/client`.
 import { manifest } from "virtual:ignifx/manifest";
 import { OrbitCamera } from "./orbit-camera.ts";
 import type { App, EnvironmentAsset, ModelAsset } from "@ignifx/core";

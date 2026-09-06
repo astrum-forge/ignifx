@@ -18,10 +18,11 @@ function fixtureProject(): Promise<string> {
     "index.html": '<!doctype html><html><body><script type="module" src="/src/main.ts"></script></body></html>',
     "src/main.ts": [
       'import { manifest } from "virtual:ignifx/manifest";',
-      'import { scripts } from "virtual:ignifx/scripts";',
+      'import { acceptHotReload, scripts } from "virtual:ignifx/scripts";',
       "",
       "const settings = import.meta.env.IGNIFX_CONFIG;",
       "document.title = [manifest.entries.length, scripts.length, settings.layers.join('-')].join(':');",
+      "acceptHotReload({ hotReload: { apply: () => ({}) } });",
     ].join("\n"),
     "src/scripts/mover.ts": [
       "export class Mover {",
@@ -103,6 +104,30 @@ describe("vite build with the ignifx plugin", () => {
     expect(code).toContain("ignifx.manifest");
     expect(code).toContain("mygame/Mover");
     expect(code).toContain("Player");
+  });
+
+  it("ships no hot-reload client in the bundle", async () => {
+    const root = await fixtureProject();
+    await build({
+      root,
+      configFile: false,
+      logLevel: "silent",
+      plugins: [ignifx()],
+      build: { outDir: "dist", emptyOutDir: true },
+    });
+
+    const outDir = join(root, "dist");
+    const files = await listFiles(outDir);
+    const bundle = files.find((file) => file.startsWith("assets/index") && file.endsWith(".js"));
+    const code = await readFile(join(outDir, bundle ?? ""), "utf8");
+
+    // `acceptHotReload` is called by the entry, so the export really was linked; the client behind
+    // it is not there (`docs/architecture/15-devtools-and-diagnostics.md` §5).
+    expect(code).toContain("mygame/Mover");
+    expect(code).not.toContain("import.meta.hot");
+    expect(code).not.toContain("hotReload.apply");
+    expect(code).not.toContain("ignifxHotReload");
+    expect(code).not.toContain("script hot reload");
   });
 
   it("fails the build when a scene file under the asset root is invalid", async () => {

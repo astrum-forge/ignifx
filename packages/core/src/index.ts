@@ -76,7 +76,12 @@ export {
 } from "./assets/types.js";
 
 // component — the base class, the registry, and the class metadata the engine derives once.
-export { ComponentRegistry, type ComponentClassInfo, type ScriptClassInfo } from "./component/component-registry.js";
+export {
+  ComponentRegistry,
+  type ComponentClassInfo,
+  type ComponentReplacement,
+  type ScriptClassInfo,
+} from "./component/component-registry.js";
 export type {
   ComponentInit,
   ComponentStatics,
@@ -137,6 +142,17 @@ export { defineExtension } from "./extension/define-extension.js";
 
 // handles — dense runtime identifiers.
 export { INVALID_HANDLE, type ComponentHandle, type EntityHandle } from "./handles/handle.js";
+
+// hot-reload — the script and scene hot-reload contract (`app.hotReload`).
+export type {
+  HotReloadHost,
+  HotReloadKind,
+  HotReloadModule,
+  HotReloadOptions,
+  HotReloadPolicy,
+  HotReloadReport,
+  HotReloadStatics,
+} from "./hot-reload/contract.js";
 
 // ids — random sources and ULIDs.
 export { createCryptoRandom, createSeededRandom, type RandomSource } from "./ids/random-source.js";

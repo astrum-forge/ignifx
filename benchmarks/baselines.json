@@ -106,5 +106,22 @@
       "counterExampleBlendedPixels": 4096,
       "counterExampleNote": "Linear-sampled atlas at zoom 6.0377 with pixelPerfect off: the whole 64x64 canvas blends."
     }
+  },
+  "devtools": {
+    "machine": "macOS 25.5 arm64 (Apple Silicon), Node 24.20.0, Vitest 5.0.0, @babylonjs/lite 1.27.0",
+    "recordedOn": "2026-09-06",
+    "note": "Phase 10's zero-cost-when-closed exit criterion. The 1,002-entity headless scene is built four times -- plain, devtools, devtools, plain, one app alive at a time -- warmed for 120 frames and then stepped 600 times per block, and each variant's median is taken over its 1,200 samples. Five consecutive runs on 2026-09-06 measured differences of 0.0000, 0.0006, -0.0001, 0.0005 and 0.0036 ms; the row below is the fourth. An earlier two-app design is recorded in the test's header for the record: it read +0.007/+0.000/+0.016 ms with the plain app built first and -0.007/-0.004/-0.008 ms with the devtools app built first, which is construction order rather than devtools, and is why the measurement runs one app at a time.",
+    "closedOverlay": {
+      "entities": 1002,
+      "steps": 600,
+      "warmupSteps": 120,
+      "blocks": 4,
+      "plainMedianMs": 0.1599,
+      "devtoolsMedianMs": 0.1603,
+      "differenceMs": 0.0005,
+      "budgetMs": 0.02,
+      "registeredSystemsWhileClosed": 0,
+      "subscriptionsWhileClosed": 0
+    }
   }
 }

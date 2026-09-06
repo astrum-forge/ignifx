@@ -5,6 +5,7 @@ import { FakeFetch } from "./fake-fetch.js";
 import type { App, ErrorReport, Extension } from "../../../src/app/types.js";
 import type { AssetsImpl } from "../../../src/assets/assets-service.js";
 import type { AssetLoader, AssetManifest } from "../../../src/assets/types.js";
+import type { HotReloadOptions } from "../../../src/hot-reload/contract.js";
 import type { SettingsInput } from "../../../src/settings/settings-input.js";
 import type { ManualClock } from "../../../src/time/clock.js";
 
@@ -29,6 +30,8 @@ export interface AssetHarnessOptions {
    * `PreUpdate` as in a running game; tests of the pre-start behaviour pass `false`.
    */
   readonly start?: boolean;
+  /** Hot-reload options, for the suites that exercise `app.hotReload`. */
+  readonly hotReload?: HotReloadOptions;
 }
 
 /** A headless app whose asset service is driven entirely by the test. */
@@ -78,6 +81,7 @@ export async function createAssetHarness(options?: AssetHarnessOptions): Promise
     // every timing assertion a multiple of 100 ms (`01-lifecycle-and-time.md` §2).
     settings: { time: { maximumDeltaTime: 1000 }, ...options?.settings },
     ...(options?.extensions === undefined ? {} : { extensions: options.extensions }),
+    ...(options?.hotReload === undefined ? {} : { hotReload: options.hotReload }),
   });
   app.onError.connect((report) => {
     errors.push(report);

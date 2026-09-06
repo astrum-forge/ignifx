@@ -160,6 +160,44 @@ export function normalizeScriptsPattern(pattern: string): string {
 }
 
 /**
+ * The function `virtual:ignifx/scripts` exports for wiring an app to script hot reload
+ * (`docs/architecture/15-devtools-and-diagnostics.md` §5).
+ *
+ * @remarks
+ * The generated module cannot know which app — or how many apps — a page built, and a module-level
+ * app reference is exactly what `CONSTITUTION.md` §3.5/§3.6 forbid. So the hand-off is explicit and
+ * one line of game code: the game passes its app in, and the module calls `app.hotReload.apply`
+ * whenever Vite replaces a script module. The export exists in a production build too, with an
+ * empty body, so the same source builds either way.
+ *
+ * @example
+ * ```ts
+ * import { acceptHotReload, scripts } from "virtual:ignifx/scripts";
+ *
+ * const app = await createApp({ canvas });
+ * app.registerComponents(scripts);
+ * acceptHotReload(app);
+ * ```
+ *
+ * @public
+ */
+export const SCRIPTS_HOT_RELOAD_EXPORT = "acceptHotReload";
+
+/**
+ * Options accepted by {@link scriptsModuleSource}.
+ *
+ * @public
+ */
+export interface ScriptsModuleOptions {
+  /**
+   * Emit the HMR client. `false` — the default, and what a build uses — leaves the module with no
+   * `import.meta.hot` reference at all, so none of the client reaches production
+   * (`docs/architecture/15-devtools-and-diagnostics.md` §5).
+   */
+  readonly hot?: boolean;
+}
+
+/**
  * Generates the source of `virtual:ignifx/scripts`.
  *
  * @remarks
@@ -170,12 +208,21 @@ export function normalizeScriptsPattern(pattern: string): string {
  * `import.meta.glob`'s eager form, Vite's HMR graph sees each script file and can push updates for
  * it.
  *
+ * **The HMR half.** Script hot reload needs no channel of its own: unlike an asset, a script module
+ * already sits in Vite's module graph, so the generated module self-accepts and Vite hands it the
+ * replacement namespace. The handler diffs the old and new registries by `typeId` for the log line
+ * and hands the whole new registry to `app.hotReload.apply`, which is the half that decides what a
+ * change means — patch or recreate — and skips the classes that did not change. The set of
+ * subscribed apps lives in `import.meta.hot.data`, which Vite carries from one instance of a module
+ * to the next, so the module that handles the *second* update still knows about them.
+ *
  * @param pattern - The root-absolute glob, from {@link normalizeScriptsPattern}.
- * @returns An ES module exporting the registry as `scripts`.
+ * @param options - Whether to emit the development-only HMR client.
+ * @returns An ES module exporting the registry as `scripts` and the wiring as `acceptHotReload`.
  *
  * @public
  */
-export function scriptsModuleSource(pattern: string): string {
+export function scriptsModuleSource(pattern: string, options?: ScriptsModuleOptions): string {
   return [
     `const modules = import.meta.glob(${JSON.stringify(pattern)}, { eager: true });`,
     "const registry = [];",
@@ -189,6 +236,62 @@ export function scriptsModuleSource(pattern: string): string {
     "  }",
     "}",
     "export const scripts = registry;",
+    ...(options?.hot === true ? hotClientLines() : buildStubLines()),
     "",
   ].join("\n");
+}
+
+/**
+ * The development-only HMR client, emitted only when `vite dev` is serving the module.
+ *
+ * @returns The lines of the client, in emission order.
+ */
+function hotClientLines(): readonly string[] {
+  return [
+    "const hot = import.meta.hot;",
+    "const state = hot ? (hot.data.ignifxHotReload ??= { apps: new Set() }) : null;",
+    "export function acceptHotReload(app) {",
+    "  if (state === null) {",
+    "    return () => {};",
+    "  }",
+    "  state.apps.add(app);",
+    "  return () => {",
+    "    state.apps.delete(app);",
+    "  };",
+    "}",
+    "if (hot) {",
+    "  hot.accept((next) => {",
+    "    if (!next) {",
+    "      return;",
+    "    }",
+    "    const before = new Set(scripts.map((type) => type.typeId));",
+    "    const added = [];",
+    "    for (const type of next.scripts) {",
+    "      if (!before.delete(type.typeId)) {",
+    "        added.push(type.typeId);",
+    "      }",
+    "    }",
+    "    const removed = [...before];",
+    "    for (const app of state.apps) {",
+    "      const report = app.hotReload.apply([{ types: next.scripts }]);",
+    '      console.info("[ignifx] script hot reload", {',
+    "        kind: report.kind,",
+    "        changed: report.typeIds,",
+    "        added,",
+    "        removed,",
+    "        instances: report.instances,",
+    "      });",
+    "    }",
+    "  });",
+    "}",
+  ];
+}
+
+/**
+ * The production stand-in: the same export, an empty body, and no `import.meta.hot` reference.
+ *
+ * @returns The lines of the stub.
+ */
+function buildStubLines(): readonly string[] {
+  return ["export function acceptHotReload() {", "  return () => {};", "}"];
 }

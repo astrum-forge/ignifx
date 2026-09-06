@@ -15,9 +15,9 @@ import { electron } from "@ignifx/electron";
 import { input, INPUT_ACTIONS_ASSET_TYPE } from "@ignifx/input";
 import { CharacterController, physics } from "@ignifx/physics";
 import { I18N_ASSET_TYPE, ui } from "@ignifx/ui";
-// A Vite virtual module the plugin serves; the declaration is in src/vite-env.d.ts.
-// eslint-disable-next-line import-x/no-unresolved -- see above.
+// Vite virtual modules the plugin serves, typed by `@ignifx/vite-plugin/client`.
 import { manifest } from "virtual:ignifx/manifest";
+import { acceptHotReload, scripts } from "virtual:ignifx/scripts";
 import { installDesktopProbe } from "./desktop-probe.js";
 import { createGameUi, hasTouch } from "./game-ui.js";
 import { buildLevel } from "./level.js";
@@ -348,7 +348,13 @@ async function main(): Promise<AppStatus> {
     throw error;
   }
 
-  app.registerComponents([HeroAnimation, Companion, PauseMenu, HudLine]);
+  // Every class under `src/scripts/**` with a `static typeId`, from the plugin's virtual registry; in
+
+  // development the registry hot-reloads edited scripts through `app.hotReload` (`"patch"` by default).
+
+  app.registerComponents(scripts);
+
+  acceptHotReload(app);
 
   // The strings come first and alone: every label below is read out of them, and the document is
   // under a kilobyte, so nothing is gained by making the loading screen wait for it.

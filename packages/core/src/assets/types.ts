@@ -461,6 +461,14 @@ export interface Assets {
    */
   loadAsync<T>(ref: AssetRef<T> | string, options?: LoadOptions): Promise<AssetHandle<T>>;
   /**
+   * Reloads a loaded asset from its source, delivering the new value through `onReplaced` the way a
+   * development hot reload does (`docs/architecture/05-assets-and-loading.md` §7); a handle that is
+   * not loaded is left alone. The Vite plugin's HMR channel and the devtools Assets panel call it.
+   *
+   * @param address - The asset's address.
+   */
+  reload(address: string): void;
+  /**
    * Requests several assets as one batch.
    *
    * @param refs - The addresses or references.

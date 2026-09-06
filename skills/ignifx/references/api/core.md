@@ -2140,6 +2140,44 @@ The scene-file JSON Schema generator
 `components[].props` per `typeId`. Classes described but never registered are not listed:
 only a registered class can appear in a file.
 
+##### replace()
+
+> **replace**(`type`): [`ComponentReplacement`](#componentreplacement)
+
+Swaps the class registered under a `typeId` for a replacement, for script hot reload
+(`docs/architecture/15-devtools-and-diagnostics.md` §5). The previous class's cached info is
+dropped and the replacement inherits its `classIndex`, so per-class bookkeeping indexed by that
+number stays valid across a reload.
+
+###### Parameters
+
+###### type
+
+[`ConcreteComponentType`](#concretecomponenttype)
+
+The replacement class. It must declare the `typeId` it replaces.
+
+###### Returns
+
+[`ComponentReplacement`](#componentreplacement)
+
+The freshly built info for the replacement, and the class it replaced.
+
+###### Remarks
+
+Additive and hot-reload-only: nothing on the normal path replaces a registration, and
+`register` still refuses to bind one id to two classes (`IGX-0203`).
+
+###### Throws
+
+IgnifxError with code `IGX-0204` when the replacement declares no `typeId`.
+
+###### Example
+
+```ts
+const { previous } = registry.replace(NextMover);
+```
+
 ##### requireTypeId()
 
 > **requireTypeId**(`type`): `string`
@@ -16458,6 +16496,13 @@ Per-frame counters and profiling scopes.
 
 Engine-wide events (`docs/architecture/02-scene-graph.md` §8).
 
+##### hotReload
+
+> `readonly` **hotReload**: [`HotReloadHost`](#hotreloadhost)
+
+Script and scene hot reload (`docs/architecture/15-devtools-and-diagnostics.md` §5). The Vite
+plugin's HMR client drives it in development; it works headlessly with no bundler at all.
+
 ##### isHeadless
 
 > `readonly` **isHeadless**: `boolean`
@@ -16520,7 +16565,7 @@ Resolved project settings.
 
 The asynchronous key-value store settings, save games, and input rebindings live in
 (`docs/architecture/14-platform-electron.md` §2). The backend is chosen from
-[PlatformInfo.kind](#kind-16) — IndexedDB in a browser, memory under Node — unless `createApp` was
+[PlatformInfo.kind](#kind-17) — IndexedDB in a browser, memory under Node — unless `createApp` was
 given one.
 
 ##### time
@@ -17700,6 +17745,26 @@ The handle, or the address it was requested under.
 
 `void`
 
+##### reload()
+
+> **reload**(`address`): `void`
+
+Reloads a loaded asset from its source, delivering the new value through `onReplaced` the way a
+development hot reload does (`docs/architecture/05-assets-and-loading.md` §7); a handle that is
+not loaded is left alone. The Vite plugin's HMR channel and the devtools Assets panel call it.
+
+###### Parameters
+
+###### address
+
+`string`
+
+The asset's address.
+
+###### Returns
+
+`void`
+
 ##### resolveUrl()
 
 > **resolveUrl**(`address`): `string`
@@ -18236,6 +18301,27 @@ The component class the field may point at.
 > `readonly` **kind**: `"componentRef"`
 
 The component-reference kind.
+
+***
+
+### ComponentReplacement
+
+What [ComponentRegistry.replace](#replace) swapped, for the hot-reload path that has to re-file every
+live instance of the class that went away.
+
+#### Properties
+
+##### info
+
+> `readonly` **info**: [`ComponentClassInfo`](#componentclassinfo)
+
+The replacement's freshly built info.
+
+##### previous
+
+> `readonly` **previous**: [`ComponentType`](#componenttype-1)\<[`Component`](#abstract-component)\> \| `null`
+
+The class registered under the id before, or `null` when nothing was.
 
 ***
 
@@ -18829,6 +18915,14 @@ The `fetch` the asset service reads through, as a shorthand for `assets.fetch`. 
 Run on Babylon Lite's null engine with no render surface
 (`docs/architecture/01-lifecycle-and-time.md` §8). Defaults to `true` when no `canvas` is
 given, so `createApp({})` is a headless app.
+
+##### hotReload?
+
+> `readonly` `optional` **hotReload?**: [`HotReloadOptions`](#hotreloadoptions)
+
+Script and scene hot reload (`docs/architecture/15-devtools-and-diagnostics.md` §5).
+`app.hotReload.apply` always works; the only thing to configure is whether a changed scene file
+rebuilds the live instances built from it.
 
 ##### logLevel?
 
@@ -20608,6 +20702,210 @@ Size along X, in metres.
 
 ***
 
+### HotReloadHost
+
+The app's hot-reload service, reached as `app.hotReload`
+(`docs/architecture/15-devtools-and-diagnostics.md` §5). It works with no Vite and no browser:
+`@ignifx/vite-plugin` generates a client that calls [HotReloadHost.apply](#apply), and a headless
+test calls it directly.
+
+#### Example
+
+```ts
+const report = app.hotReload.apply([{ types: [NextMover] }]);
+console.log(report.kind, report.typeIds, report.instances);
+```
+
+#### Properties
+
+##### onApplied
+
+> `readonly` **onApplied**: [`SignalLike`](#signallike)\<[`HotReloadReport`](#hotreloadreport)\>
+
+Emitted once per completed [HotReloadHost.apply](#apply) or
+[HotReloadHost.reloadScene](#reloadscene) with the report that call returns.
+
+##### reloadScenes
+
+> `readonly` **reloadScenes**: `boolean`
+
+Whether a changed scene file re-instantiates the live scene instances built from it, set with
+`createApp({ hotReload: { reloadScenes: true } })`. Off by default, because rebuilding a scene
+throws away everything the running game has done to it.
+
+#### Methods
+
+##### apply()
+
+> **apply**(`modules`): [`HotReloadReport`](#hotreloadreport)
+
+Applies replaced component classes to the running app.
+
+###### Parameters
+
+###### modules
+
+readonly [`HotReloadModule`](#hotreloadmodule)[]
+
+The replaced modules and the classes they export.
+
+###### Returns
+
+[`HotReloadReport`](#hotreloadreport)
+
+What was reloaded.
+
+###### Throws
+
+IgnifxError with code `IGX-0208` when called from inside a lifecycle callback, where a
+half-swapped world would be observable.
+
+##### reloadScene()
+
+> **reloadScene**(`instance`): `Promise`\<[`SceneInstance`](#sceneinstance)\>
+
+Rebuilds one scene instance from its asset's current value, honouring the file's instance
+overrides wherever their paths still resolve.
+
+###### Parameters
+
+###### instance
+
+[`SceneInstance`](#sceneinstance)
+
+The instance to rebuild. It is unloaded and a fresh one takes its place.
+
+###### Returns
+
+`Promise`\<[`SceneInstance`](#sceneinstance)\>
+
+The new instance.
+
+###### Throws
+
+IgnifxError with code `IGX-0209` when the instance was not built from a scene asset.
+
+***
+
+### HotReloadModule
+
+One replaced module's worth of component classes, as the HMR client hands them over. Classes the
+app has never seen are registered; classes whose `typeId` is already registered to a different
+class are reloaded under their policy; classes that are already the registered ones are skipped.
+
+#### Properties
+
+##### types
+
+> `readonly` **types**: readonly [`ConcreteComponentType`](#concretecomponenttype)\<[`Component`](#abstract-component)\>[]
+
+Every component or script class the replaced module exports.
+
+***
+
+### HotReloadOptions
+
+The `hotReload` section of `createApp`'s options.
+
+#### Properties
+
+##### reloadScenes?
+
+> `readonly` `optional` **reloadScenes?**: `boolean`
+
+Sets [HotReloadHost.reloadScenes](#reloadscenes). Defaults to `false`.
+
+***
+
+### HotReloadReport
+
+What one hot reload did, for logs, tests, and the devtools overlay.
+
+#### Properties
+
+##### durationMs
+
+> `readonly` **durationMs**: `number`
+
+How long the operation took, in milliseconds.
+
+##### errors
+
+> `readonly` **errors**: readonly `unknown`[]
+
+Everything that threw on the way; the reload continues past each one.
+
+##### instances
+
+> `readonly` **instances**: `number`
+
+How many live component instances were swapped or re-created, or entities rebuilt for a scene.
+
+##### kind
+
+> `readonly` **kind**: [`HotReloadKind`](#hotreloadkind)
+
+Which of the three operations this report describes.
+
+##### typeIds
+
+> `readonly` **typeIds**: readonly `string`[]
+
+The `typeId`s actually reloaded, in the order they were applied; empty when nothing changed.
+
+***
+
+### HotReloadStatics
+
+The statics a component or script class may declare to steer its own hot reload
+(`docs/architecture/15-devtools-and-diagnostics.md` §5). Structural and optional, for the reason
+given on `ComponentStatics`: a member declared on the `Component` base class would force the
+`override` keyword on every `static hotReload = "recreate"` under `noImplicitOverride`.
+
+#### Example
+
+```ts
+class Inventory extends Script.define({ slots: u32(4) }) {
+  static typeId = "mygame/Inventory";
+  static hotReload = "recreate" as const;
+}
+```
+
+#### Properties
+
+##### hotReload?
+
+> `readonly` `optional` **hotReload?**: [`HotReloadPolicy`](#hotreloadpolicy)
+
+The policy for this class; defaults to `"patch"`.
+
+#### Methods
+
+##### onHotReload()?
+
+> `optional` **onHotReload**(`previous`): `void`
+
+Runs once on the **new** class after every live instance of it has been swapped or re-created,
+with the class that was registered before as `previous`. It is the seam for class-level
+transient state — a cache keyed off the old class, a static counter — and it is deliberately
+not per instance: under `"patch"` the instances are the very same objects, so there is
+nothing to copy across (PlayCanvas's `swap(old)` exists only because it re-instantiates), and
+under `"recreate"` per-instance state is re-derived from the schema by design.
+
+###### Parameters
+
+###### previous
+
+[`ConcreteComponentType`](#concretecomponenttype)
+
+The class this one replaces.
+
+###### Returns
+
+`void`
+
+***
+
 ### IgnifxErrorOptions
 
 Options accepted by [IgnifxError](#ignifxerror). Extends the standard `ErrorOptions`, so `cause` keeps
@@ -21212,6 +21510,29 @@ The threshold below which records are dropped. Shared with every child logger.
 The dotted scope prefix of this logger, or `null` for the root.
 
 #### Methods
+
+##### addSink()
+
+> **addSink**(`sink`): () => `void`
+
+Adds a second sink that receives every record this logger tree writes, alongside the one
+`createApp({ logSink })` installed. Children share the list, so a sink added on `app.log` sees
+`ctx.log` records too. This is how `@ignifx/devtools` fills its Console panel without the game
+wiring anything.
+
+###### Parameters
+
+###### sink
+
+[`LogSink`](#logsink-1)
+
+The sink to add.
+
+###### Returns
+
+A function that removes it again.
+
+() => `void`
 
 ##### child()
 
@@ -26074,6 +26395,31 @@ item definition, a component reference's class token — so no branch has to gue
 
 ***
 
+### HotReloadKind
+
+> **HotReloadKind** = `"patch"` \| `"recreate"` \| `"scene"`
+
+What one [HotReloadReport](#hotreloadreport) describes: a prototype swap, a destroy-and-rebuild of component
+instances, or a scene instance rebuilt from its file.
+
+***
+
+### HotReloadPolicy
+
+> **HotReloadPolicy** = `"patch"` \| `"recreate"`
+
+What a class asks the engine to do with its live instances when its module is replaced
+(`docs/architecture/15-devtools-and-diagnostics.md` §5).
+
+#### Remarks
+
+`"patch"` is the default and the one to reach for while iterating on logic: the live instances
+keep their identity and every field value, and no lifecycle callback re-runs. `"recreate"` is
+required when the *field layout* changes, because a patched instance keeps whatever properties
+its constructor assigned and a renamed or added field would read `undefined`.
+
+***
+
 ### JsonArray
 
 > **JsonArray** = readonly [`JsonValue`](#jsonvalue)[]
@@ -27022,6 +27368,18 @@ An extension declares a `requires` entry that was never registered.
 
 The `requires` graph of the registered extensions contains a cycle.
 
+##### hotReloadInsideCallback
+
+> `readonly` **hotReloadInsideCallback**: `"IGX-0208"` = `"IGX-0208"`
+
+`app.hotReload.apply()` was called from inside a lifecycle callback.
+
+##### hotReloadSchemaChanged
+
+> `readonly` **hotReloadSchemaChanged**: `"IGX-0207"` = `"IGX-0207"`
+
+A hot-reloaded class kept the `"patch"` policy while its schema shape changed.
+
 ##### instanceHashMismatch
 
 > `readonly` **instanceHashMismatch**: `"IGX-0604"` = `"IGX-0604"`
@@ -27153,6 +27511,12 @@ Instantiating a scene would place an instance inside itself.
 > `readonly` **sceneNotLoaded**: `"IGX-0301"` = `"IGX-0301"`
 
 A scene was instantiated before it had finished loading.
+
+##### sceneNotReloadable
+
+> `readonly` **sceneNotReloadable**: `"IGX-1506"` = `"IGX-1506"`
+
+`app.hotReload.reloadScene()` was given an instance that was not built from a scene asset.
 
 ##### schemaOutOfRange
 

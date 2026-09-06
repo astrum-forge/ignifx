@@ -203,6 +203,7 @@ import { ComponentInit } from '@ignifx/core';
 import { componentRef } from '@ignifx/core';
 import { ComponentRefFieldSpec } from '@ignifx/core';
 import { ComponentRegistry } from '@ignifx/core';
+import { ComponentReplacement } from '@ignifx/core';
 import { ComponentStatics } from '@ignifx/core';
 import { ComponentType } from '@ignifx/core';
 import { ComponentTypeToken } from '@ignifx/core';
@@ -247,6 +248,7 @@ import { CreateBusOptions } from '@ignifx/audio';
 import { createConsoleSink } from '@ignifx/core';
 import { createCryptoRandom } from '@ignifx/core';
 import { createDefaults } from '@ignifx/core';
+import { createDevtoolsLogSink } from '@ignifx/devtools';
 import { createDiagnosticsGroup } from '@ignifx/core';
 import { CreateEntityOptions } from '@ignifx/core';
 import { createEnvironmentLoader } from '@ignifx/core';
@@ -304,6 +306,7 @@ import { DEFAULT_BRDF_LUT_ADDRESS } from '@ignifx/core';
 import { DEFAULT_CHUNK_SIZE } from '@ignifx/2d';
 import { DEFAULT_CLIP_FPS } from '@ignifx/2d';
 import { DEFAULT_CLIP_LENGTH } from '@ignifx/3d';
+import { DEFAULT_DEVTOOLS_LOG_LIMIT } from '@ignifx/devtools';
 import { DEFAULT_LAYER } from '@ignifx/core';
 import { DEFAULT_MEMORY_SINK_LIMIT } from '@ignifx/core';
 import { DEFAULT_ORTHOGRAPHIC_SIZE } from '@ignifx/2d';
@@ -314,6 +317,7 @@ import { DEFAULT_SORTING_LAYER } from '@ignifx/2d';
 import { DEFAULT_SOUND_BUS } from '@ignifx/audio';
 import { DEFAULT_STORAGE_NAMESPACE } from '@ignifx/core';
 import { defaultAudioSettings } from '@ignifx/audio';
+import { defaultDevtoolsSettings } from '@ignifx/devtools';
 import { defaultInputSettings } from '@ignifx/input';
 import { defaultPhysics2DSettings } from '@ignifx/physics-2d';
 import { defaultPhysicsSettings } from '@ignifx/physics';
@@ -352,6 +356,33 @@ import { Desktop } from '@ignifx/electron';
 import { DEVICE_KINDS } from '@ignifx/input';
 import { DeviceKind } from '@ignifx/input';
 import { DeviceLostInfo } from '@ignifx/core';
+import { devtools } from '@ignifx/devtools';
+import { DEVTOOLS_CLASS_NAMES } from '@ignifx/devtools';
+import { DEVTOOLS_ERROR_LIMIT } from '@ignifx/devtools';
+import { DEVTOOLS_ERROR_MESSAGES } from '@ignifx/devtools';
+import { DEVTOOLS_HOT_RELOAD_LIMIT } from '@ignifx/devtools';
+import { DEVTOOLS_LAYER_Z_INDEX } from '@ignifx/devtools';
+import { DEVTOOLS_LOG_LEVELS } from '@ignifx/devtools';
+import { DEVTOOLS_PANEL_NAMES } from '@ignifx/devtools';
+import { DEVTOOLS_POSITIONS } from '@ignifx/devtools';
+import { DEVTOOLS_SAMPLE_ORDER } from '@ignifx/devtools';
+import { DEVTOOLS_SETTINGS_SECTION } from '@ignifx/devtools';
+import { DEVTOOLS_STYLE_ELEMENT_ID } from '@ignifx/devtools';
+import { DEVTOOLS_UI_LAYER } from '@ignifx/devtools';
+import { DevtoolsDomTarget } from '@ignifx/devtools';
+import { devtoolsError } from '@ignifx/devtools';
+import { DevtoolsErrorCode } from '@ignifx/devtools';
+import { DevtoolsErrorOptions } from '@ignifx/devtools';
+import { DevtoolsLogSink } from '@ignifx/devtools';
+import { DevtoolsLogSinkOptions } from '@ignifx/devtools';
+import { DevtoolsOptions } from '@ignifx/devtools';
+import { DevtoolsPanelHandle } from '@ignifx/devtools';
+import { DevtoolsPanelName } from '@ignifx/devtools';
+import { DevtoolsPosition } from '@ignifx/devtools';
+import { DevtoolsService } from '@ignifx/devtools';
+import { DevtoolsServiceOptions } from '@ignifx/devtools';
+import { DevtoolsSettings } from '@ignifx/devtools';
+import { devtoolsSettingsSchema } from '@ignifx/devtools';
 import { Diagnostics } from '@ignifx/core';
 import { DiagnosticsGroup } from '@ignifx/core';
 import { DiagnosticsOptions } from '@ignifx/core';
@@ -471,6 +502,13 @@ import { HostStoredValue } from '@ignifx/electron';
 import { HostVersions } from '@ignifx/electron';
 import { HostWindow } from '@ignifx/electron';
 import { HostWindowEvent } from '@ignifx/electron';
+import { HotReloadHost } from '@ignifx/core';
+import { HotReloadKind } from '@ignifx/core';
+import { HotReloadModule } from '@ignifx/core';
+import { HotReloadOptions } from '@ignifx/core';
+import { HotReloadPolicy } from '@ignifx/core';
+import { HotReloadReport } from '@ignifx/core';
+import { HotReloadStatics } from '@ignifx/core';
 import { HUD_ANCHORS } from '@ignifx/ui';
 import { HudAnchor } from '@ignifx/ui';
 import { HudPlacement } from '@ignifx/ui';
@@ -841,6 +879,7 @@ import { REQUIRED_HOST_MEMBERS } from '@ignifx/electron';
 import { RESERVED_LAYER_NAMES } from '@ignifx/core';
 import { resetFrameSample } from '@ignifx/core';
 import { resolveClipFrames } from '@ignifx/2d';
+import { resolveDevtoolsTarget } from '@ignifx/devtools';
 import { resolveDomTarget } from '@ignifx/ui';
 import { resolveEase } from '@ignifx/core';
 import { resolveGamepadRemap } from '@ignifx/input';
@@ -979,6 +1018,7 @@ import { System } from '@ignifx/core';
 import { SystemContext } from '@ignifx/core';
 import { TagSet } from '@ignifx/core';
 import { TEXT_ALIGNMENTS } from '@ignifx/ui';
+import { TEXT_REFRESH_HZ } from '@ignifx/devtools';
 import { TextAlignment } from '@ignifx/ui';
 import { textAssetLoader } from '@ignifx/core';
 import { TextComponent } from '@ignifx/ui';
@@ -1567,6 +1607,8 @@ export { ComponentRefFieldSpec }
 
 export { ComponentRegistry }
 
+export { ComponentReplacement }
+
 export { ComponentStatics }
 
 export { ComponentType }
@@ -1654,6 +1696,8 @@ export { createConsoleSink }
 export { createCryptoRandom }
 
 export { createDefaults }
+
+export { createDevtoolsLogSink }
 
 export { createDiagnosticsGroup }
 
@@ -1769,6 +1813,8 @@ export { DEFAULT_CLIP_FPS }
 
 export { DEFAULT_CLIP_LENGTH }
 
+export { DEFAULT_DEVTOOLS_LOG_LIMIT }
+
 export { DEFAULT_LAYER }
 
 export { DEFAULT_MEMORY_SINK_LIMIT }
@@ -1788,6 +1834,8 @@ export { DEFAULT_SOUND_BUS }
 export { DEFAULT_STORAGE_NAMESPACE }
 
 export { defaultAudioSettings }
+
+export { defaultDevtoolsSettings }
 
 export { defaultInputSettings }
 
@@ -1864,6 +1912,60 @@ export { DEVICE_KINDS }
 export { DeviceKind }
 
 export { DeviceLostInfo }
+
+export { devtools }
+
+export { DEVTOOLS_CLASS_NAMES }
+
+export { DEVTOOLS_ERROR_LIMIT }
+
+export { DEVTOOLS_ERROR_MESSAGES }
+
+export { DEVTOOLS_HOT_RELOAD_LIMIT }
+
+export { DEVTOOLS_LAYER_Z_INDEX }
+
+export { DEVTOOLS_LOG_LEVELS }
+
+export { DEVTOOLS_PANEL_NAMES }
+
+export { DEVTOOLS_POSITIONS }
+
+export { DEVTOOLS_SAMPLE_ORDER }
+
+export { DEVTOOLS_SETTINGS_SECTION }
+
+export { DEVTOOLS_STYLE_ELEMENT_ID }
+
+export { DEVTOOLS_UI_LAYER }
+
+export { DevtoolsDomTarget }
+
+export { devtoolsError }
+
+export { DevtoolsErrorCode }
+
+export { DevtoolsErrorOptions }
+
+export { DevtoolsLogSink }
+
+export { DevtoolsLogSinkOptions }
+
+export { DevtoolsOptions }
+
+export { DevtoolsPanelHandle }
+
+export { DevtoolsPanelName }
+
+export { DevtoolsPosition }
+
+export { DevtoolsService }
+
+export { DevtoolsServiceOptions }
+
+export { DevtoolsSettings }
+
+export { devtoolsSettingsSchema }
 
 export { Diagnostics }
 
@@ -2102,6 +2204,20 @@ export { HostVersions }
 export { HostWindow }
 
 export { HostWindowEvent }
+
+export { HotReloadHost }
+
+export { HotReloadKind }
+
+export { HotReloadModule }
+
+export { HotReloadOptions }
+
+export { HotReloadPolicy }
+
+export { HotReloadReport }
+
+export { HotReloadStatics }
 
 export { HUD_ANCHORS }
 
@@ -2843,6 +2959,8 @@ export { resetFrameSample }
 
 export { resolveClipFrames }
 
+export { resolveDevtoolsTarget }
+
 export { resolveDomTarget }
 
 export { resolveEase }
@@ -3118,6 +3236,8 @@ export { SystemContext }
 export { TagSet }
 
 export { TEXT_ALIGNMENTS }
+
+export { TEXT_REFRESH_HZ }
 
 export { TextAlignment }
 

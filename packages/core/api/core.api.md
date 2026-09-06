@@ -33,6 +33,7 @@ export interface App {
     readonly diagnostics: Diagnostics;
     dispose(): void;
     readonly events: AppEvents;
+    readonly hotReload: HotReloadHost;
     readonly isHeadless: boolean;
     readonly isRunning: boolean;
     readonly lite: AppLiteHandles;
@@ -219,6 +220,7 @@ export interface Assets {
     registerLoader(loader: AssetLoader): void;
     registerType(type: AssetTypeDefinition): void;
     release(handleOrAddress: AssetHandle | string): void;
+    reload(address: string): void;
     resolveUrl(address: string): string;
 }
 
@@ -494,8 +496,15 @@ export class ComponentRegistry {
     register(type: ConcreteComponentType, typeId?: string): ComponentClassInfo;
     registerAll(types: readonly ConcreteComponentType[]): void;
     registrations(): readonly (readonly [typeId: string, type: ComponentType])[];
+    replace(type: ConcreteComponentType): ComponentReplacement;
     requireTypeId(type: ComponentType): string;
     get size(): number;
+}
+
+// @public
+export interface ComponentReplacement {
+    readonly info: ComponentClassInfo;
+    readonly previous: ComponentType | null;
 }
 
 // @public
@@ -566,6 +575,8 @@ export const CoreErrorCode: {
     readonly componentTypeIdMissing: "IGX-0204";
     readonly transformIsNotRemovable: "IGX-0205";
     readonly componentNotAttached: "IGX-0206";
+    readonly hotReloadSchemaChanged: "IGX-0207";
+    readonly hotReloadInsideCallback: "IGX-0208";
     readonly sceneNotLoaded: "IGX-0301";
     readonly sceneInstanceCycle: "IGX-0302";
     readonly unknownLayer: "IGX-0303";
@@ -622,6 +633,7 @@ export const CoreErrorCode: {
     readonly duplicateDiagnosticsGroup: "IGX-1503";
     readonly unknownDiagnosticsCounter: "IGX-1504";
     readonly unreachableCase: "IGX-1505";
+    readonly sceneNotReloadable: "IGX-1506";
 };
 
 // @public
@@ -662,6 +674,7 @@ export interface CreateAppOptions {
     readonly extensions?: readonly Extension[];
     readonly fetch?: FetchLike;
     readonly headless?: boolean;
+    readonly hotReload?: HotReloadOptions;
     readonly logLevel?: LogThreshold;
     readonly logSink?: LogSink;
     readonly mode?: ErrorFormatMode;
@@ -1345,6 +1358,45 @@ export interface GroundMeshOptions {
 }
 
 // @public
+export interface HotReloadHost {
+    apply(modules: readonly HotReloadModule[]): HotReloadReport;
+    readonly onApplied: SignalLike<HotReloadReport>;
+    reloadScene(instance: SceneInstance): Promise<SceneInstance>;
+    readonly reloadScenes: boolean;
+}
+
+// @public
+export type HotReloadKind = "patch" | "recreate" | "scene";
+
+// @public
+export interface HotReloadModule {
+    readonly types: readonly ConcreteComponentType[];
+}
+
+// @public
+export interface HotReloadOptions {
+    readonly reloadScenes?: boolean;
+}
+
+// @public
+export type HotReloadPolicy = "patch" | "recreate";
+
+// @public
+export interface HotReloadReport {
+    readonly durationMs: number;
+    readonly errors: readonly unknown[];
+    readonly instances: number;
+    readonly kind: HotReloadKind;
+    readonly typeIds: readonly string[];
+}
+
+// @public
+export interface HotReloadStatics {
+    readonly hotReload?: HotReloadPolicy;
+    onHotReload?(previous: ConcreteComponentType): void;
+}
+
+// @public
 export function i32(defaultValue?: number, options?: FieldOptions): FieldDefinition<number>;
 
 // @public
@@ -1656,6 +1708,7 @@ export const LOG_LEVEL_SEVERITY: Readonly<Record<LogThreshold, number>>;
 
 // @public
 export interface Logger {
+    addSink(sink: LogSink): () => void;
     child(scope: string): Logger;
     debug(message: string, ...data: readonly unknown[]): void;
     error(message: string, ...data: readonly unknown[]): void;

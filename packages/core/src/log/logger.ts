@@ -93,6 +93,16 @@ export interface Logger {
    * @returns The scoped logger.
    */
   child(scope: string): Logger;
+  /**
+   * Adds a second sink that receives every record this logger tree writes, alongside the one
+   * `createApp({ logSink })` installed. Children share the list, so a sink added on `app.log` sees
+   * `ctx.log` records too. This is how `@ignifx/devtools` fills its Console panel without the game
+   * wiring anything.
+   *
+   * @param sink - The sink to add.
+   * @returns A function that removes it again.
+   */
+  addSink(sink: LogSink): () => void;
 }
 
 /**
@@ -117,6 +127,8 @@ export interface LoggerOptions {
 /** State every logger in one tree shares, so `setLevel` on any of them moves all of them. */
 interface LoggerState {
   readonly sink: LogSink;
+  /** Sinks added with `addSink`, written after the primary one, in insertion order. */
+  readonly extraSinks: LogSink[];
   readonly now: () => number;
   readonly seen: Set<string>;
   level: LogThreshold;
@@ -189,6 +201,17 @@ class LoggerImpl implements Logger {
     this.#write(LogLevel.warn, message, data);
   }
 
+  addSink(sink: LogSink): () => void {
+    const extra = this.#state.extraSinks;
+    extra.push(sink);
+    return (): void => {
+      const index = extra.indexOf(sink);
+      if (index !== -1) {
+        extra.splice(index, 1);
+      }
+    };
+  }
+
   child(scope: string): Logger {
     const nested = this.#scope === null ? scope : `${this.#scope}${SCOPE_SEPARATOR}${scope}`;
     return new LoggerImpl(this.#state, nested);
@@ -206,6 +229,10 @@ class LoggerImpl implements Logger {
       timeMs: this.#state.now(),
     };
     this.#state.sink.write(record);
+    const extra = this.#state.extraSinks;
+    for (let index = 0; index < extra.length; index += 1) {
+      extra[index]?.write(record);
+    }
   }
 }
 
@@ -227,6 +254,7 @@ export function createLogger(options: LoggerOptions): Logger {
   const level = options.level ?? LogLevel.info;
   const state: LoggerState = {
     sink: options.sink,
+    extraSinks: [],
     now: options.now ?? defaultNow(),
     seen: new Set<string>(),
     level,

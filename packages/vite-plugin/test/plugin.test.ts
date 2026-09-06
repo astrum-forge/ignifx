@@ -123,12 +123,25 @@ describe("virtual modules", () => {
     expect(hero?.meta).toEqual({ texture: { srgb: true } });
   });
 
-  it("serves the script registry module", async () => {
+  it("serves the script registry module with the HMR client in development", async () => {
     const root = await projectTree();
     const plugin = ignifx({ scripts: "src/game/**/*.ts" });
     await configure(plugin, root, "serve");
     const source = await harness(plugin).load.call(new FakePluginContext(), RESOLVED_SCRIPTS_MODULE_ID);
     expect(source).toContain('import.meta.glob("/src/game/**/*.ts", { eager: true })');
+    expect(source).toContain("const hot = import.meta.hot;");
+    expect(source).toContain("app.hotReload.apply([{ types: next.scripts }])");
+  });
+
+  it("leaves the HMR client out of the script registry module in a build", async () => {
+    const root = await projectTree();
+    const plugin = ignifx();
+    await configure(plugin, root, "build");
+    const source = await harness(plugin).load.call(new FakePluginContext(), RESOLVED_SCRIPTS_MODULE_ID);
+    expect(source).toContain("export const scripts = registry;");
+    expect(source).toContain("export function acceptHotReload()");
+    expect(source).not.toContain("import.meta.hot");
+    expect(source).not.toContain("hotReload.apply");
   });
 
   it("declines module ids it does not own", async () => {

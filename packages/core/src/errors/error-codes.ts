@@ -138,6 +138,10 @@ export const CoreErrorCode = {
   transformIsNotRemovable: "IGX-0205",
   /** A component's engine-assigned state was read before the engine attached it to an entity. */
   componentNotAttached: "IGX-0206",
+  /** A hot-reloaded class kept the `"patch"` policy while its schema shape changed. */
+  hotReloadSchemaChanged: "IGX-0207",
+  /** `app.hotReload.apply()` was called from inside a lifecycle callback. */
+  hotReloadInsideCallback: "IGX-0208",
   /** A scene was instantiated before it had finished loading. */
   sceneNotLoaded: "IGX-0301",
   /** Instantiating a scene would place an instance inside itself. */
@@ -250,6 +254,8 @@ export const CoreErrorCode = {
   unknownDiagnosticsCounter: "IGX-1504",
   /** A `switch` over a union reached a case the type system said was impossible. */
   unreachableCase: "IGX-1505",
+  /** `app.hotReload.reloadScene()` was given an instance that was not built from a scene asset. */
+  sceneNotReloadable: "IGX-1506",
 } as const;
 
 /**
@@ -283,6 +289,9 @@ export const CORE_ERROR_MESSAGES: Readonly<Record<CoreErrorCode, string>> = {
   "IGX-0204": "{component} cannot be serialized because it has no typeId.",
   "IGX-0205": "Transform cannot be removed or disabled.",
   "IGX-0206": "{component} is not attached to an entity yet.",
+  "IGX-0207":
+    '{component} changed its schema shape under the "patch" hot-reload policy; its instances were re-created.',
+  "IGX-0208": "app.hotReload.apply() cannot run inside the {phase} callback; apply it between frames.",
   "IGX-0301": "The scene {scene} is not loaded yet.",
   "IGX-0302": "Instantiating {scene} under {entity} would nest the scene inside itself.",
   "IGX-0303": "{layer} is not a layer declared in the project settings.",
@@ -339,6 +348,7 @@ export const CORE_ERROR_MESSAGES: Readonly<Record<CoreErrorCode, string>> = {
   "IGX-1503": "The diagnostics group {group} is already registered.",
   "IGX-1504": "{counter} is not a counter of the diagnostics group {group}.",
   "IGX-1505": "Unreachable case reached for {what}.",
+  "IGX-1506": "The scene instance {scene} was not built from a scene asset, so it cannot be reloaded.",
 };
 
 /** The fixed length of an `IGX-####` code. */

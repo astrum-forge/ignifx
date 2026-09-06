@@ -190,3 +190,21 @@ describe("warnOnce", () => {
     expect(sink.length).toBe(0);
   });
 });
+
+describe("addSink", () => {
+  it("fans every record out to added sinks, from the root and its children, until removed", () => {
+    const primary = createMemorySink();
+    const added = createMemorySink();
+    const log = createLogger({ sink: primary, level: "debug", now: () => 1 });
+    const remove = log.addSink(added);
+    log.info("root");
+    log.child("assets").warn("child");
+    expect(added.toArray().map((record) => record.message)).toEqual(["root", "child"]);
+    expect(primary.toArray().map((record) => record.message)).toEqual(["root", "child"]);
+    remove();
+    remove(); // idempotent
+    log.error("after");
+    expect(added.length).toBe(2);
+    expect(primary.length).toBe(3);
+  });
+});

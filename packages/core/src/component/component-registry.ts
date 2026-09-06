@@ -73,6 +73,19 @@ export interface ComponentClassInfo {
 }
 
 /**
+ * What {@link ComponentRegistry.replace} swapped, for the hot-reload path that has to re-file every
+ * live instance of the class that went away.
+ *
+ * @public
+ */
+export interface ComponentReplacement {
+  /** The class registered under the id before, or `null` when nothing was. */
+  readonly previous: ComponentType | null;
+  /** The replacement's freshly built info. */
+  readonly info: ComponentClassInfo;
+}
+
+/**
  * The component-class table of one app. There is one per {@link App}, never a module-level one
  * (`CONSTITUTION.md` §3.5, §3.6): two apps in one test process must not see each other's types.
  *
@@ -144,6 +157,42 @@ export class ComponentRegistry {
         this.register(type);
       }
     }
+  }
+
+  /**
+   * Swaps the class registered under a `typeId` for a replacement, for script hot reload
+   * (`docs/architecture/15-devtools-and-diagnostics.md` §5). The previous class's cached info is
+   * dropped and the replacement inherits its `classIndex`, so per-class bookkeeping indexed by that
+   * number stays valid across a reload.
+   *
+   * @remarks
+   * Additive and hot-reload-only: nothing on the normal path replaces a registration, and
+   * `register` still refuses to bind one id to two classes (`IGX-0203`).
+   *
+   * @param type - The replacement class. It must declare the `typeId` it replaces.
+   * @returns The freshly built info for the replacement, and the class it replaced.
+   * @throws IgnifxError with code `IGX-0204` when the replacement declares no `typeId`.
+   *
+   * @example
+   * ```ts
+   * const { previous } = registry.replace(NextMover);
+   * ```
+   */
+  replace(type: ConcreteComponentType): ComponentReplacement {
+    const id = this.requireTypeId(type);
+    const previous = this.#byTypeId.get(id) ?? null;
+    if (previous === type) {
+      return { previous, info: this.describe(type) };
+    }
+    const inherited = previous === null ? null : (this.#info.get(previous)?.classIndex ?? null);
+    if (previous !== null) {
+      this.#info.delete(previous);
+    }
+    this.#byTypeId.set(id, type);
+    this.#info.delete(type);
+    const info = this.#build(type, inherited);
+    this.#info.set(type, info);
+    return { previous, info };
   }
 
   /**
@@ -249,15 +298,20 @@ export class ComponentRegistry {
    * Computes a class's info.
    *
    * @param type - The component class.
+   * @param inheritedClassIndex - The dense index to reuse, when a hot reload replaced a class that
+   * already had one; `null` allocates the next.
    * @returns The freshly built info.
    */
-  #build(type: ComponentType): ComponentClassInfo {
+  #build(type: ComponentType, inheritedClassIndex: number | null = null): ComponentClassInfo {
     const statics = readStatics(type);
     const ancestors = collectAncestors(type);
     const schema = statics.schema ?? null;
     const isScript = ancestors.includes(Script);
-    const classIndex = this.#nextClassIndex;
-    this.#nextClassIndex += 1;
+    let classIndex = inheritedClassIndex;
+    if (classIndex === null) {
+      classIndex = this.#nextClassIndex;
+      this.#nextClassIndex += 1;
+    }
     return {
       type,
       typeId: statics.typeId ?? null,

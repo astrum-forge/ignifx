@@ -28,6 +28,7 @@ describe("@ignifx/vite-plugin barrel", () => {
       "PLUGIN_NAME",
       "RESOLVED_MANIFEST_MODULE_ID",
       "RESOLVED_SCRIPTS_MODULE_ID",
+      "SCRIPTS_HOT_RELOAD_EXPORT",
       "SCRIPTS_MODULE_ID",
       "VitePluginError",
       "VitePluginErrorCode",

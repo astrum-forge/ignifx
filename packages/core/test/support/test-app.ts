@@ -3,6 +3,8 @@ import { AssetsImpl } from "../../src/assets/assets-service.js";
 import { Diagnostics } from "../../src/diagnostics/diagnostics.js";
 import { CoreErrorCode } from "../../src/errors/error-codes.js";
 import { IgnifxError } from "../../src/errors/ignifx-error.js";
+import { HotReloadHostImpl } from "../../src/hot-reload/hot-reload-host.js";
+import { createFrameState } from "../../src/lifecycle/frame-state.js";
 import { createLogger } from "../../src/log/logger.js";
 import { createMemorySink } from "../../src/log/memory-sink.js";
 import { detectPlatform } from "../../src/platform/platform.js";
@@ -20,6 +22,7 @@ import type {
   Coroutine,
   CoroutineHandle,
   ErrorReport,
+  FrameState,
   LayersSettings,
   ServiceKey,
   ServiceRegistry,
@@ -178,6 +181,11 @@ export class TestApp implements App {
 
   #world: World | null = null;
 
+  #hotReload: HotReloadHostImpl | null = null;
+
+  /** A monotonic stand-in for the wall clock, so `HotReloadReport.durationMs` is deterministic. */
+  #ticks = 0;
+
   readonly #lite: AppLiteHandles;
 
   constructor(engine: LiteEngine, scene: LiteScene, layers: readonly string[]) {
@@ -208,8 +216,27 @@ export class TestApp implements App {
    *
    * @param world - The world built on this app.
    */
-  bindWorld(world: World): void {
+  bindWorld(world: World, frameState?: FrameState): void {
     this.#world = world;
+    this.#hotReload = new HotReloadHostImpl({
+      app: this,
+      frameState: frameState ?? createFrameState().state,
+      log: this.log,
+      now: (): number => {
+        this.#ticks += 1;
+        return this.#ticks;
+      },
+      reloadScenes: false,
+    });
+    this.#hotReload.attachWorld(world);
+  }
+
+  get hotReload(): HotReloadHostImpl {
+    const host = this.#hotReload;
+    if (host === null) {
+      throw new Error("The test app has no world yet.");
+    }
+    return host;
   }
 
   registerComponents(types: readonly ConcreteComponentType[]): void {

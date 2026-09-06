@@ -693,6 +693,32 @@ const expectedElectronExports = [
   "isCompatibleHostVersion",
 ];
 
+// The @ignifx/devtools value surface (VERSION stays core's, asDomCanvas stays ui's).
+const expectedDevtoolsExports = [
+  "DEFAULT_DEVTOOLS_LOG_LIMIT",
+  "DEVTOOLS_CLASS_NAMES",
+  "DEVTOOLS_ERROR_LIMIT",
+  "DEVTOOLS_ERROR_MESSAGES",
+  "DEVTOOLS_HOT_RELOAD_LIMIT",
+  "DEVTOOLS_LAYER_Z_INDEX",
+  "DEVTOOLS_LOG_LEVELS",
+  "DEVTOOLS_PANEL_NAMES",
+  "DEVTOOLS_POSITIONS",
+  "DEVTOOLS_SAMPLE_ORDER",
+  "DEVTOOLS_SETTINGS_SECTION",
+  "DEVTOOLS_STYLE_ELEMENT_ID",
+  "DEVTOOLS_UI_LAYER",
+  "DevtoolsErrorCode",
+  "DevtoolsService",
+  "TEXT_REFRESH_HZ",
+  "createDevtoolsLogSink",
+  "defaultDevtoolsSettings",
+  "devtools",
+  "devtoolsError",
+  "devtoolsSettingsSchema",
+  "resolveDevtoolsTarget",
+];
+
 describe("ignifx barrel", () => {
   it("imports without executing anything and re-exports the whole @ignifx/core value surface", () => {
     // Compared as sets: the key order of a namespace object is not part of the contract.
@@ -707,8 +733,16 @@ describe("ignifx barrel", () => {
         ...expectedUiExports,
         ...expectedThreeDExports,
         ...expectedElectronExports,
+        ...expectedDevtoolsExports,
       ]),
     );
+  });
+
+  it("re-exports the @ignifx/devtools value surface by name", () => {
+    const keys = new Set(Object.keys(barrel));
+    for (const name of expectedDevtoolsExports) {
+      expect(keys.has(name)).toBe(true);
+    }
   });
 
   it("re-exports the @ignifx/electron value surface by name", () => {

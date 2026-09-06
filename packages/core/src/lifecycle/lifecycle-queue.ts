@@ -289,6 +289,23 @@ export class LifecycleQueue implements WorldInternals {
   }
 
   /**
+   * Re-files an effectively-enabled script in the sorted dispatch lists after a hot-reload class
+   * swap. Nothing is invoked: this only moves the script between lists and re-sorts it under the
+   * new `executionOrder`.
+   *
+   * @param component - The component whose class was replaced.
+   * @param previous - The class info it was filed under.
+   * @param next - The class info it is filed under now.
+   */
+  rebindDispatch(component: Component, previous: ScriptClassInfo | null, next: ScriptClassInfo | null): void {
+    if (!(component instanceof Script) || !componentInternals(component).isEnabledNow) {
+      return;
+    }
+    this.#removeFromDispatch(component, previous);
+    this.#addToDispatch(component, next);
+  }
+
+  /**
    * Recomputes and applies a component's effective enabled state.
    *
    * @param component - The component.

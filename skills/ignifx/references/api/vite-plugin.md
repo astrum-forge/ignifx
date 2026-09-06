@@ -710,6 +710,22 @@ RFC 6901 pointer to the offending value; `""` for the document root.
 
 ***
 
+### ScriptsModuleOptions
+
+Options accepted by [scriptsModuleSource](#scriptsmodulesource).
+
+#### Properties
+
+##### hot?
+
+> `readonly` `optional` **hot?**: `boolean`
+
+Emit the HMR client. `false` — the default, and what a build uses — leaves the module with no
+`import.meta.hot` reference at all, so none of the client reaches production
+(`docs/architecture/15-devtools-and-diagnostics.md` §5).
+
+***
+
 ### ValidateJsonOptions
 
 Options for [validateJsonValue](#validatejsonvalue).
@@ -1136,6 +1152,33 @@ The resolved id of [MANIFEST\_MODULE\_ID](#manifest_module_id).
 > `const` **RESOLVED\_SCRIPTS\_MODULE\_ID**: `string`
 
 The resolved id of [SCRIPTS\_MODULE\_ID](#scripts_module_id).
+
+***
+
+### SCRIPTS\_HOT\_RELOAD\_EXPORT
+
+> `const` **SCRIPTS\_HOT\_RELOAD\_EXPORT**: `"acceptHotReload"` = `"acceptHotReload"`
+
+The function `virtual:ignifx/scripts` exports for wiring an app to script hot reload
+(`docs/architecture/15-devtools-and-diagnostics.md` §5).
+
+#### Remarks
+
+The generated module cannot know which app — or how many apps — a page built, and a module-level
+app reference is exactly what `CONSTITUTION.md` §3.5/§3.6 forbid. So the hand-off is explicit and
+one line of game code: the game passes its app in, and the module calls `app.hotReload.apply`
+whenever Vite replaces a script module. The export exists in a production build too, with an
+empty body, so the same source builds either way.
+
+#### Example
+
+```ts
+import { acceptHotReload, scripts } from "virtual:ignifx/scripts";
+
+const app = await createApp({ canvas });
+app.registerComponents(scripts);
+acceptHotReload(app);
+```
 
 ***
 
@@ -1975,7 +2018,7 @@ const assets = await scanAssetRoot({ assetRoot: "/project/assets" });
 
 ### scriptsModuleSource()
 
-> **scriptsModuleSource**(`pattern`): `string`
+> **scriptsModuleSource**(`pattern`, `options?`): `string`
 
 Generates the source of `virtual:ignifx/scripts`.
 
@@ -1987,11 +2030,17 @@ Generates the source of `virtual:ignifx/scripts`.
 
 The root-absolute glob, from [normalizeScriptsPattern](#normalizescriptspattern).
 
+##### options?
+
+[`ScriptsModuleOptions`](#scriptsmoduleoptions)
+
+Whether to emit the development-only HMR client.
+
 #### Returns
 
 `string`
 
-An ES module exporting the registry as `scripts`.
+An ES module exporting the registry as `scripts` and the wiring as `acceptHotReload`.
 
 #### Remarks
 
@@ -2001,6 +2050,14 @@ from the same files are ignored, and the module keys are sorted so that the regi
 the same on every machine. Because the imports are real static imports produced by
 `import.meta.glob`'s eager form, Vite's HMR graph sees each script file and can push updates for
 it.
+
+**The HMR half.** Script hot reload needs no channel of its own: unlike an asset, a script module
+already sits in Vite's module graph, so the generated module self-accepts and Vite hands it the
+replacement namespace. The handler diffs the old and new registries by `typeId` for the log line
+and hands the whole new registry to `app.hotReload.apply`, which is the half that decides what a
+change means — patch or recreate — and skips the classes that did not change. The set of
+subscribed apps lives in `import.meta.hot.data`, which Vite carries from one instance of a module
+to the next, so the module that handles the *second* update still knows about them.
 
 ***
 

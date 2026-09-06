@@ -3,6 +3,7 @@ import type { ConcreteComponentType } from "../component/component-type.js";
 import type { Component } from "../component/component.js";
 import type { Diagnostics } from "../diagnostics/diagnostics.js";
 import type { Entity } from "../entity/entity.js";
+import type { HotReloadHost } from "../hot-reload/contract.js";
 import type { PhysicsCallbackName } from "../lifecycle/callbacks.js";
 import type { LiteEngine, LiteScene } from "../lite/scene.js";
 import type { Logger } from "../log/logger.js";
@@ -600,6 +601,11 @@ export interface App {
    * ignifx's clock and used by both toolkits.
    */
   readonly tweens: Tweens;
+  /**
+   * Script and scene hot reload (`docs/architecture/15-devtools-and-diagnostics.md` §5). The Vite
+   * plugin's HMR client drives it in development; it works headlessly with no bundler at all.
+   */
+  readonly hotReload: HotReloadHost;
   /**
    * Makes component `typeId`s known to the serializer and the inspector
    * (`docs/architecture/03-scripting-and-components.md` §4).

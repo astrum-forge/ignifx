@@ -19,9 +19,9 @@ import { electron } from "@ignifx/electron";
 import { INPUT_ACTIONS_ASSET_TYPE, input } from "@ignifx/input";
 import { BoxCollider2D, CharacterController2D, physics2d, TilemapCollider2D } from "@ignifx/physics-2d";
 import { ui } from "@ignifx/ui";
-// A Vite virtual module the plugin serves; the declaration is in src/vite-env.d.ts.
-// eslint-disable-next-line import-x/no-unresolved -- see above.
+// Vite virtual modules the plugin serves, typed by `@ignifx/vite-plugin/client`.
 import { manifest } from "virtual:ignifx/manifest";
+import { acceptHotReload, scripts } from "virtual:ignifx/scripts";
 import { createGameUi, hasTouch } from "./game-ui.js";
 import { PauseMenu } from "./scripts/pause-menu.js";
 import { PlayerController } from "./scripts/player-controller.js";
@@ -301,7 +301,13 @@ async function main(): Promise<AppStatus> {
     throw error;
   }
 
-  app.registerComponents([PlayerController, Shrine, PauseMenu]);
+  // Every class under `src/scripts/**` with a `static typeId`, from the plugin's virtual registry; in
+
+  // development the registry hot-reloads edited scripts through `app.hotReload` (`"patch"` by default).
+
+  app.registerComponents(scripts);
+
+  acceptHotReload(app);
 
   // The overlay comes up before the first asset is requested, so the loading bar sees every byte.
   // The golden is about the rendered scene, not about how this machine draws a system font, so

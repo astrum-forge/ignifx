@@ -94,7 +94,9 @@ export {
   RESOLVED_MANIFEST_MODULE_ID,
   RESOLVED_SCRIPTS_MODULE_ID,
   resolveVirtualModuleId,
+  SCRIPTS_HOT_RELOAD_EXPORT,
   SCRIPTS_MODULE_ID,
   scriptsModuleSource,
   type AssetChangedPayload,
+  type ScriptsModuleOptions,
 } from "./virtual-modules.js";

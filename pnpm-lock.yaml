@@ -612,6 +612,9 @@ importers:
       '@ignifx/core':
         specifier: workspace:*
         version: link:../core
+      '@ignifx/devtools':
+        specifier: workspace:*
+        version: link:../devtools
       '@ignifx/electron':
         specifier: workspace:*
         version: link:../electron
@@ -833,6 +836,9 @@ importers:
       '@arethetypeswrong/cli':
         specifier: 'catalog:'
         version: 0.18.5
+      '@ignifx/core':
+        specifier: workspace:*
+        version: link:../core
       '@microsoft/api-extractor':
         specifier: 'catalog:'
         version: 7.59.0(@types/node@24.13.3)
