@@ -21,7 +21,7 @@ try {
   await app.assets.loadAsync("levels/1.scene.json");
 } catch (error) {
   if (error instanceof AssetLoadError) {
-    app.log.error("{address} failed from {url}", error.address, error.url);
+    app.log.error(`${error.address} failed from ${error.url}`, error);
   }
 }
 ```
@@ -19726,7 +19726,7 @@ script throwing never stops the others.
 
 ```ts
 app.onError.connect((report) => {
-  app.log.error("{source} callback threw on {entity}", report.source, report.entity?.name ?? "-");
+  app.log.error(`${report.source} callback threw on ${report.entity?.name ?? "-"}`, report.error);
 });
 ```
 
@@ -21491,7 +21491,7 @@ so per-frame call sites guard with [Logger.isEnabled](#isenabled) instead (codin
 
 ```ts
 const log = app.log.child("physics");
-log.info("stepping at {hz}Hz", 60);
+log.info("stepping at 60 Hz");
 if (log.isEnabled("debug")) {
   log.debug("contacts", collectContacts());
 }

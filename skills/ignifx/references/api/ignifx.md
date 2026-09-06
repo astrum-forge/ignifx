@@ -1632,7 +1632,7 @@ try {
   await app.assets.loadAsync("levels/1.scene.json");
 } catch (error) {
   if (error instanceof AssetLoadError) {
-    app.log.error("{address} failed from {url}", error.address, error.url);
+    app.log.error(`${error.address} failed from ${error.url}`, error);
   }
 }
 ```
@@ -22821,7 +22821,7 @@ const group = tree.addComponent(LodGroup, {
     { distance: 60, renderer: lowDetail },
   ],
 });
-group.onLevelChanged.connect((level) => app.log.debug("LOD {level}", level), { owner: group });
+group.onLevelChanged.connect((level) => app.log.debug("LOD level:", level), { owner: group });
 ```
 
 #### Extends
@@ -30352,7 +30352,7 @@ The service behind `app.physics2d`.
 ```ts
 const hit = app.physics2d.raycast({ x: 0, y: 5 }, { x: 0, y: -1 }, 20);
 if (hit !== null) {
-  app.log.info("ray hit {name} at {y}", hit.entity.name, hit.point.y);
+  app.log.info(`ray hit ${hit.entity.name} at ${String(hit.point.y)}`);
 }
 ```
 
@@ -30861,7 +30861,7 @@ The service behind `app.physics`.
 ```ts
 const hit = app.physics.raycast({ x: 0, y: 10, z: 0 }, { x: 0, y: -1, z: 0 }, 20);
 if (hit !== null) {
-  app.log.info("ray hit {name} at {y}", hit.entity.name, hit.point.y);
+  app.log.info(`ray hit ${hit.entity.name} at ${String(hit.point.y)}`);
 }
 ```
 
@@ -60852,7 +60852,7 @@ script throwing never stops the others.
 
 ```ts
 app.onError.connect((report) => {
-  app.log.error("{source} callback threw on {entity}", report.source, report.entity?.name ?? "-");
+  app.log.error(`${report.source} callback threw on ${report.entity?.name ?? "-"}`, report.error);
 });
 ```
 
@@ -64077,7 +64077,7 @@ so per-frame call sites guard with [Logger.isEnabled](#isenabled) instead (codin
 
 ```ts
 const log = app.log.child("physics");
-log.info("stepping at {hz}Hz", 60);
+log.info("stepping at 60 Hz");
 if (log.isEnabled("debug")) {
   log.debug("contacts", collectContacts());
 }

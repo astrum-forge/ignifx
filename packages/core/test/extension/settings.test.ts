@@ -168,7 +168,7 @@ describe("extension settings sections", () => {
   it("warns and ignores an unknown section in production", async () => {
     const app = await build({ mystery: {} }, [], "production");
     expect(app.isHeadless).toBe(true);
-    expect(sink?.toArray().some((record) => record.level === "warn" && record.data.includes("mystery"))).toBe(true);
+    expect(sink?.toArray().some((record) => record.level === "warn" && record.message.includes("mystery"))).toBe(true);
   });
 
   it("throws IGX-0407 when a section is read but never registered", async () => {
