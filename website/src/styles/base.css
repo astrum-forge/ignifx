@@ -1,0 +1,250 @@
+/* Reset, typography, and the prose rules that the rendered Markdown lands in. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--t-base);
+  line-height: var(--lh-base);
+  font-synthesis-weight: none;
+  text-rendering: optimizelegibility;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 620;
+  line-height: var(--lh-tight);
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+p,
+ul,
+ol,
+dl,
+pre,
+figure,
+table {
+  margin: 0;
+}
+
+img,
+svg {
+  max-width: 100%;
+}
+
+a {
+  color: var(--flame);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+  transition: color var(--speed) var(--ease);
+}
+
+a:hover {
+  text-decoration-thickness: 2px;
+}
+
+code,
+kbd,
+samp,
+.mono {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  font-variant-ligatures: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--flame);
+  outline-offset: 2px;
+  border-radius: 1px;
+}
+
+::selection {
+  background: var(--flame-wash);
+}
+
+.skip {
+  position: absolute;
+  left: var(--s-4);
+  top: calc(var(--s-2) * -8);
+  z-index: 20;
+  padding: var(--s-2) var(--s-4);
+  border: 1px solid var(--flame);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: var(--t-sm);
+  text-decoration: none;
+  transition: top var(--speed) var(--ease);
+}
+
+.skip:focus {
+  top: var(--s-2);
+}
+
+/* --- Prose: the rendered Markdown of a skill page, and any hand-written paragraph. --- */
+
+.prose {
+  max-width: var(--measure);
+  /* A skill page is full of long identifiers (`onApplicationFocus(focused)`); an inline `code` that
+     cannot wrap is what makes a 320 px page scroll sideways. `break-word` rather than `anywhere`:
+     `anywhere` also shrinks min-content, which collapses a table column to one character wide. */
+  overflow-wrap: break-word;
+}
+
+.prose > * + * {
+  margin-top: var(--s-4);
+}
+
+.prose h2,
+.prose h3,
+.prose h4 {
+  max-width: none;
+}
+
+.prose h2 {
+  margin-top: var(--s-12);
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--rule);
+  font-size: var(--t-lg);
+}
+
+.prose h3 {
+  margin-top: var(--s-8);
+  font-size: var(--t-md);
+}
+
+.prose h4 {
+  margin-top: var(--s-6);
+  font-size: var(--t-base);
+  letter-spacing: 0;
+}
+
+.prose ul,
+.prose ol {
+  padding-left: var(--s-6);
+}
+
+.prose li + li {
+  margin-top: var(--s-2);
+}
+
+.prose blockquote {
+  margin: 0;
+  padding-left: var(--s-4);
+  border-left: 2px solid var(--flame);
+  color: var(--ink-2);
+}
+
+.prose hr {
+  height: 1px;
+  margin: var(--s-8) 0;
+  border: 0;
+  background: var(--rule);
+}
+
+.prose code {
+  padding: 0.1em 0.32em;
+  background: var(--sunk);
+  color: var(--ink);
+}
+
+.prose a code {
+  color: inherit;
+}
+
+.prose strong {
+  font-weight: 650;
+}
+
+.heading-anchor {
+  margin-left: var(--s-2);
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: 0.75em;
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity var(--speed) var(--ease);
+}
+
+.doc-heading:hover .heading-anchor,
+.heading-anchor:focus-visible {
+  opacity: 1;
+}
+
+/* --- Tables and other wide things scroll inside their own box, never the page. --- */
+
+.scroller {
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  overscroll-behavior-x: contain;
+}
+
+.prose .scroller {
+  margin-top: var(--s-4);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--t-sm);
+  line-height: 1.5;
+}
+
+th,
+td {
+  padding: var(--s-2) var(--s-3);
+  border-bottom: 1px solid var(--rule);
+  text-align: left;
+  vertical-align: top;
+}
+
+thead th {
+  position: sticky;
+  top: 0;
+  background: var(--sunk);
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+tbody tr:last-child th,
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+td code,
+th code {
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}

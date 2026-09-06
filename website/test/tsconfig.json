@@ -1,0 +1,17 @@
+{
+  // Discovery shim for the type-aware linter, not a build project (the repository lesson in
+  // `AGENTS.md`): Oxlint/tsgolint resolve the nearest `tsconfig.json` per file, and without this one
+  // the tests would be checked against the workspace root config and lose `types: ["node"]`.
+  // `pnpm --filter @ignifx/website typecheck` still checks these files through `../tsconfig.json`;
+  // this file emits nothing.
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "types": ["vite/client", "node"],
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "emitDeclarationOnly": false,
+    "noEmit": true
+  },
+  "include": ["."]
+}

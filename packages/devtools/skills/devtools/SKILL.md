@@ -177,7 +177,7 @@ import { createDevtoolsLogSink, devtools } from "@ignifx/devtools";
 const logSink = createDevtoolsLogSink({ limit: 2000 });
 const app = await createApp({ headless: true, logLevel: "debug", extensions: [devtools({ logSink })] });
 
-app.log.child("assets").warn("no atlas for {sprite}", "hero");
+app.log.child("assets").warn("no atlas for sprite:", "hero");
 console.log(logSink.length, logSink.at(0)?.message);
 
 app.dispose();

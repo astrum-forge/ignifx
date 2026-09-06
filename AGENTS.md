@@ -22,7 +22,7 @@ Use Node 24 (`.nvmrc`); dependency-cruiser refuses to run on Node 25. `pnpm inst
 
 ## Using the skill
 
-The entry skill is `skills/ignifx/SKILL.md`; subsystem skills sit at `packages/<name>/skills/<name>/SKILL.md`. In this repository Claude Code discovers it through the `.claude/skills/ignifx` symlink. In another project, copy `skills/ignifx/` into `.claude/skills/`, or — once the umbrella is published, which ships `skills/` — run `npx skills add astrumforge/ignifx`.
+The entry skill is `skills/ignifx/SKILL.md`; subsystem skills sit at `packages/<name>/skills/<name>/SKILL.md`. In this repository Claude Code discovers it through the `.claude/skills/ignifx` symlink. In another project, copy `skills/ignifx/` into `.claude/skills/`, or — once the umbrella is published, which ships `skills/` — run `npx skills add astrum-forge/ignifx`.
 
 ## Non-negotiable rules for agents
 

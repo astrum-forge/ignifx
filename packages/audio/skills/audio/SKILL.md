@@ -107,17 +107,17 @@ speaker.addComponent(Beeper).beep();
 
 ### `app.audio`
 
-| Member                       | Meaning                                                              |
-| ---------------------------- | -------------------------------------------------------------------- |
-| `state`                      | `"locked"` before the first unlock, then `"running"`/`"suspended"`/… |
-| `unlock()`                   | Resumes the context; call it from a real click handler               |
-| `masterVolume`               | Master output gain, applied after every bus                          |
-| `buses`                      | `ReadonlyMap<string, AudioBus>`, in declaration order                |
-| `bus(name)` / `tryBus(name)` | Throws `IGX-1001` / answers `null`                                   |
-| `createBus(name, options)`   | Adds a bus at run time                                               |
-| `playOneShot(clip, options)` | Fire-and-forget; defaults to the `SFX` bus                           |
-| `listener`                   | The active `AudioListener`, or `null`                                |
-| `lite.engine`                | Lite's `AudioEngine`, or `null` headless — unstable escape hatch     |
+| Member                       | Meaning                                                                    |
+| ---------------------------- | -------------------------------------------------------------------------- |
+| `state`                      | `"locked"` before the first unlock, then `"running"`/`"suspended"`/…       |
+| `unlock()`                   | Resumes the context; call it from a real click handler                     |
+| `masterVolume`               | Master output gain, applied after every bus                                |
+| `buses`                      | `ReadonlyMap<string, AudioBus>`, in declaration order                      |
+| `bus(name)` / `tryBus(name)` | Throws `IGX-1001` / answers `null`                                         |
+| `createBus(name, options)`   | Adds a bus at run time                                                     |
+| `playOneShot(clip, options)` | Fire-and-forget; `OneShotOptions` is `bus` (default `SFX`) + `PlayOptions` |
+| `listener`                   | The active `AudioListener`, or `null`                                      |
+| `lite.engine`                | Lite's `AudioEngine`, or `null` headless — unstable escape hatch           |
 
 ### `AudioSource`
 
@@ -136,6 +136,13 @@ speaker.addComponent(Beeper).beep();
 
 Methods: `play(options?)`, `playOneShot(clip, options?)`, `stop(fadeSeconds?)`, `pause()`,
 `resume()`, and the reads `isPlaying`, `instanceCount`, `instance`, `onEnded`.
+
+The two `playOneShot` methods take **different** options. `AudioSource.playOneShot(clip, options?)`
+takes `OneShotVolume` — `{ volume }` and nothing else — and forwards the source's `bus`;
+`app.audio.playOneShot(clip, options?)` takes `OneShotOptions`, which is `bus` plus all of
+`PlayOptions`. Use the service form when a one-shot needs more than a gain. Either way the voice is
+non-spatial and shared per `(clip, bus)`, so a positional impact is `play()` on a spatial
+`AudioSource`, not a one-shot.
 
 ### `SoundInstance`
 

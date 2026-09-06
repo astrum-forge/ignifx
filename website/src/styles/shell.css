@@ -1,0 +1,555 @@
+/* The masthead, the footer, buttons, and the search dialog. */
+
+.masthead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg);
+  border-bottom: 1px solid var(--rule);
+}
+
+/* The instrument motif: a millimetre rule under the header, on every page. */
+.masthead::after {
+  content: "";
+  display: block;
+  height: 5px;
+  background-image: repeating-linear-gradient(90deg, var(--rule) 0 1px, transparent 1px 14px);
+  background-position: left bottom;
+  background-repeat: repeat-x;
+  background-size: 14px 5px;
+}
+
+.masthead-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  max-width: var(--page);
+  min-height: var(--masthead-height);
+  margin: 0 auto;
+  padding: 0 var(--s-4);
+}
+
+.wordmark {
+  font-family: var(--font-display);
+  font-size: var(--t-md);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.wordmark-mark::before {
+  content: "";
+  display: inline-block;
+  width: 3px;
+  height: 0.85em;
+  margin-right: 0.45em;
+  vertical-align: -0.06em;
+  background: var(--flame);
+}
+
+.chip {
+  padding: 2px var(--s-2);
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  white-space: nowrap;
+}
+
+.tools {
+  display: flex;
+  gap: var(--s-2);
+  margin-left: auto;
+}
+
+.tool {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-1) var(--s-3);
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    color var(--speed) var(--ease),
+    border-color var(--speed) var(--ease),
+    background-color var(--speed) var(--ease);
+}
+
+.tool:hover {
+  border-color: var(--flame);
+  color: var(--ink);
+}
+
+.tool-key {
+  padding: 0 4px;
+  border: 1px solid var(--rule);
+  color: var(--ink-2);
+  font-size: 0.9em;
+}
+
+/* Controls that do nothing without JavaScript only appear once `/theme.js` has run. */
+.js-only {
+  display: none;
+}
+
+html[data-js="on"] .js-only {
+  display: inline-flex;
+}
+
+.nav {
+  max-width: var(--page);
+  margin: 0 auto;
+  padding: 0 var(--s-4);
+}
+
+.nav-list {
+  display: flex;
+  gap: var(--s-5, var(--s-4));
+  margin: 0;
+  padding: 0;
+  overflow-x: auto;
+  list-style: none;
+  scrollbar-width: none;
+}
+
+.nav-list::-webkit-scrollbar {
+  display: none;
+}
+
+.nav-link {
+  display: block;
+  padding: var(--s-2) 0 calc(var(--s-2) + 1px);
+  border-bottom: 2px solid transparent;
+  color: var(--ink-2);
+  font-size: var(--t-sm);
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    color var(--speed) var(--ease),
+    border-color var(--speed) var(--ease);
+}
+
+.nav-link:hover {
+  color: var(--ink);
+}
+
+.nav-link.is-active {
+  border-bottom-color: var(--flame);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.site-main {
+  max-width: var(--page);
+  margin: 0 auto;
+  padding: var(--s-12) var(--s-4) var(--s-24);
+}
+
+.page-doc .site-main {
+  max-width: 100rem;
+  padding-top: var(--s-8);
+}
+
+/* --- Sections: a gutter carrying a real identifier, and a column. --- */
+
+.band {
+  display: grid;
+  /* `minmax(0, …)`, not `1fr`: a grid item defaults to `min-width: auto`, and the code blocks and
+     the frame plot inside would then widen the page instead of scrolling in their own box. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-2);
+  padding: var(--s-12) 0 0;
+}
+
+.band + .band {
+  margin-top: var(--s-4);
+  border-top: 1px solid var(--rule);
+}
+
+.gutter {
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  hyphens: none;
+}
+
+.gutter code {
+  padding: 0;
+  background: none;
+}
+
+.band-title {
+  font-size: var(--t-xl);
+}
+
+.band-lead {
+  max-width: var(--measure);
+  margin-top: var(--s-3);
+  color: var(--ink-2);
+  font-size: var(--t-md);
+}
+
+.band-body {
+  min-width: 0;
+}
+
+.band-body > * + * {
+  margin-top: var(--s-6);
+}
+
+.band-after {
+  font-family: var(--font-mono);
+  font-size: var(--t-sm);
+}
+
+.arrow-link {
+  text-decoration: none;
+  border-bottom: 1px solid var(--flame);
+}
+
+.arrow-link::after {
+  content: " →";
+}
+
+.page-head {
+  max-width: var(--measure);
+  padding-bottom: var(--s-8);
+  border-bottom: 1px solid var(--rule);
+}
+
+.page-title {
+  margin-top: var(--s-3);
+  font-size: var(--t-2xl);
+}
+
+.page-lead {
+  margin-top: var(--s-4);
+  color: var(--ink-2);
+  font-size: var(--t-md);
+}
+
+.eyebrow {
+  display: flex;
+  flex-wrap: wrap;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  gap: var(--s-2);
+  align-items: baseline;
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.eyebrow-dot {
+  color: var(--rule);
+}
+
+.callout {
+  padding: var(--s-4);
+  border-left: 2px solid var(--cool);
+  background: var(--cool-wash);
+  font-size: var(--t-sm);
+}
+
+.prose-list {
+  max-width: var(--measure);
+  padding-left: var(--s-6);
+}
+
+.prose-list li + li {
+  margin-top: var(--s-3);
+}
+
+.doc-list {
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--rule);
+  list-style: none;
+}
+
+.doc-list li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1) var(--s-4);
+  align-items: baseline;
+  padding: var(--s-3) 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.doc-list li > a {
+  flex: 0 0 auto;
+  min-width: 16rem;
+  font-family: var(--font-mono);
+  font-size: var(--t-sm);
+}
+
+.doc-note {
+  flex: 1 1 20rem;
+  color: var(--ink-2);
+  font-size: var(--t-sm);
+}
+
+.api-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.api-list code {
+  display: inline-block;
+  padding: 2px var(--s-2);
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: var(--t-2xs);
+}
+
+/* --- Buttons --- */
+
+.button {
+  display: inline-block;
+  padding: var(--s-3) var(--s-6);
+  border: 1px solid var(--ink);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: var(--t-sm);
+  text-decoration: none;
+  transition:
+    background-color var(--speed) var(--ease),
+    color var(--speed) var(--ease),
+    border-color var(--speed) var(--ease);
+}
+
+.button:hover {
+  background: var(--shade);
+}
+
+.button-primary {
+  border-color: var(--flame);
+  background: var(--flame);
+  color: var(--bg);
+}
+
+.button-primary:hover {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--bg);
+}
+
+/* --- Footer --- */
+
+.site-foot {
+  border-top: 1px solid var(--rule);
+  background: var(--surface);
+}
+
+.foot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(11rem, 100%), 1fr));
+  gap: var(--s-8);
+  max-width: var(--page);
+  margin: 0 auto;
+  padding: var(--s-12) var(--s-4) var(--s-6);
+}
+
+.foot-head {
+  margin-bottom: var(--s-3);
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.foot-col ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.foot-col li + li {
+  margin-top: var(--s-2);
+}
+
+.foot-col a {
+  color: var(--ink);
+  font-size: var(--t-sm);
+  text-decoration: none;
+  border-bottom: 1px solid var(--rule);
+}
+
+.foot-col a:hover {
+  border-bottom-color: var(--flame);
+  color: var(--flame);
+}
+
+.foot-legal {
+  max-width: var(--page);
+  margin: 0 auto;
+  padding: var(--s-6) var(--s-4) var(--s-12);
+  border-top: 1px solid var(--rule);
+  color: var(--ink-2);
+  font-size: var(--t-sm);
+}
+
+/* --- Search --- */
+
+.search {
+  width: min(38rem, calc(100vw - 2rem));
+  max-height: min(32rem, calc(100vh - 6rem));
+  margin: 4rem auto auto;
+  padding: 0;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  color: var(--ink);
+  overflow: hidden auto;
+}
+
+.search::backdrop {
+  background: rgb(13 16 21 / 55%);
+}
+
+.search-form {
+  display: flex;
+  gap: var(--s-2);
+  align-items: center;
+  position: sticky;
+  top: 0;
+  padding: var(--s-3);
+  border-bottom: 1px solid var(--rule);
+  background: var(--surface);
+}
+
+.search-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.search-input {
+  flex: 1;
+  padding: var(--s-2) var(--s-3);
+  border: 1px solid var(--rule);
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--t-base);
+}
+
+.search-close {
+  padding: var(--s-2) var(--s-3);
+  border: 1px solid var(--rule);
+  background: var(--bg);
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  cursor: pointer;
+}
+
+.search-results {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.search-empty {
+  padding: var(--s-6) var(--s-4);
+  color: var(--ink-2);
+  font-size: var(--t-sm);
+}
+
+.search-hit {
+  display: grid;
+  gap: 2px;
+  padding: var(--s-3) var(--s-4);
+  border-bottom: 1px solid var(--rule);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.search-hit:hover {
+  background: var(--flame-wash);
+}
+
+.search-section {
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.search-title {
+  font-weight: 600;
+}
+
+.search-detail {
+  color: var(--ink-2);
+  font-size: var(--t-sm);
+  line-height: 1.45;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+@media (width >= 48rem) {
+  .masthead-row {
+    gap: var(--s-4);
+  }
+
+  .nav-list {
+    gap: var(--s-6);
+  }
+}
+
+@media (width >= 65rem) {
+  .band {
+    grid-template-columns: var(--gutter-width) minmax(0, 1fr);
+    gap: var(--s-8);
+  }
+
+  .gutter {
+    padding-top: 0.55rem;
+    text-align: right;
+  }
+
+  .site-main {
+    padding-inline: var(--s-8);
+  }
+
+  .masthead-row,
+  .nav,
+  .foot-grid,
+  .foot-legal {
+    padding-inline: var(--s-8);
+  }
+}
+
+@media (width < 30rem) {
+  .chip {
+    display: none;
+  }
+
+  .tool-key {
+    display: none;
+  }
+}

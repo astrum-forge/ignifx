@@ -90,7 +90,7 @@ crate.addComponent(Rigidbody, { mass: 2 });
 for (let step = 0; step < 60; step += 1) {
   app.step(1 / 60);
 }
-app.log.info("crate at y={y}", crate.transform.position.y);
+app.log.info("crate at y:", crate.transform.position.y);
 ```
 
 ## Core APIs
@@ -154,9 +154,8 @@ import type { ScriptCallbacks, TriggerEvent } from "ignifx";
 class Pickup extends Script implements ScriptCallbacks {
   static typeId = "mygame/Pickup";
 
-  onTriggerEnter(trigger: unknown): void {
-    const event = trigger as TriggerEvent;
-    this.app.log.info("{name} entered the zone", event.other?.name ?? "something");
+  onTriggerEnter(trigger: TriggerEvent): void {
+    this.app.log.info("entered the zone:", trigger.other?.name ?? "something");
   }
 }
 
@@ -193,7 +192,7 @@ const hit = app.physics.raycast({ x: 0, y: 10, z: 0 }, { x: 0, y: -1, z: 0 }, 20
   layerMask: LayerMask.everything(),
 });
 if (hit !== null) {
-  app.log.info("hit {name} at y={y}", hit.entity.name, hit.point.y);
+  app.log.info("hit:", hit.entity.name, "y:", hit.point.y);
 }
 ```
 
@@ -229,6 +228,11 @@ collides with everything. Havok tests a pair in both directions, so one side ref
   that recovers the identities.
 - **Event objects are pooled.** `TriggerEvent` and `Collision` (and its `contacts`) are reused for
   every event of a step: copy anything you keep past the callback.
+- **Type the callback parameter, do not cast it.** Core declares `onTriggerEnter?(trigger: unknown)`
+  on `ScriptCallbacks` because it cannot depend on this package, but method parameters are bivariant
+  in TypeScript, so `onTriggerEnter(trigger: TriggerEvent): void` satisfies the interface as written.
+  `trigger as TriggerEvent` is redundant, and it trips `typescript/no-unsafe-type-assertion` under
+  the engine's own lint settings.
 - **`overlap` returns a reused array**, and it is bounds-accurate rather than shape-accurate,
   because Lite's `shapeProximity` reports neither a body identity nor more than one hit.
 - **A body's entity must be a root entity** (`IGX-0907`), and a moving collider needs a

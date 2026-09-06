@@ -1,94 +1,130 @@
-// The website is an application, not a published library, so `CONSTITUTION.md` §3.5 (no import-time
-// side effects) does not apply here: the `render()` call at the bottom is this module's only side
-// effect. It exports nothing; `moduleDetection: "force"` in `tsconfig.json` keeps it a module anyway.
+// The site's only ES module. Every page is complete HTML before this runs: it adds a theme toggle,
+// a copy button on each code block, and a search dialog over the skill. Nothing here renders
+// content, and nothing on the page waits for it.
+//
+// The website is an application, not a published library, so the coding standards' rule against
+// import-time side effects does not apply to this entry module; the ESLint config records the same
+// exemption for `website/**`.
+// This import is how Vite discovers and emits the stylesheet; there is nothing to bind to.
+// oxlint-disable-next-line import/no-unassigned-import -- see above.
+import "./styles/site.css";
+import { openSearch, prefetchSearch } from "./search.ts";
 
-type Attributes = Readonly<Record<string, string>>;
+/** Where the visitor's theme choice lives; the same key `theme.ts` reads before the first paint. */
+const STORAGE_KEY = "ignifx-theme";
 
-type Child = Node | string;
+/** How long the copy button stays in its confirmed state. */
+const COPIED_MS = 1400;
 
-interface ProjectLink {
-  readonly label: string;
-  readonly href: string;
-}
-
-const REPOSITORY_URL = "https://github.com/astrum-forge/ignifx";
-
-const DESCRIPTION =
-  "A code-first TypeScript game engine for the web, built on Babylon Lite (WebGPU only). Runs in " +
-  "WebGPU-capable browsers and in Electron. Designed for indie 2D (top-down, side-scrolling) and 3D " +
-  "(third-person, first-person) games, with a Unity-style script lifecycle, Godot-style scenes and " +
-  "signals, and first-class documentation for AI coding agents.";
-
-const STATUS = "Planning phase — no packages are published yet.";
-
-const FOOTER = "Apache-2.0 · Astrum Forge Studios";
-
-const LINKS: readonly ProjectLink[] = [
-  { label: "GitHub repository", href: REPOSITORY_URL },
-  { label: "CONSTITUTION.md", href: `${REPOSITORY_URL}/blob/main/CONSTITUTION.md` },
-  { label: "docs/", href: `${REPOSITORY_URL}/tree/main/docs` },
-  { label: "skills/ignifx/SKILL.md", href: `${REPOSITORY_URL}/blob/main/skills/ignifx/SKILL.md` },
-  { label: "Astrum Forge Studios", href: "https://astrumforge.com" },
-  { label: "llms.txt (index for agents)", href: "/llms.txt" },
-];
+const root = document.documentElement;
 
 /**
- * Creates an element with static attributes and children. Every string passed in is a literal from
- * this module, so it is appended as text — no `innerHTML`, nothing interpolated from the outside.
+ * Reports the theme in force: an explicit choice if there is one, otherwise the OS preference.
  *
- * @param tag - The element name to create.
- * @param attributes - Attribute name/value pairs to set.
- * @param children - Nodes and text to append, in order.
- * @returns The new element.
+ * @returns `"dark"` or `"light"`.
  */
-function el(tag: string, attributes: Attributes = {}, children: readonly Child[] = []): HTMLElement {
-  const node = document.createElement(tag);
-  for (const [name, value] of Object.entries(attributes)) {
-    node.setAttribute(name, value);
+function currentTheme(): "dark" | "light" {
+  const explicit = root.dataset["theme"];
+  if (explicit === "dark" || explicit === "light") {
+    return explicit;
   }
-  node.append(...children);
-  return node;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
 /**
- * Creates an anchor. External destinations get `rel="noreferrer"` so no referrer leaves the site
- * (`CONSTITUTION.md` §9.1: the site makes no third-party requests and reports nothing anywhere).
+ * Writes the toggle's label and pressed state.
  *
- * @param entry - The label and destination to render.
- * @returns The new anchor element.
+ * @param button - The toggle.
  */
-function anchor(entry: ProjectLink): HTMLAnchorElement {
-  const node = document.createElement("a");
-  node.href = entry.href;
-  node.textContent = entry.label;
-  if (!entry.href.startsWith("/")) {
-    node.rel = "noreferrer";
+function paintToggle(button: HTMLButtonElement): void {
+  const theme = currentTheme();
+  const label = button.querySelector("[data-theme-label]");
+  if (label !== null) {
+    label.textContent = theme === "dark" ? "Dark" : "Light";
   }
-  return node;
+  button.setAttribute("aria-pressed", theme === "dark" ? "true" : "false");
+  button.setAttribute("aria-label", `Theme: ${theme}. Switch to ${theme === "dark" ? "light" : "dark"}.`);
 }
 
 /**
- * Replaces the contents of the container with the Phase 0 placeholder page.
- *
- * @param root - The `#app` container from `index.html`.
+ * Wires the theme toggle.
  */
-function render(root: Element): void {
-  root.replaceChildren(
-    el("header", {}, [el("h1", {}, ["ignifx"]), el("p", { class: "tagline" }, [DESCRIPTION])]),
-    el("p", { class: "status" }, [STATUS]),
-    el("nav", { "aria-label": "Project links" }, [
-      el(
-        "ul",
-        {},
-        LINKS.map((entry) => el("li", {}, [anchor(entry)])),
-      ),
-    ]),
-    el("footer", {}, [FOOTER]),
-  );
+function installTheme(): void {
+  const button = document.querySelector<HTMLButtonElement>("[data-theme-toggle]");
+  if (button === null) {
+    return;
+  }
+  paintToggle(button);
+  button.addEventListener("click", () => {
+    const next = currentTheme() === "dark" ? "light" : "dark";
+    root.dataset["theme"] = next;
+    try {
+      window.localStorage.setItem(STORAGE_KEY, next);
+    } catch {
+      // Storage is unavailable; the choice still applies for this page view.
+    }
+    paintToggle(button);
+  });
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+    paintToggle(button);
+  });
 }
 
-const container = document.querySelector("#app");
-if (container === null) {
-  throw new Error("ignifx website: the #app container is missing from index.html");
+/**
+ * Wires the copy button on every code block. The button is in the HTML already, so the layout does
+ * not move when this runs.
+ */
+function installCopyButtons(): void {
+  for (const button of document.querySelectorAll<HTMLButtonElement>("[data-copy]")) {
+    button.addEventListener("click", () => {
+      const code = button.closest(".code")?.querySelector("code")?.textContent ?? "";
+      void navigator.clipboard.writeText(code).then(
+        () => {
+          button.textContent = "Copied";
+          button.classList.add("is-copied");
+          window.setTimeout(() => {
+            button.textContent = "Copy";
+            button.classList.remove("is-copied");
+          }, COPIED_MS);
+        },
+        () => {
+          button.textContent = "Press ⌘C";
+        },
+      );
+    });
+  }
 }
-render(container);
+
+/**
+ * Wires the search button and the `s` shortcut.
+ */
+function installSearch(): void {
+  const button = document.querySelector<HTMLButtonElement>("[data-search]");
+  if (button === null) {
+    return;
+  }
+  button.addEventListener("click", () => {
+    void openSearch();
+  });
+  button.addEventListener("pointerenter", prefetchSearch, { once: true });
+  document.addEventListener("keydown", (event: KeyboardEvent) => {
+    if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) {
+      return;
+    }
+    const target = event.target;
+    const inField =
+      target instanceof HTMLElement &&
+      (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
+    if (inField) {
+      return;
+    }
+    if (event.key === "s" || event.key === "/") {
+      event.preventDefault();
+      void openSearch();
+    }
+  });
+}
+
+installTheme();
+installCopyButtons();
+installSearch();

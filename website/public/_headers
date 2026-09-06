@@ -1,0 +1,19 @@
+# Cloudflare Pages response headers. Rules are applied in order and a later, more specific rule
+# overrides a header the earlier one set, which is why `/assets/*` repeats `Cache-Control`.
+#
+# The Content-Security-Policy is deliberately absolute: the site loads nothing from anywhere else
+# and asks nothing of the network at runtime (`CONSTITUTION.md` §9.1). `script-src`/`style-src`
+# carry no `unsafe-inline`, so the build emits no inline `<script>` and no `style` attribute —
+# Shiki's per-token colours become generated classes, and the theme is applied by `/theme.js`,
+# a real file loaded synchronously. `test/site.test.ts` asserts all of that over `dist/`.
+/*
+  Content-Security-Policy: default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self'; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: accelerometer=(), ambient-light-sensor=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), usb=()
+  Cross-Origin-Opener-Policy: same-origin
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Every file under /assets/ carries a content hash in its name: fonts, the stylesheets, the module.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable

@@ -1,0 +1,231 @@
+/* The `/skill/` pages: section rail, article, contents rail, pager. */
+
+.doc {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-8);
+}
+
+.doc-body {
+  min-width: 0;
+  max-width: 46rem;
+}
+
+.doc-head {
+  padding-bottom: var(--s-6);
+  border-bottom: 1px solid var(--rule);
+}
+
+.doc-title {
+  margin-top: var(--s-3);
+  font-size: var(--t-2xl);
+}
+
+.doc-source {
+  color: var(--ink-2);
+  text-transform: none;
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+}
+
+.doc-prose {
+  margin-top: var(--s-8);
+}
+
+.doc-prose > h2:first-child {
+  margin-top: 0;
+  border-top: 0;
+  padding-top: 0;
+}
+
+/* --- The section rail --- */
+
+.rail {
+  border-top: 1px solid var(--rule);
+}
+
+.rail-group {
+  border-bottom: 1px solid var(--rule);
+}
+
+.rail-head {
+  display: flex;
+  gap: var(--s-2);
+  align-items: baseline;
+  justify-content: space-between;
+  padding: var(--s-3) 0;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  list-style: none;
+}
+
+.rail-head::-webkit-details-marker {
+  display: none;
+}
+
+.rail-head::before {
+  content: "+";
+  margin-right: var(--s-2);
+  color: var(--ink-2);
+}
+
+.rail-group[open] > .rail-head::before {
+  content: "−";
+}
+
+.rail-count {
+  margin-left: auto;
+  color: var(--ink-2);
+}
+
+.rail-list {
+  margin: 0 0 var(--s-3);
+  padding: 0;
+  list-style: none;
+}
+
+.rail-link {
+  display: block;
+  padding: var(--s-1) var(--s-2);
+  border-left: 2px solid transparent;
+  color: var(--ink-2);
+  font-size: var(--t-sm);
+  line-height: 1.4;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+  transition:
+    color var(--speed) var(--ease),
+    border-color var(--speed) var(--ease);
+}
+
+.rail-link:hover {
+  color: var(--ink);
+  border-left-color: var(--rule);
+}
+
+.rail-link.is-current {
+  border-left-color: var(--flame);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* --- The contents rail --- */
+
+.toc {
+  border-top: 1px solid var(--rule);
+  padding-top: var(--s-3);
+}
+
+.toc-head {
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.toc-list {
+  margin: var(--s-3) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.toc-item a {
+  display: block;
+  padding: var(--s-1) 0;
+  color: var(--ink-2);
+  font-size: var(--t-sm);
+  line-height: 1.4;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.toc-item a:hover {
+  color: var(--flame);
+}
+
+.toc-deep a {
+  padding-left: var(--s-3);
+  font-size: var(--t-2xs);
+}
+
+.toc-item code {
+  font-size: 0.95em;
+}
+
+/* --- Pager --- */
+
+.pager {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  margin-top: var(--s-16);
+  background: var(--rule);
+  border: 1px solid var(--rule);
+}
+
+.pager-slot {
+  display: block;
+  padding: var(--s-4);
+  background: var(--surface);
+  color: var(--ink);
+  text-decoration: none;
+  transition: background-color var(--speed) var(--ease);
+}
+
+.pager-slot:hover {
+  background: var(--bg);
+}
+
+.pager-next {
+  text-align: right;
+}
+
+.pager-dir {
+  display: block;
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.pager-label {
+  display: block;
+  margin-top: var(--s-1);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+@media (width >= 65rem) {
+  .doc {
+    grid-template-columns: 15rem minmax(0, 1fr);
+  }
+
+  .doc-rail {
+    position: sticky;
+    top: calc(var(--masthead-height) + var(--s-6));
+    max-height: calc(100vh - var(--masthead-height) - var(--s-8));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}
+
+@media (width >= 85rem) {
+  .doc {
+    grid-template-columns: 15rem minmax(0, 1fr) 15rem;
+  }
+
+  .doc-aside {
+    position: sticky;
+    top: calc(var(--masthead-height) + var(--s-6));
+    max-height: calc(100vh - var(--masthead-height) - var(--s-8));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}

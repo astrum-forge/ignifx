@@ -74,6 +74,10 @@ per fixed step:
 - A body's entity should be a **root** entity; a parented one logs `IGX-1157`.
 - The callbacks are the **3D names** — `onCollisionEnter`, `onCollisionStay`, `onCollisionExit`,
   `onTriggerEnter`, `onTriggerExit` — carrying the 2D payloads. There is no `onCollisionEnter2D`.
+  Type the parameter as the 2D payload — `onTriggerEnter(trigger: TriggerEvent2D): void` — rather
+  than accepting core's `unknown` and casting: method parameters are bivariant, so the narrow
+  signature satisfies `ScriptCallbacks`, and the cast trips `typescript/no-unsafe-type-assertion`
+  under the engine's own lint settings.
 
 ## First app
 
@@ -96,7 +100,7 @@ const body = crate.addComponent(Rigidbody2D, { mass: 2 });
 for (let index = 0; index < 240; index += 1) {
   app.step(1 / 60);
 }
-app.log.info("crate y {y}, mass {mass}", crate.transform.position.y, body.computedMass);
+app.log.info("crate y:", crate.transform.position.y, "mass:", body.computedMass);
 ```
 
 ## Core APIs
@@ -140,9 +144,8 @@ import type { TriggerEvent2D } from "@ignifx/physics-2d";
 export class Coin extends Script implements ScriptCallbacks {
   static typeId = "mygame/Coin";
 
-  onTriggerEnter(trigger: unknown): void {
-    const event = trigger as TriggerEvent2D;
-    if (event.other?.name === "Player") {
+  onTriggerEnter(trigger: TriggerEvent2D): void {
+    if (trigger.other?.name === "Player") {
       this.entity.destroy();
     }
   }
@@ -150,7 +153,7 @@ export class Coin extends Script implements ScriptCallbacks {
 ```
 
 Give the coin a collider with `isTrigger: true`; give the player anything that moves. Both entities
-receive the callback, and `event.other` and `event.otherCollider` are always the real objects —
+receive the callback, and `trigger.other` and `trigger.otherCollider` are always the real objects —
 Rapier reports both colliders, so 2D has none of the identity gaps 3D physics documents.
 
 ### Platformer movement
@@ -201,7 +204,7 @@ app.step(1 / 60);
 
 const hit = app.physics2d.raycast({ x: 0, y: 5 }, { x: 0, y: -1 }, 20);
 if (hit !== null) {
-  app.log.info("hit {name} at {y}", hit.entity.name, hit.point.y);
+  app.log.info("hit:", hit.entity.name, "y:", hit.point.y);
 }
 ```
 

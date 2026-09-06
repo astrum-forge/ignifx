@@ -94,7 +94,7 @@ eye.addComponent(ThirdPersonCamera, { target: hero, distance: 5, shoulderOffset:
 await app.start();
 app.step(1 / 60);
 // `isGrounded`, `speed`, `verticalVelocity`, and `isSprinting` are what an Animator reads.
-app.log.info("grounded={grounded} speed={speed}", controller.isGrounded, controller.speed);
+app.log.info("grounded:", controller.isGrounded, "speed:", controller.speed);
 ```
 
 The controller reads the actions `Move` (vector2), `Jump`, and `Sprint` by default. The names are
@@ -244,8 +244,11 @@ const tween = app.tweens.to(
   },
 );
 await app.start();
-app.step(0.4);
-app.log.info("halfway: {progress}", tween.progress);
+// `app.step(dt)` is clamped by `time.maximumDeltaTime` (0.1 s): half of a 0.8 s tween is 24 frames.
+for (let frame = 0; frame < 24; frame += 1) {
+  app.step(1 / 60);
+}
+app.log.info("halfway:", tween.progress);
 ```
 
 ### A companion that walks to the player

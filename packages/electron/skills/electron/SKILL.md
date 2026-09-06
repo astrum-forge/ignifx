@@ -124,7 +124,7 @@ const app = await createApp({
   extensions: [electron()],
 });
 
-app.log.info("desktop: {isElectron}", app.desktop.isElectron);
+app.log.info("desktop:", app.desktop.isElectron);
 ```
 
 Register `electron()` **unconditionally**. Without a preload bridge it logs one debug line and gives you an `app.desktop` that answers `isElectron === false`, so the browser build is unchanged.

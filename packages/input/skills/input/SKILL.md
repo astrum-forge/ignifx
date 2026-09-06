@@ -35,6 +35,27 @@ if (canvas instanceof HTMLCanvasElement) {
 }
 ```
 
+`input({ actions })` **does not await the document.** The extension starts the load in `onStart` and
+delivery happens in the `PreUpdate` of the first stepped frame, so an `actions.get(name)` made before
+that frame throws `IGX-0801`. Either load the document yourself before `start()`, or await the handle
+the extension kept — reading actions from `update` is always safe, because a frame has been stepped
+by then.
+
+```ts
+import { createApp, type InputActionsAsset } from "ignifx";
+import { input } from "@ignifx/input";
+
+declare const canvas: HTMLCanvasElement;
+
+// Before `start()` a completed load settles as soon as it finishes, so this needs no frame.
+const app = await createApp({ canvas, extensions: [input()] });
+app.input.loadActions(await app.assets.loadAsync<InputActionsAsset>("input/default.input.json"));
+await app.start();
+
+// Or keep `input({ actions: … })` and wait for the handle it kept.
+await app.input.actionsHandle?.promise;
+```
+
 `ignifx.config.ts` carries the same settings under `input`:
 
 | Setting               | Default | Meaning                                                              |
@@ -63,8 +84,9 @@ app.input (InputService)
   and `lateUpdate` of one frame — including `wasPressedThisFrame` across every fixed step.
 - Actions whose controls changed resolve first, in the arrival order of the events that changed
   them; everything else follows in map and declaration order. Nothing is undefined.
-- Maps are how a game switches context: enable `"UI"`, disable `"Player"`. Actions in a disabled map
-  read as released.
+- Maps are how a game switches context: enable `"UI"`, disable `"Player"`. `actions.get` searches
+  the enabled maps only, so a disabled map's actions are not "released" — they are invisible, and
+  `get` throws `IGX-0801`.
 - `PlayerInput` is the optional per-player component; single-player games use `app.input` directly.
 
 ## First app
@@ -129,7 +151,7 @@ app.input.actions.get("jump").wasPressedThisFrame; // true, for the whole frame
 
 | Member                                                         | What it does                                                                                                                                                                                                                                 |
 | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `actions.get(name)`                                            | Action from the **enabled** maps; `IGX-0801` when unknown                                                                                                                                                                                    |
+| `actions.get(name)`                                            | Action from the **enabled** maps; `IGX-0801` when unknown _or in a disabled map_                                                                                                                                                             |
 | `actions.find(name)` / `actions.map(name)`                     | Tolerant lookup / one map by name (`IGX-0804`)                                                                                                                                                                                               |
 | `loadActions(assetOrDefinition)`                               | Installs a document's maps, merging by map name                                                                                                                                                                                              |
 | `devices` / `gamepads`                                         | The device table; `gamepads[i].rumble(intensity, seconds)`. For gameplay, bind a `vector2` action to `<Pointer>/position` and read `action.vector`; `devices.resolve(path)` / `control(name)` / `valueAt(offset)` are the raw path for tools |
@@ -203,8 +225,11 @@ Overrides are a separate `ignifx.inputoverrides` document produced by `saveOverr
 - **Read input once per frame and trust it.** Values are captured at frame start; polling harder
   inside `fixedUpdate` changes nothing, and `wasPressedThisFrame` is `true` in _every_ fixed step of
   the frame it resolved in.
-- **Actions in a disabled map read as released**, and so do actions whose `enabled` is `false`.
-  `actions.get` only searches enabled maps — use `actions.map(name).get(name)` to reach the rest.
+- **Disabling a map hides its actions; it does not neutralise them.** `app.input.actions.get(name)`
+  searches enabled maps only and throws `IGX-0801` the moment the declaring map is disabled. Reach a
+  hidden action through `actions.map(name).get(name)` or `actions.find(name)`, where it reads as
+  released. What does read as released through `get` is an action whose own `enabled` is `false`, so
+  set `action.enabled = false` when a live handle has to keep working.
 - **`uiHasFocus` suppresses keyboard actions only.** Pointer actions keep working and the raw
   keyboard events are still published on `app.input.events`, which is what text entry reads.
 - **Pointer lock needs a user gesture.** Call `request()` from a click handler; the promise resolves

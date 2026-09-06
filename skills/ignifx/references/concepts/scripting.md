@@ -160,10 +160,14 @@ const tween = app.tweens.to(
   { position: { x: 0, y: 3, z: 0 } },
   { duration: 0.8, ease: "cubicInOut", onComplete: (): void => app.log.info("open") },
 );
-tween.onComplete.connect((finished): void => app.log.info("progress {p}", finished.progress));
+tween.onComplete.connect((finished): void => app.log.info("progress:", finished.progress));
 
 await app.start();
-app.step(0.4);
+// One `app.step(dt)` never advances more than `time.maximumDeltaTime` (0.1 s by default), so a
+// 0.8 s tween needs 48 frames of 1/60, not one `app.step(0.8)`.
+for (let frame = 0; frame < 48; frame += 1) {
+  app.step(1 / 60);
+}
 ```
 
 - **Targets** are any object. A field is tweenable when it is a `number`, or an object with

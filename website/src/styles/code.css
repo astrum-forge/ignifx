@@ -1,0 +1,104 @@
+/* Code blocks.
+
+   Shiki gives every token a `--tk` (light) and a `--tk-d` (dark) custom property through a
+   generated class; these three rules are what turn those into a colour. The generated half is one
+   declaration per colour in the theme, emitted by `scripts/highlight.ts` — the site ships no inline
+   `style` attributes, because `public/_headers` sets `style-src 'self'`. */
+
+.code-pre code span {
+  color: var(--tk, currentcolor);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .code-pre code span {
+    color: var(--tk-d, currentcolor);
+  }
+}
+
+:root[data-theme="dark"] .code-pre code span {
+  color: var(--tk-d, currentcolor);
+}
+
+.code {
+  margin: 0;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+}
+
+.prose .code {
+  margin-top: var(--s-4);
+}
+
+.code-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--s-1) var(--s-2) var(--s-1) var(--s-3);
+  border-bottom: 1px solid var(--rule);
+  background: var(--sunk);
+}
+
+.code-lang {
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.code-copy {
+  padding: 2px var(--s-2);
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  cursor: pointer;
+  transition:
+    color var(--speed) var(--ease),
+    border-color var(--speed) var(--ease);
+}
+
+.code-copy:hover {
+  border-color: var(--flame);
+  color: var(--ink);
+}
+
+.code-copy.is-copied {
+  border-color: var(--cool);
+  color: var(--cool);
+}
+
+/* The copy button does nothing without JavaScript, so it only appears once `/theme.js` has run. */
+.code-copy {
+  display: none;
+}
+
+html[data-js="on"] .code-copy {
+  display: inline-block;
+}
+
+.code-pre {
+  margin: 0;
+  padding: var(--s-4) 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: var(--t-xs);
+  line-height: 1.65;
+  tab-size: 2;
+}
+
+.code-pre code {
+  display: block;
+  min-width: fit-content;
+  padding: 0 var(--s-4);
+  background: none;
+  font-size: inherit;
+}
+
+.code-pre .line {
+  display: block;
+  min-height: 1.65em;
+}
