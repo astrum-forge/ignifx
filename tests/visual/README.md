@@ -1,6 +1,6 @@
 # Visual golden tests
 
-Playwright screenshots of the Phase 2 and Phase 6 exit-criterion scenes, compared against committed
+Playwright screenshots of the Phase 2, 6, 7 and 8 exit-criterion scenes, compared against committed
 goldens with a per-scene tolerance (coding standards §10).
 
 ```sh
@@ -8,23 +8,31 @@ pnpm test:visual                                              # from the reposit
 pnpm --filter ignifx-visual-tests run test:visual:update      # regenerate the goldens
 ```
 
-`playwright.config.ts` builds and previews four apps before the first test, so a golden is always
+`playwright.config.ts` builds and previews six apps before the first test, so a golden is always
 taken of a production build:
 
-| Scene file          | App                         | Port   | Viewport  |
-| ------------------- | --------------------------- | ------ | --------- |
-| `scenes.spec.ts`    | `examples/hello-cube`       | `4173` | 512 x 512 |
-| `scenes.spec.ts`    | `examples/gltf-viewer`      | `4174` | 512 x 512 |
-| `templates.spec.ts` | `templates/2d-topdown`      | `4175` | 512 x 288 |
-| `templates.spec.ts` | `templates/2d-sidescroller` | `4176` | 512 x 288 |
+| Scene file          | App                         | Port   | Viewport  | Tolerance |
+| ------------------- | --------------------------- | ------ | --------- | --------- |
+| `scenes.spec.ts`    | `examples/hello-cube`       | `4173` | 512 x 512 | 0.02      |
+| `scenes.spec.ts`    | `examples/gltf-viewer`      | `4174` | 512 x 512 | 0.05      |
+| `templates.spec.ts` | `templates/2d-topdown`      | `4175` | 512 x 288 | 0.02      |
+| `templates.spec.ts` | `templates/2d-sidescroller` | `4176` | 512 x 288 | 0.02      |
+| `templates.spec.ts` | `templates/3d-third-person` | `4177` | 512 x 288 | 0.05      |
+| `templates.spec.ts` | `templates/3d-first-person` | `4178` | 512 x 288 | 0.05      |
 
 The 2D templates use 16:9 because both are authored against a 320 x 180 reference resolution, and
 the side-scroller's pixel-perfect camera derives its whole-number zoom from `viewportHeight / 180`:
-at 288 pixels that is a zoom of 1, so one source texel is exactly one screen pixel.
+at 288 pixels that is a zoom of 1, so one source texel is exactly one screen pixel. The two 3D
+templates frame their `?static=1` camera for the same aspect, and get the looser tolerance
+`gltf-viewer` uses: they are lit through a 4x MSAA target by a shadow-casting directional light,
+their textures are mip-mapped and filtered across a floor that runs to the horizon, and the shadow
+map is resolved with PCF — every one of those is a place where two SwiftShader builds may round a
+subpixel differently, and one shadow edge moving by a texel across a 24-metre floor is already more
+than 2% of the frame.
 
 **`reuseExistingServer` is on outside CI**, which means a `vite preview` left running from an
 earlier invocation is reused and _no rebuild happens_. When a golden looks stale, it is: stop the
-previews (they listen on 4173-4176) before regenerating. And `--update-snapshots` alone only
+previews (they listen on 4173-4178) before regenerating. And `--update-snapshots` alone only
 rewrites a golden whose comparison **failed** — pass `--update-snapshots=all` to rewrite one whose
 change is inside the tolerance.
 
@@ -35,8 +43,16 @@ transforms, and each app resolves `window.__ignifxReady` only after it has prese
 frame. Nothing here sleeps on wall-clock time.
 
 The templates go one step further and stop the clock **before** `app.start()`, so not one fixed step
-ever runs: no body falls, no clip advances, and the camera never chases its target. The frame is the
-authored scene rather than the scene a few hundred milliseconds after it loaded.
+ever runs: no body falls, no clip advances, no navmesh bakes, and the camera never chases its
+target. The frame is the authored scene rather than the scene a few hundred milliseconds after it
+loaded.
+
+The two 3D templates go further still. A `?static=1` scene there leaves the character controllers
+and the camera rig **out** of the world altogether and places the camera by hand, because a rig that
+damps towards its target makes the picture a function of how many frames elapsed before the
+screenshot; and it sets `app.ui.visible = false`, so a golden never depends on how the runner draws
+a system font. Everything else — the seeded crate scatter, the character at its spawn, the animator
+at t = 0 — is the scene the game builds.
 
 Chromium runs as the full browser (`channel: "chromium"`), not `chrome-headless-shell`, which has no
 compositor and loses the WebGPU device after two or three presented frames — the same finding that

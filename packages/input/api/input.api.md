@@ -90,6 +90,7 @@ export interface BindingContext {
     readonly currentScheme: string;
     readonly strictSchemes: boolean;
     readonly uiHasFocus: boolean;
+    readonly uiHasPointer: boolean;
 }
 
 // @public
@@ -610,6 +611,8 @@ export class InputService implements BindingResolver {
     strictSchemes: boolean;
     get uiHasFocus(): boolean;
     set uiHasFocus(value: boolean);
+    get uiHasPointer(): boolean;
+    set uiHasPointer(value: boolean);
 }
 
 // @public

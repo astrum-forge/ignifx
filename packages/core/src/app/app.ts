@@ -28,6 +28,7 @@ import { SettingsStore } from "../settings/settings-store.js";
 import { Signal } from "../signal/signal.js";
 import { createPerformanceClock } from "../time/clock.js";
 import { TimeImpl } from "../time/time.js";
+import { TweensImpl } from "../tween/tweens.js";
 import { createWorld } from "../world/world.js";
 import { AppEventsImpl } from "./events.js";
 import { PHASE_NAMES, Phase } from "./types.js";
@@ -200,6 +201,9 @@ class AppImpl implements App {
   /** The coroutine scheduler. */
   readonly coroutines: CoroutineHostImpl;
 
+  /** The app-wide tween list, advanced by the core extension's `PostUpdate` system. */
+  readonly tweens: TweensImpl;
+
   /** `true` when the app runs on Lite's null engine with no render surface. */
   readonly isHeadless: boolean;
 
@@ -281,6 +285,7 @@ class AppImpl implements App {
     this.log = createLogger({ sink: options.logSink, level: options.logLevel });
     this.diagnostics = new Diagnostics({ development, now: (): number => this.#clock.nowMs() });
     this.time = new TimeImpl(options.clock);
+    this.tweens = new TweensImpl();
     this.services = new ServiceRegistryImpl();
     this.#settings = new SettingsStore(options.settings, options.mode, this.log);
     this.onError = new Signal<ErrorReport>({
@@ -491,6 +496,7 @@ class AppImpl implements App {
     this.#isDisposed = true;
     this.#host.dispose();
     this.coroutines.dispose();
+    this.tweens.clear();
     this.#deferred.clear();
     this.#scheduler.dispose();
     this.#deviceLoss?.disable();

@@ -128,6 +128,24 @@ async function readEntries(directory: string): Promise<readonly Dirent[]> {
 }
 
 /**
+ * Whether a `node_modules` entry is a package directory.
+ *
+ * @remarks
+ * A symlink counts. `readdir` with `withFileTypes` does **not** follow links, so `isDirectory()`
+ * answers `false` for every pnpm-installed package: pnpm links `node_modules/<name>` at a store
+ * directory under `node_modules/.pnpm`, and a workspace dependency is linked at the sibling package
+ * itself. Testing only `isDirectory()` therefore found nothing at all under pnpm — no extension was
+ * discovered, and `@ignifx/physics`'s `HavokPhysics.wasm` never reached a build, which is
+ * `IGX-0903` at the first `createApp` (found by `templates/3d-*` on 2026-09-06).
+ *
+ * @param entry - The directory entry.
+ * @returns `true` for a directory or a symlink to one.
+ */
+function isPackageEntry(entry: Dirent): boolean {
+  return !entry.name.startsWith(".") && (entry.isDirectory() || entry.isSymbolicLink());
+}
+
+/**
  * Lists the installed package directories of one `node_modules`, descending into npm scopes.
  *
  * @param nodeModules - The absolute `node_modules` directory.
@@ -137,7 +155,7 @@ async function listPackages(nodeModules: string): Promise<readonly InstalledPack
   const entries = await readEntries(nodeModules);
   const groups = await Promise.all(
     entries.map(async (entry): Promise<readonly InstalledPackage[]> => {
-      if (entry.name.startsWith(".") || !entry.isDirectory()) {
+      if (!isPackageEntry(entry)) {
         return [];
       }
       if (!entry.name.startsWith("@")) {
@@ -146,7 +164,7 @@ async function listPackages(nodeModules: string): Promise<readonly InstalledPack
       const scopeDirectory = join(nodeModules, entry.name);
       const scoped = await readEntries(scopeDirectory);
       return scoped
-        .filter((inner) => inner.isDirectory() && !inner.name.startsWith("."))
+        .filter((inner) => isPackageEntry(inner))
         .map((inner) => ({
           packageName: `${entry.name}/${inner.name}`,
           directory: join(scopeDirectory, inner.name),

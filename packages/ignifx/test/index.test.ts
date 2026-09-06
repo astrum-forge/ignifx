@@ -228,6 +228,13 @@ const expectedExports = [
   "MATERIAL_ALPHA_MODES",
   "PhysicsCallbackName",
   "ScriptCallbackKind",
+  "EASINGS",
+  "EASING_NAMES",
+  "TWEEN_LOOP_FOREVER",
+  "TWEEN_SYSTEM_ORDER",
+  "TWEEN_VALUE_KINDS",
+  "Tween",
+  "resolveEase",
 ];
 
 // The @ignifx/input value surface. `VERSION` and `describeSchemas` are deliberately absent: both
@@ -531,6 +538,126 @@ const expectedTwoDExports = [
   "zoomForSize",
 ];
 
+// The @ignifx/ui value surface (VERSION, describeSchemas, and LiteFont stay core's).
+const expectedUiExports = [
+  "Dialog",
+  "HUD_ANCHORS",
+  "HudText",
+  "I18N_ASSET_TYPE",
+  "I18N_FILE_EXTENSIONS",
+  "I18N_FORMAT",
+  "I18N_FORMAT_VERSION",
+  "I18nService",
+  "LoadingScreen",
+  "LocaleAsset",
+  "TEXT_ALIGNMENTS",
+  "TextComponent",
+  "TextRuntime",
+  "Toast",
+  "UI_CLASS_NAMES",
+  "UI_CSS_VARIABLES",
+  "UI_ERROR_MESSAGES",
+  "UI_FOCUS_ATTRIBUTE",
+  "UI_LAYER_Z_STEP",
+  "UI_SCALING_MODES",
+  "UI_SETTINGS_SECTION",
+  "UI_STYLE_ELEMENT_ID",
+  "UI_SYNC_ORDER",
+  "UiErrorCode",
+  "UiHost",
+  "UiLayer",
+  "UiSystem",
+  "VirtualButton",
+  "VirtualJoystick",
+  "WorldAnchor",
+  "WorldText",
+  "WorldText2D",
+  "asDomCanvas",
+  "computeAnchorPlacement",
+  "computeHudPlacement",
+  "computePivotPlacement",
+  "computeUiLayout",
+  "createLocaleLoader",
+  "createPluralSelector",
+  "defaultUiSettings",
+  "describeLocaleFileFormat",
+  "findVirtualDevice",
+  "isEditableElement",
+  "localeFileSchema",
+  "localeJsonSchema",
+  "parseLocaleFile",
+  "parseMessage",
+  "pixelMapping",
+  "progressFraction",
+  "renderMessage",
+  "resolveDomTarget",
+  "stickAxis",
+  "ui",
+  "uiError",
+  "uiSettingsSchema",
+];
+
+// The @ignifx/3d value surface (VERSION, describeSchemas, and LiteAnimationGroup stay core's).
+const expectedThreeDExports = [
+  "ANIMATOR_ASSET_TYPE",
+  "ANIMATOR_CONDITION_OPS",
+  "ANIMATOR_FILE_EXTENSIONS",
+  "ANIMATOR_FORMAT",
+  "ANIMATOR_FORMAT_VERSION",
+  "ANIMATOR_MASK_MODES",
+  "ANIMATOR_PARAMETER_KINDS",
+  "ANY_STATE",
+  "Animator",
+  "AnimatorAsset",
+  "AnimatorStateMachine",
+  "BILLBOARD_MODES",
+  "BILLBOARD_ORDER",
+  "Billboard",
+  "BillboardSystem",
+  "DEFAULT_CLIP_LENGTH",
+  "FirstPersonController",
+  "JumpTimers",
+  "LOD_CULLED",
+  "LOD_ORDER",
+  "LodGroup",
+  "LodSystem",
+  "NAVIGATION_ORDER",
+  "NAV_OBSTACLE_SHAPES",
+  "NavMeshAgent",
+  "NavMeshObstacle",
+  "NavMeshSurface",
+  "NavigationService",
+  "NavigationSystem",
+  "PlatformMover",
+  "Projectile",
+  "RigidbodyMover",
+  "THREE_D_ANIMATION_ORDER",
+  "THREE_D_ERROR_MESSAGES",
+  "THREE_D_SETTINGS_SECTION",
+  "ThirdPersonCamera",
+  "ThirdPersonController",
+  "ThreeDAnimationSystem",
+  "ThreeDErrorCode",
+  "WORLD_FORWARD",
+  "animatorFileSchema",
+  "cameraRelativeToRef",
+  "createAnimatorLoader",
+  "defaultStateOf",
+  "defaultThreeDSettings",
+  "defineAnimator",
+  "describeAnimatorFormat",
+  "jumpVelocity",
+  "mainCamera",
+  "mainCameraForward",
+  "projectOnSlopeToRef",
+  "slopeAngleDegrees",
+  "threeD",
+  "threeDError",
+  "threeDSettingsSchema",
+  "turnTowardsDegrees",
+  "yawFromDirection",
+];
+
 describe("ignifx barrel", () => {
   it("imports without executing anything and re-exports the whole @ignifx/core value surface", () => {
     // Compared as sets: the key order of a namespace object is not part of the contract.
@@ -542,8 +669,24 @@ describe("ignifx barrel", () => {
         ...expectedPhysicsExports,
         ...expectedPhysics2DExports,
         ...expectedTwoDExports,
+        ...expectedUiExports,
+        ...expectedThreeDExports,
       ]),
     );
+  });
+
+  it("re-exports the @ignifx/3d value surface by name", () => {
+    const keys = new Set(Object.keys(barrel));
+    for (const name of expectedThreeDExports) {
+      expect(keys.has(name)).toBe(true);
+    }
+  });
+
+  it("re-exports the @ignifx/ui value surface by name", () => {
+    const keys = new Set(Object.keys(barrel));
+    for (const name of expectedUiExports) {
+      expect(keys.has(name)).toBe(true);
+    }
   });
 
   it("re-exports the @ignifx/2d value surface by name", () => {

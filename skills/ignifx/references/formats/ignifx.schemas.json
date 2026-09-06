@@ -2,6 +2,82 @@
   "generatedBy": "pnpm docs:schemas",
   "ignifxVersion": "0.0.0",
   "schemas": {
+    "ignifx/Animator": {
+      "title": "Animator",
+      "format": "components",
+      "description": "",
+      "package": "packages/3d",
+      "fields": {
+        "animator": {
+          "kind": "asset",
+          "default": "null",
+          "description": "The .animator.json document this state machine runs."
+        },
+        "defaultLayer": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": "The layer play() and currentState() use when given no name."
+        },
+        "speed": {
+          "kind": "f32",
+          "default": "1",
+          "description": "A multiplier on every state's own rate."
+        },
+        "updateWhenPaused": {
+          "kind": "bool",
+          "default": "false",
+          "description": "Whether the animator keeps advancing while app.pause() holds."
+        },
+        "applyOnAwake": {
+          "kind": "bool",
+          "default": "true",
+          "description": "Whether the first pose is written before the first update."
+        }
+      }
+    },
+    "ignifx/animator-file": {
+      "title": "Animator",
+      "format": "ignifx.animator",
+      "description": "An animation state machine: parameters, layers, states, transitions, and 1D blend trees.",
+      "package": "packages/3d",
+      "fields": {
+        "format": {
+          "kind": "str",
+          "default": "\"ignifx.animator\"",
+          "description": "Always ignifx.animator."
+        },
+        "formatVersion": {
+          "kind": "u32",
+          "default": "1",
+          "description": "The document version this build reads."
+        },
+        "parameters": {
+          "kind": "array",
+          "default": "[]",
+          "description": "The parameters the state machine reads."
+        },
+        "layers": {
+          "kind": "array",
+          "default": "[]",
+          "description": "The layers, base first."
+        },
+        "states": {
+          "kind": "array",
+          "default": "[]",
+          "description": "The states."
+        },
+        "transitions": {
+          "kind": "array",
+          "default": "[]",
+          "description": "The transitions, in priority order."
+        },
+        "blendTrees1D": {
+          "kind": "array",
+          "default": "[]",
+          "description": "The 1D blend trees."
+        }
+      }
+    },
     "ignifx/audiobuses-file": {
       "title": "Audio buses file",
       "format": "ignifx.audiobuses",
@@ -127,6 +203,24 @@
           "kind": "f32",
           "default": "0",
           "description": "Stereo pan of a non-spatial source."
+        }
+      }
+    },
+    "ignifx/Billboard": {
+      "title": "Billboard",
+      "format": "components",
+      "description": "",
+      "package": "packages/3d",
+      "fields": {
+        "mode": {
+          "kind": "enum",
+          "default": "\"full\"",
+          "description": "Whether the billboard is free or locked upright."
+        },
+        "faceCameraPlane": {
+          "kind": "bool",
+          "default": "false",
+          "description": "Whether to align with the view plane rather than aim at the eye."
         }
       }
     },
@@ -789,6 +883,124 @@
         }
       }
     },
+    "ignifx/FirstPersonController": {
+      "title": "First person controller",
+      "format": "components",
+      "description": "",
+      "package": "packages/3d",
+      "fields": {
+        "cameraPivot": {
+          "kind": "entityRef",
+          "default": "null",
+          "description": "The child entity that pitches; usually the camera's entity."
+        },
+        "moveAction": {
+          "kind": "str",
+          "default": "\"Move\"",
+          "description": "The vector2 action that walks."
+        },
+        "lookAction": {
+          "kind": "str",
+          "default": "\"Look\"",
+          "description": "The vector2 action that looks around."
+        },
+        "jumpAction": {
+          "kind": "str",
+          "default": "\"Jump\"",
+          "description": "The button action that jumps."
+        },
+        "sprintAction": {
+          "kind": "str",
+          "default": "\"Sprint\"",
+          "description": "The button action that sprints."
+        },
+        "crouchAction": {
+          "kind": "str",
+          "default": "\"Crouch\"",
+          "description": "The button action that crouches."
+        },
+        "sensitivity": {
+          "kind": "f32",
+          "default": "0.15",
+          "description": "Degrees of rotation per unit of look input."
+        },
+        "invertY": {
+          "kind": "bool",
+          "default": "false",
+          "description": "Whether looking up needs the stick pushed down."
+        },
+        "walkSpeed": {
+          "kind": "f32",
+          "default": "4",
+          "description": "Ground speed, in m/s."
+        },
+        "sprintSpeed": {
+          "kind": "f32",
+          "default": "7",
+          "description": "Ground speed while sprinting, in m/s."
+        },
+        "crouchSpeed": {
+          "kind": "f32",
+          "default": "1.8",
+          "description": "Ground speed while crouched, in m/s."
+        },
+        "standHeight": {
+          "kind": "f32",
+          "default": "1.8",
+          "description": "The controller height while standing, in metres."
+        },
+        "crouchHeight": {
+          "kind": "f32",
+          "default": "1",
+          "description": "The controller height while crouched, in metres."
+        },
+        "gravity": {
+          "kind": "f32",
+          "default": "20",
+          "description": "Downward acceleration, in m/s squared."
+        },
+        "jumpHeight": {
+          "kind": "f32",
+          "default": "1.1",
+          "description": "How high a jump reaches, in metres."
+        },
+        "coyoteTime": {
+          "kind": "f32",
+          "default": "0.1",
+          "description": "How long a jump stays legal after leaving the ground."
+        },
+        "jumpBufferTime": {
+          "kind": "f32",
+          "default": "0.1",
+          "description": "How long an early jump press is remembered."
+        },
+        "airControl": {
+          "kind": "f32",
+          "default": "0.5",
+          "description": "How much of the ground speed applies mid-air."
+        },
+        "lockPointerOnClick": {
+          "kind": "bool",
+          "default": "true",
+          "description": "Whether the first click requests pointer lock."
+        },
+        "headBobAmplitude": {
+          "kind": "f32",
+          "default": "0",
+          "description": "How far the head bobs while walking, in metres; 0 disables it."
+        },
+        "headBobFrequency": {
+          "kind": "f32",
+          "default": "1.8",
+          "description": "Head bobs per metre travelled."
+        },
+        "sprintFovKick": {
+          "kind": "f32",
+          "default": "0",
+          "description": "Extra vertical FOV while sprinting, in degrees; 0 disables it."
+        }
+      }
+    },
     "ignifx/HeightfieldCollider": {
       "title": "HeightfieldCollider",
       "format": "components",
@@ -839,6 +1051,102 @@
           "kind": "vec3",
           "default": "[1,1,1]",
           "description": ""
+        }
+      }
+    },
+    "ignifx/HudText": {
+      "title": "HudText",
+      "format": "components",
+      "description": "Pixel-space text drawn by Babylon Lite, anchored to a corner of the render target.",
+      "package": "packages/ui",
+      "fields": {
+        "font": {
+          "kind": "asset",
+          "default": "null",
+          "description": "The TTF or OTF the glyphs come from."
+        },
+        "text": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": "The literal string to draw; ignored when i18nKey is set."
+        },
+        "i18nKey": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": "A translation key looked up in app.i18n; wins over text."
+        },
+        "fontSize": {
+          "kind": "f32",
+          "default": "32",
+          "description": "The em size, in render-target pixels."
+        },
+        "color": {
+          "kind": "color",
+          "default": "[1,1,1,1]",
+          "description": "The colour every glyph starts with."
+        },
+        "align": {
+          "kind": "enum",
+          "default": "\"left\"",
+          "description": "Which edge the lines align to."
+        },
+        "maxWidth": {
+          "kind": "f32",
+          "default": "0",
+          "description": "The wrap width in pixels; 0 does not wrap."
+        },
+        "lineHeight": {
+          "kind": "f32",
+          "default": "1.2",
+          "description": "The line-height multiplier."
+        },
+        "opacity": {
+          "kind": "f32",
+          "default": "1",
+          "description": "The whole-block alpha multiplier."
+        },
+        "anchor": {
+          "kind": "enum",
+          "default": "\"topLeft\"",
+          "description": "Which corner of the screen the position is measured from."
+        },
+        "position": {
+          "kind": "vec2",
+          "default": "[0,0]",
+          "description": "The offset from the anchor, in render-target pixels."
+        },
+        "order": {
+          "kind": "i32",
+          "default": "0",
+          "description": "Sort order within the text renderer; lower draws first."
+        }
+      }
+    },
+    "ignifx/i18n-file": {
+      "title": "Translations",
+      "format": "ignifx.i18n",
+      "description": "Message tables for one or more locales, with {name} interpolation and ICU-style plurals.",
+      "package": "packages/ui",
+      "fields": {
+        "format": {
+          "kind": "str",
+          "default": "\"ignifx.i18n\"",
+          "description": "Always ignifx.i18n."
+        },
+        "formatVersion": {
+          "kind": "u32",
+          "default": "1",
+          "description": "The document version this build reads."
+        },
+        "defaultLocale": {
+          "kind": "str",
+          "default": "\"en\"",
+          "description": "The locale used until the game picks another."
+        },
+        "locales": {
+          "kind": "map",
+          "default": "{}",
+          "description": "Message tables keyed by BCP 47 tag, then by message key."
         }
       }
     },
@@ -925,6 +1233,24 @@
           "kind": "array",
           "default": "[]",
           "description": "Never light these entities' renderers."
+        }
+      }
+    },
+    "ignifx/LodGroup": {
+      "title": "LOD group",
+      "format": "components",
+      "description": "",
+      "package": "packages/3d",
+      "fields": {
+        "levels": {
+          "kind": "array",
+          "default": "[]",
+          "description": "The levels, nearest first."
+        },
+        "hysteresis": {
+          "kind": "f32",
+          "default": "0.1",
+          "description": "How far past a threshold a switch waits, as a fraction."
         }
       }
     },
@@ -1238,6 +1564,205 @@
         }
       }
     },
+    "ignifx/NavMeshAgent": {
+      "title": "Nav mesh agent",
+      "format": "components",
+      "description": "",
+      "package": "packages/3d",
+      "fields": {
+        "surface": {
+          "kind": "entityRef",
+          "default": "null",
+          "description": "The entity carrying the NavMeshSurface to join; the first baked one when unset."
+        },
+        "speed": {
+          "kind": "f32",
+          "default": "3.5",
+          "description": "The agent's top speed, in metres per second."
+        },
+        "acceleration": {
+          "kind": "f32",
+          "default": "8",
+          "description": "How hard the agent accelerates, in metres per second squared."
+        },
+        "radius": {
+          "kind": "f32",
+          "default": "0.5",
+          "description": "The agent's radius, in metres."
+        },
+        "height": {
+          "kind": "f32",
+          "default": "2",
+          "description": "The agent's height, in metres."
+        },
+        "stoppingDistance": {
+          "kind": "f32",
+          "default": "0.25",
+          "description": "How close counts as arrived, in metres."
+        },
+        "separationWeight": {
+          "kind": "f32",
+          "default": "0",
+          "description": "How hard agents push apart; 0 disables separation."
+        },
+        "updateRotation": {
+          "kind": "bool",
+          "default": "true",
+          "description": "Whether the agent turns the entity to face the way it is moving."
+        },
+        "updatePosition": {
+          "kind": "bool",
+          "default": "true",
+          "description": "Whether the crowd's position is written onto the transform."
+        }
+      }
+    },
+    "ignifx/NavMeshObstacle": {
+      "title": "Nav mesh obstacle",
+      "format": "components",
+      "description": "",
+      "package": "packages/3d",
+      "fields": {
+        "surface": {
+          "kind": "entityRef",
+          "default": "null",
+          "description": "The entity carrying the NavMeshSurface to cut; the first baked one when unset."
+        },
+        "shape": {
+          "kind": "enum",
+          "default": "\"box\"",
+          "description": "Whether the hole is a box or a cylinder."
+        },
+        "size": {
+          "kind": "vec3",
+          "default": "[1,2,1]",
+          "description": "The box's full size, in metres."
+        },
+        "radius": {
+          "kind": "f32",
+          "default": "0.5",
+          "description": "The cylinder's radius, in metres."
+        },
+        "height": {
+          "kind": "f32",
+          "default": "2",
+          "description": "The cylinder's height, in metres."
+        }
+      }
+    },
+    "ignifx/NavMeshSurface": {
+      "title": "Nav mesh surface",
+      "format": "components",
+      "description": "",
+      "package": "packages/3d",
+      "fields": {
+        "layers": {
+          "kind": "layerMask",
+          "default": "[]",
+          "description": "Which layers' MeshRenderers are baked; empty means every layer."
+        },
+        "bakeOnAwake": {
+          "kind": "bool",
+          "default": "true",
+          "description": "Whether the surface bakes itself as soon as it is enabled."
+        },
+        "cellSize": {
+          "kind": "f32",
+          "default": "0.2",
+          "description": "Recast voxel width, in metres."
+        },
+        "cellHeight": {
+          "kind": "f32",
+          "default": "0.2",
+          "description": "Recast voxel height, in metres."
+        },
+        "walkableSlopeAngle": {
+          "kind": "f32",
+          "default": "45",
+          "description": "The steepest walkable slope, in degrees."
+        },
+        "agentHeight": {
+          "kind": "f32",
+          "default": "2",
+          "description": "The headroom an agent needs, in metres."
+        },
+        "agentRadius": {
+          "kind": "f32",
+          "default": "0.5",
+          "description": "How far agents stay from a wall, in metres."
+        },
+        "agentClimb": {
+          "kind": "f32",
+          "default": "0.4",
+          "description": "The tallest step an agent walks up, in metres."
+        },
+        "maxEdgeLength": {
+          "kind": "f32",
+          "default": "12",
+          "description": "The longest contour edge, in voxels."
+        },
+        "maxSimplificationError": {
+          "kind": "f32",
+          "default": "1.3",
+          "description": "How far a simplified edge may stray, in voxels."
+        },
+        "minRegionArea": {
+          "kind": "f32",
+          "default": "8",
+          "description": "Regions smaller than this are discarded, in voxels squared."
+        },
+        "mergeRegionArea": {
+          "kind": "f32",
+          "default": "20",
+          "description": "Regions smaller than this are merged, in voxels squared."
+        },
+        "maxVertsPerPoly": {
+          "kind": "u32",
+          "default": "6",
+          "description": "The largest navmesh polygon, in vertices."
+        },
+        "detailSampleDistance": {
+          "kind": "f32",
+          "default": "6",
+          "description": "Detail-mesh sampling distance, in voxels."
+        },
+        "detailSampleMaxError": {
+          "kind": "f32",
+          "default": "1",
+          "description": "Detail-mesh vertical error, in voxels."
+        },
+        "tileSize": {
+          "kind": "u32",
+          "default": "0",
+          "description": "Tile size in voxels; 32-64 when maxObstacles is above zero."
+        },
+        "maxObstacles": {
+          "kind": "u32",
+          "default": "0",
+          "description": "How many NavMeshObstacles fit; above zero builds a tile cache."
+        },
+        "maxAgents": {
+          "kind": "u32",
+          "default": "64",
+          "description": "How many NavMeshAgents this surface's crowd holds."
+        },
+        "maxAgentRadius": {
+          "kind": "f32",
+          "default": "1",
+          "description": "The largest agent radius the crowd will see, in metres."
+        },
+        "randomSeed": {
+          "kind": "u32",
+          "default": "0",
+          "description": "The seed Recast's randomized queries use, so paths are reproducible."
+        },
+        "prebaked": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": "A .navmesh.bin address; unsupported by the pinned Babylon Lite."
+        }
+      }
+    },
     "ignifx/ParallaxLayer": {
       "title": "ParallaxLayer",
       "format": "components",
@@ -1311,6 +1836,34 @@
           "kind": "f32",
           "default": "0",
           "description": "How much approach speed is returned, 0 to 1."
+        }
+      }
+    },
+    "ignifx/PlatformMover": {
+      "title": "Platform mover",
+      "format": "components",
+      "description": "",
+      "package": "packages/3d",
+      "fields": {
+        "offset": {
+          "kind": "vec3",
+          "default": "[0,0,6]",
+          "description": "How far the platform travels from where it started."
+        },
+        "duration": {
+          "kind": "f32",
+          "default": "4",
+          "description": "How long one leg of the trip takes, in seconds."
+        },
+        "waitSeconds": {
+          "kind": "f32",
+          "default": "0.5",
+          "description": "How long the platform pauses at each end."
+        },
+        "carryRiders": {
+          "kind": "bool",
+          "default": "true",
+          "description": "Whether characters standing on the platform ride it."
         }
       }
     },
@@ -1413,6 +1966,39 @@
         }
       }
     },
+    "ignifx/Projectile": {
+      "title": "Projectile",
+      "format": "components",
+      "description": "",
+      "package": "packages/3d",
+      "fields": {
+        "speed": {
+          "kind": "f32",
+          "default": "30",
+          "description": "How fast the projectile leaves the muzzle, in m/s."
+        },
+        "gravityScale": {
+          "kind": "f32",
+          "default": "1",
+          "description": "How much gravity the projectile feels; 0 flies straight."
+        },
+        "lifetimeSeconds": {
+          "kind": "f32",
+          "default": "5",
+          "description": "How long the projectile lives before destroying itself."
+        },
+        "destroyOnHit": {
+          "kind": "bool",
+          "default": "true",
+          "description": "Whether the projectile destroys itself on its first contact."
+        },
+        "owner": {
+          "kind": "entityRef",
+          "default": "null",
+          "description": "The entity that fired it, so it does not hit its own shooter."
+        }
+      }
+    },
     "ignifx/Rigidbody": {
       "title": "Rigidbody",
       "format": "components",
@@ -1501,6 +2087,39 @@
           "kind": "enum",
           "default": "\"auto\"",
           "description": ""
+        }
+      }
+    },
+    "ignifx/RigidbodyMover": {
+      "title": "Rigidbody mover",
+      "format": "components",
+      "description": "",
+      "package": "packages/3d",
+      "fields": {
+        "moveAction": {
+          "kind": "str",
+          "default": "\"Move\"",
+          "description": "The vector2 action that steers."
+        },
+        "force": {
+          "kind": "f32",
+          "default": "40",
+          "description": "How hard the body is pushed, in newtons."
+        },
+        "maxSpeed": {
+          "kind": "f32",
+          "default": "12",
+          "description": "The horizontal speed the mover stops adding force at."
+        },
+        "cameraRelative": {
+          "kind": "bool",
+          "default": "true",
+          "description": "Whether the stick is read relative to the main camera."
+        },
+        "torqueSteering": {
+          "kind": "bool",
+          "default": "false",
+          "description": "Whether the stick's X steers by torque rather than by force."
         }
       }
     },
@@ -1765,6 +2384,180 @@
         }
       }
     },
+    "ignifx/ThirdPersonCamera": {
+      "title": "Third person camera",
+      "format": "components",
+      "description": "",
+      "package": "packages/3d",
+      "fields": {
+        "target": {
+          "kind": "entityRef",
+          "default": "null",
+          "description": "The entity the camera orbits."
+        },
+        "lookAction": {
+          "kind": "str",
+          "default": "\"Look\"",
+          "description": "The vector2 action that orbits the camera."
+        },
+        "distance": {
+          "kind": "f32",
+          "default": "4.5",
+          "description": "How far behind the target the camera sits, in metres."
+        },
+        "minPitch": {
+          "kind": "f32",
+          "default": "-30",
+          "description": "The lowest pitch, in degrees."
+        },
+        "maxPitch": {
+          "kind": "f32",
+          "default": "60",
+          "description": "The highest pitch, in degrees."
+        },
+        "sensitivity": {
+          "kind": "f32",
+          "default": "0.2",
+          "description": "Degrees of orbit per unit of look input."
+        },
+        "damping": {
+          "kind": "f32",
+          "default": "0.08",
+          "description": "The follow time constant, in seconds; 0 snaps."
+        },
+        "shoulderOffset": {
+          "kind": "vec3",
+          "default": "[0.5,1.5,0]",
+          "description": "The pivot offset from the target, in its own space."
+        },
+        "invertY": {
+          "kind": "bool",
+          "default": "false",
+          "description": "Whether looking up needs the stick pushed down."
+        },
+        "collisionEnabled": {
+          "kind": "bool",
+          "default": "true",
+          "description": "Whether the boom is shortened by geometry in the way."
+        },
+        "collisionRadius": {
+          "kind": "f32",
+          "default": "0.25",
+          "description": "The radius of the sphere swept along the boom."
+        },
+        "collisionLayers": {
+          "kind": "layerMask",
+          "default": "[]",
+          "description": "Which layers block the camera; empty means every layer."
+        },
+        "collisionRecoverySpeed": {
+          "kind": "f32",
+          "default": "6",
+          "description": "How fast the boom eases back out, in m/s."
+        }
+      }
+    },
+    "ignifx/ThirdPersonController": {
+      "title": "Third person controller",
+      "format": "components",
+      "description": "",
+      "package": "packages/3d",
+      "fields": {
+        "moveAction": {
+          "kind": "str",
+          "default": "\"Move\"",
+          "description": "The vector2 action that steers the character."
+        },
+        "jumpAction": {
+          "kind": "str",
+          "default": "\"Jump\"",
+          "description": "The button action that jumps."
+        },
+        "sprintAction": {
+          "kind": "str",
+          "default": "\"Sprint\"",
+          "description": "The button action that sprints."
+        },
+        "walkSpeed": {
+          "kind": "f32",
+          "default": "4",
+          "description": "Ground speed with the stick fully pressed, in m/s."
+        },
+        "sprintSpeed": {
+          "kind": "f32",
+          "default": "7",
+          "description": "Ground speed while sprinting, in m/s."
+        },
+        "turnSpeed": {
+          "kind": "f32",
+          "default": "720",
+          "description": "How fast the character faces its direction, in deg/s."
+        },
+        "gravity": {
+          "kind": "f32",
+          "default": "20",
+          "description": "Downward acceleration, in m/s squared."
+        },
+        "jumpHeight": {
+          "kind": "f32",
+          "default": "1.2",
+          "description": "How high a jump reaches, in metres."
+        },
+        "coyoteTime": {
+          "kind": "f32",
+          "default": "0.12",
+          "description": "How long a jump stays legal after leaving the ground."
+        },
+        "jumpBufferTime": {
+          "kind": "f32",
+          "default": "0.12",
+          "description": "How long an early jump press is remembered."
+        },
+        "airControl": {
+          "kind": "f32",
+          "default": "0.4",
+          "description": "How much of the ground speed applies mid-air."
+        },
+        "stepHeight": {
+          "kind": "f32",
+          "default": "0",
+          "description": "The tallest step the probe lifts over; 0 disables it."
+        },
+        "slideSpeed": {
+          "kind": "f32",
+          "default": "6",
+          "description": "How fast the character slides down a too-steep slope."
+        },
+        "rotateToMovement": {
+          "kind": "bool",
+          "default": "true",
+          "description": "Whether the entity turns to face the way it is moving."
+        }
+      }
+    },
+    "ignifx/threeD-settings": {
+      "title": "3D settings",
+      "format": "components",
+      "description": "The threeD project settings section.",
+      "package": "packages/3d",
+      "fields": {
+        "navigationSeed": {
+          "kind": "u32",
+          "default": "1337",
+          "description": "The seed Recast's randomized queries start from."
+        },
+        "navigationWasmUrl": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": "Where the Recast wasm is served from; empty uses Lite's inlined copy."
+        },
+        "autoBakeNavMesh": {
+          "kind": "bool",
+          "default": "true",
+          "description": "Whether a NavMeshSurface bakes itself when the world loads."
+        }
+      }
+    },
     "ignifx/Tilemap": {
       "title": "Tilemap",
       "format": "components",
@@ -1919,6 +2712,200 @@
           "kind": "bool",
           "default": "true",
           "description": "Drop chunks outside the camera's visible bounds."
+        }
+      }
+    },
+    "ignifx/WorldAnchor": {
+      "title": "WorldAnchor",
+      "format": "components",
+      "description": "Keeps a DOM element at an entity's screen position, with clamping and distance scaling.",
+      "package": "packages/ui",
+      "fields": {
+        "offset": {
+          "kind": "vec3",
+          "default": "[0,0,0]",
+          "description": "A world-space offset added before projecting, in metres."
+        },
+        "hideWhenBehindCamera": {
+          "kind": "bool",
+          "default": "true",
+          "description": "Hide the element when the anchor is behind the camera."
+        },
+        "clampToScreen": {
+          "kind": "bool",
+          "default": "false",
+          "description": "Keep the element inside the overlay instead of hiding it."
+        },
+        "scaleWithDistance": {
+          "kind": "bool",
+          "default": "false",
+          "description": "Shrink the element as the anchor gets further away."
+        },
+        "referenceDistance": {
+          "kind": "f32",
+          "default": "10",
+          "description": "The distance at which the scale is 1, in metres."
+        },
+        "minScale": {
+          "kind": "f32",
+          "default": "0.25",
+          "description": "The smallest scale distance scaling may produce."
+        },
+        "maxScale": {
+          "kind": "f32",
+          "default": "2",
+          "description": "The largest scale distance scaling may produce."
+        }
+      }
+    },
+    "ignifx/WorldText": {
+      "title": "WorldText",
+      "format": "components",
+      "description": "3D text in the render scene: signs and banners, optionally billboarded.",
+      "package": "packages/ui",
+      "fields": {
+        "font": {
+          "kind": "asset",
+          "default": "null",
+          "description": "The TTF or OTF the glyphs come from."
+        },
+        "text": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": "The literal string to draw; ignored when i18nKey is set."
+        },
+        "i18nKey": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": "A translation key looked up in app.i18n; wins over text."
+        },
+        "fontSize": {
+          "kind": "f32",
+          "default": "32",
+          "description": "The em size, in render-target pixels."
+        },
+        "color": {
+          "kind": "color",
+          "default": "[1,1,1,1]",
+          "description": "The colour every glyph starts with."
+        },
+        "align": {
+          "kind": "enum",
+          "default": "\"left\"",
+          "description": "Which edge the lines align to."
+        },
+        "maxWidth": {
+          "kind": "f32",
+          "default": "0",
+          "description": "The wrap width in pixels; 0 does not wrap."
+        },
+        "lineHeight": {
+          "kind": "f32",
+          "default": "1.2",
+          "description": "The line-height multiplier."
+        },
+        "opacity": {
+          "kind": "f32",
+          "default": "1",
+          "description": "The whole-block alpha multiplier."
+        },
+        "offset": {
+          "kind": "vec3",
+          "default": "[0,0,0]",
+          "description": "A local offset added to the entity's position, in metres."
+        },
+        "pixelsPerUnit": {
+          "kind": "f32",
+          "default": "100",
+          "description": "How many pixels of laid-out text span one metre."
+        },
+        "billboard": {
+          "kind": "bool",
+          "default": "false",
+          "description": "Turn the text to face the camera."
+        },
+        "alwaysOnTop": {
+          "kind": "bool",
+          "default": "false",
+          "description": "Draw through geometry in front of the text."
+        }
+      }
+    },
+    "ignifx/WorldText2D": {
+      "title": "WorldText2D",
+      "format": "components",
+      "description": "Pixel-space text placed at an entity's projected position: damage numbers and name tags.",
+      "package": "packages/ui",
+      "fields": {
+        "font": {
+          "kind": "asset",
+          "default": "null",
+          "description": "The TTF or OTF the glyphs come from."
+        },
+        "text": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": "The literal string to draw; ignored when i18nKey is set."
+        },
+        "i18nKey": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": "A translation key looked up in app.i18n; wins over text."
+        },
+        "fontSize": {
+          "kind": "f32",
+          "default": "32",
+          "description": "The em size, in render-target pixels."
+        },
+        "color": {
+          "kind": "color",
+          "default": "[1,1,1,1]",
+          "description": "The colour every glyph starts with."
+        },
+        "align": {
+          "kind": "enum",
+          "default": "\"left\"",
+          "description": "Which edge the lines align to."
+        },
+        "maxWidth": {
+          "kind": "f32",
+          "default": "0",
+          "description": "The wrap width in pixels; 0 does not wrap."
+        },
+        "lineHeight": {
+          "kind": "f32",
+          "default": "1.2",
+          "description": "The line-height multiplier."
+        },
+        "opacity": {
+          "kind": "f32",
+          "default": "1",
+          "description": "The whole-block alpha multiplier."
+        },
+        "offset": {
+          "kind": "vec3",
+          "default": "[0,0,0]",
+          "description": "A world-space offset added before projecting, in metres."
+        },
+        "screenOffset": {
+          "kind": "vec2",
+          "default": "[0,0]",
+          "description": "A screen-space offset added after projecting, in pixels."
+        },
+        "pivot": {
+          "kind": "enum",
+          "default": "\"center\"",
+          "description": "Which point of the block sits on the projected position."
+        },
+        "hideWhenBehindCamera": {
+          "kind": "bool",
+          "default": "true",
+          "description": "Hide the label when the anchor is behind the camera."
+        },
+        "order": {
+          "kind": "i32",
+          "default": "0",
+          "description": "Sort order within the text renderer; lower draws first."
         }
       }
     }

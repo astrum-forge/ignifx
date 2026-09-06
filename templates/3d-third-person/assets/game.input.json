@@ -1,0 +1,78 @@
+{
+  "format": "ignifx.inputactions",
+  "formatVersion": 1,
+  "controlSchemes": [
+    { "name": "KeyboardMouse", "devices": ["Keyboard", "Mouse"] },
+    { "name": "Gamepad", "devices": ["Gamepad"] },
+    { "name": "Touch", "devices": ["Touch", "Virtual"] }
+  ],
+  "maps": [
+    {
+      "name": "Player",
+      "enabled": true,
+      "actions": [
+        {
+          "name": "Move",
+          "type": "vector2",
+          "bindings": [
+            {
+              "composite": "2DVector",
+              "up": "<Keyboard>/w",
+              "down": "<Keyboard>/s",
+              "left": "<Keyboard>/a",
+              "right": "<Keyboard>/d",
+              "scheme": "KeyboardMouse"
+            },
+            {
+              "composite": "2DVector",
+              "up": "<Keyboard>/arrowUp",
+              "down": "<Keyboard>/arrowDown",
+              "left": "<Keyboard>/arrowLeft",
+              "right": "<Keyboard>/arrowRight",
+              "scheme": "KeyboardMouse"
+            },
+            { "path": "<Gamepad>/leftStick", "processors": ["deadzone(0.2)"], "scheme": "Gamepad" },
+            { "path": "<Gamepad>/dpad", "scheme": "Gamepad" },
+            { "path": "<Virtual>/joystick", "processors": ["deadzone(0.15)"], "scheme": "Touch" }
+          ]
+        },
+        {
+          "name": "Look",
+          "type": "vector2",
+          "bindings": [
+            { "path": "<Mouse>/delta", "scheme": "KeyboardMouse" },
+            { "path": "<Gamepad>/rightStick", "processors": ["deadzone(0.2)", "scale(18)"], "scheme": "Gamepad" },
+            { "path": "<Virtual>/look", "processors": ["deadzone(0.15)", "scale(18)"], "scheme": "Touch" }
+          ]
+        },
+        {
+          "name": "Jump",
+          "type": "button",
+          "bindings": [
+            { "path": "<Keyboard>/space", "scheme": "KeyboardMouse" },
+            { "path": "<Gamepad>/buttonSouth", "scheme": "Gamepad" },
+            { "path": "<Virtual>/jump", "scheme": "Touch" }
+          ]
+        },
+        {
+          "name": "Sprint",
+          "type": "button",
+          "bindings": [
+            { "path": "<Keyboard>/shiftLeft", "scheme": "KeyboardMouse" },
+            { "path": "<Gamepad>/leftStickPress", "scheme": "Gamepad" },
+            { "path": "<Virtual>/sprint", "scheme": "Touch" }
+          ]
+        },
+        {
+          "name": "Pause",
+          "type": "button",
+          "bindings": [
+            { "path": "<Keyboard>/escape", "scheme": "KeyboardMouse" },
+            { "path": "<Gamepad>/start", "scheme": "Gamepad" },
+            { "path": "<Virtual>/pause", "scheme": "Touch" }
+          ]
+        }
+      ]
+    }
+  ]
+}

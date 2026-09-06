@@ -56,6 +56,8 @@ export const ASSET_TYPE_BY_SUFFIX: {
     readonly ".input.json": "inputactions";
     readonly ".audio.json": "audiobuses";
     readonly ".physicsmaterial.json": "physicsmaterial";
+    readonly ".i18n.json": "i18n";
+    readonly ".animator.json": "animator";
     readonly ".atlas.json": "spriteatlas";
     readonly ".spriteanim.json": "spriteanimation";
     readonly ".tilemap.json": "tilemap";

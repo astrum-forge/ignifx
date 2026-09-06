@@ -49,6 +49,7 @@ export interface App {
     step(deltaSeconds: number): void;
     stop(): void;
     readonly time: Time;
+    readonly tweens: Tweens;
     readonly version: string;
     readonly world: World;
 }
@@ -556,6 +557,8 @@ export const CoreErrorCode: {
     readonly appDisposed: "IGX-0106";
     readonly appNotReady: "IGX-0107";
     readonly invalidTimeValue: "IGX-0108";
+    readonly invalidTweenOptions: "IGX-0109";
+    readonly tweenFieldNotTweenable: "IGX-0110";
     readonly requiredComponentMissing: "IGX-0201";
     readonly multipleComponentsNotAllowed: "IGX-0202";
     readonly duplicateComponentTypeId: "IGX-0203";
@@ -890,6 +893,18 @@ export interface DiagnosticsOptions {
 
 // @public
 export type Disconnect = () => void;
+
+// @public
+export const EASING_NAMES: readonly ["linear", "quadIn", "quadOut", "quadInOut", "cubicIn", "cubicOut", "cubicInOut", "sineInOut", "backOut", "elasticOut", "bounceOut"];
+
+// @public
+export type EasingFunction = (t: number) => number;
+
+// @public
+export type EasingName = (typeof EASING_NAMES)[number];
+
+// @public
+export const EASINGS: Readonly<Record<string, EasingFunction>>;
 
 // @public
 export const EMPTY_ASSET_MANIFEST: AssetManifest;
@@ -2360,6 +2375,9 @@ export const RESERVED_LAYER_NAMES: readonly string[];
 export function resetFrameSample(sample: FrameSample): FrameSample;
 
 // @public
+export function resolveEase(ease: EasingName | EasingFunction | undefined): EasingFunction | null;
+
+// @public
 export const SCENE_ASSET_TYPE = "scene";
 
 // @public
@@ -2931,6 +2949,65 @@ export interface Transform {
     // @internal
     [TRANSFORM_NODE]: LiteSceneNode | null;
 }
+
+// @public
+export class Tween {
+    // @internal
+    constructor(target: object, props: Readonly<Record<string, TweenableValue>>, options: TweenOptions);
+    // @internal
+    advance(dt: number): boolean;
+    complete(): void;
+    get isDone(): boolean;
+    get isPaused(): boolean;
+    get isPlaying(): boolean;
+    readonly onComplete: Signal<Tween>;
+    pause(): void;
+    get progress(): number;
+    resume(): void;
+    stop(): void;
+    get target(): object;
+    readonly updateWhenPaused: boolean;
+}
+
+// @public
+export const TWEEN_LOOP_FOREVER = -1;
+
+// @public
+export const TWEEN_SYSTEM_ORDER = -100;
+
+// @public
+export const TWEEN_VALUE_KINDS: readonly ["number", "vec2", "vec3", "quat"];
+
+// @public
+export type TweenableValue = number | Vec2Like | Vec3Like | QuatLike;
+
+// @public
+export interface TweenOptions {
+    readonly delay?: number;
+    readonly duration: number;
+    readonly ease?: EasingName | EasingFunction;
+    readonly loop?: number;
+    readonly onComplete?: () => void;
+    readonly updateWhenPaused?: boolean;
+    readonly yoyo?: boolean;
+}
+
+// @public
+export type TweenProps<T> = { readonly [K in keyof T as T[K] extends TweenableValue ? K : never]?: TweenTargetValue<T[K]>; };
+
+// @public
+export interface Tweens {
+    readonly count: number;
+    stopAll(): void;
+    stopAllOf(target: object): number;
+    to<T extends object>(target: T, props: TweenProps<T>, options: TweenOptions): Tween;
+}
+
+// @public
+export type TweenTargetValue<V> = V extends number ? number : V extends QuatLike ? QuatLike : V extends Vec3Like ? Vec3Like : V extends Vec2Like ? Vec2Like : never;
+
+// @public
+export type TweenValueKind = (typeof TWEEN_VALUE_KINDS)[number];
 
 // @public
 export function u32(defaultValue?: number, options?: FieldOptions): FieldDefinition<number>;

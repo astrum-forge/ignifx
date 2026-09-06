@@ -207,8 +207,9 @@ export class InputService implements BindingResolver {
 
   readonly #padActuated: boolean[] = [];
 
-  readonly #context: { uiHasFocus: boolean; strictSchemes: boolean; currentScheme: string } = {
+  readonly #context: { uiHasFocus: boolean; uiHasPointer: boolean; strictSchemes: boolean; currentScheme: string } = {
     uiHasFocus: false,
+    uiHasPointer: false,
     strictSchemes: false,
     currentScheme: "",
   };
@@ -218,6 +219,7 @@ export class InputService implements BindingResolver {
   #bridge: DomBridge | null = null;
 
   #uiHasFocus = false;
+  #uiHasPointer = false;
 
   #currentScheme = "";
 
@@ -346,6 +348,25 @@ export class InputService implements BindingResolver {
   // eslint-disable-next-line jsdoc/require-jsdoc -- see the note above.
   set uiHasFocus(value: boolean) {
     this.#uiHasFocus = value;
+  }
+
+  /**
+   * Whether a pointer is pressed on the UI overlay (`docs/architecture/08-input.md` §5). While it is
+   * `true`, pointing-device actions (`<Pointer>`, `<Mouse>`, `<Touch>`) read as released and their
+   * events are still published on {@link InputService.events}; keyboard and gamepad actions keep
+   * working. Pointer moves and releases are read from the window, so without this flag a drag that
+   * began on a UI slider would also drive `<Pointer>/delta`.
+   *
+   * @returns `true` while the UI owns the pointer. `@ignifx/ui` assigns it.
+   */
+  get uiHasPointer(): boolean {
+    return this.#uiHasPointer;
+  }
+
+  // Documented on the getter, for the same API Extractor reason as `uiHasFocus`.
+  // eslint-disable-next-line jsdoc/require-jsdoc -- see the note above.
+  set uiHasPointer(value: boolean) {
+    this.#uiHasPointer = value;
   }
 
   /**
@@ -633,6 +654,7 @@ export class InputService implements BindingResolver {
       this.#attributeScheme(entry);
     });
     this.#context.uiHasFocus = this.#uiHasFocus;
+    this.#context.uiHasPointer = this.#uiHasPointer;
     this.#context.strictSchemes = this.strictSchemes;
     this.#context.currentScheme = this.#currentScheme;
     this.#resolveActions(this.#context);

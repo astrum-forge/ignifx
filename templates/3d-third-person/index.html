@@ -2,11 +2,14 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>ignifx — 3d-third-person</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <title>ignifx — third person</title>
     <style>
       :root {
         color-scheme: dark;
+        --ink: #e8ecf4;
+        --panel: #141a26;
+        --accent: #f0a24a;
       }
 
       html,
@@ -14,13 +17,18 @@
         margin: 0;
         height: 100%;
         overflow: hidden;
-        background: #0b0f18;
-        color: #e8ecf4;
+        background: #0e1118;
+        color: var(--ink);
         font:
           14px/1.5 system-ui,
           -apple-system,
           "Segoe UI",
           sans-serif;
+        /* A game canvas owns every gesture on it: without this a swipe scrolls the page and a
+           double tap zooms it, and neither reaches the on-screen sticks. */
+        touch-action: none;
+        -webkit-user-select: none;
+        user-select: none;
       }
 
       #game {
@@ -43,12 +51,82 @@
         font-weight: 600;
       }
 
-      body[data-webgpu="unavailable"] #game {
+      body[data-webgpu="unavailable"] #game,
+      body[data-webgpu="unavailable"] .ignifx-ui-root {
         display: none;
       }
 
       body[data-webgpu="unavailable"] #unsupported {
         display: grid;
+      }
+
+      /* ---------------------------------------------------------------------------------------
+         `@ignifx/ui` injects one small stylesheet of single-class rules with no `!important`, so
+         a template's own CSS wins on order. Everything below restyles its helper widgets; none of
+         it changes what they do. The class names are `UI_CLASS_NAMES`.
+         --------------------------------------------------------------------------------------- */
+
+      .ignifx-ui-loading {
+        background: #0e1118;
+        gap: 1rem;
+      }
+
+      .ignifx-ui-loading-label {
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        opacity: 0.75;
+      }
+
+      .ignifx-ui-loading-track {
+        height: 4px;
+        background: #232b3a;
+      }
+
+      .ignifx-ui-loading-bar,
+      .ignifx-ui-dialog-button {
+        background: var(--accent);
+      }
+
+      .ignifx-ui-dialog-button {
+        color: #171104;
+        font-weight: 600;
+      }
+
+      .ignifx-ui-dialog-panel {
+        min-width: 16rem;
+        background: var(--panel);
+        border: 1px solid rgb(232 236 244 / 12%);
+        box-shadow: 0 1.5rem 3rem rgb(0 0 0 / 45%);
+      }
+
+      .ignifx-ui-joystick,
+      .ignifx-ui-button {
+        border: 2px solid rgb(232 236 244 / 30%);
+        background: rgb(12 18 30 / 45%);
+        backdrop-filter: blur(2px);
+      }
+
+      .ignifx-ui-joystick-knob {
+        background: rgb(232 236 244 / 55%);
+      }
+
+      .ignifx-ui-button {
+        color: var(--ink);
+        font-weight: 600;
+      }
+
+      /* The HUD line `src/game-ui.ts` appends to the `hud` layer. Plain DOM: real text, real
+         fonts, and no `FontAsset` — see the note in that file about why this is not `HudText`. */
+      .hud {
+        position: absolute;
+        top: calc(1rem + var(--ignifx-safe-top, 0px));
+        left: calc(1rem + var(--ignifx-safe-left, 0px));
+        padding: 0.35rem 0.7rem;
+        border-radius: 0.35rem;
+        background: rgb(12 18 30 / 55%);
+        font-variant-numeric: tabular-nums;
+        white-space: pre;
       }
     </style>
   </head>

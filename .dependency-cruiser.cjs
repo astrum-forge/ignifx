@@ -38,9 +38,9 @@ const ALLOWED_IMPORTS = {
   physics: ["core"],
   audio: ["core"],
   "2d": ["core"],
-  ui: ["core"],
+  ui: ["core", "input"],
   "physics-2d": ["core", "2d"],
-  "3d": ["core", "physics"],
+  "3d": ["core", "physics", "input"],
 
   // Layer 3 — platform, tooling and the umbrella.
   electron: ["core"],

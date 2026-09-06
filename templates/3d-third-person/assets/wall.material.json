@@ -1,0 +1,10 @@
+{
+  "format": "ignifx.material",
+  "formatVersion": 1,
+  "type": "pbr",
+  "name": "wall",
+  "baseColor": [1, 1, 1, 1],
+  "metallic": 0.05,
+  "roughness": 0.75,
+  "baseColorTexture": { "$asset": "wall.png" }
+}

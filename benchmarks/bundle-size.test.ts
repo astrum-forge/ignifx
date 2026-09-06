@@ -10,7 +10,11 @@ import baselines from "./baselines.json" with { type: "json" };
  * The bundle ceiling (`CONSTITUTION.md` §6.4, coding standards §12 step 4): each app below is
  * built, its JavaScript is gzipped, and the first-load payload has to stay inside the ceiling
  * `baselines.json` records. The plan asks for a ceiling **per template**, not one house number,
- * because the templates do not carry the same engine: only the two 2D ones pull in Rapier.
+ * because the templates do not carry the same engine: only the two 2D ones pull in Rapier, whose
+ * `rapier2d-compat` build inlines 797 KB of base64 WebAssembly straight into the entry chunk, while
+ * the two 3D ones get Havok as a copied `.wasm` file and Recast as a chunk Babylon Lite `import()`s
+ * only when a navmesh bakes. That is why a 3D template's first load is a third of a 2D one's
+ * despite carrying more engine.
  *
  * ## What is measured, and what is not
  *
@@ -29,13 +33,20 @@ import baselines from "./baselines.json" with { type: "json" };
 /** One app whose build is weighed, and the key its baseline is filed under. */
 interface Subject {
   /** The `baselines.json` key, which is also the path from the repository root. */
-  readonly key: "examples/hello-cube" | "templates/2d-topdown" | "templates/2d-sidescroller";
+  readonly key:
+    | "examples/hello-cube"
+    | "templates/2d-topdown"
+    | "templates/2d-sidescroller"
+    | "templates/3d-third-person"
+    | "templates/3d-first-person";
 }
 
 const SUBJECTS: readonly Subject[] = [
   { key: "examples/hello-cube" },
   { key: "templates/2d-topdown" },
   { key: "templates/2d-sidescroller" },
+  { key: "templates/3d-third-person" },
+  { key: "templates/3d-first-person" },
 ];
 
 /** How long each build is given. */

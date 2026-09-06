@@ -1646,6 +1646,38 @@ keyboard actions read as released and keyboard events are still published on
 
 `void`
 
+##### uiHasPointer
+
+###### Get Signature
+
+> **get** **uiHasPointer**(): `boolean`
+
+Whether a pointer is pressed on the UI overlay (`docs/architecture/08-input.md` §5). While it is
+`true`, pointing-device actions (`<Pointer>`, `<Mouse>`, `<Touch>`) read as released and their
+events are still published on [InputService.events](#events); keyboard and gamepad actions keep
+working. Pointer moves and releases are read from the window, so without this flag a drag that
+began on a UI slider would also drive `<Pointer>/delta`.
+
+###### Returns
+
+`boolean`
+
+`true` while the UI owns the pointer. `@ignifx/ui` assigns it.
+
+###### Set Signature
+
+> **set** **uiHasPointer**(`value`): `void`
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
 #### Methods
 
 ##### cancelInteractiveRebind()
@@ -2813,6 +2845,13 @@ The control scheme in use this frame.
 > `readonly` **uiHasFocus**: `boolean`
 
 `true` while a DOM text field has focus; keyboard controls then read as released.
+
+##### uiHasPointer
+
+> `readonly` **uiHasPointer**: `boolean`
+
+`true` while a pointer is pressed on the UI overlay; pointing-device controls then read as
+released, so a drag that started on a slider does not also turn the camera.
 
 ***
 

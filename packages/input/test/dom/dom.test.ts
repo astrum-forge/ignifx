@@ -225,6 +225,50 @@ describe("the navigator gamepad reader", () => {
   });
 });
 
+describe("pointer pixel space", () => {
+  it("reports positions and deltas in backing-store pixels when the canvas is scaled", () => {
+    const dom = createFakeDom();
+    // A 100-CSS-pixel-wide canvas with a 200-pixel backing store: device pixel ratio 2.
+    Object.assign(dom.canvas, {
+      width: 200,
+      getBoundingClientRect: (): { left: number; top: number; width: number } => ({ left: 10, top: 20, width: 100 }),
+    });
+    const queue = new InputEventQueue();
+    const source = new PointerSource({ target: asTarget(dom), queue, isLocked: () => false });
+    source.attach();
+    dom.canvas.dispatch("pointerdown", {
+      clientX: 30,
+      clientY: 50,
+      movementX: 5,
+      movementY: -5,
+      button: 0,
+      pointerId: 1,
+      pointerType: "mouse",
+    });
+    const events = drain(queue);
+    expect(events[0]).toMatchObject({ type: "pointerdown", x: 40, y: 60, deltaX: 10, deltaY: -10 });
+    source.detach();
+  });
+
+  it("keeps CSS pixels when the canvas reports no sizes, as the fakes elsewhere in this file do", () => {
+    const dom = createFakeDom();
+    const queue = new InputEventQueue();
+    const source = new PointerSource({ target: asTarget(dom), queue, isLocked: () => false });
+    source.attach();
+    dom.canvas.dispatch("pointerdown", {
+      clientX: 30,
+      clientY: 50,
+      movementX: 5,
+      movementY: 5,
+      button: 0,
+      pointerId: 1,
+      pointerType: "mouse",
+    });
+    expect(drain(queue)[0]).toMatchObject({ x: 20, y: 30, deltaX: 5 });
+    source.detach();
+  });
+});
+
 describe("the event queue", () => {
   it("recycles pending entries when it is cleared", () => {
     const queue = new InputEventQueue();

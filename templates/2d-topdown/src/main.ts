@@ -17,12 +17,14 @@ import { audio, AUDIO_ASSET_TYPE, AUDIO_BUSES_ASSET_TYPE } from "@ignifx/audio";
 import { createApp, isIgnifxError, Vec2 } from "@ignifx/core";
 import { INPUT_ACTIONS_ASSET_TYPE, input } from "@ignifx/input";
 import { BoxCollider2D, CharacterController2D, physics2d, TilemapCollider2D } from "@ignifx/physics-2d";
+import { ui } from "@ignifx/ui";
 // A Vite virtual module the plugin serves; the declaration is in src/vite-env.d.ts.
 // eslint-disable-next-line import-x/no-unresolved -- see above.
 import { manifest } from "virtual:ignifx/manifest";
+import { createGameUi, hasTouch } from "./game-ui.js";
+import { PauseMenu } from "./scripts/pause-menu.js";
 import { PlayerController } from "./scripts/player-controller.js";
 import { Shrine } from "./scripts/shrine.js";
-import { createTouchControls, hasTouch } from "./touch-controls.js";
 import type { SpriteAnimationAsset, SpriteAtlasAsset, TileObjectContext, TilemapAsset } from "@ignifx/2d";
 import type { AudioBusesAsset, AudioClip } from "@ignifx/audio";
 import type { App, AssetHandle, Entity } from "@ignifx/core";
@@ -281,7 +283,7 @@ async function main(): Promise<AppStatus> {
       // module rather than fetching `assets.manifest.json` means the table is in the bundle, so
       // the first asset request needs no round trip.
       assets: { manifest },
-      extensions: [twoD(), physics2d(), input(), audio()],
+      extensions: [twoD(), physics2d(), input(), audio(), ui()],
     });
   } catch (error) {
     // IGX-0701 is the one failure a shipped game must handle itself: the browser has no WebGPU and
@@ -293,7 +295,13 @@ async function main(): Promise<AppStatus> {
     throw error;
   }
 
-  app.registerComponents([PlayerController, Shrine]);
+  app.registerComponents([PlayerController, Shrine, PauseMenu]);
+
+  // The overlay comes up before the first asset is requested, so the loading bar sees every byte.
+  // The golden is about the rendered scene, not about how this machine draws a system font, so
+  // `?static=1` hides the overlay entirely rather than trying to make it deterministic.
+  const gameUi = createGameUi(app, [{ control: "interact", label: "E" }], !isStatic && hasTouch());
+  app.ui.visible = !isStatic;
 
   const assets: Assets = {
     tiles: app.assets.load<SpriteAtlasAsset>("tiles.atlas.json", ATLAS),
@@ -330,9 +338,11 @@ async function main(): Promise<AppStatus> {
     // Stopping the clock *before* `start()` means no fixed step ever runs, so nothing falls,
     // nothing animates and the camera never chases: the frame is exactly what was authored.
     app.time.timeScale = 0;
-  } else if (hasTouch()) {
-    createTouchControls(app, [{ control: "interact", label: "E" }], document.body);
+  } else {
+    app.world.createEntity("Game UI").addComponent(PauseMenu).menu = gameUi.pause;
   }
+
+  gameUi.loading.hide();
 
   await app.start();
   await settle(SETTLE_FRAMES);

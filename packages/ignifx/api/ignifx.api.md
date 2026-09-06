@@ -9,8 +9,36 @@ import { ActionMap } from '@ignifx/input';
 import { ActionMapDefinition } from '@ignifx/input';
 import { ActionSetOptions } from '@ignifx/input';
 import { ActionVector } from '@ignifx/input';
+import { AnchorInput } from '@ignifx/ui';
+import { AnchorPlacement } from '@ignifx/ui';
 import { AnimatedTilemapSink } from '@ignifx/2d';
+import { Animator } from '@ignifx/3d';
+import { ANIMATOR_ASSET_TYPE } from '@ignifx/3d';
+import { ANIMATOR_CONDITION_OPS } from '@ignifx/3d';
+import { ANIMATOR_FILE_EXTENSIONS } from '@ignifx/3d';
+import { ANIMATOR_FORMAT } from '@ignifx/3d';
+import { ANIMATOR_FORMAT_VERSION } from '@ignifx/3d';
+import { ANIMATOR_MASK_MODES } from '@ignifx/3d';
+import { ANIMATOR_PARAMETER_KINDS } from '@ignifx/3d';
+import { AnimatorAsset } from '@ignifx/3d';
+import { AnimatorBlendChildDefinition } from '@ignifx/3d';
+import { AnimatorBlendTreeDefinition } from '@ignifx/3d';
+import { AnimatorConditionDefinition } from '@ignifx/3d';
+import { AnimatorConditionOp } from '@ignifx/3d';
+import { AnimatorDefinition } from '@ignifx/3d';
+import { AnimatorEventDefinition } from '@ignifx/3d';
+import { animatorFileSchema } from '@ignifx/3d';
+import { AnimatorInput } from '@ignifx/3d';
+import { AnimatorLayerDefinition } from '@ignifx/3d';
+import { AnimatorMaskMode } from '@ignifx/3d';
+import { AnimatorParameterDefinition } from '@ignifx/3d';
+import { AnimatorParameterKind } from '@ignifx/3d';
+import { AnimatorPlayOptions } from '@ignifx/3d';
+import { AnimatorStateDefinition } from '@ignifx/3d';
+import { AnimatorStateMachine } from '@ignifx/3d';
+import { AnimatorTransitionDefinition } from '@ignifx/3d';
 import { ANY_KEY_CONTROL } from '@ignifx/input';
+import { ANY_STATE } from '@ignifx/3d';
 import { App } from '@ignifx/core';
 import { AppEvents } from '@ignifx/core';
 import { AppLiteHandles } from '@ignifx/core';
@@ -19,8 +47,10 @@ import { applyOverrides } from '@ignifx/input';
 import { applyProcessors } from '@ignifx/input';
 import { approximately } from '@ignifx/core';
 import { AppSettings } from '@ignifx/core';
+import { ArgumentNode } from '@ignifx/ui';
 import { array } from '@ignifx/core';
 import { ArrayFieldSpec } from '@ignifx/core';
+import { asDomCanvas } from '@ignifx/ui';
 import { AsepriteAnimationImportOptions } from '@ignifx/2d';
 import { asepriteFrameName } from '@ignifx/2d';
 import { AsepriteImportOptions } from '@ignifx/2d';
@@ -95,6 +125,11 @@ import { BackendSound } from '@ignifx/audio';
 import { BackendSoundRequest } from '@ignifx/audio';
 import { BackendSpatialRequest } from '@ignifx/audio';
 import { BatchHandle } from '@ignifx/core';
+import { Billboard } from '@ignifx/3d';
+import { BILLBOARD_MODES } from '@ignifx/3d';
+import { BILLBOARD_ORDER } from '@ignifx/3d';
+import { BillboardMode } from '@ignifx/3d';
+import { BillboardSystem } from '@ignifx/3d';
 import { binaryAssetLoader } from '@ignifx/core';
 import { Binding } from '@ignifx/input';
 import { BindingContext } from '@ignifx/input';
@@ -115,6 +150,7 @@ import { Camera } from '@ignifx/core';
 import { Camera2D } from '@ignifx/2d';
 import { Camera2DFollow } from '@ignifx/2d';
 import { CameraProjection } from '@ignifx/core';
+import { cameraRelativeToRef } from '@ignifx/3d';
 import { canonicalizeNumber } from '@ignifx/core';
 import { CANVAS_ALPHA_MODES } from '@ignifx/core';
 import { CanvasAlphaMode } from '@ignifx/core';
@@ -135,6 +171,7 @@ import { CircleCollider2D } from '@ignifx/physics-2d';
 import { clamp } from '@ignifx/core';
 import { clamp01 } from '@ignifx/core';
 import { clearOverrides } from '@ignifx/input';
+import { ClipWeight } from '@ignifx/3d';
 import { Clock } from '@ignifx/core';
 import { collectOverrides } from '@ignifx/input';
 import { Collider } from '@ignifx/physics';
@@ -171,7 +208,11 @@ import { ComponentTypeToken } from '@ignifx/core';
 import { compositeIsVector } from '@ignifx/input';
 import { CompositeKind } from '@ignifx/input';
 import { compositeParts } from '@ignifx/input';
+import { computeAnchorPlacement } from '@ignifx/ui';
+import { computeHudPlacement } from '@ignifx/ui';
+import { computePivotPlacement } from '@ignifx/ui';
 import { computeSceneHash } from '@ignifx/core';
+import { computeUiLayout } from '@ignifx/ui';
 import { ConcreteComponentType } from '@ignifx/core';
 import { ConnectOptions } from '@ignifx/core';
 import { ConsoleLike } from '@ignifx/core';
@@ -195,6 +236,7 @@ import { Coroutine } from '@ignifx/core';
 import { CoroutineHandle } from '@ignifx/core';
 import { CoroutineHost } from '@ignifx/core';
 import { CoroutineYield } from '@ignifx/core';
+import { createAnimatorLoader } from '@ignifx/3d';
 import { createApp } from '@ignifx/core';
 import { CreateAppOptions } from '@ignifx/core';
 import { createAssetManifest } from '@ignifx/core';
@@ -213,6 +255,7 @@ import { createFrameSample } from '@ignifx/core';
 import { createInputActionsLoader } from '@ignifx/input';
 import { createKeyboardDevice } from '@ignifx/input';
 import { createLayerTable } from '@ignifx/core';
+import { createLocaleLoader } from '@ignifx/ui';
 import { createLogger } from '@ignifx/core';
 import { createManualClock } from '@ignifx/core';
 import { createMaterialAsset } from '@ignifx/core';
@@ -224,6 +267,7 @@ import { createNavigatorGamepadReader } from '@ignifx/input';
 import { createPerformanceClock } from '@ignifx/core';
 import { createPhysicsMaterial2DLoader } from '@ignifx/physics-2d';
 import { createPhysicsMaterialLoader } from '@ignifx/physics';
+import { createPluralSelector } from '@ignifx/ui';
 import { createPointerDevice } from '@ignifx/input';
 import { createRay } from '@ignifx/core';
 import { createSceneAsset } from '@ignifx/core';
@@ -257,6 +301,7 @@ import { DEFAULT_AUDIO_BUSES } from '@ignifx/audio';
 import { DEFAULT_BRDF_LUT_ADDRESS } from '@ignifx/core';
 import { DEFAULT_CHUNK_SIZE } from '@ignifx/2d';
 import { DEFAULT_CLIP_FPS } from '@ignifx/2d';
+import { DEFAULT_CLIP_LENGTH } from '@ignifx/3d';
 import { DEFAULT_LAYER } from '@ignifx/core';
 import { DEFAULT_MEMORY_SINK_LIMIT } from '@ignifx/core';
 import { DEFAULT_ORTHOGRAPHIC_SIZE } from '@ignifx/2d';
@@ -270,8 +315,12 @@ import { defaultInputSettings } from '@ignifx/input';
 import { defaultPhysics2DSettings } from '@ignifx/physics-2d';
 import { defaultPhysicsSettings } from '@ignifx/physics';
 import { defaultRenderingSettings } from '@ignifx/core';
+import { defaultStateOf } from '@ignifx/3d';
+import { defaultThreeDSettings } from '@ignifx/3d';
 import { defaultTwoDSettings } from '@ignifx/2d';
+import { defaultUiSettings } from '@ignifx/ui';
 import { DeferredQueue } from '@ignifx/core';
+import { defineAnimator } from '@ignifx/3d';
 import { defineExtension } from '@ignifx/core';
 import { defineInputActions } from '@ignifx/input';
 import { defineSchema } from '@ignifx/core';
@@ -281,10 +330,12 @@ import { defineTilemap } from '@ignifx/2d';
 import { DEG_TO_RAD } from '@ignifx/core';
 import { degToRad } from '@ignifx/core';
 import { deltaAngleDegrees } from '@ignifx/core';
+import { describeAnimatorFormat } from '@ignifx/3d';
 import { describeAudioBusesFormat } from '@ignifx/audio';
 import { describeEnvironmentFileFormat } from '@ignifx/core';
 import { describeInputActionsFormat } from '@ignifx/input';
 import { describeInputSchemas } from '@ignifx/input';
+import { describeLocaleFileFormat } from '@ignifx/ui';
 import { describeMaterialFileFormat } from '@ignifx/core';
 import { describePhysicsMaterialFileFormat } from '@ignifx/physics';
 import { describeSceneFileFormat } from '@ignifx/core';
@@ -300,9 +351,16 @@ import { DeviceLostInfo } from '@ignifx/core';
 import { Diagnostics } from '@ignifx/core';
 import { DiagnosticsGroup } from '@ignifx/core';
 import { DiagnosticsOptions } from '@ignifx/core';
+import { Dialog } from '@ignifx/ui';
+import { DialogButton } from '@ignifx/ui';
+import { DialogOptions } from '@ignifx/ui';
 import { Disconnect } from '@ignifx/core';
 import { DomSource } from '@ignifx/input';
 import { DomTarget } from '@ignifx/input';
+import { EASING_NAMES } from '@ignifx/core';
+import { EasingFunction } from '@ignifx/core';
+import { EasingName } from '@ignifx/core';
+import { EASINGS } from '@ignifx/core';
 import { EdgeCollider2D } from '@ignifx/physics-2d';
 import { EMPTY_ASSET_MANIFEST } from '@ignifx/core';
 import { EMPTY_TILE_ID } from '@ignifx/2d';
@@ -349,6 +407,8 @@ import { FieldOptions } from '@ignifx/core';
 import { FieldsOf } from '@ignifx/core';
 import { FieldSpec } from '@ignifx/core';
 import { findTileset } from '@ignifx/2d';
+import { findVirtualDevice } from '@ignifx/ui';
+import { FirstPersonController } from '@ignifx/3d';
 import { FOG_MODE_NAMES } from '@ignifx/core';
 import { FONT_ASSET_TYPE } from '@ignifx/core';
 import { FONT_FILE_EXTENSIONS } from '@ignifx/core';
@@ -377,6 +437,17 @@ import { HeadlessBackendOptions } from '@ignifx/audio';
 import { HeadlessBus } from '@ignifx/audio';
 import { HeadlessSound } from '@ignifx/audio';
 import { HeightfieldCollider } from '@ignifx/physics';
+import { HUD_ANCHORS } from '@ignifx/ui';
+import { HudAnchor } from '@ignifx/ui';
+import { HudPlacement } from '@ignifx/ui';
+import { HudPlacementInput } from '@ignifx/ui';
+import { HudText } from '@ignifx/ui';
+import { I18N_ASSET_TYPE } from '@ignifx/ui';
+import { I18N_FILE_EXTENSIONS } from '@ignifx/ui';
+import { I18N_FORMAT } from '@ignifx/ui';
+import { I18N_FORMAT_VERSION } from '@ignifx/ui';
+import { I18nService } from '@ignifx/ui';
+import { I18nServiceOptions } from '@ignifx/ui';
 import { i32 } from '@ignifx/core';
 import { IgnifxError } from '@ignifx/core';
 import { IgnifxErrorOptions } from '@ignifx/core';
@@ -435,6 +506,7 @@ import { InterpolationMode2D } from '@ignifx/physics-2d';
 import { INVALID_HANDLE } from '@ignifx/core';
 import { inverseLerp } from '@ignifx/core';
 import { isAssetRef } from '@ignifx/core';
+import { isEditableElement } from '@ignifx/ui';
 import { isFullCellSolid } from '@ignifx/2d';
 import { isIgnifxError } from '@ignifx/core';
 import { isSceneFileHeader } from '@ignifx/core';
@@ -447,6 +519,8 @@ import { jsonAssetLoader } from '@ignifx/core';
 import { JsonObject } from '@ignifx/core';
 import { JsonSchemaObject } from '@ignifx/core';
 import { JsonValue } from '@ignifx/core';
+import { JumpTimers } from '@ignifx/3d';
+import { jumpVelocity } from '@ignifx/3d';
 import { keyboardControlNames } from '@ignifx/input';
 import { keyCodeControlNames } from '@ignifx/input';
 import { KINEMATIC_SYNC_MODES } from '@ignifx/physics';
@@ -466,6 +540,7 @@ import { LIGHT_TYPES } from '@ignifx/core';
 import { LightShadowSettings } from '@ignifx/core';
 import { LightType } from '@ignifx/core';
 import { LiteAnimationGroup } from '@ignifx/core';
+import { LiteAnimationManager } from '@ignifx/3d';
 import { LiteAssetContainer } from '@ignifx/core';
 import { LiteAtlasTexture } from '@ignifx/2d';
 import { LiteAudioBus } from '@ignifx/audio';
@@ -478,6 +553,9 @@ import { LiteFont } from '@ignifx/core';
 import { LiteLight } from '@ignifx/core';
 import { LiteMaterial } from '@ignifx/core';
 import { LiteMesh } from '@ignifx/core';
+import { LiteNavCrowd } from '@ignifx/3d';
+import { LiteNavigationPlugin } from '@ignifx/3d';
+import { LiteObstacleHandle } from '@ignifx/3d';
 import { LitePbrMaterial } from '@ignifx/core';
 import { LiteScene } from '@ignifx/core';
 import { LiteSceneNode } from '@ignifx/core';
@@ -497,11 +575,26 @@ import { LiteSpriteSampling } from '@ignifx/2d';
 import { LiteStandardMaterial } from '@ignifx/core';
 import { LiteStaticSound } from '@ignifx/audio';
 import { LiteStreamingSound } from '@ignifx/audio';
+import { LiteTextData } from '@ignifx/ui';
+import { LiteTextLayer } from '@ignifx/ui';
+import { LiteTextRenderable } from '@ignifx/ui';
+import { LiteTextRenderer } from '@ignifx/ui';
 import { LiteTexture2D } from '@ignifx/core';
 import { LoaderContext } from '@ignifx/core';
+import { LoadingScreen } from '@ignifx/ui';
+import { LoadingScreenOptions } from '@ignifx/ui';
 import { LoadOptions } from '@ignifx/core';
 import { LoadProgress } from '@ignifx/core';
 import { LoadSceneOptions } from '@ignifx/core';
+import { LocaleAsset } from '@ignifx/ui';
+import { LocaleDocument } from '@ignifx/ui';
+import { localeFileSchema } from '@ignifx/ui';
+import { localeJsonSchema } from '@ignifx/ui';
+import { LOD_CULLED } from '@ignifx/3d';
+import { LOD_ORDER } from '@ignifx/3d';
+import { LodGroup } from '@ignifx/3d';
+import { LodLevel } from '@ignifx/3d';
+import { LodSystem } from '@ignifx/3d';
 import { LOG_LEVEL_SEVERITY } from '@ignifx/core';
 import { Logger } from '@ignifx/core';
 import { LoggerOptions } from '@ignifx/core';
@@ -509,6 +602,8 @@ import { LogLevel } from '@ignifx/core';
 import { LogRecord } from '@ignifx/core';
 import { LogSink } from '@ignifx/core';
 import { LogThreshold } from '@ignifx/core';
+import { mainCamera } from '@ignifx/3d';
+import { mainCameraForward } from '@ignifx/3d';
 import { ManualClock } from '@ignifx/core';
 import { map } from '@ignifx/core';
 import { MapFieldSpec } from '@ignifx/core';
@@ -539,6 +634,9 @@ import { MeshAssetLiteHandles } from '@ignifx/core';
 import { MeshCollider } from '@ignifx/physics';
 import { MeshGeometryData } from '@ignifx/core';
 import { MeshRenderer } from '@ignifx/core';
+import { MessageNode } from '@ignifx/ui';
+import { MessageParams } from '@ignifx/ui';
+import { MessagePattern } from '@ignifx/ui';
 import { Model } from '@ignifx/core';
 import { MODEL_ASSET_TYPE } from '@ignifx/core';
 import { MODEL_FILE_EXTENSIONS } from '@ignifx/core';
@@ -554,6 +652,14 @@ import { MutableQuat } from '@ignifx/core';
 import { MutableVec2 } from '@ignifx/core';
 import { MutableVec3 } from '@ignifx/core';
 import { MutableVec4 } from '@ignifx/core';
+import { NAV_OBSTACLE_SHAPES } from '@ignifx/3d';
+import { NAVIGATION_ORDER } from '@ignifx/3d';
+import { NavigationService } from '@ignifx/3d';
+import { NavigationSystem } from '@ignifx/3d';
+import { NavMeshAgent } from '@ignifx/3d';
+import { NavMeshObstacle } from '@ignifx/3d';
+import { NavMeshSurface } from '@ignifx/3d';
+import { NavObstacleShape } from '@ignifx/3d';
 import { normalisePath } from '@ignifx/2d';
 import { NumberFieldSpec } from '@ignifx/core';
 import { OneShotOptions } from '@ignifx/audio';
@@ -566,6 +672,8 @@ import { parseAudioBusesFile } from '@ignifx/audio';
 import { parseComposite } from '@ignifx/input';
 import { parseControlPath } from '@ignifx/input';
 import { ParsedControlPath } from '@ignifx/input';
+import { parseLocaleFile } from '@ignifx/ui';
+import { parseMessage } from '@ignifx/ui';
 import { parseOverridePath } from '@ignifx/core';
 import { parsePhysicsMaterial } from '@ignifx/physics';
 import { parsePhysicsMaterial2D } from '@ignifx/physics-2d';
@@ -625,13 +733,18 @@ import { physicsSettingsSchema } from '@ignifx/physics';
 import { pingPong } from '@ignifx/core';
 import { pinToDeviceSlot } from '@ignifx/input';
 import { pivotedPositionToRef } from '@ignifx/2d';
+import { pixelMapping } from '@ignifx/ui';
 import { pixelsToWorldToRef } from '@ignifx/2d';
 import { PlaneMeshOptions } from '@ignifx/core';
 import { PlatformInfo } from '@ignifx/core';
 import { PlatformKind } from '@ignifx/core';
+import { PlatformMover } from '@ignifx/3d';
 import { PlayClipOptions } from '@ignifx/2d';
 import { PlayerInput } from '@ignifx/input';
 import { PlayOptions } from '@ignifx/audio';
+import { PlayStateOptions } from '@ignifx/3d';
+import { PluralNode } from '@ignifx/ui';
+import { PluralSelector } from '@ignifx/ui';
 import { PointerLock } from '@ignifx/input';
 import { PointerLockSettings } from '@ignifx/input';
 import { PolygonCollider2D } from '@ignifx/physics-2d';
@@ -639,7 +752,10 @@ import { PostProcessStack } from '@ignifx/core';
 import { Processor } from '@ignifx/input';
 import { ProcessorKind } from '@ignifx/input';
 import { ProfileScope } from '@ignifx/core';
+import { progressFraction } from '@ignifx/ui';
+import { Projectile } from '@ignifx/3d';
 import { PROJECTIONS } from '@ignifx/core';
+import { projectOnSlopeToRef } from '@ignifx/3d';
 import { Quat } from '@ignifx/core';
 import { quat } from '@ignifx/core';
 import { QUAT_IDENTITY } from '@ignifx/core';
@@ -670,6 +786,7 @@ import { RENDERING_SETTINGS_SECTION } from '@ignifx/core';
 import { RenderingFeature } from '@ignifx/core';
 import { RenderingFeatureSettings } from '@ignifx/core';
 import { RenderingSettings } from '@ignifx/core';
+import { renderMessage } from '@ignifx/ui';
 import { RenderPick } from '@ignifx/core';
 import { RenderPickOptions } from '@ignifx/core';
 import { RenderSurface } from '@ignifx/core';
@@ -679,12 +796,15 @@ import { repeat } from '@ignifx/core';
 import { RESERVED_LAYER_NAMES } from '@ignifx/core';
 import { resetFrameSample } from '@ignifx/core';
 import { resolveClipFrames } from '@ignifx/2d';
+import { resolveDomTarget } from '@ignifx/ui';
+import { resolveEase } from '@ignifx/core';
 import { resolveGamepadRemap } from '@ignifx/input';
 import { resolveRelative } from '@ignifx/2d';
 import { Rigidbody } from '@ignifx/physics';
 import { Rigidbody2D } from '@ignifx/physics-2d';
 import { Rigidbody2DRapierHandles } from '@ignifx/physics-2d';
 import { RigidbodyLiteHandles } from '@ignifx/physics';
+import { RigidbodyMover } from '@ignifx/3d';
 import { SCENE_ASSET_TYPE } from '@ignifx/core';
 import { SCENE_FILE_EXTENSIONS } from '@ignifx/core';
 import { SCENE_FILE_FORMAT } from '@ignifx/core';
@@ -740,6 +860,7 @@ import { SignalOwner } from '@ignifx/core';
 import { SimulatedEvent } from '@ignifx/input';
 import { SimulatedValue } from '@ignifx/input';
 import { sizeForZoom } from '@ignifx/2d';
+import { slopeAngleDegrees } from '@ignifx/3d';
 import { SmaaEffectSettings } from '@ignifx/core';
 import { smoothStep } from '@ignifx/core';
 import { snapPixel } from '@ignifx/2d';
@@ -794,6 +915,8 @@ import { spriteRotationToLite } from '@ignifx/2d';
 import { STANDARD_TEXTURE_SLOTS } from '@ignifx/core';
 import { StandardMaterialDefinition } from '@ignifx/core';
 import { standardMaterialDefinition } from '@ignifx/core';
+import { StateChange } from '@ignifx/3d';
+import { stickAxis } from '@ignifx/ui';
 import { str } from '@ignifx/core';
 import { StringFieldSpec } from '@ignifx/core';
 import { stringifySceneFile } from '@ignifx/core';
@@ -802,13 +925,33 @@ import { SupportStateName } from '@ignifx/physics';
 import { System } from '@ignifx/core';
 import { SystemContext } from '@ignifx/core';
 import { TagSet } from '@ignifx/core';
+import { TEXT_ALIGNMENTS } from '@ignifx/ui';
+import { TextAlignment } from '@ignifx/ui';
 import { textAssetLoader } from '@ignifx/core';
+import { TextComponent } from '@ignifx/ui';
+import { TextMetrics as TextMetrics_2 } from '@ignifx/ui';
+import { TextNode } from '@ignifx/ui';
+import { TextRuntime } from '@ignifx/ui';
+import { TextRuntimeOptions } from '@ignifx/ui';
 import { TEXTURE_ASSET_TYPE } from '@ignifx/core';
 import { TextureAsset } from '@ignifx/core';
 import { TextureAssetLiteHandles } from '@ignifx/core';
 import { TextureImportOptions } from '@ignifx/core';
 import { TexturePackerImportOptions } from '@ignifx/2d';
 import { THIRD_PARTY_ERROR_PREFIX } from '@ignifx/core';
+import { ThirdPersonCamera } from '@ignifx/3d';
+import { ThirdPersonController } from '@ignifx/3d';
+import { THREE_D_ANIMATION_ORDER } from '@ignifx/3d';
+import { THREE_D_ERROR_MESSAGES } from '@ignifx/3d';
+import { THREE_D_SETTINGS_SECTION } from '@ignifx/3d';
+import { threeD } from '@ignifx/3d';
+import { ThreeDAnimationSystem } from '@ignifx/3d';
+import { threeDError } from '@ignifx/3d';
+import { ThreeDErrorCode } from '@ignifx/3d';
+import { ThreeDErrorOptions } from '@ignifx/3d';
+import { ThreeDOptions } from '@ignifx/3d';
+import { ThreeDSettings } from '@ignifx/3d';
+import { threeDSettingsSchema } from '@ignifx/3d';
 import { TileAnimationFrame } from '@ignifx/2d';
 import { TileChange } from '@ignifx/2d';
 import { TileColliderDefinition } from '@ignifx/2d';
@@ -843,6 +986,8 @@ import { TilesetDefinition } from '@ignifx/2d';
 import { Time } from '@ignifx/core';
 import { TimeSettings } from '@ignifx/core';
 import { TINT_EFFECT_WGSL } from '@ignifx/2d';
+import { Toast } from '@ignifx/ui';
+import { ToastOptions } from '@ignifx/ui';
 import { toJsonSchema } from '@ignifx/core';
 import { TONE_MAPPING_NAMES } from '@ignifx/core';
 import { ToneMappingCurve } from '@ignifx/core';
@@ -852,6 +997,17 @@ import { touchControlNames } from '@ignifx/input';
 import { Transform } from '@ignifx/core';
 import { TriggerEvent } from '@ignifx/physics';
 import { TriggerEvent2D } from '@ignifx/physics-2d';
+import { turnTowardsDegrees } from '@ignifx/3d';
+import { Tween } from '@ignifx/core';
+import { TWEEN_LOOP_FOREVER } from '@ignifx/core';
+import { TWEEN_SYSTEM_ORDER } from '@ignifx/core';
+import { TWEEN_VALUE_KINDS } from '@ignifx/core';
+import { TweenableValue } from '@ignifx/core';
+import { TweenOptions } from '@ignifx/core';
+import { TweenProps } from '@ignifx/core';
+import { Tweens } from '@ignifx/core';
+import { TweenTargetValue } from '@ignifx/core';
+import { TweenValueKind } from '@ignifx/core';
 import { TWO_D_ANIMATION_ORDER } from '@ignifx/2d';
 import { TWO_D_ERROR_MESSAGES } from '@ignifx/2d';
 import { TWO_D_MODES } from '@ignifx/2d';
@@ -871,7 +1027,34 @@ import { TwoDSettings } from '@ignifx/2d';
 import { twoDSettingsSchema } from '@ignifx/2d';
 import { TwoDSyncSystem } from '@ignifx/2d';
 import { u32 } from '@ignifx/core';
+import { ui } from '@ignifx/ui';
+import { UI_CLASS_NAMES } from '@ignifx/ui';
+import { UI_CSS_VARIABLES } from '@ignifx/ui';
+import { UI_ERROR_MESSAGES } from '@ignifx/ui';
+import { UI_FOCUS_ATTRIBUTE } from '@ignifx/ui';
+import { UI_LAYER_Z_STEP } from '@ignifx/ui';
+import { UI_SCALING_MODES } from '@ignifx/ui';
+import { UI_SETTINGS_SECTION } from '@ignifx/ui';
+import { UI_STYLE_ELEMENT_ID } from '@ignifx/ui';
+import { UI_SYNC_ORDER } from '@ignifx/ui';
+import { UiDomTarget } from '@ignifx/ui';
 import { UidRemap } from '@ignifx/core';
+import { uiError } from '@ignifx/ui';
+import { UiErrorCode } from '@ignifx/ui';
+import { UiErrorOptions } from '@ignifx/ui';
+import { UiHost } from '@ignifx/ui';
+import { UiHostOptions } from '@ignifx/ui';
+import { UiLayer } from '@ignifx/ui';
+import { UiLayerOptions } from '@ignifx/ui';
+import { UiLayout } from '@ignifx/ui';
+import { UiOptions } from '@ignifx/ui';
+import { UiPixelMapping } from '@ignifx/ui';
+import { UiScalingMode } from '@ignifx/ui';
+import { UiSettings } from '@ignifx/ui';
+import { uiSettingsSchema } from '@ignifx/ui';
+import { UiSurfaceMetrics } from '@ignifx/ui';
+import { UiSystem } from '@ignifx/ui';
+import { UiSystemOptions } from '@ignifx/ui';
 import { UlidFactoryOptions } from '@ignifx/core';
 import { validateInputActions } from '@ignifx/input';
 import { validateProps } from '@ignifx/core';
@@ -903,7 +1086,12 @@ import { VERSION } from '@ignifx/core';
 import { VibrationActuatorLike } from '@ignifx/input';
 import { VibrationEffectParameters } from '@ignifx/input';
 import { viewRotationToLite } from '@ignifx/2d';
+import { VirtualButton } from '@ignifx/ui';
+import { VirtualButtonOptions } from '@ignifx/ui';
 import { VirtualDevice } from '@ignifx/input';
+import { VirtualDeviceLike } from '@ignifx/ui';
+import { VirtualJoystick } from '@ignifx/ui';
+import { VirtualJoystickOptions } from '@ignifx/ui';
 import { VoiceHost } from '@ignifx/audio';
 import { VoiceRequest } from '@ignifx/audio';
 import { waitFixedUpdate } from '@ignifx/core';
@@ -915,10 +1103,15 @@ import { waitWhile } from '@ignifx/core';
 import { WavHeader } from '@ignifx/audio';
 import { WebAudioBackend } from '@ignifx/audio';
 import { World } from '@ignifx/core';
+import { WORLD_FORWARD } from '@ignifx/3d';
+import { WorldAnchor } from '@ignifx/ui';
 import { WorldBox } from '@ignifx/2d';
 import { WorldLiteHandles } from '@ignifx/core';
+import { WorldText } from '@ignifx/ui';
+import { WorldText2D } from '@ignifx/ui';
 import { worldToPixelsToRef } from '@ignifx/2d';
 import { wrapAngleDegrees } from '@ignifx/core';
+import { yawFromDirection } from '@ignifx/3d';
 import { zoomForSize } from '@ignifx/2d';
 
 export { ActionDefinition }
@@ -931,9 +1124,65 @@ export { ActionSetOptions }
 
 export { ActionVector }
 
+export { AnchorInput }
+
+export { AnchorPlacement }
+
 export { AnimatedTilemapSink }
 
+export { Animator }
+
+export { ANIMATOR_ASSET_TYPE }
+
+export { ANIMATOR_CONDITION_OPS }
+
+export { ANIMATOR_FILE_EXTENSIONS }
+
+export { ANIMATOR_FORMAT }
+
+export { ANIMATOR_FORMAT_VERSION }
+
+export { ANIMATOR_MASK_MODES }
+
+export { ANIMATOR_PARAMETER_KINDS }
+
+export { AnimatorAsset }
+
+export { AnimatorBlendChildDefinition }
+
+export { AnimatorBlendTreeDefinition }
+
+export { AnimatorConditionDefinition }
+
+export { AnimatorConditionOp }
+
+export { AnimatorDefinition }
+
+export { AnimatorEventDefinition }
+
+export { animatorFileSchema }
+
+export { AnimatorInput }
+
+export { AnimatorLayerDefinition }
+
+export { AnimatorMaskMode }
+
+export { AnimatorParameterDefinition }
+
+export { AnimatorParameterKind }
+
+export { AnimatorPlayOptions }
+
+export { AnimatorStateDefinition }
+
+export { AnimatorStateMachine }
+
+export { AnimatorTransitionDefinition }
+
 export { ANY_KEY_CONTROL }
+
+export { ANY_STATE }
 
 export { App }
 
@@ -951,9 +1200,13 @@ export { approximately }
 
 export { AppSettings }
 
+export { ArgumentNode }
+
 export { array }
 
 export { ArrayFieldSpec }
+
+export { asDomCanvas }
 
 export { AsepriteAnimationImportOptions }
 
@@ -1103,6 +1356,16 @@ export { BackendSpatialRequest }
 
 export { BatchHandle }
 
+export { Billboard }
+
+export { BILLBOARD_MODES }
+
+export { BILLBOARD_ORDER }
+
+export { BillboardMode }
+
+export { BillboardSystem }
+
 export { binaryAssetLoader }
 
 export { Binding }
@@ -1143,6 +1406,8 @@ export { Camera2DFollow }
 
 export { CameraProjection }
 
+export { cameraRelativeToRef }
+
 export { canonicalizeNumber }
 
 export { CANVAS_ALPHA_MODES }
@@ -1182,6 +1447,8 @@ export { clamp }
 export { clamp01 }
 
 export { clearOverrides }
+
+export { ClipWeight }
 
 export { Clock }
 
@@ -1255,7 +1522,15 @@ export { CompositeKind }
 
 export { compositeParts }
 
+export { computeAnchorPlacement }
+
+export { computeHudPlacement }
+
+export { computePivotPlacement }
+
 export { computeSceneHash }
+
+export { computeUiLayout }
 
 export { ConcreteComponentType }
 
@@ -1303,6 +1578,8 @@ export { CoroutineHost }
 
 export { CoroutineYield }
 
+export { createAnimatorLoader }
+
 export { createApp }
 
 export { CreateAppOptions }
@@ -1339,6 +1616,8 @@ export { createKeyboardDevice }
 
 export { createLayerTable }
 
+export { createLocaleLoader }
+
 export { createLogger }
 
 export { createManualClock }
@@ -1360,6 +1639,8 @@ export { createPerformanceClock }
 export { createPhysicsMaterial2DLoader }
 
 export { createPhysicsMaterialLoader }
+
+export { createPluralSelector }
 
 export { createPointerDevice }
 
@@ -1427,6 +1708,8 @@ export { DEFAULT_CHUNK_SIZE }
 
 export { DEFAULT_CLIP_FPS }
 
+export { DEFAULT_CLIP_LENGTH }
+
 export { DEFAULT_LAYER }
 
 export { DEFAULT_MEMORY_SINK_LIMIT }
@@ -1453,9 +1736,17 @@ export { defaultPhysicsSettings }
 
 export { defaultRenderingSettings }
 
+export { defaultStateOf }
+
+export { defaultThreeDSettings }
+
 export { defaultTwoDSettings }
 
+export { defaultUiSettings }
+
 export { DeferredQueue }
+
+export { defineAnimator }
 
 export { defineExtension }
 
@@ -1475,6 +1766,8 @@ export { degToRad }
 
 export { deltaAngleDegrees }
 
+export { describeAnimatorFormat }
+
 export { describeAudioBusesFormat }
 
 export { describeEnvironmentFileFormat }
@@ -1482,6 +1775,8 @@ export { describeEnvironmentFileFormat }
 export { describeInputActionsFormat }
 
 export { describeInputSchemas }
+
+export { describeLocaleFileFormat }
 
 export { describeMaterialFileFormat }
 
@@ -1513,11 +1808,25 @@ export { DiagnosticsGroup }
 
 export { DiagnosticsOptions }
 
+export { Dialog }
+
+export { DialogButton }
+
+export { DialogOptions }
+
 export { Disconnect }
 
 export { DomSource }
 
 export { DomTarget }
+
+export { EASING_NAMES }
+
+export { EasingFunction }
+
+export { EasingName }
+
+export { EASINGS }
 
 export { EdgeCollider2D }
 
@@ -1611,6 +1920,10 @@ export { FieldSpec }
 
 export { findTileset }
 
+export { findVirtualDevice }
+
+export { FirstPersonController }
+
 export { FOG_MODE_NAMES }
 
 export { FONT_ASSET_TYPE }
@@ -1666,6 +1979,28 @@ export { HeadlessBus }
 export { HeadlessSound }
 
 export { HeightfieldCollider }
+
+export { HUD_ANCHORS }
+
+export { HudAnchor }
+
+export { HudPlacement }
+
+export { HudPlacementInput }
+
+export { HudText }
+
+export { I18N_ASSET_TYPE }
+
+export { I18N_FILE_EXTENSIONS }
+
+export { I18N_FORMAT }
+
+export { I18N_FORMAT_VERSION }
+
+export { I18nService }
+
+export { I18nServiceOptions }
 
 export { i32 }
 
@@ -1783,6 +2118,8 @@ export { inverseLerp }
 
 export { isAssetRef }
 
+export { isEditableElement }
+
 export { isFullCellSolid }
 
 export { isIgnifxError }
@@ -1806,6 +2143,10 @@ export { JsonObject }
 export { JsonSchemaObject }
 
 export { JsonValue }
+
+export { JumpTimers }
+
+export { jumpVelocity }
 
 export { keyboardControlNames }
 
@@ -1845,6 +2186,8 @@ export { LightType }
 
 export { LiteAnimationGroup }
 
+export { LiteAnimationManager }
+
 export { LiteAssetContainer }
 
 export { LiteAtlasTexture }
@@ -1868,6 +2211,12 @@ export { LiteLight }
 export { LiteMaterial }
 
 export { LiteMesh }
+
+export { LiteNavCrowd }
+
+export { LiteNavigationPlugin }
+
+export { LiteObstacleHandle }
 
 export { LitePbrMaterial }
 
@@ -1907,15 +2256,45 @@ export { LiteStaticSound }
 
 export { LiteStreamingSound }
 
+export { LiteTextData }
+
+export { LiteTextLayer }
+
+export { LiteTextRenderable }
+
+export { LiteTextRenderer }
+
 export { LiteTexture2D }
 
 export { LoaderContext }
+
+export { LoadingScreen }
+
+export { LoadingScreenOptions }
 
 export { LoadOptions }
 
 export { LoadProgress }
 
 export { LoadSceneOptions }
+
+export { LocaleAsset }
+
+export { LocaleDocument }
+
+export { localeFileSchema }
+
+export { localeJsonSchema }
+
+export { LOD_CULLED }
+
+export { LOD_ORDER }
+
+export { LodGroup }
+
+export { LodLevel }
+
+export { LodSystem }
 
 export { LOG_LEVEL_SEVERITY }
 
@@ -1930,6 +2309,10 @@ export { LogRecord }
 export { LogSink }
 
 export { LogThreshold }
+
+export { mainCamera }
+
+export { mainCameraForward }
 
 export { ManualClock }
 
@@ -1991,6 +2374,12 @@ export { MeshGeometryData }
 
 export { MeshRenderer }
 
+export { MessageNode }
+
+export { MessageParams }
+
+export { MessagePattern }
+
 export { Model }
 
 export { MODEL_ASSET_TYPE }
@@ -2021,6 +2410,22 @@ export { MutableVec3 }
 
 export { MutableVec4 }
 
+export { NAV_OBSTACLE_SHAPES }
+
+export { NAVIGATION_ORDER }
+
+export { NavigationService }
+
+export { NavigationSystem }
+
+export { NavMeshAgent }
+
+export { NavMeshObstacle }
+
+export { NavMeshSurface }
+
+export { NavObstacleShape }
+
 export { normalisePath }
 
 export { NumberFieldSpec }
@@ -2044,6 +2449,10 @@ export { parseComposite }
 export { parseControlPath }
 
 export { ParsedControlPath }
+
+export { parseLocaleFile }
+
+export { parseMessage }
 
 export { parseOverridePath }
 
@@ -2163,6 +2572,8 @@ export { pinToDeviceSlot }
 
 export { pivotedPositionToRef }
 
+export { pixelMapping }
+
 export { pixelsToWorldToRef }
 
 export { PlaneMeshOptions }
@@ -2171,11 +2582,19 @@ export { PlatformInfo }
 
 export { PlatformKind }
 
+export { PlatformMover }
+
 export { PlayClipOptions }
 
 export { PlayerInput }
 
 export { PlayOptions }
+
+export { PlayStateOptions }
+
+export { PluralNode }
+
+export { PluralSelector }
 
 export { PointerLock }
 
@@ -2191,7 +2610,13 @@ export { ProcessorKind }
 
 export { ProfileScope }
 
+export { progressFraction }
+
+export { Projectile }
+
 export { PROJECTIONS }
+
+export { projectOnSlopeToRef }
 
 export { Quat }
 
@@ -2253,6 +2678,8 @@ export { RenderingFeatureSettings }
 
 export { RenderingSettings }
 
+export { renderMessage }
+
 export { RenderPick }
 
 export { RenderPickOptions }
@@ -2271,6 +2698,10 @@ export { resetFrameSample }
 
 export { resolveClipFrames }
 
+export { resolveDomTarget }
+
+export { resolveEase }
+
 export { resolveGamepadRemap }
 
 export { resolveRelative }
@@ -2282,6 +2713,8 @@ export { Rigidbody2D }
 export { Rigidbody2DRapierHandles }
 
 export { RigidbodyLiteHandles }
+
+export { RigidbodyMover }
 
 export { SCENE_ASSET_TYPE }
 
@@ -2393,6 +2826,8 @@ export { SimulatedValue }
 
 export { sizeForZoom }
 
+export { slopeAngleDegrees }
+
 export { SmaaEffectSettings }
 
 export { smoothStep }
@@ -2501,6 +2936,10 @@ export { StandardMaterialDefinition }
 
 export { standardMaterialDefinition }
 
+export { StateChange }
+
+export { stickAxis }
+
 export { str }
 
 export { StringFieldSpec }
@@ -2517,7 +2956,21 @@ export { SystemContext }
 
 export { TagSet }
 
+export { TEXT_ALIGNMENTS }
+
+export { TextAlignment }
+
 export { textAssetLoader }
+
+export { TextComponent }
+
+export { TextMetrics_2 as TextMetrics }
+
+export { TextNode }
+
+export { TextRuntime }
+
+export { TextRuntimeOptions }
 
 export { TEXTURE_ASSET_TYPE }
 
@@ -2530,6 +2983,32 @@ export { TextureImportOptions }
 export { TexturePackerImportOptions }
 
 export { THIRD_PARTY_ERROR_PREFIX }
+
+export { ThirdPersonCamera }
+
+export { ThirdPersonController }
+
+export { THREE_D_ANIMATION_ORDER }
+
+export { THREE_D_ERROR_MESSAGES }
+
+export { THREE_D_SETTINGS_SECTION }
+
+export { threeD }
+
+export { ThreeDAnimationSystem }
+
+export { threeDError }
+
+export { ThreeDErrorCode }
+
+export { ThreeDErrorOptions }
+
+export { ThreeDOptions }
+
+export { ThreeDSettings }
+
+export { threeDSettingsSchema }
 
 export { TileAnimationFrame }
 
@@ -2599,6 +3078,10 @@ export { TimeSettings }
 
 export { TINT_EFFECT_WGSL }
 
+export { Toast }
+
+export { ToastOptions }
+
 export { toJsonSchema }
 
 export { TONE_MAPPING_NAMES }
@@ -2616,6 +3099,28 @@ export { Transform }
 export { TriggerEvent }
 
 export { TriggerEvent2D }
+
+export { turnTowardsDegrees }
+
+export { Tween }
+
+export { TWEEN_LOOP_FOREVER }
+
+export { TWEEN_SYSTEM_ORDER }
+
+export { TWEEN_VALUE_KINDS }
+
+export { TweenableValue }
+
+export { TweenOptions }
+
+export { TweenProps }
+
+export { Tweens }
+
+export { TweenTargetValue }
+
+export { TweenValueKind }
 
 export { TWO_D_ANIMATION_ORDER }
 
@@ -2655,7 +3160,61 @@ export { TwoDSyncSystem }
 
 export { u32 }
 
+export { ui }
+
+export { UI_CLASS_NAMES }
+
+export { UI_CSS_VARIABLES }
+
+export { UI_ERROR_MESSAGES }
+
+export { UI_FOCUS_ATTRIBUTE }
+
+export { UI_LAYER_Z_STEP }
+
+export { UI_SCALING_MODES }
+
+export { UI_SETTINGS_SECTION }
+
+export { UI_STYLE_ELEMENT_ID }
+
+export { UI_SYNC_ORDER }
+
+export { UiDomTarget }
+
 export { UidRemap }
+
+export { uiError }
+
+export { UiErrorCode }
+
+export { UiErrorOptions }
+
+export { UiHost }
+
+export { UiHostOptions }
+
+export { UiLayer }
+
+export { UiLayerOptions }
+
+export { UiLayout }
+
+export { UiOptions }
+
+export { UiPixelMapping }
+
+export { UiScalingMode }
+
+export { UiSettings }
+
+export { uiSettingsSchema }
+
+export { UiSurfaceMetrics }
+
+export { UiSystem }
+
+export { UiSystemOptions }
 
 export { UlidFactoryOptions }
 
@@ -2719,7 +3278,17 @@ export { VibrationEffectParameters }
 
 export { viewRotationToLite }
 
+export { VirtualButton }
+
+export { VirtualButtonOptions }
+
 export { VirtualDevice }
+
+export { VirtualDeviceLike }
+
+export { VirtualJoystick }
+
+export { VirtualJoystickOptions }
 
 export { VoiceHost }
 
@@ -2743,13 +3312,23 @@ export { WebAudioBackend }
 
 export { World }
 
+export { WORLD_FORWARD }
+
+export { WorldAnchor }
+
 export { WorldBox }
 
 export { WorldLiteHandles }
 
+export { WorldText }
+
+export { WorldText2D }
+
 export { worldToPixelsToRef }
 
 export { wrapAngleDegrees }
+
+export { yawFromDirection }
 
 export { zoomForSize }
 

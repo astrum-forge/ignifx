@@ -16,5 +16,5 @@ export default defineConfig({
   dts: { isolatedDeclarations: true },
   // Peer and runtime dependencies are resolved by the consumer, never bundled
   // (00-overview.md §2.1).
-  deps: { neverBundle: ["@ignifx/core"] },
+  deps: { neverBundle: ["@babylonjs/lite", "@ignifx/core"] },
 });

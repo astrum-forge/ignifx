@@ -40,6 +40,11 @@ export interface BindingResolver {
 export interface BindingContext {
   /** `true` while a DOM text field has focus; keyboard controls then read as released. */
   readonly uiHasFocus: boolean;
+  /**
+   * `true` while a pointer is pressed on the UI overlay; pointing-device controls then read as
+   * released, so a drag that started on a slider does not also turn the camera.
+   */
+  readonly uiHasPointer: boolean;
   /** `true` when bindings tagged with another control scheme must not resolve. */
   readonly strictSchemes: boolean;
   /** The control scheme in use this frame. */
@@ -213,9 +218,9 @@ export class Binding {
     }
     const composite = this.composite;
     if (composite === null) {
-      readRef(this.#refs[0], context.uiHasFocus, out);
+      readRef(this.#refs[0], context, out);
     } else {
-      this.#evaluateComposite(composite, context.uiHasFocus, out);
+      this.#evaluateComposite(composite, context, out);
     }
     applyProcessors(this.#chain, out, this.#isVector);
   }
@@ -224,27 +229,27 @@ export class Binding {
    * Combines the composite's parts into one value.
    *
    * @param composite - Which composite this is.
-   * @param uiHasFocus - Whether keyboard controls read as released.
+   * @param context - The frame's suppression flags.
    * @param out - The value to write into.
    */
-  #evaluateComposite(composite: CompositeKind, uiHasFocus: boolean, out: ControlValue): void {
+  #evaluateComposite(composite: CompositeKind, context: SuppressionFlags, out: ControlValue): void {
     const refs = this.#refs;
     switch (composite) {
       case CompositeKind.vector2D: {
-        const up = scalarOf(refs[0], uiHasFocus);
-        const down = scalarOf(refs[1], uiHasFocus);
-        const left = scalarOf(refs[2], uiHasFocus);
-        const right = scalarOf(refs[3], uiHasFocus);
+        const up = scalarOf(refs[0], context);
+        const down = scalarOf(refs[1], context);
+        const left = scalarOf(refs[2], context);
+        const right = scalarOf(refs[3], context);
         out.x = right - left;
         out.y = up - down;
         return;
       }
       case CompositeKind.axis1D: {
-        out.x = scalarOf(refs[1], uiHasFocus) - scalarOf(refs[0], uiHasFocus);
+        out.x = scalarOf(refs[1], context) - scalarOf(refs[0], context);
         return;
       }
       case CompositeKind.buttonWithModifier: {
-        out.x = scalarOf(refs[0], uiHasFocus) > 0 ? scalarOf(refs[1], uiHasFocus) : 0;
+        out.x = scalarOf(refs[0], context) > 0 ? scalarOf(refs[1], context) : 0;
         return;
       }
       default: {
@@ -314,20 +319,41 @@ function readPart(definition: BindingDefinition, part: string): string {
   }
 }
 
+/** The two UI suppression flags a frame carries (`docs/architecture/08-input.md` §5). */
+type SuppressionFlags = Pick<BindingContext, "uiHasFocus" | "uiHasPointer">;
+
 /**
- * Reads a resolved control into a value, honouring UI focus suppression.
+ * Whether the UI owns a control's device this frame: the keyboard while a text field has focus, a
+ * pointing device while a pointer is pressed on the overlay.
+ *
+ * @param ref - The resolved control.
+ * @param context - The frame's suppression flags.
+ * @returns `true` when the control must read as released.
+ */
+function isSuppressed(ref: ControlRef, context: SuppressionFlags): boolean {
+  const kind = ref.device.kind;
+  if (context.uiHasFocus && kind === DeviceKind.keyboard) {
+    return true;
+  }
+  return (
+    context.uiHasPointer && (kind === DeviceKind.pointer || kind === DeviceKind.mouse || kind === DeviceKind.touch)
+  );
+}
+
+/**
+ * Reads a resolved control into a value, honouring UI suppression.
  *
  * @param ref - The resolved control, or `undefined` when the binding resolved to nothing.
- * @param uiHasFocus - Whether keyboard controls read as released.
+ * @param context - The frame's suppression flags.
  * @param out - The value to write into.
  */
-function readRef(ref: ControlRef | undefined, uiHasFocus: boolean, out: ControlValue): void {
+function readRef(ref: ControlRef | undefined, context: SuppressionFlags, out: ControlValue): void {
   out.x = 0;
   out.y = 0;
   if (ref === undefined || !ref.device.isConnected) {
     return;
   }
-  if (uiHasFocus && ref.device.kind === DeviceKind.keyboard) {
+  if (isSuppressed(ref, context)) {
     return;
   }
   out.x = ref.device.valueAt(ref.control.offset);
@@ -340,14 +366,14 @@ function readRef(ref: ControlRef | undefined, uiHasFocus: boolean, out: ControlV
  * Reads the scalar value of a resolved control.
  *
  * @param ref - The resolved control, or `undefined`.
- * @param uiHasFocus - Whether keyboard controls read as released.
+ * @param context - The frame's suppression flags.
  * @returns The control's first component.
  */
-function scalarOf(ref: ControlRef | undefined, uiHasFocus: boolean): number {
+function scalarOf(ref: ControlRef | undefined, context: SuppressionFlags): number {
   if (ref === undefined || !ref.device.isConnected) {
     return 0;
   }
-  if (uiHasFocus && ref.device.kind === DeviceKind.keyboard) {
+  if (isSuppressed(ref, context)) {
     return 0;
   }
   return ref.device.valueAt(ref.control.offset);

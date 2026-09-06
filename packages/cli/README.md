@@ -17,8 +17,7 @@ create-ignifx <target-dir> [--template <name>] [--overwrite] [--desktop]
 
 ## Templates
 
-`2d-topdown` and `2d-sidescroller` ship today; `3d-third-person` and `3d-first-person` arrive in
-Phase 7. The published tarball carries them at `<package>/templates/<name>`, written by `prepack`
+`2d-topdown`, `2d-sidescroller`, `3d-third-person`, and `3d-first-person` ship. The published tarball carries them at `<package>/templates/<name>`, written by `prepack`
 from the repository's `templates/` (`scripts/copy-templates.ts`); in a checkout the executable falls
 back to that same `templates/` directory, so `node packages/cli/dist/bin.js my-game` works without a
 pack. An unknown name fails with `IGX-1402`.

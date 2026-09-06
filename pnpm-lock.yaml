@@ -839,6 +839,9 @@ importers:
       '@ignifx/physics-2d':
         specifier: workspace:*
         version: link:../../packages/physics-2d
+      '@ignifx/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
     devDependencies:
       '@ignifx/vite-plugin':
         specifier: workspace:*
@@ -870,6 +873,9 @@ importers:
       '@ignifx/physics-2d':
         specifier: workspace:*
         version: link:../../packages/physics-2d
+      '@ignifx/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
     devDependencies:
       '@ignifx/vite-plugin':
         specifier: workspace:*

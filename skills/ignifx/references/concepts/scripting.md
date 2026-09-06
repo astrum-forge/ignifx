@@ -144,7 +144,48 @@ export class Door extends Script implements ScriptCallbacks {
   `app.coroutines` host (`start`, `stop`, `stopAll`, `cancelAll`, `setPaused`) round it out. An
   exception inside a coroutine is reported through `app.onError` and cancels that coroutine only.
 
-## 6. Patterns and anti-patterns
+## 6. Tweens
+
+`app.tweens` moves a value over time on ignifx's clock, so a coroutine that hand-rolls a lerp is
+almost always the wrong shape. It lives in core, so both toolkits use it.
+
+```ts
+import { createApp } from "ignifx";
+
+const app = await createApp({ headless: true });
+const door = app.world.createEntity("Door");
+
+const tween = app.tweens.to(
+  door.transform,
+  { position: { x: 0, y: 3, z: 0 } },
+  { duration: 0.8, ease: "cubicInOut", onComplete: (): void => app.log.info("open") },
+);
+tween.onComplete.connect((finished): void => app.log.info("progress {p}", finished.progress));
+
+await app.start();
+app.step(0.4);
+```
+
+- **Targets** are any object. A field is tweenable when it is a `number`, or an object with
+  `x`/`y`(`/z`(`/w`)) components — `Vec2`, `Vec3`, and `Quat`, and anything shaped like them.
+  Quaternions **slerp** along the shortest arc; everything else interpolates component-wise. A field
+  that is neither is `IGX-0110`, and a bad option is `IGX-0109`.
+- **Options.** `duration` (seconds, required), `ease`, `delay`, `loop`, `yoyo`, `updateWhenPaused`,
+  `onComplete`. `loop` counts _extra_ cycles, so `loop: 2` runs three; `-1` repeats until stopped.
+- **Easing** is a name from `EASING_NAMES` — `linear`, `quadIn/Out/InOut`, `cubicIn/Out/InOut`,
+  `sineInOut`, `backOut`, `elasticOut`, `bounceOut` — or your own `(t: number) => number`.
+- **The handle** has `pause()`, `resume()`, `stop()`, `complete()`, `progress`, `isPlaying`,
+  `isPaused`, `isDone`, and `onComplete`. `stop()` leaves the value where it stands and never
+  completes; `complete()` jumps to the end and fires. `app.tweens.stopAll()` and
+  `stopAllOf(target)` clear them in bulk.
+- **Timing.** Tweens advance in `PostUpdate`, ahead of both toolkits' animation systems, on
+  `time.deltaTime` — so `time.timeScale` slows them and `app.pause()` freezes them. A tween created
+  with `updateWhenPaused: true` runs on `time.unscaledDeltaTime` instead, which is what a menu
+  animation wants. Every tween dies with the app.
+- **Start values are latched when the delay elapses**, not when the tween is created, so two tweens
+  queued on one property chain rather than fight.
+
+## 7. Patterns and anti-patterns
 
 | Do                                                                      | Instead of                                               |
 | ----------------------------------------------------------------------- | -------------------------------------------------------- |
@@ -154,3 +195,4 @@ export class Door extends Script implements ScriptCallbacks {
 | Keep `fixedUpdate` pure simulation, integrating with its `dt`           | `app.time.deltaTime` or wall-clock time inside it        |
 | Sequence with coroutines; compose small scripts with `requires`         | `async awake()`, one large script, or a global singleton |
 | Move long work into a coroutine, a system, or a worker                  | looping over everything in `update`                      |
+| Move a value with `app.tweens.to(...)`                                  | a coroutine that lerps by hand on `deltaTime`            |

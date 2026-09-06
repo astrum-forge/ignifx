@@ -979,6 +979,10 @@ before [ASSET\_TYPE\_BY\_EXTENSION](#asset_type_by_extension) because every one 
 
 #### Type Declaration
 
+###### .animator.json
+
+> `readonly` **.animator.json**: `"animator"` = `"animator"`
+
 ###### .atlas.json
 
 > `readonly` **.atlas.json**: `"spriteatlas"` = `"spriteatlas"`
@@ -986,6 +990,10 @@ before [ASSET\_TYPE\_BY\_EXTENSION](#asset_type_by_extension) because every one 
 ###### .audio.json
 
 > `readonly` **.audio.json**: `"audiobuses"` = `"audiobuses"`
+
+###### .i18n.json
+
+> `readonly` **.i18n.json**: `"i18n"` = `"i18n"`
 
 ###### .input.json
 

@@ -12,6 +12,7 @@ import type { SceneInstance } from "../scene/scene-instance.js";
 import type { Schema } from "../schema/types.js";
 import type { Script } from "../script/script.js";
 import type { Signal, SignalLike } from "../signal/signal.js";
+import type { Tweens } from "../tween/tweens.js";
 import type { World } from "../world/world.js";
 
 /**
@@ -149,7 +150,11 @@ export interface SystemContext {
   readonly time: Time;
   /** The phase currently running. */
   readonly phase: Phase;
-  /** Seconds elapsed: `time.deltaTime`, or `time.fixedDeltaTime` inside the fixed loop. */
+  /**
+   * Seconds elapsed: `time.deltaTime`, or `time.fixedDeltaTime` inside the fixed loop. Systems run
+   * while the app is paused and `dt` is **not** zeroed then — only scripts are filtered by
+   * `updateWhenPaused` — so a system that animates checks `time.paused` itself.
+   */
   readonly dt: number;
 }
 
@@ -582,6 +587,11 @@ export interface App {
   readonly lite: AppLiteHandles;
   /** The coroutine scheduler. */
   readonly coroutines: CoroutineHost;
+  /**
+   * The app-wide tween list (`docs/architecture/12-3d-toolkit.md` §4), advanced in `PostUpdate` on
+   * ignifx's clock and used by both toolkits.
+   */
+  readonly tweens: Tweens;
   /**
    * Makes component `typeId`s known to the serializer and the inspector
    * (`docs/architecture/03-scripting-and-components.md` §4).

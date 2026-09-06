@@ -11,10 +11,11 @@ WebGPU only. A browser without it gets the fallback panel in `index.html`.
 
 ## Controls
 
-| Action | Keyboard                       | Gamepad          | Touch            |
-| ------ | ------------------------------ | ---------------- | ---------------- |
-| `move` | A/D, arrows                    | left stick, dpad | on-screen stick  |
-| `jump` | <kbd>Space</kbd>, <kbd>Z</kbd> | ✕ / A            | the **▲** button |
+| Action  | Keyboard                       | Gamepad          | Touch             |
+| ------- | ------------------------------ | ---------------- | ----------------- |
+| `move`  | A/D, arrows                    | left stick, dpad | on-screen stick   |
+| `jump`  | <kbd>Space</kbd>, <kbd>Z</kbd> | ✕ / A            | the **▲** button  |
+| `pause` | <kbd>Esc</kbd>                 | Start            | the **II** button |
 
 Hold down and press jump to drop through a one-way platform. Holding jump gives the full arc;
 tapping gives a hop.
@@ -34,7 +35,9 @@ default capsule the autostep clears about 0.15 m whatever `stepOffset` says.
 - `public/` — the sheet images, served unhashed because a `.atlas.json` names its image relative to
   itself.
 - `src/main.ts` — parallax bands, tilemap and collider, then whatever the objects layer spawns.
-- `src/touch-controls.ts` — a DOM thumbstick feeding `<Virtual>`. **Delete it** when `@ignifx/ui`
-  ships `VirtualJoystick` in Phase 8; the bindings do not change.
+- `src/game-ui.ts` — the `@ignifx/ui` overlay: a `LoadingScreen` bound to `app.assets`, a pause
+  `Dialog` driven by a script that keeps updating while the app is paused, and the
+  `VirtualJoystick` / `VirtualButton` touch controls. It replaced the hand-written
+  `src/touch-controls.ts` this template shipped in Phase 6; the bindings did not change.
 
 `?static=1` stops the clock before the first frame; the visual golden suite opens it.

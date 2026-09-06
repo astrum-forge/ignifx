@@ -16,7 +16,8 @@
     "@ignifx/audio": "workspace:*",
     "@ignifx/core": "workspace:*",
     "@ignifx/input": "workspace:*",
-    "@ignifx/physics-2d": "workspace:*"
+    "@ignifx/physics-2d": "workspace:*",
+    "@ignifx/ui": "workspace:*"
   },
   "devDependencies": {
     "@ignifx/vite-plugin": "workspace:*",

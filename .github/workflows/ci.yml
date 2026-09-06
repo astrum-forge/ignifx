@@ -130,7 +130,7 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
 
       # `pnpm build` first, so the previews Playwright starts serve a production build of the two
-      # examples and the two templates rather than rebuilding @ignifx/core inside the webServer
+      # examples and the four templates rather than rebuilding @ignifx/core inside the webServer
       # timeout. `turbo run build` covers `templates/*`, which are workspace members.
       - run: pnpm build
 
@@ -168,8 +168,9 @@ jobs:
       # @ignifx/core has to be built before an example or a template can bundle it.
       - run: pnpm build
       # CONSTITUTION.md §6.4: the ceilings in benchmarks/baselines.json are a test, not a report.
-      # One entry per app — examples/hello-cube and both 2D templates — because they do not carry
-      # the same engine: only the templates pull in Rapier's inlined WebAssembly.
+      # One entry per app — examples/hello-cube and all four templates — because they do not carry
+      # the same engine: the 2D templates pull in Rapier's inlined WebAssembly, while the 3D ones
+      # get Havok as a copied .wasm and Recast as a lazily imported chunk.
       - run: pnpm bundle-size
 
   api-report:

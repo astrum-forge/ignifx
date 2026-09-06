@@ -1,0 +1,45 @@
+{
+  "format": "ignifx.animator",
+  "formatVersion": 1,
+  "parameters": [
+    { "name": "speed", "kind": "float", "value": 0 },
+    { "name": "grounded", "kind": "bool", "value": true },
+    { "name": "jump", "kind": "trigger" }
+  ],
+  "layers": [{ "name": "Base", "weight": 1, "defaultState": "locomotion" }],
+  "states": [
+    { "name": "locomotion", "blendTree": "locomotion", "loop": true },
+    {
+      "name": "jump",
+      "clip": "jump",
+      "loop": false,
+      "events": [{ "time": 0.85, "name": "landed" }]
+    }
+  ],
+  "transitions": [
+    {
+      "from": "any",
+      "to": "jump",
+      "conditions": [{ "param": "jump", "op": "trigger" }],
+      "duration": 0.08
+    },
+    {
+      "from": "jump",
+      "to": "locomotion",
+      "conditions": [{ "param": "grounded", "op": "eq", "value": true }],
+      "duration": 0.15,
+      "exitTime": 0.85
+    }
+  ],
+  "blendTrees1D": [
+    {
+      "name": "locomotion",
+      "param": "speed",
+      "children": [
+        { "clip": "idle", "threshold": 0 },
+        { "clip": "walk", "threshold": 2 },
+        { "clip": "run", "threshold": 6 }
+      ]
+    }
+  ]
+}

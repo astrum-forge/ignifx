@@ -23,6 +23,8 @@ export const ASSET_TYPE_BY_SUFFIX = {
   ".input.json": "inputactions",
   ".audio.json": "audiobuses",
   ".physicsmaterial.json": "physicsmaterial",
+  ".i18n.json": "i18n",
+  ".animator.json": "animator",
   ".atlas.json": "spriteatlas",
   ".spriteanim.json": "spriteanimation",
   ".tilemap.json": "tilemap",

@@ -709,13 +709,13 @@ Builds a world-space ray through a point on the canvas.
 
 `number`
 
-The CSS pixel x, from the canvas's left edge.
+The backing-store pixel x, from the canvas's left edge.
 
 ###### y
 
 `number`
 
-The CSS pixel y, from the canvas's top edge.
+The backing-store pixel y, from the canvas's top edge.
 
 ###### out?
 
@@ -729,6 +729,12 @@ The ray to fill; a fresh one is allocated when omitted.
 
 `out`, or `null` when the view-projection matrix is singular — a zero-sized viewport,
 or a camera that is not attached.
+
+###### Remarks
+
+Coordinates are backing-store pixels — the canvas's `width`/`height`, the space
+[Camera.worldToScreen](#worldtoscreen) answers in and `@ignifx/input` reports `<Pointer>/position` in — not
+CSS pixels; multiply a DOM event's `offsetX`/`offsetY` by `devicePixelRatio` first.
 
 ###### Example
 
@@ -749,13 +755,13 @@ The world-space point a canvas pixel maps to at a given distance along the view 
 
 `number`
 
-The CSS pixel x, from the canvas's left edge.
+The backing-store pixel x, from the canvas's left edge (see [Camera.screenToRay](#screentoray)).
 
 ###### y
 
 `number`
 
-The CSS pixel y, from the canvas's top edge.
+The backing-store pixel y, from the canvas's top edge.
 
 ###### distance
 
@@ -11746,6 +11752,158 @@ The vector to write.
 
 ***
 
+### Tween
+
+A tween in flight.
+
+#### Remarks
+
+Endpoints are latched when the delay elapses, not when the tween is created, so two tweens queued
+on one property in the same frame chain rather than fight.
+
+#### Example
+
+```ts
+const tween = app.tweens.to(entity.transform, { position: { x: 5, y: 0, z: 0 } }, {
+  duration: 1,
+  ease: "cubicInOut",
+});
+tween.onComplete.connect(() => app.log.info("arrived"));
+```
+
+#### Properties
+
+##### onComplete
+
+> `readonly` **onComplete**: [`Signal`](#signal-3)\<[`Tween`](#tween)\>
+
+Fires once when the tween finishes, with the tween itself. Never fires after `stop`.
+
+##### updateWhenPaused
+
+> `readonly` **updateWhenPaused**: `boolean`
+
+Whether the tween runs while the app is paused.
+
+#### Accessors
+
+##### isDone
+
+###### Get Signature
+
+> **get** **isDone**(): `boolean`
+
+Whether the tween has finished or been stopped and will never advance again.
+
+###### Returns
+
+`boolean`
+
+Whether the tween has finished or been stopped and will never advance again.
+
+##### isPaused
+
+###### Get Signature
+
+> **get** **isPaused**(): `boolean`
+
+Whether `pause` is holding the tween.
+
+###### Returns
+
+`boolean`
+
+Whether `pause` is holding the tween.
+
+##### isPlaying
+
+###### Get Signature
+
+> **get** **isPlaying**(): `boolean`
+
+Whether the tween is still advancing.
+
+###### Returns
+
+`boolean`
+
+Whether the tween is still advancing.
+
+##### progress
+
+###### Get Signature
+
+> **get** **progress**(): `number`
+
+How far through the current cycle the tween is, in `[0, 1]`, after the yoyo reversal and before
+the easing curve.
+
+###### Returns
+
+`number`
+
+The normalized cycle time.
+
+##### target
+
+###### Get Signature
+
+> **get** **target**(): `object`
+
+The object being tweened, for `stopAllOf`.
+
+###### Returns
+
+`object`
+
+The object being tweened, for `stopAllOf`.
+
+#### Methods
+
+##### complete()
+
+> **complete**(): `void`
+
+Jumps the target to the tween's end value, then finishes it. `onComplete` fires, exactly as it
+would have on the last frame.
+
+###### Returns
+
+`void`
+
+##### pause()
+
+> **pause**(): `void`
+
+Holds the tween where it is; `resume` picks it back up.
+
+###### Returns
+
+`void`
+
+##### resume()
+
+> **resume**(): `void`
+
+Releases a `pause`.
+
+###### Returns
+
+`void`
+
+##### stop()
+
+> **stop**(): `void`
+
+Ends the tween where it stands, leaving the target at its current value. `onComplete` does not
+fire.
+
+###### Returns
+
+`void`
+
+***
+
 ### UidRemap
 
 The per-instance mapping from the uids a scene file carries to the runtime objects built from it
@@ -15953,6 +16111,13 @@ Resolved project settings.
 > `readonly` **time**: [`Time`](#time-3)
 
 The clock.
+
+##### tweens
+
+> `readonly` **tweens**: [`Tweens`](#tweens-1)
+
+The app-wide tween list (`docs/architecture/12-3d-toolkit.md` §4), advanced in `PostUpdate` on
+ignifx's clock and used by both toolkits.
 
 ##### version
 
@@ -22196,7 +22361,7 @@ would never settle.
 
 > **pickAsync**(`x`, `y`, `options?`): `Promise`\<[`RenderPick`](#renderpick) \| `null`\>
 
-Picks the object under one CSS pixel of the canvas, exactly, on the GPU
+Picks the object under one pixel of the canvas, exactly, on the GPU
 (`docs/architecture/07-rendering.md` §3).
 
 ###### Parameters
@@ -22205,13 +22370,13 @@ Picks the object under one CSS pixel of the canvas, exactly, on the GPU
 
 `number`
 
-The CSS pixel x, from the canvas's left edge.
+The backing-store pixel x, from the canvas's left edge.
 
 ###### y
 
 `number`
 
-The CSS pixel y, from the canvas's top edge.
+The backing-store pixel y, from the canvas's top edge.
 
 ###### options?
 
@@ -22227,8 +22392,11 @@ What was hit, or `null` for a miss.
 
 ###### Remarks
 
-Picks are serialised per app: Lite's picker owns one set of staging buffers and chains each
-call onto the previous one's promise. A headless app has no picker and always misses.
+Coordinates are **backing-store pixels** — the canvas's `width`/`height`, the space
+`Camera.worldToScreen` answers in — not CSS pixels; multiply a DOM event's `offsetX`/`offsetY`
+by `devicePixelRatio` first. Picks are serialised per app: Lite's picker owns one set of staging
+buffers and chains each call onto the previous one's promise. A headless app has no picker and
+always misses.
 
 ##### requireFeature()
 
@@ -24070,7 +24238,9 @@ What a [System](#system) is handed when its phase runs
 
 > `readonly` **dt**: `number`
 
-Seconds elapsed: `time.deltaTime`, or `time.fixedDeltaTime` inside the fixed loop.
+Seconds elapsed: `time.deltaTime`, or `time.fixedDeltaTime` inside the fixed loop. Systems run
+while the app is paused and `dt` is **not** zeroed then — only scripts are filtered by
+`updateWhenPaused` — so a system that animates checks `time.paused` itself.
 
 ##### phase
 
@@ -24322,6 +24492,167 @@ Segment count around the ring.
 > `readonly` `optional` **thickness?**: `number`
 
 Tube thickness, in metres.
+
+***
+
+### TweenOptions
+
+What `app.tweens.to(...)` accepts.
+
+#### Properties
+
+##### delay?
+
+> `readonly` `optional` **delay?**: `number`
+
+How long to wait before the first cycle starts, in seconds. Defaults to `0`.
+
+##### duration
+
+> `readonly` **duration**: `number`
+
+How long one cycle takes, in seconds. Must be finite and greater than zero.
+
+##### ease?
+
+> `readonly` `optional` **ease?**: `"linear"` \| [`EasingFunction`](#easingfunction) \| `"quadIn"` \| `"quadOut"` \| `"quadInOut"` \| `"cubicIn"` \| `"cubicOut"` \| `"cubicInOut"` \| `"sineInOut"` \| `"backOut"` \| `"elasticOut"` \| `"bounceOut"`
+
+The curve, by name or as a custom `(t) => number`. Defaults to `"linear"`.
+
+##### loop?
+
+> `readonly` `optional` **loop?**: `number`
+
+How many extra cycles to run; `-1` repeats forever. Defaults to `0` — one cycle.
+
+##### onComplete?
+
+> `readonly` `optional` **onComplete?**: () => `void`
+
+Called once when the tween finishes on its own or through [Tween.complete](#complete).
+
+###### Returns
+
+`void`
+
+##### updateWhenPaused?
+
+> `readonly` `optional` **updateWhenPaused?**: `boolean`
+
+Whether the tween keeps running while `app.pause()` holds. A tween that does advances on
+`time.unscaledDeltaTime`; every other tween advances on `time.deltaTime` and is frozen by a
+pause. Defaults to `false`.
+
+##### yoyo?
+
+> `readonly` `optional` **yoyo?**: `boolean`
+
+Whether every other cycle plays backwards. Defaults to `false`.
+
+***
+
+### Tweens
+
+The app-wide tween list.
+
+#### Example
+
+```ts
+app.tweens.to(entity.transform, { position: { x: 0, y: 3, z: 0 } }, {
+  duration: 0.6,
+  ease: "backOut",
+  yoyo: true,
+  loop: 1,
+});
+```
+
+#### Properties
+
+##### count
+
+> `readonly` **count**: `number`
+
+How many tweens are alive.
+
+#### Methods
+
+##### stopAll()
+
+> **stopAll**(): `void`
+
+Stops every tween, without firing any `onComplete`.
+
+###### Returns
+
+`void`
+
+##### stopAllOf()
+
+> **stopAllOf**(`target`): `number`
+
+Stops every tween that moves one object.
+
+###### Parameters
+
+###### target
+
+`object`
+
+The object.
+
+###### Returns
+
+`number`
+
+How many tweens were stopped.
+
+##### to()
+
+> **to**\<`T`\>(`target`, `props`, `options`): [`Tween`](#tween)
+
+Starts a tween towards `props` and returns the handle.
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* `object`
+
+The target object's type.
+
+###### Parameters
+
+###### target
+
+`T`
+
+The object whose fields move. Any object with numeric or vector fields works.
+
+###### props
+
+[`TweenProps`](#tweenprops)\<`T`\>
+
+The destination value of each field to move.
+
+###### options
+
+[`TweenOptions`](#tweenoptions)
+
+Duration, curve, delay, looping, and the completion callback.
+
+###### Returns
+
+[`Tween`](#tween)
+
+The running tween.
+
+###### Throws
+
+IgnifxError with code `IGX-0109` when an option is outside its domain.
+
+###### Throws
+
+IgnifxError with code `IGX-0110` when a named field is not tweenable.
 
 ***
 
@@ -24643,6 +24974,36 @@ Detaches a handler from a [Signal](#signal-3). Calling it more than once is a no
 #### Returns
 
 `void`
+
+***
+
+### EasingFunction
+
+> **EasingFunction** = (`t`) => `number`
+
+A curve mapping normalized time to a normalized value. Custom curves have this shape.
+
+#### Parameters
+
+##### t
+
+`number`
+
+Normalized time in `[0, 1]`.
+
+#### Returns
+
+`number`
+
+The eased value; `0` at `t = 0` and `1` at `t = 1`, free to overshoot in between.
+
+***
+
+### EasingName
+
+> **EasingName** = *typeof* [`EASING_NAMES`](#easing_names)\[`number`\]
+
+The union of the named easing curves.
 
 ***
 
@@ -25386,6 +25747,67 @@ A listener attached to a [Signal](#signal-3).
 
 The union of the tone-mapping curves.
 
+***
+
+### TweenableValue
+
+> **TweenableValue** = `number` \| [`Vec2Like`](#vec2like) \| [`Vec3Like`](#vec3like) \| [`QuatLike`](#quatlike)
+
+A value a tween knows how to interpolate: a plain number, or an object with `x`/`y`(`/z`(`/w`))
+components.
+
+***
+
+### TweenProps
+
+> **TweenProps**\<`T`\> = `{ readonly [K in keyof T as T[K] extends TweenableValue ? K : never]?: TweenTargetValue<T[K]> }`
+
+The destinations `app.tweens.to` accepts for a target: every numeric, `Vec2`, `Vec3`, or `Quat`
+field of `T`, each one optional.
+
+#### Type Parameters
+
+##### T
+
+`T`
+
+The target object's type.
+
+#### Example
+
+```ts
+const props: TweenProps<Transform> = { position: { x: 1, y: 2, z: 3 } };
+```
+
+***
+
+### TweenTargetValue
+
+> **TweenTargetValue**\<`V`\> = `V` *extends* `number` ? `number` : `V` *extends* [`QuatLike`](#quatlike) ? [`QuatLike`](#quatlike) : `V` *extends* [`Vec3Like`](#vec3like) ? [`Vec3Like`](#vec3like) : `V` *extends* [`Vec2Like`](#vec2like) ? [`Vec2Like`](#vec2like) : `never`
+
+The destination value the tween should reach for one field, narrowed to the field's own shape.
+
+#### Type Parameters
+
+##### V
+
+`V`
+
+The field's declared type.
+
+#### Remarks
+
+`QuatLike` is tested before `Vec3Like` because a quaternion satisfies both: `{ x, y, z, w }` is
+assignable to `{ x, y, z }`.
+
+***
+
+### TweenValueKind
+
+> **TweenValueKind** = *typeof* [`TWEEN_VALUE_KINDS`](#tween_value_kinds)\[`number`\]
+
+The union of [TWEEN\_VALUE\_KINDS](#tween_value_kinds).
+
 ## Variables
 
 ### ASSET\_DIAGNOSTICS\_COUNTERS
@@ -25631,6 +26053,12 @@ A project settings section did not validate against the schema its extension reg
 
 A `Time` property was set to a value outside its documented domain.
 
+##### invalidTweenOptions
+
+> `readonly` **invalidTweenOptions**: `"IGX-0109"` = `"IGX-0109"`
+
+A `app.tweens.to(...)` option was outside its documented domain.
+
 ##### malformedErrorCode
 
 > `readonly` **malformedErrorCode**: `"IGX-1502"` = `"IGX-1502"`
@@ -25787,6 +26215,12 @@ The project settings declare more layer names than the 32 available slots.
 
 `Transform` was removed or disabled; every entity must keep exactly one enabled transform.
 
+##### tweenFieldNotTweenable
+
+> `readonly` **tweenFieldNotTweenable**: `"IGX-0110"` = `"IGX-0110"`
+
+A tweened field is not a number, `Vec2`, `Vec3`, or `Quat`, or is not writable.
+
 ##### unknownComponentTypeId
 
 > `readonly` **unknownComponentTypeId**: `"IGX-0307"` = `"IGX-0307"`
@@ -25931,6 +26365,29 @@ How many records [createMemorySink](#creatememorysink) keeps when no limit is gi
 > `const` **DEG\_TO\_RAD**: `number`
 
 Multiplier that converts degrees to radians.
+
+***
+
+### EASING\_NAMES
+
+> `const` **EASING\_NAMES**: readonly \[`"linear"`, `"quadIn"`, `"quadOut"`, `"quadInOut"`, `"cubicIn"`, `"cubicOut"`, `"cubicInOut"`, `"sineInOut"`, `"backOut"`, `"elasticOut"`, `"bounceOut"`\]
+
+The names [EASINGS](#easings) declares, in table order (coding standards §5.2 — an `as const` table
+and the union derived from it, never an enum).
+
+***
+
+### EASINGS
+
+> `const` **EASINGS**: `Readonly`\<`Record`\<`string`, [`EasingFunction`](#easingfunction)\>\>
+
+Every named easing curve, keyed by the name `TweenOptions.ease` accepts.
+
+#### Example
+
+```ts
+const halfway = EASINGS.cubicInOut(0.5); // 0.5
+```
 
 ***
 
@@ -26883,6 +27340,36 @@ The asset type textures are registered under.
 
 The first digit of the range reserved for extensions published outside the `@ignifx` scope
 (`IGX-9000` through `IGX-9999`). First-party subsystems never allocate here.
+
+***
+
+### TWEEN\_LOOP\_FOREVER
+
+> `const` **TWEEN\_LOOP\_FOREVER**: `-1` = `-1`
+
+`loop: -1` means "repeat until stopped".
+
+***
+
+### TWEEN\_SYSTEM\_ORDER
+
+> `const` **TWEEN\_SYSTEM\_ORDER**: `-100` = `-100`
+
+The `PostUpdate` order the tween system runs at.
+
+#### Remarks
+
+`-100` puts tweens **before** the toolkits' animation systems, which register at `0`
+(`@ignifx/2d`) and `10` (`@ignifx/3d`): a tween that drives an `Animator` parameter or a
+material property is read by the animation that runs after it, in the same frame.
+
+***
+
+### TWEEN\_VALUE\_KINDS
+
+> `const` **TWEEN\_VALUE\_KINDS**: readonly \[`"number"`, `"vec2"`, `"vec3"`, `"quat"`\]
+
+The four value shapes a tween can interpolate.
 
 ***
 
@@ -29932,6 +30419,34 @@ The sample to reset.
 [`FrameSample`](#framesample)
 
 The same sample, so it can be used as an expression.
+
+***
+
+### resolveEase()
+
+> **resolveEase**(`ease`): [`EasingFunction`](#easingfunction) \| `null`
+
+Resolves an `ease` option to the function a tween will call.
+
+#### Parameters
+
+##### ease
+
+`"linear"` \| [`EasingFunction`](#easingfunction) \| `"quadIn"` \| `"quadOut"` \| `"quadInOut"` \| `"cubicIn"` \| `"cubicOut"` \| `"cubicInOut"` \| `"sineInOut"` \| `"backOut"` \| `"elasticOut"` \| `"bounceOut"` \| `undefined`
+
+A name from [EASING\_NAMES](#easing_names), a custom curve, or `undefined` for `linear`.
+
+#### Returns
+
+[`EasingFunction`](#easingfunction) \| `null`
+
+The curve, or `null` when the name is not one the table declares.
+
+#### Example
+
+```ts
+const curve = resolveEase("cubicOut");
+```
 
 ***
 

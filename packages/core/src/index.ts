@@ -474,6 +474,13 @@ export { createManualClock, createPerformanceClock, type Clock, type ManualClock
 // transform — the component every entity carries.
 export { Transform } from "./transform/transform.js";
 
+// tween — `app.tweens`, the property animator both toolkits use.
+export { EASING_NAMES, EASINGS, resolveEase, type EasingFunction, type EasingName } from "./tween/easing.js";
+export { Tween, TWEEN_LOOP_FOREVER, type TweenOptions } from "./tween/tween.js";
+export { TWEEN_SYSTEM_ORDER } from "./tween/tween-system.js";
+export { type TweenProps, type Tweens, type TweenTargetValue } from "./tween/tweens.js";
+export { TWEEN_VALUE_KINDS, type TweenableValue, type TweenValueKind } from "./tween/channel.js";
+
 // world — the running simulation.
 export {
   World,

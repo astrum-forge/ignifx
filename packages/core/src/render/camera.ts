@@ -242,8 +242,13 @@ export class Camera extends Component implements ComponentHooks {
   /**
    * Builds a world-space ray through a point on the canvas.
    *
-   * @param x - The CSS pixel x, from the canvas's left edge.
-   * @param y - The CSS pixel y, from the canvas's top edge.
+   * @remarks
+   * Coordinates are backing-store pixels — the canvas's `width`/`height`, the space
+   * {@link Camera.worldToScreen} answers in and `@ignifx/input` reports `<Pointer>/position` in — not
+   * CSS pixels; multiply a DOM event's `offsetX`/`offsetY` by `devicePixelRatio` first.
+   *
+   * @param x - The backing-store pixel x, from the canvas's left edge.
+   * @param y - The backing-store pixel y, from the canvas's top edge.
    * @param out - The ray to fill; a fresh one is allocated when omitted.
    * @returns `out`, or `null` when the view-projection matrix is singular — a zero-sized viewport,
    * or a camera that is not attached.
@@ -302,8 +307,8 @@ export class Camera extends Component implements ComponentHooks {
   /**
    * The world-space point a canvas pixel maps to at a given distance along the view ray.
    *
-   * @param x - The CSS pixel x, from the canvas's left edge.
-   * @param y - The CSS pixel y, from the canvas's top edge.
+   * @param x - The backing-store pixel x, from the canvas's left edge (see {@link Camera.screenToRay}).
+   * @param y - The backing-store pixel y, from the canvas's top edge.
    * @param distance - How far along the ray to travel, in metres.
    * @param out - Receives the point.
    * @returns `out`, or `null` when no ray could be built.

@@ -21,16 +21,16 @@ toolkits arrive in later phases.
 
 ## Environment
 
-| Item                | Value                                                                                                                                                                           |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Engine version      | unreleased (`0.0.0`); `@ignifx/core`, `@ignifx/input`, `@ignifx/audio`, `@ignifx/physics`, `@ignifx/2d`, `@ignifx/physics-2d`, `@ignifx/vite-plugin`, and the `ignifx` umbrella |
-| Babylon Lite        | 1.27.0 (pinned; do not call Lite APIs directly outside adapter code)                                                                                                            |
-| Node / pnpm         | 24 LTS / 11                                                                                                                                                                     |
-| Browser requirement | WebGPU (Chrome/Edge 113+, Safari 26+, Firefox 141+ Windows / 145+ Apple Silicon); Electron needs `--enable-unsafe-webgpu` (handled by `@ignifx/electron`)                       |
-| Headless            | Node 24, no GPU: `createApp({ headless: true })` plus `app.step(dt)`                                                                                                            |
-| Extensions          | `createApp({ canvas, extensions: [input(), audio(), physics()] })` — each adds its `app.<name>` service; all re-exported from `ignifx`                                          |
-| Build               | Vite 8 with `ignifx()` from `@ignifx/vite-plugin`: asset manifest, `.meta.json` sidecars, JSON validation, HMR                                                                  |
-| Commands            | `pnpm dev` · `pnpm test` · `pnpm typecheck` · `pnpm build` · `pnpm check` (all gates) · `node scripts/check-webgpu.mjs` · `node scripts/new-script.mjs <Name>`                  |
+| Item                | Value                                                                                                                                                                                                       |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Engine version      | unreleased (`0.0.0`); `@ignifx/core`, `@ignifx/input`, `@ignifx/audio`, `@ignifx/physics`, `@ignifx/2d`, `@ignifx/physics-2d`, `@ignifx/3d`, `@ignifx/ui`, `@ignifx/vite-plugin`, and the `ignifx` umbrella |
+| Babylon Lite        | 1.27.0 (pinned; do not call Lite APIs directly outside adapter code)                                                                                                                                        |
+| Node / pnpm         | 24 LTS / 11                                                                                                                                                                                                 |
+| Browser requirement | WebGPU (Chrome/Edge 113+, Safari 26+, Firefox 141+ Windows / 145+ Apple Silicon); Electron needs `--enable-unsafe-webgpu` (handled by `@ignifx/electron`)                                                   |
+| Headless            | Node 24, no GPU: `createApp({ headless: true })` plus `app.step(dt)`                                                                                                                                        |
+| Extensions          | `createApp({ canvas, extensions: [input(), audio(), physics()] })` — each adds its `app.<name>` service; all re-exported from `ignifx`                                                                      |
+| Build               | Vite 8 with `ignifx()` from `@ignifx/vite-plugin`: asset manifest, `.meta.json` sidecars, JSON validation, HMR                                                                                              |
+| Commands            | `pnpm dev` · `pnpm test` · `pnpm typecheck` · `pnpm build` · `pnpm check` (all gates) · `node scripts/check-webgpu.mjs` · `node scripts/new-script.mjs <Name>`                                              |
 
 ## Mental model
 
@@ -112,39 +112,21 @@ cube.addComponent(Spinner, { speed: 120 });
 await app.start();
 ```
 
-The same game logic without a GPU, which is how tests and tools run it:
-
-```ts
-import { Script, createApp, createManualClock, f32 } from "@ignifx/core";
-class Spinner extends Script.define({ speed: f32(90) }) {
-  static typeId = "demo/Spinner";
-  update(dt: number): void {
-    this.transform.rotate({ x: 0, y: this.speed * dt, z: 0 });
-  }
-}
-const app = await createApp({ headless: true, clock: createManualClock() });
-app.registerComponents([Spinner]);
-const cube = app.world.createEntity("Cube");
-cube.addComponent(Spinner);
-await app.start();
-for (let frame = 0; frame < 600; frame += 1) {
-  app.step(1 / 60); // ten seconds, one fixed step per call
-}
-app.log.info("spun to", cube.transform.localEulerAngles.y);
-app.dispose();
-```
+Without a GPU — how tests and tools run it — `createApp({ headless: true, clock: createManualClock() })`, then `app.step(1 / 60)` per frame and `app.dispose()`; the extensions example below is exactly that shape.
 
 ### Adding extensions
 
 Extensions register in `createApp({ extensions })`; each adds an `app.<name>` service, scripts, asset types, and a settings section, and has a subsystem skill with the detail. Everything below is also re-exported from `ignifx`. Headless apps drive input with `simulate` and advance audio playback by the frame delta, so both are testable without a device.
 
-| Package (factory)                    | Adds                                                                                                                                                                                                                                                                                                      | Skill                                            |
-| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| `@ignifx/input` (`input()`)          | `app.input`, `PlayerInput`, `.input.json` actions (`inputactions`), the `input` settings section                                                                                                                                                                                                          | `packages/input/skills/input/SKILL.md`           |
-| `@ignifx/audio` (`audio()`)          | `app.audio` (buses, one-shots, unlock), `AudioSource`, `AudioListener`, `MusicPlayer`, `.audio.json` buses (`audiobuses`), `audioclip`, the `audio` settings section                                                                                                                                      | `packages/audio/skills/audio/SKILL.md`           |
-| `@ignifx/2d` (`twoD()`)              | `app.twoD`: `Camera2D`, `SpriteRenderer`, `SpriteAnimator`, atlases, `Tilemap`/`TilemapRenderer`, sorting layers and Y-sort, pixel-perfect cameras, `ParallaxLayer`, 2D picking; `pixelsPerUnit` defaults to 100                                                                                          | `packages/2d/skills/2d/SKILL.md`                 |
-| `@ignifx/physics` (`physics()`)      | `app.physics`: 3D rigid bodies on Havok — `Rigidbody`, box/sphere/capsule/cylinder/mesh/heightfield colliders, triggers, `CharacterController`, the layer matrix, raycasts and shape queries, render interpolation; simulates on its own null-engine scene stepped by the fixed loop, so it runs headless | `packages/physics/skills/physics/SKILL.md`       |
-| `@ignifx/physics-2d` (`physics2d()`) | `app.physics2d`: 2D physics on Rapier — `Rigidbody2D`, box/circle/capsule/polygon/edge/tilemap colliders, triggers, `CharacterController2D` with slopes, autostep, snap-to-ground and one-way platforms, 2D queries; runs headless (the WebAssembly is inlined)                                           | `packages/physics-2d/skills/physics-2d/SKILL.md` |
+| Package (factory)                    | Adds                                                                                                                                                                                                                                                                                                                                                                                                        | Skill                                            |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| `@ignifx/input` (`input()`)          | `app.input`, `PlayerInput`, `.input.json` actions (`inputactions`), the `input` settings section                                                                                                                                                                                                                                                                                                            | `packages/input/skills/input/SKILL.md`           |
+| `@ignifx/audio` (`audio()`)          | `app.audio` (buses, one-shots, unlock), `AudioSource`, `AudioListener`, `MusicPlayer`, `.audio.json` buses (`audiobuses`), `audioclip`, the `audio` settings section                                                                                                                                                                                                                                        | `packages/audio/skills/audio/SKILL.md`           |
+| `@ignifx/2d` (`twoD()`)              | `app.twoD`: `Camera2D`, `SpriteRenderer`, `SpriteAnimator`, atlases, `Tilemap`/`TilemapRenderer`, sorting layers and Y-sort, pixel-perfect cameras, `ParallaxLayer`, 2D picking; `pixelsPerUnit` defaults to 100                                                                                                                                                                                            | `packages/2d/skills/2d/SKILL.md`                 |
+| `@ignifx/ui` (`ui()`)                | `app.ui`: DOM overlay root, named layers, `"css"`/`"fit"`/`"dpi"` scaling, safe-area variables, focus routing into `app.input.uiHasFocus`; `WorldAnchor`; `HudText`/`WorldText`/`WorldText2D` on Lite text; `Dialog`/`Toast`/`LoadingScreen`; `VirtualJoystick`/`VirtualButton` (need `@ignifx/input`); `app.i18n` with `.i18n.json` (`i18n`)                                                               | `packages/ui/skills/ui/SKILL.md`                 |
+| `@ignifx/3d` (`threeD()`)            | `app.navigation` with `NavMeshSurface`/`NavMeshAgent`/`NavMeshObstacle` on Recast (headless too — the wasm is inlined); `ThirdPersonController`/`FirstPersonController`, `RigidbodyMover`/`PlatformMover`/`Projectile`; `ThirdPersonCamera` with wall collision; `Animator` with blend trees, masks and events from `.animator.json` (`animator`); `LodGroup`, `Billboard`. Needs `physics()` and `input()` | `packages/3d/skills/3d/SKILL.md`                 |
+| `@ignifx/physics` (`physics()`)      | `app.physics`: 3D rigid bodies on Havok — `Rigidbody`, box/sphere/capsule/cylinder/mesh/heightfield colliders, triggers, `CharacterController`, the layer matrix, raycasts and shape queries, render interpolation; simulates on its own null-engine scene stepped by the fixed loop, so it runs headless                                                                                                   | `packages/physics/skills/physics/SKILL.md`       |
+| `@ignifx/physics-2d` (`physics2d()`) | `app.physics2d`: 2D physics on Rapier — `Rigidbody2D`, box/circle/capsule/polygon/edge/tilemap colliders, triggers, `CharacterController2D` with slopes, autostep, snap-to-ground and one-way platforms, 2D queries; runs headless (the WebAssembly is inlined)                                                                                                                                             | `packages/physics-2d/skills/physics-2d/SKILL.md` |
 
 ```ts
 import { audio, AudioClip, AudioSource, createApp, defineInputActions, input } from "ignifx";
@@ -436,6 +418,8 @@ first two digits are the area.
 | [`formats/ignifx.audiobuses.md`](references/formats/ignifx.audiobuses.md)                                                                                                                                               | `.audio.json`: the bus tree (`Master` root, volumes, children)                    |
 | [`formats/ignifx.physicsmaterial.md`](references/formats/ignifx.physicsmaterial.md)                                                                                                                                     | `.physicsmaterial.json`: friction, restitution, combine rules                     |
 | [`formats/ignifx.spriteatlas.md`](references/formats/ignifx.spriteatlas.md) · [`ignifx.spriteanimation.md`](references/formats/ignifx.spriteanimation.md) · [`ignifx.tilemap.md`](references/formats/ignifx.tilemap.md) | `.atlas.json`, `.spriteanim.json`, `.tilemap.json`: 2D frames, clips, tile layers |
+| [`formats/ignifx.i18n.md`](references/formats/ignifx.i18n.md)                                                                                                                                                           | `.i18n.json`: every locale's messages, ICU-style plurals                          |
+| [`formats/ignifx.animator.md`](references/formats/ignifx.animator.md)                                                                                                                                                   | `.animator.json`: parameters, layers, states, transitions, 1D blend trees         |
 | [`formats/components.md`](references/formats/components.md)                                                                                                                                                             | Every built-in component's fields and defaults (generated)                        |
 | [`formats/ignifx.schemas.json`](references/formats/ignifx.schemas.json)                                                                                                                                                 | All of the above bundled, for tools and validators                                |
 
@@ -443,7 +427,7 @@ first two digits are the area.
 documented in `@ignifx/vite-plugin`'s `README.md`, together with `virtual:ignifx/manifest` and
 `virtual:ignifx/scripts`.
 
-## Gotchas (top 14)
+## Gotchas (top 16)
 
 1. **Rendering features are declared before `app.start()`.** `shadows`, `postProcessing`,
    `skeletons`, `stencil`, `deviceLostRecovery` and the rest are `false` by default and refused
@@ -475,6 +459,8 @@ documented in `@ignifx/vite-plugin`'s `README.md`, together with `virtual:ignifx
 12. **Physics needs a completed fixed step and, by default, has no collision identities.** Queries throw `IGX-0902` before the first step; `collision.other` is `null` unless `physics({ collisionIdentities: "internal" })` is on, so triggers are the default gameplay mechanism; `MeshCollider` needs a GPU app.
 13. **2D physics filters by the project's first sixteen layers only.** Rapier's interaction groups are 16 bits; a 2D collider on a higher layer logs `IGX-1152` and falls back to layer 0. Queries throw `IGX-1153` before the first fixed step, as in 3D.
 14. **`twoD.pixelsPerUnit` is 100 by default**, so a 32-px sprite is 0.32 m; set it to your art's pixel size (16, 32) or everything looks tiny. 2D is +Y up in metres; the adapter flips into Lite's pixel space.
+15. **A click on UI never reaches gameplay, but a drag does.** Input reads `pointerdown` from the canvas and the overlay is its sibling, while `pointermove`/`pointerup` come from the window — so the UI host sets `app.input.uiHasPointer` during such a drag and pointing-device actions read as released. Pointer positions are backing-store pixels, the space `pickAsync` and `worldToScreen` use. Only _text_ fields set `app.input.uiHasFocus`. `WorldText` must exist before `app.start()` (`IGX-1308`); spawn `WorldText2D` mid-game instead.
+16. **Two `Model`s of one `.glb` cannot be animated independently.** Lite binds an animation group to one manager and a cloned skinned mesh shares the template's skeleton, so a second `Animator` is refused the clips (reported on `app.onError`). Load the `.glb` under a second address for a second animated character.
 
 The full list, with error codes, is in [`references/gotchas.md`](references/gotchas.md).
 
@@ -484,15 +470,15 @@ None (pre-1.0: no deprecation window; breaking changes are listed in the changel
 
 ## Where to look next
 
-| Topic                                 | Read                                                                                                                                                                                                                                                                                                                          |
-| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Frame order, callbacks, `Time`        | [`references/concepts/lifecycle.md`](references/concepts/lifecycle.md)                                                                                                                                                                                                                                                        |
-| World, entities, scenes, prefabs      | [`references/concepts/scene-graph.md`](references/concepts/scene-graph.md)                                                                                                                                                                                                                                                    |
-| Components, schemas, coroutines       | [`references/concepts/scripting.md`](references/concepts/scripting.md)                                                                                                                                                                                                                                                        |
-| Cameras, lights, meshes, the renderer | [`references/concepts/rendering.md`](references/concepts/rendering.md)                                                                                                                                                                                                                                                        |
-| Addresses, handles, loaders           | [`references/concepts/assets.md`](references/concepts/assets.md)                                                                                                                                                                                                                                                              |
-| Extensions, services, settings        | [`references/concepts/extensions.md`](references/concepts/extensions.md)                                                                                                                                                                                                                                                      |
-| Every exact signature                 | [`api/core.md`](references/api/core.md) · [`api/input.md`](references/api/input.md) · [`api/audio.md`](references/api/audio.md) · [`api/physics.md`](references/api/physics.md) · [`api/physics-2d.md`](references/api/physics-2d.md) · [`api/2d.md`](references/api/2d.md) · the subsystem skills under `packages/*/skills/` |
-| Design rationale                      | `docs/architecture/`, `docs/adr/`                                                                                                                                                                                                                                                                                             |
+| Topic                                 | Read                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Frame order, callbacks, `Time`        | [`references/concepts/lifecycle.md`](references/concepts/lifecycle.md)                                                                                                                                                                                                                                                                                                                                    |
+| World, entities, scenes, prefabs      | [`references/concepts/scene-graph.md`](references/concepts/scene-graph.md)                                                                                                                                                                                                                                                                                                                                |
+| Components, schemas, coroutines       | [`references/concepts/scripting.md`](references/concepts/scripting.md)                                                                                                                                                                                                                                                                                                                                    |
+| Cameras, lights, meshes, the renderer | [`references/concepts/rendering.md`](references/concepts/rendering.md)                                                                                                                                                                                                                                                                                                                                    |
+| Addresses, handles, loaders           | [`references/concepts/assets.md`](references/concepts/assets.md)                                                                                                                                                                                                                                                                                                                                          |
+| Extensions, services, settings        | [`references/concepts/extensions.md`](references/concepts/extensions.md)                                                                                                                                                                                                                                                                                                                                  |
+| Every exact signature                 | [`api/core.md`](references/api/core.md) · [`api/input.md`](references/api/input.md) · [`api/audio.md`](references/api/audio.md) · [`api/physics.md`](references/api/physics.md) · [`api/physics-2d.md`](references/api/physics-2d.md) · [`api/2d.md`](references/api/2d.md) · [`api/ui.md`](references/api/ui.md) · [`api/3d.md`](references/api/3d.md) · the subsystem skills under `packages/*/skills/` |
+| Design rationale                      | `docs/architecture/`, `docs/adr/`                                                                                                                                                                                                                                                                                                                                                                         |
 
 `docs/migrations/` exists only after 1.0.

@@ -40,20 +40,36 @@
       "note": "gzipBytes is the entry chunk, which is what a first load actually fetches; totalGzipBytes sums all 294 emitted chunks, almost all of them dynamically imported Lite features this scene never reaches. The ceiling is the measurement x 1.1. The plan's Phase 2 target of 250 KB gzipped is NOT met: the entry chunk is 270551 bytes, 20551 over."
     },
     "templates/2d-topdown": {
-      "gzipBytes": 1133892,
-      "ceilingBytes": 1247282,
-      "totalGzipBytes": 1362595,
-      "rawTotalBytes": 3942439,
-      "chunkCount": 295,
-      "note": "Measured 2026-09-06 on macOS 25.5 arm64 with Node 25.2.1 and Vite 8.2.2; the ceiling is the measurement x 1.1. 797097 of the 1133892 bytes are @dimforge/rapier2d-compat's dist/rapier.mjs, which inlines its WebAssembly as base64 (2119613 raw, 796778 gzipped on its own) and is statically imported by @ignifx/physics-2d. Everything else -- ignifx core, @ignifx/2d, input, audio and the Lite entry -- accounts for roughly 337 KB, in the same range as examples/hello-cube. The Phase 2 target of 250 KB gzipped does not apply to a template that ships a physics engine; the number to watch is the non-Rapier remainder."
+      "gzipBytes": 1177376,
+      "ceilingBytes": 1295114,
+      "totalGzipBytes": 1406490,
+      "rawTotalBytes": 4086906,
+      "chunkCount": 296,
+      "note": "Re-measured 2026-09-06 after Phase 8 added @ignifx/ui to the template (a LoadingScreen, a pause Dialog and the two touch widgets, replacing the hand-written src/touch-controls.ts): the entry chunk grew from 1133892 to 1177376 bytes, +43484, which is the whole of @ignifx/ui plus the widget code the template no longer carries itself. The ceiling is the new measurement x 1.1. 797097 of those bytes are @dimforge/rapier2d-compat's dist/rapier.mjs, which inlines its WebAssembly as base64 and is statically imported by @ignifx/physics-2d; the non-Rapier remainder is about 380 KB. The Phase 2 target of 250 KB gzipped does not apply to a template that ships a physics engine."
     },
     "templates/2d-sidescroller": {
-      "gzipBytes": 1134502,
-      "ceilingBytes": 1247953,
-      "totalGzipBytes": 1363188,
-      "rawTotalBytes": 3944154,
+      "gzipBytes": 1178010,
+      "ceilingBytes": 1295811,
+      "totalGzipBytes": 1407083,
+      "rawTotalBytes": 4088800,
+      "chunkCount": 296,
+      "note": "Re-measured the same way, on the same machine, on 2026-09-06. Within 634 bytes of the top-down template: the two carry the same packages and differ only in their own source."
+    },
+    "templates/3d-third-person": {
+      "gzipBytes": 406181,
+      "ceilingBytes": 446799,
+      "totalGzipBytes": 1084381,
+      "rawTotalBytes": 3568547,
       "chunkCount": 295,
-      "note": "Measured the same way, on the same machine, on 2026-09-06. Within 610 bytes of the top-down template: the two carry the same packages and differ only in their own source."
+      "note": "Measured 2026-09-06 on macOS 25.5 arm64 with Node 25.2.1 and Vite 8.2.2; the ceiling is the measurement x 1.1. The entry chunk is a third of a 2D template's because Havok's WebAssembly is NOT inlined: @ignifx/physics declares HavokPhysics.wasm in ignifx.assets.public and @ignifx/vite-plugin copies it into dist/assets/ unhashed (1.4 MB raw, not JavaScript, so it is in neither number here), where Rapier's rapier2d-compat inlines 797 KB of base64 straight into the 2D templates' entry. The second cost of a 3D template is Recast: recast-navigation-*.js gzips to 452964 bytes and inlines its own wasm as a data: URL, but it is a separate chunk that Babylon Lite import()s only when a NavMeshSurface bakes, so it is in totalGzipBytes and not in the first-load entry."
+    },
+    "templates/3d-first-person": {
+      "gzipBytes": 405904,
+      "ceilingBytes": 446494,
+      "totalGzipBytes": 1084346,
+      "rawTotalBytes": 3568005,
+      "chunkCount": 295,
+      "note": "Measured the same way, on the same machine, on 2026-09-06. Within 277 bytes of the third-person template. It carries the Recast chunk too even though it never bakes a navmesh: @ignifx/3d registers its NavigationService unconditionally, so Lite's navigation module is reachable and the chunk is emitted -- it is simply never fetched at runtime, which is what keeps it out of the entry number."
     }
   },
   "twoD": {

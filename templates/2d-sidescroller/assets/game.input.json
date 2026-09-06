@@ -2,9 +2,18 @@
   "format": "ignifx.inputactions",
   "formatVersion": 1,
   "controlSchemes": [
-    { "name": "KeyboardMouse", "devices": ["Keyboard", "Mouse"] },
-    { "name": "Gamepad", "devices": ["Gamepad"] },
-    { "name": "Touch", "devices": ["Touch", "Virtual"] }
+    {
+      "name": "KeyboardMouse",
+      "devices": ["Keyboard", "Mouse"]
+    },
+    {
+      "name": "Gamepad",
+      "devices": ["Gamepad"]
+    },
+    {
+      "name": "Touch",
+      "devices": ["Touch", "Virtual"]
+    }
   ],
   "maps": [
     {
@@ -31,19 +40,60 @@
               "right": "<Keyboard>/arrowRight",
               "scheme": "KeyboardMouse"
             },
-            { "path": "<Gamepad>/leftStick", "processors": ["deadzone(0.2)"], "scheme": "Gamepad" },
-            { "path": "<Gamepad>/dpad", "scheme": "Gamepad" },
-            { "path": "<Virtual>/joystick", "processors": ["deadzone(0.15)"], "scheme": "Touch" }
+            {
+              "path": "<Gamepad>/leftStick",
+              "processors": ["deadzone(0.2)"],
+              "scheme": "Gamepad"
+            },
+            {
+              "path": "<Gamepad>/dpad",
+              "scheme": "Gamepad"
+            },
+            {
+              "path": "<Virtual>/joystick",
+              "processors": ["deadzone(0.15)"],
+              "scheme": "Touch"
+            }
           ]
         },
         {
           "name": "jump",
           "type": "button",
           "bindings": [
-            { "path": "<Keyboard>/space", "scheme": "KeyboardMouse" },
-            { "path": "<Keyboard>/z", "scheme": "KeyboardMouse" },
-            { "path": "<Gamepad>/buttonSouth", "scheme": "Gamepad" },
-            { "path": "<Virtual>/jump", "scheme": "Touch" }
+            {
+              "path": "<Keyboard>/space",
+              "scheme": "KeyboardMouse"
+            },
+            {
+              "path": "<Keyboard>/z",
+              "scheme": "KeyboardMouse"
+            },
+            {
+              "path": "<Gamepad>/buttonSouth",
+              "scheme": "Gamepad"
+            },
+            {
+              "path": "<Virtual>/jump",
+              "scheme": "Touch"
+            }
+          ]
+        },
+        {
+          "name": "pause",
+          "type": "button",
+          "bindings": [
+            {
+              "path": "<Keyboard>/escape",
+              "scheme": "KeyboardMouse"
+            },
+            {
+              "path": "<Gamepad>/start",
+              "scheme": "Gamepad"
+            },
+            {
+              "path": "<Virtual>/pause",
+              "scheme": "Touch"
+            }
           ]
         }
       ]

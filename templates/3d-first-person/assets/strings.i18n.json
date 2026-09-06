@@ -1,0 +1,25 @@
+{
+  "format": "ignifx.i18n",
+  "formatVersion": 1,
+  "defaultLocale": "en",
+  "locales": {
+    "en": {
+      "loading.label": "Loading…",
+      "menu.paused": "Paused",
+      "menu.resume": "Resume",
+      "menu.restart": "Restart",
+      "hud.status": "{lit, plural, =0 {No pedestals lit} one {# pedestal lit} other {# pedestals lit}} · {target}",
+      "hud.nothing": "nothing in reach",
+      "hud.reach": "press E"
+    },
+    "fr": {
+      "loading.label": "Chargement…",
+      "menu.paused": "En pause",
+      "menu.resume": "Reprendre",
+      "menu.restart": "Recommencer",
+      "hud.status": "{lit, plural, =0 {Aucun socle allumé} one {# socle allumé} other {# socles allumés}} · {target}",
+      "hud.nothing": "rien à portée",
+      "hud.reach": "appuyez sur E"
+    }
+  }
+}

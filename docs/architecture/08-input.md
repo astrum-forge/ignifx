@@ -135,7 +135,8 @@ Composites: `2DVector` (up/down/left/right → `vector2`), `1DAxis` (negative/po
 ## 5. UI and focus
 
 - While a DOM text field has focus (`@ignifx/ui` sets `app.input.uiHasFocus`), keyboard actions read as released and keyboard events are not consumed; pointer actions still work unless the UI marks the event handled.
-- `app.input.events` exposes the raw, ordered event stream of the frame (`{ type: "keydown", code, key, repeat }`, pointer events with CSS coordinates, wheel) for text entry, menus, and tools.
+- While a pointer is pressed on the UI overlay (`@ignifx/ui` sets `app.input.uiHasPointer`), pointing-device actions (`<Pointer>`, `<Mouse>`, `<Touch>`) read as released and their events are still published; keyboard and gamepad actions keep working. Pointer moves and releases are read from the window, which is what would otherwise let a drag that began on a UI slider also drive `<Pointer>/delta`. (Added 2026-09-06.)
+- `app.input.events` exposes the raw, ordered event stream of the frame (`{ type: "keydown", code, key, repeat }`, pointer events in backing-store pixels — the canvas's `width`/`height`, the space `Camera.worldToScreen` and `renderer.pickAsync` use; amended 2026-09-06, previously CSS pixels, which missed picks by the device pixel ratio — wheel) for text entry, menus, and tools.
 
 ## 6. Rebinding and persistence
 

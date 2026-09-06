@@ -8,8 +8,11 @@ import type { System, SystemContext } from "@ignifx/core";
  * It runs in `PostUpdate` — after `update`, before `PreRender` — which is where every animation in
  * ignifx advances, so a `lateUpdate` sees the posed frame and the render sync writes it in the same
  * frame it was computed. It advances every `SpriteAnimator` and every animated tile on the same
- * `ctx.dt`, which is `time.deltaTime`: already scaled by `time.timeScale` and already zero while
- * the app is paused.
+ * `ctx.dt`, which is `time.deltaTime`, already scaled by `time.timeScale`. Systems keep running
+ * while the app is paused and `dt` is **not** zeroed then (only scripts are filtered by
+ * `updateWhenPaused`), so the system checks `time.paused` itself: sprite animation does not advance
+ * while paused (`01-lifecycle-and-time.md` §7). Phase 6 shipped without this check and the sprites
+ * kept animating under a pause menu.
  */
 
 /**
@@ -49,6 +52,9 @@ export class TwoDAnimationSystem implements System {
    * @param ctx - The world, clock, phase, and delta.
    */
   update(ctx: SystemContext): void {
+    if (ctx.time.paused) {
+      return;
+    }
     const animators = ctx.world.components(SpriteAnimator);
     for (let index = 0; index < animators.length; index += 1) {
       const animator = animators[index];

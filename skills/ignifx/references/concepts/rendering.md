@@ -141,7 +141,8 @@ chooses.
 
 ## 6. Picking
 
-- `app.renderer.pickAsync(x, y, { filter })` — a GPU pick in CSS pixels, resolving to
+- `app.renderer.pickAsync(x, y, { filter })` — a GPU pick in backing-store pixels (the canvas's
+  `width`/`height`; `<Pointer>/position` and `Camera.worldToScreen` use the same space), resolving to
   `{ entity, component, point, normal, distance }` or `null`. Calls are serialized per picker.
 - `world.raycastRender(ray, { filter })` — the synchronous CPU path, against renderable meshes.
   Build the ray with `camera.screenToRay(x, y)` or `createRay()`.

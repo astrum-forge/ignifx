@@ -287,6 +287,24 @@ describe("UI focus", () => {
   });
 });
 
+describe("UI pointer", () => {
+  it("reads pointing-device actions as released while a pointer is pressed on the UI", async () => {
+    const { app, step } = await withDemo();
+    app.input.simulateEvent({ type: "pointermove", x: 0, y: 0, deltaX: 20, deltaY: 0 });
+    app.input.simulate({ "<Keyboard>/space": 1 });
+    step();
+    expect(app.input.actions.get("look").vector.x).toBeCloseTo(2, 6);
+    app.input.uiHasPointer = true;
+    app.input.simulateEvent({ type: "pointermove", x: 0, y: 0, deltaX: 20, deltaY: 0 });
+    step();
+    expect(app.input.uiHasPointer).toBe(true);
+    expect(app.input.actions.get("look").vector.x).toBe(0);
+    // The keyboard is untouched, and pointer events are still published.
+    expect(app.input.actions.get("jump").isPressed).toBe(true);
+    expect(app.input.events.map((event) => event.type)).toContain("pointermove");
+  });
+});
+
 describe("focus loss", () => {
   it("releases every control when the page reports a blur", async () => {
     const { app, step } = await withDemo();

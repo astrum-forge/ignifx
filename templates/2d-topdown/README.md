@@ -11,10 +11,11 @@ WebGPU only. A browser without it gets the fallback panel in `index.html`.
 
 ## Controls
 
-| Action     | Keyboard                       | Gamepad          | Touch            |
-| ---------- | ------------------------------ | ---------------- | ---------------- |
-| `move`     | WASD, arrows                   | left stick, dpad | on-screen stick  |
-| `interact` | <kbd>E</kbd>, <kbd>Space</kbd> | ✕ / A            | the **E** button |
+| Action     | Keyboard                       | Gamepad          | Touch             |
+| ---------- | ------------------------------ | ---------------- | ----------------- |
+| `move`     | WASD, arrows                   | left stick, dpad | on-screen stick   |
+| `interact` | <kbd>E</kbd>, <kbd>Space</kbd> | ✕ / A            | the **E** button  |
+| `pause`    | <kbd>Esc</kbd>                 | Start            | the **II** button |
 
 `assets/game.input.json` owns all of that; nothing about it is hard-coded.
 
@@ -27,8 +28,10 @@ WebGPU only. A browser without it gets the fallback panel in `index.html`.
   hashed build would break that, so the PNGs are served unhashed from here.
 - `src/main.ts` — create the app, load and await every asset, build the world, start.
 - `src/scripts/` — `PlayerController` (input in `update`, movement in `fixedUpdate`) and `Shrine`.
-- `src/touch-controls.ts` — a DOM thumbstick that feeds the `<Virtual>` device. **Delete it** when
-  `@ignifx/ui` ships `VirtualJoystick` in Phase 8; the bindings do not change.
+- `src/game-ui.ts` — the `@ignifx/ui` overlay: a `LoadingScreen` bound to `app.assets`, a pause
+  `Dialog` driven by a script that keeps updating while the app is paused, and the
+  `VirtualJoystick` / `VirtualButton` touch controls. It replaced the hand-written
+  `src/touch-controls.ts` this template shipped in Phase 6; the bindings did not change.
 
 ## Level
 

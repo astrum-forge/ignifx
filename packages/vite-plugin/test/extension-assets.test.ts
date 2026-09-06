@@ -1,3 +1,5 @@
+import { mkdir, symlink } from "node:fs/promises";
+import { dirname, join } from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
 import { VitePluginErrorCode } from "../src/errors.js";
 import { collectExtensionPublicAssets, EXTENSION_KEYWORD } from "../src/extension-assets.js";
@@ -116,6 +118,23 @@ describe("collectExtensionPublicAssets", () => {
     expect(files).toHaveLength(1);
     expect(files[0]?.filePath.endsWith("node_modules/@babylonjs/havok/lib/esm/HavokPhysics.wasm")).toBe(true);
     expect(files[0]?.filePath.includes("@ignifx/physics/node_modules")).toBe(false);
+  });
+
+  it("discovers a package that is a symlink, which is every pnpm-installed package", async () => {
+    // pnpm links `node_modules/<name>` at a store directory; `readdir` with file types does not
+    // follow links, so a directory-only test found nothing (regression from 2026-09-06).
+    const root = await createFixtureTree({
+      "store/@ignifx/physics/package.json": packageJson({
+        name: "@ignifx/physics",
+        ignifx: { assets: { public: ["./wasm/HavokPhysics.wasm"] } },
+      }),
+      "store/@ignifx/physics/wasm/HavokPhysics.wasm": "wasm-bytes",
+    });
+    const link = join(root, "node_modules", "@ignifx", "physics");
+    await mkdir(dirname(link), { recursive: true });
+    await symlink(join(root, "store", "@ignifx", "physics"), link, "dir");
+    const files = await collectExtensionPublicAssets(root);
+    expect(files.map((file) => [file.packageName, file.fileName])).toEqual([["@ignifx/physics", "HavokPhysics.wasm"]]);
   });
 
   it("fails with IGX-0553 when a declared file does not exist", async () => {

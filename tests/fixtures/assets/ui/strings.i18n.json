@@ -1,0 +1,24 @@
+{
+  "format": "ignifx.i18n",
+  "formatVersion": 1,
+  "defaultLocale": "en",
+  "locales": {
+    "en": {
+      "hud.score": "Score: {score}",
+      "hud.lives": "{count, plural, =0 {No lives left} one {# life} other {# lives}}",
+      "menu.pause": "Paused",
+      "menu.resume": "Resume",
+      "menu.quit": "Quit",
+      "loading.label": "Loading…",
+      "sign.danger": "Danger"
+    },
+    "fr": {
+      "hud.score": "Score : {score}",
+      "hud.lives": "{count, plural, =0 {Aucune vie} one {# vie} other {# vies}}",
+      "menu.pause": "En pause",
+      "menu.resume": "Reprendre",
+      "menu.quit": "Quitter",
+      "loading.label": "Chargement…"
+    }
+  }
+}

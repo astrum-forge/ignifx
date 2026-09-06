@@ -45,6 +45,19 @@ base64-decoded byte for byte, with nothing re-encoded.
   <https://github.com/BabylonJS/Babylon.js>
 - **SHA-256:** `f10818901fccd58cd708fef7979daa3a37294b0bca53f450dc37e1589419813d`
 
+## `ui/ShareTechMono-Regular.ttf` — 43 272 bytes
+
+Added 2026-09-06 for Phase 8. A single-weight monospaced TrueType face, used by the `@ignifx/ui`
+text tests. It lives in the `ui/` subdirectory and its full entry — licence text, reserved font
+name, provenance command — is in [`ui/ATTRIBUTION.md`](ui/ATTRIBUTION.md), alongside the sibling
+`2d/` and `2d-templates/` files.
+
+- **Licence:** [SIL Open Font License 1.1](https://openfontlicense.org)
+- **Copyright:** Copyright (c) 2012, Carrois Type Design, Ralph du Carrois
+  (post@carrois.com www.carrois.com), with Reserved Font Name 'Share'
+- **Source:** <https://github.com/google/fonts/tree/main/ofl/sharetechmono>
+- **SHA-256:** `9ceab1f87414829af259c0f537573ae03ef7dd3147c0b27a36a1a0beb6732677`
+
 ---
 
 ## Note on CC-BY-4.0

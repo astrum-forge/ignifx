@@ -39,6 +39,8 @@ const PORTS: Readonly<Record<string, number>> = {
   "ignifx-example-gltf-viewer": 4174,
   "ignifx-template-2d-topdown": 4175,
   "ignifx-template-2d-sidescroller": 4176,
+  "ignifx-template-3d-third-person": 4177,
+  "ignifx-template-3d-first-person": 4178,
 };
 
 /**
@@ -46,7 +48,7 @@ const PORTS: Readonly<Record<string, number>> = {
  *
  * `tests/templates.spec.ts` overrides it with a 16:9 viewport: the 2D templates are authored
  * against a 320x180 reference resolution, and a square window would show a strip of level nobody
- * designed.
+ * designed, and the two 3D templates frame their static camera for the same aspect.
  */
 const VIEWPORT = { width: 512, height: 512 };
 
@@ -100,6 +102,8 @@ const config: PlaywrightTestConfig = defineConfig({
     preview("ignifx-example-gltf-viewer", PORTS["ignifx-example-gltf-viewer"] ?? 4174),
     preview("ignifx-template-2d-topdown", PORTS["ignifx-template-2d-topdown"] ?? 4175),
     preview("ignifx-template-2d-sidescroller", PORTS["ignifx-template-2d-sidescroller"] ?? 4176),
+    preview("ignifx-template-3d-third-person", PORTS["ignifx-template-3d-third-person"] ?? 4177),
+    preview("ignifx-template-3d-first-person", PORTS["ignifx-template-3d-first-person"] ?? 4178),
   ],
 });
 

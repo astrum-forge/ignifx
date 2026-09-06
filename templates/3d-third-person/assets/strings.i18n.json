@@ -1,0 +1,23 @@
+{
+  "format": "ignifx.i18n",
+  "formatVersion": 1,
+  "defaultLocale": "en",
+  "locales": {
+    "en": {
+      "loading.label": "Loading…",
+      "menu.paused": "Paused",
+      "menu.hint": "{count, plural, =0 {Nothing to find} one {# crate left to knock over} other {# crates left to knock over}}",
+      "menu.resume": "Resume",
+      "menu.restart": "Restart",
+      "hud.status": "{speed} m/s · companion {distance} m"
+    },
+    "fr": {
+      "loading.label": "Chargement…",
+      "menu.paused": "En pause",
+      "menu.hint": "{count, plural, =0 {Rien à trouver} one {# caisse à renverser} other {# caisses à renverser}}",
+      "menu.resume": "Reprendre",
+      "menu.restart": "Recommencer",
+      "hud.status": "{speed} m/s · compagnon à {distance} m"
+    }
+  }
+}

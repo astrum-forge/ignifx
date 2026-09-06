@@ -244,7 +244,7 @@ export class SpriteAnimator extends Component implements ComponentHooks {
    *
    * @remarks
    * `deltaSeconds` is `ctx.dt` in the `PostUpdate` phase, which is `time.deltaTime` — already
-   * multiplied by `time.timeScale` and already zero while the app is paused
+   * multiplied by `time.timeScale`; the 2D animation system skips the call while the app is paused
    * (`docs/architecture/01-lifecycle-and-time.md` §2). The animator does not consult the clock
    * itself, which is what makes it deterministic under `app.step`.
    *

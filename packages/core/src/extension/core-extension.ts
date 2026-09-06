@@ -30,6 +30,8 @@ import { array, f64, str, u32 } from "../schema/field-kinds.js";
 import { defineSchema } from "../schema/schema.js";
 import { createSceneLoader } from "../serialization/scene-loader.js";
 import { Transform } from "../transform/transform.js";
+import { TWEEN_SYSTEM_ORDER, TweenSystem } from "../tween/tween-system.js";
+import { tweensInternals } from "../tween/tweens.js";
 import { defineExtension } from "./define-extension.js";
 import type {
   App,
@@ -138,6 +140,12 @@ function registerCore(ctx: ExtensionContext): void {
     },
   );
   ctx.registerComponent(Transform);
+  // `app.tweens` is built by `createApp`, before any extension runs; the core extension only gives
+  // it the `PostUpdate` slot it advances in (`docs/architecture/12-3d-toolkit.md` §4).
+  ctx.registerSystem(new TweenSystem(tweensInternals(ctx.app.tweens)), {
+    phase: Phase.PostUpdate,
+    order: TWEEN_SYSTEM_ORDER,
+  });
   registerAssets(ctx);
   registerRendering(ctx);
 }

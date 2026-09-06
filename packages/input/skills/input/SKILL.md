@@ -221,6 +221,8 @@ Overrides are a separate `ignifx.inputoverrides` document produced by `saveOverr
   `KeyboardMouse` is active; set `input: { strictSchemes: true }` if that is not what you want.
 - **Binding overrides are addressed by index.** Reordering an action's bindings invalidates saved
   overrides, loudly (`IGX-0808`).
+- **Positions are backing-store pixels**, not CSS pixels: `<Pointer>/position`, `<Mouse>/position`, `<Touch>/…/position`, deltas, and `app.input.events` use the canvas's `width`/`height` space, so `app.renderer.pickAsync(pointer.position)` and `camera.screenToRay` are exact at every device pixel ratio; divide by `devicePixelRatio` for DOM work.
+- **Two UI flags mask devices**: `app.input.uiHasFocus` (a text field owns the keyboard) and `app.input.uiHasPointer` (a pointer is pressed on the UI overlay) make keyboard or pointing-device actions read as released for the frame; events are still published. `@ignifx/ui` writes both; a game with its own DOM UI sets them itself.
 
 ## Deprecated (current window)
 

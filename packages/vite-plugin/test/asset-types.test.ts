@@ -20,6 +20,8 @@ describe("assetTypeForAddress", () => {
     ["input/game.input.json", "inputactions"],
     ["audio/mix.audio.json", "audiobuses"],
     ["physics/ice.physicsmaterial.json", "physicsmaterial"],
+    ["locales/strings.i18n.json", "i18n"],
+    ["characters/hero.animator.json", "animator"],
     ["sprites/hero.atlas.json", "spriteatlas"],
     ["sprites/hero.spriteanim.json", "spriteanimation"],
     ["levels/one.tilemap.json", "tilemap"],

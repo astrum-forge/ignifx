@@ -8,6 +8,7 @@ import { createMemorySink } from "../../src/log/memory-sink.js";
 import { RendererImpl } from "../../src/render/renderer.js";
 import { defaultRenderingSettings } from "../../src/render/rendering-settings.js";
 import { Signal } from "../../src/signal/signal.js";
+import { TweensImpl } from "../../src/tween/tweens.js";
 import type {
   App,
   AppLiteHandles,
@@ -159,6 +160,7 @@ export class TestApp implements App {
   readonly settings: AppSettings;
   readonly onError = new Signal<ErrorReport>();
   readonly coroutines = new RecordingCoroutineHost();
+  readonly tweens = new TweensImpl();
   readonly assets: AssetsImpl;
   readonly events: AppEventsImpl;
   readonly renderer: RendererImpl;

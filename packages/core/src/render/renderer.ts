@@ -269,15 +269,18 @@ export interface Renderer {
    */
   warmUp(materials: readonly MaterialAsset[]): void;
   /**
-   * Picks the object under one CSS pixel of the canvas, exactly, on the GPU
+   * Picks the object under one pixel of the canvas, exactly, on the GPU
    * (`docs/architecture/07-rendering.md` §3).
    *
    * @remarks
-   * Picks are serialised per app: Lite's picker owns one set of staging buffers and chains each
-   * call onto the previous one's promise. A headless app has no picker and always misses.
+   * Coordinates are **backing-store pixels** — the canvas's `width`/`height`, the space
+   * `Camera.worldToScreen` answers in — not CSS pixels; multiply a DOM event's `offsetX`/`offsetY`
+   * by `devicePixelRatio` first. Picks are serialised per app: Lite's picker owns one set of staging
+   * buffers and chains each call onto the previous one's promise. A headless app has no picker and
+   * always misses.
    *
-   * @param x - The CSS pixel x, from the canvas's left edge.
-   * @param y - The CSS pixel y, from the canvas's top edge.
+   * @param x - The backing-store pixel x, from the canvas's left edge.
+   * @param y - The backing-store pixel y, from the canvas's top edge.
    * @param options - An entity filter.
    * @returns What was hit, or `null` for a miss.
    */
@@ -615,10 +618,10 @@ export class RendererImpl implements Renderer {
   }
 
   /**
-   * Picks the object under one CSS pixel of the canvas.
+   * Picks the object under one backing-store pixel of the canvas (see the interface's remarks).
    *
-   * @param x - The CSS pixel x, from the canvas's left edge.
-   * @param y - The CSS pixel y, from the canvas's top edge.
+   * @param x - The backing-store pixel x, from the canvas's left edge.
+   * @param y - The backing-store pixel y, from the canvas's top edge.
    * @param options - An entity filter.
    * @returns What was hit, or `null` for a miss.
    */

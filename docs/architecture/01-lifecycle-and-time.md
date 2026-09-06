@@ -159,7 +159,7 @@ class Door extends Script {
 
 ## 7. Pausing and focus
 
-- `app.pause()` sets `time.paused = true`; `app.resume()` clears it. While paused, scripts with `static updateWhenPaused = true` still receive `update`/`lateUpdate` (menus, pause screens); fixed steps and physics do not run; animation does not advance unless the `Animator` is marked `updateWhenPaused`.
+- `app.pause()` sets `time.paused = true`; `app.resume()` clears it. While paused, scripts with `static updateWhenPaused = true` still receive `update`/`lateUpdate` (menus, pause screens); fixed steps and physics do not run; animation does not advance unless the `Animator` is marked `updateWhenPaused`. Systems are not filtered: every registered system still runs while paused and receives the scaled `dt` (it is not zeroed), so a system that animates checks `time.paused` itself — the tween, 2D animation, and 3D animation systems do. (Clarified 2026-09-06.)
 - Browsers throttle or stop `requestAnimationFrame` in background tabs; the `maximumDeltaTime` clamp guarantees the simulation does not try to catch up when the tab returns. `onApplicationPause(true)` is delivered when the document becomes hidden, and templates pause by default.
 - Electron windows behave like browser tabs; the Electron extension forwards minimize/restore to the same callbacks.
 
