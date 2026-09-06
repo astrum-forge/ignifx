@@ -31,6 +31,8 @@
     "docs:recipes": "node scripts/docs-recipes.ts",
     "docs:llms": "node scripts/docs-llms.ts",
     "docs:harness": "node scripts/docs-harness.ts",
+    "licenses:notices": "node scripts/licenses.ts",
+    "licenses:check": "node scripts/licenses.ts --check",
     "deps": "depcruise --config .dependency-cruiser.cjs packages",
     "changeset": "changeset",
     "release": "pnpm build && pnpm exec changeset publish",

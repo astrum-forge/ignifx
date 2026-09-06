@@ -91,6 +91,15 @@ describe("createGameWindow", () => {
     expect(window.wouldAllowNavigation("https://evil.example")).toBe(false);
     expect(window.wouldAllowNavigation("not a url")).toBe(false);
   });
+
+  it("refuses a second ignifx:// authority, which URL.origin cannot tell apart", () => {
+    const window = createGameWindow({ entry: "index.html", preload: "/p.cjs" }) as unknown as FakeBrowserWindow;
+
+    // `new URL("ignifx://evil/x").origin` is the string `"null"`, and so is `ignifx://app`'s, so a
+    // check written on `URL.origin` would let this through. Chromium gives a `standard` scheme a
+    // real tuple origin, and `ignifx://evil` is not the one the window was built for.
+    expect(window.wouldAllowNavigation("ignifx://evil/index.html")).toBe(false);
+  });
 });
 
 describe("installCspHeader", () => {
@@ -133,6 +142,14 @@ describe("restrictPermissions", () => {
     }
   });
 
+  it("also refuses the per-device grant WebHID, WebUSB and Web Serial consult", () => {
+    const session = new FakeSession();
+    restrictPermissions(session as unknown as Session);
+
+    expect(session.devicePermissionHandler).not.toBeNull();
+    expect(session.devicePermissionHandler?.({ deviceType: "hid" })).toBe(false);
+  });
+
   it("takes an explicit list when a game genuinely needs one more", () => {
     const session = new FakeSession();
     restrictPermissions(session as unknown as Session, ["fullscreen"]);
@@ -148,6 +165,26 @@ describe("lockNavigation", () => {
     lockNavigation(window.webContents as unknown as WebContents, "ignifx://app");
 
     expect(window.wouldAllowNavigation("")).toBe(false);
+  });
+
+  it("guards the redirect and the subframe as well as the top-level navigation", () => {
+    const window = new FakeBrowserWindow();
+    lockNavigation(window.webContents as unknown as WebContents, "ignifx://app");
+
+    for (const event of ["will-navigate", "will-redirect", "will-frame-navigate"]) {
+      expect(window.wouldAllowNavigation("ignifx://app/other.html", event)).toBe(true);
+      expect(window.wouldAllowNavigation("https://evil.example", event)).toBe(false);
+      expect(window.wouldAllowNavigation("ignifx://evil/index.html", event)).toBe(false);
+      expect(window.wouldAllowNavigation("file:///etc/passwd", event)).toBe(false);
+      expect(window.wouldAllowNavigation("data:text/html,<script>alert(1)</script>", event)).toBe(false);
+    }
+  });
+
+  it("refuses a <webview> attachment, the second lock on webviewTag: false", () => {
+    const window = new FakeBrowserWindow();
+    lockNavigation(window.webContents as unknown as WebContents, "ignifx://app");
+
+    expect(window.webviewAttachmentPrevented).toBe(true);
   });
 });
 

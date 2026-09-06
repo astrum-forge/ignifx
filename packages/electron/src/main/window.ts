@@ -1,6 +1,7 @@
 import { BrowserWindow } from "electron";
-import { HOST_WINDOW_EVENT_CHANNEL } from "../host-contract.js";
+import { HOST_WINDOW_EVENT_CHANNEL, IGNIFX_ORIGIN } from "../host-contract.js";
 import { cspFor } from "./csp.js";
+import { originOfUrl } from "./origin.js";
 import { packagedEntryUrl } from "./protocol.js";
 import type { CspOptions } from "./csp.js";
 import type { HostWindowEvent } from "../host-contract.js";
@@ -162,6 +163,8 @@ export const ENFORCED_WEB_PREFERENCES: Readonly<{
   readonly webSecurity: true;
   readonly allowRunningInsecureContent: false;
   readonly experimentalFeatures: false;
+  readonly enableBlinkFeatures: "";
+  readonly enableWebSQL: false;
   readonly webviewTag: false;
   readonly spellcheck: false;
 }> = Object.freeze({
@@ -173,6 +176,13 @@ export const ENFORCED_WEB_PREFERENCES: Readonly<{
   webSecurity: true,
   allowRunningInsecureContent: false,
   experimentalFeatures: false,
+  // Empty rather than absent: `enableBlinkFeatures` (`electron.d.ts` 19410) turns on Blink features
+  // that ship disabled, and stating the empty list is what makes "none" reviewable in one place
+  // instead of being a default someone has to look up.
+  enableBlinkFeatures: "",
+  // `enableWebSQL` (`electron.d.ts` 19427) is one of the four values Electron's own security
+  // warnings check; WebSQL is a removed API with a history of memory-safety bugs and no game uses it.
+  enableWebSQL: false,
   webviewTag: false,
   spellcheck: false,
 });
@@ -377,6 +387,27 @@ export function forwardWindowEvents(window: BrowserWindow): void {
  * best. Outbound links go through `app.desktop.openExternal`, which checks the protocol against an
  * allow-list and hands the URL to the OS browser instead of loading it in the game window.
  *
+ * Four hooks, because a navigation has four ways in and blocking one of them is not blocking the
+ * navigation:
+ *
+ * - `setWindowOpenHandler` (`electron.d.ts` 18632) — `window.open`, `target="_blank"`, and every
+ *   other request for a second window. Denied outright.
+ * - `will-navigate` (`electron.d.ts` 17671) — the top-level document being replaced.
+ * - `will-redirect` (`electron.d.ts` 17802) — a **server-side** redirect mid-navigation, which
+ *   `will-navigate` never sees: the first hop passes the origin check and the redirect target is
+ *   what actually loads.
+ * - `will-frame-navigate` (`electron.d.ts` 17652) — the same for a subframe. The policy forbids
+ *   frames (`frame-src 'none'`), so this is the layer that says so when the policy is not there —
+ *   a development window whose CSP the game replaced, for instance.
+ *
+ * The origin is read with {@link originOfUrl}, not with `URL.origin`: `ignifx` is not a *special*
+ * scheme to the WHATWG parser, so `new URL("ignifx://evil/x").origin` is the string `"null"` and an
+ * equality test written on it admits every authority. See `main/origin.ts`.
+ *
+ * `will-attach-webview` (`electron.d.ts` 17579) is refused for the same reason `webviewTag: false`
+ * is set: two independent layers, because a `<webview>` that attaches is a second renderer with its
+ * own preferences.
+ *
  * @param contents - The window's web contents.
  * @param allowedOrigin - The one origin a navigation may stay on; anything else is blocked.
  *
@@ -389,17 +420,16 @@ export function forwardWindowEvents(window: BrowserWindow): void {
  */
 export function lockNavigation(contents: WebContents, allowedOrigin: string): void {
   contents.setWindowOpenHandler((): { readonly action: "deny" } => ({ action: "deny" }));
-  contents.on("will-navigate", (event, url: string): void => {
-    let origin: string;
-    try {
-      origin = new URL(url).origin;
-    } catch {
-      event.preventDefault();
-      return;
+  const gate = (details: { readonly url: string; preventDefault: () => void }): void => {
+    if (originOfUrl(details.url) !== allowedOrigin) {
+      details.preventDefault();
     }
-    if (origin !== allowedOrigin) {
-      event.preventDefault();
-    }
+  };
+  contents.on("will-navigate", gate);
+  contents.on("will-redirect", gate);
+  contents.on("will-frame-navigate", gate);
+  contents.on("will-attach-webview", (event): void => {
+    event.preventDefault();
   });
 }
 
@@ -424,6 +454,18 @@ export const ALLOWED_PERMISSIONS: readonly string[] = Object.freeze([
 /**
  * Denies every permission a game window has no business asking for.
  *
+ * @remarks
+ * Three handlers, because Electron asks three different questions and answering one of them leaves
+ * the other two on their defaults:
+ *
+ * - `setPermissionRequestHandler` (`electron.d.ts` 13426) — the prompt path, `navigator.*.request*`.
+ * - `setPermissionCheckHandler` (`electron.d.ts` 13417) — the silent path, `permissions.query` and
+ *   every API that checks before asking. Electron's own documentation says both are needed for
+ *   "complete permission handling".
+ * - `setDevicePermissionHandler` (`electron.d.ts` 13383) — the per-**device** grant that WebHID,
+ *   WebUSB and Web Serial consult once a chooser has run. `false` for everything, which is the
+ *   second lock on a door the two handlers above already keep shut.
+ *
  * @param session - The window's session.
  * @param allowed - The permissions to grant; defaults to {@link ALLOWED_PERMISSIONS}.
  *
@@ -439,6 +481,7 @@ export function restrictPermissions(session: Session, allowed: readonly string[]
     callback(allowed.includes(permission));
   });
   session.setPermissionCheckHandler((_contents, permission): boolean => allowed.includes(permission));
+  session.setDevicePermissionHandler((): boolean => false);
 }
 
 /**
@@ -478,7 +521,9 @@ export function createGameWindow(options: GameWindowOptions): BrowserWindow {
   restrictPermissions(window.webContents.session);
 
   const url = isDevServerEntry(options.entry) ? options.entry : packagedEntryUrl(options.entry);
-  lockNavigation(window.webContents, new URL(url).origin);
+  // `originOfUrl`, not `new URL(url).origin`: the latter is the string `"null"` for every
+  // `ignifx://` URL, which would have made the check below pass for `ignifx://anything`.
+  lockNavigation(window.webContents, originOfUrl(url) ?? IGNIFX_ORIGIN);
   forwardWindowEvents(window);
 
   if (options.show !== true) {

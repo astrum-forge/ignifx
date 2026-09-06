@@ -49,6 +49,7 @@ export const ElectronErrorCode: {
     readonly externalUrlRefused: "IGX-1464";
     readonly protocolPathEscaped: "IGX-1465";
     readonly invalidWindowOptions: "IGX-1466";
+    readonly hostSenderRefused: "IGX-1467";
 };
 
 // @public

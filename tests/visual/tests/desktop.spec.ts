@@ -115,6 +115,10 @@ interface RuntimePreferences {
   readonly contextIsolation: boolean;
   readonly nodeIntegration: boolean;
   readonly webSecurity: boolean;
+  readonly webviewTag: boolean;
+  readonly experimentalFeatures: boolean;
+  readonly allowRunningInsecureContent: boolean;
+  readonly enableWebSQL: boolean;
   readonly url: string;
   readonly title: string;
 }
@@ -277,6 +281,10 @@ test("observes CONSTITUTION.md §9.2's window options at runtime", async () => {
       contextIsolation: flag("contextIsolation"),
       nodeIntegration: flag("nodeIntegration"),
       webSecurity: flag("webSecurity"),
+      webviewTag: flag("webviewTag"),
+      experimentalFeatures: flag("experimentalFeatures"),
+      allowRunningInsecureContent: flag("allowRunningInsecureContent"),
+      enableWebSQL: flag("enableWebSQL"),
       url: window.webContents.getURL(),
       title: window.getTitle(),
     };
@@ -286,6 +294,30 @@ test("observes CONSTITUTION.md §9.2's window options at runtime", async () => {
   expect(preferences.contextIsolation).toBe(true);
   expect(preferences.nodeIntegration).toBe(false);
   expect(preferences.webSecurity).toBe(true);
+  // The rest of `ENFORCED_WEB_PREFERENCES`, read back off the running window rather than off the
+  // pure builder, so the two are pinned to each other (docs/security/electron-review-2026-09.md).
+  expect(preferences.webviewTag).toBe(false);
+  expect(preferences.experimentalFeatures).toBe(false);
+  expect(preferences.allowRunningInsecureContent).toBe(false);
+  expect(preferences.enableWebSQL).toBe(false);
+});
+
+test("serves one ignifx:// authority and refuses every other one", async () => {
+  const running = currentApp();
+
+  // From the **main** process, because the renderer's own `connect-src 'self'` would refuse the
+  // request before the protocol handler ever saw it — and it is the handler that is under test.
+  const statuses = await running.evaluate(async ({ net }) => ({
+    app: (await net.fetch("ignifx://app/index.html")).status,
+    other: (await net.fetch("ignifx://evil/index.html")).status,
+    escaping: (await net.fetch("ignifx://app/..%2f..%2f..%2fetc/passwd")).status,
+  }));
+
+  expect(statuses.app).toBe(200);
+  // A second authority is a second Chromium origin serving the same files, which would make
+  // `'self'` in the policy mean something other than the game.
+  expect(statuses.other).toBe(403);
+  expect(statuses.escaping).toBe(403);
 });
 
 test("gives the renderer the bridge and nothing else", async () => {

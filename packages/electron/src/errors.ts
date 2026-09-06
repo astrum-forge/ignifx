@@ -42,6 +42,8 @@ export const ElectronErrorCode = {
   protocolPathEscaped: "IGX-1465",
   /** `createGameWindow` was given options that cannot be honoured together. */
   invalidWindowOptions: "IGX-1466",
+  /** An IPC request arrived from a frame that is not the game window's own document. */
+  hostSenderRefused: "IGX-1467",
 } as const;
 
 /**
@@ -65,6 +67,7 @@ export const ELECTRON_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.
   "IGX-1464": "{url} does not use an allowed protocol.",
   "IGX-1465": "{path} resolves outside the directory the ignifx:// protocol serves.",
   "IGX-1466": "{option} is not a usable window option.",
+  "IGX-1467": "{channel} was invoked from {origin}, which is not the game window's own document.",
 });
 
 /**

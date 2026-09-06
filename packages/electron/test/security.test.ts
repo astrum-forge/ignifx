@@ -3,7 +3,9 @@
 import "./support/electron-mock.js";
 import { describe, expect, it } from "vitest";
 import { CSP_DIRECTIVE_ORDER, cspFor, defaultCsp } from "../src/main/csp.js";
-import { isAllowedExternalUrl } from "../src/main/ipc.js";
+import { allowedSenderOrigins, isAllowedExternalUrl, isTrustedSender } from "../src/main/ipc.js";
+import { originOfUrl } from "../src/main/origin.js";
+import { protocolPathFor } from "../src/main/protocol.js";
 import {
   cspValueFor,
   DEFAULT_EXTERNAL_PROTOCOLS,
@@ -48,6 +50,15 @@ describe("the window options CONSTITUTION.md §9.2 fixes", () => {
     expect(webPreferences?.allowRunningInsecureContent).toBe(false);
     expect(webPreferences?.experimentalFeatures).toBe(false);
     expect(webPreferences?.webviewTag).toBe(false);
+  });
+
+  it("states the empty Blink feature list and turns WebSQL off rather than leaving both to defaults", () => {
+    const { webPreferences } = windowOptionsFor({ entry: "index.html", preload: PRELOAD });
+
+    // `enableBlinkFeatures` (electron.d.ts 19410) turns on features that ship disabled; the empty
+    // string is the reviewable spelling of "none".
+    expect(webPreferences?.enableBlinkFeatures).toBe("");
+    expect(webPreferences?.enableWebSQL).toBe(false);
   });
 
   it("cannot be talked out of any of them by the caller", () => {
@@ -181,6 +192,71 @@ describe("the openExternal allow-list", () => {
     // failure mode, and pretending this check does it would be worse than not having it.
     expect(isAllowedExternalUrl("https:/\\/evil.example", DEFAULT_EXTERNAL_PROTOCOLS)).toBe(true);
     expect(isAllowedExternalUrl("https://evil.example", DEFAULT_EXTERNAL_PROTOCOLS)).toBe(true);
+  });
+});
+
+describe("the IPC sender check", () => {
+  it("only trusts the game window's own top-level document", () => {
+    const origins = allowedSenderOrigins();
+
+    expect(origins).toEqual(["ignifx://app"]);
+    expect(isTrustedSender({ origin: "ignifx://app", isMainFrame: true, isGameWindow: true }, origins)).toBe(true);
+    // The three ways to be something else.
+    expect(isTrustedSender({ origin: "ignifx://app", isMainFrame: false, isGameWindow: true }, origins)).toBe(false);
+    expect(isTrustedSender({ origin: "ignifx://app", isMainFrame: true, isGameWindow: false }, origins)).toBe(false);
+    expect(isTrustedSender({ origin: "https://evil.example", isMainFrame: true, isGameWindow: true }, origins)).toBe(
+      false,
+    );
+    // A frame that has navigated or been destroyed reports no origin at all.
+    expect(isTrustedSender({ origin: null, isMainFrame: true, isGameWindow: true }, origins)).toBe(false);
+  });
+
+  it("widens to the dev server only when the entry is one", () => {
+    expect(allowedSenderOrigins("index.html")).toEqual(["ignifx://app"]);
+    expect(allowedSenderOrigins("http://localhost:5173/")).toEqual(["http://localhost:5173", "ignifx://app"]);
+  });
+});
+
+describe("the origins the guards compare", () => {
+  it("does not collapse every ignifx:// authority to one value, the way URL.origin does", () => {
+    // The defect this function exists for: the WHATWG parser has no special handling for `ignifx:`,
+    // so both of these have the opaque origin `"null"` and an equality test on it always passes.
+    expect(new URL("ignifx://app/index.html").origin).toBe("null");
+    expect(new URL("ignifx://evil/index.html").origin).toBe("null");
+
+    expect(originOfUrl("ignifx://app/index.html")).toBe("ignifx://app");
+    expect(originOfUrl("ignifx://evil/index.html")).toBe("ignifx://evil");
+    expect(originOfUrl("http://localhost:5173/x")).toBe("http://localhost:5173");
+  });
+
+  it("returns null for everything with no tuple origin, so a guard refuses rather than guesses", () => {
+    for (const url of ["", "not a url", "//ignifx.com", "file:///etc/passwd", "data:text/html,x", "javascript:1"]) {
+      expect(originOfUrl(url)).toBeNull();
+    }
+  });
+});
+
+describe("the ignifx:// protocol's path handling", () => {
+  const ROOT = "/srv/game/dist";
+
+  it("keeps a request inside the served directory", () => {
+    expect(protocolPathFor("ignifx://app/assets/crate.png", ROOT)).toBe("/srv/game/dist/assets/crate.png");
+    expect(protocolPathFor("ignifx://app/", ROOT)).toBe("/srv/game/dist/index.html");
+  });
+
+  it("refuses a traversal, its encoded spellings, a NUL byte, and a second authority", () => {
+    for (const url of [
+      "ignifx://app/..%2f..%2fetc/passwd",
+      "ignifx://app/%2e%2e%2f%2e%2e%2fetc/passwd",
+      "ignifx://app/a/..%5c..%5cetc/passwd",
+      "ignifx://app/%00etc/passwd",
+      "ignifx://app/%e0%a4%a",
+      // Another authority is another Chromium origin serving the same bytes, which would make
+      // `'self'` in the policy mean something other than the game.
+      "ignifx://evil/index.html",
+    ]) {
+      expect(() => protocolPathFor(url, ROOT), url).toThrow("IGX-1465");
+    }
   });
 });
 

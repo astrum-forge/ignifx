@@ -14,6 +14,9 @@ import { WebContents } from 'electron';
 export const ALLOWED_PERMISSIONS: readonly string[];
 
 // @public
+export function allowedSenderOrigins(entry?: string): readonly string[];
+
+// @public
 export function applyWebGpuSwitches(commandLine?: CommandLineLike, platform?: string): readonly string[];
 
 // @public
@@ -81,6 +84,8 @@ export const ENFORCED_WEB_PREFERENCES: Readonly<{
     readonly webSecurity: true;
     readonly allowRunningInsecureContent: false;
     readonly experimentalFeatures: false;
+    readonly enableBlinkFeatures: "";
+    readonly enableWebSQL: false;
     readonly webviewTag: false;
     readonly spellcheck: false;
 }>;
@@ -145,7 +150,9 @@ export const HOST_WINDOW_EVENT_CHANNEL = "ignifx:window-event";
 
 // @public
 export interface HostHandlerOptions {
+    readonly entry?: string;
     readonly externalProtocols?: readonly string[];
+    readonly origins?: readonly string[];
     readonly storage?: FileStorage;
     readonly window: BrowserWindow;
 }
@@ -227,6 +234,9 @@ export function isMissingFileError(error: unknown): boolean;
 export function isQuotaError(error: unknown): boolean;
 
 // @public
+export function isTrustedSender(sender: SenderIdentity, origins: readonly string[]): boolean;
+
+// @public
 export const JSON_EXTENSION = ".json";
 
 // @public
@@ -243,6 +253,9 @@ export function mimeTypeFor(pathOrExtension: string): string;
 
 // @public
 export function openDialogOptionsFor(options?: HostOpenDialogOptions): OpenDialogOptions;
+
+// @public
+export function originOfUrl(url: string): string | null;
 
 // @public
 export const PACKAGED_ORIGIN: string;
@@ -292,6 +305,13 @@ export function respondToProtocolRequest(request: Request, root: string): Promis
 
 // @public
 export function restrictPermissions(session: Session, allowed?: readonly string[]): void;
+
+// @public
+export interface SenderIdentity {
+    readonly isGameWindow: boolean;
+    readonly isMainFrame: boolean;
+    readonly origin: string | null;
+}
 
 // @public
 export function serveIgnifxProtocol(root: string): () => void;

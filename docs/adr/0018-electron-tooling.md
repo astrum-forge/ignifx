@@ -114,6 +114,7 @@ Everything below is **documented from upstream sources and not executed in this 
 - **Linux.** `enable-features=Vulkan` is written from Chromium's own flag list. No Linux build has been run, and no Linux runner with a display has executed the desktop suite. Linux CI needs `xvfb-run`.
 - **Cross-compilation.** `electron-builder` can only produce a macOS `.dmg` on macOS; the `desktop-build` CI matrix exists to build each platform on its own runner.
 - **Code signing, notarization, and auto-update.** Out of scope before 1.0, and none of the three has been exercised.
+- **Electron Fuses on Windows and Linux.** The `electronFuses` block in each `electron-builder.yml` was read back from a packaged macOS arm64 `.app` on 2026-09-07 (`RunAsNode` off, `OnlyLoadAppFromAsar` on, and the rest as configured); whether the same flips land in a Windows or Linux binary is untested.
 - **Installer sizes.** Only the macOS arm64 `--dir` output has been measured: a 303 MB unpacked `.app` around a 15.8 MB `app.asar`. No `.dmg`, `.exe`, `.deb` or `.AppImage` has been produced.
 
 ## Requested of `@ignifx/core`

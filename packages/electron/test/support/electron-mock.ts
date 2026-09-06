@@ -123,6 +123,9 @@ export class FakeSession {
   /** The handler `restrictPermissions` registered for silent checks, or `null`. */
   permissionCheckHandler: ((contents: unknown, permission: string) => boolean) | null = null;
 
+  /** The handler `restrictPermissions` registered for per-device grants, or `null`. */
+  devicePermissionHandler: ((details: unknown) => boolean) | null = null;
+
   /** The `webRequest` surface `installCspHeader` reaches. */
   readonly webRequest = {
     onHeadersReceived: (listener: FakeSession["headersListener"]): void => {
@@ -148,6 +151,15 @@ export class FakeSession {
    */
   setPermissionCheckHandler(handler: ((contents: unknown, permission: string) => boolean) | null): void {
     this.permissionCheckHandler = handler;
+  }
+
+  /**
+   * Records the per-device grant handler.
+   *
+   * @param handler - The handler.
+   */
+  setDevicePermissionHandler(handler: ((details: unknown) => boolean) | null): void {
+    this.devicePermissionHandler = handler;
   }
 
   /**
@@ -212,8 +224,14 @@ export class FakeBrowserWindow {
   /** The handler `lockNavigation` installed for `window.open`, or `null`. */
   windowOpenHandler: (() => { readonly action: string }) | null = null;
 
-  /** The `will-navigate` listeners `lockNavigation` installed. */
-  readonly navigationListeners: ((event: { preventDefault: () => void }, url: string) => void)[] = [];
+  /**
+   * The navigation listeners `lockNavigation` installed, keyed by event name. `will-navigate`,
+   * `will-redirect` and `will-frame-navigate` all receive the same `details` object shape.
+   */
+  readonly navigationListeners = new Map<string, ((details: { url: string; preventDefault: () => void }) => void)[]>();
+
+  /** Whether a `will-attach-webview` listener refused the attachment. */
+  webviewAttachmentPrevented = false;
 
   /** The window's session. */
   readonly session = new FakeSession();
@@ -228,10 +246,19 @@ export class FakeBrowserWindow {
     setWindowOpenHandler: (handler: () => { readonly action: string }): void => {
       this.windowOpenHandler = handler;
     },
-    on: (event: string, listener: (event: { preventDefault: () => void }, url: string) => void): void => {
-      if (event === "will-navigate") {
-        this.navigationListeners.push(listener);
+    on: (event: string, listener: (details: { url: string; preventDefault: () => void }) => void): void => {
+      if (event === "will-attach-webview") {
+        listener({
+          url: "",
+          preventDefault: (): void => {
+            this.webviewAttachmentPrevented = true;
+          },
+        });
+        return;
       }
+      const existing = this.navigationListeners.get(event) ?? [];
+      existing.push(listener);
+      this.navigationListeners.set(event, existing);
     },
   };
 
@@ -274,19 +301,18 @@ export class FakeBrowserWindow {
    * Asks whether a navigation to a URL would be allowed.
    *
    * @param url - The URL being navigated to.
+   * @param event - Which navigation event to replay; defaults to `"will-navigate"`.
    * @returns `true` when no listener called `preventDefault`.
    */
-  wouldAllowNavigation(url: string): boolean {
+  wouldAllowNavigation(url: string, event = "will-navigate"): boolean {
     let prevented = false;
-    for (const listener of this.navigationListeners) {
-      listener(
-        {
-          preventDefault: (): void => {
-            prevented = true;
-          },
-        },
+    for (const listener of this.navigationListeners.get(event) ?? []) {
+      listener({
         url,
-      );
+        preventDefault: (): void => {
+          prevented = true;
+        },
+      });
     }
     return !prevented;
   }
@@ -349,6 +375,45 @@ export class FakeBrowserWindow {
   setTitle(value: string): void {
     this.title = value;
   }
+}
+
+/**
+ * How a fake invoke event identifies itself, when a test wants something other than the game
+ * window's own top-level document.
+ *
+ * @public
+ */
+export interface FakeSenderOptions {
+  /** The frame's origin; `null` stands for a frame that has already gone away. */
+  readonly origin?: string | null;
+  /** Whether the frame is the top frame. */
+  readonly isMainFrame?: boolean;
+  /** Whether the message comes from the game window's own `WebContents`. */
+  readonly isGameWindow?: boolean;
+}
+
+/**
+ * Builds the `IpcMainInvokeEvent` stand-in the guarded handlers read.
+ *
+ * @remarks
+ * `installHostHandlers` refuses anything that is not the game window's own top-level document
+ * (`IGX-1467`), so a unit test has to say who it is pretending to be. The defaults are the honest
+ * case: the packaged origin, the top frame, the window the handlers were installed for.
+ *
+ * @param window - The window the handlers were installed for.
+ * @param options - What to differ from the honest case in.
+ * @returns The event, shaped as `identifySender` reads it.
+ *
+ * @public
+ */
+export function fakeInvokeEvent(window: FakeBrowserWindow, options: FakeSenderOptions = {}): unknown {
+  const origin = options.origin === undefined ? "ignifx://app" : options.origin;
+  const isMainFrame = options.isMainFrame ?? true;
+  const isGameWindow = options.isGameWindow ?? true;
+  return {
+    sender: isGameWindow ? window.webContents : { other: true },
+    senderFrame: origin === null ? null : { origin, parent: isMainFrame ? null : { origin } },
+  };
 }
 
 // Registering the mock is a module-level statement rather than something a test calls: Vitest

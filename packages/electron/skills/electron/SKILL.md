@@ -92,7 +92,9 @@ const window = createGameWindow({
   height: 900,
   title: "My Game",
 });
-installHostHandlers({ window });
+// `entry` again: the IPC handlers only answer the game window's own top-level document, and in
+// `electron-vite dev` that document is on the dev server rather than on `ignifx://app`.
+installHostHandlers({ window, entry: DEV_SERVER_URL ?? "index.html" });
 ```
 
 **`desktop/preload.ts`** — two lines, and it must be built to CommonJS (see Gotchas).
@@ -155,9 +157,32 @@ Everything but `isElectron` and `versions` rejects with `IGX-1462` in a browser 
 | `registerIgnifxScheme()`                 | `ignifx://` as standard + secure + fetchable + streamable. **Before `whenReady`.**      |
 | `serveIgnifxProtocol(dir)`               | Serves a directory; returns a function that stops it. **After `whenReady`.**            |
 | `createGameWindow(options)`              | The window, hardened. Returns a `BrowserWindow`.                                        |
-| `installHostHandlers({ window })`        | The IPC handlers; returns a function that removes them.                                 |
+| `installHostHandlers({ window, entry })` | The IPC handlers; returns a function that removes them. Pass the same `entry`.          |
 | `windowOptionsFor(options)` / `cspFor()` | Pure builders, so a test can assert the security options.                               |
 | `FileStorage`                            | The file-system store, in `@ignifx/core`'s own on-disk layout.                          |
+
+### Security defaults
+
+`createGameWindow` and `installHostHandlers` harden the window for you. None of it is a flag you pass; deviating means an ADR (`CONSTITUTION.md` §9.2). What the package enforces:
+
+| Layer                   | What it does                                                                                                                                                                                                                                                                                                                                                         |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `webPreferences`        | `contextIsolation: true`, `sandbox: true`, `nodeIntegration` / `nodeIntegrationInWorker` / `nodeIntegrationInSubFrames` off, `webSecurity: true`, `allowRunningInsecureContent: false`, `experimentalFeatures: false`, `enableBlinkFeatures: ""`, `enableWebSQL: false`, `webviewTag: false`. Written **after** your options are spread, so they cannot be weakened. |
+| Content-Security-Policy | A response header on every document and subresource: `default-src 'none'`, `script-src 'self' 'wasm-unsafe-eval'`, `object-src`/`base-uri`/`form-action`/`frame-ancestors`/`frame-src` `'none'`. Never `'unsafe-inline'` or `'unsafe-eval'` on scripts.                                                                                                              |
+| Navigation              | `window.open` denied; `will-navigate`, `will-redirect` and `will-frame-navigate` blocked off the window's own origin; `will-attach-webview` refused.                                                                                                                                                                                                                 |
+| Permissions             | Only `pointerLock`, `fullscreen` and `automatic-fullscreen` are granted. Camera, microphone, geolocation, notifications, USB, HID and Serial are denied on the prompt path, the silent-check path, and the per-device grant.                                                                                                                                         |
+| `ignifx://`             | One authority (`app`) and one directory. A path that resolves outside it, carries a NUL byte, or names another authority is refused with `IGX-1465` and answered `403`.                                                                                                                                                                                              |
+| IPC                     | Every handler refuses anything that is not the game window's own **top-level** document on an allowed origin, with `IGX-1467`, before it reads an argument.                                                                                                                                                                                                          |
+| `openExternal`          | `https:` and `mailto:` only. `file:`, `javascript:`, plain `http:` and every custom scheme reject with `IGX-1464`.                                                                                                                                                                                                                                                   |
+| Packaging               | `electron-builder.yml` flips the Electron Fuses that disable `ELECTRON_RUN_AS_NODE`, `NODE_OPTIONS`, `--inspect` and `file://` extra privileges, and loads the app from `app.asar` only.                                                                                                                                                                             |
+
+What a **game** still has to do:
+
+- Keep secrets out of the renderer. It is sandboxed from Node, not from the player: everything in `out/renderer` is readable, `asar: true` is an archive and not encryption.
+- Validate anything it loads from outside itself. The engine validates its own scene and manifest formats; a save file a player edited, or a mod directory, is the game's own trust boundary.
+- Add its backend origins to `connect-src` with `csp: cspFor({ connectSources: [...] })`, rather than turning the policy off. `csp: null` means the window has **no** policy at all.
+- Sign and notarize before shipping. `dist:desktop` produces an unsigned build on purpose; nothing here substitutes for a real signing identity.
+- Bump Electron every quarter. Only the last three majors get Chromium security fixes.
 
 ### `app.storage` on the desktop
 

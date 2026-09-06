@@ -296,6 +296,29 @@ jobs:
             website/public/llms.txt \
             'packages/*/api'
 
+  licenses:
+    name: licenses
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      # CONSTITUTION.md §11.2: every third-party production dependency is recorded in
+      # THIRD_PARTY_NOTICES.md. The generator reads the installed tree, so a dependency added
+      # without regenerating the file is a red build rather than a discovery at release time.
+      - run: pnpm licenses:check
+      # Belt and braces: regenerate and diff, so a change in what pnpm reports (a new transitive
+      # dependency, an upstream licence change) shows up as a patch here rather than only as a
+      # "stale" message.
+      - name: Fail on notices drift
+        run: |
+          pnpm licenses:notices
+          git diff --exit-code -- THIRD_PARTY_NOTICES.md
+      # `pnpm audit` is deliberately NOT part of this job. It queries the npm advisory database over
+      # the network, and an outage there — or an advisory published against a transitive dependency
+      # with no fix yet — turns every unrelated pull request red. The audit is run and recorded by
+      # hand instead, in docs/security/electron-review-2026-09.md, alongside the Electron review.
+
   deps:
     name: deps
     runs-on: ubuntu-latest

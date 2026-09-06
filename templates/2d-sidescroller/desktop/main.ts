@@ -48,14 +48,18 @@ registerIgnifxScheme();
  */
 function openGameWindow(): void {
   removeHandlers?.();
+  const entry = DEV_SERVER_URL ?? "index.html";
   const window = createGameWindow({
-    entry: DEV_SERVER_URL ?? "index.html",
+    entry,
     preload: PRELOAD,
     width: 1280,
     height: 720,
     title: "ignifx — sidescroller",
   });
-  removeHandlers = installHostHandlers({ window });
+  // `entry` again: the IPC handlers refuse a request from anything but the game window's own
+  // top-level document, and in `electron-vite dev` that document is on the dev server rather than
+  // on `ignifx://app`.
+  removeHandlers = installHostHandlers({ window, entry });
 }
 
 app.whenReady().then(

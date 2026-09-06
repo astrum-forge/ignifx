@@ -35,12 +35,16 @@ export {
   type CspOptions,
 } from "./main/csp.js";
 export {
+  allowedSenderOrigins,
   installHostHandlers,
   isAllowedExternalUrl,
+  isTrustedSender,
   openDialogOptionsFor,
   resolveHostPaths,
   type HostHandlerOptions,
+  type SenderIdentity,
 } from "./main/ipc.js";
+export { originOfUrl } from "./main/origin.js";
 export {
   IGNIFX_SCHEME_PRIVILEGES,
   mimeTypeFor,

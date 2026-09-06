@@ -1,13 +1,19 @@
 // Must come first: it registers the `electron` module mock every import below depends on.
 // eslint-disable-next-line import-x/order -- must be evaluated first; it registers the `electron` module mock.
-import { electronMock, FakeBrowserWindow, resetElectronMock } from "./support/electron-mock.js";
+import { electronMock, fakeInvokeEvent, FakeBrowserWindow, resetElectronMock } from "./support/electron-mock.js";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { isIgnifxError } from "@ignifx/core";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { HOST_CHANNELS, HOST_WINDOW_EVENT_CHANNEL } from "../src/host-contract.js";
-import { installHostHandlers, openDialogOptionsFor, resolveHostPaths } from "../src/main/ipc.js";
+import {
+  allowedSenderOrigins,
+  installHostHandlers,
+  isTrustedSender,
+  openDialogOptionsFor,
+  resolveHostPaths,
+} from "../src/main/ipc.js";
 import { FileStorage } from "../src/main/storage-fs.js";
 import { applyWebGpuSwitches, LINUX_FEATURES_SWITCH, WEBGPU_SWITCH } from "../src/main/switches.js";
 import { FORWARDED_WINDOW_EVENTS, forwardWindowEvents } from "../src/main/window.js";
@@ -27,18 +33,30 @@ let window: FakeBrowserWindow;
 let removeHandlers: () => void;
 
 /**
- * Calls one registered handler.
+ * Calls one registered handler as the game window's own top-level document would.
  *
  * @param channel - The channel name.
  * @param args - The arguments the renderer would have sent.
  * @returns Whatever the handler returned.
  */
 async function invoke(channel: string, ...args: readonly unknown[]): Promise<unknown> {
+  return invokeAs(fakeInvokeEvent(window), channel, ...args);
+}
+
+/**
+ * Calls one registered handler as some other sender.
+ *
+ * @param event - The `IpcMainInvokeEvent` stand-in, from `fakeInvokeEvent`.
+ * @param channel - The channel name.
+ * @param args - The arguments the renderer would have sent.
+ * @returns Whatever the handler returned.
+ */
+async function invokeAs(event: unknown, channel: string, ...args: readonly unknown[]): Promise<unknown> {
   const handler = electronMock.handlers.get(channel);
   if (handler === undefined) {
     throw new Error(`no handler for ${channel}`);
   }
-  return handler(null, ...args);
+  return handler(event, ...args);
 }
 
 beforeEach(async () => {
@@ -177,6 +195,90 @@ describe("installHostHandlers", () => {
     expect(isIgnifxError(thrown) && thrown.code).toBe("IGX-1464");
     // Refused before the shell ever saw it.
     expect(electronMock.opened).toEqual(["https://ignifx.com"]);
+  });
+});
+
+describe("the sender check every handler runs first", () => {
+  /**
+   * Reads the code an untrusted sender was refused with.
+   *
+   * @param event - The sender to pretend to be.
+   * @returns The `IgnifxError` code, or `"resolved"` when the call went through.
+   */
+  async function refusalFor(event: unknown): Promise<string> {
+    try {
+      await invokeAs(event, HOST_CHANNELS.paths);
+      return "resolved";
+    } catch (error) {
+      return isIgnifxError(error) ? error.code : String(error);
+    }
+  }
+
+  it("refuses a subframe, another window, a departed frame, and a foreign origin", async () => {
+    expect(await refusalFor(fakeInvokeEvent(window, { isMainFrame: false }))).toBe("IGX-1467");
+    expect(await refusalFor(fakeInvokeEvent(window, { isGameWindow: false }))).toBe("IGX-1467");
+    expect(await refusalFor(fakeInvokeEvent(window, { origin: null }))).toBe("IGX-1467");
+    expect(await refusalFor(fakeInvokeEvent(window, { origin: "https://evil.example" }))).toBe("IGX-1467");
+    // …and the honest case still works, so the gate is not simply refusing everything.
+    expect(await refusalFor(fakeInvokeEvent(window))).toBe("resolved");
+  });
+
+  it("refuses before it reads an argument, so a hostile frame cannot even write storage", async () => {
+    const hostile = fakeInvokeEvent(window, { origin: "https://evil.example" });
+
+    await expect(
+      invokeAs(hostile, HOST_CHANNELS.storageSet, "saves", "slot1", { kind: "json", json: "1" }),
+    ).rejects.toThrow("IGX-1467");
+    await expect(invokeAs(hostile, HOST_CHANNELS.shellOpenExternal, "https://ignifx.com")).rejects.toThrow("IGX-1467");
+
+    expect(electronMock.opened).toEqual([]);
+    expect(await invoke(HOST_CHANNELS.storageKeys, "saves")).toEqual([]);
+  });
+
+  it("accepts the dev-server origin only when the entry says the window is on one", async () => {
+    expect(allowedSenderOrigins()).toEqual(["ignifx://app"]);
+    expect(allowedSenderOrigins("index.html")).toEqual(["ignifx://app"]);
+    expect(allowedSenderOrigins("http://localhost:5173/")).toEqual(["http://localhost:5173", "ignifx://app"]);
+
+    const development = new FakeBrowserWindow();
+    const remove = installHostHandlers({
+      window: development as unknown as BrowserWindow,
+      storage: new FileStorage(root),
+      entry: "http://localhost:5173/",
+    });
+    try {
+      const fromDevServer = fakeInvokeEvent(development, { origin: "http://localhost:5173" });
+      await expect(invokeAs(fromDevServer, HOST_CHANNELS.paths)).resolves.toBeDefined();
+    } finally {
+      remove();
+    }
+  });
+
+  it("takes an explicit origin list over what the entry implies", async () => {
+    const custom = new FakeBrowserWindow();
+    const remove = installHostHandlers({
+      window: custom as unknown as BrowserWindow,
+      storage: new FileStorage(root),
+      origins: ["https://game.example"],
+    });
+    try {
+      await expect(
+        invokeAs(fakeInvokeEvent(custom, { origin: "https://game.example" }), HOST_CHANNELS.paths),
+      ).resolves.toBeDefined();
+      await expect(invokeAs(fakeInvokeEvent(custom), HOST_CHANNELS.paths)).rejects.toThrow("IGX-1467");
+    } finally {
+      remove();
+    }
+  });
+
+  it("is a pure predicate, so every way of failing can be stated on its own", () => {
+    const origins = ["ignifx://app"];
+
+    expect(isTrustedSender({ origin: "ignifx://app", isMainFrame: true, isGameWindow: true }, origins)).toBe(true);
+    expect(isTrustedSender({ origin: "ignifx://app", isMainFrame: false, isGameWindow: true }, origins)).toBe(false);
+    expect(isTrustedSender({ origin: "ignifx://app", isMainFrame: true, isGameWindow: false }, origins)).toBe(false);
+    expect(isTrustedSender({ origin: null, isMainFrame: true, isGameWindow: true }, origins)).toBe(false);
+    expect(isTrustedSender({ origin: "ignifx://evil", isMainFrame: true, isGameWindow: true }, origins)).toBe(false);
   });
 });
 

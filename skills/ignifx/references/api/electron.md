@@ -1599,6 +1599,12 @@ The main process refused an IPC request, or the handler threw.
 
 `window.ignifxHost` exists but is missing a method the renderer needs.
 
+##### hostSenderRefused
+
+> `readonly` **hostSenderRefused**: `"IGX-1467"` = `"IGX-1467"`
+
+An IPC request arrived from a frame that is not the game window's own document.
+
 ##### hostUnavailable
 
 > `readonly` **hostUnavailable**: `"IGX-1462"` = `"IGX-1462"`

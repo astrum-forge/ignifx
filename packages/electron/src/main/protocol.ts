@@ -158,8 +158,9 @@ const NUL = "\u0000";
  * @param url - The request URL, as `request.url` gives it.
  * @param root - The absolute directory the protocol serves.
  * @returns The absolute path of the file to serve.
- * @throws An `IgnifxError` with code `IGX-1465` when the path resolves outside `root` or cannot be
- * decoded, and one with code `IGX-1466` when `url` is not an `ignifx://` URL.
+ * @throws An `IgnifxError` with code `IGX-1465` when the path resolves outside `root`, cannot be
+ * decoded, or names an authority other than `app`, and one with code `IGX-1466` when `url` is not an
+ * `ignifx://` URL.
  *
  * @example
  * ```ts
@@ -183,6 +184,22 @@ export function protocolPathFor(url: string, root: string): string {
     throw electronError(ElectronErrorCode.invalidWindowOptions, `"${url}" is not an ${IGNIFX_SCHEME}:// URL.`, {
       context: { option: "url" },
     });
+  }
+  // `protocol.handle` is registered per **scheme**, so every authority reaches this handler:
+  // `ignifx://evil/index.html` would otherwise serve the same bytes from a second Chromium origin,
+  // and `'self'` in the Content-Security-Policy would mean that origin rather than the game's.
+  // The comparison is case-insensitive because a `standard` scheme's host is, and Node's URL parser
+  // leaves the case of a non-special scheme's host alone (`new URL("ignifx://APP/x").host` is
+  // `"APP"`, measured on Node 25.2.1).
+  if (parsed.host.toLowerCase() !== IGNIFX_HOST_AUTHORITY) {
+    throw electronError(
+      ElectronErrorCode.protocolPathEscaped,
+      `"${url}" is not served: the only ${IGNIFX_SCHEME}:// authority is "${IGNIFX_HOST_AUTHORITY}".`,
+      {
+        context: { path: parsed.host, root: IGNIFX_HOST_AUTHORITY },
+        hint: `Address the packaged build as ${IGNIFX_SCHEME}://${IGNIFX_HOST_AUTHORITY}/…`,
+      },
+    );
   }
 
   const base = resolve(root);

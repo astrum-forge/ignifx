@@ -28,6 +28,35 @@ files:
 # casual edit of the shipped JavaScript.
 asar: true
 
+# Electron Fuses: build-time bits flipped into the binary, so a capability a game never uses cannot
+# be turned on at runtime by an environment variable or a command-line flag
+# (`@electron/fuses`, which `electron-builder` 26 already depends on — no new dependency).
+#
+#   runAsNode                             ELECTRON_RUN_AS_NODE turns the app into a Node REPL.
+#   enableNodeOptionsEnvironmentVariable  NODE_OPTIONS injects arbitrary Node flags.
+#   enableNodeCliInspectArguments         --inspect attaches a debugger to the main process.
+#   grantFileProtocolExtraPrivileges      file:// pages get powers a browser would not give them;
+#                                         ignifx serves the packaged build over `ignifx://` instead.
+#   onlyLoadAppFromAsar                   the search order becomes `app.asar` alone, so an `app/`
+#                                         directory dropped beside it is not picked up.
+#   enableCookieEncryption                the on-disk cookie store is encrypted with OS keys.
+#   resetAdHocDarwinSignature             flipping a fuse rewrites the binary and invalidates its
+#                                         signature; macOS arm64 refuses to run an unsigned binary,
+#                                         and these builds carry no identity, so the ad-hoc
+#                                         signature has to be re-applied. No-op elsewhere.
+#
+# `enableEmbeddedAsarIntegrityValidation` is deliberately **off**: it needs the resource hashes a
+# real signing step writes, and nothing here is signed (see the header).
+electronFuses:
+  runAsNode: false
+  enableNodeOptionsEnvironmentVariable: false
+  enableNodeCliInspectArguments: false
+  grantFileProtocolExtraPrivileges: false
+  onlyLoadAppFromAsar: true
+  enableCookieEncryption: true
+  enableEmbeddedAsarIntegrityValidation: false
+  resetAdHocDarwinSignature: true
+
 # The renderer is served over `ignifx://` from `out/renderer`, which `desktop/main.ts` resolves
 # relative to `out/main`. Nothing is unpacked, because nothing needs a real path on disk — the
 # WebAssembly `@ignifx/physics` loads is fetched through the protocol like any other asset.

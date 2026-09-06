@@ -6,12 +6,13 @@ dependencies beyond the Node standard library — which means **erasable syntax 
 **relative imports must carry the `.ts` extension**. `tsconfig.tools.json` type-checks them for
 `pnpm typecheck`; `scripts/tsconfig.json` gives the type-aware linters a real program to use.
 
-| Script            | npm script          | What it does                                                                                                                  |
-| ----------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `docs-schemas.ts` | `pnpm docs:schemas` | Regenerates `skills/ignifx/references/formats/*.md` and `ignifx.schemas.json` from the component schemas the packages export. |
-| `docs-recipes.ts` | `pnpm docs:recipes` | Regenerates `skills/ignifx/references/recipes/<name>.md` from `examples/recipes/<name>/main.ts`.                              |
-| `docs-llms.ts`    | `pnpm docs:llms`    | Regenerates `website/public/llms.txt`, the site's index of the skill for agents.                                              |
-| `docs-harness.ts` | `pnpm docs:harness` | Runs the CI `docs-harness` checks and exits non-zero on the first failure.                                                    |
+| Script            | npm script              | What it does                                                                                                                  |
+| ----------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `docs-schemas.ts` | `pnpm docs:schemas`     | Regenerates `skills/ignifx/references/formats/*.md` and `ignifx.schemas.json` from the component schemas the packages export. |
+| `docs-recipes.ts` | `pnpm docs:recipes`     | Regenerates `skills/ignifx/references/recipes/<name>.md` from `examples/recipes/<name>/main.ts`.                              |
+| `docs-llms.ts`    | `pnpm docs:llms`        | Regenerates `website/public/llms.txt`, the site's index of the skill for agents.                                              |
+| `docs-harness.ts` | `pnpm docs:harness`     | Runs the CI `docs-harness` checks and exits non-zero on the first failure.                                                    |
+| `licenses.ts`     | `pnpm licenses:notices` | Regenerates `THIRD_PARTY_NOTICES.md` from `pnpm licenses list --prod` and the workspace manifests.                            |
 
 Shared helpers live in `lib/`; they return results instead of exiting, so only the four entry
 scripts decide the exit code, and all output goes through `lib/log.ts`. Their tests live in
@@ -28,8 +29,31 @@ scripts decide the exit code, and all output goes through `lib/log.ts`. Their te
 - `docs-harness.ts --base <ref>` — enable `api-report-gate` and `freshness`, which need a diff base
   and therefore report `SKIPPED` outside a pull request.
 - `docs-llms.ts --root <dir>` — the same, for the `llms.txt` generator.
+- `licenses.ts --root <dir>` — the same, for the notices generator; `--check` compares the
+  committed file against what the generator would write and exits non-zero on a difference
+  (`pnpm licenses:check`, which the CI `licenses` job runs).
 - `docs-harness.ts --allow-docs-not-needed` — CI passes this when the pull request carries the
   `docs-not-needed` label; it waives the "a file under `skills/` changed" half of `api-report-gate`.
+
+## Third-party notices
+
+`licenses.ts` writes `THIRD_PARTY_NOTICES.md` (`CONSTITUTION.md` §11.2). It unions two sources,
+because neither alone is right: `pnpm licenses list --prod --json` gives the resolved production
+closure — which catches a transitive dependency nobody declared — and the workspace manifests give
+the `dependencies`, `peerDependencies` and `optionalDependencies` of every package under
+`packages/` and `templates/`, which is where a **peer** dependency such as `electron` or `vite`
+appears; pnpm does not report those under `--prod` because the workspace itself carries them as dev
+dependencies. `workspace:` specifiers and the `@ignifx/*` names are dropped: they are this
+repository, not a third party.
+
+Per package the file records the version, the SPDX licence, the copyright line lifted from the
+package's own licence file (`null` rather than a guess when it has none — the bare Apache-2.0 text
+carries no notice), the repository URL, and which ignifx packages require it. A package that ships a
+`NOTICE` file has it reproduced verbatim in a fenced block, which is what Apache-2.0 §4(d) asks of a
+redistribution; `@babylonjs/lite` is the one that does.
+
+Output is sorted and carries nothing machine-specific, so `pnpm licenses:check` is a byte
+comparison and the CI `licenses` job is a `git diff --exit-code`.
 
 ## Schema discovery convention
 
