@@ -1,5 +1,5 @@
-// Regenerates every texture and sound the two 3D templates ship, and copies the shared character
-// rig into them under the two addresses the toolkit needs. Run with:
+// Regenerates every texture the two 3D templates ship, and copies the shared character rig into
+// them under the two addresses the toolkit needs. Run with:
 //   node tests/fixtures/assets/3d-templates/make-level-art.mjs
 //
 // Every byte is produced here or by `../3d/make-rig.mjs`, so the art is an original work (see
@@ -8,12 +8,13 @@
 // `create-ignifx` copies the directory verbatim into a player's project, so it cannot reference a
 // path in this repository.
 //
-// The PNG and WAV encoders are the ones the 2D templates already use
-// (`../2d-templates/png.mjs`); nothing new is written here except the images themselves.
+// The PNG encoder is the one the 2D templates already use (`../2d-templates/png.mjs`); nothing new
+// is written here except the images themselves. Sound is not written here either:
+// `../audio-templates/make-template-audio.mjs` owns every `.wav` in every template.
 import { copyFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import process from "node:process";
-import { Canvas, encodePng, encodeWav, rng } from "../2d-templates/png.mjs";
+import { Canvas, encodePng, rng } from "../2d-templates/png.mjs";
 
 const HERE = import.meta.dirname;
 const REPO = join(HERE, "..", "..", "..", "..");
@@ -24,8 +25,17 @@ const FIRST = join(REPO, "templates", "3d-first-person", "assets");
 /** The edge of every generated texture, in pixels. A power of two, because mip chains want one. */
 const SIZE = 128;
 
-/** 22.05 kHz mono: a footstep has nothing above 11 kHz worth keeping, and it halves the file. */
-const SAMPLE_RATE = 22_050;
+/**
+ * The edge of the sky texture, in pixels. Four times {@link SIZE}: a gradient wrapped around a
+ * sphere needs many more steps than a tiling surface does before a band shows.
+ */
+const SKY_SIZE = 256;
+
+/**
+ * The per-file ceiling, in bytes. `create-ignifx` copies a template into a player's project, so a
+ * generated file that grows past this is a bug in the art, not a budget to raise.
+ */
+const MAX_BYTES = 64 * 1024;
 
 const written = [];
 
@@ -34,8 +44,12 @@ const written = [];
  * @param directory - The template `assets/` directory to write into.
  * @param name - The file name.
  * @param bytes - The encoded file.
+ * @throws {Error} If the file is over {@link MAX_BYTES}.
  */
 function write(directory, name, bytes) {
+  if (bytes.length > MAX_BYTES) {
+    throw new Error(`${name} is ${String(bytes.length)} bytes, over the ${String(MAX_BYTES)}-byte ceiling`);
+  }
   mkdirSync(directory, { recursive: true });
   const target = join(directory, name);
   writeFileSync(target, bytes);
@@ -169,39 +183,70 @@ function crateTexture(tint, seed) {
 }
 
 /**
- * A footstep: a short burst of low-passed noise with a fast attack and a 90 ms tail.
- * @param seed - The noise seed, so the file is byte-identical on every run.
- * @returns The samples, each in `[-1, 1]`.
+ * Mixes two colours without rounding, so the ordered dither below has a fraction left to spend.
+ * @param a - The first colour, `[r, g, b]`.
+ * @param b - The second colour.
+ * @param t - How much of `b`, in `[0, 1]`.
+ * @returns The mix, as three floats.
  */
-function footstep(seed) {
-  const random = rng(seed);
-  const count = Math.round(SAMPLE_RATE * 0.12);
-  const samples = new Float64Array(count);
-  let low = 0;
-  for (let i = 0; i < count; i += 1) {
-    const t = i / SAMPLE_RATE;
-    // A one-pole low pass turns white noise into the dull thud of a boot on concrete.
-    low += (random() * 2 - 1 - low) * 0.18;
-    const envelope = Math.exp(-t * 42) * Math.min(1, t * 900);
-    samples[i] = low * envelope * 0.9;
-  }
-  return samples;
+function mixExact(a, b, t) {
+  return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
 }
 
 /**
- * An interaction blip: two short sine partials with a click at the front.
- * @param baseHz - The fundamental frequency.
- * @returns The samples, each in `[-1, 1]`.
+ * The cubic ease `3t² − 2t³`, so the two halves of the sky meet without a crease at the join.
+ * @param t - The position along the segment.
+ * @returns The eased position, clamped to `[0, 1]`.
  */
-function blip(baseHz) {
-  const count = Math.round(SAMPLE_RATE * 0.18);
-  const samples = new Float64Array(count);
-  for (let i = 0; i < count; i += 1) {
-    const t = i / SAMPLE_RATE;
-    const envelope = Math.exp(-t * 16) * Math.min(1, t * 1200);
-    samples[i] = envelope * 0.5 * (Math.sin(2 * Math.PI * baseHz * t) + 0.35 * Math.sin(2 * Math.PI * baseHz * 3 * t));
+function smoothstep(t) {
+  const clamped = Math.max(0, Math.min(1, t));
+  return clamped * clamped * (3 - 2 * clamped);
+}
+
+/**
+ * The 4x4 ordered-dither matrix, in threshold order.
+ * @remarks
+ * A vertical gradient over 256 rows moves less than one code value per row in places, and the
+ * rounding is what a viewer sees as a band. Nudging each pixel by up to half a code value on a
+ * fixed 4x4 lattice turns the band into a texture the eye averages out. The lattice is used
+ * because it is periodic: 256 is a whole number of tiles wide, so the pattern still meets itself
+ * where the texture wraps around the sphere.
+ */
+const BAYER_4 = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+
+/**
+ * The sky: a vertical three-stop gradient, uniform across every row, ordered-dithered.
+ * @remarks
+ * `Environment.skybox` wants a `.dds` or `.env` cube map, which cannot be produced here, so the
+ * sky is this texture on an inverted sphere with an unlit, double-sided material instead. Because
+ * every row is one colour, the left and right edges of the image are identical and the seam where
+ * the sphere's UVs wrap is invisible.
+ * @param zenith - The colour straight overhead, `[r, g, b]`.
+ * @param band - The paler colour partway down.
+ * @param horizon - The colour at the bottom.
+ * @returns The image.
+ */
+function skyTexture(zenith, band, horizon) {
+  const canvas = new Canvas(SKY_SIZE, SKY_SIZE);
+  // Where the pale band sits. Above it the sky darkens to the zenith; below it, it warms.
+  const split = 0.58;
+  for (let y = 0; y < SKY_SIZE; y += 1) {
+    const t = y / (SKY_SIZE - 1);
+    const colour =
+      t < split
+        ? mixExact(zenith, band, smoothstep(t / split))
+        : mixExact(band, horizon, smoothstep((t - split) / (1 - split)));
+    const bias = BAYER_4.slice((y % 4) * 4, (y % 4) * 4 + 4);
+    for (let x = 0; x < SKY_SIZE; x += 1) {
+      const nudge = bias[x % 4] / 16 - 0.469;
+      canvas.set(x, y, [
+        Math.max(0, Math.min(255, Math.round(colour[0] + nudge))),
+        Math.max(0, Math.min(255, Math.round(colour[1] + nudge))),
+        Math.max(0, Math.min(255, Math.round(colour[2] + nudge))),
+      ]);
+    }
   }
-  return samples;
+  return encodePng(canvas);
 }
 
 const floor = floorTexture();
@@ -210,7 +255,8 @@ const wall = wallTexture();
 write(THIRD, "floor.png", floor);
 write(THIRD, "wall.png", wall);
 write(THIRD, "crate.png", crateTexture([146, 104, 62], 0x0bad_c0de));
-write(THIRD, "footstep.wav", encodeWav(footstep(0x1234_5678), SAMPLE_RATE));
+// A clear late afternoon: a deep blue overhead falling through a pale band to a warm horizon.
+write(THIRD, "sky.png", skyTexture([38, 78, 150], [146, 184, 216], [242, 198, 150]));
 copyShared(THIRD, "rig.glb", "player.glb");
 copyShared(THIRD, "rig.glb", "companion.glb");
 copyShared(THIRD, "hero.animator.json", "hero.animator.json");
@@ -218,7 +264,8 @@ copyShared(THIRD, "hero.animator.json", "hero.animator.json");
 write(FIRST, "floor.png", floor);
 write(FIRST, "wall.png", wall);
 write(FIRST, "crate.png", crateTexture([70, 122, 138], 0x00c0_ffee));
-write(FIRST, "blip.wav", encodeWav(blip(660), SAMPLE_RATE));
+// The same sky an hour later and indoors-adjacent: cooler, dimmer, and barely warm at the bottom.
+write(FIRST, "sky.png", skyTexture([20, 28, 52], [70, 86, 116], [136, 124, 128]));
 copyShared(FIRST, "rig.glb", "viewmodel.glb");
 copyShared(FIRST, "hero.animator.json", "hero.animator.json");
 

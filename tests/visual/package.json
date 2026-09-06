@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test:visual": "playwright test",
     "test:visual:update": "playwright test --update-snapshots",
-    "test:desktop": "playwright test --config playwright.desktop.config.ts"
+    "test:desktop": "playwright test --config playwright.desktop.config.ts",
+    "capture:gallery": "node scripts/capture-gallery.ts"
   },
   "devDependencies": {
     "@ignifx/core": "workspace:*",

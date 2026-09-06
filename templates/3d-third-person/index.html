@@ -128,6 +128,106 @@
         font-variant-numeric: tabular-nums;
         white-space: pre;
       }
+
+      /* ---------------------------------------------------------------------------------------
+         The template's own screens: title, pause, settings, rebinding and credits, built into
+         `app.ui.layer("menu")` by `src/menus/menu-screen.ts`. `@ignifx/ui` ships a dialog, a toast,
+         a loading screen and the two touch widgets and nothing else — there is no list widget and
+         no slider — so these class names belong to the template, not to the package.
+
+         `pointer-events: auto` is required: the overlay root is `pointer-events: none` so that a
+         click falls through to the canvas, and each interactive panel opts back in.
+         --------------------------------------------------------------------------------------- */
+
+      .menu {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-content: center;
+        justify-items: stretch;
+        gap: 0.35rem;
+        padding: 2rem 1rem;
+        overflow: auto;
+        pointer-events: auto;
+        background: rgb(6 9 16 / 84%);
+        backdrop-filter: blur(3px);
+      }
+
+      /* The UA rule for `[hidden]` is weaker than the class above, so hiding is spelled out. */
+      .menu[hidden] {
+        display: none;
+      }
+
+      .menu-title {
+        margin: 0;
+        font-size: 1.35rem;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+
+      .menu-subtitle {
+        margin: 0 0 0.75rem;
+        max-width: 24rem;
+        opacity: 0.65;
+      }
+
+      .menu-rows {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+        min-width: min(24rem, 100%);
+      }
+
+      .menu-heading {
+        margin-top: 0.85rem;
+        padding: 0 0.75rem;
+        font-size: 0.7rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        opacity: 0.5;
+      }
+
+      .menu-row {
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.45rem 0.75rem;
+        border: 1px solid transparent;
+        border-radius: 0.3rem;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .menu-row[data-focused] {
+        border-color: var(--accent);
+        background: rgb(255 255 255 / 8%);
+      }
+
+      .menu-row[data-disabled] {
+        opacity: 0.35;
+        cursor: default;
+      }
+
+      .menu-row-value {
+        opacity: 0.8;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .menu-row-slider {
+        width: 8rem;
+        accent-color: var(--accent);
+      }
+
+      .menu-row[data-kind="binding"] .menu-row-value {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.85em;
+      }
     </style>
   </head>
   <body>

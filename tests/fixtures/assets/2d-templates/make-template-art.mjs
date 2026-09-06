@@ -1,4 +1,4 @@
-// Regenerates every image, atlas document and sound the two 2D templates ship. Run with:
+// Regenerates every image and atlas document the two 2D templates ship. Run with:
 //   node tests/fixtures/assets/2d-templates/make-template-art.mjs
 //
 // Every byte is produced here, so the art is an original work (see ATTRIBUTION.md). Nothing is
@@ -9,11 +9,14 @@
 // The packer below pads every frame by one pixel and extrudes the frame's own border into the
 // padding. That is what `@ignifx/2d`'s `IGX-1102` check asks for, and what keeps a `pixelPerfect`
 // camera from sampling the neighbouring frame at a frame edge.
+//
+// Sound is not written here: `../audio-templates/make-template-audio.mjs` owns every `.wav` in
+// every template.
 import { Buffer } from "node:buffer";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import process from "node:process";
-import { Canvas, encodePng, encodeWav, rng } from "./png.mjs";
+import { Canvas, encodePng, rng } from "./png.mjs";
 
 const HERE = import.meta.dirname;
 const REPO = join(HERE, "..", "..", "..", "..");
@@ -44,6 +47,12 @@ const PAD = 1;
 /** Bottom-centre: an entity's origin sits at the sprite's feet, which is what Y-sort wants. */
 const FEET = [0.5, 1];
 
+/**
+ * The per-file ceiling, in bytes. `create-ignifx` copies a template into a player's project, so a
+ * generated file that grows past this is a bug in the art, not a budget to raise.
+ */
+const MAX_BYTES = 64 * 1024;
+
 const written = [];
 
 /**
@@ -51,8 +60,12 @@ const written = [];
  * @param directory - Where to write it.
  * @param name - The file name.
  * @param bytes - The contents.
+ * @throws {Error} If the file is over {@link MAX_BYTES}.
  */
 function write(directory, name, bytes) {
+  if (bytes.length > MAX_BYTES) {
+    throw new Error(`${name} is ${String(bytes.length)} bytes, over the ${String(MAX_BYTES)}-byte ceiling`);
+  }
   mkdirSync(directory, { recursive: true });
   writeFileSync(join(directory, name), bytes);
   const path = String(directory);
@@ -153,14 +166,25 @@ function writeAtlas(directory, name, sheet) {
 // ---------------------------------------------------------------------------------------------
 // Palettes. Two coherent ramps, one warm daylight and one cool dusk, so the two templates read as
 // different games rather than the same art twice.
+//
+// Each palette is a small set of hue families, and every entry sits on one of them so that a
+// colour and its own light and dark steps differ in value, not in hue:
+//
+//   T  warm earth 26-31 (path, wood, boot, hair) · foliage 113-130 (grass, leaf) ·
+//      slate 207-222 (water, stone) · accents: gold 44, tunic 0-2, bloom 349
+//   S  warm earth 22-30 (dirt, plank, brick) · foliage 109-110 (grass) ·
+//      dusk violet 230-259 (sky, hills, trees, boots, hair, outline) · accents: coin 44, suit 203
+//
+// The one deliberate exception per template is the hero's accent — T's red tunic and S's blue suit
+// — which is meant to sit off the ladder so the player reads first.
 // ---------------------------------------------------------------------------------------------
 
 const T = {
   grass: [74, 138, 74],
   grassDark: [56, 110, 60],
-  grassLight: [110, 170, 92],
-  path: [186, 149, 100],
-  pathDark: [154, 118, 76],
+  grassLight: [104, 170, 96],
+  path: [186, 144, 100],
+  pathDark: [154, 115, 76],
   water: [56, 106, 156],
   waterLight: [86, 146, 196],
   stone: [122, 128, 140],
@@ -168,17 +192,17 @@ const T = {
   stoneLight: [162, 168, 180],
   wood: [138, 92, 52],
   woodDark: [98, 64, 36],
-  leaf: [46, 104, 62],
+  leaf: [46, 104, 56],
   leafLight: [70, 138, 82],
-  leafDark: [34, 78, 48],
+  leafDark: [34, 78, 41],
   gold: [232, 190, 74],
   skin: [238, 198, 152],
   tunic: [186, 62, 58],
   tunicDark: [140, 42, 42],
-  hair: [64, 42, 30],
+  hair: [64, 45, 30],
   boot: [96, 68, 44],
   bootDark: [58, 42, 30],
-  outline: [30, 26, 34],
+  outline: [34, 28, 24],
   bloom: [220, 108, 128],
   bloomLight: [244, 232, 200],
 };
@@ -196,19 +220,19 @@ const S = {
   dirt: [104, 72, 48],
   dirtDark: [74, 50, 34],
   grass: [86, 150, 72],
-  grassLight: [110, 178, 92],
-  grassDark: [62, 116, 56],
-  brick: [126, 108, 96],
-  brickDark: [92, 78, 70],
+  grassLight: [110, 178, 95],
+  grassDark: [62, 116, 51],
+  brick: [126, 110, 96],
+  brickDark: [92, 80, 70],
   plank: [154, 104, 58],
   plankLight: [186, 132, 78],
   plankDark: [114, 74, 42],
   coin: [246, 200, 74],
-  coinDark: [198, 148, 42],
+  coinDark: [198, 156, 42],
   skin: [238, 198, 152],
   suit: [78, 148, 190],
   suitDark: [52, 108, 148],
-  hair: [46, 36, 52],
+  hair: [41, 36, 52],
   boot: [96, 84, 132],
   bootDark: [56, 48, 78],
   outline: [22, 20, 32],
@@ -458,6 +482,59 @@ const TOPDOWN_HERO = FACINGS.flatMap((facing) =>
     name: `walk_${facing}_${String(frame)}`,
     pivot: FEET,
     draw: (c, x, y) => drawWalker(c, x, y, facing, frame),
+  })),
+);
+
+/**
+ * Draws one frame of the top-down character standing still.
+ * @remarks
+ * The breath is a one-pixel lift of everything from the waist up. The boots and the two arms are
+ * drawn at their standing height and only the torso, head and hair move, which reads as a chest
+ * rising rather than the whole sprite hopping. The torso's dark backing grows by the same pixel it
+ * rises, so its lower edge stays welded to the legs and no gap opens at the hips.
+ * @param c - The sheet being drawn.
+ * @param ox - The cell's left edge.
+ * @param oy - The cell's top edge.
+ * @param facing - `"down"`, `"left"`, `"right"` or `"up"`.
+ * @param frame - The breath frame: 0 out, 1 in.
+ */
+function drawIdler(c, ox, oy, facing, frame) {
+  const cx = ox + 8;
+  const top = oy + 2;
+  const lift = frame === 0 ? 0 : -1;
+
+  c.rect(cx - 3, top + 10, 2, 4, T.boot);
+  c.rect(cx + 1, top + 10, 2, 4, T.boot);
+  c.rect(cx - 3, top + 13, 2, 1, T.bootDark);
+  c.rect(cx + 1, top + 13, 2, 1, T.bootDark);
+  c.rect(cx - 4, top + 5 + lift, 8, 6 - lift, T.tunicDark);
+  c.rect(cx - 3, top + 5 + lift, 6, 5, T.tunic);
+  c.rect(cx - 5, top + 6, 2, 4, T.skin);
+  c.rect(cx + 3, top + 6, 2, 4, T.skin);
+  c.rect(cx - 3, top + lift, 6, 6, T.skin);
+  c.rect(cx - 4, top - 1 + lift, 8, 3, T.hair);
+  c.rect(cx - 4, top + 1 + lift, 1, 2, T.hair);
+  c.rect(cx + 3, top + 1 + lift, 1, 2, T.hair);
+
+  if (facing === "down") {
+    c.set(cx - 2, top + 3 + lift, T.outline);
+    c.set(cx + 1, top + 3 + lift, T.outline);
+  } else if (facing === "up") {
+    c.rect(cx - 3, top + lift, 6, 4, T.hair);
+  } else {
+    c.set(facing === "left" ? cx - 3 : cx + 2, top + 3 + lift, T.outline);
+    c.rect(facing === "left" ? cx - 4 : cx + 3, top + 5 + lift, 1, 1, T.hair);
+  }
+}
+
+// The two breath frames of a facing are packed next to each other on purpose: a clip written as
+// `from`/`to` resolves to a **range of atlas indices**, not to a name pattern
+// (`packages/2d/src/animation/definition.ts`, `resolveClipFrames`).
+const TOPDOWN_IDLE = FACINGS.flatMap((facing) =>
+  Array.from({ length: 2 }, (_, frame) => ({
+    name: `idle_${facing}_${String(frame)}`,
+    pivot: FEET,
+    draw: (c, x, y) => drawIdler(c, x, y, facing, frame),
   })),
 );
 
@@ -737,30 +814,59 @@ const PARALLAX = [
 ];
 
 // ---------------------------------------------------------------------------------------------
-// Sound: one short decaying bell per template, 22.05 kHz mono 16-bit.
+// Both templates — fx.png: a four-frame pickup sparkle, drawn in each template's own accents.
 // ---------------------------------------------------------------------------------------------
 
-const SAMPLE_RATE = 22_050;
+/**
+ * The sparkle's shape, one entry per frame: a ring that expands and thins, a four-point star
+ * inside it, and a hot core that is gone by the third frame. `alpha` is what does the fading.
+ */
+const SPARKLE = [
+  { outer: 3, inner: 0, core: 2.2, spike: 5, alpha: 255 },
+  { outer: 4.8, inner: 2.9, core: 1.6, spike: 6, alpha: 215 },
+  { outer: 6.1, inner: 4.7, core: 0, spike: 7, alpha: 148 },
+  { outer: 7.2, inner: 6.1, core: 0, spike: 7, alpha: 82 },
+];
 
 /**
- * Synthesises a decaying three-partial bell.
- * @param baseHz - The fundamental frequency.
- * @param seconds - How long the sound lasts.
- * @returns The samples, each in `[-1, 1]`.
+ * Draws one frame of the pickup sparkle: a small burst that expands and fades.
+ * @remarks
+ * Every shape is centred on the cell's exact middle — `8`, the boundary between pixel 7 and pixel
+ * 8 — because `Canvas.disc` measures from a pixel's centre. Centring on a pixel index instead
+ * would put one more column of the burst on the right than on the left.
+ * @param c - The sheet being drawn.
+ * @param ox - The cell's left edge.
+ * @param oy - The cell's top edge.
+ * @param frame - The burst frame, 0 to 3.
+ * @param core - The hot inner colour, `[r, g, b]`.
+ * @param glow - The cooler ring colour, `[r, g, b]`.
  */
-function chime(baseHz, seconds) {
-  const count = Math.round(SAMPLE_RATE * seconds);
-  const samples = new Float64Array(count);
-  for (let i = 0; i < count; i += 1) {
-    const t = i / SAMPLE_RATE;
-    const envelope = Math.exp(-t * 9) * Math.min(1, t * 400);
-    const partials =
-      Math.sin(2 * Math.PI * baseHz * t) +
-      0.45 * Math.sin(2 * Math.PI * baseHz * 2.02 * t) +
-      0.2 * Math.sin(2 * Math.PI * baseHz * 3.01 * t);
-    samples[i] = envelope * 0.55 * partials;
-  }
-  return samples;
+function drawSparkle(c, ox, oy, frame, core, glow) {
+  const step = SPARKLE[frame];
+  const cx = ox + 8;
+  const cy = oy + 8;
+  const ring = [glow[0], glow[1], glow[2], step.alpha];
+  const star = [core[0], core[1], core[2], step.alpha];
+  c.disc(cx, cy, step.outer, ring);
+  // A transparent disc punched back out is what leaves a ring rather than a blob.
+  c.disc(cx, cy, step.inner, [0, 0, 0, 0]);
+  const arm = Math.round(step.spike);
+  c.rect(cx - 1, cy - arm, 2, arm * 2, star);
+  c.rect(cx - arm, cy - 1, arm * 2, 2, star);
+  if (step.core > 0) c.disc(cx, cy, step.core, [core[0], core[1], core[2], 255]);
+}
+
+/**
+ * Builds the four sparkle cells for one template.
+ * @param core - The hot inner colour, `[r, g, b]`.
+ * @param glow - The cooler ring colour, `[r, g, b]`.
+ * @returns The cells, in clip order.
+ */
+function sparkleCells(core, glow) {
+  return Array.from({ length: 4 }, (_, frame) => ({
+    name: `sparkle_${String(frame)}`,
+    draw: (c, x, y) => drawSparkle(c, x, y, frame, core, glow),
+  }));
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -773,14 +879,16 @@ function chime(baseHz, seconds) {
 const withSize = (cells) => cells.map((cell) => ({ w: TILE, h: TILE, ...cell }));
 
 writeAtlas(TOPDOWN, "tiles", packSheet(withSize(TOPDOWN_TILES), 8));
-writeAtlas(TOPDOWN, "hero", packSheet(withSize(TOPDOWN_HERO), 8));
-write(TOPDOWN, "chime.wav", encodeWav(chime(784, 0.35), SAMPLE_RATE));
+// The idle cells are appended, never interleaved, so every walk frame keeps the rectangle it
+// already has and only the sheet grows by a row.
+writeAtlas(TOPDOWN, "hero", packSheet(withSize([...TOPDOWN_HERO, ...TOPDOWN_IDLE]), 8));
+writeAtlas(TOPDOWN, "fx", packSheet(withSize(sparkleCells(T.bloomLight, T.gold)), 4));
 
 writeAtlas(SIDESCROLLER, "tiles", packSheet(withSize(SIDE_TILES), 8));
 writeAtlas(SIDESCROLLER, "hero", packSheet(withSize(SIDE_HERO), 8));
 writeAtlas(SIDESCROLLER, "coin", packSheet(withSize(SIDE_COIN), 6));
 writeAtlas(SIDESCROLLER, "parallax", packSheet(PARALLAX, 1));
-write(SIDESCROLLER, "chime.wav", encodeWav(chime(1046, 0.35), SAMPLE_RATE));
+writeAtlas(SIDESCROLLER, "fx", packSheet(withSize(sparkleCells(S.coin, S.plankLight)), 4));
 
 for (const [name, bytes] of written) {
   process.stdout.write(`${name.padEnd(38)} ${String(bytes).padStart(7)} bytes\n`);

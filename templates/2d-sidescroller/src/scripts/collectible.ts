@@ -19,7 +19,16 @@ function isTriggerEvent2D(value: unknown): value is TriggerEvent2D {
 }
 
 /**
- * A coin: a trigger that plays a one-shot and removes itself the first time the player touches it.
+ * A coin: a trigger that plays a one-shot and takes itself off the board the first time the player
+ * touches it.
+ *
+ * ## Deactivated, not destroyed
+ *
+ * Phase 6's version called `entity.destroy()`, which was right when a coin was a demonstration and
+ * wrong now that the template has a save file: "Continue" has to put a level back the way the
+ * player left it, and a destroyed entity cannot be un-destroyed. Setting `entity.active = false`
+ * takes the sprite and the collider out of the world just as completely, and `setCollected(false)`
+ * puts them back — which is what a save restore and "New game" both need.
  *
  * The callback name is the 3D one (`onTriggerEnter`, not `onTriggerEnter2D`); only the payload is a
  * `TriggerEvent2D`. Both entities in a 2D trigger pair receive the callback and both sides of the
@@ -32,21 +41,50 @@ export class Collectible extends Script implements ScriptCallbacks {
   /** The clip to play on pickup. Assigned when the coin is spawned. */
   clip: AssetHandle<AudioClip> | null = null;
 
-  /** Counts what has been collected so far, so the log line means something. */
-  static collected = 0;
+  /** Called the first time the player takes this coin. Assigned when the coin is spawned. */
+  onCollected: ((coin: Collectible) => void) | null = null;
+
+  /** Whether the coin has been taken. */
+  #taken = false;
+
+  /**
+   * The coin's stable id, which is the name the tilemap's objects layer gave the entity.
+   *
+   * @returns The id a save file stores.
+   */
+  get id(): string {
+    return this.entity.name;
+  }
+
+  /**
+   * Whether the coin has been taken.
+   *
+   * @returns `true` once the player has touched it.
+   */
+  get isTaken(): boolean {
+    return this.#taken;
+  }
+
+  /**
+   * Takes or replaces the coin without scoring it. This is what a save restore and a reset use.
+   *
+   * @param taken - Whether the coin should read as taken.
+   */
+  setCollected(taken: boolean): void {
+    this.#taken = taken;
+    this.entity.active = !taken;
+  }
 
   onTriggerEnter(trigger: unknown): void {
-    if (!isTriggerEvent2D(trigger) || trigger.other?.name !== "Player") {
+    if (!isTriggerEvent2D(trigger) || trigger.other?.name !== "Player" || this.#taken) {
       return;
     }
     const handle = this.clip;
-    if (handle !== null) {
+    if (handle !== null && handle.state === "loaded") {
       this.app.audio.playOneShot(handle.value, { volume: 0.5 });
     }
-    Collectible.collected += 1;
-    this.app.log.info("coin {count}", Collectible.collected);
-    // `destroy` takes effect at the end of the frame, so the collider is still alive for the rest
-    // of this fixed step and no other callback sees a half-removed entity.
-    this.entity.destroy();
+    this.setCollected(true);
+    this.onCollected?.(this);
+    this.app.log.info("coin {id}", this.id);
   }
 }

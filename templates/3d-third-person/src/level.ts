@@ -1,5 +1,6 @@
 import { Light, MeshAsset, MeshRenderer } from "@ignifx/core";
 import { BoxCollider, Rigidbody } from "@ignifx/physics";
+import { Beacon } from "./scripts/beacon.js";
 import type { App, AssetHandle, Entity, MaterialAsset } from "@ignifx/core";
 
 /**
@@ -41,6 +42,28 @@ const CRATE_COUNT = 6;
 /** The seed the crate scatter uses, so the authored scene is the same on every run. */
 const CRATE_SEED = 0x1f35_a7c1;
 
+/**
+ * Where the three beacons stand, in metres.
+ *
+ * Hand-placed at a radius of about ten, which is outside the 4.5-to-8.5 ring the crates scatter in
+ * and inside the twelve-metre wall — so a beacon never lands on a crate, and all three are in front
+ * of the `?static=1` camera, which looks down `+z` from `z = -10.5`.
+ */
+const BEACONS: readonly (readonly [number, number])[] = Object.freeze([
+  [-9.5, 3],
+  [9.5, 3],
+  [0, 10],
+]);
+
+/** How wide a beacon's base is, in metres. */
+const BEACON_BASE = 0.8;
+
+/** How tall a lit beacon's column is, in metres. */
+const BEACON_HEIGHT = 2.4;
+
+/** How far away the sky sphere is, in metres. Inside the camera's 200 m far plane. */
+const SKY_DIAMETER = 180;
+
 /** The materials a level is built from. */
 export interface LevelMaterials {
   /** The floor slab. */
@@ -49,6 +72,10 @@ export interface LevelMaterials {
   readonly wall: AssetHandle<MaterialAsset>;
   /** The pushable crates. */
   readonly crate: AssetHandle<MaterialAsset>;
+  /** The unlit gradient drawn on the inside of the sky sphere. */
+  readonly sky: AssetHandle<MaterialAsset>;
+  /** The glowing column of a lit beacon. */
+  readonly emissive: AssetHandle<MaterialAsset>;
 }
 
 /** What {@link buildLevel} produced. */
@@ -59,6 +86,10 @@ export interface Level {
   readonly navIndices: Uint32Array;
   /** The crates, so the HUD can count the ones still standing. */
   readonly crates: readonly Entity[];
+  /** The sun, so the settings screen can turn its shadows off. */
+  readonly sun: Light;
+  /** The beacons, which are what the run's progress is counted in. */
+  readonly beacons: readonly Beacon[];
 }
 
 /**
@@ -187,6 +218,20 @@ export function buildLevel(app: App, materials: LevelMaterials): Level {
   const propLayer = app.world.layers.requireIndex("Prop");
   const nav = new NavSource();
 
+  // The sky: one inverted sphere with an unlit gradient. `Environment.skybox` wants a `.dds` or
+  // `.env` cube map, which cannot be generated from arithmetic the way every other asset in this
+  // repository is (CONSTITUTION.md §11.3) — a big sphere with `unlit` and `doubleSided` on gives
+  // the same horizon for one draw call and one 2 KB PNG.
+  const skyMesh = MeshAsset.sphere(app, { diameter: SKY_DIAMETER, segments: 24 });
+  const sky = app.world.createEntity("Sky");
+  sky.addComponent(MeshRenderer, {
+    mesh: skyMesh.retain(),
+    materials: [materials.sky.retain()],
+    castShadows: false,
+    receiveShadows: false,
+  });
+  skyMesh.release();
+
   const sun = app.world.createEntity("Sun", { position: { x: -8, y: 14, z: -6 } });
   sun.transform.lookAt({ x: 0, y: 0, z: 0 });
   const light = sun.addComponent(Light, { type: "directional", intensity: 2.9 });
@@ -277,6 +322,55 @@ export function buildLevel(app: App, materials: LevelMaterials): Level {
   }
   crateMesh.release();
 
+  // The beacons. Each is a dark base with an emissive column that is hidden until the player
+  // reaches it; `src/scripts/beacon.ts` explains why the reach test is a distance and not a
+  // trigger volume.
+  const baseMesh = MeshAsset.box(app, { width: BEACON_BASE, height: 0.25, depth: BEACON_BASE });
+  const columnMesh = MeshAsset.cylinder(app, { diameter: 0.28, height: BEACON_HEIGHT });
+  const beacons: Beacon[] = [];
+  for (let index = 0; index < BEACONS.length; index += 1) {
+    const spot = BEACONS[index];
+    if (spot === undefined) {
+      continue;
+    }
+    const entity = app.world.createEntity(`Beacon ${String(index)}`, {
+      position: { x: spot[0], y: 0.125, z: spot[1] },
+    });
+    entity.layer = propLayer;
+    entity.addComponent(MeshRenderer, {
+      mesh: baseMesh.retain(),
+      materials: [materials.wall.retain()],
+      castShadows: true,
+      receiveShadows: true,
+    });
+    // Two columns in the same place, one dark and one emissive, and exactly one of them enabled.
+    // A `MeshRenderer` has no tint, and swapping a material list at run time rebuilds the renderer;
+    // two renderers and a boolean is the cheaper and clearer way to say "this one is lit".
+    const dark = app.world.createEntity(`Beacon ${String(index)} Column`, { parent: entity });
+    dark.transform.localPosition.set(0, BEACON_HEIGHT / 2 + 0.125, 0);
+    const darkRenderer = dark.addComponent(MeshRenderer, {
+      mesh: columnMesh.retain(),
+      materials: [materials.wall.retain()],
+      castShadows: true,
+      receiveShadows: true,
+    });
+    const column = app.world.createEntity(`Beacon ${String(index)} Light`, { parent: entity });
+    column.transform.localPosition.set(0, BEACON_HEIGHT / 2 + 0.125, 0);
+    const renderer = column.addComponent(MeshRenderer, {
+      mesh: columnMesh.retain(),
+      materials: [materials.emissive.retain()],
+      castShadows: false,
+      receiveShadows: false,
+    });
+    const beacon = entity.addComponent(Beacon);
+    beacon.column = renderer;
+    beacon.unlitColumn = darkRenderer;
+    beacon.setLit(false);
+    beacons.push(beacon);
+  }
+  baseMesh.release();
+  columnMesh.release();
+
   const soup = nav.build();
-  return { navPositions: soup.positions, navIndices: soup.indices, crates };
+  return { navPositions: soup.positions, navIndices: soup.indices, crates, sun: light, beacons };
 }

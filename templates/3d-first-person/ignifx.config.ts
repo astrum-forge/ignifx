@@ -11,7 +11,7 @@ export default defineConfig({
   rendering: {
     clearColor: { r: 0.043, g: 0.055, b: 0.078, a: 1 },
     msaaSamples: 4,
-    features: { shadows: true, deviceLostRecovery: true },
+    features: { shadows: true, deviceLostRecovery: true, postProcessing: true },
   },
 
   time: { fixedDeltaTime: 1 / 60 },

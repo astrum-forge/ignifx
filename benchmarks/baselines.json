@@ -1,7 +1,7 @@
 {
   "recordedOn": "2026-09-06",
   "machine": "macOS 25.5 arm64 (Apple Silicon), Node 25.2.1, Vitest 5.0.0, @babylonjs/lite 1.27.0",
-  "notes": "Frame times are reported, not asserted: they are one machine's ops/sec and exist so a human can see whether a change moved the curve. Heap and bundle numbers ARE asserted, by alloc.test.ts and bundle-size.test.ts.",
+  "notes": "Bench frame times for the two headless scenes are reported, not asserted: they are one machine's ops/sec and exist so a human can see whether a change moved the curve. Heap, bundle and per-template frame-time numbers ARE asserted, by alloc.test.ts, bundle-size.test.ts, template-frame-time.test.ts and tests/visual/tests/frame-time.spec.ts.",
   "frameTime": {
     "hello-cube": {
       "entities": 4,
@@ -14,7 +14,45 @@
       "hz": 6211.89,
       "meanMs": 0.1624,
       "rmePercent": 0.53
-    }
+    },
+    "note": "`hello-cube` and `thousand-entities` are the headless `vitest bench` scenes: ops/sec on one machine, reported and not asserted. `templates` is the Phase 12 gate and IS asserted, in two places: `tests/visual/tests/frame-time.spec.ts` measures each template in Chromium on SwiftShader at 1280x720 and compares the median against `budgetMs`, and `benchmarks/template-frame-time.test.ts` asserts every recorded row against the coding-standards \u00a77 budget.",
+    "swiftShaderFactor": 1,
+    "templates": {
+      "2d-topdown": {
+        "medianMs": 0.3,
+        "worstMs": 1.3,
+        "budgetMs": 1.0,
+        "standardsBudgetMs": 2,
+        "recordedOn": "2026-09-07",
+        "note": "Five runs on 2026-09-06/07 measured medians of 0.3, 0.2, 0.3, 0.3 and 0.3 ms and worst frames between 0.9 and 1.3 ms; the row records the highest of each. The ceiling is 1.0 ms \u2014 about 3x the median, and half the 2 ms budget the standards give a 2D game. Chromium quantises performance.now() to 0.1 ms, which is a third of this median, so the spread above is mostly the clock."
+      },
+      "2d-sidescroller": {
+        "medianMs": 0.3,
+        "worstMs": 1.0,
+        "budgetMs": 1.0,
+        "standardsBudgetMs": 2,
+        "recordedOn": "2026-09-07",
+        "note": "Five runs measured a median of 0.3 ms every time, with worst frames between 0.8 and 1.0 ms. Same ceiling and same reasoning as the top-down template; the two carry the same engine and differ only in their own gameplay code."
+      },
+      "3d-third-person": {
+        "medianMs": 0.8,
+        "worstMs": 4.2,
+        "budgetMs": 2.0,
+        "standardsBudgetMs": 4,
+        "recordedOn": "2026-09-07",
+        "note": "Five runs measured medians of 0.7, 0.8, 0.7, 0.7 and 0.7 ms; the row records the highest. Worst frames ranged from 1.3 to 4.2 ms \u2014 the 4.2 ms outlier is a navmesh crowd update landing in the same frame as a shadow-map rebuild. The ceiling is 2.0 ms, half the 4 ms the standards give a 3D game; the worst frame is reported and not asserted, because a budget is not about a single frame."
+      },
+      "3d-first-person": {
+        "medianMs": 0.9,
+        "worstMs": 1.9,
+        "budgetMs": 2.0,
+        "standardsBudgetMs": 4,
+        "recordedOn": "2026-09-07",
+        "note": "Five runs measured medians of 0.7, 0.9, 0.7, 0.7 and 0.7 ms; the row records the highest. Worst frames ranged from 1.3 to 1.9 ms. Same ceiling and same reasoning as the third-person template; it carries no navmesh, and its worst frame is correspondingly calmer."
+      }
+    },
+    "machine": "macOS 25.5 arm64 (Apple Silicon), Chromium (Playwright 1.63) + SwiftShader, 1280x720, 300 frames after a 120-frame warm-up, @babylonjs/lite 1.27.0",
+    "swiftShaderFactorNote": "Measured, and the measurement says there is no factor worth applying. Each template was run twice on 2026-09-06, once with --use-webgpu-adapter=swiftshader and once on the host GPU, and the ratio of the two mean engine-CPU figures came out 0.588, 0.429, 0.941 and 2.107 for 2d-topdown, 2d-sidescroller, 3d-third-person and 3d-first-person respectively -- i.e. SwiftShader is *cheaper* in engine CPU as often as it is dearer, because what it slows down is the rasteriser and what is being measured is the CPU side of the frame. Chromium also quantises performance.now() to 0.1 ms, which is a third of a 2D template's whole median, so the spread is mostly the clock. The ceilings below are therefore set from the SwiftShader measurement itself with about 2.5x of headroom, and every one of them is well inside the coding-standards \u00a77 budget with no multiplier at all."
   },
   "heap": {
     "hello-cube": {
@@ -32,44 +70,44 @@
   },
   "bundles": {
     "examples/hello-cube": {
-      "gzipBytes": 270551,
-      "ceilingBytes": 298000,
-      "totalGzipBytes": 497963,
-      "rawTotalBytes": 1602754,
+      "gzipBytes": 284142,
+      "ceilingBytes": 312556,
+      "totalGzipBytes": 511757,
+      "rawTotalBytes": 1645247,
       "chunkCount": 294,
-      "note": "gzipBytes is the entry chunk, which is what a first load actually fetches; totalGzipBytes sums all 294 emitted chunks, almost all of them dynamically imported Lite features this scene never reaches. The ceiling is the measurement x 1.1. The plan's Phase 2 target of 250 KB gzipped is NOT met: the entry chunk is 270551 bytes, 20551 over."
+      "note": "gzipBytes is the entry chunk, which is what a first load actually fetches; totalGzipBytes sums all 294 emitted chunks, almost all of them dynamically imported Lite features this scene never reaches. The ceiling is the measurement x 1.1. Re-measured 2026-09-06 alongside the Phase 12 template re-record: the entry chunk moved from 270551 to 284142 bytes, +13600, from engine work in Phases 10 and 11 rather than from anything in this example -- its source did not change. The plan's Phase 2 target of 250 KB gzipped is still NOT met: the entry chunk is 284142 bytes, 34142 over. Phase 12 did not chase it; that is a packages/** job."
     },
     "templates/2d-topdown": {
-      "gzipBytes": 1177376,
-      "ceilingBytes": 1295114,
-      "totalGzipBytes": 1406490,
-      "rawTotalBytes": 4086906,
-      "chunkCount": 296,
-      "note": "Re-measured 2026-09-06 after Phase 8 added @ignifx/ui to the template (a LoadingScreen, a pause Dialog and the two touch widgets, replacing the hand-written src/touch-controls.ts): the entry chunk grew from 1133892 to 1177376 bytes, +43484, which is the whole of @ignifx/ui plus the widget code the template no longer carries itself. The ceiling is the new measurement x 1.1. 797097 of those bytes are @dimforge/rapier2d-compat's dist/rapier.mjs, which inlines its WebAssembly as base64 and is statically imported by @ignifx/physics-2d; the non-Rapier remainder is about 380 KB. The Phase 2 target of 250 KB gzipped does not apply to a template that ships a physics engine."
+      "gzipBytes": 1194522,
+      "ceilingBytes": 1313974,
+      "totalGzipBytes": 1423550,
+      "rawTotalBytes": 4141852,
+      "chunkCount": 295,
+      "note": "Re-measured 2026-09-06 after Phase 12's polish. The entry chunk grew from 1177376 to 1194522 bytes, +17154: a title screen, a pause menu, a settings screen with sliders, an interactive rebinding page, a save file and a localisation document, minus the Dialog-based pause menu they replaced. The ceiling is the new measurement x 1.1. 797097 of those bytes are still @dimforge/rapier2d-compat's dist/rapier.mjs, which inlines its WebAssembly as base64 and is statically imported by @ignifx/physics-2d; the non-Rapier remainder is about 397 KB. The Phase 2 target of 250 KB gzipped does not apply to a template that ships a physics engine."
     },
     "templates/2d-sidescroller": {
-      "gzipBytes": 1178010,
-      "ceilingBytes": 1295811,
-      "totalGzipBytes": 1407083,
-      "rawTotalBytes": 4088800,
-      "chunkCount": 296,
-      "note": "Re-measured the same way, on the same machine, on 2026-09-06. Within 634 bytes of the top-down template: the two carry the same packages and differ only in their own source."
+      "gzipBytes": 1195224,
+      "ceilingBytes": 1314746,
+      "totalGzipBytes": 1424193,
+      "rawTotalBytes": 4143904,
+      "chunkCount": 295,
+      "note": "Re-measured the same way, on the same machine, on 2026-09-06. Within 677 bytes of the top-down template: the two carry the same packages and the same front end, and differ only in their own gameplay source."
     },
     "templates/3d-third-person": {
-      "gzipBytes": 406181,
-      "ceilingBytes": 446799,
-      "totalGzipBytes": 1084381,
-      "rawTotalBytes": 3568547,
-      "chunkCount": 295,
-      "note": "Measured 2026-09-06 on macOS 25.5 arm64 with Node 25.2.1 and Vite 8.2.2; the ceiling is the measurement x 1.1. The entry chunk is a third of a 2D template's because Havok's WebAssembly is NOT inlined: @ignifx/physics declares HavokPhysics.wasm in ignifx.assets.public and @ignifx/vite-plugin copies it into dist/assets/ unhashed (1.4 MB raw, not JavaScript, so it is in neither number here), where Rapier's rapier2d-compat inlines 797 KB of base64 straight into the 2D templates' entry. The second cost of a 3D template is Recast: recast-navigation-*.js gzips to 452964 bytes and inlines its own wasm as a data: URL, but it is a separate chunk that Babylon Lite import()s only when a NavMeshSurface bakes, so it is in totalGzipBytes and not in the first-load entry."
+      "gzipBytes": 423698,
+      "ceilingBytes": 466068,
+      "totalGzipBytes": 1102157,
+      "rawTotalBytes": 3625600,
+      "chunkCount": 294,
+      "note": "Re-measured 2026-09-06 after Phase 12's polish: 406181 -> 423698 bytes, +17451, which is the front end (title, pause, settings, rebinding, save) plus the PostProcessStack the graphics section switches. The ceiling is the new measurement x 1.1. The entry chunk is a third of a 2D template's because Havok's WebAssembly is NOT inlined: @ignifx/physics declares HavokPhysics.wasm in ignifx.assets.public and @ignifx/vite-plugin copies it into dist/assets/ unhashed (1.4 MB raw, not JavaScript, so it is in neither number here), where Rapier's rapier2d-compat inlines 797 KB of base64 straight into the 2D templates' entry. The second cost of a 3D template is Recast: recast-navigation-*.js gzips to about 453 KB and inlines its own wasm as a data: URL, but it is a separate chunk that Babylon Lite import()s only when a NavMeshSurface bakes, so it is in totalGzipBytes and not in the first-load entry."
     },
     "templates/3d-first-person": {
-      "gzipBytes": 405904,
-      "ceilingBytes": 446494,
-      "totalGzipBytes": 1084346,
-      "rawTotalBytes": 3568005,
-      "chunkCount": 295,
-      "note": "Measured the same way, on the same machine, on 2026-09-06. Within 277 bytes of the third-person template. It carries the Recast chunk too even though it never bakes a navmesh: @ignifx/3d registers its NavigationService unconditionally, so Lite's navigation module is reachable and the chunk is emitted -- it is simply never fetched at runtime, which is what keeps it out of the entry number."
+      "gzipBytes": 422640,
+      "ceilingBytes": 464904,
+      "totalGzipBytes": 1100903,
+      "rawTotalBytes": 3622786,
+      "chunkCount": 294,
+      "note": "Re-measured the same way, on the same machine, on 2026-09-06: 405904 -> 422640 bytes. Within 1007 bytes of the third-person template. It carries the Recast chunk too even though it never bakes a navmesh: @ignifx/3d registers its NavigationService unconditionally, so Lite's navigation module is reachable and the chunk is emitted -- it is simply never fetched at runtime, which is what keeps it out of the entry number."
     }
   },
   "twoD": {

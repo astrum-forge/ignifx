@@ -4,7 +4,9 @@
   "type": "pbr",
   "name": "crate",
   "baseColor": [1, 1, 1, 1],
-  "metallic": 0,
-  "roughness": 0.6,
+  "metallic": 0.08,
+  "roughness": 0.5,
+  "emissive": [0.012, 0.03, 0.038, 1],
+  "environmentIntensity": 1.1,
   "baseColorTexture": { "$asset": "crate.png" }
 }

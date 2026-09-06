@@ -9,8 +9,8 @@ import {
   ThirdPersonController,
   threeD,
 } from "@ignifx/3d";
-import { audio, AUDIO_ASSET_TYPE, AUDIO_BUSES_ASSET_TYPE, AudioListener } from "@ignifx/audio";
-import { Camera, createApp, isIgnifxError, Model } from "@ignifx/core";
+import { audio, AUDIO_ASSET_TYPE, AUDIO_BUSES_ASSET_TYPE, AudioListener, AudioSource } from "@ignifx/audio";
+import { Camera, createApp, isIgnifxError, Model, PostProcessStack } from "@ignifx/core";
 import { electron } from "@ignifx/electron";
 import { input, INPUT_ACTIONS_ASSET_TYPE } from "@ignifx/input";
 import { CharacterController, physics } from "@ignifx/physics";
@@ -19,13 +19,20 @@ import { I18N_ASSET_TYPE, ui } from "@ignifx/ui";
 import { manifest } from "virtual:ignifx/manifest";
 import { acceptHotReload, scripts } from "virtual:ignifx/scripts";
 import { installDesktopProbe } from "./desktop-probe.js";
+import { installFrameTimeProbe } from "./frame-time-probe.js";
 import { createGameUi, hasTouch } from "./game-ui.js";
 import { buildLevel } from "./level.js";
+import { createGameMenus } from "./menus/game-menus.js";
+import { applySettings, loadInputOverrides, loadSettings } from "./menus/settings-store.js";
+import { createRun } from "./run.js";
 import { Companion } from "./scripts/companion.js";
 import { HeroAnimation } from "./scripts/hero-animation.js";
 import { HudLine } from "./scripts/hud-line.js";
-import { PauseMenu } from "./scripts/pause-menu.js";
+import { MenuController } from "./scripts/menu-controller.js";
+import { SaveGame } from "./scripts/save-game.js";
 import type { Level } from "./level.js";
+import type { GameMenus } from "./menus/game-menus.js";
+import type { GraphicsHooks } from "./menus/settings-store.js";
 import type { AnimatorAsset } from "@ignifx/3d";
 import type { AudioBusesAsset, AudioClip } from "@ignifx/audio";
 import type { App, AssetHandle, Entity, MaterialAsset, ModelAsset } from "@ignifx/core";
@@ -75,6 +82,9 @@ const PLAYER_HEIGHT = 1.5;
 /** Where the character starts, on the ground. */
 const PLAYER_SPAWN = { x: 0, y: 0, z: -3 } as const;
 
+/** Where the capsule's centre starts: the spawn, lifted by half the capsule's height. */
+const PLAYER_SPAWN_POSE = { x: PLAYER_SPAWN.x, y: PLAYER_HEIGHT / 2, z: PLAYER_SPAWN.z } as const;
+
 /** Where the companion starts, on the ground. */
 const COMPANION_SPAWN = { x: 5, y: 0, z: 6 } as const;
 
@@ -107,7 +117,15 @@ interface Assets {
   readonly floor: AssetHandle<MaterialAsset>;
   readonly wall: AssetHandle<MaterialAsset>;
   readonly crate: AssetHandle<MaterialAsset>;
+  readonly sky: AssetHandle<MaterialAsset>;
+  readonly emissive: AssetHandle<MaterialAsset>;
   readonly footstep: AssetHandle<AudioClip>;
+  readonly jump: AssetHandle<AudioClip>;
+  readonly land: AssetHandle<AudioClip>;
+  readonly pickup: AssetHandle<AudioClip>;
+  readonly uiClick: AssetHandle<AudioClip>;
+  readonly uiHover: AssetHandle<AudioClip>;
+  readonly ambient: AssetHandle<AudioClip>;
 }
 
 /** The placeholder `announceReady` holds until the promise below hands over its resolver. */
@@ -145,6 +163,20 @@ function settle(frames: number): Promise<void> {
     chain = chain.then(nextFrame);
   }
   return chain;
+}
+
+/**
+ * The clip behind a handle, or `null` when the browser refused to decode it.
+ *
+ * @remarks
+ * `AssetHandle.value` is only meaningful once the handle is `"loaded"`; every sound in this
+ * template is optional, so a failed decode costs the game that sound and nothing else.
+ *
+ * @param handle - The handle to read.
+ * @returns The clip, or `null`.
+ */
+function clipOrNull(handle: AssetHandle<AudioClip>): AudioClip | null {
+  return handle.state === "loaded" ? handle.value : null;
 }
 
 /** Swaps the canvas for the "no WebGPU here" panel in `index.html`. */
@@ -264,18 +296,20 @@ function buildCamera(app: App, player: Entity, isStatic: boolean): Entity {
  * @param app - The running app.
  * @param assets - The loaded assets.
  * @param isStatic - Whether the scene is being built for a golden.
- * @returns The level, the character, and the companion's script.
+ * @returns The level, the character, the companion's script and the camera.
  */
-function buildWorld(
-  app: App,
-  assets: Assets,
-  isStatic: boolean,
-): { readonly level: Level; readonly player: Entity; readonly companion: Companion | null } {
-  const level = buildLevel(app, { floor: assets.floor, wall: assets.wall, crate: assets.crate });
+function buildWorld(app: App, assets: Assets, isStatic: boolean): World {
+  const level = buildLevel(app, {
+    floor: assets.floor,
+    wall: assets.wall,
+    crate: assets.crate,
+    sky: assets.sky,
+    emissive: assets.emissive,
+  });
   const player = buildPlayer(app, assets, isStatic);
   const companion = buildCompanion(app, assets, player, isStatic);
-  buildCamera(app, player, isStatic);
-  return { level, player, companion };
+  const eye = buildCamera(app, player, isStatic);
+  return { level, player, companion, eye };
 }
 
 /**
@@ -306,6 +340,140 @@ async function bakeNavigation(app: App, level: Level): Promise<void> {
   await surface.bake();
 }
 
+/** What {@link buildWorld} produced. */
+interface World {
+  /** The level. */
+  readonly level: Level;
+  /** The character. */
+  readonly player: Entity;
+  /** The companion's follow script, or `null` in a static scene. */
+  readonly companion: Companion | null;
+  /** The camera. */
+  readonly eye: Entity;
+}
+
+/**
+ * Builds the front end and the save file over a world that is already standing.
+ *
+ * @param app - The running app.
+ * @param assets - The loaded assets.
+ * @param world - What {@link buildWorld} produced.
+ * @param hud - The HUD element, or `null` under an app with no DOM overlay.
+ * @param isBench - Whether the frame-time harness is driving, in which case the game starts
+ *   immediately instead of waiting on a title screen.
+ * @returns A promise for the callback that switches the post-process effects on; it has to run
+ *   after `app.start()` (see below).
+ */
+async function installFrontEnd(
+  app: App,
+  assets: Assets,
+  world: World,
+  hud: HTMLDivElement | null,
+  isBench: boolean,
+): Promise<() => void> {
+  // The chain is built once and switched with `enabled`, because `rendering.features.postProcessing`
+  // is read when `app.start()` registers the scene and asking for it later is `IGX-0704`. The
+  // template pays for the offscreen target either way; the toggle only decides whether the two
+  // effects run.
+  //
+  // The two effects are switched on by the callback this function returns, **after** `app.start()`.
+  // Enabling them earlier makes Lite record the first bloom task against a source that is still the
+  // swapchain, and the frame is rejected with `sourceTexture has no color texture`: the offscreen
+  // target the presenter builds does not exist until the scene is registered.
+  const post = world.eye.addComponent(PostProcessStack);
+  post.bloom.threshold = 0.85;
+  post.bloom.weight = 0.35;
+
+  const sun = world.level.sun;
+  const graphics: GraphicsHooks = {
+    supportsShadows: true,
+    supportsPostProcessing: true,
+    setShadows: (enabled: boolean): void => {
+      // `rendering.features.shadows` stays on: it is what compiled the shadow pass. What a player
+      // turns off is this light's own casting, which is a live flag.
+      sun.shadows.enabled = enabled;
+    },
+    setPostProcessing: (enabled: boolean): void => {
+      post.enabled = enabled;
+    },
+  };
+
+  await loadInputOverrides(app);
+  const settings = await loadSettings(app, app.i18n.locale);
+  applySettings(app, settings, graphics);
+
+  const host = app.world.createEntity("Game UI");
+  const saveGame = host.addComponent(SaveGame);
+  let menus: GameMenus | null = null;
+
+  const run = createRun(world.player, world.level.beacons, PLAYER_SPAWN_POSE, (): void => {
+    if (saveGame.checkpoint()) {
+      menus?.toast(app.i18n.t("toast.checkpoint"));
+    }
+  });
+  saveGame.run = run.state;
+
+  menus = createGameMenus(app, {
+    settings,
+    graphics,
+    gameplayMap: "Player",
+    rebindable: [
+      { action: "Jump", labelKey: "action.jump" },
+      { action: "Sprint", labelKey: "action.sprint" },
+      { action: "Pause", labelKey: "action.pause" },
+    ],
+    creditKeys: ["credits.engine", "credits.art", "credits.license"],
+    sounds: { click: clipOrNull(assets.uiClick), hover: clipOrNull(assets.uiHover) },
+    onStartNew: (): void => {
+      saveGame.restart();
+    },
+    onContinue: (save): void => {
+      saveGame.restore(save);
+    },
+    onSaveNow: (): Promise<boolean> => saveGame.save(),
+    onQuitToTitle: (): void => {
+      saveGame.restart();
+    },
+  });
+  host.addComponent(MenuController).menus = menus;
+
+  const line = host.addComponent(HudLine);
+  line.element = hud;
+  const controller = world.player.requireComponent(ThirdPersonController);
+  const companion = world.companion;
+  line.render = (): string =>
+    app.i18n.t("hud.status", {
+      speed: controller.speed.toFixed(1),
+      distance: (companion?.distanceToTarget() ?? 0).toFixed(1),
+    });
+
+  // The ambient pad loops on the `Music` bus, which `game.audio.json` marks as not pausable so the
+  // menus can duck it rather than silence it.
+  if (clipOrNull(assets.ambient) !== null) {
+    app.world.createEntity("Ambience").addComponent(AudioSource, {
+      clip: assets.ambient.retain(),
+      bus: "Music",
+      loop: true,
+      playOnAwake: true,
+      volume: 0.9,
+    });
+  }
+
+  if (!isBench) {
+    // The game boots into its title screen. `MenuController` reconciles `app.pause()` against the
+    // screen stack every frame, so this one call is what stops the world until "New game". The
+    // frame-time harness measures a *running* game, so it skips this and nothing else.
+    menus.show("title");
+    app.pause();
+  }
+
+  return (): void => {
+    post.bloom.enabled = true;
+    post.smaa.enabled = true;
+    post.enabled = settings.postProcessing;
+  };
+}
+
 /**
  * Builds and runs the game.
  *
@@ -319,6 +487,8 @@ async function main(): Promise<AppStatus> {
 
   const flags = new URLSearchParams(window.location.search);
   const isStatic = flags.get("static") === "1";
+  const isBench = flags.get("bench") === "1";
+  const showOverlay = (!isStatic || flags.get("hud") === "1") && !isBench;
 
   let app: App;
   try {
@@ -368,15 +538,11 @@ async function main(): Promise<AppStatus> {
 
   const gameUi = createGameUi(app, {
     loadingLabel: app.i18n.t("loading.label"),
-    pauseTitle: app.i18n.t("menu.paused"),
-    pauseButtons: [
-      { id: "resume", label: app.i18n.t("menu.resume") },
-      { id: "restart", label: app.i18n.t("menu.restart") },
-    ],
-    touch: !isStatic && hasTouch(),
+    touch: !isStatic && !isBench && hasTouch(),
   });
-  // The golden is about the rendered scene, not about how this machine draws a system font.
-  app.ui.visible = !isStatic;
+  // The golden is about the rendered scene, not about how this machine draws a system font, and a
+  // frame-time run should not be measuring DOM layout either.
+  app.ui.visible = showOverlay;
 
   const assets: Assets = {
     player: app.assets.load<ModelAsset>("player.glb", MODEL),
@@ -385,7 +551,15 @@ async function main(): Promise<AppStatus> {
     floor: app.assets.load<MaterialAsset>("floor.material.json", MATERIAL),
     wall: app.assets.load<MaterialAsset>("wall.material.json", MATERIAL),
     crate: app.assets.load<MaterialAsset>("crate.material.json", MATERIAL),
+    sky: app.assets.load<MaterialAsset>("sky.material.json", MATERIAL),
+    emissive: app.assets.load<MaterialAsset>("emissive.material.json", MATERIAL),
     footstep: app.assets.load<AudioClip>("footstep.wav", CLIP),
+    jump: app.assets.load<AudioClip>("jump.wav", CLIP),
+    land: app.assets.load<AudioClip>("land.wav", CLIP),
+    pickup: app.assets.load<AudioClip>("pickup.wav", CLIP),
+    uiClick: app.assets.load<AudioClip>("ui-click.wav", CLIP),
+    uiHover: app.assets.load<AudioClip>("ui-hover.wav", CLIP),
+    ambient: app.assets.load<AudioClip>("ambient.wav", CLIP),
   };
   const actions = app.assets.load<InputActionsAsset>("game.input.json", ACTIONS);
   const buses = app.assets.load<AudioBusesAsset>("game.audio.json", BUSES);
@@ -397,14 +571,22 @@ async function main(): Promise<AppStatus> {
     assets.floor.promise,
     assets.wall.promise,
     assets.crate.promise,
+    assets.sky.promise,
+    assets.emissive.promise,
     actions.promise,
     buses.promise,
   ]);
-  // The clip is awaited separately: a browser that refuses to decode the file should cost the game
-  // its footsteps, not its first frame.
-  await assets.footstep.promise.catch((error: unknown) => {
-    app.log.warn("the footstep could not be decoded: {error}", String(error));
-  });
+  // The clips are awaited together and separately from the rest: a browser that refuses to decode
+  // a sound should cost the game its audio, not its first frame.
+  await Promise.all(
+    [assets.footstep, assets.jump, assets.land, assets.pickup, assets.uiClick, assets.uiHover, assets.ambient].map(
+      async (handle: AssetHandle<AudioClip>): Promise<void> => {
+        await handle.promise.catch((error: unknown) => {
+          app.log.warn("a sound could not be decoded: {error}", String(error));
+        });
+      },
+    ),
+  );
 
   // Installed here rather than through `input.actions` in `ignifx.config.ts`, so that the maps
   // exist before the first `update` runs. See the comment in that file.
@@ -412,6 +594,7 @@ async function main(): Promise<AppStatus> {
   await app.audio.buildBuses(buses.value.buses);
 
   const world = buildWorld(app, assets, isStatic);
+  let enableEffects: (() => void) | null = null;
 
   if (isStatic) {
     // Stopping the clock *before* `start()` means no fixed step ever runs, so nothing falls,
@@ -422,18 +605,13 @@ async function main(): Promise<AppStatus> {
     // Recast is WebAssembly in a chunk of its own; this is the only thing that fetches it, and the
     // loading screen is still up while it does.
     await bakeNavigation(app, world.level);
+    enableEffects = await installFrontEnd(app, assets, world, gameUi.hud, isBench);
+  }
 
-    const menus = app.world.createEntity("Game UI");
-    menus.addComponent(PauseMenu).menu = gameUi.pause;
-    const hud = menus.addComponent(HudLine);
-    hud.element = gameUi.hud;
-    const controller = world.player.requireComponent(ThirdPersonController);
-    const companion = world.companion;
-    hud.render = (): string =>
-      app.i18n.t("hud.status", {
-        speed: controller.speed.toFixed(1),
-        distance: (companion?.distanceToTarget() ?? 0).toFixed(1),
-      });
+  if (isStatic && showOverlay && gameUi.hud !== null) {
+    // `?static=1` leaves the front end out, so nothing writes the HUD. `?hud=1` says the overlay is
+    // wanted anyway — the gallery capture asks for exactly that — so the zero state is written once.
+    gameUi.hud.textContent = app.i18n.t("hud.status", { speed: "0.0", distance: "0.0" });
   }
 
   gameUi.loading.hide();
@@ -444,7 +622,15 @@ async function main(): Promise<AppStatus> {
     installDesktopProbe(app, world.level.crates);
   }
 
+  if (isBench) {
+    installFrameTimeProbe(app);
+  }
+
   await app.start();
+  // The post-process chain is switched on only now: its source is the offscreen target the
+  // presenter builds while `start()` registers the scene, and a task recorded before that samples
+  // the swapchain, which WebGPU rejects.
+  enableEffects?.();
   await settle(SETTLE_FRAMES);
   app.log.info("3d-third-person running: {calls} draw calls", app.renderer.drawCalls);
   return "ready";

@@ -50,12 +50,45 @@ interface HeapMeasurement {
 }
 
 /**
- * Runs the measurement script for one scene under `--expose-gc`.
+ * How many independent measurements a scene may get. A settled `heapUsed` still moves with V8's
+ * GC scheduling: under a parallel `pnpm check` one reading of hello-cube came out at 734 KB
+ * against a 104 KB baseline, and a rerun on an idle machine read 104 KB again. Noise only ever
+ * inflates a reading, while a leak reproduces on every run, so the smallest reading is the one
+ * asserted and a reading inside the ceiling ends the attempts early.
+ */
+const ATTEMPTS = 3;
+
+/**
+ * Runs the measurement script for one scene under `--expose-gc`, up to `ATTEMPTS` times.
+ *
+ * @param scene - The scene name.
+ * @param ceilingBytes - The committed ceiling; a reading inside it stops the attempts.
+ * @returns The measurement with the smallest growth.
+ */
+function measureHeap(scene: string, ceilingBytes: number): HeapMeasurement {
+  let best: HeapMeasurement | null = null;
+  for (let attempt = 0; attempt < ATTEMPTS; attempt += 1) {
+    const measurement = measureHeapOnce(scene);
+    if (best === null || measurement.growthBytes < best.growthBytes) {
+      best = measurement;
+    }
+    if (best.growthBytes <= ceilingBytes) {
+      break;
+    }
+  }
+  if (best === null) {
+    throw new Error(`no heap measurement was taken for ${scene}`);
+  }
+  return best;
+}
+
+/**
+ * Runs the measurement script for one scene under `--expose-gc`, once.
  *
  * @param scene - The scene name.
  * @returns Its measurement.
  */
-function measureHeap(scene: string): HeapMeasurement {
+function measureHeapOnce(scene: string): HeapMeasurement {
   const stdout = execFileSync(process.execPath, ["--expose-gc", MEASURE_SCRIPT, scene, String(STEPS)], {
     encoding: "utf8",
     timeout: MEASURE_TIMEOUT_MS,
@@ -79,7 +112,7 @@ function measureHeap(scene: string): HeapMeasurement {
  * @param ceilingBytes - The ceiling the baseline set.
  */
 function expectBoundedGrowth(scene: string, measuredBytes: number, ceilingBytes: number): void {
-  const measurement = measureHeap(scene);
+  const measurement = measureHeap(scene, ceilingBytes);
   expect(measurement.scene).toBe(scene);
   expect(measurement.steps).toBe(STEPS);
   expect(

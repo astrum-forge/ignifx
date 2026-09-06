@@ -1,7 +1,8 @@
 import { SpriteAnimator } from "@ignifx/2d";
 import { f32, Script, Vec2 } from "@ignifx/core";
 import { CharacterController2D } from "@ignifx/physics-2d";
-import type { MutableVec2, ScriptCallbacks } from "@ignifx/core";
+import type { AudioClip } from "@ignifx/audio";
+import type { AssetHandle, MutableVec2, ScriptCallbacks } from "@ignifx/core";
 import type { InputAction } from "@ignifx/input";
 
 /**
@@ -34,6 +35,13 @@ export class PlayerController
 {
   static typeId = "topdown/PlayerController";
 
+  /**
+   * The footstep clip, or `null` when the browser refused to decode it. Assigned when the character
+   * is spawned, so a hot-reloaded script does not re-request a file the asset service has already
+   * delivered.
+   */
+  footstep: AssetHandle<AudioClip> | null = null;
+
   /** The controller this script drives, found on attach. */
   #controller: CharacterController2D | null = null;
 
@@ -64,6 +72,16 @@ export class PlayerController
     const actions = this.app.input.actions;
     this.#move = actions.find("move");
     this.#interact = actions.find("interact");
+    // The two `footstep` markers in `hero.spriteanim.json`'s walk clips are what times the sound,
+    // so a step lands on the frame the foot lands on rather than on a timer of our own.
+    this.#animator?.onEvent.connect(
+      (name: string): void => {
+        if (name === "footstep") {
+          this.#playFootstep();
+        }
+      },
+      { owner: this },
+    );
   }
 
   update(): void {
@@ -95,6 +113,14 @@ export class PlayerController
     }
     this.#step.set(this.#wish.x * this.speed * dt, this.#wish.y * this.speed * dt);
     controller.move(this.#step);
+  }
+
+  /** Plays one footstep, pitched a little differently each time so a run does not machine-gun. */
+  #playFootstep(): void {
+    const handle = this.footstep;
+    if (handle !== null && handle.state === "loaded") {
+      this.app.audio.playOneShot(handle.value, { volume: 0.5, pitch: 0.92 + Math.random() * 0.16 });
+    }
   }
 
   /**

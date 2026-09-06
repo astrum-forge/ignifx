@@ -9,7 +9,8 @@ import { defineConfig } from "@ignifx/vite-plugin";
  */
 export default defineConfig({
   rendering: {
-    // The colour behind the level. There is no skybox in this template, so it is also the horizon.
+    // The colour behind the level. `src/level.ts` draws an unlit gradient sphere around the scene,
+    // so this only shows through where the sphere does not reach.
     clearColor: { r: 0.055, g: 0.067, b: 0.094, a: 1 },
     msaaSamples: 4,
     // `deviceLostRecovery` is on because this template is the one the desktop suite drives, and a
@@ -17,7 +18,7 @@ export default defineConfig({
     // GPU driver update, an external display unplugged. Recovery has to be enabled **before any
     // resource exists** — the capture that stamps a rebuild source onto every texture is installed
     // by that call — which is why it is a startup setting rather than something a script turns on.
-    features: { shadows: true, deviceLostRecovery: true },
+    features: { shadows: true, deviceLostRecovery: true, postProcessing: true },
   },
 
   time: { fixedDeltaTime: 1 / 60 },

@@ -1,0 +1,6 @@
+{
+  "format": "ignifx.spriteanimation",
+  "formatVersion": 1,
+  "atlas": "fx.atlas.json",
+  "clips": [{ "name": "sparkle", "from": "sparkle_0", "to": "sparkle_3", "fps": 16, "loop": false }]
+}

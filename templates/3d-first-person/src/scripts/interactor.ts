@@ -1,6 +1,6 @@
 import { entityRef, f32, LayerMask, Script } from "@ignifx/core";
 import type { AudioClip } from "@ignifx/audio";
-import type { AssetHandle, ColorLike, Entity, MaterialAsset, ScriptCallbacks } from "@ignifx/core";
+import type { AssetHandle, ColorLike, Entity, MaterialAsset, MeshRenderer, ScriptCallbacks } from "@ignifx/core";
 import type { InputAction } from "@ignifx/input";
 
 /**
@@ -37,6 +37,8 @@ export interface InteractorTarget {
   readonly entity: Entity;
   /** That entity's own material, so recolouring one does not recolour the others. */
   readonly material: AssetHandle<MaterialAsset>;
+  /** The emissive cap, shown only while the pedestal is lit. */
+  readonly glow: MeshRenderer;
 }
 
 /**
@@ -62,6 +64,9 @@ export class Interactor
 
   /** The crosshair element, so it can say when something is in reach. */
   crosshair: HTMLElement | null = null;
+
+  /** Called whenever a pedestal is switched. Assigned right after the component is added. */
+  onToggled: ((name: string, lit: boolean) => void) | null = null;
 
   /** The `Interact` action. */
   #interact: InputAction | null = null;
@@ -124,6 +129,35 @@ export class Interactor
   }
 
   /**
+   * Which pedestals are switched on, so a save file can store them.
+   *
+   * @returns Their entity names, sorted.
+   */
+  litNames(): readonly string[] {
+    return [...this.#lit].toSorted();
+  }
+
+  /**
+   * Switches one pedestal without playing a sound or reporting it. This is what a save restore and
+   * a reset use.
+   *
+   * @param target - The pedestal.
+   * @param lit - Whether it should read as lit.
+   */
+  setLit(target: InteractorTarget, lit: boolean): void {
+    const name = target.entity.name;
+    if (lit) {
+      this.#lit.add(name);
+    } else {
+      this.#lit.delete(name);
+    }
+    // `setBaseColor` writes the Lite material, which every renderer sharing this asset draws with.
+    // `src/level.ts` gives each pedestal its own `clone`, which is what makes that safe here.
+    target.material.value.setBaseColor(lit ? LIT_COLOR : IDLE_COLOR);
+    target.glow.enabled = lit;
+  }
+
+  /**
    * What the crosshair is on.
    *
    * @returns The target, or `null` when nothing is in reach.
@@ -140,18 +174,12 @@ export class Interactor
   #toggle(target: InteractorTarget): void {
     const name = target.entity.name;
     const lit = !this.#lit.has(name);
-    if (lit) {
-      this.#lit.add(name);
-    } else {
-      this.#lit.delete(name);
-    }
-    // `setBaseColor` writes the Lite material, which every renderer sharing this asset draws with.
-    // `src/level.ts` gives each pedestal its own `clone`, which is what makes that safe here.
-    target.material.value.setBaseColor(lit ? LIT_COLOR : IDLE_COLOR);
+    this.setLit(target, lit);
     const clip = this.clip;
-    if (clip !== null) {
+    if (clip !== null && clip.state === "loaded") {
       this.app.audio.playOneShot(clip.value, { volume: 0.6, pitch: lit ? 1 : 0.75 });
     }
+    this.onToggled?.(name, lit);
     this.app.log.info("{name} is now {state}", name, lit ? "lit" : "dark");
   }
 }

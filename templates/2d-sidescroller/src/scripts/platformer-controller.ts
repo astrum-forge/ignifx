@@ -1,7 +1,8 @@
 import { SpriteAnimator, SpriteRenderer } from "@ignifx/2d";
 import { bool, f32, Script, Vec2 } from "@ignifx/core";
 import { CharacterController2D } from "@ignifx/physics-2d";
-import type { MutableVec2, ScriptCallbacks, Vec2Like } from "@ignifx/core";
+import type { AudioClip } from "@ignifx/audio";
+import type { AssetHandle, MutableVec2, ScriptCallbacks, Vec2Like } from "@ignifx/core";
 import type { InputAction } from "@ignifx/input";
 
 /** The probe box used to tell a thin platform from real ground, in metres. */
@@ -64,6 +65,18 @@ export class PlatformerController
 {
   static typeId = "sidescroller/PlatformerController";
 
+  /** The footstep clip, or `null`. Assigned when the character is spawned. */
+  footstep: AssetHandle<AudioClip> | null = null;
+
+  /** The jump clip, or `null`. Assigned when the character is spawned. */
+  jumpSound: AssetHandle<AudioClip> | null = null;
+
+  /** The landing clip, or `null`. Assigned when the character is spawned. */
+  landSound: AssetHandle<AudioClip> | null = null;
+
+  /** Whether the character was on the ground at the end of the previous fixed step. */
+  #wasGrounded = true;
+
   #controller: CharacterController2D | null = null;
   #animator: SpriteAnimator | null = null;
   #sprite: SpriteRenderer | null = null;
@@ -104,6 +117,16 @@ export class PlatformerController
     const actions = this.app.input.actions;
     this.#move = actions.find("move");
     this.#jump = actions.find("jump");
+    // The two `footstep` markers in `hero.spriteanim.json`'s run clip are what time the sound, so a
+    // step lands on the frame the foot lands on rather than on a timer of our own.
+    this.#animator?.onEvent.connect(
+      (name: string): void => {
+        if (name === "footstep") {
+          this.#playClip(this.footstep, 0.45);
+        }
+      },
+      { owner: this },
+    );
   }
 
   update(dt: number): void {
@@ -130,6 +153,10 @@ export class PlatformerController
     }
 
     const grounded = controller.isGrounded;
+    if (grounded && !this.#wasGrounded) {
+      this.#playClip(this.landSound, 0.5);
+    }
+    this.#wasGrounded = grounded;
     this.#coyote = grounded ? this.coyoteTime : Math.max(0, this.#coyote - dt);
 
     this.#accelerate(dt, grounded);
@@ -141,6 +168,7 @@ export class PlatformerController
       } else {
         this.#coyote = 0;
         this.#velocity.y = this.jumpSpeed;
+        this.#playClip(this.jumpSound, 0.55);
       }
     }
 
@@ -170,6 +198,19 @@ export class PlatformerController
     }
     if (this.#velocity.y > 0 && actual.y <= 0) {
       this.#velocity.y = 0;
+    }
+  }
+
+  /**
+   * Plays one clip on the `SFX` bus, pitched a little differently each time so a run does not
+   * machine-gun.
+   *
+   * @param handle - The clip's handle, or `null` when the template did not load one.
+   * @param volume - The gain to play it at.
+   */
+  #playClip(handle: AssetHandle<AudioClip> | null, volume: number): void {
+    if (handle !== null && handle.state === "loaded") {
+      this.app.audio.playOneShot(handle.value, { volume, pitch: 0.94 + Math.random() * 0.12 });
     }
   }
 

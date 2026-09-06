@@ -54,6 +54,9 @@ const PEDESTAL_SIZE = 0.9;
 /** How high a pedestal's centre sits, in metres. */
 const PEDESTAL_Y = 1.1;
 
+/** How far away the sky sphere is, in metres. Inside the camera's far plane. */
+const SKY_DIAMETER = 180;
+
 /** The materials a level is built from. */
 export interface LevelMaterials {
   /** The floor slab. */
@@ -62,6 +65,10 @@ export interface LevelMaterials {
   readonly wall: AssetHandle<MaterialAsset>;
   /** The pushable crates. */
   readonly crate: AssetHandle<MaterialAsset>;
+  /** The unlit gradient drawn on the inside of the sky sphere. */
+  readonly sky: AssetHandle<MaterialAsset>;
+  /** The glowing cap on top of each pedestal. */
+  readonly emissive: AssetHandle<MaterialAsset>;
 }
 
 /** What {@link buildLevel} produced. */
@@ -70,6 +77,8 @@ export interface Level {
   readonly crates: readonly Entity[];
   /** The interactable pedestals, each with a material of its own the ray can recolour. */
   readonly pedestals: readonly Interactable[];
+  /** The sun, so the settings screen can turn its shadows off. */
+  readonly sun: Light;
 }
 
 /** One thing the crosshair ray can find. */
@@ -78,6 +87,8 @@ export interface Interactable {
   readonly entity: Entity;
   /** The pedestal's private material clone, so recolouring one does not recolour them all. */
   readonly material: AssetHandle<MaterialAsset>;
+  /** The emissive cap, shown only while the pedestal is lit. */
+  readonly glow: MeshRenderer;
 }
 
 /**
@@ -145,6 +156,19 @@ function addPanel(
 export function buildLevel(app: App, materials: LevelMaterials): Level {
   const levelLayer = app.world.layers.requireIndex("Level");
   const propLayer = app.world.layers.requireIndex("Prop");
+
+  // The sky: one inverted sphere with an unlit gradient. `Environment.skybox` wants a `.dds` or
+  // `.env` cube map, which cannot be generated from arithmetic the way every other asset in this
+  // repository is (CONSTITUTION.md §11.3) — a big sphere with `unlit` and `doubleSided` on gives
+  // the same horizon for one draw call and one 2 KB PNG.
+  const skyMesh = MeshAsset.sphere(app, { diameter: SKY_DIAMETER, segments: 24 });
+  app.world.createEntity("Sky").addComponent(MeshRenderer, {
+    mesh: skyMesh.retain(),
+    materials: [materials.sky.retain()],
+    castShadows: false,
+    receiveShadows: false,
+  });
+  skyMesh.release();
 
   const sun = app.world.createEntity("Sun", { position: { x: -8, y: 14, z: -6 } });
   sun.transform.lookAt({ x: 0, y: 0, z: 0 });
@@ -269,9 +293,20 @@ export function buildLevel(app: App, materials: LevelMaterials): Level {
       castShadows: true,
       receiveShadows: true,
     });
-    pedestals.push({ entity: pedestal, material });
+    // The emissive cap. It is hidden until the pedestal is lit, which is one boolean rather than a
+    // second material and a second draw call.
+    const cap = app.world.createEntity(`Pedestal ${String(index)} Cap`, { parent: pedestal });
+    cap.transform.localPosition.set(0, PEDESTAL_SIZE / 2 + 0.06, 0);
+    const glow = cap.addComponent(MeshRenderer, {
+      mesh: MeshAsset.box(app, { width: PEDESTAL_SIZE * 0.6, height: 0.12, depth: PEDESTAL_SIZE * 0.6 }),
+      materials: [materials.emissive.retain()],
+      castShadows: false,
+      receiveShadows: false,
+    });
+    glow.enabled = false;
+    pedestals.push({ entity: pedestal, material, glow });
   }
   pedestalMesh.release();
 
-  return { crates, pedestals };
+  return { crates, pedestals, sun: light };
 }

@@ -1,23 +1,33 @@
-import { Dialog, LoadingScreen, VirtualButton, VirtualJoystick } from "@ignifx/ui";
+import { LoadingScreen, VirtualButton, VirtualJoystick } from "@ignifx/ui";
 import type { App } from "@ignifx/core";
 
 /**
- * Everything the game shows over the canvas: the boot loading screen, the pause menu, and the
+ * Everything the game shows over the canvas: the boot loading screen, the HUD line, and the
  * on-screen controls.
  *
- * ## This file replaced `src/touch-controls.ts`
+ * ## Where the menus are
+ *
+ * They are not here. The title screen, the pause menu, the settings screen and the rebinding page
+ * are built by `src/menus/game-menus.ts` into `app.ui.layer("menu")`, because `@ignifx/ui` ships a
+ * `Dialog` and nothing list-shaped: a settings screen needs rows, sliders, a selection model and a
+ * back stack. `Dialog` is still used, for the one thing it is exactly right for — the "are you
+ * sure?" prompt in front of "Delete save" and "Quit to title".
+ *
+ * ## Why the HUD is a `<div>` and not a `HudText`
+ *
+ * `HudText` draws through the GPU and needs a `FontAsset` — a real `.ttf` the template would have
+ * to ship and license. A HUD line is also exactly the kind of thing HTML is better at: real fonts,
+ * real layout, selectable, announced by a screen reader, and free. `HudText` earns its cost when
+ * the text has to appear in `captureScreenshot()` or be drawn in the world; a status line is
+ * neither.
+ *
+ * ## Why the touch widgets are two constructor calls
  *
  * Phase 6 shipped a hand-written DOM thumbstick here, with a comment saying it should be deleted
  * when `@ignifx/ui` shipped `VirtualJoystick`. It has been. The widgets below write the same
  * `<Virtual>/joystick` and `<Virtual>/interact` controls with the same axis convention — screen
  * `+Y` is down and the stick's `+Y` is up — so `assets/game.input.json` did not change a line, and
  * two hundred lines of pointer bookkeeping became two constructor calls.
- *
- * ## Why the pause menu needs `app.pause()` and not focus
- *
- * `@ignifx/ui` only reports `app.input.uiHasFocus` for text-entry elements: a focused `<button>`
- * deliberately keeps gameplay running, because a HUD button should not freeze the game. Stopping
- * the game is therefore an explicit `app.pause()`, which is what `scripts/pause-menu.ts` does.
  */
 
 /** One on-screen button: the `<Virtual>` control it writes, and what it says. */
@@ -32,8 +42,8 @@ export interface TouchButton {
 export interface GameUi {
   /** The boot screen. Hide it once the preload has settled. */
   readonly loading: LoadingScreen;
-  /** The pause dialog, so a script can show it. */
-  readonly pause: Dialog;
+  /** The HUD line element, or `null` under an app with no DOM overlay. */
+  readonly hud: HTMLDivElement | null;
   /** Removes every widget this created. */
   dispose(): void;
 }
@@ -51,25 +61,24 @@ export function hasTouch(): boolean {
  * Builds the overlay.
  *
  * @param app - The running app. `app.ui` is mounted by the time `createApp` resolves.
+ * @param label - The loading screen's label, already localized.
  * @param buttons - The on-screen buttons to draw beside the stick, right to left.
  * @param touch - Whether to build the on-screen controls at all.
  * @returns The widgets, and a way to remove them.
  */
-export function createGameUi(app: App, buttons: readonly TouchButton[], touch: boolean): GameUi {
-  const loading = new LoadingScreen(app.ui, { label: "Loading…" });
+export function createGameUi(app: App, label: string, buttons: readonly TouchButton[], touch: boolean): GameUi {
+  const loading = new LoadingScreen(app.ui, { label });
   // Follows `app.assets.onProgress`, bytes-weighted where the build recorded sizes. It is
   // connected before the first `load` call so the bar starts at the first byte.
   loading.bindTo(app.assets);
 
-  const pause = new Dialog(app.ui, {
-    layer: "menu",
-    title: "Paused",
-    buttons: [
-      { id: "resume", label: "Resume" },
-      { id: "restart", label: "Restart" },
-    ],
-    visible: false,
-  });
+  const hudLayer = app.ui.layer("hud").element;
+  let hud: HTMLDivElement | null = null;
+  if (hudLayer !== null) {
+    hud = hudLayer.ownerDocument.createElement("div");
+    hud.className = "hud";
+    hudLayer.append(hud);
+  }
 
   const widgets: { dispose(): void }[] = [];
   if (touch) {
@@ -98,12 +107,12 @@ export function createGameUi(app: App, buttons: readonly TouchButton[], touch: b
 
   return {
     loading,
-    pause,
+    hud,
     dispose(): void {
       for (const widget of widgets) {
         widget.dispose();
       }
-      pause.dispose();
+      hud?.remove();
       loading.dispose();
     },
   };

@@ -1,0 +1,37 @@
+{
+  "format": "ignifx.spriteatlas",
+  "formatVersion": 1,
+  "image": "/fx.png",
+  "sampling": "nearest",
+  "premultipliedAlpha": false,
+  "frames": [
+    {
+      "name": "sparkle_0",
+      "x": 1,
+      "y": 1,
+      "w": 16,
+      "h": 16
+    },
+    {
+      "name": "sparkle_1",
+      "x": 19,
+      "y": 1,
+      "w": 16,
+      "h": 16
+    },
+    {
+      "name": "sparkle_2",
+      "x": 37,
+      "y": 1,
+      "w": 16,
+      "h": 16
+    },
+    {
+      "name": "sparkle_3",
+      "x": 55,
+      "y": 1,
+      "w": 16,
+      "h": 16
+    }
+  ]
+}

@@ -175,6 +175,91 @@
           ]
         }
       ]
+    },
+    {
+      "name": "UI",
+      "enabled": true,
+      "actions": [
+        {
+          "name": "menuMove",
+          "type": "vector2",
+          "bindings": [
+            {
+              "composite": "2DVector",
+              "up": "<Keyboard>/arrowUp",
+              "down": "<Keyboard>/arrowDown",
+              "left": "<Keyboard>/arrowLeft",
+              "right": "<Keyboard>/arrowRight",
+              "scheme": "KeyboardMouse"
+            },
+            {
+              "composite": "2DVector",
+              "up": "<Keyboard>/w",
+              "down": "<Keyboard>/s",
+              "left": "<Keyboard>/a",
+              "right": "<Keyboard>/d",
+              "scheme": "KeyboardMouse"
+            },
+            {
+              "path": "<Gamepad>/dpad",
+              "scheme": "Gamepad"
+            },
+            {
+              "path": "<Gamepad>/leftStick",
+              "processors": ["deadzone(0.5)"],
+              "scheme": "Gamepad"
+            },
+            {
+              "path": "<Virtual>/menuMove",
+              "scheme": "Touch"
+            }
+          ]
+        },
+        {
+          "name": "menuSubmit",
+          "type": "button",
+          "bindings": [
+            {
+              "path": "<Keyboard>/enter",
+              "scheme": "KeyboardMouse"
+            },
+            {
+              "path": "<Keyboard>/space",
+              "scheme": "KeyboardMouse"
+            },
+            {
+              "path": "<Gamepad>/buttonSouth",
+              "scheme": "Gamepad"
+            },
+            {
+              "path": "<Virtual>/menuSubmit",
+              "scheme": "Touch"
+            }
+          ]
+        },
+        {
+          "name": "menuBack",
+          "type": "button",
+          "bindings": [
+            {
+              "path": "<Keyboard>/escape",
+              "scheme": "KeyboardMouse"
+            },
+            {
+              "path": "<Keyboard>/backspace",
+              "scheme": "KeyboardMouse"
+            },
+            {
+              "path": "<Gamepad>/buttonEast",
+              "scheme": "Gamepad"
+            },
+            {
+              "path": "<Virtual>/menuBack",
+              "scheme": "Touch"
+            }
+          ]
+        }
+      ]
     }
   ]
 }

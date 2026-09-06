@@ -1,9 +1,17 @@
-import { Dialog, LoadingScreen, VirtualButton, VirtualJoystick } from "@ignifx/ui";
+import { LoadingScreen, VirtualButton, VirtualJoystick } from "@ignifx/ui";
 import type { App } from "@ignifx/core";
 
 /**
- * Everything the game shows over the canvas: the boot loading screen, the pause menu, the HUD line,
- * and the on-screen controls.
+ * Everything the game shows over the canvas: the boot loading screen, the HUD line, and the
+ * on-screen controls.
+ *
+ * ## Where the menus are
+ *
+ * They are not here. The title screen, the pause menu, the settings screen and the rebinding page
+ * are built by `src/menus/game-menus.ts` into `app.ui.layer("menu")`, because `@ignifx/ui` ships a
+ * `Dialog` and nothing list-shaped: a settings screen needs rows, sliders, a selection model and a
+ * back stack. `Dialog` is still used, for the one thing it is exactly right for — the "are you
+ * sure?" prompt in front of "Delete save" and "Quit to title".
  *
  * ## Why the HUD is a `<div>` and not a `HudText`
  *
@@ -26,8 +34,6 @@ import type { App } from "@ignifx/core";
 export interface GameUi {
   /** The boot screen. Hide it once the preload has settled. */
   readonly loading: LoadingScreen;
-  /** The pause dialog, so a script can show it. */
-  readonly pause: Dialog;
   /** The HUD line element, or `null` under an app with no DOM overlay. */
   readonly hud: HTMLDivElement | null;
   /** Removes every widget this created. */
@@ -38,10 +44,6 @@ export interface GameUi {
 export interface GameUiOptions {
   /** The loading screen's label, already localized. */
   readonly loadingLabel: string;
-  /** The pause dialog's title, already localized. */
-  readonly pauseTitle: string;
-  /** The pause dialog's buttons, already localized. */
-  readonly pauseButtons: readonly { readonly id: string; readonly label: string }[];
   /** Whether to build the on-screen controls. */
   readonly touch: boolean;
 }
@@ -67,13 +69,6 @@ export function createGameUi(app: App, options: GameUiOptions): GameUi {
   // Follows `app.assets.onProgress`, bytes-weighted where the build recorded sizes. It is
   // connected before the first `load` call so the bar starts at the first byte.
   loading.bindTo(app.assets);
-
-  const pause = new Dialog(app.ui, {
-    layer: "menu",
-    title: options.pauseTitle,
-    buttons: options.pauseButtons,
-    visible: false,
-  });
 
   const hudLayer = app.ui.layer("hud").element;
   let hud: HTMLDivElement | null = null;
@@ -101,14 +96,12 @@ export function createGameUi(app: App, options: GameUiOptions): GameUi {
 
   return {
     loading,
-    pause,
     hud,
     dispose(): void {
       for (const widget of widgets) {
         widget.dispose();
       }
       hud?.remove();
-      pause.dispose();
       loading.dispose();
     },
   };

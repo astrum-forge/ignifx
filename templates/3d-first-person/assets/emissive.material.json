@@ -1,0 +1,10 @@
+{
+  "format": "ignifx.material",
+  "formatVersion": 1,
+  "type": "pbr",
+  "name": "emissive",
+  "baseColor": [0.05, 0.2, 0.26, 1],
+  "metallic": 0,
+  "roughness": 0.4,
+  "emissive": [0.22, 0.8, 0.94, 1]
+}

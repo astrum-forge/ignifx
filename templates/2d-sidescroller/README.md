@@ -1,43 +1,64 @@
 # 2d-sidescroller
 
-A pixel-perfect 2D side-scroller: three parallax bands, a tilemap with slopes and one-way
-platforms, collectible coins, and a reference platformer controller.
+A pixel-perfect 2D side-scroller: three parallax bands, a tilemap with slopes and one-way platforms,
+collectible coins, a reference platformer controller, and the full front end.
 
 ```sh
 pnpm install && pnpm dev      # http://localhost:5173 · `pnpm build` → dist/
 ```
 
-WebGPU only. A browser without it gets the fallback panel in `index.html`.
+WebGPU only; a browser without it gets the fallback panel in `index.html`.
 
 ## Controls
 
-| Action  | Keyboard                       | Gamepad          | Touch             |
-| ------- | ------------------------------ | ---------------- | ----------------- |
-| `move`  | A/D, arrows                    | left stick, dpad | on-screen stick   |
-| `jump`  | <kbd>Space</kbd>, <kbd>Z</kbd> | ✕ / A            | the **▲** button  |
-| `pause` | <kbd>Esc</kbd>                 | Start            | the **II** button |
+| Action       | Keyboard                  | Gamepad          | Touch             |
+| ------------ | ------------------------- | ---------------- | ----------------- |
+| `move`       | WASD, arrows              | left stick, dpad | on-screen stick   |
+| `jump`       | Space, <kbd>Z</kbd>       | ✕ / A            | the **▲** button  |
+| `pause`      | <kbd>Esc</kbd>            | Start            | the **II** button |
+| `menuMove`   | arrows, WASD              | left stick, dpad | —                 |
+| `menuSubmit` | <kbd>Enter</kbd>, Space   | ✕ / A            | tap a row         |
+| `menuBack`   | <kbd>Esc</kbd>, Backspace | ○ / B            | the **Back** row  |
 
-Hold down and press jump to drop through a one-way platform. Holding jump gives the full arc;
-tapping gives a hop.
+`assets/game.input.json` owns all of it: the `Player` map is gameplay and the `UI` map drives the
+menus, so keyboard and gamepad navigate through one code path.
 
-## The controller
+## Menus, settings and saves
 
-`src/scripts/platformer-controller.ts` is the piece worth reading: coyote time, a jump buffer, a
-variable jump height, and drop-through, all in `fixedUpdate` over input captured in `update`. A
-`CharacterController2D` is purely kinematic, so the script owns gravity — which is what lets it use
-a weaker one going up than coming down. `shape: "box"` is not a style choice either: with the
-default capsule the autostep clears about 0.15 m whatever `stepOffset` says.
+`src/menus/` builds a **title screen** (Continue · New game · Settings · Credits), a **pause menu**
+(<kbd>Esc</kbd> in play: Resume · Save game · Settings · Quit to title) and a **settings screen** —
+master/music/effects sliders on the `Master`/`Music`/`SFX` buses, a render-scale slider on
+`app.renderer.resolutionScale`, the interactive rebinding page, an `en`/`fr` language
+toggle, Delete save and Reset to defaults. Settings and rebindings persist through
+`app.storage.namespace("settings")`; the music ducks rather than stops while a menu is up.
 
-## Layout
+**Focus order is row order**, wrapping at both ends and skipping headings and disabled rows: Up/Down
+move, Left/Right adjust, Enter activates, <kbd>Esc</kbd> backs out one screen, and the pointer
+hovers to select and clicks to activate. Rows are `tabindex="-1"` because a gamepad raises no DOM
+focus events and two focus authorities disagree — `menu-screen.ts` owns the selection.
 
-- `ignifx.config.ts` — one sorting layer per parallax band, plus `twoD` and `physics2d` settings.
-- `assets/` — atlases, clips, the tilemap and the input document, reached by address.
-- `public/` — the sheet images, served unhashed because a `.atlas.json` names its image relative to
-  itself.
-- `src/main.ts` — parallax bands, tilemap and collider, then whatever the objects layer spawns.
-- `src/game-ui.ts` — the `@ignifx/ui` overlay: a `LoadingScreen` bound to `app.assets`, a pause
-  `Dialog` driven by a script that keeps updating while the app is paused, and the
-  `VirtualJoystick` / `VirtualButton` touch controls. It replaced the hand-written
-  `src/touch-controls.ts` this template shipped in Phase 6; the bindings did not change.
+**Saves** are a versioned `ignifx-template.save` document under `app.storage.namespace("saves")`:
+position, the coins already taken, score and elapsed seconds — not a serialized scene, which would store the
+level rather than the progress through it. Taking a coin autosaves, at most one write every two
+seconds; a save from an older build is discarded with an `IGX-TPL-0011` warning rather than
+migrated, which is what makes regenerating the art safe.
 
-`?static=1` stops the clock before the first frame; the visual golden suite opens it.
+## Level and assets
+
+`assets/level.tilemap.json` carries the terrain, the slopes and the one-way planks, plus an objects
+layer the spawn and every coin come from. The camera is `pixelPerfect` against a 320 x 180 reference
+resolution, so one source texel covers a whole number of screen pixels. `public/` holds the sheet
+images, because a `.atlas.json` names its image relative to itself.
+
+Every pixel and every sample comes from a committed, seeded script; nothing is downloaded
+(`CONSTITUTION.md` §11.3). Regenerate from the repository root with `pnpm assets:2d`, `pnpm assets:levels`
+and `pnpm assets:audio`.
+
+## Query flags
+
+- `?static=1` — stops the clock **before** `app.start()` and leaves the front end out, so no fixed
+  step runs and the frame is exactly the authored scene. The visual goldens open it.
+- `?hud=1` — keeps the overlay visible in a static scene; the gallery capture uses it.
+- `?bench=1` — skips the title screen and installs `window.__ignifxFrameTime` for
+  `tests/visual/tests/frame-time.spec.ts`.
+- `?locale=<tag>` — picks a locale from `assets/strings.i18n.json` before the menus are built.

@@ -3,10 +3,10 @@
   "formatVersion": 1,
   "atlas": "hero.atlas.json",
   "clips": [
-    { "name": "idle_down", "frames": ["walk_down_0"], "fps": 1, "loop": true },
-    { "name": "idle_left", "frames": ["walk_left_0"], "fps": 1, "loop": true },
-    { "name": "idle_right", "frames": ["walk_right_0"], "fps": 1, "loop": true },
-    { "name": "idle_up", "frames": ["walk_up_0"], "fps": 1, "loop": true },
+    { "name": "idle_down", "from": "idle_down_0", "to": "idle_down_1", "fps": 2, "loop": true },
+    { "name": "idle_left", "from": "idle_left_0", "to": "idle_left_1", "fps": 2, "loop": true },
+    { "name": "idle_right", "from": "idle_right_0", "to": "idle_right_1", "fps": 2, "loop": true },
+    { "name": "idle_up", "from": "idle_up_0", "to": "idle_up_1", "fps": 2, "loop": true },
     {
       "name": "walk_down",
       "from": "walk_down_0",
