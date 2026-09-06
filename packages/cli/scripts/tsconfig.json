@@ -1,0 +1,15 @@
+{
+  // The pack-time script is Node tooling, not published code: it is never bundled, so
+  // `isolatedDeclarations` and `composite` do not apply. This config exists so that the script is
+  // type-checked at all — the same reason the repository has `tsconfig.tools.json`.
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "isolatedDeclarations": false,
+    "types": ["node"]
+  },
+  "include": ["."]
+}

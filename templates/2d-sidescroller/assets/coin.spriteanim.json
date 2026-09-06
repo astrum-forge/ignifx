@@ -1,0 +1,6 @@
+{
+  "format": "ignifx.spriteanimation",
+  "formatVersion": 1,
+  "atlas": "coin.atlas.json",
+  "clips": [{ "name": "spin", "from": "spin_0", "to": "spin_5", "fps": 10, "loop": true }]
+}

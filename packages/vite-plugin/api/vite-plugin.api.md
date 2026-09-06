@@ -53,6 +53,12 @@ export const ASSET_TYPE_BY_SUFFIX: {
     readonly ".scene.json": "scene";
     readonly ".prefab.json": "scene";
     readonly ".material.json": "material";
+    readonly ".input.json": "inputactions";
+    readonly ".audio.json": "audiobuses";
+    readonly ".physicsmaterial.json": "physicsmaterial";
+    readonly ".atlas.json": "spriteatlas";
+    readonly ".spriteanim.json": "spriteanimation";
+    readonly ".tilemap.json": "tilemap";
 };
 
 // @public

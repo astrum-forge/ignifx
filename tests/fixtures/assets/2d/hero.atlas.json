@@ -1,0 +1,13 @@
+{
+  "format": "ignifx.spriteatlas",
+  "formatVersion": 1,
+  "image": "hero.png",
+  "sampling": "nearest",
+  "premultipliedAlpha": false,
+  "frames": [
+    { "name": "idle_0", "x": 0, "y": 0, "w": 32, "h": 32, "pivot": [0.5, 1] },
+    { "name": "idle_1", "x": 32, "y": 0, "w": 32, "h": 32, "pivot": [0.5, 1] },
+    { "name": "run_0", "x": 0, "y": 32, "w": 32, "h": 32 },
+    { "name": "run_1", "x": 32, "y": 32, "w": 32, "h": 32 }
+  ]
+}

@@ -38,6 +38,57 @@
       "rawTotalBytes": 1602754,
       "chunkCount": 294,
       "note": "gzipBytes is the entry chunk, which is what a first load actually fetches; totalGzipBytes sums all 294 emitted chunks, almost all of them dynamically imported Lite features this scene never reaches. The ceiling is the measurement x 1.1. The plan's Phase 2 target of 250 KB gzipped is NOT met: the entry chunk is 270551 bytes, 20551 over."
+    },
+    "templates/2d-topdown": {
+      "gzipBytes": 1133892,
+      "ceilingBytes": 1247282,
+      "totalGzipBytes": 1362595,
+      "rawTotalBytes": 3942439,
+      "chunkCount": 295,
+      "note": "Measured 2026-09-06 on macOS 25.5 arm64 with Node 25.2.1 and Vite 8.2.2; the ceiling is the measurement x 1.1. 797097 of the 1133892 bytes are @dimforge/rapier2d-compat's dist/rapier.mjs, which inlines its WebAssembly as base64 (2119613 raw, 796778 gzipped on its own) and is statically imported by @ignifx/physics-2d. Everything else -- ignifx core, @ignifx/2d, input, audio and the Lite entry -- accounts for roughly 337 KB, in the same range as examples/hello-cube. The Phase 2 target of 250 KB gzipped does not apply to a template that ships a physics engine; the number to watch is the non-Rapier remainder."
+    },
+    "templates/2d-sidescroller": {
+      "gzipBytes": 1134502,
+      "ceilingBytes": 1247953,
+      "totalGzipBytes": 1363188,
+      "rawTotalBytes": 3944154,
+      "chunkCount": 295,
+      "note": "Measured the same way, on the same machine, on 2026-09-06. Within 610 bytes of the top-down template: the two carry the same packages and differ only in their own source."
+    }
+  },
+  "twoD": {
+    "machine": "macOS 25.5 arm64 (Apple Silicon), Node 24.20.0, Vitest 5.0.0, @babylonjs/lite 1.27.0, Chromium (Playwright) + SwiftShader",
+    "recordedOn": "2026-09-06",
+    "note": "S6.1. CPU milliseconds per frame with the render loop stopped (app.step), so no presented frame and no SwiftShader rasterisation is in the sample. `loaded` dirties all 1000 movers each frame; `idle` moves nothing. Reported, not asserted, except that `loadedMedianMs` must stay under the 2 ms coding-standards \u00a77 budget and `syncedWhileIdle` must be 0. Chromium quantises performance.now() to 0.1 ms, so the browser medians are coarse.",
+    "spriteSyncAtScale": {
+      "movers": 1000,
+      "tiles": 10000,
+      "browser": {
+        "chunkedTileSprites": 1024,
+        "loadedMedianMs": 0.3,
+        "loadedWorstMs": 0.7,
+        "idleMedianMs": 0.2,
+        "idleWorstMs": 0.7,
+        "syncedWhileIdle": 0,
+        "note": "The camera sees 1024 of the 10000 tiles, so chunk culling is exercised."
+      },
+      "node": {
+        "chunkedTileSprites": 10000,
+        "loadedMedianMs": 0.2448,
+        "loadedWorstMs": 1.084,
+        "idleMedianMs": 0.275,
+        "idleWorstMs": 3.7029,
+        "syncedWhileIdle": 0,
+        "note": "A headless app has no surface, so there is no visible rectangle to cull against and every tile is a live sprite. This is the harder of the two measurements."
+      }
+    },
+    "pixelPerfect": {
+      "note": "S6.3. Blended pixels in a full-canvas readback of a 16x16 one-pixel checkerboard: 0 means every pixel is pure magenta or pure black.",
+      "blendedPixelsAtDpr1": 0,
+      "blendedPixelsAtDpr1_5": 0,
+      "blendedPixelsAtDpr2": 0,
+      "counterExampleBlendedPixels": 4096,
+      "counterExampleNote": "Linear-sampled atlas at zoom 6.0377 with pixelPerfect off: the whole 64x64 canvas blends."
     }
   }
 }

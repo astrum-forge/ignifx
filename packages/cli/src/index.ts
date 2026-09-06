@@ -13,16 +13,20 @@ export {
   DEFAULT_TEMPLATE,
   parseArgs,
   resolveTemplateDir,
+  resolveTemplatesRoot,
   runCreate,
+  TEMPLATE_ROOT_CANDIDATES,
   USAGE,
   type CreateCommand,
   type CreateIo,
 } from "./cli.js";
 export {
   copyTemplate,
+  DEFAULT_DEPENDENCY_RANGE,
   DEFAULT_IGNORED_ENTRIES,
   DEFAULT_TEMPLATE_RENAMES,
   type CopyTemplateOptions,
   type CopyTemplateResult,
 } from "./copy-template.js";
 export { CliError, CliErrorCode } from "./errors.js";
+export { VERSION } from "./version.js";

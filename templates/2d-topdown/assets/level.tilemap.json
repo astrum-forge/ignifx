@@ -1,0 +1,323 @@
+{
+  "format": "ignifx.tilemap",
+  "formatVersion": 1,
+  "tileWidth": 16,
+  "tileHeight": 16,
+  "cellSize": 1,
+  "width": 40,
+  "height": 24,
+  "tilesets": [
+    {
+      "name": "garden",
+      "atlas": "tiles.atlas.json",
+      "firstId": 1,
+      "tiles": [
+        {
+          "id": 0,
+          "frame": "grass"
+        },
+        {
+          "id": 1,
+          "frame": "grass_tuft"
+        },
+        {
+          "id": 2,
+          "frame": "path"
+        },
+        {
+          "id": 3,
+          "frame": "water",
+          "collider": {
+            "kind": "box",
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 1
+          },
+          "properties": {
+            "surface": "water"
+          }
+        },
+        {
+          "id": 4,
+          "frame": "wall",
+          "collider": {
+            "kind": "box",
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 1
+          }
+        },
+        {
+          "id": 5,
+          "frame": "wall_top",
+          "collider": {
+            "kind": "box",
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 1
+          }
+        },
+        {
+          "id": 6,
+          "frame": "tree_canopy"
+        },
+        {
+          "id": 7,
+          "frame": "flowers"
+        },
+        {
+          "id": 8,
+          "frame": "chest"
+        },
+        {
+          "id": 9,
+          "frame": "barrel"
+        },
+        {
+          "id": 10,
+          "frame": "sign"
+        },
+        {
+          "id": 11,
+          "frame": "bush"
+        },
+        {
+          "id": 12,
+          "frame": "pad"
+        },
+        {
+          "id": 13,
+          "frame": "rock"
+        },
+        {
+          "id": 14,
+          "frame": "crate"
+        },
+        {
+          "id": 15,
+          "frame": "tree_trunk",
+          "collider": {
+            "kind": "box",
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 1
+          }
+        }
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "name": "Ground",
+      "sortingLayer": "Background",
+      "orderInLayer": 0,
+      "collision": false,
+      "tiles": {
+        "rle": [
+          15, 1, 1, 2, 18, 1, 1, 2, 4, 1, 1, 2, 8, 1, 2, 8, 7, 1, 1, 2, 6, 1, 1, 2, 2, 1, 1, 2, 1, 1, 1, 2, 1, 1, 1, 2,
+          7, 1, 1, 2, 9, 1, 2, 3, 28, 1, 1, 2, 1, 1, 1, 8, 1, 2, 3, 1, 1, 2, 2, 1, 2, 3, 1, 8, 6, 1, 2, 2, 4, 1, 1, 2,
+          3, 1, 1, 2, 5, 1, 1, 8, 3, 1, 1, 2, 7, 1, 1, 2, 2, 1, 2, 3, 8, 1, 1, 2, 6, 1, 1, 2, 7, 1, 1, 2, 10, 1, 1, 2,
+          3, 1, 2, 3, 7, 1, 1, 8, 4, 1, 2, 2, 2, 1, 1, 2, 3, 1, 1, 2, 3, 1, 2, 2, 5, 1, 1, 2, 1, 1, 1, 2, 2, 1, 1, 8, 1,
+          1, 2, 3, 8, 1, 2, 2, 1, 8, 3, 1, 1, 2, 1, 1, 1, 2, 9, 1, 1, 2, 10, 1, 1, 2, 2, 3, 5, 1, 1, 2, 10, 1, 1, 2, 10,
+          1, 1, 2, 10, 1, 2, 3, 5, 1, 1, 8, 26, 1, 1, 2, 5, 1, 2, 3, 8, 1, 1, 2, 17, 1, 1, 2, 9, 1, 1, 2, 1, 1, 2, 3, 7,
+          1, 2, 2, 5, 1, 1, 2, 5, 1, 1, 2, 1, 8, 3, 1, 1, 2, 1, 8, 2, 1, 1, 8, 1, 2, 1, 8, 6, 1, 2, 3, 5, 1, 1, 2, 5, 1,
+          1, 2, 7, 1, 1, 2, 2, 1, 1, 2, 15, 1, 2, 3, 3, 1, 1, 8, 8, 1, 1, 2, 1, 1, 1, 8, 1, 2, 3, 1, 1, 2, 2, 1, 1, 2,
+          7, 1, 38, 3, 1, 1, 1, 2, 38, 3, 10, 1, 2, 3, 5, 1, 1, 2, 2, 1, 1, 2, 3, 1, 1, 2, 4, 1, 1, 2, 2, 1, 1, 2, 1, 1,
+          1, 2, 5, 1, 1, 8, 1, 1, 1, 2, 1, 8, 6, 1, 2, 3, 8, 1, 1, 2, 7, 1, 1, 2, 4, 1, 1, 2, 1, 1, 1, 7, 5, 1, 1, 2, 6,
+          1, 1, 8, 1, 1, 2, 3, 4, 1, 1, 2, 1, 1, 2, 2, 10, 1, 1, 2, 4, 1, 1, 2, 2, 1, 1, 2, 6, 1, 1, 7, 2, 1, 1, 2, 1,
+          1, 2, 3, 8, 1, 1, 2, 4, 1, 1, 7, 1, 1, 2, 2, 2, 1, 1, 2, 4, 1, 1, 8, 1, 1, 1, 2, 1, 1, 1, 2, 4, 1, 1, 2, 4, 1,
+          2, 3, 3, 1, 1, 8, 1, 2, 1, 1, 1, 2, 17, 1, 1, 2, 1, 1, 1, 2, 3, 1, 1, 8, 7, 1, 2, 3, 11, 1, 1, 2, 5, 1, 1, 8,
+          1, 2, 7, 1, 2, 2, 5, 1, 1, 8, 4, 1, 2, 3, 2, 1, 1, 2, 3, 1, 2, 2, 1, 8, 5, 1, 1, 2, 6, 1, 1, 2, 6, 1, 1, 2,
+          14, 1, 1, 2, 2, 1, 1, 2, 5, 1, 1, 8, 3, 1, 1, 8, 1, 2, 8, 1, 1, 8, 6, 1, 1, 2, 2, 1, 1, 8, 6, 1, 1, 2, 23, 1,
+          1, 2, 1, 1
+        ]
+      }
+    },
+    {
+      "name": "Solid",
+      "sortingLayer": "Background",
+      "orderInLayer": 1,
+      "collision": true,
+      "tiles": {
+        "rle": [
+          40, 6, 41, 5, 38, 0, 2, 5, 38, 0, 2, 5, 38, 0, 2, 5, 15, 0, 7, 6, 5, 0, 7, 4, 4, 0, 2, 5, 15, 0, 7, 5, 5, 0,
+          7, 4, 4, 0, 2, 5, 27, 0, 7, 4, 4, 0, 2, 5, 27, 0, 7, 4, 4, 0, 2, 5, 27, 0, 7, 4, 4, 0, 2, 5, 27, 0, 7, 4, 4,
+          0, 2, 5, 38, 0, 2, 5, 38, 0, 2, 5, 38, 0, 2, 5, 38, 0, 2, 5, 38, 0, 2, 5, 38, 0, 2, 5, 33, 0, 1, 16, 4, 0, 2,
+          5, 38, 0, 2, 5, 3, 0, 1, 16, 19, 0, 1, 16, 14, 0, 2, 5, 38, 0, 2, 5, 38, 0, 2, 5, 38, 0, 41, 5
+        ]
+      }
+    }
+  ],
+  "objects": [
+    {
+      "type": "spawn",
+      "name": "Player",
+      "x": 9.5,
+      "y": 10.5,
+      "width": 1,
+      "height": 1,
+      "properties": {}
+    },
+    {
+      "type": "prop",
+      "name": "Chest",
+      "x": 13.5,
+      "y": 15.5,
+      "width": 1,
+      "height": 1,
+      "properties": {
+        "frame": "chest"
+      }
+    },
+    {
+      "type": "prop",
+      "name": "Barrel",
+      "x": 5.5,
+      "y": 14.5,
+      "width": 1,
+      "height": 1,
+      "properties": {
+        "frame": "barrel"
+      }
+    },
+    {
+      "type": "prop",
+      "name": "Crate",
+      "x": 6.5,
+      "y": 14.5,
+      "width": 1,
+      "height": 1,
+      "properties": {
+        "frame": "crate"
+      }
+    },
+    {
+      "type": "prop",
+      "name": "Signpost",
+      "x": 11.5,
+      "y": 11.5,
+      "width": 1,
+      "height": 1,
+      "properties": {
+        "frame": "sign"
+      }
+    },
+    {
+      "type": "prop",
+      "name": "Rock",
+      "x": 20.5,
+      "y": 6.5,
+      "width": 1,
+      "height": 1,
+      "properties": {
+        "frame": "rock"
+      }
+    },
+    {
+      "type": "prop",
+      "name": "Bush",
+      "x": 30.5,
+      "y": 5.5,
+      "width": 1,
+      "height": 1,
+      "properties": {
+        "frame": "bush"
+      }
+    },
+    {
+      "type": "prop",
+      "name": "Bush East",
+      "x": 31.5,
+      "y": 6.5,
+      "width": 1,
+      "height": 1,
+      "properties": {
+        "frame": "bush"
+      }
+    },
+    {
+      "type": "prop",
+      "name": "Crate East",
+      "x": 17.5,
+      "y": 11.6,
+      "width": 1,
+      "height": 1,
+      "properties": {
+        "frame": "crate"
+      }
+    },
+    {
+      "type": "prop",
+      "name": "Barrel East",
+      "x": 18.5,
+      "y": 10.2,
+      "width": 1,
+      "height": 1,
+      "properties": {
+        "frame": "barrel"
+      }
+    },
+    {
+      "type": "prop",
+      "name": "Rock North",
+      "x": 14.5,
+      "y": 8.4,
+      "width": 1,
+      "height": 1,
+      "properties": {
+        "frame": "rock"
+      }
+    },
+    {
+      "type": "prop",
+      "name": "Bush South",
+      "x": 22.5,
+      "y": 13.5,
+      "width": 1,
+      "height": 1,
+      "properties": {
+        "frame": "bush"
+      }
+    },
+    {
+      "type": "prop",
+      "name": "Waymarker",
+      "x": 27.5,
+      "y": 12.5,
+      "width": 1,
+      "height": 1,
+      "properties": {
+        "frame": "sign"
+      }
+    },
+    {
+      "type": "prop",
+      "name": "Cache",
+      "x": 21.5,
+      "y": 16.5,
+      "width": 1,
+      "height": 1,
+      "properties": {
+        "frame": "chest"
+      }
+    },
+    {
+      "type": "shrine",
+      "name": "Shrine",
+      "x": 25.5,
+      "y": 10.5,
+      "width": 2,
+      "height": 2,
+      "properties": {
+        "frame": "pad"
+      }
+    }
+  ],
+  "properties": {
+    "title": "Garden"
+  }
+}

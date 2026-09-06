@@ -3,15 +3,13 @@
 // `process` (argv, exit code, stdout, stderr). Everything below it takes its I/O by injection, so
 // this file stays thin enough to be verified by running the built binary rather than by unit
 // tests; it is still type-checked and linted like the rest of `src`.
-import { resolve } from "node:path";
-import { runCreate } from "./cli.js";
+import { resolveTemplatesRoot, runCreate } from "./cli.js";
 import { CliError } from "./errors.js";
 import type { CreateIo } from "./cli.js";
 
-// Published layout: `<package>/dist/bin.js` next to `<package>/templates/<name>`. The real
-// templates land in Phases 6-7 of the engineering plan; until then this resolves to a directory
-// that does not exist and the command fails with IGX-1402.
-const templatesRoot = resolve(import.meta.dirname, "../templates");
+// `<package>/templates/<name>` in a published tarball, the repository's own `templates/` in a
+// checkout. `resolveTemplatesRoot` picks whichever exists; see its documentation.
+const templatesRoot = await resolveTemplatesRoot(import.meta.dirname);
 
 const io: CreateIo = {
   // Coding standards §5.5 bans `console` outside the logging sink; this is the documented boundary

@@ -1,21 +1,42 @@
 # Visual golden tests
 
-Playwright screenshots of the Phase 2 exit-criterion scenes, compared against committed goldens with
-a per-scene tolerance (coding standards §10).
+Playwright screenshots of the Phase 2 and Phase 6 exit-criterion scenes, compared against committed
+goldens with a per-scene tolerance (coding standards §10).
 
 ```sh
 pnpm test:visual                                              # from the repository root
 pnpm --filter ignifx-visual-tests run test:visual:update      # regenerate the goldens
 ```
 
-`playwright.config.ts` builds and previews both examples on `127.0.0.1:4173` and `:4174` before the
-first test, so a golden is always taken of a production build.
+`playwright.config.ts` builds and previews four apps before the first test, so a golden is always
+taken of a production build:
+
+| Scene file          | App                         | Port   | Viewport  |
+| ------------------- | --------------------------- | ------ | --------- |
+| `scenes.spec.ts`    | `examples/hello-cube`       | `4173` | 512 x 512 |
+| `scenes.spec.ts`    | `examples/gltf-viewer`      | `4174` | 512 x 512 |
+| `templates.spec.ts` | `templates/2d-topdown`      | `4175` | 512 x 288 |
+| `templates.spec.ts` | `templates/2d-sidescroller` | `4176` | 512 x 288 |
+
+The 2D templates use 16:9 because both are authored against a 320 x 180 reference resolution, and
+the side-scroller's pixel-perfect camera derives its whole-number zoom from `viewportHeight / 180`:
+at 288 pixels that is a zoom of 1, so one source texel is exactly one screen pixel.
+
+**`reuseExistingServer` is on outside CI**, which means a `vite preview` left running from an
+earlier invocation is reused and _no rebuild happens_. When a golden looks stale, it is: stop the
+previews (they listen on 4173-4176) before regenerating. And `--update-snapshots` alone only
+rewrites a golden whose comparison **failed** — pass `--update-snapshots=all` to rewrite one whose
+change is inside the tolerance.
 
 ## How a frame is made deterministic
 
 Every scene is opened with `?static=1`, which sets `time.timeScale = 0` and pins the animated
-transforms, and each example resolves `window.__ignifxReady` only after it has presented a settled
+transforms, and each app resolves `window.__ignifxReady` only after it has presented a settled
 frame. Nothing here sleeps on wall-clock time.
+
+The templates go one step further and stop the clock **before** `app.start()`, so not one fixed step
+ever runs: no body falls, no clip advances, and the camera never chases its target. The frame is the
+authored scene rather than the scene a few hundred milliseconds after it loaded.
 
 Chromium runs as the full browser (`channel: "chromium"`), not `chrome-headless-shell`, which has no
 compositor and loses the WebGPU device after two or three presented frames — the same finding that

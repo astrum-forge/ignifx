@@ -1,0 +1,322 @@
+{
+  "format": "ignifx.tilemap",
+  "formatVersion": 1,
+  "tileWidth": 16,
+  "tileHeight": 16,
+  "cellSize": 1,
+  "width": 64,
+  "height": 20,
+  "tilesets": [
+    {
+      "name": "terrain",
+      "atlas": "tiles.atlas.json",
+      "firstId": 1,
+      "tiles": [
+        {
+          "id": 0,
+          "frame": "ground_top",
+          "collider": {
+            "kind": "box",
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 1
+          }
+        },
+        {
+          "id": 1,
+          "frame": "dirt",
+          "collider": {
+            "kind": "box",
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 1
+          }
+        },
+        {
+          "id": 2,
+          "frame": "slope_up",
+          "collider": {
+            "kind": "polygon",
+            "points": [
+              {
+                "x": 1,
+                "y": 0
+              },
+              {
+                "x": 1,
+                "y": 1
+              },
+              {
+                "x": 0,
+                "y": 1
+              }
+            ]
+          }
+        },
+        {
+          "id": 3,
+          "frame": "slope_down",
+          "collider": {
+            "kind": "polygon",
+            "points": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 1,
+                "y": 1
+              },
+              {
+                "x": 0,
+                "y": 1
+              }
+            ]
+          }
+        },
+        {
+          "id": 4,
+          "frame": "platform",
+          "collider": {
+            "kind": "box",
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 0.3125,
+            "oneWay": true
+          },
+          "properties": {
+            "oneWay": true
+          }
+        },
+        {
+          "id": 5,
+          "frame": "brick",
+          "collider": {
+            "kind": "box",
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 1
+          }
+        },
+        {
+          "id": 6,
+          "frame": "dirt_left",
+          "collider": {
+            "kind": "box",
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 1
+          }
+        },
+        {
+          "id": 7,
+          "frame": "dirt_right",
+          "collider": {
+            "kind": "box",
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 1
+          }
+        }
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "name": "Terrain",
+      "sortingLayer": "Terrain",
+      "orderInLayer": 0,
+      "collision": true,
+      "tiles": {
+        "rle": [
+          807, 0, 5, 5, 30, 0, 3, 6, 33, 0, 3, 6, 18, 0, 4, 5, 9, 0, 4, 5, 6, 0, 5, 5, 21, 0, 5, 5, 44, 0, 1, 3, 6, 1,
+          1, 4, 27, 0, 1, 3, 5, 1, 1, 4, 17, 0, 1, 3, 4, 1, 8, 2, 5, 1, 1, 4, 13, 0, 8, 1, 7, 2, 5, 1, 4, 0, 8, 1, 19,
+          2, 7, 1, 2, 0, 4, 1, 1, 7, 18, 2, 1, 8, 4, 0, 1, 7, 32, 2, 1, 8, 2, 0, 1, 7, 2, 2, 1, 8, 1, 7, 18, 2, 1, 8, 4,
+          0, 1, 7, 32, 2, 1, 8, 2, 0, 1, 7, 2, 2, 1, 8
+        ]
+      }
+    }
+  ],
+  "objects": [
+    {
+      "type": "spawn",
+      "name": "Player",
+      "x": 2.5,
+      "y": 3,
+      "width": 1,
+      "height": 1,
+      "properties": {}
+    },
+    {
+      "type": "coin",
+      "name": "Coin 1",
+      "x": 4.5,
+      "y": 6.5,
+      "width": 1,
+      "height": 1,
+      "properties": {}
+    },
+    {
+      "type": "coin",
+      "name": "Coin 2",
+      "x": 5.5,
+      "y": 6.5,
+      "width": 1,
+      "height": 1,
+      "properties": {}
+    },
+    {
+      "type": "coin",
+      "name": "Coin 3",
+      "x": 11.5,
+      "y": 7.5,
+      "width": 1,
+      "height": 1,
+      "properties": {}
+    },
+    {
+      "type": "coin",
+      "name": "Coin 4",
+      "x": 12.5,
+      "y": 4.5,
+      "width": 1,
+      "height": 1,
+      "properties": {}
+    },
+    {
+      "type": "coin",
+      "name": "Coin 5",
+      "x": 17.5,
+      "y": 6.5,
+      "width": 1,
+      "height": 1,
+      "properties": {}
+    },
+    {
+      "type": "coin",
+      "name": "Coin 6",
+      "x": 18.5,
+      "y": 6.5,
+      "width": 1,
+      "height": 1,
+      "properties": {}
+    },
+    {
+      "type": "coin",
+      "name": "Coin 7",
+      "x": 21.5,
+      "y": 5.5,
+      "width": 1,
+      "height": 1,
+      "properties": {}
+    },
+    {
+      "type": "coin",
+      "name": "Coin 8",
+      "x": 22.5,
+      "y": 5.5,
+      "width": 1,
+      "height": 1,
+      "properties": {}
+    },
+    {
+      "type": "coin",
+      "name": "Coin 9",
+      "x": 27.5,
+      "y": 6.5,
+      "width": 1,
+      "height": 1,
+      "properties": {}
+    },
+    {
+      "type": "coin",
+      "name": "Coin 10",
+      "x": 28.5,
+      "y": 6.5,
+      "width": 1,
+      "height": 1,
+      "properties": {}
+    },
+    {
+      "type": "coin",
+      "name": "Coin 11",
+      "x": 33.5,
+      "y": 5.5,
+      "width": 1,
+      "height": 1,
+      "properties": {}
+    },
+    {
+      "type": "coin",
+      "name": "Coin 12",
+      "x": 39.5,
+      "y": 5.5,
+      "width": 1,
+      "height": 1,
+      "properties": {}
+    },
+    {
+      "type": "coin",
+      "name": "Coin 13",
+      "x": 40.5,
+      "y": 8.5,
+      "width": 1,
+      "height": 1,
+      "properties": {}
+    },
+    {
+      "type": "coin",
+      "name": "Coin 14",
+      "x": 41.5,
+      "y": 8.5,
+      "width": 1,
+      "height": 1,
+      "properties": {}
+    },
+    {
+      "type": "coin",
+      "name": "Coin 15",
+      "x": 47.5,
+      "y": 7.5,
+      "width": 1,
+      "height": 1,
+      "properties": {}
+    },
+    {
+      "type": "coin",
+      "name": "Coin 16",
+      "x": 53.5,
+      "y": 6.5,
+      "width": 1,
+      "height": 1,
+      "properties": {}
+    },
+    {
+      "type": "coin",
+      "name": "Coin 17",
+      "x": 54.5,
+      "y": 6.5,
+      "width": 1,
+      "height": 1,
+      "properties": {}
+    },
+    {
+      "type": "coin",
+      "name": "Coin 18",
+      "x": 58.5,
+      "y": 5.5,
+      "width": 1,
+      "height": 1,
+      "properties": {}
+    }
+  ],
+  "properties": {
+    "title": "Dusk Run"
+  }
+}

@@ -155,6 +155,20 @@ describe("caster lists", () => {
     expect(scene.light.isCastingShadows).toBe(true);
   });
 
+  it("keeps casting after the caster's mesh is swapped for a new clone", async () => {
+    // A swapped `mesh` rebuilds the clone without `castShadows` or visibility moving; the caster list
+    // must still be rebuilt, or the generator keeps rendering the destroyed clone (a stale caster).
+    const scene = await buildShadowScene(true);
+    const before = await bandLuminance(scene.running, 29, 34, 35, 40);
+    scene.caster.mesh = MeshAsset.box(scene.running.app, { size: 2 });
+    await scene.running.advance(SETTLE_FRAMES * 4);
+    const after = await bandLuminance(scene.running, 29, 34, 35, 40);
+    expect(scene.running.errors).toEqual([]);
+    expect(scene.light.isCastingShadows).toBe(true);
+    // The same-sized replacement casts the same shadow: still dark under the box.
+    expect(after).toBeLessThan(Math.max(before * 1.25, before + 8));
+  });
+
   it("releases the generator when the light stops casting", async () => {
     const scene = await buildShadowScene(true);
     scene.light.shadows.enabled = false;

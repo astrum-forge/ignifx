@@ -6,3 +6,9 @@
 pnpm-lock.yaml
 **/api/*.api.md
 skills/ignifx/references/api/**
+
+# Written by `tests/fixtures/assets/2d-templates/make-template-*.mjs`. Re-running a generator must
+# not leave a formatting diff behind, and the run-length-encoded tile arrays are deliberately on one
+# line each — a formatter would put every integer on its own.
+templates/*/assets/*.atlas.json
+templates/*/assets/level.tilemap.json

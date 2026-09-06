@@ -1,0 +1,52 @@
+{
+  "format": "ignifx.inputactions",
+  "formatVersion": 1,
+  "controlSchemes": [
+    { "name": "KeyboardMouse", "devices": ["Keyboard", "Mouse"] },
+    { "name": "Gamepad", "devices": ["Gamepad"] },
+    { "name": "Touch", "devices": ["Touch", "Virtual"] }
+  ],
+  "maps": [
+    {
+      "name": "Player",
+      "enabled": true,
+      "actions": [
+        {
+          "name": "move",
+          "type": "vector2",
+          "bindings": [
+            {
+              "composite": "2DVector",
+              "up": "<Keyboard>/w",
+              "down": "<Keyboard>/s",
+              "left": "<Keyboard>/a",
+              "right": "<Keyboard>/d",
+              "scheme": "KeyboardMouse"
+            },
+            {
+              "composite": "2DVector",
+              "up": "<Keyboard>/arrowUp",
+              "down": "<Keyboard>/arrowDown",
+              "left": "<Keyboard>/arrowLeft",
+              "right": "<Keyboard>/arrowRight",
+              "scheme": "KeyboardMouse"
+            },
+            { "path": "<Gamepad>/leftStick", "processors": ["deadzone(0.2)"], "scheme": "Gamepad" },
+            { "path": "<Gamepad>/dpad", "scheme": "Gamepad" },
+            { "path": "<Virtual>/joystick", "processors": ["deadzone(0.15)"], "scheme": "Touch" }
+          ]
+        },
+        {
+          "name": "jump",
+          "type": "button",
+          "bindings": [
+            { "path": "<Keyboard>/space", "scheme": "KeyboardMouse" },
+            { "path": "<Keyboard>/z", "scheme": "KeyboardMouse" },
+            { "path": "<Gamepad>/buttonSouth", "scheme": "Gamepad" },
+            { "path": "<Virtual>/jump", "scheme": "Touch" }
+          ]
+        }
+      ]
+    }
+  ]
+}

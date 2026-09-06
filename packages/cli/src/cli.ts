@@ -1,5 +1,5 @@
 import { stat } from "node:fs/promises";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { parseArgs as parseNodeArgs } from "node:util";
 import { copyTemplate } from "./copy-template.js";
 import { CliError, CliErrorCode } from "./errors.js";
@@ -134,6 +134,53 @@ export function parseArgs(argv: readonly string[]): CreateCommand {
     template: values.template ?? DEFAULT_TEMPLATE,
     overwrite: values.overwrite ?? false,
   };
+}
+
+/**
+ * Where `create-ignifx` looks for its templates, in order.
+ *
+ * @remarks
+ * Both entries are relative to the directory holding the running `bin.js`.
+ *
+ * - `../templates` is the **published** layout: `prepack` copies `templates/*` into the package, so
+ *   the tarball ships `<package>/dist/bin.js` beside `<package>/templates/<name>`.
+ * - `../../../templates` is the **development** layout: `packages/cli/dist/bin.js` sits three
+ *   directories below the repository root, where the real `templates/` workspace members live. It
+ *   is what makes `node packages/cli/dist/bin.js my-game` work from a checkout, without a pack.
+ *
+ * @public
+ */
+export const TEMPLATE_ROOT_CANDIDATES: readonly string[] = ["../templates", "../../../templates"];
+
+/**
+ * Finds the directory that holds the templates.
+ *
+ * @param binDirectory - The directory of the running executable, normally `import.meta.dirname`.
+ * @returns The first of {@link TEMPLATE_ROOT_CANDIDATES} that exists as a directory; the first
+ * candidate when none does, so the failure names the published location rather than the checkout.
+ *
+ * @example
+ * ```ts
+ * const templatesRoot = await resolveTemplatesRoot(import.meta.dirname);
+ * ```
+ *
+ * @public
+ */
+export async function resolveTemplatesRoot(binDirectory: string): Promise<string> {
+  const candidates = TEMPLATE_ROOT_CANDIDATES.map((relative) => resolve(binDirectory, relative));
+  // The candidates are inspected together and chosen in order: the preference is the *order*, not
+  // the sequence of file-system calls, and one `stat` should not wait on another.
+  const found = await Promise.all(
+    candidates.map(async (candidate) => {
+      try {
+        return (await stat(candidate)).isDirectory();
+      } catch {
+        return false;
+      }
+    }),
+  );
+  const index = found.indexOf(true);
+  return candidates[index === -1 ? 0 : index] ?? binDirectory;
 }
 
 /**

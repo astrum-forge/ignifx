@@ -9,6 +9,7 @@ import { ActionMap } from '@ignifx/input';
 import { ActionMapDefinition } from '@ignifx/input';
 import { ActionSetOptions } from '@ignifx/input';
 import { ActionVector } from '@ignifx/input';
+import { AnimatedTilemapSink } from '@ignifx/2d';
 import { ANY_KEY_CONTROL } from '@ignifx/input';
 import { App } from '@ignifx/core';
 import { AppEvents } from '@ignifx/core';
@@ -20,6 +21,9 @@ import { approximately } from '@ignifx/core';
 import { AppSettings } from '@ignifx/core';
 import { array } from '@ignifx/core';
 import { ArrayFieldSpec } from '@ignifx/core';
+import { AsepriteAnimationImportOptions } from '@ignifx/2d';
+import { asepriteFrameName } from '@ignifx/2d';
+import { AsepriteImportOptions } from '@ignifx/2d';
 import { assertNever } from '@ignifx/core';
 import { assertSceneDependenciesLoaded } from '@ignifx/core';
 import { asset } from '@ignifx/core';
@@ -98,39 +102,60 @@ import { BindingDefinition } from '@ignifx/input';
 import { BindingResolver } from '@ignifx/input';
 import { BloomEffectSettings } from '@ignifx/core';
 import { BODY_TYPES } from '@ignifx/physics';
+import { BODY_TYPES_2D } from '@ignifx/physics-2d';
 import { BodyType } from '@ignifx/physics';
+import { BodyType2D } from '@ignifx/physics-2d';
 import { bool } from '@ignifx/core';
 import { BoolFieldSpec } from '@ignifx/core';
 import { BoxCollider } from '@ignifx/physics';
+import { BoxCollider2D } from '@ignifx/physics-2d';
 import { BoxMeshOptions } from '@ignifx/core';
 import { buildControls } from '@ignifx/input';
 import { Camera } from '@ignifx/core';
+import { Camera2D } from '@ignifx/2d';
+import { Camera2DFollow } from '@ignifx/2d';
 import { CameraProjection } from '@ignifx/core';
 import { canonicalizeNumber } from '@ignifx/core';
 import { CANVAS_ALPHA_MODES } from '@ignifx/core';
 import { CanvasAlphaMode } from '@ignifx/core';
+import { Capsule2DDirection } from '@ignifx/physics-2d';
+import { CAPSULE_2D_DIRECTIONS } from '@ignifx/physics-2d';
 import { CAPSULE_DIRECTIONS } from '@ignifx/physics';
 import { CapsuleCollider } from '@ignifx/physics';
+import { CapsuleCollider2D } from '@ignifx/physics-2d';
 import { CapsuleDirection } from '@ignifx/physics';
 import { CapsuleMeshOptions } from '@ignifx/core';
+import { CHARACTER_SHAPES_2D } from '@ignifx/physics-2d';
 import { CharacterCollision } from '@ignifx/physics';
+import { CharacterCollision2D } from '@ignifx/physics-2d';
 import { CharacterController } from '@ignifx/physics';
+import { CharacterController2D } from '@ignifx/physics-2d';
+import { CharacterShape2D } from '@ignifx/physics-2d';
+import { CircleCollider2D } from '@ignifx/physics-2d';
 import { clamp } from '@ignifx/core';
 import { clamp01 } from '@ignifx/core';
 import { clearOverrides } from '@ignifx/input';
 import { Clock } from '@ignifx/core';
 import { collectOverrides } from '@ignifx/input';
 import { Collider } from '@ignifx/physics';
+import { Collider2D } from '@ignifx/physics-2d';
+import { collider2DFields } from '@ignifx/physics-2d';
 import { colliderFields } from '@ignifx/physics';
 import { Collision } from '@ignifx/physics';
+import { Collision2D } from '@ignifx/physics-2d';
 import { COLLISION_EVENT_MODES } from '@ignifx/physics';
+import { COLLISION_EVENT_MODES_2D } from '@ignifx/physics-2d';
 import { COLLISION_IDENTITY_MODES } from '@ignifx/physics';
 import { CollisionEventMode } from '@ignifx/physics';
+import { CollisionEventMode2D } from '@ignifx/physics-2d';
 import { CollisionIdentityMode } from '@ignifx/physics';
+import { CollisionMergeOptions } from '@ignifx/2d';
 import { Color } from '@ignifx/core';
 import { color } from '@ignifx/core';
 import { ColorFieldSpec } from '@ignifx/core';
 import { ColorLike } from '@ignifx/core';
+import { COMBINE_RULES } from '@ignifx/physics-2d';
+import { CombineRule } from '@ignifx/physics-2d';
 import { Component } from '@ignifx/core';
 import { ComponentClassInfo } from '@ignifx/core';
 import { ComponentDefinition } from '@ignifx/core';
@@ -152,6 +177,7 @@ import { ConnectOptions } from '@ignifx/core';
 import { ConsoleLike } from '@ignifx/core';
 import { ConsoleSinkOptions } from '@ignifx/core';
 import { ContactPoint } from '@ignifx/physics';
+import { ContactPoint2D } from '@ignifx/physics-2d';
 import { ControlDescriptor } from '@ignifx/input';
 import { ControlKind } from '@ignifx/input';
 import { controlPath } from '@ignifx/input';
@@ -196,6 +222,7 @@ import { createModelLoader } from '@ignifx/core';
 import { createMouseDevice } from '@ignifx/input';
 import { createNavigatorGamepadReader } from '@ignifx/input';
 import { createPerformanceClock } from '@ignifx/core';
+import { createPhysicsMaterial2DLoader } from '@ignifx/physics-2d';
 import { createPhysicsMaterialLoader } from '@ignifx/physics';
 import { createPointerDevice } from '@ignifx/input';
 import { createRay } from '@ignifx/core';
@@ -203,7 +230,10 @@ import { createSceneAsset } from '@ignifx/core';
 import { createSceneLoader } from '@ignifx/core';
 import { createSeededRandom } from '@ignifx/core';
 import { createServiceKey } from '@ignifx/core';
+import { createSpriteAnimationLoader } from '@ignifx/2d';
+import { createSpriteAtlasLoader } from '@ignifx/2d';
 import { createTextureLoader } from '@ignifx/core';
+import { createTilemapLoader } from '@ignifx/2d';
 import { createTouchDevice } from '@ignifx/input';
 import { createUlidFactory } from '@ignifx/core';
 import { createWebAudioBackend } from '@ignifx/audio';
@@ -219,23 +249,35 @@ import { CylinderCollider } from '@ignifx/physics';
 import { CylinderMeshOptions } from '@ignifx/core';
 import { decodeProps } from '@ignifx/core';
 import { DecodeResult } from '@ignifx/core';
+import { decodeTileRle } from '@ignifx/2d';
 import { decodeValue } from '@ignifx/core';
 import { DEFAULT_ASSET_CONCURRENCY } from '@ignifx/core';
 import { DEFAULT_ASSET_ROOT } from '@ignifx/core';
 import { DEFAULT_AUDIO_BUSES } from '@ignifx/audio';
 import { DEFAULT_BRDF_LUT_ADDRESS } from '@ignifx/core';
+import { DEFAULT_CHUNK_SIZE } from '@ignifx/2d';
+import { DEFAULT_CLIP_FPS } from '@ignifx/2d';
 import { DEFAULT_LAYER } from '@ignifx/core';
 import { DEFAULT_MEMORY_SINK_LIMIT } from '@ignifx/core';
+import { DEFAULT_ORTHOGRAPHIC_SIZE } from '@ignifx/2d';
 import { DEFAULT_PAUSABLE_BUSES } from '@ignifx/audio';
+import { DEFAULT_PIXELS_PER_UNIT } from '@ignifx/2d';
+import { DEFAULT_REFERENCE_RESOLUTION } from '@ignifx/2d';
+import { DEFAULT_SORTING_LAYER } from '@ignifx/2d';
 import { DEFAULT_SOUND_BUS } from '@ignifx/audio';
 import { defaultAudioSettings } from '@ignifx/audio';
 import { defaultInputSettings } from '@ignifx/input';
+import { defaultPhysics2DSettings } from '@ignifx/physics-2d';
 import { defaultPhysicsSettings } from '@ignifx/physics';
 import { defaultRenderingSettings } from '@ignifx/core';
+import { defaultTwoDSettings } from '@ignifx/2d';
 import { DeferredQueue } from '@ignifx/core';
 import { defineExtension } from '@ignifx/core';
 import { defineInputActions } from '@ignifx/input';
 import { defineSchema } from '@ignifx/core';
+import { defineSpriteAnimation } from '@ignifx/2d';
+import { defineSpriteAtlas } from '@ignifx/2d';
+import { defineTilemap } from '@ignifx/2d';
 import { DEG_TO_RAD } from '@ignifx/core';
 import { degToRad } from '@ignifx/core';
 import { deltaAngleDegrees } from '@ignifx/core';
@@ -248,6 +290,10 @@ import { describePhysicsMaterialFileFormat } from '@ignifx/physics';
 import { describeSceneFileFormat } from '@ignifx/core';
 import { describeSchema } from '@ignifx/core';
 import { describeSchemas } from '@ignifx/core';
+import { describeSpriteAnimationFormat } from '@ignifx/2d';
+import { describeSpriteAtlasFormat } from '@ignifx/2d';
+import { describeTilemapFormat } from '@ignifx/2d';
+import { describeTwoDSchemas } from '@ignifx/2d';
 import { DEVICE_KINDS } from '@ignifx/input';
 import { DeviceKind } from '@ignifx/input';
 import { DeviceLostInfo } from '@ignifx/core';
@@ -257,8 +303,11 @@ import { DiagnosticsOptions } from '@ignifx/core';
 import { Disconnect } from '@ignifx/core';
 import { DomSource } from '@ignifx/input';
 import { DomTarget } from '@ignifx/input';
+import { EdgeCollider2D } from '@ignifx/physics-2d';
 import { EMPTY_ASSET_MANIFEST } from '@ignifx/core';
+import { EMPTY_TILE_ID } from '@ignifx/2d';
 import { encodeProps } from '@ignifx/core';
+import { encodeTileRle } from '@ignifx/2d';
 import { encodeValue } from '@ignifx/core';
 import { Entity } from '@ignifx/core';
 import { EntityHandle } from '@ignifx/core';
@@ -294,10 +343,12 @@ import { f32 } from '@ignifx/core';
 import { f64 } from '@ignifx/core';
 import { FetchLike } from '@ignifx/core';
 import { FieldDefinition } from '@ignifx/core';
+import { fieldInstancesToRecord } from '@ignifx/2d';
 import { FieldKind } from '@ignifx/core';
 import { FieldOptions } from '@ignifx/core';
 import { FieldsOf } from '@ignifx/core';
 import { FieldSpec } from '@ignifx/core';
+import { findTileset } from '@ignifx/2d';
 import { FOG_MODE_NAMES } from '@ignifx/core';
 import { FONT_ASSET_TYPE } from '@ignifx/core';
 import { FONT_FILE_EXTENSIONS } from '@ignifx/core';
@@ -317,6 +368,8 @@ import { GamepadReader } from '@ignifx/input';
 import { GamepadRemap } from '@ignifx/input';
 import { GamepadSnapshot } from '@ignifx/input';
 import { generateUlid } from '@ignifx/core';
+import { gridAtlas } from '@ignifx/2d';
+import { GridAtlasImportOptions } from '@ignifx/2d';
 import { GroundMeshOptions } from '@ignifx/core';
 import { HAVOK_WASM_AUTO } from '@ignifx/physics';
 import { HeadlessBackend } from '@ignifx/audio';
@@ -329,6 +382,11 @@ import { IgnifxError } from '@ignifx/core';
 import { IgnifxErrorOptions } from '@ignifx/core';
 import { ImageProcessingEffectSettings } from '@ignifx/core';
 import { ImageProcessingSettings } from '@ignifx/core';
+import { importAsepriteAnimations } from '@ignifx/2d';
+import { importAsepriteAtlas } from '@ignifx/2d';
+import { importLdtkLevel } from '@ignifx/2d';
+import { importTexturePackerAtlas } from '@ignifx/2d';
+import { importTiledMap } from '@ignifx/2d';
 import { input } from '@ignifx/input';
 import { INPUT_ACTIONS_ASSET_TYPE } from '@ignifx/input';
 import { INPUT_ACTIONS_FILE_EXTENSIONS } from '@ignifx/input';
@@ -371,10 +429,13 @@ import { InstantiateSceneOptions } from '@ignifx/core';
 import { InteractiveRebindOptions } from '@ignifx/input';
 import { InteractiveRebindResult } from '@ignifx/input';
 import { INTERPOLATION_MODES } from '@ignifx/physics';
+import { INTERPOLATION_MODES_2D } from '@ignifx/physics-2d';
 import { InterpolationMode } from '@ignifx/physics';
+import { InterpolationMode2D } from '@ignifx/physics-2d';
 import { INVALID_HANDLE } from '@ignifx/core';
 import { inverseLerp } from '@ignifx/core';
 import { isAssetRef } from '@ignifx/core';
+import { isFullCellSolid } from '@ignifx/2d';
 import { isIgnifxError } from '@ignifx/core';
 import { isSceneFileHeader } from '@ignifx/core';
 import { isUlid } from '@ignifx/core';
@@ -395,6 +456,9 @@ import { layerMask } from '@ignifx/core';
 import { LayerMaskFieldSpec } from '@ignifx/core';
 import { LayersSettings } from '@ignifx/core';
 import { LayerTable } from '@ignifx/core';
+import { LDTK_DEFAULT_INTGRID_COLLIDERS } from '@ignifx/2d';
+import { LDTK_INTGRID_TILESET_NAME } from '@ignifx/2d';
+import { LdtkImportOptions } from '@ignifx/2d';
 import { lerp } from '@ignifx/core';
 import { lerpAngleDegrees } from '@ignifx/core';
 import { Light } from '@ignifx/core';
@@ -403,8 +467,10 @@ import { LightShadowSettings } from '@ignifx/core';
 import { LightType } from '@ignifx/core';
 import { LiteAnimationGroup } from '@ignifx/core';
 import { LiteAssetContainer } from '@ignifx/core';
+import { LiteAtlasTexture } from '@ignifx/2d';
 import { LiteAudioBus } from '@ignifx/audio';
 import { LiteAudioEngine } from '@ignifx/audio';
+import { LiteBounds2D } from '@ignifx/2d';
 import { LiteCamera } from '@ignifx/core';
 import { LiteEngine } from '@ignifx/core';
 import { LiteEnvironmentTextures } from '@ignifx/core';
@@ -419,6 +485,15 @@ import { LiteShadowGenerator } from '@ignifx/core';
 import { LiteSkeleton } from '@ignifx/core';
 import { LiteSoundBuffer } from '@ignifx/audio';
 import { LiteSpatialTarget } from '@ignifx/audio';
+import { LiteSprite2DHandle } from '@ignifx/2d';
+import { LiteSprite2DLayer } from '@ignifx/2d';
+import { LiteSprite2DView } from '@ignifx/2d';
+import { LiteSpriteAtlas } from '@ignifx/2d';
+import { LiteSpriteBlendMode } from '@ignifx/2d';
+import { LiteSpriteFrame } from '@ignifx/2d';
+import { LiteSpritePickInfo } from '@ignifx/2d';
+import { LiteSpriteRenderer } from '@ignifx/2d';
+import { LiteSpriteSampling } from '@ignifx/2d';
 import { LiteStandardMaterial } from '@ignifx/core';
 import { LiteStaticSound } from '@ignifx/audio';
 import { LiteStreamingSound } from '@ignifx/audio';
@@ -457,6 +532,7 @@ import { MaterialKind } from '@ignifx/core';
 import { MAX_LAYERS } from '@ignifx/core';
 import { MAX_ULID_TIME_MS } from '@ignifx/core';
 import { MemorySink } from '@ignifx/core';
+import { mergeTileCollisions } from '@ignifx/2d';
 import { MESH_ASSET_TYPE } from '@ignifx/core';
 import { MeshAsset } from '@ignifx/core';
 import { MeshAssetLiteHandles } from '@ignifx/core';
@@ -478,20 +554,24 @@ import { MutableQuat } from '@ignifx/core';
 import { MutableVec2 } from '@ignifx/core';
 import { MutableVec3 } from '@ignifx/core';
 import { MutableVec4 } from '@ignifx/core';
+import { normalisePath } from '@ignifx/2d';
 import { NumberFieldSpec } from '@ignifx/core';
 import { OneShotOptions } from '@ignifx/audio';
 import { OneShotVolume } from '@ignifx/audio';
 import { optional } from '@ignifx/core';
 import { OptionalFieldSpec } from '@ignifx/core';
 import { OverridePath } from '@ignifx/core';
+import { ParallaxLayer } from '@ignifx/2d';
 import { parseAudioBusesFile } from '@ignifx/audio';
 import { parseComposite } from '@ignifx/input';
 import { parseControlPath } from '@ignifx/input';
 import { ParsedControlPath } from '@ignifx/input';
 import { parseOverridePath } from '@ignifx/core';
 import { parsePhysicsMaterial } from '@ignifx/physics';
+import { parsePhysicsMaterial2D } from '@ignifx/physics-2d';
 import { parseProcessor } from '@ignifx/input';
 import { parseProcessors } from '@ignifx/input';
+import { parseSpriteFragment } from '@ignifx/2d';
 import { parseWavHeader } from '@ignifx/audio';
 import { PartialFieldsOf } from '@ignifx/core';
 import { PBR_TEXTURE_SLOTS } from '@ignifx/core';
@@ -503,9 +583,27 @@ import { PHASE_NAMES } from '@ignifx/core';
 import { PhaseIndex } from '@ignifx/core';
 import { PHASES } from '@ignifx/core';
 import { physics } from '@ignifx/physics';
+import { physics2d } from '@ignifx/physics-2d';
+import { physics2DError } from '@ignifx/physics-2d';
+import { Physics2DErrorCode } from '@ignifx/physics-2d';
+import { Physics2DErrorOptions } from '@ignifx/physics-2d';
+import { Physics2DMaterialValues } from '@ignifx/physics-2d';
+import { Physics2DOptions } from '@ignifx/physics-2d';
+import { Physics2DRapierHandles } from '@ignifx/physics-2d';
+import { Physics2DService } from '@ignifx/physics-2d';
+import { Physics2DSettings } from '@ignifx/physics-2d';
+import { physics2DSettingsSchema } from '@ignifx/physics-2d';
+import { PHYSICS_2D_DIAGNOSTICS_COUNTERS } from '@ignifx/physics-2d';
+import { PHYSICS_2D_DIAGNOSTICS_GROUP } from '@ignifx/physics-2d';
+import { PHYSICS_2D_ERROR_MESSAGES } from '@ignifx/physics-2d';
+import { PHYSICS_2D_SETTINGS_SECTION } from '@ignifx/physics-2d';
 import { PHYSICS_DIAGNOSTICS_COUNTERS } from '@ignifx/physics';
 import { PHYSICS_DIAGNOSTICS_GROUP } from '@ignifx/physics';
 import { PHYSICS_ERROR_MESSAGES } from '@ignifx/physics';
+import { PHYSICS_MATERIAL_2D_ASSET_TYPE } from '@ignifx/physics-2d';
+import { PHYSICS_MATERIAL_2D_FILE_EXTENSION } from '@ignifx/physics-2d';
+import { PHYSICS_MATERIAL_2D_FILE_FORMAT } from '@ignifx/physics-2d';
+import { PHYSICS_MATERIAL_2D_FORMAT_VERSION } from '@ignifx/physics-2d';
 import { PHYSICS_MATERIAL_ASSET_TYPE } from '@ignifx/physics';
 import { PHYSICS_MATERIAL_FILE_EXTENSION } from '@ignifx/physics';
 import { PHYSICS_MATERIAL_FILE_FORMAT } from '@ignifx/physics';
@@ -518,6 +616,7 @@ import { PhysicsErrorCode } from '@ignifx/physics';
 import { PhysicsErrorOptions } from '@ignifx/physics';
 import { PhysicsLiteHandles } from '@ignifx/physics';
 import { PhysicsMaterial } from '@ignifx/physics';
+import { PhysicsMaterial2D } from '@ignifx/physics-2d';
 import { PhysicsMaterialValues } from '@ignifx/physics';
 import { PhysicsOptions } from '@ignifx/physics';
 import { PhysicsService } from '@ignifx/physics';
@@ -525,13 +624,17 @@ import { PhysicsSettings } from '@ignifx/physics';
 import { physicsSettingsSchema } from '@ignifx/physics';
 import { pingPong } from '@ignifx/core';
 import { pinToDeviceSlot } from '@ignifx/input';
+import { pivotedPositionToRef } from '@ignifx/2d';
+import { pixelsToWorldToRef } from '@ignifx/2d';
 import { PlaneMeshOptions } from '@ignifx/core';
 import { PlatformInfo } from '@ignifx/core';
 import { PlatformKind } from '@ignifx/core';
+import { PlayClipOptions } from '@ignifx/2d';
 import { PlayerInput } from '@ignifx/input';
 import { PlayOptions } from '@ignifx/audio';
 import { PointerLock } from '@ignifx/input';
 import { PointerLockSettings } from '@ignifx/input';
+import { PolygonCollider2D } from '@ignifx/physics-2d';
 import { PostProcessStack } from '@ignifx/core';
 import { Processor } from '@ignifx/input';
 import { ProcessorKind } from '@ignifx/input';
@@ -542,13 +645,16 @@ import { quat } from '@ignifx/core';
 import { QUAT_IDENTITY } from '@ignifx/core';
 import { QuatLike } from '@ignifx/core';
 import { QueryOptions } from '@ignifx/physics';
+import { QueryOptions2D } from '@ignifx/physics-2d';
 import { QueryShape } from '@ignifx/physics';
 import { RAD_TO_DEG } from '@ignifx/core';
 import { radToDeg } from '@ignifx/core';
 import { RandomSource } from '@ignifx/core';
 import { Ray } from '@ignifx/core';
 import { RaycastHit } from '@ignifx/physics';
+import { RaycastHit2D } from '@ignifx/physics-2d';
 import { RayVector } from '@ignifx/core';
+import { readVec2 } from '@ignifx/2d';
 import { record } from '@ignifx/core';
 import { RecordFieldSpec } from '@ignifx/core';
 import { ReferenceDecoder } from '@ignifx/core';
@@ -572,8 +678,12 @@ import { RenderTaskTimings } from '@ignifx/core';
 import { repeat } from '@ignifx/core';
 import { RESERVED_LAYER_NAMES } from '@ignifx/core';
 import { resetFrameSample } from '@ignifx/core';
+import { resolveClipFrames } from '@ignifx/2d';
 import { resolveGamepadRemap } from '@ignifx/input';
+import { resolveRelative } from '@ignifx/2d';
 import { Rigidbody } from '@ignifx/physics';
+import { Rigidbody2D } from '@ignifx/physics-2d';
+import { Rigidbody2DRapierHandles } from '@ignifx/physics-2d';
 import { RigidbodyLiteHandles } from '@ignifx/physics';
 import { SCENE_ASSET_TYPE } from '@ignifx/core';
 import { SCENE_FILE_EXTENSIONS } from '@ignifx/core';
@@ -605,6 +715,7 @@ import { ScriptCallbacks } from '@ignifx/core';
 import { ScriptClassInfo } from '@ignifx/core';
 import { ScriptDefinition } from '@ignifx/core';
 import { ScriptStatics } from '@ignifx/core';
+import { selectCamera } from '@ignifx/2d';
 import { serializeComponent } from '@ignifx/core';
 import { serializeEntity } from '@ignifx/core';
 import { SerializeIssue } from '@ignifx/core';
@@ -619,6 +730,7 @@ import { SettingsInput } from '@ignifx/core';
 import { SHADOW_TECHNIQUES } from '@ignifx/core';
 import { ShadowTechniqueName } from '@ignifx/core';
 import { ShapeCastHit } from '@ignifx/physics';
+import { ShapeCastHit2D } from '@ignifx/physics-2d';
 import { sign } from '@ignifx/core';
 import { Signal } from '@ignifx/core';
 import { SignalHandler } from '@ignifx/core';
@@ -627,13 +739,58 @@ import { SignalOptions } from '@ignifx/core';
 import { SignalOwner } from '@ignifx/core';
 import { SimulatedEvent } from '@ignifx/input';
 import { SimulatedValue } from '@ignifx/input';
+import { sizeForZoom } from '@ignifx/2d';
 import { SmaaEffectSettings } from '@ignifx/core';
 import { smoothStep } from '@ignifx/core';
+import { snapPixel } from '@ignifx/2d';
+import { snapZoomToInteger } from '@ignifx/2d';
+import { SORTING_LAYER_ORDER_STEP } from '@ignifx/2d';
 import { SortingLayersSettings } from '@ignifx/core';
+import { SortingLayerTable } from '@ignifx/2d';
 import { SoundInstance } from '@ignifx/audio';
 import { SoundVoice } from '@ignifx/audio';
+import { spawnTilemapObjects } from '@ignifx/2d';
 import { SphereCollider } from '@ignifx/physics';
 import { SphereMeshOptions } from '@ignifx/core';
+import { SPRITE_ANIMATION_ASSET_TYPE } from '@ignifx/2d';
+import { SPRITE_ANIMATION_FILE_EXTENSIONS } from '@ignifx/2d';
+import { SPRITE_ANIMATION_FORMAT } from '@ignifx/2d';
+import { SPRITE_ANIMATION_FORMAT_VERSION } from '@ignifx/2d';
+import { SPRITE_ATLAS_ASSET_TYPE } from '@ignifx/2d';
+import { SPRITE_ATLAS_FILE_EXTENSIONS } from '@ignifx/2d';
+import { SPRITE_ATLAS_FORMAT } from '@ignifx/2d';
+import { SPRITE_ATLAS_FORMAT_VERSION } from '@ignifx/2d';
+import { SPRITE_BLEND_MODES } from '@ignifx/2d';
+import { SPRITE_EFFECT_KINDS } from '@ignifx/2d';
+import { SPRITE_FRAME_FRAGMENT_PREFIX } from '@ignifx/2d';
+import { SpriteAnimationAsset } from '@ignifx/2d';
+import { SpriteAnimationDefinition } from '@ignifx/2d';
+import { SpriteAnimationEvent } from '@ignifx/2d';
+import { spriteAnimationFileSchema } from '@ignifx/2d';
+import { SpriteAnimationInput } from '@ignifx/2d';
+import { spriteAnimationJsonSchema } from '@ignifx/2d';
+import { SpriteAnimator } from '@ignifx/2d';
+import { SpriteAsset } from '@ignifx/2d';
+import { SpriteAtlasAsset } from '@ignifx/2d';
+import { SpriteAtlasAssetLiteHandles } from '@ignifx/2d';
+import { SpriteAtlasDefinition } from '@ignifx/2d';
+import { spriteAtlasFileSchema } from '@ignifx/2d';
+import { SpriteAtlasInput } from '@ignifx/2d';
+import { spriteAtlasJsonSchema } from '@ignifx/2d';
+import { SpriteBlendName } from '@ignifx/2d';
+import { SpriteClip } from '@ignifx/2d';
+import { SpriteClipDefinition } from '@ignifx/2d';
+import { SpriteEffectKind } from '@ignifx/2d';
+import { SpriteFrameDefinition } from '@ignifx/2d';
+import { SpriteFrameInfo } from '@ignifx/2d';
+import { SpriteLayerEffect } from '@ignifx/2d';
+import { SpriteLayerEntry } from '@ignifx/2d';
+import { SpriteLayerKey } from '@ignifx/2d';
+import { spriteLayerKey } from '@ignifx/2d';
+import { SpriteLayerRegistry } from '@ignifx/2d';
+import { SpriteRenderer } from '@ignifx/2d';
+import { spriteRotationFromLite } from '@ignifx/2d';
+import { spriteRotationToLite } from '@ignifx/2d';
 import { STANDARD_TEXTURE_SLOTS } from '@ignifx/core';
 import { StandardMaterialDefinition } from '@ignifx/core';
 import { standardMaterialDefinition } from '@ignifx/core';
@@ -650,9 +807,42 @@ import { TEXTURE_ASSET_TYPE } from '@ignifx/core';
 import { TextureAsset } from '@ignifx/core';
 import { TextureAssetLiteHandles } from '@ignifx/core';
 import { TextureImportOptions } from '@ignifx/core';
+import { TexturePackerImportOptions } from '@ignifx/2d';
 import { THIRD_PARTY_ERROR_PREFIX } from '@ignifx/core';
+import { TileAnimationFrame } from '@ignifx/2d';
+import { TileChange } from '@ignifx/2d';
+import { TileColliderDefinition } from '@ignifx/2d';
+import { TileCollisionInfo } from '@ignifx/2d';
+import { tileCollisionInfo } from '@ignifx/2d';
+import { TileCollisionShape } from '@ignifx/2d';
+import { TileDefinition } from '@ignifx/2d';
+import { TiledImportOptions } from '@ignifx/2d';
+import { tiledPropertiesToRecord } from '@ignifx/2d';
+import { tileFrameName } from '@ignifx/2d';
+import { Tilemap } from '@ignifx/2d';
+import { TILEMAP_ASSET_TYPE } from '@ignifx/2d';
+import { TILEMAP_FILE_EXTENSIONS } from '@ignifx/2d';
+import { TILEMAP_FORMAT } from '@ignifx/2d';
+import { TILEMAP_FORMAT_VERSION } from '@ignifx/2d';
+import { TilemapAsset } from '@ignifx/2d';
+import { TilemapCollider2D } from '@ignifx/physics-2d';
+import { TilemapCollisionChunk } from '@ignifx/2d';
+import { TilemapCollisionData } from '@ignifx/2d';
+import { TilemapDefinition } from '@ignifx/2d';
+import { tilemapFileSchema } from '@ignifx/2d';
+import { TilemapInput } from '@ignifx/2d';
+import { tilemapJsonSchema } from '@ignifx/2d';
+import { TilemapLayerDefinition } from '@ignifx/2d';
+import { TilemapLayerInput } from '@ignifx/2d';
+import { TilemapObjectDefinition } from '@ignifx/2d';
+import { TilemapRenderer } from '@ignifx/2d';
+import { TileObjectContext } from '@ignifx/2d';
+import { TileObjectFactory } from '@ignifx/2d';
+import { TileRleData } from '@ignifx/2d';
+import { TilesetDefinition } from '@ignifx/2d';
 import { Time } from '@ignifx/core';
 import { TimeSettings } from '@ignifx/core';
+import { TINT_EFFECT_WGSL } from '@ignifx/2d';
 import { toJsonSchema } from '@ignifx/core';
 import { TONE_MAPPING_NAMES } from '@ignifx/core';
 import { ToneMappingCurve } from '@ignifx/core';
@@ -661,6 +851,25 @@ import { TOUCH_SLOTS } from '@ignifx/input';
 import { touchControlNames } from '@ignifx/input';
 import { Transform } from '@ignifx/core';
 import { TriggerEvent } from '@ignifx/physics';
+import { TriggerEvent2D } from '@ignifx/physics-2d';
+import { TWO_D_ANIMATION_ORDER } from '@ignifx/2d';
+import { TWO_D_ERROR_MESSAGES } from '@ignifx/2d';
+import { TWO_D_MODES } from '@ignifx/2d';
+import { TWO_D_SETTINGS_SECTION } from '@ignifx/2d';
+import { TWO_D_SYNC_ORDER } from '@ignifx/2d';
+import { twoD } from '@ignifx/2d';
+import { TwoDAnimationSystem } from '@ignifx/2d';
+import { twoDError } from '@ignifx/2d';
+import { TwoDErrorCode } from '@ignifx/2d';
+import { TwoDErrorOptions } from '@ignifx/2d';
+import { TwoDLiteHandles } from '@ignifx/2d';
+import { TwoDMode } from '@ignifx/2d';
+import { TwoDOptions } from '@ignifx/2d';
+import { TwoDPick } from '@ignifx/2d';
+import { TwoDService } from '@ignifx/2d';
+import { TwoDSettings } from '@ignifx/2d';
+import { twoDSettingsSchema } from '@ignifx/2d';
+import { TwoDSyncSystem } from '@ignifx/2d';
 import { u32 } from '@ignifx/core';
 import { UidRemap } from '@ignifx/core';
 import { UlidFactoryOptions } from '@ignifx/core';
@@ -672,6 +881,7 @@ import { Vec2 } from '@ignifx/core';
 import { vec2 } from '@ignifx/core';
 import { VEC2_ONE } from '@ignifx/core';
 import { VEC2_ZERO } from '@ignifx/core';
+import { Vec2Json } from '@ignifx/2d';
 import { Vec2Like } from '@ignifx/core';
 import { Vec3 } from '@ignifx/core';
 import { vec3 } from '@ignifx/core';
@@ -692,6 +902,7 @@ import { VelocityLimitSettings } from '@ignifx/physics';
 import { VERSION } from '@ignifx/core';
 import { VibrationActuatorLike } from '@ignifx/input';
 import { VibrationEffectParameters } from '@ignifx/input';
+import { viewRotationToLite } from '@ignifx/2d';
 import { VirtualDevice } from '@ignifx/input';
 import { VoiceHost } from '@ignifx/audio';
 import { VoiceRequest } from '@ignifx/audio';
@@ -704,8 +915,11 @@ import { waitWhile } from '@ignifx/core';
 import { WavHeader } from '@ignifx/audio';
 import { WebAudioBackend } from '@ignifx/audio';
 import { World } from '@ignifx/core';
+import { WorldBox } from '@ignifx/2d';
 import { WorldLiteHandles } from '@ignifx/core';
+import { worldToPixelsToRef } from '@ignifx/2d';
 import { wrapAngleDegrees } from '@ignifx/core';
+import { zoomForSize } from '@ignifx/2d';
 
 export { ActionDefinition }
 
@@ -716,6 +930,8 @@ export { ActionMapDefinition }
 export { ActionSetOptions }
 
 export { ActionVector }
+
+export { AnimatedTilemapSink }
 
 export { ANY_KEY_CONTROL }
 
@@ -738,6 +954,12 @@ export { AppSettings }
 export { array }
 
 export { ArrayFieldSpec }
+
+export { AsepriteAnimationImportOptions }
+
+export { asepriteFrameName }
+
+export { AsepriteImportOptions }
 
 export { assertNever }
 
@@ -895,7 +1117,11 @@ export { BloomEffectSettings }
 
 export { BODY_TYPES }
 
+export { BODY_TYPES_2D }
+
 export { BodyType }
+
+export { BodyType2D }
 
 export { bool }
 
@@ -903,11 +1129,17 @@ export { BoolFieldSpec }
 
 export { BoxCollider }
 
+export { BoxCollider2D }
+
 export { BoxMeshOptions }
 
 export { buildControls }
 
 export { Camera }
+
+export { Camera2D }
+
+export { Camera2DFollow }
 
 export { CameraProjection }
 
@@ -917,17 +1149,33 @@ export { CANVAS_ALPHA_MODES }
 
 export { CanvasAlphaMode }
 
+export { Capsule2DDirection }
+
+export { CAPSULE_2D_DIRECTIONS }
+
 export { CAPSULE_DIRECTIONS }
 
 export { CapsuleCollider }
+
+export { CapsuleCollider2D }
 
 export { CapsuleDirection }
 
 export { CapsuleMeshOptions }
 
+export { CHARACTER_SHAPES_2D }
+
 export { CharacterCollision }
 
+export { CharacterCollision2D }
+
 export { CharacterController }
+
+export { CharacterController2D }
+
+export { CharacterShape2D }
+
+export { CircleCollider2D }
 
 export { clamp }
 
@@ -941,17 +1189,29 @@ export { collectOverrides }
 
 export { Collider }
 
+export { Collider2D }
+
+export { collider2DFields }
+
 export { colliderFields }
 
 export { Collision }
 
+export { Collision2D }
+
 export { COLLISION_EVENT_MODES }
+
+export { COLLISION_EVENT_MODES_2D }
 
 export { COLLISION_IDENTITY_MODES }
 
 export { CollisionEventMode }
 
+export { CollisionEventMode2D }
+
 export { CollisionIdentityMode }
+
+export { CollisionMergeOptions }
 
 export { Color }
 
@@ -960,6 +1220,10 @@ export { color }
 export { ColorFieldSpec }
 
 export { ColorLike }
+
+export { COMBINE_RULES }
+
+export { CombineRule }
 
 export { Component }
 
@@ -1002,6 +1266,8 @@ export { ConsoleLike }
 export { ConsoleSinkOptions }
 
 export { ContactPoint }
+
+export { ContactPoint2D }
 
 export { ControlDescriptor }
 
@@ -1091,6 +1357,8 @@ export { createNavigatorGamepadReader }
 
 export { createPerformanceClock }
 
+export { createPhysicsMaterial2DLoader }
+
 export { createPhysicsMaterialLoader }
 
 export { createPointerDevice }
@@ -1105,7 +1373,13 @@ export { createSeededRandom }
 
 export { createServiceKey }
 
+export { createSpriteAnimationLoader }
+
+export { createSpriteAtlasLoader }
+
 export { createTextureLoader }
+
+export { createTilemapLoader }
 
 export { createTouchDevice }
 
@@ -1137,6 +1411,8 @@ export { decodeProps }
 
 export { DecodeResult }
 
+export { decodeTileRle }
+
 export { decodeValue }
 
 export { DEFAULT_ASSET_CONCURRENCY }
@@ -1147,11 +1423,23 @@ export { DEFAULT_AUDIO_BUSES }
 
 export { DEFAULT_BRDF_LUT_ADDRESS }
 
+export { DEFAULT_CHUNK_SIZE }
+
+export { DEFAULT_CLIP_FPS }
+
 export { DEFAULT_LAYER }
 
 export { DEFAULT_MEMORY_SINK_LIMIT }
 
+export { DEFAULT_ORTHOGRAPHIC_SIZE }
+
 export { DEFAULT_PAUSABLE_BUSES }
+
+export { DEFAULT_PIXELS_PER_UNIT }
+
+export { DEFAULT_REFERENCE_RESOLUTION }
+
+export { DEFAULT_SORTING_LAYER }
 
 export { DEFAULT_SOUND_BUS }
 
@@ -1159,9 +1447,13 @@ export { defaultAudioSettings }
 
 export { defaultInputSettings }
 
+export { defaultPhysics2DSettings }
+
 export { defaultPhysicsSettings }
 
 export { defaultRenderingSettings }
+
+export { defaultTwoDSettings }
 
 export { DeferredQueue }
 
@@ -1170,6 +1462,12 @@ export { defineExtension }
 export { defineInputActions }
 
 export { defineSchema }
+
+export { defineSpriteAnimation }
+
+export { defineSpriteAtlas }
+
+export { defineTilemap }
 
 export { DEG_TO_RAD }
 
@@ -1195,6 +1493,14 @@ export { describeSchema }
 
 export { describeSchemas }
 
+export { describeSpriteAnimationFormat }
+
+export { describeSpriteAtlasFormat }
+
+export { describeTilemapFormat }
+
+export { describeTwoDSchemas }
+
 export { DEVICE_KINDS }
 
 export { DeviceKind }
@@ -1213,9 +1519,15 @@ export { DomSource }
 
 export { DomTarget }
 
+export { EdgeCollider2D }
+
 export { EMPTY_ASSET_MANIFEST }
 
+export { EMPTY_TILE_ID }
+
 export { encodeProps }
+
+export { encodeTileRle }
 
 export { encodeValue }
 
@@ -1287,6 +1599,8 @@ export { FetchLike }
 
 export { FieldDefinition }
 
+export { fieldInstancesToRecord }
+
 export { FieldKind }
 
 export { FieldOptions }
@@ -1294,6 +1608,8 @@ export { FieldOptions }
 export { FieldsOf }
 
 export { FieldSpec }
+
+export { findTileset }
 
 export { FOG_MODE_NAMES }
 
@@ -1333,6 +1649,10 @@ export { GamepadSnapshot }
 
 export { generateUlid }
 
+export { gridAtlas }
+
+export { GridAtlasImportOptions }
+
 export { GroundMeshOptions }
 
 export { HAVOK_WASM_AUTO }
@@ -1356,6 +1676,16 @@ export { IgnifxErrorOptions }
 export { ImageProcessingEffectSettings }
 
 export { ImageProcessingSettings }
+
+export { importAsepriteAnimations }
+
+export { importAsepriteAtlas }
+
+export { importLdtkLevel }
+
+export { importTexturePackerAtlas }
+
+export { importTiledMap }
 
 export { input }
 
@@ -1441,13 +1771,19 @@ export { InteractiveRebindResult }
 
 export { INTERPOLATION_MODES }
 
+export { INTERPOLATION_MODES_2D }
+
 export { InterpolationMode }
+
+export { InterpolationMode2D }
 
 export { INVALID_HANDLE }
 
 export { inverseLerp }
 
 export { isAssetRef }
+
+export { isFullCellSolid }
 
 export { isIgnifxError }
 
@@ -1489,6 +1825,12 @@ export { LayersSettings }
 
 export { LayerTable }
 
+export { LDTK_DEFAULT_INTGRID_COLLIDERS }
+
+export { LDTK_INTGRID_TILESET_NAME }
+
+export { LdtkImportOptions }
+
 export { lerp }
 
 export { lerpAngleDegrees }
@@ -1505,9 +1847,13 @@ export { LiteAnimationGroup }
 
 export { LiteAssetContainer }
 
+export { LiteAtlasTexture }
+
 export { LiteAudioBus }
 
 export { LiteAudioEngine }
+
+export { LiteBounds2D }
 
 export { LiteCamera }
 
@@ -1536,6 +1882,24 @@ export { LiteSkeleton }
 export { LiteSoundBuffer }
 
 export { LiteSpatialTarget }
+
+export { LiteSprite2DHandle }
+
+export { LiteSprite2DLayer }
+
+export { LiteSprite2DView }
+
+export { LiteSpriteAtlas }
+
+export { LiteSpriteBlendMode }
+
+export { LiteSpriteFrame }
+
+export { LiteSpritePickInfo }
+
+export { LiteSpriteRenderer }
+
+export { LiteSpriteSampling }
 
 export { LiteStandardMaterial }
 
@@ -1613,6 +1977,8 @@ export { MAX_ULID_TIME_MS }
 
 export { MemorySink }
 
+export { mergeTileCollisions }
+
 export { MESH_ASSET_TYPE }
 
 export { MeshAsset }
@@ -1655,6 +2021,8 @@ export { MutableVec3 }
 
 export { MutableVec4 }
 
+export { normalisePath }
+
 export { NumberFieldSpec }
 
 export { OneShotOptions }
@@ -1666,6 +2034,8 @@ export { optional }
 export { OptionalFieldSpec }
 
 export { OverridePath }
+
+export { ParallaxLayer }
 
 export { parseAudioBusesFile }
 
@@ -1679,9 +2049,13 @@ export { parseOverridePath }
 
 export { parsePhysicsMaterial }
 
+export { parsePhysicsMaterial2D }
+
 export { parseProcessor }
 
 export { parseProcessors }
+
+export { parseSpriteFragment }
 
 export { parseWavHeader }
 
@@ -1705,11 +2079,47 @@ export { PHASES }
 
 export { physics }
 
+export { physics2d }
+
+export { physics2DError }
+
+export { Physics2DErrorCode }
+
+export { Physics2DErrorOptions }
+
+export { Physics2DMaterialValues }
+
+export { Physics2DOptions }
+
+export { Physics2DRapierHandles }
+
+export { Physics2DService }
+
+export { Physics2DSettings }
+
+export { physics2DSettingsSchema }
+
+export { PHYSICS_2D_DIAGNOSTICS_COUNTERS }
+
+export { PHYSICS_2D_DIAGNOSTICS_GROUP }
+
+export { PHYSICS_2D_ERROR_MESSAGES }
+
+export { PHYSICS_2D_SETTINGS_SECTION }
+
 export { PHYSICS_DIAGNOSTICS_COUNTERS }
 
 export { PHYSICS_DIAGNOSTICS_GROUP }
 
 export { PHYSICS_ERROR_MESSAGES }
+
+export { PHYSICS_MATERIAL_2D_ASSET_TYPE }
+
+export { PHYSICS_MATERIAL_2D_FILE_EXTENSION }
+
+export { PHYSICS_MATERIAL_2D_FILE_FORMAT }
+
+export { PHYSICS_MATERIAL_2D_FORMAT_VERSION }
 
 export { PHYSICS_MATERIAL_ASSET_TYPE }
 
@@ -1735,6 +2145,8 @@ export { PhysicsLiteHandles }
 
 export { PhysicsMaterial }
 
+export { PhysicsMaterial2D }
+
 export { PhysicsMaterialValues }
 
 export { PhysicsOptions }
@@ -1749,11 +2161,17 @@ export { pingPong }
 
 export { pinToDeviceSlot }
 
+export { pivotedPositionToRef }
+
+export { pixelsToWorldToRef }
+
 export { PlaneMeshOptions }
 
 export { PlatformInfo }
 
 export { PlatformKind }
+
+export { PlayClipOptions }
 
 export { PlayerInput }
 
@@ -1762,6 +2180,8 @@ export { PlayOptions }
 export { PointerLock }
 
 export { PointerLockSettings }
+
+export { PolygonCollider2D }
 
 export { PostProcessStack }
 
@@ -1783,6 +2203,8 @@ export { QuatLike }
 
 export { QueryOptions }
 
+export { QueryOptions2D }
+
 export { QueryShape }
 
 export { RAD_TO_DEG }
@@ -1795,7 +2217,11 @@ export { Ray }
 
 export { RaycastHit }
 
+export { RaycastHit2D }
+
 export { RayVector }
+
+export { readVec2 }
 
 export { record }
 
@@ -1843,9 +2269,17 @@ export { RESERVED_LAYER_NAMES }
 
 export { resetFrameSample }
 
+export { resolveClipFrames }
+
 export { resolveGamepadRemap }
 
+export { resolveRelative }
+
 export { Rigidbody }
+
+export { Rigidbody2D }
+
+export { Rigidbody2DRapierHandles }
 
 export { RigidbodyLiteHandles }
 
@@ -1909,6 +2343,8 @@ export { ScriptDefinition }
 
 export { ScriptStatics }
 
+export { selectCamera }
+
 export { serializeComponent }
 
 export { serializeEntity }
@@ -1937,6 +2373,8 @@ export { ShadowTechniqueName }
 
 export { ShapeCastHit }
 
+export { ShapeCastHit2D }
+
 export { sign }
 
 export { Signal }
@@ -1953,19 +2391,109 @@ export { SimulatedEvent }
 
 export { SimulatedValue }
 
+export { sizeForZoom }
+
 export { SmaaEffectSettings }
 
 export { smoothStep }
 
+export { snapPixel }
+
+export { snapZoomToInteger }
+
+export { SORTING_LAYER_ORDER_STEP }
+
 export { SortingLayersSettings }
+
+export { SortingLayerTable }
 
 export { SoundInstance }
 
 export { SoundVoice }
 
+export { spawnTilemapObjects }
+
 export { SphereCollider }
 
 export { SphereMeshOptions }
+
+export { SPRITE_ANIMATION_ASSET_TYPE }
+
+export { SPRITE_ANIMATION_FILE_EXTENSIONS }
+
+export { SPRITE_ANIMATION_FORMAT }
+
+export { SPRITE_ANIMATION_FORMAT_VERSION }
+
+export { SPRITE_ATLAS_ASSET_TYPE }
+
+export { SPRITE_ATLAS_FILE_EXTENSIONS }
+
+export { SPRITE_ATLAS_FORMAT }
+
+export { SPRITE_ATLAS_FORMAT_VERSION }
+
+export { SPRITE_BLEND_MODES }
+
+export { SPRITE_EFFECT_KINDS }
+
+export { SPRITE_FRAME_FRAGMENT_PREFIX }
+
+export { SpriteAnimationAsset }
+
+export { SpriteAnimationDefinition }
+
+export { SpriteAnimationEvent }
+
+export { spriteAnimationFileSchema }
+
+export { SpriteAnimationInput }
+
+export { spriteAnimationJsonSchema }
+
+export { SpriteAnimator }
+
+export { SpriteAsset }
+
+export { SpriteAtlasAsset }
+
+export { SpriteAtlasAssetLiteHandles }
+
+export { SpriteAtlasDefinition }
+
+export { spriteAtlasFileSchema }
+
+export { SpriteAtlasInput }
+
+export { spriteAtlasJsonSchema }
+
+export { SpriteBlendName }
+
+export { SpriteClip }
+
+export { SpriteClipDefinition }
+
+export { SpriteEffectKind }
+
+export { SpriteFrameDefinition }
+
+export { SpriteFrameInfo }
+
+export { SpriteLayerEffect }
+
+export { SpriteLayerEntry }
+
+export { SpriteLayerKey }
+
+export { spriteLayerKey }
+
+export { SpriteLayerRegistry }
+
+export { SpriteRenderer }
+
+export { spriteRotationFromLite }
+
+export { spriteRotationToLite }
 
 export { STANDARD_TEXTURE_SLOTS }
 
@@ -1999,11 +2527,77 @@ export { TextureAssetLiteHandles }
 
 export { TextureImportOptions }
 
+export { TexturePackerImportOptions }
+
 export { THIRD_PARTY_ERROR_PREFIX }
+
+export { TileAnimationFrame }
+
+export { TileChange }
+
+export { TileColliderDefinition }
+
+export { TileCollisionInfo }
+
+export { tileCollisionInfo }
+
+export { TileCollisionShape }
+
+export { TileDefinition }
+
+export { TiledImportOptions }
+
+export { tiledPropertiesToRecord }
+
+export { tileFrameName }
+
+export { Tilemap }
+
+export { TILEMAP_ASSET_TYPE }
+
+export { TILEMAP_FILE_EXTENSIONS }
+
+export { TILEMAP_FORMAT }
+
+export { TILEMAP_FORMAT_VERSION }
+
+export { TilemapAsset }
+
+export { TilemapCollider2D }
+
+export { TilemapCollisionChunk }
+
+export { TilemapCollisionData }
+
+export { TilemapDefinition }
+
+export { tilemapFileSchema }
+
+export { TilemapInput }
+
+export { tilemapJsonSchema }
+
+export { TilemapLayerDefinition }
+
+export { TilemapLayerInput }
+
+export { TilemapObjectDefinition }
+
+export { TilemapRenderer }
+
+export { TileObjectContext }
+
+export { TileObjectFactory }
+
+export { TileRleData }
+
+export { TilesetDefinition }
 
 export { Time }
 
 export { TimeSettings }
+
+export { TINT_EFFECT_WGSL }
 
 export { toJsonSchema }
 
@@ -2020,6 +2614,44 @@ export { touchControlNames }
 export { Transform }
 
 export { TriggerEvent }
+
+export { TriggerEvent2D }
+
+export { TWO_D_ANIMATION_ORDER }
+
+export { TWO_D_ERROR_MESSAGES }
+
+export { TWO_D_MODES }
+
+export { TWO_D_SETTINGS_SECTION }
+
+export { TWO_D_SYNC_ORDER }
+
+export { twoD }
+
+export { TwoDAnimationSystem }
+
+export { twoDError }
+
+export { TwoDErrorCode }
+
+export { TwoDErrorOptions }
+
+export { TwoDLiteHandles }
+
+export { TwoDMode }
+
+export { TwoDOptions }
+
+export { TwoDPick }
+
+export { TwoDService }
+
+export { TwoDSettings }
+
+export { twoDSettingsSchema }
+
+export { TwoDSyncSystem }
 
 export { u32 }
 
@@ -2042,6 +2674,8 @@ export { vec2 }
 export { VEC2_ONE }
 
 export { VEC2_ZERO }
+
+export { Vec2Json }
 
 export { Vec2Like }
 
@@ -2083,6 +2717,8 @@ export { VibrationActuatorLike }
 
 export { VibrationEffectParameters }
 
+export { viewRotationToLite }
+
 export { VirtualDevice }
 
 export { VoiceHost }
@@ -2107,9 +2743,15 @@ export { WebAudioBackend }
 
 export { World }
 
+export { WorldBox }
+
 export { WorldLiteHandles }
 
+export { worldToPixelsToRef }
+
 export { wrapAngleDegrees }
+
+export { zoomForSize }
 
 // (No @packageDocumentation comment for this package)
 

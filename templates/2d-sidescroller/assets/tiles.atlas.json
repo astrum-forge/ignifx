@@ -1,0 +1,65 @@
+{
+  "format": "ignifx.spriteatlas",
+  "formatVersion": 1,
+  "image": "/tiles.png",
+  "sampling": "nearest",
+  "premultipliedAlpha": false,
+  "frames": [
+    {
+      "name": "ground_top",
+      "x": 1,
+      "y": 1,
+      "w": 16,
+      "h": 16
+    },
+    {
+      "name": "dirt",
+      "x": 19,
+      "y": 1,
+      "w": 16,
+      "h": 16
+    },
+    {
+      "name": "slope_up",
+      "x": 37,
+      "y": 1,
+      "w": 16,
+      "h": 16
+    },
+    {
+      "name": "slope_down",
+      "x": 55,
+      "y": 1,
+      "w": 16,
+      "h": 16
+    },
+    {
+      "name": "platform",
+      "x": 73,
+      "y": 1,
+      "w": 16,
+      "h": 16
+    },
+    {
+      "name": "brick",
+      "x": 91,
+      "y": 1,
+      "w": 16,
+      "h": 16
+    },
+    {
+      "name": "dirt_left",
+      "x": 109,
+      "y": 1,
+      "w": 16,
+      "h": 16
+    },
+    {
+      "name": "dirt_right",
+      "x": 127,
+      "y": 1,
+      "w": 16,
+      "h": 16
+    }
+  ]
+}

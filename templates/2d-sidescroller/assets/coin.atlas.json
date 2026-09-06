@@ -1,0 +1,51 @@
+{
+  "format": "ignifx.spriteatlas",
+  "formatVersion": 1,
+  "image": "/coin.png",
+  "sampling": "nearest",
+  "premultipliedAlpha": false,
+  "frames": [
+    {
+      "name": "spin_0",
+      "x": 1,
+      "y": 1,
+      "w": 16,
+      "h": 16
+    },
+    {
+      "name": "spin_1",
+      "x": 19,
+      "y": 1,
+      "w": 16,
+      "h": 16
+    },
+    {
+      "name": "spin_2",
+      "x": 37,
+      "y": 1,
+      "w": 16,
+      "h": 16
+    },
+    {
+      "name": "spin_3",
+      "x": 55,
+      "y": 1,
+      "w": 16,
+      "h": 16
+    },
+    {
+      "name": "spin_4",
+      "x": 73,
+      "y": 1,
+      "w": 16,
+      "h": 16
+    },
+    {
+      "name": "spin_5",
+      "x": 91,
+      "y": 1,
+      "w": 16,
+      "h": 16
+    }
+  ]
+}

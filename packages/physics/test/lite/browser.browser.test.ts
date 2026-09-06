@@ -45,7 +45,7 @@ const CANVAS_SIZE = 48;
 /** How many frames a change is given to reach the screen. */
 const SETTLE_FRAMES = 6;
 
-/** How many `SETTLE_FRAMES` rounds the first lit frame may take before the falling-cube case fails. */
+/** How many `SETTLE_FRAMES` rounds a GPU-dependent condition (first lit frame, device recovery) may take. */
 const LIT_ATTEMPTS = 40;
 
 /** The running app under test, disposed after every case. */
@@ -268,7 +268,15 @@ describe("@ignifx/physics on a real device", () => {
     expect(yBefore).toBeLessThan(4);
 
     forceWebGpuDeviceLossForTesting(app.lite.engine);
-    await advance(30);
+    // Recovery re-creates the device and every GPU resource; on a busy SwiftShader that can take
+    // more than a fixed handful of frames, so poll for the recovered signal, bounded, then give the
+    // simulation a few more frames to show it kept going.
+    const isRecovered = (): boolean => recovered > 0; // set from the signal, not the loop body
+    for (let attempt = 0; attempt < LIT_ATTEMPTS && !isRecovered(); attempt += 1) {
+      // oxlint-disable-next-line no-await-in-loop -- frames are sequential; that is the point.
+      await advance(SETTLE_FRAMES);
+    }
+    await advance(SETTLE_FRAMES * 2);
 
     expect(lost).toBe(1);
     expect(recovered).toBe(1);

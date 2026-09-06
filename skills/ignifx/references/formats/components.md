@@ -43,6 +43,22 @@ A box collision shape, sized in local units and scaled by the entity.
 | `layerOverride` | `str` | `""` |  |
 | `size` | `vec3` | `[1,1,1]` |  |
 
+## BoxCollider2D (`ignifx/BoxCollider2D`)
+
+An axis-aligned box, sized in local metres and scaled by the entity.
+
+| Field | Kind | Default | Description |
+|---|---|---|---|
+| `offset` | `vec2` | `[0,0]` |  |
+| `isTrigger` | `bool` | `false` |  |
+| `material` | `asset` | `null` |  |
+| `inlineMaterial` | `optional` | `null` |  |
+| `frictionCombine` | `enum` | `"average"` |  |
+| `restitutionCombine` | `enum` | `"average"` |  |
+| `oneWay` | `bool` | `false` |  |
+| `layerOverride` | `str` | `""` |  |
+| `size` | `vec2` | `[1,1]` |  |
+
 ## Camera (`ignifx/Camera`)
 
 The camera an entity renders the world through; the entity's transform is the view.
@@ -57,6 +73,23 @@ The camera an entity renders the world through; the entity's transform is the vi
 | `viewport` | `record` | `{"x":0,"y":0,"width":1,"height":1}` | Normalized viewport; y is measured from the bottom. |
 | `clearColor` | `optional` | `null` | Overrides the scene clear colour while this camera renders. |
 | `priority` | `i32` | `0` | The enabled camera with the highest priority renders. |
+
+## Camera2D (`ignifx/Camera2D`)
+
+The 2D camera: orthographic size in metres, pixel-perfect snapping, bounds, and follow fields.
+
+| Field | Kind | Default | Description |
+|---|---|---|---|
+| `orthographicSize` | `f32` | `5` | Half the viewport height, in metres. |
+| `pixelPerfect` | `bool` | `false` | Snap zoom to an integer and positions to whole pixels. |
+| `referenceResolution` | `vec2` | `[640,360]` | The design resolution a pixel-perfect camera fits an integer zoom to. |
+| `boundsMin` | `optional` | `null` | The lower bound of the camera's travel, in metres. |
+| `boundsMax` | `optional` | `null` | The upper bound of the camera's travel, in metres. |
+| `follow` | `entityRef` | `null` | The entity Camera2DFollow tracks. |
+| `followDamping` | `f32` | `0.15` | Seconds the follow takes to catch up; 0 is rigid. |
+| `followOffset` | `vec2` | `[0,0]` | A constant offset added to the followed position. |
+| `deadZone` | `vec2` | `[0,0]` | Half-size of the rectangle the target moves in freely. |
+| `priority` | `i32` | `0` | Highest enabled camera wins. |
 
 ## CapsuleCollider (`ignifx/CapsuleCollider`)
 
@@ -73,6 +106,24 @@ A capsule collision shape standing along X, Y, or Z.
 | `height` | `f32` | `2` |  |
 | `direction` | `enum` | `"y"` |  |
 
+## CapsuleCollider2D (`ignifx/CapsuleCollider2D`)
+
+A capsule standing along X or Y.
+
+| Field | Kind | Default | Description |
+|---|---|---|---|
+| `offset` | `vec2` | `[0,0]` |  |
+| `isTrigger` | `bool` | `false` |  |
+| `material` | `asset` | `null` |  |
+| `inlineMaterial` | `optional` | `null` |  |
+| `frictionCombine` | `enum` | `"average"` |  |
+| `restitutionCombine` | `enum` | `"average"` |  |
+| `oneWay` | `bool` | `false` |  |
+| `layerOverride` | `str` | `""` |  |
+| `radius` | `f32` | `0.25` |  |
+| `height` | `f32` | `1` |  |
+| `direction` | `enum` | `"y"` |  |
+
 ## CharacterController (`ignifx/CharacterController`)
 
 A kinematic capsule with collide-and-slide, support detection, and body pushing.
@@ -87,6 +138,40 @@ A kinematic capsule with collide-and-slide, support detection, and body pushing.
 | `pushStrength` | `f32` | `1` |  |
 | `interpolation` | `enum` | `"interpolate"` |  |
 
+## CharacterController2D (`ignifx/CharacterController2D`)
+
+A kinematic character with collide-and-slide, slopes, autostep, and snap-to-ground.
+
+| Field | Kind | Default | Description |
+|---|---|---|---|
+| `shape` | `enum` | `"capsule"` |  |
+| `radius` | `f32` | `0.25` |  |
+| `height` | `f32` | `1` |  |
+| `offset` | `vec2` | `[0,0]` |  |
+| `slopeLimit` | `f32` | `45` |  |
+| `stepOffset` | `f32` | `0` |  |
+| `snapToGround` | `f32` | `0` |  |
+| `skinWidth` | `f32` | `0.01` |  |
+| `onOneWayPlatforms` | `bool` | `true` |  |
+| `pushBodies` | `bool` | `false` |  |
+| `interpolation` | `enum` | `"interpolate"` |  |
+
+## CircleCollider2D (`ignifx/CircleCollider2D`)
+
+A circle; the larger scale axis wins.
+
+| Field | Kind | Default | Description |
+|---|---|---|---|
+| `offset` | `vec2` | `[0,0]` |  |
+| `isTrigger` | `bool` | `false` |  |
+| `material` | `asset` | `null` |  |
+| `inlineMaterial` | `optional` | `null` |  |
+| `frictionCombine` | `enum` | `"average"` |  |
+| `restitutionCombine` | `enum` | `"average"` |  |
+| `oneWay` | `bool` | `false` |  |
+| `layerOverride` | `str` | `""` |  |
+| `radius` | `f32` | `0.5` |  |
+
 ## CylinderCollider (`ignifx/CylinderCollider`)
 
 A cylinder collision shape standing along Y.
@@ -100,6 +185,22 @@ A cylinder collision shape standing along Y.
 | `layerOverride` | `str` | `""` |  |
 | `radius` | `f32` | `0.5` |  |
 | `height` | `f32` | `2` |  |
+
+## EdgeCollider2D (`ignifx/EdgeCollider2D`)
+
+An open chain of line segments — a platformer's ground contour.
+
+| Field | Kind | Default | Description |
+|---|---|---|---|
+| `offset` | `vec2` | `[0,0]` |  |
+| `isTrigger` | `bool` | `false` |  |
+| `material` | `asset` | `null` |  |
+| `inlineMaterial` | `optional` | `null` |  |
+| `frictionCombine` | `enum` | `"average"` |  |
+| `restitutionCombine` | `enum` | `"average"` |  |
+| `oneWay` | `bool` | `false` |  |
+| `layerOverride` | `str` | `""` |  |
+| `points` | `array` | `[]` |  |
 
 ## Environment (`ignifx/Environment`)
 
@@ -203,6 +304,19 @@ A playlist of music tracks with crossfading, routed to the Music bus.
 | `loopTrack` | `bool` | `false` | Repeat the current track instead of ending it. |
 | `crossfadeSeconds` | `f32` | `1.5` | How long a crossfade takes, in seconds. |
 
+## ParallaxLayer (`ignifx/ParallaxLayer`)
+
+Scrolls one sorting layer at a fraction of the camera's speed.
+
+| Field | Kind | Default | Description |
+|---|---|---|---|
+| `sortingLayer` | `str` | `"Default"` | Which sorting layer scrolls slowly. |
+| `factor` | `vec2` | `[0.5,1]` | Fraction of the camera's motion the layer follows. |
+| `repeatX` | `bool` | `false` | Tile the layer horizontally across the camera's view. |
+| `repeatY` | `bool` | `false` | Tile the layer vertically. |
+| `repeatWidth` | `f32` | `0` | World width of one repetition, in metres. |
+| `repeatHeight` | `f32` | `0` | World height of one repetition, in metres. |
+
 ## PlayerInput (`ignifx/PlayerInput`)
 
 Binds an entity to an input actions document and one device slot, for local multiplayer.
@@ -212,6 +326,22 @@ Binds an entity to an input actions document and one device slot, for local mult
 | `actions` | `asset` | `null` |  |
 | `deviceSlot` | `i32` | `0` |  |
 | `scheme` | `str` | `""` |  |
+
+## PolygonCollider2D (`ignifx/PolygonCollider2D`)
+
+The convex hull of a point list, in local metres.
+
+| Field | Kind | Default | Description |
+|---|---|---|---|
+| `offset` | `vec2` | `[0,0]` |  |
+| `isTrigger` | `bool` | `false` |  |
+| `material` | `asset` | `null` |  |
+| `inlineMaterial` | `optional` | `null` |  |
+| `frictionCombine` | `enum` | `"average"` |  |
+| `restitutionCombine` | `enum` | `"average"` |  |
+| `oneWay` | `bool` | `false` |  |
+| `layerOverride` | `str` | `""` |  |
+| `points` | `array` | `[]` |  |
 
 ## PostProcessStack (`ignifx/PostProcessStack`)
 
@@ -237,6 +367,21 @@ Makes an entity's colliders a dynamic, kinematic, or static Havok body.
 | `collisionEvents` | `enum` | `"auto"` |  |
 | `kinematicSync` | `enum` | `"teleport"` |  |
 
+## Rigidbody2D (`ignifx/Rigidbody2D`)
+
+Makes an entity's 2D colliders a dynamic, kinematic, or static Rapier body.
+
+| Field | Kind | Default | Description |
+|---|---|---|---|
+| `bodyType` | `enum` | `"dynamic"` |  |
+| `mass` | `f32` | `1` |  |
+| `gravityScale` | `f32` | `1` |  |
+| `linearDamping` | `f32` | `0` |  |
+| `angularDamping` | `f32` | `0.05` |  |
+| `freezeRotation` | `bool` | `false` |  |
+| `interpolation` | `enum` | `"interpolate"` |  |
+| `collisionEvents` | `enum` | `"auto"` |  |
+
 ## SphereCollider (`ignifx/SphereCollider`)
 
 A sphere collision shape; the largest scale axis wins.
@@ -249,3 +394,78 @@ A sphere collision shape; the largest scale axis wins.
 | `inlineMaterial` | `optional` | `null` |  |
 | `layerOverride` | `str` | `""` |  |
 | `radius` | `f32` | `0.5` |  |
+
+## SpriteAnimator (`ignifx/SpriteAnimator`)
+
+Plays a clip of atlas frames on ignifx's clock, respecting timeScale and pause.
+
+| Field | Kind | Default | Description |
+|---|---|---|---|
+| `animations` | `asset` | `null` | The .spriteanim.json document holding the clips. |
+| `defaultClip` | `str` | `""` | Which clip to start on; empty plays the document's first. |
+| `playOnAwake` | `bool` | `true` | Start the default clip as soon as the document has loaded. |
+| `speed` | `f32` | `1` | A multiplier on each clip's own frame rate. |
+
+## SpriteLayerEffect (`ignifx/SpriteLayerEffect`)
+
+A per-layer WGSL fragment effect with an fx.params vec4.
+
+| Field | Kind | Default | Description |
+|---|---|---|---|
+| `sortingLayer` | `str` | `"Default"` | Which sorting layer the effect applies to. |
+| `kind` | `enum` | `"tint"` | Which shader to install. |
+| `tint` | `color` | `[1,1,1,1]` | The colour the tint effect multiplies by. |
+| `params` | `vec4` | `[0,0,0,0]` | The fx.params vec4 a custom shader reads. |
+| `shader` | `str` | `""` | The WGSL fragment body a custom effect installs. |
+
+## SpriteRenderer (`ignifx/SpriteRenderer`)
+
+One sprite drawn from one frame of one atlas, on one sorting layer.
+
+| Field | Kind | Default | Description |
+|---|---|---|---|
+| `sprite` | `asset` | `null` | The atlas this sprite draws a frame of. |
+| `color` | `color` | `[1,1,1,1]` | Tint multiplied into every texel. |
+| `flipX` | `bool` | `false` | Mirror horizontally. |
+| `flipY` | `bool` | `false` | Mirror vertically. |
+| `sortingLayer` | `str` | `"Default"` | Which sorting layer the sprite draws on. |
+| `orderInLayer` | `i32` | `0` | Sub-order within the sorting layer; higher draws in front. |
+| `blend` | `enum` | `"alpha"` | How the colour combines with the background. |
+| `pivotOverride` | `optional` | `null` | Overrides the frame's own pivot, in [0,1] of the frame. |
+| `screenSpace` | `bool` | `false` | Keep the identity view instead of following the Camera2D. |
+| `pickable` | `bool` | `true` | Whether app.twoD.pickAt considers this sprite. |
+
+## Tilemap (`ignifx/Tilemap`)
+
+A grid of tile ids with cell arithmetic and merged collision geometry.
+
+| Field | Kind | Default | Description |
+|---|---|---|---|
+| `map` | `asset` | `null` | The .tilemap.json document. |
+| `chunkSize` | `u32` | `32` | How many cells one render and collision chunk spans. |
+| `cellSizeOverride` | `f32` | `0` | Metres per cell, overriding the document's own; 0 uses it. |
+
+## TilemapCollider2D (`ignifx/TilemapCollider2D`)
+
+The merged collision surface of a Tilemap, rebuilt when its tiles change.
+
+| Field | Kind | Default | Description |
+|---|---|---|---|
+| `offset` | `vec2` | `[0,0]` |  |
+| `isTrigger` | `bool` | `false` |  |
+| `material` | `asset` | `null` |  |
+| `inlineMaterial` | `optional` | `null` |  |
+| `frictionCombine` | `enum` | `"average"` |  |
+| `restitutionCombine` | `enum` | `"average"` |  |
+| `oneWay` | `bool` | `false` |  |
+| `layerOverride` | `str` | `""` |  |
+
+## TilemapRenderer (`ignifx/TilemapRenderer`)
+
+Draws a Tilemap's cells as sprites, materialising only the chunks the camera sees.
+
+| Field | Kind | Default | Description |
+|---|---|---|---|
+| `atlas` | `asset` | `null` | The atlas the tile frames come from. |
+| `sortingLayer` | `str` | `"Default"` | Sorting layer used when a map layer names none. |
+| `cullChunks` | `bool` | `true` | Drop chunks outside the camera's visible bounds. |

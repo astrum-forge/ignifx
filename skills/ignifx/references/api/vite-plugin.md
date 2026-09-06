@@ -979,9 +979,25 @@ before [ASSET\_TYPE\_BY\_EXTENSION](#asset_type_by_extension) because every one 
 
 #### Type Declaration
 
+###### .atlas.json
+
+> `readonly` **.atlas.json**: `"spriteatlas"` = `"spriteatlas"`
+
+###### .audio.json
+
+> `readonly` **.audio.json**: `"audiobuses"` = `"audiobuses"`
+
+###### .input.json
+
+> `readonly` **.input.json**: `"inputactions"` = `"inputactions"`
+
 ###### .material.json
 
 > `readonly` **.material.json**: `"material"` = `"material"`
+
+###### .physicsmaterial.json
+
+> `readonly` **.physicsmaterial.json**: `"physicsmaterial"` = `"physicsmaterial"`
 
 ###### .prefab.json
 
@@ -990,6 +1006,14 @@ before [ASSET\_TYPE\_BY\_EXTENSION](#asset_type_by_extension) because every one 
 ###### .scene.json
 
 > `readonly` **.scene.json**: `"scene"` = `"scene"`
+
+###### .spriteanim.json
+
+> `readonly` **.spriteanim.json**: `"spriteanimation"` = `"spriteanimation"`
+
+###### .tilemap.json
+
+> `readonly` **.tilemap.json**: `"tilemap"` = `"tilemap"`
 
 ***
 

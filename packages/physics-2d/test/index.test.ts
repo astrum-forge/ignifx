@@ -1,11 +1,16 @@
 import { describe, expect, it } from "vitest";
+import * as barrel from "../src/index.js";
 
-// The barrel is imported dynamically: a static `import * as` of a module with no exports is a
-// lint error, and awaiting the import is the sharper assertion anyway — it proves the module
-// evaluates without throwing and without doing anything (`CONSTITUTION.md` §3.5).
 describe("@ignifx/physics-2d barrel", () => {
-  it("imports without executing anything and exports nothing yet", async () => {
-    const barrel = await import("../src/index.js");
-    expect(Object.keys(barrel)).toEqual([]);
+  it("exports the extension factory, the components, and the service", () => {
+    expect(typeof barrel.physics2d).toBe("function");
+    expect(barrel.Rigidbody2D.typeId).toBe("ignifx/Rigidbody2D");
+    expect(barrel.BoxCollider2D.typeId).toBe("ignifx/BoxCollider2D");
+    expect(barrel.CharacterController2D.typeId).toBe("ignifx/CharacterController2D");
+    expect(typeof barrel.Physics2DService).toBe("function");
+  });
+
+  it("evaluates without doing anything at import time", () => {
+    expect(Object.keys(barrel).length).toBeGreaterThan(20);
   });
 });

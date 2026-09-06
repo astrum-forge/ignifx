@@ -37,9 +37,17 @@ type PreviewServer = Extract<NonNullable<PlaywrightTestConfig["webServer"]>, unk
 const PORTS: Readonly<Record<string, number>> = {
   "ignifx-example-hello-cube": 4173,
   "ignifx-example-gltf-viewer": 4174,
+  "ignifx-template-2d-topdown": 4175,
+  "ignifx-template-2d-sidescroller": 4176,
 };
 
-/** The canvas the goldens are taken at. Small keeps SwiftShader honest and the images reviewable. */
+/**
+ * The canvas the goldens are taken at. Small keeps SwiftShader honest and the images reviewable.
+ *
+ * `tests/templates.spec.ts` overrides it with a 16:9 viewport: the 2D templates are authored
+ * against a 320x180 reference resolution, and a square window would show a strip of level nobody
+ * designed.
+ */
 const VIEWPORT = { width: 512, height: 512 };
 
 /** Whether this run is on CI. */
@@ -90,6 +98,8 @@ const config: PlaywrightTestConfig = defineConfig({
   webServer: [
     preview("ignifx-example-hello-cube", PORTS["ignifx-example-hello-cube"] ?? 4173),
     preview("ignifx-example-gltf-viewer", PORTS["ignifx-example-gltf-viewer"] ?? 4174),
+    preview("ignifx-template-2d-topdown", PORTS["ignifx-template-2d-topdown"] ?? 4175),
+    preview("ignifx-template-2d-sidescroller", PORTS["ignifx-template-2d-sidescroller"] ?? 4176),
   ],
 });
 

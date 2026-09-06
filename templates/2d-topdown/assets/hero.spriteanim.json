@@ -1,0 +1,55 @@
+{
+  "format": "ignifx.spriteanimation",
+  "formatVersion": 1,
+  "atlas": "hero.atlas.json",
+  "clips": [
+    { "name": "idle_down", "frames": ["walk_down_0"], "fps": 1, "loop": true },
+    { "name": "idle_left", "frames": ["walk_left_0"], "fps": 1, "loop": true },
+    { "name": "idle_right", "frames": ["walk_right_0"], "fps": 1, "loop": true },
+    { "name": "idle_up", "frames": ["walk_up_0"], "fps": 1, "loop": true },
+    {
+      "name": "walk_down",
+      "from": "walk_down_0",
+      "to": "walk_down_7",
+      "fps": 10,
+      "loop": true,
+      "events": [
+        { "frame": 0, "name": "footstep" },
+        { "frame": 4, "name": "footstep" }
+      ]
+    },
+    {
+      "name": "walk_left",
+      "from": "walk_left_0",
+      "to": "walk_left_7",
+      "fps": 10,
+      "loop": true,
+      "events": [
+        { "frame": 0, "name": "footstep" },
+        { "frame": 4, "name": "footstep" }
+      ]
+    },
+    {
+      "name": "walk_right",
+      "from": "walk_right_0",
+      "to": "walk_right_7",
+      "fps": 10,
+      "loop": true,
+      "events": [
+        { "frame": 0, "name": "footstep" },
+        { "frame": 4, "name": "footstep" }
+      ]
+    },
+    {
+      "name": "walk_up",
+      "from": "walk_up_0",
+      "to": "walk_up_7",
+      "fps": 10,
+      "loop": true,
+      "events": [
+        { "frame": 0, "name": "footstep" },
+        { "frame": 4, "name": "footstep" }
+      ]
+    }
+  ]
+}

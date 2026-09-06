@@ -1,0 +1,30 @@
+{
+  "format": "ignifx.spriteatlas",
+  "formatVersion": 1,
+  "image": "/parallax.png",
+  "sampling": "nearest",
+  "premultipliedAlpha": false,
+  "frames": [
+    {
+      "name": "sky",
+      "x": 1,
+      "y": 1,
+      "w": 640,
+      "h": 384
+    },
+    {
+      "name": "hills",
+      "x": 1,
+      "y": 387,
+      "w": 320,
+      "h": 112
+    },
+    {
+      "name": "trees",
+      "x": 1,
+      "y": 501,
+      "w": 320,
+      "h": 176
+    }
+  ]
+}

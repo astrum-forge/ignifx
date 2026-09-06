@@ -1,14 +1,18 @@
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   CliError,
   CliErrorCode,
+  DEFAULT_DEPENDENCY_RANGE,
   DEFAULT_TEMPLATE,
   parseArgs,
   resolveTemplateDir,
+  resolveTemplatesRoot,
   runCreate,
+  TEMPLATE_ROOT_CANDIDATES,
   USAGE,
   type CreateIo,
 } from "../src/index.js";
@@ -150,7 +154,8 @@ describe("runCreate", () => {
     const result = await runCreate([targetDir], io);
 
     expect(result.files).toEqual(["package.json", "src/main.ts"]);
-    await expect(readFile(join(targetDir, "package.json"), "utf8")).resolves.toBe('{ "name": "game" }\n');
+    // The project is named after its directory, so the scaffold rewrites the template's `name`.
+    await expect(readFile(join(targetDir, "package.json"), "utf8")).resolves.toBe('{\n  "name": "my-game"\n}\n');
     expect(io.out).toHaveLength(3);
     expect(io.out[0]).toContain("2d-topdown");
     expect(io.out[1]).toBe("Wrote 2 files.");
@@ -197,5 +202,108 @@ describe("CliError", () => {
 
   it("exposes every code in the 14xx platform range", () => {
     expect(Object.values(CliErrorCode)).toEqual(["IGX-1401", "IGX-1402", "IGX-1403"]);
+  });
+});
+
+describe("resolveTemplatesRoot", () => {
+  it("names the published layout first and the checkout second", () => {
+    expect(TEMPLATE_ROOT_CANDIDATES).toEqual(["../templates", "../../../templates"]);
+  });
+
+  it("prefers <package>/templates, the layout a published tarball has", async () => {
+    const binDirectory = join(workspace, "dist");
+    await mkdir(binDirectory, { recursive: true });
+    await mkdir(join(workspace, "templates"), { recursive: true });
+
+    await expect(resolveTemplatesRoot(binDirectory)).resolves.toBe(join(workspace, "templates"));
+  });
+
+  it("falls back to the repository's templates directory in a checkout", async () => {
+    // The checkout shape: <repo>/packages/cli/dist/bin.js beside <repo>/templates.
+    const binDirectory = join(workspace, "packages", "cli", "dist");
+    await mkdir(binDirectory, { recursive: true });
+    const repoTemplates = join(workspace, "templates");
+    await mkdir(repoTemplates, { recursive: true });
+
+    await expect(resolveTemplatesRoot(binDirectory)).resolves.toBe(repoTemplates);
+  });
+
+  it("answers with the published location when neither exists, so the error names it", async () => {
+    const binDirectory = join(workspace, "nowhere", "dist");
+    await mkdir(binDirectory, { recursive: true });
+
+    await expect(resolveTemplatesRoot(binDirectory)).resolves.toBe(join(workspace, "nowhere", "templates"));
+  });
+
+  it("ignores a candidate that exists but is a file", async () => {
+    const island = join(workspace, "island");
+    const binDirectory = join(island, "dist");
+    await mkdir(binDirectory, { recursive: true });
+    await writeFile(join(island, "templates"), "not a directory", "utf8");
+
+    // `../templates` is a file, so the walk moves on; `../../../templates` does not exist either,
+    // and the answer falls back to the first candidate so the error names the published location.
+    await expect(resolveTemplatesRoot(binDirectory)).resolves.toBe(resolve(island, "templates"));
+  });
+});
+
+// The real thing: the repository's own `templates/2d-topdown`, copied the way `create-ignifx`
+// copies it. Nothing is installed — a scratch project would try to fetch unpublished `@ignifx/*`
+// packages — so what is asserted is the shape of the tree and of the generated manifest.
+describe("scaffolding the 2d-topdown template", () => {
+  const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
+
+  it("copies the whole template, applies the rename convention, and pins the @ignifx scope", async () => {
+    const io = recordingIo(join(repoRoot, "templates"));
+    const target = join(workspace, "my-game");
+
+    const result = await runCreate([target, "--template", "2d-topdown"], io);
+
+    // The convention: `_gitignore` arrives as `.gitignore`, and nothing keeps the underscore.
+    expect(result.files).toContain(".gitignore");
+    expect(result.files.some((file) => file.startsWith("_"))).toBe(false);
+    // The parts a game needs: an entry point, the plugin config, the project settings, the assets
+    // the loaders read, and the unhashed sheet images.
+    expect(result.files).toEqual(
+      expect.arrayContaining([
+        ".gitignore",
+        "ATTRIBUTION.md",
+        "README.md",
+        "assets/level.tilemap.json",
+        "assets/tiles.atlas.json",
+        "ignifx.config.ts",
+        "index.html",
+        "package.json",
+        "public/tiles.png",
+        "src/main.ts",
+        "tsconfig.json",
+        "vite.config.ts",
+      ]),
+    );
+    // Build output never reaches a generated project.
+    expect(result.files.some((file) => file.startsWith("dist/") || file.includes("node_modules"))).toBe(false);
+
+    const manifest: unknown = JSON.parse(await readFile(join(target, "package.json"), "utf8"));
+    const dependencies = (manifest as { readonly dependencies: Readonly<Record<string, string>> }).dependencies;
+    for (const name of Object.keys(dependencies)) {
+      expect(name.startsWith("@ignifx/")).toBe(true);
+      expect(dependencies[name]).toBe(DEFAULT_DEPENDENCY_RANGE);
+    }
+    expect(JSON.stringify(manifest)).not.toContain("workspace:");
+
+    // The template's tsconfig has to stand on its own: there is no parent config to extend.
+    const tsconfig = await readFile(join(target, "tsconfig.json"), "utf8");
+    expect(tsconfig).not.toContain("extends");
+  });
+
+  it("scaffolds the side-scroller too", async () => {
+    const io = recordingIo(join(repoRoot, "templates"));
+    const target = join(workspace, "runner");
+
+    const result = await runCreate([target, "--template", "2d-sidescroller"], io);
+
+    expect(result.files).toEqual(expect.arrayContaining(["public/parallax.png", "assets/coin.spriteanim.json"]));
+    const manifest = await readFile(join(target, "package.json"), "utf8");
+    expect(manifest).not.toContain("workspace:");
   });
 });

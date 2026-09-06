@@ -1,0 +1,16 @@
+{
+  "format": "ignifx.spriteanimation",
+  "formatVersion": 1,
+  "atlas": "hero.atlas.json",
+  "clips": [
+    { "name": "idle", "frames": ["idle_0", "idle_1"], "fps": 2, "loop": true },
+    {
+      "name": "run",
+      "from": "run_0",
+      "to": "run_1",
+      "fps": 4,
+      "loop": false,
+      "events": [{ "frame": 1, "name": "footstep" }]
+    }
+  ]
+}

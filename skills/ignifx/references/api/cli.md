@@ -227,6 +227,22 @@ Options for [copyTemplate](#copytemplate).
 
 #### Properties
 
+##### dependencyRange?
+
+> `readonly` `optional` **dependencyRange?**: `string` \| `null`
+
+The range that replaces a `workspace:` dependency specifier in the copied `package.json`.
+
+###### Remarks
+
+`workspace:*` and `workspace:^` become `^<range>`; `workspace:~` becomes `~<range>`; any other
+`workspace:<something>` keeps whatever followed the colon, which is what pnpm itself does when
+it publishes. Pass `null` to copy `package.json` byte for byte.
+
+###### Default Value
+
+[DEFAULT\_DEPENDENCY\_RANGE](#default_dependency_range)
+
 ##### ignore?
 
 > `readonly` `optional` **ignore?**: readonly `string`[]
@@ -246,6 +262,14 @@ Whether to write into a target directory that already contains entries.
 ###### Default Value
 
 `false` — an existing, non-empty target throws `IGX-1401` instead.
+
+##### projectName?
+
+> `readonly` `optional` **projectName?**: `string` \| `null`
+
+The `name` written into the copied `package.json`. Defaults to the target directory's base
+name, lower-cased, with any run of characters outside `a-z0-9._-` replaced by `-`; `null` keeps
+the template's own name.
 
 ##### rename?
 
@@ -425,6 +449,22 @@ expected to fold into it and `CliError` becomes a thin alias or is removed.
 
 ***
 
+### DEFAULT\_DEPENDENCY\_RANGE
+
+> `const` **DEFAULT\_DEPENDENCY\_RANGE**: `string`
+
+The version a scaffolded project's `@ignifx/*` dependencies are pinned to.
+
+#### Remarks
+
+A template inside this repository declares `"@ignifx/core": "workspace:*"`, which is pnpm's
+workspace protocol: it means "whatever the checkout has" and is meaningless outside a workspace.
+A generated project has to name a published range instead, and because the whole `@ignifx` scope
+ships one version line (`docs/architecture/00-overview.md` §2) that range is this package's own
+version.
+
+***
+
 ### DEFAULT\_IGNORED\_ENTRIES
 
 > `const` **DEFAULT\_IGNORED\_ENTRIES**: readonly `string`[]
@@ -457,11 +497,39 @@ ships its templates inside an npm package.
 
 ***
 
+### TEMPLATE\_ROOT\_CANDIDATES
+
+> `const` **TEMPLATE\_ROOT\_CANDIDATES**: readonly `string`[]
+
+Where `create-ignifx` looks for its templates, in order.
+
+#### Remarks
+
+Both entries are relative to the directory holding the running `bin.js`.
+
+- `../templates` is the **published** layout: `prepack` copies `templates/*` into the package, so
+  the tarball ships `<package>/dist/bin.js` beside `<package>/templates/<name>`.
+- `../../../templates` is the **development** layout: `packages/cli/dist/bin.js` sits three
+  directories below the repository root, where the real `templates/` workspace members live. It
+  is what makes `node packages/cli/dist/bin.js my-game` work from a checkout, without a pack.
+
+***
+
 ### USAGE
 
 > `const` **USAGE**: `"Usage: create-ignifx <target-dir> [--template <name>] [--overwrite] [--desktop]"` = `"Usage: create-ignifx <target-dir> [--template <name>] [--overwrite] [--desktop]"`
 
 The one-line usage string printed with every argument error.
+
+***
+
+### VERSION
+
+> `const` **VERSION**: `"0.0.0"` = `"0.0.0"`
+
+The `@ignifx/cli` version this build was cut from. It is also the version a scaffolded project's
+`@ignifx/*` dependencies are pinned to, because the scope is released as one line
+(`docs/architecture/00-overview.md` §2).
 
 ## Functions
 
@@ -487,8 +555,10 @@ The relative paths of the files written, sorted.
 
 #### Remarks
 
-The template tree is copied verbatim apart from the `rename` map and the `ignore` list. Symbolic
-links are followed and written as regular files, which is what a scaffolded project wants.
+The template tree is copied verbatim apart from three things: the `rename` map, the `ignore`
+list, and `package.json`, whose `workspace:` dependency specifiers are rewritten to
+`dependencyRange` so that the generated project installs from the registry. Symbolic links are
+followed and written as regular files, which is what a scaffolded project wants.
 
 #### Throws
 
@@ -576,6 +646,35 @@ The absolute or relative path of the template directory, which is known to exist
 
 A [CliError](#clierror) with code `IGX-1402` when `name` is not a single path segment or no
 such directory exists.
+
+***
+
+### resolveTemplatesRoot()
+
+> **resolveTemplatesRoot**(`binDirectory`): `Promise`\<`string`\>
+
+Finds the directory that holds the templates.
+
+#### Parameters
+
+##### binDirectory
+
+`string`
+
+The directory of the running executable, normally `import.meta.dirname`.
+
+#### Returns
+
+`Promise`\<`string`\>
+
+The first of [TEMPLATE\_ROOT\_CANDIDATES](#template_root_candidates) that exists as a directory; the first
+candidate when none does, so the failure names the published location rather than the checkout.
+
+#### Example
+
+```ts
+const templatesRoot = await resolveTemplatesRoot(import.meta.dirname);
+```
 
 ***
 

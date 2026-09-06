@@ -2,7 +2,14 @@ import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promis
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { CliError, copyTemplate, DEFAULT_IGNORED_ENTRIES, DEFAULT_TEMPLATE_RENAMES } from "../src/index.js";
+import {
+  CliError,
+  copyTemplate,
+  DEFAULT_DEPENDENCY_RANGE,
+  DEFAULT_IGNORED_ENTRIES,
+  DEFAULT_TEMPLATE_RENAMES,
+  VERSION,
+} from "../src/index.js";
 
 let workspace = "";
 let templateDir = "";
@@ -20,7 +27,18 @@ beforeEach(async () => {
   workspace = await mkdtemp(join(tmpdir(), "ignifx-cli-copy-"));
   templateDir = join(workspace, "template");
   targetDir = join(workspace, "target");
-  await writeFileAt(join(templateDir, "_package.json"), '{ "name": "game" }\n');
+  await writeFileAt(
+    join(templateDir, "_package.json"),
+    `${JSON.stringify(
+      {
+        name: "game",
+        dependencies: { "@ignifx/core": "workspace:*", "@ignifx/2d": "workspace:^", left: "^1.2.3" },
+        devDependencies: { "@ignifx/vite-plugin": "workspace:~", pinned: "workspace:1.4.0" },
+      },
+      null,
+      2,
+    )}\n`,
+  );
   await writeFileAt(join(templateDir, "_gitignore"), "dist\n");
   await writeFileAt(join(templateDir, "index.html"), "<!doctype html>\n");
   await writeFileAt(join(templateDir, "src", "main.ts"), "export const start = 1;\n");
@@ -32,6 +50,25 @@ afterEach(async () => {
 });
 
 describe("copyTemplate", () => {
+  it("names the copied project after the target directory", async () => {
+    const target = join(workspace, "My Game!");
+    await copyTemplate({ templateDir, targetDir: target });
+    const written: unknown = JSON.parse(await readFile(join(target, "package.json"), "utf8"));
+    expect((written as { name: string }).name).toBe("my-game");
+  });
+
+  it("uses an explicit projectName, and keeps the template's name when it is null", async () => {
+    await copyTemplate({ templateDir, targetDir, projectName: "starship" });
+    const named: unknown = JSON.parse(await readFile(join(targetDir, "package.json"), "utf8"));
+    expect((named as { name: string }).name).toBe("starship");
+
+    const kept = join(workspace, "kept");
+    await copyTemplate({ templateDir, targetDir: kept, projectName: null });
+    const original: unknown = JSON.parse(await readFile(join(templateDir, "_package.json"), "utf8"));
+    const copied: unknown = JSON.parse(await readFile(join(kept, "package.json"), "utf8"));
+    expect((copied as { name: string }).name).toBe((original as { name: string }).name);
+  });
+
   it("copies the whole tree and reports sorted relative paths", async () => {
     const result = await copyTemplate({ templateDir, targetDir });
 
@@ -154,5 +191,61 @@ describe("copyTemplate", () => {
     const result = await copyTemplate({ templateDir, targetDir, signal: controller.signal });
 
     expect(result.files.length).toBe(5);
+  });
+
+  it("rewrites every workspace: specifier in the copied package.json", async () => {
+    expect(DEFAULT_DEPENDENCY_RANGE).toBe(`^${VERSION}`);
+
+    await copyTemplate({ templateDir, targetDir });
+
+    const manifest: unknown = JSON.parse(await readFile(join(targetDir, "package.json"), "utf8"));
+    expect(manifest).toMatchObject({
+      dependencies: {
+        // `workspace:*` and `workspace:^` both mean "the range this release publishes".
+        "@ignifx/core": DEFAULT_DEPENDENCY_RANGE,
+        "@ignifx/2d": DEFAULT_DEPENDENCY_RANGE,
+        // Anything that was not a workspace specifier is untouched.
+        left: "^1.2.3",
+      },
+      devDependencies: {
+        "@ignifx/vite-plugin": `~${VERSION}`,
+        // `workspace:<range>` keeps the range, which is what pnpm's own publish does.
+        pinned: "1.4.0",
+      },
+    });
+  });
+
+  it("honours an explicit dependency range", async () => {
+    await copyTemplate({ templateDir, targetDir, dependencyRange: "^1.2.0" });
+
+    const manifest: unknown = JSON.parse(await readFile(join(targetDir, "package.json"), "utf8"));
+    expect(manifest).toMatchObject({ dependencies: { "@ignifx/core": "^1.2.0" } });
+  });
+
+  it("copies package.json byte for byte when the rewrite is switched off", async () => {
+    const before = await readFile(join(templateDir, "_package.json"), "utf8");
+
+    // Byte for byte needs both rewrites off: the range and the project name.
+    await copyTemplate({ templateDir, targetDir, dependencyRange: null, projectName: null });
+
+    await expect(readFile(join(targetDir, "package.json"), "utf8")).resolves.toBe(before);
+  });
+
+  it("copies an unparseable package.json verbatim rather than failing the scaffold", async () => {
+    await writeFileAt(join(templateDir, "_package.json"), "{ not json");
+
+    await copyTemplate({ templateDir, targetDir });
+
+    await expect(readFile(join(targetDir, "package.json"), "utf8")).resolves.toBe("{ not json");
+  });
+
+  it("leaves a package.json with no workspace specifier untouched", async () => {
+    await writeFileAt(join(templateDir, "_package.json"), '{"name":"game","dependencies":{"left":"^1.0.0"}}');
+
+    await copyTemplate({ templateDir, targetDir, projectName: null });
+
+    await expect(readFile(join(targetDir, "package.json"), "utf8")).resolves.toBe(
+      '{"name":"game","dependencies":{"left":"^1.0.0"}}',
+    );
   });
 });

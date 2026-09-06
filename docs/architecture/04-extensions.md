@@ -50,7 +50,7 @@ interface ExtensionContext {
 type PhysicsCallbackName =
   "onCollisionEnter" | "onCollisionStay" | "onCollisionExit" | "onTriggerEnter" | "onTriggerExit";
 
-function defineExtension<O = void>(factory: (options: O) => Extension): (options?: O) => Extension;
+function defineExtension<O = void>(factory: (options: O | undefined) => Extension): (options?: O) => Extension;
 ```
 
 Usage:

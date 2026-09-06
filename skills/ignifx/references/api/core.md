@@ -28502,7 +28502,8 @@ takes none.
 
 (`options`) => [`Extension`](#extension)
 
-Builds the extension descriptor from its options.
+Builds the extension descriptor from its options, which are `undefined` when the
+game called the factory without an argument — default them (`(options = {})`) or read them as optional.
 
 #### Returns
 

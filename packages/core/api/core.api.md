@@ -818,7 +818,7 @@ export interface DeferredQueue {
 }
 
 // @public
-export function defineExtension<O = void>(factory: (options: O) => Extension): (options?: O) => Extension;
+export function defineExtension<O = void>(factory: (options: O | undefined) => Extension): (options?: O) => Extension;
 
 // @public
 export function defineSchema<S extends Schema>(fields: S): S;

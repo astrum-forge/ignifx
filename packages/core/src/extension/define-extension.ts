@@ -12,7 +12,8 @@ import type { Extension } from "../app/types.js";
  *
  * @typeParam O - The options object the factory accepts. Defaults to `void` for an extension that
  * takes none.
- * @param factory - Builds the extension descriptor from its options.
+ * @param factory - Builds the extension descriptor from its options, which are `undefined` when the
+ * game called the factory without an argument — default them (`(options = {})`) or read them as optional.
  * @returns A factory that may be called with no argument, in which case the options are `undefined`.
  *
  * @example
@@ -31,12 +32,6 @@ import type { Extension } from "../app/types.js";
  *
  * @public
  */
-export function defineExtension<O = void>(factory: (options: O) => Extension): (options?: O) => Extension {
-  return (options?: O): Extension => {
-    // Boundary assertion (coding standards §5.2): the invariant is the contract of this helper —
-    // a factory whose options are optional must tolerate `undefined`, which is exactly what the
-    // `(options = {})` default parameter in every documented example does.
-    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
-    return factory(options as O);
-  };
+export function defineExtension<O = void>(factory: (options: O | undefined) => Extension): (options?: O) => Extension {
+  return (options?: O): Extension => factory(options);
 }

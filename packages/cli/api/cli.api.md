@@ -25,8 +25,10 @@ export function copyTemplate(options: CopyTemplateOptions): Promise<CopyTemplate
 
 // @public
 export interface CopyTemplateOptions {
+    readonly dependencyRange?: string | null;
     readonly ignore?: readonly string[];
     readonly overwrite?: boolean;
+    readonly projectName?: string | null;
     readonly rename?: Readonly<Record<string, string>>;
     readonly signal?: AbortSignal;
     readonly targetDir: string;
@@ -53,6 +55,9 @@ export interface CreateIo {
 }
 
 // @public
+export const DEFAULT_DEPENDENCY_RANGE: string;
+
+// @public
 export const DEFAULT_IGNORED_ENTRIES: readonly string[];
 
 // @public
@@ -68,10 +73,19 @@ export function parseArgs(argv: readonly string[]): CreateCommand;
 export function resolveTemplateDir(name: string, templatesRoot: string): Promise<string>;
 
 // @public
+export function resolveTemplatesRoot(binDirectory: string): Promise<string>;
+
+// @public
 export function runCreate(argv: readonly string[], io: CreateIo): Promise<CopyTemplateResult>;
 
 // @public
+export const TEMPLATE_ROOT_CANDIDATES: readonly string[];
+
+// @public
 export const USAGE = "Usage: create-ignifx <target-dir> [--template <name>] [--overwrite] [--desktop]";
+
+// @public
+export const VERSION = "0.0.0";
 
 // (No @packageDocumentation comment for this package)
 

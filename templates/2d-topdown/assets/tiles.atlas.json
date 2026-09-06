@@ -1,0 +1,128 @@
+{
+  "format": "ignifx.spriteatlas",
+  "formatVersion": 1,
+  "image": "/tiles.png",
+  "sampling": "nearest",
+  "premultipliedAlpha": false,
+  "frames": [
+    {
+      "name": "grass",
+      "x": 1,
+      "y": 1,
+      "w": 16,
+      "h": 16
+    },
+    {
+      "name": "grass_tuft",
+      "x": 19,
+      "y": 1,
+      "w": 16,
+      "h": 16
+    },
+    {
+      "name": "path",
+      "x": 37,
+      "y": 1,
+      "w": 16,
+      "h": 16
+    },
+    {
+      "name": "water",
+      "x": 55,
+      "y": 1,
+      "w": 16,
+      "h": 16
+    },
+    {
+      "name": "wall",
+      "x": 73,
+      "y": 1,
+      "w": 16,
+      "h": 16
+    },
+    {
+      "name": "wall_top",
+      "x": 91,
+      "y": 1,
+      "w": 16,
+      "h": 16
+    },
+    {
+      "name": "tree_canopy",
+      "x": 109,
+      "y": 1,
+      "w": 16,
+      "h": 16
+    },
+    {
+      "name": "flowers",
+      "x": 127,
+      "y": 1,
+      "w": 16,
+      "h": 16
+    },
+    {
+      "name": "chest",
+      "x": 1,
+      "y": 19,
+      "w": 16,
+      "h": 16,
+      "pivot": [0.5, 1]
+    },
+    {
+      "name": "barrel",
+      "x": 19,
+      "y": 19,
+      "w": 16,
+      "h": 16,
+      "pivot": [0.5, 1]
+    },
+    {
+      "name": "sign",
+      "x": 37,
+      "y": 19,
+      "w": 16,
+      "h": 16,
+      "pivot": [0.5, 1]
+    },
+    {
+      "name": "bush",
+      "x": 55,
+      "y": 19,
+      "w": 16,
+      "h": 16,
+      "pivot": [0.5, 1]
+    },
+    {
+      "name": "pad",
+      "x": 73,
+      "y": 19,
+      "w": 16,
+      "h": 16,
+      "pivot": [0.5, 1]
+    },
+    {
+      "name": "rock",
+      "x": 91,
+      "y": 19,
+      "w": 16,
+      "h": 16,
+      "pivot": [0.5, 1]
+    },
+    {
+      "name": "crate",
+      "x": 109,
+      "y": 19,
+      "w": 16,
+      "h": 16,
+      "pivot": [0.5, 1]
+    },
+    {
+      "name": "tree_trunk",
+      "x": 127,
+      "y": 19,
+      "w": 16,
+      "h": 16
+    }
+  ]
+}

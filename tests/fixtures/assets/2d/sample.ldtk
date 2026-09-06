@@ -1,0 +1,142 @@
+{
+  "__header__": {
+    "fileType": "LDtk Project JSON",
+    "app": "LDtk",
+    "appAuthor": "Sebastien Benard",
+    "appVersion": "1.5.3",
+    "url": "https://ldtk.io"
+  },
+  "jsonVersion": "1.5.3",
+  "worldGridWidth": 128,
+  "worldGridHeight": 128,
+  "worldLayout": "Free",
+  "defaultGridSize": 32,
+  "defs": {
+    "tilesets": [
+      {
+        "uid": 1,
+        "identifier": "Hero",
+        "relPath": "hero.png",
+        "pxWid": 64,
+        "pxHei": 64,
+        "tileGridSize": 32,
+        "spacing": 0,
+        "padding": 0,
+        "__cWid": 2,
+        "__cHei": 2,
+        "customData": [{ "tileId": 0, "data": "{\"solid\":true}" }],
+        "enumTags": []
+      }
+    ],
+    "layers": [
+      {
+        "uid": 10,
+        "identifier": "Ground",
+        "type": "Tiles",
+        "gridSize": 32,
+        "tilesetDefUid": 1,
+        "parallaxFactorX": 0,
+        "parallaxFactorY": 0
+      },
+      {
+        "uid": 11,
+        "identifier": "Collision",
+        "type": "IntGrid",
+        "gridSize": 32,
+        "tilesetDefUid": null,
+        "intGridValues": [
+          { "value": 1, "identifier": "solid", "color": "#8ea4c4" },
+          { "value": 2, "identifier": "oneWay", "color": "#c4a48e" }
+        ],
+        "parallaxFactorX": 0,
+        "parallaxFactorY": 0
+      },
+      { "uid": 12, "identifier": "Entities", "type": "Entities", "gridSize": 32, "tilesetDefUid": null }
+    ],
+    "entities": [
+      { "uid": 20, "identifier": "PlayerStart", "width": 32, "height": 32, "pivotX": 0, "pivotY": 0 }
+    ]
+  },
+  "levels": [
+    {
+      "uid": 100,
+      "identifier": "Level_0",
+      "worldX": 0,
+      "worldY": 0,
+      "pxWid": 128,
+      "pxHei": 128,
+      "fieldInstances": [
+        { "__identifier": "biome", "__type": "String", "__value": "cave" }
+      ],
+      "layerInstances": [
+        {
+          "__identifier": "Entities",
+          "__type": "Entities",
+          "__cWid": 4,
+          "__cHei": 4,
+          "__gridSize": 32,
+          "layerDefUid": 12,
+          "__tilesetDefUid": null,
+          "pxOffsetX": 0,
+          "pxOffsetY": 0,
+          "gridTiles": [],
+          "intGridCsv": [],
+          "autoLayerTiles": [],
+          "entityInstances": [
+            {
+              "__identifier": "PlayerStart",
+              "__grid": [3, 1],
+              "__pivot": [0, 0],
+              "width": 32,
+              "height": 32,
+              "defUid": 20,
+              "px": [96, 32],
+              "fieldInstances": [
+                { "__identifier": "facing", "__type": "String", "__value": "left" }
+              ]
+            }
+          ]
+        },
+        {
+          "__identifier": "Collision",
+          "__type": "IntGrid",
+          "__cWid": 4,
+          "__cHei": 4,
+          "__gridSize": 32,
+          "layerDefUid": 11,
+          "__tilesetDefUid": null,
+          "pxOffsetX": 0,
+          "pxOffsetY": 0,
+          "gridTiles": [],
+          "intGridCsv": [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 2],
+          "autoLayerTiles": [],
+          "entityInstances": []
+        },
+        {
+          "__identifier": "Ground",
+          "__type": "Tiles",
+          "__cWid": 4,
+          "__cHei": 4,
+          "__gridSize": 32,
+          "layerDefUid": 10,
+          "__tilesetDefUid": 1,
+          "pxOffsetX": 0,
+          "pxOffsetY": 0,
+          "intGridCsv": [],
+          "autoLayerTiles": [],
+          "entityInstances": [],
+          "gridTiles": [
+            { "px": [96, 32], "src": [0, 32], "f": 0, "t": 2, "d": [7], "a": 1 },
+            { "px": [0, 64], "src": [0, 0], "f": 0, "t": 0, "d": [8], "a": 1 },
+            { "px": [32, 64], "src": [0, 0], "f": 0, "t": 0, "d": [9], "a": 1 },
+            { "px": [64, 64], "src": [0, 0], "f": 0, "t": 0, "d": [10], "a": 1 },
+            { "px": [0, 96], "src": [0, 0], "f": 0, "t": 0, "d": [12], "a": 1 },
+            { "px": [32, 96], "src": [0, 0], "f": 1, "t": 0, "d": [13], "a": 1 },
+            { "px": [64, 96], "src": [0, 0], "f": 0, "t": 0, "d": [14], "a": 1 },
+            { "px": [96, 96], "src": [32, 0], "f": 0, "t": 1, "d": [15], "a": 1 }
+          ]
+        }
+      ]
+    }
+  ]
+}

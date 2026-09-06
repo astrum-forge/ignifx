@@ -18,7 +18,8 @@
     "create-ignifx": "./dist/bin.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "templates"
   ],
   "type": "module",
   "sideEffects": false,
@@ -35,7 +36,8 @@
   },
   "scripts": {
     "build": "tsdown",
-    "typecheck": "tsc --build tsconfig.json tsconfig.test.json",
+    "prepack": "node scripts/copy-templates.ts",
+    "typecheck": "tsc --build tsconfig.json tsconfig.test.json && tsc --project scripts/tsconfig.json",
     "test": "vitest run --project node --root ../.. packages/cli",
     "api-report": "api-extractor run --verbose",
     "docs:api": "typedoc",

@@ -170,7 +170,7 @@ The x component.
 
 ###### Implementation of
 
-[`Vec2Like`](#vec2like).[`x`](#x-14)
+[`Vec2Like`](#vec2like).[`x`](#x-17)
 
 ##### y
 
@@ -190,7 +190,7 @@ The y component.
 
 ###### Implementation of
 
-[`Vec2Like`](#vec2like).[`y`](#y-14)
+[`Vec2Like`](#vec2like).[`y`](#y-17)
 
 ***
 
@@ -251,7 +251,7 @@ The address and URL, plus the standard `context`, `hint`, and `cause`.
 
 ###### Overrides
 
-[`IgnifxError`](#ignifxerror).[`constructor`](#constructor-26)
+[`IgnifxError`](#ignifxerror).[`constructor`](#constructor-34)
 
 #### Properties
 
@@ -525,7 +525,7 @@ Creates a component. The engine constructs components; game code never calls `ne
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`constructor`](#constructor-46)
+[`Script`](#abstract-script).[`constructor`](#constructor-58)
 
 #### Properties
 
@@ -537,7 +537,7 @@ One pair of ears per entity.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-21)
+> `static` **schema**: [`Schema`](#schema-30)
 
 The serialized field declarations (ADR-0004). A listener has none: which listener is active is
 decided by which one is enabled, and a scene file records that on the component itself.
@@ -566,7 +566,7 @@ The app.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`app`](#app-24)
+[`Script`](#abstract-script).[`app`](#app-35)
 
 ##### enabled
 
@@ -601,25 +601,25 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-27)
+[`Script`](#abstract-script).[`enabled`](#enabled-38)
 
 ##### entity
 
 ###### Get Signature
 
-> **get** **entity**(): [`Entity`](#entity-9)
+> **get** **entity**(): [`Entity`](#entity-17)
 
 The entity this component is attached to.
 
 ###### Returns
 
-[`Entity`](#entity-9)
+[`Entity`](#entity-17)
 
 The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-24)
+[`Script`](#abstract-script).[`entity`](#entity-36)
 
 ##### handle
 
@@ -637,7 +637,7 @@ The handle.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`handle`](#handle-20)
+[`Script`](#abstract-script).[`handle`](#handle-31)
 
 ##### isDestroyed
 
@@ -657,7 +657,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-20)
+[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-31)
 
 ##### isEnabledInHierarchy
 
@@ -675,7 +675,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-19)
+[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-30)
 
 ##### onDestroyed
 
@@ -705,7 +705,7 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-20)
+[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-31)
 
 ##### spatialTarget
 
@@ -726,19 +726,19 @@ The entity's Lite node, which exposes the `worldMatrix` a `SpatialTarget` needs.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-23)
+> **get** **transform**(): [`Transform`](#transform-40)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-23)
+[`Transform`](#transform-40)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`transform`](#transform-21)
+[`Script`](#abstract-script).[`transform`](#transform-32)
 
 ##### uid
 
@@ -756,25 +756,25 @@ The identifier.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`uid`](#uid-24)
+[`Script`](#abstract-script).[`uid`](#uid-35)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-26)
+> **get** **world**(): [`World`](#world-45)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-26)
+[`World`](#world-45)
 
 The world.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`world`](#world-22)
+[`Script`](#abstract-script).[`world`](#world-34)
 
 #### Methods
 
@@ -822,7 +822,7 @@ class Patrol extends Script.define({ waypoints: array(vec3()), speed: f32(3) }) 
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`define`](#define-19)
+[`Script`](#abstract-script).[`define`](#define-30)
 
 ##### destroy()
 
@@ -838,7 +838,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`destroy`](#destroy-20)
+[`Script`](#abstract-script).[`destroy`](#destroy-31)
 
 ##### getComponent()
 
@@ -870,7 +870,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`getComponent`](#getcomponent-20)
+[`Script`](#abstract-script).[`getComponent`](#getcomponent-31)
 
 ##### onDisable()
 
@@ -935,7 +935,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-20)
+[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-31)
 
 ##### startCoroutine()
 
@@ -975,7 +975,7 @@ onEnable(): void {
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`startCoroutine`](#startcoroutine-3)
+[`Script`](#abstract-script).[`startCoroutine`](#startcoroutine-4)
 
 ##### stopAllCoroutines()
 
@@ -989,7 +989,7 @@ Stops every coroutine this script started.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`stopAllCoroutines`](#stopallcoroutines-3)
+[`Script`](#abstract-script).[`stopAllCoroutines`](#stopallcoroutines-4)
 
 ##### stopCoroutine()
 
@@ -1003,7 +1003,7 @@ Stops one coroutine this script started. Stopping a finished coroutine is a no-o
 
 [`CoroutineHandle`](#coroutinehandle)
 
-The handle [Script.startCoroutine](#startcoroutine-3) returned.
+The handle [Script.startCoroutine](#startcoroutine-4) returned.
 
 ###### Returns
 
@@ -1011,7 +1011,7 @@ The handle [Script.startCoroutine](#startcoroutine-3) returned.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`stopCoroutine`](#stopcoroutine-3)
+[`Script`](#abstract-script).[`stopCoroutine`](#stopcoroutine-4)
 
 ***
 
@@ -1652,7 +1652,7 @@ Applies the schema defaults, exactly as `Script.define` would.
 
 ###### Overrides
 
-[`Script`](#abstract-script).[`constructor`](#constructor-46)
+[`Script`](#abstract-script).[`constructor`](#constructor-58)
 
 #### Properties
 
@@ -1730,7 +1730,7 @@ How steeply the sound falls off with distance.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-21)
+> `static` **schema**: [`Schema`](#schema-30)
 
 The serialized field declarations (ADR-0004).
 
@@ -1770,7 +1770,7 @@ The app.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`app`](#app-24)
+[`Script`](#abstract-script).[`app`](#app-35)
 
 ##### enabled
 
@@ -1805,25 +1805,25 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-27)
+[`Script`](#abstract-script).[`enabled`](#enabled-38)
 
 ##### entity
 
 ###### Get Signature
 
-> **get** **entity**(): [`Entity`](#entity-9)
+> **get** **entity**(): [`Entity`](#entity-17)
 
 The entity this component is attached to.
 
 ###### Returns
 
-[`Entity`](#entity-9)
+[`Entity`](#entity-17)
 
 The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-24)
+[`Script`](#abstract-script).[`entity`](#entity-36)
 
 ##### handle
 
@@ -1841,7 +1841,7 @@ The handle.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`handle`](#handle-20)
+[`Script`](#abstract-script).[`handle`](#handle-31)
 
 ##### instance
 
@@ -1889,7 +1889,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-20)
+[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-31)
 
 ##### isEnabledInHierarchy
 
@@ -1907,7 +1907,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-19)
+[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-30)
 
 ##### isPlaying
 
@@ -1951,7 +1951,7 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-20)
+[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-31)
 
 ##### onEnded
 
@@ -1972,19 +1972,19 @@ The signal.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-23)
+> **get** **transform**(): [`Transform`](#transform-40)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-23)
+[`Transform`](#transform-40)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`transform`](#transform-21)
+[`Script`](#abstract-script).[`transform`](#transform-32)
 
 ##### uid
 
@@ -2002,25 +2002,25 @@ The identifier.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`uid`](#uid-24)
+[`Script`](#abstract-script).[`uid`](#uid-35)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-26)
+> **get** **world**(): [`World`](#world-45)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-26)
+[`World`](#world-45)
 
 The world.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`world`](#world-22)
+[`Script`](#abstract-script).[`world`](#world-34)
 
 #### Methods
 
@@ -2036,7 +2036,7 @@ Starts the source when `playOnAwake` is set, after the scene's props have been d
 
 ###### Implementation of
 
-[`ScriptCallbacks`](#scriptcallbacks).[`awake`](#awake-3)
+[`ScriptCallbacks`](#scriptcallbacks).[`awake`](#awake-4)
 
 ##### define()
 
@@ -2082,7 +2082,7 @@ class Patrol extends Script.define({ waypoints: array(vec3()), speed: f32(3) }) 
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`define`](#define-19)
+[`Script`](#abstract-script).[`define`](#define-30)
 
 ##### destroy()
 
@@ -2098,7 +2098,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`destroy`](#destroy-20)
+[`Script`](#abstract-script).[`destroy`](#destroy-31)
 
 ##### getComponent()
 
@@ -2130,7 +2130,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`getComponent`](#getcomponent-20)
+[`Script`](#abstract-script).[`getComponent`](#getcomponent-31)
 
 ##### onDestroy()
 
@@ -2268,7 +2268,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-20)
+[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-31)
 
 ##### resume()
 
@@ -2318,7 +2318,7 @@ onEnable(): void {
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`startCoroutine`](#startcoroutine-3)
+[`Script`](#abstract-script).[`startCoroutine`](#startcoroutine-4)
 
 ##### stop()
 
@@ -2350,7 +2350,7 @@ Stops every coroutine this script started.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`stopAllCoroutines`](#stopallcoroutines-3)
+[`Script`](#abstract-script).[`stopAllCoroutines`](#stopallcoroutines-4)
 
 ##### stopCoroutine()
 
@@ -2364,7 +2364,7 @@ Stops one coroutine this script started. Stopping a finished coroutine is a no-o
 
 [`CoroutineHandle`](#coroutinehandle)
 
-The handle [Script.startCoroutine](#startcoroutine-3) returned.
+The handle [Script.startCoroutine](#startcoroutine-4) returned.
 
 ###### Returns
 
@@ -2372,7 +2372,7 @@ The handle [Script.startCoroutine](#startcoroutine-3) returned.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`stopCoroutine`](#stopcoroutine-3)
+[`Script`](#abstract-script).[`stopCoroutine`](#stopcoroutine-4)
 
 ##### update()
 
@@ -2561,7 +2561,7 @@ Applies this collider's defaults on top of the shared ones.
 
 ###### Overrides
 
-[`Collider`](#abstract-collider).[`constructor`](#constructor-11)
+[`Collider`](#abstract-collider).[`constructor`](#constructor-17)
 
 #### Properties
 
@@ -2573,7 +2573,7 @@ Several colliders on one entity form one compound body (`09-physics.md` §2.2).
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`allowMultiple`](#allowmultiple-5)
+[`Collider`](#abstract-collider).[`allowMultiple`](#allowmultiple-11)
 
 ##### center
 
@@ -2589,11 +2589,11 @@ The shape's offset from the entity origin, in local units.
 
 > **inlineMaterial**: [`PhysicsMaterialValues`](#physicsmaterialvalues) \| `null`
 
-An inline surface, used when [Collider.material](#material-2) is `null`.
+An inline surface, used when [Collider.material](#material-5) is `null`.
 
 ###### Inherited from
 
-[`SphereCollider`](#spherecollider).[`inlineMaterial`](#inlinematerial-6)
+[`SphereCollider`](#spherecollider).[`inlineMaterial`](#inlinematerial-12)
 
 ##### isTrigger
 
@@ -2603,7 +2603,7 @@ When `true` the shape reports overlaps and resolves no contacts.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`isTrigger`](#istrigger-2)
+[`Collider`](#abstract-collider).[`isTrigger`](#istrigger-5)
 
 ##### layerOverride
 
@@ -2613,21 +2613,21 @@ The name of the layer this collider filters as, or `""` to use `entity.layer`.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`layerOverride`](#layeroverride-2)
+[`Collider`](#abstract-collider).[`layerOverride`](#layeroverride-5)
 
 ##### material
 
 > **material**: [`AssetHandle`](#assethandle)\<[`PhysicsMaterial`](#physicsmaterial)\> \| `null`
 
-A `.physicsmaterial.json` reference; wins over [Collider.inlineMaterial](#inlinematerial-2).
+A `.physicsmaterial.json` reference; wins over [Collider.inlineMaterial](#inlinematerial-5).
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`material`](#material-2)
+[`Collider`](#abstract-collider).[`material`](#material-5)
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-21)
+> `static` **schema**: [`Schema`](#schema-30)
 
 The serialized field declarations (ADR-0004).
 
@@ -2659,7 +2659,7 @@ The app.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`app`](#app-8)
+[`Collider`](#abstract-collider).[`app`](#app-14)
 
 ##### enabled
 
@@ -2694,25 +2694,25 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`enabled`](#enabled-9)
+[`Collider`](#abstract-collider).[`enabled`](#enabled-15)
 
 ##### entity
 
 ###### Get Signature
 
-> **get** **entity**(): [`Entity`](#entity-9)
+> **get** **entity**(): [`Entity`](#entity-17)
 
 The entity this component is attached to.
 
 ###### Returns
 
-[`Entity`](#entity-9)
+[`Entity`](#entity-17)
 
 The owning entity.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`entity`](#entity-6)
+[`Collider`](#abstract-collider).[`entity`](#entity-12)
 
 ##### handle
 
@@ -2730,7 +2730,7 @@ The handle.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`handle`](#handle-6)
+[`Collider`](#abstract-collider).[`handle`](#handle-12)
 
 ##### isDestroyed
 
@@ -2750,7 +2750,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`isDestroyed`](#isdestroyed-6)
+[`Collider`](#abstract-collider).[`isDestroyed`](#isdestroyed-12)
 
 ##### isEnabledInHierarchy
 
@@ -2768,7 +2768,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`isEnabledInHierarchy`](#isenabledinhierarchy-6)
+[`Collider`](#abstract-collider).[`isEnabledInHierarchy`](#isenabledinhierarchy-12)
 
 ##### onDestroyed
 
@@ -2798,25 +2798,25 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`onDestroyed`](#ondestroyed-6)
+[`Collider`](#abstract-collider).[`onDestroyed`](#ondestroyed-12)
 
 ##### transform
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-23)
+> **get** **transform**(): [`Transform`](#transform-40)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-23)
+[`Transform`](#transform-40)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`transform`](#transform-6)
+[`Collider`](#abstract-collider).[`transform`](#transform-12)
 
 ##### uid
 
@@ -2834,25 +2834,25 @@ The identifier.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`uid`](#uid-6)
+[`Collider`](#abstract-collider).[`uid`](#uid-12)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-26)
+> **get** **world**(): [`World`](#world-45)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-26)
+[`World`](#world-45)
 
 The world.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`world`](#world-7)
+[`Collider`](#abstract-collider).[`world`](#world-13)
 
 #### Methods
 
@@ -2935,7 +2935,7 @@ class Spinner extends Component.define({
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`define`](#define-6)
+[`Collider`](#abstract-collider).[`define`](#define-12)
 
 ##### destroy()
 
@@ -2951,7 +2951,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`destroy`](#destroy-6)
+[`Collider`](#abstract-collider).[`destroy`](#destroy-12)
 
 ##### getComponent()
 
@@ -2983,7 +2983,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`getComponent`](#getcomponent-6)
+[`Collider`](#abstract-collider).[`getComponent`](#getcomponent-12)
 
 ##### halfExtentsToRef()
 
@@ -3025,7 +3025,7 @@ Marks the entity's body for a rebuild at the start of the next fixed step.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`onAttach`](#onattach-4)
+[`Collider`](#abstract-collider).[`onAttach`](#onattach-8)
 
 ##### onDetach()
 
@@ -3039,7 +3039,7 @@ Marks the entity's body for a rebuild, which removes this collider from it.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`onDetach`](#ondetach-4)
+[`Collider`](#abstract-collider).[`onDetach`](#ondetach-8)
 
 ##### rebuild()
 
@@ -3061,7 +3061,7 @@ box.rebuild();
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`rebuild`](#rebuild-3)
+[`Collider`](#abstract-collider).[`rebuild`](#rebuild-7)
 
 ##### requireComponent()
 
@@ -3098,7 +3098,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`requireComponent`](#requirecomponent-6)
+[`Collider`](#abstract-collider).[`requireComponent`](#requirecomponent-12)
 
 ##### resolveMaterial()
 
@@ -3122,49 +3122,40 @@ The asset's values, the inline values, or the fallback.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`resolveMaterial`](#resolvematerial-2)
+[`Collider`](#abstract-collider).[`resolveMaterial`](#resolvematerial-5)
 
 ***
 
-### Camera
+### BoxCollider2D
 
-The camera an entity renders the world through (`docs/architecture/07-rendering.md` §2.1).
-
-#### Remarks
-
-A world renders through the enabled camera with the highest `priority`; ties break on creation
-order. A world with no enabled camera draws nothing and logs `IGX-0706` once.
+An axis-aligned box collider, sized in local metres.
 
 #### Example
 
 ```ts
-const eye = world.createEntity("Main Camera", { position: { x: 0, y: 2, z: -6 } });
-eye.addComponent(Camera, { fov: 50, near: 0.05 });
+const floor = world.createEntity("Floor");
+floor.addComponent(BoxCollider2D, { size: { x: 20, y: 1 } });
 ```
 
 #### Extends
 
-- [`Component`](#abstract-component)
-
-#### Implements
-
-- [`ComponentHooks`](#componenthooks)
+- [`Collider2D`](#abstract-collider2d)
 
 #### Constructors
 
 ##### Constructor
 
-> **new Camera**(): [`Camera`](#camera)
+> **new BoxCollider2D**(): [`BoxCollider2D`](#boxcollider2d)
 
-Applies the schema defaults, exactly as `Component.define` would.
+Applies this collider's defaults on top of the shared ones.
 
 ###### Returns
 
-[`Camera`](#camera)
+[`BoxCollider2D`](#boxcollider2d)
 
 ###### Overrides
 
-[`Component`](#abstract-component).[`constructor`](#constructor-13)
+[`Collider2D`](#abstract-collider2d).[`constructor`](#constructor-18)
 
 #### Properties
 
@@ -3172,67 +3163,109 @@ Applies the schema defaults, exactly as `Component.define` would.
 
 > `static` **allowMultiple**: `boolean`
 
-At most one camera per entity: two views from one transform would be the same view.
+Several colliders on one entity make one compound body.
 
-##### clearColor
+###### Inherited from
 
-> **clearColor**: [`ColorLike`](#colorlike) \| `null`
+[`Collider2D`](#abstract-collider2d).[`allowMultiple`](#allowmultiple-12)
 
-##### far
+##### frictionCombine
 
-> **far**: `number`
+> **frictionCombine**: `"average"` \| `"min"` \| `"multiply"` \| `"max"`
 
-##### fov
+How this surface's friction combines with the one it touches.
 
-> **fov**: `number`
+###### Inherited from
 
-##### near
+[`Collider2D`](#abstract-collider2d).[`frictionCombine`](#frictioncombine-3)
 
-> **near**: `number`
+##### inlineMaterial
 
-##### orthographicSize
+> **inlineMaterial**: [`Physics2DMaterialValues`](#physics2dmaterialvalues) \| `null`
 
-> **orthographicSize**: `number`
+An inline surface, used when [Collider2D.material](#material-6) is `null`.
 
-##### priority
+###### Inherited from
 
-> **priority**: `number`
+[`TilemapCollider2D`](#tilemapcollider2d).[`inlineMaterial`](#inlinematerial-13)
 
-##### projection
+##### isTrigger
 
-> **projection**: `"perspective"` \| `"orthographic"`
+> **isTrigger**: `boolean`
+
+When `true` the shape reports overlaps and resolves no contacts.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`isTrigger`](#istrigger-6)
+
+##### layerOverride
+
+> **layerOverride**: `string`
+
+The name of the layer this collider filters as, or `""` to use `entity.layer`.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`layerOverride`](#layeroverride-6)
+
+##### material
+
+> **material**: [`AssetHandle`](#assethandle)\<[`PhysicsMaterial2D`](#physicsmaterial2d)\> \| `null`
+
+A `.physicsmaterial.json` reference; wins over [Collider2D.inlineMaterial](#inlinematerial-6).
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`material`](#material-6)
+
+##### offset
+
+> **offset**: [`Vec2Like`](#vec2like)
+
+The shape's offset from the entity origin, in local metres.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`offset`](#offset-4)
+
+##### oneWay
+
+> **oneWay**: `boolean`
+
+Whether this is a one-way platform: a `CharacterController2D` with
+`onOneWayPlatforms` passes up through it and lands on it coming down. Rigid bodies are
+unaffected — one-way support is a character-controller feature in the MVP.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`oneWay`](#oneway-3)
+
+##### restitutionCombine
+
+> **restitutionCombine**: `"average"` \| `"min"` \| `"multiply"` \| `"max"`
+
+How this surface's restitution combines with the one it touches.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`restitutionCombine`](#restitutioncombine-3)
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-21)
+> `static` **schema**: [`Schema`](#schema-30)
 
 The serialized field declarations (ADR-0004).
+
+##### size
+
+> **size**: [`Vec2Like`](#vec2like)
 
 ##### typeId
 
 > `static` **typeId**: `string`
 
 The namespaced registration id.
-
-##### viewport
-
-> **viewport**: `object`
-
-###### height
-
-> **height**: `number`
-
-###### width
-
-> **width**: `number`
-
-###### x
-
-> **x**: `number`
-
-###### y
-
-> **y**: `number`
 
 #### Accessors
 
@@ -3252,7 +3285,7 @@ The app.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`app`](#app-9)
+[`Collider2D`](#abstract-collider2d).[`app`](#app-15)
 
 ##### enabled
 
@@ -3287,25 +3320,25 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-10)
+[`Collider2D`](#abstract-collider2d).[`enabled`](#enabled-16)
 
 ##### entity
 
 ###### Get Signature
 
-> **get** **entity**(): [`Entity`](#entity-9)
+> **get** **entity**(): [`Entity`](#entity-17)
 
 The entity this component is attached to.
 
 ###### Returns
 
-[`Entity`](#entity-9)
+[`Entity`](#entity-17)
 
 The owning entity.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`entity`](#entity-7)
+[`Collider2D`](#abstract-collider2d).[`entity`](#entity-13)
 
 ##### handle
 
@@ -3323,7 +3356,7 @@ The handle.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`handle`](#handle-7)
+[`Collider2D`](#abstract-collider2d).[`handle`](#handle-13)
 
 ##### isDestroyed
 
@@ -3343,7 +3376,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-7)
+[`Collider2D`](#abstract-collider2d).[`isDestroyed`](#isdestroyed-13)
 
 ##### isEnabledInHierarchy
 
@@ -3361,26 +3394,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-7)
-
-##### lite
-
-###### Get Signature
-
-> **get** **lite**(): `object`
-
-The Babylon Lite camera this component owns. Unstable escape hatch
-(`docs/architecture/00-overview.md` §3).
-
-###### Returns
-
-`object`
-
-The camera, or `null` before the component is attached.
-
-###### camera
-
-> `readonly` **camera**: `FreeCamera` \| `null`
+[`Collider2D`](#abstract-collider2d).[`isEnabledInHierarchy`](#isenabledinhierarchy-13)
 
 ##### onDestroyed
 
@@ -3410,25 +3424,25 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-7)
+[`Collider2D`](#abstract-collider2d).[`onDestroyed`](#ondestroyed-13)
 
 ##### transform
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-23)
+> **get** **transform**(): [`Transform`](#transform-40)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-23)
+[`Transform`](#transform-40)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`transform`](#transform-7)
+[`Collider2D`](#abstract-collider2d).[`transform`](#transform-13)
 
 ##### uid
 
@@ -3446,25 +3460,25 @@ The identifier.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`uid`](#uid-7)
+[`Collider2D`](#abstract-collider2d).[`uid`](#uid-13)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-26)
+> **get** **world**(): [`World`](#world-45)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-26)
+[`World`](#world-45)
 
 The world.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`world`](#world-8)
+[`Collider2D`](#abstract-collider2d).[`world`](#world-14)
 
 #### Methods
 
@@ -3517,7 +3531,7 @@ class Spinner extends Component.define({
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`define`](#define-7)
+[`Collider2D`](#abstract-collider2d).[`define`](#define-13)
 
 ##### destroy()
 
@@ -3533,7 +3547,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`destroy`](#destroy-7)
+[`Collider2D`](#abstract-collider2d).[`destroy`](#destroy-13)
 
 ##### getComponent()
 
@@ -3565,7 +3579,561 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`getComponent`](#getcomponent-7)
+[`Collider2D`](#abstract-collider2d).[`getComponent`](#getcomponent-13)
+
+##### onAttach()
+
+> **onAttach**(): `void`
+
+Marks the entity's body for a rebuild at the start of the next fixed step.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`onAttach`](#onattach-9)
+
+##### onDetach()
+
+> **onDetach**(): `void`
+
+Marks the entity's body for a rebuild, which removes this collider from it.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`onDetach`](#ondetach-9)
+
+##### rebuild()
+
+> **rebuild**(): `void`
+
+Rebuilds the entity's body and shapes at the start of the next fixed step. Call it after
+changing a size, an offset, `isTrigger`, or the entity's scale.
+
+###### Returns
+
+`void`
+
+###### Example
+
+```ts
+box.size = { x: 2, y: 2 };
+box.rebuild();
+```
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`rebuild`](#rebuild-8)
+
+##### requireComponent()
+
+> **requireComponent**\<`T`\>(`type`): `T`
+
+Finds another component on the same entity, requiring it to be there — the supported way to
+link components (`docs/architecture/03-scripting-and-components.md` §8).
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class.
+
+###### Returns
+
+`T`
+
+The first match in attach order.
+
+###### Throws
+
+IgnifxError with code `IGX-0201` when the entity has no such component.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`requireComponent`](#requirecomponent-13)
+
+##### resolveMaterial()
+
+> **resolveMaterial**(`fallback`): [`Physics2DMaterialValues`](#physics2dmaterialvalues)
+
+Resolves the surface this collider presents to Rapier.
+
+###### Parameters
+
+###### fallback
+
+[`Physics2DMaterialValues`](#physics2dmaterialvalues)
+
+The world's `physics2d.defaultMaterial`.
+
+###### Returns
+
+[`Physics2DMaterialValues`](#physics2dmaterialvalues)
+
+The asset's values, the inline values, or the fallback.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`resolveMaterial`](#resolvematerial-6)
+
+***
+
+### Camera
+
+The camera an entity renders the world through (`docs/architecture/07-rendering.md` §2.1).
+
+#### Remarks
+
+A world renders through the enabled camera with the highest `priority`; ties break on creation
+order. A world with no enabled camera draws nothing and logs `IGX-0706` once.
+
+#### Example
+
+```ts
+const eye = world.createEntity("Main Camera", { position: { x: 0, y: 2, z: -6 } });
+eye.addComponent(Camera, { fov: 50, near: 0.05 });
+```
+
+#### Extends
+
+- [`Component`](#abstract-component)
+
+#### Implements
+
+- [`ComponentHooks`](#componenthooks)
+
+#### Constructors
+
+##### Constructor
+
+> **new Camera**(): [`Camera`](#camera)
+
+Applies the schema defaults, exactly as `Component.define` would.
+
+###### Returns
+
+[`Camera`](#camera)
+
+###### Overrides
+
+[`Component`](#abstract-component).[`constructor`](#constructor-20)
+
+#### Properties
+
+##### allowMultiple
+
+> `static` **allowMultiple**: `boolean`
+
+At most one camera per entity: two views from one transform would be the same view.
+
+##### clearColor
+
+> **clearColor**: [`ColorLike`](#colorlike) \| `null`
+
+##### far
+
+> **far**: `number`
+
+##### fov
+
+> **fov**: `number`
+
+##### near
+
+> **near**: `number`
+
+##### orthographicSize
+
+> **orthographicSize**: `number`
+
+##### priority
+
+> **priority**: `number`
+
+##### projection
+
+> **projection**: `"perspective"` \| `"orthographic"`
+
+##### schema
+
+> `static` **schema**: [`Schema`](#schema-30)
+
+The serialized field declarations (ADR-0004).
+
+##### typeId
+
+> `static` **typeId**: `string`
+
+The namespaced registration id.
+
+##### viewport
+
+> **viewport**: `object`
+
+###### height
+
+> **height**: `number`
+
+###### width
+
+> **width**: `number`
+
+###### x
+
+> **x**: `number`
+
+###### y
+
+> **y**: `number`
+
+#### Accessors
+
+##### app
+
+###### Get Signature
+
+> **get** **app**(): [`App`](#app)
+
+The app that owns the world.
+
+###### Returns
+
+[`App`](#app)
+
+The app.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`app`](#app-16)
+
+##### enabled
+
+###### Get Signature
+
+> **get** **enabled**(): `boolean`
+
+The component's own enabled flag; `true` by default. Setting it runs the enable or disable
+transition (`docs/architecture/01-lifecycle-and-time.md` §6): `onDisable` runs immediately,
+`awake`/`onEnable` run in the next lifecycle flush — or immediately and nested when the change
+happens inside a callback.
+
+###### Returns
+
+`boolean`
+
+`true` when the component's own flag is set.
+
+###### Set Signature
+
+> **set** **enabled**(`value`): `void`
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`enabled`](#enabled-17)
+
+##### entity
+
+###### Get Signature
+
+> **get** **entity**(): [`Entity`](#entity-17)
+
+The entity this component is attached to.
+
+###### Returns
+
+[`Entity`](#entity-17)
+
+The owning entity.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`entity`](#entity-14)
+
+##### handle
+
+###### Get Signature
+
+> **get** **handle**(): [`ComponentHandle`](#componenthandle-1)
+
+The dense runtime handle; invalid after destruction.
+
+###### Returns
+
+[`ComponentHandle`](#componenthandle-1)
+
+The handle.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`handle`](#handle-14)
+
+##### isDestroyed
+
+###### Get Signature
+
+> **get** **isDestroyed**(): `boolean`
+
+`true` from the moment `destroy()` is called, long before the destroy flush runs.
+
+###### Returns
+
+`boolean`
+
+`true` once the component has been queued for destruction.
+
+Whether the owner has already been destroyed.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-14)
+
+##### isEnabledInHierarchy
+
+###### Get Signature
+
+> **get** **isEnabledInHierarchy**(): `boolean`
+
+`true` when the component's own flag is set **and** its entity is active in the hierarchy.
+
+###### Returns
+
+`boolean`
+
+`true` when the component is effectively enabled.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-14)
+
+##### lite
+
+###### Get Signature
+
+> **get** **lite**(): `object`
+
+The Babylon Lite camera this component owns. Unstable escape hatch
+(`docs/architecture/00-overview.md` §3).
+
+###### Returns
+
+`object`
+
+The camera, or `null` before the component is attached.
+
+###### camera
+
+> `readonly` **camera**: `FreeCamera` \| `null`
+
+##### onDestroyed
+
+###### Get Signature
+
+> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+Emitted once when the component is destroyed, in the destroy flush. Connecting with
+`{ owner: this }` elsewhere uses it to detach handlers automatically
+(`docs/architecture/02-scene-graph.md` §8).
+
+###### Returns
+
+[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+The signal. It is created on first access, so a component nobody listens to allocates
+nothing.
+
+Emitted once when the owner is destroyed; the signal uses it to detach the handler.
+
+###### Remarks
+
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
+`docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
+invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-14)
+
+##### transform
+
+###### Get Signature
+
+> **get** **transform**(): [`Transform`](#transform-40)
+
+The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
+
+###### Returns
+
+[`Transform`](#transform-40)
+
+The entity's transform.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`transform`](#transform-14)
+
+##### uid
+
+###### Get Signature
+
+> **get** **uid**(): `string`
+
+The stable ULID; the key files use to reference this component.
+
+###### Returns
+
+`string`
+
+The identifier.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`uid`](#uid-14)
+
+##### world
+
+###### Get Signature
+
+> **get** **world**(): [`World`](#world-45)
+
+The world the entity belongs to.
+
+###### Returns
+
+[`World`](#world-45)
+
+The world.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`world`](#world-15)
+
+#### Methods
+
+##### define()
+
+> `static` **define**\<`S`\>(`schema`): [`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+Declares a component's serialized fields and returns the base class to extend (ADR-0004,
+`docs/architecture/03-scripting-and-components.md` §3). The returned class exposes every field
+as a typed instance property, applies the defaults in its constructor, and carries the schema
+for the serializer, the inspector, and the docs harness.
+
+###### Type Parameters
+
+###### S
+
+`S` *extends* `Readonly`\<`Record`\<`string`, [`FieldDefinition`](#fielddefinition)\<`unknown`\>\>\>
+
+The schema being declared.
+
+###### Parameters
+
+###### schema
+
+`S`
+
+The field definitions, keyed by the property name they become.
+
+###### Returns
+
+[`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+An abstract class to extend.
+
+###### Throws
+
+IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
+with a `Component`/`Script` member.
+
+###### Example
+
+```ts
+class Spinner extends Component.define({
+  degreesPerSecond: f32(90, { min: -360, max: 360 }),
+  axis: vec3({ x: 0, y: 1, z: 0 }),
+}) {
+  static typeId = "mygame/Spinner";
+}
+```
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`define`](#define-14)
+
+##### destroy()
+
+> **destroy**(): `void`
+
+Queues this component for destruction. It stays usable until the destroy flush of the current
+frame, but reports `isDestroyed === true` immediately
+(`docs/architecture/01-lifecycle-and-time.md` §6). Calling it twice is a no-op.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`destroy`](#destroy-14)
+
+##### getComponent()
+
+> **getComponent**\<`T`\>(`type`): `T` \| `null`
+
+Finds another component on the same entity — sugar for `this.entity.getComponent`.
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class; matching is by class identity **and** inheritance.
+
+###### Returns
+
+`T` \| `null`
+
+The first match in attach order, or `null`.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-14)
 
 ##### getProjectionMatrix()
 
@@ -3619,7 +4187,7 @@ Creates the Lite camera and parents it under the entity's node.
 
 ###### Implementation of
 
-[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-5)
+[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-10)
 
 ##### onDetach()
 
@@ -3640,7 +4208,7 @@ this was the last one.
 
 ###### Implementation of
 
-[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-5)
+[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-10)
 
 ##### requireComponent()
 
@@ -3677,7 +4245,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-7)
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-14)
 
 ##### screenToRay()
 
@@ -3827,34 +4395,45 @@ case `out` holds a mirrored projection and should be ignored.
 
 ***
 
-### CapsuleCollider
+### Camera2D
 
-A capsule collider: a cylinder with hemispherical caps, standing along one axis.
+The 2D camera.
 
 #### Remarks
 
-`height` is the **total** tip-to-tip height, so a capsule shorter than `2 * radius` degenerates to
-a sphere of that radius rather than inverting.
+`orthographicSize` is a **half-height in metres**, exactly as Unity's orthographic camera is, so
+the zoom it produces is `viewportHeightPx / (2 · size · PPU)`. With `pixelPerfect` on, that zoom
+is snapped to a whole number (or to `1/n` when the camera is pulled far out) and the camera's
+position is snapped to the pixel grid at sync time — scripts keep their sub-pixel positions, so
+movement stays smooth even though drawing does not.
+
+#### Example
+
+```ts
+const camera = app.world.createEntity({ name: "camera" }).addComponent(Camera2D);
+camera.orthographicSize = 3;
+camera.pixelPerfect = true;
+```
 
 #### Extends
 
-- [`Collider`](#abstract-collider)
+- [`Component`](#abstract-component)
 
 #### Constructors
 
 ##### Constructor
 
-> **new CapsuleCollider**(): [`CapsuleCollider`](#capsulecollider)
+> **new Camera2D**(): [`Camera2D`](#camera2d)
 
-Applies this collider's defaults on top of the shared ones.
+Builds a camera with the schema's defaults.
 
 ###### Returns
 
-[`CapsuleCollider`](#capsulecollider)
+[`Camera2D`](#camera2d)
 
 ###### Overrides
 
-[`Collider`](#abstract-collider).[`constructor`](#constructor-11)
+[`Component`](#abstract-component).[`constructor`](#constructor-20)
 
 #### Properties
 
@@ -3862,85 +4441,79 @@ Applies this collider's defaults on top of the shared ones.
 
 > `static` **allowMultiple**: `boolean`
 
-Several colliders on one entity form one compound body (`09-physics.md` §2.2).
+One camera per entity.
 
-###### Inherited from
+##### boundsMax
 
-[`Collider`](#abstract-collider).[`allowMultiple`](#allowmultiple-5)
+> **boundsMax**: [`Vec2Like`](#vec2like) \| `null`
 
-##### center
+The upper bound of the camera's travel, in metres, or `null` for no bound.
 
-> **center**: [`Vec3Like`](#vec3like)
+##### boundsMin
 
-The shape's offset from the entity origin, in local units.
+> **boundsMin**: [`Vec2Like`](#vec2like) \| `null`
 
-###### Inherited from
+The lower bound of the camera's travel, in metres, or `null` for no bound.
 
-[`Collider`](#abstract-collider).[`center`](#center-3)
+##### deadZone
 
-##### direction
+> **deadZone**: [`Vec2Like`](#vec2like)
 
-> **direction**: `"x"` \| `"y"` \| `"z"`
+The half-size of the rectangle the target may move inside before the camera reacts, in metres.
 
-##### height
+##### follow
 
-> **height**: `number`
+> **follow**: [`Entity`](#entity-17) \| `null`
 
-##### inlineMaterial
+The entity this camera follows, or `null`. Read by `Camera2DFollow`.
 
-> **inlineMaterial**: [`PhysicsMaterialValues`](#physicsmaterialvalues) \| `null`
+##### followDamping
 
-An inline surface, used when [Collider.material](#material-2) is `null`.
+> **followDamping**: `number`
 
-###### Inherited from
+How long the follow takes to catch up, in seconds.
 
-[`Collider`](#abstract-collider).[`inlineMaterial`](#inlinematerial-2)
+##### followOffset
 
-##### isTrigger
+> **followOffset**: [`Vec2Like`](#vec2like)
 
-> **isTrigger**: `boolean`
+A constant offset added to the followed entity's position, in metres.
 
-When `true` the shape reports overlaps and resolves no contacts.
+##### orthographicSize
 
-###### Inherited from
+> **orthographicSize**: `number`
 
-[`Collider`](#abstract-collider).[`isTrigger`](#istrigger-2)
+Half the viewport height, in metres.
 
-##### layerOverride
+##### pixelPerfect
 
-> **layerOverride**: `string`
+> **pixelPerfect**: `boolean`
 
-The name of the layer this collider filters as, or `""` to use `entity.layer`.
+Whether zoom snaps to an integer and positions snap to the pixel grid.
 
-###### Inherited from
+##### priority
 
-[`Collider`](#abstract-collider).[`layerOverride`](#layeroverride-2)
+> **priority**: `number`
 
-##### material
+Highest wins when a world has several enabled cameras.
 
-> **material**: [`AssetHandle`](#assethandle)\<[`PhysicsMaterial`](#physicsmaterial)\> \| `null`
+##### referenceResolution
 
-A `.physicsmaterial.json` reference; wins over [Collider.inlineMaterial](#inlinematerial-2).
+> **referenceResolution**: [`Vec2Like`](#vec2like)
 
-###### Inherited from
-
-[`Collider`](#abstract-collider).[`material`](#material-2)
-
-##### radius
-
-> **radius**: `number`
+The design resolution a pixel-perfect camera fits an integer zoom to, in pixels.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-21)
+> `static` **schema**: [`Schema`](#schema-30)
 
-The serialized field declarations.
+The declarative fields (ADR-0004).
 
 ##### typeId
 
 > `static` **typeId**: `string`
 
-The namespaced registration id.
+The registration id the serializer writes into scene files.
 
 #### Accessors
 
@@ -3960,7 +4533,21 @@ The app.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`app`](#app-8)
+[`Component`](#abstract-component).[`app`](#app-16)
+
+##### centre
+
+###### Get Signature
+
+> **get** **centre**(): [`Vec2Like`](#vec2like)
+
+The world point the camera is centred on, after bounds clamping and pixel-perfect snapping.
+
+###### Returns
+
+[`Vec2Like`](#vec2like)
+
+A read-only view of the centre, in metres.
 
 ##### enabled
 
@@ -3995,25 +4582,25 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`enabled`](#enabled-9)
+[`Component`](#abstract-component).[`enabled`](#enabled-17)
 
 ##### entity
 
 ###### Get Signature
 
-> **get** **entity**(): [`Entity`](#entity-9)
+> **get** **entity**(): [`Entity`](#entity-17)
 
 The entity this component is attached to.
 
 ###### Returns
 
-[`Entity`](#entity-9)
+[`Entity`](#entity-17)
 
 The owning entity.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`entity`](#entity-6)
+[`Component`](#abstract-component).[`entity`](#entity-14)
 
 ##### handle
 
@@ -4031,7 +4618,7 @@ The handle.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`handle`](#handle-6)
+[`Component`](#abstract-component).[`handle`](#handle-14)
 
 ##### isDestroyed
 
@@ -4051,7 +4638,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`isDestroyed`](#isdestroyed-6)
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-14)
 
 ##### isEnabledInHierarchy
 
@@ -4069,7 +4656,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`isEnabledInHierarchy`](#isenabledinhierarchy-6)
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-14)
 
 ##### onDestroyed
 
@@ -4099,25 +4686,25 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`onDestroyed`](#ondestroyed-6)
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-14)
 
 ##### transform
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-23)
+> **get** **transform**(): [`Transform`](#transform-40)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-23)
+[`Transform`](#transform-40)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`transform`](#transform-6)
+[`Component`](#abstract-component).[`transform`](#transform-14)
 
 ##### uid
 
@@ -4135,25 +4722,1098 @@ The identifier.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`uid`](#uid-6)
+[`Component`](#abstract-component).[`uid`](#uid-14)
+
+##### viewportSizePx
+
+###### Get Signature
+
+> **get** **viewportSizePx**(): [`Vec2Like`](#vec2like)
+
+The viewport the camera last measured, in pixels.
+
+###### Returns
+
+[`Vec2Like`](#vec2like)
+
+A read-only view of the size.
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-26)
+> **get** **world**(): [`World`](#world-45)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-26)
+[`World`](#world-45)
 
 The world.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`world`](#world-7)
+[`Component`](#abstract-component).[`world`](#world-15)
+
+##### zoom
+
+###### Get Signature
+
+> **get** **zoom**(): `number`
+
+The zoom the camera last resolved to — `Sprite2DView.zoom`.
+
+###### Returns
+
+`number`
+
+The zoom; `1` before the first sync.
+
+#### Methods
+
+##### define()
+
+> `static` **define**\<`S`\>(`schema`): [`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+Declares a component's serialized fields and returns the base class to extend (ADR-0004,
+`docs/architecture/03-scripting-and-components.md` §3). The returned class exposes every field
+as a typed instance property, applies the defaults in its constructor, and carries the schema
+for the serializer, the inspector, and the docs harness.
+
+###### Type Parameters
+
+###### S
+
+`S` *extends* `Readonly`\<`Record`\<`string`, [`FieldDefinition`](#fielddefinition)\<`unknown`\>\>\>
+
+The schema being declared.
+
+###### Parameters
+
+###### schema
+
+`S`
+
+The field definitions, keyed by the property name they become.
+
+###### Returns
+
+[`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+An abstract class to extend.
+
+###### Throws
+
+IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
+with a `Component`/`Script` member.
+
+###### Example
+
+```ts
+class Spinner extends Component.define({
+  degreesPerSecond: f32(90, { min: -360, max: 360 }),
+  axis: vec3({ x: 0, y: 1, z: 0 }),
+}) {
+  static typeId = "mygame/Spinner";
+}
+```
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`define`](#define-14)
+
+##### destroy()
+
+> **destroy**(): `void`
+
+Queues this component for destruction. It stays usable until the destroy flush of the current
+frame, but reports `isDestroyed === true` immediately
+(`docs/architecture/01-lifecycle-and-time.md` §6). Calling it twice is a no-op.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`destroy`](#destroy-14)
+
+##### getComponent()
+
+> **getComponent**\<`T`\>(`type`): `T` \| `null`
+
+Finds another component on the same entity — sugar for `this.entity.getComponent`.
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class; matching is by class identity **and** inheritance.
+
+###### Returns
+
+`T` \| `null`
+
+The first match in attach order, or `null`.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-14)
+
+##### requireComponent()
+
+> **requireComponent**\<`T`\>(`type`): `T`
+
+Finds another component on the same entity, requiring it to be there — the supported way to
+link components (`docs/architecture/03-scripting-and-components.md` §8).
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class.
+
+###### Returns
+
+`T`
+
+The first match in attach order.
+
+###### Throws
+
+IgnifxError with code `IGX-0201` when the entity has no such component.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-14)
+
+##### screenToWorld()
+
+> **screenToWorld**(`x`, `y`, `out?`): [`MutableVec2`](#mutablevec2)
+
+Converts a viewport pixel into a world point.
+
+###### Parameters
+
+###### x
+
+`number`
+
+The viewport x, in pixels from the left edge.
+
+###### y
+
+`number`
+
+The viewport y, in pixels from the top edge.
+
+###### out?
+
+[`MutableVec2`](#mutablevec2)
+
+The vector to write; omitting it allocates one.
+
+###### Returns
+
+[`MutableVec2`](#mutablevec2)
+
+`out`, in world metres.
+
+###### Remarks
+
+`x` and `y` are measured from the surface's top-left corner, which is what a `PointerEvent`
+reports and what `@ignifx/input`'s pointer position carries. The result is in metres with +Y
+up. Before the first frame has synced, the camera has no viewport and the result is the
+camera's own centre.
+
+###### Example
+
+```ts
+const world = camera.screenToWorld(pointer.x, pointer.y);
+```
+
+##### worldToScreen()
+
+> **worldToScreen**(`point`, `out?`): [`MutableVec2`](#mutablevec2)
+
+Converts a world point into a viewport pixel.
+
+###### Parameters
+
+###### point
+
+[`Vec2Like`](#vec2like)
+
+The world point, in metres.
+
+###### out?
+
+[`MutableVec2`](#mutablevec2)
+
+The vector to write; omitting it allocates one.
+
+###### Returns
+
+[`MutableVec2`](#mutablevec2)
+
+`out`, in pixels from the surface's top-left corner.
+
+***
+
+### Camera2DFollow
+
+A damped, dead-zoned camera follow.
+
+#### Example
+
+```ts
+const camera = app.world.createEntity({ name: "camera" });
+const view = camera.addComponent(Camera2D);
+view.follow = player;
+view.deadZone = { x: 0.5, y: 0.3 };
+camera.addComponent(Camera2DFollow);
+```
+
+#### Extends
+
+- [`Script`](#abstract-script)
+
+#### Constructors
+
+##### Constructor
+
+> **new Camera2DFollow**(): [`Camera2DFollow`](#camera2dfollow-1)
+
+Creates a component. The engine constructs components; game code never calls `new`.
+
+###### Returns
+
+[`Camera2DFollow`](#camera2dfollow-1)
+
+###### Inherited from
+
+[`Script`](#abstract-script).[`constructor`](#constructor-58)
+
+#### Properties
+
+##### allowMultiple
+
+> `static` **allowMultiple**: `boolean`
+
+One follow per entity.
+
+##### typeId
+
+> `static` **typeId**: `string`
+
+The registration id the serializer writes into scene files.
+
+#### Accessors
+
+##### app
+
+###### Get Signature
+
+> **get** **app**(): [`App`](#app)
+
+The app that owns the world.
+
+###### Returns
+
+[`App`](#app)
+
+The app.
+
+###### Inherited from
+
+[`Script`](#abstract-script).[`app`](#app-35)
+
+##### enabled
+
+###### Get Signature
+
+> **get** **enabled**(): `boolean`
+
+The component's own enabled flag; `true` by default. Setting it runs the enable or disable
+transition (`docs/architecture/01-lifecycle-and-time.md` §6): `onDisable` runs immediately,
+`awake`/`onEnable` run in the next lifecycle flush — or immediately and nested when the change
+happens inside a callback.
+
+###### Returns
+
+`boolean`
+
+`true` when the component's own flag is set.
+
+###### Set Signature
+
+> **set** **enabled**(`value`): `void`
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Script`](#abstract-script).[`enabled`](#enabled-38)
+
+##### entity
+
+###### Get Signature
+
+> **get** **entity**(): [`Entity`](#entity-17)
+
+The entity this component is attached to.
+
+###### Returns
+
+[`Entity`](#entity-17)
+
+The owning entity.
+
+###### Inherited from
+
+[`Script`](#abstract-script).[`entity`](#entity-36)
+
+##### handle
+
+###### Get Signature
+
+> **get** **handle**(): [`ComponentHandle`](#componenthandle-1)
+
+The dense runtime handle; invalid after destruction.
+
+###### Returns
+
+[`ComponentHandle`](#componenthandle-1)
+
+The handle.
+
+###### Inherited from
+
+[`Script`](#abstract-script).[`handle`](#handle-31)
+
+##### isDestroyed
+
+###### Get Signature
+
+> **get** **isDestroyed**(): `boolean`
+
+`true` from the moment `destroy()` is called, long before the destroy flush runs.
+
+###### Returns
+
+`boolean`
+
+`true` once the component has been queued for destruction.
+
+Whether the owner has already been destroyed.
+
+###### Inherited from
+
+[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-31)
+
+##### isEnabledInHierarchy
+
+###### Get Signature
+
+> **get** **isEnabledInHierarchy**(): `boolean`
+
+`true` when the component's own flag is set **and** its entity is active in the hierarchy.
+
+###### Returns
+
+`boolean`
+
+`true` when the component is effectively enabled.
+
+###### Inherited from
+
+[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-30)
+
+##### onDestroyed
+
+###### Get Signature
+
+> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+Emitted once when the component is destroyed, in the destroy flush. Connecting with
+`{ owner: this }` elsewhere uses it to detach handlers automatically
+(`docs/architecture/02-scene-graph.md` §8).
+
+###### Returns
+
+[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+The signal. It is created on first access, so a component nobody listens to allocates
+nothing.
+
+Emitted once when the owner is destroyed; the signal uses it to detach the handler.
+
+###### Remarks
+
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
+`docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
+invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
+
+###### Inherited from
+
+[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-31)
+
+##### transform
+
+###### Get Signature
+
+> **get** **transform**(): [`Transform`](#transform-40)
+
+The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
+
+###### Returns
+
+[`Transform`](#transform-40)
+
+The entity's transform.
+
+###### Inherited from
+
+[`Script`](#abstract-script).[`transform`](#transform-32)
+
+##### uid
+
+###### Get Signature
+
+> **get** **uid**(): `string`
+
+The stable ULID; the key files use to reference this component.
+
+###### Returns
+
+`string`
+
+The identifier.
+
+###### Inherited from
+
+[`Script`](#abstract-script).[`uid`](#uid-35)
+
+##### world
+
+###### Get Signature
+
+> **get** **world**(): [`World`](#world-45)
+
+The world the entity belongs to.
+
+###### Returns
+
+[`World`](#world-45)
+
+The world.
+
+###### Inherited from
+
+[`Script`](#abstract-script).[`world`](#world-34)
+
+#### Methods
+
+##### awake()
+
+> **awake**(): `void`
+
+Finds the camera on this entity.
+
+###### Returns
+
+`void`
+
+##### define()
+
+> `static` **define**\<`S`\>(`schema`): [`ScriptDefinition`](#scriptdefinition)\<`S`\>
+
+Declares a script's serialized fields and returns the base class to extend — the `Script`
+counterpart of `Component.define`.
+
+###### Type Parameters
+
+###### S
+
+`S` *extends* `Readonly`\<`Record`\<`string`, [`FieldDefinition`](#fielddefinition)\<`unknown`\>\>\>
+
+The schema being declared.
+
+###### Parameters
+
+###### schema
+
+`S`
+
+The field definitions, keyed by the property name they become.
+
+###### Returns
+
+[`ScriptDefinition`](#scriptdefinition)\<`S`\>
+
+An abstract class to extend.
+
+###### Throws
+
+IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
+with a `Component`/`Script` member.
+
+###### Example
+
+```ts
+class Patrol extends Script.define({ waypoints: array(vec3()), speed: f32(3) }) {
+  static typeId = "mygame/Patrol";
+}
+```
+
+###### Inherited from
+
+[`Script`](#abstract-script).[`define`](#define-30)
+
+##### destroy()
+
+> **destroy**(): `void`
+
+Queues this component for destruction. It stays usable until the destroy flush of the current
+frame, but reports `isDestroyed === true` immediately
+(`docs/architecture/01-lifecycle-and-time.md` §6). Calling it twice is a no-op.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Script`](#abstract-script).[`destroy`](#destroy-31)
+
+##### getComponent()
+
+> **getComponent**\<`T`\>(`type`): `T` \| `null`
+
+Finds another component on the same entity — sugar for `this.entity.getComponent`.
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class; matching is by class identity **and** inheritance.
+
+###### Returns
+
+`T` \| `null`
+
+The first match in attach order, or `null`.
+
+###### Inherited from
+
+[`Script`](#abstract-script).[`getComponent`](#getcomponent-31)
+
+##### lateUpdate()
+
+> **lateUpdate**(`deltaTime`): `void`
+
+Moves the camera toward its target.
+
+###### Parameters
+
+###### deltaTime
+
+`number`
+
+The scaled frame delta.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+The damping is frame-rate independent: the camera covers the same fraction of the remaining
+distance per *second*, not per frame, so a 30 fps machine and a 144 fps machine see the same
+motion. `followDamping` is the time constant in seconds; `0` snaps.
+
+##### requireComponent()
+
+> **requireComponent**\<`T`\>(`type`): `T`
+
+Finds another component on the same entity, requiring it to be there — the supported way to
+link components (`docs/architecture/03-scripting-and-components.md` §8).
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class.
+
+###### Returns
+
+`T`
+
+The first match in attach order.
+
+###### Throws
+
+IgnifxError with code `IGX-0201` when the entity has no such component.
+
+###### Inherited from
+
+[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-31)
+
+##### startCoroutine()
+
+> **startCoroutine**(`routine`): [`CoroutineHandle`](#coroutinehandle)
+
+Starts a coroutine owned by this script (`docs/architecture/01-lifecycle-and-time.md` §5). The
+coroutine is paused while the script is not effectively enabled and cancelled when it is
+destroyed.
+
+###### Parameters
+
+###### routine
+
+[`Coroutine`](#coroutine)
+
+The generator to drive. Call the generator function: `this.spawnLoop()`.
+
+###### Returns
+
+[`CoroutineHandle`](#coroutinehandle)
+
+A handle for stopping it or waiting on it.
+
+###### Example
+
+```ts
+blink() {
+  while (true) {
+    this.renderer.enabled = !this.renderer.enabled;
+    yield waitSeconds(0.2);
+  }
+}
+onEnable(): void {
+  this.startCoroutine(this.blink());
+}
+```
+
+###### Inherited from
+
+[`Script`](#abstract-script).[`startCoroutine`](#startcoroutine-4)
+
+##### stopAllCoroutines()
+
+> **stopAllCoroutines**(): `void`
+
+Stops every coroutine this script started.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Script`](#abstract-script).[`stopAllCoroutines`](#stopallcoroutines-4)
+
+##### stopCoroutine()
+
+> **stopCoroutine**(`handle`): `void`
+
+Stops one coroutine this script started. Stopping a finished coroutine is a no-op.
+
+###### Parameters
+
+###### handle
+
+[`CoroutineHandle`](#coroutinehandle)
+
+The handle [Script.startCoroutine](#startcoroutine-4) returned.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Script`](#abstract-script).[`stopCoroutine`](#stopcoroutine-4)
+
+***
+
+### CapsuleCollider
+
+A capsule collider: a cylinder with hemispherical caps, standing along one axis.
+
+#### Remarks
+
+`height` is the **total** tip-to-tip height, so a capsule shorter than `2 * radius` degenerates to
+a sphere of that radius rather than inverting.
+
+#### Extends
+
+- [`Collider`](#abstract-collider)
+
+#### Constructors
+
+##### Constructor
+
+> **new CapsuleCollider**(): [`CapsuleCollider`](#capsulecollider)
+
+Applies this collider's defaults on top of the shared ones.
+
+###### Returns
+
+[`CapsuleCollider`](#capsulecollider)
+
+###### Overrides
+
+[`Collider`](#abstract-collider).[`constructor`](#constructor-17)
+
+#### Properties
+
+##### allowMultiple
+
+> `static` **allowMultiple**: `boolean`
+
+Several colliders on one entity form one compound body (`09-physics.md` §2.2).
+
+###### Inherited from
+
+[`Collider`](#abstract-collider).[`allowMultiple`](#allowmultiple-11)
+
+##### center
+
+> **center**: [`Vec3Like`](#vec3like)
+
+The shape's offset from the entity origin, in local units.
+
+###### Inherited from
+
+[`Collider`](#abstract-collider).[`center`](#center-3)
+
+##### direction
+
+> **direction**: `"x"` \| `"y"` \| `"z"`
+
+##### height
+
+> **height**: `number`
+
+##### inlineMaterial
+
+> **inlineMaterial**: [`PhysicsMaterialValues`](#physicsmaterialvalues) \| `null`
+
+An inline surface, used when [Collider.material](#material-5) is `null`.
+
+###### Inherited from
+
+[`Collider`](#abstract-collider).[`inlineMaterial`](#inlinematerial-5)
+
+##### isTrigger
+
+> **isTrigger**: `boolean`
+
+When `true` the shape reports overlaps and resolves no contacts.
+
+###### Inherited from
+
+[`Collider`](#abstract-collider).[`isTrigger`](#istrigger-5)
+
+##### layerOverride
+
+> **layerOverride**: `string`
+
+The name of the layer this collider filters as, or `""` to use `entity.layer`.
+
+###### Inherited from
+
+[`Collider`](#abstract-collider).[`layerOverride`](#layeroverride-5)
+
+##### material
+
+> **material**: [`AssetHandle`](#assethandle)\<[`PhysicsMaterial`](#physicsmaterial)\> \| `null`
+
+A `.physicsmaterial.json` reference; wins over [Collider.inlineMaterial](#inlinematerial-5).
+
+###### Inherited from
+
+[`Collider`](#abstract-collider).[`material`](#material-5)
+
+##### radius
+
+> **radius**: `number`
+
+##### schema
+
+> `static` **schema**: [`Schema`](#schema-30)
+
+The serialized field declarations.
+
+##### typeId
+
+> `static` **typeId**: `string`
+
+The namespaced registration id.
+
+#### Accessors
+
+##### app
+
+###### Get Signature
+
+> **get** **app**(): [`App`](#app)
+
+The app that owns the world.
+
+###### Returns
+
+[`App`](#app)
+
+The app.
+
+###### Inherited from
+
+[`Collider`](#abstract-collider).[`app`](#app-14)
+
+##### enabled
+
+###### Get Signature
+
+> **get** **enabled**(): `boolean`
+
+The component's own enabled flag; `true` by default. Setting it runs the enable or disable
+transition (`docs/architecture/01-lifecycle-and-time.md` §6): `onDisable` runs immediately,
+`awake`/`onEnable` run in the next lifecycle flush — or immediately and nested when the change
+happens inside a callback.
+
+###### Returns
+
+`boolean`
+
+`true` when the component's own flag is set.
+
+###### Set Signature
+
+> **set** **enabled**(`value`): `void`
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Collider`](#abstract-collider).[`enabled`](#enabled-15)
+
+##### entity
+
+###### Get Signature
+
+> **get** **entity**(): [`Entity`](#entity-17)
+
+The entity this component is attached to.
+
+###### Returns
+
+[`Entity`](#entity-17)
+
+The owning entity.
+
+###### Inherited from
+
+[`Collider`](#abstract-collider).[`entity`](#entity-12)
+
+##### handle
+
+###### Get Signature
+
+> **get** **handle**(): [`ComponentHandle`](#componenthandle-1)
+
+The dense runtime handle; invalid after destruction.
+
+###### Returns
+
+[`ComponentHandle`](#componenthandle-1)
+
+The handle.
+
+###### Inherited from
+
+[`Collider`](#abstract-collider).[`handle`](#handle-12)
+
+##### isDestroyed
+
+###### Get Signature
+
+> **get** **isDestroyed**(): `boolean`
+
+`true` from the moment `destroy()` is called, long before the destroy flush runs.
+
+###### Returns
+
+`boolean`
+
+`true` once the component has been queued for destruction.
+
+Whether the owner has already been destroyed.
+
+###### Inherited from
+
+[`Collider`](#abstract-collider).[`isDestroyed`](#isdestroyed-12)
+
+##### isEnabledInHierarchy
+
+###### Get Signature
+
+> **get** **isEnabledInHierarchy**(): `boolean`
+
+`true` when the component's own flag is set **and** its entity is active in the hierarchy.
+
+###### Returns
+
+`boolean`
+
+`true` when the component is effectively enabled.
+
+###### Inherited from
+
+[`Collider`](#abstract-collider).[`isEnabledInHierarchy`](#isenabledinhierarchy-12)
+
+##### onDestroyed
+
+###### Get Signature
+
+> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+Emitted once when the component is destroyed, in the destroy flush. Connecting with
+`{ owner: this }` elsewhere uses it to detach handlers automatically
+(`docs/architecture/02-scene-graph.md` §8).
+
+###### Returns
+
+[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+The signal. It is created on first access, so a component nobody listens to allocates
+nothing.
+
+Emitted once when the owner is destroyed; the signal uses it to detach the handler.
+
+###### Remarks
+
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
+`docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
+invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
+
+###### Inherited from
+
+[`Collider`](#abstract-collider).[`onDestroyed`](#ondestroyed-12)
+
+##### transform
+
+###### Get Signature
+
+> **get** **transform**(): [`Transform`](#transform-40)
+
+The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
+
+###### Returns
+
+[`Transform`](#transform-40)
+
+The entity's transform.
+
+###### Inherited from
+
+[`Collider`](#abstract-collider).[`transform`](#transform-12)
+
+##### uid
+
+###### Get Signature
+
+> **get** **uid**(): `string`
+
+The stable ULID; the key files use to reference this component.
+
+###### Returns
+
+`string`
+
+The identifier.
+
+###### Inherited from
+
+[`Collider`](#abstract-collider).[`uid`](#uid-12)
+
+##### world
+
+###### Get Signature
+
+> **get** **world**(): [`World`](#world-45)
+
+The world the entity belongs to.
+
+###### Returns
+
+[`World`](#world-45)
+
+The world.
+
+###### Inherited from
+
+[`Collider`](#abstract-collider).[`world`](#world-13)
 
 #### Methods
 
@@ -4236,7 +5896,7 @@ class Spinner extends Component.define({
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`define`](#define-6)
+[`Collider`](#abstract-collider).[`define`](#define-12)
 
 ##### destroy()
 
@@ -4252,7 +5912,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`destroy`](#destroy-6)
+[`Collider`](#abstract-collider).[`destroy`](#destroy-12)
 
 ##### getComponent()
 
@@ -4284,7 +5944,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`getComponent`](#getcomponent-6)
+[`Collider`](#abstract-collider).[`getComponent`](#getcomponent-12)
 
 ##### halfExtentsToRef()
 
@@ -4326,7 +5986,7 @@ Marks the entity's body for a rebuild at the start of the next fixed step.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`onAttach`](#onattach-4)
+[`Collider`](#abstract-collider).[`onAttach`](#onattach-8)
 
 ##### onDetach()
 
@@ -4340,7 +6000,7 @@ Marks the entity's body for a rebuild, which removes this collider from it.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`onDetach`](#ondetach-4)
+[`Collider`](#abstract-collider).[`onDetach`](#ondetach-8)
 
 ##### rebuild()
 
@@ -4362,7 +6022,7 @@ box.rebuild();
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`rebuild`](#rebuild-3)
+[`Collider`](#abstract-collider).[`rebuild`](#rebuild-7)
 
 ##### requireComponent()
 
@@ -4399,7 +6059,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`requireComponent`](#requirecomponent-6)
+[`Collider`](#abstract-collider).[`requireComponent`](#requirecomponent-12)
 
 ##### resolveMaterial()
 
@@ -4423,7 +6083,583 @@ The asset's values, the inline values, or the fallback.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`resolveMaterial`](#resolvematerial-2)
+[`Collider`](#abstract-collider).[`resolveMaterial`](#resolvematerial-5)
+
+***
+
+### CapsuleCollider2D
+
+A capsule collider: a rectangle with semicircular caps, standing along X or Y.
+
+#### Remarks
+
+`height` is the **total** tip-to-tip height, so a capsule shorter than `2 * radius` degenerates to
+a circle of that radius rather than inverting. Rapier's capsule always stands along Y, so an
+`x` capsule is expressed by swapping the axes of the half-extents — which means an `x` capsule
+and a rotated `y` capsule are the same shape.
+
+#### Extends
+
+- [`Collider2D`](#abstract-collider2d)
+
+#### Constructors
+
+##### Constructor
+
+> **new CapsuleCollider2D**(): [`CapsuleCollider2D`](#capsulecollider2d)
+
+Applies this collider's defaults on top of the shared ones.
+
+###### Returns
+
+[`CapsuleCollider2D`](#capsulecollider2d)
+
+###### Overrides
+
+[`Collider2D`](#abstract-collider2d).[`constructor`](#constructor-18)
+
+#### Properties
+
+##### allowMultiple
+
+> `static` **allowMultiple**: `boolean`
+
+Several colliders on one entity make one compound body.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`allowMultiple`](#allowmultiple-12)
+
+##### direction
+
+> **direction**: `"x"` \| `"y"`
+
+##### frictionCombine
+
+> **frictionCombine**: `"average"` \| `"min"` \| `"multiply"` \| `"max"`
+
+How this surface's friction combines with the one it touches.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`frictionCombine`](#frictioncombine-3)
+
+##### height
+
+> **height**: `number`
+
+##### inlineMaterial
+
+> **inlineMaterial**: [`Physics2DMaterialValues`](#physics2dmaterialvalues) \| `null`
+
+An inline surface, used when [Collider2D.material](#material-6) is `null`.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`inlineMaterial`](#inlinematerial-6)
+
+##### isTrigger
+
+> **isTrigger**: `boolean`
+
+When `true` the shape reports overlaps and resolves no contacts.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`isTrigger`](#istrigger-6)
+
+##### layerOverride
+
+> **layerOverride**: `string`
+
+The name of the layer this collider filters as, or `""` to use `entity.layer`.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`layerOverride`](#layeroverride-6)
+
+##### material
+
+> **material**: [`AssetHandle`](#assethandle)\<[`PhysicsMaterial2D`](#physicsmaterial2d)\> \| `null`
+
+A `.physicsmaterial.json` reference; wins over [Collider2D.inlineMaterial](#inlinematerial-6).
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`material`](#material-6)
+
+##### offset
+
+> **offset**: [`Vec2Like`](#vec2like)
+
+The shape's offset from the entity origin, in local metres.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`offset`](#offset-4)
+
+##### oneWay
+
+> **oneWay**: `boolean`
+
+Whether this is a one-way platform: a `CharacterController2D` with
+`onOneWayPlatforms` passes up through it and lands on it coming down. Rigid bodies are
+unaffected — one-way support is a character-controller feature in the MVP.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`oneWay`](#oneway-3)
+
+##### radius
+
+> **radius**: `number`
+
+##### restitutionCombine
+
+> **restitutionCombine**: `"average"` \| `"min"` \| `"multiply"` \| `"max"`
+
+How this surface's restitution combines with the one it touches.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`restitutionCombine`](#restitutioncombine-3)
+
+##### schema
+
+> `static` **schema**: [`Schema`](#schema-30)
+
+The serialized field declarations.
+
+##### typeId
+
+> `static` **typeId**: `string`
+
+The namespaced registration id.
+
+#### Accessors
+
+##### app
+
+###### Get Signature
+
+> **get** **app**(): [`App`](#app)
+
+The app that owns the world.
+
+###### Returns
+
+[`App`](#app)
+
+The app.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`app`](#app-15)
+
+##### enabled
+
+###### Get Signature
+
+> **get** **enabled**(): `boolean`
+
+The component's own enabled flag; `true` by default. Setting it runs the enable or disable
+transition (`docs/architecture/01-lifecycle-and-time.md` §6): `onDisable` runs immediately,
+`awake`/`onEnable` run in the next lifecycle flush — or immediately and nested when the change
+happens inside a callback.
+
+###### Returns
+
+`boolean`
+
+`true` when the component's own flag is set.
+
+###### Set Signature
+
+> **set** **enabled**(`value`): `void`
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`enabled`](#enabled-16)
+
+##### entity
+
+###### Get Signature
+
+> **get** **entity**(): [`Entity`](#entity-17)
+
+The entity this component is attached to.
+
+###### Returns
+
+[`Entity`](#entity-17)
+
+The owning entity.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`entity`](#entity-13)
+
+##### handle
+
+###### Get Signature
+
+> **get** **handle**(): [`ComponentHandle`](#componenthandle-1)
+
+The dense runtime handle; invalid after destruction.
+
+###### Returns
+
+[`ComponentHandle`](#componenthandle-1)
+
+The handle.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`handle`](#handle-13)
+
+##### isDestroyed
+
+###### Get Signature
+
+> **get** **isDestroyed**(): `boolean`
+
+`true` from the moment `destroy()` is called, long before the destroy flush runs.
+
+###### Returns
+
+`boolean`
+
+`true` once the component has been queued for destruction.
+
+Whether the owner has already been destroyed.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`isDestroyed`](#isdestroyed-13)
+
+##### isEnabledInHierarchy
+
+###### Get Signature
+
+> **get** **isEnabledInHierarchy**(): `boolean`
+
+`true` when the component's own flag is set **and** its entity is active in the hierarchy.
+
+###### Returns
+
+`boolean`
+
+`true` when the component is effectively enabled.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`isEnabledInHierarchy`](#isenabledinhierarchy-13)
+
+##### onDestroyed
+
+###### Get Signature
+
+> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+Emitted once when the component is destroyed, in the destroy flush. Connecting with
+`{ owner: this }` elsewhere uses it to detach handlers automatically
+(`docs/architecture/02-scene-graph.md` §8).
+
+###### Returns
+
+[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+The signal. It is created on first access, so a component nobody listens to allocates
+nothing.
+
+Emitted once when the owner is destroyed; the signal uses it to detach the handler.
+
+###### Remarks
+
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
+`docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
+invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`onDestroyed`](#ondestroyed-13)
+
+##### transform
+
+###### Get Signature
+
+> **get** **transform**(): [`Transform`](#transform-40)
+
+The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
+
+###### Returns
+
+[`Transform`](#transform-40)
+
+The entity's transform.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`transform`](#transform-13)
+
+##### uid
+
+###### Get Signature
+
+> **get** **uid**(): `string`
+
+The stable ULID; the key files use to reference this component.
+
+###### Returns
+
+`string`
+
+The identifier.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`uid`](#uid-13)
+
+##### world
+
+###### Get Signature
+
+> **get** **world**(): [`World`](#world-45)
+
+The world the entity belongs to.
+
+###### Returns
+
+[`World`](#world-45)
+
+The world.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`world`](#world-14)
+
+#### Methods
+
+##### define()
+
+> `static` **define**\<`S`\>(`schema`): [`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+Declares a component's serialized fields and returns the base class to extend (ADR-0004,
+`docs/architecture/03-scripting-and-components.md` §3). The returned class exposes every field
+as a typed instance property, applies the defaults in its constructor, and carries the schema
+for the serializer, the inspector, and the docs harness.
+
+###### Type Parameters
+
+###### S
+
+`S` *extends* `Readonly`\<`Record`\<`string`, [`FieldDefinition`](#fielddefinition)\<`unknown`\>\>\>
+
+The schema being declared.
+
+###### Parameters
+
+###### schema
+
+`S`
+
+The field definitions, keyed by the property name they become.
+
+###### Returns
+
+[`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+An abstract class to extend.
+
+###### Throws
+
+IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
+with a `Component`/`Script` member.
+
+###### Example
+
+```ts
+class Spinner extends Component.define({
+  degreesPerSecond: f32(90, { min: -360, max: 360 }),
+  axis: vec3({ x: 0, y: 1, z: 0 }),
+}) {
+  static typeId = "mygame/Spinner";
+}
+```
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`define`](#define-13)
+
+##### destroy()
+
+> **destroy**(): `void`
+
+Queues this component for destruction. It stays usable until the destroy flush of the current
+frame, but reports `isDestroyed === true` immediately
+(`docs/architecture/01-lifecycle-and-time.md` §6). Calling it twice is a no-op.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`destroy`](#destroy-13)
+
+##### getComponent()
+
+> **getComponent**\<`T`\>(`type`): `T` \| `null`
+
+Finds another component on the same entity — sugar for `this.entity.getComponent`.
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class; matching is by class identity **and** inheritance.
+
+###### Returns
+
+`T` \| `null`
+
+The first match in attach order, or `null`.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`getComponent`](#getcomponent-13)
+
+##### onAttach()
+
+> **onAttach**(): `void`
+
+Marks the entity's body for a rebuild at the start of the next fixed step.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`onAttach`](#onattach-9)
+
+##### onDetach()
+
+> **onDetach**(): `void`
+
+Marks the entity's body for a rebuild, which removes this collider from it.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`onDetach`](#ondetach-9)
+
+##### rebuild()
+
+> **rebuild**(): `void`
+
+Rebuilds the entity's body and shapes at the start of the next fixed step. Call it after
+changing a size, an offset, `isTrigger`, or the entity's scale.
+
+###### Returns
+
+`void`
+
+###### Example
+
+```ts
+box.size = { x: 2, y: 2 };
+box.rebuild();
+```
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`rebuild`](#rebuild-8)
+
+##### requireComponent()
+
+> **requireComponent**\<`T`\>(`type`): `T`
+
+Finds another component on the same entity, requiring it to be there — the supported way to
+link components (`docs/architecture/03-scripting-and-components.md` §8).
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class.
+
+###### Returns
+
+`T`
+
+The first match in attach order.
+
+###### Throws
+
+IgnifxError with code `IGX-0201` when the entity has no such component.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`requireComponent`](#requirecomponent-13)
+
+##### resolveMaterial()
+
+> **resolveMaterial**(`fallback`): [`Physics2DMaterialValues`](#physics2dmaterialvalues)
+
+Resolves the surface this collider presents to Rapier.
+
+###### Parameters
+
+###### fallback
+
+[`Physics2DMaterialValues`](#physics2dmaterialvalues)
+
+The world's `physics2d.defaultMaterial`.
+
+###### Returns
+
+[`Physics2DMaterialValues`](#physics2dmaterialvalues)
+
+The asset's values, the inline values, or the fallback.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`resolveMaterial`](#resolvematerial-6)
 
 ***
 
@@ -4465,7 +6701,7 @@ Applies the schema defaults.
 
 ###### Overrides
 
-[`Component`](#abstract-component).[`constructor`](#constructor-13)
+[`Component`](#abstract-component).[`constructor`](#constructor-20)
 
 #### Properties
 
@@ -4497,7 +6733,7 @@ One controller per entity.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-21)
+> `static` **schema**: [`Schema`](#schema-30)
 
 The serialized field declarations (ADR-0004).
 
@@ -4533,7 +6769,7 @@ The app.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`app`](#app-9)
+[`Component`](#abstract-component).[`app`](#app-16)
 
 ##### enabled
 
@@ -4568,25 +6804,25 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-10)
+[`Component`](#abstract-component).[`enabled`](#enabled-17)
 
 ##### entity
 
 ###### Get Signature
 
-> **get** **entity**(): [`Entity`](#entity-9)
+> **get** **entity**(): [`Entity`](#entity-17)
 
 The entity this component is attached to.
 
 ###### Returns
 
-[`Entity`](#entity-9)
+[`Entity`](#entity-17)
 
 The owning entity.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`entity`](#entity-7)
+[`Component`](#abstract-component).[`entity`](#entity-14)
 
 ##### groundNormal
 
@@ -4618,7 +6854,7 @@ The handle.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`handle`](#handle-7)
+[`Component`](#abstract-component).[`handle`](#handle-14)
 
 ##### isDestroyed
 
@@ -4638,7 +6874,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-7)
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-14)
 
 ##### isEnabledInHierarchy
 
@@ -4656,7 +6892,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-7)
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-14)
 
 ##### isGrounded
 
@@ -4714,7 +6950,7 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-7)
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-14)
 
 ##### supportState
 
@@ -4734,19 +6970,19 @@ How the character was supported at the end of the last step.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-23)
+> **get** **transform**(): [`Transform`](#transform-40)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-23)
+[`Transform`](#transform-40)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`transform`](#transform-7)
+[`Component`](#abstract-component).[`transform`](#transform-14)
 
 ##### uid
 
@@ -4764,7 +7000,7 @@ The identifier.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`uid`](#uid-7)
+[`Component`](#abstract-component).[`uid`](#uid-14)
 
 ##### velocity
 
@@ -4784,19 +7020,19 @@ A freshly allocated vector.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-26)
+> **get** **world**(): [`World`](#world-45)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-26)
+[`World`](#world-45)
 
 The world.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`world`](#world-8)
+[`Component`](#abstract-component).[`world`](#world-15)
 
 #### Methods
 
@@ -4849,7 +7085,7 @@ class Spinner extends Component.define({
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`define`](#define-7)
+[`Component`](#abstract-component).[`define`](#define-14)
 
 ##### destroy()
 
@@ -4865,7 +7101,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`destroy`](#destroy-7)
+[`Component`](#abstract-component).[`destroy`](#destroy-14)
 
 ##### getComponent()
 
@@ -4897,7 +7133,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`getComponent`](#getcomponent-7)
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-14)
 
 ##### move()
 
@@ -4929,7 +7165,7 @@ Creates the Lite controller at the start of the next fixed step.
 
 ###### Implementation of
 
-[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-5)
+[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-10)
 
 ##### onDetach()
 
@@ -4943,7 +7179,7 @@ Releases the Lite controller.
 
 ###### Implementation of
 
-[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-5)
+[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-10)
 
 ##### rebuild()
 
@@ -4990,7 +7226,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-7)
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-14)
 
 ##### setHeight()
 
@@ -5054,23 +7290,25 @@ The new world position of the entity.
 
 ***
 
-### `abstract` Collider
+### CharacterController2D
 
-The base class of every collider. It is never registered on its own; `entity.getComponents` and
-`world.components` accept it because the concrete colliders extend it.
+A kinematic character that walks, slides, climbs slopes, and steps up.
+
+#### Example
+
+```ts
+class Walk extends Script implements ScriptCallbacks {
+  static typeId = "mygame/Walk";
+  fixedUpdate(dt: number): void {
+    const controller = this.entity.requireComponent(CharacterController2D);
+    controller.move({ x: 4 * dt, y: -9.81 * dt });
+  }
+}
+```
 
 #### Extends
 
 - [`Component`](#abstract-component)
-
-#### Extended by
-
-- [`BoxCollider`](#boxcollider)
-- [`CapsuleCollider`](#capsulecollider)
-- [`CylinderCollider`](#cylindercollider)
-- [`HeightfieldCollider`](#heightfieldcollider)
-- [`MeshCollider`](#meshcollider)
-- [`SphereCollider`](#spherecollider)
 
 #### Implements
 
@@ -5080,17 +7318,17 @@ The base class of every collider. It is never registered on its own; `entity.get
 
 ##### Constructor
 
-> **new Collider**(): [`Collider`](#abstract-collider)
+> **new CharacterController2D**(): [`CharacterController2D`](#charactercontroller2d)
 
-Applies the shared defaults. A concrete collider calls `super()` and then applies its own.
+Applies the schema defaults.
 
 ###### Returns
 
-[`Collider`](#abstract-collider)
+[`CharacterController2D`](#charactercontroller2d)
 
 ###### Overrides
 
-[`Component`](#abstract-component).[`constructor`](#constructor-13)
+[`Component`](#abstract-component).[`constructor`](#constructor-20)
 
 #### Properties
 
@@ -5098,37 +7336,63 @@ Applies the shared defaults. A concrete collider calls `super()` and then applie
 
 > `static` **allowMultiple**: `boolean`
 
-Several colliders on one entity form one compound body (`09-physics.md` §2.2).
+One controller per entity.
 
-##### center
+##### height
 
-> **center**: [`Vec3Like`](#vec3like)
+> **height**: `number`
 
-The shape's offset from the entity origin, in local units.
+##### interpolation
 
-##### inlineMaterial
+> **interpolation**: `"none"` \| `"interpolate"`
 
-> **inlineMaterial**: [`PhysicsMaterialValues`](#physicsmaterialvalues) \| `null`
+##### offset
 
-An inline surface, used when [Collider.material](#material-2) is `null`.
+> **offset**: [`Vec2Like`](#vec2like)
 
-##### isTrigger
+##### onOneWayPlatforms
 
-> **isTrigger**: `boolean`
+> **onOneWayPlatforms**: `boolean`
 
-When `true` the shape reports overlaps and resolves no contacts.
+##### pushBodies
 
-##### layerOverride
+> **pushBodies**: `boolean`
 
-> **layerOverride**: `string`
+##### radius
 
-The name of the layer this collider filters as, or `""` to use `entity.layer`.
+> **radius**: `number`
 
-##### material
+##### schema
 
-> **material**: [`AssetHandle`](#assethandle)\<[`PhysicsMaterial`](#physicsmaterial)\> \| `null`
+> `static` **schema**: [`Schema`](#schema-30)
 
-A `.physicsmaterial.json` reference; wins over [Collider.inlineMaterial](#inlinematerial-2).
+The serialized field declarations (ADR-0004).
+
+##### shape
+
+> **shape**: `"box"` \| `"capsule"`
+
+##### skinWidth
+
+> **skinWidth**: `number`
+
+##### slopeLimit
+
+> **slopeLimit**: `number`
+
+##### snapToGround
+
+> **snapToGround**: `number`
+
+##### stepOffset
+
+> **stepOffset**: `number`
+
+##### typeId
+
+> `static` **typeId**: `string`
+
+The namespaced registration id.
 
 #### Accessors
 
@@ -5148,7 +7412,7 @@ The app.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`app`](#app-9)
+[`Component`](#abstract-component).[`app`](#app-16)
 
 ##### enabled
 
@@ -5183,25 +7447,39 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-10)
+[`Component`](#abstract-component).[`enabled`](#enabled-17)
 
 ##### entity
 
 ###### Get Signature
 
-> **get** **entity**(): [`Entity`](#entity-9)
+> **get** **entity**(): [`Entity`](#entity-17)
 
 The entity this component is attached to.
 
 ###### Returns
 
-[`Entity`](#entity-9)
+[`Entity`](#entity-17)
 
 The owning entity.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`entity`](#entity-7)
+[`Component`](#abstract-component).[`entity`](#entity-14)
+
+##### groundNormal
+
+###### Get Signature
+
+> **get** **groundNormal**(): [`Vec2`](#vec2-4)
+
+The most upward-facing normal of the obstacles the last move touched.
+
+###### Returns
+
+[`Vec2`](#vec2-4)
+
+A live view; copy it if you keep it.
 
 ##### handle
 
@@ -5219,7 +7497,7 @@ The handle.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`handle`](#handle-7)
+[`Component`](#abstract-component).[`handle`](#handle-14)
 
 ##### isDestroyed
 
@@ -5239,7 +7517,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-7)
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-14)
 
 ##### isEnabledInHierarchy
 
@@ -5257,7 +7535,35 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-7)
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-14)
+
+##### isGrounded
+
+###### Get Signature
+
+> **get** **isGrounded**(): `boolean`
+
+Whether the character ended the last step on walkable ground.
+
+###### Returns
+
+`boolean`
+
+Rapier's `computedGrounded` from the last move.
+
+##### onCollided
+
+###### Get Signature
+
+> **get** **onCollided**(): [`Signal`](#signal-3)\<[`CharacterCollision2D`](#charactercollision2d)\>
+
+Emitted once per obstacle the character hit during a step.
+
+###### Returns
+
+[`Signal`](#signal-3)\<[`CharacterCollision2D`](#charactercollision2d)\>
+
+The signal, created on first access.
 
 ##### onDestroyed
 
@@ -5287,25 +7593,25 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-7)
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-14)
 
 ##### transform
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-23)
+> **get** **transform**(): [`Transform`](#transform-40)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-23)
+[`Transform`](#transform-40)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`transform`](#transform-7)
+[`Component`](#abstract-component).[`transform`](#transform-14)
 
 ##### uid
 
@@ -5323,25 +7629,39 @@ The identifier.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`uid`](#uid-7)
+[`Component`](#abstract-component).[`uid`](#uid-14)
+
+##### velocity
+
+###### Get Signature
+
+> **get** **velocity**(): [`Vec2`](#vec2-4)
+
+How fast the character actually moved over the last fixed step, after sliding and blocking.
+
+###### Returns
+
+[`Vec2`](#vec2-4)
+
+A freshly allocated vector in metres per second.
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-26)
+> **get** **world**(): [`World`](#world-45)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-26)
+[`World`](#world-45)
 
 The world.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`world`](#world-8)
+[`Component`](#abstract-component).[`world`](#world-15)
 
 #### Methods
 
@@ -5394,7 +7714,7 @@ class Spinner extends Component.define({
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`define`](#define-7)
+[`Component`](#abstract-component).[`define`](#define-14)
 
 ##### destroy()
 
@@ -5410,7 +7730,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`destroy`](#destroy-7)
+[`Component`](#abstract-component).[`destroy`](#destroy-14)
 
 ##### getComponent()
 
@@ -5442,7 +7762,1072 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`getComponent`](#getcomponent-7)
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-14)
+
+##### move()
+
+> **move**(`displacement`): `void`
+
+Requests a displacement for this fixed step. Displacements accumulate until the step runs.
+
+###### Parameters
+
+###### displacement
+
+[`Vec2Like`](#vec2like)
+
+The world-space displacement to attempt, in metres.
+
+###### Returns
+
+`void`
+
+##### onAttach()
+
+> **onAttach**(): `void`
+
+Creates the Rapier controller at the start of the next fixed step.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-10)
+
+##### onDetach()
+
+> **onDetach**(): `void`
+
+Releases the Rapier controller and its collider.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-10)
+
+##### rebuild()
+
+> **rebuild**(): `void`
+
+Rebuilds the capsule or box at the start of the next fixed step.
+
+###### Returns
+
+`void`
+
+##### requireComponent()
+
+> **requireComponent**\<`T`\>(`type`): `T`
+
+Finds another component on the same entity, requiring it to be there — the supported way to
+link components (`docs/architecture/03-scripting-and-components.md` §8).
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class.
+
+###### Returns
+
+`T`
+
+The first match in attach order.
+
+###### Throws
+
+IgnifxError with code `IGX-0201` when the entity has no such component.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-14)
+
+##### teleport()
+
+> **teleport**(`position`): `void`
+
+Teleports the character, clearing any pending motion and the interpolation history.
+
+###### Parameters
+
+###### position
+
+[`Vec2Like`](#vec2like)
+
+The new world position of the entity, in metres.
+
+###### Returns
+
+`void`
+
+***
+
+### CircleCollider2D
+
+A circle collider. Non-uniform scale is not representable as a circle, so the larger scale axis
+wins — the same rule Unity applies.
+
+#### Extends
+
+- [`Collider2D`](#abstract-collider2d)
+
+#### Constructors
+
+##### Constructor
+
+> **new CircleCollider2D**(): [`CircleCollider2D`](#circlecollider2d)
+
+Applies this collider's defaults on top of the shared ones.
+
+###### Returns
+
+[`CircleCollider2D`](#circlecollider2d)
+
+###### Overrides
+
+[`Collider2D`](#abstract-collider2d).[`constructor`](#constructor-18)
+
+#### Properties
+
+##### allowMultiple
+
+> `static` **allowMultiple**: `boolean`
+
+Several colliders on one entity make one compound body.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`allowMultiple`](#allowmultiple-12)
+
+##### frictionCombine
+
+> **frictionCombine**: `"average"` \| `"min"` \| `"multiply"` \| `"max"`
+
+How this surface's friction combines with the one it touches.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`frictionCombine`](#frictioncombine-3)
+
+##### inlineMaterial
+
+> **inlineMaterial**: [`Physics2DMaterialValues`](#physics2dmaterialvalues) \| `null`
+
+An inline surface, used when [Collider2D.material](#material-6) is `null`.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`inlineMaterial`](#inlinematerial-6)
+
+##### isTrigger
+
+> **isTrigger**: `boolean`
+
+When `true` the shape reports overlaps and resolves no contacts.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`isTrigger`](#istrigger-6)
+
+##### layerOverride
+
+> **layerOverride**: `string`
+
+The name of the layer this collider filters as, or `""` to use `entity.layer`.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`layerOverride`](#layeroverride-6)
+
+##### material
+
+> **material**: [`AssetHandle`](#assethandle)\<[`PhysicsMaterial2D`](#physicsmaterial2d)\> \| `null`
+
+A `.physicsmaterial.json` reference; wins over [Collider2D.inlineMaterial](#inlinematerial-6).
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`material`](#material-6)
+
+##### offset
+
+> **offset**: [`Vec2Like`](#vec2like)
+
+The shape's offset from the entity origin, in local metres.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`offset`](#offset-4)
+
+##### oneWay
+
+> **oneWay**: `boolean`
+
+Whether this is a one-way platform: a `CharacterController2D` with
+`onOneWayPlatforms` passes up through it and lands on it coming down. Rigid bodies are
+unaffected — one-way support is a character-controller feature in the MVP.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`oneWay`](#oneway-3)
+
+##### radius
+
+> **radius**: `number`
+
+##### restitutionCombine
+
+> **restitutionCombine**: `"average"` \| `"min"` \| `"multiply"` \| `"max"`
+
+How this surface's restitution combines with the one it touches.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`restitutionCombine`](#restitutioncombine-3)
+
+##### schema
+
+> `static` **schema**: [`Schema`](#schema-30)
+
+The serialized field declarations.
+
+##### typeId
+
+> `static` **typeId**: `string`
+
+The namespaced registration id.
+
+#### Accessors
+
+##### app
+
+###### Get Signature
+
+> **get** **app**(): [`App`](#app)
+
+The app that owns the world.
+
+###### Returns
+
+[`App`](#app)
+
+The app.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`app`](#app-15)
+
+##### enabled
+
+###### Get Signature
+
+> **get** **enabled**(): `boolean`
+
+The component's own enabled flag; `true` by default. Setting it runs the enable or disable
+transition (`docs/architecture/01-lifecycle-and-time.md` §6): `onDisable` runs immediately,
+`awake`/`onEnable` run in the next lifecycle flush — or immediately and nested when the change
+happens inside a callback.
+
+###### Returns
+
+`boolean`
+
+`true` when the component's own flag is set.
+
+###### Set Signature
+
+> **set** **enabled**(`value`): `void`
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`enabled`](#enabled-16)
+
+##### entity
+
+###### Get Signature
+
+> **get** **entity**(): [`Entity`](#entity-17)
+
+The entity this component is attached to.
+
+###### Returns
+
+[`Entity`](#entity-17)
+
+The owning entity.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`entity`](#entity-13)
+
+##### handle
+
+###### Get Signature
+
+> **get** **handle**(): [`ComponentHandle`](#componenthandle-1)
+
+The dense runtime handle; invalid after destruction.
+
+###### Returns
+
+[`ComponentHandle`](#componenthandle-1)
+
+The handle.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`handle`](#handle-13)
+
+##### isDestroyed
+
+###### Get Signature
+
+> **get** **isDestroyed**(): `boolean`
+
+`true` from the moment `destroy()` is called, long before the destroy flush runs.
+
+###### Returns
+
+`boolean`
+
+`true` once the component has been queued for destruction.
+
+Whether the owner has already been destroyed.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`isDestroyed`](#isdestroyed-13)
+
+##### isEnabledInHierarchy
+
+###### Get Signature
+
+> **get** **isEnabledInHierarchy**(): `boolean`
+
+`true` when the component's own flag is set **and** its entity is active in the hierarchy.
+
+###### Returns
+
+`boolean`
+
+`true` when the component is effectively enabled.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`isEnabledInHierarchy`](#isenabledinhierarchy-13)
+
+##### onDestroyed
+
+###### Get Signature
+
+> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+Emitted once when the component is destroyed, in the destroy flush. Connecting with
+`{ owner: this }` elsewhere uses it to detach handlers automatically
+(`docs/architecture/02-scene-graph.md` §8).
+
+###### Returns
+
+[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+The signal. It is created on first access, so a component nobody listens to allocates
+nothing.
+
+Emitted once when the owner is destroyed; the signal uses it to detach the handler.
+
+###### Remarks
+
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
+`docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
+invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`onDestroyed`](#ondestroyed-13)
+
+##### transform
+
+###### Get Signature
+
+> **get** **transform**(): [`Transform`](#transform-40)
+
+The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
+
+###### Returns
+
+[`Transform`](#transform-40)
+
+The entity's transform.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`transform`](#transform-13)
+
+##### uid
+
+###### Get Signature
+
+> **get** **uid**(): `string`
+
+The stable ULID; the key files use to reference this component.
+
+###### Returns
+
+`string`
+
+The identifier.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`uid`](#uid-13)
+
+##### world
+
+###### Get Signature
+
+> **get** **world**(): [`World`](#world-45)
+
+The world the entity belongs to.
+
+###### Returns
+
+[`World`](#world-45)
+
+The world.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`world`](#world-14)
+
+#### Methods
+
+##### define()
+
+> `static` **define**\<`S`\>(`schema`): [`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+Declares a component's serialized fields and returns the base class to extend (ADR-0004,
+`docs/architecture/03-scripting-and-components.md` §3). The returned class exposes every field
+as a typed instance property, applies the defaults in its constructor, and carries the schema
+for the serializer, the inspector, and the docs harness.
+
+###### Type Parameters
+
+###### S
+
+`S` *extends* `Readonly`\<`Record`\<`string`, [`FieldDefinition`](#fielddefinition)\<`unknown`\>\>\>
+
+The schema being declared.
+
+###### Parameters
+
+###### schema
+
+`S`
+
+The field definitions, keyed by the property name they become.
+
+###### Returns
+
+[`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+An abstract class to extend.
+
+###### Throws
+
+IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
+with a `Component`/`Script` member.
+
+###### Example
+
+```ts
+class Spinner extends Component.define({
+  degreesPerSecond: f32(90, { min: -360, max: 360 }),
+  axis: vec3({ x: 0, y: 1, z: 0 }),
+}) {
+  static typeId = "mygame/Spinner";
+}
+```
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`define`](#define-13)
+
+##### destroy()
+
+> **destroy**(): `void`
+
+Queues this component for destruction. It stays usable until the destroy flush of the current
+frame, but reports `isDestroyed === true` immediately
+(`docs/architecture/01-lifecycle-and-time.md` §6). Calling it twice is a no-op.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`destroy`](#destroy-13)
+
+##### getComponent()
+
+> **getComponent**\<`T`\>(`type`): `T` \| `null`
+
+Finds another component on the same entity — sugar for `this.entity.getComponent`.
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class; matching is by class identity **and** inheritance.
+
+###### Returns
+
+`T` \| `null`
+
+The first match in attach order, or `null`.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`getComponent`](#getcomponent-13)
+
+##### onAttach()
+
+> **onAttach**(): `void`
+
+Marks the entity's body for a rebuild at the start of the next fixed step.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`onAttach`](#onattach-9)
+
+##### onDetach()
+
+> **onDetach**(): `void`
+
+Marks the entity's body for a rebuild, which removes this collider from it.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`onDetach`](#ondetach-9)
+
+##### rebuild()
+
+> **rebuild**(): `void`
+
+Rebuilds the entity's body and shapes at the start of the next fixed step. Call it after
+changing a size, an offset, `isTrigger`, or the entity's scale.
+
+###### Returns
+
+`void`
+
+###### Example
+
+```ts
+box.size = { x: 2, y: 2 };
+box.rebuild();
+```
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`rebuild`](#rebuild-8)
+
+##### requireComponent()
+
+> **requireComponent**\<`T`\>(`type`): `T`
+
+Finds another component on the same entity, requiring it to be there — the supported way to
+link components (`docs/architecture/03-scripting-and-components.md` §8).
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class.
+
+###### Returns
+
+`T`
+
+The first match in attach order.
+
+###### Throws
+
+IgnifxError with code `IGX-0201` when the entity has no such component.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`requireComponent`](#requirecomponent-13)
+
+##### resolveMaterial()
+
+> **resolveMaterial**(`fallback`): [`Physics2DMaterialValues`](#physics2dmaterialvalues)
+
+Resolves the surface this collider presents to Rapier.
+
+###### Parameters
+
+###### fallback
+
+[`Physics2DMaterialValues`](#physics2dmaterialvalues)
+
+The world's `physics2d.defaultMaterial`.
+
+###### Returns
+
+[`Physics2DMaterialValues`](#physics2dmaterialvalues)
+
+The asset's values, the inline values, or the fallback.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`resolveMaterial`](#resolvematerial-6)
+
+***
+
+### `abstract` Collider
+
+The base class of every collider. It is never registered on its own; `entity.getComponents` and
+`world.components` accept it because the concrete colliders extend it.
+
+#### Extends
+
+- [`Component`](#abstract-component)
+
+#### Extended by
+
+- [`BoxCollider`](#boxcollider)
+- [`CapsuleCollider`](#capsulecollider)
+- [`CylinderCollider`](#cylindercollider)
+- [`HeightfieldCollider`](#heightfieldcollider)
+- [`MeshCollider`](#meshcollider)
+- [`SphereCollider`](#spherecollider)
+
+#### Implements
+
+- [`ComponentHooks`](#componenthooks)
+
+#### Constructors
+
+##### Constructor
+
+> **new Collider**(): [`Collider`](#abstract-collider)
+
+Applies the shared defaults. A concrete collider calls `super()` and then applies its own.
+
+###### Returns
+
+[`Collider`](#abstract-collider)
+
+###### Overrides
+
+[`Component`](#abstract-component).[`constructor`](#constructor-20)
+
+#### Properties
+
+##### allowMultiple
+
+> `static` **allowMultiple**: `boolean`
+
+Several colliders on one entity form one compound body (`09-physics.md` §2.2).
+
+##### center
+
+> **center**: [`Vec3Like`](#vec3like)
+
+The shape's offset from the entity origin, in local units.
+
+##### inlineMaterial
+
+> **inlineMaterial**: [`PhysicsMaterialValues`](#physicsmaterialvalues) \| `null`
+
+An inline surface, used when [Collider.material](#material-5) is `null`.
+
+##### isTrigger
+
+> **isTrigger**: `boolean`
+
+When `true` the shape reports overlaps and resolves no contacts.
+
+##### layerOverride
+
+> **layerOverride**: `string`
+
+The name of the layer this collider filters as, or `""` to use `entity.layer`.
+
+##### material
+
+> **material**: [`AssetHandle`](#assethandle)\<[`PhysicsMaterial`](#physicsmaterial)\> \| `null`
+
+A `.physicsmaterial.json` reference; wins over [Collider.inlineMaterial](#inlinematerial-5).
+
+#### Accessors
+
+##### app
+
+###### Get Signature
+
+> **get** **app**(): [`App`](#app)
+
+The app that owns the world.
+
+###### Returns
+
+[`App`](#app)
+
+The app.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`app`](#app-16)
+
+##### enabled
+
+###### Get Signature
+
+> **get** **enabled**(): `boolean`
+
+The component's own enabled flag; `true` by default. Setting it runs the enable or disable
+transition (`docs/architecture/01-lifecycle-and-time.md` §6): `onDisable` runs immediately,
+`awake`/`onEnable` run in the next lifecycle flush — or immediately and nested when the change
+happens inside a callback.
+
+###### Returns
+
+`boolean`
+
+`true` when the component's own flag is set.
+
+###### Set Signature
+
+> **set** **enabled**(`value`): `void`
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`enabled`](#enabled-17)
+
+##### entity
+
+###### Get Signature
+
+> **get** **entity**(): [`Entity`](#entity-17)
+
+The entity this component is attached to.
+
+###### Returns
+
+[`Entity`](#entity-17)
+
+The owning entity.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`entity`](#entity-14)
+
+##### handle
+
+###### Get Signature
+
+> **get** **handle**(): [`ComponentHandle`](#componenthandle-1)
+
+The dense runtime handle; invalid after destruction.
+
+###### Returns
+
+[`ComponentHandle`](#componenthandle-1)
+
+The handle.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`handle`](#handle-14)
+
+##### isDestroyed
+
+###### Get Signature
+
+> **get** **isDestroyed**(): `boolean`
+
+`true` from the moment `destroy()` is called, long before the destroy flush runs.
+
+###### Returns
+
+`boolean`
+
+`true` once the component has been queued for destruction.
+
+Whether the owner has already been destroyed.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-14)
+
+##### isEnabledInHierarchy
+
+###### Get Signature
+
+> **get** **isEnabledInHierarchy**(): `boolean`
+
+`true` when the component's own flag is set **and** its entity is active in the hierarchy.
+
+###### Returns
+
+`boolean`
+
+`true` when the component is effectively enabled.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-14)
+
+##### onDestroyed
+
+###### Get Signature
+
+> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+Emitted once when the component is destroyed, in the destroy flush. Connecting with
+`{ owner: this }` elsewhere uses it to detach handlers automatically
+(`docs/architecture/02-scene-graph.md` §8).
+
+###### Returns
+
+[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+The signal. It is created on first access, so a component nobody listens to allocates
+nothing.
+
+Emitted once when the owner is destroyed; the signal uses it to detach the handler.
+
+###### Remarks
+
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
+`docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
+invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-14)
+
+##### transform
+
+###### Get Signature
+
+> **get** **transform**(): [`Transform`](#transform-40)
+
+The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
+
+###### Returns
+
+[`Transform`](#transform-40)
+
+The entity's transform.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`transform`](#transform-14)
+
+##### uid
+
+###### Get Signature
+
+> **get** **uid**(): `string`
+
+The stable ULID; the key files use to reference this component.
+
+###### Returns
+
+`string`
+
+The identifier.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`uid`](#uid-14)
+
+##### world
+
+###### Get Signature
+
+> **get** **world**(): [`World`](#world-45)
+
+The world the entity belongs to.
+
+###### Returns
+
+[`World`](#world-45)
+
+The world.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`world`](#world-15)
+
+#### Methods
+
+##### define()
+
+> `static` **define**\<`S`\>(`schema`): [`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+Declares a component's serialized fields and returns the base class to extend (ADR-0004,
+`docs/architecture/03-scripting-and-components.md` §3). The returned class exposes every field
+as a typed instance property, applies the defaults in its constructor, and carries the schema
+for the serializer, the inspector, and the docs harness.
+
+###### Type Parameters
+
+###### S
+
+`S` *extends* `Readonly`\<`Record`\<`string`, [`FieldDefinition`](#fielddefinition)\<`unknown`\>\>\>
+
+The schema being declared.
+
+###### Parameters
+
+###### schema
+
+`S`
+
+The field definitions, keyed by the property name they become.
+
+###### Returns
+
+[`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+An abstract class to extend.
+
+###### Throws
+
+IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
+with a `Component`/`Script` member.
+
+###### Example
+
+```ts
+class Spinner extends Component.define({
+  degreesPerSecond: f32(90, { min: -360, max: 360 }),
+  axis: vec3({ x: 0, y: 1, z: 0 }),
+}) {
+  static typeId = "mygame/Spinner";
+}
+```
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`define`](#define-14)
+
+##### destroy()
+
+> **destroy**(): `void`
+
+Queues this component for destruction. It stays usable until the destroy flush of the current
+frame, but reports `isDestroyed === true` immediately
+(`docs/architecture/01-lifecycle-and-time.md` §6). Calling it twice is a no-op.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`destroy`](#destroy-14)
+
+##### getComponent()
+
+> **getComponent**\<`T`\>(`type`): `T` \| `null`
+
+Finds another component on the same entity — sugar for `this.entity.getComponent`.
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class; matching is by class identity **and** inheritance.
+
+###### Returns
+
+`T` \| `null`
+
+The first match in attach order, or `null`.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-14)
 
 ##### onAttach()
 
@@ -5456,7 +8841,7 @@ Marks the entity's body for a rebuild at the start of the next fixed step.
 
 ###### Implementation of
 
-[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-5)
+[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-10)
 
 ##### onDetach()
 
@@ -5470,7 +8855,7 @@ Marks the entity's body for a rebuild, which removes this collider from it.
 
 ###### Implementation of
 
-[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-5)
+[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-10)
 
 ##### rebuild()
 
@@ -5525,7 +8910,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-7)
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-14)
 
 ##### resolveMaterial()
 
@@ -5544,6 +8929,520 @@ The world's `physics.defaultMaterial`.
 ###### Returns
 
 [`PhysicsMaterialValues`](#physicsmaterialvalues)
+
+The asset's values, the inline values, or the fallback.
+
+***
+
+### `abstract` Collider2D
+
+The base class of every 2D collider.
+
+#### Extends
+
+- [`Component`](#abstract-component)
+
+#### Extended by
+
+- [`BoxCollider2D`](#boxcollider2d)
+- [`CapsuleCollider2D`](#capsulecollider2d)
+- [`CircleCollider2D`](#circlecollider2d)
+- [`EdgeCollider2D`](#edgecollider2d)
+- [`PolygonCollider2D`](#polygoncollider2d)
+- [`TilemapCollider2D`](#tilemapcollider2d)
+
+#### Implements
+
+- [`ComponentHooks`](#componenthooks)
+
+#### Constructors
+
+##### Constructor
+
+> **new Collider2D**(): [`Collider2D`](#abstract-collider2d)
+
+Applies the shared defaults. A concrete collider calls `super()` and then applies its own.
+
+###### Returns
+
+[`Collider2D`](#abstract-collider2d)
+
+###### Overrides
+
+[`Component`](#abstract-component).[`constructor`](#constructor-20)
+
+#### Properties
+
+##### allowMultiple
+
+> `static` **allowMultiple**: `boolean`
+
+Several colliders on one entity make one compound body.
+
+##### frictionCombine
+
+> **frictionCombine**: `"average"` \| `"min"` \| `"multiply"` \| `"max"`
+
+How this surface's friction combines with the one it touches.
+
+##### inlineMaterial
+
+> **inlineMaterial**: [`Physics2DMaterialValues`](#physics2dmaterialvalues) \| `null`
+
+An inline surface, used when [Collider2D.material](#material-6) is `null`.
+
+##### isTrigger
+
+> **isTrigger**: `boolean`
+
+When `true` the shape reports overlaps and resolves no contacts.
+
+##### layerOverride
+
+> **layerOverride**: `string`
+
+The name of the layer this collider filters as, or `""` to use `entity.layer`.
+
+##### material
+
+> **material**: [`AssetHandle`](#assethandle)\<[`PhysicsMaterial2D`](#physicsmaterial2d)\> \| `null`
+
+A `.physicsmaterial.json` reference; wins over [Collider2D.inlineMaterial](#inlinematerial-6).
+
+##### offset
+
+> **offset**: [`Vec2Like`](#vec2like)
+
+The shape's offset from the entity origin, in local metres.
+
+##### oneWay
+
+> **oneWay**: `boolean`
+
+Whether this is a one-way platform: a `CharacterController2D` with
+`onOneWayPlatforms` passes up through it and lands on it coming down. Rigid bodies are
+unaffected — one-way support is a character-controller feature in the MVP.
+
+##### restitutionCombine
+
+> **restitutionCombine**: `"average"` \| `"min"` \| `"multiply"` \| `"max"`
+
+How this surface's restitution combines with the one it touches.
+
+#### Accessors
+
+##### app
+
+###### Get Signature
+
+> **get** **app**(): [`App`](#app)
+
+The app that owns the world.
+
+###### Returns
+
+[`App`](#app)
+
+The app.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`app`](#app-16)
+
+##### enabled
+
+###### Get Signature
+
+> **get** **enabled**(): `boolean`
+
+The component's own enabled flag; `true` by default. Setting it runs the enable or disable
+transition (`docs/architecture/01-lifecycle-and-time.md` §6): `onDisable` runs immediately,
+`awake`/`onEnable` run in the next lifecycle flush — or immediately and nested when the change
+happens inside a callback.
+
+###### Returns
+
+`boolean`
+
+`true` when the component's own flag is set.
+
+###### Set Signature
+
+> **set** **enabled**(`value`): `void`
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`enabled`](#enabled-17)
+
+##### entity
+
+###### Get Signature
+
+> **get** **entity**(): [`Entity`](#entity-17)
+
+The entity this component is attached to.
+
+###### Returns
+
+[`Entity`](#entity-17)
+
+The owning entity.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`entity`](#entity-14)
+
+##### handle
+
+###### Get Signature
+
+> **get** **handle**(): [`ComponentHandle`](#componenthandle-1)
+
+The dense runtime handle; invalid after destruction.
+
+###### Returns
+
+[`ComponentHandle`](#componenthandle-1)
+
+The handle.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`handle`](#handle-14)
+
+##### isDestroyed
+
+###### Get Signature
+
+> **get** **isDestroyed**(): `boolean`
+
+`true` from the moment `destroy()` is called, long before the destroy flush runs.
+
+###### Returns
+
+`boolean`
+
+`true` once the component has been queued for destruction.
+
+Whether the owner has already been destroyed.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-14)
+
+##### isEnabledInHierarchy
+
+###### Get Signature
+
+> **get** **isEnabledInHierarchy**(): `boolean`
+
+`true` when the component's own flag is set **and** its entity is active in the hierarchy.
+
+###### Returns
+
+`boolean`
+
+`true` when the component is effectively enabled.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-14)
+
+##### onDestroyed
+
+###### Get Signature
+
+> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+Emitted once when the component is destroyed, in the destroy flush. Connecting with
+`{ owner: this }` elsewhere uses it to detach handlers automatically
+(`docs/architecture/02-scene-graph.md` §8).
+
+###### Returns
+
+[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+The signal. It is created on first access, so a component nobody listens to allocates
+nothing.
+
+Emitted once when the owner is destroyed; the signal uses it to detach the handler.
+
+###### Remarks
+
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
+`docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
+invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-14)
+
+##### transform
+
+###### Get Signature
+
+> **get** **transform**(): [`Transform`](#transform-40)
+
+The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
+
+###### Returns
+
+[`Transform`](#transform-40)
+
+The entity's transform.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`transform`](#transform-14)
+
+##### uid
+
+###### Get Signature
+
+> **get** **uid**(): `string`
+
+The stable ULID; the key files use to reference this component.
+
+###### Returns
+
+`string`
+
+The identifier.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`uid`](#uid-14)
+
+##### world
+
+###### Get Signature
+
+> **get** **world**(): [`World`](#world-45)
+
+The world the entity belongs to.
+
+###### Returns
+
+[`World`](#world-45)
+
+The world.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`world`](#world-15)
+
+#### Methods
+
+##### define()
+
+> `static` **define**\<`S`\>(`schema`): [`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+Declares a component's serialized fields and returns the base class to extend (ADR-0004,
+`docs/architecture/03-scripting-and-components.md` §3). The returned class exposes every field
+as a typed instance property, applies the defaults in its constructor, and carries the schema
+for the serializer, the inspector, and the docs harness.
+
+###### Type Parameters
+
+###### S
+
+`S` *extends* `Readonly`\<`Record`\<`string`, [`FieldDefinition`](#fielddefinition)\<`unknown`\>\>\>
+
+The schema being declared.
+
+###### Parameters
+
+###### schema
+
+`S`
+
+The field definitions, keyed by the property name they become.
+
+###### Returns
+
+[`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+An abstract class to extend.
+
+###### Throws
+
+IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
+with a `Component`/`Script` member.
+
+###### Example
+
+```ts
+class Spinner extends Component.define({
+  degreesPerSecond: f32(90, { min: -360, max: 360 }),
+  axis: vec3({ x: 0, y: 1, z: 0 }),
+}) {
+  static typeId = "mygame/Spinner";
+}
+```
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`define`](#define-14)
+
+##### destroy()
+
+> **destroy**(): `void`
+
+Queues this component for destruction. It stays usable until the destroy flush of the current
+frame, but reports `isDestroyed === true` immediately
+(`docs/architecture/01-lifecycle-and-time.md` §6). Calling it twice is a no-op.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`destroy`](#destroy-14)
+
+##### getComponent()
+
+> **getComponent**\<`T`\>(`type`): `T` \| `null`
+
+Finds another component on the same entity — sugar for `this.entity.getComponent`.
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class; matching is by class identity **and** inheritance.
+
+###### Returns
+
+`T` \| `null`
+
+The first match in attach order, or `null`.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-14)
+
+##### onAttach()
+
+> **onAttach**(): `void`
+
+Marks the entity's body for a rebuild at the start of the next fixed step.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-10)
+
+##### onDetach()
+
+> **onDetach**(): `void`
+
+Marks the entity's body for a rebuild, which removes this collider from it.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-10)
+
+##### rebuild()
+
+> **rebuild**(): `void`
+
+Rebuilds the entity's body and shapes at the start of the next fixed step. Call it after
+changing a size, an offset, `isTrigger`, or the entity's scale.
+
+###### Returns
+
+`void`
+
+###### Example
+
+```ts
+box.size = { x: 2, y: 2 };
+box.rebuild();
+```
+
+##### requireComponent()
+
+> **requireComponent**\<`T`\>(`type`): `T`
+
+Finds another component on the same entity, requiring it to be there — the supported way to
+link components (`docs/architecture/03-scripting-and-components.md` §8).
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class.
+
+###### Returns
+
+`T`
+
+The first match in attach order.
+
+###### Throws
+
+IgnifxError with code `IGX-0201` when the entity has no such component.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-14)
+
+##### resolveMaterial()
+
+> **resolveMaterial**(`fallback`): [`Physics2DMaterialValues`](#physics2dmaterialvalues)
+
+Resolves the surface this collider presents to Rapier.
+
+###### Parameters
+
+###### fallback
+
+[`Physics2DMaterialValues`](#physics2dmaterialvalues)
+
+The world's `physics2d.defaultMaterial`.
+
+###### Returns
+
+[`Physics2DMaterialValues`](#physics2dmaterialvalues)
 
 The asset's values, the inline values, or the fallback.
 
@@ -6309,11 +10208,21 @@ class Health extends Component.define({ maximum: f32(100) }) {
 - [`Model`](#model)
 - [`PostProcessStack`](#postprocessstack)
 - [`Script`](#abstract-script)
-- [`Transform`](#transform-23)
+- [`Transform`](#transform-40)
 - [`PlayerInput`](#playerinput)
 - [`CharacterController`](#charactercontroller)
 - [`Collider`](#abstract-collider)
 - [`Rigidbody`](#rigidbody)
+- [`CharacterController2D`](#charactercontroller2d)
+- [`Collider2D`](#abstract-collider2d)
+- [`Rigidbody2D`](#rigidbody2d)
+- [`Camera2D`](#camera2d)
+- [`ParallaxLayer`](#parallaxlayer)
+- [`SpriteAnimator`](#spriteanimator)
+- [`SpriteLayerEffect`](#spritelayereffect)
+- [`SpriteRenderer`](#spriterenderer)
+- [`Tilemap`](#tilemap)
+- [`TilemapRenderer`](#tilemaprenderer)
 
 #### Implements
 
@@ -6382,13 +10291,13 @@ happens inside a callback.
 
 ###### Get Signature
 
-> **get** **entity**(): [`Entity`](#entity-9)
+> **get** **entity**(): [`Entity`](#entity-17)
 
 The entity this component is attached to.
 
 ###### Returns
 
-[`Entity`](#entity-9)
+[`Entity`](#entity-17)
 
 The owning entity.
 
@@ -6424,7 +10333,7 @@ Whether the owner has already been destroyed.
 
 ###### Implementation of
 
-[`SignalOwner`](#signalowner).[`isDestroyed`](#isdestroyed-21)
+[`SignalOwner`](#signalowner).[`isDestroyed`](#isdestroyed-32)
 
 ##### isEnabledInHierarchy
 
@@ -6468,19 +10377,19 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Implementation of
 
-[`SignalOwner`](#signalowner).[`onDestroyed`](#ondestroyed-21)
+[`SignalOwner`](#signalowner).[`onDestroyed`](#ondestroyed-32)
 
 ##### transform
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-23)
+> **get** **transform**(): [`Transform`](#transform-40)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-23)
+[`Transform`](#transform-40)
 
 The entity's transform.
 
@@ -6502,13 +10411,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-26)
+> **get** **world**(): [`World`](#world-45)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-26)
+[`World`](#world-45)
 
 The world.
 
@@ -7017,7 +10926,7 @@ Applies this collider's defaults on top of the shared ones.
 
 ###### Overrides
 
-[`Collider`](#abstract-collider).[`constructor`](#constructor-11)
+[`Collider`](#abstract-collider).[`constructor`](#constructor-17)
 
 #### Properties
 
@@ -7029,7 +10938,7 @@ Several colliders on one entity form one compound body (`09-physics.md` §2.2).
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`allowMultiple`](#allowmultiple-5)
+[`Collider`](#abstract-collider).[`allowMultiple`](#allowmultiple-11)
 
 ##### center
 
@@ -7049,11 +10958,11 @@ The shape's offset from the entity origin, in local units.
 
 > **inlineMaterial**: [`PhysicsMaterialValues`](#physicsmaterialvalues) \| `null`
 
-An inline surface, used when [Collider.material](#material-2) is `null`.
+An inline surface, used when [Collider.material](#material-5) is `null`.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`inlineMaterial`](#inlinematerial-2)
+[`Collider`](#abstract-collider).[`inlineMaterial`](#inlinematerial-5)
 
 ##### isTrigger
 
@@ -7063,7 +10972,7 @@ When `true` the shape reports overlaps and resolves no contacts.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`isTrigger`](#istrigger-2)
+[`Collider`](#abstract-collider).[`isTrigger`](#istrigger-5)
 
 ##### layerOverride
 
@@ -7073,17 +10982,17 @@ The name of the layer this collider filters as, or `""` to use `entity.layer`.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`layerOverride`](#layeroverride-2)
+[`Collider`](#abstract-collider).[`layerOverride`](#layeroverride-5)
 
 ##### material
 
 > **material**: [`AssetHandle`](#assethandle)\<[`PhysicsMaterial`](#physicsmaterial)\> \| `null`
 
-A `.physicsmaterial.json` reference; wins over [Collider.inlineMaterial](#inlinematerial-2).
+A `.physicsmaterial.json` reference; wins over [Collider.inlineMaterial](#inlinematerial-5).
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`material`](#material-2)
+[`Collider`](#abstract-collider).[`material`](#material-5)
 
 ##### radius
 
@@ -7091,7 +11000,7 @@ A `.physicsmaterial.json` reference; wins over [Collider.inlineMaterial](#inline
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-21)
+> `static` **schema**: [`Schema`](#schema-30)
 
 The serialized field declarations.
 
@@ -7119,7 +11028,7 @@ The app.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`app`](#app-8)
+[`Collider`](#abstract-collider).[`app`](#app-14)
 
 ##### enabled
 
@@ -7154,25 +11063,25 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`enabled`](#enabled-9)
+[`Collider`](#abstract-collider).[`enabled`](#enabled-15)
 
 ##### entity
 
 ###### Get Signature
 
-> **get** **entity**(): [`Entity`](#entity-9)
+> **get** **entity**(): [`Entity`](#entity-17)
 
 The entity this component is attached to.
 
 ###### Returns
 
-[`Entity`](#entity-9)
+[`Entity`](#entity-17)
 
 The owning entity.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`entity`](#entity-6)
+[`Collider`](#abstract-collider).[`entity`](#entity-12)
 
 ##### handle
 
@@ -7190,7 +11099,7 @@ The handle.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`handle`](#handle-6)
+[`Collider`](#abstract-collider).[`handle`](#handle-12)
 
 ##### isDestroyed
 
@@ -7210,7 +11119,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`isDestroyed`](#isdestroyed-6)
+[`Collider`](#abstract-collider).[`isDestroyed`](#isdestroyed-12)
 
 ##### isEnabledInHierarchy
 
@@ -7228,7 +11137,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`isEnabledInHierarchy`](#isenabledinhierarchy-6)
+[`Collider`](#abstract-collider).[`isEnabledInHierarchy`](#isenabledinhierarchy-12)
 
 ##### onDestroyed
 
@@ -7258,25 +11167,25 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`onDestroyed`](#ondestroyed-6)
+[`Collider`](#abstract-collider).[`onDestroyed`](#ondestroyed-12)
 
 ##### transform
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-23)
+> **get** **transform**(): [`Transform`](#transform-40)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-23)
+[`Transform`](#transform-40)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`transform`](#transform-6)
+[`Collider`](#abstract-collider).[`transform`](#transform-12)
 
 ##### uid
 
@@ -7294,25 +11203,25 @@ The identifier.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`uid`](#uid-6)
+[`Collider`](#abstract-collider).[`uid`](#uid-12)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-26)
+> **get** **world**(): [`World`](#world-45)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-26)
+[`World`](#world-45)
 
 The world.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`world`](#world-7)
+[`Collider`](#abstract-collider).[`world`](#world-13)
 
 #### Methods
 
@@ -7395,7 +11304,7 @@ class Spinner extends Component.define({
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`define`](#define-6)
+[`Collider`](#abstract-collider).[`define`](#define-12)
 
 ##### destroy()
 
@@ -7411,7 +11320,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`destroy`](#destroy-6)
+[`Collider`](#abstract-collider).[`destroy`](#destroy-12)
 
 ##### getComponent()
 
@@ -7443,7 +11352,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`getComponent`](#getcomponent-6)
+[`Collider`](#abstract-collider).[`getComponent`](#getcomponent-12)
 
 ##### halfExtentsToRef()
 
@@ -7485,7 +11394,7 @@ Marks the entity's body for a rebuild at the start of the next fixed step.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`onAttach`](#onattach-4)
+[`Collider`](#abstract-collider).[`onAttach`](#onattach-8)
 
 ##### onDetach()
 
@@ -7499,7 +11408,7 @@ Marks the entity's body for a rebuild, which removes this collider from it.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`onDetach`](#ondetach-4)
+[`Collider`](#abstract-collider).[`onDetach`](#ondetach-8)
 
 ##### rebuild()
 
@@ -7521,7 +11430,7 @@ box.rebuild();
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`rebuild`](#rebuild-3)
+[`Collider`](#abstract-collider).[`rebuild`](#rebuild-7)
 
 ##### requireComponent()
 
@@ -7558,7 +11467,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`requireComponent`](#requirecomponent-6)
+[`Collider`](#abstract-collider).[`requireComponent`](#requirecomponent-12)
 
 ##### resolveMaterial()
 
@@ -7582,7 +11491,7 @@ The asset's values, the inline values, or the fallback.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`resolveMaterial`](#resolvematerial-2)
+[`Collider`](#abstract-collider).[`resolveMaterial`](#resolvematerial-5)
 
 ***
 
@@ -7836,6 +11745,567 @@ IgnifxError with code `IGX-1503` when the name is already registered.
 
 ***
 
+### EdgeCollider2D
+
+An open chain of line segments — a platformer's ground contour.
+
+#### Extends
+
+- [`Collider2D`](#abstract-collider2d)
+
+#### Constructors
+
+##### Constructor
+
+> **new EdgeCollider2D**(): [`EdgeCollider2D`](#edgecollider2d)
+
+Applies this collider's defaults on top of the shared ones.
+
+###### Returns
+
+[`EdgeCollider2D`](#edgecollider2d)
+
+###### Overrides
+
+[`Collider2D`](#abstract-collider2d).[`constructor`](#constructor-18)
+
+#### Properties
+
+##### allowMultiple
+
+> `static` **allowMultiple**: `boolean`
+
+Several colliders on one entity make one compound body.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`allowMultiple`](#allowmultiple-12)
+
+##### frictionCombine
+
+> **frictionCombine**: `"average"` \| `"min"` \| `"multiply"` \| `"max"`
+
+How this surface's friction combines with the one it touches.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`frictionCombine`](#frictioncombine-3)
+
+##### inlineMaterial
+
+> **inlineMaterial**: [`Physics2DMaterialValues`](#physics2dmaterialvalues) \| `null`
+
+An inline surface, used when [Collider2D.material](#material-6) is `null`.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`inlineMaterial`](#inlinematerial-6)
+
+##### isTrigger
+
+> **isTrigger**: `boolean`
+
+When `true` the shape reports overlaps and resolves no contacts.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`isTrigger`](#istrigger-6)
+
+##### layerOverride
+
+> **layerOverride**: `string`
+
+The name of the layer this collider filters as, or `""` to use `entity.layer`.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`layerOverride`](#layeroverride-6)
+
+##### material
+
+> **material**: [`AssetHandle`](#assethandle)\<[`PhysicsMaterial2D`](#physicsmaterial2d)\> \| `null`
+
+A `.physicsmaterial.json` reference; wins over [Collider2D.inlineMaterial](#inlinematerial-6).
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`material`](#material-6)
+
+##### offset
+
+> **offset**: [`Vec2Like`](#vec2like)
+
+The shape's offset from the entity origin, in local metres.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`offset`](#offset-4)
+
+##### oneWay
+
+> **oneWay**: `boolean`
+
+Whether this is a one-way platform: a `CharacterController2D` with
+`onOneWayPlatforms` passes up through it and lands on it coming down. Rigid bodies are
+unaffected — one-way support is a character-controller feature in the MVP.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`oneWay`](#oneway-3)
+
+##### points
+
+> **points**: [`Vec2Like`](#vec2like)[]
+
+##### restitutionCombine
+
+> **restitutionCombine**: `"average"` \| `"min"` \| `"multiply"` \| `"max"`
+
+How this surface's restitution combines with the one it touches.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`restitutionCombine`](#restitutioncombine-3)
+
+##### schema
+
+> `static` **schema**: [`Schema`](#schema-30)
+
+The serialized field declarations.
+
+##### typeId
+
+> `static` **typeId**: `string`
+
+The namespaced registration id.
+
+#### Accessors
+
+##### app
+
+###### Get Signature
+
+> **get** **app**(): [`App`](#app)
+
+The app that owns the world.
+
+###### Returns
+
+[`App`](#app)
+
+The app.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`app`](#app-15)
+
+##### enabled
+
+###### Get Signature
+
+> **get** **enabled**(): `boolean`
+
+The component's own enabled flag; `true` by default. Setting it runs the enable or disable
+transition (`docs/architecture/01-lifecycle-and-time.md` §6): `onDisable` runs immediately,
+`awake`/`onEnable` run in the next lifecycle flush — or immediately and nested when the change
+happens inside a callback.
+
+###### Returns
+
+`boolean`
+
+`true` when the component's own flag is set.
+
+###### Set Signature
+
+> **set** **enabled**(`value`): `void`
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`enabled`](#enabled-16)
+
+##### entity
+
+###### Get Signature
+
+> **get** **entity**(): [`Entity`](#entity-17)
+
+The entity this component is attached to.
+
+###### Returns
+
+[`Entity`](#entity-17)
+
+The owning entity.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`entity`](#entity-13)
+
+##### handle
+
+###### Get Signature
+
+> **get** **handle**(): [`ComponentHandle`](#componenthandle-1)
+
+The dense runtime handle; invalid after destruction.
+
+###### Returns
+
+[`ComponentHandle`](#componenthandle-1)
+
+The handle.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`handle`](#handle-13)
+
+##### isDestroyed
+
+###### Get Signature
+
+> **get** **isDestroyed**(): `boolean`
+
+`true` from the moment `destroy()` is called, long before the destroy flush runs.
+
+###### Returns
+
+`boolean`
+
+`true` once the component has been queued for destruction.
+
+Whether the owner has already been destroyed.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`isDestroyed`](#isdestroyed-13)
+
+##### isEnabledInHierarchy
+
+###### Get Signature
+
+> **get** **isEnabledInHierarchy**(): `boolean`
+
+`true` when the component's own flag is set **and** its entity is active in the hierarchy.
+
+###### Returns
+
+`boolean`
+
+`true` when the component is effectively enabled.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`isEnabledInHierarchy`](#isenabledinhierarchy-13)
+
+##### onDestroyed
+
+###### Get Signature
+
+> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+Emitted once when the component is destroyed, in the destroy flush. Connecting with
+`{ owner: this }` elsewhere uses it to detach handlers automatically
+(`docs/architecture/02-scene-graph.md` §8).
+
+###### Returns
+
+[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+The signal. It is created on first access, so a component nobody listens to allocates
+nothing.
+
+Emitted once when the owner is destroyed; the signal uses it to detach the handler.
+
+###### Remarks
+
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
+`docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
+invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`onDestroyed`](#ondestroyed-13)
+
+##### transform
+
+###### Get Signature
+
+> **get** **transform**(): [`Transform`](#transform-40)
+
+The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
+
+###### Returns
+
+[`Transform`](#transform-40)
+
+The entity's transform.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`transform`](#transform-13)
+
+##### uid
+
+###### Get Signature
+
+> **get** **uid**(): `string`
+
+The stable ULID; the key files use to reference this component.
+
+###### Returns
+
+`string`
+
+The identifier.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`uid`](#uid-13)
+
+##### world
+
+###### Get Signature
+
+> **get** **world**(): [`World`](#world-45)
+
+The world the entity belongs to.
+
+###### Returns
+
+[`World`](#world-45)
+
+The world.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`world`](#world-14)
+
+#### Methods
+
+##### define()
+
+> `static` **define**\<`S`\>(`schema`): [`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+Declares a component's serialized fields and returns the base class to extend (ADR-0004,
+`docs/architecture/03-scripting-and-components.md` §3). The returned class exposes every field
+as a typed instance property, applies the defaults in its constructor, and carries the schema
+for the serializer, the inspector, and the docs harness.
+
+###### Type Parameters
+
+###### S
+
+`S` *extends* `Readonly`\<`Record`\<`string`, [`FieldDefinition`](#fielddefinition)\<`unknown`\>\>\>
+
+The schema being declared.
+
+###### Parameters
+
+###### schema
+
+`S`
+
+The field definitions, keyed by the property name they become.
+
+###### Returns
+
+[`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+An abstract class to extend.
+
+###### Throws
+
+IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
+with a `Component`/`Script` member.
+
+###### Example
+
+```ts
+class Spinner extends Component.define({
+  degreesPerSecond: f32(90, { min: -360, max: 360 }),
+  axis: vec3({ x: 0, y: 1, z: 0 }),
+}) {
+  static typeId = "mygame/Spinner";
+}
+```
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`define`](#define-13)
+
+##### destroy()
+
+> **destroy**(): `void`
+
+Queues this component for destruction. It stays usable until the destroy flush of the current
+frame, but reports `isDestroyed === true` immediately
+(`docs/architecture/01-lifecycle-and-time.md` §6). Calling it twice is a no-op.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`destroy`](#destroy-13)
+
+##### getComponent()
+
+> **getComponent**\<`T`\>(`type`): `T` \| `null`
+
+Finds another component on the same entity — sugar for `this.entity.getComponent`.
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class; matching is by class identity **and** inheritance.
+
+###### Returns
+
+`T` \| `null`
+
+The first match in attach order, or `null`.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`getComponent`](#getcomponent-13)
+
+##### onAttach()
+
+> **onAttach**(): `void`
+
+Marks the entity's body for a rebuild at the start of the next fixed step.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`onAttach`](#onattach-9)
+
+##### onDetach()
+
+> **onDetach**(): `void`
+
+Marks the entity's body for a rebuild, which removes this collider from it.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`onDetach`](#ondetach-9)
+
+##### rebuild()
+
+> **rebuild**(): `void`
+
+Rebuilds the entity's body and shapes at the start of the next fixed step. Call it after
+changing a size, an offset, `isTrigger`, or the entity's scale.
+
+###### Returns
+
+`void`
+
+###### Example
+
+```ts
+box.size = { x: 2, y: 2 };
+box.rebuild();
+```
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`rebuild`](#rebuild-8)
+
+##### requireComponent()
+
+> **requireComponent**\<`T`\>(`type`): `T`
+
+Finds another component on the same entity, requiring it to be there — the supported way to
+link components (`docs/architecture/03-scripting-and-components.md` §8).
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class.
+
+###### Returns
+
+`T`
+
+The first match in attach order.
+
+###### Throws
+
+IgnifxError with code `IGX-0201` when the entity has no such component.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`requireComponent`](#requirecomponent-13)
+
+##### resolveMaterial()
+
+> **resolveMaterial**(`fallback`): [`Physics2DMaterialValues`](#physics2dmaterialvalues)
+
+Resolves the surface this collider presents to Rapier.
+
+###### Parameters
+
+###### fallback
+
+[`Physics2DMaterialValues`](#physics2dmaterialvalues)
+
+The world's `physics2d.defaultMaterial`.
+
+###### Returns
+
+[`Physics2DMaterialValues`](#physics2dmaterialvalues)
+
+The asset's values, the inline values, or the fallback.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`resolveMaterial`](#resolvematerial-6)
+
+***
+
 ### Entity
 
 A node of the scene tree (`docs/architecture/02-scene-graph.md` §4). Every entity has a stable
@@ -7912,13 +12382,13 @@ The own flag.
 
 ###### Get Signature
 
-> **get** **children**(): readonly [`Entity`](#entity-9)[]
+> **get** **children**(): readonly [`Entity`](#entity-17)[]
 
 The children, in creation order. The array is live; treat it as read-only.
 
 ###### Returns
 
-readonly [`Entity`](#entity-9)[]
+readonly [`Entity`](#entity-17)[]
 
 The live child list.
 
@@ -8071,13 +12541,13 @@ The signal, created on first access.
 
 ###### Get Signature
 
-> **get** **onChildAdded**(): [`Signal`](#signal-3)\<[`Entity`](#entity-9)\>
+> **get** **onChildAdded**(): [`Signal`](#signal-3)\<[`Entity`](#entity-17)\>
 
 Emitted after a child is added, whether by creation or by reparenting.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Entity`](#entity-9)\>
+[`Signal`](#signal-3)\<[`Entity`](#entity-17)\>
 
 The signal, created on first access.
 
@@ -8085,13 +12555,13 @@ The signal, created on first access.
 
 ###### Get Signature
 
-> **get** **onChildRemoved**(): [`Signal`](#signal-3)\<[`Entity`](#entity-9)\>
+> **get** **onChildRemoved**(): [`Signal`](#signal-3)\<[`Entity`](#entity-17)\>
 
 Emitted after a child is removed.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Entity`](#entity-9)\>
+[`Signal`](#signal-3)\<[`Entity`](#entity-17)\>
 
 The signal, created on first access.
 
@@ -8133,14 +12603,14 @@ The signal, created on first access.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Entity`](#entity-9)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Entity`](#entity-17)\>
 
 Emitted in the destroy flush, after the entity's components have run `onDestroy`. `Signal`'s
 `{ owner }` option uses it to detach handlers automatically.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Entity`](#entity-9)\>
+[`Signal`](#signal-3)\<[`Entity`](#entity-17)\>
 
 The signal, created on first access.
 
@@ -8148,13 +12618,13 @@ The signal, created on first access.
 
 ###### Get Signature
 
-> **get** **onParentChanged**(): [`Signal`](#signal-3)\<[`Entity`](#entity-9) \| `null`\>
+> **get** **onParentChanged**(): [`Signal`](#signal-3)\<[`Entity`](#entity-17) \| `null`\>
 
 Emitted with the new parent after this entity is reparented.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Entity`](#entity-9) \| `null`\>
+[`Signal`](#signal-3)\<[`Entity`](#entity-17) \| `null`\>
 
 The signal, created on first access.
 
@@ -8162,13 +12632,13 @@ The signal, created on first access.
 
 ###### Get Signature
 
-> **get** **parent**(): [`Entity`](#entity-9) \| `null`
+> **get** **parent**(): [`Entity`](#entity-17) \| `null`
 
 The parent entity, or `null` when the entity is a root of its scene.
 
 ###### Returns
 
-[`Entity`](#entity-9) \| `null`
+[`Entity`](#entity-17) \| `null`
 
 The parent, or `null`.
 
@@ -8236,13 +12706,13 @@ The tag set.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-23)
+> **get** **transform**(): [`Transform`](#transform-40)
 
 The entity's transform. Every entity has one; it can be neither removed nor disabled.
 
 ###### Returns
 
-[`Transform`](#transform-23)
+[`Transform`](#transform-40)
 
 The transform.
 
@@ -8264,13 +12734,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-26)
+> **get** **world**(): [`World`](#world-45)
 
 The world that owns the entity.
 
 ###### Returns
 
-[`World`](#world-26)
+[`World`](#world-45)
 
 The world.
 
@@ -8354,7 +12824,7 @@ destroying an object the engine is still iterating would be unsound; use `destro
 
 ##### find()
 
-> **find**(`path`): [`Entity`](#entity-9) \| `null`
+> **find**(`path`): [`Entity`](#entity-17) \| `null`
 
 Resolves a path relative to this entity — `"Body/Arm.L"`, `"../Sibling"`, `"/Root/Child"`.
 
@@ -8369,7 +12839,7 @@ The path. A leading `/` resolves from the roots of this entity's scene instance;
 
 ###### Returns
 
-[`Entity`](#entity-9) \| `null`
+[`Entity`](#entity-17) \| `null`
 
 The entity, or `null` when the path resolves to nothing.
 
@@ -8381,7 +12851,7 @@ fields or `requireComponent` to link objects (`docs/architecture/02-scene-graph.
 
 ##### findChild()
 
-> **findChild**(`predicate`, `deep?`): [`Entity`](#entity-9) \| `null`
+> **findChild**(`predicate`, `deep?`): [`Entity`](#entity-17) \| `null`
 
 Finds a descendant satisfying a predicate.
 
@@ -8402,7 +12872,7 @@ direct children only.
 
 ###### Returns
 
-[`Entity`](#entity-9) \| `null`
+[`Entity`](#entity-17) \| `null`
 
 The first match, or `null`.
 
@@ -8592,7 +13062,7 @@ Reports whether this entity is anywhere below another in the tree.
 
 ###### other
 
-[`Entity`](#entity-9)
+[`Entity`](#entity-17)
 
 The candidate ancestor.
 
@@ -8659,13 +13129,13 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ##### root()
 
-> **root**(): [`Entity`](#entity-9)
+> **root**(): [`Entity`](#entity-17)
 
 The topmost ancestor.
 
 ###### Returns
 
-[`Entity`](#entity-9)
+[`Entity`](#entity-17)
 
 The root of this entity's branch, which is this entity when it has no parent.
 
@@ -8679,7 +13149,7 @@ Moves the entity under a new parent, or to the root of its scene.
 
 ###### parent
 
-[`Entity`](#entity-9) \| `null`
+[`Entity`](#entity-17) \| `null`
 
 The new parent, or `null` to detach to the scene root.
 
@@ -8745,7 +13215,7 @@ Applies the schema defaults, exactly as `Component.define` would.
 
 ###### Overrides
 
-[`Component`](#abstract-component).[`constructor`](#constructor-13)
+[`Component`](#abstract-component).[`constructor`](#constructor-20)
 
 #### Properties
 
@@ -8781,7 +13251,7 @@ One per entity, and effectively one per world: the fields are all scene state.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-21)
+> `static` **schema**: [`Schema`](#schema-30)
 
 The serialized field declarations (ADR-0004).
 
@@ -8821,7 +13291,7 @@ The app.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`app`](#app-9)
+[`Component`](#abstract-component).[`app`](#app-16)
 
 ##### enabled
 
@@ -8856,25 +13326,25 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-10)
+[`Component`](#abstract-component).[`enabled`](#enabled-17)
 
 ##### entity
 
 ###### Get Signature
 
-> **get** **entity**(): [`Entity`](#entity-9)
+> **get** **entity**(): [`Entity`](#entity-17)
 
 The entity this component is attached to.
 
 ###### Returns
 
-[`Entity`](#entity-9)
+[`Entity`](#entity-17)
 
 The owning entity.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`entity`](#entity-7)
+[`Component`](#abstract-component).[`entity`](#entity-14)
 
 ##### handle
 
@@ -8892,7 +13362,7 @@ The handle.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`handle`](#handle-7)
+[`Component`](#abstract-component).[`handle`](#handle-14)
 
 ##### installed
 
@@ -8926,7 +13396,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-7)
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-14)
 
 ##### isEnabledInHierarchy
 
@@ -8944,7 +13414,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-7)
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-14)
 
 ##### onDestroyed
 
@@ -8974,25 +13444,25 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-7)
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-14)
 
 ##### transform
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-23)
+> **get** **transform**(): [`Transform`](#transform-40)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-23)
+[`Transform`](#transform-40)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`transform`](#transform-7)
+[`Component`](#abstract-component).[`transform`](#transform-14)
 
 ##### uid
 
@@ -9010,25 +13480,25 @@ The identifier.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`uid`](#uid-7)
+[`Component`](#abstract-component).[`uid`](#uid-14)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-26)
+> **get** **world**(): [`World`](#world-45)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-26)
+[`World`](#world-45)
 
 The world.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`world`](#world-8)
+[`Component`](#abstract-component).[`world`](#world-15)
 
 #### Methods
 
@@ -9081,7 +13551,7 @@ class Spinner extends Component.define({
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`define`](#define-7)
+[`Component`](#abstract-component).[`define`](#define-14)
 
 ##### destroy()
 
@@ -9097,7 +13567,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`destroy`](#destroy-7)
+[`Component`](#abstract-component).[`destroy`](#destroy-14)
 
 ##### getComponent()
 
@@ -9129,7 +13599,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`getComponent`](#getcomponent-7)
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-14)
 
 ##### onAttach()
 
@@ -9143,7 +13613,7 @@ Records that the component exists; the scene is written on the first sync.
 
 ###### Implementation of
 
-[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-5)
+[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-10)
 
 ##### onDetach()
 
@@ -9164,7 +13634,7 @@ implies. The `PreRender` system re-picks the winner on the next frame.
 
 ###### Implementation of
 
-[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-5)
+[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-10)
 
 ##### requireComponent()
 
@@ -9201,7 +13671,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-7)
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-14)
 
 ***
 
@@ -9351,7 +13821,7 @@ The slot index, `0` through `3`.
 
 ###### Overrides
 
-[`InputDevice`](#inputdevice).[`constructor`](#constructor-30)
+[`InputDevice`](#inputdevice).[`constructor`](#constructor-38)
 
 #### Properties
 
@@ -10446,7 +14916,7 @@ Applies this collider's defaults on top of the shared ones.
 
 ###### Overrides
 
-[`Collider`](#abstract-collider).[`constructor`](#constructor-11)
+[`Collider`](#abstract-collider).[`constructor`](#constructor-17)
 
 #### Properties
 
@@ -10458,7 +14928,7 @@ Several colliders on one entity form one compound body (`09-physics.md` §2.2).
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`allowMultiple`](#allowmultiple-5)
+[`Collider`](#abstract-collider).[`allowMultiple`](#allowmultiple-11)
 
 ##### center
 
@@ -10478,11 +14948,11 @@ The shape's offset from the entity origin, in local units.
 
 > **inlineMaterial**: [`PhysicsMaterialValues`](#physicsmaterialvalues) \| `null`
 
-An inline surface, used when [Collider.material](#material-2) is `null`.
+An inline surface, used when [Collider.material](#material-5) is `null`.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`inlineMaterial`](#inlinematerial-2)
+[`Collider`](#abstract-collider).[`inlineMaterial`](#inlinematerial-5)
 
 ##### isTrigger
 
@@ -10492,7 +14962,7 @@ When `true` the shape reports overlaps and resolves no contacts.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`isTrigger`](#istrigger-2)
+[`Collider`](#abstract-collider).[`isTrigger`](#istrigger-5)
 
 ##### layerOverride
 
@@ -10502,17 +14972,17 @@ The name of the layer this collider filters as, or `""` to use `entity.layer`.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`layerOverride`](#layeroverride-2)
+[`Collider`](#abstract-collider).[`layerOverride`](#layeroverride-5)
 
 ##### material
 
 > **material**: [`AssetHandle`](#assethandle)\<[`PhysicsMaterial`](#physicsmaterial)\> \| `null`
 
-A `.physicsmaterial.json` reference; wins over [Collider.inlineMaterial](#inlinematerial-2).
+A `.physicsmaterial.json` reference; wins over [Collider.inlineMaterial](#inlinematerial-5).
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`material`](#material-2)
+[`Collider`](#abstract-collider).[`material`](#material-5)
 
 ##### samplesX
 
@@ -10524,7 +14994,7 @@ A `.physicsmaterial.json` reference; wins over [Collider.inlineMaterial](#inline
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-21)
+> `static` **schema**: [`Schema`](#schema-30)
 
 The serialized field declarations.
 
@@ -10556,7 +15026,7 @@ The app.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`app`](#app-8)
+[`Collider`](#abstract-collider).[`app`](#app-14)
 
 ##### enabled
 
@@ -10591,25 +15061,25 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`enabled`](#enabled-9)
+[`Collider`](#abstract-collider).[`enabled`](#enabled-15)
 
 ##### entity
 
 ###### Get Signature
 
-> **get** **entity**(): [`Entity`](#entity-9)
+> **get** **entity**(): [`Entity`](#entity-17)
 
 The entity this component is attached to.
 
 ###### Returns
 
-[`Entity`](#entity-9)
+[`Entity`](#entity-17)
 
 The owning entity.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`entity`](#entity-6)
+[`Collider`](#abstract-collider).[`entity`](#entity-12)
 
 ##### handle
 
@@ -10627,7 +15097,7 @@ The handle.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`handle`](#handle-6)
+[`Collider`](#abstract-collider).[`handle`](#handle-12)
 
 ##### isDestroyed
 
@@ -10647,7 +15117,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`isDestroyed`](#isdestroyed-6)
+[`Collider`](#abstract-collider).[`isDestroyed`](#isdestroyed-12)
 
 ##### isEnabledInHierarchy
 
@@ -10665,7 +15135,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`isEnabledInHierarchy`](#isenabledinhierarchy-6)
+[`Collider`](#abstract-collider).[`isEnabledInHierarchy`](#isenabledinhierarchy-12)
 
 ##### onDestroyed
 
@@ -10695,25 +15165,25 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`onDestroyed`](#ondestroyed-6)
+[`Collider`](#abstract-collider).[`onDestroyed`](#ondestroyed-12)
 
 ##### transform
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-23)
+> **get** **transform**(): [`Transform`](#transform-40)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-23)
+[`Transform`](#transform-40)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`transform`](#transform-6)
+[`Collider`](#abstract-collider).[`transform`](#transform-12)
 
 ##### uid
 
@@ -10731,25 +15201,25 @@ The identifier.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`uid`](#uid-6)
+[`Collider`](#abstract-collider).[`uid`](#uid-12)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-26)
+> **get** **world**(): [`World`](#world-45)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-26)
+[`World`](#world-45)
 
 The world.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`world`](#world-7)
+[`Collider`](#abstract-collider).[`world`](#world-13)
 
 #### Methods
 
@@ -10832,7 +15302,7 @@ class Spinner extends Component.define({
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`define`](#define-6)
+[`Collider`](#abstract-collider).[`define`](#define-12)
 
 ##### destroy()
 
@@ -10848,7 +15318,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`destroy`](#destroy-6)
+[`Collider`](#abstract-collider).[`destroy`](#destroy-12)
 
 ##### getComponent()
 
@@ -10880,7 +15350,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`getComponent`](#getcomponent-6)
+[`Collider`](#abstract-collider).[`getComponent`](#getcomponent-12)
 
 ##### halfExtentsToRef()
 
@@ -10922,7 +15392,7 @@ Marks the entity's body for a rebuild at the start of the next fixed step.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`onAttach`](#onattach-4)
+[`Collider`](#abstract-collider).[`onAttach`](#onattach-8)
 
 ##### onDetach()
 
@@ -10936,7 +15406,7 @@ Marks the entity's body for a rebuild, which removes this collider from it.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`onDetach`](#ondetach-4)
+[`Collider`](#abstract-collider).[`onDetach`](#ondetach-8)
 
 ##### rebuild()
 
@@ -10958,7 +15428,7 @@ box.rebuild();
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`rebuild`](#rebuild-3)
+[`Collider`](#abstract-collider).[`rebuild`](#rebuild-7)
 
 ##### requireComponent()
 
@@ -10995,7 +15465,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`requireComponent`](#requirecomponent-6)
+[`Collider`](#abstract-collider).[`requireComponent`](#requirecomponent-12)
 
 ##### resolveMaterial()
 
@@ -11019,7 +15489,7 @@ The asset's values, the inline values, or the fallback.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`resolveMaterial`](#resolvematerial-2)
+[`Collider`](#abstract-collider).[`resolveMaterial`](#resolvematerial-5)
 
 ***
 
@@ -12906,7 +17376,7 @@ Applies the schema defaults, exactly as `Component.define` would.
 
 ###### Overrides
 
-[`Component`](#abstract-component).[`constructor`](#constructor-13)
+[`Component`](#abstract-component).[`constructor`](#constructor-20)
 
 #### Properties
 
@@ -12922,7 +17392,7 @@ At most one light per entity: two lights from one transform want two entities.
 
 ##### exclude
 
-> **exclude**: ([`Entity`](#entity-9) \| `null`)[]
+> **exclude**: ([`Entity`](#entity-17) \| `null`)[]
 
 ##### groundColor
 
@@ -12930,7 +17400,7 @@ At most one light per entity: two lights from one transform want two entities.
 
 ##### includeOnly
 
-> **includeOnly**: ([`Entity`](#entity-9) \| `null`)[]
+> **includeOnly**: ([`Entity`](#entity-17) \| `null`)[]
 
 ##### intensity
 
@@ -12942,7 +17412,7 @@ At most one light per entity: two lights from one transform want two entities.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-21)
+> `static` **schema**: [`Schema`](#schema-30)
 
 The serialized field declarations (ADR-0004).
 
@@ -12986,7 +17456,7 @@ The app.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`app`](#app-9)
+[`Component`](#abstract-component).[`app`](#app-16)
 
 ##### enabled
 
@@ -13021,25 +17491,25 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-10)
+[`Component`](#abstract-component).[`enabled`](#enabled-17)
 
 ##### entity
 
 ###### Get Signature
 
-> **get** **entity**(): [`Entity`](#entity-9)
+> **get** **entity**(): [`Entity`](#entity-17)
 
 The entity this component is attached to.
 
 ###### Returns
 
-[`Entity`](#entity-9)
+[`Entity`](#entity-17)
 
 The owning entity.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`entity`](#entity-7)
+[`Component`](#abstract-component).[`entity`](#entity-14)
 
 ##### handle
 
@@ -13057,7 +17527,7 @@ The handle.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`handle`](#handle-7)
+[`Component`](#abstract-component).[`handle`](#handle-14)
 
 ##### isCastingShadows
 
@@ -13092,7 +17562,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-7)
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-14)
 
 ##### isEnabledInHierarchy
 
@@ -13110,7 +17580,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-7)
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-14)
 
 ##### lite
 
@@ -13163,25 +17633,25 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-7)
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-14)
 
 ##### transform
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-23)
+> **get** **transform**(): [`Transform`](#transform-40)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-23)
+[`Transform`](#transform-40)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`transform`](#transform-7)
+[`Component`](#abstract-component).[`transform`](#transform-14)
 
 ##### uid
 
@@ -13199,25 +17669,25 @@ The identifier.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`uid`](#uid-7)
+[`Component`](#abstract-component).[`uid`](#uid-14)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-26)
+> **get** **world**(): [`World`](#world-45)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-26)
+[`World`](#world-45)
 
 The world.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`world`](#world-8)
+[`Component`](#abstract-component).[`world`](#world-15)
 
 #### Methods
 
@@ -13270,7 +17740,7 @@ class Spinner extends Component.define({
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`define`](#define-7)
+[`Component`](#abstract-component).[`define`](#define-14)
 
 ##### destroy()
 
@@ -13286,7 +17756,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`destroy`](#destroy-7)
+[`Component`](#abstract-component).[`destroy`](#destroy-14)
 
 ##### getComponent()
 
@@ -13318,7 +17788,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`getComponent`](#getcomponent-7)
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-14)
 
 ##### onAttach()
 
@@ -13332,7 +17802,7 @@ Records that the component exists; the Lite light is built on the first sync.
 
 ###### Implementation of
 
-[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-5)
+[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-10)
 
 ##### onDetach()
 
@@ -13346,7 +17816,7 @@ Removes the light from the scene and releases its shadow generator.
 
 ###### Implementation of
 
-[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-5)
+[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-10)
 
 ##### requireComponent()
 
@@ -13383,7 +17853,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-7)
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-14)
 
 ***
 
@@ -15088,7 +19558,7 @@ Applies this collider's defaults on top of the shared ones.
 
 ###### Overrides
 
-[`Collider`](#abstract-collider).[`constructor`](#constructor-11)
+[`Collider`](#abstract-collider).[`constructor`](#constructor-17)
 
 #### Properties
 
@@ -15100,7 +19570,7 @@ Several colliders on one entity form one compound body (`09-physics.md` §2.2).
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`allowMultiple`](#allowmultiple-5)
+[`Collider`](#abstract-collider).[`allowMultiple`](#allowmultiple-11)
 
 ##### center
 
@@ -15124,11 +19594,11 @@ The shape's offset from the entity origin, in local units.
 
 > **inlineMaterial**: [`PhysicsMaterialValues`](#physicsmaterialvalues) \| `null`
 
-An inline surface, used when [Collider.material](#material-2) is `null`.
+An inline surface, used when [Collider.material](#material-5) is `null`.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`inlineMaterial`](#inlinematerial-2)
+[`Collider`](#abstract-collider).[`inlineMaterial`](#inlinematerial-5)
 
 ##### isTrigger
 
@@ -15138,7 +19608,7 @@ When `true` the shape reports overlaps and resolves no contacts.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`isTrigger`](#istrigger-2)
+[`Collider`](#abstract-collider).[`isTrigger`](#istrigger-5)
 
 ##### layerOverride
 
@@ -15148,17 +19618,17 @@ The name of the layer this collider filters as, or `""` to use `entity.layer`.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`layerOverride`](#layeroverride-2)
+[`Collider`](#abstract-collider).[`layerOverride`](#layeroverride-5)
 
 ##### material
 
 > **material**: [`AssetHandle`](#assethandle)\<[`PhysicsMaterial`](#physicsmaterial)\> \| `null`
 
-A `.physicsmaterial.json` reference; wins over [Collider.inlineMaterial](#inlinematerial-2).
+A `.physicsmaterial.json` reference; wins over [Collider.inlineMaterial](#inlinematerial-5).
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`material`](#material-2)
+[`Collider`](#abstract-collider).[`material`](#material-5)
 
 ##### mesh
 
@@ -15166,7 +19636,7 @@ A `.physicsmaterial.json` reference; wins over [Collider.inlineMaterial](#inline
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-21)
+> `static` **schema**: [`Schema`](#schema-30)
 
 The serialized field declarations.
 
@@ -15194,7 +19664,7 @@ The app.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`app`](#app-8)
+[`Collider`](#abstract-collider).[`app`](#app-14)
 
 ##### enabled
 
@@ -15229,25 +19699,25 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`enabled`](#enabled-9)
+[`Collider`](#abstract-collider).[`enabled`](#enabled-15)
 
 ##### entity
 
 ###### Get Signature
 
-> **get** **entity**(): [`Entity`](#entity-9)
+> **get** **entity**(): [`Entity`](#entity-17)
 
 The entity this component is attached to.
 
 ###### Returns
 
-[`Entity`](#entity-9)
+[`Entity`](#entity-17)
 
 The owning entity.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`entity`](#entity-6)
+[`Collider`](#abstract-collider).[`entity`](#entity-12)
 
 ##### handle
 
@@ -15265,7 +19735,7 @@ The handle.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`handle`](#handle-6)
+[`Collider`](#abstract-collider).[`handle`](#handle-12)
 
 ##### isDestroyed
 
@@ -15285,7 +19755,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`isDestroyed`](#isdestroyed-6)
+[`Collider`](#abstract-collider).[`isDestroyed`](#isdestroyed-12)
 
 ##### isEnabledInHierarchy
 
@@ -15303,7 +19773,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`isEnabledInHierarchy`](#isenabledinhierarchy-6)
+[`Collider`](#abstract-collider).[`isEnabledInHierarchy`](#isenabledinhierarchy-12)
 
 ##### onDestroyed
 
@@ -15333,25 +19803,25 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`onDestroyed`](#ondestroyed-6)
+[`Collider`](#abstract-collider).[`onDestroyed`](#ondestroyed-12)
 
 ##### transform
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-23)
+> **get** **transform**(): [`Transform`](#transform-40)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-23)
+[`Transform`](#transform-40)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`transform`](#transform-6)
+[`Collider`](#abstract-collider).[`transform`](#transform-12)
 
 ##### uid
 
@@ -15369,25 +19839,25 @@ The identifier.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`uid`](#uid-6)
+[`Collider`](#abstract-collider).[`uid`](#uid-12)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-26)
+> **get** **world**(): [`World`](#world-45)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-26)
+[`World`](#world-45)
 
 The world.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`world`](#world-7)
+[`Collider`](#abstract-collider).[`world`](#world-13)
 
 #### Methods
 
@@ -15476,7 +19946,7 @@ class Spinner extends Component.define({
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`define`](#define-6)
+[`Collider`](#abstract-collider).[`define`](#define-12)
 
 ##### destroy()
 
@@ -15492,7 +19962,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`destroy`](#destroy-6)
+[`Collider`](#abstract-collider).[`destroy`](#destroy-12)
 
 ##### getComponent()
 
@@ -15524,7 +19994,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`getComponent`](#getcomponent-6)
+[`Collider`](#abstract-collider).[`getComponent`](#getcomponent-12)
 
 ##### halfExtentsToRef()
 
@@ -15567,7 +20037,7 @@ Marks the entity's body for a rebuild at the start of the next fixed step.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`onAttach`](#onattach-4)
+[`Collider`](#abstract-collider).[`onAttach`](#onattach-8)
 
 ##### onDetach()
 
@@ -15581,7 +20051,7 @@ Marks the entity's body for a rebuild, which removes this collider from it.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`onDetach`](#ondetach-4)
+[`Collider`](#abstract-collider).[`onDetach`](#ondetach-8)
 
 ##### rebuild()
 
@@ -15603,7 +20073,7 @@ box.rebuild();
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`rebuild`](#rebuild-3)
+[`Collider`](#abstract-collider).[`rebuild`](#rebuild-7)
 
 ##### requireComponent()
 
@@ -15640,7 +20110,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`requireComponent`](#requirecomponent-6)
+[`Collider`](#abstract-collider).[`requireComponent`](#requirecomponent-12)
 
 ##### resolveMaterial()
 
@@ -15664,7 +20134,7 @@ The asset's values, the inline values, or the fallback.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`resolveMaterial`](#resolvematerial-2)
+[`Collider`](#abstract-collider).[`resolveMaterial`](#resolvematerial-5)
 
 ***
 
@@ -15702,7 +20172,7 @@ Applies the schema defaults, exactly as `Component.define` would.
 
 ###### Overrides
 
-[`Component`](#abstract-component).[`constructor`](#constructor-13)
+[`Component`](#abstract-component).[`constructor`](#constructor-20)
 
 #### Properties
 
@@ -15738,7 +20208,7 @@ Several renderers on one entity draw several meshes from one transform, which is
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-21)
+> `static` **schema**: [`Schema`](#schema-30)
 
 The serialized field declarations (ADR-0004).
 
@@ -15766,7 +20236,7 @@ The app.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`app`](#app-9)
+[`Component`](#abstract-component).[`app`](#app-16)
 
 ##### enabled
 
@@ -15801,25 +20271,25 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-10)
+[`Component`](#abstract-component).[`enabled`](#enabled-17)
 
 ##### entity
 
 ###### Get Signature
 
-> **get** **entity**(): [`Entity`](#entity-9)
+> **get** **entity**(): [`Entity`](#entity-17)
 
 The entity this component is attached to.
 
 ###### Returns
 
-[`Entity`](#entity-9)
+[`Entity`](#entity-17)
 
 The owning entity.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`entity`](#entity-7)
+[`Component`](#abstract-component).[`entity`](#entity-14)
 
 ##### handle
 
@@ -15837,7 +20307,7 @@ The handle.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`handle`](#handle-7)
+[`Component`](#abstract-component).[`handle`](#handle-14)
 
 ##### isDestroyed
 
@@ -15857,7 +20327,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-7)
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-14)
 
 ##### isEnabledInHierarchy
 
@@ -15875,7 +20345,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-7)
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-14)
 
 ##### isVisible
 
@@ -15939,25 +20409,25 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-7)
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-14)
 
 ##### transform
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-23)
+> **get** **transform**(): [`Transform`](#transform-40)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-23)
+[`Transform`](#transform-40)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`transform`](#transform-7)
+[`Component`](#abstract-component).[`transform`](#transform-14)
 
 ##### uid
 
@@ -15975,25 +20445,25 @@ The identifier.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`uid`](#uid-7)
+[`Component`](#abstract-component).[`uid`](#uid-14)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-26)
+> **get** **world**(): [`World`](#world-45)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-26)
+[`World`](#world-45)
 
 The world.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`world`](#world-8)
+[`Component`](#abstract-component).[`world`](#world-15)
 
 #### Methods
 
@@ -16046,7 +20516,7 @@ class Spinner extends Component.define({
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`define`](#define-7)
+[`Component`](#abstract-component).[`define`](#define-14)
 
 ##### destroy()
 
@@ -16062,7 +20532,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`destroy`](#destroy-7)
+[`Component`](#abstract-component).[`destroy`](#destroy-14)
 
 ##### getComponent()
 
@@ -16094,7 +20564,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`getComponent`](#getcomponent-7)
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-14)
 
 ##### onAttach()
 
@@ -16108,7 +20578,7 @@ Nothing to do at attach: the clone is built on the first sync, once `mesh` has b
 
 ###### Implementation of
 
-[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-5)
+[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-10)
 
 ##### onDetach()
 
@@ -16122,7 +20592,7 @@ Removes the clone from the scene, releasing its share of the template's buffers.
 
 ###### Implementation of
 
-[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-5)
+[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-10)
 
 ##### requireComponent()
 
@@ -16159,7 +20629,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-7)
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-14)
 
 ***
 
@@ -16198,7 +20668,7 @@ Applies the schema defaults, exactly as `Component.define` would.
 
 ###### Overrides
 
-[`Component`](#abstract-component).[`constructor`](#constructor-13)
+[`Component`](#abstract-component).[`constructor`](#constructor-20)
 
 #### Properties
 
@@ -16230,7 +20700,7 @@ One model per entity: a second instance under the same transform wants its own e
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-21)
+> `static` **schema**: [`Schema`](#schema-30)
 
 The serialized field declarations (ADR-0004).
 
@@ -16279,7 +20749,7 @@ The app.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`app`](#app-9)
+[`Component`](#abstract-component).[`app`](#app-16)
 
 ##### enabled
 
@@ -16314,25 +20784,25 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-10)
+[`Component`](#abstract-component).[`enabled`](#enabled-17)
 
 ##### entity
 
 ###### Get Signature
 
-> **get** **entity**(): [`Entity`](#entity-9)
+> **get** **entity**(): [`Entity`](#entity-17)
 
 The entity this component is attached to.
 
 ###### Returns
 
-[`Entity`](#entity-9)
+[`Entity`](#entity-17)
 
 The owning entity.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`entity`](#entity-7)
+[`Component`](#abstract-component).[`entity`](#entity-14)
 
 ##### handle
 
@@ -16350,7 +20820,7 @@ The handle.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`handle`](#handle-7)
+[`Component`](#abstract-component).[`handle`](#handle-14)
 
 ##### isDestroyed
 
@@ -16370,7 +20840,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-7)
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-14)
 
 ##### isEnabledInHierarchy
 
@@ -16388,7 +20858,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-7)
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-14)
 
 ##### lite
 
@@ -16456,7 +20926,7 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-7)
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-14)
 
 ##### skeletons
 
@@ -16479,19 +20949,19 @@ The skeletons.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-23)
+> **get** **transform**(): [`Transform`](#transform-40)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-23)
+[`Transform`](#transform-40)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`transform`](#transform-7)
+[`Component`](#abstract-component).[`transform`](#transform-14)
 
 ##### uid
 
@@ -16509,25 +20979,25 @@ The identifier.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`uid`](#uid-7)
+[`Component`](#abstract-component).[`uid`](#uid-14)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-26)
+> **get** **world**(): [`World`](#world-45)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-26)
+[`World`](#world-45)
 
 The world.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`world`](#world-8)
+[`Component`](#abstract-component).[`world`](#world-15)
 
 #### Methods
 
@@ -16548,7 +21018,7 @@ The glTF node name, as the file spells it.
 
 ###### entity
 
-[`Entity`](#entity-9)
+[`Entity`](#entity-17)
 
 The entity to attach.
 
@@ -16619,7 +21089,7 @@ class Spinner extends Component.define({
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`define`](#define-7)
+[`Component`](#abstract-component).[`define`](#define-14)
 
 ##### destroy()
 
@@ -16635,7 +21105,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`destroy`](#destroy-7)
+[`Component`](#abstract-component).[`destroy`](#destroy-14)
 
 ##### getComponent()
 
@@ -16667,7 +21137,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`getComponent`](#getcomponent-7)
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-14)
 
 ##### onAttach()
 
@@ -16681,7 +21151,7 @@ Nothing to do at attach: the instance is built on the first sync, once `model` i
 
 ###### Implementation of
 
-[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-5)
+[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-10)
 
 ##### onDetach()
 
@@ -16695,7 +21165,7 @@ Removes the instance from the scene and gives back its share of the template's b
 
 ###### Implementation of
 
-[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-5)
+[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-10)
 
 ##### requireComponent()
 
@@ -16732,7 +21202,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-7)
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-14)
 
 ***
 
@@ -16922,7 +21392,7 @@ Applies the schema defaults, exactly as `Script.define` would.
 
 ###### Overrides
 
-[`Script`](#abstract-script).[`constructor`](#constructor-46)
+[`Script`](#abstract-script).[`constructor`](#constructor-58)
 
 #### Properties
 
@@ -16976,7 +21446,7 @@ Whether to start the first playlist entry as soon as the entity is alive.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-21)
+> `static` **schema**: [`Schema`](#schema-30)
 
 The serialized field declarations (ADR-0004).
 
@@ -17010,7 +21480,7 @@ The app.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`app`](#app-24)
+[`Script`](#abstract-script).[`app`](#app-35)
 
 ##### current
 
@@ -17059,25 +21529,25 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-27)
+[`Script`](#abstract-script).[`enabled`](#enabled-38)
 
 ##### entity
 
 ###### Get Signature
 
-> **get** **entity**(): [`Entity`](#entity-9)
+> **get** **entity**(): [`Entity`](#entity-17)
 
 The entity this component is attached to.
 
 ###### Returns
 
-[`Entity`](#entity-9)
+[`Entity`](#entity-17)
 
 The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-24)
+[`Script`](#abstract-script).[`entity`](#entity-36)
 
 ##### handle
 
@@ -17095,7 +21565,7 @@ The handle.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`handle`](#handle-20)
+[`Script`](#abstract-script).[`handle`](#handle-31)
 
 ##### index
 
@@ -17129,7 +21599,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-20)
+[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-31)
 
 ##### isEnabledInHierarchy
 
@@ -17147,7 +21617,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-19)
+[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-30)
 
 ##### isPlaying
 
@@ -17191,7 +21661,7 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-20)
+[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-31)
 
 ##### previous
 
@@ -17211,19 +21681,19 @@ The outgoing sound, or `null`.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-23)
+> **get** **transform**(): [`Transform`](#transform-40)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-23)
+[`Transform`](#transform-40)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`transform`](#transform-21)
+[`Script`](#abstract-script).[`transform`](#transform-32)
 
 ##### uid
 
@@ -17241,25 +21711,25 @@ The identifier.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`uid`](#uid-24)
+[`Script`](#abstract-script).[`uid`](#uid-35)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-26)
+> **get** **world**(): [`World`](#world-45)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-26)
+[`World`](#world-45)
 
 The world.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`world`](#world-22)
+[`Script`](#abstract-script).[`world`](#world-34)
 
 #### Methods
 
@@ -17275,7 +21745,7 @@ Starts the first playlist entry when `playOnAwake` is set.
 
 ###### Implementation of
 
-[`ScriptCallbacks`](#scriptcallbacks).[`awake`](#awake-3)
+[`ScriptCallbacks`](#scriptcallbacks).[`awake`](#awake-4)
 
 ##### crossfadeTo()
 
@@ -17353,7 +21823,7 @@ class Patrol extends Script.define({ waypoints: array(vec3()), speed: f32(3) }) 
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`define`](#define-19)
+[`Script`](#abstract-script).[`define`](#define-30)
 
 ##### destroy()
 
@@ -17369,7 +21839,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`destroy`](#destroy-20)
+[`Script`](#abstract-script).[`destroy`](#destroy-31)
 
 ##### getComponent()
 
@@ -17401,7 +21871,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`getComponent`](#getcomponent-20)
+[`Script`](#abstract-script).[`getComponent`](#getcomponent-31)
 
 ##### next()
 
@@ -17496,7 +21966,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-20)
+[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-31)
 
 ##### startCoroutine()
 
@@ -17536,7 +22006,7 @@ onEnable(): void {
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`startCoroutine`](#startcoroutine-3)
+[`Script`](#abstract-script).[`startCoroutine`](#startcoroutine-4)
 
 ##### stop()
 
@@ -17568,7 +22038,7 @@ Stops every coroutine this script started.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`stopAllCoroutines`](#stopallcoroutines-3)
+[`Script`](#abstract-script).[`stopAllCoroutines`](#stopallcoroutines-4)
 
 ##### stopCoroutine()
 
@@ -17582,7 +22052,7 @@ Stops one coroutine this script started. Stopping a finished coroutine is a no-o
 
 [`CoroutineHandle`](#coroutinehandle)
 
-The handle [Script.startCoroutine](#startcoroutine-3) returned.
+The handle [Script.startCoroutine](#startcoroutine-4) returned.
 
 ###### Returns
 
@@ -17590,7 +22060,723 @@ The handle [Script.startCoroutine](#startcoroutine-3) returned.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`stopCoroutine`](#stopcoroutine-3)
+[`Script`](#abstract-script).[`stopCoroutine`](#stopcoroutine-4)
+
+***
+
+### ParallaxLayer
+
+A parallax layer.
+
+#### Example
+
+```ts
+const sky = app.world.createEntity({ name: "sky" }).addComponent(ParallaxLayer);
+sky.sortingLayer = "Background";
+sky.factor = { x: 0.2, y: 0.5 };
+```
+
+#### Extends
+
+- [`Component`](#abstract-component)
+
+#### Constructors
+
+##### Constructor
+
+> **new ParallaxLayer**(): [`ParallaxLayer`](#parallaxlayer)
+
+Builds a parallax layer with the schema's defaults.
+
+###### Returns
+
+[`ParallaxLayer`](#parallaxlayer)
+
+###### Overrides
+
+[`Component`](#abstract-component).[`constructor`](#constructor-20)
+
+#### Properties
+
+##### allowMultiple
+
+> `static` **allowMultiple**: `boolean`
+
+One parallax setting per entity; several entities may each drive a different sorting layer.
+
+##### factor
+
+> **factor**: [`Vec2Like`](#vec2like)
+
+How much of the camera's motion the layer follows, per axis; `1` is no parallax.
+
+##### repeatHeight
+
+> **repeatHeight**: `number`
+
+The world height one repetition spans, in metres.
+
+##### repeatWidth
+
+> **repeatWidth**: `number`
+
+The world width one repetition spans, in metres; `0` disables horizontal repetition.
+
+##### repeatX
+
+> **repeatX**: `boolean`
+
+Whether the layer's sprites repeat horizontally across the camera's view.
+
+##### repeatY
+
+> **repeatY**: `boolean`
+
+Whether the layer's sprites repeat vertically.
+
+##### schema
+
+> `static` **schema**: [`Schema`](#schema-30)
+
+The declarative fields (ADR-0004).
+
+##### sortingLayer
+
+> **sortingLayer**: `string`
+
+Which sorting layer this component slows down.
+
+##### typeId
+
+> `static` **typeId**: `string`
+
+The registration id the serializer writes into scene files.
+
+#### Accessors
+
+##### app
+
+###### Get Signature
+
+> **get** **app**(): [`App`](#app)
+
+The app that owns the world.
+
+###### Returns
+
+[`App`](#app)
+
+The app.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`app`](#app-16)
+
+##### enabled
+
+###### Get Signature
+
+> **get** **enabled**(): `boolean`
+
+The component's own enabled flag; `true` by default. Setting it runs the enable or disable
+transition (`docs/architecture/01-lifecycle-and-time.md` §6): `onDisable` runs immediately,
+`awake`/`onEnable` run in the next lifecycle flush — or immediately and nested when the change
+happens inside a callback.
+
+###### Returns
+
+`boolean`
+
+`true` when the component's own flag is set.
+
+###### Set Signature
+
+> **set** **enabled**(`value`): `void`
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`enabled`](#enabled-17)
+
+##### entity
+
+###### Get Signature
+
+> **get** **entity**(): [`Entity`](#entity-17)
+
+The entity this component is attached to.
+
+###### Returns
+
+[`Entity`](#entity-17)
+
+The owning entity.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`entity`](#entity-14)
+
+##### handle
+
+###### Get Signature
+
+> **get** **handle**(): [`ComponentHandle`](#componenthandle-1)
+
+The dense runtime handle; invalid after destruction.
+
+###### Returns
+
+[`ComponentHandle`](#componenthandle-1)
+
+The handle.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`handle`](#handle-14)
+
+##### isDestroyed
+
+###### Get Signature
+
+> **get** **isDestroyed**(): `boolean`
+
+`true` from the moment `destroy()` is called, long before the destroy flush runs.
+
+###### Returns
+
+`boolean`
+
+`true` once the component has been queued for destruction.
+
+Whether the owner has already been destroyed.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-14)
+
+##### isEnabledInHierarchy
+
+###### Get Signature
+
+> **get** **isEnabledInHierarchy**(): `boolean`
+
+`true` when the component's own flag is set **and** its entity is active in the hierarchy.
+
+###### Returns
+
+`boolean`
+
+`true` when the component is effectively enabled.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-14)
+
+##### onDestroyed
+
+###### Get Signature
+
+> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+Emitted once when the component is destroyed, in the destroy flush. Connecting with
+`{ owner: this }` elsewhere uses it to detach handlers automatically
+(`docs/architecture/02-scene-graph.md` §8).
+
+###### Returns
+
+[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+The signal. It is created on first access, so a component nobody listens to allocates
+nothing.
+
+Emitted once when the owner is destroyed; the signal uses it to detach the handler.
+
+###### Remarks
+
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
+`docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
+invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-14)
+
+##### transform
+
+###### Get Signature
+
+> **get** **transform**(): [`Transform`](#transform-40)
+
+The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
+
+###### Returns
+
+[`Transform`](#transform-40)
+
+The entity's transform.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`transform`](#transform-14)
+
+##### uid
+
+###### Get Signature
+
+> **get** **uid**(): `string`
+
+The stable ULID; the key files use to reference this component.
+
+###### Returns
+
+`string`
+
+The identifier.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`uid`](#uid-14)
+
+##### world
+
+###### Get Signature
+
+> **get** **world**(): [`World`](#world-45)
+
+The world the entity belongs to.
+
+###### Returns
+
+[`World`](#world-45)
+
+The world.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`world`](#world-15)
+
+#### Methods
+
+##### define()
+
+> `static` **define**\<`S`\>(`schema`): [`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+Declares a component's serialized fields and returns the base class to extend (ADR-0004,
+`docs/architecture/03-scripting-and-components.md` §3). The returned class exposes every field
+as a typed instance property, applies the defaults in its constructor, and carries the schema
+for the serializer, the inspector, and the docs harness.
+
+###### Type Parameters
+
+###### S
+
+`S` *extends* `Readonly`\<`Record`\<`string`, [`FieldDefinition`](#fielddefinition)\<`unknown`\>\>\>
+
+The schema being declared.
+
+###### Parameters
+
+###### schema
+
+`S`
+
+The field definitions, keyed by the property name they become.
+
+###### Returns
+
+[`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+An abstract class to extend.
+
+###### Throws
+
+IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
+with a `Component`/`Script` member.
+
+###### Example
+
+```ts
+class Spinner extends Component.define({
+  degreesPerSecond: f32(90, { min: -360, max: 360 }),
+  axis: vec3({ x: 0, y: 1, z: 0 }),
+}) {
+  static typeId = "mygame/Spinner";
+}
+```
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`define`](#define-14)
+
+##### destroy()
+
+> **destroy**(): `void`
+
+Queues this component for destruction. It stays usable until the destroy flush of the current
+frame, but reports `isDestroyed === true` immediately
+(`docs/architecture/01-lifecycle-and-time.md` §6). Calling it twice is a no-op.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`destroy`](#destroy-14)
+
+##### getComponent()
+
+> **getComponent**\<`T`\>(`type`): `T` \| `null`
+
+Finds another component on the same entity — sugar for `this.entity.getComponent`.
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class; matching is by class identity **and** inheritance.
+
+###### Returns
+
+`T` \| `null`
+
+The first match in attach order, or `null`.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-14)
+
+##### requireComponent()
+
+> **requireComponent**\<`T`\>(`type`): `T`
+
+Finds another component on the same entity, requiring it to be there — the supported way to
+link components (`docs/architecture/03-scripting-and-components.md` §8).
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class.
+
+###### Returns
+
+`T`
+
+The first match in attach order.
+
+###### Throws
+
+IgnifxError with code `IGX-0201` when the entity has no such component.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-14)
+
+***
+
+### Physics2DService
+
+The service behind `app.physics2d`.
+
+#### Example
+
+```ts
+const hit = app.physics2d.raycast({ x: 0, y: 5 }, { x: 0, y: -1 }, 20);
+if (hit !== null) {
+  app.log.info("ray hit {name} at {y}", hit.entity.name, hit.point.y);
+}
+```
+
+#### Accessors
+
+##### gravity
+
+###### Get Signature
+
+> **get** **gravity**(): [`Vec2`](#vec2-4)
+
+World gravity in metres per second squared.
+
+###### Returns
+
+[`Vec2`](#vec2-4)
+
+A live view; writing to it does nothing, assign the property instead.
+
+###### Set Signature
+
+> **set** **gravity**(`value`): `void`
+
+Replaces world gravity, which every body feels from the next fixed step.
+
+###### Parameters
+
+###### value
+
+[`Vec2Like`](#vec2like)
+
+The new acceleration vector.
+
+###### Returns
+
+`void`
+
+##### rapier
+
+###### Get Signature
+
+> **get** **rapier**(): [`Physics2DRapierHandles`](#physics2drapierhandles)
+
+The Rapier handles.
+
+###### Returns
+
+[`Physics2DRapierHandles`](#physics2drapierhandles)
+
+The world.
+
+#### Methods
+
+##### overlapBox()
+
+> **overlapBox**(`centre`, `size`, `rotation?`, `options?`): readonly [`Entity`](#entity-17)[]
+
+Lists the entities a box overlaps.
+
+###### Parameters
+
+###### centre
+
+[`Vec2Like`](#vec2like)
+
+The box's world position.
+
+###### size
+
+[`Vec2Like`](#vec2like)
+
+Its full width and height in metres.
+
+###### rotation?
+
+`number`
+
+Its rotation in degrees counter-clockwise; defaults to `0`.
+
+###### options?
+
+[`QueryOptions2D`](#queryoptions2d)
+
+Layer mask and trigger behaviour.
+
+###### Returns
+
+readonly [`Entity`](#entity-17)[]
+
+The overlapping entities. The array is reused between calls.
+
+###### Throws
+
+IgnifxError with code `IGX-1153` when no fixed step has run yet.
+
+##### overlapCircle()
+
+> **overlapCircle**(`centre`, `radius`, `options?`): readonly [`Entity`](#entity-17)[]
+
+Lists the entities a circle overlaps.
+
+###### Parameters
+
+###### centre
+
+[`Vec2Like`](#vec2like)
+
+The circle's world position.
+
+###### radius
+
+`number`
+
+Its radius in metres.
+
+###### options?
+
+[`QueryOptions2D`](#queryoptions2d)
+
+Layer mask and trigger behaviour.
+
+###### Returns
+
+readonly [`Entity`](#entity-17)[]
+
+The overlapping entities, in Rapier's order. The array is reused between calls.
+
+###### Throws
+
+IgnifxError with code `IGX-1153` when no fixed step has run yet.
+
+##### raycast()
+
+> **raycast**(`origin`, `direction`, `maxDistance?`, `options?`): [`RaycastHit2D`](#raycasthit2d) \| `null`
+
+Casts a ray and returns the first entity it hits.
+
+###### Parameters
+
+###### origin
+
+[`Vec2Like`](#vec2like)
+
+The world-space origin, in metres.
+
+###### direction
+
+[`Vec2Like`](#vec2like)
+
+The direction; it is normalised for you.
+
+###### maxDistance?
+
+`number`
+
+How far to travel; defaults to 10 km.
+
+###### options?
+
+[`QueryOptions2D`](#queryoptions2d)
+
+Layer mask and trigger behaviour.
+
+###### Returns
+
+[`RaycastHit2D`](#raycasthit2d) \| `null`
+
+The hit, or `null` when the ray clears everything.
+
+###### Throws
+
+IgnifxError with code `IGX-1153` when no fixed step has run yet.
+
+##### raycastAll()
+
+> **raycastAll**(`origin`, `direction`, `maxDistance?`, `options?`): readonly [`RaycastHit2D`](#raycasthit2d)[]
+
+Casts a ray and returns every entity along it, nearest first.
+
+###### Parameters
+
+###### origin
+
+[`Vec2Like`](#vec2like)
+
+The world-space origin.
+
+###### direction
+
+[`Vec2Like`](#vec2like)
+
+The direction; it is normalised for you.
+
+###### maxDistance?
+
+`number`
+
+How far to travel; defaults to 10 km.
+
+###### options?
+
+[`QueryOptions2D`](#queryoptions2d)
+
+Layer mask and trigger behaviour.
+
+###### Returns
+
+readonly [`RaycastHit2D`](#raycasthit2d)[]
+
+The hits, in increasing distance. The array is reused between calls.
+
+###### Throws
+
+IgnifxError with code `IGX-1153` when no fixed step has run yet.
+
+##### shapeCast()
+
+> **shapeCast**(`centre`, `radius`, `direction`, `maxDistance`, `options?`): [`ShapeCastHit2D`](#shapecasthit2d) \| `null`
+
+Sweeps a circle and returns the first contact.
+
+###### Parameters
+
+###### centre
+
+[`Vec2Like`](#vec2like)
+
+Where the sweep starts.
+
+###### radius
+
+`number`
+
+The circle's radius in metres.
+
+###### direction
+
+[`Vec2Like`](#vec2like)
+
+The sweep direction; it is normalised for you.
+
+###### maxDistance
+
+`number`
+
+How far to sweep.
+
+###### options?
+
+[`QueryOptions2D`](#queryoptions2d)
+
+Layer mask and trigger behaviour.
+
+###### Returns
+
+[`ShapeCastHit2D`](#shapecasthit2d) \| `null`
+
+The hit, or `null`.
+
+###### Throws
+
+IgnifxError with code `IGX-1153` when no fixed step has run yet.
 
 ***
 
@@ -17653,7 +22839,7 @@ The dynamic friction coefficient.
 
 ###### Implementation of
 
-[`PhysicsMaterialValues`](#physicsmaterialvalues).[`friction`](#friction-1)
+[`PhysicsMaterialValues`](#physicsmaterialvalues).[`friction`](#friction-3)
 
 ##### name
 
@@ -17669,7 +22855,7 @@ How much of the approach speed is returned, `0` to `1`.
 
 ###### Implementation of
 
-[`PhysicsMaterialValues`](#physicsmaterialvalues).[`restitution`](#restitution-1)
+[`PhysicsMaterialValues`](#physicsmaterialvalues).[`restitution`](#restitution-3)
 
 ##### staticFriction
 
@@ -17713,6 +22899,117 @@ The material.
 
 ```ts
 const bouncy = PhysicsMaterial.fromValues("bouncy", { restitution: 0.9 });
+```
+
+***
+
+### PhysicsMaterial2D
+
+A loaded 2D surface.
+
+#### Example
+
+```ts
+const ice = await app.assets.load<PhysicsMaterial2D>("materials/ice.physicsmaterial.json");
+floor.addComponent(BoxCollider2D, { size: { x: 10, y: 1 }, material: ice });
+```
+
+#### Implements
+
+- [`Physics2DMaterialValues`](#physics2dmaterialvalues)
+
+#### Constructors
+
+##### Constructor
+
+> **new PhysicsMaterial2D**(`name`, `values`): [`PhysicsMaterial2D`](#physicsmaterial2d)
+
+Wraps parsed values.
+
+###### Parameters
+
+###### name
+
+`string`
+
+A human-readable name.
+
+###### values
+
+[`Physics2DMaterialValues`](#physics2dmaterialvalues)
+
+Friction and restitution.
+
+###### Returns
+
+[`PhysicsMaterial2D`](#physicsmaterial2d)
+
+#### Properties
+
+##### assetType
+
+> `static` **assetType**: `string`
+
+The asset type token, so `asset(PhysicsMaterial2D)` fields resolve.
+
+##### friction
+
+> `readonly` **friction**: `number`
+
+The friction coefficient.
+
+###### Implementation of
+
+[`Physics2DMaterialValues`](#physics2dmaterialvalues).[`friction`](#friction)
+
+##### name
+
+> `readonly` **name**: `string`
+
+A human-readable name, used in diagnostics.
+
+##### restitution
+
+> `readonly` **restitution**: `number`
+
+How much of the approach speed is returned, `0` to `1`.
+
+###### Implementation of
+
+[`Physics2DMaterialValues`](#physics2dmaterialvalues).[`restitution`](#restitution)
+
+#### Methods
+
+##### fromValues()
+
+> `static` **fromValues**(`name`, `values`): [`PhysicsMaterial2D`](#physicsmaterial2d)
+
+Builds a material in code, filling in the fields the caller omitted.
+
+###### Parameters
+
+###### name
+
+`string`
+
+A human-readable name.
+
+###### values
+
+`Partial`\<[`Physics2DMaterialValues`](#physics2dmaterialvalues)\>
+
+Any subset of the two coefficients.
+
+###### Returns
+
+[`PhysicsMaterial2D`](#physicsmaterial2d)
+
+The material.
+
+###### Example
+
+```ts
+const bouncy = PhysicsMaterial2D.fromValues("bouncy", { restitution: 0.9 });
 ```
 
 ***
@@ -17861,7 +23158,7 @@ Whether the viewer is currently drawing.
 
 ##### overlap()
 
-> **overlap**(`shape`, `position`, `rotation?`, `options?`): readonly [`Entity`](#entity-9)[]
+> **overlap**(`shape`, `position`, `rotation?`, `options?`): readonly [`Entity`](#entity-17)[]
 
 Lists the entities a positioned shape overlaps (`09-physics.md` §5).
 
@@ -17894,7 +23191,7 @@ Layer mask and trigger behaviour.
 
 ###### Returns
 
-readonly [`Entity`](#entity-9)[]
+readonly [`Entity`](#entity-17)[]
 
 The overlapping entities, in body creation order. The array is reused between calls.
 
@@ -18058,7 +23355,7 @@ Applies the schema defaults, exactly as `Component.define` would.
 
 ###### Overrides
 
-[`Component`](#abstract-component).[`constructor`](#constructor-13)
+[`Component`](#abstract-component).[`constructor`](#constructor-20)
 
 #### Properties
 
@@ -18082,7 +23379,7 @@ Which gamepad slot the player's `<Gamepad>/…` bindings are pinned to.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-21)
+> `static` **schema**: [`Schema`](#schema-30)
 
 The serialized field declarations (ADR-0004).
 
@@ -18116,7 +23413,7 @@ The app.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`app`](#app-9)
+[`Component`](#abstract-component).[`app`](#app-16)
 
 ##### enabled
 
@@ -18151,25 +23448,25 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-10)
+[`Component`](#abstract-component).[`enabled`](#enabled-17)
 
 ##### entity
 
 ###### Get Signature
 
-> **get** **entity**(): [`Entity`](#entity-9)
+> **get** **entity**(): [`Entity`](#entity-17)
 
 The entity this component is attached to.
 
 ###### Returns
 
-[`Entity`](#entity-9)
+[`Entity`](#entity-17)
 
 The owning entity.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`entity`](#entity-7)
+[`Component`](#abstract-component).[`entity`](#entity-14)
 
 ##### handle
 
@@ -18187,7 +23484,7 @@ The handle.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`handle`](#handle-7)
+[`Component`](#abstract-component).[`handle`](#handle-14)
 
 ##### input
 
@@ -18221,7 +23518,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-7)
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-14)
 
 ##### isEnabledInHierarchy
 
@@ -18239,7 +23536,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-7)
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-14)
 
 ##### onDestroyed
 
@@ -18269,25 +23566,25 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-7)
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-14)
 
 ##### transform
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-23)
+> **get** **transform**(): [`Transform`](#transform-40)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-23)
+[`Transform`](#transform-40)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`transform`](#transform-7)
+[`Component`](#abstract-component).[`transform`](#transform-14)
 
 ##### uid
 
@@ -18305,25 +23602,25 @@ The identifier.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`uid`](#uid-7)
+[`Component`](#abstract-component).[`uid`](#uid-14)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-26)
+> **get** **world**(): [`World`](#world-45)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-26)
+[`World`](#world-45)
 
 The world.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`world`](#world-8)
+[`Component`](#abstract-component).[`world`](#world-15)
 
 #### Methods
 
@@ -18376,7 +23673,7 @@ class Spinner extends Component.define({
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`define`](#define-7)
+[`Component`](#abstract-component).[`define`](#define-14)
 
 ##### destroy()
 
@@ -18392,7 +23689,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`destroy`](#destroy-7)
+[`Component`](#abstract-component).[`destroy`](#destroy-14)
 
 ##### getComponent()
 
@@ -18424,7 +23721,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`getComponent`](#getcomponent-7)
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-14)
 
 ##### onAttach()
 
@@ -18438,7 +23735,7 @@ Builds the private maps as soon as the component's fields are assigned.
 
 ###### Implementation of
 
-[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-5)
+[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-10)
 
 ##### onDetach()
 
@@ -18452,7 +23749,7 @@ Stops the private maps resolving.
 
 ###### Implementation of
 
-[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-5)
+[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-10)
 
 ##### rebuild()
 
@@ -18502,7 +23799,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-7)
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-14)
 
 ***
 
@@ -18589,43 +23886,35 @@ IgnifxError with code `IGX-0809` when the app has no DOM canvas to lock.
 
 ***
 
-### PostProcessStack
+### PolygonCollider2D
 
-One instance of a post-process chain, attached to the main camera's entity
-(`docs/architecture/07-rendering.md` §2.7).
+A convex polygon collider, wound in either direction, in local metres.
 
-#### Example
+#### Remarks
 
-```ts
-cameraEntity.addComponent(PostProcessStack, {
-  bloom: { enabled: true, threshold: 0.85, weight: 0.4 },
-  smaa: { enabled: true },
-});
-```
+Rapier builds the **convex hull** of the points, so a concave outline is silently rounded out.
+Model a concave shape as several `PolygonCollider2D`s on one entity, or as an
+[EdgeCollider2D](#edgecollider2d) when it is an open contour.
 
 #### Extends
 
-- [`Component`](#abstract-component)
-
-#### Implements
-
-- [`ComponentHooks`](#componenthooks)
+- [`Collider2D`](#abstract-collider2d)
 
 #### Constructors
 
 ##### Constructor
 
-> **new PostProcessStack**(): [`PostProcessStack`](#postprocessstack)
+> **new PolygonCollider2D**(): [`PolygonCollider2D`](#polygoncollider2d)
 
-Applies the schema defaults, exactly as `Component.define` would.
+Applies this collider's defaults on top of the shared ones.
 
 ###### Returns
 
-[`PostProcessStack`](#postprocessstack)
+[`PolygonCollider2D`](#polygoncollider2d)
 
 ###### Overrides
 
-[`Component`](#abstract-component).[`constructor`](#constructor-13)
+[`Collider2D`](#abstract-collider2d).[`constructor`](#constructor-18)
 
 #### Properties
 
@@ -18633,25 +23922,103 @@ Applies the schema defaults, exactly as `Component.define` would.
 
 > `static` **allowMultiple**: `boolean`
 
-One chain per camera entity; a second would fight the first for the swapchain.
+Several colliders on one entity make one compound body.
 
-##### bloom
+###### Inherited from
 
-> **bloom**: [`BloomEffectSettings`](#bloomeffectsettings)
+[`Collider2D`](#abstract-collider2d).[`allowMultiple`](#allowmultiple-12)
 
-##### imageProcessing
+##### frictionCombine
 
-> **imageProcessing**: [`ImageProcessingEffectSettings`](#imageprocessingeffectsettings)
+> **frictionCombine**: `"average"` \| `"min"` \| `"multiply"` \| `"max"`
+
+How this surface's friction combines with the one it touches.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`frictionCombine`](#frictioncombine-3)
+
+##### inlineMaterial
+
+> **inlineMaterial**: [`Physics2DMaterialValues`](#physics2dmaterialvalues) \| `null`
+
+An inline surface, used when [Collider2D.material](#material-6) is `null`.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`inlineMaterial`](#inlinematerial-6)
+
+##### isTrigger
+
+> **isTrigger**: `boolean`
+
+When `true` the shape reports overlaps and resolves no contacts.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`isTrigger`](#istrigger-6)
+
+##### layerOverride
+
+> **layerOverride**: `string`
+
+The name of the layer this collider filters as, or `""` to use `entity.layer`.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`layerOverride`](#layeroverride-6)
+
+##### material
+
+> **material**: [`AssetHandle`](#assethandle)\<[`PhysicsMaterial2D`](#physicsmaterial2d)\> \| `null`
+
+A `.physicsmaterial.json` reference; wins over [Collider2D.inlineMaterial](#inlinematerial-6).
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`material`](#material-6)
+
+##### offset
+
+> **offset**: [`Vec2Like`](#vec2like)
+
+The shape's offset from the entity origin, in local metres.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`offset`](#offset-4)
+
+##### oneWay
+
+> **oneWay**: `boolean`
+
+Whether this is a one-way platform: a `CharacterController2D` with
+`onOneWayPlatforms` passes up through it and lands on it coming down. Rigid bodies are
+unaffected — one-way support is a character-controller feature in the MVP.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`oneWay`](#oneway-3)
+
+##### points
+
+> **points**: [`Vec2Like`](#vec2like)[]
+
+##### restitutionCombine
+
+> **restitutionCombine**: `"average"` \| `"min"` \| `"multiply"` \| `"max"`
+
+How this surface's restitution combines with the one it touches.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`restitutionCombine`](#restitutioncombine-3)
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-21)
+> `static` **schema**: [`Schema`](#schema-30)
 
-The serialized field declarations (ADR-0004).
-
-##### smaa
-
-> **smaa**: [`SmaaEffectSettings`](#smaaeffectsettings)
+The serialized field declarations.
 
 ##### typeId
 
@@ -18677,7 +24044,7 @@ The app.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`app`](#app-9)
+[`Collider2D`](#abstract-collider2d).[`app`](#app-15)
 
 ##### enabled
 
@@ -18712,25 +24079,25 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-10)
+[`Collider2D`](#abstract-collider2d).[`enabled`](#enabled-16)
 
 ##### entity
 
 ###### Get Signature
 
-> **get** **entity**(): [`Entity`](#entity-9)
+> **get** **entity**(): [`Entity`](#entity-17)
 
 The entity this component is attached to.
 
 ###### Returns
 
-[`Entity`](#entity-9)
+[`Entity`](#entity-17)
 
 The owning entity.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`entity`](#entity-7)
+[`Collider2D`](#abstract-collider2d).[`entity`](#entity-13)
 
 ##### handle
 
@@ -18748,7 +24115,7 @@ The handle.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`handle`](#handle-7)
+[`Collider2D`](#abstract-collider2d).[`handle`](#handle-13)
 
 ##### isDestroyed
 
@@ -18768,7 +24135,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-7)
+[`Collider2D`](#abstract-collider2d).[`isDestroyed`](#isdestroyed-13)
 
 ##### isEnabledInHierarchy
 
@@ -18786,7 +24153,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-7)
+[`Collider2D`](#abstract-collider2d).[`isEnabledInHierarchy`](#isenabledinhierarchy-13)
 
 ##### onDestroyed
 
@@ -18816,40 +24183,25 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-7)
-
-##### taskCount
-
-###### Get Signature
-
-> **get** **taskCount**(): `number`
-
-How many frame-graph tasks the stack has recorded.
-
-###### Returns
-
-`number`
-
-The task count; `0` before the chain is built, under a headless app, and when the
-`postProcessing` rendering feature is off.
+[`Collider2D`](#abstract-collider2d).[`onDestroyed`](#ondestroyed-13)
 
 ##### transform
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-23)
+> **get** **transform**(): [`Transform`](#transform-40)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-23)
+[`Transform`](#transform-40)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`transform`](#transform-7)
+[`Collider2D`](#abstract-collider2d).[`transform`](#transform-13)
 
 ##### uid
 
@@ -18867,25 +24219,25 @@ The identifier.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`uid`](#uid-7)
+[`Collider2D`](#abstract-collider2d).[`uid`](#uid-13)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-26)
+> **get** **world**(): [`World`](#world-45)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-26)
+[`World`](#world-45)
 
 The world.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`world`](#world-8)
+[`Collider2D`](#abstract-collider2d).[`world`](#world-14)
 
 #### Methods
 
@@ -18938,7 +24290,7 @@ class Spinner extends Component.define({
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`define`](#define-7)
+[`Collider2D`](#abstract-collider2d).[`define`](#define-13)
 
 ##### destroy()
 
@@ -18954,7 +24306,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`destroy`](#destroy-7)
+[`Collider2D`](#abstract-collider2d).[`destroy`](#destroy-13)
 
 ##### getComponent()
 
@@ -18986,35 +24338,57 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`getComponent`](#getcomponent-7)
+[`Collider2D`](#abstract-collider2d).[`getComponent`](#getcomponent-13)
 
 ##### onAttach()
 
 > **onAttach**(): `void`
 
-Nothing to do at attach: the chain is built on the first sync that wants an effect.
+Marks the entity's body for a rebuild at the start of the next fixed step.
 
 ###### Returns
 
 `void`
 
-###### Implementation of
+###### Inherited from
 
-[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-5)
+[`Collider2D`](#abstract-collider2d).[`onAttach`](#onattach-9)
 
 ##### onDetach()
 
 > **onDetach**(): `void`
 
-Disables and disposes every task the stack recorded.
+Marks the entity's body for a rebuild, which removes this collider from it.
 
 ###### Returns
 
 `void`
 
-###### Implementation of
+###### Inherited from
 
-[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-5)
+[`Collider2D`](#abstract-collider2d).[`onDetach`](#ondetach-9)
+
+##### rebuild()
+
+> **rebuild**(): `void`
+
+Rebuilds the entity's body and shapes at the start of the next fixed step. Call it after
+changing a size, an offset, `isTrigger`, or the entity's scale.
+
+###### Returns
+
+`void`
+
+###### Example
+
+```ts
+box.size = { x: 2, y: 2 };
+box.rebuild();
+```
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`rebuild`](#rebuild-8)
 
 ##### requireComponent()
 
@@ -19051,7 +24425,497 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-7)
+[`Collider2D`](#abstract-collider2d).[`requireComponent`](#requirecomponent-13)
+
+##### resolveMaterial()
+
+> **resolveMaterial**(`fallback`): [`Physics2DMaterialValues`](#physics2dmaterialvalues)
+
+Resolves the surface this collider presents to Rapier.
+
+###### Parameters
+
+###### fallback
+
+[`Physics2DMaterialValues`](#physics2dmaterialvalues)
+
+The world's `physics2d.defaultMaterial`.
+
+###### Returns
+
+[`Physics2DMaterialValues`](#physics2dmaterialvalues)
+
+The asset's values, the inline values, or the fallback.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`resolveMaterial`](#resolvematerial-6)
+
+***
+
+### PostProcessStack
+
+One instance of a post-process chain, attached to the main camera's entity
+(`docs/architecture/07-rendering.md` §2.7).
+
+#### Example
+
+```ts
+cameraEntity.addComponent(PostProcessStack, {
+  bloom: { enabled: true, threshold: 0.85, weight: 0.4 },
+  smaa: { enabled: true },
+});
+```
+
+#### Extends
+
+- [`Component`](#abstract-component)
+
+#### Implements
+
+- [`ComponentHooks`](#componenthooks)
+
+#### Constructors
+
+##### Constructor
+
+> **new PostProcessStack**(): [`PostProcessStack`](#postprocessstack)
+
+Applies the schema defaults, exactly as `Component.define` would.
+
+###### Returns
+
+[`PostProcessStack`](#postprocessstack)
+
+###### Overrides
+
+[`Component`](#abstract-component).[`constructor`](#constructor-20)
+
+#### Properties
+
+##### allowMultiple
+
+> `static` **allowMultiple**: `boolean`
+
+One chain per camera entity; a second would fight the first for the swapchain.
+
+##### bloom
+
+> **bloom**: [`BloomEffectSettings`](#bloomeffectsettings)
+
+##### imageProcessing
+
+> **imageProcessing**: [`ImageProcessingEffectSettings`](#imageprocessingeffectsettings)
+
+##### schema
+
+> `static` **schema**: [`Schema`](#schema-30)
+
+The serialized field declarations (ADR-0004).
+
+##### smaa
+
+> **smaa**: [`SmaaEffectSettings`](#smaaeffectsettings)
+
+##### typeId
+
+> `static` **typeId**: `string`
+
+The namespaced registration id.
+
+#### Accessors
+
+##### app
+
+###### Get Signature
+
+> **get** **app**(): [`App`](#app)
+
+The app that owns the world.
+
+###### Returns
+
+[`App`](#app)
+
+The app.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`app`](#app-16)
+
+##### enabled
+
+###### Get Signature
+
+> **get** **enabled**(): `boolean`
+
+The component's own enabled flag; `true` by default. Setting it runs the enable or disable
+transition (`docs/architecture/01-lifecycle-and-time.md` §6): `onDisable` runs immediately,
+`awake`/`onEnable` run in the next lifecycle flush — or immediately and nested when the change
+happens inside a callback.
+
+###### Returns
+
+`boolean`
+
+`true` when the component's own flag is set.
+
+###### Set Signature
+
+> **set** **enabled**(`value`): `void`
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`enabled`](#enabled-17)
+
+##### entity
+
+###### Get Signature
+
+> **get** **entity**(): [`Entity`](#entity-17)
+
+The entity this component is attached to.
+
+###### Returns
+
+[`Entity`](#entity-17)
+
+The owning entity.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`entity`](#entity-14)
+
+##### handle
+
+###### Get Signature
+
+> **get** **handle**(): [`ComponentHandle`](#componenthandle-1)
+
+The dense runtime handle; invalid after destruction.
+
+###### Returns
+
+[`ComponentHandle`](#componenthandle-1)
+
+The handle.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`handle`](#handle-14)
+
+##### isDestroyed
+
+###### Get Signature
+
+> **get** **isDestroyed**(): `boolean`
+
+`true` from the moment `destroy()` is called, long before the destroy flush runs.
+
+###### Returns
+
+`boolean`
+
+`true` once the component has been queued for destruction.
+
+Whether the owner has already been destroyed.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-14)
+
+##### isEnabledInHierarchy
+
+###### Get Signature
+
+> **get** **isEnabledInHierarchy**(): `boolean`
+
+`true` when the component's own flag is set **and** its entity is active in the hierarchy.
+
+###### Returns
+
+`boolean`
+
+`true` when the component is effectively enabled.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-14)
+
+##### onDestroyed
+
+###### Get Signature
+
+> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+Emitted once when the component is destroyed, in the destroy flush. Connecting with
+`{ owner: this }` elsewhere uses it to detach handlers automatically
+(`docs/architecture/02-scene-graph.md` §8).
+
+###### Returns
+
+[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+The signal. It is created on first access, so a component nobody listens to allocates
+nothing.
+
+Emitted once when the owner is destroyed; the signal uses it to detach the handler.
+
+###### Remarks
+
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
+`docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
+invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-14)
+
+##### taskCount
+
+###### Get Signature
+
+> **get** **taskCount**(): `number`
+
+How many frame-graph tasks the stack has recorded.
+
+###### Returns
+
+`number`
+
+The task count; `0` before the chain is built, under a headless app, and when the
+`postProcessing` rendering feature is off.
+
+##### transform
+
+###### Get Signature
+
+> **get** **transform**(): [`Transform`](#transform-40)
+
+The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
+
+###### Returns
+
+[`Transform`](#transform-40)
+
+The entity's transform.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`transform`](#transform-14)
+
+##### uid
+
+###### Get Signature
+
+> **get** **uid**(): `string`
+
+The stable ULID; the key files use to reference this component.
+
+###### Returns
+
+`string`
+
+The identifier.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`uid`](#uid-14)
+
+##### world
+
+###### Get Signature
+
+> **get** **world**(): [`World`](#world-45)
+
+The world the entity belongs to.
+
+###### Returns
+
+[`World`](#world-45)
+
+The world.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`world`](#world-15)
+
+#### Methods
+
+##### define()
+
+> `static` **define**\<`S`\>(`schema`): [`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+Declares a component's serialized fields and returns the base class to extend (ADR-0004,
+`docs/architecture/03-scripting-and-components.md` §3). The returned class exposes every field
+as a typed instance property, applies the defaults in its constructor, and carries the schema
+for the serializer, the inspector, and the docs harness.
+
+###### Type Parameters
+
+###### S
+
+`S` *extends* `Readonly`\<`Record`\<`string`, [`FieldDefinition`](#fielddefinition)\<`unknown`\>\>\>
+
+The schema being declared.
+
+###### Parameters
+
+###### schema
+
+`S`
+
+The field definitions, keyed by the property name they become.
+
+###### Returns
+
+[`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+An abstract class to extend.
+
+###### Throws
+
+IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
+with a `Component`/`Script` member.
+
+###### Example
+
+```ts
+class Spinner extends Component.define({
+  degreesPerSecond: f32(90, { min: -360, max: 360 }),
+  axis: vec3({ x: 0, y: 1, z: 0 }),
+}) {
+  static typeId = "mygame/Spinner";
+}
+```
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`define`](#define-14)
+
+##### destroy()
+
+> **destroy**(): `void`
+
+Queues this component for destruction. It stays usable until the destroy flush of the current
+frame, but reports `isDestroyed === true` immediately
+(`docs/architecture/01-lifecycle-and-time.md` §6). Calling it twice is a no-op.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`destroy`](#destroy-14)
+
+##### getComponent()
+
+> **getComponent**\<`T`\>(`type`): `T` \| `null`
+
+Finds another component on the same entity — sugar for `this.entity.getComponent`.
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class; matching is by class identity **and** inheritance.
+
+###### Returns
+
+`T` \| `null`
+
+The first match in attach order, or `null`.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-14)
+
+##### onAttach()
+
+> **onAttach**(): `void`
+
+Nothing to do at attach: the chain is built on the first sync that wants an effect.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-10)
+
+##### onDetach()
+
+> **onDetach**(): `void`
+
+Disables and disposes every task the stack recorded.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-10)
+
+##### requireComponent()
+
+> **requireComponent**\<`T`\>(`type`): `T`
+
+Finds another component on the same entity, requiring it to be there — the supported way to
+link components (`docs/architecture/03-scripting-and-components.md` §8).
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class.
+
+###### Returns
+
+`T`
+
+The first match in attach order.
+
+###### Throws
+
+IgnifxError with code `IGX-0201` when the entity has no such component.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-14)
 
 ***
 
@@ -20245,7 +26109,7 @@ Applies the schema defaults, exactly as `Component.define` would.
 
 ###### Overrides
 
-[`Component`](#abstract-component).[`constructor`](#constructor-13)
+[`Component`](#abstract-component).[`constructor`](#constructor-20)
 
 #### Properties
 
@@ -20281,7 +26145,7 @@ One body per entity.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-21)
+> `static` **schema**: [`Schema`](#schema-30)
 
 The serialized field declarations (ADR-0004).
 
@@ -20345,7 +26209,7 @@ The app.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`app`](#app-9)
+[`Component`](#abstract-component).[`app`](#app-16)
 
 ##### enabled
 
@@ -20380,25 +26244,25 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-10)
+[`Component`](#abstract-component).[`enabled`](#enabled-17)
 
 ##### entity
 
 ###### Get Signature
 
-> **get** **entity**(): [`Entity`](#entity-9)
+> **get** **entity**(): [`Entity`](#entity-17)
 
 The entity this component is attached to.
 
 ###### Returns
 
-[`Entity`](#entity-9)
+[`Entity`](#entity-17)
 
 The owning entity.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`entity`](#entity-7)
+[`Component`](#abstract-component).[`entity`](#entity-14)
 
 ##### handle
 
@@ -20416,7 +26280,7 @@ The handle.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`handle`](#handle-7)
+[`Component`](#abstract-component).[`handle`](#handle-14)
 
 ##### isDestroyed
 
@@ -20436,7 +26300,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-7)
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-14)
 
 ##### isEnabledInHierarchy
 
@@ -20454,7 +26318,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-7)
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-14)
 
 ##### linearVelocity
 
@@ -20530,25 +26394,25 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-7)
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-14)
 
 ##### transform
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-23)
+> **get** **transform**(): [`Transform`](#transform-40)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-23)
+[`Transform`](#transform-40)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`transform`](#transform-7)
+[`Component`](#abstract-component).[`transform`](#transform-14)
 
 ##### uid
 
@@ -20566,25 +26430,25 @@ The identifier.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`uid`](#uid-7)
+[`Component`](#abstract-component).[`uid`](#uid-14)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-26)
+> **get** **world**(): [`World`](#world-45)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-26)
+[`World`](#world-45)
 
 The world.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`world`](#world-8)
+[`Component`](#abstract-component).[`world`](#world-15)
 
 #### Methods
 
@@ -20713,7 +26577,7 @@ class Spinner extends Component.define({
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`define`](#define-7)
+[`Component`](#abstract-component).[`define`](#define-14)
 
 ##### destroy()
 
@@ -20729,7 +26593,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`destroy`](#destroy-7)
+[`Component`](#abstract-component).[`destroy`](#destroy-14)
 
 ##### getComponent()
 
@@ -20761,7 +26625,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`getComponent`](#getcomponent-7)
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-14)
 
 ##### linearVelocityToRef()
 
@@ -20795,7 +26659,7 @@ Marks the entity's body for a rebuild at the start of the next fixed step.
 
 ###### Implementation of
 
-[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-5)
+[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-10)
 
 ##### onDetach()
 
@@ -20809,7 +26673,7 @@ Marks the entity's body for a rebuild, which turns it back into an implicit stat
 
 ###### Implementation of
 
-[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-5)
+[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-10)
 
 ##### rebuild()
 
@@ -20857,7 +26721,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-7)
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-14)
 
 ##### teleport()
 
@@ -20879,6 +26743,698 @@ The new world position.
 [`QuatLike`](#quatlike)
 
 The new world rotation; defaults to the current one.
+
+###### Returns
+
+`void`
+
+***
+
+### Rigidbody2D
+
+Makes an entity's 2D colliders a Rapier body.
+
+#### Example
+
+```ts
+const crate = world.createEntity("Crate");
+crate.transform.position2D = new Vec2(0, 5);
+crate.addComponent(BoxCollider2D, { size: { x: 1, y: 1 } });
+crate.addComponent(Rigidbody2D, { mass: 2 });
+```
+
+#### Extends
+
+- [`Component`](#abstract-component)
+
+#### Implements
+
+- [`ComponentHooks`](#componenthooks)
+
+#### Constructors
+
+##### Constructor
+
+> **new Rigidbody2D**(): [`Rigidbody2D`](#rigidbody2d)
+
+Applies the schema defaults, exactly as `Component.define` would.
+
+###### Returns
+
+[`Rigidbody2D`](#rigidbody2d)
+
+###### Overrides
+
+[`Component`](#abstract-component).[`constructor`](#constructor-20)
+
+#### Properties
+
+##### allowMultiple
+
+> `static` **allowMultiple**: `boolean`
+
+One body per entity.
+
+##### angularDamping
+
+> **angularDamping**: `number`
+
+##### bodyType
+
+> **bodyType**: `"static"` \| `"dynamic"` \| `"kinematic"`
+
+##### collisionEvents
+
+> **collisionEvents**: `"auto"` \| `"on"` \| `"off"`
+
+##### freezeRotation
+
+> **freezeRotation**: `boolean`
+
+##### gravityScale
+
+> **gravityScale**: `number`
+
+##### interpolation
+
+> **interpolation**: `"none"` \| `"interpolate"`
+
+##### linearDamping
+
+> **linearDamping**: `number`
+
+##### mass
+
+> **mass**: `number`
+
+##### schema
+
+> `static` **schema**: [`Schema`](#schema-30)
+
+The serialized field declarations (ADR-0004).
+
+##### typeId
+
+> `static` **typeId**: `string`
+
+The namespaced registration id.
+
+#### Accessors
+
+##### angularVelocity
+
+###### Get Signature
+
+> **get** **angularVelocity**(): `number`
+
+The body's angular velocity.
+
+###### Returns
+
+`number`
+
+Degrees per second, counter-clockwise — the same unit as `Transform.rotation2D`.
+
+###### Set Signature
+
+> **set** **angularVelocity**(`value`): `void`
+
+Replaces the body's angular velocity.
+
+###### Parameters
+
+###### value
+
+`number`
+
+Degrees per second, counter-clockwise.
+
+###### Returns
+
+`void`
+
+##### app
+
+###### Get Signature
+
+> **get** **app**(): [`App`](#app)
+
+The app that owns the world.
+
+###### Returns
+
+[`App`](#app)
+
+The app.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`app`](#app-16)
+
+##### computedMass
+
+###### Get Signature
+
+> **get** **computedMass**(): `number`
+
+The mass Rapier computed for the body, in kilograms.
+
+###### Returns
+
+`number`
+
+The mass, or `0` before the body exists.
+
+##### enabled
+
+###### Get Signature
+
+> **get** **enabled**(): `boolean`
+
+The component's own enabled flag; `true` by default. Setting it runs the enable or disable
+transition (`docs/architecture/01-lifecycle-and-time.md` §6): `onDisable` runs immediately,
+`awake`/`onEnable` run in the next lifecycle flush — or immediately and nested when the change
+happens inside a callback.
+
+###### Returns
+
+`boolean`
+
+`true` when the component's own flag is set.
+
+###### Set Signature
+
+> **set** **enabled**(`value`): `void`
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`enabled`](#enabled-17)
+
+##### entity
+
+###### Get Signature
+
+> **get** **entity**(): [`Entity`](#entity-17)
+
+The entity this component is attached to.
+
+###### Returns
+
+[`Entity`](#entity-17)
+
+The owning entity.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`entity`](#entity-14)
+
+##### handle
+
+###### Get Signature
+
+> **get** **handle**(): [`ComponentHandle`](#componenthandle-1)
+
+The dense runtime handle; invalid after destruction.
+
+###### Returns
+
+[`ComponentHandle`](#componenthandle-1)
+
+The handle.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`handle`](#handle-14)
+
+##### isDestroyed
+
+###### Get Signature
+
+> **get** **isDestroyed**(): `boolean`
+
+`true` from the moment `destroy()` is called, long before the destroy flush runs.
+
+###### Returns
+
+`boolean`
+
+`true` once the component has been queued for destruction.
+
+Whether the owner has already been destroyed.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-14)
+
+##### isEnabledInHierarchy
+
+###### Get Signature
+
+> **get** **isEnabledInHierarchy**(): `boolean`
+
+`true` when the component's own flag is set **and** its entity is active in the hierarchy.
+
+###### Returns
+
+`boolean`
+
+`true` when the component is effectively enabled.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-14)
+
+##### linearVelocity
+
+###### Get Signature
+
+> **get** **linearVelocity**(): [`Vec2`](#vec2-4)
+
+The body's linear velocity in metres per second.
+
+###### Returns
+
+[`Vec2`](#vec2-4)
+
+A freshly allocated vector; use [Rigidbody2D.linearVelocityToRef](#linearvelocitytoref-1) in hot code.
+
+###### Set Signature
+
+> **set** **linearVelocity**(`value`): `void`
+
+Replaces the body's linear velocity.
+
+###### Parameters
+
+###### value
+
+[`Vec2Like`](#vec2like)
+
+Metres per second, world space.
+
+###### Returns
+
+`void`
+
+##### onDestroyed
+
+###### Get Signature
+
+> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+Emitted once when the component is destroyed, in the destroy flush. Connecting with
+`{ owner: this }` elsewhere uses it to detach handlers automatically
+(`docs/architecture/02-scene-graph.md` §8).
+
+###### Returns
+
+[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+The signal. It is created on first access, so a component nobody listens to allocates
+nothing.
+
+Emitted once when the owner is destroyed; the signal uses it to detach the handler.
+
+###### Remarks
+
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
+`docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
+invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-14)
+
+##### rapier
+
+###### Get Signature
+
+> **get** **rapier**(): [`Rigidbody2DRapierHandles`](#rigidbody2drapierhandles)
+
+The Rapier handles this component owns.
+
+###### Returns
+
+[`Rigidbody2DRapierHandles`](#rigidbody2drapierhandles)
+
+The body, or `null` before the first fixed step built it.
+
+##### transform
+
+###### Get Signature
+
+> **get** **transform**(): [`Transform`](#transform-40)
+
+The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
+
+###### Returns
+
+[`Transform`](#transform-40)
+
+The entity's transform.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`transform`](#transform-14)
+
+##### uid
+
+###### Get Signature
+
+> **get** **uid**(): `string`
+
+The stable ULID; the key files use to reference this component.
+
+###### Returns
+
+`string`
+
+The identifier.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`uid`](#uid-14)
+
+##### world
+
+###### Get Signature
+
+> **get** **world**(): [`World`](#world-45)
+
+The world the entity belongs to.
+
+###### Returns
+
+[`World`](#world-45)
+
+The world.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`world`](#world-15)
+
+#### Methods
+
+##### addForce()
+
+> **addForce**(`force`, `point?`): `void`
+
+Applies a force for one fixed step. Call it from `fixedUpdate`.
+
+###### Parameters
+
+###### force
+
+[`Vec2Like`](#vec2like)
+
+Newtons, world space.
+
+###### point?
+
+[`Vec2Like`](#vec2like)
+
+Where to apply it; defaults to the centre of mass.
+
+###### Returns
+
+`void`
+
+###### Example
+
+```ts
+fixedUpdate(): void {
+  this.body.addForce({ x: 0, y: 20 });
+}
+```
+
+##### addImpulse()
+
+> **addImpulse**(`impulse`, `point?`): `void`
+
+Applies an instantaneous impulse.
+
+###### Parameters
+
+###### impulse
+
+[`Vec2Like`](#vec2like)
+
+Newton-seconds, world space.
+
+###### point?
+
+[`Vec2Like`](#vec2like)
+
+Where to apply it; defaults to the centre of mass.
+
+###### Returns
+
+`void`
+
+##### addTorque()
+
+> **addTorque**(`torque`): `void`
+
+Applies a torque for one fixed step.
+
+###### Parameters
+
+###### torque
+
+`number`
+
+Newton-metres, positive counter-clockwise.
+
+###### Returns
+
+`void`
+
+##### define()
+
+> `static` **define**\<`S`\>(`schema`): [`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+Declares a component's serialized fields and returns the base class to extend (ADR-0004,
+`docs/architecture/03-scripting-and-components.md` §3). The returned class exposes every field
+as a typed instance property, applies the defaults in its constructor, and carries the schema
+for the serializer, the inspector, and the docs harness.
+
+###### Type Parameters
+
+###### S
+
+`S` *extends* `Readonly`\<`Record`\<`string`, [`FieldDefinition`](#fielddefinition)\<`unknown`\>\>\>
+
+The schema being declared.
+
+###### Parameters
+
+###### schema
+
+`S`
+
+The field definitions, keyed by the property name they become.
+
+###### Returns
+
+[`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+An abstract class to extend.
+
+###### Throws
+
+IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
+with a `Component`/`Script` member.
+
+###### Example
+
+```ts
+class Spinner extends Component.define({
+  degreesPerSecond: f32(90, { min: -360, max: 360 }),
+  axis: vec3({ x: 0, y: 1, z: 0 }),
+}) {
+  static typeId = "mygame/Spinner";
+}
+```
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`define`](#define-14)
+
+##### destroy()
+
+> **destroy**(): `void`
+
+Queues this component for destruction. It stays usable until the destroy flush of the current
+frame, but reports `isDestroyed === true` immediately
+(`docs/architecture/01-lifecycle-and-time.md` §6). Calling it twice is a no-op.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`destroy`](#destroy-14)
+
+##### getComponent()
+
+> **getComponent**\<`T`\>(`type`): `T` \| `null`
+
+Finds another component on the same entity — sugar for `this.entity.getComponent`.
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class; matching is by class identity **and** inheritance.
+
+###### Returns
+
+`T` \| `null`
+
+The first match in attach order, or `null`.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-14)
+
+##### linearVelocityToRef()
+
+> **linearVelocityToRef**(`out`): [`MutableVec2`](#mutablevec2)
+
+Reads the linear velocity without allocating.
+
+###### Parameters
+
+###### out
+
+[`MutableVec2`](#mutablevec2)
+
+The vector to write.
+
+###### Returns
+
+[`MutableVec2`](#mutablevec2)
+
+`out`.
+
+##### onAttach()
+
+> **onAttach**(): `void`
+
+Marks the entity's body for a rebuild at the start of the next fixed step.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-10)
+
+##### onDetach()
+
+> **onDetach**(): `void`
+
+Marks the entity's body for a rebuild, which turns it back into an implicit static body.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-10)
+
+##### rebuild()
+
+> **rebuild**(): `void`
+
+Rebuilds the body at the start of the next fixed step. Call it after changing `bodyType`,
+`mass`, `freezeRotation`, damping, or the entity's scale.
+
+###### Returns
+
+`void`
+
+##### requireComponent()
+
+> **requireComponent**\<`T`\>(`type`): `T`
+
+Finds another component on the same entity, requiring it to be there — the supported way to
+link components (`docs/architecture/03-scripting-and-components.md` §8).
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class.
+
+###### Returns
+
+`T`
+
+The first match in attach order.
+
+###### Throws
+
+IgnifxError with code `IGX-0201` when the entity has no such component.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-14)
+
+##### teleport()
+
+> **teleport**(`position`, `rotation?`): `void`
+
+Moves the body without integrating a velocity, and resets the interpolation history so the
+display pose does not slide across the gap.
+
+###### Parameters
+
+###### position
+
+[`Vec2Like`](#vec2like)
+
+The new world position, in metres.
+
+###### rotation?
+
+`number`
+
+The new rotation in degrees counter-clockwise; defaults to the current one.
 
 ###### Returns
 
@@ -20991,13 +27547,13 @@ The table, or `null` for an instance that was not built from a file.
 
 ###### Get Signature
 
-> **get** **roots**(): readonly [`Entity`](#entity-9)[]
+> **get** **roots**(): readonly [`Entity`](#entity-17)[]
 
 The instance's root entities — the ones with no parent — in creation order.
 
 ###### Returns
 
-readonly [`Entity`](#entity-9)[]
+readonly [`Entity`](#entity-17)[]
 
 The live root list. Its identity is stable for the instance's lifetime.
 
@@ -21065,6 +27621,7 @@ class Mover extends Script.define({ speed: f32(5) }) implements ScriptCallbacks 
 - [`AudioListener`](#audiolistener)
 - [`AudioSource`](#audiosource)
 - [`MusicPlayer`](#musicplayer)
+- [`Camera2DFollow`](#camera2dfollow-1)
 
 #### Constructors
 
@@ -21080,7 +27637,7 @@ Creates a component. The engine constructs components; game code never calls `ne
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`constructor`](#constructor-13)
+[`Component`](#abstract-component).[`constructor`](#constructor-20)
 
 #### Accessors
 
@@ -21100,7 +27657,7 @@ The app.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`app`](#app-9)
+[`Component`](#abstract-component).[`app`](#app-16)
 
 ##### enabled
 
@@ -21135,25 +27692,25 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-10)
+[`Component`](#abstract-component).[`enabled`](#enabled-17)
 
 ##### entity
 
 ###### Get Signature
 
-> **get** **entity**(): [`Entity`](#entity-9)
+> **get** **entity**(): [`Entity`](#entity-17)
 
 The entity this component is attached to.
 
 ###### Returns
 
-[`Entity`](#entity-9)
+[`Entity`](#entity-17)
 
 The owning entity.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`entity`](#entity-7)
+[`Component`](#abstract-component).[`entity`](#entity-14)
 
 ##### handle
 
@@ -21171,7 +27728,7 @@ The handle.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`handle`](#handle-7)
+[`Component`](#abstract-component).[`handle`](#handle-14)
 
 ##### isDestroyed
 
@@ -21191,7 +27748,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-7)
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-14)
 
 ##### isEnabledInHierarchy
 
@@ -21209,7 +27766,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-7)
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-14)
 
 ##### onDestroyed
 
@@ -21239,25 +27796,25 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-7)
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-14)
 
 ##### transform
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-23)
+> **get** **transform**(): [`Transform`](#transform-40)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-23)
+[`Transform`](#transform-40)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`transform`](#transform-7)
+[`Component`](#abstract-component).[`transform`](#transform-14)
 
 ##### uid
 
@@ -21275,25 +27832,25 @@ The identifier.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`uid`](#uid-7)
+[`Component`](#abstract-component).[`uid`](#uid-14)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-26)
+> **get** **world**(): [`World`](#world-45)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-26)
+[`World`](#world-45)
 
 The world.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`world`](#world-8)
+[`Component`](#abstract-component).[`world`](#world-15)
 
 #### Methods
 
@@ -21341,7 +27898,7 @@ class Patrol extends Script.define({ waypoints: array(vec3()), speed: f32(3) }) 
 
 ###### Overrides
 
-[`Component`](#abstract-component).[`define`](#define-7)
+[`Component`](#abstract-component).[`define`](#define-14)
 
 ##### destroy()
 
@@ -21357,7 +27914,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`destroy`](#destroy-7)
+[`Component`](#abstract-component).[`destroy`](#destroy-14)
 
 ##### getComponent()
 
@@ -21389,7 +27946,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`getComponent`](#getcomponent-7)
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-14)
 
 ##### requireComponent()
 
@@ -21426,7 +27983,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-7)
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-14)
 
 ##### startCoroutine()
 
@@ -21486,7 +28043,7 @@ Stops one coroutine this script started. Stopping a finished coroutine is a no-o
 
 [`CoroutineHandle`](#coroutinehandle)
 
-The handle [Script.startCoroutine](#startcoroutine-3) returned.
+The handle [Script.startCoroutine](#startcoroutine-4) returned.
 
 ###### Returns
 
@@ -21677,6 +28234,125 @@ The payload. Omitted for `Signal<void>`.
 
 IgnifxError with code `IGX-0104` wrapping the first handler exception, when the signal
 was constructed without an `onHandlerError` reporter.
+
+***
+
+### SortingLayerTable
+
+Resolves sorting-layer names to draw orders.
+
+#### Example
+
+```ts
+const layers = new SortingLayerTable(["Background", "Default", "Foreground"]);
+layers.indexOf("Foreground"); // 2
+```
+
+#### Constructors
+
+##### Constructor
+
+> **new SortingLayerTable**(`names`): [`SortingLayerTable`](#sortinglayertable)
+
+Builds the table from the project's `sortingLayers` section.
+
+###### Parameters
+
+###### names
+
+readonly `string`[]
+
+The names, back to front. An empty list falls back to `["Default"]`.
+
+###### Returns
+
+[`SortingLayerTable`](#sortinglayertable)
+
+#### Accessors
+
+##### names
+
+###### Get Signature
+
+> **get** **names**(): readonly `string`[]
+
+The layer names, back to front.
+
+###### Returns
+
+readonly `string`[]
+
+The names.
+
+#### Methods
+
+##### indexOf()
+
+> **indexOf**(`name`): `number`
+
+Resolves a name to its index.
+
+###### Parameters
+
+###### name
+
+`string`
+
+The sorting layer name.
+
+###### Returns
+
+`number`
+
+The index, or `-1` when the project declares no such layer.
+
+##### orderOf()
+
+> **orderOf**(`name`): `number`
+
+The Lite `Sprite2DLayer.order` a sorting layer's sub-layers start at.
+
+###### Parameters
+
+###### name
+
+`string`
+
+The sorting layer name.
+
+###### Returns
+
+`number`
+
+The base order.
+
+###### Throws
+
+IgnifxError with code `IGX-1107` when the project declares no such layer.
+
+##### require()
+
+> **require**(`name`): `number`
+
+Resolves a name to its index and refuses to guess.
+
+###### Parameters
+
+###### name
+
+`string`
+
+The sorting layer name.
+
+###### Returns
+
+`number`
+
+The index.
+
+###### Throws
+
+IgnifxError with code `IGX-1107` when the project declares no such layer.
 
 ***
 
@@ -22120,7 +28796,7 @@ Applies this collider's defaults on top of the shared ones.
 
 ###### Overrides
 
-[`Collider`](#abstract-collider).[`constructor`](#constructor-11)
+[`Collider`](#abstract-collider).[`constructor`](#constructor-17)
 
 #### Properties
 
@@ -22132,7 +28808,7 @@ Several colliders on one entity form one compound body (`09-physics.md` §2.2).
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`allowMultiple`](#allowmultiple-5)
+[`Collider`](#abstract-collider).[`allowMultiple`](#allowmultiple-11)
 
 ##### center
 
@@ -22148,11 +28824,11 @@ The shape's offset from the entity origin, in local units.
 
 > **inlineMaterial**: [`PhysicsMaterialValues`](#physicsmaterialvalues) \| `null`
 
-An inline surface, used when [Collider.material](#material-2) is `null`.
+An inline surface, used when [Collider.material](#material-5) is `null`.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`inlineMaterial`](#inlinematerial-2)
+[`Collider`](#abstract-collider).[`inlineMaterial`](#inlinematerial-5)
 
 ##### isTrigger
 
@@ -22162,7 +28838,7 @@ When `true` the shape reports overlaps and resolves no contacts.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`isTrigger`](#istrigger-2)
+[`Collider`](#abstract-collider).[`isTrigger`](#istrigger-5)
 
 ##### layerOverride
 
@@ -22172,17 +28848,17 @@ The name of the layer this collider filters as, or `""` to use `entity.layer`.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`layerOverride`](#layeroverride-2)
+[`Collider`](#abstract-collider).[`layerOverride`](#layeroverride-5)
 
 ##### material
 
 > **material**: [`AssetHandle`](#assethandle)\<[`PhysicsMaterial`](#physicsmaterial)\> \| `null`
 
-A `.physicsmaterial.json` reference; wins over [Collider.inlineMaterial](#inlinematerial-2).
+A `.physicsmaterial.json` reference; wins over [Collider.inlineMaterial](#inlinematerial-5).
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`material`](#material-2)
+[`Collider`](#abstract-collider).[`material`](#material-5)
 
 ##### radius
 
@@ -22190,7 +28866,7 @@ A `.physicsmaterial.json` reference; wins over [Collider.inlineMaterial](#inline
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-21)
+> `static` **schema**: [`Schema`](#schema-30)
 
 The serialized field declarations.
 
@@ -22218,7 +28894,7 @@ The app.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`app`](#app-8)
+[`Collider`](#abstract-collider).[`app`](#app-14)
 
 ##### enabled
 
@@ -22253,25 +28929,25 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`enabled`](#enabled-9)
+[`Collider`](#abstract-collider).[`enabled`](#enabled-15)
 
 ##### entity
 
 ###### Get Signature
 
-> **get** **entity**(): [`Entity`](#entity-9)
+> **get** **entity**(): [`Entity`](#entity-17)
 
 The entity this component is attached to.
 
 ###### Returns
 
-[`Entity`](#entity-9)
+[`Entity`](#entity-17)
 
 The owning entity.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`entity`](#entity-6)
+[`Collider`](#abstract-collider).[`entity`](#entity-12)
 
 ##### handle
 
@@ -22289,7 +28965,7 @@ The handle.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`handle`](#handle-6)
+[`Collider`](#abstract-collider).[`handle`](#handle-12)
 
 ##### isDestroyed
 
@@ -22309,7 +28985,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`isDestroyed`](#isdestroyed-6)
+[`Collider`](#abstract-collider).[`isDestroyed`](#isdestroyed-12)
 
 ##### isEnabledInHierarchy
 
@@ -22327,7 +29003,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`isEnabledInHierarchy`](#isenabledinhierarchy-6)
+[`Collider`](#abstract-collider).[`isEnabledInHierarchy`](#isenabledinhierarchy-12)
 
 ##### onDestroyed
 
@@ -22357,25 +29033,25 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`onDestroyed`](#ondestroyed-6)
+[`Collider`](#abstract-collider).[`onDestroyed`](#ondestroyed-12)
 
 ##### transform
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-23)
+> **get** **transform**(): [`Transform`](#transform-40)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-23)
+[`Transform`](#transform-40)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`transform`](#transform-6)
+[`Collider`](#abstract-collider).[`transform`](#transform-12)
 
 ##### uid
 
@@ -22393,25 +29069,25 @@ The identifier.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`uid`](#uid-6)
+[`Collider`](#abstract-collider).[`uid`](#uid-12)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-26)
+> **get** **world**(): [`World`](#world-45)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-26)
+[`World`](#world-45)
 
 The world.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`world`](#world-7)
+[`Collider`](#abstract-collider).[`world`](#world-13)
 
 #### Methods
 
@@ -22494,7 +29170,7 @@ class Spinner extends Component.define({
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`define`](#define-6)
+[`Collider`](#abstract-collider).[`define`](#define-12)
 
 ##### destroy()
 
@@ -22510,7 +29186,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`destroy`](#destroy-6)
+[`Collider`](#abstract-collider).[`destroy`](#destroy-12)
 
 ##### getComponent()
 
@@ -22542,7 +29218,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`getComponent`](#getcomponent-6)
+[`Collider`](#abstract-collider).[`getComponent`](#getcomponent-12)
 
 ##### halfExtentsToRef()
 
@@ -22584,7 +29260,7 @@ Marks the entity's body for a rebuild at the start of the next fixed step.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`onAttach`](#onattach-4)
+[`Collider`](#abstract-collider).[`onAttach`](#onattach-8)
 
 ##### onDetach()
 
@@ -22598,7 +29274,7 @@ Marks the entity's body for a rebuild, which removes this collider from it.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`onDetach`](#ondetach-4)
+[`Collider`](#abstract-collider).[`onDetach`](#ondetach-8)
 
 ##### rebuild()
 
@@ -22620,7 +29296,7 @@ box.rebuild();
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`rebuild`](#rebuild-3)
+[`Collider`](#abstract-collider).[`rebuild`](#rebuild-7)
 
 ##### requireComponent()
 
@@ -22657,7 +29333,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`requireComponent`](#requirecomponent-6)
+[`Collider`](#abstract-collider).[`requireComponent`](#requirecomponent-12)
 
 ##### resolveMaterial()
 
@@ -22681,7 +29357,2084 @@ The asset's values, the inline values, or the fallback.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`resolveMaterial`](#resolvematerial-2)
+[`Collider`](#abstract-collider).[`resolveMaterial`](#resolvematerial-5)
+
+***
+
+### SpriteAnimationAsset
+
+A loaded sprite-animation document.
+
+#### Remarks
+
+Resolution needs an atlas, and a document may be loaded before, after, or without one. The asset
+therefore keeps the parsed clips and resolves them lazily the first time an atlas is offered;
+`SpriteAnimator` offers its renderer's atlas. Under a headless app everything here works
+unchanged, which is what makes animation timing testable with `app.step`.
+
+#### Example
+
+```ts
+const clips = await app.assets.load<SpriteAnimationAsset>("2d/hero.spriteanim.json").promise;
+clips.clipNames(); // ["idle", "run"]
+```
+
+#### Properties
+
+##### address
+
+> `readonly` **address**: `string`
+
+The address the document was loaded from.
+
+##### assetType
+
+> `static` **assetType**: `string`
+
+The type name the asset service registers animation documents under.
+
+##### atlasAddress
+
+> `readonly` **atlasAddress**: `string`
+
+The atlas address the document names, already resolved against its own address.
+
+##### definition
+
+> `readonly` **definition**: [`SpriteAnimationDefinition`](#spriteanimationdefinition)
+
+The parsed document.
+
+#### Accessors
+
+##### defaultClipName
+
+###### Get Signature
+
+> **get** **defaultClipName**(): `string`
+
+The name of the clip a component that names none plays.
+
+###### Returns
+
+`string`
+
+The first clip's name, or `""` when the document is empty.
+
+#### Methods
+
+##### clipNames()
+
+> **clipNames**(): readonly `string`[]
+
+Every clip name, in declaration order.
+
+###### Returns
+
+readonly `string`[]
+
+A freshly allocated array.
+
+##### requireClip()
+
+> **requireClip**(`name`, `atlas`): [`SpriteClip`](#spriteclip)
+
+Looks a clip up, resolving against an atlas first.
+
+###### Parameters
+
+###### name
+
+`string`
+
+The clip name.
+
+###### atlas
+
+[`SpriteAtlasAsset`](#spriteatlasasset)
+
+The atlas the frame names index into.
+
+###### Returns
+
+[`SpriteClip`](#spriteclip)
+
+The clip.
+
+###### Throws
+
+IgnifxError with code `IGX-1108` when the document declares no such clip.
+
+##### resolve()
+
+> **resolve**(`atlas`): `ReadonlyMap`\<`string`, [`SpriteClip`](#spriteclip)\>
+
+Resolves every clip's frame names against an atlas.
+
+###### Parameters
+
+###### atlas
+
+[`SpriteAtlasAsset`](#spriteatlasasset)
+
+The atlas the frame names index into.
+
+###### Returns
+
+`ReadonlyMap`\<`string`, [`SpriteClip`](#spriteclip)\>
+
+The clips, keyed by name.
+
+###### Remarks
+
+The result is cached against the atlas it was resolved with, so playing ten characters off one
+atlas resolves once. Offering a different atlas re-resolves.
+
+***
+
+### SpriteAnimator
+
+A sprite animator.
+
+#### Example
+
+```ts
+const animator = hero.addComponent(SpriteAnimator);
+animator.animations = app.assets.load<SpriteAnimationAsset>("2d/hero.spriteanim.json").retain();
+animator.onEvent.connect((name) => { if (name === "footstep") playStep(); }, { owner: animator });
+animator.play("run");
+```
+
+#### Extends
+
+- [`Component`](#abstract-component)
+
+#### Implements
+
+- [`ComponentHooks`](#componenthooks)
+
+#### Constructors
+
+##### Constructor
+
+> **new SpriteAnimator**(): [`SpriteAnimator`](#spriteanimator)
+
+Builds an animator with the schema's defaults.
+
+###### Returns
+
+[`SpriteAnimator`](#spriteanimator)
+
+###### Overrides
+
+[`Component`](#abstract-component).[`constructor`](#constructor-20)
+
+#### Properties
+
+##### allowMultiple
+
+> `static` **allowMultiple**: `boolean`
+
+One animator per entity.
+
+##### animations
+
+> **animations**: [`AssetHandle`](#assethandle)\<[`SpriteAnimationAsset`](#spriteanimationasset)\> \| `null`
+
+The document holding the clips.
+
+##### defaultClip
+
+> **defaultClip**: `string`
+
+Which clip to start on; empty plays the document's first.
+
+##### playOnAwake
+
+> **playOnAwake**: `boolean`
+
+Whether the default clip starts as soon as the document has loaded.
+
+##### schema
+
+> `static` **schema**: [`Schema`](#schema-30)
+
+The declarative fields (ADR-0004).
+
+##### speed
+
+> **speed**: `number`
+
+A multiplier on the clip's own frame rate.
+
+##### typeId
+
+> `static` **typeId**: `string`
+
+The registration id the serializer writes into scene files.
+
+#### Accessors
+
+##### app
+
+###### Get Signature
+
+> **get** **app**(): [`App`](#app)
+
+The app that owns the world.
+
+###### Returns
+
+[`App`](#app)
+
+The app.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`app`](#app-16)
+
+##### asset
+
+###### Get Signature
+
+> **get** **asset**(): [`SpriteAnimationAsset`](#spriteanimationasset) \| `null`
+
+The loaded animation document, or `null` while it is still loading.
+
+###### Returns
+
+[`SpriteAnimationAsset`](#spriteanimationasset) \| `null`
+
+The document.
+
+##### clip
+
+###### Get Signature
+
+> **get** **clip**(): [`SpriteClip`](#spriteclip) \| `null`
+
+The clip currently playing, or `null`.
+
+###### Returns
+
+[`SpriteClip`](#spriteclip) \| `null`
+
+The clip.
+
+##### enabled
+
+###### Get Signature
+
+> **get** **enabled**(): `boolean`
+
+The component's own enabled flag; `true` by default. Setting it runs the enable or disable
+transition (`docs/architecture/01-lifecycle-and-time.md` §6): `onDisable` runs immediately,
+`awake`/`onEnable` run in the next lifecycle flush — or immediately and nested when the change
+happens inside a callback.
+
+###### Returns
+
+`boolean`
+
+`true` when the component's own flag is set.
+
+###### Set Signature
+
+> **set** **enabled**(`value`): `void`
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`enabled`](#enabled-17)
+
+##### entity
+
+###### Get Signature
+
+> **get** **entity**(): [`Entity`](#entity-17)
+
+The entity this component is attached to.
+
+###### Returns
+
+[`Entity`](#entity-17)
+
+The owning entity.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`entity`](#entity-14)
+
+##### frame
+
+###### Get Signature
+
+> **get** **frame**(): `number`
+
+The atlas frame index the animator last wrote.
+
+###### Returns
+
+`number`
+
+The frame index, or `-1` when no clip is playing.
+
+##### handle
+
+###### Get Signature
+
+> **get** **handle**(): [`ComponentHandle`](#componenthandle-1)
+
+The dense runtime handle; invalid after destruction.
+
+###### Returns
+
+[`ComponentHandle`](#componenthandle-1)
+
+The handle.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`handle`](#handle-14)
+
+##### isDestroyed
+
+###### Get Signature
+
+> **get** **isDestroyed**(): `boolean`
+
+`true` from the moment `destroy()` is called, long before the destroy flush runs.
+
+###### Returns
+
+`boolean`
+
+`true` once the component has been queued for destruction.
+
+Whether the owner has already been destroyed.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-14)
+
+##### isEnabledInHierarchy
+
+###### Get Signature
+
+> **get** **isEnabledInHierarchy**(): `boolean`
+
+`true` when the component's own flag is set **and** its entity is active in the hierarchy.
+
+###### Returns
+
+`boolean`
+
+`true` when the component is effectively enabled.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-14)
+
+##### isPlaying
+
+###### Get Signature
+
+> **get** **isPlaying**(): `boolean`
+
+Whether a clip is currently advancing.
+
+###### Returns
+
+`boolean`
+
+`true` while playing.
+
+##### onClipEnded
+
+###### Get Signature
+
+> **get** **onClipEnded**(): [`Signal`](#signal-3)\<`string`\>
+
+Emitted with a clip's name when a non-looping clip reaches its last frame.
+
+###### Returns
+
+[`Signal`](#signal-3)\<`string`\>
+
+The signal.
+
+##### onDestroyed
+
+###### Get Signature
+
+> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+Emitted once when the component is destroyed, in the destroy flush. Connecting with
+`{ owner: this }` elsewhere uses it to detach handlers automatically
+(`docs/architecture/02-scene-graph.md` §8).
+
+###### Returns
+
+[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+The signal. It is created on first access, so a component nobody listens to allocates
+nothing.
+
+Emitted once when the owner is destroyed; the signal uses it to detach the handler.
+
+###### Remarks
+
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
+`docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
+invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-14)
+
+##### onEvent
+
+###### Get Signature
+
+> **get** **onEvent**(): [`Signal`](#signal-3)\<`string`\>
+
+Emitted with an event's name when playback passes the frame that declares it.
+
+###### Remarks
+
+A looping clip fires each event once per pass. A clip advanced by more than one frame in a
+single step — a long frame, or a high `speed` — fires every event it skipped over, in order,
+so a footstep is never silently dropped.
+
+###### Returns
+
+[`Signal`](#signal-3)\<`string`\>
+
+The signal.
+
+##### time
+
+###### Get Signature
+
+> **get** **time**(): `number`
+
+How far into the clip playback is, in seconds.
+
+###### Returns
+
+`number`
+
+The elapsed time.
+
+##### transform
+
+###### Get Signature
+
+> **get** **transform**(): [`Transform`](#transform-40)
+
+The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
+
+###### Returns
+
+[`Transform`](#transform-40)
+
+The entity's transform.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`transform`](#transform-14)
+
+##### uid
+
+###### Get Signature
+
+> **get** **uid**(): `string`
+
+The stable ULID; the key files use to reference this component.
+
+###### Returns
+
+`string`
+
+The identifier.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`uid`](#uid-14)
+
+##### world
+
+###### Get Signature
+
+> **get** **world**(): [`World`](#world-45)
+
+The world the entity belongs to.
+
+###### Returns
+
+[`World`](#world-45)
+
+The world.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`world`](#world-15)
+
+#### Methods
+
+##### define()
+
+> `static` **define**\<`S`\>(`schema`): [`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+Declares a component's serialized fields and returns the base class to extend (ADR-0004,
+`docs/architecture/03-scripting-and-components.md` §3). The returned class exposes every field
+as a typed instance property, applies the defaults in its constructor, and carries the schema
+for the serializer, the inspector, and the docs harness.
+
+###### Type Parameters
+
+###### S
+
+`S` *extends* `Readonly`\<`Record`\<`string`, [`FieldDefinition`](#fielddefinition)\<`unknown`\>\>\>
+
+The schema being declared.
+
+###### Parameters
+
+###### schema
+
+`S`
+
+The field definitions, keyed by the property name they become.
+
+###### Returns
+
+[`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+An abstract class to extend.
+
+###### Throws
+
+IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
+with a `Component`/`Script` member.
+
+###### Example
+
+```ts
+class Spinner extends Component.define({
+  degreesPerSecond: f32(90, { min: -360, max: 360 }),
+  axis: vec3({ x: 0, y: 1, z: 0 }),
+}) {
+  static typeId = "mygame/Spinner";
+}
+```
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`define`](#define-14)
+
+##### destroy()
+
+> **destroy**(): `void`
+
+Queues this component for destruction. It stays usable until the destroy flush of the current
+frame, but reports `isDestroyed === true` immediately
+(`docs/architecture/01-lifecycle-and-time.md` §6). Calling it twice is a no-op.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`destroy`](#destroy-14)
+
+##### getComponent()
+
+> **getComponent**\<`T`\>(`type`): `T` \| `null`
+
+Finds another component on the same entity — sugar for `this.entity.getComponent`.
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class; matching is by class identity **and** inheritance.
+
+###### Returns
+
+`T` \| `null`
+
+The first match in attach order, or `null`.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-14)
+
+##### onAttach()
+
+> **onAttach**(): `void`
+
+Clears playback state, so a recycled component does not inherit the previous one's.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-10)
+
+##### onDetach()
+
+> **onDetach**(): `void`
+
+Releases the signals' handlers.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-10)
+
+##### pause()
+
+> **pause**(): `void`
+
+Suspends playback where it is; [SpriteAnimator.resume](#resume-6) continues from there.
+
+###### Returns
+
+`void`
+
+##### play()
+
+> **play**(`name`, `options?`): `void`
+
+Starts a clip.
+
+###### Parameters
+
+###### name
+
+`string`
+
+The clip's name.
+
+###### options?
+
+[`PlayClipOptions`](#playclipoptions)
+
+Whether to rewind a clip that is already playing.
+
+###### Returns
+
+`void`
+
+###### Throws
+
+IgnifxError with code `IGX-1108` when the document declares no such clip.
+
+###### Example
+
+```ts
+animator.play("run", { restart: true });
+```
+
+##### requireComponent()
+
+> **requireComponent**\<`T`\>(`type`): `T`
+
+Finds another component on the same entity, requiring it to be there — the supported way to
+link components (`docs/architecture/03-scripting-and-components.md` §8).
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class.
+
+###### Returns
+
+`T`
+
+The first match in attach order.
+
+###### Throws
+
+IgnifxError with code `IGX-0201` when the entity has no such component.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-14)
+
+##### resume()
+
+> **resume**(): `void`
+
+Continues a paused clip.
+
+###### Returns
+
+`void`
+
+##### stop()
+
+> **stop**(): `void`
+
+Stops playback and rewinds to the clip's first frame.
+
+###### Returns
+
+`void`
+
+***
+
+### SpriteAtlasAsset
+
+A loaded sprite atlas.
+
+#### Remarks
+
+Under a headless app the document is parsed and every frame is queryable, but `lite.atlas` is
+`null` — nothing is uploaded (`docs/architecture/07-rendering.md` §6). That is what lets a
+headless test assert frame counts, pivots, and animation timing without a GPU.
+
+#### Example
+
+```ts
+const handle = app.assets.load<SpriteAtlasAsset>("2d/hero.atlas.json");
+const atlas = await handle.promise;
+atlas.frameIndex("idle_0"); // 0
+```
+
+#### Properties
+
+##### address
+
+> `readonly` **address**: `string`
+
+The address the atlas was loaded from.
+
+##### assetType
+
+> `static` **assetType**: `string`
+
+The type name the asset service registers sprite atlases under.
+
+##### definition
+
+> `readonly` **definition**: [`SpriteAtlasDefinition`](#spriteatlasdefinition)
+
+The parsed `.atlas.json` document.
+
+#### Accessors
+
+##### frameCount
+
+###### Get Signature
+
+> **get** **frameCount**(): `number`
+
+How many frames the atlas declares.
+
+###### Returns
+
+`number`
+
+The frame count.
+
+##### isReleased
+
+###### Get Signature
+
+> **get** **isReleased**(): `boolean`
+
+Whether the atlas was uploaded to a device at all.
+
+###### Returns
+
+`boolean`
+
+`true` once the GPU texture has been given up, or under a headless app.
+
+##### lite
+
+###### Get Signature
+
+> **get** **lite**(): [`SpriteAtlasAssetLiteHandles`](#spriteatlasassetlitehandles)
+
+The Babylon Lite objects the asset owns. Unstable escape hatch
+(`CONSTITUTION.md` §3.4).
+
+###### Returns
+
+[`SpriteAtlasAssetLiteHandles`](#spriteatlasassetlitehandles)
+
+The Lite atlas, or `null` under a headless app.
+
+#### Methods
+
+##### frame()
+
+> **frame**(`index`): [`SpriteFrameInfo`](#spriteframeinfo) \| `null`
+
+Describes one frame.
+
+###### Parameters
+
+###### index
+
+`number`
+
+The frame index.
+
+###### Returns
+
+[`SpriteFrameInfo`](#spriteframeinfo) \| `null`
+
+The frame, or `null` when the index is out of range.
+
+##### frameIndex()
+
+> **frameIndex**(`name`): `number`
+
+Looks a frame up by name.
+
+###### Parameters
+
+###### name
+
+`string`
+
+The frame name.
+
+###### Returns
+
+`number`
+
+The index, or `-1` when the atlas has no such frame.
+
+##### frameNames()
+
+> **frameNames**(): readonly `string`[]
+
+Every frame name, in index order.
+
+###### Returns
+
+readonly `string`[]
+
+A freshly allocated array.
+
+##### requireFrame()
+
+> **requireFrame**(`name`): `number`
+
+Looks a frame up by name and refuses to guess.
+
+###### Parameters
+
+###### name
+
+`string`
+
+The frame name.
+
+###### Returns
+
+`number`
+
+The index.
+
+###### Throws
+
+IgnifxError with code `IGX-1106` when the atlas declares no such frame.
+
+***
+
+### SpriteLayerEffect
+
+A per-layer shader effect.
+
+#### Example
+
+```ts
+const dusk = app.world.createEntity({ name: "dusk" }).addComponent(SpriteLayerEffect);
+dusk.sortingLayer = "Default";
+dusk.kind = "tint";
+dusk.tint = { r: 0.6, g: 0.6, b: 0.9, a: 1 };
+```
+
+#### Extends
+
+- [`Component`](#abstract-component)
+
+#### Constructors
+
+##### Constructor
+
+> **new SpriteLayerEffect**(): [`SpriteLayerEffect`](#spritelayereffect)
+
+Builds an effect with the schema's defaults.
+
+###### Returns
+
+[`SpriteLayerEffect`](#spritelayereffect)
+
+###### Overrides
+
+[`Component`](#abstract-component).[`constructor`](#constructor-20)
+
+#### Properties
+
+##### allowMultiple
+
+> `static` **allowMultiple**: `boolean`
+
+One effect per entity; several entities may each drive a different sorting layer.
+
+##### kind
+
+> **kind**: `"custom"` \| `"tint"`
+
+Which shader to install.
+
+##### params
+
+> **params**: [`Vec4Like`](#vec4like)
+
+The `fx.params` vec4 a `custom` shader reads.
+
+##### schema
+
+> `static` **schema**: [`Schema`](#schema-30)
+
+The declarative fields (ADR-0004).
+
+##### shader
+
+> **shader**: `string`
+
+The WGSL fragment body a `custom` effect installs.
+
+##### sortingLayer
+
+> **sortingLayer**: `string`
+
+Which sorting layer the effect applies to.
+
+##### tint
+
+> **tint**: `object`
+
+The colour the `tint` effect multiplies by, written into `fx.params`.
+
+###### a
+
+> `readonly` **a**: `number`
+
+###### b
+
+> `readonly` **b**: `number`
+
+###### g
+
+> `readonly` **g**: `number`
+
+###### r
+
+> `readonly` **r**: `number`
+
+##### typeId
+
+> `static` **typeId**: `string`
+
+The registration id the serializer writes into scene files.
+
+#### Accessors
+
+##### app
+
+###### Get Signature
+
+> **get** **app**(): [`App`](#app)
+
+The app that owns the world.
+
+###### Returns
+
+[`App`](#app)
+
+The app.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`app`](#app-16)
+
+##### enabled
+
+###### Get Signature
+
+> **get** **enabled**(): `boolean`
+
+The component's own enabled flag; `true` by default. Setting it runs the enable or disable
+transition (`docs/architecture/01-lifecycle-and-time.md` §6): `onDisable` runs immediately,
+`awake`/`onEnable` run in the next lifecycle flush — or immediately and nested when the change
+happens inside a callback.
+
+###### Returns
+
+`boolean`
+
+`true` when the component's own flag is set.
+
+###### Set Signature
+
+> **set** **enabled**(`value`): `void`
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`enabled`](#enabled-17)
+
+##### entity
+
+###### Get Signature
+
+> **get** **entity**(): [`Entity`](#entity-17)
+
+The entity this component is attached to.
+
+###### Returns
+
+[`Entity`](#entity-17)
+
+The owning entity.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`entity`](#entity-14)
+
+##### handle
+
+###### Get Signature
+
+> **get** **handle**(): [`ComponentHandle`](#componenthandle-1)
+
+The dense runtime handle; invalid after destruction.
+
+###### Returns
+
+[`ComponentHandle`](#componenthandle-1)
+
+The handle.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`handle`](#handle-14)
+
+##### isDestroyed
+
+###### Get Signature
+
+> **get** **isDestroyed**(): `boolean`
+
+`true` from the moment `destroy()` is called, long before the destroy flush runs.
+
+###### Returns
+
+`boolean`
+
+`true` once the component has been queued for destruction.
+
+Whether the owner has already been destroyed.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-14)
+
+##### isEnabledInHierarchy
+
+###### Get Signature
+
+> **get** **isEnabledInHierarchy**(): `boolean`
+
+`true` when the component's own flag is set **and** its entity is active in the hierarchy.
+
+###### Returns
+
+`boolean`
+
+`true` when the component is effectively enabled.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-14)
+
+##### onDestroyed
+
+###### Get Signature
+
+> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+Emitted once when the component is destroyed, in the destroy flush. Connecting with
+`{ owner: this }` elsewhere uses it to detach handlers automatically
+(`docs/architecture/02-scene-graph.md` §8).
+
+###### Returns
+
+[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+The signal. It is created on first access, so a component nobody listens to allocates
+nothing.
+
+Emitted once when the owner is destroyed; the signal uses it to detach the handler.
+
+###### Remarks
+
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
+`docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
+invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-14)
+
+##### transform
+
+###### Get Signature
+
+> **get** **transform**(): [`Transform`](#transform-40)
+
+The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
+
+###### Returns
+
+[`Transform`](#transform-40)
+
+The entity's transform.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`transform`](#transform-14)
+
+##### uid
+
+###### Get Signature
+
+> **get** **uid**(): `string`
+
+The stable ULID; the key files use to reference this component.
+
+###### Returns
+
+`string`
+
+The identifier.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`uid`](#uid-14)
+
+##### world
+
+###### Get Signature
+
+> **get** **world**(): [`World`](#world-45)
+
+The world the entity belongs to.
+
+###### Returns
+
+[`World`](#world-45)
+
+The world.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`world`](#world-15)
+
+#### Methods
+
+##### define()
+
+> `static` **define**\<`S`\>(`schema`): [`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+Declares a component's serialized fields and returns the base class to extend (ADR-0004,
+`docs/architecture/03-scripting-and-components.md` §3). The returned class exposes every field
+as a typed instance property, applies the defaults in its constructor, and carries the schema
+for the serializer, the inspector, and the docs harness.
+
+###### Type Parameters
+
+###### S
+
+`S` *extends* `Readonly`\<`Record`\<`string`, [`FieldDefinition`](#fielddefinition)\<`unknown`\>\>\>
+
+The schema being declared.
+
+###### Parameters
+
+###### schema
+
+`S`
+
+The field definitions, keyed by the property name they become.
+
+###### Returns
+
+[`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+An abstract class to extend.
+
+###### Throws
+
+IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
+with a `Component`/`Script` member.
+
+###### Example
+
+```ts
+class Spinner extends Component.define({
+  degreesPerSecond: f32(90, { min: -360, max: 360 }),
+  axis: vec3({ x: 0, y: 1, z: 0 }),
+}) {
+  static typeId = "mygame/Spinner";
+}
+```
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`define`](#define-14)
+
+##### destroy()
+
+> **destroy**(): `void`
+
+Queues this component for destruction. It stays usable until the destroy flush of the current
+frame, but reports `isDestroyed === true` immediately
+(`docs/architecture/01-lifecycle-and-time.md` §6). Calling it twice is a no-op.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`destroy`](#destroy-14)
+
+##### getComponent()
+
+> **getComponent**\<`T`\>(`type`): `T` \| `null`
+
+Finds another component on the same entity — sugar for `this.entity.getComponent`.
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class; matching is by class identity **and** inheritance.
+
+###### Returns
+
+`T` \| `null`
+
+The first match in attach order, or `null`.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-14)
+
+##### requireComponent()
+
+> **requireComponent**\<`T`\>(`type`): `T`
+
+Finds another component on the same entity, requiring it to be there — the supported way to
+link components (`docs/architecture/03-scripting-and-components.md` §8).
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class.
+
+###### Returns
+
+`T`
+
+The first match in attach order.
+
+###### Throws
+
+IgnifxError with code `IGX-0201` when the entity has no such component.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-14)
+
+##### source()
+
+> **source**(): `string`
+
+The WGSL fragment body this effect installs.
+
+###### Returns
+
+`string`
+
+The shader source.
+
+###### Throws
+
+IgnifxError with code `IGX-1113` when `kind` is `"custom"` and `shader` is empty.
+
+***
+
+### SpriteLayerRegistry
+
+Owns every Lite sprite layer in one app.
+
+#### Constructors
+
+##### Constructor
+
+> **new SpriteLayerRegistry**(`sortingLayers`, `ySort`, `onLayerCreated`, `onLayerRemoved`): [`SpriteLayerRegistry`](#spritelayerregistry)
+
+Builds the registry.
+
+###### Parameters
+
+###### sortingLayers
+
+[`SortingLayerTable`](#sortinglayertable)
+
+Resolves a sorting-layer name to its draw order.
+
+###### ySort
+
+`Readonly`\<`Record`\<`string`, `boolean`\>\>
+
+Which sorting layers draw back-to-front by world Y.
+
+###### onLayerCreated
+
+(`layer`) => `void`
+
+Called with each new Lite layer, so the sprite renderer can draw it.
+
+###### onLayerRemoved
+
+(`layer`) => `void`
+
+Called before a layer is dropped.
+
+###### Returns
+
+[`SpriteLayerRegistry`](#spritelayerregistry)
+
+#### Methods
+
+##### collectLayers()
+
+> **collectLayers**(`worldOnly`, `out`): `Sprite2DLayer`[]
+
+The Lite layers, in draw order — what picking tests against.
+
+###### Parameters
+
+###### worldOnly
+
+`boolean`
+
+Whether to skip screen-space layers.
+
+###### out
+
+`Sprite2DLayer`[]
+
+The array to fill; it is emptied first, so one array serves every frame.
+
+###### Returns
+
+`Sprite2DLayer`[]
+
+`out`.
+
+##### describe()
+
+> **describe**(): readonly [`SpriteLayerEntry`](#spritelayerentry)[]
+
+Every layer, in draw order.
+
+###### Returns
+
+readonly [`SpriteLayerEntry`](#spritelayerentry)[]
+
+A freshly allocated snapshot, for diagnostics.
+
+***
+
+### SpriteRenderer
+
+A sprite.
+
+#### Remarks
+
+The `sprite` field is an atlas handle; the frame inside it comes from the address's `#frame:`
+fragment when there is one, and otherwise from [SpriteRenderer.frame](#frame-6), which game code and
+`SpriteAnimator` both write. A sprite whose atlas has not finished loading draws nothing and
+costs nothing.
+
+#### Example
+
+```ts
+const hero = app.world.createEntity({ name: "hero" });
+const sprite = hero.addComponent(SpriteRenderer);
+sprite.sprite = app.assets.load<SpriteAtlasAsset>("2d/hero.atlas.json").retain();
+sprite.sortingLayer = "Default";
+```
+
+#### Extends
+
+- [`Component`](#abstract-component)
+
+#### Implements
+
+- [`ComponentHooks`](#componenthooks)
+
+#### Constructors
+
+##### Constructor
+
+> **new SpriteRenderer**(): [`SpriteRenderer`](#spriterenderer)
+
+Builds a sprite with the schema's defaults.
+
+###### Returns
+
+[`SpriteRenderer`](#spriterenderer)
+
+###### Overrides
+
+[`Component`](#abstract-component).[`constructor`](#constructor-20)
+
+#### Properties
+
+##### allowMultiple
+
+> `static` **allowMultiple**: `boolean`
+
+Several sprites may share an entity — a character and its shadow, for instance.
+
+##### blend
+
+> **blend**: `"opaque"` \| `"premultiplied"` \| `"alpha"` \| `"additive"` \| `"multiply"`
+
+How the sprite's colour combines with what is behind it.
+
+##### color
+
+> **color**: [`ColorLike`](#colorlike)
+
+The tint multiplied into every texel.
+
+##### flipX
+
+> **flipX**: `boolean`
+
+Whether the sprite is mirrored horizontally.
+
+##### flipY
+
+> **flipY**: `boolean`
+
+Whether the sprite is mirrored vertically.
+
+##### orderInLayer
+
+> **orderInLayer**: `number`
+
+The sub-order within the sorting layer; higher draws in front.
+
+##### pickable
+
+> **pickable**: `boolean`
+
+Whether `app.twoD.pickAt` considers this sprite.
+
+##### pivotOverride
+
+> **pivotOverride**: [`Vec2Like`](#vec2like) \| `null`
+
+The pivot in `[0, 1]` of the frame, overriding the frame's own; `null` uses the frame's.
+
+##### schema
+
+> `static` **schema**: [`Schema`](#schema-30)
+
+The declarative fields (ADR-0004).
+
+##### screenSpace
+
+> **screenSpace**: `boolean`
+
+Whether the sprite keeps the identity view instead of following the `Camera2D`.
+
+##### sortingLayer
+
+> **sortingLayer**: `string`
+
+Which sorting layer the sprite draws on.
+
+##### sprite
+
+> **sprite**: [`AssetHandle`](#assethandle)\<[`SpriteAtlasAsset`](#spriteatlasasset)\> \| `null`
+
+The atlas this sprite draws a frame of.
+
+##### typeId
+
+> `static` **typeId**: `string`
+
+The registration id the serializer writes into scene files.
+
+#### Accessors
+
+##### app
+
+###### Get Signature
+
+> **get** **app**(): [`App`](#app)
+
+The app that owns the world.
+
+###### Returns
+
+[`App`](#app)
+
+The app.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`app`](#app-16)
+
+##### atlas
+
+###### Get Signature
+
+> **get** **atlas**(): [`SpriteAtlasAsset`](#spriteatlasasset) \| `null`
+
+The loaded atlas, or `null` while it is still loading or failed.
+
+###### Returns
+
+[`SpriteAtlasAsset`](#spriteatlasasset) \| `null`
+
+The atlas.
+
+##### bounds
+
+###### Get Signature
+
+> **get** **bounds**(): `object`
+
+The sprite's world-space axis-aligned bounding box, for coarse queries
+(`docs/architecture/11-2d-toolkit.md` §5).
+
+###### Remarks
+
+The box is the one the last sync computed, so it is a frame behind a sprite that has just
+moved, and it is the origin-sized empty box until the sprite has been synced once. It ignores
+rotation: a rotated sprite reports the box of its unrotated quad, which is the cheap
+conservative answer only for rotations that are multiples of a quarter turn.
+
+###### Returns
+
+`object`
+
+A freshly allocated box in world metres.
+
+###### max
+
+> `readonly` **max**: [`Vec2Like`](#vec2like)
+
+###### min
+
+> `readonly` **min**: [`Vec2Like`](#vec2like)
+
+##### enabled
+
+###### Get Signature
+
+> **get** **enabled**(): `boolean`
+
+The component's own enabled flag; `true` by default. Setting it runs the enable or disable
+transition (`docs/architecture/01-lifecycle-and-time.md` §6): `onDisable` runs immediately,
+`awake`/`onEnable` run in the next lifecycle flush — or immediately and nested when the change
+happens inside a callback.
+
+###### Returns
+
+`boolean`
+
+`true` when the component's own flag is set.
+
+###### Set Signature
+
+> **set** **enabled**(`value`): `void`
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`enabled`](#enabled-17)
+
+##### entity
+
+###### Get Signature
+
+> **get** **entity**(): [`Entity`](#entity-17)
+
+The entity this component is attached to.
+
+###### Returns
+
+[`Entity`](#entity-17)
+
+The owning entity.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`entity`](#entity-14)
+
+##### frame
+
+###### Get Signature
+
+> **get** **frame**(): `number`
+
+The atlas frame drawn.
+
+###### Returns
+
+`number`
+
+The frame index.
+
+###### Set Signature
+
+> **set** **frame**(`value`): `void`
+
+Sets the atlas frame drawn, marking the sprite for the next sync when it changes.
+
+###### Parameters
+
+###### value
+
+`number`
+
+The frame index.
+
+###### Returns
+
+`void`
+
+##### handle
+
+###### Get Signature
+
+> **get** **handle**(): [`ComponentHandle`](#componenthandle-1)
+
+The dense runtime handle; invalid after destruction.
+
+###### Returns
+
+[`ComponentHandle`](#componenthandle-1)
+
+The handle.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`handle`](#handle-14)
+
+##### isDestroyed
+
+###### Get Signature
+
+> **get** **isDestroyed**(): `boolean`
+
+`true` from the moment `destroy()` is called, long before the destroy flush runs.
+
+###### Returns
+
+`boolean`
+
+`true` once the component has been queued for destruction.
+
+Whether the owner has already been destroyed.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-14)
+
+##### isEnabledInHierarchy
+
+###### Get Signature
+
+> **get** **isEnabledInHierarchy**(): `boolean`
+
+`true` when the component's own flag is set **and** its entity is active in the hierarchy.
+
+###### Returns
+
+`boolean`
+
+`true` when the component is effectively enabled.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-14)
+
+##### lite
+
+###### Get Signature
+
+> **get** **lite**(): `object`
+
+The Babylon Lite objects the component uses. Unstable escape hatch
+(`CONSTITUTION.md` §3.4).
+
+###### Returns
+
+`object`
+
+The sprite handle, or `null` when the sprite is not in a layer.
+
+###### sprite
+
+> `readonly` **sprite**: `Sprite2DHandle` \| `null`
+
+##### onDestroyed
+
+###### Get Signature
+
+> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+Emitted once when the component is destroyed, in the destroy flush. Connecting with
+`{ owner: this }` elsewhere uses it to detach handlers automatically
+(`docs/architecture/02-scene-graph.md` §8).
+
+###### Returns
+
+[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+The signal. It is created on first access, so a component nobody listens to allocates
+nothing.
+
+Emitted once when the owner is destroyed; the signal uses it to detach the handler.
+
+###### Remarks
+
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
+`docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
+invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-14)
+
+##### transform
+
+###### Get Signature
+
+> **get** **transform**(): [`Transform`](#transform-40)
+
+The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
+
+###### Returns
+
+[`Transform`](#transform-40)
+
+The entity's transform.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`transform`](#transform-14)
+
+##### uid
+
+###### Get Signature
+
+> **get** **uid**(): `string`
+
+The stable ULID; the key files use to reference this component.
+
+###### Returns
+
+`string`
+
+The identifier.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`uid`](#uid-14)
+
+##### world
+
+###### Get Signature
+
+> **get** **world**(): [`World`](#world-45)
+
+The world the entity belongs to.
+
+###### Returns
+
+[`World`](#world-45)
+
+The world.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`world`](#world-15)
+
+#### Methods
+
+##### define()
+
+> `static` **define**\<`S`\>(`schema`): [`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+Declares a component's serialized fields and returns the base class to extend (ADR-0004,
+`docs/architecture/03-scripting-and-components.md` §3). The returned class exposes every field
+as a typed instance property, applies the defaults in its constructor, and carries the schema
+for the serializer, the inspector, and the docs harness.
+
+###### Type Parameters
+
+###### S
+
+`S` *extends* `Readonly`\<`Record`\<`string`, [`FieldDefinition`](#fielddefinition)\<`unknown`\>\>\>
+
+The schema being declared.
+
+###### Parameters
+
+###### schema
+
+`S`
+
+The field definitions, keyed by the property name they become.
+
+###### Returns
+
+[`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+An abstract class to extend.
+
+###### Throws
+
+IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
+with a `Component`/`Script` member.
+
+###### Example
+
+```ts
+class Spinner extends Component.define({
+  degreesPerSecond: f32(90, { min: -360, max: 360 }),
+  axis: vec3({ x: 0, y: 1, z: 0 }),
+}) {
+  static typeId = "mygame/Spinner";
+}
+```
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`define`](#define-14)
+
+##### destroy()
+
+> **destroy**(): `void`
+
+Queues this component for destruction. It stays usable until the destroy flush of the current
+frame, but reports `isDestroyed === true` immediately
+(`docs/architecture/01-lifecycle-and-time.md` §6). Calling it twice is a no-op.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`destroy`](#destroy-14)
+
+##### getComponent()
+
+> **getComponent**\<`T`\>(`type`): `T` \| `null`
+
+Finds another component on the same entity — sugar for `this.entity.getComponent`.
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class; matching is by class identity **and** inheritance.
+
+###### Returns
+
+`T` \| `null`
+
+The first match in attach order, or `null`.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-14)
+
+##### onAttach()
+
+> **onAttach**(): `void`
+
+Resets the sync shadow state, so a recycled component does not inherit the previous one's.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-10)
+
+##### onDetach()
+
+> **onDetach**(): `void`
+
+Marks the sprite for removal from its layer. The sync system does the removal, because it owns
+the layer.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-10)
+
+##### requireComponent()
+
+> **requireComponent**\<`T`\>(`type`): `T`
+
+Finds another component on the same entity, requiring it to be there — the supported way to
+link components (`docs/architecture/03-scripting-and-components.md` §8).
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class.
+
+###### Returns
+
+`T`
+
+The first match in attach order.
+
+###### Throws
+
+IgnifxError with code `IGX-0201` when the entity has no such component.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-14)
 
 ***
 
@@ -22896,6 +31649,1922 @@ through `ctx.loadDependency`, which counts the asset handle instead.
 
 ***
 
+### Tilemap
+
+A tilemap.
+
+#### Example
+
+```ts
+const level = app.world.createEntity({ name: "level" }).addComponent(Tilemap);
+level.map = app.assets.load<TilemapAsset>("2d/level-1.tilemap.json").retain();
+level.setTile(0, 3, 2, 0); // carve a hole in the ground layer
+```
+
+#### Extends
+
+- [`Component`](#abstract-component)
+
+#### Implements
+
+- [`ComponentHooks`](#componenthooks)
+
+#### Constructors
+
+##### Constructor
+
+> **new Tilemap**(): [`Tilemap`](#tilemap)
+
+Builds a tilemap with the schema's defaults.
+
+###### Returns
+
+[`Tilemap`](#tilemap)
+
+###### Overrides
+
+[`Component`](#abstract-component).[`constructor`](#constructor-20)
+
+#### Properties
+
+##### allowMultiple
+
+> `static` **allowMultiple**: `boolean`
+
+One tilemap per entity.
+
+##### cellSizeOverride
+
+> **cellSizeOverride**: `number`
+
+The metres one cell spans, overriding the document's own; `0` uses the document's.
+
+##### chunkSize
+
+> **chunkSize**: `number`
+
+How many cells one chunk spans on each axis.
+
+##### map
+
+> **map**: [`AssetHandle`](#assethandle)\<[`TilemapAsset`](#tilemapasset-1)\> \| `null`
+
+The `.tilemap.json` document.
+
+##### schema
+
+> `static` **schema**: [`Schema`](#schema-30)
+
+The declarative fields (ADR-0004).
+
+##### typeId
+
+> `static` **typeId**: `string`
+
+The registration id the serializer writes into scene files.
+
+#### Accessors
+
+##### app
+
+###### Get Signature
+
+> **get** **app**(): [`App`](#app)
+
+The app that owns the world.
+
+###### Returns
+
+[`App`](#app)
+
+The app.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`app`](#app-16)
+
+##### asset
+
+###### Get Signature
+
+> **get** **asset**(): [`TilemapAsset`](#tilemapasset-1) \| `null`
+
+The loaded document, or `null` while it is still loading.
+
+###### Returns
+
+[`TilemapAsset`](#tilemapasset-1) \| `null`
+
+The asset.
+
+##### cellSize
+
+###### Get Signature
+
+> **get** **cellSize**(): `number`
+
+How many metres one cell spans.
+
+###### Returns
+
+`number`
+
+The cell size; `0` when nothing has loaded.
+
+##### collisionData
+
+###### Get Signature
+
+> **get** **collisionData**(): [`TilemapCollisionData`](#tilemapcollisiondata-1)
+
+The merged collision surface, rebuilt if a tile changed since the last read.
+
+###### Remarks
+
+The shape is the contract `@ignifx/physics-2d` consumes: chunked, in world metres relative to
+the tilemap entity's origin, with adjacent full-cell tiles merged into as few counter-clockwise
+rectangles as possible.
+
+###### Returns
+
+[`TilemapCollisionData`](#tilemapcollisiondata-1)
+
+The collision data.
+
+##### definition
+
+###### Get Signature
+
+> **get** **definition**(): [`TilemapDefinition`](#tilemapdefinition-1) \| `null`
+
+The parsed document, or `null`.
+
+###### Returns
+
+[`TilemapDefinition`](#tilemapdefinition-1) \| `null`
+
+The definition.
+
+##### enabled
+
+###### Get Signature
+
+> **get** **enabled**(): `boolean`
+
+The component's own enabled flag; `true` by default. Setting it runs the enable or disable
+transition (`docs/architecture/01-lifecycle-and-time.md` §6): `onDisable` runs immediately,
+`awake`/`onEnable` run in the next lifecycle flush — or immediately and nested when the change
+happens inside a callback.
+
+###### Returns
+
+`boolean`
+
+`true` when the component's own flag is set.
+
+###### Set Signature
+
+> **set** **enabled**(`value`): `void`
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`enabled`](#enabled-17)
+
+##### entity
+
+###### Get Signature
+
+> **get** **entity**(): [`Entity`](#entity-17)
+
+The entity this component is attached to.
+
+###### Returns
+
+[`Entity`](#entity-17)
+
+The owning entity.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`entity`](#entity-14)
+
+##### handle
+
+###### Get Signature
+
+> **get** **handle**(): [`ComponentHandle`](#componenthandle-1)
+
+The dense runtime handle; invalid after destruction.
+
+###### Returns
+
+[`ComponentHandle`](#componenthandle-1)
+
+The handle.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`handle`](#handle-14)
+
+##### isDestroyed
+
+###### Get Signature
+
+> **get** **isDestroyed**(): `boolean`
+
+`true` from the moment `destroy()` is called, long before the destroy flush runs.
+
+###### Returns
+
+`boolean`
+
+`true` once the component has been queued for destruction.
+
+Whether the owner has already been destroyed.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-14)
+
+##### isEnabledInHierarchy
+
+###### Get Signature
+
+> **get** **isEnabledInHierarchy**(): `boolean`
+
+`true` when the component's own flag is set **and** its entity is active in the hierarchy.
+
+###### Returns
+
+`boolean`
+
+`true` when the component is effectively enabled.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-14)
+
+##### layerCount
+
+###### Get Signature
+
+> **get** **layerCount**(): `number`
+
+How many layers the document has.
+
+###### Returns
+
+`number`
+
+The layer count.
+
+##### onCollisionChanged
+
+###### Get Signature
+
+> **get** **onCollisionChanged**(): [`Signal`](#signal-3)
+
+Emitted after the merged collision surface has been rebuilt.
+
+###### Remarks
+
+`@ignifx/physics-2d` connects to this and rebuilds only the chunks whose geometry moved. The
+rebuild is lazy: the signal fires on the first read of [Tilemap.collisionData](#collisiondata) after a
+change, not on the `setTile` call itself, so a script that rewrites a thousand tiles in one
+frame pays for one merge.
+
+###### Returns
+
+[`Signal`](#signal-3)
+
+The signal.
+
+##### onDestroyed
+
+###### Get Signature
+
+> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+Emitted once when the component is destroyed, in the destroy flush. Connecting with
+`{ owner: this }` elsewhere uses it to detach handlers automatically
+(`docs/architecture/02-scene-graph.md` §8).
+
+###### Returns
+
+[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+The signal. It is created on first access, so a component nobody listens to allocates
+nothing.
+
+Emitted once when the owner is destroyed; the signal uses it to detach the handler.
+
+###### Remarks
+
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
+`docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
+invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-14)
+
+##### onTileChanged
+
+###### Get Signature
+
+> **get** **onTileChanged**(): [`Signal`](#signal-3)\<[`TileChange`](#tilechange)\>
+
+Emitted whenever `setTile` changes a cell.
+
+###### Returns
+
+[`Signal`](#signal-3)\<[`TileChange`](#tilechange)\>
+
+The signal.
+
+##### transform
+
+###### Get Signature
+
+> **get** **transform**(): [`Transform`](#transform-40)
+
+The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
+
+###### Returns
+
+[`Transform`](#transform-40)
+
+The entity's transform.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`transform`](#transform-14)
+
+##### uid
+
+###### Get Signature
+
+> **get** **uid**(): `string`
+
+The stable ULID; the key files use to reference this component.
+
+###### Returns
+
+`string`
+
+The identifier.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`uid`](#uid-14)
+
+##### world
+
+###### Get Signature
+
+> **get** **world**(): [`World`](#world-45)
+
+The world the entity belongs to.
+
+###### Returns
+
+[`World`](#world-45)
+
+The world.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`world`](#world-15)
+
+#### Methods
+
+##### cellToWorld()
+
+> **cellToWorld**\<`TOut`\>(`x`, `y`, `out`): `TOut`
+
+Converts a cell into the world point at its **centre**.
+
+###### Type Parameters
+
+###### TOut
+
+`TOut` *extends* [`MutableVec2`](#mutablevec2)
+
+###### Parameters
+
+###### x
+
+`number`
+
+The cell's column.
+
+###### y
+
+`number`
+
+The cell's row, with `0` at the bottom.
+
+###### out
+
+`TOut`
+
+The vector to write.
+
+###### Returns
+
+`TOut`
+
+`out`, in world metres.
+
+##### collisionAt()
+
+> **collisionAt**(`x`, `y`): [`TileCollisionInfo`](#tilecollisioninfo-3)
+
+The collision footprint of whatever is at a cell, across every collision layer.
+
+###### Parameters
+
+###### x
+
+`number`
+
+The cell's column.
+
+###### y
+
+`number`
+
+The cell's row, with `0` at the bottom.
+
+###### Returns
+
+[`TileCollisionInfo`](#tilecollisioninfo-3)
+
+The topmost non-empty collider, or a `"none"` shape.
+
+##### define()
+
+> `static` **define**\<`S`\>(`schema`): [`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+Declares a component's serialized fields and returns the base class to extend (ADR-0004,
+`docs/architecture/03-scripting-and-components.md` §3). The returned class exposes every field
+as a typed instance property, applies the defaults in its constructor, and carries the schema
+for the serializer, the inspector, and the docs harness.
+
+###### Type Parameters
+
+###### S
+
+`S` *extends* `Readonly`\<`Record`\<`string`, [`FieldDefinition`](#fielddefinition)\<`unknown`\>\>\>
+
+The schema being declared.
+
+###### Parameters
+
+###### schema
+
+`S`
+
+The field definitions, keyed by the property name they become.
+
+###### Returns
+
+[`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+An abstract class to extend.
+
+###### Throws
+
+IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
+with a `Component`/`Script` member.
+
+###### Example
+
+```ts
+class Spinner extends Component.define({
+  degreesPerSecond: f32(90, { min: -360, max: 360 }),
+  axis: vec3({ x: 0, y: 1, z: 0 }),
+}) {
+  static typeId = "mygame/Spinner";
+}
+```
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`define`](#define-14)
+
+##### destroy()
+
+> **destroy**(): `void`
+
+Queues this component for destruction. It stays usable until the destroy flush of the current
+frame, but reports `isDestroyed === true` immediately
+(`docs/architecture/01-lifecycle-and-time.md` §6). Calling it twice is a no-op.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`destroy`](#destroy-14)
+
+##### getComponent()
+
+> **getComponent**\<`T`\>(`type`): `T` \| `null`
+
+Finds another component on the same entity — sugar for `this.entity.getComponent`.
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class; matching is by class identity **and** inheritance.
+
+###### Returns
+
+`T` \| `null`
+
+The first match in attach order, or `null`.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-14)
+
+##### getTile()
+
+> **getTile**(`layer`, `x`, `y`): `number`
+
+Reads a tile.
+
+###### Parameters
+
+###### layer
+
+`number`
+
+The layer's index in the document.
+
+###### x
+
+`number`
+
+The cell's column, with `0` at the left.
+
+###### y
+
+`number`
+
+The cell's row, with `0` at the bottom.
+
+###### Returns
+
+`number`
+
+The tile id, or `0` for an empty or out-of-range cell.
+
+##### layerSize()
+
+> **layerSize**(`layer`): [`Vec2Like`](#vec2like)
+
+A layer's size, in cells.
+
+###### Parameters
+
+###### layer
+
+`number`
+
+The layer's index.
+
+###### Returns
+
+[`Vec2Like`](#vec2like)
+
+The size, or a zero size for an unknown layer.
+
+##### onAttach()
+
+> **onAttach**(): `void`
+
+Drops the grids, so a recycled component does not inherit the previous one's.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-10)
+
+##### onDetach()
+
+> **onDetach**(): `void`
+
+Releases the grids.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-10)
+
+##### requireComponent()
+
+> **requireComponent**\<`T`\>(`type`): `T`
+
+Finds another component on the same entity, requiring it to be there — the supported way to
+link components (`docs/architecture/03-scripting-and-components.md` §8).
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class.
+
+###### Returns
+
+`T`
+
+The first match in attach order.
+
+###### Throws
+
+IgnifxError with code `IGX-0201` when the entity has no such component.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-14)
+
+##### setTile()
+
+> **setTile**(`layer`, `x`, `y`, `tileId`): `void`
+
+Writes a tile.
+
+###### Parameters
+
+###### layer
+
+`number`
+
+The layer's index in the document.
+
+###### x
+
+`number`
+
+The cell's column, with `0` at the left.
+
+###### y
+
+`number`
+
+The cell's row, with `0` at the bottom.
+
+###### tileId
+
+`number`
+
+The tile id, or `0` to clear the cell.
+
+###### Returns
+
+`void`
+
+###### Throws
+
+IgnifxError with code `IGX-1111` when the cell is outside the layer.
+
+##### worldToCell()
+
+> **worldToCell**\<`TOut`\>(`point`, `out`): `TOut`
+
+Converts a world point into the cell containing it.
+
+###### Type Parameters
+
+###### TOut
+
+`TOut` *extends* [`MutableVec2`](#mutablevec2)
+
+###### Parameters
+
+###### point
+
+[`Vec2Like`](#vec2like)
+
+The world point, in metres.
+
+###### out
+
+`TOut`
+
+The vector to write.
+
+###### Returns
+
+`TOut`
+
+`out`, holding integer cell coordinates that may be outside the map.
+
+###### Remarks
+
+The point is in world metres; the map's own origin is the tilemap entity's position, so a moved
+or scaled tilemap still answers correctly. The result is floored, so a point exactly on a cell
+boundary belongs to the cell above and to the right of it.
+
+***
+
+### TilemapAsset
+
+A loaded tilemap document.
+
+#### Example
+
+```ts
+const map = await app.assets.load<TilemapAsset>("2d/level-1.tilemap.json").promise;
+map.definition.layers.length; // 2
+```
+
+#### Properties
+
+##### address
+
+> `readonly` **address**: `string`
+
+The address the document was loaded from.
+
+##### assetType
+
+> `static` **assetType**: `string`
+
+The type name the asset service registers tilemaps under.
+
+##### atlasAddresses
+
+> `readonly` **atlasAddresses**: readonly `string`[]
+
+Each tileset's atlas address, resolved against this document's address.
+
+##### definition
+
+> `readonly` **definition**: [`TilemapDefinition`](#tilemapdefinition-1)
+
+The parsed document, with every tile layer decoded to a dense array.
+
+#### Methods
+
+##### atlasFor()
+
+> **atlasFor**(`tilesetIndex`): `string`
+
+The atlas address a tileset's tiles come from.
+
+###### Parameters
+
+###### tilesetIndex
+
+`number`
+
+The tileset's index in the document.
+
+###### Returns
+
+`string`
+
+The address, or `""` when the index is out of range.
+
+***
+
+### TilemapCollider2D
+
+The collision surface of a tilemap, as one static body's worth of Rapier shapes.
+
+#### Example
+
+```ts
+const map = world.createEntity("Map");
+const collider = map.addComponent(TilemapCollider2D);
+collider.collisionData = tilemap.collisionData;
+```
+
+#### Extends
+
+- [`Collider2D`](#abstract-collider2d)
+
+#### Constructors
+
+##### Constructor
+
+> **new TilemapCollider2D**(): [`TilemapCollider2D`](#tilemapcollider2d)
+
+Applies the shared defaults.
+
+###### Returns
+
+[`TilemapCollider2D`](#tilemapcollider2d)
+
+###### Overrides
+
+[`Collider2D`](#abstract-collider2d).[`constructor`](#constructor-18)
+
+#### Properties
+
+##### allowMultiple
+
+> `static` **allowMultiple**: `boolean`
+
+Several colliders on one entity make one compound body.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`allowMultiple`](#allowmultiple-12)
+
+##### frictionCombine
+
+> **frictionCombine**: `"average"` \| `"min"` \| `"multiply"` \| `"max"`
+
+How this surface's friction combines with the one it touches.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`frictionCombine`](#frictioncombine-3)
+
+##### inlineMaterial
+
+> **inlineMaterial**: [`Physics2DMaterialValues`](#physics2dmaterialvalues) \| `null`
+
+An inline surface, used when [Collider2D.material](#material-6) is `null`.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`inlineMaterial`](#inlinematerial-6)
+
+##### isTrigger
+
+> **isTrigger**: `boolean`
+
+When `true` the shape reports overlaps and resolves no contacts.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`isTrigger`](#istrigger-6)
+
+##### layerOverride
+
+> **layerOverride**: `string`
+
+The name of the layer this collider filters as, or `""` to use `entity.layer`.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`layerOverride`](#layeroverride-6)
+
+##### material
+
+> **material**: [`AssetHandle`](#assethandle)\<[`PhysicsMaterial2D`](#physicsmaterial2d)\> \| `null`
+
+A `.physicsmaterial.json` reference; wins over [Collider2D.inlineMaterial](#inlinematerial-6).
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`material`](#material-6)
+
+##### offset
+
+> **offset**: [`Vec2Like`](#vec2like)
+
+The shape's offset from the entity origin, in local metres.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`offset`](#offset-4)
+
+##### oneWay
+
+> **oneWay**: `boolean`
+
+Whether this is a one-way platform: a `CharacterController2D` with
+`onOneWayPlatforms` passes up through it and lands on it coming down. Rigid bodies are
+unaffected — one-way support is a character-controller feature in the MVP.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`oneWay`](#oneway-3)
+
+##### restitutionCombine
+
+> **restitutionCombine**: `"average"` \| `"min"` \| `"multiply"` \| `"max"`
+
+How this surface's restitution combines with the one it touches.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`restitutionCombine`](#restitutioncombine-3)
+
+##### schema
+
+> `static` **schema**: [`Schema`](#schema-30)
+
+The serialized field declarations; the geometry itself comes from the tilemap asset.
+
+##### typeId
+
+> `static` **typeId**: `string`
+
+The namespaced registration id.
+
+#### Accessors
+
+##### app
+
+###### Get Signature
+
+> **get** **app**(): [`App`](#app)
+
+The app that owns the world.
+
+###### Returns
+
+[`App`](#app)
+
+The app.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`app`](#app-15)
+
+##### collisionData
+
+###### Get Signature
+
+> **get** **collisionData**(): [`TilemapCollisionData`](#tilemapcollisiondata-1) \| `null`
+
+The merged chunk geometry this collider builds shapes from.
+
+###### Returns
+
+[`TilemapCollisionData`](#tilemapcollisiondata-1) \| `null`
+
+The data, or `null` when none has been supplied.
+
+###### Set Signature
+
+> **set** **collisionData**(`value`): `void`
+
+Replaces the tilemap geometry and schedules a rebuild.
+
+###### Parameters
+
+###### value
+
+[`TilemapCollisionData`](#tilemapcollisiondata-1) \| `null`
+
+The merged chunk geometry, or `null` to drop the shapes.
+
+###### Returns
+
+`void`
+
+##### enabled
+
+###### Get Signature
+
+> **get** **enabled**(): `boolean`
+
+The component's own enabled flag; `true` by default. Setting it runs the enable or disable
+transition (`docs/architecture/01-lifecycle-and-time.md` §6): `onDisable` runs immediately,
+`awake`/`onEnable` run in the next lifecycle flush — or immediately and nested when the change
+happens inside a callback.
+
+###### Returns
+
+`boolean`
+
+`true` when the component's own flag is set.
+
+###### Set Signature
+
+> **set** **enabled**(`value`): `void`
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`enabled`](#enabled-16)
+
+##### entity
+
+###### Get Signature
+
+> **get** **entity**(): [`Entity`](#entity-17)
+
+The entity this component is attached to.
+
+###### Returns
+
+[`Entity`](#entity-17)
+
+The owning entity.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`entity`](#entity-13)
+
+##### handle
+
+###### Get Signature
+
+> **get** **handle**(): [`ComponentHandle`](#componenthandle-1)
+
+The dense runtime handle; invalid after destruction.
+
+###### Returns
+
+[`ComponentHandle`](#componenthandle-1)
+
+The handle.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`handle`](#handle-13)
+
+##### isDestroyed
+
+###### Get Signature
+
+> **get** **isDestroyed**(): `boolean`
+
+`true` from the moment `destroy()` is called, long before the destroy flush runs.
+
+###### Returns
+
+`boolean`
+
+`true` once the component has been queued for destruction.
+
+Whether the owner has already been destroyed.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`isDestroyed`](#isdestroyed-13)
+
+##### isEnabledInHierarchy
+
+###### Get Signature
+
+> **get** **isEnabledInHierarchy**(): `boolean`
+
+`true` when the component's own flag is set **and** its entity is active in the hierarchy.
+
+###### Returns
+
+`boolean`
+
+`true` when the component is effectively enabled.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`isEnabledInHierarchy`](#isenabledinhierarchy-13)
+
+##### onDestroyed
+
+###### Get Signature
+
+> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+Emitted once when the component is destroyed, in the destroy flush. Connecting with
+`{ owner: this }` elsewhere uses it to detach handlers automatically
+(`docs/architecture/02-scene-graph.md` §8).
+
+###### Returns
+
+[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+The signal. It is created on first access, so a component nobody listens to allocates
+nothing.
+
+Emitted once when the owner is destroyed; the signal uses it to detach the handler.
+
+###### Remarks
+
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
+`docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
+invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`onDestroyed`](#ondestroyed-13)
+
+##### transform
+
+###### Get Signature
+
+> **get** **transform**(): [`Transform`](#transform-40)
+
+The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
+
+###### Returns
+
+[`Transform`](#transform-40)
+
+The entity's transform.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`transform`](#transform-13)
+
+##### uid
+
+###### Get Signature
+
+> **get** **uid**(): `string`
+
+The stable ULID; the key files use to reference this component.
+
+###### Returns
+
+`string`
+
+The identifier.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`uid`](#uid-13)
+
+##### world
+
+###### Get Signature
+
+> **get** **world**(): [`World`](#world-45)
+
+The world the entity belongs to.
+
+###### Returns
+
+[`World`](#world-45)
+
+The world.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`world`](#world-14)
+
+#### Methods
+
+##### define()
+
+> `static` **define**\<`S`\>(`schema`): [`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+Declares a component's serialized fields and returns the base class to extend (ADR-0004,
+`docs/architecture/03-scripting-and-components.md` §3). The returned class exposes every field
+as a typed instance property, applies the defaults in its constructor, and carries the schema
+for the serializer, the inspector, and the docs harness.
+
+###### Type Parameters
+
+###### S
+
+`S` *extends* `Readonly`\<`Record`\<`string`, [`FieldDefinition`](#fielddefinition)\<`unknown`\>\>\>
+
+The schema being declared.
+
+###### Parameters
+
+###### schema
+
+`S`
+
+The field definitions, keyed by the property name they become.
+
+###### Returns
+
+[`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+An abstract class to extend.
+
+###### Throws
+
+IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
+with a `Component`/`Script` member.
+
+###### Example
+
+```ts
+class Spinner extends Component.define({
+  degreesPerSecond: f32(90, { min: -360, max: 360 }),
+  axis: vec3({ x: 0, y: 1, z: 0 }),
+}) {
+  static typeId = "mygame/Spinner";
+}
+```
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`define`](#define-13)
+
+##### destroy()
+
+> **destroy**(): `void`
+
+Queues this component for destruction. It stays usable until the destroy flush of the current
+frame, but reports `isDestroyed === true` immediately
+(`docs/architecture/01-lifecycle-and-time.md` §6). Calling it twice is a no-op.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`destroy`](#destroy-13)
+
+##### getComponent()
+
+> **getComponent**\<`T`\>(`type`): `T` \| `null`
+
+Finds another component on the same entity — sugar for `this.entity.getComponent`.
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class; matching is by class identity **and** inheritance.
+
+###### Returns
+
+`T` \| `null`
+
+The first match in attach order, or `null`.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`getComponent`](#getcomponent-13)
+
+##### onAttach()
+
+> **onAttach**(): `void`
+
+Marks the entity's body for a rebuild at the start of the next fixed step.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`onAttach`](#onattach-9)
+
+##### onDetach()
+
+> **onDetach**(): `void`
+
+Marks the entity's body for a rebuild, which removes this collider from it.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`onDetach`](#ondetach-9)
+
+##### rebuild()
+
+> **rebuild**(): `void`
+
+Rebuilds the entity's body and shapes at the start of the next fixed step. Call it after
+changing a size, an offset, `isTrigger`, or the entity's scale.
+
+###### Returns
+
+`void`
+
+###### Example
+
+```ts
+box.size = { x: 2, y: 2 };
+box.rebuild();
+```
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`rebuild`](#rebuild-8)
+
+##### requireComponent()
+
+> **requireComponent**\<`T`\>(`type`): `T`
+
+Finds another component on the same entity, requiring it to be there — the supported way to
+link components (`docs/architecture/03-scripting-and-components.md` §8).
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class.
+
+###### Returns
+
+`T`
+
+The first match in attach order.
+
+###### Throws
+
+IgnifxError with code `IGX-0201` when the entity has no such component.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`requireComponent`](#requirecomponent-13)
+
+##### resolveMaterial()
+
+> **resolveMaterial**(`fallback`): [`Physics2DMaterialValues`](#physics2dmaterialvalues)
+
+Resolves the surface this collider presents to Rapier.
+
+###### Parameters
+
+###### fallback
+
+[`Physics2DMaterialValues`](#physics2dmaterialvalues)
+
+The world's `physics2d.defaultMaterial`.
+
+###### Returns
+
+[`Physics2DMaterialValues`](#physics2dmaterialvalues)
+
+The asset's values, the inline values, or the fallback.
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`resolveMaterial`](#resolvematerial-6)
+
+***
+
+### TilemapRenderer
+
+A tilemap renderer.
+
+#### Example
+
+```ts
+const level = app.world.createEntity({ name: "level" });
+level.addComponent(Tilemap).map = app.assets.load<TilemapAsset>("2d/level-1.tilemap.json").retain();
+const renderer = level.addComponent(TilemapRenderer);
+renderer.atlas = app.assets.load<SpriteAtlasAsset>("2d/tiles.atlas.json").retain();
+```
+
+#### Extends
+
+- [`Component`](#abstract-component)
+
+#### Implements
+
+- [`ComponentHooks`](#componenthooks)
+
+#### Constructors
+
+##### Constructor
+
+> **new TilemapRenderer**(): [`TilemapRenderer`](#tilemaprenderer)
+
+Builds a renderer with the schema's defaults.
+
+###### Returns
+
+[`TilemapRenderer`](#tilemaprenderer)
+
+###### Overrides
+
+[`Component`](#abstract-component).[`constructor`](#constructor-20)
+
+#### Properties
+
+##### allowMultiple
+
+> `static` **allowMultiple**: `boolean`
+
+One renderer per entity.
+
+##### atlas
+
+> **atlas**: [`AssetHandle`](#assethandle)\<[`SpriteAtlasAsset`](#spriteatlasasset)\> \| `null`
+
+The atlas the tile frames come from.
+
+##### cullChunks
+
+> **cullChunks**: `boolean`
+
+Whether chunks outside the camera's visible bounds are dropped.
+
+##### schema
+
+> `static` **schema**: [`Schema`](#schema-30)
+
+The declarative fields (ADR-0004).
+
+##### sortingLayer
+
+> **sortingLayer**: `string`
+
+Which sorting layer the tiles draw on, when the document's layers name none.
+
+##### typeId
+
+> `static` **typeId**: `string`
+
+The registration id the serializer writes into scene files.
+
+#### Accessors
+
+##### app
+
+###### Get Signature
+
+> **get** **app**(): [`App`](#app)
+
+The app that owns the world.
+
+###### Returns
+
+[`App`](#app)
+
+The app.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`app`](#app-16)
+
+##### chunkCount
+
+###### Get Signature
+
+> **get** **chunkCount**(): `number`
+
+How many chunks are currently materialised.
+
+###### Returns
+
+`number`
+
+The count.
+
+##### enabled
+
+###### Get Signature
+
+> **get** **enabled**(): `boolean`
+
+The component's own enabled flag; `true` by default. Setting it runs the enable or disable
+transition (`docs/architecture/01-lifecycle-and-time.md` §6): `onDisable` runs immediately,
+`awake`/`onEnable` run in the next lifecycle flush — or immediately and nested when the change
+happens inside a callback.
+
+###### Returns
+
+`boolean`
+
+`true` when the component's own flag is set.
+
+###### Set Signature
+
+> **set** **enabled**(`value`): `void`
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`enabled`](#enabled-17)
+
+##### entity
+
+###### Get Signature
+
+> **get** **entity**(): [`Entity`](#entity-17)
+
+The entity this component is attached to.
+
+###### Returns
+
+[`Entity`](#entity-17)
+
+The owning entity.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`entity`](#entity-14)
+
+##### handle
+
+###### Get Signature
+
+> **get** **handle**(): [`ComponentHandle`](#componenthandle-1)
+
+The dense runtime handle; invalid after destruction.
+
+###### Returns
+
+[`ComponentHandle`](#componenthandle-1)
+
+The handle.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`handle`](#handle-14)
+
+##### isDestroyed
+
+###### Get Signature
+
+> **get** **isDestroyed**(): `boolean`
+
+`true` from the moment `destroy()` is called, long before the destroy flush runs.
+
+###### Returns
+
+`boolean`
+
+`true` once the component has been queued for destruction.
+
+Whether the owner has already been destroyed.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-14)
+
+##### isEnabledInHierarchy
+
+###### Get Signature
+
+> **get** **isEnabledInHierarchy**(): `boolean`
+
+`true` when the component's own flag is set **and** its entity is active in the hierarchy.
+
+###### Returns
+
+`boolean`
+
+`true` when the component is effectively enabled.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-14)
+
+##### loadedAtlas
+
+###### Get Signature
+
+> **get** **loadedAtlas**(): [`SpriteAtlasAsset`](#spriteatlasasset) \| `null`
+
+The loaded atlas, or `null`.
+
+###### Returns
+
+[`SpriteAtlasAsset`](#spriteatlasasset) \| `null`
+
+The atlas.
+
+##### onDestroyed
+
+###### Get Signature
+
+> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+Emitted once when the component is destroyed, in the destroy flush. Connecting with
+`{ owner: this }` elsewhere uses it to detach handlers automatically
+(`docs/architecture/02-scene-graph.md` §8).
+
+###### Returns
+
+[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+The signal. It is created on first access, so a component nobody listens to allocates
+nothing.
+
+Emitted once when the owner is destroyed; the signal uses it to detach the handler.
+
+###### Remarks
+
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
+`docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
+invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-14)
+
+##### spriteCount
+
+###### Get Signature
+
+> **get** **spriteCount**(): `number`
+
+How many sprites the materialised chunks hold in total.
+
+###### Returns
+
+`number`
+
+The count.
+
+##### transform
+
+###### Get Signature
+
+> **get** **transform**(): [`Transform`](#transform-40)
+
+The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
+
+###### Returns
+
+[`Transform`](#transform-40)
+
+The entity's transform.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`transform`](#transform-14)
+
+##### uid
+
+###### Get Signature
+
+> **get** **uid**(): `string`
+
+The stable ULID; the key files use to reference this component.
+
+###### Returns
+
+`string`
+
+The identifier.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`uid`](#uid-14)
+
+##### world
+
+###### Get Signature
+
+> **get** **world**(): [`World`](#world-45)
+
+The world the entity belongs to.
+
+###### Returns
+
+[`World`](#world-45)
+
+The world.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`world`](#world-15)
+
+#### Methods
+
+##### define()
+
+> `static` **define**\<`S`\>(`schema`): [`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+Declares a component's serialized fields and returns the base class to extend (ADR-0004,
+`docs/architecture/03-scripting-and-components.md` §3). The returned class exposes every field
+as a typed instance property, applies the defaults in its constructor, and carries the schema
+for the serializer, the inspector, and the docs harness.
+
+###### Type Parameters
+
+###### S
+
+`S` *extends* `Readonly`\<`Record`\<`string`, [`FieldDefinition`](#fielddefinition)\<`unknown`\>\>\>
+
+The schema being declared.
+
+###### Parameters
+
+###### schema
+
+`S`
+
+The field definitions, keyed by the property name they become.
+
+###### Returns
+
+[`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+An abstract class to extend.
+
+###### Throws
+
+IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
+with a `Component`/`Script` member.
+
+###### Example
+
+```ts
+class Spinner extends Component.define({
+  degreesPerSecond: f32(90, { min: -360, max: 360 }),
+  axis: vec3({ x: 0, y: 1, z: 0 }),
+}) {
+  static typeId = "mygame/Spinner";
+}
+```
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`define`](#define-14)
+
+##### destroy()
+
+> **destroy**(): `void`
+
+Queues this component for destruction. It stays usable until the destroy flush of the current
+frame, but reports `isDestroyed === true` immediately
+(`docs/architecture/01-lifecycle-and-time.md` §6). Calling it twice is a no-op.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`destroy`](#destroy-14)
+
+##### getComponent()
+
+> **getComponent**\<`T`\>(`type`): `T` \| `null`
+
+Finds another component on the same entity — sugar for `this.entity.getComponent`.
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class; matching is by class identity **and** inheritance.
+
+###### Returns
+
+`T` \| `null`
+
+The first match in attach order, or `null`.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-14)
+
+##### onAttach()
+
+> **onAttach**(): `void`
+
+Marks every chunk stale, so a recycled component rebuilds.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-10)
+
+##### onDetach()
+
+> **onDetach**(): `void`
+
+Marks every chunk stale; the 2D sync system does the removal, because it owns the layers.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-10)
+
+##### requireComponent()
+
+> **requireComponent**\<`T`\>(`type`): `T`
+
+Finds another component on the same entity, requiring it to be there — the supported way to
+link components (`docs/architecture/03-scripting-and-components.md` §8).
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class.
+
+###### Returns
+
+`T`
+
+The first match in attach order.
+
+###### Throws
+
+IgnifxError with code `IGX-0201` when the entity has no such component.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-14)
+
+***
+
 ### Transform
 
 The view over an entity's Babylon Lite `SceneNode`
@@ -22933,17 +33602,17 @@ class Follow extends Script implements ScriptCallbacks {
 
 ##### Constructor
 
-> **new Transform**(): [`Transform`](#transform-23)
+> **new Transform**(): [`Transform`](#transform-40)
 
 Creates an unbound transform. The entity constructor binds it to a Lite node immediately.
 
 ###### Returns
 
-[`Transform`](#transform-23)
+[`Transform`](#transform-40)
 
 ###### Overrides
 
-[`Component`](#abstract-component).[`constructor`](#constructor-13)
+[`Component`](#abstract-component).[`constructor`](#constructor-20)
 
 #### Properties
 
@@ -22977,7 +33646,7 @@ The app.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`app`](#app-9)
+[`Component`](#abstract-component).[`app`](#app-16)
 
 ##### enabled
 
@@ -23022,25 +33691,25 @@ happens inside a callback.
 
 ###### Overrides
 
-[`Component`](#abstract-component).[`enabled`](#enabled-10)
+[`Component`](#abstract-component).[`enabled`](#enabled-17)
 
 ##### entity
 
 ###### Get Signature
 
-> **get** **entity**(): [`Entity`](#entity-9)
+> **get** **entity**(): [`Entity`](#entity-17)
 
 The entity this component is attached to.
 
 ###### Returns
 
-[`Entity`](#entity-9)
+[`Entity`](#entity-17)
 
 The owning entity.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`entity`](#entity-7)
+[`Component`](#abstract-component).[`entity`](#entity-14)
 
 ##### eulerAngles
 
@@ -23101,7 +33770,7 @@ The handle.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`handle`](#handle-7)
+[`Component`](#abstract-component).[`handle`](#handle-14)
 
 ##### isDestroyed
 
@@ -23121,7 +33790,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-7)
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-14)
 
 ##### isEnabledInHierarchy
 
@@ -23139,7 +33808,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-7)
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-14)
 
 ##### lite
 
@@ -23346,7 +34015,7 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-7)
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-14)
 
 ##### position
 
@@ -23479,19 +34148,19 @@ The angle in degrees.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-23)
+> **get** **transform**(): [`Transform`](#transform-40)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-23)
+[`Transform`](#transform-40)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`transform`](#transform-7)
+[`Component`](#abstract-component).[`transform`](#transform-14)
 
 ##### uid
 
@@ -23509,7 +34178,7 @@ The identifier.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`uid`](#uid-7)
+[`Component`](#abstract-component).[`uid`](#uid-14)
 
 ##### up
 
@@ -23529,19 +34198,19 @@ A freshly allocated vector. Use `Transform.upToRef` in hot code.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-26)
+> **get** **world**(): [`World`](#world-45)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-26)
+[`World`](#world-45)
 
 The world.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`world`](#world-8)
+[`Component`](#abstract-component).[`world`](#world-15)
 
 ##### worldMatrix
 
@@ -23631,7 +34300,7 @@ class Spinner extends Component.define({
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`define`](#define-7)
+[`Component`](#abstract-component).[`define`](#define-14)
 
 ##### destroy()
 
@@ -23649,7 +34318,7 @@ IgnifxError with code `IGX-0205`. Destroy the entity instead.
 
 ###### Overrides
 
-[`Component`](#abstract-component).[`destroy`](#destroy-7)
+[`Component`](#abstract-component).[`destroy`](#destroy-14)
 
 ##### eulerAnglesToRef()
 
@@ -23733,7 +34402,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`getComponent`](#getcomponent-7)
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-14)
 
 ##### inverseTransformDirection()
 
@@ -23924,7 +34593,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-7)
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-14)
 
 ##### rightToRef()
 
@@ -24169,6 +34838,493 @@ The vector to write.
 
 ***
 
+### TwoDAnimationSystem
+
+Advances sprite animation on ignifx's clock.
+
+#### Implements
+
+- [`System`](#system)
+
+#### Constructors
+
+##### Constructor
+
+> **new TwoDAnimationSystem**(`tilemaps`): [`TwoDAnimationSystem`](#twodanimationsystem)
+
+Builds the system.
+
+###### Parameters
+
+###### tilemaps
+
+[`AnimatedTilemapSink`](#animatedtilemapsink)
+
+Advances animated tiles on the same clock.
+
+###### Returns
+
+[`TwoDAnimationSystem`](#twodanimationsystem)
+
+#### Properties
+
+##### name
+
+> `readonly` **name**: `"ignifx/2d-animation"` = `"ignifx/2d-animation"`
+
+The name diagnostics and error reports use.
+
+###### Implementation of
+
+[`System`](#system).[`name`](#name-35)
+
+#### Methods
+
+##### update()
+
+> **update**(`ctx`): `void`
+
+Advances every animator and every animated tile.
+
+###### Parameters
+
+###### ctx
+
+[`SystemContext`](#systemcontext)
+
+The world, clock, phase, and delta.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`System`](#system).[`update`](#update-6)
+
+***
+
+### TwoDService
+
+The 2D service.
+
+#### Example
+
+```ts
+const hit = app.twoD.pickAt(pointer.x, pointer.y);
+if (hit !== null) {
+  hit.entity.destroy();
+}
+```
+
+#### Accessors
+
+##### layers
+
+###### Get Signature
+
+> **get** **layers**(): readonly [`SpriteLayerEntry`](#spritelayerentry)[]
+
+Every Lite sprite layer in draw order, for diagnostics and tests.
+
+###### Remarks
+
+The snapshot is freshly allocated on each read; it is a debugging surface, not a per-frame one.
+
+###### Returns
+
+readonly [`SpriteLayerEntry`](#spritelayerentry)[]
+
+The layers.
+
+##### lite
+
+###### Get Signature
+
+> **get** **lite**(): [`TwoDLiteHandles`](#twodlitehandles)
+
+The Babylon Lite objects the toolkit owns. Unstable escape hatch
+(`CONSTITUTION.md` §3.4).
+
+###### Returns
+
+[`TwoDLiteHandles`](#twodlitehandles)
+
+The sprite rendering context, or `null` under a headless app or before the first frame.
+
+##### mainCamera
+
+###### Get Signature
+
+> **get** **mainCamera**(): [`Camera2D`](#camera2d) \| `null`
+
+The camera the last frame was drawn through: the highest-priority enabled `Camera2D`.
+
+###### Returns
+
+[`Camera2D`](#camera2d) \| `null`
+
+The camera, or `null` when the world has none enabled.
+
+##### mode
+
+###### Get Signature
+
+> **get** **mode**(): `"sprite"` \| `"mixed"`
+
+Whether sprites are the whole frame or composite over the 3D scene.
+
+###### Returns
+
+`"sprite"` \| `"mixed"`
+
+The mode.
+
+##### pixelsPerUnit
+
+###### Get Signature
+
+> **get** **pixelsPerUnit**(): `number`
+
+How many pixels one world metre spans (`docs/architecture/11-2d-toolkit.md` §1).
+
+###### Returns
+
+`number`
+
+The conversion factor; `100` unless the project or a scene changed it.
+
+##### settings
+
+###### Get Signature
+
+> **get** **settings**(): [`TwoDSettings`](#twodsettings)
+
+The resolved `twoD` settings, after any scene-file override.
+
+###### Returns
+
+[`TwoDSettings`](#twodsettings)
+
+The settings.
+
+##### sortingLayers
+
+###### Get Signature
+
+> **get** **sortingLayers**(): readonly `string`[]
+
+The project's sorting layers, back to front.
+
+###### Returns
+
+readonly `string`[]
+
+The names.
+
+##### spriteCount
+
+###### Get Signature
+
+> **get** **spriteCount**(): `number`
+
+How many `SpriteRenderer` components the last frame walked.
+
+###### Returns
+
+`number`
+
+The count.
+
+##### syncedLastFrame
+
+###### Get Signature
+
+> **get** **syncedLastFrame**(): `number`
+
+How many sprites the last frame actually wrote to Lite.
+
+###### Remarks
+
+This is the number spike S6.1 watches: on a steady frame with a static tilemap it is the count
+of sprites that genuinely moved, not the count that exist.
+
+###### Returns
+
+`number`
+
+The count.
+
+#### Methods
+
+##### pickAt()
+
+> **pickAt**(`xPx`, `yPx`): [`TwoDPick`](#twodpick) \| `null`
+
+Picks the topmost sprite under a viewport pixel (`docs/architecture/11-2d-toolkit.md` §5).
+
+###### Parameters
+
+###### xPx
+
+`number`
+
+The viewport x, in pixels from the left edge.
+
+###### yPx
+
+`number`
+
+The viewport y, in pixels from the top edge.
+
+###### Returns
+
+[`TwoDPick`](#twodpick) \| `null`
+
+The hit, or `null` for a miss.
+
+###### Remarks
+
+Picking is a CPU test against every world layer's instance data, in draw order — no GPU
+readback and no frame of latency, which is what makes it usable from a click handler. It
+resolves only `SpriteRenderer` components: a tilemap's tiles have no component, so use
+`Tilemap.worldToCell` for those.
+
+##### registerTileObjectFactory()
+
+> **registerTileObjectFactory**(`type`, `factory`): `void`
+
+Registers the factory that turns one kind of tilemap object into an entity
+(`docs/architecture/11-2d-toolkit.md` §2.5).
+
+###### Parameters
+
+###### type
+
+`string`
+
+The object `type` the map writes.
+
+###### factory
+
+[`TileObjectFactory`](#tileobjectfactory)
+
+Builds the entity, or returns `null` to spawn nothing.
+
+###### Returns
+
+`void`
+
+###### Throws
+
+IgnifxError with code `IGX-1110` when a factory for the type is already registered.
+
+###### Example
+
+```ts
+app.twoD.registerTileObjectFactory("spawn", ({ world, position }) => {
+  const player = world.createEntity({ name: "player" });
+  player.transform.position2D = new Vec2(position.x, position.y);
+  return player;
+});
+```
+
+##### screenToWorld()
+
+> **screenToWorld**(`xPx`, `yPx`, `out?`): [`MutableVec2`](#mutablevec2)
+
+Converts a viewport pixel into a world point through the active camera.
+
+###### Parameters
+
+###### xPx
+
+`number`
+
+The viewport x.
+
+###### yPx
+
+`number`
+
+The viewport y.
+
+###### out?
+
+[`MutableVec2`](#mutablevec2)
+
+The vector to write; omitting it allocates one.
+
+###### Returns
+
+[`MutableVec2`](#mutablevec2)
+
+`out`, or the origin when no camera is active.
+
+##### unregisterTileObjectFactory()
+
+> **unregisterTileObjectFactory**(`type`): `boolean`
+
+Removes a tile-object factory.
+
+###### Parameters
+
+###### type
+
+`string`
+
+The object type.
+
+###### Returns
+
+`boolean`
+
+`true` when a factory was registered.
+
+##### visibleWorldBounds()
+
+> **visibleWorldBounds**(`out`): `boolean`
+
+The world-space rectangle the camera can currently see.
+
+###### Parameters
+
+###### out
+
+[`WorldBox`](#worldbox)
+
+The box to write: its `min` takes the lower corner and its `max` the upper.
+
+###### Returns
+
+`boolean`
+
+`true` when a camera and a layer existed to measure against.
+
+##### worldToScreen()
+
+> **worldToScreen**(`point`, `out?`): [`MutableVec2`](#mutablevec2)
+
+Converts a world point into a viewport pixel through the active camera.
+
+###### Parameters
+
+###### point
+
+[`Vec2Like`](#vec2like)
+
+The world point, in metres.
+
+###### out?
+
+[`MutableVec2`](#mutablevec2)
+
+The vector to write; omitting it allocates one.
+
+###### Returns
+
+[`MutableVec2`](#mutablevec2)
+
+`out`, or the origin when no camera is active.
+
+***
+
+### TwoDSyncSystem
+
+Writes sprites and camera views into Babylon Lite once per frame.
+
+#### Implements
+
+- [`System`](#system)
+
+#### Properties
+
+##### name
+
+> `readonly` **name**: `"ignifx/2d-sync"` = `"ignifx/2d-sync"`
+
+The name diagnostics and error reports use.
+
+###### Implementation of
+
+[`System`](#system).[`name`](#name-35)
+
+#### Methods
+
+##### onWorldCreated()
+
+> **onWorldCreated**(`world`): `void`
+
+Connects the scene hook to a new world.
+
+###### Parameters
+
+###### world
+
+[`World`](#world-45)
+
+The new world.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+This is the only hook that fires for every world. `register` runs before the world exists and
+`onStart` runs only when a game calls `app.start()`, so a headless tool that loads a scene
+without ever starting a loop would otherwise never see its `settings.twoD` block.
+
+###### Implementation of
+
+[`System`](#system).[`onWorldCreated`](#onworldcreated)
+
+##### onWorldDisposed()
+
+> **onWorldDisposed**(`_world`): `void`
+
+Drops every layer when the world goes away.
+
+###### Parameters
+
+###### \_world
+
+[`World`](#world-45)
+
+The world being disposed.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`System`](#system).[`onWorldDisposed`](#onworlddisposed)
+
+##### update()
+
+> **update**(`ctx`): `void`
+
+Runs one frame's synchronisation.
+
+###### Parameters
+
+###### ctx
+
+[`SystemContext`](#systemcontext)
+
+The world, clock, phase, and delta.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`System`](#system).[`update`](#update-6)
+
+***
+
 ### UidRemap
 
 The per-instance mapping from the uids a scene file carries to the runtime objects built from it
@@ -24242,7 +35398,7 @@ The component, or `null` when the file declares no such component.
 
 ##### entity()
 
-> **entity**(`fileUid`): [`Entity`](#entity-9) \| `null`
+> **entity**(`fileUid`): [`Entity`](#entity-17) \| `null`
 
 Resolves a file uid to its entity.
 
@@ -24256,19 +35412,19 @@ The uid read from the file.
 
 ###### Returns
 
-[`Entity`](#entity-9) \| `null`
+[`Entity`](#entity-17) \| `null`
 
 The entity, or `null` when the file declares no such entity.
 
 ##### entries()
 
-> **entries**(): `IterableIterator`\<readonly \[`string`, [`Entity`](#entity-9)\]\>
+> **entries**(): `IterableIterator`\<readonly \[`string`, [`Entity`](#entity-17)\]\>
 
 Every entity the remap holds, in the order the file declared them.
 
 ###### Returns
 
-`IterableIterator`\<readonly \[`string`, [`Entity`](#entity-9)\]\>
+`IterableIterator`\<readonly \[`string`, [`Entity`](#entity-17)\]\>
 
 The live iterator over `[fileUid, entity]` pairs.
 
@@ -27588,7 +38744,7 @@ Builds an empty virtual device.
 
 ###### Overrides
 
-[`InputDevice`](#inputdevice).[`constructor`](#constructor-30)
+[`InputDevice`](#inputdevice).[`constructor`](#constructor-38)
 
 #### Properties
 
@@ -28458,13 +39614,13 @@ The main camera, or `null` when the world has none.
 
 ###### Get Signature
 
-> **get** **onEntityCreated**(): [`Signal`](#signal-3)\<[`Entity`](#entity-9)\>
+> **get** **onEntityCreated**(): [`Signal`](#signal-3)\<[`Entity`](#entity-17)\>
 
 Emitted for every entity the world creates.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Entity`](#entity-9)\>
+[`Signal`](#signal-3)\<[`Entity`](#entity-17)\>
 
 The signal.
 
@@ -28472,13 +39628,13 @@ The signal.
 
 ###### Get Signature
 
-> **get** **onEntityDestroyed**(): [`Signal`](#signal-3)\<[`Entity`](#entity-9)\>
+> **get** **onEntityDestroyed**(): [`Signal`](#signal-3)\<[`Entity`](#entity-17)\>
 
 Emitted for every entity the destroy flush releases.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Entity`](#entity-9)\>
+[`Signal`](#signal-3)\<[`Entity`](#entity-17)\>
 
 The signal.
 
@@ -28546,13 +39702,13 @@ The live scene list.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-26)
+> **get** **world**(): [`World`](#world-45)
 
 The world itself; `WorldHost` names it so entities can reach it.
 
 ###### Returns
 
-[`World`](#world-26)
+[`World`](#world-45)
 
 This world.
 
@@ -28594,7 +39750,7 @@ The live list. O(1) to obtain, stable within a phase, and never allocated per ca
 
 ##### createEntity()
 
-> **createEntity**(`name?`, `options?`): [`Entity`](#entity-9)
+> **createEntity**(`name?`, `options?`): [`Entity`](#entity-17)
 
 Creates an entity with a transform and a Lite node.
 
@@ -28614,7 +39770,7 @@ The parent, the owning scene, and an initial world position and rotation.
 
 ###### Returns
 
-[`Entity`](#entity-9)
+[`Entity`](#entity-17)
 
 The new entity, already active and registered.
 
@@ -28637,7 +39793,7 @@ index. The Lite scene itself belongs to the app and is left alone.
 
 ##### findAllByName()
 
-> **findAllByName**(`name`): [`Entity`](#entity-9)[]
+> **findAllByName**(`name`): [`Entity`](#entity-17)[]
 
 Every entity with a name, depth-first from the roots of every scene.
 
@@ -28651,13 +39807,13 @@ The name to match exactly.
 
 ###### Returns
 
-[`Entity`](#entity-9)[]
+[`Entity`](#entity-17)[]
 
 A freshly allocated array; empty when nothing matches.
 
 ##### findByName()
 
-> **findByName**(`name`): [`Entity`](#entity-9) \| `null`
+> **findByName**(`name`): [`Entity`](#entity-17) \| `null`
 
 The first entity with a name, depth-first from the roots of every scene.
 
@@ -28671,7 +39827,7 @@ The name to match exactly.
 
 ###### Returns
 
-[`Entity`](#entity-9) \| `null`
+[`Entity`](#entity-17) \| `null`
 
 The first match, or `null`.
 
@@ -28683,7 +39839,7 @@ convenience, not a lookup the engine itself uses
 
 ##### findByTag()
 
-> **findByTag**(`tag`): readonly [`Entity`](#entity-9)[]
+> **findByTag**(`tag`): readonly [`Entity`](#entity-17)[]
 
 Every entity carrying a tag.
 
@@ -28697,7 +39853,7 @@ The tag.
 
 ###### Returns
 
-readonly [`Entity`](#entity-9)[]
+readonly [`Entity`](#entity-17)[]
 
 The live list of tagged entities. A tag nothing carries yields a shared frozen empty
 array.
@@ -28731,7 +39887,7 @@ The component, or `null` when the handle is stale.
 
 ##### getEntity()
 
-> **getEntity**(`uid`): [`Entity`](#entity-9) \| `null`
+> **getEntity**(`uid`): [`Entity`](#entity-17) \| `null`
 
 Looks an entity up by its stable identifier.
 
@@ -28745,13 +39901,13 @@ The ULID.
 
 ###### Returns
 
-[`Entity`](#entity-9) \| `null`
+[`Entity`](#entity-17) \| `null`
 
 The entity, or `null` when nothing in this world carries that uid.
 
 ##### getEntityByHandle()
 
-> **getEntityByHandle**(`handle`): [`Entity`](#entity-9) \| `null`
+> **getEntityByHandle**(`handle`): [`Entity`](#entity-17) \| `null`
 
 Resolves a dense runtime handle.
 
@@ -28765,14 +39921,14 @@ The handle.
 
 ###### Returns
 
-[`Entity`](#entity-9) \| `null`
+[`Entity`](#entity-17) \| `null`
 
 The entity, or `null` when the handle is stale — a handle kept across a destroy never
 resolves to whatever entity recycled the slot.
 
 ##### instantiate()
 
-> **instantiate**(`scene`, `options?`): [`Entity`](#entity-9)
+> **instantiate**(`scene`, `options?`): [`Entity`](#entity-17)
 
 Instantiates a loaded scene asset as a prefab (ADR-0005) and answers with its root.
 
@@ -28792,7 +39948,7 @@ Parent, owning instance, name, and initial placement.
 
 ###### Returns
 
-[`Entity`](#entity-9)
+[`Entity`](#entity-17)
 
 The instance root.
 
@@ -28820,7 +39976,7 @@ const enemy = world.instantiate(enemyPrefab, { position: { x: 4, y: 0, z: 2 } })
 
 ##### instantiateAsync()
 
-> **instantiateAsync**(`scene`, `options?`): `Promise`\<[`Entity`](#entity-9)\>
+> **instantiateAsync**(`scene`, `options?`): `Promise`\<[`Entity`](#entity-17)\>
 
 Loads a scene asset and instantiates it (`docs/architecture/02-scene-graph.md` §2).
 
@@ -28840,7 +39996,7 @@ Parent, owning instance, name, and initial placement.
 
 ###### Returns
 
-`Promise`\<[`Entity`](#entity-9)\>
+`Promise`\<[`Entity`](#entity-17)\>
 
 The instance root, once the asset and its dependencies have loaded.
 
@@ -28913,7 +40069,7 @@ whole instance `persistent`.
 
 ###### entity
 
-[`Entity`](#entity-9)
+[`Entity`](#entity-17)
 
 The entity to move; it must be a root.
 
@@ -29083,6 +40239,38 @@ The control scheme to keep; `""` keeps every binding whatever its tag.
 
 ***
 
+### AnimatedTilemapSink
+
+Anything that owns animated tiles and can step them.
+
+#### Methods
+
+##### advanceAnimatedTiles()
+
+> **advanceAnimatedTiles**(`world`, `deltaSeconds`): `void`
+
+Advances every animated tile by one frame's worth of scaled time.
+
+###### Parameters
+
+###### world
+
+[`World`](#world-45)
+
+The world holding the tilemaps.
+
+###### deltaSeconds
+
+`number`
+
+The scaled frame delta, `time.deltaTime`.
+
+###### Returns
+
+`void`
+
+***
+
 ### App
 
 The root object of a game and the surface a script sees through `this.app`
@@ -29182,6 +40370,12 @@ Every failure the engine caught at a boundary rather than rethrowing.
 
 3D physics: gravity, queries, the debug viewer, and the Lite escape hatch.
 
+##### physics2d
+
+> `readonly` **physics2d**: [`Physics2DService`](#physics2dservice)
+
+2D physics: gravity, queries, and the Rapier escape hatch.
+
 ##### platform
 
 > `readonly` **platform**: [`PlatformInfo`](#platforminfo)
@@ -29210,9 +40404,16 @@ Resolved project settings.
 
 ##### time
 
-> `readonly` **time**: [`Time`](#time-3)
+> `readonly` **time**: [`Time`](#time-4)
 
 The clock.
+
+##### twoD
+
+> `readonly` **twoD**: [`TwoDService`](#twodservice)
+
+The 2D service (`docs/architecture/11-2d-toolkit.md` §1): the pixels-per-unit conversion, the
+active `Camera2D`, sprite picking, the sprite-layer diagnostics, and the Lite escape hatch.
 
 ##### version
 
@@ -29222,7 +40423,7 @@ The `@ignifx/core` version this app was built from.
 
 ##### world
 
-> `readonly` **world**: [`World`](#world-26)
+> `readonly` **world**: [`World`](#world-45)
 
 The running simulation.
 
@@ -29475,6 +40676,70 @@ The field definition every element follows.
 > `readonly` **kind**: `"array"`
 
 The array kind.
+
+***
+
+### AsepriteAnimationImportOptions
+
+What [importAsepriteAnimations](#importasepriteanimations) accepts alongside the document.
+
+#### Properties
+
+##### atlas?
+
+> `readonly` `optional` **atlas?**: `string`
+
+The `.atlas.json` address the clips index into. Defaults to `""`, the renderer's own atlas.
+
+##### defaultFps?
+
+> `readonly` `optional` **defaultFps?**: `number`
+
+The rate a tag gets when Aseprite recorded no usable frame durations. Defaults to `12`.
+
+##### frameNameOf?
+
+> `readonly` `optional` **frameNameOf?**: (`index`) => `string`
+
+Names the atlas frame at a document frame index. Defaults to the same normalisation
+`importAsepriteAtlas` applies to the document's own frame keys, which is what makes the two
+imports agree; override it when the atlas was produced some other way.
+
+###### Parameters
+
+###### index
+
+`number`
+
+###### Returns
+
+`string`
+
+***
+
+### AsepriteImportOptions
+
+What [importAsepriteAtlas](#importasepriteatlas) accepts alongside the document.
+
+#### Properties
+
+##### image?
+
+> `readonly` `optional` **image?**: `string`
+
+The image address to write into the atlas. Defaults to the document's `meta.image`.
+
+##### premultipliedAlpha?
+
+> `readonly` `optional` **premultipliedAlpha?**: `boolean`
+
+Whether the image's RGB is already multiplied by its alpha. Defaults to `false`.
+
+##### sampling?
+
+> `readonly` `optional` **sampling?**: `"linear"` \| `"nearest"`
+
+The min/mag filter. Defaults to `"linear"`; pixel art wants `"nearest"`.
 
 ***
 
@@ -31976,7 +43241,7 @@ The world-space impulse the character applied.
 
 ##### other
 
-> `readonly` **other**: [`Entity`](#entity-9) \| `null`
+> `readonly` **other**: [`Entity`](#entity-17) \| `null`
 
 The entity that was pushed, or `null` when it is not an ignifx body.
 
@@ -31985,6 +43250,38 @@ The entity that was pushed, or `null` when it is not an ignifx body.
 > `readonly` **point**: [`Vec3Like`](#vec3like)
 
 Where the impulse was applied.
+
+***
+
+### CharacterCollision2D
+
+What `CharacterController2D.onCollided` reports: one obstacle the character hit this step.
+
+#### Properties
+
+##### normal
+
+> `readonly` **normal**: [`Vec2Like`](#vec2like)
+
+The world-space outward normal on the obstacle.
+
+##### other
+
+> `readonly` **other**: [`Entity`](#entity-17) \| `null`
+
+The entity that was hit, or `null` when it is not an ignifx body.
+
+##### otherCollider
+
+> `readonly` **otherCollider**: [`Collider2D`](#abstract-collider2d) \| `null`
+
+The collider that was hit, or `null`.
+
+##### point
+
+> `readonly` **point**: [`Vec2Like`](#vec2like)
+
+The world-space contact point.
 
 ***
 
@@ -32046,7 +43343,7 @@ The contacts of this event. Pooled; valid only during the callback.
 
 ##### other
 
-> `readonly` **other**: [`Entity`](#entity-9) \| `null`
+> `readonly` **other**: [`Entity`](#entity-17) \| `null`
 
 The entity that was hit, or `null` when the identity is unavailable.
 
@@ -32064,9 +43361,85 @@ The relative velocity at the contact, or `null` when a body identity is unavaila
 
 ##### self
 
-> `readonly` **self**: [`Entity`](#entity-9)
+> `readonly` **self**: [`Entity`](#entity-17)
 
 The entity whose script is being called.
+
+***
+
+### Collision2D
+
+What a script's `onCollisionEnter`/`onCollisionStay`/`onCollisionExit` is handed in a 2D world.
+
+#### Properties
+
+##### contacts
+
+> `readonly` **contacts**: readonly [`ContactPoint2D`](#contactpoint2d)[]
+
+The contacts of this event. Pooled; valid only during the callback.
+
+##### other
+
+> `readonly` **other**: [`Entity`](#entity-17) \| `null`
+
+The entity that was hit, or `null` when its body is already gone.
+
+##### otherCollider
+
+> `readonly` **otherCollider**: [`Collider2D`](#abstract-collider2d) \| `null`
+
+The exact collider on the other entity.
+
+##### relativeVelocity
+
+> `readonly` **relativeVelocity**: [`Vec2Like`](#vec2like)
+
+The relative velocity of the two bodies at the contact, in metres per second.
+
+##### self
+
+> `readonly` **self**: [`Entity`](#entity-17)
+
+The entity whose script is being called.
+
+##### selfCollider
+
+> `readonly` **selfCollider**: [`Collider2D`](#abstract-collider2d) \| `null`
+
+The collider on this entity that took part.
+
+***
+
+### CollisionMergeOptions
+
+The grid [mergeTileCollisions](#mergetilecollisions) walks.
+
+#### Properties
+
+##### cellSize
+
+> `readonly` **cellSize**: `number`
+
+The edge length of one cell, in metres.
+
+##### chunkSize
+
+> `readonly` **chunkSize**: `number`
+
+The edge length of one chunk, in cells; `32` is what `TilemapRenderer` uses.
+
+##### height
+
+> `readonly` **height**: `number`
+
+The grid's height, in cells.
+
+##### width
+
+> `readonly` **width**: `number`
+
+The grid's width, in cells.
 
 ***
 
@@ -32337,7 +43710,7 @@ The component instance type the token stands for.
 
 ###### Inherited from
 
-[`ComponentStatics`](#componentstatics).[`allowMultiple`](#allowmultiple-7)
+[`ComponentStatics`](#componentstatics).[`allowMultiple`](#allowmultiple-14)
 
 ##### prototype
 
@@ -32363,7 +43736,7 @@ The serialized field declarations, set by `Component.define` / `Script.define`.
 
 ###### Inherited from
 
-[`ComponentStatics`](#componentstatics).[`schema`](#schema-7)
+[`ComponentStatics`](#componentstatics).[`schema`](#schema-12)
 
 ##### typeId?
 
@@ -32375,7 +43748,7 @@ derived from the class name, so minification and renames cannot change a file's 
 
 ###### Inherited from
 
-[`ComponentStatics`](#componentstatics).[`typeId`](#typeid-7)
+[`ComponentStatics`](#componentstatics).[`typeId`](#typeid-13)
 
 ***
 
@@ -32455,7 +43828,7 @@ schema defaults, then from the file or the `init` object.
 
 ###### Inherited from
 
-[`ComponentType`](#componenttype-1).[`allowMultiple`](#allowmultiple-8)
+[`ComponentType`](#componenttype-1).[`allowMultiple`](#allowmultiple-15)
 
 ##### prototype
 
@@ -32485,7 +43858,7 @@ The serialized field declarations, set by `Component.define` / `Script.define`.
 
 ###### Inherited from
 
-[`ComponentType`](#componenttype-1).[`schema`](#schema-8)
+[`ComponentType`](#componenttype-1).[`schema`](#schema-13)
 
 ##### typeId?
 
@@ -32497,7 +43870,7 @@ derived from the class name, so minification and renames cannot change a file's 
 
 ###### Inherited from
 
-[`ComponentType`](#componenttype-1).[`typeId`](#typeid-8)
+[`ComponentType`](#componenttype-1).[`typeId`](#typeid-14)
 
 ***
 
@@ -32646,6 +44019,32 @@ The world-space contact normal.
 > `readonly` **point**: [`Vec3Like`](#vec3like)
 
 The world-space contact point.
+
+***
+
+### ContactPoint2D
+
+One contact point of a 2D collision. Pooled with its owning [Collision2D](#collision2d).
+
+#### Properties
+
+##### impulse
+
+> `readonly` **impulse**: `number`
+
+The magnitude of the impulse Rapier's solver applied; `0` for a contact that just ended.
+
+##### normal
+
+> `readonly` **normal**: [`Vec2Like`](#vec2like)
+
+The world-space contact normal, pointing away from the other collider.
+
+##### point
+
+> `readonly` **point**: [`Vec2Like`](#vec2like)
+
+The world-space contact point, in metres.
 
 ***
 
@@ -33065,7 +44464,7 @@ file's value in tree order once construction is complete.
 
 ##### parent?
 
-> `readonly` `optional` **parent?**: [`Entity`](#entity-9)
+> `readonly` `optional` **parent?**: [`Entity`](#entity-17)
 
 The parent to attach the new entity to; `undefined` makes it a root of its scene.
 
@@ -33590,7 +44989,7 @@ The handle the instanced scene was loaded through, or `null` when no asset servi
 
 ##### instanceRoot
 
-> `readonly` **instanceRoot**: [`Entity`](#entity-9)
+> `readonly` **instanceRoot**: [`Entity`](#entity-17)
 
 The entity the `instance` entry sat on — the root of this instance.
 
@@ -33874,7 +45273,7 @@ The component involved, or `null` when the failure is not component-scoped.
 
 ##### entity
 
-> `readonly` **entity**: [`Entity`](#entity-9) \| `null`
+> `readonly` **entity**: [`Entity`](#entity-17) \| `null`
 
 The entity involved, or `null` when the failure is not entity-scoped.
 
@@ -34080,7 +45479,7 @@ script callback: this routes through the same guarded call site the frame loop u
 
 ###### entity
 
-[`Entity`](#entity-9)
+[`Entity`](#entity-17)
 
 The entity whose scripts should receive the callback.
 
@@ -34134,7 +45533,7 @@ what `Rigidbody.collisionEvents` auto-detection asks (`09-physics.md` §2.1).
 
 ###### entity
 
-[`Entity`](#entity-9)
+[`Entity`](#entity-17)
 
 The entity to inspect.
 
@@ -34331,7 +45730,7 @@ The section name as it appears in `ignifx.config.ts`.
 
 ###### schema
 
-[`Schema`](#schema-21)
+[`Schema`](#schema-30)
 
 The schema the section is validated against.
 
@@ -34878,6 +46277,92 @@ The pad's `id` string.
 > `readonly` **mapping**: `string`
 
 The pad's `mapping`: `"standard"`, `"xr-standard"`, or `""`.
+
+***
+
+### GridAtlasImportOptions
+
+What [gridAtlas](#gridatlas) needs to cut an evenly spaced sheet into frames.
+
+#### Properties
+
+##### cellHeight
+
+> `readonly` **cellHeight**: `number`
+
+One cell's height, in pixels. Must be positive.
+
+##### cellWidth
+
+> `readonly` **cellWidth**: `number`
+
+One cell's width, in pixels. Must be positive.
+
+##### columns?
+
+> `readonly` `optional` **columns?**: `number`
+
+How many columns to emit. Defaults to as many as the image holds; clamped to that.
+
+##### image
+
+> `readonly` **image**: `string`
+
+The address of the image the frames are cut from.
+
+##### imageHeight
+
+> `readonly` **imageHeight**: `number`
+
+The image's full height, in pixels.
+
+##### imageWidth
+
+> `readonly` **imageWidth**: `number`
+
+The image's full width, in pixels.
+
+##### margin?
+
+> `readonly` `optional` **margin?**: `number`
+
+The border left around the whole grid, in pixels. Defaults to `0`.
+
+##### namePrefix?
+
+> `readonly` `optional` **namePrefix?**: `string`
+
+The `<prefix>_<index>` frame names use. Defaults to `"tile"`.
+
+##### pivot?
+
+> `readonly` `optional` **pivot?**: [`Vec2Like`](#vec2like)
+
+The pivot every frame gets, in `[0, 1]`. Defaults to the centre.
+
+##### premultipliedAlpha?
+
+> `readonly` `optional` **premultipliedAlpha?**: `boolean`
+
+Whether the image's RGB is already multiplied by its alpha. Defaults to `false`.
+
+##### rows?
+
+> `readonly` `optional` **rows?**: `number`
+
+How many rows to emit. Defaults to as many as the image holds; clamped to that.
+
+##### sampling?
+
+> `readonly` `optional` **sampling?**: `"linear"` \| `"nearest"`
+
+The min/mag filter. Defaults to `"linear"`; pixel art wants `"nearest"`.
+
+##### spacing?
+
+> `readonly` `optional` **spacing?**: `number`
+
+The gap between adjacent cells, in pixels. Defaults to `0`.
 
 ***
 
@@ -35459,7 +46944,7 @@ Renames the instance root.
 
 ##### parent?
 
-> `readonly` `optional` **parent?**: [`Entity`](#entity-9) \| `null`
+> `readonly` `optional` **parent?**: [`Entity`](#entity-17) \| `null`
 
 The parent to attach the instance root to; `null` or omitted makes it a root.
 
@@ -35518,13 +47003,13 @@ The handle the scene was loaded through, recorded on `Entity.prefab` when `asIns
 
 ##### parent?
 
-> `readonly` `optional` **parent?**: [`Entity`](#entity-9) \| `null`
+> `readonly` `optional` **parent?**: [`Entity`](#entity-17) \| `null`
 
 The entity the scene's roots attach to; `null` or omitted makes them roots of `scene`.
 
 ##### rootEntity?
 
-> `readonly` `optional` **rootEntity?**: [`Entity`](#entity-9) \| `null`
+> `readonly` `optional` **rootEntity?**: [`Entity`](#entity-17) \| `null`
 
 The entity that stands for the instance when `asInstance` is set and the file has more or fewer
 than one root. `world.instantiate` creates it and passes it as both `parent` and `rootEntity`,
@@ -35646,6 +47131,55 @@ The `layers` project settings section (`docs/architecture/04-extensions.md` §5,
 > `readonly` **layers**: readonly `string`[]
 
 The project's layer names in declaration order.
+
+***
+
+### LdtkImportOptions
+
+How [importLdtkLevel](#importldtklevel) maps LDtk's conventions onto ignifx's.
+
+#### Properties
+
+##### atlasFor?
+
+> `readonly` `optional` **atlasFor?**: (`relPath`) => `string`
+
+Maps an LDtk tileset's `relPath` onto the address of the ignifx `.atlas.json` generated from it.
+Defaults to swapping the file extension for `.atlas.json`.
+
+###### Parameters
+
+###### relPath
+
+`string`
+
+###### Returns
+
+`string`
+
+##### intGridColliders?
+
+> `readonly` `optional` **intGridColliders?**: `Readonly`\<`Record`\<`number`, [`TileColliderDefinition`](#tilecolliderdefinition)\>\>
+
+Replaces [LDTK\_DEFAULT\_INTGRID\_COLLIDERS](#ldtk_default_intgrid_colliders) for this import.
+
+##### level?
+
+> `readonly` `optional` **level?**: `string`
+
+The `identifier` of the level to import. Defaults to the project's first level.
+
+##### pixelsPerUnit?
+
+> `readonly` `optional` **pixelsPerUnit?**: `number`
+
+The pixels one world metre spans. Defaults to `100`, matching `twoD.pixelsPerUnit`.
+
+##### sortingLayer?
+
+> `readonly` `optional` **sortingLayer?**: `string`
+
+The sorting layer every layer lands in. Defaults to `"Default"`.
 
 ***
 
@@ -37269,6 +48803,140 @@ Whether lighting is skipped entirely.
 
 ***
 
+### Physics2DErrorOptions
+
+Options accepted by [physics2DError](#physics2derror).
+
+#### Properties
+
+##### cause?
+
+> `readonly` `optional` **cause?**: `unknown`
+
+The failure being wrapped, when there is one.
+
+##### context?
+
+> `readonly` `optional` **context?**: `Readonly`\<`Record`\<`string`, `string` \| `number` \| `boolean` \| `null`\>\>
+
+Identifiers that locate the failure.
+
+##### hint?
+
+> `readonly` `optional` **hint?**: `string`
+
+One sentence telling the developer what to do about it.
+
+***
+
+### Physics2DMaterialValues
+
+A surface, either as the `physics2d.defaultMaterial` setting or inline on a collider.
+
+#### Properties
+
+##### friction
+
+> `readonly` **friction**: `number`
+
+The friction coefficient.
+
+##### restitution
+
+> `readonly` **restitution**: `number`
+
+How much of the approach speed is returned, `0` to `1`.
+
+***
+
+### Physics2DOptions
+
+What `physics2d()` accepts.
+
+#### Properties
+
+##### initialize?
+
+> `readonly` `optional` **initialize?**: () => `Promise`\<`void`\>
+
+Replaces the step that instantiates Rapier's WebAssembly module. The default awaits
+`RAPIER.init()`, which decodes the base64 payload the `-compat` build inlines; a host that has
+already preloaded the module, or a test that wants to observe the failure path, supplies its
+own.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+***
+
+### Physics2DRapierHandles
+
+The Rapier objects the 2D physics extension owns. Unstable escape hatch
+(`docs/architecture/00-overview.md` §3).
+
+#### Properties
+
+##### world
+
+> `readonly` **world**: `World`
+
+Rapier's `World`.
+
+***
+
+### Physics2DSettings
+
+The resolved `physics2d` settings section.
+
+#### Example
+
+```ts
+// ignifx.config.ts
+export default {
+  layers: { layers: ["Default", "Player", "Enemy"] },
+  physics2d: {
+    gravity: { x: 0, y: -9.81 },
+    collisionMatrix: { Player: ["Default", "Enemy"], Enemy: ["Default"] },
+  },
+};
+```
+
+#### Properties
+
+##### collisionMatrix
+
+> `readonly` **collisionMatrix**: `Readonly`\<`Record`\<`string`, readonly `string`[]\>\>
+
+Which layers each layer collides with. A layer the map does not mention collides with
+everything, which is what makes the default project need no matrix at all.
+
+##### defaultMaterial
+
+> `readonly` **defaultMaterial**: [`Physics2DMaterialValues`](#physics2dmaterialvalues)
+
+The surface a collider with no material of its own uses.
+
+##### gravity
+
+> `readonly` **gravity**: [`Vec2Like`](#vec2like)
+
+World gravity in metres per second squared; +Y is up (`11-2d-toolkit.md` §3).
+
+##### interpolation
+
+> `readonly` **interpolation**: `boolean`
+
+Whether dynamic bodies and character controllers interpolate between fixed steps.
+
+##### velocityIterations
+
+> `readonly` **velocityIterations**: `number`
+
+How many iterations Rapier's constraint solver runs; `0` leaves Rapier's own default (4).
+
+***
+
 ### PhysicsDebugViewer
 
 The wireframe overlay `@ignifx/devtools` toggles (`09-physics.md` §9).
@@ -37493,6 +49161,20 @@ Whether the app runs in a document or in a bare JavaScript runtime.
 
 ***
 
+### PlayClipOptions
+
+What [SpriteAnimator.play](#play-5) accepts.
+
+#### Properties
+
+##### restart?
+
+> `readonly` `optional` **restart?**: `boolean`
+
+Whether to rewind a clip that is already playing. Defaults to `false`.
+
+***
+
 ### PlayOptions
 
 The per-play overrides a game passes to `play()` (`docs/architecture/10-audio.md` §3).
@@ -37666,6 +49348,26 @@ Which layers the query may hit. Defaults to everything.
 
 ***
 
+### QueryOptions2D
+
+Options every 2D query accepts.
+
+#### Properties
+
+##### hitTriggers?
+
+> `readonly` `optional` **hitTriggers?**: `boolean`
+
+Whether trigger volumes count as hits. Defaults to `false`.
+
+##### layerMask?
+
+> `readonly` `optional` **layerMask?**: [`LayerMask`](#layermask-4)
+
+Which layers the query may hit. Defaults to everything.
+
+***
+
 ### RandomSource
 
 Where [generateUlid](#generateulid) gets its randomness. Injecting it is what lets a test replay a scene
@@ -37758,7 +49460,7 @@ The distance from the ray origin, in metres.
 
 ##### entity
 
-> `readonly` **entity**: [`Entity`](#entity-9)
+> `readonly` **entity**: [`Entity`](#entity-17)
 
 The entity that was hit.
 
@@ -37779,6 +49481,49 @@ The world-space contact point.
 > `readonly` **triangleIndex**: `number`
 
 The triangle index on a `MeshCollider`, or `-1` for a primitive.
+
+***
+
+### RaycastHit2D
+
+What a 2D ray or shape query hit.
+
+#### Remarks
+
+The object is freshly allocated per hit, so it is safe to keep. `raycastAll` returns a **reused**
+array of freshly allocated hits.
+
+#### Properties
+
+##### collider
+
+> `readonly` **collider**: [`Collider2D`](#abstract-collider2d) \| `null`
+
+The collider that was hit.
+
+##### distance
+
+> `readonly` **distance**: `number`
+
+The distance from the ray origin, in metres.
+
+##### entity
+
+> `readonly` **entity**: [`Entity`](#entity-17)
+
+The entity that was hit.
+
+##### normal
+
+> `readonly` **normal**: [`Vec2Like`](#vec2like)
+
+The world-space surface normal.
+
+##### point
+
+> `readonly` **point**: [`Vec2Like`](#vec2like)
+
+The world-space contact point, in metres.
 
 ***
 
@@ -37822,7 +49567,7 @@ Kind-specific data for `record`.
 
 ##### fields
 
-> `readonly` **fields**: [`Schema`](#schema-21)
+> `readonly` **fields**: [`Schema`](#schema-30)
 
 The sub-fields, in declaration order.
 
@@ -38444,7 +50189,7 @@ How far along the ray the hit is, in metres.
 
 ##### entity
 
-> `readonly` **entity**: [`Entity`](#entity-9)
+> `readonly` **entity**: [`Entity`](#entity-17)
 
 The entity that owns the mesh the ray hit.
 
@@ -38479,7 +50224,7 @@ returns, which is what makes a "pick only the pickups" query exact rather than a
 
 ###### entity
 
-[`Entity`](#entity-9)
+[`Entity`](#entity-17)
 
 The candidate.
 
@@ -38530,6 +50275,21 @@ first readback lands, `"error"` when it failed, `"ok"` otherwise.
 > `readonly` **tasks**: readonly [`RenderTaskTiming`](#rendertasktiming)[]
 
 The tasks, in frame execution order. Empty unless `status` is `"ok"`.
+
+***
+
+### Rigidbody2DRapierHandles
+
+The Rapier objects a `Rigidbody2D` owns. Unstable escape hatch
+(`docs/architecture/00-overview.md` §3).
+
+#### Properties
+
+##### body
+
+> `readonly` **body**: `RigidBody` \| `null`
+
+The Rapier body, or `null` before the first fixed step has built it.
 
 ***
 
@@ -38609,7 +50369,7 @@ The file-local uid to runtime object table (`docs/architecture/02-scene-graph.md
 
 ##### roots
 
-> `readonly` **roots**: readonly [`Entity`](#entity-9)[]
+> `readonly` **roots**: readonly [`Entity`](#entity-17)[]
 
 The entities that ended up parentless within the built subtree, in file order.
 
@@ -39367,7 +51127,7 @@ optional for the reason given on [ComponentStatics](#componentstatics).
 
 ###### Inherited from
 
-[`ComponentStatics`](#componentstatics).[`allowMultiple`](#allowmultiple-7)
+[`ComponentStatics`](#componentstatics).[`allowMultiple`](#allowmultiple-14)
 
 ##### executionOrder?
 
@@ -39394,7 +51154,7 @@ The serialized field declarations, set by `Component.define` / `Script.define`.
 
 ###### Inherited from
 
-[`ComponentStatics`](#componentstatics).[`schema`](#schema-7)
+[`ComponentStatics`](#componentstatics).[`schema`](#schema-12)
 
 ##### typeId?
 
@@ -39406,7 +51166,7 @@ derived from the class name, so minification and renames cannot change a file's 
 
 ###### Inherited from
 
-[`ComponentStatics`](#componentstatics).[`typeId`](#typeid-7)
+[`ComponentStatics`](#componentstatics).[`typeId`](#typeid-13)
 
 ##### updateWhenPaused?
 
@@ -39647,7 +51407,7 @@ The distance travelled before contact, in metres.
 
 ##### entity
 
-> `readonly` **entity**: [`Entity`](#entity-9) \| `null`
+> `readonly` **entity**: [`Entity`](#entity-17) \| `null`
 
 The entity the swept shape hit, or `null` when the bounds index cannot identify it.
 
@@ -39668,6 +51428,50 @@ The world-space contact normal on the hit body.
 > `readonly` **point**: [`Vec3Like`](#vec3like)
 
 The world-space contact point on the hit body.
+
+***
+
+### ShapeCastHit2D
+
+What a 2D shape sweep hit.
+
+#### Properties
+
+##### collider
+
+> `readonly` **collider**: [`Collider2D`](#abstract-collider2d) \| `null`
+
+The collider it hit.
+
+##### distance
+
+> `readonly` **distance**: `number`
+
+The distance travelled before contact, in metres.
+
+##### entity
+
+> `readonly` **entity**: [`Entity`](#entity-17)
+
+The entity the swept shape hit.
+
+##### fraction
+
+> `readonly` **fraction**: `number`
+
+How far along the sweep the contact occurs, in `[0, 1]`.
+
+##### normal
+
+> `readonly` **normal**: [`Vec2Like`](#vec2like)
+
+The world-space contact normal.
+
+##### point
+
+> `readonly` **point**: [`Vec2Like`](#vec2like)
+
+The world-space contact point on the hit collider.
 
 ***
 
@@ -40083,6 +51887,499 @@ Ring count; higher is smoother. Lite defaults to 32.
 
 ***
 
+### SpriteAnimationDefinition
+
+The parsed `.spriteanim.json` document.
+
+#### Properties
+
+##### atlas
+
+> `readonly` **atlas**: `string`
+
+The address of the `.atlas.json` the clips index into; empty uses the renderer's own atlas.
+
+##### clips
+
+> `readonly` **clips**: readonly [`SpriteClipDefinition`](#spriteclipdefinition)[]
+
+The clips, in declaration order; the first is the default when the component names none.
+
+##### format
+
+> `readonly` **format**: `"ignifx.spriteanimation"`
+
+Always `"ignifx.spriteanimation"`.
+
+##### formatVersion
+
+> `readonly` **formatVersion**: `number`
+
+Always `1` in this build.
+
+***
+
+### SpriteAnimationEvent
+
+A frame event: a name emitted on `SpriteAnimator.onEvent` when the clip reaches a frame.
+
+#### Properties
+
+##### frame
+
+> `readonly` **frame**: `number`
+
+The zero-based index **within the clip**, not within the atlas.
+
+##### name
+
+> `readonly` **name**: `string`
+
+The name emitted on `SpriteAnimator.onEvent`.
+
+***
+
+### SpriteAnimationInput
+
+What [defineSpriteAnimation](#definespriteanimation) accepts.
+
+#### Properties
+
+##### atlas?
+
+> `readonly` `optional` **atlas?**: `string`
+
+The address of the `.atlas.json` the clips index into.
+
+##### clips
+
+> `readonly` **clips**: readonly [`SpriteClipDefinition`](#spriteclipdefinition)[]
+
+The clips.
+
+##### format?
+
+> `readonly` `optional` **format?**: `string`
+
+Always `"ignifx.spriteanimation"` when present.
+
+##### formatVersion?
+
+> `readonly` `optional` **formatVersion?**: `number`
+
+The document version.
+
+***
+
+### SpriteAsset
+
+A sprite: one frame of one atlas, which is what `SpriteRenderer.sprite` points at.
+
+#### Remarks
+
+A bare `"2d/hero.atlas.json"` address resolves to frame `0`; the `#frame:` fragment picks another
+(`docs/architecture/11-2d-toolkit.md` §2.2). The asset service shares the underlying atlas
+between every fragment of the same address, so ten sprites off one atlas upload one texture.
+
+#### Properties
+
+##### atlas
+
+> `readonly` **atlas**: [`SpriteAtlasAsset`](#spriteatlasasset)
+
+The atlas the frame lives in.
+
+##### frame
+
+> `readonly` **frame**: `number`
+
+The frame index.
+
+##### name
+
+> `readonly` **name**: `string`
+
+The frame's name.
+
+***
+
+### SpriteAtlasAssetLiteHandles
+
+The Babylon Lite objects a [SpriteAtlasAsset](#spriteatlasasset) owns.
+
+#### Properties
+
+##### atlas
+
+> `readonly` **atlas**: `SpriteAtlas` \| `null`
+
+The Lite atlas, or `null` under a headless app, which uploads nothing.
+
+***
+
+### SpriteAtlasDefinition
+
+The parsed `.atlas.json` document.
+
+#### Example
+
+```ts
+const atlas = defineSpriteAtlas({
+  image: "2d/hero.png",
+  sampling: "nearest",
+  frames: [{ name: "idle_0", x: 0, y: 0, w: 32, h: 32, pivot: { x: 0.5, y: 1 } }],
+});
+```
+
+#### Properties
+
+##### format
+
+> `readonly` **format**: `"ignifx.spriteatlas"`
+
+Always `"ignifx.spriteatlas"`.
+
+##### formatVersion
+
+> `readonly` **formatVersion**: `number`
+
+Always `1` in this build.
+
+##### frames
+
+> `readonly` **frames**: readonly [`SpriteFrameDefinition`](#spriteframedefinition)[]
+
+The frames, in the order they are indexed.
+
+##### image
+
+> `readonly` **image**: `string`
+
+The address of the image the frames are cut from.
+
+##### premultipliedAlpha
+
+> `readonly` **premultipliedAlpha**: `boolean`
+
+Whether the image's RGB is already multiplied by its alpha. Defaults to `false`.
+
+##### sampling
+
+> `readonly` **sampling**: `"linear"` \| `"nearest"`
+
+The min/mag filter. `"nearest"` is what pixel art wants. Defaults to `"linear"`.
+
+***
+
+### SpriteAtlasInput
+
+What [defineSpriteAtlas](#definespriteatlas) accepts: the document with every defaulted field optional.
+
+#### Properties
+
+##### format?
+
+> `readonly` `optional` **format?**: `string`
+
+Always `"ignifx.spriteatlas"` when present.
+
+##### formatVersion?
+
+> `readonly` `optional` **formatVersion?**: `number`
+
+The document version.
+
+##### frames
+
+> `readonly` **frames**: readonly [`SpriteFrameDefinition`](#spriteframedefinition)[]
+
+The frames.
+
+##### image
+
+> `readonly` **image**: `string`
+
+The address of the image the frames are cut from.
+
+##### premultipliedAlpha?
+
+> `readonly` `optional` **premultipliedAlpha?**: `boolean`
+
+Whether the image is premultiplied. Defaults to `false`.
+
+##### sampling?
+
+> `readonly` `optional` **sampling?**: `"linear"` \| `"nearest"`
+
+The min/mag filter. Defaults to `"linear"`.
+
+***
+
+### SpriteClip
+
+One clip, resolved against an atlas.
+
+#### Properties
+
+##### durationSeconds
+
+> `readonly` **durationSeconds**: `number`
+
+How long one pass through the clip takes, in seconds.
+
+##### events
+
+> `readonly` **events**: readonly [`SpriteAnimationEvent`](#spriteanimationevent)[]
+
+Events fired as the clip passes a frame.
+
+##### fps
+
+> `readonly` **fps**: `number`
+
+Frames per second.
+
+##### frames
+
+> `readonly` **frames**: readonly `number`[]
+
+The atlas frame indices, in play order.
+
+##### loop
+
+> `readonly` **loop**: `boolean`
+
+Whether the clip restarts at its end.
+
+##### name
+
+> `readonly` **name**: `string`
+
+The clip's name.
+
+***
+
+### SpriteClipDefinition
+
+One clip: an ordered run of atlas frames with a rate and a loop flag.
+
+#### Properties
+
+##### events?
+
+> `readonly` `optional` **events?**: readonly [`SpriteAnimationEvent`](#spriteanimationevent)[]
+
+Events fired as the clip passes a frame.
+
+##### fps?
+
+> `readonly` `optional` **fps?**: `number`
+
+Frames per second. Defaults to `12`.
+
+##### frames?
+
+> `readonly` `optional` **frames?**: readonly `string`[]
+
+The atlas frame names, in play order. Empty when `from`/`to` name a range instead.
+
+##### from?
+
+> `readonly` `optional` **from?**: `string`
+
+The first frame of a contiguous atlas range, when `frames` is absent.
+
+##### loop?
+
+> `readonly` `optional` **loop?**: `boolean`
+
+Whether the clip restarts at its end. Defaults to `true`.
+
+##### name
+
+> `readonly` **name**: `string`
+
+The clip's name, unique within the document; what `SpriteAnimator.play` takes.
+
+##### to?
+
+> `readonly` `optional` **to?**: `string`
+
+The last frame of a contiguous atlas range, inclusive.
+
+***
+
+### SpriteFrameDefinition
+
+One frame rectangle, in image pixels with a top-left origin.
+
+#### Properties
+
+##### h
+
+> `readonly` **h**: `number`
+
+The height, in image pixels.
+
+##### name
+
+> `readonly` **name**: `string`
+
+The frame's name, unique within the document; what `#frame:` addresses.
+
+##### pivot?
+
+> `readonly` `optional` **pivot?**: [`Vec2Json`](#vec2json)
+
+The pivot in `[0, 1]` of the frame — `[0, 0]` top-left, `[0.5, 0.5]` centre, `[1, 1]`
+bottom-right. Defaults to the centre. Written either as `[x, y]` or as `{ x, y }`.
+
+##### sourceSize?
+
+> `readonly` `optional` **sourceSize?**: [`Vec2Json`](#vec2json)
+
+The untrimmed source size, when the packer trimmed transparent margins. Defaults to `w`/`h`.
+
+##### w
+
+> `readonly` **w**: `number`
+
+The width, in image pixels.
+
+##### x
+
+> `readonly` **x**: `number`
+
+The left edge, in image pixels.
+
+##### y
+
+> `readonly` **y**: `number`
+
+The top edge, in image pixels.
+
+***
+
+### SpriteFrameInfo
+
+One frame of a loaded atlas, as game code sees it.
+
+#### Properties
+
+##### heightPx
+
+> `readonly` **heightPx**: `number`
+
+Its drawn height, in image pixels.
+
+##### index
+
+> `readonly` **index**: `number`
+
+Its index in the atlas, which is what Lite addresses frames by.
+
+##### name
+
+> `readonly` **name**: `string`
+
+The frame's name.
+
+##### pivot
+
+> `readonly` **pivot**: [`Vec2Like`](#vec2like)
+
+Its pivot in `[0, 1]` of the frame, `[0, 0]` top-left.
+
+##### widthPx
+
+> `readonly` **widthPx**: `number`
+
+Its drawn width, in image pixels.
+
+***
+
+### SpriteLayerEntry
+
+One Lite layer and everything the registry tracks alongside it.
+
+#### Properties
+
+##### count
+
+> `readonly` **count**: `number`
+
+How many sprites the layer currently holds.
+
+##### key
+
+> `readonly` **key**: `string`
+
+The composite key, built by [spriteLayerKey](#spritelayerkey).
+
+##### layer
+
+> `readonly` **layer**: `Sprite2DLayer`
+
+The Lite layer.
+
+##### screenSpace
+
+> `readonly` **screenSpace**: `boolean`
+
+Whether the layer keeps the identity view instead of following the `Camera2D`.
+
+##### sortingLayer
+
+> `readonly` **sortingLayer**: `string`
+
+The sorting layer's name.
+
+##### ySort
+
+> `readonly` **ySort**: `boolean`
+
+Whether the layer is Y-sorted.
+
+***
+
+### SpriteLayerKey
+
+The layer key a sprite belongs to.
+
+#### Remarks
+
+Two sprites share a Lite layer exactly when all four parts match. The atlas is part of the key
+because a `Sprite2DLayer` is bound to one atlas for its whole life (`index.d.ts` 11885,
+`readonly atlas`), and the blend mode is part of it for the same reason (`readonly blendMode`).
+
+#### Properties
+
+##### atlas
+
+> `readonly` **atlas**: [`SpriteAtlasAsset`](#spriteatlasasset)
+
+The atlas every sprite in the layer draws from.
+
+##### blend
+
+> `readonly` **blend**: `"opaque"` \| `"premultiplied"` \| `"alpha"` \| `"additive"` \| `"multiply"`
+
+The blend mode.
+
+##### screenSpace
+
+> `readonly` **screenSpace**: `boolean`
+
+Whether the layer keeps the identity view instead of following the `Camera2D`.
+
+##### sortingLayer
+
+> `readonly` **sortingLayer**: `string`
+
+The sorting layer's name.
+
+***
+
 ### StandardMaterialDefinition
 
 The properties a `"standard"` material declares — the cheap non-PBR path
@@ -40222,7 +52519,7 @@ Called once when the world the system belongs to has been created.
 
 ###### world
 
-[`World`](#world-26)
+[`World`](#world-45)
 
 The new world.
 
@@ -40240,7 +52537,7 @@ Called once when the world the system belongs to is being disposed.
 
 ###### world
 
-[`World`](#world-26)
+[`World`](#world-45)
 
 The world going away.
 
@@ -40289,13 +52586,13 @@ The phase currently running.
 
 ##### time
 
-> `readonly` **time**: [`Time`](#time-3)
+> `readonly` **time**: [`Time`](#time-4)
 
 The app clock.
 
 ##### world
 
-> `readonly` **world**: [`World`](#world-26)
+> `readonly` **world**: [`World`](#world-45)
 
 The world the system operates on.
 
@@ -40381,6 +52678,725 @@ Premultiply alpha at decode time; for atlases drawn with a premultiplied blend p
 > `readonly` **srgb**: `boolean`
 
 Decode to linear on sample (`rgba8unorm-srgb`). Base colour and emissive want it; data maps must not.
+
+***
+
+### TexturePackerImportOptions
+
+What [importTexturePackerAtlas](#importtexturepackeratlas) accepts alongside the document.
+
+#### Properties
+
+##### image?
+
+> `readonly` `optional` **image?**: `string`
+
+The image address to write into the atlas. Defaults to the document's `meta.image`.
+
+##### keepExtensions?
+
+> `readonly` `optional` **keepExtensions?**: `boolean`
+
+Whether to keep the `.png` on frame names. Defaults to `false`, which strips it.
+
+##### premultipliedAlpha?
+
+> `readonly` `optional` **premultipliedAlpha?**: `boolean`
+
+Whether the image's RGB is already multiplied by its alpha. Defaults to `false`.
+
+##### sampling?
+
+> `readonly` `optional` **sampling?**: `"linear"` \| `"nearest"`
+
+The min/mag filter. Defaults to `"linear"`.
+
+***
+
+### TileAnimationFrame
+
+One frame of an animated tile.
+
+#### Properties
+
+##### durationMs
+
+> `readonly` **durationMs**: `number`
+
+How long the step lasts, in milliseconds.
+
+##### frame
+
+> `readonly` **frame**: `string`
+
+The atlas frame name drawn during this step.
+
+***
+
+### TileChange
+
+One tile change, as [Tilemap.onTileChanged](#ontilechanged) reports it.
+
+#### Properties
+
+##### current
+
+> `readonly` **current**: `number`
+
+The tile id that is there now.
+
+##### layer
+
+> `readonly` **layer**: `number`
+
+The layer's index in the document.
+
+##### previous
+
+> `readonly` **previous**: `number`
+
+The tile id that was there.
+
+##### x
+
+> `readonly` **x**: `number`
+
+The cell's column, with `0` at the left.
+
+##### y
+
+> `readonly` **y**: `number`
+
+The cell's row, with `0` at the **bottom**.
+
+***
+
+### TileCollisionInfo
+
+Everything a physics backend needs to know about one tile of a tileset.
+
+#### Properties
+
+##### oneWay
+
+> `readonly` **oneWay**: `boolean`
+
+Whether the tile is a one-way platform (solid only when crossed from above).
+
+##### properties
+
+> `readonly` **properties**: `Readonly`\<`Record`\<`string`, `string` \| `number` \| `boolean`\>\>
+
+The tile's custom properties, carried through from the tileset or the importer.
+
+##### shape
+
+> `readonly` **shape**: [`TileCollisionShape`](#tilecollisionshape)
+
+The tile's collision footprint in cell-local metres.
+
+***
+
+### TileDefinition
+
+One tile of a tileset: what it draws, what it collides with, and what it carries.
+
+#### Properties
+
+##### animation?
+
+> `readonly` `optional` **animation?**: readonly [`TileAnimationFrame`](#tileanimationframe)[]
+
+The animation frames, when the tile animates. A single frame is treated as a static tile.
+
+##### collider?
+
+> `readonly` `optional` **collider?**: [`TileColliderDefinition`](#tilecolliderdefinition)
+
+The collision footprint, in cell-normalised top-left-origin units. Absent means no collider.
+
+##### frame
+
+> `readonly` **frame**: `string`
+
+The atlas frame the tile draws, by name.
+
+##### id
+
+> `readonly` **id**: `number`
+
+The tile's index **within its tileset**, zero-based; the global id is `tileset.firstId + id`.
+
+##### properties?
+
+> `readonly` `optional` **properties?**: `Readonly`\<`Record`\<`string`, `string` \| `number` \| `boolean`\>\>
+
+The tile's custom properties, carried through from the editor.
+
+***
+
+### TiledImportOptions
+
+How [importTiledMap](#importtiledmap) maps Tiled's conventions onto ignifx's.
+
+#### Properties
+
+##### atlasFor?
+
+> `readonly` `optional` **atlasFor?**: (`imageSource`) => `string`
+
+Maps a Tiled tileset's `image` path onto the address of the ignifx `.atlas.json` that was
+generated from it. Defaults to swapping the file extension for `.atlas.json`.
+
+###### Parameters
+
+###### imageSource
+
+`string`
+
+###### Returns
+
+`string`
+
+##### pixelsPerUnit?
+
+> `readonly` `optional` **pixelsPerUnit?**: `number`
+
+The pixels one world metre spans. Defaults to `100`, matching `twoD.pixelsPerUnit`.
+
+##### sortingLayer?
+
+> `readonly` `optional` **sortingLayer?**: `string`
+
+The sorting layer every tile layer lands in unless it says otherwise. Defaults to `"Default"`.
+
+***
+
+### TilemapCollisionChunk
+
+The merged collision geometry of one chunk of a tilemap, in **world-space metres relative to the
+tilemap entity's origin**.
+
+#### Remarks
+
+Adjacent solid tiles are merged into as few polygons as possible before they reach this shape, so
+a solid 3x2 block of tiles arrives as a single six-vertex rectangle rather than six boxes.
+
+#### Properties
+
+##### chunkX
+
+> `readonly` **chunkX**: `number`
+
+The chunk's column index, in chunks.
+
+##### chunkY
+
+> `readonly` **chunkY**: `number`
+
+The chunk's row index, in chunks.
+
+##### oneWayEdges
+
+> `readonly` **oneWayEdges**: readonly readonly \[[`Vec2Like`](#vec2like), [`Vec2Like`](#vec2like)\][]
+
+The one-way platform edges, each a `[from, to]` pair with solid side to the left of `from → to`.
+
+##### polygons
+
+> `readonly` **polygons**: readonly readonly [`Vec2Like`](#vec2like)[][]
+
+The merged solid outlines, each wound counter-clockwise.
+
+***
+
+### TilemapCollisionData
+
+The whole collision surface of a `Tilemap`, chunked so a physics backend can rebuild only the
+chunks that changed.
+
+#### Remarks
+
+`version` increments whenever any chunk changes; a backend that caches colliders compares it to
+the version it last consumed and rebuilds when they differ. `Tilemap.onCollisionChanged` fires at
+the same moment.
+
+#### Properties
+
+##### cellSize
+
+> `readonly` **cellSize**: `number`
+
+The edge length of one cell, in metres.
+
+##### chunks
+
+> `readonly` **chunks**: readonly [`TilemapCollisionChunk`](#tilemapcollisionchunk)[]
+
+The chunks that carry at least one collider; empty chunks are omitted.
+
+##### chunkSize
+
+> `readonly` **chunkSize**: `number`
+
+The edge length of one chunk, in cells.
+
+##### version
+
+> `readonly` **version**: `number`
+
+Increments on every change to the merged geometry.
+
+***
+
+### TilemapDefinition
+
+The parsed `.tilemap.json` document.
+
+#### Example
+
+```ts
+const map = defineTilemap({
+  tileWidth: 32,
+  width: 2,
+  height: 1,
+  tilesets: [{ name: "hero", atlas: "2d/hero.atlas.json", firstId: 1, tiles: [{ id: 0, frame: "hero_0" }] }],
+  layers: [{ name: "Ground", tiles: [1, 0] }],
+});
+map.cellSize; // 0.32 — 32 px at the default 100 pixels per unit
+```
+
+#### Properties
+
+##### cellSize
+
+> `readonly` **cellSize**: `number`
+
+The world size of one cell, in metres — `tileWidth / pixelsPerUnit`.
+
+###### Remarks
+
+Collision uses this single number on both axes. A map whose tiles are not square still gets a
+square collision cell; that is a deliberate MVP limitation and it is why the importers warn
+nothing and simply record both pixel sizes above.
+
+##### format
+
+> `readonly` **format**: `"ignifx.tilemap"`
+
+Always `"ignifx.tilemap"`.
+
+##### formatVersion
+
+> `readonly` **formatVersion**: `number`
+
+Always `1` in this build.
+
+##### height
+
+> `readonly` **height**: `number`
+
+The map's height, in cells.
+
+##### layers
+
+> `readonly` **layers**: readonly [`TilemapLayerDefinition`](#tilemaplayerdefinition)[]
+
+The tile layers, back to front: index `0` draws behind index `1`.
+
+##### objects
+
+> `readonly` **objects**: readonly [`TilemapObjectDefinition`](#tilemapobjectdefinition)[]
+
+The objects gathered from every object layer, in document order.
+
+##### properties
+
+> `readonly` **properties**: `Readonly`\<`Record`\<`string`, `string` \| `number` \| `boolean`\>\>
+
+The map's custom properties.
+
+##### tileHeight
+
+> `readonly` **tileHeight**: `number`
+
+The height of one tile, in **pixels**.
+
+##### tilesets
+
+> `readonly` **tilesets**: readonly [`TilesetDefinition`](#tilesetdefinition)[]
+
+The tilesets, sorted by ascending [TilesetDefinition.firstId](#firstid).
+
+##### tileWidth
+
+> `readonly` **tileWidth**: `number`
+
+The width of one tile, in **pixels**.
+
+##### width
+
+> `readonly` **width**: `number`
+
+The map's width, in cells.
+
+***
+
+### TilemapInput
+
+What [defineTilemap](#definetilemap) accepts: the document with every defaulted field optional.
+
+#### Properties
+
+##### cellSize?
+
+> `readonly` `optional` **cellSize?**: `number`
+
+The metre size of one cell. Defaults to `tileWidth / 100`, the default pixels-per-unit.
+
+##### format?
+
+> `readonly` `optional` **format?**: `string`
+
+Always `"ignifx.tilemap"` when present.
+
+##### formatVersion?
+
+> `readonly` `optional` **formatVersion?**: `number`
+
+The document version.
+
+##### height
+
+> `readonly` **height**: `number`
+
+The map's height, in cells.
+
+##### layers?
+
+> `readonly` `optional` **layers?**: readonly [`TilemapLayerInput`](#tilemaplayerinput)[]
+
+The tile layers, back to front. Defaults to none.
+
+##### objects?
+
+> `readonly` `optional` **objects?**: readonly [`TilemapObjectDefinition`](#tilemapobjectdefinition)[]
+
+The objects. Defaults to none.
+
+##### properties?
+
+> `readonly` `optional` **properties?**: `Readonly`\<`Record`\<`string`, `string` \| `number` \| `boolean`\>\>
+
+The map's custom properties. Defaults to none.
+
+##### tileHeight?
+
+> `readonly` `optional` **tileHeight?**: `number`
+
+The height of one tile, in pixels. Defaults to `tileWidth`.
+
+##### tilesets?
+
+> `readonly` `optional` **tilesets?**: readonly [`TilesetDefinition`](#tilesetdefinition)[]
+
+The tilesets. Defaults to none.
+
+##### tileWidth
+
+> `readonly` **tileWidth**: `number`
+
+The width of one tile, in pixels.
+
+##### width
+
+> `readonly` **width**: `number`
+
+The map's width, in cells.
+
+***
+
+### TilemapLayerDefinition
+
+One layer of tiles.
+
+#### Remarks
+
+`tiles` is **always** the dense, decoded array in the parsed form: `width * height` global tile
+ids in row-major order with the **top** row first, which is how every editor stores a grid.
+`0` ([EMPTY\_TILE\_ID](#empty_tile_id)) means the cell is empty. Runtime code that thinks in +Y-up cell
+coordinates reads index `(height - 1 - cellY) * width + cellX`.
+
+#### Properties
+
+##### collision
+
+> `readonly` **collision**: `boolean`
+
+Whether the layer contributes collision geometry.
+
+##### height
+
+> `readonly` **height**: `number`
+
+The layer's height, in cells.
+
+##### name
+
+> `readonly` **name**: `string`
+
+The layer's name, unique within the document.
+
+##### opacity
+
+> `readonly` **opacity**: `number`
+
+The layer's opacity in `[0, 1]`.
+
+##### orderInLayer
+
+> `readonly` **orderInLayer**: `number`
+
+The order within the sorting layer; higher draws in front.
+
+##### parallax
+
+> `readonly` **parallax**: [`Vec2Like`](#vec2like)
+
+The parallax multiplier; `{ x: 1, y: 1 }` moves with the camera.
+
+##### sortingLayer
+
+> `readonly` **sortingLayer**: `string`
+
+The sorting layer the tiles draw in (`docs/architecture/11-2d-toolkit.md` §1).
+
+##### tiles
+
+> `readonly` **tiles**: readonly `number`[]
+
+`width * height` global tile ids, row-major, top row first.
+
+##### width
+
+> `readonly` **width**: `number`
+
+The layer's width, in cells.
+
+***
+
+### TilemapLayerInput
+
+What [defineTilemap](#definetilemap) accepts for one layer: every defaulted field optional, and `tiles`
+either dense or run-length encoded.
+
+#### Properties
+
+##### collision?
+
+> `readonly` `optional` **collision?**: `boolean`
+
+Whether the layer collides. Defaults to `false`.
+
+##### height?
+
+> `readonly` `optional` **height?**: `number`
+
+The layer's height in cells. Defaults to the map's height.
+
+##### name
+
+> `readonly` **name**: `string`
+
+The layer's name, unique within the document.
+
+##### opacity?
+
+> `readonly` `optional` **opacity?**: `number`
+
+The opacity in `[0, 1]`. Defaults to `1`.
+
+##### orderInLayer?
+
+> `readonly` `optional` **orderInLayer?**: `number`
+
+The order within the sorting layer. Defaults to `0`.
+
+##### parallax?
+
+> `readonly` `optional` **parallax?**: [`Vec2Like`](#vec2like)
+
+The parallax multiplier. Defaults to `{ x: 1, y: 1 }`.
+
+##### sortingLayer?
+
+> `readonly` `optional` **sortingLayer?**: `string`
+
+The sorting layer. Defaults to `"Default"`.
+
+##### tiles
+
+> `readonly` **tiles**: readonly `number`[] \| [`TileRleData`](#tilerledata)
+
+The tile ids, dense (row-major, top row first) or run-length encoded.
+
+##### width?
+
+> `readonly` `optional` **width?**: `number`
+
+The layer's width in cells. Defaults to the map's width.
+
+***
+
+### TilemapObjectDefinition
+
+One object placed on the map, to be turned into an entity by a registered `TileObjectFactory`.
+
+#### Remarks
+
+`x`, `y`, `width` and `height` are **world metres with +Y up**, and `x`/`y` name the object's
+**bottom-left** corner. Importers do the conversion out of the editor's top-left pixel space, so
+nothing downstream has to know what editor the map came from.
+
+#### Properties
+
+##### height
+
+> `readonly` **height**: `number`
+
+The height, in world metres.
+
+##### name
+
+> `readonly` **name**: `string`
+
+The object's name, as authored; not required to be unique.
+
+##### properties
+
+> `readonly` **properties**: `Readonly`\<`Record`\<`string`, `string` \| `number` \| `boolean`\>\>
+
+The object's custom properties.
+
+##### type
+
+> `readonly` **type**: `string`
+
+The object's type — what `app.twoD.registerTileObjectFactory` keys on.
+
+##### width
+
+> `readonly` **width**: `number`
+
+The width, in world metres.
+
+##### x
+
+> `readonly` **x**: `number`
+
+The left edge, in world metres.
+
+##### y
+
+> `readonly` **y**: `number`
+
+The bottom edge, in world metres, +Y up.
+
+***
+
+### TileObjectContext
+
+What a [TileObjectFactory](#tileobjectfactory) is handed.
+
+#### Properties
+
+##### name
+
+> `readonly` **name**: `string`
+
+The object's name, as the map wrote it.
+
+##### position
+
+> `readonly` **position**: [`Vec2Like`](#vec2like)
+
+The object's bottom-left corner, in world metres relative to the tilemap entity.
+
+##### properties
+
+> `readonly` **properties**: `Readonly`\<`Record`\<`string`, `string` \| `number` \| `boolean`\>\>
+
+The object's custom properties.
+
+##### size
+
+> `readonly` **size**: [`Vec2Like`](#vec2like)
+
+The object's size, in world metres.
+
+##### tilemap
+
+> `readonly` **tilemap**: [`Entity`](#entity-17)
+
+The tilemap entity the object came from, so a factory can parent to it.
+
+##### type
+
+> `readonly` **type**: `string`
+
+The object's type, which selected this factory.
+
+##### world
+
+> `readonly` **world**: [`World`](#world-45)
+
+The world to create the entity in.
+
+***
+
+### TileRleData
+
+A run-length-encoded tile array, as a `.tilemap.json` may store it to keep sparse maps small.
+
+#### Properties
+
+##### rle
+
+> `readonly` **rle**: readonly `number`[]
+
+Flattened `[count, value, count, value, …]` pairs; see [decodeTileRle](#decodetilerle).
+
+***
+
+### TilesetDefinition
+
+A block of tiles cut from one atlas, occupying a contiguous run of global tile ids.
+
+#### Properties
+
+##### atlas
+
+> `readonly` **atlas**: `string`
+
+The address of the `.atlas.json` the frames come from; empty for a collision-only tileset.
+
+##### firstId
+
+> `readonly` **firstId**: `number`
+
+The global id of this tileset's tile `0`. Always at least `1`, because `0` means empty.
+
+##### name
+
+> `readonly` **name**: `string`
+
+The tileset's name, unique within the document; also the frame-name prefix.
+
+##### tiles
+
+> `readonly` **tiles**: readonly [`TileDefinition`](#tiledefinition)[]
+
+The tiles, indexed by their local [TileDefinition.id](#id-4).
 
 ***
 
@@ -40555,7 +53571,7 @@ class Pickup extends Script implements ScriptCallbacks {
 
 ##### other
 
-> `readonly` **other**: [`Entity`](#entity-9) \| `null`
+> `readonly` **other**: [`Entity`](#entity-17) \| `null`
 
 The entity that entered or left, or `null` when Havok no longer tracks its body.
 
@@ -40567,9 +53583,189 @@ The other entity's first collider, or `null`. Lite reports no shape identity (§
 
 ##### self
 
-> `readonly` **self**: [`Entity`](#entity-9)
+> `readonly` **self**: [`Entity`](#entity-17)
 
 The entity whose script is being called.
+
+***
+
+### TriggerEvent2D
+
+What a script's `onTriggerEnter`/`onTriggerExit` is handed in a 2D world.
+
+#### Example
+
+```ts
+class Coin extends Script implements ScriptCallbacks {
+  static typeId = "mygame/Coin";
+  onTriggerEnter(trigger: TriggerEvent2D): void {
+    if (trigger.other?.tags.has("player") === true) {
+      this.entity.destroy();
+    }
+  }
+}
+```
+
+#### Properties
+
+##### other
+
+> `readonly` **other**: [`Entity`](#entity-17) \| `null`
+
+The entity that entered or left, or `null` when its body is already gone.
+
+##### otherCollider
+
+> `readonly` **otherCollider**: [`Collider2D`](#abstract-collider2d) \| `null`
+
+The exact collider on the other entity — Rapier reports shape identity, unlike Havok.
+
+##### self
+
+> `readonly` **self**: [`Entity`](#entity-17)
+
+The entity whose script is being called.
+
+##### selfCollider
+
+> `readonly` **selfCollider**: [`Collider2D`](#abstract-collider2d) \| `null`
+
+The collider on this entity that took part.
+
+***
+
+### TwoDErrorOptions
+
+Options accepted by [twoDError](#twoderror): the same subset of `IgnifxErrorOptions` this package uses.
+
+#### Properties
+
+##### cause?
+
+> `readonly` `optional` **cause?**: `unknown`
+
+The failure being wrapped, when there is one.
+
+##### context?
+
+> `readonly` `optional` **context?**: `Readonly`\<`Record`\<`string`, `string` \| `number` \| `boolean` \| `null`\>\>
+
+Identifiers that locate the failure.
+
+##### hint?
+
+> `readonly` `optional` **hint?**: `string`
+
+One sentence telling the developer what to do about it.
+
+***
+
+### TwoDLiteHandles
+
+The Babylon Lite objects `app.twoD` owns.
+
+#### Properties
+
+##### renderer
+
+> `readonly` **renderer**: `SpriteRenderer` \| `null`
+
+The sprite rendering context, or `null` under a headless app or before the first frame.
+
+***
+
+### TwoDOptions
+
+What `twoD()` accepts. Every field overrides the matching `twoD` settings section value.
+
+#### Properties
+
+##### mode?
+
+> `readonly` `optional` **mode?**: `"sprite"` \| `"mixed"`
+
+Whether sprites are the whole frame (`"sprite"`) or composite over the 3D scene (`"mixed"`).
+
+##### pixelsPerUnit?
+
+> `readonly` `optional` **pixelsPerUnit?**: `number`
+
+How many pixels one world metre spans.
+
+##### ySort?
+
+> `readonly` `optional` **ySort?**: `Readonly`\<`Record`\<`string`, `boolean`\>\>
+
+Which sorting layers draw back-to-front by world Y.
+
+***
+
+### TwoDPick
+
+What `app.twoD.pickAt` returns.
+
+#### Properties
+
+##### component
+
+> `readonly` **component**: [`SpriteRenderer`](#spriterenderer)
+
+The sprite component that was hit.
+
+##### entity
+
+> `readonly` **entity**: [`Entity`](#entity-17)
+
+The entity carrying the sprite that was hit.
+
+##### u
+
+> `readonly` **u**: `number`
+
+Where inside the sprite's quad the hit landed, in `[0, 1]`.
+
+##### v
+
+> `readonly` **v**: `number`
+
+Where inside the sprite's quad the hit landed, in `[0, 1]`.
+
+***
+
+### TwoDSettings
+
+The resolved `twoD` settings section.
+
+#### Example
+
+```ts
+// ignifx.config.ts
+export default defineConfig({
+  sortingLayers: { sortingLayers: ["Background", "Default", "Foreground"] },
+  twoD: { mode: "sprite", pixelsPerUnit: 16, ySort: { Default: true } },
+});
+```
+
+#### Properties
+
+##### mode
+
+> `readonly` **mode**: `"sprite"` \| `"mixed"`
+
+Whether sprites are the whole frame (`"sprite"`) or composite over the 3D scene (`"mixed"`).
+
+##### pixelsPerUnit
+
+> `readonly` **pixelsPerUnit**: `number`
+
+How many pixels one world metre spans. Defaults to `100`.
+
+##### ySort
+
+> `readonly` **ySort**: `Readonly`\<`Record`\<`string`, `boolean`\>\>
+
+Which sorting layers draw back-to-front by world Y rather than by `orderInLayer`. A layer the
+record does not mention does not Y-sort.
 
 ***
 
@@ -40939,6 +54135,26 @@ Samples per second per channel.
 
 ***
 
+### WorldBox
+
+A caller-owned world-space box, so reading the camera's bounds allocates nothing.
+
+#### Properties
+
+##### max
+
+> `readonly` **max**: [`MutableVec2`](#mutablevec2)
+
+The upper corner, in world metres.
+
+##### min
+
+> `readonly` **min**: [`MutableVec2`](#mutablevec2)
+
+The lower corner, in world metres.
+
+***
+
 ### WorldLiteHandles
 
 Babylon Lite objects a world owns. Unstable escape hatch
@@ -41044,6 +54260,14 @@ The union of [BODY\_TYPES](#body_types).
 
 ***
 
+### BodyType2D
+
+> **BodyType2D** = *typeof* [`BODY_TYPES_2D`](#body_types_2d)\[`number`\]
+
+The union of [BODY\_TYPES\_2D](#body_types_2d).
+
+***
+
 ### CameraProjection
 
 > **CameraProjection** = *typeof* [`PROJECTIONS`](#projections)\[`number`\]
@@ -41060,11 +54284,27 @@ The union of the canvas alpha modes.
 
 ***
 
+### Capsule2DDirection
+
+> **Capsule2DDirection** = *typeof* [`CAPSULE_2D_DIRECTIONS`](#capsule_2d_directions)\[`number`\]
+
+The union of [CAPSULE\_2D\_DIRECTIONS](#capsule_2d_directions).
+
+***
+
 ### CapsuleDirection
 
 > **CapsuleDirection** = *typeof* [`CAPSULE_DIRECTIONS`](#capsule_directions)\[`number`\]
 
 The union of [CAPSULE\_DIRECTIONS](#capsule_directions).
+
+***
+
+### CharacterShape2D
+
+> **CharacterShape2D** = *typeof* [`CHARACTER_SHAPES_2D`](#character_shapes_2d)\[`number`\]
+
+The union of [CHARACTER\_SHAPES\_2D](#character_shapes_2d).
 
 ***
 
@@ -41076,11 +54316,27 @@ The union of [COLLISION\_EVENT\_MODES](#collision_event_modes).
 
 ***
 
+### CollisionEventMode2D
+
+> **CollisionEventMode2D** = *typeof* [`COLLISION_EVENT_MODES_2D`](#collision_event_modes_2d)\[`number`\]
+
+The union of [COLLISION\_EVENT\_MODES\_2D](#collision_event_modes_2d).
+
+***
+
 ### CollisionIdentityMode
 
 > **CollisionIdentityMode** = *typeof* [`COLLISION_IDENTITY_MODES`](#collision_identity_modes)\[`number`\]
 
 The union of [COLLISION\_IDENTITY\_MODES](#collision_identity_modes).
+
+***
+
+### CombineRule
+
+> **CombineRule** = *typeof* [`COMBINE_RULES`](#combine_rules)\[`number`\]
+
+The union of [COMBINE\_RULES](#combine_rules).
 
 ***
 
@@ -41111,7 +54367,7 @@ able to write a plain `static typeId` without the `override` keyword.
 
 ##### S
 
-`S` *extends* [`Schema`](#schema-21)
+`S` *extends* [`Schema`](#schema-30)
 
 The schema the class was defined from.
 
@@ -41368,7 +54624,7 @@ what gives `this.speed` its `number` type inside a component declared with
 
 ##### S
 
-`S` *extends* [`Schema`](#schema-21)
+`S` *extends* [`Schema`](#schema-30)
 
 The schema to project.
 
@@ -41440,6 +54696,14 @@ The raw event kinds `app.input.events` publishes.
 > **InterpolationMode** = *typeof* [`INTERPOLATION_MODES`](#interpolation_modes)\[`number`\]
 
 The union of [INTERPOLATION\_MODES](#interpolation_modes).
+
+***
+
+### InterpolationMode2D
+
+> **InterpolationMode2D** = *typeof* [`INTERPOLATION_MODES_2D`](#interpolation_modes_2d)\[`number`\]
+
+The union of [INTERPOLATION\_MODES\_2D](#interpolation_modes_2d).
 
 ***
 
@@ -41530,6 +54794,18 @@ Unstable; excluded from the stability guarantees of `CONSTITUTION.md` Article IV
 
 ***
 
+### LiteAtlasTexture
+
+> **LiteAtlasTexture** = `Texture2D`
+
+The GPU texture behind an atlas (`index.d.ts` 12907).
+
+#### Remarks
+
+Unstable; excluded from the stability guarantees of `CONSTITUTION.md` Article IV.
+
+***
+
 ### LiteAudioBus
 
 > **LiteAudioBus** = `AudioBus$1`
@@ -41544,6 +54820,19 @@ Babylon Lite's generic mixer bus (`index.d.ts` 910). Unstable escape hatch.
 
 Babylon Lite's audio engine (`index.d.ts` 926). Unstable escape hatch: excluded from the
 stability guarantees of `CONSTITUTION.md` Article IV.
+
+***
+
+### LiteBounds2D
+
+> **LiteBounds2D** = `Bounds2D`
+
+Mutable axis-aligned 2D bounds, the shape `getSprite2DVisibleBoundsToRef` writes
+(`index.d.ts` 1352).
+
+#### Remarks
+
+Unstable; excluded from the stability guarantees of `CONSTITUTION.md` Article IV.
 
 ***
 
@@ -41732,6 +55021,124 @@ it, which is how a spatial `AudioSource` follows its entity.
 
 ***
 
+### LiteSprite2DHandle
+
+> **LiteSprite2DHandle** = `Sprite2DHandle`
+
+A stable identity for one sprite that survives Lite's swap-remove reindexing
+(`index.d.ts` 11880).
+
+#### Remarks
+
+Unstable; excluded from the stability guarantees of `CONSTITUTION.md` Article IV.
+
+***
+
+### LiteSprite2DLayer
+
+> **LiteSprite2DLayer** = `Sprite2DLayer`
+
+One ordered batch of sprites drawn from a single atlas with a single blend mode
+(`index.d.ts` 11885).
+
+#### Remarks
+
+Unstable; excluded from the stability guarantees of `CONSTITUTION.md` Article IV.
+
+***
+
+### LiteSprite2DView
+
+> **LiteSprite2DView** = `Sprite2DView`
+
+A layer's 2D camera: pan, zoom, and rotation in Lite's pixel space (`index.d.ts` 11988).
+
+#### Remarks
+
+`positionPx` is the layer-pixel point that lands at the **top-left** of the viewport, not the
+centre — verified against `sprite2DWorldToScreenToRef` in `lib/sprite/sprite-2d-view.js`.
+
+Unstable; excluded from the stability guarantees of `CONSTITUTION.md` Article IV.
+
+***
+
+### LiteSpriteAtlas
+
+> **LiteSpriteAtlas** = `SpriteAtlas`
+
+A loaded atlas: one texture plus the frame rectangles inside it (`index.d.ts` 12041).
+
+#### Remarks
+
+Unstable; excluded from the stability guarantees of `CONSTITUTION.md` Article IV.
+
+***
+
+### LiteSpriteBlendMode
+
+> **LiteSpriteBlendMode** = `SpriteBlendMode`
+
+An opaque blend-mode descriptor (`index.d.ts` 12122).
+
+#### Remarks
+
+Unstable; excluded from the stability guarantees of `CONSTITUTION.md` Article IV.
+
+***
+
+### LiteSpriteFrame
+
+> **LiteSpriteFrame** = `SpriteFrame`
+
+One frame of an atlas: UVs in `[0, 1]`, source size in pixels, and a pivot (`index.d.ts` 12156).
+
+#### Remarks
+
+The `pivot` field is **stored but not applied** by the `Sprite2DLayer` pipeline; only Lite's
+billboard family reads it. `@ignifx/2d` applies it itself — see `pivotedPositionToRef`.
+
+Unstable; excluded from the stability guarantees of `CONSTITUTION.md` Article IV.
+
+***
+
+### LiteSpritePickInfo
+
+> **LiteSpritePickInfo** = `SpritePickInfo`
+
+A `pickSprite2D` hit: the layer, the dense sprite index, and the within-quad UV
+(`index.d.ts` 12179).
+
+#### Remarks
+
+Unstable; excluded from the stability guarantees of `CONSTITUTION.md` Article IV.
+
+***
+
+### LiteSpriteRenderer
+
+> **LiteSpriteRenderer** = `SpriteRenderer$1`
+
+Lite's sprite rendering context — the second rendering context `@ignifx/2d` registers on the
+app's surface, after the render scene, so 2D composites on top (`index.d.ts` 12215).
+
+#### Remarks
+
+Unstable; excluded from the stability guarantees of `CONSTITUTION.md` Article IV.
+
+***
+
+### LiteSpriteSampling
+
+> **LiteSpriteSampling** = `SpriteSampling`
+
+A sprite atlas's min/mag filter (`index.d.ts` 12229).
+
+#### Remarks
+
+Unstable; excluded from the stability guarantees of `CONSTITUTION.md` Article IV.
+
+***
+
 ### LiteStandardMaterial
 
 > **LiteStandardMaterial** = `StandardMaterialProps`
@@ -41866,7 +55273,7 @@ mean "take the schema default" here, so both are accepted (`applyInit`, `encodeP
 
 ##### S
 
-`S` *extends* [`Schema`](#schema-21)
+`S` *extends* [`Schema`](#schema-30)
 
 The schema to project.
 
@@ -41885,6 +55292,14 @@ The union of the frame phases.
 > **PhaseIndex** = `0` \| `1` \| `2` \| `3` \| `4` \| `5`
 
 A slot in [FrameSample.cpuMs](#cpums). The kernel's `Phase` ordinals index this array.
+
+***
+
+### Physics2DErrorCode
+
+> **Physics2DErrorCode** = *typeof* [`Physics2DErrorCode`](#physics2derrorcode)\[keyof *typeof* [`Physics2DErrorCode`](#physics2derrorcode)\]
+
+The union of the codes the `Physics2DErrorCode` table declares.
 
 ***
 
@@ -41985,7 +55400,7 @@ The union of script callback ordinals.
 
 > **ScriptDefinition**\<`S`\> = () => [`Script`](#abstract-script) & [`FieldsOf`](#fieldsof)\<`S`\> & `object`
 
-The abstract base class [Script.define](#define-19) returns: a `Script` that also carries every field
+The abstract base class [Script.define](#define-30) returns: a `Script` that also carries every field
 the schema declares, typed.
 
 #### Type Declaration
@@ -42008,7 +55423,7 @@ to write a plain `static typeId` or `static executionOrder` without the `overrid
 
 ##### S
 
-`S` *extends* [`Schema`](#schema-21)
+`S` *extends* [`Schema`](#schema-30)
 
 The schema the class was defined from.
 
@@ -42124,6 +55539,23 @@ What a value passed to [InputService.simulate](#simulate) may be.
 
 ***
 
+### SpriteBlendName
+
+> **SpriteBlendName** = *typeof* [`SPRITE_BLEND_MODES`](#sprite_blend_modes)\[`number`\]
+
+How a sprite's colour combines with what is already in the framebuffer
+(`docs/architecture/11-2d-toolkit.md` §2.2).
+
+***
+
+### SpriteEffectKind
+
+> **SpriteEffectKind** = *typeof* [`SPRITE_EFFECT_KINDS`](#sprite_effect_kinds)\[`number`\]
+
+Which shader a `SpriteLayerEffect` installs.
+
+***
+
 ### SupportStateName
 
 > **SupportStateName** = *typeof* [`SUPPORT_STATES`](#support_states)\[`number`\]
@@ -42132,11 +55564,236 @@ The union of [SUPPORT\_STATES](#support_states).
 
 ***
 
+### TileColliderDefinition
+
+> **TileColliderDefinition** = \{ `height`: `number`; `kind`: `"box"`; `oneWay?`: `boolean`; `width`: `number`; `x`: `number`; `y`: `number`; \} \| \{ `kind`: `"polygon"`; `oneWay?`: `boolean`; `points`: readonly [`Vec2Like`](#vec2like)[]; \} \| \{ `kind`: `"none"`; \}
+
+A tile's collision footprint **as authored**: cell-normalised `[0, 1]` units with the origin at
+the cell's **top-left** corner and +Y pointing **down**.
+
+#### Union Members
+
+##### Type Literal
+
+\{ `height`: `number`; `kind`: `"box"`; `oneWay?`: `boolean`; `width`: `number`; `x`: `number`; `y`: `number`; \}
+
+###### height
+
+> `readonly` **height**: `number`
+
+The box's height, in cell-normalised units.
+
+###### kind
+
+> `readonly` **kind**: `"box"`
+
+Discriminant: an axis-aligned box.
+
+###### oneWay?
+
+> `readonly` `optional` **oneWay?**: `boolean`
+
+Whether the tile is a one-way platform. Defaults to `false`.
+
+###### width
+
+> `readonly` **width**: `number`
+
+The box's width, in cell-normalised units.
+
+###### x
+
+> `readonly` **x**: `number`
+
+The box's left edge, in cell-normalised units.
+
+###### y
+
+> `readonly` **y**: `number`
+
+The box's **top** edge, in cell-normalised units measured downwards from the cell's top.
+
+***
+
+##### Type Literal
+
+\{ `kind`: `"polygon"`; `oneWay?`: `boolean`; `points`: readonly [`Vec2Like`](#vec2like)[]; \}
+
+###### kind
+
+> `readonly` **kind**: `"polygon"`
+
+Discriminant: an outline.
+
+###### oneWay?
+
+> `readonly` `optional` **oneWay?**: `boolean`
+
+Whether the tile is a one-way platform. Defaults to `false`.
+
+###### points
+
+> `readonly` **points**: readonly [`Vec2Like`](#vec2like)[]
+
+The vertices in cell-normalised units with a top-left origin, in the editor's winding.
+
+***
+
+##### Type Literal
+
+\{ `kind`: `"none"`; \}
+
+###### kind
+
+> `readonly` **kind**: `"none"`
+
+Discriminant: the tile renders but does not collide.
+
+#### Remarks
+
+This is deliberately *not* [TileCollisionShape](#tilecollisionshape), which is cell-local **metres** with a
+**bottom-left** origin, +Y up and counter-clockwise winding. Editors work top-down and the
+physics world works bottom-up; [tileCollisionInfo](#tilecollisioninfo) converts, and nothing else should.
+
+A box covering the top quarter of a cell — the usual one-way platform — is
+`{ kind: "box", x: 0, y: 0, width: 1, height: 0.25, oneWay: true }`.
+
+***
+
+### TileCollisionShape
+
+> **TileCollisionShape** = \{ `height`: `number`; `kind`: `"box"`; `width`: `number`; `x`: `number`; `y`: `number`; \} \| \{ `kind`: `"polygon"`; `points`: readonly [`Vec2Like`](#vec2like)[]; \} \| \{ `kind`: `"none"`; \}
+
+The collision footprint of a single tile, expressed in **cell-local metres** with the origin at
+the bottom-left corner of the cell (ignifx 2D is +Y up — `docs/adr/0011`).
+
+#### Union Members
+
+##### Type Literal
+
+\{ `height`: `number`; `kind`: `"box"`; `width`: `number`; `x`: `number`; `y`: `number`; \}
+
+###### height
+
+> `readonly` **height**: `number`
+
+The box's height, in metres.
+
+###### kind
+
+> `readonly` **kind**: `"box"`
+
+Discriminant: an axis-aligned box.
+
+###### width
+
+> `readonly` **width**: `number`
+
+The box's width, in metres.
+
+###### x
+
+> `readonly` **x**: `number`
+
+The box's left edge, in cell-local metres.
+
+###### y
+
+> `readonly` **y**: `number`
+
+The box's bottom edge, in cell-local metres.
+
+***
+
+##### Type Literal
+
+\{ `kind`: `"polygon"`; `points`: readonly [`Vec2Like`](#vec2like)[]; \}
+
+###### kind
+
+> `readonly` **kind**: `"polygon"`
+
+Discriminant: a convex or concave outline.
+
+###### points
+
+> `readonly` **points**: readonly [`Vec2Like`](#vec2like)[]
+
+The outline's vertices in cell-local metres, wound counter-clockwise.
+
+***
+
+##### Type Literal
+
+\{ `kind`: `"none"`; \}
+
+###### kind
+
+> `readonly` **kind**: `"none"`
+
+Discriminant: the tile does not collide.
+
+#### Remarks
+
+`"none"` is the shape of a tile that renders but does not collide; it is the default for a tile
+whose tileset entry declares no collider.
+
+***
+
+### TileObjectFactory
+
+> **TileObjectFactory** = (`context`) => [`Entity`](#entity-17) \| `null`
+
+Builds the entities a tilemap's objects layer describes.
+
+#### Parameters
+
+##### context
+
+[`TileObjectContext`](#tileobjectcontext)
+
+#### Returns
+
+[`Entity`](#entity-17) \| `null`
+
+***
+
 ### ToneMappingCurve
 
 > **ToneMappingCurve** = *typeof* `TONE_MAPPING_NAMES`\[`number`\]
 
 The union of the tone-mapping curves.
+
+***
+
+### TwoDErrorCode
+
+> **TwoDErrorCode** = *typeof* [`TwoDErrorCode`](#twoderrorcode)\[keyof *typeof* [`TwoDErrorCode`](#twoderrorcode)\]
+
+The union of the codes the `TwoDErrorCode` table declares.
+
+***
+
+### TwoDMode
+
+> **TwoDMode** = *typeof* [`TWO_D_MODES`](#two_d_modes)\[`number`\]
+
+How 2D composites with the 3D render scene.
+
+#### Remarks
+
+`"sprite"` is a pure 2D game: sprites are the only thing drawn. `"mixed"` is 2.5D — the render
+scene draws first and the sprite pass composites on top without clearing, so meshes and sprites
+share a frame.
+
+***
+
+### Vec2Json
+
+> **Vec2Json** = [`Vec2Like`](#vec2like) \| readonly \[`number`, `number`\]
+
+A 2D value as a document may write it: `[x, y]`, the form `@ignifx/core` encodes every `vec2`
+field into a file as (`schema/encode.ts` line 393), or `{ x, y }`, the form an importer emits.
 
 ## Variables
 
@@ -42416,11 +56073,27 @@ How a body moves.
 
 ***
 
+### BODY\_TYPES\_2D
+
+> `const` **BODY\_TYPES\_2D**: readonly \[`"dynamic"`, `"kinematic"`, `"static"`\]
+
+How a 2D body moves.
+
+***
+
 ### CANVAS\_ALPHA\_MODES
 
 > `const` **CANVAS\_ALPHA\_MODES**: readonly \[`"opaque"`, `"premultiplied"`\]
 
 The canvas alpha modes Lite accepts, in the order the inspector lists them.
+
+***
+
+### CAPSULE\_2D\_DIRECTIONS
+
+> `const` **CAPSULE\_2D\_DIRECTIONS**: readonly \[`"x"`, `"y"`\]
+
+The axis a 2D capsule stands along.
 
 ***
 
@@ -42432,9 +56105,25 @@ The axis a capsule stands along.
 
 ***
 
+### CHARACTER\_SHAPES\_2D
+
+> `const` **CHARACTER\_SHAPES\_2D**: readonly \[`"capsule"`, `"box"`\]
+
+The collision shape a 2D character controller uses.
+
+***
+
 ### COLLISION\_EVENT\_MODES
 
 > `const` **COLLISION\_EVENT\_MODES**: readonly \[`"auto"`, `"on"`, `"off"`\]
+
+Whether collision callbacks are delivered for this body.
+
+***
+
+### COLLISION\_EVENT\_MODES\_2D
+
+> `const` **COLLISION\_EVENT\_MODES\_2D**: readonly \[`"auto"`, `"on"`, `"off"`\]
 
 Whether collision callbacks are delivered for this body.
 
@@ -42445,6 +56134,15 @@ Whether collision callbacks are delivered for this body.
 > `const` **COLLISION\_IDENTITY\_MODES**: readonly \[`"upstream"`, `"internal"`\]
 
 How collision events learn which bodies took part (`09-physics.md` §4, ADR-0013).
+
+***
+
+### COMBINE\_RULES
+
+> `const` **COMBINE\_RULES**: readonly \[`"average"`, `"min"`, `"multiply"`, `"max"`\]
+
+How two surfaces' coefficients are combined when they touch, mirroring Rapier's
+`CoefficientCombineRule`.
 
 ***
 
@@ -42987,6 +56685,22 @@ The BRDF lookup table address an `Environment` uses when neither it nor the proj
 
 ***
 
+### DEFAULT\_CHUNK\_SIZE
+
+> `const` **DEFAULT\_CHUNK\_SIZE**: `32` = `32`
+
+How many cells one chunk spans by default (`docs/architecture/11-2d-toolkit.md` §2.5).
+
+***
+
+### DEFAULT\_CLIP\_FPS
+
+> `const` **DEFAULT\_CLIP\_FPS**: `12` = `12`
+
+The frames-per-second a clip that declares none plays at.
+
+***
+
 ### DEFAULT\_LAYER
 
 > `const` **DEFAULT\_LAYER**: `0` = `0`
@@ -43003,12 +56717,45 @@ How many records [createMemorySink](#creatememorysink) keeps when no limit is gi
 
 ***
 
+### DEFAULT\_ORTHOGRAPHIC\_SIZE
+
+> `const` **DEFAULT\_ORTHOGRAPHIC\_SIZE**: `5` = `5`
+
+The half-height, in metres, a camera that declares none shows.
+
+***
+
 ### DEFAULT\_PAUSABLE\_BUSES
 
 > `const` **DEFAULT\_PAUSABLE\_BUSES**: readonly `string`[]
 
 The buses `app.pause()` pauses by default: all of them except `"UI"`, so a pause menu can still
 click (`docs/architecture/10-audio.md` §6).
+
+***
+
+### DEFAULT\_PIXELS\_PER\_UNIT
+
+> `const` **DEFAULT\_PIXELS\_PER\_UNIT**: `100` = `100`
+
+The default pixels-per-unit, matching `twoD.pixelsPerUnit`
+(`docs/architecture/11-2d-toolkit.md` §1). At 100, a 32-pixel sprite is 0.32 metres wide.
+
+***
+
+### DEFAULT\_REFERENCE\_RESOLUTION
+
+> `const` **DEFAULT\_REFERENCE\_RESOLUTION**: [`Vec2Like`](#vec2like)
+
+The reference resolution a pixel-perfect camera fits an integer zoom to.
+
+***
+
+### DEFAULT\_SORTING\_LAYER
+
+> `const` **DEFAULT\_SORTING\_LAYER**: `"Default"` = `"Default"`
+
+The sorting layer a component that names none draws on.
 
 ***
 
@@ -43087,6 +56834,14 @@ A synthetic device fed by on-screen controls.
 > `const` **EMPTY\_ASSET\_MANIFEST**: [`AssetManifest`](#assetmanifest)
 
 The manifest an app uses until a build supplies one.
+
+***
+
+### EMPTY\_TILE\_ID
+
+> `const` **EMPTY\_TILE\_ID**: `0` = `0`
+
+The tile id that means "this cell is empty"; no tileset may claim it.
 
 ***
 
@@ -43659,6 +57414,14 @@ Whether a body's display pose is interpolated between fixed steps.
 
 ***
 
+### INTERPOLATION\_MODES\_2D
+
+> `const` **INTERPOLATION\_MODES\_2D**: readonly \[`"none"`, `"interpolate"`\]
+
+Whether a body's display pose is interpolated between fixed steps.
+
+***
+
 ### INVALID\_HANDLE
 
 > `const` **INVALID\_HANDLE**: `0` = `0`
@@ -43694,6 +57457,30 @@ const config = app.assets.load<{ readonly hp: number }>("data/player.json");
 > `const` **KINEMATIC\_SYNC\_MODES**: readonly \[`"teleport"`, `"velocity"`\]
 
 How a moved kinematic node reaches Havok.
+
+***
+
+### LDTK\_DEFAULT\_INTGRID\_COLLIDERS
+
+> `const` **LDTK\_DEFAULT\_INTGRID\_COLLIDERS**: `Readonly`\<`Record`\<`number`, [`TileColliderDefinition`](#tilecolliderdefinition)\>\>
+
+The default meaning of an LDtk IntGrid value, in cell-normalised top-left-origin units.
+
+#### Remarks
+
+`1` is "solid" — the whole cell collides. `2` is "one-way" — the top quarter of the cell collides,
+and only from above. Those two conventions cover the LDtk projects people actually ship, and
+anything else is project-specific, so [LdtkImportOptions.intGridColliders](#intgridcolliders) replaces this
+table wholesale. An IntGrid value with no entry still gets a tile id and a frame; it simply does
+not collide.
+
+***
+
+### LDTK\_INTGRID\_TILESET\_NAME
+
+> `const` **LDTK\_INTGRID\_TILESET\_NAME**: `"intgrid"` = `"intgrid"`
+
+The name given to the synthetic tileset that carries IntGrid colliders.
 
 ***
 
@@ -43980,6 +57767,38 @@ const app = await createApp({ headless: true, extensions: [physics()] });
 
 ***
 
+### PHYSICS\_2D\_DIAGNOSTICS\_COUNTERS
+
+> `const` **PHYSICS\_2D\_DIAGNOSTICS\_COUNTERS**: readonly `string`[]
+
+The counters `09-physics.md` §9 and `11-2d-toolkit.md` §8 name for 2D.
+
+***
+
+### PHYSICS\_2D\_DIAGNOSTICS\_GROUP
+
+> `const` **PHYSICS\_2D\_DIAGNOSTICS\_GROUP**: `"physics2d"` = `"physics2d"`
+
+The diagnostics group name.
+
+***
+
+### PHYSICS\_2D\_ERROR\_MESSAGES
+
+> `const` **PHYSICS\_2D\_ERROR\_MESSAGES**: `Readonly`\<`Record`\<`string`, `string`\>\>
+
+The one-line message template of every code, as `ExtensionContext.registerErrorCodes` wants it.
+
+***
+
+### PHYSICS\_2D\_SETTINGS\_SECTION
+
+> `const` **PHYSICS\_2D\_SETTINGS\_SECTION**: `"physics2d"` = `"physics2d"`
+
+The section name as it appears in `ignifx.config.ts`.
+
+***
+
 ### PHYSICS\_DIAGNOSTICS\_COUNTERS
 
 > `const` **PHYSICS\_DIAGNOSTICS\_COUNTERS**: readonly `string`[]
@@ -44002,6 +57821,38 @@ The diagnostics group name.
 
 The one-line message template of every code, as `ExtensionContext.registerErrorCodes` wants it.
 Context keys appear in braces, matching the core table's convention.
+
+***
+
+### PHYSICS\_MATERIAL\_2D\_ASSET\_TYPE
+
+> `const` **PHYSICS\_MATERIAL\_2D\_ASSET\_TYPE**: `"physicsmaterial"` = `"physicsmaterial"`
+
+The asset type name `.physicsmaterial.json` addresses resolve to.
+
+***
+
+### PHYSICS\_MATERIAL\_2D\_FILE\_EXTENSION
+
+> `const` **PHYSICS\_MATERIAL\_2D\_FILE\_EXTENSION**: `".physicsmaterial.json"` = `".physicsmaterial.json"`
+
+The address suffix that selects the loader.
+
+***
+
+### PHYSICS\_MATERIAL\_2D\_FILE\_FORMAT
+
+> `const` **PHYSICS\_MATERIAL\_2D\_FILE\_FORMAT**: `"ignifx.physicsmaterial"` = `"ignifx.physicsmaterial"`
+
+The `format` string every physics-material document declares.
+
+***
+
+### PHYSICS\_MATERIAL\_2D\_FORMAT\_VERSION
+
+> `const` **PHYSICS\_MATERIAL\_2D\_FORMAT\_VERSION**: `1` = `1`
+
+The file format version; `1` before ignifx 1.0.
 
 ***
 
@@ -44042,6 +57893,106 @@ The file format version; `1` before ignifx 1.0.
 > `const` **PHYSICS\_SETTINGS\_SECTION**: `"physics"` = `"physics"`
 
 The section name as it appears in `ignifx.config.ts`.
+
+***
+
+### physics2d
+
+> `const` **physics2d**: (`options?`) => [`Extension`](#extension)
+
+Builds the 2D physics extension.
+
+#### Parameters
+
+##### options?
+
+[`Physics2DOptions`](#physics2doptions)
+
+Optionally, an already-instantiated Rapier module.
+
+#### Returns
+
+[`Extension`](#extension)
+
+The extension descriptor.
+
+#### Example
+
+```ts
+const app = await createApp({ headless: true, extensions: [physics2d()] });
+```
+
+***
+
+### Physics2DErrorCode
+
+> `const` **Physics2DErrorCode**: `object`
+
+Every diagnostic code `@ignifx/physics-2d` can throw or report.
+
+#### Type Declaration
+
+##### bodyOnChildEntity
+
+> `readonly` **bodyOnChildEntity**: `"IGX-1157"`
+
+A 2D body was built for an entity that has a parent, whose pose is not world space.
+
+##### bothPhysicsExtensions
+
+> `readonly` **bothPhysicsExtensions**: `"IGX-1101"`
+
+Both `physics()` and `physics2d()` are registered on one world (`11-2d-toolkit.md` §8).
+
+##### colliderGeometryInvalid
+
+> `readonly` **colliderGeometryInvalid**: `"IGX-1156"`
+
+A collider's geometry is degenerate: too few points, or a hull Rapier refused to build.
+
+##### invalidMaterialFile
+
+> `readonly` **invalidMaterialFile**: `"IGX-1154"`
+
+A `.physicsmaterial.json` file is not an `ignifx.physicsmaterial` document this build reads.
+
+##### layerOutOfRange
+
+> `readonly` **layerOutOfRange**: `"IGX-1152"`
+
+A collider's layer index is outside the sixteen Rapier's interaction groups can express.
+
+##### movedStaticBody
+
+> `readonly` **movedStaticBody**: `"IGX-1151"`
+
+An entity with 2D colliders but no `Rigidbody2D` moved after its static body was placed.
+
+##### queryBeforeStep
+
+> `readonly` **queryBeforeStep**: `"IGX-1153"`
+
+A query ran before the first completed fixed step, so Rapier has no broadphase yet.
+
+##### rapierUnavailable
+
+> `readonly` **rapierUnavailable**: `"IGX-1150"`
+
+The Rapier WebAssembly module could not be instantiated.
+
+##### unknownLayer
+
+> `readonly` **unknownLayer**: `"IGX-1155"`
+
+The `physics2d.collisionMatrix` setting names a layer the project does not declare.
+
+#### Example
+
+```ts
+throw physics2DError(Physics2DErrorCode.queryBeforeStep, "raycast() ran before the first step.", {
+  context: { query: "raycast" },
+});
+```
 
 ***
 
@@ -44442,6 +58393,108 @@ dispatched from a phase and therefore get a sorted dispatch list.
 
 ***
 
+### SORTING\_LAYER\_ORDER\_STEP
+
+> `const` **SORTING\_LAYER\_ORDER\_STEP**: `1000` = `1e3`
+
+How far apart two sorting layers' Lite `order` values sit.
+
+#### Remarks
+
+A gap of 1000 leaves room for the per-(atlas, blend, space) sub-layers a single sorting layer
+expands into: one sorting layer holding sprites from twelve atlases in three blend modes still
+fits inside its slice without reaching the next layer's.
+
+***
+
+### SPRITE\_ANIMATION\_ASSET\_TYPE
+
+> `const` **SPRITE\_ANIMATION\_ASSET\_TYPE**: `"spriteanimation"` = `"spriteanimation"`
+
+The asset type name the loader registers.
+
+***
+
+### SPRITE\_ANIMATION\_FILE\_EXTENSIONS
+
+> `const` **SPRITE\_ANIMATION\_FILE\_EXTENSIONS**: readonly `string`[]
+
+The address suffixes that select the sprite-animation loader.
+
+***
+
+### SPRITE\_ANIMATION\_FORMAT
+
+> `const` **SPRITE\_ANIMATION\_FORMAT**: `"ignifx.spriteanimation"` = `"ignifx.spriteanimation"`
+
+The `format` discriminator every `.spriteanim.json` document carries.
+
+***
+
+### SPRITE\_ANIMATION\_FORMAT\_VERSION
+
+> `const` **SPRITE\_ANIMATION\_FORMAT\_VERSION**: `1` = `1`
+
+The document version this build reads and writes.
+
+***
+
+### SPRITE\_ATLAS\_ASSET\_TYPE
+
+> `const` **SPRITE\_ATLAS\_ASSET\_TYPE**: `"spriteatlas"` = `"spriteatlas"`
+
+The asset type name the loader registers.
+
+***
+
+### SPRITE\_ATLAS\_FILE\_EXTENSIONS
+
+> `const` **SPRITE\_ATLAS\_FILE\_EXTENSIONS**: readonly `string`[]
+
+The address suffixes that select the sprite-atlas loader.
+
+***
+
+### SPRITE\_ATLAS\_FORMAT
+
+> `const` **SPRITE\_ATLAS\_FORMAT**: `"ignifx.spriteatlas"` = `"ignifx.spriteatlas"`
+
+The `format` discriminator every `.atlas.json` document carries.
+
+***
+
+### SPRITE\_ATLAS\_FORMAT\_VERSION
+
+> `const` **SPRITE\_ATLAS\_FORMAT\_VERSION**: `1` = `1`
+
+The document version this build reads and writes.
+
+***
+
+### SPRITE\_BLEND\_MODES
+
+> `const` **SPRITE\_BLEND\_MODES**: readonly \[`"alpha"`, `"premultiplied"`, `"additive"`, `"multiply"`, `"opaque"`\]
+
+The blend modes `SpriteRenderer.blend` accepts, in the order an inspector should list them.
+
+***
+
+### SPRITE\_EFFECT\_KINDS
+
+> `const` **SPRITE\_EFFECT\_KINDS**: readonly \[`"tint"`, `"custom"`\]
+
+The built-in effects, in the order an inspector should list them.
+
+***
+
+### SPRITE\_FRAME\_FRAGMENT\_PREFIX
+
+> `const` **SPRITE\_FRAME\_FRAGMENT\_PREFIX**: `"frame:"` = `"frame:"`
+
+The fragment prefix that addresses one frame: `"sprites/hero.atlas.json#frame:idle_0"`.
+
+***
+
 ### STANDARD\_TEXTURE\_SLOTS
 
 > `const` **STANDARD\_TEXTURE\_SLOTS**: readonly `string`[]
@@ -44483,11 +58536,231 @@ The first digit of the range reserved for extensions published outside the `@ign
 
 ***
 
+### TILEMAP\_ASSET\_TYPE
+
+> `const` **TILEMAP\_ASSET\_TYPE**: `"tilemap"` = `"tilemap"`
+
+The asset type name the loader registers.
+
+***
+
+### TILEMAP\_FILE\_EXTENSIONS
+
+> `const` **TILEMAP\_FILE\_EXTENSIONS**: readonly `string`[]
+
+The address suffixes that select the tilemap loader.
+
+***
+
+### TILEMAP\_FORMAT
+
+> `const` **TILEMAP\_FORMAT**: `"ignifx.tilemap"` = `"ignifx.tilemap"`
+
+The `format` discriminator every `.tilemap.json` document carries.
+
+***
+
+### TILEMAP\_FORMAT\_VERSION
+
+> `const` **TILEMAP\_FORMAT\_VERSION**: `1` = `1`
+
+The document version this build reads and writes.
+
+***
+
+### TINT\_EFFECT\_WGSL
+
+> `const` **TINT\_EFFECT\_WGSL**: `"let texel = textureSample(atlasTex, atlasSamp, uv); return vec4f(texel.rgb * fx.params.rgb, texel.a * fx.params.a);"` = `"let texel = textureSample(atlasTex, atlasSamp, uv); return vec4f(texel.rgb * fx.params.rgb, texel.a * fx.params.a);"`
+
+The WGSL body of the built-in `tint` effect.
+
+#### Remarks
+
+Multiplies the sampled texel by `fx.params.rgb` and scales its alpha by `fx.params.a`, which is
+a per-layer tint that a per-sprite `color` cannot express — every sprite in the layer fades
+together, in one uniform write, rather than in one instance write each.
+
+***
+
 ### TOUCH\_SLOTS
 
 > `const` **TOUCH\_SLOTS**: `10` = `10`
 
 How many simultaneous touches `Touch` tracks; `<Touch>/touch0` … `<Touch>/touch9`.
+
+***
+
+### TWO\_D\_ANIMATION\_ORDER
+
+> `const` **TWO\_D\_ANIMATION\_ORDER**: `0` = `0`
+
+The `PostUpdate` order the 2D animation system runs at.
+
+#### Remarks
+
+`PostUpdate` is empty today — no core or extension system registers there — so `0` is the middle
+of an open phase. Anything a game adds later can sit either side of it by choosing a sign.
+
+***
+
+### TWO\_D\_ERROR\_MESSAGES
+
+> `const` **TWO\_D\_ERROR\_MESSAGES**: `Readonly`\<`Record`\<`string`, `string`\>\>
+
+The one-line message template of every code, as `ExtensionContext.registerErrorCodes` wants it.
+Context keys appear in braces, matching the core table's convention.
+
+***
+
+### TWO\_D\_MODES
+
+> `const` **TWO\_D\_MODES**: readonly \[`"sprite"`, `"mixed"`\]
+
+Every rendering mode the 2D toolkit supports, in the order an inspector should list them
+(`docs/architecture/11-2d-toolkit.md` §1).
+
+***
+
+### TWO\_D\_SETTINGS\_SECTION
+
+> `const` **TWO\_D\_SETTINGS\_SECTION**: `"twoD"` = `"twoD"`
+
+The section name as it appears in `ignifx.config.ts` and in a scene file's `settings` block.
+
+***
+
+### TWO\_D\_SYNC\_ORDER
+
+> `const` **TWO\_D\_SYNC\_ORDER**: `-450` = `-450`
+
+The `PreRender` order the 2D sync system runs at.
+
+#### Remarks
+
+`-450`, not the `-400` `docs/architecture/11-2d-toolkit.md` §2.2 names, because audio's pump
+already holds `-400`. See the module's own remarks.
+
+***
+
+### twoD
+
+> `const` **twoD**: (`options?`) => [`Extension`](#extension)
+
+The `@ignifx/2d` extension factory.
+
+#### Parameters
+
+##### options?
+
+[`TwoDOptions`](#twodoptions)
+
+Overrides for the `twoD` settings section.
+
+#### Returns
+
+[`Extension`](#extension)
+
+The extension descriptor to pass to `createApp`.
+
+#### Example
+
+```ts
+const app = await createApp({
+  canvas,
+  extensions: [twoD({ pixelsPerUnit: 16, ySort: { Default: true } })],
+});
+```
+
+***
+
+### TwoDErrorCode
+
+> `const` **TwoDErrorCode**: `object`
+
+Every diagnostic code `@ignifx/2d` can throw or log, keyed by an intention-revealing name so call
+sites read as prose and the compiler catches typos (coding standards §5.2).
+
+#### Type Declaration
+
+##### atlasFrameNotExtruded
+
+> `readonly` **atlasFrameNotExtruded**: `"IGX-1102"`
+
+An atlas frame has no one-pixel extruded border, which a pixel-perfect camera will bleed.
+
+##### duplicateExtension
+
+> `readonly` **duplicateExtension**: `"IGX-1112"`
+
+A second `twoD()` extension was registered on one app.
+
+##### duplicateObjectFactory
+
+> `readonly` **duplicateObjectFactory**: `"IGX-1110"`
+
+`app.twoD.registerTileObjectFactory` was called twice for one object type.
+
+##### invalidAnimationFile
+
+> `readonly` **invalidAnimationFile**: `"IGX-1104"`
+
+A `.spriteanim.json` file is not an `ignifx.spriteanimation` document this build can read.
+
+##### invalidAtlasFile
+
+> `readonly` **invalidAtlasFile**: `"IGX-1103"`
+
+A `.atlas.json` file is not an `ignifx.spriteatlas` document this build can read.
+
+##### invalidTilemapFile
+
+> `readonly` **invalidTilemapFile**: `"IGX-1105"`
+
+A `.tilemap.json` file is not an `ignifx.tilemap` document this build can read.
+
+##### missingShaderSource
+
+> `readonly` **missingShaderSource**: `"IGX-1113"`
+
+A `SpriteLayerEffect` declared the `custom` kind without a WGSL fragment body.
+
+##### tileOutOfRange
+
+> `readonly` **tileOutOfRange**: `"IGX-1111"`
+
+A tile coordinate is outside the tilemap layer's bounds.
+
+##### unknownClip
+
+> `readonly` **unknownClip**: `"IGX-1108"`
+
+`SpriteAnimator.play` named a clip the animation asset does not declare.
+
+##### unknownFrame
+
+> `readonly` **unknownFrame**: `"IGX-1106"`
+
+A sprite address names a frame the atlas does not declare.
+
+##### unknownSortingLayer
+
+> `readonly` **unknownSortingLayer**: `"IGX-1107"`
+
+A component named a sorting layer the `sortingLayers` settings section does not declare.
+
+##### unsupportedImport
+
+> `readonly` **unsupportedImport**: `"IGX-1109"`
+
+A tilemap importer was handed a document it cannot read, or an unsupported projection.
+
+#### Example
+
+```ts
+throw twoDError(TwoDErrorCode.unknownSortingLayer, "Foreground is not a declared sorting layer.", {
+  context: { sortingLayer: "Foreground" },
+});
+```
 
 ***
 
@@ -44796,6 +59069,48 @@ waypoints: array(vec3()); // Vec3Like[]
 
 ***
 
+### asepriteFrameName()
+
+> **asepriteFrameName**(`raw`): `string`
+
+Normalises an Aseprite frame key into an identifier a clip and a `#frame:` fragment can name.
+
+The rule, applied in this order:
+
+1. Drop a trailing file extension — a dot, a letter, then up to seven more alphanumerics — so
+   `hero 0.aseprite` and `hero_0.png` both lose their suffix but `walk.2` does not.
+2. Replace every run of non-alphanumeric characters with a single `_`.
+3. Trim leading and trailing `_`.
+
+Case is preserved: `Hero (Idle) 0.aseprite` becomes `Hero_Idle_0`, not `hero_idle_0`. A key that
+normalises to nothing at all (`"###.png"`) becomes `frame`.
+
+[importAsepriteAtlas](#importasepriteatlas) and `importAsepriteAnimations` both run keys through this function,
+which is what makes an imported clip's frame names line up with the imported atlas's.
+
+#### Parameters
+
+##### raw
+
+`string`
+
+The frame key as Aseprite wrote it — a hash key, or an array entry's `filename`.
+
+#### Returns
+
+`string`
+
+The normalised frame name.
+
+#### Example
+
+```ts
+asepriteFrameName("hero (idle) 0.aseprite"); // "hero_idle_0"
+asepriteFrameName("hero_0.png"); // "hero_0"
+```
+
+***
+
 ### assertNever()
 
 > **assertNever**(`value`, `what`): `never`
@@ -45026,13 +59341,13 @@ throw audioError(AudioErrorCode.unknownBus, "Ambience is not a registered bus.",
 
 ### audioSettingsSchema()
 
-> **audioSettingsSchema**(): [`Schema`](#schema-21)
+> **audioSettingsSchema**(): [`Schema`](#schema-30)
 
 The schema the `audio` section is validated against.
 
 #### Returns
 
-[`Schema`](#schema-21)
+[`Schema`](#schema-30)
 
 The schema, built fresh so no module holds state (`CONSTITUTION.md` §3.5).
 
@@ -45234,16 +59549,30 @@ The document to persist.
 
 ***
 
+### collider2DFields()
+
+> **collider2DFields**(): [`Schema`](#schema-30)
+
+The fields every 2D collider declares.
+
+#### Returns
+
+[`Schema`](#schema-30)
+
+The shared field declarations, ready to spread into a collider's own schema.
+
+***
+
 ### colliderFields()
 
-> **colliderFields**(): [`Schema`](#schema-21)
+> **colliderFields**(): [`Schema`](#schema-30)
 
 The fields every collider declares. It is a function because a field kind is a function call and
 module scope holds declarations only (`CONSTITUTION.md` §3.5).
 
 #### Returns
 
-[`Schema`](#schema-21)
+[`Schema`](#schema-30)
 
 The shared field declarations, ready to spread into a collider's own schema.
 
@@ -46085,6 +60414,20 @@ A clock reading the host's monotonic timer.
 
 ***
 
+### createPhysicsMaterial2DLoader()
+
+> **createPhysicsMaterial2DLoader**(): [`AssetLoader`](#assetloader)\<[`PhysicsMaterial2D`](#physicsmaterial2d)\>
+
+Builds the loader for `.physicsmaterial.json` files.
+
+#### Returns
+
+[`AssetLoader`](#assetloader)\<[`PhysicsMaterial2D`](#physicsmaterial2d)\>
+
+The loader, ready for `ctx.registerAssetLoader`.
+
+***
+
 ### createPhysicsMaterialLoader()
 
 > **createPhysicsMaterialLoader**(): [`AssetLoader`](#assetloader)\<[`PhysicsMaterial`](#physicsmaterial)\>
@@ -46287,6 +60630,46 @@ ctx.registerService(StorageService, new LocalStorage());
 
 ***
 
+### createSpriteAnimationLoader()
+
+> **createSpriteAnimationLoader**(): [`AssetLoader`](#assetloader)\<[`SpriteAnimationAsset`](#spriteanimationasset)\>
+
+Builds the loader for `.spriteanim.json` addresses.
+
+#### Returns
+
+[`AssetLoader`](#assetloader)\<[`SpriteAnimationAsset`](#spriteanimationasset)\>
+
+The loader to register with `ctx.registerAssetLoader`.
+
+#### Example
+
+```ts
+ctx.registerAssetLoader(createSpriteAnimationLoader());
+```
+
+***
+
+### createSpriteAtlasLoader()
+
+> **createSpriteAtlasLoader**(): [`AssetLoader`](#assetloader)\<[`SpriteAtlasAsset`](#spriteatlasasset)\>
+
+Builds the loader for `.atlas.json` addresses.
+
+#### Returns
+
+[`AssetLoader`](#assetloader)\<[`SpriteAtlasAsset`](#spriteatlasasset)\>
+
+The loader to register with `ctx.registerAssetLoader`.
+
+#### Example
+
+```ts
+ctx.registerAssetLoader(createSpriteAtlasLoader());
+```
+
+***
+
 ### createTextureLoader()
 
 > **createTextureLoader**(): [`AssetLoader`](#assetloader)\<[`TextureAsset`](#textureasset)\>
@@ -46303,6 +60686,26 @@ The loader to register with `ctx.registerAssetLoader`.
 
 ```ts
 ctx.registerAssetLoader(createTextureLoader());
+```
+
+***
+
+### createTilemapLoader()
+
+> **createTilemapLoader**(): [`AssetLoader`](#assetloader)\<[`TilemapAsset`](#tilemapasset-1)\>
+
+Builds the loader for `.tilemap.json` addresses.
+
+#### Returns
+
+[`AssetLoader`](#assetloader)\<[`TilemapAsset`](#tilemapasset-1)\>
+
+The loader to register with `ctx.registerAssetLoader`.
+
+#### Example
+
+```ts
+ctx.registerAssetLoader(createTilemapLoader());
 ```
 
 ***
@@ -46526,6 +60929,39 @@ The decoded field object and every problem found.
 
 ***
 
+### decodeTileRle()
+
+> **decodeTileRle**(`rle`): readonly `number`[]
+
+Expands the `[count, value, …]` pairs [encodeTileRle](#encodetilerle) produces back into a dense array.
+
+#### Parameters
+
+##### rle
+
+readonly `number`[]
+
+The encoded pairs.
+
+#### Returns
+
+readonly `number`[]
+
+The dense tile ids.
+
+#### Throws
+
+IgnifxError with code `IGX-1105` when the array has an odd length, or a run count that is
+not a finite non-negative integer.
+
+#### Example
+
+```ts
+decodeTileRle([2, 1, 3, 0]); // [1, 1, 0, 0, 0]
+```
+
+***
+
 ### decodeValue()
 
 > **decodeValue**\<`T`\>(`field`, `json`, `references`): [`DecodeResult`](#decoderesult)\<`T`\>
@@ -46605,6 +61041,20 @@ The default `input` section.
 
 ***
 
+### defaultPhysics2DSettings()
+
+> **defaultPhysics2DSettings**(): [`Physics2DSettings`](#physics2dsettings)
+
+The values used when a project omits the `physics2d` section.
+
+#### Returns
+
+[`Physics2DSettings`](#physics2dsettings)
+
+A fresh defaults object.
+
+***
+
 ### defaultPhysicsSettings()
 
 > **defaultPhysicsSettings**(): [`PhysicsSettings`](#physicssettings)
@@ -46643,6 +61093,20 @@ defaults.features.shadows; // false
 
 ***
 
+### defaultTwoDSettings()
+
+> **defaultTwoDSettings**(): [`TwoDSettings`](#twodsettings)
+
+The values used for everything a project omits.
+
+#### Returns
+
+[`TwoDSettings`](#twodsettings)
+
+The default `twoD` section.
+
+***
+
 ### defineExtension()
 
 > **defineExtension**\<`O`\>(`factory`): (`options?`) => [`Extension`](#extension)
@@ -46666,7 +61130,8 @@ takes none.
 
 (`options`) => [`Extension`](#extension)
 
-Builds the extension descriptor from its options.
+Builds the extension descriptor from its options, which are `undefined` when the
+game called the factory without an argument — default them (`(options = {})`) or read them as optional.
 
 #### Returns
 
@@ -46777,6 +61242,106 @@ const moverSchema = defineSchema({
   waypoints: array(vec3()),
 });
 ```
+
+***
+
+### defineSpriteAnimation()
+
+> **defineSpriteAnimation**(`input`, `address?`): [`SpriteAnimationDefinition`](#spriteanimationdefinition)
+
+Fills in the defaults of an animation document and checks the invariants the animator relies on.
+
+#### Parameters
+
+##### input
+
+[`SpriteAnimationInput`](#spriteanimationinput)
+
+The document, as authored or as an importer emitted it.
+
+##### address?
+
+`string`
+
+What to name in an error; defaults to `"<inline>"`.
+
+#### Returns
+
+[`SpriteAnimationDefinition`](#spriteanimationdefinition)
+
+The complete document.
+
+#### Throws
+
+IgnifxError with code `IGX-1104` when the format tag, the version, or a clip is wrong.
+
+***
+
+### defineSpriteAtlas()
+
+> **defineSpriteAtlas**(`input`, `address?`): [`SpriteAtlasDefinition`](#spriteatlasdefinition)
+
+Fills in the defaults of an atlas document and checks the invariants a loader relies on.
+
+#### Parameters
+
+##### input
+
+[`SpriteAtlasInput`](#spriteatlasinput)
+
+The document, as authored or as an importer emitted it.
+
+##### address?
+
+`string`
+
+What to name in an error; defaults to `"<inline>"`.
+
+#### Returns
+
+[`SpriteAtlasDefinition`](#spriteatlasdefinition)
+
+The complete document.
+
+#### Throws
+
+IgnifxError with code `IGX-1103` when the format tag, the version, the image address, or
+a frame rectangle is wrong, or two frames share a name.
+
+***
+
+### defineTilemap()
+
+> **defineTilemap**(`input`, `address?`): [`TilemapDefinition`](#tilemapdefinition-1)
+
+Fills in the defaults of a tilemap document, decodes any run-length-encoded layer, and checks the
+invariants the renderer and the collider rely on.
+
+#### Parameters
+
+##### input
+
+[`TilemapInput`](#tilemapinput)
+
+The document, as authored or as an importer emitted it.
+
+##### address?
+
+`string`
+
+What to name in an error; defaults to `"\<inline\>"`.
+
+#### Returns
+
+[`TilemapDefinition`](#tilemapdefinition-1)
+
+The complete document, with every layer's `tiles` dense.
+
+#### Throws
+
+IgnifxError with code `IGX-1105` when the format tag or version is wrong, a tile size is
+not positive, a tileset's `firstId` is not positive, two layers share a name, a run-length array
+has an odd length, or a layer's decoded tile count is not `width * height`.
 
 ***
 
@@ -46965,7 +61530,7 @@ The component's namespaced registration id, for example `mygame/Mover`.
 
 ##### schema
 
-[`Schema`](#schema-21)
+[`Schema`](#schema-30)
 
 The component's declared fields.
 
@@ -47008,6 +61573,68 @@ The records, keyed by namespaced type id.
 ```ts
 const schemas = describeSchemas();
 schemas["ignifx/Camera"].fields["fov"].default; // 60
+```
+
+***
+
+### describeSpriteAnimationFormat()
+
+> **describeSpriteAnimationFormat**(): [`SchemaDescription`](#schemadescription)
+
+Describes the `ignifx.spriteanimation` file format.
+
+#### Returns
+
+[`SchemaDescription`](#schemadescription)
+
+The record `pnpm docs:schemas` renders.
+
+***
+
+### describeSpriteAtlasFormat()
+
+> **describeSpriteAtlasFormat**(): [`SchemaDescription`](#schemadescription)
+
+Describes the `ignifx.spriteatlas` file format.
+
+#### Returns
+
+[`SchemaDescription`](#schemadescription)
+
+The record `pnpm docs:schemas` renders.
+
+***
+
+### describeTilemapFormat()
+
+> **describeTilemapFormat**(): [`SchemaDescription`](#schemadescription)
+
+Describes the `ignifx.tilemap` file format.
+
+#### Returns
+
+[`SchemaDescription`](#schemadescription)
+
+The record `pnpm docs:schemas` renders.
+
+***
+
+### describeTwoDSchemas()
+
+> **describeTwoDSchemas**(): `Readonly`\<`Record`\<`string`, [`SchemaDescription`](#schemadescription)\>\>
+
+Describes every component and file format this package declares, for the documentation harness.
+
+#### Returns
+
+`Readonly`\<`Record`\<`string`, [`SchemaDescription`](#schemadescription)\>\>
+
+The records, keyed by namespaced type id.
+
+#### Example
+
+```ts
+describeTwoDSchemas()["ignifx/Camera2D"].fields["orthographicSize"].default; // 5
 ```
 
 ***
@@ -47058,6 +61685,40 @@ An optional collector; problems are appended to it in discovery order.
 [`JsonObject`](#jsonobject)
 
 The JSON object written under `props` in a scene file.
+
+***
+
+### encodeTileRle()
+
+> **encodeTileRle**(`tiles`): readonly `number`[]
+
+Run-length encodes a dense tile array.
+
+#### Parameters
+
+##### tiles
+
+readonly `number`[]
+
+The dense tile ids.
+
+#### Returns
+
+readonly `number`[]
+
+The encoded pairs; empty for an empty input.
+
+#### Remarks
+
+The layout is flat `[count, value, count, value, …]` pairs, read left to right, so
+`[1, 1, 0, 0, 0]` encodes to `[2, 1, 3, 0]`. It is the same shape Tiled's chunk encoding and
+LDtk's exports settle on, and it round-trips exactly through [decodeTileRle](#decodetilerle).
+
+#### Example
+
+```ts
+encodeTileRle([1, 1, 0, 0, 0]); // [2, 1, 3, 0]
+```
 
 ***
 
@@ -47304,6 +61965,75 @@ The field definition.
 
 ***
 
+### fieldInstancesToRecord()
+
+> **fieldInstancesToRecord**(`fields`): `Readonly`\<`Record`\<`string`, `string` \| `number` \| `boolean`\>\>
+
+Flattens LDtk's `[{ __identifier, __type, __value }]` field instances into a plain record.
+
+#### Parameters
+
+##### fields
+
+`unknown`
+
+The value of a `fieldInstances` field, or anything else.
+
+#### Returns
+
+`Readonly`\<`Record`\<`string`, `string` \| `number` \| `boolean`\>\>
+
+The flattened record; empty when `fields` is not a field-instance array.
+
+#### Remarks
+
+Only `string`, `number` and `boolean` values survive. LDtk's richer field types — points, entity
+references, arrays, enum tuples — have no equivalent in the tilemap format's flat property record
+and are dropped rather than stringified.
+
+#### Example
+
+```ts
+fieldInstancesToRecord([{ __identifier: "facing", __type: "String", __value: "left" }]);
+// { facing: "left" }
+```
+
+***
+
+### findTileset()
+
+> **findTileset**(`map`, `tileId`): [`TilesetDefinition`](#tilesetdefinition) \| `null`
+
+Resolves a global tile id to the tileset that owns it.
+
+#### Parameters
+
+##### map
+
+[`TilemapDefinition`](#tilemapdefinition-1)
+
+The parsed document.
+
+##### tileId
+
+`number`
+
+The global tile id.
+
+#### Returns
+
+[`TilesetDefinition`](#tilesetdefinition) \| `null`
+
+The owning tileset, or `null` for the empty tile and for an id no tileset claims.
+
+#### Remarks
+
+The owner is the tileset with the highest [TilesetDefinition.firstId](#firstid) that is still less
+than or equal to `tileId` — the rule Tiled's `firstgid` implies. `defineTilemap` sorts the
+tilesets ascending, so this is a backward scan over a handful of entries.
+
+***
+
 ### formatErrorMessage()
 
 > **formatErrorMessage**(`code`, `message`, `context`, `hint`, `mode`): `string`
@@ -47419,6 +62149,61 @@ isUlid(uid); // true
 
 ***
 
+### gridAtlas()
+
+> **gridAtlas**(`options`): [`SpriteAtlasDefinition`](#spriteatlasdefinition)
+
+Cuts an evenly spaced sprite sheet into an `ignifx.spriteatlas` document.
+
+Frames come out in reading order — left to right, then top to bottom — named
+`<namePrefix>_<index>` with `index` counting from `0` across the whole sheet, so a 4×2
+grid ends at `tile_7`. `columns` and `rows` default to as many whole cells as the image holds
+(`floor((imageWidth - 2·margin + spacing) / (cellWidth + spacing))`, and likewise for rows) and
+are clamped to that capacity when given, so an over-large explicit count never produces a frame
+that falls off the image.
+
+#### Parameters
+
+##### options
+
+[`GridAtlasImportOptions`](#gridatlasimportoptions)
+
+The sheet's geometry and the frame naming.
+
+#### Returns
+
+[`SpriteAtlasDefinition`](#spriteatlasdefinition)
+
+The complete atlas document.
+
+#### Remarks
+
+`namePrefix` is how a grid atlas lines up with the rest of the toolkit: `@ignifx/2d`'s Tiled
+importer names a tileset's frames `<tilesetName>_<index>`, so passing the tileset's name
+as `namePrefix` makes a hand-cut grid atlas addressable by exactly the names a tilemap emits.
+
+#### Throws
+
+IgnifxError with code `IGX-1109` when a cell dimension is not positive, or when the
+geometry yields no frames at all.
+
+#### Example
+
+```ts
+const atlas = gridAtlas({
+  image: "2d/terrain.png",
+  imageWidth: 64,
+  imageHeight: 64,
+  cellWidth: 32,
+  cellHeight: 32,
+  namePrefix: "terrain",
+  sampling: "nearest",
+});
+atlas.frames.map((frame) => frame.name); // ["terrain_0", "terrain_1", "terrain_2", "terrain_3"]
+```
+
+***
+
 ### i32()
 
 > **i32**(`defaultValue?`, `options?`): [`FieldDefinition`](#fielddefinition)\<`number`\>
@@ -47445,6 +62230,313 @@ Inspector and serializer metadata.
 [`FieldDefinition`](#fielddefinition)\<`number`\>
 
 The field definition.
+
+***
+
+### importAsepriteAnimations()
+
+> **importAsepriteAnimations**(`json`, `options?`): [`SpriteAnimationDefinition`](#spriteanimationdefinition)
+
+Converts an Aseprite sheet export's tags into an `ignifx.spriteanimation` document.
+
+Every entry in `meta.frameTags` becomes one clip, named after the tag, listing the frame names
+for indices `from` through `to` explicitly rather than as a range — a clip that lists names
+survives an atlas being repacked in a different order.
+
+Playback direction is baked into that list, because ignifx clips play forwards:
+
+- `"forward"` (and anything unrecognised) lists `from … to` in order.
+- `"reverse"` lists them backwards.
+- `"pingpong"` lists them forwards and then appends the **interior** frames in reverse, so a
+  three-frame tag becomes `0, 1, 2, 1` — the ends are not repeated, which is what makes the clip
+  loop seamlessly.
+
+`loop` is `true` unless the tag's `repeat` is the string `"1"`, Aseprite's "play once".
+
+#### Parameters
+
+##### json
+
+`unknown`
+
+The parsed Aseprite document.
+
+##### options?
+
+[`AsepriteAnimationImportOptions`](#asepriteanimationimportoptions)
+
+The atlas address, the fallback rate, and a frame-naming override.
+
+#### Returns
+
+[`SpriteAnimationDefinition`](#spriteanimationdefinition)
+
+The complete animation document, already through `defineSpriteAnimation`.
+
+#### Remarks
+
+Aseprite stores a duration **per frame**, in milliseconds, while an ignifx clip carries a single
+`fps`. A tag is therefore approximated by the mean of its frames' durations: `fps` is
+`1000 / averageDuration`, rounded to three decimal places. A tag whose frames all share a
+duration converts exactly; one with uneven durations does not, and the individual frames will
+hold for the average instead of their authored time. Split such a tag, or even the durations out
+in Aseprite, when the timing matters. When no frame in the range declares a positive duration,
+`options.defaultFps` — itself defaulting to `12` — is used instead.
+
+Aseprite has no frame-event concept, so no clip carries `events`.
+
+#### Throws
+
+IgnifxError with code `IGX-1109` when the document is not an object, when
+`meta.frameTags` is missing, is not an array, or is empty, when a tag has no name, or when
+frames cannot be named because the document has no readable `frames` and no `frameNameOf` was
+supplied.
+
+#### Example
+
+```ts
+const animations = importAsepriteAnimations(JSON.parse(text), { atlas: "2d/hero.atlas.json" });
+animations.clips[0]; // { name: "idle", frames: ["hero_0", "hero_1"], fps: 10, loop: true }
+```
+
+***
+
+### importAsepriteAtlas()
+
+> **importAsepriteAtlas**(`json`, `options?`): [`SpriteAtlasDefinition`](#spriteatlasdefinition)
+
+Converts an Aseprite JSON sheet export into an `ignifx.spriteatlas` document.
+
+Aseprite writes a TexturePacker-shaped document — `frames` as either a hash or an array,
+`meta.image`, `meta.size` — plus its own `meta.frameTags`, `meta.slices` and `meta.layers`. The
+frame keys it produces are file-ish (`hero 0.aseprite`, `hero (idle) 0.aseprite`), so every one
+is put through [asepriteFrameName](#asepriteframename); `importAsepriteAnimations` uses the same normaliser,
+which is what makes the imported clips and the imported atlas agree on names.
+
+A trimmed frame keeps its `sourceSize` so the loader can place the trimmed rectangle back inside
+its original bounds.
+
+#### Parameters
+
+##### json
+
+`unknown`
+
+The parsed Aseprite document.
+
+##### options?
+
+[`AsepriteImportOptions`](#asepriteimportoptions)
+
+The image override and sampling.
+
+#### Returns
+
+[`SpriteAtlasDefinition`](#spriteatlasdefinition)
+
+The complete atlas document.
+
+#### Remarks
+
+Pivots are **best-effort**. Aseprite has no per-frame pivot; it has slices, which carry an
+optional pivot in sprite-canvas pixels relative to the slice's own bounds and apply from their
+key's `frame` index onwards. This importer takes the slice key with the greatest `frame` index at
+or below the frame being converted (ties going to the earlier slice in document order) and
+normalises `bounds + pivot` against the frame's untrimmed size, clamped into `[0, 1]`. That is
+right for the common case — one slice covering the character, authored on an untrimmed sheet —
+and approximate for anything else. Frames no slice covers get the centre.
+
+#### Throws
+
+IgnifxError with code `IGX-1109` when the document is not an object, when `frames` is
+neither an object nor an array, when it is empty, when no image address can be found, or when a
+frame has no rectangle.
+
+#### Example
+
+```ts
+const atlas = importAsepriteAtlas(JSON.parse(text), { sampling: "nearest" });
+atlas.frames[0]?.name; // "hero_idle_0", from the key "hero (idle) 0.aseprite"
+```
+
+***
+
+### importLdtkLevel()
+
+> **importLdtkLevel**(`ldtk`, `options?`): [`TilemapDefinition`](#tilemapdefinition-1)
+
+Imports one level of an LDtk project.
+
+#### Parameters
+
+##### ldtk
+
+`unknown`
+
+The parsed `.ldtk` project.
+
+##### options?
+
+[`LdtkImportOptions`](#ldtkimportoptions)
+
+The level to pick, pixels-per-unit, the sorting layer, and the mappings.
+
+#### Returns
+
+[`TilemapDefinition`](#tilemapdefinition-1)
+
+The `ignifx.tilemap` document for that level.
+
+#### Remarks
+
+Three LDtk conventions need translating, and each is a place a naive importer goes wrong:
+
+- **Layer order is reversed.** LDtk stores `layerInstances` front-to-back — index `0` is the
+  layer drawn on *top*. ignifx layers are back-to-front, so the list is reversed and
+  `orderInLayer` follows the reversed index.
+- **Tile layers are sparse.** `gridTiles` is a list of `{ px, t }` placements, not a grid; the
+  importer expands it into the dense `__cWid * __cHei` array the tilemap format wants, filling
+  the gaps with `0`. `t` is a tile index *within its tileset*, so the global id is
+  `tileset.firstId + t`. A layer's `pxOffsetX`/`pxOffsetY` shift the grid; a dense grid has no
+  sub-cell placement, so the offset is rounded to whole cells.
+- **IntGrid layers are collision, not art.** An `intGridCsv` becomes a layer with
+  `collision: true` whose ids point into a synthetic, art-less tileset named
+  [LDTK\_INTGRID\_TILESET\_NAME](#ldtk_intgrid_tileset_name); see [LDTK\_DEFAULT\_INTGRID\_COLLIDERS](#ldtk_default_intgrid_colliders) for the value
+  mapping and [LdtkImportOptions.intGridColliders](#intgridcolliders) for overriding it.
+
+A tileset's `customData` entries are read as JSON, and an entry that parses to an object with
+`solid: true` gives its tile a full-cell box collider. Data that is not JSON, or that says
+something else, is ignored rather than treated as an error — `customData` is a free-form field
+and other tools put other things in it.
+
+Per-tile flips (`gridTiles[].f`) are dropped, as they are in the Tiled importer: the tilemap
+format has no per-cell flip yet.
+
+#### Throws
+
+IgnifxError with code `IGX-1109` when the project has no levels, when
+[LdtkImportOptions.level](#level) names a level that is not there, or when a layer's type is not
+`Tiles`, `IntGrid` or `Entities`; and `IGX-1105` when what it decodes to is not a valid tilemap.
+
+#### Example
+
+```ts
+const map = importLdtkLevel(JSON.parse(await readFile("world.ldtk", "utf8")), { level: "Cave" });
+```
+
+***
+
+### importTexturePackerAtlas()
+
+> **importTexturePackerAtlas**(`json`, `options?`): [`SpriteAtlasDefinition`](#spriteatlasdefinition)
+
+Converts a TexturePacker JSON export into an `ignifx.spriteatlas` document.
+
+Both of TexturePacker's JSON layouts are read and produce identical output for the same sheet:
+the **hash** layout, whose `frames` is an object keyed by file name, and the **array** layout,
+whose `frames` is an array of entries carrying a `filename`. Frame names lose their trailing file
+extension (`hero_0.png` becomes `hero_0`) unless `keepExtensions` is set.
+
+A frame's `pivot` is used as-is when the document declares one: TexturePacker already writes
+pivots normalised into `[0, 1]` against a top-left origin, which is exactly ignifx's convention.
+Frames without one get the centre. A frame marked `trimmed` carries its `sourceSize` through so
+the loader can lay the trimmed rectangle back inside its original bounds.
+
+#### Parameters
+
+##### json
+
+`unknown`
+
+The parsed TexturePacker document.
+
+##### options?
+
+[`TexturePackerImportOptions`](#texturepackerimportoptions)
+
+The image override, name handling, and sampling.
+
+#### Returns
+
+[`SpriteAtlasDefinition`](#spriteatlasdefinition)
+
+The complete atlas document.
+
+#### Remarks
+
+Rotated frames are rejected rather than silently drawn wrong — the sprite pipeline has no
+per-frame rotation flag.
+
+`spriteSourceSize`'s **offset** (`x`/`y`) has no home in `SpriteFrameDefinition`, which records
+only the untrimmed size, so a trimmed frame whose art is not centred in its source bounds may sit
+slightly off. Pack with trimming disabled, or with `spriteSourceSize` centred, when that matters.
+
+#### Throws
+
+IgnifxError with code `IGX-1109` when the document is not an object, when `frames` is
+neither an object nor an array, when it is empty, when no image address can be found, when a
+frame has no rectangle, or when a frame is rotated.
+
+#### Example
+
+```ts
+const atlas = importTexturePackerAtlas(JSON.parse(text), { image: "2d/hero.png" });
+atlas.frames[0]?.name; // "hero_0"
+```
+
+***
+
+### importTiledMap()
+
+> **importTiledMap**(`tmj`, `options?`): [`TilemapDefinition`](#tilemapdefinition-1)
+
+Imports a Tiled JSON map.
+
+#### Parameters
+
+##### tmj
+
+`unknown`
+
+The parsed `.tmj` document.
+
+##### options?
+
+[`TiledImportOptions`](#tiledimportoptions)
+
+Pixels-per-unit, the default sorting layer, and the atlas address mapping.
+
+#### Returns
+
+[`TilemapDefinition`](#tilemapdefinition-1)
+
+The `ignifx.tilemap` document.
+
+#### Remarks
+
+Three Tiled features are rejected outright with `IGX-1109` rather than approximated: a non
+orthogonal `orientation`, an `infinite` map (whose layers are chunked rather than dense), and
+base64/compressed layer `data` (which arrives as a string). Everything else degrades quietly —
+image layers and group layers are skipped, and unknown properties are carried through.
+
+Tiled stores the horizontal, vertical and diagonal flip flags in the top three bits of every
+global tile id. ignifx has no per-cell flip yet, so those bits are **masked off** and the tile
+draws unflipped; without the mask a flipped tile would resolve to a nonsensical tileset.
+
+The frame names this importer emits are `<tilesetName>_<localTileIndex>` — the same names
+the grid-atlas generator gives the frames it cuts out of the tileset image, which is the contract
+that lets `TilemapRenderer` look a tile's sprite up without a side table.
+
+#### Throws
+
+IgnifxError with code `IGX-1109` when the document is not an orthogonal, finite,
+uncompressed Tiled map, and `IGX-1105` when what it decodes to is not a valid tilemap.
+
+#### Example
+
+```ts
+const map = importTiledMap(JSON.parse(await readFile("cave.tmj", "utf8")), { pixelsPerUnit: 32 });
+```
 
 ***
 
@@ -47518,13 +62610,13 @@ throw inputError(InputErrorCode.unknownActionMap, "UI is not a registered action
 
 ### inputSettingsSchema()
 
-> **inputSettingsSchema**(): [`Schema`](#schema-21)
+> **inputSettingsSchema**(): [`Schema`](#schema-30)
 
 The schema the `input` section is validated against.
 
 #### Returns
 
-[`Schema`](#schema-21)
+[`Schema`](#schema-30)
 
 The schema, built fresh so no module holds state (`CONSTITUTION.md` §3.5).
 
@@ -47542,7 +62634,7 @@ every asset the file references is already loaded, which is what a `SceneAsset` 
 
 ##### world
 
-[`World`](#world-26)
+[`World`](#world-45)
 
 The world to build into.
 
@@ -47648,6 +62740,42 @@ The candidate.
 
 ```ts
 const address = isAssetRef(input) ? input.address : input;
+```
+
+***
+
+### isFullCellSolid()
+
+> **isFullCellSolid**(`info`, `cellSize`): `boolean`
+
+Whether a tile's collider fills its whole cell and is not a one-way platform — the only shape the
+rectangle merge can absorb.
+
+#### Parameters
+
+##### info
+
+[`TileCollisionInfo`](#tilecollisioninfo-3)
+
+The tile's collision info, in cell-local metres.
+
+##### cellSize
+
+`number`
+
+The edge length of one cell, in metres.
+
+#### Returns
+
+`boolean`
+
+Whether the tile is a plain, full-cell solid.
+
+#### Example
+
+```ts
+isFullCellSolid({ shape: { kind: "box", x: 0, y: 0, width: 1, height: 1 }, oneWay: false, properties: {} }, 1);
+// true
 ```
 
 ***
@@ -48001,6 +63129,82 @@ ammo: map(i32(0)); // Record<string, number>
 
 ***
 
+### mergeTileCollisions()
+
+> **mergeTileCollisions**(`infoAt`, `options`, `version`): [`TilemapCollisionData`](#tilemapcollisiondata-1)
+
+Merges a grid of per-tile collision shapes into chunked, world-space polygons.
+
+#### Parameters
+
+##### infoAt
+
+(`x`, `y`) => [`TileCollisionInfo`](#tilecollisioninfo-3)
+
+The per-cell collision info, in cell coordinates with `y = 0` at the bottom.
+
+##### options
+
+[`CollisionMergeOptions`](#collisionmergeoptions)
+
+The cell size, chunk size, and grid extent.
+
+##### version
+
+`number`
+
+The version stamp to carry into the result; callers increment it per rebuild.
+
+#### Returns
+
+[`TilemapCollisionData`](#tilemapcollisiondata-1)
+
+The chunked collision data.
+
+#### Remarks
+
+**Coordinates.** `infoAt` is called with cell coordinates in which `y = 0` is the **bottom** row,
+because the ignifx 2D world is +Y up; a caller reading a `TilemapLayerDefinition`, whose rows run
+top-first, indexes it as `(height - 1 - y) * width + x`. Everything this function emits is world
+metres relative to the tilemap's origin, so cell `(x, y)` spans
+`[x·cellSize, (x+1)·cellSize] × [y·cellSize, (y+1)·cellSize]`.
+
+**The merge.** Each chunk is handled independently, so a later edit rebuilds one chunk rather than
+the map. Inside a chunk, cells that [isFullCellSolid](#isfullcellsolid) accepts go into a boolean grid and are
+merged in two greedy passes: first every row is cut into maximal horizontal runs, then a run
+extends upwards for as long as the row above holds a run with exactly the same span, which is
+marked consumed. Each surviving block is emitted as one counter-clockwise rectangle. It is the
+classic row-then-column greedy mesher: linear in cells plus a small scan per row, and optimal for
+rectangles while deliberately not optimal in general — an L-shape comes out as two rectangles, not
+one six-vertex polygon, and that is the trade the algorithm makes for being O(n).
+
+Anything the rectangle pass cannot absorb — a partial box, a slope polygon — is emitted as its own
+polygon, translated into world metres. Its winding is already counter-clockwise, because
+`tileCollisionInfo` guarantees it.
+
+**One-way platforms.** A one-way tile contributes no polygon at all; it contributes its collider's
+**top edge** to `oneWayEdges`. The winding follows the same rule as a polygon: the solid material
+is to the **left** of `from → to`. For a directed edge `d = to − from`, "left" is `d` rotated a
+quarter turn counter-clockwise, `(−dy, dx)`. An upward-facing platform is solid *below* its
+surface — that is the half you cannot pass through once you have landed — so we need
+`(−dy, dx) = (0, −1)`, giving `dy = 0` and `dx = −1`. The edge therefore runs from its **right**
+end to its **left** end.
+
+Chunks that end up with neither a polygon nor a one-way edge are omitted entirely.
+
+#### Example
+
+```ts
+const data = mergeTileCollisions((x, y) => tileCollisionInfo(map, tileAt(x, y)), {
+  cellSize: map.cellSize,
+  chunkSize: 32,
+  width: map.width,
+  height: map.height,
+}, 1);
+```
+
+***
+
 ### mouseControlNames()
 
 > **mouseControlNames**(): readonly `string`[]
@@ -48053,6 +63257,28 @@ The stepped value, exactly `target` once the remaining distance fits in `maxDelt
 // frame-rate independent approach at 2 units per second
 health = moveTowards(health, 100, 2 * time.deltaTime);
 ```
+
+***
+
+### normalisePath()
+
+> **normalisePath**(`path`): `string`
+
+Collapses `.` and `..` segments in a `/`-separated path.
+
+#### Parameters
+
+##### path
+
+`string`
+
+The path to normalise.
+
+#### Returns
+
+`string`
+
+The normalised path; leading `..` segments that escape the root are dropped.
 
 ***
 
@@ -48262,6 +63488,38 @@ IgnifxError with code `IGX-0904` when the document is not one this build can rea
 
 ***
 
+### parsePhysicsMaterial2D()
+
+> **parsePhysicsMaterial2D**(`address`, `document`): [`PhysicsMaterial2D`](#physicsmaterial2d)
+
+Parses one `ignifx.physicsmaterial` document into a 2D surface.
+
+#### Parameters
+
+##### address
+
+`string`
+
+The address it came from, for the diagnostic.
+
+##### document
+
+[`JsonValue`](#jsonvalue)
+
+The parsed JSON.
+
+#### Returns
+
+[`PhysicsMaterial2D`](#physicsmaterial2d)
+
+The material.
+
+#### Throws
+
+IgnifxError with code `IGX-1154` when the document is not one this build can read.
+
+***
+
 ### parseProcessor()
 
 > **parseProcessor**(`source`): [`Processor`](#processor)
@@ -48317,6 +63575,34 @@ The parsed chain.
 #### Throws
 
 IgnifxError with code `IGX-0802` for the first unparseable entry.
+
+***
+
+### parseSpriteFragment()
+
+> **parseSpriteFragment**(`fragment`): `string` \| `null`
+
+Splits a sprite address into its atlas address and its frame name.
+
+#### Parameters
+
+##### fragment
+
+`string` \| `null`
+
+The part after `#`, or `null` for a bare atlas address.
+
+#### Returns
+
+`string` \| `null`
+
+The frame name, or `null` when the fragment does not select a frame.
+
+#### Example
+
+```ts
+parseSpriteFragment("frame:idle_0"); // "idle_0"
+```
 
 ***
 
@@ -48384,6 +63670,67 @@ pbrMaterialDefinition({ name: "gold", metallic: 1, roughness: 0.25 });
 
 ***
 
+### physics2DError()
+
+> **physics2DError**(`code`, `message`, `options?`): [`IgnifxError`](#ignifxerror)
+
+Builds an `IgnifxError` carrying one of this package's codes.
+
+#### Parameters
+
+##### code
+
+[`Physics2DErrorCode`](#physics2derrorcode-1)
+
+The code from the `Physics2DErrorCode` table.
+
+##### message
+
+`string`
+
+The actionable development sentence.
+
+##### options?
+
+[`Physics2DErrorOptions`](#physics2derroroptions)
+
+Context identifiers, a remedy hint, and the wrapped cause.
+
+#### Returns
+
+[`IgnifxError`](#ignifxerror)
+
+The error to throw or to reject with.
+
+#### Example
+
+```ts
+throw physics2DError(Physics2DErrorCode.unknownLayer, "physics2d.collisionMatrix names Enemy.", {
+  context: { layer: "Enemy" },
+});
+```
+
+***
+
+### physics2DSettingsSchema()
+
+> **physics2DSettingsSchema**(): [`Schema`](#schema-30)
+
+Builds the schema the `physics2d` section is validated against.
+
+#### Returns
+
+[`Schema`](#schema-30)
+
+The schema.
+
+#### Remarks
+
+It is a function, not a module-level constant: every field kind is a function call, and module
+scope holds declarations and immutable constants only (`CONSTITUTION.md` §3.5).
+
+***
+
 ### physicsError()
 
 > **physicsError**(`code`, `message`, `options?`): [`IgnifxError`](#ignifxerror)
@@ -48428,13 +63775,13 @@ throw physicsError(PhysicsErrorCode.unknownLayer, "physics.collisionMatrix names
 
 ### physicsSettingsSchema()
 
-> **physicsSettingsSchema**(): [`Schema`](#schema-21)
+> **physicsSettingsSchema**(): [`Schema`](#schema-30)
 
 Builds the schema the `physics` section is validated against.
 
 #### Returns
 
-[`Schema`](#schema-21)
+[`Schema`](#schema-30)
 
 The schema.
 
@@ -48520,6 +63867,125 @@ const player2 = pinToDeviceSlot(definition, 1, "Gamepad");
 
 ***
 
+### pivotedPositionToRef()
+
+> **pivotedPositionToRef**\<`TOut`\>(`anchorXPx`, `anchorYPx`, `pivot`, `widthPx`, `heightPx`, `rotationRadians`, `out`): `TOut`
+
+Places the pivot of a sprite at a world point by offsetting the position Lite draws it at.
+
+#### Type Parameters
+
+##### TOut
+
+`TOut` *extends* [`MutableVec2`](#mutablevec2)
+
+#### Parameters
+
+##### anchorXPx
+
+`number`
+
+The world anchor, in layer pixels.
+
+##### anchorYPx
+
+`number`
+
+The world anchor, in layer pixels.
+
+##### pivot
+
+[`Vec2Like`](#vec2like)
+
+The pivot in `[0, 1]` of the frame; `[0, 0]` is top-left, `[1, 1]` bottom-right.
+
+##### widthPx
+
+`number`
+
+The drawn width, in pixels.
+
+##### heightPx
+
+`number`
+
+The drawn height, in pixels.
+
+##### rotationRadians
+
+`number`
+
+The sprite's Lite rotation, which the offset turns with.
+
+##### out
+
+`TOut`
+
+The vector to write.
+
+#### Returns
+
+`TOut`
+
+`out`: the value to write to `Sprite2DProps.positionPx`.
+
+#### Remarks
+
+Lite's sprite pipeline has **one pivot per layer**, not per sprite or per frame: the vertex
+shader reads `L.pivot` out of the layer uniform (`lib/sprite/sprite-pipeline.js` lines 25 and
+264–265), and the per-frame `SpriteFrame.pivot` is consumed only by the *billboard* family
+(`lib/sprite/billboard-sprite.js` lines 166–167). ignifx therefore keeps every layer on the
+centre pivot `[0.5, 0.5]` and moves the sprite instead, which is what makes a per-frame pivot and
+`SpriteRenderer.pivotOverride` work at all.
+
+***
+
+### pixelsToWorldToRef()
+
+> **pixelsToWorldToRef**\<`TOut`\>(`xPx`, `yPx`, `pixelsPerUnit`, `out`): `TOut`
+
+Converts a Lite layer-pixel point back to world metres.
+
+#### Type Parameters
+
+##### TOut
+
+`TOut` *extends* [`MutableVec2`](#mutablevec2)
+
+#### Parameters
+
+##### xPx
+
+`number`
+
+The layer x, in pixels.
+
+##### yPx
+
+`number`
+
+The layer y, in pixels, with +Y down.
+
+##### pixelsPerUnit
+
+`number`
+
+The pixels one metre spans.
+
+##### out
+
+`TOut`
+
+The vector to write.
+
+#### Returns
+
+`TOut`
+
+`out`, in metres with +Y up.
+
+***
+
 ### quat()
 
 > **quat**(`defaultValue?`, `options?`): [`FieldDefinition`](#fielddefinition)\<[`QuatLike`](#quatlike)\>
@@ -48567,6 +64033,34 @@ The angle in radians.
 `number`
 
 The same angle in degrees.
+
+***
+
+### readVec2()
+
+> **readVec2**(`value`, `fallback`): [`Vec2Like`](#vec2like)
+
+Normalises either written form of a 2D value.
+
+#### Parameters
+
+##### value
+
+[`Vec2Json`](#vec2json) \| `undefined`
+
+What the document wrote, or `undefined`.
+
+##### fallback
+
+[`Vec2Like`](#vec2like)
+
+What to use when the document wrote nothing.
+
+#### Returns
+
+[`Vec2Like`](#vec2like)
+
+The normalised vector.
 
 ***
 
@@ -48670,6 +64164,34 @@ The same sample, so it can be used as an expression.
 
 ***
 
+### resolveClipFrames()
+
+> **resolveClipFrames**(`clip`, `indexOf`): readonly `number`[]
+
+Resolves a clip's frame names into atlas frame indices.
+
+#### Parameters
+
+##### clip
+
+[`SpriteClipDefinition`](#spriteclipdefinition)
+
+The clip to resolve.
+
+##### indexOf
+
+(`name`) => `number`
+
+Maps an atlas frame name to its index, or `-1` when the atlas has no such frame.
+
+#### Returns
+
+readonly `number`[]
+
+The indices in play order; empty when the clip names nothing the atlas has.
+
+***
+
 ### resolveGamepadRemap()
 
 > **resolveGamepadRemap**(`snapshot`): [`GamepadRemap`](#gamepadremap) \| `null`
@@ -48694,6 +64216,48 @@ The remap, or `null` for a standard pad.
 
 ```ts
 resolveGamepadRemap({ id: "Pro Controller (Nintendo)", mapping: "", buttons: [], axes: [] });
+```
+
+***
+
+### resolveRelative()
+
+> **resolveRelative**(`base`, `reference`): `string`
+
+Resolves a document-relative reference against the document's own address or URL.
+
+#### Parameters
+
+##### base
+
+`string`
+
+The address or URL of the document holding the reference.
+
+##### reference
+
+`string`
+
+What the document wrote.
+
+#### Returns
+
+`string`
+
+The resolved address or URL.
+
+#### Remarks
+
+A reference that is absolute — one of the recognised URL schemes, or one starting with `/` — is
+returned untouched, so a project that prefers project-root addresses can write them. `.` and `..`
+segments are collapsed, and a base with no `/` at all is treated as a file in the root.
+
+#### Example
+
+```ts
+resolveRelative("2d/hero.atlas.json", "hero.png"); // "2d/hero.png"
+resolveRelative("2d/hero.atlas.json", "../shared/pal.png"); // "shared/pal.png"
+resolveRelative("2d/hero.atlas.json", "/sprites/hero.png"); // "/sprites/hero.png"
 ```
 
 ***
@@ -48728,6 +64292,28 @@ The schema document.
 const schema = sceneFileJsonSchema(app.world.registry);
 await writeFile("ignifx.schemas.json", JSON.stringify(schema, null, 2));
 ```
+
+***
+
+### selectCamera()
+
+> **selectCamera**(`world`): [`Camera2D`](#camera2d) \| `null`
+
+Picks the camera the frame draws through: the highest-priority enabled `Camera2D`.
+
+#### Parameters
+
+##### world
+
+[`World`](#world-45)
+
+The world to search.
+
+#### Returns
+
+[`Camera2D`](#camera2d) \| `null`
+
+The camera, or `null` when the world has none enabled.
 
 ***
 
@@ -48786,7 +64372,7 @@ Writes one entity as a file record, for tooling and tests
 
 ##### entity
 
-[`Entity`](#entity-9)
+[`Entity`](#entity-17)
 
 The entity to write.
 
@@ -48827,7 +64413,7 @@ Writes a scene instance, or a set of entities, as a scene file object
 
 ##### source
 
-[`SceneInstance`](#sceneinstance) \| readonly [`Entity`](#entity-9)[]
+[`SceneInstance`](#sceneinstance) \| readonly [`Entity`](#entity-17)[]
 
 The instance to write, or the entities to write as a file's roots.
 
@@ -48886,6 +64472,40 @@ for `NaN`.
 
 ***
 
+### sizeForZoom()
+
+> **sizeForZoom**(`viewportHeightPx`, `zoom`, `pixelsPerUnit`): `number`
+
+The inverse of [zoomForSize](#zoomforsize): what half-height a zoom shows.
+
+#### Parameters
+
+##### viewportHeightPx
+
+`number`
+
+The viewport height, in pixels.
+
+##### zoom
+
+`number`
+
+The `Sprite2DView.zoom` value.
+
+##### pixelsPerUnit
+
+`number`
+
+The pixels one metre spans.
+
+#### Returns
+
+`number`
+
+The half-height, in metres.
+
+***
+
 ### smoothStep()
 
 > **smoothStep**(`edge0`, `edge1`, `x`): `number`
@@ -48924,6 +64544,253 @@ A value in `[0, 1]`. Degenerate edges (`edge0 === edge1`) step from 0 to 1 at th
 ```ts
 smoothStep(0, 1, 0.5); // 0.5, but with zero slope at 0 and 1
 ```
+
+***
+
+### snapPixel()
+
+> **snapPixel**(`valuePx`, `zoom`): `number`
+
+Snaps a layer-pixel coordinate to the whole-pixel grid a pixel-perfect camera draws on.
+
+#### Parameters
+
+##### valuePx
+
+`number`
+
+The coordinate, in layer pixels.
+
+##### zoom
+
+`number`
+
+The camera's zoom; at zoom 2 the grid step is half a layer pixel.
+
+#### Returns
+
+`number`
+
+The snapped coordinate.
+
+***
+
+### snapZoomToInteger()
+
+> **snapZoomToInteger**(`zoom`): `number`
+
+Snaps a zoom to the nearest usable integer for a pixel-perfect camera
+(`docs/architecture/11-2d-toolkit.md` §4).
+
+#### Parameters
+
+##### zoom
+
+`number`
+
+The continuous zoom [zoomForSize](#zoomforsize) produced.
+
+#### Returns
+
+`number`
+
+The snapped zoom, always greater than zero.
+
+#### Remarks
+
+Zooms below 1 snap to the reciprocal of an integer (`1/2`, `1/3`, …) rather than to zero, so a
+camera that is pulled far out still lands on a whole-texel scale.
+
+***
+
+### spawnTilemapObjects()
+
+> **spawnTilemapObjects**(`app`, `service`, `tilemap`): readonly [`Entity`](#entity-17)[]
+
+Runs the registered factory for every object in one tilemap.
+
+#### Parameters
+
+##### app
+
+[`App`](#app)
+
+The app.
+
+##### service
+
+[`TwoDService`](#twodservice)
+
+The 2D service holding the factory registry.
+
+##### tilemap
+
+[`Tilemap`](#tilemap)
+
+The tilemap whose objects layer to walk.
+
+#### Returns
+
+readonly [`Entity`](#entity-17)[]
+
+The entities that were created, in document order.
+
+#### Example
+
+```ts
+app.twoD.registerTileObjectFactory("spawn", ({ world, position }) => {
+  const player = world.createEntity({ name: "player" });
+  player.transform.position2D = new Vec2(position.x, position.y);
+  return player;
+});
+```
+
+***
+
+### spriteAnimationFileSchema()
+
+> **spriteAnimationFileSchema**(): [`Schema`](#schema-30)
+
+The `ignifx.spriteanimation` document schema.
+
+#### Returns
+
+[`Schema`](#schema-30)
+
+The schema, built fresh so no module holds state (`CONSTITUTION.md` §3.5).
+
+***
+
+### spriteAnimationJsonSchema()
+
+> **spriteAnimationJsonSchema**(): [`JsonObject`](#jsonobject)
+
+The JSON Schema a tool validates a `.spriteanim.json` document against.
+
+#### Returns
+
+[`JsonObject`](#jsonobject)
+
+The JSON Schema object.
+
+***
+
+### spriteAtlasFileSchema()
+
+> **spriteAtlasFileSchema**(): [`Schema`](#schema-30)
+
+The `ignifx.spriteatlas` document schema.
+
+#### Returns
+
+[`Schema`](#schema-30)
+
+The schema, built fresh so no module holds state (`CONSTITUTION.md` §3.5).
+
+***
+
+### spriteAtlasJsonSchema()
+
+> **spriteAtlasJsonSchema**(): [`JsonObject`](#jsonobject)
+
+The JSON Schema a tool validates a `.atlas.json` document against.
+
+#### Returns
+
+[`JsonObject`](#jsonobject)
+
+The JSON Schema object.
+
+***
+
+### spriteLayerKey()
+
+> **spriteLayerKey**(`sortingLayer`, `atlasAddress`, `blend`, `screenSpace`): `string`
+
+Builds the composite key two sprites must share to land in one Lite layer.
+
+#### Parameters
+
+##### sortingLayer
+
+`string`
+
+The sorting layer's name.
+
+##### atlasAddress
+
+`string`
+
+The atlas's address.
+
+##### blend
+
+`"opaque"` \| `"premultiplied"` \| `"alpha"` \| `"additive"` \| `"multiply"`
+
+The blend mode.
+
+##### screenSpace
+
+`boolean`
+
+Whether the layer ignores the camera.
+
+#### Returns
+
+`string`
+
+The key.
+
+***
+
+### spriteRotationFromLite()
+
+> **spriteRotationFromLite**(`radians`): `number`
+
+Converts a Lite sprite rotation back to ignifx degrees.
+
+#### Parameters
+
+##### radians
+
+`number`
+
+The `Sprite2DProps.rotation` value.
+
+#### Returns
+
+`number`
+
+The ignifx rotation, in degrees counter-clockwise.
+
+***
+
+### spriteRotationToLite()
+
+> **spriteRotationToLite**(`degrees`): `number`
+
+Converts an ignifx rotation about +Z into the rotation Lite gives a **sprite**.
+
+#### Parameters
+
+##### degrees
+
+`number`
+
+The ignifx rotation, in degrees counter-clockwise.
+
+#### Returns
+
+`number`
+
+The rotation to write to `Sprite2DProps.rotation`, in radians.
+
+#### Remarks
+
+`Transform.rotation2D` is degrees counter-clockwise in a +Y-up world. A sprite's quad is built in
+Lite's +Y-down pixel space (`(corner - pivot) * sizePx`, then rotated), so the same visual turn is
+the negated angle there. Verified against the sprite vertex shader in
+`@babylonjs/lite@1.27.0`, `lib/sprite/sprite-pipeline.js` line 25.
 
 ***
 
@@ -49008,6 +64875,152 @@ stringifySceneFile(serializeScene(instance)) === stringifySceneFile(serializeSce
 
 ***
 
+### tileCollisionInfo()
+
+> **tileCollisionInfo**(`map`, `tileId`): [`TileCollisionInfo`](#tilecollisioninfo-3)
+
+Resolves a global tile id into the collision information a physics backend consumes.
+
+#### Parameters
+
+##### map
+
+[`TilemapDefinition`](#tilemapdefinition-1)
+
+The parsed document.
+
+##### tileId
+
+`number`
+
+The global tile id, `0` for an empty cell.
+
+#### Returns
+
+[`TileCollisionInfo`](#tilecollisioninfo-3)
+
+The tile's runtime collision info; a non-colliding, non-one-way default for the empty
+tile, for an id no tileset claims, and for a tile that declares no collider.
+
+#### Remarks
+
+This is the only place the authoring convention becomes the runtime one. A
+[TileColliderDefinition](#tilecolliderdefinition) is cell-normalised with a **top-left** origin and +Y down; a
+[TileCollisionShape](#tilecollisionshape) is cell-local **metres** with a **bottom-left** origin, +Y up and
+counter-clockwise winding. So:
+
+- a box's bottom edge is `(1 - y - height) * cellSize`, because the authored `y` measures the
+  distance from the cell's top down to the box's *top* edge;
+- a polygon's points each become `(x * cellSize, (1 - y) * cellSize)`, and the point **order is
+  reversed**, because mirroring a ring about a horizontal axis flips its winding — a clockwise
+  editor outline is counter-clockwise once flipped only if it is also walked backwards.
+
+#### Example
+
+```ts
+// A one-way platform authored as the top quarter of the cell, at cellSize 1:
+tileCollisionInfo(map, 2).shape; // { kind: "box", x: 0, y: 0.75, width: 1, height: 0.25 }
+```
+
+***
+
+### tiledPropertiesToRecord()
+
+> **tiledPropertiesToRecord**(`properties`): `Readonly`\<`Record`\<`string`, `string` \| `number` \| `boolean`\>\>
+
+Flattens Tiled's `[{ name, type, value }]` property arrays into a plain record.
+
+#### Parameters
+
+##### properties
+
+`unknown`
+
+The value of a Tiled `properties` field, or anything else.
+
+#### Returns
+
+`Readonly`\<`Record`\<`string`, `string` \| `number` \| `boolean`\>\>
+
+The flattened record; empty when `properties` is not a Tiled property array.
+
+#### Remarks
+
+Only `string`, `number` and `boolean` values survive; Tiled's `object` and `class` property types
+carry editor-side references that mean nothing at runtime, and are dropped rather than stringified
+into something that looks meaningful but is not. `color` and `file` properties are strings in the
+JSON and come through as strings.
+
+#### Example
+
+```ts
+tiledPropertiesToRecord([{ name: "biome", type: "string", value: "cave" }]); // { biome: "cave" }
+```
+
+***
+
+### tileFrameName()
+
+> **tileFrameName**(`map`, `tileId`): `string` \| `null`
+
+The atlas frame a global tile id draws.
+
+#### Parameters
+
+##### map
+
+[`TilemapDefinition`](#tilemapdefinition-1)
+
+The parsed document.
+
+##### tileId
+
+`number`
+
+The global tile id.
+
+#### Returns
+
+`string` \| `null`
+
+The frame name, or `null` for the empty tile and for an id no tileset claims.
+
+#### Example
+
+```ts
+tileFrameName(map, 1); // "hero_0"
+```
+
+***
+
+### tilemapFileSchema()
+
+> **tilemapFileSchema**(): [`Schema`](#schema-30)
+
+The `ignifx.tilemap` document schema.
+
+#### Returns
+
+[`Schema`](#schema-30)
+
+The schema, built fresh so no module holds state (`CONSTITUTION.md` §3.5).
+
+***
+
+### tilemapJsonSchema()
+
+> **tilemapJsonSchema**(): [`JsonObject`](#jsonobject)
+
+The JSON Schema a tool validates a `.tilemap.json` document against.
+
+#### Returns
+
+[`JsonObject`](#jsonobject)
+
+The JSON Schema object.
+
+***
+
 ### toJsonSchema()
 
 > **toJsonSchema**(`schema`): [`JsonObject`](#jsonobject)
@@ -49020,7 +65033,7 @@ editor autocompletion (`docs/architecture/06-serialization-and-scene-format.md` 
 
 ##### schema
 
-[`Schema`](#schema-21)
+[`Schema`](#schema-30)
 
 The schema to convert.
 
@@ -49043,6 +65056,63 @@ The touch control names, in index order.
 readonly `string`[]
 
 `primaryTouch/…`, `touch0/…` through `touch9/…`, and `touchCount`.
+
+***
+
+### twoDError()
+
+> **twoDError**(`code`, `message`, `options?`): [`IgnifxError`](#ignifxerror)
+
+Builds an `IgnifxError` carrying one of this package's codes.
+
+#### Parameters
+
+##### code
+
+[`TwoDErrorCode`](#twoderrorcode-1)
+
+The code from the `TwoDErrorCode` table.
+
+##### message
+
+`string`
+
+The actionable development sentence.
+
+##### options?
+
+[`TwoDErrorOptions`](#twoderroroptions)
+
+Context identifiers, a remedy hint, and the wrapped cause.
+
+#### Returns
+
+[`IgnifxError`](#ignifxerror)
+
+The error to throw or to reject with.
+
+#### Example
+
+```ts
+throw twoDError(TwoDErrorCode.unknownClip, "hero.spriteanim.json declares no clip named jump.", {
+  context: { asset: "hero.spriteanim.json", clip: "jump" },
+});
+```
+
+***
+
+### twoDSettingsSchema()
+
+> **twoDSettingsSchema**(): [`Schema`](#schema-30)
+
+The schema the `twoD` section is validated against, in `ignifx.config.ts` and in a scene file
+alike.
+
+#### Returns
+
+[`Schema`](#schema-30)
+
+The schema, built fresh so no module holds state (`CONSTITUTION.md` §3.5).
 
 ***
 
@@ -49125,7 +65195,7 @@ as `IGX-0607`; names the caller omits are legal, because omitted props take sche
 
 ##### schema
 
-[`Schema`](#schema-21)
+[`Schema`](#schema-30)
 
 The schema to check against.
 
@@ -49330,6 +65400,35 @@ The field definition.
 
 ***
 
+### viewRotationToLite()
+
+> **viewRotationToLite**(`degrees`): `number`
+
+Converts a `Camera2D` rotation into the rotation Lite gives a **view**.
+
+#### Parameters
+
+##### degrees
+
+`number`
+
+The camera rotation, in degrees counter-clockwise.
+
+#### Returns
+
+`number`
+
+The rotation to write to `Sprite2DView.rotation`, in radians.
+
+#### Remarks
+
+A view rotation is applied to an already-flipped world offset rather than to a sprite-local
+offset, and the two flips cancel — so unlike [spriteRotationToLite](#spriterotationtolite) the sign is kept.
+Verified against `sprite2DWorldToScreenToRef` in `@babylonjs/lite@1.27.0`,
+`lib/sprite/sprite-2d-view.js`.
+
+***
+
 ### waitFixedUpdate()
 
 > **waitFixedUpdate**(): [`WaitInstruction`](#waitinstruction)
@@ -49465,6 +65564,58 @@ The instruction to `yield`. Allocates one small object.
 
 ***
 
+### worldToPixelsToRef()
+
+> **worldToPixelsToRef**\<`TOut`\>(`x`, `y`, `pixelsPerUnit`, `out`): `TOut`
+
+Converts a world point in metres to a Lite layer-pixel point.
+
+#### Type Parameters
+
+##### TOut
+
+`TOut` *extends* [`MutableVec2`](#mutablevec2)
+
+#### Parameters
+
+##### x
+
+`number`
+
+The world x, in metres.
+
+##### y
+
+`number`
+
+The world y, in metres, with +Y up.
+
+##### pixelsPerUnit
+
+`number`
+
+The pixels one metre spans.
+
+##### out
+
+`TOut`
+
+The vector to write.
+
+#### Returns
+
+`TOut`
+
+`out`, in pixels with +Y down.
+
+#### Example
+
+```ts
+worldToPixelsToRef(1.5, 0.5, 100, out); // out is (150, -50)
+```
+
+***
+
 ### wrapAngleDegrees()
 
 > **wrapAngleDegrees**(`degrees`): `number`
@@ -49491,3 +65642,38 @@ The equivalent angle in `[-180, 180)`; exactly `180` wraps to `-180`.
 wrapAngleDegrees(370); // 10
 wrapAngleDegrees(-190); // 170
 ```
+
+***
+
+### zoomForSize()
+
+> **zoomForSize**(`viewportHeightPx`, `orthographicSize`, `pixelsPerUnit`): `number`
+
+The zoom a `Camera2D` needs so that `orthographicSize` metres fill half the viewport's height
+(`docs/architecture/11-2d-toolkit.md` §2.1).
+
+#### Parameters
+
+##### viewportHeightPx
+
+`number`
+
+The viewport height, in pixels.
+
+##### orthographicSize
+
+`number`
+
+The camera's half-height, in metres.
+
+##### pixelsPerUnit
+
+`number`
+
+The pixels one metre spans.
+
+#### Returns
+
+`number`
+
+The `Sprite2DView.zoom` value; never zero, because Lite rejects a zero zoom.

@@ -168,6 +168,59 @@
         }
       }
     },
+    "ignifx/BoxCollider2D": {
+      "title": "BoxCollider2D",
+      "format": "components",
+      "description": "An axis-aligned box, sized in local metres and scaled by the entity.",
+      "package": "packages/physics-2d",
+      "fields": {
+        "offset": {
+          "kind": "vec2",
+          "default": "[0,0]",
+          "description": ""
+        },
+        "isTrigger": {
+          "kind": "bool",
+          "default": "false",
+          "description": ""
+        },
+        "material": {
+          "kind": "asset",
+          "default": "null",
+          "description": ""
+        },
+        "inlineMaterial": {
+          "kind": "optional",
+          "default": "null",
+          "description": ""
+        },
+        "frictionCombine": {
+          "kind": "enum",
+          "default": "\"average\"",
+          "description": ""
+        },
+        "restitutionCombine": {
+          "kind": "enum",
+          "default": "\"average\"",
+          "description": ""
+        },
+        "oneWay": {
+          "kind": "bool",
+          "default": "false",
+          "description": ""
+        },
+        "layerOverride": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": ""
+        },
+        "size": {
+          "kind": "vec2",
+          "default": "[1,1]",
+          "description": ""
+        }
+      }
+    },
     "ignifx/Camera": {
       "title": "Camera",
       "format": "components",
@@ -216,6 +269,64 @@
         }
       }
     },
+    "ignifx/Camera2D": {
+      "title": "Camera2D",
+      "format": "components",
+      "description": "The 2D camera: orthographic size in metres, pixel-perfect snapping, bounds, and follow fields.",
+      "package": "packages/2d",
+      "fields": {
+        "orthographicSize": {
+          "kind": "f32",
+          "default": "5",
+          "description": "Half the viewport height, in metres."
+        },
+        "pixelPerfect": {
+          "kind": "bool",
+          "default": "false",
+          "description": "Snap zoom to an integer and positions to whole pixels."
+        },
+        "referenceResolution": {
+          "kind": "vec2",
+          "default": "[640,360]",
+          "description": "The design resolution a pixel-perfect camera fits an integer zoom to."
+        },
+        "boundsMin": {
+          "kind": "optional",
+          "default": "null",
+          "description": "The lower bound of the camera's travel, in metres."
+        },
+        "boundsMax": {
+          "kind": "optional",
+          "default": "null",
+          "description": "The upper bound of the camera's travel, in metres."
+        },
+        "follow": {
+          "kind": "entityRef",
+          "default": "null",
+          "description": "The entity Camera2DFollow tracks."
+        },
+        "followDamping": {
+          "kind": "f32",
+          "default": "0.15",
+          "description": "Seconds the follow takes to catch up; 0 is rigid."
+        },
+        "followOffset": {
+          "kind": "vec2",
+          "default": "[0,0]",
+          "description": "A constant offset added to the followed position."
+        },
+        "deadZone": {
+          "kind": "vec2",
+          "default": "[0,0]",
+          "description": "Half-size of the rectangle the target moves in freely."
+        },
+        "priority": {
+          "kind": "i32",
+          "default": "0",
+          "description": "Highest enabled camera wins."
+        }
+      }
+    },
     "ignifx/CapsuleCollider": {
       "title": "CapsuleCollider",
       "format": "components",
@@ -255,6 +366,69 @@
         "height": {
           "kind": "f32",
           "default": "2",
+          "description": ""
+        },
+        "direction": {
+          "kind": "enum",
+          "default": "\"y\"",
+          "description": ""
+        }
+      }
+    },
+    "ignifx/CapsuleCollider2D": {
+      "title": "CapsuleCollider2D",
+      "format": "components",
+      "description": "A capsule standing along X or Y.",
+      "package": "packages/physics-2d",
+      "fields": {
+        "offset": {
+          "kind": "vec2",
+          "default": "[0,0]",
+          "description": ""
+        },
+        "isTrigger": {
+          "kind": "bool",
+          "default": "false",
+          "description": ""
+        },
+        "material": {
+          "kind": "asset",
+          "default": "null",
+          "description": ""
+        },
+        "inlineMaterial": {
+          "kind": "optional",
+          "default": "null",
+          "description": ""
+        },
+        "frictionCombine": {
+          "kind": "enum",
+          "default": "\"average\"",
+          "description": ""
+        },
+        "restitutionCombine": {
+          "kind": "enum",
+          "default": "\"average\"",
+          "description": ""
+        },
+        "oneWay": {
+          "kind": "bool",
+          "default": "false",
+          "description": ""
+        },
+        "layerOverride": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": ""
+        },
+        "radius": {
+          "kind": "f32",
+          "default": "0.25",
+          "description": ""
+        },
+        "height": {
+          "kind": "f32",
+          "default": "1",
           "description": ""
         },
         "direction": {
@@ -307,6 +481,122 @@
         }
       }
     },
+    "ignifx/CharacterController2D": {
+      "title": "CharacterController2D",
+      "format": "components",
+      "description": "A kinematic character with collide-and-slide, slopes, autostep, and snap-to-ground.",
+      "package": "packages/physics-2d",
+      "fields": {
+        "shape": {
+          "kind": "enum",
+          "default": "\"capsule\"",
+          "description": ""
+        },
+        "radius": {
+          "kind": "f32",
+          "default": "0.25",
+          "description": ""
+        },
+        "height": {
+          "kind": "f32",
+          "default": "1",
+          "description": ""
+        },
+        "offset": {
+          "kind": "vec2",
+          "default": "[0,0]",
+          "description": ""
+        },
+        "slopeLimit": {
+          "kind": "f32",
+          "default": "45",
+          "description": ""
+        },
+        "stepOffset": {
+          "kind": "f32",
+          "default": "0",
+          "description": ""
+        },
+        "snapToGround": {
+          "kind": "f32",
+          "default": "0",
+          "description": ""
+        },
+        "skinWidth": {
+          "kind": "f32",
+          "default": "0.01",
+          "description": ""
+        },
+        "onOneWayPlatforms": {
+          "kind": "bool",
+          "default": "true",
+          "description": ""
+        },
+        "pushBodies": {
+          "kind": "bool",
+          "default": "false",
+          "description": ""
+        },
+        "interpolation": {
+          "kind": "enum",
+          "default": "\"interpolate\"",
+          "description": ""
+        }
+      }
+    },
+    "ignifx/CircleCollider2D": {
+      "title": "CircleCollider2D",
+      "format": "components",
+      "description": "A circle; the larger scale axis wins.",
+      "package": "packages/physics-2d",
+      "fields": {
+        "offset": {
+          "kind": "vec2",
+          "default": "[0,0]",
+          "description": ""
+        },
+        "isTrigger": {
+          "kind": "bool",
+          "default": "false",
+          "description": ""
+        },
+        "material": {
+          "kind": "asset",
+          "default": "null",
+          "description": ""
+        },
+        "inlineMaterial": {
+          "kind": "optional",
+          "default": "null",
+          "description": ""
+        },
+        "frictionCombine": {
+          "kind": "enum",
+          "default": "\"average\"",
+          "description": ""
+        },
+        "restitutionCombine": {
+          "kind": "enum",
+          "default": "\"average\"",
+          "description": ""
+        },
+        "oneWay": {
+          "kind": "bool",
+          "default": "false",
+          "description": ""
+        },
+        "layerOverride": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": ""
+        },
+        "radius": {
+          "kind": "f32",
+          "default": "0.5",
+          "description": ""
+        }
+      }
+    },
     "ignifx/CylinderCollider": {
       "title": "CylinderCollider",
       "format": "components",
@@ -346,6 +636,59 @@
         "height": {
           "kind": "f32",
           "default": "2",
+          "description": ""
+        }
+      }
+    },
+    "ignifx/EdgeCollider2D": {
+      "title": "EdgeCollider2D",
+      "format": "components",
+      "description": "An open chain of line segments — a platformer's ground contour.",
+      "package": "packages/physics-2d",
+      "fields": {
+        "offset": {
+          "kind": "vec2",
+          "default": "[0,0]",
+          "description": ""
+        },
+        "isTrigger": {
+          "kind": "bool",
+          "default": "false",
+          "description": ""
+        },
+        "material": {
+          "kind": "asset",
+          "default": "null",
+          "description": ""
+        },
+        "inlineMaterial": {
+          "kind": "optional",
+          "default": "null",
+          "description": ""
+        },
+        "frictionCombine": {
+          "kind": "enum",
+          "default": "\"average\"",
+          "description": ""
+        },
+        "restitutionCombine": {
+          "kind": "enum",
+          "default": "\"average\"",
+          "description": ""
+        },
+        "oneWay": {
+          "kind": "bool",
+          "default": "false",
+          "description": ""
+        },
+        "layerOverride": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": ""
+        },
+        "points": {
+          "kind": "array",
+          "default": "[]",
           "description": ""
         }
       }
@@ -895,6 +1238,44 @@
         }
       }
     },
+    "ignifx/ParallaxLayer": {
+      "title": "ParallaxLayer",
+      "format": "components",
+      "description": "Scrolls one sorting layer at a fraction of the camera's speed.",
+      "package": "packages/2d",
+      "fields": {
+        "sortingLayer": {
+          "kind": "str",
+          "default": "\"Default\"",
+          "description": "Which sorting layer scrolls slowly."
+        },
+        "factor": {
+          "kind": "vec2",
+          "default": "[0.5,1]",
+          "description": "Fraction of the camera's motion the layer follows."
+        },
+        "repeatX": {
+          "kind": "bool",
+          "default": "false",
+          "description": "Tile the layer horizontally across the camera's view."
+        },
+        "repeatY": {
+          "kind": "bool",
+          "default": "false",
+          "description": "Tile the layer vertically."
+        },
+        "repeatWidth": {
+          "kind": "f32",
+          "default": "0",
+          "description": "World width of one repetition, in metres."
+        },
+        "repeatHeight": {
+          "kind": "f32",
+          "default": "0",
+          "description": "World height of one repetition, in metres."
+        }
+      }
+    },
     "ignifx/physicsmaterial-file": {
       "title": "Physics material file",
       "format": "ignifx.physicsmaterial",
@@ -952,6 +1333,59 @@
         "scheme": {
           "kind": "str",
           "default": "\"\"",
+          "description": ""
+        }
+      }
+    },
+    "ignifx/PolygonCollider2D": {
+      "title": "PolygonCollider2D",
+      "format": "components",
+      "description": "The convex hull of a point list, in local metres.",
+      "package": "packages/physics-2d",
+      "fields": {
+        "offset": {
+          "kind": "vec2",
+          "default": "[0,0]",
+          "description": ""
+        },
+        "isTrigger": {
+          "kind": "bool",
+          "default": "false",
+          "description": ""
+        },
+        "material": {
+          "kind": "asset",
+          "default": "null",
+          "description": ""
+        },
+        "inlineMaterial": {
+          "kind": "optional",
+          "default": "null",
+          "description": ""
+        },
+        "frictionCombine": {
+          "kind": "enum",
+          "default": "\"average\"",
+          "description": ""
+        },
+        "restitutionCombine": {
+          "kind": "enum",
+          "default": "\"average\"",
+          "description": ""
+        },
+        "oneWay": {
+          "kind": "bool",
+          "default": "false",
+          "description": ""
+        },
+        "layerOverride": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": ""
+        },
+        "points": {
+          "kind": "array",
+          "default": "[]",
           "description": ""
         }
       }
@@ -1018,6 +1452,54 @@
         "kinematicSync": {
           "kind": "enum",
           "default": "\"teleport\"",
+          "description": ""
+        }
+      }
+    },
+    "ignifx/Rigidbody2D": {
+      "title": "Rigidbody2D",
+      "format": "components",
+      "description": "Makes an entity's 2D colliders a dynamic, kinematic, or static Rapier body.",
+      "package": "packages/physics-2d",
+      "fields": {
+        "bodyType": {
+          "kind": "enum",
+          "default": "\"dynamic\"",
+          "description": ""
+        },
+        "mass": {
+          "kind": "f32",
+          "default": "1",
+          "description": ""
+        },
+        "gravityScale": {
+          "kind": "f32",
+          "default": "1",
+          "description": ""
+        },
+        "linearDamping": {
+          "kind": "f32",
+          "default": "0",
+          "description": ""
+        },
+        "angularDamping": {
+          "kind": "f32",
+          "default": "0.05",
+          "description": ""
+        },
+        "freezeRotation": {
+          "kind": "bool",
+          "default": "false",
+          "description": ""
+        },
+        "interpolation": {
+          "kind": "enum",
+          "default": "\"interpolate\"",
+          "description": ""
+        },
+        "collisionEvents": {
+          "kind": "enum",
+          "default": "\"auto\"",
           "description": ""
         }
       }
@@ -1095,6 +1577,348 @@
           "kind": "f32",
           "default": "0.5",
           "description": ""
+        }
+      }
+    },
+    "ignifx/spriteanimation-file": {
+      "title": "Sprite animation",
+      "format": "ignifx.spriteanimation",
+      "description": "Clips of atlas frames with a rate, a loop flag, and frame events.",
+      "package": "packages/2d",
+      "fields": {
+        "format": {
+          "kind": "str",
+          "default": "\"ignifx.spriteanimation\"",
+          "description": "Always ignifx.spriteanimation."
+        },
+        "formatVersion": {
+          "kind": "u32",
+          "default": "1",
+          "description": "The document version this build reads."
+        },
+        "atlas": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": "The .atlas.json address, relative to this document."
+        },
+        "clips": {
+          "kind": "array",
+          "default": "[]",
+          "description": "The clips; the first is the default."
+        }
+      }
+    },
+    "ignifx/SpriteAnimator": {
+      "title": "SpriteAnimator",
+      "format": "components",
+      "description": "Plays a clip of atlas frames on ignifx's clock, respecting timeScale and pause.",
+      "package": "packages/2d",
+      "fields": {
+        "animations": {
+          "kind": "asset",
+          "default": "null",
+          "description": "The .spriteanim.json document holding the clips."
+        },
+        "defaultClip": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": "Which clip to start on; empty plays the document's first."
+        },
+        "playOnAwake": {
+          "kind": "bool",
+          "default": "true",
+          "description": "Start the default clip as soon as the document has loaded."
+        },
+        "speed": {
+          "kind": "f32",
+          "default": "1",
+          "description": "A multiplier on each clip's own frame rate."
+        }
+      }
+    },
+    "ignifx/spriteatlas-file": {
+      "title": "Sprite atlas",
+      "format": "ignifx.spriteatlas",
+      "description": "An image plus the frame rectangles inside it, in pixels with a top-left origin.",
+      "package": "packages/2d",
+      "fields": {
+        "format": {
+          "kind": "str",
+          "default": "\"ignifx.spriteatlas\"",
+          "description": "Always ignifx.spriteatlas."
+        },
+        "formatVersion": {
+          "kind": "u32",
+          "default": "1",
+          "description": "The document version this build reads."
+        },
+        "image": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": "The image address, relative to this document."
+        },
+        "sampling": {
+          "kind": "enum",
+          "default": "\"linear\"",
+          "description": "Min/mag filter; nearest for pixel art."
+        },
+        "premultipliedAlpha": {
+          "kind": "bool",
+          "default": "false",
+          "description": "Whether the image's RGB is already multiplied by its alpha."
+        },
+        "frames": {
+          "kind": "array",
+          "default": "[]",
+          "description": "The frames, in the order they are indexed."
+        }
+      }
+    },
+    "ignifx/SpriteLayerEffect": {
+      "title": "SpriteLayerEffect",
+      "format": "components",
+      "description": "A per-layer WGSL fragment effect with an fx.params vec4.",
+      "package": "packages/2d",
+      "fields": {
+        "sortingLayer": {
+          "kind": "str",
+          "default": "\"Default\"",
+          "description": "Which sorting layer the effect applies to."
+        },
+        "kind": {
+          "kind": "enum",
+          "default": "\"tint\"",
+          "description": "Which shader to install."
+        },
+        "tint": {
+          "kind": "color",
+          "default": "[1,1,1,1]",
+          "description": "The colour the tint effect multiplies by."
+        },
+        "params": {
+          "kind": "vec4",
+          "default": "[0,0,0,0]",
+          "description": "The fx.params vec4 a custom shader reads."
+        },
+        "shader": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": "The WGSL fragment body a custom effect installs."
+        }
+      }
+    },
+    "ignifx/SpriteRenderer": {
+      "title": "SpriteRenderer",
+      "format": "components",
+      "description": "One sprite drawn from one frame of one atlas, on one sorting layer.",
+      "package": "packages/2d",
+      "fields": {
+        "sprite": {
+          "kind": "asset",
+          "default": "null",
+          "description": "The atlas this sprite draws a frame of."
+        },
+        "color": {
+          "kind": "color",
+          "default": "[1,1,1,1]",
+          "description": "Tint multiplied into every texel."
+        },
+        "flipX": {
+          "kind": "bool",
+          "default": "false",
+          "description": "Mirror horizontally."
+        },
+        "flipY": {
+          "kind": "bool",
+          "default": "false",
+          "description": "Mirror vertically."
+        },
+        "sortingLayer": {
+          "kind": "str",
+          "default": "\"Default\"",
+          "description": "Which sorting layer the sprite draws on."
+        },
+        "orderInLayer": {
+          "kind": "i32",
+          "default": "0",
+          "description": "Sub-order within the sorting layer; higher draws in front."
+        },
+        "blend": {
+          "kind": "enum",
+          "default": "\"alpha\"",
+          "description": "How the colour combines with the background."
+        },
+        "pivotOverride": {
+          "kind": "optional",
+          "default": "null",
+          "description": "Overrides the frame's own pivot, in [0,1] of the frame."
+        },
+        "screenSpace": {
+          "kind": "bool",
+          "default": "false",
+          "description": "Keep the identity view instead of following the Camera2D."
+        },
+        "pickable": {
+          "kind": "bool",
+          "default": "true",
+          "description": "Whether app.twoD.pickAt considers this sprite."
+        }
+      }
+    },
+    "ignifx/Tilemap": {
+      "title": "Tilemap",
+      "format": "components",
+      "description": "A grid of tile ids with cell arithmetic and merged collision geometry.",
+      "package": "packages/2d",
+      "fields": {
+        "map": {
+          "kind": "asset",
+          "default": "null",
+          "description": "The .tilemap.json document."
+        },
+        "chunkSize": {
+          "kind": "u32",
+          "default": "32",
+          "description": "How many cells one render and collision chunk spans."
+        },
+        "cellSizeOverride": {
+          "kind": "f32",
+          "default": "0",
+          "description": "Metres per cell, overriding the document's own; 0 uses it."
+        }
+      }
+    },
+    "ignifx/tilemap-file": {
+      "title": "Tilemap",
+      "format": "ignifx.tilemap",
+      "description": "Tile size, layers of tile ids, tilesets with colliders, and an objects layer.",
+      "package": "packages/2d",
+      "fields": {
+        "format": {
+          "kind": "str",
+          "default": "\"ignifx.tilemap\"",
+          "description": "Always ignifx.tilemap."
+        },
+        "formatVersion": {
+          "kind": "u32",
+          "default": "1",
+          "description": "The document version this build reads."
+        },
+        "tileWidth": {
+          "kind": "f32",
+          "default": "32",
+          "description": "One cell's width, in pixels."
+        },
+        "tileHeight": {
+          "kind": "f32",
+          "default": "32",
+          "description": "One cell's height, in pixels."
+        },
+        "cellSize": {
+          "kind": "f32",
+          "default": "0.32",
+          "description": "One cell's size, in world metres."
+        },
+        "width": {
+          "kind": "u32",
+          "default": "0",
+          "description": "The map's width, in cells."
+        },
+        "height": {
+          "kind": "u32",
+          "default": "0",
+          "description": "The map's height, in cells."
+        },
+        "tilesets": {
+          "kind": "array",
+          "default": "[]",
+          "description": "The tilesets, ascending by firstId."
+        },
+        "layers": {
+          "kind": "array",
+          "default": "[]",
+          "description": "The tile layers, back to front."
+        },
+        "objects": {
+          "kind": "array",
+          "default": "[]",
+          "description": "The objects layer."
+        },
+        "properties": {
+          "kind": "map",
+          "default": "{}",
+          "description": "The map's custom properties."
+        }
+      }
+    },
+    "ignifx/TilemapCollider2D": {
+      "title": "TilemapCollider2D",
+      "format": "components",
+      "description": "The merged collision surface of a Tilemap, rebuilt when its tiles change.",
+      "package": "packages/physics-2d",
+      "fields": {
+        "offset": {
+          "kind": "vec2",
+          "default": "[0,0]",
+          "description": ""
+        },
+        "isTrigger": {
+          "kind": "bool",
+          "default": "false",
+          "description": ""
+        },
+        "material": {
+          "kind": "asset",
+          "default": "null",
+          "description": ""
+        },
+        "inlineMaterial": {
+          "kind": "optional",
+          "default": "null",
+          "description": ""
+        },
+        "frictionCombine": {
+          "kind": "enum",
+          "default": "\"average\"",
+          "description": ""
+        },
+        "restitutionCombine": {
+          "kind": "enum",
+          "default": "\"average\"",
+          "description": ""
+        },
+        "oneWay": {
+          "kind": "bool",
+          "default": "false",
+          "description": ""
+        },
+        "layerOverride": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": ""
+        }
+      }
+    },
+    "ignifx/TilemapRenderer": {
+      "title": "TilemapRenderer",
+      "format": "components",
+      "description": "Draws a Tilemap's cells as sprites, materialising only the chunks the camera sees.",
+      "package": "packages/2d",
+      "fields": {
+        "atlas": {
+          "kind": "asset",
+          "default": "null",
+          "description": "The atlas the tile frames come from."
+        },
+        "sortingLayer": {
+          "kind": "str",
+          "default": "\"Default\"",
+          "description": "Sorting layer used when a map layer names none."
+        },
+        "cullChunks": {
+          "kind": "bool",
+          "default": "true",
+          "description": "Drop chunks outside the camera's visible bounds."
         }
       }
     }
