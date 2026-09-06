@@ -84,7 +84,7 @@ function preview(packageName: string, port: number): PreviewServer {
 }
 
 /** Chromium flags for a SwiftShader WebGPU adapter; see the module comment for the Linux half. */
-const chromiumArgs: readonly string[] =
+const chromiumArgs: string[] =
   process.platform === "linux"
     ? [
         "--enable-unsafe-webgpu",
@@ -114,7 +114,7 @@ const config: PlaywrightTestConfig = defineConfig({
     deviceScaleFactor: 1,
     trace: "retain-on-failure",
     launchOptions: {
-      args: chromiumArgs,
+      args: [...chromiumArgs],
     },
   },
   webServer: [

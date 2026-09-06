@@ -32,7 +32,7 @@ import { defineConfig } from "vitest/config";
  * `coverage` is a root-level option in Vitest 5 — it is ignored inside `projects[].test`.
  */
 /** Chromium flags for a SwiftShader WebGPU adapter; the Linux half is explained above. */
-const chromiumArgs: readonly string[] =
+const chromiumArgs: string[] =
   process.platform === "linux"
     ? [
         "--enable-unsafe-webgpu",
