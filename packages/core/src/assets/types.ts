@@ -576,7 +576,7 @@ export interface AssetLoadErrorOptions extends IgnifxErrorOptions {
  *   await app.assets.loadAsync("levels/1.scene.json");
  * } catch (error) {
  *   if (error instanceof AssetLoadError) {
- *     app.log.error("{address} failed from {url}", error.address, error.url);
+ *     app.log.error(`${error.address} failed from ${error.url}`, error);
  *   }
  * }
  * ```

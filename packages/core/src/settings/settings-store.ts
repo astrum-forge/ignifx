@@ -175,7 +175,7 @@ export class SettingsStore implements AppSettings {
           hint: "Register the extension that owns the section, or remove it from the project settings.",
         });
       }
-      this.#log.warn("Ignoring the unknown settings section {section}.", name);
+      this.#log.warn(`Ignoring the unknown settings section ${name}.`);
     }
     this.#isFrozen = true;
   }

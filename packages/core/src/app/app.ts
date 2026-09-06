@@ -367,7 +367,7 @@ class AppImpl implements App {
       clock: options.clock,
       development,
       report: (error: unknown, system: System, phase: Phase): void => {
-        this.log.error("The system {system} threw in {phase}.", system.name, PHASE_NAMES[phase] ?? "", error);
+        this.log.error(`The system ${system.name} threw in ${PHASE_NAMES[phase] ?? "no phase"}.`, error);
         this.#report({ error, source: "system", phase, entity: null, component: null });
       },
     });
@@ -814,14 +814,7 @@ class AppImpl implements App {
     const phase = report.phase === null ? "no phase" : (PHASE_NAMES[report.phase] ?? "no phase");
     const entity = report.entity === null ? "-" : report.entity.name;
     const component = report.component === null ? "-" : report.component.constructor.name;
-    this.log.error(
-      "A {source} boundary caught a failure in {phase} on {entity}/{component}.",
-      report.source,
-      phase,
-      entity,
-      component,
-      report.error,
-    );
+    this.log.error(`A ${report.source} boundary caught a failure in ${phase} on ${entity}/${component}.`, report.error);
   }
 
   /**

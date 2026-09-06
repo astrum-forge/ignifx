@@ -208,7 +208,11 @@ describe("app.onError", () => {
     expect(reports).toEqual(["lifecycle:Bad"]);
     const errors = sink.toArray().filter((record) => record.level === "error");
     expect(errors).toHaveLength(1);
-    expect(errors[0]?.data).toContain("lifecycle");
+    // The logger does not interpolate, so the line is assembled before it is logged and the thrown
+    // error rides along as structured data.
+    expect(errors[0]?.message).toBe("A lifecycle boundary caught a failure in Update on Bad/Thrower.");
+    expect(errors[0]?.data).toHaveLength(1);
+    expect(errors[0]?.data[0]).toBeInstanceOf(Error);
   });
 
   it("survives a handler that throws", async () => {

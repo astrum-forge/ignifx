@@ -349,7 +349,7 @@ export class Animator extends Component implements ComponentHooks {
         entity: this.entity,
         component: this,
       });
-      this.app.log.warn("The clip {clip} is already driven by another Animator; this one skips it.", clip);
+      this.app.log.warn(`The clip ${clip} is already driven by another Animator; this one skips it.`);
     });
     for (const name of this.#mixer.clipNames) {
       machine.setClipLength(name, this.#mixer.lengthOf(name));

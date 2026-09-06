@@ -365,7 +365,7 @@ export interface AppSettings {
  * @example
  * ```ts
  * app.onError.connect((report) => {
- *   app.log.error("{source} callback threw on {entity}", report.source, report.entity?.name ?? "-");
+ *   app.log.error(`${report.source} callback threw on ${report.entity?.name ?? "-"}`, report.error);
  * });
  * ```
  *

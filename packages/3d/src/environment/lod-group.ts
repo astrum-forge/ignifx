@@ -77,7 +77,7 @@ function lodGroupSchema(): Schema {
  *     { distance: 60, renderer: lowDetail },
  *   ],
  * });
- * group.onLevelChanged.connect((level) => app.log.debug("LOD {level}", level), { owner: group });
+ * group.onLevelChanged.connect((level) => app.log.debug("LOD level:", level), { owner: group });
  * ```
  *
  * @public

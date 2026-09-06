@@ -12,7 +12,7 @@ import { LOG_LEVEL_SEVERITY, LogLevel, type LogRecord, type LogSink, type LogThr
  * @example
  * ```ts
  * const log = app.log.child("physics");
- * log.info("stepping at {hz}Hz", 60);
+ * log.info("stepping at 60 Hz");
  * if (log.isEnabled("debug")) {
  *   log.debug("contacts", collectContacts());
  * }

@@ -41,7 +41,7 @@ export interface Physics2DRapierHandles {
  * ```ts
  * const hit = app.physics2d.raycast({ x: 0, y: 5 }, { x: 0, y: -1 }, 20);
  * if (hit !== null) {
- *   app.log.info("ray hit {name} at {y}", hit.entity.name, hit.point.y);
+ *   app.log.info(`ray hit ${hit.entity.name} at ${String(hit.point.y)}`);
  * }
  * ```
  *
