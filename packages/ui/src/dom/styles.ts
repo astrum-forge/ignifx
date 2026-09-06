@@ -5,8 +5,10 @@
  *
  * The rules do only what a game cannot reasonably be asked to repeat: position the root over the
  * canvas, make it click-through, and give the helper widgets a shape that is visible before any
- * game CSS loads. Every rule is a single class selector with no `!important`, so a template's own
- * stylesheet wins on specificity or on order.
+ * game CSS loads. No rule uses `!important`, and every rule is a single class selector — except the
+ * two that carry a state a game must not be able to defeat by accident: `.ignifx-ui-menu[hidden]`,
+ * which is what actually hides a menu, and the `[data-focused]` / `[data-disabled]` row states,
+ * which a game restyles by writing the same selector.
  */
 
 /**
@@ -15,6 +17,20 @@
  * @public
  */
 export const UI_STYLE_ELEMENT_ID = "ignifx-ui-styles";
+
+/**
+ * The `z-index` a `Dialog` is drawn at inside its layer.
+ *
+ * @remarks
+ * A dialog is modal, and a modal that paints under the panel that opened it swallows every click
+ * on that panel. Siblings with no `z-index` paint in DOM order, so a `Dialog` created before a
+ * `Menu` in the same layer would lose; giving every dialog one number puts it above every other
+ * root of its layer whatever order they were built in. Two dialogs in one layer still stack in DOM
+ * order, and `DialogOptions.zIndex` overrides the number for a dialog that must sit elsewhere.
+ *
+ * @public
+ */
+export const UI_DIALOG_Z_INDEX = 1000;
 
 /**
  * The class names the host and the helper widgets set, so a template's CSS can target them without
@@ -43,6 +59,26 @@ export const UI_CLASS_NAMES = {
   dialogButtons: "ignifx-ui-dialog-buttons",
   /** One `Dialog` button. */
   dialogButton: "ignifx-ui-dialog-button",
+  /** A `Menu`'s outermost panel. */
+  menu: "ignifx-ui-menu",
+  /** A `Menu`'s heading. */
+  menuTitle: "ignifx-ui-menu-title",
+  /** A `Menu`'s subtitle. */
+  menuSubtitle: "ignifx-ui-menu-subtitle",
+  /** The list a `Menu`'s rows are appended to. */
+  menuRows: "ignifx-ui-menu-rows",
+  /** One selectable `Menu` row. */
+  menuRow: "ignifx-ui-menu-row",
+  /** A `Menu` row's left-hand text. */
+  menuRowLabel: "ignifx-ui-menu-row-label",
+  /** A `Menu` row's right-hand text. */
+  menuRowValue: "ignifx-ui-menu-row-value",
+  /** A `Menu` slider row's range input. */
+  menuRowSlider: "ignifx-ui-menu-row-slider",
+  /** A `Menu`'s `"heading"` row. */
+  menuHeading: "ignifx-ui-menu-heading",
+  /** A `Menu`'s `"separator"` row. */
+  menuSeparator: "ignifx-ui-menu-separator",
   /** A `Toast`'s stack container. */
   toastStack: "ignifx-ui-toasts",
   /** One toast. */
@@ -100,7 +136,7 @@ export function uiStyleSheet(): string {
     `.${c.layer}{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;}`,
     `.${c.interactive}{pointer-events:auto;}`,
     `.${c.dialog}{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;` +
-      `align-items:center;justify-content:center;pointer-events:auto;}`,
+      `align-items:center;justify-content:center;pointer-events:auto;z-index:${String(UI_DIALOG_Z_INDEX)};}`,
     `.${c.dialogBackdrop}{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);}`,
     `.${c.dialogPanel}{position:relative;min-width:12rem;padding:1rem;border-radius:0.5rem;` +
       `background:#1b1d22;color:#f5f5f5;font:inherit;}`,
@@ -109,6 +145,20 @@ export function uiStyleSheet(): string {
     `.${c.dialogButtons}{display:flex;gap:0.5rem;justify-content:flex-end;}`,
     `.${c.dialogButton}{padding:0.4rem 0.9rem;border:0;border-radius:0.25rem;background:#3a6df0;` +
       `color:#fff;font:inherit;cursor:pointer;}`,
+    `.${c.menu}{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;` +
+      `flex-direction:column;align-items:center;justify-content:center;gap:0.5rem;pointer-events:auto;}`,
+    // The UA rule for `[hidden]` is a type selector, so a game's own `.ignifx-ui-menu { display: … }`
+    // would beat it; this class-plus-attribute selector stays ahead of a single-class rule without
+    // an `!important`.
+    `.${c.menu}[hidden]{display:none;}`,
+    `.${c.menuRows}{display:flex;flex-direction:column;min-width:12rem;max-height:100%;overflow:auto;}`,
+    `.${c.menuRow}{display:flex;align-items:center;justify-content:space-between;gap:0.75rem;` +
+      `padding:0.4rem 0.75rem;border:1px solid transparent;border-radius:0.25rem;background:transparent;` +
+      `color:inherit;font:inherit;text-align:left;cursor:pointer;}`,
+    `.${c.menuRow}[data-focused]{border-color:currentColor;background:rgba(255,255,255,0.1);}`,
+    `.${c.menuRow}[data-disabled]{opacity:0.4;cursor:default;}`,
+    `.${c.menuHeading}{padding:0.6rem 0.75rem 0.2rem;opacity:0.6;}`,
+    `.${c.menuSeparator}{margin:0.4rem 0.75rem;border-top:1px solid currentColor;opacity:0.25;}`,
     `.${c.toastStack}{position:absolute;right:1rem;bottom:1rem;display:flex;flex-direction:column;` +
       `gap:0.5rem;align-items:flex-end;}`,
     `.${c.toast}{padding:0.5rem 0.9rem;border-radius:0.25rem;background:#1b1d22;color:#f5f5f5;}`,
@@ -134,6 +184,12 @@ export function uiStyleSheet(): string {
  * and neither removes the other's (`CONSTITUTION.md` §3.6). Nothing removes it: a stylesheet with
  * no matching elements costs nothing, and unmounting it would break the app that is still running.
  *
+ * It is **prepended** to the head rather than appended, which is what actually makes this file's
+ * promise true. The overlay is built inside `createApp`, long after the page's own `<style>` and
+ * `<link>` elements have been parsed; appending would put every package rule *after* the game's,
+ * and a game rule of equal specificity would silently lose. Prepending puts the defaults where
+ * defaults belong — first — so a single-class rule in the game's stylesheet wins on order.
+ *
  * @param document - The document to inject into.
  *
  * @internal
@@ -148,5 +204,5 @@ export function ensureUiStyles(document: Document): void {
   const style = document.createElement("style");
   style.id = UI_STYLE_ELEMENT_ID;
   style.textContent = uiStyleSheet();
-  document.head.append(style);
+  document.head.prepend(style);
 }

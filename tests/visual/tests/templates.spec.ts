@@ -160,9 +160,10 @@ test.describe("template scenes", () => {
  * (`docs/plan/engineering-plan.md`, Phase 12).
  *
  * These open each template **without** `?static=1`, because the overlay is exactly what a golden
- * hides: the point here is that the DOM is right, not that the pixels are. Every screen is the
- * template's own `MenuScreen` (`src/menus/menu-screen.ts`), so the selectors are `data-menu` on the
- * panel and `data-row` on each row.
+ * hides: the point here is that the DOM is right, not that the pixels are. Every screen is
+ * `@ignifx/ui`'s `Menu` widget, driven by a `MenuStack` (`src/menus/game-menus.ts`), so the
+ * selectors are the widget's: `data-menu` on the panel, `data-row` on each row, and the
+ * `ignifx-ui-menu-*` classes on the pieces inside a row.
  */
 test.describe("template front end", () => {
   test.use({ viewport: { width: 640, height: 480 } });
@@ -202,8 +203,8 @@ test.describe("template front end", () => {
       const settings = page.locator('[data-menu="settings"]');
       await expect(settings).toBeVisible();
       // Three bus sliders and the resolution scale, all of them native range inputs.
-      await expect(settings.locator(".menu-row-slider")).toHaveCount(4);
-      await expect(settings.locator('[data-row="master"] .menu-row-value')).toHaveText(/%$/u);
+      await expect(settings.locator(".ignifx-ui-menu-row-slider")).toHaveCount(4);
+      await expect(settings.locator('[data-row="master"] .ignifx-ui-menu-row-value')).toHaveText(/%$/u);
 
       // Escape backs out of the settings screen to the pause menu, and again to the game.
       await holdKey(page, "Escape");
@@ -227,7 +228,9 @@ test.describe("template front end", () => {
       await expect(bindings.locator('[data-row^="scheme-"]')).not.toHaveCount(0);
       await expect(bindings.locator('[data-row^="bind-KeyboardMouse-"]').first()).toBeVisible();
       // A binding row shows the path a player reads, not `<Keyboard>/escape`.
-      await expect(bindings.locator('[data-row^="bind-KeyboardMouse-"] .menu-row-value').first()).not.toHaveText(/^</u);
+      await expect(
+        bindings.locator('[data-row^="bind-KeyboardMouse-"] .ignifx-ui-menu-row-value').first(),
+      ).not.toHaveText(/^</u);
 
       await holdKey(page, "Escape");
       await expect(bindings).toBeHidden();
@@ -240,26 +243,30 @@ test.describe("template front end", () => {
       await page.locator('[data-menu="settings"] [data-row="bindings"]').click();
       const bindings = page.locator('[data-menu="bindings"]');
       const row = bindings.locator('[data-row^="bind-KeyboardMouse-"]').first();
-      const before = await row.locator(".menu-row-value").innerText();
+      const before = await row.locator(".ignifx-ui-menu-row-value").innerText();
 
       await row.click();
       // The click's own mouse release must land before the rebind starts listening, or the rebind
       // catches `<Mouse>/leftButton` instead of the key. `performInteractiveRebind` settles from a
       // `PreUpdate`, so one frame is enough; a quarter of a second is generous.
       await page.waitForTimeout(250);
-      await expect(row.locator(".menu-row-value")).not.toHaveText(before);
+      await expect(row.locator(".ignifx-ui-menu-row-value")).not.toHaveText(before);
       await holdKey(page, "j");
-      await expect(row.locator(".menu-row-value")).toHaveText(/j$/iu);
+      await expect(row.locator(".ignifx-ui-menu-row-value")).toHaveText(/j$/iu);
 
       // The override is written to `app.storage.namespace("settings")`, so it comes back.
       await openScene(page, `${url}/`);
       await page.locator('[data-menu="title"] [data-row="title-settings"]').click();
       await page.locator('[data-menu="settings"] [data-row="bindings"]').click();
-      await expect(bindings.locator('[data-row^="bind-KeyboardMouse-"] .menu-row-value').first()).toHaveText(/j$/iu);
+      await expect(bindings.locator('[data-row^="bind-KeyboardMouse-"] .ignifx-ui-menu-row-value').first()).toHaveText(
+        /j$/iu,
+      );
 
       // Clean up, so the next test in this file starts on a fresh profile.
       await bindings.locator('[data-row="reset-bindings"]').click();
-      await expect(bindings.locator('[data-row^="bind-KeyboardMouse-"] .menu-row-value').first()).toHaveText(before);
+      await expect(bindings.locator('[data-row^="bind-KeyboardMouse-"] .ignifx-ui-menu-row-value').first()).toHaveText(
+        before,
+      );
       expect(failures, `the page reported errors: ${failures.join(" | ")}`).toEqual([]);
     });
 
@@ -300,7 +307,7 @@ test.describe("template front end", () => {
     await title.locator('[data-row="new-game"]').click();
     await expect(page.locator(".hud")).toContainText("compagnon");
     await holdKey(page, "Escape");
-    await expect(page.locator('[data-menu="pause"] .menu-title')).toHaveText("En pause");
+    await expect(page.locator('[data-menu="pause"] .ignifx-ui-menu-title')).toHaveText("En pause");
     await expect(page.locator('[data-menu="pause"] [data-row="resume"]')).toHaveText("Reprendre");
   });
 });

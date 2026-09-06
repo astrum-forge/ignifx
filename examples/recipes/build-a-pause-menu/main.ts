@@ -1,96 +1,92 @@
 /**
  * Build a pause menu
  *
- * Game UI in ignifx is HTML: `@ignifx/ui` puts one absolutely positioned `<div>` over the canvas,
- * and `Dialog` builds a titled panel with buttons inside it. Real DOM means real focus, so Tab and
- * Enter already work; this recipe adds the gamepad by moving `document.activeElement` from a
- * `navigate` action.
+ * Game UI in ignifx is HTML, and `@ignifx/ui`'s `Menu` is the list widget a front end is made of: a
+ * title, rows that declare what they edit, and one selection model that keyboard, gamepad and
+ * pointer all drive. `MenuStack` stacks screens and makes <kbd>Esc</kbd> unwind exactly one.
  *
  * Pausing is two independent switches. `app.pause()` stops the fixed loop and the three update
- * callbacks, so the one script that must keep running declares `static updateWhenPaused = true`.
- * Swapping the action maps is the other: disable `"Player"`, enable `"UI"`. Read an action only
- * while its map is enabled — `actions.get` searches **enabled** maps and throws `IGX-0801`
- * otherwise, which is why each branch below reads only its own map.
+ * callbacks, so the one script that must keep running declares `static updateWhenPaused = true` and
+ * feeds the stack `app.time.unscaledDeltaTime` — a held direction has to keep time while the game
+ * is stopped. Swapping the action maps is the other switch: disable `"Player"`, enable `"UI"`. Read
+ * an action only while its map is enabled — `actions.get` searches **enabled** maps and throws
+ * `IGX-0801` otherwise.
  *
- * Focus is real, so Tab and Enter work with no code once `open()` has focused the first button, and
- * the script disposes the dialog it built in `onDestroy` — the overlay outlives any one entity.
- *
- * A press on a `pointer-events: auto` element never reaches gameplay, because `@ignifx/input` reads
- * `pointerdown` from the canvas and the overlay is the canvas's sibling. A drag that started on the
- * UI does still move `<Pointer>/delta`, so a camera script checks `app.ui.pointerOverUi`.
+ * Because the stack has a navigation source it turns the menu's own DOM key handling off; without
+ * that, an arrow bound to `navigate` would move the selection twice. `onChanged` firing with `null`
+ * is the single place the game comes back — the Resume row and Escape both end there.
  *
  * `menu.input.json` beside this file is what `input/menu.input.json` resolves to; its `"UI"` map
  * ships disabled.
  */
 import { Script, createApp } from "@ignifx/core";
 import { input } from "@ignifx/input";
-import { Dialog, ui } from "@ignifx/ui";
+import { Menu, MenuStack, ui } from "@ignifx/ui";
 import type { ScriptCallbacks } from "@ignifx/core";
 import type { InputActionsAsset } from "@ignifx/input";
 
-/** Owns the pause dialog: it opens it, navigates it, closes it, and disposes it. */
+/** Owns the pause screen. */
 class PauseMenu extends Script implements ScriptCallbacks {
   static typeId = "recipes/PauseMenu";
   static updateWhenPaused = true;
-  #dialog: Dialog | null = null;
-  #armed = true;
+  #stack: MenuStack | null = null;
+  #menu: Menu | null = null;
+  #sensitivity = 0.8;
 
   awake(): void {
-    const buttons = ["Resume", "Quit"].map((label) => ({ id: label.toLowerCase(), label }));
-    this.#dialog = new Dialog(this.app.ui, { title: "Paused", layer: "menu", buttons });
-    this.#dialog.onChosen.connect(this.#chose, { owner: this });
+    const map = this.app.input.actions.maps.get("UI") ?? null;
+    const stack = new MenuStack({
+      navigation: {
+        move: map?.actions.get("navigate") ?? null,
+        submit: map?.actions.get("submit") ?? null,
+        back: map?.actions.get("back") ?? null,
+      },
+    });
+    stack.onChanged.connect(this.#changed, { owner: this });
+    this.#stack = stack;
+    this.#menu = new Menu(this.app.ui, {
+      id: "pause",
+      title: "Paused",
+      rows: [
+        { kind: "action", id: "resume", label: "Resume", activate: stack.closeAll.bind(stack) },
+        {
+          kind: "slider",
+          id: "sensitivity",
+          label: "Look sensitivity",
+          min: 0.1,
+          max: 1,
+          step: 0.05,
+          get: (): number => this.#sensitivity,
+          set: (value: number): void => void (this.#sensitivity = value),
+        },
+      ],
+    });
   }
-
-  readonly #chose = (id: string): void => {
-    if (id === "resume") {
-      this.close();
-    }
-  };
 
   update(): void {
-    const actions = this.app.input.actions;
-    if (this.#dialog?.isVisible !== true) {
-      if (actions.get("pause").wasPressedThisFrame) {
-        this.open();
-      }
-    } else if (actions.get("back").wasPressedThisFrame) {
-      this.close();
-    } else {
-      this.#navigate(actions.get("navigate").vector.y);
+    if (this.#stack?.isOpen === true) {
+      this.#stack.update(this.app.time.unscaledDeltaTime);
+    } else if (this.app.input.actions.get("pause").wasPressedThisFrame && this.#menu !== null) {
+      this.#stack?.push(this.#menu);
     }
-  }
-
-  open(): void {
-    this.#dialog?.show();
-    this.app.input.actions.map("Player").enabled = false;
-    this.app.input.actions.map("UI").enabled = true;
-    this.#dialog?.element?.querySelector("button")?.focus();
-    this.app.pause();
-  }
-
-  close(): void {
-    this.#dialog?.hide();
-    this.app.input.actions.map("UI").enabled = false;
-    this.app.input.actions.map("Player").enabled = true;
-    this.app.resume();
   }
 
   onDestroy(): void {
-    this.#dialog?.dispose();
+    this.#stack?.dispose();
+    this.#menu?.dispose();
   }
 
-  // One move per push of the stick — a held stick is not a key repeat — over real DOM focus.
-  #navigate(y: number): void {
-    const push = Math.abs(y) >= 0.5;
-    this.#armed ||= !push;
-    const buttons = [...(this.#dialog?.element?.querySelectorAll("button") ?? [])];
-    if (!push || !this.#armed || buttons.length === 0) {
-      return;
+  // Opening and closing are one switch, read off the stack: the Resume row and Escape need no code.
+  readonly #changed = (top: Menu | null): void => {
+    const open = top !== null;
+    this.app.input.actions.map("Player").enabled = !open;
+    this.app.input.actions.map("UI").enabled = open;
+    if (open) {
+      this.app.pause();
+    } else {
+      this.app.resume();
     }
-    this.#armed = false;
-    const at = buttons.findIndex((button) => button === document.activeElement);
-    buttons[(Math.max(at, 0) + (y < 0 ? 1 : -1) + buttons.length) % buttons.length]?.focus();
-  }
+  };
 }
 
 const canvas = document.querySelector("canvas");

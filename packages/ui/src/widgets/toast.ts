@@ -14,6 +14,14 @@ import type { SignalLike } from "@ignifx/core";
  * pauses when the game pauses, it is deterministic in a headless test that steps the clock, and it
  * cannot fire after the app has been disposed. A game that wants wall-clock timing passes
  * `app.time.unscaledDeltaTime`.
+ *
+ * The consequence is the one thing to remember: **`app.pause()` stops `update` for every ordinary
+ * script**, so a toast advanced from an ordinary script freezes with the game and a message shown
+ * from a pause menu never expires. The script that calls {@link Toast.advance} declares
+ * `static updateWhenPaused = true` and passes `app.time.unscaledDeltaTime`. `UiSystem` deliberately
+ * does not advance toasts for you: `docs/architecture/13-ui.md` §3 defines a toast as running on
+ * the game clock, and a system that advanced every toast would take that choice away from the game
+ * and would have to keep a registry of every toast ever built.
  */
 
 /**
@@ -47,8 +55,8 @@ interface LiveToast {
  * ```ts
  * const toasts = new Toast(app.ui);
  * toasts.show("Checkpoint reached");
- * // in a script's update:
- * toasts.advance(dt);
+ * // in the update of a script that declares `static updateWhenPaused = true`:
+ * toasts.advance(app.time.unscaledDeltaTime);
  * ```
  *
  * @public
@@ -142,7 +150,13 @@ export class Toast {
   /**
    * Advances every message's timer.
    *
-   * @param deltaSeconds - Seconds elapsed since the previous call; `dt` from a script's `update`.
+   * @remarks
+   * Nothing calls this for you. The script that does must declare `static updateWhenPaused = true`
+   * if toasts are to expire while the game is paused — a menu's "Saved" message is shown from a
+   * paused game, and an ordinary script gets no `update` there.
+   *
+   * @param deltaSeconds - Seconds elapsed since the previous call; `dt` from a script's `update`, or
+   * `app.time.unscaledDeltaTime` when the toast has to expire while the game is paused.
    */
   advance(deltaSeconds: number): void {
     for (let index = this.#live.length - 1; index >= 0; index -= 1) {

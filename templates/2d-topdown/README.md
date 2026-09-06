@@ -34,8 +34,10 @@ toggle, Delete save and Reset to defaults. Settings and rebindings persist throu
 
 **Focus order is row order**, wrapping at both ends and skipping headings and disabled rows: Up/Down
 move, Left/Right adjust, Enter activates, <kbd>Esc</kbd> backs out one screen, and the pointer
-hovers to select and clicks to activate. Rows are `tabindex="-1"` because a gamepad raises no DOM
-focus events and two focus authorities disagree — `menu-screen.ts` owns the selection.
+hovers to select and clicks to activate. All of that is `@ignifx/ui`'s `Menu` and `MenuStack`, not
+template code: rows are `tabindex="-1"` because a gamepad raises no DOM focus events and two focus
+authorities disagree, so the widget owns the selection and announces it with `aria-activedescendant`.
+`src/menus/game-menus.ts` only declares which rows exist and what they read and write.
 
 **Saves** are a versioned `ignifx-template.save` document under `app.storage.namespace("saves")`:
 position, the shrines already lit, score and elapsed seconds — not a serialized scene, which would store the

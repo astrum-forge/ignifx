@@ -133,16 +133,14 @@
       }
 
       /* ---------------------------------------------------------------------------------------
-         The template's own screens: title, pause, settings, rebinding and credits, built into
-         `app.ui.layer("menu")` by `src/menus/menu-screen.ts`. `@ignifx/ui` ships a dialog, a toast,
-         a loading screen and the two touch widgets and nothing else — there is no list widget and
-         no slider — so these class names belong to the template, not to the package.
-
-         `pointer-events: auto` is required: the overlay root is `pointer-events: none` so that a
-         click falls through to the canvas, and each interactive panel opts back in.
+         The screens — title, pause, settings, rebinding and credits — are `@ignifx/ui`'s `Menu`
+         widget, mounted in `app.ui.layer("menu")` by `src/menus/game-menus.ts`. The package ships a
+         handful of shape-only defaults under the same class names; everything below is this
+         template's skin over them, and it wins because the package injects its stylesheet at the
+         *top* of `<head>`, ahead of this one.
          --------------------------------------------------------------------------------------- */
 
-      .menu {
+      .ignifx-ui-menu {
         position: absolute;
         inset: 0;
         display: grid;
@@ -156,12 +154,15 @@
         backdrop-filter: blur(3px);
       }
 
-      /* The UA rule for `[hidden]` is weaker than the class above, so hiding is spelled out. */
-      .menu[hidden] {
-        display: none;
+      /* `@ignifx/ui` already carries `.ignifx-ui-menu[hidden] { display: none }`, which outranks the
+         single-class rule above; nothing here needs to repeat it. */
+
+      .ignifx-ui-menu-separator {
+        margin: 0.6rem 0.75rem;
+        border-top: 1px solid rgb(232 236 244 / 15%);
       }
 
-      .menu-title {
+      .ignifx-ui-menu-title {
         margin: 0;
         font-size: 1.35rem;
         font-weight: 600;
@@ -170,20 +171,20 @@
         color: var(--accent);
       }
 
-      .menu-subtitle {
+      .ignifx-ui-menu-subtitle {
         margin: 0 0 0.75rem;
         max-width: 24rem;
         opacity: 0.65;
       }
 
-      .menu-rows {
+      .ignifx-ui-menu-rows {
         display: flex;
         flex-direction: column;
         gap: 0.15rem;
         min-width: min(24rem, 100%);
       }
 
-      .menu-heading {
+      .ignifx-ui-menu-heading {
         margin-top: 0.85rem;
         padding: 0 0.75rem;
         font-size: 0.7rem;
@@ -192,7 +193,7 @@
         opacity: 0.5;
       }
 
-      .menu-row {
+      .ignifx-ui-menu-row {
         display: grid;
         grid-template-columns: 1fr auto auto;
         align-items: center;
@@ -207,27 +208,27 @@
         cursor: pointer;
       }
 
-      .menu-row[data-focused] {
+      .ignifx-ui-menu-row[data-focused] {
         border-color: var(--accent);
         background: rgb(255 255 255 / 8%);
       }
 
-      .menu-row[data-disabled] {
+      .ignifx-ui-menu-row[data-disabled] {
         opacity: 0.35;
         cursor: default;
       }
 
-      .menu-row-value {
+      .ignifx-ui-menu-row-value {
         opacity: 0.8;
         font-variant-numeric: tabular-nums;
       }
 
-      .menu-row-slider {
+      .ignifx-ui-menu-row-slider {
         width: 8rem;
         accent-color: var(--accent);
       }
 
-      .menu-row[data-kind="binding"] .menu-row-value {
+      .ignifx-ui-menu-row[data-kind="binding"] .ignifx-ui-menu-row-value {
         font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
         font-size: 0.85em;
       }

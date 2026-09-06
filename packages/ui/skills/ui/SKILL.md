@@ -1,6 +1,6 @@
 ---
 name: ui
-description: Builds game UI in ignifx with @ignifx/ui: the DOM overlay host and layers, scaling modes, input focus routing, world-space anchors, world and HUD text on Babylon Lite's text renderer, virtual joysticks and buttons for touch, dialogs, toasts, loading screens, and localization. Use when adding or editing menus, HUDs, on-screen text, touch controls, or overlay UI in an ignifx project, or when the user mentions @ignifx/ui, HudText, WorldAnchor, VirtualJoystick, or app.i18n.
+description: Builds game UI in ignifx with @ignifx/ui: the DOM overlay host and layers, scaling modes, input focus routing, world-space anchors, world and HUD text on Babylon Lite's text renderer, menus and menu stacks, virtual joysticks and buttons for touch, dialogs, toasts, loading screens, and localization. Use when adding or editing menus, title/pause/settings screens, HUDs, on-screen text, touch controls, or overlay UI in an ignifx project, or when the user mentions @ignifx/ui, Menu, MenuStack, HudText, WorldAnchor, VirtualJoystick, or app.i18n.
 license: Apache-2.0
 metadata:
   ignifx-version: "0.0.0-unreleased"
@@ -66,7 +66,7 @@ app.i18n (I18nService)
  └─ load(handle) · t(key, params) · locale · onLocaleChanged · availableLocales
 
 components   WorldAnchor · HudText · WorldText2D · WorldText
-helpers      Dialog · Toast · LoadingScreen · VirtualJoystick · VirtualButton
+helpers      Menu · MenuStack · Dialog · Toast · LoadingScreen · VirtualJoystick · VirtualButton
 ```
 
 **One system, `PreRender` order 1100** — after core's camera sync at 900, because every projection
@@ -95,15 +95,8 @@ const canvas = document.querySelector("canvas");
 if (canvas instanceof HTMLCanvasElement) {
   const app = await createApp({ canvas, extensions: [ui()] });
 
-  // A DOM label in the hud layer.
-  const score = document.createElement("div");
-  score.textContent = "Score: 0";
-  score.style.position = "absolute";
-  score.style.left = "16px";
-  score.style.top = "16px";
-  app.ui.layer("hud").element?.append(score);
-
-  // A name tag that follows an entity.
+  // A name tag that follows an entity. (A plain DOM label goes in
+  // `app.ui.layer("hud").element` the same way, positioned with CSS.)
   const tag = document.createElement("div");
   tag.textContent = "Boss";
   app.ui.layer("hud").element?.append(tag);
@@ -148,6 +141,31 @@ that anchor), `order`, `metrics`.
 Shared text fields: `font` (a `FontAsset` handle), `text`, `i18nKey`, `fontSize`, `color`, `align`,
 `maxWidth`, `lineHeight`, `opacity`.
 
+**`Menu`** — `new Menu(app.ui, { id, title, subtitle, layer, rows, visible, cancelable, keyboard,
+wrap, text })`, then `setRows`, `refresh()`, `show()`/`hide()`, `moveSelection(±1)`,
+`adjustSelection(±1)`, `activateSelection()`, `select(id)`, `cancel()`, `dispose()`, plus `element`,
+`rows`, `selected`, `selectedIndex`, `isVisible`, `cancelable`, `keyboardEnabled`, and the signals
+`onSelectionChanged`, `onActivated`, `onBack`.
+
+| Row `kind`    | What it declares, on top of `id`, `label` and `enabled?`      |
+| ------------- | ------------------------------------------------------------- |
+| `"action"`    | `activate?()`, and an optional right-hand `value`             |
+| `"toggle"`    | `get`/`set` a boolean; drawn with the menu's `text.on`/`.off` |
+| `"slider"`    | `min`/`max`/`step` plus `get`/`set`, and an optional `format` |
+| `"choice"`    | `values` plus `get`/`set` a string, and an optional `format`  |
+| `"binding"`   | `path()` and `rebind?()`, and an optional `listening()`       |
+| `"heading"`   | a label that groups the rows under it; never selected         |
+| `"separator"` | a rule; never selected                                        |
+
+`label` (and `title`, `subtitle`, `text.*`) is a string **or** a function, re-read on every
+`refresh()` — which is what makes a menu localizable.
+
+**`MenuStack`** — `new MenuStack({ navigation, repeatDelay, repeatInterval, threshold })`, then
+`push(menu)`, `pop()`, `closeAll()`, `refresh()`, `update(unscaledDelta)`, plus `top`, `bottom`,
+`menus`, `depth`, `isOpen`, `suspended`, and `onChanged`/`onSelectionChanged`/`onActivated`.
+`navigation` is `{ move, submit, back }` — three objects shaped like `@ignifx/input` actions, which
+is how the widget reaches a gamepad without importing the package.
+
 **`app.i18n`** — `load(handleOrAsset)`, `t(key, params)`, `has(key)`, `locale`, `fallbackLocale`,
 `availableLocales`, `onLocaleChanged`.
 
@@ -159,7 +177,7 @@ Full signatures: `skills/ignifx/references/api/ui.md`.
 
 ```ts
 import { createApp } from "ignifx";
-import { Dialog, LoadingScreen, ui } from "@ignifx/ui";
+import { LoadingScreen, Menu, MenuStack, ui } from "@ignifx/ui";
 
 const canvas = document.querySelector("canvas");
 if (canvas instanceof HTMLCanvasElement) {
@@ -170,26 +188,55 @@ if (canvas instanceof HTMLCanvasElement) {
   await app.assets.preloadGroup("boot").promise;
   loading.hide();
 
-  const pause = new Dialog(app.ui, {
+  const state = { music: 0.8, shadows: true };
+  const stack = new MenuStack();
+  const pause = new Menu(app.ui, {
+    id: "pause",
     title: "Paused",
-    buttons: [
-      { id: "resume", label: "Resume" },
-      { id: "quit", label: "Quit" },
+    text: { on: "On", off: "Off" },
+    rows: [
+      { kind: "action", id: "resume", label: "Resume", activate: stack.closeAll.bind(stack) },
+      { kind: "heading", id: "audio", label: "Audio" },
+      // prettier-ignore
+      { kind: "slider", id: "music", label: "Music", min: 0, max: 1, step: 0.05,
+        get: (): number => state.music, set: (v: number): void => void (state.music = v),
+        format: (v: number): string => `${String(Math.round(v * 100))}%` },
+      // prettier-ignore
+      { kind: "toggle", id: "shadows", label: "Shadows",
+        get: (): boolean => state.shadows, set: (v: boolean): void => void (state.shadows = v) },
     ],
   });
-  pause.onChosen.connect((id: string) => {
-    pause.hide();
-    if (id === "resume") {
+  // The stack owns pausing: any screen up stops the game, and the last one closing starts it again.
+  stack.onChanged.connect((top: Menu | null): void => {
+    if (top === null) {
       app.resume();
+    } else {
+      app.pause();
     }
   });
 
-  // Somewhere in the game's own input handling:
-  pause.show();
-  app.pause();
-
+  stack.push(pause); // …from the game's own input handling
   await app.start();
 }
+```
+
+`stack.push(other)` opens a screen over this one and `pop()` (or Escape, or the pad's east button)
+comes back; `menu.cancelable = false` is what stops Escape unwinding past a title screen.
+
+With no `navigation` source a menu reads the keyboard itself — Up/Down, Left/Right, Enter, Escape —
+because the list takes DOM focus on `show()`. Give the stack one to add the gamepad, and pump it
+from a script that declares `static updateWhenPaused = true`:
+
+```ts ignore-check
+const map = app.input.actions.maps.get("UI") ?? null;
+const stack = new MenuStack({
+  navigation: {
+    move: map?.actions.get("menuMove") ?? null,
+    submit: map?.actions.get("menuSubmit") ?? null,
+    back: map?.actions.get("menuBack") ?? null,
+  },
+});
+stack.update(app.time.unscaledDeltaTime); // in the script's update
 ```
 
 ### Touch controls
@@ -282,8 +329,19 @@ parameter. Field reference: `skills/ignifx/references/formats/ignifx.i18n.md`.
   changing `text` or `color` does not. A per-frame counter is cheap; a per-frame font size is not.
 - **`WorldAnchor.element` is not serialised.** A scene file carries the flags; the game assigns the
   element in `awake`.
-- **A `Toast` runs on the game clock.** Call `toast.advance(dt)` from a script's `update`; it then
-  pauses when the game pauses and is deterministic in a headless test.
+- **A `Toast` runs on the game clock, and nothing advances it for you.** Call `toast.advance(dt)`
+  from a script's `update`. A message shown from a pause menu only expires if that script declares
+  `static updateWhenPaused = true` and passes `app.time.unscaledDeltaTime` — `app.pause()` stops
+  `update` for every other script.
+- **A `Dialog` is always above the other roots of its layer.** The stylesheet gives it
+  `z-index: 1000` (`UI_DIALOG_Z_INDEX`, overridable with `DialogOptions.zIndex`), because siblings
+  with no `z-index` paint in DOM order and a modal built before a `Menu` would otherwise sit under
+  it with its backdrop swallowing every click. Re-use one dialog and call `setTitle`, `setMessage`
+  and `setButtons` rather than building one per question.
+- **A menu owns its selection; the browser owns focus only for the list.** Rows are `tabindex="-1"`
+  and the list carries `aria-activedescendant`, because a gamepad raises no DOM focus events. If the
+  game also binds arrows to a `menuMove` action, drive the menus through a `MenuStack` with a
+  `navigation` source — it turns each pushed menu's own key handling off, and back on when it pops.
 - **Two apps in one document share one stylesheet and get one overlay each.** The root is mounted
   as the canvas's next sibling, so put the canvas in a positioned wrapper.
 

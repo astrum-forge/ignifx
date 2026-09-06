@@ -548,6 +548,13 @@ const expectedTwoDExports = [
 // The @ignifx/ui value surface (VERSION, describeSchemas, and LiteFont stay core's).
 const expectedUiExports = [
   "Dialog",
+  "Menu",
+  "MenuStack",
+  "UI_DIALOG_Z_INDEX",
+  "formatBindingPath",
+  "resolveMenuChoices",
+  "resolveMenuLabel",
+  "snapToStep",
   "HUD_ANCHORS",
   "HudText",
   "I18N_ASSET_TYPE",

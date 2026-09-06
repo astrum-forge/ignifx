@@ -98,6 +98,30 @@ export class FakeElement {
   /** An `<input>`'s type. */
   type = "";
 
+  /** An `<input>`'s value. */
+  value = "";
+
+  /** An `<input type="range">`'s lowest value. */
+  min = "";
+
+  /** An `<input type="range">`'s highest value. */
+  max = "";
+
+  /** An `<input type="range">`'s step. */
+  step = "";
+
+  /** Whether the element carries the `hidden` attribute. */
+  hidden = false;
+
+  /** The tab order the element was given. */
+  tabIndex = 0;
+
+  /** How many times {@link FakeElement.focus} was called. */
+  focusCount = 0;
+
+  /** How many times {@link FakeElement.scrollIntoView} was called. */
+  scrollCount = 0;
+
   /** Whether the element is `contenteditable`. */
   isContentEditable = false;
 
@@ -134,6 +158,22 @@ export class FakeElement {
       node.parentElement?.removeChild(node);
       node.parentElement = this;
       this.children.push(node);
+    }
+  }
+
+  /**
+   * Inserts children before every existing one.
+   *
+   * @param nodes - The children.
+   */
+  prepend(...nodes: FakeElement[]): void {
+    for (let index = nodes.length - 1; index >= 0; index -= 1) {
+      const node = nodes[index];
+      if (node !== undefined) {
+        node.parentElement?.removeChild(node);
+        node.parentElement = this;
+        this.children.unshift(node);
+      }
     }
   }
 
@@ -198,6 +238,43 @@ export class FakeElement {
   }
 
   /**
+   * Removes an attribute.
+   *
+   * @param name - The attribute name.
+   */
+  removeAttribute(name: string): void {
+    this.attributes.delete(name);
+  }
+
+  /**
+   * Adds or removes a valueless attribute.
+   *
+   * @param name - The attribute name.
+   * @param force - `true` to add it, `false` to remove it.
+   * @returns Whether the attribute is present afterwards.
+   */
+  toggleAttribute(name: string, force?: boolean): boolean {
+    const wanted = force ?? !this.attributes.has(name);
+    if (wanted) {
+      this.attributes.set(name, "");
+    } else {
+      this.attributes.delete(name);
+    }
+    return wanted;
+  }
+
+  /** Records a focus call and becomes the document's active element. */
+  focus(): void {
+    this.focusCount += 1;
+    this.ownerDocument.activeElement = this;
+  }
+
+  /** Records a scroll-into-view call. */
+  scrollIntoView(): void {
+    this.scrollCount += 1;
+  }
+
+  /**
    * Records a pointer capture.
    *
    * @param pointerId - The pointer.
@@ -238,18 +315,36 @@ export class FakeElement {
   }
 
   /**
-   * Fires every listener of a type, then bubbles to the parent.
+   * Fires every listener of a type, then bubbles to the parent unless a handler stopped it.
    *
    * @param type - The event type.
    * @param event - The event object handed to the listeners.
+   * @returns `false` when a handler called `preventDefault`, as `dispatchEvent` does.
    */
-  dispatch(type: string, event: Record<string, unknown> = {}): void {
-    const payload = { type, target: this, preventDefault: (): void => {}, stopPropagation: (): void => {}, ...event };
+  dispatch(type: string, event: Record<string, unknown> = {}): boolean {
+    // An object rather than two `let`s: the flags are written from the closures below, and the
+    // compiler would otherwise narrow the plain locals to `false` for the rest of the method.
+    const flags = { stopped: false, prevented: false };
+    const payload = {
+      type,
+      target: this,
+      preventDefault: (): void => {
+        flags.prevented = true;
+      },
+      stopPropagation: (): void => {
+        flags.stopped = true;
+      },
+      ...event,
+    };
     // A snapshot, so a handler that unsubscribes itself does not break the walk.
     for (const handler of Array.from(this.listeners.get(type) ?? [])) {
       handler(payload);
     }
-    this.parentElement?.dispatch(type, { ...event, target: payload["target"] });
+    if (flags.stopped) {
+      return !flags.prevented;
+    }
+    const bubbled = this.parentElement?.dispatch(type, { ...event, target: payload["target"] }) ?? true;
+    return !flags.prevented && bubbled;
   }
 
   /**

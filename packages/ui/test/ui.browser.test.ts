@@ -3,6 +3,7 @@ import { defineInputActions, input } from "@ignifx/input";
 import { afterEach, describe, expect, it } from "vitest";
 import { UI_CLASS_NAMES, UI_CSS_VARIABLES } from "../src/dom/styles.js";
 import { Dialog } from "../src/widgets/dialog.js";
+import { Menu } from "../src/widgets/menu.js";
 import { Toast } from "../src/widgets/toast.js";
 import { VirtualButton } from "../src/widgets/virtual-button.js";
 import { VirtualJoystick } from "../src/widgets/virtual-joystick.js";
@@ -346,4 +347,116 @@ describe("the dialog helpers", () => {
     expect(toasts.element?.children).toHaveLength(0);
     toasts.dispose();
   });
+});
+
+describe("the menu widget", () => {
+  it("shows, takes focus, and is driven by real key events", async () => {
+    const running = await createUiBrowserApp({ options: { layers: ["hud", "menu"] } });
+    harness = running;
+    let volume = 0.5;
+    const runs: string[] = [];
+    const menu = new Menu(running.app.ui, {
+      id: "pause",
+      title: "Paused",
+      rows: [
+        { kind: "action", id: "resume", label: "Resume", activate: (): void => void runs.push("resume") },
+        {
+          kind: "slider",
+          id: "music",
+          label: "Music",
+          min: 0,
+          max: 1,
+          step: 0.1,
+          get: (): number => volume,
+          set: (value: number): void => {
+            volume = value;
+          },
+        },
+      ],
+    });
+    const panel = menu.element;
+    expect(panel).not.toBeNull();
+    // `hidden` really hides it: the package rule is `.ignifx-ui-menu[hidden]`, which outranks the
+    // single-class rule a game writes.
+    expect(panel === null ? "" : getComputedStyle(panel).display).toBe("none");
+
+    menu.show();
+    expect(panel === null ? "" : getComputedStyle(panel).display).not.toBe("none");
+    const list = panel?.querySelector(`.${UI_CLASS_NAMES.menuRows}`);
+    expect(document.activeElement).toBe(list);
+    // A focused list is not a text field, so gameplay input keeps flowing.
+    expect(running.app.ui.keyboardHasFocus).toBe(false);
+
+    list?.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true, cancelable: true }));
+    expect(menu.selected?.id).toBe("music");
+    list?.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true, cancelable: true }));
+    expect(volume).toBeCloseTo(0.6, 10);
+
+    let backs = 0;
+    menu.onBack.connect((): void => {
+      backs += 1;
+    });
+    list?.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }));
+    expect(backs).toBe(1);
+
+    // The pointer path: a click on a row runs it.
+    panel?.querySelector<HTMLElement>('[data-row="resume"]')?.click();
+    expect(runs).toEqual(["resume"]);
+
+    // The range input carries the drag back, snapped to the step.
+    const slider = panel?.querySelector<HTMLInputElement>(`.${UI_CLASS_NAMES.menuRowSlider}`);
+    expect(slider?.type).toBe("range");
+    if (slider !== null && slider !== undefined) {
+      slider.value = "0.83";
+      slider.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    expect(volume).toBeCloseTo(0.8, 10);
+
+    menu.dispose();
+    expect(panel?.isConnected).toBe(false);
+  }, 60_000);
+
+  it("lets a page stylesheet of equal specificity win, because the package rules go first", async () => {
+    const sheet = document.createElement("style");
+    sheet.textContent = `.${UI_CLASS_NAMES.menuRow}{color:rgb(1, 2, 3);}`;
+    document.head.append(sheet);
+    try {
+      const running = await createUiBrowserApp({ options: { layers: ["menu"] } });
+      harness = running;
+      const menu = new Menu(running.app.ui, { id: "m", rows: [{ kind: "action", id: "a", label: "A" }] });
+      menu.show();
+      const rowElement = menu.element?.querySelector<HTMLElement>('[data-row="a"]');
+      expect(rowElement === null || rowElement === undefined ? "" : getComputedStyle(rowElement).color).toBe(
+        "rgb(1, 2, 3)",
+      );
+      menu.dispose();
+    } finally {
+      sheet.remove();
+    }
+  }, 60_000);
+
+  it("draws a dialog above a menu built after it in the same layer", async () => {
+    const running = await createUiBrowserApp({ options: { layers: ["hud", "menu"] } });
+    harness = running;
+    // Built first, so with no stacking rule it would paint underneath and swallow every click.
+    const dialog = new Dialog(running.app.ui, { title: "Sure?", buttons: [{ id: "yes", label: "Yes" }] });
+    const menu = new Menu(running.app.ui, {
+      id: "settings",
+      title: "Settings",
+      rows: [{ kind: "action", id: "delete", label: "Delete save" }],
+    });
+    menu.show();
+    dialog.show();
+    const root = dialog.element;
+    expect(root === null ? "" : getComputedStyle(root).zIndex).toBe("1000");
+
+    const panel = root?.querySelector(`.${UI_CLASS_NAMES.dialogPanel}`);
+    const rect = panel?.getBoundingClientRect();
+    const hit =
+      rect === undefined ? null : document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    expect(hit === null ? false : root?.contains(hit)).toBe(true);
+
+    dialog.dispose();
+    menu.dispose();
+  }, 60_000);
 });

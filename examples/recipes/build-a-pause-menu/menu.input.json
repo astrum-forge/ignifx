@@ -37,6 +37,11 @@
           ]
         },
         {
+          "name": "submit",
+          "type": "button",
+          "bindings": [{ "path": "<Keyboard>/enter" }, { "path": "<Gamepad>/buttonSouth" }]
+        },
+        {
           "name": "back",
           "type": "button",
           "bindings": [{ "path": "<Keyboard>/escape" }, { "path": "<Gamepad>/buttonEast" }]

@@ -25,7 +25,7 @@ The pages below are the Agent Skill that ships with the engine, served under `/s
 
 - [Animate a sprite from an atlas](/skill/references/recipes/animate-a-sprite-from-an-atlas): Two documents and two components.
 - [Bind an action and read it](/skill/references/recipes/bind-an-action-and-read-it): Game code asks for `"move"` and `"jump"`, never for a key code.
-- [Build a pause menu](/skill/references/recipes/build-a-pause-menu): Game UI in ignifx is HTML: `@ignifx/ui` puts one absolutely positioned `<div>` over the canvas, and `Dialog` builds a titled panel with buttons inside it.
+- [Build a pause menu](/skill/references/recipes/build-a-pause-menu): Game UI in ignifx is HTML, and `@ignifx/ui`'s `Menu` is the list widget a front end is made of: a title, rows that declare what they edit, and one selection model that keyboard, gamepad and pointer all drive.
 - [Move a 3D character controller](/skill/references/recipes/character-controller-3d): A `CharacterController` is a kinematic capsule that collides and slides.
 - [Load a model](/skill/references/recipes/load-a-model): A `.glb` or `.gltf` file loads as a `ModelAsset`, and a `Model` component instantiates it under an entity.
 - [Load a tilemap and give it collision](/skill/references/recipes/load-a-tilemap-with-collision): Three components share the work.
@@ -71,7 +71,7 @@ The pages below are the Agent Skill that ships with the engine, served under `/s
 - [@ignifx/input](/skill/references/api/input): `@ignifx/input` public barrel: devices, action maps, bindings, composites and processors, control schemes, the `.input.json` asset, pointer lock, the cursor, rebinding, and `PlayerInput` (`docs/architecture/08-input.md`).
 - [@ignifx/physics-2d](/skill/references/api/physics-2d): `@ignifx/physics-2d` public barrel: 2D physics on Rapier — `Rigidbody2D`, the 2D colliders, triggers, `CharacterController2D`, one-way platforms, queries, the layer matrix, and interpolation (`docs/architecture/11-2d-toolkit.md` §8, ADR-0006).
 - [@ignifx/physics](/skill/references/api/physics): `@ignifx/physics` public barrel: 3D physics on Havok through Babylon Lite — rigidbodies, colliders, triggers, the character controller, queries, the layer matrix, and interpolation (`docs/architecture/09-physics.md`).
-- [@ignifx/ui](/skill/references/api/ui): `@ignifx/ui` public barrel: the DOM overlay host and its layers, the three scaling modes, input focus routing, `WorldAnchor`, the three text components on Babylon Lite's text renderer, the touch and dialog helpers, and `app.i18n` (`docs/architecture/13-ui.md`).
+- [@ignifx/ui](/skill/references/api/ui): `@ignifx/ui` public barrel: the DOM overlay host and its layers, the three scaling modes, input focus routing, `WorldAnchor`, the three text components on Babylon Lite's text renderer, the touch, menu and dialog helpers, and `app.i18n` (`docs/architecture/13-ui.md`).
 - [@ignifx/vite-plugin](/skill/references/api/vite-plugin): `@ignifx/vite-plugin` public barrel: asset manifest generation, scene and prefab JSON validation, WASM and asset handling, and HMR hooks (`docs/architecture/00-overview.md` §2).
 
 ## Extensions

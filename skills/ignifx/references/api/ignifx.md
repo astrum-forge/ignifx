@@ -1949,7 +1949,7 @@ Creates a component. The engine constructs components; game code never calls `ne
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`constructor`](#constructor-81)
+[`Script`](#abstract-script).[`constructor`](#constructor-83)
 
 #### Properties
 
@@ -2025,7 +2025,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-49)
+[`Script`](#abstract-script).[`enabled`](#enabled-55)
 
 ##### entity
 
@@ -2860,6 +2860,12 @@ One voice is kept per clip-and-bus pair and reused, so a hundred coins in a seco
 Web Audio sub-graph and a hundred instances, with the oldest stolen past sixteen. The clip must
 already be loaded; an `asset()` field hands you exactly that.
 
+This is the **wider** of the two one-shot calls: it takes [OneShotOptions](#oneshotoptions), which is `bus`
+plus all of `PlayOptions`. `AudioSource.playOneShot(clip, { volume })` is the narrow form — it
+supplies the source's bus and accepts a gain and nothing else
+(`docs/architecture/10-audio.md` §3, "Corrections"). Neither form is spatial; a positional sound
+is `play()` on a spatial `AudioSource`.
+
 ###### Example
 
 ```ts
@@ -3076,7 +3082,7 @@ Applies the schema defaults, exactly as `Script.define` would.
 
 ###### Overrides
 
-[`Script`](#abstract-script).[`constructor`](#constructor-81)
+[`Script`](#abstract-script).[`constructor`](#constructor-83)
 
 #### Properties
 
@@ -3229,7 +3235,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-49)
+[`Script`](#abstract-script).[`enabled`](#enabled-55)
 
 ##### entity
 
@@ -3651,10 +3657,21 @@ The gain for this one play.
 
 The sound.
 
+###### Remarks
+
+The options are **not** the service form's: this takes [OneShotVolume](#oneshotvolume) — `{ volume }` and
+nothing else — and supplies the source's own `bus`. `app.audio.playOneShot(clip, options)` takes
+`OneShotOptions`, which is `bus` plus all of `PlayOptions` (`pitch`, `loop`, `delay`,
+`startOffset`, `duration`); reach for that one when a one-shot needs more than a gain. Either
+way the voice is non-spatial and shared per `(clip, bus)`, so a positional impact is `play()` on
+a spatial `AudioSource`, not a one-shot.
+
 ###### Example
 
 ```ts
 this.source.playOneShot(this.impact.value, { volume: 0.5 });
+// More than a gain? Use the service, and name the bus yourself:
+this.app.audio.playOneShot(this.impact.value, { bus: this.source.bus, pitch: 1.2 });
 ```
 
 ##### requireComponent()
@@ -3811,7 +3828,7 @@ accept changed.
 
 ###### Implementation of
 
-[`ScriptCallbacks`](#scriptcallbacks).[`update`](#update-9)
+[`ScriptCallbacks`](#scriptcallbacks).[`update`](#update-10)
 
 ***
 
@@ -4282,7 +4299,7 @@ The world, clock, phase, and delta.
 
 ###### Implementation of
 
-[`System`](#system).[`update`](#update-10)
+[`System`](#system).[`update`](#update-11)
 
 ***
 
@@ -6914,7 +6931,7 @@ Creates a component. The engine constructs components; game code never calls `ne
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`constructor`](#constructor-81)
+[`Script`](#abstract-script).[`constructor`](#constructor-83)
 
 #### Properties
 
@@ -6983,7 +7000,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-49)
+[`Script`](#abstract-script).[`enabled`](#enabled-55)
 
 ##### entity
 
@@ -13721,7 +13738,9 @@ How many frames the history can hold.
 
 > `readonly` **isDevelopment**: `boolean`
 
-Whether per-phase timings and User Timing entries are being recorded.
+Whether per-phase timings and User Timing entries are being recorded — that is, whether the app
+was created with `mode: "development"`, which is the default in every build. Read it before
+trusting `FrameSample.cpuMs`.
 
 #### Accessors
 
@@ -13815,6 +13834,53 @@ The group name.
 The group, or `null` when no subsystem registered it — an absent group is expected
 absence, not a failure (coding standards §5.5).
 
+##### groupOrRegister()
+
+> **groupOrRegister**(`name`, `counterNames`): [`DiagnosticsGroup`](#diagnosticsgroup-1)
+
+Looks a counter group up by name and registers it if no subsystem has yet — the idiom for code
+that may run more than once (`docs/architecture/15-devtools-and-diagnostics.md` §3).
+
+###### Parameters
+
+###### name
+
+`string`
+
+The group name.
+
+###### counterNames
+
+readonly `string`[]
+
+The counter names to register with, used only on the first call.
+
+###### Returns
+
+[`DiagnosticsGroup`](#diagnosticsgroup-1)
+
+The existing group, or the newly registered one.
+
+###### Remarks
+
+`registerGroup` throws `IGX-1503` on a duplicate name, which is right for an extension that
+registers its group once at `register()` time and wrong for a script: a script's `awake` runs
+once per instance, and a scene reload runs it again, so `group(name) ?? registerGroup(name, …)`
+had to be written out by hand at every call site. This is that expression, with one difference
+worth knowing: when the group already exists it is returned **as it was registered**, and
+`counterNames` is ignored rather than merged — Lite-style counter arrays are indexed, and
+growing one under a subsystem that already holds indices into it would silently renumber its
+counters. A caller that then asks for a counter the first registration did not declare gets
+`IGX-1504` from [DiagnosticsGroup.index](#index-1), which names the group and the counter.
+
+###### Example
+
+```ts
+// In a Script's `awake`, which runs once per instance and again after a scene reload.
+const counters = this.app.diagnostics.groupOrRegister("game", ["enemiesAlive", "wavesCleared"]);
+this.enemiesAlive = counters.index("enemiesAlive");
+```
+
 ##### profile()
 
 > **profile**(`name`): [`ProfileScope`](#profilescope)
@@ -13904,6 +13970,12 @@ The counter names, in the order their indices are assigned.
 [`DiagnosticsGroup`](#diagnosticsgroup-1)
 
 The group, whose indices are resolved once with [DiagnosticsGroup.index](#index-1).
+
+###### Remarks
+
+A second registration of the same name is a mistake, not a merge, so it throws. A script that
+cannot know whether it is the first instance to run — a gameplay counter shared by every enemy,
+a group that survives a scene reload — asks for [Diagnostics.groupOrRegister](#grouporregister) instead.
 
 ###### Throws
 
@@ -14021,6 +14093,37 @@ Hides the dialog and emits [Dialog.onDismissed](#ondismissed).
 ###### Returns
 
 `void`
+
+##### setButtons()
+
+> **setButtons**(`buttons`): `void`
+
+Replaces the buttons.
+
+###### Parameters
+
+###### buttons
+
+readonly [`DialogButton`](#dialogbutton)[]
+
+The buttons, left to right. An empty list leaves the row empty.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+One dialog re-used for every question is cheaper than one dialog per question and keeps the
+stacking predictable, so the buttons have to be able to change: a confirmation asks
+"Yes"/"No", a save error offers "Retry"/"Cancel", and a locale change relabels both.
+
+###### Example
+
+```ts ignore-check
+dialog.setMessage("Delete this save?");
+dialog.setButtons([{ id: "no", label: "No" }, { id: "yes", label: "Yes" }]);
+```
 
 ##### setMessage()
 
@@ -14762,7 +14865,7 @@ The stored value, or `null` when the namespace has no such key.
 
 ###### Implementation of
 
-[`StorageBackend`](#storagebackend).[`get`](#get-11)
+[`StorageBackend`](#storagebackend).[`get`](#get-14)
 
 ##### keys()
 
@@ -14828,7 +14931,7 @@ A promise that settles once the value is durable.
 
 ###### Implementation of
 
-[`StorageBackend`](#storagebackend).[`set`](#set-13)
+[`StorageBackend`](#storagebackend).[`set`](#set-16)
 
 ***
 
@@ -16288,7 +16391,7 @@ Applies the schema defaults, exactly as `Component.define` would.
 
 ###### Overrides
 
-[`Script`](#abstract-script).[`constructor`](#constructor-81)
+[`Script`](#abstract-script).[`constructor`](#constructor-83)
 
 #### Properties
 
@@ -16501,7 +16604,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-49)
+[`Script`](#abstract-script).[`enabled`](#enabled-55)
 
 ##### entity
 
@@ -19073,7 +19176,7 @@ Builds a HUD label with the schema's defaults.
 
 ###### Overrides
 
-[`TextComponent`](#abstract-textcomponent).[`constructor`](#constructor-90)
+[`TextComponent`](#abstract-textcomponent).[`constructor`](#constructor-92)
 
 #### Properties
 
@@ -19133,7 +19236,7 @@ The em size, in render-target pixels.
 
 > **i18nKey**: `string`
 
-A translation key looked up in `app.i18n`; wins over [TextComponent.text](#text-1).
+A translation key looked up in `app.i18n`; wins over [TextComponent.text](#text-2).
 
 ###### Inherited from
 
@@ -19195,7 +19298,7 @@ The literal string to draw; ignored when [TextComponent.i18nKey](#i18nkey-1) is 
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`text`](#text-1)
+[`TextComponent`](#abstract-textcomponent).[`text`](#text-2)
 
 ##### typeId
 
@@ -19256,7 +19359,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`enabled`](#enabled-55)
+[`TextComponent`](#abstract-textcomponent).[`enabled`](#enabled-61)
 
 ##### entity
 
@@ -20061,7 +20164,7 @@ Closes the connection. The next call opens a new one.
 
 ###### Implementation of
 
-[`StorageBackend`](#storagebackend).[`dispose`](#dispose-20)
+[`StorageBackend`](#storagebackend).[`dispose`](#dispose-22)
 
 ##### get()
 
@@ -20091,7 +20194,7 @@ The value, or `null`.
 
 ###### Implementation of
 
-[`StorageBackend`](#storagebackend).[`get`](#get-11)
+[`StorageBackend`](#storagebackend).[`get`](#get-14)
 
 ##### keys()
 
@@ -20157,7 +20260,7 @@ A promise that settles once the transaction commits.
 
 ###### Implementation of
 
-[`StorageBackend`](#storagebackend).[`set`](#set-13)
+[`StorageBackend`](#storagebackend).[`set`](#set-16)
 
 ***
 
@@ -23327,7 +23430,7 @@ The world, clock, phase, and delta.
 
 ###### Implementation of
 
-[`System`](#system).[`update`](#update-10)
+[`System`](#system).[`update`](#update-11)
 
 ***
 
@@ -24780,7 +24883,7 @@ Drops every namespace.
 
 ###### Implementation of
 
-[`StorageBackend`](#storagebackend).[`dispose`](#dispose-20)
+[`StorageBackend`](#storagebackend).[`dispose`](#dispose-22)
 
 ##### get()
 
@@ -24810,7 +24913,7 @@ A copy of the stored value, or `null`.
 
 ###### Implementation of
 
-[`StorageBackend`](#storagebackend).[`get`](#get-11)
+[`StorageBackend`](#storagebackend).[`get`](#get-14)
 
 ##### keys()
 
@@ -24876,7 +24979,646 @@ A promise that settles once the value is stored.
 
 ###### Implementation of
 
-[`StorageBackend`](#storagebackend).[`set`](#set-13)
+[`StorageBackend`](#storagebackend).[`set`](#set-16)
+
+***
+
+### Menu
+
+A panel of selectable rows in an overlay layer.
+
+#### Example
+
+```ts ignore-check
+const pause = new Menu(app.ui, { id: "pause", title: "Paused" });
+pause.setRows([
+  { kind: "action", id: "resume", label: "Resume", activate: () => pause.hide() },
+  { kind: "slider", id: "music", label: "Music", min: 0, max: 1, step: 0.05,
+    get: () => music.volume, set: (v) => { music.volume = v; },
+    format: (v) => `${String(Math.round(v * 100))}%` },
+]);
+pause.show();
+```
+
+#### Constructors
+
+##### Constructor
+
+> **new Menu**(`host`, `options`): [`Menu`](#menu)
+
+Builds the panel and mounts it, hidden unless `options.visible` says otherwise.
+
+###### Parameters
+
+###### host
+
+[`UiHost`](#uihost)
+
+The overlay host, normally `app.ui`.
+
+###### options
+
+[`MenuOptions`](#menuoptions)
+
+The id, the heading, the layer, and the starting rows.
+
+###### Returns
+
+[`Menu`](#menu)
+
+#### Properties
+
+##### id
+
+> `readonly` **id**: `string`
+
+The id the menu was built with.
+
+#### Accessors
+
+##### cancelable
+
+###### Get Signature
+
+> **get** **cancelable**(): `boolean`
+
+Whether Escape and [Menu.cancel](#cancel-1) back out of this menu. A title screen sets it `false`.
+
+###### Returns
+
+`boolean`
+
+`true` when the menu can be dismissed.
+
+###### Set Signature
+
+> **set** **cancelable**(`value`): `void`
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+##### element
+
+###### Get Signature
+
+> **get** **element**(): `HTMLDivElement` \| `null`
+
+The panel element, so a game can restyle it or a test can read it.
+
+###### Returns
+
+`HTMLDivElement` \| `null`
+
+The element, or `null` under an app with no DOM overlay.
+
+##### isVisible
+
+###### Get Signature
+
+> **get** **isVisible**(): `boolean`
+
+Whether the panel is on screen.
+
+###### Returns
+
+`boolean`
+
+`true` between [Menu.show](#show-3) and [Menu.hide](#hide-3).
+
+##### keyboardEnabled
+
+###### Get Signature
+
+> **get** **keyboardEnabled**(): `boolean`
+
+Whether the widget reads the keyboard itself.
+
+###### Returns
+
+`boolean`
+
+`true` while its own `keydown` handler acts.
+
+###### Set Signature
+
+> **set** **keyboardEnabled**(`value`): `void`
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+##### onActivated
+
+###### Get Signature
+
+> **get** **onActivated**(): [`SignalLike`](#signallike)\<[`MenuRow`](#menurow)\>
+
+Emitted with the row that was activated, after its own handler ran.
+
+###### Returns
+
+[`SignalLike`](#signallike)\<[`MenuRow`](#menurow)\>
+
+The signal.
+
+##### onBack
+
+###### Get Signature
+
+> **get** **onBack**(): [`SignalLike`](#signallike)
+
+Emitted by [Menu.cancel](#cancel-1) — Escape, the pad's east button, or a call — when the menu is
+[Menu.cancelable](#cancelable). A [MenuStack](#menustack) connects `pop` to it.
+
+###### Returns
+
+[`SignalLike`](#signallike)
+
+The signal.
+
+##### onSelectionChanged
+
+###### Get Signature
+
+> **get** **onSelectionChanged**(): [`SignalLike`](#signallike)\<[`MenuRow`](#menurow)\>
+
+Emitted with the newly selected row whenever the selection moves, from any device. A game
+connects a click sound to it.
+
+###### Returns
+
+[`SignalLike`](#signallike)\<[`MenuRow`](#menurow)\>
+
+The signal.
+
+##### rows
+
+###### Get Signature
+
+> **get** **rows**(): readonly [`MenuRow`](#menurow)[]
+
+The rows the menu is drawing.
+
+###### Returns
+
+readonly [`MenuRow`](#menurow)[]
+
+The rows, in draw order.
+
+##### selected
+
+###### Get Signature
+
+> **get** **selected**(): [`MenuRow`](#menurow) \| `null`
+
+The selected row.
+
+###### Returns
+
+[`MenuRow`](#menurow) \| `null`
+
+The row under the selection, or `null` when nothing can be selected.
+
+##### selectedIndex
+
+###### Get Signature
+
+> **get** **selectedIndex**(): `number`
+
+Where the selection sits.
+
+###### Returns
+
+`number`
+
+The index into [Menu.rows](#rows-1).
+
+#### Methods
+
+##### activateSelection()
+
+> **activateSelection**(): `void`
+
+Runs the selected row's activate behaviour.
+
+###### Returns
+
+`void`
+
+##### adjustSelection()
+
+> **adjustSelection**(`direction`): `void`
+
+Runs the selected row's Left or Right behaviour: a slider moves by one step, a toggle flips,
+and a choice advances.
+
+###### Parameters
+
+###### direction
+
+`-1` \| `1`
+
+`-1` for left, `1` for right.
+
+###### Returns
+
+`void`
+
+##### cancel()
+
+> **cancel**(): `boolean`
+
+Backs out of the menu, if it is [Menu.cancelable](#cancelable).
+
+###### Returns
+
+`boolean`
+
+`true` when [Menu.onBack](#onback) was emitted, so the caller knows the press was used.
+
+##### dispose()
+
+> **dispose**(): `void`
+
+Removes the panel from the overlay and unsubscribes everything.
+
+###### Returns
+
+`void`
+
+##### hide()
+
+> **hide**(): `void`
+
+Hides the panel.
+
+###### Returns
+
+`void`
+
+##### moveSelection()
+
+> **moveSelection**(`delta`): `void`
+
+Moves the selection, skipping headings, separators and disabled rows.
+
+###### Parameters
+
+###### delta
+
+`-1` \| `1`
+
+`-1` for up, `1` for down.
+
+###### Returns
+
+`void`
+
+##### refresh()
+
+> **refresh**(): `void`
+
+Re-reads every label and value and redraws the selection.
+
+###### Returns
+
+`void`
+
+##### select()
+
+> **select**(`id`): `boolean`
+
+Puts the selection on a row by id.
+
+###### Parameters
+
+###### id
+
+`string`
+
+The row's [MenuRowBase.id](#id-11).
+
+###### Returns
+
+`boolean`
+
+`true` when a selectable row with that id was found.
+
+##### setRows()
+
+> **setRows**(`rows`): `void`
+
+Replaces the rows and rebuilds the panel.
+
+###### Parameters
+
+###### rows
+
+readonly [`MenuRow`](#menurow)[]
+
+The rows, in draw order.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+Rebuilding rather than diffing is deliberate: the row list changes when a save appears, when a
+control scheme changes and when the locale changes, and a menu of at most a few dozen rows is
+not worth a reconciler. The selection stays on the same row id when that id is still present.
+
+##### show()
+
+> **show**(): `void`
+
+Shows the panel, puts the selection on the first row that can take it, and focuses the list.
+
+###### Returns
+
+`void`
+
+***
+
+### MenuStack
+
+A stack of [Menu](#menu) screens, innermost last.
+
+#### Example
+
+```ts ignore-check
+const stack = new MenuStack({ navigation });
+stack.push(title);
+// in a script that runs while paused:
+stack.update(app.time.unscaledDeltaTime);
+```
+
+#### Constructors
+
+##### Constructor
+
+> **new MenuStack**(`options?`): [`MenuStack`](#menustack)
+
+Builds an empty stack.
+
+###### Parameters
+
+###### options?
+
+[`MenuStackOptions`](#menustackoptions)
+
+The controls to read, and the repeat timings.
+
+###### Returns
+
+[`MenuStack`](#menustack)
+
+#### Accessors
+
+##### bottom
+
+###### Get Signature
+
+> **get** **bottom**(): [`Menu`](#menu) \| `null`
+
+The menu at the bottom, which is the one the stack was opened with.
+
+###### Returns
+
+[`Menu`](#menu) \| `null`
+
+The first menu pushed, or `null` when the stack is empty.
+
+##### depth
+
+###### Get Signature
+
+> **get** **depth**(): `number`
+
+How deep the stack is.
+
+###### Returns
+
+`number`
+
+The number of menus on it.
+
+##### isOpen
+
+###### Get Signature
+
+> **get** **isOpen**(): `boolean`
+
+Whether any menu is open.
+
+###### Returns
+
+`boolean`
+
+`true` while the stack is not empty.
+
+##### menus
+
+###### Get Signature
+
+> **get** **menus**(): readonly [`Menu`](#menu)[]
+
+The menus on the stack, outermost first.
+
+###### Returns
+
+readonly [`Menu`](#menu)[]
+
+The menus, in push order.
+
+##### onActivated
+
+###### Get Signature
+
+> **get** **onActivated**(): [`SignalLike`](#signallike)\<[`MenuRow`](#menurow)\>
+
+Emitted with the row that was activated on the top menu.
+
+###### Returns
+
+[`SignalLike`](#signallike)\<[`MenuRow`](#menurow)\>
+
+The signal.
+
+##### onChanged
+
+###### Get Signature
+
+> **get** **onChanged**(): [`SignalLike`](#signallike)\<[`Menu`](#menu) \| `null`\>
+
+Emitted with the new top menu — `null` when the stack empties — whenever the stack changes. A
+game connects its audio ducking and its pause state to it.
+
+###### Returns
+
+[`SignalLike`](#signallike)\<[`Menu`](#menu) \| `null`\>
+
+The signal.
+
+##### onSelectionChanged
+
+###### Get Signature
+
+> **get** **onSelectionChanged**(): [`SignalLike`](#signallike)\<[`MenuRow`](#menurow)\>
+
+Emitted with the newly selected row whenever the selection moves on the top menu.
+
+###### Returns
+
+[`SignalLike`](#signallike)\<[`MenuRow`](#menurow)\>
+
+The signal.
+
+##### suspended
+
+###### Get Signature
+
+> **get** **suspended**(): `boolean`
+
+Whether [MenuStack.update](#update-6) is reading its controls.
+
+###### Remarks
+
+Set it while something modal is on top of the menu — a confirmation `Dialog`, or a rebind that
+is listening for the next key — so that the same press does not reach both.
+
+###### Returns
+
+`boolean`
+
+`true` while navigation is suspended.
+
+###### Set Signature
+
+> **set** **suspended**(`value`): `void`
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+##### top
+
+###### Get Signature
+
+> **get** **top**(): [`Menu`](#menu) \| `null`
+
+The menu on top, which is the visible one.
+
+###### Returns
+
+[`Menu`](#menu) \| `null`
+
+The top menu, or `null` when the stack is empty.
+
+#### Methods
+
+##### closeAll()
+
+> **closeAll**(): `void`
+
+Closes every menu on the stack.
+
+###### Returns
+
+`void`
+
+##### dispose()
+
+> **dispose**(): `void`
+
+Drops every subscription. The menus themselves belong to the game and are not disposed.
+
+###### Returns
+
+`void`
+
+##### pop()
+
+> **pop**(): [`Menu`](#menu) \| `null`
+
+Closes the top menu and shows the one underneath.
+
+###### Returns
+
+[`Menu`](#menu) \| `null`
+
+The menu that was closed, or `null` when the stack was already empty.
+
+##### push()
+
+> **push**(`menu`): `void`
+
+Hides whatever is on top and shows `menu` over it.
+
+###### Parameters
+
+###### menu
+
+[`Menu`](#menu)
+
+The menu to open.
+
+###### Returns
+
+`void`
+
+##### refresh()
+
+> **refresh**(): `void`
+
+Re-reads every label on every menu on the stack, for a locale change.
+
+###### Returns
+
+`void`
+
+##### update()
+
+> **update**(`unscaledDelta`): `void`
+
+Reads the navigation controls and applies them to the top menu.
+
+###### Parameters
+
+###### unscaledDelta
+
+`number`
+
+Seconds since the last call, on the unscaled clock.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+Call it from a script that declares `static updateWhenPaused = true`, with
+`app.time.unscaledDeltaTime`: a menu that repeats a held direction has to keep time while the
+game is stopped, and scaled time is pinned at zero while it is.
 
 ***
 
@@ -24926,7 +25668,7 @@ Whether the template's GPU buffers have been released.
 
 `boolean`
 
-`true` once [MeshAsset.dispose](#dispose-14) has run.
+`true` once [MeshAsset.dispose](#dispose-16) has run.
 
 ##### lite
 
@@ -26402,8 +27144,8 @@ The clips the file declared.
 
 ###### Remarks
 
-Unstable: these are Lite's own animation groups, and ignifx does not advance them in Phase 2
-(ADR-0003 — `@ignifx/3d`'s animator owns playback).
+Unstable: these are Lite's own animation groups, and core does not advance them
+(ADR-0003 — `@ignifx/3d`'s `Animator` owns playback).
 
 ###### Returns
 
@@ -26913,9 +27655,9 @@ The clips the file declared, stripped from the container so Lite never ticks the
 
 ###### Remarks
 
-Unstable: these are Lite's own animation groups, handed on to `@ignifx/3d`'s animator, and they
-are excluded from the stability guarantees of `CONSTITUTION.md` Article IV. A `Model` re-binds
-them per instance when the animation system lands; in Phase 2 they are read-only metadata.
+Unstable: these are Lite's own animation groups, handed on to `@ignifx/3d`'s `Animator`, and
+they are excluded from the stability guarantees of `CONSTITUTION.md` Article IV. To core they
+are read-only metadata: nothing here advances or re-binds them.
 
 ##### assetType
 
@@ -27070,7 +27812,7 @@ Applies the schema defaults, exactly as `Script.define` would.
 
 ###### Overrides
 
-[`Script`](#abstract-script).[`constructor`](#constructor-81)
+[`Script`](#abstract-script).[`constructor`](#constructor-83)
 
 #### Properties
 
@@ -27207,7 +27949,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-49)
+[`Script`](#abstract-script).[`enabled`](#enabled-55)
 
 ##### entity
 
@@ -27973,7 +28715,7 @@ The world, clock, phase, and delta.
 
 ###### Implementation of
 
-[`System`](#system).[`update`](#update-10)
+[`System`](#system).[`update`](#update-11)
 
 ***
 
@@ -31209,7 +31951,7 @@ Applies the schema defaults, exactly as `Component.define` would.
 
 ###### Overrides
 
-[`Script`](#abstract-script).[`constructor`](#constructor-81)
+[`Script`](#abstract-script).[`constructor`](#constructor-83)
 
 #### Properties
 
@@ -31328,7 +32070,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-49)
+[`Script`](#abstract-script).[`enabled`](#enabled-55)
 
 ##### entity
 
@@ -32884,6 +33626,13 @@ The asset's values, the inline values, or the fallback.
 One instance of a post-process chain, attached to the main camera's entity
 (`docs/architecture/07-rendering.md` §2.7).
 
+#### Remarks
+
+The stack may be attached and configured either **before** or after `app.start()`. Before start
+the chain's frame-graph tasks are appended and recorded by the scene registration `start()` runs;
+after start they are recorded on the spot. Either way the first frame the canvas presents already
+carries the effects.
+
 #### Example
 
 ```ts
@@ -33376,7 +34125,7 @@ Applies the schema defaults, exactly as `Component.define` would.
 
 ###### Overrides
 
-[`Script`](#abstract-script).[`constructor`](#constructor-81)
+[`Script`](#abstract-script).[`constructor`](#constructor-83)
 
 #### Properties
 
@@ -33501,7 +34250,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-49)
+[`Script`](#abstract-script).[`enabled`](#enabled-55)
 
 ##### entity
 
@@ -36473,7 +37222,7 @@ Applies the schema defaults, exactly as `Component.define` would.
 
 ###### Overrides
 
-[`Script`](#abstract-script).[`constructor`](#constructor-81)
+[`Script`](#abstract-script).[`constructor`](#constructor-83)
 
 #### Properties
 
@@ -36584,7 +37333,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-49)
+[`Script`](#abstract-script).[`enabled`](#enabled-55)
 
 ##### entity
 
@@ -41167,7 +41916,7 @@ The em size, in render-target pixels.
 
 > **i18nKey**: `string`
 
-A translation key looked up in `app.i18n`; wins over [TextComponent.text](#text-1).
+A translation key looked up in `app.i18n`; wins over [TextComponent.text](#text-2).
 
 ##### lineHeight
 
@@ -41716,7 +42465,7 @@ Applies the schema defaults, exactly as `Component.define` would.
 
 ###### Overrides
 
-[`Script`](#abstract-script).[`constructor`](#constructor-81)
+[`Script`](#abstract-script).[`constructor`](#constructor-83)
 
 #### Properties
 
@@ -41883,7 +42632,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-49)
+[`Script`](#abstract-script).[`enabled`](#enabled-55)
 
 ##### entity
 
@@ -42374,7 +43123,7 @@ Applies the schema defaults, exactly as `Component.define` would.
 
 ###### Overrides
 
-[`Script`](#abstract-script).[`constructor`](#constructor-81)
+[`Script`](#abstract-script).[`constructor`](#constructor-83)
 
 #### Properties
 
@@ -42539,7 +43288,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-49)
+[`Script`](#abstract-script).[`enabled`](#enabled-55)
 
 ##### entity
 
@@ -43086,7 +43835,7 @@ here, per animator, which is also what makes `updateWhenPaused` mean something.
 
 ###### Implementation of
 
-[`System`](#system).[`update`](#update-10)
+[`System`](#system).[`update`](#update-11)
 
 ***
 
@@ -45015,8 +45764,8 @@ A stack of transient messages.
 ```ts
 const toasts = new Toast(app.ui);
 toasts.show("Checkpoint reached");
-// in a script's update:
-toasts.advance(dt);
+// in the update of a script that declares `static updateWhenPaused = true`:
+toasts.advance(app.time.unscaledDeltaTime);
 ```
 
 #### Constructors
@@ -45103,11 +45852,18 @@ Advances every message's timer.
 
 `number`
 
-Seconds elapsed since the previous call; `dt` from a script's `update`.
+Seconds elapsed since the previous call; `dt` from a script's `update`, or
+`app.time.unscaledDeltaTime` when the toast has to expire while the game is paused.
 
 ###### Returns
 
 `void`
+
+###### Remarks
+
+Nothing calls this for you. The script that does must declare `static updateWhenPaused = true`
+if toasts are to expire while the game is paused — a menu's "Saved" message is shown from a
+paused game, and an ordinary script gets no `update` there.
 
 ##### clear()
 
@@ -46642,7 +47398,7 @@ The world, clock, phase, and delta.
 
 ###### Implementation of
 
-[`System`](#system).[`update`](#update-10)
+[`System`](#system).[`update`](#update-11)
 
 ***
 
@@ -47063,7 +47819,7 @@ The world, clock, phase, and delta.
 
 ###### Implementation of
 
-[`System`](#system).[`update`](#update-10)
+[`System`](#system).[`update`](#update-11)
 
 ***
 
@@ -47631,7 +48387,7 @@ The world, clock, phase, and delta.
 
 ###### Implementation of
 
-[`System`](#system).[`update`](#update-10)
+[`System`](#system).[`update`](#update-11)
 
 ***
 
@@ -52074,10 +52830,10 @@ The running simulation: the entity registry, the scene instances, and the lifecy
 
 #### Remarks
 
-Phase 1 ships the subset that needs no asset system: entity creation, queries, the implicit
-`"default"` scene, and the lifecycle. `loadScene`, `unloadScene`, `instantiate`,
-`instantiateAsync`, and `moveEntityToScene` arrive in Phase 2, and `onSceneLoaded`/
-`onSceneUnloaded` exist here but never fire until then.
+The world owns entity creation, queries, the implicit `"default"` scene, and the lifecycle, plus
+the scene operations that need the asset service — `loadScene`, `unloadScene`, `instantiate`,
+`instantiateAsync`, `moveEntityToScene` — and the `onSceneLoaded`/`onSceneUnloaded` signals they
+raise.
 
 #### Example
 
@@ -52147,7 +52903,7 @@ The app.
 
 > **get** **isDisposed**(): `boolean`
 
-`true` once [World.dispose](#dispose-26) has run.
+`true` once [World.dispose](#dispose-28) has run.
 
 ###### Returns
 
@@ -52251,7 +53007,7 @@ The signal.
 
 > **get** **onSceneLoaded**(): [`Signal`](#signal-3)\<[`SceneInstance`](#sceneinstance)\>
 
-Emitted when a scene instance finishes loading. Never fires before Phase 2.
+Emitted when a scene instance finishes loading.
 
 ###### Returns
 
@@ -52265,7 +53021,7 @@ The signal.
 
 > **get** **onSceneUnloaded**(): [`Signal`](#signal-3)\<[`SceneInstance`](#sceneinstance)\>
 
-Emitted when a scene instance is unloaded. Never fires before Phase 2.
+Emitted when a scene instance is unloaded.
 
 ###### Returns
 
@@ -53299,7 +54055,7 @@ Builds a sign with the schema's defaults.
 
 ###### Overrides
 
-[`TextComponent`](#abstract-textcomponent).[`constructor`](#constructor-90)
+[`TextComponent`](#abstract-textcomponent).[`constructor`](#constructor-92)
 
 #### Properties
 
@@ -53365,7 +54121,7 @@ The em size, in render-target pixels.
 
 > **i18nKey**: `string`
 
-A translation key looked up in `app.i18n`; wins over [TextComponent.text](#text-1).
+A translation key looked up in `app.i18n`; wins over [TextComponent.text](#text-2).
 
 ###### Inherited from
 
@@ -53427,7 +54183,7 @@ The literal string to draw; ignored when [TextComponent.i18nKey](#i18nkey-1) is 
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`text`](#text-1)
+[`TextComponent`](#abstract-textcomponent).[`text`](#text-2)
 
 ##### typeId
 
@@ -53488,7 +54244,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`enabled`](#enabled-55)
+[`TextComponent`](#abstract-textcomponent).[`enabled`](#enabled-61)
 
 ##### entity
 
@@ -53910,7 +54666,7 @@ Builds a floating label with the schema's defaults.
 
 ###### Overrides
 
-[`TextComponent`](#abstract-textcomponent).[`constructor`](#constructor-90)
+[`TextComponent`](#abstract-textcomponent).[`constructor`](#constructor-92)
 
 #### Properties
 
@@ -53970,7 +54726,7 @@ Whether the label is hidden when the anchor point is behind the camera.
 
 > **i18nKey**: `string`
 
-A translation key looked up in `app.i18n`; wins over [TextComponent.text](#text-1).
+A translation key looked up in `app.i18n`; wins over [TextComponent.text](#text-2).
 
 ###### Inherited from
 
@@ -54044,7 +54800,7 @@ The literal string to draw; ignored when [TextComponent.i18nKey](#i18nkey-1) is 
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`text`](#text-1)
+[`TextComponent`](#abstract-textcomponent).[`text`](#text-2)
 
 ##### typeId
 
@@ -54105,7 +54861,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`enabled`](#enabled-55)
+[`TextComponent`](#abstract-textcomponent).[`enabled`](#enabled-61)
 
 ##### entity
 
@@ -55182,7 +55938,7 @@ Resolved project settings.
 
 The asynchronous key-value store settings, save games, and input rebindings live in
 (`docs/architecture/14-platform-electron.md` §2). The backend is chosen from
-[PlatformInfo.kind](#kind-25) — IndexedDB in a browser, memory under Node — unless `createApp` was
+[PlatformInfo.kind](#kind-32) — IndexedDB in a browser, memory under Node — unless `createApp` was
 given one.
 
 ##### time
@@ -59318,16 +60074,29 @@ Where `app.log` writes. Defaults to the console sink.
 > `readonly` `optional` **mode?**: [`ErrorFormatMode`](#errorformatmode)
 
 `"development"` turns on per-phase CPU timings, full error messages, and the strict half of
-every rule `04-extensions.md` §2 relaxes in production. Defaults to `"development"`; the Vite
-plugin sets it from the build mode in Phase 2.
+every rule `04-extensions.md` §2 relaxes in production.
+
+###### Remarks
+
+Defaults to `"development"`, and **nothing else ever changes it**: neither `@ignifx/vite-plugin`
+nor a template overrides it, so a production `vite build` of a game that passes no `mode` runs
+in development mode — full error text, `performance.mark`/`measure` entries, and
+`FrameSample.cpuMs` filled in. That is deliberate: the mode decides how the *engine* reports
+itself, and only the game knows whether its shipped build wants that. Pass it from the bundler's
+own flag to opt out — `mode: import.meta.env.PROD ? "production" : "development"`.
+
+###### Default Value
+
+`"development"`
 
 ##### settings?
 
 > `readonly` `optional` **settings?**: `Readonly`\<`Record`\<`string`, `unknown`\>\>
 
 Project settings, as `ignifx.config.ts` would supply them
-(`docs/architecture/04-extensions.md` §5). The Vite plugin injects the resolved config in
-Phase 2; tests and Electron tooling pass it here.
+(`docs/architecture/04-extensions.md` §5). `@ignifx/vite-plugin` injects the resolved
+`ignifx.config.ts` as the `import.meta.env.IGNIFX_CONFIG` literal, which a game passes straight
+in here; tests and Electron tooling pass their own object instead.
 
 ##### storage?
 
@@ -60356,8 +61125,10 @@ Options for the [Diagnostics](#diagnostics-1) constructor.
 
 > `readonly` `optional` **development?**: `boolean`
 
-Whether this is a development build. Per-phase CPU timings and `performance.mark`/`measure`
-entries are only produced when it is `true`. Defaults to `false`.
+Whether the app runs in development mode. Per-phase CPU timings and
+`performance.mark`/`measure` entries are only produced when it is `true`. Defaults to `false`
+here; `createApp` passes `mode === "development"`, and that `mode` itself defaults to
+`"development"` in every build — a bundler's production flag does not change it.
 
 ##### historyLength?
 
@@ -60439,6 +61210,12 @@ The heading. Omit for a dialog with no title.
 > `readonly` `optional` **visible?**: `boolean`
 
 Whether the dialog starts shown. Defaults to `false`.
+
+##### zIndex?
+
+> `readonly` `optional` **zIndex?**: `number`
+
+The stacking order inside the layer. Defaults to `UI_DIALOG_Z_INDEX`, from the stylesheet.
 
 ***
 
@@ -61695,8 +62472,17 @@ How many coroutines were resumed this frame.
 
 > `readonly` **cpuMs**: `Float64Array`
 
-CPU milliseconds per phase, indexed by [PhaseIndex](#phaseindex). Always [PHASE\_COUNT](#phase_count) long and
-only filled in development builds.
+CPU milliseconds per phase, indexed by [PhaseIndex](#phaseindex). Always [PHASE\_COUNT](#phase_count) long, and
+filled only while the app is in development mode — every entry is `0` otherwise.
+
+###### Remarks
+
+"Development mode" is `createApp({ mode })`, and nothing else. It is **not** the bundler's mode:
+`mode` defaults to `"development"` and no ignifx tooling overrides it, so a `vite build` of a
+game that never passes `mode` still records these timings. A project that wants them gone from
+its shipped build passes `mode: "production"` itself — for example
+`createApp({ mode: import.meta.env.PROD ? "production" : "development" })` — and a probe that
+reads `cpuMs` then reports zeros.
 
 ##### destroyed
 
@@ -64073,6 +64859,11 @@ Calls below the current threshold return before any record is built, so a disabl
 one numeric comparison. The rest parameter itself is still materialised by the JavaScript engine,
 so per-frame call sites guard with [Logger.isEnabled](#isenabled) instead (coding standards §7).
 
+**A message is not a format string.** It is written to the sink verbatim and the extras are
+appended beside it, the way `console.warn(message, ...data)` does; nothing substitutes into it, so
+a `{placeholder}` token is printed literally. Pass values as extras
+(`log.info("hero z:", z)`), never as tokens inside the message.
+
 #### Example
 
 ```ts
@@ -64642,6 +65433,752 @@ The record to write.
 ###### Inherited from
 
 [`LogSink`](#logsink-2).[`write`](#write-1)
+
+***
+
+### MenuActionRow
+
+A row that runs something when it is activated.
+
+#### Extends
+
+- [`MenuRowBase`](#menurowbase)
+
+#### Properties
+
+##### activate?
+
+> `readonly` `optional` **activate?**: () => `void`
+
+What Enter, the pad's south button and a click do.
+
+###### Returns
+
+`void`
+
+##### enabled?
+
+> `readonly` `optional` **enabled?**: () => `boolean`
+
+Whether the row can be selected. A row that answers `false` is drawn dimmed and skipped.
+
+###### Returns
+
+`boolean`
+
+###### Inherited from
+
+[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-34)
+
+##### id
+
+> `readonly` **id**: `string`
+
+A stable id. It becomes the row's `data-row` attribute, which is what a test selects on.
+
+###### Inherited from
+
+[`MenuRowBase`](#menurowbase).[`id`](#id-11)
+
+##### kind
+
+> `readonly` **kind**: `"action"`
+
+What kind of row this is.
+
+##### label
+
+> `readonly` **label**: [`MenuLabel`](#menulabel)
+
+The left-hand text.
+
+###### Inherited from
+
+[`MenuRowBase`](#menurowbase).[`label`](#label-7)
+
+##### value?
+
+> `readonly` `optional` **value?**: [`MenuLabel`](#menulabel)
+
+The right-hand text, when the row shows one.
+
+***
+
+### MenuBindingRow
+
+A row that shows one input binding and starts a rebind when it is activated.
+
+#### Remarks
+
+The row knows nothing about `@ignifx/input`: it is handed the binding's path as a string and a
+callback that starts whatever rebinding flow the game uses. `@ignifx/input`'s
+`performInteractiveRebind` is the usual one.
+
+#### Extends
+
+- [`MenuRowBase`](#menurowbase)
+
+#### Properties
+
+##### enabled?
+
+> `readonly` `optional` **enabled?**: () => `boolean`
+
+Whether the row can be selected. A row that answers `false` is drawn dimmed and skipped.
+
+###### Returns
+
+`boolean`
+
+###### Inherited from
+
+[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-34)
+
+##### id
+
+> `readonly` **id**: `string`
+
+A stable id. It becomes the row's `data-row` attribute, which is what a test selects on.
+
+###### Inherited from
+
+[`MenuRowBase`](#menurowbase).[`id`](#id-11)
+
+##### kind
+
+> `readonly` **kind**: `"binding"`
+
+What kind of row this is.
+
+##### label
+
+> `readonly` **label**: [`MenuLabel`](#menulabel)
+
+The left-hand text.
+
+###### Inherited from
+
+[`MenuRowBase`](#menurowbase).[`label`](#label-7)
+
+##### listening?
+
+> `readonly` `optional` **listening?**: () => `boolean`
+
+Whether this row's rebind is listening right now, which changes what the row shows.
+
+###### Returns
+
+`boolean`
+
+##### path
+
+> `readonly` **path**: () => `string`
+
+Reads the binding path, such as `<Keyboard>/arrowUp`, or `""` when nothing is bound.
+
+###### Returns
+
+`string`
+
+##### rebind?
+
+> `readonly` `optional` **rebind?**: () => `void`
+
+Starts the rebind.
+
+###### Returns
+
+`void`
+
+***
+
+### MenuButtonSource
+
+Anything with a press edge, which `@ignifx/input`'s `InputAction` is.
+
+#### Properties
+
+##### wasPressedThisFrame
+
+> `readonly` **wasPressedThisFrame**: `boolean`
+
+Whether the control went down this frame.
+
+***
+
+### MenuChoiceRow
+
+A row that cycles through a list of values.
+
+#### Extends
+
+- [`MenuRowBase`](#menurowbase)
+
+#### Properties
+
+##### enabled?
+
+> `readonly` `optional` **enabled?**: () => `boolean`
+
+Whether the row can be selected. A row that answers `false` is drawn dimmed and skipped.
+
+###### Returns
+
+`boolean`
+
+###### Inherited from
+
+[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-34)
+
+##### format?
+
+> `readonly` `optional` **format?**: (`value`) => `string`
+
+Renders a value for display. Defaults to the value itself.
+
+###### Parameters
+
+###### value
+
+`string`
+
+###### Returns
+
+`string`
+
+##### get
+
+> `readonly` **get**: () => `string`
+
+Reads the current value.
+
+###### Returns
+
+`string`
+
+##### id
+
+> `readonly` **id**: `string`
+
+A stable id. It becomes the row's `data-row` attribute, which is what a test selects on.
+
+###### Inherited from
+
+[`MenuRowBase`](#menurowbase).[`id`](#id-11)
+
+##### kind
+
+> `readonly` **kind**: `"choice"`
+
+What kind of row this is.
+
+##### label
+
+> `readonly` **label**: [`MenuLabel`](#menulabel)
+
+The left-hand text.
+
+###### Inherited from
+
+[`MenuRowBase`](#menurowbase).[`label`](#label-7)
+
+##### set
+
+> `readonly` **set**: (`value`) => `void`
+
+Writes the new value.
+
+###### Parameters
+
+###### value
+
+`string`
+
+###### Returns
+
+`void`
+
+##### values
+
+> `readonly` **values**: [`MenuChoiceValues`](#menuchoicevalues)
+
+The values to cycle through, in order.
+
+***
+
+### MenuHeadingRow
+
+A non-selectable label that groups the rows under it.
+
+#### Properties
+
+##### id
+
+> `readonly` **id**: `string`
+
+A stable id, which becomes the row's `data-row` attribute.
+
+##### kind
+
+> `readonly` **kind**: `"heading"`
+
+What kind of row this is.
+
+##### label
+
+> `readonly` **label**: [`MenuLabel`](#menulabel)
+
+The heading text.
+
+***
+
+### MenuNavigation
+
+The three controls a menu stack reads.
+
+#### Properties
+
+##### back?
+
+> `readonly` `optional` **back?**: [`MenuButtonSource`](#menubuttonsource) \| `null`
+
+Backs out one screen.
+
+##### move?
+
+> `readonly` `optional` **move?**: [`MenuVectorSource`](#menuvectorsource) \| `null`
+
+Moves the selection (`y`) and adjusts the selected row (`x`).
+
+##### submit?
+
+> `readonly` `optional` **submit?**: [`MenuButtonSource`](#menubuttonsource) \| `null`
+
+Activates the selected row.
+
+***
+
+### MenuOptions
+
+What `new Menu(app.ui, options)` accepts.
+
+#### Properties
+
+##### cancelable?
+
+> `readonly` `optional` **cancelable?**: `boolean`
+
+Whether Escape and [Menu.cancel](#cancel-1) back out of the menu. Defaults to `true`.
+
+##### id
+
+> `readonly` **id**: `string`
+
+A stable id; it becomes the panel's `data-menu` attribute.
+
+##### keyboard?
+
+> `readonly` `optional` **keyboard?**: `boolean`
+
+Whether the widget reads the keyboard itself. Defaults to `true`.
+
+###### Remarks
+
+Turn it off when the game drives navigation from its own input actions, or every arrow press
+moves the selection twice. A [MenuStack](#menustack) built with a navigation
+source does that for you.
+
+##### layer?
+
+> `readonly` `optional` **layer?**: `string`
+
+The overlay layer to mount into. Defaults to `"menu"`.
+
+##### rows?
+
+> `readonly` `optional` **rows?**: readonly [`MenuRow`](#menurow)[]
+
+The rows to start with. More usually arrive through [Menu.setRows](#setrows).
+
+##### subtitle?
+
+> `readonly` `optional` **subtitle?**: [`MenuLabel`](#menulabel)
+
+A line of prose under the heading.
+
+##### text?
+
+> `readonly` `optional` **text?**: [`MenuText`](#menutext)
+
+The words the rows use for their states.
+
+##### title?
+
+> `readonly` `optional` **title?**: [`MenuLabel`](#menulabel)
+
+The panel's heading. Re-read on every [Menu.refresh](#refresh).
+
+##### visible?
+
+> `readonly` `optional` **visible?**: `boolean`
+
+Whether the menu starts shown. Defaults to `false`.
+
+##### wrap?
+
+> `readonly` `optional` **wrap?**: `boolean`
+
+Whether the selection wraps at both ends. Defaults to `true`.
+
+***
+
+### MenuRowBase
+
+What every selectable row carries.
+
+#### Extended by
+
+- [`MenuActionRow`](#menuactionrow)
+- [`MenuBindingRow`](#menubindingrow)
+- [`MenuChoiceRow`](#menuchoicerow)
+- [`MenuSliderRow`](#menusliderrow)
+- [`MenuToggleRow`](#menutogglerow)
+
+#### Properties
+
+##### enabled?
+
+> `readonly` `optional` **enabled?**: () => `boolean`
+
+Whether the row can be selected. A row that answers `false` is drawn dimmed and skipped.
+
+###### Returns
+
+`boolean`
+
+##### id
+
+> `readonly` **id**: `string`
+
+A stable id. It becomes the row's `data-row` attribute, which is what a test selects on.
+
+##### label
+
+> `readonly` **label**: [`MenuLabel`](#menulabel)
+
+The left-hand text.
+
+***
+
+### MenuSeparatorRow
+
+A non-selectable rule between groups of rows.
+
+#### Properties
+
+##### id
+
+> `readonly` **id**: `string`
+
+A stable id, which becomes the row's `data-row` attribute.
+
+##### kind
+
+> `readonly` **kind**: `"separator"`
+
+What kind of row this is.
+
+***
+
+### MenuSliderRow
+
+A row that edits a number over a range.
+
+#### Remarks
+
+Drawn as a native `<input type="range">` plus the formatted value, because dragging a knob is
+worth having and `@ignifx/ui`'s own focus policy deliberately does not count a slider as a text
+field (`docs/architecture/13-ui.md` §1), so a slider under the pointer never suppresses gameplay
+input.
+
+#### Extends
+
+- [`MenuRowBase`](#menurowbase)
+
+#### Properties
+
+##### enabled?
+
+> `readonly` `optional` **enabled?**: () => `boolean`
+
+Whether the row can be selected. A row that answers `false` is drawn dimmed and skipped.
+
+###### Returns
+
+`boolean`
+
+###### Inherited from
+
+[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-34)
+
+##### format?
+
+> `readonly` `optional` **format?**: (`value`) => `string`
+
+Renders the value. Defaults to the number itself.
+
+###### Parameters
+
+###### value
+
+`number`
+
+###### Returns
+
+`string`
+
+##### get
+
+> `readonly` **get**: () => `number`
+
+Reads the current value.
+
+###### Returns
+
+`number`
+
+##### id
+
+> `readonly` **id**: `string`
+
+A stable id. It becomes the row's `data-row` attribute, which is what a test selects on.
+
+###### Inherited from
+
+[`MenuRowBase`](#menurowbase).[`id`](#id-11)
+
+##### kind
+
+> `readonly` **kind**: `"slider"`
+
+What kind of row this is.
+
+##### label
+
+> `readonly` **label**: [`MenuLabel`](#menulabel)
+
+The left-hand text.
+
+###### Inherited from
+
+[`MenuRowBase`](#menurowbase).[`label`](#label-7)
+
+##### max
+
+> `readonly` **max**: `number`
+
+The highest value the row may take.
+
+##### min
+
+> `readonly` **min**: `number`
+
+The lowest value the row may take.
+
+##### set
+
+> `readonly` **set**: (`value`) => `void`
+
+Writes a new value, already clamped and snapped to the step.
+
+###### Parameters
+
+###### value
+
+`number`
+
+###### Returns
+
+`void`
+
+##### step
+
+> `readonly` **step**: `number`
+
+How far one Left or Right press moves the value.
+
+***
+
+### MenuStackOptions
+
+What `new MenuStack(options)` accepts.
+
+#### Properties
+
+##### navigation?
+
+> `readonly` `optional` **navigation?**: [`MenuNavigation`](#menunavigation)
+
+The controls to read in [MenuStack.update](#update-6). Omit to drive the stack by hand.
+
+##### repeatDelay?
+
+> `readonly` `optional` **repeatDelay?**: `number`
+
+How long the first repeat of a held direction waits, in seconds. Defaults to `0.35`.
+
+##### repeatInterval?
+
+> `readonly` `optional` **repeatInterval?**: `number`
+
+How long each following repeat waits, in seconds. Defaults to `0.12`.
+
+##### threshold?
+
+> `readonly` `optional` **threshold?**: `number`
+
+How far an axis must move before it counts as a direction. Defaults to `0.5`.
+
+***
+
+### MenuText
+
+The words a menu uses for the states its rows can be in, so a localized game sets them once per
+menu rather than on every row.
+
+#### Properties
+
+##### listening?
+
+> `readonly` `optional` **listening?**: [`MenuLabel`](#menulabel)
+
+What a `"binding"` row shows while it is listening. Defaults to `"Press any key…"`.
+
+##### off?
+
+> `readonly` `optional` **off?**: [`MenuLabel`](#menulabel)
+
+What a `"toggle"` row shows when it is off. Defaults to `"Off"`.
+
+##### on?
+
+> `readonly` `optional` **on?**: [`MenuLabel`](#menulabel)
+
+What a `"toggle"` row shows when it is on. Defaults to `"On"`.
+
+##### unbound?
+
+> `readonly` `optional` **unbound?**: [`MenuLabel`](#menulabel)
+
+What a `"binding"` row shows when nothing is bound. Defaults to `"—"`.
+
+***
+
+### MenuToggleRow
+
+A row that flips a flag.
+
+#### Extends
+
+- [`MenuRowBase`](#menurowbase)
+
+#### Properties
+
+##### enabled?
+
+> `readonly` `optional` **enabled?**: () => `boolean`
+
+Whether the row can be selected. A row that answers `false` is drawn dimmed and skipped.
+
+###### Returns
+
+`boolean`
+
+###### Inherited from
+
+[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-34)
+
+##### format?
+
+> `readonly` `optional` **format?**: (`value`) => `string`
+
+Renders the flag. Defaults to the menu's `text.on` / `text.off`.
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`string`
+
+##### get
+
+> `readonly` **get**: () => `boolean`
+
+Reads the flag.
+
+###### Returns
+
+`boolean`
+
+##### id
+
+> `readonly` **id**: `string`
+
+A stable id. It becomes the row's `data-row` attribute, which is what a test selects on.
+
+###### Inherited from
+
+[`MenuRowBase`](#menurowbase).[`id`](#id-11)
+
+##### kind
+
+> `readonly` **kind**: `"toggle"`
+
+What kind of row this is.
+
+##### label
+
+> `readonly` **label**: [`MenuLabel`](#menulabel)
+
+The left-hand text.
+
+###### Inherited from
+
+[`MenuRowBase`](#menurowbase).[`label`](#label-7)
+
+##### set
+
+> `readonly` **set**: (`value`) => `void`
+
+Writes the flag.
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+***
+
+### MenuVectorSource
+
+Anything with a two-dimensional value, which `@ignifx/input`'s `InputAction` is.
+
+#### Properties
+
+##### vector
+
+> `readonly` **vector**: [`Vec2Like`](#vec2like)
+
+The direction, `-1` to `1` on each axis. Positive `y` is up.
 
 ***
 
@@ -65222,7 +66759,16 @@ Linear gain for this play; defaults to the source's `volume`.
 
 ### OneShotVolume
 
-Options accepted by [AudioSource.playOneShot](#playoneshot-1).
+Options accepted by [AudioSource.playOneShot](#playoneshot-1): a gain and nothing else.
+
+#### Remarks
+
+Deliberately narrower than the `OneShotOptions` the service form takes
+(`docs/architecture/10-audio.md` §3, "Corrections"). The component form exists to fire a second
+clip **through this source's bus**, so `bus` is not a caller's choice, and everything else in
+`PlayOptions` — `pitch`, `loop`, `delay`, `startOffset`, `duration` — describes a sound the
+source would then have no handle on. A one-shot that needs more than a gain is
+`app.audio.playOneShot(clip, options)`, which takes `bus` plus all of `PlayOptions`.
 
 #### Properties
 
@@ -65230,7 +66776,7 @@ Options accepted by [AudioSource.playOneShot](#playoneshot-1).
 
 > `readonly` `optional` **volume?**: `number`
 
-Linear gain for this one play.
+Linear gain for this one play, multiplying the source's own `volume`. Defaults to `1`.
 
 ***
 
@@ -68832,6 +70378,20 @@ The clip's name.
 
 One clip: an ordered run of atlas frames with a rate and a loop flag.
 
+#### Remarks
+
+A clip names its frames one of two ways, and they mean different things.
+
+- `frames` is an explicit **list of frame names**, played in the order written. Anything the
+  atlas does not carry is dropped, and the frames need not be adjacent in the atlas.
+- `from`/`to` is an **index range over the atlas**, not a pair of endpoints joined by name. Both
+  names are resolved to their atlas indices and *every index between them is played*, in atlas
+  order, endpoints included. So a range whose endpoints are not adjacent in the sheet plays
+  whatever the packer happened to put between them — a `from: "run_0"`, `to: "run_5"` over an
+  atlas ordered `run_0, idle_0, run_1, …` plays `idle_0` too. Use `frames` whenever the run is
+  not contiguous in the atlas.
+- `to` before `from` is legal and plays the range backwards.
+
 #### Properties
 
 ##### events?
@@ -68850,13 +70410,15 @@ Frames per second. Defaults to `12`.
 
 > `readonly` `optional` **frames?**: readonly `string`[]
 
-The atlas frame names, in play order. Empty when `from`/`to` name a range instead.
+The atlas frame names, in play order; they need not be adjacent in the atlas. Absent or empty
+when `from`/`to` name a range instead.
 
 ##### from?
 
 > `readonly` `optional` **from?**: `string`
 
-The first frame of a contiguous atlas range, when `frames` is absent.
+The atlas frame whose **index** starts the range, when `frames` is absent. The clip plays every
+atlas index from here to `to`, so the two must bracket a contiguous run in the sheet.
 
 ##### loop?
 
@@ -68874,7 +70436,8 @@ The clip's name, unique within the document; what `SpriteAnimator.play` takes.
 
 > `readonly` `optional` **to?**: `string`
 
-The last frame of a contiguous atlas range, inclusive.
+The atlas frame whose **index** ends the range, inclusive. An index below `from`'s plays the
+range backwards.
 
 ***
 
@@ -70597,7 +72160,7 @@ The tileset's name, unique within the document; also the frame-name prefix.
 
 > `readonly` **tiles**: readonly [`TileDefinition`](#tiledefinition)[]
 
-The tiles, indexed by their local [TileDefinition.id](#id-5).
+The tiles, indexed by their local [TileDefinition.id](#id-15).
 
 ***
 
@@ -70735,7 +72298,7 @@ What `new Toast(app.ui, options)` accepts.
 
 > `readonly` `optional` **duration?**: `number`
 
-How long a message stays up, in seconds, unless [Toast.show](#show-3) overrides it.
+How long a message stays up, in seconds, unless [Toast.show](#show-4) overrides it.
 
 ##### layer?
 
@@ -71379,7 +72942,7 @@ export default defineConfig({
 > `readonly` **layers**: readonly `string`[]
 
 The layers created eagerly, back to front. Declaring them here is what makes their stacking
-order independent of the order the game happens to call [UiHost.layer](#layer-14) in.
+order independent of the order the game happens to call [UiHost.layer](#layer-15) in.
 
 ##### referenceResolution
 
@@ -72572,7 +74135,9 @@ The union of the two-digit subsystem prefixes declared by `ErrorRange`.
 
 The `fetch` implementation the service performs every read through
 (`docs/architecture/05-assets-and-loading.md` §8). Injecting it is how headless tests supply
-deterministic responses and how a Node app maps addresses onto `fs` (Phase 9).
+deterministic responses and how a Node app maps addresses onto `fs`. A packaged Electron build
+needs no injection: `@ignifx/electron` serves `dist/` over `ignifx://`, which the renderer's own
+`fetch` reaches.
 
 ***
 
@@ -73416,6 +74981,35 @@ The union of the material families.
 
 ***
 
+### MenuChoiceValues
+
+> **MenuChoiceValues** = readonly `string`[] \| (() => readonly `string`[])
+
+The values a `"choice"` row cycles through: a fixed list, or one read per use.
+
+***
+
+### MenuLabel
+
+> **MenuLabel** = `string` \| (() => `string`)
+
+Text that is either fixed or re-read on every refresh.
+
+#### Remarks
+
+A function is what makes a menu localizable: `label: () => app.i18n.t("menu.resume")` re-renders
+itself when `app.i18n.locale` changes, because [Menu.refresh](#refresh) calls it again.
+
+***
+
+### MenuRow
+
+> **MenuRow** = [`MenuActionRow`](#menuactionrow) \| [`MenuBindingRow`](#menubindingrow) \| [`MenuChoiceRow`](#menuchoicerow) \| [`MenuHeadingRow`](#menuheadingrow) \| [`MenuSeparatorRow`](#menuseparatorrow) \| [`MenuSliderRow`](#menusliderrow) \| [`MenuToggleRow`](#menutogglerow)
+
+One row of a [Menu](#menu).
+
+***
+
 ### MessageNode
 
 > **MessageNode** = [`TextNode`](#textnode) \| [`ArgumentNode`](#argumentnode) \| [`PluralNode`](#pluralnode)
@@ -73830,8 +75424,8 @@ Discriminant: this value is a byte array.
 
 The two members are a discriminated union on their `kind`, so a backend switches once
 and the compiler proves both arms are handled. Backends must round-trip both members exactly: the
-`json` string that comes back from [StorageBackend.get](#get-11) has to be the same string that went
-into [StorageBackend.set](#set-13), and the `bytes` have to be byte-identical and the same length. A
+`json` string that comes back from [StorageBackend.get](#get-14) has to be the same string that went
+into [StorageBackend.set](#set-16), and the `bytes` have to be byte-identical and the same length. A
 backend may copy the bytes (IndexedDB's structured clone does) but must never alias the caller's
 buffer after `set` resolves.
 
@@ -75838,6 +77432,12 @@ The main process refused an IPC request, or the handler threw.
 > `readonly` **hostContractIncomplete**: `"IGX-1461"`
 
 `window.ignifxHost` exists but is missing a method the renderer needs.
+
+##### hostSenderRefused
+
+> `readonly` **hostSenderRefused**: `"IGX-1467"`
+
+An IPC request arrived from a frame that is not the game window's own document.
 
 ##### hostUnavailable
 
@@ -78505,6 +80105,66 @@ A `LoadingScreen`'s label.
 
 A `LoadingScreen`'s progress track.
 
+##### menu
+
+> `readonly` **menu**: `"ignifx-ui-menu"`
+
+A `Menu`'s outermost panel.
+
+##### menuHeading
+
+> `readonly` **menuHeading**: `"ignifx-ui-menu-heading"`
+
+A `Menu`'s `"heading"` row.
+
+##### menuRow
+
+> `readonly` **menuRow**: `"ignifx-ui-menu-row"`
+
+One selectable `Menu` row.
+
+##### menuRowLabel
+
+> `readonly` **menuRowLabel**: `"ignifx-ui-menu-row-label"`
+
+A `Menu` row's left-hand text.
+
+##### menuRows
+
+> `readonly` **menuRows**: `"ignifx-ui-menu-rows"`
+
+The list a `Menu`'s rows are appended to.
+
+##### menuRowSlider
+
+> `readonly` **menuRowSlider**: `"ignifx-ui-menu-row-slider"`
+
+A `Menu` slider row's range input.
+
+##### menuRowValue
+
+> `readonly` **menuRowValue**: `"ignifx-ui-menu-row-value"`
+
+A `Menu` row's right-hand text.
+
+##### menuSeparator
+
+> `readonly` **menuSeparator**: `"ignifx-ui-menu-separator"`
+
+A `Menu`'s `"separator"` row.
+
+##### menuSubtitle
+
+> `readonly` **menuSubtitle**: `"ignifx-ui-menu-subtitle"`
+
+A `Menu`'s subtitle.
+
+##### menuTitle
+
+> `readonly` **menuTitle**: `"ignifx-ui-menu-title"`
+
+A `Menu`'s heading.
+
 ##### root
 
 > `readonly` **root**: `"ignifx-ui-root"`
@@ -78563,6 +80223,22 @@ The top safe-area inset, from `env(safe-area-inset-top)`.
 > `readonly` **scale**: `"--ignifx-ui-scale"`
 
 The uniform scale the root is drawn at, as a bare number.
+
+***
+
+### UI\_DIALOG\_Z\_INDEX
+
+> `const` **UI\_DIALOG\_Z\_INDEX**: `1000` = `1e3`
+
+The `z-index` a `Dialog` is drawn at inside its layer.
+
+#### Remarks
+
+A dialog is modal, and a modal that paints under the panel that opened it swallows every click
+on that panel. Siblings with no `z-index` paint in DOM order, so a `Dialog` created before a
+`Menu` in the same layer would lose; giving every dialog one number puts it above every other
+root of its layer whatever order they were built in. Two dialogs in one layer still stack in DOM
+order, and `DialogOptions.zIndex` overrides the number for a dialog that must sit elsewhere.
 
 ***
 
@@ -80596,7 +82272,8 @@ The root logger; call [Logger.child](#child) for scoped loggers.
 
 ```ts
 const log = createLogger({ sink: createConsoleSink(), level: "debug" });
-log.child("assets").warnOnce("missing-atlas", "No atlas for sprite {id}.");
+// A message is not a format string — nothing substitutes into it. Pass values as extras.
+log.child("assets").warnOnce("missing-atlas", "No atlas for sprite:", spriteId);
 ```
 
 ***
@@ -82743,6 +84420,41 @@ device?.setVector("joystick", 0, 1);
 
 ***
 
+### formatBindingPath()
+
+> **formatBindingPath**(`path`, `unbound`): `string`
+
+Renders an `@ignifx/input` binding path the way a player reads it.
+
+#### Parameters
+
+##### path
+
+`string`
+
+The binding path, such as `<Keyboard>/arrowUp`, or `""` for none.
+
+##### unbound
+
+`string`
+
+What to answer for an empty path.
+
+#### Returns
+
+`string`
+
+The label, such as `Keyboard: Arrow up`.
+
+#### Example
+
+```ts
+formatBindingPath("<Keyboard>/arrowUp", "—"); // "Keyboard: Arrow up"
+formatBindingPath("", "—"); // "—"
+```
+
+***
+
 ### formatErrorMessage()
 
 > **formatErrorMessage**(`code`, `message`, `context`, `hint`, `mode`): `string`
@@ -83814,8 +85526,8 @@ Declares a set of layers. Layers are stored by *name*, not by bit value, so rena
 project settings does not silently repoint existing files
 (`docs/architecture/06-serialization-and-scene-format.md` §3).
 
-The value type is a read-only array of names in Phase 1; the kernel's `LayerMask` class arrives
-with the layer registry and will satisfy the same structural shape.
+The field's value is a read-only array of names. The kernel's `LayerMask` satisfies the same
+structural shape, so a component may hold either.
 
 #### Parameters
 
@@ -85338,6 +87050,13 @@ readonly `number`[]
 
 The indices in play order; empty when the clip names nothing the atlas has.
 
+#### Remarks
+
+`frames` resolves name by name and skips what the atlas does not carry. `from`/`to` resolves both
+endpoints to atlas **indices** and walks every index between them — ascending or descending — so
+a range over non-adjacent frames plays everything the packer put in between
+([SpriteClipDefinition](#spriteclipdefinition)).
+
 ***
 
 ### resolveEase()
@@ -85393,6 +87112,56 @@ The remap, or `null` for a standard pad.
 ```ts
 resolveGamepadRemap({ id: "Pro Controller (Nintendo)", mapping: "", buttons: [], axes: [] });
 ```
+
+***
+
+### resolveMenuChoices()
+
+> **resolveMenuChoices**(`values`): readonly `string`[]
+
+Reads a [MenuChoiceValues](#menuchoicevalues).
+
+#### Parameters
+
+##### values
+
+[`MenuChoiceValues`](#menuchoicevalues)
+
+The fixed list or the function.
+
+#### Returns
+
+readonly `string`[]
+
+The values, in order.
+
+***
+
+### resolveMenuLabel()
+
+> **resolveMenuLabel**(`label`, `fallback`): `string`
+
+Reads a [MenuLabel](#menulabel).
+
+#### Parameters
+
+##### label
+
+[`MenuLabel`](#menulabel) \| `undefined`
+
+The fixed string, the function, or nothing.
+
+##### fallback
+
+`string`
+
+What to answer when `label` is `undefined`.
+
+#### Returns
+
+`string`
+
+The text to draw.
 
 ***
 
@@ -85770,6 +87539,58 @@ The camera's zoom; at zoom 2 the grid step is half a layer pixel.
 `number`
 
 The snapped coordinate.
+
+***
+
+### snapToStep()
+
+> **snapToStep**(`value`, `min`, `max`, `step`): `number`
+
+Clamps a number into a range and snaps it to the step.
+
+#### Parameters
+
+##### value
+
+`number`
+
+The raw value.
+
+##### min
+
+`number`
+
+The lowest allowed value.
+
+##### max
+
+`number`
+
+The highest allowed value.
+
+##### step
+
+`number`
+
+The grid the value is snapped to. A step of `0` or less disables snapping.
+
+#### Returns
+
+`number`
+
+The clamped, snapped value.
+
+#### Remarks
+
+Snapping rather than accumulating is what stops a slider from drifting by floating-point error
+after a few hundred key presses: every value is recomputed from `min` and a whole number of
+steps.
+
+#### Example
+
+```ts
+snapToStep(0.37, 0, 1, 0.05); // 0.35
+```
 
 ***
 

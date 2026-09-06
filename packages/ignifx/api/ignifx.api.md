@@ -459,6 +459,7 @@ import { FONT_ASSET_TYPE } from '@ignifx/core';
 import { FONT_FILE_EXTENSIONS } from '@ignifx/core';
 import { FontAsset } from '@ignifx/core';
 import { FontAssetLiteHandles } from '@ignifx/core';
+import { formatBindingPath } from '@ignifx/ui';
 import { formatErrorMessage } from '@ignifx/core';
 import { FRAME_HISTORY_LENGTH } from '@ignifx/core';
 import { FrameSample } from '@ignifx/core';
@@ -706,6 +707,25 @@ import { MAX_LAYERS } from '@ignifx/core';
 import { MAX_ULID_TIME_MS } from '@ignifx/core';
 import { MemorySink } from '@ignifx/core';
 import { MemoryStorageBackend } from '@ignifx/core';
+import { Menu } from '@ignifx/ui';
+import { MenuActionRow } from '@ignifx/ui';
+import { MenuBindingRow } from '@ignifx/ui';
+import { MenuButtonSource } from '@ignifx/ui';
+import { MenuChoiceRow } from '@ignifx/ui';
+import { MenuChoiceValues } from '@ignifx/ui';
+import { MenuHeadingRow } from '@ignifx/ui';
+import { MenuLabel } from '@ignifx/ui';
+import { MenuNavigation } from '@ignifx/ui';
+import { MenuOptions } from '@ignifx/ui';
+import { MenuRow } from '@ignifx/ui';
+import { MenuRowBase } from '@ignifx/ui';
+import { MenuSeparatorRow } from '@ignifx/ui';
+import { MenuSliderRow } from '@ignifx/ui';
+import { MenuStack } from '@ignifx/ui';
+import { MenuStackOptions } from '@ignifx/ui';
+import { MenuText } from '@ignifx/ui';
+import { MenuToggleRow } from '@ignifx/ui';
+import { MenuVectorSource } from '@ignifx/ui';
 import { mergeTileCollisions } from '@ignifx/2d';
 import { MESH_ASSET_TYPE } from '@ignifx/core';
 import { MeshAsset } from '@ignifx/core';
@@ -883,6 +903,8 @@ import { resolveDevtoolsTarget } from '@ignifx/devtools';
 import { resolveDomTarget } from '@ignifx/ui';
 import { resolveEase } from '@ignifx/core';
 import { resolveGamepadRemap } from '@ignifx/input';
+import { resolveMenuChoices } from '@ignifx/ui';
+import { resolveMenuLabel } from '@ignifx/ui';
 import { resolveRelative } from '@ignifx/2d';
 import { Rigidbody } from '@ignifx/physics';
 import { Rigidbody2D } from '@ignifx/physics-2d';
@@ -949,6 +971,7 @@ import { slopeAngleDegrees } from '@ignifx/3d';
 import { SmaaEffectSettings } from '@ignifx/core';
 import { smoothStep } from '@ignifx/core';
 import { snapPixel } from '@ignifx/2d';
+import { snapToStep } from '@ignifx/ui';
 import { snapZoomToInteger } from '@ignifx/2d';
 import { SORTING_LAYER_ORDER_STEP } from '@ignifx/2d';
 import { SortingLayersSettings } from '@ignifx/core';
@@ -1124,6 +1147,7 @@ import { u32 } from '@ignifx/core';
 import { ui } from '@ignifx/ui';
 import { UI_CLASS_NAMES } from '@ignifx/ui';
 import { UI_CSS_VARIABLES } from '@ignifx/ui';
+import { UI_DIALOG_Z_INDEX } from '@ignifx/ui';
 import { UI_ERROR_MESSAGES } from '@ignifx/ui';
 import { UI_FOCUS_ATTRIBUTE } from '@ignifx/ui';
 import { UI_LAYER_Z_STEP } from '@ignifx/ui';
@@ -2120,6 +2144,8 @@ export { FontAsset }
 
 export { FontAssetLiteHandles }
 
+export { formatBindingPath }
+
 export { formatErrorMessage }
 
 export { FRAME_HISTORY_LENGTH }
@@ -2614,6 +2640,44 @@ export { MemorySink }
 
 export { MemoryStorageBackend }
 
+export { Menu }
+
+export { MenuActionRow }
+
+export { MenuBindingRow }
+
+export { MenuButtonSource }
+
+export { MenuChoiceRow }
+
+export { MenuChoiceValues }
+
+export { MenuHeadingRow }
+
+export { MenuLabel }
+
+export { MenuNavigation }
+
+export { MenuOptions }
+
+export { MenuRow }
+
+export { MenuRowBase }
+
+export { MenuSeparatorRow }
+
+export { MenuSliderRow }
+
+export { MenuStack }
+
+export { MenuStackOptions }
+
+export { MenuText }
+
+export { MenuToggleRow }
+
+export { MenuVectorSource }
+
 export { mergeTileCollisions }
 
 export { MESH_ASSET_TYPE }
@@ -2968,6 +3032,10 @@ export { resolveEase }
 
 export { resolveGamepadRemap }
 
+export { resolveMenuChoices }
+
+export { resolveMenuLabel }
+
 export { resolveRelative }
 
 export { Rigidbody }
@@ -3099,6 +3167,8 @@ export { SmaaEffectSettings }
 export { smoothStep }
 
 export { snapPixel }
+
+export { snapToStep }
 
 export { snapZoomToInteger }
 
@@ -3449,6 +3519,8 @@ export { ui }
 export { UI_CLASS_NAMES }
 
 export { UI_CSS_VARIABLES }
+
+export { UI_DIALOG_Z_INDEX }
 
 export { UI_ERROR_MESSAGES }
 

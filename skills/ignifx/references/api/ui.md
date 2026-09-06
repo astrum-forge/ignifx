@@ -2,7 +2,7 @@
 
 `@ignifx/ui` public barrel: the DOM overlay host and its layers, the three scaling modes, input
 focus routing, `WorldAnchor`, the three text components on Babylon Lite's text renderer, the
-touch and dialog helpers, and `app.i18n` (`docs/architecture/13-ui.md`). Explicit named
+touch, menu and dialog helpers, and `app.i18n` (`docs/architecture/13-ui.md`). Explicit named
 re-exports only — no `export *` (coding standards §4).
 
 ## Classes
@@ -118,6 +118,37 @@ Hides the dialog and emits [Dialog.onDismissed](#ondismissed).
 
 `void`
 
+##### setButtons()
+
+> **setButtons**(`buttons`): `void`
+
+Replaces the buttons.
+
+###### Parameters
+
+###### buttons
+
+readonly [`DialogButton`](#dialogbutton)[]
+
+The buttons, left to right. An empty list leaves the row empty.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+One dialog re-used for every question is cheaper than one dialog per question and keeps the
+stacking predictable, so the buttons have to be able to change: a confirmation asks
+"Yes"/"No", a save error offers "Retry"/"Cancel", and a locale change relabels both.
+
+###### Example
+
+```ts ignore-check
+dialog.setMessage("Delete this save?");
+dialog.setButtons([{ id: "no", label: "No" }, { id: "yes", label: "Yes" }]);
+```
+
 ##### setMessage()
 
 > **setMessage**(`text`): `void`
@@ -202,7 +233,7 @@ Builds a HUD label with the schema's defaults.
 
 ###### Overrides
 
-[`TextComponent`](#abstract-textcomponent).[`constructor`](#constructor-3)
+[`TextComponent`](#abstract-textcomponent).[`constructor`](#constructor-5)
 
 #### Properties
 
@@ -262,7 +293,7 @@ The em size, in render-target pixels.
 
 > **i18nKey**: `string`
 
-A translation key looked up in `app.i18n`; wins over [TextComponent.text](#text-1).
+A translation key looked up in `app.i18n`; wins over [TextComponent.text](#text-2).
 
 ###### Inherited from
 
@@ -324,7 +355,7 @@ The literal string to draw; ignored when [TextComponent.i18nKey](#i18nkey-1) is 
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`text`](#text-1)
+[`TextComponent`](#abstract-textcomponent).[`text`](#text-2)
 
 ##### typeId
 
@@ -385,7 +416,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`enabled`](#enabled-1)
+[`TextComponent`](#abstract-textcomponent).[`enabled`](#enabled-7)
 
 ##### entity
 
@@ -1197,6 +1228,645 @@ The BCP 47 tags.
 
 ***
 
+### Menu
+
+A panel of selectable rows in an overlay layer.
+
+#### Example
+
+```ts ignore-check
+const pause = new Menu(app.ui, { id: "pause", title: "Paused" });
+pause.setRows([
+  { kind: "action", id: "resume", label: "Resume", activate: () => pause.hide() },
+  { kind: "slider", id: "music", label: "Music", min: 0, max: 1, step: 0.05,
+    get: () => music.volume, set: (v) => { music.volume = v; },
+    format: (v) => `${String(Math.round(v * 100))}%` },
+]);
+pause.show();
+```
+
+#### Constructors
+
+##### Constructor
+
+> **new Menu**(`host`, `options`): [`Menu`](#menu)
+
+Builds the panel and mounts it, hidden unless `options.visible` says otherwise.
+
+###### Parameters
+
+###### host
+
+[`UiHost`](#uihost)
+
+The overlay host, normally `app.ui`.
+
+###### options
+
+[`MenuOptions`](#menuoptions)
+
+The id, the heading, the layer, and the starting rows.
+
+###### Returns
+
+[`Menu`](#menu)
+
+#### Properties
+
+##### id
+
+> `readonly` **id**: `string`
+
+The id the menu was built with.
+
+#### Accessors
+
+##### cancelable
+
+###### Get Signature
+
+> **get** **cancelable**(): `boolean`
+
+Whether Escape and [Menu.cancel](#cancel) back out of this menu. A title screen sets it `false`.
+
+###### Returns
+
+`boolean`
+
+`true` when the menu can be dismissed.
+
+###### Set Signature
+
+> **set** **cancelable**(`value`): `void`
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+##### element
+
+###### Get Signature
+
+> **get** **element**(): `HTMLDivElement` \| `null`
+
+The panel element, so a game can restyle it or a test can read it.
+
+###### Returns
+
+`HTMLDivElement` \| `null`
+
+The element, or `null` under an app with no DOM overlay.
+
+##### isVisible
+
+###### Get Signature
+
+> **get** **isVisible**(): `boolean`
+
+Whether the panel is on screen.
+
+###### Returns
+
+`boolean`
+
+`true` between [Menu.show](#show-2) and [Menu.hide](#hide-2).
+
+##### keyboardEnabled
+
+###### Get Signature
+
+> **get** **keyboardEnabled**(): `boolean`
+
+Whether the widget reads the keyboard itself.
+
+###### Returns
+
+`boolean`
+
+`true` while its own `keydown` handler acts.
+
+###### Set Signature
+
+> **set** **keyboardEnabled**(`value`): `void`
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+##### onActivated
+
+###### Get Signature
+
+> **get** **onActivated**(): `SignalLike`\<[`MenuRow`](#menurow)\>
+
+Emitted with the row that was activated, after its own handler ran.
+
+###### Returns
+
+`SignalLike`\<[`MenuRow`](#menurow)\>
+
+The signal.
+
+##### onBack
+
+###### Get Signature
+
+> **get** **onBack**(): `SignalLike`
+
+Emitted by [Menu.cancel](#cancel) — Escape, the pad's east button, or a call — when the menu is
+[Menu.cancelable](#cancelable). A [MenuStack](#menustack) connects `pop` to it.
+
+###### Returns
+
+`SignalLike`
+
+The signal.
+
+##### onSelectionChanged
+
+###### Get Signature
+
+> **get** **onSelectionChanged**(): `SignalLike`\<[`MenuRow`](#menurow)\>
+
+Emitted with the newly selected row whenever the selection moves, from any device. A game
+connects a click sound to it.
+
+###### Returns
+
+`SignalLike`\<[`MenuRow`](#menurow)\>
+
+The signal.
+
+##### rows
+
+###### Get Signature
+
+> **get** **rows**(): readonly [`MenuRow`](#menurow)[]
+
+The rows the menu is drawing.
+
+###### Returns
+
+readonly [`MenuRow`](#menurow)[]
+
+The rows, in draw order.
+
+##### selected
+
+###### Get Signature
+
+> **get** **selected**(): [`MenuRow`](#menurow) \| `null`
+
+The selected row.
+
+###### Returns
+
+[`MenuRow`](#menurow) \| `null`
+
+The row under the selection, or `null` when nothing can be selected.
+
+##### selectedIndex
+
+###### Get Signature
+
+> **get** **selectedIndex**(): `number`
+
+Where the selection sits.
+
+###### Returns
+
+`number`
+
+The index into [Menu.rows](#rows).
+
+#### Methods
+
+##### activateSelection()
+
+> **activateSelection**(): `void`
+
+Runs the selected row's activate behaviour.
+
+###### Returns
+
+`void`
+
+##### adjustSelection()
+
+> **adjustSelection**(`direction`): `void`
+
+Runs the selected row's Left or Right behaviour: a slider moves by one step, a toggle flips,
+and a choice advances.
+
+###### Parameters
+
+###### direction
+
+`-1` \| `1`
+
+`-1` for left, `1` for right.
+
+###### Returns
+
+`void`
+
+##### cancel()
+
+> **cancel**(): `boolean`
+
+Backs out of the menu, if it is [Menu.cancelable](#cancelable).
+
+###### Returns
+
+`boolean`
+
+`true` when [Menu.onBack](#onback) was emitted, so the caller knows the press was used.
+
+##### dispose()
+
+> **dispose**(): `void`
+
+Removes the panel from the overlay and unsubscribes everything.
+
+###### Returns
+
+`void`
+
+##### hide()
+
+> **hide**(): `void`
+
+Hides the panel.
+
+###### Returns
+
+`void`
+
+##### moveSelection()
+
+> **moveSelection**(`delta`): `void`
+
+Moves the selection, skipping headings, separators and disabled rows.
+
+###### Parameters
+
+###### delta
+
+`-1` \| `1`
+
+`-1` for up, `1` for down.
+
+###### Returns
+
+`void`
+
+##### refresh()
+
+> **refresh**(): `void`
+
+Re-reads every label and value and redraws the selection.
+
+###### Returns
+
+`void`
+
+##### select()
+
+> **select**(`id`): `boolean`
+
+Puts the selection on a row by id.
+
+###### Parameters
+
+###### id
+
+`string`
+
+The row's [MenuRowBase.id](#id-7).
+
+###### Returns
+
+`boolean`
+
+`true` when a selectable row with that id was found.
+
+##### setRows()
+
+> **setRows**(`rows`): `void`
+
+Replaces the rows and rebuilds the panel.
+
+###### Parameters
+
+###### rows
+
+readonly [`MenuRow`](#menurow)[]
+
+The rows, in draw order.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+Rebuilding rather than diffing is deliberate: the row list changes when a save appears, when a
+control scheme changes and when the locale changes, and a menu of at most a few dozen rows is
+not worth a reconciler. The selection stays on the same row id when that id is still present.
+
+##### show()
+
+> **show**(): `void`
+
+Shows the panel, puts the selection on the first row that can take it, and focuses the list.
+
+###### Returns
+
+`void`
+
+***
+
+### MenuStack
+
+A stack of [Menu](#menu) screens, innermost last.
+
+#### Example
+
+```ts ignore-check
+const stack = new MenuStack({ navigation });
+stack.push(title);
+// in a script that runs while paused:
+stack.update(app.time.unscaledDeltaTime);
+```
+
+#### Constructors
+
+##### Constructor
+
+> **new MenuStack**(`options?`): [`MenuStack`](#menustack)
+
+Builds an empty stack.
+
+###### Parameters
+
+###### options?
+
+[`MenuStackOptions`](#menustackoptions) = `{}`
+
+The controls to read, and the repeat timings.
+
+###### Returns
+
+[`MenuStack`](#menustack)
+
+#### Accessors
+
+##### bottom
+
+###### Get Signature
+
+> **get** **bottom**(): [`Menu`](#menu) \| `null`
+
+The menu at the bottom, which is the one the stack was opened with.
+
+###### Returns
+
+[`Menu`](#menu) \| `null`
+
+The first menu pushed, or `null` when the stack is empty.
+
+##### depth
+
+###### Get Signature
+
+> **get** **depth**(): `number`
+
+How deep the stack is.
+
+###### Returns
+
+`number`
+
+The number of menus on it.
+
+##### isOpen
+
+###### Get Signature
+
+> **get** **isOpen**(): `boolean`
+
+Whether any menu is open.
+
+###### Returns
+
+`boolean`
+
+`true` while the stack is not empty.
+
+##### menus
+
+###### Get Signature
+
+> **get** **menus**(): readonly [`Menu`](#menu)[]
+
+The menus on the stack, outermost first.
+
+###### Returns
+
+readonly [`Menu`](#menu)[]
+
+The menus, in push order.
+
+##### onActivated
+
+###### Get Signature
+
+> **get** **onActivated**(): `SignalLike`\<[`MenuRow`](#menurow)\>
+
+Emitted with the row that was activated on the top menu.
+
+###### Returns
+
+`SignalLike`\<[`MenuRow`](#menurow)\>
+
+The signal.
+
+##### onChanged
+
+###### Get Signature
+
+> **get** **onChanged**(): `SignalLike`\<[`Menu`](#menu) \| `null`\>
+
+Emitted with the new top menu — `null` when the stack empties — whenever the stack changes. A
+game connects its audio ducking and its pause state to it.
+
+###### Returns
+
+`SignalLike`\<[`Menu`](#menu) \| `null`\>
+
+The signal.
+
+##### onSelectionChanged
+
+###### Get Signature
+
+> **get** **onSelectionChanged**(): `SignalLike`\<[`MenuRow`](#menurow)\>
+
+Emitted with the newly selected row whenever the selection moves on the top menu.
+
+###### Returns
+
+`SignalLike`\<[`MenuRow`](#menurow)\>
+
+The signal.
+
+##### suspended
+
+###### Get Signature
+
+> **get** **suspended**(): `boolean`
+
+Whether [MenuStack.update](#update) is reading its controls.
+
+###### Remarks
+
+Set it while something modal is on top of the menu — a confirmation `Dialog`, or a rebind that
+is listening for the next key — so that the same press does not reach both.
+
+###### Returns
+
+`boolean`
+
+`true` while navigation is suspended.
+
+###### Set Signature
+
+> **set** **suspended**(`value`): `void`
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+##### top
+
+###### Get Signature
+
+> **get** **top**(): [`Menu`](#menu) \| `null`
+
+The menu on top, which is the visible one.
+
+###### Returns
+
+[`Menu`](#menu) \| `null`
+
+The top menu, or `null` when the stack is empty.
+
+#### Methods
+
+##### closeAll()
+
+> **closeAll**(): `void`
+
+Closes every menu on the stack.
+
+###### Returns
+
+`void`
+
+##### dispose()
+
+> **dispose**(): `void`
+
+Drops every subscription. The menus themselves belong to the game and are not disposed.
+
+###### Returns
+
+`void`
+
+##### pop()
+
+> **pop**(): [`Menu`](#menu) \| `null`
+
+Closes the top menu and shows the one underneath.
+
+###### Returns
+
+[`Menu`](#menu) \| `null`
+
+The menu that was closed, or `null` when the stack was already empty.
+
+##### push()
+
+> **push**(`menu`): `void`
+
+Hides whatever is on top and shows `menu` over it.
+
+###### Parameters
+
+###### menu
+
+[`Menu`](#menu)
+
+The menu to open.
+
+###### Returns
+
+`void`
+
+##### refresh()
+
+> **refresh**(): `void`
+
+Re-reads every label on every menu on the stack, for a locale change.
+
+###### Returns
+
+`void`
+
+##### update()
+
+> **update**(`unscaledDelta`): `void`
+
+Reads the navigation controls and applies them to the top menu.
+
+###### Parameters
+
+###### unscaledDelta
+
+`number`
+
+Seconds since the last call, on the unscaled clock.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+Call it from a script that declares `static updateWhenPaused = true`, with
+`app.time.unscaledDeltaTime`: a menu that repeats a held direction has to keep time while the
+game is stopped, and scaled time is pinned at zero while it is.
+
+***
+
 ### `abstract` TextComponent
 
 The base of `HudText`, `WorldText2D`, and `WorldText`: the schema fields and the shaped block.
@@ -1261,7 +1931,7 @@ The em size, in render-target pixels.
 
 > **i18nKey**: `string`
 
-A translation key looked up in `app.i18n`; wins over [TextComponent.text](#text-1).
+A translation key looked up in `app.i18n`; wins over [TextComponent.text](#text-2).
 
 ##### lineHeight
 
@@ -1685,8 +2355,8 @@ A stack of transient messages.
 ```ts
 const toasts = new Toast(app.ui);
 toasts.show("Checkpoint reached");
-// in a script's update:
-toasts.advance(dt);
+// in the update of a script that declares `static updateWhenPaused = true`:
+toasts.advance(app.time.unscaledDeltaTime);
 ```
 
 #### Constructors
@@ -1773,11 +2443,18 @@ Advances every message's timer.
 
 `number`
 
-Seconds elapsed since the previous call; `dt` from a script's `update`.
+Seconds elapsed since the previous call; `dt` from a script's `update`, or
+`app.time.unscaledDeltaTime` when the toast has to expire while the game is paused.
 
 ###### Returns
 
 `void`
+
+###### Remarks
+
+Nothing calls this for you. The script that does must declare `static updateWhenPaused = true`
+if toasts are to expire while the game is paused — a menu's "Saved" message is shown from a
+paused game, and an ordinary script gets no `update` there.
 
 ##### clear()
 
@@ -3000,7 +3677,7 @@ Builds a sign with the schema's defaults.
 
 ###### Overrides
 
-[`TextComponent`](#abstract-textcomponent).[`constructor`](#constructor-3)
+[`TextComponent`](#abstract-textcomponent).[`constructor`](#constructor-5)
 
 #### Properties
 
@@ -3066,7 +3743,7 @@ The em size, in render-target pixels.
 
 > **i18nKey**: `string`
 
-A translation key looked up in `app.i18n`; wins over [TextComponent.text](#text-1).
+A translation key looked up in `app.i18n`; wins over [TextComponent.text](#text-2).
 
 ###### Inherited from
 
@@ -3128,7 +3805,7 @@ The literal string to draw; ignored when [TextComponent.i18nKey](#i18nkey-1) is 
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`text`](#text-1)
+[`TextComponent`](#abstract-textcomponent).[`text`](#text-2)
 
 ##### typeId
 
@@ -3189,7 +3866,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`enabled`](#enabled-1)
+[`TextComponent`](#abstract-textcomponent).[`enabled`](#enabled-7)
 
 ##### entity
 
@@ -3600,7 +4277,7 @@ Builds a floating label with the schema's defaults.
 
 ###### Overrides
 
-[`TextComponent`](#abstract-textcomponent).[`constructor`](#constructor-3)
+[`TextComponent`](#abstract-textcomponent).[`constructor`](#constructor-5)
 
 #### Properties
 
@@ -3660,7 +4337,7 @@ Whether the label is hidden when the anchor point is behind the camera.
 
 > **i18nKey**: `string`
 
-A translation key looked up in `app.i18n`; wins over [TextComponent.text](#text-1).
+A translation key looked up in `app.i18n`; wins over [TextComponent.text](#text-2).
 
 ###### Inherited from
 
@@ -3734,7 +4411,7 @@ The literal string to draw; ignored when [TextComponent.i18nKey](#i18nkey-1) is 
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`text`](#text-1)
+[`TextComponent`](#abstract-textcomponent).[`text`](#text-2)
 
 ##### typeId
 
@@ -3795,7 +4472,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`enabled`](#enabled-1)
+[`TextComponent`](#abstract-textcomponent).[`enabled`](#enabled-7)
 
 ##### entity
 
@@ -4285,6 +4962,12 @@ The heading. Omit for a dialog with no title.
 
 Whether the dialog starts shown. Defaults to `false`.
 
+##### zIndex?
+
+> `readonly` `optional` **zIndex?**: `number`
+
+The stacking order inside the layer. Defaults to `UI_DIALOG_Z_INDEX`, from the stylesheet.
+
 ***
 
 ### HudPlacement
@@ -4409,6 +5092,752 @@ Every locale's message table, keyed by BCP 47 tag.
 
 ***
 
+### MenuActionRow
+
+A row that runs something when it is activated.
+
+#### Extends
+
+- [`MenuRowBase`](#menurowbase)
+
+#### Properties
+
+##### activate?
+
+> `readonly` `optional` **activate?**: () => `void`
+
+What Enter, the pad's south button and a click do.
+
+###### Returns
+
+`void`
+
+##### enabled?
+
+> `readonly` `optional` **enabled?**: () => `boolean`
+
+Whether the row can be selected. A row that answers `false` is drawn dimmed and skipped.
+
+###### Returns
+
+`boolean`
+
+###### Inherited from
+
+[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-4)
+
+##### id
+
+> `readonly` **id**: `string`
+
+A stable id. It becomes the row's `data-row` attribute, which is what a test selects on.
+
+###### Inherited from
+
+[`MenuRowBase`](#menurowbase).[`id`](#id-7)
+
+##### kind
+
+> `readonly` **kind**: `"action"`
+
+What kind of row this is.
+
+##### label
+
+> `readonly` **label**: [`MenuLabel`](#menulabel)
+
+The left-hand text.
+
+###### Inherited from
+
+[`MenuRowBase`](#menurowbase).[`label`](#label-6)
+
+##### value?
+
+> `readonly` `optional` **value?**: [`MenuLabel`](#menulabel)
+
+The right-hand text, when the row shows one.
+
+***
+
+### MenuBindingRow
+
+A row that shows one input binding and starts a rebind when it is activated.
+
+#### Remarks
+
+The row knows nothing about `@ignifx/input`: it is handed the binding's path as a string and a
+callback that starts whatever rebinding flow the game uses. `@ignifx/input`'s
+`performInteractiveRebind` is the usual one.
+
+#### Extends
+
+- [`MenuRowBase`](#menurowbase)
+
+#### Properties
+
+##### enabled?
+
+> `readonly` `optional` **enabled?**: () => `boolean`
+
+Whether the row can be selected. A row that answers `false` is drawn dimmed and skipped.
+
+###### Returns
+
+`boolean`
+
+###### Inherited from
+
+[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-4)
+
+##### id
+
+> `readonly` **id**: `string`
+
+A stable id. It becomes the row's `data-row` attribute, which is what a test selects on.
+
+###### Inherited from
+
+[`MenuRowBase`](#menurowbase).[`id`](#id-7)
+
+##### kind
+
+> `readonly` **kind**: `"binding"`
+
+What kind of row this is.
+
+##### label
+
+> `readonly` **label**: [`MenuLabel`](#menulabel)
+
+The left-hand text.
+
+###### Inherited from
+
+[`MenuRowBase`](#menurowbase).[`label`](#label-6)
+
+##### listening?
+
+> `readonly` `optional` **listening?**: () => `boolean`
+
+Whether this row's rebind is listening right now, which changes what the row shows.
+
+###### Returns
+
+`boolean`
+
+##### path
+
+> `readonly` **path**: () => `string`
+
+Reads the binding path, such as `<Keyboard>/arrowUp`, or `""` when nothing is bound.
+
+###### Returns
+
+`string`
+
+##### rebind?
+
+> `readonly` `optional` **rebind?**: () => `void`
+
+Starts the rebind.
+
+###### Returns
+
+`void`
+
+***
+
+### MenuButtonSource
+
+Anything with a press edge, which `@ignifx/input`'s `InputAction` is.
+
+#### Properties
+
+##### wasPressedThisFrame
+
+> `readonly` **wasPressedThisFrame**: `boolean`
+
+Whether the control went down this frame.
+
+***
+
+### MenuChoiceRow
+
+A row that cycles through a list of values.
+
+#### Extends
+
+- [`MenuRowBase`](#menurowbase)
+
+#### Properties
+
+##### enabled?
+
+> `readonly` `optional` **enabled?**: () => `boolean`
+
+Whether the row can be selected. A row that answers `false` is drawn dimmed and skipped.
+
+###### Returns
+
+`boolean`
+
+###### Inherited from
+
+[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-4)
+
+##### format?
+
+> `readonly` `optional` **format?**: (`value`) => `string`
+
+Renders a value for display. Defaults to the value itself.
+
+###### Parameters
+
+###### value
+
+`string`
+
+###### Returns
+
+`string`
+
+##### get
+
+> `readonly` **get**: () => `string`
+
+Reads the current value.
+
+###### Returns
+
+`string`
+
+##### id
+
+> `readonly` **id**: `string`
+
+A stable id. It becomes the row's `data-row` attribute, which is what a test selects on.
+
+###### Inherited from
+
+[`MenuRowBase`](#menurowbase).[`id`](#id-7)
+
+##### kind
+
+> `readonly` **kind**: `"choice"`
+
+What kind of row this is.
+
+##### label
+
+> `readonly` **label**: [`MenuLabel`](#menulabel)
+
+The left-hand text.
+
+###### Inherited from
+
+[`MenuRowBase`](#menurowbase).[`label`](#label-6)
+
+##### set
+
+> `readonly` **set**: (`value`) => `void`
+
+Writes the new value.
+
+###### Parameters
+
+###### value
+
+`string`
+
+###### Returns
+
+`void`
+
+##### values
+
+> `readonly` **values**: [`MenuChoiceValues`](#menuchoicevalues)
+
+The values to cycle through, in order.
+
+***
+
+### MenuHeadingRow
+
+A non-selectable label that groups the rows under it.
+
+#### Properties
+
+##### id
+
+> `readonly` **id**: `string`
+
+A stable id, which becomes the row's `data-row` attribute.
+
+##### kind
+
+> `readonly` **kind**: `"heading"`
+
+What kind of row this is.
+
+##### label
+
+> `readonly` **label**: [`MenuLabel`](#menulabel)
+
+The heading text.
+
+***
+
+### MenuNavigation
+
+The three controls a menu stack reads.
+
+#### Properties
+
+##### back?
+
+> `readonly` `optional` **back?**: [`MenuButtonSource`](#menubuttonsource) \| `null`
+
+Backs out one screen.
+
+##### move?
+
+> `readonly` `optional` **move?**: [`MenuVectorSource`](#menuvectorsource) \| `null`
+
+Moves the selection (`y`) and adjusts the selected row (`x`).
+
+##### submit?
+
+> `readonly` `optional` **submit?**: [`MenuButtonSource`](#menubuttonsource) \| `null`
+
+Activates the selected row.
+
+***
+
+### MenuOptions
+
+What `new Menu(app.ui, options)` accepts.
+
+#### Properties
+
+##### cancelable?
+
+> `readonly` `optional` **cancelable?**: `boolean`
+
+Whether Escape and [Menu.cancel](#cancel) back out of the menu. Defaults to `true`.
+
+##### id
+
+> `readonly` **id**: `string`
+
+A stable id; it becomes the panel's `data-menu` attribute.
+
+##### keyboard?
+
+> `readonly` `optional` **keyboard?**: `boolean`
+
+Whether the widget reads the keyboard itself. Defaults to `true`.
+
+###### Remarks
+
+Turn it off when the game drives navigation from its own input actions, or every arrow press
+moves the selection twice. A [MenuStack](#menustack) built with a navigation
+source does that for you.
+
+##### layer?
+
+> `readonly` `optional` **layer?**: `string`
+
+The overlay layer to mount into. Defaults to `"menu"`.
+
+##### rows?
+
+> `readonly` `optional` **rows?**: readonly [`MenuRow`](#menurow)[]
+
+The rows to start with. More usually arrive through [Menu.setRows](#setrows).
+
+##### subtitle?
+
+> `readonly` `optional` **subtitle?**: [`MenuLabel`](#menulabel)
+
+A line of prose under the heading.
+
+##### text?
+
+> `readonly` `optional` **text?**: [`MenuText`](#menutext)
+
+The words the rows use for their states.
+
+##### title?
+
+> `readonly` `optional` **title?**: [`MenuLabel`](#menulabel)
+
+The panel's heading. Re-read on every [Menu.refresh](#refresh).
+
+##### visible?
+
+> `readonly` `optional` **visible?**: `boolean`
+
+Whether the menu starts shown. Defaults to `false`.
+
+##### wrap?
+
+> `readonly` `optional` **wrap?**: `boolean`
+
+Whether the selection wraps at both ends. Defaults to `true`.
+
+***
+
+### MenuRowBase
+
+What every selectable row carries.
+
+#### Extended by
+
+- [`MenuActionRow`](#menuactionrow)
+- [`MenuBindingRow`](#menubindingrow)
+- [`MenuChoiceRow`](#menuchoicerow)
+- [`MenuSliderRow`](#menusliderrow)
+- [`MenuToggleRow`](#menutogglerow)
+
+#### Properties
+
+##### enabled?
+
+> `readonly` `optional` **enabled?**: () => `boolean`
+
+Whether the row can be selected. A row that answers `false` is drawn dimmed and skipped.
+
+###### Returns
+
+`boolean`
+
+##### id
+
+> `readonly` **id**: `string`
+
+A stable id. It becomes the row's `data-row` attribute, which is what a test selects on.
+
+##### label
+
+> `readonly` **label**: [`MenuLabel`](#menulabel)
+
+The left-hand text.
+
+***
+
+### MenuSeparatorRow
+
+A non-selectable rule between groups of rows.
+
+#### Properties
+
+##### id
+
+> `readonly` **id**: `string`
+
+A stable id, which becomes the row's `data-row` attribute.
+
+##### kind
+
+> `readonly` **kind**: `"separator"`
+
+What kind of row this is.
+
+***
+
+### MenuSliderRow
+
+A row that edits a number over a range.
+
+#### Remarks
+
+Drawn as a native `<input type="range">` plus the formatted value, because dragging a knob is
+worth having and `@ignifx/ui`'s own focus policy deliberately does not count a slider as a text
+field (`docs/architecture/13-ui.md` §1), so a slider under the pointer never suppresses gameplay
+input.
+
+#### Extends
+
+- [`MenuRowBase`](#menurowbase)
+
+#### Properties
+
+##### enabled?
+
+> `readonly` `optional` **enabled?**: () => `boolean`
+
+Whether the row can be selected. A row that answers `false` is drawn dimmed and skipped.
+
+###### Returns
+
+`boolean`
+
+###### Inherited from
+
+[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-4)
+
+##### format?
+
+> `readonly` `optional` **format?**: (`value`) => `string`
+
+Renders the value. Defaults to the number itself.
+
+###### Parameters
+
+###### value
+
+`number`
+
+###### Returns
+
+`string`
+
+##### get
+
+> `readonly` **get**: () => `number`
+
+Reads the current value.
+
+###### Returns
+
+`number`
+
+##### id
+
+> `readonly` **id**: `string`
+
+A stable id. It becomes the row's `data-row` attribute, which is what a test selects on.
+
+###### Inherited from
+
+[`MenuRowBase`](#menurowbase).[`id`](#id-7)
+
+##### kind
+
+> `readonly` **kind**: `"slider"`
+
+What kind of row this is.
+
+##### label
+
+> `readonly` **label**: [`MenuLabel`](#menulabel)
+
+The left-hand text.
+
+###### Inherited from
+
+[`MenuRowBase`](#menurowbase).[`label`](#label-6)
+
+##### max
+
+> `readonly` **max**: `number`
+
+The highest value the row may take.
+
+##### min
+
+> `readonly` **min**: `number`
+
+The lowest value the row may take.
+
+##### set
+
+> `readonly` **set**: (`value`) => `void`
+
+Writes a new value, already clamped and snapped to the step.
+
+###### Parameters
+
+###### value
+
+`number`
+
+###### Returns
+
+`void`
+
+##### step
+
+> `readonly` **step**: `number`
+
+How far one Left or Right press moves the value.
+
+***
+
+### MenuStackOptions
+
+What `new MenuStack(options)` accepts.
+
+#### Properties
+
+##### navigation?
+
+> `readonly` `optional` **navigation?**: [`MenuNavigation`](#menunavigation)
+
+The controls to read in [MenuStack.update](#update). Omit to drive the stack by hand.
+
+##### repeatDelay?
+
+> `readonly` `optional` **repeatDelay?**: `number`
+
+How long the first repeat of a held direction waits, in seconds. Defaults to `0.35`.
+
+##### repeatInterval?
+
+> `readonly` `optional` **repeatInterval?**: `number`
+
+How long each following repeat waits, in seconds. Defaults to `0.12`.
+
+##### threshold?
+
+> `readonly` `optional` **threshold?**: `number`
+
+How far an axis must move before it counts as a direction. Defaults to `0.5`.
+
+***
+
+### MenuText
+
+The words a menu uses for the states its rows can be in, so a localized game sets them once per
+menu rather than on every row.
+
+#### Properties
+
+##### listening?
+
+> `readonly` `optional` **listening?**: [`MenuLabel`](#menulabel)
+
+What a `"binding"` row shows while it is listening. Defaults to `"Press any key…"`.
+
+##### off?
+
+> `readonly` `optional` **off?**: [`MenuLabel`](#menulabel)
+
+What a `"toggle"` row shows when it is off. Defaults to `"Off"`.
+
+##### on?
+
+> `readonly` `optional` **on?**: [`MenuLabel`](#menulabel)
+
+What a `"toggle"` row shows when it is on. Defaults to `"On"`.
+
+##### unbound?
+
+> `readonly` `optional` **unbound?**: [`MenuLabel`](#menulabel)
+
+What a `"binding"` row shows when nothing is bound. Defaults to `"—"`.
+
+***
+
+### MenuToggleRow
+
+A row that flips a flag.
+
+#### Extends
+
+- [`MenuRowBase`](#menurowbase)
+
+#### Properties
+
+##### enabled?
+
+> `readonly` `optional` **enabled?**: () => `boolean`
+
+Whether the row can be selected. A row that answers `false` is drawn dimmed and skipped.
+
+###### Returns
+
+`boolean`
+
+###### Inherited from
+
+[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-4)
+
+##### format?
+
+> `readonly` `optional` **format?**: (`value`) => `string`
+
+Renders the flag. Defaults to the menu's `text.on` / `text.off`.
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`string`
+
+##### get
+
+> `readonly` **get**: () => `boolean`
+
+Reads the flag.
+
+###### Returns
+
+`boolean`
+
+##### id
+
+> `readonly` **id**: `string`
+
+A stable id. It becomes the row's `data-row` attribute, which is what a test selects on.
+
+###### Inherited from
+
+[`MenuRowBase`](#menurowbase).[`id`](#id-7)
+
+##### kind
+
+> `readonly` **kind**: `"toggle"`
+
+What kind of row this is.
+
+##### label
+
+> `readonly` **label**: [`MenuLabel`](#menulabel)
+
+The left-hand text.
+
+###### Inherited from
+
+[`MenuRowBase`](#menurowbase).[`label`](#label-6)
+
+##### set
+
+> `readonly` **set**: (`value`) => `void`
+
+Writes the flag.
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+***
+
+### MenuVectorSource
+
+Anything with a two-dimensional value, which `@ignifx/input`'s `InputAction` is.
+
+#### Properties
+
+##### vector
+
+> `readonly` **vector**: `Vec2Like`
+
+The direction, `-1` to `1` on each axis. Positive `y` is up.
+
+***
+
 ### MessagePattern
 
 A parsed message, or the reason it could not be parsed.
@@ -4505,7 +5934,7 @@ What `new Toast(app.ui, options)` accepts.
 
 > `readonly` `optional` **duration?**: `number`
 
-How long a message stays up, in seconds, unless [Toast.show](#show-2) overrides it.
+How long a message stays up, in seconds, unless [Toast.show](#show-3) overrides it.
 
 ##### layer?
 
@@ -4743,7 +6172,7 @@ export default defineConfig({
 > `readonly` **layers**: readonly `string`[]
 
 The layers created eagerly, back to front. Declaring them here is what makes their stacking
-order independent of the order the game happens to call [UiHost.layer](#layer-4) in.
+order independent of the order the game happens to call [UiHost.layer](#layer-5) in.
 
 ##### referenceResolution
 
@@ -5049,6 +6478,35 @@ Unstable escape-hatch type.
 
 ***
 
+### MenuChoiceValues
+
+> **MenuChoiceValues** = readonly `string`[] \| (() => readonly `string`[])
+
+The values a `"choice"` row cycles through: a fixed list, or one read per use.
+
+***
+
+### MenuLabel
+
+> **MenuLabel** = `string` \| (() => `string`)
+
+Text that is either fixed or re-read on every refresh.
+
+#### Remarks
+
+A function is what makes a menu localizable: `label: () => app.i18n.t("menu.resume")` re-renders
+itself when `app.i18n.locale` changes, because [Menu.refresh](#refresh) calls it again.
+
+***
+
+### MenuRow
+
+> **MenuRow** = [`MenuActionRow`](#menuactionrow) \| [`MenuBindingRow`](#menubindingrow) \| [`MenuChoiceRow`](#menuchoicerow) \| [`MenuHeadingRow`](#menuheadingrow) \| [`MenuSeparatorRow`](#menuseparatorrow) \| [`MenuSliderRow`](#menusliderrow) \| [`MenuToggleRow`](#menutogglerow)
+
+One row of a [Menu](#menu).
+
+***
+
 ### MessageNode
 
 > **MessageNode** = [`TextNode`](#textnode) \| [`ArgumentNode`](#argumentnode) \| [`PluralNode`](#pluralnode)
@@ -5306,6 +6764,66 @@ A `LoadingScreen`'s label.
 
 A `LoadingScreen`'s progress track.
 
+##### menu
+
+> `readonly` **menu**: `"ignifx-ui-menu"` = `"ignifx-ui-menu"`
+
+A `Menu`'s outermost panel.
+
+##### menuHeading
+
+> `readonly` **menuHeading**: `"ignifx-ui-menu-heading"` = `"ignifx-ui-menu-heading"`
+
+A `Menu`'s `"heading"` row.
+
+##### menuRow
+
+> `readonly` **menuRow**: `"ignifx-ui-menu-row"` = `"ignifx-ui-menu-row"`
+
+One selectable `Menu` row.
+
+##### menuRowLabel
+
+> `readonly` **menuRowLabel**: `"ignifx-ui-menu-row-label"` = `"ignifx-ui-menu-row-label"`
+
+A `Menu` row's left-hand text.
+
+##### menuRows
+
+> `readonly` **menuRows**: `"ignifx-ui-menu-rows"` = `"ignifx-ui-menu-rows"`
+
+The list a `Menu`'s rows are appended to.
+
+##### menuRowSlider
+
+> `readonly` **menuRowSlider**: `"ignifx-ui-menu-row-slider"` = `"ignifx-ui-menu-row-slider"`
+
+A `Menu` slider row's range input.
+
+##### menuRowValue
+
+> `readonly` **menuRowValue**: `"ignifx-ui-menu-row-value"` = `"ignifx-ui-menu-row-value"`
+
+A `Menu` row's right-hand text.
+
+##### menuSeparator
+
+> `readonly` **menuSeparator**: `"ignifx-ui-menu-separator"` = `"ignifx-ui-menu-separator"`
+
+A `Menu`'s `"separator"` row.
+
+##### menuSubtitle
+
+> `readonly` **menuSubtitle**: `"ignifx-ui-menu-subtitle"` = `"ignifx-ui-menu-subtitle"`
+
+A `Menu`'s subtitle.
+
+##### menuTitle
+
+> `readonly` **menuTitle**: `"ignifx-ui-menu-title"` = `"ignifx-ui-menu-title"`
+
+A `Menu`'s heading.
+
 ##### root
 
 > `readonly` **root**: `"ignifx-ui-root"` = `"ignifx-ui-root"`
@@ -5364,6 +6882,22 @@ The top safe-area inset, from `env(safe-area-inset-top)`.
 > `readonly` **scale**: `"--ignifx-ui-scale"` = `"--ignifx-ui-scale"`
 
 The uniform scale the root is drawn at, as a bare number.
+
+***
+
+### UI\_DIALOG\_Z\_INDEX
+
+> `const` **UI\_DIALOG\_Z\_INDEX**: `1000` = `1000`
+
+The `z-index` a `Dialog` is drawn at inside its layer.
+
+#### Remarks
+
+A dialog is modal, and a modal that paints under the panel that opened it swallows every click
+on that panel. Siblings with no `z-index` paint in DOM order, so a `Dialog` created before a
+`Menu` in the same layer would lose; giving every dialog one number puts it above every other
+root of its layer whatever order they were built in. Two dialogs in one layer still stack in DOM
+order, and `DialogOptions.zIndex` overrides the number for a dialog that must sit elsewhere.
 
 ***
 
@@ -5846,6 +7380,41 @@ device?.setVector("joystick", 0, 1);
 
 ***
 
+### formatBindingPath()
+
+> **formatBindingPath**(`path`, `unbound`): `string`
+
+Renders an `@ignifx/input` binding path the way a player reads it.
+
+#### Parameters
+
+##### path
+
+`string`
+
+The binding path, such as `<Keyboard>/arrowUp`, or `""` for none.
+
+##### unbound
+
+`string`
+
+What to answer for an empty path.
+
+#### Returns
+
+`string`
+
+The label, such as `Keyboard: Arrow up`.
+
+#### Example
+
+```ts
+formatBindingPath("<Keyboard>/arrowUp", "—"); // "Keyboard: Arrow up"
+formatBindingPath("", "—"); // "—"
+```
+
+***
+
 ### isEditableElement()
 
 > **isEditableElement**(`node`): `boolean`
@@ -6094,6 +7663,108 @@ The rendered string.
 ```ts
 const pattern = parseMessage("{count, plural, one {# life} other {# lives}}");
 renderMessage(pattern, { count: 3 }, createPluralSelector("en")); // "3 lives"
+```
+
+***
+
+### resolveMenuChoices()
+
+> **resolveMenuChoices**(`values`): readonly `string`[]
+
+Reads a [MenuChoiceValues](#menuchoicevalues).
+
+#### Parameters
+
+##### values
+
+[`MenuChoiceValues`](#menuchoicevalues)
+
+The fixed list or the function.
+
+#### Returns
+
+readonly `string`[]
+
+The values, in order.
+
+***
+
+### resolveMenuLabel()
+
+> **resolveMenuLabel**(`label`, `fallback`): `string`
+
+Reads a [MenuLabel](#menulabel).
+
+#### Parameters
+
+##### label
+
+[`MenuLabel`](#menulabel) \| `undefined`
+
+The fixed string, the function, or nothing.
+
+##### fallback
+
+`string`
+
+What to answer when `label` is `undefined`.
+
+#### Returns
+
+`string`
+
+The text to draw.
+
+***
+
+### snapToStep()
+
+> **snapToStep**(`value`, `min`, `max`, `step`): `number`
+
+Clamps a number into a range and snaps it to the step.
+
+#### Parameters
+
+##### value
+
+`number`
+
+The raw value.
+
+##### min
+
+`number`
+
+The lowest allowed value.
+
+##### max
+
+`number`
+
+The highest allowed value.
+
+##### step
+
+`number`
+
+The grid the value is snapped to. A step of `0` or less disables snapping.
+
+#### Returns
+
+`number`
+
+The clamped, snapped value.
+
+#### Remarks
+
+Snapping rather than accumulating is what stops a slider from drifting by floating-point error
+after a few hundred key presses: every value is recomputed from `min` and a whole number of
+steps.
+
+#### Example
+
+```ts
+snapToStep(0.37, 0, 1, 0.05); // 0.35
 ```
 
 ***

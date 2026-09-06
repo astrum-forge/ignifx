@@ -111,6 +111,7 @@ export class Dialog {
     get isVisible(): boolean;
     get onChosen(): SignalLike<string>;
     get onDismissed(): SignalLike;
+    setButtons(buttons: readonly DialogButton[]): void;
     setMessage(text: string): void;
     setTitle(text: string): void;
     show(): void;
@@ -130,10 +131,14 @@ export interface DialogOptions {
     readonly message?: string;
     readonly title?: string;
     readonly visible?: boolean;
+    readonly zIndex?: number;
 }
 
 // @public
 export function findVirtualDevice(app: App): VirtualDeviceLike | null;
+
+// @public
+export function formatBindingPath(path: string, unbound: string): string;
 
 // @public
 export const HUD_ANCHORS: readonly ["topLeft", "top", "topRight", "left", "center", "right", "bottomLeft", "bottom", "bottomRight"];
@@ -278,6 +283,174 @@ export function localeFileSchema(): Schema;
 export function localeJsonSchema(): JsonSchemaObject;
 
 // @public
+export class Menu {
+    constructor(host: UiHost, options: MenuOptions);
+    activateSelection(): void;
+    adjustSelection(direction: -1 | 1): void;
+    cancel(): boolean;
+    get cancelable(): boolean;
+    set cancelable(value: boolean);
+    dispose(): void;
+    get element(): HTMLDivElement | null;
+    hide(): void;
+    readonly id: string;
+    get isVisible(): boolean;
+    get keyboardEnabled(): boolean;
+    set keyboardEnabled(value: boolean);
+    moveSelection(delta: -1 | 1): void;
+    get onActivated(): SignalLike<MenuRow>;
+    get onBack(): SignalLike;
+    get onSelectionChanged(): SignalLike<MenuRow>;
+    refresh(): void;
+    get rows(): readonly MenuRow[];
+    select(id: string): boolean;
+    get selected(): MenuRow | null;
+    get selectedIndex(): number;
+    setRows(rows: readonly MenuRow[]): void;
+    show(): void;
+}
+
+// @public
+export interface MenuActionRow extends MenuRowBase {
+    readonly activate?: () => void;
+    readonly kind: "action";
+    readonly value?: MenuLabel;
+}
+
+// @public
+export interface MenuBindingRow extends MenuRowBase {
+    readonly kind: "binding";
+    readonly listening?: () => boolean;
+    readonly path: () => string;
+    readonly rebind?: () => void;
+}
+
+// @public
+export interface MenuButtonSource {
+    readonly wasPressedThisFrame: boolean;
+}
+
+// @public
+export interface MenuChoiceRow extends MenuRowBase {
+    readonly format?: (value: string) => string;
+    readonly get: () => string;
+    readonly kind: "choice";
+    readonly set: (value: string) => void;
+    readonly values: MenuChoiceValues;
+}
+
+// @public
+export type MenuChoiceValues = readonly string[] | (() => readonly string[]);
+
+// @public
+export interface MenuHeadingRow {
+    readonly id: string;
+    readonly kind: "heading";
+    readonly label: MenuLabel;
+}
+
+// @public
+export type MenuLabel = string | (() => string);
+
+// @public
+export interface MenuNavigation {
+    readonly back?: MenuButtonSource | null;
+    readonly move?: MenuVectorSource | null;
+    readonly submit?: MenuButtonSource | null;
+}
+
+// @public
+export interface MenuOptions {
+    readonly cancelable?: boolean;
+    readonly id: string;
+    readonly keyboard?: boolean;
+    readonly layer?: string;
+    readonly rows?: readonly MenuRow[];
+    readonly subtitle?: MenuLabel;
+    readonly text?: MenuText;
+    readonly title?: MenuLabel;
+    readonly visible?: boolean;
+    readonly wrap?: boolean;
+}
+
+// @public
+export type MenuRow = MenuActionRow | MenuBindingRow | MenuChoiceRow | MenuHeadingRow | MenuSeparatorRow | MenuSliderRow | MenuToggleRow;
+
+// @public
+export interface MenuRowBase {
+    readonly enabled?: () => boolean;
+    readonly id: string;
+    readonly label: MenuLabel;
+}
+
+// @public
+export interface MenuSeparatorRow {
+    readonly id: string;
+    readonly kind: "separator";
+}
+
+// @public
+export interface MenuSliderRow extends MenuRowBase {
+    readonly format?: (value: number) => string;
+    readonly get: () => number;
+    readonly kind: "slider";
+    readonly max: number;
+    readonly min: number;
+    readonly set: (value: number) => void;
+    readonly step: number;
+}
+
+// @public
+export class MenuStack {
+    constructor(options?: MenuStackOptions);
+    get bottom(): Menu | null;
+    closeAll(): void;
+    get depth(): number;
+    dispose(): void;
+    get isOpen(): boolean;
+    get menus(): readonly Menu[];
+    get onActivated(): SignalLike<MenuRow>;
+    get onChanged(): SignalLike<Menu | null>;
+    get onSelectionChanged(): SignalLike<MenuRow>;
+    pop(): Menu | null;
+    push(menu: Menu): void;
+    refresh(): void;
+    get suspended(): boolean;
+    set suspended(value: boolean);
+    get top(): Menu | null;
+    update(unscaledDelta: number): void;
+}
+
+// @public
+export interface MenuStackOptions {
+    readonly navigation?: MenuNavigation;
+    readonly repeatDelay?: number;
+    readonly repeatInterval?: number;
+    readonly threshold?: number;
+}
+
+// @public
+export interface MenuText {
+    readonly listening?: MenuLabel;
+    readonly off?: MenuLabel;
+    readonly on?: MenuLabel;
+    readonly unbound?: MenuLabel;
+}
+
+// @public
+export interface MenuToggleRow extends MenuRowBase {
+    readonly format?: (value: boolean) => string;
+    readonly get: () => boolean;
+    readonly kind: "toggle";
+    readonly set: (value: boolean) => void;
+}
+
+// @public
+export interface MenuVectorSource {
+    readonly vector: Vec2Like;
+}
+
+// @public
 export type MessageNode = TextNode | ArgumentNode | PluralNode;
 
 // @public
@@ -318,6 +491,15 @@ export function renderMessage(pattern: MessagePattern, params: MessageParams, se
 //
 // @internal
 export function resolveDomTarget(surface: unknown): UiDomTarget | null;
+
+// @public
+export function resolveMenuChoices(values: MenuChoiceValues): readonly string[];
+
+// @public
+export function resolveMenuLabel(label: MenuLabel | undefined, fallback: string): string;
+
+// @public
+export function snapToStep(value: number, min: number, max: number, step: number): number;
 
 // @public
 export function stickAxis(delta: number, length: number, radius: number, deadZone: number): number;
@@ -419,6 +601,16 @@ export const UI_CLASS_NAMES: {
     readonly dialogMessage: "ignifx-ui-dialog-message";
     readonly dialogButtons: "ignifx-ui-dialog-buttons";
     readonly dialogButton: "ignifx-ui-dialog-button";
+    readonly menu: "ignifx-ui-menu";
+    readonly menuTitle: "ignifx-ui-menu-title";
+    readonly menuSubtitle: "ignifx-ui-menu-subtitle";
+    readonly menuRows: "ignifx-ui-menu-rows";
+    readonly menuRow: "ignifx-ui-menu-row";
+    readonly menuRowLabel: "ignifx-ui-menu-row-label";
+    readonly menuRowValue: "ignifx-ui-menu-row-value";
+    readonly menuRowSlider: "ignifx-ui-menu-row-slider";
+    readonly menuHeading: "ignifx-ui-menu-heading";
+    readonly menuSeparator: "ignifx-ui-menu-separator";
     readonly toastStack: "ignifx-ui-toasts";
     readonly toast: "ignifx-ui-toast";
     readonly loading: "ignifx-ui-loading";
@@ -438,6 +630,9 @@ export const UI_CSS_VARIABLES: {
     readonly safeLeft: "--ignifx-safe-left";
     readonly scale: "--ignifx-ui-scale";
 };
+
+// @public
+export const UI_DIALOG_Z_INDEX = 1e3;
 
 // @public
 export const UI_ERROR_MESSAGES: Readonly<Record<string, string>>;

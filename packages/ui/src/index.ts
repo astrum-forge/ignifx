@@ -1,7 +1,7 @@
 /**
  * `@ignifx/ui` public barrel: the DOM overlay host and its layers, the three scaling modes, input
  * focus routing, `WorldAnchor`, the three text components on Babylon Lite's text renderer, the
- * touch and dialog helpers, and `app.i18n` (`docs/architecture/13-ui.md`). Explicit named
+ * touch, menu and dialog helpers, and `app.i18n` (`docs/architecture/13-ui.md`). Explicit named
  * re-exports only — no `export *` (coding standards §4).
  *
  * @packageDocumentation
@@ -24,7 +24,7 @@ export {
   type UiPixelMapping,
   type UiSurfaceMetrics,
 } from "./dom/scaling.js";
-export { UI_CLASS_NAMES, UI_CSS_VARIABLES, UI_STYLE_ELEMENT_ID } from "./dom/styles.js";
+export { UI_CLASS_NAMES, UI_CSS_VARIABLES, UI_DIALOG_Z_INDEX, UI_STYLE_ELEMENT_ID } from "./dom/styles.js";
 
 // errors — the `IGX-13xx` code space this package owns.
 export { UI_ERROR_MESSAGES, uiError, UiErrorCode, type UiErrorOptions } from "./errors.js";
@@ -105,6 +105,32 @@ export { VERSION } from "./version.js";
 // widgets — the DOM helpers templates build their menus and touch controls out of.
 export { Dialog, type DialogButton, type DialogOptions } from "./widgets/dialog.js";
 export { LoadingScreen, progressFraction, type LoadingScreenOptions } from "./widgets/loading-screen.js";
+export { Menu, type MenuOptions } from "./widgets/menu.js";
+export {
+  formatBindingPath,
+  resolveMenuChoices,
+  resolveMenuLabel,
+  snapToStep,
+  type MenuActionRow,
+  type MenuBindingRow,
+  type MenuChoiceRow,
+  type MenuChoiceValues,
+  type MenuHeadingRow,
+  type MenuLabel,
+  type MenuRow,
+  type MenuRowBase,
+  type MenuSeparatorRow,
+  type MenuSliderRow,
+  type MenuText,
+  type MenuToggleRow,
+} from "./widgets/menu-row.js";
+export {
+  MenuStack,
+  type MenuButtonSource,
+  type MenuNavigation,
+  type MenuStackOptions,
+  type MenuVectorSource,
+} from "./widgets/menu-stack.js";
 export { Toast, type ToastOptions } from "./widgets/toast.js";
 export { VirtualButton, type VirtualButtonOptions } from "./widgets/virtual-button.js";
 export { findVirtualDevice, type VirtualDeviceLike } from "./widgets/virtual-device.js";

@@ -22,6 +22,15 @@ import type { SignalLike } from "@ignifx/core";
  *
  * Under a headless app every method is a no-op and {@link Dialog.element} is `null`, so the same
  * code runs in a test.
+ *
+ * ## Stacking
+ *
+ * A dialog is modal, so it is always drawn **above** the other roots of its layer: the stylesheet
+ * gives `.ignifx-ui-dialog` a `z-index` of `UI_DIALOG_Z_INDEX`, and {@link DialogOptions.zIndex}
+ * overrides it per dialog. Without that rule a dialog created before a `Menu` in the same layer
+ * paints under it — siblings with no `z-index` paint in DOM order — and the invisible backdrop
+ * swallows every click meant for the panel on top. Two dialogs in one layer still stack in DOM
+ * order, so the one shown last is the one on top.
  */
 
 /**
@@ -54,6 +63,8 @@ export interface DialogOptions {
   readonly visible?: boolean;
   /** Whether a click on the backdrop dismisses the dialog. Defaults to `false`. */
   readonly dismissOnBackdrop?: boolean;
+  /** The stacking order inside the layer. Defaults to `UI_DIALOG_Z_INDEX`, from the stylesheet. */
+  readonly zIndex?: number;
 }
 
 /**
@@ -67,6 +78,10 @@ export class Dialog {
   readonly #title: HTMLHeadingElement | null = null;
 
   readonly #message: HTMLParagraphElement | null = null;
+
+  readonly #buttonRow: HTMLDivElement | null = null;
+
+  readonly #buttonCleanups: (() => void)[] = [];
 
   readonly #chosen = new Signal<string>();
 
@@ -124,19 +139,18 @@ export class Dialog {
       panel.append(paragraph);
       this.#message = paragraph;
     }
-    const buttons = options.buttons ?? [];
-    if (buttons.length > 0) {
-      const row = document.createElement("div");
-      row.className = UI_CLASS_NAMES.dialogButtons;
-      for (const button of buttons) {
-        row.append(this.#createButton(document, button));
-      }
-      panel.append(row);
-    }
+    const row = document.createElement("div");
+    row.className = UI_CLASS_NAMES.dialogButtons;
+    panel.append(row);
+    this.#buttonRow = row;
     root.append(panel);
     root.style.setProperty("display", this.#visible ? "flex" : "none");
+    if (options.zIndex !== undefined) {
+      root.style.setProperty("z-index", String(options.zIndex));
+    }
     layerElement.append(root);
     this.#root = root;
+    this.setButtons(options.buttons ?? []);
   }
 
   /**
@@ -217,16 +231,49 @@ export class Dialog {
     }
   }
 
+  /**
+   * Replaces the buttons.
+   *
+   * @remarks
+   * One dialog re-used for every question is cheaper than one dialog per question and keeps the
+   * stacking predictable, so the buttons have to be able to change: a confirmation asks
+   * "Yes"/"No", a save error offers "Retry"/"Cancel", and a locale change relabels both.
+   *
+   * @param buttons - The buttons, left to right. An empty list leaves the row empty.
+   *
+   * @example
+   * ```ts ignore-check
+   * dialog.setMessage("Delete this save?");
+   * dialog.setButtons([{ id: "no", label: "No" }, { id: "yes", label: "Yes" }]);
+   * ```
+   */
+  setButtons(buttons: readonly DialogButton[]): void {
+    const row = this.#buttonRow;
+    if (row === null || this.#disposed) {
+      return;
+    }
+    for (const cleanup of this.#buttonCleanups) {
+      cleanup();
+    }
+    this.#buttonCleanups.length = 0;
+    row.replaceChildren();
+    const document = row.ownerDocument;
+    for (const button of buttons) {
+      row.append(this.#createButton(document, button));
+    }
+  }
+
   /** Removes the dialog and unsubscribes. */
   dispose(): void {
     if (this.#disposed) {
       return;
     }
     this.#disposed = true;
-    for (const cleanup of this.#cleanups) {
+    for (const cleanup of [...this.#cleanups, ...this.#buttonCleanups]) {
       cleanup();
     }
     this.#cleanups.length = 0;
+    this.#buttonCleanups.length = 0;
     this.#root?.remove();
     this.#chosen.clear();
     this.#dismissed.clear();
@@ -249,7 +296,7 @@ export class Dialog {
       this.#chosen.emit(button.id);
     };
     element.addEventListener("click", onClick);
-    this.#cleanups.push((): void => {
+    this.#buttonCleanups.push((): void => {
       element.removeEventListener("click", onClick);
     });
     return element;

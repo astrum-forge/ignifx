@@ -1,5 +1,4 @@
-import { Dialog, Toast } from "@ignifx/ui";
-import { MenuScreen } from "./menu-screen.js";
+import { Dialog, Menu, MenuStack, Toast } from "@ignifx/ui";
 import { deleteSave, readSave } from "./save-store.js";
 import {
   applySettings,
@@ -9,25 +8,33 @@ import {
   saveInputOverrides,
   saveSettings,
 } from "./settings-store.js";
-import type { MenuRow } from "./menu-screen.js";
 import type { SaveFile } from "./save-store.js";
 import type { GameSettings, GraphicsHooks } from "./settings-store.js";
 import type { AudioClip } from "@ignifx/audio";
 import type { App } from "@ignifx/core";
 import type { InputAction } from "@ignifx/input";
+import type { MenuRow } from "@ignifx/ui";
 
 /**
- * The whole front end of a template: a title screen, a pause menu, a settings screen with an
- * interactive rebinding page, a confirmation dialog and a toast stack — all four templates build
- * the same thing from this file and differ only in the options they hand it.
+ * The whole front end of a template — a title screen, a pause menu, a settings screen with an
+ * interactive rebinding page, a confirmation dialog and a toast stack — built out of `@ignifx/ui`'s
+ * `Menu` and `MenuStack`. All four templates build the same thing from this file and differ only in
+ * the options they hand it.
+ *
+ * ## What the package owns and what this file owns
+ *
+ * `Menu` owns the rows, the selection, the ARIA and the three input paths; `MenuStack` owns screen
+ * navigation, the held-direction repeat on the unscaled clock, and the rule that Escape unwinds one
+ * screen. What is left here is the part that is actually about *this game*: which rows exist, what
+ * they read and write, and what happens when one is chosen.
  *
  * ## One navigation path for keyboard, gamepad and pointer
  *
  * Navigation is read from a `UI` action map that every template's `game.input.json` declares:
- * `menuMove` (a `vector2`), `menuSubmit` and `menuBack`. Keyboard and pad therefore go through the
- * _same_ code, and a pad that is not plugged in costs nothing. The pointer is handled by the DOM —
- * `pointerenter` moves the selection, `click` activates it — because a mouse already has a cursor
- * and does not need a selection model.
+ * `menuMove` (a `vector2`), `menuSubmit` and `menuBack`, handed to the stack as a
+ * `MenuNavigation`. Keyboard and pad therefore go through the _same_ code, and a pad that is not
+ * plugged in costs nothing. Because the stack has a navigation source it turns each menu's own DOM
+ * key handling off, so an arrow press moves the selection once rather than twice.
  *
  * The `pause` action is deliberately **not** read here. `MenuController` reads it, and only while
  * no menu is open; otherwise a single press of Escape would both close the screen (`menuBack`) and
@@ -43,18 +50,9 @@ import type { InputAction } from "@ignifx/input";
  *
  * ## Headless
  *
- * `MenuScreen`, `Dialog` and `Toast` are all documented no-ops with no DOM overlay, so everything
- * here runs under a headless app: the state machine is real, only the pixels are missing.
+ * `Menu`, `MenuStack`, `Dialog` and `Toast` are all documented no-ops with no DOM overlay, so
+ * everything here runs under a headless app: the state machine is real, only the pixels are missing.
  */
-
-/** How long the first repeat of a held direction waits, in unscaled seconds. */
-const REPEAT_DELAY_SECONDS = 0.35;
-
-/** How long each following repeat waits, in unscaled seconds. */
-const REPEAT_INTERVAL_SECONDS = 0.12;
-
-/** How far a stick or a composite must move before it counts as a direction. */
-const NAVIGATION_THRESHOLD = 0.5;
 
 /** What the music is multiplied by while a menu is open. */
 const DUCK_FACTOR = 0.35;
@@ -67,6 +65,12 @@ const REBIND_TIMEOUT_SECONDS = 6;
 
 /** The action map every template declares for menu navigation. */
 const UI_MAP_NAME = "UI";
+
+/** The settings a slider row can edit. */
+type NumericSetting = "masterVolume" | "musicVolume" | "renderScale" | "sfxVolume";
+
+/** The settings a toggle row can edit. */
+type FlagSetting = "postProcessing" | "shadows";
 
 /** The clips the menus play, or `null` where a template did not load one. */
 export interface MenuSounds {
@@ -112,11 +116,11 @@ export interface GameMenusOptions {
 export interface GameMenus {
   /** Whether any screen is on top. */
   readonly isOpen: boolean;
-  /** Whether the title screen is the one on top. */
+  /** Whether the title screen is the one at the bottom of the stack. */
   readonly isTitle: boolean;
   /** Whether a rebind is listening, so nothing else should read the input. */
   readonly isRebinding: boolean;
-  /** Shows the title screen and hides everything else. */
+  /** Shows the title screen or the pause menu, and hides everything else. */
   show: (screen: "title" | "pause") => void;
   /** Closes every screen. */
   close: () => void;
@@ -130,54 +134,14 @@ export interface GameMenus {
   dispose: () => void;
 }
 
-/** The mutable state the closures below share. */
-interface MenuState {
-  /** The screen stack, innermost last. Empty when the game is running. */
-  stack: MenuScreen[];
-  /** Which direction is being held, or `0`. */
-  heldX: -1 | 0 | 1;
-  /** Which direction is being held, or `0`. */
-  heldY: -1 | 0 | 1;
-  /** How long until the held direction repeats, in unscaled seconds. */
-  repeatIn: number;
-  /** Whether a rebind is listening. */
-  rebinding: boolean;
-  /** Whether the music is currently ducked. */
-  ducked: boolean;
-  /** The save the title screen offers, re-read whenever the title is shown. */
-  save: SaveFile | null;
-}
-
 /**
- * Turns an axis into a direction, so a stick and a keyboard composite are read the same way.
+ * Renders a 0-to-1 gain or scale as a percentage.
  *
- * @param value - The axis value, `-1` to `1`.
- * @returns `-1`, `0` or `1`.
+ * @param value - The value.
+ * @returns The text drawn beside the slider.
  */
-function direction(value: number): -1 | 0 | 1 {
-  if (value >= NAVIGATION_THRESHOLD) {
-    return 1;
-  }
-  return value <= -NAVIGATION_THRESHOLD ? -1 : 0;
-}
-
-/**
- * Renders a binding path the way a player reads it: `<Keyboard>/arrowUp` becomes `Arrow up`.
- *
- * @param path - The binding path, or an empty string for a composite.
- * @param unbound - What to show when there is no simple path.
- * @returns The label.
- */
-export function describeBindingPath(path: string, unbound: string): string {
-  if (path === "") {
-    return unbound;
-  }
-  const slash = path.indexOf("/");
-  const device = slash > 0 ? path.slice(1, slash - 1) : "";
-  const control = slash > 0 ? path.slice(slash + 1) : path;
-  const spaced = control.replaceAll("/", " ").replaceAll(/(?<lower>[a-z])(?<upper>[A-Z])/gu, "$<lower> $<upper>");
-  const pretty = spaced.charAt(0).toUpperCase() + spaced.slice(1).toLowerCase();
-  return device === "" ? pretty : `${device}: ${pretty}`;
+function percent(value: number): string {
+  return `${String(Math.round(value * 100))}%`;
 }
 
 /**
@@ -198,43 +162,31 @@ function shortDate(save: SaveFile): string {
  * @param options - The settings to edit, the hooks into the template's scene, and the callbacks.
  * @returns The front end.
  */
-// oxlint-disable-next-line max-lines-per-function -- the screens share one closure over `state`,
-// `settings` and the callbacks; splitting them would mean threading eight parameters through five
-// builders, and every row is three lines of declaration.
+// oxlint-disable-next-line max-lines-per-function -- the screens share one closure over the
+// settings, the stack and the callbacks; splitting them would mean threading eight parameters
+// through five builders, and every row is now a single declaration.
 export function createGameMenus(app: App, options: GameMenusOptions): GameMenus {
   const { settings, graphics } = options;
-  const state: MenuState = { stack: [], heldX: 0, heldY: 0, repeatIn: 0, rebinding: false, ducked: false, save: null };
+  const state = { rebinding: false, ducked: false, save: null as SaveFile | null };
   const t = (key: string, params?: Record<string, string | number>): string => app.i18n.t(key, params ?? {});
 
   // Resolved once, out of the `UI` map by name. Not `actions.find("menuMove")`: a path-shaped
   // lookup with a string literal is what `ignifx/no-entity-find-in-src` forbids outside tests, and
   // resolving three actions on every frame of every menu would be wasted work besides.
   const uiMap = app.input.actions.maps.get(UI_MAP_NAME) ?? null;
-  const menuMove = uiMap?.actions.get("menuMove") ?? null;
-  const menuSubmit = uiMap?.actions.get("menuSubmit") ?? null;
-  const menuBack = uiMap?.actions.get("menuBack") ?? null;
+  const stack = new MenuStack({
+    navigation: {
+      move: uiMap?.actions.get("menuMove") ?? null,
+      submit: uiMap?.actions.get("menuSubmit") ?? null,
+      back: uiMap?.actions.get("menuBack") ?? null,
+    },
+  });
 
   const toasts = new Toast(app.ui, { layer: "overlay", duration: 2.5 });
-  // The `overlay` layer, not `menu`: every `MenuScreen` panel lives in `menu`, they are appended
-  // after this dialog, and a later sibling with the same z-index paints on top — so a confirm
-  // prompt mounted there is drawn under the screen that opened it and swallows every click.
-  const confirm = new Dialog(app.ui, {
-    layer: "overlay",
-    title: t("confirm.title"),
-    buttons: [
-      { id: "no", label: t("confirm.no") },
-      { id: "yes", label: t("confirm.yes") },
-    ],
-  });
+  // The same `menu` layer as the screens: `Dialog` carries `UI_DIALOG_Z_INDEX`, so a modal is drawn
+  // above every other root of its layer whatever order they were built in.
+  const confirm = new Dialog(app.ui, { title: t("confirm.title") });
   let onConfirmed: (() => void) | null = null;
-  confirm.onChosen.connect((id: string) => {
-    confirm.hide();
-    const handler = onConfirmed;
-    onConfirmed = null;
-    if (id === "yes" && handler !== null) {
-      handler();
-    }
-  });
 
   /**
    * Plays one of the two UI clips, on the `UI` bus so it survives `app.pause()`.
@@ -253,54 +205,64 @@ export function createGameMenus(app: App, options: GameMenusOptions): GameMenus 
     void saveSettings(app, settings);
   };
 
-  /** Fades the music down while a menu is up and back when the last one closes. */
-  const updateDucking = (): void => {
-    const wanted = state.stack.length > 0;
-    if (wanted === state.ducked) {
-      return;
-    }
-    state.ducked = wanted;
-    const target = wanted ? settings.musicVolume * DUCK_FACTOR : settings.musicVolume;
-    app.audio.tryBus("Music")?.setVolume(target, DUCK_SECONDS);
-  };
-
-  const title = new MenuScreen(app, { id: "title", title: () => t("menu.title"), subtitle: () => t("menu.tagline") });
-  const pause = new MenuScreen(app, { id: "pause", title: () => t("menu.paused") });
-  const settingsScreen = new MenuScreen(app, { id: "settings", title: () => t("settings.title") });
-  const bindings = new MenuScreen(app, {
-    id: "bindings",
-    title: () => t("settings.bindings"),
-    subtitle: () => t("bindings.hint"),
-  });
-  const credits = new MenuScreen(app, { id: "credits", title: () => t("menu.credits") });
-
   /**
-   * Pushes a screen on top of the stack.
+   * Builds one screen with the words and the sounds every screen in this game shares.
    *
-   * @param screen - The screen to show.
+   * @param id - The screen id, which becomes its `data-menu` attribute.
+   * @param title - Its heading.
+   * @param subtitle - The line under the heading, when it has one.
+   * @returns The screen.
    */
-  const push = (screen: MenuScreen): void => {
-    state.stack.at(-1)?.hide();
-    state.stack.push(screen);
-    screen.show();
-    updateDucking();
+  const screen = (id: string, title: () => string, subtitle?: () => string): Menu => {
+    const menu = new Menu(app.ui, {
+      id,
+      title,
+      ...(subtitle === undefined ? {} : { subtitle }),
+      text: {
+        on: () => t("common.on"),
+        off: () => t("common.off"),
+        unbound: () => t("bindings.unbound"),
+        listening: () => t("bindings.press"),
+      },
+    });
+    // Backing out is a click too; the stack's own signals cover moving and activating.
+    menu.onBack.connect(() => {
+      play(options.sounds.click);
+    });
+    return menu;
   };
 
-  /** Pops the top screen, revealing whatever was under it. */
-  const pop = (): void => {
-    state.stack.pop()?.hide();
-    state.stack.at(-1)?.show();
-    updateDucking();
-  };
+  const title = screen(
+    "title",
+    () => t("menu.title"),
+    () => t("menu.tagline"),
+  );
+  const pause = screen("pause", () => t("menu.paused"));
+  const settingsScreen = screen("settings", () => t("settings.title"));
+  const bindings = screen(
+    "bindings",
+    () => t("settings.bindings"),
+    () => t("bindings.hint"),
+  );
+  const credits = screen("credits", () => t("menu.credits"));
+  // The title screen is the game's floor: Escape must not unwind past it into a running game.
+  title.cancelable = false;
 
-  /** Closes every screen. */
-  const closeAll = (): void => {
-    for (let index = state.stack.length - 1; index >= 0; index -= 1) {
-      state.stack[index]?.hide();
+  stack.onSelectionChanged.connect(() => {
+    play(options.sounds.hover);
+  });
+  stack.onActivated.connect(() => {
+    play(options.sounds.click);
+  });
+  stack.onChanged.connect(() => {
+    const wanted = stack.isOpen;
+    if (wanted !== state.ducked) {
+      state.ducked = wanted;
+      app.audio
+        .tryBus("Music")
+        ?.setVolume(wanted ? settings.musicVolume * DUCK_FACTOR : settings.musicVolume, DUCK_SECONDS);
     }
-    state.stack.length = 0;
-    updateDucking();
-  };
+  });
 
   /**
    * Asks for confirmation before running something destructive.
@@ -312,8 +274,24 @@ export function createGameMenus(app: App, options: GameMenusOptions): GameMenus 
     onConfirmed = handler;
     confirm.setTitle(t("confirm.title"));
     confirm.setMessage(t(messageKey));
+    confirm.setButtons([
+      { id: "no", label: t("confirm.no") },
+      { id: "yes", label: t("confirm.yes") },
+    ]);
     confirm.show();
+    // The dialog is modal: the same press must not reach the screen underneath it.
+    stack.suspended = true;
   };
+
+  confirm.onChosen.connect((id: string) => {
+    confirm.hide();
+    stack.suspended = false;
+    const handler = onConfirmed;
+    onConfirmed = null;
+    if (id === "yes" && handler !== null) {
+      handler();
+    }
+  });
 
   /**
    * The action the rebinding page is editing, looked up in the gameplay map so it is found even
@@ -338,6 +316,7 @@ export function createGameMenus(app: App, options: GameMenusOptions): GameMenus 
       return;
     }
     state.rebinding = true;
+    stack.suspended = true;
     bindings.refresh();
     void app.input
       .performInteractiveRebind(action, {
@@ -349,6 +328,7 @@ export function createGameMenus(app: App, options: GameMenusOptions): GameMenus 
       .then(
         async (result) => {
           state.rebinding = false;
+          stack.suspended = false;
           if (result.path === null) {
             toasts.show(t(result.timedOut ? "toast.rebindTimedOut" : "toast.rebindCanceled"));
           } else {
@@ -358,6 +338,7 @@ export function createGameMenus(app: App, options: GameMenusOptions): GameMenus 
         },
         (error: unknown) => {
           state.rebinding = false;
+          stack.suspended = false;
           app.log.warn("IGX-TPL-0021 the rebind failed: {error}", String(error));
           bindings.setRows(bindingRows());
         },
@@ -388,26 +369,27 @@ export function createGameMenus(app: App, options: GameMenusOptions): GameMenus 
           }
           const bindingIndex = index;
           schemeRows.push({
-            id: `bind-${scheme.name}-${entry.action}-${String(index)}`,
             kind: "binding",
+            id: `bind-${scheme.name}-${entry.action}-${String(index)}`,
             label: () => t(entry.labelKey),
-            value: () =>
-              state.rebinding ? t("bindings.press") : describeBindingPath(binding.effectivePath, t("bindings.unbound")),
+            path: () => binding.effectivePath,
+            listening: () => state.rebinding,
             enabled: () => !state.rebinding,
-            activate: () => {
+            rebind: () => {
               rebind(action, bindingIndex);
             },
           });
         }
       }
       if (schemeRows.length > 0) {
-        rows.push({ id: `scheme-${scheme.name}`, kind: "heading", label: () => scheme.name }, ...schemeRows);
+        rows.push({ kind: "heading", id: `scheme-${scheme.name}`, label: () => scheme.name }, ...schemeRows);
       }
     }
     rows.push(
+      { kind: "separator", id: "bindings-rule" },
       {
-        id: "reset-bindings",
         kind: "action",
+        id: "reset-bindings",
         label: () => t("settings.resetBindings"),
         enabled: () => !state.rebinding,
         activate: () => {
@@ -417,57 +399,50 @@ export function createGameMenus(app: App, options: GameMenusOptions): GameMenus 
           });
         },
       },
-      { id: "bindings-back", kind: "action", label: () => t("menu.back"), activate: pop },
+      { kind: "action", id: "bindings-back", label: () => t("menu.back"), activate: () => void stack.pop() },
     );
     return rows;
   };
 
   /**
-   * A slider row over one of the three bus gains.
+   * A slider row over one of the numeric settings, as a percentage.
    *
    * @param id - The row id.
    * @param labelKey - The i18n key of its label.
-   * @param get - Reads the gain.
-   * @param set - Writes the gain.
+   * @param key - Which setting the row edits.
+   * @param min - The lowest value it may take.
    * @returns The row.
    */
-  const volumeRow = (id: string, labelKey: string, get: () => number, set: (value: number) => void): MenuRow => ({
-    id,
+  const sliderRow = (id: string, labelKey: string, key: NumericSetting, min = 0): MenuRow => ({
     kind: "slider",
+    id,
     label: () => t(labelKey),
-    range: {
-      min: 0,
-      max: 1,
-      step: 0.05,
-      get,
-      set: (value: number) => {
-        set(value);
-        commit();
-      },
-      format: (value: number) => `${String(Math.round(value * 100))}%`,
+    min,
+    max: 1,
+    step: 0.05,
+    get: () => settings[key],
+    set: (value: number) => {
+      settings[key] = value;
+      commit();
     },
+    format: percent,
   });
 
   /**
-   * A yes/no row.
+   * A yes/no row over one of the graphics flags. `Menu`'s `text.on` / `text.off` render it.
    *
    * @param id - The row id.
    * @param labelKey - The i18n key of its label.
-   * @param get - Reads the flag.
-   * @param set - Writes the flag.
+   * @param key - Which setting the row edits.
    * @returns The row.
    */
-  const toggleRow = (id: string, labelKey: string, get: () => boolean, set: (value: boolean) => void): MenuRow => ({
-    id,
+  const toggleRow = (id: string, labelKey: string, key: FlagSetting): MenuRow => ({
     kind: "toggle",
+    id,
     label: () => t(labelKey),
-    value: () => t(get() ? "common.on" : "common.off"),
-    activate: () => {
-      set(!get());
-      commit();
-    },
-    adjust: () => {
-      set(!get());
+    get: () => settings[key],
+    set: (value: boolean) => {
+      settings[key] = value;
       commit();
     },
   });
@@ -480,105 +455,51 @@ export function createGameMenus(app: App, options: GameMenusOptions): GameMenus 
    */
   const settingsRows = (): readonly MenuRow[] => {
     const rows: MenuRow[] = [
-      { id: "audio", kind: "heading", label: () => t("settings.audio") },
-      volumeRow(
-        "master",
-        "settings.master",
-        () => settings.masterVolume,
-        (value: number) => {
-          settings.masterVolume = value;
-        },
-      ),
-      volumeRow(
-        "music",
-        "settings.music",
-        () => settings.musicVolume,
-        (value: number) => {
-          settings.musicVolume = value;
-        },
-      ),
-      volumeRow(
-        "sfx",
-        "settings.sfx",
-        () => settings.sfxVolume,
-        (value: number) => {
-          settings.sfxVolume = value;
-        },
-      ),
-      { id: "graphics", kind: "heading", label: () => t("settings.graphics") },
-      {
-        id: "render-scale",
-        kind: "slider",
-        label: () => t("settings.renderScale"),
-        range: {
-          min: MIN_RENDER_SCALE,
-          max: 1,
-          step: 0.05,
-          get: () => settings.renderScale,
-          set: (value: number) => {
-            settings.renderScale = value;
-            commit();
-          },
-          format: (value: number) => `${String(Math.round(value * 100))}%`,
-        },
-      },
+      { kind: "heading", id: "audio", label: () => t("settings.audio") },
+      sliderRow("master", "settings.master", "masterVolume"),
+      sliderRow("music", "settings.music", "musicVolume"),
+      sliderRow("sfx", "settings.sfx", "sfxVolume"),
+      { kind: "heading", id: "graphics", label: () => t("settings.graphics") },
+      sliderRow("render-scale", "settings.renderScale", "renderScale", MIN_RENDER_SCALE),
     ];
     if (graphics.supportsShadows) {
-      rows.push(
-        toggleRow(
-          "shadows",
-          "settings.shadows",
-          () => settings.shadows,
-          (value: boolean) => {
-            settings.shadows = value;
-          },
-        ),
-      );
+      rows.push(toggleRow("shadows", "settings.shadows", "shadows"));
     }
     if (graphics.supportsPostProcessing) {
-      rows.push(
-        toggleRow(
-          "post-processing",
-          "settings.post",
-          () => settings.postProcessing,
-          (value: boolean) => {
-            settings.postProcessing = value;
-          },
-        ),
-      );
+      rows.push(toggleRow("post-processing", "settings.post", "postProcessing"));
     }
     rows.push(
-      { id: "input", kind: "heading", label: () => t("settings.input") },
+      { kind: "heading", id: "input", label: () => t("settings.input") },
       {
-        id: "bindings",
         kind: "action",
+        id: "bindings",
         label: () => t("settings.bindings"),
         activate: () => {
           bindings.setRows(bindingRows());
-          push(bindings);
+          stack.push(bindings);
         },
       },
-      { id: "game", kind: "heading", label: () => t("settings.game") },
+      { kind: "heading", id: "game", label: () => t("settings.game") },
     );
-    const locales = app.i18n.availableLocales;
-    if (locales.length > 1) {
+    if (app.i18n.availableLocales.length > 1) {
       rows.push({
-        id: "language",
         kind: "choice",
+        id: "language",
         label: () => t("settings.language"),
-        value: () => t(`locale.${app.i18n.locale}`),
-        activate: () => {
-          cycleLocale(1);
+        values: () => app.i18n.availableLocales,
+        get: () => app.i18n.locale,
+        set: (locale: string) => {
+          app.i18n.locale = locale;
+          settings.locale = locale;
+          commit();
         },
-        adjust: (delta: -1 | 1) => {
-          cycleLocale(delta);
-        },
+        format: (locale: string) => t(`locale.${locale}`),
       });
     }
     rows.push(
       {
-        id: "delete-save",
         kind: "action",
+        id: "delete-save",
         label: () => t("settings.deleteSave"),
         enabled: () => state.save !== null,
         activate: () => {
@@ -593,8 +514,8 @@ export function createGameMenus(app: App, options: GameMenusOptions): GameMenus 
         },
       },
       {
-        id: "reset-settings",
         kind: "action",
+        id: "reset-settings",
         label: () => t("settings.reset"),
         activate: () => {
           ask("confirm.reset", () => {
@@ -612,26 +533,9 @@ export function createGameMenus(app: App, options: GameMenusOptions): GameMenus 
           });
         },
       },
-      { id: "settings-back", kind: "action", label: () => t("menu.back"), activate: pop },
+      { kind: "action", id: "settings-back", label: () => t("menu.back"), activate: () => void stack.pop() },
     );
     return rows;
-  };
-
-  /**
-   * Moves the locale on by one, wrapping, and re-renders every screen.
-   *
-   * @param delta - `1` for the next locale, `-1` for the previous one.
-   */
-  const cycleLocale = (delta: -1 | 1): void => {
-    const locales = app.i18n.availableLocales;
-    const here = locales.indexOf(app.i18n.locale);
-    const next = locales[(here + delta + locales.length) % locales.length];
-    if (next === undefined || next === app.i18n.locale) {
-      return;
-    }
-    app.i18n.locale = next;
-    settings.locale = next;
-    commit();
   };
 
   /**
@@ -641,8 +545,8 @@ export function createGameMenus(app: App, options: GameMenusOptions): GameMenus 
    */
   const titleRows = (): readonly MenuRow[] => [
     {
-      id: "continue",
       kind: "action",
+      id: "continue",
       label: () => t("menu.continue"),
       value: () => (state.save === null ? t("title.noSave") : t("title.savedAt", { when: shortDate(state.save) })),
       enabled: () => state.save !== null,
@@ -651,34 +555,34 @@ export function createGameMenus(app: App, options: GameMenusOptions): GameMenus 
         if (save === null) {
           return;
         }
-        closeAll();
+        stack.closeAll();
         options.onContinue(save);
       },
     },
     {
-      id: "new-game",
       kind: "action",
+      id: "new-game",
       label: () => t("menu.newGame"),
       activate: () => {
-        closeAll();
+        stack.closeAll();
         options.onStartNew();
       },
     },
     {
-      id: "title-settings",
       kind: "action",
+      id: "title-settings",
       label: () => t("menu.settings"),
       activate: () => {
         settingsScreen.setRows(settingsRows());
-        push(settingsScreen);
+        stack.push(settingsScreen);
       },
     },
     {
-      id: "title-credits",
       kind: "action",
+      id: "title-credits",
       label: () => t("menu.credits"),
       activate: () => {
-        push(credits);
+        stack.push(credits);
       },
     },
   ];
@@ -689,10 +593,17 @@ export function createGameMenus(app: App, options: GameMenusOptions): GameMenus 
    * @returns The rows.
    */
   const pauseRows = (): readonly MenuRow[] => [
-    { id: "resume", kind: "action", label: () => t("menu.resume"), activate: closeAll },
     {
-      id: "save",
       kind: "action",
+      id: "resume",
+      label: () => t("menu.resume"),
+      activate: () => {
+        stack.closeAll();
+      },
+    },
+    {
+      kind: "action",
+      id: "save",
       label: () => t("menu.save"),
       activate: () => {
         void options.onSaveNow().then((written: boolean) => {
@@ -704,21 +615,21 @@ export function createGameMenus(app: App, options: GameMenusOptions): GameMenus 
       },
     },
     {
-      id: "pause-settings",
       kind: "action",
+      id: "pause-settings",
       label: () => t("menu.settings"),
       activate: () => {
         settingsScreen.setRows(settingsRows());
-        push(settingsScreen);
+        stack.push(settingsScreen);
       },
     },
     {
-      id: "quit",
       kind: "action",
+      id: "quit",
       label: () => t("menu.quit"),
       activate: () => {
         ask("confirm.quit", () => {
-          closeAll();
+          stack.closeAll();
           options.onQuitToTitle();
           showTitle();
         });
@@ -747,24 +658,18 @@ export function createGameMenus(app: App, options: GameMenusOptions): GameMenus 
    * `Continue` switches from disabled to enabled when the read settles.
    */
   const showTitle = (): void => {
-    closeAll();
-    push(title);
+    stack.closeAll();
+    stack.push(title);
     void refreshSave();
   };
 
   credits.setRows([
-    ...options.creditKeys.map((key: string): MenuRow => ({ id: key, kind: "heading", label: () => t(key) })),
-    { id: "credits-back", kind: "action", label: () => t("menu.back"), activate: pop },
+    ...options.creditKeys.map((key: string): MenuRow => ({ kind: "heading", id: key, label: () => t(key) })),
+    { kind: "action", id: "credits-back", label: () => t("menu.back"), activate: () => void stack.pop() },
   ]);
   title.setRows(titleRows());
   pause.setRows(pauseRows());
   settingsScreen.setRows(settingsRows());
-
-  title.setCancelHandler(null);
-  pause.setCancelHandler(closeAll);
-  settingsScreen.setCancelHandler(pop);
-  bindings.setCancelHandler(pop);
-  credits.setCancelHandler(pop);
 
   const localeChanged = app.i18n.onLocaleChanged.connect(() => {
     title.setRows(titleRows());
@@ -779,82 +684,41 @@ export function createGameMenus(app: App, options: GameMenusOptions): GameMenus 
 
   return {
     get isOpen(): boolean {
-      return state.stack.length > 0;
+      return stack.isOpen;
     },
     get isTitle(): boolean {
-      return state.stack[0]?.id === "title";
+      return stack.bottom?.id === "title";
     },
     get isRebinding(): boolean {
       return state.rebinding;
     },
-    show(screen: "title" | "pause"): void {
-      if (screen === "title") {
+    show(which: "title" | "pause"): void {
+      if (which === "title") {
         showTitle();
         return;
       }
-      closeAll();
-      push(pause);
+      stack.closeAll();
+      stack.push(pause);
     },
-    close: closeAll,
+    close(): void {
+      stack.closeAll();
+    },
     update(unscaledDelta: number): void {
       toasts.advance(unscaledDelta);
-      const top = state.stack.at(-1);
-      if (top === undefined || state.rebinding || confirm.isVisible) {
-        state.heldX = 0;
-        state.heldY = 0;
-        return;
-      }
-      const x = direction(menuMove?.vector.x ?? 0);
-      const y = direction(menuMove?.vector.y ?? 0);
-      if (x !== state.heldX || y !== state.heldY) {
-        state.heldX = x;
-        state.heldY = y;
-        state.repeatIn = REPEAT_DELAY_SECONDS;
-        if (y !== 0) {
-          top.moveSelection(y > 0 ? -1 : 1);
-          play(options.sounds.hover);
-        }
-        if (x !== 0) {
-          top.adjustSelection(x);
-        }
-      } else if (x !== 0 || y !== 0) {
-        state.repeatIn -= unscaledDelta;
-        if (state.repeatIn <= 0) {
-          state.repeatIn = REPEAT_INTERVAL_SECONDS;
-          if (y !== 0) {
-            top.moveSelection(y > 0 ? -1 : 1);
-            play(options.sounds.hover);
-          }
-          if (x !== 0) {
-            top.adjustSelection(x);
-          }
-        }
-      }
-      if (menuSubmit?.wasPressedThisFrame === true) {
-        play(options.sounds.click);
-        top.activateSelection();
-        return;
-      }
-      if (menuBack?.wasPressedThisFrame === true) {
-        play(options.sounds.click);
-        top.cancel();
-      }
+      stack.update(unscaledDelta);
     },
     refresh(): void {
-      for (const screen of state.stack) {
-        screen.refresh();
-      }
+      stack.refresh();
     },
     toast(text: string): void {
       toasts.show(text);
     },
     dispose(): void {
       localeChanged();
-      title.dispose();
-      pause.dispose();
-      settingsScreen.dispose();
-      bindings.dispose();
-      credits.dispose();
+      stack.dispose();
+      for (const menu of [title, pause, settingsScreen, bindings, credits]) {
+        menu.dispose();
+      }
       confirm.dispose();
       toasts.dispose();
     },
