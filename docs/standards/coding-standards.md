@@ -222,12 +222,17 @@ Workflow `ci.yml` on every pull request and on `main`:
 
 1. `install` (pnpm, frozen lockfile, store cache)
 2. `format` · `lint` (oxlint, eslint) · `typecheck` (`tsc --build`)
-3. `test:unit` (Node) · `test:browser` (Chromium + WebGPU flags) · `test:visual` (GPU job; required on `main`, optional label on PRs)
+3. `test:unit` (Node) · `test:browser` (Chromium + WebGPU flags) · `test:visual` (GPU job, Linux; required on `main`, optional label on PRs) ·
+   `test:frame-budget` (the template frame budgets, on `macos-latest`: they are a measurement against ceilings recorded on that
+   machine class, and a shared Linux runner cannot make it — ADR-0009, "Frame budgets need a comparable machine")
 4. `build` (tsdown per package; publint; arethetypeswrong) · `bundle-size` (per template against `benchmarks/baselines.json`)
 5. `api-report` (API Extractor diff) · `docs-harness`
 6. `deps` (dependency-cruiser; no cycles; layering)
 
-`release.yml` on `main`: Changesets version PR → on merge, build, publish with npm Trusted Publishing (OIDC, provenance), tag, GitHub release notes, website docs refresh. `website.yml` deploys `website/` separately.
+`release.yml` on `main`: Changesets version PR → on merge, build, publish with npm Trusted Publishing (OIDC), verify every package
+reached the registry (`pnpm release:verify`), tag, GitHub release notes, website docs refresh. Provenance is off while
+`astrum-forge/ignifx` is private, because npm cannot attest from a private source repository (ADR-0009). `website.yml` deploys
+`website/` separately.
 
 ## 13. Dependencies and supply chain
 

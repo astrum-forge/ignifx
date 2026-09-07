@@ -1,20 +1,22 @@
 # Repository scripts
 
-Node-only tooling for the documentation harness (`docs/architecture/16-docs-harness-and-skill.md`).
+Node-only tooling for the documentation harness (`docs/architecture/16-docs-harness-and-skill.md`)
+and the release.
 Every script is plain TypeScript run by Node ≥ 24 through type stripping — no build step and no
 dependencies beyond the Node standard library — which means **erasable syntax only** and
 **relative imports must carry the `.ts` extension**. `tsconfig.tools.json` type-checks them for
 `pnpm typecheck`; `scripts/tsconfig.json` gives the type-aware linters a real program to use.
 
-| Script            | npm script              | What it does                                                                                                                  |
-| ----------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `docs-schemas.ts` | `pnpm docs:schemas`     | Regenerates `skills/ignifx/references/formats/*.md` and `ignifx.schemas.json` from the component schemas the packages export. |
-| `docs-recipes.ts` | `pnpm docs:recipes`     | Regenerates `skills/ignifx/references/recipes/<name>.md` from `examples/recipes/<name>/main.ts`.                              |
-| `docs-llms.ts`    | `pnpm docs:llms`        | Regenerates `website/public/llms.txt`, the site's index of the skill for agents.                                              |
-| `docs-harness.ts` | `pnpm docs:harness`     | Runs the CI `docs-harness` checks and exits non-zero on the first failure.                                                    |
-| `licenses.ts`     | `pnpm licenses:notices` | Regenerates `THIRD_PARTY_NOTICES.md` from `pnpm licenses list --prod` and the workspace manifests.                            |
+| Script                | npm script              | What it does                                                                                                                     |
+| --------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `docs-schemas.ts`     | `pnpm docs:schemas`     | Regenerates `skills/ignifx/references/formats/*.md` and `ignifx.schemas.json` from the component schemas the packages export.    |
+| `docs-recipes.ts`     | `pnpm docs:recipes`     | Regenerates `skills/ignifx/references/recipes/<name>.md` from `examples/recipes/<name>/main.ts`.                                 |
+| `docs-llms.ts`        | `pnpm docs:llms`        | Regenerates `website/public/llms.txt`, the site's index of the skill for agents.                                                 |
+| `docs-harness.ts`     | `pnpm docs:harness`     | Runs the CI `docs-harness` checks and exits non-zero on the first failure.                                                       |
+| `licenses.ts`         | `pnpm licenses:notices` | Regenerates `THIRD_PARTY_NOTICES.md` from `pnpm licenses list --prod` and the workspace manifests.                               |
+| `verify-published.ts` | `pnpm release:verify`   | Asks registry.npmjs.org whether every publishable package under `packages/` is really there at the version its manifest carries. |
 
-Shared helpers live in `lib/`; they return results instead of exiting, so only the four entry
+Shared helpers live in `lib/`; they return results instead of exiting, so only the entry
 scripts decide the exit code, and all output goes through `lib/log.ts`. Their tests live in
 `scripts/test/` and run in the Vitest `node` project (`vitest.config.ts` lists that glob).
 
@@ -34,6 +36,11 @@ scripts decide the exit code, and all output goes through `lib/log.ts`. Their te
   (`pnpm licenses:check`, which the CI `licenses` job runs).
 - `docs-harness.ts --allow-docs-not-needed` — CI passes this when the pull request carries the
   `docs-not-needed` label; it waives the "a file under `skills/` changed" half of `api-report-gate`.
+- `verify-published.ts --version <v>` — check one version instead of the one in each manifest;
+  `--registry <url>`, `--attempts <n>` (default 10) and `--delay-ms <n>` (default 6000) cover a
+  registry other than npm and the CDN lag that makes a just-published version 404 for a few seconds.
+  `release.yml` runs it with no options straight after `changeset publish`, because a publisher's
+  exit code is not evidence that a release arrived.
 
 ## Third-party notices
 

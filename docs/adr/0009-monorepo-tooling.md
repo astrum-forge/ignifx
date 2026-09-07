@@ -107,3 +107,62 @@ Both are far inside the 3-minute Phase 0 exit criterion. Node 24 had to be downl
 - **Type-aware Oxlint resolves the nearest `tsconfig.json` per file.** Test files that import Node built-ins are otherwise checked against the root solution file and lose `types: ["node"]`, producing spurious `no-unsafe-*` findings. Packages whose tests need Node types carry a non-emitting `test/tsconfig.json` shim (`packages/cli` today), repository scripts carry `scripts/tsconfig.json`, and plain-JS config files (`*.cjs`, `*.mjs`) have the typed `no-unsafe-*` family switched off in `.oxlintrc.json`. Recorded in standards §3.
 - **Docs harness.** Subsystem skills are discovered through each package's `ignifx.skill` manifest entry (`04-extensions.md` §4), not by globbing `packages/*/skills/`, so the umbrella's `prepack` copy of the entry skill is never linted twice; `regeneration-diff` compares only generated paths (`references/api`, `references/formats`, `references/recipes` minus their READMEs, `packages/*/api`). `examples-compile` does not compile the TypeDoc `@example` fragments under `references/api/` (Phase 11 decides whether they are wrapped or exempt).
 - **Result.** `pnpm check` 15 s cold; `pnpm test:browser` 4 Chromium WebGPU tests; `pnpm deps` clean on 65 modules; `pnpm -r publish --dry-run` packs all 14 packages with publint and attw clean; the umbrella tarball ships `skills/ignifx/`. Not verifiable locally: the GitHub Actions run itself (Linux WebGPU flags remain unverified) and the `0.0.1` tag, which needs the first commit.
+
+### Frame budgets need a comparable machine, so they left the Linux job (2026-09-07)
+
+Phase 12 added `tests/visual/tests/frame-time.spec.ts`, which measures each template's engine CPU
+per frame and asserts the median against the ceiling `benchmarks/baselines.json` records. It ran
+inside `test:visual`, and the first push that carried it turned the `test-visual` job from 3m12s
+green into a 15-minute timeout. What the run measured on GitHub's `ubuntu-latest`:
+
+| Template          | Median | Ceiling | Outcome                             |
+| ----------------- | ------ | ------- | ----------------------------------- |
+| `2d-topdown`      | 2.0 ms | 1.0 ms  | failed, 43.9 s                      |
+| `2d-sidescroller` | 0.7 ms | 1.0 ms  | passed, 39.3 s                      |
+| `3d-third-person` | —      | 2.0 ms  | timed out, 240 s (420 frames unmet) |
+| `3d-first-person` | —      | 2.0 ms  | timed out, 240 s (420 frames unmet) |
+
+The same four take 9.2 s, 7.9 s, 59.3 s and 66 s on the recording machine (macOS 25.5 arm64), all
+inside their ceilings. The runner is slow enough that a 3D template cannot present 420 SwiftShader
+frames inside the per-test timeout at all, and slow enough that a 2D median lands at twice its
+ceiling. Neither number says anything about the engine, which is the same objection the spec's own
+header raises against measuring frames per second.
+
+Decision: `playwright.config.ts` declares two projects. `goldens` (`pnpm test:visual`) is the image
+comparison and stays the required check on `ubuntu-latest` — a golden is reproducible on any
+machine, which is the whole point of pinning SwiftShader. `frame-budget`
+(`pnpm test:frame-budget`) is the measurement, and CI runs it in its own job on `macos-latest`, the
+machine class the ceilings were recorded on. `benchmarks/template-frame-time.test.ts` still holds
+the recorded rows to the coding-standards §7 budget in `test-unit`, on every runner, so
+`CONSTITUTION.md` §6.4 keeps a check that no machine can excuse.
+
+The cost is that macOS minutes bill at ten times the Linux rate on a private repository, which is
+why the job carries the four budget tests and nothing else, and runs on `push`, in the merge queue,
+on `workflow_dispatch`, and on a pull request only with the `visual` label.
+
+### npm publishing: Trusted Publishing yes, provenance not while the repository is private (2026-09-07)
+
+`release.yml` went from a dry run to a real publish. What was verified rather than assumed:
+
+- **The scope is claimed and nothing is a first publish.** `@ignifx/*` and `ignifx` are held by the
+  `astrumforge` account, and every one of the 13 packages carries a `0.0.0` placeholder published by
+  hand on 2026-09-06. This matters because npm Trusted Publishing cannot create a package that does
+  not exist yet.
+- **changesets shells out to pnpm.** `@changesets/cli` 3.0.2 picks the publish tool from the
+  workspace (`getPublishTool`), so `pnpm release` reaches `pnpm publish`, not `npm publish`. pnpm's
+  OIDC path takes precedence over any static token from 11.0.7, and the 404-on-OIDC regression of
+  pnpm/pnpm#11513 was fixed in 11.1.3 by treating an unresolved `${NODE_AUTH_TOKEN}` placeholder as
+  empty; this repository is on 11.17.0 and `.github/actions/setup` never asks `setup-node` to write
+  such a placeholder.
+- **Provenance is impossible here.** npm has not generated provenance from a private source
+  repository since 2023-07-25, and Trusted Publishing does not change that — it generates an
+  attestation with no flag when it can, and cannot here. `publishConfig.provenance` is therefore
+  `false` in all 13 manifests, which is a deviation from `CONSTITUTION.md` §9.4. Making
+  `astrum-forge/ignifx` public is what restores it; the flip is then those 13 fields and nothing in
+  the workflow. Each manifest also gained the `repository` field npm matches a Trusted Publisher
+  and an attestation against.
+- **A publish is verified, not trusted.** `changeset publish` ships one package at a time, and a
+  Trusted Publisher configured against the wrong workflow file answers E404 for a _scoped_ package
+  (npm/cli#8976) — the shape `@ignifx/*` has. `scripts/verify-published.ts` (`pnpm release:verify`)
+  asks registry.npmjs.org for every version the working tree carries and fails the release job when
+  one is missing, retrying for the CDN lag that makes a fresh version 404 for a few seconds.
