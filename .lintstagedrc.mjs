@@ -7,6 +7,12 @@
 // - `oxlint --fix` is NOT run here. An autofix at commit time rewrote code that had passed the full
 //   `pnpm check` (merged two `push` calls, replaced a `dirname(fileURLToPath(...))` and left its
 //   imports unused), and the breakage surfaced only on the next run. The hook reports; people fix.
+//
+// And one learned on 2026-09-07: oxfmt formats JSON, oxlint does not lint it. Handing oxlint a
+// staged list that is only `.json` makes it exit 1 with "No files found to lint", which aborted a
+// commit that re-recorded `benchmarks/baselines.json` on its own. Both tools stay in one glob entry
+// so they run in order — separate entries would race oxfmt's writes against oxlint's reads — and
+// oxlint is given the subset it can actually lint.
 
 /** Files a generator writes; they are formatted by their generator, not by the hook. */
 const GENERATED = [
@@ -32,10 +38,21 @@ function quoted(files) {
   return files.map((file) => JSON.stringify(file)).join(" ");
 }
 
+/** Extensions oxlint understands. It formats nothing and it does not lint JSON. */
+const LINTABLE = /\.(?:ts|mts|cts|js|mjs|cjs)$/u;
+
 export default {
   "*.{ts,mts,cts,js,mjs,cjs,json}": (files) => {
     const kept = handEdited(files);
-    return kept.length === 0 ? [] : [`oxfmt ${quoted(kept)}`, `oxlint ${quoted(kept)}`];
+    if (kept.length === 0) {
+      return [];
+    }
+    const lintable = kept.filter((file) => LINTABLE.test(file));
+    const tasks = [`oxfmt ${quoted(kept)}`];
+    if (lintable.length > 0) {
+      tasks.push(`oxlint ${quoted(lintable)}`);
+    }
+    return tasks;
   },
   "*.md": ["prettier --write"],
 };

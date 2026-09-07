@@ -140,6 +140,22 @@ The cost is that macOS minutes bill at ten times the Linux rate on a private rep
 why the job carries the four budget tests and nothing else, and runs on `push`, in the merge queue,
 on `workflow_dispatch`, and on a pull request only with the `visual` label.
 
+Measured on `macos-latest` on 2026-09-07, the first time the job ran:
+
+| Template          | Runner median | Recording machine | Ceiling | Headroom on the runner |
+| ----------------- | ------------- | ----------------- | ------- | ---------------------- |
+| `2d-topdown`      | 0.4 ms        | 0.3 ms            | 1.0 ms  | 2.5x                   |
+| `2d-sidescroller` | 0.4 ms        | 0.3 ms            | 1.0 ms  | 2.5x                   |
+| `3d-third-person` | 1.2 ms        | 0.7 ms            | 2.0 ms  | **1.7x**               |
+| `3d-first-person` | 0.9 ms        | 0.7 ms            | 2.0 ms  | 2.2x                   |
+
+The runner is between 1.3x and 1.7x slower than the machine that recorded the ceilings, which is
+what a shared VM against an Apple Silicon desktop should look like, and every template is inside its
+ceiling. `3d-third-person` has the least room — 1.2 ms against 2.0 ms — so it is the one to watch: a
+noisier-than-usual runner is the likeliest cause of a red `frame-budget` job that no engine change
+explains, and the answer then is to re-measure rather than to raise the ceiling. The job takes about
+7 minutes, most of it the two 3D templates at 2.5 minutes each.
+
 ### npm publishing: Trusted Publishing yes, provenance not while the repository is private (2026-09-07)
 
 `release.yml` went from a dry run to a real publish. What was verified rather than assumed:
