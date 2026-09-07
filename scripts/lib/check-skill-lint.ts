@@ -14,6 +14,7 @@ import { extractRelativeLinks, extractSections, sectionAt, stripFencedBlocks } f
 import { collectSkillExamples } from "./skill-examples.ts";
 import { displayPath, listSkillMarkdown } from "./skill-files.ts";
 import { checkDeprecatedSection, checkSectionOrder } from "./skill-template.ts";
+import { acceptedVersions } from "./skill-version.ts";
 import type { CheckResult, HarnessContext } from "./check-result.ts";
 import type { SkillRoot } from "./skill-files.ts";
 
@@ -28,16 +29,6 @@ const GENERATED_SEGMENT = `${path.sep}references${path.sep}api${path.sep}`;
 
 const SKILL_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
 const LEADING_PRONOUN = /^(?:i|we|you|your|my|our)\b/iu;
-
-/**
- * Lists the values `metadata.ignifx-version` may take.
- *
- * @param releaseVersion - Version of `@ignifx/core`.
- * @returns The accepted values.
- */
-function acceptedVersions(releaseVersion: string): readonly string[] {
-  return releaseVersion === "0.0.0" ? [releaseVersion, "0.0.0-unreleased"] : [releaseVersion];
-}
 
 /**
  * Validates one skill's frontmatter and size.

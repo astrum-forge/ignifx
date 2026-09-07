@@ -7,14 +7,15 @@ dependencies beyond the Node standard library — which means **erasable syntax 
 **relative imports must carry the `.ts` extension**. `tsconfig.tools.json` type-checks them for
 `pnpm typecheck`; `scripts/tsconfig.json` gives the type-aware linters a real program to use.
 
-| Script                | npm script              | What it does                                                                                                                     |
-| --------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `docs-schemas.ts`     | `pnpm docs:schemas`     | Regenerates `skills/ignifx/references/formats/*.md` and `ignifx.schemas.json` from the component schemas the packages export.    |
-| `docs-recipes.ts`     | `pnpm docs:recipes`     | Regenerates `skills/ignifx/references/recipes/<name>.md` from `examples/recipes/<name>/main.ts`.                                 |
-| `docs-llms.ts`        | `pnpm docs:llms`        | Regenerates `website/public/llms.txt`, the site's index of the skill for agents.                                                 |
-| `docs-harness.ts`     | `pnpm docs:harness`     | Runs the CI `docs-harness` checks and exits non-zero on the first failure.                                                       |
-| `licenses.ts`         | `pnpm licenses:notices` | Regenerates `THIRD_PARTY_NOTICES.md` from `pnpm licenses list --prod` and the workspace manifests.                               |
-| `verify-published.ts` | `pnpm release:verify`   | Asks registry.npmjs.org whether every publishable package under `packages/` is really there at the version its manifest carries. |
+| Script                   | npm script              | What it does                                                                                                                                             |
+| ------------------------ | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `docs-schemas.ts`        | `pnpm docs:schemas`     | Regenerates `skills/ignifx/references/formats/*.md` and `ignifx.schemas.json` from the component schemas the packages export.                            |
+| `docs-recipes.ts`        | `pnpm docs:recipes`     | Regenerates `skills/ignifx/references/recipes/<name>.md` from `examples/recipes/<name>/main.ts`.                                                         |
+| `docs-llms.ts`           | `pnpm docs:llms`        | Regenerates `website/public/llms.txt`, the site's index of the skill for agents.                                                                         |
+| `docs-harness.ts`        | `pnpm docs:harness`     | Runs the CI `docs-harness` checks and exits non-zero on the first failure.                                                                               |
+| `licenses.ts`            | `pnpm licenses:notices` | Regenerates `THIRD_PARTY_NOTICES.md` from `pnpm licenses list --prod` and the workspace manifests.                                                       |
+| `verify-published.ts`    | `pnpm release:verify`   | Asks registry.npmjs.org whether every publishable package under `packages/` is really there at the version its manifest carries.                         |
+| `sync-skill-versions.ts` | `pnpm skills:version`   | Writes `@ignifx/core`'s version into every skill's `metadata.ignifx-version`. Runs inside `pnpm version-packages`, which is the Changesets version step. |
 
 Shared helpers live in `lib/`; they return results instead of exiting, so only the entry
 scripts decide the exit code, and all output goes through `lib/log.ts`. Their tests live in
@@ -41,6 +42,10 @@ scripts decide the exit code, and all output goes through `lib/log.ts`. Their te
   registry other than npm and the CDN lag that makes a just-published version 404 for a few seconds.
   `release.yml` runs it with no options straight after `changeset publish`, because a publisher's
   exit code is not evidence that a release arrived.
+- `sync-skill-versions.ts --check` — write nothing and exit non-zero when a skill's declared version
+  is not one `check-skill-lint.ts` would accept; `--root <dir>` as above. The accepted set lives in
+  `lib/skill-version.ts`, imported by both the linter that enforces it and the writer that repairs
+  it, so the two cannot drift.
 
 ## Third-party notices
 
