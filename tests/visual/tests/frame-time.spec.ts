@@ -32,6 +32,14 @@ import type { Page } from "playwright/test";
  * spread is the clock. The ceilings in `baselines.json` are therefore set from the SwiftShader
  * measurement itself with about 2.5x of headroom, and each is well inside §7 with no multiplier.
  *
+ * ## Where this runs
+ *
+ * As the Playwright `frame-budget` project, on its own: `pnpm test:frame-budget` locally, and the
+ * `frame-budget` CI job on `macos-latest`. A ceiling is only a ceiling against a machine comparable
+ * to the one that recorded it, and GitHub's `ubuntu-latest` is not — it measured 2.0 ms against a
+ * 1.0 ms ceiling for `2d-topdown` and could not finish either 3D template's 420 frames inside the
+ * timeout below (ADR-0009, "Frame budgets need a comparable machine").
+ *
  * ## Determinism
  *
  * `?bench=1` builds the full scene, skips the title screen and leaves the DOM overlay off. No input

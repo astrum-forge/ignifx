@@ -8,6 +8,11 @@
   "homepage": "https://ignifx.com",
   "license": "Apache-2.0",
   "author": "Astrum Forge Studios",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/astrum-forge/ignifx.git",
+    "directory": "packages/ignifx"
+  },
   "files": [
     "dist",
     "skills"
@@ -23,7 +28,7 @@
   },
   "publishConfig": {
     "access": "public",
-    "provenance": true
+    "provenance": false
   },
   "scripts": {
     "build": "tsdown",

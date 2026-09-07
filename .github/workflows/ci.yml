@@ -12,6 +12,9 @@ on:
   # Required checks have to report in the merge queue too, and merge_group is a separate event
   # from pull_request — without this the queue would wait forever on checks that never run.
   merge_group:
+  # The two GPU jobs below run on `push` and in the queue, not on every pull request. This is how
+  # they are run on demand — on a branch, before opening the pull request that changes them.
+  workflow_dispatch:
 
 # One run per ref. github.head_ref is only set for pull_request, hence the fallback; for
 # merge_group, github.ref is unique per merge group, so queued runs never cancel each other.
@@ -129,14 +132,25 @@ jobs:
     name: test-visual
     # Standards §12 step 3: required on main, opt-in on pull requests. `push` covers main (the `on:`
     # block has no other push branch) and merge_group covers the queue, so the required check still
-    # reports there; a pull request opts in with the `visual` label. Goldens are one image per scene
+    # reports there; a pull request opts in with the `visual` label. The label has to be on the pull
+    # request when the run starts — `pull_request` fires on `opened`/`synchronize` and not on
+    # `labeled`, so labelling an open pull request takes effect on its next push. Goldens are one image per scene
     # with no platform segment, so this job compares a Linux SwiftShader render against a macOS one
     # (tests/visual/README.md) — the per-scene maxDiffPixelRatio is what absorbs the difference.
+    #
+    # This is the `goldens` project only. The frame budgets are the `frame-budget` job below: they
+    # are a measurement rather than an image comparison, and this runner cannot make it
+    # (tests/visual/playwright.config.ts, "Two projects").
     if: >-
       github.event_name == 'push' || github.event_name == 'merge_group' ||
+      github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'visual'))
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # 25, not 15: a failing Playwright test costs its whole timeout, and on 2026-09-07 twelve of them
+    # ran the job past 15 minutes, so it was *cancelled* — which prints no failure summary and skips
+    # the `if: failure()` upload below. A red job that says why is worth more than a fast one that
+    # does not. The suite itself is about four minutes when it passes.
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
@@ -158,6 +172,53 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: visual-diffs
+          path: |
+            tests/visual/test-results/**
+            tests/visual/playwright-report/**
+          if-no-files-found: warn
+          retention-days: 14
+
+  frame-budget:
+    name: frame-budget
+    # CONSTITUTION.md §6.4: budgets are tests. This is the live half of the template frame-time gate
+    # — `benchmarks/template-frame-time.test.ts` asserts the recorded rows in `test-unit`, and this
+    # measures the running templates against them.
+    #
+    # macOS, and not the ubuntu runner every other job uses, because the ceilings in
+    # `benchmarks/baselines.json` were recorded on macOS arm64 with SwiftShader and a budget is only
+    # a budget against a comparable machine. Measured on GitHub's ubuntu-latest on 2026-09-06:
+    # `2d-topdown` came out at a 2.0 ms median against its 1.0 ms ceiling, and neither 3D template
+    # finished its 420 frames inside the 240 s per-test timeout. That job was measuring the runner.
+    # The trade-off is that macOS minutes bill at ten times the Linux rate on a private repository,
+    # which is why this job carries only the frame-budget project and runs on `push` and in the
+    # queue rather than on every pull request. The `visual` label opts a pull request in, and has
+    # to be there before the run starts — see the note on test-visual.
+    if: >-
+      github.event_name == 'push' || github.event_name == 'merge_group' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'visual'))
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+
+      # The full Chromium build, not chrome-headless-shell — same reason as test-visual. No
+      # `--with-deps`: that installs Linux system libraries and has nothing to do on macOS.
+      - name: Install Chromium
+        run: pnpm exec playwright install chromium
+
+      - run: pnpm build
+
+      # Prints one `median / worst / ceiling` line per template before it asserts, so a re-record is
+      # a copy of two numbers out of this log rather than a second run.
+      - run: pnpm test:frame-budget
+
+      - name: Upload the failing runs
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: frame-budget-report
           path: |
             tests/visual/test-results/**
             tests/visual/playwright-report/**
@@ -268,7 +329,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
+      # `fetch-depth: 0`, not the default 1: on a pull request this job runs `api-report-gate` and
+      # `freshness`, which diff against the base commit, and a shallow checkout does not contain it
+      # — both gates reported "could not diff against <sha>" on the first pull request that ever
+      # reached this job (2026-09-07).
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - uses: ./.github/actions/setup
       # CONSTITUTION.md §5.2/§5.5: examples compile and the skill matches the current API. On a
       # pull request the harness also runs its two diff-based gates (api-report-gate, freshness)

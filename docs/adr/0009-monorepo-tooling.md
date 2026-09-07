@@ -107,3 +107,124 @@ Both are far inside the 3-minute Phase 0 exit criterion. Node 24 had to be downl
 - **Type-aware Oxlint resolves the nearest `tsconfig.json` per file.** Test files that import Node built-ins are otherwise checked against the root solution file and lose `types: ["node"]`, producing spurious `no-unsafe-*` findings. Packages whose tests need Node types carry a non-emitting `test/tsconfig.json` shim (`packages/cli` today), repository scripts carry `scripts/tsconfig.json`, and plain-JS config files (`*.cjs`, `*.mjs`) have the typed `no-unsafe-*` family switched off in `.oxlintrc.json`. Recorded in standards §3.
 - **Docs harness.** Subsystem skills are discovered through each package's `ignifx.skill` manifest entry (`04-extensions.md` §4), not by globbing `packages/*/skills/`, so the umbrella's `prepack` copy of the entry skill is never linted twice; `regeneration-diff` compares only generated paths (`references/api`, `references/formats`, `references/recipes` minus their READMEs, `packages/*/api`). `examples-compile` does not compile the TypeDoc `@example` fragments under `references/api/` (Phase 11 decides whether they are wrapped or exempt).
 - **Result.** `pnpm check` 15 s cold; `pnpm test:browser` 4 Chromium WebGPU tests; `pnpm deps` clean on 65 modules; `pnpm -r publish --dry-run` packs all 14 packages with publint and attw clean; the umbrella tarball ships `skills/ignifx/`. Not verifiable locally: the GitHub Actions run itself (Linux WebGPU flags remain unverified) and the `0.0.1` tag, which needs the first commit.
+
+### Frame budgets need a comparable machine, so they left the Linux job (2026-09-07)
+
+Phase 12 added `tests/visual/tests/frame-time.spec.ts`, which measures each template's engine CPU
+per frame and asserts the median against the ceiling `benchmarks/baselines.json` records. It ran
+inside `test:visual`, and the first push that carried it turned the `test-visual` job from 3m12s
+green into a 15-minute timeout. What the run measured on GitHub's `ubuntu-latest`:
+
+| Template          | Median | Ceiling | Outcome                             |
+| ----------------- | ------ | ------- | ----------------------------------- |
+| `2d-topdown`      | 2.0 ms | 1.0 ms  | failed, 43.9 s                      |
+| `2d-sidescroller` | 0.7 ms | 1.0 ms  | passed, 39.3 s                      |
+| `3d-third-person` | —      | 2.0 ms  | timed out, 240 s (420 frames unmet) |
+| `3d-first-person` | —      | 2.0 ms  | timed out, 240 s (420 frames unmet) |
+
+The same four take 9.2 s, 7.9 s, 59.3 s and 66 s on the recording machine (macOS 25.5 arm64), all
+inside their ceilings. The runner is slow enough that a 3D template cannot present 420 SwiftShader
+frames inside the per-test timeout at all, and slow enough that a 2D median lands at twice its
+ceiling. Neither number says anything about the engine, which is the same objection the spec's own
+header raises against measuring frames per second.
+
+Decision: `playwright.config.ts` declares two projects. `goldens` (`pnpm test:visual`) is the image
+comparison and stays the required check on `ubuntu-latest` — a golden is reproducible on any
+machine, which is the whole point of pinning SwiftShader. `frame-budget`
+(`pnpm test:frame-budget`) is the measurement, and CI runs it in its own job on `macos-latest`, the
+machine class the ceilings were recorded on. `benchmarks/template-frame-time.test.ts` still holds
+the recorded rows to the coding-standards §7 budget in `test-unit`, on every runner, so
+`CONSTITUTION.md` §6.4 keeps a check that no machine can excuse.
+
+The cost is that macOS minutes bill at ten times the Linux rate on a private repository, which is
+why the job carries the four budget tests and nothing else, and runs on `push`, in the merge queue,
+on `workflow_dispatch`, and on a pull request only with the `visual` label.
+
+Measured on `macos-latest` on 2026-09-07, the first time the job ran:
+
+| Template          | Runner median | Recording machine | Ceiling | Headroom on the runner |
+| ----------------- | ------------- | ----------------- | ------- | ---------------------- |
+| `2d-topdown`      | 0.4 ms        | 0.3 ms            | 1.0 ms  | 2.5x                   |
+| `2d-sidescroller` | 0.4 ms        | 0.3 ms            | 1.0 ms  | 2.5x                   |
+| `3d-third-person` | 1.2 ms        | 0.7 ms            | 2.0 ms  | **1.7x**               |
+| `3d-first-person` | 0.9 ms        | 0.7 ms            | 2.0 ms  | 2.2x                   |
+
+The runner is between 1.3x and 1.7x slower than the machine that recorded the ceilings, which is
+what a shared VM against an Apple Silicon desktop should look like, and every template is inside its
+ceiling. `3d-third-person` has the least room — 1.2 ms against 2.0 ms — so it is the one to watch: a
+noisier-than-usual runner is the likeliest cause of a red `frame-budget` job that no engine change
+explains, and the answer then is to re-measure rather than to raise the ceiling. The job takes about
+7 minutes, most of it the two 3D templates at 2.5 minutes each.
+
+### npm publishing: Trusted Publishing yes, provenance not while the repository is private (2026-09-07)
+
+`release.yml` went from a dry run to a real publish. What was verified rather than assumed:
+
+- **The scope is claimed and nothing is a first publish.** `@ignifx/*` and `ignifx` are held by the
+  `astrumforge` account, and every one of the 13 packages carries a `0.0.0` placeholder published by
+  hand on 2026-09-06. This matters because npm Trusted Publishing cannot create a package that does
+  not exist yet.
+- **changesets shells out to pnpm.** `@changesets/cli` 3.0.2 picks the publish tool from the
+  workspace (`getPublishTool`), so `pnpm release` reaches `pnpm publish`, not `npm publish`. pnpm's
+  OIDC path takes precedence over any static token from 11.0.7, and the 404-on-OIDC regression of
+  pnpm/pnpm#11513 was fixed in 11.1.3 by treating an unresolved `${NODE_AUTH_TOKEN}` placeholder as
+  empty; this repository is on 11.17.0 and `.github/actions/setup` never asks `setup-node` to write
+  such a placeholder.
+- **Provenance is impossible here.** npm has not generated provenance from a private source
+  repository since 2023-07-25, and Trusted Publishing does not change that — it generates an
+  attestation with no flag when it can, and cannot here. `publishConfig.provenance` is therefore
+  `false` in all 13 manifests, which is a deviation from `CONSTITUTION.md` §9.4. Making
+  `astrum-forge/ignifx` public is what restores it; the flip is then those 13 fields and nothing in
+  the workflow. Each manifest also gained the `repository` field npm matches a Trusted Publisher
+  and an attestation against.
+- **A publish is verified, not trusted.** `changeset publish` ships one package at a time, and a
+  Trusted Publisher configured against the wrong workflow file answers E404 for a _scoped_ package
+  (npm/cli#8976) — the shape `@ignifx/*` has. `scripts/verify-published.ts` (`pnpm release:verify`)
+  asks registry.npmjs.org for every version the working tree carries and fails the release job when
+  one is missing, retrying for the CDN lag that makes a fresh version 404 for a few seconds.
+
+### A wall-clock key hold is a frame-rate assumption (2026-09-07)
+
+The first pull request whose `test-visual` job reached the goldens found twelve failures, all in
+`tests/visual/tests/templates.spec.ts`, none of them an image comparison. The four scene goldens and
+the four template goldens passed in 2 to 16 seconds each; what failed was the front end.
+
+| Test                                                     | 2d-topdown      | 2d-sidescroller | 3d-third-person |
+| -------------------------------------------------------- | --------------- | --------------- | --------------- |
+| boots into a title screen                                | pass 5.6 s      | pass 6.3 s      | pass 11.1 s     |
+| the rebinding page lists a binding per control scheme    | pass 7.2 s      | pass 7.4 s      | **fail 43.4 s** |
+| Escape opens the pause menu and the settings screen      | **fail 36.7 s** | **fail 36.4 s** | **fail 41.4 s** |
+| an interactive rebind takes effect and survives a reload | **fail 38.1 s** | **fail 38.0 s** | **fail 44.4 s** |
+| a saved game is offered as Continue after a reload       | **fail 2.0 m**  | **fail 2.0 m**  | **fail 2.0 m**  |
+
+The pattern names the cause. The one test with no key press passes everywhere; the one whose only
+key press is its last step passes on the two 2D templates and fails on the 3D one; the three that
+press a key mid-test fail on all four. The helper they share was
+
+```ts
+await page.keyboard.down(key);
+await page.waitForTimeout(200); // KEY_HOLD_MS
+await page.keyboard.up(key);
+```
+
+and its own comment recorded why a hold is needed at all: `@ignifx/input` drains its queue once per
+`PreUpdate`, so a press and release inside one frame is never `wasPressedThisFrame`. The 200 ms was
+measured on macOS on 2026-09-06. It is a frame-rate assumption in disguise: the `frame-budget` job
+measured this same runner presenting a 3D template at **under two frames a second**, where 200 ms is
+less than half a frame, so the release landed in the same tick as the press and the hold was
+swallowed. Every failure then cost its whole `expect` (30 s) or test (120 s) timeout — about ten
+minutes of waiting, which ran the job past its 15-minute cap and got it **cancelled** rather than
+failed, printing no failure summary and skipping the `if: failure()` artifact upload.
+
+Decision: holds are counted in **frames**. `waitForFrames(page, n)` awaits `n`
+`requestAnimationFrame` callbacks in the page, so it measures the thing the input queue is actually
+drained on and costs whatever that machine's frames cost. `KEY_HOLD_MS` becomes `KEY_HOLD_FRAMES`
+(4), and the `waitForTimeout(250)` in the rebinding test goes the same way. Coding standards §10
+already said no test may sleep on wall-clock time; this is what that rule is for, and Linux is what
+made the cost visible.
+
+Two smaller fixes from the same run: the `docs-harness` job checks out with `fetch-depth: 0`,
+because `api-report-gate` and `freshness` diff against the base commit and a shallow checkout does
+not contain it (both reported "could not diff against <sha>" — that job had never run on a pull
+request before); and `test-visual`'s timeout goes to 25 minutes, so a failing run fails with a
+report instead of being cancelled without one.

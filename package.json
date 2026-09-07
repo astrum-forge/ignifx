@@ -16,6 +16,7 @@
     "test": "vitest run --project node --coverage",
     "test:browser": "vitest run --project browser",
     "test:visual": "pnpm --filter ignifx-visual-tests run test:visual",
+    "test:frame-budget": "pnpm --filter ignifx-visual-tests run test:frame-budget",
     "bench": "vitest bench --run --reporter=verbose benchmarks",
     "bundle-size": "vitest run --project node benchmarks/bundle-size.test.ts",
     "assets:2d": "node tests/fixtures/assets/2d-templates/make-template-art.mjs",
@@ -36,6 +37,7 @@
     "deps": "depcruise --config .dependency-cruiser.cjs packages",
     "changeset": "changeset",
     "release": "pnpm build && pnpm exec changeset publish",
+    "release:verify": "node scripts/verify-published.ts",
     "check": "pnpm run build && pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run api-report && pnpm run docs:harness"
   },
   "devDependencies": {

@@ -36,6 +36,20 @@ import type { PlaywrightTestConfig } from "playwright/test";
  * Every scene is opened with `?static=1`, which stops `time.timeScale` and pins the animated
  * transforms, and the page resolves `window.__ignifxReady` only after it has presented a settled
  * frame. Nothing here sleeps on wall-clock time (standards §10).
+ *
+ * ## Two projects, because they need different machines
+ *
+ * `goldens` is everything here except `frame-time.spec.ts`: image comparisons, which SwiftShader
+ * makes reproducible anywhere. It is `pnpm test:visual`, and it is the required CI check.
+ *
+ * `frame-budget` is `frame-time.spec.ts` alone: a *measurement* of engine CPU per frame against the
+ * ceilings in `benchmarks/baselines.json`. Those ceilings were recorded on one machine, and a
+ * shared CI runner is not it — GitHub's `ubuntu-latest` measured a 2.0 ms median for `2d-topdown`
+ * against a 1.0 ms ceiling on 2026-09-06, and could not finish either 3D template's 420 frames
+ * inside the 240 s per-test timeout, where the recording machine takes 60 to 70 s. Enforcing the
+ * ceiling there measures the runner, which is the same mistake the spec's own header rejects for
+ * frames per second. It is `pnpm test:frame-budget`, it runs on macOS in CI, and it is what a
+ * re-record runs (`README.md`).
  */
 
 /** One `webServer` entry. Playwright does not export `TestConfigWebServer` by name. */
@@ -106,6 +120,12 @@ const config: PlaywrightTestConfig = defineConfig({
   expect: { timeout: 30_000 },
   // No `{platform}` — see the module comment.
   snapshotPathTemplate: "{testDir}/__screenshots__/{arg}{ext}",
+  // Two projects, run separately and on different machines — see the module comment. Neither adds
+  // a `use` of its own: the per-suite viewports are `test.use` calls inside the two spec files.
+  projects: [
+    { name: "goldens", testIgnore: /frame-time\.spec\.ts$/u },
+    { name: "frame-budget", testMatch: /frame-time\.spec\.ts$/u },
+  ],
   use: {
     ...devices["Desktop Chrome"],
     channel: "chromium",
