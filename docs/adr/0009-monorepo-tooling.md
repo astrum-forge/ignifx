@@ -166,3 +166,49 @@ on `workflow_dispatch`, and on a pull request only with the `visual` label.
   (npm/cli#8976) — the shape `@ignifx/*` has. `scripts/verify-published.ts` (`pnpm release:verify`)
   asks registry.npmjs.org for every version the working tree carries and fails the release job when
   one is missing, retrying for the CDN lag that makes a fresh version 404 for a few seconds.
+
+### A wall-clock key hold is a frame-rate assumption (2026-09-07)
+
+The first pull request whose `test-visual` job reached the goldens found twelve failures, all in
+`tests/visual/tests/templates.spec.ts`, none of them an image comparison. The four scene goldens and
+the four template goldens passed in 2 to 16 seconds each; what failed was the front end.
+
+| Test                                                     | 2d-topdown      | 2d-sidescroller | 3d-third-person |
+| -------------------------------------------------------- | --------------- | --------------- | --------------- |
+| boots into a title screen                                | pass 5.6 s      | pass 6.3 s      | pass 11.1 s     |
+| the rebinding page lists a binding per control scheme    | pass 7.2 s      | pass 7.4 s      | **fail 43.4 s** |
+| Escape opens the pause menu and the settings screen      | **fail 36.7 s** | **fail 36.4 s** | **fail 41.4 s** |
+| an interactive rebind takes effect and survives a reload | **fail 38.1 s** | **fail 38.0 s** | **fail 44.4 s** |
+| a saved game is offered as Continue after a reload       | **fail 2.0 m**  | **fail 2.0 m**  | **fail 2.0 m**  |
+
+The pattern names the cause. The one test with no key press passes everywhere; the one whose only
+key press is its last step passes on the two 2D templates and fails on the 3D one; the three that
+press a key mid-test fail on all four. The helper they share was
+
+```ts
+await page.keyboard.down(key);
+await page.waitForTimeout(200); // KEY_HOLD_MS
+await page.keyboard.up(key);
+```
+
+and its own comment recorded why a hold is needed at all: `@ignifx/input` drains its queue once per
+`PreUpdate`, so a press and release inside one frame is never `wasPressedThisFrame`. The 200 ms was
+measured on macOS on 2026-09-06. It is a frame-rate assumption in disguise: the `frame-budget` job
+measured this same runner presenting a 3D template at **under two frames a second**, where 200 ms is
+less than half a frame, so the release landed in the same tick as the press and the hold was
+swallowed. Every failure then cost its whole `expect` (30 s) or test (120 s) timeout — about ten
+minutes of waiting, which ran the job past its 15-minute cap and got it **cancelled** rather than
+failed, printing no failure summary and skipping the `if: failure()` artifact upload.
+
+Decision: holds are counted in **frames**. `waitForFrames(page, n)` awaits `n`
+`requestAnimationFrame` callbacks in the page, so it measures the thing the input queue is actually
+drained on and costs whatever that machine's frames cost. `KEY_HOLD_MS` becomes `KEY_HOLD_FRAMES`
+(4), and the `waitForTimeout(250)` in the rebinding test goes the same way. Coding standards §10
+already said no test may sleep on wall-clock time; this is what that rule is for, and Linux is what
+made the cost visible.
+
+Two smaller fixes from the same run: the `docs-harness` job checks out with `fetch-depth: 0`,
+because `api-report-gate` and `freshness` diff against the base commit and a shallow checkout does
+not contain it (both reported "could not diff against <sha>" — that job had never run on a pull
+request before); and `test-visual`'s timeout goes to 25 minutes, so a failing run fails with a
+report instead of being cancelled without one.

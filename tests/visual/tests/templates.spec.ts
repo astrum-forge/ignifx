@@ -66,16 +66,23 @@ declare global {
 }
 
 /**
- * How long `Escape` is held, in milliseconds.
+ * How many presented frames a key is held for.
  *
  * `page.keyboard.press()` sends `keydown` and `keyup` with no delay between them, and both land in
  * the same frame: `@ignifx/input` applies its queue once per `PreUpdate`, so the control goes down
  * and back up before any script runs and `wasPressedThisFrame` is never true. Measured on
- * 2026-09-06 — `press()` does not open the pause menu, `down()` + 200 ms + `up()` does. A human
- * cannot press a key for zero milliseconds, so this is a property of the test tool rather than a
- * defect, but it is the reason these tests do not use `press`.
+ * 2026-09-06 — `press()` does not open the pause menu, a hold across frames does. A human cannot
+ * press a key for zero milliseconds, so this is a property of the test tool rather than a defect,
+ * but it is the reason these tests do not use `press`.
+ *
+ * The hold is counted in **frames**, not milliseconds, because a frame is the unit the input queue
+ * is drained on and its wall-clock length is a property of the machine. The original 200 ms was
+ * measured on macOS; on GitHub's `ubuntu-latest` SwiftShader presents a 3D template at under two
+ * frames a second, so 200 ms is less than half a frame and every key hold was swallowed — twelve
+ * front-end tests failed there on 2026-09-07 for that reason alone, each burning its full timeout.
+ * Counting frames is also what coding standards §10 asks for: no test sleeps on wall-clock time.
  */
-const KEY_HOLD_MS = 200;
+const KEY_HOLD_FRAMES = 4;
 
 const TOPDOWN = "http://127.0.0.1:4175";
 const SIDESCROLLER = "http://127.0.0.1:4176";
@@ -110,6 +117,27 @@ async function openScene(page: Page, url: string): Promise<string[]> {
 }
 
 /**
+ * Waits for the page to present frames. The engine drives its loop from `requestAnimationFrame`, so
+ * a callback that runs after N of them has seen N engine ticks, however long the machine took over
+ * them — which is what makes this safe on a software rasteriser and on a laptop alike.
+ *
+ * @param page - The page under test.
+ * @param frames - How many presented frames to wait for.
+ */
+async function waitForFrames(page: Page, frames: number): Promise<void> {
+  await page.evaluate(async (count: number) => {
+    for (let index = 0; index < count; index += 1) {
+      // oxlint-disable-next-line eslint/no-await-in-loop -- frames are sequential by definition; awaiting them together would resolve on one frame N times over, which is the bug this helper exists to avoid.
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => {
+          resolve();
+        });
+      });
+    }
+  }, frames);
+}
+
+/**
  * Presses and holds a key long enough for the engine to see the edge.
  *
  * @param page - The page under test.
@@ -117,9 +145,9 @@ async function openScene(page: Page, url: string): Promise<string[]> {
  */
 async function holdKey(page: Page, key: string): Promise<void> {
   await page.keyboard.down(key);
-  await page.waitForTimeout(KEY_HOLD_MS);
+  await waitForFrames(page, KEY_HOLD_FRAMES);
   await page.keyboard.up(key);
-  await page.waitForTimeout(KEY_HOLD_MS);
+  await waitForFrames(page, KEY_HOLD_FRAMES);
 }
 
 test.describe("template scenes", () => {
@@ -248,8 +276,9 @@ test.describe("template front end", () => {
       await row.click();
       // The click's own mouse release must land before the rebind starts listening, or the rebind
       // catches `<Mouse>/leftButton` instead of the key. `performInteractiveRebind` settles from a
-      // `PreUpdate`, so one frame is enough; a quarter of a second is generous.
-      await page.waitForTimeout(250);
+      // `PreUpdate`, so one frame is enough; four is generous. Frames rather than milliseconds for
+      // the same reason as `KEY_HOLD_FRAMES`.
+      await waitForFrames(page, KEY_HOLD_FRAMES);
       await expect(row.locator(".ignifx-ui-menu-row-value")).not.toHaveText(before);
       await holdKey(page, "j");
       await expect(row.locator(".ignifx-ui-menu-row-value")).toHaveText(/j$/iu);
