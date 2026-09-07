@@ -1,6 +1,6 @@
 {
   "name": "@ignifx/physics",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "ignifx 3D physics on Havok through Babylon Lite: rigidbodies, colliders, triggers, character controller, queries.",
   "keywords": [
     "ignifx",

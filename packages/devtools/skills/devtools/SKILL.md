@@ -3,7 +3,7 @@ name: devtools
 description: Inspects and debugs a running ignifx game with @ignifx/devtools: the stats and diagnostics overlay, the scene tree browser, the schema-driven component inspector, the physics debug view, the console, and the script hot-reload reports. Use when diagnosing frame time, entity counts, component values, asset refcounts, or physics behaviour in an ignifx project, or when the user mentions @ignifx/devtools, the stats overlay, the inspector, or app.devtools.
 license: Apache-2.0
 metadata:
-  ignifx-version: "0.0.0-unreleased"
+  ignifx-version: "0.1.0"
 ---
 
 # @ignifx/devtools
