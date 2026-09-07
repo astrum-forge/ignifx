@@ -132,7 +132,9 @@ jobs:
     name: test-visual
     # Standards §12 step 3: required on main, opt-in on pull requests. `push` covers main (the `on:`
     # block has no other push branch) and merge_group covers the queue, so the required check still
-    # reports there; a pull request opts in with the `visual` label. Goldens are one image per scene
+    # reports there; a pull request opts in with the `visual` label. The label has to be on the pull
+    # request when the run starts — `pull_request` fires on `opened`/`synchronize` and not on
+    # `labeled`, so labelling an open pull request takes effect on its next push. Goldens are one image per scene
     # with no platform segment, so this job compares a Linux SwiftShader render against a macOS one
     # (tests/visual/README.md) — the per-scene maxDiffPixelRatio is what absorbs the difference.
     #
@@ -185,7 +187,8 @@ jobs:
     # finished its 420 frames inside the 240 s per-test timeout. That job was measuring the runner.
     # The trade-off is that macOS minutes bill at ten times the Linux rate on a private repository,
     # which is why this job carries only the frame-budget project and runs on `push` and in the
-    # queue rather than on every pull request.
+    # queue rather than on every pull request. The `visual` label opts a pull request in, and has
+    # to be there before the run starts — see the note on test-visual.
     if: >-
       github.event_name == 'push' || github.event_name == 'merge_group' ||
       github.event_name == 'workflow_dispatch' ||
