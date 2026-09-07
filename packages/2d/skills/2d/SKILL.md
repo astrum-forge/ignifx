@@ -3,7 +3,7 @@ name: 2d
 description: Builds 2D games in ignifx with @ignifx/2d: Camera2D, SpriteRenderer, SpriteAnimator, texture atlases, Tilemap rendering and import, sorting layers and Y-sort, pixel-perfect cameras, parallax layers, and 2D picking. Use when adding or editing sprites, sprite animation, tilemaps, atlases, sorting layers, or a 2D camera in an ignifx project, or when the user mentions @ignifx/2d, Camera2D, SpriteRenderer, or Tilemap.
 license: Apache-2.0
 metadata:
-  ignifx-version: "0.0.0-unreleased"
+  ignifx-version: "0.1.0"
 ---
 
 # @ignifx/2d

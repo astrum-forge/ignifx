@@ -1,6 +1,6 @@
 {
   "name": "@ignifx/vite-plugin",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "ignifx Vite plugin: asset manifest generation, scene/prefab JSON validation, WASM/asset handling, HMR hooks.",
   "keywords": [
     "ignifx"

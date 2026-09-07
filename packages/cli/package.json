@@ -1,6 +1,6 @@
 {
   "name": "@ignifx/cli",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "create-ignifx: scaffolds an ignifx project by copying a template directory.",
   "keywords": [
     "cli",

@@ -1,6 +1,6 @@
 {
   "name": "@ignifx/ui",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "ignifx UI: DOM overlay host, focus routing, world and HUD text.",
   "keywords": [
     "ignifx",
