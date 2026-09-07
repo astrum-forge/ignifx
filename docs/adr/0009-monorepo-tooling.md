@@ -228,3 +228,31 @@ because `api-report-gate` and `freshness` diff against the base commit and a sha
 not contain it (both reported "could not diff against <sha>" — that job had never run on a pull
 request before); and `test-visual`'s timeout goes to 25 minutes, so a failing run fails with a
 report instead of being cancelled without one.
+
+### A version bump has to reach the skills too (2026-09-07)
+
+The first "Version Packages" pull request failed `docs-harness` with two checks red, and both had
+the same cause. `changeset version` bumps `packages/*/package.json` and writes changelogs; it knows
+nothing about anything else in the repository that names a version, and two things here do:
+
+- every skill declares the engine version it documents in `metadata.ignifx-version`, and
+  `check-skill-lint.ts` holds it to `@ignifx/core`'s version — ten skills still said
+  `"0.0.0-unreleased"` against a bumped `0.1.0`, which is ten skill-lint problems;
+- `skills/ignifx/references/formats/ignifx.schemas.json` embeds `ignifxVersion`, so a fresh
+  `pnpm docs:schemas` differs from the committed file and `regeneration-diff` goes red.
+
+Neither is a defect in the version PR — it is a step the release never had. Decision: the workflow's
+`version-script` becomes `pnpm version-packages`, which is `changeset version` followed by
+`pnpm skills:version` and `pnpm docs:schemas`. `scripts/sync-skill-versions.ts` writes core's
+version into each skill's frontmatter, and the set of values a skill may declare now lives in
+`scripts/lib/skill-version.ts` and is imported by both the linter that enforces it and the writer
+that repairs it, so the two cannot drift. The placeholder is deliberately preserved while core is
+`0.0.0`: `"0.0.0-unreleased"` says more than a bare `0.0.0`, both are accepted at that version, and
+the writer leaves any already-accepted value alone.
+
+Verified by simulating the release on 2026-09-07 — every package bumped to `0.1.0`,
+`pnpm skills:version && pnpm docs:schemas`, then the full harness: `skill-lint`,
+`regeneration-diff` and the other three checks all green, where the real version branch had two red.
+
+The `api-report-gate` and `freshness` failures reported on the same run were the shallow checkout
+fixed above, and they passed here.

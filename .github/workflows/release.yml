@@ -91,7 +91,13 @@ jobs:
         id: changesets
         uses: changesets/action@v2
         with:
-          version-script: pnpm changeset version
+          # `pnpm version-packages`, not a bare `changeset version`: the bump has to reach two more
+          # places that Changesets knows nothing about. Every skill declares the engine version it
+          # documents in `metadata.ignifx-version`, and `skills/ignifx/references/formats/
+          # ignifx.schemas.json` embeds it too — so a bare bump leaves the "Version Packages" branch
+          # failing `docs-harness` with ten skill-lint problems and a regeneration diff, which is
+          # exactly what the first version pull request did on 2026-09-07.
+          version-script: pnpm version-packages
           # v2 renamed this input from `publish` (v1) to `publish-script`.
           # `--no-git-checks` is needed because the runner is on a detached checkout;
           # `--access public` matches publishConfig in each package.

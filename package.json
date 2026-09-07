@@ -36,6 +36,8 @@
     "licenses:check": "node scripts/licenses.ts --check",
     "deps": "depcruise --config .dependency-cruiser.cjs packages",
     "changeset": "changeset",
+    "skills:version": "node scripts/sync-skill-versions.ts",
+    "version-packages": "pnpm exec changeset version && pnpm run skills:version && pnpm run docs:schemas",
     "release": "pnpm build && pnpm exec changeset publish",
     "release:verify": "node scripts/verify-published.ts",
     "check": "pnpm run build && pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run api-report && pnpm run docs:harness"
