@@ -1,5 +1,13 @@
 # @ignifx/electron
 
+## 0.2.0
+
+### Patch Changes
+
+- Updated dependencies [c8fb925]
+- Updated dependencies [c8fb925]
+  - @ignifx/core@0.2.0
+
 ## 0.1.0
 
 ### Minor Changes
