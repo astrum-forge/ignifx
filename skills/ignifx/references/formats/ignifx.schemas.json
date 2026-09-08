@@ -922,7 +922,12 @@
         "sensitivity": {
           "kind": "f32",
           "default": "0.15",
-          "description": "Degrees of rotation per unit of look input."
+          "description": "Degrees of rotation per unit of pointer look; for a mouse, degrees per CSS pixel."
+        },
+        "stickLookSpeed": {
+          "kind": "f32",
+          "default": "180",
+          "description": "Degrees of rotation per second at full deflection, for a gamepad or on-screen stick."
         },
         "invertY": {
           "kind": "bool",
@@ -982,7 +987,7 @@
         "lockPointerOnClick": {
           "kind": "bool",
           "default": "true",
-          "description": "Whether the first click requests pointer lock."
+          "description": "Whether a click requests pointer lock; while it is on, mouse look waits for the lock."
         },
         "headBobAmplitude": {
           "kind": "f32",
@@ -2418,7 +2423,17 @@
         "sensitivity": {
           "kind": "f32",
           "default": "0.2",
-          "description": "Degrees of orbit per unit of look input."
+          "description": "Degrees of orbit per unit of pointer look; for a mouse, degrees per CSS pixel."
+        },
+        "stickLookSpeed": {
+          "kind": "f32",
+          "default": "180",
+          "description": "Degrees of orbit per second at full deflection, for a gamepad or on-screen stick."
+        },
+        "lockPointerOnClick": {
+          "kind": "bool",
+          "default": "false",
+          "description": "Whether a click requests pointer lock; while it is on, mouse look waits for the lock."
         },
         "damping": {
           "kind": "f32",
@@ -2448,7 +2463,7 @@
         "collisionLayers": {
           "kind": "layerMask",
           "default": "[]",
-          "description": "Which layers block the camera; empty means every layer."
+          "description": "Which layers the boom's hit is attributed to; the target's own body is always swept through."
         },
         "collisionRecoverySpeed": {
           "kind": "f32",

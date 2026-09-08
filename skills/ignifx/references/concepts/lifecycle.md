@@ -1,7 +1,7 @@
 # Lifecycle and time
 
 When things happen in a frame, which callbacks a `Script` may implement, and how a headless app is
-stepped. Engine `0.0.0`; rationale in `docs/architecture/01-lifecycle-and-time.md`.
+stepped. Rationale in `docs/architecture/01-lifecycle-and-time.md`.
 
 ## 1. Frame order
 

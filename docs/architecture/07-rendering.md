@@ -132,6 +132,7 @@ Attached to the main camera entity. Ordered list of effects; each maps to a Lite
 - `imageProcessing` is always recorded **last**, whatever `order` says: Lite's task writes the swapchain unconditionally and takes no target, so nothing can read what it produced.
 - A `PostProcessStack` may be configured before `app.start()`: its chain is appended to Lite's frame graph without recording while the scene is unregistered, and `registerScene`'s own `frameGraph.build()` then records it after the scene task (recording earlier failed with Lite error 107, "sourceTexture has no color texture", until 2026-09-07).
 - A `PostProcessStack` attached without the feature logs `IGX-0710` once and is inert. The feature costs one full-screen blit per frame while no chain is recorded, which is why it is off by default.
+- **Tuning is live; shape is rebuilt (2026-09-08).** A write to `bloom.weight`/`kernel`/`threshold`/`exposure` or to any SMAA field on a running stack is re-uploaded to the recorded Lite task on the next `PreRender` (`updateUniforms()`), and only when a value changed. A change to the chain's _shape_ — which effects are enabled, their `order`, or bloom's `scale`, which sizes the blur targets at creation — disposes the chain and records a new one; the old tasks stay in the frame graph disabled, because Lite has no removal. Until this date the records were read once, when the chain was first built, and a slider bound to `bloom.threshold` did nothing.
 
 ## 3. Picking
 

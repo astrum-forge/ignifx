@@ -49,12 +49,27 @@ import type { Schema } from "../schema/types.js";
  * `imageProcessing` is always recorded last, whatever `order` says: Lite's task writes `engine.scRT`
  * unconditionally and takes no target, so nothing can read what it produced.
  *
+ * ## Tuning is live; the chain's shape is rebuilt
+ *
+ * Writing `bloom.threshold`, `bloom.weight`, `bloom.kernel`, `bloom.exposure` or any SMAA field on
+ * a running stack reaches the recorded Lite task on the next `PreRender`: the chain re-uploads the
+ * task's uniforms, and only when a value actually changed (`PostProcessChain.applySettings`). That is
+ * what a settings slider or an inspector edit needs, and it costs nothing on a frame where nothing
+ * moved. Until 2026-09-08 those writes were read once, when the chain was built, and never again —
+ * a slider bound to `bloom.threshold` did nothing.
+ *
+ * What a recorded task cannot change is its **shape**: which effects are on, in which `order`, and
+ * bloom's `scale`, which sizes the blur targets when the task is created. A change to any of those
+ * rebuilds the chain — the old tasks are disabled and their GPU resources freed, new ones recorded.
+ *
  * ## The one Lite limit this component still inherits
  *
- * **Nothing can be removed from a frame graph.** `executionEnabled = false` is the substitute, so
- * disabling an effect leaves its GPU resources allocated and costs one branch per frame. The
- * component disposes them at detach. Resizing, by contrast, is free: every target is sized by the
- * surface and reallocated by the frame-graph rebuild a resize triggers.
+ * **Nothing can be removed from a frame graph.** `executionEnabled = false` is the substitute, so a
+ * rebuilt chain leaves its old tasks in the graph, disabled and disposed, at one branch per frame
+ * each. Toggling an effect's `enabled` in a settings menu therefore costs a rebuild per toggle;
+ * toggling the whole component's `enabled` costs nothing but a branch, because the chain is kept and
+ * merely skipped. The component disposes everything at detach. Resizing, by contrast, is free: every
+ * target is sized by the surface and reallocated by the frame-graph rebuild a resize triggers.
  */
 
 /**
@@ -185,8 +200,8 @@ export class PostProcessStack extends Component implements ComponentHooks {
   }
 
   /**
-   * Builds the chain the first time any effect is enabled, and switches individual effects on and
-   * off after that. The `PreRender` system calls it.
+   * Builds the chain when the effects it should hold change, and keeps the recorded tasks' tuning
+   * and enabled state in step with the fields after that. The `PreRender` system calls it.
    *
    * @remarks
    * It is also called once by `app.start()`, through `renderer.syncBeforeRegister`, which is what
@@ -195,32 +210,60 @@ export class PostProcessStack extends Component implements ComponentHooks {
    * (`PostProcessChain`'s `isFrameGraphBuilt`). Recording them early instead binds a scene colour
    * that no task has allocated yet and Lite rejects the whole frame with error 107.
    *
+   * The chain's identity is {@link PostProcessStack.plannedChain} plus bloom's `scale`. When it
+   * changes, the old chain is disposed and a new one recorded; when it does not, the chain follows
+   * the component's `enabled` and re-uploads whatever tuning changed. A rebuild never happens
+   * before the frame graph is built, because `syncBeforeRegister` is the only sync `start()` runs.
+   *
    * @param renderer - The rendering service, for the engine and the scene.
    *
    * @internal
    */
   sync(renderer: RendererImpl): void {
     const wanted = this.#chainKey();
-    if (wanted !== this.#built && this.#chain === null) {
-      this.#built = wanted;
-      // The request list is the component's own state, so it is built whether or not there is a
-      // device to record it into; only the recording is device-only.
-      const requests = this.#requests(renderer.settings.srgb);
-      const presenter = renderer.presenter;
-      if (!renderer.isHeadless && presenter !== null) {
-        this.#chain = new PostProcessChain(
-          renderer.engine,
-          renderer.scene,
-          presenter,
-          requests,
-          renderer.isSceneRegistered,
-        );
-      }
-      this.#warnAboutFeature(renderer, requests.length);
+    if (wanted !== this.#built) {
+      this.#rebuild(renderer, wanted);
       return;
     }
     this.#warnAboutFeature(renderer, this.plannedChain().length);
-    this.#chain?.setEnabled(this.isEnabledInHierarchy);
+    const chain = this.#chain;
+    if (chain !== null) {
+      chain.setEnabled(this.isEnabledInHierarchy);
+      chain.applySettings(this.bloom, this.smaa, renderer.isSceneRegistered);
+    }
+  }
+
+  /**
+   * Replaces the chain with one that holds the effects the fields currently ask for.
+   *
+   * @remarks
+   * The request list is the component's own state, so it is built whether or not there is a device
+   * to record it into; only the recording is device-only. An old chain is disposed first, which
+   * also hands the swapchain back to the compositing blit, so a stack whose last effect was just
+   * switched off presents the plain scene from the next frame rather than a stale one.
+   *
+   * @param renderer - The rendering service, for the engine and the scene.
+   * @param wanted - The chain identity the fields currently describe.
+   */
+  #rebuild(renderer: RendererImpl, wanted: string): void {
+    this.#built = wanted;
+    const previous = this.#chain;
+    this.#chain = null;
+    previous?.dispose();
+    const requests = this.#requests(renderer.settings.srgb);
+    const presenter = renderer.presenter;
+    if (!renderer.isHeadless && presenter !== null && requests.length > 0) {
+      const chain = new PostProcessChain(
+        renderer.engine,
+        renderer.scene,
+        presenter,
+        requests,
+        renderer.isSceneRegistered,
+      );
+      chain.setEnabled(this.isEnabledInHierarchy);
+      this.#chain = chain;
+    }
+    this.#warnAboutFeature(renderer, requests.length);
   }
 
   /**
@@ -284,14 +327,16 @@ export class PostProcessStack extends Component implements ComponentHooks {
   }
 
   /**
-   * The identity of the chain the fields currently ask for: which effects are on, in which order.
-   * A change to it while the chain already exists only flips `executionEnabled`, because Lite
-   * cannot re-order a recorded frame graph.
+   * The identity of the chain the fields currently ask for: which effects are on, in which order,
+   * and — while bloom is one of them — bloom's `scale`, the one tuning Lite fixes when the task is
+   * created. A change to it while a chain exists is a rebuild, because Lite cannot re-order a
+   * recorded frame graph or resize a bloom task's blur targets.
    *
    * @returns The key.
    */
   #chainKey(): string {
-    return this.plannedChain().join(",");
+    const effects = this.plannedChain().join(",");
+    return this.bloom.enabled ? `${effects}|scale=${String(this.bloom.scale)}` : effects;
   }
 
   /**

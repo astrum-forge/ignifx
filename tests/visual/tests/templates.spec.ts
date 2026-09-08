@@ -62,6 +62,11 @@ declare global {
   interface Window {
     /** Resolves once the template has presented a settled frame. Set by each `main.ts`. */
     __ignifxReady: Promise<"ready" | "unsupported">;
+    /**
+     * The `?probe=1` gameplay hook each template installs (`src/gameplay-probe.ts`). Its snapshot
+     * shape is the template's own, so it is `unknown` here and narrowed by a type guard per suite.
+     */
+    __ignifxGameplay?: { snapshot(): unknown };
   }
 }
 
@@ -338,5 +343,782 @@ test.describe("template front end", () => {
     await holdKey(page, "Escape");
     await expect(page.locator('[data-menu="pause"] .ignifx-ui-menu-title')).toHaveText("En pause");
     await expect(page.locator('[data-menu="pause"] [data-row="resume"]')).toHaveText("Reprendre");
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────────────────────
+// 2D gameplay. Everything below this line belongs to one `describe` block; nothing above it is
+// touched.
+// ─────────────────────────────────────────────────────────────────────────────────────────────
+
+/**
+ * One reading of a 2D template's `?probe=1` hook, `window.__ignifxGameplay.snapshot()`.
+ *
+ * @remarks
+ * The two templates expose the fields their own gameplay has — the side-scroller a grounded flag
+ * and a respawn point, the top-down a camera and a list of lit shrines — so the shared half is
+ * required here and the rest is optional. The hook's global declaration types its snapshot as
+ * `unknown`: one name carries two shapes, and a declaration that was the union of both would let a
+ * side-scroller test read `lit` and still compile, so each suite narrows with its own type guard.
+ */
+interface Gameplay2DSnapshot {
+  /** The character's world position, in metres. */
+  readonly position: { readonly x: number; readonly y: number };
+  /** The score: coins taken, or shrines lit. */
+  readonly score: number;
+  /** Side-scroller only: whether the character is standing on something. */
+  readonly grounded?: boolean;
+  /** Side-scroller only: where a fall out of the level would put the character back. */
+  readonly respawn?: { readonly x: number; readonly y: number };
+  /** Top-down only: where the camera is, in metres. */
+  readonly camera?: { readonly x: number; readonly y: number };
+  /** Top-down only: the ids of the shrines that are lit. */
+  readonly lit?: readonly string[];
+}
+
+/** How many presented frames pass between two readings of the probe while a key is held. */
+const PROBE_POLL_FRAMES = 5;
+
+/**
+ * How many presented frames a walk is given before the test gives up. Generous on purpose: a frame
+ * on SwiftShader carries more simulated time than a frame on a real GPU, never less, so a budget
+ * counted in frames is an upper bound on both.
+ */
+const WALK_BUDGET_FRAMES = 600;
+
+/** How many presented frames one jump's flight is sampled for. */
+const FLIGHT_FRAMES = 90;
+
+/**
+ * The world x of the left edge of the top-down template's shrine pad. The pad is one cell wide, so
+ * the character is over it anywhere between this and one metre further east.
+ */
+const SHRINE_PAD_LEFT = 25;
+
+/**
+ * How many presented frames the character is given to climb the first slope, from a standing start
+ * at the spawn. Measured on 2026-09-08 at 65 fixed steps with the surface-aligned run and at about
+ * 180 without it, so this is the number that would have failed before the fix and passes with a
+ * wide margin after it.
+ */
+const SLOPE_BUDGET_FRAMES = 120;
+
+/**
+ * Reads the `?probe=1` hook.
+ *
+ * @param page - The page under test.
+ * @returns The current reading.
+ */
+async function readProbe(page: Page): Promise<Gameplay2DSnapshot> {
+  const reading = await readGameplayHook(page);
+  if (!isGameplay2DSnapshot(reading)) {
+    throw new Error("window.__ignifxGameplay.snapshot() did not answer with a 2D reading.");
+  }
+  return reading;
+}
+
+/**
+ * Whether a probe reading has the fields every 2D template's snapshot carries.
+ *
+ * @param value - Whatever the page answered.
+ * @returns `true` for a 2D reading.
+ */
+function isGameplay2DSnapshot(value: unknown): value is Gameplay2DSnapshot {
+  return typeof value === "object" && value !== null && "position" in value && "score" in value;
+}
+
+/**
+ * Calls the `?probe=1` hook in the page and answers with whatever it returned.
+ *
+ * @param page - The page under test.
+ * @returns The raw reading, for a suite's type guard.
+ */
+function readGameplayHook(page: Page): Promise<unknown> {
+  return page.evaluate((): unknown => {
+    const hook = window.__ignifxGameplay;
+    if (hook === undefined) {
+      throw new Error("window.__ignifxGameplay is missing: the page was not opened with ?probe=1.");
+    }
+    return hook.snapshot();
+  });
+}
+
+/**
+ * Opens a template with its probe installed and leaves the title screen for the game.
+ *
+ * @param page - The page under test.
+ * @param url - The template's origin.
+ * @returns The list the page's uncaught errors are collected into.
+ */
+async function startGame(page: Page, url: string): Promise<string[]> {
+  const failures = await openScene(page, `${url}/?probe=1`);
+  await page.locator('[data-menu="title"] [data-row="new-game"]').click();
+  // The click unpauses through `MenuController`, which reconciles the screen stack in `Update`;
+  // a few frames later the world is running and the probe reads a moving character.
+  await waitForFrames(page, KEY_HOLD_FRAMES);
+  return failures;
+}
+
+/**
+ * Holds one or more keys until a reading satisfies the predicate, or the budget runs out.
+ *
+ * @param page - The page under test.
+ * @param keys - The keys to hold together.
+ * @param done - What the test is waiting for.
+ * @param budget - How many presented frames to allow.
+ * @returns The last reading, and how many frames it took.
+ */
+async function holdUntil(
+  page: Page,
+  keys: readonly string[],
+  done: (reading: Gameplay2DSnapshot) => boolean,
+  budget: number = WALK_BUDGET_FRAMES,
+): Promise<{ readonly reading: Gameplay2DSnapshot; readonly frames: number }> {
+  for (const key of keys) {
+    // oxlint-disable-next-line eslint/no-await-in-loop -- key presses are ordered by definition; the browser applies them in the order they arrive.
+    await page.keyboard.down(key);
+  }
+  let reading = await readProbe(page);
+  let frames = 0;
+  while (frames < budget && !done(reading)) {
+    // oxlint-disable-next-line eslint/no-await-in-loop -- frames are sequential by definition, and the reading has to be of the frame that was just presented.
+    await waitForFrames(page, PROBE_POLL_FRAMES);
+    frames += PROBE_POLL_FRAMES;
+    // oxlint-disable-next-line eslint/no-await-in-loop -- see above.
+    reading = await readProbe(page);
+  }
+  for (const key of keys) {
+    // oxlint-disable-next-line eslint/no-await-in-loop -- see above.
+    await page.keyboard.up(key);
+  }
+  await waitForFrames(page, 2);
+  return { reading, frames };
+}
+
+/**
+ * Jumps and reports how far the character rose.
+ *
+ * @remarks
+ * The apex is sampled frame by frame rather than computed, because the point of the test is that
+ * the *simulation* produces it. It always lands after the button is released: the full arc takes
+ * 27 fixed steps to reach its top and the shortest clamped one 15, so a hold of 16 frames or fewer
+ * is over before the character is.
+ *
+ * @param page - The page under test.
+ * @param holdFrames - How many presented frames the jump button is held for.
+ * @returns The rise, in metres.
+ */
+async function measureJump(page: Page, holdFrames: number): Promise<number> {
+  const base = (await readProbe(page)).position.y;
+  await page.keyboard.down("Space");
+  await waitForFrames(page, holdFrames);
+  await page.keyboard.up("Space");
+  let apex = base;
+  for (let index = 0; index < FLIGHT_FRAMES; index += 1) {
+    // oxlint-disable-next-line eslint/no-await-in-loop -- frames are sequential by definition; the apex is the maximum over them.
+    await waitForFrames(page, 1);
+    // oxlint-disable-next-line eslint/no-await-in-loop -- see above.
+    const reading = await readProbe(page);
+    apex = Math.max(apex, reading.position.y);
+    if (index > holdFrames + 6 && reading.grounded === true) {
+      break;
+    }
+  }
+  return apex - base;
+}
+
+/**
+ * The gameplay half of the two 2D templates, driven through the `?probe=1` hook each of them
+ * installs (`src/gameplay-probe.ts`) rather than through screenshots.
+ *
+ * ## Why a probe and not a golden
+ *
+ * A golden answers "does the scene still look like this"; none of the questions below are about
+ * pixels. "A tap and a hold reach different heights" is two numbers, "the slope is climbed at
+ * running speed" is a number against a frame budget, and "falling into the pit puts the character
+ * back" is a coordinate. Photographing them would make the assertions weaker *and* the failures
+ * harder to read. The four goldens above stay exactly as they are.
+ *
+ * ## Why the holds are counted in frames
+ *
+ * The same reason `KEY_HOLD_FRAMES` gives: a frame is the unit the input queue is drained on and
+ * the fixed loop is stepped from, and its wall-clock length is a property of the machine. Every
+ * budget here is therefore an upper bound that holds on a slow software rasteriser as well as on a
+ * real GPU — a slower frame carries *more* simulated time, never less.
+ *
+ * The numbers the assertions are built on were measured on 2026-09-08, headlessly against the real
+ * `level.tilemap.json` and again in Chromium on SwiftShader.
+ */
+test.describe("2d template gameplay", () => {
+  test.use({ viewport: { width: 512, height: 288 } });
+
+  // The coin at (12.5, 4.5) sits over the top of the level's first slope, so running right from the
+  // spawn is enough to take it: the trigger fires, the coin leaves the board, the run autosaves and
+  // the HUD counts it. Before `@ignifx/physics-2d` let a character controller through a sensor, the
+  // coin was solid and this walk ended against it.
+  test("2d-sidescroller: walking right takes the first coin, and it is scored, saved and shown", async ({ page }) => {
+    const failures = await startGame(page, SIDESCROLLER);
+    const before = await readProbe(page);
+    expect(before.score, "the run starts with nothing taken").toBe(0);
+    expect(before.position.x).toBeCloseTo(2.5, 1);
+
+    const walk = await holdUntil(page, ["d"], (reading) => reading.score >= 1);
+    expect(walk.reading.score, `no coin was taken in ${String(walk.frames)} frames`).toBe(1);
+    // The coin is past the slope, so scoring it also proves the climb happened.
+    expect(walk.reading.position.x).toBeGreaterThan(12);
+    expect(walk.reading.position.y).toBeGreaterThan(3.9);
+
+    // Taking a coin asks `SaveGame` for a checkpoint, and the checkpoint shows itself as a toast.
+    await expect(page.locator(".ignifx-ui-toast").first()).toBeVisible();
+    await expect(page.locator(".hud")).toHaveText(/1 coin/u);
+    expect(failures, `the page reported errors: ${failures.join(" | ")}`).toEqual([]);
+  });
+
+  // The whole of "variable jump height": one clamp on the release edge. A one-frame tap has to
+  // clear a tile anyway — `minJumpHeight` is 1.1 m — and a held button has to reach the full
+  // `jumpSpeed` arc of 3.42 m, which is what every coin over a plank is placed against. The bug
+  // this replaces multiplied the rise by 0.45 on *every* step the button was up, so the same launch
+  // reached 0.41 m or 3.42 m depending on how many frames the tap happened to cover.
+  test("2d-sidescroller: a tapped jump clears a tile and a held jump reaches the plank", async ({ page }) => {
+    const failures = await startGame(page, SIDESCROLLER);
+
+    const tapped = await measureJump(page, 1);
+    expect(tapped, "the shortest possible tap must still clear a tile").toBeGreaterThan(1);
+    expect(tapped, "a tap must not reach the top of the arc").toBeLessThan(2);
+
+    await waitForFrames(page, KEY_HOLD_FRAMES);
+    const held = await measureJump(page, 16);
+    // The planks sit three metres above the ground they are reached from.
+    expect(held, "a held jump must reach the planks").toBeGreaterThan(3);
+    expect(held, "and no further than the arc `jumpSpeed` and `riseGravity` describe").toBeLessThan(3.8);
+    expect(held - tapped, "the two must be visibly different jumps").toBeGreaterThan(1);
+    expect(failures, `the page reported errors: ${failures.join(" | ")}`).toEqual([]);
+  });
+
+  // The level's first slope rises one metre over one cell at x = 8, and the run is rotated onto it,
+  // so it is climbed at the run speed rather than at its cosine. The wall rule this depends on is
+  // read from contact normals: the short-move test it replaces fired on every slope and collapsed
+  // the stored speed each step, which is what made the hill a crawl.
+  test("2d-sidescroller: the first slope is climbed at running speed", async ({ page }) => {
+    const failures = await startGame(page, SIDESCROLLER);
+    const climb = await holdUntil(page, ["d"], (reading) => reading.position.y >= 4, SLOPE_BUDGET_FRAMES);
+    expect(
+      climb.reading.position.y,
+      `the character was at y = ${climb.reading.position.y.toFixed(2)} after ${String(climb.frames)} frames`,
+    ).toBeGreaterThanOrEqual(4);
+    expect(climb.reading.grounded, "and it should be standing on the shelf, not sailing over it").toBe(true);
+    expect(failures, `the page reported errors: ${failures.join(" | ")}`).toEqual([]);
+  });
+
+  // The pit at x = 20 to 24 has no floor. Falling into it used to be permanent — the character fell
+  // for ever behind a camera clamped at the level's lower bound — and now puts it back on the last
+  // ground it stood on, which is the lip it ran off, with the coins it had already taken.
+  test("2d-sidescroller: falling into the pit puts the character back on its lip", async ({ page }) => {
+    const failures = await startGame(page, SIDESCROLLER);
+    const fall = await holdUntil(page, ["d"], (reading) => reading.position.y < -1);
+    expect(
+      fall.reading.position.y,
+      `the character never reached the pit in ${String(fall.frames)} frames`,
+    ).toBeLessThan(-1);
+    const score = fall.reading.score;
+
+    // Nothing is held now, so the only thing that can move the character is the respawn.
+    const back = await holdUntil(page, [], (reading) => reading.position.y > 0, FLIGHT_FRAMES);
+    expect(back.reading.position.y, "the fall should have ended").toBeGreaterThan(0);
+    expect(back.reading.position.y).toBeCloseTo(3, 0);
+    // The lip of the first pit, not the spawn and not the far side.
+    expect(back.reading.position.x).toBeGreaterThan(19);
+    expect(back.reading.position.x).toBeLessThan(21);
+    expect(back.reading.respawn?.x).toBeCloseTo(back.reading.position.x, 1);
+    expect(back.reading.score, "a fall costs progress through the level, not the coins already taken").toBe(score);
+    expect(failures, `the page reported errors: ${failures.join(" | ")}`).toEqual([]);
+  });
+
+  // The shrine is a trigger the size of the pad it is drawn on. Standing on it lights it, scores
+  // the run and autosaves — and, before the same `@ignifx/physics-2d` fix, the pad was solid to the
+  // character controller and the player simply walked into it. Getting there means stepping around
+  // the barrel on the path, which is what the props are there to demonstrate.
+  test("2d-topdown: walking onto the shrine pad lights it", async ({ page }) => {
+    const failures = await startGame(page, TOPDOWN);
+    const before = await readProbe(page);
+    expect(before.score).toBe(0);
+    expect(before.lit).toEqual([]);
+
+    // South of the path's centre line first, to clear the barrel at (18.5, 10.2); then east until
+    // the character is standing on the pad's column, then north onto the pad itself.
+    //
+    // The eastward leg stops at the pad's *left* edge rather than at its middle. A reading is taken
+    // every `PROBE_POLL_FRAMES` frames and a frame on a loaded machine carries more simulated time
+    // than one on an idle machine, so where the walk stops is only bounded from below — aiming at
+    // 25.4 put it past the far edge of a one-metre pad on a busy run, and the character then walked
+    // north beside the shrine instead of over it.
+    const south = await holdUntil(page, ["s"], (reading) => reading.position.y <= 9.4);
+    expect(south.reading.position.y, "the character should be south of the barrel's row").toBeLessThan(9.5);
+    const east = await holdUntil(page, ["d"], (reading) => reading.position.x >= SHRINE_PAD_LEFT);
+    expect(east.reading.position.x, "the walk east should end on the pad's column").toBeGreaterThan(SHRINE_PAD_LEFT);
+    expect(east.reading.position.x, "and not past it").toBeLessThan(SHRINE_PAD_LEFT + 1);
+    const lit = await holdUntil(page, ["w"], (reading) => reading.score >= 1);
+    expect(lit.reading.lit, `the shrine did not light in ${String(lit.frames)} frames`).toEqual(["Shrine"]);
+    expect(lit.reading.score).toBe(1);
+    // The camera follows through a dead zone of 1.5 by 1, so it trails the character rather than
+    // being pinned to it — but never by more than the dead zone plus a frame of damping.
+    expect(Math.abs((lit.reading.camera?.x ?? 0) - lit.reading.position.x)).toBeLessThan(2);
+    expect(Math.abs((lit.reading.camera?.y ?? 0) - lit.reading.position.y)).toBeLessThan(2);
+
+    await expect(page.locator(".ignifx-ui-toast").first()).toBeVisible();
+    await expect(page.locator(".hud")).toHaveText(/1 shrine lit/u);
+    expect(failures, `the page reported errors: ${failures.join(" | ")}`).toEqual([]);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────────────────────
+// 3D gameplay. Everything below this line belongs to one `describe` block; nothing above it is
+// touched.
+// ─────────────────────────────────────────────────────────────────────────────────────────────
+
+/**
+ * One reading of a 3D template's `?probe=1` hook, `window.__ignifxGameplay.snapshot()`.
+ *
+ * @remarks
+ * The shared half is required and each template's own extras are optional, for the same reason the
+ * 2D interface above is shaped this way: one hook name carries two shapes, and a declaration that
+ * was the union of both would let a first-person test read the boom and still compile.
+ */
+interface Gameplay3DSnapshot {
+  /** The camera's orbit yaw, or the body's yaw, in degrees. */
+  readonly yaw: number;
+  /** The camera's orbit pitch, or the head's, in degrees. */
+  readonly pitch: number;
+  /** The character's world position, in metres. */
+  readonly position: { readonly x: number; readonly y: number; readonly z: number };
+  /** Whether the canvas holds the pointer. */
+  readonly pointerLocked: boolean;
+  /** Whether the world is stopped. */
+  readonly paused: boolean;
+  /** Third person only: where the boom ends after the collision sweep, in metres. */
+  readonly boom?: number;
+  /** Third person only: where the camera is, in metres. */
+  readonly camera?: { readonly x: number; readonly y: number; readonly z: number };
+  /** First person only: the head's local height above the capsule's centre, in metres. */
+  readonly headHeight?: number;
+}
+
+/** The viewport these tests run at, and therefore where the middle of the canvas is. */
+const CANVAS_CENTRE = { x: 320, y: 240 } as const;
+
+/** Degrees of look per CSS pixel of mouse motion; both rigs are built with this `sensitivity`. */
+const DEGREES_PER_PIXEL = 0.1;
+
+/** How far the first-person head may travel from its rest height, in metres: `headBobAmplitude`. */
+const HEAD_BOB_AMPLITUDE = 0.025;
+
+/** Where the first-person head sits when the character is standing still, in metres: `EYE_OFFSET`. */
+const HEAD_REST_HEIGHT = 0.72;
+
+/** How many presented frames a look or a click is given to reach the rig. */
+const SETTLE_FRAMES_3D = 8;
+
+/** How many presented frames pass between two readings while a key or a stick is held. */
+const POLL_FRAMES_3D = 5;
+
+/** How many presented frames a walk or an orbit is given before the test gives up. */
+const BUDGET_FRAMES_3D = 400;
+
+/**
+ * The last of a run of readings.
+ *
+ * @param readings - The readings, oldest first; never empty, because every poll takes one before
+ * it starts.
+ * @returns The newest reading.
+ */
+function newest(readings: readonly Gameplay3DSnapshot[]): Gameplay3DSnapshot {
+  const last = readings.at(-1);
+  if (last === undefined) {
+    throw new Error("no probe readings were taken.");
+  }
+  return last;
+}
+
+/**
+ * Reads a 3D template's `?probe=1` hook.
+ *
+ * @param page - The page under test.
+ * @returns The current reading.
+ */
+async function read3D(page: Page): Promise<Gameplay3DSnapshot> {
+  const reading = await readGameplayHook(page);
+  if (!isGameplay3DSnapshot(reading)) {
+    throw new Error("window.__ignifxGameplay.snapshot() did not answer with a 3D reading.");
+  }
+  return reading;
+}
+
+/**
+ * Whether a probe reading has the fields every 3D template's snapshot carries.
+ *
+ * @param value - Whatever the page answered.
+ * @returns `true` for a 3D reading.
+ */
+function isGameplay3DSnapshot(value: unknown): value is Gameplay3DSnapshot {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "yaw" in value &&
+    "pitch" in value &&
+    "position" in value &&
+    "pointerLocked" in value
+  );
+}
+
+/**
+ * Opens a 3D template with its probe installed and leaves the title screen for the game.
+ *
+ * @param page - The page under test.
+ * @param url - The template's origin.
+ * @returns The list the page's uncaught errors are collected into.
+ */
+async function start3D(page: Page, url: string): Promise<string[]> {
+  const failures = await openScene(page, `${url}/?probe=1`);
+  await page.locator('[data-menu="title"] [data-row="new-game"]').click();
+  await waitForFrames(page, SETTLE_FRAMES_3D);
+  return failures;
+}
+
+/**
+ * Moves the mouse to the middle of the canvas and then by a measured offset, so the delta the rig
+ * sees is exactly the offset.
+ *
+ * @remarks
+ * Playwright's mouse position is absolute and persists between calls, and a locked pointer turns
+ * every move into a look — including the move back to the middle. Parking at the middle first,
+ * and letting those frames present before the reading is taken, is what makes the second move the
+ * only motion between the two readings.
+ *
+ * @param page - The page under test.
+ * @param dx - CSS pixels to the right.
+ * @param dy - CSS pixels down.
+ * @returns The readings before and after the offset.
+ */
+async function lookBy(
+  page: Page,
+  dx: number,
+  dy: number,
+): Promise<{ readonly before: Gameplay3DSnapshot; readonly after: Gameplay3DSnapshot }> {
+  await page.mouse.move(CANVAS_CENTRE.x, CANVAS_CENTRE.y);
+  await waitForFrames(page, SETTLE_FRAMES_3D);
+  const before = await read3D(page);
+  await page.mouse.move(CANVAS_CENTRE.x + dx, CANVAS_CENTRE.y + dy);
+  await waitForFrames(page, SETTLE_FRAMES_3D);
+  return { before, after: await read3D(page) };
+}
+
+/**
+ * Clicks the middle of the canvas, which is the gesture both rigs treat as "give me the pointer".
+ *
+ * @param page - The page under test.
+ * @returns Whether the browser granted the lock.
+ */
+async function takePointer(page: Page): Promise<boolean> {
+  await page.mouse.click(CANVAS_CENTRE.x, CANVAS_CENTRE.y);
+  await waitForFrames(page, SETTLE_FRAMES_3D);
+  return (await read3D(page)).pointerLocked;
+}
+
+/**
+ * Holds one key until a reading satisfies the predicate, or the budget runs out.
+ *
+ * @param page - The page under test.
+ * @param key - The key to hold, or `null` to poll without pressing anything.
+ * @param done - What the test is waiting for.
+ * @param budget - How many presented frames to allow.
+ * @returns Every reading taken, oldest first.
+ */
+async function hold3DUntil(
+  page: Page,
+  key: string | null,
+  done: (reading: Gameplay3DSnapshot) => boolean,
+  budget: number = BUDGET_FRAMES_3D,
+): Promise<readonly Gameplay3DSnapshot[]> {
+  if (key !== null) {
+    await page.keyboard.down(key);
+  }
+  const readings: Gameplay3DSnapshot[] = [await read3D(page)];
+  let frames = 0;
+  while (frames < budget && !done(newest(readings))) {
+    // oxlint-disable-next-line eslint/no-await-in-loop -- frames are sequential by definition, and each reading has to be of the frame that was just presented.
+    await waitForFrames(page, POLL_FRAMES_3D);
+    frames += POLL_FRAMES_3D;
+    // oxlint-disable-next-line eslint/no-await-in-loop -- see above.
+    readings.push(await read3D(page));
+  }
+  if (key !== null) {
+    await page.keyboard.up(key);
+  }
+  await waitForFrames(page, 2);
+  return readings;
+}
+
+/**
+ * Pushes an on-screen stick to full deflection and holds it until the predicate is satisfied.
+ *
+ * @remarks
+ * `VirtualJoystick` writes `<Virtual>/<control>` from `pointerdown`/`pointermove` on its own pad,
+ * so a mouse press and drag over the pad is the same gesture a thumb makes. The offset is well past
+ * the pad's 44-pixel radius, which is what full deflection means.
+ *
+ * @param page - The page under test.
+ * @param control - The stick's `aria-label`, which `VirtualJoystick` sets to its control name.
+ * @param dx - Which way to push, horizontally.
+ * @param dy - Which way to push, vertically; negative is up.
+ * @param done - What the test is waiting for.
+ * @returns Every reading taken, oldest first.
+ */
+async function pushStickUntil(
+  page: Page,
+  control: string,
+  dx: number,
+  dy: number,
+  done: (reading: Gameplay3DSnapshot) => boolean,
+): Promise<readonly Gameplay3DSnapshot[]> {
+  const pad = page.locator(`[aria-label="${control}"]`);
+  const box = await pad.boundingBox();
+  expect(box, `the on-screen ${control} stick is not on the page`).not.toBeNull();
+  const centre = { x: (box?.x ?? 0) + (box?.width ?? 0) / 2, y: (box?.y ?? 0) + (box?.height ?? 0) / 2 };
+  await page.mouse.move(centre.x, centre.y);
+  await page.mouse.down();
+  await page.mouse.move(centre.x + dx, centre.y + dy);
+  const readings: Gameplay3DSnapshot[] = [await read3D(page)];
+  let frames = 0;
+  while (frames < BUDGET_FRAMES_3D && !done(newest(readings))) {
+    // oxlint-disable-next-line eslint/no-await-in-loop -- frames are sequential by definition; see `hold3DUntil`.
+    await waitForFrames(page, POLL_FRAMES_3D);
+    frames += POLL_FRAMES_3D;
+    // oxlint-disable-next-line eslint/no-await-in-loop -- see above.
+    readings.push(await read3D(page));
+  }
+  await page.mouse.up();
+  await waitForFrames(page, 2);
+  return readings;
+}
+
+/**
+ * The gameplay half of the two 3D templates, driven through the `?probe=1` hook each of them
+ * installs (`src/gameplay-probe.ts`) rather than through screenshots. The four goldens above stay
+ * exactly as they are.
+ *
+ * ## Pointer lock, and what a headless browser will and will not do
+ *
+ * Both rigs run with `lockPointerOnClick`, so mouse look waits for the lock and a hint line asks
+ * the player for the click. Measured on 2026-09-08 in this suite's Chromium on macOS: a synthetic
+ * `page.mouse.click` on the canvas **is** granted the lock, so the mouse half is tested for real —
+ * but Escape does **not** release it the way a real browser does, and while the canvas holds the
+ * pointer every synthetic click is routed to the canvas rather than to the menu that is on top of
+ * it. Tests that need the menu therefore never take the lock, or give it back by hand.
+ *
+ * A runner that refuses the lock outright is still a possibility, so the two tests that can only
+ * assert something once it is held skip themselves rather than fail. Everything the fixes are
+ * really about — the hint, the gate on unlocked mouse look, the boom that no longer collapses into
+ * the character, the head bob, the click that must not flip a pedestal — is asserted without it.
+ *
+ * ## Why some of it is driven with the on-screen sticks
+ *
+ * `<Virtual>` look is never gated on the lock, which makes a `hasTouch` context the one place a
+ * test can turn the view with no lock at all. It is also the only way to cover the touch pads,
+ * whose `scale(18)` processors were removed from both `game.input.json` in the same change.
+ */
+test.describe("3d template gameplay", () => {
+  test.use({ viewport: { width: 640, height: 480 } });
+
+  // The regression the hint exists for: with `lockPointerOnClick` on, a cursor crossing the canvas
+  // is not a look gesture, and without a line saying so the first thing a player does is move the
+  // mouse, see nothing happen, and conclude the demo is broken.
+  test("3d-third-person: the hint asks for a click, and an unlocked mouse leaves the camera alone", async ({
+    page,
+  }) => {
+    const failures = await start3D(page, THIRD_PERSON);
+    const hint = page.locator(".lock-hint");
+    await expect(hint).toBeVisible();
+    await expect(hint).toHaveText(/Click to look/u);
+
+    const before = await read3D(page);
+    expect(before.pointerLocked).toBe(false);
+    // Straight across the canvas and back, the way a cursor travels towards a menu button. Before
+    // the rig gated it, this swung the camera through tens of degrees.
+    await page.mouse.move(80, 80);
+    await page.mouse.move(560, 400);
+    await page.mouse.move(320, 120);
+    await waitForFrames(page, SETTLE_FRAMES_3D);
+    const after = await read3D(page);
+    expect(after.yaw).toBeCloseTo(before.yaw, 4);
+    expect(after.pitch).toBeCloseTo(before.pitch, 4);
+    await expect(hint).toBeVisible();
+    expect(failures, `the page reported errors: ${failures.join(" | ")}`).toEqual([]);
+  });
+
+  // The other half of the same behaviour: once the browser hands the pointer over, the mouse orbits
+  // at exactly `sensitivity` degrees per CSS pixel, and the hint takes itself away.
+  test("3d-third-person: a click takes the pointer, the hint goes, and the mouse orbits", async ({ page }) => {
+    const failures = await start3D(page, THIRD_PERSON);
+    const locked = await takePointer(page);
+    test.skip(!locked, "this browser refused the pointer lock; the click-to-lock path needs it");
+
+    await expect(page.locator(".lock-hint")).toBeHidden();
+    const yawed = await lookBy(page, 300, 0);
+    expect(yawed.after.yaw - yawed.before.yaw).toBeCloseTo(300 * DEGREES_PER_PIXEL, 1);
+    // Forward on the mouse aims the camera up, which lowers the boom's pitch. `invertY` is off and
+    // the rigs normalise the axis per device, so this is the same direction a stick pushed up gives.
+    const pitched = await lookBy(page, 0, -100);
+    expect(pitched.after.pitch - pitched.before.pitch).toBeCloseTo(-100 * DEGREES_PER_PIXEL, 1);
+    expect(failures, `the page reported errors: ${failures.join(" | ")}`).toEqual([]);
+  });
+
+  // Movement is camera-relative through `mainCameraForward`, so W walks away from the camera
+  // whichever way the rig is pointing, and the boom stays out at its full length in the open.
+  test("3d-third-person: W walks the character along the camera's forward", async ({ page }) => {
+    const failures = await start3D(page, THIRD_PERSON);
+    const start = await read3D(page);
+    expect(start.boom ?? 0).toBeGreaterThan(4);
+    const readings = await hold3DUntil(page, "w", (reading) => {
+      return Math.hypot(reading.position.x - start.position.x, reading.position.z - start.position.z) > 1.5;
+    });
+    const end = newest(readings);
+    const moved = { x: end.position.x - start.position.x, z: end.position.z - start.position.z };
+    const travelled = Math.hypot(moved.x, moved.z);
+    expect(
+      travelled,
+      `the character did not walk in ${String(readings.length * POLL_FRAMES_3D)} frames`,
+    ).toBeGreaterThan(1.5);
+
+    // The camera's forward, from where it sits towards the character it frames.
+    const eye = start.camera ?? start.position;
+    const forward = { x: start.position.x - eye.x, z: start.position.z - eye.z };
+    const cosine = (moved.x * forward.x + moved.z * forward.z) / (travelled * Math.hypot(forward.x, forward.z));
+    expect(cosine, "W should walk away from the camera").toBeGreaterThan(0.9);
+    expect(failures, `the page reported errors: ${failures.join(" | ")}`).toEqual([]);
+  });
+
+  // Gamepad-free, and with no pointer lock taken, so the menu is the only thing the clicks can
+  // reach. `paused` is read from the probe rather than inferred from the DOM.
+  test("3d-third-person: Escape opens the pause menu and Resume gives the game back", async ({ page }) => {
+    const failures = await start3D(page, THIRD_PERSON);
+    expect((await read3D(page)).paused).toBe(false);
+    const hint = page.locator(".lock-hint");
+    await expect(hint).toBeVisible();
+
+    await holdKey(page, "Escape");
+    const pause = page.locator('[data-menu="pause"]');
+    await expect(pause).toBeVisible();
+    expect((await read3D(page)).paused).toBe(true);
+    // The hint is about a click that would mean "choose a row" while a menu is up.
+    await expect(hint).toBeHidden();
+
+    await pause.locator('[data-row="resume"]').click();
+    await expect(pause).toBeHidden();
+    await waitForFrames(page, SETTLE_FRAMES_3D);
+    expect((await read3D(page)).paused).toBe(false);
+    await expect(hint).toBeVisible();
+    expect(failures, `the page reported errors: ${failures.join(" | ")}`).toEqual([]);
+  });
+
+  test("3d-first-person: the hint asks for a click, and an unlocked mouse leaves the view alone", async ({ page }) => {
+    const failures = await start3D(page, FIRST_PERSON);
+    const hint = page.locator(".lock-hint");
+    await expect(hint).toBeVisible();
+    await expect(hint).toHaveText(/Click to look/u);
+
+    const before = await read3D(page);
+    expect(before.pointerLocked).toBe(false);
+    await page.mouse.move(80, 80);
+    await page.mouse.move(560, 400);
+    await page.mouse.move(320, 120);
+    await waitForFrames(page, SETTLE_FRAMES_3D);
+    const after = await read3D(page);
+    expect(after.yaw).toBeCloseTo(before.yaw, 4);
+    expect(after.pitch).toBeCloseTo(before.pitch, 4);
+    expect(failures, `the page reported errors: ${failures.join(" | ")}`).toEqual([]);
+  });
+
+  // The head bob is the "jumpy" the template shipped with: 0.035 m at the engine's default 1.8 bobs
+  // per metre is seven bobs a second at a 4 m/s walk, which reads as a shake. It is 0.025 m at
+  // 0.5 bobs per metre now — two bobs a second, a footfall cadence — and the bounds below are what
+  // says so without depending on where in the cycle a frame happened to land.
+  test("3d-first-person: walking bobs the head by the authored amount, and standing still does not", async ({
+    page,
+  }) => {
+    const failures = await start3D(page, FIRST_PERSON);
+    const idle = await hold3DUntil(page, null, (_reading) => false, POLL_FRAMES_3D * 3);
+    for (const reading of idle) {
+      expect(reading.headHeight ?? Number.NaN).toBeCloseTo(HEAD_REST_HEIGHT, 5);
+    }
+
+    const walked = await hold3DUntil(page, "w", (reading) => reading.position.z > 4.5);
+    // A character wedged in scenery still *reports* a walking speed, and would still bob; asserting
+    // that it actually travelled is what stops this test passing over a spawn that cannot move.
+    expect(newest(walked).position.z, "the character did not walk forward").toBeGreaterThan(4.5);
+    const heights = walked.map((reading) => reading.headHeight ?? Number.NaN);
+    const low = Math.min(...heights);
+    const high = Math.max(...heights);
+    expect(low, "the head dipped further than headBobAmplitude").toBeGreaterThanOrEqual(
+      HEAD_REST_HEIGHT - HEAD_BOB_AMPLITUDE - 0.001,
+    );
+    expect(high, "the head rose further than headBobAmplitude").toBeLessThanOrEqual(
+      HEAD_REST_HEIGHT + HEAD_BOB_AMPLITUDE + 0.001,
+    );
+    expect(high - low, "the head did not bob at all").toBeGreaterThan(0.005);
+    expect(failures, `the page reported errors: ${failures.join(" | ")}`).toEqual([]);
+  });
+
+  /**
+   * The two tests a `hasTouch` context buys: `<Virtual>` look is never gated on the pointer lock,
+   * so the view can be turned with nothing held, and the on-screen pads are covered at the same
+   * time. Both templates build the sticks from `navigator.maxTouchPoints`, and neither builds the
+   * click-to-look hint here — a phone has no pointer to lock and telling it to click would be a lie.
+   */
+  test.describe("with the on-screen sticks", () => {
+    test.use({ hasTouch: true });
+
+    // The bug behind "the camera on the third-person example does not behave correctly". The boom
+    // sweeps a sphere from the pivot out to the camera, and `app.physics.shapeCast` reports a hit
+    // for every body in the world — `layerMask` only decides which entity it *names* — so
+    // `collisionLayers` could not keep the character's own capsule out of the sweep. Orbiting past
+    // it collapsed the boom to zero and put the camera inside the character's head, over roughly
+    // half of every turn. The pivot now sits above the capsule and `minPitch` is 0, so a full orbit
+    // in the open leaves the boom at its full length.
+    test("3d-third-person: a full orbit on the look pad never collapses the boom", async ({ page }) => {
+      const failures = await start3D(page, THIRD_PERSON);
+      await expect(page.locator(".lock-hint")).toHaveCount(0);
+      const start = await read3D(page);
+      const readings = await pushStickUntil(page, "look", 70, 0, (reading) => reading.yaw - start.yaw >= 360);
+      const end = newest(readings);
+      expect(end.yaw - start.yaw, "the stick did not turn the camera all the way round").toBeGreaterThanOrEqual(360);
+
+      const shortest = Math.min(...readings.map((reading) => reading.boom ?? 0));
+      expect(shortest, "the boom collapsed during the orbit").toBeGreaterThan(4);
+      expect(failures, `the page reported errors: ${failures.join(" | ")}`).toEqual([]);
+    });
+
+    // `Interact` is bound to <kbd>E</kbd> *and* to the left mouse button, and the left mouse button
+    // is also what asks for pointer lock. The click that gives the player their view back must not
+    // flip whichever pedestal happens to be under the crosshair; `Interactor` reads
+    // `InputAction.activeDevice` and ignores a mouse press until the lock is held.
+    test("3d-first-person: an unlocked click does not toggle a pedestal, and E does", async ({ page }) => {
+      const failures = await start3D(page, FIRST_PERSON);
+      const hud = page.locator(".hud");
+      // Down about ten degrees, which is where the pedestal straight ahead of the spawn sits.
+      const aimed = await pushStickUntil(page, "look", 0, 70, (reading) => reading.pitch >= 9);
+      expect(newest(aimed).pitch, "the look pad did not aim down").toBeGreaterThanOrEqual(9);
+      await hold3DUntil(page, "w", (reading) => reading.position.z > 4.4);
+      await expect(hud).toHaveText(/press E or click/u);
+      await expect(hud).toHaveText(/No pedestals lit/u);
+
+      // The click asks for the pointer, and that is all it may do.
+      await page.mouse.click(CANVAS_CENTRE.x, CANVAS_CENTRE.y);
+      await waitForFrames(page, SETTLE_FRAMES_3D);
+      await expect(hud).toHaveText(/No pedestals lit/u);
+
+      await holdKey(page, "e");
+      await expect(hud).toHaveText(/1 pedestal lit/u);
+      expect(failures, `the page reported errors: ${failures.join(" | ")}`).toEqual([]);
+    });
   });
 });

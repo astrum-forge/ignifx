@@ -42,6 +42,10 @@ import type {
  * A disabled task costs one array entry and one branch per frame. Both gaps are recorded in
  * ADR-0002's validation table.
  *
+ * What *can* change on a recorded task is its tuning: bloom's `weight`/`kernel`/`threshold`/
+ * `exposure` and every SMAA field are writable, and `updateUniforms()` re-uploads them
+ * ({@link updateBloomTask}, {@link updateSmaaTask}). Only bloom's `bloomScale` is fixed at creation.
+ *
  * ## Sources and targets
  *
  * Every post-process task takes a `sourceTexture` and writes to a `targetTexture`, defaulting to
@@ -78,6 +82,22 @@ export type LitePostProcessTask = Task;
  * @internal
  */
 export type LiteRenderTarget = RenderTarget;
+
+/**
+ * A recorded bloom task, re-exported under an ignifx name so the chain can keep a typed handle to
+ * the one task whose tuning it retunes live ({@link updateBloomTask}).
+ *
+ * @internal
+ */
+export type LiteBloomTask = BloomPostProcessTask;
+
+/**
+ * A recorded SMAA task, re-exported under an ignifx name for the same reason as
+ * {@link LiteBloomTask} ({@link updateSmaaTask}).
+ *
+ * @internal
+ */
+export type LiteSmaaTask = SmaaPostProcessTask;
 
 /**
  * The bloom settings an ignifx `PostProcessStack` entry declares.
@@ -255,6 +275,71 @@ export function createSmaaTask(
     config.sourceIsSrgb = settings.sourceIsSrgb;
   }
   return createSmaaPostProcessTask(config, engine, scene);
+}
+
+/**
+ * Pushes a bloom task's tuning to the GPU without rebuilding the task.
+ *
+ * @remarks
+ * `weight`, `kernel`, `threshold` and `exposure` are plain writable fields on Lite's task, and
+ * `updateUniforms()` "recomputes and uploads the uniforms of all sub-passes (extract, blur X/Y,
+ * merge) from current settings" (`index.d.ts` 1287–1298, verified against `@babylonjs/lite@1.27.0`).
+ * `bloomScale` is **read-only** on the task: it sizes the blur targets when the task is created, so
+ * a scale change is a new task, not an update — `PostProcessStack` rebuilds its chain for that.
+ *
+ * Call it only once the task has been recorded: before `record()` there is no uniform buffer to
+ * upload into. A task created before `registerScene` is recorded by the scene's own frame-graph
+ * build, and it was created with the settings it has, so nothing is lost by waiting.
+ *
+ * @param task - The recorded bloom task.
+ * @param settings - The tuning to apply; a field left `undefined` keeps the task's current value.
+ *
+ * @internal
+ */
+export function updateBloomTask(task: BloomPostProcessTask, settings: BloomSettings): void {
+  if (settings.weight !== undefined) {
+    task.weight = settings.weight;
+  }
+  if (settings.kernel !== undefined) {
+    task.kernel = settings.kernel;
+  }
+  if (settings.threshold !== undefined) {
+    task.threshold = settings.threshold;
+  }
+  if (settings.exposure !== undefined) {
+    task.exposure = settings.exposure;
+  }
+  task.updateUniforms();
+}
+
+/**
+ * Pushes an SMAA task's tuning to the GPU without rebuilding the task.
+ *
+ * @remarks
+ * Lite documents every one of these fields as "call `updateUniforms()` after changing it"
+ * (`index.d.ts` 11622–11652). `sourceIsSrgb` is deliberately not here: it describes the source
+ * target, which does not change while the chain stands. The same "recorded first" rule as
+ * {@link updateBloomTask} applies.
+ *
+ * @param task - The recorded SMAA task.
+ * @param settings - The tuning to apply; a field left `undefined` keeps the task's current value.
+ *
+ * @internal
+ */
+export function updateSmaaTask(task: SmaaPostProcessTask, settings: SmaaSettings): void {
+  if (settings.threshold !== undefined) {
+    task.threshold = settings.threshold;
+  }
+  if (settings.maxSearchSteps !== undefined) {
+    task.maxSearchSteps = settings.maxSearchSteps;
+  }
+  if (settings.diagonalDetection !== undefined) {
+    task.diagonalDetection = settings.diagonalDetection;
+  }
+  if (settings.cornerDetection !== undefined) {
+    task.cornerDetection = settings.cornerDetection;
+  }
+  task.updateUniforms();
 }
 
 /**

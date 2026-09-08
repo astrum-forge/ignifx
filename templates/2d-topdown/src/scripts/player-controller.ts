@@ -42,6 +42,13 @@ export class PlayerController
    */
   footstep: AssetHandle<AudioClip> | null = null;
 
+  /**
+   * Called with the names of everything the `interact` press found within arm's reach, so the front
+   * end can say so. `null` under an app with no front end — a `?static=1` scene, or the frame-time
+   * harness — in which case the answer only reaches the log.
+   */
+  onLookAround: ((names: readonly string[]) => void) | null = null;
+
   /** The controller this script drives, found on attach. */
   #controller: CharacterController2D | null = null;
 
@@ -127,6 +134,11 @@ export class PlayerController
    * Reports what is within arm's reach. A real game would open the chest or read the sign; this is
    * the shortest honest demonstration of a 2D shape query, and of the fact that a query needs one
    * completed fixed step behind it (`IGX-1153`).
+   *
+   * @remarks
+   * The answer goes to {@link PlayerController.onLookAround} as well as to the log, because a
+   * control a player is told to press has to do something the player can see. A log line is not
+   * that.
    */
   #lookAround(): void {
     const here = this.transform.position2D;
@@ -138,7 +150,8 @@ export class PlayerController
         names.push(entity.name);
       }
     }
-    this.app.log.info("interact: {count} nearby ({names})", names.length, names.join(", "));
+    this.app.log.info("interact: within reach:", names.length === 0 ? "nothing" : names.join(", "));
+    this.onLookAround?.(names);
   }
 
   /** Chooses the facing from the movement vector and plays the matching clip. */

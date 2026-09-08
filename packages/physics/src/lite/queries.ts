@@ -93,6 +93,10 @@ export interface SweepQueryResult {
  * @param from - The start position.
  * @param to - The end position.
  * @param hitTriggers - Whether trigger volumes count as hits.
+ * @param ignoreBody - One body the sweep passes through, or `null`. Lite's `ShapeCastQuery` takes
+ * exactly one (`ignoreBody`, `index.d.ts` 11494) and — unlike `physicsRaycast` — no
+ * `membership`/`collideWith` pair, so this is the only filtering a sweep can do inside Havok; a
+ * layer mask is applied to the *attribution* of the hit by the service, never to the sweep.
  * @param point - Written with the contact point on the hit body.
  * @param normal - Written with the contact normal on the hit body.
  * @param out - Written with the hit flag and the sweep fraction.
@@ -106,6 +110,7 @@ export function sweepShape(
   from: Vec3Like,
   to: Vec3Like,
   hitTriggers: boolean,
+  ignoreBody: LitePhysicsBody | null,
   point: MutableVec3,
   normal: MutableVec3,
   out: SweepQueryResult,
@@ -116,6 +121,7 @@ export function sweepShape(
     startPosition: { x: from.x, y: from.y, z: from.z },
     endPosition: { x: to.x, y: to.y, z: to.z },
     shouldHitTriggers: hitTriggers,
+    ...(ignoreBody === null ? {} : { ignoreBody }),
   });
   out.hit = result.hasHit;
   out.fraction = result.fraction;

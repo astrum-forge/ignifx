@@ -128,8 +128,10 @@ export const physics2d: (options?: Physics2DOptions) => Extension = defineExtens
           order: PHYSICS_2D_RESTORE_ORDER,
         });
         ctx.registerSystem(new Physics2DStepSystem(host), { phase: Phase.FixedUpdate, order: PHYSICS_2D_STEP_ORDER });
+        // `Update`, not `PreRender`: camera rigs and scripts must read the same pose the renderer
+        // draws (`runtime/systems.ts`, `docs/architecture/01-lifecycle-and-time.md` §3).
         ctx.registerSystem(new Physics2DInterpolationSystem(host), {
-          phase: Phase.PreRender,
+          phase: Phase.Update,
           order: PHYSICS_2D_INTERPOLATE_ORDER,
         });
       },

@@ -22,6 +22,7 @@ import { manifest } from "virtual:ignifx/manifest";
 import { acceptHotReload, scripts } from "virtual:ignifx/scripts";
 import { installFrameTimeProbe } from "./frame-time-probe.js";
 import { createGameUi, hasTouch } from "./game-ui.js";
+import { installGameplayProbe } from "./gameplay-probe.js";
 import { buildLevel } from "./level.js";
 import { createGameMenus } from "./menus/game-menus.js";
 import { applySettings, loadInputOverrides, loadSettings } from "./menus/settings-store.js";
@@ -29,6 +30,7 @@ import { createRun } from "./run.js";
 import { AttachToHand } from "./scripts/attach-to-hand.js";
 import { HudLine } from "./scripts/hud-line.js";
 import { Interactor } from "./scripts/interactor.js";
+import { LockHint } from "./scripts/lock-hint.js";
 import { MenuController } from "./scripts/menu-controller.js";
 import { SaveGame } from "./scripts/save-game.js";
 import type { Level } from "./level.js";
@@ -42,8 +44,8 @@ import type { LocaleAsset } from "@ignifx/ui";
 
 /**
  * A first-person 3D game: a walking, jumping, sprinting, crouching character whose head owns the
- * pitch, pointer lock on the first click, a crosshair ray that lights the pedestal it lands on, a
- * view model with a prop attached to the rig's `hand` node, a loading screen and a pause menu.
+ * pitch, pointer lock on a click, a crosshair ray that lights the pedestal it lands on, a view
+ * model with a prop attached to the rig's `hand` node, a loading screen and a pause menu.
  *
  * The shape of this file is the shape of every ignifx game:
  *
@@ -81,6 +83,29 @@ const STAND_HEIGHT = 1.8;
 
 /** How high the eyes sit above the capsule's centre, in metres. */
 const EYE_OFFSET = 0.72;
+
+/** Ground speed while walking, in metres per second. The head bob is derived from it. */
+const WALK_SPEED = 4;
+
+/**
+ * How far the head rises and falls while walking, in metres.
+ *
+ * @remarks
+ * 0.025 m is a two-and-a-half-centimetre sway at the eye, which reads as weight without reading as
+ * a camera shake. The template shipped 0.035 m at the engine's default 1.8 bobs per metre, which at
+ * 4 m/s is seven bobs a second — a vibration, not a walk, and the "jumpy" the owner reported.
+ */
+const HEAD_BOB_AMPLITUDE = 0.025;
+
+/**
+ * How many head bobs one metre of travel is worth.
+ *
+ * @remarks
+ * `FirstPersonController` advances the bob phase by distance, not by time, so a sprint bobs faster
+ * than a walk for free and a stopped character does not bob at all. Two bobs a second at
+ * {@link WALK_SPEED} — a walking cadence, one per footfall — is `2 / WALK_SPEED` bobs per metre.
+ */
+const HEAD_BOB_FREQUENCY = 2 / WALK_SPEED;
 
 /** Where the character starts, on the ground. */
 const PLAYER_SPAWN = { x: 0, y: 0, z: 2.5 } as const;
@@ -257,16 +282,23 @@ function buildPlayer(app: App, assets: Assets, isStatic: boolean): { readonly pl
 
   player.addComponent(FirstPersonController, {
     cameraPivot: head,
-    walkSpeed: 4,
+    walkSpeed: WALK_SPEED,
     sprintSpeed: 7,
     crouchSpeed: 1.8,
     standHeight: STAND_HEIGHT,
     crouchHeight: 1.1,
     jumpHeight: 1.1,
-    sensitivity: 0.12,
-    headBobAmplitude: 0.035,
-    // The first click on the canvas asks the browser for pointer lock; `<Mouse>/delta` keeps
-    // reporting while it holds, and `Escape` gives it back (which is also what opens the menu).
+    // Degrees per **CSS pixel**, so one figure suits a retina display and a 1080p monitor and does
+    // not move when the settings screen changes the render scale: a 180-degree turn is about 1,800
+    // pixels of hand, roughly one mouse mat.
+    sensitivity: 0.1,
+    // Degrees per **second** at full deflection: a stick is a rate, not a displacement.
+    stickLookSpeed: 180,
+    headBobAmplitude: HEAD_BOB_AMPLITUDE,
+    headBobFrequency: HEAD_BOB_FREQUENCY,
+    // Every click asks for the pointer while it is not held, and mouse look waits until it is
+    // granted; `src/scripts/lock-hint.ts` tells the player about the click and
+    // `src/scripts/interactor.ts` stops that click also flipping a pedestal. See the README.
     lockPointerOnClick: true,
   });
   return { player, head };
@@ -282,6 +314,8 @@ interface World {
   readonly head: Entity;
   /** The crosshair element, or `null` under an app with no DOM overlay. */
   readonly crosshair: HTMLElement | null;
+  /** The "click to look" line, or `null` on a device with no pointer to lock. */
+  readonly hint: HTMLElement | null;
 }
 
 /**
@@ -376,6 +410,7 @@ async function installFrontEnd(
 
   const line = host.addComponent(HudLine);
   line.element = hud;
+  host.addComponent(LockHint).element = world.hint;
   line.render = (): string =>
     app.i18n.t("hud.status", {
       lit: interactor.litCount,
@@ -468,6 +503,7 @@ async function main(): Promise<AppStatus> {
 
   const gameUi = createGameUi(app, {
     loadingLabel: app.i18n.t("loading.label"),
+    lockHint: app.i18n.t("hint.lock"),
     touch: !isStatic && !isBench && hasTouch(),
   });
   // The golden is about the rendered scene, not about how this machine draws a system font, and a
@@ -537,7 +573,7 @@ async function main(): Promise<AppStatus> {
     enableEffects = await installFrontEnd(
       app,
       assets,
-      { level, ...character, crosshair: gameUi.crosshair },
+      { level, ...character, crosshair: gameUi.crosshair, hint: gameUi.hint },
       gameUi.hud,
       isBench,
     );
@@ -551,6 +587,16 @@ async function main(): Promise<AppStatus> {
 
   gameUi.loading.hide();
 
+  // A test-only hook, and only under `?probe=1`: the gameplay half of
+  // `tests/visual/tests/templates.spec.ts` reads the view and the character as numbers rather than
+  // as pixels. See `src/gameplay-probe.ts`.
+  if (flags.get("probe") === "1") {
+    const controller = character.player.getComponent(FirstPersonController);
+    if (controller !== null) {
+      installGameplayProbe(app, character.player, character.head, controller);
+    }
+  }
+
   if (isBench) {
     installFrameTimeProbe(app);
   }
@@ -561,7 +607,7 @@ async function main(): Promise<AppStatus> {
   // the swapchain, which WebGPU rejects.
   enableEffects?.();
   await settle(SETTLE_FRAMES);
-  app.log.info("3d-first-person running: {calls} draw calls", app.renderer.drawCalls);
+  app.log.info("3d-first-person running; draw calls:", app.renderer.drawCalls);
   return "ready";
 }
 

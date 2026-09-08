@@ -132,8 +132,10 @@ export const physics: (options?: PhysicsOptions) => Extension = defineExtension<
         order: PHYSICS_RESTORE_ORDER,
       });
       ctx.registerSystem(new PhysicsStepSystem(host), { phase: Phase.FixedUpdate, order: PHYSICS_STEP_ORDER });
+      // `Update`, not `PreRender`: camera rigs and scripts must read the same pose the renderer
+      // draws (`runtime/systems.ts`, `docs/architecture/01-lifecycle-and-time.md` §3).
       ctx.registerSystem(new PhysicsInterpolationSystem(host), {
-        phase: Phase.PreRender,
+        phase: Phase.Update,
         order: PHYSICS_INTERPOLATE_ORDER,
       });
     },

@@ -11,6 +11,10 @@ import type { SignalLike } from "@ignifx/core";
  * The browser only grants a lock inside a user gesture, so `request()` is called from a click
  * handler, not from `start()`. The returned promise settles either way: it resolves `true` on
  * `pointerlockchange` and `false` on `pointerlockerror`.
+ *
+ * A lock is asked for with `unadjustedMovement: true` before it is asked for plainly, so that the
+ * deltas a locked look reads are the mouse's own counts rather than the pointer-acceleration curve
+ * the desktop applies to a cursor.
  */
 
 /**
@@ -68,6 +72,11 @@ export class PointerLock {
   /**
    * Requests the lock. Must be called from inside a user gesture.
    *
+   * @remarks
+   * The lock is asked for with `unadjustedMovement: true` first — raw, un-accelerated mouse motion,
+   * which is what a first-person look wants — and plainly when the browser rejects the option.
+   * Either way the promise settles once, on the outcome of whichever request the browser accepted.
+   *
    * @returns `true` once the lock is held, `false` when the browser refused it.
    * @throws IgnifxError with code `IGX-0809` when the app has no DOM canvas to lock.
    */
@@ -86,7 +95,7 @@ export class PointerLock {
     const settled = new Promise<boolean>((resolve) => {
       this.#pending.push(resolve);
     });
-    const result: unknown = target.canvas.requestPointerLock();
+    const result = this.#lock(target.canvas);
     if (result instanceof Promise) {
       // Newer Chromium returns a promise that rejects with the same reason `pointerlockerror`
       // reports; whichever arrives first settles the request.
@@ -137,6 +146,38 @@ export class PointerLock {
     this.#settle(false);
     this.#target = null;
     this.#changed.clear();
+  }
+
+  /**
+   * Takes the lock, asking for raw mouse motion first.
+   *
+   * @remarks
+   * `unadjustedMovement` turns off the operating system's pointer acceleration for the duration of
+   * the lock, which is what a first-person look wants: acceleration makes a fast flick travel
+   * further than a slow one over the same distance, and that is the "jumpy" feel players report.
+   * The option is Chromium-only and is rejected — synchronously in older builds, through the
+   * returned promise in newer ones — where it is unsupported, so a refusal falls back to the plain
+   * request rather than leaving the game with no lock at all.
+   *
+   * @param canvas - The element to lock.
+   * @returns Whatever the browser returned: a promise, or `undefined` in the older shape.
+   */
+  #lock(canvas: DomTarget["canvas"]): unknown {
+    const plain = (): unknown => canvas.requestPointerLock();
+    let result: unknown;
+    try {
+      result = canvas.requestPointerLock({ unadjustedMovement: true });
+    } catch {
+      // Older engines throw on the unrecognised argument instead of rejecting.
+      return plain();
+    }
+    if (result instanceof Promise) {
+      const pending: Promise<unknown> = result;
+      // A browser that knows the promise shape but not the option rejects it. Swallow that one
+      // rejection here and retry plainly; whatever the retry does settles the caller's promise.
+      return pending.catch(plain);
+    }
+    return result;
   }
 
   /**

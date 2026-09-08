@@ -36,6 +36,7 @@ interface InputAction {
   readonly onPerformed: Signal<InputActionEvent>; // value changed / button pressed
   readonly onCanceled: Signal<InputActionEvent>; // returned to rest
   readonly bindings: readonly Binding[];
+  readonly activeDevice: DeviceKind | null; // which device produced this frame's value
 }
 interface ActionMap {
   readonly name: string;
@@ -49,6 +50,7 @@ app.input.actions.map("UI").enabled = true;
 
 - Maps group actions by context (`"Player"`, `"UI"`, `"Vehicle"`); enabling/disabling a map is how games switch contexts. Actions inside disabled maps read as released.
 - `pressPoint` (default 0.5) turns analog values into button state.
+- **`activeDevice` (added 2026-09-08)** names the device family behind the binding whose magnitude won the frame, and `null` when the action is at rest or disabled. It is stable for the frame like every other reading. A composite answers with the device of its **first** part — the four parts of a `2DVector` are one device in any binding that makes sense, and a mixed one has no single answer. It exists because one action legitimately means different things per device: a `Look` bound to both `<Mouse>/delta` and `<Gamepad>/rightStick` carries a displacement from one and a rate from the other, and a mouse look must be ignored until the pointer is locked while a stick look must not be (`12-3d-toolkit.md` §1.2).
 
 ## 3. Bindings
 
@@ -127,8 +129,14 @@ Composites: `2DVector` (up/down/left/right → `vector2`), `1DAxis` (negative/po
 ## 4. Devices
 
 - **Keyboard/Mouse/Pointer/Touch** subscribe to DOM events on the canvas (pointer, wheel, touch) and on `window` (keyboard, blur). `blur`/`visibilitychange` release all controls to avoid stuck keys.
+
+  **Amended 2026-09-08.** The canvas `wheel` listener is registered **non-passive** (`{ passive: false }`) and calls `preventDefault()` on every wheel event it queues. A passive listener may not, and the page behind the canvas therefore scrolled — or the browser zoomed — while the game read the same wheel as a camera zoom. It is worst in the embedded case ignifx.com uses, where the canvas lives in an `<iframe>` and the wheel scrolled the article around it. The wheel is read from the canvas and nowhere else, so a wheel over the page's own chrome is untouched, and the queued entry is unchanged.
+
 - **Gamepads** are polled through the Gamepad API each frame; `standard` mapping is assumed, with a small remap table for common non-standard pads. Haptics via `gamepad.vibrationActuator.playEffect` when present (`app.input.gamepads[0].rumble(intensity, seconds)`).
 - **Pointer lock** (`app.input.pointerLock.request()`/`exit()`, `locked`, `onChange`) for first-person controls; `<Mouse>/delta` keeps reporting during lock. **Cursor** visibility: `app.input.cursor.visible`.
+
+  **Amended 2026-09-08.** `request()` asks for `canvas.requestPointerLock({ unadjustedMovement: true })` first and falls back to the plain call when the browser rejects the option (by throwing, or by rejecting the returned promise). Unadjusted movement is raw mouse motion with the desktop's pointer-acceleration curve removed, which is what a first-person look wants: with acceleration on, a fast flick turns further than a slow one over the same desk distance, and that is most of what players describe as a "jumpy" look. Every settle semantic is unchanged — the promise resolves `true` on `pointerlockchange`, `false` on `pointerlockerror`, and rejects with `IGX-0809` on a headless app.
+
 - **Control schemes** switch on the last device that produced input; `app.input.currentScheme` and `onControlSchemeChanged` let UI show the right glyphs.
 - **Device events:** `onDeviceConnected`/`onDeviceDisconnected` (gamepads).
 
@@ -136,7 +144,18 @@ Composites: `2DVector` (up/down/left/right → `vector2`), `1DAxis` (negative/po
 
 - While a DOM text field has focus (`@ignifx/ui` sets `app.input.uiHasFocus`), keyboard actions read as released and keyboard events are not consumed; pointer actions still work unless the UI marks the event handled.
 - While a pointer is pressed on the UI overlay (`@ignifx/ui` sets `app.input.uiHasPointer`), pointing-device actions (`<Pointer>`, `<Mouse>`, `<Touch>`) read as released and their events are still published; keyboard and gamepad actions keep working. Pointer moves and releases are read from the window, which is what would otherwise let a drag that began on a UI slider also drive `<Pointer>/delta`. (Added 2026-09-06.)
-- `app.input.events` exposes the raw, ordered event stream of the frame (`{ type: "keydown", code, key, repeat }`, pointer events in backing-store pixels — the canvas's `width`/`height`, the space `Camera.worldToScreen` and `renderer.pickAsync` use; amended 2026-09-06, previously CSS pixels, which missed picks by the device pixel ratio — wheel) for text entry, menus, and tools.
+- `app.input.events` exposes the raw, ordered event stream of the frame (`{ type: "keydown", code, key, repeat }`, pointer events, wheel) for text entry, menus, and tools.
+
+**Pointer pixel spaces (amended 2026-09-08).** A pointer event carries two measurements and they are in two different units:
+
+| Reading                                                                                             | Unit                                                     | Why                                                                                                                                                                                                                                                                  |
+| --------------------------------------------------------------------------------------------------- | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Positions** — `<Pointer>/position`, `<Mouse>/position`, `<Touch>/…/position`, `event.x`/`event.y` | **Backing-store pixels** (the canvas's `width`/`height`) | They name a place on the render target, which is the space `Camera.worldToScreen`, `renderer.pickAsync`, and `Camera.screenToRay` share. Unchanged since 2026-09-06.                                                                                                 |
+| **Deltas** — `<Pointer>/delta`, `<Mouse>/delta`, `<Touch>/…/delta`, `event.deltaX`/`event.deltaY`   | **CSS pixels** (raw `movementX`/`movementY`)             | They measure hand motion, not a place. Scaling them by `width / rect.width` doubled a look's sensitivity at a device pixel ratio of 2 and changed it again every time a settings screen moved `renderer.resolutionScale`. A look sensitivity must depend on neither. |
+
+Wheel deltas are the browser's own and are untouched. The deltas are the DOM adapter's to produce: it uses `movementX`/`movementY` where the browser reports them and, for the pointer types that leave them at zero (touch, some pens), derives the motion from that pointer's own successive `clientX`/`clientY` — never from the queued position, which is in the other space. `DeviceWriter` derives nothing; a `simulateEvent` in a test states the delta it means.
+
+The consequence for gameplay code: a mouse look sensitivity is now in degrees per **CSS pixel** and is stable across displays and render scales; 0.08 to 0.15 is a sensible range (`@ignifx/3d`'s rigs default to 0.15 and 0.2).
 
 ## 6. Rebinding and persistence
 

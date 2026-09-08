@@ -4,9 +4,11 @@ import { Rigidbody2D } from "../../src/components/rigidbody.js";
 import { createPhysics2DApp, FIXED_STEP } from "../support/harness.js";
 
 /**
- * Interpolation (`docs/architecture/09-physics.md` §1, identical in 2D): the `PreRender` system
- * writes `lerp(prev, cur, time.fixedStepAlpha)` and the `FixedUpdate −100` system puts the
- * authoritative pose back before anything reads it, so the display pose never leaks into Rapier.
+ * Interpolation (`docs/architecture/09-physics.md` §1, identical in 2D): the `Systems(Update, -900)`
+ * system writes `lerp(prev, cur, time.fixedStepAlpha)` at the top of `Update` and the
+ * `FixedUpdate −100` system puts the authoritative pose back before anything reads it, so the
+ * display pose never leaks into Rapier. `display-pose.test.ts` covers the other half: everything
+ * outside the fixed loop reads the display pose.
  */
 
 describe("2D interpolation", () => {

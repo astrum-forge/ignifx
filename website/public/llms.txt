@@ -9,7 +9,7 @@ The pages below are the Agent Skill that ships with the engine. They live in the
 ## Docs
 
 - [ignifx](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/SKILL.md): ignifx is a code-first TypeScript game engine for browsers and Electron.
-- [Gotchas](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/gotchas.md): Traps in the engine as it stands (`0.0.0`, rendering and assets included), each with its replacement and, where one exists, the error code you will see.
+- [Gotchas](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/gotchas.md): Traps in the engine as it stands (rendering and assets included), each with its replacement and, where one exists, the error code you will see.
 
 ## Concepts
 

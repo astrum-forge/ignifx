@@ -26,9 +26,9 @@ export const TEMPLATES: readonly ExampleOf<"Templates">[] = [
       "pause menu, settings, key rebinding and save file are all real. Everything but the camera is spawned from " +
       "the map's objects layer, so moving a spawn needs no TypeScript.",
     tries: [
-      "Walk with WASD or the arrows and light a shrine with E; the game autosaves when you do.",
+      "Walk onto a shrine pad with WASD or the arrows to light it; the game autosaves when you do. Press E to see what is within reach.",
       "Press Escape for the pause menu, then Settings to move the audio and render-scale sliders.",
-      "Open Settings, then Controls, and rebind a key — the override persists across a reload.",
+      "Open Settings, then Rebind controls, and give a key a new binding — the override persists across a reload.",
     ],
     uses: ["Tilemap", "TilemapRenderer", "Camera2DFollow", "CharacterController2D", "Menu", "MenuStack", "app.storage"],
     assets: [
@@ -110,7 +110,7 @@ export const TEMPLATES: readonly ExampleOf<"Templates">[] = [
       "code; and the crates are rigid bodies you can push. Walking up to a beacon lights it, scores a point and " +
       "autosaves. The title screen, pause menu, settings, key rebinding and save file are all real.",
     tries: [
-      "Walk with WASD, look with the mouse and hold Shift to sprint; the rig blends idle, walk and run.",
+      "Click the frame to take the pointer, then walk with WASD, look with the mouse and hold Shift to sprint; the rig blends idle, walk and run.",
       "Walk into one of the three beacons to light it — that scores a point and autosaves the run.",
       "Press Escape, then Settings, and turn shadows or post-processing off while the game runs.",
     ],
@@ -160,7 +160,7 @@ export const TEMPLATES: readonly ExampleOf<"Templates">[] = [
       "menu, settings, key rebinding and save file are all real.",
     tries: [
       "Click the frame to take pointer lock, then walk with WASD and hold C to crouch.",
-      "Look at a pedestal and press E — the heads-up display says what is in reach before you do.",
+      "Look at a pedestal and press E, or click, to light it; the game autosaves when you do.",
       "Press Escape, then Settings, and turn shadows or post-processing off while the game runs.",
     ],
     uses: [

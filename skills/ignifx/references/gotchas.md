@@ -1,6 +1,6 @@
 # Gotchas
 
-Traps in the engine as it stands (`0.0.0`, rendering and assets included), each with its replacement
+Traps in the engine as it stands (rendering and assets included), each with its replacement
 and, where one exists, the error code you will see. The eighteen most common are repeated in
 `../SKILL.md`.
 

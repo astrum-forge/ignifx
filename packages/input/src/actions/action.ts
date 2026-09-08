@@ -4,6 +4,7 @@ import type { ActionMap } from "./action-map.js";
 import type { ActionDefinition, InputActionType } from "../asset/definition.js";
 import type { BindingContext, BindingResolver } from "../bindings/binding.js";
 import type { ControlValue } from "../bindings/processors.js";
+import type { DeviceKind } from "../devices/device.js";
 import type { SignalLike, Vec2Like } from "@ignifx/core";
 
 /**
@@ -132,6 +133,8 @@ export class InputAction {
 
   #magnitude = 0;
 
+  #activeDevice: DeviceKind | null = null;
+
   #isPressed = false;
 
   #wasPressedThisFrame = false;
@@ -237,6 +240,29 @@ export class InputAction {
   }
 
   /**
+   * Which device family produced this frame's value: the device behind the binding whose magnitude
+   * won the frame, or `null` when the action is at rest, disabled, or in a disabled map. Stable for
+   * the whole frame, like every other reading on an action.
+   *
+   * @remarks
+   * A composite binding answers with the device of its first part, because the four parts of a
+   * `2DVector` are one device in every binding that makes sense. Use it to treat one action
+   * differently per device — a mouse look that must be ignored until the pointer is locked, a stick
+   * look that is a rate rather than a displacement — without splitting the action in two.
+   *
+   * @returns The winning binding's device family, or `null`.
+   *
+   * @example
+   * ```ts
+   * const look = app.input.actions.get("look");
+   * const degrees = look.activeDevice === "Gamepad" ? look.vector.x * 180 * dt : look.vector.x * 0.1;
+   * ```
+   */
+  get activeDevice(): DeviceKind | null {
+    return this.#activeDevice;
+  }
+
+  /**
    * The action's value in the shape its `type` implies.
    *
    * @returns A boolean for `button`, a number for `axis`, a live `Vec2Like` for `vector2`.
@@ -267,6 +293,7 @@ export class InputAction {
     let bestX = 0;
     let bestY = 0;
     let best = -1;
+    let bestDevice: DeviceKind | null = null;
     if (this.enabled && this.map.enabled) {
       const bindings = this.#bindings;
       for (let index = 0; index < bindings.length; index += 1) {
@@ -280,6 +307,7 @@ export class InputAction {
           best = magnitude;
           bestX = this.#scratch.x;
           bestY = this.#scratch.y;
+          bestDevice = binding.deviceKind;
         }
       }
     }
@@ -287,6 +315,9 @@ export class InputAction {
     this.#values[0] = bestX;
     this.#values[1] = this.type === "vector2" ? bestY : 0;
     this.#magnitude = magnitude;
+    // An action at rest names no device: every binding read zero, so the first one "won" by
+    // accident and reporting its device would make a released action look actuated by something.
+    this.#activeDevice = magnitude > 0 ? bestDevice : null;
     const pressed = magnitude > 0 && magnitude >= pressPoint;
     this.#isPressed = pressed;
     this.#wasPressedThisFrame = pressed && !previousPressed;

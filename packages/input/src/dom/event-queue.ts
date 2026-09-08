@@ -28,6 +28,10 @@ type QueuedKind = InputEventType | "releaseAll" | "control";
  * Every field is always present; the ones an event kind does not use read `0` or `""`. A fixed
  * shape is what lets the records be pooled, and reading `deltaX` on a `keydown` is harmless.
  *
+ * Pointer **positions** are backing-store pixels and pointer **deltas** are CSS pixels; the two
+ * spaces differ by the device pixel ratio and the render scale, and §5 of the architecture document
+ * says why each is where it is.
+ *
  * The records are recycled: keep a copy of anything needed after the frame ends.
  *
  * @public
@@ -43,13 +47,13 @@ export interface InputEventRecord {
   readonly key: string;
   /** Whether a key event is an auto-repeat. */
   readonly repeat: boolean;
-  /** The pointer x, in CSS pixels from the canvas's left edge. */
+  /** The pointer x, in backing-store pixels from the canvas's left edge. */
   readonly x: number;
-  /** The pointer y, in CSS pixels from the canvas's top edge. */
+  /** The pointer y, in backing-store pixels from the canvas's top edge. */
   readonly y: number;
-  /** The pointer movement x, or the wheel's horizontal delta. */
+  /** The pointer movement x, in **CSS** pixels, or the wheel's horizontal delta. */
   readonly deltaX: number;
-  /** The pointer movement y, or the wheel's vertical delta. */
+  /** The pointer movement y, in **CSS** pixels, or the wheel's vertical delta. */
   readonly deltaY: number;
   /** The `PointerEvent.button` index, for pointer events. */
   readonly button: number;

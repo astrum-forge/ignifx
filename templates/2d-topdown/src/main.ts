@@ -24,6 +24,7 @@ import { manifest } from "virtual:ignifx/manifest";
 import { acceptHotReload, scripts } from "virtual:ignifx/scripts";
 import { installFrameTimeProbe } from "./frame-time-probe.js";
 import { createGameUi, hasTouch } from "./game-ui.js";
+import { installGameplayProbe } from "./gameplay-probe.js";
 import { createGameMenus } from "./menus/game-menus.js";
 import { applySettings, loadInputOverrides, loadSettings } from "./menus/settings-store.js";
 import { createRun } from "./run.js";
@@ -34,6 +35,7 @@ import { SaveGame } from "./scripts/save-game.js";
 import { Shrine } from "./scripts/shrine.js";
 import type { GameMenus } from "./menus/game-menus.js";
 import type { GraphicsHooks } from "./menus/settings-store.js";
+import type { Run } from "./run.js";
 import type { SpriteAnimationAsset, SpriteAtlasAsset, TileObjectContext, TilemapAsset } from "@ignifx/2d";
 import type { AudioBusesAsset, AudioClip } from "@ignifx/audio";
 import type { App, AssetHandle, Entity } from "@ignifx/core";
@@ -62,6 +64,8 @@ import type { LocaleAsset } from "@ignifx/ui";
  * - `?hud=1` keeps the DOM overlay visible in a `?static=1` scene, which is what the gallery
  *   capture script uses; a golden leaves it off so the image never depends on how the runner draws
  *   a system font.
+ * - `?probe=1` installs `window.__ignifxGameplay`, the read-only test hook the gameplay half of
+ *   `tests/visual/tests/templates.spec.ts` measures the character with. See `src/gameplay-probe.ts`.
  * - `?locale=<tag>` picks a locale from `assets/strings.i18n.json` before the menus are built.
  */
 
@@ -117,6 +121,8 @@ interface Assets {
 interface World {
   /** The character. */
   readonly player: Entity;
+  /** The camera that follows it. */
+  readonly camera: Entity;
   /** Where the character starts. */
   readonly spawn: Vec2;
   /** Every shrine the objects layer spawned. */
@@ -322,7 +328,7 @@ function buildWorld(app: App, assets: Assets): World {
   eye.addComponent(Camera2DFollow);
   // The ears ride the camera, so a sound is panned from where the player is looking.
   eye.addComponent(AudioListener);
-  return { player: spawned.player, spawn: spawned.spawn, shrines };
+  return { player: spawned.player, camera: eye, spawn: spawned.spawn, shrines };
 }
 
 /**
@@ -334,7 +340,7 @@ function buildWorld(app: App, assets: Assets): World {
  * @param hud - The HUD element, or `null` under an app with no DOM overlay.
  * @param isBench - Whether the frame-time harness is driving, in which case the game starts
  *   immediately instead of waiting on a title screen.
- * @returns A promise that settles once the front end is up.
+ * @returns A promise that answers with the run once the front end is up.
  */
 async function installFrontEnd(
   app: App,
@@ -342,7 +348,7 @@ async function installFrontEnd(
   world: World,
   hud: HTMLDivElement | null,
   isBench: boolean,
-): Promise<void> {
+): Promise<Run> {
   // A 2D sprite scene has no shadow-casting light and no post-process chain, so the settings
   // screen leaves both graphics rows out rather than offering a switch that does nothing.
   const graphics: GraphicsHooks = {
@@ -398,6 +404,19 @@ async function installFrontEnd(
   line.element = hud;
   line.render = (): string => app.i18n.t("hud.status", { score: run.score() });
 
+  // `interact` runs a shape query and now says what it found, because a control the player is told
+  // to press has to do something the player can see.
+  const controller = world.player.getComponent(PlayerController);
+  if (controller !== null) {
+    controller.onLookAround = (names: readonly string[]): void => {
+      menus.toast(
+        names.length === 0
+          ? app.i18n.t("toast.nothingNearby")
+          : app.i18n.t("toast.nearby", { names: names.join(", ") }),
+      );
+    };
+  }
+
   // The ambient pad loops on the `Music` bus, which `game.audio.json` marks as not pausable so the
   // menus can duck it rather than silence it.
   if (clipOrNull(assets.ambient) !== null) {
@@ -413,12 +432,13 @@ async function installFrontEnd(
   if (isBench) {
     // The frame-time harness measures a *running* game, so it skips the title screen. Everything
     // else is the scene a player gets.
-    return;
+    return run;
   }
   // The game boots into its title screen. `MenuController` reconciles `app.pause()` against the
   // screen stack every frame, so this one call is what stops the world until "New game".
   menus.show("title");
   app.pause();
+  return run;
 }
 
 /**
@@ -537,7 +557,12 @@ async function main(): Promise<AppStatus> {
     // front end is left out for the same reason.
     app.time.timeScale = 0;
   } else {
-    await installFrontEnd(app, assets, world, gameUi.hud, isBench);
+    const run = await installFrontEnd(app, assets, world, gameUi.hud, isBench);
+    // A read-only test hook, and only under `?probe=1`: the gameplay half of the template spec
+    // measures the character in metres rather than in pixels. See `src/gameplay-probe.ts`.
+    if (flags.get("probe") === "1") {
+      installGameplayProbe(app, world.player, world.camera, world.shrines, run);
+    }
   }
 
   if (isStatic && showOverlay && gameUi.hud !== null) {
@@ -554,7 +579,7 @@ async function main(): Promise<AppStatus> {
 
   await app.start();
   await settle(SETTLE_FRAMES);
-  app.log.info("2d-topdown running: {sprites} sprites", app.twoD.spriteCount);
+  app.log.info("2d-topdown running; sprites:", app.twoD.spriteCount);
   return "ready";
 }
 

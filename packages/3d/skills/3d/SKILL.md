@@ -104,23 +104,51 @@ treated as absent; the character stands still rather than throwing.
 
 ## Core APIs
 
-| Component               | What it does                                                     | Key fields                                                                                                                                                     |
-| ----------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ThirdPersonController` | Camera-relative movement on a `CharacterController`.             | `walkSpeed`, `sprintSpeed`, `turnSpeed`, `gravity`, `jumpHeight`, `coyoteTime`, `jumpBufferTime`, `airControl`, `stepHeight`, `slideSpeed`, `rotateToMovement` |
-| `FirstPersonController` | Mouse-look on the body's yaw and a child pivot's pitch.          | `cameraPivot`, `sensitivity`, `invertY`, `standHeight`, `crouchHeight`, `headBobAmplitude`, `sprintFovKick`, `lockPointerOnClick`                              |
-| `RigidbodyMover`        | Forces on a `Rigidbody`; `torqueSteering` for vehicles.          | `force`, `maxSpeed`, `cameraRelative`, `torqueSteering`                                                                                                        |
-| `PlatformMover`         | A kinematic platform that carries the characters standing on it. | `offset`, `duration`, `waitSeconds`, `carryRiders`                                                                                                             |
-| `Projectile`            | Muzzle velocity, gravity scale, lifetime, destroy-on-hit.        | `speed`, `gravityScale`, `lifetimeSeconds`, `destroyOnHit`, `owner`                                                                                            |
-| `ThirdPersonCamera`     | Orbit rig with damping and wall collision.                       | `target`, `distance`, `minPitch`, `maxPitch`, `sensitivity`, `damping`, `shoulderOffset`, `collisionEnabled`, `collisionRadius`, `collisionLayers`             |
-| `Animator`              | Runs a `.animator.json` state machine on a `Model`.              | `animator`, `speed`, `defaultLayer`, `updateWhenPaused`                                                                                                        |
-| `NavMeshSurface`        | Bakes a navmesh and owns its crowd.                              | `layers`, `bakeOnAwake`, `agentRadius`, `agentHeight`, `agentClimb`, `cellSize`, `maxObstacles`, `maxAgents`, `randomSeed`                                     |
-| `NavMeshAgent`          | One crowd agent, written back onto the transform.                | `speed`, `acceleration`, `radius`, `height`, `stoppingDistance`, `updateRotation`                                                                              |
-| `NavMeshObstacle`       | A runtime hole in a tile-cache navmesh.                          | `shape`, `size`, `radius`, `height`                                                                                                                            |
-| `LodGroup`              | Distance-based `MeshRenderer` switching with hysteresis.         | `levels`, `hysteresis`                                                                                                                                         |
-| `Billboard`             | Faces the main camera; `yAxis` stays upright.                    | `mode`, `faceCameraPlane`                                                                                                                                      |
+| Component               | What it does                                                     | Key fields                                                                                                                                                                                 |
+| ----------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ThirdPersonController` | Camera-relative movement on a `CharacterController`.             | `walkSpeed`, `sprintSpeed`, `turnSpeed`, `gravity`, `jumpHeight`, `coyoteTime`, `jumpBufferTime`, `airControl`, `stepHeight`, `slideSpeed`, `rotateToMovement`                             |
+| `FirstPersonController` | Mouse-look on the body's yaw and a child pivot's pitch.          | `cameraPivot`, `sensitivity`, `stickLookSpeed`, `invertY`, `standHeight`, `crouchHeight`, `headBobAmplitude`, `sprintFovKick`, `lockPointerOnClick`                                        |
+| `RigidbodyMover`        | Forces on a `Rigidbody`; `torqueSteering` for vehicles.          | `force`, `maxSpeed`, `cameraRelative`, `torqueSteering`                                                                                                                                    |
+| `PlatformMover`         | A kinematic platform that carries the characters standing on it. | `offset`, `duration`, `waitSeconds`, `carryRiders`                                                                                                                                         |
+| `Projectile`            | Muzzle velocity, gravity scale, lifetime, destroy-on-hit.        | `speed`, `gravityScale`, `lifetimeSeconds`, `destroyOnHit`, `owner`                                                                                                                        |
+| `ThirdPersonCamera`     | Orbit rig with damping and wall collision.                       | `target`, `distance`, `minPitch`, `maxPitch`, `sensitivity`, `stickLookSpeed`, `lockPointerOnClick`, `damping`, `shoulderOffset`, `collisionEnabled`, `collisionRadius`, `collisionLayers` |
+| `Animator`              | Runs a `.animator.json` state machine on a `Model`.              | `animator`, `speed`, `defaultLayer`, `updateWhenPaused`                                                                                                                                    |
+| `NavMeshSurface`        | Bakes a navmesh and owns its crowd.                              | `layers`, `bakeOnAwake`, `agentRadius`, `agentHeight`, `agentClimb`, `cellSize`, `maxObstacles`, `maxAgents`, `randomSeed`                                                                 |
+| `NavMeshAgent`          | One crowd agent, written back onto the transform.                | `speed`, `acceleration`, `radius`, `height`, `stoppingDistance`, `updateRotation`                                                                                                          |
+| `NavMeshObstacle`       | A runtime hole in a tile-cache navmesh.                          | `shape`, `size`, `radius`, `height`                                                                                                                                                        |
+| `LodGroup`              | Distance-based `MeshRenderer` switching with hysteresis.         | `levels`, `hysteresis`                                                                                                                                                                     |
+| `Billboard`             | Faces the main camera; `yAxis` stays upright.                    | `mode`, `faceCameraPlane`                                                                                                                                                                  |
 
 `app.navigation` carries `findPath(from, to)`, `closestPoint(point)`, `raycast(from, to)`,
 `surfaces`, `primarySurface`, `isLoaded`, and `onReady`.
+
+### Looking around (both rigs)
+
+`FirstPersonController` and `ThirdPersonCamera` read one `Look` action and treat its devices
+differently, using `InputAction.activeDevice`:
+
+| Field                | Applies to                                       | Unit                                                  | Default                     |
+| -------------------- | ------------------------------------------------ | ----------------------------------------------------- | --------------------------- |
+| `sensitivity`        | `<Mouse>/delta`, `<Pointer>/delta`, touch deltas | Degrees per **CSS pixel** — 0.08–0.15 suits most mice | `0.15` (FP) / `0.2` (rig)   |
+| `stickLookSpeed`     | `<Gamepad>/…`, `<Virtual>/…`                     | Degrees per **second** at full deflection             | `180`                       |
+| `lockPointerOnClick` | Mouse and unified pointer only                   | Click to lock, and ignore mouse look until it is held | `true` (FP) / `false` (rig) |
+
+Bind the stick with a `deadzone(...)` and nothing else: a `scale(...)` on a stick binding
+double-counts, because `stickLookSpeed × dt` already turns the deflection into a rate. Mouse
+sensitivity does not depend on the device pixel ratio or on `renderer.resolutionScale`.
+
+**Up is up on every device.** A screen's `y` grows downward and a stick's grows upward; the rigs
+reconcile that, so moving the mouse forward and pushing the stick up both look up in first person
+(and both lower the boom and aim the camera up in third person). `invertY` flips mouse, touch, and
+stick together — there is no need for a `scale(1, -1)` on one binding to line the devices up.
+
+```json
+{
+  "name": "Look",
+  "type": "vector2",
+  "bindings": [{ "path": "<Mouse>/delta" }, { "path": "<Gamepad>/rightStick", "processors": ["deadzone(0.15)"] }]
+}
+```
 
 ## Recipes
 
@@ -315,14 +343,18 @@ Past the last level's distance every renderer is off — that is how a group cul
 
 ## Gotchas
 
-| Trap                                                           | What happens                                                                                                                                                                                                                         | Do this instead                                                                                                                    |
-| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Two `Model`s of one `.glb`, each with an `Animator`            | The second animator is refused the clips (reported on `app.onError`) and both instances would share one pose anyway: Babylon Lite binds an animation group to one manager, and a cloned skinned mesh shares the template's skeleton. | One animated instance per model asset. Load a second copy of the `.glb` under a different address for a second animated character. |
-| `.navmesh.bin` / `ignifx bake navmesh`                         | Babylon Lite 1.27.0 has no navmesh serialization at all. `NavMeshSurface.prebaked` logs a warning and bakes at runtime.                                                                                                              | Bake at runtime, or keep the bake cheap by baking from `addSource` geometry. See `docs/adr/0017-navigation-wasm.md`.               |
-| Destroying `NavMeshAgent`s in a loop                           | Lite has no `removeAgent`; the slot is never freed and `maxAgents` fills up.                                                                                                                                                         | Re-bake the surface, which builds a fresh crowd, or pool your agents.                                                              |
-| Reading `CharacterController.isGrounded` for animation         | Havok's character controller has no static friction, so it reports `false` on _any_ incline.                                                                                                                                         | Read `ThirdPersonController.isGrounded`, which classifies the ground against `slopeLimit`.                                         |
-| Expecting `app.navigation.findPath` to work on the first frame | Recast is WebAssembly and loads asynchronously; nothing is baked yet, so the path is empty.                                                                                                                                          | `await surface.bake()`, or connect to `surface.onBaked`. Queries never throw — they answer empty.                                  |
-| A tween on `transform.position` in a coroutine loop            | Two tweens on one property fight, and hand-rolled lerps ignore `timeScale`.                                                                                                                                                          | One `app.tweens.to(...)`; it latches its start value when its delay elapses.                                                       |
+| Trap                                                           | What happens                                                                                                                                                                                                                         | Do this instead                                                                                                                      |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Two `Model`s of one `.glb`, each with an `Animator`            | The second animator is refused the clips (reported on `app.onError`) and both instances would share one pose anyway: Babylon Lite binds an animation group to one manager, and a cloned skinned mesh shares the template's skeleton. | One animated instance per model asset. Load a second copy of the `.glb` under a different address for a second animated character.   |
+| `.navmesh.bin` / `ignifx bake navmesh`                         | Babylon Lite 1.27.0 has no navmesh serialization at all. `NavMeshSurface.prebaked` logs a warning and bakes at runtime.                                                                                                              | Bake at runtime, or keep the bake cheap by baking from `addSource` geometry. See `docs/adr/0017-navigation-wasm.md`.                 |
+| Destroying `NavMeshAgent`s in a loop                           | Lite has no `removeAgent`; the slot is never freed and `maxAgents` fills up.                                                                                                                                                         | Re-bake the surface, which builds a fresh crowd, or pool your agents.                                                                |
+| Reading `CharacterController.isGrounded` for animation         | Havok's character controller has no static friction, so it reports `false` on _any_ incline.                                                                                                                                         | Read `ThirdPersonController.isGrounded`, which classifies the ground against `slopeLimit`.                                           |
+| Expecting `app.navigation.findPath` to work on the first frame | Recast is WebAssembly and loads asynchronously; nothing is baked yet, so the path is empty.                                                                                                                                          | `await surface.bake()`, or connect to `surface.onBaked`. Queries never throw — they answer empty.                                    |
+| A tween on `transform.position` in a coroutine loop            | Two tweens on one property fight, and hand-rolled lerps ignore `timeScale`.                                                                                                                                                          | One `app.tweens.to(...)`; it latches its start value when its delay elapses.                                                         |
+| Mouse look that does nothing in a first-person game            | With `lockPointerOnClick` on (the default) the mouse is ignored until the browser grants the lock, so nothing turns until the player clicks the canvas — and a headless test never gets the lock at all.                             | Click the canvas, or set `lockPointerOnClick: false` for drag-to-look. In a test, drive `<Gamepad>/rightStick` or turn the flag off. |
+| `scale(18)` on a stick's look binding                          | The stick is counted twice: `stickLookSpeed × dt` already turns the deflection into degrees per second, so the view whips round.                                                                                                     | Keep only `deadzone(...)` on the binding and tune `stickLookSpeed`.                                                                  |
+| `scale(1, -1)` to line a stick up with the mouse               | The rigs already normalise the pitch axis per device, so a hand-rolled sign flip inverts that one device on its own.                                                                                                                 | Delete the flip and use `invertY`, which flips every device together.                                                                |
+| Retuning `sensitivity` per display                             | It used to change with the device pixel ratio and the render scale, because pointer deltas were backing-store pixels. They are CSS pixels now.                                                                                       | One value everywhere: degrees per CSS pixel, 0.08–0.15 for a mouse.                                                                  |
 
 ## Deprecated (current window)
 

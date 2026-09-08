@@ -57,7 +57,7 @@ export {
 } from "./material.js";
 
 // queries — what `app.physics` answers.
-export type { QueryOptions, QueryShape, RaycastHit, ShapeCastHit } from "./queries.js";
+export type { QueryOptions, QueryShape, RaycastHit, ShapeCastHit, ShapeCastOptions } from "./queries.js";
 
 // runtime — the diagnostics group name and the collision-identity modes the options accept.
 export {

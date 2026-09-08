@@ -4,6 +4,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
     <title>ignifx — first person</title>
+    <!-- An inline icon rather than a file: without one the browser asks for `/favicon.ico` on every
+         load and the console logs a 404 that has nothing to do with the game. A data URI costs no
+         request and no asset, and `vite build` copies it into `dist/index.html` unchanged. -->
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23141a26'/%3E%3Ccircle cx='8' cy='8' r='4' stroke='%234ad2f0' stroke-width='1.5' fill='none'/%3E%3Cpath d='M8 1v3M8 12v3M1 8h3M12 8h3' stroke='%234ad2f0' stroke-width='1.5'/%3E%3C/svg%3E"
+    />
     <style>
       :root {
         color-scheme: dark;
@@ -145,6 +152,22 @@
         background: rgb(12 18 30 / 55%);
         font-variant-numeric: tabular-nums;
         white-space: pre;
+      }
+
+      /* The "click to look" line `src/scripts/lock-hint.ts` shows while the game is running and
+         the browser has not granted pointer lock. Bottom-centre rather than beside the HUD: it is
+         an instruction, not a reading, and it has to be findable without looking away from the
+         middle of the frame. */
+      .lock-hint {
+        position: absolute;
+        bottom: calc(1.5rem + var(--ignifx-safe-bottom, 0px));
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 0.35rem 0.8rem;
+        border-radius: 999px;
+        background: rgb(12 18 30 / 65%);
+        letter-spacing: 0.02em;
+        white-space: nowrap;
       }
 
       /* ---------------------------------------------------------------------------------------

@@ -8,13 +8,14 @@ import {
   layerMask,
   LayerMask,
   Quat,
+  RAD_TO_DEG,
   Script,
   str,
   vec3,
   Vec3,
 } from "@ignifx/core";
-import { ActionSlot } from "../character/actions.js";
-import type { Entity, MutableVec3, Schema, Vec2Like, Vec3Like } from "@ignifx/core";
+import { LookInput } from "../character/look-input.js";
+import type { Entity, MutableVec3, Schema, Vec3Like } from "@ignifx/core";
 
 /**
  * `ThirdPersonCamera` (`docs/architecture/12-3d-toolkit.md` §2.1): an orbit rig with a shoulder
@@ -30,10 +31,30 @@ import type { Entity, MutableVec3, Schema, Vec2Like, Vec3Like } from "@ignifx/co
  * camera in to just short of that point, so the character never disappears behind a wall. Coming
  * back out is damped and going in is instant — a camera that eased *into* a wall would clip through
  * it for the duration of the ease, which is exactly the frame the player is looking at.
+ *
+ * ## Look
+ *
+ * The orbit input is `LookInput` (`../character/look-input.ts`), shared with
+ * `FirstPersonController`: pointer lock on click when the game asks for it, unlocked mouse motion
+ * ignored while it does, and a stick's deflection read as a rate rather than a displacement.
+ *
+ * ## The orbit is yaw about the world's up, then pitch about the camera's own right
+ *
+ * `Quat.fromEulerDegrees(x, y, z)` composes in intrinsic **XYZ** order, so `(pitch, yaw, 0)` pitches
+ * first and then yaws about the *tilted* axis: with any pitch at all, looking sideways rolled the
+ * horizon and the camera rose and fell as it went round (measured 2026-09-08: at 15 degrees of
+ * pitch the camera's height followed `cos(yaw)`). The rig therefore builds its rotation as
+ * `Ry(yaw) * Rx(pitch)` — a Hamilton product applies the right factor first — which is the only
+ * order in which a horizontal mouse motion is a turn about the vertical, and it seeds its angles at
+ * `awake` from the entity's forward vector rather than from Euler angles, so an authored tilt reads
+ * the same whatever order it was written in.
  */
 
 /** How far short of a hit the camera stops, in metres, so it never sits inside the surface. */
 const COLLISION_PADDING = 0.08;
+
+/** The default stick look rate, in degrees per second at full deflection. */
+const DEFAULT_STICK_LOOK_SPEED = 180;
 
 /**
  * Builds the `ThirdPersonCamera` field declarations.
@@ -47,19 +68,52 @@ function thirdPersonCameraSchema(): Schema {
     distance: f32(4.5, { min: 0, tooltip: "How far behind the target the camera sits, in metres." }),
     minPitch: f32(-30, { min: -89, max: 89, tooltip: "The lowest pitch, in degrees." }),
     maxPitch: f32(60, { min: -89, max: 89, tooltip: "The highest pitch, in degrees." }),
-    sensitivity: f32(0.2, { min: 0, tooltip: "Degrees of orbit per unit of look input." }),
+    sensitivity: f32(0.2, {
+      min: 0,
+      tooltip: "Degrees of orbit per unit of pointer look; for a mouse, degrees per CSS pixel.",
+    }),
+    stickLookSpeed: f32(DEFAULT_STICK_LOOK_SPEED, {
+      min: 0,
+      tooltip: "Degrees of orbit per second at full deflection, for a gamepad or on-screen stick.",
+    }),
+    lockPointerOnClick: bool(false, {
+      tooltip: "Whether a click requests pointer lock; while it is on, mouse look waits for the lock.",
+    }),
     damping: f32(0.08, { min: 0, tooltip: "The follow time constant, in seconds; 0 snaps." }),
     shoulderOffset: vec3({ x: 0.5, y: 1.5, z: 0 }, { tooltip: "The pivot offset from the target, in its own space." }),
     invertY: bool(false, { tooltip: "Whether looking up needs the stick pushed down." }),
     collisionEnabled: bool(true, { tooltip: "Whether the boom is shortened by geometry in the way." }),
     collisionRadius: f32(0.25, { min: 0.01, tooltip: "The radius of the sphere swept along the boom." }),
-    collisionLayers: layerMask([], { tooltip: "Which layers block the camera; empty means every layer." }),
+    collisionLayers: layerMask([], {
+      tooltip: "Which layers the boom's hit is attributed to; the target's own body is always swept through.",
+    }),
     collisionRecoverySpeed: f32(6, { min: 0, tooltip: "How fast the boom eases back out, in m/s." }),
   });
 }
 
 /**
  * An orbiting third-person camera rig.
+ *
+ * @remarks
+ * **Look units.** A pointer reading (`<Mouse>/delta`, `<Pointer>/delta`) is a displacement in CSS
+ * pixels and is multiplied by `sensitivity`, in degrees per pixel; 0.08 to 0.15 suits most mice, and
+ * the figure no longer changes with the device pixel ratio or the render scale. A gamepad or virtual
+ * stick is a deflection, which is a rate, and is multiplied by `stickLookSpeed` in degrees per
+ * second, so the orbit rate does not follow the frame rate. One `Look` action feeds both;
+ * `InputAction.activeDevice` is what tells them apart.
+ *
+ * **Pointer lock** is off by default, because a third-person game that drag-orbits with a held mouse
+ * button wants the cursor. Set `lockPointerOnClick` to `true` for the console-style rig: a
+ * `pointerdown` then asks the browser for the lock whenever it is not held, and mouse or unified
+ * pointer look is ignored until it is granted, so a cursor crossing the canvas no longer spins the
+ * camera. Gamepad and touch look are never gated.
+ *
+ * **Pitch direction.** Up is up on every device: moving the mouse forward and pushing a stick up both
+ * lower the boom and aim the camera up, and pulling back raises it and looks down over the target's
+ * shoulder. The two devices measure `y` in opposite directions and the look helper reconciles that
+ * before the rig sees it, so `invertY` flips mouse, touch, and stick together — set it for a rig
+ * that should swing up and over when the player pushes forward. Positive `pitch` still means the
+ * camera is raised and aimed down.
  *
  * @example
  * ```ts
@@ -95,8 +149,14 @@ export class ThirdPersonCamera extends Script {
   /** The highest pitch, in degrees. */
   declare maxPitch: number;
 
-  /** Degrees of orbit per unit of look input. */
+  /** Degrees of orbit per unit of pointer look; for a mouse, degrees per CSS pixel of motion. */
   declare sensitivity: number;
+
+  /** Degrees of orbit per second at full deflection, for a gamepad or on-screen stick. */
+  declare stickLookSpeed: number;
+
+  /** Whether a click requests pointer lock; while it is on, mouse look waits for the lock. */
+  declare lockPointerOnClick: boolean;
 
   /** The follow time constant, in seconds. */
   declare damping: number;
@@ -113,7 +173,10 @@ export class ThirdPersonCamera extends Script {
   /** The radius of the sphere swept along the boom. */
   declare collisionRadius: number;
 
-  /** Which layers block the camera; an empty list means every layer. */
+  /**
+   * Which layers the boom's hit is attributed to; an empty list means every layer. The target's own
+   * body is always swept through, whatever the list says.
+   */
   declare collisionLayers: readonly string[];
 
   /** How fast the boom eases back out, in metres per second. */
@@ -125,7 +188,7 @@ export class ThirdPersonCamera extends Script {
 
   #currentDistance = Number.NaN;
 
-  readonly #look = new ActionSlot("");
+  readonly #look = new LookInput();
 
   readonly #pivot: MutableVec3 = new Vec3();
 
@@ -136,6 +199,12 @@ export class ThirdPersonCamera extends Script {
   readonly #hit: MutableVec3 = new Vec3();
 
   readonly #rotation: Quat = new Quat();
+
+  /** Scratch for the yaw half of the orbit rotation. */
+  readonly #yawRotation: Quat = new Quat();
+
+  /** Scratch for the pitch half of the orbit rotation. */
+  readonly #pitchRotation: Quat = new Quat();
 
   /** Applies the schema defaults, exactly as `Component.define` would. */
   constructor() {
@@ -179,18 +248,30 @@ export class ThirdPersonCamera extends Script {
     return this.#pivot;
   }
 
-  /** Takes the entity's current facing as the starting orbit and binds the action name. */
+  /**
+   * Takes the entity's current facing as the starting orbit and binds the action name.
+   *
+   * @remarks
+   * The angles are read off the entity's **forward vector**, not its Euler angles: an Euler triple
+   * depends on the order it was composed in, and the rig composes yaw-then-pitch, which is not the
+   * order `Transform.eulerAngles` reports. A forward vector has one yaw and one pitch whatever
+   * produced it. Positive pitch aims down, so a forward that points below the horizon is a positive
+   * pitch; a forward pointing straight up or down has no yaw and keeps the current one.
+   */
   awake(): void {
-    const angles = this.entity.transform.eulerAngles;
-    this.#yaw = angles.y;
-    this.#pitch = angles.x;
+    const forward = this.entity.transform.forward;
+    const horizontal = Math.hypot(forward.x, forward.z);
+    if (horizontal > 1e-6) {
+      this.#yaw = Math.atan2(forward.x, forward.z) * RAD_TO_DEG;
+    }
+    this.#pitch = -Math.asin(clamp(forward.y, -1, 1)) * RAD_TO_DEG;
     this.#currentDistance = this.distance;
-    this.#look.retarget(this.lookAction);
+    this.#look.rebind(this.lookAction);
   }
 
   /** Re-resolves the action name, after a rebind or an action-set reload. */
   rebind(): void {
-    this.#look.retarget(this.lookAction);
+    this.#look.rebind(this.lookAction);
   }
 
   /** Snaps the rig to its target without damping — after a teleport or a scene load. */
@@ -205,10 +286,10 @@ export class ThirdPersonCamera extends Script {
    * @param dt - The frame delta, in seconds.
    */
   lateUpdate(dt: number): void {
-    const look = this.#look.resolve(this)?.vector ?? ZERO_STICK;
-    this.#yaw += look.x * this.sensitivity;
+    const look = this.#look.step(this, dt);
+    this.#yaw += look.x;
     this.#pitch = clamp(
-      this.#pitch + (this.invertY ? look.y : -look.y) * this.sensitivity,
+      this.#pitch + (this.invertY ? look.y : -look.y),
       Math.min(this.minPitch, this.maxPitch),
       Math.max(this.minPitch, this.maxPitch),
     );
@@ -230,7 +311,7 @@ export class ThirdPersonCamera extends Script {
       return;
     }
     this.#readPivot(target);
-    Quat.fromEulerDegreesToRef(this.#pitch, this.#yaw, 0, this.#rotation);
+    this.#orbitRotation();
     Quat.rotateVectorToRef(this.#rotation, BOOM, this.#offset);
     const reach = this.currentDistance;
     this.#desired.x = this.#pivot.x - this.#offset.x * reach;
@@ -261,16 +342,22 @@ export class ThirdPersonCamera extends Script {
       return;
     }
     this.#readPivot(target);
-    Quat.fromEulerDegreesToRef(this.#pitch, this.#yaw, 0, this.#rotation);
+    this.#orbitRotation();
     Quat.rotateVectorToRef(this.#rotation, BOOM, this.#offset);
     this.#desired.x = this.#pivot.x - this.#offset.x * this.distance;
     this.#desired.y = this.#pivot.y - this.#offset.y * this.distance;
     this.#desired.z = this.#pivot.z - this.#offset.z * this.distance;
+    // `ignore: target` is what keeps the boom off the character's own capsule. The pivot usually
+    // sits *inside* that capsule — a shoulder is inside the body — and Lite's sweep cannot be
+    // filtered by layer, only told to pass through one body; without it half of every orbit reported
+    // the capsule at fraction zero and the camera sat in the character's head (measured 2026-09-08).
+    // `collisionLayers` still decides which hit is attributed an entity; any other body in the way
+    // shortens the boom regardless, which for scenery is the point.
     const hit = this.app.physics.shapeCast(
       { kind: "sphere", radius: this.collisionRadius },
       this.#pivot,
       this.#desired,
-      { layerMask: this.#mask() },
+      { layerMask: this.#mask(), ignore: target },
     );
     if (hit === null) {
       // Ease back out, so leaving cover is a glide rather than a jump cut.
@@ -282,6 +369,22 @@ export class ThirdPersonCamera extends Script {
     }
     // Going in is immediate: an eased pull-in spends its ease inside the wall.
     this.#currentDistance = Math.max(0, Math.min(this.#currentDistance, hit.distance - COLLISION_PADDING));
+  }
+
+  /**
+   * Writes the orbit rotation — yaw about the world's up, then pitch about the camera's own right —
+   * into `#rotation`.
+   *
+   * @remarks
+   * `Ry(yaw) * Rx(pitch)`: the Hamilton product applies its right factor first, so the pitch tilts
+   * the boom about the camera's right axis and the yaw then swings that tilted boom around the
+   * vertical. The other order — one `fromEulerDegrees(pitch, yaw, 0)` call, which is intrinsic XYZ —
+   * yaws about an axis that has already been pitched, and rolls the horizon.
+   */
+  #orbitRotation(): void {
+    Quat.fromEulerDegreesToRef(0, this.#yaw, 0, this.#yawRotation);
+    Quat.fromEulerDegreesToRef(this.#pitch, 0, 0, this.#pitchRotation);
+    Quat.multiplyToRef(this.#yawRotation, this.#pitchRotation, this.#rotation);
   }
 
   /**
@@ -307,6 +410,3 @@ export class ThirdPersonCamera extends Script {
 
 /** The unit boom direction the rig rotates: the camera sits *behind* the pivot, along `-forward`. */
 const BOOM: Vec3Like = Object.freeze({ x: 0, y: 0, z: 1 });
-
-/** The reading a missing look action stands in for. */
-const ZERO_STICK: Vec2Like = Object.freeze({ x: 0, y: 0 });

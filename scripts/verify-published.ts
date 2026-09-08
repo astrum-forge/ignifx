@@ -15,8 +15,11 @@
  * Options:
  * - `--version <v>` — check this version instead of the one in each `package.json`.
  * - `--registry <url>` — a registry other than `https://registry.npmjs.org`.
- * - `--attempts <n>` — how many rounds to try before giving up (default 10). The registry is read
- *   through a CDN, so a version published seconds ago can still answer 404.
+ * - `--attempts <n>` — how many rounds to try before giving up (default 40, four minutes at the
+ *   default delay). The registry is read through a CDN, so a version published seconds ago can
+ *   still answer 404 — and not only for seconds: on 2026-09-08 `@ignifx/core@0.2.0` was the last of
+ *   thirteen to appear and still read as missing after ten rounds, a minute after the publish,
+ *   which failed the release job for a release that had in fact succeeded.
  * - `--delay-ms <n>` — how long to wait between rounds (default 6000).
  * - `--root <dir>` — run against a tree other than the repository.
  */
@@ -28,8 +31,11 @@ import { checkPackage, DEFAULT_REGISTRY, isUnresolved } from "./lib/registry.ts"
 import { listWorkspacePackages, readJsonObject, repositoryRoot } from "./lib/workspace.ts";
 import type { RegistryCheck } from "./lib/registry.ts";
 
-/** How many rounds are tried before the release is called a failure. */
-const DEFAULT_ATTEMPTS = 10;
+/**
+ * How many rounds are tried before the release is called a failure: four minutes at the default
+ * delay, which is longer than the registry's CDN has been seen to lag (see the module comment).
+ */
+const DEFAULT_ATTEMPTS = 40;
 
 /** How long to wait between rounds, in milliseconds. */
 const DEFAULT_DELAY_MS = 6000;

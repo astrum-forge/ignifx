@@ -18,13 +18,15 @@ Lite's `createHavokWorld(scene, hknp)` inserts its own callback at the front of 
 Per fixed step (see `01-lifecycle-and-time.md` §3, step 4):
 
 ```
-Systems(FixedUpdate, order -100)  restore authoritative poses on interpolated bodies (undo the display pose written last PreRender)
+Systems(FixedUpdate, order -100)  restore authoritative poses on interpolated bodies (undo the display pose written at the top of the previous Update)
 scripts.fixedUpdate(dt)           forces, velocities, CharacterController.move() requests, kinematic node moves
 Systems(FixedUpdate, order  100)  stepScene(simEngine, simScene, dt·1000); snapshot poses (prev ← cur, cur ← node)
 event dispatch                    collisions and triggers drained by Lite's post-step hook → onCollision*/onTrigger* on scripts of both entities
 ```
 
-Per frame in `PreRender` (order −500): for every `Rigidbody` with `interpolation: "interpolate"`, write `lerp(prev, cur, time.fixedStepAlpha)` into the node. Dynamic bodies have prestep sync disabled, so the display pose never leaks back into Havok.
+Per frame in `Update` (order −900): for every `Rigidbody` with `interpolation: "interpolate"`, write `lerp(prev, cur, time.fixedStepAlpha)` into the node. Dynamic bodies have prestep sync disabled, so the display pose never leaks back into Havok.
+
+The display pose is written at the **top of `Update`**, in `Systems(Update, order < 0)`, and not in `PreRender` (moved 2026-09-08; `01-lifecycle-and-time.md` §3). `fixedStepAlpha` is final as soon as the fixed loop ends, and everything after that point — `scripts.update`, animation, `lateUpdate` camera rigs, the render sync — has to read the same pose the frame presents. A follow camera running in `lateUpdate` used to frame the character at the last fixed step's pose while the renderer drew it interpolated, so the character juddered against the camera by up to a fixed step of motion every frame. `fixedUpdate` and Havok are unaffected: the restore system at `FixedUpdate −100` runs before `scripts.fixedUpdate`.
 
 ## 2. Components
 
@@ -92,7 +94,7 @@ class CharacterController extends Component.define({
 }
 ```
 
-- The controller owns the entity's world position: after each step it writes `getPosition()` into the transform. Rotation stays user-controlled. With `interpolation: "interpolate"` (the default) the controller keeps the previous and current step positions and the `PreRender` system writes the interpolated position exactly as for `Rigidbody`, restoring the authoritative position at the start of each fixed step, so player characters do not judder above the fixed rate.
+- The controller owns the entity's world position: after each step it writes `getPosition()` into the transform. Rotation stays user-controlled. With `interpolation: "interpolate"` (the default) the controller keeps the previous and current step positions and the `Update −900` system writes the interpolated position exactly as for `Rigidbody`, restoring the authoritative position at the start of each fixed step, so player characters do not judder above the fixed rate — and a camera rig in `lateUpdate` reads the same interpolated position the renderer draws.
 - `pushStrength` **scales** Lite's `characterStrength`, whose default is `1e38` — effectively infinite — so `pushStrength: 1` means "Lite's default", not "one newton".
 - `supportState` comes from a `checkSupport` probe the step system runs once per step with a **unit** gravity direction (handing Lite the full 9.81 m/s² vector makes the probe overshoot). Lite's `PhysicsCharacterController.staticFriction` defaults to `0`, so a bare controller pressed against _any_ incline keeps a residual down-slope velocity and the probe classifies it as `sliding`; `slopeLimit` still decides what the character can climb. The toolkit controllers add the friction and gravity handling that make `supportState` read the way Unity's does.
 - Step offset (stairs) is not a Lite feature; the 3D toolkit's `ThirdPersonController`/`FirstPersonController` implement a step probe with `shapeCast` (Phase 7).
@@ -121,7 +123,7 @@ class CharacterController extends Component.define({
 
 ```ts
 raycast(origin, direction, maxDistance?, options?: { layerMask?, hitTriggers? }): RaycastHit | null  // physicsRaycast
-shapeCast(shape, from, to, options?): ShapeCastHit | null                                          // shapeCast
+shapeCast(shape, from, to, options?: { layerMask?, hitTriggers?, ignore? }): ShapeCastHit | null    // shapeCast
 overlap(shape, position, rotation?, options?): readonly Entity[]                                    // bounds index
 distanceToNearest(shape, position, maxDistance, options?): number                                   // shapeProximity
 ```
@@ -140,6 +142,8 @@ one completed step (Lite builds the broadphase on the first step); calling earli
 body-bounds index, and `overlap` is answered entirely from that index — the entities whose world
 bounding box the query shape's bounding box intersects. Both are bounds-accurate rather than
 shape-accurate until an upstream API lands, and `overlap` returns a **reused** array.
+
+**A sweep cannot be layer-filtered, but it can pass through one body (2026-09-08).** `ShapeCastQuery` has no `membership`/`collideWith`, so a body outside `layerMask` still stops a `shapeCast`; the mask decides only whether the hit is attributed an `entity`. `ShapeCastOptions.ignore` names the one entity — a `Rigidbody`, a collider-only static or a `CharacterController` — whose body the sweep passes through (Lite's `ignoreBody`). It exists because a sweep that starts inside a body reports that body at fraction zero and nothing else, which is what a camera boom leaving its target's capsule and a step probe leaving the character's feet both do; `@ignifx/3d`'s `ThirdPersonCamera` and `ThirdPersonController` use it for exactly that.
 
 ## 6. Settings
 

@@ -223,7 +223,15 @@ export function buildLevel(app: App, materials: LevelMaterials): Level {
   }
   // Two interior stubs, so the room has a corner to walk around and something to break the
   // sightline from one pedestal to the next.
-  addPanel(app, alongX, materials.wall, "Stub A", -2, 3);
+  //
+  // Stub A's centre is at x = -3 rather than -2, which is where it was until 2026-09-08. A panel is
+  // `PANEL_WIDTH` across, so the old one ran to x = 0 at z = 2.75 to 3.25 — and the character spawns
+  // at (0, 2.5) with a 0.35 m capsule, which put its shoulder a quarter of a metre *inside* the
+  // corner of a wall. Havok spent the first half second pushing the character back out, and where it
+  // came to rest decided whether walking forward worked at all: two centimetres of x either way was
+  // the difference between strolling into the room and standing still against an invisible corner.
+  // Neither stub is in the `?static=1` camera's view, which faces `-z` from the spawn.
+  addPanel(app, alongX, materials.wall, "Stub A", -3, 3);
   addPanel(app, alongZ, materials.wall, "Stub B", -4, 5);
   // The handles the two shared meshes were created with; every panel took its own reference.
   alongX.mesh.release();

@@ -61,7 +61,10 @@ per fixed step:
   Systems(FixedUpdate, -100)  restore the authoritative pose of interpolated bodies
   scripts.fixedUpdate(dt)     forces, velocities, controller.move()
   Systems(FixedUpdate,  100)  step Havok · snapshot poses · dispatch collision and trigger events
-  Systems(PreRender,  -500)   write lerp(previous, current, time.fixedStepAlpha)
+
+once per frame, after the fixed loop:
+  Systems(Update,     -900)   write lerp(previous, current, time.fixedStepAlpha)
+  scripts.update · animation · scripts.lateUpdate · rendering   all read that display pose
 ```
 
 - Colliders and bodies are (re)built at the **start of the next fixed step**, never mid-frame, so
@@ -97,15 +100,15 @@ app.log.info("crate at y:", crate.transform.position.y);
 
 ### `app.physics`
 
-| Member                                                      | What it does                                                    |
-| ----------------------------------------------------------- | --------------------------------------------------------------- |
-| `gravity`                                                   | World gravity; assigning it takes effect on the next step       |
-| `raycast(origin, direction, maxDistance?, options?)`        | First entity along a ray, with point, normal, and distance      |
-| `shapeCast(shape, from, to, options?)`                      | Sweeps a sphere/box/capsule and reports the first contact       |
-| `overlap(shape, position, rotation?, options?)`             | Entities whose world bounds the shape touches (array is reused) |
-| `distanceToNearest(shape, position, maxDistance, options?)` | Distance to the closest body, or `Infinity`                     |
-| `debugViewer.enabled`                                       | Lite's wireframe overlay on the render scene (needs a GPU)      |
-| `lite`                                                      | Unstable escape hatch: the Havok world and the simulation scene |
+| Member                                                      | What it does                                                                                                                                                                   |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `gravity`                                                   | World gravity; assigning it takes effect on the next step                                                                                                                      |
+| `raycast(origin, direction, maxDistance?, options?)`        | First entity along a ray, with point, normal, and distance                                                                                                                     |
+| `shapeCast(shape, from, to, options?)`                      | Sweeps a sphere/box/capsule and reports the first contact; `options.ignore` names one entity the sweep passes through — the caller's own body, when the sweep starts inside it |
+| `overlap(shape, position, rotation?, options?)`             | Entities whose world bounds the shape touches (array is reused)                                                                                                                |
+| `distanceToNearest(shape, position, maxDistance, options?)` | Distance to the closest body, or `Infinity`                                                                                                                                    |
+| `debugViewer.enabled`                                       | Lite's wireframe overlay on the render scene (needs a GPU)                                                                                                                     |
+| `lite`                                                      | Unstable escape hatch: the Havok world and the simulation scene                                                                                                                |
 
 Every query needs at least one completed fixed step — Havok builds its broadphase there — and
 reports `IGX-0902` before that.
@@ -238,7 +241,10 @@ collides with everything. Havok tests a pair in both directions, so one side ref
 - **A body's entity must be a root entity** (`IGX-0907`), and a moving collider needs a
   `Rigidbody` (`IGX-0901`).
 - **Interpolated poses are display-only.** Read `transform.position` in `fixedUpdate` when you need
-  the authoritative pose; `update` and `PreRender` see the interpolated one.
+  the authoritative pose. Everything outside the fixed loop — `update`, `lateUpdate`, animation,
+  camera rigs, rendering — sees the interpolated one, because the display pose is written at the top
+  of `Update`. That is deliberate: a follow camera in `lateUpdate` must frame the character where the
+  frame draws it, or the two judder against each other.
 - **A resting body sleeps.** Changing `app.physics.gravity` does not wake it; apply an impulse.
 
 ## Deprecated (current window)

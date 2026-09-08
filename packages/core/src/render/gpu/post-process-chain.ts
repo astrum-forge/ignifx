@@ -7,8 +7,15 @@ import {
   disposePostProcessTask,
   setPostProcessTaskEnabled,
   surfaceRenderTarget,
+  updateBloomTask,
+  updateSmaaTask,
 } from "../../lite/gpu/post-process.js";
-import type { LitePostProcessTask, LiteRenderTarget } from "../../lite/gpu/post-process.js";
+import type {
+  LiteBloomTask,
+  LitePostProcessTask,
+  LiteRenderTarget,
+  LiteSmaaTask,
+} from "../../lite/gpu/post-process.js";
 import type { ScenePresenter } from "../../lite/gpu/render-path.js";
 import type { LiteEngine, LiteScene } from "../../lite/scene.js";
 import type { BloomEffectSettings, SmaaEffectSettings } from "../post-process-stack.js";
@@ -42,6 +49,15 @@ import type { BloomEffectSettings, SmaaEffectSettings } from "../post-process-st
  * (`lib/frame-graph/image-processing-task.js`), so it cannot hand its output to another effect. The
  * chain moves it to the end whatever `order` the component declares, rather than silently producing
  * a frame in which the effects after it read a target nobody wrote.
+ *
+ * ## Tuning is live; topology is not
+ *
+ * A recorded task's tuning — bloom's `weight`, `kernel`, `threshold`, `exposure`; every SMAA field —
+ * is written straight onto the Lite task and re-uploaded with `updateUniforms()` by
+ * {@link PostProcessChain.applySettings}, which the stack calls every frame. It compares against
+ * what it last uploaded, so a frame in which nothing moved uploads nothing. What a recorded task
+ * cannot change is its shape: which effects exist, in which order, and bloom's `bloomScale`, which
+ * sizes the blur targets at creation. Those are `PostProcessStack`'s to rebuild.
  */
 
 /** What an effect entry contributes to the chain. */
@@ -56,6 +72,22 @@ export interface PostProcessEffectRequest {
   readonly sourceIsSrgb: boolean;
 }
 
+/** The bloom tuning a chain last uploaded, so an unchanged frame uploads nothing. */
+interface AppliedBloom {
+  weight: number;
+  kernel: number;
+  threshold: number;
+  exposure: number;
+}
+
+/** The SMAA tuning a chain last uploaded. */
+interface AppliedSmaa {
+  threshold: number;
+  maxSearchSteps: number;
+  diagonalDetection: boolean;
+  cornerDetection: boolean;
+}
+
 /** A recorded chain, and the handle that takes it down again. */
 export class PostProcessChain {
   readonly #tasks: LitePostProcessTask[] = [];
@@ -63,6 +95,18 @@ export class PostProcessChain {
   readonly #presenter: ScenePresenter;
 
   readonly #isFrameGraphBuilt: boolean;
+
+  /** The bloom task, when the chain has one; the one task whose tuning is retuned live. */
+  #bloom: LiteBloomTask | null = null;
+
+  /** The SMAA task, when the chain has one. */
+  #smaa: LiteSmaaTask | null = null;
+
+  /** What the bloom task was created with, and then what it was last retuned to. */
+  #appliedBloom: AppliedBloom | null = null;
+
+  /** What the SMAA task was created with, and then what it was last retuned to. */
+  #appliedSmaa: AppliedSmaa | null = null;
 
   /**
    * Records the requested effects into a scene's frame graph.
@@ -123,6 +167,58 @@ export class PostProcessChain {
   }
 
   /**
+   * Pushes the effects' current tuning to the recorded tasks, uploading only what changed since the
+   * last call.
+   *
+   * @remarks
+   * Nothing is uploaded until the scene's frame graph has been built: a task created before
+   * `registerScene` has no uniform buffer yet, and it was created with the very settings it holds,
+   * so there is nothing to catch up on. `scale` is not applied here — it is baked into the task and
+   * a change to it is a rebuild, which `PostProcessStack` performs.
+   *
+   * @param bloom - The stack's bloom record.
+   * @param smaa - The stack's SMAA record.
+   * @param isFrameGraphBuilt - Whether the scene has been registered, so the tasks are recorded.
+   */
+  applySettings(bloom: BloomEffectSettings, smaa: SmaaEffectSettings, isFrameGraphBuilt: boolean): void {
+    if (!isFrameGraphBuilt) {
+      return;
+    }
+    const bloomTask = this.#bloom;
+    const appliedBloom = this.#appliedBloom;
+    if (
+      bloomTask !== null &&
+      appliedBloom !== null &&
+      (appliedBloom.weight !== bloom.weight ||
+        appliedBloom.kernel !== bloom.kernel ||
+        appliedBloom.threshold !== bloom.threshold ||
+        appliedBloom.exposure !== bloom.exposure)
+    ) {
+      appliedBloom.weight = bloom.weight;
+      appliedBloom.kernel = bloom.kernel;
+      appliedBloom.threshold = bloom.threshold;
+      appliedBloom.exposure = bloom.exposure;
+      updateBloomTask(bloomTask, appliedBloom);
+    }
+    const smaaTask = this.#smaa;
+    const appliedSmaa = this.#appliedSmaa;
+    if (
+      smaaTask !== null &&
+      appliedSmaa !== null &&
+      (appliedSmaa.threshold !== smaa.threshold ||
+        appliedSmaa.maxSearchSteps !== smaa.maxSearchSteps ||
+        appliedSmaa.diagonalDetection !== smaa.diagonalDetection ||
+        appliedSmaa.cornerDetection !== smaa.cornerDetection)
+    ) {
+      appliedSmaa.threshold = smaa.threshold;
+      appliedSmaa.maxSearchSteps = smaa.maxSearchSteps;
+      appliedSmaa.diagonalDetection = smaa.diagonalDetection;
+      appliedSmaa.cornerDetection = smaa.cornerDetection;
+      updateSmaaTask(smaaTask, appliedSmaa);
+    }
+  }
+
+  /**
    * Switches every recorded task on or off. Lite offers no removal, so this is what "disable the
    * stack" means.
    *
@@ -158,6 +254,10 @@ export class PostProcessChain {
       this.#presenter.setPresentEnabled(true);
     }
     this.#tasks.length = 0;
+    this.#bloom = null;
+    this.#smaa = null;
+    this.#appliedBloom = null;
+    this.#appliedSmaa = null;
   }
 
   /**
@@ -190,22 +290,31 @@ export class PostProcessChain {
   ): LitePostProcessTask {
     if (effect.name === "bloom") {
       const settings = effect.bloom;
-      return createBloomTask(engine, scene, source, target, {
+      // Copied, not referenced: the record is the component's live state, and the point of the
+      // copy is to know later what the task actually holds.
+      this.#appliedBloom = {
         weight: settings.weight,
         kernel: settings.kernel,
         threshold: settings.threshold,
         exposure: settings.exposure,
-        scale: settings.scale,
-      });
+      };
+      const task = createBloomTask(engine, scene, source, target, { ...this.#appliedBloom, scale: settings.scale });
+      this.#bloom = task;
+      return task;
     }
     const settings = effect.smaa;
-    return createSmaaTask(engine, scene, source, target, {
+    this.#appliedSmaa = {
       threshold: settings.threshold,
       maxSearchSteps: settings.maxSearchSteps,
       diagonalDetection: settings.diagonalDetection,
       cornerDetection: settings.cornerDetection,
+    };
+    const task = createSmaaTask(engine, scene, source, target, {
+      ...this.#appliedSmaa,
       sourceIsSrgb: effect.sourceIsSrgb,
     });
+    this.#smaa = task;
+    return task;
   }
 }
 

@@ -248,9 +248,9 @@ export function gettingStartedPage(highlighter: CodeHighlighter): string {
 
   const stepOne = site.published
     ? join(
-        sh("npm create ignifx@latest my-game"),
-        h("p", {}, "You will be asked for a template. Pass one to skip the question:"),
-        sh("npm create ignifx@latest my-game -- --template 3d-third-person"),
+        sh("npx @ignifx/cli@latest my-game"),
+        h("p", {}, md("The default template is `2d-topdown`. Pass one to pick another:")),
+        sh("npx @ignifx/cli@latest my-game --template 3d-third-person"),
       )
     : join(
         h("p", {}, "ignifx is not on npm yet, so the first step is the repository:"),
@@ -354,7 +354,7 @@ export function gettingStartedPage(highlighter: CodeHighlighter): string {
             ),
           ),
           site.published
-            ? sh("npm create ignifx@latest my-game -- --template 3d-first-person --desktop")
+            ? sh("npx @ignifx/cli@latest my-game --template 3d-first-person --desktop")
             : h(
                 "p",
                 {},

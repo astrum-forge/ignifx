@@ -146,6 +146,12 @@ scene is rendered into an offscreen target and a copy pass composites it onto th
 copy. It costs one full-screen blit per frame while no effect is enabled, which is why it is
 opt-in. Attach a `PostProcessStack` without it and you get `IGX-0710` once, and an inert component.
 
+Every bloom and SMAA field is live: write `post.bloom.threshold = 0.4` from a settings slider or a
+script and the recorded task is re-uploaded on the next frame. Changing _which_ effects are on, their
+`order`, or `bloom.scale` rebuilds the chain instead, so toggle the **component's** `enabled` for an
+on/off switch — it keeps the chain and skips it — and reserve `bloom.enabled`/`smaa.enabled` for
+choosing the chain's contents.
+
 Two things follow for a stack you do enable. `imageProcessing` is always applied **last**, whatever
 `order` you give it, because Lite's grading pass writes the canvas and hands nothing on. And nothing
 can be removed from a frame graph, so an effect that has been recorded is switched off rather than

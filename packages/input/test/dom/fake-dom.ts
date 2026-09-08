@@ -12,10 +12,14 @@ type Listener = (event: unknown) => void;
 export class FakeTarget {
   readonly listeners = new Map<string, Set<Listener>>();
 
-  addEventListener(type: string, handler: Listener): void {
+  /** The options the last registration of each type was made with; `undefined` when it passed none. */
+  readonly listenerOptions = new Map<string, unknown>();
+
+  addEventListener(type: string, handler: Listener, options?: unknown): void {
     const set = this.listeners.get(type) ?? new Set<Listener>();
     set.add(handler);
     this.listeners.set(type, set);
+    this.listenerOptions.set(type, options);
   }
 
   removeEventListener(type: string, handler: Listener): void {
@@ -36,11 +40,17 @@ export class FakeTarget {
   }
 }
 
-/** A canvas stand-in with the three members the adapters touch. */
+/** A canvas stand-in with the four members the adapters touch. */
 export class FakeCanvas extends FakeTarget {
   readonly style = { cursor: "" };
 
   pointerLockRequests = 0;
+
+  /** The argument of each `requestPointerLock` call, in order; `undefined` for a plain one. */
+  readonly pointerLockOptions: unknown[] = [];
+
+  /** How this canvas answers a request that asks for `unadjustedMovement`. */
+  unadjustedMovement: "accept" | "throw" | "reject" = "accept";
 
   lockResult: unknown = undefined;
 
@@ -48,8 +58,15 @@ export class FakeCanvas extends FakeTarget {
     return { left: 10, top: 20 };
   }
 
-  requestPointerLock(): unknown {
+  requestPointerLock(options?: unknown): unknown {
     this.pointerLockRequests += 1;
+    this.pointerLockOptions.push(options);
+    if (options !== undefined && this.unadjustedMovement === "throw") {
+      throw new TypeError("unadjustedMovement is not supported");
+    }
+    if (options !== undefined && this.unadjustedMovement === "reject") {
+      return Promise.reject(new Error("unadjustedMovement is not supported"));
+    }
     return this.lockResult;
   }
 }

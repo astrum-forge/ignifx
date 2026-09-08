@@ -1,6 +1,6 @@
 # ADR-0006 · 2D physics backend
 
-**Status:** Accepted · **Date:** 2026-09-05 · **Validated:** 2026-09-06 (Phase 6 spike S6.2, see Validation below)
+**Status:** Accepted · **Date:** 2026-09-05 · **Validated:** 2026-09-06 (Phase 6 spike S6.2), amended 2026-09-08 (sensor filtering, see Validation below)
 
 ## Context
 
@@ -84,6 +84,23 @@ it. `docs/architecture/11-2d-toolkit.md` §8 has been corrected to match.
   0.2 m, and no combination of `minWidth`, `maxHeight`, `offset` or capsule height changed that.
   `CharacterController2D` therefore gained a `shape` field (`"capsule" | "box"`, default
   `"capsule"`), and the skill documents that `stepOffset` needs `shape: "box"`.
+
+### Sensors are obstacles to the character controller (measured 2026-09-08)
+
+`KinematicCharacterController.computeColliderMovement(collider, delta, filterFlags, filterGroups,
+filterPredicate)` takes `filterFlags` as its **third** argument, and the adapter used to pass
+`undefined` there. Measured against `@dimforge/rapier2d-compat@0.20.0` on macOS arm64, Node 24: a
+kinematic box driven by the controller towards a static sensor ball stops dead at the sensor's
+surface (`x = 0.49` for a sensor at `x = 1` with radius 0.3, a 0.2 half-width character and a 0.01
+offset) and, because it never overlaps the sensor, `drainCollisionEvents` reports nothing at all.
+With `QueryFilterFlags.EXCLUDE_SENSORS` (value `8`) as `filterFlags`, the same character walks
+through to `x = 3.0` and the queue reports the `started`/`stopped` pair.
+
+Sensors are regions of space, not geometry, so the adapter now passes `EXCLUDE_SENSORS` on every
+controller move. This is what makes a collectible work: the templates author a coin as a
+`CircleCollider2D { isTrigger: true }` on an entity with no rigidbody, and a `CharacterController2D`
+player could neither reach it nor raise `onTriggerEnter` on it. Sensors correspondingly no longer
+appear in `CharacterController2D.onCollided`, which is right — a trigger is not an obstacle.
 
 ### Two further Rapier facts the adapter is built around
 

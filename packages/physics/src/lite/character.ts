@@ -1,5 +1,5 @@
 import { createPhysicsCharacterController } from "@babylonjs/lite";
-import type { LitePhysicsWorld } from "./havok.js";
+import type { LitePhysicsBody, LitePhysicsWorld } from "./havok.js";
 import type { PhysicsCharacterController } from "@babylonjs/lite";
 import type { LiteSceneNode, MutableVec3, Vec3Like } from "@ignifx/core";
 
@@ -153,6 +153,19 @@ export function probeSupport(
   const normal = surface.averageSurfaceNormal;
   groundNormal.set(normal.x, normal.y, normal.z);
   return toSupportState(surface.supportedState);
+}
+
+/**
+ * The Havok body a controller's capsule is, which is what a query names to sweep *past* the
+ * character rather than into it (`ShapeCastOptions.ignore`).
+ *
+ * @param controller - The controller.
+ * @returns Its body handle.
+ *
+ * @internal
+ */
+export function controllerBody(controller: LiteCharacterController): LitePhysicsBody {
+  return controller.getBody();
 }
 
 /**

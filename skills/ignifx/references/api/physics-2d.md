@@ -1397,6 +1397,11 @@ Rapier's `computedGrounded` from the last move.
 
 Emitted once per obstacle the character hit during a step.
 
+###### Remarks
+
+Trigger colliders are not obstacles — the character walks straight through them — so a sensor
+never appears here. Listen for `onTriggerEnter`/`onTriggerExit` on the entity's scripts instead.
+
 ###### Returns
 
 `Signal`\<[`CharacterCollision2D`](#charactercollision2d)\>

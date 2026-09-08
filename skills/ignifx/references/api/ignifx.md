@@ -9477,6 +9477,11 @@ Rapier's `computedGrounded` from the last move.
 
 Emitted once per obstacle the character hit during a step.
 
+###### Remarks
+
+Trigger colliders are not obstacles — the character walks straight through them — so a sensor
+never appears here. Listen for `onTriggerEnter`/`onTriggerExit` on the entity's scripts instead.
+
 ###### Returns
 
 [`Signal`](#signal-3)\<[`CharacterCollision2D`](#charactercollision2d)\>
@@ -16369,6 +16374,29 @@ The GPU handles, or `null` under a headless app.
 
 A first-person character.
 
+#### Remarks
+
+**Look units.** A pointer reading (`<Mouse>/delta`, `<Pointer>/delta`) is a displacement in CSS
+pixels and is multiplied by `sensitivity`, in degrees per pixel; 0.08 to 0.15 suits most mice, and
+the figure no longer changes with the device pixel ratio or the render scale. A gamepad or virtual
+stick is a deflection, which is a rate, and is multiplied by `stickLookSpeed` in degrees per
+second: the same physical push turns through the same angle at 60 and at 144 fps. Both are read
+from one `Look` action; `InputAction.activeDevice` is what tells them apart.
+
+**Pointer lock.** While `lockPointerOnClick` is `true` (the default), a `pointerdown` on the
+canvas asks the browser for the lock — every time it is not held, not only once, because the
+browser drops it on Escape and on focus loss — and look readings from the mouse or the unified
+pointer are **ignored until the lock is granted**. That is what stops the view spinning while the
+player moves an unlocked cursor towards a menu button. Gamepad and touch look keep working
+throughout. Set `lockPointerOnClick` to `false` for a drag-to-look design, which restores
+unconditional mouse look.
+
+**Pitch direction.** Up is up on every device: moving the mouse forward and pushing a stick up both
+look up, which is the first-person convention. The rigs read one normalised axis — a screen's `y`
+grows downward and a stick's grows upward, and the look helper reconciles that before either rig
+sees it — so `invertY` flips mouse, touch, and stick together rather than fixing one and breaking
+the other. Positive `pitch` still means the head is looking down.
+
 #### Example
 
 ```ts
@@ -16489,7 +16517,7 @@ How high a jump reaches.
 
 > **lockPointerOnClick**: `boolean`
 
-Whether the first click requests pointer lock.
+Whether a click requests pointer lock; while it is on, mouse look waits for the lock.
 
 ##### lookAction
 
@@ -16519,7 +16547,7 @@ The declarative fields (ADR-0004).
 
 > **sensitivity**: `number`
 
-Degrees of rotation per unit of look input.
+Degrees of rotation per unit of pointer look; for a mouse, degrees per CSS pixel of motion.
 
 ##### sprintAction
 
@@ -16544,6 +16572,12 @@ Ground speed while sprinting.
 > **standHeight**: `number`
 
 The controller height while standing.
+
+##### stickLookSpeed
+
+> **stickLookSpeed**: `number`
+
+Degrees of rotation per second at full deflection, for a gamepad or on-screen stick.
 
 ##### typeId
 
@@ -17129,7 +17163,7 @@ The handle [Script.startCoroutine](#startcoroutine-8) returned.
 
 > **update**(`dt`): `void`
 
-Looks around, bobs the head, and asks for pointer lock the first time the player clicks.
+Looks around, bobs the head, and asks for pointer lock whenever the player clicks without it.
 
 ###### Parameters
 
@@ -20375,6 +20409,36 @@ Emitted the frame the action is first actuated.
 What the action produces.
 
 #### Accessors
+
+##### activeDevice
+
+###### Get Signature
+
+> **get** **activeDevice**(): [`DeviceKind`](#devicekind-1) \| `null`
+
+Which device family produced this frame's value: the device behind the binding whose magnitude
+won the frame, or `null` when the action is at rest, disabled, or in a disabled map. Stable for
+the whole frame, like every other reading on an action.
+
+###### Remarks
+
+A composite binding answers with the device of its first part, because the four parts of a
+`2DVector` are one device in every binding that makes sense. Use it to treat one action
+differently per device — a mouse look that must be ignored until the pointer is locked, a stick
+look that is a rate rather than a displacement — without splitting the action in two.
+
+###### Example
+
+```ts
+const look = app.input.actions.get("look");
+const degrees = look.activeDevice === "Gamepad" ? look.vector.x * 180 * dt : look.vector.x * 0.1;
+```
+
+###### Returns
+
+[`DeviceKind`](#devicekind-1) \| `null`
+
+The winning binding's device family, or `null`.
 
 ##### axis
 
@@ -31897,9 +31961,9 @@ The end position.
 
 ###### options?
 
-[`QueryOptions`](#queryoptions)
+`ShapeCastOptions`
 
-Layer mask and trigger behaviour.
+Layer mask, trigger behaviour, and the one entity to sweep through.
 
 ###### Returns
 
@@ -31911,6 +31975,12 @@ The hit, or `null`.
 
 Lite's `shapeCast` reports no body (`index.d.ts` 11497), so `entity` is resolved against the
 extension's body-bounds index and is bounds-accurate rather than shape-accurate.
+
+The sweep itself cannot be filtered by layer — Lite's `ShapeCastQuery` carries no collision
+masks — so a body outside `layerMask` still stops the sweep; it is merely reported with
+`entity: null`. What the sweep *can* do is pass through one body, `options.ignore`, which is
+how a camera boom leaves its target's capsule and a step probe leaves the character's own feet
+without reporting them at fraction zero (2026-09-08).
 
 ###### Throws
 
@@ -33053,6 +33123,12 @@ Requests the lock. Must be called from inside a user gesture.
 `Promise`\<`boolean`\>
 
 `true` once the lock is held, `false` when the browser refused it.
+
+###### Remarks
+
+The lock is asked for with `unadjustedMovement: true` first — raw, un-accelerated mouse motion,
+which is what a first-person look wants — and plainly when the browser rejects the option.
+Either way the promise settles once, on the outcome of whichever request the browser accepted.
 
 ###### Throws
 
@@ -42445,6 +42521,28 @@ through `ctx.loadDependency`, which counts the asset handle instead.
 
 An orbiting third-person camera rig.
 
+#### Remarks
+
+**Look units.** A pointer reading (`<Mouse>/delta`, `<Pointer>/delta`) is a displacement in CSS
+pixels and is multiplied by `sensitivity`, in degrees per pixel; 0.08 to 0.15 suits most mice, and
+the figure no longer changes with the device pixel ratio or the render scale. A gamepad or virtual
+stick is a deflection, which is a rate, and is multiplied by `stickLookSpeed` in degrees per
+second, so the orbit rate does not follow the frame rate. One `Look` action feeds both;
+`InputAction.activeDevice` is what tells them apart.
+
+**Pointer lock** is off by default, because a third-person game that drag-orbits with a held mouse
+button wants the cursor. Set `lockPointerOnClick` to `true` for the console-style rig: a
+`pointerdown` then asks the browser for the lock whenever it is not held, and mouse or unified
+pointer look is ignored until it is granted, so a cursor crossing the canvas no longer spins the
+camera. Gamepad and touch look are never gated.
+
+**Pitch direction.** Up is up on every device: moving the mouse forward and pushing a stick up both
+lower the boom and aim the camera up, and pulling back raises it and looks down over the target's
+shoulder. The two devices measure `y` in opposite directions and the look helper reconciles that
+before the rig sees it, so `invertY` flips mouse, touch, and stick together — set it for a rig
+that should swing up and over when the player pushes forward. Positive `pitch` still means the
+camera is raised and aimed down.
+
 #### Example
 
 ```ts
@@ -42491,7 +42589,8 @@ Whether the boom is shortened by geometry in the way.
 
 > **collisionLayers**: readonly `string`[]
 
-Which layers block the camera; an empty list means every layer.
+Which layers the boom's hit is attributed to; an empty list means every layer. The target's own
+body is always swept through, whatever the list says.
 
 ##### collisionRadius
 
@@ -42523,6 +42622,12 @@ How far behind the target the camera sits, in metres.
 
 Whether looking up needs the stick pushed down.
 
+##### lockPointerOnClick
+
+> **lockPointerOnClick**: `boolean`
+
+Whether a click requests pointer lock; while it is on, mouse look waits for the lock.
+
 ##### lookAction
 
 > **lookAction**: `string`
@@ -42551,13 +42656,19 @@ The declarative fields (ADR-0004).
 
 > **sensitivity**: `number`
 
-Degrees of orbit per unit of look input.
+Degrees of orbit per unit of pointer look; for a mouse, degrees per CSS pixel of motion.
 
 ##### shoulderOffset
 
 > **shoulderOffset**: [`Vec3Like`](#vec3like)
 
 The pivot offset from the target, in the target's own space.
+
+##### stickLookSpeed
+
+> **stickLookSpeed**: `number`
+
+Degrees of orbit per second at full deflection, for a gamepad or on-screen stick.
 
 ##### target
 
@@ -42851,6 +42962,14 @@ Takes the entity's current facing as the starting orbit and binds the action nam
 ###### Returns
 
 `void`
+
+###### Remarks
+
+The angles are read off the entity's **forward vector**, not its Euler angles: an Euler triple
+depends on the order it was composed in, and the rig composes yaw-then-pitch, which is not the
+order `Transform.eulerAngles` reports. A forward vector has one yaw and one pitch whatever
+produced it. Positive pitch aims down, so a forward that points below the horizon is a positive
+pitch; a forward pointing straight up or down has no yaw and keeps the current one.
 
 ##### define()
 
@@ -64000,6 +64119,10 @@ One raw event of the current frame (`docs/architecture/08-input.md` §5).
 Every field is always present; the ones an event kind does not use read `0` or `""`. A fixed
 shape is what lets the records be pooled, and reading `deltaX` on a `keydown` is harmless.
 
+Pointer **positions** are backing-store pixels and pointer **deltas** are CSS pixels; the two
+spaces differ by the device pixel ratio and the render scale, and §5 of the architecture document
+says why each is where it is.
+
 The records are recycled: keep a copy of anything needed after the frame ends.
 
 #### Properties
@@ -64020,13 +64143,13 @@ The physical `KeyboardEvent.code`, for key events.
 
 > `readonly` **deltaX**: `number`
 
-The pointer movement x, or the wheel's horizontal delta.
+The pointer movement x, in **CSS** pixels, or the wheel's horizontal delta.
 
 ##### deltaY
 
 > `readonly` **deltaY**: `number`
 
-The pointer movement y, or the wheel's vertical delta.
+The pointer movement y, in **CSS** pixels, or the wheel's vertical delta.
 
 ##### key
 
@@ -64068,13 +64191,13 @@ Which kind of event this is.
 
 > `readonly` **x**: `number`
 
-The pointer x, in CSS pixels from the canvas's left edge.
+The pointer x, in backing-store pixels from the canvas's left edge.
 
 ##### y
 
 > `readonly` **y**: `number`
 
-The pointer y, in CSS pixels from the canvas's top edge.
+The pointer y, in backing-store pixels from the canvas's top edge.
 
 ***
 
@@ -69915,13 +70038,15 @@ The control name a key event names, for example `w` — not the raw `KeyboardEve
 
 > `readonly` `optional` **deltaX?**: `number`
 
-The pointer movement x, or the wheel's horizontal delta.
+The pointer movement x in **CSS** pixels, or the wheel's horizontal delta. Nothing derives it
+from `x`: the two are in different spaces (`docs/architecture/08-input.md` §5), so a test that
+wants motion states it.
 
 ##### deltaY?
 
 > `readonly` `optional` **deltaY?**: `number`
 
-The pointer movement y, or the wheel's vertical delta.
+The pointer movement y in **CSS** pixels, or the wheel's vertical delta.
 
 ##### key?
 
@@ -69957,13 +70082,13 @@ Which kind of event to queue.
 
 > `readonly` `optional` **x?**: `number`
 
-The pointer x, in CSS pixels from the canvas's left edge.
+The pointer x, in backing-store pixels from the canvas's left edge.
 
 ##### y?
 
 > `readonly` `optional` **y?**: `number`
 
-The pointer y, in CSS pixels from the canvas's top edge.
+The pointer y, in backing-store pixels from the canvas's top edge.
 
 ***
 

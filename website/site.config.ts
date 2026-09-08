@@ -59,13 +59,15 @@ export interface SiteConfig {
 /**
  * Site-wide configuration.
  *
- * `published` is the release gate: it stays `false` until `npm view ignifx version` returns a real
- * release, at which point flipping this one line switches every install surface, the header npm
- * button, the footer link and the version chip at once (`06-engineering.md` §8).
+ * `published` is the release gate: it stayed `false` until `npm view ignifx version` returned a real
+ * release — `0.2.0`, on 2026-09-08 — and flipping this one line switched every install surface, the
+ * header npm button, the footer link and the version chip at once (`06-engineering.md` §8). The
+ * scaffolder ships as `@ignifx/cli` (bin `create-ignifx`); no `create-ignifx` package exists on npm,
+ * so the install surfaces say `npx @ignifx/cli@latest`, which is the command that resolves.
  */
 export const site: SiteConfig = {
-  /** Whether `ignifx` and `@ignifx/*` are on npm. Flip on release day, not before. */
-  published: false,
+  /** Whether `ignifx` and `@ignifx/*` are on npm. Flipped on 2026-09-08, when `0.2.0` shipped. */
+  published: true,
   /** The workspace version, read from `packages/core/package.json`. */
   version: readCoreVersion(),
   /** The repository. */

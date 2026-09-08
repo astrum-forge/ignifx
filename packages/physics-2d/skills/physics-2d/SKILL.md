@@ -64,7 +64,10 @@ per fixed step:
   Systems(FixedUpdate, -100)  restore the authoritative pose of interpolated bodies
   scripts.fixedUpdate(dt)     forces, velocities, controller.move()
   Systems(FixedUpdate,  100)  step Rapier · snapshot poses · dispatch collision and trigger events
-  Systems(PreRender,  -500)   write lerp(previous, current, time.fixedStepAlpha)
+
+once per frame, after the fixed loop:
+  Systems(Update,     -900)   write lerp(previous, current, time.fixedStepAlpha)
+  scripts.update · animation · scripts.lateUpdate · rendering   all read that display pose
 ```
 
 - Bodies and colliders are (re)built at the **start of the next fixed step**, never mid-frame, so
@@ -155,6 +158,11 @@ export class Coin extends Script implements ScriptCallbacks {
 Give the coin a collider with `isTrigger: true`; give the player anything that moves. Both entities
 receive the callback, and `trigger.other` and `trigger.otherCollider` are always the real objects —
 Rapier reports both colliders, so 2D has none of the identity gaps 3D physics documents.
+
+The coin needs no `Rigidbody2D`: a collider on its own gets an implicit static body, which is the
+right thing for a pickup that never moves. The player can be a `Rigidbody2D` **or** a
+`CharacterController2D` — a trigger is never an obstacle to the controller, so the character walks
+straight through the volume at full speed while the callbacks fire.
 
 ### Platformer movement
 
@@ -264,6 +272,13 @@ Component field tables: `skills/ignifx/references/formats/components.md`.
 - **Autostep needs a box.** `stepOffset` clears a 0.3 m step with `shape: "box"`; with the default
   capsule of radius 0.2 it clears about 0.15 m and no more (measured, ADR-0006 Validation). Give a
   stair-climbing character `shape: "box"`.
+- **A trigger is never an obstacle to a character controller.** `CharacterController2D` filters
+  sensors out of its collide-and-slide sweep, so it passes through an `isTrigger` collider without
+  slowing and the trigger callbacks fire on both entities. The flip side: a sensor never shows up in
+  `CharacterController2D.onCollided` — use `onTriggerEnter`/`onTriggerExit` for pickups and zones,
+  and `onCollided` only for the walls and floors the character actually pushed against. (Rapier's
+  controller counts sensors as walls unless `QueryFilterFlags.EXCLUDE_SENSORS` is passed; measured
+  2026-09-08 against 0.20.0, ADR-0006 Validation.)
 - **One-way platforms are a character-controller feature.** `oneWay` changes what
   `CharacterController2D` collides with; rigid bodies fall through such a collider in both
   directions in the MVP.
@@ -276,6 +291,10 @@ Component field tables: `skills/ignifx/references/formats/components.md`.
   `-deterministic-` builds are the ones that do (ADR-0006 Validation).
 - **`angularVelocity` is degrees per second**, matching `Transform.rotation2D`, while Rapier's own
   API is radians. The `rapier` escape hatch gives you radians.
+- **Interpolated poses are display-only.** Read `transform.position` in `fixedUpdate` when you need
+  the authoritative pose. Everything outside the fixed loop — `update`, `lateUpdate`, animation,
+  `Camera2DFollow`, rendering — sees the interpolated one, because the display pose is written at the
+  top of `Update`. That is what keeps a follow camera locked to the sprite the frame actually draws.
 
 ## Deprecated (current window)
 

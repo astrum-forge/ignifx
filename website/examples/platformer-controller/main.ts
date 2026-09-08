@@ -273,10 +273,11 @@ bootExample({
               },
               bind(script, "coyoteTime"),
             ),
+            // The rise a one-frame tap is guaranteed; a held button still climbs the whole arc.
             slider(
-              "Jump cut",
-              { min: 0.1, max: 1, step: 0.05, format: (value: number): string => value.toFixed(2) },
-              bind(script, "jumpCut"),
+              "Short jump",
+              { min: 0.3, max: 3, step: 0.1, format: (value: number): string => `${value.toFixed(1)} m` },
+              bind(script, "minJumpHeight"),
             ),
           ],
         },
