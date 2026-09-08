@@ -758,6 +758,36 @@ What the action produces.
 
 #### Accessors
 
+##### activeDevice
+
+###### Get Signature
+
+> **get** **activeDevice**(): [`DeviceKind`](#devicekind-1) \| `null`
+
+Which device family produced this frame's value: the device behind the binding whose magnitude
+won the frame, or `null` when the action is at rest, disabled, or in a disabled map. Stable for
+the whole frame, like every other reading on an action.
+
+###### Remarks
+
+A composite binding answers with the device of its first part, because the four parts of a
+`2DVector` are one device in every binding that makes sense. Use it to treat one action
+differently per device — a mouse look that must be ignored until the pointer is locked, a stick
+look that is a rate rather than a displacement — without splitting the action in two.
+
+###### Example
+
+```ts
+const look = app.input.actions.get("look");
+const degrees = look.activeDevice === "Gamepad" ? look.vector.x * 180 * dt : look.vector.x * 0.1;
+```
+
+###### Returns
+
+[`DeviceKind`](#devicekind-1) \| `null`
+
+The winning binding's device family, or `null`.
+
 ##### axis
 
 ###### Get Signature
@@ -2521,6 +2551,12 @@ Requests the lock. Must be called from inside a user gesture.
 
 `true` once the lock is held, `false` when the browser refused it.
 
+###### Remarks
+
+The lock is asked for with `unadjustedMovement: true` first — raw, un-accelerated mouse motion,
+which is what a first-person look wants — and plainly when the browser rejects the option.
+Either way the promise settles once, on the outcome of whichever request the browser accepted.
+
 ###### Throws
 
 IgnifxError with code `IGX-0809` when the app has no DOM canvas to lock.
@@ -3416,6 +3452,10 @@ One raw event of the current frame (`docs/architecture/08-input.md` §5).
 Every field is always present; the ones an event kind does not use read `0` or `""`. A fixed
 shape is what lets the records be pooled, and reading `deltaX` on a `keydown` is harmless.
 
+Pointer **positions** are backing-store pixels and pointer **deltas** are CSS pixels; the two
+spaces differ by the device pixel ratio and the render scale, and §5 of the architecture document
+says why each is where it is.
+
 The records are recycled: keep a copy of anything needed after the frame ends.
 
 #### Properties
@@ -3436,13 +3476,13 @@ The physical `KeyboardEvent.code`, for key events.
 
 > `readonly` **deltaX**: `number`
 
-The pointer movement x, or the wheel's horizontal delta.
+The pointer movement x, in **CSS** pixels, or the wheel's horizontal delta.
 
 ##### deltaY
 
 > `readonly` **deltaY**: `number`
 
-The pointer movement y, or the wheel's vertical delta.
+The pointer movement y, in **CSS** pixels, or the wheel's vertical delta.
 
 ##### key
 
@@ -3484,13 +3524,13 @@ Which kind of event this is.
 
 > `readonly` **x**: `number`
 
-The pointer x, in CSS pixels from the canvas's left edge.
+The pointer x, in backing-store pixels from the canvas's left edge.
 
 ##### y
 
 > `readonly` **y**: `number`
 
-The pointer y, in CSS pixels from the canvas's top edge.
+The pointer y, in backing-store pixels from the canvas's top edge.
 
 ***
 
@@ -3854,13 +3894,15 @@ The control name a key event names, for example `w` — not the raw `KeyboardEve
 
 > `readonly` `optional` **deltaX?**: `number`
 
-The pointer movement x, or the wheel's horizontal delta.
+The pointer movement x in **CSS** pixels, or the wheel's horizontal delta. Nothing derives it
+from `x`: the two are in different spaces (`docs/architecture/08-input.md` §5), so a test that
+wants motion states it.
 
 ##### deltaY?
 
 > `readonly` `optional` **deltaY?**: `number`
 
-The pointer movement y, or the wheel's vertical delta.
+The pointer movement y in **CSS** pixels, or the wheel's vertical delta.
 
 ##### key?
 
@@ -3896,13 +3938,13 @@ Which kind of event to queue.
 
 > `readonly` `optional` **x?**: `number`
 
-The pointer x, in CSS pixels from the canvas's left edge.
+The pointer x, in backing-store pixels from the canvas's left edge.
 
 ##### y?
 
 > `readonly` `optional` **y?**: `number`
 
-The pointer y, in CSS pixels from the canvas's top edge.
+The pointer y, in backing-store pixels from the canvas's top edge.
 
 ***
 

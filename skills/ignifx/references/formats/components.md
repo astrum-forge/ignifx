@@ -243,7 +243,8 @@ The world's image-based lighting, skybox, fog, image processing, and clear colou
 | `jumpAction` | `str` | `"Jump"` | The button action that jumps. |
 | `sprintAction` | `str` | `"Sprint"` | The button action that sprints. |
 | `crouchAction` | `str` | `"Crouch"` | The button action that crouches. |
-| `sensitivity` | `f32` | `0.15` | Degrees of rotation per unit of look input. |
+| `sensitivity` | `f32` | `0.15` | Degrees of rotation per unit of pointer look; for a mouse, degrees per CSS pixel. |
+| `stickLookSpeed` | `f32` | `180` | Degrees of rotation per second at full deflection, for a gamepad or on-screen stick. |
 | `invertY` | `bool` | `false` | Whether looking up needs the stick pushed down. |
 | `walkSpeed` | `f32` | `4` | Ground speed, in m/s. |
 | `sprintSpeed` | `f32` | `7` | Ground speed while sprinting, in m/s. |
@@ -255,7 +256,7 @@ The world's image-based lighting, skybox, fog, image processing, and clear colou
 | `coyoteTime` | `f32` | `0.1` | How long a jump stays legal after leaving the ground. |
 | `jumpBufferTime` | `f32` | `0.1` | How long an early jump press is remembered. |
 | `airControl` | `f32` | `0.5` | How much of the ground speed applies mid-air. |
-| `lockPointerOnClick` | `bool` | `true` | Whether the first click requests pointer lock. |
+| `lockPointerOnClick` | `bool` | `true` | Whether a click requests pointer lock; while it is on, mouse look waits for the lock. |
 | `headBobAmplitude` | `f32` | `0` | How far the head bobs while walking, in metres; 0 disables it. |
 | `headBobFrequency` | `f32` | `1.8` | Head bobs per metre travelled. |
 | `sprintFovKick` | `f32` | `0` | Extra vertical FOV while sprinting, in degrees; 0 disables it. |
@@ -593,13 +594,15 @@ One sprite drawn from one frame of one atlas, on one sorting layer.
 | `distance` | `f32` | `4.5` | How far behind the target the camera sits, in metres. |
 | `minPitch` | `f32` | `-30` | The lowest pitch, in degrees. |
 | `maxPitch` | `f32` | `60` | The highest pitch, in degrees. |
-| `sensitivity` | `f32` | `0.2` | Degrees of orbit per unit of look input. |
+| `sensitivity` | `f32` | `0.2` | Degrees of orbit per unit of pointer look; for a mouse, degrees per CSS pixel. |
+| `stickLookSpeed` | `f32` | `180` | Degrees of orbit per second at full deflection, for a gamepad or on-screen stick. |
+| `lockPointerOnClick` | `bool` | `false` | Whether a click requests pointer lock; while it is on, mouse look waits for the lock. |
 | `damping` | `f32` | `0.08` | The follow time constant, in seconds; 0 snaps. |
 | `shoulderOffset` | `vec3` | `[0.5,1.5,0]` | The pivot offset from the target, in its own space. |
 | `invertY` | `bool` | `false` | Whether looking up needs the stick pushed down. |
 | `collisionEnabled` | `bool` | `true` | Whether the boom is shortened by geometry in the way. |
 | `collisionRadius` | `f32` | `0.25` | The radius of the sphere swept along the boom. |
-| `collisionLayers` | `layerMask` | `[]` | Which layers block the camera; empty means every layer. |
+| `collisionLayers` | `layerMask` | `[]` | Which layers the boom's hit is attributed to; the target's own body is always swept through. |
 | `collisionRecoverySpeed` | `f32` | `6` | How fast the boom eases back out, in m/s. |
 
 ## Third person controller (`ignifx/ThirdPersonController`)

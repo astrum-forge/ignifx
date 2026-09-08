@@ -53,7 +53,8 @@ const rig = eye.addComponent(ThirdPersonCamera, {
   shoulderOffset: { x: 0.5, y: 1.5, z: 0 },
   minPitch: -30,
   maxPitch: 60,
-  damping: 12,
+  // A time constant in seconds, not a fraction: 0 snaps, about 0.08 keeps up with a running character.
+  damping: 0.08,
   collisionEnabled: true,
   collisionRadius: 0.25,
   // Level geometry only: a cast that hit the character would jam the camera at its nose.

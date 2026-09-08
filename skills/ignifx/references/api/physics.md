@@ -4474,9 +4474,9 @@ The end position.
 
 ###### options?
 
-[`QueryOptions`](#queryoptions)
+[`ShapeCastOptions`](#shapecastoptions)
 
-Layer mask and trigger behaviour.
+Layer mask, trigger behaviour, and the one entity to sweep through.
 
 ###### Returns
 
@@ -4488,6 +4488,12 @@ The hit, or `null`.
 
 Lite's `shapeCast` reports no body (`index.d.ts` 11497), so `entity` is resolved against the
 extension's body-bounds index and is bounds-accurate rather than shape-accurate.
+
+The sweep itself cannot be filtered by layer — Lite's `ShapeCastQuery` carries no collision
+masks — so a body outside `layerMask` still stops the sweep; it is merely reported with
+`entity: null`. What the sweep *can* do is pass through one body, `options.ignore`, which is
+how a camera boom leaves its target's capsule and a step probe leaves the character's own feet
+without reporting them at fraction zero (2026-09-08).
 
 ###### Throws
 
@@ -6039,6 +6045,10 @@ The world speed clamps.
 
 Options every query accepts.
 
+#### Extended by
+
+- [`ShapeCastOptions`](#shapecastoptions)
+
 #### Properties
 
 ##### hitTriggers?
@@ -6161,6 +6171,55 @@ The world-space contact normal on the hit body.
 > `readonly` **point**: `Vec3Like`
 
 The world-space contact point on the hit body.
+
+***
+
+### ShapeCastOptions
+
+Options a shape sweep accepts, on top of [QueryOptions](#queryoptions).
+
+#### Remarks
+
+`ignore` exists because a sweep that starts at or inside a body — a camera boom leaving its
+target's capsule, a step probe leaving the character's own feet — reports that body at fraction
+zero and nothing else. Lite's sweep can exclude exactly one body, and cannot filter by layer at
+all (`ShapeCastQuery` has `ignoreBody` and no collision masks, unlike `physicsRaycast`), so
+`layerMask` decides which hit is *attributed* an entity while `ignore` is the one body the
+geometry itself passes through. Added 2026-09-08.
+
+#### Extends
+
+- [`QueryOptions`](#queryoptions)
+
+#### Properties
+
+##### hitTriggers?
+
+> `readonly` `optional` **hitTriggers?**: `boolean`
+
+Whether trigger volumes count as hits. Defaults to `false`.
+
+###### Inherited from
+
+[`QueryOptions`](#queryoptions).[`hitTriggers`](#hittriggers)
+
+##### ignore?
+
+> `readonly` `optional` **ignore?**: `Entity` \| `null`
+
+An entity whose body the sweep passes through — usually the caller's own. A `Rigidbody`, a
+collider-only static, and a `CharacterController` capsule are all accepted; an entity with no
+body is ignored.
+
+##### layerMask?
+
+> `readonly` `optional` **layerMask?**: `LayerMask`
+
+Which layers the query may hit. Defaults to everything.
+
+###### Inherited from
+
+[`QueryOptions`](#queryoptions).[`layerMask`](#layermask)
 
 ***
 
