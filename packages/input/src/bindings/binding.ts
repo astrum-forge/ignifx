@@ -203,6 +203,20 @@ export class Binding {
   }
 
   /**
+   * The device family this binding reads from, which is what `InputAction.activeDevice` reports
+   * when this binding wins the frame. A composite answers with the device of its **first**
+   * part: the four parts of a `2DVector` are one device in every sane binding, and a composite that
+   * does mix devices has no single answer to give.
+   *
+   * @returns The device kind, or `null` when the binding resolved to no control at all.
+   *
+   * @internal
+   */
+  get deviceKind(): DeviceKind | null {
+    return this.#refs[0]?.device.kind ?? null;
+  }
+
+  /**
    * Reads the binding's value for this frame.
    *
    * @param out - The value to write into.

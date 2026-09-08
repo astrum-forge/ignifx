@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { defineInputActions } from "../../src/index.js";
+import { defineInputActions, DeviceKind } from "../../src/index.js";
 import { createInputApp, demoActions } from "../support/app.js";
 import type { InputActionEvent } from "../../src/index.js";
 import type { InputAppHarness } from "../support/app.js";
@@ -297,5 +297,47 @@ describe("action signals", () => {
     step();
     expect(jump.isPressed).toBe(false);
     expect(jump.wasPressedThisFrame).toBe(false);
+  });
+});
+
+describe("the active device", () => {
+  it("names the device of the binding that won the frame", async () => {
+    const { app, step } = await withDemo();
+    const move = app.input.actions.get("move");
+    expect(move.activeDevice).toBeNull();
+
+    app.input.simulate({ "<Keyboard>/d": 1 });
+    step();
+    // A composite answers with the device of its first part; all four parts are one keyboard.
+    expect(move.activeDevice).toBe(DeviceKind.keyboard);
+
+    app.input.simulate({ "<Keyboard>/d": 0, "<Gamepad>/leftStick": { x: 0.8, y: 0 } });
+    step();
+    expect(move.activeDevice).toBe(DeviceKind.gamepad);
+
+    app.input.simulate({ "<Gamepad>/leftStick": { x: 0, y: 0 } });
+    step();
+    expect(move.activeDevice).toBeNull();
+  });
+
+  it("names the mouse for a look bound to the mouse delta", async () => {
+    const { app, step } = await withDemo();
+    app.input.simulate({ "<Mouse>/delta": { x: 4, y: -2 } });
+    step();
+    expect(app.input.actions.get("look").activeDevice).toBe(DeviceKind.mouse);
+  });
+
+  it("is null while the action is disabled, and again once the action is at rest", async () => {
+    const { app, step } = await withDemo();
+    const move = app.input.actions.get("move");
+    app.input.simulate({ "<Keyboard>/d": 1 });
+    step();
+    expect(move.activeDevice).toBe(DeviceKind.keyboard);
+    move.enabled = false;
+    step();
+    expect(move.activeDevice).toBeNull();
+    move.enabled = true;
+    step();
+    expect(move.activeDevice).toBe(DeviceKind.keyboard);
   });
 });

@@ -78,7 +78,7 @@ describe("the pointing adapter", () => {
       pointerId: 4,
       pointerType: "pen",
     });
-    dom.canvas.dispatch("wheel", { deltaX: 1, deltaY: -2, clientX: 30, clientY: 50 });
+    dom.canvas.dispatch("wheel", { deltaX: 1, deltaY: -2, clientX: 30, clientY: 50, preventDefault: (): void => {} });
     const events = drain(queue);
     expect(events[0]).toMatchObject({ type: "pointerdown", x: 20, y: 30, button: 2, pointerId: 4, pointerType: "pen" });
     expect(events[1]).toMatchObject({ type: "pointermove", x: 30, y: 40, deltaX: 10, deltaY: 10 });
@@ -106,6 +106,29 @@ describe("the pointing adapter", () => {
     locked = true;
     dom.canvas.dispatch("contextmenu", event);
     expect(prevented).toBe(1);
+  });
+
+  it("takes the wheel non-passively and stops the page scrolling under the canvas", () => {
+    const dom = createFakeDom();
+    const queue = new InputEventQueue();
+    const source = new PointerSource({ target: asTarget(dom), queue, isLocked: () => false });
+    source.attach();
+    // A passive listener may not `preventDefault`, and the page behind an embedded game canvas
+    // would scroll while the game zoomed (`docs/architecture/08-input.md` §4).
+    expect(dom.canvas.listenerOptions.get("wheel")).toEqual({ passive: false });
+    let prevented = 0;
+    dom.canvas.dispatch("wheel", {
+      deltaX: 0,
+      deltaY: 3,
+      clientX: 30,
+      clientY: 50,
+      preventDefault: (): void => {
+        prevented += 1;
+      },
+    });
+    expect(prevented).toBe(1);
+    expect(drain(queue)[0]).toMatchObject({ type: "wheel", deltaY: 3 });
+    source.detach();
   });
 });
 
@@ -157,6 +180,8 @@ describe("the pointer-lock controller", () => {
     lock.onChange.connect((locked: boolean) => seen.push(locked));
     const pending = lock.request();
     expect(dom.canvas.pointerLockRequests).toBe(1);
+    // Raw, un-accelerated motion is what a first-person look wants; the plain call is the fallback.
+    expect(dom.canvas.pointerLockOptions[0]).toEqual({ unadjustedMovement: true });
     dom.document.pointerLockElement = dom.canvas;
     dom.document.dispatch("pointerlockchange", {});
     expect(await pending).toBe(true);
@@ -186,6 +211,35 @@ describe("the pointer-lock controller", () => {
     const lock = new PointerLock();
     lock.attach(asTarget(dom));
     expect(await lock.request()).toBe(false);
+    lock.detach();
+  });
+
+  it("falls back to a plain request when the browser rejects unadjusted movement", async () => {
+    const dom = createFakeDom();
+    dom.canvas.unadjustedMovement = "reject";
+    const lock = new PointerLock();
+    lock.attach(asTarget(dom));
+    const pending = lock.request();
+    // One tick is all the rejection needs to reach the fallback: the promise is already rejected
+    // when `catch` is attached, so its reaction runs before this continuation.
+    await Promise.resolve();
+    expect(dom.canvas.pointerLockRequests).toBe(2);
+    expect(dom.canvas.pointerLockOptions).toEqual([{ unadjustedMovement: true }, undefined]);
+    dom.document.pointerLockElement = dom.canvas;
+    dom.document.dispatch("pointerlockchange", {});
+    expect(await pending).toBe(true);
+    lock.detach();
+  });
+
+  it("falls back to a plain request when the option throws", async () => {
+    const dom = createFakeDom();
+    dom.canvas.unadjustedMovement = "throw";
+    const lock = new PointerLock();
+    lock.attach(asTarget(dom));
+    const pending = lock.request();
+    expect(dom.canvas.pointerLockRequests).toBe(2);
+    dom.document.dispatch("pointerlockerror", {});
+    expect(await pending).toBe(false);
     lock.detach();
   });
 
@@ -222,50 +276,6 @@ describe("the DOM bridge", () => {
 describe("the navigator gamepad reader", () => {
   it("is absent under Node, where there is no Gamepad API", () => {
     expect(createNavigatorGamepadReader()).toBeNull();
-  });
-});
-
-describe("pointer pixel space", () => {
-  it("reports positions and deltas in backing-store pixels when the canvas is scaled", () => {
-    const dom = createFakeDom();
-    // A 100-CSS-pixel-wide canvas with a 200-pixel backing store: device pixel ratio 2.
-    Object.assign(dom.canvas, {
-      width: 200,
-      getBoundingClientRect: (): { left: number; top: number; width: number } => ({ left: 10, top: 20, width: 100 }),
-    });
-    const queue = new InputEventQueue();
-    const source = new PointerSource({ target: asTarget(dom), queue, isLocked: () => false });
-    source.attach();
-    dom.canvas.dispatch("pointerdown", {
-      clientX: 30,
-      clientY: 50,
-      movementX: 5,
-      movementY: -5,
-      button: 0,
-      pointerId: 1,
-      pointerType: "mouse",
-    });
-    const events = drain(queue);
-    expect(events[0]).toMatchObject({ type: "pointerdown", x: 40, y: 60, deltaX: 10, deltaY: -10 });
-    source.detach();
-  });
-
-  it("keeps CSS pixels when the canvas reports no sizes, as the fakes elsewhere in this file do", () => {
-    const dom = createFakeDom();
-    const queue = new InputEventQueue();
-    const source = new PointerSource({ target: asTarget(dom), queue, isLocked: () => false });
-    source.attach();
-    dom.canvas.dispatch("pointerdown", {
-      clientX: 30,
-      clientY: 50,
-      movementX: 5,
-      movementY: 5,
-      button: 0,
-      pointerId: 1,
-      pointerType: "mouse",
-    });
-    expect(drain(queue)[0]).toMatchObject({ x: 20, y: 30, deltaX: 5 });
-    source.detach();
   });
 });
 

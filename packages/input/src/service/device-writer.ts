@@ -63,18 +63,9 @@ export class DeviceWriter {
   /** `pointerId` occupying each touch slot, or `-1` when the slot is free. */
   readonly #slotIds: Int32Array = new Int32Array(TOUCH_SLOTS).fill(-1);
 
-  /** The last position seen in each touch slot, so a delta can be derived. */
-  readonly #slotLast: Float32Array = new Float32Array(TOUCH_SLOTS * 2);
-
   #heldKeys = 0;
 
   #activePointers = 0;
-
-  #lastPointerX = 0;
-
-  #lastPointerY = 0;
-
-  #hasLastPointer = false;
 
   /**
    * Resolves every control the writer needs.
@@ -185,9 +176,7 @@ export class DeviceWriter {
     this.#devices.releaseAll();
     this.#heldKeys = 0;
     this.#activePointers = 0;
-    this.#hasLastPointer = false;
     this.#slotIds.fill(-1);
-    this.#slotLast.fill(0);
   }
 
   /**
@@ -222,19 +211,21 @@ export class DeviceWriter {
    * Applies one pointer event to `<Pointer>` and, depending on `pointerType`, to `<Mouse>` or
    * `<Touch>`.
    *
+   * @remarks
+   * The entry's position is in backing-store pixels and its delta is in CSS pixels, and the two are
+   * never derived from one another here (`docs/architecture/08-input.md` §5). A delta computed from
+   * successive positions would carry the device pixel ratio and the render scale into a look
+   * sensitivity; the DOM adapter, which sees `clientX`/`clientY`, is the only place that may derive
+   * one, and `simulateEvent` states the delta it means.
+   *
    * @param entry - The queued pointer entry.
    */
   #writePointer(entry: MutableInputEvent): void {
     const down = entry.kind === "pointerdown";
     const up = entry.kind === "pointerup";
     const devices = this.#devices;
-    const deltaX =
-      entry.deltaX !== 0 || entry.deltaY !== 0 || !this.#hasLastPointer ? entry.deltaX : entry.x - this.#lastPointerX;
-    const deltaY =
-      entry.deltaX !== 0 || entry.deltaY !== 0 || !this.#hasLastPointer ? entry.deltaY : entry.y - this.#lastPointerY;
-    this.#lastPointerX = entry.x;
-    this.#lastPointerY = entry.y;
-    this.#hasLastPointer = true;
+    const deltaX = entry.deltaX;
+    const deltaY = entry.deltaY;
     if (down) {
       this.#activePointers += 1;
     } else if (up) {
@@ -289,12 +280,8 @@ export class DeviceWriter {
     const press = this.#touchPress[slot];
     const position = this.#touchPosition[slot];
     const delta = this.#touchDelta[slot];
-    const derivedX = down ? 0 : entry.x - (this.#slotLast[slot * 2] ?? 0);
-    const derivedY = down ? 0 : entry.y - (this.#slotLast[slot * 2 + 1] ?? 0);
-    const moveX = deltaX !== 0 || deltaY !== 0 ? deltaX : derivedX;
-    const moveY = deltaX !== 0 || deltaY !== 0 ? deltaY : derivedY;
-    this.#slotLast[slot * 2] = entry.x;
-    this.#slotLast[slot * 2 + 1] = entry.y;
+    const moveX = down ? 0 : deltaX;
+    const moveY = down ? 0 : deltaY;
     if (position !== undefined) {
       devices.touch.writeVector(position, entry.x, entry.y);
     }

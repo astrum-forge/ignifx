@@ -189,9 +189,14 @@ describe("real pointer events", () => {
     expect(running.app.input.actions.get("tap").isPressed).toBe(false);
   });
 
-  it("drive the wheel", async () => {
+  it("drive the wheel, and stop the page scrolling with it", async () => {
     const running = await createBrowserInputApp();
-    running.canvas.dispatchEvent(new WheelEvent("wheel", { deltaY: 1, bubbles: true }));
+    // Cancelable, because the point of the non-passive listener is that `preventDefault` counts: a
+    // wheel over a running game canvas zooms the game and must not also scroll the host page
+    // (`docs/architecture/08-input.md` §4).
+    const wheel = new WheelEvent("wheel", { deltaY: 1, bubbles: true, cancelable: true });
+    running.canvas.dispatchEvent(wheel);
+    expect(wheel.defaultPrevented).toBe(true);
     let sawScroll = false;
     await Array.from({ length: SETTLE_FRAMES }).reduce<Promise<void>>(
       (chain) =>

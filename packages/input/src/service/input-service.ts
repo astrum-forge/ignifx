@@ -110,13 +110,17 @@ export interface SimulatedEvent {
   readonly key?: string;
   /** Whether a key event is an auto-repeat. */
   readonly repeat?: boolean;
-  /** The pointer x, in CSS pixels from the canvas's left edge. */
+  /** The pointer x, in backing-store pixels from the canvas's left edge. */
   readonly x?: number;
-  /** The pointer y, in CSS pixels from the canvas's top edge. */
+  /** The pointer y, in backing-store pixels from the canvas's top edge. */
   readonly y?: number;
-  /** The pointer movement x, or the wheel's horizontal delta. */
+  /**
+   * The pointer movement x in **CSS** pixels, or the wheel's horizontal delta. Nothing derives it
+   * from `x`: the two are in different spaces (`docs/architecture/08-input.md` §5), so a test that
+   * wants motion states it.
+   */
   readonly deltaX?: number;
-  /** The pointer movement y, or the wheel's vertical delta. */
+  /** The pointer movement y in **CSS** pixels, or the wheel's vertical delta. */
   readonly deltaY?: number;
   /** The `PointerEvent.button` index. */
   readonly button?: number;

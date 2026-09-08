@@ -103,6 +103,36 @@ describe("simulated input", () => {
     expect(touch.valueAt(touch.control("touchCount")?.offset ?? 0)).toBe(1);
   });
 
+  it("writes the event's own delta onto the touch slot rather than deriving one from positions", async () => {
+    const { app, step } = await withDemo();
+    const touch = app.input.devices.touch;
+    const delta = touch.control("touch0/delta");
+    const position = touch.control("touch0/position");
+    expect(delta).not.toBeNull();
+    expect(position).not.toBeNull();
+    if (delta === null || position === null) {
+      return;
+    }
+    // The queued position is in backing-store pixels and the queued delta is in CSS pixels; a delta
+    // derived here from the positions would carry the device pixel ratio into a look sensitivity
+    // (`docs/architecture/08-input.md` §5). The DOM adapter is the only place that may derive one.
+    app.input.simulateEvent({ type: "pointerdown", pointerType: "touch", pointerId: 3, x: 20, y: 20 });
+    step();
+    expect(touch.valueAt(delta.offset)).toBe(0);
+    app.input.simulateEvent({
+      type: "pointermove",
+      pointerType: "touch",
+      pointerId: 3,
+      x: 60,
+      y: 20,
+      deltaX: 20,
+      deltaY: 0,
+    });
+    step();
+    expect(touch.valueAt(position.offset)).toBe(60);
+    expect(touch.valueAt(delta.offset)).toBe(20);
+  });
+
   it("tracks anyKey while any key is held", async () => {
     const { app, step } = await withDemo();
     const anyKey = app.input.devices.keyboard.control("anyKey");

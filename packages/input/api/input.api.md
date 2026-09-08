@@ -69,6 +69,8 @@ export function applyProcessors(chain: readonly Processor[], value: ControlValue
 export class Binding {
     constructor(definition: BindingDefinition, resolver: BindingResolver);
     readonly composite: CompositeKind | null;
+    // @internal
+    get deviceKind(): DeviceKind | null;
     get effectivePath(): string;
     // @internal
     evaluate(out: ControlValue, context: BindingContext): void;
@@ -363,6 +365,7 @@ export const INPUT_SETTINGS_SECTION = "input";
 // @public
 export class InputAction {
     constructor(definition: ActionDefinition, map: ActionMap, resolver: BindingResolver, onHandlerError: (error: unknown) => void);
+    get activeDevice(): DeviceKind | null;
     get axis(): number;
     get bindings(): readonly Binding[];
     enabled: boolean;

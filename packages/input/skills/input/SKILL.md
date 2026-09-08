@@ -160,7 +160,7 @@ app.input.actions.get("jump").wasPressedThisFrame; // true, for the whole frame
 | `onDeviceConnected` / `onDeviceDisconnected`                   | Gamepad slots filling and emptying                                                                                                                                                                                                           |
 | `uiHasFocus`                                                   | While `true`, keyboard actions read as released                                                                                                                                                                                              |
 | `pressPoint` / `strictSchemes`                                 | Runtime knobs, defaulted from the settings section                                                                                                                                                                                           |
-| `pointerLock.request()/exit()/locked/onChange`                 | Pointer lock; `<Mouse>/delta` keeps reporting while locked                                                                                                                                                                                   |
+| `pointerLock.request()/exit()/locked/onChange`                 | Pointer lock; `<Mouse>/delta` keeps reporting while locked. `request()` asks for `unadjustedMovement` (raw, un-accelerated motion) and falls back to the plain request where the browser refuses the option                                  |
 | `cursor.visible`                                               | `cursor: none` on the canvas                                                                                                                                                                                                                 |
 | `simulate(values)` / `simulateEvent(event)`                    | Headless and test input, through the same pipeline                                                                                                                                                                                           |
 | `releaseAll()`                                                 | Queues what `blur` queues, so nothing stays stuck                                                                                                                                                                                            |
@@ -170,12 +170,13 @@ app.input.actions.get("jump").wasPressedThisFrame; // true, for the whole frame
 
 ### `InputAction`
 
-| Member                                                     | Notes                                           |
-| ---------------------------------------------------------- | ----------------------------------------------- |
-| `name`, `map`, `type`, `enabled`, `bindings`               | `type` is `button`, `axis`, or `vector2`        |
-| `isPressed`, `wasPressedThisFrame`, `wasReleasedThisFrame` | Edge flags hold for the whole frame             |
-| `axis`, `vector`, `magnitude`, `value`                     | `vector` is a **live** view; never reallocated  |
-| `onStarted`, `onPerformed`, `onCanceled`                   | `Signal<InputActionEvent>`; the event is reused |
+| Member                                                     | Notes                                                                                                                                                                                                        |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `name`, `map`, `type`, `enabled`, `bindings`               | `type` is `button`, `axis`, or `vector2`                                                                                                                                                                     |
+| `isPressed`, `wasPressedThisFrame`, `wasReleasedThisFrame` | Edge flags hold for the whole frame                                                                                                                                                                          |
+| `axis`, `vector`, `magnitude`, `value`                     | `vector` is a **live** view; never reallocated                                                                                                                                                               |
+| `activeDevice`                                             | The `DeviceKind` of the binding that won this frame (`"Mouse"`, `"Gamepad"`, …), `null` at rest or disabled; a composite reports its first part's device. Read it to treat one action differently per device |
+| `onStarted`, `onPerformed`, `onCanceled`                   | `Signal<InputActionEvent>`; the event is reused                                                                                                                                                              |
 
 ### `PlayerInput` (component, `ignifx/PlayerInput`)
 
@@ -204,8 +205,14 @@ the declared schemes, `-1` for none), `pointerLocked`.
 
 - **Switch context**: `app.input.actions.map("Player").enabled = false;` then enable `"UI"`.
 - **Rebind a key**: `await app.input.performInteractiveRebind(action, { bindingIndex: 0, cancelPath: "<Keyboard>/escape", timeoutSeconds: 5 })`, then persist `app.input.saveOverrides()`.
-- **First-person look**: bind `<Mouse>/delta` with `scale(0.1)` and call
-  `app.input.pointerLock.request()` from a click handler.
+- **First-person look**: bind `<Mouse>/delta`, call `app.input.pointerLock.request()` from a click
+  handler, and scale in the game rather than in the binding: deltas are CSS pixels, so a sensitivity
+  of **0.08–0.15 degrees per pixel** feels right on every display and at every render scale.
+  `@ignifx/3d`'s `FirstPersonController` and `ThirdPersonCamera` do this for you, including the
+  "ignore the mouse until the lock is held" rule. Bind a stick to the same action and read
+  `action.activeDevice` to multiply it by a rate (degrees per second) times `dt` instead — and to
+  fix the sign: a pointer's `y` grows **downward** and a stick's grows **upward**, so a rig that
+  wants one pitch axis negates the pointer's.
 - **Local multiplayer**: give each player entity a `PlayerInput` with its own `deviceSlot`.
 - **On-screen stick**: write `<Virtual>/joystick` from a UI widget with
   `app.input.devices.virtual.setVector("joystick", x, y)` and bind the path like any other.
@@ -246,7 +253,8 @@ Overrides are a separate `ignifx.inputoverrides` document produced by `saveOverr
   `KeyboardMouse` is active; set `input: { strictSchemes: true }` if that is not what you want.
 - **Binding overrides are addressed by index.** Reordering an action's bindings invalidates saved
   overrides, loudly (`IGX-0808`).
-- **Positions are backing-store pixels**, not CSS pixels: `<Pointer>/position`, `<Mouse>/position`, `<Touch>/…/position`, deltas, and `app.input.events` use the canvas's `width`/`height` space, so `app.renderer.pickAsync(pointer.position)` and `camera.screenToRay` are exact at every device pixel ratio; divide by `devicePixelRatio` for DOM work.
+- **Positions are backing-store pixels, deltas are CSS pixels.** `<Pointer>/position`, `<Mouse>/position`, `<Touch>/…/position` and `event.x`/`event.y` are in the canvas's `width`/`height` space, so `app.renderer.pickAsync(pointer.position)` and `camera.screenToRay` are exact at every device pixel ratio; divide by `devicePixelRatio` for DOM work. `<Mouse>/delta`, `<Pointer>/delta`, `<Touch>/…/delta` and `event.deltaX`/`event.deltaY` are **CSS** pixels of hand motion, so a look sensitivity does not double on a retina display and does not move when a settings screen changes `renderer.resolutionScale`. Do not derive one from the other.
+- **A wheel over the canvas does not scroll the page.** The canvas `wheel` listener is non-passive and calls `preventDefault()`, which is what keeps an embedded game (an `<iframe>` on a page) from scrolling its host while the player zooms. A wheel anywhere else on the page is untouched.
 - **Two UI flags mask devices**: `app.input.uiHasFocus` (a text field owns the keyboard) and `app.input.uiHasPointer` (a pointer is pressed on the UI overlay) make keyboard or pointing-device actions read as released for the frame; events are still published. `@ignifx/ui` writes both; a game with its own DOM UI sets them itself.
 
 ## Deprecated (current window)
