@@ -1,3 +1,4 @@
+import { QueryFilterFlags } from "@dimforge/rapier2d-compat";
 import type { RapierCollider, RapierWorld } from "./world.js";
 import type { KinematicCharacterController } from "@dimforge/rapier2d-compat";
 import type { MutableVec2, Vec2Like } from "@ignifx/core";
@@ -21,10 +22,24 @@ import type { MutableVec2, Vec2Like } from "@ignifx/core";
  *   0.2 m — a Rapier limitation, recorded in ADR-0006's validation section and in the skill.
  * - **The broadphase must exist first.** Before the world has stepped, `computeColliderMovement`
  *   sees no obstacles at all and reports the requested motion unchanged.
+ * - **A sensor is an obstacle unless `filterFlags` says otherwise** (measured 2026-09-08). With
+ *   `filterFlags` left `undefined`, a kinematic box driven by the controller into a static sensor
+ *   ball stops dead at the sensor's surface and no intersection event is ever raised, because the
+ *   character never overlaps it. Passing {@link QueryFilterFlags.EXCLUDE_SENSORS} lets the
+ *   character walk through and `drainCollisionEvents` then reports the started/stopped pair. Every
+ *   move in {@link computeControllerMovement} therefore passes it: a trigger volume is a region of
+ *   space, never a wall.
  *
  * @internal
  */
 export type RapierController = KinematicCharacterController;
+
+/**
+ * The obstacle filter every controller move uses. Sensors describe regions, not geometry, so they
+ * are excluded from collide-and-slide; the pair is still reported by the world step, which is where
+ * `onTriggerEnter`/`onTriggerExit` come from.
+ */
+const OBSTACLE_FLAGS: QueryFilterFlags = QueryFilterFlags.EXCLUDE_SENSORS;
 
 /** How a controller is configured, in ignifx units. */
 export interface ControllerTuning2D {
@@ -120,6 +135,10 @@ export function setControllerSkinWidth(controller: RapierController, skinWidth: 
 /**
  * Runs one collide-and-slide move.
  *
+ * @remarks
+ * Sensors are excluded from the obstacle set ({@link OBSTACLE_FLAGS}), so a character walks into and
+ * out of a trigger volume at full speed and the world step raises the intersection events.
+ *
  * @param controller - The controller.
  * @param collider - The character's own collider.
  * @param desired - The displacement to attempt, in metres.
@@ -139,9 +158,9 @@ export function computeControllerMovement(
   out: MutableVec2,
 ): boolean {
   if (filter === null) {
-    controller.computeColliderMovement(collider, { x: desired.x, y: desired.y }, undefined, groups);
+    controller.computeColliderMovement(collider, { x: desired.x, y: desired.y }, OBSTACLE_FLAGS, groups);
   } else {
-    controller.computeColliderMovement(collider, { x: desired.x, y: desired.y }, undefined, groups, filter);
+    controller.computeColliderMovement(collider, { x: desired.x, y: desired.y }, OBSTACLE_FLAGS, groups, filter);
   }
   controller.computedMovement(out);
   return controller.computedGrounded();

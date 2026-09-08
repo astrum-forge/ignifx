@@ -41,9 +41,11 @@ describe("the audio extension", () => {
     }
   });
 
-  it("pumps in PreRender, after physics interpolation and before the render sync", () => {
+  it("pumps in PreRender, before the render sync", () => {
+    // Physics writes its display pose at the top of `Update` (order -900) since 2026-09-08, so the
+    // pump reads listener and source transforms the frame will present; the only order that has to
+    // hold inside `PreRender` is "before core's render sync".
     expect(AUDIO_PUMP_ORDER).toBe(-400);
-    expect(AUDIO_PUMP_ORDER).toBeGreaterThan(-500);
     expect(AUDIO_PUMP_ORDER).toBeLessThan(900);
     expect(Phase.PreRender).toBe(5);
   });

@@ -3,6 +3,8 @@ import { Collider } from "../components/collider.js";
 import { Rigidbody } from "../components/rigidbody.js";
 import { PhysicsErrorCode, physicsError } from "../errors.js";
 import {
+  SupportState,
+  controllerBody,
   createController,
   disposeController,
   moveController,
@@ -11,7 +13,6 @@ import {
   readControllerPosition,
   readControllerVelocity,
   resizeController as resizeLiteController,
-  SupportState,
   tuneController,
   writeControllerPosition,
   writeControllerVelocity,
@@ -409,7 +410,8 @@ export class PhysicsRuntime {
 
   /**
    * Restores the authoritative pose of every interpolated body and controller, undoing the display
-   * pose the `PreRender` system wrote (`09-physics.md` §1, spike S4.3).
+   * pose the `Update` system wrote at the top of the previous frame's `Update`
+   * (`09-physics.md` §1, spike S4.3).
    */
   restorePoses(): void {
     for (let index = 0; index < this.#records.length; index += 1) {
@@ -501,6 +503,29 @@ export class PhysicsRuntime {
    */
   recordOf(entity: Entity): BodyRecord | null {
     return this.#byEntity.get(entity) ?? null;
+  }
+
+  /**
+   * The Havok body an entity's physics is, whether that is a `Rigidbody`, a collider-only static, or
+   * a `CharacterController`'s capsule — which is what a sweep names to pass through it
+   * (`ShapeCastOptions.ignore`).
+   *
+   * @param entity - The entity.
+   * @returns The body, or `null` when the entity has none yet: a body is built on the fixed step
+   * after its components attach, so a query in the same frame finds nothing to ignore.
+   */
+  bodyOf(entity: Entity): LitePhysicsBody | null {
+    const record = this.#byEntity.get(entity);
+    if (record !== undefined) {
+      return record.body;
+    }
+    for (let index = 0; index < this.#controllers.length; index += 1) {
+      const controller = this.#controllers[index];
+      if (controller !== undefined && controller.component.entity === entity) {
+        return controllerBody(controller.controller);
+      }
+    }
+    return null;
   }
 
   /**
@@ -742,7 +767,8 @@ export class PhysicsRuntime {
   /**
    * Publishes the frame's counters and zeroes the accumulators. The kernel resets `FrameSample` each
    * frame but not diagnostics **groups** (`Diagnostics.beginFrame`), so a group that reports
-   * per-frame totals resets itself — and `PreRender` is where a frame's fixed steps are all done.
+   * per-frame totals resets itself — and the top of `Update`, where the display pose is written, is
+   * the first point in a frame at which every fixed step of that frame is done.
    */
   #publishCounters(): void {
     this.#counters.set(this.#index("bodies"), this.#records.length);

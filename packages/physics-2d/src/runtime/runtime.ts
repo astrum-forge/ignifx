@@ -538,7 +538,7 @@ export class Physics2DRuntime {
 
   /**
    * Restores the authoritative pose of every interpolated body, undoing the display pose the
-   * `PreRender` system wrote (`09-physics.md` §1).
+   * `Update` system wrote at the top of the previous frame's `Update` (`09-physics.md` §1).
    */
   restorePoses(): void {
     for (let index = 0; index < this.#records.length; index += 1) {
@@ -624,8 +624,9 @@ export class Physics2DRuntime {
   }
 
   /**
-   * Publishes the frame's counters and zeroes the accumulators. `PreRender` is where a frame's fixed
-   * steps are all done.
+   * Publishes the frame's counters and zeroes the accumulators. The top of `Update`, where the
+   * display pose is written, is the first point in a frame at which every fixed step of that frame
+   * is done.
    */
   #publishCounters(): void {
     this.#counters.set(this.#counters.index("bodies"), this.#records.length);
@@ -1207,6 +1208,10 @@ export class Physics2DRuntime {
 
   /**
    * Reports every obstacle a controller hit and returns the most upward-facing normal.
+   *
+   * @remarks
+   * Sensors are filtered out of the move (`lite/rapier/character.ts`), so a trigger volume never
+   * shows up here and never contributes a ground normal.
    *
    * @param rapierController - Rapier's controller.
    * @param component - The component.

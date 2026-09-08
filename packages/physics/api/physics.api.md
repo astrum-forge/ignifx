@@ -358,7 +358,7 @@ export class PhysicsService {
     overlap(shape: QueryShape, position: Vec3Like, rotation?: Quat, options?: QueryOptions): readonly Entity[];
     raycast(origin: Vec3Like, direction: Vec3Like, maxDistance?: number, options?: QueryOptions): RaycastHit | null;
     setDebugViewerEnabled(enabled: boolean): void;
-    shapeCast(shape: QueryShape, from: Vec3Like, to: Vec3Like, options?: QueryOptions): ShapeCastHit | null;
+    shapeCast(shape: QueryShape, from: Vec3Like, to: Vec3Like, options?: ShapeCastOptions): ShapeCastHit | null;
 }
 
 // @public
@@ -452,6 +452,11 @@ export interface ShapeCastHit {
     readonly fraction: number;
     readonly normal: Vec3Like;
     readonly point: Vec3Like;
+}
+
+// @public
+export interface ShapeCastOptions extends QueryOptions {
+    readonly ignore?: Entity | null;
 }
 
 // @public

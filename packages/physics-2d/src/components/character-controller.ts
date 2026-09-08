@@ -173,6 +173,10 @@ export class CharacterController2D extends Component implements ComponentHooks {
   /**
    * Emitted once per obstacle the character hit during a step.
    *
+   * @remarks
+   * Trigger colliders are not obstacles — the character walks straight through them — so a sensor
+   * never appears here. Listen for `onTriggerEnter`/`onTriggerExit` on the entity's scripts instead.
+   *
    * @returns The signal, created on first access.
    */
   get onCollided(): Signal<CharacterCollision2D> {

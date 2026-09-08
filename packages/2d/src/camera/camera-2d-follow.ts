@@ -13,7 +13,11 @@ import type { MutableVec2 } from "@ignifx/core";
  *
  * The move happens in `lateUpdate`, after every `update` has run, so the camera sees the frame's
  * final player position rather than last frame's — the single most common cause of a camera that
- * visibly lags its target by one frame.
+ * visibly lags its target by one frame. For a physics-driven target that position is the
+ * **display** pose: `@ignifx/physics-2d` writes `lerp(prev, cur, fixedStepAlpha)` at the top of
+ * `Update` (`01-lifecycle-and-time.md` §3, since 2026-09-08), so the camera frames the target where
+ * the sprite is drawn rather than where the last fixed step left it — which, through a pixel-perfect
+ * camera that quantises both independently, used to read as a shaking sprite.
  */
 
 /**

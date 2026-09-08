@@ -32,6 +32,28 @@ export interface QueryOptions {
 }
 
 /**
+ * Options a shape sweep accepts, on top of {@link QueryOptions}.
+ *
+ * @remarks
+ * `ignore` exists because a sweep that starts at or inside a body — a camera boom leaving its
+ * target's capsule, a step probe leaving the character's own feet — reports that body at fraction
+ * zero and nothing else. Lite's sweep can exclude exactly one body, and cannot filter by layer at
+ * all (`ShapeCastQuery` has `ignoreBody` and no collision masks, unlike `physicsRaycast`), so
+ * `layerMask` decides which hit is *attributed* an entity while `ignore` is the one body the
+ * geometry itself passes through. Added 2026-09-08.
+ *
+ * @public
+ */
+export interface ShapeCastOptions extends QueryOptions {
+  /**
+   * An entity whose body the sweep passes through — usually the caller's own. A `Rigidbody`, a
+   * collider-only static, and a `CharacterController` capsule are all accepted; an entity with no
+   * body is ignored.
+   */
+  readonly ignore?: Entity | null;
+}
+
+/**
  * A shape to sweep or to test for overlaps. It is a description, not a component: the service builds
  * the Havok shape for the call and releases it afterwards.
  *

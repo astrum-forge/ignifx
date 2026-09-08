@@ -101,7 +101,7 @@ interface PlayOptions {
 }
 ```
 
-- Spatial sources attach to the entity's transform node through Lite's `attachedTo` (`attachSpatialTarget`), so position and orientation follow automatically; `updateSpatialAudio(engine)` is pumped once per frame in `PreRender` at **order −400** — after physics interpolation (−500) and well before the render sync (900) — and `setSpatialAutoUpdate(engine, false)` keeps Lite from starting a second `requestAnimationFrame` loop (`CONSTITUTION.md` §3.2).
+- Spatial sources attach to the entity's transform node through Lite's `attachedTo` (`attachSpatialTarget`), so position and orientation follow automatically; `updateSpatialAudio(engine)` is pumped once per frame in `PreRender` at **order −400** — after the physics display pose, which since 2026-09-08 is written at the top of `Update` (order −900, `01-lifecycle-and-time.md` §3), and well before the render sync (900) — and `setSpatialAutoUpdate(engine, false)` keeps Lite from starting a second `requestAnimationFrame` loop (`CONSTITUTION.md` §3.2).
 - Angles are degrees in the schema and converted to radians for Lite; `pitch` maps to `playbackRate` (Lite's `pitch` is in cents and is not exposed).
 - Streaming clips ignore `maxInstances > preloadCount` and warn.
 

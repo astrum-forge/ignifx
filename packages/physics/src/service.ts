@@ -7,7 +7,7 @@ import type { Collider } from "./components/collider.js";
 import type { LitePhysicsViewer } from "./lite/gpu/viewer.js";
 import type { LitePhysicsShape, LitePhysicsWorld } from "./lite/havok.js";
 import type { RayQueryResult, SweepQueryResult } from "./lite/queries.js";
-import type { QueryOptions, QueryShape, RaycastHit, ShapeCastHit } from "./queries.js";
+import type { QueryOptions, QueryShape, RaycastHit, ShapeCastHit, ShapeCastOptions } from "./queries.js";
 import type { BodyRecord } from "./runtime/body-record.js";
 import type { PhysicsHost } from "./runtime/host.js";
 import type { PhysicsRuntime } from "./runtime/runtime.js";
@@ -207,16 +207,24 @@ export class PhysicsService {
    * Lite's `shapeCast` reports no body (`index.d.ts` 11497), so `entity` is resolved against the
    * extension's body-bounds index and is bounds-accurate rather than shape-accurate.
    *
+   * The sweep itself cannot be filtered by layer — Lite's `ShapeCastQuery` carries no collision
+   * masks — so a body outside `layerMask` still stops the sweep; it is merely reported with
+   * `entity: null`. What the sweep *can* do is pass through one body, `options.ignore`, which is
+   * how a camera boom leaves its target's capsule and a step probe leaves the character's own feet
+   * without reporting them at fraction zero (2026-09-08).
+   *
    * @param shape - The shape to sweep.
    * @param from - The start position.
    * @param to - The end position.
-   * @param options - Layer mask and trigger behaviour.
+   * @param options - Layer mask, trigger behaviour, and the one entity to sweep through.
    * @returns The hit, or `null`.
    * @throws IgnifxError with code `IGX-0902` in development when no fixed step has run yet.
    */
-  shapeCast(shape: QueryShape, from: Vec3Like, to: Vec3Like, options?: QueryOptions): ShapeCastHit | null {
+  shapeCast(shape: QueryShape, from: Vec3Like, to: Vec3Like, options?: ShapeCastOptions): ShapeCastHit | null {
     this.#requireStep("shapeCast");
     this.#rt().countQuery();
+    const ignored = options?.ignore ?? null;
+    const ignoredBody = ignored === null ? null : this.#rt().bodyOf(ignored);
     const handle = this.#buildQueryShape(shape);
     try {
       sweepShape(
@@ -226,6 +234,7 @@ export class PhysicsService {
         from,
         to,
         options?.hitTriggers === true,
+        ignoredBody,
         this.#point,
         this.#normal,
         this.#sweepResult,
@@ -236,7 +245,7 @@ export class PhysicsService {
     if (!this.#sweepResult.hit) {
       return null;
     }
-    const record = this.#recordAt(this.#point, options);
+    const record = this.#recordAt(this.#point, options, ignored);
     const distance = Math.hypot(to.x - from.x, to.y - from.y, to.z - from.z) * this.#sweepResult.fraction;
     return {
       entity: record?.entity ?? null,
@@ -435,15 +444,17 @@ export class PhysicsService {
    *
    * @param point - The point.
    * @param options - Layer mask and trigger behaviour.
+   * @param ignored - The entity the sweep was told to pass through, which can therefore not be the
+   * one it hit.
    * @returns The record, or `null`.
    */
-  #recordAt(point: Vec3Like, options: QueryOptions | undefined): BodyRecord | null {
+  #recordAt(point: Vec3Like, options: QueryOptions | undefined, ignored: Entity | null = null): BodyRecord | null {
     const records = this.#rt().records;
     let best: BodyRecord | null = null;
     let bestDistance = Number.POSITIVE_INFINITY;
     for (let index = 0; index < records.length; index += 1) {
       const record = records[index];
-      if (record === undefined || !this.#accepts(record, options)) {
+      if (record === undefined || record.entity === ignored || !this.#accepts(record, options)) {
         continue;
       }
       const centre = record.currentPosition;

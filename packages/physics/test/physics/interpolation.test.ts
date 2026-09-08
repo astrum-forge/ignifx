@@ -9,10 +9,12 @@ import type { ScriptCallbacks } from "@ignifx/core";
 /**
  * **Spike S4.3 — interpolation never leaks into Havok.**
  *
- * `PreRender` writes `lerp(prev, cur, alpha)` into the entity's node, and `Systems(FixedUpdate, -100)`
- * puts the authoritative pose back before anything reads it. A script's `fixedUpdate` runs *after*
- * that restore, so what it observes is the authoritative pose — which is what these tests record and
- * compare between an interpolated app and one with interpolation switched off.
+ * `Systems(Update, -900)` writes `lerp(prev, cur, alpha)` into the entity's node at the top of
+ * `Update`, and `Systems(FixedUpdate, -100)` puts the authoritative pose back before anything reads
+ * it. A script's `fixedUpdate` runs *after* that restore, so what it observes is the authoritative
+ * pose — which is what these tests record and compare between an interpolated app and one with
+ * interpolation switched off. `display-pose.test.ts` covers the other half: everything outside the
+ * fixed loop reads the display pose.
  */
 
 /** A frame delta that is not a whole number of fixed steps, so `fixedStepAlpha` is rarely zero. */
@@ -85,8 +87,8 @@ describe("S4.3 · interpolation", () => {
   it("restores a kinematic body's authoritative pose before fixedUpdate", async () => {
     const interpolated = await runKinematic("interpolate");
     const plain = await runKinematic("none");
-    // The interpolated app sees exactly the poses it wrote, not the display poses `PreRender` left
-    // on the node — otherwise the kinematic body would drift and Havok would be dragged with it.
+    // The interpolated app sees exactly the poses it wrote, not the display poses the `Update`
+    // system left on the node — otherwise the body would drift and Havok would be dragged with it.
     expect(interpolated).toEqual(plain);
     expect(interpolated.at(-1)).toBeGreaterThan(0);
   }, 30_000);

@@ -73,6 +73,7 @@ FRAME START  (Lite callback or app.step)
  5. Lifecycle flush B
       start()   for effectively-enabled scripts that have not started yet
  6. Update                                                          Systems(Update, order < 0)
+      physics interpolation writes display poses (alpha = fixedStepAlpha)
       scripts.update(deltaTime)
       coroutines waiting on next frame / WaitForSeconds / WaitUntil / promises resume
                                                                     Systems(Update, order >= 0)
@@ -85,7 +86,6 @@ FRAME START  (Lite callback or app.step)
       onDisable() then onDestroy() for components/entities queued by destroy() this frame,
       children before parents; Lite objects removed from the render scene; assets released
 10. PreRender                                                       Systems(PreRender)
-      physics interpolation writes display poses (alpha = fixedStepAlpha)
       2D adapter syncs sprite instances from transforms; camera adapter syncs viewport/ortho
       audio pumps updateSpatialAudio; ui syncs; diagnostics samples counters
 RETURN to Lite → frame graph executes and the frame is presented (no render in headless)
@@ -94,6 +94,7 @@ RETURN to Lite → frame graph executes and the frame is presented (no render in
 Notes:
 
 - **Why physics is split around `fixedUpdate`.** Scripts write forces, velocities, and `CharacterController.move()` requests in `fixedUpdate`; the physics system then steps once with `fixedDeltaTime`; collision and trigger callbacks fire immediately after that step, still inside the fixed loop, so a script can react in the same step.
+- **Why physics interpolation writes the display pose at the top of `Update`.** (Moved there from `PreRender` on 2026-09-08.) `fixedStepAlpha` is final the moment the fixed loop ends, and everything downstream of that point must agree on one pose. A camera rig, an attachment, or any script that reads a transform in `update`/`lateUpdate` has to see the pose the frame will present, not the pose the last fixed step left behind — otherwise the character is drawn at `lerp(prev, cur, alpha)` while the camera frames it up to one whole fixed step away, and the two judder against each other at every refresh rate. Writing the display pose in `Systems(Update, order < 0)` puts it in front of `scripts.update`, animation, `lateUpdate`, and the render sync, which is Unity's model. The simulation is unaffected: physics restores the authoritative pose in `Systems(FixedUpdate, order < 0)`, which runs before `scripts.fixedUpdate`, so `fixedUpdate` and the solver never see a display pose. A system that must read an authoritative pose outside the fixed loop registers at `Phase.Update` with an order below the physics one (`−900`).
 - **Why animation sits between `update` and `lateUpdate`.** `lateUpdate` is where camera follow logic and bone-relative attachments read final poses. This matches Unity. Babylon Lite would otherwise advance glTF animation _after_ our callback; the adapter therefore detaches animation groups from Lite's scene-owned ticking and advances them itself (`12-3d-toolkit.md` §Animator).
 - **Destroy before render** matches Unity: an entity destroyed during frame N is not drawn in frame N.
 - The fixed loop is bounded by `maximumDeltaTime`; with defaults, at most six fixed steps run per frame. Dropped time is reported in diagnostics.
