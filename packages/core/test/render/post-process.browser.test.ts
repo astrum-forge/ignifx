@@ -291,6 +291,100 @@ describe("an effect chain", () => {
   });
 });
 
+describe("retuning a chain that is already recorded", () => {
+  /**
+   * Until 2026-09-08 the chain read its tuning once, when it was built, and `sync` afterwards only
+   * flipped `executionEnabled`. A slider bound to `bloom.threshold` therefore did nothing on the
+   * website's bloom example, and `bloom.enabled = false` on a one-effect chain left bloom running.
+   * Bloom's `weight`, `kernel`, `threshold` and `exposure` are writable on Lite's task and
+   * `updateUniforms()` re-uploads them; `bloomScale` is not, so a scale change rebuilds the chain.
+   */
+
+  /**
+   * Builds the scene with a strong bloom already recorded and samples the frame before it.
+   *
+   * @returns The app, the stack, and the plain frame's samples.
+   */
+  async function buildBloomingScene(): Promise<{
+    readonly running: BrowserApp;
+    readonly stack: PostProcessStack;
+    readonly plain: readonly PixelRgba[];
+  }> {
+    const running = await buildScene();
+    const plain = await samples(running);
+    const stack = running.world.createEntity("Post").addComponent(PostProcessStack);
+    stack.bloom.enabled = true;
+    stack.bloom.threshold = 0.2;
+    stack.bloom.weight = 1;
+    stack.bloom.kernel = 64;
+    stack.bloom.scale = 1;
+    await running.advance(SETTLE_FRAMES * 3);
+    return { running, stack, plain };
+  }
+
+  it("follows a weight written after the chain was built", async () => {
+    const { running, stack, plain } = await buildBloomingScene();
+    const bled = await cornerLuminance(running);
+    expect(bled).toBeGreaterThan(pixelLuminance(plain[1] ?? { r: 0, g: 0, b: 0, a: 255 }));
+
+    // Weight 0 merges none of the blur back, so the frame is the plain scene again.
+    stack.bloom.weight = 0;
+    await running.advance(SETTLE_FRAMES * 3);
+    expect(allMatch(plain, await samples(running), 4)).toBe(true);
+
+    stack.bloom.weight = 1;
+    await running.advance(SETTLE_FRAMES * 3);
+    expect(await cornerLuminance(running)).toBeGreaterThan(pixelLuminance(plain[1] ?? { r: 0, g: 0, b: 0, a: 255 }));
+    expect(stack.taskCount).toBe(1);
+    expect(running.errors).toEqual([]);
+  });
+
+  it("follows a threshold written after the chain was built", async () => {
+    const { running, stack, plain } = await buildBloomingScene();
+
+    // Nothing in the frame is brighter than 5, so nothing glows.
+    stack.bloom.threshold = 5;
+    await running.advance(SETTLE_FRAMES * 3);
+    expect(allMatch(plain, await samples(running), 4)).toBe(true);
+
+    stack.bloom.threshold = 0.2;
+    await running.advance(SETTLE_FRAMES * 3);
+    expect(await cornerLuminance(running)).toBeGreaterThan(pixelLuminance(plain[1] ?? { r: 0, g: 0, b: 0, a: 255 }));
+    expect(running.errors).toEqual([]);
+  });
+
+  it("switches a single effect off and on after the chain was built", async () => {
+    const { running, stack, plain } = await buildBloomingScene();
+
+    stack.bloom.enabled = false;
+    await running.advance(SETTLE_FRAMES * 3);
+    // The chain is gone and the compositing blit is back, so the plain scene presents.
+    expect(stack.taskCount).toBe(0);
+    expect(allMatch(plain, await samples(running), 4)).toBe(true);
+
+    stack.bloom.enabled = true;
+    await running.advance(SETTLE_FRAMES * 3);
+    expect(stack.taskCount).toBe(1);
+    expect(await cornerLuminance(running)).toBeGreaterThan(pixelLuminance(plain[1] ?? { r: 0, g: 0, b: 0, a: 255 }));
+    expect(running.errors).toEqual([]);
+  });
+
+  it("rebuilds for a new scale and keeps glowing", async () => {
+    const { running, stack, plain } = await buildBloomingScene();
+
+    // A quarter-resolution blur on a 48 px canvas runs on a 12 px target, so the halo hugs the cube
+    // rather than reaching the far corner; what has to hold is that the rebuilt chain still glows
+    // (the frame is not the plain scene), still presents, and recorded cleanly.
+    stack.bloom.scale = 0.25;
+    await running.advance(SETTLE_FRAMES * 3);
+    expect(stack.taskCount).toBe(1);
+    expect(allMatch(plain, await samples(running), 2)).toBe(false);
+    expect(await centreLuminance(running)).toBeGreaterThan(BLACK * 4);
+    expect(running.errors).toEqual([]);
+    expect(running.log.toArray().filter((record) => record.level === "error")).toEqual([]);
+  });
+});
+
 describe("an effect chain on a multisampled surface", () => {
   it("reads the resolved single-sample colour and still presents", async () => {
     const running = await buildScene({ msaaSamples: 4 });
