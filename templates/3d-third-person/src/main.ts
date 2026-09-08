@@ -21,6 +21,7 @@ import { acceptHotReload, scripts } from "virtual:ignifx/scripts";
 import { installDesktopProbe } from "./desktop-probe.js";
 import { installFrameTimeProbe } from "./frame-time-probe.js";
 import { createGameUi, hasTouch } from "./game-ui.js";
+import { installGameplayProbe } from "./gameplay-probe.js";
 import { buildLevel } from "./level.js";
 import { createGameMenus } from "./menus/game-menus.js";
 import { applySettings, loadInputOverrides, loadSettings } from "./menus/settings-store.js";
@@ -28,6 +29,7 @@ import { createRun } from "./run.js";
 import { Companion } from "./scripts/companion.js";
 import { HeroAnimation } from "./scripts/hero-animation.js";
 import { HudLine } from "./scripts/hud-line.js";
+import { LockHint } from "./scripts/lock-hint.js";
 import { MenuController } from "./scripts/menu-controller.js";
 import { SaveGame } from "./scripts/save-game.js";
 import type { Level } from "./level.js";
@@ -280,11 +282,28 @@ function buildCamera(app: App, player: Entity, isStatic: boolean): Entity {
     damping: 0.06,
     minPitch: -20,
     maxPitch: 55,
-    sensitivity: 0.12,
+    // Degrees per **CSS pixel** of mouse motion, so the same figure suits a retina display and a
+    // 1080p monitor and does not move when the settings screen changes the render scale. A full
+    // 180-degree turn is about 1,800 pixels of hand movement, which is roughly one mouse mat.
+    sensitivity: 0.1,
+    // Degrees per second at full deflection, not per frame: a stick is a rate. 150 is a little
+    // under the engine's 180 default because an orbit camera frames a character rather than aims,
+    // and it matches what the old `scale(18)` binding happened to give at 60 fps (18 x 0.12 x 60 =
+    // 130 deg/s) without being a hostage to the frame rate the way that arithmetic was.
+    stickLookSpeed: 150,
+    // The console-style rig: a click on the canvas asks the browser for the pointer, and mouse look
+    // waits until it is granted. Without it the camera swung whenever the cursor crossed the frame
+    // — on the way to a menu button, or on the way out of the page — and stopped dead the moment
+    // the cursor left. Gamepad and touch look are never gated; they have no cursor to lose.
+    // `src/scripts/lock-hint.ts` is what tells the player about the click.
+    lockPointerOnClick: true,
+    // `invertY` is deliberately left at its default: the rig normalises the pitch axis per device,
+    // so a mouse pushed forward and a stick pushed up both aim the camera up already.
     collisionEnabled: true,
     collisionRadius: 0.25,
-    // Only scenery shortens the boom. Leaving this empty would let the character's own capsule and
-    // the companion pull the camera in whenever one drifted behind it.
+    // Which hit the boom attributes an entity to. The rig always sweeps *past* its own target's
+    // capsule — the shoulder pivot sits inside it — and Lite's sweep cannot be filtered by layer, so
+    // the companion drifting behind the camera still shortens the boom, as scenery does.
     collisionLayers: ["Level", "Prop"],
   });
   return eye;
@@ -359,6 +378,7 @@ interface World {
  * @param assets - The loaded assets.
  * @param world - What {@link buildWorld} produced.
  * @param hud - The HUD element, or `null` under an app with no DOM overlay.
+ * @param hint - The "click to look" line, or `null` on a device with no pointer to lock.
  * @param isBench - Whether the frame-time harness is driving, in which case the game starts
  *   immediately instead of waiting on a title screen.
  * @returns A promise for the callback that switches the post-process effects on; it has to run
@@ -369,6 +389,7 @@ async function installFrontEnd(
   assets: Assets,
   world: World,
   hud: HTMLDivElement | null,
+  hint: HTMLDivElement | null,
   isBench: boolean,
 ): Promise<() => void> {
   // The chain is built once and switched with `enabled`, because `rendering.features.postProcessing`
@@ -439,6 +460,7 @@ async function installFrontEnd(
 
   const line = host.addComponent(HudLine);
   line.element = hud;
+  host.addComponent(LockHint).element = hint;
   const controller = world.player.requireComponent(ThirdPersonController);
   const companion = world.companion;
   line.render = (): string =>
@@ -538,6 +560,7 @@ async function main(): Promise<AppStatus> {
 
   const gameUi = createGameUi(app, {
     loadingLabel: app.i18n.t("loading.label"),
+    lockHint: app.i18n.t("hint.lock"),
     touch: !isStatic && !isBench && hasTouch(),
   });
   // The golden is about the rendered scene, not about how this machine draws a system font, and a
@@ -605,7 +628,7 @@ async function main(): Promise<AppStatus> {
     // Recast is WebAssembly in a chunk of its own; this is the only thing that fetches it, and the
     // loading screen is still up while it does.
     await bakeNavigation(app, world.level);
-    enableEffects = await installFrontEnd(app, assets, world, gameUi.hud, isBench);
+    enableEffects = await installFrontEnd(app, assets, world, gameUi.hud, gameUi.hint, isBench);
   }
 
   if (isStatic && showOverlay && gameUi.hud !== null) {
@@ -616,10 +639,16 @@ async function main(): Promise<AppStatus> {
 
   gameUi.loading.hide();
 
-  // A test-only hook, and only under `?probe=1`: `tests/visual/tests/desktop.spec.ts` uses it for
-  // the Phase 9 device-loss exit criterion. See `src/desktop-probe.ts`.
+  // Two test-only hooks, and only under `?probe=1`: `tests/visual/tests/desktop.spec.ts` uses the
+  // first for the Phase 9 device-loss exit criterion, and the gameplay half of
+  // `tests/visual/tests/templates.spec.ts` uses the second to read the camera and the character as
+  // numbers rather than as pixels. See `src/desktop-probe.ts` and `src/gameplay-probe.ts`.
   if (flags.get("probe") === "1") {
     installDesktopProbe(app, world.level.crates);
+    const rig = world.eye.getComponent(ThirdPersonCamera);
+    if (rig !== null) {
+      installGameplayProbe(app, world.player, rig);
+    }
   }
 
   if (isBench) {
@@ -632,7 +661,7 @@ async function main(): Promise<AppStatus> {
   // the swapchain, which WebGPU rejects.
   enableEffects?.();
   await settle(SETTLE_FRAMES);
-  app.log.info("3d-third-person running: {calls} draw calls", app.renderer.drawCalls);
+  app.log.info("3d-third-person running; draw calls:", app.renderer.drawCalls);
   return "ready";
 }
 

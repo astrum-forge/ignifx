@@ -1,4 +1,5 @@
 import { entityRef, f32, LayerMask, Script } from "@ignifx/core";
+import { DeviceKind } from "@ignifx/input";
 import type { AudioClip } from "@ignifx/audio";
 import type { AssetHandle, ColorLike, Entity, MaterialAsset, MeshRenderer, ScriptCallbacks } from "@ignifx/core";
 import type { InputAction } from "@ignifx/input";
@@ -23,6 +24,17 @@ import type { InputAction } from "@ignifx/input";
  * never reports the floor, the walls or the crates and never allocates a hit for them. Walking the
  * hits and asking "is this a pedestal?" would do the same work in JavaScript, every frame, for
  * every ray.
+ *
+ * ## Why a click is ignored while the pointer is unlocked
+ *
+ * `Interact` is bound to both <kbd>E</kbd> and the left mouse button, and the left mouse button is
+ * also the gesture that asks the browser for pointer lock (`FirstPersonController`'s
+ * `lockPointerOnClick`). Without the gate below, the click that gives the player their mouse back —
+ * after Escape, after a pause menu, after tabbing away — would *also* flip whatever pedestal
+ * happened to be under the crosshair, which is a pedestal the player never aimed at. Left click
+ * still interacts; it just has to be a click made while the game holds the pointer, which is every
+ * click after the first. `InputAction.activeDevice` is what tells a mouse press apart from
+ * <kbd>E</kbd>, a gamepad trigger or the on-screen button, none of which are gated.
  */
 
 /** How the pedestal reads when the crosshair is not on it. */
@@ -104,9 +116,28 @@ export class Interactor
         this.crosshair.dataset["target"] = found === null ? "none" : "hit";
       }
     }
-    if (found !== null && this.#interact?.wasPressedThisFrame === true) {
+    if (found !== null && this.#wasInteractPressed()) {
       this.#toggle(found);
     }
+  }
+
+  /**
+   * Whether `Interact` went down this frame in a way that should act on the world.
+   *
+   * @remarks
+   * See the module comment: a mouse press only counts once the game holds the pointer, because the
+   * press that takes the lock is the player asking for their view back, not for a pedestal.
+   *
+   * @returns `true` when the press should toggle whatever the crosshair is on.
+   */
+  #wasInteractPressed(): boolean {
+    const interact = this.#interact;
+    if (interact === null || !interact.wasPressedThisFrame) {
+      return false;
+    }
+    const device = interact.activeDevice;
+    const isPointer = device === DeviceKind.mouse || device === DeviceKind.pointer;
+    return !isPointer || this.app.input.pointerLock.locked;
   }
 
   /**
@@ -180,6 +211,6 @@ export class Interactor
       this.app.audio.playOneShot(clip.value, { volume: 0.6, pitch: lit ? 1 : 0.75 });
     }
     this.onToggled?.(name, lit);
-    this.app.log.info("{name} is now {state}", name, lit ? "lit" : "dark");
+    this.app.log.info("pedestal toggled:", name, lit ? "lit" : "dark");
   }
 }

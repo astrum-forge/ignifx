@@ -15,7 +15,7 @@ WebGPU only; a browser without it gets the fallback panel in `index.html`.
 | Action       | Keyboard                  | Gamepad          | Touch             |
 | ------------ | ------------------------- | ---------------- | ----------------- |
 | `Move`       | WASD, arrows              | left stick, dpad | on-screen stick   |
-| `Look`       | mouse                     | right stick      | right stick       |
+| `Look`       | mouse, once locked        | right stick      | right stick       |
 | `Jump`       | Space                     | ✕ / A            | the **▲** button  |
 | `Sprint`     | <kbd>Shift</kbd>          | L3               | the **»** button  |
 | `Pause`      | <kbd>Esc</kbd>            | Start            | the **II** button |
@@ -24,7 +24,31 @@ WebGPU only; a browser without it gets the fallback panel in `index.html`.
 | `menuBack`   | <kbd>Esc</kbd>, Backspace | ○ / B            | the **Back** row  |
 
 `assets/game.input.json` owns all of it: the `Player` map is gameplay and the `UI` map drives the
-menus, so keyboard and gamepad navigate through one code path.
+menus, so keyboard and gamepad navigate through one code path. `Look` carries no `scale(...)`
+processor: a mouse delta is a displacement in CSS pixels that `sensitivity` turns into degrees, and
+a stick is a deflection that `stickLookSpeed` turns into degrees per second, so the two are tuned on
+the rig and not in the binding.
+
+## The camera
+
+`ThirdPersonCamera` runs with `lockPointerOnClick: true`. **Click the picture to look around, and
+press <kbd>Esc</kbd> to give the pointer back**; a line at the bottom of the screen says so whenever
+the game is running without the lock. Until the browser grants the lock, mouse look is ignored — a
+cursor crossing the canvas on its way to a menu button is not a look gesture, and one that leaves
+the window would otherwise stop a turn dead. Gamepad and touch look never wait for anything. Losing
+the lock — <kbd>Esc</kbd>, tabbing away, the window losing focus — opens the pause menu, so the game
+never runs on unwatched, and the next click on the picture takes the pointer back.
+
+Sensitivity is **0.1 degrees per CSS pixel**, which is the same feel on a retina display and on a
+1080p monitor and does not move when the settings screen changes the render scale. The sticks orbit
+at **150 degrees per second** at full deflection.
+
+The boom sweeps a sphere from the shoulder pivot out to the camera, so a wall behind the character
+shortens it at once and it eases back out at `collisionRecoverySpeed`. The pivot is over the right
+shoulder, inside the character's capsule, and the rig sweeps _past_ that capsule
+(`ShapeCastOptions.ignore`): Lite's sweep cannot be filtered by layer, so `collisionLayers` only
+decides which hit is attributed an entity, and any other body in the way — the companion included —
+shortens the boom the way a wall does.
 
 ## Menus, settings and saves
 
@@ -69,4 +93,8 @@ and `pnpm assets:audio`.
 - `?hud=1` — keeps the overlay visible in a static scene; the gallery capture uses it.
 - `?bench=1` — skips the title screen and installs `window.__ignifxFrameTime` for
   `tests/visual/tests/frame-time.spec.ts`.
+- `?probe=1` — installs the two test hooks: `window.__ignifxProbe` (`src/desktop-probe.ts`, the
+  device-loss criterion in `tests/visual/tests/desktop.spec.ts`) and `window.__ignifxGameplay`
+  (`src/gameplay-probe.ts`, the camera and character readings `tests/visual/tests/templates.spec.ts`
+  asserts on). Neither exists without the flag.
 - `?locale=<tag>` — picks a locale from `assets/strings.i18n.json` before the menus are built.

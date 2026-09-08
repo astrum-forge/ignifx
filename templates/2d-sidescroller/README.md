@@ -23,6 +23,32 @@ WebGPU only; a browser without it gets the fallback panel in `index.html`.
 `assets/game.input.json` owns all of it: the `Player` map is gameplay and the `UI` map drives the
 menus, so keyboard and gamepad navigate through one code path.
 
+Hold <kbd>S</kbd> (or the down arrow, or push the stick down) and press `jump` while standing on one
+of the wooden planks to **drop through** it.
+
+## How the character moves
+
+`src/scripts/platformer-controller.ts` is the reference controller, and its numbers are the ones a
+game would actually tune:
+
+| What        | Number           | Why                                                                                                |
+| ----------- | ---------------- | -------------------------------------------------------------------------------------------------- |
+| Run speed   | 7 m/s            | Reached in 0.1 s on the ground and 0.2 s in the air, so a correction in mid-air costs something.   |
+| Jump        | 1.28 m to 3.42 m | A one-frame tap clears `minJumpHeight`; holding for 0.2 s gives the whole `jumpSpeed` arc.         |
+| Gravity     | 36 up, 52 down   | Two gravities: the fall is faster than the rise, which is what makes the arc read as "snappy".     |
+| Coyote time | 0.1 s            | A jump pressed just after running off a ledge still works.                                         |
+| Jump buffer | 0.12 s           | A jump pressed just before landing fires on the landing frame.                                     |
+| Fall limit  | y = −3           | Below the map the character is put back on the last ground it stood on. Nothing is scored or lost. |
+
+Two things it does that are easy to get wrong. The **variable jump height** is one clamp on the
+release edge, not a factor applied every step the button is up — a factor compounds, and the same
+launch then reaches 0.41 m or 3.42 m depending on how many frames the tap happened to cover. And a
+**wall** is recognised from the contact normals `CharacterController2D.onCollided` reports, not from
+"the controller moved less than I asked for": collide-and-slide on a 45-degree slope legitimately
+returns about half the requested horizontal motion, so the short-move test alone turns every hill
+into a crawl. The run is also rotated onto the surface it is standing on, so a slope is climbed at
+the run speed rather than at its cosine.
+
 ## Menus, settings and saves
 
 `src/menus/` builds a **title screen** (Continue · New game · Settings · Credits), a **pause menu**
@@ -64,4 +90,7 @@ and `pnpm assets:audio`.
 - `?hud=1` — keeps the overlay visible in a static scene; the gallery capture uses it.
 - `?bench=1` — skips the title screen and installs `window.__ignifxFrameTime` for
   `tests/visual/tests/frame-time.spec.ts`.
+- `?probe=1` — installs `window.__ignifxGameplay`, a read-only reading of the character and the run
+  that `tests/visual/tests/templates.spec.ts` measures instead of photographing. See
+  `src/gameplay-probe.ts`.
 - `?locale=<tag>` — picks a locale from `assets/strings.i18n.json` before the menus are built.

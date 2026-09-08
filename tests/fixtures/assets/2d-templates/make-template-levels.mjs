@@ -267,7 +267,10 @@ function topdownDocument() {
       { type: "prop", name: "Bush South", x: 22.5, y: 13.5, width: 1, height: 1, properties: { frame: "bush" } },
       { type: "prop", name: "Waymarker", x: 27.5, y: 12.5, width: 1, height: 1, properties: { frame: "sign" } },
       { type: "prop", name: "Cache", x: 21.5, y: 16.5, width: 1, height: 1, properties: { frame: "chest" } },
-      { type: "shrine", name: "Shrine", x: 25.5, y: 10.5, width: 2, height: 2, properties: { frame: "pad" } },
+      // One cell, because that is the size of the `pad` frame the shrine is drawn with: the
+      // template turns an object's declared size into its trigger box, and a 2x2 trigger over a
+      // 1x1 pad lights the shrine from a metre above the tile the player can see.
+      { type: "shrine", name: "Shrine", x: 25.5, y: 10.5, width: 1, height: 1, properties: { frame: "pad" } },
     ],
     properties: { title: "Garden" },
   };

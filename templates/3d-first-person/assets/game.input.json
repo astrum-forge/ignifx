@@ -66,12 +66,12 @@
             },
             {
               "path": "<Gamepad>/rightStick",
-              "processors": ["deadzone(0.2)", "scale(18)"],
+              "processors": ["deadzone(0.2)"],
               "scheme": "Gamepad"
             },
             {
               "path": "<Virtual>/look",
-              "processors": ["deadzone(0.15)", "scale(18)"],
+              "processors": ["deadzone(0.15)"],
               "scheme": "Touch"
             }
           ]

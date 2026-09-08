@@ -288,8 +288,8 @@
       "name": "Shrine",
       "x": 25.5,
       "y": 10.5,
-      "width": 2,
-      "height": 2,
+      "width": 1,
+      "height": 1,
       "properties": {
         "frame": "pad"
       }

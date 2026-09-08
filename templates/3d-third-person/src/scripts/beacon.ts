@@ -98,6 +98,6 @@ export class Beacon
       this.app.audio.playOneShot(handle.value, { volume: 0.7 });
     }
     this.onLit?.(this);
-    this.app.log.info("{name} lights up", this.id);
+    this.app.log.info("beacon lit:", this.id);
   }
 }

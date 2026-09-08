@@ -85,6 +85,6 @@ export class Collectible extends Script implements ScriptCallbacks {
     }
     this.setCollected(true);
     this.onCollected?.(this);
-    this.app.log.info("coin {id}", this.id);
+    this.app.log.info("coin taken:", this.id);
   }
 }

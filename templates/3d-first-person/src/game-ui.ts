@@ -38,6 +38,11 @@ export interface GameUi {
   readonly hud: HTMLDivElement | null;
   /** The crosshair, which `Interactor` marks when something is in reach. */
   readonly crosshair: HTMLDivElement | null;
+  /**
+   * The "click to look" line `LockHint` shows and hides, or `null` when this device has no pointer
+   * to lock — a phone gets the on-screen sticks instead, and telling it to click would be a lie.
+   */
+  readonly hint: HTMLDivElement | null;
   /** Removes every widget this created. */
   dispose(): void;
 }
@@ -46,6 +51,8 @@ export interface GameUi {
 export interface GameUiOptions {
   /** The loading screen's label, already localized. */
   readonly loadingLabel: string;
+  /** The "click to look" line, already localized. */
+  readonly lockHint: string;
   /** Whether to build the on-screen controls. */
   readonly touch: boolean;
 }
@@ -75,6 +82,7 @@ export function createGameUi(app: App, options: GameUiOptions): GameUi {
   const hudLayer = app.ui.layer("hud").element;
   let hud: HTMLDivElement | null = null;
   let crosshair: HTMLDivElement | null = null;
+  let hint: HTMLDivElement | null = null;
   if (hudLayer !== null) {
     hud = hudLayer.ownerDocument.createElement("div");
     hud.className = "hud";
@@ -85,6 +93,14 @@ export function createGameUi(app: App, options: GameUiOptions): GameUi {
     crosshair.className = "crosshair";
     crosshair.dataset["target"] = "none";
     hudLayer.append(hud, crosshair);
+    if (!options.touch) {
+      hint = hudLayer.ownerDocument.createElement("div");
+      hint.className = "lock-hint";
+      hint.textContent = options.lockHint;
+      // Hidden until `LockHint` decides otherwise, so it never flashes over the title screen.
+      hint.hidden = true;
+      hudLayer.append(hint);
+    }
   }
 
   const widgets: { dispose(): void }[] = [];
@@ -108,12 +124,14 @@ export function createGameUi(app: App, options: GameUiOptions): GameUi {
     loading,
     hud,
     crosshair,
+    hint,
     dispose(): void {
       for (const widget of widgets) {
         widget.dispose();
       }
       hud?.remove();
       crosshair?.remove();
+      hint?.remove();
       loading.dispose();
     },
   };

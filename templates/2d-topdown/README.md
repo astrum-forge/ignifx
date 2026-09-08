@@ -49,7 +49,10 @@ migrated, which is what makes regenerating the art safe.
 
 `assets/level.tilemap.json` carries two tile layers and an objects layer, and everything but the camera
 is spawned from that objects layer through `app.twoD.registerTileObjectFactory` — a map edit can move
-the spawn or add a shrine with no TypeScript. Each sheet image sits beside its `.atlas.json`, which
+the spawn or add a shrine with no TypeScript. An object's declared width and height become its
+trigger box, so the shrine is one cell, the size of the `pad` frame it is drawn with. The props
+along the path are solid at their base only, so walking east from the spawn means stepping around a
+barrel rather than through it. Each sheet image sits beside its `.atlas.json`, which
 names it relatively; `@ignifx/2d` resolves that through the asset manifest, so a hashed build and a
 deploy under a sub-path both find it.
 
@@ -64,4 +67,7 @@ and `pnpm assets:audio`.
 - `?hud=1` — keeps the overlay visible in a static scene; the gallery capture uses it.
 - `?bench=1` — skips the title screen and installs `window.__ignifxFrameTime` for
   `tests/visual/tests/frame-time.spec.ts`.
+- `?probe=1` — installs `window.__ignifxGameplay`, a read-only reading of the character, the camera
+  and the run that `tests/visual/tests/templates.spec.ts` measures instead of photographing. See
+  `src/gameplay-probe.ts`.
 - `?locale=<tag>` — picks a locale from `assets/strings.i18n.json` before the menus are built.
