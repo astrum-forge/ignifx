@@ -3,7 +3,7 @@ name: 3d
 description: Builds 3D games in ignifx with @ignifx/3d: third-person and first-person character controllers and camera rigs, the Animator state machine with blend trees and animation events, navigation meshes and agents, LOD groups, and billboards. Use when adding or editing 3D character movement, camera rigs, animation state machines, or navigation in an ignifx project, or when the user mentions @ignifx/3d, Animator, ThirdPersonController, or NavMeshAgent.
 license: Apache-2.0
 metadata:
-  ignifx-version: "0.2.0"
+  ignifx-version: "0.2.1"
 ---
 
 # @ignifx/3d
