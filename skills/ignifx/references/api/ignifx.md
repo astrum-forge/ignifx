@@ -42963,6 +42963,14 @@ Takes the entity's current facing as the starting orbit and binds the action nam
 
 `void`
 
+###### Remarks
+
+The angles are read off the entity's **forward vector**, not its Euler angles: an Euler triple
+depends on the order it was composed in, and the rig composes yaw-then-pitch, which is not the
+order `Transform.eulerAngles` reports. A forward vector has one yaw and one pitch whatever
+produced it. Positive pitch aims down, so a forward that points below the horizon is a positive
+pitch; a forward pointing straight up or down has no yaw and keeps the current one.
+
 ##### define()
 
 > `static` **define**\<`S`\>(`schema`): [`ScriptDefinition`](#scriptdefinition)\<`S`\>

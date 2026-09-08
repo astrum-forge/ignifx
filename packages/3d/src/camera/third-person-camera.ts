@@ -8,6 +8,7 @@ import {
   layerMask,
   LayerMask,
   Quat,
+  RAD_TO_DEG,
   Script,
   str,
   vec3,
@@ -36,6 +37,17 @@ import type { Entity, MutableVec3, Schema, Vec3Like } from "@ignifx/core";
  * The orbit input is `LookInput` (`../character/look-input.ts`), shared with
  * `FirstPersonController`: pointer lock on click when the game asks for it, unlocked mouse motion
  * ignored while it does, and a stick's deflection read as a rate rather than a displacement.
+ *
+ * ## The orbit is yaw about the world's up, then pitch about the camera's own right
+ *
+ * `Quat.fromEulerDegrees(x, y, z)` composes in intrinsic **XYZ** order, so `(pitch, yaw, 0)` pitches
+ * first and then yaws about the *tilted* axis: with any pitch at all, looking sideways rolled the
+ * horizon and the camera rose and fell as it went round (measured 2026-09-08: at 15 degrees of
+ * pitch the camera's height followed `cos(yaw)`). The rig therefore builds its rotation as
+ * `Ry(yaw) * Rx(pitch)` — a Hamilton product applies the right factor first — which is the only
+ * order in which a horizontal mouse motion is a turn about the vertical, and it seeds its angles at
+ * `awake` from the entity's forward vector rather than from Euler angles, so an authored tilt reads
+ * the same whatever order it was written in.
  */
 
 /** How far short of a hit the camera stops, in metres, so it never sits inside the surface. */
@@ -188,6 +200,12 @@ export class ThirdPersonCamera extends Script {
 
   readonly #rotation: Quat = new Quat();
 
+  /** Scratch for the yaw half of the orbit rotation. */
+  readonly #yawRotation: Quat = new Quat();
+
+  /** Scratch for the pitch half of the orbit rotation. */
+  readonly #pitchRotation: Quat = new Quat();
+
   /** Applies the schema defaults, exactly as `Component.define` would. */
   constructor() {
     super();
@@ -230,11 +248,23 @@ export class ThirdPersonCamera extends Script {
     return this.#pivot;
   }
 
-  /** Takes the entity's current facing as the starting orbit and binds the action name. */
+  /**
+   * Takes the entity's current facing as the starting orbit and binds the action name.
+   *
+   * @remarks
+   * The angles are read off the entity's **forward vector**, not its Euler angles: an Euler triple
+   * depends on the order it was composed in, and the rig composes yaw-then-pitch, which is not the
+   * order `Transform.eulerAngles` reports. A forward vector has one yaw and one pitch whatever
+   * produced it. Positive pitch aims down, so a forward that points below the horizon is a positive
+   * pitch; a forward pointing straight up or down has no yaw and keeps the current one.
+   */
   awake(): void {
-    const angles = this.entity.transform.eulerAngles;
-    this.#yaw = angles.y;
-    this.#pitch = angles.x;
+    const forward = this.entity.transform.forward;
+    const horizontal = Math.hypot(forward.x, forward.z);
+    if (horizontal > 1e-6) {
+      this.#yaw = Math.atan2(forward.x, forward.z) * RAD_TO_DEG;
+    }
+    this.#pitch = -Math.asin(clamp(forward.y, -1, 1)) * RAD_TO_DEG;
     this.#currentDistance = this.distance;
     this.#look.rebind(this.lookAction);
   }
@@ -281,7 +311,7 @@ export class ThirdPersonCamera extends Script {
       return;
     }
     this.#readPivot(target);
-    Quat.fromEulerDegreesToRef(this.#pitch, this.#yaw, 0, this.#rotation);
+    this.#orbitRotation();
     Quat.rotateVectorToRef(this.#rotation, BOOM, this.#offset);
     const reach = this.currentDistance;
     this.#desired.x = this.#pivot.x - this.#offset.x * reach;
@@ -312,7 +342,7 @@ export class ThirdPersonCamera extends Script {
       return;
     }
     this.#readPivot(target);
-    Quat.fromEulerDegreesToRef(this.#pitch, this.#yaw, 0, this.#rotation);
+    this.#orbitRotation();
     Quat.rotateVectorToRef(this.#rotation, BOOM, this.#offset);
     this.#desired.x = this.#pivot.x - this.#offset.x * this.distance;
     this.#desired.y = this.#pivot.y - this.#offset.y * this.distance;
@@ -339,6 +369,22 @@ export class ThirdPersonCamera extends Script {
     }
     // Going in is immediate: an eased pull-in spends its ease inside the wall.
     this.#currentDistance = Math.max(0, Math.min(this.#currentDistance, hit.distance - COLLISION_PADDING));
+  }
+
+  /**
+   * Writes the orbit rotation — yaw about the world's up, then pitch about the camera's own right —
+   * into `#rotation`.
+   *
+   * @remarks
+   * `Ry(yaw) * Rx(pitch)`: the Hamilton product applies its right factor first, so the pitch tilts
+   * the boom about the camera's right axis and the yaw then swings that tilted boom around the
+   * vertical. The other order — one `fromEulerDegrees(pitch, yaw, 0)` call, which is intrinsic XYZ —
+   * yaws about an axis that has already been pitched, and rolls the horizon.
+   */
+  #orbitRotation(): void {
+    Quat.fromEulerDegreesToRef(0, this.#yaw, 0, this.#yawRotation);
+    Quat.fromEulerDegreesToRef(this.#pitch, 0, 0, this.#pitchRotation);
+    Quat.multiplyToRef(this.#yawRotation, this.#pitchRotation, this.#rotation);
   }
 
   /**

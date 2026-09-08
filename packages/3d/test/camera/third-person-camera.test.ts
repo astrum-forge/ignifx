@@ -50,6 +50,56 @@ function refusals(harness: ThreeDAppHarness): number {
 }
 
 describe("ThirdPersonCamera", () => {
+  it("orbits about the vertical at a non-zero pitch: no roll, and a constant height all the way round", async () => {
+    const harness = await createThreeDApp();
+    harness.app.input.loadActions(characterActions());
+    const target = harness.world.createEntity("Hero", { position: { x: 0, y: 1, z: 0 } });
+    const cameraEntity = harness.world.createEntity("Camera");
+    cameraEntity.addComponent(Camera);
+    // Authored the way the template authors it: a downward tilt on the entity, read at awake.
+    cameraEntity.transform.localEulerAngles = { x: 20, y: 0, z: 0 };
+    const rig = cameraEntity.addComponent(ThirdPersonCamera, {
+      target,
+      distance: 5,
+      damping: 0,
+      shoulderOffset: { x: 0, y: 0, z: 0 },
+      collisionEnabled: false,
+    });
+    harness.stepMany(2);
+    expect(rig.pitch).toBeCloseTo(20, 3);
+    expect(rig.yaw).toBeCloseTo(0, 3);
+    const height = cameraEntity.transform.position.y;
+    // Five metres back and 20 degrees up puts the camera 5·sin(20°) above the pivot.
+    expect(height).toBeCloseTo(1 + 5 * Math.sin((20 * Math.PI) / 180), 3);
+
+    // Before 2026-09-08 the rotation was one intrinsic-XYZ Euler call, so yawing at a pitch rolled
+    // the horizon and the camera's height followed cos(yaw). A horizontal mouse motion must be a
+    // turn about the vertical: the camera's right axis stays level, its up stays up, its height
+    // stays put, and it keeps looking at the pivot.
+    const pixelsPerStep = 30 / rig.sensitivity;
+    for (let step = 1; step <= 12; step += 1) {
+      harness.app.input.simulate({ "<Mouse>/delta": { x: pixelsPerStep, y: 0 } });
+      harness.step();
+      harness.step();
+      const transform = cameraEntity.transform;
+      const label = `yaw ${String(30 * step)}`;
+      expect(rig.pitch, label).toBeCloseTo(20, 3);
+      expect(transform.right.y, label).toBeCloseTo(0, 4);
+      expect(transform.up.y, label).toBeGreaterThan(0.9);
+      expect(transform.position.y, label).toBeCloseTo(height, 3);
+      const toPivot = {
+        x: rig.pivot.x - transform.position.x,
+        y: rig.pivot.y - transform.position.y,
+        z: rig.pivot.z - transform.position.z,
+      };
+      const length = Math.hypot(toPivot.x, toPivot.y, toPivot.z);
+      const forward = transform.forward;
+      const facing = (forward.x * toPivot.x + forward.y * toPivot.y + forward.z * toPivot.z) / length;
+      expect(facing, label).toBeCloseTo(1, 4);
+    }
+    harness.dispose();
+  }, 30_000);
+
   it("sweeps past the target's own capsule, so a pivot inside the character never collapses the boom", async () => {
     const harness = await createThreeDApp();
     harness.app.input.loadActions(characterActions());
