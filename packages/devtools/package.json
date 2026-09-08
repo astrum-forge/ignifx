@@ -1,6 +1,6 @@
 {
   "name": "@ignifx/devtools",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "ignifx devtools: stats overlay, scene tree and component inspector, physics debug view, script hot reload.",
   "keywords": [
     "ignifx",

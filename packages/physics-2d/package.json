@@ -1,6 +1,6 @@
 {
   "name": "@ignifx/physics-2d",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "ignifx 2D physics: Rigidbody2D, 2D colliders, CharacterController2D, queries.",
   "keywords": [
     "ignifx",

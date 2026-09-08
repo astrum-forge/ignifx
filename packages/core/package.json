@@ -1,6 +1,6 @@
 {
   "name": "@ignifx/core",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "ignifx core: app, world, entities, components, scripts, and the Babylon Lite adapter boundary.",
   "homepage": "https://ignifx.com",
   "license": "Apache-2.0",

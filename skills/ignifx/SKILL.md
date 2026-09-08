@@ -3,7 +3,7 @@ name: ignifx
 description: Builds 2D and 3D web games with the ignifx TypeScript game engine (WebGPU-only, Babylon Lite based, browser and Electron). Use when creating or editing ignifx apps, entities, scripts, scenes, prefabs, assets, input actions, physics, audio, sprites, or tilemaps, or when the user mentions ignifx, @ignifx packages, createApp, Script lifecycle, or ignifx scene JSON.
 license: Apache-2.0
 metadata:
-  ignifx-version: "0.1.0"
+  ignifx-version: "0.2.0"
   babylon-lite-version: "1.27.0"
 ---
 
