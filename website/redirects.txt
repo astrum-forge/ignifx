@@ -1,0 +1,13 @@
+# Template for `dist/_redirects`, emitted by the site build (`scripts/headers.ts`), which replaces
+# the marker line at the bottom with one redirect per Agent Skill file.
+#
+# The five rules of `01-strategy-and-ia.md` §7. Cloudflare Pages accepts an external link as a
+# destination ("A file path or external link"), matches rules in file order, and allows only one
+# splat per pattern; a suffix after `:splat` is not documented, so the generated block below names
+# every skill file explicitly and the two splat rules are only a safety net for a page added
+# without regenerating.
+/gallery/            /examples/               301
+/gallery/*           /examples/               301
+/getting-started/    /docs/getting-started/   301
+
+%%SKILL_REDIRECTS%%

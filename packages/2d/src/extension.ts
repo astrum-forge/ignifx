@@ -15,9 +15,9 @@ import {
   enableSpriteDeviceLostRecovery,
 } from "./lite/gpu/sprite-renderer.js";
 import { TwoDRuntime } from "./service/runtime.js";
-import { TWO_D_SYNC_ORDER, TwoDSyncSystem } from "./service/sync-system.js";
+import { selectCamera, TWO_D_SYNC_ORDER, TwoDSyncSystem } from "./service/sync-system.js";
 import { TwoDService } from "./service/two-d-service.js";
-import { defaultTwoDSettings, TWO_D_SETTINGS_SECTION, twoDSettingsSchema } from "./settings.js";
+import { defaultTwoDSettings, spriteClearColor, TWO_D_SETTINGS_SECTION, twoDSettingsSchema } from "./settings.js";
 import { ParallaxLayer } from "./sprite/parallax-layer.js";
 import { SpriteLayerEffect } from "./sprite/sprite-layer-effect.js";
 import { SpriteRenderer } from "./sprite/sprite-renderer.js";
@@ -36,6 +36,7 @@ import type {
   JsonValue,
   SceneInstance,
   SortingLayersSettings,
+  World,
 } from "@ignifx/core";
 
 /**
@@ -184,8 +185,9 @@ function registerTwoD(ctx: ExtensionContext, options: TwoDOptions): void {
       ? null
       : (): LiteSpriteRenderer =>
           // `clear: false` in "mixed" mode so the render scene's colour survives underneath
-          // (`index.d.ts` 12222); in "sprite" mode the sprite pass owns the frame and clears it.
-          createRegisteredSpriteRenderer(app.lite.engine, settings.mode === "sprite", BLACK),
+          // (`index.d.ts` 12222); in "sprite" mode the sprite pass owns the frame and clears it to
+          // the project's `rendering.clearColor`, which nothing else in a 2D scene would apply.
+          createRegisteredSpriteRenderer(app.lite.engine, settings.mode === "sprite", spriteClearColor(app)),
     attachLayer,
     detachLayer,
     destroyRenderer: destroySpriteRenderer,
@@ -203,13 +205,16 @@ function registerTwoD(ctx: ExtensionContext, options: TwoDOptions): void {
     applySceneSettings(app, runtime, settings, scene);
     spawnTileObjects(app, service, scene);
   });
+  // A `Camera2D` is a camera as far as the frame is concerned, so a 2D-only world is not the
+  // "nothing is drawn" case `IGX-0706` warns about. The world is re-examined on each ask rather
+  // than the runtime's last-frame camera being reported, because core's render sync also runs once
+  // inside `app.start()` — before the 2D sync system has picked a camera for the first time.
+  const removeCameraSource = app.renderer.addCameraSource((world: World): boolean => selectCamera(world) !== null);
   ctx.onDispose((): void => {
+    removeCameraSource();
     runtime.dispose();
   });
 }
-
-/** The clear colour a `"sprite"`-mode frame starts from. */
-const BLACK = Object.freeze({ r: 0, g: 0, b: 0, a: 1 });
 
 /**
  * Turns on device-lost recovery.

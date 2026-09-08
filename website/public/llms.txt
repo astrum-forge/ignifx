@@ -4,87 +4,87 @@
 
 > Builds 2D and 3D web games with the ignifx TypeScript game engine (WebGPU-only, Babylon Lite based, browser and Electron).
 
-The pages below are the Agent Skill that ships with the engine, served under `/skill/`.
+The pages below are the Agent Skill that ships with the engine. They live in the repository, and every link below is the file itself.
 
 ## Docs
 
-- [ignifx](/skill/): ignifx is a code-first TypeScript game engine for browsers and Electron.
-- [Gotchas](/skill/references/gotchas): Traps in the engine as it stands (`0.0.0`, rendering and assets included), each with its replacement and, where one exists, the error code you will see.
+- [ignifx](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/SKILL.md): ignifx is a code-first TypeScript game engine for browsers and Electron.
+- [Gotchas](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/gotchas.md): Traps in the engine as it stands (`0.0.0`, rendering and assets included), each with its replacement and, where one exists, the error code you will see.
 
 ## Concepts
 
-- [Assets](/skill/references/concepts/assets): Everything a game loads — textures, models, scenes and prefabs, materials, environments, fonts, JSON, text, bytes — is addressed, typed, reference-counted, and asynchronous.
-- [Extensions](/skill/references/concepts/extensions): An extension is the unit of optional functionality: it registers components, systems, services, settings, and error codes with one app.
-- [Lifecycle and time](/skill/references/concepts/lifecycle): When things happen in a frame, which callbacks a `Script` may implement, and how a headless app is stepped.
-- [Platform and storage](/skill/references/concepts/platform-and-storage): `app.platform` says where the game is running; `app.storage` is where it keeps settings, save games, and input rebindings.
-- [Rendering](/skill/references/concepts/rendering): ignifx does not render; Babylon Lite does.
-- [Scene graph](/skill/references/concepts/scene-graph): `World`, `SceneInstance`, `Entity`, `Transform`, tags, layers, signals, and — since Phase 2 — scene files, prefabs, and instancing.
-- [Scripting: components, schemas, coroutines](/skill/references/concepts/scripting): How game code is written: `Component` for data a system owns, `Script` for data with lifecycle callbacks, and a declarative schema instead of decorators (ADR-0004).
+- [Assets](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/concepts/assets.md): Everything a game loads — textures, models, scenes and prefabs, materials, environments, fonts, JSON, text, bytes — is addressed, typed, reference-counted, and asynchronous.
+- [Extensions](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/concepts/extensions.md): An extension is the unit of optional functionality: it registers components, systems, services, settings, and error codes with one app.
+- [Lifecycle and time](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/concepts/lifecycle.md): When things happen in a frame, which callbacks a `Script` may implement, and how a headless app is stepped.
+- [Platform and storage](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/concepts/platform-and-storage.md): `app.platform` says where the game is running; `app.storage` is where it keeps settings, save games, and input rebindings.
+- [Rendering](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/concepts/rendering.md): ignifx does not render; Babylon Lite does.
+- [Scene graph](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/concepts/scene-graph.md): `World`, `SceneInstance`, `Entity`, `Transform`, tags, layers, signals, and — since Phase 2 — scene files, prefabs, and instancing.
+- [Scripting: components, schemas, coroutines](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/concepts/scripting.md): How game code is written: `Component` for data a system owns, `Script` for data with lifecycle callbacks, and a declarative schema instead of decorators (ADR-0004).
 
 ## Recipes
 
-- [Animate a sprite from an atlas](/skill/references/recipes/animate-a-sprite-from-an-atlas): Two documents and two components.
-- [Bind an action and read it](/skill/references/recipes/bind-an-action-and-read-it): Game code asks for `"move"` and `"jump"`, never for a key code.
-- [Build a pause menu](/skill/references/recipes/build-a-pause-menu): Game UI in ignifx is HTML, and `@ignifx/ui`'s `Menu` is the list widget a front end is made of: a title, rows that declare what they edit, and one selection model that keyboard, gamepad and pointer all drive.
-- [Move a 3D character controller](/skill/references/recipes/character-controller-3d): A `CharacterController` is a kinematic capsule that collides and slides.
-- [Load a model](/skill/references/recipes/load-a-model): A `.glb` or `.gltf` file loads as a `ModelAsset`, and a `Model` component instantiates it under an entity.
-- [Load a tilemap and give it collision](/skill/references/recipes/load-a-tilemap-with-collision): Three components share the work.
-- [Move a 2D platformer character](/skill/references/recipes/platformer-controller-2d): `CharacterController2D` is a kinematic capsule or box that collides and slides through Rapier.
-- [Play a positional one-shot and a music loop](/skill/references/recipes/play-a-one-shot-and-a-loop): The mixer is a tree of named buses declared in a `.audio.json`: every sound plays on one, and a bus's volume multiplies through its children.
-- [Raycast and catch a trigger in 3D](/skill/references/recipes/raycast-and-trigger-3d): Two ways to ask the physics world a question.
-- [Rebind a key at run time](/skill/references/recipes/rebind-a-key-at-runtime): `performInteractiveRebind` listens for the next control the player touches and writes it onto one binding as an override.
-- [Save and load game state](/skill/references/recipes/save-and-load-game-state): `app.storage` is the asynchronous key–value store behind save games, settings and input rebindings.
-- [Show a gameplay counter in devtools](/skill/references/recipes/show-diagnostics-in-devtools): `@ignifx/devtools` draws the overlay; every number on its Stats panel comes from `app.diagnostics`, which is core.
-- [Spawn a prefab on click](/skill/references/recipes/spawn-a-prefab-on-click): A click is a ray.
-- [Spawn a prefab](/skill/references/recipes/spawn-a-prefab): A prefab is a scene file (ADR-0005): the same `ignifx.scene` format, loaded as a `SceneAsset` and stamped out with `world.instantiate`.
-- [Follow a character with a third-person camera](/skill/references/recipes/third-person-camera): `ThirdPersonCamera` is an orbit rig: it puts the entity carrying the `Camera` behind `target`, at `distance`, offset by `shoulderOffset`, and damps toward that pose.
-- [Tween a transform](/skill/references/recipes/tween-a-transform): `app.tweens` is core: it interpolates any number, `Vec2`, `Vec3` or `Quat` property of any object, on the game clock, in `PostUpdate` — so a tween honours `time.timeScale` and stops with `app.pause()` unless it asks for `updateWhenPaused`.
+- [Animate a sprite from an atlas](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/animate-a-sprite-from-an-atlas.md): Two documents and two components.
+- [Bind an action and read it](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/bind-an-action-and-read-it.md): Game code asks for `"move"` and `"jump"`, never for a key code.
+- [Build a pause menu](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/build-a-pause-menu.md): Game UI in ignifx is HTML, and `@ignifx/ui`'s `Menu` is the list widget a front end is made of: a title, rows that declare what they edit, and one selection model that keyboard, gamepad and pointer all drive.
+- [Move a 3D character controller](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/character-controller-3d.md): A `CharacterController` is a kinematic capsule that collides and slides.
+- [Load a model](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/load-a-model.md): A `.glb` or `.gltf` file loads as a `ModelAsset`, and a `Model` component instantiates it under an entity.
+- [Load a tilemap and give it collision](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/load-a-tilemap-with-collision.md): Three components share the work.
+- [Move a 2D platformer character](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/platformer-controller-2d.md): `CharacterController2D` is a kinematic capsule or box that collides and slides through Rapier.
+- [Play a positional one-shot and a music loop](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/play-a-one-shot-and-a-loop.md): The mixer is a tree of named buses declared in a `.audio.json`: every sound plays on one, and a bus's volume multiplies through its children.
+- [Raycast and catch a trigger in 3D](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/raycast-and-trigger-3d.md): Two ways to ask the physics world a question.
+- [Rebind a key at run time](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/rebind-a-key-at-runtime.md): `performInteractiveRebind` listens for the next control the player touches and writes it onto one binding as an override.
+- [Save and load game state](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/save-and-load-game-state.md): `app.storage` is the asynchronous key–value store behind save games, settings and input rebindings.
+- [Show a gameplay counter in devtools](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/show-diagnostics-in-devtools.md): `@ignifx/devtools` draws the overlay; every number on its Stats panel comes from `app.diagnostics`, which is core.
+- [Spawn a prefab on click](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/spawn-a-prefab-on-click.md): A click is a ray.
+- [Spawn a prefab](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/spawn-a-prefab.md): A prefab is a scene file (ADR-0005): the same `ignifx.scene` format, loaded as a `SceneAsset` and stamped out with `world.instantiate`.
+- [Follow a character with a third-person camera](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/third-person-camera.md): `ThirdPersonCamera` is an orbit rig: it puts the entity carrying the `Camera` behind `target`, at `distance`, offset by `shoulderOffset`, and damps toward that pose.
+- [Tween a transform](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/tween-a-transform.md): `app.tweens` is core: it interpolates any number, `Vec2`, `Vec3` or `Quat` property of any object, on the game clock, in `PostUpdate` — so a tween honours `time.timeScale` and stops with `app.pause()` unless it asks for `updateWhenPaused`.
 
 ## File formats
 
-- [components](/skill/references/formats/components): Generated by `pnpm docs:schemas`.
-- [ignifx.animator](/skill/references/formats/ignifx.animator): Generated by `pnpm docs:schemas`.
-- [ignifx.audiobuses](/skill/references/formats/ignifx.audiobuses): Generated by `pnpm docs:schemas`.
-- [ignifx.environment](/skill/references/formats/ignifx.environment): Generated by `pnpm docs:schemas`.
-- [ignifx.i18n](/skill/references/formats/ignifx.i18n): Generated by `pnpm docs:schemas`.
-- [ignifx.inputactions](/skill/references/formats/ignifx.inputactions): Generated by `pnpm docs:schemas`.
-- [ignifx.material](/skill/references/formats/ignifx.material): Generated by `pnpm docs:schemas`.
-- [ignifx.physicsmaterial](/skill/references/formats/ignifx.physicsmaterial): Generated by `pnpm docs:schemas`.
-- [ignifx.scene](/skill/references/formats/ignifx.scene): Generated by `pnpm docs:schemas`.
-- [ignifx.spriteanimation](/skill/references/formats/ignifx.spriteanimation): Generated by `pnpm docs:schemas`.
-- [ignifx.spriteatlas](/skill/references/formats/ignifx.spriteatlas): Generated by `pnpm docs:schemas`.
-- [ignifx.tilemap](/skill/references/formats/ignifx.tilemap): Generated by `pnpm docs:schemas`.
-- [Input action files (`.input.json`)](/skill/references/formats/inputactions): Hand-written companion to the generated field table in `ignifx.inputactions.md`.
-- [Material files (`.material.json`)](/skill/references/formats/material): Hand-written companion to the generated field table in `ignifx.material.md`.
-- [Scene and prefab files (`.scene.json`, `.prefab.json`)](/skill/references/formats/scene): Hand-written companion to the generated field table in `ignifx.scene.md`.
+- [components](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/formats/components.md): Generated by `pnpm docs:schemas`.
+- [ignifx.animator](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/formats/ignifx.animator.md): Generated by `pnpm docs:schemas`.
+- [ignifx.audiobuses](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/formats/ignifx.audiobuses.md): Generated by `pnpm docs:schemas`.
+- [ignifx.environment](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/formats/ignifx.environment.md): Generated by `pnpm docs:schemas`.
+- [ignifx.i18n](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/formats/ignifx.i18n.md): Generated by `pnpm docs:schemas`.
+- [ignifx.inputactions](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/formats/ignifx.inputactions.md): Generated by `pnpm docs:schemas`.
+- [ignifx.material](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/formats/ignifx.material.md): Generated by `pnpm docs:schemas`.
+- [ignifx.physicsmaterial](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/formats/ignifx.physicsmaterial.md): Generated by `pnpm docs:schemas`.
+- [ignifx.scene](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/formats/ignifx.scene.md): Generated by `pnpm docs:schemas`.
+- [ignifx.spriteanimation](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/formats/ignifx.spriteanimation.md): Generated by `pnpm docs:schemas`.
+- [ignifx.spriteatlas](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/formats/ignifx.spriteatlas.md): Generated by `pnpm docs:schemas`.
+- [ignifx.tilemap](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/formats/ignifx.tilemap.md): Generated by `pnpm docs:schemas`.
+- [Input action files (`.input.json`)](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/formats/inputactions.md): Hand-written companion to the generated field table in `ignifx.inputactions.md`.
+- [Material files (`.material.json`)](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/formats/material.md): Hand-written companion to the generated field table in `ignifx.material.md`.
+- [Scene and prefab files (`.scene.json`, `.prefab.json`)](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/formats/scene.md): Hand-written companion to the generated field table in `ignifx.scene.md`.
 
 ## API reference
 
-- [@ignifx/2d](/skill/references/api/2d): `@ignifx/2d` public barrel: `Camera2D`, `SpriteRenderer`, `SpriteAnimator`, atlases, `Tilemap`, sorting layers, pixel-perfect rendering, parallax, and 2D picking (`docs/architecture/11-2d-toolkit.md`).
-- [@ignifx/3d](/skill/references/api/3d): `@ignifx/3d` public barrel: the 3D toolkit — character and camera rigs, the `Animator` state machine, navigation, and the environment helpers (`docs/architecture/12-3d-toolkit.md`).
-- [@ignifx/audio](/skill/references/api/audio): `@ignifx/audio` public barrel: the audio service and its mixer tree, `AudioSource`, `AudioListener`, `MusicPlayer`, the `audio` and `audiobuses` assets, the two backends, and the `audio()` extension (`docs/architecture/10-audio.md`).
-- [@ignifx/cli](/skill/references/api/cli): `@ignifx/cli` public barrel.
-- [@ignifx/core](/skill/references/api/core): `@ignifx/core` public barrel.
-- [@ignifx/devtools](/skill/references/api/devtools): `@ignifx/devtools` public barrel: the overlay and its nine panels, the schema-driven inspector, the Console panel's log sink, the `devtools` settings section, and the `IGX-155x` code space (`docs/architecture/15-devtools-and-diagnostics.md` §4).
-- [@ignifx/electron](/skill/references/api/electron-main): `@ignifx/electron/main` public barrel: the Electron main-process surface — the game window factory that turns WebGPU on, the `ignifx://` protocol that serves packaged assets, the typed IPC handlers behind the preload bridge, and the file-system store `app.storage` writes through…
-- [@ignifx/electron](/skill/references/api/electron-preload): `@ignifx/electron/preload` public barrel: the typed, versioned bridge exposed to the renderer through `contextBridge` as `window.ignifxHost` — storage, paths, window controls, dialogs, the shell, and the contract version (`docs/architecture/14-platform-electron.md` §3).
-- [@ignifx/electron](/skill/references/api/electron): `@ignifx/electron` public barrel: the renderer half — the `electron()` extension, `app.desktop`, the file-system storage backend, and the typed host contract both processes share (`docs/architecture/14-platform-electron.md` §3).
-- [ignifx](/skill/references/api/ignifx): `ignifx` public barrel: the umbrella entry point that re-exports `@ignifx/core` and, as each phase lands, the standard extensions (`docs/architecture/00-overview.md` §2).
-- [@ignifx/input](/skill/references/api/input): `@ignifx/input` public barrel: devices, action maps, bindings, composites and processors, control schemes, the `.input.json` asset, pointer lock, the cursor, rebinding, and `PlayerInput` (`docs/architecture/08-input.md`).
-- [@ignifx/physics-2d](/skill/references/api/physics-2d): `@ignifx/physics-2d` public barrel: 2D physics on Rapier — `Rigidbody2D`, the 2D colliders, triggers, `CharacterController2D`, one-way platforms, queries, the layer matrix, and interpolation (`docs/architecture/11-2d-toolkit.md` §8, ADR-0006).
-- [@ignifx/physics](/skill/references/api/physics): `@ignifx/physics` public barrel: 3D physics on Havok through Babylon Lite — rigidbodies, colliders, triggers, the character controller, queries, the layer matrix, and interpolation (`docs/architecture/09-physics.md`).
-- [@ignifx/ui](/skill/references/api/ui): `@ignifx/ui` public barrel: the DOM overlay host and its layers, the three scaling modes, input focus routing, `WorldAnchor`, the three text components on Babylon Lite's text renderer, the touch, menu and dialog helpers, and `app.i18n` (`docs/architecture/13-ui.md`).
-- [@ignifx/vite-plugin](/skill/references/api/vite-plugin): `@ignifx/vite-plugin` public barrel: asset manifest generation, scene and prefab JSON validation, WASM and asset handling, and HMR hooks (`docs/architecture/00-overview.md` §2).
+- [@ignifx/2d](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/api/2d.md): `@ignifx/2d` public barrel: `Camera2D`, `SpriteRenderer`, `SpriteAnimator`, atlases, `Tilemap`, sorting layers, pixel-perfect rendering, parallax, and 2D picking (`docs/architecture/11-2d-toolkit.md`).
+- [@ignifx/3d](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/api/3d.md): `@ignifx/3d` public barrel: the 3D toolkit — character and camera rigs, the `Animator` state machine, navigation, and the environment helpers (`docs/architecture/12-3d-toolkit.md`).
+- [@ignifx/audio](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/api/audio.md): `@ignifx/audio` public barrel: the audio service and its mixer tree, `AudioSource`, `AudioListener`, `MusicPlayer`, the `audio` and `audiobuses` assets, the two backends, and the `audio()` extension (`docs/architecture/10-audio.md`).
+- [@ignifx/cli](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/api/cli.md): `@ignifx/cli` public barrel.
+- [@ignifx/core](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/api/core.md): `@ignifx/core` public barrel.
+- [@ignifx/devtools](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/api/devtools.md): `@ignifx/devtools` public barrel: the overlay and its nine panels, the schema-driven inspector, the Console panel's log sink, the `devtools` settings section, and the `IGX-155x` code space (`docs/architecture/15-devtools-and-diagnostics.md` §4).
+- [@ignifx/electron](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/api/electron-main.md): `@ignifx/electron/main` public barrel: the Electron main-process surface — the game window factory that turns WebGPU on, the `ignifx://` protocol that serves packaged assets, the typed IPC handlers behind the preload bridge, and the file-system store `app.storage` writes through…
+- [@ignifx/electron](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/api/electron-preload.md): `@ignifx/electron/preload` public barrel: the typed, versioned bridge exposed to the renderer through `contextBridge` as `window.ignifxHost` — storage, paths, window controls, dialogs, the shell, and the contract version (`docs/architecture/14-platform-electron.md` §3).
+- [@ignifx/electron](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/api/electron.md): `@ignifx/electron` public barrel: the renderer half — the `electron()` extension, `app.desktop`, the file-system storage backend, and the typed host contract both processes share (`docs/architecture/14-platform-electron.md` §3).
+- [ignifx](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/api/ignifx.md): `ignifx` public barrel: the umbrella entry point that re-exports `@ignifx/core` and, as each phase lands, the standard extensions (`docs/architecture/00-overview.md` §2).
+- [@ignifx/input](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/api/input.md): `@ignifx/input` public barrel: devices, action maps, bindings, composites and processors, control schemes, the `.input.json` asset, pointer lock, the cursor, rebinding, and `PlayerInput` (`docs/architecture/08-input.md`).
+- [@ignifx/physics-2d](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/api/physics-2d.md): `@ignifx/physics-2d` public barrel: 2D physics on Rapier — `Rigidbody2D`, the 2D colliders, triggers, `CharacterController2D`, one-way platforms, queries, the layer matrix, and interpolation (`docs/architecture/11-2d-toolkit.md` §8, ADR-0006).
+- [@ignifx/physics](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/api/physics.md): `@ignifx/physics` public barrel: 3D physics on Havok through Babylon Lite — rigidbodies, colliders, triggers, the character controller, queries, the layer matrix, and interpolation (`docs/architecture/09-physics.md`).
+- [@ignifx/ui](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/api/ui.md): `@ignifx/ui` public barrel: the DOM overlay host and its layers, the three scaling modes, input focus routing, `WorldAnchor`, the three text components on Babylon Lite's text renderer, the touch, menu and dialog helpers, and `app.i18n` (`docs/architecture/13-ui.md`).
+- [@ignifx/vite-plugin](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/api/vite-plugin.md): `@ignifx/vite-plugin` public barrel: asset manifest generation, scene and prefab JSON validation, WASM and asset handling, and HMR hooks (`docs/architecture/00-overview.md` §2).
 
 ## Extensions
 
-- [@ignifx/2d](/skill/2d/): `@ignifx/2d` is the ignifx extension that draws **sprites**.
-- [@ignifx/3d](/skill/3d/): `@ignifx/3d` is the ignifx extension that turns `@ignifx/core` + `@ignifx/physics` + `@ignifx/input` into a **3D game**: characters that walk, a camera that follows them without clipping through walls, an animation state machine that drives their skeleton, and navigation for everything that is not…
-- [@ignifx/audio](/skill/audio/): `@ignifx/audio` is the ignifx extension that plays sound.
-- [@ignifx/devtools](/skill/devtools/): `@ignifx/devtools` is the ignifx extension that puts a debug overlay over the canvas: frame numbers, the entity tree, a live component inspector, asset handles, input, audio, physics, the log, and a per-phase timing graph.
-- [@ignifx/electron](/skill/electron/): The Electron half of ignifx.
-- [@ignifx/input](/skill/input/): `@ignifx/input` is the ignifx extension that turns browser input into **actions**.
-- [@ignifx/physics](/skill/physics/): `@ignifx/physics` is the ignifx extension that simulates 3D rigid bodies with Havok, through Babylon Lite.
-- [@ignifx/physics-2d](/skill/physics-2d/): `@ignifx/physics-2d` is the ignifx extension that simulates 2D rigid bodies with **Rapier 2D** (`@dimforge/rapier2d-compat`, Apache-2.0, ADR-0006).
-- [@ignifx/ui](/skill/ui/): **Game UI in ignifx is HTML.** `@ignifx/ui` puts one absolutely positioned `<div>` over the canvas and lets a game mount React, Svelte, Vue or plain DOM into named layers inside it.
+- [@ignifx/2d](https://github.com/astrum-forge/ignifx/blob/main/packages/2d/skills/2d/SKILL.md): `@ignifx/2d` is the ignifx extension that draws **sprites**.
+- [@ignifx/3d](https://github.com/astrum-forge/ignifx/blob/main/packages/3d/skills/3d/SKILL.md): `@ignifx/3d` is the ignifx extension that turns `@ignifx/core` + `@ignifx/physics` + `@ignifx/input` into a **3D game**: characters that walk, a camera that follows them without clipping through walls, an animation state machine that drives their skeleton, and navigation for everything that is not…
+- [@ignifx/audio](https://github.com/astrum-forge/ignifx/blob/main/packages/audio/skills/audio/SKILL.md): `@ignifx/audio` is the ignifx extension that plays sound.
+- [@ignifx/devtools](https://github.com/astrum-forge/ignifx/blob/main/packages/devtools/skills/devtools/SKILL.md): `@ignifx/devtools` is the ignifx extension that puts a debug overlay over the canvas: frame numbers, the entity tree, a live component inspector, asset handles, input, audio, physics, the log, and a per-phase timing graph.
+- [@ignifx/electron](https://github.com/astrum-forge/ignifx/blob/main/packages/electron/skills/electron/SKILL.md): The Electron half of ignifx.
+- [@ignifx/input](https://github.com/astrum-forge/ignifx/blob/main/packages/input/skills/input/SKILL.md): `@ignifx/input` is the ignifx extension that turns browser input into **actions**.
+- [@ignifx/physics](https://github.com/astrum-forge/ignifx/blob/main/packages/physics/skills/physics/SKILL.md): `@ignifx/physics` is the ignifx extension that simulates 3D rigid bodies with Havok, through Babylon Lite.
+- [@ignifx/physics-2d](https://github.com/astrum-forge/ignifx/blob/main/packages/physics-2d/skills/physics-2d/SKILL.md): `@ignifx/physics-2d` is the ignifx extension that simulates 2D rigid bodies with **Rapier 2D** (`@dimforge/rapier2d-compat`, Apache-2.0, ADR-0006).
+- [@ignifx/ui](https://github.com/astrum-forge/ignifx/blob/main/packages/ui/skills/ui/SKILL.md): **Game UI in ignifx is HTML.** `@ignifx/ui` puts one absolutely positioned `<div>` over the canvas and lets a game mount React, Svelte, Vue or plain DOM into named layers inside it.
 

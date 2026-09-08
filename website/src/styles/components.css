@@ -1,0 +1,599 @@
+/* Bands, grids, cards, callouts, posters, the example frame, and the pager.
+
+   Everything is a hairline-bordered surface with a 6 px radius. There are no shadows and no
+   card-on-card stacking; a hover raises a card's border to `--ink-2` and nothing moves
+   (`02-design-system.md` §1 and §2.5). */
+
+/* --- Bands --- */
+
+.band,
+.gallery,
+.feature,
+.viewer,
+.source {
+  padding: var(--band-gap) 0;
+}
+
+.band + .band,
+.gallery + .gallery,
+.feature + .feature {
+  padding-top: 0;
+}
+
+.band-quiet {
+  border-top: 1px solid var(--rule);
+  color: var(--ink-2);
+  font-size: var(--t-sm);
+}
+
+.band-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--s-6);
+  margin-bottom: var(--s-8);
+}
+
+.band-title {
+  font-size: var(--t-xl);
+}
+
+.band-lead {
+  max-width: var(--measure-lead);
+  margin-top: var(--s-3);
+  color: var(--ink-2);
+}
+
+.eyebrow {
+  margin-bottom: var(--s-3);
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.band-action {
+  flex: none;
+}
+
+.band-more {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--t-sm);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.band-more:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 599px) {
+  .band-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--s-4);
+  }
+}
+
+/* Editorial paragraphs inside a band get the same rhythm as prose without needing the class. */
+.band p + p,
+.band .scroller + .prose,
+.band .callout,
+.band .scroller + h2,
+.band p + .code,
+.band .code + p {
+  margin-top: var(--s-4);
+}
+
+/* --- Page heads --- */
+
+.page-head {
+  padding: var(--s-16) 0 0;
+}
+
+.page-head-tight {
+  padding-top: var(--s-8);
+}
+
+.page-head-center {
+  padding: var(--s-24) 0;
+  text-align: center;
+}
+
+.page-head h1 {
+  font-size: var(--t-2xl);
+}
+
+.page-lead {
+  max-width: var(--measure-lead);
+  margin-top: var(--s-4);
+  color: var(--ink-2);
+  font-size: var(--t-md);
+}
+
+.page-head-center .page-lead {
+  margin: var(--s-4) auto 0;
+}
+
+.page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3);
+  margin-top: var(--s-6);
+}
+
+.page-head .pill {
+  margin-top: var(--s-6);
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  margin-bottom: var(--s-4);
+  color: var(--ink-2);
+  font-size: var(--t-sm);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.back:hover {
+  color: var(--flame);
+}
+
+/* --- Grids: 12 columns above 1040 px, 6 to 800 px, one below (`02` §2.5 and §5). --- */
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--gutter);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Two real columns rather than `auto-fit`: at 1200 px a 22rem track fits three times, which turns
+   a pair of columns into a ragged row of three. */
+.grid-two {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 800px) {
+  .grid-two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.grid-three {
+  grid-template-columns: repeat(auto-fit, minmax(min(19rem, 100%), 1fr));
+}
+
+.grid-four {
+  grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
+}
+
+.grid-pillars {
+  grid-template-columns: repeat(auto-fit, minmax(min(13rem, 100%), 1fr));
+}
+
+@media (min-width: 1040px) {
+  .grid-three {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .grid-four {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .grid-pillars {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+/* --- Cards --- */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface);
+  transition: border-color var(--speed) var(--ease);
+}
+
+a.card,
+.card a {
+  text-decoration: none;
+}
+
+.card:hover {
+  border-color: var(--ink-2);
+}
+
+.card-feature,
+.card-hub,
+.card-picker {
+  padding: var(--s-4);
+  gap: var(--s-2);
+}
+
+.card-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-4);
+}
+
+.card-title {
+  color: var(--ink);
+  font-size: var(--t-md);
+}
+
+a.card-title {
+  display: inline-flex;
+  align-items: center;
+  color: var(--flame);
+}
+
+.card-line {
+  color: var(--ink-2);
+  font-size: var(--t-sm);
+}
+
+.card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  margin-top: auto;
+  padding-top: var(--s-2);
+}
+
+.card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin-top: var(--s-3);
+}
+
+.card-more {
+  margin-top: auto;
+  padding-top: var(--s-2);
+  font-size: var(--t-sm);
+  font-weight: 600;
+}
+
+.card-more:hover {
+  text-decoration: underline;
+}
+
+.card-code {
+  color: var(--ink-2);
+  font-size: var(--t-sm);
+}
+
+/* --- Control-device icon rows --- */
+
+.controls {
+  display: flex;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--ink-2);
+}
+
+/* --- Posters --- */
+
+.poster {
+  display: block;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: var(--sunk);
+  border-bottom: 1px solid var(--rule);
+}
+
+.poster img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.poster-missing {
+  display: grid;
+  place-items: center;
+  padding: var(--s-4);
+  color: var(--ink-2);
+  font-size: var(--t-sm);
+  text-align: center;
+}
+
+/* --- Callouts --- */
+
+.callout {
+  margin-top: var(--s-6);
+  padding: var(--s-4);
+  border: 1px solid var(--rule);
+  border-left-width: 3px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-size: var(--t-sm);
+}
+
+.callout-note {
+  border-left-color: var(--flame);
+}
+
+.callout-caution {
+  border-left-color: var(--warn);
+}
+
+/* --- Tick and cross lists --- */
+
+.ticks,
+.crosses {
+  margin: var(--s-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ticks li,
+.crosses li {
+  position: relative;
+  padding-left: var(--s-6);
+}
+
+.ticks li + li,
+.crosses li + li {
+  margin-top: var(--s-2);
+}
+
+.ticks li::before {
+  content: "→";
+  position: absolute;
+  left: 0;
+  color: var(--flame);
+}
+
+.crosses li::before {
+  content: "×";
+  position: absolute;
+  left: 0;
+  color: var(--warn);
+}
+
+/* --- The example frame --- */
+
+.frame {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--sunk);
+  overflow: hidden;
+}
+
+.frame-box {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: var(--sunk);
+}
+
+.frame-app {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* A browser draws no ring on a focused iframe, and the frame is a Tab stop (`02` §6). */
+.frame-app:focus-visible {
+  outline: 2px solid var(--flame);
+  outline-offset: -2px;
+}
+
+.frame-cover {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: var(--sunk);
+}
+
+.frame-cover .poster {
+  position: absolute;
+  inset: 0;
+  border-bottom: 0;
+}
+
+.frame-play {
+  position: relative;
+  z-index: 1;
+}
+
+.frame.is-ready .frame-cover {
+  display: none;
+}
+
+.frame-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2) var(--s-4);
+  padding: var(--s-2);
+  border-top: 1px solid var(--rule);
+  background: var(--surface);
+}
+
+.frame-controls,
+.frame-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.frame-meta {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+/* The hero's toolbar carries a sentence of caption as well as the controls, so it takes a second
+   row rather than letting the two collide. */
+.frame-bar-stacked .frame-meta {
+  flex: 1 1 100%;
+  justify-content: flex-start;
+  padding: 0 var(--s-2);
+  text-align: left;
+}
+
+.frame-btn {
+  min-height: 32px;
+  padding: 0 var(--s-2);
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+}
+
+html[data-js="on"] .frame-btn.js-only {
+  display: inline-flex;
+}
+
+.frame:not(.is-paused) .frame-btn .icon-play,
+.frame.is-paused .frame-btn .icon-pause {
+  display: none;
+}
+
+.frame-hint,
+.frame-stats,
+.frame-caption {
+  color: var(--ink-2);
+  font-size: var(--t-2xs);
+}
+
+.frame-hint,
+.frame-stats {
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+html[data-js="on"] .frame-stats.js-only {
+  display: block;
+}
+
+.frame-caption {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.frame-link {
+  flex: none;
+  font-size: var(--t-2xs);
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.frame-link:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 799px) {
+  .frame-btn .btn-text {
+    display: none;
+  }
+
+  .frame-btn {
+    min-width: 44px;
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  .frame-hint {
+    display: none;
+  }
+}
+
+@media (max-width: 599px) {
+  .frame-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .frame-meta {
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  /* The caption takes several lines on a phone; the link belongs under it, not beside it. */
+  .frame-caption {
+    flex: 1 1 100%;
+  }
+}
+
+/* --- Previous / next --- */
+
+.pager {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s-4);
+  margin-top: var(--s-8);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--rule);
+}
+
+.pager a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.pager a:hover {
+  text-decoration: underline;
+}
+
+.pager-next {
+  text-align: right;
+}
+
+.pager-label {
+  display: block;
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* --- Metadata rows --- */
+
+.meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s-2);
+}
+
+.meta-row + .meta-row {
+  margin-top: var(--s-2);
+}
+
+.meta-label {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.meta-code {
+  padding: 0.1em 0.35em;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  background: var(--surface);
+}

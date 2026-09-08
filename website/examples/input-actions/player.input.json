@@ -1,0 +1,132 @@
+{
+  "format": "ignifx.inputactions",
+  "formatVersion": 1,
+  "controlSchemes": [
+    { "name": "KeyboardMouse", "devices": ["Keyboard", "Mouse"] },
+    { "name": "Gamepad", "devices": ["Gamepad"] },
+    { "name": "Touch", "devices": ["Touch"] }
+  ],
+  "maps": [
+    {
+      "name": "Player",
+      "enabled": true,
+      "actions": [
+        {
+          "name": "move",
+          "type": "vector2",
+          "bindings": [
+            {
+              "composite": "2DVector",
+              "up": "<Keyboard>/w",
+              "down": "<Keyboard>/s",
+              "left": "<Keyboard>/a",
+              "right": "<Keyboard>/d",
+              "processors": ["normalize"],
+              "scheme": "KeyboardMouse"
+            },
+            {
+              "composite": "2DVector",
+              "up": "<Keyboard>/arrowUp",
+              "down": "<Keyboard>/arrowDown",
+              "left": "<Keyboard>/arrowLeft",
+              "right": "<Keyboard>/arrowRight",
+              "processors": ["normalize"],
+              "scheme": "KeyboardMouse"
+            },
+            { "path": "<Gamepad>/leftStick", "processors": ["deadzone(0.2)"], "scheme": "Gamepad" },
+            { "path": "<Gamepad>/dpad", "scheme": "Gamepad" },
+            {
+              "path": "<Touch>/primaryTouch/delta",
+              "processors": ["scale(0.02)", "clamp(-1,1)"],
+              "scheme": "Touch"
+            }
+          ]
+        },
+        {
+          "name": "look",
+          "type": "vector2",
+          "bindings": [
+            { "path": "<Mouse>/delta", "processors": ["scale(0.08)", "clamp(-1,1)"], "scheme": "KeyboardMouse" },
+            { "path": "<Gamepad>/rightStick", "processors": ["deadzone(0.15)"], "scheme": "Gamepad" }
+          ]
+        },
+        {
+          "name": "aim",
+          "type": "vector2",
+          "bindings": [{ "path": "<Pointer>/position" }]
+        },
+        {
+          "name": "spin",
+          "type": "axis",
+          "bindings": [
+            {
+              "composite": "1DAxis",
+              "negative": "<Keyboard>/q",
+              "positive": "<Keyboard>/e",
+              "scheme": "KeyboardMouse"
+            },
+            {
+              "composite": "1DAxis",
+              "negative": "<Gamepad>/leftShoulder",
+              "positive": "<Gamepad>/rightShoulder",
+              "scheme": "Gamepad"
+            }
+          ]
+        },
+        {
+          "name": "boost",
+          "type": "axis",
+          "bindings": [
+            { "path": "<Keyboard>/shiftLeft", "scheme": "KeyboardMouse" },
+            { "path": "<Gamepad>/rightTrigger", "processors": ["deadzone(0.05)"], "scheme": "Gamepad" }
+          ]
+        },
+        {
+          "name": "jump",
+          "type": "button",
+          "bindings": [
+            { "path": "<Keyboard>/space", "scheme": "KeyboardMouse" },
+            { "path": "<Gamepad>/buttonSouth", "scheme": "Gamepad" },
+            { "path": "<Touch>/touch1/press", "scheme": "Touch" }
+          ]
+        },
+        {
+          "name": "fire",
+          "type": "button",
+          "bindings": [
+            { "path": "<Mouse>/leftButton", "scheme": "KeyboardMouse" },
+            { "path": "<Gamepad>/buttonWest", "scheme": "Gamepad" },
+            { "path": "<Touch>/touch2/press", "scheme": "Touch" }
+          ]
+        },
+        {
+          "name": "sprint",
+          "type": "button",
+          "bindings": [
+            {
+              "composite": "ButtonWithModifier",
+              "modifier": "<Keyboard>/shiftLeft",
+              "button": "<Keyboard>/w",
+              "scheme": "KeyboardMouse"
+            },
+            { "path": "<Gamepad>/leftStickPress", "scheme": "Gamepad" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "System",
+      "enabled": true,
+      "actions": [
+        {
+          "name": "toggleMap",
+          "type": "button",
+          "bindings": [
+            { "path": "<Keyboard>/escape", "scheme": "KeyboardMouse" },
+            { "path": "<Gamepad>/start", "scheme": "Gamepad" }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -197,6 +197,25 @@ declare files that must be served verbatim:
 They are copied **unhashed** into the public path, because WASM loaders locate their binary by name.
 Two extensions publishing the same file name is an error (`IGX-0553`).
 
+Each one is also listed in the manifest, at its bare file name, with the served URL — `base`
+included. That is what makes `app.assets.resolveUrl("HavokPhysics.wasm")` answer correctly on a page
+served from a sub-path: without an entry, `resolveUrl` falls back to a **page-relative**
+`<assetRoot>/<name>`, which points somewhere no file was written as soon as the document does not sit
+directly above the asset root, and `@ignifx/physics` then reports `IGX-0903`. A project asset whose
+address equals a published file name is an error (`IGX-0552`), because `resolveUrl` could not answer
+for both.
+
+If the bundler emits its own copy of the same bytes — `@babylonjs/havok`'s ESM build carries a
+`new URL("HavokPhysics.wasm", import.meta.url)` that Rollup resolves, which would ship the binary
+twice — the plugin repoints that reference at its own unhashed copy and drops the bundler's, so
+exactly one file ships and the URLs that already worked keep working.
+
+**Discovery walks `node_modules` from the Vite root upwards and reads only the packages installed
+_directly_ in each one.** Under pnpm that is the root's own `dependencies`/`devDependencies`, so an
+extension reached transitively — through the `ignifx` umbrella, for instance — publishes nothing. A
+project that registers `physics()` through the umbrella must also list `@ignifx/physics` in its own
+`package.json` for `HavokPhysics.wasm` to be copied and listed.
+
 ## Error codes
 
 The plugin runs before an `App` exists, so it throws its own `VitePluginError` with a code from the

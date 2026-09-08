@@ -20,6 +20,14 @@ import type { RenderingSettings } from "../rendering-settings.js";
  * file (`docs/architecture/05-assets-and-loading.md` §5,
  * `06-serialization-and-scene-format.md` §6).
  *
+ * ## The skybox is decided here, once
+ *
+ * Lite builds the background inside `loadEnvironment` and hands back no handle on it, so this is
+ * the only place that can decide whether there is one: `Environment.skybox` can report a
+ * disagreement (`IGX-0711`) but cannot change it. `skyboxEnabled: false` skips the background;
+ * otherwise the declaration's `skybox` image is used, and when it names none the environment draws
+ * **its own** prefiltered cube map (see {@link toLoadOptions}).
+ *
  * ## Two addresses, one asset type
  *
  * A bare `.env` address is the common case: load this IBL, take the BRDF table and the skybox from
@@ -183,6 +191,14 @@ function toLoadOptions(
   if (!definition.skyboxEnabled) {
     options.skipSkybox = true;
   } else if (definition.skybox === "") {
+    // Naming the environment as its own skybox source is what selects Lite's HDR cube skybox:
+    // `loadEnvironment` treats `skyboxUrl === url` (or any `.env` suffix) as "reuse the specular
+    // cube map I just uploaded", the way Babylon.js's `createDefaultSkybox` does, and otherwise
+    // draws a flat box painted in `scene.clearColor` — a background indistinguishable from no
+    // background at all (`lib/_chunks/env-helpers-*.js`, `skyboxIsEnv` and
+    // `buildSolidSkyboxRenderable`). So an environment that says "draw a skybox" and names no image
+    // draws itself.
+    options.skyboxUrl = options.url;
     options.skyboxSize = definition.skyboxSize;
   } else {
     options.skyboxUrl = ctx.app.assets.resolveUrl(definition.skybox);

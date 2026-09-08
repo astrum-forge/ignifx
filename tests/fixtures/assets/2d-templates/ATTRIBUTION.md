@@ -54,13 +54,21 @@ than interleaved, so every walk frame keeps the rectangle it already had; the tw
 a facing are adjacent because `from`/`to` resolves to a range of atlas **indices**, not to a name
 pattern (`packages/2d/src/animation/definition.ts`).
 
-## Why the sheets live in `public/`
+## Where the sheets live
 
-A `.atlas.json` names its image **relative to the document**, and `@ignifx/vite-plugin`
-content-hashes everything under a project's asset root on a production build — so a hashed
-`assets/tiles.<hash>.atlas.json` would look for `assets/tiles.png`, a name that no longer exists,
-and the load would fail with `IGX-0505`. Vite's `public/` directory is copied verbatim and
-unhashed, so the documents name `/tiles.png` and resolve in `pnpm dev` and `pnpm build` alike.
+Beside their atlas documents, in the template's `assets/`, named relatively: `"image": "tiles.png"`.
+`@ignifx/2d` reads such a reference as an **address** relative to the document's own address and
+resolves it through the asset manifest (`packages/2d/src/atlas/loader.ts`, `resolveAtlasImageUrl`),
+so a production build that content-hashes the asset root still finds the sheet.
+
+Until 2026-09-08 the sheets sat in each template's `public/` directory and the documents named them
+root-relatively as `/tiles.png`. That was a workaround for a Phase 6 loader that resolved the
+reference against the document's own **URL**, which a hashed build breaks: `assets/tiles.<hash>.atlas.json`
+looked for `assets/tiles.png`, a name that no longer exists, and the load failed with `IGX-0505`.
+The workaround only ever resolved at a site's root, so a template deployed under a sub-path — the
+website's `/examples/<name>/run/`, for one — asked the origin's root for a sheet that was not there.
+The loader resolves addresses through the manifest now, so both the `public/` copy and the
+root-relative name are gone.
 
 ## Sizes
 
@@ -69,13 +77,13 @@ the side-scroller's three-band parallax sheet at 5,607 bytes.
 
 | File                                        | Bytes | What it holds                                                                |
 | ------------------------------------------- | ----- | ---------------------------------------------------------------------------- |
-| `2d-topdown/public/tiles.png`               | 1,279 | 16 frames of 16x16: eight terrain tiles and eight props                      |
-| `2d-topdown/public/hero.png`                | 1,047 | 40 frames: an eight-frame walk cycle and a two-frame idle, in four facings   |
-| `2d-topdown/public/fx.png`                  | 468   | Four 16x16 sparkle frames, in `bloomLight` over `gold`                       |
+| `2d-topdown/assets/tiles.png`               | 1,279 | 16 frames of 16x16: eight terrain tiles and eight props                      |
+| `2d-topdown/assets/hero.png`                | 1,047 | 40 frames: an eight-frame walk cycle and a two-frame idle, in four facings   |
+| `2d-topdown/assets/fx.png`                  | 468   | Four 16x16 sparkle frames, in `bloomLight` over `gold`                       |
 | `2d-topdown/assets/level.tilemap.json`      | 7,516 | A 40x24 walled garden, two layers, nine objects                              |
-| `2d-sidescroller/public/tiles.png`          | 685   | Eight frames: ground, dirt, two slopes, a plank, brick, two edges            |
-| `2d-sidescroller/public/hero.png`           | 688   | 14 frames: idle, jump, fall and an eight-frame run                           |
-| `2d-sidescroller/public/coin.png`           | 304   | Six spin frames                                                              |
-| `2d-sidescroller/public/fx.png`             | 471   | Four 16x16 sparkle frames, in `coin` over `plankLight`                       |
-| `2d-sidescroller/public/parallax.png`       | 5,607 | A 640x384 sky, a 320x112 hill band, a 320x176 treeline                       |
+| `2d-sidescroller/assets/tiles.png`          | 685   | Eight frames: ground, dirt, two slopes, a plank, brick, two edges            |
+| `2d-sidescroller/assets/hero.png`           | 688   | 14 frames: idle, jump, fall and an eight-frame run                           |
+| `2d-sidescroller/assets/coin.png`           | 304   | Six spin frames                                                              |
+| `2d-sidescroller/assets/fx.png`             | 471   | Four 16x16 sparkle frames, in `coin` over `plankLight`                       |
+| `2d-sidescroller/assets/parallax.png`       | 5,607 | A 640x384 sky, a 320x112 hill band, a 320x176 treeline                       |
 | `2d-sidescroller/assets/level.tilemap.json` | 6,104 | A 64x20 course: two slopes each way, two pits, five one-way planks, 18 coins |

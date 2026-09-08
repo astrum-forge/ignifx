@@ -1,6 +1,6 @@
 # ADR-0019 · The public website: a prerendered static site on Cloudflare Pages
 
-**Status:** Accepted · **Date:** 2026-09-06 · **Phase:** 12 · **Supersedes:** none
+**Status:** Accepted · **Superseded in part by ADR-0020** (§1's "imports no workspace package", §2's "no inline script", §3's route list and the Consequences' "Impossible for now") · **Date:** 2026-09-06 · **Phase:** 12 · **Supersedes:** none
 **Related:** `CONSTITUTION.md` §9.1 (no telemetry, no third-party requests), §11.1/§11.3 (licensing and attribution) · `docs/architecture/16-docs-harness-and-skill.md` §1 and §3 (the skill is the documentation; `llms.txt`) · `docs/plan/engineering-plan.md` Phase 12 · `website/DESIGN.md`
 
 ---

@@ -1,10 +1,14 @@
 # Checks for website/ (the ignifx.com public site). This workflow does NOT deploy.
 #
 # Hosting is Cloudflare Pages, connected directly to this repository (ADR-0019, owner requirement
-# 2026-09-06): Cloudflare runs `pnpm install` and then `pnpm --filter @ignifx/website build` on every
-# push to `main` and serves `website/dist`. The GitHub Pages job that Phase 0 used as a placeholder
-# is gone; nothing here writes to any environment. The `website/dist` artifact below exists so a
-# reviewer can download the built site from a pull request.
+# 2026-09-06): Cloudflare runs `pnpm install` and then the build command on every push to `main` and
+# serves `website/dist`. Since ADR-0020 that command is `pnpm turbo run build
+# --filter=@ignifx/website...` — the site runs the engine's examples, so the workspace packages must
+# be built first, and the `...` suffix is what orders that. This workflow runs the same command, so a
+# pull request fails here rather than on a Pages preview.
+#
+# The `paths` filter is wide for the same reason: an engine change, an example, a template or a
+# visual-suite change can now break the site.
 name: Website
 
 on:
@@ -12,16 +16,26 @@ on:
     branches: [main]
     paths:
       - "website/**"
+      - "packages/**"
+      - "examples/**"
+      - "templates/**"
+      - "tests/visual/**"
       - "skills/**"
       - "packages/*/skills/**"
       - "scripts/docs-llms.ts"
+      - "scripts/lib/llms-index.ts"
       - ".github/workflows/website.yml"
   pull_request:
     paths:
       - "website/**"
+      - "packages/**"
+      - "examples/**"
+      - "templates/**"
+      - "tests/visual/**"
       - "skills/**"
       - "packages/*/skills/**"
       - "scripts/docs-llms.ts"
+      - "scripts/lib/llms-index.ts"
       - ".github/workflows/website.yml"
   workflow_dispatch:
 
@@ -36,7 +50,9 @@ jobs:
   website:
     name: build and check
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # The build now compiles thirteen packages, every example and the templates before it renders a
+    # page; 15 minutes was sized for a site that imported nothing.
+    timeout-minutes: 30
     env:
       # The desktop templates declare `electron` as an allowed build script; the site never runs it,
       # and downloading the binary would add ~100 MB to every job. Cloudflare needs the same variable
@@ -48,18 +64,23 @@ jobs:
 
       # `website/public/llms.txt` is generated from skills/ and packages/*/skills/. A skill page that
       # has been added, renamed or re-summarised without regenerating it would give the site a stale
-      # index, so a diff fails here rather than shipping.
+      # index — and since ADR-0020 a stale entry is a dead link to a file that no longer exists — so a
+      # diff fails here rather than shipping.
       - name: llms.txt is current
         run: |
           pnpm docs:llms
           git diff --exit-code website/public/llms.txt
 
+      # The same command Cloudflare Pages runs. It comes before the typecheck: since ADR-0020 the
+      # site imports `ignifx` and `@ignifx/vite-plugin`, whose types live in their `dist/`.
+      - run: pnpm turbo run build --filter=@ignifx/website...
+
       - run: pnpm --filter @ignifx/website typecheck
 
-      - run: pnpm --filter @ignifx/website build
-
-      # Asserts the built output: every llms.txt URL resolves, every internal link resolves, no
-      # off-origin subresource, no inline script or style, page weight, contrast, headers.
+      # Asserts the built output: every route, a run page per catalogue slug, every llms.txt URL
+      # resolves to a repository file, every internal link resolves, no off-origin subresource, one
+      # inline script (the JSON-LD block) and nothing else, page weight, contrast, the three header
+      # blocks and the redirect table.
       - run: pnpm --filter @ignifx/website test
 
       - name: Upload the built site for review

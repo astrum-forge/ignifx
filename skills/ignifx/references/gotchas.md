@@ -118,8 +118,21 @@ and, where one exists, the error code you will see. The eighteen most common are
     measured **3 extra frames** before the mesh appeared, against 0–2 when the family had been warmed
     and 0 when a mesh of that family was already drawn. `app.start()` warms the `boot` preload group;
     call `app.renderer.warmUp(materials)` for anything you load later (ADR-0014).
-36. **Do not put two `Environment` components in one world.** The one enabled last wins and
-    the world logs `IGX-0705` once. There is one image-based lighting setup per world.
+36. **Do not put two `Environment` components in one world**, and do not expect its `skybox` record
+    to change the background. The one enabled last wins and the world logs `IGX-0705` once; there is
+    one image-based lighting setup per world. Babylon Lite builds the background inside
+    `loadEnvironment`, from the `.environment.json`'s `skyboxEnabled`/`skybox`/`skyboxSize`, and
+    hands back no handle on it — so _setting_ `Environment.skybox` to something the installed
+    environment did not deliver logs `IGX-0711` once and changes nothing, while leaving the record
+    alone is silent whatever the declaration says. An
+    environment loaded _after_ `app.start()` gets no background at all, because only `registerScene`
+    drains the builders that would make one. Assigning a different **loaded** handle to
+    `environment` does switch the _lighting_ (diffuse next frame, specular the frame after, when the
+    material groups are rebuilt), and both assets keep their GPU resources while retained, so
+    switching back and forth is free. Assigning `null` means "stop steering", not "go dark": Lite
+    has no inverse of `loadEnvironment`, so the last environment keeps lighting the scene and
+    `installed` keeps naming it. A world that switches environments wants `skyboxEnabled: false` and
+    an `Environment.clearColor`.
 37. **Do not ask a point or hemispheric light for shadows.** Lite has no cube-shadow generator, so
     `shadows.enabled` on either throws `IGX-0703`. Cast from a directional or spot light.
 38. **Do not forget an enabled `Camera`.** A world without one renders nothing and logs `IGX-0706`

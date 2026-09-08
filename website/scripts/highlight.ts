@@ -11,14 +11,14 @@
  * and the theme toggle needs no re-render.
  */
 import { createHighlighter } from "shiki";
-import { each, esc, h } from "./html.ts";
+import { each, esc, h, join } from "./html.ts";
 import type { BundledLanguage, Highlighter } from "shiki";
 
 /** The two Shiki themes, chosen for low chroma so they sit inside the site's own palette. */
 const THEMES = { light: "vitesse-light", dark: "vitesse-dark" } as const;
 
 /** Languages loaded up front. Anything else in a fence renders as plain text. */
-const LANGUAGES: readonly BundledLanguage[] = ["typescript", "javascript", "json", "bash"];
+const LANGUAGES: readonly BundledLanguage[] = ["typescript", "javascript", "json", "bash", "html"];
 
 /** Fence info strings mapped onto a loaded grammar. `ts run` and `ts ignore-check` are harness tags. */
 const ALIASES: ReadonlyMap<string, BundledLanguage> = new Map([
@@ -28,10 +28,21 @@ const ALIASES: ReadonlyMap<string, BundledLanguage> = new Map([
   ["javascript", "javascript"],
   ["json", "json"],
   ["jsonc", "json"],
+  ["html", "html"],
   ["sh", "bash"],
   ["bash", "bash"],
   ["shell", "bash"],
 ]);
+
+/** How one code block is labelled and captioned. */
+export interface CodeOptions {
+  /** Replaces the language chip, e.g. `main.ts`. */
+  readonly label?: string;
+  /** A line under the block, in `--ink-2`, e.g. `compiled by the docs harness`. */
+  readonly caption?: string;
+  /** Whether to colour the tokens. Defaults to `true`. */
+  readonly colour?: boolean;
+}
 
 /** A highlighter plus the class table it has accumulated so far. */
 export interface CodeHighlighter {
@@ -40,10 +51,10 @@ export interface CodeHighlighter {
    *
    * @param code - The block's text, without the fences.
    * @param info - The fence info string (`ts`, `ts run`, `json`, `""`).
-   * @param colour - Whether to colour the tokens. Defaults to `true`.
+   * @param options - Label, caption and colouring.
    * @returns A `<figure class="code">` holding a copy button and the highlighted `<pre>`.
    */
-  readonly render: (code: string, info: string, colour?: boolean) => string;
+  readonly render: (code: string, info: string, options?: CodeOptions) => string;
   /**
    * Renders the stylesheet for every token class handed out so far. Call after the last page.
    *
@@ -137,15 +148,18 @@ export async function createCodeHighlighter(): Promise<CodeHighlighter> {
   }
 
   return {
-    render(code: string, info: string, colour = true): string {
-      const label = grammarFor(info) ?? "text";
-      const inner = tokenize(code.replace(/\n$/u, ""), info, colour);
+    render(code: string, info: string, options: CodeOptions = {}): string {
+      const named = options.label !== undefined;
+      const label = options.label ?? grammarFor(info) ?? "text";
+      const inner = tokenize(code.replace(/\n$/u, ""), info, options.colour ?? true);
       const body = h("pre", { class: "code-pre", tabindex: "0" }, h("code", {}, inner));
       const bar = h("div", { class: "code-bar" }, [
-        h("span", { class: "code-lang" }, esc(label)),
+        h("span", { class: named ? "code-lang code-name" : "code-lang" }, esc(label)),
         h("button", { type: "button", class: "code-copy", "data-copy": true }, "Copy"),
       ]);
-      return h("figure", { class: "code" }, [bar, body]);
+      const caption =
+        options.caption === undefined ? null : h("figcaption", { class: "code-caption" }, esc(options.caption));
+      return h("figure", { class: "code" }, join(bar, body, caption));
     },
     stylesheet(): string {
       // One declaration per colour pair; `src/styles/code.css` holds the three rules that pick

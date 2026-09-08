@@ -15812,14 +15812,21 @@ gun.setParent(hand, { worldPositionStays: false });     // keeps its local offse
 
 The world's lighting environment (`docs/architecture/07-rendering.md` §2.5).
 
-#### Example
+#### Examples
 
 ```ts
 const studio = await app.assets.loadAsync<EnvironmentAsset>("environments/studio.env");
-world.createEntity("Environment").addComponent(Environment, {
+const env = world.createEntity("Environment").addComponent(Environment, {
   environment: studio.retain(),
   imageProcessing: { exposure: 1.2, contrast: 1, toneMapping: "aces" },
 });
+```
+
+Switching environments at runtime. Both handles stay retained, so switching back costs nothing.
+
+```ts
+const night = await app.assets.loadAsync<EnvironmentAsset>("environments/night.env");
+env.environment = night.retain();
 ```
 
 #### Extends
@@ -15886,15 +15893,7 @@ The serialized field declarations (ADR-0004).
 
 ##### skybox
 
-> **skybox**: `object`
-
-###### enabled
-
-> **enabled**: `boolean`
-
-###### size
-
-> **size**: `number`
+> **skybox**: `EnvironmentSkyboxSettings`
 
 ##### typeId
 
@@ -15999,13 +15998,20 @@ The handle.
 
 > **get** **installed**(): [`EnvironmentAsset`](#environmentasset) \| `null`
 
-The environment asset this component installed, once it has loaded.
+The environment asset this component installed on the scene.
+
+###### Remarks
+
+It stops at the **last installed** asset, which is what the scene is actually lit by: setting
+`environment` back to `null` does not un-light the scene, because Lite has no inverse of
+`loadEnvironment` (see the module remarks). Headless it names the asset too — what a headless
+app skips is the cube map, not the bookkeeping.
 
 ###### Returns
 
 [`EnvironmentAsset`](#environmentasset) \| `null`
 
-The asset, or `null` when none is loaded.
+The asset, or `null` when this component has never installed one.
 
 ##### isDestroyed
 
@@ -76687,6 +76693,12 @@ A signal handler threw and no handler-error reporter was installed.
 > `readonly` **simulationSceneAlreadySet**: `"IGX-0410"`
 
 A second, different simulation scene was handed to a world that already has one.
+
+##### skyboxFixedAtLoad
+
+> `readonly` **skyboxFixedAtLoad**: `"IGX-0711"`
+
+An `Environment.skybox` asks for a background the environment it installed cannot draw.
 
 ##### stepOutsideHeadless
 

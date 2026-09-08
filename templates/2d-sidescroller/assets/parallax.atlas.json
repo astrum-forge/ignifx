@@ -1,7 +1,7 @@
 {
   "format": "ignifx.spriteatlas",
   "formatVersion": 1,
-  "image": "/parallax.png",
+  "image": "parallax.png",
   "sampling": "nearest",
   "premultipliedAlpha": false,
   "frames": [

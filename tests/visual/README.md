@@ -1,7 +1,8 @@
 # Visual golden tests
 
-Playwright screenshots of the Phase 2, 6, 7 and 8 exit-criterion scenes, compared against committed
-goldens with a per-scene tolerance (coding standards §10).
+Playwright screenshots of the Phase 2, 6, 7 and 8 exit-criterion scenes and of every runnable
+example on ignifx.com, compared against committed goldens with a per-scene tolerance (coding
+standards §10).
 
 ```sh
 pnpm test:visual                                              # from the repository root
@@ -13,10 +14,10 @@ pnpm --filter ignifx-visual-tests run test:visual:update      # regenerate the g
 
 `playwright.config.ts` splits this directory in two, and the two are run separately.
 
-| Project        | Files                                 | Command                  | Where it runs in CI               |
-| -------------- | ------------------------------------- | ------------------------ | --------------------------------- |
-| `goldens`      | `scenes.spec.ts`, `templates.spec.ts` | `pnpm test:visual`       | `test-visual`, on `ubuntu-latest` |
-| `frame-budget` | `frame-time.spec.ts`                  | `pnpm test:frame-budget` | `frame-budget`, on `macos-latest` |
+| Project        | Files                                                     | Command                  | Where it runs in CI               |
+| -------------- | --------------------------------------------------------- | ------------------------ | --------------------------------- |
+| `goldens`      | `scenes.spec.ts`, `templates.spec.ts`, `examples.spec.ts` | `pnpm test:visual`       | `test-visual`, on `ubuntu-latest` |
+| `frame-budget` | `frame-time.spec.ts`                                      | `pnpm test:frame-budget` | `frame-budget`, on `macos-latest` |
 
 A golden is an image comparison, and SwiftShader makes it reproducible on any machine. A frame
 budget is a **measurement** against ceilings recorded on one machine (`benchmarks/baselines.json`
@@ -28,12 +29,13 @@ mistake `frame-time.spec.ts`'s own header rejects for frames per second. So the 
 macOS runner, and `test-visual` carries the goldens alone.
 
 To re-record a budget: run `pnpm test:frame-budget`, take the `median` and `worst` the run prints
-per template, and write them into `benchmarks/frame-time` rows in `baselines.json` with the machine
-and the date. `benchmarks/template-frame-time.test.ts` then holds those rows to the coding-standards
-§7 budget, in the `test-unit` job, on every runner.
+per template and per example, and write them into the `frameTime.templates` and
+`frameTime.examples` rows in `baselines.json` with the machine and the date.
+`benchmarks/template-frame-time.test.ts` then holds those rows to the coding-standards §7 budget, in
+the `test-unit` job, on every runner.
 
-`playwright.config.ts` builds and previews six apps before the first test, so a golden is always
-taken of a production build:
+`playwright.config.ts` builds and previews **seven** things before the first test, so a golden is
+always taken of a production build:
 
 | Scene file          | App                         | Port   | Viewport  | Tolerance |
 | ------------------- | --------------------------- | ------ | --------- | --------- |
@@ -43,6 +45,7 @@ taken of a production build:
 | `templates.spec.ts` | `templates/2d-sidescroller` | `4176` | 512 x 288 | 0.02      |
 | `templates.spec.ts` | `templates/3d-third-person` | `4177` | 512 x 288 | 0.05      |
 | `templates.spec.ts` | `templates/3d-first-person` | `4178` | 512 x 288 | 0.05      |
+| `examples.spec.ts`  | the whole `website` build   | `4179` | 640 x 360 | per slug  |
 
 The 2D templates use 16:9 because both are authored against a 320 x 180 reference resolution, and
 the side-scroller's pixel-perfect camera derives its whole-number zoom from `viewportHeight / 180`:
@@ -54,9 +57,50 @@ map is resolved with PCF — every one of those is a place where two SwiftShader
 subpixel differently, and one shadow edge moving by a texel across a 24-metre floor is already more
 than 2% of the frame.
 
+## The website's examples
+
+`examples.spec.ts` is different from the other two in one way that matters: its pages come from
+**one** build, not one build per page. `pnpm --filter @ignifx/website build` runs the site build,
+then the multi-page examples build, then every template in the catalogue rebuilt under
+`--base /examples/<name>/run/`; `vite preview` then serves `website/dist` on port 4179. So a golden
+here is a golden of the deployed artefact: the run page at its real URL, its assets at their hashed
+URLs under `/examples/assets/`, the vendor chunk shared between examples. That build is why the
+entry's `timeout` is ten minutes rather than three.
+
+The slugs come from `website/examples/catalogue.ts`, and the first test in the file asserts that the
+catalogue and the spec's own tolerance table name the same set — so an example added to the site
+without a golden fails here rather than shipping unwatched. Each tolerance carries a one-line reason
+next to it.
+
+Two kinds of URL, because there are two kinds of run page:
+
+| Catalogue entry      | Run page is                               | Opened at                    |
+| -------------------- | ----------------------------------------- | ---------------------------- |
+| no `template`        | a kit example, `website/examples/<slug>/` | `?static=1&nopanel=1&seed=1` |
+| `template: "<name>"` | that template's own build                 | `?static=1&hud=1`            |
+
+Both flags sets are the ones `website/examples/_tools/capture-posters.ts` captures the committed
+poster from, so the golden and the poster are the same frame at two sizes — 640 x 360 here,
+1280 x 720 there. The kit stops the clock **before** `app.start()` under `?static=1`, for the same
+reason the templates do (below), and `?nopanel=1` keeps the parameter panel — and therefore the
+runner's system font — out of the image.
+
+**Posters are not goldens.** A golden is written by this suite into `tests/__screenshots__/`; a
+poster is committed art written into `website/public/examples/` by a script, because a test never
+writes into `website/public/`. `capture-posters.ts` builds into a temporary directory and previews
+on a free port in the 5180-5189 range, so it never disturbs `website/dist` and two people can
+capture different slugs at once.
+
+The examples half of `frame-time.spec.ts` measures the same pages through `?bench=1`, which the kit
+answers with the same `window.__ignifxFrameTime` probe the templates install
+(`templates/*/src/frame-time-probe.ts`) — engine CPU milliseconds per presented frame, summed over
+the frame's phases. Its rows are `frameTime.examples.<slug>` in `benchmarks/baselines.json`. A
+catalogue entry with a `template` is **not** measured there: its run page is that template's own
+build, and the template already has a `frameTime.templates` row.
+
 **`reuseExistingServer` is on outside CI**, which means a `vite preview` left running from an
 earlier invocation is reused and _no rebuild happens_. When a golden looks stale, it is: stop the
-previews (they listen on 4173-4178) before regenerating. And `--update-snapshots` alone only
+previews (they listen on 4173-4179) before regenerating. And `--update-snapshots` alone only
 rewrites a golden whose comparison **failed** — pass `--update-snapshots=all` to rewrite one whose
 change is inside the tolerance.
 
@@ -154,12 +198,14 @@ beats Lite's default (`docs/architecture/07-rendering.md` §2.1).
 
 ## Files
 
-| Path                           | What it is                                                                |
-| ------------------------------ | ------------------------------------------------------------------------- |
-| `playwright.config.ts`         | Browser, flags, viewport, preview servers, projects                       |
-| `playwright.desktop.config.ts` | The Electron suite's own configuration                                    |
-| `tests/scenes.spec.ts`         | The two examples and their tolerances                                     |
-| `tests/templates.spec.ts`      | The four templates and their front ends                                   |
-| `tests/frame-time.spec.ts`     | The `frame-budget` project                                                |
-| `tests/desktop.spec.ts`        | The Electron suite (`pnpm --filter ignifx-visual-tests run test:desktop`) |
-| `tests/__screenshots__/*.png`  | The goldens                                                               |
+| Path                                   | What it is                                                                |
+| -------------------------------------- | ------------------------------------------------------------------------- |
+| `playwright.config.ts`                 | Browser, flags, viewport, preview servers, projects                       |
+| `playwright.desktop.config.ts`         | The Electron suite's own configuration                                    |
+| `tests/scenes.spec.ts`                 | The two workspace examples and their tolerances                           |
+| `tests/templates.spec.ts`              | The four templates and their front ends                                   |
+| `tests/examples.spec.ts`               | Every runnable example on ignifx.com, from the site build                 |
+| `tests/frame-time.spec.ts`             | The `frame-budget` project: the templates, then the website examples      |
+| `tests/desktop.spec.ts`                | The Electron suite (`pnpm --filter ignifx-visual-tests run test:desktop`) |
+| `tests/__screenshots__/*.png`          | The goldens for `scenes.spec.ts` and `templates.spec.ts`                  |
+| `tests/__screenshots__/examples/*.png` | The goldens for `examples.spec.ts`, one per catalogue slug                |

@@ -1,0 +1,44 @@
+ignifx — logo and badge usage
+
+The logos and badges in this archive are free to use under the rules below; no permission is
+needed.
+
+ABOUT
+
+ignifx is an open-source TypeScript game engine built on WebGPU, for 2D and 3D games that run
+in the browser and on the desktop.
+
+THE NAME
+
+Say it "ig-ni-fix". Write it ignifx, always lowercase, even at the start of a sentence.
+
+DO
+
+- Use the badges to show your game or project runs on ignifx.
+- Use the mark or lockup when writing about ignifx, in a talk, or in a list of engines.
+- Use the light lockup on dark grounds and the dark lockup on light grounds.
+- Keep the clear space: at least the height of the mark on every side.
+
+DO NOT
+
+- Change the colours, add effects, rotate, stretch, outline or recolour the mark.
+- Use the mark or name as part of your own product's name or logo, or in a way that suggests
+  Astrum Forge Studios made or endorses your product.
+- Capitalise it: it is ignifx, not "Ignifx" or "IgniFX".
+- Set the wordmark in another typeface.
+
+MINIMUM SIZES
+
+Mark 16 px. Horizontal lockup 96 px wide. Stacked lockup 64 px wide. Badges 20 px high.
+
+COLOURS
+
+Flame #A63D07 on light, #FF9E4A on dark. Ink #14181F. Paper #FAFBFC. Dark ground #0D1015.
+See colours.txt for the full list.
+
+PERMISSION
+
+The ignifx name and mark are trademarks of Astrum Forge Studios Pty Ltd. You may use them as
+described here to refer to ignifx. For anything else, email info@astrumforge.com.
+
+The engine itself is released under the Apache-2.0 licence; this file covers the marks only.

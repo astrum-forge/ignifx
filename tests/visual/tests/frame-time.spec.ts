@@ -3,12 +3,22 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test } from "playwright/test";
+import { CATALOGUE } from "../../../website/examples/catalogue.ts";
+import type { ExampleEntry } from "../../../website/examples/catalogue.ts";
 import type { Page } from "playwright/test";
 
 /**
- * The Phase 12 frame-budget gate: each template's **engine CPU milliseconds per frame** has to stay
- * inside the ceiling `benchmarks/baselines.json` records, and `benchmarks/template-frame-time.test.ts`
- * keeps every one of those ceilings inside the coding-standards §7 budget.
+ * The frame-budget gate: each template's and each website example's **engine CPU milliseconds per
+ * frame** has to stay inside the ceiling `benchmarks/baselines.json` records, and
+ * `benchmarks/template-frame-time.test.ts` keeps every one of those ceilings inside the
+ * coding-standards §7 budget.
+ *
+ * Two describe blocks, two sources of pages. The templates are previewed one per port, from their
+ * own builds, as they have been since Phase 12. The website's examples come from the **site build**
+ * previewed on port 4179 (`playwright.config.ts`), because a website example is a page in one
+ * multi-page build rather than a package: measuring it anywhere else would measure a different
+ * bundle. Their rows live under `frameTime.examples.<slug>`; the templates keep
+ * `frameTime.templates.<name>`.
  *
  * ## Why CPU time and not frames per second
  *
@@ -58,29 +68,30 @@ const WARMUP_FRAMES = 120;
 const MEASURED_FRAMES = 300;
 
 /**
- * Reads one template's recorded ceiling out of `baselines.json`.
+ * Reads one recorded ceiling out of `baselines.json`.
  *
  * @remarks
  * Narrowed with `in` at every step rather than asserted onto a declared shape: the file is read
  * from disk, and a missing row should say so rather than arrive as `undefined` inside a number.
  *
- * @param name - The template's directory name.
+ * @param group - `"templates"` or `"examples"`, the section of `frameTime` to look in.
+ * @param name - The row's key: a template's directory name, or an example's catalogue slug.
  * @returns The ceiling in milliseconds, or `null` when the file has no such row.
  */
-function ceilingFor(name: string): number | null {
+function ceilingFor(group: "examples" | "templates", name: string): number | null {
   const parsed: unknown = JSON.parse(readFileSync(BASELINES, "utf8"));
   if (typeof parsed !== "object" || parsed === null || !("frameTime" in parsed)) {
     return null;
   }
   const frameTime: unknown = parsed.frameTime;
-  if (typeof frameTime !== "object" || frameTime === null || !("templates" in frameTime)) {
+  if (typeof frameTime !== "object" || frameTime === null || !(group in frameTime)) {
     return null;
   }
-  const templates: unknown = frameTime.templates;
-  if (typeof templates !== "object" || templates === null || !(name in templates)) {
+  const rows: unknown = Object.getOwnPropertyDescriptor(frameTime, group)?.value;
+  if (typeof rows !== "object" || rows === null || !(name in rows)) {
     return null;
   }
-  const row: unknown = Object.getOwnPropertyDescriptor(templates, name)?.value;
+  const row: unknown = Object.getOwnPropertyDescriptor(rows, name)?.value;
   if (typeof row !== "object" || row === null || !("budgetMs" in row)) {
     return null;
   }
@@ -95,6 +106,23 @@ const TEMPLATES = [
   ["3d-third-person", 4177],
   ["3d-first-person", 4178],
 ] as const;
+
+/** Where the site build is previewed. `playwright.config.ts` owns the number. */
+const SITE = "http://127.0.0.1:4179";
+
+/**
+ * The website examples that carry the kit, and are therefore measurable.
+ *
+ * @remarks
+ * Derived from the catalogue rather than written out, so an example added to the site is measured
+ * without anyone remembering to add it here — it fails on its missing `baselines.json` row instead,
+ * which is the failure that tells you what to do. A catalogue entry with a `template` is skipped:
+ * its run page is that template's own build, and the template is already measured above under
+ * `frameTime.templates`, so measuring it twice would only produce two numbers to disagree.
+ */
+const EXAMPLES: readonly string[] = CATALOGUE.filter((entry: ExampleEntry) => entry.template === undefined).map(
+  (entry: ExampleEntry) => entry.slug,
+);
 
 /**
  * The middle value of a list.
@@ -115,21 +143,22 @@ function median(values: readonly number[]): number {
 }
 
 /**
- * Runs a template and answers with one engine CPU millisecond figure per measured frame.
+ * Runs a page under `?bench=1` and answers with one engine CPU millisecond figure per measured
+ * frame.
  *
  * @param page - The page under test.
- * @param port - The port the template is previewed on.
+ * @param url - The page to open, `?bench=1` included.
  * @returns The samples, warm-up already discarded.
  */
-async function measure(page: Page, port: number): Promise<readonly number[]> {
+async function measure(page: Page, url: string): Promise<readonly number[]> {
   const failures: string[] = [];
   page.on("pageerror", (error) => {
     failures.push(error.message);
   });
-  await page.goto(`http://127.0.0.1:${String(port)}/?bench=1`, { waitUntil: "load" });
+  await page.goto(url, { waitUntil: "load" });
   const status: unknown = await page.evaluate("window.__ignifxReady");
   expect(failures, `the page reported errors: ${failures.join(" | ")}`).toEqual([]);
-  expect(status, "the browser did not give the template a WebGPU device").toBe("ready");
+  expect(status, "the browser did not give the page a WebGPU device").toBe("ready");
 
   const total = WARMUP_FRAMES + MEASURED_FRAMES;
   // A string body rather than a function, so nothing has to be said about `window`'s type here: the
@@ -166,10 +195,10 @@ test.describe("template frame budgets", () => {
 
   for (const [name, port] of TEMPLATES) {
     test(`${name}: median engine CPU per frame is inside the recorded ceiling`, async ({ page }) => {
-      const samples = await measure(page, port);
+      const samples = await measure(page, `http://127.0.0.1:${String(port)}/?bench=1`);
       const middle = median(samples);
       const worst = Math.max(...samples);
-      const recorded = ceilingFor(name);
+      const recorded = ceilingFor("templates", name);
       expect(recorded, `baselines.json has no frameTime.templates.${name}.budgetMs`).not.toBeNull();
       const ceiling = recorded ?? 0;
       // Printed so a re-record is a copy of two numbers rather than a second run.
@@ -180,6 +209,38 @@ test.describe("template frame budgets", () => {
       expect(
         middle,
         `${name}: ${String(MEASURED_FRAMES)} frames cost ${middle.toFixed(4)} ms of engine CPU at the median ` +
+          `(worst ${worst.toFixed(4)} ms). The ceiling in baselines.json is ${ceiling.toFixed(4)} ms.`,
+      ).toBeLessThanOrEqual(ceiling);
+    });
+  }
+});
+
+test.describe("website example frame budgets", () => {
+  // The same viewport as the templates, and the one the posters are captured at: the cost of a
+  // frame depends on how much of the scene the camera can see.
+  test.use({ viewport: { width: 1280, height: 720 } });
+  test.setTimeout(240_000);
+
+  for (const slug of EXAMPLES) {
+    test(`${slug}: median engine CPU per frame is inside the recorded ceiling`, async ({ page }) => {
+      // `?bench=1` speaks the same probe protocol the templates' `src/frame-time-probe.ts` does —
+      // the kit installs `window.__ignifxFrameTime` under that flag — so nothing in `measure`
+      // needs to know which kind of page it is looking at. It also leaves the parameter panel off,
+      // so what is measured is the engine rather than four DOM writes a second.
+      const samples = await measure(page, `${SITE}/examples/${slug}/run/?bench=1`);
+      const middle = median(samples);
+      const worst = Math.max(...samples);
+      const recorded = ceilingFor("examples", slug);
+      expect(recorded, `baselines.json has no frameTime.examples.${slug}.budgetMs`).not.toBeNull();
+      const ceiling = recorded ?? 0;
+      // Printed so a re-record is a copy of two numbers rather than a second run.
+      process.stdout.write(
+        `${slug.padEnd(20)} median ${middle.toFixed(4)} ms  worst ${worst.toFixed(4)} ms  ` +
+          `ceiling ${ceiling.toFixed(4)} ms\n`,
+      );
+      expect(
+        middle,
+        `${slug}: ${String(MEASURED_FRAMES)} frames cost ${middle.toFixed(4)} ms of engine CPU at the median ` +
           `(worst ${worst.toFixed(4)} ms). The ceiling in baselines.json is ${ceiling.toFixed(4)} ms.`,
       ).toBeLessThanOrEqual(ceiling);
     });

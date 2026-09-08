@@ -38,7 +38,39 @@ import type { EnvironmentTextures, SceneContext, ToneMapping } from "@babylonjs/
  * `setSceneImageProcessing` is **async** (`index.d.ts` 10917) because tone mapping is baked into
  * the PBR shaders at `registerScene` time; changing it recompiles the affected pipelines
  * (`rebuildScenePbrPipelines`). Setting exposure or contrast alone still goes through the same
- * call.
+ * call. Note that `loadEnvironment` **overwrites** all three (`toneMappingEnabled = true`,
+ * `exposure = 0.8`, `contrast = 1.2`) as a side effect of installing an environment, which is why
+ * the `Environment` component re-applies its own image processing after every install.
+ *
+ * ## Swapping the installed environment: `scene._envTextures`
+ *
+ * Lite 1.27.0 declares **no** public way to replace, clear, or read back a registered scene's
+ * environment. `index.d.ts` has no `scene.environmentTexture`, no `unloadEnvironment`, and no
+ * setter of any kind; `loadEnvironment` is the only installer and it fetches, decodes, and uploads
+ * a fresh cube map every call. What it actually installs is one field —
+ * `scene._envTextures = textures` (`lib/_chunks/env-helpers-CRI1i-A3.js` 24, and the same line in
+ * `lib/loader-hdr/load-hdr.js` 23, `lib/loader-env/load-dds-env.js` 177 and
+ * `lib/loader-gltf/gltf-ext-lights-image-based.js` 65) — and every consumer reads that field:
+ *
+ * - the PBR group builder, which bakes the cube view and sampler into each material's bind group
+ *   (`lib/material/pbr/pbr-material.js` 12 → `lib/material/pbr/pbr-renderable.js`);
+ * - the scene-uniform packer, for `lodGenerationScale` (`lib/frame-graph/scene-uniforms-pack.js` 21);
+ * - the env UBO contributor, for the diffuse spherical harmonics (`lib/scene/scene-ubo-extras.js` 24);
+ * - the blur contributor, for `lodGenerationOffset` (`lib/scene/set-environment-blur.js` 8);
+ * - the render task's scene-UBO cache key, which is keyed on the **object identity** of the field
+ *   (`lib/frame-graph/render-task.js` 358), so a new object re-uploads the harmonics by itself.
+ *
+ * Lite's own device-lost recovery replaces the field exactly this way
+ * (`lib/loader-env/environment-recovery.js` 16 and 38), so {@link installSceneEnvironment} writes it
+ * too. Bind groups are the one consumer that does *not* re-read it: they hold the `GPUTextureView`,
+ * so a swap only reaches the specular reflection once the material groups have been rebuilt, which
+ * `rebuildSceneRenderables` does (`lib/scene/scene-rebuild.js`, `rebuildEachGroup`). The
+ * `Environment` component therefore reports an install as a topology change and lets the render-sync
+ * system fire its one coalesced rebuild. This is the only place in ignifx that touches a Lite field
+ * `index.d.ts` does not declare, which is what the adapter boundary exists for
+ * (`CONSTITUTION.md` §3.4, ADR-0002); it is pinned by
+ * `packages/core/test/lite/render/environment.browser.test.ts`, which fails loudly if the field is
+ * renamed.
  */
 
 /**
@@ -156,6 +188,85 @@ export function loadSceneEnvironment(
     liteOptions.groundTextureUrl = options.groundTextureUrl;
   }
   return loadEnvironment(scene, options.url, liteOptions);
+}
+
+/**
+ * The scene fields Babylon Lite 1.27.0 writes for image-based lighting but does not declare in
+ * `index.d.ts`. Adapter-internal Lite mirror (coding standards §5.1); see the module header for the
+ * `lib/` lines that prove each one.
+ */
+interface SceneEnvironmentSlot {
+  /** What `loadEnvironment` installed, or `undefined` on a scene that has never had one. */
+  _envTextures?: EnvironmentTextures | undefined;
+}
+
+/**
+ * Views a scene through its undeclared environment slot.
+ *
+ * @param scene - The scene.
+ * @returns The same object, typed so the slot is reachable.
+ */
+function environmentSlotOf(scene: SceneContext): SceneEnvironmentSlot {
+  // Boundary assertion (coding standards §5.2): `SceneContext` is a plain object literal Lite
+  // creates in `lib/scene/scene-core.js`, and `_envTextures` is one of its own fields — it is
+  // absent from `index.d.ts` because it is not part of Lite's declared surface, not because it is
+  // a different object. See the module header for every `lib/` line that reads or writes it.
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+  return scene as SceneContext & SceneEnvironmentSlot;
+}
+
+/**
+ * Reports which environment textures a scene is currently lit by.
+ *
+ * @param scene - The scene to inspect.
+ * @returns The installed textures, or `null` when no environment has ever been installed.
+ *
+ * @internal
+ */
+export function readSceneEnvironment(scene: SceneContext): EnvironmentTextures | null {
+  // The underscore is Lite's, not ignifx's: coding standards §5.1 reserves `_field` for exactly
+  // this, an adapter-internal mirror of a Lite field, and the module header proves the name.
+  // oxlint-disable-next-line no-underscore-dangle
+  return environmentSlotOf(scene)._envTextures ?? null;
+}
+
+/**
+ * Points a scene at an already-loaded set of environment textures, without loading anything.
+ *
+ * @remarks
+ * This is how an `Environment` component swaps environments at runtime: the textures belong to the
+ * `EnvironmentAsset` that loaded them and stay alive as long as its handle is retained, so
+ * switching between two loaded assets uploads nothing and frees nothing.
+ *
+ * The specular reflection follows only after the scene's material groups are rebuilt
+ * (`rebuildRenderables` in `../shadow.ts`): a PBR bind group holds the cube map's `GPUTextureView`,
+ * not the slot. The diffuse harmonics and the LOD scale follow immediately, because the render
+ * task's scene-UBO cache is keyed on this object's identity.
+ *
+ * @param scene - The scene to light.
+ * @param textures - The textures to light it with.
+ * @returns `true` when the scene was lit by something else and now is not — the caller owes a
+ * renderable rebuild; `false` when these textures were already installed and nothing was written.
+ *
+ * @example
+ * ```ts
+ * if (installSceneEnvironment(scene, asset.lite.textures)) {
+ *   await rebuildRenderables(scene);
+ * }
+ * ```
+ *
+ * @internal
+ */
+export function installSceneEnvironment(scene: SceneContext, textures: EnvironmentTextures): boolean {
+  const slot = environmentSlotOf(scene);
+  // As in `readSceneEnvironment`: an adapter-internal Lite mirror (coding standards §5.1).
+  // oxlint-disable-next-line no-underscore-dangle
+  if (slot._envTextures === textures) {
+    return false;
+  }
+  // oxlint-disable-next-line no-underscore-dangle
+  slot._envTextures = textures;
+  return true;
 }
 
 /**

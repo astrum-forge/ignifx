@@ -17,3 +17,10 @@ templates/*/assets/level.tilemap.json
 # and `templates/*/release/**` is a packaged application; neither is hand-written.
 templates/*/out/**
 templates/*/release/**
+
+# Written by `website/examples/tilemap/tools/build-2d-assets.ts` from the two Tiled maps beside the
+# examples that load them. Same reasoning as the template assets above: re-running the generator
+# must not leave a formatting diff, the run-length-encoded tile arrays are deliberately one line
+# each, and the `.tmj.json` sources keep one map row per line so a reader can see the grid.
+website/examples/assets/2d/*.json
+website/examples/*/*.tmj.json

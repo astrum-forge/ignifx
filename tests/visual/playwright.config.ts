@@ -40,7 +40,9 @@ import type { PlaywrightTestConfig } from "playwright/test";
  * ## Two projects, because they need different machines
  *
  * `goldens` is everything here except `frame-time.spec.ts`: image comparisons, which SwiftShader
- * makes reproducible anywhere. It is `pnpm test:visual`, and it is the required CI check.
+ * makes reproducible anywhere. It is `pnpm test:visual`, and it is the required CI check. It now
+ * includes `tests/examples.spec.ts`, the website's runnable examples, whose pages come from the
+ * site build previewed on 4179.
  *
  * `frame-budget` is `frame-time.spec.ts` alone: a *measurement* of engine CPU per frame against the
  * ceilings in `benchmarks/baselines.json`. Those ceilings were recorded on one machine, and a
@@ -64,6 +66,19 @@ const PORTS: Readonly<Record<string, number>> = {
   "ignifx-template-3d-third-person": 4177,
   "ignifx-template-3d-first-person": 4178,
 };
+
+/**
+ * Where the whole website is previewed from.
+ *
+ * @remarks
+ * `tests/examples.spec.ts` and the examples half of `tests/frame-time.spec.ts` open their pages
+ * here rather than on a per-example port, because a website example is not a package: it is a page
+ * in one multi-page build that shares its vendor chunk and its asset manifest with every other
+ * example, and a template's run page is that template rebuilt under `--base /examples/<name>/run/`.
+ * The only honest thing to measure and to photograph is the deployed artefact, so this entry runs
+ * the real site build and previews `website/dist`.
+ */
+const WEBSITE_PORT = 4179;
 
 /**
  * The canvas the goldens are taken at. Small keeps SwiftShader honest and the images reviewable.
@@ -92,6 +107,31 @@ function preview(packageName: string, port: number): PreviewServer {
     url: `http://127.0.0.1:${String(port)}/`,
     reuseExistingServer: !isCi,
     timeout: 180_000,
+    stdout: "ignore",
+    stderr: "pipe",
+  };
+}
+
+/**
+ * Builds the whole website and previews `website/dist`.
+ *
+ * @remarks
+ * The readiness `url` is a run page rather than `/`, so the suite cannot start against a `dist/`
+ * whose examples half has not been written yet — and, incidentally, so a failure says which page is
+ * missing rather than "the server did not answer".
+ *
+ * @param port - The port `vite preview` binds.
+ * @returns One `webServer` entry.
+ */
+function previewWebsite(port: number): PreviewServer {
+  return {
+    command:
+      `pnpm --filter @ignifx/website run build && ` +
+      `pnpm --filter @ignifx/website exec vite preview --host 127.0.0.1 --port ${String(port)} --strictPort`,
+    url: `http://127.0.0.1:${String(port)}/examples/hello-cube/run/`,
+    reuseExistingServer: !isCi,
+    // The site, the examples and every template in the catalogue, from cold.
+    timeout: 600_000,
     stdout: "ignore",
     stderr: "pipe",
   };
@@ -144,6 +184,7 @@ const config: PlaywrightTestConfig = defineConfig({
     preview("ignifx-template-2d-sidescroller", PORTS["ignifx-template-2d-sidescroller"] ?? 4176),
     preview("ignifx-template-3d-third-person", PORTS["ignifx-template-3d-third-person"] ?? 4177),
     preview("ignifx-template-3d-first-person", PORTS["ignifx-template-3d-first-person"] ?? 4178),
+    previewWebsite(WEBSITE_PORT),
   ],
 });
 

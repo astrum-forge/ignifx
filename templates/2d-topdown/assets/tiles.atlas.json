@@ -1,7 +1,7 @@
 {
   "format": "ignifx.spriteatlas",
   "formatVersion": 1,
-  "image": "/tiles.png",
+  "image": "tiles.png",
   "sampling": "nearest",
   "premultipliedAlpha": false,
   "frames": [

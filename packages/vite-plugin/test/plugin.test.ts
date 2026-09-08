@@ -109,6 +109,30 @@ describe("virtual modules", () => {
     ]);
   });
 
+  it("lists an extension public asset in the manifest the bundle carries", async () => {
+    // The regression this covers: `virtual:ignifx/manifest` is what game code reads, and it is
+    // built during `load()` — long before `generateBundle` writes `assets.manifest.json`. Populate
+    // the extension list only at emit time and the two manifests disagree, with the incomplete one
+    // being the one that ships.
+    const root = await createFixtureTree({
+      "assets/a.png": PNG_BYTES,
+      "node_modules/@ignifx/physics/package.json": JSON.stringify({
+        name: "@ignifx/physics",
+        ignifx: { assets: { public: ["./HavokPhysics.wasm"] } },
+      }),
+      "node_modules/@ignifx/physics/HavokPhysics.wasm": "wasm-bytes",
+    });
+    const plugin = ignifx();
+    await configure(plugin, root, "build");
+    const context = new FakePluginContext();
+    await harness(plugin).buildStart.call(context);
+    const manifest = parseManifestModule((await harness(plugin).load.call(context, RESOLVED_MANIFEST_MODULE_ID)) ?? "");
+    const wasm = manifest.entries.find((entry) => entry.address === "HavokPhysics.wasm");
+    expect(wasm?.url).toBe("/assets/HavokPhysics.wasm");
+    expect(wasm?.type).toBe("binary");
+    expect(wasm?.bytes).toBe("wasm-bytes".length);
+  });
+
   it("serves the build manifest with content-hashed URLs under publicPath", async () => {
     const root = await projectTree();
     const plugin = ignifx();
@@ -197,7 +221,7 @@ describe("generateBundle", () => {
     await configure(plugin, root, "build");
     const context = new FakePluginContext();
     await harness(plugin).buildStart.call(context);
-    await harness(plugin).generateBundle.call(context);
+    await harness(plugin).generateBundle.call(context, {}, {});
 
     const names = context.emitted.map((file) => file.fileName).toSorted();
     expect(names).toHaveLength(3);
@@ -211,7 +235,7 @@ describe("generateBundle", () => {
     const plugin = ignifx();
     await configure(plugin, root, "build");
     const context = new FakePluginContext();
-    await harness(plugin).generateBundle.call(context);
+    await harness(plugin).generateBundle.call(context, {}, {});
     const png = context.emitted.find((file) => file.fileName.includes("hero"));
     expect(png?.source).toEqual(Buffer.from(PNG_BYTES));
     expect(png?.originalFileName).toBe(join(root, "assets", "sprites", "hero.png"));
@@ -229,7 +253,7 @@ describe("generateBundle", () => {
     const plugin = ignifx();
     await configure(plugin, root, "build");
     const context = new FakePluginContext();
-    await harness(plugin).generateBundle.call(context);
+    await harness(plugin).generateBundle.call(context, {}, {});
     expect(context.emitted.map((file) => file.fileName)).toContain("assets/HavokPhysics.wasm");
   });
 
@@ -238,7 +262,7 @@ describe("generateBundle", () => {
     const plugin = ignifx({ publicPath: "static", manifestFileName: "meta/assets.json" });
     await configure(plugin, root, "build");
     const context = new FakePluginContext();
-    await harness(plugin).generateBundle.call(context);
+    await harness(plugin).generateBundle.call(context, {}, {});
     const names = context.emitted.map((file) => file.fileName);
     expect(names).toContain("meta/assets.json");
     expect(names.some((name) => name.startsWith("static/a."))).toBe(true);
@@ -248,7 +272,7 @@ describe("generateBundle", () => {
     const root = await createFixtureTree({ "assets/levels/bad.scene.json": "{}" });
     const plugin = ignifx();
     await configure(plugin, root, "build");
-    await expect(harness(plugin).generateBundle.call(new FakePluginContext())).rejects.toThrow(/IGX-0651/u);
+    await expect(harness(plugin).generateBundle.call(new FakePluginContext(), {}, {})).rejects.toThrow(/IGX-0651/u);
   });
 });
 
@@ -281,6 +305,13 @@ describe("configureServer", () => {
     await harness(plugin).configureServer(asViteServer(server));
     const response = server.request("/assets/HavokPhysics.wasm");
     expect(response.headers["content-type"]).toBe("application/wasm");
+
+    // …and lists it in the development manifest at the URL the middleware answers, so a game that
+    // calls `resolveUrl` in dev gets the same answer it gets from a build.
+    const manifest = JSON.parse(server.request("/assets.manifest.json").body ?? "") as AssetManifest;
+    const wasm = manifest.entries.find((entry) => entry.address === "HavokPhysics.wasm");
+    expect(wasm?.url).toBe("/assets/HavokPhysics.wasm");
+    expect(wasm?.type).toBe("binary");
   });
 
   it("passes an unrelated request on to the next middleware", async () => {
@@ -496,7 +527,25 @@ describe("failure paths", () => {
     });
     const plugin = ignifx();
     await configure(plugin, root, "build");
-    await expect(harness(plugin).generateBundle.call(new FakePluginContext())).rejects.toThrow(
+    await expect(harness(plugin).generateBundle.call(new FakePluginContext(), {}, {})).rejects.toThrow(
+      expect.objectContaining({ code: VitePluginErrorCode.duplicateOutputFile }),
+    );
+  });
+
+  it("refuses a project asset whose address an extension public asset already claims", async () => {
+    // Two different files, so the emitted file names do not collide — but both would be listed at
+    // the manifest address `x.png`, and `resolveUrl` would answer with whichever sorted last.
+    const root = await createFixtureTree({
+      "assets/x.png": PNG_BYTES,
+      "node_modules/@ignifx/clash/package.json": JSON.stringify({
+        name: "@ignifx/clash",
+        ignifx: { assets: { public: ["./x.png"] } },
+      }),
+      "node_modules/@ignifx/clash/x.png": new Uint8Array([...PNG_BYTES, 0]),
+    });
+    const plugin = ignifx();
+    await configure(plugin, root, "build");
+    await expect(harness(plugin).generateBundle.call(new FakePluginContext(), {}, {})).rejects.toThrow(
       expect.objectContaining({ code: VitePluginErrorCode.duplicateOutputFile }),
     );
   });

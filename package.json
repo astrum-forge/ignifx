@@ -24,7 +24,6 @@
     "assets:3d": "node tests/fixtures/assets/3d-templates/make-level-art.mjs",
     "assets:audio": "node tests/fixtures/assets/audio-templates/make-template-audio.mjs",
     "assets": "pnpm run assets:2d && pnpm run assets:levels && pnpm run assets:3d && pnpm run assets:audio",
-    "capture:gallery": "pnpm --filter ignifx-visual-tests run capture:gallery",
     "api-report": "turbo run api-report",
     "pack-check": "turbo run pack-check",
     "docs:api": "turbo run docs:api",

@@ -230,6 +230,8 @@ export const CoreErrorCode = {
   invalidAssetFile: "IGX-0709",
   /** A `PostProcessStack` was attached without the `postProcessing` rendering feature. */
   postProcessingFeatureOff: "IGX-0710",
+  /** An `Environment.skybox` asks for a background the environment it installed cannot draw. */
+  skyboxFixedAtLoad: "IGX-0711",
   /** The host exposes no Web Crypto implementation. */
   cryptoUnavailable: "IGX-1420",
   /** A storage namespace name is not a legal namespace segment. */
@@ -336,6 +338,8 @@ export const CORE_ERROR_MESSAGES: Readonly<Record<CoreErrorCode, string>> = {
   "IGX-0708": "{asset} declares the material kind {kind}, which this build cannot construct.",
   "IGX-0709": "{file} is not an {format} file.",
   "IGX-0710": "{entity} attached a PostProcessStack, but rendering.features.postProcessing is off.",
+  "IGX-0711":
+    "{entity} asks for an Environment.skybox that {asset} was not loaded with; declare it in the .environment.json.",
   "IGX-1420": "This host does not expose Web Crypto.",
   "IGX-1421": "{namespace} is not a valid storage namespace.",
   "IGX-1422": "That storage key is empty, too long, or contains a control character.",

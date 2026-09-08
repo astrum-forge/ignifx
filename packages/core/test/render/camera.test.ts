@@ -4,6 +4,7 @@ import { Vec3 } from "../../src/math/vec3.js";
 import { Camera, createRay } from "../../src/render/camera.js";
 import { createRenderHarness, warningsOf } from "./support/render-harness.js";
 import type { RenderHarness } from "./support/render-harness.js";
+import type { World } from "../../src/world/world.js";
 
 /**
  * `Camera` and main-camera selection (`docs/architecture/07-rendering.md` §2.1).
@@ -104,6 +105,62 @@ describe("main camera selection", () => {
     h.frame();
     h.frame();
     expect(warningsOf(h).filter((line) => line.includes("no enabled camera"))).toHaveLength(2);
+  });
+
+  it("stays silent while a registered camera source claims the world", async () => {
+    // What `@ignifx/2d` does with its sprite renderer: the frame is drawn through a `Camera2D`, so
+    // "nothing is drawn" is false and `IGX-0706` would be a warning on a correct scene.
+    const h = await app();
+    let claimed = true;
+    const seen: World[] = [];
+    const remove = h.renderer.addCameraSource((world: World): boolean => {
+      seen.push(world);
+      return claimed;
+    });
+    h.frame();
+    h.frame();
+    expect(seen).toEqual([h.world, h.world]);
+    expect(warningsOf(h).filter((line) => line.includes("no enabled camera"))).toEqual([]);
+
+    // The claim is re-asked rather than latched, so a world that loses its 2D camera warns.
+    claimed = false;
+    h.frame();
+    expect(warningsOf(h).filter((line) => line.includes("no enabled camera"))).toHaveLength(1);
+
+    // Removing the source leaves the warning latched, exactly as if it had never been registered.
+    remove();
+    h.frame();
+    expect(warningsOf(h).filter((line) => line.includes("no enabled camera"))).toHaveLength(1);
+  });
+
+  it("clears the latch while a source claims the world, so a later loss warns again", async () => {
+    // The sequence a real app produces: `app.start()` reconciles an empty world and warns, then the
+    // scene with its `Camera2D` arrives, then that camera is destroyed. A `Camera` behaves the same
+    // way, and the two should not disagree.
+    const h = await app();
+    let claimed = false;
+    h.renderer.addCameraSource((): boolean => claimed);
+    h.frame();
+    expect(warningsOf(h).filter((line) => line.includes("no enabled camera"))).toHaveLength(1);
+
+    claimed = true;
+    h.frame();
+    claimed = false;
+    h.frame();
+    expect(warningsOf(h).filter((line) => line.includes("no enabled camera"))).toHaveLength(2);
+  });
+
+  it("asks no camera source at all while a 3D camera is enabled", async () => {
+    const h = await app();
+    let asked = 0;
+    h.renderer.addCameraSource((): boolean => {
+      asked += 1;
+      return true;
+    });
+    h.world.createEntity("Eye").addComponent(Camera);
+    h.frame();
+    h.frame();
+    expect(asked).toBe(0);
   });
 });
 

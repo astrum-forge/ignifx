@@ -20,6 +20,12 @@ address ──▶ manifest ──▶ url ──▶ loader ──▶ value
   `"level1"`, …). `@ignifx/vite-plugin` generates it (`ASSET_MANIFEST_FORMAT`, version 1);
   `EMPTY_ASSET_MANIFEST` is what an app without one uses. `assets.resolveUrl(address)` is the
   lookup, and it is what a loader fetches.
+- An extension's **public assets** — `@ignifx/physics`'s `HavokPhysics.wasm` — are listed too, at
+  their bare file name, with the served URL and `base` already applied. That is what makes
+  `resolveUrl("HavokPhysics.wasm")` correct on a page served from a sub-path; an address the manifest
+  does not carry falls back to a page-relative `<assetRoot>/<address>`. The plugin discovers them in
+  the packages installed **directly** in `node_modules`, so a project that reaches an extension only
+  through the `ignifx` umbrella has to list that extension in its own `package.json`.
 - In-code assets live at a `memory:` address instead. `MeshAsset.box(app)` and
   `createMaterialAsset(app, …)` publish through `Assets.register`, so they name **no file**.
 

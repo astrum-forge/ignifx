@@ -3,6 +3,7 @@ import { Color } from "../../src/math/color.js";
 import { Camera } from "../../src/render/camera.js";
 import { environmentDefinition, EnvironmentAsset } from "../../src/render/environment-asset.js";
 import { Environment } from "../../src/render/environment.js";
+import { readInstalledEnvironment } from "../../src/render/gpu/environment-install.js";
 import { imageProcessingLast } from "../../src/render/gpu/post-process-chain.js";
 import { Light } from "../../src/render/light.js";
 import { createMaterialAsset, pbrMaterialDefinition } from "../../src/render/material-asset.js";
@@ -13,6 +14,9 @@ import { Model } from "../../src/render/model.js";
 import { PostProcessStack } from "../../src/render/post-process-stack.js";
 import { createRenderHarness, warningsOf } from "./support/render-harness.js";
 import type { RenderHarness } from "./support/render-harness.js";
+import type { AssetHandle } from "../../src/assets/types.js";
+import type { LiteEnvironmentTextures } from "../../src/lite/gpu/environment.js";
+import type { EnvironmentDefinition } from "../../src/render/environment-asset.js";
 import type { PostProcessEffectRequest } from "../../src/render/gpu/post-process-chain.js";
 
 /**
@@ -42,6 +46,36 @@ async function app(postProcessing = false): Promise<RenderHarness> {
     postProcessing ? { settings: { rendering: { features: { postProcessing: true } } } } : undefined,
   );
   return harness;
+}
+
+/**
+ * Registers an environment asset that carries GPU handles, the way a device-backed load would.
+ *
+ * @remarks
+ * The handles are the *identity* the scene's environment slot is asserted against, and nothing in
+ * the swap path dereferences them — `installLoadedEnvironment` assigns the field and the render-sync
+ * system counts a rebuild — so a headless test can prove the swap without a device. What the
+ * browser project proves is the other half: that the slot is the field Lite actually reads
+ * (`test/lite/render/environment.browser.test.ts`).
+ *
+ * @param h - The harness.
+ * @param address - The address to register it under.
+ * @param definition - Declaration overrides, for the skybox assertions.
+ * @returns A retained handle. Release it at the end of the test.
+ */
+function registerEnvironment(
+  h: RenderHarness,
+  address: string,
+  definition: Partial<EnvironmentDefinition> = {},
+): AssetHandle<EnvironmentAsset> {
+  // Boundary assertion (coding standards §5.2): a stand-in for the GPU handle set, asserted on by
+  // identity only.
+  const textures = {
+    sphericalHarmonics: new Float32Array(36),
+    lodGenerationScale: 0.8,
+  } as unknown as LiteEnvironmentTextures;
+  const asset = new EnvironmentAsset(address, environmentDefinition(definition), "brdf-lut.png", textures);
+  return h.app.assets.register(asset, { type: "environment" });
 }
 
 describe("renderable rebuild batching", () => {
@@ -147,6 +181,104 @@ describe("the environment", () => {
     // The asset is recorded even headlessly; what is skipped is the rotation and the blur, which
     // are properties of a cube map a headless load never produced.
     expect(environment.installed).toBe(handle.value);
+    handle.release();
+  });
+
+  it("installs a different loaded environment, and back again, one rebuild each", async () => {
+    const h = await app();
+    const a = registerEnvironment(h, "environments/a.env");
+    const b = registerEnvironment(h, "environments/b.env");
+    const scene = h.world.lite.scene;
+    const environment = h.world.createEntity("Env").addComponent(Environment, { environment: a });
+
+    h.frame();
+    expect(environment.installed).toBe(a.value);
+    expect(readInstalledEnvironment(scene)).toBe(a.value.lite.textures);
+    // The rebuild lands on the frame *after* the one that changed the topology, exactly as a mesh's
+    // does (`RenderSyncSystem.#rebuildRenderables`).
+    h.frame();
+    const afterFirst = h.renderer.renderableRebuilds;
+    expect(afterFirst).toBe(1);
+
+    environment.environment = b;
+    h.frame();
+    expect(environment.installed).toBe(b.value);
+    expect(readInstalledEnvironment(scene)).toBe(b.value.lite.textures);
+    h.frame();
+    expect(h.renderer.renderableRebuilds).toBe(afterFirst + 1);
+
+    environment.environment = a;
+    h.frame();
+    h.frame();
+    expect(readInstalledEnvironment(scene)).toBe(a.value.lite.textures);
+    expect(h.renderer.renderableRebuilds).toBe(afterFirst + 2);
+
+    // Frames that change nothing write nothing and rebuild nothing.
+    h.frame();
+    h.frame();
+    expect(h.renderer.renderableRebuilds).toBe(afterFirst + 2);
+    expect(readInstalledEnvironment(scene)).toBe(a.value.lite.textures);
+    a.release();
+    b.release();
+  });
+
+  it("leaves the scene lit when the handle goes back to null", async () => {
+    const h = await app();
+    const a = registerEnvironment(h, "environments/a.env");
+    const scene = h.world.lite.scene;
+    const environment = h.world.createEntity("Env").addComponent(Environment, { environment: a });
+    h.frame();
+    h.frame();
+    const rebuilds = h.renderer.renderableRebuilds;
+
+    environment.environment = null;
+    h.frame();
+    h.frame();
+    // Lite has no inverse of `loadEnvironment`, so `null` means "stop steering", not "go dark".
+    expect(readInstalledEnvironment(scene)).toBe(a.value.lite.textures);
+    expect(environment.installed).toBe(a.value);
+    expect(h.renderer.renderableRebuilds).toBe(rebuilds);
+    a.release();
+  });
+
+  it("logs IGX-0711 once when the skybox record asks for what the environment was not loaded with", async () => {
+    const h = await app();
+    const handle = registerEnvironment(h, "environments/a.env");
+    const environment = h.world.createEntity("Env").addComponent(Environment, {
+      environment: handle,
+      // The declaration draws a background at its default size; this asks for neither.
+      skybox: { enabled: false, size: 400 },
+    });
+    h.frame();
+    h.frame();
+    h.frame();
+    expect(environment.skybox.enabled).toBe(false);
+    expect(warningsOf(h).filter((line) => line.includes("IGX-0711"))).toHaveLength(1);
+    handle.release();
+  });
+
+  it("says nothing about a skybox record nobody touched, whatever the declaration says", async () => {
+    const h = await app();
+    // The shape a project that wants no background has: the declaration says so and the component
+    // is left alone. Warning here would tell off every such project for doing nothing.
+    const off = registerEnvironment(h, "environments/off.env", { skyboxEnabled: false });
+    h.world.createEntity("EnvOff").addComponent(Environment, { environment: off });
+    h.frame();
+    h.frame();
+    expect(warningsOf(h).filter((line) => line.includes("IGX-0711"))).toHaveLength(0);
+    off.release();
+  });
+
+  it("says nothing about the skybox while the component and the declaration agree", async () => {
+    const h = await app();
+    const handle = registerEnvironment(h, "environments/a.env", { skyboxEnabled: false });
+    h.world.createEntity("Env").addComponent(Environment, {
+      environment: handle,
+      skybox: { enabled: false, size: 20 },
+    });
+    h.frame();
+    h.frame();
+    expect(warningsOf(h).filter((line) => line.includes("IGX-0711"))).toHaveLength(0);
     handle.release();
   });
 });

@@ -1,0 +1,12 @@
+ignifx — screenshots
+
+Six captures at 1280×720, produced by the repository's visual test suite. No hand-made images.
+
+2d-topdown.png — the 2D top-down template: sprites, a tilemap and Rapier physics.
+2d-sidescroller.png — the 2D side-scroller template: a run-and-jump character on a tilemap.
+3d-third-person.png — the 3D third-person template: a character controller with Havok physics.
+3d-first-person.png — the 3D first-person template: mouse-look, a navigation mesh and spatial audio.
+pbr-model.png — physically based rendering: a glTF model under image-based lighting with bloom.
+tilemap.png — a tilemap rendered by @ignifx/2d, with layers and animated tiles.
+
+Licence: Apache-2.0; sample assets credited at ignifx.com/examples/attribution/

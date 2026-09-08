@@ -1,0 +1,92 @@
+/*
+ * The HUD panel's own styling, in the site's tokens (`02-design-system.md` §2.3), transcribed for
+ * the same reason `_kit/kit.css` transcribes them: a frame is a separate document and the site's
+ * stylesheet is emitted with a content hash this build cannot know.
+ *
+ * One deviation from `08-execution.md` §4.2, which asks that every `<slug>/index.html` be identical
+ * in shape: this example links a second stylesheet. It is the one example whose subject is DOM UI,
+ * and the alternative — thirty `element.style.setProperty` calls in `hud.ts` — would bury the
+ * lesson under styling. The frames' CSP allows `style-src 'self'`, so a linked stylesheet needs no
+ * relaxation.
+ *
+ * The four `--ignifx-safe-*` custom properties are published by `@ignifx/ui` on the overlay root
+ * from `env(safe-area-inset-*)`. Reading them here, rather than reading `env()` directly, is what
+ * lets the panel's "Simulate a notch" toggle show a laptop what a phone would do.
+ */
+
+.hud {
+  position: absolute;
+  top: calc(88px + var(--ignifx-safe-top, 0px));
+  left: calc(20px + var(--ignifx-safe-left, 0px));
+  box-sizing: border-box;
+  width: 19rem;
+  max-width: calc(100% - 40px);
+  padding: 12px 14px;
+  border: 1px solid #262d38;
+  border-radius: 6px;
+  background: rgb(20 24 31 / 88%);
+  color: #e7eaf0;
+  font:
+    13px/1.5 ui-monospace,
+    sfmono-regular,
+    "SF Mono",
+    menlo,
+    consolas,
+    monospace;
+}
+
+@media (prefers-color-scheme: light) {
+  .hud {
+    border-color: #d2d8e2;
+    background: rgb(250 251 252 / 92%);
+    color: #14181f;
+  }
+}
+
+.hud-title {
+  margin: 0 0 8px;
+  color: #ff9e4a;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+@media (prefers-color-scheme: light) {
+  .hud-title {
+    color: #a63d07;
+  }
+}
+
+.hud-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 1px 0;
+}
+
+.hud-value {
+  color: #5ad1c8;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+@media (prefers-color-scheme: light) {
+  .hud-value {
+    color: #0b6a78;
+  }
+}
+
+.hud-note {
+  margin: 10px 0 0;
+  color: #98a2b3;
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+@media (prefers-color-scheme: light) {
+  .hud-note {
+    color: #4b5464;
+  }
+}

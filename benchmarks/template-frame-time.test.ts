@@ -72,3 +72,51 @@ describe("the recorded template frame budgets", () => {
     expect(baselines.frameTime.swiftShaderFactorNote.length).toBeGreaterThan(120);
   });
 });
+
+/** One recorded frame-budget row; the template rows and the website example rows share the shape. */
+interface FrameRow {
+  readonly medianMs: number;
+  readonly worstMs: number;
+  readonly budgetMs: number;
+  readonly standardsBudgetMs: number;
+  readonly recordedOn: string;
+}
+
+/**
+ * Separates the recorded rows of `frameTime.examples` from its prose `note`.
+ *
+ * @param value - One property of the `examples` block.
+ * @returns Whether it is a row rather than the note.
+ */
+function isFrameRow(value: unknown): value is FrameRow {
+  return typeof value === "object" && value !== null && "medianMs" in value && "budgetMs" in value;
+}
+
+/** The website examples with a recorded row, keyed by catalogue slug. */
+const EXAMPLE_ROWS: readonly (readonly [string, FrameRow])[] = Object.entries(baselines.frameTime.examples).flatMap(
+  ([name, value]) => (isFrameRow(value) ? [[name, value] as const] : []),
+);
+
+describe("the recorded website example frame budgets", () => {
+  // The rows are measured by the `website example frame budgets` block of
+  // `tests/visual/tests/frame-time.spec.ts` against `/examples/<slug>/run/?bench=1` on the site
+  // build; this file holds them to the same two claims as the template rows, on every runner.
+  it("records the launch examples", () => {
+    expect(EXAMPLE_ROWS.length).toBeGreaterThanOrEqual(2);
+  });
+
+  for (const [name, row] of EXAMPLE_ROWS) {
+    it(`keeps ${name} inside the §7 budget for its dimension and inside its own ceiling`, () => {
+      expect([STANDARDS_BUDGET_MS["2d"], STANDARDS_BUDGET_MS["3d"]], name).toContain(row.standardsBudgetMs);
+      expect(row.budgetMs, `${name}: ceiling above the coding-standards §7 budget`).toBeLessThanOrEqual(
+        row.standardsBudgetMs,
+      );
+      expect(row.medianMs, name).toBeGreaterThan(0);
+      expect(
+        row.medianMs,
+        `${name}: the recorded median is ${String(row.medianMs)} ms and the ceiling is ${String(row.budgetMs)} ms.`,
+      ).toBeLessThanOrEqual(row.budgetMs);
+      expect(row.recordedOn, name).toMatch(/^\d{4}-\d{2}-\d{2}$/u);
+    });
+  }
+});

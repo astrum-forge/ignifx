@@ -1,6 +1,6 @@
 # Attribution
 
-Every file in `assets/` and `public/` is an **original work created for the ignifx repository** by
+Every file in `assets/` is an **original work created for the ignifx repository** by
 Astrum Forge Studios, generated programmatically and licensed under **Apache-2.0** — the same
 licence as the template itself. Nothing is copied from, derived from, or redistributed out of a
 third-party asset pack, and nothing was downloaded.

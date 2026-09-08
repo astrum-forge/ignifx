@@ -154,6 +154,52 @@ describe("headless behaviour", () => {
   });
 });
 
+describe("IGX-0706 on a 2D-only world", () => {
+  /**
+   * Every `IGX-0706` line the harness's app has logged.
+   *
+   * @returns The matching log messages.
+   */
+  function noCameraWarnings(): readonly string[] {
+    return (harness?.log.toArray() ?? [])
+      .filter((record) => record.message.includes("IGX-0706"))
+      .map((record) => record.message);
+  }
+
+  it("does not warn about a missing camera when a Camera2D is enabled", async () => {
+    harness = await createTwoDApp();
+    harness.app.world.createEntity("Camera").addComponent(Camera2D);
+    harness.step();
+    harness.step();
+    expect(noCameraWarnings()).toEqual([]);
+  });
+
+  it("still warns about a world that has no camera of either kind", async () => {
+    harness = await createTwoDApp();
+    harness.step();
+    harness.step();
+    expect(noCameraWarnings()).toHaveLength(1);
+  });
+
+  it("starts warning again once the last Camera2D is destroyed", async () => {
+    harness = await createTwoDApp();
+    const camera = harness.app.world.createEntity("Camera").addComponent(Camera2D);
+    harness.step();
+    expect(noCameraWarnings()).toEqual([]);
+
+    camera.destroy();
+    harness.step();
+    expect(noCameraWarnings()).toHaveLength(1);
+  });
+
+  it("counts a disabled Camera2D as no camera", async () => {
+    harness = await createTwoDApp();
+    harness.app.world.createEntity("Camera").addComponent(Camera2D).enabled = false;
+    harness.step();
+    expect(noCameraWarnings()).toHaveLength(1);
+  });
+});
+
 /** A minimal scene file carrying a `settings.twoD` block. */
 function sceneWith(block: unknown): string {
   return JSON.stringify({

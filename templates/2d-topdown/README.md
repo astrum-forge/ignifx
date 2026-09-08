@@ -49,8 +49,9 @@ migrated, which is what makes regenerating the art safe.
 
 `assets/level.tilemap.json` carries two tile layers and an objects layer, and everything but the camera
 is spawned from that objects layer through `app.twoD.registerTileObjectFactory` — a map edit can move
-the spawn or add a shrine with no TypeScript. `public/` holds the sheet images, because a
-`.atlas.json` names its image relative to itself and a hashed build would break that.
+the spawn or add a shrine with no TypeScript. Each sheet image sits beside its `.atlas.json`, which
+names it relatively; `@ignifx/2d` resolves that through the asset manifest, so a hashed build and a
+deploy under a sub-path both find it.
 
 Every pixel and every sample comes from a committed, seeded script; nothing is downloaded
 (`CONSTITUTION.md` §11.3). Regenerate from the repository root with `pnpm assets:2d`, `pnpm assets:levels`

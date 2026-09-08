@@ -1,0 +1,36 @@
+{
+  "format": "ignifx.inputactions",
+  "formatVersion": 1,
+  "controlSchemes": [
+    { "name": "KeyboardMouse", "devices": ["Keyboard", "Mouse"] },
+    { "name": "Gamepad", "devices": ["Gamepad"] }
+  ],
+  "maps": [
+    {
+      "name": "Player",
+      "enabled": true,
+      "actions": [
+        {
+          "name": "left",
+          "type": "button",
+          "bindings": [{ "path": "<Keyboard>/a" }, { "path": "<Gamepad>/dpad/left" }]
+        },
+        {
+          "name": "right",
+          "type": "button",
+          "bindings": [{ "path": "<Keyboard>/d" }, { "path": "<Gamepad>/dpad/right" }]
+        },
+        {
+          "name": "hop",
+          "type": "button",
+          "bindings": [{ "path": "<Keyboard>/w" }, { "path": "<Gamepad>/buttonSouth" }]
+        },
+        {
+          "name": "brake",
+          "type": "button",
+          "bindings": [{ "path": "<Keyboard>/space" }, { "path": "<Gamepad>/buttonEast" }]
+        }
+      ]
+    }
+  ]
+}

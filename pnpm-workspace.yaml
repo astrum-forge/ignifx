@@ -58,6 +58,15 @@ catalog:
   typescript-eslint: ^8.69.0
   typescript-native: npm:typescript@7.0.2
   shiki: ^4.4.3
+  # Build-time tools for the website only (posters, sample-asset compression, the press kit).
+  # None runs an install script; none ships to the browser.
+  sharp: ^0.35.4
+  fontkit: ^2.0.4
+  fflate: ^0.8.3
+  "@gltf-transform/core": ^4.5.0
+  "@gltf-transform/extensions": ^4.5.0
+  "@gltf-transform/functions": ^4.5.0
+  meshoptimizer: ^1.2.0
   vite: ^8.2.2
   vitest: ^5.0.0
 

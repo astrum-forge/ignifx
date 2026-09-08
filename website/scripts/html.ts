@@ -99,6 +99,27 @@ export function join(...parts: readonly (string | null)[]): string {
   return out;
 }
 
+const CODE_SPAN = /`([^`]+)`/gu;
+const BOLD_SPAN = /\*\*([^*]+)\*\*/gu;
+const LINK_SPAN = /\[([^\]]+)\]\((\/[^)\s]+|https?:\/\/[^)\s]+)\)/gu;
+
+/**
+ * Renders the tiny Markdown subset the copy tables are written in: `` `code` ``, `**bold**`, and
+ * `[label](/route)`. Everything is escaped first, so a copy string can hold `<` and `&` freely.
+ *
+ * The copy in `website/plan/03-pages-and-copy.md` is pasted verbatim, and it is written in
+ * Markdown; this is what lets it stay verbatim instead of being retyped as HTML.
+ *
+ * @param text - The source text.
+ * @returns HTML.
+ */
+export function md(text: string): string {
+  return esc(text)
+    .replaceAll(CODE_SPAN, "<code>$1</code>")
+    .replaceAll(BOLD_SPAN, "<strong>$1</strong>")
+    .replaceAll(LINK_SPAN, '<a href="$2">$1</a>');
+}
+
 /**
  * Maps a list to HTML and joins it.
  *

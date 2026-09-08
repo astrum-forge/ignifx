@@ -1,5 +1,6 @@
-/* Design tokens. `DESIGN.md` holds the reasoning and the measured contrast ratios; this file is the
-   single source of truth for the values, and `test/site.test.ts` parses it to re-check the ratios.
+/* Design tokens. `website/plan/02-design-system.md` §2 holds the reasoning and the measured contrast
+   ratios; this file is the single source of truth for the values, and `test/site.test.ts` parses it
+   to re-check the ratios.
 
    `:root` carries the whole light palette. The dark palette is declared twice — once under the OS
    preference, guarded so an explicit light choice wins, and once under `[data-theme="dark"]` so the
@@ -20,10 +21,22 @@
   --flame: #a63d07;
   --cool: #0b6a78;
 
+  /* The support pill's two states. Both are drawn on `--surface`, which is the ground they clear
+     WCAG AA against; `--ok` at this value does not clear 4.5:1 on `--bg` or `--sunk`. */
+  --ok: #1b7f3b;
+  --warn: #8a5a00;
+
+  /* The one gradient on the site: a radial ember behind the hero canvas, never behind text. */
+  --ember: rgb(166 61 7 / 10%);
+
   /* Derived, low-alpha washes. Kept as separate tokens so both themes can tune them. */
   --flame-wash: rgb(166 61 7 / 9%);
   --cool-wash: rgb(11 106 120 / 9%);
-  --shade: rgb(20 24 31 / 6%);
+  --ok-wash: rgb(27 127 59 / 10%);
+  --warn-wash: rgb(138 90 0 / 10%);
+
+  /* The header's translucent surface. A colour, so both themes can set their own alpha. */
+  --surface-blur: rgb(250 251 252 / 92%);
 
   /* Type. The fallback face names are generated `@font-face` rules with a measured `size-adjust`. */
   --font-display: "Archivo Variable", "Archivo Variable Fallback", "Helvetica Neue", arial, sans-serif;
@@ -32,6 +45,7 @@
     "JetBrains Mono Variable", "JetBrains Mono Variable Fallback", ui-monospace, sfmono-regular, menlo, consolas,
     monospace;
 
+  /* Scale, root 16 px: 0.75 · 0.875 · 1 · 1.125 · 1.375 · 1.75 · 2.25 · 3 · 4 rem. */
   --t-2xs: 0.75rem;
   --t-xs: 0.8125rem;
   --t-sm: 0.875rem;
@@ -41,12 +55,13 @@
   --t-xl: 1.75rem;
   --t-2xl: 2.25rem;
   --t-3xl: 3rem;
+  --t-hero: 4rem;
 
   /* Line boxes are fixed in rem so a font swap cannot change a block's height. */
   --lh-base: 1.625rem;
   --lh-tight: 1.35;
 
-  /* Space. A 4 px base, used in multiples; nothing on this site is spaced by eye. */
+  /* Space: 4 · 8 · 12 · 16 · 24 · 32 · 48 · 64 · 96 · 128 px. Nothing is spaced by eye. */
   --s-1: 0.25rem;
   --s-2: 0.5rem;
   --s-3: 0.75rem;
@@ -56,14 +71,37 @@
   --s-12: 3rem;
   --s-16: 4rem;
   --s-24: 6rem;
+  --s-32: 8rem;
 
-  --measure: 68ch;
-  --page: 78rem;
-  --gutter-width: 9.5rem;
+  /* Band rhythm: 96 px between sections, 64 px under 800 px (§2.5). */
+  --band-gap: var(--s-24);
+
+  /* Wrapped in `min(…, 100%)` so a measure can never be wider than its column: a 56ch paragraph
+     inside a 360 px viewport is what makes a page scroll sideways. */
+  --measure: min(64ch, 100%);
+  --measure-lead: min(56ch, 100%);
+  --page: 75rem;
+  --pad: var(--s-6);
+  --gutter: var(--s-6);
   --masthead-height: 3.5rem;
+  --radius: 6px;
 
   --ease: cubic-bezier(0.2, 0, 0, 1);
   --speed: 140ms;
+}
+
+@media (max-width: 799px) {
+  :root {
+    --t-hero: 3rem;
+    --band-gap: var(--s-16);
+  }
+}
+
+@media (max-width: 599px) {
+  :root {
+    --t-hero: 2.5rem;
+    --pad: var(--s-4);
+  }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -78,9 +116,14 @@
     --rule: #262d38;
     --flame: #ff9e4a;
     --cool: #5ad1c8;
+    --ok: #5bd48a;
+    --warn: #f2c14e;
+    --ember: rgb(255 158 74 / 12%);
     --flame-wash: rgb(255 158 74 / 12%);
     --cool-wash: rgb(90 209 200 / 12%);
-    --shade: rgb(231 234 240 / 6%);
+    --ok-wash: rgb(91 212 138 / 12%);
+    --warn-wash: rgb(242 193 78 / 12%);
+    --surface-blur: rgb(20 24 31 / 92%);
   }
 }
 
@@ -95,7 +138,12 @@
   --rule: #262d38;
   --flame: #ff9e4a;
   --cool: #5ad1c8;
+  --ok: #5bd48a;
+  --warn: #f2c14e;
+  --ember: rgb(255 158 74 / 12%);
   --flame-wash: rgb(255 158 74 / 12%);
   --cool-wash: rgb(90 209 200 / 12%);
-  --shade: rgb(231 234 240 / 6%);
+  --ok-wash: rgb(91 212 138 / 12%);
+  --warn-wash: rgb(242 193 78 / 12%);
+  --surface-blur: rgb(20 24 31 / 92%);
 }

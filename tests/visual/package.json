@@ -10,8 +10,7 @@
     "test:visual": "playwright test --project goldens",
     "test:frame-budget": "playwright test --project frame-budget",
     "test:visual:update": "playwright test --project goldens --update-snapshots",
-    "test:desktop": "playwright test --config playwright.desktop.config.ts",
-    "capture:gallery": "node scripts/capture-gallery.ts"
+    "test:desktop": "playwright test --config playwright.desktop.config.ts"
   },
   "devDependencies": {
     "@ignifx/core": "workspace:*",

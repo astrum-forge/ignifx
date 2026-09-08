@@ -5,10 +5,11 @@
  * `15-devtools-and-diagnostics.md` §5).
  */
 
+import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
-import { readFile } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import { basename, isAbsolute, relative, resolve } from "node:path";
-import { hashedAddress, isSidecarFileName, META_SUFFIX } from "./asset-types.js";
+import { assetTypeForAddress, hashedAddress, isSidecarFileName, META_SUFFIX } from "./asset-types.js";
 import { VitePluginError, VitePluginErrorCode } from "./errors.js";
 import { collectExtensionPublicAssets } from "./extension-assets.js";
 import { findIgnifxConfigFile, IGNIFX_CONFIG_DEFINE_KEY, loadIgnifxConfig } from "./ignifx-config.js";
@@ -25,11 +26,11 @@ import {
 } from "./virtual-modules.js";
 import type { ExtensionPublicAsset } from "./extension-assets.js";
 import type { JsonObject } from "./json.js";
-import type { AssetManifest, ScannedAsset } from "./manifest.js";
+import type { AssetManifest, AssetManifestEntry, ScannedAsset } from "./manifest.js";
 import type { IgnifxPluginOptions } from "./options.js";
 import type { ValidationProblem } from "./validate.js";
 import type { AssetChangedPayload } from "./virtual-modules.js";
-import type { ConfigEnv, Plugin, ViteDevServer } from "vite";
+import type { ConfigEnv, Plugin, Rollup, ViteDevServer } from "vite";
 
 /**
  * The plugin's name, as it appears in Vite logs and in `PLUGIN_ERROR` diagnostics.
@@ -77,6 +78,39 @@ interface OutputFile {
   readonly filePath: string;
   /** The bytes to write. */
   readonly source: Uint8Array;
+}
+
+/** One extension public asset, with the two manifest fields that need the file read. */
+interface DescribedExtensionAsset {
+  /** The discovered file. */
+  readonly file: ExtensionPublicAsset;
+  /** Its size in bytes. */
+  readonly bytes: number;
+  /** Its last-modified time, so an unchanged file is not read and hashed twice. */
+  readonly modifiedMs: number;
+  /** The truncated lowercase hex sha256 of its contents. */
+  readonly hash: string;
+  /** Its contents, kept so the emit does not read the file a second time. */
+  readonly source: Uint8Array;
+}
+
+/**
+ * Whether two byte sequences are identical.
+ *
+ * @param left - One sequence.
+ * @param right - The other.
+ * @returns `true` when they have the same length and the same bytes.
+ */
+function isSameBytes(left: Uint8Array, right: Uint8Array): boolean {
+  if (left.byteLength !== right.byteLength) {
+    return false;
+  }
+  for (let index = 0; index < left.byteLength; index += 1) {
+    if (left[index] !== right[index]) {
+      return false;
+    }
+  }
+  return true;
 }
 
 /**
@@ -179,9 +213,46 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
   let configDependencies: readonly string[] = [];
   let assets: readonly ScannedAsset[] = [];
   let problems: readonly ValidationProblem[] = [];
-  let extensionAssets: readonly ExtensionPublicAsset[] = [];
+  let extensionAssets: readonly DescribedExtensionAsset[] = [];
   let scanned = false;
   let pendingWork: Promise<void> = Promise.resolve();
+  /**
+   * Files already read, keyed by absolute path, so that a dev-server rescan — one per saved asset —
+   * does not re-read and re-hash a 2 MB WebAssembly binary that has not changed.
+   */
+  const describedByPath = new Map<string, DescribedExtensionAsset>();
+
+  /**
+   * Rediscovers every extension public asset and reads it.
+   *
+   * @remarks
+   * The bytes are needed twice — once for the manifest entry's `bytes`/`hash`, once for the file
+   * the build emits — so they are read here and kept, rather than read once per use.
+   *
+   * @returns Nothing; the result lands in `extensionAssets`.
+   */
+  async function refreshExtensionAssets(): Promise<void> {
+    const files = await collectExtensionPublicAssets(root);
+    extensionAssets = await Promise.all(
+      files.map(async (file): Promise<DescribedExtensionAsset> => {
+        const info = await stat(file.filePath);
+        const cached = describedByPath.get(file.filePath);
+        if (cached !== undefined && cached.bytes === info.size && cached.modifiedMs === info.mtimeMs) {
+          return cached;
+        }
+        const source = await readFile(file.filePath);
+        const described: DescribedExtensionAsset = {
+          file,
+          bytes: source.byteLength,
+          modifiedMs: info.mtimeMs,
+          hash: createHash("sha256").update(source).digest("hex").slice(0, settings.hashLength),
+          source,
+        };
+        describedByPath.set(file.filePath, described);
+        return described;
+      }),
+    );
+  }
 
   /**
    * The absolute asset root.
@@ -237,14 +308,67 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
   }
 
   /**
-   * The manifest for the assets scanned so far, with URLs for the current command.
+   * The manifest entry of one extension public asset.
+   *
+   * @remarks
+   * `docs/architecture/05-assets-and-loading.md` §7: the runtime reaches these files through
+   * `app.assets.resolveUrl(<file name>)`, and a `resolveUrl` that misses falls back to a
+   * **page-relative** `<assetRoot>/<address>` — right at `/`, wrong under any sub-path, and
+   * `IGX-0903` when `@ignifx/physics` then fetches it (found by the website's
+   * `/examples/<slug>/run/` pages on 2026-09-07). Listing the file makes `resolveUrl` answer with
+   * the served URL instead, `resolvedConfig.base` included, exactly as it does for a hashed asset.
+   *
+   * The address is the bare file name because the copy is unhashed and lands directly in the public
+   * path: a WASM loader asks for its companion by name, not by a hashed URL.
+   *
+   * @param described - The discovered file and its content hash.
+   * @returns The entry.
+   */
+  function extensionEntry(described: DescribedExtensionAsset): AssetManifestEntry {
+    const { fileName } = described.file;
+    return {
+      address: fileName,
+      url: `${normalizedBase()}${settings.publicPath}${fileName}`,
+      bytes: described.bytes,
+      hash: described.hash,
+      type: assetTypeForAddress(fileName),
+      groups: [],
+    };
+  }
+
+  /**
+   * The manifest for the assets scanned so far plus every extension public asset, with URLs for the
+   * current command.
    *
    * @returns The manifest.
+   * @throws A {@link VitePluginError} with code `IGX-0552` when a project asset and an extension
+   * public asset claim the same manifest address, which would make `resolveUrl` answer arbitrarily.
    */
   function currentManifest(): AssetManifest {
-    return buildManifest(assets, settings.assetRoot, (asset) =>
+    const scannedManifest = buildManifest(assets, settings.assetRoot, (asset) =>
       command === "build" ? productionUrl(asset) : developmentUrl(asset.address),
     );
+    if (extensionAssets.length === 0) {
+      return scannedManifest;
+    }
+    const addresses = new Set(scannedManifest.entries.map((entry) => entry.address));
+    for (const described of extensionAssets) {
+      if (addresses.has(described.file.fileName)) {
+        throw new VitePluginError(
+          VitePluginErrorCode.duplicateOutputFile,
+          `"${described.file.packageName}" publishes "${described.file.fileName}" and the asset root holds a file ` +
+            "with the same address; rename one of them.",
+        );
+      }
+    }
+    // `Array.prototype.sort`'s own code-unit order, which is what `scanAssetRoot` sorts addresses
+    // with; `localeCompare` would order the merged list by a collation that is a property of the
+    // machine, and the manifest has to be byte-identical between two builds of the same tree.
+    const entries = [
+      ...scannedManifest.entries,
+      ...extensionAssets.map((described) => extensionEntry(described)),
+    ].toSorted((left, right) => (left.address < right.address ? -1 : left.address > right.address ? 1 : 0));
+    return { ...scannedManifest, entries };
   }
 
   /**
@@ -257,6 +381,11 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
    * @param warn - Where to send the "no asset root" warning.
    */
   async function refresh(warn: (message: string) => void): Promise<void> {
+    // Before the scan, because `currentManifest()` merges the two lists and `load()` bakes the
+    // result into `virtual:ignifx/manifest` — the manifest the *bundle* carries — long before
+    // `generateBundle` writes `assets.manifest.json`. Populating these only at emit time gave a
+    // build whose two manifests disagreed, and the one game code reads was the incomplete one.
+    await refreshExtensionAssets();
     try {
       assets = await scanAssetRoot({ assetRoot: assetRootPath(), hashLength: settings.hashLength });
     } catch (error) {
@@ -366,14 +495,13 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
    * @throws A {@link VitePluginError} with code `IGX-0552` when two files would build to one name.
    */
   async function collectOutputFiles(): Promise<readonly OutputFile[]> {
-    extensionAssets = await collectExtensionPublicAssets(root);
     const planned = [
       ...assets.map((asset) => ({
         fileName: `${settings.publicPath}${hashedAddress(asset.address, asset.hash)}`,
         filePath: asset.filePath,
         owner: asset.address,
       })),
-      ...extensionAssets.map((file) => ({
+      ...extensionAssets.map(({ file }) => ({
         fileName: `${settings.publicPath}${file.fileName}`,
         filePath: file.filePath,
         owner: `the public asset of "${file.packageName}"`,
@@ -398,6 +526,60 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
       filePath: entry.filePath,
       source: sources[index] ?? new Uint8Array(),
     }));
+  }
+
+  /**
+   * Folds a bundler-emitted copy of an extension public asset onto the plugin's own unhashed copy.
+   *
+   * @remarks
+   * `@babylonjs/havok`'s ESM build carries a dead
+   * `new URL("HavokPhysics.wasm", import.meta.url)` — dead because `@ignifx/physics` always hands
+   * Emscripten a `wasmBinary` — and Rollup resolves it, so a build that also gets the plugin's
+   * unhashed copy ships the same 2.09 MB twice (measured in `templates/3d-first-person` on
+   * 2026-09-08). Neither copy can simply be dropped: the plugin's is the one
+   * `Assets.resolveUrl("HavokPhysics.wasm")` and a hand-written `physics({ havokWasm })` name, and
+   * the bundler's is the one the chunk references. So the reference is repointed at the plugin's
+   * copy and the bundler's is removed, which leaves exactly one file and keeps every URL that
+   * already worked working.
+   *
+   * The match is on **bytes**, not on the file name a bundler happened to choose: two files with
+   * the same contents are interchangeable, and anything else risks folding a file that is merely
+   * named alike. Only assets the plugin did not emit itself are candidates, so a project asset is
+   * never folded away — its manifest entry points at its own hashed URL.
+   *
+   * @param bundle - The bundle being generated, edited in place.
+   */
+  function foldBundlerCopies(bundle: Rollup.OutputBundle): void {
+    const ours = new Set(extensionAssets.map(({ file }) => `${settings.publicPath}${file.fileName}`));
+    const renames = new Map<string, string>();
+    for (const [key, output] of Object.entries(bundle)) {
+      if (output.type !== "asset" || ours.has(output.fileName) || typeof output.source === "string") {
+        continue;
+      }
+      const source = output.source;
+      const match = extensionAssets.find((described) => isSameBytes(described.source, source));
+      if (match === undefined) {
+        continue;
+      }
+      renames.set(output.fileName, `${settings.publicPath}${match.file.fileName}`);
+      // A bundle is a plain record keyed by file name, and removing the key is how a plugin drops
+      // an output (the emitted copy above has already taken its place).
+      // oxlint-disable-next-line no-dynamic-delete -- see above.
+      delete bundle[key];
+    }
+    if (renames.size === 0) {
+      return;
+    }
+    for (const output of Object.values(bundle)) {
+      if (output.type !== "chunk") {
+        continue;
+      }
+      let code = output.code;
+      for (const [from, to] of renames) {
+        code = code.split(from).join(to);
+      }
+      output.code = code;
+    }
   }
 
   /**
@@ -443,10 +625,10 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
       }
       if (url.startsWith(publicPrefix)) {
         const wanted = decodeURIComponent(url.slice(publicPrefix.length));
-        const file = extensionAssets.find((candidate) => candidate.fileName === wanted);
-        if (file !== undefined) {
-          response.setHeader("Content-Type", contentTypeFor(file.fileName));
-          createReadStream(file.filePath).pipe(response);
+        const described = extensionAssets.find((candidate) => candidate.file.fileName === wanted);
+        if (described !== undefined) {
+          response.setHeader("Content-Type", contentTypeFor(described.file.fileName));
+          createReadStream(described.file.filePath).pipe(response);
           return;
         }
       }
@@ -525,7 +707,6 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
     },
 
     async configureServer(server) {
-      extensionAssets = await collectExtensionPublicAssets(root);
       installMiddleware(server);
 
       server.watcher.add(assetRootPath());
@@ -539,7 +720,7 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
       reportToDevServer(server);
     },
 
-    async generateBundle() {
+    async generateBundle(_output, bundle) {
       await ensureScanned((message) => {
         this.warn(message);
       });
@@ -556,6 +737,7 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
           source: file.source,
         });
       }
+      foldBundlerCopies(bundle);
 
       this.emitFile({
         type: "asset",

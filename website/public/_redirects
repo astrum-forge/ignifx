@@ -1,8 +1,0 @@
-# Cloudflare Pages redirects. Only aliases that a real link is likely to use: the site has no
-# client-side router, so there is nothing else to rewrite. `dist/404.html` is served automatically
-# for anything that does not match a file.
-
-# `llms.txt` addresses the skill under /skill/; anyone who followed a repository path lands here.
-/docs/skill/*   /skill/:splat   301
-/skill.md       /skill/         301
-/skills/*       /skill/:splat   301

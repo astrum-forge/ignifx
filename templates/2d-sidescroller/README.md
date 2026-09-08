@@ -49,8 +49,9 @@ migrated, which is what makes regenerating the art safe.
 
 `assets/level.tilemap.json` carries the terrain, the slopes and the one-way planks, plus an objects
 layer the spawn and every coin come from. The camera is `pixelPerfect` against a 320 x 180 reference
-resolution, so one source texel covers a whole number of screen pixels. `public/` holds the sheet
-images, because a `.atlas.json` names its image relative to itself.
+resolution, so one source texel covers a whole number of screen pixels. Each sheet image sits
+beside its `.atlas.json`, which names it relatively; `@ignifx/2d` resolves that through the asset
+manifest, so a hashed build and a deploy under a sub-path both find it.
 
 Every pixel and every sample comes from a committed, seeded script; nothing is downloaded
 (`CONSTITUTION.md` §11.3). Regenerate from the repository root with `pnpm assets:2d`, `pnpm assets:levels`
