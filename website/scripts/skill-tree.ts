@@ -1,58 +1,38 @@
 /**
- * Discovery of the pages served under `/skill/`.
+ * Discovery of the Agent Skill files, for two purposes only.
  *
- * The URL mapping is the contract `website/public/llms.txt` publishes and `scripts/lib/llms-index.ts`
- * documents:
+ * The site no longer renders the skill: `/llms.txt` links straight at the repository and the old
+ * `/skill/**` routes are `_redirects` lines (`01-strategy-and-ia.md` §10, decision 3 of
+ * `08-execution.md` §2). What survives here is the route → repository-path mapping the redirects
+ * are generated from, and the reader that lets the build assert that every URL `/llms.txt`
+ * publishes is an absolute link to a file that exists in the working tree.
  *
- * | Repository path                            | URL                              |
+ * | Repository path                            | Retired URL                      |
  * | ------------------------------------------ | -------------------------------- |
  * | `skills/ignifx/SKILL.md`                   | `/skill/`                        |
  * | `skills/ignifx/references/gotchas.md`      | `/skill/references/gotchas`      |
  * | `skills/ignifx/references/<dir>/<name>.md` | `/skill/references/<dir>/<name>` |
  * | `packages/<pkg>/skills/<name>/SKILL.md`    | `/skill/<name>/`                 |
  *
- * The mapping is re-implemented here rather than imported from `scripts/`, so the site never
- * depends on workspace code that a fresh Cloudflare clone has not built. `buildSite` fails the
- * build when an `llms.txt` entry has no page, and `test/site.test.ts` asserts the same thing over
- * the emitted files, so the two implementations cannot drift apart silently.
+ * The mapping is re-implemented here rather than imported from the repository's `scripts/`, because
+ * `scripts/lib/*` is type-checked as a Node tool project and the site is a browser bundle project;
+ * `test/site.test.ts` asserts the emitted redirects against the tree, so the two cannot drift.
  */
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import path from "node:path";
 
-/** Which group of the skill a page belongs to. Drives the rail, the prev/next pair, and search. */
-export type SkillSection = "entry" | "extensions" | "concepts" | "recipes" | "formats" | "api";
-
-/** One rendered skill page. */
+/** One skill file and the route that used to serve it. */
 export interface SkillPage {
-  /** Site route, always absolute and always ending in `/` or a bare name. */
+  /** The retired site route, which is now a redirect source. */
   readonly route: string;
   /** Absolute path to the Markdown file. */
   readonly file: string;
-  /** Repository-relative path, used for the "view source" link and for link rewriting. */
+  /** Repository-relative path, with `/` separators. */
   readonly repoPath: string;
-  /** Group this page belongs to. */
-  readonly section: SkillSection;
-  /** Label shown in the rail and in search results. */
-  readonly label: string;
 }
 
-/** The `references/` directories that become sections, in the order the site lists them. */
-const REFERENCE_SECTIONS: readonly { readonly dir: string; readonly section: SkillSection }[] = [
-  { dir: "concepts", section: "concepts" },
-  { dir: "recipes", section: "recipes" },
-  { dir: "formats", section: "formats" },
-  { dir: "api", section: "api" },
-];
-
-/** Human labels for the sections, used as headings in the rail and on `/docs/`. */
-export const SECTION_TITLES: Readonly<Record<SkillSection, string>> = {
-  entry: "Entry skill",
-  extensions: "Extensions",
-  concepts: "Concepts",
-  recipes: "Recipes",
-  formats: "File formats",
-  api: "API reference",
-};
+/** The `references/` directories, in the order the index lists them. */
+const REFERENCE_DIRECTORIES: readonly string[] = ["concepts", "recipes", "formats", "api"];
 
 /**
  * Lists the `.md` files of one directory, `README.md` excluded, sorted by file name.
@@ -94,10 +74,10 @@ function declaredSkill(packageDirectory: string): string | null {
 }
 
 /**
- * Finds every page the site serves under `/skill/`.
+ * Finds every Agent Skill file, with the route that used to serve it.
  *
  * @param repositoryRoot - Absolute path to the repository root.
- * @returns The pages, in the order the rail lists them.
+ * @returns The files, entry skill first, then the subsystem skills, then the reference pages.
  */
 export function findSkillPages(repositoryRoot: string): readonly SkillPage[] {
   const entryDirectory = path.join(repositoryRoot, "skills", "ignifx");
@@ -107,18 +87,16 @@ export function findSkillPages(repositoryRoot: string): readonly SkillPage[] {
    * Appends one page.
    *
    * @param file - Absolute path to the Markdown file.
-   * @param route - The site route.
-   * @param section - The group it belongs to.
-   * @param label - The rail label.
+   * @param route - The retired site route.
    */
-  function add(file: string, route: string, section: SkillSection, label: string): void {
-    pages.push({ route, file, repoPath: path.relative(repositoryRoot, file), section, label });
+  function add(file: string, route: string): void {
+    pages.push({ route, file, repoPath: path.relative(repositoryRoot, file).split(path.sep).join("/") });
   }
 
-  add(path.join(entryDirectory, "SKILL.md"), "/skill/", "entry", "ignifx");
+  add(path.join(entryDirectory, "SKILL.md"), "/skill/");
   const gotchas = path.join(entryDirectory, "references", "gotchas.md");
   if (existsSync(gotchas)) {
-    add(gotchas, "/skill/references/gotchas", "entry", "Gotchas");
+    add(gotchas, "/skill/references/gotchas");
   }
 
   const packagesDirectory = path.join(repositoryRoot, "packages");
@@ -128,32 +106,43 @@ export function findSkillPages(repositoryRoot: string): readonly SkillPage[] {
     .map((file) => ({ file, name: path.basename(path.dirname(file)) }))
     .toSorted((left, right) => left.name.localeCompare(right.name));
   for (const { file, name } of extensions) {
-    add(file, `/skill/${name}/`, "extensions", `@ignifx/${name}`);
+    add(file, `/skill/${name}/`);
   }
 
-  for (const { dir, section } of REFERENCE_SECTIONS) {
-    for (const file of markdownFiles(path.join(entryDirectory, "references", dir))) {
-      const name = path.basename(file, ".md");
-      add(file, `/skill/references/${dir}/${name}`, section, name);
+  for (const directory of REFERENCE_DIRECTORIES) {
+    for (const file of markdownFiles(path.join(entryDirectory, "references", directory))) {
+      add(file, `/skill/references/${directory}/${path.basename(file, ".md")}`);
     }
   }
   return pages;
 }
 
 /**
- * Reads the site URLs listed in `website/public/llms.txt`.
+ * Reads the URLs listed in `website/public/llms.txt`.
  *
  * @param llmsText - The generated file's contents.
- * @returns Every `/skill/…` URL it links to, in file order.
+ * @returns Every linked URL, in file order.
  */
-export function llmsRoutes(llmsText: string): readonly string[] {
-  const routes: string[] = [];
-  const pattern = /^- \[[^\]]*\]\((?<url>\/[^)]*)\)/gmu;
+export function llmsUrls(llmsText: string): readonly string[] {
+  const urls: string[] = [];
+  const pattern = /^- \[[^\]]*\]\((?<url>[^)]*)\)/gmu;
   for (const match of llmsText.matchAll(pattern)) {
     const url = match.groups?.["url"];
     if (url !== undefined) {
-      routes.push(url);
+      urls.push(url);
     }
   }
-  return routes;
+  return urls;
+}
+
+/**
+ * Turns one `blob/main` URL back into the repository path it names.
+ *
+ * @param url - An absolute GitHub URL.
+ * @param blobPrefix - The `blob/main` prefix, from `site.config.ts`.
+ * @returns The repository-relative path, or `null` when the URL is not one of ours.
+ */
+export function repoPathOf(url: string, blobPrefix: string): string | null {
+  const prefix = `${blobPrefix}/`;
+  return url.startsWith(prefix) ? url.slice(prefix.length) : null;
 }

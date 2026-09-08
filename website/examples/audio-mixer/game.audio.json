@@ -1,0 +1,10 @@
+{
+  "format": "ignifx.audiobuses",
+  "formatVersion": 1,
+  "buses": [
+    { "name": "Master", "parent": "", "volume": 1 },
+    { "name": "Music", "parent": "Master", "volume": 0.55, "pausable": true },
+    { "name": "SFX", "parent": "Master", "volume": 0.85, "pausable": true },
+    { "name": "UI", "parent": "Master", "volume": 0.9, "pausable": false }
+  ]
+}

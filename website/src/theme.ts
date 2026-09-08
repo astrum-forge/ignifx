@@ -1,6 +1,7 @@
 // Loaded as a classic, synchronous `<script src="/theme.js">` in `<head>`, so the stored theme is
 // on `<html>` before the first paint. The usual fix for that is an inline script, and the site's
-// Content-Security-Policy (`public/_headers`) allows no inline script at all.
+// Content-Security-Policy (emitted from `website/headers.txt`) allows no inline script except the
+// one JSON-LD block, whose hash the build writes into `script-src`.
 //
 // It also stamps `data-js="on"`, which is what reveals the controls that do nothing without
 // JavaScript (`.js-only` in `src/styles/shell.css`). Nothing else may be imported here: Rollup

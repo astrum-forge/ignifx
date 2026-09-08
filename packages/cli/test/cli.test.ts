@@ -266,8 +266,9 @@ describe("scaffolding the 2d-topdown template", () => {
     // The convention: `_gitignore` arrives as `.gitignore`, and nothing keeps the underscore.
     expect(result.files).toContain(".gitignore");
     expect(result.files.some((file) => file.startsWith("_"))).toBe(false);
-    // The parts a game needs: an entry point, the plugin config, the project settings, the assets
-    // the loaders read, and the unhashed sheet images.
+    // The parts a game needs: an entry point, the plugin config, the project settings, and the
+    // assets the loaders read — the sprite sheets among them, beside the atlas documents that name
+    // them (`tests/fixtures/assets/2d-templates/ATTRIBUTION.md`, "Where the sheets live").
     expect(result.files).toEqual(
       expect.arrayContaining([
         ".gitignore",
@@ -275,10 +276,10 @@ describe("scaffolding the 2d-topdown template", () => {
         "README.md",
         "assets/level.tilemap.json",
         "assets/tiles.atlas.json",
+        "assets/tiles.png",
         "ignifx.config.ts",
         "index.html",
         "package.json",
-        "public/tiles.png",
         "src/main.ts",
         "tsconfig.json",
         "vite.config.ts",
@@ -306,7 +307,7 @@ describe("scaffolding the 2d-topdown template", () => {
 
     const result = await runCreate([target, "--template", "2d-sidescroller"], io);
 
-    expect(result.files).toEqual(expect.arrayContaining(["public/parallax.png", "assets/coin.spriteanim.json"]));
+    expect(result.files).toEqual(expect.arrayContaining(["assets/parallax.png", "assets/coin.spriteanim.json"]));
     const manifest = await readFile(join(target, "package.json"), "utf8");
     expect(manifest).not.toContain("workspace:");
   });

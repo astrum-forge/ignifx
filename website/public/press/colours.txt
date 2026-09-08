@@ -1,0 +1,24 @@
+ignifx — brand colours
+
+The palette in 05-press-kit.md §2 and 02-design-system.md §2.3. Do not recolour the mark or
+the wordmark outside these values.
+
+#A63D07  Flame — the mark and the accent, on light grounds
+#FF9E4A  Flame — the mark and the accent, on dark grounds
+#14181F  Ink — the wordmark and body text, on light grounds
+#E7EAF0  Ink — the wordmark and body text, on dark grounds
+#4B5464  Secondary ink — the badge label, on light grounds
+#98A2B3  Secondary ink — the badge label, on dark grounds
+#FAFBFC  Paper — the light badge's ground
+#14181F  Surface (dark) — the dark badge's ground; the same value as ink on light
+#D2D8E2  Hairline — the light badge's border
+#262D38  Hairline — the dark badge's border
+#0D1015  Dark ground — the social image and the avatar
+
+Mark facets, not for reuse: sampled from the master (brand/ignifx-mark.png). The artwork is a
+raster; these are the colours it is painted in, for matching a layout to it. They are not
+brand tokens and nothing else should be coloured with them.
+
+#C90645  mark facets, not for reuse: magenta-red (66.1% of the mark)
+#FA8A13  mark facets, not for reuse: orange (26.6% of the mark)
+#FBDD74  mark facets, not for reuse: yellow (6.9% of the mark)

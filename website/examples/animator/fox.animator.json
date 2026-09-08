@@ -1,0 +1,41 @@
+{
+  "format": "ignifx.animator",
+  "formatVersion": 1,
+  "parameters": [
+    { "name": "speed", "kind": "float", "value": 4 },
+    { "name": "survey", "kind": "trigger" }
+  ],
+  "layers": [{ "name": "Base", "weight": 1, "defaultState": "locomotion" }],
+  "states": [
+    { "name": "locomotion", "blendTree": "locomotion", "loop": true },
+    {
+      "name": "survey",
+      "clip": "Survey",
+      "loop": false,
+      "events": [
+        { "time": 0.3, "name": "look-up" },
+        { "time": 0.75, "name": "sniff" }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "from": "any",
+      "to": "survey",
+      "conditions": [{ "param": "survey", "op": "trigger" }],
+      "duration": 0.12
+    },
+    { "from": "survey", "to": "locomotion", "duration": 0.25, "exitTime": 0.9 }
+  ],
+  "blendTrees1D": [
+    {
+      "name": "locomotion",
+      "param": "speed",
+      "children": [
+        { "clip": "Survey", "threshold": 0 },
+        { "clip": "Walk", "threshold": 2 },
+        { "clip": "Run", "threshold": 6 }
+      ]
+    }
+  ]
+}

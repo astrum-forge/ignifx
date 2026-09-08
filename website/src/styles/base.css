@@ -1,4 +1,4 @@
-/* Reset, typography, and the prose rules that the rendered Markdown lands in. */
+/* Reset, typography, the shared layout shell, and the prose rules the rendered Markdown lands in. */
 
 *,
 *::before,
@@ -21,6 +21,10 @@ body {
   text-rendering: optimizelegibility;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 h1,
 h2,
 h3,
@@ -31,6 +35,23 @@ h4 {
   line-height: var(--lh-tight);
   letter-spacing: -0.015em;
   text-wrap: balance;
+}
+
+h1 {
+  font-size: var(--t-2xl);
+}
+
+h2 {
+  font-size: var(--t-xl);
+}
+
+h3 {
+  font-size: var(--t-lg);
+}
+
+h4 {
+  font-size: var(--t-md);
+  letter-spacing: 0;
 }
 
 p,
@@ -46,6 +67,14 @@ table {
 img,
 svg {
   max-width: 100%;
+}
+
+/* The icon sprite is definitions only; it must occupy no space. */
+.sprite {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
 }
 
 a {
@@ -68,6 +97,14 @@ samp,
   font-variant-ligatures: none;
 }
 
+kbd {
+  padding: 0.1em 0.35em;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  background: var(--sunk);
+  font-size: 0.8em;
+}
+
 :focus-visible {
   outline: 2px solid var(--flame);
   outline-offset: 2px;
@@ -78,13 +115,24 @@ samp,
   background: var(--flame-wash);
 }
 
+/* Screen-reader-only text, for a label that an icon already carries visually. */
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .skip {
   position: absolute;
   left: var(--s-4);
   top: calc(var(--s-2) * -8);
-  z-index: 20;
+  z-index: 30;
   padding: var(--s-2) var(--s-4);
   border: 1px solid var(--flame);
+  border-radius: var(--radius);
   background: var(--surface);
   color: var(--ink);
   font-family: var(--font-mono);
@@ -97,11 +145,28 @@ samp,
   top: var(--s-2);
 }
 
-/* --- Prose: the rendered Markdown of a skill page, and any hand-written paragraph. --- */
+/* --- The layout shell: 1200 px max, 24 px side padding (16 px under 600 px). --- */
+
+.shell {
+  width: 100%;
+  max-width: var(--page);
+  margin: 0 auto;
+  padding: 0 var(--pad);
+}
+
+.shell-narrow {
+  max-width: 46rem;
+}
+
+.site-main {
+  display: block;
+}
+
+/* --- Prose: a rendered recipe or attribution document, and any hand-written paragraph. --- */
 
 .prose {
   max-width: var(--measure);
-  /* A skill page is full of long identifiers (`onApplicationFocus(focused)`); an inline `code` that
+  /* A recipe is full of long identifiers (`onApplicationFocus(focused)`); an inline `code` that
      cannot wrap is what makes a 320 px page scroll sideways. `break-word` rather than `anywhere`:
      `anywhere` also shrinks min-content, which collapses a table column to one character wide. */
   overflow-wrap: break-word;
@@ -132,7 +197,6 @@ samp,
 .prose h4 {
   margin-top: var(--s-6);
   font-size: var(--t-base);
-  letter-spacing: 0;
 }
 
 .prose ul,
@@ -160,6 +224,7 @@ samp,
 
 .prose code {
   padding: 0.1em 0.32em;
+  border-radius: 3px;
   background: var(--sunk);
   color: var(--ink);
 }
@@ -237,6 +302,8 @@ td code,
 th code {
   white-space: nowrap;
 }
+
+/* --- Motion: interactive state only, and nothing at all for a reduced-motion visitor. --- */
 
 @media (prefers-reduced-motion: reduce) {
   *,

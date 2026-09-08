@@ -38,7 +38,10 @@ import type { World } from "../world/world.js";
  *    awaited — it resolves on its own, and the frame must not block on it.
  * 4. **Main-camera selection.** The enabled camera with the highest `priority` becomes
  *    `scene.camera` and `world.mainCamera`; ties break on creation order, so two cameras at the
- *    same priority resolve deterministically. A world with no enabled camera logs `IGX-0706` once.
+ *    same priority resolve deterministically. A world with no enabled camera logs `IGX-0706` once,
+ *    unless another rendering context has registered a camera source that claims the frame
+ *    (`Renderer.addCameraSource`, which is how `@ignifx/2d` keeps the warning off a `Camera2D`-only
+ *    scene).
  * 5. **Shadow caster lists.** Lite keys a generator's caster list by array identity and re-preloads
  *    the shadow pipeline whenever a **new** array arrives, so the list is rebuilt only in a frame
  *    where the caster set actually changed, and the same array is handed to every casting light.
@@ -47,7 +50,10 @@ import type { World } from "../world/world.js";
  *    `consumeCasterChange`. A component destroyed between frames cannot report anything — it has
  *    left the world's list — so it raises `renderer.needsCasterRebuild` from `onDetach` instead.
  * 6. **One environment.** The enabled `Environment` with the highest creation order wins; a second
- *    one logs `IGX-0705` once per world.
+ *    one logs `IGX-0705` once per world. A frame in which the winner installed a *different* loaded
+ *    `EnvironmentAsset` counts as a topology change, because a PBR material's bind group holds the
+ *    environment cube map's texture view: only the rebuild of step 3 re-binds it (`07-rendering.md`
+ *    §2.5).
  */
 
 /**
@@ -153,7 +159,9 @@ export class RenderSyncSystem implements System {
     }
 
     this.#selectCamera(world, cameras);
-    this.#applyEnvironment(world);
+    // An environment that installed a different cube map owes the frame a renderable rebuild: a PBR
+    // bind group holds the cube map's texture view, so nothing re-binds without one.
+    topologyChanged = this.#applyEnvironment(world) || topologyChanged;
     this.#applyStacks(world);
     this.#areCastersDirty = this.#areCastersDirty || castersChanged;
     // The rebuild is deferred by one frame on purpose; see `#rebuildRenderables`.
@@ -205,10 +213,22 @@ export class RenderSyncSystem implements System {
   /**
    * Says once, at warning level, that the world renders nothing because no camera is enabled.
    *
+   * @remarks
+   * Silent when another rendering context claims the frame through a camera of its own — a
+   * `"sprite"`-mode `@ignifx/2d` world with a `Camera2D` and no 3D `Camera` is a correct scene, and
+   * `Renderer.addCameraSource` is how it says so. The claim is re-asked every frame rather than
+   * latched, so a world that later loses its `Camera2D` still gets the warning.
+   *
    * @param world - The world being reconciled.
    */
   #warnAboutMissingCamera(world: World): void {
     const renderer = this.#renderer;
+    if (renderer.hasExternalCamera(world)) {
+      // Cleared rather than merely skipped, so that the sequence "app starts empty, the 2D camera
+      // arrives, the 2D camera goes away" warns exactly as the same sequence does for a `Camera`.
+      renderer.hasLoggedNoCamera = false;
+      return;
+    }
     if (renderer.hasLoggedNoCamera) {
       return;
     }
@@ -220,8 +240,9 @@ export class RenderSyncSystem implements System {
    * Applies the winning `Environment`, warning once when a world has more than one enabled.
    *
    * @param world - The world being reconciled.
+   * @returns `true` when the winner installed a different environment on the scene this frame.
    */
-  #applyEnvironment(world: World): void {
+  #applyEnvironment(world: World): boolean {
     const environments = world.components(Environment);
     let winner: Environment | null = null;
     let enabledCount = 0;
@@ -245,7 +266,7 @@ export class RenderSyncSystem implements System {
     if (enabledCount <= 1) {
       this.#hasLoggedMultipleEnvironments = false;
     }
-    winner?.sync(this.#renderer);
+    return winner?.sync(this.#renderer) ?? false;
   }
 
   /**

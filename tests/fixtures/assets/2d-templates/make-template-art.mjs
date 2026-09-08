@@ -12,6 +12,23 @@
 //
 // Sound is not written here: `../audio-templates/make-template-audio.mjs` owns every `.wav` in
 // every template.
+//
+// ## Sheets sit beside their atlas documents, and are named relatively
+//
+// A sheet is written to `templates/<name>/assets/<sheet>.png` and its `.atlas.json` names it as
+// `"image": "<sheet>.png"`. `@ignifx/2d` reads such a reference as an **address** relative to the
+// document's own address and resolves it through the asset manifest
+// (`packages/2d/src/atlas/loader.ts`, `resolveAtlasImageUrl`), so a production build that
+// content-hashes the asset root still finds the sheet.
+//
+// It was not always so. In Phase 6 the loader resolved the reference against the document's own
+// *URL*, which a hashed build breaks — `assets/tiles.a1b2c3d4.atlas.json` looked for
+// `assets/tiles.png`, a name that no longer exists, and the load failed with `IGX-0505` — so the
+// sheets were parked in Vite's unhashed `public/` directory and addressed root-relatively as
+// `/tiles.png`. That worked only at a site's root: a template deployed under a sub-path, such as
+// the website's `/examples/<name>/run/`, asked the origin's root for a sheet that was not there.
+// The loader resolves addresses through the manifest now, so neither the `public/` copy nor the
+// root-relative name is needed, and both are gone.
 import { Buffer } from "node:buffer";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -22,21 +39,6 @@ const HERE = import.meta.dirname;
 const REPO = join(HERE, "..", "..", "..", "..");
 const TOPDOWN = join(REPO, "templates", "2d-topdown", "assets");
 const SIDESCROLLER = join(REPO, "templates", "2d-sidescroller", "assets");
-
-/**
- * Where the sheet images go, and why they are not in `assets/`.
- *
- * A `.atlas.json` names its image **relative to the document**, and `@ignifx/2d` resolves that
- * against the document's own URL. `@ignifx/vite-plugin` content-hashes everything under the asset
- * root on a production build, so `assets/tiles.a1b2c3d4.atlas.json` would look for
- * `assets/tiles.png` — a name that no longer exists — and the load would fail with `IGX-0505`.
- * Vite's `public/` directory is copied verbatim and unhashed, so an absolute `/tiles.png` resolves
- * in `pnpm dev` and in `pnpm build` alike. The documents themselves stay in `assets/`, where they
- * are hashed and reached by address through the manifest.
- * @param directory - A template's `assets/` directory.
- * @returns Its sibling `public/` directory.
- */
-const PUBLIC = (directory) => join(directory, "..", "public");
 
 /** The edge of one tile and one character cell, in pixels. `twoD.pixelsPerUnit` matches it. */
 const TILE = 16;
@@ -68,10 +70,8 @@ function write(directory, name, bytes) {
   }
   mkdirSync(directory, { recursive: true });
   writeFileSync(join(directory, name), bytes);
-  const path = String(directory);
-  const template = path.includes("2d-topdown") ? "2d-topdown" : "2d-sidescroller";
-  const kind = path.endsWith("public") ? "public" : "assets";
-  written.push([`${template}/${kind}/${name}`, bytes.length]);
+  const template = String(directory).includes("2d-topdown") ? "2d-topdown" : "2d-sidescroller";
+  written.push([`${template}/assets/${name}`, bytes.length]);
 }
 
 /**
@@ -141,19 +141,19 @@ function packSheet(cells, columns) {
 }
 
 /**
- * Writes a packed sheet as `public/<name>.png` plus its `assets/<name>.atlas.json` document.
+ * Writes a packed sheet as `assets/<name>.png` plus its `assets/<name>.atlas.json` document.
  * @param directory - The template's `assets/` directory.
  * @param name - The sheet's base name.
  * @param sheet - What {@link packSheet} produced.
  * @returns The same sheet, for chaining.
  */
 function writeAtlas(directory, name, sheet) {
-  write(PUBLIC(directory), `${name}.png`, encodePng(sheet.canvas));
+  write(directory, `${name}.png`, encodePng(sheet.canvas));
   writeJson(directory, `${name}.atlas.json`, {
     format: "ignifx.spriteatlas",
     formatVersion: 1,
-    // Absolute, and served from `public/`. See the comment on PUBLIC above.
-    image: `/${name}.png`,
+    // An address relative to this document, resolved through the manifest. See the header.
+    image: `${name}.png`,
     // Pixel art is never filtered: a texture's sampler is fixed at upload, so `pixelPerfect` on the
     // camera is not enough on its own (`packages/2d/skills/2d/SKILL.md`, "Gotchas").
     sampling: "nearest",

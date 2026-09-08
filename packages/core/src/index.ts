@@ -256,6 +256,7 @@ export {
   Environment,
   type EnvironmentFogMode,
   type EnvironmentFogSettings,
+  type EnvironmentSkyboxSettings,
   type ImageProcessingSettings,
   type ToneMappingCurve,
 } from "./render/environment.js";

@@ -46,6 +46,7 @@ import type { RenderingFeatureName, RenderingFeatures } from "../lite/render-fea
 import type { LiteEngine, LiteScene } from "../lite/scene.js";
 import type { ColorLike } from "../math/types.js";
 import type { RenderSurface } from "../platform/webgpu.js";
+import type { Disconnect } from "../signal/signal.js";
 import type { World } from "../world/world.js";
 
 /**
@@ -309,6 +310,25 @@ export interface Renderer {
    * which point Lite has compiled what it is going to compile.
    */
   requireFeature(feature: RenderingFeature): void;
+  /**
+   * Registers a probe that answers whether a rendering context **other than the render scene** is
+   * drawing a world through a camera of its own.
+   *
+   * @remarks
+   * The one caller is an extension that owns a second rendering context on the same surface —
+   * `@ignifx/2d`'s sprite renderer, which draws a `"sprite"`-mode frame through a `Camera2D` and
+   * needs no 3D `Camera` at all. `IGX-0706` says "this world has no enabled camera, so nothing is
+   * drawn"; on such a world the second half is false, so the probe suppresses it
+   * (`docs/architecture/07-rendering.md` §2.1, `11-2d-toolkit.md` §1). The probe is asked only in
+   * the frames where no 3D camera was selected, and it is never cached: a scene that loses its
+   * `Camera2D` starts warning again.
+   *
+   * @param probe - Answers `true` while the caller has an active camera for the world it is handed.
+   * @returns A function that removes the probe.
+   *
+   * @internal
+   */
+  addCameraSource(probe: (world: World) => boolean): Disconnect;
 }
 
 /**
@@ -336,6 +356,9 @@ export class RendererImpl implements Renderer {
   renderableRebuilds = 0;
 
   readonly #app: App;
+
+  /** Probes registered by {@link RendererImpl.addCameraSource}, in registration order. */
+  readonly #cameraSources: ((world: World) => boolean)[] = [];
 
   readonly #features: MutableRenderingFeatures;
 
@@ -693,6 +716,44 @@ export class RendererImpl implements Renderer {
   requireFeature(feature: RenderingFeature): void {
     assertRenderingFeatureAvailable(feature, this.#isSceneRegistered);
     this.#features[feature] = true;
+  }
+
+  /**
+   * Registers a probe that answers whether another rendering context has a camera of its own.
+   *
+   * @param probe - Answers `true` while the caller has an active camera for the world.
+   * @returns A function that removes the probe.
+   */
+  addCameraSource(probe: (world: World) => boolean): Disconnect {
+    this.#cameraSources.push(probe);
+    return (): void => {
+      const index = this.#cameraSources.indexOf(probe);
+      if (index >= 0) {
+        this.#cameraSources.splice(index, 1);
+      }
+    };
+  }
+
+  /**
+   * Whether any registered probe claims a camera for this world.
+   *
+   * @remarks
+   * Asked by the render sync system only in a frame where no enabled `Camera` was found, which is
+   * what keeps `IGX-0706` off a correct 2D-only scene without costing a well-formed 3D scene
+   * anything (`docs/architecture/07-rendering.md` §2.1).
+   *
+   * @param world - The world being reconciled.
+   * @returns `true` when something other than the render scene draws it.
+   *
+   * @internal
+   */
+  hasExternalCamera(world: World): boolean {
+    for (let index = 0; index < this.#cameraSources.length; index += 1) {
+      if (this.#cameraSources[index]?.(world) === true) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**

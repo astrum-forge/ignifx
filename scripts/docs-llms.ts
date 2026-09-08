@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 /**
- * `pnpm docs:llms` — regenerates `website/public/llms.txt`, the index of the Agent Skill for agents
- * browsing ignifx.com (`docs/architecture/16-docs-harness-and-skill.md` §1 and §3).
+ * `pnpm docs:llms` — regenerates `website/public/llms.txt`, the index of the Agent Skill that
+ * ignifx.com serves for agents (`docs/architecture/16-docs-harness-and-skill.md` §1 and §3).
  *
  * The whole file is derived from `skills/ignifx/**` and the per-package `skills/`, so it states
- * only what the tree says; `lib/llms-index.ts` documents the repository-path → URL mapping, which
- * `website/README.md` repeats for whoever builds the site.
+ * only what the tree says. Every URL in it is an absolute link to the file in the GitHub
+ * repository: the site renders no skill page (ADR-0020), and `lib/llms-index.ts` documents the
+ * mapping, which `website/README.md` repeats for whoever builds the site.
  *
  * Options: `--root <dir>` runs against a tree other than the repository (used by the tests).
  */

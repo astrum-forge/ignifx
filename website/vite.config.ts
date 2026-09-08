@@ -8,7 +8,9 @@ import { ignifxSite } from "./scripts/site.ts";
 // HTML pipeline — and the inline module-preload polyfill it injects, which `script-src 'self'`
 // would refuse — never runs. Two JavaScript entries are built instead:
 //
-// - `main`  → `assets/main-<hash>.js`, an ES module that enhances an already-complete page.
+// - `main`  → `assets/main-<hash>.js`, an ES module that enhances an already-complete page. It
+//   dynamically imports `src/viewer.ts`, so Rollup emits the example bridge as its own chunk that
+//   only the home page and the viewer pages ever fetch.
 // - `theme` → `/theme.js`, deliberately unhashed and import-free so it can be loaded as a classic,
 //   synchronous script in `<head>` and apply the stored theme before the first paint.
 const websiteRoot = import.meta.dirname;
@@ -19,7 +21,8 @@ export default defineConfig({
   appType: "mpa",
   build: {
     target: "es2023",
-    // No inline `<script>` anywhere in the output; see `public/_headers`.
+    // No inline `<script>` anywhere in the output except the JSON-LD block, whose hash the build
+    // writes into `script-src`; see `headers.txt`.
     modulePreload: false,
     cssCodeSplit: false,
     // Everything is a real file with a real URL, so `img-src 'self'` covers it.

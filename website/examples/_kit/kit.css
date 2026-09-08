@@ -1,0 +1,379 @@
+/*
+ * The one stylesheet an example frame loads (`website/plan/04-examples-platform.md` §4).
+ *
+ * ## The tokens are copied, not imported
+ *
+ * The values below are `website/plan/02-design-system.md` §2.3's palette, transcribed. They are not
+ * imported from the site's stylesheet on purpose: a frame is a separate document, the site's CSS is
+ * emitted with a content hash the examples build cannot know, and an example opened standalone must
+ * look right with nothing else loaded. The cost is that a palette change has to be made twice; the
+ * benefit is that a frame has exactly one stylesheet and no cross-build dependency.
+ *
+ * There is no theme toggle inside a frame — the viewer has one and the frame is not a page — so the
+ * palette follows `prefers-color-scheme` alone.
+ *
+ * Fonts are the system stacks rather than Archivo and Public Sans, for the same hashing reason:
+ * `@font-face` in here would have to name a file whose URL the site build chooses. The panel is
+ * chrome around a game, and system UI is what a game's own settings screen uses anyway.
+ */
+
+:root {
+  /* 02-design-system.md §2.3, light. */
+  --bg: #eef0f4;
+  --surface: #fafbfc;
+  --sunk: #e3e7ee;
+  --ink: #14181f;
+  --ink-2: #4b5464;
+  --rule: #d2d8e2;
+  --flame: #a63d07;
+  --cool: #0b6a78;
+  --ok: #1b7f3b;
+  --warn: #8a5a00;
+
+  /* §2.5: one radius on everything, 1 px hairlines, no shadows. */
+  --radius: 6px;
+  /* §2.6: transitions only on interactive state. */
+  --motion: 140ms cubic-bezier(0.2, 0, 0, 1);
+
+  --sans: system-ui, -apple-system, "Segoe UI", roboto, helvetica, arial, sans-serif;
+  --mono: ui-monospace, sfmono-regular, "SF Mono", menlo, consolas, "Liberation Mono", monospace;
+
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* 02-design-system.md §2.3, dark. */
+    --bg: #0d1015;
+    --surface: #14181f;
+    --sunk: #1b212a;
+    --ink: #e7eaf0;
+    --ink-2: #98a2b3;
+    --rule: #262d38;
+    --flame: #ff9e4a;
+    --cool: #5ad1c8;
+    --ok: #5bd48a;
+    --warn: #f2c14e;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion: 0ms;
+  }
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--ink);
+  font: 14px/1.5 var(--sans);
+}
+
+#game {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  /* Without this a drag on a phone scrolls the frame instead of orbiting the camera, and a pinch
+     zooms the page. `@ignifx/input` reads pointer events from the canvas and cannot preventDefault
+     a passive listener. */
+  touch-action: none;
+  cursor: grab;
+}
+
+#game:active {
+  cursor: grabbing;
+}
+
+/* ── The parameter panel ─────────────────────────────────────────────────── */
+
+.igx-panel {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 248px;
+  max-width: calc(100vw - 24px);
+  max-height: calc(100% - 24px);
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 12px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(12px);
+  /* Inside the phone's safe area; `@ignifx/ui` publishes these on the overlay root. */
+  margin: var(--ignifx-safe-top, 0) var(--ignifx-safe-right, 0) 0 0;
+}
+
+/* The title bar is a button, so the whole strip toggles the panel and the target clears 44 px. */
+.igx-panel-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: color var(--motion);
+}
+
+.igx-panel-heading {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+/* A chevron drawn from two borders: no icon file, no inline SVG, and it rotates when it opens. */
+.igx-panel-chevron {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  margin-right: 4px;
+  border-right: 1.5px solid var(--ink-2);
+  border-bottom: 1.5px solid var(--ink-2);
+  transform: rotate(-135deg);
+  transition:
+    transform var(--motion),
+    border-color var(--motion);
+}
+
+.igx-panel-title:hover .igx-panel-chevron {
+  border-color: var(--ink);
+}
+
+.igx-panel-collapsed .igx-panel-chevron {
+  transform: rotate(45deg);
+}
+
+.igx-panel-body {
+  margin-top: 4px;
+}
+
+/* Collapsed, the panel is the title bar and nothing else: no scroll area, no reserved height, and
+   the vertical padding drops away so a 219 px-tall frame gives up 54 px rather than 70. */
+.igx-panel-collapsed {
+  max-height: none;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  overflow: visible;
+}
+
+.igx-group {
+  border-top: 1px solid var(--rule);
+  padding-top: 4px;
+}
+
+.igx-group:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.igx-group-title {
+  /* A `<summary>` is a real button: keyboard operable, and 44 px tall for a thumb. */
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  cursor: pointer;
+  color: var(--ink-2);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  transition: color var(--motion);
+}
+
+.igx-group-title:hover {
+  color: var(--ink);
+}
+
+.igx-row {
+  display: block;
+  padding: 2px 0 6px;
+}
+
+.igx-row-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0;
+}
+
+.igx-row-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 24px;
+}
+
+.igx-row-label {
+  color: var(--ink);
+}
+
+.igx-row-value {
+  color: var(--cool);
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.igx-row-readout .igx-row-head {
+  min-height: 22px;
+}
+
+.igx-panel label {
+  cursor: pointer;
+}
+
+/* ── Controls ────────────────────────────────────────────────────────────── */
+
+.igx-panel input[type="range"] {
+  /* The thumb is 20 px; the 44 px track is what a thumb actually has to hit. */
+  width: 100%;
+  height: 44px;
+  margin: 0;
+  accent-color: var(--flame);
+  background: transparent;
+  cursor: pointer;
+}
+
+.igx-panel input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  /* The 44 px target is the row; the box itself stays 20 px so the label reads as a label. */
+  margin: 0;
+  accent-color: var(--flame);
+  cursor: pointer;
+}
+
+.igx-panel input[type="color"] {
+  width: 44px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--sunk);
+  cursor: pointer;
+}
+
+.igx-panel select {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 4px;
+  padding: 0 8px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--sunk);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+  transition:
+    border-color var(--motion),
+    color var(--motion);
+}
+
+.igx-panel select:hover {
+  border-color: var(--ink-2);
+}
+
+.igx-button {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--sunk);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+  transition:
+    border-color var(--motion),
+    background var(--motion);
+}
+
+.igx-button:hover {
+  border-color: var(--ink-2);
+}
+
+/* §3, Button: focus ring 2 px --flame, offset 2 px. */
+.igx-panel :focus-visible,
+.igx-fallback a:focus-visible {
+  outline: 2px solid var(--flame);
+  outline-offset: 2px;
+}
+
+/* ── The paused announcement ─────────────────────────────────────────────── */
+
+.igx-status {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  margin: 0;
+  padding: 4px 12px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  color: var(--ink-2);
+  font-family: var(--mono);
+  font-size: 0.75rem;
+}
+
+/* ── The no-WebGPU panel ─────────────────────────────────────────────────── */
+
+.igx-fallback {
+  display: grid;
+  position: absolute;
+  inset: 0;
+  place-content: center;
+  gap: 8px;
+  padding: 24px;
+  background: var(--bg);
+  text-align: center;
+}
+
+.igx-fallback h1 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.igx-fallback p {
+  max-width: 48ch;
+  margin: 0 auto;
+  color: var(--ink-2);
+}
+
+.igx-fallback a {
+  color: var(--flame);
+  font-weight: 600;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+/* ── Narrow frames ───────────────────────────────────────────────────────── */
+
+@media (max-width: 520px) {
+  .igx-panel {
+    /* A 248 px panel over a 320 px canvas hides the game. Below 520 px it becomes a sheet along
+       the bottom edge, which is where a thumb already is. */
+    top: auto;
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    width: auto;
+    max-height: 45%;
+    margin: 0 var(--ignifx-safe-right, 0) var(--ignifx-safe-bottom, 0) var(--ignifx-safe-left, 0);
+  }
+}

@@ -228,7 +228,7 @@ The world's image-based lighting, skybox, fog, image processing, and clear colou
 | `environment` | `asset` | `null` | The .env image-based lighting to install. |
 | `rotation` | `f32` | `0` | Rotation of the environment around world Y, in degrees. |
 | `blur` | `f32` | `0` | How blurred the specular reflection is. |
-| `skybox` | `record` | `{"enabled":true,"size":20}` | The background the environment draws. |
+| `skybox` | `record` | `{"enabled":true,"size":20}` | The background, as the installed .environment.json declared it. Read-only in practice. |
 | `fog` | `record` | `{"mode":"none","color":[0.784314,0.784314,0.784314,1],"density":0.01,"start":10,"end":100}` | Distance fog. |
 | `imageProcessing` | `record` | `{"exposure":1,"contrast":1,"toneMapping":"none"}` | Exposure, contrast, and tone mapping. Recompiles PBR pipelines when it changes. |
 | `clearColor` | `color` | `[0,0,0,1]` | The colour the scene is cleared to, in sRGB. |

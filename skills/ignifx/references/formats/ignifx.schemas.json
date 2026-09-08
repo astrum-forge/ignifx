@@ -811,7 +811,7 @@
         "skybox": {
           "kind": "record",
           "default": "{\"enabled\":true,\"size\":20}",
-          "description": "The background the environment draws."
+          "description": "The background, as the installed .environment.json declared it. Read-only in practice."
         },
         "fog": {
           "kind": "record",
@@ -859,7 +859,7 @@
         "skybox": {
           "kind": "str",
           "default": "\"\"",
-          "description": "A .dds or .env skybox address; empty for none."
+          "description": "A .dds or .env skybox address; empty draws this environment's own cube map."
         },
         "skyboxSize": {
           "kind": "f32",
@@ -869,7 +869,7 @@
         "skyboxEnabled": {
           "kind": "bool",
           "default": "true",
-          "description": "Whether a skybox is drawn at all."
+          "description": "Whether a skybox is drawn at all; decided here, not on the component."
         },
         "blur": {
           "kind": "f32",

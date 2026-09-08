@@ -7,7 +7,9 @@ import {
 } from "../../../src/lite/camera.js";
 import {
   FOG_MODES,
+  installSceneEnvironment,
   loadSceneEnvironment,
+  readSceneEnvironment,
   setSceneClearColor,
   setSceneEnvironmentBlur,
   setSceneEnvironmentRotation,
@@ -20,6 +22,7 @@ import { captureFrame } from "../../../src/lite/gpu/screenshot-capture.js";
 import { createPbrMaterialFromProps } from "../../../src/lite/material.js";
 import { createNode } from "../../../src/lite/node.js";
 import { createPixelRgba, pixelLuminance, samplePixel } from "../../../src/lite/screenshot.js";
+import { rebuildRenderables } from "../../../src/lite/shadow.js";
 import { assetUrl } from "./fixtures/asset-urls.js";
 import { advanceFrames, createRenderHarness } from "./fixtures/gpu-harness.js";
 import type { RenderHarness } from "./fixtures/gpu-harness.js";
@@ -49,9 +52,11 @@ afterEach(() => {
  * Builds a scene with a mirror-like metal box, optionally lit by the studio environment.
  *
  * @param withEnvironment - Whether to load `studio.env`.
+ * @param surface - `"metal"` reflects the specular cube map; `"diffuse"` is lit only by the
+ * environment's spherical harmonics, which is what makes a change to them measurable.
  * @returns The running harness.
  */
-async function buildScene(withEnvironment: boolean): Promise<RenderHarness> {
+async function buildScene(withEnvironment: boolean, surface: "metal" | "diffuse" = "metal"): Promise<RenderHarness> {
   const harness = await createRenderHarness({
     size: 48,
     msaaSamples: 1,
@@ -66,7 +71,11 @@ async function buildScene(withEnvironment: boolean): Promise<RenderHarness> {
         });
       }
       const box = createBoxMesh(engine, 2);
-      setMeshMaterial(box, createPbrMaterialFromProps({ baseColor: [1, 1, 1, 1], metallic: 1, roughness: 0.15 }));
+      const props =
+        surface === "metal"
+          ? { baseColor: [1, 1, 1, 1] as const, metallic: 1, roughness: 0.15 }
+          : { baseColor: [1, 1, 1, 1] as const, metallic: 0, roughness: 1 };
+      setMeshMaterial(box, createPbrMaterialFromProps(props));
       addMeshToScene(scene, box);
 
       const cameraNode = createNode("camera-entity");
@@ -172,5 +181,113 @@ describe("image processing", () => {
         }),
       Promise.resolve(),
     );
+  }, 30_000);
+});
+
+describe("swapping the installed environment", () => {
+  it("reads back what loadEnvironment installed, and moves the scene onto another set", async () => {
+    const harness = await buildScene(true);
+    const first = loaded;
+    expect(first).not.toBeNull();
+    // The regression guard for the one undeclared Lite field ignifx touches: if `_envTextures` is
+    // renamed or moved, this is `null` and the whole suite says so.
+    expect(readSceneEnvironment(harness.scene)).toBe(first);
+    expect(installSceneEnvironment(harness.scene, first as EnvironmentTextures)).toBe(false);
+
+    const second = await loadSceneEnvironment(harness.scene, {
+      url: assetUrl("studio.env"),
+      brdfUrl: assetUrl("brdf-lut.png"),
+      skipSkybox: true,
+      skipGround: true,
+    });
+    // A second load is a second upload: Lite installs it itself, so the slot has already moved.
+    expect(second).not.toBe(first);
+    expect(readSceneEnvironment(harness.scene)).toBe(second);
+    // And Lite overwrote the scene's image processing on the way, which is why the `Environment`
+    // component re-applies its own after every install.
+    expect(harness.scene.imageProcessing.exposure).toBeCloseTo(0.8, 6);
+
+    expect(installSceneEnvironment(harness.scene, first as EnvironmentTextures)).toBe(true);
+    expect(readSceneEnvironment(harness.scene)).toBe(first);
+    expect(installSceneEnvironment(harness.scene, second)).toBe(true);
+    expect(readSceneEnvironment(harness.scene)).toBe(second);
+  }, 30_000);
+
+  it("changes what a diffuse surface is lit by, with no rebuild", async () => {
+    const harness = await buildScene(true, "diffuse");
+    const original = loaded as EnvironmentTextures;
+    const lit = await centreLuminance(harness);
+    expect(lit).toBeGreaterThan(8);
+
+    // A diffuse surface is lit entirely by the environment's spherical harmonics, and those live in
+    // the scene uniform buffer, whose cache key is the identity of the installed set
+    // (`lib/frame-graph/render-task.js`). So this needs no renderable rebuild to be visible.
+    const dark: EnvironmentTextures = { ...original, sphericalHarmonics: new Float32Array(36) };
+    expect(installSceneEnvironment(harness.scene, dark)).toBe(true);
+    await advanceFrames(harness, WARM_FRAMES);
+    const unlit = await centreLuminance(harness);
+    expect(unlit).toBeLessThan(lit - 10);
+
+    installSceneEnvironment(harness.scene, original);
+    await advanceFrames(harness, WARM_FRAMES);
+    expect(await centreLuminance(harness)).toBeGreaterThan(unlit + 10);
+  }, 30_000);
+
+  it("keeps a metal surface lit across a swap once the renderables are rebuilt", async () => {
+    const harness = await buildScene(true);
+    const first = loaded as EnvironmentTextures;
+    const before = await centreLuminance(harness);
+    expect(before).toBeGreaterThan(8);
+
+    const second = await loadSceneEnvironment(harness.scene, {
+      url: assetUrl("studio.env"),
+      brdfUrl: assetUrl("brdf-lut.png"),
+      skipSkybox: true,
+      skipGround: true,
+    });
+    installSceneEnvironment(harness.scene, first);
+    await rebuildRenderables(harness.scene);
+    await advanceFrames(harness, WARM_FRAMES);
+    // A bind group holds the cube map's texture view, so the rebuild is what re-binds it. The
+    // failure this pins is the interesting one: a stale or dangling view renders black or rejects
+    // the frame.
+    expect(await centreLuminance(harness)).toBeGreaterThan(8);
+
+    installSceneEnvironment(harness.scene, second);
+    await rebuildRenderables(harness.scene);
+    await advanceFrames(harness, WARM_FRAMES);
+    expect(await centreLuminance(harness)).toBeGreaterThan(8);
+  }, 40_000);
+});
+
+describe("a skybox from the environment's own cube map", () => {
+  it("paints the background when the .env names itself as the skybox source", async () => {
+    // `loadEnvironment` treats `skyboxUrl === url` as "reuse the cube map I just uploaded" and
+    // builds an HDR cube background; omitting it draws a flat box painted in the clear colour,
+    // which on a black scene is indistinguishable from no background at all. This is what the
+    // environment loader relies on for a declaration that enables a skybox and names no image.
+    const harness = await createRenderHarness({
+      size: 48,
+      msaaSamples: 1,
+      beforeRegister: async (_engine, scene) => {
+        setSceneClearColor(scene, 0, 0, 0, 1);
+        await loadSceneEnvironment(scene, {
+          url: assetUrl("studio.env"),
+          brdfUrl: assetUrl("brdf-lut.png"),
+          skyboxUrl: assetUrl("studio.env"),
+          skyboxSize: 60,
+          skipGround: true,
+        });
+        const cameraNode = createNode("camera-entity");
+        const camera = createCameraUnderNode(cameraNode);
+        setCameraPerspective(camera, 60);
+        setCameraClipPlanes(camera, 0.1, 100);
+        setSceneCamera(scene, camera);
+      },
+    });
+    current = harness;
+    await advanceFrames(harness, WARM_FRAMES);
+    // Nothing is in the scene but the background, so any lit pixel is the cube map.
+    expect(await centreLuminance(harness)).toBeGreaterThan(8);
   }, 30_000);
 });

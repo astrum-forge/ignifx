@@ -1,4 +1,4 @@
-import type { Plugin } from "vite";
+import type { Plugin, Rollup } from "vite";
 
 /** The subset of Rollup's `EmittedAsset` the plugin uses; `rolldown` is not a direct dependency. */
 export interface EmittedAssetLike {
@@ -170,7 +170,7 @@ export interface PluginHarness {
   buildStart(this: FakePluginContext): Promise<void>;
   resolveId(id: string): string | null;
   load(this: FakePluginContext, id: string): Promise<string | null>;
-  generateBundle(this: FakePluginContext): Promise<void>;
+  generateBundle(this: FakePluginContext, output: unknown, bundle: Rollup.OutputBundle): Promise<void>;
   configureServer(server: unknown): Promise<void>;
 }
 

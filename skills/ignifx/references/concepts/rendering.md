@@ -15,14 +15,14 @@ Entity ──▶ Camera | Light | MeshRenderer | Model | Environment | PostProce
 Exact fields and defaults are in [`../formats/components.md`](../formats/components.md); this is
 what they mean.
 
-| Component          | What it adds                                                      | Notes                                                                                                 |
-| ------------------ | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `Camera`           | A view. The **entity's transform is the view**; no follow logic   | `projection`, `fov` (degrees), `orthographicSize`, `near`/`far`, `viewport`, `clearColor`, `priority` |
-| `Light`            | `"directional" \| "point" \| "spot" \| "hemispheric"`             | `shadows` is a sub-record; only directional and spot lights can cast (`IGX-0703`)                     |
-| `MeshRenderer`     | One clone of a `MeshAsset`, drawn with a `MaterialAsset`          | `allowMultiple`; several renderers per entity are fine                                                |
-| `Model`            | One instance of a loaded glTF, cloned under the entity's node     | `nodes`, `attachToNode(name, entity)`, `materialOverrides`; `animations`/`skeletons` are `@beta`      |
-| `Environment`      | Image-based lighting, skybox, fog, image processing, clear colour | **One per world**; a second enabled one logs `IGX-0705` and the most recent wins                      |
-| `PostProcessStack` | `bloom`, `smaa`, `imageProcessing`, as one frame-graph chain      | Needs `features.postProcessing`, or it logs `IGX-0710` and does nothing (§3)                          |
+| Component          | What it adds                                                      | Notes                                                                                                                                                                 |
+| ------------------ | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Camera`           | A view. The **entity's transform is the view**; no follow logic   | `projection`, `fov` (degrees), `orthographicSize`, `near`/`far`, `viewport`, `clearColor`, `priority`                                                                 |
+| `Light`            | `"directional" \| "point" \| "spot" \| "hemispheric"`             | `shadows` is a sub-record; only directional and spot lights can cast (`IGX-0703`)                                                                                     |
+| `MeshRenderer`     | One clone of a `MeshAsset`, drawn with a `MaterialAsset`          | `allowMultiple`; several renderers per entity are fine                                                                                                                |
+| `Model`            | One instance of a loaded glTF, cloned under the entity's node     | `nodes`, `attachToNode(name, entity)`, `materialOverrides`; `animations`/`skeletons` are `@beta`                                                                      |
+| `Environment`      | Image-based lighting, skybox, fog, image processing, clear colour | **One per world**; a second enabled one logs `IGX-0705` and the most recent wins. Assign a different **loaded** handle to `environment` to switch lighting at runtime |
+| `PostProcessStack` | `bloom`, `smaa`, `imageProcessing`, as one frame-graph chain      | Needs `features.postProcessing`, or it logs `IGX-0710` and does nothing (§3)                                                                                          |
 
 - `Camera` also answers geometry questions: `screenToRay(x, y)`, `worldToScreen(point, out)`,
   `screenToWorldPoint(x, y, distance, out)`, `viewportToWorldPoint(u, v, distance, out)`,
@@ -43,7 +43,35 @@ what they mean.
   `Camera.clearColor` on the main camera wins whenever it is not `null`, then
   `Environment.clearColor`, then the `rendering.clearColor` setting (§4), which is applied as the
   scene is created. Setting a camera's back to `null` leaves whatever is there; it does not restore
-  the setting.
+  the setting. Every one of them is **sRGB and is presented as its linear value** — a channel lands
+  on screen at `srgbToLinear(value) * 255`, so `{ r: 0.6, g: 0.2, b: 0.9 }` reads back as bytes
+  `81, 8, 201` and a literal `#14181F` is almost black; pass the inverse to match a page colour.
+  In `@ignifx/2d`'s `"sprite"` mode the sprite pass owns the frame, so only the
+  `rendering.clearColor` setting applies (same decode, same bytes) and the two components do
+  nothing.
+- **Switching environments at runtime works, switching skyboxes does not.** Assigning a different
+  _loaded_ `AssetHandle<EnvironmentAsset>` to `Environment.environment` moves the scene onto that
+  asset's cube map: the diffuse light changes on the next frame and the specular reflection one
+  frame after that, when the render sync rebuilds the material groups. Both handles keep their GPU
+  resources while they are retained, so switching back and forth is free. `environment = null`
+  means "stop steering", not "go dark" — Babylon Lite has no inverse of `loadEnvironment`, so the
+  last installed environment keeps lighting the scene, and `environment.installed` keeps naming it.
+  The **skybox** is the part Lite decides when the asset loads: setting `Environment.skybox` to
+  something the installed `.environment.json` did not deliver logs `IGX-0711` once and changes
+  nothing (leaving the record alone is silent). Declare `skyboxEnabled`/`skyboxSize` in the
+  `.environment.json`, and give a world that switches environments `skyboxEnabled: false` plus an
+  `Environment.clearColor`.
+
+  ```ts
+  import type { App, AssetHandle, Environment, EnvironmentAsset } from "@ignifx/core";
+
+  /** Switches the world's lighting to another prefiltered environment. */
+  export async function useEnvironment(app: App, env: Environment, address: string): Promise<void> {
+    const next: AssetHandle<EnvironmentAsset> = await app.assets.loadAsync<EnvironmentAsset>(address);
+    env.environment = next.retain();
+  }
+  ```
+
 - A `Light` is driven by the entity's transform: a directional or spot light shines along the
   entity's forward (`+Z`) axis, a point or spot light sits at its position, and a hemispheric light's
   sky direction is the entity's up (`+Y`) axis. Point it with `entity.transform.lookAt(target)`.

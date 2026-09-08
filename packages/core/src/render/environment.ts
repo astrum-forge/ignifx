@@ -1,10 +1,15 @@
 import { Component } from "../component/component.js";
+import { CoreErrorCode } from "../errors/error-codes.js";
 import { setSceneFog, TONE_MAPPING_NAMES } from "../lite/gpu/environment.js";
 import { Color } from "../math/color.js";
 import { asset, bool, color, enumOf, f32, record } from "../schema/field-kinds.js";
 import { createDefaults, defineSchema } from "../schema/schema.js";
 import { EnvironmentAsset } from "./environment-asset.js";
-import { applyEnvironmentOrientation, applySceneImageProcessing } from "./gpu/environment-install.js";
+import {
+  applyEnvironmentOrientation,
+  applySceneImageProcessing,
+  installLoadedEnvironment,
+} from "./gpu/environment-install.js";
 import type { RendererImpl } from "./renderer.js";
 import type { AssetHandle } from "../assets/types.js";
 import type { ComponentHooks } from "../component/component.js";
@@ -32,6 +37,53 @@ import type { Schema } from "../schema/types.js";
  * a second one until the first has settled; a failure is reported through `app.onError` rather than
  * becoming an unhandled rejection (coding standards §8). The visible consequence is that a script
  * that ramps exposure every frame gets as many recompiles as the GPU can keep up with and no queue.
+ *
+ * ## Switching environments at runtime
+ *
+ * An `.env` is loaded **onto the scene** by the asset loader, because that is the only shape Lite's
+ * `loadEnvironment` has (`./environment-asset.ts` explains it at length). Until 2026-09-08 that
+ * meant `environment` was effectively read-only after the first load: the component re-aimed what
+ * the loader had installed and nothing more, so assigning a second loaded handle changed the
+ * rotation and the blur and left the lighting alone. It now installs the asset's recorded handles
+ * on the scene (`./gpu/environment-install.ts`) and reports the install as a **topology change**,
+ * which the render-sync system coalesces into the frame's one `rebuildSceneRenderables` — the step
+ * that makes every PBR material re-bind the new cube map, because a bind group holds the texture
+ * view rather than the scene's slot. Two loaded handles can therefore be swapped back and forth for
+ * free: the GPU resources belong to the assets, stay alive while their handles are retained, and are
+ * released by the asset system exactly as before.
+ *
+ * Installing also re-applies rotation, blur, **and** image processing, because Lite's
+ * `loadEnvironment` overwrites `scene.imageProcessing` (`toneMappingEnabled`, `exposure = 0.8`,
+ * `contrast = 1.2`) as a side effect of every load.
+ *
+ * ## Assigning `null` leaves the scene lit
+ *
+ * Lite 1.27.0 has no inverse of `loadEnvironment` — no `unloadEnvironment`, no
+ * `scene.environmentTexture` to clear — and clearing its slot by hand would leave every PBR
+ * material bound to a cube map the scene no longer admits to having until the next renderable
+ * rebuild. So `environment = null` is documented as "stop steering the environment", not "turn the
+ * lights off": the last installed environment keeps lighting the scene, exactly as detaching the
+ * component does. {@link Environment.installed} keeps naming it, because that is what the scene is
+ * actually lit by. To change the lighting, install a different loaded environment.
+ *
+ * ## `skybox` is decided when the environment loads, not here
+ *
+ * Lite builds the background inside `loadEnvironment`, as a *feature-owned* `Renderable` pushed
+ * onto the scene from a deferred builder that `registerScene` drains
+ * (`lib/_chunks/env-helpers-*.js`). `Renderable` (`index.d.ts` 9678) is `{ order, isTransparent,
+ * mesh?, bind }` — no visibility flag, no size, no handle — and Lite exposes no way to remove one,
+ * so a background that has been built cannot be hidden, resized, or re-aimed at another cube map.
+ * The `.environment.json` is therefore the authority: `skyboxEnabled`, `skybox` and `skyboxSize`
+ * decide the background when the asset loads. The component's `skybox` record is read every frame
+ * so that a value the installed environment cannot deliver is *reported* — `IGX-0711`, once per
+ * component — rather than silently ignored, which is what it was until 2026-09-08. A field left at
+ * its schema default never reports anything, so only a project that actually asked for a different
+ * background hears about it.
+ *
+ * The one improvement that did fit: an environment with `skyboxEnabled` and no explicit `skybox`
+ * now draws **its own** prefiltered cube map (`./loaders/environment-loader.ts`), where Lite's
+ * default was a flat box painted in the clear colour. So a bare `.env` gets a real background, and
+ * the component's default `skybox.enabled: true` agrees with it.
  *
  * ## `ambientColor` does not exist
  *
@@ -89,6 +141,34 @@ export interface EnvironmentFogSettings {
 }
 
 /**
+ * Whether a background is drawn, when nothing says otherwise. It matches the `.environment.json`
+ * default (`skyboxEnabled`), which is what makes the ordinary case agree with itself.
+ */
+const SKYBOX_ENABLED_DEFAULT = true;
+
+/** The background cube's default size in metres. It matches the file format's `skyboxSize`. */
+const SKYBOX_SIZE_DEFAULT = 20;
+
+/**
+ * The `skybox` record an `Environment` declares (`docs/architecture/07-rendering.md` §2.5).
+ *
+ * @remarks
+ * Babylon Lite 1.27.0 builds the background inside `loadEnvironment` and hands back no handle on
+ * it, so both fields are decided when the environment **loads** and cannot be changed afterwards.
+ * Declare them in the `.environment.json` (`skyboxEnabled`, `skyboxSize`); a component that asks
+ * for something else logs `IGX-0711` once. The defaults match the file format's, so the ordinary
+ * case is silent.
+ *
+ * @public
+ */
+export interface EnvironmentSkyboxSettings {
+  /** Whether a background is drawn behind the scene. */
+  enabled: boolean;
+  /** The background cube's size, in metres. */
+  size: number;
+}
+
+/**
  * The `imageProcessing` record an `Environment` declares
  * (`docs/architecture/07-rendering.md` §2.5).
  *
@@ -109,10 +189,18 @@ export interface ImageProcessingSettings {
  * @example
  * ```ts
  * const studio = await app.assets.loadAsync<EnvironmentAsset>("environments/studio.env");
- * world.createEntity("Environment").addComponent(Environment, {
+ * const env = world.createEntity("Environment").addComponent(Environment, {
  *   environment: studio.retain(),
  *   imageProcessing: { exposure: 1.2, contrast: 1, toneMapping: "aces" },
  * });
+ * ```
+ *
+ * @example
+ * Switching environments at runtime. Both handles stay retained, so switching back costs nothing.
+ *
+ * ```ts
+ * const night = await app.assets.loadAsync<EnvironmentAsset>("environments/night.env");
+ * env.environment = night.retain();
  * ```
  *
  * @public
@@ -133,7 +221,7 @@ export class Environment extends Component implements ComponentHooks {
 
   declare blur: number;
 
-  declare skybox: { enabled: boolean; size: number };
+  declare skybox: EnvironmentSkyboxSettings;
 
   declare fog: EnvironmentFogSettings;
 
@@ -159,20 +247,31 @@ export class Environment extends Component implements ComponentHooks {
 
   #imageProcessingInFlight = false;
 
-  #appliedEnvironment: EnvironmentAsset | null = null;
+  #trackedEnvironment: EnvironmentAsset | null = null;
+
+  #installedEnvironment: EnvironmentAsset | null = null;
+
+  #hasWarnedAboutSkybox = false;
 
   /**
-   * The environment asset this component installed, once it has loaded.
+   * The environment asset this component installed on the scene.
    *
-   * @returns The asset, or `null` when none is loaded.
+   * @remarks
+   * It stops at the **last installed** asset, which is what the scene is actually lit by: setting
+   * `environment` back to `null` does not un-light the scene, because Lite has no inverse of
+   * `loadEnvironment` (see the module remarks). Headless it names the asset too — what a headless
+   * app skips is the cube map, not the bookkeeping.
+   *
+   * @returns The asset, or `null` when this component has never installed one.
    */
   get installed(): EnvironmentAsset | null {
-    return this.#appliedEnvironment;
+    return this.#installedEnvironment;
   }
 
   /** Records that the component exists; the scene is written on the first sync. */
   onAttach(): void {
-    this.#appliedEnvironment = null;
+    this.#trackedEnvironment = null;
+    this.#installedEnvironment = null;
   }
 
   /**
@@ -185,7 +284,8 @@ export class Environment extends Component implements ComponentHooks {
    * implies. The `PreRender` system re-picks the winner on the next frame.
    */
   onDetach(): void {
-    this.#appliedEnvironment = null;
+    this.#trackedEnvironment = null;
+    this.#installedEnvironment = null;
   }
 
   /**
@@ -193,14 +293,19 @@ export class Environment extends Component implements ComponentHooks {
    * environment only.
    *
    * @param renderer - The rendering service, for the scene and the headless flag.
+   * @returns `true` when a different environment was installed on the scene this frame, which is a
+   * topology change: the render-sync system owes the frame one `rebuildSceneRenderables` so that
+   * every PBR material re-binds the new cube map.
    *
    * @internal
    */
-  sync(renderer: RendererImpl): void {
+  sync(renderer: RendererImpl): boolean {
     this.#applyClearColor(renderer);
     this.#applyFog(renderer);
-    this.#applyEnvironment(renderer);
+    const installed = this.#applyEnvironment(renderer);
+    this.#reportSkybox(renderer);
     this.#applyImageProcessing(renderer);
+    return installed;
   }
 
   /**
@@ -247,27 +352,94 @@ export class Environment extends Component implements ComponentHooks {
   }
 
   /**
-   * Applies the loaded environment's rotation and blur, and records which asset is installed.
+   * Installs a newly assigned environment on the scene, then applies its rotation and blur.
+   *
+   * @remarks
+   * Three things happen only when the field moves to a *different* loaded asset, which is what
+   * keeps the "write only what changed" discipline of `07-rendering.md` §2.2: the scene is pointed
+   * at the asset's recorded Lite handles, the rotation and the blur are invalidated so they are
+   * written against the new cube map, and the image-processing key is cleared — Lite's
+   * `loadEnvironment` overwrote `scene.imageProcessing` while that asset was loading, so the
+   * component's own exposure, contrast and curve have to be written again.
+   *
+   * A move to `null` is deliberately *not* an uninstall (see the module remarks): the field stops
+   * steering, and the scene stays lit by whatever was installed last.
    *
    * @param renderer - The rendering service, for the scene.
+   * @returns `true` when the scene's environment slot moved this frame.
    */
-  #applyEnvironment(renderer: RendererImpl): void {
+  #applyEnvironment(renderer: RendererImpl): boolean {
     const loaded = this.environment?.state === "loaded" ? this.environment.value : null;
-    if (loaded !== this.#appliedEnvironment) {
-      this.#appliedEnvironment = loaded;
-      this.#appliedRotation = Number.NaN;
-      this.#appliedBlur = Number.NaN;
+    let installed = false;
+    if (loaded !== this.#trackedEnvironment) {
+      this.#trackedEnvironment = loaded;
+      if (loaded !== null && loaded !== this.#installedEnvironment) {
+        this.#installedEnvironment = loaded;
+        this.#appliedRotation = Number.NaN;
+        this.#appliedBlur = Number.NaN;
+        this.#appliedImageProcessing = "";
+        this.#hasWarnedAboutSkybox = false;
+        const textures = loaded.lite.textures;
+        // A headless load produced none, and there is no scene slot to move: the asset is still
+        // recorded, so `installed` answers.
+        installed = textures !== null && installLoadedEnvironment(renderer.scene, textures);
+      }
     }
-    if (loaded === null || renderer.isHeadless) {
+    if (this.#installedEnvironment === null || renderer.isHeadless) {
       // The rotation and the blur are properties of the installed cube map, which a headless load
-      // never produced; the asset is still recorded, so `installed` answers.
-      return;
+      // never produced.
+      return installed;
     }
     if (this.#appliedRotation !== this.rotation || this.#appliedBlur !== this.blur) {
       this.#appliedRotation = this.rotation;
       this.#appliedBlur = this.blur;
       applyEnvironmentOrientation(renderer.scene, this.rotation, this.blur);
     }
+    return installed;
+  }
+
+  /**
+   * Says once, at warning level, that the `skybox` record asks for a background the installed
+   * environment was not loaded with.
+   *
+   * @remarks
+   * The field cannot be honoured here and this is not an oversight: Lite 1.27.0 builds the
+   * background inside `loadEnvironment`, as a `Renderable` with no visibility flag, no size and no
+   * handle, and offers nothing that removes or re-aims one (see the module remarks). So the record
+   * is compared with what the installed asset's declaration actually delivered, and a disagreement
+   * is reported rather than dropped.
+   *
+   * A field still sitting at its schema default is **not** a disagreement, whatever the declaration
+   * says. Otherwise every project whose `.environment.json` turns the background off would be told
+   * off for never having touched a component field, which is the opposite of actionable. The
+   * warning therefore means "you asked for something and did not get it", never "these two numbers
+   * differ".
+   *
+   * @param renderer - The rendering service, for the log sink.
+   */
+  #reportSkybox(renderer: RendererImpl): void {
+    const installed = this.#installedEnvironment;
+    if (installed === null || this.#hasWarnedAboutSkybox) {
+      return;
+    }
+    const definition = installed.definition;
+    const skybox = this.skybox;
+    const askedForEnabled = skybox.enabled !== SKYBOX_ENABLED_DEFAULT && skybox.enabled !== definition.skyboxEnabled;
+    const askedForSize = skybox.size !== SKYBOX_SIZE_DEFAULT && skybox.size !== definition.skyboxSize;
+    if (!askedForEnabled && !askedForSize) {
+      return;
+    }
+    this.#hasWarnedAboutSkybox = true;
+    renderer.app.log.warn(
+      `${CoreErrorCode.skyboxFixedAtLoad}: {entity} asks for skybox ` +
+        "{requested}, but {asset} was loaded with {loaded} and Babylon Lite builds the background " +
+        "when the environment loads, with no handle to change it afterwards. Declare skyboxEnabled " +
+        "and skyboxSize in the .environment.json instead.",
+      this.entity.name,
+      `{ enabled: ${String(skybox.enabled)}, size: ${String(skybox.size)} }`,
+      installed.address,
+      `{ enabled: ${String(definition.skyboxEnabled)}, size: ${String(definition.skyboxSize)} }`,
+    );
   }
 
   /**
@@ -344,10 +516,15 @@ function environmentSchema(): Schema {
     blur: f32(0, { min: 0, max: 1, tooltip: "How blurred the specular reflection is." }),
     skybox: record(
       {
-        enabled: bool(true, { tooltip: "Whether a skybox is drawn behind the scene." }),
-        size: f32(20, { min: 0.001, tooltip: "The skybox cube's size, in metres." }),
+        enabled: bool(SKYBOX_ENABLED_DEFAULT, {
+          tooltip: "Whether a skybox is drawn; set it in the .environment.json.",
+        }),
+        size: f32(SKYBOX_SIZE_DEFAULT, {
+          min: 0.001,
+          tooltip: "The skybox cube's size in metres; set it in the .environment.json.",
+        }),
       },
-      { tooltip: "The background the environment draws." },
+      { tooltip: "The background, as the installed .environment.json declared it. Read-only in practice." },
     ),
     fog: record(
       {

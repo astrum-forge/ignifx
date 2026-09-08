@@ -1,0 +1,60 @@
+# Template for `dist/_headers`, emitted by the site build (`scripts/headers.ts`).
+#
+# It lives here rather than in `public/` because Vite copies `public/` *after* the bundle is
+# written and would overwrite an emitted file. The build substitutes the hash marker on the
+# `script-src` line below with the SHA-256 of the one JSON-LD block every page carries
+# (`08-execution.md` §4.5).
+#
+# Cloudflare Pages applies **every** matching rule and joins a repeated header with a comma
+# ("An incoming request which matches multiple rules' URL patterns will inherit all rules' headers.
+# If a header is applied twice in the `_headers` file, the values are joined with a comma
+# separator."), so a rule that needs a *different* value first detaches the one `/*` set with
+# `! Header-Name`. A pattern may hold only one splat, which is why the example frames are matched
+# as `/examples/*run/` rather than `/examples/*/run/*`; `test/site.test.ts` asserts that no
+# catalogue slug ends in `run`, so the pattern cannot catch a viewer page by accident.
+#
+# The site policy is deliberately absolute: the site loads nothing from anywhere else and asks
+# nothing of the network at runtime (`CONSTITUTION.md` §9.1). `script-src` carries the JSON-LD hash
+# and nothing else — no `unsafe-inline` for scripts or styles anywhere on a site page, which is why
+# Shiki's per-token colours are generated classes and the theme is applied by `/theme.js`, a real
+# file loaded synchronously.
+/*
+  Content-Security-Policy: default-src 'self'; img-src 'self' data:; script-src 'self' %%JSONLD_HASH%%; style-src 'self'; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: accelerometer=(), ambient-light-sensor=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), usb=()
+  Cross-Origin-Opener-Policy: same-origin
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Every file under /assets/ carries a content hash in its name: fonts, the stylesheets, the module.
+/assets/*
+  ! Cache-Control
+  Cache-Control: public, max-age=31536000, immutable
+
+# The brand mark and the favicons are unhashed, and change only when the brand does.
+/brand/*
+  ! Cache-Control
+  Cache-Control: public, max-age=86400
+
+# The examples' hashed chunks and their vendored sample assets.
+/examples/assets/*
+  ! Cache-Control
+  Cache-Control: public, max-age=31536000, immutable
+
+# Example frames: same-origin asset fetches, WebAssembly (Havok, Rapier, Recast), embeddable by our
+# own pages. `style-src` carries 'unsafe-inline' because `@ignifx/ui` and `@ignifx/devtools` install
+# their stylesheets by appending a `<style>` element; `packages/electron/src/main/csp.ts` already
+# allows exactly that, and only for styles (ADR-0020).
+/examples/*run/
+  ! Content-Security-Policy
+  Content-Security-Policy: default-src 'self'; img-src 'self' data: blob:; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' data:; worker-src 'self' blob:; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'
+
+/examples/*run/index.html
+  ! Content-Security-Policy
+  Content-Security-Policy: default-src 'self'; img-src 'self' data: blob:; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' data:; worker-src 'self' blob:; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'
+
+# Badges are hot-linked by other sites (`05-press-kit.md` §4).
+/press/badges/*
+  ! Cache-Control
+  Cache-Control: public, max-age=86400
+  Access-Control-Allow-Origin: *

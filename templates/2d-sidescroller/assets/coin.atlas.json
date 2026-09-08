@@ -1,7 +1,7 @@
 {
   "format": "ignifx.spriteatlas",
   "formatVersion": 1,
-  "image": "/coin.png",
+  "image": "coin.png",
   "sampling": "nearest",
   "premultipliedAlpha": false,
   "frames": [

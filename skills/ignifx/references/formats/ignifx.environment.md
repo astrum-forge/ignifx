@@ -12,8 +12,8 @@ An image-based lighting environment, its BRDF lookup table, and its skybox.
 | `formatVersion` | `u32` | `1` | The file format version; 1 before ignifx 1.0. |
 | `environment` | `str` | `""` | The .env address holding the prefiltered cube map. |
 | `brdfLut` | `str` | `""` | The RGBD BRDF table; empty takes rendering.brdfLut. |
-| `skybox` | `str` | `""` | A .dds or .env skybox address; empty for none. |
+| `skybox` | `str` | `""` | A .dds or .env skybox address; empty draws this environment's own cube map. |
 | `skyboxSize` | `f32` | `20` | The skybox cube's size, in metres. |
-| `skyboxEnabled` | `bool` | `true` | Whether a skybox is drawn at all. |
+| `skyboxEnabled` | `bool` | `true` | Whether a skybox is drawn at all; decided here, not on the component. |
 | `blur` | `f32` | `0` | How blurred the specular reflection is, 0 to 1. |
 | `rotation` | `f32` | `0` | Rotation around world Y, in degrees. |

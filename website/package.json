@@ -7,16 +7,34 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "dev:examples": "vite --config examples/vite.config.ts",
+    "build": "vite build && pnpm run build:examples && node examples/_tools/build-templates.ts",
+    "build:examples": "vite build --config examples/vite.config.ts",
     "preview": "vite preview",
+    "press-kit": "node press/build.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run"
+  },
+  "dependencies": {
+    "@ignifx/physics": "workspace:*",
+    "ignifx": "workspace:*"
   },
   "devDependencies": {
     "@fontsource-variable/archivo": "catalog:",
     "@fontsource-variable/jetbrains-mono": "catalog:",
     "@fontsource-variable/public-sans": "catalog:",
+    "@gltf-transform/core": "catalog:",
+    "@gltf-transform/extensions": "catalog:",
+    "@gltf-transform/functions": "catalog:",
+    "@ignifx/vite-plugin": "workspace:*",
+    "@types/node": "catalog:",
+    "@webgpu/types": "catalog:",
+    "fflate": "catalog:",
+    "fontkit": "catalog:",
     "marked": "catalog:",
+    "meshoptimizer": "catalog:",
+    "playwright": "catalog:",
+    "sharp": "catalog:",
     "shiki": "catalog:",
     "typescript-native": "catalog:",
     "vite": "catalog:"

@@ -1,26 +1,38 @@
-/* The hero, the frame timeline, the card grid, and the measured figures. */
+/* The home page: hero, pillars, the complete app, templates, studio and install.
+
+   The hero is as tall as its content, never `100vh` (`02-design-system.md` §4.1), and it carries
+   the site's one gradient: a single radial `--ember` glow behind the running canvas. */
 
 .hero {
-  max-width: 54rem;
-  padding-bottom: var(--s-8);
+  position: relative;
+  overflow: hidden;
+  padding: var(--s-16) 0 var(--band-gap);
 }
 
-/* The hero eyebrow names packages and versions, which are never upper-cased. */
-.hero .eyebrow {
-  text-transform: none;
-  letter-spacing: 0;
+.hero-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(60% 55% at 72% 46%, var(--ember), transparent 70%);
+}
+
+.hero-shell {
+  position: relative;
+  display: grid;
+  gap: var(--s-12);
+  align-items: center;
 }
 
 .hero-title {
-  margin-top: var(--s-4);
-  font-size: clamp(2rem, 1.2rem + 3.4vw, 3.5rem);
-  font-weight: 680;
+  font-size: var(--t-hero);
+  /* A display line at 4 rem needs a tighter box than body copy; `--lh-tight` is for headings. */
+  line-height: 1.02;
   letter-spacing: -0.03em;
 }
 
 .hero-lead {
-  max-width: var(--measure);
-  margin-top: var(--s-6);
+  max-width: var(--measure-lead);
+  margin-top: var(--s-4);
   color: var(--ink-2);
   font-size: var(--t-md);
 }
@@ -28,364 +40,133 @@
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: var(--s-3);
-  margin-top: var(--s-8);
-}
-
-.hero-status {
-  display: flex;
-  gap: var(--s-2);
-  align-items: baseline;
-  max-width: var(--measure);
   margin-top: var(--s-6);
-  color: var(--ink-2);
-  font-size: var(--t-sm);
 }
 
-.dot {
-  flex: 0 0 auto;
-  width: 7px;
-  height: 7px;
-  margin-top: 0.15em;
-  background: var(--flame);
-  border-radius: 50%;
+/* The pill is its own block so it hugs its text; as a flex item beside the buttons it would take
+   the whole line's width and wrap inside a box far wider than its content. */
+.hero-pill {
+  margin-top: var(--s-4);
 }
 
-/* --- The frame timeline: the one bold thing on the site. --- */
-
-.frame {
-  margin: 0;
-}
-
-.frame-plot {
-  padding: var(--s-4) 0;
-  overflow-x: auto;
-  border: 1px solid var(--rule);
-  background: var(--surface);
-}
-
-.frame-svg {
-  display: block;
-  width: 100%;
-  min-width: 44rem;
-  height: auto;
-}
-
-.frame-svg text {
-  font-family: var(--font-mono);
-  fill: var(--ink-2);
-}
-
-.budget {
-  fill: var(--sunk);
-  stroke: var(--rule);
-  stroke-width: 1;
-}
-
-.budget-used {
-  fill: var(--flame);
-}
-
-.budget-label {
-  font-size: 12px;
-}
-
-.budget-used-label {
-  font-size: 12px;
-  fill: var(--flame);
-}
-
-.tick {
-  stroke: var(--rule);
-  stroke-width: 1;
-}
-
-.tick-major {
-  stroke: var(--ink-2);
-}
-
-.tick-label {
-  font-size: 10px;
-}
-
-.tick-unit {
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-
-.leader {
-  fill: none;
-  stroke: var(--rule);
-  stroke-width: 1;
-  stroke-dasharray: 3 3;
-}
-
-.phase-box {
-  fill: var(--bg);
-  stroke: var(--rule);
-  stroke-width: 1;
-  transition: fill var(--speed) var(--ease);
-}
-
-.phase:hover .phase-box {
-  fill: var(--flame-wash);
-  stroke: var(--flame);
-}
-
-.phase-ordinal {
-  font-size: 10px;
-  fill: var(--ink-2);
-}
-
-.phase-name {
-  font-size: 13px;
-  fill: var(--ink);
-}
-
-.playhead {
-  fill: var(--flame);
-  animation: sweep 2.4s linear infinite;
-}
-
-@keyframes sweep {
-  from {
-    transform: translateX(0);
-  }
-
-  to {
-    transform: translateX(880px);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .playhead {
-    animation: none;
-    opacity: 0.35;
-  }
-}
-
-.frame-caption {
-  max-width: var(--measure);
+.hero-support {
+  max-width: var(--measure-lead);
   margin-top: var(--s-4);
   color: var(--ink-2);
-  font-size: var(--t-sm);
-}
-
-.phase-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
-  gap: var(--s-4) var(--s-6);
-  margin-top: var(--s-6);
-}
-
-.phase-entry {
-  min-width: 0;
-}
-
-.phase-list dt {
-  display: flex;
-  gap: var(--s-2);
-  align-items: baseline;
-  font-family: var(--font-mono);
-  font-size: var(--t-sm);
-  color: var(--ink);
-}
-
-.phase-key {
-  display: inline-grid;
-  place-items: center;
-  width: 1.25rem;
-  height: 1.25rem;
-  border: 1px solid var(--rule);
-  color: var(--ink-2);
   font-size: var(--t-2xs);
 }
 
-.phase-list dd {
-  margin: var(--s-1) 0 0 2rem;
-  color: var(--ink-2);
-  font-size: var(--t-sm);
-  line-height: 1.5;
+@media (min-width: 1040px) {
+  .hero-shell {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  }
 }
 
-/* --- Cards --- */
+/* --- Pillars --- */
 
-.grid {
-  display: grid;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-/* Hairlines are borders on the cells, not a background showing through 1 px gaps: an incomplete
-   last row would otherwise leave a filled block where a card is missing. */
-.grid-cards {
-  grid-template-columns: repeat(auto-fill, minmax(min(17rem, 100%), 1fr));
+.pillar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding-top: var(--s-4);
   border-top: 1px solid var(--rule);
-  border-left: 1px solid var(--rule);
 }
 
-.card {
-  min-width: 0;
-  padding: var(--s-4) var(--s-4) var(--s-6);
-  border-right: 1px solid var(--rule);
-  border-bottom: 1px solid var(--rule);
-  background: var(--surface);
-  transition: background-color var(--speed) var(--ease);
-}
-
-.card:hover {
-  background: var(--bg);
-}
-
-.card-pkg {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--s-2);
-  justify-content: space-between;
-  color: var(--ink-2);
-  font-family: var(--font-mono);
-  font-size: var(--t-2xs);
-}
-
-.card-title {
-  margin-top: var(--s-2);
-  font-size: var(--t-base);
-}
-
-.card-title a {
-  color: var(--ink);
-  text-decoration: none;
-  border-bottom: 1px solid transparent;
-}
-
-.card-title a:hover {
-  border-bottom-color: var(--flame);
+.pillar-icon {
   color: var(--flame);
 }
 
-.card-text {
-  margin-top: var(--s-2);
+.pillar-title {
+  font-size: var(--t-lg);
+}
+
+.pillar p {
   color: var(--ink-2);
   font-size: var(--t-sm);
-  line-height: 1.5;
 }
 
-.card-links {
-  margin: var(--s-3) 0 0;
-  padding: 0;
-  list-style: none;
+/* --- The complete app --- */
+
+.split {
+  display: grid;
+  /* `minmax(0, …)` rather than `1fr`: a `<pre>`'s min-content is its longest line, and an implicit
+     `auto` track would grow the grid past the viewport instead of letting the block scroll. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-8);
+  align-items: start;
 }
 
-.card-links li + li {
-  margin-top: var(--s-1);
-}
-
-.card-links a {
-  font-family: var(--font-mono);
-  font-size: var(--t-2xs);
-}
-
-/* --- Measured figures --- */
-
-.grid-measures {
-  grid-template-columns: repeat(auto-fit, minmax(min(12rem, 100%), 1fr));
-  border-top: 1px solid var(--rule);
-  border-left: 1px solid var(--rule);
-}
-
-.measure {
+.split-copy,
+.split-code {
   min-width: 0;
-  padding: var(--s-4);
-  border-right: 1px solid var(--rule);
-  border-bottom: 1px solid var(--rule);
-  background: var(--surface);
 }
 
-.measure-value {
-  color: var(--cool);
-  font-family: var(--font-mono);
-  font-size: var(--t-xl);
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
+@media (min-width: 1040px) {
+  .split {
+    grid-template-columns: minmax(0, 4fr) minmax(0, 6fr);
+  }
 }
 
-.measure-unit {
-  margin-left: 0.15em;
-  font-size: var(--t-sm);
-  font-weight: 400;
-}
-
-.measure-label {
-  margin-top: var(--s-3);
-  font-size: var(--t-sm);
-  line-height: 1.45;
-}
-
-.measure-source {
-  margin-top: var(--s-2);
+.split-copy p {
+  max-width: var(--measure-lead);
   color: var(--ink-2);
-  font-family: var(--font-mono);
-  font-size: var(--t-2xs);
-  overflow-wrap: anywhere;
 }
 
-/* --- Gallery --- */
+.split-code .code-pre {
+  max-height: 34rem;
+  overflow-y: auto;
+}
 
-.shots {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(21rem, 100%), 1fr));
+/* --- Templates --- */
+
+.card-template .card-actions {
+  margin-top: var(--s-4);
+}
+
+/* --- Studio --- */
+
+.studio {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
   gap: var(--s-6);
-  margin: 0;
-  padding: 0;
-  list-style: none;
 }
 
-.shot {
-  border: 1px solid var(--rule);
-  background: var(--surface);
-}
-
-.shot-image {
-  display: block;
-  width: 100%;
-  height: auto;
-  aspect-ratio: 16 / 9;
-  object-fit: cover;
-  background: var(--sunk);
-  border-bottom: 1px solid var(--rule);
-}
-
-.shot-body {
-  padding: var(--s-4);
-}
-
-.shot-size {
-  color: var(--cool);
-}
-
-.controls {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: var(--s-1) var(--s-4);
-  margin-top: var(--s-4);
-  padding-top: var(--s-3);
-  border-top: 1px solid var(--rule);
-  font-size: var(--t-2xs);
-}
-
-.controls dt {
-  font-family: var(--font-mono);
-  color: var(--ink);
-}
-
-.controls dd {
-  margin: 0;
+.studio-copy {
+  max-width: var(--measure);
   color: var(--ink-2);
 }
 
-.shot .band-after {
-  margin-top: var(--s-4);
+/* --- Install --- */
+
+.install {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-8);
+  align-items: start;
+}
+
+.install-code,
+.install-side {
+  min-width: 0;
+}
+
+@media (min-width: 800px) {
+  .install {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  }
+}
+
+.install-note,
+.install-support {
+  margin-top: var(--s-3);
+  color: var(--ink-2);
+  font-size: var(--t-sm);
+}
+
+.install-support {
+  font-size: var(--t-2xs);
 }

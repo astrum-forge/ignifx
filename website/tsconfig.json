@@ -15,7 +15,7 @@
     "isolatedDeclarations": false,
     // No WebGPU here — the shell renders DOM only, and `DOM`/`DOM.Iterable` come from the base
     // config. `vite/client` supplies `import.meta.env` and Vite's asset module declarations.
-    "types": ["vite/client", "node"]
+    "types": ["vite/client", "node", "@webgpu/types"]
   },
-  "include": ["src", "scripts", "test", "vite.config.ts", "vitest.config.ts"]
+  "include": ["src", "scripts", "test", "examples", "press", "site.config.ts", "vite.config.ts", "vitest.config.ts"]
 }

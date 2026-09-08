@@ -1,0 +1,103 @@
+{
+  "format": "ignifx.spriteanimation",
+  "formatVersion": 1,
+  "atlas": "villager.atlas.json",
+  "clips": [
+    {
+      "name": "idle_down",
+      "from": "idle_down_0",
+      "to": "idle_down_1",
+      "fps": 2,
+      "loop": true
+    },
+    {
+      "name": "idle_left",
+      "from": "idle_left_0",
+      "to": "idle_left_1",
+      "fps": 2,
+      "loop": true
+    },
+    {
+      "name": "idle_right",
+      "from": "idle_right_0",
+      "to": "idle_right_1",
+      "fps": 2,
+      "loop": true
+    },
+    {
+      "name": "idle_up",
+      "from": "idle_up_0",
+      "to": "idle_up_1",
+      "fps": 2,
+      "loop": true
+    },
+    {
+      "name": "walk_down",
+      "from": "walk_down_0",
+      "to": "walk_down_7",
+      "fps": 10,
+      "loop": true,
+      "events": [
+        {
+          "frame": 0,
+          "name": "footstep"
+        },
+        {
+          "frame": 4,
+          "name": "footstep"
+        }
+      ]
+    },
+    {
+      "name": "walk_left",
+      "from": "walk_left_0",
+      "to": "walk_left_7",
+      "fps": 10,
+      "loop": true,
+      "events": [
+        {
+          "frame": 0,
+          "name": "footstep"
+        },
+        {
+          "frame": 4,
+          "name": "footstep"
+        }
+      ]
+    },
+    {
+      "name": "walk_right",
+      "from": "walk_right_0",
+      "to": "walk_right_7",
+      "fps": 10,
+      "loop": true,
+      "events": [
+        {
+          "frame": 0,
+          "name": "footstep"
+        },
+        {
+          "frame": 4,
+          "name": "footstep"
+        }
+      ]
+    },
+    {
+      "name": "walk_up",
+      "from": "walk_up_0",
+      "to": "walk_up_7",
+      "fps": 10,
+      "loop": true,
+      "events": [
+        {
+          "frame": 0,
+          "name": "footstep"
+        },
+        {
+          "frame": 4,
+          "name": "footstep"
+        }
+      ]
+    }
+  ]
+}

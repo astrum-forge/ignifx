@@ -621,6 +621,7 @@ export const CoreErrorCode: {
     readonly unsupportedMaterialKind: "IGX-0708";
     readonly invalidAssetFile: "IGX-0709";
     readonly postProcessingFeatureOff: "IGX-0710";
+    readonly skyboxFixedAtLoad: "IGX-0711";
     readonly cryptoUnavailable: "IGX-1420";
     readonly storageInvalidNamespace: "IGX-1421";
     readonly storageInvalidKey: "IGX-1422";
@@ -1055,12 +1056,9 @@ export class Environment extends Component implements ComponentHooks {
     rotation: number;
     static schema: Schema;
     // (undocumented)
-    skybox: {
-        enabled: boolean;
-        size: number;
-    };
+    skybox: EnvironmentSkyboxSettings;
     // @internal
-    sync(renderer: RendererImpl): void;
+    sync(renderer: RendererImpl): boolean;
     static typeId: string;
 }
 
@@ -1119,6 +1117,12 @@ export interface EnvironmentFogSettings {
     end: number;
     mode: EnvironmentFogMode;
     start: number;
+}
+
+// @public
+export interface EnvironmentSkyboxSettings {
+    enabled: boolean;
+    size: number;
 }
 
 // @public
@@ -2397,6 +2401,8 @@ export interface RenderCapture {
 
 // @public
 export interface Renderer {
+    // @internal
+    addCameraSource(probe: (world: World) => boolean): Disconnect;
     captureScreenshot(): Promise<RenderCapture>;
     readonly drawCalls: number;
     readonly features: Readonly<RenderingFeatureSettings>;

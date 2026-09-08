@@ -1,5 +1,5 @@
-import { bool, defineSchema, enumOf, f32, map } from "@ignifx/core";
-import type { Schema } from "@ignifx/core";
+import { bool, Color, defineSchema, enumOf, f32, map, RENDERING_SETTINGS_SECTION } from "@ignifx/core";
+import type { App, ColorLike, RenderingSettings, Schema } from "@ignifx/core";
 
 /**
  * The `twoD` project settings section (`docs/architecture/04-extensions.md` §5,
@@ -86,4 +86,36 @@ export function twoDSettingsSchema(): Schema {
     pixelsPerUnit: f32(100, { min: Number.EPSILON }),
     ySort: map(bool(false)),
   });
+}
+
+/**
+ * The value a `"sprite"`-mode frame is cleared to, read from the **core** `rendering.clearColor`
+ * setting and decoded the way the 3D path decodes it.
+ *
+ * @remarks
+ * A `"sprite"`-mode sprite pass owns the frame: it clears the swapchain itself and nothing the
+ * render scene did survives underneath, so `rendering.clearColor` would otherwise have no effect at
+ * all in a 2D game. The precedence the 3D path documents —
+ * `Camera.clearColor`, then `Environment.clearColor`, then the setting
+ * (`docs/architecture/07-rendering.md` §2.1) — has only its last rung here: neither of those two
+ * components exists in a 2D scene, and `Camera2D` has no `clearColor` field of its own.
+ *
+ * Colours are sRGB everywhere in ignifx and Lite's clear values are linear, so the setting is
+ * decoded on the way through exactly as `RendererImpl.applyClearColor` decodes it. That is what
+ * makes a `"sprite"` frame and a `"mixed"` frame with the same setting the same colour on screen,
+ * and it is also why a literal `#14181F` presents darker than its hex suggests.
+ *
+ * @param app - The app whose settings are read.
+ * @returns The clear value, as straight linear RGBA in `0` to `1`.
+ *
+ * @internal
+ */
+export function spriteClearColor(app: App): ColorLike {
+  const { clearColor } = app.settings.section<RenderingSettings>(RENDERING_SETTINGS_SECTION);
+  return {
+    r: Color.srgbToLinear(clearColor.r),
+    g: Color.srgbToLinear(clearColor.g),
+    b: Color.srgbToLinear(clearColor.b),
+    a: clearColor.a,
+  };
 }

@@ -1,7 +1,7 @@
 {
   "format": "ignifx.spriteatlas",
   "formatVersion": 1,
-  "image": "/fx.png",
+  "image": "fx.png",
   "sampling": "nearest",
   "premultipliedAlpha": false,
   "frames": [
