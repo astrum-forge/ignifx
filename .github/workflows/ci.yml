@@ -198,7 +198,11 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'visual'))
     runs-on: macos-latest
-    timeout-minutes: 30
+    # 45, not 30: the project measures 29 pages — four templates and twenty-five website examples —
+    # and on 2026-09-08 the first full run on `main` reached page 24 in 28 minutes (the 3D templates
+    # take about three minutes each, `pbr-model` four) before the 30-minute limit cancelled it, which
+    # prints no summary and skips the upload below. The suite needs about 40 minutes on this runner.
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
