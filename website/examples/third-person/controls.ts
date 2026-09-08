@@ -38,10 +38,11 @@ const BUTTON_RIGHT = "9.5rem";
  * The action map the character and its camera read.
  *
  * @remarks
- * `scale(14, -14)` on the two stick bindings does two things at once. The negative y is the sign
- * fix: a pointer's y grows downward, a stick's grows upward, and the rig subtracts `look.y` from
- * its pitch — so a stick pushed forward would look down. The 14 is the magnitude, chosen so a full
- * deflection turns at about the rate a drag across the canvas does.
+ * The two stick bindings carry a dead zone and nothing else. `ThirdPersonCamera` reads a stick as a
+ * **rate** — `stickLookSpeed` degrees per second at full deflection — and a pointer delta as a
+ * displacement in CSS pixels, and it normalises the pitch axis per device so that "up is up" on
+ * both (`docs/architecture/12-3d-toolkit.md` §2.1, 2026-09-08). A `scale(…)` here would therefore
+ * double-count the rate, and a sign flip would invert the stick against the mouse.
  */
 export const PLAYER_ACTIONS = defineInputActions({
   maps: [
@@ -76,8 +77,8 @@ export const PLAYER_ACTIONS = defineInputActions({
           type: "vector2",
           bindings: [
             { path: "<Pointer>/delta" },
-            { path: "<Gamepad>/rightStick", processors: ["deadzone(0.2)", "scale(14, -14)"] },
-            { path: "<Virtual>/look", processors: ["deadzone(0.15)", "scale(14, -14)"] },
+            { path: "<Gamepad>/rightStick", processors: ["deadzone(0.2)"] },
+            { path: "<Virtual>/look", processors: ["deadzone(0.15)"] },
           ],
         },
         {

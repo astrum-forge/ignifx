@@ -17,12 +17,14 @@
  * | Two-finger    | `<Touch>/touchCount`, `touch0`/`touch1`       | Pinch to dolly                      |
  * | Right stick   | `<Gamepad>/rightStick`, `deadzone(0.15)`      | Yaw and pitch, degrees per second   |
  *
- * `<Pointer>/delta` and the touch positions are in **backing-store pixels** (the canvas's
- * `width`/`height`, the space `pickAsync` and `Camera.worldToScreen` share), so every pixel figure
- * here is divided by the canvas's backing height before it becomes an angle. That is what makes the
- * gesture feel the same at a device pixel ratio of 1, 2 and 3, and at any canvas size:
- * {@link OrbitCamera.dragDegreesPerScreen} degrees per drag across the canvas, whatever the canvas
- * is.
+ * `<Pointer>/delta` is in **CSS pixels** of hand motion, and the touch positions are in
+ * **backing-store pixels** (the canvas's `width`/`height`, the space `pickAsync` and
+ * `Camera.worldToScreen` share) — `docs/architecture/08-input.md` §5 says why the two differ. The
+ * drag is therefore divided by the canvas's **CSS** height before it becomes an angle, so the
+ * gesture feels the same at a device pixel ratio of 1, 2 and 3, at any render scale and at any
+ * canvas size: {@link OrbitCamera.dragDegreesPerScreen} degrees per drag across the canvas,
+ * whatever the canvas is. The pinch compares two touch positions with each other, so its unit
+ * cancels out.
  *
  * A pointer press that starts on the parameter panel never reaches `<Pointer>/press` — the panel is
  * the canvas's sibling and `@ignifx/input` reads `pointerdown` from the canvas — and a drag that
@@ -230,13 +232,26 @@ export class OrbitCamera
   }
 
   /**
-   * The canvas's backing height in pixels, which every pointer figure is normalised by.
+   * The canvas's height in **CSS pixels**, which the drag delta is normalised by.
+   *
+   * @remarks
+   * `<Pointer>/delta` reports CSS pixels, so the divisor has to be the CSS height, not the backing
+   * store's: dividing by `canvas.height` would make a drag turn the camera less on a retina display
+   * and again less when a render-scale setting grows the backing store. An `OffscreenCanvas` has no
+   * layout box; its backing height is the only figure there is.
    *
    * @returns The height, or `1` when there is no surface, so a division is always safe.
    */
   get #screenHeight(): number {
     const surface = this.app.renderer.surface;
-    return surface === null || surface.height <= 0 ? 1 : surface.height;
+    if (surface === null) {
+      return 1;
+    }
+    const layoutHeight = "clientHeight" in surface ? surface.clientHeight : 0;
+    if (layoutHeight > 0) {
+      return layoutHeight;
+    }
+    return surface.height <= 0 ? 1 : surface.height;
   }
 
   /**

@@ -78,8 +78,9 @@ body {
   width: 100vw;
   height: 100vh;
   /* Without this a drag on a phone scrolls the frame instead of orbiting the camera, and a pinch
-     zooms the page. `@ignifx/input` reads pointer events from the canvas and cannot preventDefault
-     a passive listener. */
+     zooms the page. `@ignifx/input` never calls preventDefault on a pointer event — only on the
+     wheel, which it owns outright so a zoom does not also scroll the page around the frame — so
+     touch gestures are declined here, declaratively. */
   touch-action: none;
   cursor: grab;
 }

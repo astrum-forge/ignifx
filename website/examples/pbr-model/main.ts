@@ -165,15 +165,11 @@ bootExample({
         {
           label: "Bloom",
           controls: [
-            // A literal binding, not `bind(post.bloom, "enabled")`: `bind` reads the value once, here, and
-            // bloom is only switched on in `afterStart` — the toggle would render unchecked over a frame
-            // that has bloom in it.
-            toggle("Enabled", {
-              value: true,
-              change: (on: boolean): void => {
-                post.bloom.enabled = on;
-              },
-            }),
+            // The component's `enabled`, not `bloom.enabled`: the chain stays recorded and is skipped,
+            // which is a branch a frame rather than a rebuild per click — and it reads `true` here, during
+            // `setup`, while `bloom.enabled` is still false until `afterStart`. The threshold slider is
+            // live: the recorded task's uniforms are re-uploaded the frame after it moves.
+            toggle("Enabled", bind(post, "enabled")),
             slider("Threshold", { min: 0, max: 1.5, step: 0.02 }, bind(post.bloom, "threshold")),
           ],
         },

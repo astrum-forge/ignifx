@@ -8,7 +8,7 @@ import {
   SpriteRenderer,
   Vec2,
 } from "ignifx";
-import type { InputAction, MutableVec2, ScriptCallbacks, Tilemap } from "ignifx";
+import type { CharacterCollision2D, InputAction, MutableVec2, ScriptCallbacks, Tilemap, Vec2Like } from "ignifx";
 
 /**
  * The runner: everything about how the character *feels*, in one file, so `main.ts` is only the
@@ -21,6 +21,21 @@ import type { InputAction, MutableVec2, ScriptCallbacks, Tilemap } from "ignifx"
 
 /** Below this height the runner has left the world through the pit, and is put back. */
 const FALL_LIMIT = -2;
+
+/** Degrees to radians, for reading the controller's `slopeLimit` as an angle. */
+const DEGREES_TO_RADIANS = Math.PI / 180;
+
+/** How sideways an unwalkable contact normal has to be to count as a wall. A brick's is 1. */
+const WALL_NORMAL_X = 0.5;
+
+/** How far down a contact normal has to point to count as a ceiling. */
+const CEILING_NORMAL_Y = -0.5;
+
+/** How far a ground normal has to lean before the run is rotated onto it; flat ground is exactly `(0, 1)`. */
+const SLOPE_NORMAL_X = 0.01;
+
+/** How much of the requested horizontal speed a step has to lose before a wall counts as stopping the runner. */
+const WALL_STALL_RATIO = 0.5;
 
 /** The actions the runner reads. Its own map, so the kit's camera actions are untouched. */
 export const RUN_ACTIONS = defineInputActions({
@@ -73,6 +88,16 @@ export const RUN_ACTIONS = defineInputActions({
  * Input is sampled in `update` and spent in `fixedUpdate`, because those are two different clocks.
  * `wasPressedThisFrame` is true for exactly one *frame*, and a frame carries zero, one or two fixed
  * steps: read it inside the step and a press is either missed or acted on twice.
+ *
+ * Two rules here are the ones every platformer gets wrong the first time. **Walls are read from
+ * contact normals, not from a short move**: collide-and-slide on a 45-degree ramp legitimately
+ * returns about half the requested horizontal motion, so "I moved less than I asked, I must have hit
+ * a wall" zeroes the run on every ramp and the runner crawls up it (measured 2026-09-08 at a
+ * fraction of the run speed). `CharacterController2D.onCollided` reports a normal per obstacle
+ * instead; a normal that is too steep to stand on *and* sideways is a wall, and only if it also
+ * stalled the move. **The jump cut is a clamp applied once**, on the release edge: multiplying the
+ * rise by a factor on *every* step the button is up compounds, so the same launch reached 0.4 m or
+ * 3.4 m depending on how many frames a tap covered. `minJumpHeight` is what a tap is guaranteed.
  */
 export class Runner
   extends Script.define({
@@ -94,8 +119,11 @@ export class Runner
     coyoteTime: f32(0.1),
     /** How long before landing a jump press is remembered, in seconds. */
     jumpBuffer: f32(0.12),
-    /** What the rising velocity is multiplied by when the button is released early. */
-    jumpCut: f32(0.45),
+    /**
+     * The rise a *tapped* jump is guaranteed to reach, in metres. Releasing the button early clamps
+     * the climb to this once; holding it gives the whole `jumpSpeed` arc.
+     */
+    minJumpHeight: f32(1.1),
     /** Whether the sprite is mirrored when running left. */
     flipSprite: bool(true),
   })
@@ -134,12 +162,32 @@ export class Runner
   #wasGrounded = true;
   #clip = "";
 
+  /** Whether the runner is on the way up from a jump, and whether that rise has been clamped yet. */
+  #rising = false;
+  #cut = false;
+
+  /** What the previous fixed step touched: a wall on the right (`1`) or left (`-1`), a ceiling, the ground. */
+  #blocked = 0;
+  #ceiling = false;
+  readonly #surface: MutableVec2 = new Vec2(0, 1);
+  #surfaceY = -2;
+
   awake(): void {
-    this.#controller = this.entity.requireComponent(CharacterController2D);
+    const controller = this.entity.requireComponent(CharacterController2D);
+    this.#controller = controller;
     this.#animator = this.entity.getComponent(SpriteAnimator);
     this.#sprite = this.entity.getComponent(SpriteRenderer);
     this.#move = this.app.input.actions.find("move");
     this.#jump = this.app.input.actions.find("jump");
+    // One call per obstacle the move touched, raised by the step system after this script's
+    // `fixedUpdate`, so each step reads the previous step's contacts — the same one-step lag
+    // `controller.velocity` has. The event is pooled: classify it here, keep nothing of it.
+    controller.onCollided.connect(
+      (hit: CharacterCollision2D): void => {
+        this.#noteContact(hit.normal);
+      },
+      { owner: this },
+    );
   }
 
   update(dt: number): void {
@@ -170,6 +218,10 @@ export class Runner
     const grounded = controller.isGrounded;
     this.#wasGrounded = grounded;
     this.#coyote = grounded ? this.coyoteTime : Math.max(0, this.#coyote - dt);
+    if (grounded) {
+      this.#rising = false;
+    }
+    this.#applyContacts(controller);
     this.#accelerate(dt, grounded);
 
     if (this.#buffered > 0 && this.#coyote > 0) {
@@ -179,13 +231,20 @@ export class Runner
       } else {
         this.#coyote = 0;
         this.#velocity.y = this.jumpSpeed;
+        this.#rising = true;
+        this.#cut = false;
       }
     }
 
-    // Releasing the button on the way up cuts the rise short. That is the whole of "variable jump
-    // height": holding it gives the full arc, tapping gives a hop.
-    if (!this.#jumpHeld && this.#velocity.y > 0) {
-      this.#velocity.y *= this.jumpCut;
+    // The whole of "variable jump height", applied **once** per jump: the first step in which the
+    // button is no longer held clamps the climb to what `minJumpHeight` needs. It can only shorten
+    // a jump — released near the apex, the rise is already below the clamp and nothing happens.
+    if (this.#rising && !this.#cut && !this.#jumpHeld) {
+      this.#cut = true;
+      this.#velocity.y = Math.min(this.#velocity.y, Math.sqrt(2 * this.riseGravity * this.minJumpHeight));
+    }
+    if (this.#velocity.y <= 0) {
+      this.#rising = false;
     }
     const gravity = this.#velocity.y > 0 ? this.riseGravity : this.fallGravity;
     this.#velocity.y = Math.max(-this.terminalVelocity, this.#velocity.y - gravity * dt);
@@ -195,17 +254,75 @@ export class Runner
       this.#velocity.y = -1;
     }
 
-    this.#step.set(this.#velocity.x * dt, this.#velocity.y * dt);
+    this.#stepAlong(grounded, dt);
     controller.move(this.#step);
+    // Whatever the contact handler hears from here on belongs to the step Rapier is about to run.
+    this.#blocked = 0;
+    this.#ceiling = false;
+    this.#surface.set(0, 1);
+    this.#surfaceY = -2;
+  }
 
-    // The controller reports what it *actually* did. Walking into a wall has to zero the stored
-    // horizontal speed, or the runner keeps pressing into it and never accelerates away.
-    const actual = controller.velocity;
-    if (Math.abs(actual.x) < Math.abs(this.#velocity.x) * 0.5) {
-      this.#velocity.x = actual.x;
+  /**
+   * Applies the previous step's contacts: a wall that stalled the move zeroes the run, a ceiling
+   * ends the rise.
+   *
+   * @param controller - The controller, for what the last step actually resolved.
+   */
+  #applyContacts(controller: CharacterController2D): void {
+    if (this.#blocked !== 0 && Math.sign(this.#velocity.x) === this.#blocked) {
+      const resolved = controller.velocity;
+      if (Math.abs(resolved.x) < Math.abs(this.#velocity.x) * WALL_STALL_RATIO) {
+        this.#velocity.x = 0;
+      }
     }
-    if (this.#velocity.y > 0 && actual.y <= 0) {
+    if (this.#ceiling && this.#velocity.y > 0) {
       this.#velocity.y = 0;
+      this.#rising = false;
+    }
+  }
+
+  /**
+   * Turns the velocity into the displacement `move()` is given, rotated onto the ground the runner
+   * stands on so a run follows a ramp at full speed instead of cutting across it at its cosine. A
+   * jump is left alone: `jumpSpeed` goes straight up on a ramp as it does on the flat.
+   *
+   * @param grounded - Whether the runner is on the ground.
+   * @param dt - The fixed step, in seconds.
+   */
+  #stepAlong(grounded: boolean, dt: number): void {
+    const x = this.#velocity.x * dt;
+    const y = this.#velocity.y * dt;
+    const normal = this.#surface;
+    if (!grounded || this.#velocity.y > 0 || Math.abs(normal.x) <= SLOPE_NORMAL_X) {
+      this.#step.set(x, y);
+      return;
+    }
+    this.#step.set(normal.y * x + normal.x * y, normal.y * y - normal.x * x);
+  }
+
+  /**
+   * Files one contact normal as a ceiling, walkable ground, or a candidate wall.
+   *
+   * @param normal - The obstacle's outward normal at the contact point.
+   */
+  #noteContact(normal: Vec2Like): void {
+    if (normal.y <= CEILING_NORMAL_Y) {
+      this.#ceiling = true;
+      return;
+    }
+    const limit = this.#controller?.slopeLimit ?? 45;
+    if (normal.y >= Math.cos(limit * DEGREES_TO_RADIANS)) {
+      // Walkable: the most upward-facing surface of the step is the one the run is rotated onto.
+      if (normal.y > this.#surfaceY) {
+        this.#surfaceY = normal.y;
+        this.#surface.set(normal.x, normal.y);
+      }
+      return;
+    }
+    if (Math.abs(normal.x) > WALL_NORMAL_X) {
+      // A wall on the runner's right pushes left, so its normal's x is negative.
+      this.#blocked = normal.x < 0 ? 1 : -1;
     }
   }
 

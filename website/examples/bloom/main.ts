@@ -18,14 +18,18 @@ import { CLEAR_COLOR, createEmissiveRow, createFloor, createSphereRow, SHOT, STA
  *
  * And the effect is switched on **after** `app.start()`, which is what `afterStart` is for: a task
  * recorded before the scene is registered samples the swapchain, and WebGPU rejects that frame. The
- * chain itself is built once and toggled with `enabled`, because a frame graph cannot have a task
- * removed — so the Enabled toggle below costs one branch a frame and no rebuild.
+ * Enabled toggle below flips the **component**, not `bloom.enabled`: a frame graph cannot have a
+ * task removed, so a disabled stack keeps its chain and skips it — one branch a frame, no rebuild —
+ * whereas switching an effect's own `enabled` rebuilds the chain.
  *
- * The four sliders are the effect's whole surface. `threshold` is compared against the **linear**
- * offscreen target rather than the graded frame, which is why its useful range stops well short of
- * 1; `weight` is how much of the blur is mixed back; `kernel` is the blur width in pixels; and
- * `scale` is the fraction of full resolution the blur runs at, which is the first thing to lower on
- * a phone. `rows.ts` beside this file holds the composition, and says why there are two rows.
+ * The four sliders are the effect's whole surface, and they are live: `threshold`, `weight` and
+ * `kernel` are re-uploaded to the recorded task the frame after they change, and `scale` — the one
+ * tuning Lite fixes when a bloom task is created — rebuilds the chain. `threshold` is compared
+ * against the **linear** offscreen target rather than the graded frame, which is why its useful
+ * range stops well short of 1; `weight` is how much of the blur is mixed back; `kernel` is the blur
+ * width in pixels; and `scale` is the fraction of full resolution the blur runs at, which is the
+ * first thing to lower on a phone. `rows.ts` beside this file holds the composition, and says why
+ * there are two rows.
  */
 
 /**
@@ -107,15 +111,10 @@ bootExample({
         {
           label: "Bloom",
           controls: [
-            // A literal binding rather than `bind(post.bloom, "enabled")`: the panel is built
-            // during `setup`, when the flag is still false, so `bind` would read `false` and open
-            // the toggle unchecked over a frame that has bloom in it.
-            toggle("Enabled", {
-              value: true,
-              change: (on: boolean): void => {
-                post.bloom.enabled = on;
-              },
-            }),
+            // The component's `enabled`, not `bloom.enabled`: the chain stays recorded and is
+            // skipped, which is a branch a frame rather than a rebuild per click. It also reads
+            // `true` here, during `setup`, while `bloom.enabled` is still false until `afterStart`.
+            toggle("Enabled", bind(post, "enabled")),
             slider("Threshold", { min: 0, max: 1, step: 0.02, format: twoPlaces }, bind(post.bloom, "threshold")),
             slider("Weight", { min: 0, max: 1.5, step: 0.05, format: twoPlaces }, bind(post.bloom, "weight")),
             slider("Kernel", { min: 8, max: 128, step: 4, format: pixels }, bind(post.bloom, "kernel")),
