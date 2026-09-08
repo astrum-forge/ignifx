@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { gzipSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
@@ -12,6 +13,7 @@ import { slugify, stripFrontmatter } from "../scripts/markdown.ts";
 import { resolveGuideLink } from "../scripts/repo-content.ts";
 import { fileNameForRoute } from "../scripts/site.ts";
 import { findSkillPages, llmsUrls, repoPathOf } from "../scripts/skill-tree.ts";
+import { readText } from "../scripts/text.ts";
 import { site } from "../site.config.ts";
 
 const websiteRoot = path.resolve(import.meta.dirname, "..");
@@ -210,6 +212,17 @@ describe("routing", () => {
     const empty = CATEGORIES.find((category) => !CATALOGUE.some((entry) => entry.category === category));
     if (empty !== undefined) {
       expect(exampleHref("not-built-yet", empty)).toBe("/examples/");
+    }
+  });
+
+  it("reads repository text with CRLF normalised, so a Windows checkout parses like a Linux one", () => {
+    // CI's `windows-latest` checks files out with CRLF; every parser here matches at line starts.
+    const file = path.join(tmpdir(), `ignifx-crlf-${String(process.pid)}.md`);
+    writeFileSync(file, "## First app\r\n\r\n```ts\r\nconst x = 1;\r\n```\r\n");
+    try {
+      expect(readText(file)).toBe("## First app\n\n```ts\nconst x = 1;\n```\n");
+    } finally {
+      rmSync(file, { force: true });
     }
   });
 

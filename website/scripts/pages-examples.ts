@@ -6,7 +6,7 @@
  * runs, and it runs inside an `<iframe>` of the example's own build, so this module holds no
  * per-example code at all.
  */
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import path from "node:path";
 import { CATALOGUE } from "../examples/catalogue.ts";
 import { blobUrl } from "../site.config.ts";
@@ -17,6 +17,7 @@ import { each, esc, h, join } from "./html.ts";
 import { icon } from "./icons.ts";
 import { renderMarkdown } from "./markdown.ts";
 import { exampleCard } from "./pages-home.ts";
+import { readText } from "./text.ts";
 import type { CodeHighlighter } from "./highlight.ts";
 import type { ExampleEntry } from "../examples/catalogue.ts";
 
@@ -301,7 +302,7 @@ export function attributionPage(
     ? h(
         "div",
         { class: "prose" },
-        renderMarkdown(highlighter, readFileSync(file, "utf8"), (href) =>
+        renderMarkdown(highlighter, readText(file), (href) =>
           href.startsWith("http") || href.startsWith("#") ? href : blobUrl(`website/examples/assets/${href}`),
         ).html,
       )

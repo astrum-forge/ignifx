@@ -7,11 +7,12 @@
  * and the source does not — the SHA-256 of the JSON-LD block, and one redirect per Agent Skill
  * file.
  */
-import { readFileSync } from "node:fs";
+
 import path from "node:path";
 import { site } from "../site.config.ts";
 import { jsonLdHash } from "./layout.ts";
 import { findSkillPages } from "./skill-tree.ts";
+import { readText } from "./text.ts";
 
 /** The marker line `redirects.txt` carries where the generated block goes. */
 const SKILL_MARKER = "%%SKILL_REDIRECTS%%";
@@ -30,7 +31,7 @@ const SOURCE_WIDTH = 44;
  * @throws When the template has lost its hash marker.
  */
 export function renderHeaders(websiteRoot: string): string {
-  const template = readFileSync(path.join(websiteRoot, "headers.txt"), "utf8");
+  const template = readText(path.join(websiteRoot, "headers.txt"));
   if (!template.includes(HASH_MARKER)) {
     throw new Error("website: headers.txt no longer carries the JSON-LD hash marker, so the block would be blocked.");
   }
@@ -62,7 +63,7 @@ function line(from: string, to: string): string {
  * @throws When the template has lost its marker.
  */
 export function renderRedirects(repositoryRoot: string, websiteRoot: string): string {
-  const template = readFileSync(path.join(websiteRoot, "redirects.txt"), "utf8");
+  const template = readText(path.join(websiteRoot, "redirects.txt"));
   if (!template.includes(SKILL_MARKER)) {
     throw new Error("website: redirects.txt no longer carries the skill-redirects marker line.");
   }

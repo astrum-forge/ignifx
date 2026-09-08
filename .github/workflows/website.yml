@@ -71,10 +71,11 @@ jobs:
           pnpm docs:llms
           git diff --exit-code website/public/llms.txt
 
-      - run: pnpm --filter @ignifx/website typecheck
-
-      # The same command Cloudflare Pages runs.
+      # The same command Cloudflare Pages runs. It comes before the typecheck: since ADR-0020 the
+      # site imports `ignifx` and `@ignifx/vite-plugin`, whose types live in their `dist/`.
       - run: pnpm turbo run build --filter=@ignifx/website...
+
+      - run: pnpm --filter @ignifx/website typecheck
 
       # Asserts the built output: every route, a run page per catalogue slug, every llms.txt URL
       # resolves to a repository file, every internal link resolves, no off-origin subresource, one

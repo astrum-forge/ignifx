@@ -15,7 +15,7 @@
  * being produced.
  */
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import path from "node:path";
 import { CATALOGUE } from "../examples/catalogue.ts";
 import { site } from "../site.config.ts";
@@ -39,6 +39,7 @@ import { pressPage } from "./pages-press.ts";
 import { missingPressFiles, pressScreenshots } from "./press-files.ts";
 import { readGuides, ungroupedRecipes } from "./repo-content.ts";
 import { llmsUrls, repoPathOf } from "./skill-tree.ts";
+import { readText } from "./text.ts";
 import type { Assets } from "./layout.ts";
 import type { Plugin } from "vite";
 
@@ -320,7 +321,7 @@ export function ignifxSite(repositoryRoot: string, websiteRoot: string): Plugin 
 
       // The contract with `pnpm docs:llms` since ADR-0020: every URL it publishes is an absolute
       // link to a file that exists in the working tree, not a page on this site.
-      const llms = readFileSync(path.join(websiteRoot, "public", "llms.txt"), "utf8");
+      const llms = readText(path.join(websiteRoot, "public", "llms.txt"));
       const urls = llmsUrls(llms);
       const broken: string[] = [];
       for (const url of urls) {

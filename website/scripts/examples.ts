@@ -6,10 +6,11 @@
  * The catalogue's types are fixed (`08-execution.md` §5): this module reads them and never changes
  * them.
  */
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import { CATALOGUE, CATEGORIES, findExample } from "../examples/catalogue.ts";
 import { blobUrl } from "../site.config.ts";
+import { readText } from "./text.ts";
 import type { ExampleCategory, ExampleEntry } from "../examples/catalogue.ts";
 
 /** The three formats every poster is committed in, best first (`08-execution.md` §2). */
@@ -166,7 +167,7 @@ export function readSources(repositoryRoot: string, entry: ExampleEntry): readon
     const full = path.join(absolute, file);
     return {
       label: file,
-      text: existsSync(full) ? readFileSync(full, "utf8") : null,
+      text: existsSync(full) ? readText(full) : null,
       language: languageOf(file),
       url: blobUrl(`${repoPrefix}/${file}`),
     };

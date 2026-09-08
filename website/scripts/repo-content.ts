@@ -6,9 +6,10 @@
  * compiles (`AGENTS.md`: "Skill examples are compiled by the harness"), and a guide page is the
  * recipe page, unchanged, with its links rewritten.
  */
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import path from "node:path";
 import { blobUrl } from "../site.config.ts";
+import { readText } from "./text.ts";
 
 /** Where the recipes live, relative to the repository root. */
 export const RECIPES_DIRECTORY = "skills/ignifx/references/recipes";
@@ -136,7 +137,7 @@ export function readGuides(repositoryRoot: string): readonly Guide[] {
           `website: ${RECIPES_DIRECTORY}/${name}.md is listed in GUIDE_GROUPS but does not exist. Update scripts/repo-content.ts.`,
         );
       }
-      const source = readFileSync(file, "utf8");
+      const source = readText(file);
       guides.push({
         name,
         route: `/docs/guides/${name}/`,
@@ -168,7 +169,7 @@ export function ungroupedRecipes(repositoryRoot: string): readonly string[] {
   }
   const grouped = new Set(GUIDE_GROUPS.flatMap((group) => group.recipes));
   const listed = new Set<string>();
-  for (const match of readFileSync(readme, "utf8").matchAll(/^\|\s*\[`(?<name>[a-z\d-]+)`\]/gmu)) {
+  for (const match of readText(readme).matchAll(/^\|\s*\[`(?<name>[a-z\d-]+)`\]/gmu)) {
     const name = match.groups?.["name"];
     if (name !== undefined) {
       listed.add(name);
@@ -213,7 +214,7 @@ export function resolveGuideLink(href: string): string {
  */
 export function readFirstAppSample(repositoryRoot: string): string {
   const file = path.join(repositoryRoot, "skills", "ignifx", "SKILL.md");
-  const source = readFileSync(file, "utf8");
+  const source = readText(file);
   const section = source.split(/^## /mu).find((block) => block.startsWith("First app"));
   if (section === undefined) {
     throw new Error(`website: skills/ignifx/SKILL.md has no "## First app" section to quote on the home page.`);
