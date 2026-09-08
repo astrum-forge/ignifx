@@ -508,11 +508,11 @@ describe("release gating (03-pages-and-copy.md §8)", () => {
     // Shiki splits a command across one `<span>` per token, so the assertion runs over the text.
     const home = (documents.get("index.html") ?? "").replaceAll(/<[^>]*>/gu, "");
     if (site.published) {
-      expect(home).toContain("npm create ignifx@latest");
+      expect(home).toContain("npx @ignifx/cli@latest");
     } else {
       expect(home).toContain("npm · soon");
       expect(home).toContain("git clone https://github.com/astrum-forge/ignifx.git");
-      expect(home).not.toContain("npm create ignifx@latest");
+      expect(home).not.toContain("npx @ignifx/cli@latest");
     }
   });
 });

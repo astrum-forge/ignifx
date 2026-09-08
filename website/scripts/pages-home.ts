@@ -83,7 +83,7 @@ function templateCard(websiteRoot: string, template: (typeof TEMPLATE_CARDS)[num
         label: "Create",
         variant: "secondary",
         icon: "copy",
-        copy: `npx create-ignifx my-game --template ${template.name}`,
+        copy: `npx @ignifx/cli@latest my-game --template ${template.name}`,
         ariaLabel: `Copy the create command for the ${template.title} template`,
       })
     : button({
@@ -279,13 +279,15 @@ export function homePage(repositoryRoot: string, websiteRoot: string, highlighte
   });
 
   const installCode = site.published
-    ? "npm create ignifx@latest my-game\ncd my-game && npm install && npm run dev"
+    ? "npx @ignifx/cli@latest my-game\ncd my-game && npm install && npm run dev"
     : "git clone https://github.com/astrum-forge/ignifx.git\ncd ignifx && pnpm install && pnpm build\npnpm --filter ignifx-template-3d-third-person dev";
   const installNote = site.published
     ? h(
         "p",
         { class: "install-note" },
-        md("Pick a template when asked, or pass `--template 3d-third-person`. Add `--desktop` for an Electron build."),
+        md(
+          "The default is the top-down template; pass `--template 3d-third-person` for another. Add `--desktop` for an Electron build.",
+        ),
       )
     : h("p", { class: "install-note" }, [
         "ignifx is not on npm yet. Until the first release, clone the repository and run a template from the workspace. ",

@@ -283,7 +283,7 @@ export const FEATURE_SECTIONS: readonly FeatureSection[] = [
   {
     id: "tooling",
     title: "Tooling",
-    packages: "@ignifx/vite-plugin and create-ignifx",
+    packages: "@ignifx/vite-plugin and @ignifx/cli (`create-ignifx`)",
     body: "",
     bullets: [
       "A Vite plugin that generates the asset manifest, writes `.meta.json` sidecars, validates scene, prefab, material, input, audio, animator and tilemap JSON against the engine schemas, handles WebAssembly, and wires hot module replacement",
