@@ -1,5 +1,65 @@
 # @ignifx/physics
 
+## 0.2.1
+
+### Patch Changes
+
+- 6a39fae: The interpolated display pose is written before `update`, so camera rigs and scripts see the pose the frame draws
+  
+  Poses are still snapshotted on the fixed step and interpolated with `time.fixedStepAlpha`, but the
+  system that writes `lerp(prev, cur, alpha)` into a `Rigidbody`'s or `CharacterController`'s node
+  moved from `Systems(PreRender, −500)` to `Systems(Update, −900)` — straight after the fixed loop and
+  lifecycle flush B, in front of `scripts.update`.
+  
+  Why: `ThirdPersonCamera`, `FirstPersonController`, bone attachments and every hand-written follow camera
+  run in `update`/`lateUpdate`, which used to be *before* the display pose existed. They framed the
+  character where the last fixed step left it while the renderer drew it at `lerp(prev, cur, alpha)`,
+  so at any refresh rate the character juddered against the camera by up to one fixed step of motion —
+  about 0.1 m at sprint speed, every frame. Writing the pose at the top of `Update` means `update`,
+  `lateUpdate`, animation, camera rigs and the render sync all read the same pose the frame presents.
+  This is Unity's model.
+  
+  What a game author sees: a smooth third- or first-person camera, and `transform.position` read from
+  `update`/`lateUpdate` now returning the interpolated pose rather than the last fixed one. The
+  simulation is unchanged: the restore system at `FixedUpdate −100` still runs before
+  `scripts.fixedUpdate`, so `fixedUpdate` and Havok only ever see authoritative poses, and a kinematic
+  body moved by writing its transform behaves exactly as before — the restore already overwrote such a
+  write before the step read it. A system that must read an authoritative pose outside the fixed loop
+  registers at `Phase.Update` with an order below `−900`.
+  
+  Public API change: none. The order constant and the interpolation system are `@internal`.
+- 6a39fae: `shapeCast` can sweep past one body, and the third-person boom and step probe no longer report the character's own capsule
+  
+  Lite's `ShapeCastQuery` carries no collision masks — unlike `physicsRaycast` — so a shape sweep
+  cannot be filtered by layer inside Havok; `layerMask` only ever decided which hit was *attributed*
+  an entity, and a body outside the mask still stopped the sweep, reported with `entity: null`. Two
+  callers in `@ignifx/3d` were sweeping from inside the character's own capsule and were stopped by it
+  at fraction zero every time:
+  
+  - `ThirdPersonCamera` sweeps from its shoulder pivot, which sits inside the capsule, out along the
+    boom. For every yaw whose boom crossed the capsule the sweep hit it immediately, `currentDistance`
+    collapsed to `0` and the camera sat inside the character's head — measured on 2026-09-08 in the
+    third-person template at every yaw from 30° to 180° at the spawn, with no wall anywhere near.
+    `collisionLayers: ["Level", "Prop"]` could not prevent it, because the mask never reached the sweep.
+  - `ThirdPersonController`'s step probe sweeps a sphere forward from the character's feet; both of its
+    sweeps found the capsule first, so `stepHeight` never lifted anything.
+  
+  `ShapeCastOptions` — `QueryOptions` plus `ignore?: Entity | null` — names the one body the sweep
+  passes through, resolved to its Havok body whether the entity is a `Rigidbody`, a collider-only
+  static, or a `CharacterController` (whose capsule body Lite exposes through `getBody()`). The camera
+  rig ignores its `target`; the step probe ignores its own entity. A masked-out body other than the
+  ignored one still shortens the boom, which for scenery is the point and is now said so on
+  `collisionLayers`.
+  
+  What a game author sees: a third-person camera that holds its distance through a full orbit and a
+  `stepHeight` that climbs steps; and, for their own queries, a way to sweep out of a body they are
+  standing in.
+  
+  Public API change: `ShapeCastOptions` is new and `PhysicsService.shapeCast` takes it in place of
+  `QueryOptions` (a widening — every existing call compiles). Nothing was removed or renamed.
+- Updated dependencies [388b0f6]
+  - @ignifx/core@0.2.1
+
 ## 0.2.0
 
 ### Patch Changes

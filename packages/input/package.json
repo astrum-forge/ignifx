@@ -1,6 +1,6 @@
 {
   "name": "@ignifx/input",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "ignifx input: action maps, bindings, keyboard/mouse/pointer/gamepad/touch devices, pointer lock, rebinding.",
   "keywords": [
     "ignifx",
