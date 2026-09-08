@@ -1,7 +1,8 @@
 import { Camera } from "@ignifx/core";
-import { BoxCollider, Rigidbody } from "@ignifx/physics";
+import { BoxCollider, CharacterController, Rigidbody } from "@ignifx/physics";
 import { describe, expect, it } from "vitest";
 import { ThirdPersonCamera } from "../../src/camera/third-person-camera.js";
+import { characterActions } from "../support/actions.js";
 import { createThreeDApp } from "../support/harness.js";
 import type { ThreeDAppHarness } from "../support/harness.js";
 import type { Entity } from "@ignifx/core";
@@ -36,7 +37,60 @@ function buildRig(harness: ThreeDAppHarness): { target: Entity; rig: ThirdPerson
   return { target, rig };
 }
 
+/**
+ * Counts the pointer-lock refusals the rig logged. A headless app has no canvas, so every request
+ * rejects with `IGX-0809` and the rig swallows it as a warning — which is what makes the re-arming
+ * visible without a DOM.
+ *
+ * @param harness - The app harness.
+ * @returns How many refusals have been logged so far.
+ */
+function refusals(harness: ThreeDAppHarness): number {
+  return harness.sink.toArray().filter((record) => record.message.includes("Pointer lock was refused.")).length;
+}
+
 describe("ThirdPersonCamera", () => {
+  it("sweeps past the target's own capsule, so a pivot inside the character never collapses the boom", async () => {
+    const harness = await createThreeDApp();
+    harness.app.input.loadActions(characterActions());
+    // A floor under the character, so the capsule has something to stand on; nothing else in the world.
+    const floor = harness.world.createEntity("Floor", { position: { x: 0, y: -0.5, z: 0 } });
+    floor.addComponent(BoxCollider, { size: { x: 60, y: 1, z: 60 } });
+    floor.addComponent(Rigidbody, { bodyType: "static" });
+    const target = harness.world.createEntity("Hero", { position: { x: 0, y: 0.9, z: 0 } });
+    target.addComponent(CharacterController, { height: 1.8, radius: 0.35 });
+    const cameraEntity = harness.world.createEntity("Camera");
+    cameraEntity.addComponent(Camera);
+    // A shoulder pivot: inside the capsule, as every third-person rig's is. A level boom (pitch 0)
+    // keeps the sweep 1.45 m above a floor whose top is at 0.5, so the capsule is the only body it
+    // could ever meet.
+    const rig = cameraEntity.addComponent(ThirdPersonCamera, {
+      target,
+      distance: 4.5,
+      damping: 0,
+      minPitch: 0,
+      maxPitch: 0,
+      shoulderOffset: { x: 0.4, y: 0.55, z: 0 },
+      collisionRadius: 0.25,
+      collisionLayers: [],
+    });
+    harness.stepMany(4);
+    expect(rig.currentDistance).toBeCloseTo(4.5, 2);
+
+    // Orbit a full turn in 30-degree steps through the rig's own look input. Before 2026-09-08 the
+    // sweep found the capsule at fraction zero for every yaw whose boom crossed it, and
+    // `currentDistance` read 0 — the camera sat inside the character's head.
+    const pixelsPerStep = 30 / rig.sensitivity;
+    for (let step = 1; step <= 12; step += 1) {
+      harness.app.input.simulate({ "<Mouse>/delta": { x: pixelsPerStep, y: 0 } });
+      harness.step();
+      harness.step();
+      expect(rig.yaw, `step ${String(step)}`).toBeCloseTo(30 * step, 3);
+      expect(rig.currentDistance, `yaw ${String(30 * step)}`).toBeCloseTo(4.5, 2);
+    }
+    harness.dispose();
+  }, 30_000);
+
   it("pulls in when a wall stands between the target and the camera, and eases back out", async () => {
     const harness = await createThreeDApp();
     const { rig } = buildRig(harness);
@@ -123,6 +177,87 @@ describe("ThirdPersonCamera", () => {
     harness.stepMany(3);
     expect(rig.pitch).toBeGreaterThanOrEqual(-10);
     expect(rig.pitch).toBeLessThanOrEqual(40);
+    harness.dispose();
+  });
+
+  it("orbits with an unlocked mouse, because click-to-lock is off by default", async () => {
+    const harness = await createThreeDApp();
+    harness.app.input.loadActions(characterActions());
+    const { rig } = buildRig(harness);
+    rig.sensitivity = 1;
+    harness.step();
+    expect(rig.lockPointerOnClick).toBe(false);
+    const yaw = rig.yaw;
+    // A drag-to-orbit game keeps the cursor, so nothing waits for a lock it never asks for.
+    harness.app.input.simulate({ "<Mouse>/delta": { x: 10, y: 0 } });
+    harness.step();
+    expect(rig.yaw).toBeCloseTo(yaw + 10, 3);
+    harness.dispose();
+  });
+
+  it("ignores mouse look and re-asks for the lock once click-to-lock is on", async () => {
+    const harness = await createThreeDApp();
+    harness.app.input.loadActions(characterActions());
+    const { rig } = buildRig(harness);
+    rig.sensitivity = 1;
+    rig.lockPointerOnClick = true;
+    harness.step();
+    const yaw = rig.yaw;
+
+    harness.app.input.simulate({ "<Mouse>/delta": { x: 10, y: 0 } });
+    harness.app.input.simulateEvent({ type: "pointerdown", button: 0 });
+    harness.step();
+    // The headless app has no canvas, so the request rejects and is logged rather than thrown.
+    await Promise.resolve();
+    expect(rig.yaw).toBeCloseTo(yaw, 5);
+    expect(refusals(harness)).toBe(1);
+
+    // Every further click asks again: a browser drops the lock on Escape and on focus loss.
+    harness.app.input.simulateEvent({ type: "pointerdown", button: 0 });
+    harness.step();
+    await Promise.resolve();
+    expect(refusals(harness)).toBe(2);
+    harness.dispose();
+  });
+
+  it("aims up when the mouse moves forward and when the stick is pushed up", async () => {
+    const harness = await createThreeDApp();
+    harness.app.input.loadActions(characterActions());
+    const { rig } = buildRig(harness);
+    rig.sensitivity = 1;
+    rig.stickLookSpeed = 180;
+    harness.step();
+    const start = rig.pitch;
+
+    // The same two gestures as the first-person suite, and the same answer: both lower the pitch,
+    // which drops the boom and aims the camera up past the target.
+    harness.app.input.simulate({ "<Mouse>/delta": { x: 0, y: -10 } });
+    harness.step();
+    expect(rig.pitch).toBeCloseTo(start - 10, 3);
+
+    harness.app.input.simulate({ "<Mouse>/delta": { x: 0, y: 0 }, "<Gamepad>/rightStick": { x: 0, y: 1 } });
+    harness.step(1 / 60);
+    expect(rig.pitch).toBeCloseTo(start - 13, 3);
+    harness.dispose();
+  });
+
+  it("orbits with a gamepad stick at a rate the frame rate does not change", async () => {
+    const harness = await createThreeDApp();
+    harness.app.input.loadActions(characterActions());
+    const { rig } = buildRig(harness);
+    rig.lockPointerOnClick = true;
+    rig.stickLookSpeed = 180;
+    harness.step();
+    const start = rig.yaw;
+    // A stick is a deflection, so it is a rate: 180 deg/s for 1/60 s is three degrees, and the lock
+    // gate does not apply to a device with no cursor to lose.
+    harness.app.input.simulate({ "<Gamepad>/rightStick": { x: 1, y: 0 } });
+    harness.step(1 / 60);
+    expect(rig.yaw - start).toBeCloseTo(3, 3);
+    const halfway = rig.yaw;
+    harness.step(1 / 120);
+    harness.step(1 / 120);
+    expect(rig.yaw - halfway).toBeCloseTo(3, 3);
     harness.dispose();
   });
 

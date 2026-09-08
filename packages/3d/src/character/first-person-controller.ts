@@ -13,6 +13,7 @@ import {
 } from "@ignifx/core";
 import { CharacterController } from "@ignifx/physics";
 import { ActionSlot, isHeld, wasPressed } from "./actions.js";
+import { LookInput } from "./look-input.js";
 import { JumpTimers, jumpVelocity } from "./movement.js";
 import type { Entity, MutableVec3, Schema, Vec2Like } from "@ignifx/core";
 
@@ -28,6 +29,10 @@ import type { Entity, MutableVec3, Schema, Vec2Like } from "@ignifx/core";
  * Look happens in `update`, on the frame delta, because a mouse is sampled per frame and a look
  * that lagged the fixed step would feel heavy. Movement happens in `fixedUpdate`, like every other
  * character in the toolkit.
+ *
+ * The look itself is `LookInput` (`look-input.ts`), shared with `ThirdPersonCamera`: it is what
+ * re-arms the pointer-lock request after the browser drops the lock, ignores unlocked mouse motion,
+ * and turns a stick's deflection into a rate while a pointer's delta stays a displacement.
  */
 
 /** How far the head may pitch, in degrees, before the neck complains. */
@@ -35,6 +40,9 @@ const MAX_PITCH = 89;
 
 /** The default gravity, matching `ThirdPersonController`. */
 const DEFAULT_GRAVITY = 20;
+
+/** The default stick look rate, in degrees per second at full deflection. */
+const DEFAULT_STICK_LOOK_SPEED = 180;
 
 /** A small downward bias that keeps a grounded character stuck to slopes. */
 const GROUND_STICK_SPEED = 2;
@@ -52,7 +60,14 @@ function firstPersonSchema(): Schema {
     jumpAction: str("Jump", { tooltip: "The button action that jumps." }),
     sprintAction: str("Sprint", { tooltip: "The button action that sprints." }),
     crouchAction: str("Crouch", { tooltip: "The button action that crouches." }),
-    sensitivity: f32(0.15, { min: 0, tooltip: "Degrees of rotation per unit of look input." }),
+    sensitivity: f32(0.15, {
+      min: 0,
+      tooltip: "Degrees of rotation per unit of pointer look; for a mouse, degrees per CSS pixel.",
+    }),
+    stickLookSpeed: f32(DEFAULT_STICK_LOOK_SPEED, {
+      min: 0,
+      tooltip: "Degrees of rotation per second at full deflection, for a gamepad or on-screen stick.",
+    }),
     invertY: bool(false, { tooltip: "Whether looking up needs the stick pushed down." }),
     walkSpeed: f32(4, { min: 0, tooltip: "Ground speed, in m/s." }),
     sprintSpeed: f32(7, { min: 0, tooltip: "Ground speed while sprinting, in m/s." }),
@@ -64,7 +79,9 @@ function firstPersonSchema(): Schema {
     coyoteTime: f32(0.1, { min: 0, tooltip: "How long a jump stays legal after leaving the ground." }),
     jumpBufferTime: f32(0.1, { min: 0, tooltip: "How long an early jump press is remembered." }),
     airControl: f32(0.5, { min: 0, max: 1, tooltip: "How much of the ground speed applies mid-air." }),
-    lockPointerOnClick: bool(true, { tooltip: "Whether the first click requests pointer lock." }),
+    lockPointerOnClick: bool(true, {
+      tooltip: "Whether a click requests pointer lock; while it is on, mouse look waits for the lock.",
+    }),
     headBobAmplitude: f32(0, { min: 0, tooltip: "How far the head bobs while walking, in metres; 0 disables it." }),
     headBobFrequency: f32(1.8, { min: 0, tooltip: "Head bobs per metre travelled." }),
     sprintFovKick: f32(0, { min: 0, tooltip: "Extra vertical FOV while sprinting, in degrees; 0 disables it." }),
@@ -73,6 +90,28 @@ function firstPersonSchema(): Schema {
 
 /**
  * A first-person character.
+ *
+ * @remarks
+ * **Look units.** A pointer reading (`<Mouse>/delta`, `<Pointer>/delta`) is a displacement in CSS
+ * pixels and is multiplied by `sensitivity`, in degrees per pixel; 0.08 to 0.15 suits most mice, and
+ * the figure no longer changes with the device pixel ratio or the render scale. A gamepad or virtual
+ * stick is a deflection, which is a rate, and is multiplied by `stickLookSpeed` in degrees per
+ * second: the same physical push turns through the same angle at 60 and at 144 fps. Both are read
+ * from one `Look` action; `InputAction.activeDevice` is what tells them apart.
+ *
+ * **Pointer lock.** While `lockPointerOnClick` is `true` (the default), a `pointerdown` on the
+ * canvas asks the browser for the lock — every time it is not held, not only once, because the
+ * browser drops it on Escape and on focus loss — and look readings from the mouse or the unified
+ * pointer are **ignored until the lock is granted**. That is what stops the view spinning while the
+ * player moves an unlocked cursor towards a menu button. Gamepad and touch look keep working
+ * throughout. Set `lockPointerOnClick` to `false` for a drag-to-look design, which restores
+ * unconditional mouse look.
+ *
+ * **Pitch direction.** Up is up on every device: moving the mouse forward and pushing a stick up both
+ * look up, which is the first-person convention. The rigs read one normalised axis — a screen's `y`
+ * grows downward and a stick's grows upward, and the look helper reconciles that before either rig
+ * sees it — so `invertY` flips mouse, touch, and stick together rather than fixing one and breaking
+ * the other. Positive `pitch` still means the head is looking down.
  *
  * @example
  * ```ts
@@ -116,8 +155,11 @@ export class FirstPersonController extends Script {
   /** The button action that crouches. */
   declare crouchAction: string;
 
-  /** Degrees of rotation per unit of look input. */
+  /** Degrees of rotation per unit of pointer look; for a mouse, degrees per CSS pixel of motion. */
   declare sensitivity: number;
+
+  /** Degrees of rotation per second at full deflection, for a gamepad or on-screen stick. */
+  declare stickLookSpeed: number;
 
   /** Whether looking up needs the stick pushed down. */
   declare invertY: boolean;
@@ -152,7 +194,7 @@ export class FirstPersonController extends Script {
   /** How much of the ground speed applies mid-air. */
   declare airControl: number;
 
-  /** Whether the first click requests pointer lock. */
+  /** Whether a click requests pointer lock; while it is on, mouse look waits for the lock. */
   declare lockPointerOnClick: boolean;
 
   /** How far the head bobs while walking, in metres. */
@@ -184,13 +226,11 @@ export class FirstPersonController extends Script {
 
   #baseFov = Number.NaN;
 
-  #lockRequested = false;
-
   readonly #jumps = new JumpTimers();
 
   readonly #move = new ActionSlot("");
 
-  readonly #look = new ActionSlot("");
+  readonly #look = new LookInput();
 
   readonly #jump = new ActionSlot("");
 
@@ -285,15 +325,14 @@ export class FirstPersonController extends Script {
   }
 
   /**
-   * Looks around, bobs the head, and asks for pointer lock the first time the player clicks.
+   * Looks around, bobs the head, and asks for pointer lock whenever the player clicks without it.
    *
    * @param dt - The frame delta, in seconds.
    */
   update(dt: number): void {
-    this.#requestPointerLock();
-    const look = this.#look.resolve(this)?.vector ?? ZERO_STICK;
-    this.#yaw += look.x * this.sensitivity;
-    this.#pitch += (this.invertY ? look.y : -look.y) * this.sensitivity;
+    const look = this.#look.step(this, dt);
+    this.#yaw += look.x;
+    this.#pitch += this.invertY ? look.y : -look.y;
     this.#pitch = clamp(this.#pitch, -MAX_PITCH, MAX_PITCH);
     Quat.fromEulerDegreesToRef(0, this.#yaw, 0, this.#rotation);
     this.entity.transform.rotation = this.#rotation;
@@ -371,37 +410,6 @@ export class FirstPersonController extends Script {
   }
 
   /**
-   * Requests pointer lock once, the first time the player presses anything.
-   */
-  #requestPointerLock(): void {
-    if (!this.lockPointerOnClick || this.#lockRequested) {
-      return;
-    }
-    const input = this.entity.world.app.input;
-    if (input.pointerLock.locked) {
-      this.#lockRequested = true;
-      return;
-    }
-    // `app.input.events` is the frame's raw event log; a pointer press is the gesture browsers
-    // accept as user activation for `requestPointerLock`.
-    const events = input.events;
-    let pressed = false;
-    for (let index = 0; index < events.length; index += 1) {
-      if (events[index]?.type === "pointerdown") {
-        pressed = true;
-        break;
-      }
-    }
-    if (!pressed) {
-      return;
-    }
-    this.#lockRequested = true;
-    void input.pointerLock.request().catch((error: unknown): void => {
-      this.app.log.warn("Pointer lock was refused.", error);
-    });
-  }
-
-  /**
    * Bobs the head with the character's speed.
    *
    * @param pivot - The head entity.
@@ -445,7 +453,7 @@ export class FirstPersonController extends Script {
   /** Points the five action slots at the current field values. */
   #rebind(): void {
     this.#move.retarget(this.moveAction);
-    this.#look.retarget(this.lookAction);
+    this.#look.rebind(this.lookAction);
     this.#jump.retarget(this.jumpAction);
     this.#sprint.retarget(this.sprintAction);
     this.#crouch.retarget(this.crouchAction);

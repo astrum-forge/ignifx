@@ -196,9 +196,15 @@ describe("FirstPersonController flourishes", () => {
       invertY: true,
     });
     harness.step();
+    // Up is up on every device, so the mouse moved *down* would normally look down (a positive
+    // pitch). `invertY` is what turns that into looking up, and it does the same to a stick.
     harness.app.input.simulate({ "<Mouse>/delta": { x: 0, y: 10 } });
     harness.step();
-    expect(controller.pitch).toBeGreaterThan(0);
+    expect(controller.pitch).toBeLessThan(0);
+    const raised = controller.pitch;
+    harness.app.input.simulate({ "<Mouse>/delta": { x: 0, y: 0 }, "<Gamepad>/rightStick": { x: 0, y: 1 } });
+    harness.step();
+    expect(controller.pitch).toBeGreaterThan(raised);
     harness.dispose();
   });
 

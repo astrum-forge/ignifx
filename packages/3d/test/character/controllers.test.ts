@@ -129,6 +129,32 @@ describe("ThirdPersonController", () => {
     harness.dispose();
   });
 
+  it("lifts over a low step when stepHeight allows it, and not when it does not", async () => {
+    // The probe sweeps from inside the character's own capsule, so before 2026-09-08 both of its
+    // sweeps reported the capsule at fraction zero and `stepHeight` never lifted anything.
+    const climbStep = async (stepHeight: number): Promise<number> => {
+      const harness = await createThreeDApp();
+      harness.app.input.loadActions(characterActions());
+      addFloor(harness);
+      addCamera(harness);
+      // A 0.3 m ledge across the character's path, one metre ahead.
+      const ledge = harness.world.createEntity("Ledge", { position: { x: 0, y: 0.15, z: 2.5 } });
+      ledge.addComponent(BoxCollider, { size: { x: 10, y: 0.3, z: 3 } });
+      ledge.addComponent(Rigidbody, { bodyType: "static" });
+      const entity = harness.world.createEntity("Hero", { position: { x: 0, y: 1, z: 0 } });
+      entity.addComponent(CharacterController, { height: 1.8, radius: 0.35, slopeLimit: 45 });
+      entity.addComponent(ThirdPersonController, { walkSpeed: 3, turnSpeed: 3600, stepHeight });
+      harness.stepMany(20);
+      harness.app.input.simulate({ "<Keyboard>/w": 1 });
+      harness.stepMany(120);
+      harness.dispose();
+      return entity.transform.position.z;
+    };
+    // The camera looks down +Z, so W walks towards the ledge; with the probe the character is on it.
+    expect(await climbStep(0.35)).toBeGreaterThan(2);
+    expect(await climbStep(0)).toBeLessThan(1.2);
+  }, 60_000);
+
   it("cancels its momentum on request", async () => {
     const harness = await createThreeDApp();
     harness.app.input.loadActions(characterActions());
@@ -201,6 +227,33 @@ async function climb(degrees: number): Promise<number> {
   } finally {
     harness.dispose();
   }
+}
+
+/**
+ * Counts the pointer-lock refusals the controller logged. A headless app has no canvas, so every
+ * request rejects with `IGX-0809` and the controller swallows it as a warning — which is what makes
+ * the re-arming visible without a DOM.
+ *
+ * @param harness - The app harness.
+ * @returns How many refusals have been logged so far.
+ */
+function lockRefusals(harness: ThreeDAppHarness): number {
+  return harness.sink.toArray().filter((record) => record.message.includes("Pointer lock was refused.")).length;
+}
+
+/**
+ * Builds a player with a first-person controller and a head pivot.
+ *
+ * @param harness - The app harness.
+ * @param fields - Overrides for the controller's fields.
+ * @returns The controller.
+ */
+function addFirstPerson(harness: ThreeDAppHarness, fields: Record<string, unknown>): FirstPersonController {
+  const player = harness.world.createEntity("Player", { position: { x: 0, y: 1, z: 0 } });
+  player.addComponent(CharacterController, { height: 1.8, radius: 0.35 });
+  const head = harness.world.createEntity("Head", { parent: player, position: { x: 0, y: 1.6, z: 0 } });
+  head.addComponent(Camera);
+  return player.addComponent(FirstPersonController, { cameraPivot: head, ...fields });
 }
 
 describe("FirstPersonController", () => {
@@ -298,6 +351,115 @@ describe("FirstPersonController", () => {
     harness.stepMany(8);
     expect(controller.verticalVelocity).toBeGreaterThan(0);
     expect(player.transform.position.y).toBeGreaterThan(groundY + 0.1);
+    harness.dispose();
+  });
+
+  it("ignores mouse look until the pointer is locked", async () => {
+    const harness = await createThreeDApp();
+    harness.app.input.loadActions(characterActions());
+    addFloor(harness);
+    // The default: click to lock. A headless app never grants the lock, which is the same state a
+    // browser is in between the click and the grant — and the state a menu leaves it in.
+    const controller = addFirstPerson(harness, { sensitivity: 1 });
+    harness.step();
+    harness.app.input.simulate({ "<Mouse>/delta": { x: 90, y: 0 } });
+    harness.step();
+    expect(controller.yaw).toBeCloseTo(0, 5);
+
+    // A drag-to-look game switches the gate off and gets unconditional mouse look back. The delta
+    // is a per-frame reading, so it has to be simulated again for the second frame.
+    controller.lockPointerOnClick = false;
+    harness.app.input.simulate({ "<Mouse>/delta": { x: 90, y: 0 } });
+    harness.step();
+    expect(controller.yaw).toBeCloseTo(90, 0);
+    harness.dispose();
+  });
+
+  it("looks up when the mouse moves forward and when the stick is pushed up", async () => {
+    const harness = await createThreeDApp();
+    harness.app.input.loadActions(characterActions());
+    addFloor(harness);
+    const controller = addFirstPerson(harness, { sensitivity: 1, stickLookSpeed: 180, lockPointerOnClick: false });
+    harness.step();
+
+    // A mouse moved forward reports a negative `movementY`; a stick pushed up reports `+y`. Both
+    // mean "look up", which is a negative pitch, and one `invertY` flips both.
+    harness.app.input.simulate({ "<Mouse>/delta": { x: 0, y: -10 } });
+    harness.step();
+    expect(controller.pitch).toBeCloseTo(-10, 3);
+
+    harness.app.input.simulate({ "<Mouse>/delta": { x: 0, y: 0 }, "<Gamepad>/rightStick": { x: 0, y: 1 } });
+    harness.step(1 / 60);
+    expect(controller.pitch).toBeCloseTo(-13, 3);
+    harness.dispose();
+  });
+
+  it("keeps looking with a gamepad stick while the pointer is unlocked", async () => {
+    const harness = await createThreeDApp();
+    harness.app.input.loadActions(characterActions());
+    addFloor(harness);
+    const controller = addFirstPerson(harness, { stickLookSpeed: 180 });
+    harness.step();
+    harness.app.input.simulate({ "<Gamepad>/rightStick": { x: 1, y: 0 } });
+    harness.step(1 / 60);
+    // A stick has no cursor to lose, so the lock gate does not apply to it: 180 deg/s for 1/60 s.
+    expect(controller.yaw).toBeCloseTo(3, 3);
+    harness.dispose();
+  });
+
+  it("reads a stick as a rate, so the frame rate does not change the turn", async () => {
+    const harness = await createThreeDApp();
+    harness.app.input.loadActions(characterActions());
+    addFloor(harness);
+    const controller = addFirstPerson(harness, { stickLookSpeed: 180 });
+    harness.step();
+    harness.app.input.simulate({ "<Gamepad>/rightStick": { x: 1, y: 0 } });
+    const start = controller.yaw;
+    harness.step(1 / 60);
+    expect(controller.yaw - start).toBeCloseTo(3, 3);
+    const halfway = controller.yaw;
+    harness.step(1 / 120);
+    harness.step(1 / 120);
+    expect(controller.yaw - halfway).toBeCloseTo(3, 3);
+    harness.dispose();
+  });
+
+  it("asks for pointer lock again every time the player clicks without it", async () => {
+    const harness = await createThreeDApp();
+    harness.app.input.loadActions(characterActions());
+    addFloor(harness);
+    addFirstPerson(harness, {});
+    harness.step();
+    expect(lockRefusals(harness)).toBe(0);
+
+    harness.app.input.simulateEvent({ type: "pointerdown", button: 0 });
+    harness.step();
+    // The rejection, and the warning it logs, arrive on the microtask queue.
+    await Promise.resolve();
+    expect(lockRefusals(harness)).toBe(1);
+
+    // The old one-shot latch stopped here, and a player who pressed Escape never got the lock back.
+    harness.app.input.simulateEvent({ type: "pointerdown", button: 0 });
+    harness.step();
+    await Promise.resolve();
+    expect(lockRefusals(harness)).toBe(2);
+
+    // A frame without a press asks for nothing.
+    harness.step();
+    await Promise.resolve();
+    expect(lockRefusals(harness)).toBe(2);
+    harness.dispose();
+  });
+
+  it("asks for nothing when the game does not want the lock", async () => {
+    const harness = await createThreeDApp();
+    harness.app.input.loadActions(characterActions());
+    addFloor(harness);
+    addFirstPerson(harness, { lockPointerOnClick: false });
+    harness.app.input.simulateEvent({ type: "pointerdown", button: 0 });
+    harness.step();
+    await Promise.resolve();
+    expect(lockRefusals(harness)).toBe(0);
     harness.dispose();
   });
 });

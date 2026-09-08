@@ -35,7 +35,13 @@ export function characterActions(): InputActionsDefinition {
           { name: "Jump", type: "button", bindings: [{ path: "<Keyboard>/space" }] },
           { name: "Sprint", type: "button", bindings: [{ path: "<Keyboard>/shiftLeft" }] },
           { name: "Crouch", type: "button", bindings: [{ path: "<Keyboard>/c" }] },
-          { name: "Look", type: "vector2", bindings: [{ path: "<Mouse>/delta" }] },
+          {
+            name: "Look",
+            type: "vector2",
+            // Two devices on one action, which is what `InputAction.activeDevice` exists to tell
+            // apart: a mouse delta is a displacement, a stick is a rate.
+            bindings: [{ path: "<Mouse>/delta" }, { path: "<Gamepad>/rightStick" }],
+          },
         ],
       },
     ],

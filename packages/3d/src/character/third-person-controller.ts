@@ -365,20 +365,33 @@ export class ThirdPersonController extends Script {
     feet.y = transform.position.y + controller.center.y - controller.height / 2 + radius;
     feet.z = transform.position.z + controller.center.z;
     const shape = { kind: "sphere", radius: radius * 0.9 } as const;
-    const blockedAhead = physics.shapeCast(shape, feet, {
-      x: feet.x + this.#direction.x * reach,
-      y: feet.y,
-      z: feet.z + this.#direction.z * reach,
-    });
+    // Both sweeps start inside the character's own capsule, so without `ignore` each reported it at
+    // fraction zero and the probe never lifted anything (measured 2026-09-08: `stepHeight` was inert).
+    const probe = { ignore: this.entity } as const;
+    const blockedAhead = physics.shapeCast(
+      shape,
+      feet,
+      {
+        x: feet.x + this.#direction.x * reach,
+        y: feet.y,
+        z: feet.z + this.#direction.z * reach,
+      },
+      probe,
+    );
     if (blockedAhead === null) {
       return;
     }
     const lifted = { x: feet.x, y: feet.y + this.stepHeight, z: feet.z };
-    const clearAbove = physics.shapeCast(shape, lifted, {
-      x: lifted.x + this.#direction.x * reach,
-      y: lifted.y,
-      z: lifted.z + this.#direction.z * reach,
-    });
+    const clearAbove = physics.shapeCast(
+      shape,
+      lifted,
+      {
+        x: lifted.x + this.#direction.x * reach,
+        y: lifted.y,
+        z: lifted.z + this.#direction.z * reach,
+      },
+      probe,
+    );
     if (clearAbove !== null) {
       return;
     }
