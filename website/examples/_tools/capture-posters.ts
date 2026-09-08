@@ -33,6 +33,7 @@ import process from "node:process";
 import { chromium } from "playwright";
 import sharp from "sharp";
 import { CATALOGUE } from "../catalogue.ts";
+import { viteEntry } from "./vite-bin.ts";
 import type { ExampleEntry } from "../catalogue.ts";
 import type { ChildProcess } from "node:child_process";
 import type { Browser } from "playwright";
@@ -209,8 +210,8 @@ interface Preview {
 async function preview(cwd: string, args: readonly string[]): Promise<Preview> {
   const port = await freePort();
   const server: ChildProcess = spawn(
-    join(cwd, "node_modules", ".bin", "vite"),
-    ["preview", "--host", "127.0.0.1", "--port", String(port), "--strictPort", ...args],
+    process.execPath,
+    [viteEntry(cwd), "preview", "--host", "127.0.0.1", "--port", String(port), "--strictPort", ...args],
     { cwd, stdio: ["ignore", "ignore", "pipe"], detached: true },
   );
   let stderr = "";
@@ -438,7 +439,7 @@ async function captureKitExamples(browser: Browser, entries: readonly ExampleEnt
   let over = 0;
   try {
     const config = ["--config", "examples/vite.config.ts"];
-    await run(join(WEBSITE, "node_modules", ".bin", "vite"), ["build", ...config, "--outDir", staging], WEBSITE);
+    await run(process.execPath, [viteEntry(WEBSITE), "build", ...config, "--outDir", staging], WEBSITE);
     const server = await preview(WEBSITE, [...config, "--outDir", outDir]);
     try {
       for (const entry of entries) {

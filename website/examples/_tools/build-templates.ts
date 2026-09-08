@@ -39,6 +39,7 @@ import { mkdir } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import process from "node:process";
 import { CATALOGUE } from "../catalogue.ts";
+import { viteEntry } from "./vite-bin.ts";
 import type { ExampleEntry } from "../catalogue.ts";
 
 /** The repository root, three levels above this file. */
@@ -88,9 +89,10 @@ async function buildTemplate(name: string): Promise<void> {
   const base = `/examples/${name}/run/`;
   await mkdir(outDir, { recursive: true });
   process.stdout.write(`building templates/${name} → website/dist/examples/${name}/run/\n`);
+  // Node on Vite's entry file, not the `.bin` shim: see `vite-bin.ts`.
   await run(
-    join(directory, "node_modules", ".bin", "vite"),
-    ["build", "--base", base, "--outDir", outDir, "--emptyOutDir"],
+    process.execPath,
+    [viteEntry(directory), "build", "--base", base, "--outDir", outDir, "--emptyOutDir"],
     directory,
   );
 }
