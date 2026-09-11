@@ -1,5 +1,17 @@
 # @ignifx/devtools
 
+## 0.2.2
+
+### Patch Changes
+
+- Updated dependencies [be82465]
+  - @ignifx/core@0.2.2
+  - @ignifx/audio@0.2.2
+  - @ignifx/input@0.2.2
+  - @ignifx/physics@0.2.2
+  - @ignifx/physics-2d@0.2.2
+  - @ignifx/ui@0.2.2
+
 ## 0.2.1
 
 ### Patch Changes

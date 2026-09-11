@@ -1,6 +1,6 @@
 {
   "name": "@ignifx/electron",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "ignifx Electron support: main-process window factory with WebGPU flags, typed preload bridge, file-system storage.",
   "keywords": [
     "ignifx",

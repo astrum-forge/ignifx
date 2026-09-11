@@ -1,5 +1,11 @@
 # @ignifx/core
 
+## 0.2.2
+
+### Patch Changes
+
+- be82465: Clarify API documentation and starter-template comments, and update the README's setup instructions.
+
 ## 0.2.1
 
 ### Patch Changes

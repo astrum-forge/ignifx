@@ -1,6 +1,6 @@
 {
   "name": "ignifx",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "ignifx umbrella package: re-exports @ignifx/core and the standard extensions, and ships the ignifx Agent Skill.",
   "keywords": [
     "ignifx"

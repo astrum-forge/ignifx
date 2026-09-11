@@ -1,6 +1,6 @@
 {
   "name": "@ignifx/2d",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "ignifx 2D toolkit: Camera2D, sprites, sprite animation, atlases, tilemaps, sorting layers, pixel-perfect, parallax.",
   "keywords": [
     "ignifx",
