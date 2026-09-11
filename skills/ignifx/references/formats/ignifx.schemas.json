@@ -1,6 +1,6 @@
 {
   "generatedBy": "pnpm docs:schemas",
-  "ignifxVersion": "0.2.1",
+  "ignifxVersion": "0.2.2",
   "schemas": {
     "ignifx/Animator": {
       "title": "Animator",

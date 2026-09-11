@@ -3,7 +3,7 @@ name: physics
 description: Adds 3D physics to an ignifx game with @ignifx/physics: Havok simulation on a separate headless scene, Rigidbody, box/sphere/capsule/mesh colliders, physics materials, triggers, CharacterController, raycasts and shape queries, the collision layer matrix, and render interpolation. Use when adding or editing 3D physics bodies, colliders, triggers, character movement, or physics queries in an ignifx project, or when the user mentions @ignifx/physics, Rigidbody, Havok, or collision layers.
 license: Apache-2.0
 metadata:
-  ignifx-version: "0.2.1"
+  ignifx-version: "0.2.2"
 ---
 
 # @ignifx/physics

@@ -3,7 +3,7 @@ name: electron
 description: Ships an ignifx game as an Electron desktop app with @ignifx/electron: the main-process window factory that enables WebGPU, a typed and sandboxed preload bridge, the ignifx:// asset protocol, the file-system storage backend, and the renderer-side extension that exposes app.desktop. Use when packaging, configuring, or debugging an ignifx desktop build, or when the user mentions @ignifx/electron, createGameWindow, the preload bridge, or desktop templates.
 license: Apache-2.0
 metadata:
-  ignifx-version: "0.2.1"
+  ignifx-version: "0.2.2"
 ---
 
 # @ignifx/electron

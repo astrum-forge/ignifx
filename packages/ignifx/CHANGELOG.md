@@ -1,5 +1,22 @@
 # ignifx
 
+## 0.2.2
+
+### Patch Changes
+
+- be82465: Clarify API documentation and starter-template comments, and update the README's setup instructions.
+- Updated dependencies [be82465]
+  - @ignifx/core@0.2.2
+  - @ignifx/3d@0.2.2
+  - @ignifx/audio@0.2.2
+  - @ignifx/2d@0.2.2
+  - @ignifx/devtools@0.2.2
+  - @ignifx/electron@0.2.2
+  - @ignifx/input@0.2.2
+  - @ignifx/physics@0.2.2
+  - @ignifx/physics-2d@0.2.2
+  - @ignifx/ui@0.2.2
+
 ## 0.2.1
 
 ### Patch Changes

@@ -3,7 +3,7 @@ name: physics-2d
 description: Adds 2D physics to an ignifx game with @ignifx/physics-2d: Rapier 2D simulation on the fixed loop, Rigidbody2D, box/circle/capsule/polygon/edge/tilemap colliders, physics materials, 2D triggers, CharacterController2D with slopes, autostep, snap-to-ground and one-way platforms, 2D raycasts and shape queries, the collision layer matrix, and render interpolation. Use when adding or editing 2D physics bodies, 2D colliders, platformer movement, 2D triggers, or 2D queries in an ignifx project, or when the user mentions @ignifx/physics-2d, Rigidbody2D, Rapier, or CharacterController2D.
 license: Apache-2.0
 metadata:
-  ignifx-version: "0.2.1"
+  ignifx-version: "0.2.2"
 ---
 
 # @ignifx/physics-2d

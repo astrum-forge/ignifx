@@ -3,7 +3,7 @@ name: audio
 description: Adds sound and music to an ignifx game with @ignifx/audio: the bus tree, AudioSource and AudioListener components, static and streaming AudioClip assets, spatial audio, a music player, and the browser unlock flow. Use when adding or editing sound effects, music, audio buses, mixing, or spatial audio in an ignifx project, or when the user mentions @ignifx/audio, AudioSource, AudioListener, or audio buses.
 license: Apache-2.0
 metadata:
-  ignifx-version: "0.2.1"
+  ignifx-version: "0.2.2"
 ---
 
 # @ignifx/audio
