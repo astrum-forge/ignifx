@@ -10,27 +10,10 @@ import type {
 } from "./definition.js";
 
 /**
- * The `Animator` state machine (`docs/architecture/12-3d-toolkit.md` §3), as a pure module.
- *
- * Nothing here knows about Babylon Lite, about entities, or about the frame loop: it takes
- * parameters and a delta and produces the per-clip weights, speeds, and events that the Lite
- * adapter applies. That is the whole reason it is a separate file — a state machine that can be
- * driven a step at a time in a plain Node test is a state machine whose exit times, triggers, and
- * blend thresholds are actually verified (`12-3d-toolkit.md` §3, and the Phase 7 exit criteria).
- *
- * ## Time
- *
- * Each layer tracks a **cumulative** normalized cursor: `1.5` means "one and a half times through
- * the state's clip". Wrapping is done on the way out, in `normalizedTime`,
- * so that an event at `0.25` fires once per pass without the machine having to remember which pass
- * it is on.
- *
- * ## Clip lengths
- *
- * A clip's length in seconds comes from the model, which the pure module cannot see. The adapter
- * calls {@link AnimatorStateMachine.setClipLength} once per clip after the model loads; until then
- * every clip is {@link DEFAULT_CLIP_LENGTH} second long, which keeps a headless test honest and a
- * not-yet-loaded animator from dividing by zero.
+ * Compute clip weights, speeds, and events without a renderer.
+ * Each layer keeps a cumulative normalised cursor so events fire once per pass; only the exposed
+ * `normalizedTime` wraps. The mixer supplies clip lengths after loading; until then,
+ * `DEFAULT_CLIP_LENGTH` prevents division by zero and gives headless runs a usable duration.
  */
 
 /**

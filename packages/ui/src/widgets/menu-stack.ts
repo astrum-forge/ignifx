@@ -4,37 +4,10 @@ import type { Menu } from "./menu.js";
 import type { Disconnect, SignalLike, Vec2Like } from "@ignifx/core";
 
 /**
- * `MenuStack` — screen navigation for {@link Menu}: push a screen on top, pop back to the one
- * underneath, and drive the whole stack from one place.
- *
- * Every front end that has more than one screen needs the same three things, and they are the
- * three things games get wrong: exactly one screen is visible at a time; Escape (or the pad's east
- * button) unwinds exactly one level; and a held direction repeats on the **unscaled** clock, so
- * navigation still works while `app.pause()` has stopped the game.
- *
- * ## Why the input is an interface and not `@ignifx/input`
- *
- * `@ignifx/input` is an optional peer of `@ignifx/ui` (`docs/architecture/13-ui.md` header), and a
- * menu is exactly the kind of thing a game builds without it. {@link MenuNavigation} is therefore a
- * structural shape that an `InputAction` already satisfies — pass the actions of a `UI` action map
- * straight in — while a game with no input extension passes its own objects, or nothing at all and
- * uses the widget's own keyboard handling.
- *
- * ```ts ignore-check
- * const ui = app.input.actions.maps.get("UI") ?? null;
- * const stack = new MenuStack({
- *   navigation: {
- *     move: ui?.actions.get("menuMove") ?? null,
- *     submit: ui?.actions.get("menuSubmit") ?? null,
- *     back: ui?.actions.get("menuBack") ?? null,
- *   },
- * });
- * ```
- *
- * A stack built with a navigation source turns each pushed menu's own keyboard handling **off**
- * while the menu is on the stack, and restores it on the way out: otherwise a keyboard bound to
- * `menuMove` would move the selection twice per press, once through the action and once through
- * the DOM.
+ * Show one menu at a time and unwind one level per back action. Use unscaled time for input repeat
+ * so navigation works while paused. Navigation accepts action-shaped objects without importing input.
+ * When a navigation source is supplied, disable each stacked menu's keyboard handling to avoid
+ * processing the same key twice; restore it on removal.
  */
 
 /**

@@ -45,26 +45,9 @@ import type { AssetsSettings } from "../assets/types.js";
 import type { RenderingSettings } from "../render/rendering-settings.js";
 
 /**
- * The implicit core extension (`docs/architecture/04-extensions.md` §7). `@ignifx/core` registers
- * itself through the same contract as everything else, so there is one code path and one set of
- * guarantees.
- *
- * @remarks
- * It registers what the kernel owns: `Transform`, `Camera`, `Light`, `MeshRenderer`, `Model`,
- * `Environment`, and `PostProcessStack`; the `layers`, `sortingLayers`, `time`, `assets`, and
- * `rendering` settings sections; the `json`/`text`/`binary`/`scene` loaders and the GPU ones
- * (`texture`, `model`, `material`, `environment`, `font`); the service behind `app.renderer`; the
- * `PreUpdate` system that delivers completed loads; and the `PreRender` system that reconciles the
- * render components with the Lite scene (`04-extensions.md` §7, `05-assets-and-loading.md` §5,
- * `07-rendering.md` §2, `01-lifecycle-and-time.md` §3 steps 2 and 6).
- *
- * The core diagnostic codes are **not** registered here: `createErrorCodeRegistry()` already
- * pre-loads `CORE_ERROR_MESSAGES`, and registering them a second time is `IGX-1501`.
- *
- * The schemas and defaults are built inside `register`, not at module scope: a schema field is a
- * function call, and module scope holds declarations and immutable constants only
- * (`CONSTITUTION.md` §3.5, coding standards §4). They are built once per app, which is where the
- * cost belongs.
+ * Register core components, settings, loaders, and systems through the same extension contract.
+ * Build schemas per app to avoid import-time work (constitution §3.5). Core error codes are already
+ * loaded by `createErrorCodeRegistry`; registering them again would throw `IGX-1501`.
  */
 
 /**

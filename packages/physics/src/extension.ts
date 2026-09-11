@@ -37,25 +37,9 @@ import type { PhysicsSettings } from "./settings.js";
 import type { App, ComponentType, ConcreteComponentType, Extension, ExtensionContext } from "@ignifx/core";
 
 /**
- * The `@ignifx/physics` extension (`docs/architecture/09-physics.md`, `04-extensions.md` §1).
- *
- * ## Why the world is built in `onStart` rather than in `register`
- *
- * `register` runs before `createApp` builds the Lite engine and the `World`
- * (`packages/core/src/app/app.ts`, `initialize`), and the Havok world needs the world's layer table
- * and the kernel's physics hooks. So `register` declares everything — components, settings, the
- * loader, the error codes, the three systems, the service, the `app.physics` property — against a
- * {@link PhysicsHost} holder, and `onStart` loads Havok, builds the runtime, and fills the holder in.
- *
- * ## Where `HavokPhysics.wasm` comes from
- *
- * The package declares `ignifx.assets.public`, so the Vite plugin copies the binary **unhashed and
- * by base name** into the public asset path (`packages/vite-plugin/src/plugin.ts`,
- * `generateBundle`). The default asset root and the default public path are the same directory, so
- * the address is the bare file name and `app.assets.resolveUrl("HavokPhysics.wasm")` is the URL —
- * not a package-scoped address like `ignifx/HavokPhysics.wasm`, which nothing would serve. Under
- * Node the loader falls back to the installed `@babylonjs/havok` package, so a headless app needs no
- * configuration.
+ * Create the physics runtime in `onStart`, after the world and its layer table exist.
+ * The Vite plugin copies `HavokPhysics.wasm` into public assets under its base name.
+ * Headless loading falls back to the installed Havok package.
  */
 
 /**

@@ -126,7 +126,7 @@ function asRecord(value: unknown): Record<string, unknown> | null {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     return null;
   }
-  // Boundary assertion (coding standards §5.2): a non-null, non-array object is a string-keyed bag.
+  // A non-null, non-array object is a string-keyed bag.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return value as Record<string, unknown>;
 }

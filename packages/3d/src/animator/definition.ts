@@ -1,14 +1,8 @@
 import { threeDError, ThreeDErrorCode } from "../errors.js";
 
 /**
- * The `ignifx.animator` document — the `.animator.json` file that declares an animation state
- * machine (`docs/architecture/06-serialization-and-scene-format.md` §6, `12-3d-toolkit.md` §3).
- *
- * The document is pure data. It names clips by the animation-group names a `.glb` declares, never
- * by index, so re-exporting a model with the clips in a different order does not silently change
- * what plays. Everything the state machine needs to run — parameters, layers, states, transitions,
- * and 1D blend trees — is in here, which is what lets `AnimatorStateMachine` be a headless module
- * with no Babylon Lite in sight (`12-3d-toolkit.md` §3, "the state machine must be pure").
+ * Animation state-machine file data. Clips are named rather than indexed so reordering them in a
+ * model export does not change which clip plays. The state machine can use this data without a GPU.
  */
 
 /**

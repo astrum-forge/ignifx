@@ -1,17 +1,7 @@
 /**
- * `ignifx` public barrel: the umbrella entry point that re-exports `@ignifx/core` and, as each
- * phase lands, the standard extensions (`docs/architecture/00-overview.md` §2). Every symbol is
- * re-exported by name — no `export *` (coding standards §4).
- *
- * Phase 2 added the render components, the GPU asset loaders, and the scene serialization surface;
- * Phase 3 adds the whole of `@ignifx/input`. The physics, physics-2d, audio, 2d, 3d, and ui
- * re-exports and the one-call `createGame()` arrive with the phases of
- * `docs/plan/engineering-plan.md` that populate those packages.
- *
- * Two `@ignifx/input` exports are deliberately **not** re-exported, because `@ignifx/core` already
- * owns the name: `VERSION` (the umbrella reports the core version) and `describeSchemas` (the
- * documentation harness reads each package's own entry point, so nothing is lost). Reach them as
- * `@ignifx/input`'s own exports when a tool needs them.
+ * Re-export core and the standard runtime extensions through the `ignifx` entry point.
+ * `VERSION` and `describeSchemas` come from core; tools needing an extension's versions of those
+ * names import them from that package.
  *
  * @packageDocumentation
  */
@@ -437,7 +427,7 @@ export {
   waitWhile,
   World,
   wrapAngleDegrees,
-  // Tweens (Phase 7, core-owned)
+  // Tweens
   EASINGS,
   EASING_NAMES,
   TWEEN_LOOP_FOREVER,
@@ -453,7 +443,7 @@ export {
   type TweenValueKind,
   type TweenableValue,
   type Tweens,
-  // Platform and storage (Phase 9)
+  // Platform and storage
   createFileStorageBackend,
   DEFAULT_STORAGE_NAMESPACE,
   IndexedDbStorageBackend,
@@ -468,7 +458,7 @@ export {
   type StoredValue,
   type StoredValueKind,
   type WebGpuInfo,
-  // Hot reload (Phase 10)
+  // Hot reload
   type ComponentReplacement,
   type HotReloadHost,
   type HotReloadKind,
@@ -477,11 +467,11 @@ export {
   type HotReloadPolicy,
   type HotReloadReport,
   type HotReloadStatics,
-  // Scene/prefab token for `asset()` fields (Phase 11)
+  // Scene/prefab token for `asset()` fields
   SceneAssetToken,
 } from "@ignifx/core";
 
-// Phase 2 game-facing types that were missing from the barrel
+// Rendering and scene types
 export type {
   AppEvents,
   DeviceLostInfo,
@@ -626,7 +616,7 @@ export {
   VirtualDevice,
 } from "@ignifx/input";
 
-// Kernel hooks for extension authors (Phase 4 preparation)
+// Kernel hooks for extension authors
 export { PhysicsCallbackName, ScriptCallbackKind } from "@ignifx/core";
 export type { WorldLiteHandles } from "@ignifx/core";
 

@@ -1,22 +1,9 @@
 import type { App, Entity } from "@ignifx/core";
 
 /**
- * The flattened entity tree the Scene tree panel renders and the Stats panel counts
- * (`docs/architecture/15-devtools-and-diagnostics.md` §4).
- *
- * ## Why an index rather than a live walk
- *
- * §4 asks for a virtualised list that holds 10,000 entities without a per-frame rebuild. Two
- * things make that possible: the tree is flattened **once per change** rather than once per frame,
- * and the flattening reuses one array, so a refresh that finds nothing changed allocates nothing.
- * `World` publishes `onEntityCreated`, `onEntityDestroyed`, `onSceneLoaded` and `onSceneUnloaded`;
- * each of them only marks the index dirty, and the rebuild happens at the panel's refresh rate.
- *
- * A re-parent is the one structural change the world does **not** publish, so the index is also
- * rebuilt whenever the panel is asked to and the entity count differs from what it recorded — and
- * a game that re-parents without changing the count sees the new shape on its next dirtying event
- * or when the developer types in the search box. That is a devtools view refreshing a frame late,
- * not a correctness problem, and it is the price of never walking 10,000 entities per frame.
+ * Flatten the entity tree only when marked dirty, reusing its array between refreshes.
+ * Structural signals mark it dirty. A reparent without an entity-count change becomes visible
+ * at the next dirty event or search refresh; the index does not walk the world every frame.
  */
 
 /** One row of the flattened tree. */

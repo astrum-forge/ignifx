@@ -346,10 +346,8 @@ test.describe("template front end", () => {
   });
 });
 
-// ─────────────────────────────────────────────────────────────────────────────────────────────
 // 2D gameplay. Everything below this line belongs to one `describe` block; nothing above it is
 // touched.
-// ─────────────────────────────────────────────────────────────────────────────────────────────
 
 /**
  * One reading of a 2D template's `?probe=1` hook, `window.__ignifxGameplay.snapshot()`.
@@ -671,10 +669,8 @@ test.describe("2d template gameplay", () => {
   });
 });
 
-// ─────────────────────────────────────────────────────────────────────────────────────────────
 // 3D gameplay. Everything below this line belongs to one `describe` block; nothing above it is
 // touched.
-// ─────────────────────────────────────────────────────────────────────────────────────────────
 
 /**
  * One reading of a 3D template's `?probe=1` hook, `window.__ignifxGameplay.snapshot()`.

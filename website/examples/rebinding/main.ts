@@ -9,32 +9,9 @@ import type { PanelControl } from "../_kit/panel.ts";
 import type { App, InputOverridesJson } from "ignifx";
 
 /**
- * Press a control, rebind an action, keep it: `performInteractiveRebind`, `saveOverrides` and
- * `app.storage`, in that order.
- *
- * `player.input.json` beside this file gives each of the four actions two bindings — the keyboard
- * one at index 0 and the gamepad one at index 1 — and the order is load-bearing. An override is
- * addressed by **binding index**, so reordering an action's bindings invalidates a saved override
- * loudly (`IGX-0808`) rather than quietly rebinding the wrong control. Every rebind below names
- * index 0, so the pad binding is never touched.
- *
- * ## The three steps a settings screen has
- *
- * 1. **Listen.** `performInteractiveRebind` waits for the next control the player actuates and
- *    writes it onto one binding as an override. It resolves with what happened — a `path`, or
- *    `canceled`, or `timedOut` — and only one rebind may listen at a time (`IGX-0807`), which is
- *    what the `listening` guard below is for.
- * 2. **Save.** `saveOverrides()` produces a small `ignifx.inputoverrides` document — the overrides
- *    only, not the whole action document — and `app.storage` is where it belongs: the same
- *    asynchronous store the game's settings and save slots use, scoped by `namespace`.
- * 3. **Apply, carefully.** A saved document is player data from an older build. It is applied
- *    inside a `try`, and a document that no longer fits the bindings is dropped rather than
- *    allowed to stop the game.
- *
- * The rack shows the result without a word of text: a key cap takes the colour of the device
- * family its binding names, so a rebind from the keyboard to a pad turns a cap from orange to
- * green. `formatBindingPath` — the helper `@ignifx/ui`'s `Menu` rows use — writes the same thing
- * as words in the panel.
+ * Rebind the keyboard slot at index 0, leaving the gamepad binding unchanged.
+ * Only one interactive rebind can listen at a time (`IGX-0807`). Save overrides through app storage
+ * and catch incompatible saved documents (`IGX-0808`) so an old binding layout cannot stop the game.
  */
 
 /** The actions this example rebinds, left to right on the rack. */

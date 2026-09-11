@@ -5,21 +5,9 @@ import type { HostStoredValue, IgnifxHost } from "../host-contract.js";
 import type { StorageBackend, StoredValue } from "@ignifx/core";
 
 /**
- * The `StorageBackend` a desktop build installs over `app.storage`
- * (`docs/architecture/14-platform-electron.md` §2, `packages/core/src/storage/backend.ts`).
- *
- * It holds no state and does no work: every call forwards over the preload bridge to the main
- * process, where `main/storage-fs.ts` does the file-system work in the layout `@ignifx/core`'s own
- * Node file backend uses. The renderer is sandboxed, so this indirection is not a design
- * preference — there is no `fs` on this side of the boundary to call.
- *
- * ## The error codes belong to core
- *
- * `StorageBackend`'s rule 8 fixes them: `IGX-1424` out of quota, `IGX-1426` a value that cannot be
- * read back, `IGX-1425` everything else, each with the underlying failure as `cause`. Those are
- * `@ignifx/core`'s codes, in the platform block core allocates from `IGX-1420` upward, and this
- * backend raises them rather than its own `IGX-146x` codes precisely so that a game's
- * `catch (error) { if (error.code === "IGX-1424") … }` reads the same on every platform.
+ * Forward storage operations through the preload bridge because the renderer has no filesystem access.
+ * Use core's storage error codes (`IGX-1424` quota, `IGX-1426` unreadable data, `IGX-1425` other
+ * failures) so callers handle errors the same way on every platform.
  */
 
 /**

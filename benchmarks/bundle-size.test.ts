@@ -7,27 +7,9 @@ import { describe, expect, it } from "vitest";
 import baselines from "./baselines.json" with { type: "json" };
 
 /**
- * The bundle ceiling (`CONSTITUTION.md` §6.4, coding standards §12 step 4): each app below is
- * built, its JavaScript is gzipped, and the first-load payload has to stay inside the ceiling
- * `baselines.json` records. The plan asks for a ceiling **per template**, not one house number,
- * because the templates do not carry the same engine: only the two 2D ones pull in Rapier, whose
- * `rapier2d-compat` build inlines 797 KB of base64 WebAssembly straight into the entry chunk, while
- * the two 3D ones get Havok as a copied `.wasm` file and Recast as a chunk Babylon Lite `import()`s
- * only when a navmesh bakes. That is why a 3D template's first load is a third of a 2D one's
- * despite carrying more engine.
- *
- * ## What is measured, and what is not
- *
- * Babylon Lite code-splits aggressively: a build of `hello-cube` emits close to three hundred
- * chunks, and all but a handful are `import()`ed on demand by features the scene never reaches.
- * The number that decides how long a player waits for the first frame is the **entry chunk**, which
- * is what the ceiling is set on. The sum over every emitted chunk is recorded next to it as
- * `totalGzipBytes`, so a change that only moves weight from the entry into a lazy chunk is visible
- * rather than invisible.
- *
- * The plan's Phase 2 target is "ignifx core + Lite minimal scene under 250 KB gzipped". The
- * measured entry chunk is over that; the number is recorded honestly in `baselines.json` and the
- * gap is written up in `README.md`.
+ * Check each app's gzipped entry chunk against its recorded ceiling. Also report all emitted
+ * JavaScript as `totalGzipBytes` so moving code into lazy chunks remains visible.
+ * Templates have separate ceilings because their backend payloads differ; see benchmarks/README.md.
  */
 
 /** One app whose build is weighed, and the key its baseline is filed under. */

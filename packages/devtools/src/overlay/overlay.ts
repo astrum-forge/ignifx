@@ -7,22 +7,8 @@ import type { DevtoolsPanelName, DevtoolsSettings } from "../settings.js";
 import type { App } from "@ignifx/core";
 
 /**
- * The overlay's DOM half (`docs/architecture/15-devtools-and-diagnostics.md` §4).
- *
- * ## Where it mounts
- *
- * In `app.ui.layer("devtools")` when `@ignifx/ui` is registered and its overlay is live
- * (`13-ui.md` §1), because that is where a game already expects DOM to sit and it inherits the
- * host's scaling and safe-area handling. Otherwise the overlay builds its own root as the canvas's
- * **next sibling**, inside the canvas's own parent, which is what `packages/ui/src/dom/host.ts`
- * does and for the same reason: an overlay that moves with the canvas, and one overlay per app
- * rather than one per document (`CONSTITUTION.md` §3.6).
- *
- * ## Refresh rates
- *
- * Text panels refresh at {@link TEXT_REFRESH_HZ}; a panel that declares `perFrame` refreshes every
- * frame. Only the **visible** panel refreshes at all — a hidden tab costs nothing but the tab
- * button.
+ * Mount in the UI host's devtools layer when available, otherwise beside the app's canvas.
+ * Only visible panels refresh; text panels use `TEXT_REFRESH_HZ`, while live panels run each frame.
  */
 
 /**

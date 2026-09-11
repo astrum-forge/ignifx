@@ -1,30 +1,8 @@
 /**
- * `app.hotReload` (`docs/architecture/15-devtools-and-diagnostics.md` §5): the policy engine behind
- * script hot reload, and the scene half of it.
- *
- * Everything here works with no Vite and no browser. `@ignifx/vite-plugin` generates a client that
- * calls {@link HotReloadHostImpl.apply} with the classes a replaced module exports; a headless test
- * calls the same method with two hand-written classes. That is deliberate: the policy is the
- * engine's, and the bundler only supplies the channel.
- *
- * Decisions this file makes where `15` §5 leaves a choice, each with the sentence it follows:
- *
- * - **A reload is refused inside a lifecycle callback (`IGX-0208`).** §5 does not say when a swap
- *   runs, and `01-lifecycle-and-time.md` §3 has no step for one. Refusing is the rule
- *   `destroyImmediate` already follows (`IGX-0102`) for the same reason — a world half-way through
- *   a class swap must not be observable — and it costs nothing in practice: an HMR message arrives
- *   from a socket callback and a devtools button from a DOM event, neither of which is inside a
- *   lifecycle callback.
- * - **A `"patch"` class whose schema shape changed is re-created instead.** §5 says `"recreate"` is
- *   "required when field layouts change" but does not say what happens when a class changes its
- *   layout and forgets to ask. Patching it would hand the new code an instance missing its new
- *   fields, so the engine warns with `IGX-0207` and applies `"recreate"`, which is the outcome the
- *   author would have chosen.
- * - **One report per `apply` call.** {@link HotReloadReport} carries a single `kind`, so a call that
- *   both patched and re-created reports `"recreate"` — the stronger of the two, and the one whose
- *   consequences a reader needs to know about.
- * - **`onHotReload` is class-level, and runs on the replacement class with the class it replaced.**
- *   The reasoning is on `HotReloadStatics.onHotReload` in `contract.ts`.
+ * Apply script reloads independently of the bundler.
+ * Reject reloads inside lifecycle callbacks (`IGX-0208`) so scripts cannot observe a partial swap.
+ * A changed schema forces recreation with `IGX-0207`; a mixed reload reports `recreate`.
+ * The replacement class receives `onHotReload` with the previous class.
  */
 
 import { CoreErrorCode } from "../errors/error-codes.js";
@@ -293,7 +271,7 @@ export class HotReloadHostImpl implements HotReloadHost {
     }
     return {
       typeId,
-      // Boundary assertion (coding standards §5.2): only a concrete class reaches the registry's
+      // Only a concrete class reaches the registry's
       // type-id table, because `register` takes a `ConcreteComponentType`.
       // oxlint-disable-next-line typescript/no-unsafe-type-assertion
       previous: current as ConcreteComponentType,

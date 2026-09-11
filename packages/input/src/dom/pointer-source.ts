@@ -2,22 +2,10 @@ import type { DomSource, DomSourceOptions } from "./dom-target.js";
 import type { InputEventQueue, MutableInputEvent } from "./event-queue.js";
 
 /**
- * The pointing adapter (`docs/architecture/08-input.md` §4). One adapter serves `Mouse`, `Pointer`,
- * and `Touch`, because DOM **pointer events** already unify them: a touch fires `pointerdown` with
- * `pointerType === "touch"` and its own `pointerId`, which is exactly the slot model `<Touch>`
- * needs. Subscribing to `touchstart`/`touchmove` as well would double-count every touch, so this
- * build does not; the only thing the touch events are still used for is suppressing the browser's
- * default scroll/zoom gestures, which `touch-action: none` on the canvas does declaratively.
- *
- * `pointerdown` and `wheel` are read from the canvas — a wheel over the page's chrome is not game
- * input — while `pointermove`, `pointerup`, and `pointercancel` are read from the window, so a drag
- * that leaves the canvas still ends.
- *
- * Two units meet here and they are deliberately different (`docs/architecture/08-input.md` §5).
- * **Positions** are backing-store pixels, because they are compared against the render target by
- * `Camera.worldToScreen` and `renderer.pickAsync`. **Deltas** are CSS pixels, because they measure
- * hand motion: scaling them by the device pixel ratio would double a look's sensitivity on a
- * retina display and change it again whenever a settings screen moved the render-scale slider.
+ * Use pointer events for mouse, pen, and touch to avoid counting touches twice.
+ * Read presses and wheel events from the canvas, but movement and release from the window so
+ * leaving the canvas cannot strand a drag. Positions use backing-store pixels for picking;
+ * deltas use CSS pixels so display density does not change look sensitivity.
  */
 
 /**

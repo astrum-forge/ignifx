@@ -37,13 +37,8 @@ export const IGNIFX_CONFIG_FILE_NAMES = [
 ] as const;
 
 /**
- * Identity helper that gives a game's `ignifx.config.ts` its types without widening the object.
- *
- * @remarks
- * `ignifx/config` re-exports this in Phase 12 so that a game can write
- * `import { defineConfig } from "ignifx/config"` rather than reaching into the build plugin. The
- * function is deliberately generic and lossless: it returns the argument, so literal types such as
- * the layer-name tuple survive into the game's own typings.
+ * Type a project config while preserving inferred literal types.
+ * Also available as `defineConfig` from `ignifx/config`.
  *
  * @typeParam T - The shape of the project config, inferred from the argument.
  * @param config - The project config object.

@@ -207,7 +207,7 @@ function restore(
   const target = fieldBag(component);
   const decoded = decodeProps(withoutAssets(schema), snapshot.props, decoder);
   report(decoded.issues, snapshot.uid, onIssue);
-  // Boundary assertion (coding standards §5.2): the read side of the same invariant.
+  // The read side of the same invariant.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   const values = decoded.value as Record<string, unknown>;
   for (const [name, field] of Object.entries(schema)) {
@@ -258,7 +258,7 @@ function withoutAssets(schema: Schema): Schema {
  * @returns The same object, typed for named reads and writes.
  */
 function fieldBag(component: Component): Record<string, unknown> {
-  // Boundary assertion (coding standards §5.2): the invariant the serializer relies on too — a
+  // The invariant the serializer relies on too — a
   // schema-defined class carries exactly the schema's field names as own data properties.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return component as unknown as Record<string, unknown>;

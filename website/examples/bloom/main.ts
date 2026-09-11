@@ -6,30 +6,10 @@ import { createLightRig } from "../_kit/stage.ts";
 import { CLEAR_COLOR, createEmissiveRow, createFloor, createSphereRow, SHOT, START_BLOOM } from "./rows.ts";
 
 /**
- * Bloom: the one post-process every game reaches for, and the two ways a surface gets bright enough
- * to bleed.
- *
- * Two lines of `settings` and one callback are the whole of it.
- *
- * `features.postProcessing` renders the scene into an offscreen target so a pass has something it
- * is allowed to sample. It is read **once**, when `app.start()` registers the scene — asking
- * afterwards is `IGX-0704` — and without it a `PostProcessStack` logs `IGX-0710` and does nothing
- * at all. It is the line people forget.
- *
- * And the effect is switched on **after** `app.start()`, which is what `afterStart` is for: a task
- * recorded before the scene is registered samples the swapchain, and WebGPU rejects that frame. The
- * Enabled toggle below flips the **component**, not `bloom.enabled`: a frame graph cannot have a
- * task removed, so a disabled stack keeps its chain and skips it — one branch a frame, no rebuild —
- * whereas switching an effect's own `enabled` rebuilds the chain.
- *
- * The four sliders are the effect's whole surface, and they are live: `threshold`, `weight` and
- * `kernel` are re-uploaded to the recorded task the frame after they change, and `scale` — the one
- * tuning Lite fixes when a bloom task is created — rebuilds the chain. `threshold` is compared
- * against the **linear** offscreen target rather than the graded frame, which is why its useful
- * range stops well short of 1; `weight` is how much of the blur is mixed back; `kernel` is the blur
- * width in pixels; and `scale` is the fraction of full resolution the blur runs at, which is the
- * first thing to lower on a phone. `rows.ts` beside this file holds the composition, and says why
- * there are two rows.
+ * Declare `postProcessing` before startup, then enable bloom after scene registration.
+ * Toggle the stack to skip its existing chain. Changing an effect's enabled state or bloom scale
+ * rebuilds the chain; threshold, weight, and kernel update live.
+ * Threshold uses linear light, kernel uses pixels, and scale is a fraction of full resolution.
  */
 
 /**

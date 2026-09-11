@@ -8,27 +8,9 @@ import type { HostOpenDialogOptions, HostPaths, HostStoredValue } from "../host-
 import type { BrowserWindow, IpcMainInvokeEvent, OpenDialogOptions, WebContents } from "electron";
 
 /**
- * The main-process ends of the preload bridge
- * (`docs/architecture/14-platform-electron.md` §3).
- *
- * Every handler is `ipcMain.handle` (`electron.d.ts` 8993) — request/response, never a fire-and-
- * forget `on`. That is what makes the renderer side a promise-returning method rather than a
- * message pump, and what makes a failure in the main process reach the game as a rejection instead
- * of as silence.
- *
- * Nothing here trusts its arguments. The renderer is sandboxed and context-isolated, but a renderer
- * is still the process an attacker reaches first, so each handler re-validates the shapes it was
- * given before touching the file system or the shell.
- *
- * ## Nothing here trusts its sender either
- *
- * `ipcMain.handle` is registered per **channel**, not per window: every frame in every
- * `WebContents` in the process can invoke it, and Electron's own note on `IpcMainInvokeEvent`
- * (`electron.d.ts` 18806) says handlers should check `senderFrame`. {@link isTrustedSender} is that
- * check, and it asks three questions rather than one — the sender must be the game window's own
- * `WebContents`, the **top** frame of it, and on an origin the window was built to load. A subframe
- * on the same origin fails the second, and a subframe on a hostile origin fails the third; both
- * reject with `IGX-1467` before any argument is read.
+ * Validate each IPC sender and payload before filesystem or shell access.
+ * Only the game window's top frame on an allowed origin is trusted (`IGX-1467` otherwise).
+ * Request/response handlers return failures as rejected promises.
  */
 
 /**

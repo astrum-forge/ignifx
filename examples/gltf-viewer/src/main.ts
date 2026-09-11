@@ -19,21 +19,9 @@ import { OrbitCamera } from "./orbit-camera.ts";
 import type { App, EnvironmentAsset, ModelAsset } from "@ignifx/core";
 
 /**
- * A glTF viewer: one `.glb` loaded through `app.assets`, image-based lighting from a `.env`
- * probe, a drag-to-orbit camera, and a bloom + SMAA post-process chain.
- *
- * `@ignifx/input` does not exist yet (Phase 3), so the orbit control listens to pointer events on
- * the canvas directly. That is the only part of this file a later phase will replace.
- *
- * Query flags, used by the visual golden suite (`tests/visual/`):
- *
- * - `?post=1` turns the post-process chain on. The `postProcessing` rendering feature is declared in
- *   `ignifx.config.ts` either way — it picks the frame graph, so it cannot be toggled after
- *   `createApp` — and this flag only decides whether any effect is enabled.
- * - `?static=1` stops time, so the frame is reproducible.
- *
- * `window.__ignifxReady` resolves to `"ready"` once a settled frame is on screen, or to
- * `"unsupported"` when the browser has no WebGPU.
+ * Load a glTF model with environment lighting and a DOM orbit camera.
+ * `?post=1` enables post-processing; `?static=1` freezes time for visual captures.
+ * `window.__ignifxReady` resolves after a settled frame, or reports `unsupported` without WebGPU.
  */
 
 declare global {
@@ -60,16 +48,10 @@ window.__ignifxReady = new Promise<AppStatus>((resolve) => {
   announceReady = resolve;
 });
 
-/** The placeholder `announceReady` holds until the promise below hands over its resolver. */
 function noop(): void {
   // Nothing to do: the promise executor runs synchronously and replaces this on the next line.
 }
 
-/**
- * Waits for one animation frame.
- *
- * @returns A promise that resolves inside the next frame callback.
- */
 function nextFrame(): Promise<void> {
   return new Promise<void>((resolve) => {
     requestAnimationFrame(() => {
@@ -167,11 +149,6 @@ async function buildScene(app: App, canvas: HTMLCanvasElement, postProcess: bool
   app.world.createEntity("Model").addComponent(Model, { model, castShadows: true, receiveShadows: false });
 }
 
-/**
- * Builds and runs the viewer.
- *
- * @returns The status `window.__ignifxReady` resolves to.
- */
 async function main(): Promise<AppStatus> {
   const canvas = document.querySelector("#game");
   if (!(canvas instanceof HTMLCanvasElement)) {

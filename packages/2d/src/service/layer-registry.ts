@@ -15,18 +15,9 @@ import type { LiteSprite2DHandle, LiteSprite2DLayer, LiteSpriteCustomShader } fr
 import type { SpriteRenderer } from "../sprite/sprite-renderer.js";
 
 /**
- * The pool of Lite sprite layers (`docs/architecture/11-2d-toolkit.md` §1).
- *
- * One `Sprite2DLayer` exists per **(sorting layer, atlas, blend mode, screen-space)** tuple,
- * because Lite binds a layer to one atlas and one blend mode for its whole life (`index.d.ts` 11885
- * declares both `readonly`). Layers are created on demand as sprites appear and torn down with the
- * app; a sprite that changes any part of its key is removed from one layer and added to another,
- * which replaces its handle.
- *
- * The registry also carries the **handle-index to component** map that picking needs. Lite has no
- * per-sprite metadata slot and removes by swapping the last sprite into the freed index
- * (`lib/sprite/sprite-2d-handle.js`), so the map is a dense array kept in step by applying the same
- * swap rule.
+ * Pool sprite layers by sorting layer, atlas, blend mode, and screen-space mode.
+ * A changed key needs a new handle because a layer's atlas and blend mode cannot change.
+ * The picking map mirrors Lite's swap removal so each index still identifies the right component.
  */
 
 /** How many sprites a new layer pre-allocates room for. */

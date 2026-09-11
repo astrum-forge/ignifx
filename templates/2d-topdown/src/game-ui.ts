@@ -2,32 +2,9 @@ import { LoadingScreen, VirtualButton, VirtualJoystick } from "@ignifx/ui";
 import type { App } from "@ignifx/core";
 
 /**
- * Everything the game shows over the canvas: the boot loading screen, the HUD line, and the
- * on-screen controls.
- *
- * ## Where the menus are
- *
- * They are not here. The title screen, the pause menu, the settings screen and the rebinding page
- * are built by `src/menus/game-menus.ts` into `app.ui.layer("menu")`, because `@ignifx/ui` ships a
- * `Dialog` and nothing list-shaped: a settings screen needs rows, sliders, a selection model and a
- * back stack. `Dialog` is still used, for the one thing it is exactly right for — the "are you
- * sure?" prompt in front of "Delete save" and "Quit to title".
- *
- * ## Why the HUD is a `<div>` and not a `HudText`
- *
- * `HudText` draws through the GPU and needs a `FontAsset` — a real `.ttf` the template would have
- * to ship and license. A HUD line is also exactly the kind of thing HTML is better at: real fonts,
- * real layout, selectable, announced by a screen reader, and free. `HudText` earns its cost when
- * the text has to appear in `captureScreenshot()` or be drawn in the world; a status line is
- * neither.
- *
- * ## Why the touch widgets are two constructor calls
- *
- * Phase 6 shipped a hand-written DOM thumbstick here, with a comment saying it should be deleted
- * when `@ignifx/ui` shipped `VirtualJoystick`. It has been. The widgets below write the same
- * `<Virtual>/joystick` and `<Virtual>/interact` controls with the same axis convention — screen
- * `+Y` is down and the stick's `+Y` is up — so `assets/game.input.json` did not change a line, and
- * two hundred lines of pointer bookkeeping became two constructor calls.
+ * Build the loading screen, DOM HUD, and touch controls. Menus live in `menus/game-menus.ts`.
+ * The DOM HUD needs no bundled font. Virtual widgets share the action bindings used by desktop
+ * controls; the joystick converts screen Y-down motion to a Y-up control value.
  */
 
 /** One on-screen button: the `<Virtual>` control it writes, and what it says. */

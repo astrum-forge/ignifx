@@ -5,24 +5,9 @@ import type { Physics2DRuntime } from "../runtime/runtime.js";
 import type { ComponentHooks, MutableVec2, Schema, Vec2Like } from "@ignifx/core";
 
 /**
- * The `Rigidbody2D` component (`docs/architecture/11-2d-toolkit.md` §8): what makes an entity's 2D
- * colliders a simulated, kinematic, or explicitly static Rapier body.
- *
- * ## Decisions §8 leaves open
- *
- * - **`mass` is exact, and `0` means "weigh the colliders".** Rapier derives a body's mass and
- *   angular inertia from each collider's *density* and area (`geometry/collider.d.ts`,
- *   `setDensity`), and `setAdditionalMass` adds mass without inertia. So a non-zero `mass` is
- *   applied by scaling every collider's density until the body weighs exactly that, which keeps the
- *   inertia distribution the shapes imply; `mass: 0` leaves Rapier's own density of 1 kg/m² alone.
- * - **`freezeRotation` is one boolean, not three.** A 2D body has one rotational degree of freedom
- *   (`dynamics/rigid_body.d.ts`, `lockRotations`).
- * - **Damping is per body here, unlike 3D.** Havok has no per-body damping; Rapier does
- *   (`setLinearDamping`, `setAngularDamping`), so `linearDamping` and `angularDamping` are real
- *   fields rather than upstream requests.
- * - **`collisionEvents` is a three-valued enum**, exactly as in `@ignifx/physics`: a schema field
- *   has one kind (ADR-0004), and `"auto"` recomputes from `ctx.entityImplements` whenever a
- *   component joins or leaves the entity.
+ * A nonzero mass rescales collider densities while preserving their inertia distribution.
+ * Zero keeps the default density of 1 kg/m². Rotation has one freeze flag; damping is per body.
+ * Automatic collision events follow callbacks as components join or leave the entity.
  */
 
 /**

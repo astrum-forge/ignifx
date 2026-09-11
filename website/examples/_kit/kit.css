@@ -89,7 +89,7 @@ body {
   cursor: grabbing;
 }
 
-/* ── The parameter panel ─────────────────────────────────────────────────── */
+/* The parameter panel */
 
 .igx-panel {
   position: absolute;
@@ -238,7 +238,7 @@ body {
   cursor: pointer;
 }
 
-/* ── Controls ────────────────────────────────────────────────────────────── */
+/* Controls */
 
 .igx-panel input[type="range"] {
   /* The thumb is 20 px; the 44 px track is what a thumb actually has to hit. */
@@ -314,7 +314,7 @@ body {
   outline-offset: 2px;
 }
 
-/* ── The paused announcement ─────────────────────────────────────────────── */
+/* The paused announcement */
 
 .igx-status {
   position: absolute;
@@ -330,7 +330,7 @@ body {
   font-size: 0.75rem;
 }
 
-/* ── The no-WebGPU panel ─────────────────────────────────────────────────── */
+/* The no-WebGPU panel */
 
 .igx-fallback {
   display: grid;
@@ -363,7 +363,7 @@ body {
   text-underline-offset: 2px;
 }
 
-/* ── Narrow frames ───────────────────────────────────────────────────────── */
+/* Narrow frames */
 
 @media (max-width: 520px) {
   .igx-panel {

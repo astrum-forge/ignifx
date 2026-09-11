@@ -50,7 +50,7 @@ function asRecord(value: unknown): Readonly<Record<string, unknown>> | null {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     return null;
   }
-  // Boundary assertion (coding standards §5.2): the invariant is the `typeof`/`Array.isArray` pair
+  // The invariant is the `typeof`/`Array.isArray` pair
   // above, which is exactly what makes a value an index-readable plain object.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return value as Readonly<Record<string, unknown>>;

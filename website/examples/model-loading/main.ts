@@ -7,28 +7,9 @@ import { fit, START_SUBJECT, SUBJECT_RADIUS, SUBJECTS, TARGET_HEIGHT } from "./s
 import type { AssetHandle, ModelAsset } from "ignifx";
 
 /**
- * Loading a glTF, watching it arrive, swapping it for another, and handing the memory back.
- *
- * The asset service is reference counted, and this example is the whole of what that means in
- * practice. `app.assets.load` answers with an `AssetHandle` **immediately** — still `"loading"`,
- * with a `progress` between 0 and 1 — so a game assigns it and carries on; the panel's Handle group
- * is that handle's own fields, read four times a second. Assigning a still-loading handle to
- * `Model.model` is allowed and is the normal thing to do: the model appears on the frame its
- * delivery lands in.
- *
- * The two rules worth taking away:
- *
- * 1. **Every `load` needs one `release`.** Two loads of one address answer with the same handle and
- *    a higher `refCount`, and the value is unloaded when the count reaches zero — after
- *    `assets.gcDelay` seconds, or at once when something calls `assets.gc()`. "Release the others"
- *    below does exactly that, and the Held readout is the bytes it gave back.
- * 2. **Await before `start()`, assign after it.** A load that finishes before the loop is running
- *    settles at once, so the opening subject is on screen in the first frame and a capture of it is
- *    reproducible. A load that finishes afterwards settles in `PreUpdate`, which is what makes the
- *    progress readout worth having.
- *
- * The measured bounds of the three models, and the arithmetic that stands each of them on the floor
- * at one height, are in `subjects.ts` beside this file.
+ * Assign loading asset handles to models and display their progress until delivery.
+ * Pair every load with a release; zero-reference assets are collected after `gcDelay` or `gc()`.
+ * Await the opening asset before startup for a settled first frame. Later loads arrive in `PreUpdate`.
  */
 
 /** How the panel writes a fraction: `progress` is `0…1`, bytes-weighted where sizes are known. */

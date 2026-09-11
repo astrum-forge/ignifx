@@ -18,36 +18,11 @@ import { LookInput } from "../character/look-input.js";
 import type { Entity, MutableVec3, Schema, Vec3Like } from "@ignifx/core";
 
 /**
- * `ThirdPersonCamera` (`docs/architecture/12-3d-toolkit.md` §2.1): an orbit rig with a shoulder
- * offset, damping, and collision.
+ * Follow the animated target in `lateUpdate`. A sphere sweep shortens the camera boom immediately
+ * at an obstacle; only the return is damped, so the camera never eases through a wall.
  *
- * It runs in `lateUpdate`, which is the whole point: `PostUpdate` has already advanced the
- * `Animator`, so a camera framing a character's head sees the head where the animation actually put
- * it this frame, not where it was last frame (`01-lifecycle-and-time.md` §3).
- *
- * ## Collision
- *
- * A sphere is swept from the target's pivot out along the boom. The first thing it hits pulls the
- * camera in to just short of that point, so the character never disappears behind a wall. Coming
- * back out is damped and going in is instant — a camera that eased *into* a wall would clip through
- * it for the duration of the ease, which is exactly the frame the player is looking at.
- *
- * ## Look
- *
- * The orbit input is `LookInput` (`../character/look-input.ts`), shared with
- * `FirstPersonController`: pointer lock on click when the game asks for it, unlocked mouse motion
- * ignored while it does, and a stick's deflection read as a rate rather than a displacement.
- *
- * ## The orbit is yaw about the world's up, then pitch about the camera's own right
- *
- * `Quat.fromEulerDegrees(x, y, z)` composes in intrinsic **XYZ** order, so `(pitch, yaw, 0)` pitches
- * first and then yaws about the *tilted* axis: with any pitch at all, looking sideways rolled the
- * horizon and the camera rose and fell as it went round (measured 2026-09-08: at 15 degrees of
- * pitch the camera's height followed `cos(yaw)`). The rig therefore builds its rotation as
- * `Ry(yaw) * Rx(pitch)` — a Hamilton product applies the right factor first — which is the only
- * order in which a horizontal mouse motion is a turn about the vertical, and it seeds its angles at
- * `awake` from the entity's forward vector rather than from Euler angles, so an authored tilt reads
- * the same whatever order it was written in.
+ * Build rotation as `Ry(yaw) * Rx(pitch)` to keep yaw about world up and the horizon level.
+ * Seed the angles from the forward vector so authored rotations use the same convention.
  */
 
 /** How far short of a hit the camera stops, in metres, so it never sits inside the surface. */
@@ -92,28 +67,16 @@ function thirdPersonCameraSchema(): Schema {
 }
 
 /**
- * An orbiting third-person camera rig.
+ * An orbiting camera with shoulder offset, damping, and collision recovery.
  *
- * @remarks
- * **Look units.** A pointer reading (`<Mouse>/delta`, `<Pointer>/delta`) is a displacement in CSS
- * pixels and is multiplied by `sensitivity`, in degrees per pixel; 0.08 to 0.15 suits most mice, and
- * the figure no longer changes with the device pixel ratio or the render scale. A gamepad or virtual
- * stick is a deflection, which is a rate, and is multiplied by `stickLookSpeed` in degrees per
- * second, so the orbit rate does not follow the frame rate. One `Look` action feeds both;
- * `InputAction.activeDevice` is what tells them apart.
+ * Pointer look uses `sensitivity` in degrees per CSS pixel; stick look uses `stickLookSpeed` in
+ * degrees per second. Both use the `Look` action, with units selected by its active device.
  *
- * **Pointer lock** is off by default, because a third-person game that drag-orbits with a held mouse
- * button wants the cursor. Set `lockPointerOnClick` to `true` for the console-style rig: a
- * `pointerdown` then asks the browser for the lock whenever it is not held, and mouse or unified
- * pointer look is ignored until it is granted, so a cursor crossing the canvas no longer spins the
- * camera. Gamepad and touch look are never gated.
+ * `lockPointerOnClick` defaults to `false`. When enabled, canvas presses request pointer lock,
+ * and mouse/pointer look waits for it. Gamepad and touch look remain available.
  *
- * **Pitch direction.** Up is up on every device: moving the mouse forward and pushing a stick up both
- * lower the boom and aim the camera up, and pulling back raises it and looks down over the target's
- * shoulder. The two devices measure `y` in opposite directions and the look helper reconciles that
- * before the rig sees it, so `invertY` flips mouse, touch, and stick together — set it for a rig
- * that should swing up and over when the player pushes forward. Positive `pitch` still means the
- * camera is raised and aimed down.
+ * Moving the mouse forward or pushing a stick up lowers the boom and aims upward. `invertY`
+ * reverses all devices; positive `pitch` raises the camera and aims down.
  *
  * @example
  * ```ts

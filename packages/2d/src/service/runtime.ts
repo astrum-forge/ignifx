@@ -10,21 +10,9 @@ import type { TwoDSettings } from "../settings.js";
 import type { App, Disconnect, SceneInstance, World } from "@ignifx/core";
 
 /**
- * The mutable state one app's 2D toolkit carries between frames: the resolved settings, the layer
- * registry, the Lite sprite renderer, and the active camera.
- *
- * It exists as its own object rather than as fields on the service because the sync system, the
- * animation system, and the service all need it, and none of them owns the others.
- *
- * ## Why the renderer is created lazily
- *
- * Lite requires the sprite renderer to be registered **after** `registerScene`, so that it
- * composites on top (`index.d.ts` 12205-12209). `@ignifx/core` registers the render scene inside
- * `app.start()`, *after* every extension's `onStart` has already run, and emits no signal when it
- * does — `RendererImpl.isSceneRegistered` is internal. So there is no hook an extension can use.
- * {@link TwoDRuntime.ensureRenderer} closes that gap: the sync system calls it at the top of every
- * `PreRender`, and the first such call happens inside Lite's own frame callback, which only runs
- * once the scene is registered and the loop is going.
+ * State shared by the 2D service and systems, owned by one app.
+ * Create the sprite renderer on the first `PreRender`: core registers its render scene during
+ * `app.start()`, and the sprite renderer must be registered afterwards to draw on top.
  */
 
 /**

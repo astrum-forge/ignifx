@@ -418,7 +418,7 @@ function childrenOf(provider: IWorldMatrixProvider | null): SceneNode[] | null {
     return null;
   }
   const children = provider.children;
-  // Boundary assertion (coding standards §5.2): the invariant is that a world-matrix provider with
+  // The invariant is that a world-matrix provider with
   // an array-valued `children` is a `SceneNode`, which is what Lite itself assumes here.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return Array.isArray(children) ? (children as SceneNode[]) : null;
@@ -525,7 +525,7 @@ export function parentNode(node: SceneNode): SceneNode | null {
   if (parent === null || !("children" in parent)) {
     return null;
   }
-  // Boundary assertion (coding standards §5.2): a world-matrix provider that carries `children` is
+  // A world-matrix provider that carries `children` is
   // a `SceneNode` — the same invariant Lite's own `setParent` relies on.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return parent as SceneNode;

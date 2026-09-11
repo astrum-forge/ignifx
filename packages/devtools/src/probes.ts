@@ -104,7 +104,7 @@ export function probeUi(app: App): UiProbe | null {
   if (read(ui, "isActive") !== true) {
     return null;
   }
-  // Boundary assertion (coding standards §5.2): the shape checks above are the narrowing.
+  // The shape checks above are the narrowing.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- see above.
   return ui as UiProbe;
 }

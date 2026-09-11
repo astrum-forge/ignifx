@@ -1,37 +1,7 @@
 /**
- * The Content-Security-Policy a game window is served under
- * (`CONSTITUTION.md` §9.2, `docs/architecture/14-platform-electron.md` §3).
- *
- * ## Why a header and not a `<meta>` tag
- *
- * Both work in Chromium, and a `<meta http-equiv="Content-Security-Policy">` tag has the advantage
- * of travelling with the file. It is nevertheless the wrong instrument here for two reasons that
- * are properties of the mechanism rather than preferences:
- *
- * 1. A `<meta>` policy only starts applying at the point the parser reaches it, so anything the
- *    document did earlier — an injected script in the `<head>`, a `<base>` tag — is outside it. A
- *    response header covers the document from its first byte.
- * 2. `frame-ancestors`, `report-uri`, and `sandbox` are **ignored** in a `<meta>` policy by
- *    specification. `frame-ancestors 'none'` is one of the directives that matters most for a
- *    desktop build, and it is only reachable from a header.
- *
- * The header is injected with `session.webRequest.onHeadersReceived` (`electron.d.ts` 19657), which
- * is the documented way to add a response header to every navigation and subresource a session
- * loads, including the `ignifx://` responses this package's own protocol handler produces.
- *
- * ## `'unsafe-inline'` for styles, and only for styles
- *
- * `@ignifx/ui` installs its widget stylesheet by appending a `<style>` element, and a game
- * template's `index.html` carries its own `<style>` block. Both are inline styles, so `style-src`
- * has to allow them. Nothing about that widens the script surface, which is where CSP earns its
- * keep: `script-src` never gets `'unsafe-inline'` and never gets `'unsafe-eval'`.
- *
- * ## `'wasm-unsafe-eval'`
- *
- * `@ignifx/physics` and `@ignifx/physics-2d` instantiate WebAssembly, and Chromium refuses
- * `WebAssembly.instantiate` under a CSP whose `script-src` allows neither `'unsafe-eval'` nor the
- * narrower `'wasm-unsafe-eval'`. The narrow token is the default here; a game with no WebAssembly
- * can turn it off with `wasm: false`.
+ * Apply CSP through response headers so it covers the full document and supports `frame-ancestors`.
+ * Allow inline styles for UI widgets and templates, but never inline scripts or `unsafe-eval`.
+ * The narrower `wasm-unsafe-eval` permission supports physics; `wasm: false` removes it.
  */
 
 import { IGNIFX_ORIGIN } from "../host-contract.js";

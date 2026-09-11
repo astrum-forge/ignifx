@@ -122,7 +122,7 @@ async function readWasmBytes(url: string): Promise<ArrayBuffer> {
 async function readFromDisk(path: string): Promise<ArrayBuffer | null> {
   try {
     const specifier = NODE_FS_SPECIFIER;
-    // Boundary assertion (coding standards §5.2): a dynamic import with a non-literal specifier is
+    // A dynamic import with a non-literal specifier is
     // typed `any`, and {@link NodeFileSystem} is the one method of it this branch calls.
     // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     const fs = (await import(/* @vite-ignore */ specifier)) as NodeFileSystem;

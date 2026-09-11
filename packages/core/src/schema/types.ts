@@ -1,9 +1,7 @@
 import type { JsonObject, JsonValue } from "./json.js";
 
 /**
- * Every field kind a component schema can declare
- * (`docs/architecture/03-scripting-and-components.md` §3). Declared as an `as const` table with a
- * derived union rather than an `enum`, which `erasableSyntaxOnly` bans (coding standards §5.2).
+ * Field kinds supported by component schemas.
  *
  * @public
  */
@@ -127,16 +125,9 @@ export interface AssetTypeToken<A> {
 }
 
 /**
- * The plain, serializable form of an asset reference: what `{ "$asset": … }` decodes to before the
- * asset service turns it into a handle, and what a tool that reads a scene file without an app
- * works with (`docs/architecture/05-assets-and-loading.md` §2).
- *
- * @remarks
- * It is **not** the runtime value of an `asset()` field. Since Phase 2 that value is
- * `AssetHandle<A> | null`: a component receives the handle already loaded
- * (`docs/architecture/05-assets-and-loading.md` §3), so `this.mesh?.value` reaches the asset with no
- * second lookup. The two shapes overlap on `address`/`type`, which is why the encoder accepts
- * either.
+ * A serializable asset reference used by scene tools before an app resolves it.
+ * Runtime `asset()` fields hold `AssetHandle<A> | null`; the encoder accepts both forms through
+ * their shared address and optional type.
  *
  * @typeParam A - The asset value type this reference points at. It is a compile-time marker only:
  * `assetOf` is never assigned at runtime and is never serialized. It exists so that

@@ -2,33 +2,10 @@ import { CoreErrorCode } from "../errors/error-codes.js";
 import { IgnifxError } from "../errors/ignifx-error.js";
 
 /**
- * `app.platform`: what the engine knows about the host it is running on
- * (`docs/architecture/14-platform-electron.md` §1). Extensions branch on it — the input extension to
- * decide whether pointer lock is worth offering, the renderer to size its budgets — and game code
- * rarely should.
- *
- * ## Decisions the documents left open
- *
- * - **Detection is a pure function of a `PlatformHost` record.** §1 says the service is
- *   "populated at `createApp`" and nothing else. Reading the globals and *interpreting* them are
- *   two different jobs, and only the first one needs a browser: `readPlatformHost` scrapes
- *   `globalThis` and `detectPlatform` turns the result into a {@link PlatformInfo}. That is
- *   what lets the whole of the interpretation — every operating system, every mobile heuristic — be
- *   unit-tested under Node with a fabricated host.
- * - **`kind` is `"browser"` until something proves otherwise.** An Electron renderer *is* a browser
- *   as far as the kernel can tell; guessing from the user agent would be worse than being honest.
- *   `@ignifx/electron` detects its own preload bridge and calls
- *   `platformInternals(app.platform).setKind("electron")`, which is the one supported mutation.
- * - **`webgpu` describes the adapter, not the device.** Babylon Lite's public `index.d.ts` (v1.27.0)
- *   exposes neither the `GPUAdapter` nor the `GPUDevice` it acquired — `EngineContext` declares only
- *   `surfaces`, `drawCallCount`, `gpuFrameTimeMs`, `useHighPrecisionMatrix` and `useFloatingOrigin`
- *   — so reaching the engine's device would mean an assertion onto an undocumented `_device`
- *   property. `createApp` asks `navigator.gpu` for a *second* adapter instead, which costs nothing
- *   (an adapter is not a device) and reports what the hardware can do rather than what Lite asked
- *   for. `features` and `limits` are therefore an upper bound on the running device's.
- * - **Every field is plain data.** `features` is a sorted string array and `limits` a number record,
- *   not the live `GPUSupportedFeatures`/`GPUSupportedLimits` objects, so the whole record survives
- *   `JSON.stringify` into a bug report or a devtools panel.
+ * Separate reading host globals from interpreting them so detection is testable without a browser.
+ * Electron is identified by its preload bridge. GPU information describes adapter capabilities,
+ * which may exceed the running device's enabled features and limits.
+ * Keep the result serializable for diagnostics.
  */
 
 /**
@@ -389,7 +366,7 @@ export function platformInternals(platform: PlatformInfo): PlatformInfoImpl {
  * @returns The value, or `undefined` when the property is absent.
  */
 function readKey(source: object, key: string): unknown {
-  // Boundary assertion (coding standards §5.2): these are host objects read by name, and no lib
+  // These are host objects read by name, and no lib
   // declares `userAgentData` or a `process` global in a DOM-only type environment.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   const view = source as Record<string, unknown>;

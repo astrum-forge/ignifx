@@ -95,7 +95,7 @@ function readMaterialFile(parsed: unknown, address: string): Record<string, unkn
   if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
     throw notAMaterial(address);
   }
-  // Boundary assertion (coding standards §5.2): the array and `null` cases are gone, so what is
+  // The array and `null` cases are gone, so what is
   // left is a JSON object read by name.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   const file = parsed as Record<string, unknown>;

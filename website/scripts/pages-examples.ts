@@ -21,7 +21,7 @@ import { readText } from "./text.ts";
 import type { CodeHighlighter } from "./highlight.ts";
 import type { ExampleEntry } from "../examples/catalogue.ts";
 
-/** Repository path of the attribution document the examples agent maintains. */
+/** Repository path of the example asset attributions. */
 export const ATTRIBUTION_FILE = "website/examples/assets/ATTRIBUTION.md";
 
 /**

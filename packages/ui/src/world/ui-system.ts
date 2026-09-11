@@ -19,27 +19,8 @@ import type {
 } from "@ignifx/core";
 
 /**
- * The one system `@ignifx/ui` registers (`docs/architecture/01-lifecycle-and-time.md` §3,
- * `13-ui.md` §2: *"Updated in `PreRender` after camera sync, in batch, using
- * `Camera.worldToScreen`"*).
- *
- * ## Ordering
- *
- * `@ignifx/core`'s `RenderSyncSystem` runs at `PreRender` order **900**
- * (`packages/core/src/render/render-sync-system.ts` 63) and is what refreshes the render target's
- * size on every `Camera` and writes the frame's transforms onto the Lite cameras. Every projection
- * this system performs would be a frame stale, and would divide by last frame's viewport, if it ran
- * before that. {@link UI_SYNC_ORDER} is therefore **1100**: after core's sync, and inside the
- * `[1001, 9999]` band `RegisterSystemOptions` reserves for extensions
- * (`packages/core/src/app/types.ts` 649). Nothing else in the engine occupies it — physics
- * interpolation is at `-500`, 2D sync at `-450`, audio at `-400`.
- *
- * ## What it does
- *
- * One pass per component kind, in the order a frame needs them: create the text renderer if this is
- * the first frame, project every `WorldAnchor` and every `WorldText2D` once, then re-shape whatever
- * text changed. Projection uses the world's main camera; with no camera nothing is projected and
- * every anchored element is hidden, which is what a loading screen with no scene looks like.
+ * Run after core's camera sync so projections use the current pose and render-target size.
+ * With no main camera, hide anchored elements. Text shaping only repeats when content changes.
  */
 
 /**

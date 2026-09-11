@@ -5,16 +5,8 @@ import { TILEMAP_FORMAT, TILEMAP_FORMAT_VERSION } from "./tilemap/definition.js"
 import type { Schema } from "@ignifx/core";
 
 /**
- * Declarative schemas for the three file formats `@ignifx/2d` reads
- * (`docs/architecture/06-serialization-and-scene-format.md` §6).
- *
- * These exist for **documentation and tooling**, not for the loaders: a loader validates with its
- * own `defineX` function, which produces an actionable `IGX-11##` message naming the offending
- * frame or clip. The schema here is what `pnpm docs:schemas` renders into
- * `skills/ignifx/references/formats/`, and what a JSON Schema for an editor is generated from.
- *
- * The two descriptions are deliberately kept in one package so they cannot drift apart in a
- * release; a test asserts that a fixture accepted by the loader also validates against the schema.
+ * Schemas for generated format docs and editor validation. Loaders validate through their own
+ * `defineX` functions; tests check that accepted fixtures also satisfy these schemas.
  */
 
 /**

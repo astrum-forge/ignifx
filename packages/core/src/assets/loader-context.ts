@@ -177,7 +177,7 @@ export class LoaderContextImpl implements LoaderContext {
   async loadDependency<D>(ref: AssetRef<D> | string, options?: LoadOptions): Promise<AssetHandle<D>> {
     const dependency = this.#host.requestDependency(ref, options, this.#handle);
     await dependency.promise;
-    // Boundary assertion (coding standards §5.2): the cache is untyped because loaders return
+    // The cache is untyped because loaders return
     // `unknown`; `D` is the caller's declaration of what this address holds.
     // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     return dependency as unknown as AssetHandle<D>;

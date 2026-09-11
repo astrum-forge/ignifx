@@ -3,20 +3,9 @@ import type { Physics2DMaterialValues } from "./settings.js";
 import type { AssetLoader, JsonObject, JsonValue, LoaderContext } from "@ignifx/core";
 
 /**
- * The `ignifx.physicsmaterial` asset, read by the 2D extension.
- *
- * ## Why the format is the 3D one
- *
- * `11-2d-toolkit.md` §8 lists a `PhysicsMaterial2D`, and `09-physics.md` §2.4 already defines
- * `{ "format": "ignifx.physicsmaterial", "friction": …, "staticFriction": …, "restitution": … }`.
- * Inventing a second document for the same two numbers would give artists two files to keep in
- * step, so this package reads **the same format and the same `.physicsmaterial.json` extension**,
- * ignoring `staticFriction` (Rapier 2D has one friction coefficient, `geometry/collider.d.ts`).
- * `@ignifx/physics` and `@ignifx/physics-2d` never run in one world — `IGX-1101` — so the two
- * loaders never collide.
- *
- * The 2D-only knobs, how two surfaces' friction and restitution are **combined**, are fields on the
- * collider rather than on the asset, so the document stays byte-identical to the 3D one.
+ * Read the shared `.physicsmaterial.json` format, ignoring `staticFriction` because Rapier has one
+ * friction coefficient. Combine rules stay on colliders. Only one physics extension runs per world,
+ * so the 2D and 3D loaders do not compete.
  */
 
 /**
@@ -167,7 +156,7 @@ function asObject(value: JsonValue): JsonObject | null {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     return null;
   }
-  // Boundary assertion (coding standards §5.2): the guard above is exactly `JsonObject`.
+  // The guard above is exactly `JsonObject`.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return value as JsonObject;
 }

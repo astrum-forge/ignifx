@@ -17452,17 +17452,9 @@ The asset type name, when the address alone does not identify it.
 
 ### AssetRefValue
 
-The plain, serializable form of an asset reference: what `{ "$asset": … }` decodes to before the
-asset service turns it into a handle, and what a tool that reads a scene file without an app
-works with (`docs/architecture/05-assets-and-loading.md` §2).
-
-#### Remarks
-
-It is **not** the runtime value of an `asset()` field. Since Phase 2 that value is
-`AssetHandle<A> | null`: a component receives the handle already loaded
-(`docs/architecture/05-assets-and-loading.md` §3), so `this.mesh?.value` reaches the asset with no
-second lookup. The two shapes overlap on `address`/`type`, which is why the encoder accepts
-either.
+A serializable asset reference used by scene tools before an app resolves it.
+Runtime `asset()` fields hold `AssetHandle<A> | null`; the encoder accepts both forms through
+their shared address and optional type.
 
 #### Type Parameters
 
@@ -28122,9 +28114,7 @@ const code = `IGX-${ErrorRange.rendering}01` satisfies ErrorCode; // "IGX-0701"
 
 > `const` **FieldKind**: `object`
 
-Every field kind a component schema can declare
-(`docs/architecture/03-scripting-and-components.md` §3). Declared as an `as const` table with a
-derived union rather than an `enum`, which `erasableSyntaxOnly` bans (coding standards §5.2).
+Field kinds supported by component schemas.
 
 #### Type Declaration
 
@@ -28329,7 +28319,7 @@ const config = app.assets.load<{ readonly hp: number }>("data/player.json");
 
 > `const` **LIGHT\_TYPES**: readonly \[`"directional"`, `"point"`, `"spot"`, `"hemispheric"`\]
 
-The `as const` name table behind the public union of the same name.
+Supported light kinds.
 
 ***
 

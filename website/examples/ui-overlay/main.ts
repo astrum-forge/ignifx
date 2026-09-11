@@ -9,28 +9,9 @@ import type { Hud } from "./hud.ts";
 import type { AssetHandle, FontAsset, ScriptCallbacks, UiScalingMode } from "ignifx";
 
 /**
- * The overlay, all four of its parts, over a scene you can still see.
- *
- * `@ignifx/ui` puts one absolutely positioned `<div>` over the canvas and hands a game named
- * layers inside it. **Game UI in ignifx is HTML**, which is what buys real fonts, real layout,
- * screen readers and any framework the team already knows. So:
- *
- * - the HUD panel and its safe-area frame are plain DOM in `app.ui.layer("hud")` (`hud.ts`);
- * - `Dialog` and `Toast` are DOM helpers with no styling opinions, in the `menu` and `overlay`
- *   layers, stacked by layer rather than by luck;
- * - `HudText` is the exception — **GPU** text, positioned in backing-store pixels, which is the one
- *   tool for text that has to line up with `captureScreenshot()`.
- *
- * The Scaling select is the part worth playing with. It decides what a UI unit *is*: a CSS pixel
- * (`css`), a pixel of a fixed reference resolution (`fit`, letterboxed), or a backing-store pixel
- * (`dpi`). Switch it and the DOM half of the overlay changes size while the `HudText` above it does
- * not, because the two live in different spaces — `app.ui.pixelMapping` is the conversion between
- * them. The parameter panel is DOM in a layer too, so it resizes with the HUD.
- *
- * One gotcha is load-bearing and this file shows the fix rather than describing it: **a `Toast`
- * runs on the game clock and nothing advances it for you.** The script that does declares
- * `static updateWhenPaused = true` and passes `app.time.unscaledDeltaTime`, so the message the
- * dialog raises still expires — the dialog paused the game to ask.
+ * Show DOM layers alongside GPU HUD text. DOM scaling follows `app.ui.pixelMapping`;
+ * `HudText` positions stay in backing-store pixels and appear in renderer captures.
+ * Advance toasts with unscaled time from a script that updates while paused so dialog messages expire.
  */
 
 /** The font `HudText` draws with. Vendored, OFL-1.1; see `assets/ATTRIBUTION.md`. */

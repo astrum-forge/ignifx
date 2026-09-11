@@ -1,13 +1,7 @@
 import type { AssetLoader, LoaderContext } from "./types.js";
 
 /**
- * The three loaders that need no adapter and no GPU
- * (`docs/architecture/05-assets-and-loading.md` §5, last row of the core table). The core extension
- * registers them; `texture`, `model`, `scene`, `material`, `environment`, and `font` arrive with the
- * rendering layer, which owns the Lite adapter.
- *
- * Each is a frozen object literal rather than a factory: they hold no state, so one instance per
- * process is correct and module scope stays free of allocation (`CONSTITUTION.md` §3.5).
+ * Built-in JSON, text, and binary loaders, registered by the core extension.
  */
 
 /**

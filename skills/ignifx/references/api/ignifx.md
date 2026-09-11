@@ -1,18 +1,8 @@
 # ignifx
 
-`ignifx` public barrel: the umbrella entry point that re-exports `@ignifx/core` and, as each
-phase lands, the standard extensions (`docs/architecture/00-overview.md` §2). Every symbol is
-re-exported by name — no `export *` (coding standards §4).
-
-Phase 2 added the render components, the GPU asset loaders, and the scene serialization surface;
-Phase 3 adds the whole of `@ignifx/input`. The physics, physics-2d, audio, 2d, 3d, and ui
-re-exports and the one-call `createGame()` arrive with the phases of
-`docs/plan/engineering-plan.md` that populate those packages.
-
-Two `@ignifx/input` exports are deliberately **not** re-exported, because `@ignifx/core` already
-owns the name: `VERSION` (the umbrella reports the core version) and `describeSchemas` (the
-documentation harness reads each package's own entry point, so nothing is lost). Reach them as
-`@ignifx/input`'s own exports when a tool needs them.
+Re-export core and the standard runtime extensions through the `ignifx` entry point.
+`VERSION` and `describeSchemas` come from core; tools needing an extension's versions of those
+names import them from that package.
 
 ## Classes
 
@@ -16372,30 +16362,16 @@ The GPU handles, or `null` under a headless app.
 
 ### FirstPersonController
 
-A first-person character.
+A first-person character with movement, jumping, and camera look.
 
-#### Remarks
+Pointer look uses `sensitivity` in degrees per CSS pixel; stick look uses `stickLookSpeed` in
+degrees per second. The `Look` action's active device selects the units.
 
-**Look units.** A pointer reading (`<Mouse>/delta`, `<Pointer>/delta`) is a displacement in CSS
-pixels and is multiplied by `sensitivity`, in degrees per pixel; 0.08 to 0.15 suits most mice, and
-the figure no longer changes with the device pixel ratio or the render scale. A gamepad or virtual
-stick is a deflection, which is a rate, and is multiplied by `stickLookSpeed` in degrees per
-second: the same physical push turns through the same angle at 60 and at 144 fps. Both are read
-from one `Look` action; `InputAction.activeDevice` is what tells them apart.
+`lockPointerOnClick` defaults to `true`: canvas presses request pointer lock, and mouse/pointer
+look waits for it. Gamepad and touch look remain available. Set it to `false` for unlocked mouse look.
 
-**Pointer lock.** While `lockPointerOnClick` is `true` (the default), a `pointerdown` on the
-canvas asks the browser for the lock — every time it is not held, not only once, because the
-browser drops it on Escape and on focus loss — and look readings from the mouse or the unified
-pointer are **ignored until the lock is granted**. That is what stops the view spinning while the
-player moves an unlocked cursor towards a menu button. Gamepad and touch look keep working
-throughout. Set `lockPointerOnClick` to `false` for a drag-to-look design, which restores
-unconditional mouse look.
-
-**Pitch direction.** Up is up on every device: moving the mouse forward and pushing a stick up both
-look up, which is the first-person convention. The rigs read one normalised axis — a screen's `y`
-grows downward and a stick's grows upward, and the look helper reconciles that before either rig
-sees it — so `invertY` flips mouse, touch, and stick together rather than fixing one and breaking
-the other. Positive `pitch` still means the head is looking down.
+Moving the mouse forward or pushing a stick up looks up. `invertY` reverses all devices;
+positive `pitch` looks down.
 
 #### Example
 
@@ -42519,29 +42495,16 @@ through `ctx.loadDependency`, which counts the asset handle instead.
 
 ### ThirdPersonCamera
 
-An orbiting third-person camera rig.
+An orbiting camera with shoulder offset, damping, and collision recovery.
 
-#### Remarks
+Pointer look uses `sensitivity` in degrees per CSS pixel; stick look uses `stickLookSpeed` in
+degrees per second. Both use the `Look` action, with units selected by its active device.
 
-**Look units.** A pointer reading (`<Mouse>/delta`, `<Pointer>/delta`) is a displacement in CSS
-pixels and is multiplied by `sensitivity`, in degrees per pixel; 0.08 to 0.15 suits most mice, and
-the figure no longer changes with the device pixel ratio or the render scale. A gamepad or virtual
-stick is a deflection, which is a rate, and is multiplied by `stickLookSpeed` in degrees per
-second, so the orbit rate does not follow the frame rate. One `Look` action feeds both;
-`InputAction.activeDevice` is what tells them apart.
+`lockPointerOnClick` defaults to `false`. When enabled, canvas presses request pointer lock,
+and mouse/pointer look waits for it. Gamepad and touch look remain available.
 
-**Pointer lock** is off by default, because a third-person game that drag-orbits with a held mouse
-button wants the cursor. Set `lockPointerOnClick` to `true` for the console-style rig: a
-`pointerdown` then asks the browser for the lock whenever it is not held, and mouse or unified
-pointer look is ignored until it is granted, so a cursor crossing the canvas no longer spins the
-camera. Gamepad and touch look are never gated.
-
-**Pitch direction.** Up is up on every device: moving the mouse forward and pushing a stick up both
-lower the boom and aim the camera up, and pulling back raises it and looks down over the target's
-shoulder. The two devices measure `y` in opposite directions and the look helper reconciles that
-before the rig sees it, so `invertY` flips mouse, touch, and stick together — set it for a rig
-that should swing up and over when the player pushes forward. Positive `pitch` still means the
-camera is raised and aimed down.
+Moving the mouse forward or pushing a stick up lowers the boom and aims upward. `invertY`
+reverses all devices; positive `pitch` raises the camera and aims down.
 
 #### Example
 
@@ -57067,17 +57030,9 @@ The asset type name, when the address alone does not identify it.
 
 ### AssetRefValue
 
-The plain, serializable form of an asset reference: what `{ "$asset": … }` decodes to before the
-asset service turns it into a handle, and what a tool that reads a scene file without an app
-works with (`docs/architecture/05-assets-and-loading.md` §2).
-
-#### Remarks
-
-It is **not** the runtime value of an `asset()` field. Since Phase 2 that value is
-`AssetHandle<A> | null`: a component receives the handle already loaded
-(`docs/architecture/05-assets-and-loading.md` §3), so `this.mesh?.value` reaches the asset with no
-second lookup. The two shapes overlap on `address`/`type`, which is why the encoder accepts
-either.
+A serializable asset reference used by scene tools before an app resolves it.
+Runtime `asset()` fields hold `AssetHandle<A> | null`; the encoder accepts both forms through
+their shared address and optional type.
 
 #### Type Parameters
 
@@ -66975,16 +66930,8 @@ Linear gain for this play; defaults to the source's `volume`.
 
 ### OneShotVolume
 
-Options accepted by [AudioSource.playOneShot](#playoneshot-1): a gain and nothing else.
-
-#### Remarks
-
-Deliberately narrower than the `OneShotOptions` the service form takes
-(`docs/architecture/10-audio.md` §3, "Corrections"). The component form exists to fire a second
-clip **through this source's bus**, so `bus` is not a caller's choice, and everything else in
-`PlayOptions` — `pitch`, `loop`, `delay`, `startOffset`, `duration` — describes a sound the
-source would then have no handle on. A one-shot that needs more than a gain is
-`app.audio.playOneShot(clip, options)`, which takes `bus` plus all of `PlayOptions`.
+Gain options for a one-shot played through this source's bus.
+Use `app.audio.playOneShot` to choose a bus or supply other playback options.
 
 #### Properties
 
@@ -77824,9 +77771,7 @@ const code = `IGX-${ErrorRange.rendering}01` satisfies ErrorCode; // "IGX-0701"
 
 > `const` **FieldKind**: `object`
 
-Every field kind a component schema can declare
-(`docs/architecture/03-scripting-and-components.md` §3). Declared as an `as const` table with a
-derived union rather than an `enum`, which `erasableSyntaxOnly` bans (coding standards §5.2).
+Field kinds supported by component schemas.
 
 #### Type Declaration
 
@@ -78502,7 +78447,7 @@ The name given to the synthetic tileset that carries IntGrid colliders.
 
 > `const` **LIGHT\_TYPES**: readonly \[`"directional"`, `"point"`, `"spot"`, `"hemispheric"`\]
 
-The `as const` name table behind the public union of the same name.
+Supported light kinds.
 
 ***
 

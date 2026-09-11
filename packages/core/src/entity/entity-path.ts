@@ -2,25 +2,10 @@ import { entityInternals } from "./internals.js";
 import type { Entity } from "./entity.js";
 
 /**
- * The `entity.find("Body/Arm.L")` path grammar (`docs/architecture/02-scene-graph.md` §4).
- *
- * @remarks
- * Deliberately fragile — the Godot `get_node` lesson — and therefore allowed only in tests,
- * examples, and tools, where a hard-coded path is the point; `ignifx/no-entity-find-in-src` flags
- * it anywhere else. Serialized `entityRef`/`componentRef` fields and `requireComponent` are the
- * supported way to link objects.
- *
- * The grammar is exactly:
- *
- * - segments are separated by `/`;
- * - a leading `/` resolves from the roots of the entity's **own scene instance**, not the world, so
- *   an additive HUD scene cannot accidentally reach into the gameplay scene (§10 says cross-scene
- *   links go through tags, uids, or a service);
- * - `..` is the parent and `.` is the entity itself, but **only as whole segments** — a name may
- *   contain dots, which is why `Arm.L` resolves as a name and not as a path;
- * - empty segments are skipped, so `"a//b"` and `"a/b/"` mean `"a/b"`;
- * - anything that does not resolve yields `null`, because a lookup that finds nothing is an
- *   expected absence, not an error (coding standards §5.5).
+ * Resolve `/`-separated entity paths within the entity's scene instance.
+ * A leading `/` starts at scene roots; whole segments `.` and `..` mean self and parent.
+ * Empty segments are ignored and unresolved paths return `null`.
+ * Use schema references in runtime source; path lookup is for examples, tests, and tools.
  */
 
 /**

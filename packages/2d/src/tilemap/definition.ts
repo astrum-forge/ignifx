@@ -5,23 +5,9 @@ import type { TileCollisionInfo, TileCollisionShape } from "./collision-data.js"
 import type { Vec2Like } from "@ignifx/core";
 
 /**
- * The `ignifx.tilemap` document — the `.tilemap.json` file that names tile sizes, tilesets, tile
- * layers and object layers (`docs/architecture/06-serialization-and-scene-format.md` §6,
- * `11-2d-toolkit.md` §2.5).
- *
- * Two coordinate conventions meet in this file and it is worth stating both loudly, because getting
- * them backwards is the single easiest mistake to make in a tilemap pipeline:
- *
- * - **Authoring space** (everything on `TileColliderDefinition` and every editor this package
- *   imports from) is cell-normalised `[0, 1]` with the origin at the **top-left** of the cell and
- *   +Y pointing **down**. Tiled and LDtk both emit pixels in that orientation, and the importers
- *   divide by the tile size rather than flipping.
- * - **Runtime space** (`TileCollisionShape`, `TilemapCollisionData`, and every world coordinate on
- *   `TilemapObjectDefinition`) is metres with the origin at the **bottom-left** and +Y pointing
- *   **up**, because that is the ignifx 2D world (ADR-0011).
- *
- * {@link tileCollisionInfo} is the one function that crosses between them, so the flip lives in
- * exactly one place — the same discipline `../math/coords.ts` applies to the render path.
+ * Tilemap file data uses top-left, Y-down coordinates; collider points are cell-normalised.
+ * Runtime collision data uses bottom-left, Y-up coordinates in metres.
+ * `tileCollisionInfo` converts between them (docs/architecture/11-2d-toolkit.md §2.5, ADR-0011).
  */
 
 /**

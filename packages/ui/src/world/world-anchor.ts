@@ -5,23 +5,9 @@ import type { UiPixelMapping } from "../dom/scaling.js";
 import type { ComponentHooks, Schema, Vec3Like } from "@ignifx/core";
 
 /**
- * `WorldAnchor` (`docs/architecture/13-ui.md` §2): *"keeps a DOM element positioned at the entity's
- * screen position (name tags, health bars, markers)"*.
- *
- * ## The element is the game's, not the component's
- *
- * A game creates the element — with its framework, its CSS, its accessibility attributes — mounts
- * it in whichever `app.ui.layer` it belongs to, and assigns it to {@link WorldAnchor.element}. The
- * component writes exactly three properties on it and nothing else: `position: absolute`,
- * `left`/`top` at the origin, and a `transform` carrying the translate and the scale. That keeps a
- * React tree's own rendering untouched — the anchor only ever writes inline style — and it means
- * an anchor with no element is simply inert.
- *
- * ## Cost
- *
- * The transform string is the one per-frame allocation and it is unavoidable: the DOM takes CSS
- * text. Everything else is compared first, so an anchor whose entity did not move and whose camera
- * did not move writes nothing at all (coding standards §7).
+ * Position a game-owned DOM element without changing its contents or ownership.
+ * Cache pose and camera state to avoid redundant style writes; changing a CSS transform still
+ * requires a string allocation.
  */
 
 /**

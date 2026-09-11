@@ -68,7 +68,7 @@ function registerEnvironment(
   address: string,
   definition: Partial<EnvironmentDefinition> = {},
 ): AssetHandle<EnvironmentAsset> {
-  // Boundary assertion (coding standards §5.2): a stand-in for the GPU handle set, asserted on by
+  // A stand-in for the GPU handle set, asserted on by
   // identity only.
   const textures = {
     sphericalHarmonics: new Float32Array(36),

@@ -13,20 +13,9 @@ import type { Scheduler } from "../scheduler/scheduler.js";
 import type { SettingsStore } from "../settings/settings-store.js";
 
 /**
- * The extension host (`docs/architecture/04-extensions.md` §2). It builds the extension list, sorts
- * it, validates it, runs `register` in order, and later runs `onStart` in order and
- * `onStop`/`dispose` in reverse.
- *
- * Decisions the documents leave open:
- *
- * - **`register` and `onStart` failures propagate.** They are construction, not frame work: a game
- *   whose physics extension could not fetch its WASM should see `createApp()` reject, not start and
- *   misbehave. `onStop`, `dispose`, and the `onDispose` callbacks are caught and reported through
- *   `app.onError` with `source: "extension"` instead, so one failing teardown never strands the
- *   rest.
- * - **Sorting is a depth-first walk of the list in the order the game wrote it.** That makes the
- *   result stable and predictable: extensions with no relationship keep their list order, and a
- *   dependency is only pulled forward as far as it has to be.
+ * Register and start extensions in dependency order; stop and dispose them in reverse order.
+ * Unrelated extensions keep declaration order. Registration and startup failures propagate;
+ * teardown failures go to `app.onError` so remaining cleanup can continue.
  */
 
 /** The DFS colour of an extension while the list is being sorted. */

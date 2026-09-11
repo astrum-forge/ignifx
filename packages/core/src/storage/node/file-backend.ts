@@ -429,7 +429,7 @@ export async function createFileStorageBackend(options: FileStorageOptions): Pro
       hint: "A directory storage backend runs under Node or Electron's main process only.",
     });
   }
-  // Boundary assertion (coding standards §5.2): a dynamic import with a computed specifier has no
+  // A dynamic import with a computed specifier has no
   // static type, and `FileSystemApi` is this module's declaration of what Node hands back.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return createFileSystemBackend(loaded as FileSystemApi, options.directory);

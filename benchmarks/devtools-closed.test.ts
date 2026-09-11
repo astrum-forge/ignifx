@@ -16,35 +16,9 @@ import { Rotator } from "./scenes/rotator.ts";
 import type { App } from "@ignifx/core";
 
 /**
- * The Phase 10 **zero-cost-when-closed** gate (`docs/plan/engineering-plan.md` Phase 10 exit
- * criteria, `docs/architecture/15-devtools-and-diagnostics.md` §4: *"zero cost when closed"*).
- *
- * ## What is measured
- *
- * The same 1,002-entity headless scene the frame-time table uses, stepped 600 times, in four
- * blocks: two apps with no extensions and two with `devtools()` registered and never opened, one
- * alive at a time. The statistic is the median per-frame time of each variant over its 1,200
- * samples — the median rather than the mean because one 8 ms GC pause in 1,200 frames should not
- * decide the outcome.
- *
- * Four blocks rather than two, with one app alive at a time, because construction order biases the
- * result. Measured on 2026-09-06 with two concurrent apps: with the plain app built first the
- * difference read +0.007, +0.000 and +0.016 ms, and with the devtools app built first it read
- * -0.007, -0.004 and -0.008 ms — the same magnitude, the opposite sign. Whatever is built second is
- * slightly cheaper to step. Running one variant at a time in the order plain, devtools, devtools,
- * plain gives each variant one cold position and one warm one.
- *
- * ## Why it can be asserted rather than merely reported
- *
- * A registered-but-closed devtools is supposed to be *structurally* absent, not merely cheap: it
- * registers no system, holds no subscription, and owns no DOM until `open()` is called
- * (`packages/devtools/src/service.ts`). The only thing left running is a `keydown` listener on the
- * document, which a headless app does not even install. So the expected difference is not "small",
- * it is "nothing but measurement noise" — and 0.02 ms is a hundredth of the 1.6 ms this scene
- * spends per frame.
- *
- * The recorded numbers live in `baselines.json` under `devtools`; they are one machine's, and the
- * assertion below is on the live measurement, not on them.
+ * Compare live frame time with devtools registered but never opened, using one app at a time.
+ * Run plain, devtools, devtools, plain to balance warm-up bias; compare medians to reduce GC noise.
+ * This tests the unopened state, where no sampler or overlay subscriptions have been installed.
  */
 
 /** How many mover entities the scene builds; with the camera and the sun that is 1,002. */

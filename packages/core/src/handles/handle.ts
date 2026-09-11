@@ -47,7 +47,7 @@ export const INVALID_HANDLE = 0;
  * @internal
  */
 export function toEntityHandle(value: number): EntityHandle {
-  // Boundary assertion (coding standards §5.2): the brand is a compile-time marker with no runtime
+  // The brand is a compile-time marker with no runtime
   // representation, so branding is the identity function and this is the one place it happens.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return value as EntityHandle;

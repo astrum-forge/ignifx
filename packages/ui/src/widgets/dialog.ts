@@ -4,33 +4,8 @@ import type { UiHost } from "../dom/host.js";
 import type { SignalLike } from "@ignifx/core";
 
 /**
- * `Dialog` (`docs/architecture/13-ui.md` §3): *"plain DOM helper classes with no styling opinions
- * beyond a minimal stylesheet; templates ship their own CSS"*.
- *
- * The whole point is that a template's pause menu is two lines:
- *
- * ```ts ignore-check
- * const pause = new Dialog(app.ui, {
- *   title: "Paused",
- *   buttons: [{ id: "resume", label: "Resume" }, { id: "quit", label: "Quit" }],
- * });
- * pause.onChosen.connect((id) => {
- *   pause.hide();
- *   if (id === "resume") app.resume();
- * });
- * ```
- *
- * Under a headless app every method is a no-op and {@link Dialog.element} is `null`, so the same
- * code runs in a test.
- *
- * ## Stacking
- *
- * A dialog is modal, so it is always drawn **above** the other roots of its layer: the stylesheet
- * gives `.ignifx-ui-dialog` a `z-index` of `UI_DIALOG_Z_INDEX`, and {@link DialogOptions.zIndex}
- * overrides it per dialog. Without that rule a dialog created before a `Menu` in the same layer
- * paints under it — siblings with no `z-index` paint in DOM order — and the invisible backdrop
- * swallows every click meant for the panel on top. Two dialogs in one layer still stack in DOM
- * order, so the one shown last is the one on top.
+ * Modal dialogs use a higher stacking level than menus so their panels and backdrops stay above
+ * other layer content. Without a DOM overlay, methods are no-ops and `element` is `null`.
  */
 
 /**

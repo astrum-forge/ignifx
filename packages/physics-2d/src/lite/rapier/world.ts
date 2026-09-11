@@ -18,23 +18,10 @@ import type { Collider, RigidBody, Shape } from "@dimforge/rapier2d-compat";
 import type { MutableVec2, Vec2Like } from "@ignifx/core";
 
 /**
- * The Rapier 2D adapter (`docs/architecture/11-2d-toolkit.md` §8, ADR-0006). Everything the runtime
- * needs from `@dimforge/rapier2d-compat` is a function here, so the rest of `src/` never imports the
- * backend (`ignifx/no-lite-outside-adapter`, coding standards §4).
- *
- * ## Facts measured against `@dimforge/rapier2d-compat@0.20.0` (spike S6.2)
- *
- * - **The broadphase is only built by `World.step`.** Before the first step, `castRay` returns
- *   `null` and `KinematicCharacterController.computeColliderMovement` reports the full requested
- *   motion with no obstacles; a collider created after the last step is invisible until the next
- *   one. {@link primeWorld} runs a zero-length step, which builds the broadphase without
- *   integrating — but it is *not* free of side effects on a running simulation (a settled pile
- *   hashes differently), so the runtime primes only when the collider set changed.
- * - **`InteractionGroups` is one 32-bit number**: membership in the high 16 bits, filter in the low
- *   16 (`geometry/interaction_groups.d.ts`). Sixteen layers, not thirty-two.
- * - **`ActiveCollisionTypes.DEFAULT` excludes non-dynamic pairs**, so a kinematic character never
- *   reports entering a static sensor. Colliders that want events are given
- *   `ActiveCollisionTypes.ALL`.
+ * Keep Rapier calls inside the adapter (ADR-0006).
+ * Queries need a built broadphase. Prime after collider-set changes only: a zero-length step can
+ * still affect a running simulation. Interaction groups support sixteen layers; event-enabled
+ * colliders include non-dynamic pairs so characters can enter static sensors.
  */
 
 /**

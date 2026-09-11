@@ -30,7 +30,6 @@ import type { Entity } from "../../src/entity/entity.js";
 import type { SceneFile, SceneFileEntity } from "../../src/serialization/scene-file.js";
 import type { TestWorld } from "../support/create-test-world.js";
 
-/** Does nothing; the stub handle's `release` needs a function, not behaviour. */
 function noop(): void {
   // A stub handle holds no resources.
 }

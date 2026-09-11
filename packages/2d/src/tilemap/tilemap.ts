@@ -8,19 +8,9 @@ import type { TilemapDefinition } from "./definition.js";
 import type { AssetHandle, ComponentHooks, MutableVec2, Schema, Vec2Like } from "@ignifx/core";
 
 /**
- * `Tilemap` (`docs/architecture/11-2d-toolkit.md` §2.5): the grid of tile ids a level is built
- * from, its cell arithmetic, and the merged collision geometry `@ignifx/physics-2d` consumes.
- *
- * The component holds no Lite object — `TilemapRenderer` draws it — so a headless app carries the
- * full grid and the full collision surface. That is what makes a level's collision testable
- * without a GPU, and what lets a server run the same map the client draws.
- *
- * ## Coordinates
- *
- * Cell `(0, 0)` is the **bottom-left** of the map, because ignifx 2D is +Y up (ADR-0011). The
- * document's own layers are stored top row first, as every editor writes them, and the component
- * flips on the way in. `worldToCell`/`cellToWorld` are relative to the tilemap entity's own
- * transform, so moving the entity moves the whole map.
+ * Keep the tile grid and collision data available without a renderer or GPU.
+ * Cell `(0, 0)` is the bottom-left; document rows are flipped from their top-first order.
+ * Cell/world conversions include the tilemap entity's transform (ADR-0011).
  */
 
 /**

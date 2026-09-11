@@ -4,20 +4,9 @@ import type { ComponentType } from "./component-type.js";
 import type { Component } from "./component.js";
 
 /**
- * The world's live per-type component registry — what `world.components(Type)` returns and what
- * every system iterates (`docs/architecture/02-scene-graph.md` §9).
- *
- * @remarks
- * A component is filed under **every** class in its ancestor chain, so a query for `Script` really
- * does return every script and a query for `Component` returns everything, with no prototype walk
- * and no filtering per frame. Each bucket records where the component sits, so removal is a
- * swap-remove rather than a scan: `add` and `remove` are both O(ancestors), which is a small
- * constant.
- *
- * The array a query returns is the bucket itself: obtaining it costs nothing, its identity is
- * stable for the lifetime of the world, and it is live — a component added later shows up in it.
- * Swap-remove means the order is *not* creation order and changes when a component is destroyed;
- * systems that need deterministic ordering iterate `world.scriptsWith(kind)` instead.
+ * Index components under every ancestor class so base-class queries need no filtering.
+ * Queries return stable, live arrays. Swap removal changes their order; systems that need script
+ * execution order use `world.scriptsWith(kind)`.
  */
 
 /** Shared empty bucket for a type nothing has ever been filed under. */
@@ -102,12 +91,12 @@ export class ComponentStore {
     if (bucket === undefined) {
       // Nothing of this type has ever existed. Returning the shared frozen empty array keeps the
       // query allocation-free; the bucket is created the moment something is filed under it.
-      // Boundary assertion (coding standards §5.2): an empty array of `Component` is an empty array
+      // An empty array of `Component` is an empty array
       // of any subtype.
       // oxlint-disable-next-line typescript/no-unsafe-type-assertion
       return EMPTY_BUCKET as unknown as readonly T[];
     }
-    // Boundary assertion (coding standards §5.2): the invariant is that a component is only ever
+    // The invariant is that a component is only ever
     // filed under classes in its own ancestor chain, so every member of the bucket for `type` is a
     // `T`.
     // oxlint-disable-next-line typescript/no-unsafe-type-assertion

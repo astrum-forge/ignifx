@@ -255,7 +255,7 @@ function attachComponents(context: BuildContext): void {
           },
         );
       }
-      // Boundary assertion (coding standards §5.2): only a concrete class reaches the registry's
+      // Only a concrete class reaches the registry's
       // type-id table, because `ComponentRegistry.register` takes a `ConcreteComponentType`.
       // oxlint-disable-next-line typescript/no-unsafe-type-assertion
       const component = built.entity.addComponent(type as ConcreteComponentType);
@@ -425,11 +425,11 @@ function applyProps(
       context.report(issue.code, `${uid}.${issue.path === "" ? "<value>" : issue.path}: ${issue.message}`);
     }
   }
-  // Boundary assertion (coding standards §5.2): the schema declares exactly these property names on
+  // The schema declares exactly these property names on
   // the component's generated base class, and `decodeProps` produced one value per declared field.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   const target = component as unknown as Record<string, unknown>;
-  // Boundary assertion (coding standards §5.2): the same invariant, read side.
+  // The same invariant, read side.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   const values = decoded.value as Record<string, unknown>;
   for (const name of Object.keys(schema)) {

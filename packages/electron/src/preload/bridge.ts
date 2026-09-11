@@ -12,29 +12,9 @@ import type {
 import type { IpcRendererEvent } from "electron";
 
 /**
- * The preload bridge (`docs/architecture/14-platform-electron.md` §3, `CONSTITUTION.md` §9.2).
- *
- * ## What crosses, and what does not
- *
- * `contextBridge.exposeInMainWorld` (`electron.d.ts` 7237) copies a value into the renderer's world
- * through a structured-clone-like boundary: functions become callable proxies, plain data is
- * cloned, and anything with a live prototype chain into Node is refused. What the renderer gets is
- * therefore a closed set of async functions — never `ipcRenderer`, never a channel name it could
- * choose, never an object it could walk back to `require`.
- *
- * The single main-to-renderer channel is subscribed *here*, and the renderer is handed an
- * `onEvent(listener)` that never sees the `IpcRendererEvent`. Handing the event object across would
- * expose `sender`, which is a live `IpcRenderer`.
- *
- * ## This file must be bundled to CommonJS
- *
- * A sandboxed preload script cannot be an ES module. Measured on Electron 44.2.0 / macOS arm64
- * (S9.1): with `sandbox: true`, a `preload.mjs` exposing this bridge left
- * `window.ignifxHost === undefined` with no error logged anywhere; the same code as CommonJS
- * worked. `@ignifx/electron` publishes ESM like every other package in the repository, so a desktop
- * app's build is what converts it — the templates' `electron.vite.config.ts` builds
- * `desktop/preload.ts` with `format: "cjs"` and an `index.cjs` file name, and that file is what
- * `createGameWindow`'s `preload` option points at.
+ * Expose only the fixed async host methods and plain event data to the renderer.
+ * Never pass `ipcRenderer` or its event objects across the bridge.
+ * Bundle the preload as CommonJS for sandboxed windows (ADR-0018).
  */
 
 /**

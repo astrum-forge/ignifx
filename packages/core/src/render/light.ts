@@ -35,46 +35,15 @@ import type { ColorLike } from "../math/types.js";
 import type { Schema } from "../schema/types.js";
 
 /**
- * The `Light` component (`docs/architecture/07-rendering.md` §2.2): the four light kinds Babylon
- * Lite offers, driven from the entity's transform.
+ * Sync lights from entity world poses without parenting the Lite light, so lighting and shadows
+ * use the same direction (ADR-0002). Directional and spot lights use forward; hemispheric lights use up.
  *
- * ## The Lite light is not parented; the entity's world pose is written onto it
- *
- * Every other render component mirrors its entity by parenting a Lite object under the entity's
- * node. A light cannot: Lite composes a light's world matrix as `parentWorld ×
- * localMatrixFromDirection(light.direction, light.position)` and the shader reads that world
- * matrix, while the shadow frustum is fitted from `light.direction`/`light.position` *directly*
- * (`src/lite/light.ts` has the citations). Parenting the light and also writing a world direction
- * onto it rotated the light twice; parenting it and leaving the local direction alone made it shade
- * one way and cast another. Both were visible in the Phase 2 visual suite, and both are recorded in
- * ADR-0002's "Corrections after the visual suite".
- *
- * So the adapter creates the light with `parent = null`, and {@link Light.sync} writes the entity's
- * **world** pose onto the light in every frame the entity's `worldMatrixVersion` moved — its forward
- * axis for a directional or spot light, its **up** axis for a hemispheric light's sky direction, and
- * its position for anything that has one. One pose, read identically by the shader, the lights
- * uniform buffer, and the shadow frustum. It also re-marks the light for the lights UBO, which Lite
- * bumps only from a light's own observable writes — so the pose write is the dirty nudge as well.
- *
- * ## Decisions the documents left open
- *
- * - **`includeOnly`/`exclude` are entity references, matched to mesh ids.** §2.2's table maps them
- *   onto `includedOnlyMeshIds`/`excludedMeshIds`, which are sets of `Mesh.id` **strings**
- *   (`lib/render/lights-ubo.js`). A `MeshRenderer` gives its clone the entity's uid as that id, so
- *   the component turns the referenced entities into a set of uids. An entity with no renderer
- *   contributes nothing, which is the harmless reading.
- * - **A spot light's `technique` is ignored, not rejected.** Lite has one spot generator, PCF
- *   (`index.d.ts` 2856). Rejecting a declared `"csm"` on a spot light would fail a scene over a
- *   value that has one sensible interpretation.
- * - **Shadows need the `shadows` rendering feature.** `registerSceneWithShadowSupport` is the only
- *   call that grows a shadow pass, and nothing public adds one later (`src/lite/shadow.ts`), so a
- *   light that asks for shadows without the feature is a no-op with a logged warning rather than a
- *   throw: the game still runs, unlit by shadows.
+ * Include/exclude lists use entity mesh ids. Spot shadows use PCF regardless of the requested technique.
+ * Shadows require the rendering feature; otherwise the request logs a warning and draws no shadows.
  */
 
-/** The light kinds a `Light` can be. */
 /**
- * The `as const` name table behind the public union of the same name.
+ * Supported light kinds.
  *
  * @public
  */

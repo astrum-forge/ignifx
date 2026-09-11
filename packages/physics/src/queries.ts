@@ -2,21 +2,9 @@ import type { Collider } from "./components/collider.js";
 import type { Entity, LayerMask, Vec3Like } from "@ignifx/core";
 
 /**
- * The query vocabulary of `app.physics` (`docs/architecture/09-physics.md` §5).
- *
- * ## Two corrections to §5
- *
- * `@babylonjs/lite@1.27.0` reports a body identity for **`physicsRaycast` only**: `ShapeCastResult`
- * and `ShapeProximityResult` carry points and normals but no body (`index.d.ts` 11497, 11540), and
- * `shapeProximity`'s collector has capacity `1`, so it can never list more than one hit
- * (`lib/physics/havok-queries.js:7`). So:
- *
- * - `shapeCast` runs Lite's sweep for the geometry and resolves `entity` against the extension's own
- *   body-bounds index. It is exact about *where* the sweep hit and bounds-accurate about *what*.
- * - `overlap` is answered entirely from that index — the entities whose world bounds intersect the
- *   query shape's world bounds — because Lite cannot list overlaps at all.
- *
- * Both are documented as bounds-accurate rather than shape-accurate until an upstream API lands.
+ * Raycasts return backend body identities. Shape casts use backend hit geometry and the local
+ * body-bounds index for identity; overlaps use that index entirely. Shape-cast identities and
+ * overlap results are bounds-accurate, not exact shape intersections.
  */
 
 /**

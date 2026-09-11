@@ -81,7 +81,7 @@ export function validateSceneFile(value: unknown): readonly SceneFileIssue[] {
  * @internal
  */
 export function asSceneFile(value: unknown): SceneFile {
-  // Boundary assertion (coding standards §5.2): the invariant is that `validateSceneFile` returned
+  // The invariant is that `validateSceneFile` returned
   // no issues for this exact value, which is every constraint the interface expresses.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return value as SceneFile;
@@ -309,7 +309,7 @@ function asRecord(value: unknown): Record<string, unknown> | null {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     return null;
   }
-  // Boundary assertion (coding standards §5.2): the guard above is exactly "a plain object", which
+  // The guard above is exactly "a plain object", which
   // is a string-keyed bag of unknowns.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return value as Record<string, unknown>;

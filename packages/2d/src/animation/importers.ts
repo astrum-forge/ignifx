@@ -61,12 +61,6 @@ function isUnknownArray(value: unknown): value is readonly unknown[] {
   return Array.isArray(value);
 }
 
-/**
- * Narrows an unknown value to a real number.
- *
- * @param value - The value to test.
- * @returns Whether it is a finite number.
- */
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
 }

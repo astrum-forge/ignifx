@@ -17,30 +17,9 @@ import {
 import type { AssetHandle, EnvironmentAsset, ModelAsset } from "ignifx";
 
 /**
- * Tone mapping and exposure: the last thing that happens to a frame, and the one a game puts in its
- * settings screen.
- *
- * A renderer works in linear light with no ceiling — a metal highlight or an emissive surface is
- * routinely several times brighter than white — and a display has a ceiling of one. A tone-mapping
- * curve is the function that maps the first onto the second, and `Environment.imageProcessing` is
- * where ignifx keeps it: `exposure` multiplies the scene before the curve, `contrast` steepens it,
- * and `toneMapping` picks the curve. **It is compiled into the PBR shaders**, not applied as a
- * pass, which is why changing the curve recompiles the scene's pipelines and changing the exposure
- * is nearly free. (`PostProcessStack.imageProcessing` is the other path, as a real pass over the
- * finished frame; the two do the same arithmetic in different places.)
- *
- * The instrument is the ramp of six emissive spheres: their emissive climbs to exactly one, so
- * raising the exposure walks them past the display's ceiling from the right, and what each curve
- * does with the ones that went past is the whole difference between the curves. The corset is there
- * because a curve has to be judged on a real surface too — cloth, leather and a metal clasp.
- *
- * ## Why this is a flip and not a split screen
- *
- * A world renders through **one** camera: the enabled `Camera` with the highest `priority` becomes
- * `scene.camera` and the others draw nothing, so two viewports side by side is not something ignifx
- * can do today. And the curve is scene state in any case — it is compiled into the materials, not
- * chosen per camera — so even two views would show the same one. The panel therefore holds two
- * curves and a toggle that flips between them, which is the honest version of the same comparison.
+ * Compare tone-mapping curves and exposure through `Environment.imageProcessing`.
+ * Exposure changes a uniform; changing the curve recompiles material pipelines.
+ * Use a toggle for comparison because the world renders one camera and grading is scene-wide.
  */
 
 bootExample({

@@ -5,26 +5,10 @@ import type { PhysicsRuntime } from "../runtime/runtime.js";
 import type { ComponentHooks, MutableVec3, QuatLike, Schema, Vec3Like } from "@ignifx/core";
 
 /**
- * The `Rigidbody` component (`docs/architecture/09-physics.md` §2.1): what makes an entity's
- * colliders a simulated, kinematic, or explicitly static Havok body.
- *
- * ## Corrections to §2.1, all forced by `@babylonjs/lite@1.27.0`
- *
- * - **`collisionEvents` is a three-valued enum, not a boolean.** §2.1 describes a field whose value
- *   is "auto"; a schema field has one kind and one value (ADR-0004), so the field is
- *   `"auto" | "on" | "off"` and `"auto"` is the default. `"auto"` is what §2.1 actually specifies:
- *   recomputed from `ctx.entityImplements` whenever a component is added to or removed from the
- *   entity.
- * - **`velocityLimits` is not a per-body field.** Lite exposes `setPhysicsVelocityLimits(world, …)`
- *   only (`index.d.ts` 10880) — there is no per-body clamp — so the limits live in the `physics`
- *   settings section and the field is absent.
- * - **A body's entity must be a root entity.** Lite's post-step sync writes `node.position` and
- *   `node.rotationQuaternion`, which are *local* values (`lib/physics/havok.js:_syncBodyToNode`), so
- *   a parented entity would be simulated in its parent's space. The extension reports `IGX-0907`
- *   and simulates it anyway rather than silently misplacing it.
- *
- * Not available in Lite 1.27.0 and therefore absent, as §2.1 already records: per-body damping,
- * per-body gravity factor, sleep thresholds, and an explicit `wakeUp()`.
+ * Simulate colliders on a root entity; parented bodies log `IGX-0907` because backend pose writes
+ * are local. Collision events default to `auto`, following attached callbacks.
+ * Velocity limits are world settings; per-body damping, gravity factors, sleep thresholds, and
+ * explicit wake-up are unavailable in the pinned Lite adapter.
  */
 
 /**

@@ -965,7 +965,7 @@ function collectInChildren<T extends Component>(
  * @param typeName - The class name, for the error message.
  */
 function applyComponentInit(component: Component, schema: Schema, init: object, typeName: string): void {
-  // Boundary assertion (coding standards §5.2): the invariant is that `ComponentInit<T>` only ever
+  // The invariant is that `ComponentInit<T>` only ever
   // names schema fields, so reading it as a string-keyed bag is exactly what the validator and the
   // deserializer do with the same names.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
@@ -977,7 +977,7 @@ function applyComponentInit(component: Component, schema: Schema, init: object, 
       context: { component: typeName, field: first.path, issues: issues.length },
     });
   }
-  // Boundary assertion (coding standards §5.2): the component's own schema declares these property
+  // The component's own schema declares these property
   // names, and the values have just been validated against it.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   const target = component as unknown as Record<string, unknown>;

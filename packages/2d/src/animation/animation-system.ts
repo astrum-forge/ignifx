@@ -3,16 +3,9 @@ import type { AnimatedTilemapSink } from "../tilemap/animated-tiles.js";
 import type { System, SystemContext } from "@ignifx/core";
 
 /**
- * The 2D animation system (`docs/architecture/01-lifecycle-and-time.md` §3, ADR-0003).
- *
- * It runs in `PostUpdate` — after `update`, before `PreRender` — which is where every animation in
- * ignifx advances, so a `lateUpdate` sees the posed frame and the render sync writes it in the same
- * frame it was computed. It advances every `SpriteAnimator` and every animated tile on the same
- * `ctx.dt`, which is `time.deltaTime`, already scaled by `time.timeScale`. Systems keep running
- * while the app is paused and `dt` is **not** zeroed then (only scripts are filtered by
- * `updateWhenPaused`), so the system checks `time.paused` itself: sprite animation does not advance
- * while paused (`01-lifecycle-and-time.md` §7). Phase 6 shipped without this check and the sprites
- * kept animating under a pause menu.
+ * Advance sprite and tile animation in `PostUpdate` so `lateUpdate` sees the current frame.
+ * Systems still run while paused with a nonzero delta, so this system checks `time.paused`
+ * before advancing animation (docs/architecture/01-lifecycle-and-time.md §7).
  */
 
 /**

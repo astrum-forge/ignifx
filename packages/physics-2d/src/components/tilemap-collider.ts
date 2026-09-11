@@ -5,25 +5,9 @@ import type { TilemapCollisionData } from "@ignifx/2d";
 import type { Schema, Vec2Like } from "@ignifx/core";
 
 /**
- * `TilemapCollider2D` (`docs/architecture/11-2d-toolkit.md` §2.5, §8): the merged collision surface
- * of a `Tilemap`, turned into Rapier geometry.
- *
- * ## How it reaches the data
- *
- * `@ignifx/2d` is an **optional** peer of `@ignifx/physics-2d` (a physics-only 2D game needs no
- * sprite toolkit), so this component never imports the toolkit as a value — only the
- * `TilemapCollisionData` type. A game, or `@ignifx/2d`'s own tilemap loader, assigns
- * {@link TilemapCollider2D.collisionData}; the runtime compares the data's `version` at the start of
- * every fixed step and rebuilds the shapes when it changes, which is the same moment
- * `Tilemap.onCollisionChanged` fires and needs no signal subscription across the package boundary.
- *
- * ## Why closed polylines rather than polygons
- *
- * A merged run of solid tiles is not convex in general — an L of tiles merges into an L — and
- * Rapier's polygon shape is a **convex hull** (`geometry/shape.d.ts`, `ConvexPolygon`), which would
- * silently fill the notch. A closed `polyline` reproduces the outline exactly and is the shape
- * static level geometry wants; the trade-off is that a polyline is infinitely thin, so a body that
- * starts inside the tilemap is not pushed out.
+ * Read tile collision data through the optional 2D toolkit's type and rebuild when its version changes.
+ * Closed polylines preserve concave tile outlines that convex hulls would fill in. They are thin
+ * surfaces, so a body starting inside the map is not pushed out.
  */
 
 /**

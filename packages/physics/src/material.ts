@@ -198,7 +198,7 @@ function asObject(value: JsonValue): JsonObject | null {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     return null;
   }
-  // Boundary assertion (coding standards §5.2): the guard above is exactly `JsonObject` — an object
+  // The guard above is exactly `JsonObject` — an object
   // that is neither `null` nor an array — which is what `JsonValue` leaves in the union.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return value as JsonObject;

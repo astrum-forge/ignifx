@@ -8,21 +8,8 @@ import type { HostWindowEvent } from "../host-contract.js";
 import type { BrowserWindowConstructorOptions, Session, WebContents } from "electron";
 
 /**
- * The game window (`docs/architecture/14-platform-electron.md` §3, `CONSTITUTION.md` §9.2).
- *
- * The four `webPreferences` values §9.2 fixes — `contextIsolation: true`, `sandbox: true`,
- * `nodeIntegration: false`, `webSecurity: true` — are not options. {@link windowOptionsFor} writes
- * them last, after the caller's own object has been spread, so a caller cannot weaken them by
- * accident; deviating requires an ADR, which means editing this file rather than passing a flag.
- *
- * ## The sandbox decides the preload script's module format
- *
- * A sandboxed preload script **cannot be an ES module**. Measured on Electron 44.2.0 / macOS arm64
- * (S9.1): with `sandbox: true` and a `preload.mjs` containing
- * `import { contextBridge } from "electron"`, the renderer saw `window.ignifxHost === undefined`
- * and no error surfaced; the byte-identical script as CommonJS `preload.cjs` exposed the bridge.
- * `docs/architecture/14-platform-electron.md` §3 calls the preload `.mjs`, and that sentence is
- * wrong for a sandboxed window — the templates build `desktop/preload.ts` to CommonJS.
+ * Write required security settings after caller options so they cannot be overridden
+ * (constitution §9.2). Sandboxed preloads must be bundled as CommonJS; see ADR-0018.
  */
 
 /**

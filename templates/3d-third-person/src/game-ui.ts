@@ -2,32 +2,9 @@ import { LoadingScreen, VirtualButton, VirtualJoystick } from "@ignifx/ui";
 import type { App } from "@ignifx/core";
 
 /**
- * Everything the game shows over the canvas: the boot loading screen, the HUD line, and the
- * on-screen controls.
- *
- * ## Where the menus are
- *
- * They are not here. The title screen, the pause menu, the settings screen and the rebinding page
- * are built by `src/menus/game-menus.ts` into `app.ui.layer("menu")`, because `@ignifx/ui` ships a
- * `Dialog` and nothing list-shaped: a settings screen needs rows, sliders, a selection model and a
- * back stack. `Dialog` is still used, for the one thing it is exactly right for — the "are you
- * sure?" prompt in front of "Delete save" and "Quit to title".
- *
- * ## Why the HUD is a `<div>` and not a `HudText`
- *
- * `@ignifx/ui` draws GPU text through `HudText`, and every text component needs a `FontAsset` — a
- * real `.ttf` the template would have to ship and license. A HUD line is also exactly the kind of
- * thing HTML is better at: real fonts, real layout, selectable, announced by a screen reader, and
- * free. `HudText` earns its cost when the text has to appear in `captureScreenshot()` or be drawn
- * in the world; a status line is neither. The skill says the same thing in one sentence: *"Use the
- * DOM for menus, HUDs, dialogs and touch controls."*
- *
- * ## Why the touch widgets are two constructor calls
- *
- * Phase 6 shipped the two 2D templates' `src/touch-controls.ts`, a hand-written thumbstick, with a comment
- * saying it should be deleted when `@ignifx/ui` shipped `VirtualJoystick`. It has been: the widgets
- * below write the same `<Virtual>/…` controls with the same axis convention, so `game.input.json`
- * says nothing about where the input came from.
+ * Build the loading screen, DOM HUD, and touch controls. Menus live in `menus/game-menus.ts`.
+ * The DOM HUD needs no bundled font. Virtual widgets share the action bindings used by desktop
+ * controls; the joystick converts screen Y-down motion to a Y-up control value.
  */
 
 /** What {@link createGameUi} hands back. */

@@ -3,21 +3,9 @@ import { Camera2D } from "./camera-2d.js";
 import type { MutableVec2 } from "@ignifx/core";
 
 /**
- * `Camera2DFollow` (`docs/architecture/11-2d-toolkit.md` §2.1): the reference implementation of a
- * smooth, dead-zoned camera follow.
- *
- * It is a `Script`, not part of `Camera2D`, on purpose: following is a *policy*, and a game that
- * wants look-ahead, screen shake, or room-based snapping replaces this script without touching the
- * camera. `Camera2D` holds the fields (`follow`, `followDamping`, `followOffset`, `deadZone`)
- * because a scene file has to be able to author them; this script is what reads them.
- *
- * The move happens in `lateUpdate`, after every `update` has run, so the camera sees the frame's
- * final player position rather than last frame's — the single most common cause of a camera that
- * visibly lags its target by one frame. For a physics-driven target that position is the
- * **display** pose: `@ignifx/physics-2d` writes `lerp(prev, cur, fixedStepAlpha)` at the top of
- * `Update` (`01-lifecycle-and-time.md` §3, since 2026-09-08), so the camera frames the target where
- * the sprite is drawn rather than where the last fixed step left it — which, through a pixel-perfect
- * camera that quantises both independently, used to read as a shaking sprite.
+ * Follow the camera's target in `lateUpdate`, after gameplay and physics interpolation have
+ * written its display pose. Keeping follow behaviour in a script lets games replace it without
+ * changing `Camera2D` (docs/architecture/11-2d-toolkit.md §2.1).
  */
 
 /**

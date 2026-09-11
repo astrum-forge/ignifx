@@ -31,31 +31,9 @@ import type { Physics2DSettings } from "./settings.js";
 import type { App, ComponentType, ConcreteComponentType, Extension, ExtensionContext } from "@ignifx/core";
 
 /**
- * The `@ignifx/physics-2d` extension (`docs/architecture/11-2d-toolkit.md` §8,
- * `04-extensions.md` §1).
- *
- * ## Why `@ignifx/2d` is optional rather than required
- *
- * `00-overview.md` §2 draws `@ignifx/physics-2d` above `@ignifx/2d`, and the layering rule allows
- * the dependency. At runtime the only thing this package needs from the toolkit is the
- * `TilemapCollisionData` **type**, which is erased at build time, so a platformer that draws its own
- * graphics can register `physics2d()` on its own. The manifest therefore declares
- * `requires: []` and `optional: ["@ignifx/2d"]`, and `package.json` makes `@ignifx/2d` an optional
- * peer dependency.
- *
- * ## Why the world is built in `onStart`
- *
- * `register` runs before `createApp` builds the `World` (`packages/core/src/app/app.ts`,
- * `initialize`), and the Rapier world needs the world's layer table; Rapier's WebAssembly module
- * also has to be instantiated, which is asynchronous. So `register` declares everything against a
- * {@link Physics2DHost} holder and `onStart` fills the holder in.
- *
- * ## One physics extension per world
- *
- * `11-2d-toolkit.md` §8: "A world uses either `physics()` or `physics2d()`; registering both throws
- * `IGX-1101`". `@ignifx/physics` publishes its Havok simulation scene through
- * `ExtensionContext.setSimulationScene`, so `app.world.lite.simulationScene !== null` at `onStart`
- * is the test — and it needs no dependency on `@ignifx/physics`, which this package must not have.
+ * The 2D toolkit is optional; physics only needs its tile-collision data type.
+ * Create the Rapier world in `onStart`, once the world's layer table exists and WASM is ready.
+ * Reject a world already using 3D physics with `IGX-1101`.
  */
 
 /**

@@ -3,7 +3,6 @@ import { CoreErrorCode } from "../../src/errors/error-codes.js";
 import { isIgnifxError } from "../../src/errors/ignifx-error.js";
 import { Signal, type DeferredQueue, type SignalOwner } from "../../src/signal/signal.js";
 
-/** A handler that does nothing, for tests that only care about connection bookkeeping. */
 function noop(): void {
   // Intentionally empty.
 }

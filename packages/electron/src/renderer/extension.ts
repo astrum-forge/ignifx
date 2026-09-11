@@ -10,21 +10,9 @@ import type { HostWindowEvent, IgnifxHost } from "../host-contract.js";
 import type { App, Extension, ExtensionContext } from "@ignifx/core";
 
 /**
- * The `electron()` extension: the renderer half of `@ignifx/electron`
- * (`docs/architecture/14-platform-electron.md` §3).
- *
- * Registering it is the whole installation. In an Electron window it finds `window.ignifxHost`,
- * checks the contract, swaps `app.storage`'s backend for the file-system one, records
- * `app.platform.kind = "electron"`, wires the host's window events to `onApplicationFocus`, and
- * defines `app.desktop`. In a browser tab or a headless test there is no bridge, so it logs one
- * debug line and defines a `app.desktop` that answers `isElectron === false` and refuses everything
- * else — which is what lets one renderer bundle serve both builds.
- *
- * ## It imports no `electron`
- *
- * A renderer is sandboxed and context-isolated: it has no Node, no `require`, and no Electron
- * module system. `window.ignifxHost` is the entire interface, which is also why this file is the
- * one part of the package a browser build can safely bundle.
+ * Use `window.ignifxHost` to install desktop storage, window events, and `app.desktop`.
+ * Without the bridge, expose `isElectron === false` and reject desktop operations.
+ * Keep Electron and Node imports out of this renderer entry so browser builds can share it.
  */
 
 /**

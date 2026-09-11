@@ -88,14 +88,7 @@ const CAMERA_HALF_HEIGHT = 9;
 /** The map is 40 by 24 cells of one metre, and the camera may not leave it. */
 const LEVEL_SIZE = { x: 40, y: 24 };
 
-/**
- * The asset type to load each document as.
- *
- * `@ignifx/vite-plugin`'s manifest types a file by its extension, and its table does not yet know
- * the 2D suffixes: a `.atlas.json` arrives typed as plain `"json"`, which would pick the generic
- * JSON loader instead of the sprite-atlas one. Naming the type at the call site is what the
- * `LoadOptions.type` override is for, and it is exact rather than a guess from the file name.
- */
+/** Explicit loader types for the template assets. */
 const ATLAS = { type: SPRITE_ATLAS_ASSET_TYPE } as const;
 const CLIPS = { type: SPRITE_ANIMATION_ASSET_TYPE } as const;
 const MAP = { type: TILEMAP_ASSET_TYPE } as const;
@@ -129,7 +122,6 @@ interface World {
   readonly shrines: readonly Shrine[];
 }
 
-/** The placeholder `announceReady` holds until the promise below hands over its resolver. */
 function noop(): void {
   // Nothing to do: the promise executor runs synchronously and replaces this on the next line.
 }
@@ -139,11 +131,6 @@ window.__ignifxReady = new Promise<AppStatus>((resolve) => {
   announceReady = resolve;
 });
 
-/**
- * Waits for one animation frame.
- *
- * @returns A promise that resolves inside the next frame callback.
- */
 function nextFrame(): Promise<void> {
   return new Promise<void>((resolve) => {
     requestAnimationFrame(() => {
@@ -441,11 +428,6 @@ async function installFrontEnd(
   return run;
 }
 
-/**
- * Builds and runs the game.
- *
- * @returns The status `window.__ignifxReady` resolves to.
- */
 async function main(): Promise<AppStatus> {
   const canvas = document.querySelector("#game");
   if (!(canvas instanceof HTMLCanvasElement)) {

@@ -3,36 +3,9 @@ import type { LiteAudioBus, LiteAudioEngine, LiteSpatialTarget } from "../lite/t
 import type { SignalLike } from "@ignifx/core";
 
 /**
- * The one contract the audio service and every audio component talk to
- * (`docs/architecture/10-audio.md` §7). It has exactly two implementations:
- *
- * - `WebAudioBackend` (`src/lite/web/**`) wraps Babylon Lite's Web Audio engine. It is the only
- *   part of this package that imports `@babylonjs/lite`, and it only ever runs in a browser.
- * - `HeadlessBackend` (`src/headless/**`) is pure TypeScript. It tracks the same state — playing,
- *   paused, instance counts, volumes — and *simulates* playback: an instance ends after
- *   `clip.duration / playbackRate` seconds of engine time, advanced by the `PreRender` pump with
- *   the frame delta rather than by a wall clock.
- *
- * Because both implement the same contract with the same semantics, every gameplay test — "does
- * the door creak stop after two seconds", "does the music crossfade" — runs under Node with real
- * meaning, and only the two backends themselves need a browser to be tested.
- *
- * ## Why no ramp durations reach the backend
- *
- * Every fade in this package — a bus fader, `stop(fade)`, a music crossfade — is interpolated by
- * the service in the `PreRender` pump and pushed to the backend as a plain value once per frame.
- * Lite could ramp for us (`RampOptions`, `index.d.ts` 9339), but then a fade would run on the audio
- * clock in a browser and on the frame clock under Node, and the two would not agree; and Lite
- * already smooths every parameter write by `parameterRampDuration` (10 ms by default,
- * `index.d.ts` 950), so a per-frame push does not click.
- *
- * ## Why creation may be synchronous
- *
- * `createSound` returns `BackendSound | Promise<BackendSound>` rather than always a promise.
- * Decoding audio through Web Audio is asynchronous and always will be; the headless backend has
- * nothing to decode, so it answers synchronously. That difference is deliberate: a headless test
- * that calls `source.play()` and then steps the app sees the sound start in the very first frame,
- * with no microtask turn in between, which is what makes `onEnded` timing exact.
+ * The browser backend plays audio; the headless backend tracks playback on engine time.
+ * Fades are computed in `PreRender` for both backends so their timing agrees.
+ * Headless sound creation is synchronous, allowing playback to begin without a microtask turn.
  */
 
 /**

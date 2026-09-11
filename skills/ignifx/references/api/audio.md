@@ -5858,16 +5858,8 @@ Linear gain for this play; defaults to the source's `volume`.
 
 ### OneShotVolume
 
-Options accepted by [AudioSource.playOneShot](#playoneshot-1): a gain and nothing else.
-
-#### Remarks
-
-Deliberately narrower than the `OneShotOptions` the service form takes
-(`docs/architecture/10-audio.md` §3, "Corrections"). The component form exists to fire a second
-clip **through this source's bus**, so `bus` is not a caller's choice, and everything else in
-`PlayOptions` — `pitch`, `loop`, `delay`, `startOffset`, `duration` — describes a sound the
-source would then have no handle on. A one-shot that needs more than a gain is
-`app.audio.playOneShot(clip, options)`, which takes `bus` plus all of `PlayOptions`.
+Gain options for a one-shot played through this source's bus.
+Use `app.audio.playOneShot` to choose a bus or supply other playback options.
 
 #### Properties
 

@@ -7,29 +7,9 @@ import { IGNIFX_HOST_AUTHORITY, IGNIFX_SCHEME } from "../host-contract.js";
 import type { Readable } from "node:stream";
 
 /**
- * The `ignifx://` protocol that serves a packaged build's `dist/` directory
- * (`docs/architecture/14-platform-electron.md` §3, `05-assets-and-loading.md` §8).
- *
- * ## Why a custom protocol rather than `file://`
- *
- * `file://` pages have an opaque origin in Chromium, which costs a desktop build three things a
- * browser build has for free: `fetch` of a relative URL fails, `'self'` in a Content-Security-Policy
- * matches nothing, and `isSecureContext` is false — and without a secure context there is no
- * `navigator.gpu` at all. Registering `ignifx` with
- * `standard: true, secure: true, supportFetchAPI: true, stream: true`
- * (`protocol.registerSchemesAsPrivileged`, `electron.d.ts` 11702; `Privileges`, `electron.d.ts`
- * 23336) gives the packaged renderer a real, secure origin — `ignifx://app` — so the same manifest,
- * the same relative addresses, and the same loaders work unchanged between `pnpm dev` and the
- * installer. Measured on Electron 44.2.0 / macOS arm64 (S9.1): `window.isSecureContext === true`,
- * `window.location.origin === "ignifx://app"`, and `navigator.gpu.requestAdapter()` resolved.
- *
- * ## Range requests are this module's job, not `net.fetch`'s
- *
- * `protocol.handle` (`electron.d.ts` 11561) hands back whatever `Response` the handler returns, and
- * the obvious implementation — `net.fetch(pathToFileURL(resolved))` — does **not** honour a
- * `Range` request header: measured on Electron 44.2.0, a request for `bytes=100-199` against a
- * 2000-byte file came back `200` with all 2000 bytes and no `Content-Range`. A media element that
- * seeks needs a real `206`, so the handler parses the header itself and streams the slice.
+ * Serve packaged assets from the secure `ignifx://app` origin, with relative fetch support.
+ * Handle byte ranges here: Electron's file fetch does not produce the partial responses needed
+ * for media seeking. See docs/architecture/14-platform-electron.md §3.
  */
 
 /**

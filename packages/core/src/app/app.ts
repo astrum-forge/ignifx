@@ -62,24 +62,9 @@ import type { Clock } from "../time/clock.js";
 import type { World } from "../world/world.js";
 
 /**
- * `createApp` and the `App` implementation: the root object of a game
- * (`docs/architecture/00-overview.md` §1, `01-lifecycle-and-time.md` §1 and §8,
- * `04-extensions.md` §2). There are no globals — every engine service hangs off this object
- * (`CONSTITUTION.md` §3.6), and two apps in one process share nothing.
- *
- * Decisions the documents leave open:
- *
- * - **Settings are frozen before the engine is created**, not after. §2 rule 5 lists engine, world,
- *   then freeze; freezing first is the same work in a better order, because a project that names an
- *   unknown settings section then fails before a GPU device has been acquired.
- * - **`app.step(dt)` does not require `app.start()`.** §8's example starts first, and extensions'
- *   `onStart` hooks may well be required for a meaningful frame, but nothing in §3 depends on the
- *   loop having been started, and unit tests are much simpler when a bare `createApp` can be
- *   stepped. What `step` does refuse is running while Babylon Lite's own loop is driving frames
- *   (`IGX-0105`).
- * - **`stop()` may be followed by `start()`.** The frame callback is registered again and the
- *   `onStart` hooks run again; nothing in §1 says otherwise, and a template that stops on
- *   `visibilitychange` needs it.
+ * Each app owns its services and frame state (constitution §3.6).
+ * Validate and freeze settings before acquiring a GPU device. Manual stepping works before `start`,
+ * but is refused while Lite drives the loop (`IGX-0105`). Starting after `stop` runs `onStart` again.
  */
 
 /** Milliseconds in one second; the boundary the Lite callback's delta crosses. */

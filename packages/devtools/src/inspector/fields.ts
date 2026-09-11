@@ -6,33 +6,9 @@ import type { DevtoolsPanelHost } from "../overlay/panel.js";
 import type { Component, FieldDefinition, ReferenceEncoder } from "@ignifx/core";
 
 /**
- * The schema-driven half of the Inspector panel
- * (`docs/architecture/15-devtools-and-diagnostics.md` §4: *"schema-driven editing of any
- * component's fields live"*).
- *
- * ## How a write reaches the component
- *
- * Exactly the way the scene loader's `applyProps` does it: `component[name] = value`, a plain
- * property assignment onto the properties `Component.define` put on the generated base class
- * (`packages/core/src/serialization/load.ts` `applyProps`,
- * `packages/core/src/component/component.ts` `define`). Core has no field-change hook — there is no
- * `onFieldChanged` anywhere in `packages/core/src` — so the assignment *is* the documented path,
- * and a component that wants to react to an inspector edit reacts to it the same way it reacts to a
- * scene load: by reading the field in `update` or in `onEnable`.
- *
- * ## Which kinds get an editor
- *
- * The eight kinds §4 names — number, bool, string, enum, vector, color, asset and entity reference
- * — get a real control. Every other kind (`array`, `record`, `map`, `layerMask`, `curve`,
- * `custom`, `componentRef`) is shown as its encoded JSON and is not editable: those need a nested
- * editor, and a wrong `custom` codec write would corrupt game state rather than merely look wrong.
- * `optional` unwraps to its inner kind and adds a null toggle.
- *
- * ## `FieldOptions`
- *
- * `hidden` drops the row, `readonly` disables its controls, `tooltip` becomes the row's `title`,
- * `min`/`max`/`step` are written onto numeric inputs, and `group` folds the field under a heading
- * the Inspector panel draws.
+ * Edit supported schema fields through ordinary property assignments, just as scene loading does.
+ * Complex values remain read-only JSON; optional fields add a null toggle. Field metadata controls
+ * visibility, editability, tooltips, numeric ranges, and grouping.
  */
 
 /** How references encode when the inspector shows a field as JSON: it is a view, not a file. */

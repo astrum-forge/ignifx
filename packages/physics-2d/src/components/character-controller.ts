@@ -7,27 +7,9 @@ import type { Physics2DRuntime } from "../runtime/runtime.js";
 import type { ComponentHooks, Schema, Vec2Like } from "@ignifx/core";
 
 /**
- * The `CharacterController2D` component (`docs/architecture/11-2d-toolkit.md` §8): Rapier's
- * `KinematicCharacterController` (`control/character_controller.d.ts`) driven from `fixedUpdate`.
- *
- * ## How it is driven
- *
- * Call {@link CharacterController2D.move} from `fixedUpdate`. The requested displacements of one
- * step are summed and handed to Rapier's `computeColliderMovement` by the step system, so two
- * scripts moving the same character compose instead of fighting. Gravity is **not** applied by this
- * component: a bare controller is purely kinematic, exactly as the 3D one is, and the toolkit
- * controller scripts integrate gravity themselves.
- *
- * After the step the controller owns the entity's world X and Y. Z and `rotation2D` stay
- * user-controlled.
- *
- * ## The one addition to §8: `shape`
- *
- * §8 describes the controller as a capsule. Measured against `@dimforge/rapier2d-compat@0.20.0`
- * (spike S6.2), Rapier's autostep clears a 0.3 m step with a **box** character and refuses anything
- * above about 0.15 m with a capsule of radius 0.2 — so `stepOffset` is only usable with a box.
- * {@link CharacterController2D.shape} therefore chooses between the two, defaulting to `"capsule"`
- * as §8 says, and the limitation is documented in the skill and in ADR-0006's validation section.
+ * Sum `move` displacements during `fixedUpdate`; game scripts supply gravity.
+ * After the step the controller owns world X/Y, while Z and rotation remain user-controlled.
+ * Box shapes support taller autosteps than capsules; see ADR-0006's validation results.
  */
 
 /**

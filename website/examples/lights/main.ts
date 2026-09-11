@@ -60,7 +60,7 @@ bootExample({
     attachOrbit(app, eye, { yaw: 26, pitch: 29, distance: 10.5, target: FOCUS, minDistance: 4, maxDistance: 30 });
     await createSubjects(app);
 
-    // ── Directional: a direction, and no position. `lookAt` is what sets it. ──────────────
+    // Directional: a direction, and no position. `lookAt` is what sets it.
     const sunEntity = app.world.createEntity("Sun", { position: SUN.at });
     sunEntity.transform.lookAt(FOCUS);
     const sun = sunEntity.addComponent(Light, { type: "directional", intensity: SUN.intensity });
@@ -74,7 +74,7 @@ bootExample({
     const sunArrow = createArrow(app, { parent: sunEntity, size: SUN.arrow, color: fromHex(SUN.color) });
     const sunSwitch = createLightSwitch(sun, SUN.intensity, [sunArrow.entity]);
 
-    // ── Point: a position and a range. The pivot is what walks it around the scene. ───────
+    // Point: a position and a range. The pivot is what walks it around the scene.
     const pivot = app.world.createEntity("Lamp Pivot");
     const lampEntity = app.world.createEntity("Lamp", { parent: pivot, position: LAMP.at });
     const lamp = lampEntity.addComponent(Light, { type: "point", intensity: LAMP.intensity, range: LAMP.range });
@@ -89,7 +89,7 @@ bootExample({
       lampRing.setRadius(value);
     };
 
-    // ── Spot: a position, a direction, a range and a cone. ────────────────────────────────
+    // Spot: a position, a direction, a range and a cone.
     const spotEntity = app.world.createEntity("Spot", { position: SPOT.at });
     spotEntity.transform.lookAt(SPOT.aim);
     const spot = spotEntity.addComponent(Light, {
@@ -115,7 +115,7 @@ bootExample({
       spotCone.setAngle(value);
     };
 
-    // ── Hemispheric: two colours and an up axis. Ambient, and it cannot cast. ─────────────
+    // Hemispheric: two colours and an up axis. Ambient, and it cannot cast.
     const skyEntity = app.world.createEntity("Ambient", { position: SKY.at });
     const ambient = skyEntity.addComponent(Light, { type: "hemispheric", intensity: SKY.intensity });
     ambient.color = fromHex(SKY.color);

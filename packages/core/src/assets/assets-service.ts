@@ -39,38 +39,16 @@ import type { LiteEngine } from "../lite/scene.js";
 import type { JsonObject } from "../schema/json.js";
 
 /**
- * `app.assets` (`docs/architecture/05-assets-and-loading.md` §3–§5, §9): one cache, one loader per
- * type, reference-counted handles, a priority queue in front of the network, and a single delivery
- * point in `PreUpdate` (`01-lifecycle-and-time.md` §3 step 2).
+ * Cache assets by address and deliver completions, failures, and reload swaps in `PreUpdate`
+ * while the loop runs. Outside the loop, completed loads settle immediately. Progress getters read
+ * live counters; progress signals follow delivery timing.
  *
- * Decisions the documents leave open:
+ * An aborted request releases its own hold; shared callers still receive the result. Releasing the
+ * last hold without aborting lets the load finish before collection. Failed handles stay cached
+ * until collected, preventing repeated requests for a permanent failure.
  *
- * - **Delivery is the only place state changes.** §4 says completed loads are delivered in
- *   `PreUpdate` "never mid-phase". So a loader that resolves during a `fetch` continuation does not
- *   flip `state` or settle `promise`: it pushes onto a queue that `AssetDeliverySystem` drains. The
- *   same queue carries failures and hot-reload swaps, so all three are observable at one point.
- * - **`progress` is live, `onProgress` is delivered.** The delivery rule exists so that two scripts
- *   in one frame never disagree about whether an asset is *ready*. A progress bar has no such
- *   requirement, so the getter reads the byte counters directly and only the callbacks are batched.
- * - **Aborting one request of several does not cancel the shared load.** An `options.signal` abort
- *   drops that request's hold; the fetch is aborted only when no request is interested any more.
- *   The aborting caller shares the handle, so a load two scripts asked for still resolves for both
- *   when one of them cancels. An aborted request has already released its own hold — do not release
- *   it again.
- * - **Releasing to zero while a load is in flight does not abort it.** §3 pairs `release` with the
- *   collector, not with cancellation; the load finishes and the asset becomes a collector candidate.
- *   Cancellation is what an `AbortSignal` is for.
- * - **A failed handle stays cached until it is collected.** Retrying immediately would turn a
- *   permanent 404 into a loop; once the last holder releases it the entry is dropped and the next
- *   `load` starts fresh. `reload(address)` forces an attempt in development.
- * - **Retry backoff counts unscaled time.** §9 asks for exponential backoff without naming a clock.
- *   The collector uses `time.deltaTime` (§3 calls it a cache lifetime, which is game time), but a
- *   network retry must not stop because the game paused or set `timeScale` to zero, so it counts
- *   `time.unscaledDeltaTime`. Neither reads a wall clock: tests drive both with `app.step`.
- * - **Hot reload loads before it unloads.** §5 says the default reload is "unload + load"; doing it
- *   in that order would destroy a working value when the new one fails to parse, and the brief for
- *   this module requires that "failures leave the old value". The previous value is released only
- *   once the replacement exists.
+ * Retries use unscaled time; collection uses scaled time. Reloads keep the old value until a
+ * replacement loads successfully (docs/architecture/05-assets-and-loading.md).
  */
 
 /**
@@ -1529,7 +1507,7 @@ function memoryLoader(type: string): AssetLoader {
  * @returns The same object, typed.
  */
 function toTyped<T>(handle: AssetHandleImpl): AssetHandle<T> {
-  // Boundary assertion (coding standards §5.2): a loader returns `unknown`, so `T` is the caller's
+  // A loader returns `unknown`, so `T` is the caller's
   // declaration of what this address holds — the same escape hatch `JSON.parse` callers take.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return handle as unknown as AssetHandle<T>;
