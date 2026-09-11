@@ -18,14 +18,9 @@ export const PLATFORM: readonly ExampleOf<"Platform">[] = [
     dimension: "3D",
     priority: "P0",
     status: "ready",
-    line: "The overlay, open on arrival, with a wave counter to watch.",
+    line: "Inspect scene objects, edit values and watch performance while the game runs.",
     paragraph:
-      "`@ignifx/devtools` is one extension and one key. Register it, press backtick, and nine tabs appear over the " +
-      "canvas: frame numbers, the entity tree, a live component inspector, asset handles, input, audio, physics, " +
-      "the log and a per-phase timing graph. Every example on this site carries it; this is the one that opens it " +
-      "for you, pointed at the `Director` entity, whose serialised fields are rows you can edit. Closed, it costs " +
-      "nothing — no system runs and no DOM exists until `open()` — which is why a game registers it behind a " +
-      "development flag and forgets about it.",
+      "The developer tools open with this example. Explore the scene tree, edit the Director’s fields and watch the wave timing change. Use the other tabs to inspect performance, assets, input, audio and physics.",
     tries: [
       "Type a new number into the Inspector's `waveSeconds` row and watch the wave clock follow it.",
       "Open Stats for draw calls and engine CPU, then Timeline for the same frame, phase by phase.",

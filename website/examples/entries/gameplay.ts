@@ -18,16 +18,11 @@ export const GAMEPLAY: readonly ExampleOf<"Gameplay">[] = [
     dimension: "3D",
     priority: "P0",
     status: "ready",
-    line: "A character controller and an orbit camera that will not clip through a wall.",
+    line: "Move a character with a following camera that adjusts around walls.",
     paragraph:
-      "Two components carry a whole third-person game. `ThirdPersonController` moves a character " +
-      "capsule on the fixed step, camera-relative, with gravity, coyote time and a step-up of its " +
-      "own; `ThirdPersonCamera` orbits behind it and sphere-casts along its boom, so backing into " +
-      "the corner of the yard pulls the camera in instead of putting a wall between you and your " +
-      "character. Walk out through the doorway and the boom eases back to full length. Keyboard, " +
-      "gamepad and touch all drive the same four actions.",
+      "Explore a small yard with third-person controls. The orbit camera moves closer when a wall gets in the way and eases back when the view clears. Try walking and sprinting with keyboard, gamepad or touch controls.",
     tries: [
-      "Back into the corner on the left and watch the Boom now figure fall as the wall pushes the camera in.",
+      "Back into the left corner. Watch the camera move closer and the Boom now value decrease.",
       "Turn Wall collision off, back into the same corner, and see what the camera does without it.",
       "Hold Shift to sprint: the character turns to face the way it is going, and the camera keeps up.",
     ],
@@ -63,18 +58,13 @@ export const GAMEPLAY: readonly ExampleOf<"Gameplay">[] = [
     dimension: "3D",
     priority: "P0",
     status: "ready",
-    line: "A state machine with a blend tree, a trigger and animation events, all in one document.",
+    line: "Blend movement animations and trigger a separate action, with events you can inspect.",
     paragraph:
-      "The Fox has three clips and `fox.animator.json` turns them into behaviour. A 1D blend tree " +
-      "mixes them on a `speed` parameter, so the gait changes with the number instead of snapping " +
-      "at a threshold; a trigger cuts to a one-shot look-around from wherever the machine is; two " +
-      "animation events on that state arrive on `Animator.onEvent` as the clip crosses them, and " +
-      "the panel counts them. The code writes one parameter and sets one trigger. Everything else " +
-      "is data, which is what makes an animator something you retune rather than rewrite.",
+      "Control a fox with an animation state machine. Changing speed blends its movement clips, while the Survey trigger plays a look-around animation. The panel shows the current state and counts animation events as they fire.",
     tries: [
       "Drag speed from 0 to 8 and watch the Gait readout name the two clips being mixed at each value.",
       "Press survey: the State readout changes, both events fire, and the exit time returns the fox to its gait.",
-      "Slow Rate to 0.25x and press survey again; the events fire at the same points in a clip that now takes four times as long.",
+      "Set Rate to 0.25x and press survey again to watch the events in slow motion.",
     ],
     uses: ["Animator", "AnimatorAsset", "Animator.onEvent", "Model", "app.assets.load", "OrbitCamera"],
     assets: [

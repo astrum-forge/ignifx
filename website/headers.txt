@@ -52,9 +52,3 @@
 /examples/*run/index.html
   ! Content-Security-Policy
   Content-Security-Policy: default-src 'self'; img-src 'self' data: blob:; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' data:; worker-src 'self' blob:; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'
-
-# Badges are hot-linked by other sites (`05-press-kit.md` §4).
-/press/badges/*
-  ! Cache-Control
-  Cache-Control: public, max-age=86400
-  Access-Control-Allow-Origin: *

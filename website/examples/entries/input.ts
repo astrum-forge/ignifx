@@ -18,19 +18,13 @@ export const INPUT: readonly ExampleOf<"Input">[] = [
     dimension: "3D",
     priority: "P0",
     status: "ready",
-    line: "Every device and every action, live: one document binds them, a board shows what they resolved.",
+    line: "Drive a rover and watch keyboard, gamepad and touch input appear on a live dashboard.",
     paragraph:
-      "Nothing in this program names a key. `player.input.json` beside `main.ts` is the whole input " +
-      "configuration — two maps, three control schemes, all three composites (`2DVector` for WASD, `1DAxis` for Q " +
-      "and E, `ButtonWithModifier` for shift-W) and the processors that make a stick and a keyboard agree. The " +
-      "board behind the rover is that document made visible: key caps light from the `move` action, the two dials " +
-      "are its `vector2` values inside their dead-zone rings, the bars are its axes, and the strip along the " +
-      "bottom shows which device produced input last, which control scheme that selected, and whether the " +
-      "`Player` map is enabled. The rover in front reads the same actions and drives on them.",
+      "Control a rover through named input actions. The dashboard shows movement values, button presses and the active device. Keyboard, gamepad and touch controls share the same configuration file, shown in the source below.",
     tries: [
-      "Hold W and A together: the dot sits on the ring, not past it, because a normalise processor keeps a diagonal at one.",
+      "Hold W and A together. The movement display keeps diagonal input at the same strength as a single direction.",
       "Squeeze a gamepad trigger slowly and watch the boost bar fill before the action counts as pressed.",
-      "Press Escape: the Player map switches off, every gate and lamp on it goes dead, and the device row keeps reading.",
+      "Press Escape to disable player controls. The device display keeps tracking input.",
     ],
     uses: [
       "app.input.loadActions",
@@ -58,18 +52,13 @@ export const INPUT: readonly ExampleOf<"Input">[] = [
     dimension: "3D",
     priority: "P1",
     status: "ready",
-    line: "Press a control, rebind an action, and keep it: the override is saved and survives a reload.",
+    line: "Change a control binding and keep it after reloading the page.",
     paragraph:
-      "The three steps a settings screen has. `performInteractiveRebind` listens for the next control the player " +
-      "touches and writes it onto one binding as an override; `saveOverrides()` produces a small " +
-      "`ignifx.inputoverrides` document — the overrides only, not the whole action document — and `app.storage` " +
-      "keeps it, so a rebind is still there when the page is reloaded. Each cap on the rack takes the colour of " +
-      "the device family its binding names, so rebinding one to a gamepad button turns it from orange to green " +
-      "without a word of text, and the puck in front is what the four actions actually do.",
+      "Rebind an action to a key or gamepad button, then try the new control. The rack shows each binding and its device type. Your changes are saved locally, so they remain after a page reload.",
     tries: [
       "Press Rebind hop, then press any key: the cap goes orange for a keyboard, and the panel says which key.",
       "Rebind one to a gamepad button and watch that cap turn green while the other three stay orange.",
-      "Reload the page: the rebinding is still there, because it went to app.storage. Reset to defaults clears it.",
+      "Reload the page to check that your bindings were saved. Choose Reset to defaults to clear them.",
     ],
     uses: [
       "app.input.performInteractiveRebind",

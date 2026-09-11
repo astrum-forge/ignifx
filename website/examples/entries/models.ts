@@ -32,16 +32,12 @@ export const MODELS: readonly ExampleOf<"Models">[] = [
     dimension: "3D",
     priority: "P0",
     status: "ready",
-    line: "Load a glTF, watch it arrive, swap it for another, and hand the memory back.",
+    line: "Load and switch 3D models, track their progress and release unused assets.",
     paragraph:
-      "Three sample models of wildly different sizes, on one metre of grid per metre of world. " +
-      "`app.assets.load` answers with a handle straight away — still loading, with a progress between " +
-      "zero and one — and the Handle group is that handle's own fields, read four times a second: its " +
-      "address, its state, its progress, how many holders it has, and how many bytes the models it is " +
-      "holding weigh. Every load needs one release, and Release the others is what that looks like.",
+      "Load three glTF models and inspect their loading state, progress and memory estimates. Switch between models, then release the ones you no longer need. The panel shows which assets the example still holds.",
     tries: [
-      "Switch the model: a handle asked for the first time is still loading when it is assigned, so the model lands a frame or two later.",
-      "Press Release the others and watch the Held readout drop: the bytes go back when the last holder lets go.",
+      "Switch models and watch the loading status in the panel.",
+      "Press Release the others and watch the Held count decrease.",
       "Turn the grid off to read the silhouette, then drag to orbit and scroll to zoom.",
     ],
     uses: ["app.assets.load", "AssetHandle", "Model", "Environment", "MeshAsset.ground", "app.assets.gc"],
@@ -80,20 +76,13 @@ export const MODELS: readonly ExampleOf<"Models">[] = [
     dimension: "3D",
     priority: "P0",
     status: "ready",
-    line: "Thirty-six spheres from one mesh: metalness across, roughness up, every value live.",
+    line: "Compare smooth, rough, painted and metallic surfaces on a grid of spheres.",
     paragraph:
-      "The two numbers that decide what a physically based surface looks like, laid out so the whole " +
-      "parameter space is on screen at once. Metalness runs left to right and roughness bottom to top; " +
-      "the sliders move each axis's two ends, so you can compress the grid onto any patch of the space " +
-      "and compare. The light is a prefiltered studio probe with a modest key and fill behind it, " +
-      "because a metal has no diffuse term and shows only its surroundings — the soft highlights down " +
-      "the right-hand column are the probe's own softboxes, and roughness is what blurs them. Nothing " +
-      "else is loaded: the mesh is `MeshAsset.sphere` and the thirty-six materials are " +
-      "`pbrMaterialDefinition` records edited live, which costs uniform writes and no shader work.",
+      "See how roughness and metalness change a material. Metalness increases from left to right, and roughness from bottom to top. Adjust each range or rotate the environment to compare the reflections.",
     tries: [
       "Set both metalness ends to one: every sphere becomes a metal, and the base colour now tints the reflection instead of the surface.",
-      "Pull Top row down to 0.3 and the roughness axis compresses onto the range a real product is authored in.",
-      "Rotate the probe, then blur it: a metal has nothing to show but what is around it, so blurring the probe is what turns the bottom-right mirror into satin.",
+      "Set Top row to 0.3 to compare only the smoother end of the roughness range.",
+      "Rotate the environment, then add blur to soften the reflections.",
     ],
     uses: [
       "pbrMaterialDefinition",
@@ -117,17 +106,13 @@ export const MODELS: readonly ExampleOf<"Models">[] = [
     dimension: "3D",
     priority: "P0",
     status: "ready",
-    line: "A rigged fox with three clips: pick one, blend two, change the rate, drag the playhead.",
+    line: "Blend a fox’s walk and run animations, change playback speed and inspect individual poses.",
     paragraph:
-      "The Khronos Fox ships three animations — Survey, Walk and Run — and core does not play them: " +
-      "`ModelAsset` strips the clips off the loaded glTF and `Animator`, from `@ignifx/3d`, runs a state " +
-      "machine document over them. The document here is the smallest one that means anything: one float, " +
-      "one layer, two states and a one-dimensional blend tree. Gait moves along the tree and weights Walk " +
-      "against Run on one shared cursor; the Mix readout is those weights, live.",
+      "A rigged fox demonstrates animation playback and blending. Move between walking and running, change the playback speed or drag the playhead to inspect a pose. Switch to Survey to see a transition into a different animation.",
     tries: [
-      "Drag Gait from walk to run and read the Mix line: two clips at once, phase-locked, with no call to blend them.",
-      "Set Speed to zero and drag the Playhead: the pose is recomputed from the state machine's cursor every frame, so seeking is moving the cursor.",
-      "Switch the State to Survey: a crossfade does not care that the two clips are 1.16 and 3.42 seconds long.",
+      "Drag Gait from walk to run. The Mix line shows how much each animation contributes.",
+      "Set Speed to zero, then drag the Playhead to inspect individual poses.",
+      "Switch State to Survey and watch the animations crossfade.",
     ],
     uses: ["Model", "Animator", "defineAnimator", "AnimatorStateMachine", "Model.animations", "features.skeletons"],
     assets: [

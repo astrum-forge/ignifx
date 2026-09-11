@@ -1,7 +1,9 @@
 # 03 · Pages and copy
 
-Final copy for every page. Engineers paste it; nobody rewrites it in a template. Where a line depends
-on the first npm release, both variants are given and marked **[pre-release]** / **[release]**; the
+Historical launch copy, superseded by the 2026-09-11 content pass in [DESIGN.md](../DESIGN.md).
+Current copy lives in the page renderers, copy tables and example catalogue entries.
+Where a line depends on the first npm release, both variants are given and marked
+**[pre-release]** / **[release]**; the
 build picks one from `website/site.config.ts` (`published: boolean`, `version: string`).
 
 Conventions: `ignifx` is lowercase everywhere. Package names are code. Browser versions are the ones

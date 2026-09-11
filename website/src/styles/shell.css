@@ -303,18 +303,13 @@ html[data-js="on"] .js-only {
 .lockup {
   display: inline-flex;
   align-items: center;
-  /* 0.35 em ink to ink: the mark's canvas carries 19% transparent padding on each side, so the
-     box-to-text gap is 0.35 − 0.193 × 1.2 em. */
-  gap: 0.12em;
+  gap: 0.3em;
   color: var(--ink);
-  font-size: var(--t-md);
+  font-size: var(--t-lg);
   text-decoration: none;
 }
 
-/* The mark is a raster image on a square, ink-centred canvas (`02` §2.1): its ink fills 60% of the
-   box across and 87% down, so a 1.2 em box renders ink 1.04 em tall — a little above the wordmark's
-   own ink box (0.913 em) and 1.5× its cap height. Chosen optically from a rendered strip of
-   0.91/1.05/1.2/1.35/1.5 em candidates, as `02` §2.2 asks. */
+/* The square vector master keeps the same proportions at every icon size. */
 .mark {
   width: 1.2em;
   height: 1.2em;

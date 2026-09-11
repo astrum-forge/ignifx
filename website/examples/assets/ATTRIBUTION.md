@@ -70,7 +70,7 @@ base-colour, packed occlusion/roughness/metalness and normal maps, hovering over
 
 > ignifx mascot ship — © 2026 Astrum Forge Studios Pty Ltd. A brand asset supplied by the owner on
 > 2026-09-07 (original: `website/brand/source/spaceship.glb`), used under the ignifx trademark rules
-> on /press/; not a sample asset for reuse.
+> of Astrum Forge Studios; not a sample asset for reuse.
 
 **Hero only.** `pbr-model` is the one example that may load it, and therefore the one poster and the
 social card that may show it. No other example, template or recipe loads `models/ignifx-ship.glb`.

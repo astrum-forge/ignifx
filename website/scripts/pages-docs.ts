@@ -2,7 +2,7 @@
  * `/docs/`, `/docs/getting-started/`, `/docs/guides/`, `/docs/guides/<name>/` and
  * `/docs/browser-support/` (`03-pages-and-copy.md` §5–§7, wireframes `02` §4.5–§4.7).
  *
- * The docs hub and the two written pages are copy from the plan. A guide page is a recipe from
+ * The docs hub points visitors to setup, guides and reference material. A guide page is a recipe from
  * `skills/ignifx/references/recipes/`, rendered unchanged with its links rewritten — the site
  * serves no other skill page (`01-strategy-and-ia.md` §10).
  */
@@ -39,23 +39,28 @@ function hubCards(guideCount: number): readonly HubCard[] {
   return [
     {
       title: "Getting started",
-      line: "From nothing to a running template in five minutes.",
+      line: "Create a project and run your first game.",
       href: "/docs/getting-started/",
       external: false,
     },
     {
       title: `Guides (${String(guideCount)})`,
-      line: "Short guides, one task each, with code the engine's checks compile.",
+      line: "Learn one task at a time with practical code examples.",
       href: "/docs/guides/",
       external: false,
     },
     {
       title: "API reference",
-      line: "Every public export of every package, generated from the source.",
+      line: "Look up components, methods and options for each package.",
       href: treeUrl("skills/ignifx/references/api"),
       external: true,
     },
-    { title: "Templates", line: "Four small finished games to copy.", href: "/#templates", external: false },
+    {
+      title: "Templates",
+      line: "Four playable starting points for your own game.",
+      href: "/#templates",
+      external: false,
+    },
     {
       title: "Browser support",
       line: "What WebGPU is, where it runs, and how to check.",
@@ -64,7 +69,7 @@ function hubCards(guideCount: number): readonly HubCard[] {
     },
     {
       title: "Contributing",
-      line: "How the project works and how to get a change in.",
+      line: "Set up the repository and contribute a change.",
       href: blobUrl("CONTRIBUTING.md"),
       external: true,
     },
@@ -110,10 +115,10 @@ export function docsPage(guides: readonly Guide[]): string {
     h("section", { class: "page-head" }, [
       h("div", { class: "shell" }, [
         h("h1", {}, "Docs"),
-        h("p", { class: "page-lead" }, "Start here, then read a guide that does one thing."),
+        h("p", { class: "page-lead" }, "Create your first project, learn a new feature or look up an API."),
         h("div", { class: "page-actions" }, [
-          button({ label: "Getting started", variant: "primary", href: "/docs/getting-started/" }),
-          button({ label: "Star on GitHub", variant: "secondary", icon: "github", href: site.repo }),
+          button({ label: "Get started", variant: "primary", href: "/docs/getting-started/" }),
+          button({ label: "View on GitHub", variant: "secondary", icon: "github", href: site.repo }),
         ]),
       ]),
     ]),
@@ -156,7 +161,7 @@ export function guidesIndexPage(guides: readonly Guide[]): string {
           "p",
           { class: "page-lead" },
           esc(
-            "One task each, with code the engine's documentation checks compile and run. Every guide is a page of the Agent Skill that ships with the engine.",
+            "Follow practical examples for common game tasks, from moving a character to loading a scene and saving progress.",
           ),
         ),
       ]),
@@ -249,7 +254,11 @@ export function gettingStartedPage(highlighter: CodeHighlighter): string {
   const stepOne = site.published
     ? join(
         sh("npx @ignifx/cli@latest my-game"),
-        h("p", {}, md("The default template is `2d-topdown`. Pass one to pick another:")),
+        h(
+          "p",
+          {},
+          md("This creates a `2d-topdown` project. To start with a different template instead, use its name:"),
+        ),
         sh("npx @ignifx/cli@latest my-game --template 3d-third-person"),
       )
     : join(
@@ -279,7 +288,7 @@ export function gettingStartedPage(highlighter: CodeHighlighter): string {
         "p",
         {},
         md(
-          "`npm run build` writes a static `dist/` you can host anywhere: Cloudflare Pages, Netlify, GitHub Pages, an S3 bucket, itch.io.",
+          "Run `npm run build` to create the `dist/` folder. Upload its contents to a static web host or a browser-game platform such as itch.io.",
         ),
       )
     : join(
@@ -295,7 +304,7 @@ export function gettingStartedPage(highlighter: CodeHighlighter): string {
           "p",
           { class: "page-lead" },
           esc(
-            "Five minutes from an empty folder to a running game. You need Node 24, a package manager, and a browser with WebGPU.",
+            "Create a project, run a template and start changing the game. You’ll need Node 24, npm and a browser with WebGPU.",
           ),
         ),
         supportPill(),
@@ -303,21 +312,21 @@ export function gettingStartedPage(highlighter: CodeHighlighter): string {
     ]),
     h("div", { class: "band band-steps" }, [
       h("div", { class: "shell shell-narrow" }, [
-        step(1, "Create a project", stepOne),
         step(
-          2,
-          "Pick a template",
+          1,
+          "Choose a template",
           join(
             picker,
             h(
               "p",
               {},
               esc(
-                "Every template is a small finished game: a title screen, a pause menu, settings for volume, render scale, shadows and post-processing, interactive rebinding, saves with checkpoint autosave, and English and French strings. Delete the game and keep the front end.",
+                "Each template includes a title screen, pause menu, audio and graphics settings, control rebinding and checkpoint saves. Use it as a starting point, then add your own gameplay and art.",
               ),
             ),
           ),
         ),
+        step(2, "Create a project", stepOne),
         step(
           3,
           "Run it",
@@ -350,7 +359,7 @@ export function gettingStartedPage(highlighter: CodeHighlighter): string {
             "p",
             {},
             md(
-              "Add `--desktop` when you create the project and you get an Electron variant with `dev:desktop`, `build:desktop` and `dist:desktop`. The window is created with WebGPU enabled, context isolation on, the renderer sandboxed, and a typed bridge for the few things a game needs from the host.",
+              "Add `--desktop` when creating your project to include an Electron desktop app. Use `npm run dev:desktop` during development and `npm run dist:desktop` to package it. The template configures the window and build tools for you.",
             ),
           ),
           site.published
@@ -400,7 +409,7 @@ export function browserSupportPage(): string {
           "p",
           { class: "page-lead" },
           esc(
-            "ignifx renders through WebGPU and nothing else. That is a deliberate choice: one render path, tested once, with modern features everywhere it runs.",
+            "ignifx uses WebGPU to draw your game. Players need a browser and device that support it; there is no WebGL fallback.",
           ),
         ),
         supportPill(),
@@ -413,12 +422,12 @@ export function browserSupportPage(): string {
           BROWSER_SUPPORT.map(([browser, since]) => [browser, since]),
           "WebGPU support by browser",
         ),
-        h("h2", { class: "band-title" }, "If your browser does not have it"),
+        h("h2", { class: "band-title" }, "If WebGPU is unavailable"),
         h(
           "p",
           {},
           md(
-            "A browser without WebGPU cannot run an ignifx game, and the engine says so clearly: `createApp` rejects with error `IGX-0701`, and every template shows a fallback panel that links here. On Linux and on some older integrated GPUs, WebGPU exists but is off by default; check `chrome://gpu` or `about:config` for your browser's flag.",
+            "Update your browser and graphics drivers, then try again. Support depends on your operating system and GPU as well as the browser version. If WebGPU is still unavailable, ignifx templates show a message instead of starting the game.",
           ),
         ),
         h("h2", { class: "band-title" }, "Check from the command line"),
@@ -426,7 +435,7 @@ export function browserSupportPage(): string {
           "p",
           {},
           md(
-            "Every project ships `node scripts/check-webgpu.mjs`, which launches a browser headlessly and reports what the adapter says.",
+            "Run `node scripts/check-webgpu.mjs` in your project to check whether the test browser can access a WebGPU adapter.",
           ),
         ),
       ]),
@@ -443,14 +452,13 @@ export function notFoundPage(): string {
   return h("section", { class: "page-head page-head-center" }, [
     h("div", { class: "shell shell-narrow" }, [
       markImg(128, "mark mark-lg"),
-      h("h1", {}, "This page has gone dark."),
-      h("p", { class: "page-lead" }, "The address may have moved when the site was rebuilt. These still work:"),
+      h("h1", {}, "Page not found"),
+      h("p", { class: "page-lead" }, "This address may have changed. Choose a page below to continue."),
       h("ul", { class: "notfound-links" }, [
         h("li", {}, h("a", { href: "/" }, "Home")),
         h("li", {}, h("a", { href: "/features/" }, "Features")),
         h("li", {}, h("a", { href: "/examples/" }, "Examples")),
         h("li", {}, h("a", { href: "/docs/" }, "Docs")),
-        h("li", {}, h("a", { href: "/press/" }, "Press")),
       ]),
     ]),
   ]);

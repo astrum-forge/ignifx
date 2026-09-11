@@ -18,17 +18,13 @@ export const RENDERING: readonly ExampleOf<"Rendering">[] = [
     dimension: "3D",
     priority: "P0",
     status: "ready",
-    line: "The ignifx ship under image-based lighting, with bloom and ACES tone mapping.",
+    line: "Explore the ignifx ship with realistic metal, reflections and glowing engines.",
     paragraph:
-      "The ignifx ship, banked in flight: a glTF model with physically based metal, lit by a prefiltered " +
-      "environment probe, then bloom, anti-aliasing and ACES tone mapping as a post-process stack. This is the " +
-      "render path every 3D ignifx game uses, and the parameters on the right are the ones a game puts in its " +
-      "settings screen. `shot.ts` beside it holds the composition — the lens, the pose, the grading — so `main.ts` " +
-      "is only the engine.",
+      "Explore a 3D ship rendered with physically based materials. Environment lighting creates reflections on the hull, while bloom gives the engines their glow. Adjust the lighting and materials in the panel, or switch models to compare the results.",
     tries: [
-      "Drag to orbit and scroll to zoom; the reflections on the hull follow the probe as you move.",
-      "Switch the Model select to Corset: one assignment swaps a loaded glTF for another.",
-      "Rotate the environment, or blur it: one number moves every reflection on the ship at once.",
+      "Drag to orbit and scroll to zoom. Watch the reflections change as you move.",
+      "Choose Corset in the Model menu to compare a different model.",
+      "Rotate the environment or add blur to change the reflections on the ship.",
     ],
     uses: ["Model", "Environment", "PostProcessStack", "app.assets.load", "Light.exclude", "Camera"],
     assets: [
@@ -36,7 +32,7 @@ export const RENDERING: readonly ExampleOf<"Rendering">[] = [
         name: "ignifx mascot ship",
         licence: "© 2026 Astrum Forge Studios Pty Ltd",
         author: "Astrum Forge Studios",
-        source: "https://ignifx.com/press/",
+        source: "https://astrumforge.com",
       },
       {
         name: "Corset",
@@ -66,14 +62,9 @@ export const RENDERING: readonly ExampleOf<"Rendering">[] = [
     dimension: "3D",
     priority: "P0",
     status: "ready",
-    line: "Click to select: the GPU pick and the CPU raycast, at the same pixel.",
+    line: "Click a shape and compare object selection using the GPU and CPU.",
     paragraph:
-      "Seven generated shapes on a grid, and every click resolves the same pixel twice. " +
-      "`app.renderer.pickAsync` draws an id buffer and reads one pixel back from the device; " +
-      "`world.raycastRender` walks the scene's meshes on the CPU and answers in the same call. Both report the " +
-      "entity they hit, both skip a renderer whose `pickable` is false, and the two rows in the panel agree on " +
-      "every click — while their timings do not, because one of them waits for the device. Both take " +
-      "backing-store pixels, which is why the click arrives as an `@ignifx/input` action rather than as a DOM event.",
+      "Select shapes on a grid using two methods: GPU picking and CPU raycasting. The panel shows which object each method finds and how long it takes. Toggle whether the floor can be selected, then try again.",
     tries: [
       "Click a shape, then the floor between two of them: both paths report the same hit and the same miss.",
       "Read the two timings. The CPU row is the ray test alone; the GPU row includes the readback.",

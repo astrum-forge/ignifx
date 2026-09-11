@@ -20,8 +20,8 @@ import { icon, iconSprite, markImg } from "./icons.ts";
 /** The production origin, used for canonical links, the sitemap and Open Graph. */
 export const SITE_ORIGIN = site.origin;
 
-/** The Open Graph card, produced by the press kit (`05-press-kit.md` §3). */
-const SOCIAL_IMAGE = "/press/ignifx-social-1200x630.png";
+/** The Open Graph card, produced by `brand/build.ts`. */
+const SOCIAL_IMAGE = "/brand/social-1200x630.png";
 
 /** Asset URLs the shell links to, filled in once Rollup has named the emitted files. */
 export interface Assets {
@@ -98,11 +98,10 @@ const NAV: readonly { readonly href: string; readonly label: string }[] = [
   { href: "/features/", label: "Features" },
   { href: "/examples/", label: "Examples" },
   { href: "/docs/", label: "Docs" },
-  { href: "/press/", label: "Press" },
 ];
 
 /**
- * Renders the header: lockup, the four links, GitHub, npm, the theme toggle.
+ * Renders the header: lockup, the three links, GitHub, npm, the theme toggle.
  *
  * The four links live in a `<details>` so the small-screen menu needs no JavaScript. Above 800 px
  * the summary is hidden and the list is laid out as a row (`src/styles/shell.css`).
@@ -202,7 +201,6 @@ function footerColumns(): readonly FooterColumn[] {
       "Company",
       [
         ["Astrum Forge Studios", site.studio],
-        ["Press kit", "/press/"],
         [site.contactEmail, `mailto:${site.contactEmail}`],
         ["Security policy", blobUrl("SECURITY.md")],
         ["Licence: Apache-2.0", blobUrl("LICENSE")],

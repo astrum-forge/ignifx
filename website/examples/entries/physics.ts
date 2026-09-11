@@ -18,15 +18,9 @@ export const PHYSICS: readonly ExampleOf<"Physics">[] = [
     dimension: "3D",
     priority: "P0",
     status: "ready",
-    line: "Drop boxes, spheres and capsules into a pit; change the surface they land on.",
+    line: "Drop boxes, spheres and capsules into a pit and adjust their friction and bounce.",
     paragraph:
-      "Rigid bodies on Havok. Click the floor to drop the selected shape, or press the button; the " +
-      "friction and bounce sliders are a physics material, which a collider reads when its shape is " +
-      "built, so they reach the next body you drop. The simulation runs in `FixedUpdate` on its own " +
-      "headless scene at a fixed rate, whatever the frame rate does, and a body that stops moving is " +
-      "put to sleep and costs nothing until something wakes it — the dimmed ones in the pit are the " +
-      "ones this example has measured at rest. Every shape is a `MeshAsset` factory, so nothing is " +
-      "fetched.",
+      "Drop objects into a pit to try Havok physics. Adjust friction and bounce for newly created bodies, or reset the pile with those settings. Objects dim when they settle and brighten when something moves them again.",
     tries: [
       "Click anywhere on the floor: the click is a ray, and the ray is where the body lands.",
       "Raise Bounce to 0.8, then press Reset — the whole pile is re-dropped on the new surface.",
@@ -56,14 +50,9 @@ export const PHYSICS: readonly ExampleOf<"Physics">[] = [
     dimension: "3D",
     priority: "P0",
     status: "ready",
-    line: "A capsule that walks up a 30° ramp, refuses a 60° one, and jumps.",
+    line: "Move a character up ramps, test slope limits and try touch controls.",
     paragraph:
-      "A `CharacterController` is a kinematic capsule that collides and slides. It applies no gravity " +
-      "of its own, so the script owns the vertical speed — and therefore owns jump feel, the coyote " +
-      "window, and the ground snap that keeps the capsule on the surface instead of skipping down it. " +
-      "Movement is simulation, so it runs in `fixedUpdate`, and it is camera-relative, so the same " +
-      "code reads a keyboard, a gamepad stick and an on-screen thumbstick. Both ramps are built from " +
-      "their angles rather than eyeballed, so 30° and 60° are measured by construction.",
+      "Move a capsule-shaped character around two ramps. The controller climbs slopes within its limit and blocks steeper ones. Adjust the limit or switch to touch controls to see how the same movement system responds.",
     tries: [
       "Walk up the pale ramp, then try the dark one: 30° is inside the slope limit and 60° is not.",
       "Drop the slope limit to 20° and the ramp you just climbed becomes a wall.",

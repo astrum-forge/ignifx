@@ -11,7 +11,7 @@
     "build": "vite build && pnpm run build:examples && node examples/_tools/build-templates.ts",
     "build:examples": "vite build --config examples/vite.config.ts",
     "preview": "vite preview",
-    "press-kit": "node press/build.ts",
+    "brand": "node brand/build.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run"
   },

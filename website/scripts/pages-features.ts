@@ -24,7 +24,7 @@ export function featuresPage(): string {
         "p",
         { class: "page-lead" },
         esc(
-          "Everything in the box, grouped the way you will use it. Each section links to an example that runs in your browser.",
+          "Explore the tools for building your game, from scenes and physics to menus and desktop builds. Try the linked examples to see them in action.",
         ),
       ),
       h("div", { class: "page-actions" }, [
@@ -71,7 +71,7 @@ export function featuresPage(): string {
         section.chips.length === 0
           ? ""
           : h("p", { class: "feature-chips" }, [
-              h("span", { class: "feature-chips-label" }, "See it:"),
+              h("span", { class: "feature-chips-label" }, "Explore:"),
               each(section.chips, (item) =>
                 h("a", { class: "chip chip-link", href: exampleHref(item.target, item.fallback) }, esc(item.label)),
               ),

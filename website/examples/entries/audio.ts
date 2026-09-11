@@ -18,18 +18,13 @@ export const AUDIO: readonly ExampleOf<"Audio">[] = [
     dimension: "3D",
     priority: "P0",
     status: "ready",
-    line: "A bus tree with faders: one-shots on SFX, a loop on Music, and the autoplay lock in plain sight.",
+    line: "Mix music, effects and interface sounds with separate volume controls.",
     paragraph:
-      "The four faders are the four buses of `game.audio.json` — `Master`, with `Music`, `SFX` and `UI` routed " +
-      "into it — and the rail on the floor is that routing. A fader's knob is the bus's own gain; the lamp above " +
-      "it is the gain that actually reaches the output, so pulling `Master` down dims every lamp while the three " +
-      "faders under it stay where they are. Click a pad to fire a sound through its bus, click a fader to mute " +
-      "one. The ring on the floor is the browser's autoplay lock: it pulses amber until the audio context runs, " +
-      "and the chime this example asks for while it is still locked is queued rather than dropped.",
+      "Try a mixer with Master, Music, SFX and UI volume controls. Lowering Master reduces every sound, while the other controls adjust their own groups. Click a pad to play a sound. The ring turns green when the browser allows audio to start.",
     tries: [
       "Click anywhere: the ring turns green, and the chime queued before that first click plays now.",
-      "Pull the Master fader down and watch every lamp on the desk dim while the three faders under it hold their place.",
-      "Click the leftmost pad to start the loop, then click the Music fader: the knob turns red and the loop goes quiet.",
+      "Lower Master. Every lamp dims as the overall volume drops.",
+      "Click the leftmost pad to play music, then click the Music fader to mute it.",
     ],
     uses: [
       "parseAudioBusesFile",

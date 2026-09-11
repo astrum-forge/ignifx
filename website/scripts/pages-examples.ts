@@ -57,7 +57,7 @@ export function examplesIndexPage(websiteRoot: string): string {
         "p",
         { class: "page-lead" },
         esc(
-          "Every example runs in your browser on this site's engine build, with its source beside it and the same file on GitHub one click away. Press backtick in any example for the devtools overlay.",
+          "Try a feature in your browser, experiment with its controls and read the source code. Choose a category to explore.",
         ),
       ),
       supportPill(),
@@ -192,7 +192,7 @@ export function examplePage(
   const files = each(sources, (file, index) =>
     h("div", { class: index === 0 ? "source-file is-active" : "source-file", "data-source-file": file.label }, [
       file.text === null
-        ? h("p", { class: "source-missing" }, esc(`${file.label} is not in the tree yet.`))
+        ? h("p", { class: "source-missing" }, esc(`${file.label} is not available yet.`))
         : highlighter.render(file.text, file.language, { label: file.label }),
     ]),
   );
@@ -200,7 +200,10 @@ export function examplePage(
   const source = h("section", { class: "source" }, [
     h("div", { class: "shell" }, [
       h("details", { class: "disclosure source-disclosure" }, [
-        h("summary", { class: "disclosure-summary" }, [h("span", {}, "Show source"), icon("chevron", "icon-next")]),
+        h("summary", { class: "disclosure-summary" }, [
+          h("span", {}, "Show source code"),
+          icon("chevron", "icon-next"),
+        ]),
         h("div", { class: "disclosure-body source-body" }, [
           h("div", { class: "source-head" }, [
             h("h2", {}, "Source"),

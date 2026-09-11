@@ -10,8 +10,8 @@
  *
  * The build fails, in production, when the tree cannot back what a page says: a catalogue entry
  * without a directory, a first source file or all three posters; a recipe with no guide group; a
- * missing `ATTRIBUTION.md`; a press file the page lists. Under `vite build --mode development`
- * those are warnings, so the site can be worked on while the examples and press kits are still
+ * missing `ATTRIBUTION.md`. Under `vite build --mode development`
+ * those are warnings, so the site can be worked on while the examples are still
  * being produced.
  */
 import { createHash } from "node:crypto";
@@ -35,8 +35,6 @@ import {
 import { attributionPage, ATTRIBUTION_FILE, examplePage, examplesIndexPage } from "./pages-examples.ts";
 import { featuresPage } from "./pages-features.ts";
 import { homePage } from "./pages-home.ts";
-import { pressPage } from "./pages-press.ts";
-import { missingPressFiles, pressScreenshots } from "./press-files.ts";
 import { readGuides, ungroupedRecipes } from "./repo-content.ts";
 import { llmsUrls, repoPathOf } from "./skill-tree.ts";
 import { readText } from "./text.ts";
@@ -197,7 +195,7 @@ export function ignifxSite(repositoryRoot: string, websiteRoot: string): Plugin 
       add(
         "/",
         "ignifx · The TypeScript game engine for WebGPU",
-        "Build 2D and 3D games in TypeScript and ship them to any modern browser and the desktop. Open source, WebGPU-only, batteries included.",
+        "Build 2D and 3D games in TypeScript for WebGPU browsers and desktop. Explore playable templates, interactive examples and an open-source engine.",
         homePage(repositoryRoot, websiteRoot, highlighter),
         "page-home",
       );
@@ -247,7 +245,7 @@ export function ignifxSite(repositoryRoot: string, websiteRoot: string): Plugin 
       add(
         "/docs/guides/",
         "Guides · ignifx",
-        `The ${String(guides.length)} ignifx guides: one task each, with code the engine's documentation checks compile and run.`,
+        `The ${String(guides.length)} ignifx guides: practical code examples for building scenes, controls, audio and other game features.`,
         guidesIndexPage(guides),
       );
       for (const guide of guides) {
@@ -265,32 +263,10 @@ export function ignifxSite(repositoryRoot: string, websiteRoot: string): Plugin 
         browserSupportPage(),
       );
 
-      // The press page is rendered last, because it is the one page whose content comes from another
-      // owner's directory (`08-execution.md` §5) and the build reports what is not there yet.
-      const missingPress = missingPressFiles(websiteRoot);
-      if (missingPress.length > 0) {
-        complain(
-          `the press kit is missing ${String(missingPress.length)} file(s) the page lists: ${missingPress.join(", ")}.`,
-        );
-      }
-      if (pressScreenshots(websiteRoot).length === 0) {
-        // A warning, not a failure: the six captures come from the visual suite once the examples
-        // exist (`05-press-kit.md` §5), and the page reads the directory rather than naming them.
-        this.warn(
-          "ignifx-site: website/public/press/screenshots/ holds no PNG, so the press page shows no screenshot.",
-        );
-      }
-      add(
-        "/press/",
-        "Press kit · ignifx",
-        "Boilerplate, logos, badges, screenshots and usage rules for writing about ignifx or showing that your game runs on it.",
-        pressPage(websiteRoot, highlighter),
-      );
-
       const notFound = renderDocument({
         route: "/404.html",
         title: "Page not found · ignifx",
-        description: "That ignifx page does not exist. Home, features, examples, docs and the press kit still work.",
+        description: "Find your way back to ignifx features, examples and documentation.",
         main: notFoundPage(),
         assets: assetsPlaceholder,
       });

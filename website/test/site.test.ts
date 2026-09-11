@@ -116,7 +116,6 @@ const expectedRoutes = [
   "/docs/getting-started/",
   "/docs/guides/",
   "/docs/browser-support/",
-  "/press/",
 ];
 
 describe("routing", () => {
@@ -420,10 +419,7 @@ describe("headers and redirects", () => {
     }
   });
 
-  it("lets other sites hot-link the badges and caches the hashed assets for a year", () => {
-    const badges = headerBlock("/press/badges/*").join("\n");
-    expect(badges).toContain("Access-Control-Allow-Origin: *");
-    expect(badges).toContain("Cache-Control: public, max-age=86400");
+  it("caches hashed assets for a year and brand files for a day", () => {
     for (const pattern of ["/assets/*", "/examples/assets/*"]) {
       const block = headerBlock(pattern).join("\n");
       expect(block, pattern).toContain("! Cache-Control");
@@ -449,6 +445,16 @@ describe("headers and redirects", () => {
       sawAbsolute = sawAbsolute || (parts[1] ?? "").startsWith("https://");
     }
     expect(sawAbsolute).toBe(true);
+  });
+
+  it("keeps the paused press kit out of the public build", () => {
+    expect(existsSync(path.join(dist, "press"))).toBe(false);
+    expect(redirects).toMatch(/^\/press\/\s+\/\s+302$/mu);
+    for (const [file, html] of documents) {
+      expect(html, file).not.toMatch(/(?:href|src)="\/press\//u);
+      expect(html, file).toContain("/brand/social-1200x630.png");
+    }
+    expect(readFileSync(path.join(dist, "sitemap.xml"), "utf8")).not.toContain("/press/");
   });
 
   it("redirects the retired routes, one line per skill file", () => {
