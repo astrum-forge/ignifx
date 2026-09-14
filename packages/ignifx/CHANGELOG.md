@@ -1,5 +1,44 @@
 # ignifx
 
+## 0.3.0
+
+### Minor Changes
+
+- 6e1eed7: - Add `@ignifx/particles`: `ParticleSystem` plays `.particles.json` definitions as stateless GPU particles. The vertex shader evaluates each particle from its spawn record and the current time, so the CPU writes only the particles emitted each frame. `play`, `stop`, `pause`, `resume`, `emit(n)`, `simulate(seconds)`, `aliveCount` and `onStopped` control it.
+  - Add nine presets through `particleDefinition("fire" | "smoke" | "sparks" | "explosion" | "dust" | "sparkle" | "rain" | "snow" | "leaves", overrides?)`.
+  - Add `app.particles` with `maxParticles`, `qualityScale` and `gravity` (taken from the physics settings when `@ignifx/physics` is registered), plus alive, emitted, upload and draw-call counters in `app.diagnostics`.
+  - Particles pause exactly with the app, follow `timeScale`, and reproduce for a given `seed`. Collisions, sub-emitters and per-particle sorting are not available: they are not functions of time alone.
+  - Add `@ignifx/particles-2d`: `ParticleSystem2D` plays the same definitions into a 2D sorting layer through `app.twoD.createSpriteBatch`, sharing the particle budget with the 3D systems.
+  - The `ignifx` umbrella re-exports both packages.
+- 6e1eed7: - Add `@ignifx/terrain`: `Terrain` loads a `.terrain.json` with a 16-bit `.r16` heightmap, a PNG heightmap, or seeded noise, and draws it as chunked geomipmapped meshes with skirts, one level of detail per chunk, chosen and frustum-culled every frame.
+  - Blend up to eight texture layers with RGBA control maps or height and slope rules through one PBR material and a surface shader, so shadows, image-based lighting and fog stay intact. Per-layer roughness is not available.
+  - Query the terrain without physics: `heightAt`, `normalAt`, `raycast`, `bounds`, `worldToSample` and `sampleToWorld`. `colliderInit()` returns the init a `HeightfieldCollider` from `@ignifx/physics` accepts, and `setHeights` sculpts at runtime and raises `onHeightsChanged`.
+  - Add `TerrainScatter`, which places grass and trees on chosen layers, slopes and heights with a seed, and draws them through `InstancedMeshRenderer` with GPU culling, an LOD mesh and the `foliageMaterialDefinition` wind shader.
+  - An 8-bit heightmap loads with a terracing warning (`IGX-1603`). Convert 16-bit PNGs with the new `ignifx import heightmap in.png out.r16` command in `@ignifx/cli`.
+  - The `ignifx` umbrella re-exports the package.
+
+### Patch Changes
+
+- be82465: Clarify API documentation and starter-template comments, and update the README's setup instructions.
+- Updated dependencies [be82465]
+- Updated dependencies [6e1eed7]
+- Updated dependencies [6e1eed7]
+- Updated dependencies [6e1eed7]
+- Updated dependencies [6e1eed7]
+  - @ignifx/core@0.3.0
+  - @ignifx/3d@0.3.0
+  - @ignifx/audio@0.3.0
+  - @ignifx/particles@0.3.0
+  - @ignifx/particles-2d@0.3.0
+  - @ignifx/terrain@0.3.0
+  - @ignifx/2d@0.3.0
+  - @ignifx/devtools@0.3.0
+  - @ignifx/electron@0.3.0
+  - @ignifx/input@0.3.0
+  - @ignifx/physics@0.3.0
+  - @ignifx/physics-2d@0.3.0
+  - @ignifx/ui@0.3.0
+
 ## 0.2.1
 
 ### Patch Changes

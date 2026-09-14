@@ -3,7 +3,7 @@ name: 3d
 description: Builds 3D games in ignifx with @ignifx/3d: third-person and first-person character controllers and camera rigs, the Animator state machine with blend trees and animation events, navigation meshes and agents, LOD groups, and billboards. Use when adding or editing 3D character movement, camera rigs, animation state machines, or navigation in an ignifx project, or when the user mentions @ignifx/3d, Animator, ThirdPersonController, or NavMeshAgent.
 license: Apache-2.0
 metadata:
-  ignifx-version: "0.2.1"
+  ignifx-version: "0.3.0"
 ---
 
 # @ignifx/3d
@@ -25,7 +25,7 @@ walk. Only the _pose_ needs a GPU.
 
 ## Environment
 
-- Engine: ignifx `0.2.1`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
+- Engine: ignifx `0.3.0`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
 - Requires `@ignifx/physics` and `@ignifx/input`; register both **before** `threeD()`.
 - WebGPU only, browser and Electron. Babylon Lite `1.27.0` is a peer dependency.
 - Nothing happens at import time.

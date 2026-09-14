@@ -1,5 +1,20 @@
 # @ignifx/vite-plugin
 
+## 0.3.0
+
+### Minor Changes
+
+- 6e1eed7: - List every `.wgsl` file under the asset root in the manifest as a `shader` asset, and `.particles.json`, `.terrain.json` and `.r16` files as `particles`, `terrain` and `heightmap` assets.
+  - Validate shaders at build time and in the dev server: WGSL syntax errors report `IGX-0654` with the parser's line, and contract errors report `IGX-0655` (missing or repeated `// @ignifx` form line, an undeclared `shaderUniforms`, `shaderSystem`, `surfaceUniforms` or texture, a missing entry point, a hand-written `@group`/`@binding`, or `textureSample` reachable from a vertex stage). Set `validate: false` to turn the checks off.
+  - Editing a `.wgsl` file announces `ignifx:asset-changed`, which the engine's shader hot reload listens for.
+
+### Patch Changes
+
+- be82465: Clarify API documentation and starter-template comments, and update the README's setup instructions.
+- Updated dependencies [be82465]
+- Updated dependencies [6e1eed7]
+  - @ignifx/core@0.3.0
+
 ## 0.2.1
 
 ### Patch Changes

@@ -3,7 +3,7 @@ name: audio
 description: Adds sound and music to an ignifx game with @ignifx/audio: the bus tree, AudioSource and AudioListener components, static and streaming AudioClip assets, spatial audio, a music player, and the browser unlock flow. Use when adding or editing sound effects, music, audio buses, mixing, or spatial audio in an ignifx project, or when the user mentions @ignifx/audio, AudioSource, AudioListener, or audio buses.
 license: Apache-2.0
 metadata:
-  ignifx-version: "0.2.1"
+  ignifx-version: "0.3.0"
 ---
 
 # @ignifx/audio
@@ -23,7 +23,7 @@ Use it for sound effects, footsteps, UI clicks, positional audio, music with cro
 
 ## Environment
 
-- Engine: ignifx `0.2.1`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
+- Engine: ignifx `0.3.0`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
 - Peer dependency: `@babylonjs/lite` `1.27.0`, reached only from `src/lite/**`.
 - Browsers, Electron, and Node. Nothing happens at import time; registering the extension is the
   whole installation.

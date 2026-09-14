@@ -3,7 +3,7 @@ name: input
 description: Wires player input into an ignifx game with @ignifx/input: action maps, bindings, composites and processors, control schemes, keyboard, mouse, pointer, gamepad and touch devices, pointer lock, cursor handling, .input.json action assets, and runtime rebinding. Use when adding or editing input actions, bindings, devices, or a rebinding screen in an ignifx project, or when the user mentions @ignifx/input, PlayerInput, action maps, or input.json.
 license: Apache-2.0
 metadata:
-  ignifx-version: "0.2.1"
+  ignifx-version: "0.3.0"
 ---
 
 # @ignifx/input
@@ -20,7 +20,7 @@ rebinding screens. Raw device state stays available for tools and prototypes.
 
 ## Environment
 
-- Engine: ignifx `0.2.1`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
+- Engine: ignifx `0.3.0`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
 - Browsers and Electron. No Babylon Lite dependency: input is DOM-only, so it works identically
   under the null engine (`createApp({ headless: true })`).
 - Register it like any extension; nothing happens at import time.

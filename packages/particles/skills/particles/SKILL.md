@@ -3,7 +3,7 @@ name: particles
 description: Builds GPU particle effects in ignifx with @ignifx/particles: fire, smoke, sparks, explosions, weather and magic, declared in .particles.json and evaluated on the GPU from CPU-written spawn records. Use when adding or editing a particle effect, an emitter, or a .particles.json document in an ignifx project, or when the user mentions @ignifx/particles, ParticleSystem, particleDefinition, or app.particles.
 license: Apache-2.0
 metadata:
-  ignifx-version: "0.2.1"
+  ignifx-version: "0.3.0"
 ---
 
 # @ignifx/particles
@@ -21,7 +21,7 @@ trades those away, and "Gotchas" below says what to do instead. For 2D sprite pa
 
 ## Environment
 
-- Engine: ignifx `0.2.1`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
+- Engine: ignifx `0.3.0`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
 - Requires nothing but `@ignifx/core`. `@ignifx/physics` is optional: when it is registered, an
   effect that asks for "the world's gravity" reads the `physics` settings section.
 - WebGPU only, browser and Electron. Babylon Lite `1.27.0` is a peer dependency, and this package

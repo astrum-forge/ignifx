@@ -1,5 +1,16 @@
 # @ignifx/3d
 
+## 0.3.0
+
+### Patch Changes
+
+- be82465: Clarify API documentation and starter-template comments, and update the README's setup instructions.
+- Updated dependencies [be82465]
+- Updated dependencies [6e1eed7]
+  - @ignifx/core@0.3.0
+  - @ignifx/input@0.3.0
+  - @ignifx/physics@0.3.0
+
 ## 0.2.1
 
 ### Patch Changes

@@ -3,7 +3,7 @@ name: 2d
 description: Builds 2D games in ignifx with @ignifx/2d: Camera2D, SpriteRenderer, SpriteAnimator, texture atlases, Tilemap rendering and import, sorting layers and Y-sort, pixel-perfect cameras, parallax layers, sprite batches, and 2D picking. Use when adding or editing sprites, sprite animation, tilemaps, atlases, sorting layers, sprite batches, or a 2D camera in an ignifx project, or when the user mentions @ignifx/2d, Camera2D, SpriteRenderer, SpriteBatch, or Tilemap.
 license: Apache-2.0
 metadata:
-  ignifx-version: "0.2.1"
+  ignifx-version: "0.3.0"
 ---
 
 # @ignifx/2d
@@ -21,7 +21,7 @@ parse, `SpriteAnimator` advances on the stepped clock. Only the pixels need a GP
 
 ## Environment
 
-- Engine: ignifx `0.2.1`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
+- Engine: ignifx `0.3.0`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
 - WebGPU only, browser and Electron. Babylon Lite `1.27.0` is a peer dependency.
 - Register it like any extension; nothing happens at import time.
 

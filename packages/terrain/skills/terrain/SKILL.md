@@ -3,7 +3,7 @@ name: terrain
 description: Builds heightmap and procedural terrains in ignifx with @ignifx/terrain: .terrain.json documents, 16-bit heightmaps and seeded noise, chunked geomipmapped level of detail with frustum culling, a splat surface shader on PBR, height/normal/raycast queries, HeightfieldCollider coupling, runtime sculpting, and seeded foliage scatter. Use when adding or editing outdoor ground in an ignifx project, or when the user mentions @ignifx/terrain, Terrain, TerrainScatter, .terrain.json, .r16, heightmaps, or splat maps.
 license: Apache-2.0
 metadata:
-  ignifx-version: "0.2.1"
+  ignifx-version: "0.3.0"
 ---
 
 # @ignifx/terrain
@@ -23,7 +23,7 @@ weights, every query, `colliderInit()`, and the whole scatter placement.
 
 ## Environment
 
-- Engine: ignifx `0.2.1`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
+- Engine: ignifx `0.3.0`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
 - WebGPU only, browser and Electron. Babylon Lite `1.27.0` is a peer dependency.
 - Needs the `materialPlugins` rendering feature. `terrain()` declares it for you at registration.
 - Nothing happens at import time.
