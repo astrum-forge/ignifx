@@ -116,4 +116,19 @@ describe("bounded heap growth over 600 headless steps", () => {
     const baseline = baselines.heap["thousand-entities"];
     expectBoundedGrowth("thousand-entities", baseline.measuredBytes, baseline.ceilingBytes);
   });
+
+  it("instancing-20k", { timeout: MEASURE_TIMEOUT_MS }, () => {
+    const baseline = baselines.heap["instancing-20k"];
+    expectBoundedGrowth("instancing-20k", baseline.measuredBytes, baseline.ceilingBytes);
+  });
+
+  it("particles-10k", { timeout: MEASURE_TIMEOUT_MS }, () => {
+    const baseline = baselines.heap["particles-10k"];
+    expectBoundedGrowth("particles-10k", baseline.measuredBytes, baseline.ceilingBytes);
+  });
+
+  it("terrain-512", { timeout: MEASURE_TIMEOUT_MS }, () => {
+    const baseline = baselines.heap["terrain-512"];
+    expectBoundedGrowth("terrain-512", baseline.measuredBytes, baseline.ceilingBytes);
+  });
 });

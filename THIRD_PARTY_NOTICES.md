@@ -10,7 +10,7 @@ Sample art, audio and models shipped with a template are **not** listed here: ea
 records its own in `templates/<name>/ATTRIBUTION.md` (§11.3). The web fonts the project site uses
 are development-time packages and carry their licences in `website/public/licenses/`.
 
-8 packages.
+12 packages.
 
 ## @babylonjs/havok
 
@@ -24,7 +24,7 @@ are development-time packages and carry their licences in `website/public/licens
 - Version: 1.27.0
 - License: Apache-2.0
 - Repository: <https://github.com/BabylonJS/Babylon-Lite>
-- Required by: @ignifx/2d, @ignifx/3d, @ignifx/audio, @ignifx/core, @ignifx/physics, @ignifx/ui
+- Required by: @ignifx/2d, @ignifx/3d, @ignifx/audio, @ignifx/core, @ignifx/particles, @ignifx/particles-2d, @ignifx/physics, @ignifx/terrain, @ignifx/ui
 
 Its `NOTICE` file, reproduced as Apache-2.0 §4(d) requires:
 
@@ -525,10 +525,40 @@ flag will run closure compiler from third_party/).
 - Repository: <https://github.com/electron/electron>
 - Required by: @ignifx/electron
 
+## fast-png
+
+- Version: 8.0.0
+- License: MIT
+- Copyright (c) 2015 Michaël Zasso
+- Repository: <https://github.com/image-js/fast-png>
+- Required by: @ignifx/cli
+
+## fflate
+
+- Version: 0.8.3
+- License: MIT
+- Copyright (c) 2026 Arjun Barrett
+- Repository: <https://github.com/101arrowz/fflate>
+
+## iobuffer
+
+- Version: 6.0.1
+- License: MIT
+- Copyright (c) 2015 Michaël Zasso
+- Repository: <https://github.com/image-js/iobuffer>
+
 ## vite
 
 - Version: 8.2.2
 - License: MIT
 - Copyright (c) 2019-present, VoidZero Inc. and Vite contributors
 - Repository: <https://github.com/vitejs/vite>
+- Required by: @ignifx/vite-plugin
+
+## wgsl_reflect
+
+- Version: 1.6.0
+- License: MIT
+- Copyright (c) 2021 Brendan Duncan
+- Repository: <https://github.com/brendan-duncan/wgsl_reflect>
 - Required by: @ignifx/vite-plugin

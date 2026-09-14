@@ -205,7 +205,14 @@ describe("CliError", () => {
   });
 
   it("exposes every code in the 14xx platform range", () => {
-    expect(Object.values(CliErrorCode)).toEqual(["IGX-1401", "IGX-1402", "IGX-1403"]);
+    expect(Object.values(CliErrorCode)).toEqual([
+      "IGX-1401",
+      "IGX-1402",
+      "IGX-1403",
+      "IGX-1404",
+      "IGX-1405",
+      "IGX-1406",
+    ]);
   });
 });
 

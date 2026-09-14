@@ -32,4 +32,14 @@ export {
   type CopyTemplateResult,
 } from "./copy-template.js";
 export { CliError, CliErrorCode } from "./errors.js";
+export {
+  encodeHeightmapR16,
+  heightmapSamples,
+  IMPORT_HEIGHTMAP_USAGE,
+  parseImportHeightmapArgs,
+  runImportHeightmap,
+  type ImportHeightmapCommand,
+  type ImportHeightmapResult,
+  type ImportIo,
+} from "./import-heightmap.js";
 export { VERSION } from "./version.js";

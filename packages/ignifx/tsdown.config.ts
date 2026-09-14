@@ -26,6 +26,9 @@ export default defineConfig({
       "@ignifx/2d",
       "@ignifx/3d",
       "@ignifx/ui",
+      "@ignifx/particles",
+      "@ignifx/particles-2d",
+      "@ignifx/terrain",
     ],
   },
 });

@@ -24,7 +24,7 @@ documented no-op, and the components keep their state — so the same script run
 
 ## Environment
 
-- Engine: ignifx `0.0.0-unreleased`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
+- Engine: ignifx `0.2.1`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
 - WebGPU only, browser and Electron. Babylon Lite `1.27.0` is a peer dependency.
 - `@ignifx/input` is an **optional** peer: only `VirtualJoystick` and `VirtualButton` need it.
 - Register it like any extension; nothing happens at import time.

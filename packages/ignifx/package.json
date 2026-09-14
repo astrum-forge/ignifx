@@ -48,8 +48,11 @@
     "@ignifx/devtools": "workspace:*",
     "@ignifx/electron": "workspace:*",
     "@ignifx/input": "workspace:*",
+    "@ignifx/particles": "workspace:*",
+    "@ignifx/particles-2d": "workspace:*",
     "@ignifx/physics": "workspace:*",
     "@ignifx/physics-2d": "workspace:*",
+    "@ignifx/terrain": "workspace:*",
     "@ignifx/ui": "workspace:*"
   },
   "devDependencies": {

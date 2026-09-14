@@ -62,7 +62,7 @@
       },
       "pbr-model": {
         "medianMs": 0.1,
-        "worstMs": 1.0,
+        "worstMs": 1,
         "budgetMs": 0.5,
         "standardsBudgetMs": 4,
         "recordedOn": "2026-09-07",
@@ -118,7 +118,7 @@
       },
       "shadows": {
         "medianMs": 0.1,
-        "worstMs": 1.0,
+        "worstMs": 1,
         "budgetMs": 0.5,
         "standardsBudgetMs": 4,
         "recordedOn": "2026-09-08",
@@ -244,10 +244,140 @@
         "standardsBudgetMs": 4,
         "recordedOn": "2026-09-08",
         "note": "Recorded from a scratch build rather than from the site build the suite measures: this example's catalogue entry did not exist while it was being written, so it was built with a copy of website/examples/vite.config.ts's root, base, target and ignifx() plugin into a directory outside the repository and previewed on 127.0.0.1:5222. Same machine, same browser, same flags, same probe. To be confirmed by the coordinator's own pnpm test:frame-budget run against the site build. Three runs on 2026-09-08 measured a median of 0.2 ms every time, with worst frames of 0.3, 0.3 and 0.4 ms; the row records the highest of each. **The devtools overlay's own cost is in this row.** ?bench=1 leaves the kit's parameter panel off, but settings.devtools.openOnStart still opens the overlay, and once opened it installs a PreRender system at order 9000 that samples every frame and rewrites the visible panel at 10 Hz — inside FrameSample.cpuMs, and therefore inside this measurement. That is deliberate: the overlay is what the example is. It shows up as a floor rather than a spike — only 12 of 300 frames measured zero, against 32 for picking — which is what a sampler that runs every frame looks like. The 0.5 ms ceiling is 2.5x the median and 8x inside the 4 ms coding-standards §7 budget."
+      },
+      "particles": {
+        "medianMs": 0.2,
+        "worstMs": 0.4,
+        "budgetMs": 0.5,
+        "standardsBudgetMs": 4,
+        "recordedOn": "2026-09-15",
+        "note": "Measured by the examples agent on 2026-09-14 (scratch build, vite preview, Chromium SwiftShader, 1280x720, 120 warm-up + 300 measured frames). The ceiling is 0.5 ms, the convention for the 0.1-0.2 ms examples: five performance.now() ticks. Re-recorded by the coordinator from pnpm test:frame-budget before merge."
+      },
+      "explosion": {
+        "medianMs": 0.2,
+        "worstMs": 0.8,
+        "budgetMs": 0.5,
+        "standardsBudgetMs": 4,
+        "recordedOn": "2026-09-15",
+        "note": "Measured by the examples agent on 2026-09-14 (scratch build, vite preview, Chromium SwiftShader, 1280x720, 120 warm-up + 300 measured frames). The ceiling is 0.5 ms, the convention for the 0.1-0.2 ms examples: five performance.now() ticks. Re-recorded by the coordinator from pnpm test:frame-budget before merge."
+      },
+      "weather": {
+        "medianMs": 0.2,
+        "worstMs": 0.3,
+        "budgetMs": 0.5,
+        "standardsBudgetMs": 4,
+        "recordedOn": "2026-09-15",
+        "note": "Measured by the examples agent on 2026-09-14 (scratch build, vite preview, Chromium SwiftShader, 1280x720, 120 warm-up + 300 measured frames). The ceiling is 0.5 ms, the convention for the 0.1-0.2 ms examples: five performance.now() ticks. Re-recorded by the coordinator from pnpm test:frame-budget before merge."
+      },
+      "particles-2d": {
+        "medianMs": 0.2,
+        "worstMs": 0.6,
+        "budgetMs": 0.5,
+        "standardsBudgetMs": 4,
+        "recordedOn": "2026-09-15",
+        "note": "Measured by the examples agent on 2026-09-14 (scratch build, vite preview, Chromium SwiftShader, 1280x720, 120 warm-up + 300 measured frames). The ceiling is 0.5 ms, the convention for the 0.1-0.2 ms examples: five performance.now() ticks. Re-recorded by the coordinator from pnpm test:frame-budget before merge."
+      },
+      "custom-shader": {
+        "medianMs": 0.1,
+        "worstMs": 0.3,
+        "budgetMs": 0.5,
+        "standardsBudgetMs": 4,
+        "recordedOn": "2026-09-15",
+        "note": "Recorded on 2026-09-15 from pnpm test:frame-budget (site build, Chromium SwiftShader, 1280x720, 120 warm-up + 300 measured frames; macOS 25.5 arm64, Node 25.2.1): median 0.1 ms, worst 0.3 ms — one performance.now() tick at the median. The ceiling is 0.5 ms, the convention for the sub-tick examples."
+      },
+      "surface-shaders": {
+        "medianMs": 0.1,
+        "worstMs": 0.3,
+        "budgetMs": 0.5,
+        "standardsBudgetMs": 4,
+        "recordedOn": "2026-09-15",
+        "note": "Recorded on 2026-09-15 from pnpm test:frame-budget (site build, Chromium SwiftShader, 1280x720, 120 warm-up + 300 measured frames; macOS 25.5 arm64, Node 25.2.1): median 0.1 ms, worst 0.3 ms — one performance.now() tick at the median. The ceiling is 0.5 ms, the convention for the sub-tick examples."
+      },
+      "vertex-animation": {
+        "medianMs": 0.1,
+        "worstMs": 0.3,
+        "budgetMs": 0.5,
+        "standardsBudgetMs": 4,
+        "recordedOn": "2026-09-15",
+        "note": "Recorded on 2026-09-15 from pnpm test:frame-budget (site build, Chromium SwiftShader, 1280x720, 120 warm-up + 300 measured frames; macOS 25.5 arm64, Node 25.2.1): median 0.1 ms, worst 0.3 ms — one performance.now() tick at the median. The ceiling is 0.5 ms, the convention for the sub-tick examples."
+      },
+      "custom-post-process": {
+        "medianMs": 0.2,
+        "worstMs": 3,
+        "budgetMs": 0.5,
+        "standardsBudgetMs": 4,
+        "recordedOn": "2026-09-15",
+        "note": "Recorded on 2026-09-15 from pnpm test:frame-budget (site build, Chromium SwiftShader, 1280x720, 120 warm-up + 300 measured frames; macOS 25.5 arm64, Node 25.2.1): median 0.2 ms, worst 3.0 ms — the worst frame is the chain rebuild when the LUT effect first records. The ceiling is 0.5 ms on the median."
+      },
+      "instancing": {
+        "medianMs": 0.1,
+        "worstMs": 0.3,
+        "budgetMs": 0.5,
+        "standardsBudgetMs": 4,
+        "recordedOn": "2026-09-15",
+        "note": "Recorded on 2026-09-15 from pnpm test:frame-budget (site build, Chromium SwiftShader, 1280x720, 120 warm-up + 300 measured frames; macOS 25.5 arm64, Node 25.2.1): median 0.1 ms, worst 0.3 ms. Under ?bench=1 the example draws 2,000 of its 20,000 instances, because SwiftShader cannot rasterise the full belt 420 times inside the probe's time limit; the engine CPU cost is the same for any count once the slab is static. The ceiling is 0.5 ms."
+      },
+      "terrain": {
+        "medianMs": 0.2,
+        "worstMs": 0.4,
+        "budgetMs": 0.6,
+        "standardsBudgetMs": 4,
+        "recordedOn": "2026-09-15",
+        "note": "Measured by the examples agent on 2026-09-15 (site build, Chromium SwiftShader, 1280x720, 120 warm-up + 300 measured frames). 0.1 ms is Chromium's performance.now() quantum. Re-recorded by the coordinator from pnpm test:frame-budget before merge."
+      },
+      "terrain-procedural": {
+        "medianMs": 0.2,
+        "worstMs": 0.4,
+        "budgetMs": 0.6,
+        "standardsBudgetMs": 4,
+        "recordedOn": "2026-09-15",
+        "note": "Measured by the examples agent on 2026-09-15 (site build, Chromium SwiftShader, 1280x720, 120 warm-up + 300 measured frames). 0.1 ms is Chromium's performance.now() quantum. Re-recorded by the coordinator from pnpm test:frame-budget before merge."
+      },
+      "terrain-foliage": {
+        "medianMs": 0.2,
+        "worstMs": 1.8,
+        "budgetMs": 0.6,
+        "standardsBudgetMs": 4,
+        "recordedOn": "2026-09-15",
+        "note": "Measured by the examples agent on 2026-09-15 (site build, Chromium SwiftShader, 1280x720, 120 warm-up + 300 measured frames). 0.1 ms is Chromium's performance.now() quantum. Re-recorded by the coordinator from pnpm test:frame-budget before merge."
+      },
+      "terrain-walk": {
+        "medianMs": 0.9,
+        "worstMs": 1.3,
+        "budgetMs": 1.5,
+        "standardsBudgetMs": 4,
+        "recordedOn": "2026-09-15",
+        "note": "Measured by the examples agent on 2026-09-15 (site build, Chromium SwiftShader, 1280x720, 120 warm-up + 300 measured frames). 0.1 ms is Chromium's performance.now() quantum. Re-recorded by the coordinator from pnpm test:frame-budget before merge."
+      },
+      "terrain-sculpt": {
+        "medianMs": 0.3,
+        "worstMs": 1.1,
+        "budgetMs": 0.8,
+        "standardsBudgetMs": 4,
+        "recordedOn": "2026-09-15",
+        "note": "Measured by the examples agent on 2026-09-15 (site build, Chromium SwiftShader, 1280x720, 120 warm-up + 300 measured frames). 0.1 ms is Chromium's performance.now() quantum. Re-recorded by the coordinator from pnpm test:frame-budget before merge."
       }
     },
     "machine": "macOS 25.5 arm64 (Apple Silicon), Chromium (Playwright 1.63) + SwiftShader, 1280x720, 300 frames after a 120-frame warm-up, @babylonjs/lite 1.27.0",
-    "swiftShaderFactorNote": "Measured, and the measurement says there is no factor worth applying. Each template was run twice on 2026-09-06, once with --use-webgpu-adapter=swiftshader and once on the host GPU, and the ratio of the two mean engine-CPU figures came out 0.588, 0.429, 0.941 and 2.107 for 2d-topdown, 2d-sidescroller, 3d-third-person and 3d-first-person respectively -- i.e. SwiftShader is *cheaper* in engine CPU as often as it is dearer, because what it slows down is the rasteriser and what is being measured is the CPU side of the frame. Chromium also quantises performance.now() to 0.1 ms, which is a third of a 2D template's whole median, so the spread is mostly the clock. The ceilings below are therefore set from the SwiftShader measurement itself with about 2.5x of headroom, and every one of them is well inside the coding-standards §7 budget with no multiplier at all."
+    "swiftShaderFactorNote": "Measured, and the measurement says there is no factor worth applying. Each template was run twice on 2026-09-06, once with --use-webgpu-adapter=swiftshader and once on the host GPU, and the ratio of the two mean engine-CPU figures came out 0.588, 0.429, 0.941 and 2.107 for 2d-topdown, 2d-sidescroller, 3d-third-person and 3d-first-person respectively -- i.e. SwiftShader is *cheaper* in engine CPU as often as it is dearer, because what it slows down is the rasteriser and what is being measured is the CPU side of the frame. Chromium also quantises performance.now() to 0.1 ms, which is a third of a 2D template's whole median, so the spread is mostly the clock. The ceilings below are therefore set from the SwiftShader measurement itself with about 2.5x of headroom, and every one of them is well inside the coding-standards §7 budget with no multiplier at all.",
+    "instancing-20k": {
+      "entities": 2,
+      "instances": 20000,
+      "meanMs": 0.0028,
+      "medianMs": 0.0025,
+      "p95Ms": 0.0041,
+      "note": "Headless CPU per frame with a static 20,000-instance slab, 600 measured frames after 600 warm-up (macOS 25.5 arm64, Node 25.2.1); reported, not asserted."
+    },
+    "particles-10k": {
+      "entities": 3,
+      "particles": 10000,
+      "emittedPerSecond": 2000,
+      "meanMs": 0.0333,
+      "medianMs": 0.0314,
+      "p95Ms": 0.0359,
+      "budgetMs": 0.5,
+      "note": "Headless CPU per frame for one ParticleSystem holding 10,000 live particles at 2,000 emitted per second, 600 measured frames after 600 warm-up (macOS 25.5 arm64, Node 25.2.1). The plan's §6.3 budget is 0.5 ms and the median is 0.031 ms, about 16x inside it. Headless there is no device, so this is the CPU half the design is about: 34 records written into the ring per frame plus one census walk of the live tail. The upload itself is one updateStorageBuffer of 34 x 48 bytes, measured at about 0.1 ms per KB in spike S0.1. Reported, not asserted; the asserted half is the heap row below."
+    }
   },
   "heap": {
     "hello-cube": {
@@ -261,6 +391,24 @@
       "measuredBytes": 9072,
       "ceilingBytes": 65536,
       "note": "Three runs measured exactly 9072 bytes. 2x headroom would be 18144; the ceiling is 64 KiB because heapUsed is a whole-process number that a different V8 build can shift, and 64 KiB is still 16x under the 1 MB the standards imply and three orders of magnitude under one small object per entity per frame."
+    },
+    "instancing-20k": {
+      "steps": 600,
+      "measuredBytes": 33952,
+      "ceilingBytes": 131072,
+      "note": "Four runs on 2026-09-08 (macOS 25.5 arm64, Node 25.2.1) measured 23712, 33952, -232640 and -44920 bytes after a 600-step warm-up; the row records the largest positive. The ceiling is 128 KiB, about 4x it and the same order as thousand-entities' 64 KiB: a static 20,000-instance slab is uploaded once, so a frame touches four field comparisons and a visibility check whatever the instance count."
+    },
+    "particles-10k": {
+      "steps": 600,
+      "measuredBytes": -16312,
+      "ceilingBytes": 131072,
+      "note": "Three runs on 2026-09-15 (macOS 25.5 arm64, Node 25.2.1) measured -16456, -16312 and -16312 bytes after a 600-step warm-up; every reading is negative, so the row records the largest. The ceiling is 128 KiB, the same as instancing-20k: the 480 KB record ring is allocated once and a frame writes 34 records into it through reused scratch arrays, so nothing should accumulate however many particles are alive."
+    },
+    "terrain-512": {
+      "steps": 600,
+      "measuredBytes": -9032,
+      "ceilingBytes": 131072,
+      "note": "A 513x513 field cut into 64 chunks of 64 m, each with four levels of detail. Three runs on 2026-09-14 (macOS 25.5 arm64, Node 25.2.1) measured -9680, -9032 and -9680 bytes after a 600-step warm-up; every reading is negative, so the row records the largest. The ceiling is 128 KiB, the same as instancing-20k: a frame is 64 distance tests, 64 frustum tests and one visibility write per chunk, all over pre-allocated typed arrays. The plan's other two terrain-512 numbers are timings rather than heap, so they are recorded here rather than asserted by alloc.test.ts: `benchmarks/scenes/terrain-512.ts` exports measureTerrain512(), and on the same machine it measured a LOD pass of 0.0095-0.0107 ms per frame (plan target 0.05 ms), 10,000 world-space Terrain.heightAt calls in 0.87-0.92 ms (target 1 ms), and a load-time build of 64 chunks x 4 LODs with skirts in 29.3-30.4 ms (spike S0.3 recorded about 40 ms). packages/terrain/test/performance.test.ts asserts the first two with 10x runner headroom."
     }
   },
   "bundles": {

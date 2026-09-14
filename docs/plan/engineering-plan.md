@@ -307,7 +307,9 @@ Ticked 2026-09-07 against the phase status lines above; "feature complete" here 
 
 ## 8. Post-1.0 roadmap (not committed)
 
-Editor (schema-driven inspector → scene editor), multi-camera/render targets, worker rendering (`OffscreenCanvas`), particles (Lite node particles), 2D lighting, networking (lockstep/server-authoritative on the deterministic loop), XR when Lite's path is runnable, asset packs, audio effects, root motion, 2D blend spaces, save-game migrations tooling.
+Editor (schema-driven inspector → scene editor), multi-camera/render targets, worker rendering (`OffscreenCanvas`), 2D lighting, networking (lockstep/server-authoritative on the deterministic loop), XR when Lite's path is runnable, asset packs, audio effects, root motion, 2D blend spaces, save-game migrations tooling.
+
+Particles, instancing, terrain and custom shaders left this list on 2026-09-08: `2026-09-terrain-particles-shaders.md` delivers them before 1.0 as `@ignifx/particles`, `@ignifx/particles-2d`, `@ignifx/terrain` and core additions.
 
 ## 9. Phase 0 kick-off checklist
 

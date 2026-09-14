@@ -12,7 +12,7 @@ import { defineConfig } from "tsdown";
  * list on every build.
  */
 export default defineConfig({
-  entry: ["src/index.ts", "src/bin.ts"],
+  entry: ["src/index.ts", "src/bin.ts", "src/ignifx/bin.ts"],
   format: ["esm"],
   platform: "node",
   fixedExtension: false,

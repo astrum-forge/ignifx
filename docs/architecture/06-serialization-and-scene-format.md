@@ -127,17 +127,19 @@ Numbers are canonicalized before writing: `x = Math.round(x * 1e6) / 1e6`, `-0` 
 
 All share the `format`/`formatVersion` header and JSON Schema validation:
 
-| Format                   | Extension                                                 | Owner           |
-| ------------------------ | --------------------------------------------------------- | --------------- |
-| `ignifx.material`        | `.material.json`                                          | core            |
-| `ignifx.environment`     | `.environment.json`                                       | core            |
-| `ignifx.spriteatlas`     | `.atlas.json`                                             | `@ignifx/2d`    |
-| `ignifx.spriteanimation` | `.spriteanim.json`                                        | `@ignifx/2d`    |
-| `ignifx.tilemap`         | `.tilemap.json` (import from Tiled `.tmj` / LDtk `.ldtk`) | `@ignifx/2d`    |
-| `ignifx.inputactions`    | `.input.json`                                             | `@ignifx/input` |
-| `ignifx.animator`        | `.animator.json`                                          | `@ignifx/3d`    |
-| `ignifx.audiobuses`      | `.audio.json`                                             | `@ignifx/audio` |
-| `ignifx.manifest`        | `assets.manifest.json`                                    | vite plugin     |
+| Format                   | Extension                                                 | Owner               |
+| ------------------------ | --------------------------------------------------------- | ------------------- |
+| `ignifx.material`        | `.material.json`                                          | core                |
+| `ignifx.environment`     | `.environment.json`                                       | core                |
+| `ignifx.spriteatlas`     | `.atlas.json`                                             | `@ignifx/2d`        |
+| `ignifx.spriteanimation` | `.spriteanim.json`                                        | `@ignifx/2d`        |
+| `ignifx.tilemap`         | `.tilemap.json` (import from Tiled `.tmj` / LDtk `.ldtk`) | `@ignifx/2d`        |
+| `ignifx.inputactions`    | `.input.json`                                             | `@ignifx/input`     |
+| `ignifx.animator`        | `.animator.json`                                          | `@ignifx/3d`        |
+| `ignifx.audiobuses`      | `.audio.json`                                             | `@ignifx/audio`     |
+| `ignifx.particles`       | `.particles.json`                                         | `@ignifx/particles` |
+| `ignifx.terrain`         | `.terrain.json` (heightmap as `.r16`, or PNG)             | `@ignifx/terrain`   |
+| `ignifx.manifest`        | `assets.manifest.json`                                    | vite plugin         |
 
 ## 7. Versioning and migration
 

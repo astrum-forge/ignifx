@@ -11,6 +11,12 @@ export const CliErrorCode = {
   templateNotFound: "IGX-1402",
   /** The command line could not be parsed, or an argument is not usable. */
   invalidArguments: "IGX-1403",
+  /** A heightmap PNG is not one `ignifx import heightmap` can turn into `.r16`. */
+  unsupportedHeightmap: "IGX-1404",
+  /** A file named on the command line could not be read or written. */
+  fileNotAccessible: "IGX-1405",
+  /** A converted heightmap's source was 8-bit, so its heights are terraced. Reported, never thrown. */
+  eightBitHeightmapSource: "IGX-1406",
 } as const;
 
 /**
