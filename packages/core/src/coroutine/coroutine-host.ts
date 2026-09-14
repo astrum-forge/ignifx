@@ -4,27 +4,11 @@ import type { FrameStateController } from "../lifecycle/frame-state.js";
 import type { Script } from "../script/script.js";
 
 /**
- * The generator-coroutine scheduler (`docs/architecture/01-lifecycle-and-time.md` §5, ADR-0010).
- * Coroutines are resumed **synchronously**, by the frame function, at two points: after every
- * script's `update` (the `Update` resume point) and immediately after each fixed step. Nothing here
- * ever resumes a coroutine from a microtask — a promise continuation only records the outcome and
- * raises a flag the next `Update` reads, which is what keeps ordering deterministic relative to
- * other scripts.
+ * Resume coroutines synchronously after script updates or each fixed step (ADR-0010).
+ * Promise callbacks only record results for the next update.
  *
- * Decisions the documents leave open, and how this implementation settles them:
- *
- * - **A coroutine runs up to its first `yield` immediately.** §5's example calls
- *   `this.audio.play("creak")` before the first `yield waitSeconds(0.5)` and reads as if the sound
- *   plays when `startCoroutine` is called, which is also Unity's behaviour. The first segment
- *   therefore runs inside `startCoroutine`, unless the owning script is not effectively enabled, in
- *   which case the coroutine starts paused and its first segment runs at the first `Update` after
- *   it is enabled.
- * - **`waitSeconds(s)` is inclusive.** The wait ends on the first `Update` at which the accumulated
- *   scaled time is greater than or equal to `s`, so `waitSeconds(1 / 60)` resumes one frame later
- *   at a steady 60 fps rather than two.
- * - **`stopCoroutine` detaches promises too.** §5 distinguishes stopping from cancelling only by
- *   intent; both leave a coroutine that can never run again, so both detach pending promise
- *   continuations. A settlement that arrives afterwards does nothing.
+ * A coroutine runs to its first yield immediately unless its owner is disabled. Timed waits end
+ * when accumulated time reaches the requested duration. Stopping also detaches pending promises.
  */
 
 /** What a suspended coroutine is waiting for. */

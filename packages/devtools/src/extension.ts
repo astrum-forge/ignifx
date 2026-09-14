@@ -10,24 +10,9 @@ import type { DevtoolsPosition, DevtoolsSettings } from "./settings.js";
 import type { Extension, ExtensionContext, System } from "@ignifx/core";
 
 /**
- * The `@ignifx/devtools` extension (`docs/architecture/04-extensions.md` §1,
- * `15-devtools-and-diagnostics.md` §4). Registering it is the whole installation: `devtools()`
- * gives a game `app.devtools`, the `devtools` settings section, the `IGX-155x` code table, and a
- * toggle key. It registers **no** component, **no** service beyond its own, and — until the overlay
- * is first opened — **no** system.
- *
- * ## What it needs, and what it does not
- *
- * Nothing but `@ignifx/core`. `@ignifx/ui`, `@ignifx/input`, `@ignifx/audio`, `@ignifx/physics` and
- * `@ignifx/physics-2d` are optional peers that `src/**` never imports: every reach into them is a
- * `Reflect.get` shape check in `probes.ts`, so a game with only core opens the same overlay with
- * three of its nine panels saying "not registered".
- *
- * ## Headless
- *
- * `app.devtools.open()` is a documented no-op with one debug line on an app with no DOM canvas
- * (`07-rendering.md` §6). Everything else — `panel(name)`, `select(entity)`, the signals, the
- * settings — works, so a headless test asserts on the same object a browser drives.
+ * Register devtools with core; optional extensions are inspected through shape checks.
+ * The sampler is installed only when the overlay first opens. Without a DOM canvas, opening is a
+ * no-op; settings, selection, and signals remain available to headless tests.
  */
 
 /**

@@ -1,15 +1,6 @@
 /**
- * The script hot-reload contract (`docs/architecture/15-devtools-and-diagnostics.md` §5).
- *
- * **Note for the `@ignifx/devtools` agent, and for anyone editing this file.** The shapes declared
- * here are frozen: `@ignifx/devtools` consumes {@link HotReloadHost}, {@link HotReloadReport}, and
- * {@link HotReloadModule} to drive and display a reload, and `@ignifx/vite-plugin` generates the
- * client that calls {@link HotReloadHost.apply}. Add to this file rather than changing what is
- * already here.
- *
- * This module is types only: it declares the contract, and `hot-reload-host.ts` implements it. It
- * imports nothing but types, which is what lets the plugin-facing and devtools-facing halves of the
- * feature depend on it without dragging the implementation in.
+ * Types shared by the hot-reload host, devtools, and the generated Vite client.
+ * Keeping this module type-only lets each consumer use the contract without loading the host.
  */
 
 import type { ConcreteComponentType } from "../component/component-type.js";

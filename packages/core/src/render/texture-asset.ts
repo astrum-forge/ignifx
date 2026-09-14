@@ -205,7 +205,7 @@ export function readTextureImportOptions(meta: JsonObject | null): TextureImport
   if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
     return defaults;
   }
-  // Boundary assertion (coding standards §5.2): the array and `null` cases are already gone, so
+  // The array and `null` cases are already gone, so
   // what is left is a JSON object, which the readers below index by name.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   const block = raw as Record<string, unknown>;
@@ -237,7 +237,7 @@ export function toLiteTextureOptions(options: TextureImportOptions): LiteTexture
   return {
     srgb: options.srgb,
     mipMaps: options.mipMaps,
-    // Boundary assertion (coding standards §5.2): the sidecar is JSON, so the sampler modes arrive
+    // The sidecar is JSON, so the sampler modes arrive
     // as plain strings; WebGPU validates them when the sampler is created.
     // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     addressModeU: options.addressModeU as GPUAddressMode,

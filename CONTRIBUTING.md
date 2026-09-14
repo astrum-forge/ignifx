@@ -1,119 +1,100 @@
 # Contributing to ignifx
 
-ignifx is governed by written rules rather than convention. Read them before you write code; this
-file only tells you how to get set up and what the loop looks like.
+Use this guide to set up the repository, validate a change, and open a pull request.
+The [coding standards](docs/standards/coding-standards.md) hold the coding and writing rules.
 
-## Read first, in this order
+## Read first
 
-Precedence when two documents disagree, highest first (`docs/README.md`, `CONSTITUTION.md` §10.1):
+Start with [AGENTS.md](AGENTS.md), then read:
 
-1. [`CONSTITUTION.md`](CONSTITUTION.md) — the rules, as numbered clauses you cite in review.
-2. [`docs/standards/coding-standards.md`](docs/standards/coding-standards.md) — toolchain,
-   TypeScript configuration, naming, testing, CI, pull requests.
-3. [`docs/architecture/00-overview.md`](docs/architecture/00-overview.md), then the document for
-   the subsystem you are touching.
-4. [`docs/adr/`](docs/adr/) — decisions, with the context that produced them.
-5. [`docs/plan/engineering-plan.md`](docs/plan/engineering-plan.md) — what is being built now, and
-   what is deliberately out of scope.
-6. [`skills/ignifx/SKILL.md`](skills/ignifx/SKILL.md) — how to _use_ the engine.
+1. [Constitution](CONSTITUTION.md): project rules and priorities.
+2. [Coding standards](docs/standards/coding-standards.md): daily workflow, code, tests, and writing.
+3. [Architecture overview](docs/architecture/00-overview.md) and the subsystem you will change.
+4. [Engineering plan](docs/plan/engineering-plan.md): current status and scope.
+5. [Engine skill](skills/ignifx/SKILL.md): how to use the engine.
 
-## Prerequisites
-
-| Need                 | Version            | How it is pinned                                                                                                                             |
-| -------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Node.js              | 24 LTS (`>=24.20`) | [`.nvmrc`](.nvmrc) and `engines` in `package.json`                                                                                           |
-| pnpm                 | 11.x               | `packageManager` in `package.json`; install with `npm i -g pnpm@11` (CI installs it through `pnpm/action-setup`, which reads the same field) |
-| Chrome / Chromium    | current            | Installed by Playwright (`pnpm exec playwright install chromium`); needed for the WebGPU browser tests                                       |
-| A WebGPU-capable GPU | —                  | Only for running the browser tests locally; CI uses a software adapter                                                                       |
+Read linked [ADRs](docs/adr/) when they affect your change. Document precedence is defined in constitution §10.1.
 
 ## Set up
+
+Use Node 24 from [`.nvmrc`](.nvmrc) and the pnpm version in [`package.json`](package.json).
+Install Chromium through Playwright for browser tests. Local GPU tests need a WebGPU-capable device; CI uses SwiftShader.
 
 ```sh
 git clone git@github.com:astrum-forge/ignifx.git
 cd ignifx
-pnpm install            # installs the workspace and the git hooks (lefthook)
-pnpm check              # the full local gate; must be green before you push
+nvm use
+pnpm install
+pnpm exec playwright install chromium
+pnpm check
 ```
 
-`pnpm check` builds the workspace first (turbo-cached, so a no-op on a warm tree), then runs format
-check, lint, typecheck, unit tests with coverage, the API report and the documentation harness — the
-same things CI runs, in the same order (standards §12). The build is not optional: packages resolve
-through `exports` to `dist/`, and on a fresh clone every `@ignifx/*` import is an `error` type
-until it exists.
+`pnpm install` sets up the Git hooks. `pnpm check` builds first, then checks formatting, lint, types, unit tests with coverage, API reports, and docs.
+The build is needed because workspace imports resolve to `dist/`. Browser, visual, frame-budget, dependency, and package checks are separate commands.
 
 ## Everyday commands
 
-| Command                     | What it does                                                                                      |
-| --------------------------- | ------------------------------------------------------------------------------------------------- |
-| `pnpm dev`                  | Runs the workspace's dev tasks                                                                    |
-| `pnpm build`                | Builds every package with tsdown                                                                  |
-| `pnpm test`                 | Vitest `node` project — headless unit tests on Babylon Lite's null engine                         |
-| `pnpm test:browser`         | Vitest `browser` project — real Chromium with WebGPU, for GPU-touching code (`*.browser.test.ts`) |
-| `pnpm typecheck`            | `tsc --build` across the project references                                                       |
-| `pnpm lint` / `pnpm format` | Oxlint (+ ESLint for the gap rules) / oxfmt                                                       |
-| `pnpm deps`                 | dependency-cruiser: no import cycles, and the package layering of `00-overview.md` §2.1           |
-| `pnpm api-report`           | Regenerates `packages/*/api/*.api.md` — commit the result                                         |
-| `pnpm docs:api`             | Regenerates the skill's API references — commit the result                                        |
-| `pnpm changeset`            | Records a changeset for a user-visible change                                                     |
+| Command                             | Purpose                                          |
+| ----------------------------------- | ------------------------------------------------ |
+| `pnpm dev`                          | Run workspace development tasks                  |
+| `pnpm build`                        | Build the workspace                              |
+| `pnpm test`                         | Run headless unit tests with coverage            |
+| `pnpm test:browser`                 | Run Chromium WebGPU tests                        |
+| `pnpm test:visual`                  | Compare visual goldens                           |
+| `pnpm test:frame-budget`            | Check template frame budgets                     |
+| `pnpm typecheck`                    | Check TypeScript projects                        |
+| `pnpm lint`                         | Run Oxlint and ESLint                            |
+| `pnpm format` / `pnpm format:check` | Format files / check formatting                  |
+| `pnpm deps`                         | Check dependency layers and cycles               |
+| `pnpm pack-check`                   | Validate package exports and types               |
+| `pnpm api-report`                   | Validate API reports; fails on drift or warnings |
+| `pnpm docs:harness`                 | Regenerate and check docs, examples, and skills  |
+| `pnpm changeset`                    | Record a user-visible change for release         |
 
-Visual regression tests (`tests/visual/`) and bundle-size baselines arrive in Phase 2; their CI
-jobs exist today as placeholders so the required-check names are stable.
+Start with checks relevant to the change, then run `pnpm check` before opening a PR.
+See [standards §10](docs/standards/coding-standards.md#10-testing) for which tests apply.
 
-## The loop
+## Generated files
 
-1. **Branch.** `feat/<scope>-<topic>`, or `fix/`, `docs/`, `chore/`, `refactor/`, `perf/`, `test/`
-   (standards §11). Branches are short-lived and merge into `main` (`CONSTITUTION.md` §7.1).
-2. **Commit.** Conventional Commits, `type(scope): summary`. The scope is a package name and is
-   validated by [`commitlint.config.ts`](commitlint.config.ts) — `core`, `input`, `physics`,
-   `physics-2d`, `audio`, `2d`, `3d`, `ui`, `electron`, `devtools`, `vite-plugin`, `cli`, `ignifx`,
-   `templates`, `examples`, `benchmarks`, `website`, `docs`, `skills`, `repo`. Breaking changes
-   carry `!` and a `BREAKING CHANGE:` footer.
-3. **Changeset.** Every user-visible change needs one (`pnpm changeset`, `CONSTITUTION.md` §7.3).
-   Before 1.0 a "major" changeset produces a minor bump with the change listed under **Breaking**.
-4. **One concern per pull request** (`CONSTITUTION.md` §7.5). Keep it under ~500 changed lines
-   where you can; split a large feature into a sequence that follows the engineering plan.
-5. **Open the pull request.** The template's checklist is the definition of done, not decoration.
-   Paste your `pnpm check` output into "How tested" (standards §15).
-6. **Merge.** Squash-merge with the pull request title as the commit subject. Never force-push a
-   shared branch. A human maintainer approves every merge — agents may review but cannot approve
-   (`CONSTITUTION.md` §7.4).
+Edit the source, run the generator, and review the result. Never hand-edit generated output.
 
-## Definition of done
+| Output                          | Command                                                                   |
+| ------------------------------- | ------------------------------------------------------------------------- |
+| Package API report              | `pnpm --filter @ignifx/core api-report:update` (replace the package name) |
+| Skill API references            | `pnpm docs:api`                                                           |
+| Format schemas and field tables | `pnpm docs:schemas`                                                       |
+| Recipe pages                    | `pnpm docs:recipes`                                                       |
+| `llms.txt`                      | `pnpm docs:llms`                                                          |
+| License notices                 | `pnpm licenses:notices`                                                   |
 
-A change is done when code, tests, TSDoc, `skills/**`, and a changeset are all present, CI is
-green, and a maintainer has approved (`CONSTITUTION.md` §6.6). Concretely, that means:
+Build changed packages before regenerating API reports. Run `pnpm api-report` afterwards; the update command alone does not validate the report.
+For benchmark baselines, use the relevant benchmark's recording procedure and include measurements in the PR.
+Use `pnpm docs:harness -- --no-regenerate` if another contributor is editing generated-doc sources at the same time.
 
-- Public symbols carry TSDoc with a release tag; the API report is regenerated, not hand-edited.
-- `skills/ignifx/SKILL.md` and its references describe the API **as of this change**
-  (`CONSTITUTION.md` §5.2). The documentation harness fails the build if they drift.
-- New runtime code has unit tests; GPU-touching code has a browser test; a bug fix has a
-  regression test (`CONSTITUTION.md` §6.1). Coverage floors: 80% per package, 90% for core.
-- `@babylonjs/lite` is imported only from `src/lite/**` (`CONSTITUTION.md` §3.4). If the adapter
-  does not expose what you need, extend the adapter — with a test and TSDoc.
+## Make a change
 
-## Two rules that surprise people
+1. Work on a short-lived branch. Use the branch and commit conventions in [standards §11](docs/standards/coding-standards.md#11-git-and-pull-requests); allowed commit scopes are in [`commitlint.config.ts`](commitlint.config.ts).
+2. Keep the PR focused on one concern. Prefer clear names and simple control flow. Comments should explain a hidden reason or constraint in one or two short sentences; see [standards §9](docs/standards/coding-standards.md#9-documentation-and-writing).
+3. Test changed behaviour. Update affected TSDoc and skill pages, then regenerate any changed public API reports and references.
+4. Add a changeset for user-visible package, template, or shipped skill changes. Contributor-only documentation does not need a package release. Follow [the changeset guide](.changeset/README.md).
+5. Run `pnpm check`. In the PR, explain the problem, resulting behaviour, and validation. Include the command's result and any checks not run.
+6. Human maintainers approve merges. Squash-merge with the PR title; never force-push a shared branch. Hooks format and report lint without auto-fixing it, so run `pnpm lint` after committing.
 
-- **No migration documents before 1.0.** `docs/migrations/` stays empty except for its README
-  while the version is `0.x` (`CONSTITUTION.md` §4.2). Breaking changes are allowed in minor
-  releases and are recorded in the changelog, not in a migration guide. CI enforces this.
-- **Never hand-edit generated files** — `packages/*/api/*.api.md`,
-  `skills/**/references/api/*`, `benchmarks/baselines.json`. Regenerate them (standards §15).
+Constitution amendments need an ADR, a `constitution: …` PR title, and project-owner approval (constitution §10.2).
 
-## Working with AI agents
+## Release rules
 
-Agents are contributors here and are held to every rule above (`CONSTITUTION.md` §7.4). Start at
-[`AGENTS.md`](AGENTS.md), which is the tool-agnostic entry point, and read standards §15 for the
-rules specific to agents: run `pnpm check` and include the result, cite clause numbers when
-explaining a decision, and verify any Babylon Lite claim against the pinned version's `index.d.ts`
-rather than from memory.
+Before 1.0, breaking changes use a **minor** changeset and a **Breaking** heading with the required user action.
+Do not write migration documents under `docs/migrations/` while versions are `0.x`.
+Write release notes as short descriptions of user-visible outcomes; keep implementation details and test logs in the PR.
 
-## Reporting a problem
+The release workflow creates the **Version Packages** PR. Review its versions and notes before merging.
+It uses `pnpm version-packages` to update package versions, skill versions, and schemas together.
+After merge, CI publishes and runs `pnpm release:verify`. Do not publish manually.
 
-Open an issue with the reproduction, the browser and GPU you saw it on, and what you expected.
-For anything that looks security-relevant, do not open a public issue — email the maintainers at
-the address on [astrumforge.com](https://astrumforge.com).
+## Report a problem
 
-## Licence
+Include a reproduction, expected behaviour, and the browser/GPU involved.
+For security issues, follow [SECURITY.md](SECURITY.md) instead of opening a public issue.
 
-Contributions are accepted under the Apache License 2.0, the same licence as the project
-(`CONSTITUTION.md` §11.1).
+Contributions use Apache License 2.0, the same license as ignifx.

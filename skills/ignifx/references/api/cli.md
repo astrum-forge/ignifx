@@ -440,8 +440,8 @@ The union of the error codes this package can throw.
 
 > `const` **CliErrorCode**: `object`
 
-Error codes owned by `@ignifx/cli`. They live in the `14xx` platform range reserved by
-`docs/architecture/15-devtools-and-diagnostics.md` §1.
+Diagnostic codes for scaffolding failures, in the reserved `IGX-14xx` platform range.
+The CLI reports these through `CliError` without creating an engine app.
 
 #### Type Declaration
 
@@ -462,12 +462,6 @@ The target directory already exists and is not empty, and `overwrite` was not re
 > `readonly` **templateNotFound**: `"IGX-1402"` = `"IGX-1402"`
 
 The requested template directory does not exist.
-
-#### Remarks
-
-The CLI runs before an `App` exists, so it cannot throw core's `IgnifxError`. Phase 1 introduces
-the full `IgnifxError` registry described in that document; when it lands, these codes are
-expected to fold into it and `CliError` becomes a thin alias or is removed.
 
 ***
 

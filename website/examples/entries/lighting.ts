@@ -26,13 +26,9 @@ export const LIGHTING: readonly ExampleOf<"Lighting">[] = [
     dimension: "3D",
     priority: "P0",
     status: "ready",
-    line: "Directional, point, spot and hemispheric, each drawn with a gizmo you can see.",
+    line: "Compare four types of light and adjust their colour, strength and reach.",
     paragraph:
-      "A light is invisible, so each of the four here carries a small unlit shape that shows what it is: an arrow " +
-      "for the directional light's direction, a glowing orb and a ring at its range for the point light, a cone " +
-      "for the spot, and a two-tone marker for the hemispheric light's sky and ground colours. Every gizmo is a " +
-      "child entity of the light, so it inherits the pose and nothing keeps the two in step by hand. Switch a lamp " +
-      "off and change its colour, its intensity, its range and its cone, and watch which parts of the scene answer.",
+      "Explore directional, point, spot and hemispheric lights. Each has a visible marker showing its position, direction or range. Turn lights on and off to see how each one changes the scene.",
     tries: [
       "Turn every lamp off but one, then bring the others back one at a time.",
       "Widen the spot light's cone angle and soften its edge; the cone gizmo follows both.",
@@ -54,13 +50,9 @@ export const LIGHTING: readonly ExampleOf<"Lighting">[] = [
     dimension: "3D",
     priority: "P0",
     status: "ready",
-    line: "PCF, ESM and cascades over a long floor, with the map size, the biases and the distance live.",
+    line: "Compare shadow techniques and adjust their softness, detail and distance.",
     paragraph:
-      "Four shapes turning over a floor that receives, and five pillars receding to forty metres so a cascade " +
-      "split and a shadow distance have somewhere to show. Shadows are two decisions in ignifx: the " +
-      "`rendering.features.shadows` opt-in, which is read once when the scene is registered, and each light's own " +
-      "`shadows` record. Only `enabled` in that record is live — everything else is read when the shadow generator " +
-      "is built — so the panel drops the generator and builds another, and counts them while it does.",
+      "Compare shadows on moving shapes and a row of distant pillars. Adjust the shadow settings to see the balance between detail, softness and visible artefacts. Changing the technique rebuilds the shadows; choosing cascades reloads the example.",
     tries: [
       "Pull the normal bias to zero and watch the sphere stripe itself with its own shadow.",
       "Raise the depth bias until the shadows detach from the shapes that threw them.",
@@ -81,17 +73,13 @@ export const LIGHTING: readonly ExampleOf<"Lighting">[] = [
     dimension: "3D",
     priority: "P0",
     status: "ready",
-    line: "Three prefiltered environments, switched at runtime, with rotation and blur.",
+    line: "Light a scene with environment images and see how surfaces reflect their surroundings.",
     paragraph:
-      "There is no `Light` component in this example. Every highlight and every reflection comes from a " +
-      "prefiltered `.env` — a cube map convolved offline into one mip per roughness, plus the harmonics that carry " +
-      "the diffuse term. The front row is metal and the back row is painted, and both run from mirror-smooth to " +
-      "fully rough, so you can see what the same probe does to each. Switching probes is one assignment: all three " +
-      "are loaded before the app starts, and the handles stay retained so switching back costs nothing.",
+      "The lighting in this scene comes from environment images. Compare metal and painted spheres at different roughness levels. Switch environments, rotate them or add blur to see how the reflections change.",
     tries: [
-      "Switch the probe from Studio to Bridge and back; the whole frame changes temperature.",
+      "Switch the environment from Studio to Bridge and compare the lighting.",
       "Rotate the environment and watch every reflection in the row turn with it.",
-      "Raise the blur and the sharp softboxes soften into a wash the rough spheres already show.",
+      "Raise Blur to soften the reflections on the smooth spheres.",
     ],
     uses: ["Environment", "Environment.rotation", "Environment.blur", "app.assets.load", "pbrMaterialDefinition"],
     assets: [
@@ -122,17 +110,13 @@ export const LIGHTING: readonly ExampleOf<"Lighting">[] = [
     dimension: "3D",
     priority: "P0",
     status: "ready",
-    line: "Standard, ACES, Neutral and none, with exposure and contrast, flipped A against B.",
+    line: "Compare how tone mapping, exposure and contrast change the finished image.",
     paragraph:
-      "A renderer works in linear light with no ceiling and a display has a ceiling of one; a tone-mapping curve " +
-      "is the function between them, and in ignifx it lives on `Environment.imageProcessing` and is compiled into " +
-      "the PBR shaders. The ramp of six emissive spheres is the instrument: raising the exposure walks them past " +
-      "the ceiling from the right, and what each curve does with the ones that went past is the whole difference. " +
-      "A world renders through one camera, so this is an A-against-B flip rather than a split screen.",
+      "Tone mapping turns a scene’s wide range of brightness into colours a screen can display. Compare Standard, ACES and Neutral curves, or turn tone mapping off. The glowing spheres make differences in highlights easy to see.",
     tries: [
-      "Raise the exposure to three and flip the comparison on: none clips the ramp flat, ACES rolls it off.",
+      "Raise Exposure to three and turn on the comparison to inspect the bright spheres.",
       "Set the comparison to Neutral and flip: it keeps more of the amber than ACES does.",
-      "Drop the exposure to a half and the curves converge, because nothing is near the ceiling any more.",
+      "Lower Exposure to 0.5 and compare the curves again.",
     ],
     uses: ["Environment.imageProcessing", "ToneMappingCurve", "Model", "app.assets.load", "createLightRig"],
     assets: [

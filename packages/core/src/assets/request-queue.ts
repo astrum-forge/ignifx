@@ -1,15 +1,6 @@
 /**
- * The priority queue in front of the network
- * (`docs/architecture/05-assets-and-loading.md` §4: "Requests are scheduled through a priority
- * queue with a concurrency limit (default 6 concurrent fetches)").
- *
- * Decision the documents leave open: **the limit gates fetches, not whole loader runs.** §4 counts
- * "concurrent fetches", and gating loader runs instead would deadlock the moment a loader used
- * `loadDependency`: the parent would hold a slot while waiting for a child that cannot get one.
- * With the limit on `ctx.fetchBytes`/`fetchText`/`fetchJson`, a loader waiting on a dependency
- * holds nothing, and the number of sockets in flight is still exactly what §4 promises.
- *
- * Ordering: higher `priority` first, and first-come first-served within one priority.
+ * Limit concurrent fetches, not loader runs: a loader waiting for a dependency must not hold a
+ * slot that the dependency needs. Higher priorities run first; ties keep request order.
  */
 
 /** One request waiting for a slot. */

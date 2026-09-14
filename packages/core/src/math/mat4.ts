@@ -16,7 +16,7 @@ export type Mat4Elements = Float32Array & { readonly length: 16 };
  * @returns Fresh, zeroed storage.
  */
 function allocateElements(): Mat4Elements {
-  // Boundary assertion (coding standards §5.2): the invariant is that this array is exactly 16
+  // The invariant is that this array is exactly 16
   // elements long, which `Float32Array`'s `length: number` cannot express. Babylon Lite brands its
   // own allocation the same way (`lib/math/_matrix-allocator.js`).
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion

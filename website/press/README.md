@@ -1,3 +1,9 @@
+# Archived press kit
+
+The public press kit is paused as of 2026-09-11. Its last published assets are preserved in
+`legacy-assets/`, outside the public site. The generator below documents the previous identity;
+do not run it against the current site. Use `pnpm --filter @ignifx/website brand` for current site assets.
+
 # The brand-file generator
 
 Everything with the mark on it is generated, not drawn. This directory holds the generator; its

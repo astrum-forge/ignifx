@@ -2,23 +2,8 @@ import { LOG_LEVEL_SEVERITY } from "@ignifx/core";
 import type { LogLevel, LogRecord, LogSink, LogThreshold } from "@ignifx/core";
 
 /**
- * The sink behind the Console panel (`docs/architecture/15-devtools-and-diagnostics.md` §2, §4).
- *
- * ## Why a game has to install it
- *
- * `app.log`'s sink is fixed when the app is built — `createApp({ logSink })` hands it to
- * `createLogger` once and `Logger` exposes no way to add a second one
- * (`packages/core/src/app/app.ts`, `packages/core/src/log/logger.ts`). An extension that registers
- * later therefore cannot intercept log records at all. Until core grows a sink list, the Console
- * panel is fed by a sink the *game* installs:
- *
- * ```ts
- * const sink = createDevtoolsLogSink({ tee: createConsoleSink() });
- * const app = await createApp({ canvas, logSink: sink, extensions: [devtools({ logSink: sink })] });
- * ```
- *
- * Without it the panel still shows `app.onError` reports and hot-reload reports, which is
- * everything devtools can see on its own; it says so in place of the log lines.
+ * Buffer log records for the Console panel. The devtools extension attaches its sink through
+ * `Logger.addSink`; pass a shared sink when the game also needs access to those records.
  */
 
 /**

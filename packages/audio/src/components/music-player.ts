@@ -5,29 +5,9 @@ import type { SoundInstance, SoundVoice } from "../service/voice.js";
 import type { AssetHandle, Disconnect, Schema, ScriptCallbacks } from "@ignifx/core";
 
 /**
- * `MusicPlayer` (`docs/architecture/10-audio.md` §5): the script that owns a game's music.
- *
- * ## Why a script and not a service
- *
- * Music belongs to an entity, so it can be put in a persistent scene and keep playing across a
- * `"single"` scene load — Unity's `DontDestroyOnLoad`, which ignifx does at scene granularity
- * (`02-scene-graph.md` §3). Put a `MusicPlayer` in a persistent scene and the track survives the
- * level change; put it in the level and it does not. Nothing else is needed to make that work.
- *
- * ## Crossfading
- *
- * A crossfade holds **two** voices at once: the outgoing one fades to silence and stops, the
- * incoming one fades up from silence. Both fades are interpolated by the audio service from the
- * frame delta, so a two-second crossfade takes two seconds of game time on both backends
- * (`backend/types.ts`). Music clips are normally streaming — a five-minute track has no business
- * being decoded into memory — which is a property of the clip's `.meta.json`, not of this script:
- * `{ "audio": { "streaming": true } }`.
- *
- * ## The playlist
- *
- * `next()` crossfades to the following entry. When `autoAdvance` is set, the same thing happens on
- * its own each time a track ends; a track stopped with {@link MusicPlayer.stop} does not advance,
- * because a stop is a decision and an ending is not.
+ * Music follows its entity's lifetime; put the player in a persistent scene to survive level loads.
+ * Crossfades hold two voices and use the audio service's game-time fades.
+ * `autoAdvance` follows natural track endings, not explicit stops. Streaming is a clip sidecar setting.
  */
 
 /**

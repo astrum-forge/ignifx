@@ -2,27 +2,9 @@ import { describe, expect, it } from "vitest";
 import baselines from "./baselines.json" with { type: "json" };
 
 /**
- * The Phase 6 performance gate, as a **data assertion** rather than a measurement.
- *
- * The numbers under `twoD` were measured by spike S6.1 in `@ignifx/2d`'s own browser and node
- * suites — 1,000 moving sprites over a 100x100 tilemap, with the render loop stopped so that the
- * sample is sprite-sync CPU time and nothing else. Re-running that here would double the cost of
- * `pnpm test` and would measure a different machine every time, so this file asserts the recorded
- * numbers instead: it is the thing that turns "we wrote it down" into "CI notices when someone
- * edits it down".
- *
- * Two claims are enforced, both from `docs/plan/engineering-plan.md`'s Phase 6 exit criteria and
- * `docs/standards/coding-standards.md` §7:
- *
- * - **Under budget.** The 2D engine gets 2 ms of CPU per frame. Both environments' medians are
- *   about eight times under it.
- * - **Nothing is written while nothing moves.** A sprite whose transform has not changed must not
- *   be re-uploaded, so `syncedWhileIdle` is exactly zero, not merely small.
- *
- * The pixel-perfect numbers from S6.3 are asserted the same way: at every device pixel ratio the
- * suite tried, a one-pixel checkerboard read back with **no** blended pixels, and the deliberate
- * counter-example (a linear-sampled atlas at a fractional zoom) blended every pixel it had — which
- * is what makes the zero meaningful rather than a tautology.
+ * Check recorded 2D sync and pixel-perfect results against their budgets.
+ * The S6.1 and S6.3 suites collect the measurements; this file does not rerun them.
+ * Idle sprites must have zero sync writes, and nearest-sampled pixel art must have no blended pixels.
  */
 
 /** The per-frame CPU budget the 2D engine has, in milliseconds (coding standards §7). */

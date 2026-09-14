@@ -2,20 +2,9 @@ import type { AssetHandleImpl } from "./asset-handle.js";
 import type { FetchLike } from "./types.js";
 
 /**
- * The one place the asset service touches the network
- * (`docs/architecture/05-assets-and-loading.md` §5, §8).
- *
- * Decision the documents leave open: **`fetch` is the only I/O.** §8 says headless runs use "fetch
- * for URLs and Node file reads for paths", but a second code path would mean loaders behaving
- * differently per host, which §8's own last sentence forbids ("so loaders do not branch on
- * platform"). A Node app that needs files therefore passes a `fetch` of its own that maps them
- * onto `fs`; tests pass a fake. A packaged desktop build does not need one — `@ignifx/electron`
- * registers the `ignifx://` scheme with `supportFetchAPI`, so the renderer's ordinary `fetch`
- * reaches `dist/` (`14-platform-electron.md` §3). Nothing here imports `node:fs`.
- *
- * Progress is bytes-weighted whenever a size is known — from the manifest entry, else from
- * `Content-Length` — and the body is read chunk by chunk so the counter moves during the download
- * rather than jumping at the end.
+ * All asset I/O goes through the supplied `fetch`. Node callers can provide one for local files;
+ * Electron's `ignifx://` protocol supports the renderer's ordinary fetch.
+ * Read bodies in chunks for progress, using manifest sizes before `Content-Length` when available.
  */
 
 /** The header carrying the response size. */

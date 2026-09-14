@@ -1,43 +1,23 @@
-## What
+## Change
 
-<!-- One concern per pull request (CONSTITUTION.md §7.5, standards §11). Say what changed. -->
+<!-- State the problem and resulting behaviour in a few sentences. Link an issue, plan item, or ADR if relevant. -->
 
-## Why
+## Validation
 
-<!-- Link the driver: a phase/deliverable in docs/plan/engineering-plan.md, an ADR in docs/adr/,
-     or an issue. Cite the constitution or standards clauses the change rests on (standards §15). -->
+<!-- Paste the pnpm check result. Add relevant browser or benchmark results and name any checks not run. -->
 
-- Plan item / ADR / issue:
-- Clauses cited:
-
-## How tested
-
-<!-- Paste the result of `pnpm check` (standards §15). Name any new tests and say what they pin
-     down; for a bug fix, point at the regression test (CONSTITUTION.md §6.1). -->
-
-```
+```text
 $ pnpm check
 ```
 
-## Definition of done
+## Checklist
 
-<!-- CONSTITUTION.md §6.6 and standards §11. Tick every box or say in one line why it does not
-     apply — an unticked box with no explanation blocks review. -->
+<!-- Mark each item done or explain briefly why it does not apply. Standards §15 has the full requirements. -->
 
-- [ ] Code follows `docs/standards/coding-standards.md` (no `any`, no enums/namespaces, no
-      import-time side effects, no `async` lifecycle callbacks).
-- [ ] Tests added or updated, and they pass; coverage floors held (80% per package, 90% for core —
-      CONSTITUTION.md §6.2). GPU-touching code has a browser test.
-- [ ] TSDoc on every public symbol, with a release tag (`@public`/`@beta`/`@alpha`/`@internal`) and
-      an example where usage is not obvious (CONSTITUTION.md §5.4).
-- [ ] API report regenerated (`pnpm api-report`) and `api/*.api.md` committed — not hand-edited.
-- [ ] `skills/**` updated in this pull request (CONSTITUTION.md §5.2), or `docs-not-needed`
-      because: <!-- justification --> .
-- [ ] Changeset added (`pnpm changeset`) at the right semver level; breaking changes listed under a
-      **Breaking** heading (CONSTITUTION.md §4.2).
-- [ ] `@babylonjs/lite` (and other native/WASM backends) imported only from `src/lite/**`
-      (CONSTITUTION.md §3.4).
-- [ ] Nothing added under `docs/migrations/` — the version is still `0.x` (CONSTITUTION.md §4.2).
-- [ ] Any Babylon Lite claim was verified against the pinned version's `index.d.ts`, not from
-      memory (AGENTS.md).
-- [ ] Waivers, if any, are written out with an issue tracking their removal (CONSTITUTION.md §10.3).
+- [ ] Code follows the standards; comments are short and explain only non-obvious reasons or constraints.
+- [ ] Relevant tests pass, including regression and GPU tests where needed; coverage and budgets hold.
+- [ ] Public API changes include TSDoc, regenerated reports/references, and affected skill pages. `pnpm api-report` passes after regeneration.
+- [ ] User-visible changes have a concise changeset; breaking changes state the required action under **Breaking**.
+- [ ] No generated files were hand-edited; no pre-1.0 migration documents were added.
+- [ ] Any Lite API claims were checked against the pinned `index.d.ts`; backend imports stay inside adapters.
+- [ ] Any waiver has a written reason and an issue tracking its removal (constitution §10.3).

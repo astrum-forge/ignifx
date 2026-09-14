@@ -44,11 +44,6 @@ afterEach(() => {
   }
 });
 
-/**
- * Waits for one animation frame.
- *
- * @returns A promise that settles on the next frame.
- */
 async function nextFrame(): Promise<void> {
   await new Promise<void>((resolve) => {
     requestAnimationFrame(() => {

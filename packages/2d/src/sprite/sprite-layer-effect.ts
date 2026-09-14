@@ -4,20 +4,8 @@ import { DEFAULT_SORTING_LAYER } from "../service/sorting-layers.js";
 import type { Schema, Vec4Like } from "@ignifx/core";
 
 /**
- * `SpriteLayerEffect` (`docs/architecture/11-2d-toolkit.md` §6): a per-layer custom fragment shader.
- *
- * Lite's 2D path has no lighting model, so effects are what a 2D game reaches for instead: a tint,
- * a dissolve, water, a heat shimmer. A layer created with a `customShader`
- * (`Sprite2DLayerOptions.customShader`, `index.d.ts` 11934) runs a WGSL fragment body with a
- * built-in `fx.time` clock and a `fx.params` vec4 the component writes every frame through
- * `setSprite2DShaderParams` (`index.d.ts` 11074).
- *
- * ## The one-shader-per-layer constraint
- *
- * `Sprite2DLayer.customShader` is `readonly` and is only set at creation. A layer's shader
- * therefore cannot change once sprites are in it, so `SpriteLayerEffect` has to exist **before**
- * the first sprite on its sorting layer is synced — put it in the scene file, or add it in
- * `awake`, not halfway through a level.
+ * Apply a custom fragment shader to a sorting layer. The shader is fixed when the layer is
+ * created, so add the effect before that layer's first sprite sync, such as in the scene or `awake`.
  */
 
 /**

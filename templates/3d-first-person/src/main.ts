@@ -146,7 +146,6 @@ interface Assets {
   readonly ambient: AssetHandle<AudioClip>;
 }
 
-/** The placeholder `announceReady` holds until the promise below hands over its resolver. */
 function noop(): void {
   // Nothing to do: the promise executor runs synchronously and replaces this on the next line.
 }
@@ -156,11 +155,6 @@ window.__ignifxReady = new Promise<AppStatus>((resolve) => {
   announceReady = resolve;
 });
 
-/**
- * Waits for one animation frame.
- *
- * @returns A promise that resolves inside the next frame callback.
- */
 function nextFrame(): Promise<void> {
   return new Promise<void>((resolve) => {
     requestAnimationFrame(() => {
@@ -444,11 +438,6 @@ async function installFrontEnd(
   };
 }
 
-/**
- * Builds and runs the game.
- *
- * @returns The status `window.__ignifxReady` resolves to.
- */
 async function main(): Promise<AppStatus> {
   const canvas = document.querySelector("#game");
   if (!(canvas instanceof HTMLCanvasElement)) {

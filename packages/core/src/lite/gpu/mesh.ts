@@ -363,7 +363,7 @@ export function setMeshId(mesh: Mesh, id: string): void {
 export function overrideSubtreeMaterials(node: SceneNode, overrides: ReadonlyMap<string, Material>): number {
   let changed = 0;
   if ("material" in node) {
-    // Boundary assertion (coding standards §5.2): a scene node that carries `material` is a mesh —
+    // A scene node that carries `material` is a mesh —
     // the same structural test Lite's own scene walk uses.
     // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     const mesh = node as Mesh;
@@ -428,7 +428,7 @@ export function disposeMeshTemplate(scene: SceneContext, template: Mesh): void {
  */
 export function collectSubtreeMeshes(node: SceneNode, out: Mesh[]): void {
   if ("material" in node) {
-    // Boundary assertion (coding standards §5.2): see the note above.
+    // See the note above.
     // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     out.push(node as Mesh);
   }

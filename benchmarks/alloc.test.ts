@@ -4,26 +4,9 @@ import { describe, expect, it } from "vitest";
 import baselines from "./baselines.json" with { type: "json" };
 
 /**
- * The allocation-free-frame gate (coding standards §7): each hot-path scene runs 600 headless steps
- * under `node --expose-gc`, the heap is settled before and after, and the growth has to stay inside
- * the ceiling `baselines.json` records.
- *
- * ## Why a child process
- *
- * The measurement needs `--expose-gc`, and Vitest 5 has no per-file way to add a V8 flag: it would
- * have to go on the whole pool, where it applies to every unit test in the run. The other option
- * the standards leave open — `test.skipIf(globalThis.gc === undefined)` — turns the gate into a
- * no-op the day someone drops the flag, which is worse than not having one. A child process either
- * measures or fails.
- *
- * ## What the numbers mean
- *
- * `growthBytes` is the process's whole `heapUsed` delta, not an allocation count, so it also carries
- * V8's own bookkeeping. What makes it a signal rather than noise is that it does **not** scale with
- * the number of entities or with the number of steps: measured 2026-09-06, the 1,000-entity scene
- * grew 9,072 bytes over 600 steps — identical across runs — while the four-entity scene grew more,
- * and quadrupling the step count did not quadruple either. One small object allocated per entity
- * per frame would show up here as tens of megabytes.
+ * Measure retained heap growth after 600 headless steps, against `baselines.json`.
+ * A child process provides `--expose-gc` without changing Vitest's pool flags.
+ * The result includes V8 bookkeeping and is not a count of all allocations.
  */
 
 /** Where the measurement script lives. */
@@ -98,7 +81,7 @@ function measureHeapOnce(scene: string): HeapMeasurement {
   if (typeof parsed !== "object" || parsed === null || !("growthBytes" in parsed)) {
     throw new TypeError(`measure-heap.ts printed something that is not a measurement: ${stdout}`);
   }
-  // Boundary assertion (coding standards §5.2): a child process's stdout is untyped by definition,
+  // A child process's stdout is untyped by definition,
   // and the shape check above is what makes reading it safe.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- see above.
   return parsed as HeapMeasurement;

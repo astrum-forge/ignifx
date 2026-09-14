@@ -7,25 +7,9 @@ import type { PhysicsRuntime } from "../runtime/runtime.js";
 import type { ComponentHooks, Schema, Vec3Like } from "@ignifx/core";
 
 /**
- * The `CharacterController` component (`docs/architecture/09-physics.md` §2.3): Lite's kinematic
- * capsule with collide-and-slide, support detection, and dynamic-body pushing.
- *
- * ## How it is driven
- *
- * Call {@link CharacterController.move} from `fixedUpdate`. The requested displacements of one step
- * are summed and handed to Lite's `moveWithCollisions` by the step system, so two scripts moving the
- * same character compose instead of fighting. After the step the controller owns the entity's world
- * **position**; rotation stays user-controlled.
- *
- * ## Corrections to §2.3
- *
- * - `supportState` is read from the last step's `checkSupport` probe, which the step system runs
- *   once per step; reading it does not probe again.
- * - Gravity is **not** applied by this component. §2.3 already says so: a bare controller is purely
- *   kinematic and the 3D toolkit's controllers integrate gravity through `checkSupport` +
- *   `integrate` (Phase 7). {@link CharacterController.move} is the whole input.
- * - `pushStrength` scales Lite's `characterStrength`, whose default is `1e38` — effectively
- *   "infinite". A `pushStrength` of `1` therefore means "Lite's default", not "one newton".
+ * Sum `move` displacements during `fixedUpdate` and apply them in the physics step.
+ * The controller owns world position after the step; game code owns rotation and gravity.
+ * `supportState` is the last step's result. `pushStrength` scales Lite's default strength, not newtons.
  */
 
 /**

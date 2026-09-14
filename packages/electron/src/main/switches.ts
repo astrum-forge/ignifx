@@ -1,22 +1,8 @@
 import { app } from "electron";
 
 /**
- * The Chromium command-line switches a WebGPU game window needs
- * (`docs/architecture/14-platform-electron.md` §3).
- *
- * ## Why `enable-unsafe-webgpu` is not optional
- *
- * WebGPU is on by default in Chrome, but that default arrives through a server-side feature
- * rollout that Electron does not receive: an Electron app gets Chromium's *compiled* defaults,
- * where WebGPU is still behind the flag. Measured on Electron 44.2.0 / macOS arm64 (S9.1): with the
- * switch appended before `app.whenReady()`, `navigator.gpu.requestAdapter()` resolved an adapter
- * reporting `vendor: "apple"`, `architecture: "metal-3"`, 25 features, and a cleared frame
- * presented through a configured canvas context.
- *
- * The switch must be appended **before** `app.whenReady()`. `app.commandLine.appendSwitch`
- * (`electron.d.ts` 7112) writes into the command line Chromium reads while it initialises; a switch
- * appended after initialisation is inert, and the symptom is `navigator.gpu === undefined` with no
- * error anywhere.
+ * Append WebGPU switches before `app.whenReady`, when Chromium reads its command line.
+ * The pinned Electron build needs `enable-unsafe-webgpu`; see ADR-0018 for validation.
  */
 
 /**

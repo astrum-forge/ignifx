@@ -5,19 +5,9 @@ import type { CollectedShape2D } from "./collider.js";
 import type { Schema, Vec2Like } from "@ignifx/core";
 
 /**
- * The concrete 2D colliders (`docs/architecture/11-2d-toolkit.md` §8). Each maps to one Rapier
- * shape (`geometry/shape.d.ts`), sized in local metres and multiplied by the entity's lossy scale.
- *
- * ## The two point-list colliders
- *
- * - `PolygonCollider2D` builds a **convex** shape (`ColliderDesc.convexHull`). Rapier 2D also ships
- *   `convexDecomposition`, which needs a triangle mesh with an index buffer and runs V-HACD — far
- *   too heavy for a component field. Concave outlines are expressed as several
- *   `PolygonCollider2D`s on one entity, which is what a compound body is for, or as an
- *   `EdgeCollider2D` when the outline is open.
- * - `EdgeCollider2D` builds a `polyline`, the open chain a platformer's ground contour wants. A
- *   polyline is infinitely thin: a fast body can tunnel through it, and a character controller that
- *   starts *inside* one is not pushed out. Static level geometry is what it is for.
+ * Polygon colliders use convex hulls; represent concave geometry with multiple colliders.
+ * Edge colliders are thin, open polylines for static contours: fast bodies can tunnel through them,
+ * and bodies starting inside are not pushed out.
  */
 
 /** A quarter turn in radians, which is how a horizontal capsule is expressed. */

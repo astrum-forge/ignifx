@@ -18,31 +18,9 @@ import { OpeningPose, seek, stateLengthSeconds } from "./playhead.ts";
 import type { AssetHandle, ModelAsset } from "ignifx";
 
 /**
- * A rigged glTF with three clips: choose one, blend two of them into each other, change the rate,
- * and drag the playhead.
- *
- * The Fox ships three animations — `Survey`, `Walk` and `Run` — and nothing in core plays them.
- * `ModelAsset` strips the clips off the loaded glTF and hands them on as read-only metadata
- * (`Model.animations`), and `Animator`, from `@ignifx/3d`, is what drives them: it runs a
- * **state machine document**, not a clip list, because that is what a game needs by the second
- * character. This example is the smallest such document — one layer, two states, a blend tree —
- * and the panel is its parameters.
- *
- * Three things a reader should take away:
- *
- * 1. **A state names a clip of the `.glb`, by name.** `Survey` below is the clip's own name, and
- *    the document would fail to pose anything if it were spelled differently.
- * 2. **Blending is a parameter, not a call.** `gait` moves along the one-dimensional blend tree,
- *    which weights `Walk` and `Run` against each other and keeps both phase-locked to the same
- *    cursor. Switching *states* is the other kind of blend, and `crossFade` is that one.
- * 3. **The pose is recomputed from the machine's cursor every frame**, in `PostUpdate`. That is
- *    what makes the playhead slider possible with no engine API for it; `playhead.ts`, beside this
- *    file, is the whole of that.
- *
- * `threeD()` requires `physics()` and `input()`, so all three are registered even though nothing
- * here collides with anything: the toolkit's controllers move a `CharacterController` and its
- * navigation needs the layer table, and the extension host refuses a partial graph rather than
- * failing later.
+ * Drive named model clips with an Animator state machine. The `gait` parameter blends Walk and Run;
+ * `crossFade` blends between states. Poses follow the machine cursor in `PostUpdate`.
+ * Register physics and input with `threeD`, as required by its extension dependencies.
  */
 
 /**

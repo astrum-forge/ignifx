@@ -42,14 +42,9 @@ export const TWO_D: readonly ExampleOf<"2D">[] = [
     dimension: "2D",
     priority: "P0",
     status: "ready",
-    line: "A Tiled map in three layers, drawn a chunk at a time, with a villager walking it.",
+    line: "Explore a layered pixel-art village with solid walls and a following camera.",
     paragraph:
-      "A village of forty by twenty cells, drawn from a hand-written Tiled export. `Tilemap` owns the document — " +
-      "the grid, the tileset and the per-tile colliders; `TilemapRenderer` draws it from one atlas a chunk at a " +
-      "time and drops the chunks the camera cannot see; `TilemapCollider2D` turns the solid layer into one static " +
-      "body, with adjacent cells merged into as few outlines as the tiles allow. The three tile layers each sit in " +
-      "their own sorting layer, and the top one — roofs and tree crowns — draws above the villager, which is what " +
-      "puts her behind a house when she walks into it.",
+      "Walk through a village loaded from a Tiled map. Walls, fences and trees block movement, while roofs and treetops appear in front of the character. The camera follows the villager, and the renderer skips map sections outside the view.",
     tries: [
       "Turn off Cull chunks and watch the tile count double: the whole map is materialised instead of the part you can see.",
       "Walk into the fence, the tree trunks and the house fronts; every one of them is a collider the map file described.",
@@ -81,14 +76,9 @@ export const TWO_D: readonly ExampleOf<"2D">[] = [
     dimension: "2D",
     priority: "P0",
     status: "ready",
-    line: "One atlas, four clips, a mirrored walk and a speed dial.",
+    line: "Play sprite clips, change their speed and flip the character’s direction.",
     paragraph:
-      "Two documents and two components. The `.atlas.json` names the frames inside one image, in image pixels " +
-      "with a top-left origin; the `.spriteanim.json` names clips over those frames — `idle` and `run` as ranges, " +
-      "`jump` and `fall` as single poses. A `SpriteRenderer` draws the atlas and a `SpriteAnimator` picks the " +
-      "frame, advancing in `PostUpdate` on ignifx's own clock, so the time scale slows it and a headless test can " +
-      "step it. The four small runners on the right each hold one clip and are never touched again, so the clips " +
-      "can be compared; the large one is what the panel drives.",
+      "A sprite sheet supplies the frames for idle, run, jump and fall animations. Use the large character to try each clip, change its speed and flip its direction. The smaller characters show the clips side by side.",
     tries: [
       "Switch clips and watch the frame counter: idle is four frames at six a second, run is eight at fourteen.",
       "Turn Flip on. One set of frames, mirrored — a walk cycle is never drawn twice.",

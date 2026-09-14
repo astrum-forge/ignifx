@@ -63,7 +63,7 @@ export class ServiceRegistryImpl implements ServiceRegistry {
     if (value === undefined) {
       return null;
     }
-    // Boundary assertion (coding standards §5.2): the invariant is enforced by
+    // The invariant is enforced by
     // `set<T>(key: ServiceKey<T>, value: T)`, which is the only writer. A `Map` cannot carry the
     // relationship between a key's type parameter and its value.
     // oxlint-disable-next-line typescript/no-unsafe-type-assertion

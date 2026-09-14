@@ -4,24 +4,9 @@ import type { UiHost } from "../dom/host.js";
 import type { AssetProgress, Assets, Disconnect, SignalLike } from "@ignifx/core";
 
 /**
- * `LoadingScreen` (`docs/architecture/13-ui.md` §3): a full-overlay panel with a label and a
- * progress bar, bound to `app.assets`.
- *
- * ## Where the number comes from
- *
- * `app.assets.onProgress` carries `{ loaded, total, bytesLoaded, bytesTotal }`
- * (`packages/core/src/assets/types.ts`). {@link progressFraction} prefers the byte counts, because
- * a 40 MB level and a 2 KB config are not half the work each, and falls back to the handle counts
- * when the build recorded no sizes. A `BatchHandle` from `app.assets.preloadGroup("boot")` reports
- * its own mean in `progress`, which {@link LoadingScreen.progress} also accepts.
- *
- * ## Pairing with the asset-delivery rule
- *
- * A completed load settles as soon as it finishes before `app.start()` and after `app.stop()`;
- * once the loop runs, delivery waits for `PreUpdate`. So a boot screen that awaits
- * `preloadGroup("boot").promise` **before** `start()` needs no frames, and one that loads a level
- * mid-game is driven by the frames the loop is already running. Neither case needs this class to
- * poll.
+ * Prefer byte-weighted progress, falling back to handle counts when sizes are unknown.
+ * Boot loads can be awaited before `app.start`; running games deliver loads in `PreUpdate`.
+ * Both paths update through asset signals, without polling.
  */
 
 /**

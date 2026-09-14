@@ -10,32 +10,9 @@ import type { AssetHandle, ColorLike, MaterialAsset } from "ignifx";
 type RangeEnd = "metalHigh" | "metalLow" | "roughHigh" | "roughLow";
 
 /**
- * The two numbers that decide what a physically based surface looks like, laid out as a grid: one
- * mesh, thirty-six materials, and nothing loaded but the environment probe.
- *
- * Metalness runs left to right and roughness runs bottom to top, so every square of the grid is a
- * different surface and the whole of the parameter space is on screen at once. Reading it is the
- * lesson:
- *
- * - **Down the metal side (right), the base colour tints the reflection.** A metal has no diffuse
- *   term at all: what you see is the environment, coloured by the metal. Turn the base colour green
- *   and only the metals go green.
- * - **Down the dielectric side (left), the base colour is the diffuse albedo** and the reflection
- *   is a white highlight on top of it. That is why a plastic has a white shine whatever colour it
- *   is.
- * - **Roughness spreads the reflection.** At zero the probe is mirrored; at one it is averaged into
- *   an even sheen. A fully rough metal is the one combination that looks like nothing in
- *   particular, which is why real materials rarely sit there.
- * - **A metal with no environment is black.** The grid is lit by a prefiltered studio probe for
- *   exactly that reason — the two soft highlights down the metal column are the probe's own softbox
- *   panels, not lamps — with a modest key and fill behind it so the rough dielectrics keep a
- *   recognisable shape. Rotate the probe and every reflection moves at once; blur it to one and the
- *   top-right corner loses its shape altogether.
- *
- * Every material is `pbrMaterialDefinition` — the same record a `.material.json` file holds — built
- * with `createMaterialAsset` and then edited live through `MaterialAsset.setMetallicRoughness` and
- * `setBaseColor`, which is what the sliders drive. Nothing here rebuilds a shader: the two numbers
- * are uniforms.
+ * Compare metalness across columns and roughness across rows using shared geometry.
+ * Metal base colour tints reflections; dielectric base colour controls diffuse colour.
+ * The environment supplies reflections, while the panel updates material uniforms live.
  */
 
 /** How many columns of metalness, and rows of roughness. Thirty-six materials, one mesh. */

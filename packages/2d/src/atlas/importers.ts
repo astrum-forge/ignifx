@@ -4,18 +4,8 @@ import type { SpriteAtlasDefinition, SpriteFrameDefinition } from "./definition.
 import type { Vec2Like } from "@ignifx/core";
 
 /**
- * The atlas importers: pure functions that turn a third-party packer document — or a plain grid
- * description — into an `ignifx.spriteatlas` document
- * (`docs/architecture/11-2d-toolkit.md` §2.3).
- *
- * Nothing here does I/O. The CLI (`ignifx import atlas`) reads the file, hands the parsed JSON to
- * one of these functions, and writes the returned document out; a game can equally call them at
- * build time from a script. Every frame rectangle stays in **image pixels with a top-left origin**,
- * which is what both TexturePacker and Aseprite emit and what the loader expects.
- *
- * Untrusted input is typed `unknown` and narrowed with the local guards below rather than asserted
- * (coding standards §5.2), so a malformed document fails with `IGX-1109` instead of producing an
- * atlas that only breaks later, at load.
+ * Convert packer JSON or a grid description into an `ignifx.spriteatlas` document without I/O.
+ * Frame rectangles use image pixels with a top-left origin. Invalid input throws `IGX-1109`.
  */
 
 /** The pivot a frame gets when neither the packer nor the caller names one. */
@@ -83,12 +73,6 @@ function isUnknownArray(value: unknown): value is readonly unknown[] {
   return Array.isArray(value);
 }
 
-/**
- * Narrows an unknown value to a real number.
- *
- * @param value - The value to test.
- * @returns Whether it is a finite number.
- */
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
 }

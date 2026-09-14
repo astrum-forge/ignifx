@@ -11,28 +11,8 @@ import type { SpriteScratch } from "../lite/sprite-layer.js";
 import type { MutableVec2, System, SystemContext, Vec2Like, World } from "@ignifx/core";
 
 /**
- * The 2D sync system (`docs/architecture/11-2d-toolkit.md` §2.2,
- * `01-lifecycle-and-time.md` §3): once per frame, in `PreRender`, it selects the active
- * `Camera2D`, writes every world layer's view, and pushes every sprite whose transform or fields
- * changed into its Lite layer.
- *
- * ## Ordering
- *
- * `docs/architecture/11-2d-toolkit.md` §2.2 asks for `PreRender` order `-400`, but
- * `@ignifx/audio`'s spatial pump already occupies that exact slot
- * (`AUDIO_PUMP_ORDER`, `docs/architecture/10-audio.md` §5). Equal orders are broken by
- * registration order, which makes the interleaving depend on the order a game lists its
- * extensions in. The two systems touch nothing in common, so the tie would be harmless — but a
- * frame order that changes with an argument list is not something to leave in place, so 2D takes
- * {@link TWO_D_SYNC_ORDER} instead: after physics interpolation at `-500` has written the frame's
- * final transforms, before audio at `-400`, and well before core's render sync at `900`.
- *
- * ## Cost
- *
- * A sprite that did not move and whose fields did not change costs one integer comparison
- * (`Transform.worldMatrixVersion`), and an entity marked `isStatic` costs that comparison only
- * until its first sync. That is what keeps a 100x100 tilemap at zero per-frame sync cost once its
- * chunks are up (spike S6.1).
+ * Sync changed sprites and camera views in `PreRender`, before audio and core render sync.
+ * Unchanged sprites need only a transform-version check; static sprites sync once.
  */
 
 /**

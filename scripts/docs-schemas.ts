@@ -1,40 +1,8 @@
 #!/usr/bin/env node
 /**
- * `pnpm docs:schemas` — regenerates the file-format tables and the JSON Schema bundle that the
- * agent skill points at (`docs/architecture/16-docs-harness-and-skill.md` §3).
- *
- * ## Discovery convention
- *
- * A package contributes schemas to the documentation by exporting a `schemas` binding from its
- * built entry point, `packages/<dir>/dist/index.js`. The binding is a record keyed by component
- * `typeId`:
- *
- * ```js
- * export const schemas = {
- *   "ignifx/MeshRenderer": {
- *     title: "MeshRenderer",              // optional; defaults to the part after the slash
- *     format: "components",               // optional; the formats page this entry lands on
- *     description: "Draws a mesh asset.", // optional
- *     fields: {
- *       mesh: { kind: "asset", default: null, description: "The mesh to draw." },
- *     },
- *   },
- * };
- * ```
- *
- * Discovery is by convention, not configuration: every `packages/<dir>/dist/index.js` that exists is
- * imported, and a package without a `schemas` export simply contributes nothing. Nothing before
- * Phase 1 exports one, so the script writes no files and exits 0 today.
- *
- * ## Output
- *
- * - `skills/ignifx/references/formats/<format>.md` — one table per component, grouped by `format`.
- * - `skills/ignifx/references/formats/ignifx.schemas.json` — every schema in one bundle.
- *
- * The script only ever writes those files; it never cleans the directory, so the hand-written
- * `formats/README.md` and the prose pages beside it survive regeneration.
- *
- * Options: `--root <dir>` runs against a tree other than the repository (used by the tests).
+ * Regenerate format tables and the JSON Schema bundle from built package schema exports.
+ * Write generated pages under `skills/ignifx/references/formats`, preserving hand-written files.
+ * See docs/architecture/16-docs-harness-and-skill.md §3 for the generation contract.
  */
 import path from "node:path";
 import { parseArguments } from "./lib/args.ts";

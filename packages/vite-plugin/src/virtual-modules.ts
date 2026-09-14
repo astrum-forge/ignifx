@@ -36,12 +36,7 @@ export const MANIFEST_MODULE_ID = "virtual:ignifx/manifest";
 export const SCRIPTS_MODULE_ID = "virtual:ignifx/scripts";
 
 /**
- * The HMR event the plugin sends when an asset under the asset root changes.
- *
- * @remarks
- * The assets service listens for it and reloads the affected handles, firing
- * `AssetHandle.onReplaced` (`docs/architecture/05-assets-and-loading.md` §7). The *policy* of a
- * script hot reload — patch or recreate — is Phase 10's; this package only ships the channel.
+ * The asset-change HMR event. The asset service reloads affected handles and emits `onReplaced`.
  *
  * @example
  * ```ts

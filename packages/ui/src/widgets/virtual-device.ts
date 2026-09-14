@@ -2,18 +2,8 @@ import { uiError, UiErrorCode } from "../errors.js";
 import type { App } from "@ignifx/core";
 
 /**
- * How `@ignifx/ui` reaches `@ignifx/input`'s virtual device without importing it
- * (`docs/architecture/13-ui.md` §3, `08-input.md` §8).
- *
- * `@ignifx/input` is an **optional** peer: the overlay host, the text components, and the
- * localization service do not need it, and only the two touch widgets do. Importing it — even
- * `import type` — would pull its `declare module "@ignifx/core"` augmentation into every consumer's
- * program, so an app that installs `@ignifx/ui` alone would suddenly have a typed `app.input` that
- * does not exist at runtime. The device is therefore reached structurally: the two methods the
- * widgets call, found by name on `app.input.devices.virtual`.
- *
- * `VirtualDevice` satisfies {@link VirtualDeviceLike} exactly
- * (`packages/input/src/devices/virtual.ts`), so nothing is lost by not naming the class.
+ * Reach virtual input through its two-method shape. Importing the optional input peer, even for
+ * types, would augment core and expose `app.input` to games that have not installed it.
  */
 
 /**

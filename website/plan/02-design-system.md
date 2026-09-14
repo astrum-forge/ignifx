@@ -1,5 +1,8 @@
 # 02 · Design system and page designs
 
+The 2026-09-11 content and layout refinements are recorded in [DESIGN.md](../DESIGN.md).
+Its homepage order, card layouts and writing guidance supersede those parts of this launch plan.
+
 This document replaces `website/DESIGN.md` when the overhaul is built. It keeps what already works
 (the cool neutral palette, the flame accent, the three self-hosted faces, both themes, no gradients
 as texture, no third-party requests) and changes the register: from an instrument panel that

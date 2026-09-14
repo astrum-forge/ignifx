@@ -241,7 +241,7 @@ export function toRenderingFeatures(settings: RenderingSettings): RenderingFeatu
       features[name] = declared[name] === true;
     }
   }
-  // Boundary assertion (coding standards §5.2): the loop wrote exactly the keys of
+  // The loop wrote exactly the keys of
   // `RENDERING_FEATURE_NAMES`, which is what `RenderingFeatures` is a mapped type over.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return features as RenderingFeatures;

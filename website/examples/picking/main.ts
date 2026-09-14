@@ -9,24 +9,10 @@ import type { Picker } from "./click-to-pick.ts";
 import type { RenderPick } from "ignifx";
 
 /**
- * Picking, both ways, at the same pixel. Click a shape and it is resolved twice:
- *
- * - `app.renderer.pickAsync(x, y)` — the **GPU** path. Lite draws an id buffer and reads one pixel
- *   back from the device, so it is exact for anything the GPU can draw and it costs a round trip.
- *   It is a promise for that reason, not for tidiness, and calls are serialized per picker.
- * - `world.raycastRender(camera.screenToRay(x, y))` — the **CPU** path. It walks the scene's meshes,
- *   tests each one's bounding box and then its triangles, and answers in the same call. A mesh that
- *   kept no CPU positions is invisible to it, and a hidden mesh still blocks it — only `pickable`
- *   and the filter take a mesh out of either path.
- *
- * Both answer `{ entity, component, distance }` or `null`, so the two rows in the panel should
- * agree on every click. The timings should not: the GPU figure includes the readback wait and the
- * CPU figure includes no wait at all.
- *
- * **Both take backing-store pixels** — `canvas.width`/`canvas.height`, the space
- * `<Pointer>/position` reports in and `Camera.worldToScreen` answers in — not CSS pixels. That is
- * why the click arrives through `@ignifx/input` (`click-to-pick.ts`) rather than off a DOM event:
- * the action already speaks the right units, on a mouse and on a finger alike.
+ * Compare GPU picking with a CPU render raycast at the same backing-store pixel.
+ * GPU timing includes readback; CPU picking needs retained mesh positions. Both use `pickable`
+ * and filters, so hiding a mesh alone does not exclude it.
+ * Input pointer positions already use the pixel space these APIs expect.
  */
 
 /** What one resolved pick is remembered as, for the readouts. */

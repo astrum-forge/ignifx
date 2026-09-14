@@ -127,7 +127,7 @@ function describe(host: DevtoolsPanelHost, component: Component): { schema: Sche
   if (type === null || typeof type !== "function" || !("prototype" in type)) {
     return { schema: null, label: "component" };
   }
-  // Boundary assertion (coding standards §5.2): every component instance's constructor is a
+  // Every component instance's constructor is a
   // component class, which is exactly the `ComponentType` shape the registry describes.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- see above.
   const componentType = type as ComponentType;

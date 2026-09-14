@@ -117,7 +117,7 @@ export type CallbackFunction = (argument?: unknown) => void;
  * @internal
  */
 export function readCallback(target: object, name: string): CallbackFunction | null {
-  // Boundary assertion (coding standards §5.2): the invariant is that a JavaScript object can be
+  // The invariant is that a JavaScript object can be
   // read as a string-keyed bag; the `typeof` check below is what makes the result safe.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   const bag = target as Record<string, unknown>;
@@ -125,7 +125,7 @@ export function readCallback(target: object, name: string): CallbackFunction | n
   if (typeof value !== "function") {
     return null;
   }
-  // Boundary assertion (coding standards §5.2): the value is known to be callable; its parameters
+  // The value is known to be callable; its parameters
   // are supplied by the single call site that knows which callback this is.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return value as CallbackFunction;

@@ -3,17 +3,8 @@ import type { TwoDService } from "../service/two-d-service.js";
 import type { App, Entity, SceneInstance } from "@ignifx/core";
 
 /**
- * Spawning the entities a tilemap's objects layer describes
- * (`docs/architecture/11-2d-toolkit.md` §2.5).
- *
- * A map editor's objects layer is a list of *intentions* — "a player starts here", "this rectangle
- * is a trigger" — and only the game knows what each one becomes. `app.twoD.registerTileObjectFactory`
- * is where a game says so, and this module is what runs those factories when a scene carrying a
- * `Tilemap` finishes loading.
- *
- * Objects are spawned **once per scene load**, on `world.onSceneLoaded`, after `awake` and
- * `onEnable` have flushed (`world.ts` 596-597), so a factory can reach any component the scene
- * declared.
+ * Run the game's tile-object factories once per scene load, on `world.onSceneLoaded`.
+ * `awake` and `onEnable` have finished by then, so factories can use the scene's components.
  */
 
 /**

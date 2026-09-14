@@ -2,26 +2,8 @@ import type { Collider2D } from "./components/collider.js";
 import type { Entity, Vec2Like } from "@ignifx/core";
 
 /**
- * The payloads the five physics callbacks receive in 2D (`docs/architecture/11-2d-toolkit.md` §8,
- * `09-physics.md` §4).
- *
- * ## The callbacks are the 3D names
- *
- * `11-2d-toolkit.md` §8 writes them as `onCollisionEnter2D`/`onTriggerEnter2D`. The kernel's
- * `PhysicsCallbackName` union has five members and no `2D` variants
- * (`packages/core/src/lifecycle/callbacks.ts`), and a world uses either `physics()` or
- * `physics2d()` — never both, which is what `IGX-1101` enforces. So a 2D game implements
- * `onCollisionEnter`, `onCollisionStay`, `onCollisionExit`, `onTriggerEnter`, and `onTriggerExit`,
- * and receives the 2D payloads below. §8 is corrected accordingly.
- *
- * ## Identities are native
- *
- * Rapier reports **both** colliders of every event (`pipeline/event_queue.d.ts`,
- * `drainCollisionEvents`), so `other` is never `null` for a live body and the ADR-0013 waiver that
- * 3D physics needs has no counterpart here.
- *
- * Every payload is **pooled**: the same instances are reused for every event of a step, so a script
- * that needs a value after its callback returns must copy it out (coding standards §7).
+ * 2D physics uses the same five collision and trigger callback names as 3D, without a `2D` suffix.
+ * Rapier supplies both collider identities. Payloads are pooled; copy values needed after a callback.
  */
 
 /**

@@ -6,23 +6,8 @@ import type { PhysicsMaterialValues } from "../settings.js";
 import type { AssetHandle, ComponentHooks, LiteSceneNode, MutableVec3, Schema, Vec3Like } from "@ignifx/core";
 
 /**
- * The collider contract (`docs/architecture/09-physics.md` §2.2). Every collider shares four
- * fields — `center`, `isTrigger`, a material, and a layer override — and answers two questions the
- * body builder asks: what Havok shape it is, and how big its local bounding box is.
- *
- * ## The one correction to §2.2
- *
- * §2.2 writes the material field as `material: asset(PhysicsMaterial) | inline { … }`. A schema
- * field has exactly one kind (ADR-0004), so the union is split into two fields:
- * {@link Collider.material} (an asset reference) and {@link Collider.inlineMaterial} (a record).
- * The asset wins, the inline record is the fallback, and `physics.defaultMaterial` is the last
- * resort.
- *
- * ## Shape sizes and scale
- *
- * Sizes are authored in local units and multiplied by the entity's lossy scale when the shape is
- * built. Havok has no way to rescale a built shape, so changing the scale afterwards needs
- * {@link Collider.rebuild}, exactly as §2.2 says.
+ * Collider dimensions use local units and the entity's scale at build time; call `rebuild` after
+ * changing scale. Material assets take precedence over inline material, then project defaults.
  */
 
 /**

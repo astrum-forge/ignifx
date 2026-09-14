@@ -1,12 +1,6 @@
 /**
- * The row vocabulary {@link Menu} draws, and the two pure functions that
- * turn a row's declaration into the text on screen.
- *
- * A row is **declarative**: it says what it edits (`get`/`set`) rather than how to draw it, so the
- * widget can render it, adjust it with Left/Right, announce it to a screen reader, and keep the
- * value in step with whatever else changes it. That is the difference between this and a list of
- * buttons: a settings screen written as buttons has to re-implement clamping, formatting and
- * repeat in every game.
+ * Rows declare the values they edit through `get` and `set`. The menu handles rendering,
+ * clamping, formatting, and input repeat so each settings screen can share that behaviour.
  */
 
 /**

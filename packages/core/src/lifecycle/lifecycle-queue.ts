@@ -22,27 +22,10 @@ import type { WorldHost } from "../world/world-host.js";
 import type { WorldInternals } from "../world/world-internals.js";
 
 /**
- * The lifecycle queues and the three flushes the frame function calls
- * (`docs/architecture/01-lifecycle-and-time.md` §3 steps 3, 5, and 9; §4 and §6 define the
- * semantics). Every callback the engine invokes goes through {@link LifecycleQueue.invokeCallback},
- * the one guarded call site: it brackets the call with the frame state, catches whatever the
- * callback throws, reports it to `app.onError`, and carries on with the next script (§5).
- *
- * Decisions this class makes where the documents leave a choice, each with the sentence it follows:
- *
- * - **`awake` waits for the first time a component is effectively enabled.** §4's table says
- *   `awake` runs "right after the component is attached to an entity that is active in the
- *   hierarchy", but the guarantee immediately below it says "a callback never runs ... on a
- *   component whose `enabled` is `false`, except `onDisable`/`onDestroy`". The guarantee wins: a
- *   component added with `enabled = false` gets no `awake` until it is enabled.
- * - **`onDisable` is synchronous, `onEnable` is queued.** §3 step 3 lists `onEnable` in flush A, so
- *   it waits for the flush; §4 says `onDisable` runs "when the component stops being effectively
- *   enabled", with no flush named, so it runs at the transition. Inside a callback both run
- *   immediately and nested, which is what §4's "entities or components created from inside a
- *   callback ... run nested and synchronously" requires of `awake`.
- * - **Within one entity, components are released in attach order.** §3 step 9 fixes only "children
- *   before parents". Attach order is the same order `awake` used, so one mental model covers both
- *   ends of a component's life.
+ * Route callbacks through one guarded call site so errors are reported and other scripts continue.
+ * `awake` waits until the component is effectively enabled. Outside callbacks, enables are queued
+ * and disables are immediate; nested changes run synchronously.
+ * Destroy children before parents and release each entity's components in attachment order.
  */
 
 /** How many callbacks get a sorted dispatch list. */

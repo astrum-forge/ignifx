@@ -4,27 +4,10 @@ import { bind, button, readout, select, slider, toggle } from "../_kit/panel.ts"
 import type { App, AssetHandle, SpriteAnimationAsset, SpriteAtlasAsset } from "ignifx";
 
 /**
- * One atlas, four clips, and the two components that turn them into a character on screen.
- *
- * The `.atlas.json` names the frames inside one image, in image pixels with a top-left origin; the
- * `.spriteanim.json` names clips over those frames — `idle` as a range, `run` as a range with two
- * `footstep` events on it, and `jump` and `fall` as single-frame poses. A `SpriteRenderer` draws
- * the atlas and a `SpriteAnimator` picks the frame, advancing in `PostUpdate` on **ignifx's own
- * clock**, so `time.timeScale` slows the animation and a headless test can step it.
- *
- * Three things a reader should take away:
- *
- * - **Direction is `flipX`, not a mirrored clip.** One set of frames, flipped when the character
- *   walks the other way, which is half the sheet a game would otherwise draw.
- * - **A frame's `pivot` is where the entity's origin sits inside it**, in `[0, 1]` of the frame with
- *   `[0, 0]` at the top-left. Every frame here pivots at `[0.5, 1]`, so the origin is at the feet
- *   and a character on a slope stands on it rather than in it.
- * - **`pixelsPerUnit` defaults to 100**, which would draw this 16-pixel sheet at 0.16 m. It is 16
- *   here, so one sprite is one metre. Sampling belongs to the atlas (`"sampling": "nearest"`),
- *   because a texture's sampler is fixed at upload — the camera's `pixelPerfect` does not change it.
- *
- * The four small runners on the right each hold one clip and never change, so the clips can be
- * compared side by side; the big one on the left is what the panel drives.
+ * Pair an atlas with a sprite-animation document; the animator advances on engine time in `PostUpdate`.
+ * Frame pivots use top-left normalised coordinates; `[0.5, 1]` keeps these sprites on their feet.
+ * Use `flipX` for direction and 16 pixels per unit for this 16-pixel art. Nearest sampling belongs
+ * to the atlas; camera pixel snapping does not change the texture sampler.
  */
 
 /** The clips `runner.spriteanim.json` declares, in the order the select lists them. */

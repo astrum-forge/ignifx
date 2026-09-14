@@ -48,11 +48,6 @@ function unsettled(): void {
   // Replaced synchronously by the `Promise` constructor.
 }
 
-/**
- * Waits for the next animation frame.
- *
- * @returns A promise that resolves on the next frame.
- */
 function nextFrame(): Promise<void> {
   return new Promise<void>((resolve) => {
     requestAnimationFrame(() => {

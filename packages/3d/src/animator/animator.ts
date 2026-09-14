@@ -8,17 +8,8 @@ import type { LiteAnimationManager } from "../lite/types.js";
 import type { AssetHandle, ComponentHooks, Schema } from "@ignifx/core";
 
 /**
- * `Animator` (`docs/architecture/12-3d-toolkit.md` §3): the animation state machine that drives a
- * `Model`'s skeletal clips on ignifx's clock.
- *
- * The component is a thin shell around two halves that never talk to each other directly: the pure
- * {@link AnimatorStateMachine}, which turns parameters and a delta into per-clip weights, and the
- * `AnimatorMixer`, which is the only thing here that knows Babylon Lite exists. That split is what
- * makes exit times, triggers, blend thresholds, and animation events testable in a plain Node test
- * with no GPU and no model.
- *
- * A headless app therefore runs the *whole* state machine — transitions fire, events fire,
- * `currentState` moves — and simply poses nothing. A game's animation logic is testable in CI.
+ * Drive a model's clips on the engine clock. The state machine computes transitions and weights;
+ * the mixer applies them to the model. Headless apps run the state machine without posing geometry.
  */
 
 /**

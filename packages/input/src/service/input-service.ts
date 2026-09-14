@@ -32,24 +32,8 @@ import type { InputSettings } from "../settings.js";
 import type { App, AssetHandle, DiagnosticsGroup, SignalLike, Vec2Like } from "@ignifx/core";
 
 /**
- * The input service, reached as `app.input` (`docs/architecture/08-input.md` §1). It owns the
- * devices, the queued event stream, the installed action maps, the control schemes, pointer lock,
- * the cursor, and the once-per-frame resolution that makes every read in a frame agree.
- *
- * ## Where the frame's work happens
- *
- * {@link InputService.resolveFrame} is called by the `PreUpdate` system at order `-950`, before the
- * asset delivery system at `-900` (`01-lifecycle-and-time.md` §3 step 2). It resets the per-frame
- * deltas, polls gamepads, drains the queue in arrival order, resolves actions, advances an
- * interactive rebind, and publishes diagnostics. Nothing else in the frame writes device or action
- * state, which is what makes `wasPressedThisFrame` stable across every fixed step.
- *
- * ## The order actions resolve in
- *
- * Applying a queued event marks the actions bound to the control it changed, in the order the
- * events arrived; those actions resolve — and emit — first, in that order. Everything else resolves
- * afterwards in map and then declaration order, so an action whose value did not change emits
- * nothing and the frame is fully deterministic (`08-input.md` §1).
+ * Resolve input once in `PreUpdate`, before asset delivery, so all fixed steps share frame state.
+ * Changed actions resolve in event order; remaining actions follow map and declaration order.
  */
 
 /**

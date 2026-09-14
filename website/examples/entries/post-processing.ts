@@ -18,19 +18,13 @@ export const POST_PROCESSING: readonly ExampleOf<"Post-processing">[] = [
     dimension: "3D",
     priority: "P0",
     status: "ready",
-    line: "Emissive surfaces bleed light; threshold, weight, kernel and scale.",
+    line: "Add a glow around bright objects and adjust its strength and spread.",
     paragraph:
-      "Two rows of emitters under one bloom pass. Behind: Khronos's emissive-strength test, five cubes whose glTF " +
-      "materials declare the same blue at 1x, 2x, 4x, 8x and 16x, so the brightest of them sit far above white. In " +
-      "front: five spheres built in code, one hue ramped over the 0-1 range an ignifx material's `emissive` field " +
-      "accepts. Both rows bleed, and only the cubes reach past white — which is the difference between a glTF " +
-      "extension and a hand-written material, on screen. The pass is two lines of settings and one callback: " +
-      "`features.postProcessing` renders the scene into an offscreen target so an effect has something to sample, " +
-      "and the effect is switched on after `app.start()`.",
+      "Bloom adds a glow around bright surfaces. Compare glowing cubes loaded from a glTF model with spheres created in code. Adjust the threshold to choose which surfaces glow, then change the strength and spread of the effect.",
     tries: [
       "Pull Threshold down and watch the dim spheres join the glow; the cubes never leave it.",
-      "Widen Kernel to 128, then drop Scale to 0.1: nearly the same glow for a quarter of the blur.",
-      "Turn the Lamps off. What is left is the light the emitters make, which is all bloom reads.",
+      "Set Kernel to 128 for a wider glow, then lower Scale to compare its appearance.",
+      "Turn Lamps off to see the glowing materials without the scene lights.",
     ],
     uses: ["PostProcessStack", "features.postProcessing", "Environment", "Model", "MeshRenderer"],
     assets: [

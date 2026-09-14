@@ -11,25 +11,9 @@ import type { SpriteLayerRegistry } from "../service/layer-registry.js";
 import type { AssetHandle, ComponentHooks, MutableVec2, Schema } from "@ignifx/core";
 
 /**
- * `TilemapRenderer` (`docs/architecture/11-2d-toolkit.md` §2.5): draws a `Tilemap`'s cells as
- * sprites, one chunk at a time.
- *
- * ## Why chunks
- *
- * A 100x100 map is 10 000 cells. Materialising all of them as sprites costs 10 000 instance slots
- * and, worse, 10 000 per-frame comparisons. Instead the renderer materialises a chunk — 32x32 cells
- * by default — only while it intersects the camera's visible bounds
- * (`getSprite2DVisibleBoundsToRef`, `index.d.ts` 5992), and drops it again when it leaves. A chunk
- * that is up and unchanged costs **nothing** per frame: its sprites are written once, at the moment
- * the chunk is built, and never touched again. That is the property spike S6.1 measures.
- *
- * ## Why the renderer owns its sprites
- *
- * Tiles do not get a `SpriteRenderer` component each — 10 000 components and 10 000 entities is a
- * cost with no benefit, since a tile has no behaviour. The renderer places sprites into the same
- * Lite layers component-owned sprites use, through the registry's raw path, so tiles sort against
- * characters correctly. The trade is that `app.twoD.pickAt` does not resolve a tile;
- * `Tilemap.worldToCell` does, exactly and for free.
+ * Draw visible tilemap chunks through the shared sprite-layer registry so tiles sort with characters.
+ * Chunk sprites are written when built and removed when out of view. Tiles have no individual
+ * entities; use `Tilemap.worldToCell` to locate a tile rather than `app.twoD.pickAt`.
  */
 
 /** One materialised chunk. */

@@ -1,10 +1,8 @@
 /**
  * The home page (`03-pages-and-copy.md` §2, wireframe `02-design-system.md` §4.1).
  *
- * Eight bands: the hero with the running example, the five pillars, the complete app, the twelve
- * subsystems, the four templates, the examples teaser, the studio, and the install block. The copy
- * is pasted from the plan; the code sample is sliced out of the entry skill at build time, so it
- * cannot drift from the code the docs harness compiles.
+ * Playable templates lead into code and feature highlights. The complete code sample comes from
+ * the entry skill, so it stays in sync with the example checked by the docs harness.
  */
 import { CATALOGUE, findExample } from "../examples/catalogue.ts";
 import { site } from "../site.config.ts";
@@ -22,8 +20,7 @@ import type { ExampleEntry } from "../examples/catalogue.ts";
 const HERO_SLUG = "pbr-model";
 
 /** The hero's caption (`03` §2). */
-const HERO_CAPTION =
-  "Physically based rendering — a glTF model lit by an image-based environment, with bloom and tone mapping. Drag to orbit.";
+const HERO_CAPTION = "Rendered live with ignifx. Drag to explore the ship.";
 
 /**
  * Renders one example card: poster, title, category chip, one line. The whole card is the link.
@@ -80,7 +77,7 @@ function templateCard(websiteRoot: string, template: (typeof TEMPLATE_CARDS)[num
   const entry = findExample(template.name);
   const create = site.published
     ? button({
-        label: "Create",
+        label: "Copy command",
         variant: "secondary",
         icon: "copy",
         copy: `npx @ignifx/cli@latest my-game --template ${template.name}`,
@@ -136,21 +133,25 @@ export function homePage(repositoryRoot: string, websiteRoot: string, highlighte
     h("div", { class: "hero-glow", "aria-hidden": "true" }),
     h("div", { class: "shell hero-shell" }, [
       h("div", { class: "hero-copy" }, [
-        h("p", { class: "eyebrow" }, "Open source · TypeScript · WebGPU"),
-        h("h1", { class: "hero-title" }, "Ignite your next game."),
+        h("p", { class: "hero-intro" }, "Open-source game engine"),
+        h("h1", { class: "hero-title" }, "Make games in TypeScript."),
         h(
           "p",
           { class: "hero-lead" },
           esc(
-            "ignifx is an open-source TypeScript game engine built on WebGPU. Write your game as code, run it in the browser or on the desktop, and ship with physics, audio, input, UI and animation already in the box.",
+            "ignifx gives you the tools to build 2D and 3D games for the browser and desktop. Start with a playable template and make it your own.",
           ),
         ),
         h("div", { class: "hero-actions" }, [
           button({ label: "Get started", variant: "primary", href: "/docs/getting-started/" }),
-          button({ label: "See the examples", variant: "secondary", href: "/examples/" }),
+          button({ label: "Explore examples", variant: "secondary", href: "/examples/" }),
         ]),
         supportPill("hero-pill"),
-        h("p", { class: "hero-support" }, esc(SUPPORT_LINE)),
+        h("p", { class: "hero-support" }, [
+          esc(SUPPORT_LINE),
+          " ",
+          h("a", { href: "/docs/browser-support/" }, "Check browser support"),
+        ]),
       ]),
       exampleFrame({
         slug: HERO_SLUG,
@@ -186,7 +187,7 @@ export function homePage(repositoryRoot: string, websiteRoot: string, highlighte
   });
 
   const code = band({
-    title: "This is a complete ignifx app",
+    title: "Your game starts with code",
     className: "band-code",
     body: h("div", { class: "split" }, [
       h("div", { class: "split-copy" }, [
@@ -194,7 +195,7 @@ export function homePage(repositoryRoot: string, websiteRoot: string, highlighte
           "p",
           {},
           esc(
-            "A camera, a shadow-casting light, a ground plane and a spinning cube, every asset created in code. There is no hidden project file behind it. This sample is compiled and run by the engine's documentation checks, so it cannot go stale.",
+            "This complete example creates a camera, a light, a floor and a spinning cube. Scenes and gameplay use the same TypeScript workflow.",
           ),
         ),
         h(
@@ -208,15 +209,15 @@ export function homePage(repositoryRoot: string, websiteRoot: string, highlighte
         { class: "split-code" },
         highlighter.render(readFirstAppSample(repositoryRoot), "ts", {
           label: "main.ts",
-          caption: "compiled by the docs harness",
+          caption: "A complete scene in TypeScript",
         }),
       ),
     ]),
   });
 
   const features = band({
-    title: "Everything a game needs",
-    lead: "Twelve subsystems, one API style, one version number. Add the ones you use.",
+    title: "Tools for the whole game",
+    lead: "From the first moving character to menus and sound, build on features that work together.",
     className: "band-features",
     action: h("a", { class: "band-more", href: "/features/" }, ["All features", icon("chevron", "icon-next")]),
     body: h(
@@ -224,13 +225,17 @@ export function homePage(repositoryRoot: string, websiteRoot: string, highlighte
       { class: "grid grid-three" },
       each(FEATURE_CARDS, (card) =>
         h("li", { class: "card card-feature" }, [
-          chip(`\`${card.chip}\``, "chip-pkg"),
           h("h3", { class: "card-title" }, esc(card.title)),
           h("p", { class: "card-line" }, esc(card.line)),
-          h("a", { class: "card-more", href: exampleHref(card.seeIt, card.fallback) }, [
-            "See it",
-            icon("chevron", "icon-next"),
-          ]),
+          h(
+            "a",
+            {
+              class: "card-more",
+              href: exampleHref(card.seeIt, card.fallback),
+              "aria-label": `View example: ${card.title}`,
+            },
+            ["View example", icon("chevron", "icon-next")],
+          ),
         ]),
       ),
     ),
@@ -239,7 +244,7 @@ export function homePage(repositoryRoot: string, websiteRoot: string, highlighte
   const templates = band({
     id: "templates",
     title: "Start from a playable game",
-    lead: "Four templates, each a small finished game: title screen, pause menu, settings, rebinding, saves, and keyboard, gamepad and touch controls. Copy one and replace the game.",
+    lead: "Choose a starting point for your game. Each template includes menus, settings, saves and controls for keyboard, gamepad and touch.",
     className: "band-templates",
     body: h(
       "div",
@@ -249,8 +254,8 @@ export function homePage(repositoryRoot: string, websiteRoot: string, highlighte
   });
 
   const teaser = band({
-    title: "See it running",
-    lead: "Every example runs in your browser, with its source beside it.",
+    title: "Try a feature. See how it works.",
+    lead: "Explore interactive examples, adjust their settings and read the source code.",
     className: "band-teaser",
     action: h("a", { class: "band-more", href: "/examples/" }, ["All examples", icon("chevron", "icon-next")]),
     body: h(
@@ -261,14 +266,14 @@ export function homePage(repositoryRoot: string, websiteRoot: string, highlighte
   });
 
   const studio = band({
-    title: "Built by a studio that ships with it",
+    title: "Made by Astrum Forge Studios",
     className: "band-studio",
     body: h("div", { class: "studio" }, [
       h(
         "p",
         { class: "studio-copy" },
         esc(
-          "ignifx is developed by Astrum Forge Studios, an independent game studio, and it is the engine behind the studio's own games and projects. Features arrive because a game needed them, and they stay because a game still does.",
+          "We’re an independent game studio building ignifx for our own games and for developers who like working in code. The engine is open source under Apache-2.0.",
         ),
       ),
       h("a", { class: "band-more", href: site.studio, rel: "noreferrer" }, [
@@ -296,7 +301,7 @@ export function homePage(repositoryRoot: string, websiteRoot: string, highlighte
       ]);
 
   const install = band({
-    title: "Get started in a minute",
+    title: "Start building",
     className: "band-install",
     body: h("div", { class: "install" }, [
       h("div", { class: "install-code" }, [highlighter.render(installCode, "sh", { label: "shell" }), installNote]),
@@ -307,5 +312,5 @@ export function homePage(repositoryRoot: string, websiteRoot: string, highlighte
     ]),
   });
 
-  return join(hero, pillars, code, features, templates, teaser, studio, install);
+  return join(hero, pillars, templates, code, features, teaser, studio, install);
 }

@@ -89,29 +89,16 @@ function firstPersonSchema(): Schema {
 }
 
 /**
- * A first-person character.
+ * A first-person character with movement, jumping, and camera look.
  *
- * @remarks
- * **Look units.** A pointer reading (`<Mouse>/delta`, `<Pointer>/delta`) is a displacement in CSS
- * pixels and is multiplied by `sensitivity`, in degrees per pixel; 0.08 to 0.15 suits most mice, and
- * the figure no longer changes with the device pixel ratio or the render scale. A gamepad or virtual
- * stick is a deflection, which is a rate, and is multiplied by `stickLookSpeed` in degrees per
- * second: the same physical push turns through the same angle at 60 and at 144 fps. Both are read
- * from one `Look` action; `InputAction.activeDevice` is what tells them apart.
+ * Pointer look uses `sensitivity` in degrees per CSS pixel; stick look uses `stickLookSpeed` in
+ * degrees per second. The `Look` action's active device selects the units.
  *
- * **Pointer lock.** While `lockPointerOnClick` is `true` (the default), a `pointerdown` on the
- * canvas asks the browser for the lock — every time it is not held, not only once, because the
- * browser drops it on Escape and on focus loss — and look readings from the mouse or the unified
- * pointer are **ignored until the lock is granted**. That is what stops the view spinning while the
- * player moves an unlocked cursor towards a menu button. Gamepad and touch look keep working
- * throughout. Set `lockPointerOnClick` to `false` for a drag-to-look design, which restores
- * unconditional mouse look.
+ * `lockPointerOnClick` defaults to `true`: canvas presses request pointer lock, and mouse/pointer
+ * look waits for it. Gamepad and touch look remain available. Set it to `false` for unlocked mouse look.
  *
- * **Pitch direction.** Up is up on every device: moving the mouse forward and pushing a stick up both
- * look up, which is the first-person convention. The rigs read one normalised axis — a screen's `y`
- * grows downward and a stick's grows upward, and the look helper reconciles that before either rig
- * sees it — so `invertY` flips mouse, touch, and stick together rather than fixing one and breaking
- * the other. Positive `pitch` still means the head is looking down.
+ * Moving the mouse forward or pushing a stick up looks up. `invertY` reverses all devices;
+ * positive `pitch` looks down.
  *
  * @example
  * ```ts

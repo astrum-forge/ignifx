@@ -652,7 +652,7 @@ function encodeComponentProps(
   if (schema === null) {
     return {};
   }
-  // Boundary assertion (coding standards §5.2): a schema-defined class carries exactly the schema's
+  // A schema-defined class carries exactly the schema's
   // field names as own properties, assigned by the generated base class's constructor.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   const values = component as unknown as Record<string, unknown>;
@@ -717,7 +717,7 @@ function readUid(value: unknown): string | null {
  * @returns The same object, typed as JSON.
  */
 function toJson(record: SceneFileComponent): JsonValue {
-  // Boundary assertion (coding standards §5.2): every field of a component record is already JSON;
+  // Every field of a component record is already JSON;
   // the interface exists to name the shape, not to add anything to it.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return record as unknown as JsonValue;

@@ -6,42 +6,11 @@ import type { UiHost } from "../dom/host.js";
 import type { SignalLike } from "@ignifx/core";
 
 /**
- * `Menu` — the list widget every game menu is made of: a title, an optional subtitle, and a
- * vertical list of {@link MenuRow}s that keyboard, gamepad and pointer all drive through one
- * selection model.
- *
- * It is a DOM helper in the same family as `Dialog`, `Toast` and `LoadingScreen`
- * (`docs/architecture/13-ui.md` §3: *"plain DOM helper classes with no styling opinions beyond a
- * minimal stylesheet; templates ship their own CSS"*), and it follows the same two rules: with no
- * DOM overlay every method is a no-op and {@link Menu.element} is `null`, and every visible piece
- * carries a `UI_CLASS_NAMES` class that a game restyles.
- *
- * ## Why the widget owns the selection instead of the browser
- *
- * Every row is `tabindex="-1"` and the selected row is chosen by this class rather than by
- * `document.activeElement`. The reason is the gamepad: a pad produces no DOM focus events, so pad
- * navigation needs its own path anyway, and two focus authorities in one screen disagree the first
- * time a row is added or removed. The DOM focus that does exist goes to the **list**, once, which
- * is what lets `aria-activedescendant` tell a screen reader where the selection is and what lets
- * the widget read the keyboard at all. The pointer only *moves* the selection and activates it,
- * because a mouse already has a cursor.
- *
- * ## ARIA
- *
- * The list is `role="menu"` and its rows are `role="menuitem"`, with `role="menuitemcheckbox"` plus
- * `aria-checked` for a `"toggle"` row and `role="separator"` for headings and separators. `menu`
- * was chosen over `listbox`/`option` for two reasons: WAI-ARIA's `option` expresses only *"is in
- * the selection"*, so a toggle's on/off state has nowhere to live, while `menuitemcheckbox` is
- * exactly that state; and a menu is what this is — a list of commands the player runs, not a set of
- * values one of which is chosen. `aria-activedescendant` on the list expresses the roving selection
- * without moving focus, which both roles support.
- *
- * The one compromise is the slider row. ARIA has no `menuitemslider`, and neither `menuitem` nor
- * `option` may contain an interactive descendant, so the native `<input type="range">` is marked
- * `aria-hidden="true"` and `tabindex="-1"`: it is a pointer affordance only, it is not in the
- * accessibility tree, and the value reaches a screen reader through the row's own accessible name
- * (its label plus the formatted value), which is refreshed on every change. Left and Right on the
- * row adjust the value with no pointer at all.
+ * Share one selection model across keyboard, gamepad, and pointer input.
+ * DOM focus stays on the list; `aria-activedescendant` identifies the selected row.
+ * Toggle rows expose `aria-checked`. Sliders expose their value through the row's accessible name;
+ * the range input is pointer-only, while Left/Right also adjust the value.
+ * Without a DOM overlay, methods are no-ops and `element` is `null`.
  */
 
 /**

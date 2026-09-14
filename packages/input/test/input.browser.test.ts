@@ -31,7 +31,6 @@ afterEach(() => {
   harness = null;
 });
 
-/** Waits for one animation frame. */
 function nextFrame(): Promise<void> {
   return new Promise<void>((resolve) => {
     requestAnimationFrame(() => {

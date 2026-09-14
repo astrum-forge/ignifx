@@ -9,22 +9,9 @@ import type { Logger } from "../log/logger.js";
 import type { Schema } from "../schema/types.js";
 
 /**
- * Project settings (`docs/architecture/04-extensions.md` §5). Each section is owned by the
- * extension that registered it, validated against that extension's schema, and frozen once every
- * extension has registered.
- *
- * Decisions the documents leave open:
- *
- * - **Single-field shorthand.** §5's example writes `layers: ["Default", "Ground"]`, an array,
- *   while `AppSettings.layers` is `{ layers: readonly string[] }` and `Schema` describes an object
- *   with named fields. The two are reconciled by one documented rule: when a section's schema
- *   declares exactly one field and the project supplies something that is not a plain object, the
- *   value is taken as that field's value. So `layers: [...]` and `layers: { layers: [...] }` both
- *   work, and `time: { fixedDeltaTime: 1 / 60 }` — two fields — keeps its object form.
- * - **A provided section is merged over the defaults, not replaced by them.** §5 calls the
- *   registered values "defaults", and omitted props already take schema defaults elsewhere
- *   (`06-serialization-and-scene-format.md` §2), so a project that sets only `fixedDeltaTime`
- *   keeps the default `maximumDeltaTime`.
+ * Merge project values over each extension's schema defaults, validate, then freeze.
+ * Single-field sections accept a non-object value as shorthand, such as `layers: ["Default"]`;
+ * multi-field sections use named properties.
  */
 
 /** One registered section. */
@@ -123,7 +110,7 @@ export class SettingsStore implements AppSettings {
         hint: "A section exists once the extension that owns it has run its register() hook.",
       });
     }
-    // Boundary assertion (coding standards §5.2): the invariant is that the resolved value was
+    // The invariant is that the resolved value was
     // built from the owner's own schema and defaults, so it has exactly the shape the owner
     // declared. Nothing in the type system connects a section name to a shape.
     // oxlint-disable-next-line typescript/no-unsafe-type-assertion

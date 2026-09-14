@@ -15,30 +15,10 @@ import type { LiteMesh } from "../lite/gpu/mesh.js";
 import type { LiteScene } from "../lite/scene.js";
 
 /**
- * `MeshAsset` (`docs/architecture/07-rendering.md` §2.3): the geometry template a `MeshRenderer`
- * clones. One upload, many renderers — `cloneTransformNode` shallow-clones a mesh and shares its
- * `_gpu` wrapper under a reference count, so N renderers of one asset cost one set of vertex
- * buffers (ADR-0002 Validation, `src/lite/gpu/mesh.ts`).
- *
- * ## Why the factories return handles
- *
- * `MeshRenderer.mesh` is an `asset(MeshAsset)` field, and since Phase 2 the runtime value of an
- * `asset()` field is an `AssetHandle` (`05-assets-and-loading.md` §3). A primitive built in code
- * therefore has to be *published* before a renderer can hold it, which is what `Assets.register`
- * does: the factories below register the template under a `memory:mesh/<n>` address and hand back
- * the handle, already loaded, with one holder — the caller.
- *
- * Ownership follows from that. The caller releases the handle (or lets a `using` block do it); the
- * collector then runs the `mesh` type's `unload`, which is {@link MeshAsset.dispose}. Releasing
- * while renderers still hold clones is safe — Lite frees the shared buffers only when the last
- * co-owner has gone — but the template can no longer be cloned afterwards.
- *
- * ## Headless
- *
- * Every Lite mesh factory uploads through `engine._device`, which the null engine does not have
- * (`07-rendering.md` §6). Under a headless app a `MeshAsset` therefore carries no geometry:
- * `lite.mesh` is `null`, `dispose()` is a no-op, and a `MeshRenderer` that holds it keeps its state
- * without touching the scene. Tests assert on component state, not on Lite scene contents.
+ * Mesh templates share geometry with renderer clones (ADR-0002).
+ * Factories register a loaded handle with one caller-owned hold; release it when no longer needed.
+ * Existing clones survive collection, but a disposed template cannot make new clones.
+ * Headless mesh assets keep component state without GPU geometry.
  */
 
 /**

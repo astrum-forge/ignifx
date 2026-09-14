@@ -18,13 +18,9 @@ export const UI: readonly ExampleOf<"UI">[] = [
     dimension: "3D",
     priority: "P0",
     status: "ready",
-    line: "A HUD, a dialog and toasts in HTML, over a scene you can still see.",
+    line: "Try menus, dialogs and notifications over a running game scene.",
     paragraph:
-      "Game UI in ignifx is HTML. `@ignifx/ui` puts one positioned element over the canvas and hands your game " +
-      "named layers inside it, so a HUD is a `div`, a modal is a `Dialog` and a message is a `Toast` — real fonts, " +
-      "real layout, screen readers, any framework you already know. The score in the corner is the exception: " +
-      "`HudText` is drawn by the GPU in backing-store pixels, for text that has to line up with a screenshot. The " +
-      "Scaling select decides what a UI unit is, and the notch toggle shows a desktop what a phone reports.",
+      "This interface combines HTML controls with text drawn on the game canvas. Change the layout scale, simulate a phone’s safe area or open a dialog that pauses the game. Notifications can still expire while gameplay is paused.",
     tries: [
       "Switch Scaling to fit: every HTML part of the overlay rescales together, and the GPU score does not.",
       "Turn on “Simulate a notch” and watch the HUD move inside the four safe-area insets.",

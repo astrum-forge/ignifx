@@ -6,29 +6,9 @@ import type { UiLayer } from "../dom/layer.js";
 import type { App } from "@ignifx/core";
 
 /**
- * `VirtualJoystick` (`docs/architecture/13-ui.md` §3): an on-screen thumbstick that writes a
- * `<Virtual>/…` vector control, so a touch game binds exactly the same action to
- * `<Virtual>/joystick` that a desktop game binds to `<Keyboard>/wasd`.
- *
- * ## Replacing a template's own widget
- *
- * `templates/2d-topdown/src/touch-controls.ts` says it is *"meant to be **deleted** when
- * `@ignifx/ui` ships a `VirtualJoystick`… the bindings in `game.input.json`
- * (`<Virtual>/joystick`, `<Virtual>/interact`) do not change"*. This class writes the same two
- * controls with the same axis convention — screen `+Y` is down and the stick's `+Y` is up, so the
- * vertical axis is negated here and nowhere else — and the swap is that file's deletion plus:
- *
- * ```ts ignore-check
- * const stick = new VirtualJoystick(app, { control: "joystick" });
- * const jump = new VirtualButton(app, { control: "interact", label: "E" });
- * ```
- *
- * ## Multi-touch
- *
- * The stick claims exactly one `pointerId` and ignores every other pointer until that one is
- * released, so a thumb on the stick and a thumb on a button never fight. `pointerup` **and**
- * `pointercancel` both release it: a value written on `pointerdown` and never cleared would leave
- * the character walking for ever, which is the bug the template's own comment calls out.
+ * Write a virtual vector control with Y up, converting screen Y-down motion here.
+ * Claim one pointer at a time so the stick and buttons support separate touches.
+ * Clear the control on both release and cancellation to prevent stuck movement.
  */
 
 /**

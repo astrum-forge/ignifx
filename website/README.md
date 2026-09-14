@@ -16,10 +16,10 @@ pnpm --filter @ignifx/website typecheck
 pnpm --filter @ignifx/website dev                  # the site, on Vite's dev server
 pnpm --filter @ignifx/website dev:examples         # the examples, at /examples/<slug>/
 pnpm --filter @ignifx/website preview              # serve dist locally
-pnpm --filter @ignifx/website press-kit            # regenerate public/press/** (output committed)
+pnpm --filter @ignifx/website brand                # regenerate site logos, icons and the social card
 ```
 
-While the examples' posters or the press kit are still being produced, `pnpm --filter
+While the examples' posters are still being produced, `pnpm --filter
 @ignifx/website exec vite build --mode development` turns the build's "this claim has nothing behind
 it" errors into warnings. A production build never does.
 
@@ -29,13 +29,12 @@ Every fact on the site comes out of the tree at build time: the version from
 `packages/core/package.json` (through `site.config.ts`), the "First app" sample from
 `skills/ignifx/SKILL.md`, the sixteen guides from `skills/ignifx/references/recipes/`, the example
 catalogue from `examples/catalogue.ts`, the sample-asset credits from
-`examples/assets/ATTRIBUTION.md`, and the press files from `public/press/`. A **production** build
+`examples/assets/ATTRIBUTION.md`. A **production** build
 fails when the tree cannot back a page:
 
 - a catalogue entry with no directory, no first source file, or no poster in all three formats;
 - a recipe with no group in `scripts/repo-content.ts`;
 - a missing `ATTRIBUTION.md`;
-- a press file the page lists;
 - an `llms.txt` URL that is not an absolute link to a file in the working tree.
 
 ## Layout
@@ -46,8 +45,8 @@ fails when the tree cannot back a page:
 | `scripts/`       | The build: the Vite plugin, the page renderers, the copy tables, the icon sprite, Markdown, fonts.       |
 | `src/`           | What ships to the browser: `main.ts`, `viewer.ts` (a chunk), `theme.ts`, and `styles/`.                  |
 | `examples/`      | The runnable examples: `catalogue.ts`, the shared `_kit/`, one directory per example, `assets/`.         |
-| `press/`         | The press-kit generator; its output is committed under `public/press/`.                                  |
-| `public/`        | Copied verbatim: `llms.txt`, `robots.txt`, `favicon.svg`, `examples/<slug>.{png,webp,avif}`, `press/**`. |
+| `press/`         | Archived press-kit generator and `legacy-assets/`; not published.                                        |
+| `public/`        | Copied verbatim: `llms.txt`, `robots.txt`, `favicon.ico`, `examples/<slug>.{png,webp,avif}`, `brand/**`. |
 | `headers.txt`    | Template for `dist/_headers`. The build substitutes the JSON-LD hash.                                    |
 | `redirects.txt`  | Template for `dist/_redirects`. The build appends one line per Agent Skill file.                         |
 | `test/`          | Assertions over `dist/`: routes, links, weight, contrast, headers, the no-third-party scan.              |
@@ -58,13 +57,13 @@ written and would overwrite the emitted file.
 
 ## Routes
 
-Twelve fixed routes, plus one page per catalogue example and one per guide:
+The main routes, plus one page per catalogue example and one per guide:
 
 ```
 /                          /features/                 /examples/
 /examples/<slug>/          /examples/<slug>/run/      /examples/attribution/
 /docs/                     /docs/getting-started/     /docs/guides/
-/docs/guides/<name>/       /docs/browser-support/     /press/
+/docs/guides/<name>/       /docs/browser-support/
 404.html  ·  sitemap.xml  ·  robots.txt  ·  llms.txt  ·  _headers  ·  _redirects
 ```
 
@@ -120,7 +119,6 @@ Three policies are emitted from `headers.txt`:
 | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | `/*`              | `connect-src 'none'`, `frame-ancestors 'none'`, `style-src 'self'`, `script-src 'self' 'sha256-…'` — the one JSON-LD block, by hash.     |
 | `/examples/*run/` | `script-src 'self' 'wasm-unsafe-eval'` (Havok, Rapier, Recast) and `style-src 'self' 'unsafe-inline'` for `@ignifx/ui`'s injected sheet. |
-| `/press/badges/*` | `Access-Control-Allow-Origin: *` and a one-day cache: other sites hot-link these.                                                        |
 
 Cloudflare applies **every** matching rule and comma-joins a repeated header, so a rule that needs a
 different value detaches the `/*` one with `! Header-Name` first; and a pattern may hold only one
@@ -171,3 +169,6 @@ deploy.
 Pages serves `dist/404.html` for anything that does not match a file, applies `dist/_headers` for
 response headers and `dist/_redirects` for the aliases. `/assets/*` and `/examples/assets/*` are
 content-hashed and served `immutable`; HTML is `max-age=0, must-revalidate`.
+
+The press kit is temporarily retired. `/press/` redirects to the home page; archived assets stay
+under `press/legacy-assets/` and are not copied into the build. Current branding lives in `brand/`.

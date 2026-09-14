@@ -167,16 +167,10 @@ function createRandom(seed: number): () => number {
   // oxlint-enable unicorn/prefer-math-trunc
 }
 
-/** The placeholder `announce` holds until the promise below hands over its resolver. */
 function noop(): void {
   // Nothing to do: the promise executor runs synchronously and replaces this on the next line.
 }
 
-/**
- * Waits for one animation frame.
- *
- * @returns A promise that resolves inside the next frame callback.
- */
 function nextFrame(): Promise<void> {
   return new Promise<void>((resolve) => {
     requestAnimationFrame(() => {

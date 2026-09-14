@@ -6,29 +6,9 @@ import type { Physics2DMaterialValues } from "../settings.js";
 import type { AssetHandle, ComponentHooks, Schema, Vec2Like } from "@ignifx/core";
 
 /**
- * The 2D collider contract (`docs/architecture/11-2d-toolkit.md` §8). Every collider shares an
- * offset, the trigger flag, a surface, a layer override, and the one-way platform flag, and answers
- * one question the body builder asks: which Rapier shapes it stands for.
- *
- * ## Corrections to §8
- *
- * - **The material is two fields, not a union.** A schema field has exactly one kind (ADR-0004), so
- *   {@link Collider2D.material} (an asset reference) and {@link Collider2D.inlineMaterial} (a
- *   record) are separate; the asset wins, the inline record is the fallback, and
- *   `physics2d.defaultMaterial` is the last resort. This is the same split `@ignifx/physics` makes.
- * - **Combine rules are collider fields.** Rapier combines two surfaces' friction and restitution
- *   with a per-collider rule (`dynamics/coefficient_combine_rule.d.ts`); the 3D
- *   `ignifx.physicsmaterial` document has no such field, so the knob lives here rather than
- *   forking the asset format.
- * - **A collider may stand for several Rapier colliders.** `TilemapCollider2D` produces one polygon
- *   per merged tile run, so {@link Collider2D.collectShapes} fills a list rather than returning one
- *   shape.
- *
- * ## Sizes and scale
- *
- * Sizes are authored in local metres and multiplied by the entity's lossy scale when the shapes are
- * built. Rapier cannot rescale a built shape, so a later scale change needs
- * {@link Collider2D.rebuild}.
+ * Build shapes from local metres multiplied by entity scale; call `rebuild` after changing scale.
+ * Material assets take precedence over inline values, then project defaults. Friction and restitution
+ * combine rules belong to each collider. A tilemap collider can produce several backend shapes.
  */
 
 /**

@@ -97,7 +97,7 @@ function readDescription(parsed: unknown, address: string): EnvironmentDefinitio
   if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
     throw notAnEnvironment(address);
   }
-  // Boundary assertion (coding standards §5.2): the array and `null` cases are gone.
+  // The array and `null` cases are gone.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   const file = parsed as Record<string, unknown>;
   if (file["format"] !== ENVIRONMENT_FILE_FORMAT) {

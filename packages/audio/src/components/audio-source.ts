@@ -21,43 +21,15 @@ import type { PlayOptions, SoundInstance, SoundVoice } from "../service/voice.js
 import type { AssetHandle, Disconnect, Schema, ScriptCallbacks, SignalLike } from "@ignifx/core";
 
 /**
- * `AudioSource` (`docs/architecture/10-audio.md` §3): the component that makes a sound come from an
- * entity.
- *
- * ## What it owns
- *
- * One *voice*: the clip, the bus, and the options, as the backend knows them. Every `play()` starts
- * another instance of that one voice, up to `maxInstances`, above which the **oldest** is stolen —
- * which is what Babylon Lite does (`lib/audio/static-sound.js`, `_stopExcessInstances`) and what a
- * footstep loop wants: the newest step is the one that matters.
- *
- * ## What is applied when
- *
- * `volume` and `pan` are pushed to the running sound as soon as they change. Everything that
- * defines the *shape* of the sound — `clip`, `bus`, `loop`, `maxInstances`, `spatial` and its
- * parameters — cannot be changed on a live Web Audio graph, so changing one rebuilds the voice at
- * the start of the next `update`: anything playing stops, and the next `play()` uses the new
- * settings. `pitch` is a per-play value (Lite's `playbackRate` is fixed once an instance has
- * started), so it takes effect on the next `play()` rather than on the instance that is running.
- *
- * ## Angles
- *
- * `cone.innerAngle` and `cone.outerAngle` are **degrees** here, as everything user-facing in ignifx
- * is (coding standards §5.1), and are converted to the radians Lite's `SpatialSoundOptions` wants
- * (`index.d.ts` 11771; Lite converts them back to degrees for the Web Audio panner in
- * `lib/audio/spatial.js`).
+ * A source owns one voice; each play creates an instance, replacing the oldest above `maxInstances`.
+ * Volume and pan update live. Changes to clip, bus, loop, instance limit, or spatial settings rebuild
+ * the voice on the next update and stop current playback. Pitch affects the next play.
+ * Public cone angles use degrees; the adapter converts them for Lite.
  */
 
 /**
- * Options accepted by {@link AudioSource.playOneShot}: a gain and nothing else.
- *
- * @remarks
- * Deliberately narrower than the `OneShotOptions` the service form takes
- * (`docs/architecture/10-audio.md` §3, "Corrections"). The component form exists to fire a second
- * clip **through this source's bus**, so `bus` is not a caller's choice, and everything else in
- * `PlayOptions` — `pitch`, `loop`, `delay`, `startOffset`, `duration` — describes a sound the
- * source would then have no handle on. A one-shot that needs more than a gain is
- * `app.audio.playOneShot(clip, options)`, which takes `bus` plus all of `PlayOptions`.
+ * Gain options for a one-shot played through this source's bus.
+ * Use `app.audio.playOneShot` to choose a bus or supply other playback options.
  *
  * @public
  */

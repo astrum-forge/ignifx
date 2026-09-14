@@ -18,11 +18,9 @@ export const BASICS: readonly ExampleOf<"Basics">[] = [
     dimension: "3D",
     priority: "P0",
     status: "ready",
-    line: "The smallest complete app: a light rig, a ground plane and a spinning cube.",
+    line: "Start with a spinning cube, a camera and lights, all created in code.",
     paragraph:
-      "Everything an ignifx app needs and nothing else: a camera you can orbit, a three-point light rig whose key " +
-      "light casts, a ground plane and a cube with a nine-line spinning script. Every asset is created in code, so " +
-      "nothing is fetched and the whole program is one file you can read top to bottom.",
+      "A small scene with a spinning cube, an orbit camera and lights. Change the cube’s speed and colour while it runs. The scene is created entirely in code, with no model or texture files to load.",
     tries: [
       "Drag the spin slider and watch the cube change pace without a reload.",
       "Change the cube's colour: one material, edited live, with no shader rebuild.",

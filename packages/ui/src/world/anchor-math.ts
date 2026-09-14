@@ -2,28 +2,9 @@ import { clamp } from "@ignifx/core";
 import type { UiPixelMapping } from "../dom/scaling.js";
 
 /**
- * Where a `WorldAnchor`'s element goes, and whether it is shown
- * (`docs/architecture/13-ui.md` §2). Pure arithmetic, so every combination of
- * `hideWhenBehindCamera`, `clampToScreen` and `scaleWithDistance` is a node test with a fake
- * camera and no DOM.
- *
- * ## The two pixel spaces
- *
- * `Camera.worldToScreen` writes **render-target** pixels: it divides by
- * `RendererImpl.readTargetSize`, which is `canvas.width`/`canvas.height`
- * (`packages/core/src/lite/gpu/render-diagnostics-gpu.ts` 126-128). A DOM element lives in the
- * overlay's UI units. {@link UiPixelMapping}, built by the host from the current layout, is the
- * conversion, and it is applied here rather than in the system so the system does nothing but
- * loop.
- *
- * ## Behind the camera
- *
- * `worldToScreen` returns `false` and leaves a **mirrored** projection in `out` when the point is
- * behind the camera — its own documentation says the value "should be ignored". So a point behind
- * the camera is either hidden (`hideWhenBehindCamera`) or, when the anchor also clamps, reflected
- * about the viewport centre before being clamped, which pushes an off-screen marker to the correct
- * edge instead of the opposite one. With neither flag set it is hidden, because a mirrored
- * position is not a position.
+ * Convert camera backing-store pixels to overlay units through `UiPixelMapping`.
+ * Behind-camera projections are mirrored: hide them, or reflect before clamping to the viewport
+ * edge. Keep the arithmetic independent of the DOM for headless tests.
  */
 
 /**

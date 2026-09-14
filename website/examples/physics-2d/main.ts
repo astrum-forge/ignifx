@@ -7,23 +7,9 @@ import { ARENA_WIDTH, COLUMNS, MIDDLE_COLUMN } from "./scene.ts";
 import type { SpriteAtlasAsset } from "ignifx";
 
 /**
- * Rapier 2D through `Rigidbody2D` and two collider shapes: a stack of crates to knock over and
- * coins to roll into them.
- *
- * A collider makes an entity solid; a `Rigidbody2D` makes it move; the pose comes back on
- * `entity.transform.position2D` like any other. The simulation is stepped by ignifx's own fixed
- * loop — no Babylon scene is involved — so it advances at a fixed rate whatever the frame rate
- * does, and dynamic bodies interpolate between steps so a 60 Hz simulation still looks smooth at
- * 144 Hz.
- *
- * Three things in here are worth reading for.
- *
- * - The **shape** is the difference between a crate and a coin: a `BoxCollider2D` stacks and
- *   topples, a `CircleCollider2D` rolls. Nothing else about the two bodies differs.
- * - **Mass is exact kilograms.** `mass: 0` would mean "weigh the colliders at 1 kg/m²"; the numbers
- *   below are chosen so a thrown coin can move a crate but not a wall of them.
- * - The floor and the two walls carry **colliders and no `Rigidbody2D`**, which gives them an
- *   implicit static body — placed once, at the start of the next fixed step.
+ * Simulate boxes and circles with the engine's fixed loop and interpolate their display poses.
+ * Mass is in kilograms; zero derives it from collider area at 1 kg/m².
+ * Colliders without a Rigidbody2D become static bodies at the next fixed step.
  */
 
 // The dusk sky behind the arena: presents as bytes `31, 35, 51` (`#1F2333`), darker than the

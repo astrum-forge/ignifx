@@ -4,24 +4,9 @@ import type { UiHost } from "../dom/host.js";
 import type { SignalLike } from "@ignifx/core";
 
 /**
- * `Toast` (`docs/architecture/13-ui.md` §3): a transient message stacked in a corner of the
- * overlay.
- *
- * ## Why the clock is the app's, not the browser's
- *
- * A toast dismisses itself after a number of **game seconds**, advanced by
- * {@link Toast.advance} from the game's own loop, rather than by `setTimeout`. Three reasons: it
- * pauses when the game pauses, it is deterministic in a headless test that steps the clock, and it
- * cannot fire after the app has been disposed. A game that wants wall-clock timing passes
- * `app.time.unscaledDeltaTime`.
- *
- * The consequence is the one thing to remember: **`app.pause()` stops `update` for every ordinary
- * script**, so a toast advanced from an ordinary script freezes with the game and a message shown
- * from a pause menu never expires. The script that calls {@link Toast.advance} declares
- * `static updateWhenPaused = true` and passes `app.time.unscaledDeltaTime`. `UiSystem` deliberately
- * does not advance toasts for you: `docs/architecture/13-ui.md` §3 defines a toast as running on
- * the game clock, and a system that advanced every toast would take that choice away from the game
- * and would have to keep a registry of every toast ever built.
+ * The caller advances toast lifetime; no browser timer can outlive the app.
+ * For messages that expire while paused, call `advance(app.time.unscaledDeltaTime)` from a script
+ * with `updateWhenPaused = true`. The UI system does not advance toasts automatically.
  */
 
 /**

@@ -5,22 +5,8 @@ import type { DevtoolsPanel, DevtoolsPanelHost } from "../overlay/panel.js";
 import type { LogLevel, LogRecord, LogThreshold } from "@ignifx/core";
 
 /**
- * The **Console** panel (`docs/architecture/15-devtools-and-diagnostics.md` §4: *"log sink"*, with
- * §1's error reports and §5's hot-reload reports).
- *
- * ## Three sources, one list
- *
- * The list is drawn in a fixed order rather than merged by timestamp: `app.onError` reports first,
- * then hot-reload reports, then log records newest-first. The two clocks involved are different —
- * error entries are stamped with `app.time.unscaledTime` and log records with the logger's own
- * `performance.now()` reading — so interleaving them by number would put lines in an order that
- * looks precise and is not.
- *
- * ## Where the sink comes from
- *
- * The extension adds its sink to `app.log` with `Logger.addSink` at registration, so every logger in
- * the tree reaches the panel with no game-side wiring; `devtools({ logSink })` only substitutes a
- * shared or differently sized one.
+ * Group errors, reload reports, and log records rather than sorting them across incompatible clocks.
+ * The extension attaches a log sink at registration; games may supply a shared sink.
  */
 
 /** How many lines the panel renders. More than a screenful; the sink keeps the rest. */

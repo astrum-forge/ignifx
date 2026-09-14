@@ -634,7 +634,7 @@ export class RendererImpl implements Renderer {
     for (const handle of this.#app.assets.manifest.entries) {
       const cached = this.#app.assets.get(handle.address);
       if (cached !== null && cached.state === "loaded" && cached.type === MATERIAL_ASSET_TYPE) {
-        // Boundary assertion (coding standards §5.2): the cache is untyped, and the type name is
+        // The cache is untyped, and the type name is
         // what says this entry holds a material.
         // oxlint-disable-next-line typescript/no-unsafe-type-assertion
         materials.push(cached.value as MaterialAsset);

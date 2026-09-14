@@ -76,11 +76,6 @@ class Ticker extends Script implements ScriptCallbacks {
   }
 }
 
-/**
- * Waits for one animation frame.
- *
- * @returns A promise that resolves inside the next frame callback.
- */
 function nextFrame(): Promise<void> {
   return new Promise<void>((resolve) => {
     requestAnimationFrame(() => {

@@ -32,6 +32,7 @@ The entry skill is `skills/ignifx/SKILL.md`; subsystem skills sit at `packages/<
 - Never write under `docs/migrations/` while the version is `0.x`; never hand-edit generated files.
 - Verify any Babylon Lite claim against the pinned version's `index.d.ts`, not against memory or Lite's prose docs (they disagree in places).
 - Run `pnpm check` before opening a pull request and paste the result. Humans approve merges.
+- Follow coding standards §9 for short comments, API docs, and release notes; use `.changeset/README.md` when writing a changeset.
 
 ## Repository lessons every agent should know
 

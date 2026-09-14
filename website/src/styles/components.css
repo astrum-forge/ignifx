@@ -176,7 +176,7 @@
 }
 
 .grid-pillars {
-  grid-template-columns: repeat(auto-fit, minmax(min(13rem, 100%), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(19rem, 100%), 1fr));
 }
 
 @media (min-width: 1040px) {
@@ -189,7 +189,7 @@
   }
 
   .grid-pillars {
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 

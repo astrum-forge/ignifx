@@ -849,13 +849,7 @@ The union of the diagnostic codes this package can report.
 
 > `const` **ASSET\_CHANGED\_EVENT**: `"ignifx:asset-changed"` = `"ignifx:asset-changed"`
 
-The HMR event the plugin sends when an asset under the asset root changes.
-
-#### Remarks
-
-The assets service listens for it and reloads the affected handles, firing
-`AssetHandle.onReplaced` (`docs/architecture/05-assets-and-loading.md` §7). The *policy* of a
-script hot reload — patch or recreate — is Phase 10's; this package only ships the channel.
+The asset-change HMR event. The asset service reloads affected handles and emits `onReplaced`.
 
 #### Example
 
@@ -1441,7 +1435,8 @@ const files = await collectExtensionPublicAssets("/project");
 
 > **defineConfig**\<`T`\>(`config`): `T`
 
-Identity helper that gives a game's `ignifx.config.ts` its types without widening the object.
+Type a project config while preserving inferred literal types.
+Also available as `defineConfig` from `ignifx/config`.
 
 #### Type Parameters
 
@@ -1464,13 +1459,6 @@ The project config object.
 `T`
 
 The same object, unchanged.
-
-#### Remarks
-
-`ignifx/config` re-exports this in Phase 12 so that a game can write
-`import { defineConfig } from "ignifx/config"` rather than reaching into the build plugin. The
-function is deliberately generic and lossless: it returns the argument, so literal types such as
-the layer-name tuple survive into the game's own typings.
 
 #### Example
 

@@ -2,8 +2,8 @@ import { clamp, degToRad, f32, Script } from "@ignifx/core";
 import type { ScriptCallbacks } from "@ignifx/core";
 
 /**
- * A drag-to-orbit camera control, written against the DOM because `@ignifx/input` arrives in
- * Phase 3. When it does, the pointer plumbing here becomes an action map and the maths stays.
+ * Drag-to-orbit camera using DOM pointer events. This standalone example does not register the
+ * input extension.
  */
 
 /** How far the pitch may travel from the horizon, in degrees. */

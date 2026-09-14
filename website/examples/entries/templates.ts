@@ -18,13 +18,9 @@ export const TEMPLATES: readonly ExampleOf<"Templates">[] = [
     dimension: "2D",
     priority: "P0",
     status: "ready",
-    line: "A tilemap with a collision layer, a Y-sorted character, a camera follow and the full front end.",
+    line: "Explore a pixel-art courtyard, light shrines and save your progress.",
     paragraph:
-      "One of the four templates `create-ignifx` scaffolds, running here exactly as it runs on a developer's " +
-      "machine. A Tiled-style tilemap with a collision layer becomes colliders; props and the character sort by " +
-      "their Y position so they overlap correctly; the camera follows through a dead zone; and the title screen, " +
-      "pause menu, settings, key rebinding and save file are all real. Everything but the camera is spawned from " +
-      "the map's objects layer, so moving a spawn needs no TypeScript.",
+      "A playable starting point for a top-down game. Explore the courtyard and light shrines to save your progress. The template includes a following camera, collisions, menus, settings and control rebinding.",
     tries: [
       "Walk onto a shrine pad with WASD or the arrows to light it; the game autosaves when you do. Press E to see what is within reach.",
       "Press Escape for the pause menu, then Settings to move the audio and render-scale sliders.",
@@ -53,14 +49,9 @@ export const TEMPLATES: readonly ExampleOf<"Templates">[] = [
     dimension: "2D",
     priority: "P0",
     status: "ready",
-    line: "Three parallax bands, a tilemap with slopes and one-way platforms, coins, and a pixel-perfect camera.",
+    line: "Run, jump and collect coins across a scrolling pixel-art level.",
     paragraph:
-      "One of the four templates `create-ignifx` scaffolds, running here exactly as it runs on a developer's " +
-      "machine. Three parallax bands slide behind a tilemap that carries 45-degree slopes and one-way planks; the " +
-      "reference platformer controller has coyote time, a jump buffer, a variable jump height and drop-through; " +
-      "the coins are trigger colliders that score a point and autosave when they are taken; and the camera is " +
-      "pixel-perfect against a 320 by 180 reference resolution, so one source texel covers a whole number of " +
-      "screen pixels. The title screen, pause menu, settings, key rebinding and save file are all real.",
+      "A playable starting point for a platformer. Jump across slopes and platforms, collect coins and drop through wooden planks. The template includes scrolling backgrounds, a pixel-perfect camera, menus, settings and saves.",
     tries: [
       "Run with WASD or the arrows and jump with Space; taking a coin scores a point and autosaves.",
       "Hold S or the down arrow and press Space on one of the planks to drop through it.",
@@ -100,15 +91,9 @@ export const TEMPLATES: readonly ExampleOf<"Templates">[] = [
     dimension: "3D",
     priority: "P0",
     status: "ready",
-    line: "A character on a capsule, an orbit camera that avoids walls, an animated rig, and a companion that paths.",
+    line: "Explore with an animated character, a following camera and an AI companion.",
     paragraph:
-      "One of the four templates `create-ignifx` scaffolds, running here exactly as it runs on a developer's " +
-      "machine. The character is a `CharacterController` capsule driven by `ThirdPersonController`; the orbit " +
-      "camera sweeps a sphere along its boom, so geometry in the way pulls the camera in rather than letting it " +
-      "sit inside a wall; an `Animator` state machine blends idle, walk and run on a rigged model and triggers " +
-      "the jump; the companion is a `NavMeshAgent` on a surface baked from the geometry the level builds in " +
-      "code; and the crates are rigid bodies you can push. Walking up to a beacon lights it, scores a point and " +
-      "autosaves. The title screen, pause menu, settings, key rebinding and save file are all real.",
+      "A playable starting point for a third-person game. Explore a courtyard, push crates and light beacons to save your progress. An animated character, a camera that adjusts around walls and a pathfinding companion are already set up, along with menus and settings.",
     tries: [
       "Click the frame to take the pointer, then walk with WASD, look with the mouse and hold Shift to sprint; the rig blends idle, walk and run.",
       "Walk into one of the three beacons to light it — that scores a point and autosaves the run.",
@@ -149,15 +134,9 @@ export const TEMPLATES: readonly ExampleOf<"Templates">[] = [
     dimension: "3D",
     priority: "P0",
     status: "ready",
-    line: "Walk, sprint, crouch and jump with pointer lock, a view model on the hand, and things to push.",
+    line: "Explore in first person, push crates and interact with objects.",
     paragraph:
-      "One of the four templates `create-ignifx` scaffolds, running here exactly as it runs on a developer's " +
-      "machine. `FirstPersonController` walks, sprints, crouches and jumps on a `CharacterController` capsule, " +
-      "with head bob and pointer lock, and the body owns the yaw while the head owns the pitch. The view model " +
-      "is parented to the rig's `hand` node, so the prop it carries follows the animation; a crosshair ray from " +
-      "the camera through `app.physics.raycast` reports what is in reach on the `Interactable` layer and lights " +
-      "a pedestal when you interact; and the crates are rigid bodies you can push. The title screen, pause " +
-      "menu, settings, key rebinding and save file are all real.",
+      "A playable starting point for a first-person game. Walk, sprint, crouch and jump around the room, then interact with pedestals to light them. The template includes mouse-look, a held item, menus, settings and saves.",
     tries: [
       "Click the frame to take pointer lock, then walk with WASD and hold C to crouch.",
       "Look at a pedestal and press E, or click, to light it; the game autosaves when you do.",

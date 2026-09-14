@@ -71,7 +71,7 @@ export { ThirdPersonController } from "./character/third-person-controller.js";
 export { FirstPersonController } from "./character/first-person-controller.js";
 export { PlatformMover, Projectile, RigidbodyMover } from "./character/movers.js";
 
-// environment — the two Phase 7 helpers of `12-3d-toolkit.md` §6.
+// Environment helpers (docs/architecture/12-3d-toolkit.md §6).
 export { LOD_CULLED, LOD_ORDER, LodGroup, LodSystem, type LodLevel } from "./environment/lod-group.js";
 export {
   BILLBOARD_MODES,

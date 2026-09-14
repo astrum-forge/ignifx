@@ -1,11 +1,6 @@
 /**
- * Error codes owned by `@ignifx/cli`. They live in the `14xx` platform range reserved by
- * `docs/architecture/15-devtools-and-diagnostics.md` §1.
- *
- * @remarks
- * The CLI runs before an `App` exists, so it cannot throw core's `IgnifxError`. Phase 1 introduces
- * the full `IgnifxError` registry described in that document; when it lands, these codes are
- * expected to fold into it and `CliError` becomes a thin alias or is removed.
+ * Diagnostic codes for scaffolding failures, in the reserved `IGX-14xx` platform range.
+ * The CLI reports these through `CliError` without creating an engine app.
  *
  * @public
  */

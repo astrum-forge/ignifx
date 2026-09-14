@@ -27,36 +27,9 @@ import type { DevtoolsPanelName, DevtoolsSettings } from "./settings.js";
 import type { App, Disconnect, Entity, ErrorReport, SignalLike, System } from "@ignifx/core";
 
 /**
- * `app.devtools` (`docs/architecture/15-devtools-and-diagnostics.md` §4).
- *
- * ## Zero cost when closed
- *
- * The exit criterion in `docs/plan/engineering-plan.md` Phase 10 is that a registered-but-closed
- * devtools costs nothing. What that means here, precisely:
- *
- * - **No system while it has never been opened.** `devtools()` registers no system in `register`.
- *   The `PreRender` sampler is registered by the first {@link DevtoolsService.open}, through the
- *   callback the extension handed the service.
- * - **No subscriptions while closed.** `app.onError`, the world's four structural signals, the
- *   hot-reload signal and the scene-reload watcher are all connected by `open()` and disconnected
- *   by `close()`.
- * - **No DOM while closed.** `close()` disposes the overlay and its panels; `open()` rebuilds them.
- *   Panel visibility survives the round trip because the service, not the overlay, owns it.
- * - **One live listener.** The toggle key, which is one `keydown` handler doing one string
- *   comparison.
- *
- * The one thing core does **not** allow is removing the sampler system again: `Scheduler` has a
- * `registerSystem` and no `unregisterSystem`, so once the overlay has been opened the system stays
- * registered for the app's life and returns on its first line while the overlay is closed. That is
- * one predicate per frame, and it is what `benchmarks/devtools-closed.test.ts` measures.
- *
- * ## Where the sampler runs
- *
- * `Phase.PreRender`, order {@link DEVTOOLS_SAMPLE_ORDER} = 9000. Core's render sync is 900
- * (`packages/core/src/render/render-sync-system.ts`), `@ignifx/ui` is 1100, `@ignifx/2d` is -450
- * and `@ignifx/audio` is -400, and `04-extensions.md` gives extensions `[1001, 9999]`. 9000 is
- * after every one of them, which is the only order at which the sample reports the numbers those
- * systems just wrote rather than the previous frame's.
+ * Keep no overlay DOM or subscriptions while closed. The toggle key remains active.
+ * The first open registers a sampler that cannot be unregistered; after closing, it returns
+ * immediately. Sampling runs late in `PreRender` so it sees current system diagnostics.
  */
 
 /**

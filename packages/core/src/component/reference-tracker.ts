@@ -2,21 +2,9 @@ import { componentInternals } from "./internals.js";
 import type { Component } from "./component.js";
 
 /**
- * Tracked references (`docs/architecture/02-scene-graph.md` §4): a field declared with `entityRef`
- * or `componentRef` is set to `null` when its target is destroyed, in the same destroy flush,
- * before any `onDestroy` of the holder runs. Plain class fields holding entities or components are
- * not* tracked; game code checks `isDestroyed` before using those.
- *
- * @remarks
- * **How it is implemented, and why not with accessors.** The obvious design intercepts every write
- * to a tracked field with a generated accessor, so the tracker can index holders by target. Coding
- * standards §5.3 bans `Object.defineProperty` tricks and prototype mutation, which is what
- * generating those accessors requires, so the tracker takes the other route: it keeps the small set
- * of components whose class declares at least one tracked field, and the destroy flush makes one
- * pass over that set, nulling any tracked field whose current value is being destroyed. Tracked
- * fields stay ordinary data properties — `this.target = other` is a plain assignment with no hidden
- * cost — and the pass is O(holders x tracked fields) once per flush that destroys anything, not per
- * frame and not per entity.
+ * Clear schema-declared entity and component references during the destroy flush, before holders'
+ * `onDestroy` callbacks. Plain fields are not tracked; callers check `isDestroyed` themselves.
+ * Scan tracked holders only when something is destroyed, keeping field assignments free of accessors.
  */
 
 /**
@@ -97,7 +85,7 @@ export class ReferenceTracker {
         continue;
       }
       const fields = info.trackedFields;
-      // Boundary assertion (coding standards §5.2): a tracked field is an ordinary data property
+      // A tracked field is an ordinary data property
       // whose name came from the component's own schema, so reading and clearing it by name is
       // exactly what the serializer does with the same names.
       // oxlint-disable-next-line typescript/no-unsafe-type-assertion

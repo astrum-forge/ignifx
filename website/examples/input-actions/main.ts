@@ -8,28 +8,9 @@ import { attachRover } from "./rover.ts";
 import type { InputAction } from "ignifx";
 
 /**
- * Every device and every action, live: an `.input.json` document, the board it lights up, and the
- * rover it drives.
- *
- * Read `player.input.json` beside this file first — it is the whole input configuration, and
- * nothing in this program names a key. Two maps: `Player`, which holds the gameplay actions, and
- * `System`, which holds the one action that switches `Player` off. Inside `Player` are the three
- * composites (`2DVector` for WASD, `1DAxis` for Q and E, `ButtonWithModifier` for shift-W), the
- * processors that make a stick and a keyboard agree (`deadzone`, `normalize`, `scale`, `clamp`), and
- * three control schemes.
- *
- * ## The document is imported, not addressed
- *
- * `?raw` hands the file over as text, `JSON.parse` turns it into a value and `validateInputActions`
- * turns that into the definition `loadActions` takes — the **same** check the asset loader runs, so
- * a typo in the document is an error here rather than a silently missing action. The alternative is
- * to put the file under `website/examples/assets/` and load it by address, which is what a game
- * does; it is imported here so the viewer page can show it as a tab next to this file, which is the
- * point of the example.
- *
- * A document named in `input({ actions })` is **not** awaited: it is delivered like any other asset,
- * in a later frame (`packages/input/skills/input/SKILL.md`). Loading it before `app.start()` is what
- * makes the first frame have its maps — and the board resolve its actions in `attachBoard`.
+ * Load action maps from `player.input.json` so gameplay reads actions rather than keys.
+ * Import the document as raw text to display it beside this example, then validate it before loading.
+ * Load before `app.start` so the board can resolve its actions on the first frame.
  */
 
 /**

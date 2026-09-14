@@ -1,29 +1,7 @@
 /**
- * What a shadow setting can and cannot change while a game is running, and the two-frame rebuild
- * that makes the changeable half land.
- *
- * @remarks
- * **Only `shadows.enabled` is live.** Everything else in a `Light`'s `shadows` record — the
- * technique, the map size, the depth and normal biases, the darkness, the cascade count and the
- * shadow distance — is read exactly once, when the component builds its generator:
- * `packages/core/src/render/gpu/light-shadows.ts` maps the record onto Babylon Lite's configuration
- * at that moment and never looks at it again, and `Light.sync` only compares whether casting is
- * wanted against whether a generator is attached. Writing `shadows.mapSize = 2048` on a light
- * that is already casting therefore changes nothing at all, silently.
- *
- * So a graphics menu that offers shadow quality has to drop the generator and build another, which
- * is what {@link ShadowRebuild} does.
- *
- * ## The technique is the exception, and it needs a reload
- *
- * A renderable bakes the shadow bind group's **layout** when the scene's material groups are built
- * — a single 2D depth texture for PCF, a float colour texture for ESM, a four-layer depth array for
- * CSM — and `rebuildSceneRenderables` does not re-pick it. So dropping the generator and building
- * one of a different kind binds the new texture to the old layout. Measured on 2026-09-08 in
- * Chromium: PCF to ESM binds an `RGBA16Float` map where the shader declares `Depth`, and PCF to CSM
- * binds a four-layer array view where it declares a single 2D view, after which the frame is black.
- * Each technique is correct when it is the one the scene started with, so the technique is chosen
- * per page load, through `?technique=`, and everything else is changed in place.
+ * Rebuild the shadow generator to apply settings other than the live `shadows.enabled` flag.
+ * Technique changes require a page reload because scene material layouts depend on the technique;
+ * a new generator alone would bind an incompatible texture. Select it through `?technique=`.
  */
 
 import { Light, Script, SHADOW_TECHNIQUES, u32 } from "ignifx";

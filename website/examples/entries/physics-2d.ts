@@ -34,14 +34,9 @@ export const PHYSICS_2D: readonly ExampleOf<"Physics">[] = [
     dimension: "2D",
     priority: "P0",
     status: "ready",
-    line: "Ramps, low steps, one-way planks and coyote time on a kinematic character controller.",
+    line: "Run and jump across ramps, steps and platforms you can drop through.",
     paragraph:
-      "`CharacterController2D` is a kinematic box that collides and slides through Rapier, and it applies no " +
-      "gravity at all. That is the point: the script owns the vertical velocity, which is what makes coyote time, " +
-      "a jump buffer and a variable jump height possible. The course is built for the four fields on the panel — " +
-      "two 45-degree ramps for `slopeLimit`, three quarter-metre steps for `stepOffset`, two tiers of one-way " +
-      'planks for `onOneWayPlatforms`, and a pit to fall into. Autostep needs `shape: "box"`; the default ' +
-      "capsule clears about 0.15 m however large the number is.",
+      "Try a 2D controller on a course of ramps, steps and one-way platforms. Adjust slope and step limits to change where the character can go. The movement script also supports forgiving jumps and different jump heights.",
     tries: [
       "Pull Slope limit under 45 and walk at a ramp: the controller refuses the climb and slides you back.",
       "Drop Step offset to 0.1 and the three low steps become a wall; put it back to 0.3 and you walk up them.",
@@ -72,14 +67,9 @@ export const PHYSICS_2D: readonly ExampleOf<"Physics">[] = [
     dimension: "2D",
     priority: "P0",
     status: "ready",
-    line: "Stack crates, roll coins into them, and watch Rapier take the tower apart.",
+    line: "Stack crates, launch coins and watch Rapier simulate the collisions.",
     paragraph:
-      "A collider makes an entity solid, a `Rigidbody2D` makes it move, and the pose comes back on " +
-      "`entity.transform.position2D` like any other. The only difference between a crate and a coin here is the " +
-      "collider shape — a box stacks and topples, a circle rolls — and the mass, which is exact kilograms. The " +
-      "floor and the two off-screen walls carry colliders and no body, which is what makes them static. Rapier is " +
-      "stepped by ignifx's own fixed loop at 60 Hz whatever the frame rate does, and dynamic bodies interpolate " +
-      "between steps so the motion stays smooth above it.",
+      "Build a stack of crates and knock it down with coins. Boxes stack and topple; circles roll. Change gravity to see how it affects the same objects, or reset the scene to try another throw.",
     tries: [
       "Click or tap anywhere: a coin is thrown from the left edge at the point you picked.",
       "Drop crates until the tower leans, then knock it down and press Reset the stack.",

@@ -9,6 +9,10 @@
   padding: var(--s-16) 0 var(--band-gap);
 }
 
+.hero + .band {
+  padding-top: 0;
+}
+
 .hero-glow {
   position: absolute;
   inset: 0;
@@ -28,6 +32,13 @@
   /* A display line at 4 rem needs a tighter box than body copy; `--lh-tight` is for headings. */
   line-height: 1.02;
   letter-spacing: -0.03em;
+}
+
+.hero-intro {
+  margin-bottom: var(--s-4);
+  color: var(--ink-2);
+  font-size: var(--t-base);
+  font-weight: 600;
 }
 
 .hero-lead {
@@ -55,7 +66,7 @@
   max-width: var(--measure-lead);
   margin-top: var(--s-4);
   color: var(--ink-2);
-  font-size: var(--t-2xs);
+  font-size: var(--t-sm);
 }
 
 @media (min-width: 1040px) {
@@ -84,7 +95,7 @@
 
 .pillar p {
   color: var(--ink-2);
-  font-size: var(--t-sm);
+  max-width: 40ch;
 }
 
 /* --- The complete app --- */
@@ -120,6 +131,37 @@
 }
 
 /* --- Templates --- */
+
+.band-templates .grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.card-template .card-body {
+  padding: var(--s-6);
+}
+
+.card-template .card-title {
+  font-size: var(--t-lg);
+}
+
+.card-template .card-line,
+.band-features .card-line {
+  font-size: var(--t-base);
+}
+
+@media (min-width: 800px) {
+  .band-templates .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.band-features .card-feature {
+  padding: var(--s-6) 0;
+  border: 0;
+  border-top: 1px solid var(--rule);
+  border-radius: 0;
+  background: transparent;
+}
 
 .card-template .card-actions {
   margin-top: var(--s-4);
@@ -168,5 +210,5 @@
 }
 
 .install-support {
-  font-size: var(--t-2xs);
+  font-size: var(--t-sm);
 }

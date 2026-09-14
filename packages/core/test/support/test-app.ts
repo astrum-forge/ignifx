@@ -39,9 +39,8 @@ import type { Storage } from "../../src/storage/storage.js";
 import type { World } from "../../src/world/world.js";
 
 /**
- * A fake `App` that satisfies the contract in `src/app/types.ts` without any of the runtime the
- * second Phase 1 agent writes. It exists so the scene-graph suites can drive the lifecycle flushes
- * directly; the same stub is what the runtime suites replace one piece at a time.
+ * A fake app for driving lifecycle flushes directly in scene-graph tests.
+ * Runtime suites replace individual services as needed.
  */
 
 /** Records every call the kernel makes into the coroutine scheduler. */
@@ -95,7 +94,7 @@ export class RecordingCoroutineHost implements CoroutineHost {
   }
 }
 
-/** A mutable `Time` with no clock behind it; the runtime agent replaces it. */
+/** Mutable time values that tests advance directly. */
 export class TestTime implements Time {
   deltaTime = 1 / 60;
   unscaledDeltaTime = 1 / 60;

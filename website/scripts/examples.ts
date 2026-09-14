@@ -187,7 +187,7 @@ export interface CatalogueProblem {
  * entry, and no example directory without an entry (`06-engineering.md` §3).
  *
  * The caller decides what a problem means: the production build fails, a development build warns,
- * so the site can be worked on before the examples agent has captured its posters.
+ * so the site can build before example posters have been captured.
  *
  * @param repositoryRoot - Absolute path to the repository root.
  * @param websiteRoot - Absolute path to `website/`.

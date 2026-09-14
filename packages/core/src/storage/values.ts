@@ -132,7 +132,7 @@ export function fromStoredValue<T>(key: string, stored: StoredValue): T {
       hint: "Delete the key, or restore the store from a backup.",
     });
   }
-  // Boundary assertion (coding standards §5.2): see above.
+  // See above.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return parsed as T;
 }

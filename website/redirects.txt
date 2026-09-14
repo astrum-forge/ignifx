@@ -10,4 +10,7 @@
 /gallery/*           /examples/               301
 /getting-started/    /docs/getting-started/   301
 
+# The press kit is paused while the identity is refreshed.
+/press/             /                         302
+
 %%SKILL_REDIRECTS%%

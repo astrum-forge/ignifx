@@ -68,7 +68,7 @@ function resizeObserverOf(view: Window): ResizeObserverConstructor | null {
   if (typeof candidate !== "function") {
     return null;
   }
-  // Boundary assertion (coding standards §5.2): the platform either has the constructor the spec
+  // The platform either has the constructor the spec
   // defines or it has nothing, and a fake injected by a test declares the same two methods.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return candidate as ResizeObserverConstructor;

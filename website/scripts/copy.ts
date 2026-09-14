@@ -1,15 +1,8 @@
-/**
- * The site's copy, pasted from `website/plan/03-pages-and-copy.md` and `05-press-kit.md` §2.
- *
- * Nothing in this file is rewritten by the build: a page reads a table here and lays it out. Two
- * conventions come from the plan and are load-bearing — `ignifx` is lowercase everywhere
- * (`CONSTITUTION.md` §1.5), and every string is in the inline Markdown subset {@link md} renders,
- * so the copy stays byte-comparable with the plan document.
- */
+/** Shared visitor-facing copy. Page renderers own their headings and introductions. */
 import type { IconName } from "./icons.ts";
 import type { ExampleCategory } from "../examples/catalogue.ts";
 
-/** One of the five messaging pillars (`03` §2, "Why ignifx"). */
+/** One reason to choose ignifx. */
 export interface Pillar {
   /** The icon that heads the card. */
   readonly icon: IconName;
@@ -19,49 +12,27 @@ export interface Pillar {
   readonly body: string;
 }
 
-/** The five pillars, in display order. */
+/** The three reasons, in display order. */
 export const PILLARS: readonly Pillar[] = [
   {
     icon: "code",
-    title: "Code first",
-    body:
-      "Your game is TypeScript, not a project file. Entities, components and scripts with typed, " +
-      "schema-declared fields. One obvious way to do each thing, and no decorators, globals or magic.",
-  },
-  {
-    icon: "play",
-    title: "WebGPU only, by design",
-    body:
-      "ignifx renders through Babylon Lite on WebGPU alone. One render path means PBR materials, " +
-      "image-based lighting, shadows and post-processing that behave the same everywhere WebGPU runs, " +
-      "and nothing to test twice.",
+    title: "Work in TypeScript",
+    body: "Build scenes and write gameplay in your code editor. Typed components and scripts help you find mistakes as you work.",
   },
   {
     icon: "gamepad",
-    title: "Batteries included",
-    body:
-      "3D physics on Havok. 2D physics on Rapier. Spatial audio with a real mixer. Action-based input " +
-      "with rebinding. A DOM UI layer. Animation state machines, navigation meshes, sprites and " +
-      "tilemaps. Each one is a line in `createApp`.",
+    title: "Start with the essentials",
+    body: "Physics, controls, audio, menus and animation are ready to use. Add the extensions your game needs.",
   },
   {
     icon: "fullscreen",
-    title: "Browser, desktop and headless",
-    body:
-      "The same game runs in a browser tab, in a hardened Electron window, and headlessly in Node for " +
-      "your tests and tools. Saves, settings and rebinds persist on all three.",
-  },
-  {
-    icon: "github",
-    title: "Open source, from a studio that ships with it",
-    body: "Apache-2.0, developed in the open, and used by Astrum Forge Studios for its own games and projects.",
+    title: "Take your game further",
+    body: "Run your game in a WebGPU browser or package it for desktop with Electron. Test gameplay in Node without opening a window.",
   },
 ];
 
-/** One of the twelve subsystem cards on the home page (`03` §2, "Features grid"). */
+/** One feature highlighted on the home page. */
 export interface FeatureCard {
-  /** The package chip. */
-  readonly chip: string;
   /** The heading. */
   readonly title: string;
   /** One line. */
@@ -72,91 +43,43 @@ export interface FeatureCard {
   readonly fallback: ExampleCategory;
 }
 
-/** The twelve cards, in display order. */
+/** The six highlights, in display order. */
 export const FEATURE_CARDS: readonly FeatureCard[] = [
   {
-    chip: "@ignifx/core",
-    title: "Rendering",
-    line: "PBR materials, image-based lighting, shadows, bloom and SMAA through Babylon Lite.",
+    title: "Light your worlds",
+    line: "Give 3D scenes realistic materials, reflections, shadows and a finishing touch of bloom.",
     seeIt: "pbr-model",
     fallback: "Rendering",
   },
   {
-    chip: "@ignifx/core",
-    title: "Scenes and prefabs",
-    line: "One JSON format for scenes and prefabs; instances keep their overrides.",
-    seeIt: "scenes-and-prefabs",
-    fallback: "Gameplay",
-  },
-  {
-    chip: "@ignifx/core",
-    title: "Assets",
-    line: "Addressed, typed, reference-counted, cancellable, and hot-swappable in development.",
-    seeIt: "model-loading",
-    fallback: "Models",
-  },
-  {
-    chip: "@ignifx/physics",
-    title: "3D physics",
-    line: "Rigid bodies, colliders, triggers, a character controller and queries, on Havok.",
-    seeIt: "physics-playground",
-    fallback: "Physics",
-  },
-  {
-    chip: "@ignifx/physics-2d",
-    title: "2D physics",
-    line: "Bodies, colliders, one-way platforms and a platformer controller, on Rapier.",
-    seeIt: "physics-2d",
-    fallback: "Physics",
-  },
-  {
-    chip: "@ignifx/2d",
-    title: "Sprites and tilemaps",
-    line: "Atlases from TexturePacker and Aseprite, tilemaps from Tiled and LDtk, pixel-perfect.",
+    title: "Build in 2D",
+    line: "Bring sprites and tilemaps to life with animation, layered backgrounds and pixel-perfect cameras.",
     seeIt: "tilemap",
     fallback: "2D",
   },
   {
-    chip: "@ignifx/3d",
-    title: "Characters and cameras",
-    line: "Third- and first-person rigs, an orbit camera that stays out of walls.",
-    seeIt: "third-person",
-    fallback: "Gameplay",
+    title: "Put physics to work",
+    line: "Add collisions, moving bodies and character controllers with Havok for 3D and Rapier for 2D.",
+    seeIt: "physics-playground",
+    fallback: "Physics",
   },
   {
-    chip: "@ignifx/3d",
-    title: "Animation and navigation",
-    line: "State machines with blend trees on glTF skeletons; navmesh agents on Recast.",
-    seeIt: "animator",
-    fallback: "Gameplay",
-  },
-  {
-    chip: "@ignifx/input",
-    title: "Input",
-    line: "Keyboard, mouse, gamepad and touch become named actions you can rebind at runtime.",
+    title: "Let players choose their controls",
+    line: "Support keyboard, mouse, gamepad and touch, with controls players can rebind.",
     seeIt: "input-actions",
     fallback: "Input",
   },
   {
-    chip: "@ignifx/audio",
-    title: "Audio",
-    line: "A bus tree, positional one-shots, music, and browsers that start locked, handled.",
+    title: "Shape the sound",
+    line: "Play music and positional sound effects. Give players separate volume controls for each.",
     seeIt: "audio-mixer",
     fallback: "Audio",
   },
   {
-    chip: "@ignifx/ui",
-    title: "UI",
-    line: "Menus, dialogs, toasts, HUD and world-space text, virtual gamepad, translations.",
+    title: "Make room for menus",
+    line: "Build menus, health displays and dialogs with HTML, plus touch controls and translations.",
     seeIt: "ui-overlay",
     fallback: "UI",
-  },
-  {
-    chip: "@ignifx/electron",
-    title: "Desktop",
-    line: "A hardened Electron window, a typed bridge, and file-system saves. One flag to build.",
-    seeIt: "/docs/getting-started/#desktop",
-    fallback: "Platform",
   },
 ];
 
@@ -175,22 +98,22 @@ export const TEMPLATE_CARDS: readonly TemplateCard[] = [
   {
     name: "2d-topdown",
     title: "2D top-down",
-    line: "A tilemap with collision, Y-sorted props, a dead-zoned camera and shrines to light.",
+    line: "Explore a pixel-art courtyard, light shrines and save your progress.",
   },
   {
     name: "2d-sidescroller",
     title: "2D side-scroller",
-    line: "Parallax bands, slopes and one-way platforms, coins, and a pixel-perfect camera.",
+    line: "Run, jump and collect coins across a scrolling pixel-art level.",
   },
   {
     name: "3d-third-person",
     title: "3D third-person",
-    line: "A character on a capsule, an orbit camera that avoids walls, an animated rig, a companion.",
+    line: "Explore with an animated character, a following camera and an AI companion.",
   },
   {
     name: "3d-first-person",
     title: "3D first-person",
-    line: "Walk, sprint, crouch and jump with pointer lock, a view model, and things to push.",
+    line: "Explore in first person, push crates and interact with objects.",
   },
 ];
 
@@ -211,16 +134,16 @@ export const HOME_EXAMPLE_SLUGS: readonly string[] = [
 /** The three bullets beside the home page's code block (`03` §2, "The code"). */
 export const CODE_BULLETS: readonly { readonly title: string; readonly body: string }[] = [
   {
-    title: "Typed fields, no decorators.",
-    body: "`Script.define({ speed: f32(90) })` is a serialisable, inspectable field.",
+    title: "Declare editable fields.",
+    body: "Set values such as speed in your script and adjust them in the inspector.",
   },
   {
-    title: "One frame, six phases.",
-    body: "A fixed step for simulation, `update` for the rest, and every callback in a documented order.",
+    title: "Choose when your code runs.",
+    body: "Use `fixedUpdate` for physics and `update` for changes each frame.",
   },
   {
-    title: "Extensions in one line.",
-    body: "`createApp({ extensions: [input(), physics(), audio()] })`.",
+    title: "Add features as you need them.",
+    body: "Register input, physics or audio when you create your app.",
   },
 ];
 
@@ -235,8 +158,7 @@ export const BROWSER_SUPPORT: readonly (readonly [string, string])[] = [
 ];
 
 /** The support line under the hero buttons and in the install block (`03` §2). */
-export const SUPPORT_LINE =
-  "Runs wherever WebGPU does: Chrome and Edge 113+, Safari 26+, Firefox 141+ on Windows and 145+ on Apple Silicon. Desktop through Electron.";
+export const SUPPORT_LINE = "Requires a browser with WebGPU. Desktop builds use Electron.";
 
 /** One card on the docs hub (`03` §5). */
 export interface DocsCard {
@@ -253,32 +175,16 @@ export interface DocsCard {
 /** The three boilerplate paragraphs on the press page (`05-press-kit.md` §2). */
 export const BOILERPLATE: readonly { readonly label: string; readonly text: string }[] = [
   {
-    label: "Short (25 words)",
-    text:
-      "ignifx is an open-source TypeScript game engine built on WebGPU, for 2D and 3D games that run " +
-      "in the browser and on the desktop.",
+    label: "Short description",
+    text: "ignifx is an open-source TypeScript engine for 2D and 3D games. Build for WebGPU browsers and desktop with playable templates and tools for everyday game development.",
   },
   {
-    label: "Medium (60 words)",
-    text:
-      "ignifx is an open-source TypeScript game engine built on WebGPU. Developers write their game as " +
-      "code, with entities, components and scripts, and ship it to any modern browser or, through " +
-      "Electron, to Windows, macOS and Linux. Physics, audio, input, UI, animation and navigation are " +
-      "included. ignifx is developed by Astrum Forge Studios and released under the Apache-2.0 licence.",
+    label: "Overview",
+    text: "ignifx is an open-source game engine for developers who want to build in TypeScript. It supports 2D and 3D games in WebGPU browsers, with desktop packaging through Electron. Physics, input, audio, menus and animation are available as extensions. Four playable templates provide a starting point. ignifx is developed by Astrum Forge Studios and released under Apache-2.0.",
   },
   {
-    label: "Long (120 words)",
-    text:
-      "ignifx is an open-source game engine for the modern web. It is written in TypeScript and renders " +
-      "exclusively through WebGPU, using Babylon Lite as its rasteriser, which gives every game one " +
-      "render path with physically based materials, image-based lighting, shadows and post-processing. " +
-      "Developers write their game as code: entities, components and scripts with typed, " +
-      "schema-declared fields, and one obvious way to do each thing. The engine ships with 3D physics " +
-      "on Havok, 2D physics on Rapier, spatial audio with a bus mixer, action-based input with runtime " +
-      "rebinding, a DOM UI layer, animation state machines, navigation meshes, sprites and tilemaps, " +
-      "and a devtools overlay. The same game runs in a browser tab, in a hardened Electron window, and " +
-      "headlessly in Node for testing. ignifx is developed by Astrum Forge Studios, an independent " +
-      "game studio, and is released under the Apache-2.0 licence.",
+    label: "Detailed description",
+    text: "ignifx is an open-source TypeScript game engine developed by Astrum Forge Studios. Developers build scenes and gameplay in code, using typed components and scripts. The engine supports 2D and 3D games, with WebGPU rendering through Babylon Lite and desktop packaging through Electron. Extensions provide physics, keyboard and gamepad input, touch controls, audio, menus, animation and navigation. Sprite and tilemap tools support 2D games. Four playable templates include menus, settings and saves, so developers can begin with a working game. Interactive examples show individual features alongside their source code. Gameplay tests can run in Node without a browser or GPU. ignifx is released under Apache-2.0.",
   },
 ];
 

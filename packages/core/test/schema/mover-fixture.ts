@@ -15,7 +15,7 @@ import {
 import type { ReferenceDecoder, ReferenceEncoder } from "../../src/schema/encode.js";
 import type { FieldDefinition } from "../../src/schema/types.js";
 
-/** Stand-in for the kernel's `Entity`, which does not exist until the kernel agent lands it. */
+/** Minimal entity shape for schema-reference tests. */
 export class FakeEntity {
   readonly uid: string;
 

@@ -1,111 +1,111 @@
-# The ignifx Constitution
+# ignifx Constitution
 
-**Status:** Ratified draft v1 (2026-09-05) · **Owner:** Astrum Forge Studios · **Precedence:** highest
+**Status:** Revision proposed 2026-09-11 ([ADR-0021](docs/adr/0021-clear-development-guidance.md)); ratified baseline v1 (2026-09-05) · **Owner:** Astrum Forge Studios · **Precedence:** highest
 
-This document governs how ignifx is designed, built, documented, released, and changed. It is short on purpose. Anything that is a _rule_ lives here; anything that is a _how-to_ lives in the standards and architecture documents that this constitution ranks below itself (see Article X).
+This document sets the project's rules. The [coding standards](docs/standards/coding-standards.md) explain how to apply them.
+Clause numbers are stable so reviews and ADRs can cite them, for example `§3.4`.
 
-Clauses are numbered `§A.n` so that pull requests, ADRs, and reviews can cite them.
+For daily work: read the relevant design, make the smallest complete change, test its behaviour, and update the docs affected by it.
+Keep code and writing easy to read. The standards' [development workflow](docs/standards/coding-standards.md#development-workflow) lists the steps.
 
----
+## 1. Purpose and scope
 
-## Article I — Identity and Scope
+- **§1.1 Engine.** ignifx is a code-first TypeScript game engine. It uses Babylon Lite (`@babylonjs/lite`) to render through WebGPU in browsers and Electron.
+- **§1.2 Audience.** Build for independent developers, small teams, and their coding agents making 2D and 3D games.
+- **§1.3 Scope.** No WebGL fallback, Babylon.js fork, or general-purpose 3D viewer. A visual editor may follow 1.0; it must build on the runtime.
+- **§1.4 Design influences.** Use Unity-style script lifecycles and Godot-style scene trees, signals, resources, and extensions. When those models conflict, prefer explicit, type-safe behaviour.
+- **§1.5 Names.** Write `ignifx` in lowercase. Publish as `@ignifx/*` and the `ignifx` umbrella. The studio is Astrum Forge Studios (`astrumforge.com`); the project site is `ignifx.com`.
 
-- **§1.1 What ignifx is.** ignifx is a code-first, TypeScript game engine for the web. It renders exclusively through WebGPU by way of Babylon Lite (`@babylonjs/lite`), and it runs in WebGPU-capable browsers and in Electron.
-- **§1.2 Who it is for.** Independent developers and small teams building 2D games (top-down, side-scrolling) and 3D games (third-person, first-person) with maximum flexibility, and the AI coding agents that work alongside them.
-- **§1.3 What ignifx is not.** ignifx is not a WebGL engine, not a fork of Babylon.js, not an editor-first engine, and not a general-purpose 3D viewer. Editor tooling may come after 1.0 and must build on the runtime, never the reverse.
-- **§1.4 Inspiration, not imitation.** The scripting and component model draws on Unity's `MonoBehaviour` lifecycle; the scene tree, signals, resources, and add-on model draw on Godot. Where the two disagree, ignifx chooses the option that is more explicit and more type-safe.
-- **§1.5 Naming.** The engine is written `ignifx` (always lowercase). Published packages use the `@ignifx/*` npm scope plus the umbrella package `ignifx`. The studio is Astrum Forge Studios (astrumforge.com); the project site is ignifx.com.
+## 2. Priorities
 
-## Article II — Ranked Principles
+When priorities conflict, the earlier one wins. Cite its clause when explaining the tradeoff.
 
-When principles conflict, the higher-ranked one wins. Reviews cite the rank when resolving a disagreement.
+1. **§2.1 Correctness.** Behaviour must match the types and docs on supported platforms. Fixed-step simulation must be reproducible.
+2. **§2.2 Clarity.** Use explicit, fully typed APIs and straightforward code. Document one clear way to do each common task in the engine skill. Prefer clear names and control flow over explanatory comments or extra abstractions.
+3. **§2.3 Extension.** Keep core small. Put optional capabilities in extensions that games choose to register.
+4. **§2.4 Performance.** Runtime changes must meet frame-time and allocation budgets.
+5. **§2.5 Pay for use.** Unused features must add no bundle bytes or frame work. Preserve tree shaking.
 
-1. **§2.1 Correctness and determinism.** The engine must do what its types and documentation say, every frame, on every supported platform. Simulation must be reproducible under a fixed timestep.
-2. **§2.2 Clarity for humans and agents.** APIs are explicit, discoverable, and fully typed. There is one obvious way to do each common task, and that way is documented in `SKILL.md`.
-3. **§2.3 Flexibility through extension.** Every optional capability is an extension. The core stays small; games compose what they need.
-4. **§2.4 Performance.** Frame budgets and allocation budgets are part of the definition of done for runtime code.
-5. **§2.5 Pay only for what you use.** Unused features cost zero bytes and zero frame time. ignifx inherits and respects Babylon Lite's tree-shaking discipline.
+## 3. Architecture
 
-## Article III — Architecture Tenets
+- **§3.1 Lifecycle.** Run script callbacks in the documented, deterministic order. Pass delta time to per-frame callbacks and distinguish scaled from unscaled time.
+- **§3.2 Timing.** Run physics and deterministic gameplay in `fixedUpdate`; run presentation in `update` and `lateUpdate`. Core owns the fixed-step accumulator. Extensions must not build their own.
+- **§3.3 Ownership.** The ignifx scene tree owns entities and components. Lite's `SceneContext` owns render data. Only adapters may change Lite scene arrays.
+- **§3.4 Lite boundary.** Only `src/lite/**` in each package may import `@babylonjs/lite`. Expose Lite objects only through named, documented `.lite` escape hatches, which have no stability guarantee.
+- **§3.5 Module loading.** No import-time registration, I/O, global mutation, or service creation. Module scope may contain declarations and immutable constants as defined in standards §4. Initialise services in app construction or extension registration.
+- **§3.6 Services.** Reach services through `App`, `World`, or `Entity`; no ambient singletons. Two apps must run independently in one process.
+- **§3.7 Serialization.** Serializable components declare schemas. Scene and prefab files are versioned JSON. Do not infer serialized fields through reflection.
+- **§3.8 Headless support.** Code that needs no GPU must run in Node with Lite's null engine, including the scene tree, scripts, physics, animation, and asset metadata.
+- **§3.9 Errors.** API misuse throws an actionable error in development. Production may shorten the message but must keep a stable error code.
+- **§3.10 2D support.** Provide dedicated sprites, tilemaps, pixel-perfect cameras, sorting layers, and physics on the shared entity model.
 
-- **§3.1 Explicit lifecycle.** Scripts receive engine callbacks in a documented, deterministic order (`awake`, `onEnable`, `start`, `fixedUpdate`, `update`, `lateUpdate`, `onDisable`, `onDestroy`, and the collision/trigger family). Every per-frame callback receives delta time as an argument; scaled and unscaled time are always distinguishable.
-- **§3.2 Fixed timestep for simulation, variable timestep for presentation.** Physics and gameplay that must be deterministic run in `fixedUpdate`; rendering and presentation logic run in `update`/`lateUpdate`. The accumulator loop is defined once in the core and is not reimplemented by extensions.
-- **§3.3 One scene tree, one owner.** The ignifx scene tree owns entities and components. Babylon Lite's `SceneContext` owns render data. ignifx mirrors into Lite through adapter components; nothing outside the adapter layer touches Lite scene arrays directly.
-- **§3.4 Adapter boundary around Babylon Lite.** `@babylonjs/lite` moves fast and declares its API "young". Only modules under a designated adapter directory in each package may import it. Public ignifx APIs expose Lite objects only through explicitly named, documented escape hatches, and those escape hatches carry no stability guarantee.
-- **§3.5 No import-time side effects.** No module executes code, registers globals, or allocates at import time. Registration happens inside `App` construction or an extension's `register` function.
-- **§3.6 No ambient singletons.** Engine services are reached through the `App` (or the `World`/`Entity` a script belongs to), never through module-level globals. Test code must be able to run two independent apps in one process.
-- **§3.7 Serialization is schema-driven.** Every serializable component declares a schema. Scene and prefab files are versioned JSON. There is no reflection-based, undeclared serialization.
-- **§3.8 Headless is a supported target.** Everything that does not need a GPU (scene tree, scripting, physics, animation, assets metadata) must run under Babylon Lite's null engine in Node for tests and servers.
-- **§3.9 Errors are loud in development and structured in production.** Misuse throws with an actionable message in development builds. Production builds may compact messages but must keep an error code.
-- **§3.10 2D is first-class, not a camera trick.** 2D projects use a 2D-specific toolkit (sprites, tilemaps, pixel-perfect camera, sorting layers, 2D physics) built on the same entity model, not a thin wrapper over the 3D path.
+## 4. Versions and compatibility
 
-## Article IV — Versioning and Compatibility
+- **§4.1 Versions.** Follow SemVer 2.0.0. Release all published packages together on one version line using Changesets fixed versioning.
+- **§4.2 Before 1.0.** Breaking changes may ship in minor releases, never patches. List each under **Breaking** in its changelog entry. Do not write migration documents under `docs/migrations/`; keep the current API docs and skill accurate.
+- **§4.3 Releasing 1.0.** All of these must be true:
+  - Every MVP phase in the engineering plan is complete.
+  - The public API reports have been reviewed and frozen.
+  - All four reference templates build and pass CI.
+  - The documentation harness passes.
+  - Performance and bundle budgets pass on the supported browser matrix.
+  - Two consecutive minor releases have shipped without breaking changes.
+- **§4.4 After 1.0.** Breaking API, behaviour, or file-format changes require a major release and a migration document in the same release. Include the reason and exact before/after code. Announce deprecations in a minor release with `@deprecated` and a replacement; keep them working for at least one further minor release and remove them only in the next major. Version scene, prefab, and asset-manifest formats and provide an upgrade path across at least one major version boundary.
+- **§4.5 API reports.** Every published package has a generated API report. Report changes require a changeset at the correct version level. CI checks for a changeset; reviewers check its level.
+- **§4.6 Lite upgrades.** Pin Lite to an exact catalog version. Upgrade it in a dedicated, reviewed change with the full visual and headless suites.
 
-- **§4.1 Semantic Versioning.** All packages follow SemVer 2.0.0 and are released together with a single version line (fixed versioning via Changesets).
-- **§4.2 Before 1.0 (the MVP era).**
-  - Breaking changes are permitted in **minor** releases (`0.x` → `0.(x+1)`), never in patch releases.
-  - Every breaking change is listed under a **Breaking** heading in the changelog entry that introduces it.
-  - **No migration documents are written before 1.0.** Effort goes into getting the API right and keeping `SKILL.md` current, not into documenting churn.
-- **§4.3 Reaching 1.0.** 1.0 is declared only when all of the following hold: every MVP phase in the engineering plan is complete; the public API report has been reviewed and frozen; the four reference templates (2D top-down, 2D side-scroller, 3D third-person, 3D first-person) build and pass CI; the documentation harness is green; performance and bundle budgets are met on the supported browser matrix; and at least two consecutive minor releases have shipped with no breaking change.
-- **§4.4 After 1.0.**
-  - Breaking changes ship only in **major** releases.
-  - Every breaking change to a public interface, behaviour, or file format must ship with a migration document in `docs/migrations/` in the same release, describing what changed, why, and the exact before/after code.
-  - Deprecations are announced in a minor release, marked `@deprecated` in TSDoc with a pointer to the replacement, kept working for at least one further minor release, and removed only in the next major.
-  - Scene, prefab, and asset-manifest files carry a format version and remain loadable across at least one major version boundary via an upgrade path.
-- **§4.5 API surface control.** Every published package has an API report generated from its declaration files. A change to the report requires a changeset of the matching semver level; CI blocks otherwise.
-- **§4.6 Babylon Lite pinning.** `@babylonjs/lite` is pinned to an exact version in the workspace catalog. Upgrades are deliberate, reviewed changes that run the full visual and headless suites.
+## 5. Documentation
 
-## Article V — Documentation and the Agent-First Mandate
+- **§5.1 Entry point.** Ship `skills/ignifx/SKILL.md` and its references with the umbrella package to teach agents how to use the engine.
+- **§5.2 Keep docs current.** The skill describes the current release. Changes to public APIs, lifecycle order, file formats, or defaults must update the affected skill pages in the same pull request. The documentation harness checks for drift.
+- **§5.3 Keep history separate.** Record decisions in ADRs and, after 1.0, migrations in `docs/migrations/`. During a deprecation window, the skill may include one line per deprecated API pointing to its replacement.
+- **§5.4 Public API docs.** Give every public symbol a short TSDoc summary and a release tag (`@public`, `@beta`, `@alpha`, or `@internal`). Document parameters and returns as required by lint, plus defaults, units, ownership, and failure behaviour where callers need them. Use an example when usage is unclear. Describe the contract, not the function's implementation steps.
+- **§5.5 Working examples.** Type-check skill and recipe examples in CI; execute them where headless use is possible. Broken examples fail the build.
+- **§5.6 Decisions.** Use an ADR for decisions that constrain future work. State the context, options, decision, and consequences. Routine implementation choices belong in the code or pull request.
+- **§5.7 Agent entry files.** Keep root `AGENTS.md` and `CLAUDE.md` limited to repository mechanics and links. Do not duplicate API docs.
+- **§5.8 Plain writing.** Keep comments, docs, and release notes short, simple, and direct. Explain as you would to a beginner (ELI5), while keeping technical facts exact. Comments explain a reason, constraint, or surprise; they do not narrate code. Release notes explain what changes for the user and any action they must take. Follow standards §9 for examples.
 
-- **§5.1 SKILL.md is the entry point.** The repository ships an Agent Skill (`skills/ignifx/SKILL.md` plus `references/`) that teaches an agent how to use the engine. It is published with the umbrella package.
-- **§5.2 Always current.** `SKILL.md` and its references describe **only** the API of the current release. A pull request that changes a public interface, a lifecycle order, a file format, or a default value must update `SKILL.md`/references in the same pull request. CI enforces this through the documentation harness.
-- **§5.3 Legacy stays out of the skill.** Migration guides, deprecated patterns, and historical context live under `docs/migrations/` and `docs/adr/`. The skill may contain at most a one-line "do not use X, use Y" pointer for an API that is inside its deprecation window, and nothing else about the past.
-- **§5.4 Every public symbol is documented.** Public exports carry TSDoc with a summary, parameter and return documentation, and at least one example where usage is not obvious. Release tags (`@public`, `@beta`, `@alpha`, `@internal`) are mandatory.
-- **§5.5 Examples must run.** Code in `SKILL.md`, references, and recipes is type-checked and, where headless execution is possible, executed in CI. Broken examples fail the build.
-- **§5.6 Decisions are recorded.** Any decision that constrains future work is recorded as an ADR in `docs/adr/` with context, options, decision, and consequences.
-- **§5.7 Agent instructions stay thin.** `CLAUDE.md`/`AGENTS.md` at the repository root contain only repository mechanics and pointers to the canonical documents; they never duplicate API documentation.
+## 6. Quality
 
-## Article VI — Quality Gates
+- **§6.1 Tests.** Runtime changes need headless unit tests and, when they touch the GPU, real Chromium WebGPU tests. Bug fixes need regression tests. Test observable behaviour, not the shape of the implementation.
+- **§6.2 Coverage.** Keep line coverage at least 80% per package and 90% for core. These are minimums, not a reason to write low-value tests.
+- **§6.3 Flaky tests.** Quarantine intermittent failures the same day. Fix or delete the test within one release cycle.
+- **§6.4 Budgets.** CI checks template bundle sizes and benchmark frame times. A regression in a scene that does not use the changed feature is a defect; do not hide it by raising the baseline.
+- **§6.5 Types.** Use strict TypeScript and the standards' additional checks everywhere. No `any`, non-null assertions, or `@ts-ignore`; use `unknown` and narrow it. Exceptions follow §10.3.
+- **§6.6 Done.** A change is ready for review when its implementation and relevant tests pass, affected docs are current, and any required generated files, changeset, and post-1.0 migration notes are included. Prose-only changes need no runtime tests. Contributor-only docs need no package release. Completion requires green CI and human maintainer approval. Standards §15 lists the checks.
 
-- **§6.1 Tests are required.** Runtime code ships with unit tests (Vitest, headless) and, where it touches the GPU, browser tests that run in real Chrome with WebGPU. Bug fixes add a regression test.
-- **§6.2 Coverage floor.** Line coverage per package does not drop below 80%, and the core package does not drop below 90%. Coverage is a floor, not a target.
-- **§6.3 No flaky tests.** A test that fails intermittently is quarantined the same day and fixed or deleted within one release cycle.
-- **§6.4 Budgets are tests.** Bundle-size ceilings per template and frame-time budgets per benchmark scene are checked in CI. A regression in a scene that does not use the changed feature is a design defect, not a new baseline.
-- **§6.5 Type safety is absolute.** `strict` mode plus the additional flags in the coding standards are on everywhere; `any`, non-null assertions, and `@ts-ignore` require a justification comment and reviewer sign-off.
-- **§6.6 Definition of done.** A change is done when: code, tests, TSDoc, `SKILL.md`/references, changeset, and (post-1.0) migration notes are all present; CI is green; and a maintainer has approved.
+## 7. Development and review
 
-## Article VII — Process
+- **§7.1 Branches.** Use short-lived branches and pull requests into `main`. Keep `main` releasable.
+- **§7.2 Commits.** Use Conventional Commits for commits and pull-request titles, with a scope allowed by `commitlint.config.ts`. Constitution amendments use the title required by §10.2.
+- **§7.3 Releases.** Every user-visible change needs a changeset. CI releases from accumulated changesets. Do not publish by hand.
+- **§7.4 Approval.** Agents may implement and review changes and open pull requests. A human maintainer must approve every merge into `main`.
+- **§7.5 Scope.** Each pull request addresses one concern. Split large features into reviewable steps following the plan. Do not add speculative features, abstractions, or unrelated cleanup.
+- **§7.6 Plan.** Update the engineering plan when scope, order, or estimates change. Explain changes to phase exit criteria in the pull request.
 
-- **§7.1 Trunk-based development.** Work happens on short-lived branches merged into `main` through pull requests. `main` is always releasable.
-- **§7.2 Conventional Commits.** Commit messages and pull-request titles follow Conventional Commits; scopes are package names.
-- **§7.3 Changesets.** Every user-visible change carries a changeset. Releases are cut from accumulated changesets by CI, never by hand.
-- **§7.4 Agents are contributors, humans are approvers.** AI agents may open pull requests and are held to every rule in this constitution. Every merge into `main` requires approval from a human maintainer.
-- **§7.5 Small, reviewable changes.** A pull request addresses one concern. Large features land behind a sequence of pull requests following the engineering plan.
-- **§7.6 The plan is a living document.** `docs/plan/engineering-plan.md` is updated when scope, ordering, or estimates change. Phase exit criteria are edited only through a pull request that explains why.
+## 8. Extensions
 
-## Article VIII — Extensions and Ecosystem
+- **§8.1 Shared contract.** Input, physics, audio, 2D, 3D, UI, Electron, and devtools use the same extension contract as third-party packages.
+- **§8.2 Compatibility.** The extension contract is public API and follows §4.
+- **§8.3 Registration.** Register extensions explicitly when constructing an app. No runtime filesystem discovery or global registration.
+- **§8.4 Manifests.** Extension packages declare an `ignifx` manifest in `package.json`: name, engine range, capabilities, and peer extensions. Validate it at registration in development builds.
 
-- **§8.1 Core features are extensions too.** Input, physics, audio, 2D, 3D toolkits, UI, Electron, and devtools are packages that register through the same extension contract available to third parties.
-- **§8.2 The extension contract is a public API.** Its stability guarantees are the same as any other public API (Article IV).
-- **§8.3 Declared, not discovered.** Extensions are registered explicitly when an `App` is constructed. There is no filesystem scanning or magic global registration at runtime.
-- **§8.4 Manifests.** Each extension package declares an `ignifx` manifest in its `package.json` (name, compatible engine range, capabilities, peer extensions). The engine validates manifests at registration time in development builds.
+## 9. Security and dependencies
 
-## Article IX — Security, Privacy, and Supply Chain
+- **§9.1 Privacy.** The engine and templates send no telemetry. Only a game developer may choose to add it.
+- **§9.2 Electron.** Use context isolation, sandboxed renderers, no renderer Node integration, a strict Content Security Policy, and a typed preload bridge. Deviations require an ADR.
+- **§9.3 Dependencies.** Keep runtime dependencies minimal. Justify additions in an ADR. Enforce a minimum age for new versions and allow install scripts only for reviewed packages.
+- **§9.4 Builds and publishing.** Commit lockfiles and use frozen installs in CI. Publish with provenance. The existing private-repository exception is recorded in ADR-0009; restore provenance when the repository becomes public.
 
-- **§9.1 No telemetry by default.** The engine and templates send no data anywhere unless a game developer explicitly adds it.
-- **§9.2 Electron baseline.** Electron templates use context isolation, sandboxed renderers, no Node integration in renderers, a strict Content Security Policy, and a typed preload bridge. Deviations require an ADR.
-- **§9.3 Dependency discipline.** Runtime dependencies are minimal and justified in an ADR when added. The workspace enforces a minimum release age for new dependency versions and disallows lifecycle scripts from unknown packages.
-- **§9.4 Reproducible builds.** Lockfiles are committed; CI installs with a frozen lockfile; packages are published with provenance.
+## 10. Governance
 
-## Article X — Governance and Precedence
+- **§10.1 Precedence.** Resolve conflicts in this order: constitution → coding standards → architecture → ADRs → engineering plan → skill and references → code comments. Lower documents may be stricter, never looser.
+- **§10.2 Amendments.** Change this constitution through a pull request titled `constitution: …`, with an ADR and project-owner approval. Date the revision in the status line.
+- **§10.3 Exceptions.** A waiver needs a written reason in the pull request and an issue tracking its removal.
+- **§10.4 Ownership.** Astrum Forge Studios owns project direction. List maintainers in `MAINTAINERS.md` when there is more than one.
 
-- **§10.1 Order of precedence.** When documents conflict: (1) this constitution, (2) `docs/standards/coding-standards.md`, (3) `docs/architecture/*`, (4) ADRs, (5) the engineering plan, (6) `SKILL.md` and references, (7) code comments. A lower document may be stricter than a higher one but never looser.
-- **§10.2 Amendment.** This constitution changes only through a pull request titled `constitution: …`, accompanied by an ADR, and approved by the project owner. Amendments are dated in the status line.
-- **§10.3 Waivers.** A rule may be waived for a specific change only with a written justification in the pull request and an issue tracking removal of the waiver.
-- **§10.4 Ownership.** Astrum Forge Studios owns the project direction. Maintainers are listed in `MAINTAINERS.md` once the project has more than one.
+## 11. Licensing
 
-## Article XI — Licensing
-
-- **§11.1 License.** ignifx is licensed under the Apache License 2.0 (see `LICENSE`). Contributions are accepted under the same license.
-- **§11.2 Third-party code.** Vendored or derived code keeps its notice in `THIRD_PARTY_NOTICES.md`. Copying Babylon.js or Babylon Lite source into ignifx is prohibited; ignifx consumes Lite as a dependency.
-- **§11.3 Assets.** Sample assets in templates and examples must be licensed for redistribution, with attribution recorded alongside the asset.
+- **§11.1 License.** ignifx and contributions use Apache License 2.0; see `LICENSE`.
+- **§11.2 Third-party code.** Preserve notices for vendored or derived code in `THIRD_PARTY_NOTICES.md`. Do not copy Babylon.js or Babylon Lite source into ignifx; consume Lite as a dependency.
+- **§11.3 Assets.** Sample assets must allow redistribution. Keep attribution beside each asset.

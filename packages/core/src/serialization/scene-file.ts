@@ -210,7 +210,7 @@ export function isSceneFileHeader(value: unknown): boolean {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     return false;
   }
-  // Boundary assertion (coding standards §5.2): the three lines above have established that the
+  // The three lines above have established that the
   // value is a non-null, non-array object, which is exactly a string-keyed bag.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   const object = value as Record<string, unknown>;

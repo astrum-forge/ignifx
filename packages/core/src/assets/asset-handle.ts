@@ -5,18 +5,9 @@ import { AssetLoadError } from "./types.js";
 import type { AssetHandle, AssetLoader, AssetState } from "./types.js";
 
 /**
- * The reference-counted handle and the load bookkeeping that hangs off it
- * (`docs/architecture/05-assets-and-loading.md` §3).
- *
- * The class is deliberately **not** generic. `T` on the public `AssetHandle<T>` is the caller's
- * declaration of what a loader produces — the loader itself returns `unknown` — and `Signal<T>`
- * carries private state, which makes it invariant in `T`. Keeping the implementation on `unknown`
- * puts the single unavoidable assertion at the service's public boundary instead of scattering
- * variance workarounds through the cache.
- *
- * Everything a load needs while it is in flight lives here too: the abort controller, the retry
- * countdown, the collector countdown, the byte counters, and the dependency list. One object per
- * address means the cache is a plain `Map` and no per-frame lookup allocates (coding standards §7).
+ * Shared load state and reference counts for one asset address.
+ * The implementation stores `unknown` because loaders are untyped and `Signal<T>` is invariant;
+ * the asset service checks the public boundary in one place.
  */
 
 /**

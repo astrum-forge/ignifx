@@ -64,14 +64,14 @@ function factSheet(): readonly (readonly [string, string])[] {
     ["Language", "TypeScript"],
     ["Renderer", "WebGPU, through Babylon Lite"],
     ["Physics", "Havok (3D), Rapier (2D)"],
-    ["Platforms", "Chrome and Edge 113+, Safari 26+, Firefox 141+/145+; Windows, macOS and Linux via Electron"],
+    ["Platforms", "[WebGPU browsers](/docs/browser-support/); Windows, macOS and Linux via Electron"],
     ["Website", "ignifx.com"],
     ["Source", "github.com/astrum-forge/ignifx"],
     [
       "Packages",
       site.published ? "`ignifx` and `@ignifx/*` on npm" : "`ignifx` and `@ignifx/*` — first release coming to npm",
     ],
-    ["First release", site.published ? site.version : "Not yet released"],
+    ["Version", site.published ? site.version : "Not yet released"],
     ["Contact", site.contactEmail],
   ];
 }
@@ -140,7 +140,7 @@ export function pressPage(websiteRoot: string, highlighter: CodeHighlighter): st
         "p",
         { class: "page-lead" },
         esc(
-          "Everything you need to write about ignifx, or to say that your game runs on it. The logos and badges below are free to use under the rules in the usage section; no permission is needed.",
+          "Descriptions, logos and screenshots for writing about ignifx, plus badges for games built with it. You can use the logos and badges without asking permission if you follow the usage rules below.",
         ),
       ),
       h("div", { class: "page-actions" }, [
@@ -189,13 +189,7 @@ export function pressPage(websiteRoot: string, highlighter: CodeHighlighter): st
   const name = h("section", { class: "band band-quiet", id: "the-name" }, [
     h("div", { class: "shell shell-narrow" }, [
       h("h2", { class: "band-title" }, "The name"),
-      h(
-        "p",
-        {},
-        md(
-          "ignifx is a blend of **ignite** and **effects**, the “fx” a game developer writes on a folder of particle systems and post-processing. It began as the internal engine at Astrum Forge Studios, used for the studio's own games and projects, before being released as open source. The flame in the mark is the ignition; the crystal it burns inside is the effect it leaves behind.",
-        ),
-      ),
+      h("p", {}, md("The name combines **ignite** and **effects**. The logo shows a flame inside a crystal.")),
       h("p", {}, md("Say it “ig-ni-fix”. Write it `ignifx`, always lowercase, even at the start of a sentence.")),
     ]),
   ]);
@@ -270,9 +264,7 @@ export function pressPage(websiteRoot: string, highlighter: CodeHighlighter): st
       h(
         "p",
         { class: "band-lead" },
-        esc(
-          "Hot-link them straight from this site: the URLs below are stable and served with a permissive CORS header.",
-        ),
+        esc("Add a badge to your website or README with one of the snippets below. The badge image is hosted here."),
       ),
       h(
         "div",
