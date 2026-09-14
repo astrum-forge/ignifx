@@ -299,6 +299,81 @@ export {
   type TorusMeshOptions,
 } from "./render/mesh-asset.js";
 export { MeshRenderer } from "./render/mesh-renderer.js";
+// Custom shaders (docs/plan/2026-09-terrain-particles-shaders.md §3). The pragma parser, the live
+// material state, the surface-shader layer and the post-effect compiler are reached through dynamic
+// `import()` and must not be re-exported here: a value re-export puts them in every entry chunk
+// (`CONSTITUTION.md` §2.5, `src/render/shader-support.ts`).
+export { createShaderLoader } from "./render/loaders/shader-loader.js";
+export { SHADER_ASSET_TYPE, SHADER_FILE_EXTENSIONS, ShaderAsset } from "./render/shader-asset.js";
+export {
+  shaderMaterialDefinition,
+  type ShaderMaterialDefinition,
+  type ShaderMaterialDefinitionInput,
+} from "./render/shader-material-definition.js";
+export {
+  IGNIFX_UNIFORM_NAMES,
+  LITE_SYSTEM_UNIFORM_NAMES,
+  SHADER_ATTRIBUTE_NAMES,
+  SHADER_BLEND_MODES,
+  SHADER_CULL_MODES,
+  SHADER_INSTANCING_MODES,
+  SHADER_KINDS,
+  SHADER_TEXTURE_FALLBACKS,
+  SHADER_UNIFORM_TYPES,
+  SURFACE_HOOK_NAMES,
+  SURFACE_UNIFORM_BLOCK,
+  type IgnifxUniformName,
+  type LiteSystemUniformName,
+  type ShaderAttributeName,
+  type ShaderBlendMode,
+  type ShaderCullMode,
+  type ShaderDeclaration,
+  type ShaderDefineDeclaration,
+  type ShaderInstancingMode,
+  type ShaderKind,
+  type ShaderPipelineState,
+  type ShaderStorageDeclaration,
+  type ShaderTextureDeclaration,
+  type ShaderTextureFallback,
+  type ShaderUniformDeclaration,
+  type ShaderUniformType,
+  type SurfaceHookName,
+} from "./render/shader-declaration.js";
+export {
+  createStorageBufferAsset,
+  STORAGE_BUFFER_ASSET_TYPE,
+  StorageBufferAsset,
+  type StorageBufferAssetLiteHandles,
+} from "./render/storage-buffer-asset.js";
+export type { LiteStorageBuffer } from "./lite/gpu/storage-buffer.js";
+export type { LiteShaderMaterial } from "./lite/gpu/shader-material.js";
+// Surface shaders (§3.2). A material reaches its own through `material.surfaces` and
+// `material.surface(name)`, so only the types are exported.
+export type { SurfaceShaderBinding, SurfaceShaderInit, SurfaceShaderReference } from "./render/surface-shader.js";
+export type { SurfaceHostCapabilities, SurfaceHostFamily } from "./render/surface-shader-compiler.js";
+// Raw Babylon Lite material plugins (@beta)
+export {
+  defineMaterialPlugin,
+  isLiteMaterialPluginPoint,
+  LITE_MATERIAL_PLUGIN_POINTS,
+  MATERIAL_PLUGIN_DEFAULT_PRIORITY,
+  MATERIAL_PLUGIN_RESERVED_NAMES,
+  MATERIAL_PLUGIN_SAMPLER_BUDGET,
+} from "./render/material-plugin.js";
+export type {
+  LiteMaterialPluginPoint,
+  MaterialPluginDefinition,
+  MaterialPluginDefinitionInit,
+} from "./render/material-plugin.js";
+// Custom post effects (§3.3)
+export { customEffect, POST_EFFECT_BUILTIN_UNIFORMS, POST_EFFECT_FUNCTION } from "./render/post-effect.js";
+export type { CustomEffectInit, CustomEffectSettings } from "./render/post-effect.js";
+export {
+  InstancedMeshRenderer,
+  type InstancedMeshLod,
+  type InstancedMeshRendererLiteHandles,
+  type InstanceRange,
+} from "./render/instanced-mesh-renderer.js";
 export {
   MODEL_ASSET_TYPE,
   MODEL_FILE_EXTENSIONS,
@@ -338,6 +413,7 @@ export { describeEnvironmentFileFormat, describeMaterialFileFormat, describeSche
 export {
   TEXTURE_ASSET_TYPE,
   TextureAsset,
+  type PixelTextureOptions,
   type TextureAssetLiteHandles,
   type TextureImportOptions,
 } from "./render/texture-asset.js";

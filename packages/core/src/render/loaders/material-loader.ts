@@ -1,7 +1,6 @@
 import { CoreErrorCode } from "../../errors/error-codes.js";
 import { IgnifxError } from "../../errors/ignifx-error.js";
 import {
-  assertMaterialKindSupported,
   buildMaterialAsset,
   MATERIAL_ASSET_TYPE,
   MATERIAL_FILE_EXTENSION,
@@ -13,12 +12,20 @@ import {
   STANDARD_TEXTURE_SLOTS,
   standardMaterialDefinition,
 } from "../material-asset.js";
+import { shaderMaterialDefinition } from "../shader-material-definition.js";
+import { loadShaderSupport, loadSurfaceShaderSupport } from "../shader-support.js";
 import type { AssetHandle, AssetLoader, LoaderContext } from "../../assets/types.js";
 import type { MaterialAlphaMode } from "../../lite/material.js";
 import type { ColorLike } from "../../math/types.js";
 import type { JsonValue } from "../../schema/json.js";
 import type { MaterialAsset, MaterialDefinition, MaterialKind } from "../material-asset.js";
+import type { ShaderAsset } from "../shader-asset.js";
+import type { ShaderMaterialDefinition } from "../shader-material-definition.js";
+import type { SurfaceShaderInit, SurfaceShaderReference } from "../surface-shader.js";
 import type { TextureAsset } from "../texture-asset.js";
+
+/** Babylon Lite's own default plugin priority; a `surfaces` entry that names none takes it. */
+const SURFACE_PRIORITY = 500;
 
 /**
  * The `material` asset loader: `.material.json` to `MaterialAsset`
@@ -50,6 +57,29 @@ import type { TextureAsset } from "../texture-asset.js";
  * its slot unbound and the material draws without it. Only two things throw: a file that is not an
  * `ignifx.material` at all (`IGX-0709`), and one that declares a family this build cannot construct
  * (`IGX-0708`).
+ *
+ * ## `"type": "shader"` is stricter, on purpose
+ *
+ * A shader material's `values` and `defines` are checked against the `.wgsl` file's own
+ * `// @ignifx` declarations, and an undeclared name (`IGX-0712`) or a value of the wrong shape
+ * (`IGX-0713`) fails the load. A PBR property that does not exist is a typo with an obvious
+ * fallback — the default; a uniform that does not exist has none, and a shader that silently
+ * ignores half its material is the failure mode custom shaders are hardest to debug from
+ * (`docs/plan/2026-09-terrain-particles-shaders.md` §3.1). The same file is checked at build time
+ * by `@ignifx/vite-plugin`, so this is the last line rather than the first.
+ *
+ * ```jsonc
+ * {
+ *   "format": "ignifx.material",
+ *   "formatVersion": 1,
+ *   "type": "shader",
+ *   "name": "dissolve",
+ *   "shader": "shaders/dissolve.wgsl",
+ *   "values": { "progress": 0.25, "edgeColor": [1, 0.6, 0.2] },
+ *   "textures": { "noiseTexture": "textures/noise.png" },
+ *   "defines": { "SOFT_EDGE": true }
+ * }
+ * ```
  */
 
 /**
@@ -72,12 +102,23 @@ export function createMaterialLoader(): AssetLoader<MaterialAsset> {
       const parsed: unknown = await ctx.fetchJson();
       const file = readMaterialFile(parsed, ctx.address);
       const kind = readKind(file, ctx.address);
-      assertMaterialKindSupported(kind, ctx.address);
+      if (kind === "shader") {
+        return loadShaderMaterial(ctx, file);
+      }
       const slots = kind === "pbr" ? PBR_TEXTURE_SLOTS : STANDARD_TEXTURE_SLOTS;
       const addresses = readTextureAddresses(file, slots);
+      const references = readSurfaceReferences(file, ctx.address);
       const textures = await loadTextures(ctx, addresses);
-      const definition = kind === "pbr" ? readPbr(file, addresses) : readStandard(file, addresses);
-      return buildMaterialAsset(definition, textures);
+      const surfaces = await loadSurfaceShaders(ctx, references);
+      const definition =
+        kind === "pbr" ? readPbr(file, addresses, references) : readStandard(file, addresses, references);
+      return buildMaterialAsset(definition, textures, { app: ctx.app, shader: null, surfaces });
+    },
+    unload(value: MaterialAsset): void {
+      // A `"shader"` material registers itself with the `PreRender` uniform writer and connects to
+      // its shader's `onReplaced`; both have to go when the last holder lets go. A PBR or Standard
+      // material owns nothing of the kind and this is a no-op for it.
+      value.dispose();
     },
   };
 }
@@ -221,9 +262,14 @@ async function loadTextures(
  *
  * @param file - The file body.
  * @param textures - Slot name to address.
+ * @param surfaces - The `.surface.wgsl` references the file declared.
  * @returns The declaration.
  */
-function readPbr(file: Record<string, unknown>, textures: Record<string, string>): MaterialDefinition {
+function readPbr(
+  file: Record<string, unknown>,
+  textures: Record<string, string>,
+  surfaces: readonly SurfaceShaderReference[],
+): MaterialDefinition {
   return pbrMaterialDefinition({
     name: readString(file, "name", ""),
     baseColor: readColor(file, "baseColor", { r: 1, g: 1, b: 1, a: 1 }),
@@ -239,6 +285,7 @@ function readPbr(file: Record<string, unknown>, textures: Record<string, string>
     unlit: readBoolean(file, "unlit", false),
     environmentIntensity: readNumber(file, "environmentIntensity", 1),
     textures,
+    surfaces,
   });
 }
 
@@ -247,9 +294,14 @@ function readPbr(file: Record<string, unknown>, textures: Record<string, string>
  *
  * @param file - The file body.
  * @param textures - Slot name to address.
+ * @param surfaces - The `.surface.wgsl` references the file declared.
  * @returns The declaration.
  */
-function readStandard(file: Record<string, unknown>, textures: Record<string, string>): MaterialDefinition {
+function readStandard(
+  file: Record<string, unknown>,
+  textures: Record<string, string>,
+  surfaces: readonly SurfaceShaderReference[],
+): MaterialDefinition {
   return standardMaterialDefinition({
     name: readString(file, "name", ""),
     diffuse: readColor(file, "diffuse", { r: 1, g: 1, b: 1, a: 1 }),
@@ -261,7 +313,126 @@ function readStandard(file: Record<string, unknown>, textures: Record<string, st
     doubleSided: readBoolean(file, "doubleSided", false),
     unlit: readBoolean(file, "unlit", false),
     textures,
+    surfaces,
   });
+}
+
+/**
+ * Reads the `surfaces` array: a list of `.surface.wgsl` references, each an address string, an
+ * `{ "$asset": … }` reference, or an object carrying `shader` and optionally `name`, `values`,
+ * `textures`, `enabled`, `priority`.
+ *
+ * @param file - The file body.
+ * @param address - The material's address, for diagnostics.
+ * @returns The references, in the order the file listed them.
+ * @throws IgnifxError with code `IGX-0709` when an entry names no shader.
+ */
+function readSurfaceReferences(file: Record<string, unknown>, address: string): readonly SurfaceShaderReference[] {
+  const raw = file["surfaces"];
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+  const references: SurfaceShaderReference[] = [];
+  for (const entry of raw) {
+    const shader = readShaderReference(entry);
+    if (shader === "") {
+      throw new IgnifxError(CoreErrorCode.invalidAssetFile, `${address} declares a surface with no shader.`, {
+        context: { file: address, format: MATERIAL_FILE_FORMAT },
+        hint: 'Each entry of "surfaces" is an address, or { "shader": "shaders/<name>.surface.wgsl" }.',
+      });
+    }
+    if (typeof entry === "string") {
+      references.push({ shader, name: "", values: {}, textures: {}, enabled: true, priority: SURFACE_PRIORITY });
+      continue;
+    }
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- a JSON object read by name.
+    const record = entry as Record<string, unknown>;
+    references.push({
+      shader,
+      name: readString(record, "name", ""),
+      values: readValues(record),
+      textures: readTextureRecord(record),
+      enabled: readBoolean(record, "enabled", true),
+      priority: readNumber(record, "priority", SURFACE_PRIORITY),
+    });
+  }
+  return references;
+}
+
+/**
+ * Reads one `surfaces` entry's shader address, accepting a bare address, an `{ "$asset": … }`
+ * reference, or an object whose `shader` field is either.
+ *
+ * @param entry - The JSON value.
+ * @returns The address, or `""` when there is none.
+ */
+function readShaderReference(entry: unknown): string {
+  if (typeof entry === "string") {
+    return entry;
+  }
+  if (typeof entry !== "object" || entry === null || Array.isArray(entry)) {
+    return "";
+  }
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- a JSON object read by name.
+  const record = entry as Record<string, unknown>;
+  const shader = record["shader"];
+  if (typeof shader === "string") {
+    return shader;
+  }
+  if (typeof shader !== "object" || shader === null || Array.isArray(shader)) {
+    return "";
+  }
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- a JSON object read by name.
+  const asset = (shader as Record<string, unknown>)["$asset"];
+  return typeof asset === "string" ? asset : "";
+}
+
+/**
+ * Loads every surface shader the material names, and the textures each one binds.
+ *
+ * @remarks
+ * A surface shader that fails to load fails the **material**, unlike a texture: a missing normal map
+ * is a visual defect, a missing shader is a material that does not exist. The requests are issued
+ * together rather than in sequence, because no shader's textures depend on another shader.
+ *
+ * @param ctx - The loader context.
+ * @param references - What the file declared.
+ * @returns The inits {@link buildMaterialAsset} attaches, in order.
+ */
+async function loadSurfaceShaders(
+  ctx: LoaderContext,
+  references: readonly SurfaceShaderReference[],
+): Promise<readonly SurfaceShaderInit[]> {
+  if (references.length > 0) {
+    // Pulls the surface-shader layer into memory before `buildMaterialAsset` reaches for it. The
+    // `.wgsl` loader below does the same, so this is belt and braces for a material whose shaders
+    // were preloaded elsewhere.
+    await loadSurfaceShaderSupport();
+  }
+  const loads = references.map(async (reference): Promise<SurfaceShaderInit> => {
+    const [shader, resolved] = await Promise.all([
+      ctx.loadDependency<ShaderAsset>(reference.shader),
+      loadNamedTextures(ctx, reference.textures),
+    ]);
+    const textures: Record<string, AssetHandle<TextureAsset>> = {};
+    const names = Object.keys(resolved.addresses);
+    for (let index = 0; index < names.length; index += 1) {
+      const handle = resolved.handles[index];
+      const name = names[index];
+      if (handle !== undefined && name !== undefined) {
+        textures[name] = handle;
+      }
+    }
+    return {
+      shader,
+      ...(reference.name === "" ? {} : { name: reference.name }),
+      values: reference.values,
+      textures,
+      enabled: reference.enabled,
+      priority: reference.priority,
+    };
+  });
+  return Promise.all(loads);
 }
 
 /**
@@ -345,4 +516,160 @@ function readColor(file: Record<string, unknown>, key: string, fallback: ColorLi
  */
 function channel(value: JsonValue | undefined, fallback: number): number {
   return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+}
+
+/**
+ * Loads a `"shader"` material: the `.wgsl`, then its textures, then the values and defines checked
+ * against what the file declares.
+ *
+ * @param ctx - The loader context.
+ * @param file - The file body.
+ * @returns The material.
+ * @throws IgnifxError with code `IGX-0709` when the file names no shader, `IGX-0719` when the
+ * shader's pragmas are malformed, `IGX-0712` for an undeclared value or define, or `IGX-0713` for a
+ * value of the wrong shape.
+ */
+async function loadShaderMaterial(ctx: LoaderContext, file: Record<string, unknown>): Promise<MaterialAsset> {
+  const address = readString(file, "shader", "");
+  if (address === "") {
+    throw new IgnifxError(CoreErrorCode.invalidAssetFile, `${ctx.address} declares no shader.`, {
+      context: { file: ctx.address, format: MATERIAL_FILE_FORMAT },
+      hint: 'A shader material carries "shader": "shaders/<name>.wgsl".',
+    });
+  }
+  const shader = await ctx.loadDependency<ShaderAsset>(address);
+  const requested = readTextureRecord(file);
+  const [resolved] = await Promise.all([loadNamedTextures(ctx, requested), loadShaderSupport()]);
+  const definition: ShaderMaterialDefinition = shaderMaterialDefinition({
+    shader: address,
+    name: readString(file, "name", address),
+    values: readValues(file),
+    textures: resolved.addresses,
+    defines: readDefines(file),
+  });
+  return buildMaterialAsset(definition, resolved.handles, { app: ctx.app, shader: shader.value });
+}
+
+/**
+ * Reads the `textures` record, accepting a bare address string or an `{ "$asset": … }` reference.
+ *
+ * @param file - The file body.
+ * @returns Sampler name to address.
+ */
+function readTextureRecord(file: Record<string, unknown>): Record<string, string> {
+  const record: Record<string, string> = {};
+  const declared = file["textures"];
+  if (typeof declared !== "object" || declared === null || Array.isArray(declared)) {
+    return record;
+  }
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- a JSON object read by name.
+  const entries = declared as Record<string, unknown>;
+  for (const name of Object.keys(entries)) {
+    const value: unknown = entries[name];
+    if (typeof value === "string" && value !== "") {
+      record[name] = value;
+      continue;
+    }
+    if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+      // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- a JSON object read by name.
+      const address = (value as Record<string, unknown>)["$asset"];
+      if (typeof address === "string" && address !== "") {
+        record[name] = address;
+      }
+    }
+  }
+  return record;
+}
+
+/**
+ * Loads the textures a shader material binds by name, dropping the ones that failed.
+ *
+ * @remarks
+ * A texture that fails to load is dropped from **both** the record and the handle list, so the two
+ * stay aligned and the sampler falls back to its declared 1x1 texture — the same "a missing map is
+ * a visual defect, not a failed level" rule the PBR path follows.
+ *
+ * @param ctx - The loader context.
+ * @param requested - Sampler name to address.
+ * @returns The addresses that loaded and their handles, in the same order.
+ */
+async function loadNamedTextures(
+  ctx: LoaderContext,
+  requested: Record<string, string>,
+): Promise<{ readonly addresses: Record<string, string>; readonly handles: readonly AssetHandle<TextureAsset>[] }> {
+  const names = Object.keys(requested);
+  const requests: Promise<AssetHandle<TextureAsset> | null>[] = [];
+  for (let index = 0; index < names.length; index += 1) {
+    const address = requested[names[index] ?? ""] ?? "";
+    requests.push(ctx.loadDependency<TextureAsset>(address).catch((): null => null));
+  }
+  const settled = await Promise.all(requests);
+  const addresses: Record<string, string> = {};
+  const handles: AssetHandle<TextureAsset>[] = [];
+  for (let index = 0; index < settled.length; index += 1) {
+    const handle = settled[index];
+    const name = names[index];
+    const address = name === undefined ? undefined : requested[name];
+    if (handle === null || handle === undefined || name === undefined || address === undefined) {
+      continue;
+    }
+    addresses[name] = address;
+    handles.push(handle);
+  }
+  return { addresses, handles };
+}
+
+/**
+ * Reads the `values` record: a number, or an array of numbers for a vector, matrix, or sRGB colour.
+ *
+ * @param file - The file body.
+ * @returns Uniform name to value; entries of any other shape are dropped and fail later as
+ * `IGX-0712`/`IGX-0713` only if they name something the shader declares.
+ */
+function readValues(file: Record<string, unknown>): Record<string, number | readonly number[]> {
+  const values: Record<string, number | readonly number[]> = {};
+  const declared = file["values"];
+  if (typeof declared !== "object" || declared === null || Array.isArray(declared)) {
+    return values;
+  }
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- a JSON object read by name.
+  const entries = declared as Record<string, unknown>;
+  for (const name of Object.keys(entries)) {
+    const value: unknown = entries[name];
+    if (typeof value === "number" && Number.isFinite(value)) {
+      values[name] = value;
+      continue;
+    }
+    if (Array.isArray(value)) {
+      const numbers: number[] = [];
+      for (const element of value) {
+        numbers.push(typeof element === "number" && Number.isFinite(element) ? element : 0);
+      }
+      values[name] = numbers;
+    }
+  }
+  return values;
+}
+
+/**
+ * Reads the `defines` record.
+ *
+ * @param file - The file body.
+ * @returns Define name to value.
+ */
+function readDefines(file: Record<string, unknown>): Record<string, boolean | number> {
+  const defines: Record<string, boolean | number> = {};
+  const declared = file["defines"];
+  if (typeof declared !== "object" || declared === null || Array.isArray(declared)) {
+    return defines;
+  }
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- a JSON object read by name.
+  const entries = declared as Record<string, unknown>;
+  for (const name of Object.keys(entries)) {
+    const value: unknown = entries[name];
+    if (typeof value === "boolean" || (typeof value === "number" && Number.isFinite(value))) {
+      defines[name] = value;
+    }
+  }
+  return defines;
 }

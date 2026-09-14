@@ -382,6 +382,9 @@ export class RendererImpl implements Renderer {
 
   #syncSystem: { sync(world: World): void } | null = null;
 
+  /** Adapter chunks a component asked for; `app.start()` waits for them before it reconciles. */
+  readonly #gpuAdapters: Promise<void>[] = [];
+
   #handles: { readonly engine: LiteEngine; readonly scene: LiteScene } | null = null;
 
   #presenter: ScenePresenter | null = null;
@@ -902,6 +905,42 @@ export class RendererImpl implements Renderer {
    */
   syncBeforeRegister(world: World): void {
     this.#syncSystem?.sync(world);
+  }
+
+  /**
+   * Records a Babylon Lite adapter chunk a component asked for, so `app.start()` waits for it.
+   *
+   * @remarks
+   * A component whose adapter is split out of the entry chunk (`CONSTITUTION.md` §2.5) cannot build
+   * its Lite objects until the chunk has arrived, and Lite bakes thin-instance culling and LOD
+   * pairings at `registerScene`. Declaring the load here is what makes the wait happen **before**
+   * the one reconciliation `app.start()` runs, so a renderer created before `start()` is registered
+   * with its meshes in place. A component added later just picks its adapter up a frame or two on.
+   *
+   * @param load - The load in flight. Its failure is reported through `app.onError`, not thrown.
+   *
+   * @internal
+   */
+  requireGpuAdapter(load: Promise<unknown>): void {
+    this.#gpuAdapters.push(
+      load.then(
+        (): void => undefined,
+        (failure: unknown): void => {
+          this.#app.onError.emit({ error: failure, source: "asset", phase: null, entity: null, component: null });
+        },
+      ),
+    );
+  }
+
+  /**
+   * Waits for every adapter chunk {@link RendererImpl.requireGpuAdapter} was told about.
+   *
+   * @returns A promise that settles once they have all arrived or failed.
+   *
+   * @internal
+   */
+  async gpuAdaptersReady(): Promise<void> {
+    await Promise.all(this.#gpuAdapters.splice(0, this.#gpuAdapters.length));
   }
 
   /**

@@ -1,4 +1,4 @@
-import { addToScene, createMeshFromData, removeFromScene, setSubtreeVisible } from "@babylonjs/lite";
+import { addToScene, createMeshFromData, isShaderMaterial, removeFromScene, setSubtreeVisible } from "@babylonjs/lite";
 import type { EngineContext, Material, Mesh, SceneContext } from "@babylonjs/lite";
 
 /**
@@ -30,6 +30,13 @@ import type { EngineContext, Material, Mesh, SceneContext } from "@babylonjs/lit
  *
  * Hiding is enough: `visible` is read when a renderable is drawn, not when it is built, so a hidden
  * probe still forces its family's group builder to run.
+ *
+ * A shader material warms too, and a probe needs no matching geometry: a missing attribute binds
+ * from a shared zero buffer and a declared sampler always holds ignifx's 1x1 fallback. A declared
+ * **storage buffer** is the exception — Lite throws when it builds a bind group with one unbound
+ * (error 310) and the throw lands inside `registerScene`, where nothing can catch it per probe — so
+ * {@link warmUpMaterials} skips such a material, which then pays Lite's runtime-build path on its
+ * first draw.
  */
 
 /**
@@ -75,7 +82,8 @@ export interface MaterialWarmUp {
  *
  * @param engine - The engine that owns the probe geometry.
  * @param scene - The scene to warm up.
- * @param materials - The materials whose families must be compiled at registration.
+ * @param materials - The materials whose families must be compiled at registration. A shader
+ * material that declares a storage buffer is skipped; see the module header.
  * @returns The installed probes. Pass them to {@link discardMaterialWarmUp} to take them out.
  *
  * @example
@@ -95,7 +103,7 @@ export function warmUpMaterials(
   const probes: Mesh[] = [];
   for (let i = 0; i < materials.length; i++) {
     const material = materials[i];
-    if (material === undefined) {
+    if (material === undefined || !canWarmUp(material)) {
       continue;
     }
     const probe = createMeshFromData(
@@ -137,4 +145,15 @@ export function discardMaterialWarmUp(scene: SceneContext, warmUp: MaterialWarmU
       removeFromScene(scene, probe);
     }
   }
+}
+
+/**
+ * Whether a hidden probe wearing this material can be registered without risking a throw inside
+ * `registerScene`.
+ *
+ * @param material - The material to warm.
+ * @returns `false` for a custom WGSL material that declares a storage buffer, `true` otherwise.
+ */
+function canWarmUp(material: Material): boolean {
+  return !isShaderMaterial(material) || material.storageBufferDecls.length === 0;
 }

@@ -25,6 +25,7 @@ import { createPixelRgba, pixelLuminance, samplePixel } from "../../../src/lite/
 import { rebuildRenderables } from "../../../src/lite/shadow.js";
 import { assetUrl } from "./fixtures/asset-urls.js";
 import { advanceFrames, createRenderHarness } from "./fixtures/gpu-harness.js";
+import { sceneUboContributorCount } from "./fixtures/lite-internals.js";
 import type { RenderHarness } from "./fixtures/gpu-harness.js";
 import type { EnvironmentTextures } from "@babylonjs/lite";
 
@@ -145,8 +146,10 @@ describe("scene background and fog", () => {
     expect(harness.scene.clearColor).toEqual({ r: 0.1, g: 0.2, b: 0.3, a: 1 });
   });
 
-  it("creates, updates, and clears the fog block", async () => {
+  it("installs fog through setFog, so the scene UBO gets a fog writer", async () => {
     const harness = await buildScene(false);
+    expect(sceneUboContributorCount(harness.scene)).toBe(0);
+
     setSceneFog(harness.scene, "linear", 0.5, 0.5, 0.5, 0.01, 10, 50);
     expect(harness.scene.fog).toEqual({
       mode: FOG_MODES.linear,
@@ -155,14 +158,37 @@ describe("scene background and fog", () => {
       end: 50,
       color: [0.5, 0.5, 0.5],
     });
+    // The whole point of going through Lite's `setFog`: without the contributor it registers, the
+    // fog block Lite compiles into every PBR pipeline reads a zeroed `vFogInfos` and never fires.
+    expect(sceneUboContributorCount(harness.scene)).toBe(1);
+  });
 
-    const existing = harness.scene.fog;
+  it("re-installs a fresh config on every change, so the scene-UBO cache misses", async () => {
+    const harness = await buildScene(false);
+    setSceneFog(harness.scene, "linear", 0.5, 0.5, 0.5, 0.01, 10, 50);
+    const first = harness.scene.fog;
     setSceneFog(harness.scene, "exp2", 1, 0, 0, 0.02, 1, 2);
-    expect(harness.scene.fog).toBe(existing);
+    // A render task caches its scene UBO on the identity of `scene.fog`, so mutating the installed
+    // object in place would leave the new density and colour unwritten.
+    expect(harness.scene.fog).not.toBe(first);
     expect(harness.scene.fog?.mode).toBe(FOG_MODES.exp2);
+    expect(harness.scene.fog?.density).toBe(0.02);
+  });
 
+  it("turns fog off with mode 0 rather than dropping the config", async () => {
+    const harness = await buildScene(false);
+    setSceneFog(harness.scene, "exp2", 1, 0, 0, 0.02, 1, 2);
+    setSceneFog(harness.scene, "none", 0, 0, 0, 0, 0, 0);
+    // `null` would only stop the writer; the pipelines compiled while fog was on keep their fog
+    // block and would go on reading the last values written.
+    expect(harness.scene.fog?.mode).toBe(FOG_MODES.none);
+  });
+
+  it("leaves a scene that never asked for fog paying nothing", async () => {
+    const harness = await buildScene(false);
     setSceneFog(harness.scene, "none", 0, 0, 0, 0, 0, 0);
     expect(harness.scene.fog).toBeNull();
+    expect(sceneUboContributorCount(harness.scene)).toBe(0);
   });
 });
 

@@ -29,6 +29,7 @@ describe("describeSchemas", () => {
     expect(Object.keys(schemas).toSorted()).toEqual([
       "ignifx/Camera",
       "ignifx/Environment",
+      "ignifx/InstancedMeshRenderer",
       "ignifx/Light",
       "ignifx/MeshRenderer",
       "ignifx/Model",

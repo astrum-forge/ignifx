@@ -224,7 +224,14 @@ export class SpriteLayerRegistry {
    */
   place(component: SpriteRenderer, atlas: SpriteAtlasAsset, scratch: SpriteScratch): string {
     const key = spriteLayerKey(component.sortingLayer, atlas.address, component.blend, component.screenSpace);
-    const record = this.#ensure(key, component.sortingLayer, component.blend, component.screenSpace, atlas);
+    const record = this.#ensure(
+      key,
+      component.sortingLayer,
+      component.blend,
+      component.screenSpace,
+      atlas,
+      INITIAL_LAYER_CAPACITY,
+    );
     const handle = addSprite(record.layer, scratch);
     const index = spriteIndexOf(handle);
     if (index >= 0) {
@@ -284,13 +291,62 @@ export class SpriteLayerRegistry {
     scratch: SpriteScratch,
   ): { readonly key: string; readonly handle: LiteSprite2DHandle } {
     const key = spriteLayerKey(sortingLayer, atlas.address, blend, screenSpace);
-    const record = this.#ensure(key, sortingLayer, blend, screenSpace, atlas);
+    const record = this.#ensure(key, sortingLayer, blend, screenSpace, atlas, INITIAL_LAYER_CAPACITY);
     const handle = addSprite(record.layer, scratch);
     const index = spriteIndexOf(handle);
     if (index >= 0) {
       record.components[index] = null;
     }
     return { key, handle };
+  }
+
+  /**
+   * Claims `capacity` sprite slots in one layer at once — what `app.twoD.createSpriteBatch` is
+   * built on.
+   *
+   * @remarks
+   * This is {@link SpriteLayerRegistry.placeRaw} `capacity` times with the key computed once and
+   * the Lite layer pre-allocated for the whole crowd, so a 5 000-sprite batch neither builds 5 000
+   * key strings nor makes Lite double its instance array nine times. Like `placeRaw` the slots take
+   * no place in the pick map: a batch sprite has no component for `app.twoD.pickAt` to resolve.
+   *
+   * The `capacity` is only a pre-allocation for a layer this call **creates**. A batch that lands
+   * in a layer some `SpriteRenderer` already opened gets Lite's growth-by-doubling instead, which
+   * is correct but reallocates.
+   *
+   * @param sortingLayer - The sorting layer's name.
+   * @param atlas - The atlas every slot draws from.
+   * @param blend - The blend mode.
+   * @param screenSpace - Whether the layer ignores the camera.
+   * @param capacity - How many slots to claim.
+   * @param scratch - The reusable props record every slot is created from, already written.
+   * @param out - The array to fill with the handles; it is emptied first.
+   * @returns The key of the layer the slots landed in, and the layer itself.
+   *
+   * @internal
+   */
+  // oxlint-disable-next-line max-params -- called once per batch; four of them are the layer key.
+  placeBatch(
+    sortingLayer: string,
+    atlas: SpriteAtlasAsset,
+    blend: SpriteBlendName,
+    screenSpace: boolean,
+    capacity: number,
+    scratch: SpriteScratch,
+    out: LiteSprite2DHandle[],
+  ): { readonly key: string; readonly layer: LiteSprite2DLayer } {
+    const key = spriteLayerKey(sortingLayer, atlas.address, blend, screenSpace);
+    const record = this.#ensure(key, sortingLayer, blend, screenSpace, atlas, capacity);
+    out.length = 0;
+    for (let slot = 0; slot < capacity; slot += 1) {
+      const handle = addSprite(record.layer, scratch);
+      const index = spriteIndexOf(handle);
+      if (index >= 0) {
+        record.components[index] = null;
+      }
+      out.push(handle);
+    }
+    return { key, layer: record.layer };
   }
 
   /**
@@ -378,14 +434,17 @@ export class SpriteLayerRegistry {
    * @param blend - The blend mode the layer draws with.
    * @param screenSpace - Whether the layer ignores the camera.
    * @param atlas - The atlas to bind the layer to.
+   * @param capacity - How many sprites a layer this call creates pre-allocates room for.
    * @returns The record.
    */
+  // oxlint-disable-next-line max-params -- private; four of them are the parts of the layer key.
   #ensure(
     key: string,
     sortingLayer: string,
     blend: SpriteBlendName,
     screenSpace: boolean,
     atlas: SpriteAtlasAsset,
+    capacity: number,
   ): LayerRecord {
     const existing = this.#records.get(key);
     if (existing !== undefined) {
@@ -402,7 +461,7 @@ export class SpriteLayerRegistry {
     const layer = createLayer(liteAtlas, {
       blend,
       order,
-      capacity: INITIAL_LAYER_CAPACITY,
+      capacity,
       customShader: this.#shaderFor(sortingLayer),
     });
     const ySort = !screenSpace && this.#ySort[sortingLayer] === true;

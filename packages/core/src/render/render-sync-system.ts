@@ -1,7 +1,9 @@
+import { CoreErrorCode } from "../errors/error-codes.js";
 import { setSceneCamera } from "../lite/camera.js";
 import { rebuildRenderables } from "../lite/shadow.js";
 import { Camera } from "./camera.js";
 import { Environment } from "./environment.js";
+import { InstancedMeshRenderer } from "./instanced-mesh-renderer.js";
 import { Light } from "./light.js";
 import { MeshRenderer } from "./mesh-renderer.js";
 import { Model } from "./model.js";
@@ -31,11 +33,13 @@ import type { World } from "../world/world.js";
  *    on the next frame with no bookkeeping at the call site.
  * 2. **Visibility.** `entity.activeInHierarchy && component.enabled` is materialised onto each
  *    clone's `visible`. Never removal: Lite disposes a mesh that leaves its last scene.
- * 3. **One `rebuildSceneRenderables` per frame.** Adding a mesh, adding a light, or giving a light
- *    a shadow generator all invalidate the per-mesh light index list and the compiled shader
- *    permutation that renderables bake in (`index.d.ts` 9465). The call is expensive, so every
- *    topology change in a frame is coalesced into one, fired at the end of the phase and not
- *    awaited — it resolves on its own, and the frame must not block on it.
+ * 3. **One `rebuildSceneRenderables` per frame, and never two at once.** Adding a mesh, adding a
+ *    light, or giving a light a shadow generator all invalidate the per-mesh light index list and
+ *    the compiled shader permutation that renderables bake in (`index.d.ts` 9465). The call is
+ *    expensive, so every topology change in a frame is coalesced into one, fired at the end of the
+ *    phase and not awaited — it resolves on its own, and the frame must not block on it. Because it
+ *    is not awaited, a rebuild asked for while one is still running is *queued*, not started: two
+ *    overlapping runs corrupt the frame graph outright, which `#drainRebuilds` records in full.
  * 4. **Main-camera selection.** The enabled camera with the highest `priority` becomes
  *    `scene.camera` and `world.mainCamera`; ties break on creation order, so two cameras at the
  *    same priority resolve deterministically. A world with no enabled camera logs `IGX-0706` once,
@@ -69,6 +73,17 @@ import type { World } from "../world/world.js";
 export const RENDER_SYNC_ORDER = 900;
 
 /**
+ * Whether a light's shadow generator is an ESM one: only a directional light honours `technique`
+ * (a spot light always uses PCF, the one generator Lite offers it).
+ *
+ * @param light - The light, if any.
+ * @returns `true` for an enabled, casting, directional light whose technique is `"esm"`.
+ */
+function isEsmCaster(light: Light | undefined): boolean {
+  return light?.isCastingShadows === true && light.type === "directional" && light.shadows.technique === "esm";
+}
+
+/**
  * Reconciles the render components with the Lite scene once per frame.
  *
  * @internal
@@ -80,12 +95,19 @@ export class RenderSyncSystem implements System {
   readonly #renderer: RendererImpl;
 
   readonly #casters: LiteMesh[] = [];
+  /** The casters an ESM generator may take: every caster whose material is not a shader material. */
+  readonly #esmCasters: LiteMesh[] = [];
+  /** Renderers already reported with `IGX-0724`, so the warning fires once per component. */
+  readonly #esmSkipReported = new WeakSet<MeshRenderer | Model | InstancedMeshRenderer>();
 
   #hasLoggedMultipleEnvironments = false;
 
   #isRebuildDue = false;
 
   #isRebuildInFlight = false;
+
+  /** A rebuild asked for while one was already running; it is run once the in-flight one lands. */
+  #isRebuildPending = false;
 
   #areCastersDirty = false;
 
@@ -125,6 +147,7 @@ export class RenderSyncSystem implements System {
     const renderer = this.#renderer;
     const meshes = world.components(MeshRenderer);
     const models = world.components(Model);
+    const instanced = world.components(InstancedMeshRenderer);
     const lights = world.components(Light);
     const cameras = world.components(Camera);
 
@@ -146,6 +169,15 @@ export class RenderSyncSystem implements System {
       if (model !== undefined) {
         topologyChanged = model.sync(renderer) || topologyChanged;
         castersChanged = model.consumeCasterChange() || castersChanged;
+      }
+    }
+    // An instanced renderer is reconciled and contributes casters exactly as a `MeshRenderer` does;
+    // it is a third renderable component, not a variation on the first two.
+    for (let index = 0; index < instanced.length; index += 1) {
+      const cloud = instanced[index];
+      if (cloud !== undefined) {
+        topologyChanged = cloud.sync(renderer) || topologyChanged;
+        castersChanged = cloud.consumeCasterChange() || castersChanged;
       }
     }
     for (let index = 0; index < lights.length; index += 1) {
@@ -173,9 +205,10 @@ export class RenderSyncSystem implements System {
     // Caster lists come **after** the renderable rebuild has settled; see `#rebuildCasters`.
     if (this.#areCastersDirty && !this.#isRebuildDue && !this.#isRebuildInFlight) {
       this.#areCastersDirty = false;
-      this.#rebuildCasters(meshes, models, lights);
+      this.#rebuildCasters(meshes, models, instanced, lights);
     }
-    renderer.publishCounters(cameras.length, lights.length, meshes.length);
+    // An instanced cloud is one renderable, so it counts once beside a mesh renderer.
+    renderer.publishCounters(cameras.length, lights.length, meshes.length + instanced.length);
   }
 
   /**
@@ -296,24 +329,93 @@ export class RenderSyncSystem implements System {
    *
    * @param meshes - Every mesh renderer in the world.
    * @param models - Every model in the world; each contributes its whole instantiated subtree.
+   * @param instanced - Every instanced renderer in the world; each contributes its instanced mesh
+   * and its LOD partner.
    * @param lights - Every light in the world.
    */
-  #rebuildCasters(meshes: readonly MeshRenderer[], models: readonly Model[], lights: readonly Light[]): void {
+  #rebuildCasters(
+    meshes: readonly MeshRenderer[],
+    models: readonly Model[],
+    instanced: readonly InstancedMeshRenderer[],
+    lights: readonly Light[],
+  ): void {
     const casters = this.#casters;
+    const esmCasters = this.#esmCasters;
     casters.length = 0;
+    esmCasters.length = 0;
+    let hasEsmLight = false;
+    for (let index = 0; index < lights.length; index += 1) {
+      if (isEsmCaster(lights[index])) {
+        hasEsmLight = true;
+      }
+    }
     for (let index = 0; index < meshes.length; index += 1) {
-      meshes[index]?.collectCasters(casters);
+      const mesh = meshes[index];
+      if (mesh !== undefined) {
+        this.#collectPartitioned(mesh, casters, esmCasters, hasEsmLight);
+      }
     }
     for (let index = 0; index < models.length; index += 1) {
-      models[index]?.collectCasters(casters);
+      const model = models[index];
+      if (model !== undefined) {
+        this.#collectPartitioned(model, casters, esmCasters, hasEsmLight);
+      }
+    }
+    for (let index = 0; index < instanced.length; index += 1) {
+      const cloud = instanced[index];
+      if (cloud !== undefined) {
+        this.#collectPartitioned(cloud, casters, esmCasters, hasEsmLight);
+      }
     }
     // Lite keys the list by array identity, so a fresh array is what tells it the set changed.
     const snapshot = casters.slice();
+    const esmSnapshot = esmCasters.slice();
     for (let index = 0; index < lights.length; index += 1) {
       const light = lights[index];
       if (light?.isCastingShadows === true) {
-        light.setShadowCasters(snapshot);
+        light.setShadowCasters(isEsmCaster(light) ? esmSnapshot : snapshot);
       }
+    }
+  }
+
+  /**
+   * Collects one renderer's casters into the full list and, unless it draws with a shader
+   * material, into the ESM list too. A shader-material caster under an ESM light is reported once
+   * with `IGX-0724` (Babylon Lite 1.27.0 has no ESM view for the shader family).
+   *
+   * @param renderer - The mesh renderer, model, or instanced renderer.
+   * @param casters - The list every PCF and CSM generator takes.
+   * @param esmCasters - The list every ESM generator takes.
+   * @param hasEsmLight - Whether any enabled light casts with the ESM technique this frame.
+   */
+  #collectPartitioned(
+    renderer: MeshRenderer | Model | InstancedMeshRenderer,
+    casters: LiteMesh[],
+    esmCasters: LiteMesh[],
+    hasEsmLight: boolean,
+  ): void {
+    const before = casters.length;
+    renderer.collectCasters(casters);
+    if (casters.length === before) {
+      return;
+    }
+    if (!renderer.usesShaderMaterial) {
+      for (let k = before; k < casters.length; k += 1) {
+        const mesh = casters[k];
+        if (mesh !== undefined) {
+          esmCasters.push(mesh);
+        }
+      }
+      return;
+    }
+    if (hasEsmLight && !this.#esmSkipReported.has(renderer)) {
+      this.#esmSkipReported.add(renderer);
+      renderer.entity.world.app.log.warn(
+        `${CoreErrorCode.shaderMaterialEsmCasterSkipped}: {entity} uses a shader material under ESM shadows; ` +
+          "Babylon Lite 1.27.0 cannot render it into an ESM map, so it casts no shadow there. " +
+          "Use pcf shadows or castShadows: false.",
+        renderer.entity.name,
+      );
     }
   }
 
@@ -350,19 +452,80 @@ export class RenderSyncSystem implements System {
     if (renderer.isHeadless || !renderer.isSceneRegistered) {
       return;
     }
+    if (this.#isRebuildInFlight) {
+      // Never a second concurrent run; see `#drainRebuilds`. One more pass covers whatever changed
+      // since this one started, and several requests in the same window collapse into that one.
+      this.#isRebuildPending = true;
+      return;
+    }
     this.#isRebuildInFlight = true;
     // Out of the frame callback as well as out of the frame: the whole ignifx frame runs inside
     // Lite's `onBeforeRender`, and rebuilding a scene's material groups from in there rebuilds them
     // against a frame that has not been recorded yet. A microtask runs once the rendered frame's
     // task has finished, which is the earliest point that is genuinely "between frames".
     queueMicrotask((): void => {
-      void rebuildRenderables(renderer.scene)
-        .catch((error: unknown): void => {
-          renderer.app.onError.emit({ error, source: "system", phase: null, entity: null, component: null });
-        })
-        .finally((): void => {
-          this.#isRebuildInFlight = false;
-        });
+      void this.#drainRebuilds();
     });
+  }
+
+  /**
+   * Runs `rebuildSceneRenderables` to completion, then once more for every request that arrived
+   * while it was running.
+   *
+   * @remarks
+   * **Two of these must never overlap.** `rebuildSceneGroups` is a long `async` function whose
+   * `finally` ends with `ctx._frameGraph.build()` (`lib/scene/scene-rebuild.js` 50-56), and
+   * `build()` re-records every task — which for a render task means `buildBindings` over
+   * `scene._renderables` followed by `buildRenderPassDescriptor`
+   * (`lib/frame-graph/render-task.js` 84-92). A second run in flight spends most of its life with
+   * the scene torn half down: `dropGroupOutput` has cleared `meshes.r`, `materializeRuntimeMesh`
+   * has spliced a mesh's renderables out and not yet pushed the new ones back. `build()` landing in
+   * that window throws out of `record()` **after** the task's targets were reallocated and
+   * **before** `buildRenderPassDescriptor` ran, so the task keeps the colour attachment it was
+   * constructed with — `{ loadOp, storeOp }`, with no `view` key at all
+   * (`lib/frame-graph/render-task.js` 30, 49). Every later frame then fails the same way, because
+   * `executePass` only re-assigns `att.view` for the swapchain target (line 268-275):
+   * `beginRenderPass … colorAttachments[0].view … Required member is undefined`, and the canvas
+   * goes black for good. Reproduced on the weather example on 2026-09-15 by swapping two particle
+   * systems' generated shader materials under fog and shadows — about one load in five.
+   *
+   * Lite serialises its own half already: a material swap on a thin-instanced mesh reaches
+   * `hooks.queue`, which chains on `state.tail`, and `processMaterialSwaps` refuses to start while
+   * that tail is live (`lib/scene/scene-material-swap.js` 4-6,
+   * `lib/scene/scene-runtime-mesh-build.js`, `queue`). `rebuildSceneGroups` funnels every group
+   * through the same tail (`X` → `exclusive`). So one rebuild at a time on this side is what the
+   * rest of the arrangement already assumes.
+   *
+   * @returns A promise that settles when nothing more is owed.
+   */
+  async #drainRebuilds(): Promise<void> {
+    const renderer = this.#renderer;
+    try {
+      do {
+        if (renderer.isHeadless || !renderer.isSceneRegistered) {
+          return;
+        }
+        try {
+          // oxlint-disable-next-line no-await-in-loop -- the whole point is that these never overlap.
+          await rebuildRenderables(renderer.scene);
+        } catch (error: unknown) {
+          renderer.app.onError.emit({ error, source: "system", phase: null, entity: null, component: null });
+        }
+      } while (this.#takePendingRebuild());
+    } finally {
+      this.#isRebuildInFlight = false;
+      this.#isRebuildPending = false;
+    }
+  }
+
+  /**
+   * Clears the queued-rebuild flag and reports whether one was queued.
+   *
+   * @returns `true` when a rebuild was asked for while the last one was running.
+   */
+  #takePendingRebuild(): boolean {
+    const pending = this.#isRebuildPending;
+    this.#isRebuildPending = false;
+    return pending;
   }
 }

@@ -100,3 +100,13 @@ export {
   type AssetChangedPayload,
   type ScriptsModuleOptions,
 } from "./virtual-modules.js";
+export {
+  IGNIFX_SYSTEM_UNIFORMS,
+  LITE_SYSTEM_UNIFORMS,
+  validateWgslAsset,
+  validateWgslAssets,
+  validateWgslSource,
+  WGSL_EXTENSION,
+  type WgslProblem,
+  type WgslShaderKind,
+} from "./wgsl-validate.js";

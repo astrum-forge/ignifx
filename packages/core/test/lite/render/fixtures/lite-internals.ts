@@ -2,7 +2,7 @@
    file: spike S2.4 proves that two clones share one geometry upload by object identity, and the
    only handle on that upload is `Mesh._gpu`, which `index.d.ts` does not declare. Confining the
    reads here keeps every test free of the pattern. */
-import type { SceneNode } from "@babylonjs/lite";
+import type { SceneContext, SceneNode } from "@babylonjs/lite";
 
 /**
  * The private mesh fields spike S2.4 inspects, as they are written in
@@ -58,4 +58,24 @@ export function geometryOwnerCount(node: SceneNode): number | undefined {
  */
 export function isGeometryDisposed(node: SceneNode): boolean {
   return internals(node)._disposed === true;
+}
+
+/** The scene-UBO writers Lite keeps in a private field of its own. */
+interface SceneInternals {
+  /**
+   * The contributors `_writePassSceneUBO` runs after the packed scene uniforms
+   * (`lib/frame-graph/render-task.js` 372-379). `setFog`, `setClipPlane` and the environment
+   * installers are the only things that push onto it, and nothing else writes their UBO slots.
+   */
+  readonly _sceneUboContributors?: readonly unknown[];
+}
+
+/**
+ * How many scene-UBO contributors a scene has registered.
+ *
+ * @param scene - The scene to probe.
+ * @returns The count; `0` while nothing has registered one.
+ */
+export function sceneUboContributorCount(scene: SceneContext): number {
+  return (scene as unknown as SceneInternals)._sceneUboContributors?.length ?? 0;
 }

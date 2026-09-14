@@ -150,6 +150,24 @@ export class MeshRenderer extends Component implements ComponentHooks {
   }
 
   /**
+   * Whether the material this renderer draws with is a `"shader"` material.
+   *
+   * @remarks
+   * The render sync system asks before it builds an ESM caster list: Babylon Lite 1.27.0 has no ESM
+   * shadow view for the shader family and writes the fragment colour's red channel into the map
+   * (`lib/shadow/esm-directional-shadow-generator.js` 230–245), so such a mesh is left out of it and
+   * reported once with `IGX-0724`. PCF and CSM generators take it.
+   *
+   * @returns `true` when the first declared material is loaded and is a shader material.
+   *
+   * @internal
+   */
+  get usesShaderMaterial(): boolean {
+    const declared = this.materials[0];
+    return declared?.state === "loaded" && declared.value.kind === "shader";
+  }
+
+  /**
    * Appends this renderer's mesh to a shadow caster list, when it casts.
    *
    * @param out - The caster list being built.

@@ -1,5 +1,4 @@
 import {
-  enableAsyncShaderPipelineCompilation,
   enableBoneControl,
   enableGltfCameras,
   enableMaterialPlugins,
@@ -138,7 +137,8 @@ export async function applyRenderingFeatures(
     enableMaterialPlugins(scene);
   }
   if (features.asyncPipelines) {
-    enableAsyncShaderPipelineCompilation(engine);
+    // Its own chunk; `./gpu/async-pipelines.ts` records why.
+    (await import("./gpu/async-pipelines.js")).enableAsyncPipelines(engine);
   }
   if (features.lightmaps) {
     await enablePbrLightmap();

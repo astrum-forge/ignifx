@@ -31,7 +31,7 @@ ruleTester.run("error-code-format", errorCodeFormat, {
     { code: "const code = 'IGX-abcd';", errors: [{ messageId: "badFormat" }] },
     { code: "const code = `IGX-12`;", errors: [{ messageId: "badFormat" }] },
     { code: "const code = 'IGX-0001';", errors: [{ messageId: "unregisteredRange" }] },
-    { code: "const code = 'IGX-1601';", errors: [{ messageId: "unregisteredRange" }] },
+    { code: "const code = 'IGX-1801';", errors: [{ messageId: "unregisteredRange" }] },
     { code: "const code = 'IGX-8000';", errors: [{ messageId: "unregisteredRange" }] },
     {
       code: "throw new IgnifxError('nope', 'message');",

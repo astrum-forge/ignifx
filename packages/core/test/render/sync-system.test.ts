@@ -12,6 +12,10 @@ import { MeshRenderer } from "../../src/render/mesh-renderer.js";
 import { createModelAsset } from "../../src/render/model-asset.js";
 import { Model } from "../../src/render/model.js";
 import { PostProcessStack } from "../../src/render/post-process-stack.js";
+import { SHADER_ASSET_TYPE, ShaderAsset } from "../../src/render/shader-asset.js";
+import { shaderMaterialDefinition } from "../../src/render/shader-material-definition.js";
+import { parseShaderDeclaration } from "../../src/render/shader-pragma.js";
+import { loadShaderSupport } from "../../src/render/shader-support.js";
 import { createRenderHarness, warningsOf } from "./support/render-harness.js";
 import type { RenderHarness } from "./support/render-harness.js";
 import type { AssetHandle } from "../../src/assets/types.js";
@@ -148,7 +152,10 @@ describe("the environment", () => {
 
     environment.fog.mode = "none";
     h.frame();
-    expect(h.world.lite.scene.fog).toBeNull();
+    // Not `null`: the PBR pipelines compiled while fog was on still carry the fog block, and mode 0
+    // is what that block reads as "no fog". Dropping the config would stop the UBO writer and leave
+    // the last fog standing (`src/lite/gpu/environment.ts`).
+    expect(h.world.lite.scene.fog?.mode).toBe(0);
   });
 
   it("warns once with IGX-0705 while two are enabled, and the latest wins", async () => {
@@ -348,6 +355,28 @@ describe("models", () => {
     handle.release();
   });
 
+  // A model's material overrides can name a shader material, so it has to take the same ESM
+  // partition a `MeshRenderer` does (`IGX-0724`); the device half is in
+  // `shader-esm-casters.browser.test.ts`.
+  it("reports a shader material among its overrides, so ESM caster lists can exclude it", async () => {
+    const h = await app();
+    const handle = h.app.assets.register(createModelAsset("models/hero.glb", null, null), { type: "model" });
+    const pbr = createMaterialAsset(h.app, pbrMaterialDefinition({ name: "body" }), []);
+    const model = h.world.createEntity("Hero").addComponent(Model, { model: handle, materialOverrides: { body: pbr } });
+    expect(model.usesShaderMaterial).toBe(false);
+
+    const address = "shaders/white.wgsl";
+    const source = "// @ignifx shader\n";
+    await loadShaderSupport();
+    h.app.assets.register(new ShaderAsset(address, source, parseShaderDeclaration(source, address)), {
+      type: SHADER_ASSET_TYPE,
+      address,
+    });
+    model.materialOverrides["body"] = createMaterialAsset(h.app, shaderMaterialDefinition({ shader: address }), []);
+    expect(model.usesShaderMaterial).toBe(true);
+    handle.release();
+  });
+
   // The caster half of the same contract `MeshRenderer` has: a `Model` answers `collectCasters`
   // and `consumeCasterChange`, and the sync system asks it. Headlessly there is no clone, so the
   // answer is "nothing", and it settles after the first frame exactly as a mesh renderer's does.
@@ -470,6 +499,7 @@ function requestsOf(stack: PostProcessStack): readonly PostProcessEffectRequest[
     bloom: stack.bloom,
     smaa: stack.smaa,
     sourceIsSrgb: false,
+    custom: null,
   }));
 }
 

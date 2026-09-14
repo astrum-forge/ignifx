@@ -1,7 +1,6 @@
 import { Component } from "../component/component.js";
 import { CoreErrorCode } from "../errors/error-codes.js";
 import { setSceneFog, TONE_MAPPING_NAMES } from "../lite/gpu/environment.js";
-import { Color } from "../math/color.js";
 import { asset, bool, color, enumOf, f32, record } from "../schema/field-kinds.js";
 import { createDefaults, defineSchema } from "../schema/schema.js";
 import { EnvironmentAsset } from "./environment-asset.js";
@@ -328,7 +327,14 @@ export class Environment extends Component implements ComponentHooks {
   }
 
   /**
-   * Writes the fog record, decoded to linear.
+   * Writes the fog record.
+   *
+   * @remarks
+   * The colour goes across **encoded**, unlike every other colour this component writes: Lite's fog
+   * block decodes it itself — `color = mix(pow(scene.vFogColor.rgb, vec3(2.2)), color, fogFactor)`
+   * (`lib/material/pbr/pbr-fog-wgsl.js` 4) — so handing it a linear value decodes it twice and the
+   * fog reads far darker than the swatch. The clear colour, which the render pass consumes as a
+   * linear clear value, is decoded by `RendererImpl.applyClearColor` instead.
    *
    * @param renderer - The rendering service, for the scene.
    */
@@ -342,9 +348,9 @@ export class Environment extends Component implements ComponentHooks {
     setSceneFog(
       renderer.scene,
       toFogMode(fog.mode),
-      Color.srgbToLinear(fog.color.r),
-      Color.srgbToLinear(fog.color.g),
-      Color.srgbToLinear(fog.color.b),
+      fog.color.r,
+      fog.color.g,
+      fog.color.b,
       fog.density,
       fog.start,
       fog.end,

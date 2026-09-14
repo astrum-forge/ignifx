@@ -711,6 +711,9 @@ class AppImpl implements App {
     // world's cameras, lights, and meshes into the Lite scene first, so a game that loaded its
     // scene before starting registers with its content — and the warm-up has lights to compile
     // against.
+    // Adapter chunks a component declared in `onAttach` have to be here before that one
+    // reconciliation, because Lite bakes what it finds at `registerScene`.
+    await renderer.gpuAdaptersReady();
     const world = this.#world;
     if (world !== null) {
       renderer.syncBeforeRegister(world);

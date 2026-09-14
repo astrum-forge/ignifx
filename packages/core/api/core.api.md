@@ -13,6 +13,7 @@ import { Font } from '@babylonjs/lite';
 import { FreeCamera } from '@babylonjs/lite';
 import { HemisphericLight } from '@babylonjs/lite';
 import { Material } from '@babylonjs/lite';
+import { MaterialPlugin } from '@babylonjs/lite';
 import { Mesh } from '@babylonjs/lite';
 import { PbrMaterialProps } from '@babylonjs/lite';
 import { PickingInfo } from '@babylonjs/lite';
@@ -20,10 +21,15 @@ import { PointLight } from '@babylonjs/lite';
 import { RenderTarget } from '@babylonjs/lite';
 import { SceneContext } from '@babylonjs/lite';
 import { SceneNode } from '@babylonjs/lite';
+import { ShaderAttributeName as ShaderAttributeName_2 } from '@babylonjs/lite';
+import { ShaderMaterial } from '@babylonjs/lite';
+import { ShaderSystemUniformName } from '@babylonjs/lite';
+import { ShaderUniformType as ShaderUniformType_2 } from '@babylonjs/lite';
 import { ShadowGenerator } from '@babylonjs/lite';
 import { Skeleton } from '@babylonjs/lite';
 import { SpotLight } from '@babylonjs/lite';
 import { StandardMaterialProps } from '@babylonjs/lite';
+import { StorageBuffer } from '@babylonjs/lite';
 import { Texture2D } from '@babylonjs/lite';
 
 // @public
@@ -622,6 +628,21 @@ export const CoreErrorCode: {
     readonly invalidAssetFile: "IGX-0709";
     readonly postProcessingFeatureOff: "IGX-0710";
     readonly skyboxFixedAtLoad: "IGX-0711";
+    readonly unknownShaderBinding: "IGX-0712";
+    readonly shaderValueMismatch: "IGX-0713";
+    readonly shaderLightUniformWithoutLight: "IGX-0714";
+    readonly shaderCompileFailed: "IGX-0715";
+    readonly surfaceShaderFeatureOff: "IGX-0716";
+    readonly instancingSettingTooLate: "IGX-0717";
+    readonly notAShaderMaterial: "IGX-0718";
+    readonly invalidShaderPragma: "IGX-0719";
+    readonly storageBufferOutOfRange: "IGX-0720";
+    readonly instancedCapacityExceeded: "IGX-0721";
+    readonly invalidPixelData: "IGX-0722";
+    readonly surfaceHookMissing: "IGX-0723";
+    readonly shaderMaterialEsmCasterSkipped: "IGX-0724";
+    readonly invalidGeometryUpdate: "IGX-0725";
+    readonly surfaceSamplerBudgetExceeded: "IGX-0726";
     readonly cryptoUnavailable: "IGX-1420";
     readonly storageInvalidNamespace: "IGX-1421";
     readonly storageInvalidKey: "IGX-1422";
@@ -763,6 +784,12 @@ export function createSeededRandom(seed: number): RandomSource;
 export function createServiceKey<T>(name: string): ServiceNameKey<T>;
 
 // @public
+export function createShaderLoader(): AssetLoader<ShaderAsset>;
+
+// @public
+export function createStorageBufferAsset(app: App, name: string, data: ArrayBufferView): AssetHandle<StorageBufferAsset>;
+
+// @public
 export function createTextureLoader(): AssetLoader<TextureAsset>;
 
 // @public
@@ -786,6 +813,27 @@ export interface CurveValue {
 
 // @public
 export function custom<T>(codec: CustomFieldCodec<T>, options?: FieldOptions): FieldDefinition<T>;
+
+// @public
+export function customEffect(init: CustomEffectInit): CustomEffectSettings;
+
+// @public
+export interface CustomEffectInit {
+    readonly enabled?: boolean;
+    readonly order?: number;
+    readonly shader: AssetHandle<ShaderAsset> | null;
+    readonly textures?: Readonly<Record<string, AssetHandle<TextureAsset> | null>>;
+    readonly values?: Readonly<Record<string, number | readonly number[]>>;
+}
+
+// @public
+export interface CustomEffectSettings {
+    enabled: boolean;
+    order: number;
+    shader: AssetHandle<ShaderAsset> | null;
+    textures: Record<string, AssetHandle<TextureAsset> | null>;
+    values: Record<string, number | readonly number[]>;
+}
 
 // @public
 export interface CustomFieldCodec<T> {
@@ -850,6 +898,9 @@ export interface DeferredQueue {
 
 // @public
 export function defineExtension<O = void>(factory: (options: O | undefined) => Extension): (options?: O) => Extension;
+
+// @beta
+export function defineMaterialPlugin(definition: MaterialPluginDefinitionInit): MaterialPluginDefinition;
 
 // @public
 export function defineSchema<S extends Schema>(fields: S): S;
@@ -1168,6 +1219,8 @@ export const ErrorRange: {
     readonly ui: "13";
     readonly platform: "14";
     readonly devtools: "15";
+    readonly terrain: "16";
+    readonly particles: "17";
 };
 
 // @public
@@ -1405,6 +1458,9 @@ export interface HotReloadStatics {
 export function i32(defaultValue?: number, options?: FieldOptions): FieldDefinition<number>;
 
 // @public
+export const IGNIFX_UNIFORM_NAMES: readonly ["time", "unscaledTime", "deltaTime", "mainLightDirection", "mainLightColor", "ambientColor"];
+
+// @public
 export class IgnifxError extends Error {
     constructor(code: ErrorCode, message: string, options?: IgnifxErrorOptions);
     readonly code: ErrorCode;
@@ -1418,6 +1474,9 @@ export interface IgnifxErrorOptions extends ErrorOptions {
     readonly hint?: string | null;
     readonly mode?: ErrorFormatMode;
 }
+
+// @public
+export type IgnifxUniformName = (typeof IGNIFX_UNIFORM_NAMES)[number];
 
 // @public
 export interface ImageProcessingEffectSettings {
@@ -1441,6 +1500,68 @@ export class IndexedDbStorageBackend implements StorageBackend {
     keys(namespace: string, prefix?: string): Promise<readonly string[]>;
     readonly name = "indexeddb";
     set(namespace: string, key: string, value: StoredValue): Promise<void>;
+}
+
+// @public
+export interface InstancedMeshLod {
+    band: number;
+    distance: number;
+    mesh: AssetHandle<MeshAsset> | null;
+}
+
+// @public
+export class InstancedMeshRenderer extends Component implements ComponentHooks {
+    constructor();
+    static allowMultiple: boolean;
+    // (undocumented)
+    capacity: number;
+    // (undocumented)
+    castShadows: boolean;
+    // @internal
+    collectCasters(out: LiteMesh[]): void;
+    // @internal
+    consumeCasterChange(): boolean;
+    get count(): number;
+    // (undocumented)
+    gpuCulling: boolean;
+    get isVisible(): boolean;
+    get lite(): InstancedMeshRendererLiteHandles;
+    // (undocumented)
+    lod: InstancedMeshLod | null;
+    markDirty(range?: InstanceRange): void;
+    // (undocumented)
+    materials: (AssetHandle<MaterialAsset> | null)[];
+    // (undocumented)
+    mesh: AssetHandle<MeshAsset> | null;
+    onAttach(): void;
+    onDetach(): void;
+    // (undocumented)
+    pickable: boolean;
+    // (undocumented)
+    receiveShadows: boolean;
+    // (undocumented)
+    renderOrder: number;
+    static schema: Schema;
+    setColors(colors: Float32Array | null): void;
+    setCount(count: number): void;
+    setMatrices(matrices: Float32Array, count: number): void;
+    // @internal
+    sync(renderer: RendererImpl): boolean;
+    static typeId: string;
+    // @internal
+    get usesShaderMaterial(): boolean;
+}
+
+// @public
+export interface InstancedMeshRendererLiteHandles {
+    readonly lodMesh: LiteMesh | null;
+    readonly mesh: LiteMesh | null;
+}
+
+// @public
+export interface InstanceRange {
+    readonly count: number;
+    readonly start: number;
 }
 
 // @public
@@ -1478,6 +1599,9 @@ export function isAssetRef(value: unknown): value is AssetRef;
 
 // @public
 export function isIgnifxError(value: unknown): value is IgnifxError;
+
+// @beta
+export function isLiteMaterialPluginPoint(value: string): value is LiteMaterialPluginPoint;
 
 // @public
 export function isSceneFileHeader(value: unknown): boolean;
@@ -1614,6 +1738,12 @@ export interface LightShadowSettings {
 export type LightType = (typeof LIGHT_TYPES)[number];
 
 // @beta
+export const LITE_MATERIAL_PLUGIN_POINTS: readonly ["CUSTOM_FRAGMENT_DEFINITIONS", "CUSTOM_FRAGMENT_MAIN_BEGIN", "CUSTOM_FRAGMENT_UPDATE_ALPHA", "CUSTOM_FRAGMENT_UPDATE_DIFFUSE", "CUSTOM_FRAGMENT_BEFORE_LIGHTS", "CUSTOM_FRAGMENT_BEFORE_FINALCOLORCOMPOSITION", "CUSTOM_FRAGMENT_BEFORE_FRAGCOLOR", "CUSTOM_VERTEX_MAIN_BEGIN", "CUSTOM_VERTEX_UPDATE_WORLDPOS", "CUSTOM_VERTEX_MAIN_END"];
+
+// @public
+export const LITE_SYSTEM_UNIFORM_NAMES: readonly ["world", "view", "projection", "viewProjection", "worldView", "worldViewProjection", "cameraPosition", "screenSize", "alphaCutoff"];
+
+// @beta
 export type LiteAnimationGroup = AnimationGroup;
 
 // @public
@@ -1637,6 +1767,9 @@ export type LiteLight = DirectionalLight | PointLight | SpotLight | HemisphericL
 // @public
 export type LiteMaterial = Material;
 
+// @beta
+export type LiteMaterialPluginPoint = (typeof LITE_MATERIAL_PLUGIN_POINTS)[number];
+
 // @public
 export type LiteMesh = Mesh;
 
@@ -1650,6 +1783,9 @@ export type LiteScene = SceneContext;
 export type LiteSceneNode = SceneNode;
 
 // @public
+export type LiteShaderMaterial = ShaderMaterial;
+
+// @public
 export type LiteShadowGenerator = ShadowGenerator;
 
 // @beta
@@ -1657,6 +1793,12 @@ export type LiteSkeleton = Skeleton;
 
 // @public
 export type LiteStandardMaterial = StandardMaterialProps;
+
+// @public
+export type LiteStorageBuffer = StorageBuffer;
+
+// @public
+export type LiteSystemUniformName = (typeof LITE_SYSTEM_UNIFORM_NAMES)[number];
 
 // @public
 export type LiteTexture2D = Texture2D;
@@ -1847,22 +1989,43 @@ export const MATERIAL_FORMAT_VERSION = 1;
 // @public
 export const MATERIAL_KINDS: readonly ["pbr", "standard", "shader"];
 
+// @beta
+export const MATERIAL_PLUGIN_DEFAULT_PRIORITY = 500;
+
+// @beta
+export const MATERIAL_PLUGIN_RESERVED_NAMES: readonly string[];
+
+// @beta
+export const MATERIAL_PLUGIN_SAMPLER_BUDGET = 9;
+
 // @public
 export type MaterialAlphaMode = (typeof MATERIAL_ALPHA_MODES)[number];
 
 // @public
 export class MaterialAsset {
+    // Warning: (ae-forgotten-export) The symbol "ShaderMaterialState" needs to be exported by the entry point index.d.ts
+    //
     // @internal
-    constructor(definition: MaterialDefinition, material: LitePbrMaterial | LiteStandardMaterial, textures: readonly AssetHandle<TextureAsset>[]);
+    constructor(definition: MaterialDefinition, material: LitePbrMaterial | LiteStandardMaterial, textures: readonly AssetHandle<TextureAsset>[], shader?: ShaderMaterialState | null);
     static assetType: string;
     clone(app: App): AssetHandle<MaterialAsset>;
     readonly definition: MaterialDefinition;
+    dispose(): void;
+    getUniform(name: string, out?: Float32Array): number | Float32Array;
+    get isDrawable(): boolean;
     get kind(): MaterialKind;
     get lite(): MaterialAssetLiteHandles;
     get name(): string;
     setAlpha(alpha: number): void;
     setBaseColor(color: ColorLike): void;
+    setDefine(name: string, value: boolean | number): void;
     setMetallicRoughness(metallic: number, roughness: number): void;
+    setStorageBuffer(name: string, buffer: AssetHandle<StorageBufferAsset> | null): void;
+    setTexture(name: string, texture: AssetHandle<TextureAsset> | null): void;
+    setUniform(name: string, value: number | readonly number[] | Float32Array | ColorLike): void;
+    get shader(): ShaderAsset | null;
+    surface(name: string): SurfaceShaderBinding;
+    get surfaces(): readonly SurfaceShaderBinding[];
     readonly textures: readonly AssetHandle<TextureAsset>[];
 }
 
@@ -1872,10 +2035,28 @@ export interface MaterialAssetLiteHandles {
 }
 
 // @public
-export type MaterialDefinition = PbrMaterialDefinition | StandardMaterialDefinition;
+export type MaterialDefinition = PbrMaterialDefinition | StandardMaterialDefinition | ShaderMaterialDefinition;
 
 // @public
 export type MaterialKind = (typeof MATERIAL_KINDS)[number];
+
+// @beta
+export interface MaterialPluginDefinition {
+    readonly code: Readonly<Partial<Record<LiteMaterialPluginPoint, string>>>;
+    readonly name: string;
+    readonly priority: number;
+    readonly textures: readonly ShaderTextureDeclaration[];
+    readonly uniforms: readonly ShaderUniformDeclaration[];
+}
+
+// @beta
+export interface MaterialPluginDefinitionInit {
+    readonly code: Readonly<Partial<Record<LiteMaterialPluginPoint, string>>>;
+    readonly name: string;
+    readonly priority?: number;
+    readonly textures?: readonly ShaderTextureDeclaration[];
+    readonly uniforms?: readonly ShaderUniformDeclaration[];
+}
 
 // @public
 export const MAX_LAYERS = 32;
@@ -1910,7 +2091,7 @@ export const MESH_ASSET_TYPE = "mesh";
 export class MeshAsset {
     [Symbol.dispose](): void;
     // @internal
-    constructor(name: string, mesh: LiteMesh | null, scene: LiteScene | null);
+    constructor(name: string, mesh: LiteMesh | null, scene: LiteScene | null, geometry?: MeshGeometryData | null, engine?: LiteEngine | null);
     static assetType: string;
     static box(app: App, options?: BoxMeshOptions): AssetHandle<MeshAsset>;
     static capsule(app: App, options?: CapsuleMeshOptions): AssetHandle<MeshAsset>;
@@ -1918,12 +2099,18 @@ export class MeshAsset {
     dispose(): void;
     static fromData(app: App, name: string, data: MeshGeometryData): AssetHandle<MeshAsset>;
     static ground(app: App, options?: GroundMeshOptions): AssetHandle<MeshAsset>;
+    get indexCount(): number;
     get isDisposed(): boolean;
     get lite(): MeshAssetLiteHandles;
     readonly name: string;
     static plane(app: App, options?: PlaneMeshOptions): AssetHandle<MeshAsset>;
     static sphere(app: App, options?: SphereMeshOptions): AssetHandle<MeshAsset>;
     static torus(app: App, options?: TorusMeshOptions): AssetHandle<MeshAsset>;
+    updateColors(data: Float32Array, vertexOffset?: number, vertexCount?: number): void;
+    updateNormals(data: Float32Array, vertexOffset?: number, vertexCount?: number): void;
+    updatePositions(data: Float32Array, vertexOffset?: number, vertexCount?: number): void;
+    updateUvs(data: Float32Array, vertexOffset?: number, vertexCount?: number): void;
+    get vertexCount(): number;
 }
 
 // @public
@@ -1933,10 +2120,13 @@ export interface MeshAssetLiteHandles {
 
 // @public
 export interface MeshGeometryData {
+    readonly colors?: Float32Array;
     readonly indices: Uint32Array;
     readonly normals: Float32Array;
     readonly positions: Float32Array;
+    readonly tangents?: Float32Array;
     readonly uvs?: Float32Array;
+    readonly uvs2?: Float32Array;
 }
 
 // @public
@@ -1969,6 +2159,8 @@ export class MeshRenderer extends Component implements ComponentHooks {
     // @internal
     sync(renderer: RendererImpl): boolean;
     static typeId: string;
+    // @internal
+    get usesShaderMaterial(): boolean;
 }
 
 // @public
@@ -2004,6 +2196,8 @@ export class Model extends Component implements ComponentHooks {
     // @internal
     sync(renderer: RendererImpl): boolean;
     static typeId: string;
+    // @internal
+    get usesShaderMaterial(): boolean;
 }
 
 // @public
@@ -2153,6 +2347,7 @@ export interface PbrMaterialDefinition {
     readonly normalScale: number;
     readonly occlusionStrength: number;
     readonly roughness: number;
+    readonly surfaces: readonly SurfaceShaderReference[];
     readonly textures: Readonly<Record<string, string>>;
     readonly unlit: boolean;
 }
@@ -2201,6 +2396,13 @@ export type PhysicsCallbackName = (typeof PhysicsCallbackName)[keyof typeof Phys
 export function pingPong(t: number, length: number): number;
 
 // @public
+export interface PixelTextureOptions {
+    readonly filter?: "nearest" | "linear";
+    readonly srgb?: boolean;
+    readonly wrap?: "clamp" | "repeat";
+}
+
+// @public
 export interface PlaneMeshOptions {
     readonly height?: number;
     readonly size?: number;
@@ -2232,11 +2434,22 @@ export type PlatformKind = "browser" | "electron" | "node";
 export type PlatformOs = "macos" | "windows" | "linux" | "ios" | "android" | "unknown";
 
 // @public
+export const POST_EFFECT_BUILTIN_UNIFORMS: readonly {
+    readonly name: string;
+    readonly type: ShaderUniformType;
+}[];
+
+// @public
+export const POST_EFFECT_FUNCTION = "mainFragment";
+
+// @public
 export class PostProcessStack extends Component implements ComponentHooks {
     constructor();
     static allowMultiple: boolean;
     // (undocumented)
     bloom: BloomEffectSettings;
+    // (undocumented)
+    custom: CustomEffectSettings[];
     // (undocumented)
     imageProcessing: ImageProcessingEffectSettings;
     onAttach(): void;
@@ -2794,6 +3007,142 @@ export interface SetParentOptions {
 export type SettingsInput = Readonly<Record<string, unknown>>;
 
 // @public
+export const SHADER_ASSET_TYPE = "shader";
+
+// @public
+export const SHADER_ATTRIBUTE_NAMES: readonly ["position", "normal", "uv", "uv2", "tangent", "color", "joints", "weights", "joints1", "weights1"];
+
+// @public
+export const SHADER_BLEND_MODES: readonly ["opaque", "alpha", "additive", "premultiplied"];
+
+// @public
+export const SHADER_CULL_MODES: readonly ["back", "front", "none"];
+
+// @public
+export const SHADER_FILE_EXTENSIONS: readonly string[];
+
+// @public
+export const SHADER_INSTANCING_MODES: readonly ["none", "matrices", "matrices-colors"];
+
+// @public
+export const SHADER_KINDS: readonly ["shader", "surface", "post"];
+
+// @public
+export const SHADER_TEXTURE_FALLBACKS: readonly ["white", "black", "transparent"];
+
+// @public
+export const SHADER_UNIFORM_TYPES: readonly ["f32", "u32", "i32", "vec2<f32>", "vec3<f32>", "vec4<f32>", "mat4x4<f32>"];
+
+// @public
+export class ShaderAsset {
+    // @internal
+    constructor(address: string, source: string, declaration: ShaderDeclaration);
+    readonly address: string;
+    static assetType: string;
+    readonly declaration: ShaderDeclaration;
+    get kind(): ShaderKind;
+    readonly source: string;
+}
+
+// @public
+export type ShaderAttributeName = (typeof SHADER_ATTRIBUTE_NAMES)[number];
+
+// @public
+export type ShaderBlendMode = (typeof SHADER_BLEND_MODES)[number];
+
+// @public
+export type ShaderCullMode = (typeof SHADER_CULL_MODES)[number];
+
+// @public
+export interface ShaderDeclaration {
+    readonly attributes: readonly ShaderAttributeName[];
+    readonly defines: readonly ShaderDefineDeclaration[];
+    readonly ignifx: readonly IgnifxUniformName[];
+    readonly kind: ShaderKind;
+    readonly pipeline: ShaderPipelineState;
+    readonly storage: readonly ShaderStorageDeclaration[];
+    readonly system: readonly LiteSystemUniformName[];
+    readonly textures: readonly ShaderTextureDeclaration[];
+    readonly uniforms: readonly ShaderUniformDeclaration[];
+}
+
+// @public
+export interface ShaderDefineDeclaration {
+    readonly name: string;
+    readonly value: boolean | number;
+}
+
+// @public
+export type ShaderInstancingMode = (typeof SHADER_INSTANCING_MODES)[number];
+
+// @public
+export type ShaderKind = (typeof SHADER_KINDS)[number];
+
+// @public
+export interface ShaderMaterialDefinition {
+    readonly defines: Readonly<Record<string, boolean | number>>;
+    readonly kind: "shader";
+    readonly name: string;
+    readonly shader: string;
+    readonly textures: Readonly<Record<string, string>>;
+    readonly values: Readonly<Record<string, number | readonly number[] | ColorLike>>;
+}
+
+// @public
+export function shaderMaterialDefinition(input: ShaderMaterialDefinitionInput): ShaderMaterialDefinition;
+
+// @public
+export interface ShaderMaterialDefinitionInput {
+    readonly defines?: Readonly<Record<string, boolean | number>>;
+    readonly name?: string;
+    readonly shader: AssetHandle<ShaderAsset> | string;
+    readonly textures?: Readonly<Record<string, AssetHandle<TextureAsset> | string>>;
+    readonly values?: Readonly<Record<string, number | readonly number[] | ColorLike>>;
+}
+
+// @public
+export interface ShaderPipelineState {
+    readonly blend: ShaderBlendMode;
+    readonly cull: ShaderCullMode;
+    readonly depthTest: boolean;
+    readonly depthWrite: boolean;
+    readonly instancing: ShaderInstancingMode;
+    readonly transmissive: boolean;
+}
+
+// @public
+export interface ShaderStorageDeclaration {
+    readonly name: string;
+    readonly type: string;
+}
+
+// @public
+export interface ShaderTextureDeclaration {
+    readonly array: boolean;
+    readonly fallback: ShaderTextureFallback | null;
+    readonly name: string;
+    readonly normal: boolean;
+    readonly srgb: boolean;
+}
+
+// @public
+export type ShaderTextureFallback = (typeof SHADER_TEXTURE_FALLBACKS)[number];
+
+// @public
+export interface ShaderUniformDeclaration {
+    readonly color: boolean;
+    readonly defaultValue: number | readonly number[];
+    readonly name: string;
+    readonly range: readonly [number, number] | null;
+    readonly step: number | null;
+    readonly tooltip: string | null;
+    readonly type: ShaderUniformType;
+}
+
+// @public
+export type ShaderUniformType = (typeof SHADER_UNIFORM_TYPES)[number];
+
+// @public
 export const SHADOW_TECHNIQUES: readonly ["esm", "pcf", "csm"];
 
 // @public
@@ -2871,6 +3220,7 @@ export interface StandardMaterialDefinition {
     readonly name: string;
     readonly specular: ColorLike;
     readonly specularPower: number;
+    readonly surfaces: readonly SurfaceShaderReference[];
     readonly textures: Readonly<Record<string, string>>;
     readonly unlit: boolean;
 }
@@ -2889,6 +3239,9 @@ interface Storage_2 {
 export { Storage_2 as Storage }
 
 // @public
+export const STORAGE_BUFFER_ASSET_TYPE = "storagebuffer";
+
+// @public
 export const STORAGE_KEY_MAX_LENGTH = 512;
 
 // @public
@@ -2900,6 +3253,28 @@ export interface StorageBackend {
     keys(namespace: string, prefix?: string): Promise<readonly string[]>;
     readonly name: string;
     set(namespace: string, key: string, value: StoredValue): Promise<void>;
+}
+
+// @public
+export class StorageBufferAsset {
+    // @internal
+    constructor(name: string, byteLength: number, cpu: Uint8Array, buffer: LiteStorageBuffer | null, engine: LiteEngine | null);
+    get address(): string;
+    static assetType: string;
+    readonly byteLength: number;
+    get bytes(): Uint8Array;
+    dispose(): void;
+    get isDisposed(): boolean;
+    get lite(): StorageBufferAssetLiteHandles;
+    readonly name: string;
+    // @internal
+    publishedAt(address: string): void;
+    update(data: ArrayBufferView, byteOffset?: number): void;
+}
+
+// @public
+export interface StorageBufferAssetLiteHandles {
+    readonly buffer: LiteStorageBuffer | null;
 }
 
 // Warning: (ae-forgotten-export) The symbol "StorageImpl" needs to be exported by the entry point index.d.ts
@@ -2930,6 +3305,64 @@ export interface StringFieldSpec {
 
 // @public
 export function stringifySceneFile(file: SceneFile): string;
+
+// @public
+export const SURFACE_HOOK_NAMES: readonly ["displace", "surface", "composite"];
+
+// @public
+export const SURFACE_UNIFORM_BLOCK = "surfaceUniforms";
+
+// @public
+export type SurfaceHookName = (typeof SURFACE_HOOK_NAMES)[number];
+
+// @public
+export interface SurfaceHostCapabilities {
+    readonly family: SurfaceHostFamily;
+    readonly hasNormal: boolean;
+    readonly hasUv: boolean;
+}
+
+// @public
+export type SurfaceHostFamily = "pbr" | "standard";
+
+// @public
+export class SurfaceShaderBinding {
+    // Warning: (ae-forgotten-export) The symbol "SurfaceShaderBindingInput" needs to be exported by the entry point index.d.ts
+    //
+    // @internal
+    constructor(input: SurfaceShaderBindingInput);
+    get enabled(): boolean;
+    set enabled(value: boolean);
+    get(name: string, out?: Float32Array): number | Float32Array;
+    getTexture(name: string): AssetHandle<TextureAsset> | null;
+    // Warning: (ae-forgotten-export) The symbol "LiteMaterialPlugin" needs to be exported by the entry point index.d.ts
+    get lite(): LiteMaterialPlugin | null;
+    readonly name: string;
+    readonly priority: number;
+    set(name: string, value: number | readonly number[] | Float32Array | ColorLike): void;
+    setTexture(name: string, texture: AssetHandle<TextureAsset> | null): void;
+    readonly shader: ShaderAsset;
+}
+
+// @public
+export interface SurfaceShaderInit {
+    readonly enabled?: boolean;
+    readonly name?: string;
+    readonly priority?: number;
+    readonly shader: AssetHandle<ShaderAsset>;
+    readonly textures?: Readonly<Record<string, AssetHandle<TextureAsset>>>;
+    readonly values?: Readonly<Record<string, number | readonly number[] | ColorLike>>;
+}
+
+// @public
+export interface SurfaceShaderReference {
+    readonly enabled: boolean;
+    readonly name: string;
+    readonly priority: number;
+    readonly shader: string;
+    readonly textures: Readonly<Record<string, string>>;
+    readonly values: Readonly<Record<string, number | readonly number[]>>;
+}
 
 // @public
 export interface System {
@@ -2973,14 +3406,22 @@ export const TEXTURE_ASSET_TYPE = "texture";
 // @public
 export class TextureAsset {
     // @internal
-    constructor(address: string, texture: LiteTexture2D | null, options: TextureImportOptions);
+    constructor(address: string, texture: LiteTexture2D | null, options: TextureImportOptions, pixelSource?: {
+        readonly engine: LiteEngine;
+        readonly width: number;
+        readonly height: number;
+    } | null);
     readonly address: string;
     static assetType: string;
+    static fromPixels(app: App, name: string, data: Uint8Array, width: number, height: number, options?: PixelTextureOptions): AssetHandle<TextureAsset>;
+    get height(): number;
     get isReleased(): boolean;
     get lite(): TextureAssetLiteHandles;
     readonly options: TextureImportOptions;
     releaseGpu(): boolean;
     retainGpu(): void;
+    update(data: Uint8Array, x?: number, y?: number, width?: number, height?: number): void;
+    get width(): number;
 }
 
 // @public

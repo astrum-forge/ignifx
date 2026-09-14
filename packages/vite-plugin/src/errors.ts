@@ -37,6 +37,14 @@ export const VitePluginErrorCode = {
   schemaViolation: "IGX-0652",
   /** A supplied JSON Schema uses a keyword or `$ref` target this validator does not implement. */
   unsupportedSchema: "IGX-0653",
+  /** A `.wgsl` shader asset under the asset root does not parse as WGSL. */
+  wgslSyntaxError: "IGX-0654",
+  /**
+   * A `.wgsl` shader asset parses but breaks the ignifx WGSL contract: no `// @ignifx` form line or
+   * two of them, an undeclared uniform, system uniform or texture, a missing entry point for the
+   * declared form, a hand-declared `@group`/`@binding`, or a texture sampled from the vertex stage.
+   */
+  wgslContractViolation: "IGX-0655",
 } as const;
 
 /**

@@ -24,6 +24,7 @@ import {
   resolveVirtualModuleId,
   scriptsModuleSource,
 } from "./virtual-modules.js";
+import { validateWgslAssets } from "./wgsl-validate.js";
 import type { ExtensionPublicAsset } from "./extension-assets.js";
 import type { JsonObject } from "./json.js";
 import type { AssetManifest, AssetManifestEntry, ScannedAsset } from "./manifest.js";
@@ -395,7 +396,18 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
       assets = [];
       warn(`${error.code} ${error.message}`);
     }
-    problems = settings.validate ? await validateJsonAssets(assets, settings.schemas) : [];
+    if (settings.validate) {
+      // The two validators read disjoint sets of files, so they run together and their findings are
+      // reported as one list: a build that fails is meant to name everything that is wrong with the
+      // asset tree, not the first thing.
+      const [jsonProblems, wgslProblems] = await Promise.all([
+        validateJsonAssets(assets, settings.schemas),
+        validateWgslAssets(assets),
+      ]);
+      problems = [...jsonProblems, ...wgslProblems];
+    } else {
+      problems = [];
+    }
     scanned = true;
   }
 

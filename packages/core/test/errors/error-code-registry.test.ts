@@ -1,4 +1,4 @@
-/* eslint-disable ignifx/error-code-format -- `IGX-1601` below is a deliberately out-of-range code,
+/* eslint-disable ignifx/error-code-format -- `IGX-1801` below is a deliberately out-of-range code,
    used to prove the registry rejects it. */
 import { describe, expect, it } from "vitest";
 import { createErrorCodeRegistry } from "../../src/errors/error-code-registry.js";
@@ -33,7 +33,7 @@ describe("error code registry", () => {
   it("rejects a code that is not in a known range", () => {
     const registry = createErrorCodeRegistry();
     try {
-      registry.register({ "IGX-1601": "nope" }, "game/spawner");
+      registry.register({ "IGX-1801": "nope" }, "game/spawner");
       expect.unreachable();
     } catch (error) {
       expect(isIgnifxError(error) && error.code).toBe(CoreErrorCode.malformedErrorCode);

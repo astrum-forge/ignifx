@@ -40,6 +40,8 @@ export const ASSET_TYPE_BY_EXTENSION: {
     readonly ".mp3": "audio";
     readonly ".ogg": "audio";
     readonly ".wav": "audio";
+    readonly ".wgsl": "shader";
+    readonly ".r16": "heightmap";
     readonly ".json": "json";
     readonly ".txt": "text";
     readonly ".md": "text";
@@ -61,6 +63,8 @@ export const ASSET_TYPE_BY_SUFFIX: {
     readonly ".atlas.json": "spriteatlas";
     readonly ".spriteanim.json": "spriteanimation";
     readonly ".tilemap.json": "tilemap";
+    readonly ".particles.json": "particles";
+    readonly ".terrain.json": "terrain";
 };
 
 // @public
@@ -157,6 +161,9 @@ export const IGNIFX_CONFIG_DEFINE_KEY = "import.meta.env.IGNIFX_CONFIG";
 export const IGNIFX_CONFIG_FILE_NAMES: readonly ["ignifx.config.ts", "ignifx.config.mts", "ignifx.config.js", "ignifx.config.mjs"];
 
 // @public
+export const IGNIFX_SYSTEM_UNIFORMS: readonly string[];
+
+// @public
 export interface IgnifxPluginApi {
     whenIdle(): Promise<void>;
 }
@@ -207,6 +214,9 @@ export interface JsonSchemaProvider {
 
 // @public
 export type JsonValue = string | number | boolean | null | JsonArray | JsonObject;
+
+// @public
+export const LITE_SYSTEM_UNIFORMS: readonly string[];
 
 // @public
 export function loadIgnifxConfig(configFile: string | null, root: string, env: ConfigEnv): Promise<ResolvedIgnifxConfig>;
@@ -322,6 +332,15 @@ export interface ValidateJsonOptions {
 export function validateJsonValue(value: JsonValue, schema: JsonSchemaObject, options?: ValidateJsonOptions): readonly SchemaViolation[];
 
 // @public
+export function validateWgslAsset(address: string, filePath: string, source: string): readonly ValidationProblem[];
+
+// @public
+export function validateWgslAssets(assets: readonly ScannedAsset[]): Promise<readonly ValidationProblem[]>;
+
+// @public
+export function validateWgslSource(source: string): readonly WgslProblem[];
+
+// @public
 export interface ValidationProblem {
     readonly address: string;
     readonly code: VitePluginErrorCode;
@@ -348,10 +367,25 @@ export const VitePluginErrorCode: {
     readonly missingFormatHeader: "IGX-0651";
     readonly schemaViolation: "IGX-0652";
     readonly unsupportedSchema: "IGX-0653";
+    readonly wgslSyntaxError: "IGX-0654";
+    readonly wgslContractViolation: "IGX-0655";
 };
 
 // @public
 export type VitePluginErrorCode = (typeof VitePluginErrorCode)[keyof typeof VitePluginErrorCode];
+
+// @public
+export const WGSL_EXTENSION = ".wgsl";
+
+// @public
+export interface WgslProblem {
+    readonly code: VitePluginErrorCode;
+    readonly line: number;
+    readonly message: string;
+}
+
+// @public
+export type WgslShaderKind = "post" | "shader" | "surface";
 
 // (No @packageDocumentation comment for this package)
 
