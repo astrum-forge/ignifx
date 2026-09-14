@@ -32,6 +32,13 @@ describe("assetTypeForAddress", () => {
     ["data/loot.json", "json"],
     ["docs/readme.md", "text"],
     ["wasm/havok.wasm", "binary"],
+    ["effects/fire.particles.json", "particles"],
+    ["world/island.terrain.json", "terrain"],
+    ["world/island.r16", "heightmap"],
+    ["shaders/dissolve.wgsl", "shader"],
+    ["shaders/DISSOLVE.WGSL", "shader"],
+    ["shaders/snow.surface.wgsl", "shader"],
+    ["shaders/vignette.post.wgsl", "shader"],
   ] as const)("classifies %s as %s", (address, expected) => {
     expect(assetTypeForAddress(address)).toBe(expected);
   });
@@ -69,6 +76,13 @@ describe("splitAssetFileName", () => {
   it("treats a plain json file as a single extension", () => {
     expect(splitAssetFileName("loot.json")).toEqual({ stem: "loot", extension: ".json" });
   });
+
+  it("splits a two-segment wgsl name at its last dot, because only json suffixes are compound", () => {
+    // `.surface.wgsl` and `.post.wgsl` need no row in `ASSET_TYPE_BY_SUFFIX`: the `// @ignifx`
+    // pragma inside the file declares which of the three shader forms it is, and the single
+    // extension already classifies all three as `shader`.
+    expect(splitAssetFileName("snow.surface.wgsl")).toEqual({ stem: "snow.surface", extension: ".wgsl" });
+  });
 });
 
 describe("hashedAddress", () => {
@@ -86,6 +100,10 @@ describe("hashedAddress", () => {
 
   it("handles a file with no extension", () => {
     expect(hashedAddress("data/LICENSE", "ffff")).toBe("data/LICENSE.ffff");
+  });
+
+  it("keeps the .wgsl extension last so the browser still gets a shader source file", () => {
+    expect(hashedAddress("shaders/snow.surface.wgsl", "0a1b2c3d")).toBe("shaders/snow.surface.0a1b2c3d.wgsl");
   });
 });
 

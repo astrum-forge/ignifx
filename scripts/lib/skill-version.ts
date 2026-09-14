@@ -17,6 +17,9 @@
  */
 const VERSION_LINE = /^(?<indent>[ \t]+)ignifx-version:[ \t]*(?<quote>["']?)(?<value>[^"'\n]*)\k<quote>[ \t]*$/mu;
 
+/** The prose line the Environment section of every skill opens with; kept equal to the frontmatter. */
+const PROSE_LINE = /^(?<prefix>- Engine: ignifx `)(?<value>[^`\n]+)(?<suffix>`)/mu;
+
 /**
  * Lists the values `metadata.ignifx-version` may take.
  *
@@ -58,9 +61,12 @@ export function rewriteSkillVersion(source: string, version: string): SkillVersi
   // An already-accepted value is left alone: rewriting `"0.0.0-unreleased"` to a bare `0.0.0`
   // before anything is published would throw away the more honest of the two.
   if (acceptedVersions(version).includes(previous)) {
-    return { text: source, previous, changed: false };
+    const prose = source.replace(PROSE_LINE, `$<prefix>${version}$<suffix>`);
+    return { text: prose, previous, changed: prose !== source };
   }
   const indent = match.groups["indent"] ?? "  ";
-  const replaced = source.replace(VERSION_LINE, `${indent}ignifx-version: ${JSON.stringify(version)}`);
+  const replaced = source
+    .replace(VERSION_LINE, `${indent}ignifx-version: ${JSON.stringify(version)}`)
+    .replace(PROSE_LINE, `$<prefix>${version}$<suffix>`);
   return { text: replaced, previous, changed: true };
 }

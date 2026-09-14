@@ -232,6 +232,86 @@ describe("vite build with the ignifx plugin", () => {
     expect(code).not.toContain("script hot reload");
   });
 
+  it("fails the build when a shader under the asset root does not parse", async () => {
+    const root = await createFixtureTree({
+      "index.html": '<!doctype html><html><body><script type="module" src="/src/main.ts"></script></body></html>',
+      "src/main.ts": "document.title = 'x';",
+      "assets/shaders/broken.wgsl": await readFile(
+        join(import.meta.dirname, "fixtures", "shaders", "syntax-error.wgsl"),
+        "utf8",
+      ),
+    });
+    await expect(
+      build({
+        root,
+        configFile: false,
+        logLevel: "silent",
+        plugins: [ignifx()],
+        build: { outDir: "dist", emptyOutDir: true },
+      }),
+    ).rejects.toThrow(/shaders\/broken\.wgsl: line 4: is not valid WGSL .+ \(IGX-0654\)/u);
+  });
+
+  it("fails the build when a shader breaks the ignifx WGSL contract", async () => {
+    const root = await createFixtureTree({
+      "index.html": '<!doctype html><html><body><script type="module" src="/src/main.ts"></script></body></html>',
+      "src/main.ts": "document.title = 'x';",
+      "assets/shaders/wind.surface.wgsl": await readFile(
+        join(import.meta.dirname, "fixtures", "shaders", "displace-texture.surface.wgsl"),
+        "utf8",
+      ),
+    });
+    await expect(
+      build({
+        root,
+        configFile: false,
+        logLevel: "silent",
+        plugins: [ignifx()],
+        build: { outDir: "dist", emptyOutDir: true },
+      }),
+    ).rejects.toThrow(/IGX-0655/u);
+  });
+
+  it("builds a valid shader tree and lists every .wgsl file as a shader asset", async () => {
+    const root = await createFixtureTree({
+      "index.html": '<!doctype html><html><body><script type="module" src="/src/main.ts"></script></body></html>',
+      "src/main.ts":
+        'import { manifest } from "virtual:ignifx/manifest";\ndocument.title = String(manifest.entries.length);\n',
+      "assets/shaders/dissolve.wgsl": await readFile(
+        join(import.meta.dirname, "fixtures", "shaders", "valid-shader.wgsl"),
+        "utf8",
+      ),
+      "assets/shaders/snow.surface.wgsl": await readFile(
+        join(import.meta.dirname, "fixtures", "shaders", "valid-surface.surface.wgsl"),
+        "utf8",
+      ),
+      "assets/shaders/vignette.post.wgsl": await readFile(
+        join(import.meta.dirname, "fixtures", "shaders", "valid-post.post.wgsl"),
+        "utf8",
+      ),
+    });
+    await build({
+      root,
+      configFile: false,
+      logLevel: "silent",
+      plugins: [ignifx()],
+      build: { outDir: "dist", emptyOutDir: true },
+    });
+
+    const outDir = join(root, "dist");
+    const manifest = JSON.parse(await readFile(join(outDir, "assets.manifest.json"), "utf8")) as AssetManifest;
+    expect(manifest.entries.map((entry) => [entry.address, entry.type])).toEqual([
+      ["shaders/dissolve.wgsl", "shader"],
+      ["shaders/snow.surface.wgsl", "shader"],
+      ["shaders/vignette.post.wgsl", "shader"],
+    ]);
+    // The hash goes before the single `.wgsl` extension, so the two-segment names stay readable.
+    const files = await listFiles(outDir);
+    expect(files.filter((file) => file.endsWith(".wgsl"))).toEqual(
+      manifest.entries.map((entry) => entry.url.replace(/^\//u, "")),
+    );
+  });
+
   it("fails the build when a scene file under the asset root is invalid", async () => {
     const root = await createFixtureTree({
       "index.html": '<!doctype html><html><body><script type="module" src="/src/main.ts"></script></body></html>',

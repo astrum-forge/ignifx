@@ -24,7 +24,7 @@ A world uses **either** `physics()` **or** `physics2d()`. Registering both throw
 
 ## Environment
 
-- Engine: ignifx `0.0.0-unreleased`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
+- Engine: ignifx `0.2.1`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
 - Dependency: `@dimforge/rapier2d-compat` `^0.20.0`. The `-compat` build **inlines** its WebAssembly
   as base64, so nothing has to be served and Node, the browser, and Electron all take the same path.
 - `@ignifx/2d` is an **optional** peer: you need it only for `TilemapCollider2D`'s data type, so a

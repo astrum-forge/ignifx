@@ -28,5 +28,15 @@ new recipe is added to the table below and to the Recipes table in `../../SKILL.
 | [`play-a-one-shot-and-a-loop`](play-a-one-shot-and-a-loop.md) | Play a positional one-shot on a bus and fade a music loop with a tween |
 | [`build-a-pause-menu`](build-a-pause-menu.md) | Pause the app, swap action maps, and drive a `Dialog` by keyboard and pad |
 | [`tween-a-transform`](tween-a-transform.md) | Chain eased tweens on a transform and cancel them on destroy |
+| [`write-a-custom-shader`](write-a-custom-shader.md) | Declare a `.wgsl` with `// @ignifx` pragmas and drive its uniforms from a script |
+| [`add-a-surface-shader`](add-a-surface-shader.md) | Layer a `.surface.wgsl` onto a PBR material and keep its lighting and shadows |
+| [`add-a-custom-post-process`](add-a-custom-post-process.md) | Record a `.post.wgsl` into `PostProcessStack.custom` beside bloom |
+| [`instance-many-meshes`](instance-many-meshes.md) | Draw thousands of copies of one mesh from a matrix slab in one draw call |
+| [`play-a-particle-effect`](play-a-particle-effect.md) | Play a preset effect, stop it, and fast-forward it with `simulate` |
+| [`burst-particles-on-hit`](burst-particles-on-hit.md) | Emit a one-off burst from a trigger callback, drawn the same frame |
+| [`particles-in-2d`](particles-in-2d.md) | Draw one particle document as sprites on a 2D sorting layer |
+| [`load-a-heightmap-terrain`](load-a-heightmap-terrain.md) | Load a `.terrain.json` with a 16-bit heightmap and query the ground |
+| [`walk-on-terrain`](walk-on-terrain.md) | Give a terrain a `HeightfieldCollider` from `colliderInit()` and walk a character on it |
+| [`scatter-foliage`](scatter-foliage.md) | Place seeded grass with `TerrainScatter` and a wind foliage material |
 | [`save-and-load-game-state`](save-and-load-game-state.md) | Write a versioned save slot to `app.storage` from an autosave coroutine |
 | [`show-diagnostics-in-devtools`](show-diagnostics-in-devtools.md) | Publish a gameplay counter into `app.diagnostics` and read it back |

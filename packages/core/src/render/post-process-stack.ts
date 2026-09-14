@@ -1,12 +1,22 @@
 import { Component } from "../component/component.js";
 import { CoreErrorCode } from "../errors/error-codes.js";
-import { bool, f32, i32, record, u32 } from "../schema/field-kinds.js";
+import { isIgnifxError } from "../errors/ignifx-error.js";
+import { array, asset, bool, custom, f32, i32, map, record, u32 } from "../schema/field-kinds.js";
 import { createDefaults, defineSchema } from "../schema/schema.js";
-import { PostProcessChain } from "./gpu/post-process-chain.js";
+import { applyPostProcessSettings, recordPostProcessChain } from "./gpu/post-process-chain.js";
+import { postEffectCompiler } from "./post-effect-support.js";
+import { postEffectValuesCodec } from "./post-effect.js";
 import { rendererInternals } from "./renderer.js";
-import type { PostProcessEffectRequest } from "./gpu/post-process-chain.js";
+import { ShaderAsset } from "./shader-asset.js";
+import { shaderSupport } from "./shader-support.js";
+import { TextureAsset } from "./texture-asset.js";
+import type { CustomEffectRequest, PostProcessChain, PostProcessEffectRequest } from "./gpu/post-process-chain.js";
+import type { CustomEffectSettings } from "./post-effect.js";
 import type { RendererImpl } from "./renderer.js";
+import type { ShaderTextureDeclaration } from "./shader-declaration.js";
+import type { App } from "../app/types.js";
 import type { ComponentHooks } from "../component/component.js";
+import type { LiteTexture2D } from "../lite/gpu/texture.js";
 import type { Schema } from "../schema/types.js";
 
 /**
@@ -49,14 +59,20 @@ import type { Schema } from "../schema/types.js";
  * `imageProcessing` is always recorded last, whatever `order` says: Lite's task writes `engine.scRT`
  * unconditionally and takes no target, so nothing can read what it produced.
  *
+ * ## `custom` brings one more rebuild trigger
+ *
+ * A custom effect's chain links are eagerly allocated, fixed-size textures, because Lite's public
+ * fullscreen-effect path samples a `Texture2D` (`src/lite/gpu/effect-task.ts`). So the chain's
+ * identity includes the surface size while one is enabled, and a canvas resize rebuilds it. Its
+ * `values` round-trip through a hand-written codec, for the reason `./post-effect.ts` records.
+ *
  * ## Tuning is live; the chain's shape is rebuilt
  *
  * Writing `bloom.threshold`, `bloom.weight`, `bloom.kernel`, `bloom.exposure` or any SMAA field on
  * a running stack reaches the recorded Lite task on the next `PreRender`: the chain re-uploads the
  * task's uniforms, and only when a value actually changed (`PostProcessChain.applySettings`). That is
  * what a settings slider or an inspector edit needs, and it costs nothing on a frame where nothing
- * moved. Until 2026-09-08 those writes were read once, when the chain was built, and never again —
- * a slider bound to `bloom.threshold` did nothing.
+ * moved.
  *
  * What a recorded task cannot change is its **shape**: which effects are on, in which `order`, and
  * bloom's `scale`, which sizes the blur targets when the task is created. A change to any of those
@@ -163,6 +179,8 @@ export class PostProcessStack extends Component implements ComponentHooks {
 
   declare imageProcessing: ImageProcessingEffectSettings;
 
+  declare custom: CustomEffectSettings[];
+
   /** Applies the schema defaults, exactly as `Component.define` would. */
   constructor() {
     super();
@@ -174,6 +192,29 @@ export class PostProcessStack extends Component implements ComponentHooks {
   #built = "";
 
   #hasWarnedAboutFeature = false;
+
+  /** The shader addresses whose compilation already failed, so the report is made once each. */
+  readonly #failedShaders = new Set<string>();
+
+  /** The entry buffer `#chainKey` refills every frame. */
+  readonly #entryScratch: ChainEntry[] = [];
+
+  /**
+   * Reports, once per effect, that its `values` name a uniform the shader does not declare.
+   *
+   * @remarks
+   * A field rather than a method so the chain can hold one stable reference: it is handed over at
+   * construction, not per frame.
+   *
+   * @param address - The shader's address.
+   * @param message - What the compiler said.
+   */
+  readonly #reportRefusedValues = (address: string, message: string): void => {
+    this.app.log.error(
+      `${CoreErrorCode.shaderCompileFailed}: ${address} has a custom post effect whose values were refused, ` +
+        `so it stopped uploading them. ${message}`,
+    );
+  };
 
   /**
    * How many frame-graph tasks the stack has recorded.
@@ -220,17 +261,25 @@ export class PostProcessStack extends Component implements ComponentHooks {
    * @internal
    */
   sync(renderer: RendererImpl): void {
-    const wanted = this.#chainKey();
+    const wanted = this.#chainKey(renderer);
     if (wanted !== this.#built) {
       this.#rebuild(renderer, wanted);
       return;
     }
-    this.#warnAboutFeature(renderer, this.plannedChain().length);
-    const chain = this.#chain;
-    if (chain !== null) {
-      chain.setEnabled(this.isEnabledInHierarchy);
-      chain.applySettings(this.bloom, this.smaa, renderer.isSceneRegistered);
+    if (!this.#hasWarnedAboutFeature && !renderer.features.postProcessing) {
+      this.#warnAboutFeature(renderer, this.plannedChain().length);
     }
+    const surface = renderer.surface;
+    applyPostProcessSettings(
+      this.#chain,
+      this.isEnabledInHierarchy,
+      this.bloom,
+      this.smaa,
+      renderer.app.time,
+      surface?.width ?? 0,
+      surface?.height ?? 0,
+      renderer.isSceneRegistered,
+    );
   }
 
   /**
@@ -250,19 +299,17 @@ export class PostProcessStack extends Component implements ComponentHooks {
     const previous = this.#chain;
     this.#chain = null;
     previous?.dispose();
-    const requests = this.#requests(renderer.settings.srgb);
-    const presenter = renderer.presenter;
-    if (!renderer.isHeadless && presenter !== null && requests.length > 0) {
-      const chain = new PostProcessChain(
-        renderer.engine,
-        renderer.scene,
-        presenter,
-        requests,
-        renderer.isSceneRegistered,
-      );
-      chain.setEnabled(this.isEnabledInHierarchy);
-      this.#chain = chain;
-    }
+    const requests = this.#requests(renderer);
+    this.#chain = recordPostProcessChain(
+      renderer.engine,
+      renderer.scene,
+      renderer.presenter,
+      renderer.isHeadless,
+      requests,
+      renderer.isSceneRegistered,
+      this.isEnabledInHierarchy,
+      this.#reportRefusedValues,
+    );
     this.#warnAboutFeature(renderer, requests.length);
   }
 
@@ -294,22 +341,77 @@ export class PostProcessStack extends Component implements ComponentHooks {
   /**
    * The enabled effects, first to last, with the tuning each one needs.
    *
-   * @param sourceIsSrgb - Whether the chain's input is an sRGB target, which decides where the
-   * image-processing effect converts.
+   * @remarks
+   * A custom effect is compiled here, which is where a `.post.wgsl` that declares no `mainFragment`
+   * or the wrong `@ignifx` kind surfaces: the effect is dropped and the failure is reported once per
+   * shader address through `app.log.error`, rather than throwing out of a `PreRender` system on every
+   * frame.
+   *
+   * @param renderer - The rendering service, for the sRGB flag, the app, and the fallback textures.
    * @returns The requests the frame-graph half records.
    */
-  #requests(sourceIsSrgb: boolean): readonly PostProcessEffectRequest[] {
+  #requests(renderer: RendererImpl): readonly PostProcessEffectRequest[] {
+    const sourceIsSrgb = renderer.settings.srgb;
     const requests: PostProcessEffectRequest[] = [];
     for (const entry of this.#entries()) {
-      if (entry.enabled) {
-        requests.push({ name: entry.name, bloom: this.bloom, smaa: this.smaa, sourceIsSrgb });
+      if (!entry.enabled) {
+        continue;
+      }
+      const settings = entry.settings;
+      if (entry.name !== "custom" || settings === null) {
+        requests.push({ name: entry.name, bloom: this.bloom, smaa: this.smaa, sourceIsSrgb, custom: null });
+        continue;
+      }
+      const request = this.#compile(renderer, settings);
+      if (request !== null) {
+        requests.push({ name: "custom", bloom: this.bloom, smaa: this.smaa, sourceIsSrgb, custom: request });
       }
     }
     return requests;
   }
 
   /**
-   * The chain the fields currently ask for, as an ordered list of effect names. It is what
+   * Compiles one custom effect and resolves its textures.
+   *
+   * @param renderer - The rendering service.
+   * @param settings - The effect's record.
+   * @returns The request, or `null` when the shader is missing, unloaded, or does not compile.
+   */
+  #compile(renderer: RendererImpl, settings: CustomEffectSettings): CustomEffectRequest | null {
+    const handle = settings.shader;
+    if (handle === null || handle.state !== "loaded") {
+      return null;
+    }
+    const shader = handle.value;
+    const compiler = postEffectCompiler();
+    if (compiler === null) {
+      return null;
+    }
+    try {
+      const compiled = compiler.compiledPostEffect(shader);
+      const textures: (LiteTexture2D | null)[] = [];
+      for (const declaration of compiled.textures) {
+        const bound = settings.textures[declaration.name] ?? null;
+        const resolved = bound !== null && bound.state === "loaded" ? bound.value.lite.texture : null;
+        textures.push(resolved ?? (renderer.isHeadless ? null : fallbackTexture(renderer.app, declaration)));
+      }
+      return { address: shader.address, compiled, shader, settings, textures };
+    } catch (failure: unknown) {
+      if (!this.#failedShaders.has(shader.address)) {
+        this.#failedShaders.add(shader.address);
+        const message = isIgnifxError(failure) ? failure.message : String(failure);
+        renderer.app.log.error(
+          `${CoreErrorCode.shaderCompileFailed}: {asset} could not be recorded as a custom post effect. ${message}`,
+          shader.address,
+        );
+      }
+      return null;
+    }
+  }
+
+  /**
+   * The effects the fields currently ask for, by name, ordered by `order`. The recorded chain moves
+   * `imageProcessing` last whatever its `order` says. It is what
    * {@link PostProcessStack.taskCount} would grow to on a device.
    *
    * @returns The effect names, first to last.
@@ -332,30 +434,114 @@ export class PostProcessStack extends Component implements ComponentHooks {
    * created. A change to it while a chain exists is a rebuild, because Lite cannot re-order a
    * recorded frame graph or resize a bloom task's blur targets.
    *
+   * @remarks
+   * A custom effect adds its shader address and its bound texture addresses, because both are baked
+   * into the effect's shader module and bind group, and — because its chain links are eagerly
+   * allocated at a fixed size — the surface's backing-store size, so a resize rebuilds.
+   *
+   * @param renderer - The rendering service, for the surface size.
    * @returns The key.
    */
-  #chainKey(): string {
-    const effects = this.plannedChain().join(",");
-    return this.bloom.enabled ? `${effects}|scale=${String(this.bloom.scale)}` : effects;
+  #chainKey(renderer: RendererImpl): string {
+    // `sync` builds this every frame, so it fills one reused array rather than allocating three.
+    const entries = this.#fillEntries(this.#entryScratch);
+    let key = "";
+    let hasCustom = false;
+    for (let index = 0; index < entries.length; index += 1) {
+      const entry = entries[index];
+      if (entry === undefined || !entry.enabled) {
+        continue;
+      }
+      const settings = entry.settings;
+      if (entry.name !== "custom" || settings === null) {
+        key = key === "" ? entry.name : `${key},${entry.name}`;
+        continue;
+      }
+      hasCustom = true;
+      const bound = settings.textures;
+      const names = Object.keys(bound).toSorted();
+      let textures = "";
+      for (let slot = 0; slot < names.length; slot += 1) {
+        const name = names[slot] ?? "";
+        textures += `${slot === 0 ? "" : "&"}${name}=${bound[name]?.address ?? ""}`;
+      }
+      const part = `custom:${settings.shader?.address ?? ""}:${textures}`;
+      key = key === "" ? part : `${key},${part}`;
+    }
+    if (this.bloom.enabled) {
+      key = `${key}|scale=${String(this.bloom.scale)}`;
+    }
+    if (hasCustom) {
+      const surface = renderer.surface;
+      key = `${key}|size=${String(surface?.width ?? 0)}x${String(surface?.height ?? 0)}`;
+    }
+    return key;
   }
 
   /**
-   * The three effect records, as a uniform list ordered by their `order` fields.
+   * The three built-in effect records and every custom effect, as one list ordered by `order`.
+   *
+   * @remarks
+   * Sorted stably, so two custom effects with the same `order` keep the order the list declares.
    *
    * @returns The entries, first to last.
    */
-  #entries(): readonly {
-    readonly name: "bloom" | "smaa" | "imageProcessing";
-    readonly enabled: boolean;
-    readonly order: number;
-  }[] {
-    const entries = [
-      { name: "bloom", enabled: this.bloom.enabled, order: this.bloom.order },
-      { name: "smaa", enabled: this.smaa.enabled, order: this.smaa.order },
-      { name: "imageProcessing", enabled: this.imageProcessing.enabled, order: this.imageProcessing.order },
-    ] as const;
-    return entries.toSorted((left, right) => left.order - right.order);
+  #entries(): readonly ChainEntry[] {
+    return this.#fillEntries([]);
   }
+
+  /**
+   * Fills an array with the current entries, ordered by `order`.
+   *
+   * @param out - The array to refill; its previous contents are discarded.
+   * @returns `out`, sorted stably so two effects with the same `order` keep the declared order.
+   */
+  #fillEntries(out: ChainEntry[]): ChainEntry[] {
+    out.length = 0;
+    out.push(
+      { name: "bloom", enabled: this.bloom.enabled, order: this.bloom.order, settings: null },
+      { name: "smaa", enabled: this.smaa.enabled, order: this.smaa.order, settings: null },
+      {
+        name: "imageProcessing",
+        enabled: this.imageProcessing.enabled,
+        order: this.imageProcessing.order,
+        settings: null,
+      },
+    );
+    for (const settings of this.custom) {
+      out.push({
+        name: "custom",
+        enabled: settings.enabled && settings.shader !== null,
+        order: settings.order,
+        settings,
+      });
+    }
+    out.sort((left, right) => left.order - right.order);
+    return out;
+  }
+}
+
+/**
+ * The 1x1 texture a declared-but-unbound post-effect sampler is filled with.
+ *
+ * @param app - The app whose shader-material registry owns the fallbacks.
+ * @param declaration - The sampler declaration, for its `default` and `array` flags.
+ * @returns The texture, or `null` when the custom-shader layer has not loaded.
+ */
+function fallbackTexture(app: App, declaration: ShaderTextureDeclaration): LiteTexture2D | null {
+  return shaderSupport()?.shaderMaterialsOf(app).fallbackTexture(declaration) ?? null;
+}
+
+/** One entry of the ordered chain the component's fields describe. */
+interface ChainEntry {
+  /** Which effect it is. */
+  readonly name: "bloom" | "smaa" | "imageProcessing" | "custom";
+  /** Whether it runs. */
+  readonly enabled: boolean;
+  /** Position in the chain; lower runs first. */
+  readonly order: number;
+  /** The record, for a `"custom"` entry; `null` for the three built-ins. */
+  readonly settings: CustomEffectSettings | null;
 }
 
 /**
@@ -408,6 +594,19 @@ function postProcessSchema(): Schema {
         order: i32(2, { tooltip: "Position in the chain; lower runs first." }),
       },
       { tooltip: "Exposure, contrast, and tone mapping as a pass — the alternative to Environment." },
+    ),
+    custom: array(
+      record({
+        shader: asset(ShaderAsset, { tooltip: "The .post.wgsl whose mainFragment runs full-screen." }),
+        enabled: bool(true, { tooltip: "Whether the effect runs." }),
+        order: i32(10, { tooltip: "Position in the chain; lower runs first." }),
+        values: custom(postEffectValuesCodec(), {
+          tooltip: "Overrides of the file's declared uniform defaults, by declared name.",
+        }),
+        textures: map(asset(TextureAsset), { tooltip: "Textures for the file's declared samplers." }),
+      }),
+      [],
+      { tooltip: "Custom full-screen WGSL effects, ordered among the built-ins by order." },
     ),
   });
 }

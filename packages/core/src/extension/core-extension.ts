@@ -9,11 +9,13 @@ import { CoreErrorCode } from "../errors/error-codes.js";
 import { IgnifxError } from "../errors/ignifx-error.js";
 import { Camera } from "../render/camera.js";
 import { Environment } from "../render/environment.js";
+import { InstancedMeshRenderer } from "../render/instanced-mesh-renderer.js";
 import { Light } from "../render/light.js";
 import { createEnvironmentLoader } from "../render/loaders/environment-loader.js";
 import { createFontLoader } from "../render/loaders/font-loader.js";
 import { createMaterialLoader } from "../render/loaders/material-loader.js";
 import { createModelLoader } from "../render/loaders/model-loader.js";
+import { createShaderLoader } from "../render/loaders/shader-loader.js";
 import { createTextureLoader } from "../render/loaders/texture-loader.js";
 import { MESH_ASSET_TYPE, MeshAsset } from "../render/mesh-asset.js";
 import { MeshRenderer } from "../render/mesh-renderer.js";
@@ -26,6 +28,8 @@ import {
   RENDERING_SETTINGS_SECTION,
   renderingSettingsSchema,
 } from "../render/rendering-settings.js";
+import { SHADER_UNIFORM_ORDER, ShaderUniformSystem } from "../render/shader-uniform-system.js";
+import { STORAGE_BUFFER_ASSET_TYPE, StorageBufferAsset } from "../render/storage-buffer-asset.js";
 import { array, f64, str, u32 } from "../schema/field-kinds.js";
 import { defineSchema } from "../schema/schema.js";
 import { createSceneLoader } from "../serialization/scene-loader.js";
@@ -153,12 +157,26 @@ function registerRendering(ctx: ExtensionContext): void {
   );
   const renderer = new RendererImpl(ctx.app, ctx.settings<RenderingSettings>(RENDERING_SETTINGS_SECTION));
   ctx.registerService(RendererService, renderer);
-  ctx.registerComponents([Camera, Light, MeshRenderer, Model, Environment, PostProcessStack]);
+  ctx.registerComponents([Camera, Light, MeshRenderer, InstancedMeshRenderer, Model, Environment, PostProcessStack]);
   ctx.registerAssetLoader(createTextureLoader());
   ctx.registerAssetLoader(createModelLoader());
   ctx.registerAssetLoader(createMaterialLoader());
   ctx.registerAssetLoader(createEnvironmentLoader());
   ctx.registerAssetLoader(createFontLoader());
+  ctx.registerAssetLoader(createShaderLoader());
+  // `createStorageBufferAsset(...)` publishes through `Assets.register`, which needs the type to
+  // exist so a `memory:storagebuffer/<n>` handle can be collected — and its `unload` is what frees
+  // the GPU allocation.
+  ctx.registerAssetLoader({
+    type: STORAGE_BUFFER_ASSET_TYPE,
+    extensions: [],
+    load: (): Promise<never> => Promise.reject(noStorageBufferFileFormat()),
+    unload: (value: unknown): void => {
+      if (value instanceof StorageBufferAsset) {
+        value.dispose();
+      }
+    },
+  });
   // `MeshAsset.box(...)` and friends publish through `Assets.register`, which needs the type to
   // exist so a `memory:mesh/<n>` handle can be collected — and its `unload` is what frees the
   // template's GPU buffers.
@@ -171,6 +189,10 @@ function registerRendering(ctx: ExtensionContext): void {
         value.dispose();
       }
     },
+  });
+  ctx.registerSystem(new ShaderUniformSystem(ctx.app), {
+    phase: Phase.PreRender,
+    order: SHADER_UNIFORM_ORDER,
   });
   const sync = new RenderSyncSystem(renderer);
   renderer.attachSyncSystem(sync);
@@ -190,6 +212,19 @@ function noMeshFileFormat(): IgnifxError {
   return new IgnifxError(CoreErrorCode.assetNoLoader, "There is no mesh file format; build one in code.", {
     context: { type: MESH_ASSET_TYPE },
     hint: "Use MeshAsset.box/sphere/plane/ground/... for primitives, or load a .glb as a model.",
+  });
+}
+
+/**
+ * Builds the failure a `storagebuffer` **address** produces: there is no storage buffer file
+ * format, because the bytes are always written by the game.
+ *
+ * @returns The error to reject with.
+ */
+function noStorageBufferFileFormat(): IgnifxError {
+  return new IgnifxError(CoreErrorCode.assetNoLoader, "There is no storage buffer file format; build one in code.", {
+    context: { type: STORAGE_BUFFER_ASSET_TYPE },
+    hint: "Use createStorageBufferAsset(app, name, data).",
   });
 }
 

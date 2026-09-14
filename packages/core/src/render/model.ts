@@ -255,6 +255,25 @@ export class Model extends Component implements ComponentHooks {
   }
 
   /**
+   * Whether any material override this model draws with is a `"shader"` material; see
+   * `MeshRenderer.usesShaderMaterial` for why the render sync system asks.
+   *
+   * @returns `true` when at least one loaded override is a shader material.
+   *
+   * @internal
+   */
+  get usesShaderMaterial(): boolean {
+    const overrides = this.materialOverrides;
+    for (const name of Object.keys(overrides)) {
+      const handle = overrides[name];
+      if (handle != null && handle.state === "loaded" && handle.value.kind === "shader") {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * Appends every mesh of the instantiated subtree to a shadow caster list, when the model casts.
    *
    * @param out - The caster list being built.

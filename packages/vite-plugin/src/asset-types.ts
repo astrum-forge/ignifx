@@ -28,6 +28,8 @@ export const ASSET_TYPE_BY_SUFFIX = {
   ".atlas.json": "spriteatlas",
   ".spriteanim.json": "spriteanimation",
   ".tilemap.json": "tilemap",
+  ".particles.json": "particles",
+  ".terrain.json": "terrain",
 } as const;
 
 /**
@@ -55,6 +57,13 @@ export const ASSET_TYPE_BY_EXTENSION = {
   ".mp3": "audio",
   ".ogg": "audio",
   ".wav": "audio",
+  // `.surface.wgsl` and `.post.wgsl` need no row of their own in `ASSET_TYPE_BY_SUFFIX`: the
+  // pragma inside the file, not the name, declares which of the three shader forms it is
+  // (`docs/plan/2026-09-terrain-particles-shaders.md` §3.1), and the single-extension lookup below
+  // already classifies all three as `shader`.
+  ".wgsl": "shader",
+  // Raw 16-bit little-endian heightmaps for `@ignifx/terrain`.
+  ".r16": "heightmap",
   ".json": "json",
   ".txt": "text",
   ".md": "text",

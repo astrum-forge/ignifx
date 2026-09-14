@@ -52,6 +52,14 @@ export const TwoDErrorCode = {
   duplicateExtension: "IGX-1112",
   /** A `SpriteLayerEffect` declared the `custom` kind without a WGSL fragment body. */
   missingShaderSource: "IGX-1113",
+  /** `app.twoD.createSpriteBatch` was given a capacity that is not a positive whole number. */
+  invalidBatchCapacity: "IGX-1114",
+  /** A sprite batch was handed a slot index, or a `count`, outside `0 .. capacity`. */
+  batchIndexOutOfRange: "IGX-1115",
+  /** A sprite batch was written to, or resized, after `dispose()`. */
+  batchDisposed: "IGX-1116",
+  /** `app.twoD.createSpriteBatch` was given an atlas handle that has not finished loading. */
+  batchAtlasNotLoaded: "IGX-1117",
 } as const;
 
 /**
@@ -80,6 +88,10 @@ export const TWO_D_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.fre
   "IGX-1111": "Cell {x},{y} is outside layer {layer}.",
   "IGX-1112": "The twoD() extension is already registered on this app.",
   "IGX-1113": "A custom SpriteLayerEffect needs a WGSL fragment body in its shader field.",
+  "IGX-1114": "A sprite batch capacity must be a whole number of at least 1; got {capacity}.",
+  "IGX-1115": "{index} is outside the sprite batch's 0..{capacity} slots.",
+  "IGX-1116": "This sprite batch was disposed; create another one.",
+  "IGX-1117": "The atlas handle for a sprite batch is {state}, not loaded.",
 });
 
 /**

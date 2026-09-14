@@ -4,13 +4,13 @@
 
 ## Material file (`ignifx/material-file`)
 
-A PBR or Standard material: colours in sRGB, factors unitless, textures as { "$asset": … } references.
+A PBR, Standard, or shader material: colours in sRGB, factors unitless, textures as { "$asset": … } references. A shader material names a .wgsl and the values, textures, and defines it sets on it.
 
 | Field | Kind | Default | Description |
 |---|---|---|---|
 | `format` | `str` | `"ignifx.material"` | Always "ignifx.material". |
 | `formatVersion` | `u32` | `1` | The file format version; 1 before ignifx 1.0. |
-| `type` | `enum` | `"pbr"` | The material family: pbr, standard, shader. "shader" is declared but not implemented; it is rejected with IGX-0708. |
+| `type` | `enum` | `"pbr"` | The material family: pbr, standard, shader. An unknown value is rejected with IGX-0708. |
 | `name` | `str` | `""` | A human-readable name; glTF overrides match on it. |
 | `baseColor` | `color` | `[1,1,1,1]` | PBR: sRGB base colour and alpha. |
 | `metallic` | `f32` | `1` | PBR: metallic factor, 0 to 1. |
@@ -32,6 +32,11 @@ A PBR or Standard material: colours in sRGB, factors unitless, textures as { "$a
 | `normalTexture` | `asset` | `null` | The tangent-space normal map. |
 | `emissiveTexture` | `asset` | `null` | The emissive map (sRGB). |
 | `occlusionTexture` | `asset` | `null` | PBR: a separate occlusion map. |
+| `surfaces` | `array` | `[]` | PBR: the .surface.wgsl files layered onto the material, each an address or { shader, name?, values?, textures?, enabled?, priority? }. Needs rendering.features.materialPlugins (IGX-0716); a standard material cannot host one (IGX-0723). |
 | `diffuseTexture` | `asset` | `null` | Standard: the diffuse map (sRGB). |
 | `specularTexture` | `asset` | `null` | Standard: the specular map. |
 | `opacityTexture` | `asset` | `null` | Standard: the opacity map. |
+| `shader` | `str` | `""` | Shader: the address of the .wgsl whose // @ignifx pragmas declare the layout. |
+| `values` | `map` | `{}` | Shader: overrides of the file's declared uniform defaults, by uniform name; a number or an array of numbers, sRGB for a colour uniform. An undeclared name is IGX-0712 and a wrong shape is IGX-0713. |
+| `textures` | `map` | `{}` | Shader: texture addresses by declared sampler name. An unbound sampler falls back to the declaration's 1x1 default. |
+| `defines` | `map` | `{}` | Shader: overrides of the file's declared define values, by name; a boolean or a number. An undeclared name is IGX-0712. |

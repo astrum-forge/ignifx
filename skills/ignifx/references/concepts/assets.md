@@ -13,7 +13,9 @@ address ──▶ manifest ──▶ url ──▶ loader ──▶ value
 
 - An **address** is a path under the project's asset root (`assets/` by default):
   `"models/hero.glb"`, `"levels/level01.scene.json"`. Absolute `https:`, `blob:`, and `data:` URLs
-  are taken as-is. A **fragment** selects a sub-asset: `"models/hero.glb#animation:Run"`.
+  are not resolved against the root; they are passed to the app's `fetch` unchanged, so a custom
+  `fetch` must handle them (extensions load their built-in shaders from `data:` URLs). A
+  **fragment** selects a sub-asset: `"models/hero.glb#animation:Run"`.
 - `AssetRef<T>` is the serializable form, `{ address, type? }`; `assetRef(address, type?)` builds
   one and `isAssetRef(value)` narrows an `unknown`. In a file it is `{ "$asset": "models/hero.glb" }`.
 - `assets.manifest` maps addresses to URLs, byte sizes, hashes, types, and **groups** (`"boot"`,
@@ -80,8 +82,15 @@ import { createApp } from "@ignifx/core";
 import type { FetchLike } from "@ignifx/core";
 
 // How a Node app loads real project files: resolve each asset URL under the project directory.
+// Complete URLs (`data:`, `blob:`, `http:`) go to the platform fetch; extensions ship shaders as `data:` URLs.
 const projectRoot = pathToFileURL(`${process.cwd()}/`);
-const fetchFromDisk: FetchLike = async (url) => new Response(await readFile(new URL(String(url), projectRoot)));
+const fetchFromDisk: FetchLike = async (url, init) => {
+  const target = String(url);
+  if (/^(?:data|blob|https?):/u.test(target)) {
+    return globalThis.fetch(target, init);
+  }
+  return new Response(await readFile(new URL(target, projectRoot)));
+};
 
 const app = await createApp({ headless: true, fetch: fetchFromDisk });
 app.dispose();
@@ -132,7 +141,7 @@ An `AssetLoader<T>` declares a `type` and the `extensions` it claims, then `load
 progress propagate), `reportProgress(fraction)`, `meta` (the `.meta.json` sidecar), and the unstable
 `lite.engine`.
 
-The core extension registers: `texture` (`.png .jpg .jpeg .webp .ktx2 .basis`), `model`
+The core extension registers: `texture` (`.png .jpg .jpeg .webp .ktx2 .basis`), `shader` (`.wgsl`), `model`
 (`.glb .gltf`), `scene` (`.scene.json .prefab.json`), `material` (`.material.json`), `environment`
 (`.env .hdr .dds`), `font` (`.ttf .otf`), and the generic `jsonAssetLoader`, `textAssetLoader`, and
 `binaryAssetLoader`. There is **no mesh file format**: geometry is either a primitive built in code

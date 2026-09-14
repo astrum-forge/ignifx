@@ -5,6 +5,7 @@ import {
   NeutralToneMapping,
   setEnvironmentBlur,
   setEnvironmentRotation,
+  setFog,
   setSceneImageProcessing,
   StandardToneMapping,
 } from "@babylonjs/lite";
@@ -32,6 +33,26 @@ import type { EnvironmentTextures, SceneContext, ToneMapping } from "@babylonjs/
  *
  * `SceneContext.fog` is `FogConfig | null` (`index.d.ts` 5350) with a numeric `mode`; Lite exports
  * no named constants for it, so {@link FOG_MODES} maps ignifx's names onto the numbers.
+ *
+ * **Fog has to be installed with `setFog`, not by assigning the field.** `scene.fog` is what the PBR
+ * group builder reads to decide whether a material's program gets the fog block at all
+ * (`lib/material/pbr/pbr-renderable.js` 140-159, `PBR_HAS_FOG`), but the block it compiles reads
+ * `scene.vFogInfos.x` out of the scene uniform buffer — and the only writer of those slots is
+ * `writeFogUbo`, which nothing registers except `setFog`
+ * (`lib/scene/scene-ubo-extras.js`: `setFog` is `scene.fog = config` **plus**
+ * `_registerSceneUboContributor(scene, writeFogUbo)`, and `_writePassSceneUBO` runs
+ * `scene._sceneUboContributors` and nothing else, `lib/frame-graph/render-task.js` 372-379).
+ * Lite says as much in `index.d.ts` 10471: "importing `setFog` is what pulls the fog UBO writer into
+ * the bundle". Assigning `scene.fog` alone therefore compiles the fog block into every PBR pipeline
+ * and leaves `vFogInfos` zeroed, so `vFogInfos.x > 0.0` is never true and the scene renders with no
+ * fog at all — the cost with none of the effect.
+ *
+ * A **fresh** config object goes in on every change, because a render task caches its scene UBO on
+ * the identity of `scene.fog` (`s[1] === fog`, `lib/frame-graph/render-task.js` 355-371): mutating
+ * the installed object in place leaves the cache key equal and the new density or colour never
+ * reaches the GPU. Turning fog off writes mode `0`, which is what the already-compiled fog block
+ * reads as "no fog"; dropping the field back to `null` would only stop the writer and leave the last
+ * fog standing. A scene that never had fog keeps its `null` and pays nothing.
  *
  * ## Image processing
  *
@@ -332,9 +353,9 @@ export function setSceneClearColor(scene: SceneContext, r: number, g: number, b:
  *
  * @param scene - The scene to change.
  * @param mode - The fog falloff, or `"none"` to disable it.
- * @param r - The linear red component of the fog colour.
- * @param g - The linear green component.
- * @param b - The linear blue component.
+ * @param r - The sRGB red component of the fog colour; Lite's fog block decodes it itself.
+ * @param g - The sRGB green component.
+ * @param b - The sRGB blue component.
  * @param density - The density, for the exponential modes.
  * @param start - Where linear fog begins, in metres.
  * @param end - Where linear fog reaches full strength, in metres.
@@ -351,23 +372,11 @@ export function setSceneFog(
   start: number,
   end: number,
 ): void {
-  if (mode === "none") {
-    scene.fog = null;
+  if (mode === "none" && scene.fog === null) {
+    // A scene that never had fog pays nothing: no contributor, no fog block in any PBR pipeline.
     return;
   }
-  const existing = scene.fog;
-  if (existing === null) {
-    scene.fog = { mode: FOG_MODES[mode], density, start, end, color: [r, g, b] };
-    return;
-  }
-  existing.mode = FOG_MODES[mode];
-  existing.density = density;
-  existing.start = start;
-  existing.end = end;
-  const color = existing.color;
-  color[0] = r;
-  color[1] = g;
-  color[2] = b;
+  setFog(scene, { mode: FOG_MODES[mode], density, start, end, color: [r, g, b] });
 }
 
 /**

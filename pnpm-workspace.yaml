@@ -69,6 +69,10 @@ catalog:
   meshoptimizer: ^1.2.0
   vite: ^8.2.2
   vitest: ^5.0.0
+  # Build-time WGSL parsing and reflection for @ignifx/vite-plugin (shader validation, standards §14).
+  wgsl_reflect: ^1.6.0
+  # 16-bit PNG decoding for `ignifx import heightmap` in @ignifx/cli (terrain plan §5.1).
+  fast-png: ^8.0.0
 
 # CONSTITUTION.md §9.3 / standards §13: only listed packages may run install scripts.
 # `minimumReleaseAge` is intentionally left at pnpm's default.

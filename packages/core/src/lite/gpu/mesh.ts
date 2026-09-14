@@ -11,6 +11,10 @@ import {
   createTorus,
   removeFromScene,
   setSubtreeVisible,
+  updateMeshColors as liteUpdateMeshColors,
+  updateMeshNormals as liteUpdateMeshNormals,
+  updateMeshPositions as liteUpdateMeshPositions,
+  updateMeshUvs as liteUpdateMeshUvs,
 } from "@babylonjs/lite";
 import type {
   BoxOptions,
@@ -56,6 +60,26 @@ import type {
  * - Hiding is `setSubtreeVisible` (exported as `setMeshVisible` too, `index.d.ts` 11199): it
  *   cascades `visible` down the subtree and bumps a global visibility epoch. Never remove a mesh
  *   from the scene to hide it — that disposes it.
+ *
+ * ## Updating a mesh's vertices (verified against `lib/mesh/mesh-factories.js`)
+ *
+ * `updateMesh*` writes the GPU buffer and **nothing else**. Three consequences, all of them
+ * surprising enough to be worth stating where the calls are:
+ *
+ * 1. **The retained CPU arrays are not replaced.** `createMeshFromData` keeps `_cpuPositions`,
+ *    `_cpuNormals`, `_cpuUvs` and `_cpuIndices` — the arrays it was handed — and Lite's CPU ray
+ *    pick reads them (`lib/picking/ray-pick.js`). Only `updateMeshGeometry`/`resizeMeshGeometry`
+ *    re-retain, through `retainMeshGeometry`. So an update that hands over a *different* array
+ *    leaves picking looking at the old geometry, while an update after mutating the retained array
+ *    in place leaves picking exact. `MeshAsset` keeps its own copy in step for that reason.
+ * 2. **Bounds are not recomputed.** `retainMeshGeometry` is what calls `computeAabb` and writes
+ *    `boundMin`/`boundMax`; the partial updaters do not. `Mesh`'s own declaration says a consumer
+ *    "MAY overwrite these with a wider hand-computed box", so {@link setMeshBounds} exists and
+ *    `MeshAsset.updatePositions` uses it.
+ * 3. **A cloned template cannot be updated at all.** `writeVertexAttributeRange` throws
+ *    (`ThrowLiteError(360)`) when `mesh._gpu._refCount > 1`, and cloning a mesh retains that very
+ *    wrapper. A `MeshAsset` a `MeshRenderer` has drawn is therefore frozen; a mesh meant to be
+ *    edited is a renderable of its own, which is the shape the terrain chunk adapter uses.
  */
 
 /**
@@ -188,6 +212,9 @@ export function createTorusMesh(engine: EngineContext, options?: TorusOptions): 
  * @param normals - Three floats per vertex.
  * @param indices - Three indices per triangle.
  * @param uvs - Two floats per vertex, or omitted.
+ * @param uvs2 - Two floats per vertex for the second UV set, or omitted.
+ * @param tangents - Four floats per vertex, or omitted.
+ * @param colors - Four floats per vertex, or omitted.
  * @returns The mesh.
  *
  * @internal
@@ -199,8 +226,215 @@ export function createMeshFromGeometry(
   normals: Float32Array,
   indices: Uint32Array,
   uvs?: Float32Array,
+  uvs2?: Float32Array,
+  tangents?: Float32Array,
+  colors?: Float32Array,
 ): Mesh {
-  return createMeshFromData(engine, name, positions, normals, indices, uvs);
+  return createMeshFromData(engine, name, positions, normals, indices, uvs, uvs2, tangents, colors);
+}
+
+/**
+ * Re-uploads part of a mesh's position buffer.
+ *
+ * @remarks
+ * A no-op range is accepted; an out-of-range one, or a mesh whose GPU geometry has co-owners,
+ * throws a Lite error (see the module note). It does **not** refresh the CPU picking geometry or
+ * the bounds.
+ *
+ * @param engine - The engine that owns the buffer.
+ * @param mesh - The mesh to update.
+ * @param positions - Three floats per vertex, read from index 0.
+ * @param vertexOffset - The first destination vertex to overwrite.
+ * @param vertexCount - How many vertices to write.
+ *
+ * @internal
+ */
+export function updateMeshPositions(
+  engine: EngineContext,
+  mesh: Mesh,
+  positions: Float32Array,
+  vertexOffset: number,
+  vertexCount: number,
+): void {
+  liteUpdateMeshPositions(engine, mesh, positions, vertexOffset, vertexCount);
+}
+
+/**
+ * Re-uploads part of a mesh's normal buffer.
+ *
+ * @param engine - The engine that owns the buffer.
+ * @param mesh - The mesh to update.
+ * @param normals - Three floats per vertex.
+ * @param vertexOffset - The first destination vertex to overwrite.
+ * @param vertexCount - How many vertices to write.
+ *
+ * @internal
+ */
+export function updateMeshNormals(
+  engine: EngineContext,
+  mesh: Mesh,
+  normals: Float32Array,
+  vertexOffset: number,
+  vertexCount: number,
+): void {
+  liteUpdateMeshNormals(engine, mesh, normals, vertexOffset, vertexCount);
+}
+
+/**
+ * Re-uploads part of a mesh's UV buffer.
+ *
+ * @remarks
+ * Lite makes it a no-op when the mesh was created without UVs, rather than an error.
+ *
+ * @param engine - The engine that owns the buffer.
+ * @param mesh - The mesh to update.
+ * @param uvs - Two floats per vertex.
+ * @param vertexOffset - The first destination vertex to overwrite.
+ * @param vertexCount - How many vertices to write.
+ *
+ * @internal
+ */
+export function updateMeshUvs(
+  engine: EngineContext,
+  mesh: Mesh,
+  uvs: Float32Array,
+  vertexOffset: number,
+  vertexCount: number,
+): void {
+  liteUpdateMeshUvs(engine, mesh, uvs, vertexOffset, vertexCount);
+}
+
+/**
+ * Re-uploads part of a mesh's vertex-colour buffer.
+ *
+ * @remarks
+ * The colour attribute is `vec4`, and Lite makes the call a no-op when the mesh was created without
+ * colours.
+ *
+ * @param engine - The engine that owns the buffer.
+ * @param mesh - The mesh to update.
+ * @param colors - Four floats per vertex.
+ * @param vertexOffset - The first destination vertex to overwrite.
+ * @param vertexCount - How many vertices to write.
+ *
+ * @internal
+ */
+export function updateMeshColors(
+  engine: EngineContext,
+  mesh: Mesh,
+  colors: Float32Array,
+  vertexOffset: number,
+  vertexCount: number,
+): void {
+  liteUpdateMeshColors(engine, mesh, colors, vertexOffset, vertexCount);
+}
+
+/**
+ * Writes a mesh's object-local bounding box.
+ *
+ * @remarks
+ * `Mesh.boundMin`/`boundMax` are declared consumer-writable, and writing them is the only way to
+ * keep the shadow fit, the thin-instance culler and the Havok shape extents honest after a partial
+ * vertex update — none of the partial updaters recomputes them. The existing arrays are mutated in
+ * place when they are there, so repeated sculpting allocates nothing.
+ *
+ * @param mesh - The mesh to re-bound.
+ * @param minX - The smallest X.
+ * @param minY - The smallest Y.
+ * @param minZ - The smallest Z.
+ * @param maxX - The largest X.
+ * @param maxY - The largest Y.
+ * @param maxZ - The largest Z.
+ *
+ * @internal
+ */
+export function setMeshBounds(
+  mesh: Mesh,
+  minX: number,
+  minY: number,
+  minZ: number,
+  maxX: number,
+  maxY: number,
+  maxZ: number,
+): void {
+  const boundMin = mesh.boundMin;
+  if (boundMin === undefined) {
+    mesh.boundMin = [minX, minY, minZ];
+  } else {
+    boundMin[0] = minX;
+    boundMin[1] = minY;
+    boundMin[2] = minZ;
+  }
+  const boundMax = mesh.boundMax;
+  if (boundMax === undefined) {
+    mesh.boundMax = [maxX, maxY, maxZ];
+  } else {
+    boundMax[0] = maxX;
+    boundMax[1] = maxY;
+    boundMax[2] = maxZ;
+  }
+}
+
+/**
+ * Gives a cloned mesh bounding-box arrays of its own.
+ *
+ * @remarks
+ * `cloneMeshNode` shallow-spreads the template (`lib/scene/transform-node.js`), so a clone starts
+ * out sharing the template's `boundMin`/`boundMax` arrays and {@link setMeshBounds} — which mutates
+ * in place — would write through to the template and to every other clone. Any caller that re-bounds
+ * one clone alone has to call this first.
+ *
+ * @param mesh - The clone.
+ *
+ * @internal
+ */
+export function detachMeshBounds(mesh: Mesh): void {
+  const boundMin = mesh.boundMin;
+  if (boundMin !== undefined) {
+    mesh.boundMin = [boundMin[0], boundMin[1], boundMin[2]];
+  }
+  const boundMax = mesh.boundMax;
+  if (boundMax !== undefined) {
+    mesh.boundMax = [boundMax[0], boundMax[1], boundMax[2]];
+  }
+}
+
+/**
+ * Recomputes a mesh's object-local bounding box from a position array and writes it.
+ *
+ * @remarks
+ * The partial vertex updaters leave `boundMin`/`boundMax` alone (see the module note), and every
+ * consumer that fits a shadow cascade, culls a thin instance, or measures a Havok shape reads them.
+ * One linear pass, no allocation. A position array too short to hold one vertex leaves the bounds
+ * as they were.
+ *
+ * @param mesh - The mesh to re-bound.
+ * @param positions - Three floats per vertex.
+ *
+ * @internal
+ */
+export function recomputeMeshBounds(mesh: Mesh, positions: Float32Array): void {
+  if (positions.length < 3) {
+    return;
+  }
+  let minX = Number.POSITIVE_INFINITY;
+  let minY = Number.POSITIVE_INFINITY;
+  let minZ = Number.POSITIVE_INFINITY;
+  let maxX = Number.NEGATIVE_INFINITY;
+  let maxY = Number.NEGATIVE_INFINITY;
+  let maxZ = Number.NEGATIVE_INFINITY;
+  for (let index = 0; index + 2 < positions.length; index += 3) {
+    const x = positions[index] ?? 0;
+    const y = positions[index + 1] ?? 0;
+    const z = positions[index + 2] ?? 0;
+    minX = x < minX ? x : minX;
+    minY = y < minY ? y : minY;
+    minZ = z < minZ ? z : minZ;
+    maxX = x > maxX ? x : maxX;
+    maxY = y > maxY ? y : maxY;
+    maxZ = z > maxZ ? z : maxZ;
+  }
+  setMeshBounds(mesh, minX, minY, minZ, maxX, maxY, maxZ);
 }
 
 /**
@@ -320,7 +554,7 @@ export function setMeshRenderOrder(mesh: Mesh, renderOrder: number): void {
  *
  * @remarks
  * `pickable === false` removes the mesh from both the GPU picker's candidate list and the CPU ray
- * test, so it neither occludes nor returns a hit (`index.d.ts` 7156, `lib/picking/ray-pick.js`).
+ * test, so it neither occludes nor returns a hit (`index.d.ts` 7214, `lib/picking/ray-pick.js`).
  *
  * @param mesh - The mesh to change.
  * @param pickable - `true` to allow picking.

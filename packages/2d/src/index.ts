@@ -126,6 +126,7 @@ export {
 // service — `app.twoD`, the layer pool, the sorting-layer table, and the sync system.
 export { spriteLayerKey, SpriteLayerRegistry, type SpriteLayerEntry } from "./service/layer-registry.js";
 export { DEFAULT_SORTING_LAYER, SORTING_LAYER_ORDER_STEP, SortingLayerTable } from "./service/sorting-layers.js";
+export type { SpriteBatch, SpriteBatchLiteHandles, SpriteBatchOptions } from "./service/sprite-batch.js";
 export { selectCamera, TWO_D_SYNC_ORDER, TwoDSyncSystem } from "./service/sync-system.js";
 export {
   TwoDService,

@@ -3,7 +3,6 @@ import {
   createDefaultMaterial,
   createPbrMaterialFromProps,
   createStandardMaterialFromProps,
-  createWgslMaterial,
   enableMaterialChangeTracking,
   isBlendedAlphaMode,
   markMaterialDirty,
@@ -26,12 +25,6 @@ import type { Texture2D } from "@babylonjs/lite";
 function fakeTexture(): Texture2D {
   return { width: 1, height: 1 } as unknown as Texture2D;
 }
-
-/** The smallest WGSL pair Lite's `createShaderMaterial` validator accepts. */
-const TRIVIAL_WGSL = {
-  vertexSource: "@vertex fn main() -> @builtin(position) vec4<f32> { return vec4<f32>(0.0); }",
-  fragmentSource: "@fragment fn main() -> @location(0) vec4<f32> { return vec4<f32>(1.0); }",
-};
 
 describe("PBR materials", () => {
   it("renames ignifx props onto Lite's glTF-shaped fields", () => {
@@ -176,18 +169,6 @@ describe("standard materials", () => {
     expect(material.alphaCutOff).toBe(0.25);
     expect(material.backFaceCulling).toBe(false);
     expect(material.disableLighting).toBe(true);
-  });
-});
-
-describe("WGSL materials", () => {
-  it("keeps the declared sources and attributes", () => {
-    const material = createWgslMaterial({ ...TRIVIAL_WGSL, attributes: ["position"] });
-    expect(material.attributes).toEqual(["position"]);
-    expect(material.needAlphaBlending).toBe(false);
-  });
-
-  it("rejects a declaration without a position attribute, eagerly", () => {
-    expect(() => createWgslMaterial({ ...TRIVIAL_WGSL, attributes: ["normal"] })).toThrow();
   });
 });
 

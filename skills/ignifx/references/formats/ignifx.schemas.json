@@ -1183,6 +1183,59 @@
         }
       }
     },
+    "ignifx/InstancedMeshRenderer": {
+      "title": "InstancedMeshRenderer",
+      "format": "components",
+      "description": "Draws one mesh many times from a caller-owned matrix slab, in a single draw call, with optional GPU culling and a coarser mesh for far instances.",
+      "package": "packages/core",
+      "fields": {
+        "mesh": {
+          "kind": "asset",
+          "default": "null",
+          "description": "The geometry template every instance draws."
+        },
+        "materials": {
+          "kind": "array",
+          "default": "[]",
+          "description": "Index 0 draws; empty uses the default material."
+        },
+        "capacity": {
+          "kind": "u32",
+          "default": "1024",
+          "description": "The largest instance count; fixed once the scene is registered."
+        },
+        "gpuCulling": {
+          "kind": "bool",
+          "default": "true",
+          "description": "Cull instances on the GPU; fixed once the scene is registered."
+        },
+        "castShadows": {
+          "kind": "bool",
+          "default": "true",
+          "description": "Whether the instances are rendered into shadow maps."
+        },
+        "receiveShadows": {
+          "kind": "bool",
+          "default": "true",
+          "description": "Whether shadow maps darken the instances."
+        },
+        "renderOrder": {
+          "kind": "i32",
+          "default": "0",
+          "description": "Sort key within the opaque or transparent phase; lower draws first."
+        },
+        "pickable": {
+          "kind": "bool",
+          "default": "false",
+          "description": "Whether picking considers the instances; a hit names no instance index."
+        },
+        "lod": {
+          "kind": "optional",
+          "default": "null",
+          "description": "An optional coarse mesh for far instances; needs gpuCulling."
+        }
+      }
+    },
     "ignifx/Light": {
       "title": "Light",
       "format": "components",
@@ -1262,7 +1315,7 @@
     "ignifx/material-file": {
       "title": "Material file",
       "format": "ignifx.material",
-      "description": "A PBR or Standard material: colours in sRGB, factors unitless, textures as { \"$asset\": … } references.",
+      "description": "A PBR, Standard, or shader material: colours in sRGB, factors unitless, textures as { \"$asset\": … } references. A shader material names a .wgsl and the values, textures, and defines it sets on it.",
       "package": "packages/core",
       "fields": {
         "format": {
@@ -1278,7 +1331,7 @@
         "type": {
           "kind": "enum",
           "default": "\"pbr\"",
-          "description": "The material family: pbr, standard, shader. \"shader\" is declared but not implemented; it is rejected with IGX-0708."
+          "description": "The material family: pbr, standard, shader. An unknown value is rejected with IGX-0708."
         },
         "name": {
           "kind": "str",
@@ -1385,6 +1438,11 @@
           "default": "null",
           "description": "PBR: a separate occlusion map."
         },
+        "surfaces": {
+          "kind": "array",
+          "default": "[]",
+          "description": "PBR: the .surface.wgsl files layered onto the material, each an address or { shader, name?, values?, textures?, enabled?, priority? }. Needs rendering.features.materialPlugins (IGX-0716); a standard material cannot host one (IGX-0723)."
+        },
         "diffuseTexture": {
           "kind": "asset",
           "default": "null",
@@ -1399,6 +1457,26 @@
           "kind": "asset",
           "default": "null",
           "description": "Standard: the opacity map."
+        },
+        "shader": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": "Shader: the address of the .wgsl whose // @ignifx pragmas declare the layout."
+        },
+        "values": {
+          "kind": "map",
+          "default": "{}",
+          "description": "Shader: overrides of the file's declared uniform defaults, by uniform name; a number or an array of numbers, sRGB for a colour uniform. An undeclared name is IGX-0712 and a wrong shape is IGX-0713."
+        },
+        "textures": {
+          "kind": "map",
+          "default": "{}",
+          "description": "Shader: texture addresses by declared sampler name. An unbound sampler falls back to the declaration's 1x1 default."
+        },
+        "defines": {
+          "kind": "map",
+          "default": "{}",
+          "description": "Shader: overrides of the file's declared define values, by name; a boolean or a number. An undeclared name is IGX-0712."
         }
       }
     },
@@ -1806,6 +1884,138 @@
         }
       }
     },
+    "ignifx/particles-file": {
+      "title": "Particles",
+      "format": "ignifx.particles",
+      "description": "A stateless GPU particle effect: capacity and timing, emission rates and bursts, an emitter shape, start values, forces, over-lifetime curves, and the renderer.",
+      "package": "packages/particles",
+      "fields": {
+        "format": {
+          "kind": "str",
+          "default": "\"ignifx.particles\"",
+          "description": "Always ignifx.particles."
+        },
+        "formatVersion": {
+          "kind": "u32",
+          "default": "1",
+          "description": "The document version this build reads."
+        },
+        "main": {
+          "kind": "record",
+          "default": "{\"capacity\":1000,\"duration\":5,\"looping\":true,\"prewarm\":false,\"startDelay\":0,\"simulationSpace\":\"local\",\"seed\":0,\"playOnAwake\":true,\"timeScale\":1,\"renderOrder\":0}",
+          "description": "Capacity, timing, space, and playback."
+        },
+        "emission": {
+          "kind": "record",
+          "default": "{\"rateOverTime\":10,\"rateOverDistance\":0,\"bursts\":[]}",
+          "description": "Rates and bursts."
+        },
+        "shape": {
+          "kind": "record",
+          "default": "{\"kind\":\"cone\",\"radius\":0.2,\"thickness\":1,\"arc\":360,\"angle\":25,\"length\":1,\"size\":[1,1,1],\"emitFrom\":\"volume\",\"randomDirection\":0,\"spherizeDirection\":0,\"vertices\":[]}",
+          "description": "Where particles start and which way they go."
+        },
+        "start": {
+          "kind": "record",
+          "default": "{\"lifetime\":2,\"speed\":2,\"size\":0.2,\"size3D\":[1,1,1],\"rotation\":0,\"color\":[1,1,1,1]}",
+          "description": "What a particle is born with."
+        },
+        "forces": {
+          "kind": "record",
+          "default": "{\"gravity\":[0,0,0],\"gravityMultiplier\":0,\"drag\":0,\"constantForce\":[0,0,0],\"orbit\":{\"axis\":[0,1,0],\"speed\":90},\"noise\":{\"strength\":0.5,\"frequency\":1,\"scroll\":[0,0,0],\"octaves\":1,\"influenceOverLife\":1}}",
+          "description": "What acts on a particle."
+        },
+        "overLifetime": {
+          "kind": "record",
+          "default": "{\"color\":[1,1,1,1],\"size\":1,\"sizeY\":1,\"sizeZ\":1,\"rotation\":0}",
+          "description": "How a particle changes over its life."
+        },
+        "renderer": {
+          "kind": "record",
+          "default": "{\"mode\":\"billboard\",\"mesh\":\"box\",\"texture\":\"\",\"sheet\":{\"tiles\":[1,1],\"frameOverTime\":0},\"blend\":\"premultiplied\",\"lit\":false,\"pivot\":[0,0],\"speedScale\":0,\"lengthScale\":1}",
+          "description": "How a particle is drawn."
+        }
+      }
+    },
+    "ignifx/particles-settings": {
+      "title": "Particles settings",
+      "format": "components",
+      "description": "The particles project settings section.",
+      "package": "packages/particles",
+      "fields": {
+        "maxParticles": {
+          "kind": "u32",
+          "default": "100000",
+          "description": "The particle budget every ParticleSystem capacity is counted against."
+        },
+        "qualityScale": {
+          "kind": "f32",
+          "default": "1",
+          "description": "A 0-1 multiplier on emission rates and burst counts."
+        },
+        "gravity": {
+          "kind": "vec3",
+          "default": "[0,-9.81,0]",
+          "description": "The world gravity a gravityMultiplier scales, in m/s^2."
+        }
+      }
+    },
+    "ignifx/ParticleSystem": {
+      "title": "Particle system",
+      "format": "components",
+      "description": "",
+      "package": "packages/particles",
+      "fields": {
+        "definition": {
+          "kind": "asset",
+          "default": "null",
+          "description": "The .particles.json this system plays."
+        },
+        "playOnAwake": {
+          "kind": "bool",
+          "default": "true",
+          "description": "Play the first frame the system is enabled, if the definition agrees."
+        },
+        "seed": {
+          "kind": "u32",
+          "default": "0",
+          "description": "The emission seed; 0 uses the definition's, and 0 there picks at random."
+        }
+      }
+    },
+    "ignifx/ParticleSystem2D": {
+      "title": "ParticleSystem2D",
+      "format": "components",
+      "description": "Draws a .particles.json effect as sprites on a sorting layer.",
+      "package": "packages/particles-2d",
+      "fields": {
+        "definition": {
+          "kind": "asset",
+          "default": "null",
+          "description": "The .particles.json this system plays."
+        },
+        "atlas": {
+          "kind": "asset",
+          "default": "null",
+          "description": "The atlas whose frames the particles draw."
+        },
+        "playOnAwake": {
+          "kind": "bool",
+          "default": "true",
+          "description": "Play the first frame the system is enabled, if the definition agrees."
+        },
+        "seed": {
+          "kind": "u32",
+          "default": "0",
+          "description": "The emission seed; 0 uses the definition's, and 0 there picks at random."
+        },
+        "sortingLayer": {
+          "kind": "str",
+          "default": "\"Default\"",
+          "description": "Which sorting layer the particles draw on."
+        }
+      }
+    },
     "ignifx/physicsmaterial-file": {
       "title": "Physics material file",
       "format": "ignifx.physicsmaterial",
@@ -1951,7 +2161,7 @@
     "ignifx/PostProcessStack": {
       "title": "PostProcessStack",
       "format": "components",
-      "description": "Bloom, SMAA, and image processing, inserted into the scene's frame graph.",
+      "description": "Bloom, SMAA, image processing, and custom .post.wgsl effects, inserted into the scene's frame graph.",
       "package": "packages/core",
       "fields": {
         "bloom": {
@@ -1968,6 +2178,11 @@
           "kind": "record",
           "default": "{\"enabled\":false,\"order\":2}",
           "description": "Exposure, contrast, and tone mapping as a pass — the alternative to Environment."
+        },
+        "custom": {
+          "kind": "array",
+          "default": "[]",
+          "description": "Custom full-screen WGSL effects, ordered among the built-ins by order."
         }
       }
     },
@@ -2386,6 +2601,180 @@
           "kind": "bool",
           "default": "true",
           "description": "Whether app.twoD.pickAt considers this sprite."
+        }
+      }
+    },
+    "ignifx/Terrain": {
+      "title": "Terrain",
+      "format": "components",
+      "description": "",
+      "package": "packages/terrain",
+      "fields": {
+        "definition": {
+          "kind": "asset",
+          "default": "null",
+          "description": "The .terrain.json this terrain draws."
+        },
+        "lodBias": {
+          "kind": "f32",
+          "default": "1",
+          "description": "Multiplies every LOD threshold; above 1 keeps detail further out."
+        },
+        "receiveShadows": {
+          "kind": "bool",
+          "default": "true",
+          "description": "Whether shadow maps darken the terrain."
+        },
+        "frustumCulling": {
+          "kind": "bool",
+          "default": "true",
+          "description": "Whether chunks outside the camera's frustum are hidden."
+        }
+      }
+    },
+    "ignifx/terrain-file": {
+      "title": "Terrain",
+      "format": "ignifx.terrain",
+      "description": "A terrain: size, resolution, a heightmap or seeded noise, chunking, layers, and the splat.",
+      "package": "packages/terrain",
+      "fields": {
+        "format": {
+          "kind": "str",
+          "default": "\"ignifx.terrain\"",
+          "description": "Always ignifx.terrain."
+        },
+        "formatVersion": {
+          "kind": "u32",
+          "default": "1",
+          "description": "The document version this build reads."
+        },
+        "name": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": "A human-readable name; the file's basename when empty."
+        },
+        "size": {
+          "kind": "record",
+          "default": "{\"width\":512,\"depth\":512,\"height\":80}",
+          "description": "The terrain's extent, in metres."
+        },
+        "resolution": {
+          "kind": "u32",
+          "default": "513",
+          "description": "Samples per side; 2^n + 1."
+        },
+        "heightmap": {
+          "kind": "record",
+          "default": "{\"source\":\"\"}",
+          "description": "Where the heights come from; omit it for noise."
+        },
+        "noise": {
+          "kind": "record",
+          "default": "{\"seed\":1,\"octaves\":6,\"frequency\":0.004,\"lacunarity\":2,\"persistence\":0.5,\"ridged\":false,\"terraces\":0}",
+          "description": "The seeded fractal noise used when there is no heightmap."
+        },
+        "chunks": {
+          "kind": "record",
+          "default": "{\"size\":64,\"lodLevels\":4,\"lodDistance\":96,\"skirtDepth\":2}",
+          "description": "How the field is cut into chunks."
+        },
+        "layers": {
+          "kind": "array",
+          "default": "[]",
+          "description": "The layers, 1 to 8, in control-channel order."
+        },
+        "splat": {
+          "kind": "record",
+          "default": "{\"control\":[]}",
+          "description": "Painted splat weights; omit it to generate them from rules."
+        },
+        "splatRules": {
+          "kind": "array",
+          "default": "[]",
+          "description": "Rules that generate the splat weights."
+        },
+        "material": {
+          "kind": "record",
+          "default": "{\"roughness\":0.9,\"metallic\":0}",
+          "description": "The PBR factors every layer shares; per-layer roughness is not available."
+        }
+      }
+    },
+    "ignifx/TerrainScatter": {
+      "title": "Terrain scatter",
+      "format": "components",
+      "description": "",
+      "package": "packages/terrain",
+      "fields": {
+        "mesh": {
+          "kind": "asset",
+          "default": "null",
+          "description": "The mesh every instance draws."
+        },
+        "material": {
+          "kind": "asset",
+          "default": "null",
+          "description": "The material, normally from foliageMaterialDefinition."
+        },
+        "lodMesh": {
+          "kind": "asset",
+          "default": "null",
+          "description": "A cheaper mesh drawn past lodDistance; null for none."
+        },
+        "lodDistance": {
+          "kind": "f32",
+          "default": "40",
+          "description": "Metres past which the LOD mesh takes over."
+        },
+        "density": {
+          "kind": "f32",
+          "default": "0.5",
+          "description": "Instances per square metre."
+        },
+        "layers": {
+          "kind": "array",
+          "default": "[]",
+          "description": "Splat layers to place on; empty places everywhere."
+        },
+        "layerThreshold": {
+          "kind": "f32",
+          "default": "0.5",
+          "description": "The splat weight a named layer must reach."
+        },
+        "slope": {
+          "kind": "vec2",
+          "default": "[0,35]",
+          "description": "The slope band, in degrees."
+        },
+        "height": {
+          "kind": "vec2",
+          "default": "[-1000000000,1000000000]",
+          "description": "The height band, in metres."
+        },
+        "scale": {
+          "kind": "vec2",
+          "default": "[0.8,1.2]",
+          "description": "The random uniform scale range."
+        },
+        "randomYaw": {
+          "kind": "bool",
+          "default": "true",
+          "description": "Whether each instance is turned randomly about Y."
+        },
+        "alignToNormal": {
+          "kind": "bool",
+          "default": "false",
+          "description": "Whether each instance stands along the surface normal."
+        },
+        "seed": {
+          "kind": "u32",
+          "default": "1",
+          "description": "The placement seed; the same seed places the same instances."
+        },
+        "maxInstances": {
+          "kind": "u32",
+          "default": "50000",
+          "description": "The cap, which also sizes the GPU instance buffer."
         }
       }
     },

@@ -2,8 +2,10 @@ import { Vec2 } from "@ignifx/core";
 import { twoDError, TwoDErrorCode } from "../errors.js";
 import { pickSprite, screenToLayer, visibleBounds } from "../lite/sprite-layer.js";
 import { pixelsToWorldToRef } from "../math/coords.js";
+import { createSpriteBatch } from "./sprite-batch.js";
 import type { SpriteLayerEntry } from "./layer-registry.js";
 import type { TwoDLiteHandles, TwoDRuntime } from "./runtime.js";
+import type { SpriteBatch, SpriteBatchOptions } from "./sprite-batch.js";
 import type { Camera2D } from "../camera/camera-2d.js";
 import type { LiteBounds2D, LiteSprite2DLayer } from "../lite/types.js";
 import type { TwoDMode, TwoDSettings } from "../settings.js";
@@ -240,6 +242,37 @@ export class TwoDService {
       }
     }
     return null;
+  }
+
+  /**
+   * Claims a fixed-capacity crowd of sprites that no entity owns
+   * (`docs/plan/2026-09-terrain-particles-shaders.md` §2.2).
+   *
+   * @remarks
+   * Use it when the sprites are not *things* — bullets, sparks, debris, 2D particles — and the
+   * per-entity cost of a `SpriteRenderer` would dominate. The batch is not picked and does not sort
+   * its own slots; see {@link SpriteBatch}. Dispose it when the crowd is gone, or take it with
+   * `using`.
+   *
+   * @param options - The atlas, the capacity, the sorting layer, the blend, and the space.
+   * @returns The batch.
+   * @throws IgnifxError with code `IGX-1114` for a capacity that is not a whole number of at least
+   * 1, `IGX-1117` for an atlas handle that has not finished loading, or `IGX-1107` for a sorting
+   * layer the project does not declare.
+   *
+   * @example
+   * ```ts
+   * const atlas = app.assets.load<SpriteAtlasAsset>("2d/spark.atlas.json");
+   * await atlas.promise;
+   * const batch = app.twoD.createSpriteBatch({ atlas, capacity: 2048, blend: "additive" });
+   * batch.count = 1;
+   * batch.write(0, 0, 0, 0.2, 0.2, 0, 0, 1, 0.8, 0.3, 1);
+   * ```
+   *
+   * @beta
+   */
+  createSpriteBatch(options: SpriteBatchOptions): SpriteBatch {
+    return createSpriteBatch(this.#runtime, options);
   }
 
   /**

@@ -1,0 +1,120 @@
+/**
+ * Write a custom shader
+ *
+ * A `.wgsl` file whose `// @ignifx` pragma comments **are** its declaration is a material family of
+ * your own: the pragmas say which attributes the vertex stage reads, which engine uniforms it wants,
+ * and which uniforms, textures and defines a material may set. The file stays valid WGSL, and the
+ * declaration is what `setUniform` checks against and what the devtools inspector renders.
+ *
+ * ```wgsl
+ * // shaders/dissolve.wgsl
+ * // @ignifx shader
+ * // @ignifx attributes position, uv
+ * // @ignifx system worldViewProjection, time
+ * // @ignifx uniform progress: f32 = 0 range(0, 1)
+ * // @ignifx uniform edgeColor: vec3<f32> = color(1.0, 0.45, 0.1)
+ * // @ignifx uniform baseColor: vec3<f32> = color(0.2, 0.2, 0.25)
+ * // @ignifx texture noiseTexture default white
+ * // @ignifx blend opaque cull back
+ *
+ * struct VertexOutput {
+ *   @builtin(position) position: vec4<f32>,
+ *   @location(0) uv: vec2<f32>,
+ * }
+ *
+ * @vertex fn mainVertex(input: VertexInput) -> VertexOutput {
+ *   var out: VertexOutput;
+ *   out.position = shaderSystem.worldViewProjection * vec4<f32>(input.position, 1.0);
+ *   out.uv = input.uv;
+ *   return out;
+ * }
+ *
+ * @fragment fn mainFragment(input: VertexOutput) -> @location(0) vec4<f32> {
+ *   let noise = textureSample(noiseTexture, noiseTextureSampler, input.uv * 4.0).r;
+ *   if (noise < shaderUniforms.progress) { discard; }
+ *   let edge = 1.0 - smoothstep(shaderUniforms.progress, shaderUniforms.progress + 0.08, noise);
+ *   let wobble = 0.05 * sin(shaderUniforms.time * 3.0);
+ *   let base = shaderUniforms.baseColor + vec3<f32>(wobble);
+ *   return vec4<f32>(mix(base, shaderUniforms.edgeColor, edge), 1.0);
+ * }
+ * ```
+ *
+ * `VertexInput`, `shaderSystem`, `mainVertex` and `mainFragment` are Babylon Lite's names; ignifx
+ * adds `shaderUniforms`, `<name>`/`<name>Sampler` per texture, and the clock. Babylon Lite's own
+ * uniforms are read from `shaderSystem`, everything else — your uniforms **and** `time` — from
+ * `shaderUniforms`, even though one `// @ignifx system` line declares both.
+ *
+ * A shader material is unlit: it owns every pixel it draws and receives no shadows and no
+ * image-based lighting. For a lit look, hook into PBR instead — see
+ * [`add-a-surface-shader`](add-a-surface-shader.md). The contract, the pragma table and the WGSL
+ * traps are in [`../concepts/rendering.md`](../concepts/rendering.md) and
+ * [`../formats/wgsl.md`](../formats/wgsl.md).
+ */
+import {
+  Camera,
+  MeshAsset,
+  MeshRenderer,
+  Script,
+  createApp,
+  createMaterialAsset,
+  f32,
+  shaderMaterialDefinition,
+} from "@ignifx/core";
+import type { AssetHandle, MaterialAsset, ScriptCallbacks, ShaderAsset, TextureAsset } from "@ignifx/core";
+
+/** Drives the shader's `progress` uniform, which is what eats the mesh away. */
+class Dissolve extends Script.define({ speed: f32(0.3) }) implements ScriptCallbacks {
+  static typeId = "recipes/Dissolve";
+
+  /** The material to write; a plain field, because an in-code material has no file address. */
+  material: AssetHandle<MaterialAsset> | null = null;
+
+  #progress = 0;
+
+  update(dt: number): void {
+    const material = this.material;
+    if (material === null) {
+      return;
+    }
+    this.#progress = Math.min(1, this.#progress + this.speed * dt);
+    // Checked against the declaration: an unknown name is IGX-0712, a wrong shape IGX-0713.
+    material.value.setUniform("progress", this.#progress);
+  }
+}
+
+const canvas = document.querySelector("canvas");
+if (!(canvas instanceof HTMLCanvasElement)) {
+  throw new Error("ignifx renders into a <canvas> element.");
+}
+
+const app = await createApp({ canvas, settings: { assets: { root: "assets" } } });
+app.registerComponents([Dissolve]);
+
+// Both are ordinary assets: `.wgsl` loads as a `ShaderAsset`, and the shader's declaration names
+// the sampler the texture binds to. Awaited before `start()`, so they settle without a frame.
+const shader = await app.assets.loadAsync<ShaderAsset>("shaders/dissolve.wgsl");
+const noise = await app.assets.loadAsync<TextureAsset>("textures/noise.png");
+
+const material = createMaterialAsset(
+  app,
+  shaderMaterialDefinition({
+    name: "dissolve",
+    shader,
+    values: { progress: 0, edgeColor: [1, 0.6, 0.2] },
+    textures: { noiseTexture: noise },
+  }),
+  [noise],
+);
+// A shader material is its own family: warm it, or the first mesh drawn with it appears late.
+app.renderer.warmUp([material.value]);
+
+const eye = app.world.createEntity("Main Camera");
+eye.transform.localPosition.set(0, 1.2, -3);
+eye.transform.lookAt({ x: 0, y: 0, z: 0 });
+eye.addComponent(Camera, { fov: 55 });
+
+const statue = app.world.createEntity("Statue");
+statue.addComponent(MeshRenderer, { mesh: MeshAsset.sphere(app, { diameter: 1.4 }), materials: [material] });
+statue.addComponent(Dissolve, { speed: 0.25 }).material = material;
+
+await app.start();

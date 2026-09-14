@@ -1,18 +1,25 @@
+import { CoreErrorCode } from "../errors/error-codes.js";
+import { IgnifxError } from "../errors/ignifx-error.js";
+import { createMeshFromGeometry } from "../lite/gpu/mesh.js";
 import {
-  createBoxMesh,
-  createCapsuleMesh,
-  createCylinderMesh,
-  createGroundMesh,
-  createMeshFromGeometry,
-  createPlaneMesh,
-  createSphereMesh,
-  createTorusMesh,
-  disposeMeshTemplate,
-} from "../lite/gpu/mesh.js";
+  buildBoxTemplate,
+  buildCapsuleTemplate,
+  buildCylinderTemplate,
+  buildGroundTemplate,
+  buildMeshTemplate,
+  buildPlaneTemplate,
+  buildSphereTemplate,
+  buildTorusTemplate,
+  releaseMeshTemplate,
+  uploadMeshColors,
+  uploadMeshNormals,
+  uploadMeshPositions,
+  uploadMeshUvs,
+} from "./gpu/mesh-template.js";
 import type { App } from "../app/types.js";
 import type { AssetHandle } from "../assets/types.js";
 import type { LiteMesh } from "../lite/gpu/mesh.js";
-import type { LiteScene } from "../lite/scene.js";
+import type { LiteEngine, LiteScene } from "../lite/scene.js";
 
 /**
  * Mesh templates share geometry with renderer clones (ADR-0002).
@@ -27,6 +34,18 @@ import type { LiteScene } from "../lite/scene.js";
  * @public
  */
 export const MESH_ASSET_TYPE = "mesh";
+
+/** Floats per vertex in the position attribute. */
+const FLOATS_PER_POSITION = 3;
+
+/** Floats per vertex in the normal attribute. */
+const FLOATS_PER_NORMAL = 3;
+
+/** Floats per vertex in a UV attribute. */
+const FLOATS_PER_UV = 2;
+
+/** Floats per vertex in the colour attribute — Lite's colour attribute is `vec4`. */
+const FLOATS_PER_COLOR = 4;
 
 /**
  * How {@link MeshAsset.box} sizes its box, in metres. Give `size` for a cube, or the three
@@ -143,7 +162,10 @@ export interface TorusMeshOptions {
  *
  * @remarks
  * Lite keeps references to these arrays rather than copying them — they are what its CPU ray pick
- * and its bounds read (`lib/mesh/mesh-factories.js`) — so a caller must not mutate them afterwards.
+ * and its bounds read (`lib/mesh/mesh-factories.js`). Mutating one behind Lite's back changes what
+ * a pick reports without changing what the GPU draws; the sanctioned way to change geometry after
+ * the fact is {@link MeshAsset.updatePositions} and its three siblings, which re-upload, keep this
+ * copy in step, and re-fit the bounds.
  *
  * @public
  */
@@ -156,6 +178,18 @@ export interface MeshGeometryData {
   readonly indices: Uint32Array;
   /** Two floats per vertex, or omitted for a mesh with no texture coordinates. */
   readonly uvs?: Float32Array;
+  /**
+   * Two floats per vertex for the second UV set (`uv2` in a shader), or omitted. Lightmaps, baked
+   * ambient occlusion, and the parent-LOD height a terrain morph reads all ride here.
+   */
+  readonly uvs2?: Float32Array;
+  /** Four floats per vertex — `xyz` plus a handedness `w` — or omitted. A normal map needs them. */
+  readonly tangents?: Float32Array;
+  /**
+   * Four floats per vertex, linear RGBA, or omitted. A material has to be one that reads the colour
+   * attribute; set `hasVertexAlpha` on the Lite mesh if the alpha is meant to blend.
+   */
+  readonly colors?: Float32Array;
 }
 
 /**
@@ -195,6 +229,10 @@ export class MeshAsset {
 
   readonly #scene: LiteScene | null;
 
+  readonly #geometry: MeshGeometryData | null;
+
+  readonly #engine: LiteEngine | null;
+
   #mesh: LiteMesh | null;
 
   #isDisposed = false;
@@ -206,13 +244,25 @@ export class MeshAsset {
    * @param mesh - The template, or `null` when the app is headless.
    * @param scene - The scene the template is released through, or `null` when there is nothing to
    * release.
+   * @param geometry - The vertex arrays the asset was built from, when it came from
+   * {@link MeshAsset.fromData}; `null` for a primitive, whose arrays Lite generated and never
+   * handed back. It is what makes the `update*` methods legal.
+   * @param engine - The engine an update writes through, or `null` under a headless app.
    *
    * @internal
    */
-  constructor(name: string, mesh: LiteMesh | null, scene: LiteScene | null) {
+  constructor(
+    name: string,
+    mesh: LiteMesh | null,
+    scene: LiteScene | null,
+    geometry: MeshGeometryData | null = null,
+    engine: LiteEngine | null = null,
+  ) {
     this.name = name;
     this.#mesh = mesh;
     this.#scene = scene;
+    this.#geometry = geometry;
+    this.#engine = engine;
   }
 
   /**
@@ -235,6 +285,197 @@ export class MeshAsset {
   }
 
   /**
+   * How many vertices the geometry has.
+   *
+   * @remarks
+   * Known for a mesh built with {@link MeshAsset.fromData} — headless included — and `0` for a
+   * primitive: Lite generates a primitive's arrays internally and 1.27.0's `Mesh` exposes no vertex
+   * count, only the opaque `MeshGPU` handle it says a user never touches (`index.d.ts` 7230).
+   *
+   * @returns The vertex count, or `0`.
+   */
+  get vertexCount(): number {
+    const geometry = this.#geometry;
+    return geometry === null ? 0 : geometry.positions.length / FLOATS_PER_POSITION;
+  }
+
+  /**
+   * How many indices the geometry has — three per triangle.
+   *
+   * @returns The index count, or `0`; see {@link MeshAsset.vertexCount}.
+   */
+  get indexCount(): number {
+    return this.#geometry?.indices.length ?? 0;
+  }
+
+  /**
+   * Re-uploads vertex positions and re-fits the bounds.
+   *
+   * @remarks
+   * Only a mesh from {@link MeshAsset.fromData} can be updated, and only while nothing has cloned it:
+   * Lite refuses to write a vertex buffer with more than one owner, and a `MeshRenderer` clone is a
+   * second owner.
+   *
+   * Lite's `updateMeshPositions` writes the GPU buffer and stops there, so this also copies the range
+   * into the asset's own position array — the one Lite retained and CPU picking reads — and rewrites
+   * the bounds from the whole of it, `O(vertexCount)` per call. Passing the asset's own array skips
+   * the copy.
+   *
+   * @param data - Three floats per vertex, read from index 0.
+   * @param vertexOffset - The first vertex to overwrite. Defaults to `0`.
+   * @param vertexCount - How many vertices to write. Defaults to as many as `data` holds.
+   * @throws IgnifxError with code `IGX-0702` when the mesh did not come from
+   * {@link MeshAsset.fromData}, or has been disposed.
+   * @throws IgnifxError with code `IGX-0725` when the range falls outside the mesh or `data` is too
+   * short for it.
+   *
+   * @example
+   * ```ts
+   * const grid = MeshAsset.fromData(app, "grid", { positions, normals, indices });
+   * positions[1] += 0.5;
+   * grid.value.updatePositions(positions);
+   * ```
+   */
+  updatePositions(data: Float32Array, vertexOffset = 0, vertexCount?: number): void {
+    const geometry = this.#requireGeometry("updatePositions");
+    const count = this.#resolveRange("updatePositions", data, FLOATS_PER_POSITION, vertexOffset, vertexCount);
+    copyRange(data, geometry.positions, FLOATS_PER_POSITION, vertexOffset, count);
+    uploadMeshPositions(this.#engine, this.#mesh, data, vertexOffset, count, geometry.positions);
+  }
+
+  /**
+   * Re-uploads vertex normals.
+   *
+   * @remarks
+   * The same rules as {@link MeshAsset.updatePositions}, minus the bounds: a normal cannot move a
+   * bounding box. The range is copied into the asset's own normal array so that a later
+   * `updatePositions` sees a consistent mesh.
+   *
+   * @param data - Three floats per vertex.
+   * @param vertexOffset - The first vertex to overwrite. Defaults to `0`.
+   * @param vertexCount - How many vertices to write. Defaults to as many as `data` holds.
+   * @throws IgnifxError with code `IGX-0702` or `IGX-0725`; see
+   * {@link MeshAsset.updatePositions}.
+   */
+  updateNormals(data: Float32Array, vertexOffset = 0, vertexCount?: number): void {
+    const geometry = this.#requireGeometry("updateNormals");
+    const count = this.#resolveRange("updateNormals", data, FLOATS_PER_NORMAL, vertexOffset, vertexCount);
+    copyRange(data, geometry.normals, FLOATS_PER_NORMAL, vertexOffset, count);
+    uploadMeshNormals(this.#engine, this.#mesh, data, vertexOffset, count);
+  }
+
+  /**
+   * Re-uploads texture coordinates.
+   *
+   * @remarks
+   * Lite makes the upload a **no-op** when the mesh was created without UVs, rather than an error,
+   * so a mesh whose `MeshGeometryData` named none silently ignores this. The range check still runs.
+   *
+   * @param data - Two floats per vertex.
+   * @param vertexOffset - The first vertex to overwrite. Defaults to `0`.
+   * @param vertexCount - How many vertices to write. Defaults to as many as `data` holds.
+   * @throws IgnifxError with code `IGX-0702` or `IGX-0725`; see
+   * {@link MeshAsset.updatePositions}.
+   */
+  updateUvs(data: Float32Array, vertexOffset = 0, vertexCount?: number): void {
+    const geometry = this.#requireGeometry("updateUvs");
+    const count = this.#resolveRange("updateUvs", data, FLOATS_PER_UV, vertexOffset, vertexCount);
+    const retained = geometry.uvs;
+    if (retained !== undefined) {
+      copyRange(data, retained, FLOATS_PER_UV, vertexOffset, count);
+    }
+    uploadMeshUvs(this.#engine, this.#mesh, data, vertexOffset, count);
+  }
+
+  /**
+   * Re-uploads vertex colours.
+   *
+   * @remarks
+   * Four floats per vertex, linear RGBA. A no-op on the GPU when the mesh was created without
+   * colours, exactly as {@link MeshAsset.updateUvs} is.
+   *
+   * @param data - Four floats per vertex.
+   * @param vertexOffset - The first vertex to overwrite. Defaults to `0`.
+   * @param vertexCount - How many vertices to write. Defaults to as many as `data` holds.
+   * @throws IgnifxError with code `IGX-0702` or `IGX-0725`; see
+   * {@link MeshAsset.updatePositions}.
+   */
+  updateColors(data: Float32Array, vertexOffset = 0, vertexCount?: number): void {
+    const geometry = this.#requireGeometry("updateColors");
+    const count = this.#resolveRange("updateColors", data, FLOATS_PER_COLOR, vertexOffset, vertexCount);
+    const retained = geometry.colors;
+    if (retained !== undefined) {
+      copyRange(data, retained, FLOATS_PER_COLOR, vertexOffset, count);
+    }
+    uploadMeshColors(this.#engine, this.#mesh, data, vertexOffset, count);
+  }
+
+  /**
+   * The retained geometry, or a misuse error.
+   *
+   * @param member - The method name the error names.
+   * @returns The geometry arrays.
+   * @throws IgnifxError with code `IGX-0702` when there are none.
+   */
+  #requireGeometry(member: string): MeshGeometryData {
+    const geometry = this.#geometry;
+    if (geometry !== null && !this.#isDisposed) {
+      return geometry;
+    }
+    throw new IgnifxError(
+      CoreErrorCode.invalidRuntime,
+      `${this.name} was ${this.#isDisposed ? "disposed" : "not created by MeshAsset.fromData"}, so ` +
+        `${member}() cannot run.`,
+      {
+        context: { asset: this.name, member: `MeshAsset.${member}()` },
+        hint: "Only a mesh built with MeshAsset.fromData carries the vertex arrays an update validates against.",
+      },
+    );
+  }
+
+  /**
+   * Resolves and checks an update's vertex range.
+   *
+   * @param member - The method name the error names.
+   * @param data - The source array.
+   * @param components - Floats per vertex for this attribute.
+   * @param vertexOffset - The first destination vertex.
+   * @param vertexCount - The requested count, or `undefined` for "as many as `data` holds".
+   * @returns The resolved count.
+   * @throws IgnifxError with code `IGX-0725` when the range does not fit.
+   */
+  #resolveRange(
+    member: string,
+    data: Float32Array,
+    components: number,
+    vertexOffset: number,
+    vertexCount: number | undefined,
+  ): number {
+    const available = Math.floor(data.length / components);
+    const count = vertexCount ?? available;
+    const total = this.vertexCount;
+    const fits =
+      Number.isInteger(vertexOffset) &&
+      vertexOffset >= 0 &&
+      Number.isInteger(count) &&
+      count >= 0 &&
+      count <= available &&
+      vertexOffset + count <= total;
+    if (fits) {
+      return count;
+    }
+    throw new IgnifxError(
+      CoreErrorCode.invalidGeometryUpdate,
+      `${this.name}: an update of ${String(count)} vertices at offset ${String(vertexOffset)} does not fit the ` +
+        `${String(total)}-vertex mesh, or the source array holds only ${String(available)}.`,
+      {
+        context: { asset: this.name, member: `MeshAsset.${member}()`, offset: vertexOffset, count, total },
+        hint: "An update writes inside the geometry it was created with; rebuild the asset to change its size.",
+      },
+    );
+  }
+
+  /**
    * Releases the template's GPU buffers.
    *
    * @remarks
@@ -250,11 +491,8 @@ export class MeshAsset {
     }
     this.#isDisposed = true;
     const mesh = this.#mesh;
-    const scene = this.#scene;
     this.#mesh = null;
-    if (mesh !== null && scene !== null) {
-      disposeMeshTemplate(scene, mesh);
-    }
+    releaseMeshTemplate(this.#scene, mesh);
   }
 
   /** Releases the template when the asset leaves a `using` block. */
@@ -275,9 +513,7 @@ export class MeshAsset {
    * ```
    */
   static box(app: App, options?: BoxMeshOptions): AssetHandle<MeshAsset> {
-    return publish(app, "box", () =>
-      createBoxMesh(app.lite.engine, options === undefined ? undefined : { ...options }),
-    );
+    return publish(app, "box", (engine) => buildBoxTemplate(engine, options));
   }
 
   /**
@@ -288,9 +524,7 @@ export class MeshAsset {
    * @returns The handle, with one holder.
    */
   static sphere(app: App, options?: SphereMeshOptions): AssetHandle<MeshAsset> {
-    return publish(app, "sphere", () =>
-      createSphereMesh(app.lite.engine, options === undefined ? undefined : { ...options }),
-    );
+    return publish(app, "sphere", (engine) => buildSphereTemplate(engine, options));
   }
 
   /**
@@ -301,9 +535,7 @@ export class MeshAsset {
    * @returns The handle, with one holder.
    */
   static plane(app: App, options?: PlaneMeshOptions): AssetHandle<MeshAsset> {
-    return publish(app, "plane", () =>
-      createPlaneMesh(app.lite.engine, options === undefined ? undefined : { ...options }),
-    );
+    return publish(app, "plane", (engine) => buildPlaneTemplate(engine, options));
   }
 
   /**
@@ -315,7 +547,7 @@ export class MeshAsset {
    */
   static ground(app: App, options?: GroundMeshOptions): AssetHandle<MeshAsset> {
     const lite = toGroundOptions(options);
-    return publish(app, "ground", () => createGroundMesh(app.lite.engine, lite));
+    return publish(app, "ground", (engine) => buildGroundTemplate(engine, lite));
   }
 
   /**
@@ -326,9 +558,7 @@ export class MeshAsset {
    * @returns The handle, with one holder.
    */
   static cylinder(app: App, options?: CylinderMeshOptions): AssetHandle<MeshAsset> {
-    return publish(app, "cylinder", () =>
-      createCylinderMesh(app.lite.engine, options === undefined ? undefined : { ...options }),
-    );
+    return publish(app, "cylinder", (engine) => buildCylinderTemplate(engine, options));
   }
 
   /**
@@ -339,9 +569,7 @@ export class MeshAsset {
    * @returns The handle, with one holder.
    */
   static capsule(app: App, options?: CapsuleMeshOptions): AssetHandle<MeshAsset> {
-    return publish(app, "capsule", () =>
-      createCapsuleMesh(app.lite.engine, options === undefined ? undefined : { ...options }),
-    );
+    return publish(app, "capsule", (engine) => buildCapsuleTemplate(engine, options));
   }
 
   /**
@@ -352,9 +580,7 @@ export class MeshAsset {
    * @returns The handle, with one holder.
    */
   static torus(app: App, options?: TorusMeshOptions): AssetHandle<MeshAsset> {
-    return publish(app, "torus", () =>
-      createTorusMesh(app.lite.engine, options === undefined ? undefined : { ...options }),
-    );
+    return publish(app, "torus", (engine) => buildTorusTemplate(engine, options));
   }
 
   /**
@@ -362,8 +588,9 @@ export class MeshAsset {
    *
    * @param app - The app that owns the engine and the asset service.
    * @param name - A human-readable name.
-   * @param data - Positions, normals, indices, and optional texture coordinates. Lite keeps
-   * references to the arrays; do not mutate them afterwards.
+   * @param data - Positions, normals, indices, and any of the four optional attributes. Lite keeps
+   * references to the arrays; a caller that means to edit them afterwards does so through the
+   * `update*` methods, which keep Lite's own copy and its bounds in step.
    * @returns The handle, with one holder.
    *
    * @example
@@ -376,10 +603,57 @@ export class MeshAsset {
    * ```
    */
   static fromData(app: App, name: string, data: MeshGeometryData): AssetHandle<MeshAsset> {
-    return publish(app, name, () =>
-      createMeshFromGeometry(app.lite.engine, name, data.positions, data.normals, data.indices, data.uvs),
+    return publish(
+      app,
+      name,
+      (engine) =>
+        createMeshFromGeometry(
+          engine,
+          name,
+          data.positions,
+          data.normals,
+          data.indices,
+          data.uvs,
+          data.uvs2,
+          data.tangents,
+          data.colors,
+        ),
+      data,
     );
   }
+}
+
+/**
+ * Copies one attribute's vertex range from a source array into the array the asset retains, when
+ * they are not already the same array.
+ *
+ * @remarks
+ * An indexed loop rather than `target.set(source.subarray(...), offset)`, because `subarray`
+ * allocates a view and sculpting a terrain is not a place to allocate per call
+ * (coding standards §7).
+ *
+ * @param source - The values the caller handed in, read from index 0.
+ * @param target - The retained array.
+ * @param components - Floats per vertex for this attribute.
+ * @param vertexOffset - The first destination vertex.
+ * @param count - How many vertices to copy.
+ */
+function copyRange(
+  source: Float32Array,
+  target: Float32Array,
+  components: number,
+  vertexOffset: number,
+  count: number,
+): void {
+  const floats = count * components;
+  const base = vertexOffset * components;
+  if (source === target) {
+    // The same array, so the ranges can overlap; `copyWithin` is defined for that and is a no-op
+    // when the offset is zero, which is the ordinary "I edited it in place" case.
+    target.copyWithin(base, 0, floats);
+    return;
+  }
+  target.set(source.subarray(0, floats), base);
 }
 
 /**
@@ -418,10 +692,16 @@ function toGroundOptions(
  * @param app - The app that owns the engine and the asset service.
  * @param name - A human-readable name.
  * @param build - Creates the Lite mesh. Never called when the app is headless.
+ * @param geometry - The vertex arrays, for a mesh built from data; `null` for a primitive.
  * @returns The handle, with one holder.
  */
-function publish(app: App, name: string, build: () => LiteMesh): AssetHandle<MeshAsset> {
-  const scene = app.lite.scene;
-  const mesh = app.isHeadless ? null : build();
-  return app.assets.register(new MeshAsset(name, mesh, app.isHeadless ? null : scene), { type: MESH_ASSET_TYPE });
+function publish(
+  app: App,
+  name: string,
+  build: (engine: LiteEngine) => LiteMesh,
+  geometry: MeshGeometryData | null = null,
+): AssetHandle<MeshAsset> {
+  const handles = buildMeshTemplate(app.isHeadless, app.lite.scene, app.lite.engine, build);
+  const asset = new MeshAsset(name, handles.mesh, handles.scene, geometry, handles.engine);
+  return app.assets.register(asset, { type: MESH_ASSET_TYPE });
 }

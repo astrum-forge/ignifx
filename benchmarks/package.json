@@ -11,7 +11,9 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@ignifx/core": "workspace:*"
+    "@ignifx/core": "workspace:*",
+    "@ignifx/particles": "workspace:*",
+    "@ignifx/terrain": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",

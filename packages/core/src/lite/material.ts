@@ -1,6 +1,5 @@
 import {
   createPbrMaterial,
-  createShaderMaterial,
   createStandardMaterial,
   enableMaterialTracking,
   markMaterialUboDirty,
@@ -14,15 +13,7 @@ import {
   setStandardSpecularTexture,
 } from "@babylonjs/lite";
 import { assertNever } from "../errors/ignifx-error.js";
-import type {
-  Material,
-  PbrMaterialProps,
-  SceneContext,
-  ShaderMaterial,
-  ShaderMaterialOptions,
-  StandardMaterialProps,
-  Texture2D,
-} from "@babylonjs/lite";
+import type { Material, PbrMaterialProps, SceneContext, StandardMaterialProps, Texture2D } from "@babylonjs/lite";
 
 /**
  * Material half of the Babylon Lite adapter (`docs/architecture/07-rendering.md` §2.6): the three
@@ -48,6 +39,14 @@ import type {
  * - Scalar and vector edits only need `markMaterialUboDirty` (`index.d.ts` 6974), which bumps
  *   `_uboVersion`. Anything that changes the compiled feature set — binding or clearing a texture,
  *   flipping `doubleSided`, changing culling — needs {@link rebuildMaterialPipelines}.
+ *
+ * ## The custom WGSL family lives elsewhere
+ *
+ * `createShaderMaterial` and the `setShader*` setters are in `./gpu/shader-material.ts`, not here:
+ * this module is statically reachable from every app through the material asset layer, and Babylon
+ * Lite exports one barrel, so a static import of the shader factory would put Lite's whole
+ * shader-material pipeline in every entry chunk. That module is reached through a dynamic
+ * `import()` instead (`docs/plan/2026-09-terrain-particles-shaders.md` §3.1, "Bundle cost").
  */
 
 /**
@@ -308,23 +307,6 @@ export function createStandardMaterialFromProps(input: StandardMaterialInput): S
     setStandardOpacityTexture(material, input.opacityTexture);
   }
   return material;
-}
-
-/**
- * Builds a custom WGSL material.
- *
- * @remarks
- * Lite validates the declaration eagerly — a missing `position` attribute, a duplicate uniform
- * name, or an empty source throws immediately (`lib/material/shader/shader-material.js`) — but
- * compiles nothing until the material is first drawn, so this is safe under the null engine.
- *
- * @param options - The WGSL sources and the declared attribute, uniform, and sampler layout.
- * @returns The material.
- *
- * @internal
- */
-export function createWgslMaterial(options: ShaderMaterialOptions): ShaderMaterial {
-  return createShaderMaterial(options);
 }
 
 /**

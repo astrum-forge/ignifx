@@ -37,6 +37,11 @@ export interface JsonSchemaProvider {
 /**
  * One validation failure, addressed by asset and JSON pointer.
  *
+ * @remarks
+ * The shape is shared with the shader validator (`wgsl-validate.ts`), which reports the same kind
+ * of build-time failure through the same channel. A `.wgsl` file has no JSON pointer, so those
+ * problems carry an empty `pointer` and put `line <n>:` at the head of the message instead.
+ *
  * @public
  */
 export interface ValidationProblem {
@@ -48,7 +53,7 @@ export interface ValidationProblem {
   readonly pointer: string;
   /** What is wrong, in one sentence. */
   readonly message: string;
-  /** The diagnostic code: `IGX-0650`, `IGX-0651`, or `IGX-0652`. */
+  /** The diagnostic code: `IGX-0650`–`IGX-0652` for JSON, `IGX-0654`/`IGX-0655` for WGSL. */
   readonly code: VitePluginErrorCode;
 }
 

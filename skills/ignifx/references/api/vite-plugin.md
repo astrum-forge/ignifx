@@ -758,6 +758,12 @@ the `schema` argument itself, which is what a self-contained schema wants.
 
 One validation failure, addressed by asset and JSON pointer.
 
+#### Remarks
+
+The shape is shared with the shader validator (`wgsl-validate.ts`), which reports the same kind
+of build-time failure through the same channel. A `.wgsl` file has no JSON pointer, so those
+problems carry an empty `pointer` and put `line <n>:` at the head of the message instead.
+
 #### Properties
 
 ##### address
@@ -770,7 +776,7 @@ The address of the offending asset.
 
 > `readonly` **code**: [`VitePluginErrorCode`](#vitepluginerrorcode-2)
 
-The diagnostic code: `IGX-0650`, `IGX-0651`, or `IGX-0652`.
+The diagnostic code: `IGX-0650`–`IGX-0652` for JSON, `IGX-0654`/`IGX-0655` for WGSL.
 
 ##### filePath
 
@@ -789,6 +795,32 @@ What is wrong, in one sentence.
 > `readonly` **pointer**: `string`
 
 RFC 6901 pointer to the offending value; `""` for the document as a whole.
+
+***
+
+### WgslProblem
+
+One shader problem, addressed by line.
+
+#### Properties
+
+##### code
+
+> `readonly` **code**: [`VitePluginErrorCode`](#vitepluginerrorcode-2)
+
+The diagnostic code: `IGX-0654` for a parse failure, `IGX-0655` for a contract violation.
+
+##### line
+
+> `readonly` **line**: `number`
+
+The 1-based line the problem is on; `1` when the rule is about the file as a whole.
+
+##### message
+
+> `readonly` **message**: `string`
+
+What is wrong, in one sentence, with the fix where there is one.
 
 ## Type Aliases
 
@@ -842,6 +874,15 @@ A JSON value.
 > **VitePluginErrorCode** = *typeof* [`VitePluginErrorCode`](#vitepluginerrorcode-1)\[keyof *typeof* [`VitePluginErrorCode`](#vitepluginerrorcode-1)\]
 
 The union of the diagnostic codes this package can report.
+
+***
+
+### WgslShaderKind
+
+> **WgslShaderKind** = `"post"` \| `"shader"` \| `"surface"`
+
+The three forms a `.wgsl` file can declare with its `// @ignifx shader|surface|post` line
+(`docs/plan/2026-09-terrain-particles-shaders.md` §3.1–§3.3).
 
 ## Variables
 
@@ -957,6 +998,10 @@ extension that will later read it.
 
 > `readonly` **.png**: `"texture"` = `"texture"`
 
+###### .r16
+
+> `readonly` **.r16**: `"heightmap"` = `"heightmap"`
+
 ###### .ttf
 
 > `readonly` **.ttf**: `"font"` = `"font"`
@@ -976,6 +1021,10 @@ extension that will later read it.
 ###### .webp
 
 > `readonly` **.webp**: `"texture"` = `"texture"`
+
+###### .wgsl
+
+> `readonly` **.wgsl**: `"shader"` = `"shader"`
 
 ***
 
@@ -1013,6 +1062,10 @@ before [ASSET\_TYPE\_BY\_EXTENSION](#asset_type_by_extension) because every one 
 
 > `readonly` **.material.json**: `"material"` = `"material"`
 
+###### .particles.json
+
+> `readonly` **.particles.json**: `"particles"` = `"particles"`
+
 ###### .physicsmaterial.json
 
 > `readonly` **.physicsmaterial.json**: `"physicsmaterial"` = `"physicsmaterial"`
@@ -1028,6 +1081,10 @@ before [ASSET\_TYPE\_BY\_EXTENSION](#asset_type_by_extension) because every one 
 ###### .spriteanim.json
 
 > `readonly` **.spriteanim.json**: `"spriteanimation"` = `"spriteanimation"`
+
+###### .terrain.json
+
+> `readonly` **.terrain.json**: `"terrain"` = `"terrain"`
 
 ###### .tilemap.json
 
@@ -1108,6 +1165,26 @@ The `define` key the resolved project config is injected under
 > `const` **IGNIFX\_CONFIG\_FILE\_NAMES**: readonly \[`"ignifx.config.ts"`, `"ignifx.config.mts"`, `"ignifx.config.js"`, `"ignifx.config.mjs"`\]
 
 The file names auto-detected at the Vite root, in the order they are tried.
+
+***
+
+### IGNIFX\_SYSTEM\_UNIFORMS
+
+> `const` **IGNIFX\_SYSTEM\_UNIFORMS**: readonly `string`[]
+
+The uniforms ignifx supplies on top of Lite's, uploaded once per frame per material that declares
+them (`docs/plan/2026-09-terrain-particles-shaders.md` §3.1). They live beside a shader's own
+custom uniforms, so a shader reads them as `shaderUniforms.time`, not `shaderSystem.time`.
+
+***
+
+### LITE\_SYSTEM\_UNIFORMS
+
+> `const` **LITE\_SYSTEM\_UNIFORMS**: readonly `string`[]
+
+The system uniforms Babylon Lite 1.27.0 generates into `shaderSystem`
+(`@babylonjs/lite`'s `index.d.ts` line 11445). There is no `time` and there are no lights: those
+are ignifx's, and they arrive through [IGNIFX\_SYSTEM\_UNIFORMS](#ignifx_system_uniforms) instead.
 
 ***
 
@@ -1260,6 +1337,29 @@ A format-headed JSON file failed validation against the JSON Schema supplied for
 > `readonly` **unsupportedSchema**: `"IGX-0653"` = `"IGX-0653"`
 
 A supplied JSON Schema uses a keyword or `$ref` target this validator does not implement.
+
+##### wgslContractViolation
+
+> `readonly` **wgslContractViolation**: `"IGX-0655"` = `"IGX-0655"`
+
+A `.wgsl` shader asset parses but breaks the ignifx WGSL contract: no `// @ignifx` form line or
+two of them, an undeclared uniform, system uniform or texture, a missing entry point for the
+declared form, a hand-declared `@group`/`@binding`, or a texture sampled from the vertex stage.
+
+##### wgslSyntaxError
+
+> `readonly` **wgslSyntaxError**: `"IGX-0654"` = `"IGX-0654"`
+
+A `.wgsl` shader asset under the asset root does not parse as WGSL.
+
+***
+
+### WGSL\_EXTENSION
+
+> `const` **WGSL\_EXTENSION**: `".wgsl"` = `".wgsl"`
+
+The file extension that marks a shader asset. Both `*.surface.wgsl` and `*.post.wgsl` end in it;
+the pragma inside the file, not its name, decides which of the three forms it is.
 
 ## Functions
 
@@ -2245,4 +2345,107 @@ const problems = validateJsonValue({ format: "ignifx.scene" }, {
   properties: { format: { const: "ignifx.scene" }, formatVersion: { type: "integer" } },
 });
 // [{ pointer: "", message: 'missing required property "formatVersion"' }]
+```
+
+***
+
+### validateWgslAsset()
+
+> **validateWgslAsset**(`address`, `filePath`, `source`): readonly [`ValidationProblem`](#validationproblem)[]
+
+Validates one `.wgsl` file that lives under the asset root.
+
+#### Parameters
+
+##### address
+
+`string`
+
+The asset address, used in messages.
+
+##### filePath
+
+`string`
+
+The absolute path of the file.
+
+##### source
+
+`string`
+
+The file's contents.
+
+#### Returns
+
+readonly [`ValidationProblem`](#validationproblem)[]
+
+Every problem found, in the shared shape the plugin reports JSON failures in. The line
+heads the message, because a WGSL file has no JSON pointer to address a problem with.
+
+#### Example
+
+```ts
+const problems = validateWgslAsset("shaders/x.wgsl", "/p/assets/shaders/x.wgsl", "// @ignifx shader\n");
+// [{ address: "shaders/x.wgsl", pointer: "", message: 'line 1: declares "shader" but has no …' }]
+```
+
+***
+
+### validateWgslAssets()
+
+> **validateWgslAssets**(`assets`): `Promise`\<readonly [`ValidationProblem`](#validationproblem)[]\>
+
+Validates every `.wgsl` asset in a scan.
+
+#### Parameters
+
+##### assets
+
+readonly [`ScannedAsset`](#scannedasset)[]
+
+The scanned assets to check; anything that is not a `.wgsl` file is skipped.
+
+#### Returns
+
+`Promise`\<readonly [`ValidationProblem`](#validationproblem)[]\>
+
+Every problem found, ordered by address (the order `scanAssetRoot` returns) and, within
+one file, by line.
+
+***
+
+### validateWgslSource()
+
+> **validateWgslSource**(`source`): readonly [`WgslProblem`](#wgslproblem)[]
+
+Validates one shader source against the ignifx WGSL contract.
+
+#### Parameters
+
+##### source
+
+`string`
+
+The shader source.
+
+#### Returns
+
+readonly [`WgslProblem`](#wgslproblem)[]
+
+Every problem found, ordered by line; a parse failure is returned on its own, because
+every other rule reads the parse.
+
+#### Remarks
+
+The rules, each reported with the line it is on: the file parses; it declares exactly one
+`// @ignifx shader|surface|post`; every `shaderUniforms`/`shaderSystem`/`surfaceUniforms` member
+and every sampled texture is declared; the declared kind's entry points exist; no binding is
+declared by hand; and no vertex-stage code samples a texture. Full type checking stays with the
+browser's WGSL compiler.
+
+#### Example
+
+```ts
+validateWgslSource("// @ignifx shader\n@vertex fn mainVertex() {}\n");
+// [{ line: 1, message: 'declares "shader" but has no "@fragment fn mainFragment"…', code: "IGX-0655" }]
 ```

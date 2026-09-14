@@ -4,6 +4,7 @@ import { describeSceneFileFormat } from "../serialization/scene-file.js";
 import { Camera } from "./camera.js";
 import { ENVIRONMENT_FILE_FORMAT, ENVIRONMENT_FORMAT_VERSION } from "./environment-asset.js";
 import { Environment } from "./environment.js";
+import { InstancedMeshRenderer } from "./instanced-mesh-renderer.js";
 import { Light } from "./light.js";
 import { MATERIAL_FILE_FORMAT, MATERIAL_FORMAT_VERSION, MATERIAL_KINDS } from "./material-asset.js";
 import { MeshRenderer } from "./mesh-renderer.js";
@@ -57,6 +58,10 @@ export function describeSchemas(): Readonly<Record<string, SchemaDescription>> {
     "ignifx/MeshRenderer": describeSchema("ignifx/MeshRenderer", MeshRenderer.schema, {
       description: "Draws one clone of a mesh asset with a material.",
     }),
+    "ignifx/InstancedMeshRenderer": describeSchema("ignifx/InstancedMeshRenderer", InstancedMeshRenderer.schema, {
+      description:
+        "Draws one mesh many times from a caller-owned matrix slab, in a single draw call, with optional GPU culling and a coarser mesh for far instances.",
+    }),
     "ignifx/Model": describeSchema("ignifx/Model", Model.schema, {
       description: "One instance of a loaded glTF, cloned under the entity's node.",
     }),
@@ -64,7 +69,8 @@ export function describeSchemas(): Readonly<Record<string, SchemaDescription>> {
       description: "The world's image-based lighting, skybox, fog, image processing, and clear colour.",
     }),
     "ignifx/PostProcessStack": describeSchema("ignifx/PostProcessStack", PostProcessStack.schema, {
-      description: "Bloom, SMAA, and image processing, inserted into the scene's frame graph.",
+      description:
+        "Bloom, SMAA, image processing, and custom .post.wgsl effects, inserted into the scene's frame graph.",
     }),
     "ignifx/scene-file": describeSceneFileFormat(),
     "ignifx/material-file": describeMaterialFileFormat(),
@@ -85,7 +91,7 @@ export function describeMaterialFileFormat(): SchemaDescription {
     title: "Material file",
     format: MATERIAL_FILE_FORMAT,
     description:
-      'A PBR or Standard material: colours in sRGB, factors unitless, textures as { "$asset": … } references.',
+      'A PBR, Standard, or shader material: colours in sRGB, factors unitless, textures as { "$asset": … } references. A shader material names a .wgsl and the values, textures, and defines it sets on it.',
     fields: {
       format: { kind: "str", default: MATERIAL_FILE_FORMAT, description: `Always "${MATERIAL_FILE_FORMAT}".` },
       formatVersion: {
@@ -96,7 +102,7 @@ export function describeMaterialFileFormat(): SchemaDescription {
       type: {
         kind: "enum",
         default: "pbr",
-        description: `The material family: ${MATERIAL_KINDS.join(", ")}. "shader" is declared but not implemented; it is rejected with IGX-0708.`,
+        description: `The material family: ${MATERIAL_KINDS.join(", ")}. An unknown value is rejected with IGX-0708.`,
       },
       name: { kind: "str", default: "", description: "A human-readable name; glTF overrides match on it." },
       baseColor: { kind: "color", default: [1, 1, 1, 1], description: "PBR: sRGB base colour and alpha." },
@@ -123,9 +129,38 @@ export function describeMaterialFileFormat(): SchemaDescription {
       normalTexture: { kind: "asset", default: null, description: "The tangent-space normal map." },
       emissiveTexture: { kind: "asset", default: null, description: "The emissive map (sRGB)." },
       occlusionTexture: { kind: "asset", default: null, description: "PBR: a separate occlusion map." },
+      surfaces: {
+        kind: "array",
+        default: [],
+        description:
+          "PBR: the .surface.wgsl files layered onto the material, each an address or { shader, name?, values?, textures?, enabled?, priority? }. Needs rendering.features.materialPlugins (IGX-0716); a standard material cannot host one (IGX-0723).",
+      },
       diffuseTexture: { kind: "asset", default: null, description: "Standard: the diffuse map (sRGB)." },
       specularTexture: { kind: "asset", default: null, description: "Standard: the specular map." },
       opacityTexture: { kind: "asset", default: null, description: "Standard: the opacity map." },
+      shader: {
+        kind: "str",
+        default: "",
+        description: "Shader: the address of the .wgsl whose // @ignifx pragmas declare the layout.",
+      },
+      values: {
+        kind: "map",
+        default: {},
+        description:
+          "Shader: overrides of the file's declared uniform defaults, by uniform name; a number or an array of numbers, sRGB for a colour uniform. An undeclared name is IGX-0712 and a wrong shape is IGX-0713.",
+      },
+      textures: {
+        kind: "map",
+        default: {},
+        description:
+          "Shader: texture addresses by declared sampler name. An unbound sampler falls back to the declaration's 1x1 default.",
+      },
+      defines: {
+        kind: "map",
+        default: {},
+        description:
+          "Shader: overrides of the file's declared define values, by name; a boolean or a number. An undeclared name is IGX-0712.",
+      },
     },
   };
 }

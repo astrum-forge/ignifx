@@ -56,7 +56,7 @@ Texture slots (`STANDARD_TEXTURE_SLOTS`): `diffuseTexture`, `specularTexture`, `
 
 | Rule                | Detail                                                                                          |
 | ------------------- | ------------------------------------------------------------------------------------------------ |
-| `type`              | `MATERIAL_KINDS` is `"pbr" \| "standard" \| "shader"`; `"shader"` is declared, not built yet     |
+| `type`              | `MATERIAL_KINDS` is `"pbr" \| "standard" \| "shader"`; a `"shader"` file names a `.wgsl` (see [`wgsl.md`](wgsl.md)); a PBR file may carry `surfaces`     |
 | Unknown family      | `IGX-0708` — the file names a family this build cannot construct                                 |
 | Wrong header        | `IGX-0709` — the file is not the ignifx description format it claims                             |
 | `alphaMode`         | `MATERIAL_ALPHA_MODES` is `"opaque" \| "mask" \| "blend"`; `"mask"` uses `alphaCutoff`      |

@@ -124,6 +124,8 @@ import { BackendPlayRequest } from '@ignifx/audio';
 import { BackendSound } from '@ignifx/audio';
 import { BackendSoundRequest } from '@ignifx/audio';
 import { BackendSpatialRequest } from '@ignifx/audio';
+import { bakeCurve } from '@ignifx/particles';
+import { bakeGradient } from '@ignifx/particles';
 import { BatchHandle } from '@ignifx/core';
 import { Billboard } from '@ignifx/3d';
 import { BILLBOARD_MODES } from '@ignifx/3d';
@@ -145,6 +147,7 @@ import { BoolFieldSpec } from '@ignifx/core';
 import { BoxCollider } from '@ignifx/physics';
 import { BoxCollider2D } from '@ignifx/physics-2d';
 import { BoxMeshOptions } from '@ignifx/core';
+import { buildChunkGeometry } from '@ignifx/terrain';
 import { buildControls } from '@ignifx/input';
 import { Camera } from '@ignifx/core';
 import { Camera2D } from '@ignifx/2d';
@@ -167,6 +170,11 @@ import { CharacterCollision2D } from '@ignifx/physics-2d';
 import { CharacterController } from '@ignifx/physics';
 import { CharacterController2D } from '@ignifx/physics-2d';
 import { CharacterShape2D } from '@ignifx/physics-2d';
+import { chunkBounds } from '@ignifx/terrain';
+import { ChunkGeometry } from '@ignifx/terrain';
+import { chunkGridSide } from '@ignifx/terrain';
+import { chunkIndexCount } from '@ignifx/terrain';
+import { chunkVertexCount } from '@ignifx/terrain';
 import { CircleCollider2D } from '@ignifx/physics-2d';
 import { clamp } from '@ignifx/core';
 import { clamp01 } from '@ignifx/core';
@@ -190,7 +198,10 @@ import { CollisionMergeOptions } from '@ignifx/2d';
 import { Color } from '@ignifx/core';
 import { color } from '@ignifx/core';
 import { ColorFieldSpec } from '@ignifx/core';
+import { ColorInput } from '@ignifx/particles';
 import { ColorLike } from '@ignifx/core';
+import { ColorValue } from '@ignifx/particles';
+import { ColorValueInput } from '@ignifx/particles';
 import { COMBINE_RULES } from '@ignifx/physics-2d';
 import { CombineRule } from '@ignifx/physics-2d';
 import { Component } from '@ignifx/core';
@@ -222,6 +233,8 @@ import { ContactPoint } from '@ignifx/physics';
 import { ContactPoint2D } from '@ignifx/physics-2d';
 import { ControlDescriptor } from '@ignifx/input';
 import { ControlKind } from '@ignifx/input';
+import { controlMapCount } from '@ignifx/terrain';
+import { ControlMaps } from '@ignifx/terrain';
 import { controlPath } from '@ignifx/input';
 import { ControlRef } from '@ignifx/input';
 import { ControlSchemeDefinition } from '@ignifx/input';
@@ -253,11 +266,14 @@ import { CreateEntityOptions } from '@ignifx/core';
 import { createEnvironmentLoader } from '@ignifx/core';
 import { createErrorCodeRegistry } from '@ignifx/core';
 import { createFileStorageBackend } from '@ignifx/core';
+import { createFoliageMaterial } from '@ignifx/terrain';
 import { createFontLoader } from '@ignifx/core';
 import { createFrameSample } from '@ignifx/core';
+import { createHeightmapLoader } from '@ignifx/terrain';
 import { createInputActionsLoader } from '@ignifx/input';
 import { createKeyboardDevice } from '@ignifx/input';
 import { createLayerTable } from '@ignifx/core';
+import { createLayerTextures } from '@ignifx/terrain';
 import { createLocaleLoader } from '@ignifx/ui';
 import { createLogger } from '@ignifx/core';
 import { createManualClock } from '@ignifx/core';
@@ -267,18 +283,25 @@ import { createMemorySink } from '@ignifx/core';
 import { createModelLoader } from '@ignifx/core';
 import { createMouseDevice } from '@ignifx/input';
 import { createNavigatorGamepadReader } from '@ignifx/input';
+import { createParticleLoader } from '@ignifx/particles';
+import { createParticleState } from '@ignifx/particles';
 import { createPerformanceClock } from '@ignifx/core';
 import { createPhysicsMaterial2DLoader } from '@ignifx/physics-2d';
 import { createPhysicsMaterialLoader } from '@ignifx/physics';
 import { createPluralSelector } from '@ignifx/ui';
 import { createPointerDevice } from '@ignifx/input';
 import { createRay } from '@ignifx/core';
+import { createScatterPlacements } from '@ignifx/terrain';
 import { createSceneAsset } from '@ignifx/core';
 import { createSceneLoader } from '@ignifx/core';
 import { createSeededRandom } from '@ignifx/core';
 import { createServiceKey } from '@ignifx/core';
+import { createShaderLoader } from '@ignifx/core';
 import { createSpriteAnimationLoader } from '@ignifx/2d';
 import { createSpriteAtlasLoader } from '@ignifx/2d';
+import { createStorageBufferAsset } from '@ignifx/core';
+import { createTerrainHit } from '@ignifx/terrain';
+import { createTerrainLoader } from '@ignifx/terrain';
 import { createTextureLoader } from '@ignifx/core';
 import { createTilemapLoader } from '@ignifx/2d';
 import { createTouchDevice } from '@ignifx/input';
@@ -290,14 +313,22 @@ import { CurveFieldSpec } from '@ignifx/core';
 import { CurveKey } from '@ignifx/core';
 import { CurveValue } from '@ignifx/core';
 import { custom } from '@ignifx/core';
+import { customEffect } from '@ignifx/core';
+import { CustomEffectInit } from '@ignifx/core';
+import { CustomEffectSettings } from '@ignifx/core';
 import { CustomFieldCodec } from '@ignifx/core';
 import { CustomFieldSpec } from '@ignifx/core';
 import { CylinderCollider } from '@ignifx/physics';
 import { CylinderMeshOptions } from '@ignifx/core';
+import { DecodedPng } from '@ignifx/terrain';
+import { decodePng } from '@ignifx/terrain';
 import { decodeProps } from '@ignifx/core';
+import { decodeR16 } from '@ignifx/terrain';
 import { DecodeResult } from '@ignifx/core';
+import { decodeRgbaImage } from '@ignifx/terrain';
 import { decodeTileRle } from '@ignifx/2d';
 import { decodeValue } from '@ignifx/core';
+import { DeepPartial } from '@ignifx/particles';
 import { DEFAULT_ASSET_CONCURRENCY } from '@ignifx/core';
 import { DEFAULT_ASSET_ROOT } from '@ignifx/core';
 import { DEFAULT_AUDIO_BUSES } from '@ignifx/audio';
@@ -318,6 +349,7 @@ import { DEFAULT_STORAGE_NAMESPACE } from '@ignifx/core';
 import { defaultAudioSettings } from '@ignifx/audio';
 import { defaultDevtoolsSettings } from '@ignifx/devtools';
 import { defaultInputSettings } from '@ignifx/input';
+import { defaultParticlesSettings } from '@ignifx/particles';
 import { defaultPhysics2DSettings } from '@ignifx/physics-2d';
 import { defaultPhysicsSettings } from '@ignifx/physics';
 import { defaultRenderingSettings } from '@ignifx/core';
@@ -329,9 +361,12 @@ import { DeferredQueue } from '@ignifx/core';
 import { defineAnimator } from '@ignifx/3d';
 import { defineExtension } from '@ignifx/core';
 import { defineInputActions } from '@ignifx/input';
+import { defineMaterialPlugin } from '@ignifx/core';
+import { defineParticles } from '@ignifx/particles';
 import { defineSchema } from '@ignifx/core';
 import { defineSpriteAnimation } from '@ignifx/2d';
 import { defineSpriteAtlas } from '@ignifx/2d';
+import { defineTerrain } from '@ignifx/terrain';
 import { defineTilemap } from '@ignifx/2d';
 import { DEG_TO_RAD } from '@ignifx/core';
 import { degToRad } from '@ignifx/core';
@@ -343,12 +378,14 @@ import { describeInputActionsFormat } from '@ignifx/input';
 import { describeInputSchemas } from '@ignifx/input';
 import { describeLocaleFileFormat } from '@ignifx/ui';
 import { describeMaterialFileFormat } from '@ignifx/core';
+import { describeParticlesFormat } from '@ignifx/particles';
 import { describePhysicsMaterialFileFormat } from '@ignifx/physics';
 import { describeSceneFileFormat } from '@ignifx/core';
 import { describeSchema } from '@ignifx/core';
 import { describeSchemas } from '@ignifx/core';
 import { describeSpriteAnimationFormat } from '@ignifx/2d';
 import { describeSpriteAtlasFormat } from '@ignifx/2d';
+import { describeTerrainFormat } from '@ignifx/terrain';
 import { describeTilemapFormat } from '@ignifx/2d';
 import { describeTwoDSchemas } from '@ignifx/2d';
 import { Desktop } from '@ignifx/electron';
@@ -388,6 +425,7 @@ import { Dialog } from '@ignifx/ui';
 import { DialogButton } from '@ignifx/ui';
 import { DialogOptions } from '@ignifx/ui';
 import { Disconnect } from '@ignifx/core';
+import { distanceToBox } from '@ignifx/terrain';
 import { DomSource } from '@ignifx/input';
 import { DomTarget } from '@ignifx/input';
 import { EASING_NAMES } from '@ignifx/core';
@@ -403,9 +441,11 @@ import { ElectronErrorCode } from '@ignifx/electron';
 import { ElectronErrorOptions } from '@ignifx/electron';
 import { ElectronOptions } from '@ignifx/electron';
 import { ElectronStorageBackend } from '@ignifx/electron';
+import { EmitterRandom } from '@ignifx/particles';
 import { EMPTY_ASSET_MANIFEST } from '@ignifx/core';
 import { EMPTY_TILE_ID } from '@ignifx/2d';
 import { encodeProps } from '@ignifx/core';
+import { encodeR16 } from '@ignifx/terrain';
 import { encodeTileRle } from '@ignifx/2d';
 import { encodeValue } from '@ignifx/core';
 import { Entity } from '@ignifx/core';
@@ -436,6 +476,9 @@ import { ErrorContext } from '@ignifx/core';
 import { ErrorFormatMode } from '@ignifx/core';
 import { ErrorRange } from '@ignifx/core';
 import { ErrorReport } from '@ignifx/core';
+import { evaluateCurve } from '@ignifx/particles';
+import { evaluateGradient } from '@ignifx/particles';
+import { evaluateParticle } from '@ignifx/particles';
 import { Extension } from '@ignifx/core';
 import { ExtensionContext } from '@ignifx/core';
 import { f32 } from '@ignifx/core';
@@ -453,6 +496,12 @@ import { findTileset } from '@ignifx/2d';
 import { findVirtualDevice } from '@ignifx/ui';
 import { FirstPersonController } from '@ignifx/3d';
 import { FOG_MODE_NAMES } from '@ignifx/core';
+import { FOLIAGE_SHADER_NAME } from '@ignifx/terrain';
+import { foliageMaterialDefinition } from '@ignifx/terrain';
+import { FoliageMaterialInput } from '@ignifx/terrain';
+import { foliageShaderAddress } from '@ignifx/terrain';
+import { FoliageShaderOptions } from '@ignifx/terrain';
+import { foliageShaderSource } from '@ignifx/terrain';
 import { FONT_ASSET_TYPE } from '@ignifx/core';
 import { FONT_FILE_EXTENSIONS } from '@ignifx/core';
 import { FontAsset } from '@ignifx/core';
@@ -463,6 +512,7 @@ import { FRAME_HISTORY_LENGTH } from '@ignifx/core';
 import { FrameSample } from '@ignifx/core';
 import { FrameState } from '@ignifx/core';
 import { FreezeRotation } from '@ignifx/physics';
+import { Frustum } from '@ignifx/terrain';
 import { GAMEPAD_REMAPS } from '@ignifx/input';
 import { GAMEPAD_SLOTS } from '@ignifx/input';
 import { gamepadControlNames } from '@ignifx/input';
@@ -471,17 +521,28 @@ import { GamepadLike } from '@ignifx/input';
 import { GamepadReader } from '@ignifx/input';
 import { GamepadRemap } from '@ignifx/input';
 import { GamepadSnapshot } from '@ignifx/input';
+import { generateControlMaps } from '@ignifx/terrain';
+import { generateNoiseField } from '@ignifx/terrain';
+import { generateParticleWgsl } from '@ignifx/particles';
+import { generateScatter } from '@ignifx/terrain';
 import { generateUlid } from '@ignifx/core';
 import { GpuAdapterInfo } from '@ignifx/core';
+import { gradientNoise } from '@ignifx/particles';
+import { GradientStop } from '@ignifx/particles';
 import { gridAtlas } from '@ignifx/2d';
 import { GridAtlasImportOptions } from '@ignifx/2d';
 import { GroundMeshOptions } from '@ignifx/core';
+import { hashFloats } from '@ignifx/terrain';
+import { hashToUnit } from '@ignifx/particles';
 import { HAVOK_WASM_AUTO } from '@ignifx/physics';
 import { HeadlessBackend } from '@ignifx/audio';
 import { HeadlessBackendOptions } from '@ignifx/audio';
 import { HeadlessBus } from '@ignifx/audio';
 import { HeadlessSound } from '@ignifx/audio';
+import { HeightField } from '@ignifx/terrain';
 import { HeightfieldCollider } from '@ignifx/physics';
+import { HEIGHTMAP_ASSET_TYPE } from '@ignifx/terrain';
+import { HEIGHTMAP_FILE_EXTENSIONS } from '@ignifx/terrain';
 import { HOST_CHANNELS } from '@ignifx/electron';
 import { HOST_CONTRACT_MAJOR } from '@ignifx/electron';
 import { HOST_CONTRACT_VERSION } from '@ignifx/electron';
@@ -522,9 +583,11 @@ import { i32 } from '@ignifx/core';
 import { IGNIFX_HOST_AUTHORITY } from '@ignifx/electron';
 import { IGNIFX_ORIGIN } from '@ignifx/electron';
 import { IGNIFX_SCHEME } from '@ignifx/electron';
+import { IGNIFX_UNIFORM_NAMES } from '@ignifx/core';
 import { IgnifxError } from '@ignifx/core';
 import { IgnifxErrorOptions } from '@ignifx/core';
 import { IgnifxHost } from '@ignifx/electron';
+import { IgnifxUniformName } from '@ignifx/core';
 import { ImageProcessingEffectSettings } from '@ignifx/core';
 import { ImageProcessingSettings } from '@ignifx/core';
 import { importAsepriteAnimations } from '@ignifx/2d';
@@ -569,6 +632,10 @@ import { InputService } from '@ignifx/input';
 import { InputServiceOptions } from '@ignifx/input';
 import { InputSettings } from '@ignifx/input';
 import { inputSettingsSchema } from '@ignifx/input';
+import { InstancedMeshLod } from '@ignifx/core';
+import { InstancedMeshRenderer } from '@ignifx/core';
+import { InstancedMeshRendererLiteHandles } from '@ignifx/core';
+import { InstanceRange } from '@ignifx/core';
 import { InstantiateOptions } from '@ignifx/core';
 import { instantiateScene } from '@ignifx/core';
 import { InstantiateSceneOptions } from '@ignifx/core';
@@ -585,8 +652,11 @@ import { isCompatibleHostVersion } from '@ignifx/electron';
 import { isEditableElement } from '@ignifx/ui';
 import { isFullCellSolid } from '@ignifx/2d';
 import { isIgnifxError } from '@ignifx/core';
+import { isLiteMaterialPluginPoint } from '@ignifx/core';
+import { isPng } from '@ignifx/terrain';
 import { isSceneFileHeader } from '@ignifx/core';
 import { isUlid } from '@ignifx/core';
+import { isUnitScalar } from '@ignifx/particles';
 import { isValidErrorCode } from '@ignifx/core';
 import { isWebGpuAvailable } from '@ignifx/core';
 import { JsonArray } from '@ignifx/core';
@@ -603,6 +673,7 @@ import { KinematicSyncMode } from '@ignifx/physics';
 import { LayerMask } from '@ignifx/core';
 import { layerMask } from '@ignifx/core';
 import { LayerMaskFieldSpec } from '@ignifx/core';
+import { LAYERS_PER_CONTROL_MAP } from '@ignifx/terrain';
 import { LayersSettings } from '@ignifx/core';
 import { LayerTable } from '@ignifx/core';
 import { LDTK_DEFAULT_INTGRID_COLLIDERS } from '@ignifx/2d';
@@ -614,6 +685,8 @@ import { Light } from '@ignifx/core';
 import { LIGHT_TYPES } from '@ignifx/core';
 import { LightShadowSettings } from '@ignifx/core';
 import { LightType } from '@ignifx/core';
+import { LITE_MATERIAL_PLUGIN_POINTS } from '@ignifx/core';
+import { LITE_SYSTEM_UNIFORM_NAMES } from '@ignifx/core';
 import { LiteAnimationGroup } from '@ignifx/core';
 import { LiteAnimationManager } from '@ignifx/3d';
 import { LiteAssetContainer } from '@ignifx/core';
@@ -622,11 +695,14 @@ import { LiteAudioBus } from '@ignifx/audio';
 import { LiteAudioEngine } from '@ignifx/audio';
 import { LiteBounds2D } from '@ignifx/2d';
 import { LiteCamera } from '@ignifx/core';
+import { LiteChunkMesh } from '@ignifx/terrain';
+import { LiteChunkNode } from '@ignifx/terrain';
 import { LiteEngine } from '@ignifx/core';
 import { LiteEnvironmentTextures } from '@ignifx/core';
 import { LiteFont } from '@ignifx/core';
 import { LiteLight } from '@ignifx/core';
 import { LiteMaterial } from '@ignifx/core';
+import { LiteMaterialPluginPoint } from '@ignifx/core';
 import { LiteMesh } from '@ignifx/core';
 import { LiteNavCrowd } from '@ignifx/3d';
 import { LiteNavigationPlugin } from '@ignifx/3d';
@@ -634,6 +710,7 @@ import { LiteObstacleHandle } from '@ignifx/3d';
 import { LitePbrMaterial } from '@ignifx/core';
 import { LiteScene } from '@ignifx/core';
 import { LiteSceneNode } from '@ignifx/core';
+import { LiteShaderMaterial } from '@ignifx/core';
 import { LiteShadowGenerator } from '@ignifx/core';
 import { LiteSkeleton } from '@ignifx/core';
 import { LiteSoundBuffer } from '@ignifx/audio';
@@ -649,13 +726,16 @@ import { LiteSpriteRenderer } from '@ignifx/2d';
 import { LiteSpriteSampling } from '@ignifx/2d';
 import { LiteStandardMaterial } from '@ignifx/core';
 import { LiteStaticSound } from '@ignifx/audio';
+import { LiteStorageBuffer } from '@ignifx/core';
 import { LiteStreamingSound } from '@ignifx/audio';
+import { LiteSystemUniformName } from '@ignifx/core';
 import { LiteTextData } from '@ignifx/ui';
 import { LiteTextLayer } from '@ignifx/ui';
 import { LiteTextRenderable } from '@ignifx/ui';
 import { LiteTextRenderer } from '@ignifx/ui';
 import { LiteTexture2D } from '@ignifx/core';
 import { LoaderContext } from '@ignifx/core';
+import { loadGeneratedShader } from '@ignifx/terrain';
 import { LoadingScreen } from '@ignifx/ui';
 import { LoadingScreenOptions } from '@ignifx/ui';
 import { LoadOptions } from '@ignifx/core';
@@ -666,10 +746,12 @@ import { LocaleDocument } from '@ignifx/ui';
 import { localeFileSchema } from '@ignifx/ui';
 import { localeJsonSchema } from '@ignifx/ui';
 import { LOD_CULLED } from '@ignifx/3d';
+import { LOD_HYSTERESIS } from '@ignifx/terrain';
 import { LOD_ORDER } from '@ignifx/3d';
 import { LodGroup } from '@ignifx/3d';
 import { LodLevel } from '@ignifx/3d';
 import { LodSystem } from '@ignifx/3d';
+import { lodThreshold } from '@ignifx/terrain';
 import { LOG_LEVEL_SEVERITY } from '@ignifx/core';
 import { Logger } from '@ignifx/core';
 import { LoggerOptions } from '@ignifx/core';
@@ -677,6 +759,8 @@ import { LogLevel } from '@ignifx/core';
 import { LogRecord } from '@ignifx/core';
 import { LogSink } from '@ignifx/core';
 import { LogThreshold } from '@ignifx/core';
+import { LOOKUP_SAMPLES } from '@ignifx/particles';
+import { LookupRow } from '@ignifx/particles';
 import { mainCamera } from '@ignifx/3d';
 import { mainCameraForward } from '@ignifx/3d';
 import { ManualClock } from '@ignifx/core';
@@ -692,12 +776,18 @@ import { MATERIAL_FILE_EXTENSION } from '@ignifx/core';
 import { MATERIAL_FILE_FORMAT } from '@ignifx/core';
 import { MATERIAL_FORMAT_VERSION } from '@ignifx/core';
 import { MATERIAL_KINDS } from '@ignifx/core';
+import { MATERIAL_PLUGIN_DEFAULT_PRIORITY } from '@ignifx/core';
+import { MATERIAL_PLUGIN_RESERVED_NAMES } from '@ignifx/core';
+import { MATERIAL_PLUGIN_SAMPLER_BUDGET } from '@ignifx/core';
 import { MaterialAlphaMode } from '@ignifx/core';
 import { MaterialAsset } from '@ignifx/core';
 import { MaterialAssetLiteHandles } from '@ignifx/core';
 import { MaterialDefinition } from '@ignifx/core';
 import { MaterialKind } from '@ignifx/core';
+import { MaterialPluginDefinition } from '@ignifx/core';
+import { MaterialPluginDefinitionInit } from '@ignifx/core';
 import { MAX_LAYERS } from '@ignifx/core';
+import { MAX_TERRAIN_LAYERS } from '@ignifx/terrain';
 import { MAX_ULID_TIME_MS } from '@ignifx/core';
 import { MemorySink } from '@ignifx/core';
 import { MemoryStorageBackend } from '@ignifx/core';
@@ -727,6 +817,7 @@ import { MeshAssetLiteHandles } from '@ignifx/core';
 import { MeshCollider } from '@ignifx/physics';
 import { MeshGeometryData } from '@ignifx/core';
 import { MeshRenderer } from '@ignifx/core';
+import { MeshShapeTable } from '@ignifx/particles';
 import { MessageNode } from '@ignifx/ui';
 import { MessageParams } from '@ignifx/ui';
 import { MessagePattern } from '@ignifx/ui';
@@ -754,6 +845,7 @@ import { NavMeshAgent } from '@ignifx/3d';
 import { NavMeshObstacle } from '@ignifx/3d';
 import { NavMeshSurface } from '@ignifx/3d';
 import { NavObstacleShape } from '@ignifx/3d';
+import { noise3 } from '@ignifx/particles';
 import { normalisePath } from '@ignifx/2d';
 import { NumberFieldSpec } from '@ignifx/core';
 import { OneShotOptions } from '@ignifx/audio';
@@ -761,6 +853,7 @@ import { OneShotVolume } from '@ignifx/audio';
 import { optional } from '@ignifx/core';
 import { OptionalFieldSpec } from '@ignifx/core';
 import { OverridePath } from '@ignifx/core';
+import { packLayerImages } from '@ignifx/terrain';
 import { ParallaxLayer } from '@ignifx/2d';
 import { parseAudioBusesFile } from '@ignifx/audio';
 import { parseComposite } from '@ignifx/input';
@@ -776,9 +869,96 @@ import { parseProcessors } from '@ignifx/input';
 import { parseSpriteFragment } from '@ignifx/2d';
 import { parseWavHeader } from '@ignifx/audio';
 import { PartialFieldsOf } from '@ignifx/core';
+import { Particle2DUpdateSystem } from '@ignifx/particles-2d';
+import { Particle2DWriteSystem } from '@ignifx/particles-2d';
+import { PARTICLE_2D_UPDATE_ORDER } from '@ignifx/particles-2d';
+import { PARTICLE_2D_WRITE_ORDER } from '@ignifx/particles-2d';
+import { PARTICLE_ASSET_TYPE } from '@ignifx/particles';
+import { PARTICLE_BLEND_MODES } from '@ignifx/particles';
+import { PARTICLE_EMIT_FROM } from '@ignifx/particles';
+import { PARTICLE_FILE_EXTENSIONS } from '@ignifx/particles';
+import { PARTICLE_FRAME_MODES } from '@ignifx/particles';
+import { PARTICLE_MESHES } from '@ignifx/particles';
+import { PARTICLE_PRESETS } from '@ignifx/particles';
+import { PARTICLE_RENDER_MODES } from '@ignifx/particles';
+import { PARTICLE_RENDER_ORDER } from '@ignifx/particles';
+import { PARTICLE_SHAPE_KINDS } from '@ignifx/particles';
+import { PARTICLE_SIMULATION_SPACES } from '@ignifx/particles';
+import { PARTICLE_UPDATE_ORDER } from '@ignifx/particles';
+import { ParticleAsset } from '@ignifx/particles';
+import { particleAssetFromDefinition } from '@ignifx/particles';
+import { ParticleBlendMode } from '@ignifx/particles';
+import { ParticleBurst } from '@ignifx/particles';
+import { ParticleBurstInput } from '@ignifx/particles';
+import { ParticleDefinition } from '@ignifx/particles';
+import { particleDefinition } from '@ignifx/particles';
+import { ParticleDefinitionInput } from '@ignifx/particles';
+import { ParticleDefinitionResources } from '@ignifx/particles';
+import { ParticleEmission } from '@ignifx/particles';
+import { ParticleEmissionInput } from '@ignifx/particles';
+import { ParticleEmitFrom } from '@ignifx/particles';
+import { ParticleEmitterCore } from '@ignifx/particles';
+import { ParticleEmitterCoreOptions } from '@ignifx/particles';
+import { ParticleEvaluationInputs } from '@ignifx/particles';
+import { ParticleForces } from '@ignifx/particles';
+import { ParticleForcesInput } from '@ignifx/particles';
+import { ParticleFrameMode } from '@ignifx/particles';
+import { ParticleLookup } from '@ignifx/particles';
+import { ParticleMain } from '@ignifx/particles';
+import { ParticleMainInput } from '@ignifx/particles';
+import { ParticleMeshName } from '@ignifx/particles';
+import { ParticleNoise } from '@ignifx/particles';
+import { ParticleOrbit } from '@ignifx/particles';
+import { ParticleOverLifetime } from '@ignifx/particles';
+import { ParticleOverLifetimeInput } from '@ignifx/particles';
+import { ParticlePreset } from '@ignifx/particles';
+import { particlePresetInput } from '@ignifx/particles';
+import { ParticleRenderer } from '@ignifx/particles';
+import { ParticleRendererInput } from '@ignifx/particles';
+import { ParticleRenderMode } from '@ignifx/particles';
+import { ParticleRenderSystem } from '@ignifx/particles';
+import { particles } from '@ignifx/particles';
+import { particles2D } from '@ignifx/particles-2d';
+import { particles2DError } from '@ignifx/particles-2d';
+import { Particles2DErrorCode } from '@ignifx/particles-2d';
+import { Particles2DErrorOptions } from '@ignifx/particles-2d';
+import { Particles2DService } from '@ignifx/particles-2d';
+import { PARTICLES_2D_DIAGNOSTICS_COUNTERS } from '@ignifx/particles-2d';
+import { PARTICLES_2D_DIAGNOSTICS_GROUP } from '@ignifx/particles-2d';
+import { PARTICLES_2D_ERROR_MESSAGES } from '@ignifx/particles-2d';
+import { PARTICLES_DIAGNOSTICS_COUNTERS } from '@ignifx/particles';
+import { PARTICLES_DIAGNOSTICS_GROUP } from '@ignifx/particles';
+import { PARTICLES_ERROR_MESSAGES } from '@ignifx/particles';
+import { PARTICLES_FORMAT } from '@ignifx/particles';
+import { PARTICLES_FORMAT_VERSION } from '@ignifx/particles';
+import { PARTICLES_SETTINGS_SECTION } from '@ignifx/particles';
+import { particlesError } from '@ignifx/particles';
+import { ParticlesErrorCode } from '@ignifx/particles';
+import { ParticlesErrorOptions } from '@ignifx/particles';
+import { particlesFileSchema } from '@ignifx/particles';
+import { particleShaderAddress } from '@ignifx/particles';
+import { ParticleShape } from '@ignifx/particles';
+import { ParticleShapeInput } from '@ignifx/particles';
+import { ParticleShapeKind } from '@ignifx/particles';
+import { ParticleSheet } from '@ignifx/particles';
+import { ParticleSheetInput } from '@ignifx/particles';
+import { ParticleSimulationSpace } from '@ignifx/particles';
+import { ParticlesOptions } from '@ignifx/particles';
+import { ParticlesService } from '@ignifx/particles';
+import { ParticlesSettings } from '@ignifx/particles';
+import { particlesSettingsSchema } from '@ignifx/particles';
+import { ParticleStart } from '@ignifx/particles';
+import { ParticleStartInput } from '@ignifx/particles';
+import { ParticleState } from '@ignifx/particles';
+import { ParticleStopOptions } from '@ignifx/particles';
+import { ParticleSystem } from '@ignifx/particles';
+import { ParticleSystem2D } from '@ignifx/particles-2d';
+import { particleUnits } from '@ignifx/particles';
+import { ParticleUpdateSystem } from '@ignifx/particles';
 import { PBR_TEXTURE_SLOTS } from '@ignifx/core';
 import { PbrMaterialDefinition } from '@ignifx/core';
 import { pbrMaterialDefinition } from '@ignifx/core';
+import { pcg3d } from '@ignifx/particles';
 import { Phase } from '@ignifx/core';
 import { PHASE_COUNT } from '@ignifx/core';
 import { PHASE_NAMES } from '@ignifx/core';
@@ -829,6 +1009,7 @@ import { pinToDeviceSlot } from '@ignifx/input';
 import { pivotedPositionToRef } from '@ignifx/2d';
 import { pixelMapping } from '@ignifx/ui';
 import { pixelsToWorldToRef } from '@ignifx/2d';
+import { PixelTextureOptions } from '@ignifx/core';
 import { PlaneMeshOptions } from '@ignifx/core';
 import { PlatformInfo } from '@ignifx/core';
 import { PlatformKind } from '@ignifx/core';
@@ -839,9 +1020,13 @@ import { PlayerInput } from '@ignifx/input';
 import { PlayOptions } from '@ignifx/audio';
 import { PluralNode } from '@ignifx/ui';
 import { PluralSelector } from '@ignifx/ui';
+import { pngToRgba8 } from '@ignifx/terrain';
+import { pngToSamples16 } from '@ignifx/terrain';
 import { PointerLock } from '@ignifx/input';
 import { PointerLockSettings } from '@ignifx/input';
 import { PolygonCollider2D } from '@ignifx/physics-2d';
+import { POST_EFFECT_BUILTIN_UNIFORMS } from '@ignifx/core';
+import { POST_EFFECT_FUNCTION } from '@ignifx/core';
 import { PostProcessStack } from '@ignifx/core';
 import { Processor } from '@ignifx/input';
 import { ProcessorKind } from '@ignifx/input';
@@ -858,6 +1043,7 @@ import { QueryOptions } from '@ignifx/physics';
 import { QueryOptions2D } from '@ignifx/physics-2d';
 import { QueryShape } from '@ignifx/physics';
 import { QUOTA_MESSAGE_PREFIX } from '@ignifx/electron';
+import { R16_FILE_EXTENSION } from '@ignifx/terrain';
 import { RAD_TO_DEG } from '@ignifx/core';
 import { radToDeg } from '@ignifx/core';
 import { RandomSource } from '@ignifx/core';
@@ -865,9 +1051,20 @@ import { Ray } from '@ignifx/core';
 import { RaycastHit } from '@ignifx/physics';
 import { RaycastHit2D } from '@ignifx/physics-2d';
 import { RayVector } from '@ignifx/core';
+import { readScalarRow } from '@ignifx/particles';
 import { readVec2 } from '@ignifx/2d';
 import { record } from '@ignifx/core';
+import { RECORD_BYTES } from '@ignifx/particles';
+import { RECORD_FLOATS } from '@ignifx/particles';
+import { RECORD_LIFETIME } from '@ignifx/particles';
+import { RECORD_POSITION } from '@ignifx/particles';
+import { RECORD_ROTATION } from '@ignifx/particles';
+import { RECORD_SEED } from '@ignifx/particles';
+import { RECORD_SIZE } from '@ignifx/particles';
+import { RECORD_SPAWN_TIME } from '@ignifx/particles';
+import { RECORD_VELOCITY } from '@ignifx/particles';
 import { RecordFieldSpec } from '@ignifx/core';
+import { recordSeed } from '@ignifx/particles';
 import { ReferenceDecoder } from '@ignifx/core';
 import { ReferenceEncoder } from '@ignifx/core';
 import { RegisterAssetOptions } from '@ignifx/core';
@@ -892,16 +1089,31 @@ import { REQUIRED_HOST_MEMBERS } from '@ignifx/electron';
 import { RESERVED_LAYER_NAMES } from '@ignifx/core';
 import { resetFrameSample } from '@ignifx/core';
 import { resolveClipFrames } from '@ignifx/2d';
+import { resolveColor } from '@ignifx/particles';
 import { resolveEase } from '@ignifx/core';
 import { resolveGamepadRemap } from '@ignifx/input';
 import { resolveMenuChoices } from '@ignifx/ui';
 import { resolveMenuLabel } from '@ignifx/ui';
 import { resolveRelative } from '@ignifx/2d';
+import { resolveScalar } from '@ignifx/particles';
+import { resolveTerrainAddress } from '@ignifx/terrain';
+import { RgbaImage } from '@ignifx/terrain';
 import { Rigidbody } from '@ignifx/physics';
 import { Rigidbody2D } from '@ignifx/physics-2d';
 import { Rigidbody2DRapierHandles } from '@ignifx/physics-2d';
 import { RigidbodyLiteHandles } from '@ignifx/physics';
 import { RigidbodyMover } from '@ignifx/3d';
+import { RingCensus } from '@ignifx/particles';
+import { sampleControlWeight } from '@ignifx/terrain';
+import { sampleRow } from '@ignifx/particles';
+import { sampleShape } from '@ignifx/particles';
+import { scalarMax } from '@ignifx/particles';
+import { scalarMin } from '@ignifx/particles';
+import { ScalarValue } from '@ignifx/particles';
+import { ScalarValueInput } from '@ignifx/particles';
+import { scatterCapacity } from '@ignifx/terrain';
+import { ScatterPlacements } from '@ignifx/terrain';
+import { ScatterRules } from '@ignifx/terrain';
 import { SCENE_ASSET_TYPE } from '@ignifx/core';
 import { SCENE_FILE_EXTENSIONS } from '@ignifx/core';
 import { SCENE_FILE_FORMAT } from '@ignifx/core';
@@ -934,6 +1146,7 @@ import { ScriptClassInfo } from '@ignifx/core';
 import { ScriptDefinition } from '@ignifx/core';
 import { ScriptStatics } from '@ignifx/core';
 import { selectCamera } from '@ignifx/2d';
+import { selectLod } from '@ignifx/terrain';
 import { serializeComponent } from '@ignifx/core';
 import { serializeEntity } from '@ignifx/core';
 import { SerializeIssue } from '@ignifx/core';
@@ -945,6 +1158,32 @@ import { ServiceNameKey } from '@ignifx/core';
 import { ServiceRegistry } from '@ignifx/core';
 import { SetParentOptions } from '@ignifx/core';
 import { SettingsInput } from '@ignifx/core';
+import { SHADER_ASSET_TYPE } from '@ignifx/core';
+import { SHADER_ATTRIBUTE_NAMES } from '@ignifx/core';
+import { SHADER_BLEND_MODES } from '@ignifx/core';
+import { SHADER_CULL_MODES } from '@ignifx/core';
+import { SHADER_FILE_EXTENSIONS } from '@ignifx/core';
+import { SHADER_INSTANCING_MODES } from '@ignifx/core';
+import { SHADER_KINDS } from '@ignifx/core';
+import { SHADER_TEXTURE_FALLBACKS } from '@ignifx/core';
+import { SHADER_UNIFORM_TYPES } from '@ignifx/core';
+import { ShaderAsset } from '@ignifx/core';
+import { ShaderAttributeName } from '@ignifx/core';
+import { ShaderBlendMode } from '@ignifx/core';
+import { ShaderCullMode } from '@ignifx/core';
+import { ShaderDeclaration } from '@ignifx/core';
+import { ShaderInstancingMode } from '@ignifx/core';
+import { ShaderKind } from '@ignifx/core';
+import { ShaderMaterialDefinition } from '@ignifx/core';
+import { shaderMaterialDefinition } from '@ignifx/core';
+import { ShaderMaterialDefinitionInput } from '@ignifx/core';
+import { ShaderPipelineState } from '@ignifx/core';
+import { shaderSourceAddress } from '@ignifx/terrain';
+import { ShaderStorageDeclaration } from '@ignifx/core';
+import { ShaderTextureDeclaration } from '@ignifx/core';
+import { ShaderTextureFallback } from '@ignifx/core';
+import { ShaderUniformDeclaration } from '@ignifx/core';
+import { ShaderUniformType } from '@ignifx/core';
 import { SHADOW_TECHNIQUES } from '@ignifx/core';
 import { ShadowTechniqueName } from '@ignifx/core';
 import { ShapeCastHit } from '@ignifx/physics';
@@ -964,11 +1203,13 @@ import { smoothStep } from '@ignifx/core';
 import { snapPixel } from '@ignifx/2d';
 import { snapToStep } from '@ignifx/ui';
 import { snapZoomToInteger } from '@ignifx/2d';
+import { solidControlMaps } from '@ignifx/terrain';
 import { SORTING_LAYER_ORDER_STEP } from '@ignifx/2d';
 import { SortingLayersSettings } from '@ignifx/core';
 import { SortingLayerTable } from '@ignifx/2d';
 import { SoundInstance } from '@ignifx/audio';
 import { SoundVoice } from '@ignifx/audio';
+import { SpawnRecordRing } from '@ignifx/particles';
 import { spawnTilemapObjects } from '@ignifx/2d';
 import { SphereCollider } from '@ignifx/physics';
 import { SphereMeshOptions } from '@ignifx/core';
@@ -1011,6 +1252,7 @@ import { SpriteLayerRegistry } from '@ignifx/2d';
 import { SpriteRenderer } from '@ignifx/2d';
 import { spriteRotationFromLite } from '@ignifx/2d';
 import { spriteRotationToLite } from '@ignifx/2d';
+import { srgbToLinear } from '@ignifx/particles';
 import { STANDARD_TEXTURE_SLOTS } from '@ignifx/core';
 import { StandardMaterialDefinition } from '@ignifx/core';
 import { standardMaterialDefinition } from '@ignifx/core';
@@ -1018,10 +1260,13 @@ import { StateChange } from '@ignifx/3d';
 import { stickAxis } from '@ignifx/ui';
 import { Storage as Storage_2 } from '@ignifx/core';
 import { STORAGE_BACKEND_FAILED_CODE } from '@ignifx/electron';
+import { STORAGE_BUFFER_ASSET_TYPE } from '@ignifx/core';
 import { STORAGE_KEY_MAX_LENGTH } from '@ignifx/core';
 import { STORAGE_QUOTA_CODE } from '@ignifx/electron';
 import { STORAGE_VALUE_CORRUPT_CODE } from '@ignifx/electron';
 import { StorageBackend } from '@ignifx/core';
+import { StorageBufferAsset } from '@ignifx/core';
+import { StorageBufferAssetLiteHandles } from '@ignifx/core';
 import { StoredValue } from '@ignifx/core';
 import { StoredValueKind } from '@ignifx/core';
 import { str } from '@ignifx/core';
@@ -1029,9 +1274,57 @@ import { StringFieldSpec } from '@ignifx/core';
 import { stringifySceneFile } from '@ignifx/core';
 import { SUPPORT_STATES } from '@ignifx/physics';
 import { SupportStateName } from '@ignifx/physics';
+import { SURFACE_HOOK_NAMES } from '@ignifx/core';
+import { SURFACE_UNIFORM_BLOCK } from '@ignifx/core';
+import { SurfaceHookName } from '@ignifx/core';
+import { SurfaceHostCapabilities } from '@ignifx/core';
+import { SurfaceHostFamily } from '@ignifx/core';
+import { SurfaceShaderBinding } from '@ignifx/core';
+import { SurfaceShaderInit } from '@ignifx/core';
+import { SurfaceShaderReference } from '@ignifx/core';
 import { System } from '@ignifx/core';
 import { SystemContext } from '@ignifx/core';
 import { TagSet } from '@ignifx/core';
+import { Terrain } from '@ignifx/terrain';
+import { terrain } from '@ignifx/terrain';
+import { TERRAIN_ASSET_TYPE } from '@ignifx/terrain';
+import { TERRAIN_DIAGNOSTICS_COUNTERS } from '@ignifx/terrain';
+import { TERRAIN_DIAGNOSTICS_GROUP } from '@ignifx/terrain';
+import { TERRAIN_ERROR_MESSAGES } from '@ignifx/terrain';
+import { TERRAIN_FILE_EXTENSIONS } from '@ignifx/terrain';
+import { TERRAIN_FORMAT } from '@ignifx/terrain';
+import { TERRAIN_FORMAT_VERSION } from '@ignifx/terrain';
+import { TERRAIN_LOD_ORDER } from '@ignifx/terrain';
+import { TERRAIN_SPLAT_NAME } from '@ignifx/terrain';
+import { TerrainAsset } from '@ignifx/terrain';
+import { terrainAssetFromDefinition } from '@ignifx/terrain';
+import { TerrainAssetOptions } from '@ignifx/terrain';
+import { TerrainChunksDefinition } from '@ignifx/terrain';
+import { TerrainColliderInit } from '@ignifx/terrain';
+import { TerrainDefinition } from '@ignifx/terrain';
+import { TerrainDefinitionInput } from '@ignifx/terrain';
+import { terrainError } from '@ignifx/terrain';
+import { TerrainErrorCode } from '@ignifx/terrain';
+import { TerrainErrorOptions } from '@ignifx/terrain';
+import { terrainFileSchema } from '@ignifx/terrain';
+import { TerrainHeightmapDefinition } from '@ignifx/terrain';
+import { TerrainHit } from '@ignifx/terrain';
+import { TerrainLayerDefinition } from '@ignifx/terrain';
+import { TerrainLayerImages } from '@ignifx/terrain';
+import { TerrainLayerInput } from '@ignifx/terrain';
+import { TerrainLayerTextures } from '@ignifx/terrain';
+import { TerrainLodSystem } from '@ignifx/terrain';
+import { TerrainMaterialDefinition } from '@ignifx/terrain';
+import { TerrainNoiseDefinition } from '@ignifx/terrain';
+import { TerrainRegion } from '@ignifx/terrain';
+import { TerrainScatter } from '@ignifx/terrain';
+import { TerrainSize } from '@ignifx/terrain';
+import { TerrainSplatDefinition } from '@ignifx/terrain';
+import { TerrainSplatLayerSpec } from '@ignifx/terrain';
+import { TerrainSplatRule } from '@ignifx/terrain';
+import { TerrainSplatRuleInput } from '@ignifx/terrain';
+import { terrainSplatShaderSource } from '@ignifx/terrain';
+import { TerrainSplatShaderSpec } from '@ignifx/terrain';
 import { TEXT_ALIGNMENTS } from '@ignifx/ui';
 import { TEXT_REFRESH_HZ } from '@ignifx/devtools';
 import { TextAlignment } from '@ignifx/ui';
@@ -1162,6 +1455,7 @@ import { UiSurfaceMetrics } from '@ignifx/ui';
 import { UiSystem } from '@ignifx/ui';
 import { UlidFactoryOptions } from '@ignifx/core';
 import { UnavailableDesktop } from '@ignifx/electron';
+import { UploadRange } from '@ignifx/particles';
 import { validateInputActions } from '@ignifx/input';
 import { validateProps } from '@ignifx/core';
 import { validateSceneFile } from '@ignifx/core';
@@ -1218,6 +1512,8 @@ import { WorldText } from '@ignifx/ui';
 import { WorldText2D } from '@ignifx/ui';
 import { worldToPixelsToRef } from '@ignifx/2d';
 import { wrapAngleDegrees } from '@ignifx/core';
+import { writeChunkIndices } from '@ignifx/terrain';
+import { writeChunkVertices } from '@ignifx/terrain';
 import { yawFromDirection } from '@ignifx/3d';
 import { zoomForSize } from '@ignifx/2d';
 
@@ -1461,6 +1757,10 @@ export { BackendSoundRequest }
 
 export { BackendSpatialRequest }
 
+export { bakeCurve }
+
+export { bakeGradient }
+
 export { BatchHandle }
 
 export { Billboard }
@@ -1502,6 +1802,8 @@ export { BoxCollider }
 export { BoxCollider2D }
 
 export { BoxMeshOptions }
+
+export { buildChunkGeometry }
 
 export { buildControls }
 
@@ -1546,6 +1848,16 @@ export { CharacterController }
 export { CharacterController2D }
 
 export { CharacterShape2D }
+
+export { chunkBounds }
+
+export { ChunkGeometry }
+
+export { chunkGridSide }
+
+export { chunkIndexCount }
+
+export { chunkVertexCount }
 
 export { CircleCollider2D }
 
@@ -1593,7 +1905,13 @@ export { color }
 
 export { ColorFieldSpec }
 
+export { ColorInput }
+
 export { ColorLike }
+
+export { ColorValue }
+
+export { ColorValueInput }
 
 export { COMBINE_RULES }
 
@@ -1657,6 +1975,10 @@ export { ControlDescriptor }
 
 export { ControlKind }
 
+export { controlMapCount }
+
+export { ControlMaps }
+
 export { controlPath }
 
 export { ControlRef }
@@ -1719,15 +2041,21 @@ export { createErrorCodeRegistry }
 
 export { createFileStorageBackend }
 
+export { createFoliageMaterial }
+
 export { createFontLoader }
 
 export { createFrameSample }
+
+export { createHeightmapLoader }
 
 export { createInputActionsLoader }
 
 export { createKeyboardDevice }
 
 export { createLayerTable }
+
+export { createLayerTextures }
 
 export { createLocaleLoader }
 
@@ -1747,6 +2075,10 @@ export { createMouseDevice }
 
 export { createNavigatorGamepadReader }
 
+export { createParticleLoader }
+
+export { createParticleState }
+
 export { createPerformanceClock }
 
 export { createPhysicsMaterial2DLoader }
@@ -1759,6 +2091,8 @@ export { createPointerDevice }
 
 export { createRay }
 
+export { createScatterPlacements }
+
 export { createSceneAsset }
 
 export { createSceneLoader }
@@ -1767,9 +2101,17 @@ export { createSeededRandom }
 
 export { createServiceKey }
 
+export { createShaderLoader }
+
 export { createSpriteAnimationLoader }
 
 export { createSpriteAtlasLoader }
+
+export { createStorageBufferAsset }
+
+export { createTerrainHit }
+
+export { createTerrainLoader }
 
 export { createTextureLoader }
 
@@ -1793,6 +2135,12 @@ export { CurveValue }
 
 export { custom }
 
+export { customEffect }
+
+export { CustomEffectInit }
+
+export { CustomEffectSettings }
+
 export { CustomFieldCodec }
 
 export { CustomFieldSpec }
@@ -1801,13 +2149,23 @@ export { CylinderCollider }
 
 export { CylinderMeshOptions }
 
+export { DecodedPng }
+
+export { decodePng }
+
 export { decodeProps }
 
+export { decodeR16 }
+
 export { DecodeResult }
+
+export { decodeRgbaImage }
 
 export { decodeTileRle }
 
 export { decodeValue }
+
+export { DeepPartial }
 
 export { DEFAULT_ASSET_CONCURRENCY }
 
@@ -1849,6 +2207,8 @@ export { defaultDevtoolsSettings }
 
 export { defaultInputSettings }
 
+export { defaultParticlesSettings }
+
 export { defaultPhysics2DSettings }
 
 export { defaultPhysicsSettings }
@@ -1871,11 +2231,17 @@ export { defineExtension }
 
 export { defineInputActions }
 
+export { defineMaterialPlugin }
+
+export { defineParticles }
+
 export { defineSchema }
 
 export { defineSpriteAnimation }
 
 export { defineSpriteAtlas }
+
+export { defineTerrain }
 
 export { defineTilemap }
 
@@ -1899,6 +2265,8 @@ export { describeLocaleFileFormat }
 
 export { describeMaterialFileFormat }
 
+export { describeParticlesFormat }
+
 export { describePhysicsMaterialFileFormat }
 
 export { describeSceneFileFormat }
@@ -1910,6 +2278,8 @@ export { describeSchemas }
 export { describeSpriteAnimationFormat }
 
 export { describeSpriteAtlasFormat }
+
+export { describeTerrainFormat }
 
 export { describeTilemapFormat }
 
@@ -1989,6 +2359,8 @@ export { DialogOptions }
 
 export { Disconnect }
 
+export { distanceToBox }
+
 export { DomSource }
 
 export { DomTarget }
@@ -2019,11 +2391,15 @@ export { ElectronOptions }
 
 export { ElectronStorageBackend }
 
+export { EmitterRandom }
+
 export { EMPTY_ASSET_MANIFEST }
 
 export { EMPTY_TILE_ID }
 
 export { encodeProps }
+
+export { encodeR16 }
 
 export { encodeTileRle }
 
@@ -2085,6 +2461,12 @@ export { ErrorRange }
 
 export { ErrorReport }
 
+export { evaluateCurve }
+
+export { evaluateGradient }
+
+export { evaluateParticle }
+
 export { Extension }
 
 export { ExtensionContext }
@@ -2119,6 +2501,18 @@ export { FirstPersonController }
 
 export { FOG_MODE_NAMES }
 
+export { FOLIAGE_SHADER_NAME }
+
+export { foliageMaterialDefinition }
+
+export { FoliageMaterialInput }
+
+export { foliageShaderAddress }
+
+export { FoliageShaderOptions }
+
+export { foliageShaderSource }
+
 export { FONT_ASSET_TYPE }
 
 export { FONT_FILE_EXTENSIONS }
@@ -2139,6 +2533,8 @@ export { FrameState }
 
 export { FreezeRotation }
 
+export { Frustum }
+
 export { GAMEPAD_REMAPS }
 
 export { GAMEPAD_SLOTS }
@@ -2155,15 +2551,31 @@ export { GamepadRemap }
 
 export { GamepadSnapshot }
 
+export { generateControlMaps }
+
+export { generateNoiseField }
+
+export { generateParticleWgsl }
+
+export { generateScatter }
+
 export { generateUlid }
 
 export { GpuAdapterInfo }
+
+export { gradientNoise }
+
+export { GradientStop }
 
 export { gridAtlas }
 
 export { GridAtlasImportOptions }
 
 export { GroundMeshOptions }
+
+export { hashFloats }
+
+export { hashToUnit }
 
 export { HAVOK_WASM_AUTO }
 
@@ -2175,7 +2587,13 @@ export { HeadlessBus }
 
 export { HeadlessSound }
 
+export { HeightField }
+
 export { HeightfieldCollider }
+
+export { HEIGHTMAP_ASSET_TYPE }
+
+export { HEIGHTMAP_FILE_EXTENSIONS }
 
 export { HOST_CHANNELS }
 
@@ -2257,11 +2675,15 @@ export { IGNIFX_ORIGIN }
 
 export { IGNIFX_SCHEME }
 
+export { IGNIFX_UNIFORM_NAMES }
+
 export { IgnifxError }
 
 export { IgnifxErrorOptions }
 
 export { IgnifxHost }
+
+export { IgnifxUniformName }
 
 export { ImageProcessingEffectSettings }
 
@@ -2351,6 +2773,14 @@ export { InputSettings }
 
 export { inputSettingsSchema }
 
+export { InstancedMeshLod }
+
+export { InstancedMeshRenderer }
+
+export { InstancedMeshRendererLiteHandles }
+
+export { InstanceRange }
+
 export { InstantiateOptions }
 
 export { instantiateScene }
@@ -2383,9 +2813,15 @@ export { isFullCellSolid }
 
 export { isIgnifxError }
 
+export { isLiteMaterialPluginPoint }
+
+export { isPng }
+
 export { isSceneFileHeader }
 
 export { isUlid }
+
+export { isUnitScalar }
 
 export { isValidErrorCode }
 
@@ -2419,6 +2855,8 @@ export { layerMask }
 
 export { LayerMaskFieldSpec }
 
+export { LAYERS_PER_CONTROL_MAP }
+
 export { LayersSettings }
 
 export { LayerTable }
@@ -2441,6 +2879,10 @@ export { LightShadowSettings }
 
 export { LightType }
 
+export { LITE_MATERIAL_PLUGIN_POINTS }
+
+export { LITE_SYSTEM_UNIFORM_NAMES }
+
 export { LiteAnimationGroup }
 
 export { LiteAnimationManager }
@@ -2457,6 +2899,10 @@ export { LiteBounds2D }
 
 export { LiteCamera }
 
+export { LiteChunkMesh }
+
+export { LiteChunkNode }
+
 export { LiteEngine }
 
 export { LiteEnvironmentTextures }
@@ -2466,6 +2912,8 @@ export { LiteFont }
 export { LiteLight }
 
 export { LiteMaterial }
+
+export { LiteMaterialPluginPoint }
 
 export { LiteMesh }
 
@@ -2480,6 +2928,8 @@ export { LitePbrMaterial }
 export { LiteScene }
 
 export { LiteSceneNode }
+
+export { LiteShaderMaterial }
 
 export { LiteShadowGenerator }
 
@@ -2511,7 +2961,11 @@ export { LiteStandardMaterial }
 
 export { LiteStaticSound }
 
+export { LiteStorageBuffer }
+
 export { LiteStreamingSound }
+
+export { LiteSystemUniformName }
 
 export { LiteTextData }
 
@@ -2524,6 +2978,8 @@ export { LiteTextRenderer }
 export { LiteTexture2D }
 
 export { LoaderContext }
+
+export { loadGeneratedShader }
 
 export { LoadingScreen }
 
@@ -2545,6 +3001,8 @@ export { localeJsonSchema }
 
 export { LOD_CULLED }
 
+export { LOD_HYSTERESIS }
+
 export { LOD_ORDER }
 
 export { LodGroup }
@@ -2552,6 +3010,8 @@ export { LodGroup }
 export { LodLevel }
 
 export { LodSystem }
+
+export { lodThreshold }
 
 export { LOG_LEVEL_SEVERITY }
 
@@ -2566,6 +3026,10 @@ export { LogRecord }
 export { LogSink }
 
 export { LogThreshold }
+
+export { LOOKUP_SAMPLES }
+
+export { LookupRow }
 
 export { mainCamera }
 
@@ -2597,6 +3061,12 @@ export { MATERIAL_FORMAT_VERSION }
 
 export { MATERIAL_KINDS }
 
+export { MATERIAL_PLUGIN_DEFAULT_PRIORITY }
+
+export { MATERIAL_PLUGIN_RESERVED_NAMES }
+
+export { MATERIAL_PLUGIN_SAMPLER_BUDGET }
+
 export { MaterialAlphaMode }
 
 export { MaterialAsset }
@@ -2607,7 +3077,13 @@ export { MaterialDefinition }
 
 export { MaterialKind }
 
+export { MaterialPluginDefinition }
+
+export { MaterialPluginDefinitionInit }
+
 export { MAX_LAYERS }
+
+export { MAX_TERRAIN_LAYERS }
 
 export { MAX_ULID_TIME_MS }
 
@@ -2667,6 +3143,8 @@ export { MeshGeometryData }
 
 export { MeshRenderer }
 
+export { MeshShapeTable }
+
 export { MessageNode }
 
 export { MessageParams }
@@ -2721,6 +3199,8 @@ export { NavMeshSurface }
 
 export { NavObstacleShape }
 
+export { noise3 }
+
 export { normalisePath }
 
 export { NumberFieldSpec }
@@ -2734,6 +3214,8 @@ export { optional }
 export { OptionalFieldSpec }
 
 export { OverridePath }
+
+export { packLayerImages }
 
 export { ParallaxLayer }
 
@@ -2765,11 +3247,185 @@ export { parseWavHeader }
 
 export { PartialFieldsOf }
 
+export { Particle2DUpdateSystem }
+
+export { Particle2DWriteSystem }
+
+export { PARTICLE_2D_UPDATE_ORDER }
+
+export { PARTICLE_2D_WRITE_ORDER }
+
+export { PARTICLE_ASSET_TYPE }
+
+export { PARTICLE_BLEND_MODES }
+
+export { PARTICLE_EMIT_FROM }
+
+export { PARTICLE_FILE_EXTENSIONS }
+
+export { PARTICLE_FRAME_MODES }
+
+export { PARTICLE_MESHES }
+
+export { PARTICLE_PRESETS }
+
+export { PARTICLE_RENDER_MODES }
+
+export { PARTICLE_RENDER_ORDER }
+
+export { PARTICLE_SHAPE_KINDS }
+
+export { PARTICLE_SIMULATION_SPACES }
+
+export { PARTICLE_UPDATE_ORDER }
+
+export { ParticleAsset }
+
+export { particleAssetFromDefinition }
+
+export { ParticleBlendMode }
+
+export { ParticleBurst }
+
+export { ParticleBurstInput }
+
+export { ParticleDefinition }
+
+export { particleDefinition }
+
+export { ParticleDefinitionInput }
+
+export { ParticleDefinitionResources }
+
+export { ParticleEmission }
+
+export { ParticleEmissionInput }
+
+export { ParticleEmitFrom }
+
+export { ParticleEmitterCore }
+
+export { ParticleEmitterCoreOptions }
+
+export { ParticleEvaluationInputs }
+
+export { ParticleForces }
+
+export { ParticleForcesInput }
+
+export { ParticleFrameMode }
+
+export { ParticleLookup }
+
+export { ParticleMain }
+
+export { ParticleMainInput }
+
+export { ParticleMeshName }
+
+export { ParticleNoise }
+
+export { ParticleOrbit }
+
+export { ParticleOverLifetime }
+
+export { ParticleOverLifetimeInput }
+
+export { ParticlePreset }
+
+export { particlePresetInput }
+
+export { ParticleRenderer }
+
+export { ParticleRendererInput }
+
+export { ParticleRenderMode }
+
+export { ParticleRenderSystem }
+
+export { particles }
+
+export { particles2D }
+
+export { particles2DError }
+
+export { Particles2DErrorCode }
+
+export { Particles2DErrorOptions }
+
+export { Particles2DService }
+
+export { PARTICLES_2D_DIAGNOSTICS_COUNTERS }
+
+export { PARTICLES_2D_DIAGNOSTICS_GROUP }
+
+export { PARTICLES_2D_ERROR_MESSAGES }
+
+export { PARTICLES_DIAGNOSTICS_COUNTERS }
+
+export { PARTICLES_DIAGNOSTICS_GROUP }
+
+export { PARTICLES_ERROR_MESSAGES }
+
+export { PARTICLES_FORMAT }
+
+export { PARTICLES_FORMAT_VERSION }
+
+export { PARTICLES_SETTINGS_SECTION }
+
+export { particlesError }
+
+export { ParticlesErrorCode }
+
+export { ParticlesErrorOptions }
+
+export { particlesFileSchema }
+
+export { particleShaderAddress }
+
+export { ParticleShape }
+
+export { ParticleShapeInput }
+
+export { ParticleShapeKind }
+
+export { ParticleSheet }
+
+export { ParticleSheetInput }
+
+export { ParticleSimulationSpace }
+
+export { ParticlesOptions }
+
+export { ParticlesService }
+
+export { ParticlesSettings }
+
+export { particlesSettingsSchema }
+
+export { ParticleStart }
+
+export { ParticleStartInput }
+
+export { ParticleState }
+
+export { ParticleStopOptions }
+
+export { ParticleSystem }
+
+export { ParticleSystem2D }
+
+export { particleUnits }
+
+export { ParticleUpdateSystem }
+
 export { PBR_TEXTURE_SLOTS }
 
 export { PbrMaterialDefinition }
 
 export { pbrMaterialDefinition }
+
+export { pcg3d }
 
 export { Phase }
 
@@ -2871,6 +3527,8 @@ export { pixelMapping }
 
 export { pixelsToWorldToRef }
 
+export { PixelTextureOptions }
+
 export { PlaneMeshOptions }
 
 export { PlatformInfo }
@@ -2891,11 +3549,19 @@ export { PluralNode }
 
 export { PluralSelector }
 
+export { pngToRgba8 }
+
+export { pngToSamples16 }
+
 export { PointerLock }
 
 export { PointerLockSettings }
 
 export { PolygonCollider2D }
+
+export { POST_EFFECT_BUILTIN_UNIFORMS }
+
+export { POST_EFFECT_FUNCTION }
 
 export { PostProcessStack }
 
@@ -2929,6 +3595,8 @@ export { QueryShape }
 
 export { QUOTA_MESSAGE_PREFIX }
 
+export { R16_FILE_EXTENSION }
+
 export { RAD_TO_DEG }
 
 export { radToDeg }
@@ -2943,11 +3611,33 @@ export { RaycastHit2D }
 
 export { RayVector }
 
+export { readScalarRow }
+
 export { readVec2 }
 
 export { record }
 
+export { RECORD_BYTES }
+
+export { RECORD_FLOATS }
+
+export { RECORD_LIFETIME }
+
+export { RECORD_POSITION }
+
+export { RECORD_ROTATION }
+
+export { RECORD_SEED }
+
+export { RECORD_SIZE }
+
+export { RECORD_SPAWN_TIME }
+
+export { RECORD_VELOCITY }
+
 export { RecordFieldSpec }
+
+export { recordSeed }
 
 export { ReferenceDecoder }
 
@@ -2997,6 +3687,8 @@ export { resetFrameSample }
 
 export { resolveClipFrames }
 
+export { resolveColor }
+
 export { resolveEase }
 
 export { resolveGamepadRemap }
@@ -3007,6 +3699,12 @@ export { resolveMenuLabel }
 
 export { resolveRelative }
 
+export { resolveScalar }
+
+export { resolveTerrainAddress }
+
+export { RgbaImage }
+
 export { Rigidbody }
 
 export { Rigidbody2D }
@@ -3016,6 +3714,28 @@ export { Rigidbody2DRapierHandles }
 export { RigidbodyLiteHandles }
 
 export { RigidbodyMover }
+
+export { RingCensus }
+
+export { sampleControlWeight }
+
+export { sampleRow }
+
+export { sampleShape }
+
+export { scalarMax }
+
+export { scalarMin }
+
+export { ScalarValue }
+
+export { ScalarValueInput }
+
+export { scatterCapacity }
+
+export { ScatterPlacements }
+
+export { ScatterRules }
 
 export { SCENE_ASSET_TYPE }
 
@@ -3081,6 +3801,8 @@ export { ScriptStatics }
 
 export { selectCamera }
 
+export { selectLod }
+
 export { serializeComponent }
 
 export { serializeEntity }
@@ -3102,6 +3824,58 @@ export { ServiceRegistry }
 export { SetParentOptions }
 
 export { SettingsInput }
+
+export { SHADER_ASSET_TYPE }
+
+export { SHADER_ATTRIBUTE_NAMES }
+
+export { SHADER_BLEND_MODES }
+
+export { SHADER_CULL_MODES }
+
+export { SHADER_FILE_EXTENSIONS }
+
+export { SHADER_INSTANCING_MODES }
+
+export { SHADER_KINDS }
+
+export { SHADER_TEXTURE_FALLBACKS }
+
+export { SHADER_UNIFORM_TYPES }
+
+export { ShaderAsset }
+
+export { ShaderAttributeName }
+
+export { ShaderBlendMode }
+
+export { ShaderCullMode }
+
+export { ShaderDeclaration }
+
+export { ShaderInstancingMode }
+
+export { ShaderKind }
+
+export { ShaderMaterialDefinition }
+
+export { shaderMaterialDefinition }
+
+export { ShaderMaterialDefinitionInput }
+
+export { ShaderPipelineState }
+
+export { shaderSourceAddress }
+
+export { ShaderStorageDeclaration }
+
+export { ShaderTextureDeclaration }
+
+export { ShaderTextureFallback }
+
+export { ShaderUniformDeclaration }
+
+export { ShaderUniformType }
 
 export { SHADOW_TECHNIQUES }
 
@@ -3141,6 +3915,8 @@ export { snapToStep }
 
 export { snapZoomToInteger }
 
+export { solidControlMaps }
+
 export { SORTING_LAYER_ORDER_STEP }
 
 export { SortingLayersSettings }
@@ -3150,6 +3926,8 @@ export { SortingLayerTable }
 export { SoundInstance }
 
 export { SoundVoice }
+
+export { SpawnRecordRing }
 
 export { spawnTilemapObjects }
 
@@ -3235,6 +4013,8 @@ export { spriteRotationFromLite }
 
 export { spriteRotationToLite }
 
+export { srgbToLinear }
+
 export { STANDARD_TEXTURE_SLOTS }
 
 export { StandardMaterialDefinition }
@@ -3249,6 +4029,8 @@ export { Storage_2 as Storage }
 
 export { STORAGE_BACKEND_FAILED_CODE }
 
+export { STORAGE_BUFFER_ASSET_TYPE }
+
 export { STORAGE_KEY_MAX_LENGTH }
 
 export { STORAGE_QUOTA_CODE }
@@ -3256,6 +4038,10 @@ export { STORAGE_QUOTA_CODE }
 export { STORAGE_VALUE_CORRUPT_CODE }
 
 export { StorageBackend }
+
+export { StorageBufferAsset }
+
+export { StorageBufferAssetLiteHandles }
 
 export { StoredValue }
 
@@ -3271,11 +4057,107 @@ export { SUPPORT_STATES }
 
 export { SupportStateName }
 
+export { SURFACE_HOOK_NAMES }
+
+export { SURFACE_UNIFORM_BLOCK }
+
+export { SurfaceHookName }
+
+export { SurfaceHostCapabilities }
+
+export { SurfaceHostFamily }
+
+export { SurfaceShaderBinding }
+
+export { SurfaceShaderInit }
+
+export { SurfaceShaderReference }
+
 export { System }
 
 export { SystemContext }
 
 export { TagSet }
+
+export { Terrain }
+
+export { terrain }
+
+export { TERRAIN_ASSET_TYPE }
+
+export { TERRAIN_DIAGNOSTICS_COUNTERS }
+
+export { TERRAIN_DIAGNOSTICS_GROUP }
+
+export { TERRAIN_ERROR_MESSAGES }
+
+export { TERRAIN_FILE_EXTENSIONS }
+
+export { TERRAIN_FORMAT }
+
+export { TERRAIN_FORMAT_VERSION }
+
+export { TERRAIN_LOD_ORDER }
+
+export { TERRAIN_SPLAT_NAME }
+
+export { TerrainAsset }
+
+export { terrainAssetFromDefinition }
+
+export { TerrainAssetOptions }
+
+export { TerrainChunksDefinition }
+
+export { TerrainColliderInit }
+
+export { TerrainDefinition }
+
+export { TerrainDefinitionInput }
+
+export { terrainError }
+
+export { TerrainErrorCode }
+
+export { TerrainErrorOptions }
+
+export { terrainFileSchema }
+
+export { TerrainHeightmapDefinition }
+
+export { TerrainHit }
+
+export { TerrainLayerDefinition }
+
+export { TerrainLayerImages }
+
+export { TerrainLayerInput }
+
+export { TerrainLayerTextures }
+
+export { TerrainLodSystem }
+
+export { TerrainMaterialDefinition }
+
+export { TerrainNoiseDefinition }
+
+export { TerrainRegion }
+
+export { TerrainScatter }
+
+export { TerrainSize }
+
+export { TerrainSplatDefinition }
+
+export { TerrainSplatLayerSpec }
+
+export { TerrainSplatRule }
+
+export { TerrainSplatRuleInput }
+
+export { terrainSplatShaderSource }
+
+export { TerrainSplatShaderSpec }
 
 export { TEXT_ALIGNMENTS }
 
@@ -3537,6 +4419,8 @@ export { UlidFactoryOptions }
 
 export { UnavailableDesktop }
 
+export { UploadRange }
+
 export { validateInputActions }
 
 export { validateProps }
@@ -3648,6 +4532,10 @@ export { WorldText2D }
 export { worldToPixelsToRef }
 
 export { wrapAngleDegrees }
+
+export { writeChunkIndices }
+
+export { writeChunkVertices }
 
 export { yawFromDirection }
 

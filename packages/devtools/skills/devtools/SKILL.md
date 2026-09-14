@@ -23,7 +23,7 @@ until `open()` is called.
 
 ## Environment
 
-- Engine: ignifx `0.0.0-unreleased`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
+- Engine: ignifx `0.2.1`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
 - WebGPU only, browser and Electron. The overlay is plain DOM over the canvas.
 - `@ignifx/ui`, `@ignifx/input`, `@ignifx/audio`, `@ignifx/physics` and `@ignifx/physics-2d` are all
   **optional** peers. The package imports none of them; it reaches them structurally, so a game with

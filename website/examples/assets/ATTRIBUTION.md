@@ -57,8 +57,60 @@ Downloaded and compressed 2026-09-07. Re-create every file from the commands in
 | `2d/course.tilemap.json` | 3 979 | Apache-2.0 | `platformer-controller` |
 | `2d/props.png` | 3 492 | CC0 1.0 | `physics-2d` |
 | `2d/props.atlas.json` | 15 463 | Apache-2.0 | `physics-2d` |
+| `textures/shockwave.png` | 11 201 | Apache-2.0 | `explosion` |
+| `2d/fx-flame.png` | 398 | Apache-2.0 | `particles-2d` |
+| `2d/fx-flame.atlas.json` | 282 | Apache-2.0 | `particles-2d` |
+| `2d/fx-dust.png` | 330 | Apache-2.0 | `particles-2d` |
+| `2d/fx-dust.atlas.json` | 281 | Apache-2.0 | `particles-2d` |
+| `2d/fx-spark.png` | 426 | Apache-2.0 | `particles-2d` |
+| `2d/fx-spark.atlas.json` | 651 | Apache-2.0 | `particles-2d` |
 
-**Total: 9 029 839 bytes** against the 48 MB launch cap, and the largest file is 2.92 MiB against
+The thirteen `.wgsl` files below are this repository's own shader source, hand-written and
+Apache-2.0 like the rest of the repository. `@ignifx/vite-plugin` parses and checks every one of
+them at build time, so a broken shader is a build failure with a line number rather than a black
+surface on a visitor's machine.
+
+| File                                             | Bytes | Licence    | Used by               |
+| ------------------------------------------------ | ----- | ---------- | --------------------- |
+| `shaders/custom-shader/dissolve.wgsl`            | 2 130 | Apache-2.0 | `custom-shader`       |
+| `shaders/custom-shader/forcefield.wgsl`          | 2 101 | Apache-2.0 | `custom-shader`       |
+| `shaders/custom-shader/hologram.wgsl`            | 2 181 | Apache-2.0 | `custom-shader`       |
+| `shaders/custom-shader/toon.wgsl`                | 2 175 | Apache-2.0 | `custom-shader`       |
+| `shaders/surface-shaders/hit-flash.surface.wgsl` | 1 043 | Apache-2.0 | `surface-shaders`     |
+| `shaders/surface-shaders/rim.surface.wgsl`       | 975   | Apache-2.0 | `surface-shaders`     |
+| `shaders/surface-shaders/snow.surface.wgsl`      | 1 420 | Apache-2.0 | `surface-shaders`     |
+| `shaders/surface-shaders/wetness.surface.wgsl`   | 1 356 | Apache-2.0 | `surface-shaders`     |
+| `shaders/vertex-animation/bulge.surface.wgsl`    | 1 139 | Apache-2.0 | `vertex-animation`    |
+| `shaders/vertex-animation/flag.wgsl`             | 2 355 | Apache-2.0 | `vertex-animation`    |
+| `shaders/vertex-animation/grass.wgsl`            | 2 514 | Apache-2.0 | `vertex-animation`    |
+| `shaders/vertex-animation/jelly.wgsl`            | 2 156 | Apache-2.0 | `vertex-animation`    |
+| `shaders/custom-post-process/crt.post.wgsl`      | 2 116 | Apache-2.0 | `custom-post-process` |
+| `shaders/custom-post-process/grain.post.wgsl`    | 1 466 | Apache-2.0 | `custom-post-process` |
+| `shaders/custom-post-process/lut.post.wgsl`      | 1 517 | Apache-2.0 | `custom-post-process` |
+| `shaders/custom-post-process/pixelate.post.wgsl` | 887   | Apache-2.0 | `custom-post-process` |
+| `shaders/custom-post-process/vignette.post.wgsl` | 1 300 | Apache-2.0 | `custom-post-process` |
+
+The terrain files below are written by `website/examples/_tools/make-terrain-assets.ts` — the island
+heightmap, its four ground layers, the RGBA splat control map, and the two foliage cards. Nothing is
+downloaded: every byte is generated from a seed, so a re-run reproduces the committed files and no
+third party has to be up for the site to build. `island.r16` is raw little-endian `uint16`, row-major,
+513 x 513 samples, no header; eight bits would put a 31 cm stair on every slope of its 80 m range.
+
+| File                               | Bytes   | Licence    | Used by                             |
+| ---------------------------------- | ------- | ---------- | ----------------------------------- |
+| `terrain/grass_albedo.png`         | 99 456  | Apache-2.0 | `terrain`                           |
+| `terrain/grass_card.png`           | 2 267   | Apache-2.0 | `terrain-foliage`, `terrain-sculpt` |
+| `terrain/grass_card.png.meta.json` | 32      | Apache-2.0 | `terrain-foliage`, `terrain-sculpt` |
+| `terrain/island.r16`               | 526 338 | Apache-2.0 | `terrain`                           |
+| `terrain/island.terrain.json`      | 683     | Apache-2.0 | `terrain`                           |
+| `terrain/island_splat.png`         | 122 200 | Apache-2.0 | `terrain`                           |
+| `terrain/rock_albedo.png`          | 91 930  | Apache-2.0 | `terrain`                           |
+| `terrain/sand_albedo.png`          | 73 667  | Apache-2.0 | `terrain`                           |
+| `terrain/snow_albedo.png`          | 76 831  | Apache-2.0 | `terrain`                           |
+| `terrain/tree_atlas.png`           | 2 640   | Apache-2.0 | `terrain-foliage`                   |
+| `terrain/tree_atlas.png.meta.json` | 32      | Apache-2.0 | `terrain-foliage`                   |
+
+**Total: 10 054 746 bytes** against the 48 MB launch cap, and the largest file is 2.92 MiB against
 the 4 MB per-file cap (`04-examples-platform.md` §5.1 rule 4).
 
 ---
@@ -377,6 +429,32 @@ generate all of their art; no upstream.
 - **Source:** this repository, `website/examples/_tools/make-grid-texture.ts`
 - **SHA-256:** `de07d7757776fa844875562a3d795371cef30e0f75e3822af54ed2057aad1098`
 
+## The particle art — `textures/shockwave.png` and the three `2d/fx-*` sets
+
+Four images and three sprite atlases, painted by arithmetic in a committed script the way the
+templates generate all of their art; no upstream. A 3D `ParticleSystem` needs no image at all — its
+generated program draws a soft procedural disc — so the only shape that arithmetic in a shader will
+not give you is here: `textures/shockwave.png` is the ring the blast wave in `explosion` draws. The
+three 16-pixel sprites exist because a `ParticleSystem2D` draws an atlas rather than a shader, and
+`fx-spark` carries four frames so the example can show the sheet rule. Every sprite is painted
+white, because a particle's colour is its document's, applied as a tint.
+
+Prettier formats the three atlas documents after the script writes them, as it does every JSON file
+in the repository, so the digests below are of the formatted files.
+
+- **Licence:** [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
+- **Copyright:** © Astrum Forge Studios
+- **Source:** this repository, `website/examples/_tools/make-particle-sprites.ts`
+- **SHA-256:**
+  - `textures/shockwave.png` (128×128 RGBA):
+    `f3ad511e7345833b391012c8967cd04ce2252799636380db016c35d3539275a0`
+  - `2d/fx-flame.png` (18×18 RGBA): `c5c4c40648e1ae3d66c7dba3912475f56314c2750548896dece6665ae6ca2b08`
+  - `2d/fx-flame.atlas.json`: `29ef56a041a979b826db1778a655a5a20ad0b2d271aa8131dc28f42c362d46f7`
+  - `2d/fx-dust.png` (18×18 RGBA): `c32f2e77262865307d21494bc4c638a77e2f7e8292e6f6a5b8c8c2c89a83cb6a`
+  - `2d/fx-dust.atlas.json`: `192346130cff7bf4838258a8b04a414da021df6f837b6488dde653f952b7cd9d`
+  - `2d/fx-spark.png` (72×18 RGBA): `019ed092b33d62ca888ec00a25e62ad0144a79835366d7c874b52be5e076a8d9`
+  - `2d/fx-spark.atlas.json`: `5168880f9c2e7278783a01555018ff86070a42ee2d51d34bc481c77e65b3029e`
+
 ## `fonts/share-tech-mono.ttf` — 43 272 bytes
 
 A single-weight monospaced TrueType face, version 1.003. `ui-overlay` shapes its `HudText` score
@@ -600,6 +678,14 @@ cp ../tests/fixtures/assets/ui/ShareTechMono-Regular.ttf examples/assets/fonts/s
 # textures/grid.png and textures/backdrop.png
 pnpm --filter @ignifx/website exec node examples/_tools/make-grid-texture.ts
 pnpm --filter @ignifx/website exec node examples/_tools/make-backdrop-texture.ts
+
+# textures/shockwave.png and the three 2d/fx-* sprite sets and their atlases. It prints each
+# digest; Prettier then formats the three atlas documents, which is what the committed bytes are.
+pnpm --filter @ignifx/website exec node examples/_tools/make-particle-sprites.ts
+
+# terrain/* — the island heightmap, its four layer textures, the splat control map and the two
+# foliage cards. Seeded, so the command reproduces the committed bytes; it prints each digest.
+pnpm --filter @ignifx/website exec node examples/_tools/make-terrain-assets.ts
 
 # audio/*.wav — the templates' own synthesised clips, copied byte for byte. Regenerate the source
 # set with `pnpm assets:audio` from the repository root first if the generator has changed.

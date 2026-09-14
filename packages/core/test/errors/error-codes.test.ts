@@ -10,10 +10,12 @@ import {
 } from "../../src/errors/error-codes.js";
 
 describe("error code table", () => {
-  it("declares the fifteen subsystem ranges from the diagnostics architecture", () => {
-    expect(Object.keys(ErrorRange)).toHaveLength(15);
+  it("declares the seventeen subsystem ranges from the diagnostics architecture", () => {
+    expect(Object.keys(ErrorRange)).toHaveLength(17);
     expect(ErrorRange.lifecycle).toBe("01");
     expect(ErrorRange.devtools).toBe("15");
+    expect(ErrorRange.terrain).toBe("16");
+    expect(ErrorRange.particles).toBe("17");
   });
 
   it("reserves the leading digit nine for third-party extensions", () => {
@@ -57,7 +59,7 @@ describe("isValidErrorCode", () => {
   });
 
   it("rejects a range no subsystem owns", () => {
-    expect(isValidErrorCode("IGX-1601")).toBe(false);
+    expect(isValidErrorCode("IGX-1801")).toBe(false);
     expect(isValidErrorCode("IGX-0001")).toBe(false);
   });
 

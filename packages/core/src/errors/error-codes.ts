@@ -50,6 +50,10 @@ export const ErrorRange = {
   platform: "14",
   /** Devtools, logging, and diagnostics. */
   devtools: "15",
+  /** Terrain assets, chunks, and queries. */
+  terrain: "16",
+  /** Particle systems, 3D and 2D. */
+  particles: "17",
 } as const;
 
 /**
@@ -232,6 +236,36 @@ export const CoreErrorCode = {
   postProcessingFeatureOff: "IGX-0710",
   /** An `Environment.skybox` asks for a background the environment it installed cannot draw. */
   skyboxFixedAtLoad: "IGX-0711",
+  /** A shader material was asked for a uniform, texture, or storage buffer its shader never declared. */
+  unknownShaderBinding: "IGX-0712",
+  /** A shader uniform was written with a value whose shape does not match its declared type. */
+  shaderValueMismatch: "IGX-0713",
+  /** A shader declares a main-light uniform, but the world has no enabled directional light. */
+  shaderLightUniformWithoutLight: "IGX-0714",
+  /** A shader failed to compile or rebuild; the previous material stays in use. */
+  shaderCompileFailed: "IGX-0715",
+  /** A surface shader was attached without the `materialPlugins` rendering feature. */
+  surfaceShaderFeatureOff: "IGX-0716",
+  /** An `InstancedMeshRenderer` setting Lite fixes at scene registration was changed afterwards. */
+  instancingSettingTooLate: "IGX-0717",
+  /** A shader-material method was called on a PBR or Standard material. */
+  notAShaderMaterial: "IGX-0718",
+  /** A `.wgsl` file carries an `@ignifx` pragma this build cannot read. */
+  invalidShaderPragma: "IGX-0719",
+  /** A storage buffer update reaches past the buffer's capacity. */
+  storageBufferOutOfRange: "IGX-0720",
+  /** More instances were written to an `InstancedMeshRenderer` than its capacity holds. */
+  instancedCapacityExceeded: "IGX-0721",
+  /** Pixel data handed to a texture does not match its declared size. */
+  invalidPixelData: "IGX-0722",
+  /** A surface shader cannot run on its host: no hook, a hook the host lacks, or a Standard host. */
+  surfaceHookMissing: "IGX-0723",
+  /** A shader-material mesh was left out of an ESM shadow caster list, which Lite cannot render for it. */
+  shaderMaterialEsmCasterSkipped: "IGX-0724",
+  /** A `MeshAsset` vertex update named a range the geometry cannot hold. */
+  invalidGeometryUpdate: "IGX-0725",
+  /** The surface shaders attached to one material declare more samplers than fit beside the host material. */
+  surfaceSamplerBudgetExceeded: "IGX-0726",
   /** The host exposes no Web Crypto implementation. */
   cryptoUnavailable: "IGX-1420",
   /** A storage namespace name is not a legal namespace segment. */
@@ -340,6 +374,23 @@ export const CORE_ERROR_MESSAGES: Readonly<Record<CoreErrorCode, string>> = {
   "IGX-0710": "{entity} attached a PostProcessStack, but rendering.features.postProcessing is off.",
   "IGX-0711":
     "{entity} asks for an Environment.skybox that {asset} was not loaded with; declare it in the .environment.json.",
+  "IGX-0712": "{name} is not a uniform, texture, storage buffer, or plugin binding that is declared.",
+  "IGX-0713": "{name} on {material} expects {expected}, not {actual}.",
+  "IGX-0714": "{material} declares {name}, but this world has no enabled directional light; zeros are uploaded.",
+  "IGX-0715": "{asset} failed to compile; the previous material stays in use. {message}",
+  "IGX-0716": "{material} carries a surface shader, but rendering.features.materialPlugins is off.",
+  "IGX-0717": "{entity} changed {field} on an InstancedMeshRenderer after the scene was registered.",
+  "IGX-0718": "{material} is a {kind} material; {method} needs a shader material.",
+  "IGX-0719": "{asset} line {line}: {message}",
+  "IGX-0720": "{buffer}: an update of {bytes} bytes at offset {offset} exceeds the {capacity}-byte buffer.",
+  "IGX-0721": "{entity}: {count} instances exceed the capacity of {capacity}.",
+  "IGX-0722": "{asset}: {bytes} bytes of pixel data do not match {width}x{height} RGBA.",
+  "IGX-0723":
+    "A surface shader or post effect declares no hook this host can run: displace, surface, composite, or mainFragment.",
+  "IGX-0724":
+    "{entity} uses a shader material under ESM shadows; Babylon Lite 1.27.0 cannot render it into an ESM map, so it casts no shadow. Use pcf shadows or castShadows: false.",
+  "IGX-0725": "{asset}: an update of {count} vertices at offset {offset} does not fit the {total}-vertex mesh.",
+  "IGX-0726": "{samplers} plugin samplers are declared; {budget} fit beside a textured PBR material.",
   "IGX-1420": "This host does not expose Web Crypto.",
   "IGX-1421": "{namespace} is not a valid storage namespace.",
   "IGX-1422": "That storage key is empty, too long, or contains a control character.",
@@ -382,7 +433,7 @@ const DIGITS = "0123456789";
  * ```ts
  * isValidErrorCode("IGX-0701"); // true  — rendering
  * isValidErrorCode("IGX-9042"); // true  — third party
- * isValidErrorCode("IGX-1601"); // false — no subsystem owns 16
+ * isValidErrorCode("IGX-1801"); // false — no subsystem owns 18
  * ```
  *
  * @public

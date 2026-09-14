@@ -24,6 +24,8 @@ describe("@ignifx/vite-plugin barrel", () => {
       "EXTENSION_KEYWORD",
       "IGNIFX_CONFIG_DEFINE_KEY",
       "IGNIFX_CONFIG_FILE_NAMES",
+      "IGNIFX_SYSTEM_UNIFORMS",
+      "LITE_SYSTEM_UNIFORMS",
       "MANIFEST_MODULE_ID",
       "PLUGIN_NAME",
       "RESOLVED_MANIFEST_MODULE_ID",
@@ -32,6 +34,7 @@ describe("@ignifx/vite-plugin barrel", () => {
       "SCRIPTS_MODULE_ID",
       "VitePluginError",
       "VitePluginErrorCode",
+      "WGSL_EXTENSION",
       "addressFromRelativePath",
       "appendPointer",
       "assetTypeForAddress",
@@ -60,6 +63,9 @@ describe("@ignifx/vite-plugin barrel", () => {
       "validateJsonAsset",
       "validateJsonAssets",
       "validateJsonValue",
+      "validateWgslAsset",
+      "validateWgslAssets",
+      "validateWgslSource",
     ]);
   });
 

@@ -235,7 +235,7 @@ describe("the material loader", () => {
     expect(String(handle.error?.cause)).toContain("IGX-0603");
   });
 
-  it("rejects a shader material as IGX-0708, which Phase 7 owns", async () => {
+  it("rejects a shader material that names no shader as IGX-0709", async () => {
     const h = await app();
     canned(
       h,
@@ -244,7 +244,96 @@ describe("the material loader", () => {
     );
     const handle = h.app.assets.load<MaterialAsset>("materials/wgsl.material.json");
     await until(h, () => handle.state !== "loading");
-    expect(String(handle.error?.cause)).toContain("IGX-0708");
+    // `"shader"` used to be the family this build could not construct (IGX-0708); it is implemented
+    // now, and a shader material without a `shader` address is an incomplete file instead
+    // (`test/assets/shader-loader.test.ts` covers the family itself).
+    expect(String(handle.error?.cause)).toContain("IGX-0709");
+  });
+
+  it("reads a shader material's values, textures, and defines, dropping what it cannot use", async () => {
+    const h = await app();
+    const shader = "shaders/dissolve.wgsl";
+    canned(
+      h,
+      shader,
+      "// @ignifx shader\n// @ignifx uniform progress: f32 = 0\n// @ignifx uniform edge: vec3<f32> = color(1, 1, 1)\n// @ignifx texture noise\n// @ignifx define SOFT = false\n",
+    );
+    canned(
+      h,
+      "materials/dissolve.material.json",
+      JSON.stringify({
+        format: "ignifx.material",
+        formatVersion: 1,
+        type: "shader",
+        name: "dissolve",
+        shader,
+        values: { progress: 0.25, edge: [1, 0.5, "x"], dropped: "no" },
+        textures: { noise: { $asset: "textures/a.png" }, missing: 3 },
+        defines: { SOFT: true, ignored: "no" },
+      }),
+    );
+    const handle = h.app.assets.load<MaterialAsset>("materials/dissolve.material.json");
+    // The shader loader awaits dynamic `import()`s, which no number of frames advances.
+    await handle.promise.catch((): null => null);
+    await h.settle(1);
+    expect(handle.state).toBe("loaded");
+    expect(handle.value.kind).toBe("shader");
+    expect(handle.value.getUniform("progress")).toBeCloseTo(0.25);
+    expect(handle.value.definition).toMatchObject({ kind: "shader", name: "dissolve" });
+  });
+
+  it("reads a surfaces list written as an address, an $asset reference, and an object", async () => {
+    const h = await app();
+    const surface = "shaders/snow.surface.wgsl";
+    canned(
+      h,
+      surface,
+      "// @ignifx surface\n// @ignifx uniform amount: f32 = 0.5\nfn surface(in: SurfaceInput, s: ptr<function, Surface>) { (*s).baseColor = vec3<f32>(1.0); }\n",
+    );
+    canned(
+      h,
+      "materials/rock.material.json",
+      JSON.stringify({
+        format: "ignifx.material",
+        formatVersion: 1,
+        type: "pbr",
+        name: "rock",
+        surfaces: [
+          surface,
+          { shader: { $asset: surface }, name: "second" },
+          { shader: surface, name: "third", values: { amount: 0.8 }, enabled: false, priority: 20 },
+        ],
+      }),
+    );
+    const handle = h.app.assets.load<MaterialAsset>("materials/rock.material.json");
+    await handle.promise.catch((): null => null);
+    await h.settle(1);
+    expect(handle.state).toBe("loaded");
+    expect(handle.value.definition).toMatchObject({ kind: "pbr" });
+  });
+
+  it("rejects a surfaces entry that names no shader as IGX-0709", async () => {
+    const h = await app();
+    canned(
+      h,
+      "materials/bad-surface.material.json",
+      JSON.stringify({ format: "ignifx.material", formatVersion: 1, type: "pbr", surfaces: [{ nope: 1 }] }),
+    );
+    const handle = h.app.assets.load<MaterialAsset>("materials/bad-surface.material.json");
+    await until(h, () => handle.state !== "loading");
+    expect(String(handle.error?.cause)).toContain("IGX-0709");
+  });
+
+  it("ignores a surfaces field that is not an array", async () => {
+    const h = await app();
+    canned(
+      h,
+      "materials/plain.material.json",
+      JSON.stringify({ format: "ignifx.material", formatVersion: 1, type: "pbr", surfaces: "none" }),
+    );
+    const handle = h.app.assets.load<MaterialAsset>("materials/plain.material.json");
+    await until(h, () => handle.state !== "loading");
+    expect(handle.state).toBe("loaded");
   });
 
   it("rejects a family that is not a family at all, also as IGX-0708", async () => {
@@ -384,5 +473,73 @@ describe("the font loader", () => {
     await until(h, () => handle.state !== "loading");
     expect(handle.state).toBe("failed");
     expect(handle.error?.code).toBe("IGX-0505");
+  });
+});
+
+describe("the material loader's JSON tolerance", () => {
+  it("rejects a body that is not an object at all", async () => {
+    const h = await app();
+    canned(h, "materials/list.material.json", JSON.stringify([1, 2, 3]));
+    const handle = h.app.assets.load<MaterialAsset>("materials/list.material.json");
+    await until(h, () => handle.state !== "loading");
+    expect(String(handle.error?.cause)).toContain("IGX-0709");
+  });
+
+  it("drops a texture reference that names no address", async () => {
+    const h = await app();
+    canned(
+      h,
+      "materials/empty-texture.material.json",
+      JSON.stringify({
+        format: "ignifx.material",
+        formatVersion: 1,
+        type: "pbr",
+        baseColorTexture: { $asset: "" },
+        normalTexture: { nope: 1 },
+      }),
+    );
+    const handle = h.app.assets.load<MaterialAsset>("materials/empty-texture.material.json");
+    await until(h, () => handle.state !== "loading");
+    expect(handle.state).toBe("loaded");
+    expect(handle.value.definition.textures).toStrictEqual({});
+  });
+
+  it("drops a surfaces entry whose shader reference is an array or a non-string $asset", async () => {
+    const h = await app();
+    canned(
+      h,
+      "materials/odd-surfaces.material.json",
+      JSON.stringify({
+        format: "ignifx.material",
+        formatVersion: 1,
+        type: "pbr",
+        surfaces: [{ shader: [1] }],
+      }),
+    );
+    const handle = h.app.assets.load<MaterialAsset>("materials/odd-surfaces.material.json");
+    await until(h, () => handle.state !== "loading");
+    expect(String(handle.error?.cause)).toContain("IGX-0709");
+  });
+
+  it("drops a shader material's defines that are neither boolean nor finite", async () => {
+    const h = await app();
+    const shader = "shaders/plain.wgsl";
+    canned(h, shader, "// @ignifx shader\n// @ignifx define SOFT = false\n");
+    canned(
+      h,
+      "materials/odd-defines.material.json",
+      JSON.stringify({
+        format: "ignifx.material",
+        formatVersion: 1,
+        type: "shader",
+        shader,
+        textures: { missing: { $asset: "" } },
+        defines: { SOFT: true, broken: "yes", alsoBroken: Number.POSITIVE_INFINITY },
+      }),
+    );
+    const handle = h.app.assets.load<MaterialAsset>("materials/odd-defines.material.json");
+    await handle.promise.catch((): null => null);
+    await h.settle(1);
+    expect(handle.state).toBe("loaded");
   });
 });

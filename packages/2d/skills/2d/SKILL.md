@@ -1,6 +1,6 @@
 ---
 name: 2d
-description: Builds 2D games in ignifx with @ignifx/2d: Camera2D, SpriteRenderer, SpriteAnimator, texture atlases, Tilemap rendering and import, sorting layers and Y-sort, pixel-perfect cameras, parallax layers, and 2D picking. Use when adding or editing sprites, sprite animation, tilemaps, atlases, sorting layers, or a 2D camera in an ignifx project, or when the user mentions @ignifx/2d, Camera2D, SpriteRenderer, or Tilemap.
+description: Builds 2D games in ignifx with @ignifx/2d: Camera2D, SpriteRenderer, SpriteAnimator, texture atlases, Tilemap rendering and import, sorting layers and Y-sort, pixel-perfect cameras, parallax layers, sprite batches, and 2D picking. Use when adding or editing sprites, sprite animation, tilemaps, atlases, sorting layers, sprite batches, or a 2D camera in an ignifx project, or when the user mentions @ignifx/2d, Camera2D, SpriteRenderer, SpriteBatch, or Tilemap.
 license: Apache-2.0
 metadata:
   ignifx-version: "0.2.1"
@@ -21,7 +21,7 @@ parse, `SpriteAnimator` advances on the stepped clock. Only the pixels need a GP
 
 ## Environment
 
-- Engine: ignifx `0.0.0-unreleased`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
+- Engine: ignifx `0.2.1`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
 - WebGPU only, browser and Electron. Babylon Lite `1.27.0` is a peer dependency.
 - Register it like any extension; nothing happens at import time.
 
@@ -121,6 +121,7 @@ Full signatures: `skills/ignifx/references/api/2d.md`.
 | `layers`                              | Diagnostics: every Lite layer in draw order                |
 | `registerTileObjectFactory(type, fn)` | What a tilemap's objects layer spawns                      |
 | `syncedLastFrame` · `spriteCount`     | How many sprites the last frame actually wrote             |
+| `createSpriteBatch(options)`          | A fixed-capacity crowd of entity-less sprites (`@beta`)    |
 | `lite.renderer`                       | The Lite `SpriteRenderer`, or `null` headless              |
 
 ### Components
@@ -136,6 +137,42 @@ Full signatures: `skills/ignifx/references/api/2d.md`.
 | `SpriteLayerEffect` (`ignifx/SpriteLayerEffect`) | `sortingLayer`, `kind`, `tint`, `params`, `shader`                                                                      |
 | `Camera2DFollow` (`ignifx/Camera2DFollow`)       | A `Script`; reads `Camera2D`'s follow fields in `lateUpdate`                                                            |
 
+### `SpriteBatch` — sprites without entities (`@beta`)
+
+`app.twoD.createSpriteBatch({ atlas, capacity, sortingLayer?, blend?, screenSpace? })` claims
+`capacity` slots in one Lite layer and hands back a `SpriteBatch` addressed by index. Use it when the
+sprites are not _things_ — bullets, sparks, debris, 2D particles — and one entity each would cost
+more than the drawing does. Use `SpriteRenderer` for anything with a transform, a pick or a place in
+a scene file.
+
+| Member                                                                  | Meaning                                                            |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `capacity`                                                              | The slots claimed; fixed for the batch's life                      |
+| `count`                                                                 | How many leading slots draw; slots at `count` and above are hidden |
+| `write(index, x, y, w, h, frame, rotation, r, g, b, a, flipX?, flipY?)` | One slot, in world metres, +Y up, and degrees counter-clockwise    |
+| `hide(index)`                                                           | Hides one slot until it is written again                           |
+| `dispose()`                                                             | Gives the slots back; also runs at the end of a `using` block      |
+| `lite.handles`                                                          | The Lite `Sprite2DHandle` per slot — unstable escape hatch         |
+
+```ts
+import { createApp } from "ignifx";
+import { twoD } from "@ignifx/2d";
+import type { SpriteAtlasAsset } from "@ignifx/2d";
+
+const app = await createApp({ headless: true, extensions: [twoD()] });
+const atlas = app.assets.load<SpriteAtlasAsset>("2d/spark.atlas.json");
+await atlas.promise;
+
+const sparks = app.twoD.createSpriteBatch({ atlas, capacity: 2048, blend: "additive" });
+sparks.count = 1;
+// index, centre x/y (metres, +Y up), width/height (metres), frame, rotation (degrees), then RGBA.
+sparks.write(0, 1.5, 0.5, 0.2, 0.2, 0, 0, 1, 0.8, 0.3, 1);
+sparks.dispose();
+```
+
+A batch is not picked, does not sort its own slots, and centres every slot on the `(x, y)` written —
+see the Gotchas.
+
 ### Importers
 
 Pure functions, so a build step or a test can call them with no app:
@@ -147,7 +184,9 @@ Pure functions, so a build step or a test can call them with no app:
 `IGX-1102` unextruded atlas frame (logged, not thrown) · `IGX-1103`/`IGX-1104`/`IGX-1105` unreadable
 document · `IGX-1106` unknown frame · `IGX-1107` unknown sorting layer · `IGX-1108` unknown clip ·
 `IGX-1109` unsupported import · `IGX-1110` duplicate object factory · `IGX-1111` cell out of range ·
-`IGX-1112` duplicate extension · `IGX-1113` custom effect with no WGSL.
+`IGX-1112` duplicate extension · `IGX-1113` custom effect with no WGSL · `IGX-1114` bad sprite-batch
+capacity · `IGX-1115` sprite-batch slot or count out of range · `IGX-1116` sprite batch used after
+`dispose()` · `IGX-1117` sprite-batch atlas not loaded.
 
 ## Recipes
 
@@ -230,6 +269,14 @@ Generated reference: `skills/ignifx/references/formats/`.
   `.atlas.json`, because a texture's sampler is fixed at upload.
 - **Tiles are not pickable.** They have no component, so `pickAt` skips them; use
   `Tilemap.worldToCell`, which is exact and free.
+- **A `SpriteBatch` slot is centred on the position written and is never picked.** It ignores the
+  frame's pivot — offset the position yourself if you need feet on the ground — and holds no
+  component for `pickAt` to resolve. It also does not sort its own slots: on a Y-sorted sorting layer
+  Lite sorts them with that layer's sprites, and otherwise they draw in index order. Raising `count`
+  reveals slots with the geometry they last carried, so write a slot before counting it in.
+- **Keep a big moving batch off a Y-sorted sorting layer.** One moved sprite marks the whole Lite
+  layer unsorted, which costs a merge sort and a full re-upload of every sprite in it that frame.
+  Put a thousand particles on their own non-Y-sorted sorting layer instead.
 - **Register `SpriteLayerEffect` before the first sprite on its layer.** A Lite layer's shader is
   fixed at creation.
 - **The sky of a `"sprite"`-mode frame is `rendering.clearColor`, and nothing else.** The sprite pass

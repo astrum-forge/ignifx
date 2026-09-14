@@ -4,6 +4,8 @@
 
 ```ts
 
+import { DecodedPng } from 'fast-png';
+
 // @public
 export class CliError extends Error {
     constructor(code: CliErrorCode, message: string, options?: ErrorOptions);
@@ -15,6 +17,9 @@ export const CliErrorCode: {
     readonly targetNotEmpty: "IGX-1401";
     readonly templateNotFound: "IGX-1402";
     readonly invalidArguments: "IGX-1403";
+    readonly unsupportedHeightmap: "IGX-1404";
+    readonly fileNotAccessible: "IGX-1405";
+    readonly eightBitHeightmapSource: "IGX-1406";
 };
 
 // @public
@@ -78,7 +83,39 @@ export const DESKTOP_ONLY_ENTRIES: readonly string[];
 export const DESKTOP_SCRIPT_SUFFIX = ":desktop";
 
 // @public
+export function encodeHeightmapR16(samples: Uint16Array): Uint8Array;
+
+// @public
+export function heightmapSamples(png: DecodedPng, file?: string): Uint16Array;
+
+// @public
+export const IMPORT_HEIGHTMAP_USAGE = "Usage: ignifx import heightmap <in.png> <out.r16>";
+
+// @public
+export interface ImportHeightmapCommand {
+    readonly input: string;
+    readonly output: string;
+}
+
+// @public
+export interface ImportHeightmapResult {
+    readonly bitDepth: number;
+    readonly height: number;
+    readonly output: string;
+    readonly width: number;
+}
+
+// @public
+export interface ImportIo {
+    readonly stderr: (line: string) => void;
+    readonly stdout: (line: string) => void;
+}
+
+// @public
 export function parseArgs(argv: readonly string[]): CreateCommand;
+
+// @public
+export function parseImportHeightmapArgs(argv: readonly string[]): ImportHeightmapCommand;
 
 // @public
 export function resolveTemplateDir(name: string, templatesRoot: string): Promise<string>;
@@ -88,6 +125,9 @@ export function resolveTemplatesRoot(binDirectory: string): Promise<string>;
 
 // @public
 export function runCreate(argv: readonly string[], io: CreateIo): Promise<CopyTemplateResult>;
+
+// @public
+export function runImportHeightmap(argv: readonly string[], io: ImportIo): Promise<ImportHeightmapResult>;
 
 // @public
 export const TEMPLATE_ROOT_CANDIDATES: readonly string[];

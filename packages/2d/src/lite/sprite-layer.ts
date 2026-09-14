@@ -268,6 +268,52 @@ export function updateSprite(handle: Sprite2DHandle, scratch: SpriteScratch): vo
 }
 
 /**
+ * A reusable **partial** props record that carries nothing but a visibility flag.
+ *
+ * @remarks
+ * `updateSprite2D` takes a `Partial<Sprite2DProps>` and Lite keeps each sprite's true size in a
+ * side array (`layer._savedSize`), writing `size = visible ? trueW : 0` into the instance slot
+ * (`lib/sprite/sprite-2d.js`, `writeInstance`). So a visibility-only patch both hides a sprite and
+ * restores its exact geometry when it comes back, without the caller having to remember the
+ * geometry — which is what lets a sprite batch shrink and grow its `count` in one write per slot.
+ *
+ * @internal
+ */
+export interface SpriteVisibilityScratch {
+  /** The patch object handed to `updateSprite2D`. */
+  readonly patch: Partial<Sprite2DProps>;
+}
+
+/**
+ * Builds the reusable visibility patch.
+ *
+ * @returns A fresh record; each owner keeps exactly one.
+ *
+ * @internal
+ */
+export function createSpriteVisibilityScratch(): SpriteVisibilityScratch {
+  return { patch: { visible: true } };
+}
+
+/**
+ * Shows or hides one sprite, leaving every other field alone.
+ *
+ * @param handle - The sprite.
+ * @param scratch - The reusable visibility patch.
+ * @param visible - Whether the sprite draws.
+ *
+ * @internal
+ */
+export function updateSpriteVisibility(
+  handle: Sprite2DHandle,
+  scratch: SpriteVisibilityScratch,
+  visible: boolean,
+): void {
+  scratch.patch.visible = visible;
+  updateSprite2D(handle, scratch.patch);
+}
+
+/**
  * Removes a sprite, tolerating a handle whose sprite is already gone.
  *
  * @remarks

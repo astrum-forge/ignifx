@@ -1,8 +1,8 @@
 # @ignifx/vite-plugin
 
 The build-time half of the ignifx asset pipeline: it generates the asset manifest, validates the
-JSON file formats, injects `ignifx.config.ts`, copies the static files extensions need, and carries
-asset changes to the running game over HMR.
+JSON file formats and the WGSL shaders, injects `ignifx.config.ts`, copies the static files
+extensions need, and carries asset changes to the running game over HMR.
 
 The package depends on nothing from the engine (`docs/architecture/00-overview.md` §2). It produces
 the files `@ignifx/core` consumes at runtime.
@@ -39,6 +39,7 @@ There is no default export: the plugin is the named factory `ignifx` (coding sta
 | Assets               | served by Vite from the asset root                                  | copied to `<outDir>/assets/` with immutable-cacheable names     |
 | Project config       | `import.meta.env.IGNIFX_CONFIG`                                     | same                                                            |
 | Validation           | reported in the terminal and the browser error overlay              | fails the build                                                 |
+| Shaders              | `.wgsl` files are `shader` assets, validated with the JSON assets   | same                                                            |
 | Extension WASM/fonts | served from `/assets/<name>`                                        | copied unhashed to `<outDir>/assets/<name>`                     |
 | Changes              | `ignifx:asset-changed` over HMR; a config edit forces a full reload | —                                                               |
 
@@ -87,8 +88,8 @@ address so that two builds of the same tree produce the same bytes:
 - **url** — root-relative in development, content-hashed in a build. The hash goes _before_ the
   extension, and a two-segment JSON extension stays intact: `level1.scene.json` becomes
   `level1.<hash>.scene.json`, so the loader still recognises the format.
-- **type** — derived from the extension (`texture`, `model`, `scene`, `material`, `environment`,
-  `font`, `audio`, `json`, `text`, `binary`); an unknown extension is `binary`.
+- **type** — derived from the extension (`texture`, `model`, `scene`, `material`, `shader`,
+  `environment`, `font`, `audio`, `json`, `text`, `binary`); an unknown extension is `binary`.
 - **groups** and **meta** — from the `.meta.json` sidecar; `meta` is omitted when there is none.
 
 ### Sidecars
@@ -170,6 +171,48 @@ Problems are reported with a JSON pointer:
 levels/level1.scene.json /entities/0: missing required property "uid" (IGX-0652)
 ```
 
+## Shaders
+
+Every `.wgsl` file under the asset root is a `shader` asset — `*.surface.wgsl` and `*.post.wgsl`
+included, because the `// @ignifx` pragma inside the file, not its name, declares which of the three
+forms it is. The hash goes before the single `.wgsl` extension in a build
+(`snow.surface.wgsl` → `snow.surface.<hash>.wgsl`), and the manifest address stays unhashed, which is
+what game code loads.
+
+Each one is parsed with [`wgsl_reflect`](https://github.com/brendan-duncan/wgsl_reflect) (MIT, zero
+dependencies) at `buildStart` and on every dev-server change, and checked against the ignifx WGSL
+contract. Six rules, each reported with the file and the line:
+
+| Rule                   | Reports                                                                                                                                                                                                       | Code       |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| Syntax                 | the file does not parse, at the parser's line                                                                                                                                                                 | `IGX-0654` |
+| Form                   | no `// @ignifx shader\|surface\|post` line, or two of them                                                                                                                                                    | `IGX-0655` |
+| Declared names         | a `shaderUniforms.x`/`shaderSystem.x` the file never declared — engine-supplied names included, because the struct is generated from the declaration — or a sampled texture with no `// @ignifx texture` line | `IGX-0655` |
+| Entry points           | `shader` without `@vertex fn mainVertex`/`@fragment fn mainFragment`, `post` without `mainFragment`, `surface` with none of `displace`/`surface`/`composite`                                                  | `IGX-0655` |
+| Hand-declared bindings | a `var<uniform>`, `var<storage>`, texture or sampler in the source — ignifx and Lite generate the whole bind-group layout from the declarations                                                               | `IGX-0655` |
+| Vertex-stage sampling  | `textureSample` anywhere the `@vertex` entry reaches, and any texture read the `surface` form's `displace` hook reaches                                                                                       | `IGX-0655` |
+
+A `shader` file has to list every engine uniform it reads on an `// @ignifx system` line, because
+`@ignifx/core` generates the `shaderUniforms` and `shaderSystem` blocks from the declaration alone:
+reading `shaderSystem.cameraPosition` without declaring it leaves the member out of the generated
+struct. `post` files are exempt — their bindings come from the post-process stack, not from a shader
+material.
+
+```
+shaders/dissolve.wgsl: line 24: calls textureSample in "mainVertex", which the vertex stage reaches;
+WGSL allows textureSample in the fragment stage only — use textureSampleLevel or textureLoad (IGX-0655)
+```
+
+A failure fails a production build and shows in the dev server's terminal and browser error overlay,
+exactly as a JSON schema failure does; `validate: false` turns both off. Full type checking stays
+with the browser's WGSL compiler, which reports through `app.onError`. What these rules add is a
+**file and a line**: the browser compiles the source Lite generated — your file with a scene UBO, two
+uniform blocks, a sampler pair per texture and a `VertexInput` struct in front of it — so its
+diagnostics point at line numbers that exist in nothing you wrote.
+
+Editing a `.wgsl` file announces `ignifx:asset-changed` like any other asset, and `@ignifx/core`'s
+shader assets rebuild their material in place.
+
 ## HMR
 
 ```ts
@@ -235,6 +278,8 @@ collide with them.
 | `IGX-0651` | A format-headed file has no usable `format`/`formatVersion` header                                                 |
 | `IGX-0652` | A document failed its JSON Schema                                                                                  |
 | `IGX-0653` | A supplied schema uses a keyword this validator does not implement                                                 |
+| `IGX-0654` | A `.wgsl` shader asset does not parse as WGSL                                                                      |
+| `IGX-0655` | A `.wgsl` shader asset breaks the ignifx WGSL contract (see [Shaders](#shaders))                                   |
 
 ## License
 

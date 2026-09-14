@@ -41,15 +41,42 @@ const ALLOWED_IMPORTS = {
   ui: ["core", "input"],
   "physics-2d": ["core", "2d"],
   "3d": ["core", "physics", "input"],
+  particles: ["core"],
+  "particles-2d": ["core", "2d", "particles"],
+  terrain: ["core"],
 
   // Layer 3 — platform, tooling and the umbrella.
   electron: ["core"],
   devtools: ["core", "ui", "input", "audio", "physics", "physics-2d"],
-  ignifx: ["core", "input", "physics", "physics-2d", "audio", "2d", "3d", "ui", "electron", "devtools"],
+  ignifx: [
+    "core",
+    "input",
+    "physics",
+    "physics-2d",
+    "audio",
+    "2d",
+    "3d",
+    "ui",
+    "electron",
+    "devtools",
+    "particles",
+    "particles-2d",
+    "terrain",
+  ],
 
   // Build-time tooling: no runtime coupling to the engine at all.
   "vite-plugin": [],
   cli: [],
+};
+
+/**
+ * Extra imports a package's `test/` may make that its `src/` may not. Integration tests that check a
+ * by-data coupling end to end (plan `2026-09-terrain-particles-shaders.md` §5.4) live here so the
+ * runtime layering above stays exact.
+ */
+const TEST_ONLY_IMPORTS = {
+  // packages/physics/test/terrain-heightfield.test.ts drives a HeightfieldCollider from Terrain.colliderInit().
+  physics: ["terrain"],
 };
 
 /** Directory names under `packages/` that are not published engine packages. */
@@ -92,13 +119,19 @@ function sourcesOf(name) {
   return `^packages/${escapeForRegExp(name)}/(src|test)/`;
 }
 
-/** One layering rule per package, generated from ALLOWED_IMPORTS. */
-const layeringRules = PACKAGE_NAMES.map((name) => {
-  const allowed = ALLOWED_IMPORTS[name];
+/**
+ * One layering rule per package, generated from ALLOWED_IMPORTS; a package with TEST_ONLY_IMPORTS
+ * gets one rule for `src/` and a looser one for `test/`.
+ * @param name - A package directory name under `packages/`.
+ * @param suffix - Appended to the rule name when a package has more than one rule.
+ * @param fromPath - The regular expression source of the files the rule applies to.
+ * @param allowed - The package directory names this rule lets those files import.
+ * @returns The dependency-cruiser rule.
+ */
+function layeringRule(name, suffix, fromPath, allowed) {
   const selfAndAllowed = [name, ...allowed].flatMap((dependency) => referencesTo(dependency));
-
   return {
-    name: `layering-${name}`,
+    name: `layering-${name}${suffix}`,
     comment:
       allowed.length > 0
         ? `@ignifx/${name} may import only ${allowed.map((dependency) => `@ignifx/${dependency}`).join(", ")} ` +
@@ -106,12 +139,24 @@ const layeringRules = PACKAGE_NAMES.map((name) => {
         : `@ignifx/${name} sits at the bottom of its stack and may not import any @ignifx/* package ` +
           `(docs/architecture/00-overview.md §2.1).`,
     severity: "error",
-    from: { path: sourcesOf(name) },
+    from: { path: fromPath },
     to: {
       path: ["^packages/", String.raw`^@ignifx/`, "node_modules/@ignifx/"],
       pathNot: selfAndAllowed,
     },
   };
+}
+
+const layeringRules = PACKAGE_NAMES.flatMap((name) => {
+  const allowed = ALLOWED_IMPORTS[name];
+  const testOnly = TEST_ONLY_IMPORTS[name];
+  if (testOnly === undefined) {
+    return [layeringRule(name, "", sourcesOf(name), allowed)];
+  }
+  return [
+    layeringRule(name, "-src", `^packages/${escapeForRegExp(name)}/src/`, allowed),
+    layeringRule(name, "-test", `^packages/${escapeForRegExp(name)}/test/`, [...allowed, ...testOnly]),
+  ];
 });
 
 module.exports = {

@@ -43,6 +43,9 @@
     "api-report:update": "api-extractor run --local --verbose",
     "pack-check": "publint && attw --pack . --profile esm-only"
   },
+  "dependencies": {
+    "wgsl_reflect": "catalog:"
+  },
   "devDependencies": {
     "@arethetypeswrong/cli": "catalog:",
     "@ignifx/core": "workspace:*",

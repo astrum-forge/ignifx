@@ -1,4 +1,7 @@
 import { createHelloCubeScene } from "../scenes/hello-cube.ts";
+import { createInstancing20kScene } from "../scenes/instancing-20k.ts";
+import { createParticles10kScene } from "../scenes/particles-10k.ts";
+import { createTerrain512Scene } from "../scenes/terrain-512.ts";
 import { createThousandEntitiesScene } from "../scenes/thousand-entities.ts";
 import type { BenchScene } from "../scenes/types.ts";
 
@@ -19,6 +22,9 @@ import type { BenchScene } from "../scenes/types.ts";
 const SCENES: Readonly<Record<string, () => Promise<BenchScene>>> = {
   "hello-cube": createHelloCubeScene,
   "thousand-entities": createThousandEntitiesScene,
+  "instancing-20k": createInstancing20kScene,
+  "particles-10k": createParticles10kScene,
+  "terrain-512": createTerrain512Scene,
 };
 
 /** How many times the heap is settled before and after the measured run. */

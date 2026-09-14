@@ -20,7 +20,7 @@ rebinding screens. Raw device state stays available for tools and prototypes.
 
 ## Environment
 
-- Engine: ignifx `0.0.0-unreleased`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
+- Engine: ignifx `0.2.1`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
 - Browsers and Electron. No Babylon Lite dependency: input is DOM-only, so it works identically
   under the null engine (`createApp({ headless: true })`).
 - Register it like any extension; nothing happens at import time.

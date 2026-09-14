@@ -20,7 +20,8 @@
     "directory": "packages/cli"
   },
   "bin": {
-    "create-ignifx": "./dist/bin.js"
+    "create-ignifx": "./dist/bin.js",
+    "ignifx": "./dist/ignifx/bin.js"
   },
   "files": [
     "dist",
@@ -48,6 +49,9 @@
     "docs:api": "typedoc",
     "api-report:update": "api-extractor run --local --verbose",
     "pack-check": "publint && attw --pack . --profile esm-only"
+  },
+  "dependencies": {
+    "fast-png": "catalog:"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "catalog:",

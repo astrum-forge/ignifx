@@ -426,6 +426,103 @@ The line to write, without a trailing newline.
 
 Directory that holds one subdirectory per template.
 
+***
+
+### ImportHeightmapCommand
+
+A parsed `ignifx import heightmap` invocation.
+
+#### Properties
+
+##### input
+
+> `readonly` **input**: `string`
+
+The PNG to read, exactly as the user typed it.
+
+##### output
+
+> `readonly` **output**: `string`
+
+The `.r16` to write.
+
+***
+
+### ImportHeightmapResult
+
+What [runImportHeightmap](#runimportheightmap) wrote.
+
+#### Properties
+
+##### bitDepth
+
+> `readonly` **bitDepth**: `number`
+
+The source PNG's bit depth; `8` means the heights are already terraced.
+
+##### height
+
+> `readonly` **height**: `number`
+
+The heightmap's height in samples.
+
+##### output
+
+> `readonly` **output**: `string`
+
+The file written.
+
+##### width
+
+> `readonly` **width**: `number`
+
+The heightmap's width in samples.
+
+***
+
+### ImportIo
+
+The side-effecting surface [runImportHeightmap](#runimportheightmap) is allowed to touch, injected so unit tests
+never spawn a process (`CONSTITUTION.md` §3.6).
+
+#### Properties
+
+##### stderr
+
+> `readonly` **stderr**: (`line`) => `void`
+
+Writes one line of diagnostic output.
+
+###### Parameters
+
+###### line
+
+`string`
+
+The line, without a trailing newline.
+
+###### Returns
+
+`void`
+
+##### stdout
+
+> `readonly` **stdout**: (`line`) => `void`
+
+Writes one line of progress output.
+
+###### Parameters
+
+###### line
+
+`string`
+
+The line, without a trailing newline.
+
+###### Returns
+
+`void`
+
 ## Type Aliases
 
 ### CliErrorCode
@@ -445,6 +542,18 @@ The CLI reports these through `CliError` without creating an engine app.
 
 #### Type Declaration
 
+##### eightBitHeightmapSource
+
+> `readonly` **eightBitHeightmapSource**: `"IGX-1406"` = `"IGX-1406"`
+
+A converted heightmap's source was 8-bit, so its heights are terraced. Reported, never thrown.
+
+##### fileNotAccessible
+
+> `readonly` **fileNotAccessible**: `"IGX-1405"` = `"IGX-1405"`
+
+A file named on the command line could not be read or written.
+
 ##### invalidArguments
 
 > `readonly` **invalidArguments**: `"IGX-1403"` = `"IGX-1403"`
@@ -462,6 +571,12 @@ The target directory already exists and is not empty, and `overwrite` was not re
 > `readonly` **templateNotFound**: `"IGX-1402"` = `"IGX-1402"`
 
 The requested template directory does not exist.
+
+##### unsupportedHeightmap
+
+> `readonly` **unsupportedHeightmap**: `"IGX-1404"` = `"IGX-1404"`
+
+A heightmap PNG is not one `ignifx import heightmap` can turn into `.r16`.
 
 ***
 
@@ -554,6 +669,14 @@ The suffix marking a `package.json` script that belongs to the desktop variant.
 
 ***
 
+### IMPORT\_HEIGHTMAP\_USAGE
+
+> `const` **IMPORT\_HEIGHTMAP\_USAGE**: `"Usage: ignifx import heightmap <in.png> <out.r16>"` = `"Usage: ignifx import heightmap <in.png> <out.r16>"`
+
+The one-line usage string printed with every argument error.
+
+***
+
 ### TEMPLATE\_ROOT\_CANDIDATES
 
 > `const` **TEMPLATE\_ROOT\_CANDIDATES**: readonly `string`[]
@@ -635,6 +758,62 @@ console.log(`${String(result.files.length)} files written`);
 
 ***
 
+### encodeHeightmapR16()
+
+> **encodeHeightmapR16**(`samples`): `Uint8Array`
+
+Encodes samples as little-endian `.r16` bytes.
+
+#### Parameters
+
+##### samples
+
+`Uint16Array`
+
+The samples, row-major.
+
+#### Returns
+
+`Uint8Array`
+
+The file's bytes.
+
+***
+
+### heightmapSamples()
+
+> **heightmapSamples**(`png`, `file?`): `Uint16Array`
+
+Turns a decoded PNG into 16-bit height samples: greyscale as is, colour by Rec. 709 luminance,
+8-bit scaled so full white stays full height.
+
+#### Parameters
+
+##### png
+
+`DecodedPng`
+
+The decoded image.
+
+##### file?
+
+`string` = `"<memory>"`
+
+The file's path, for messages.
+
+#### Returns
+
+`Uint16Array`
+
+`width * height` samples, row-major.
+
+#### Throws
+
+A [CliError](#clierror) with code `IGX-1404` when the bit depth is below 8, or the image is
+indexed, which carries no meaningful height.
+
+***
+
 ### parseArgs()
 
 > **parseArgs**(`argv`): [`CreateCommand`](#createcommand)
@@ -672,6 +851,39 @@ directory is missing, or extra positionals are given.
 ```ts
 const command = parseArgs(["my-game", "--template", "3d-first-person", "--desktop"]);
 // { targetDir: "my-game", template: "3d-first-person", overwrite: false, desktop: true }
+```
+
+***
+
+### parseImportHeightmapArgs()
+
+> **parseImportHeightmapArgs**(`argv`): [`ImportHeightmapCommand`](#importheightmapcommand)
+
+Parses the arguments of `ignifx import heightmap`.
+
+#### Parameters
+
+##### argv
+
+readonly `string`[]
+
+The arguments after `import heightmap`.
+
+#### Returns
+
+[`ImportHeightmapCommand`](#importheightmapcommand)
+
+The parsed command.
+
+#### Throws
+
+A [CliError](#clierror) with code `IGX-1403` when the command line is unparseable or does not
+name exactly one input and one output.
+
+#### Example
+
+```ts
+const command = parseImportHeightmapArgs(["island.png", "island.r16"]);
 ```
 
 ***
@@ -777,4 +989,43 @@ await runCreate(["my-game"], {
   stderr: (line) => lines.push(line),
   templatesRoot: "/path/to/templates",
 });
+```
+
+***
+
+### runImportHeightmap()
+
+> **runImportHeightmap**(`argv`, `io`): `Promise`\<[`ImportHeightmapResult`](#importheightmapresult)\>
+
+Reads a PNG heightmap and writes the `.r16` `@ignifx/terrain` loads.
+
+#### Parameters
+
+##### argv
+
+readonly `string`[]
+
+The arguments after `import heightmap`.
+
+##### io
+
+[`ImportIo`](#importio)
+
+The injected output sinks.
+
+#### Returns
+
+`Promise`\<[`ImportHeightmapResult`](#importheightmapresult)\>
+
+What was written.
+
+#### Throws
+
+A [CliError](#clierror) with code `IGX-1403` for bad arguments, `IGX-1404` for a PNG this
+command cannot read, or `IGX-1405` when a file cannot be read or written.
+
+#### Example
+
+```ts
+await runImportHeightmap(["island.png", "island.r16"], { stdout: log, stderr: log });
 ```

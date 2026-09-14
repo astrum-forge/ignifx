@@ -1,6 +1,6 @@
 /**
  * What the site reads out of the repository at build time: the "First app" sample from the entry
- * skill, and the sixteen recipes that become `/docs/guides/<name>/`.
+ * skill, and the recipes that become `/docs/guides/<name>/`.
  *
  * Nothing here is transcribed by hand. The home page's code block is the same text the docs harness
  * compiles (`AGENTS.md`: "Skill examples are compiled by the harness"), and a guide page is the
@@ -22,7 +22,19 @@ export const RECIPES_DIRECTORY = "skills/ignifx/references/recipes";
  */
 export const GUIDE_GROUPS: readonly { readonly title: string; readonly recipes: readonly string[] }[] = [
   { title: "Scenes and assets", recipes: ["load-a-model", "spawn-a-prefab", "spawn-a-prefab-on-click"] },
-  { title: "Rendering and motion", recipes: ["tween-a-transform"] },
+  { title: "Rendering and motion", recipes: ["tween-a-transform", "instance-many-meshes"] },
+  {
+    title: "Shaders",
+    recipes: ["write-a-custom-shader", "add-a-surface-shader", "add-a-custom-post-process"],
+  },
+  {
+    title: "Particles",
+    recipes: ["play-a-particle-effect", "burst-particles-on-hit", "particles-in-2d"],
+  },
+  {
+    title: "Terrain",
+    recipes: ["load-a-heightmap-terrain", "walk-on-terrain", "scatter-foliage"],
+  },
   { title: "Input", recipes: ["bind-an-action-and-read-it", "rebind-a-key-at-runtime"] },
   { title: "3D", recipes: ["character-controller-3d", "third-person-camera", "raycast-and-trigger-3d"] },
   {

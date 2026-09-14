@@ -45,6 +45,7 @@
     "@babylonjs/havok": "catalog:",
     "@babylonjs/lite": "catalog:",
     "@ignifx/core": "workspace:*",
+    "@ignifx/terrain": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
     "@types/node": "catalog:",
     "@types/webxr": "catalog:",
