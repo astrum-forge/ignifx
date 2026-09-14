@@ -1,11 +1,11 @@
 # Rendering
 
-ignifx does not render; Babylon Lite does. Six components describe what a frame contains, one
+ignifx does not render; Babylon Lite does. Seven components describe what a frame contains, one
 `PreRender` system reconciles them with the Lite scene, and `app.renderer` owns everything that is
 not attached to an entity. Rationale in `docs/architecture/07-rendering.md`.
 
 ```
-Entity ──▶ Camera | Light | MeshRenderer | Model | Environment | PostProcessStack
+Entity ──▶ Camera | Light | MeshRenderer | InstancedMeshRenderer | Model | Environment | PostProcessStack
                      │
        PreRender ──▶ render-sync (order 900) ──▶ Lite scene ──▶ frame
 ```
@@ -15,14 +15,15 @@ Entity ──▶ Camera | Light | MeshRenderer | Model | Environment | PostProce
 Exact fields and defaults are in [`../formats/components.md`](../formats/components.md); this is
 what they mean.
 
-| Component          | What it adds                                                      | Notes                                                                                                                                                                 |
-| ------------------ | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Camera`           | A view. The **entity's transform is the view**; no follow logic   | `projection`, `fov` (degrees), `orthographicSize`, `near`/`far`, `viewport`, `clearColor`, `priority`                                                                 |
-| `Light`            | `"directional" \| "point" \| "spot" \| "hemispheric"`             | `shadows` is a sub-record; only directional and spot lights can cast (`IGX-0703`)                                                                                     |
-| `MeshRenderer`     | One clone of a `MeshAsset`, drawn with a `MaterialAsset`          | `allowMultiple`; several renderers per entity are fine                                                                                                                |
-| `Model`            | One instance of a loaded glTF, cloned under the entity's node     | `nodes`, `attachToNode(name, entity)`, `materialOverrides`; `animations`/`skeletons` are `@beta`                                                                      |
-| `Environment`      | Image-based lighting, skybox, fog, image processing, clear colour | **One per world**; a second enabled one logs `IGX-0705` and the most recent wins. Assign a different **loaded** handle to `environment` to switch lighting at runtime |
-| `PostProcessStack` | `bloom`, `smaa`, `imageProcessing`, as one frame-graph chain      | Needs `features.postProcessing`, or it logs `IGX-0710` and does nothing (§3)                                                                                          |
+| Component               | What it adds                                                      | Notes                                                                                                                                                                 |
+| ----------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Camera`                | A view. The **entity's transform is the view**; no follow logic   | `projection`, `fov` (degrees), `orthographicSize`, `near`/`far`, `viewport`, `clearColor`, `priority`                                                                 |
+| `Light`                 | `"directional" \| "point" \| "spot" \| "hemispheric"`             | `shadows` is a sub-record; only directional and spot lights can cast (`IGX-0703`)                                                                                     |
+| `MeshRenderer`          | One clone of a `MeshAsset`, drawn with a `MaterialAsset`          | `allowMultiple`; several renderers per entity are fine                                                                                                                |
+| `InstancedMeshRenderer` | One mesh drawn many times from a caller-owned matrix slab         | `setMatrices(slab, count)`, `setColors`, `setCount`, `markDirty(range)`; `capacity`, `gpuCulling` and `lod` are fixed before `app.start()` (`IGX-0717`)               |
+| `Model`                 | One instance of a loaded glTF, cloned under the entity's node     | `nodes`, `attachToNode(name, entity)`, `materialOverrides`; `animations`/`skeletons` are `@beta`                                                                      |
+| `Environment`           | Image-based lighting, skybox, fog, image processing, clear colour | **One per world**; a second enabled one logs `IGX-0705` and the most recent wins. Assign a different **loaded** handle to `environment` to switch lighting at runtime |
+| `PostProcessStack`      | `bloom`, `smaa`, `imageProcessing`, as one frame-graph chain      | Needs `features.postProcessing`, or it logs `IGX-0710` and does nothing (§3)                                                                                          |
 
 - `Camera` also answers geometry questions: `screenToRay(x, y)`, `worldToScreen(point, out)`,
   `screenToWorldPoint(x, y, distance, out)`, `viewportToWorldPoint(u, v, distance, out)`,
@@ -173,7 +174,123 @@ when the family was warmed, and 0 when a mesh of that family was already being d
 `app.renderer.warmUp(materials)` does the same for anything loaded later, at a moment the game
 chooses.
 
-## 6. Picking
+## 6. Custom shaders
+
+Three forms, all authored as `.wgsl` files whose `// @ignifx` comment lines **are** the declaration.
+The full grammar is [`../formats/wgsl.md`](../formats/wgsl.md); this is what each form is for and
+what the WGSL has to obey.
+
+| Form              | What it is                                           | Lighting                                | Recipe                                                                 |
+| ----------------- | ---------------------------------------------------- | --------------------------------------- | ---------------------------------------------------------------------- |
+| `@ignifx shader`  | A whole material family: you write both stages       | None. Unlit, casts no ESM shadow        | [`write-a-custom-shader`](../recipes/write-a-custom-shader.md)         |
+| `@ignifx surface` | Up to three hooks inside the engine's PBR shader     | The engine's: lights, shadows, IBL, fog | [`add-a-surface-shader`](../recipes/add-a-surface-shader.md)           |
+| `@ignifx post`    | One full-screen pass in the `PostProcessStack` chain | Not applicable                          | [`add-a-custom-post-process`](../recipes/add-a-custom-post-process.md) |
+
+Pick by what you need to keep. A surface shader is the answer whenever the object should still be
+lit like everything else; a shader material is the answer when you want the whole pixel, or a vertex
+stage that moves with the clock.
+
+### The pragmas, in one table
+
+| Pragma                                                                                | Declares                                                    |
+| ------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `@ignifx shader` \| `surface` \| `post`                                               | Which form the file is                                      |
+| `@ignifx attributes position, normal, uv, …`                                          | The Babylon Lite attributes `VertexInput` carries           |
+| `@ignifx system worldViewProjection, time, …`                                         | Engine uniforms: Lite's, plus ignifx's clock and main light |
+| `@ignifx uniform name: type = default [range(a, b)] [step(s)] [color] [tooltip("…")]` | A settable uniform, with the inspector hints                |
+| `@ignifx texture name [srgb] [normal] [default white\|black\|transparent] [array]`    | A sampler pair, with the 1×1 texture it falls back to       |
+| `@ignifx storage name: array<T>`                                                      | A read-only storage buffer                                  |
+| `@ignifx define NAME = true`                                                          | A `const` a material may override                           |
+| `@ignifx blend … cull … depthWrite … depthTest … transmissive instancing …`           | Pipeline state                                              |
+
+### The names Babylon Lite gives you
+
+`VertexInput`, `shaderSystem`, `<name>`/`<name>Sampler`, `mainVertex` and `mainFragment` are Lite's
+own, generated in front of your source, and are used **verbatim**:
+
+- `VertexInput` is a struct built from the `attributes` list, so `input.position`, `input.normal`,
+  `input.uv` exist exactly when you declared them. With `instancing matrices` it also carries
+  `world0`…`world3` (and `instanceColor` with `matrices-colors`).
+- `shaderSystem.<name>` holds the Lite system uniforms the file declared: `world`, `view`,
+  `projection`, `viewProjection`, `worldView`, `worldViewProjection`, `cameraPosition`,
+  `screenSize`, `alphaCutoff`. There is no `time` and there are no lights in it.
+- `shaderUniforms.<name>` holds **your** uniforms — and the ignifx ones, which is the one asymmetry
+  worth memorising: `// @ignifx system time` declares it, and the WGSL reads `shaderUniforms.time`.
+- `scene.<field>` is Lite's scene block: `viewProjection`, `vEyePosition`, spherical-harmonic ambient
+  `vSphericalL*`, `vFogInfos`/`vFogColor`, `clipPlane`.
+- `mainVertex` and `mainFragment` are the fixed entry points of a `shader` file.
+
+The ignifx uniforms, uploaded once per frame per material that declares one:
+
+| Uniform                             | Type        | Value                                                                   |
+| ----------------------------------- | ----------- | ----------------------------------------------------------------------- |
+| `time`, `unscaledTime`, `deltaTime` | `f32`       | `app.time`'s scaled clock, its unscaled clock, and the frame delta      |
+| `mainLightDirection`                | `vec3<f32>` | World-space unit direction of the brightest enabled directional `Light` |
+| `mainLightColor`                    | `vec3<f32>` | That light's linear colour times its intensity                          |
+| `ambientColor`                      | `vec3<f32>` | The environment's spherical-harmonic ambient term                       |
+
+`time` is the **scaled** clock, so `app.pause()` freezes every shader that reads it. Declaring a
+light uniform in a world with no directional light uploads zeros and logs `IGX-0714` once.
+
+### Surface-shader hooks
+
+| Hook                                                         | Reads                                                                             | Writes                                                  |
+| ------------------------------------------------------------ | --------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| `displace(in: DisplaceInput) -> vec3<f32>`                   | `in.position`, `in.normal`, `in.uv`, `in.color`, `in.world` — and nothing else    | A world-space offset; the shadow-caster pass follows it |
+| `surface(in: SurfaceInput, s: ptr<function, Surface>)`       | `in.uv`, `in.worldPosition`, `in.geometricNormal`, `in.viewDirection`, `in.color` | `(*s).baseColor`, `.alpha`, `.emissive`, `.normal`      |
+| `composite(in: SurfaceInput, color: vec3<f32>) -> vec3<f32>` | The same input, plus the lit linear colour, before fog and tone mapping           | The returned colour — rim light, hit flash, toon steps  |
+
+`roughness` and `metallic` are readable and ignored on write, because Lite's PBR template declares
+them `let`. `displace` runs in the vertex stage, where Lite exposes **no** plugin uniform, texture or
+helper function — so a static bulge is a hook and time-driven wind is a shader material. A file's own
+uniforms are read from `surfaceUniforms`, which is rewritten into the host material's block; a
+material's surface shaders share a budget of nine samplers (`IGX-0726`), and only a PBR material can
+host one (`IGX-0723`, with `rendering.features.materialPlugins` declared, or `IGX-0716`).
+
+### Post effects
+
+A `post` file provides `fn mainFragment(in: PostInput) -> vec4<f32>` and samples `inputTexture`
+with `inputTextureSampler`; `shaderUniforms` already carries `screenSize`, `time`, `unscaledTime`
+and `deltaTime`. `PostProcessStack.custom` holds them as `customEffect({ shader, values, textures,
+order, enabled })`, ordered against the built-ins — and `imageProcessing` still runs last (§4).
+
+### The WGSL rules that actually bite
+
+- **Alignment.** A `vec3<f32>` is 16-byte aligned and 12 bytes wide, so the next member starts at the
+  next multiple of 16 and a `vec3` followed by an `f32` packs into one 16-byte slot. An array in
+  uniform space has a stride of at least 16. Spell it out with `@align`/`@size` rather than counting
+  ([WGSL § alignment and size](https://www.w3.org/TR/WGSL/#alignment-and-size)).
+- **`textureSample` is fragment-only.** The vertex stage has no implicit derivatives, so a lookup
+  table read in `mainVertex` uses `textureSampleLevel` or `textureLoad`
+  ([WGSL § textureSample](https://www.w3.org/TR/WGSL/#texturesample)). The Vite plugin catches this
+  at build time as `IGX-0655`.
+- **Texture origin and clip depth.** WebGPU's texture and framebuffer origin is the **top-left**
+  corner and its clip-space depth range is `[0, 1]`, not OpenGL's `[-1, 1]` — so ported GLSL that
+  flips `y` or remaps `z` is wrong twice
+  ([WebGPU § coordinate systems](https://www.w3.org/TR/webgpu/#coordinate-systems)).
+- **Premultiplied alpha is one choice made twice.** `blend premultiplied` expects a fragment whose
+  `rgb` is already multiplied by its `a`, while texture import leaves alpha straight
+  (`premultiplyAlpha` is `false` by default). Either turn that import option on for the texture or
+  multiply in the shader — mixing the two is what dark or glowing fringes are.
+- **Do not write `enable f16;`.** The extension compiles only on a device created with the
+  `shader-f16` feature ([WGSL § f16 extension](https://www.w3.org/TR/WGSL/#extension-f16)), and
+  Babylon Lite 1.27.0's engine options carry `requiredLimits` but no optional **features**, so no
+  ignifx app can ask for it. Everything is `f32`.
+
+### Two Babylon Lite traps
+
+- **Floating origin.** With `rendering.useFloatingOrigin` on, `shaderSystem.cameraPosition` reads
+  `(0, 0, 0)` and the world matrices are camera-relative. A shader that compares a world position
+  with the camera has to be written for that, or the setting left off.
+- **Instancing is not in `world`.** With `instancing matrices`, `shaderSystem.world`, `worldView` and
+  `worldViewProjection` are **not** instance-aware. Compose the instance matrix yourself:
+  `shaderSystem.world * mat4x4<f32>(input.world0, input.world1, input.world2, input.world3)`. See
+  [`instance-many-meshes`](../recipes/instance-many-meshes.md).
+
+A failure at compile time reaches `app.onError` as `IGX-0715` carrying Lite's message, and the last
+material that compiled keeps drawing — which is also what makes `.wgsl` hot reload safe.
+
+## 7. Picking
 
 - `app.renderer.pickAsync(x, y, { filter })` — a GPU pick in backing-store pixels (the canvas's
   `width`/`height`; `<Pointer>/position` and `Camera.worldToScreen` use the same space), resolving to
@@ -183,7 +300,7 @@ chooses.
 - Both skip a renderer whose `pickable` is `false`. Physics raycasts are a different thing and
   arrive with `@ignifx/physics`.
 
-## 7. Headless
+## 8. Headless
 
 Under `createApp({ headless: true })` there is no device: `MeshAsset` factories build no geometry,
 `MeshRenderer`/`Model` keep their fields and touch no scene, `lite.mesh` is `null`, `pickAsync`
@@ -195,7 +312,7 @@ The headless backing store is 1×1 pixel: `screenToRay`/`worldToScreen` still wo
 screen is the unit square, so a centre-screen click is
 `app.input.simulate({ "<Pointer>/position": { x: 0.5, y: 0.5 } })`.
 
-## 8. Device loss
+## 9. Device loss
 
 With `features.deviceLostRecovery` on, Babylon Lite rebuilds its resources after the WebGPU device
 is lost. The three signals are on `app.events`:

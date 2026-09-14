@@ -296,6 +296,22 @@ Pixel-space text drawn by Babylon Lite, anchored to a corner of the render targe
 | `position` | `vec2` | `[0,0]` | The offset from the anchor, in render-target pixels. |
 | `order` | `i32` | `0` | Sort order within the text renderer; lower draws first. |
 
+## InstancedMeshRenderer (`ignifx/InstancedMeshRenderer`)
+
+Draws one mesh many times from a caller-owned matrix slab, in a single draw call, with optional GPU culling and a coarser mesh for far instances.
+
+| Field | Kind | Default | Description |
+|---|---|---|---|
+| `mesh` | `asset` | `null` | The geometry template every instance draws. |
+| `materials` | `array` | `[]` | Index 0 draws; empty uses the default material. |
+| `capacity` | `u32` | `1024` | The largest instance count; fixed once the scene is registered. |
+| `gpuCulling` | `bool` | `true` | Cull instances on the GPU; fixed once the scene is registered. |
+| `castShadows` | `bool` | `true` | Whether the instances are rendered into shadow maps. |
+| `receiveShadows` | `bool` | `true` | Whether shadow maps darken the instances. |
+| `renderOrder` | `i32` | `0` | Sort key within the opaque or transparent phase; lower draws first. |
+| `pickable` | `bool` | `false` | Whether picking considers the instances; a hit names no instance index. |
+| `lod` | `optional` | `null` | An optional coarse mesh for far instances; needs gpuCulling. |
+
 ## Light (`ignifx/Light`)
 
 A directional, point, spot, or hemispheric light, with optional shadow casting.
@@ -438,6 +454,36 @@ Scrolls one sorting layer at a fraction of the camera's speed.
 | `repeatWidth` | `f32` | `0` | World width of one repetition, in metres. |
 | `repeatHeight` | `f32` | `0` | World height of one repetition, in metres. |
 
+## Particles settings (`ignifx/particles-settings`)
+
+The particles project settings section.
+
+| Field | Kind | Default | Description |
+|---|---|---|---|
+| `maxParticles` | `u32` | `100000` | The particle budget every ParticleSystem capacity is counted against. |
+| `qualityScale` | `f32` | `1` | A 0-1 multiplier on emission rates and burst counts. |
+| `gravity` | `vec3` | `[0,-9.81,0]` | The world gravity a gravityMultiplier scales, in m/s^2. |
+
+## Particle system (`ignifx/ParticleSystem`)
+
+| Field | Kind | Default | Description |
+|---|---|---|---|
+| `definition` | `asset` | `null` | The .particles.json this system plays. |
+| `playOnAwake` | `bool` | `true` | Play the first frame the system is enabled, if the definition agrees. |
+| `seed` | `u32` | `0` | The emission seed; 0 uses the definition's, and 0 there picks at random. |
+
+## ParticleSystem2D (`ignifx/ParticleSystem2D`)
+
+Draws a .particles.json effect as sprites on a sorting layer.
+
+| Field | Kind | Default | Description |
+|---|---|---|---|
+| `definition` | `asset` | `null` | The .particles.json this system plays. |
+| `atlas` | `asset` | `null` | The atlas whose frames the particles draw. |
+| `playOnAwake` | `bool` | `true` | Play the first frame the system is enabled, if the definition agrees. |
+| `seed` | `u32` | `0` | The emission seed; 0 uses the definition's, and 0 there picks at random. |
+| `sortingLayer` | `str` | `"Default"` | Which sorting layer the particles draw on. |
+
 ## Platform mover (`ignifx/PlatformMover`)
 
 | Field | Kind | Default | Description |
@@ -475,13 +521,14 @@ The convex hull of a point list, in local metres.
 
 ## PostProcessStack (`ignifx/PostProcessStack`)
 
-Bloom, SMAA, and image processing, inserted into the scene's frame graph.
+Bloom, SMAA, image processing, and custom .post.wgsl effects, inserted into the scene's frame graph.
 
 | Field | Kind | Default | Description |
 |---|---|---|---|
 | `bloom` | `record` | `{"enabled":false,"order":0,"weight":0.15,"kernel":64,"threshold":0.9,"exposure":1,"scale":0.5}` | Bloom. |
 | `smaa` | `record` | `{"enabled":false,"order":1,"threshold":0.05,"maxSearchSteps":16,"diagonalDetection":false,"cornerDetection":false}` | SMAA anti-aliasing. Needs a single-sample source. |
 | `imageProcessing` | `record` | `{"enabled":false,"order":2}` | Exposure, contrast, and tone mapping as a pass — the alternative to Environment. |
+| `custom` | `array` | `[]` | Custom full-screen WGSL effects, ordered among the built-ins by order. |
 
 ## Projectile (`ignifx/Projectile`)
 
@@ -584,6 +631,34 @@ One sprite drawn from one frame of one atlas, on one sorting layer.
 | `pivotOverride` | `optional` | `null` | Overrides the frame's own pivot, in [0,1] of the frame. |
 | `screenSpace` | `bool` | `false` | Keep the identity view instead of following the Camera2D. |
 | `pickable` | `bool` | `true` | Whether app.twoD.pickAt considers this sprite. |
+
+## Terrain (`ignifx/Terrain`)
+
+| Field | Kind | Default | Description |
+|---|---|---|---|
+| `definition` | `asset` | `null` | The .terrain.json this terrain draws. |
+| `lodBias` | `f32` | `1` | Multiplies every LOD threshold; above 1 keeps detail further out. |
+| `receiveShadows` | `bool` | `true` | Whether shadow maps darken the terrain. |
+| `frustumCulling` | `bool` | `true` | Whether chunks outside the camera's frustum are hidden. |
+
+## Terrain scatter (`ignifx/TerrainScatter`)
+
+| Field | Kind | Default | Description |
+|---|---|---|---|
+| `mesh` | `asset` | `null` | The mesh every instance draws. |
+| `material` | `asset` | `null` | The material, normally from foliageMaterialDefinition. |
+| `lodMesh` | `asset` | `null` | A cheaper mesh drawn past lodDistance; null for none. |
+| `lodDistance` | `f32` | `40` | Metres past which the LOD mesh takes over. |
+| `density` | `f32` | `0.5` | Instances per square metre. |
+| `layers` | `array` | `[]` | Splat layers to place on; empty places everywhere. |
+| `layerThreshold` | `f32` | `0.5` | The splat weight a named layer must reach. |
+| `slope` | `vec2` | `[0,35]` | The slope band, in degrees. |
+| `height` | `vec2` | `[-1000000000,1000000000]` | The height band, in metres. |
+| `scale` | `vec2` | `[0.8,1.2]` | The random uniform scale range. |
+| `randomYaw` | `bool` | `true` | Whether each instance is turned randomly about Y. |
+| `alignToNormal` | `bool` | `false` | Whether each instance stands along the surface normal. |
+| `seed` | `u32` | `1` | The placement seed; the same seed places the same instances. |
+| `maxInstances` | `u32` | `50000` | The cap, which also sizes the GPU instance buffer. |
 
 ## Third person camera (`ignifx/ThirdPersonCamera`)
 

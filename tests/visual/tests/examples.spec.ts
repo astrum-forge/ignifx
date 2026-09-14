@@ -232,6 +232,101 @@ const GOLDENS: readonly Golden[] = [
     tolerance: 0.06,
     reason: "380 px of the overlay's own DOM text, including the selected entity's id, which is new on every load",
   },
+  {
+    slug: "custom-shader",
+    tolerance: 0.03,
+    reason:
+      "a hand-written dissolve whose discard edge is a smoothstep over a sine field: every fragment along the burn " +
+      "line is a place two rasterisers may round the field differently",
+  },
+  {
+    slug: "surface-shaders",
+    tolerance: 0.05,
+    reason:
+      "IBL specular on two glTF models, a PCF shadow, and four surface hooks compiled into the PBR shader, so a " +
+      "single mip choice moves the snow mask and the rim together",
+  },
+  {
+    slug: "vertex-animation",
+    tolerance: 0.04,
+    reason:
+      "three vertex stages displacing 44 grass quads, a 28-column flag grid and a deformed cube at 4x MSAA, plus " +
+      "one PCF shadow under the displaced sphere",
+  },
+  {
+    slug: "custom-post-process",
+    tolerance: 0.05,
+    reason:
+      "three full-screen passes resample the frame — a barrel warp, a chromatic split and a LUT lookup — so every " +
+      "pixel of the ship is a filtered read of a filtered read",
+  },
+  {
+    slug: "particles",
+    tolerance: 0.04,
+    reason:
+      "a flame of overlapping additive quads: every pixel of it is several soft gradients summed, so one rounded " +
+      "sample moves the whole plume",
+  },
+  {
+    slug: "explosion",
+    tolerance: 0.05,
+    reason:
+      "an additive fireball, seventy velocity-aligned spark streaks, a sampled shockwave ring and two dozen lit " +
+      "boxes, all summed over a dark floor",
+  },
+  {
+    slug: "weather",
+    tolerance: 0.06,
+    reason:
+      "about 1,300 rain streaks two pixels wide: a subpixel difference in one drop's projected position moves the " +
+      "whole streak",
+  },
+  {
+    slug: "particles-2d",
+    tolerance: 0.02,
+    reason:
+      "nearest-sampled tiles at a whole-number zoom, which may barely move, plus three additive particle effects " +
+      "whose soft edges may",
+  },
+  {
+    slug: "instancing",
+    tolerance: 0.04,
+    reason:
+      "20,000 instanced silhouettes at 4x MSAA with a dithered LOD band across the belt: the far side is thousands " +
+      "of subpixel edges",
+  },
+  {
+    slug: "terrain",
+    tolerance: 0.04,
+    reason:
+      "a 513-square height field blended from four world-space layer textures, so every mip choice on a hillside " +
+      "moves a whole band of the splat",
+  },
+  {
+    slug: "terrain-procedural",
+    tolerance: 0.04,
+    reason:
+      "noise evaluated per sample and four rule-painted layers feathered into each other: a rounding difference " +
+      "anywhere on the field shows along every band edge at once",
+  },
+  {
+    slug: "terrain-foliage",
+    tolerance: 0.08,
+    reason:
+      "tens of thousands of alpha-tested grass cards, each a few pixels wide, plus GPU-culled conifers and their " +
+      "PCF shadows: the cutoff falls either side of the same texel on two rasterisers",
+  },
+  {
+    slug: "terrain-walk",
+    tolerance: 0.04,
+    reason: "a flat-shaded rig and one soft PCF shadow over a 4x MSAA hillside blended from three tinted layers",
+  },
+  {
+    slug: "terrain-sculpt",
+    tolerance: 0.08,
+    reason:
+      "nine thousand alpha-tested grass cards over a tinted field: every card's cutoff edge is a subpixel decision",
+  },
 ];
 
 /**

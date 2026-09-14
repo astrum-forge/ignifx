@@ -19,12 +19,15 @@ import { GAMEPLAY } from "./entries/gameplay.ts";
 import { INPUT } from "./entries/input.ts";
 import { LIGHTING } from "./entries/lighting.ts";
 import { MODELS } from "./entries/models.ts";
+import { PARTICLES } from "./entries/particles.ts";
 import { PHYSICS_2D } from "./entries/physics-2d.ts";
 import { PHYSICS } from "./entries/physics.ts";
 import { PLATFORM } from "./entries/platform.ts";
 import { POST_PROCESSING } from "./entries/post-processing.ts";
 import { RENDERING } from "./entries/rendering.ts";
+import { SHADERS } from "./entries/shaders.ts";
 import { TEMPLATES } from "./entries/templates.ts";
+import { TERRAIN } from "./entries/terrain.ts";
 import { TWO_D } from "./entries/two-d.ts";
 import { UI } from "./entries/ui.ts";
 
@@ -32,6 +35,7 @@ import { UI } from "./entries/ui.ts";
 export const CATEGORIES = [
   "Basics",
   "Rendering",
+  "Shaders",
   "Post-processing",
   "Lighting",
   "Models",
@@ -41,6 +45,8 @@ export const CATEGORIES = [
   "Input",
   "Audio",
   "UI",
+  "Particles",
+  "Terrain",
   "Platform",
   "Templates",
 ] as const;
@@ -120,6 +126,7 @@ export type ExampleOf<C extends ExampleCategory> = ExampleEntry & { readonly cat
 export const CATALOGUE: readonly ExampleEntry[] = assertUniqueSlugs([
   ...BASICS,
   ...RENDERING,
+  ...SHADERS,
   ...POST_PROCESSING,
   ...LIGHTING,
   ...MODELS,
@@ -130,6 +137,8 @@ export const CATALOGUE: readonly ExampleEntry[] = assertUniqueSlugs([
   ...INPUT,
   ...AUDIO,
   ...UI,
+  ...PARTICLES,
+  ...TERRAIN,
   ...PLATFORM,
   ...TEMPLATES,
 ]);

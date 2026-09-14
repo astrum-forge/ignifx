@@ -1,8 +1,8 @@
 # Gotchas
 
-Traps in the engine as it stands (rendering and assets included), each with its replacement
-and, where one exists, the error code you will see. The eighteen most common are repeated in
-`../SKILL.md`.
+Traps in the engine as it stands (rendering, shaders, particles, terrain and assets included), each
+with its replacement and, where one exists, the error code you will see. The twenty-one most common
+are repeated in `../SKILL.md`.
 
 ## App and platform
 
@@ -166,35 +166,86 @@ and, where one exists, the error code you will see. The eighteen most common are
     cannot rebuild PCF/CSM shadow generators or glTF `EXT_lights_image_based` environments, so a
     scene using either reaches `app.events.onDeviceRecoveryFailed`. Offer a page reload.
 
+## Shaders, particles, and terrain
+
+Each of these comes from a subsystem's own page; the link is where the detail lives.
+
+45. **Do not expect a `ShaderMaterial` to be lit.** A `@ignifx shader` file owns every pixel it
+    draws: no direct light, no shadows received, no image-based lighting, no fog. Hook into PBR with
+    a `.surface.wgsl` instead when the object should match the rest of the scene
+    ([`concepts/rendering.md`](concepts/rendering.md) §6).
+46. **Do not declare `time` and then read `shaderSystem.time`.** `// @ignifx system time` declares
+    it, but the ignifx uniforms live beside your own in `shaderUniforms` — Babylon Lite's block has
+    no clock in it ([`formats/wgsl.md`](formats/wgsl.md)).
+47. **Do not call `textureSample` in a vertex stage.** WGSL forbids it; use `textureSampleLevel` or
+    `textureLoad`. The Vite plugin reports it as `IGX-0655` with a line, before the browser would.
+48. **Do not compose an instanced world matrix from `shaderSystem.world` alone.** With
+    `instancing matrices` it is not instance-aware: multiply it by
+    `mat4x4<f32>(input.world0, input.world1, input.world2, input.world3)`.
+49. **Do not put a surface shader on a Standard material** (`IGX-0723`), and do not forget
+    `rendering.features.materialPlugins` (`IGX-0716`). Nine samplers is the whole budget one
+    material's surface shaders share (`IGX-0726`), and `roughness`/`metallic` are read-only in a
+    hook because Lite's template declares them `let`.
+50. **Do not read a uniform, a texture or the clock in a `displace` hook.** Lite's plugin uniforms
+    and samplers are fragment-stage only, so the hook is refused. Static displacement is a hook;
+    wind is a shader material (`packages/terrain/skills/terrain/SKILL.md`).
+51. **Do not change `capacity`, `gpuCulling` or `lod` on an `InstancedMeshRenderer` after
+    `app.start()`.** Lite fixes the instance buffer and the culling setup before the scene is
+    registered, so it is refused with `IGX-0717`. `setCount` is the runtime knob.
+52. **Do not expect particles to collide, sort against each other, or spawn more particles.** None
+    of those is a function of a particle's age, and the simulation is stateless by design. Order
+    whole systems with `main.renderOrder`, and use `additive` where order must not matter
+    (`packages/particles/skills/particles/SKILL.md`).
+53. **Do not size a particle `capacity` below `rateOverTime × the longest lifetime`.** The ring
+    overwrites the oldest live particle instead of growing, the effect visibly thins, and
+    `droppedCount` counts each one. `app.particles.maxParticles` clamps the whole budget and logs
+    `IGX-1702` once.
+54. **Do not read `app.time.time` to age an effect, and do not expect a looping effect to start
+    full.** A system's clock is its own (`system.time`), and a document the player walks up to wants
+    `"prewarm": true` or a `simulate(seconds)` after `play()`.
+55. **Do not give a 2D particle system an unloaded atlas or an undeclared sorting layer.** The first
+    reports `IGX-1754` once and draws nothing, the second falls back to `"Default"` with
+    `IGX-1756`. Particles are never pickable and never carry a pivot
+    (`packages/particles-2d/skills/particles-2d/SKILL.md`).
+56. **Do not ship an 8-bit heightmap.** 256 steps over an 80 m range is a 31 cm stair on every
+    slope; loading one warns with `IGX-1603`. `.r16` is canonical, 16-bit PNG loads through the
+    package's own decoder, and `ignifx import heightmap in.png out.r16` converts a source.
+57. **Do not rotate a terrain's entity** (`IGX-1604`: queries honour translation and scale only),
+    and do not expect chunks to cast shadows — they are renderables, not components, so a hill does
+    not shadow the valley beside it (`packages/terrain/skills/terrain/SKILL.md`).
+58. **Do not query a terrain before its document arrives** (`IGX-1609`), and do not expect a
+    `TerrainScatter` to follow a changed rule on its own: placement runs once, and `regenerate()` is
+    how a density or seed change lands.
+
 ## Assets
 
-45. **Do not call `load` without a matching `release`.** Handles are shared and reference-counted:
+59. **Do not call `load` without a matching `release`.** Handles are shared and reference-counted:
     two loads of one address answer with the same handle. `using handle = app.assets.load(…)` or an
     explicit `release()` — and a zero-reference asset is only unloaded after `assets.gcDelay`
     seconds (default 5).
-46. **Do not read `handle.value` while the state is not `"loaded"`.** It throws `IGX-0501`. Await
+60. **Do not read `handle.value` while the state is not `"loaded"`.** It throws `IGX-0501`. Await
     `handle.promise`, `yield handle.promise` in a coroutine, or check `handle.state` first.
-47. **Do not expect a load to land mid-frame.** Completed loads are delivered by one system in
+61. **Do not expect a load to land mid-frame.** Completed loads are delivered by one system in
     `PreUpdate`, so a state flip you asked for during `update` is observable on the **next** frame,
     at one consistent point. That is deliberate: "is this ready?" has one answer per frame.
-48. **Do not release the handle an `asset()` field holds.** The field never owned the reference —
+62. **Do not release the handle an `asset()` field holds.** The field never owned the reference —
     the scene instance that loaded the asset releases it on unload. Release only what your own code
     loaded or built.
-49. **Do not expect an in-code asset to survive a save.** `MeshAsset.box(app)`,
+63. **Do not expect an in-code asset to survive a save.** `MeshAsset.box(app)`,
     `createMaterialAsset(app, …)`, and anything from `Assets.register` live at a `memory:` address
     that names no file, so serializing a component holding one writes `null` and reports `IGX-0602`.
     Write a `.material.json` or ship a `.glb` when it has to round-trip.
-50. **Do not look for a mesh file format.** There is none: geometry is a primitive built in code or
+64. **Do not look for a mesh file format.** There is none: geometry is a primitive built in code or
     part of a `ModelAsset`. A `"mesh"` address fails with `IGX-0504`.
-51. **Do not load a scene before registering the components it names.** An unknown `typeId` is
+65. **Do not load a scene before registering the components it names.** An unknown `typeId` is
     `IGX-0307` and the entity is built without that component. Call `app.registerComponents([...])`
     first — `virtual:ignifx/scripts` from `@ignifx/vite-plugin` generates the list for you.
-52. **Do not hand-write a `memory:` address, and do not assume an address is a URL.** Addresses are
+66. **Do not hand-write a `memory:` address, and do not assume an address is a URL.** Addresses are
     resolved through the manifest; `app.assets.resolveUrl(address)` is what a loader fetches.
 
 ## Callbacks the extensions deliver
 
-53. **Do not type a physics callback's parameter as `unknown` and cast it.** Core declares
+67. **Do not type a physics callback's parameter as `unknown` and cast it.** Core declares
     `onCollisionEnter?(collision: unknown)` and `onTriggerEnter?(trigger: unknown)` on
     `ScriptCallbacks` because it does not depend on the physics packages, but TypeScript's method
     parameters are bivariant: writing `onTriggerEnter(trigger: TriggerEvent): void` (or
@@ -205,13 +256,13 @@ and, where one exists, the error code you will see. The eighteen most common are
 
 ## Diagnostics and builds
 
-54. **Do not call `app.diagnostics.registerGroup` from a script.** A second registration of a name
+68. **Do not call `app.diagnostics.registerGroup` from a script.** A second registration of a name
     throws `IGX-1503`, and a script's `awake` runs once per instance and again after a scene reload.
     Use `app.diagnostics.groupOrRegister(name, counterNames)`, which registers on the first call and
     hands back the same group afterwards. The counter names of a later call are ignored — counters
     are indexed, so a group cannot grow under a subsystem already holding indices into it — and
     asking that group for a counter it never declared throws `IGX-1504`.
-55. **Do not assume a production build turns development mode off.** `createApp`'s `mode` defaults
+69. **Do not assume a production build turns development mode off.** `createApp`'s `mode` defaults
     to `"development"` and nothing overrides it — not the Vite plugin, not `vite build`. So a shipped
     game still formats full error messages, writes `performance.mark`/`measure` entries, and fills
     `FrameSample.cpuMs`. That is often what you want while a game is young; when it is not, pass the

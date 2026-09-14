@@ -1,0 +1,17 @@
+{
+  "format": "ignifx.terrain",
+  "formatVersion": 1,
+  "name": "island",
+  "size": { "width": 512, "depth": 512, "height": 80 },
+  "resolution": 513,
+  "heightmap": { "source": "island.r16" },
+  "chunks": { "size": 64, "lodLevels": 4, "lodDistance": 128, "skirtDepth": 2 },
+  "layers": [
+    { "name": "sand", "albedo": "sand_albedo.png", "tiling": 14 },
+    { "name": "grass", "albedo": "grass_albedo.png", "tiling": 12 },
+    { "name": "rock", "albedo": "rock_albedo.png", "tiling": 20, "triplanar": true },
+    { "name": "snow", "albedo": "snow_albedo.png", "tiling": 16 }
+  ],
+  "splat": { "control": ["island_splat.png"] },
+  "material": { "roughness": 0.94, "metallic": 0 }
+}

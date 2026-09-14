@@ -9,7 +9,7 @@ The pages below are the Agent Skill that ships with the engine. They live in the
 ## Docs
 
 - [ignifx](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/SKILL.md): ignifx is a code-first TypeScript game engine for browsers and Electron.
-- [Gotchas](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/gotchas.md): Traps in the engine as it stands (rendering and assets included), each with its replacement and, where one exists, the error code you will see.
+- [Gotchas](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/gotchas.md): Traps in the engine as it stands (rendering, shaders, particles, terrain and assets included), each with its replacement and, where one exists, the error code you will see.
 
 ## Concepts
 
@@ -23,22 +23,32 @@ The pages below are the Agent Skill that ships with the engine. They live in the
 
 ## Recipes
 
+- [Add a custom post process](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/add-a-custom-post-process.md): A `// @ignifx post` file is one full-screen fragment function.
+- [Add a surface shader](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/add-a-surface-shader.md): A surface shader is a small piece of WGSL layered onto a **PBR** material, so the engine keeps doing the lighting: shadows, image-based lighting, fog and tone mapping all still apply, and your code only says what the surface is made of.
 - [Animate a sprite from an atlas](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/animate-a-sprite-from-an-atlas.md): Two documents and two components.
 - [Bind an action and read it](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/bind-an-action-and-read-it.md): Game code asks for `"move"` and `"jump"`, never for a key code.
 - [Build a pause menu](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/build-a-pause-menu.md): Game UI in ignifx is HTML, and `@ignifx/ui`'s `Menu` is the list widget a front end is made of: a title, rows that declare what they edit, and one selection model that keyboard, gamepad and pointer all drive.
+- [Burst particles on a hit](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/burst-particles-on-hit.md): `emit(count)` spawns particles at the system's current clock whether or not it is playing, which is what a one-off impact wants.
 - [Move a 3D character controller](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/character-controller-3d.md): A `CharacterController` is a kinematic capsule that collides and slides.
+- [Instance many meshes](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/instance-many-meshes.md): One mesh, one material, thousands of copies, one draw call.
+- [Load a heightmap terrain](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/load-a-heightmap-terrain.md): A `.terrain.json` says how big the ground is, where its heights come from, how it is chunked, and which texture layers blend across it.
 - [Load a model](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/load-a-model.md): A `.glb` or `.gltf` file loads as a `ModelAsset`, and a `Model` component instantiates it under an entity.
 - [Load a tilemap and give it collision](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/load-a-tilemap-with-collision.md): Three components share the work.
+- [Draw particles in 2D](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/particles-in-2d.md): `ParticleSystem2D` plays the same `.particles.json` a 3D `ParticleSystem` plays, but draws it as sprites in a `@ignifx/2d` sorting layer, so torch fire sorts, blends and pans with the rest of the scene.
 - [Move a 2D platformer character](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/platformer-controller-2d.md): `CharacterController2D` is a kinematic capsule or box that collides and slides through Rapier.
 - [Play a positional one-shot and a music loop](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/play-a-one-shot-and-a-loop.md): The mixer is a tree of named buses declared in a `.audio.json`: every sound plays on one, and a bus's volume multiplies through its children.
+- [Play a particle effect](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/play-a-particle-effect.md): An effect is a document — a `.particles.json`, or the same object built in code by `particleDefinition(preset, overrides)` — and a `ParticleSystem` component plays it.
 - [Raycast and catch a trigger in 3D](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/raycast-and-trigger-3d.md): Two ways to ask the physics world a question.
 - [Rebind a key at run time](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/rebind-a-key-at-runtime.md): `performInteractiveRebind` listens for the next control the player touches and writes it onto one binding as an override.
 - [Save and load game state](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/save-and-load-game-state.md): `app.storage` is the asynchronous key–value store behind save games, settings and input rebindings.
+- [Scatter foliage on terrain](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/scatter-foliage.md): `TerrainScatter` places instances on the terrain it shares an entity with — or on any ancestor's — by seeded rules: a density in instances per square metre, the splat layers a candidate may stand on, and the slope and height bands it must fall in.
 - [Show a gameplay counter in devtools](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/show-diagnostics-in-devtools.md): `@ignifx/devtools` draws the overlay; every number on its Stats panel comes from `app.diagnostics`, which is core.
 - [Spawn a prefab on click](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/spawn-a-prefab-on-click.md): A click is a ray.
 - [Spawn a prefab](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/spawn-a-prefab.md): A prefab is a scene file (ADR-0005): the same `ignifx.scene` format, loaded as a `SceneAsset` and stamped out with `world.instantiate`.
 - [Follow a character with a third-person camera](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/third-person-camera.md): `ThirdPersonCamera` is an orbit rig: it puts the entity carrying the `Camera` behind `target`, at `distance`, offset by `shoulderOffset`, and damps toward that pose.
 - [Tween a transform](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/tween-a-transform.md): `app.tweens` is core: it interpolates any number, `Vec2`, `Vec3` or `Quat` property of any object, on the game clock, in `PostUpdate` — so a tween honours `time.timeScale` and stops with `app.pause()` unless it asks for `updateWhenPaused`.
+- [Walk on terrain](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/walk-on-terrain.md): `@ignifx/terrain` does not depend on `@ignifx/physics`: a terrain without physics costs no physics code.
+- [Write a custom shader](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/recipes/write-a-custom-shader.md): A `.wgsl` file whose `// @ignifx` pragma comments **are** its declaration is a material family of your own: the pragmas say which attributes the vertex stage reads, which engine uniforms it wants, and which uniforms, textures and defines a material may set.
 
 ## File formats
 
@@ -49,14 +59,17 @@ The pages below are the Agent Skill that ships with the engine. They live in the
 - [ignifx.i18n](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/formats/ignifx.i18n.md): Generated by `pnpm docs:schemas`.
 - [ignifx.inputactions](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/formats/ignifx.inputactions.md): Generated by `pnpm docs:schemas`.
 - [ignifx.material](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/formats/ignifx.material.md): Generated by `pnpm docs:schemas`.
+- [ignifx.particles](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/formats/ignifx.particles.md): Generated by `pnpm docs:schemas`.
 - [ignifx.physicsmaterial](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/formats/ignifx.physicsmaterial.md): Generated by `pnpm docs:schemas`.
 - [ignifx.scene](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/formats/ignifx.scene.md): Generated by `pnpm docs:schemas`.
 - [ignifx.spriteanimation](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/formats/ignifx.spriteanimation.md): Generated by `pnpm docs:schemas`.
 - [ignifx.spriteatlas](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/formats/ignifx.spriteatlas.md): Generated by `pnpm docs:schemas`.
+- [ignifx.terrain](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/formats/ignifx.terrain.md): Generated by `pnpm docs:schemas`.
 - [ignifx.tilemap](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/formats/ignifx.tilemap.md): Generated by `pnpm docs:schemas`.
 - [Input action files (`.input.json`)](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/formats/inputactions.md): Hand-written companion to the generated field table in `ignifx.inputactions.md`.
 - [Material files (`.material.json`)](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/formats/material.md): Hand-written companion to the generated field table in `ignifx.material.md`.
 - [Scene and prefab files (`.scene.json`, `.prefab.json`)](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/formats/scene.md): Hand-written companion to the generated field table in `ignifx.scene.md`.
+- [Shader files (`.wgsl`)](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/formats/wgsl.md): <!-- Hand-written, not generated: a shader's declaration lives in comments inside the file, so there is no schema for `pnpm docs:schemas` to render.
 
 ## API reference
 
@@ -71,8 +84,11 @@ The pages below are the Agent Skill that ships with the engine. They live in the
 - [@ignifx/electron](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/api/electron.md): `@ignifx/electron` public barrel: the renderer half — the `electron()` extension, `app.desktop`, the file-system storage backend, and the typed host contract both processes share (`docs/architecture/14-platform-electron.md` §3).
 - [ignifx](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/api/ignifx.md): Re-export core and the standard runtime extensions through the `ignifx` entry point.
 - [@ignifx/input](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/api/input.md): `@ignifx/input` public barrel: devices, action maps, bindings, composites and processors, control schemes, the `.input.json` asset, pointer lock, the cursor, rebinding, and `PlayerInput` (`docs/architecture/08-input.md`).
+- [@ignifx/particles-2d](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/api/particles-2d.md): `@ignifx/particles-2d` public barrel: the `ParticleSystem2D` component, the `particles2D()` extension, and the service that shares `app.particles`' budget with the 3D systems (`docs/plan/2026-09-terrain-particles-shaders.md` §4.3).
+- [@ignifx/particles](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/api/particles.md): Stateless GPU particles: the `ParticleSystem` component, `.particles.json` definitions and presets, `app.particles`, and the CPU evaluator `@ignifx/particles-2d` shares (`docs/plan/2026-09-terrain-particles-shaders.md` §4).
 - [@ignifx/physics-2d](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/api/physics-2d.md): `@ignifx/physics-2d` public barrel: 2D physics on Rapier — `Rigidbody2D`, the 2D colliders, triggers, `CharacterController2D`, one-way platforms, queries, the layer matrix, and interpolation (`docs/architecture/11-2d-toolkit.md` §8, ADR-0006).
 - [@ignifx/physics](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/api/physics.md): `@ignifx/physics` public barrel: 3D physics on Havok through Babylon Lite — rigidbodies, colliders, triggers, the character controller, queries, the layer matrix, and interpolation (`docs/architecture/09-physics.md`).
+- [@ignifx/terrain](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/api/terrain.md): `@ignifx/terrain` public barrel: heightmap and procedural terrains with chunked geomipmapped LOD, a splat surface shader on PBR, gameplay queries, sculpting, and seeded foliage (`docs/plan/2026-09-terrain-particles-shaders.md` §5, `docs/adr/0023-terrain-chunked-geomipmapping.md`).
 - [@ignifx/ui](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/api/ui.md): `@ignifx/ui` public barrel: the DOM overlay host and its layers, the three scaling modes, input focus routing, `WorldAnchor`, the three text components on Babylon Lite's text renderer, the touch, menu and dialog helpers, and `app.i18n` (`docs/architecture/13-ui.md`).
 - [@ignifx/vite-plugin](https://github.com/astrum-forge/ignifx/blob/main/skills/ignifx/references/api/vite-plugin.md): `@ignifx/vite-plugin` public barrel: asset manifest generation, scene and prefab JSON validation, WASM and asset handling, and HMR hooks (`docs/architecture/00-overview.md` §2).
 
@@ -84,7 +100,10 @@ The pages below are the Agent Skill that ships with the engine. They live in the
 - [@ignifx/devtools](https://github.com/astrum-forge/ignifx/blob/main/packages/devtools/skills/devtools/SKILL.md): `@ignifx/devtools` is the ignifx extension that puts a debug overlay over the canvas: frame numbers, the entity tree, a live component inspector, asset handles, input, audio, physics, the log, and a per-phase timing graph.
 - [@ignifx/electron](https://github.com/astrum-forge/ignifx/blob/main/packages/electron/skills/electron/SKILL.md): The Electron half of ignifx.
 - [@ignifx/input](https://github.com/astrum-forge/ignifx/blob/main/packages/input/skills/input/SKILL.md): `@ignifx/input` is the ignifx extension that turns browser input into **actions**.
+- [@ignifx/particles](https://github.com/astrum-forge/ignifx/blob/main/packages/particles/skills/particles/SKILL.md): `@ignifx/particles` draws effects: fire, smoke, sparks, explosions, rain, snow, dust, glints and falling leaves.
+- [@ignifx/particles-2d](https://github.com/astrum-forge/ignifx/blob/main/packages/particles-2d/skills/particles-2d/SKILL.md): `ParticleSystem2D` plays a `.particles.json` effect as sprites on a sorting layer.
 - [@ignifx/physics](https://github.com/astrum-forge/ignifx/blob/main/packages/physics/skills/physics/SKILL.md): `@ignifx/physics` is the ignifx extension that simulates 3D rigid bodies with Havok, through Babylon Lite.
 - [@ignifx/physics-2d](https://github.com/astrum-forge/ignifx/blob/main/packages/physics-2d/skills/physics-2d/SKILL.md): `@ignifx/physics-2d` is the ignifx extension that simulates 2D rigid bodies with **Rapier 2D** (`@dimforge/rapier2d-compat`, Apache-2.0, ADR-0006).
+- [@ignifx/terrain](https://github.com/astrum-forge/ignifx/blob/main/packages/terrain/skills/terrain/SKILL.md): `@ignifx/terrain` is the ignifx extension that turns a heightmap — or a seed — into **ground**: a chunked, level-of-detail mesh with blended texture layers, plus the queries a game asks of it (`heightAt`, `normalAt`, `raycast`), a `HeightfieldCollider` by data, runtime sculpting, and seeded foliage.
 - [@ignifx/ui](https://github.com/astrum-forge/ignifx/blob/main/packages/ui/skills/ui/SKILL.md): **Game UI in ignifx is HTML.** `@ignifx/ui` puts one absolutely positioned `<div>` over the canvas and lets a game mount React, Svelte, Vue or plain DOM into named layers inside it.
 

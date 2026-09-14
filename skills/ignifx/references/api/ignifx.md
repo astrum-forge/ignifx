@@ -160,7 +160,7 @@ The x component.
 
 ###### Implementation of
 
-[`Vec2Like`](#vec2like).[`x`](#x-19)
+[`Vec2Like`](#vec2like).[`x`](#x-20)
 
 ##### y
 
@@ -250,7 +250,7 @@ The layer `play` and `currentState` default to; empty means the document's base 
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The declarative fields (ADR-0004).
 
@@ -524,13 +524,13 @@ The machine.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -560,13 +560,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -1665,7 +1665,7 @@ The address and URL, plus the standard `context`, `hint`, and `cause`.
 
 ###### Overrides
 
-[`IgnifxError`](#ignifxerror).[`constructor`](#constructor-44)
+[`IgnifxError`](#ignifxerror).[`constructor`](#constructor-47)
 
 #### Properties
 
@@ -1727,7 +1727,7 @@ One sentence telling the developer how to fix it, or `null` when there is nothin
 
 ###### Inherited from
 
-[`IgnifxError`](#ignifxerror).[`name`](#name-25)
+[`IgnifxError`](#ignifxerror).[`name`](#name-26)
 
 ##### stack?
 
@@ -1939,7 +1939,7 @@ Creates a component. The engine constructs components; game code never calls `ne
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`constructor`](#constructor-83)
+[`Script`](#abstract-script).[`constructor`](#constructor-95)
 
 #### Properties
 
@@ -1951,7 +1951,7 @@ One pair of ears per entity.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The serialized field declarations (ADR-0004). A listener has none: which listener is active is
 decided by which one is enabled, and a scene file records that on the component itself.
@@ -1980,7 +1980,7 @@ The app.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`app`](#app-46)
+[`Script`](#abstract-script).[`app`](#app-49)
 
 ##### enabled
 
@@ -2015,7 +2015,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-55)
+[`Script`](#abstract-script).[`enabled`](#enabled-60)
 
 ##### entity
 
@@ -2033,7 +2033,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-47)
+[`Script`](#abstract-script).[`entity`](#entity-50)
 
 ##### handle
 
@@ -2051,7 +2051,7 @@ The handle.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`handle`](#handle-42)
+[`Script`](#abstract-script).[`handle`](#handle-45)
 
 ##### isDestroyed
 
@@ -2071,7 +2071,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-42)
+[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-45)
 
 ##### isEnabledInHierarchy
 
@@ -2089,7 +2089,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-41)
+[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-44)
 
 ##### onDestroyed
 
@@ -2119,7 +2119,7 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-42)
+[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-45)
 
 ##### spatialTarget
 
@@ -2140,19 +2140,19 @@ The entity's Lite node, which exposes the `worldMatrix` a `SpatialTarget` needs.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`transform`](#transform-43)
+[`Script`](#abstract-script).[`transform`](#transform-46)
 
 ##### uid
 
@@ -2170,25 +2170,25 @@ The identifier.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`uid`](#uid-46)
+[`Script`](#abstract-script).[`uid`](#uid-49)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`world`](#world-45)
+[`Script`](#abstract-script).[`world`](#world-48)
 
 #### Methods
 
@@ -2236,7 +2236,7 @@ class Patrol extends Script.define({ waypoints: array(vec3()), speed: f32(3) }) 
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`define`](#define-41)
+[`Script`](#abstract-script).[`define`](#define-44)
 
 ##### destroy()
 
@@ -2252,7 +2252,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`destroy`](#destroy-42)
+[`Script`](#abstract-script).[`destroy`](#destroy-45)
 
 ##### getComponent()
 
@@ -2284,7 +2284,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`getComponent`](#getcomponent-42)
+[`Script`](#abstract-script).[`getComponent`](#getcomponent-45)
 
 ##### onDisable()
 
@@ -2349,7 +2349,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-42)
+[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-45)
 
 ##### startCoroutine()
 
@@ -3072,7 +3072,7 @@ Applies the schema defaults, exactly as `Script.define` would.
 
 ###### Overrides
 
-[`Script`](#abstract-script).[`constructor`](#constructor-83)
+[`Script`](#abstract-script).[`constructor`](#constructor-95)
 
 #### Properties
 
@@ -3150,7 +3150,7 @@ How steeply the sound falls off with distance.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The serialized field declarations (ADR-0004).
 
@@ -3190,7 +3190,7 @@ The app.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`app`](#app-46)
+[`Script`](#abstract-script).[`app`](#app-49)
 
 ##### enabled
 
@@ -3225,7 +3225,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-55)
+[`Script`](#abstract-script).[`enabled`](#enabled-60)
 
 ##### entity
 
@@ -3243,7 +3243,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-47)
+[`Script`](#abstract-script).[`entity`](#entity-50)
 
 ##### handle
 
@@ -3261,7 +3261,7 @@ The handle.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`handle`](#handle-42)
+[`Script`](#abstract-script).[`handle`](#handle-45)
 
 ##### instance
 
@@ -3309,7 +3309,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-42)
+[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-45)
 
 ##### isEnabledInHierarchy
 
@@ -3327,7 +3327,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-41)
+[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-44)
 
 ##### isPlaying
 
@@ -3371,7 +3371,7 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-42)
+[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-45)
 
 ##### onEnded
 
@@ -3392,19 +3392,19 @@ The signal.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`transform`](#transform-43)
+[`Script`](#abstract-script).[`transform`](#transform-46)
 
 ##### uid
 
@@ -3422,25 +3422,25 @@ The identifier.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`uid`](#uid-46)
+[`Script`](#abstract-script).[`uid`](#uid-49)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`world`](#world-45)
+[`Script`](#abstract-script).[`world`](#world-48)
 
 #### Methods
 
@@ -3502,7 +3502,7 @@ class Patrol extends Script.define({ waypoints: array(vec3()), speed: f32(3) }) 
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`define`](#define-41)
+[`Script`](#abstract-script).[`define`](#define-44)
 
 ##### destroy()
 
@@ -3518,7 +3518,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`destroy`](#destroy-42)
+[`Script`](#abstract-script).[`destroy`](#destroy-45)
 
 ##### getComponent()
 
@@ -3550,7 +3550,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`getComponent`](#getcomponent-42)
+[`Script`](#abstract-script).[`getComponent`](#getcomponent-45)
 
 ##### onDestroy()
 
@@ -3699,7 +3699,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-42)
+[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-45)
 
 ##### resume()
 
@@ -3818,7 +3818,7 @@ accept changed.
 
 ###### Implementation of
 
-[`ScriptCallbacks`](#scriptcallbacks).[`update`](#update-10)
+[`ScriptCallbacks`](#scriptcallbacks).[`update`](#update-12)
 
 ***
 
@@ -3874,7 +3874,7 @@ Whether the billboard is free or locked upright.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The declarative fields (ADR-0004).
 
@@ -4047,13 +4047,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -4083,13 +4083,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -4243,7 +4243,7 @@ Turns every enabled `Billboard` towards the main camera.
 
 #### Implements
 
-- [`System`](#system)
+- [`System`](#system-1)
 
 #### Constructors
 
@@ -4265,7 +4265,7 @@ The name diagnostics and error reports use.
 
 ###### Implementation of
 
-[`System`](#system).[`name`](#name-51)
+[`System`](#system-1).[`name`](#name-65)
 
 #### Methods
 
@@ -4289,7 +4289,7 @@ The world, clock, phase, and delta.
 
 ###### Implementation of
 
-[`System`](#system).[`update`](#update-11)
+[`System`](#system-1).[`update`](#update-14)
 
 ***
 
@@ -4529,7 +4529,7 @@ A `.physicsmaterial.json` reference; wins over [Collider.inlineMaterial](#inline
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The serialized field declarations (ADR-0004).
 
@@ -4706,13 +4706,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -4742,13 +4742,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -5155,7 +5155,7 @@ How this surface's restitution combines with the one it touches.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The serialized field declarations (ADR-0004).
 
@@ -5332,13 +5332,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -5368,13 +5368,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -5674,7 +5674,7 @@ At most one camera per entity: two views from one transform would be the same vi
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The serialized field declarations (ADR-0004).
 
@@ -5886,13 +5886,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -5922,13 +5922,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -6413,7 +6413,7 @@ The design resolution a pixel-perfect camera fits an integer zoom to, in pixels.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The declarative fields (ADR-0004).
 
@@ -6600,13 +6600,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -6650,13 +6650,13 @@ A read-only view of the size.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -6921,7 +6921,7 @@ Creates a component. The engine constructs components; game code never calls `ne
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`constructor`](#constructor-83)
+[`Script`](#abstract-script).[`constructor`](#constructor-95)
 
 #### Properties
 
@@ -6955,7 +6955,7 @@ The app.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`app`](#app-46)
+[`Script`](#abstract-script).[`app`](#app-49)
 
 ##### enabled
 
@@ -6990,7 +6990,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-55)
+[`Script`](#abstract-script).[`enabled`](#enabled-60)
 
 ##### entity
 
@@ -7008,7 +7008,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-47)
+[`Script`](#abstract-script).[`entity`](#entity-50)
 
 ##### handle
 
@@ -7026,7 +7026,7 @@ The handle.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`handle`](#handle-42)
+[`Script`](#abstract-script).[`handle`](#handle-45)
 
 ##### isDestroyed
 
@@ -7046,7 +7046,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-42)
+[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-45)
 
 ##### isEnabledInHierarchy
 
@@ -7064,7 +7064,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-41)
+[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-44)
 
 ##### onDestroyed
 
@@ -7094,25 +7094,25 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-42)
+[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-45)
 
 ##### transform
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`transform`](#transform-43)
+[`Script`](#abstract-script).[`transform`](#transform-46)
 
 ##### uid
 
@@ -7130,25 +7130,25 @@ The identifier.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`uid`](#uid-46)
+[`Script`](#abstract-script).[`uid`](#uid-49)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`world`](#world-45)
+[`Script`](#abstract-script).[`world`](#world-48)
 
 #### Methods
 
@@ -7206,7 +7206,7 @@ class Patrol extends Script.define({ waypoints: array(vec3()), speed: f32(3) }) 
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`define`](#define-41)
+[`Script`](#abstract-script).[`define`](#define-44)
 
 ##### destroy()
 
@@ -7222,7 +7222,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`destroy`](#destroy-42)
+[`Script`](#abstract-script).[`destroy`](#destroy-45)
 
 ##### getComponent()
 
@@ -7254,7 +7254,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`getComponent`](#getcomponent-42)
+[`Script`](#abstract-script).[`getComponent`](#getcomponent-45)
 
 ##### lateUpdate()
 
@@ -7315,7 +7315,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-42)
+[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-45)
 
 ##### startCoroutine()
 
@@ -7500,7 +7500,7 @@ A `.physicsmaterial.json` reference; wins over [Collider.inlineMaterial](#inline
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The serialized field declarations.
 
@@ -7673,13 +7673,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -7709,13 +7709,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -8134,7 +8134,7 @@ How this surface's restitution combines with the one it touches.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The serialized field declarations.
 
@@ -8307,13 +8307,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -8343,13 +8343,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -8641,7 +8641,7 @@ One controller per entity.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The serialized field declarations (ADR-0004).
 
@@ -8878,13 +8878,13 @@ How the character was supported at the end of the last step.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -8928,13 +8928,13 @@ A freshly allocated vector.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -9272,7 +9272,7 @@ One controller per entity.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The serialized field declarations (ADR-0004).
 
@@ -9512,13 +9512,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -9562,13 +9562,13 @@ A freshly allocated vector in metres per second.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -9915,7 +9915,7 @@ How this surface's restitution combines with the one it touches.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The serialized field declarations.
 
@@ -10088,13 +10088,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -10124,13 +10124,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -10591,13 +10591,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -10627,13 +10627,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -11105,13 +11105,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -11141,13 +11141,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -12121,7 +12121,8 @@ class Health extends Component.define({ maximum: f32(100) }) {
 - [`Model`](#model)
 - [`PostProcessStack`](#postprocessstack)
 - [`Script`](#abstract-script)
-- [`Transform`](#transform-54)
+- [`Transform`](#transform-59)
+- [`InstancedMeshRenderer`](#instancedmeshrenderer)
 - [`PlayerInput`](#playerinput)
 - [`CharacterController`](#charactercontroller)
 - [`Collider`](#abstract-collider)
@@ -12144,6 +12145,10 @@ class Health extends Component.define({ maximum: f32(100) }) {
 - [`NavMeshAgent`](#navmeshagent)
 - [`NavMeshObstacle`](#navmeshobstacle)
 - [`NavMeshSurface`](#navmeshsurface)
+- [`ParticleSystem`](#particlesystem)
+- [`ParticleSystem2D`](#particlesystem2d)
+- [`Terrain`](#terrain-2)
+- [`TerrainScatter`](#terrainscatter)
 
 #### Implements
 
@@ -12254,7 +12259,7 @@ Whether the owner has already been destroyed.
 
 ###### Implementation of
 
-[`SignalOwner`](#signalowner).[`isDestroyed`](#isdestroyed-43)
+[`SignalOwner`](#signalowner).[`isDestroyed`](#isdestroyed-46)
 
 ##### isEnabledInHierarchy
 
@@ -12298,19 +12303,19 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Implementation of
 
-[`SignalOwner`](#signalowner).[`onDestroyed`](#ondestroyed-43)
+[`SignalOwner`](#signalowner).[`onDestroyed`](#ondestroyed-46)
 
 ##### transform
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -12332,13 +12337,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -12959,7 +12964,7 @@ A `.physicsmaterial.json` reference; wins over [Collider.inlineMaterial](#inline
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The serialized field declarations.
 
@@ -13132,13 +13137,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -13168,13 +13173,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -14292,7 +14297,7 @@ How this surface's restitution combines with the one it touches.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The serialized field declarations.
 
@@ -14465,13 +14470,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -14501,13 +14506,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -14774,7 +14779,7 @@ The identifier that appears in error context.
 
 ###### Implementation of
 
-[`StorageBackend`](#storagebackend).[`name`](#name-50)
+[`StorageBackend`](#storagebackend).[`name`](#name-60)
 
 #### Methods
 
@@ -14800,7 +14805,7 @@ A promise that settles once the namespace is empty.
 
 ###### Implementation of
 
-[`StorageBackend`](#storagebackend).[`clear`](#clear-7)
+[`StorageBackend`](#storagebackend).[`clear`](#clear-9)
 
 ##### delete()
 
@@ -14927,6 +14932,91 @@ A promise that settles once the value is durable.
 ###### Implementation of
 
 [`StorageBackend`](#storagebackend).[`set`](#set-16)
+
+***
+
+### EmitterRandom
+
+**`Beta`**
+
+A deterministic stream of unit floats for the emission scheduler, drawn from `pcg3d` over a
+counter so two systems with the same seed and the same frame deltas roll the same numbers.
+
+#### Constructors
+
+##### Constructor
+
+> **new EmitterRandom**(`seed`): [`EmitterRandom`](#emitterrandom)
+
+**`Beta`**
+
+Creates a stream.
+
+###### Parameters
+
+###### seed
+
+`number`
+
+The seed to start from.
+
+###### Returns
+
+[`EmitterRandom`](#emitterrandom)
+
+#### Accessors
+
+##### seed
+
+###### Get Signature
+
+> **get** **seed**(): `number`
+
+**`Beta`**
+
+The seed the stream runs on.
+
+###### Returns
+
+`number`
+
+The seed.
+
+#### Methods
+
+##### next()
+
+> **next**(): `number`
+
+**`Beta`**
+
+The next unit float in `[0, 1)`.
+
+###### Returns
+
+`number`
+
+The number.
+
+##### reseed()
+
+> **reseed**(`seed`): `void`
+
+**`Beta`**
+
+Restarts the stream from a seed.
+
+###### Parameters
+
+###### seed
+
+`number`
+
+The new seed.
+
+###### Returns
+
+`void`
 
 ***
 
@@ -15330,13 +15420,13 @@ The tag set.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform. Every entity has one; it can be neither removed nor disabled.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The transform.
 
@@ -15358,13 +15448,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world that owns the entity.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -15882,7 +15972,7 @@ One per entity, and effectively one per world: the fields are all scene state.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The serialized field declarations (ADR-0004).
 
@@ -16080,13 +16170,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -16116,13 +16206,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -16401,7 +16491,7 @@ Applies the schema defaults, exactly as `Component.define` would.
 
 ###### Overrides
 
-[`Script`](#abstract-script).[`constructor`](#constructor-83)
+[`Script`](#abstract-script).[`constructor`](#constructor-95)
 
 #### Properties
 
@@ -16515,7 +16605,7 @@ The `CharacterController` this drives.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The declarative fields (ADR-0004).
 
@@ -16585,7 +16675,7 @@ The app.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`app`](#app-46)
+[`Script`](#abstract-script).[`app`](#app-49)
 
 ##### enabled
 
@@ -16620,7 +16710,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-55)
+[`Script`](#abstract-script).[`enabled`](#enabled-60)
 
 ##### entity
 
@@ -16638,7 +16728,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-47)
+[`Script`](#abstract-script).[`entity`](#entity-50)
 
 ##### handle
 
@@ -16656,7 +16746,7 @@ The handle.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`handle`](#handle-42)
+[`Script`](#abstract-script).[`handle`](#handle-45)
 
 ##### isCrouched
 
@@ -16690,7 +16780,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-42)
+[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-45)
 
 ##### isEnabledInHierarchy
 
@@ -16708,7 +16798,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-41)
+[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-44)
 
 ##### isGrounded
 
@@ -16766,7 +16856,7 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-42)
+[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-45)
 
 ##### pitch
 
@@ -16800,19 +16890,19 @@ The character's horizontal speed this step.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`transform`](#transform-43)
+[`Script`](#abstract-script).[`transform`](#transform-46)
 
 ##### uid
 
@@ -16830,7 +16920,7 @@ The identifier.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`uid`](#uid-46)
+[`Script`](#abstract-script).[`uid`](#uid-49)
 
 ##### verticalVelocity
 
@@ -16850,19 +16940,19 @@ The character's vertical speed, positive upwards.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`world`](#world-45)
+[`Script`](#abstract-script).[`world`](#world-48)
 
 ##### yaw
 
@@ -16934,7 +17024,7 @@ class Patrol extends Script.define({ waypoints: array(vec3()), speed: f32(3) }) 
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`define`](#define-41)
+[`Script`](#abstract-script).[`define`](#define-44)
 
 ##### destroy()
 
@@ -16950,7 +17040,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`destroy`](#destroy-42)
+[`Script`](#abstract-script).[`destroy`](#destroy-45)
 
 ##### fixedUpdate()
 
@@ -17000,7 +17090,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`getComponent`](#getcomponent-42)
+[`Script`](#abstract-script).[`getComponent`](#getcomponent-45)
 
 ##### onDisable()
 
@@ -17057,7 +17147,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-42)
+[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-45)
 
 ##### startCoroutine()
 
@@ -17204,6 +17294,132 @@ The parsed font.
 
 ***
 
+### Frustum
+
+Six planes extracted from a view-projection matrix.
+
+#### Example
+
+```ts
+const frustum = new Frustum();
+frustum.setFromViewProjection(viewProjection.elements);
+frustum.intersectsBox(-1, 0, -1, 1, 2, 1);
+```
+
+#### Constructors
+
+##### Constructor
+
+> **new Frustum**(): [`Frustum`](#frustum)
+
+###### Returns
+
+[`Frustum`](#frustum)
+
+#### Properties
+
+##### planes
+
+> `readonly` **planes**: `Float32Array`
+
+The planes, four floats each, normalised: left, right, bottom, top, near, far.
+
+#### Accessors
+
+##### isValid
+
+###### Get Signature
+
+> **get** **isValid**(): `boolean`
+
+Whether the last matrix given produced a usable frustum. A headless camera with no surface, or
+a matrix with a non-finite element, does not; then nothing is culled.
+
+###### Returns
+
+`boolean`
+
+`true` when [Frustum.intersectsBox](#intersectsbox) can answer.
+
+#### Methods
+
+##### intersectsBox()
+
+> **intersectsBox**(`minX`, `minY`, `minZ`, `maxX`, `maxY`, `maxZ`): `boolean`
+
+Whether an axis-aligned box is at least partly inside the frustum.
+
+###### Parameters
+
+###### minX
+
+`number`
+
+The box's smallest X.
+
+###### minY
+
+`number`
+
+The box's smallest Y.
+
+###### minZ
+
+`number`
+
+The box's smallest Z.
+
+###### maxX
+
+`number`
+
+The box's largest X.
+
+###### maxY
+
+`number`
+
+The box's largest Y.
+
+###### maxZ
+
+`number`
+
+The box's largest Z.
+
+###### Returns
+
+`boolean`
+
+`false` only when the box is wholly outside one plane.
+
+###### Remarks
+
+Conservative: a box that straddles a corner may be reported inside when it is not, which costs
+a draw, never a missing chunk. An invalid frustum reports everything inside.
+
+##### setFromViewProjection()
+
+> **setFromViewProjection**(`m`): `boolean`
+
+Extracts the planes from a column-major view-projection matrix.
+
+###### Parameters
+
+###### m
+
+`ArrayLike`\<`number`\>
+
+Sixteen column-major elements, `m[column * 4 + row]`.
+
+###### Returns
+
+`boolean`
+
+Whether the frustum is valid.
+
+***
+
 ### GamepadDevice
 
 A game controller (`docs/architecture/08-input.md` §4). Values are refreshed once per frame from
@@ -17246,7 +17462,7 @@ The slot index, `0` through `3`.
 
 ###### Overrides
 
-[`InputDevice`](#inputdevice).[`constructor`](#constructor-49)
+[`InputDevice`](#inputdevice).[`constructor`](#constructor-52)
 
 #### Properties
 
@@ -18312,6 +18528,562 @@ Stops every instance at once, without an `onEnded`: a stop is not an end.
 
 ***
 
+### HeightField
+
+A regular grid of heights and the queries over it.
+
+#### Example
+
+```ts
+const field = HeightField.fromNormalised(65, { width: 64, depth: 64, height: 10 }, values);
+field.heightAt(3.5, -2); // metres, bilinear
+```
+
+#### Constructors
+
+##### Constructor
+
+> **new HeightField**(`resolution`, `size`, `heights?`): [`HeightField`](#heightfield)
+
+Wraps a height array.
+
+###### Parameters
+
+###### resolution
+
+`number`
+
+Samples per side.
+
+###### size
+
+[`TerrainSize`](#terrainsize-1)
+
+The extent, in metres.
+
+###### heights?
+
+`Float32Array`\<`ArrayBufferLike`\>
+
+`resolution * resolution` heights in metres, or omitted for a flat field.
+
+###### Returns
+
+[`HeightField`](#heightfield)
+
+###### Throws
+
+IgnifxError with code `IGX-1608` when `heights` has the wrong length.
+
+#### Properties
+
+##### depth
+
+> `readonly` **depth**: `number`
+
+The extent along Z, in metres.
+
+##### height
+
+> `readonly` **height**: `number`
+
+The height a full-scale sample reaches, in metres.
+
+##### heights
+
+> `readonly` **heights**: `Float32Array`
+
+The heights, in metres, row-major: `heights[iz * resolution + ix]`. Mutating it directly is
+allowed for bulk generation; go through [HeightField.setHeights](#setheights) when something has to be
+told, because a `Terrain` rebuilds only the chunks that method names.
+
+##### resolution
+
+> `readonly` **resolution**: `number`
+
+Samples per side.
+
+##### spacingX
+
+> `readonly` **spacingX**: `number`
+
+Metres between neighbouring samples along X.
+
+##### spacingZ
+
+> `readonly` **spacingZ**: `number`
+
+Metres between neighbouring samples along Z.
+
+##### width
+
+> `readonly` **width**: `number`
+
+The extent along X, in metres.
+
+#### Methods
+
+##### assertRegion()
+
+> **assertRegion**(`x`, `z`, `width`, `depth`): `void`
+
+Refuses a rectangle that does not lie inside the field.
+
+###### Parameters
+
+###### x
+
+`number`
+
+The first column.
+
+###### z
+
+`number`
+
+The first row.
+
+###### width
+
+`number`
+
+How many columns.
+
+###### depth
+
+`number`
+
+How many rows.
+
+###### Returns
+
+`void`
+
+###### Throws
+
+IgnifxError with code `IGX-1610`.
+
+##### fromNormalised()
+
+> `static` **fromNormalised**(`resolution`, `size`, `values`): [`HeightField`](#heightfield)
+
+Builds a field from normalised values, `0..1` mapped onto `0..size.height`.
+
+###### Parameters
+
+###### resolution
+
+`number`
+
+Samples per side.
+
+###### size
+
+[`TerrainSize`](#terrainsize-1)
+
+The extent, in metres.
+
+###### values
+
+`Float32Array`
+
+`resolution * resolution` values, row-major.
+
+###### Returns
+
+[`HeightField`](#heightfield)
+
+The field.
+
+###### Throws
+
+IgnifxError with code `IGX-1608` when the value count does not match.
+
+##### fromSamples16()
+
+> `static` **fromSamples16**(`resolution`, `size`, `samples`): [`HeightField`](#heightfield)
+
+Builds a field from 16-bit samples, `0..65535` mapped onto `0..size.height`.
+
+###### Parameters
+
+###### resolution
+
+`number`
+
+Samples per side.
+
+###### size
+
+[`TerrainSize`](#terrainsize-1)
+
+The extent, in metres.
+
+###### samples
+
+`Uint16Array`
+
+`resolution * resolution` samples, row-major.
+
+###### Returns
+
+[`HeightField`](#heightfield)
+
+The field.
+
+###### Throws
+
+IgnifxError with code `IGX-1608` when the sample count does not match.
+
+##### heightAt()
+
+> **heightAt**(`x`, `z`): `number`
+
+The height under a local point, bilinearly interpolated; points outside the field read the
+nearest edge.
+
+###### Parameters
+
+###### x
+
+`number`
+
+Metres along X.
+
+###### z
+
+`number`
+
+Metres along Z.
+
+###### Returns
+
+`number`
+
+The height in metres.
+
+##### localToSampleX()
+
+> **localToSampleX**(`x`): `number`
+
+The fractional sample column of a local X.
+
+###### Parameters
+
+###### x
+
+`number`
+
+Metres along X.
+
+###### Returns
+
+`number`
+
+The column, unclamped.
+
+##### localToSampleZ()
+
+> **localToSampleZ**(`z`): `number`
+
+The fractional sample row of a local Z.
+
+###### Parameters
+
+###### z
+
+`number`
+
+Metres along Z.
+
+###### Returns
+
+`number`
+
+The row, unclamped.
+
+##### minMax()
+
+> **minMax**(`x`, `z`, `width`, `depth`, `out`): `Float32Array`
+
+The lowest and highest sample inside a rectangle.
+
+###### Parameters
+
+###### x
+
+`number`
+
+The first column.
+
+###### z
+
+`number`
+
+The first row.
+
+###### width
+
+`number`
+
+How many columns.
+
+###### depth
+
+`number`
+
+How many rows.
+
+###### out
+
+`Float32Array`
+
+Receives `[min, max]`.
+
+###### Returns
+
+`Float32Array`
+
+`out`, for chaining.
+
+##### normalAt()
+
+> **normalAt**(`x`, `z`, `out`): [`MutableVec3`](#mutablevec3)
+
+The unit surface normal under a local point, from central differences one sample apart.
+
+###### Parameters
+
+###### x
+
+`number`
+
+Metres along X.
+
+###### z
+
+`number`
+
+Metres along Z.
+
+###### out
+
+[`MutableVec3`](#mutablevec3)
+
+Receives the normal.
+
+###### Returns
+
+[`MutableVec3`](#mutablevec3)
+
+`out`, for chaining.
+
+##### raycast()
+
+> **raycast**(`ray`, `out`): `boolean`
+
+Marches a ray across the field and reports where it first crosses the surface.
+
+###### Parameters
+
+###### ray
+
+[`Ray`](#ray)
+
+The ray, in local metres.
+
+###### out
+
+[`TerrainHit`](#terrainhit)
+
+Receives the hit.
+
+###### Returns
+
+`boolean`
+
+`true` when the ray hit the surface within `ray.length`.
+
+###### Remarks
+
+The ray is clipped to the field's bounding box first, then stepped at half a sample spacing;
+once a step finds the ray below the surface the crossing is bisected. The ray and the hit are in
+the field's local frame.
+
+##### sample()
+
+> **sample**(`ix`, `iz`): `number`
+
+One sample, with the indices clamped to the grid.
+
+###### Parameters
+
+###### ix
+
+`number`
+
+The column.
+
+###### iz
+
+`number`
+
+The row.
+
+###### Returns
+
+`number`
+
+The height in metres.
+
+##### sampleNormal()
+
+> **sampleNormal**(`ix`, `iz`, `out`): [`MutableVec3`](#mutablevec3)
+
+The unit surface normal at a sample, from central differences of its neighbours. What the chunk
+builder reads at every LOD, so coarse and fine meshes shade the same.
+
+###### Parameters
+
+###### ix
+
+`number`
+
+The column.
+
+###### iz
+
+`number`
+
+The row.
+
+###### out
+
+[`MutableVec3`](#mutablevec3)
+
+Receives the normal.
+
+###### Returns
+
+[`MutableVec3`](#mutablevec3)
+
+`out`, for chaining.
+
+##### sampleToLocalX()
+
+> **sampleToLocalX**(`ix`): `number`
+
+The local X of a sample column.
+
+###### Parameters
+
+###### ix
+
+`number`
+
+The column.
+
+###### Returns
+
+`number`
+
+Metres along X.
+
+##### sampleToLocalZ()
+
+> **sampleToLocalZ**(`iz`): `number`
+
+The local Z of a sample row.
+
+###### Parameters
+
+###### iz
+
+`number`
+
+The row.
+
+###### Returns
+
+`number`
+
+Metres along Z.
+
+##### setHeights()
+
+> **setHeights**(`x`, `z`, `width`, `depth`, `heights`): `void`
+
+Overwrites a rectangle of samples.
+
+###### Parameters
+
+###### x
+
+`number`
+
+The first column.
+
+###### z
+
+`number`
+
+The first row.
+
+###### width
+
+`number`
+
+How many columns.
+
+###### depth
+
+`number`
+
+How many rows.
+
+###### heights
+
+`Float32Array`
+
+`width * depth` heights in metres, row-major.
+
+###### Returns
+
+`void`
+
+###### Throws
+
+IgnifxError with code `IGX-1610` when the rectangle falls outside the field or `heights`
+is too short.
+
+##### slopeAt()
+
+> **slopeAt**(`x`, `z`): `number`
+
+The slope under a local point, in degrees from horizontal.
+
+###### Parameters
+
+###### x
+
+`number`
+
+Metres along X.
+
+###### z
+
+`number`
+
+Metres along Z.
+
+###### Returns
+
+`number`
+
+The slope, `0` flat, `90` vertical.
+
+***
+
 ### HeightfieldCollider
 
 A heightfield collider: a regular grid of height samples in the XZ plane, which is what a terrain
@@ -18419,7 +19191,7 @@ A `.physicsmaterial.json` reference; wins over [Collider.inlineMaterial](#inline
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The serialized field declarations.
 
@@ -18596,13 +19368,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -18632,13 +19404,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -19192,7 +19964,7 @@ Builds a HUD label with the schema's defaults.
 
 ###### Overrides
 
-[`TextComponent`](#abstract-textcomponent).[`constructor`](#constructor-92)
+[`TextComponent`](#abstract-textcomponent).[`constructor`](#constructor-108)
 
 #### Properties
 
@@ -19226,7 +19998,7 @@ The colour every glyph starts with.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`color`](#color-9)
+[`TextComponent`](#abstract-textcomponent).[`color`](#color-19)
 
 ##### font
 
@@ -19302,7 +20074,7 @@ The offset from the anchor, in render-target pixels; x grows right, y grows down
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The declarative fields (ADR-0004).
 
@@ -19340,7 +20112,7 @@ The app.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`app`](#app-51)
+[`TextComponent`](#abstract-textcomponent).[`app`](#app-56)
 
 ##### enabled
 
@@ -19375,7 +20147,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`enabled`](#enabled-61)
+[`TextComponent`](#abstract-textcomponent).[`enabled`](#enabled-71)
 
 ##### entity
 
@@ -19393,7 +20165,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`entity`](#entity-54)
+[`TextComponent`](#abstract-textcomponent).[`entity`](#entity-59)
 
 ##### handle
 
@@ -19411,7 +20183,7 @@ The handle.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`handle`](#handle-47)
+[`TextComponent`](#abstract-textcomponent).[`handle`](#handle-52)
 
 ##### isDestroyed
 
@@ -19431,7 +20203,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`isDestroyed`](#isdestroyed-48)
+[`TextComponent`](#abstract-textcomponent).[`isDestroyed`](#isdestroyed-53)
 
 ##### isEnabledInHierarchy
 
@@ -19449,7 +20221,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`isEnabledInHierarchy`](#isenabledinhierarchy-46)
+[`TextComponent`](#abstract-textcomponent).[`isEnabledInHierarchy`](#isenabledinhierarchy-51)
 
 ##### lite
 
@@ -19529,25 +20301,25 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`onDestroyed`](#ondestroyed-48)
+[`TextComponent`](#abstract-textcomponent).[`onDestroyed`](#ondestroyed-53)
 
 ##### transform
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`transform`](#transform-48)
+[`TextComponent`](#abstract-textcomponent).[`transform`](#transform-53)
 
 ##### uid
 
@@ -19565,25 +20337,25 @@ The identifier.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`uid`](#uid-51)
+[`TextComponent`](#abstract-textcomponent).[`uid`](#uid-56)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`world`](#world-51)
+[`TextComponent`](#abstract-textcomponent).[`world`](#world-56)
 
 #### Methods
 
@@ -19636,7 +20408,7 @@ class Spinner extends Component.define({
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`define`](#define-46)
+[`TextComponent`](#abstract-textcomponent).[`define`](#define-51)
 
 ##### destroy()
 
@@ -19652,7 +20424,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`destroy`](#destroy-47)
+[`TextComponent`](#abstract-textcomponent).[`destroy`](#destroy-52)
 
 ##### getComponent()
 
@@ -19684,7 +20456,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`getComponent`](#getcomponent-47)
+[`TextComponent`](#abstract-textcomponent).[`getComponent`](#getcomponent-52)
 
 ##### onDetach()
 
@@ -19735,7 +20507,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`requireComponent`](#requirecomponent-47)
+[`TextComponent`](#abstract-textcomponent).[`requireComponent`](#requirecomponent-52)
 
 ##### resolveText()
 
@@ -19888,7 +20660,7 @@ The message key.
 
 `boolean`
 
-`true` when [I18nService.t](#t-9) will find a message.
+`true` when [I18nService.t](#t-10) will find a message.
 
 ##### load()
 
@@ -20110,7 +20882,7 @@ The identifier that appears in error context.
 
 ###### Implementation of
 
-[`StorageBackend`](#storagebackend).[`name`](#name-50)
+[`StorageBackend`](#storagebackend).[`name`](#name-60)
 
 #### Methods
 
@@ -20136,7 +20908,7 @@ A promise that settles once the transaction commits.
 
 ###### Implementation of
 
-[`StorageBackend`](#storagebackend).[`clear`](#clear-7)
+[`StorageBackend`](#storagebackend).[`clear`](#clear-9)
 
 ##### delete()
 
@@ -20180,7 +20952,7 @@ Closes the connection. The next call opens a new one.
 
 ###### Implementation of
 
-[`StorageBackend`](#storagebackend).[`dispose`](#dispose-22)
+[`StorageBackend`](#storagebackend).[`dispose`](#dispose-26)
 
 ##### get()
 
@@ -21625,6 +22397,642 @@ app.input.simulateEvent({ type: "pointerdown", x: 10, y: 20, button: 0 });
 
 ***
 
+### InstancedMeshRenderer
+
+Draws one mesh many times from a caller-owned matrix slab, in a single draw call (the plan's
+§3.5).
+
+#### Example
+
+```ts
+using box = MeshAsset.box(app, { size: 0.5 });
+const field = world.createEntity("Asteroids");
+const renderer = field.addComponent(InstancedMeshRenderer, { mesh: box.retain(), capacity: 20_000 });
+
+const slab = new Float32Array(20_000 * 16);
+// ... write 16 column-major floats per instance ...
+renderer.setMatrices(slab, 20_000);
+```
+
+#### Extends
+
+- [`Component`](#abstract-component)
+
+#### Implements
+
+- [`ComponentHooks`](#componenthooks)
+
+#### Constructors
+
+##### Constructor
+
+> **new InstancedMeshRenderer**(): [`InstancedMeshRenderer`](#instancedmeshrenderer)
+
+Applies the schema defaults, exactly as `Component.define` would.
+
+###### Returns
+
+[`InstancedMeshRenderer`](#instancedmeshrenderer)
+
+###### Overrides
+
+[`Component`](#abstract-component).[`constructor`](#constructor-25)
+
+#### Properties
+
+##### allowMultiple
+
+> `static` **allowMultiple**: `boolean`
+
+Several instanced renderers on one entity draw several clouds from one transform.
+
+##### capacity
+
+> **capacity**: `number`
+
+##### castShadows
+
+> **castShadows**: `boolean`
+
+##### gpuCulling
+
+> **gpuCulling**: `boolean`
+
+##### lod
+
+> **lod**: [`InstancedMeshLod`](#instancedmeshlod) \| `null`
+
+##### materials
+
+> **materials**: ([`AssetHandle`](#assethandle)\<[`MaterialAsset`](#materialasset)\> \| `null`)[]
+
+##### mesh
+
+> **mesh**: [`AssetHandle`](#assethandle)\<[`MeshAsset`](#meshasset)\> \| `null`
+
+##### pickable
+
+> **pickable**: `boolean`
+
+##### receiveShadows
+
+> **receiveShadows**: `boolean`
+
+##### renderOrder
+
+> **renderOrder**: `number`
+
+##### schema
+
+> `static` **schema**: [`Schema`](#schema-44)
+
+The serialized field declarations (ADR-0004).
+
+##### typeId
+
+> `static` **typeId**: `string`
+
+The namespaced registration id.
+
+#### Accessors
+
+##### app
+
+###### Get Signature
+
+> **get** **app**(): [`App`](#app-1)
+
+The app that owns the world.
+
+###### Returns
+
+[`App`](#app-1)
+
+The app.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`app`](#app-18)
+
+##### count
+
+###### Get Signature
+
+> **get** **count**(): `number`
+
+How many instances are drawn.
+
+###### Returns
+
+`number`
+
+The active count; `0` until [InstancedMeshRenderer.setMatrices](#setmatrices) has run.
+
+##### enabled
+
+###### Get Signature
+
+> **get** **enabled**(): `boolean`
+
+The component's own enabled flag; `true` by default. Setting it runs the enable or disable
+transition (`docs/architecture/01-lifecycle-and-time.md` §6): `onDisable` runs immediately,
+`awake`/`onEnable` run in the next lifecycle flush — or immediately and nested when the change
+happens inside a callback.
+
+###### Returns
+
+`boolean`
+
+`true` when the component's own flag is set.
+
+###### Set Signature
+
+> **set** **enabled**(`value`): `void`
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`enabled`](#enabled-19)
+
+##### entity
+
+###### Get Signature
+
+> **get** **entity**(): [`Entity`](#entity-19)
+
+The entity this component is attached to.
+
+###### Returns
+
+[`Entity`](#entity-19)
+
+The owning entity.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`entity`](#entity-16)
+
+##### handle
+
+###### Get Signature
+
+> **get** **handle**(): [`ComponentHandle`](#componenthandle-1)
+
+The dense runtime handle; invalid after destruction.
+
+###### Returns
+
+[`ComponentHandle`](#componenthandle-1)
+
+The handle.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`handle`](#handle-16)
+
+##### isDestroyed
+
+###### Get Signature
+
+> **get** **isDestroyed**(): `boolean`
+
+`true` from the moment `destroy()` is called, long before the destroy flush runs.
+
+###### Returns
+
+`boolean`
+
+`true` once the component has been queued for destruction.
+
+Whether the owner has already been destroyed.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-16)
+
+##### isEnabledInHierarchy
+
+###### Get Signature
+
+> **get** **isEnabledInHierarchy**(): `boolean`
+
+`true` when the component's own flag is set **and** its entity is active in the hierarchy.
+
+###### Returns
+
+`boolean`
+
+`true` when the component is effectively enabled.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-16)
+
+##### isVisible
+
+###### Get Signature
+
+> **get** **isVisible**(): `boolean`
+
+Whether the instanced mesh is currently drawn: its own `enabled` flag and its entity's
+`activeInHierarchy`, materialised onto Lite's `visible`.
+
+###### Returns
+
+`boolean`
+
+`true` when the meshes are visible.
+
+##### lite
+
+###### Get Signature
+
+> **get** **lite**(): [`InstancedMeshRendererLiteHandles`](#instancedmeshrendererlitehandles)
+
+The Babylon Lite meshes this renderer draws. Unstable escape hatch
+(`docs/architecture/00-overview.md` §3).
+
+###### Returns
+
+[`InstancedMeshRendererLiteHandles`](#instancedmeshrendererlitehandles)
+
+The instanced mesh and its LOD partner, either of which may be `null`.
+
+##### onDestroyed
+
+###### Get Signature
+
+> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+Emitted once when the component is destroyed, in the destroy flush. Connecting with
+`{ owner: this }` elsewhere uses it to detach handlers automatically
+(`docs/architecture/02-scene-graph.md` §8).
+
+###### Returns
+
+[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+The signal. It is created on first access, so a component nobody listens to allocates
+nothing.
+
+Emitted once when the owner is destroyed; the signal uses it to detach the handler.
+
+###### Remarks
+
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
+`docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
+invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-16)
+
+##### transform
+
+###### Get Signature
+
+> **get** **transform**(): [`Transform`](#transform-59)
+
+The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
+
+###### Returns
+
+[`Transform`](#transform-59)
+
+The entity's transform.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`transform`](#transform-16)
+
+##### uid
+
+###### Get Signature
+
+> **get** **uid**(): `string`
+
+The stable ULID; the key files use to reference this component.
+
+###### Returns
+
+`string`
+
+The identifier.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`uid`](#uid-16)
+
+##### world
+
+###### Get Signature
+
+> **get** **world**(): [`World`](#world-64)
+
+The world the entity belongs to.
+
+###### Returns
+
+[`World`](#world-64)
+
+The world.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`world`](#world-17)
+
+#### Methods
+
+##### define()
+
+> `static` **define**\<`S`\>(`schema`): [`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+Declares a component's serialized fields and returns the base class to extend (ADR-0004,
+`docs/architecture/03-scripting-and-components.md` §3). The returned class exposes every field
+as a typed instance property, applies the defaults in its constructor, and carries the schema
+for the serializer, the inspector, and the docs harness.
+
+###### Type Parameters
+
+###### S
+
+`S` *extends* `Readonly`\<`Record`\<`string`, [`FieldDefinition`](#fielddefinition)\<`unknown`\>\>\>
+
+The schema being declared.
+
+###### Parameters
+
+###### schema
+
+`S`
+
+The field definitions, keyed by the property name they become.
+
+###### Returns
+
+[`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+An abstract class to extend.
+
+###### Throws
+
+IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
+with a `Component`/`Script` member.
+
+###### Example
+
+```ts
+class Spinner extends Component.define({
+  degreesPerSecond: f32(90, { min: -360, max: 360 }),
+  axis: vec3({ x: 0, y: 1, z: 0 }),
+}) {
+  static typeId = "mygame/Spinner";
+}
+```
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`define`](#define-16)
+
+##### destroy()
+
+> **destroy**(): `void`
+
+Queues this component for destruction. It stays usable until the destroy flush of the current
+frame, but reports `isDestroyed === true` immediately
+(`docs/architecture/01-lifecycle-and-time.md` §6). Calling it twice is a no-op.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`destroy`](#destroy-16)
+
+##### getComponent()
+
+> **getComponent**\<`T`\>(`type`): `T` \| `null`
+
+Finds another component on the same entity — sugar for `this.entity.getComponent`.
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class; matching is by class identity **and** inheritance.
+
+###### Returns
+
+`T` \| `null`
+
+The first match in attach order, or `null`.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-16)
+
+##### markDirty()
+
+> **markDirty**(`range?`): `void`
+
+Says that the caller mutated the slab in place, so the next `PreRender` re-uploads it.
+
+###### Parameters
+
+###### range?
+
+[`InstanceRange`](#instancerange)
+
+Which instances moved. **Advisory in this version**: Lite 1.27.0 exposes no
+sub-range flush, so the whole active range `[0, count)` is re-uploaded either way. Pass it
+anyway; the day Lite grows one, callers that already declared their range get it for free.
+
+###### Returns
+
+`void`
+
+##### onAttach()
+
+> **onAttach**(): `void`
+
+Declares the thin-instance adapter chunk, so `app.start()` waits for it before the first
+reconciliation. The meshes themselves are built on the first sync, once `mesh` has decoded.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-11)
+
+##### onDetach()
+
+> **onDetach**(): `void`
+
+Removes both meshes from the scene, releasing their share of the templates' buffers.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-11)
+
+##### requireComponent()
+
+> **requireComponent**\<`T`\>(`type`): `T`
+
+Finds another component on the same entity, requiring it to be there — the supported way to
+link components (`docs/architecture/03-scripting-and-components.md` §8).
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class.
+
+###### Returns
+
+`T`
+
+The first match in attach order.
+
+###### Throws
+
+IgnifxError with code `IGX-0201` when the entity has no such component.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-16)
+
+##### setColors()
+
+> **setColors**(`colors`): `void`
+
+Installs, replaces, or removes the per-instance colours.
+
+###### Parameters
+
+###### colors
+
+`Float32Array`\<`ArrayBufferLike`\> \| `null`
+
+The slab; at least `count * 4` floats, or `null` to stop reading colours.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+Four floats per instance, **linear** RGBA in `0..1` — the same space a material's `baseColor`
+is uploaded in, not sRGB. The material has to be one that reads `instanceColor`; a stock PBR
+material ignores them.
+
+Adding or removing colours changes the compiled pipeline, so it costs the frame's one
+`rebuildSceneRenderables`. Editing them in place does not: mutate the slab and call
+[InstancedMeshRenderer.markDirty](#markdirty).
+
+###### Throws
+
+IgnifxError with code `IGX-0721` when the slab is too short for the current count.
+
+##### setCount()
+
+> **setCount**(`count`): `void`
+
+Changes how many instances are drawn, without re-uploading the slab.
+
+###### Parameters
+
+###### count
+
+`number`
+
+The new count, at most `capacity` and at most what the slab holds.
+
+###### Returns
+
+`void`
+
+###### Throws
+
+IgnifxError with code `IGX-0721` when `count` is not an integer in `[0, capacity]`, or
+when the matrix or colour slab is too short to hold that many instances.
+
+##### setMatrices()
+
+> **setMatrices**(`matrices`, `count`): `void`
+
+Points the renderer at a matrix slab.
+
+###### Parameters
+
+###### matrices
+
+`Float32Array`
+
+The slab; at least `count * 16` floats.
+
+###### count
+
+`number`
+
+How many instances to draw, at most `capacity`.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+The array is **not copied**: Lite reads the caller's memory for the life of the renderer, so it
+has to stay alive, and mutating it afterwards is the intended way to move instances — followed
+by [InstancedMeshRenderer.markDirty](#markdirty). Sixteen floats per instance, column-major, the
+layout Lite's `Mat4` and `Transform.worldMatrix` already use.
+
+The upload happens in the next `PreRender`, not here.
+
+###### Throws
+
+IgnifxError with code `IGX-0721` when `count` is not an integer in `[0, capacity]`, or
+when the slab (or the colour slab set earlier) is too short to hold that many instances.
+
+***
+
 ### JumpTimers
 
 The two forgiving timers every good jump has (`12-3d-toolkit.md` §1.1).
@@ -22274,7 +23682,7 @@ At most one light per entity: two lights from one transform want two entities.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The serialized field declarations (ADR-0004).
 
@@ -22501,13 +23909,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -22537,13 +23945,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -23019,7 +24427,7 @@ The levels, nearest first.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The declarative fields (ADR-0004).
 
@@ -23220,13 +24628,13 @@ Fires with the new level index each time the group switches; `-1` means culled.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -23256,13 +24664,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -23430,7 +24838,7 @@ Evaluates every `LodGroup` against the main camera.
 
 #### Implements
 
-- [`System`](#system)
+- [`System`](#system-1)
 
 #### Constructors
 
@@ -23452,7 +24860,7 @@ The name diagnostics and error reports use.
 
 ###### Implementation of
 
-[`System`](#system).[`name`](#name-51)
+[`System`](#system-1).[`name`](#name-65)
 
 #### Methods
 
@@ -23476,7 +24884,7 @@ The world, clock, phase, and delta.
 
 ###### Implementation of
 
-[`System`](#system).[`update`](#update-11)
+[`System`](#system-1).[`update`](#update-14)
 
 ***
 
@@ -24684,6 +26092,26 @@ The texture handles the material samples, in slot order. It does not own them.
 
 #### Accessors
 
+##### isDrawable
+
+###### Get Signature
+
+> **get** **isDrawable**(): `boolean`
+
+Whether Babylon Lite can draw the material yet.
+
+###### Remarks
+
+`false` only for a shader material whose file declares a `// @ignifx storage` binding that
+nothing has filled in: Lite refuses to build a bind group with an unbound storage buffer, so
+such a material must be given one before a mesh wears it. Everything else is always drawable.
+
+###### Returns
+
+`boolean`
+
+`true` when every declared binding has something bound.
+
 ##### kind
 
 ###### Get Signature
@@ -24726,6 +26154,36 @@ The material's human-readable name.
 
 The declared name.
 
+##### shader
+
+###### Get Signature
+
+> **get** **shader**(): [`ShaderAsset`](#shaderasset) \| `null`
+
+The shader a `"shader"` material sets values on.
+
+###### Returns
+
+[`ShaderAsset`](#shaderasset) \| `null`
+
+The shader asset, or `null` for a PBR or Standard material. A hot reload of the
+`.wgsl` replaces it in place.
+
+##### surfaces
+
+###### Get Signature
+
+> **get** **surfaces**(): readonly [`SurfaceShaderBinding`](#surfaceshaderbinding)[]
+
+The surface shaders layered onto this material, in the order they were attached
+(`docs/plan/2026-09-terrain-particles-shaders.md` §3.2).
+
+###### Returns
+
+readonly [`SurfaceShaderBinding`](#surfaceshaderbinding)[]
+
+The bindings, or an empty array.
+
 #### Methods
 
 ##### clone()
@@ -24754,6 +26212,55 @@ The copy's handle, with one holder — the caller.
 The copy shares the original's *textures* (they are addressed assets, and the handles are
 retained by whoever loaded them) and nothing else: it is a second Lite material in the same
 family, so it costs no extra shader compilation.
+
+##### dispose()
+
+> **dispose**(): `void`
+
+Releases what the material holds beyond its Babylon Lite object: a shader material's per-frame
+uniform registration and its hot-reload hook.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+The `material` asset type's `unload` runs it when the last holder releases the handle, so a
+game that pairs `load`/`release` or uses `using` never has to. Calling it twice is a no-op, and
+it is a no-op on a PBR or Standard material, which own nothing of the kind.
+
+##### getUniform()
+
+> **getUniform**(`name`, `out?`): `number` \| `Float32Array`\<`ArrayBufferLike`\>
+
+Reads the current value of one of the shader's declared uniforms.
+
+###### Parameters
+
+###### name
+
+`string`
+
+The declared uniform's name.
+
+###### out?
+
+`Float32Array`\<`ArrayBufferLike`\>
+
+Receives a vector or matrix value; omit it to get a fresh array, or read a scalar
+uniform's number directly.
+
+###### Returns
+
+`number` \| `Float32Array`\<`ArrayBufferLike`\>
+
+The number for `f32`, `u32`, and `i32`, and the filled array for everything else.
+
+###### Throws
+
+IgnifxError with code `IGX-0718` unless this is a `"shader"` material, `IGX-0712` when
+the shader declares no such uniform, or `IGX-0713` when `out` is too short.
 
 ##### setAlpha()
 
@@ -24798,6 +26305,47 @@ The colour is sRGB, like every colour in ignifx's public API; the linear value t
 is derived here. The change marks the material's uniform block dirty, which is the cheap path:
 no pipeline is recompiled (`src/lite/material.ts`).
 
+###### Throws
+
+IgnifxError with code `IGX-0718` on a `"shader"` material, which has no base colour of
+the engine's choosing.
+
+##### setDefine()
+
+> **setDefine**(`name`, `value`): `void`
+
+Overrides one of the shader's declared `define` values.
+
+###### Parameters
+
+###### name
+
+`string`
+
+The declared define's name.
+
+###### value
+
+`number` \| `boolean`
+
+The new value; a boolean compiles to `bool`, a number to `f32`.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+A define is a WGSL `const` compiled into the pipeline, so this rebuilds the Babylon Lite
+material and replays every value, texture, and storage binding onto the new one. `MeshRenderer`
+picks the new material up on the next `PreRender`, and the frame after that draws with the new
+pipeline — so treat it as a level-load or settings-screen operation, not a per-frame one.
+
+###### Throws
+
+IgnifxError with code `IGX-0718` unless this is a `"shader"` material, or `IGX-0712`
+when the shader declares no such define.
+
 ##### setMetallicRoughness()
 
 > **setMetallicRoughness**(`metallic`, `roughness`): `void`
@@ -24822,6 +26370,142 @@ The roughness factor, 0 to 1.
 ###### Returns
 
 `void`
+
+##### setStorageBuffer()
+
+> **setStorageBuffer**(`name`, `buffer`): `void`
+
+Binds a read-only storage buffer to one of the shader's declared bindings.
+
+###### Parameters
+
+###### name
+
+`string`
+
+The declared binding's name.
+
+###### buffer
+
+[`AssetHandle`](#assethandle)\<[`StorageBufferAsset`](#storagebufferasset)\> \| `null`
+
+The buffer, or `null` to unbind. A shader material with an unbound declared
+storage buffer is not drawable ([MaterialAsset.isDrawable](#isdrawable)).
+
+###### Returns
+
+`void`
+
+###### Throws
+
+IgnifxError with code `IGX-0718` unless this is a `"shader"` material, or `IGX-0712`
+when the shader declares no such storage buffer.
+
+##### setTexture()
+
+> **setTexture**(`name`, `texture`): `void`
+
+Binds a texture to one of the shader's declared samplers.
+
+###### Parameters
+
+###### name
+
+`string`
+
+The declared sampler's name.
+
+###### texture
+
+[`AssetHandle`](#assethandle)\<[`TextureAsset`](#textureasset)\> \| `null`
+
+The texture, or `null` to restore the declaration's 1x1 fallback. There is no
+"unbound": Babylon Lite cannot build a bind group for a sampler with nothing in it, so a
+declaration with no `default` falls back to white.
+
+###### Returns
+
+`void`
+
+###### Throws
+
+IgnifxError with code `IGX-0718` unless this is a `"shader"` material, or `IGX-0712`
+when the shader declares no such sampler.
+
+##### setUniform()
+
+> **setUniform**(`name`, `value`): `void`
+
+Writes one of the shader's declared uniforms.
+
+###### Parameters
+
+###### name
+
+`string`
+
+The declared uniform's name.
+
+###### value
+
+`number` \| [`ColorLike`](#colorlike) \| `Float32Array`\<`ArrayBufferLike`\> \| readonly `number`[]
+
+A number, a numeric array of the declared length, or an sRGB colour.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+The value is checked against the `// @ignifx uniform` declaration in the `.wgsl`: an undeclared
+name is `IGX-0712` and a value of the wrong shape is `IGX-0713`, so a typo fails at the call
+site rather than showing up as a black surface. A uniform declared `color(…)` takes a
+[ColorLike](#colorlike) in **sRGB** and is uploaded linear, like every other colour in ignifx.
+
+###### Throws
+
+IgnifxError with code `IGX-0718` unless this is a `"shader"` material, `IGX-0712` when
+the shader declares no such uniform or the engine writes it, or `IGX-0713` when the value's
+shape does not match the declared type.
+
+###### Example
+
+```ts
+dissolve.value.setUniform("progress", 0.4);
+dissolve.value.setUniform("edgeColor", { r: 1, g: 0.45, b: 0.1, a: 1 });
+```
+
+##### surface()
+
+> **surface**(`name`): [`SurfaceShaderBinding`](#surfaceshaderbinding)
+
+One attached surface shader, by the name it answers to — the `.surface.wgsl` basename unless the
+material renamed it.
+
+###### Parameters
+
+###### name
+
+`string`
+
+The shader's name.
+
+###### Returns
+
+[`SurfaceShaderBinding`](#surfaceshaderbinding)
+
+The binding a game writes values through.
+
+###### Throws
+
+IgnifxError with code `IGX-0712` when the material carries no such surface shader.
+
+###### Example
+
+```ts
+rock.value.surface("snow").set("amount", 0.8);
+```
 
 ***
 
@@ -24859,7 +26543,7 @@ The identifier that appears in error context.
 
 ###### Implementation of
 
-[`StorageBackend`](#storagebackend).[`name`](#name-50)
+[`StorageBackend`](#storagebackend).[`name`](#name-60)
 
 #### Methods
 
@@ -24885,7 +26569,7 @@ A promise that settles once the namespace is empty.
 
 ###### Implementation of
 
-[`StorageBackend`](#storagebackend).[`clear`](#clear-7)
+[`StorageBackend`](#storagebackend).[`clear`](#clear-9)
 
 ##### delete()
 
@@ -24929,7 +26613,7 @@ Drops every namespace.
 
 ###### Implementation of
 
-[`StorageBackend`](#storagebackend).[`dispose`](#dispose-22)
+[`StorageBackend`](#storagebackend).[`dispose`](#dispose-26)
 
 ##### get()
 
@@ -25702,6 +27386,20 @@ A human-readable name, used in diagnostics and as the Lite mesh's name.
 
 #### Accessors
 
+##### indexCount
+
+###### Get Signature
+
+> **get** **indexCount**(): `number`
+
+How many indices the geometry has — three per triangle.
+
+###### Returns
+
+`number`
+
+The index count, or `0`; see [MeshAsset.vertexCount](#vertexcount).
+
 ##### isDisposed
 
 ###### Get Signature
@@ -25714,7 +27412,7 @@ Whether the template's GPU buffers have been released.
 
 `boolean`
 
-`true` once [MeshAsset.dispose](#dispose-16) has run.
+`true` once [MeshAsset.dispose](#dispose-17) has run.
 
 ##### lite
 
@@ -25730,6 +27428,26 @@ The Babylon Lite objects the asset owns. Unstable escape hatch
 [`MeshAssetLiteHandles`](#meshassetlitehandles)
 
 The template mesh, or `null` under a headless app.
+
+##### vertexCount
+
+###### Get Signature
+
+> **get** **vertexCount**(): `number`
+
+How many vertices the geometry has.
+
+###### Remarks
+
+Known for a mesh built with [MeshAsset.fromData](#fromdata) — headless included — and `0` for a
+primitive: Lite generates a primitive's arrays internally and 1.27.0's `Mesh` exposes no vertex
+count, only the opaque `MeshGPU` handle it says a user never touches (`index.d.ts` 7230).
+
+###### Returns
+
+`number`
+
+The vertex count, or `0`.
 
 #### Methods
 
@@ -25869,8 +27587,9 @@ A human-readable name.
 
 [`MeshGeometryData`](#meshgeometrydata)
 
-Positions, normals, indices, and optional texture coordinates. Lite keeps
-references to the arrays; do not mutate them afterwards.
+Positions, normals, indices, and any of the four optional attributes. Lite keeps
+references to the arrays; a caller that means to edit them afterwards does so through the
+`update*` methods, which keep Lite's own copy and its bounds in step.
 
 ###### Returns
 
@@ -25992,6 +27711,186 @@ Diameter, thickness, and tessellation.
 
 The handle, with one holder.
 
+##### updateColors()
+
+> **updateColors**(`data`, `vertexOffset?`, `vertexCount?`): `void`
+
+Re-uploads vertex colours.
+
+###### Parameters
+
+###### data
+
+`Float32Array`
+
+Four floats per vertex.
+
+###### vertexOffset?
+
+`number`
+
+The first vertex to overwrite. Defaults to `0`.
+
+###### vertexCount?
+
+`number`
+
+How many vertices to write. Defaults to as many as `data` holds.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+Four floats per vertex, linear RGBA. A no-op on the GPU when the mesh was created without
+colours, exactly as [MeshAsset.updateUvs](#updateuvs) is.
+
+###### Throws
+
+IgnifxError with code `IGX-0702` or `IGX-0725`; see
+[MeshAsset.updatePositions](#updatepositions).
+
+##### updateNormals()
+
+> **updateNormals**(`data`, `vertexOffset?`, `vertexCount?`): `void`
+
+Re-uploads vertex normals.
+
+###### Parameters
+
+###### data
+
+`Float32Array`
+
+Three floats per vertex.
+
+###### vertexOffset?
+
+`number`
+
+The first vertex to overwrite. Defaults to `0`.
+
+###### vertexCount?
+
+`number`
+
+How many vertices to write. Defaults to as many as `data` holds.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+The same rules as [MeshAsset.updatePositions](#updatepositions), minus the bounds: a normal cannot move a
+bounding box. The range is copied into the asset's own normal array so that a later
+`updatePositions` sees a consistent mesh.
+
+###### Throws
+
+IgnifxError with code `IGX-0702` or `IGX-0725`; see
+[MeshAsset.updatePositions](#updatepositions).
+
+##### updatePositions()
+
+> **updatePositions**(`data`, `vertexOffset?`, `vertexCount?`): `void`
+
+Re-uploads vertex positions and re-fits the bounds.
+
+###### Parameters
+
+###### data
+
+`Float32Array`
+
+Three floats per vertex, read from index 0.
+
+###### vertexOffset?
+
+`number`
+
+The first vertex to overwrite. Defaults to `0`.
+
+###### vertexCount?
+
+`number`
+
+How many vertices to write. Defaults to as many as `data` holds.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+Only a mesh from [MeshAsset.fromData](#fromdata) can be updated, and only while nothing has cloned it:
+Lite refuses to write a vertex buffer with more than one owner, and a `MeshRenderer` clone is a
+second owner.
+
+Lite's `updateMeshPositions` writes the GPU buffer and stops there, so this also copies the range
+into the asset's own position array — the one Lite retained and CPU picking reads — and rewrites
+the bounds from the whole of it, `O(vertexCount)` per call. Passing the asset's own array skips
+the copy.
+
+###### Throws
+
+IgnifxError with code `IGX-0702` when the mesh did not come from
+[MeshAsset.fromData](#fromdata), or has been disposed.
+
+###### Throws
+
+IgnifxError with code `IGX-0725` when the range falls outside the mesh or `data` is too
+short for it.
+
+###### Example
+
+```ts
+const grid = MeshAsset.fromData(app, "grid", { positions, normals, indices });
+positions[1] += 0.5;
+grid.value.updatePositions(positions);
+```
+
+##### updateUvs()
+
+> **updateUvs**(`data`, `vertexOffset?`, `vertexCount?`): `void`
+
+Re-uploads texture coordinates.
+
+###### Parameters
+
+###### data
+
+`Float32Array`
+
+Two floats per vertex.
+
+###### vertexOffset?
+
+`number`
+
+The first vertex to overwrite. Defaults to `0`.
+
+###### vertexCount?
+
+`number`
+
+How many vertices to write. Defaults to as many as `data` holds.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+Lite makes the upload a **no-op** when the mesh was created without UVs, rather than an error,
+so a mesh whose `MeshGeometryData` named none silently ignores this. The range check still runs.
+
+###### Throws
+
+IgnifxError with code `IGX-0702` or `IGX-0725`; see
+[MeshAsset.updatePositions](#updatepositions).
+
 ***
 
 ### MeshCollider
@@ -26102,7 +28001,7 @@ A `.physicsmaterial.json` reference; wins over [Collider.inlineMaterial](#inline
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The serialized field declarations.
 
@@ -26275,13 +28174,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -26311,13 +28210,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -26674,7 +28573,7 @@ Several renderers on one entity draw several meshes from one transform, which is
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The serialized field declarations (ADR-0004).
 
@@ -26881,13 +28780,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -26917,13 +28816,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -27099,6 +28998,72 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ***
 
+### MeshShapeTable
+
+**`Beta`**
+
+Precomputed data a `"mesh"` shape samples from: the cumulative area of its triangles.
+
+#### Constructors
+
+##### Constructor
+
+> **new MeshShapeTable**(`vertices`): [`MeshShapeTable`](#meshshapetable)
+
+**`Beta`**
+
+Builds the table.
+
+###### Parameters
+
+###### vertices
+
+`Float32Array`
+
+Nine floats per triangle.
+
+###### Returns
+
+[`MeshShapeTable`](#meshshapetable)
+
+#### Properties
+
+##### cumulative
+
+> `readonly` **cumulative**: `Float32Array`
+
+**`Beta`**
+
+Cumulative areas, one per triangle, ending at the total.
+
+##### vertices
+
+> `readonly` **vertices**: `Float32Array`
+
+**`Beta`**
+
+The triangle soup, nine floats per triangle.
+
+#### Accessors
+
+##### area
+
+###### Get Signature
+
+> **get** **area**(): `number`
+
+**`Beta`**
+
+The total surface area.
+
+###### Returns
+
+`number`
+
+The area.
+
+***
+
 ### Model
 
 One instance of a loaded model (`docs/architecture/07-rendering.md` §2.4).
@@ -27166,7 +29131,7 @@ One model per entity: a second instance under the same transform wants its own e
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The serialized field declarations (ADR-0004).
 
@@ -27415,13 +29380,13 @@ The skeletons.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -27451,13 +29416,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -27858,7 +29823,7 @@ Applies the schema defaults, exactly as `Script.define` would.
 
 ###### Overrides
 
-[`Script`](#abstract-script).[`constructor`](#constructor-83)
+[`Script`](#abstract-script).[`constructor`](#constructor-95)
 
 #### Properties
 
@@ -27912,7 +29877,7 @@ Whether to start the first playlist entry as soon as the entity is alive.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The serialized field declarations (ADR-0004).
 
@@ -27946,7 +29911,7 @@ The app.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`app`](#app-46)
+[`Script`](#abstract-script).[`app`](#app-49)
 
 ##### current
 
@@ -27995,7 +29960,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-55)
+[`Script`](#abstract-script).[`enabled`](#enabled-60)
 
 ##### entity
 
@@ -28013,7 +29978,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-47)
+[`Script`](#abstract-script).[`entity`](#entity-50)
 
 ##### handle
 
@@ -28031,7 +29996,7 @@ The handle.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`handle`](#handle-42)
+[`Script`](#abstract-script).[`handle`](#handle-45)
 
 ##### index
 
@@ -28065,7 +30030,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-42)
+[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-45)
 
 ##### isEnabledInHierarchy
 
@@ -28083,7 +30048,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-41)
+[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-44)
 
 ##### isPlaying
 
@@ -28127,7 +30092,7 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-42)
+[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-45)
 
 ##### previous
 
@@ -28147,19 +30112,19 @@ The outgoing sound, or `null`.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`transform`](#transform-43)
+[`Script`](#abstract-script).[`transform`](#transform-46)
 
 ##### uid
 
@@ -28177,25 +30142,25 @@ The identifier.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`uid`](#uid-46)
+[`Script`](#abstract-script).[`uid`](#uid-49)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`world`](#world-45)
+[`Script`](#abstract-script).[`world`](#world-48)
 
 #### Methods
 
@@ -28289,7 +30254,7 @@ class Patrol extends Script.define({ waypoints: array(vec3()), speed: f32(3) }) 
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`define`](#define-41)
+[`Script`](#abstract-script).[`define`](#define-44)
 
 ##### destroy()
 
@@ -28305,7 +30270,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`destroy`](#destroy-42)
+[`Script`](#abstract-script).[`destroy`](#destroy-45)
 
 ##### getComponent()
 
@@ -28337,7 +30302,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`getComponent`](#getcomponent-42)
+[`Script`](#abstract-script).[`getComponent`](#getcomponent-45)
 
 ##### next()
 
@@ -28432,7 +30397,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-42)
+[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-45)
 
 ##### startCoroutine()
 
@@ -28705,7 +30670,7 @@ Advances Recast crowds on the fixed step.
 
 #### Implements
 
-- [`System`](#system)
+- [`System`](#system-1)
 
 #### Constructors
 
@@ -28737,7 +30702,7 @@ The name diagnostics and error reports use.
 
 ###### Implementation of
 
-[`System`](#system).[`name`](#name-51)
+[`System`](#system-1).[`name`](#name-65)
 
 #### Methods
 
@@ -28761,7 +30726,7 @@ The world, clock, phase, and delta.
 
 ###### Implementation of
 
-[`System`](#system).[`update`](#update-11)
+[`System`](#system-1).[`update`](#update-14)
 
 ***
 
@@ -28829,7 +30794,7 @@ The agent's radius, in metres.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The declarative fields (ADR-0004).
 
@@ -29128,13 +31093,13 @@ The distance in metres; `Infinity` when the agent is not on a navmesh.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -29178,13 +31143,13 @@ The agent's current world velocity, as the crowd reports it. Reused each frame.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -29438,7 +31403,7 @@ The cylinder's radius, in metres.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The declarative fields (ADR-0004).
 
@@ -29643,13 +31608,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -29679,13 +31644,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -30017,7 +31982,7 @@ The seed Recast's randomized queries use.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The declarative fields (ADR-0004).
 
@@ -30323,13 +32288,13 @@ How many geometry sources have been added by hand.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -30359,13 +32324,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -30762,7 +32727,7 @@ Whether the layer's sprites repeat vertically.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The declarative fields (ADR-0004).
 
@@ -30941,13 +32906,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -30977,13 +32942,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -31128,6 +33093,2307 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 ###### Inherited from
 
 [`Component`](#abstract-component).[`requireComponent`](#requirecomponent-16)
+
+***
+
+### ParticleAsset
+
+A parsed particle document.
+
+#### Example
+
+```ts
+const handle = app.assets.load<ParticleAsset>("fx/fire.particles.json").retain();
+await handle.promise;
+handle.value.definition.main.capacity; // 1000
+```
+
+#### Properties
+
+##### address
+
+> `readonly` **address**: `string`
+
+Where the document was loaded from, or the `memory:` address it was published at.
+
+##### assetType
+
+> `static` **assetType**: `string`
+
+The asset type name, so `assetRef` and the inspector can round-trip a reference.
+
+##### definition
+
+> `readonly` **definition**: [`ParticleDefinition`](#particledefinition-3)
+
+The parsed, baked document.
+
+##### texture
+
+> `readonly` **texture**: [`AssetHandle`](#assethandle)\<[`TextureAsset`](#textureasset)\> \| `null`
+
+The texture the renderer samples, or `null` for the procedural soft disc.
+
+#### Methods
+
+##### dispose()
+
+> **dispose**(): `void`
+
+Releases what the asset holds beyond its data. The `particles` asset type's `unload` runs it
+when the last holder releases the handle.
+
+###### Returns
+
+`void`
+
+***
+
+### ParticleEmitterCore
+
+**`Beta`**
+
+The CPU half of a particle system: the spawn-record ring, the system clock, the seeded random
+stream, and the emission scheduler.
+
+#### Example
+
+```ts
+const core = new ParticleEmitterCore({ definition, capacity: 1000, seed: 7 });
+core.play();
+core.advance(1 / 60);
+core.reconcile();
+```
+
+#### Constructors
+
+##### Constructor
+
+> **new ParticleEmitterCore**(`options`): [`ParticleEmitterCore`](#particleemittercore)
+
+**`Beta`**
+
+Creates the core.
+
+###### Parameters
+
+###### options
+
+[`ParticleEmitterCoreOptions`](#particleemittercoreoptions)
+
+The definition, the clamped capacity, and the seed.
+
+###### Returns
+
+[`ParticleEmitterCore`](#particleemittercore)
+
+#### Properties
+
+##### definition
+
+> `readonly` **definition**: [`ParticleDefinition`](#particledefinition-3)
+
+**`Beta`**
+
+The definition every record is written from.
+
+##### emitterWorld
+
+> `readonly` **emitterWorld**: `Float32Array`
+
+**`Beta`**
+
+The emitter's world matrix, column-major; write it before [ParticleEmitterCore.advance](#advance-3).
+A `"world"` definition bakes it into every record, and `rateOverDistance` reads its translation.
+
+##### onStopped
+
+> **onStopped**: (() => `void`) \| `null`
+
+**`Beta`**
+
+Called once when a non-looping system runs out of cycle and particles.
+
+##### qualityScale
+
+> **qualityScale**: `number`
+
+**`Beta`**
+
+A `0`–`1` multiplier on rates and burst counts; the app's `qualityScale`.
+
+##### ring
+
+> `readonly` **ring**: [`SpawnRecordRing`](#spawnrecordring)
+
+**`Beta`**
+
+The spawn records.
+
+#### Accessors
+
+##### aliveCount
+
+###### Get Signature
+
+> **get** **aliveCount**(): `number`
+
+**`Beta`**
+
+How many particles are alive, as of the last [ParticleEmitterCore.reconcile](#reconcile).
+
+###### Returns
+
+`number`
+
+The exact count.
+
+##### drawCount
+
+###### Get Signature
+
+> **get** **drawCount**(): `number`
+
+**`Beta`**
+
+How many records the GPU draws, newest first: from the newest back to the oldest still alive.
+
+###### Returns
+
+`number`
+
+The draw count.
+
+##### droppedTotal
+
+###### Get Signature
+
+> **get** **droppedTotal**(): `number`
+
+**`Beta`**
+
+How many spawns landed on a slot whose particle was still alive, so that older particle
+vanished. It is what "over budget" looks like from inside a system: the capacity the app's
+`maxParticles` granted is smaller than `rate × lifetime`.
+
+###### Returns
+
+`number`
+
+The total since the last `play()` from an empty ring.
+
+##### emittedTotal
+
+###### Get Signature
+
+> **get** **emittedTotal**(): `number`
+
+**`Beta`**
+
+How many particles have been emitted since the last `play()` from an empty ring.
+
+###### Returns
+
+`number`
+
+The total.
+
+##### isEmitting
+
+###### Get Signature
+
+> **get** **isEmitting**(): `boolean`
+
+**`Beta`**
+
+Whether the current cycle still emits.
+
+###### Returns
+
+`boolean`
+
+`true` while emission runs.
+
+##### isPaused
+
+###### Get Signature
+
+> **get** **isPaused**(): `boolean`
+
+**`Beta`**
+
+Whether the clock is held.
+
+###### Returns
+
+`boolean`
+
+`true` after `pause()`.
+
+##### isPlaying
+
+###### Get Signature
+
+> **get** **isPlaying**(): `boolean`
+
+**`Beta`**
+
+Whether the system is playing, paused or not.
+
+###### Returns
+
+`boolean`
+
+`true` between `play()` and the stop.
+
+##### seed
+
+###### Get Signature
+
+> **get** **seed**(): `number`
+
+**`Beta`**
+
+The seed in use: the declared one, or the random one `play()` picked for a declared `0`.
+
+###### Returns
+
+`number`
+
+The seed.
+
+##### time
+
+###### Get Signature
+
+> **get** **time**(): `number`
+
+**`Beta`**
+
+The system clock, in seconds: what every record's age is measured against.
+
+###### Returns
+
+`number`
+
+The clock.
+
+#### Methods
+
+##### advance()
+
+> **advance**(`dt`): `void`
+
+**`Beta`**
+
+Advances one frame. It does nothing while paused, and nothing once a stopped system's last
+particle has died.
+
+###### Parameters
+
+###### dt
+
+`number`
+
+The frame's scaled seconds; the definition's own `timeScale` is applied here.
+
+###### Returns
+
+`void`
+
+##### emit()
+
+> **emit**(`count`): `void`
+
+**`Beta`**
+
+Spawns particles now, at the current clock, whether or not the system is playing.
+
+###### Parameters
+
+###### count
+
+`number`
+
+How many; a non-integer is floored, and `qualityScale` does not apply.
+
+###### Returns
+
+`void`
+
+##### pause()
+
+> **pause**(): `void`
+
+**`Beta`**
+
+Holds the clock; emission and ageing stop until [ParticleEmitterCore.resume](#resume-4).
+
+###### Returns
+
+`void`
+
+##### play()
+
+> **play**(): `void`
+
+**`Beta`**
+
+Starts, or resumes after a `stop()`, emission. On an empty ring the clock restarts at zero and
+a `prewarm` definition fast-forwards one cycle; otherwise the clock keeps counting.
+
+###### Returns
+
+`void`
+
+##### reconcile()
+
+> **reconcile**(): [`RingCensus`](#ringcensus)
+
+**`Beta`**
+
+Recounts the ring at the current clock and fires `onStopped` once a non-looping system has
+nothing left to do.
+
+###### Returns
+
+[`RingCensus`](#ringcensus)
+
+The census.
+
+##### resume()
+
+> **resume**(): `void`
+
+**`Beta`**
+
+Releases a `pause()`.
+
+###### Returns
+
+`void`
+
+##### simulate()
+
+> **simulate**(`seconds`): `void`
+
+**`Beta`**
+
+Fast-forwards the system by `seconds` in fixed sub-steps, emitting as it goes — what `prewarm`
+does, and what a test does to reach a known state. The definition's `timeScale` does not apply.
+
+###### Parameters
+
+###### seconds
+
+`number`
+
+How far to advance the system clock.
+
+###### Returns
+
+`void`
+
+##### stop()
+
+> **stop**(`options?`): `void`
+
+**`Beta`**
+
+Stops emission. Live particles keep ageing until they die unless `clear` is set.
+
+###### Parameters
+
+###### options?
+
+[`ParticleStopOptions`](#particlestopoptions)
+
+Whether to clear the particles too.
+
+###### Returns
+
+`void`
+
+***
+
+### ParticleRenderSystem
+
+**`Beta`**
+
+Uploads every system's new records, writes its uniforms, bounds its draw count, and publishes the
+`particles` counters. Runs in `PreRender` before core's render sync.
+
+#### Implements
+
+- [`System`](#system-1)
+
+#### Constructors
+
+##### Constructor
+
+> **new ParticleRenderSystem**(`service`): [`ParticleRenderSystem`](#particlerendersystem)
+
+**`Beta`**
+
+Creates the system.
+
+###### Parameters
+
+###### service
+
+[`ParticlesService`](#particlesservice)
+
+The service whose list it walks.
+
+###### Returns
+
+[`ParticleRenderSystem`](#particlerendersystem)
+
+#### Properties
+
+##### name
+
+> `readonly` **name**: `string`
+
+**`Beta`**
+
+The name diagnostics and error reports use.
+
+###### Implementation of
+
+[`System`](#system-1).[`name`](#name-65)
+
+#### Methods
+
+##### update()
+
+> **update**(): `void`
+
+**`Beta`**
+
+Runs the upload for one frame.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`System`](#system-1).[`update`](#update-14)
+
+***
+
+### Particles2DService
+
+The 2D particles service: the live system list, the shared budget, and the counters.
+
+#### Example
+
+```ts
+app.particles.qualityScale = 0.5; // halves emission for 2D and 3D systems alike
+```
+
+#### Constructors
+
+##### Constructor
+
+> **new Particles2DService**(`particles`, `twoD`, `sortingLayers`): [`Particles2DService`](#particles2dservice)
+
+Creates the service.
+
+###### Parameters
+
+###### particles
+
+[`ParticlesService`](#particlesservice)
+
+The shared budget, from `ctx.require(ParticlesService)`.
+
+###### twoD
+
+[`TwoDService`](#twodservice)
+
+The sprite-layer service batches are claimed from.
+
+###### sortingLayers
+
+readonly `string`[]
+
+The project's declared sorting layers, for `IGX-1756`.
+
+###### Returns
+
+[`Particles2DService`](#particles2dservice)
+
+#### Properties
+
+##### particles
+
+> `readonly` **particles**: [`ParticlesService`](#particlesservice)
+
+The 3D particles service every capacity reservation goes through.
+
+#### Accessors
+
+##### counters
+
+###### Get Signature
+
+> **get** **counters**(): [`DiagnosticsGroup`](#diagnosticsgroup-1) \| `null`
+
+The `particles-2d` diagnostics group, once the extension registered it.
+
+###### Returns
+
+[`DiagnosticsGroup`](#diagnosticsgroup-1) \| `null`
+
+The group, or `null` before registration.
+
+##### gravity
+
+###### Get Signature
+
+> **get** **gravity**(): [`Vec3Like`](#vec3like)
+
+The world gravity a definition's `gravityMultiplier` scales, in metres per second squared.
+
+###### Returns
+
+[`Vec3Like`](#vec3like)
+
+`app.particles.gravity`.
+
+##### qualityScale
+
+###### Get Signature
+
+> **get** **qualityScale**(): `number`
+
+The `0`–`1` emission multiplier `app.particles` holds.
+
+###### Returns
+
+`number`
+
+The multiplier.
+
+##### systems
+
+###### Get Signature
+
+> **get** **systems**(): readonly [`ParticleSystem2D`](#particlesystem2d)[]
+
+Every attached `ParticleSystem2D`, in attach order.
+
+###### Returns
+
+readonly [`ParticleSystem2D`](#particlesystem2d)[]
+
+The live list; iterate it without copying.
+
+#### Methods
+
+##### dispose()
+
+> **dispose**(): `void`
+
+Forgets every attached system. The extension calls it on dispose.
+
+###### Returns
+
+`void`
+
+***
+
+### ParticlesService
+
+The particles service, reached as `app.particles`.
+
+#### Example
+
+```ts
+app.particles.qualityScale = 0.5; // half the emission everywhere, for a low setting
+app.particles.systems.length; // how many ParticleSystem components are attached
+```
+
+#### Constructors
+
+##### Constructor
+
+> **new ParticlesService**(`app`, `settings`): [`ParticlesService`](#particlesservice)
+
+Creates the service.
+
+###### Parameters
+
+###### app
+
+[`App`](#app-1)
+
+The app it belongs to.
+
+###### settings
+
+[`ParticlesSettings`](#particlessettings)
+
+The resolved `particles` section, options already merged.
+
+###### Returns
+
+[`ParticlesService`](#particlesservice)
+
+#### Properties
+
+##### maxParticles
+
+> **maxParticles**: `number`
+
+The budget every attached system's capacity is counted against. Raising it takes effect for
+systems attached afterwards.
+
+##### qualityScale
+
+> **qualityScale**: `number`
+
+A `0`–`1` multiplier on every rate and burst count, read each frame.
+
+#### Accessors
+
+##### capacityInUse
+
+###### Get Signature
+
+> **get** **capacityInUse**(): `number`
+
+How much of the budget attached systems hold.
+
+###### Returns
+
+`number`
+
+The sum of every attached system's capacity.
+
+##### counters
+
+###### Get Signature
+
+> **get** **counters**(): [`DiagnosticsGroup`](#diagnosticsgroup-1) \| `null`
+
+The `particles` diagnostics group, once the extension registered it.
+
+###### Returns
+
+[`DiagnosticsGroup`](#diagnosticsgroup-1) \| `null`
+
+The group, or `null` before registration.
+
+##### gravity
+
+###### Get Signature
+
+> **get** **gravity**(): [`Vec3Like`](#vec3like)
+
+The world gravity a definition's `gravityMultiplier` scales, in metres per second squared.
+
+###### Returns
+
+[`Vec3Like`](#vec3like)
+
+The service's own vector; assign to replace it.
+
+###### Set Signature
+
+> **set** **gravity**(`value`): `void`
+
+Copies a new world gravity in, so the caller's object is not retained.
+
+###### Parameters
+
+###### value
+
+[`Vec3Like`](#vec3like)
+
+The gravity to copy.
+
+###### Returns
+
+`void`
+
+##### systems
+
+###### Get Signature
+
+> **get** **systems**(): readonly [`ParticleSystem`](#particlesystem)[]
+
+Every attached `ParticleSystem`, in attach order.
+
+###### Returns
+
+readonly [`ParticleSystem`](#particlesystem)[]
+
+The live list; iterate it without copying.
+
+#### Methods
+
+##### dispose()
+
+> **dispose**(): `void`
+
+Releases every shared resource. The extension calls it on dispose.
+
+###### Returns
+
+`void`
+
+##### release()
+
+> **release**(`granted`): `void`
+
+**`Beta`**
+
+Gives capacity back to the budget.
+
+###### Parameters
+
+###### granted
+
+`number`
+
+What [ParticlesService.reserve](#reserve) returned.
+
+###### Returns
+
+`void`
+
+##### reserve()
+
+> **reserve**(`entity`, `requested`): `number`
+
+**`Beta`**
+
+Takes capacity out of the budget, clamping to what is left and logging `IGX-1702` when it had
+to. Every renderer that spends the particle budget goes through here, `@ignifx/particles-2d`
+included; pair each call with [ParticlesService.release](#release-3).
+
+###### Parameters
+
+###### entity
+
+`string`
+
+The entity's name, for the warning.
+
+###### requested
+
+`number`
+
+The definition's capacity, in records.
+
+###### Returns
+
+`number`
+
+The capacity granted, at least one record.
+
+***
+
+### ParticleSystem
+
+Draws a particle effect on its entity.
+
+#### Example
+
+```ts
+const fire = particleAssetFromDefinition(app, particleDefinition("fire"));
+const system = campfire.addComponent(ParticleSystem, { definition: fire });
+system.emit(50);
+```
+
+#### Extends
+
+- [`Component`](#abstract-component)
+
+#### Implements
+
+- [`ComponentHooks`](#componenthooks)
+
+#### Constructors
+
+##### Constructor
+
+> **new ParticleSystem**(): [`ParticleSystem`](#particlesystem)
+
+Applies the schema defaults, exactly as `Component.define` would.
+
+###### Returns
+
+[`ParticleSystem`](#particlesystem)
+
+###### Overrides
+
+[`Component`](#abstract-component).[`constructor`](#constructor-25)
+
+#### Properties
+
+##### allowMultiple
+
+> `static` **allowMultiple**: `boolean`
+
+Several effects may share one entity; each owns its own renderer.
+
+##### definition
+
+> **definition**: [`AssetHandle`](#assethandle)\<[`ParticleAsset`](#particleasset)\> \| `null`
+
+The `.particles.json`, as a loaded handle.
+
+##### onStopped
+
+> `readonly` **onStopped**: [`Signal`](#signal-3)\<[`ParticleSystem`](#particlesystem)\>
+
+Emitted once when a non-looping system runs out of cycle and particles.
+
+##### playOnAwake
+
+> **playOnAwake**: `boolean`
+
+Whether the system plays the first frame it is enabled; the definition's `playOnAwake` must agree.
+
+##### schema
+
+> `static` **schema**: [`Schema`](#schema-44)
+
+The declarative fields (ADR-0004).
+
+##### seed
+
+> **seed**: `number`
+
+The emission seed; `0` uses the definition's, and a definition seed of `0` picks at random.
+
+##### typeId
+
+> `static` **typeId**: `string`
+
+The registration id the serializer writes into scene files.
+
+#### Accessors
+
+##### aliveCount
+
+###### Get Signature
+
+> **get** **aliveCount**(): `number`
+
+How many particles are alive, exactly, as of the last frame.
+
+###### Returns
+
+`number`
+
+The count.
+
+##### app
+
+###### Get Signature
+
+> **get** **app**(): [`App`](#app-1)
+
+The app that owns the world.
+
+###### Returns
+
+[`App`](#app-1)
+
+The app.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`app`](#app-18)
+
+##### asset
+
+###### Get Signature
+
+> **get** **asset**(): [`ParticleAsset`](#particleasset) \| `null`
+
+The loaded document, or `null` while the handle is loading or unset.
+
+###### Returns
+
+[`ParticleAsset`](#particleasset) \| `null`
+
+The asset.
+
+##### capacity
+
+###### Get Signature
+
+> **get** **capacity**(): `number`
+
+The ring capacity in use, after the app's budget clamped the definition's.
+
+###### Returns
+
+`number`
+
+The capacity, or `0` before a definition is applied.
+
+##### drawCount
+
+###### Get Signature
+
+> **get** **drawCount**(): `number`
+
+How many records the GPU draws this frame: from the newest back to the oldest still alive.
+
+###### Returns
+
+`number`
+
+The draw count.
+
+##### droppedCount
+
+###### Get Signature
+
+> **get** **droppedCount**(): `number`
+
+How many spawns displaced a particle that was still alive, because the capacity the app's
+`maxParticles` budget granted is smaller than the definition's rate times its lifetime.
+
+###### Returns
+
+`number`
+
+The total since the system last started from empty.
+
+##### enabled
+
+###### Get Signature
+
+> **get** **enabled**(): `boolean`
+
+The component's own enabled flag; `true` by default. Setting it runs the enable or disable
+transition (`docs/architecture/01-lifecycle-and-time.md` §6): `onDisable` runs immediately,
+`awake`/`onEnable` run in the next lifecycle flush — or immediately and nested when the change
+happens inside a callback.
+
+###### Returns
+
+`boolean`
+
+`true` when the component's own flag is set.
+
+###### Set Signature
+
+> **set** **enabled**(`value`): `void`
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`enabled`](#enabled-19)
+
+##### entity
+
+###### Get Signature
+
+> **get** **entity**(): [`Entity`](#entity-19)
+
+The entity this component is attached to.
+
+###### Returns
+
+[`Entity`](#entity-19)
+
+The owning entity.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`entity`](#entity-16)
+
+##### handle
+
+###### Get Signature
+
+> **get** **handle**(): [`ComponentHandle`](#componenthandle-1)
+
+The dense runtime handle; invalid after destruction.
+
+###### Returns
+
+[`ComponentHandle`](#componenthandle-1)
+
+The handle.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`handle`](#handle-16)
+
+##### isDestroyed
+
+###### Get Signature
+
+> **get** **isDestroyed**(): `boolean`
+
+`true` from the moment `destroy()` is called, long before the destroy flush runs.
+
+###### Returns
+
+`boolean`
+
+`true` once the component has been queued for destruction.
+
+Whether the owner has already been destroyed.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-16)
+
+##### isEnabledInHierarchy
+
+###### Get Signature
+
+> **get** **isEnabledInHierarchy**(): `boolean`
+
+`true` when the component's own flag is set **and** its entity is active in the hierarchy.
+
+###### Returns
+
+`boolean`
+
+`true` when the component is effectively enabled.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-16)
+
+##### isPaused
+
+###### Get Signature
+
+> **get** **isPaused**(): `boolean`
+
+Whether the clock is held by `pause()`.
+
+###### Returns
+
+`boolean`
+
+`true` while paused.
+
+##### isPlaying
+
+###### Get Signature
+
+> **get** **isPlaying**(): `boolean`
+
+Whether the system is playing, paused or not.
+
+###### Returns
+
+`boolean`
+
+`true` between `play()` and the stop.
+
+##### onDestroyed
+
+###### Get Signature
+
+> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+Emitted once when the component is destroyed, in the destroy flush. Connecting with
+`{ owner: this }` elsewhere uses it to detach handlers automatically
+(`docs/architecture/02-scene-graph.md` §8).
+
+###### Returns
+
+[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+The signal. It is created on first access, so a component nobody listens to allocates
+nothing.
+
+Emitted once when the owner is destroyed; the signal uses it to detach the handler.
+
+###### Remarks
+
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
+`docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
+invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-16)
+
+##### records
+
+###### Get Signature
+
+> **get** **records**(): `Float32Array`\<`ArrayBufferLike`\> \| `null`
+
+**`Beta`**
+
+The CPU mirror of the spawn records: `capacity * 12` floats, one 48-byte record per slot, in
+the layout `src/emitter/record-ring.ts` documents. Read-only; for tests and tools.
+
+###### Returns
+
+`Float32Array`\<`ArrayBufferLike`\> \| `null`
+
+The mirror, or `null` before a definition is applied.
+
+##### time
+
+###### Get Signature
+
+> **get** **time**(): `number`
+
+The system-local clock, in seconds — what every particle's age is measured against and what the
+shader reads as `clock`.
+
+###### Returns
+
+`number`
+
+The clock.
+
+##### transform
+
+###### Get Signature
+
+> **get** **transform**(): [`Transform`](#transform-59)
+
+The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
+
+###### Returns
+
+[`Transform`](#transform-59)
+
+The entity's transform.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`transform`](#transform-16)
+
+##### uid
+
+###### Get Signature
+
+> **get** **uid**(): `string`
+
+The stable ULID; the key files use to reference this component.
+
+###### Returns
+
+`string`
+
+The identifier.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`uid`](#uid-16)
+
+##### world
+
+###### Get Signature
+
+> **get** **world**(): [`World`](#world-64)
+
+The world the entity belongs to.
+
+###### Returns
+
+[`World`](#world-64)
+
+The world.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`world`](#world-17)
+
+#### Methods
+
+##### define()
+
+> `static` **define**\<`S`\>(`schema`): [`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+Declares a component's serialized fields and returns the base class to extend (ADR-0004,
+`docs/architecture/03-scripting-and-components.md` §3). The returned class exposes every field
+as a typed instance property, applies the defaults in its constructor, and carries the schema
+for the serializer, the inspector, and the docs harness.
+
+###### Type Parameters
+
+###### S
+
+`S` *extends* `Readonly`\<`Record`\<`string`, [`FieldDefinition`](#fielddefinition)\<`unknown`\>\>\>
+
+The schema being declared.
+
+###### Parameters
+
+###### schema
+
+`S`
+
+The field definitions, keyed by the property name they become.
+
+###### Returns
+
+[`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+An abstract class to extend.
+
+###### Throws
+
+IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
+with a `Component`/`Script` member.
+
+###### Example
+
+```ts
+class Spinner extends Component.define({
+  degreesPerSecond: f32(90, { min: -360, max: 360 }),
+  axis: vec3({ x: 0, y: 1, z: 0 }),
+}) {
+  static typeId = "mygame/Spinner";
+}
+```
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`define`](#define-16)
+
+##### destroy()
+
+> **destroy**(): `void`
+
+Queues this component for destruction. It stays usable until the destroy flush of the current
+frame, but reports `isDestroyed === true` immediately
+(`docs/architecture/01-lifecycle-and-time.md` §6). Calling it twice is a no-op.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`destroy`](#destroy-16)
+
+##### emit()
+
+> **emit**(`count`): `void`
+
+Spawns particles now, at the current clock, whether or not the system is playing. Called from a
+script's `update`, they are drawn in the same frame.
+
+###### Parameters
+
+###### count
+
+`number`
+
+How many; floored.
+
+###### Returns
+
+`void`
+
+###### Throws
+
+IgnifxError with code `IGX-1707` for a negative or non-finite count, or `IGX-1705`
+when no definition is applied.
+
+##### evaluate()
+
+> **evaluate**(`slot`, `out?`): `boolean`
+
+**`Beta`**
+
+Evaluates one spawn record at the current clock with the CPU evaluator, in world space — the
+same arithmetic the shader runs, for tests and tools.
+
+###### Parameters
+
+###### slot
+
+`number`
+
+The record's slot in the ring.
+
+###### out?
+
+[`ParticleState`](#particlestate)
+
+Receives the state; allocate one with `createParticleState()`.
+
+###### Returns
+
+`boolean`
+
+`true` when the record is alive.
+
+##### getComponent()
+
+> **getComponent**\<`T`\>(`type`): `T` \| `null`
+
+Finds another component on the same entity — sugar for `this.entity.getComponent`.
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class; matching is by class identity **and** inheritance.
+
+###### Returns
+
+`T` \| `null`
+
+The first match in attach order, or `null`.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-16)
+
+##### onAttach()
+
+> **onAttach**(): `void`
+
+Joins the service's live list.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-11)
+
+##### onDetach()
+
+> **onDetach**(): `void`
+
+Releases the GPU side, the budget, and the shared resources.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-11)
+
+##### pause()
+
+> **pause**(): `void`
+
+Holds the clock; every particle freezes in place.
+
+###### Returns
+
+`void`
+
+##### play()
+
+> **play**(): `void`
+
+Starts emitting, or resumes after `stop()`. A `prewarm` definition fast-forwards one cycle.
+
+###### Returns
+
+`void`
+
+##### requireComponent()
+
+> **requireComponent**\<`T`\>(`type`): `T`
+
+Finds another component on the same entity, requiring it to be there — the supported way to
+link components (`docs/architecture/03-scripting-and-components.md` §8).
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class.
+
+###### Returns
+
+`T`
+
+The first match in attach order.
+
+###### Throws
+
+IgnifxError with code `IGX-0201` when the entity has no such component.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-16)
+
+##### resume()
+
+> **resume**(): `void`
+
+Releases `pause()`.
+
+###### Returns
+
+`void`
+
+##### simulate()
+
+> **simulate**(`seconds`): `void`
+
+Fast-forwards the system by `seconds`, emitting as it goes — what `prewarm` does.
+
+###### Parameters
+
+###### seconds
+
+`number`
+
+How far to advance.
+
+###### Returns
+
+`void`
+
+###### Throws
+
+IgnifxError with code `IGX-1707` for a negative or non-finite duration, or `IGX-1705`
+when no definition is applied.
+
+##### stop()
+
+> **stop**(`options?`): `void`
+
+Stops emitting. Live particles finish their lives unless `clear` is set.
+
+###### Parameters
+
+###### options?
+
+[`ParticleStopOptions`](#particlestopoptions)
+
+Whether to clear the particles too.
+
+###### Returns
+
+`void`
+
+***
+
+### ParticleSystem2D
+
+Draws a `.particles.json` effect as sprites on a sorting layer.
+
+#### Remarks
+
+The document is simulated exactly as the 3D `ParticleSystem` simulates it, then flattened: X and
+Y become the sprite's centre in world metres and the evaluated Z is dropped, because 2D draws in
+sorting-layer order rather than by depth (`docs/architecture/11-2d-toolkit.md` §3). Sizes are
+world metres, the tint is linear, and `renderer.texture`, `mode`, `lit` and `pivot` are ignored —
+the frames come from [ParticleSystem2D.atlas](#atlas-1).
+
+#### Example
+
+```ts
+const torch = app.world.createEntity("torch");
+const system = torch.addComponent(ParticleSystem2D, { definition: fire, atlas: sparks });
+system.emit(20);
+```
+
+#### Extends
+
+- [`Component`](#abstract-component)
+
+#### Implements
+
+- [`ComponentHooks`](#componenthooks)
+
+#### Constructors
+
+##### Constructor
+
+> **new ParticleSystem2D**(): [`ParticleSystem2D`](#particlesystem2d)
+
+Applies the schema defaults, exactly as `Component.define` would.
+
+###### Returns
+
+[`ParticleSystem2D`](#particlesystem2d)
+
+###### Overrides
+
+[`Component`](#abstract-component).[`constructor`](#constructor-25)
+
+#### Properties
+
+##### allowMultiple
+
+> `static` **allowMultiple**: `boolean`
+
+Several effects may share one entity; each owns its own batch.
+
+##### atlas
+
+> **atlas**: [`AssetHandle`](#assethandle)\<[`SpriteAtlasAsset`](#spriteatlasasset)\> \| `null`
+
+The atlas every particle draws a frame of; it must be loaded before anything is drawn.
+
+###### Remarks
+
+The document's sheet tile index is the atlas frame index: `renderer.sheet.tiles` of
+`{ x: 2, y: 2 }` picks frames 0–3, counted across rows. A document with no `sheet`, and a frame
+the atlas does not have, both draw frame 0.
+
+##### definition
+
+> **definition**: [`AssetHandle`](#assethandle)\<[`ParticleAsset`](#particleasset)\> \| `null`
+
+The `.particles.json`, as a loaded handle.
+
+##### onStopped
+
+> `readonly` **onStopped**: [`Signal`](#signal-3)\<[`ParticleSystem2D`](#particlesystem2d)\>
+
+Emitted once when a non-looping system runs out of cycle and particles.
+
+##### playOnAwake
+
+> **playOnAwake**: `boolean`
+
+Whether the system plays the first frame it is enabled; the definition's `playOnAwake` must agree.
+
+##### schema
+
+> `static` **schema**: [`Schema`](#schema-44)
+
+The declarative fields (ADR-0004).
+
+##### seed
+
+> **seed**: `number`
+
+The emission seed; `0` uses the definition's, and a definition seed of `0` picks at random.
+
+##### sortingLayer
+
+> **sortingLayer**: `string`
+
+Which sorting layer the particles draw on.
+
+##### typeId
+
+> `static` **typeId**: `string`
+
+The registration id the serializer writes into scene files.
+
+#### Accessors
+
+##### aliveCount
+
+###### Get Signature
+
+> **get** **aliveCount**(): `number`
+
+How many particles are alive, exactly, as of the last frame.
+
+###### Returns
+
+`number`
+
+The count.
+
+##### app
+
+###### Get Signature
+
+> **get** **app**(): [`App`](#app-1)
+
+The app that owns the world.
+
+###### Returns
+
+[`App`](#app-1)
+
+The app.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`app`](#app-18)
+
+##### asset
+
+###### Get Signature
+
+> **get** **asset**(): [`ParticleAsset`](#particleasset) \| `null`
+
+The loaded document, or `null` while the handle is loading or unset.
+
+###### Returns
+
+[`ParticleAsset`](#particleasset) \| `null`
+
+The asset.
+
+##### capacity
+
+###### Get Signature
+
+> **get** **capacity**(): `number`
+
+The ring capacity in use, after `app.particles`' budget clamped the definition's.
+
+###### Returns
+
+`number`
+
+The capacity, or `0` before a definition is applied.
+
+##### enabled
+
+###### Get Signature
+
+> **get** **enabled**(): `boolean`
+
+The component's own enabled flag; `true` by default. Setting it runs the enable or disable
+transition (`docs/architecture/01-lifecycle-and-time.md` §6): `onDisable` runs immediately,
+`awake`/`onEnable` run in the next lifecycle flush — or immediately and nested when the change
+happens inside a callback.
+
+###### Returns
+
+`boolean`
+
+`true` when the component's own flag is set.
+
+###### Set Signature
+
+> **set** **enabled**(`value`): `void`
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`enabled`](#enabled-19)
+
+##### entity
+
+###### Get Signature
+
+> **get** **entity**(): [`Entity`](#entity-19)
+
+The entity this component is attached to.
+
+###### Returns
+
+[`Entity`](#entity-19)
+
+The owning entity.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`entity`](#entity-16)
+
+##### handle
+
+###### Get Signature
+
+> **get** **handle**(): [`ComponentHandle`](#componenthandle-1)
+
+The dense runtime handle; invalid after destruction.
+
+###### Returns
+
+[`ComponentHandle`](#componenthandle-1)
+
+The handle.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`handle`](#handle-16)
+
+##### isDestroyed
+
+###### Get Signature
+
+> **get** **isDestroyed**(): `boolean`
+
+`true` from the moment `destroy()` is called, long before the destroy flush runs.
+
+###### Returns
+
+`boolean`
+
+`true` once the component has been queued for destruction.
+
+Whether the owner has already been destroyed.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-16)
+
+##### isEnabledInHierarchy
+
+###### Get Signature
+
+> **get** **isEnabledInHierarchy**(): `boolean`
+
+`true` when the component's own flag is set **and** its entity is active in the hierarchy.
+
+###### Returns
+
+`boolean`
+
+`true` when the component is effectively enabled.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-16)
+
+##### isPaused
+
+###### Get Signature
+
+> **get** **isPaused**(): `boolean`
+
+Whether the clock is held by `pause()`.
+
+###### Returns
+
+`boolean`
+
+`true` while paused.
+
+##### isPlaying
+
+###### Get Signature
+
+> **get** **isPlaying**(): `boolean`
+
+Whether the system is playing, paused or not.
+
+###### Returns
+
+`boolean`
+
+`true` between `play()` and the stop.
+
+##### onDestroyed
+
+###### Get Signature
+
+> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+Emitted once when the component is destroyed, in the destroy flush. Connecting with
+`{ owner: this }` elsewhere uses it to detach handlers automatically
+(`docs/architecture/02-scene-graph.md` §8).
+
+###### Returns
+
+[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+The signal. It is created on first access, so a component nobody listens to allocates
+nothing.
+
+Emitted once when the owner is destroyed; the signal uses it to detach the handler.
+
+###### Remarks
+
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
+`docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
+invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-16)
+
+##### spriteCount
+
+###### Get Signature
+
+> **get** **spriteCount**(): `number`
+
+How many sprite slots the last frame wrote: the alive particles the batch is drawing.
+
+###### Returns
+
+`number`
+
+The count.
+
+##### time
+
+###### Get Signature
+
+> **get** **time**(): `number`
+
+The system-local clock, in seconds — what every particle's age is measured against.
+
+###### Returns
+
+`number`
+
+The clock.
+
+##### transform
+
+###### Get Signature
+
+> **get** **transform**(): [`Transform`](#transform-59)
+
+The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
+
+###### Returns
+
+[`Transform`](#transform-59)
+
+The entity's transform.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`transform`](#transform-16)
+
+##### uid
+
+###### Get Signature
+
+> **get** **uid**(): `string`
+
+The stable ULID; the key files use to reference this component.
+
+###### Returns
+
+`string`
+
+The identifier.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`uid`](#uid-16)
+
+##### world
+
+###### Get Signature
+
+> **get** **world**(): [`World`](#world-64)
+
+The world the entity belongs to.
+
+###### Returns
+
+[`World`](#world-64)
+
+The world.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`world`](#world-17)
+
+#### Methods
+
+##### define()
+
+> `static` **define**\<`S`\>(`schema`): [`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+Declares a component's serialized fields and returns the base class to extend (ADR-0004,
+`docs/architecture/03-scripting-and-components.md` §3). The returned class exposes every field
+as a typed instance property, applies the defaults in its constructor, and carries the schema
+for the serializer, the inspector, and the docs harness.
+
+###### Type Parameters
+
+###### S
+
+`S` *extends* `Readonly`\<`Record`\<`string`, [`FieldDefinition`](#fielddefinition)\<`unknown`\>\>\>
+
+The schema being declared.
+
+###### Parameters
+
+###### schema
+
+`S`
+
+The field definitions, keyed by the property name they become.
+
+###### Returns
+
+[`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+An abstract class to extend.
+
+###### Throws
+
+IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
+with a `Component`/`Script` member.
+
+###### Example
+
+```ts
+class Spinner extends Component.define({
+  degreesPerSecond: f32(90, { min: -360, max: 360 }),
+  axis: vec3({ x: 0, y: 1, z: 0 }),
+}) {
+  static typeId = "mygame/Spinner";
+}
+```
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`define`](#define-16)
+
+##### destroy()
+
+> **destroy**(): `void`
+
+Queues this component for destruction. It stays usable until the destroy flush of the current
+frame, but reports `isDestroyed === true` immediately
+(`docs/architecture/01-lifecycle-and-time.md` §6). Calling it twice is a no-op.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`destroy`](#destroy-16)
+
+##### emit()
+
+> **emit**(`count`): `void`
+
+Spawns particles now, at the current clock, whether or not the system is playing. Called from a
+script's `update`, they are drawn in the same frame.
+
+###### Parameters
+
+###### count
+
+`number`
+
+How many; floored.
+
+###### Returns
+
+`void`
+
+###### Throws
+
+IgnifxError with code `IGX-1753` for a negative or non-finite count, or `IGX-1752`
+when no definition is applied.
+
+##### evaluate()
+
+> **evaluate**(`slot`, `out?`): `boolean`
+
+**`Beta`**
+
+Evaluates one spawn record at the current clock — the same arithmetic the 3D system's shader
+runs, for tests and tools.
+
+###### Parameters
+
+###### slot
+
+`number`
+
+The record's slot in the ring.
+
+###### out?
+
+[`ParticleState`](#particlestate)
+
+Receives the state; allocate one with `createParticleState()`.
+
+###### Returns
+
+`boolean`
+
+`true` when the record is alive.
+
+##### getComponent()
+
+> **getComponent**\<`T`\>(`type`): `T` \| `null`
+
+Finds another component on the same entity — sugar for `this.entity.getComponent`.
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class; matching is by class identity **and** inheritance.
+
+###### Returns
+
+`T` \| `null`
+
+The first match in attach order, or `null`.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-16)
+
+##### onAttach()
+
+> **onAttach**(): `void`
+
+Joins the service's live list.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-11)
+
+##### onDetach()
+
+> **onDetach**(): `void`
+
+Releases the batch, the budget, and the core.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-11)
+
+##### pause()
+
+> **pause**(): `void`
+
+Holds the clock; every particle freezes in place.
+
+###### Returns
+
+`void`
+
+##### play()
+
+> **play**(): `void`
+
+Starts emitting, or resumes after `stop()`. A `prewarm` definition fast-forwards one cycle.
+
+###### Returns
+
+`void`
+
+##### requireComponent()
+
+> **requireComponent**\<`T`\>(`type`): `T`
+
+Finds another component on the same entity, requiring it to be there — the supported way to
+link components (`docs/architecture/03-scripting-and-components.md` §8).
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class.
+
+###### Returns
+
+`T`
+
+The first match in attach order.
+
+###### Throws
+
+IgnifxError with code `IGX-0201` when the entity has no such component.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-16)
+
+##### resume()
+
+> **resume**(): `void`
+
+Releases `pause()`.
+
+###### Returns
+
+`void`
+
+##### simulate()
+
+> **simulate**(`seconds`): `void`
+
+Fast-forwards the system by `seconds`, emitting as it goes — what `prewarm` does.
+
+###### Parameters
+
+###### seconds
+
+`number`
+
+How far to advance.
+
+###### Returns
+
+`void`
+
+###### Throws
+
+IgnifxError with code `IGX-1753` for a negative or non-finite duration, or `IGX-1752`
+when no definition is applied.
+
+##### stop()
+
+> **stop**(`options?`): `void`
+
+Stops emitting. Live particles finish their lives unless `clear` is set.
+
+###### Parameters
+
+###### options?
+
+[`ParticleStopOptions`](#particlestopoptions)
+
+Whether to clear the particles too.
+
+###### Returns
+
+`void`
+
+***
+
+### ParticleUpdateSystem
+
+**`Beta`**
+
+Advances every system's emitter core by the frame's scaled delta, or by nothing while the app is
+paused. Runs late in `Update` so a script's `emit()` is drawn in the same frame.
+
+#### Implements
+
+- [`System`](#system-1)
+
+#### Constructors
+
+##### Constructor
+
+> **new ParticleUpdateSystem**(`service`): [`ParticleUpdateSystem`](#particleupdatesystem)
+
+**`Beta`**
+
+Creates the system.
+
+###### Parameters
+
+###### service
+
+[`ParticlesService`](#particlesservice)
+
+The service whose list it walks.
+
+###### Returns
+
+[`ParticleUpdateSystem`](#particleupdatesystem)
+
+#### Properties
+
+##### name
+
+> `readonly` **name**: `string`
+
+**`Beta`**
+
+The name diagnostics and error reports use.
+
+###### Implementation of
+
+[`System`](#system-1).[`name`](#name-65)
+
+#### Methods
+
+##### update()
+
+> **update**(`ctx`): `void`
+
+**`Beta`**
+
+Runs emission for one frame.
+
+###### Parameters
+
+###### ctx
+
+[`SystemContext`](#systemcontext)
+
+The world, the clock, the phase, and the frame delta.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`System`](#system-1).[`update`](#update-14)
 
 ***
 
@@ -32003,7 +36269,7 @@ Applies the schema defaults, exactly as `Component.define` would.
 
 ###### Overrides
 
-[`Script`](#abstract-script).[`constructor`](#constructor-83)
+[`Script`](#abstract-script).[`constructor`](#constructor-95)
 
 #### Properties
 
@@ -32039,7 +36305,7 @@ The kinematic `Rigidbody` this drives.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The declarative fields (ADR-0004).
 
@@ -32073,7 +36339,7 @@ The app.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`app`](#app-46)
+[`Script`](#abstract-script).[`app`](#app-49)
 
 ##### deltaThisStep
 
@@ -32122,7 +36388,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-55)
+[`Script`](#abstract-script).[`enabled`](#enabled-60)
 
 ##### entity
 
@@ -32140,7 +36406,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-47)
+[`Script`](#abstract-script).[`entity`](#entity-50)
 
 ##### handle
 
@@ -32158,7 +36424,7 @@ The handle.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`handle`](#handle-42)
+[`Script`](#abstract-script).[`handle`](#handle-45)
 
 ##### isDestroyed
 
@@ -32178,7 +36444,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-42)
+[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-45)
 
 ##### isEnabledInHierarchy
 
@@ -32196,7 +36462,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-41)
+[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-44)
 
 ##### onDestroyed
 
@@ -32226,7 +36492,7 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-42)
+[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-45)
 
 ##### riderCount
 
@@ -32246,19 +36512,19 @@ How many characters are currently riding.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`transform`](#transform-43)
+[`Script`](#abstract-script).[`transform`](#transform-46)
 
 ##### uid
 
@@ -32276,25 +36542,25 @@ The identifier.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`uid`](#uid-46)
+[`Script`](#abstract-script).[`uid`](#uid-49)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`world`](#world-45)
+[`Script`](#abstract-script).[`world`](#world-48)
 
 #### Methods
 
@@ -32352,7 +36618,7 @@ class Patrol extends Script.define({ waypoints: array(vec3()), speed: f32(3) }) 
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`define`](#define-41)
+[`Script`](#abstract-script).[`define`](#define-44)
 
 ##### destroy()
 
@@ -32368,7 +36634,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`destroy`](#destroy-42)
+[`Script`](#abstract-script).[`destroy`](#destroy-45)
 
 ##### fixedUpdate()
 
@@ -32418,7 +36684,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`getComponent`](#getcomponent-42)
+[`Script`](#abstract-script).[`getComponent`](#getcomponent-45)
 
 ##### requireComponent()
 
@@ -32455,7 +36721,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-42)
+[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-45)
 
 ##### startCoroutine()
 
@@ -32599,7 +36865,7 @@ Which gamepad slot the player's `<Gamepad>/…` bindings are pinned to.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The serialized field declarations (ADR-0004).
 
@@ -32792,13 +37058,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -32828,13 +37094,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -33242,7 +37508,7 @@ How this surface's restitution combines with the one it touches.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The serialized field declarations.
 
@@ -33415,13 +37681,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -33451,13 +37717,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -33736,13 +38002,17 @@ One chain per camera entity; a second would fight the first for the swapchain.
 
 > **bloom**: [`BloomEffectSettings`](#bloomeffectsettings)
 
+##### custom
+
+> **custom**: [`CustomEffectSettings`](#customeffectsettings)[]
+
 ##### imageProcessing
 
 > **imageProcessing**: [`ImageProcessingEffectSettings`](#imageprocessingeffectsettings)
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The serialized field declarations (ADR-0004).
 
@@ -33934,13 +38204,13 @@ The task count; `0` before the chain is built, under a headless app, and when th
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -33970,13 +38240,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -34183,7 +38453,7 @@ Applies the schema defaults, exactly as `Component.define` would.
 
 ###### Overrides
 
-[`Script`](#abstract-script).[`constructor`](#constructor-83)
+[`Script`](#abstract-script).[`constructor`](#constructor-95)
 
 #### Properties
 
@@ -34225,7 +38495,7 @@ The `Rigidbody` that carries it.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The declarative fields (ADR-0004).
 
@@ -34273,7 +38543,7 @@ The app.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`app`](#app-46)
+[`Script`](#abstract-script).[`app`](#app-49)
 
 ##### enabled
 
@@ -34308,7 +38578,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-55)
+[`Script`](#abstract-script).[`enabled`](#enabled-60)
 
 ##### entity
 
@@ -34326,7 +38596,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-47)
+[`Script`](#abstract-script).[`entity`](#entity-50)
 
 ##### handle
 
@@ -34344,7 +38614,7 @@ The handle.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`handle`](#handle-42)
+[`Script`](#abstract-script).[`handle`](#handle-45)
 
 ##### isDestroyed
 
@@ -34364,7 +38634,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-42)
+[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-45)
 
 ##### isEnabledInHierarchy
 
@@ -34382,7 +38652,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-41)
+[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-44)
 
 ##### onDestroyed
 
@@ -34412,25 +38682,25 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-42)
+[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-45)
 
 ##### transform
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`transform`](#transform-43)
+[`Script`](#abstract-script).[`transform`](#transform-46)
 
 ##### uid
 
@@ -34448,25 +38718,25 @@ The identifier.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`uid`](#uid-46)
+[`Script`](#abstract-script).[`uid`](#uid-49)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`world`](#world-45)
+[`Script`](#abstract-script).[`world`](#world-48)
 
 #### Methods
 
@@ -34524,7 +38794,7 @@ class Patrol extends Script.define({ waypoints: array(vec3()), speed: f32(3) }) 
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`define`](#define-41)
+[`Script`](#abstract-script).[`define`](#define-44)
 
 ##### destroy()
 
@@ -34540,7 +38810,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`destroy`](#destroy-42)
+[`Script`](#abstract-script).[`destroy`](#destroy-45)
 
 ##### fixedUpdate()
 
@@ -34590,7 +38860,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`getComponent`](#getcomponent-42)
+[`Script`](#abstract-script).[`getComponent`](#getcomponent-45)
 
 ##### onCollisionEnter()
 
@@ -34645,7 +38915,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-42)
+[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-45)
 
 ##### startCoroutine()
 
@@ -35951,7 +40221,7 @@ One body per entity.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The serialized field declarations (ADR-0004).
 
@@ -36206,13 +40476,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -36242,13 +40512,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -36635,7 +40905,7 @@ One body per entity.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The serialized field declarations (ADR-0004).
 
@@ -36900,13 +41170,13 @@ The body, or `null` before the first fixed step built it.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -36936,13 +41206,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -37280,7 +41550,7 @@ Applies the schema defaults, exactly as `Component.define` would.
 
 ###### Overrides
 
-[`Script`](#abstract-script).[`constructor`](#constructor-83)
+[`Script`](#abstract-script).[`constructor`](#constructor-95)
 
 #### Properties
 
@@ -37322,7 +41592,7 @@ The `Rigidbody` this pushes.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The declarative fields (ADR-0004).
 
@@ -37356,7 +41626,7 @@ The app.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`app`](#app-46)
+[`Script`](#abstract-script).[`app`](#app-49)
 
 ##### enabled
 
@@ -37391,7 +41661,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-55)
+[`Script`](#abstract-script).[`enabled`](#enabled-60)
 
 ##### entity
 
@@ -37409,7 +41679,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-47)
+[`Script`](#abstract-script).[`entity`](#entity-50)
 
 ##### handle
 
@@ -37427,7 +41697,7 @@ The handle.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`handle`](#handle-42)
+[`Script`](#abstract-script).[`handle`](#handle-45)
 
 ##### isDestroyed
 
@@ -37447,7 +41717,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-42)
+[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-45)
 
 ##### isEnabledInHierarchy
 
@@ -37465,7 +41735,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-41)
+[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-44)
 
 ##### onDestroyed
 
@@ -37495,25 +41765,25 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-42)
+[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-45)
 
 ##### transform
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`transform`](#transform-43)
+[`Script`](#abstract-script).[`transform`](#transform-46)
 
 ##### uid
 
@@ -37531,25 +41801,25 @@ The identifier.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`uid`](#uid-46)
+[`Script`](#abstract-script).[`uid`](#uid-49)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`world`](#world-45)
+[`Script`](#abstract-script).[`world`](#world-48)
 
 #### Methods
 
@@ -37607,7 +41877,7 @@ class Patrol extends Script.define({ waypoints: array(vec3()), speed: f32(3) }) 
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`define`](#define-41)
+[`Script`](#abstract-script).[`define`](#define-44)
 
 ##### destroy()
 
@@ -37623,7 +41893,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`destroy`](#destroy-42)
+[`Script`](#abstract-script).[`destroy`](#destroy-45)
 
 ##### fixedUpdate()
 
@@ -37673,7 +41943,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`getComponent`](#getcomponent-42)
+[`Script`](#abstract-script).[`getComponent`](#getcomponent-45)
 
 ##### requireComponent()
 
@@ -37710,7 +41980,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-42)
+[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-45)
 
 ##### startCoroutine()
 
@@ -38156,13 +42426,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -38192,13 +42462,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -38405,6 +42675,68 @@ The handle [Script.startCoroutine](#startcoroutine-8) returned.
 
 ***
 
+### ShaderAsset
+
+A loaded `.wgsl` file: its source and what its pragmas declare
+(`docs/plan/2026-09-terrain-particles-shaders.md` §3.1).
+
+#### Remarks
+
+Shaders are shared: many materials reference one shader asset, and each material holds its own
+values. Editing the file in development re-parses the declaration and rebuilds every material
+built from it in place (`docs/architecture/05-assets-and-loading.md` §7).
+
+#### Example
+
+```ts
+const dissolve = await app.assets.loadAsync<ShaderAsset>("shaders/dissolve.wgsl");
+dissolve.value.declaration.uniforms.map((uniform) => uniform.name); // ["progress", "edgeColor"]
+```
+
+#### Properties
+
+##### address
+
+> `readonly` **address**: `string`
+
+The address the shader was loaded from.
+
+##### assetType
+
+> `static` **assetType**: `string`
+
+The type name the asset service registers shaders under.
+
+##### declaration
+
+> `readonly` **declaration**: [`ShaderDeclaration`](#shaderdeclaration)
+
+What the file's `// @ignifx` pragmas declare.
+
+##### source
+
+> `readonly` **source**: `string`
+
+The whole file, as written. It is handed to Babylon Lite as both the vertex and the fragment source.
+
+#### Accessors
+
+##### kind
+
+###### Get Signature
+
+> **get** **kind**(): `"shader"` \| `"surface"` \| `"post"`
+
+Which of the three authoring forms the file declared.
+
+###### Returns
+
+`"shader"` \| `"surface"` \| `"post"`
+
+`"shader"`, `"surface"`, or `"post"`.
+
+***
+
 ### Signal
 
 A typed, synchronous, many-listener event (`docs/architecture/02-scene-graph.md` §8). Signals are
@@ -38415,7 +42747,7 @@ the children it owns, a child announces what happened and lets interested partie
 
 Delivery guarantees:
 
-- Handlers run in connection order, synchronously, inside [Signal.emit](#emit).
+- Handlers run in connection order, synchronously, inside [Signal.emit](#emit-3).
 - A handler connected *during* an emit runs on the next emit, never the one in flight.
 - A handler disconnected during an emit never runs again, including in the emit in flight.
 - One handler throwing does not stop delivery to the others.
@@ -38858,7 +43190,7 @@ Whether every live instance is paused.
 
 ###### Implementation of
 
-[`SoundInstance`](#soundinstance).[`isPaused`](#ispaused-2)
+[`SoundInstance`](#soundinstance).[`isPaused`](#ispaused-5)
 
 ##### isPlaying
 
@@ -38878,7 +43210,7 @@ Whether anything is sounding.
 
 ###### Implementation of
 
-[`SoundInstance`](#soundinstance).[`isPlaying`](#isplaying-4)
+[`SoundInstance`](#soundinstance).[`isPlaying`](#isplaying-7)
 
 ##### onEnded
 
@@ -39012,7 +43344,7 @@ Pauses every instance.
 
 ###### Implementation of
 
-[`SoundInstance`](#soundinstance).[`pause`](#pause-4)
+[`SoundInstance`](#soundinstance).[`pause`](#pause-7)
 
 ##### play()
 
@@ -39044,7 +43376,7 @@ Resumes every paused instance.
 
 ###### Implementation of
 
-[`SoundInstance`](#soundinstance).[`resume`](#resume-4)
+[`SoundInstance`](#soundinstance).[`resume`](#resume-7)
 
 ##### setPan()
 
@@ -39123,7 +43455,319 @@ Seconds of frame time to fade over; `0` stops now.
 
 ###### Implementation of
 
-[`SoundInstance`](#soundinstance).[`stop`](#stop-7)
+[`SoundInstance`](#soundinstance).[`stop`](#stop-10)
+
+***
+
+### SpawnRecordRing
+
+**`Beta`**
+
+The CPU copy of a system's spawn records. Record `n` lives in slot `n % capacity`, so the newest
+record is the one the shader draws first and an overwritten record simply disappears.
+
+#### Constructors
+
+##### Constructor
+
+> **new SpawnRecordRing**(`capacity`): [`SpawnRecordRing`](#spawnrecordring)
+
+**`Beta`**
+
+Allocates a ring.
+
+###### Parameters
+
+###### capacity
+
+`number`
+
+How many records it holds; at least one.
+
+###### Returns
+
+[`SpawnRecordRing`](#spawnrecordring)
+
+#### Properties
+
+##### capacity
+
+> `readonly` **capacity**: `number`
+
+**`Beta`**
+
+How many records the ring holds.
+
+##### floats
+
+> `readonly` **floats**: `Float32Array`
+
+**`Beta`**
+
+The records as floats, `capacity * RECORD_FLOATS` long.
+
+##### words
+
+> `readonly` **words**: `Uint32Array`
+
+**`Beta`**
+
+The same bytes as words, for `seed` and `flags`.
+
+#### Accessors
+
+##### head
+
+###### Get Signature
+
+> **get** **head**(): `number`
+
+**`Beta`**
+
+The slot the next record goes into.
+
+###### Returns
+
+`number`
+
+`written % capacity`.
+
+##### pendingCount
+
+###### Get Signature
+
+> **get** **pendingCount**(): `number`
+
+**`Beta`**
+
+How many records have been written and not yet uploaded, capped at the capacity because older
+ones were overwritten anyway.
+
+###### Returns
+
+`number`
+
+The pending count.
+
+##### tail
+
+###### Get Signature
+
+> **get** **tail**(): `number`
+
+**`Beta`**
+
+The index of the oldest record still inside the draw window.
+
+###### Returns
+
+`number`
+
+The record index, not the slot.
+
+##### written
+
+###### Get Signature
+
+> **get** **written**(): `number`
+
+**`Beta`**
+
+How many records have been written since the last clear.
+
+###### Returns
+
+`number`
+
+The count; it never decreases except through [SpawnRecordRing.clear](#clear-8).
+
+#### Methods
+
+##### clear()
+
+> **clear**(): `void`
+
+**`Beta`**
+
+Forgets every record, so the next frame draws nothing and uploads nothing.
+
+###### Returns
+
+`void`
+
+##### markUploaded()
+
+> **markUploaded**(): `void`
+
+**`Beta`**
+
+Records that everything written so far has reached the GPU.
+
+###### Returns
+
+`void`
+
+##### pendingRanges()
+
+> **pendingRanges**(`out`): `number`
+
+**`Beta`**
+
+The runs of slots written since the last upload, at most two because a ring wraps at most once
+per frame that matters — anything older than a whole ring was overwritten.
+
+###### Parameters
+
+###### out
+
+\[[`UploadRange`](#uploadrange), [`UploadRange`](#uploadrange)\]
+
+Receives up to two ranges.
+
+###### Returns
+
+`number`
+
+How many of `out`'s entries are meaningful: `0`, `1`, or `2`.
+
+##### reconcile()
+
+> **reconcile**(`clock`, `out`): [`RingCensus`](#ringcensus)
+
+**`Beta`**
+
+Advances the tail past leading dead records and counts the alive ones behind it. One pass over
+the draw window, no allocation.
+
+###### Parameters
+
+###### clock
+
+`number`
+
+The system clock.
+
+###### out
+
+[`RingCensus`](#ringcensus)
+
+Receives the counts.
+
+###### Returns
+
+[`RingCensus`](#ringcensus)
+
+`out`.
+
+##### slotOf()
+
+> **slotOf**(`index`): `number`
+
+**`Beta`**
+
+The slot of a record.
+
+###### Parameters
+
+###### index
+
+`number`
+
+The record index.
+
+###### Returns
+
+`number`
+
+The slot.
+
+##### write()
+
+> **write**(`spawnTime`, `lifetime`, `seed`, `flags`, `px`, `py`, `pz`, `size`, `vx`, `vy`, `vz`, `rotation`): `number`
+
+**`Beta`**
+
+Writes one record and returns its slot.
+
+###### Parameters
+
+###### spawnTime
+
+`number`
+
+The system clock at spawn.
+
+###### lifetime
+
+`number`
+
+Seconds the particle lives.
+
+###### seed
+
+`number`
+
+The per-record hash seed.
+
+###### flags
+
+`number`
+
+Reserved; write `0`.
+
+###### px
+
+`number`
+
+Start position X.
+
+###### py
+
+`number`
+
+Start position Y.
+
+###### pz
+
+`number`
+
+Start position Z.
+
+###### size
+
+`number`
+
+Start size.
+
+###### vx
+
+`number`
+
+Start velocity X.
+
+###### vy
+
+`number`
+
+Start velocity Y.
+
+###### vz
+
+`number`
+
+Start velocity Z.
+
+###### rotation
+
+`number`
+
+Start rotation, in radians.
+
+###### Returns
+
+`number`
+
+The slot written.
 
 ***
 
@@ -39220,7 +43864,7 @@ A `.physicsmaterial.json` reference; wins over [Collider.inlineMaterial](#inline
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The serialized field declarations.
 
@@ -39393,13 +44037,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -39429,13 +44073,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -39911,7 +44555,7 @@ Whether the default clip starts as soon as the document has loaded.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The declarative fields (ADR-0004).
 
@@ -40194,13 +44838,13 @@ The elapsed time.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -40230,13 +44874,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -40377,7 +45021,7 @@ Releases the signals' handlers.
 
 > **pause**(): `void`
 
-Suspends playback where it is; [SpriteAnimator.resume](#resume-6) continues from there.
+Suspends playback where it is; [SpriteAnimator.resume](#resume-9) continues from there.
 
 ###### Returns
 
@@ -40694,7 +45338,7 @@ The `fx.params` vec4 a `custom` shader reads.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The declarative fields (ADR-0004).
 
@@ -40901,13 +45545,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -40937,13 +45581,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -41198,7 +45842,7 @@ A sprite.
 #### Remarks
 
 The `sprite` field is an atlas handle; the frame inside it comes from the address's `#frame:`
-fragment when there is one, and otherwise from [SpriteRenderer.frame](#frame-6), which game code and
+fragment when there is one, and otherwise from [SpriteRenderer.frame](#frame-8), which game code and
 `SpriteAnimator` both write. A sprite whose atlas has not finished loading draws nothing and
 costs nothing.
 
@@ -41287,7 +45931,7 @@ The pivot in `[0, 1]` of the frame, overriding the frame's own; `null` uses the 
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The declarative fields (ADR-0004).
 
@@ -41573,13 +46217,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -41609,13 +46253,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -41792,6 +46436,163 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ***
 
+### StorageBufferAsset
+
+A read-only GPU buffer a custom shader indexes
+(`docs/plan/2026-09-terrain-particles-shaders.md` §2.2).
+
+#### Remarks
+
+Bind it to a material with `MaterialAsset.setStorageBuffer(name, handle)`, where `name` is a
+`// @ignifx storage` declaration in the shader file. The asset keeps a CPU copy of its contents,
+so a device loss recovers without the game re-uploading anything.
+
+#### Example
+
+```ts
+const records = new Float32Array(1024);
+using buffer = createStorageBufferAsset(app, "particles", records);
+buffer.value.update(records.subarray(0, 64), 0);
+```
+
+#### Properties
+
+##### assetType
+
+> `static` **assetType**: `string`
+
+The type name the asset service registers storage buffers under.
+
+##### byteLength
+
+> `readonly` **byteLength**: `number`
+
+The allocated capacity in bytes: the requested length rounded up to four, at least four.
+
+##### name
+
+> `readonly` **name**: `string`
+
+A human-readable name, used as the buffer's debug label and in diagnostics.
+
+#### Accessors
+
+##### address
+
+###### Get Signature
+
+> **get** **address**(): `string`
+
+The synthetic `memory:` address the asset service published the buffer at.
+
+###### Returns
+
+`string`
+
+The address, or `""` before [createStorageBufferAsset](#createstoragebufferasset) has published it.
+
+##### bytes
+
+###### Get Signature
+
+> **get** **bytes**(): `Uint8Array`
+
+The CPU-side copy of the buffer's contents.
+
+###### Remarks
+
+The asset's own array, not a copy: read it, do not write it. It is what a headless test asserts
+on and what a device-loss recovery re-uploads.
+
+###### Returns
+
+`Uint8Array`
+
+The bytes.
+
+##### isDisposed
+
+###### Get Signature
+
+> **get** **isDisposed**(): `boolean`
+
+Whether the GPU allocation has been given up.
+
+###### Returns
+
+`boolean`
+
+`true` once [StorageBufferAsset.dispose](#dispose-27) has run.
+
+##### lite
+
+###### Get Signature
+
+> **get** **lite**(): [`StorageBufferAssetLiteHandles`](#storagebufferassetlitehandles)
+
+The Babylon Lite objects the asset owns. Unstable escape hatch.
+
+###### Returns
+
+[`StorageBufferAssetLiteHandles`](#storagebufferassetlitehandles)
+
+The Lite buffer, or `null` under a headless app or after disposal.
+
+#### Methods
+
+##### dispose()
+
+> **dispose**(): `void`
+
+Destroys the GPU allocation. Calling it twice is a no-op, and it is a no-op under a headless
+app.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+The asset service calls this when the last holder releases the handle, so a game that uses
+`using` or pairs `load`/`release` never has to.
+
+##### update()
+
+> **update**(`data`, `byteOffset?`): `void`
+
+Overwrites part of the buffer.
+
+###### Parameters
+
+###### data
+
+`ArrayBufferView`
+
+The bytes to write. The byte length must be a multiple of four.
+
+###### byteOffset?
+
+`number`
+
+Where to start, in bytes; a multiple of four. Defaults to `0`.
+
+###### Returns
+
+`void`
+
+###### Throws
+
+IgnifxError with code `IGX-0720` when the offset or the length is not a multiple of
+four, or when the write would run past the end of the buffer.
+
+###### Example
+
+```ts
+buffer.value.update(new Float32Array([1, 2, 3, 4]), 16);
+```
+
+***
+
 ### TagSet
 
 The mutable set of tags on one entity.
@@ -41907,6 +46708,1795 @@ Every tag, in insertion order.
 `IterableIterator`\<`string`\>
 
 An iterator over the tags.
+
+***
+
+### Terrain
+
+A chunked, geomipmapped terrain.
+
+#### Example
+
+```ts
+const ground = app.world.createEntity("Terrain");
+const terrain = ground.addComponent(Terrain, { definition: island });
+terrain.heightAt(0, 0);
+```
+
+#### Extends
+
+- [`Component`](#abstract-component)
+
+#### Implements
+
+- [`ComponentHooks`](#componenthooks)
+
+#### Constructors
+
+##### Constructor
+
+> **new Terrain**(): [`Terrain`](#terrain-2)
+
+Applies the schema defaults, exactly as `Component.define` would.
+
+###### Returns
+
+[`Terrain`](#terrain-2)
+
+###### Overrides
+
+[`Component`](#abstract-component).[`constructor`](#constructor-25)
+
+#### Properties
+
+##### allowMultiple
+
+> `static` **allowMultiple**: `boolean`
+
+One terrain per entity.
+
+##### definition
+
+> **definition**: [`AssetHandle`](#assethandle)\<[`TerrainAsset`](#terrainasset-1)\> \| `null`
+
+The terrain document this component draws.
+
+##### frustumCulling
+
+> **frustumCulling**: `boolean`
+
+Whether chunks outside the camera's frustum are hidden.
+
+##### lodBias
+
+> **lodBias**: `number`
+
+Multiplies every LOD threshold; above `1` keeps fine meshes further from the camera.
+
+##### receiveShadows
+
+> **receiveShadows**: `boolean`
+
+Whether shadow maps darken the terrain. Chunks never **cast**; see the skill's gotchas.
+
+##### schema
+
+> `static` **schema**: [`Schema`](#schema-44)
+
+The declarative fields (ADR-0004).
+
+##### typeId
+
+> `static` **typeId**: `string`
+
+The registration id the serializer writes into scene files.
+
+#### Accessors
+
+##### app
+
+###### Get Signature
+
+> **get** **app**(): [`App`](#app-1)
+
+The app that owns the world.
+
+###### Returns
+
+[`App`](#app-1)
+
+The app.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`app`](#app-18)
+
+##### asset
+
+###### Get Signature
+
+> **get** **asset**(): [`TerrainAsset`](#terrainasset-1) \| `null`
+
+The loaded asset.
+
+###### Returns
+
+[`TerrainAsset`](#terrainasset-1) \| `null`
+
+The asset, or `null` until it is delivered.
+
+##### chunkCount
+
+###### Get Signature
+
+> **get** **chunkCount**(): `number`
+
+How many chunks the terrain is cut into.
+
+###### Returns
+
+`number`
+
+The chunk count; `0` before the asset is delivered.
+
+##### drawCalls
+
+###### Get Signature
+
+> **get** **drawCalls**(): `number`
+
+How many draw calls the terrain costs: one per visible chunk, because every chunk is one mesh
+with one material. `engine.drawCallCount` counts hidden bindings and is not this number.
+
+###### Returns
+
+`number`
+
+The count.
+
+##### enabled
+
+###### Get Signature
+
+> **get** **enabled**(): `boolean`
+
+The component's own enabled flag; `true` by default. Setting it runs the enable or disable
+transition (`docs/architecture/01-lifecycle-and-time.md` §6): `onDisable` runs immediately,
+`awake`/`onEnable` run in the next lifecycle flush — or immediately and nested when the change
+happens inside a callback.
+
+###### Returns
+
+`boolean`
+
+`true` when the component's own flag is set.
+
+###### Set Signature
+
+> **set** **enabled**(`value`): `void`
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`enabled`](#enabled-19)
+
+##### entity
+
+###### Get Signature
+
+> **get** **entity**(): [`Entity`](#entity-19)
+
+The entity this component is attached to.
+
+###### Returns
+
+[`Entity`](#entity-19)
+
+The owning entity.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`entity`](#entity-16)
+
+##### handle
+
+###### Get Signature
+
+> **get** **handle**(): [`ComponentHandle`](#componenthandle-1)
+
+The dense runtime handle; invalid after destruction.
+
+###### Returns
+
+[`ComponentHandle`](#componenthandle-1)
+
+The handle.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`handle`](#handle-16)
+
+##### heights
+
+###### Get Signature
+
+> **get** **heights**(): `Float32Array`
+
+The heights in metres, row-major, in the terrain's local frame. Write through
+[Terrain.setHeights](#setheights-1); a direct write rebuilds nothing.
+
+###### Throws
+
+IgnifxError with code `IGX-1609` before the asset is delivered.
+
+###### Returns
+
+`Float32Array`
+
+The live array.
+
+##### isDestroyed
+
+###### Get Signature
+
+> **get** **isDestroyed**(): `boolean`
+
+`true` from the moment `destroy()` is called, long before the destroy flush runs.
+
+###### Returns
+
+`boolean`
+
+`true` once the component has been queued for destruction.
+
+Whether the owner has already been destroyed.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-16)
+
+##### isEnabledInHierarchy
+
+###### Get Signature
+
+> **get** **isEnabledInHierarchy**(): `boolean`
+
+`true` when the component's own flag is set **and** its entity is active in the hierarchy.
+
+###### Returns
+
+`boolean`
+
+`true` when the component is effectively enabled.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-16)
+
+##### isLoaded
+
+###### Get Signature
+
+> **get** **isLoaded**(): `boolean`
+
+Whether the asset has been delivered and the terrain is ready to answer queries.
+
+###### Returns
+
+`boolean`
+
+`true` once the document has loaded.
+
+##### material
+
+###### Get Signature
+
+> **get** **material**(): [`AssetHandle`](#assethandle)\<[`MaterialAsset`](#materialasset)\> \| `null`
+
+The material the chunks draw with: one PBR material carrying the `terrainSplat` surface shader.
+
+###### Returns
+
+[`AssetHandle`](#assethandle)\<[`MaterialAsset`](#materialasset)\> \| `null`
+
+The material, or `null` headless and before the asset loads.
+
+##### onDestroyed
+
+###### Get Signature
+
+> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+Emitted once when the component is destroyed, in the destroy flush. Connecting with
+`{ owner: this }` elsewhere uses it to detach handlers automatically
+(`docs/architecture/02-scene-graph.md` §8).
+
+###### Returns
+
+[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+The signal. It is created on first access, so a component nobody listens to allocates
+nothing.
+
+Emitted once when the owner is destroyed; the signal uses it to detach the handler.
+
+###### Remarks
+
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
+`docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
+invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-16)
+
+##### onHeightsChanged
+
+###### Get Signature
+
+> **get** **onHeightsChanged**(): [`Signal`](#signal-3)\<[`TerrainRegion`](#terrainregion)\>
+
+Fires after [Terrain.setHeights](#setheights-1) with the sample rectangle that changed, so a collider
+and a scatter can follow.
+
+###### Returns
+
+[`Signal`](#signal-3)\<[`TerrainRegion`](#terrainregion)\>
+
+The signal.
+
+##### resolution
+
+###### Get Signature
+
+> **get** **resolution**(): `number`
+
+Samples per side.
+
+###### Throws
+
+IgnifxError with code `IGX-1609` before the asset is delivered.
+
+###### Returns
+
+`number`
+
+The resolution.
+
+##### size
+
+###### Get Signature
+
+> **get** **size**(): [`TerrainSize`](#terrainsize-1)
+
+The extent in metres the document declares, before the entity's scale.
+
+###### Throws
+
+IgnifxError with code `IGX-1609` before the asset is delivered.
+
+###### Returns
+
+[`TerrainSize`](#terrainsize-1)
+
+The size.
+
+##### transform
+
+###### Get Signature
+
+> **get** **transform**(): [`Transform`](#transform-59)
+
+The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
+
+###### Returns
+
+[`Transform`](#transform-59)
+
+The entity's transform.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`transform`](#transform-16)
+
+##### uid
+
+###### Get Signature
+
+> **get** **uid**(): `string`
+
+The stable ULID; the key files use to reference this component.
+
+###### Returns
+
+`string`
+
+The identifier.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`uid`](#uid-16)
+
+##### visibleChunks
+
+###### Get Signature
+
+> **get** **visibleChunks**(): `number`
+
+How many chunks the last LOD pass left visible.
+
+###### Returns
+
+`number`
+
+The count.
+
+##### world
+
+###### Get Signature
+
+> **get** **world**(): [`World`](#world-64)
+
+The world the entity belongs to.
+
+###### Returns
+
+[`World`](#world-64)
+
+The world.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`world`](#world-17)
+
+#### Methods
+
+##### bounds()
+
+> **bounds**(`out`): `Float32Array`
+
+The terrain's world-space bounding box, skirts excluded.
+
+###### Parameters
+
+###### out
+
+`Float32Array`
+
+Receives `[minX, minY, minZ, maxX, maxY, maxZ]`.
+
+###### Returns
+
+`Float32Array`
+
+`out`, for chaining.
+
+###### Throws
+
+IgnifxError with code `IGX-1609` before the asset is delivered.
+
+##### colliderInit()
+
+> **colliderInit**(`region?`): [`TerrainColliderInit`](#terraincolliderinit-1)
+
+The initialisation a `HeightfieldCollider` takes, by data.
+
+###### Parameters
+
+###### region?
+
+[`TerrainRegion`](#terrainregion)
+
+The sample rectangle to cover. Defaults to the whole field.
+
+###### Returns
+
+[`TerrainColliderInit`](#terraincolliderinit-1)
+
+The init object.
+
+###### Remarks
+
+Values are in the terrain's **local** frame; the collider applies the entity's scale itself
+(`packages/physics/src/components/colliders.ts`). A `HeightfieldCollider` always centres its
+shape on its own entity and ignores `Collider.center`, so a `region` collider belongs on a
+child entity placed at [Terrain.regionCenter](#regioncenter).
+
+###### Throws
+
+IgnifxError with code `IGX-1609` before the asset is delivered, or `IGX-1610` when the
+region falls outside the field or is smaller than two samples on a side.
+
+###### Example
+
+```ts
+const collider = ground.addComponent(HeightfieldCollider, terrain.colliderInit());
+terrain.onHeightsChanged.connect(() => {
+  Object.assign(collider, terrain.colliderInit());
+  collider.rebuild();
+}, { owner: this });
+```
+
+##### define()
+
+> `static` **define**\<`S`\>(`schema`): [`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+Declares a component's serialized fields and returns the base class to extend (ADR-0004,
+`docs/architecture/03-scripting-and-components.md` §3). The returned class exposes every field
+as a typed instance property, applies the defaults in its constructor, and carries the schema
+for the serializer, the inspector, and the docs harness.
+
+###### Type Parameters
+
+###### S
+
+`S` *extends* `Readonly`\<`Record`\<`string`, [`FieldDefinition`](#fielddefinition)\<`unknown`\>\>\>
+
+The schema being declared.
+
+###### Parameters
+
+###### schema
+
+`S`
+
+The field definitions, keyed by the property name they become.
+
+###### Returns
+
+[`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+An abstract class to extend.
+
+###### Throws
+
+IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
+with a `Component`/`Script` member.
+
+###### Example
+
+```ts
+class Spinner extends Component.define({
+  degreesPerSecond: f32(90, { min: -360, max: 360 }),
+  axis: vec3({ x: 0, y: 1, z: 0 }),
+}) {
+  static typeId = "mygame/Spinner";
+}
+```
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`define`](#define-16)
+
+##### destroy()
+
+> **destroy**(): `void`
+
+Queues this component for destruction. It stays usable until the destroy flush of the current
+frame, but reports `isDestroyed === true` immediately
+(`docs/architecture/01-lifecycle-and-time.md` §6). Calling it twice is a no-op.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`destroy`](#destroy-16)
+
+##### getComponent()
+
+> **getComponent**\<`T`\>(`type`): `T` \| `null`
+
+Finds another component on the same entity — sugar for `this.entity.getComponent`.
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class; matching is by class identity **and** inheritance.
+
+###### Returns
+
+`T` \| `null`
+
+The first match in attach order, or `null`.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-16)
+
+##### heightAt()
+
+> **heightAt**(`x`, `z`): `number`
+
+The height of the surface under a world-space point, bilinearly interpolated. Points outside
+the terrain read the nearest edge.
+
+###### Parameters
+
+###### x
+
+`number`
+
+The world X, in metres.
+
+###### z
+
+`number`
+
+The world Z, in metres.
+
+###### Returns
+
+`number`
+
+The world Y of the surface, in metres.
+
+###### Throws
+
+IgnifxError with code `IGX-1609` before the asset is delivered.
+
+##### lodOf()
+
+> **lodOf**(`chunkX`, `chunkZ`): `number`
+
+The level of detail a chunk is showing.
+
+###### Parameters
+
+###### chunkX
+
+`number`
+
+The chunk column.
+
+###### chunkZ
+
+`number`
+
+The chunk row.
+
+###### Returns
+
+`number`
+
+The level, or `0` before the asset is delivered.
+
+##### normalAt()
+
+> **normalAt**(`x`, `z`, `out`): [`MutableVec3`](#mutablevec3)
+
+The unit surface normal under a world-space point.
+
+###### Parameters
+
+###### x
+
+`number`
+
+The world X, in metres.
+
+###### z
+
+`number`
+
+The world Z, in metres.
+
+###### out
+
+[`MutableVec3`](#mutablevec3)
+
+Receives the normal.
+
+###### Returns
+
+[`MutableVec3`](#mutablevec3)
+
+`out`, for chaining.
+
+###### Throws
+
+IgnifxError with code `IGX-1609` before the asset is delivered.
+
+##### onAttach()
+
+> **onAttach**(): `void`
+
+Builds nothing: the asset may still be loading, so the LOD system does the work.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-11)
+
+##### onDetach()
+
+> **onDetach**(): `void`
+
+Destroys the chunk meshes and releases the material.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-11)
+
+##### raycast()
+
+> **raycast**(`ray`, `out`): `boolean`
+
+Marches a world-space ray across the terrain and reports where it first meets the surface.
+
+###### Parameters
+
+###### ray
+
+[`Ray`](#ray)
+
+The ray, in world metres.
+
+###### out
+
+[`TerrainHit`](#terrainhit)
+
+Receives the hit, in world space.
+
+###### Returns
+
+`boolean`
+
+`true` when the ray hit inside `ray.length`.
+
+###### Throws
+
+IgnifxError with code `IGX-1609` before the asset is delivered.
+
+##### regionCenter()
+
+> **regionCenter**(`region`, `out`): [`MutableVec3`](#mutablevec3)
+
+Where a region's centre sits in the terrain's local frame.
+
+###### Parameters
+
+###### region
+
+[`TerrainRegion`](#terrainregion)
+
+The sample rectangle.
+
+###### out
+
+[`MutableVec3`](#mutablevec3)
+
+Receives the centre; `y` is always `0`.
+
+###### Returns
+
+[`MutableVec3`](#mutablevec3)
+
+`out`, for chaining.
+
+###### Remarks
+
+A `HeightfieldCollider` centres its shape on its own entity, so a collider built from
+[Terrain.colliderInit](#colliderinit) with a `region` goes on a child entity whose `localPosition` is
+this point. The whole field's centre is the origin, which is why a full-field collider needs no
+child entity at all.
+
+###### Throws
+
+IgnifxError with code `IGX-1609` before the asset is delivered, or `IGX-1610` when the
+region falls outside the field.
+
+##### requireComponent()
+
+> **requireComponent**\<`T`\>(`type`): `T`
+
+Finds another component on the same entity, requiring it to be there — the supported way to
+link components (`docs/architecture/03-scripting-and-components.md` §8).
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class.
+
+###### Returns
+
+`T`
+
+The first match in attach order.
+
+###### Throws
+
+IgnifxError with code `IGX-0201` when the entity has no such component.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-16)
+
+##### sampleToWorld()
+
+> **sampleToWorld**(`ix`, `iz`, `out`): [`MutableVec3`](#mutablevec3)
+
+The world-space position of a sample.
+
+###### Parameters
+
+###### ix
+
+`number`
+
+The sample column.
+
+###### iz
+
+`number`
+
+The sample row.
+
+###### out
+
+[`MutableVec3`](#mutablevec3)
+
+Receives the position.
+
+###### Returns
+
+[`MutableVec3`](#mutablevec3)
+
+`out`, for chaining.
+
+###### Throws
+
+IgnifxError with code `IGX-1609` before the asset is delivered.
+
+##### setHeights()
+
+> **setHeights**(`x`, `z`, `width`, `depth`, `heights`): `void`
+
+Overwrites a rectangle of heights and rebuilds the chunks it touches.
+
+###### Parameters
+
+###### x
+
+`number`
+
+The first sample column.
+
+###### z
+
+`number`
+
+The first sample row.
+
+###### width
+
+`number`
+
+How many columns.
+
+###### depth
+
+`number`
+
+How many rows.
+
+###### heights
+
+`Float32Array`
+
+`width * depth` heights in metres, row-major, in the terrain's local frame.
+
+###### Returns
+
+`void`
+
+###### Throws
+
+IgnifxError with code `IGX-1609` before the asset is delivered, or `IGX-1610` when the
+rectangle falls outside the field or `heights` is too short.
+
+##### setSplat()
+
+> **setSplat**(`layer`, `x`, `z`, `width`, `depth`, `weights`): `void`
+
+Overwrites one layer's splat weights over a rectangle of control-map texels and re-uploads it.
+
+###### Parameters
+
+###### layer
+
+`number`
+
+The layer's control-channel index.
+
+###### x
+
+`number`
+
+The first texel column.
+
+###### z
+
+`number`
+
+The first texel row.
+
+###### width
+
+`number`
+
+How many columns.
+
+###### depth
+
+`number`
+
+How many rows.
+
+###### weights
+
+`Uint8Array`
+
+`width * depth` weights, `0` to `255`, row-major.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+The shader normalises the weights of a texel, so a weight is relative to the other layers there
+rather than an absolute coverage. The control map has `resolution - 1` texels per side unless a
+painted map declared another size.
+
+###### Throws
+
+IgnifxError with code `IGX-1609` before the asset is delivered, `IGX-1610` when the
+rectangle falls outside the control map, or `IGX-1611` for an unknown layer index.
+
+##### slopeAt()
+
+> **slopeAt**(`x`, `z`): `number`
+
+The slope under a world-space point, in degrees from horizontal.
+
+###### Parameters
+
+###### x
+
+`number`
+
+The world X, in metres.
+
+###### z
+
+`number`
+
+The world Z, in metres.
+
+###### Returns
+
+`number`
+
+`0` flat, `90` vertical.
+
+###### Throws
+
+IgnifxError with code `IGX-1609` before the asset is delivered.
+
+##### worldToSample()
+
+> **worldToSample**(`x`, `z`, `out`): `Float32Array`
+
+The fractional sample coordinate of a world-space point.
+
+###### Parameters
+
+###### x
+
+`number`
+
+The world X, in metres.
+
+###### z
+
+`number`
+
+The world Z, in metres.
+
+###### out
+
+`Float32Array`
+
+Receives `[column, row]`, unclamped.
+
+###### Returns
+
+`Float32Array`
+
+`out`, for chaining.
+
+###### Throws
+
+IgnifxError with code `IGX-1609` before the asset is delivered.
+
+***
+
+### TerrainAsset
+
+A loaded `.terrain.json`, or a terrain built in code.
+
+#### Example
+
+```ts
+const handle = await app.assets.loadAsync<TerrainAsset>("terrain/island.terrain.json");
+handle.value.field.heightAt(0, 0);
+```
+
+#### Properties
+
+##### address
+
+> `readonly` **address**: `string`
+
+The address the asset was loaded or registered under.
+
+##### assetType
+
+> `static` **assetType**: `string`
+
+The asset type this class registers under.
+
+##### control
+
+> `readonly` **control**: [`ControlMaps`](#controlmaps)
+
+The splat weights on the CPU; what a `TerrainScatter` reads.
+
+##### controlTextures
+
+> `readonly` **controlTextures**: readonly [`AssetHandle`](#assethandle)\<[`TextureAsset`](#textureasset)\>[]
+
+One RGBA texture per control map, in control-map order.
+
+##### definition
+
+> `readonly` **definition**: [`TerrainDefinition`](#terraindefinition-1)
+
+The resolved document, every default filled in.
+
+##### field
+
+> `readonly` **field**: [`HeightField`](#heightfield)
+
+The heights, in metres, in the terrain's local frame.
+
+##### layers
+
+> `readonly` **layers**: [`TerrainLayerTextures`](#terrainlayertextures)
+
+The albedo and normal texture arrays, or `null` handles for a textureless terrain.
+
+##### shader
+
+> `readonly` **shader**: [`AssetHandle`](#assethandle)\<[`ShaderAsset`](#shaderasset)\>
+
+The generated `terrainSplat` surface shader, shared by every terrain of the same shape.
+
+##### splat
+
+> `readonly` **splat**: [`TerrainSplatShaderSpec`](#terrainsplatshaderspec)
+
+The layer shape the shader was generated for.
+
+#### Accessors
+
+##### isDisposed
+
+###### Get Signature
+
+> **get** **isDisposed**(): `boolean`
+
+Whether [TerrainAsset.dispose](#dispose-29) has run.
+
+###### Returns
+
+`boolean`
+
+`true` once the asset has released its handles.
+
+#### Methods
+
+##### dispose()
+
+> **dispose**(): `void`
+
+Releases the textures and the shader. The asset service calls this when the asset unloads.
+
+###### Returns
+
+`void`
+
+##### layerIndex()
+
+> **layerIndex**(`name`): `number`
+
+The control-channel index of a named layer.
+
+###### Parameters
+
+###### name
+
+`string`
+
+The layer's name.
+
+###### Returns
+
+`number`
+
+The index, or `-1` when the terrain declares no such layer.
+
+***
+
+### TerrainLodSystem
+
+Selects every terrain's chunk levels of detail and hides what the camera cannot see.
+
+#### Implements
+
+- [`System`](#system-1)
+
+#### Constructors
+
+##### Constructor
+
+> **new TerrainLodSystem**(): [`TerrainLodSystem`](#terrainlodsystem)
+
+###### Returns
+
+[`TerrainLodSystem`](#terrainlodsystem)
+
+#### Properties
+
+##### name
+
+> `readonly` **name**: `"ignifx/terrain-lod"` = `"ignifx/terrain-lod"`
+
+The name diagnostics and error reports use.
+
+###### Implementation of
+
+[`System`](#system-1).[`name`](#name-65)
+
+#### Methods
+
+##### update()
+
+> **update**(`ctx`): `void`
+
+Builds, sculpt-syncs, and level-of-detail-selects every terrain in the world.
+
+###### Parameters
+
+###### ctx
+
+[`SystemContext`](#systemcontext)
+
+The world, clock, phase, and delta.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`System`](#system-1).[`update`](#update-14)
+
+***
+
+### TerrainScatter
+
+Seeded foliage on a terrain.
+
+#### Remarks
+
+`maxInstances` sizes the `InstancedMeshRenderer`'s instance buffer, which Babylon Lite fixes
+before the scene is registered, so set it before `app.start()`.
+
+#### Example
+
+```ts
+const grass = ground.addComponent(TerrainScatter, {
+  mesh: card,
+  material: foliage,
+  density: 2,
+  layers: ["grass"],
+  maxInstances: 20_000,
+});
+```
+
+#### Extends
+
+- [`Component`](#abstract-component)
+
+#### Implements
+
+- [`ComponentHooks`](#componenthooks)
+
+#### Constructors
+
+##### Constructor
+
+> **new TerrainScatter**(): [`TerrainScatter`](#terrainscatter)
+
+Applies the schema defaults, exactly as `Component.define` would.
+
+###### Returns
+
+[`TerrainScatter`](#terrainscatter)
+
+###### Overrides
+
+[`Component`](#abstract-component).[`constructor`](#constructor-25)
+
+#### Properties
+
+##### alignToNormal
+
+> **alignToNormal**: `boolean`
+
+Whether each instance stands along the surface normal rather than straight up.
+
+##### allowMultiple
+
+> `static` **allowMultiple**: `boolean`
+
+One scatter per entity; a second kind of foliage goes on a child.
+
+##### density
+
+> **density**: `number`
+
+Instances per square metre of terrain.
+
+##### height
+
+> **height**: [`Vec2Like`](#vec2like)
+
+The height band, in metres.
+
+##### layers
+
+> **layers**: `string`[]
+
+Splat layer names to place on; empty places everywhere.
+
+##### layerThreshold
+
+> **layerThreshold**: `number`
+
+The splat weight a named layer must reach before a candidate stands.
+
+##### lodDistance
+
+> **lodDistance**: `number`
+
+Metres past which the LOD mesh takes over.
+
+##### lodMesh
+
+> **lodMesh**: [`AssetHandle`](#assethandle)\<[`MeshAsset`](#meshasset)\> \| `null`
+
+A cheaper mesh drawn past [TerrainScatter.lodDistance](#loddistance-1), or `null`.
+
+##### material
+
+> **material**: [`AssetHandle`](#assethandle)\<[`MaterialAsset`](#materialasset)\> \| `null`
+
+The material, normally built by `foliageMaterialDefinition`.
+
+##### maxInstances
+
+> **maxInstances**: `number`
+
+The cap on instances, which also sizes the GPU instance buffer.
+
+##### mesh
+
+> **mesh**: [`AssetHandle`](#assethandle)\<[`MeshAsset`](#meshasset)\> \| `null`
+
+The mesh every instance draws.
+
+##### randomYaw
+
+> **randomYaw**: `boolean`
+
+Whether each instance is turned by a random angle about Y.
+
+##### requires
+
+> `static` **requires**: readonly \[*typeof* [`InstancedMeshRenderer`](#instancedmeshrenderer)\]
+
+The renderer the instances are drawn through; added automatically.
+
+##### scale
+
+> **scale**: [`Vec2Like`](#vec2like)
+
+The random uniform scale range.
+
+##### schema
+
+> `static` **schema**: [`Schema`](#schema-44)
+
+The declarative fields (ADR-0004).
+
+##### seed
+
+> **seed**: `number`
+
+The placement seed.
+
+##### slope
+
+> **slope**: [`Vec2Like`](#vec2like)
+
+The slope band, in degrees from horizontal.
+
+##### typeId
+
+> `static` **typeId**: `string`
+
+The registration id the serializer writes into scene files.
+
+#### Accessors
+
+##### app
+
+###### Get Signature
+
+> **get** **app**(): [`App`](#app-1)
+
+The app that owns the world.
+
+###### Returns
+
+[`App`](#app-1)
+
+The app.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`app`](#app-18)
+
+##### count
+
+###### Get Signature
+
+> **get** **count**(): `number`
+
+How many instances are placed.
+
+###### Returns
+
+`number`
+
+The count.
+
+##### enabled
+
+###### Get Signature
+
+> **get** **enabled**(): `boolean`
+
+The component's own enabled flag; `true` by default. Setting it runs the enable or disable
+transition (`docs/architecture/01-lifecycle-and-time.md` §6): `onDisable` runs immediately,
+`awake`/`onEnable` run in the next lifecycle flush — or immediately and nested when the change
+happens inside a callback.
+
+###### Returns
+
+`boolean`
+
+`true` when the component's own flag is set.
+
+###### Set Signature
+
+> **set** **enabled**(`value`): `void`
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`enabled`](#enabled-19)
+
+##### entity
+
+###### Get Signature
+
+> **get** **entity**(): [`Entity`](#entity-19)
+
+The entity this component is attached to.
+
+###### Returns
+
+[`Entity`](#entity-19)
+
+The owning entity.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`entity`](#entity-16)
+
+##### handle
+
+###### Get Signature
+
+> **get** **handle**(): [`ComponentHandle`](#componenthandle-1)
+
+The dense runtime handle; invalid after destruction.
+
+###### Returns
+
+[`ComponentHandle`](#componenthandle-1)
+
+The handle.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`handle`](#handle-16)
+
+##### isDestroyed
+
+###### Get Signature
+
+> **get** **isDestroyed**(): `boolean`
+
+`true` from the moment `destroy()` is called, long before the destroy flush runs.
+
+###### Returns
+
+`boolean`
+
+`true` once the component has been queued for destruction.
+
+Whether the owner has already been destroyed.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-16)
+
+##### isEnabledInHierarchy
+
+###### Get Signature
+
+> **get** **isEnabledInHierarchy**(): `boolean`
+
+`true` when the component's own flag is set **and** its entity is active in the hierarchy.
+
+###### Returns
+
+`boolean`
+
+`true` when the component is effectively enabled.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-16)
+
+##### onDestroyed
+
+###### Get Signature
+
+> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+Emitted once when the component is destroyed, in the destroy flush. Connecting with
+`{ owner: this }` elsewhere uses it to detach handlers automatically
+(`docs/architecture/02-scene-graph.md` §8).
+
+###### Returns
+
+[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+The signal. It is created on first access, so a component nobody listens to allocates
+nothing.
+
+Emitted once when the owner is destroyed; the signal uses it to detach the handler.
+
+###### Remarks
+
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
+`docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
+invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-16)
+
+##### transform
+
+###### Get Signature
+
+> **get** **transform**(): [`Transform`](#transform-59)
+
+The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
+
+###### Returns
+
+[`Transform`](#transform-59)
+
+The entity's transform.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`transform`](#transform-16)
+
+##### uid
+
+###### Get Signature
+
+> **get** **uid**(): `string`
+
+The stable ULID; the key files use to reference this component.
+
+###### Returns
+
+`string`
+
+The identifier.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`uid`](#uid-16)
+
+##### world
+
+###### Get Signature
+
+> **get** **world**(): [`World`](#world-64)
+
+The world the entity belongs to.
+
+###### Returns
+
+[`World`](#world-64)
+
+The world.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`world`](#world-17)
+
+#### Methods
+
+##### define()
+
+> `static` **define**\<`S`\>(`schema`): [`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+Declares a component's serialized fields and returns the base class to extend (ADR-0004,
+`docs/architecture/03-scripting-and-components.md` §3). The returned class exposes every field
+as a typed instance property, applies the defaults in its constructor, and carries the schema
+for the serializer, the inspector, and the docs harness.
+
+###### Type Parameters
+
+###### S
+
+`S` *extends* `Readonly`\<`Record`\<`string`, [`FieldDefinition`](#fielddefinition)\<`unknown`\>\>\>
+
+The schema being declared.
+
+###### Parameters
+
+###### schema
+
+`S`
+
+The field definitions, keyed by the property name they become.
+
+###### Returns
+
+[`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+An abstract class to extend.
+
+###### Throws
+
+IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
+with a `Component`/`Script` member.
+
+###### Example
+
+```ts
+class Spinner extends Component.define({
+  degreesPerSecond: f32(90, { min: -360, max: 360 }),
+  axis: vec3({ x: 0, y: 1, z: 0 }),
+}) {
+  static typeId = "mygame/Spinner";
+}
+```
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`define`](#define-16)
+
+##### destroy()
+
+> **destroy**(): `void`
+
+Queues this component for destruction. It stays usable until the destroy flush of the current
+frame, but reports `isDestroyed === true` immediately
+(`docs/architecture/01-lifecycle-and-time.md` §6). Calling it twice is a no-op.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`destroy`](#destroy-16)
+
+##### getComponent()
+
+> **getComponent**\<`T`\>(`type`): `T` \| `null`
+
+Finds another component on the same entity — sugar for `this.entity.getComponent`.
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class; matching is by class identity **and** inheritance.
+
+###### Returns
+
+`T` \| `null`
+
+The first match in attach order, or `null`.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-16)
+
+##### onAttach()
+
+> **onAttach**(): `void`
+
+Sizes the instance buffer before the scene is registered.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-11)
+
+##### onDetach()
+
+> **onDetach**(): `void`
+
+Empties the renderer, so a disabled scatter draws nothing.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-11)
+
+##### regenerate()
+
+> **regenerate**(): `void`
+
+Places the instances again, which is what a changed rule needs.
+
+###### Returns
+
+`void`
+
+###### Throws
+
+IgnifxError with code `IGX-1612` when no `Terrain` is on this entity or an ancestor, or
+`IGX-1611` when [TerrainScatter.layers](#layers-9) names a layer the terrain does not declare.
+
+##### requireComponent()
+
+> **requireComponent**\<`T`\>(`type`): `T`
+
+Finds another component on the same entity, requiring it to be there — the supported way to
+link components (`docs/architecture/03-scripting-and-components.md` §8).
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class.
+
+###### Returns
+
+`T`
+
+The first match in attach order.
+
+###### Throws
+
+IgnifxError with code `IGX-0201` when the entity has no such component.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-16)
 
 ***
 
@@ -42190,13 +48780,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -42226,13 +48816,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -42433,6 +49023,20 @@ The resolved import options, sidecar values merged onto the defaults.
 
 #### Accessors
 
+##### height
+
+###### Get Signature
+
+> **get** **height**(): `number`
+
+The texture's height, in texels.
+
+###### Returns
+
+`number`
+
+The height, or `0`; see [TextureAsset.width](#width-12).
+
 ##### isReleased
 
 ###### Get Signature
@@ -42461,7 +49065,102 @@ The Babylon Lite objects the asset owns. Unstable escape hatch.
 
 The GPU texture, or `null` under a headless app.
 
+##### width
+
+###### Get Signature
+
+> **get** **width**(): `number`
+
+The texture's width, in texels.
+
+###### Remarks
+
+Known for every texture that reached the GPU — Lite records it on the texture handle
+(`index.d.ts` 12876) — and for a headless [TextureAsset.fromPixels](#frompixels) texture, which
+remembers the size it was asked for. A texture **loaded** from a file under a headless app
+decoded nothing, so it reports `0`.
+
+###### Returns
+
+`number`
+
+The width, or `0` when nothing knows it.
+
 #### Methods
+
+##### fromPixels()
+
+> `static` **fromPixels**(`app`, `name`, `data`, `width`, `height`, `options?`): [`AssetHandle`](#assethandle)\<[`TextureAsset`](#textureasset)\>
+
+Creates a texture from tightly packed RGBA8 bytes and publishes it as an in-memory asset.
+
+###### Parameters
+
+###### app
+
+[`App`](#app-1)
+
+The app whose engine uploads the texture and whose asset service holds the handle.
+
+###### name
+
+`string`
+
+A human-readable name. It becomes the asset's `address` — the string diagnostics
+and the `IGX-0722` message name it by — while the handle's own address is the generated
+`memory:texture/<ulid>` the asset service published it at.
+
+###### data
+
+`Uint8Array`
+
+`width * height * 4` bytes.
+
+###### width
+
+`number`
+
+The width in texels, at least 1.
+
+###### height
+
+`number`
+
+The height in texels, at least 1.
+
+###### options?
+
+[`PixelTextureOptions`](#pixeltextureoptions)
+
+Sampler and colour-space overrides; `nearest`, `clamp`, no sRGB by default.
+
+###### Returns
+
+[`AssetHandle`](#assethandle)\<[`TextureAsset`](#textureasset)\>
+
+The handle, already loaded, with one holder — the caller.
+
+###### Remarks
+
+The bytes are `width * height * 4` long, row-major, **top row first**, with straight (not
+premultiplied) alpha. They are copied into the GPU texture and not retained.
+
+The result is the only kind of texture [TextureAsset.update](#update-16) accepts. Ownership follows
+the rule every in-code asset follows: the caller holds the handle, releasing it (or letting a
+`using` block do it) runs the `texture` type's unload, which releases the GPU share.
+
+###### Throws
+
+IgnifxError with code `IGX-0722` when `width` or `height` is not a positive integer, or
+`data` is not exactly `width * height * 4` bytes long.
+
+###### Example
+
+```ts
+const pixels = new Uint8Array(2 * 2 * 4);
+pixels.fill(255);
+using ramp = TextureAsset.fromPixels(app, "ramp", pixels, 2, 2, { filter: "nearest" });
+```
 
 ##### releaseGpu()
 
@@ -42490,6 +49189,76 @@ Claims an extra share of the GPU texture, so releasing the asset does not destro
 
 Only needed when a Lite object has to outlive the asset that loaded it. Ordinary sharing goes
 through `ctx.loadDependency`, which counts the asset handle instead.
+
+##### update()
+
+> **update**(`data`, `x?`, `y?`, `width?`, `height?`): `void`
+
+Writes a rectangular region of the texture from RGBA8 bytes.
+
+###### Parameters
+
+###### data
+
+`Uint8Array`
+
+`width * height * 4` bytes for the region, row-major, top row first.
+
+###### x?
+
+`number`
+
+The destination origin's column. Defaults to `0`.
+
+###### y?
+
+`number`
+
+The destination origin's row. Defaults to `0`.
+
+###### width?
+
+`number`
+
+The region's width. Defaults to the texture's width.
+
+###### height?
+
+`number`
+
+The region's height. Defaults to the texture's height.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+Only a texture from [TextureAsset.fromPixels](#frompixels) can be written to: that is the factory that
+asks WebGPU for `COPY_DST` usage. The region defaults to the whole texture. Nothing is uploaded
+under a headless app, but the size check still runs, so a generator's arithmetic is testable
+without a device.
+
+The texture has one mip level, so there is no chain to regenerate and an update is complete the
+moment the queue drains.
+
+###### Throws
+
+IgnifxError with code `IGX-0702` when the texture did not come from
+[TextureAsset.fromPixels](#frompixels).
+
+###### Throws
+
+IgnifxError with code `IGX-0722` when the region falls outside the texture or `data` is
+not exactly `width * height * 4` bytes long.
+
+###### Example
+
+```ts
+const splat = TextureAsset.fromPixels(app, "splat", pixels, 256, 256);
+pixels[0] = 255;
+splat.value.update(pixels.subarray(0, 4), 0, 0, 1, 1); // one texel
+```
 
 ***
 
@@ -42532,7 +49301,7 @@ Applies the schema defaults, exactly as `Component.define` would.
 
 ###### Overrides
 
-[`Script`](#abstract-script).[`constructor`](#constructor-83)
+[`Script`](#abstract-script).[`constructor`](#constructor-95)
 
 #### Properties
 
@@ -42611,7 +49380,7 @@ The lowest pitch, in degrees.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The declarative fields (ADR-0004).
 
@@ -42663,7 +49432,7 @@ The app.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`app`](#app-46)
+[`Script`](#abstract-script).[`app`](#app-49)
 
 ##### currentDistance
 
@@ -42712,7 +49481,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-55)
+[`Script`](#abstract-script).[`enabled`](#enabled-60)
 
 ##### entity
 
@@ -42730,7 +49499,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-47)
+[`Script`](#abstract-script).[`entity`](#entity-50)
 
 ##### handle
 
@@ -42748,7 +49517,7 @@ The handle.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`handle`](#handle-42)
+[`Script`](#abstract-script).[`handle`](#handle-45)
 
 ##### isDestroyed
 
@@ -42768,7 +49537,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-42)
+[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-45)
 
 ##### isEnabledInHierarchy
 
@@ -42786,7 +49555,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-41)
+[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-44)
 
 ##### onDestroyed
 
@@ -42816,7 +49585,7 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-42)
+[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-45)
 
 ##### pitch
 
@@ -42850,19 +49619,19 @@ The point the camera is orbiting, in world space. Reused each frame.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`transform`](#transform-43)
+[`Script`](#abstract-script).[`transform`](#transform-46)
 
 ##### uid
 
@@ -42880,25 +49649,25 @@ The identifier.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`uid`](#uid-46)
+[`Script`](#abstract-script).[`uid`](#uid-49)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`world`](#world-45)
+[`Script`](#abstract-script).[`world`](#world-48)
 
 ##### yaw
 
@@ -42978,7 +49747,7 @@ class Patrol extends Script.define({ waypoints: array(vec3()), speed: f32(3) }) 
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`define`](#define-41)
+[`Script`](#abstract-script).[`define`](#define-44)
 
 ##### destroy()
 
@@ -42994,7 +49763,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`destroy`](#destroy-42)
+[`Script`](#abstract-script).[`destroy`](#destroy-45)
 
 ##### getComponent()
 
@@ -43026,7 +49795,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`getComponent`](#getcomponent-42)
+[`Script`](#abstract-script).[`getComponent`](#getcomponent-45)
 
 ##### lateUpdate()
 
@@ -43091,7 +49860,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-42)
+[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-45)
 
 ##### snap()
 
@@ -43211,7 +49980,7 @@ Applies the schema defaults, exactly as `Component.define` would.
 
 ###### Overrides
 
-[`Script`](#abstract-script).[`constructor`](#constructor-83)
+[`Script`](#abstract-script).[`constructor`](#constructor-95)
 
 #### Properties
 
@@ -43277,7 +50046,7 @@ Whether the entity turns to face the way it is moving.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The declarative fields (ADR-0004).
 
@@ -43341,7 +50110,7 @@ The app.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`app`](#app-46)
+[`Script`](#abstract-script).[`app`](#app-49)
 
 ##### enabled
 
@@ -43376,7 +50145,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-55)
+[`Script`](#abstract-script).[`enabled`](#enabled-60)
 
 ##### entity
 
@@ -43394,7 +50163,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-47)
+[`Script`](#abstract-script).[`entity`](#entity-50)
 
 ##### handle
 
@@ -43412,7 +50181,7 @@ The handle.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`handle`](#handle-42)
+[`Script`](#abstract-script).[`handle`](#handle-45)
 
 ##### isDestroyed
 
@@ -43432,7 +50201,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-42)
+[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-45)
 
 ##### isEnabledInHierarchy
 
@@ -43450,7 +50219,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-41)
+[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-44)
 
 ##### isGrounded
 
@@ -43522,7 +50291,7 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-42)
+[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-45)
 
 ##### speed
 
@@ -43542,19 +50311,19 @@ The character's horizontal speed this step, in metres per second.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`transform`](#transform-43)
+[`Script`](#abstract-script).[`transform`](#transform-46)
 
 ##### uid
 
@@ -43572,7 +50341,7 @@ The identifier.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`uid`](#uid-46)
+[`Script`](#abstract-script).[`uid`](#uid-49)
 
 ##### verticalVelocity
 
@@ -43592,19 +50361,19 @@ The character's vertical speed, positive upwards.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`world`](#world-45)
+[`Script`](#abstract-script).[`world`](#world-48)
 
 #### Methods
 
@@ -43662,7 +50431,7 @@ class Patrol extends Script.define({ waypoints: array(vec3()), speed: f32(3) }) 
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`define`](#define-41)
+[`Script`](#abstract-script).[`define`](#define-44)
 
 ##### destroy()
 
@@ -43678,7 +50447,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`destroy`](#destroy-42)
+[`Script`](#abstract-script).[`destroy`](#destroy-45)
 
 ##### fixedUpdate()
 
@@ -43728,7 +50497,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`getComponent`](#getcomponent-42)
+[`Script`](#abstract-script).[`getComponent`](#getcomponent-45)
 
 ##### rebind()
 
@@ -43775,7 +50544,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-42)
+[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-45)
 
 ##### resetMomentum()
 
@@ -43871,7 +50640,7 @@ Advances skeletal animation on ignifx's clock.
 
 #### Implements
 
-- [`System`](#system)
+- [`System`](#system-1)
 
 #### Constructors
 
@@ -43893,7 +50662,7 @@ The name diagnostics and error reports use.
 
 ###### Implementation of
 
-[`System`](#system).[`name`](#name-51)
+[`System`](#system-1).[`name`](#name-65)
 
 #### Methods
 
@@ -43923,7 +50692,7 @@ here, per animator, which is also what makes `updateWhenPaused` mean something.
 
 ###### Implementation of
 
-[`System`](#system).[`update`](#update-11)
+[`System`](#system-1).[`update`](#update-14)
 
 ***
 
@@ -43991,7 +50760,7 @@ The `.tilemap.json` document.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The declarative fields (ADR-0004).
 
@@ -44275,13 +51044,13 @@ The signal.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -44311,13 +51080,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -44876,7 +51645,7 @@ How this surface's restitution combines with the one it touches.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The serialized field declarations; the geometry itself comes from the tilemap asset.
 
@@ -45081,13 +51850,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -45117,13 +51886,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -45404,7 +52173,7 @@ Whether chunks outside the camera's visible bounds are dropped.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The declarative fields (ADR-0004).
 
@@ -45625,13 +52394,13 @@ The count.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -45661,13 +52430,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -46036,13 +52805,13 @@ class Follow extends Script implements ScriptCallbacks {
 
 ##### Constructor
 
-> **new Transform**(): [`Transform`](#transform-54)
+> **new Transform**(): [`Transform`](#transform-59)
 
 Creates an unbound transform. The entity constructor binds it to a Lite node immediately.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 ###### Overrides
 
@@ -46582,13 +53351,13 @@ The angle in degrees.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -46632,13 +53401,13 @@ A freshly allocated vector. Use `Transform.upToRef` in hot code.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -47430,7 +54199,7 @@ Advances sprite animation on ignifx's clock.
 
 #### Implements
 
-- [`System`](#system)
+- [`System`](#system-1)
 
 #### Constructors
 
@@ -47462,7 +54231,7 @@ The name diagnostics and error reports use.
 
 ###### Implementation of
 
-[`System`](#system).[`name`](#name-51)
+[`System`](#system-1).[`name`](#name-65)
 
 #### Methods
 
@@ -47486,7 +54255,7 @@ The world, clock, phase, and delta.
 
 ###### Implementation of
 
-[`System`](#system).[`update`](#update-11)
+[`System`](#system-1).[`update`](#update-14)
 
 ***
 
@@ -47642,6 +54411,52 @@ of sprites that genuinely moved, not the count that exist.
 The count.
 
 #### Methods
+
+##### createSpriteBatch()
+
+> **createSpriteBatch**(`options`): `SpriteBatch`
+
+**`Beta`**
+
+Claims a fixed-capacity crowd of sprites that no entity owns
+(`docs/plan/2026-09-terrain-particles-shaders.md` §2.2).
+
+###### Parameters
+
+###### options
+
+`SpriteBatchOptions`
+
+The atlas, the capacity, the sorting layer, the blend, and the space.
+
+###### Returns
+
+`SpriteBatch`
+
+The batch.
+
+###### Remarks
+
+Use it when the sprites are not *things* — bullets, sparks, debris, 2D particles — and the
+per-entity cost of a `SpriteRenderer` would dominate. The batch is not picked and does not sort
+its own slots; see SpriteBatch. Dispose it when the crowd is gone, or take it with
+`using`.
+
+###### Throws
+
+IgnifxError with code `IGX-1114` for a capacity that is not a whole number of at least
+1, `IGX-1117` for an atlas handle that has not finished loading, or `IGX-1107` for a sorting
+layer the project does not declare.
+
+###### Example
+
+```ts
+const atlas = app.assets.load<SpriteAtlasAsset>("2d/spark.atlas.json");
+await atlas.promise;
+const batch = app.twoD.createSpriteBatch({ atlas, capacity: 2048, blend: "additive" });
+batch.count = 1;
+batch.write(0, 0, 0, 0.2, 0.2, 0, 0, 1, 0.8, 0.3, 1);
+```
 
 ##### pickAt()
 
@@ -47821,7 +54636,7 @@ Writes sprites and camera views into Babylon Lite once per frame.
 
 #### Implements
 
-- [`System`](#system)
+- [`System`](#system-1)
 
 #### Properties
 
@@ -47833,7 +54648,7 @@ The name diagnostics and error reports use.
 
 ###### Implementation of
 
-[`System`](#system).[`name`](#name-51)
+[`System`](#system-1).[`name`](#name-65)
 
 #### Methods
 
@@ -47847,7 +54662,7 @@ Connects the scene hook to a new world.
 
 ###### world
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The new world.
 
@@ -47863,7 +54678,7 @@ without ever starting a loop would otherwise never see its `settings.twoD` block
 
 ###### Implementation of
 
-[`System`](#system).[`onWorldCreated`](#onworldcreated)
+[`System`](#system-1).[`onWorldCreated`](#onworldcreated)
 
 ##### onWorldDisposed()
 
@@ -47875,7 +54690,7 @@ Drops every layer when the world goes away.
 
 ###### \_world
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world being disposed.
 
@@ -47885,7 +54700,7 @@ The world being disposed.
 
 ###### Implementation of
 
-[`System`](#system).[`onWorldDisposed`](#onworlddisposed)
+[`System`](#system-1).[`onWorldDisposed`](#onworlddisposed)
 
 ##### update()
 
@@ -47907,7 +54722,7 @@ The world, clock, phase, and delta.
 
 ###### Implementation of
 
-[`System`](#system).[`update`](#update-11)
+[`System`](#system-1).[`update`](#update-14)
 
 ***
 
@@ -48411,7 +55226,7 @@ Projects world anchors and re-shapes text once per frame.
 
 #### Implements
 
-- [`System`](#system)
+- [`System`](#system-1)
 
 #### Properties
 
@@ -48423,7 +55238,7 @@ The name diagnostics and error reports use.
 
 ###### Implementation of
 
-[`System`](#system).[`name`](#name-51)
+[`System`](#system-1).[`name`](#name-65)
 
 #### Methods
 
@@ -48437,7 +55252,7 @@ Builds the overlay, now that the engine and its canvas exist.
 
 ###### \_world
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The new world, which the overlay does not need.
 
@@ -48453,7 +55268,7 @@ headless tool never does. `@ignifx/2d` uses the same hook for the same reason.
 
 ###### Implementation of
 
-[`System`](#system).[`onWorldCreated`](#onworldcreated)
+[`System`](#system-1).[`onWorldCreated`](#onworldcreated)
 
 ##### update()
 
@@ -48475,7 +55290,7 @@ The world, clock, phase, and delta.
 
 ###### Implementation of
 
-[`System`](#system).[`update`](#update-11)
+[`System`](#system-1).[`update`](#update-14)
 
 ***
 
@@ -52095,7 +58910,7 @@ Builds an empty virtual device.
 
 ###### Overrides
 
-[`InputDevice`](#inputdevice).[`constructor`](#constructor-49)
+[`InputDevice`](#inputdevice).[`constructor`](#constructor-52)
 
 #### Properties
 
@@ -52991,7 +59806,7 @@ The app.
 
 > **get** **isDisposed**(): `boolean`
 
-`true` once [World.dispose](#dispose-28) has run.
+`true` once [World.dispose](#dispose-34) has run.
 
 ###### Returns
 
@@ -53153,13 +59968,13 @@ The live scene list.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world itself; `WorldHost` names it so entities can reach it.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 This world.
 
@@ -53717,7 +60532,7 @@ Whether the element shrinks with distance.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The declarative fields (ADR-0004).
 
@@ -53904,13 +60719,13 @@ The placement; `visible` is `false` before the first sync.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
@@ -53940,13 +60755,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
@@ -54143,7 +60958,7 @@ Builds a sign with the schema's defaults.
 
 ###### Overrides
 
-[`TextComponent`](#abstract-textcomponent).[`constructor`](#constructor-92)
+[`TextComponent`](#abstract-textcomponent).[`constructor`](#constructor-108)
 
 #### Properties
 
@@ -54183,7 +60998,7 @@ The colour every glyph starts with.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`color`](#color-9)
+[`TextComponent`](#abstract-textcomponent).[`color`](#color-19)
 
 ##### font
 
@@ -54259,7 +61074,7 @@ How many pixels of laid-out text span one world metre.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The declarative fields (ADR-0004).
 
@@ -54297,7 +61112,7 @@ The app.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`app`](#app-51)
+[`TextComponent`](#abstract-textcomponent).[`app`](#app-56)
 
 ##### enabled
 
@@ -54332,7 +61147,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`enabled`](#enabled-61)
+[`TextComponent`](#abstract-textcomponent).[`enabled`](#enabled-71)
 
 ##### entity
 
@@ -54350,7 +61165,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`entity`](#entity-54)
+[`TextComponent`](#abstract-textcomponent).[`entity`](#entity-59)
 
 ##### handle
 
@@ -54368,7 +61183,7 @@ The handle.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`handle`](#handle-47)
+[`TextComponent`](#abstract-textcomponent).[`handle`](#handle-52)
 
 ##### isDestroyed
 
@@ -54388,7 +61203,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`isDestroyed`](#isdestroyed-48)
+[`TextComponent`](#abstract-textcomponent).[`isDestroyed`](#isdestroyed-53)
 
 ##### isEnabledInHierarchy
 
@@ -54406,7 +61221,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`isEnabledInHierarchy`](#isenabledinhierarchy-46)
+[`TextComponent`](#abstract-textcomponent).[`isEnabledInHierarchy`](#isenabledinhierarchy-51)
 
 ##### lite
 
@@ -54485,25 +61300,25 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`onDestroyed`](#ondestroyed-48)
+[`TextComponent`](#abstract-textcomponent).[`onDestroyed`](#ondestroyed-53)
 
 ##### transform
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`transform`](#transform-48)
+[`TextComponent`](#abstract-textcomponent).[`transform`](#transform-53)
 
 ##### uid
 
@@ -54521,25 +61336,25 @@ The identifier.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`uid`](#uid-51)
+[`TextComponent`](#abstract-textcomponent).[`uid`](#uid-56)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`world`](#world-51)
+[`TextComponent`](#abstract-textcomponent).[`world`](#world-56)
 
 #### Methods
 
@@ -54592,7 +61407,7 @@ class Spinner extends Component.define({
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`define`](#define-46)
+[`TextComponent`](#abstract-textcomponent).[`define`](#define-51)
 
 ##### destroy()
 
@@ -54608,7 +61423,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`destroy`](#destroy-47)
+[`TextComponent`](#abstract-textcomponent).[`destroy`](#destroy-52)
 
 ##### getComponent()
 
@@ -54640,7 +61455,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`getComponent`](#getcomponent-47)
+[`TextComponent`](#abstract-textcomponent).[`getComponent`](#getcomponent-52)
 
 ##### onDetach()
 
@@ -54691,7 +61506,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`requireComponent`](#requirecomponent-47)
+[`TextComponent`](#abstract-textcomponent).[`requireComponent`](#requirecomponent-52)
 
 ##### resolveText()
 
@@ -54754,7 +61569,7 @@ Builds a floating label with the schema's defaults.
 
 ###### Overrides
 
-[`TextComponent`](#abstract-textcomponent).[`constructor`](#constructor-92)
+[`TextComponent`](#abstract-textcomponent).[`constructor`](#constructor-108)
 
 #### Properties
 
@@ -54782,7 +61597,7 @@ The colour every glyph starts with.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`color`](#color-9)
+[`TextComponent`](#abstract-textcomponent).[`color`](#color-19)
 
 ##### font
 
@@ -54870,7 +61685,7 @@ Which point of the block sits on the projected position.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-41)
+> `static` **schema**: [`Schema`](#schema-44)
 
 The declarative fields (ADR-0004).
 
@@ -54914,7 +61729,7 @@ The app.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`app`](#app-51)
+[`TextComponent`](#abstract-textcomponent).[`app`](#app-56)
 
 ##### enabled
 
@@ -54949,7 +61764,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`enabled`](#enabled-61)
+[`TextComponent`](#abstract-textcomponent).[`enabled`](#enabled-71)
 
 ##### entity
 
@@ -54967,7 +61782,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`entity`](#entity-54)
+[`TextComponent`](#abstract-textcomponent).[`entity`](#entity-59)
 
 ##### handle
 
@@ -54985,7 +61800,7 @@ The handle.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`handle`](#handle-47)
+[`TextComponent`](#abstract-textcomponent).[`handle`](#handle-52)
 
 ##### isDestroyed
 
@@ -55005,7 +61820,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`isDestroyed`](#isdestroyed-48)
+[`TextComponent`](#abstract-textcomponent).[`isDestroyed`](#isdestroyed-53)
 
 ##### isEnabledInHierarchy
 
@@ -55023,7 +61838,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`isEnabledInHierarchy`](#isenabledinhierarchy-46)
+[`TextComponent`](#abstract-textcomponent).[`isEnabledInHierarchy`](#isenabledinhierarchy-51)
 
 ##### lite
 
@@ -55102,25 +61917,25 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`onDestroyed`](#ondestroyed-48)
+[`TextComponent`](#abstract-textcomponent).[`onDestroyed`](#ondestroyed-53)
 
 ##### transform
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-54)
+> **get** **transform**(): [`Transform`](#transform-59)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-54)
+[`Transform`](#transform-59)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`transform`](#transform-48)
+[`TextComponent`](#abstract-textcomponent).[`transform`](#transform-53)
 
 ##### uid
 
@@ -55138,25 +61953,25 @@ The identifier.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`uid`](#uid-51)
+[`TextComponent`](#abstract-textcomponent).[`uid`](#uid-56)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-59)
+> **get** **world**(): [`World`](#world-64)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`world`](#world-51)
+[`TextComponent`](#abstract-textcomponent).[`world`](#world-56)
 
 #### Methods
 
@@ -55209,7 +62024,7 @@ class Spinner extends Component.define({
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`define`](#define-46)
+[`TextComponent`](#abstract-textcomponent).[`define`](#define-51)
 
 ##### destroy()
 
@@ -55225,7 +62040,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`destroy`](#destroy-47)
+[`TextComponent`](#abstract-textcomponent).[`destroy`](#destroy-52)
 
 ##### getComponent()
 
@@ -55257,7 +62072,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`getComponent`](#getcomponent-47)
+[`TextComponent`](#abstract-textcomponent).[`getComponent`](#getcomponent-52)
 
 ##### onDetach()
 
@@ -55308,7 +62123,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`requireComponent`](#requirecomponent-47)
+[`TextComponent`](#abstract-textcomponent).[`requireComponent`](#requirecomponent-52)
 
 ##### resolveText()
 
@@ -55542,7 +62357,7 @@ Advances every animated tile by one frame's worth of scaled time.
 
 ###### world
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world holding the tilemaps.
 
@@ -56069,6 +62884,13 @@ the world, and the lazily loaded Recast module behind both.
 
 Every failure the engine caught at a boundary rather than rethrowing.
 
+##### particles
+
+> `readonly` **particles**: [`ParticlesService`](#particlesservice)
+
+Particles (`docs/plan/2026-09-terrain-particles-shaders.md` §4.3): the budget, the quality
+multiplier, the gravity, the counters, and the live list of `ParticleSystem` components.
+
 ##### physics
 
 > `readonly` **physics**: [`PhysicsService`](#physicsservice)
@@ -56090,7 +62912,7 @@ Where the app is running, what it is running on, and what its WebGPU adapter off
 
 ##### renderer
 
-> `readonly` **renderer**: [`Renderer`](#renderer-2)
+> `readonly` **renderer**: [`Renderer`](#renderer-4)
 
 Surface sizing, material warm-up, GPU picking, screenshots, and the render diagnostics
 (`docs/architecture/07-rendering.md` §1, §3, §5).
@@ -56109,16 +62931,16 @@ Resolved project settings.
 
 ##### storage
 
-> `readonly` **storage**: [`Storage`](#storage-4)
+> `readonly` **storage**: [`Storage`](#storage-5)
 
 The asynchronous key-value store settings, save games, and input rebindings live in
 (`docs/architecture/14-platform-electron.md` §2). The backend is chosen from
-[PlatformInfo.kind](#kind-32) — IndexedDB in a browser, memory under Node — unless `createApp` was
+[PlatformInfo.kind](#kind-34) — IndexedDB in a browser, memory under Node — unless `createApp` was
 given one.
 
 ##### time
 
-> `readonly` **time**: [`Time`](#time-5)
+> `readonly` **time**: [`Time`](#time-10)
 
 The clock.
 
@@ -56151,7 +62973,7 @@ The `@ignifx/core` version this app was built from.
 
 ##### world
 
-> `readonly` **world**: [`World`](#world-59)
+> `readonly` **world**: [`World`](#world-64)
 
 The running simulation.
 
@@ -59054,6 +65876,38 @@ The world-space contact point.
 
 ***
 
+### ChunkGeometry
+
+The vertex arrays of one chunk at one level of detail.
+
+#### Properties
+
+##### indices
+
+> `readonly` **indices**: `Uint32Array`
+
+Three indices per triangle.
+
+##### normals
+
+> `readonly` **normals**: `Float32Array`
+
+Three floats per vertex.
+
+##### positions
+
+> `readonly` **positions**: `Float32Array`
+
+Three floats per vertex, in the terrain's local frame.
+
+##### uvs
+
+> `readonly` **uvs**: `Float32Array`
+
+Two floats per vertex: the terrain-wide `0..1` coordinate.
+
+***
+
 ### ClipWeight
 
 One clip's contribution to the pose this frame.
@@ -59914,6 +66768,26 @@ Where the control's components start in the device's value array.
 
 ***
 
+### ControlMaps
+
+The control maps of a terrain, on the CPU.
+
+#### Properties
+
+##### maps
+
+> `readonly` **maps**: readonly `Uint8Array`\<`ArrayBufferLike`\>[]
+
+One RGBA8 image per four layers, `size * size * 4` bytes each.
+
+##### size
+
+> `readonly` **size**: `number`
+
+Texels per side: `resolution - 1`.
+
+***
+
 ### ControlRef
 
 One control of one device, as a binding holds it after resolution.
@@ -60386,6 +67260,82 @@ The curve's keys, ordered by time.
 
 ***
 
+### CustomEffectInit
+
+What [customEffect](#customeffect) accepts: a shader and whichever fields differ from the defaults.
+
+#### Properties
+
+##### enabled?
+
+> `readonly` `optional` **enabled?**: `boolean`
+
+Whether the effect runs. Defaults to `true`.
+
+##### order?
+
+> `readonly` `optional` **order?**: `number`
+
+Position in the chain. Defaults to `10`, which is after the built-ins' defaults.
+
+##### shader
+
+> `readonly` **shader**: [`AssetHandle`](#assethandle)\<[`ShaderAsset`](#shaderasset)\> \| `null`
+
+The `// @ignifx post` shader.
+
+##### textures?
+
+> `readonly` `optional` **textures?**: `Readonly`\<`Record`\<`string`, [`AssetHandle`](#assethandle)\<[`TextureAsset`](#textureasset)\> \| `null`\>\>
+
+Textures for the file's declared samplers.
+
+##### values?
+
+> `readonly` `optional` **values?**: `Readonly`\<`Record`\<`string`, `number` \| readonly `number`[]\>\>
+
+Overrides of the file's declared uniform defaults.
+
+***
+
+### CustomEffectSettings
+
+One custom effect on a `PostProcessStack` (`docs/architecture/07-rendering.md` §2.7).
+
+#### Properties
+
+##### enabled
+
+> **enabled**: `boolean`
+
+Whether the effect runs.
+
+##### order
+
+> **order**: `number`
+
+Position in the chain; lower runs first, alongside bloom's and SMAA's `order`.
+
+##### shader
+
+> **shader**: [`AssetHandle`](#assethandle)\<[`ShaderAsset`](#shaderasset)\> \| `null`
+
+The `// @ignifx post` shader; `null` records nothing.
+
+##### textures
+
+> **textures**: `Record`\<`string`, [`AssetHandle`](#assethandle)\<[`TextureAsset`](#textureasset)\> \| `null`\>
+
+Textures for the file's declared samplers, by declared name.
+
+##### values
+
+> **values**: `Record`\<`string`, `number` \| readonly `number`[]\>
+
+Overrides of the file's declared uniform defaults, by declared name.
+
+***
+
 ### CustomFieldCodec
 
 The hand-written encoder and decoder behind a `custom()` field. The codec owns both the default
@@ -60520,6 +67470,44 @@ Height along Y, in metres.
 > `readonly` `optional` **tessellation?**: `number`
 
 Radial segment count.
+
+***
+
+### DecodedPng
+
+A decoded PNG: samples in scanline order, one row after another, `channels` per pixel.
+
+#### Properties
+
+##### bitDepth
+
+> `readonly` **bitDepth**: `8` \| `16`
+
+Bits per sample. Indexed images decode to 8.
+
+##### channels
+
+> `readonly` **channels**: `1` \| `2` \| `3` \| `4`
+
+Samples per pixel: 1 grey, 2 grey+alpha, 3 RGB, 4 RGBA.
+
+##### data
+
+> `readonly` **data**: `Uint8Array`\<`ArrayBufferLike`\> \| `Uint16Array`\<`ArrayBufferLike`\>
+
+`width * height * channels` samples; a `Uint16Array` for 16-bit images.
+
+##### height
+
+> `readonly` **height**: `number`
+
+Height in pixels.
+
+##### width
+
+> `readonly` **width**: `number`
+
+Width in pixels.
 
 ***
 
@@ -62267,7 +69255,7 @@ The section name as it appears in `ignifx.config.ts`.
 
 ###### schema
 
-[`Schema`](#schema-41)
+[`Schema`](#schema-44)
 
 The schema the section is validated against.
 
@@ -62291,7 +69279,7 @@ Registers a system in a phase.
 
 ###### system
 
-[`System`](#system)
+[`System`](#system-1)
 
 The system.
 
@@ -62598,6 +69586,102 @@ Options accepted by [createFileStorageBackend](#createfilestoragebackend).
 The root directory. It is created on first write, together with every namespace directory
 under it. Under Electron this is `app.getPath("userData")`; in a test it is a temporary
 directory.
+
+***
+
+### FoliageMaterialInput
+
+What [foliageMaterialDefinition](#foliagematerialdefinition) accepts.
+
+#### Properties
+
+##### albedo
+
+> `readonly` **albedo**: [`AssetHandle`](#assethandle)\<[`TextureAsset`](#textureasset)\>
+
+The albedo texture, with the alpha the cutoff tests.
+
+##### alphaCutoff?
+
+> `readonly` `optional` **alphaCutoff?**: `number`
+
+The alpha below which a fragment is discarded. Defaults to `0.5`.
+
+##### doubleSided?
+
+> `readonly` `optional` **doubleSided?**: `boolean`
+
+Whether both faces draw. Defaults to `true`, and is the only option: the shader declares
+`cull none` and lights two-sided, because a grass card seen from behind is still grass.
+
+##### instanced?
+
+> `readonly` `optional` **instanced?**: `boolean`
+
+Whether the material draws an `InstancedMeshRenderer`. Defaults to `true`, which is what a
+`TerrainScatter` needs; a plain `MeshRenderer` needs `false`, because the instanced vertex
+stage reads `world0..world3` and a mesh without thin instances has none.
+
+##### name?
+
+> `readonly` `optional` **name?**: `string`
+
+A human-readable name. Defaults to `foliage`.
+
+##### tint?
+
+> `readonly` `optional` **tint?**: [`ColorLike`](#colorlike)
+
+An sRGB tint multiplied with the albedo. Defaults to white.
+
+##### wind?
+
+> `readonly` `optional` **wind?**: \{ `frequency?`: `number`; `height?`: `number`; `strength?`: `number`; \} \| `null`
+
+The wind. Omit it for `strength: 0.25, frequency: 1.2, height: 1`; `null` switches it off.
+
+###### Union Members
+
+###### Type Literal
+
+\{ `frequency?`: `number`; `height?`: `number`; `strength?`: `number`; \}
+
+###### frequency?
+
+> `readonly` `optional` **frequency?**: `number`
+
+Sway cycles per second.
+
+###### height?
+
+> `readonly` `optional` **height?**: `number`
+
+The height above the mesh origin at which the lean reaches `strength`.
+
+###### strength?
+
+> `readonly` `optional` **strength?**: `number`
+
+Metres of lean at `height`.
+
+***
+
+`null`
+
+***
+
+### FoliageShaderOptions
+
+What [foliageShaderSource](#foliageshadersource) bakes into the file.
+
+#### Properties
+
+##### instanced?
+
+> `readonly` `optional` **instanced?**: `boolean`
+
+Whether the material draws thin instances — an `InstancedMeshRenderer` — and so composes
+`world0..world3`. Defaults to `true`. A material for a plain `MeshRenderer` needs `false`.
 
 ***
 
@@ -64351,6 +71435,79 @@ Defaults to `false`, which is Unity's behaviour and what most games want.
 
 ***
 
+### InstancedMeshLod
+
+The `lod` field of an [InstancedMeshRenderer](#instancedmeshrenderer): a coarser mesh for far instances.
+
+#### Remarks
+
+Mutable, because a schema `record()` field is a plain object a script edits in place — and
+`distance` and `band` are meant to be edited, which Lite re-applies live. Replacing `mesh` after
+the scene is registered is refused with `IGX-0717`.
+
+#### Properties
+
+##### band
+
+> **band**: `number`
+
+The width of the per-instance dither window centred on `distance`.
+
+##### distance
+
+> **distance**: `number`
+
+The camera distance, in world units, at which an instance switches to the coarse mesh.
+
+##### mesh
+
+> **mesh**: [`AssetHandle`](#assethandle)\<[`MeshAsset`](#meshasset)\> \| `null`
+
+The coarse mesh drawn beyond `distance`.
+
+***
+
+### InstancedMeshRendererLiteHandles
+
+The Babylon Lite meshes an [InstancedMeshRenderer](#instancedmeshrenderer) draws. Unstable escape hatch
+(`docs/architecture/00-overview.md` §3).
+
+#### Properties
+
+##### lodMesh
+
+> `readonly` **lodMesh**: `Mesh` \| `null`
+
+The LOD partner, or `null` when the renderer declares none.
+
+##### mesh
+
+> `readonly` **mesh**: `Mesh` \| `null`
+
+The instanced mesh, or `null` when there is nothing to draw.
+
+***
+
+### InstanceRange
+
+The instance range [InstancedMeshRenderer.markDirty](#markdirty) is told about.
+
+#### Properties
+
+##### count
+
+> `readonly` **count**: `number`
+
+How many instances moved.
+
+##### start
+
+> `readonly` **start**: `number`
+
+The first instance index that moved.
+
+***
+
 ### InstantiateOptions
 
 Options accepted by [World.instantiate](#instantiate-1) and [World.instantiateAsync](#instantiateasync)
@@ -65381,6 +72538,32 @@ The record to write.
 
 ***
 
+### LookupRow
+
+One row of the lookup texture: which row it is and how its bytes map back to values.
+
+#### Properties
+
+##### index
+
+> `readonly` **index**: `number`
+
+The row index in the texture.
+
+##### max
+
+> `readonly` **max**: `number`
+
+The value a byte of `255` decodes to.
+
+##### min
+
+> `readonly` **min**: `number`
+
+The value a byte of `0` decodes to.
+
+***
+
 ### ManualClock
 
 A clock that only moves when a test moves it.
@@ -65514,6 +72697,108 @@ The Lite material. Present in headless mode too: a material is plain data.
 
 ***
 
+### MaterialPluginDefinition
+
+**`Beta`**
+
+What a raw material plugin declares: a name, the values and textures it wants beside the host
+material's own, and the WGSL it injects.
+
+#### Properties
+
+##### code
+
+> `readonly` **code**: `Readonly`\<`Partial`\<`Record`\<[`LiteMaterialPluginPoint`](#litematerialpluginpoint), `string`\>\>\>
+
+**`Beta`**
+
+The WGSL to inject, by point. Vertex points take statements; there are no vertex helpers.
+
+##### name
+
+> `readonly` **name**: `string`
+
+**`Beta`**
+
+The plugin's identity. It is part of Lite's pipeline cache key, so it must be stable.
+
+##### priority
+
+> `readonly` **priority**: `number`
+
+**`Beta`**
+
+Lower runs first; Lite's own default is [MATERIAL\_PLUGIN\_DEFAULT\_PRIORITY](#material_plugin_default_priority).
+
+##### textures
+
+> `readonly` **textures**: readonly [`ShaderTextureDeclaration`](#shadertexturedeclaration)[]
+
+**`Beta`**
+
+The `texture`/`sampler` pairs added to the host material's bind group. Fragment stage only.
+
+##### uniforms
+
+> `readonly` **uniforms**: readonly [`ShaderUniformDeclaration`](#shaderuniformdeclaration)[]
+
+**`Beta`**
+
+The uniform fields appended to the host material's uniform block. Fragment stage only.
+
+***
+
+### MaterialPluginDefinitionInit
+
+**`Beta`**
+
+The properties [defineMaterialPlugin](#definematerialplugin) accepts; everything but `name` and `code` has a
+default.
+
+#### Properties
+
+##### code
+
+> `readonly` **code**: `Readonly`\<`Partial`\<`Record`\<[`LiteMaterialPluginPoint`](#litematerialpluginpoint), `string`\>\>\>
+
+**`Beta`**
+
+The WGSL to inject, by point.
+
+##### name
+
+> `readonly` **name**: `string`
+
+**`Beta`**
+
+The plugin's identity.
+
+##### priority?
+
+> `readonly` `optional` **priority?**: `number`
+
+**`Beta`**
+
+Lower runs first. Defaults to [MATERIAL\_PLUGIN\_DEFAULT\_PRIORITY](#material_plugin_default_priority).
+
+##### textures?
+
+> `readonly` `optional` **textures?**: readonly [`ShaderTextureDeclaration`](#shadertexturedeclaration)[]
+
+**`Beta`**
+
+The samplers. Defaults to none.
+
+##### uniforms?
+
+> `readonly` `optional` **uniforms?**: readonly [`ShaderUniformDeclaration`](#shaderuniformdeclaration)[]
+
+**`Beta`**
+
+The uniform fields. Defaults to none.
+
+***
+
 ### MemorySink
 
 A [LogSink](#logsink-2) that keeps the most recent records in a fixed-size ring buffer. Used by the
@@ -65639,7 +72924,7 @@ Whether the row can be selected. A row that answers `false` is drawn dimmed and 
 
 ###### Inherited from
 
-[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-34)
+[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-37)
 
 ##### id
 
@@ -65703,7 +72988,7 @@ Whether the row can be selected. A row that answers `false` is drawn dimmed and 
 
 ###### Inherited from
 
-[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-34)
+[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-37)
 
 ##### id
 
@@ -65799,7 +73084,7 @@ Whether the row can be selected. A row that answers `false` is drawn dimmed and 
 
 ###### Inherited from
 
-[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-34)
+[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-37)
 
 ##### format?
 
@@ -66090,7 +73375,7 @@ Whether the row can be selected. A row that answers `false` is drawn dimmed and 
 
 ###### Inherited from
 
-[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-34)
+[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-37)
 
 ##### format?
 
@@ -66267,7 +73552,7 @@ Whether the row can be selected. A row that answers `false` is drawn dimmed and 
 
 ###### Inherited from
 
-[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-34)
+[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-37)
 
 ##### format?
 
@@ -66375,9 +73660,19 @@ Raw vertex data for [MeshAsset.fromData](#fromdata).
 #### Remarks
 
 Lite keeps references to these arrays rather than copying them — they are what its CPU ray pick
-and its bounds read (`lib/mesh/mesh-factories.js`) — so a caller must not mutate them afterwards.
+and its bounds read (`lib/mesh/mesh-factories.js`). Mutating one behind Lite's back changes what
+a pick reports without changing what the GPU draws; the sanctioned way to change geometry after
+the fact is [MeshAsset.updatePositions](#updatepositions) and its three siblings, which re-upload, keep this
+copy in step, and re-fit the bounds.
 
 #### Properties
+
+##### colors?
+
+> `readonly` `optional` **colors?**: `Float32Array`\<`ArrayBufferLike`\>
+
+Four floats per vertex, linear RGBA, or omitted. A material has to be one that reads the colour
+attribute; set `hasVertexAlpha` on the Lite mesh if the alpha is meant to blend.
 
 ##### indices
 
@@ -66397,11 +73692,24 @@ Three floats per vertex, one normal each.
 
 Three floats per vertex.
 
+##### tangents?
+
+> `readonly` `optional` **tangents?**: `Float32Array`\<`ArrayBufferLike`\>
+
+Four floats per vertex — `xyz` plus a handedness `w` — or omitted. A normal map needs them.
+
 ##### uvs?
 
 > `readonly` `optional` **uvs?**: `Float32Array`\<`ArrayBufferLike`\>
 
 Two floats per vertex, or omitted for a mesh with no texture coordinates.
+
+##### uvs2?
+
+> `readonly` `optional` **uvs2?**: `Float32Array`\<`ArrayBufferLike`\>
+
+Two floats per vertex for the second UV set (`uv2` in a shader), or omitted. Lightmaps, baked
+ambient occlusion, and the parent-LOD height a terrain morph reads all ride here.
 
 ***
 
@@ -66884,7 +74192,7 @@ How long to play for, in seconds; `0` plays to the end of the clip.
 
 ###### Inherited from
 
-[`PlayOptions`](#playoptions).[`duration`](#duration-6)
+[`PlayOptions`](#playoptions).[`duration`](#duration-8)
 
 ##### loop?
 
@@ -66989,6 +74297,1421 @@ Which device of the family, zero-based. `0` when the path carries no `{index}`.
 
 ***
 
+### ParticleBurst
+
+One burst: `count` particles at `time` into the cycle, repeated `cycles` times every `interval`
+seconds with `probability`.
+
+#### Properties
+
+##### count
+
+> `readonly` **count**: [`ScalarValue`](#scalarvalue)
+
+How many particles; a random count is rolled per firing.
+
+##### cycles
+
+> `readonly` **cycles**: `number`
+
+How many times the burst fires per cycle; `0` means until the cycle ends.
+
+##### interval
+
+> `readonly` **interval**: `number`
+
+Seconds between firings.
+
+##### probability
+
+> `readonly` **probability**: `number`
+
+The chance a firing happens, `0`–`1`.
+
+##### time
+
+> `readonly` **time**: `number`
+
+Seconds into the cycle.
+
+***
+
+### ParticleBurstInput
+
+One burst as authored.
+
+#### Properties
+
+##### count?
+
+> `readonly` `optional` **count?**: [`ScalarValueInput`](#scalarvalueinput)
+
+How many particles. Defaults to `10`.
+
+##### cycles?
+
+> `readonly` `optional` **cycles?**: `number`
+
+Firings per cycle; `0` means until the cycle ends. Defaults to `1`.
+
+##### interval?
+
+> `readonly` `optional` **interval?**: `number`
+
+Seconds between firings. Defaults to `0.1`.
+
+##### probability?
+
+> `readonly` `optional` **probability?**: `number`
+
+The chance a firing happens. Defaults to `1`.
+
+##### time?
+
+> `readonly` `optional` **time?**: `number`
+
+Seconds into the cycle. Defaults to `0`.
+
+***
+
+### ParticleDefinition
+
+The parsed and baked `.particles.json` document.
+
+#### Properties
+
+##### emission
+
+> `readonly` **emission**: [`ParticleEmission`](#particleemission)
+
+Rates and bursts.
+
+##### forces
+
+> `readonly` **forces**: [`ParticleForces`](#particleforces)
+
+What acts on it.
+
+##### format
+
+> `readonly` **format**: `"ignifx.particles"`
+
+Always `"ignifx.particles"`.
+
+##### formatVersion
+
+> `readonly` **formatVersion**: `number`
+
+Always `1` in this build.
+
+##### lookup
+
+> `readonly` **lookup**: [`ParticleLookup`](#particlelookup)
+
+The baked lookup texture.
+
+##### main
+
+> `readonly` **main**: [`ParticleMain`](#particlemain)
+
+Capacity, timing, space, and playback.
+
+##### overLifetime
+
+> `readonly` **overLifetime**: [`ParticleOverLifetime`](#particleoverlifetime)
+
+How it changes over its life.
+
+##### renderer
+
+> `readonly` **renderer**: [`ParticleRenderer`](#particlerenderer)
+
+How it is drawn.
+
+##### shape
+
+> `readonly` **shape**: [`ParticleShape`](#particleshape)
+
+Where particles start and which way they go.
+
+##### start
+
+> `readonly` **start**: [`ParticleStart`](#particlestart)
+
+What a particle is born with.
+
+***
+
+### ParticleDefinitionInput
+
+What [defineParticles](#defineparticles) accepts: the document as authored, every key optional. Unknown keys
+are reported, because a misspelled module silently doing nothing is the worst outcome for an
+effect file.
+
+#### Properties
+
+##### emission?
+
+> `readonly` `optional` **emission?**: [`ParticleEmissionInput`](#particleemissioninput)
+
+The `emission` module.
+
+##### forces?
+
+> `readonly` `optional` **forces?**: [`ParticleForcesInput`](#particleforcesinput)
+
+The `forces` module.
+
+##### format?
+
+> `readonly` `optional` **format?**: `string`
+
+Always `"ignifx.particles"` when present.
+
+##### formatVersion?
+
+> `readonly` `optional` **formatVersion?**: `number`
+
+The document version.
+
+##### main?
+
+> `readonly` `optional` **main?**: [`ParticleMainInput`](#particlemaininput)
+
+The `main` module.
+
+##### overLifetime?
+
+> `readonly` `optional` **overLifetime?**: [`ParticleOverLifetimeInput`](#particleoverlifetimeinput)
+
+The `overLifetime` module.
+
+##### renderer?
+
+> `readonly` `optional` **renderer?**: [`ParticleRendererInput`](#particlerendererinput)
+
+The `renderer` module.
+
+##### shape?
+
+> `readonly` `optional` **shape?**: [`ParticleShapeInput`](#particleshapeinput)
+
+The `shape` module.
+
+##### start?
+
+> `readonly` `optional` **start?**: [`ParticleStartInput`](#particlestartinput)
+
+The `start` module.
+
+***
+
+### ParticleDefinitionResources
+
+The GPU-facing resources one definition's systems share.
+
+#### Properties
+
+##### lut
+
+> `readonly` **lut**: [`AssetHandle`](#assethandle)\<[`TextureAsset`](#textureasset)\>
+
+The baked lookup texture.
+
+##### materialDefinition
+
+> `readonly` **materialDefinition**: [`ShaderMaterialDefinition`](#shadermaterialdefinition-3)
+
+The material every system builds its own copy from.
+
+##### mesh
+
+> `readonly` **mesh**: [`AssetHandle`](#assethandle)\<[`MeshAsset`](#meshasset)\>
+
+The quad, or the primitive a `"mesh"` renderer draws.
+
+##### shader
+
+> `readonly` **shader**: [`AssetHandle`](#assethandle)\<[`ShaderAsset`](#shaderasset)\>
+
+The program's asset, loading until the shader adapter is in place.
+
+##### sheet
+
+> `readonly` **sheet**: [`AssetHandle`](#assethandle)\<[`TextureAsset`](#textureasset)\> \| `null`
+
+The renderer's texture, or `null` for the procedural disc.
+
+##### source
+
+> `readonly` **source**: `string`
+
+The generated program.
+
+##### textures
+
+> `readonly` **textures**: readonly [`AssetHandle`](#assethandle)\<[`TextureAsset`](#textureasset)\>[]
+
+The texture handles in the order `materialDefinition.textures` names them.
+
+***
+
+### ParticleEmission
+
+The `emission` module.
+
+#### Properties
+
+##### bursts
+
+> `readonly` **bursts**: readonly [`ParticleBurst`](#particleburst)[]
+
+The bursts, in declaration order.
+
+##### rateOverDistance
+
+> `readonly` **rateOverDistance**: `number`
+
+Particles per metre the emitter moves.
+
+##### rateOverTime
+
+> `readonly` **rateOverTime**: `number`
+
+Particles per second while the cycle runs.
+
+***
+
+### ParticleEmissionInput
+
+The `emission` module as authored.
+
+#### Properties
+
+##### bursts?
+
+> `readonly` `optional` **bursts?**: readonly [`ParticleBurstInput`](#particleburstinput)[]
+
+The bursts. Defaults to none.
+
+##### rateOverDistance?
+
+> `readonly` `optional` **rateOverDistance?**: `number`
+
+Particles per metre moved. Defaults to `0`.
+
+##### rateOverTime?
+
+> `readonly` `optional` **rateOverTime?**: `number`
+
+Particles per second. Defaults to `10`.
+
+***
+
+### ParticleEmitterCoreOptions
+
+**`Beta`**
+
+How [ParticleEmitterCore](#particleemittercore) is built.
+
+#### Properties
+
+##### capacity
+
+> `readonly` **capacity**: `number`
+
+**`Beta`**
+
+The ring capacity, after the app's budget clamped it.
+
+##### definition
+
+> `readonly` **definition**: [`ParticleDefinition`](#particledefinition-3)
+
+**`Beta`**
+
+The definition to emit.
+
+##### seed
+
+> `readonly` **seed**: `number`
+
+**`Beta`**
+
+The seed; `0` picks a random one on `play()`.
+
+***
+
+### ParticleEvaluationInputs
+
+**`Beta`**
+
+The per-system inputs the evaluator needs beyond the definition.
+
+#### Properties
+
+##### definition
+
+> `readonly` **definition**: [`ParticleDefinition`](#particledefinition-3)
+
+**`Beta`**
+
+The definition every record was written from.
+
+##### emitterWorld
+
+> `readonly` **emitterWorld**: `Float32Array`
+
+**`Beta`**
+
+The emitter's current world matrix, for a `"local"` definition; ignored for `"world"`.
+
+##### gravity
+
+> `readonly` **gravity**: `Float32Array`
+
+**`Beta`**
+
+The effective gravity plus constant force, in the simulation space.
+
+##### orbitCenter
+
+> `readonly` **orbitCenter**: `Float32Array`
+
+**`Beta`**
+
+The orbit centre in the simulation space: the origin for `"local"`, the emitter's position for `"world"`.
+
+***
+
+### ParticleForces
+
+The `forces` module.
+
+#### Properties
+
+##### constantForce
+
+> `readonly` **constantForce**: [`Vec3Like`](#vec3like)
+
+A constant acceleration, in metres per second squared, folded into gravity.
+
+##### drag
+
+> `readonly` **drag**: `number`
+
+Linear drag; `0` is none.
+
+##### gravity
+
+> `readonly` **gravity**: [`Vec3Like`](#vec3like) \| `null`
+
+An explicit world gravity, or `null` to use `gravityMultiplier` times the app's gravity.
+
+##### gravityMultiplier
+
+> `readonly` **gravityMultiplier**: `number`
+
+How much of the app's gravity applies when `gravity` is `null`.
+
+##### noise
+
+> `readonly` **noise**: [`ParticleNoise`](#particlenoise) \| `null`
+
+A noise offset, or `null`.
+
+##### orbit
+
+> `readonly` **orbit**: [`ParticleOrbit`](#particleorbit) \| `null`
+
+A rotation about an axis, or `null`.
+
+***
+
+### ParticleForcesInput
+
+The `forces` module as authored.
+
+#### Properties
+
+##### constantForce?
+
+> `readonly` `optional` **constantForce?**: [`Vec3Like`](#vec3like)
+
+Defaults to `(0, 0, 0)`.
+
+##### drag?
+
+> `readonly` `optional` **drag?**: `number`
+
+Defaults to `0`.
+
+##### gravity?
+
+> `readonly` `optional` **gravity?**: [`Vec3Like`](#vec3like) \| `null`
+
+An explicit gravity, or `null`/omitted to scale the app's.
+
+##### gravityMultiplier?
+
+> `readonly` `optional` **gravityMultiplier?**: `number`
+
+Defaults to `0`.
+
+##### noise?
+
+> `readonly` `optional` **noise?**: \{ `frequency?`: `number`; `influenceOverLife?`: [`ScalarValueInput`](#scalarvalueinput); `octaves?`: `number`; `scroll?`: [`Vec3Like`](#vec3like); `strength?`: `number`; \} \| `null`
+
+Defaults to none.
+
+##### orbit?
+
+> `readonly` `optional` **orbit?**: \{ `axis?`: [`Vec3Like`](#vec3like); `speed?`: `number`; \} \| `null`
+
+Defaults to none.
+
+***
+
+### ParticleLookup
+
+The baked lookup texture both evaluators sample: [LOOKUP\_SAMPLES](#lookup_samples) texels wide, RGBA8, one
+row per curve or gradient the definition uses, in the order colour, size, rotation, noise
+influence, sheet frame. The GPU reads the bytes the CPU decodes, to the filter's precision.
+
+#### Properties
+
+##### color
+
+> `readonly` **color**: [`LookupRow`](#lookuprow) \| `null`
+
+The colour-over-life gradient row, or `null`.
+
+##### frame
+
+> `readonly` **frame**: [`LookupRow`](#lookuprow) \| `null`
+
+The frame-over-life row, or `null`.
+
+##### noise
+
+> `readonly` **noise**: [`LookupRow`](#lookuprow) \| `null`
+
+The noise-influence-over-life row, or `null`.
+
+##### pixels
+
+> `readonly` **pixels**: `Uint8Array`
+
+The texels, `rows * LOOKUP_SAMPLES * 4` bytes, top row first.
+
+##### rotation
+
+> `readonly` **rotation**: [`LookupRow`](#lookuprow) \| `null`
+
+The angular-speed-over-life row, or `null`.
+
+##### rows
+
+> `readonly` **rows**: `number`
+
+How many rows the texture has; at least `1`.
+
+##### size
+
+> `readonly` **size**: [`LookupRow`](#lookuprow) \| `null`
+
+The size-over-life row, or `null`. Per-axis sizes use R, G, and B.
+
+***
+
+### ParticleMain
+
+The `main` module: capacity, timing, space, and playback.
+
+#### Properties
+
+##### capacity
+
+> `readonly` **capacity**: `number`
+
+How many spawn records the ring holds. Older records are overwritten, alive or not.
+
+##### duration
+
+> `readonly` **duration**: `number`
+
+How long one emission cycle lasts, in seconds.
+
+##### looping
+
+> `readonly` **looping**: `boolean`
+
+Whether the cycle repeats. A non-looping system stops when the cycle ends and the last particle dies.
+
+##### playOnAwake
+
+> `readonly` **playOnAwake**: `boolean`
+
+Whether a `ParticleSystem` starts playing the first frame it is enabled.
+
+##### prewarm
+
+> `readonly` **prewarm**: `boolean`
+
+Whether `play()` fast-forwards one full cycle first, so a looping effect starts steady.
+
+##### renderOrder
+
+> `readonly` **renderOrder**: `number`
+
+The renderer's sort key within the transparent phase; lower draws first.
+
+##### seed
+
+> `readonly` **seed**: `number`
+
+The emission seed; `0` picks one at random on `play()`. A component's `seed` field overrides it.
+
+##### simulationSpace
+
+> `readonly` **simulationSpace**: `"local"` \| `"world"`
+
+Where positions live.
+
+##### startDelay
+
+> `readonly` **startDelay**: `number`
+
+Seconds after `play()` before emission starts.
+
+##### timeScale
+
+> `readonly` **timeScale**: `number`
+
+A multiplier on the system's own clock.
+
+***
+
+### ParticleMainInput
+
+The `main` module as authored.
+
+#### Properties
+
+##### capacity?
+
+> `readonly` `optional` **capacity?**: `number`
+
+See [ParticleMain.capacity](#capacity-2). Defaults to `1000`.
+
+##### duration?
+
+> `readonly` `optional` **duration?**: `number`
+
+See [ParticleMain.duration](#duration-5). Defaults to `5`.
+
+##### looping?
+
+> `readonly` `optional` **looping?**: `boolean`
+
+See [ParticleMain.looping](#looping). Defaults to `true`.
+
+##### playOnAwake?
+
+> `readonly` `optional` **playOnAwake?**: `boolean`
+
+See [ParticleMain.playOnAwake](#playonawake-2). Defaults to `true`.
+
+##### prewarm?
+
+> `readonly` `optional` **prewarm?**: `boolean`
+
+See [ParticleMain.prewarm](#prewarm). Defaults to `false`.
+
+##### renderOrder?
+
+> `readonly` `optional` **renderOrder?**: `number`
+
+See [ParticleMain.renderOrder](#renderorder-2). Defaults to `0`.
+
+##### seed?
+
+> `readonly` `optional` **seed?**: `number`
+
+See [ParticleMain.seed](#seed-3). Defaults to `0`.
+
+##### simulationSpace?
+
+> `readonly` `optional` **simulationSpace?**: `"local"` \| `"world"`
+
+See [ParticleMain.simulationSpace](#simulationspace). Defaults to `"local"`.
+
+##### startDelay?
+
+> `readonly` `optional` **startDelay?**: `number`
+
+See [ParticleMain.startDelay](#startdelay). Defaults to `0`.
+
+##### timeScale?
+
+> `readonly` `optional` **timeScale?**: `number`
+
+See [ParticleMain.timeScale](#timescale). Defaults to `1`.
+
+***
+
+### ParticleNoise
+
+A positional noise offset sampled at the analytic position.
+
+#### Properties
+
+##### frequency
+
+> `readonly` **frequency**: `number`
+
+How quickly the field varies with position.
+
+##### influenceOverLife
+
+> `readonly` **influenceOverLife**: [`ScalarValue`](#scalarvalue)
+
+A multiplier on `strength` over the particle's life.
+
+##### octaves
+
+> `readonly` **octaves**: `number`
+
+How many octaves are summed, `1` or `2`.
+
+##### scroll
+
+> `readonly` **scroll**: [`Vec3Like`](#vec3like)
+
+How the field drifts with time, in field units per second.
+
+##### strength
+
+> `readonly` **strength**: `number`
+
+The largest offset, in metres.
+
+***
+
+### ParticleOrbit
+
+A rotation about a fixed axis through the emitter.
+
+#### Properties
+
+##### axis
+
+> `readonly` **axis**: [`Vec3Like`](#vec3like)
+
+The axis, normalized at definition time.
+
+##### speed
+
+> `readonly` **speed**: `number`
+
+Degrees per second.
+
+***
+
+### ParticleOverLifetime
+
+The `overLifetime` module.
+
+#### Properties
+
+##### color
+
+> `readonly` **color**: [`ColorValue`](#colorvalue) \| `null`
+
+A colour multiplied onto the start colour over the particle's life, or `null`.
+
+##### rotation
+
+> `readonly` **rotation**: [`ScalarValue`](#scalarvalue) \| `null`
+
+The angular speed, in degrees per second, or `null` for none.
+
+##### size
+
+> `readonly` **size**: [`ScalarValue`](#scalarvalue) \| `null`
+
+A multiplier on the start size (the X axis when `sizeY` or `sizeZ` is set), or `null`.
+
+##### sizeY
+
+> `readonly` **sizeY**: [`ScalarValue`](#scalarvalue) \| `null`
+
+A separate multiplier for the Y axis, or `null` to follow `size`.
+
+##### sizeZ
+
+> `readonly` **sizeZ**: [`ScalarValue`](#scalarvalue) \| `null`
+
+A separate multiplier for the Z axis, or `null` to follow `size`.
+
+***
+
+### ParticleOverLifetimeInput
+
+The `overLifetime` module as authored.
+
+#### Properties
+
+##### color?
+
+> `readonly` `optional` **color?**: [`ColorValueInput`](#colorvalueinput) \| `null`
+
+A gradient, or a constant tint.
+
+##### rotation?
+
+> `readonly` `optional` **rotation?**: [`ScalarValueInput`](#scalarvalueinput) \| `null`
+
+Angular speed in degrees per second.
+
+##### size?
+
+> `readonly` `optional` **size?**: [`ScalarValueInput`](#scalarvalueinput) \| `null`
+
+A curve or constant multiplier.
+
+##### sizeY?
+
+> `readonly` `optional` **sizeY?**: [`ScalarValueInput`](#scalarvalueinput) \| `null`
+
+A separate Y multiplier.
+
+##### sizeZ?
+
+> `readonly` `optional` **sizeZ?**: [`ScalarValueInput`](#scalarvalueinput) \| `null`
+
+A separate Z multiplier.
+
+***
+
+### ParticleRenderer
+
+The `renderer` module.
+
+#### Properties
+
+##### blend
+
+> `readonly` **blend**: `"premultiplied"` \| `"alpha"` \| `"additive"`
+
+How particles composite.
+
+##### lengthScale
+
+> `readonly` **lengthScale**: `number`
+
+A multiplier on a `"stretched"` particle's length.
+
+##### lit
+
+> `readonly` **lit**: `boolean`
+
+Whether particles are shaded with the main light and the ambient colour.
+
+##### mesh
+
+> `readonly` **mesh**: `"sphere"` \| `"box"` \| `"capsule"` \| `"cylinder"` \| `"plane"` \| `"torus"`
+
+The primitive a `"mesh"` renderer draws.
+
+##### mode
+
+> `readonly` **mode**: `"mesh"` \| `"billboard"` \| `"stretched"` \| `"horizontal"` \| `"vertical"`
+
+How particles are oriented.
+
+##### pivot
+
+> `readonly` **pivot**: [`Vec2Like`](#vec2like)
+
+Where the particle's origin sits inside its quad, in size units; `(0, 0)` is the centre.
+
+##### sheet
+
+> `readonly` **sheet**: [`ParticleSheet`](#particlesheet) \| `null`
+
+The sprite-sheet layout of `texture`, or `null` for a single image.
+
+##### speedScale
+
+> `readonly` **speedScale**: `number`
+
+How much of the speed a `"stretched"` particle adds to its length.
+
+##### texture
+
+> `readonly` **texture**: `string` \| `null`
+
+The texture's asset address, or `null` for a procedural soft disc.
+
+***
+
+### ParticleRendererInput
+
+The `renderer` module as authored.
+
+#### Properties
+
+##### blend?
+
+> `readonly` `optional` **blend?**: `"premultiplied"` \| `"alpha"` \| `"additive"`
+
+Defaults to `"premultiplied"`.
+
+##### lengthScale?
+
+> `readonly` `optional` **lengthScale?**: `number`
+
+Defaults to `1`.
+
+##### lit?
+
+> `readonly` `optional` **lit?**: `boolean`
+
+Defaults to `false`.
+
+##### mesh?
+
+> `readonly` `optional` **mesh?**: `"sphere"` \| `"box"` \| `"capsule"` \| `"cylinder"` \| `"plane"` \| `"torus"`
+
+Defaults to `"box"`.
+
+##### mode?
+
+> `readonly` `optional` **mode?**: `"mesh"` \| `"billboard"` \| `"stretched"` \| `"horizontal"` \| `"vertical"`
+
+Defaults to `"billboard"`.
+
+##### pivot?
+
+> `readonly` `optional` **pivot?**: [`Vec2Like`](#vec2like)
+
+Defaults to `(0, 0)`.
+
+##### sheet?
+
+> `readonly` `optional` **sheet?**: [`ParticleSheetInput`](#particlesheetinput) \| `null`
+
+Defaults to `null`.
+
+##### speedScale?
+
+> `readonly` `optional` **speedScale?**: `number`
+
+Defaults to `0`.
+
+##### texture?
+
+> `readonly` `optional` **texture?**: `string` \| `null`
+
+Defaults to `null`.
+
+***
+
+### Particles2DErrorOptions
+
+Options accepted by [particles2DError](#particles2derror): the same subset of `IgnifxErrorOptions` this
+package uses.
+
+#### Properties
+
+##### cause?
+
+> `readonly` `optional` **cause?**: `unknown`
+
+The failure being wrapped, when there is one.
+
+##### context?
+
+> `readonly` `optional` **context?**: `Readonly`\<`Record`\<`string`, `string` \| `number` \| `boolean` \| `null`\>\>
+
+Identifiers that locate the failure.
+
+##### hint?
+
+> `readonly` `optional` **hint?**: `string`
+
+One sentence telling the developer what to do about it.
+
+***
+
+### ParticlesErrorOptions
+
+Options accepted by [particlesError](#particleserror): the same subset of `IgnifxErrorOptions` this package
+uses.
+
+#### Properties
+
+##### cause?
+
+> `readonly` `optional` **cause?**: `unknown`
+
+The failure being wrapped, when there is one.
+
+##### context?
+
+> `readonly` `optional` **context?**: `Readonly`\<`Record`\<`string`, `string` \| `number` \| `boolean` \| `null`\>\>
+
+Identifiers that locate the failure.
+
+##### hint?
+
+> `readonly` `optional` **hint?**: `string`
+
+One sentence telling the developer what to do about it.
+
+***
+
+### ParticleShape
+
+The `shape` module. Every field is present; a shape reads the ones that apply to it.
+
+#### Properties
+
+##### angle
+
+> `readonly` **angle**: `number`
+
+A cone's half-angle in degrees.
+
+##### arc
+
+> `readonly` **arc**: `number`
+
+The angular span of a sphere, hemisphere, circle, or cone, in degrees.
+
+##### emitFrom
+
+> `readonly` **emitFrom**: `"volume"` \| `"shell"` \| `"base"`
+
+Where inside the shape particles start.
+
+##### kind
+
+> `readonly` **kind**: `"point"` \| `"mesh"` \| `"sphere"` \| `"box"` \| `"hemisphere"` \| `"cone"` \| `"circle"` \| `"edge"`
+
+Which shape.
+
+##### length
+
+> `readonly` **length**: `number`
+
+A cone's height, or an edge's length.
+
+##### radius
+
+> `readonly` **radius**: `number`
+
+The radius of a sphere, hemisphere, circle, or cone base; half the length of an edge.
+
+##### randomDirection
+
+> `readonly` **randomDirection**: `number`
+
+How much of the start direction is random, `0`–`1`.
+
+##### size
+
+> `readonly` **size**: [`Vec3Like`](#vec3like)
+
+A box's full extents.
+
+##### spherizeDirection
+
+> `readonly` **spherizeDirection**: `number`
+
+How much of the start direction points away from the shape's centre, `0`–`1`.
+
+##### thickness
+
+> `readonly` **thickness**: `number`
+
+How much of a sphere, hemisphere, or circle's radius emits, `0` (surface only) to `1` (whole).
+
+##### vertices
+
+> `readonly` **vertices**: `Float32Array`
+
+A `"mesh"` shape's triangle soup: three floats per vertex, three vertices per triangle.
+
+***
+
+### ParticleShapeInput
+
+The `shape` module as authored.
+
+#### Properties
+
+##### angle?
+
+> `readonly` `optional` **angle?**: `number`
+
+See [ParticleShape.angle](#angle). Defaults to `25`.
+
+##### arc?
+
+> `readonly` `optional` **arc?**: `number`
+
+See [ParticleShape.arc](#arc). Defaults to `360`.
+
+##### emitFrom?
+
+> `readonly` `optional` **emitFrom?**: `"volume"` \| `"shell"` \| `"base"`
+
+See [ParticleShape.emitFrom](#emitfrom). Defaults to `"base"` for a cone and `"volume"` otherwise.
+
+##### kind?
+
+> `readonly` `optional` **kind?**: `"point"` \| `"mesh"` \| `"sphere"` \| `"box"` \| `"hemisphere"` \| `"cone"` \| `"circle"` \| `"edge"`
+
+Which shape. Defaults to `"cone"`.
+
+##### length?
+
+> `readonly` `optional` **length?**: `number`
+
+See [ParticleShape.length](#length-3). Defaults to `1`.
+
+##### radius?
+
+> `readonly` `optional` **radius?**: `number`
+
+See [ParticleShape.radius](#radius-9). Defaults to `0.2`.
+
+##### randomDirection?
+
+> `readonly` `optional` **randomDirection?**: `number`
+
+See [ParticleShape.randomDirection](#randomdirection). Defaults to `0`.
+
+##### size?
+
+> `readonly` `optional` **size?**: [`Vec3Like`](#vec3like)
+
+See [ParticleShape.size](#size-10). Defaults to `(1, 1, 1)`.
+
+##### spherizeDirection?
+
+> `readonly` `optional` **spherizeDirection?**: `number`
+
+See [ParticleShape.spherizeDirection](#spherizedirection). Defaults to `0`.
+
+##### thickness?
+
+> `readonly` `optional` **thickness?**: `number`
+
+See [ParticleShape.thickness](#thickness). Defaults to `1`.
+
+##### vertices?
+
+> `readonly` `optional` **vertices?**: readonly `number`[]
+
+A `"mesh"` shape's triangles, nine numbers per triangle.
+
+***
+
+### ParticleSheet
+
+A sprite sheet laid out in a grid.
+
+#### Properties
+
+##### fps
+
+> `readonly` **fps**: `number`
+
+Frames per second, for `"fps"`.
+
+##### frameOverTime
+
+> `readonly` **frameOverTime**: [`ScalarValue`](#scalarvalue)
+
+The frame over the particle's life as a fraction of the sheet, for `"curve"`.
+
+##### mode
+
+> `readonly` **mode**: `"curve"` \| `"random"` \| `"fps"`
+
+How the frame is chosen.
+
+##### tiles
+
+> `readonly` **tiles**: [`Vec2Like`](#vec2like)
+
+Columns and rows of the grid.
+
+***
+
+### ParticleSheetInput
+
+A sprite sheet as authored.
+
+#### Properties
+
+##### frameOverTime?
+
+> `readonly` `optional` **frameOverTime?**: `"random"` \| [`ScalarValueInput`](#scalarvalueinput) \| \{ `fps`: `number`; \}
+
+A curve over life, `"random"`, or `{ fps }`. Defaults to a linear curve over the whole sheet.
+
+##### tiles?
+
+> `readonly` `optional` **tiles?**: [`Vec2Like`](#vec2like)
+
+Columns and rows. Defaults to `(1, 1)`.
+
+***
+
+### ParticlesOptions
+
+What `particles()` accepts. Every field overrides the matching `particles` settings section value.
+
+#### Properties
+
+##### gravity?
+
+> `readonly` `optional` **gravity?**: [`Vec3Like`](#vec3like)
+
+The world gravity a `gravityMultiplier` scales.
+
+##### maxParticles?
+
+> `readonly` `optional` **maxParticles?**: `number`
+
+The particle budget every system's capacity is counted against.
+
+##### qualityScale?
+
+> `readonly` `optional` **qualityScale?**: `number`
+
+A `0`–`1` multiplier on every emission rate and burst count.
+
+***
+
+### ParticlesSettings
+
+The resolved `particles` settings section.
+
+#### Example
+
+```ts
+// ignifx.config.ts
+export default defineConfig({
+  particles: { maxParticles: 50_000, qualityScale: 1 },
+});
+```
+
+#### Properties
+
+##### gravity
+
+> `readonly` **gravity**: [`Vec3Like`](#vec3like)
+
+The world gravity, in metres per second squared, a definition's `forces.gravityMultiplier`
+scales. When `@ignifx/physics` is registered and this stays at its default, the physics
+section's gravity is used instead.
+
+##### maxParticles
+
+> `readonly` **maxParticles**: `number`
+
+The budget every `ParticleSystem`'s `capacity` is counted against. A system that would push the
+total over it is clamped to what is left and `IGX-1702` is logged once.
+
+##### qualityScale
+
+> `readonly` **qualityScale**: `number`
+
+A `0`–`1` multiplier on every emission rate and burst count, for settings screens.
+
+***
+
+### ParticleStart
+
+The `start` module: what a particle is born with.
+
+#### Properties
+
+##### color
+
+> `readonly` **color**: [`ColorValue`](#colorvalue)
+
+The start colour, sRGB. A random value picks between two colours per particle.
+
+##### lifetime
+
+> `readonly` **lifetime**: [`ScalarValue`](#scalarvalue)
+
+Seconds a particle lives.
+
+##### rotation
+
+> `readonly` **rotation**: [`ScalarValue`](#scalarvalue)
+
+The start rotation, in degrees.
+
+##### size
+
+> `readonly` **size**: [`ScalarValue`](#scalarvalue)
+
+The particle's size, in metres.
+
+##### size3D
+
+> `readonly` **size3D**: [`Vec3Like`](#vec3like) \| `null`
+
+Optional per-axis multipliers on `size`, or `null` for a uniform size.
+
+##### speed
+
+> `readonly` **speed**: [`ScalarValue`](#scalarvalue)
+
+Metres per second along the start direction.
+
+***
+
+### ParticleStartInput
+
+The `start` module as authored.
+
+#### Properties
+
+##### color?
+
+> `readonly` `optional` **color?**: [`ColorValueInput`](#colorvalueinput)
+
+Defaults to opaque white.
+
+##### lifetime?
+
+> `readonly` `optional` **lifetime?**: [`ScalarValueInput`](#scalarvalueinput)
+
+Defaults to `2`.
+
+##### rotation?
+
+> `readonly` `optional` **rotation?**: [`ScalarValueInput`](#scalarvalueinput)
+
+Defaults to `0`.
+
+##### size?
+
+> `readonly` `optional` **size?**: [`ScalarValueInput`](#scalarvalueinput)
+
+Defaults to `0.2`.
+
+##### size3D?
+
+> `readonly` `optional` **size3D?**: [`Vec3Like`](#vec3like) \| `null`
+
+Defaults to `null`.
+
+##### speed?
+
+> `readonly` `optional` **speed?**: [`ScalarValueInput`](#scalarvalueinput)
+
+Defaults to `2`.
+
+***
+
+### ParticleState
+
+**`Beta`**
+
+Everything a particle is at one instant.
+
+#### Properties
+
+##### age
+
+> **age**: `number`
+
+**`Beta`**
+
+Seconds since spawn.
+
+##### color
+
+> `readonly` **color**: `Float32Array`
+
+**`Beta`**
+
+Linear red, green, blue, and straight alpha.
+
+##### frame
+
+> **frame**: `number`
+
+**`Beta`**
+
+The sprite-sheet frame, or `0` without a sheet.
+
+##### life
+
+> **life**: `number`
+
+**`Beta`**
+
+`age / lifetime`, in `[0, 1]`.
+
+##### position
+
+> `readonly` **position**: `Float32Array`
+
+**`Beta`**
+
+The world position.
+
+##### rotation
+
+> **rotation**: `number`
+
+**`Beta`**
+
+The rotation about the view axis (or the mesh's spin axis), in radians.
+
+##### size
+
+> `readonly` **size**: `Float32Array`
+
+**`Beta`**
+
+The size along each axis, in metres.
+
+##### velocity
+
+> `readonly` **velocity**: `Float32Array`
+
+**`Beta`**
+
+The world velocity.
+
+***
+
+### ParticleStopOptions
+
+What [ParticleEmitterCore.stop](#stop-7) accepts.
+
+#### Properties
+
+##### clear?
+
+> `readonly` `optional` **clear?**: `boolean`
+
+Whether to forget the live particles too. Defaults to `false`: they finish their lives.
+
+***
+
 ### PbrMaterialDefinition
 
 The properties a `"pbr"` material declares. Every colour is sRGB; every factor is unitless.
@@ -67072,6 +75795,14 @@ How strongly ambient occlusion darkens the surface, 0 to 1.
 > `readonly` **roughness**: `number`
 
 Roughness factor, 0 to 1.
+
+##### surfaces
+
+> `readonly` **surfaces**: readonly [`SurfaceShaderReference`](#surfaceshaderreference)[]
+
+The `.surface.wgsl` files layered onto this material, in the order they are applied
+(`docs/plan/2026-09-terrain-particles-shaders.md` §3.2). It needs
+`rendering.features.materialPlugins`.
 
 ##### textures
 
@@ -67397,6 +76128,39 @@ The world speed clamps.
 
 ***
 
+### PixelTextureOptions
+
+How [TextureAsset.fromPixels](#frompixels) samples the texture it creates.
+
+#### Remarks
+
+A deliberately small subset of [TextureImportOptions](#textureimportoptions): a pixel texture has one mip level,
+so `mipMaps` has nothing to say, and the bytes are handed over already oriented and with straight
+alpha, so `invertY` and `premultiplyAlpha` have nothing to do. The defaults are Lite's own and
+they suit a data map — `nearest` filtering and `clamp` addressing, no sRGB decode.
+
+#### Properties
+
+##### filter?
+
+> `readonly` `optional` **filter?**: `"linear"` \| `"nearest"`
+
+How texels are filtered. `"nearest"` keeps a lookup table exact; the default.
+
+##### srgb?
+
+> `readonly` `optional` **srgb?**: `boolean`
+
+Decode to linear on sample (`rgba8unorm-srgb`). Leave it off for lookup tables and data maps.
+
+##### wrap?
+
+> `readonly` `optional` **wrap?**: `"clamp"` \| `"repeat"`
+
+What happens outside `0..1`. The default is `"clamp"`.
+
+***
+
 ### PlaneMeshOptions
 
 How [MeshAsset.plane](#plane) sizes its quad, which lies in the XY plane facing `-Z`.
@@ -67492,7 +76256,7 @@ What WebGPU offers, or `null` in a headless app and on a host with no WebGPU.
 
 ### PlayClipOptions
 
-What [SpriteAnimator.play](#play-7) accepts.
+What [SpriteAnimator.play](#play-10) accepts.
 
 #### Properties
 
@@ -67922,7 +76686,7 @@ Kind-specific data for `record`.
 
 ##### fields
 
-> `readonly` **fields**: [`Schema`](#schema-41)
+> `readonly` **fields**: [`Schema`](#schema-44)
 
 The sub-fields, in declaration order.
 
@@ -68636,6 +77400,32 @@ The tasks, in frame execution order. Empty unless `status` is `"ok"`.
 
 ***
 
+### RgbaImage
+
+An 8-bit RGBA image.
+
+#### Properties
+
+##### data
+
+> `readonly` **data**: `Uint8Array`
+
+`width * height * 4` bytes, row-major, top row first, straight alpha.
+
+##### height
+
+> `readonly` **height**: `number`
+
+Height in pixels.
+
+##### width
+
+> `readonly` **width**: `number`
+
+Width in pixels.
+
+***
+
 ### Rigidbody2DRapierHandles
 
 The Rapier objects a `Rigidbody2D` owns. Unstable escape hatch
@@ -68663,6 +77453,144 @@ The Babylon Lite objects a `Rigidbody` owns. Unstable escape hatch
 > `readonly` **body**: `PhysicsBody` \| `null`
 
 The Havok body, or `null` before the first fixed step has built it.
+
+***
+
+### RingCensus
+
+**`Beta`**
+
+What one reconciliation pass found.
+
+#### Properties
+
+##### alive
+
+> **alive**: `number`
+
+**`Beta`**
+
+Records whose age is inside their lifetime. Exact.
+
+##### drawCount
+
+> **drawCount**: `number`
+
+**`Beta`**
+
+Records from the newest back to the oldest still alive: what the GPU draws.
+
+***
+
+### ScatterPlacements
+
+The per-instance arrays [generateScatter](#generatescatter) fills, in the terrain's local frame.
+
+#### Properties
+
+##### normals
+
+> `readonly` **normals**: `Float32Array`
+
+Three floats per instance: the surface normal there.
+
+##### positions
+
+> `readonly` **positions**: `Float32Array`
+
+Three floats per instance.
+
+##### scale
+
+> `readonly` **scale**: `Float32Array`
+
+One uniform scale per instance.
+
+##### yaw
+
+> `readonly` **yaw**: `Float32Array`
+
+One angle per instance, in radians about Y.
+
+***
+
+### ScatterRules
+
+What decides where a `TerrainScatter` puts its instances.
+
+#### Properties
+
+##### density
+
+> `readonly` **density**: `number`
+
+Instances per square metre of terrain.
+
+##### heightMax
+
+> `readonly` **heightMax**: `number`
+
+The highest height that accepts a candidate, in metres.
+
+##### heightMin
+
+> `readonly` **heightMin**: `number`
+
+The lowest height that accepts a candidate, in metres.
+
+##### layers
+
+> `readonly` **layers**: readonly `number`[]
+
+Control-channel indices a candidate may stand on; empty places everywhere.
+
+##### layerThreshold
+
+> `readonly` **layerThreshold**: `number`
+
+The splat weight a named layer must reach, `0` to `1`.
+
+##### maxInstances
+
+> `readonly` **maxInstances**: `number`
+
+The most instances to place, whatever the density asks for.
+
+##### randomYaw
+
+> `readonly` **randomYaw**: `boolean`
+
+Whether each instance is turned by a random angle about Y.
+
+##### scaleMax
+
+> `readonly` **scaleMax**: `number`
+
+The largest random scale.
+
+##### scaleMin
+
+> `readonly` **scaleMin**: `number`
+
+The smallest random scale.
+
+##### seed
+
+> `readonly` **seed**: `number`
+
+The seed; the same seed always places the same instances.
+
+##### slopeMax
+
+> `readonly` **slopeMax**: `number`
+
+The steepest slope that accepts a candidate, in degrees.
+
+##### slopeMin
+
+> `readonly` **slopeMin**: `number`
+
+The shallowest slope that accepts a candidate, in degrees.
 
 ***
 
@@ -69745,6 +78673,313 @@ API Extractor, and the qualified form it asks for is unresolvable to TypeDoc.
 
 ***
 
+### ShaderDeclaration
+
+Everything a `.wgsl` file declares about itself — the parsed pragmas, with defaults filled in.
+
+#### Properties
+
+##### attributes
+
+> `readonly` **attributes**: readonly (`"color"` \| `"position"` \| `"normal"` \| `"uv"` \| `"uv2"` \| `"tangent"` \| `"joints"` \| `"weights"` \| `"joints1"` \| `"weights1"`)[]
+
+The vertex attributes the vertex stage reads. A `"shader"` file always includes `position`.
+
+##### defines
+
+> `readonly` **defines**: readonly `ShaderDefineDeclaration`[]
+
+The WGSL `const` declarations a material may override.
+
+##### ignifx
+
+> `readonly` **ignifx**: readonly (`"time"` \| `"unscaledTime"` \| `"deltaTime"` \| `"mainLightDirection"` \| `"mainLightColor"` \| `"ambientColor"`)[]
+
+The ignifx-provided uniforms, read as `shaderUniforms.<name>` and written every frame.
+
+##### kind
+
+> `readonly` **kind**: `"shader"` \| `"surface"` \| `"post"`
+
+Which of the three authoring forms the file is.
+
+##### pipeline
+
+> `readonly` **pipeline**: [`ShaderPipelineState`](#shaderpipelinestate)
+
+The pipeline state.
+
+##### storage
+
+> `readonly` **storage**: readonly [`ShaderStorageDeclaration`](#shaderstoragedeclaration)[]
+
+The read-only storage buffers.
+
+##### system
+
+> `readonly` **system**: readonly (`"alphaCutoff"` \| `"world"` \| `"view"` \| `"projection"` \| `"viewProjection"` \| `"worldView"` \| `"worldViewProjection"` \| `"cameraPosition"` \| `"screenSize"`)[]
+
+The Babylon Lite system uniforms, read as `shaderSystem.<name>`.
+
+##### textures
+
+> `readonly` **textures**: readonly [`ShaderTextureDeclaration`](#shadertexturedeclaration)[]
+
+The samplers, each generating `<name>` and `<name>Sampler`.
+
+##### uniforms
+
+> `readonly` **uniforms**: readonly [`ShaderUniformDeclaration`](#shaderuniformdeclaration)[]
+
+The custom uniforms, read as `shaderUniforms.<name>`.
+
+***
+
+### ShaderMaterialDefinition
+
+The properties a `"shader"` material declares: which shader, and what to set on it
+(`docs/plan/2026-09-terrain-particles-shaders.md` §3.1).
+
+#### Properties
+
+##### defines
+
+> `readonly` **defines**: `Readonly`\<`Record`\<`string`, `boolean` \| `number`\>\>
+
+Overrides of the shader file's declared `define` values, by name.
+
+##### kind
+
+> `readonly` **kind**: `"shader"`
+
+The family discriminator.
+
+##### name
+
+> `readonly` **name**: `string`
+
+A human-readable name, used in GPU debug labels and diagnostics.
+
+##### shader
+
+> `readonly` **shader**: `string`
+
+The address of the `.wgsl` this material is values for.
+
+##### textures
+
+> `readonly` **textures**: `Readonly`\<`Record`\<`string`, `string`\>\>
+
+Texture asset addresses, by the declared sampler name.
+
+##### values
+
+> `readonly` **values**: `Readonly`\<`Record`\<`string`, `number` \| readonly `number`[] \| [`ColorLike`](#colorlike)\>\>
+
+Overrides of the shader file's declared uniform defaults, by uniform name. A colour uniform's
+value is sRGB, like every colour in ignifx's public API.
+
+***
+
+### ShaderMaterialDefinitionInput
+
+What [shaderMaterialDefinition](#shadermaterialdefinition) accepts.
+
+#### Properties
+
+##### defines?
+
+> `readonly` `optional` **defines?**: `Readonly`\<`Record`\<`string`, `number` \| `boolean`\>\>
+
+Overrides of the declared `define` values.
+
+##### name?
+
+> `readonly` `optional` **name?**: `string`
+
+A human-readable name; defaults to the shader's address.
+
+##### shader
+
+> `readonly` **shader**: `string` \| [`AssetHandle`](#assethandle)\<[`ShaderAsset`](#shaderasset)\>
+
+The `.wgsl` asset, as a loaded handle or an address.
+
+##### textures?
+
+> `readonly` `optional` **textures?**: `Readonly`\<`Record`\<`string`, `string` \| [`AssetHandle`](#assethandle)\<[`TextureAsset`](#textureasset)\>\>\>
+
+Textures for the declared samplers, as loaded handles or addresses.
+
+##### values?
+
+> `readonly` `optional` **values?**: `Readonly`\<`Record`\<`string`, `number` \| [`ColorLike`](#colorlike) \| readonly `number`[]\>\>
+
+Overrides of the declared uniform defaults. Colours are sRGB.
+
+***
+
+### ShaderPipelineState
+
+The pipeline state a `// @ignifx blend …` line declares.
+
+#### Properties
+
+##### blend
+
+> `readonly` **blend**: `"opaque"` \| `"premultiplied"` \| `"alpha"` \| `"additive"`
+
+How fragments are composited.
+
+##### cull
+
+> `readonly` **cull**: `"none"` \| `"back"` \| `"front"`
+
+Which faces are drawn.
+
+##### depthTest
+
+> `readonly` **depthTest**: `boolean`
+
+Whether the draw depth-tests at all; `false` compiles `depthCompare: "always"`.
+
+##### depthWrite
+
+> `readonly` **depthWrite**: `boolean`
+
+Whether the draw writes depth. Defaults to `true` for an opaque surface and `false` for a
+blended one — Babylon Lite's own rule — unless the file says `depthWrite on` explicitly.
+
+##### instancing
+
+> `readonly` **instancing**: `"none"` \| `"matrices"` \| `"matrices-colors"`
+
+Which instance streams the vertex stage reads.
+
+##### transmissive
+
+> `readonly` **transmissive**: `boolean`
+
+Whether the surface samples the opaque scene colour behind it. Requires a blended surface.
+
+***
+
+### ShaderStorageDeclaration
+
+One `// @ignifx storage …` line: a read-only storage buffer the shader indexes.
+
+#### Properties
+
+##### name
+
+> `readonly` **name**: `string`
+
+The WGSL identifier.
+
+##### type
+
+> `readonly` **type**: `string`
+
+The WGSL variable type, verbatim, for example `array<Particle>`.
+
+***
+
+### ShaderTextureDeclaration
+
+One `// @ignifx texture …` line: a `texture_2d<f32>` (or `texture_2d_array<f32>`) plus the
+`<name>Sampler` Babylon Lite generates beside it.
+
+#### Properties
+
+##### array
+
+> `readonly` **array**: `boolean`
+
+Whether the binding is a `texture_2d_array<f32>` rather than a `texture_2d<f32>`.
+
+##### fallback
+
+> `readonly` **fallback**: `"white"` \| `"black"` \| `"transparent"` \| `null`
+
+Which 1x1 texture is bound when a material binds nothing, or `null` for the implicit `"white"`.
+
+###### Remarks
+
+A declared sampler that nothing fills in cannot be left unbound: Babylon Lite refuses to build
+a bind group for it (error 309), so *something* is always bound.
+
+##### name
+
+> `readonly` **name**: `string`
+
+The WGSL identifier; the sampler is `<name>Sampler`.
+
+##### normal
+
+> `readonly` **normal**: `boolean`
+
+Whether the texture is a tangent-space normal map.
+
+##### srgb
+
+> `readonly` **srgb**: `boolean`
+
+Whether the texture holds sRGB-encoded colour, which the texture import needs to know.
+
+***
+
+### ShaderUniformDeclaration
+
+One `// @ignifx uniform …` line: a value a material sets and the vertex or fragment stage reads
+as `shaderUniforms.<name>`.
+
+#### Properties
+
+##### color
+
+> `readonly` **color**: `boolean`
+
+Whether the value is a colour, declared with `color(…)` or the bare `color` modifier.
+
+##### defaultValue
+
+> `readonly` **defaultValue**: `number` \| readonly `number`[]
+
+The value a material starts with. A colour default is the **sRGB** value the file wrote; the
+material layer decodes it to linear on the way to the GPU.
+
+##### name
+
+> `readonly` **name**: `string`
+
+The WGSL identifier.
+
+##### range
+
+> `readonly` **range**: readonly \[`number`, `number`\] \| `null`
+
+The inclusive slider bounds an inspector should offer, or `null`.
+
+##### step
+
+> `readonly` **step**: `number` \| `null`
+
+The slider increment an inspector should use, or `null`.
+
+##### tooltip
+
+> `readonly` **tooltip**: `string` \| `null`
+
+One sentence describing the uniform, or `null`.
+
+##### type
+
+> `readonly` **type**: `"f32"` \| `"i32"` \| `"u32"` \| `"vec2<f32>"` \| `"vec3<f32>"` \| `"vec4<f32>"` \| `"mat4x4<f32>"`
+
+The WGSL type.
+
+***
+
 ### ShapeCastHit
 
 What a shape sweep hit.
@@ -70818,6 +80053,15 @@ sRGB specular colour.
 
 Specular exponent; higher values give a tighter highlight.
 
+##### surfaces
+
+> `readonly` **surfaces**: readonly [`SurfaceShaderReference`](#surfaceshaderreference)[]
+
+The `.surface.wgsl` files layered onto this material. **Refused on a Standard material**:
+Babylon Lite 1.27.0 cannot bake a Standard host's plugins in time (`./surface-shader.ts`). The
+field exists so the format is one shape for both families and so the refusal is a sentence
+rather than a silently ignored list.
+
 ##### textures
 
 > `readonly` **textures**: `Readonly`\<`Record`\<`string`, `string`\>\>
@@ -70966,7 +80210,7 @@ IgnifxError with code `IGX-1425` when the backend fails.
 
 ##### namespace()
 
-> **namespace**(`name`): [`Storage`](#storage-4)
+> **namespace**(`name`): [`Storage`](#storage-5)
 
 Narrows to a child namespace — `"saves"`, `"settings"`, `"input-overrides"`.
 
@@ -70980,7 +80224,7 @@ Narrows to a child namespace — `"saves"`, `"settings"`, `"input-overrides"`.
 
 ###### Returns
 
-[`Storage`](#storage-4)
+[`Storage`](#storage-5)
 
 The child store, which shares this store's backend and sees none of its keys.
 
@@ -71230,6 +80474,21 @@ A promise that settles once the value is durable.
 
 ***
 
+### StorageBufferAssetLiteHandles
+
+The Babylon Lite objects a [StorageBufferAsset](#storagebufferasset) owns. Unstable escape hatch
+(`docs/architecture/00-overview.md` §3).
+
+#### Properties
+
+##### buffer
+
+> `readonly` **buffer**: `StorageBuffer` \| `null`
+
+The Lite storage buffer, or `null` under a headless app or after disposal.
+
+***
+
 ### StringFieldSpec
 
 Kind-specific data for `str`.
@@ -71241,6 +80500,355 @@ Kind-specific data for `str`.
 > `readonly` **kind**: `"str"`
 
 The string kind.
+
+***
+
+### SurfaceHostCapabilities
+
+What the compiler has to know about the host material beyond its family.
+
+#### Remarks
+
+Both flags exist because Standard's template declares a varying or a variable only when something
+asks for it: `input.vu` exists only when the material carries a texture that samples UV
+(`standard-flags.js` `NEEDS_UV`), and `normalW` only when lighting is on. Referencing either
+without it is a WGSL compile error in Lite's own template, so the compiler substitutes a constant
+instead. A PBR host always has both.
+
+#### Properties
+
+##### family
+
+> `readonly` **family**: [`SurfaceHostFamily`](#surfacehostfamily)
+
+Which family's slots and variable names to generate for.
+
+##### hasNormal
+
+> `readonly` **hasNormal**: `boolean`
+
+Whether the host declares a shading normal. `false` makes a `normal` write a no-op.
+
+##### hasUv
+
+> `readonly` **hasUv**: `boolean`
+
+Whether the host declares a UV varying. `false` makes `in.uv` read `(0, 0)`.
+
+***
+
+### SurfaceShaderBinding
+
+One surface shader attached to one material: the handle a game holds to change its values.
+
+#### Remarks
+
+A material's bindings live as long as its attachment; reach them with `material.surfaces` and
+`material.surface(name)`.
+
+#### Properties
+
+##### name
+
+> `readonly` **name**: `string`
+
+The name the shader answers to on this material.
+
+##### priority
+
+> `readonly` **priority**: `number`
+
+Lower runs first among the material's surface shaders.
+
+##### shader
+
+> `readonly` **shader**: [`ShaderAsset`](#shaderasset)
+
+The `.surface.wgsl` this binding was compiled from.
+
+#### Accessors
+
+##### enabled
+
+###### Get Signature
+
+> **get** **enabled**(): `boolean`
+
+Whether the shader contributes anything.
+
+###### Returns
+
+`boolean`
+
+`true` while it does.
+
+###### Set Signature
+
+> **set** **enabled**(`value`): `void`
+
+Switches the shader off, which restores the host material's plain look.
+
+###### Remarks
+
+A disabled plugin contributes no WGSL but still changes Lite's pipeline cache key, so each
+toggle costs a pipeline rebuild — a settings-screen operation, not a per-frame one.
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+`false` to switch it off.
+
+###### Returns
+
+`void`
+
+##### lite
+
+###### Get Signature
+
+> **get** **lite**(): `MaterialPlugin` \| `null`
+
+The Babylon Lite plugin this binding drives. Unstable escape hatch
+(`docs/architecture/00-overview.md` §3).
+
+###### Returns
+
+`MaterialPlugin` \| `null`
+
+The plugin, or `null` under a headless app, which builds none.
+
+#### Methods
+
+##### get()
+
+> **get**(`name`, `out?`): `number` \| `Float32Array`\<`ArrayBufferLike`\>
+
+Reads a declared uniform's current value, as it stands on the CPU side. A colour reads back
+**linear**, which is what the shader sees.
+
+###### Parameters
+
+###### name
+
+`string`
+
+The declared uniform's name.
+
+###### out?
+
+`Float32Array`\<`ArrayBufferLike`\>
+
+Receives a vector or matrix value; omit it for a fresh array, or read a scalar's
+number directly.
+
+###### Returns
+
+`number` \| `Float32Array`\<`ArrayBufferLike`\>
+
+The number for `f32`, `u32`, and `i32`, and the filled array for everything else.
+
+###### Throws
+
+IgnifxError with code `IGX-0712` when the file declares no such uniform, or `IGX-0713`
+when `out` is shorter than the value.
+
+##### getTexture()
+
+> **getTexture**(`name`): [`AssetHandle`](#assethandle)\<[`TextureAsset`](#textureasset)\> \| `null`
+
+The texture currently bound to a declared sampler.
+
+###### Parameters
+
+###### name
+
+`string`
+
+The declared sampler's name.
+
+###### Returns
+
+[`AssetHandle`](#assethandle)\<[`TextureAsset`](#textureasset)\> \| `null`
+
+The handle, or `null` when the declaration's fallback is bound.
+
+###### Throws
+
+IgnifxError with code `IGX-0712` when the file declares no such sampler.
+
+##### set()
+
+> **set**(`name`, `value`): `void`
+
+Writes one of the shader's declared uniforms.
+
+###### Parameters
+
+###### name
+
+`string`
+
+The declared uniform's name, as the file wrote it.
+
+###### value
+
+`number` \| [`ColorLike`](#colorlike) \| `Float32Array`\<`ArrayBufferLike`\> \| readonly `number`[]
+
+A number, a numeric array of the declared length, or an sRGB colour.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+The value is checked against the `// @ignifx uniform` declaration in the file, so a typo fails
+at the call site rather than as a black surface. A uniform declared `color(…)` takes a
+[ColorLike](#colorlike) in **sRGB** and is uploaded linear, like every other colour in ignifx. The
+write re-uploads the host material's uniform block and recompiles nothing.
+
+###### Throws
+
+IgnifxError with code `IGX-0712` when the file declares no such uniform, or `IGX-0713`
+when the value's shape does not match the declared type.
+
+###### Example
+
+```ts
+snow.set("amount", 0.8);
+snow.set("snowColor", { r: 0.95, g: 0.97, b: 1, a: 1 });
+```
+
+##### setTexture()
+
+> **setTexture**(`name`, `texture`): `void`
+
+Binds a texture to one of the shader's declared samplers.
+
+###### Parameters
+
+###### name
+
+`string`
+
+The declared sampler's name.
+
+###### texture
+
+[`AssetHandle`](#assethandle)\<[`TextureAsset`](#textureasset)\> \| `null`
+
+The texture, or `null` for the fallback.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+There is no "unbound": a bind group with a missing entry fails WebGPU validation, so `null`
+restores the declaration's 1x1 fallback — white unless the file said
+`default black` or `default transparent`. The change rebuilds the material's renderables.
+
+###### Throws
+
+IgnifxError with code `IGX-0712` when the file declares no such sampler.
+
+***
+
+### SurfaceShaderInit
+
+What a material declares for one attached surface shader.
+
+#### Properties
+
+##### enabled?
+
+> `readonly` `optional` **enabled?**: `boolean`
+
+Whether the shader contributes anything. Defaults to `true`.
+
+##### name?
+
+> `readonly` `optional` **name?**: `string`
+
+The name the shader answers to on this material. Defaults to the address's basename with
+`.surface.wgsl` removed, so `shaders/snow.surface.wgsl` is `snow`.
+
+##### priority?
+
+> `readonly` `optional` **priority?**: `number`
+
+Lower runs first among the material's surface shaders. Defaults to `500`, Babylon Lite's own.
+
+##### shader
+
+> `readonly` **shader**: [`AssetHandle`](#assethandle)\<[`ShaderAsset`](#shaderasset)\>
+
+The loaded `.surface.wgsl`.
+
+##### textures?
+
+> `readonly` `optional` **textures?**: `Readonly`\<`Record`\<`string`, [`AssetHandle`](#assethandle)\<[`TextureAsset`](#textureasset)\>\>\>
+
+Textures for the file's declared samplers, by declared name.
+
+##### values?
+
+> `readonly` `optional` **values?**: `Readonly`\<`Record`\<`string`, `number` \| [`ColorLike`](#colorlike) \| readonly `number`[]\>\>
+
+Overrides of the file's declared uniform defaults, by declared name.
+
+***
+
+### SurfaceShaderReference
+
+What a `.material.json` writes for one surface shader: the shader's address and its values.
+
+#### Remarks
+
+The runtime shape is [SurfaceShaderInit](#surfaceshaderinit), which carries handles; this is the serialized one,
+which carries addresses, and is what a PBR or Standard material definition holds.
+
+#### Properties
+
+##### enabled
+
+> `readonly` **enabled**: `boolean`
+
+Whether the shader contributes anything.
+
+##### name
+
+> `readonly` **name**: `string`
+
+The name the shader answers to; empty takes the address's basename.
+
+##### priority
+
+> `readonly` **priority**: `number`
+
+Lower runs first.
+
+##### shader
+
+> `readonly` **shader**: `string`
+
+The address of the `.surface.wgsl`.
+
+##### textures
+
+> `readonly` **textures**: `Readonly`\<`Record`\<`string`, `string`\>\>
+
+Texture addresses by declared sampler name.
+
+##### values
+
+> `readonly` **values**: `Readonly`\<`Record`\<`string`, `number` \| readonly `number`[]\>\>
+
+Overrides of the file's declared uniform defaults.
 
 ***
 
@@ -71294,7 +80902,7 @@ Called once when the world the system belongs to has been created.
 
 ###### world
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The new world.
 
@@ -71312,7 +80920,7 @@ Called once when the world the system belongs to is being disposed.
 
 ###### world
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world going away.
 
@@ -71342,7 +80950,7 @@ The world, clock, phase, and delta for this invocation.
 
 ### SystemContext
 
-What a [System](#system) is handed when its phase runs
+What a [System](#system-1) is handed when its phase runs
 (`docs/architecture/03-scripting-and-components.md` §6).
 
 #### Properties
@@ -71363,15 +80971,735 @@ The phase currently running.
 
 ##### time
 
-> `readonly` **time**: [`Time`](#time-5)
+> `readonly` **time**: [`Time`](#time-10)
 
 The app clock.
 
 ##### world
 
-> `readonly` **world**: [`World`](#world-59)
+> `readonly` **world**: [`World`](#world-64)
 
 The world the system operates on.
+
+***
+
+### TerrainAssetOptions
+
+What [terrainAssetFromDefinition](#terrainassetfromdefinition) accepts.
+
+#### Properties
+
+##### address?
+
+> `readonly` `optional` **address?**: `string`
+
+The address to register under. Defaults to a generated `memory:` address.
+
+##### heights?
+
+> `readonly` `optional` **heights?**: `Float32Array`\<`ArrayBufferLike`\>
+
+Heights in metres, row-major, `resolution * resolution` of them. Omit them to generate the
+definition's noise.
+
+***
+
+### TerrainChunksDefinition
+
+How the field is cut into chunks and how their levels of detail are chosen.
+
+#### Properties
+
+##### lodDistance
+
+> `readonly` **lodDistance**: `number`
+
+The camera distance, in metres, at which level 1 takes over; each level doubles it.
+
+##### lodLevels
+
+> `readonly` **lodLevels**: `number`
+
+How many LOD meshes each chunk carries; level `n` skips `2^n` samples.
+
+##### size
+
+> `readonly` **size**: `number`
+
+Quads per chunk side. `resolution - 1` must be a multiple of it.
+
+##### skirtDepth
+
+> `readonly` **skirtDepth**: `number`
+
+How far, in metres, every LOD mesh's edges hang down to hide cracks between levels.
+
+***
+
+### TerrainColliderInit
+
+What a `HeightfieldCollider` needs, by data: `@ignifx/terrain` never imports `@ignifx/physics`
+(plan §5.4), so this is the shape rather than the type.
+
+#### Properties
+
+##### heights
+
+> `readonly` **heights**: `number`[]
+
+`samplesX * samplesZ` heights in metres, in the terrain's local frame. Rows run from the
+largest Z to the smallest, which is the order Babylon Lite's heightfield reads.
+
+##### samplesX
+
+> `readonly` **samplesX**: `number`
+
+Samples along X, at least 2.
+
+##### samplesZ
+
+> `readonly` **samplesZ**: `number`
+
+Samples along Z, at least 2.
+
+##### size
+
+> `readonly` **size**: [`Vec3Like`](#vec3like)
+
+The covered extent in metres; `y` is the terrain's full height range.
+
+***
+
+### TerrainDefinition
+
+A fully resolved terrain: every field present, every address resolved, every rule checked.
+
+#### Properties
+
+##### chunks
+
+> `readonly` **chunks**: [`TerrainChunksDefinition`](#terrainchunksdefinition)
+
+How the field is chunked.
+
+##### chunksPerSide
+
+> `readonly` **chunksPerSide**: `number`
+
+Chunks per side, derived: `(resolution - 1) / chunks.size`.
+
+##### format
+
+> `readonly` **format**: `"ignifx.terrain"`
+
+Always [TERRAIN\_FORMAT](#terrain_format).
+
+##### formatVersion
+
+> `readonly` **formatVersion**: `1`
+
+Always [TERRAIN\_FORMAT\_VERSION](#terrain_format_version).
+
+##### heightmap
+
+> `readonly` **heightmap**: [`TerrainHeightmapDefinition`](#terrainheightmapdefinition) \| `null`
+
+The heightmap, or `null` when the heights come from noise.
+
+##### layers
+
+> `readonly` **layers**: readonly [`TerrainLayerDefinition`](#terrainlayerdefinition)[]
+
+The layers, 1 to 8, in control-channel order.
+
+##### material
+
+> `readonly` **material**: [`TerrainMaterialDefinition`](#terrainmaterialdefinition)
+
+The shared PBR factors.
+
+##### name
+
+> `readonly` **name**: `string`
+
+A human-readable name; the document's basename when the file names none.
+
+##### noise
+
+> `readonly` **noise**: [`TerrainNoiseDefinition`](#terrainnoisedefinition) \| `null`
+
+The noise, or `null` when the heights come from a heightmap.
+
+##### resolution
+
+> `readonly` **resolution**: `number`
+
+Samples per side, `2^n + 1`.
+
+##### size
+
+> `readonly` **size**: [`TerrainSize`](#terrainsize-1)
+
+The extent, in metres.
+
+##### splat
+
+> `readonly` **splat**: [`TerrainSplatDefinition`](#terrainsplatdefinition) \| `null`
+
+The painted control maps, or `null` when the weights come from rules.
+
+##### splatRules
+
+> `readonly` **splatRules**: readonly [`TerrainSplatRule`](#terrainsplatrule)[]
+
+The splat rules; empty when the weights come from painted maps.
+
+***
+
+### TerrainDefinitionInput
+
+What `defineTerrain` accepts: the document with every defaulted field optional.
+
+#### Properties
+
+##### chunks?
+
+> `readonly` `optional` **chunks?**: `Partial`\<[`TerrainChunksDefinition`](#terrainchunksdefinition)\>
+
+How the field is chunked. Defaults to `64` quads, `4` levels, `96` metres, `2` metres of skirt.
+
+##### format?
+
+> `readonly` `optional` **format?**: `string`
+
+Must be [TERRAIN\_FORMAT](#terrain_format) when present.
+
+##### formatVersion?
+
+> `readonly` `optional` **formatVersion?**: `number`
+
+Must be [TERRAIN\_FORMAT\_VERSION](#terrain_format_version) when present.
+
+##### heightmap?
+
+> `readonly` `optional` **heightmap?**: `Partial`\<[`TerrainHeightmapDefinition`](#terrainheightmapdefinition)\> \| `null`
+
+The heightmap; omit it for noise.
+
+##### layers?
+
+> `readonly` `optional` **layers?**: readonly [`TerrainLayerInput`](#terrainlayerinput)[]
+
+The layers. Defaults to one flat grey layer named `ground`.
+
+##### material?
+
+> `readonly` `optional` **material?**: `Partial`\<[`TerrainMaterialDefinition`](#terrainmaterialdefinition)\>
+
+The shared PBR factors. Defaults to roughness `0.9`, metallic `0`.
+
+##### name?
+
+> `readonly` `optional` **name?**: `string`
+
+A human-readable name.
+
+##### noise?
+
+> `readonly` `optional` **noise?**: `Partial`\<[`TerrainNoiseDefinition`](#terrainnoisedefinition)\> \| `null`
+
+The noise; used when there is no heightmap.
+
+##### resolution?
+
+> `readonly` `optional` **resolution?**: `number`
+
+Samples per side. Defaults to `513`.
+
+##### size?
+
+> `readonly` `optional` **size?**: `Partial`\<[`TerrainSize`](#terrainsize-1)\>
+
+The extent, in metres. Defaults to `512 x 512 x 80`.
+
+##### splat?
+
+> `readonly` `optional` **splat?**: \{ `control?`: readonly `string`[]; \} \| `null`
+
+The painted control maps.
+
+##### splatRules?
+
+> `readonly` `optional` **splatRules?**: readonly [`TerrainSplatRuleInput`](#terrainsplatruleinput)[]
+
+The splat rules.
+
+***
+
+### TerrainErrorOptions
+
+Options accepted by [terrainError](#terrainerror): the same subset of `IgnifxErrorOptions` this package
+uses.
+
+#### Properties
+
+##### cause?
+
+> `readonly` `optional` **cause?**: `unknown`
+
+The failure being wrapped, when there is one.
+
+##### context?
+
+> `readonly` `optional` **context?**: `Readonly`\<`Record`\<`string`, `string` \| `number` \| `boolean` \| `null`\>\>
+
+Identifiers that locate the failure.
+
+##### hint?
+
+> `readonly` `optional` **hint?**: `string`
+
+One sentence telling the developer what to do about it.
+
+***
+
+### TerrainHeightmapDefinition
+
+Where a terrain's heights come from when they come from a file.
+
+#### Properties
+
+##### source
+
+> `readonly` **source**: `string`
+
+The heightmap's address: a `.r16` (canonical) or a PNG, resolved relative to the document.
+
+***
+
+### TerrainHit
+
+What [HeightField.raycast](#raycast) writes: the hit point, the surface normal there, and how far
+along the ray it was. Build one with [createTerrainHit](#createterrainhit) and reuse it.
+
+#### Properties
+
+##### distance
+
+> **distance**: `number`
+
+The distance from the ray's origin to the hit, in metres.
+
+##### normal
+
+> `readonly` **normal**: [`MutableVec3`](#mutablevec3)
+
+The unit surface normal at the hit.
+
+##### point
+
+> `readonly` **point**: [`MutableVec3`](#mutablevec3)
+
+The hit point, in the frame the ray was stated in.
+
+***
+
+### TerrainLayerDefinition
+
+One textured layer of the splat.
+
+#### Properties
+
+##### albedo
+
+> `readonly` **albedo**: `string`
+
+The albedo texture's address, resolved relative to the document; empty for a flat colour.
+
+##### color
+
+> `readonly` **color**: [`ColorLike`](#colorlike)
+
+An sRGB tint multiplied with the albedo; the whole colour when there is no albedo texture.
+
+##### name
+
+> `readonly` **name**: `string`
+
+The layer's name; what a splat rule and a `TerrainScatter` refer to.
+
+##### normal
+
+> `readonly` **normal**: `string` \| `null`
+
+The tangent-space normal map's address, or `null` for none.
+
+##### tiling
+
+> `readonly` **tiling**: `number`
+
+How many metres one repeat of the textures spans.
+
+##### triplanar
+
+> `readonly` **triplanar**: `boolean`
+
+Whether the layer projects along all three axes, which hides stretching on cliffs.
+
+***
+
+### TerrainLayerImages
+
+The decoded layer images of one terrain, all the same size.
+
+#### Properties
+
+##### albedo
+
+> `readonly` **albedo**: readonly `Uint8Array`\<`ArrayBufferLike`\>[]
+
+One RGBA8 image per layer, in layer order.
+
+##### height
+
+> `readonly` **height**: `number`
+
+Every layer's height, in texels.
+
+##### normals
+
+> `readonly` **normals**: readonly (`Uint8Array`\<`ArrayBufferLike`\> \| `null`)[]
+
+One RGBA8 normal map per layer, or `null` for a layer without one.
+
+##### width
+
+> `readonly` **width**: `number`
+
+Every layer's width, in texels.
+
+***
+
+### TerrainLayerInput
+
+What [TerrainLayerDefinition](#terrainlayerdefinition) accepts: every defaulted field optional.
+
+#### Properties
+
+##### albedo?
+
+> `readonly` `optional` **albedo?**: `string`
+
+The albedo texture's address.
+
+##### color?
+
+> `readonly` `optional` **color?**: [`ColorLike`](#colorlike) \| readonly `number`[]
+
+An sRGB tint, as `{ r, g, b, a }` or `[r, g, b]`. Defaults to white.
+
+##### name
+
+> `readonly` **name**: `string`
+
+The layer's name. Required.
+
+##### normal?
+
+> `readonly` `optional` **normal?**: `string` \| `null`
+
+The normal map's address.
+
+##### tiling?
+
+> `readonly` `optional` **tiling?**: `number`
+
+Metres per texture repeat. Defaults to `8`.
+
+##### triplanar?
+
+> `readonly` `optional` **triplanar?**: `boolean`
+
+Whether the layer is projected triplanar. Defaults to `false`.
+
+***
+
+### TerrainLayerTextures
+
+The texture assets a terrain material samples its layers through.
+
+#### Properties
+
+##### albedo
+
+> `readonly` **albedo**: [`AssetHandle`](#assethandle)\<[`TextureAsset`](#textureasset)\> \| `null`
+
+The albedo array, one slice per layer; `null` for a terrain with no layer images.
+
+##### hasNormal
+
+> `readonly` **hasNormal**: readonly `boolean`[]
+
+Which layers carry a normal map, in layer order.
+
+##### normals
+
+> `readonly` **normals**: [`AssetHandle`](#assethandle)\<[`TextureAsset`](#textureasset)\> \| `null`
+
+The normal array, or `null` when no layer carries a normal map.
+
+***
+
+### TerrainMaterialDefinition
+
+The PBR factors the whole terrain shares. Per-layer roughness is not possible: Babylon Lite's PBR
+template declares `roughness` as a `let`, so a material plugin cannot drive it.
+
+#### Properties
+
+##### metallic
+
+> `readonly` **metallic**: `number`
+
+Metallic factor, 0 to 1.
+
+##### roughness
+
+> `readonly` **roughness**: `number`
+
+Roughness factor, 0 to 1.
+
+***
+
+### TerrainNoiseDefinition
+
+The seeded fractal noise a terrain without a heightmap is built from.
+
+#### Properties
+
+##### frequency
+
+> `readonly` **frequency**: `number`
+
+The first octave's frequency, in cycles per metre.
+
+##### lacunarity
+
+> `readonly` **lacunarity**: `number`
+
+How much the frequency grows per octave.
+
+##### octaves
+
+> `readonly` **octaves**: `number`
+
+How many octaves are summed.
+
+##### persistence
+
+> `readonly` **persistence**: `number`
+
+How much the amplitude shrinks per octave.
+
+##### ridged
+
+> `readonly` **ridged**: `boolean`
+
+Ridged multifractal (sharp crests) rather than plain fBm.
+
+##### seed
+
+> `readonly` **seed**: `number`
+
+The seed; the same seed always produces the same field.
+
+##### terraces
+
+> `readonly` **terraces**: `number`
+
+How many flat steps the height is quantised into; `0` leaves it smooth.
+
+***
+
+### TerrainRegion
+
+A rectangle of samples: the region a sculpt edits, a collider covers, or a chunk rebuild touches.
+
+#### Properties
+
+##### depth
+
+> `readonly` **depth**: `number`
+
+How many rows.
+
+##### width
+
+> `readonly` **width**: `number`
+
+How many columns.
+
+##### x
+
+> `readonly` **x**: `number`
+
+The first sample column.
+
+##### z
+
+> `readonly` **z**: `number`
+
+The first sample row.
+
+***
+
+### TerrainSize
+
+The terrain's extent, in metres. `height` is the full range the heightmap's `0..65535` maps onto.
+
+#### Properties
+
+##### depth
+
+> `readonly` **depth**: `number`
+
+Extent along Z.
+
+##### height
+
+> `readonly` **height**: `number`
+
+The height a full-scale sample reaches; the field spans `0..height`.
+
+##### width
+
+> `readonly` **width**: `number`
+
+Extent along X.
+
+***
+
+### TerrainSplatDefinition
+
+A painted control map set: one RGBA image per four layers, one channel per layer.
+
+#### Properties
+
+##### control
+
+> `readonly` **control**: readonly `string`[]
+
+The control map addresses, resolved relative to the document; the second covers layers 5–8.
+
+***
+
+### TerrainSplatLayerSpec
+
+One layer's compile-time shape.
+
+#### Properties
+
+##### color
+
+> `readonly` **color**: [`ColorLike`](#colorlike)
+
+The layer's sRGB tint.
+
+##### hasNormal
+
+> `readonly` **hasNormal**: `boolean`
+
+Whether the layer's slice of the normal array holds a normal map.
+
+##### tiling
+
+> `readonly` **tiling**: `number`
+
+Metres per texture repeat.
+
+##### triplanar
+
+> `readonly` **triplanar**: `boolean`
+
+Whether the layer projects along all three axes.
+
+***
+
+### TerrainSplatRule
+
+One rule of a generated splat: where a layer appears, by height and slope band.
+
+#### Properties
+
+##### height
+
+> `readonly` **height**: readonly \[`number`, `number`\] \| `null`
+
+The height band, in metres, or `null` for every height.
+
+##### layer
+
+> `readonly` **layer**: `string`
+
+The layer the rule paints.
+
+##### slope
+
+> `readonly` **slope**: readonly \[`number`, `number`\] \| `null`
+
+The slope band, in degrees from horizontal, or `null` for every slope.
+
+***
+
+### TerrainSplatRuleInput
+
+What a splat rule accepts.
+
+#### Properties
+
+##### height?
+
+> `readonly` `optional` **height?**: readonly `number`[]
+
+The height band, in metres.
+
+##### layer
+
+> `readonly` **layer**: `string`
+
+The layer the rule paints. Required.
+
+##### slope?
+
+> `readonly` `optional` **slope?**: readonly `number`[]
+
+The slope band, in degrees.
+
+***
+
+### TerrainSplatShaderSpec
+
+What decides the generated file's shape.
+
+#### Properties
+
+##### layers
+
+> `readonly` **layers**: readonly [`TerrainSplatLayerSpec`](#terrainsplatlayerspec)[]
+
+The layers, in control-channel order, 1 to 8.
+
+##### normals
+
+> `readonly` **normals**: `boolean`
+
+Whether a normal texture array is bound.
+
+##### textured
+
+> `readonly` **textured**: `boolean`
+
+Whether an albedo texture array is bound; without one the layers blend their tints alone.
 
 ***
 
@@ -72257,7 +82585,7 @@ The object's type, which selected this factory.
 
 ##### world
 
-> `readonly` **world**: [`World`](#world-59)
+> `readonly` **world**: [`World`](#world-64)
 
 The world to create the entity in.
 
@@ -73087,7 +83415,7 @@ export default defineConfig({
 > `readonly` **layers**: readonly `string`[]
 
 The layers created eagerly, back to front. Declaring them here is what makes their stacking
-order independent of the order the game happens to call [UiHost.layer](#layer-14) in.
+order independent of the order the game happens to call [UiHost.layer](#layer-16) in.
 
 ##### referenceResolution
 
@@ -73163,6 +83491,32 @@ The clock, in milliseconds since the Unix epoch. Defaults to `Date.now`.
 > `readonly` `optional` **random?**: [`RandomSource`](#randomsource)
 
 Where randomness comes from. Defaults to [createCryptoRandom](#createcryptorandom).
+
+***
+
+### UploadRange
+
+**`Beta`**
+
+A contiguous run of records to upload, in slots.
+
+#### Properties
+
+##### count
+
+> `readonly` **count**: `number`
+
+**`Beta`**
+
+How many records.
+
+##### start
+
+> `readonly` **start**: `number`
+
+**`Beta`**
+
+The first slot.
 
 ***
 
@@ -73918,6 +84272,32 @@ The union of [COLLISION\_IDENTITY\_MODES](#collision_identity_modes).
 
 ***
 
+### ColorInput
+
+> **ColorInput** = [`ColorLike`](#colorlike) \| readonly \[`number`, `number`, `number`, `number`\]
+
+A colour as a document may write it: an `{ r, g, b, a }` object or an `[r, g, b, a]` array, both
+sRGB in `0`–`1`.
+
+***
+
+### ColorValue
+
+> **ColorValue** = \{ `kind`: `"constant"`; `value`: [`ColorLike`](#colorlike); \} \| \{ `kind`: `"random"`; `max`: [`ColorLike`](#colorlike); `min`: [`ColorLike`](#colorlike); \} \| \{ `kind`: `"gradient"`; `samples`: `Float32Array`; `stops`: readonly [`GradientStop`](#gradientstop)[]; \}
+
+A resolved colour value. A `"gradient"` carries its baked RGBA samples, sRGB, four floats per
+sample.
+
+***
+
+### ColorValueInput
+
+> **ColorValueInput** = [`ColorInput`](#colorinput) \| \{ `max`: [`ColorInput`](#colorinput); `min`: [`ColorInput`](#colorinput); \} \| \{ `gradient`: readonly [`GradientStop`](#gradientstop)[]; \}
+
+A colour a document may give as a constant, a random pick between two, or a gradient.
+
+***
+
 ### CombineRule
 
 > **CombineRule** = *typeof* [`COMBINE_RULES`](#combine_rules)\[`number`\]
@@ -73953,7 +84333,7 @@ able to write a plain `static typeId` without the `override` keyword.
 
 ##### S
 
-`S` *extends* [`Schema`](#schema-41)
+`S` *extends* [`Schema`](#schema-44)
 
 The schema the class was defined from.
 
@@ -74065,6 +84445,22 @@ handle to another coroutine to wait for, or a promise to resume on once it settl
 
 One key of an animation curve: time, value, incoming tangent, outgoing tangent
 (`docs/architecture/06-serialization-and-scene-format.md` §3).
+
+***
+
+### DeepPartial
+
+> **DeepPartial**\<`T`\> = `T` *extends* readonly `unknown`[] ? `T` : `T` *extends* `object` ? `{ readonly [K in keyof T]?: DeepPartial<T[K]> }` : `T`
+
+A recursively optional view of a type: what an override of a preset looks like.
+
+#### Type Parameters
+
+##### T
+
+`T`
+
+The type being made optional.
 
 ***
 
@@ -74274,7 +84670,7 @@ what gives `this.speed` its `number` type inside a component declared with
 
 ##### S
 
-`S` *extends* [`Schema`](#schema-41)
+`S` *extends* [`Schema`](#schema-44)
 
 The schema to project.
 
@@ -74306,6 +84702,14 @@ How one frame's pads are read. Injecting it is what makes the mapping testable i
 #### Returns
 
 readonly ([`GamepadLike`](#gamepadlike) \| `null`)[]
+
+***
+
+### GradientStop
+
+> **GradientStop** = readonly \[`number`, `number`, `number`, `number`, `number`\]
+
+One stop of a colour gradient: normalized time, then sRGB red, green, blue, and alpha in `0`–`1`.
 
 ***
 
@@ -74408,6 +84812,14 @@ its constructor assigned and a renamed or added field would read `undefined`.
 
 Which point of the render target a `HudText`'s position is measured from, and which point of the
 block sits there.
+
+***
+
+### IgnifxUniformName
+
+> **IgnifxUniformName** = *typeof* [`IGNIFX_UNIFORM_NAMES`](#ignifx_uniform_names)\[`number`\]
+
+The union of the ignifx-provided uniform names.
 
 ***
 
@@ -74616,6 +85028,30 @@ Unstable; excluded from the stability guarantees of `CONSTITUTION.md` Article IV
 
 ***
 
+### LiteChunkMesh
+
+> **LiteChunkMesh** = `Mesh`
+
+The Babylon Lite mesh a terrain chunk is, under an ignifx name.
+
+#### Remarks
+
+Unstable; excluded from the stability guarantees of `CONSTITUTION.md` Article IV.
+
+***
+
+### LiteChunkNode
+
+> **LiteChunkNode** = `SceneNode`
+
+The Babylon Lite node a terrain's chunks are parented under, under an ignifx name.
+
+#### Remarks
+
+Unstable; excluded from the stability guarantees of `CONSTITUTION.md` Article IV.
+
+***
+
 ### LiteEngine
 
 > **LiteEngine** = `EngineContext`
@@ -74683,6 +85119,16 @@ The Babylon Lite material a `MaterialAsset` owns, re-exported under an ignifx na
 #### Remarks
 
 Unstable; excluded from the stability guarantees of `CONSTITUTION.md` Article IV.
+
+***
+
+### LiteMaterialPluginPoint
+
+> **LiteMaterialPluginPoint** = *typeof* [`LITE_MATERIAL_PLUGIN_POINTS`](#lite_material_plugin_points)\[`number`\]
+
+**`Beta`**
+
+One of Babylon Lite's ten material-plugin injection points.
 
 ***
 
@@ -74780,6 +85226,19 @@ feature code can name the type without importing `@babylonjs/lite`
 
 Unstable: it is Lite's type, reachable only through documented `.lite` escape hatches, and it is
 excluded from the stability guarantees of `CONSTITUTION.md` Article IV.
+
+***
+
+### LiteShaderMaterial
+
+> **LiteShaderMaterial** = `ShaderMaterial`
+
+A Babylon Lite custom WGSL material, re-exported under an ignifx name
+(`CONSTITUTION.md` §3.4, coding standards §4).
+
+#### Remarks
+
+Unstable; excluded from the stability guarantees of `CONSTITUTION.md` Article IV.
 
 ***
 
@@ -74967,11 +85426,32 @@ Babylon Lite's buffer-backed sound (`index.d.ts` 12336). Unstable escape hatch.
 
 ***
 
+### LiteStorageBuffer
+
+> **LiteStorageBuffer** = `StorageBuffer`
+
+A Babylon Lite read-only storage buffer, re-exported under an ignifx name
+(`CONSTITUTION.md` §3.4, coding standards §4).
+
+#### Remarks
+
+Unstable; excluded from the stability guarantees of `CONSTITUTION.md` Article IV.
+
+***
+
 ### LiteStreamingSound
 
 > **LiteStreamingSound** = `StreamingSound`
 
 Babylon Lite's media-element-backed sound (`index.d.ts` 12499). Unstable escape hatch.
+
+***
+
+### LiteSystemUniformName
+
+> **LiteSystemUniformName** = *typeof* [`LITE_SYSTEM_UNIFORM_NAMES`](#lite_system_uniform_names)\[`number`\]
+
+The union of the Babylon Lite system uniform names.
 
 ***
 
@@ -75080,7 +85560,7 @@ The union of the alpha modes a material can declare.
 
 ### MaterialDefinition
 
-> **MaterialDefinition** = [`PbrMaterialDefinition`](#pbrmaterialdefinition-3) \| [`StandardMaterialDefinition`](#standardmaterialdefinition-3)
+> **MaterialDefinition** = [`PbrMaterialDefinition`](#pbrmaterialdefinition-3) \| [`StandardMaterialDefinition`](#standardmaterialdefinition-3) \| [`ShaderMaterialDefinition`](#shadermaterialdefinition-3)
 
 The parsed body of a `.material.json`, discriminated by `kind`.
 
@@ -75182,9 +85662,89 @@ mean "take the schema default" here, so both are accepted (`applyInit`, `encodeP
 
 ##### S
 
-`S` *extends* [`Schema`](#schema-41)
+`S` *extends* [`Schema`](#schema-44)
 
 The schema to project.
+
+***
+
+### ParticleBlendMode
+
+> **ParticleBlendMode** = *typeof* [`PARTICLE_BLEND_MODES`](#particle_blend_modes)\[`number`\]
+
+The union of [PARTICLE\_BLEND\_MODES](#particle_blend_modes).
+
+***
+
+### ParticleEmitFrom
+
+> **ParticleEmitFrom** = *typeof* [`PARTICLE_EMIT_FROM`](#particle_emit_from)\[`number`\]
+
+The union of [PARTICLE\_EMIT\_FROM](#particle_emit_from).
+
+***
+
+### ParticleFrameMode
+
+> **ParticleFrameMode** = *typeof* [`PARTICLE_FRAME_MODES`](#particle_frame_modes)\[`number`\]
+
+The union of [PARTICLE\_FRAME\_MODES](#particle_frame_modes).
+
+***
+
+### ParticleMeshName
+
+> **ParticleMeshName** = *typeof* [`PARTICLE_MESHES`](#particle_meshes)\[`number`\]
+
+The union of [PARTICLE\_MESHES](#particle_meshes).
+
+***
+
+### ParticlePreset
+
+> **ParticlePreset** = *typeof* [`PARTICLE_PRESETS`](#particle_presets)\[`number`\]
+
+The union of [PARTICLE\_PRESETS](#particle_presets).
+
+***
+
+### ParticleRenderMode
+
+> **ParticleRenderMode** = *typeof* [`PARTICLE_RENDER_MODES`](#particle_render_modes)\[`number`\]
+
+The union of [PARTICLE\_RENDER\_MODES](#particle_render_modes).
+
+***
+
+### Particles2DErrorCode
+
+> **Particles2DErrorCode** = *typeof* [`Particles2DErrorCode`](#particles2derrorcode)\[keyof *typeof* [`Particles2DErrorCode`](#particles2derrorcode)\]
+
+The union of the codes the `Particles2DErrorCode` table declares.
+
+***
+
+### ParticlesErrorCode
+
+> **ParticlesErrorCode** = *typeof* [`ParticlesErrorCode`](#particleserrorcode)\[keyof *typeof* [`ParticlesErrorCode`](#particleserrorcode)\]
+
+The union of the codes the `ParticlesErrorCode` table declares.
+
+***
+
+### ParticleShapeKind
+
+> **ParticleShapeKind** = *typeof* [`PARTICLE_SHAPE_KINDS`](#particle_shape_kinds)\[`number`\]
+
+The union of [PARTICLE\_SHAPE\_KINDS](#particle_shape_kinds).
+
+***
+
+### ParticleSimulationSpace
+
+> **ParticleSimulationSpace** = *typeof* [`PARTICLE_SIMULATION_SPACES`](#particle_simulation_spaces)\[`number`\]
+
+The union of [PARTICLE\_SIMULATION\_SPACES](#particle_simulation_spaces).
 
 ***
 
@@ -75305,6 +85865,24 @@ transferred to a worker. Declared here so public signatures do not depend on a B
 
 ***
 
+### ScalarValue
+
+> **ScalarValue** = \{ `kind`: `"constant"`; `value`: `number`; \} \| \{ `kind`: `"random"`; `max`: `number`; `min`: `number`; \} \| \{ `curve`: [`CurveValue`](#curvevalue); `kind`: `"curve"`; `samples`: `Float32Array`; \}
+
+A resolved scalar value. A `"curve"` carries its [LOOKUP\_SAMPLES](#lookup_samples) baked samples so the CPU
+side never re-evaluates the Hermite spline.
+
+***
+
+### ScalarValueInput
+
+> **ScalarValueInput** = `number` \| \{ `max`: `number`; `min`: `number`; \} \| \{ `curve`: [`CurveValue`](#curvevalue); \}
+
+A number a document may give as a constant, a range, or a curve. As authored:
+`2`, `{ "min": 1, "max": 3 }`, or `{ "curve": { "keys": [[0, 1, 0, 0], [1, 0, 0, 0]] } }`.
+
+***
+
 ### Schema
 
 > **Schema** = `Readonly`\<`Record`\<`string`, [`FieldDefinition`](#fielddefinition)\<`unknown`\>\>\>
@@ -75335,7 +85913,7 @@ The union of script callback ordinals.
 
 > **ScriptDefinition**\<`S`\> = () => [`Script`](#abstract-script) & [`FieldsOf`](#fieldsof)\<`S`\> & `object`
 
-The abstract base class [Script.define](#define-41) returns: a `Script` that also carries every field
+The abstract base class [Script.define](#define-44) returns: a `Script` that also carries every field
 the schema declares, typed.
 
 #### Type Declaration
@@ -75358,7 +85936,7 @@ to write a plain `static typeId` or `static executionOrder` without the `overrid
 
 ##### S
 
-`S` *extends* [`Schema`](#schema-41)
+`S` *extends* [`Schema`](#schema-44)
 
 The schema the class was defined from.
 
@@ -75431,6 +86009,66 @@ const app = await createApp({
   settings: { layers: ["Default", "Player"], time: { fixedDeltaTime: 1 / 120 } },
 });
 ```
+
+***
+
+### ShaderAttributeName
+
+> **ShaderAttributeName** = *typeof* [`SHADER_ATTRIBUTE_NAMES`](#shader_attribute_names)\[`number`\]
+
+The union of the attribute names a declaration may name.
+
+***
+
+### ShaderBlendMode
+
+> **ShaderBlendMode** = *typeof* [`SHADER_BLEND_MODES`](#shader_blend_modes)\[`number`\]
+
+The blend modes a declaration may ask for.
+
+***
+
+### ShaderCullMode
+
+> **ShaderCullMode** = *typeof* [`SHADER_CULL_MODES`](#shader_cull_modes)\[`number`\]
+
+The face-culling modes a declaration may ask for. `"front"` is refused: Babylon Lite 1.27.0
+exposes only `backFaceCulling`.
+
+***
+
+### ShaderInstancingMode
+
+> **ShaderInstancingMode** = *typeof* [`SHADER_INSTANCING_MODES`](#shader_instancing_modes)\[`number`\]
+
+How a declaration expects to be drawn: one mesh at a time, or thin-instanced with a matrix slab
+and optionally a per-instance colour.
+
+***
+
+### ShaderKind
+
+> **ShaderKind** = *typeof* [`SHADER_KINDS`](#shader_kinds)\[`number`\]
+
+Which of the three authoring forms a `.wgsl` file is: a full custom material, a surface shader
+that hooks into the engine's lit materials, or a full-screen post effect.
+
+***
+
+### ShaderTextureFallback
+
+> **ShaderTextureFallback** = *typeof* [`SHADER_TEXTURE_FALLBACKS`](#shader_texture_fallbacks)\[`number`\]
+
+Which 1x1 texture is bound to a declared sampler that nothing has filled in
+(Godot's `hint_default_*`).
+
+***
+
+### ShaderUniformType
+
+> **ShaderUniformType** = *typeof* [`SHADER_UNIFORM_TYPES`](#shader_uniform_types)\[`number`\]
+
+The union of the uniform types a declaration may name.
 
 ***
 
@@ -75571,6 +86209,31 @@ a UTF-8 byte array are indistinguishable once written.
 > **SupportStateName** = *typeof* [`SUPPORT_STATES`](#support_states)\[`number`\]
 
 The union of [SUPPORT\_STATES](#support_states).
+
+***
+
+### SurfaceHookName
+
+> **SurfaceHookName** = *typeof* [`SURFACE_HOOK_NAMES`](#surface_hook_names)\[`number`\]
+
+One of the three surface-shader hooks.
+
+***
+
+### SurfaceHostFamily
+
+> **SurfaceHostFamily** = `"pbr"` \| `"standard"`
+
+The material family a surface shader is compiled against. The generated WGSL differs: the two
+templates name their variables differently and Standard has fewer injection points.
+
+***
+
+### TerrainErrorCode
+
+> **TerrainErrorCode** = *typeof* [`TerrainErrorCode`](#terrainerrorcode)\[keyof *typeof* [`TerrainErrorCode`](#terrainerrorcode)\]
+
+The union of the codes the `TerrainErrorCode` table declares.
 
 ***
 
@@ -76580,11 +87243,23 @@ The `requires` graph of the registered extensions contains a cycle.
 
 A hot-reloaded class kept the `"patch"` policy while its schema shape changed.
 
+##### instancedCapacityExceeded
+
+> `readonly` **instancedCapacityExceeded**: `"IGX-0721"`
+
+More instances were written to an `InstancedMeshRenderer` than its capacity holds.
+
 ##### instanceHashMismatch
 
 > `readonly` **instanceHashMismatch**: `"IGX-0604"`
 
 A scene instance's override hash does not match the scene file it was recorded against.
+
+##### instancingSettingTooLate
+
+> `readonly` **instancingSettingTooLate**: `"IGX-0717"`
+
+An `InstancedMeshRenderer` setting Lite fixes at scene registration was changed afterwards.
 
 ##### invalidAssetFile
 
@@ -76592,11 +87267,23 @@ A scene instance's override hash does not match the scene file it was recorded a
 
 An asset file does not carry the format header its loader requires.
 
+##### invalidGeometryUpdate
+
+> `readonly` **invalidGeometryUpdate**: `"IGX-0725"`
+
+A `MeshAsset` vertex update named a range the geometry cannot hold.
+
 ##### invalidOverridePath
 
 > `readonly` **invalidOverridePath**: `"IGX-0609"`
 
 An instance override declares a `path` the override grammar does not accept.
+
+##### invalidPixelData
+
+> `readonly` **invalidPixelData**: `"IGX-0722"`
+
+Pixel data handed to a texture does not match its declared size.
 
 ##### invalidRuntime
 
@@ -76609,6 +87296,12 @@ A runtime handle was used after disposal, or was not created by ignifx.
 > `readonly` **invalidSettings**: `"IGX-0408"`
 
 A project settings section did not validate against the schema its extension registered.
+
+##### invalidShaderPragma
+
+> `readonly` **invalidShaderPragma**: `"IGX-0719"`
+
+A `.wgsl` file carries an `@ignifx` pragma this build cannot read.
 
 ##### invalidTimeValue
 
@@ -76663,6 +87356,12 @@ A serialized number was `NaN` or infinite.
 > `readonly` **notASceneFile**: `"IGX-0308"`
 
 A file handed to the scene loader does not carry the `ignifx.scene` format header.
+
+##### notAShaderMaterial
+
+> `readonly` **notAShaderMaterial**: `"IGX-0718"`
+
+A shader-material method was called on a PBR or Standard material.
 
 ##### parentingCycle
 
@@ -76748,6 +87447,30 @@ A screenshot was requested with no render loop running, so no frame will ever be
 
 `ctx.require()` asked for a service that no earlier extension registered.
 
+##### shaderCompileFailed
+
+> `readonly` **shaderCompileFailed**: `"IGX-0715"`
+
+A shader failed to compile or rebuild; the previous material stays in use.
+
+##### shaderLightUniformWithoutLight
+
+> `readonly` **shaderLightUniformWithoutLight**: `"IGX-0714"`
+
+A shader declares a main-light uniform, but the world has no enabled directional light.
+
+##### shaderMaterialEsmCasterSkipped
+
+> `readonly` **shaderMaterialEsmCasterSkipped**: `"IGX-0724"`
+
+A shader-material mesh was left out of an ESM shadow caster list, which Lite cannot render for it.
+
+##### shaderValueMismatch
+
+> `readonly` **shaderValueMismatch**: `"IGX-0713"`
+
+A shader uniform was written with a value whose shape does not match its declared type.
+
 ##### shadowsUnsupportedForLight
 
 > `readonly` **shadowsUnsupportedForLight**: `"IGX-0703"`
@@ -76784,6 +87507,12 @@ An `Environment.skybox` asks for a background the environment it installed canno
 
 The storage backend failed for a reason the engine cannot classify.
 
+##### storageBufferOutOfRange
+
+> `readonly` **storageBufferOutOfRange**: `"IGX-0720"`
+
+A storage buffer update reaches past the buffer's capacity.
+
 ##### storageInvalidKey
 
 > `readonly` **storageInvalidKey**: `"IGX-1422"`
@@ -76813,6 +87542,24 @@ A stored value could not be read back; the store was damaged or written by somet
 > `readonly` **storageValueNotSerializable**: `"IGX-1423"`
 
 A value handed to `app.storage.set` has no JSON form.
+
+##### surfaceHookMissing
+
+> `readonly` **surfaceHookMissing**: `"IGX-0723"`
+
+A surface shader cannot run on its host: no hook, a hook the host lacks, or a Standard host.
+
+##### surfaceSamplerBudgetExceeded
+
+> `readonly` **surfaceSamplerBudgetExceeded**: `"IGX-0726"`
+
+The surface shaders attached to one material declare more samplers than fit beside the host material.
+
+##### surfaceShaderFeatureOff
+
+> `readonly` **surfaceShaderFeatureOff**: `"IGX-0716"`
+
+A surface shader was attached without the `materialPlugins` rendering feature.
 
 ##### tooManyLayers
 
@@ -76855,6 +87602,12 @@ A layer name that the project settings do not declare was used.
 > `readonly` **unknownSettingsSection**: `"IGX-0407"`
 
 `ctx.settings()` asked for a settings section that was never registered.
+
+##### unknownShaderBinding
+
+> `readonly` **unknownShaderBinding**: `"IGX-0712"`
+
+A shader material was asked for a uniform, texture, or storage buffer its shader never declared.
 
 ##### unreachableCase
 
@@ -77711,6 +88464,12 @@ Input devices, actions, and bindings.
 
 App lifecycle, phases, time, coroutines, destruction.
 
+##### particles
+
+> `readonly` **particles**: `"17"`
+
+Particle systems, 3D and 2D.
+
 ##### physics
 
 > `readonly` **physics**: `"09"`
@@ -77740,6 +88499,12 @@ Scenes, scene instances, layers.
 > `readonly` **serialization**: `"06"`
 
 Schemas, scene/prefab JSON, references.
+
+##### terrain
+
+> `readonly` **terrain**: `"16"`
+
+Terrain assets, chunks, and queries.
 
 ##### threeD
 
@@ -77917,6 +88682,14 @@ The `as const` name table behind the public union of the same name.
 
 ***
 
+### FOLIAGE\_SHADER\_NAME
+
+> `const` **FOLIAGE\_SHADER\_NAME**: `"foliage"` = `"foliage"`
+
+The name of the generated foliage shader; the material and the diagnostics carry it.
+
+***
+
 ### FONT\_ASSET\_TYPE
 
 > `const` **FONT\_ASSET\_TYPE**: `"font"` = `"font"`
@@ -77964,6 +88737,22 @@ How many gamepad slots the service tracks (`docs/architecture/08-input.md` §1).
 > `const` **HAVOK\_WASM\_AUTO**: `"auto"` = `"auto"`
 
 The value [PhysicsSettings.havokWasm](#havokwasm) carries when the address comes from the manifest.
+
+***
+
+### HEIGHTMAP\_ASSET\_TYPE
+
+> `const` **HEIGHTMAP\_ASSET\_TYPE**: `"heightmap"` = `"heightmap"`
+
+The asset type a raw heightmap is registered under; the Vite plugin maps `.r16` to it.
+
+***
+
+### HEIGHTMAP\_FILE\_EXTENSIONS
+
+> `const` **HEIGHTMAP\_FILE\_EXTENSIONS**: readonly `string`[]
+
+The address suffixes that select the heightmap loader.
 
 ***
 
@@ -78162,6 +88951,16 @@ The origin the packaged renderer runs on: `ignifx://app`.
 > `const` **IGNIFX\_SCHEME**: `"ignifx"` = `"ignifx"`
 
 The `ignifx://` scheme the packaged renderer is served from.
+
+***
+
+### IGNIFX\_UNIFORM\_NAMES
+
+> `const` **IGNIFX\_UNIFORM\_NAMES**: readonly \[`"time"`, `"unscaledTime"`, `"deltaTime"`, `"mainLightDirection"`, `"mainLightColor"`, `"ambientColor"`\]
+
+The uniforms **ignifx** fills in every frame, read in WGSL as `shaderUniforms.<name>`
+(`docs/plan/2026-09-terrain-particles-shaders.md` §3.1). Babylon Lite has no clock and no light
+bindings for a shader material, so these are the engine's own addition.
 
 ***
 
@@ -78419,6 +89218,14 @@ How a moved kinematic node reaches Havok.
 
 ***
 
+### LAYERS\_PER\_CONTROL\_MAP
+
+> `const` **LAYERS\_PER\_CONTROL\_MAP**: `4` = `4`
+
+How many layers one RGBA map carries.
+
+***
+
 ### LDTK\_DEFAULT\_INTGRID\_COLLIDERS
 
 > `const` **LDTK\_DEFAULT\_INTGRID\_COLLIDERS**: `Readonly`\<`Record`\<`number`, [`TileColliderDefinition`](#tilecolliderdefinition)\>\>
@@ -78451,11 +89258,50 @@ Supported light kinds.
 
 ***
 
+### LITE\_MATERIAL\_PLUGIN\_POINTS
+
+> `const` **LITE\_MATERIAL\_PLUGIN\_POINTS**: readonly \[`"CUSTOM_FRAGMENT_DEFINITIONS"`, `"CUSTOM_FRAGMENT_MAIN_BEGIN"`, `"CUSTOM_FRAGMENT_UPDATE_ALPHA"`, `"CUSTOM_FRAGMENT_UPDATE_DIFFUSE"`, `"CUSTOM_FRAGMENT_BEFORE_LIGHTS"`, `"CUSTOM_FRAGMENT_BEFORE_FINALCOLORCOMPOSITION"`, `"CUSTOM_FRAGMENT_BEFORE_FRAGCOLOR"`, `"CUSTOM_VERTEX_MAIN_BEGIN"`, `"CUSTOM_VERTEX_UPDATE_WORLDPOS"`, `"CUSTOM_VERTEX_MAIN_END"`\]
+
+**`Beta`**
+
+The Babylon Lite injection points a [MaterialPluginDefinition](#materialplugindefinition) may fill in.
+
+#### Remarks
+
+The names are Lite's own (`MaterialPluginPoint`, `index.d.ts` 7084) and are taught verbatim,
+because a plugin's code is written against the template around the point.
+
+***
+
+### LITE\_SYSTEM\_UNIFORM\_NAMES
+
+> `const` **LITE\_SYSTEM\_UNIFORM\_NAMES**: readonly \[`"world"`, `"view"`, `"projection"`, `"viewProjection"`, `"worldView"`, `"worldViewProjection"`, `"cameraPosition"`, `"screenSize"`, `"alphaCutoff"`\]
+
+The uniforms Babylon Lite fills in itself every frame, read in WGSL as `shaderSystem.<name>`
+(`index.d.ts` 11432).
+
+#### Remarks
+
+Two of them lie under `rendering.useFloatingOrigin`: `cameraPosition` reads `(0, 0, 0)` and the
+world matrices are camera-relative. With instancing on, `world`, `worldView`, and
+`worldViewProjection` are **not** instance-aware — the shader composes
+`shaderSystem.world * mat4x4(input.world0, input.world1, input.world2, input.world3)`.
+
+***
+
 ### LOD\_CULLED
 
 > `const` **LOD\_CULLED**: `-1` = `-1`
 
 The level index meaning "past the last level; draw nothing".
+
+***
+
+### LOD\_HYSTERESIS
+
+> `const` **LOD\_HYSTERESIS**: `0.1` = `.1`
+
+How far past a threshold, as a fraction, a chunk waits before switching level.
 
 ***
 
@@ -78516,6 +89362,15 @@ Something is wrong but the frame continues.
 #### Remarks
 
 `as const` object plus derived union rather than an `enum` (coding standards §5.2, §5.3).
+
+***
+
+### LOOKUP\_SAMPLES
+
+> `const` **LOOKUP\_SAMPLES**: `64` = `64`
+
+How many samples a baked curve or gradient row holds. Both evaluators read the same 64 samples
+with the same linear rule, which is what makes the lookup the contract between them.
 
 ***
 
@@ -78585,11 +89440,67 @@ The material families `.material.json` can declare
 
 ***
 
+### MATERIAL\_PLUGIN\_DEFAULT\_PRIORITY
+
+> `const` **MATERIAL\_PLUGIN\_DEFAULT\_PRIORITY**: `500` = `500`
+
+**`Beta`**
+
+The default priority Babylon Lite gives a plugin with none (`index.d.ts` 7057).
+
+***
+
+### MATERIAL\_PLUGIN\_RESERVED\_NAMES
+
+> `const` **MATERIAL\_PLUGIN\_RESERVED\_NAMES**: readonly `string`[]
+
+**`Beta`**
+
+The WGSL names the PBR and Standard templates already own, which a plugin may not reuse for a
+uniform field or a sampler.
+
+#### Remarks
+
+A plugin's fields land in the host's own uniform block and its samplers in the host's own bind
+group, so a collision is a duplicate WGSL declaration and the whole material stops compiling with
+a message that names neither the plugin nor the field. Refusing at attach time is the difference
+between a sentence and a shader dump. Read from `pbr-template.js` `_baseMaterialUboFields` and
+`_baseBindings`, and `standard-template.js` `materialStruct` and `_baseBindings`.
+
+***
+
+### MATERIAL\_PLUGIN\_SAMPLER\_BUDGET
+
+> `const` **MATERIAL\_PLUGIN\_SAMPLER\_BUDGET**: `9` = `9`
+
+**`Beta`**
+
+How many `texture`/`sampler` pairs one material's plugins may declare together.
+
+#### Remarks
+
+Measured on a device on 2026-09-08 (spike S0.2): a fully textured PBR material — base colour,
+normal, ORM, emissive — with image-based lighting and one PCF shadow light already binds seven
+textures and seven samplers of the sixteen per stage that every WebGPU implementation guarantees,
+SwiftShader included, and Lite requests no higher `requiredLimits`. Nine is what is left, and it
+drops to eight with a second shadow light and seven with a lightmap, so a material that means to
+be portable should stay well under the cap.
+
+***
+
 ### MAX\_LAYERS
 
 > `const` **MAX\_LAYERS**: `32` = `32`
 
 How many layer slots exist. One bit each, in a 32-bit mask.
+
+***
+
+### MAX\_TERRAIN\_LAYERS
+
+> `const` **MAX\_TERRAIN\_LAYERS**: `8` = `8`
+
+The most layers one terrain may declare: two RGBA control maps, four channels each.
 
 ***
 
@@ -78654,6 +89565,363 @@ The `FixedUpdate` order the navigation system runs at.
 extension band; `200` is deliberately outside it and above the `[-1000, 1000]` core band's
 midpoint, so navigation lands after `fixedUpdate` scripts and after the physics step. An agent
 that also carries a `CharacterController` therefore sees this step's ground contact.
+
+***
+
+### PARTICLE\_2D\_UPDATE\_ORDER
+
+> `const` **PARTICLE\_2D\_UPDATE\_ORDER**: `900` = `900`
+
+Where the update system sits in `Update`: the same place `@ignifx/particles` puts its own.
+
+***
+
+### PARTICLE\_2D\_WRITE\_ORDER
+
+> `const` **PARTICLE\_2D\_WRITE\_ORDER**: `-460` = `-460`
+
+Where the write system sits in `PreRender`: before `@ignifx/2d`'s sprite sync (`-450`).
+
+***
+
+### PARTICLE\_ASSET\_TYPE
+
+> `const` **PARTICLE\_ASSET\_TYPE**: `"particles"` = `"particles"`
+
+The asset type name the loader registers.
+
+***
+
+### PARTICLE\_BLEND\_MODES
+
+> `const` **PARTICLE\_BLEND\_MODES**: readonly \[`"premultiplied"`, `"additive"`, `"alpha"`\]
+
+How particles composite over what is behind them. `premultiplied` is the default: fire and smoke
+share one draw and blend front-to-back correctly.
+
+***
+
+### PARTICLE\_EMIT\_FROM
+
+> `const` **PARTICLE\_EMIT\_FROM**: readonly \[`"volume"`, `"shell"`, `"base"`\]
+
+Where inside a shape particles start: anywhere in it, on its surface, or — for a cone — on its
+base disc.
+
+***
+
+### PARTICLE\_FILE\_EXTENSIONS
+
+> `const` **PARTICLE\_FILE\_EXTENSIONS**: readonly `string`[]
+
+The address suffixes that select the particle loader.
+
+***
+
+### PARTICLE\_FRAME\_MODES
+
+> `const` **PARTICLE\_FRAME\_MODES**: readonly \[`"curve"`, `"random"`, `"fps"`\]
+
+How a sprite sheet picks its frame: from a curve over the particle's life, at random per particle,
+or advancing at a fixed rate.
+
+***
+
+### PARTICLE\_MESHES
+
+> `const` **PARTICLE\_MESHES**: readonly \[`"box"`, `"sphere"`, `"plane"`, `"cylinder"`, `"capsule"`, `"torus"`\]
+
+The core primitives a `"mesh"` renderer may draw, each built at unit size.
+
+***
+
+### PARTICLE\_PRESETS
+
+> `const` **PARTICLE\_PRESETS**: readonly \[`"fire"`, `"smoke"`, `"sparks"`, `"explosion"`, `"dust"`, `"sparkle"`, `"rain"`, `"snow"`, `"leaves"`\]
+
+Every preset name, in the order the documentation lists them.
+
+***
+
+### PARTICLE\_RENDER\_MODES
+
+> `const` **PARTICLE\_RENDER\_MODES**: readonly \[`"billboard"`, `"stretched"`, `"horizontal"`, `"vertical"`, `"mesh"`\]
+
+How a particle is oriented when drawn.
+
+***
+
+### PARTICLE\_RENDER\_ORDER
+
+> `const` **PARTICLE\_RENDER\_ORDER**: `880` = `880`
+
+Where the render system sits in `PreRender`: before core's shader-uniform (890) and render-sync
+(900) systems, so this frame's records and uniforms are what the scene draws.
+
+***
+
+### PARTICLE\_SHAPE\_KINDS
+
+> `const` **PARTICLE\_SHAPE\_KINDS**: readonly \[`"point"`, `"sphere"`, `"hemisphere"`, `"cone"`, `"box"`, `"circle"`, `"edge"`, `"mesh"`\]
+
+Every emitter shape. Directional shapes emit along the emitter's local `+Y`.
+
+***
+
+### PARTICLE\_SIMULATION\_SPACES
+
+> `const` **PARTICLE\_SIMULATION\_SPACES**: readonly \[`"local"`, `"world"`\]
+
+Where a particle's position is integrated: in the emitter's space and transformed by the emitter's
+current world matrix at draw (`"local"`, so the effect follows its entity), or baked into world
+space at spawn (`"world"`, so a trail stays where it was emitted).
+
+***
+
+### PARTICLE\_UPDATE\_ORDER
+
+> `const` **PARTICLE\_UPDATE\_ORDER**: `900` = `900`
+
+Where the update system sits in `Update`: after every script, so a script's `emit()` is drawn in
+the same frame.
+
+***
+
+### particles
+
+> `const` **particles**: (`options?`) => [`Extension`](#extension)
+
+The `@ignifx/particles` extension factory.
+
+#### Parameters
+
+##### options?
+
+[`ParticlesOptions`](#particlesoptions)
+
+Overrides for the `particles` settings section.
+
+#### Returns
+
+[`Extension`](#extension)
+
+The extension descriptor to pass to `createApp`.
+
+#### Example
+
+```ts
+const app = await createApp({ canvas, extensions: [particles({ maxParticles: 50_000 })] });
+```
+
+***
+
+### PARTICLES\_2D\_DIAGNOSTICS\_COUNTERS
+
+> `const` **PARTICLES\_2D\_DIAGNOSTICS\_COUNTERS**: readonly `string`[]
+
+The counters the group carries, in index order.
+
+***
+
+### PARTICLES\_2D\_DIAGNOSTICS\_GROUP
+
+> `const` **PARTICLES\_2D\_DIAGNOSTICS\_GROUP**: `"particles-2d"` = `"particles-2d"`
+
+The diagnostics group name.
+
+***
+
+### PARTICLES\_2D\_ERROR\_MESSAGES
+
+> `const` **PARTICLES\_2D\_ERROR\_MESSAGES**: `Readonly`\<`Record`\<`string`, `string`\>\>
+
+The one-line message template of every code, as `ExtensionContext.registerErrorCodes` wants it.
+Context keys appear in braces, matching the core table's convention.
+
+***
+
+### PARTICLES\_DIAGNOSTICS\_COUNTERS
+
+> `const` **PARTICLES\_DIAGNOSTICS\_COUNTERS**: readonly `string`[]
+
+The counters the group carries, in index order.
+
+***
+
+### PARTICLES\_DIAGNOSTICS\_GROUP
+
+> `const` **PARTICLES\_DIAGNOSTICS\_GROUP**: `"particles"` = `"particles"`
+
+The diagnostics group name.
+
+***
+
+### PARTICLES\_ERROR\_MESSAGES
+
+> `const` **PARTICLES\_ERROR\_MESSAGES**: `Readonly`\<`Record`\<`string`, `string`\>\>
+
+The one-line message template of every code, as `ExtensionContext.registerErrorCodes` wants it.
+Context keys appear in braces, matching the core table's convention.
+
+***
+
+### PARTICLES\_FORMAT
+
+> `const` **PARTICLES\_FORMAT**: `"ignifx.particles"` = `"ignifx.particles"`
+
+The `format` discriminator every `.particles.json` document carries.
+
+***
+
+### PARTICLES\_FORMAT\_VERSION
+
+> `const` **PARTICLES\_FORMAT\_VERSION**: `1` = `1`
+
+The document version this build reads and writes.
+
+***
+
+### PARTICLES\_SETTINGS\_SECTION
+
+> `const` **PARTICLES\_SETTINGS\_SECTION**: `"particles"` = `"particles"`
+
+The section name as it appears in `ignifx.config.ts`.
+
+***
+
+### particles2D
+
+> `const` **particles2D**: () => [`Extension`](#extension)
+
+The `@ignifx/particles-2d` extension factory.
+
+#### Returns
+
+[`Extension`](#extension)
+
+The extension descriptor to pass to `createApp`.
+
+#### Example
+
+```ts
+const app = await createApp({ canvas, extensions: [twoD(), particles(), particles2D()] });
+```
+
+***
+
+### Particles2DErrorCode
+
+> `const` **Particles2DErrorCode**: `object`
+
+Every diagnostic code `@ignifx/particles-2d` can throw or log, keyed by an intention-revealing
+name so call sites read as prose and the compiler catches typos (coding standards §5.2).
+
+#### Type Declaration
+
+##### atlasNotLoaded
+
+> `readonly` **atlasNotLoaded**: `"IGX-1754"`
+
+A `ParticleSystem2D` has a definition but no loaded atlas, so it draws nothing.
+
+##### duplicateExtension
+
+> `readonly` **duplicateExtension**: `"IGX-1751"`
+
+A second `particles2D()` extension was registered on one app.
+
+##### extensionMissing
+
+> `readonly` **extensionMissing**: `"IGX-1755"`
+
+A `ParticleSystem2D` was attached to an app that never registered `particles2D()`.
+
+##### invalidArgument
+
+> `readonly` **invalidArgument**: `"IGX-1753"`
+
+`emit` or `simulate` was given a value that is not a finite number in range.
+
+##### noDefinition
+
+> `readonly` **noDefinition**: `"IGX-1752"`
+
+A `ParticleSystem2D` method that needs a definition ran without one.
+
+##### unknownSortingLayer
+
+> `readonly` **unknownSortingLayer**: `"IGX-1756"`
+
+A `ParticleSystem2D` names a sorting layer the project does not declare; `"Default"` was used.
+
+#### Example
+
+```ts
+throw particles2DError(Particles2DErrorCode.noDefinition, "torch has no definition.", {
+  context: { entity: "torch", method: "play" },
+});
+```
+
+***
+
+### ParticlesErrorCode
+
+> `const` **ParticlesErrorCode**: `object`
+
+Every diagnostic code `@ignifx/particles` can throw or log, keyed by an intention-revealing name
+so call sites read as prose and the compiler catches typos (coding standards §5.2).
+
+#### Type Declaration
+
+##### budgetExceeded
+
+> `readonly` **budgetExceeded**: `"IGX-1702"`
+
+A `ParticleSystem` asked for more capacity than the `app.particles.maxParticles` budget has left; it was clamped.
+
+##### duplicateExtension
+
+> `readonly` **duplicateExtension**: `"IGX-1703"`
+
+A second `particles()` extension was registered on one app.
+
+##### invalidArgument
+
+> `readonly` **invalidArgument**: `"IGX-1707"`
+
+`emit`, `simulate`, or a value argument was not a finite number in range.
+
+##### invalidParticlesFile
+
+> `readonly` **invalidParticlesFile**: `"IGX-1701"`
+
+A `.particles.json` document, or a `defineParticles` input, is not an `ignifx.particles` document this build can read.
+
+##### noDefinition
+
+> `readonly` **noDefinition**: `"IGX-1705"`
+
+A `ParticleSystem` method that needs a definition ran without one.
+
+##### shaderFailed
+
+> `readonly` **shaderFailed**: `"IGX-1706"`
+
+The generated particle shader failed to load or to build a material.
+
+##### unknownPreset
+
+> `readonly` **unknownPreset**: `"IGX-1704"`
+
+`particleDefinition` named a preset that does not exist.
+
+#### Example
+
+```ts
+throw particlesError(ParticlesErrorCode.invalidParticlesFile, "fire.particles.json declares no main.", {
+  context: { file: "fire.particles.json", reason: "main is missing" },
+});
+```
 
 ***
 
@@ -79126,6 +90394,29 @@ throw physicsError(PhysicsErrorCode.queryBeforeStep, "raycast() ran before the f
 
 ***
 
+### POST\_EFFECT\_BUILTIN\_UNIFORMS
+
+> `const` **POST\_EFFECT\_BUILTIN\_UNIFORMS**: readonly `object`[]
+
+The uniforms every post effect's `shaderUniforms` block carries before the file's own, in this
+order.
+
+#### Remarks
+
+`screenSize` is in backing-store pixels — `canvas.width`/`canvas.height` — like everything else
+the engine reports (`docs/architecture/07-rendering.md` §3). The three clocks are the app's, so
+`time` freezes under `app.pause()` and `unscaledTime` does not.
+
+***
+
+### POST\_EFFECT\_FUNCTION
+
+> `const` **POST\_EFFECT\_FUNCTION**: `"mainFragment"` = `"mainFragment"`
+
+The name a `// @ignifx post` file gives its fragment function.
+
+***
+
 ### ProcessorKind
 
 > `const` **ProcessorKind**: `object`
@@ -79200,11 +90491,110 @@ this is the one module both of them import.
 
 ***
 
+### R16\_FILE\_EXTENSION
+
+> `const` **R16\_FILE\_EXTENSION**: `".r16"` = `".r16"`
+
+The address suffix of the canonical raw heightmap: little-endian `uint16`, row-major,
+`resolution * resolution` samples, `0..65535` mapped onto `0..size.height`.
+
+***
+
 ### RAD\_TO\_DEG
 
 > `const` **RAD\_TO\_DEG**: `number`
 
 Multiplier that converts radians to degrees.
+
+***
+
+### RECORD\_BYTES
+
+> `const` **RECORD\_BYTES**: `number`
+
+**`Beta`**
+
+Bytes per record, matching the WGSL `Particle` struct's size.
+
+***
+
+### RECORD\_FLOATS
+
+> `const` **RECORD\_FLOATS**: `12` = `12`
+
+**`Beta`**
+
+Floats per record.
+
+***
+
+### RECORD\_LIFETIME
+
+> `const` **RECORD\_LIFETIME**: `1` = `1`
+
+**`Beta`**
+
+The float index of `lifetime` inside a record.
+
+***
+
+### RECORD\_POSITION
+
+> `const` **RECORD\_POSITION**: `4` = `4`
+
+**`Beta`**
+
+The float index of `position.x` inside a record.
+
+***
+
+### RECORD\_ROTATION
+
+> `const` **RECORD\_ROTATION**: `11` = `11`
+
+**`Beta`**
+
+The float index of `rotation` inside a record, in radians.
+
+***
+
+### RECORD\_SEED
+
+> `const` **RECORD\_SEED**: `2` = `2`
+
+**`Beta`**
+
+The word index of `seed` inside a record; read it from the ring's `words`, not its floats.
+
+***
+
+### RECORD\_SIZE
+
+> `const` **RECORD\_SIZE**: `7` = `7`
+
+**`Beta`**
+
+The float index of `size` inside a record.
+
+***
+
+### RECORD\_SPAWN\_TIME
+
+> `const` **RECORD\_SPAWN\_TIME**: `0` = `0`
+
+**`Beta`**
+
+The float index of `spawnTime` inside a record.
+
+***
+
+### RECORD\_VELOCITY
+
+> `const` **RECORD\_VELOCITY**: `8` = `8`
+
+**`Beta`**
+
+The float index of `velocity.x` inside a record.
 
 ***
 
@@ -79458,6 +90848,84 @@ dispatched from a phase and therefore get a sorted dispatch list.
 
 ***
 
+### SHADER\_ASSET\_TYPE
+
+> `const` **SHADER\_ASSET\_TYPE**: `"shader"` = `"shader"`
+
+The asset type shaders are registered under.
+
+***
+
+### SHADER\_ATTRIBUTE\_NAMES
+
+> `const` **SHADER\_ATTRIBUTE\_NAMES**: readonly \[`"position"`, `"normal"`, `"uv"`, `"uv2"`, `"tangent"`, `"color"`, `"joints"`, `"weights"`, `"joints1"`, `"weights1"`\]
+
+The vertex attributes a shader material can bind — Babylon Lite's fixed set
+(`index.d.ts` 11295). A name outside this list is reported with its line.
+
+***
+
+### SHADER\_BLEND\_MODES
+
+> `const` **SHADER\_BLEND\_MODES**: readonly \[`"opaque"`, `"alpha"`, `"additive"`, `"premultiplied"`\]
+
+How a shader material composites its fragments.
+
+***
+
+### SHADER\_CULL\_MODES
+
+> `const` **SHADER\_CULL\_MODES**: readonly \[`"back"`, `"front"`, `"none"`\]
+
+Which faces are drawn. `"front"` is accepted by the grammar and refused by the parser, because
+Babylon Lite 1.27.0 exposes only `backFaceCulling`.
+
+***
+
+### SHADER\_FILE\_EXTENSIONS
+
+> `const` **SHADER\_FILE\_EXTENSIONS**: readonly `string`[]
+
+The address extensions that select the shader loader.
+
+#### Remarks
+
+`.surface.wgsl` and `.post.wgsl` both end in `.wgsl`, so one extension covers all three forms.
+
+***
+
+### SHADER\_INSTANCING\_MODES
+
+> `const` **SHADER\_INSTANCING\_MODES**: readonly \[`"none"`, `"matrices"`, `"matrices-colors"`\]
+
+Which instance streams the vertex stage reads.
+
+***
+
+### SHADER\_KINDS
+
+> `const` **SHADER\_KINDS**: readonly \[`"shader"`, `"surface"`, `"post"`\]
+
+The three authoring forms the form directive names, in the order the documentation lists them.
+
+***
+
+### SHADER\_TEXTURE\_FALLBACKS
+
+> `const` **SHADER\_TEXTURE\_FALLBACKS**: readonly \[`"white"`, `"black"`, `"transparent"`\]
+
+The 1x1 fallback textures a declaration can bind when nothing else is.
+
+***
+
+### SHADER\_UNIFORM\_TYPES
+
+> `const` **SHADER\_UNIFORM\_TYPES**: readonly \[`"f32"`, `"u32"`, `"i32"`, `"vec2<f32>"`, `"vec3<f32>"`, `"vec4<f32>"`, `"mat4x4<f32>"`\]
+
+The WGSL types a declared uniform may have — Babylon Lite's set (`index.d.ts` 11445).
+
+***
+
 ### SHADOW\_TECHNIQUES
 
 > `const` **SHADOW\_TECHNIQUES**: readonly \[`"esm"`, `"pcf"`, `"csm"`\]
@@ -79584,6 +91052,14 @@ The texture slots a `"standard"` material may name.
 
 ***
 
+### STORAGE\_BUFFER\_ASSET\_TYPE
+
+> `const` **STORAGE\_BUFFER\_ASSET\_TYPE**: `"storagebuffer"` = `"storagebuffer"`
+
+The asset type storage buffers are registered under.
+
+***
+
 ### STORAGE\_KEY\_MAX\_LENGTH
 
 > `const` **STORAGE\_KEY\_MAX\_LENGTH**: `512` = `512`
@@ -79625,6 +91101,212 @@ core's as documented constants.
 > `const` **SUPPORT\_STATES**: readonly \[`"unsupported"`, `"sliding"`, `"supported"`\]
 
 How the character is supported by whatever is under it.
+
+***
+
+### SURFACE\_HOOK\_NAMES
+
+> `const` **SURFACE\_HOOK\_NAMES**: readonly \[`"displace"`, `"surface"`, `"composite"`\]
+
+The three hooks a `.surface.wgsl` file may provide.
+
+***
+
+### SURFACE\_UNIFORM\_BLOCK
+
+> `const` **SURFACE\_UNIFORM\_BLOCK**: `"surfaceUniforms"` = `"surfaceUniforms"`
+
+The uniform block name a surface shader reads its declared uniforms from.
+
+***
+
+### terrain
+
+> `const` **terrain**: () => [`Extension`](#extension)
+
+The `@ignifx/terrain` extension factory.
+
+#### Returns
+
+[`Extension`](#extension)
+
+The extension descriptor to pass to `createApp`.
+
+#### Example
+
+```ts
+const app = await createApp({ canvas, extensions: [terrain()] });
+```
+
+***
+
+### TERRAIN\_ASSET\_TYPE
+
+> `const` **TERRAIN\_ASSET\_TYPE**: `"terrain"` = `"terrain"`
+
+The asset type terrains are registered under.
+
+***
+
+### TERRAIN\_DIAGNOSTICS\_COUNTERS
+
+> `const` **TERRAIN\_DIAGNOSTICS\_COUNTERS**: readonly `string`[]
+
+The counters the terrain group publishes, in index order.
+
+***
+
+### TERRAIN\_DIAGNOSTICS\_GROUP
+
+> `const` **TERRAIN\_DIAGNOSTICS\_GROUP**: `"terrain"` = `"terrain"`
+
+The diagnostics group name (`docs/architecture/15-devtools-and-diagnostics.md` §3).
+
+***
+
+### TERRAIN\_ERROR\_MESSAGES
+
+> `const` **TERRAIN\_ERROR\_MESSAGES**: `Readonly`\<`Record`\<`string`, `string`\>\>
+
+The one-line message template of every code, as `ExtensionContext.registerErrorCodes` wants it.
+Context keys appear in braces, matching the core table's convention.
+
+***
+
+### TERRAIN\_FILE\_EXTENSIONS
+
+> `const` **TERRAIN\_FILE\_EXTENSIONS**: readonly `string`[]
+
+The address suffixes that select the terrain loader.
+
+***
+
+### TERRAIN\_FORMAT
+
+> `const` **TERRAIN\_FORMAT**: `"ignifx.terrain"` = `"ignifx.terrain"`
+
+The `format` header every `.terrain.json` carries.
+
+***
+
+### TERRAIN\_FORMAT\_VERSION
+
+> `const` **TERRAIN\_FORMAT\_VERSION**: `1` = `1`
+
+The only `formatVersion` this build reads.
+
+***
+
+### TERRAIN\_LOD\_ORDER
+
+> `const` **TERRAIN\_LOD\_ORDER**: `10` = `10`
+
+The `PreRender` order the terrain LOD system runs at.
+
+#### Remarks
+
+`10` puts it **after** core's render sync at `0`, because `Camera.getViewMatrix` reads the
+Babylon Lite camera and that is what the sync writes; running earlier would cull against last
+frame's view. Chunk meshes are not components, so nothing downstream needs them decided sooner.
+
+***
+
+### TERRAIN\_SPLAT\_NAME
+
+> `const` **TERRAIN\_SPLAT\_NAME**: `"terrainSplat"` = `"terrainSplat"`
+
+The name the terrain's splat shader answers to on its material.
+
+***
+
+### TerrainErrorCode
+
+> `const` **TerrainErrorCode**: `object`
+
+Every diagnostic code `@ignifx/terrain` can throw or log, keyed by an intention-revealing name so
+call sites read as prose and the compiler catches typos (coding standards §5.2).
+
+#### Type Declaration
+
+##### eightBitHeightmap
+
+> `readonly` **eightBitHeightmap**: `"IGX-1603"`
+
+An 8-bit heightmap was loaded; it terraces. Logged once, never thrown.
+
+##### heightmapSizeMismatch
+
+> `readonly` **heightmapSizeMismatch**: `"IGX-1608"`
+
+A heightmap or a control map decoded to a sample count that does not match the declaration.
+
+##### invalidResolution
+
+> `readonly` **invalidResolution**: `"IGX-1602"`
+
+`resolution` is not `2^n + 1`, or does not equal `chunks.size * chunksPerSide + 1`.
+
+##### invalidTerrainFile
+
+> `readonly` **invalidTerrainFile**: `"IGX-1601"`
+
+A `.terrain.json` document, or a `defineTerrain` input, is not one this build can read.
+
+##### layerSizeMismatch
+
+> `readonly` **layerSizeMismatch**: `"IGX-1607"`
+
+The layer textures of a terrain are not all the same size; a texture array needs equal layers.
+
+##### regionOutOfRange
+
+> `readonly` **regionOutOfRange**: `"IGX-1610"`
+
+A region handed to `setHeights`, `setSplat`, or `colliderInit` falls outside the field.
+
+##### rotationUnsupported
+
+> `readonly` **rotationUnsupported**: `"IGX-1604"`
+
+The terrain entity is rotated about Y, which the world-space queries do not honour. Logged once.
+
+##### scatterNeedsTerrain
+
+> `readonly` **scatterNeedsTerrain**: `"IGX-1612"`
+
+A `TerrainScatter` found no `Terrain` on its entity or any ancestor.
+
+##### terrainNotLoaded
+
+> `readonly` **terrainNotLoaded**: `"IGX-1609"`
+
+A query ran on a `Terrain` whose asset has not been delivered yet.
+
+##### tooManyLayers
+
+> `readonly` **tooManyLayers**: `"IGX-1605"`
+
+A terrain declares no layer, or more than [MAX\_TERRAIN\_LAYERS](#max_terrain_layers) of them.
+
+##### unknownLayer
+
+> `readonly` **unknownLayer**: `"IGX-1611"`
+
+A splat rule or a scatter names a layer the terrain does not declare.
+
+##### unsupportedImage
+
+> `readonly` **unsupportedImage**: `"IGX-1606"`
+
+An image uses a PNG feature the built-in decoder does not read, or is not a PNG at all.
+
+#### Example
+
+```ts
+throw terrainError(TerrainErrorCode.invalidTerrainFile, "island.terrain.json names no layers.", {
+  context: { file: "island.terrain.json" },
+});
+```
 
 ***
 
@@ -80027,6 +91709,24 @@ sites read as prose and the compiler catches typos (coding standards §5.2).
 
 An atlas frame has no one-pixel extruded border, which a pixel-perfect camera will bleed.
 
+##### batchAtlasNotLoaded
+
+> `readonly` **batchAtlasNotLoaded**: `"IGX-1117"`
+
+`app.twoD.createSpriteBatch` was given an atlas handle that has not finished loading.
+
+##### batchDisposed
+
+> `readonly` **batchDisposed**: `"IGX-1116"`
+
+A sprite batch was written to, or resized, after `dispose()`.
+
+##### batchIndexOutOfRange
+
+> `readonly` **batchIndexOutOfRange**: `"IGX-1115"`
+
+A sprite batch was handed a slot index, or a `count`, outside `0 .. capacity`.
+
 ##### duplicateExtension
 
 > `readonly` **duplicateExtension**: `"IGX-1112"`
@@ -80050,6 +91750,12 @@ A `.spriteanim.json` file is not an `ignifx.spriteanimation` document this build
 > `readonly` **invalidAtlasFile**: `"IGX-1103"`
 
 A `.atlas.json` file is not an `ignifx.spriteatlas` document this build can read.
+
+##### invalidBatchCapacity
+
+> `readonly` **invalidBatchCapacity**: `"IGX-1114"`
+
+`app.twoD.createSpriteBatch` was given a capacity that is not a positive whole number.
 
 ##### invalidTilemapFile
 
@@ -80617,13 +92323,13 @@ Where something faces when the world has no enabled camera at all.
 
 ### animatorFileSchema()
 
-> **animatorFileSchema**(): [`Schema`](#schema-41)
+> **animatorFileSchema**(): [`Schema`](#schema-44)
 
 The `ignifx.animator` document schema.
 
 #### Returns
 
-[`Schema`](#schema-41)
+[`Schema`](#schema-44)
 
 The schema, built fresh so no module holds state (`CONSTITUTION.md` §3.5).
 
@@ -81149,15 +92855,59 @@ throw audioError(AudioErrorCode.unknownBus, "Ambience is not a registered bus.",
 
 ### audioSettingsSchema()
 
-> **audioSettingsSchema**(): [`Schema`](#schema-41)
+> **audioSettingsSchema**(): [`Schema`](#schema-44)
 
 The schema the `audio` section is validated against.
 
 #### Returns
 
-[`Schema`](#schema-41)
+[`Schema`](#schema-44)
 
 The schema, built fresh so no module holds state (`CONSTITUTION.md` §3.5).
+
+***
+
+### bakeCurve()
+
+> **bakeCurve**(`curve`): `Float32Array`
+
+Bakes a curve into [LOOKUP\_SAMPLES](#lookup_samples) samples over `[0, 1]`.
+
+#### Parameters
+
+##### curve
+
+[`CurveValue`](#curvevalue)
+
+The curve.
+
+#### Returns
+
+`Float32Array`
+
+The samples; sample `i` is the curve at `i / 63`.
+
+***
+
+### bakeGradient()
+
+> **bakeGradient**(`stops`): `Float32Array`
+
+Bakes a gradient into [LOOKUP\_SAMPLES](#lookup_samples) RGBA samples.
+
+#### Parameters
+
+##### stops
+
+readonly [`GradientStop`](#gradientstop)[]
+
+The stops.
+
+#### Returns
+
+`Float32Array`
+
+`LOOKUP_SAMPLES * 4` floats, sRGB.
 
 ***
 
@@ -81186,6 +92936,65 @@ Inspector and serializer metadata.
 [`FieldDefinition`](#fielddefinition)\<`boolean`\>
 
 The field definition.
+
+***
+
+### buildChunkGeometry()
+
+> **buildChunkGeometry**(`field`, `chunkX`, `chunkZ`, `lod`, `chunkSize`, `skirtDepth`): [`ChunkGeometry`](#chunkgeometry)
+
+Builds one chunk's mesh at one level of detail.
+
+#### Parameters
+
+##### field
+
+[`HeightField`](#heightfield)
+
+The height field, in the terrain's local frame.
+
+##### chunkX
+
+`number`
+
+The chunk column.
+
+##### chunkZ
+
+`number`
+
+The chunk row.
+
+##### lod
+
+`number`
+
+The level of detail.
+
+##### chunkSize
+
+`number`
+
+Quads per chunk side.
+
+##### skirtDepth
+
+`number`
+
+How far the skirts hang down, in metres.
+
+#### Returns
+
+[`ChunkGeometry`](#chunkgeometry)
+
+Fresh arrays.
+
+#### Example
+
+```ts
+const lod0 = buildChunkGeometry(field, 0, 0, 0, 64, 2);
+lod0.positions.length / 3; // 65 * 65 + 4 * 65
+```
 
 ***
 
@@ -81310,6 +93119,142 @@ canonicalizeNumber(-0); // 0
 
 ***
 
+### chunkBounds()
+
+> **chunkBounds**(`field`, `chunkX`, `chunkZ`, `chunkSize`, `skirtDepth`, `out`): `Float32Array`
+
+A chunk's axis-aligned bounds in the terrain's local frame, skirts included.
+
+#### Parameters
+
+##### field
+
+[`HeightField`](#heightfield)
+
+The height field.
+
+##### chunkX
+
+`number`
+
+The chunk column.
+
+##### chunkZ
+
+`number`
+
+The chunk row.
+
+##### chunkSize
+
+`number`
+
+Quads per chunk side.
+
+##### skirtDepth
+
+`number`
+
+How far the skirts hang down.
+
+##### out
+
+`Float32Array`
+
+Receives `[minX, minY, minZ, maxX, maxY, maxZ]`.
+
+#### Returns
+
+`Float32Array`
+
+`out`, for chaining.
+
+***
+
+### chunkGridSide()
+
+> **chunkGridSide**(`chunkSize`, `lod`): `number`
+
+Vertices per side of a chunk's mesh at a level of detail.
+
+#### Parameters
+
+##### chunkSize
+
+`number`
+
+Quads per chunk side.
+
+##### lod
+
+`number`
+
+The level; level `n` skips `2^n` samples.
+
+#### Returns
+
+`number`
+
+The vertex count per side.
+
+***
+
+### chunkIndexCount()
+
+> **chunkIndexCount**(`chunkSize`, `lod`): `number`
+
+How many indices a chunk's mesh has at a level of detail, skirts included.
+
+#### Parameters
+
+##### chunkSize
+
+`number`
+
+Quads per chunk side.
+
+##### lod
+
+`number`
+
+The level.
+
+#### Returns
+
+`number`
+
+The index count, three per triangle.
+
+***
+
+### chunkVertexCount()
+
+> **chunkVertexCount**(`chunkSize`, `lod`): `number`
+
+How many vertices a chunk's mesh has at a level of detail, skirts included.
+
+#### Parameters
+
+##### chunkSize
+
+`number`
+
+Quads per chunk side.
+
+##### lod
+
+`number`
+
+The level.
+
+#### Returns
+
+`number`
+
+The vertex count.
+
+***
+
 ### clamp()
 
 > **clamp**(`value`, `min`, `max`): `number`
@@ -81417,13 +93362,13 @@ The document to persist.
 
 ### collider2DFields()
 
-> **collider2DFields**(): [`Schema`](#schema-41)
+> **collider2DFields**(): [`Schema`](#schema-44)
 
 The fields every 2D collider declares.
 
 #### Returns
 
-[`Schema`](#schema-41)
+[`Schema`](#schema-44)
 
 The shared field declarations, ready to spread into a collider's own schema.
 
@@ -81431,14 +93376,14 @@ The shared field declarations, ready to spread into a collider's own schema.
 
 ### colliderFields()
 
-> **colliderFields**(): [`Schema`](#schema-41)
+> **colliderFields**(): [`Schema`](#schema-44)
 
 The fields every collider declares. It is a function because a field kind is a function call and
 module scope holds declarations only (`CONSTITUTION.md` §3.5).
 
 #### Returns
 
-[`Schema`](#schema-41)
+[`Schema`](#schema-44)
 
 The shared field declarations, ready to spread into a collider's own schema.
 
@@ -81817,6 +93762,28 @@ computeUiLayout("fit", { cssWidth: 800, cssHeight: 600, deviceWidth: 800, device
   400, 300,
 ]).scale; // 2
 ```
+
+***
+
+### controlMapCount()
+
+> **controlMapCount**(`layerCount`): `number`
+
+How many control maps a layer count needs.
+
+#### Parameters
+
+##### layerCount
+
+`number`
+
+The terrain's layer count.
+
+#### Returns
+
+`number`
+
+One per four layers.
 
 ***
 
@@ -82250,6 +94217,48 @@ await app.storage.namespace("saves").set("slot1", { level: 3 });
 
 ***
 
+### createFoliageMaterial()
+
+> **createFoliageMaterial**(`app`, `input`): `Promise`\<[`AssetHandle`](#assethandle)\<[`MaterialAsset`](#materialasset)\>\>
+
+Loads the foliage shader and builds the material in one call.
+
+#### Parameters
+
+##### app
+
+[`App`](#app-1)
+
+The app.
+
+##### input
+
+[`FoliageMaterialInput`](#foliagematerialinput)
+
+The albedo, the wind, the cutoff, and the tint.
+
+#### Returns
+
+`Promise`\<[`AssetHandle`](#assethandle)\<[`MaterialAsset`](#materialasset)\>\>
+
+The material handle, with one holder — the caller.
+
+#### Remarks
+
+The shader goes through the ordinary `.wgsl` loader — from a `data:` address, with the type given
+because the address has no suffix — which is also what loads Babylon Lite's custom-WGSL adapter
+the first time. Before `app.start()` the load settles at once; afterwards it settles in the next
+frame's `PreUpdate`, so call this from setup code rather than a lifecycle callback.
+
+#### Example
+
+```ts
+const grass = await createFoliageMaterial(app, { albedo: grassCard, wind: { strength: 0.3 } });
+scatter.material = grass;
+```
+
+***
+
 ### createFontLoader()
 
 > **createFontLoader**(): [`AssetLoader`](#assetloader)\<[`FontAsset`](#fontasset)\>
@@ -82292,6 +94301,21 @@ for (let index = 0; index < app.diagnostics.historyLength; index += 1) {
   graph.push(sample.rawDeltaMs);
 }
 ```
+
+***
+
+### createHeightmapLoader()
+
+> **createHeightmapLoader**(): [`AssetLoader`](#assetloader)\<`ArrayBuffer`\>
+
+The loader for raw heightmaps: it fetches the bytes and decodes nothing, because only the
+`.terrain.json` that names the file knows its resolution.
+
+#### Returns
+
+[`AssetLoader`](#assetloader)\<`ArrayBuffer`\>
+
+The loader, for `ExtensionContext.registerAssetLoader`.
 
 ***
 
@@ -82359,6 +94383,45 @@ fit in the 32 slots.
 ```ts
 const layers = createLayerTable(["Default", "Ground", "Player", "Enemy"]);
 ```
+
+***
+
+### createLayerTextures()
+
+> **createLayerTextures**(`app`, `name`, `images`): [`TerrainLayerTextures`](#terrainlayertextures)
+
+Builds the albedo and normal texture arrays of a terrain and publishes them as texture assets.
+
+#### Parameters
+
+##### app
+
+[`App`](#app-1)
+
+The app whose engine uploads and whose asset service publishes.
+
+##### name
+
+`string`
+
+The terrain's address, which prefixes the texture addresses.
+
+##### images
+
+[`TerrainLayerImages`](#terrainlayerimages) \| `null`
+
+The packed layer images, or `null` for a textureless terrain.
+
+#### Returns
+
+[`TerrainLayerTextures`](#terrainlayertextures)
+
+The texture handles.
+
+#### Remarks
+
+Headless both handles wrap `null` GPU textures and nothing is uploaded; the assets still report
+their size. Each handle has one holder — the `TerrainAsset`, which releases it when it unloads.
 
 ***
 
@@ -82585,6 +94648,42 @@ The reader, or `null`.
 
 ***
 
+### createParticleLoader()
+
+> **createParticleLoader**(): [`AssetLoader`](#assetloader)\<[`ParticleAsset`](#particleasset)\>
+
+Builds the loader for `.particles.json` addresses.
+
+#### Returns
+
+[`AssetLoader`](#assetloader)\<[`ParticleAsset`](#particleasset)\>
+
+The loader to register with `ctx.registerAssetLoader`.
+
+#### Example
+
+```ts
+ctx.registerAssetLoader(createParticleLoader());
+```
+
+***
+
+### createParticleState()
+
+> **createParticleState**(): [`ParticleState`](#particlestate)
+
+**`Beta`**
+
+Allocates an empty state.
+
+#### Returns
+
+[`ParticleState`](#particlestate)
+
+A state with every field zeroed.
+
+***
+
 ### createPerformanceClock()
 
 > **createPerformanceClock**(): [`Clock`](#clock)
@@ -82692,6 +94791,28 @@ A fresh ray. **Allocates** — make one per call site, not per frame.
 const ray = createRay();
 camera.screenToRay(event.offsetX, event.offsetY, ray);
 ```
+
+***
+
+### createScatterPlacements()
+
+> **createScatterPlacements**(`capacity`): [`ScatterPlacements`](#scatterplacements)
+
+Allocates placement arrays for a capacity.
+
+#### Parameters
+
+##### capacity
+
+`number`
+
+The most instances they will hold.
+
+#### Returns
+
+[`ScatterPlacements`](#scatterplacements)
+
+Fresh arrays. **Allocates** — build them once per capacity, not per frame.
 
 ***
 
@@ -82848,6 +94969,35 @@ ctx.registerService(StorageService, new LocalStorage());
 
 ***
 
+### createShaderLoader()
+
+> **createShaderLoader**(): [`AssetLoader`](#assetloader)\<[`ShaderAsset`](#shaderasset)\>
+
+Builds the loader for `.wgsl` addresses.
+
+#### Returns
+
+[`AssetLoader`](#assetloader)\<[`ShaderAsset`](#shaderasset)\>
+
+The loader to register with `ctx.registerAssetLoader`.
+
+#### Remarks
+
+A parse failure fails the load, unlike a malformed `.material.json` property: a shader whose
+declaration cannot be read has no usable fallback (`CONSTITUTION.md` §3.9).
+
+The loader is also where the custom-shader layers are pulled into memory. A `ShaderAsset` can only
+come from here, so awaiting them here is what lets `createMaterialAsset` and the `.material.json`
+loader build a shader material synchronously (`../shader-support.ts`).
+
+#### Example
+
+```ts
+ctx.registerAssetLoader(createShaderLoader());
+```
+
+***
+
 ### createSpriteAnimationLoader()
 
 > **createSpriteAnimationLoader**(): [`AssetLoader`](#assetloader)\<[`SpriteAnimationAsset`](#spriteanimationasset)\>
@@ -82884,6 +95034,88 @@ The loader to register with `ctx.registerAssetLoader`.
 
 ```ts
 ctx.registerAssetLoader(createSpriteAtlasLoader());
+```
+
+***
+
+### createStorageBufferAsset()
+
+> **createStorageBufferAsset**(`app`, `name`, `data`): [`AssetHandle`](#assethandle)\<[`StorageBufferAsset`](#storagebufferasset)\>
+
+Allocates a read-only storage buffer and publishes it as an in-memory asset.
+
+#### Parameters
+
+##### app
+
+[`App`](#app-1)
+
+The app whose engine allocates it and whose asset service publishes it.
+
+##### name
+
+`string`
+
+A human-readable name, used as the GPU debug label.
+
+##### data
+
+`ArrayBufferView`
+
+The initial contents, which also fix the capacity.
+
+#### Returns
+
+[`AssetHandle`](#assethandle)\<[`StorageBufferAsset`](#storagebufferasset)\>
+
+The handle, with one holder — the caller.
+
+#### Remarks
+
+The capacity is fixed at creation: `data.byteLength` rounded up to four bytes. Allocate the whole
+ring or table once and [StorageBufferAsset.update](#update-13) the part that changed — that is the
+pattern the stateless particle design is built on, and it is what keeps the per-frame cost to one
+`writeBuffer`.
+
+#### Example
+
+```ts
+using table = createStorageBufferAsset(app, "spawns", new Float32Array(4096));
+material.value.setStorageBuffer("particles", table);
+```
+
+***
+
+### createTerrainHit()
+
+> **createTerrainHit**(): [`TerrainHit`](#terrainhit)
+
+Creates a reusable [TerrainHit](#terrainhit).
+
+#### Returns
+
+[`TerrainHit`](#terrainhit)
+
+A fresh hit record. **Allocates** — make one per call site, not per frame.
+
+***
+
+### createTerrainLoader()
+
+> **createTerrainLoader**(): [`AssetLoader`](#assetloader)\<[`TerrainAsset`](#terrainasset-1)\>
+
+The loader for `.terrain.json` documents.
+
+#### Returns
+
+[`AssetLoader`](#assetloader)\<[`TerrainAsset`](#terrainasset-1)\>
+
+The loader, for `ExtensionContext.registerAssetLoader`.
+
+#### Example
+
+```ts
+const island = await app.assets.loadAsync<TerrainAsset>("terrain/island.terrain.json");
 ```
 
 ***
@@ -83104,6 +95336,73 @@ grid: custom({
 
 ***
 
+### customEffect()
+
+> **customEffect**(`init`): [`CustomEffectSettings`](#customeffectsettings)
+
+Fills in a custom effect's defaults, so a caller names only what it means to set.
+
+#### Parameters
+
+##### init
+
+[`CustomEffectInit`](#customeffectinit)
+
+The shader and the fields to set.
+
+#### Returns
+
+[`CustomEffectSettings`](#customeffectsettings)
+
+A complete settings record, ready to push onto `PostProcessStack.custom`.
+
+#### Example
+
+```ts
+stack.custom.push(customEffect({ shader: vignette, order: 5, values: { amount: 0.6 } }));
+```
+
+***
+
+### decodePng()
+
+> **decodePng**(`bytes`, `file?`): `Promise`\<[`DecodedPng`](#decodedpng)\>
+
+Decodes a PNG.
+
+#### Parameters
+
+##### bytes
+
+`Uint8Array`
+
+The file's bytes.
+
+##### file?
+
+`string`
+
+The file's address, for messages.
+
+#### Returns
+
+`Promise`\<[`DecodedPng`](#decodedpng)\>
+
+The decoded image.
+
+#### Throws
+
+IgnifxError with code `IGX-1606` when the bytes are not a PNG this decoder reads.
+
+#### Example
+
+```ts
+const png = await decodePng(new Uint8Array(await ctx.fetchBytes()), ctx.address);
+png.bitDepth; // 16 for a heightmap that will not terrace
+```
+
+***
+
 ### decodeProps()
 
 > **decodeProps**\<`S`\>(`schema`, `json`, `references`): [`DecodeResult`](#decoderesult)\<[`FieldsOf`](#fieldsof)\<`S`\>\>
@@ -83144,6 +95443,83 @@ How to resolve uids back to entities and components.
 [`DecodeResult`](#decoderesult)\<[`FieldsOf`](#fieldsof)\<`S`\>\>
 
 The decoded field object and every problem found.
+
+***
+
+### decodeR16()
+
+> **decodeR16**(`buffer`, `resolution`, `file?`): `Uint16Array`
+
+Decodes a `.r16` buffer into samples.
+
+#### Parameters
+
+##### buffer
+
+`ArrayBuffer`
+
+The file's bytes.
+
+##### resolution
+
+`number`
+
+The samples per side the terrain declares, checked against the byte count.
+
+##### file?
+
+`string`
+
+The file's address, for the message.
+
+#### Returns
+
+`Uint16Array`
+
+`resolution * resolution` samples, row-major.
+
+#### Throws
+
+IgnifxError with code `IGX-1608` when the byte count does not match.
+
+#### Example
+
+```ts
+const samples = decodeR16(await ctx.fetchBytes(), 513, "terrain/island.r16");
+```
+
+***
+
+### decodeRgbaImage()
+
+> **decodeRgbaImage**(`bytes`, `file?`): `Promise`\<[`RgbaImage`](#rgbaimage)\>
+
+Decodes an image file to RGBA8.
+
+#### Parameters
+
+##### bytes
+
+`ArrayBuffer`
+
+The file's bytes.
+
+##### file?
+
+`string`
+
+The file's address, for messages.
+
+#### Returns
+
+`Promise`\<[`RgbaImage`](#rgbaimage)\>
+
+The decoded image.
+
+#### Throws
+
+IgnifxError with code `IGX-1606` when neither the built-in PNG decoder nor the browser can
+read the bytes.
 
 ***
 
@@ -83270,6 +95646,20 @@ The values used for everything a project omits.
 [`InputSettings`](#inputsettings)
 
 The default `input` section.
+
+***
+
+### defaultParticlesSettings()
+
+> **defaultParticlesSettings**(): [`ParticlesSettings`](#particlessettings)
+
+The values used for everything a project omits.
+
+#### Returns
+
+[`ParticlesSettings`](#particlessettings)
+
+The default `particles` section.
 
 ***
 
@@ -83527,6 +95917,102 @@ const actions = defineInputActions({
 
 ***
 
+### defineMaterialPlugin()
+
+> **defineMaterialPlugin**(`definition`): [`MaterialPluginDefinition`](#materialplugindefinition)
+
+**`Beta`**
+
+Validates a raw material-plugin declaration and fills in its defaults.
+
+#### Parameters
+
+##### definition
+
+[`MaterialPluginDefinitionInit`](#materialplugindefinitioninit)
+
+The declaration.
+
+#### Returns
+
+[`MaterialPluginDefinition`](#materialplugindefinition)
+
+The same declaration with `priority`, `uniforms`, and `textures` filled in.
+
+#### Remarks
+
+Nothing here reaches a device: the result is plain data that `attachSurfaceShaders` and
+`attachMaterialPlugin` turn into a Lite plugin. The checks are the ones whose failure would
+otherwise surface as a WGSL compile error with no mention of the plugin — an empty `code`, a
+duplicate or reserved binding name, a name that is not a WGSL identifier, an unknown injection
+point, or more samplers than [MATERIAL\_PLUGIN\_SAMPLER\_BUDGET](#material_plugin_sampler_budget).
+
+The **surface-shader compiler produces one of these**, so a bug in this validation is a bug in
+every surface shader too, which is why it lives here rather than inside the compiler.
+
+#### Throws
+
+IgnifxError with code `IGX-0723` when `code` fills in no point, `IGX-0712` when a name is
+not a legal, unique, unreserved WGSL identifier or a point name is unknown, or `IGX-0726` when the
+plugin alone exceeds the sampler budget.
+
+#### Example
+
+```ts
+const tint = defineMaterialPlugin({
+  name: "tint",
+  code: { CUSTOM_FRAGMENT_UPDATE_ALPHA: "baseColor = baseColor * vec3<f32>(1.0, 0.5, 0.5);" },
+});
+```
+
+***
+
+### defineParticles()
+
+> **defineParticles**(`input`, `address?`): [`ParticleDefinition`](#particledefinition-3)
+
+Fills in the defaults of a particle document, checks every rule the evaluators rely on, and bakes
+its curves and gradients into the lookup rows both hosts sample.
+
+#### Parameters
+
+##### input
+
+[`ParticleDefinitionInput`](#particledefinitioninput)
+
+The document, as authored.
+
+##### address?
+
+`string`
+
+What to name in an error; defaults to `"<inline>"`.
+
+#### Returns
+
+[`ParticleDefinition`](#particledefinition-3)
+
+The complete, frozen definition.
+
+#### Throws
+
+IgnifxError with code `IGX-1701`, naming the offending path, when the document is not
+readable.
+
+#### Example
+
+```ts
+const sparks = defineParticles({
+  main: { capacity: 200, duration: 1, looping: false },
+  emission: { rateOverTime: 0, bursts: [{ time: 0, count: 120 }] },
+  start: { lifetime: { min: 0.4, max: 1 }, speed: { min: 3, max: 6 }, size: 0.04 },
+  forces: { gravityMultiplier: 1, drag: 0.5 },
+  renderer: { mode: "stretched", blend: "additive" },
+});
+```
+
+***
+
 ### defineSchema()
 
 > **defineSchema**\<`S`\>(`fields`): `S`
@@ -83635,6 +96121,54 @@ The complete document.
 
 IgnifxError with code `IGX-1103` when the format tag, the version, the image address, or
 a frame rectangle is wrong, or two frames share a name.
+
+***
+
+### defineTerrain()
+
+> **defineTerrain**(`input`, `address?`): [`TerrainDefinition`](#terraindefinition-1)
+
+Validates a terrain document and fills in its defaults.
+
+#### Parameters
+
+##### input
+
+[`TerrainDefinitionInput`](#terraindefinitioninput)
+
+The document, with every defaulted field optional.
+
+##### address?
+
+`string`
+
+The document's address, for messages and for resolving the addresses it names.
+Defaults to `<inline>`, which resolves references against the asset root.
+
+#### Returns
+
+[`TerrainDefinition`](#terraindefinition-1)
+
+The resolved definition.
+
+#### Throws
+
+IgnifxError with code `IGX-1601` for a malformed document, `IGX-1602` for a resolution
+that does not fit `2^n + 1` or the chunking, `IGX-1605` for a layer count outside 1–8, or
+`IGX-1611` for a rule naming an unknown layer.
+
+#### Example
+
+```ts
+const island = defineTerrain({
+  size: { width: 256, depth: 256, height: 40 },
+  resolution: 257,
+  noise: { seed: 7, octaves: 5 },
+  chunks: { size: 64, lodLevels: 3 },
+  layers: [{ name: "grass" }, { name: "rock", triplanar: true }],
+  splatRules: [{ layer: "grass" }, { layer: "rock", slope: [35, 90] }],
+});
+```
 
 ***
 
@@ -83836,6 +96370,20 @@ The description of the top-level file fields.
 
 ***
 
+### describeParticlesFormat()
+
+> **describeParticlesFormat**(): [`SchemaDescription`](#schemadescription)
+
+Describes the `ignifx.particles` file format.
+
+#### Returns
+
+[`SchemaDescription`](#schemadescription)
+
+The record `pnpm docs:schemas` renders.
+
+***
+
 ### describePhysicsMaterialFileFormat()
 
 > **describePhysicsMaterialFileFormat**(): [`SchemaDescription`](#schemadescription)
@@ -83886,7 +96434,7 @@ The component's namespaced registration id, for example `mygame/Mover`.
 
 ##### schema
 
-[`Schema`](#schema-41)
+[`Schema`](#schema-44)
 
 The component's declared fields.
 
@@ -83952,6 +96500,20 @@ The record `pnpm docs:schemas` renders.
 > **describeSpriteAtlasFormat**(): [`SchemaDescription`](#schemadescription)
 
 Describes the `ignifx.spriteatlas` file format.
+
+#### Returns
+
+[`SchemaDescription`](#schemadescription)
+
+The record `pnpm docs:schemas` renders.
+
+***
+
+### describeTerrainFormat()
+
+> **describeTerrainFormat**(): [`SchemaDescription`](#schemadescription)
+
+Describes the `ignifx.terrain` file format.
 
 #### Returns
 
@@ -84039,15 +96601,61 @@ throw devtoolsError(DevtoolsErrorCode.unknownPanel, "physics2d is not a devtools
 
 ### devtoolsSettingsSchema()
 
-> **devtoolsSettingsSchema**(): [`Schema`](#schema-41)
+> **devtoolsSettingsSchema**(): [`Schema`](#schema-44)
 
 The schema the `devtools` section is validated against.
 
 #### Returns
 
-[`Schema`](#schema-41)
+[`Schema`](#schema-44)
 
 The schema, built fresh so no module holds state (`CONSTITUTION.md` §3.5).
+
+***
+
+### distanceToBox()
+
+> **distanceToBox**(`x`, `y`, `z`, `bounds`, `offset?`): `number`
+
+The distance from a point to the nearest point of an axis-aligned box; zero inside it.
+
+#### Parameters
+
+##### x
+
+`number`
+
+The point's X.
+
+##### y
+
+`number`
+
+The point's Y.
+
+##### z
+
+`number`
+
+The point's Z.
+
+##### bounds
+
+`ArrayLike`\<`number`\>
+
+`[minX, minY, minZ, maxX, maxY, maxZ]`, read from `offset`.
+
+##### offset?
+
+`number`
+
+Where the six values start.
+
+#### Returns
+
+`number`
+
+The distance, in the box's units.
 
 ***
 
@@ -84139,6 +96747,28 @@ An optional collector; problems are appended to it in discovery order.
 [`JsonObject`](#jsonobject)
 
 The JSON object written under `props` in a scene file.
+
+***
+
+### encodeR16()
+
+> **encodeR16**(`samples`): `ArrayBuffer`
+
+Encodes samples as a `.r16` buffer.
+
+#### Parameters
+
+##### samples
+
+`Uint16Array`
+
+The samples, row-major.
+
+#### Returns
+
+`ArrayBuffer`
+
+The bytes, little-endian.
 
 ***
 
@@ -84357,6 +96987,124 @@ environmentDefinition({ environment: "environments/studio.env", skyboxEnabled: f
 
 ***
 
+### evaluateCurve()
+
+> **evaluateCurve**(`curve`, `t`): `number`
+
+Evaluates a cubic Hermite curve at `t`, clamping to the end keys outside the key range
+(`docs/architecture/06-serialization-and-scene-format.md` §3: keys are
+`[time, value, inTangent, outTangent]`).
+
+#### Parameters
+
+##### curve
+
+[`CurveValue`](#curvevalue)
+
+The curve; its keys must be sorted by time and non-empty.
+
+##### t
+
+`number`
+
+Where to evaluate.
+
+#### Returns
+
+`number`
+
+The value; `0` for a curve with no keys.
+
+***
+
+### evaluateGradient()
+
+> **evaluateGradient**(`stops`, `t`, `out`): `Float32Array`
+
+Evaluates a gradient at `t` by linear interpolation between stops, clamping outside them.
+
+#### Parameters
+
+##### stops
+
+readonly [`GradientStop`](#gradientstop)[]
+
+The stops, sorted by time and non-empty.
+
+##### t
+
+`number`
+
+Where to evaluate.
+
+##### out
+
+`Float32Array`
+
+Receives the sRGB colour.
+
+#### Returns
+
+`Float32Array`
+
+`out`.
+
+***
+
+### evaluateParticle()
+
+> **evaluateParticle**(`inputs`, `floats`, `words`, `slot`, `clock`, `out`): `boolean`
+
+**`Beta`**
+
+Evaluates one record at a clock.
+
+#### Parameters
+
+##### inputs
+
+[`ParticleEvaluationInputs`](#particleevaluationinputs)
+
+The definition and the per-system values.
+
+##### floats
+
+`Float32Array`
+
+The ring's floats.
+
+##### words
+
+`Uint32Array`
+
+The ring's words.
+
+##### slot
+
+`number`
+
+Which record.
+
+##### clock
+
+`number`
+
+The system clock.
+
+##### out
+
+[`ParticleState`](#particlestate)
+
+Receives the state.
+
+#### Returns
+
+`boolean`
+
+`true` when the particle is alive; `false` leaves `out` untouched.
+
+***
+
 ### f32()
 
 > **f32**(`defaultValue?`, `options?`): [`FieldDefinition`](#fielddefinition)\<`number`\>
@@ -84554,6 +97302,99 @@ device?.setVector("joystick", 0, 1);
 
 ***
 
+### foliageMaterialDefinition()
+
+> **foliageMaterialDefinition**(`input`): [`ShaderMaterialDefinition`](#shadermaterialdefinition-3)
+
+Builds a foliage material declaration: the foliage shader plus the wind, cutoff, and tint values.
+
+#### Parameters
+
+##### input
+
+[`FoliageMaterialInput`](#foliagematerialinput)
+
+The albedo, the wind, the cutoff, and the tint.
+
+#### Returns
+
+[`ShaderMaterialDefinition`](#shadermaterialdefinition-3)
+
+A `"shader"` material declaration.
+
+#### Remarks
+
+Pure data, like every other `*Definition` helper; the shader it names has to be **loaded**
+before `createMaterialAsset` accepts the declaration, which is what
+[createFoliageMaterial](#createfoliagematerial) does in one call. The wind's `strength`, `frequency`, and `height`
+become the `windStrength`, `windFrequency`, and `windHeight` uniforms, so a game can change them
+on the material at runtime with `setUniform`.
+
+#### Example
+
+```ts
+const definition = foliageMaterialDefinition({ albedo: grassCard, wind: { strength: 0.3 } });
+```
+
+***
+
+### foliageShaderAddress()
+
+> **foliageShaderAddress**(`instanced?`): `string`
+
+The address the foliage shader for a variant is loaded from: a `data:` URL of its source.
+
+#### Parameters
+
+##### instanced?
+
+`boolean`
+
+Which variant.
+
+#### Returns
+
+`string`
+
+The address.
+
+***
+
+### foliageShaderSource()
+
+> **foliageShaderSource**(`options?`): `string`
+
+Generates the foliage `.wgsl`.
+
+#### Parameters
+
+##### options?
+
+[`FoliageShaderOptions`](#foliageshaderoptions)
+
+Whether the shader is instanced.
+
+#### Returns
+
+`string`
+
+The `.wgsl` source.
+
+#### Remarks
+
+The declared uniforms are what [foliageMaterialDefinition](#foliagematerialdefinition) sets and what
+`material.value.setUniform` can change at runtime: `windStrength` (metres of lean at
+`windHeight`), `windFrequency` (cycles per second), `windHeight` (metres), `tint` (sRGB), and
+`cutoff` (the alpha below which a fragment is discarded). The one sampler is `albedo`.
+
+#### Example
+
+```ts
+const source = foliageShaderSource({ instanced: false });
+```
+
+***
+
 ### formatBindingPath()
 
 > **formatBindingPath**(`path`, `unbound`): `string`
@@ -84662,6 +97503,179 @@ Every control a `<Gamepad>/…` path may end in.
 
 ***
 
+### generateControlMaps()
+
+> **generateControlMaps**(`field`, `layers`, `rules`): [`ControlMaps`](#controlmaps)
+
+Generates control maps from splat rules.
+
+#### Parameters
+
+##### field
+
+[`HeightField`](#heightfield)
+
+The height field the rules read heights and slopes from.
+
+##### layers
+
+readonly [`TerrainLayerDefinition`](#terrainlayerdefinition)[]
+
+The terrain's layers, in channel order.
+
+##### rules
+
+readonly [`TerrainSplatRule`](#terrainsplatrule)[]
+
+The rules; each names a declared layer.
+
+#### Returns
+
+[`ControlMaps`](#controlmaps)
+
+The maps, `resolution - 1` texels per side.
+
+#### Example
+
+```ts
+const maps = generateControlMaps(field, layers, [
+  { layer: "grass", height: null, slope: null },
+  { layer: "rock", height: null, slope: [35, 90] },
+]);
+```
+
+***
+
+### generateNoiseField()
+
+> **generateNoiseField**(`resolution`, `widthMetres`, `depthMetres`, `noise`, `out?`): `Float32Array`
+
+Fills a normalised height field from noise.
+
+#### Parameters
+
+##### resolution
+
+`number`
+
+Samples per side.
+
+##### widthMetres
+
+`number`
+
+The field's extent along X, in metres, so `frequency` is in cycles per metre.
+
+##### depthMetres
+
+`number`
+
+The field's extent along Z, in metres.
+
+##### noise
+
+[`TerrainNoiseDefinition`](#terrainnoisedefinition)
+
+The noise parameters.
+
+##### out?
+
+`Float32Array`\<`ArrayBufferLike`\>
+
+`resolution * resolution` floats to fill, or omitted for a fresh array.
+
+#### Returns
+
+`Float32Array`
+
+The field, normalised to `0..1`.
+
+#### Example
+
+```ts
+const values = generateNoiseField(129, 128, 128, { seed: 7, octaves: 5, frequency: 0.02, lacunarity: 2, persistence: 0.5, ridged: false, terraces: 0 });
+```
+
+***
+
+### generateParticleWgsl()
+
+> **generateParticleWgsl**(`definition`): `string`
+
+**`Beta`**
+
+Generates the WGSL program that draws a definition.
+
+#### Parameters
+
+##### definition
+
+[`ParticleDefinition`](#particledefinition-3)
+
+The definition.
+
+#### Returns
+
+`string`
+
+The whole `.wgsl` source, pragmas included, ready for the shader loader.
+
+#### Example
+
+```ts
+const source = generateParticleWgsl(particleDefinition("fire"));
+source.includes("@ignifx blend premultiplied"); // true
+```
+
+***
+
+### generateScatter()
+
+> **generateScatter**(`field`, `control`, `rules`, `out`): `number`
+
+Places instances on a terrain and reports how many passed every rule.
+
+#### Parameters
+
+##### field
+
+[`HeightField`](#heightfield)
+
+The height field, read in its local frame.
+
+##### control
+
+[`ControlMaps`](#controlmaps)
+
+The splat weights, for the layer rule.
+
+##### rules
+
+[`ScatterRules`](#scatterrules)
+
+What accepts a candidate and how it is turned and scaled.
+
+##### out
+
+[`ScatterPlacements`](#scatterplacements)
+
+Receives the placements; its length caps the result.
+
+#### Returns
+
+`number`
+
+How many instances were written.
+
+#### Example
+
+```ts
+const placements = createScatterPlacements(scatterCapacity(field, 0.5, 50_000));
+const count = generateScatter(field, control, rules, placements);
+```
+
+***
+
 ### generateUlid()
 
 > **generateUlid**(`random?`, `now?`): `string`
@@ -84701,6 +97715,48 @@ ordering inside a millisecond matters, which is what an app does for entity uids
 const uid = generateUlid();
 isUlid(uid); // true
 ```
+
+***
+
+### gradientNoise()
+
+> **gradientNoise**(`x`, `y`, `z`, `scratch`): `number`
+
+**`Beta`**
+
+One scalar of lattice gradient noise at a point.
+
+#### Parameters
+
+##### x
+
+`number`
+
+The sample position.
+
+##### y
+
+`number`
+
+The sample position.
+
+##### z
+
+`number`
+
+The sample position.
+
+##### scratch
+
+`Uint32Array`
+
+Three words of scratch space.
+
+#### Returns
+
+`number`
+
+The noise value, in roughly `[-1, 1]`.
 
 ***
 
@@ -84756,6 +97812,57 @@ const atlas = gridAtlas({
 });
 atlas.frames.map((frame) => frame.name); // ["terrain_0", "terrain_1", "terrain_2", "terrain_3"]
 ```
+
+***
+
+### hashFloats()
+
+> **hashFloats**(`values`): `number`
+
+A stable 32-bit hash of a float array, for determinism tests and replays.
+
+#### Parameters
+
+##### values
+
+`Float32Array`
+
+The array.
+
+#### Returns
+
+`number`
+
+An unsigned 32-bit hash.
+
+#### Remarks
+
+Hashes the IEEE bit pattern of every element, so two arrays hash alike exactly when they are
+bit-identical.
+
+***
+
+### hashToUnit()
+
+> **hashToUnit**(`word`): `number`
+
+**`Beta`**
+
+Turns a hashed word into a unit float in `[0, 1)` — the same `f32(h) * 2^-32` the shader uses.
+
+#### Parameters
+
+##### word
+
+`number`
+
+A `u32`.
+
+#### Returns
+
+`number`
+
+The unit float.
 
 ***
 
@@ -85199,13 +98306,13 @@ throw inputError(InputErrorCode.unknownActionMap, "UI is not a registered action
 
 ### inputSettingsSchema()
 
-> **inputSettingsSchema**(): [`Schema`](#schema-41)
+> **inputSettingsSchema**(): [`Schema`](#schema-44)
 
 The schema the `input` section is validated against.
 
 #### Returns
 
-[`Schema`](#schema-41)
+[`Schema`](#schema-44)
 
 The schema, built fresh so no module holds state (`CONSTITUTION.md` §3.5).
 
@@ -85223,7 +98330,7 @@ every asset the file references is already loaded, which is what a `SceneAsset` 
 
 ##### world
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world to build into.
 
@@ -85472,6 +98579,52 @@ app.onError.connect((report) => {
 
 ***
 
+### isLiteMaterialPluginPoint()
+
+> **isLiteMaterialPluginPoint**(`value`): value is "CUSTOM\_FRAGMENT\_DEFINITIONS" \| "CUSTOM\_FRAGMENT\_MAIN\_BEGIN" \| "CUSTOM\_FRAGMENT\_UPDATE\_ALPHA" \| "CUSTOM\_FRAGMENT\_UPDATE\_DIFFUSE" \| "CUSTOM\_FRAGMENT\_BEFORE\_LIGHTS" \| "CUSTOM\_FRAGMENT\_BEFORE\_FINALCOLORCOMPOSITION" \| "CUSTOM\_FRAGMENT\_BEFORE\_FRAGCOLOR" \| "CUSTOM\_VERTEX\_MAIN\_BEGIN" \| "CUSTOM\_VERTEX\_UPDATE\_WORLDPOS" \| "CUSTOM\_VERTEX\_MAIN\_END"
+
+**`Beta`**
+
+Whether a string is one of Lite's ten injection points.
+
+#### Parameters
+
+##### value
+
+`string`
+
+The candidate.
+
+#### Returns
+
+value is "CUSTOM\_FRAGMENT\_DEFINITIONS" \| "CUSTOM\_FRAGMENT\_MAIN\_BEGIN" \| "CUSTOM\_FRAGMENT\_UPDATE\_ALPHA" \| "CUSTOM\_FRAGMENT\_UPDATE\_DIFFUSE" \| "CUSTOM\_FRAGMENT\_BEFORE\_LIGHTS" \| "CUSTOM\_FRAGMENT\_BEFORE\_FINALCOLORCOMPOSITION" \| "CUSTOM\_FRAGMENT\_BEFORE\_FRAGCOLOR" \| "CUSTOM\_VERTEX\_MAIN\_BEGIN" \| "CUSTOM\_VERTEX\_UPDATE\_WORLDPOS" \| "CUSTOM\_VERTEX\_MAIN\_END"
+
+`true` when Lite accepts it.
+
+***
+
+### isPng()
+
+> **isPng**(`bytes`): `boolean`
+
+Whether a byte buffer starts with the PNG signature.
+
+#### Parameters
+
+##### bytes
+
+`Uint8Array`
+
+The file's bytes.
+
+#### Returns
+
+`boolean`
+
+`true` for a PNG.
+
+***
+
 ### isSceneFileHeader()
 
 > **isSceneFileHeader**(`value`): `boolean`
@@ -85526,6 +98679,28 @@ isUlid("01arz3ndektsv4rrffq69g5fav"); // false — ULIDs are canonically upperca
 
 ***
 
+### isUnitScalar()
+
+> **isUnitScalar**(`value`): `boolean`
+
+Whether a scalar is a constant `1`, so a module can skip it entirely.
+
+#### Parameters
+
+##### value
+
+[`ScalarValue`](#scalarvalue)
+
+The scalar.
+
+#### Returns
+
+`boolean`
+
+`true` for a constant equal to one.
+
+***
+
 ### isValidErrorCode()
 
 > **isValidErrorCode**(`code`): `` code is `IGX-${number}` ``
@@ -85560,7 +98735,7 @@ The rule has exactly two parts and the `ignifx/error-code-format` lint rule mirr
 ```ts
 isValidErrorCode("IGX-0701"); // true  — rendering
 isValidErrorCode("IGX-9042"); // true  — third party
-isValidErrorCode("IGX-1601"); // false — no subsystem owns 16
+isValidErrorCode("IGX-1801"); // false — no subsystem owns 18
 ```
 
 ***
@@ -85772,15 +98947,59 @@ lerpAngleDegrees(350, 10, 0.5); // 360
 
 ***
 
+### loadGeneratedShader()
+
+> **loadGeneratedShader**(`app`, `source`): `Promise`\<[`AssetHandle`](#assethandle)\<[`ShaderAsset`](#shaderasset)\>\>
+
+Loads generated WGSL as a `ShaderAsset`.
+
+#### Parameters
+
+##### app
+
+[`App`](#app-1)
+
+The app whose asset service loads it.
+
+##### source
+
+`string`
+
+The `.wgsl` or `.surface.wgsl` text.
+
+#### Returns
+
+`Promise`\<[`AssetHandle`](#assethandle)\<[`ShaderAsset`](#shaderasset)\>\>
+
+The handle, with one holder — the caller.
+
+#### Remarks
+
+The type has to be given: a `data:` address has no `.wgsl` suffix to infer it from. Before
+`app.start()` the load settles as soon as it finishes; afterwards it settles in the next frame's
+`PreUpdate`, so call this from setup code rather than a lifecycle callback.
+
+#### Throws
+
+IgnifxError with code `IGX-0719` when the source's pragmas cannot be read.
+
+#### Example
+
+```ts
+const shader = await loadGeneratedShader(app, terrainSplatShaderSource(spec));
+```
+
+***
+
 ### localeFileSchema()
 
-> **localeFileSchema**(): [`Schema`](#schema-41)
+> **localeFileSchema**(): [`Schema`](#schema-44)
 
 The schema a translation document is described and validated against for tooling.
 
 #### Returns
 
-[`Schema`](#schema-41)
+[`Schema`](#schema-44)
 
 The schema, built fresh so no module holds state (`CONSTITUTION.md` §3.5).
 
@@ -85806,6 +99025,40 @@ The JSON Schema object.
 
 ***
 
+### lodThreshold()
+
+> **lodThreshold**(`level`, `lodDistance`, `lodBias`): `number`
+
+The camera distance at which a level takes over.
+
+#### Parameters
+
+##### level
+
+`number`
+
+The level, at least 1.
+
+##### lodDistance
+
+`number`
+
+The terrain's `chunks.lodDistance`, in metres.
+
+##### lodBias
+
+`number`
+
+The `Terrain.lodBias` multiplier.
+
+#### Returns
+
+`number`
+
+The threshold, in metres.
+
+***
+
 ### mainCamera()
 
 > **mainCamera**(`world`): [`Camera`](#camera) \| `null`
@@ -85816,7 +99069,7 @@ The camera the player is looking through.
 
 ##### world
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world to look in.
 
@@ -85844,7 +99097,7 @@ The main camera's forward vector.
 
 ##### world
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world to look in.
 
@@ -86031,6 +99284,60 @@ health = moveTowards(health, 100, 2 * time.deltaTime);
 
 ***
 
+### noise3()
+
+> **noise3**(`x`, `y`, `z`, `octaves`, `scratch`, `out`): `Float32Array`
+
+**`Beta`**
+
+Three decorrelated noise channels at a point, summed over one or two octaves.
+
+#### Parameters
+
+##### x
+
+`number`
+
+The sample position.
+
+##### y
+
+`number`
+
+The sample position.
+
+##### z
+
+`number`
+
+The sample position.
+
+##### octaves
+
+`number`
+
+`1` or `2`.
+
+##### scratch
+
+`Uint32Array`
+
+Three words of scratch space.
+
+##### out
+
+`Float32Array`
+
+Receives the three channels.
+
+#### Returns
+
+`Float32Array`
+
+`out`.
+
+***
+
 ### normalisePath()
 
 > **normalisePath**(`path`): `string`
@@ -86093,6 +99400,44 @@ The field definition.
 ```ts
 nickname: optional(str()); // string | null
 ```
+
+***
+
+### packLayerImages()
+
+> **packLayerImages**(`albedo`, `normals`, `file`): [`TerrainLayerImages`](#terrainlayerimages) \| `null`
+
+Checks that every decoded layer image shares one size and packs them into layer order.
+
+#### Parameters
+
+##### albedo
+
+readonly ([`RgbaImage`](#rgbaimage) \| `null`)[]
+
+One albedo image per layer; `null` entries become opaque white.
+
+##### normals
+
+readonly ([`RgbaImage`](#rgbaimage) \| `null`)[]
+
+One normal map per layer, or `null` for a layer without one.
+
+##### file
+
+`string`
+
+The terrain's address, for messages.
+
+#### Returns
+
+[`TerrainLayerImages`](#terrainlayerimages) \| `null`
+
+The packed images, or `null` when no layer supplied an image at all.
+
+#### Throws
+
+IgnifxError with code `IGX-1607` when two images differ in size.
 
 ***
 
@@ -86485,6 +99830,690 @@ const seconds = header?.duration ?? null;
 
 ***
 
+### particleAssetFromDefinition()
+
+> **particleAssetFromDefinition**(`app`, `definition`, `name?`): [`AssetHandle`](#assethandle)\<[`ParticleAsset`](#particleasset)\>
+
+Publishes a definition built in code as a `particles` asset, so a `ParticleSystem`'s `definition`
+field can hold it without a file. A `renderer.texture` starts loading here; the system draws the
+procedural disc until it arrives. The handle has one holder, the caller.
+
+#### Parameters
+
+##### app
+
+[`App`](#app-1)
+
+The app whose asset service publishes it.
+
+##### definition
+
+[`ParticleDefinition`](#particledefinition-3)
+
+The definition, from [defineParticles](#defineparticles) or a preset.
+
+##### name?
+
+`string`
+
+A human-readable name for diagnostics; defaults to `"particles"`.
+
+#### Returns
+
+[`AssetHandle`](#assethandle)\<[`ParticleAsset`](#particleasset)\>
+
+The handle, already loaded.
+
+#### Example
+
+```ts
+const fire = particleAssetFromDefinition(app, particleDefinition("fire"));
+campfire.addComponent(ParticleSystem, { definition: fire });
+```
+
+***
+
+### particleDefinition()
+
+> **particleDefinition**(`name`, `overrides?`): [`ParticleDefinition`](#particledefinition-3)
+
+A preset, with any part of it overridden, as a complete definition. An object override merges key
+by key; an array or a primitive replaces the whole value.
+
+#### Parameters
+
+##### name
+
+`"fire"` \| `"smoke"` \| `"sparks"` \| `"explosion"` \| `"dust"` \| `"sparkle"` \| `"rain"` \| `"snow"` \| `"leaves"`
+
+The preset.
+
+##### overrides?
+
+What to change.
+
+###### emission?
+
+\{ `bursts?`: readonly [`ParticleBurstInput`](#particleburstinput)[]; `rateOverDistance?`: `number`; `rateOverTime?`: `number`; \}
+
+The `emission` module.
+
+###### emission.bursts?
+
+readonly [`ParticleBurstInput`](#particleburstinput)[]
+
+The bursts. Defaults to none.
+
+###### emission.rateOverDistance?
+
+`number`
+
+Particles per metre moved. Defaults to `0`.
+
+###### emission.rateOverTime?
+
+`number`
+
+Particles per second. Defaults to `10`.
+
+###### forces?
+
+\{ `constantForce?`: \{ `x?`: `number`; `y?`: `number`; `z?`: `number`; \}; `drag?`: `number`; `gravity?`: \{ `x?`: `number`; `y?`: `number`; `z?`: `number`; \} \| `null`; `gravityMultiplier?`: `number`; `noise?`: \{ `frequency?`: `number`; `influenceOverLife?`: `number` \| \{ `max?`: `number`; `min?`: `number`; \} \| \{ `curve?`: \{ `keys?`: ... \| ...; \}; \}; `octaves?`: `number`; `scroll?`: \{ `x?`: `number`; `y?`: `number`; `z?`: `number`; \}; `strength?`: `number`; \} \| `null`; `orbit?`: \{ `axis?`: \{ `x?`: `number`; `y?`: `number`; `z?`: `number`; \}; `speed?`: `number`; \} \| `null`; \}
+
+The `forces` module.
+
+###### forces.constantForce?
+
+\{ `x?`: `number`; `y?`: `number`; `z?`: `number`; \}
+
+Defaults to `(0, 0, 0)`.
+
+###### forces.constantForce.x?
+
+`number`
+
+The x component.
+
+###### forces.constantForce.y?
+
+`number`
+
+The y component.
+
+###### forces.constantForce.z?
+
+`number`
+
+The z component.
+
+###### forces.drag?
+
+`number`
+
+Defaults to `0`.
+
+###### forces.gravity?
+
+\{ `x?`: `number`; `y?`: `number`; `z?`: `number`; \} \| `null`
+
+An explicit gravity, or `null`/omitted to scale the app's.
+
+###### forces.gravityMultiplier?
+
+`number`
+
+Defaults to `0`.
+
+###### forces.noise?
+
+\{ `frequency?`: `number`; `influenceOverLife?`: `number` \| \{ `max?`: `number`; `min?`: `number`; \} \| \{ `curve?`: \{ `keys?`: ... \| ...; \}; \}; `octaves?`: `number`; `scroll?`: \{ `x?`: `number`; `y?`: `number`; `z?`: `number`; \}; `strength?`: `number`; \} \| `null`
+
+Defaults to none.
+
+###### forces.orbit?
+
+\{ `axis?`: \{ `x?`: `number`; `y?`: `number`; `z?`: `number`; \}; `speed?`: `number`; \} \| `null`
+
+Defaults to none.
+
+###### format?
+
+`string`
+
+Always `"ignifx.particles"` when present.
+
+###### formatVersion?
+
+`number`
+
+The document version.
+
+###### main?
+
+\{ `capacity?`: `number`; `duration?`: `number`; `looping?`: `boolean`; `playOnAwake?`: `boolean`; `prewarm?`: `boolean`; `renderOrder?`: `number`; `seed?`: `number`; `simulationSpace?`: `"local"` \| `"world"`; `startDelay?`: `number`; `timeScale?`: `number`; \}
+
+The `main` module.
+
+###### main.capacity?
+
+`number`
+
+See [ParticleMain.capacity](#capacity-2). Defaults to `1000`.
+
+###### main.duration?
+
+`number`
+
+See [ParticleMain.duration](#duration-5). Defaults to `5`.
+
+###### main.looping?
+
+`boolean`
+
+See [ParticleMain.looping](#looping). Defaults to `true`.
+
+###### main.playOnAwake?
+
+`boolean`
+
+See [ParticleMain.playOnAwake](#playonawake-2). Defaults to `true`.
+
+###### main.prewarm?
+
+`boolean`
+
+See [ParticleMain.prewarm](#prewarm). Defaults to `false`.
+
+###### main.renderOrder?
+
+`number`
+
+See [ParticleMain.renderOrder](#renderorder-2). Defaults to `0`.
+
+###### main.seed?
+
+`number`
+
+See [ParticleMain.seed](#seed-3). Defaults to `0`.
+
+###### main.simulationSpace?
+
+`"local"` \| `"world"`
+
+See [ParticleMain.simulationSpace](#simulationspace). Defaults to `"local"`.
+
+###### main.startDelay?
+
+`number`
+
+See [ParticleMain.startDelay](#startdelay). Defaults to `0`.
+
+###### main.timeScale?
+
+`number`
+
+See [ParticleMain.timeScale](#timescale). Defaults to `1`.
+
+###### overLifetime?
+
+\{ `color?`: readonly \[`number`, `number`, `number`, `number`\] \| \{ `a?`: `number`; `b?`: `number`; `g?`: `number`; `r?`: `number`; \} \| \{ `max?`: readonly \[`number`, `number`, `number`, `number`\] \| \{ `a?`: `number`; `b?`: `number`; `g?`: `number`; `r?`: `number`; \}; `min?`: readonly \[`number`, `number`, `number`, `number`\] \| \{ `a?`: `number`; `b?`: `number`; `g?`: `number`; `r?`: `number`; \}; \} \| \{ `gradient?`: readonly [`GradientStop`](#gradientstop)[]; \} \| `null`; `rotation?`: `number` \| \{ `max?`: `number`; `min?`: `number`; \} \| \{ `curve?`: \{ `keys?`: readonly [`CurveKey`](#curvekey)[]; \}; \} \| `null`; `size?`: `number` \| \{ `max?`: `number`; `min?`: `number`; \} \| \{ `curve?`: \{ `keys?`: readonly [`CurveKey`](#curvekey)[]; \}; \} \| `null`; `sizeY?`: `number` \| \{ `max?`: `number`; `min?`: `number`; \} \| \{ `curve?`: \{ `keys?`: readonly [`CurveKey`](#curvekey)[]; \}; \} \| `null`; `sizeZ?`: `number` \| \{ `max?`: `number`; `min?`: `number`; \} \| \{ `curve?`: \{ `keys?`: readonly [`CurveKey`](#curvekey)[]; \}; \} \| `null`; \}
+
+The `overLifetime` module.
+
+###### overLifetime.color?
+
+readonly \[`number`, `number`, `number`, `number`\] \| \{ `a?`: `number`; `b?`: `number`; `g?`: `number`; `r?`: `number`; \} \| \{ `max?`: readonly \[`number`, `number`, `number`, `number`\] \| \{ `a?`: `number`; `b?`: `number`; `g?`: `number`; `r?`: `number`; \}; `min?`: readonly \[`number`, `number`, `number`, `number`\] \| \{ `a?`: `number`; `b?`: `number`; `g?`: `number`; `r?`: `number`; \}; \} \| \{ `gradient?`: readonly [`GradientStop`](#gradientstop)[]; \} \| `null`
+
+A gradient, or a constant tint.
+
+###### overLifetime.rotation?
+
+`number` \| \{ `max?`: `number`; `min?`: `number`; \} \| \{ `curve?`: \{ `keys?`: readonly [`CurveKey`](#curvekey)[]; \}; \} \| `null`
+
+Angular speed in degrees per second.
+
+###### overLifetime.size?
+
+`number` \| \{ `max?`: `number`; `min?`: `number`; \} \| \{ `curve?`: \{ `keys?`: readonly [`CurveKey`](#curvekey)[]; \}; \} \| `null`
+
+A curve or constant multiplier.
+
+###### overLifetime.sizeY?
+
+`number` \| \{ `max?`: `number`; `min?`: `number`; \} \| \{ `curve?`: \{ `keys?`: readonly [`CurveKey`](#curvekey)[]; \}; \} \| `null`
+
+A separate Y multiplier.
+
+###### overLifetime.sizeZ?
+
+`number` \| \{ `max?`: `number`; `min?`: `number`; \} \| \{ `curve?`: \{ `keys?`: readonly [`CurveKey`](#curvekey)[]; \}; \} \| `null`
+
+A separate Z multiplier.
+
+###### renderer?
+
+\{ `blend?`: `"premultiplied"` \| `"alpha"` \| `"additive"`; `lengthScale?`: `number`; `lit?`: `boolean`; `mesh?`: `"sphere"` \| `"box"` \| `"capsule"` \| `"cylinder"` \| `"plane"` \| `"torus"`; `mode?`: `"mesh"` \| `"billboard"` \| `"stretched"` \| `"horizontal"` \| `"vertical"`; `pivot?`: \{ `x?`: `number`; `y?`: `number`; \}; `sheet?`: \{ `frameOverTime?`: `number` \| `"random"` \| \{ `max?`: `number`; `min?`: `number`; \} \| \{ `curve?`: \{ `keys?`: ... \| ...; \}; \} \| \{ `fps?`: `number`; \}; `tiles?`: \{ `x?`: `number`; `y?`: `number`; \}; \} \| `null`; `speedScale?`: `number`; `texture?`: `string` \| `null`; \}
+
+The `renderer` module.
+
+###### renderer.blend?
+
+`"premultiplied"` \| `"alpha"` \| `"additive"`
+
+Defaults to `"premultiplied"`.
+
+###### renderer.lengthScale?
+
+`number`
+
+Defaults to `1`.
+
+###### renderer.lit?
+
+`boolean`
+
+Defaults to `false`.
+
+###### renderer.mesh?
+
+`"sphere"` \| `"box"` \| `"capsule"` \| `"cylinder"` \| `"plane"` \| `"torus"`
+
+Defaults to `"box"`.
+
+###### renderer.mode?
+
+`"mesh"` \| `"billboard"` \| `"stretched"` \| `"horizontal"` \| `"vertical"`
+
+Defaults to `"billboard"`.
+
+###### renderer.pivot?
+
+\{ `x?`: `number`; `y?`: `number`; \}
+
+Defaults to `(0, 0)`.
+
+###### renderer.pivot.x?
+
+`number`
+
+The x component.
+
+###### renderer.pivot.y?
+
+`number`
+
+The y component.
+
+###### renderer.sheet?
+
+\{ `frameOverTime?`: `number` \| `"random"` \| \{ `max?`: `number`; `min?`: `number`; \} \| \{ `curve?`: \{ `keys?`: ... \| ...; \}; \} \| \{ `fps?`: `number`; \}; `tiles?`: \{ `x?`: `number`; `y?`: `number`; \}; \} \| `null`
+
+Defaults to `null`.
+
+###### renderer.speedScale?
+
+`number`
+
+Defaults to `0`.
+
+###### renderer.texture?
+
+`string` \| `null`
+
+Defaults to `null`.
+
+###### shape?
+
+\{ `angle?`: `number`; `arc?`: `number`; `emitFrom?`: `"volume"` \| `"shell"` \| `"base"`; `kind?`: `"point"` \| `"mesh"` \| `"sphere"` \| `"box"` \| `"hemisphere"` \| `"cone"` \| `"circle"` \| `"edge"`; `length?`: `number`; `radius?`: `number`; `randomDirection?`: `number`; `size?`: \{ `x?`: `number`; `y?`: `number`; `z?`: `number`; \}; `spherizeDirection?`: `number`; `thickness?`: `number`; `vertices?`: readonly `number`[]; \}
+
+The `shape` module.
+
+###### shape.angle?
+
+`number`
+
+See [ParticleShape.angle](#angle). Defaults to `25`.
+
+###### shape.arc?
+
+`number`
+
+See [ParticleShape.arc](#arc). Defaults to `360`.
+
+###### shape.emitFrom?
+
+`"volume"` \| `"shell"` \| `"base"`
+
+See [ParticleShape.emitFrom](#emitfrom). Defaults to `"base"` for a cone and `"volume"` otherwise.
+
+###### shape.kind?
+
+`"point"` \| `"mesh"` \| `"sphere"` \| `"box"` \| `"hemisphere"` \| `"cone"` \| `"circle"` \| `"edge"`
+
+Which shape. Defaults to `"cone"`.
+
+###### shape.length?
+
+`number`
+
+See [ParticleShape.length](#length-3). Defaults to `1`.
+
+###### shape.radius?
+
+`number`
+
+See [ParticleShape.radius](#radius-9). Defaults to `0.2`.
+
+###### shape.randomDirection?
+
+`number`
+
+See [ParticleShape.randomDirection](#randomdirection). Defaults to `0`.
+
+###### shape.size?
+
+\{ `x?`: `number`; `y?`: `number`; `z?`: `number`; \}
+
+See [ParticleShape.size](#size-10). Defaults to `(1, 1, 1)`.
+
+###### shape.size.x?
+
+`number`
+
+The x component.
+
+###### shape.size.y?
+
+`number`
+
+The y component.
+
+###### shape.size.z?
+
+`number`
+
+The z component.
+
+###### shape.spherizeDirection?
+
+`number`
+
+See [ParticleShape.spherizeDirection](#spherizedirection). Defaults to `0`.
+
+###### shape.thickness?
+
+`number`
+
+See [ParticleShape.thickness](#thickness). Defaults to `1`.
+
+###### shape.vertices?
+
+readonly `number`[]
+
+A `"mesh"` shape's triangles, nine numbers per triangle.
+
+###### start?
+
+\{ `color?`: readonly \[`number`, `number`, `number`, `number`\] \| \{ `a?`: `number`; `b?`: `number`; `g?`: `number`; `r?`: `number`; \} \| \{ `max?`: readonly \[`number`, `number`, `number`, `number`\] \| \{ `a?`: `number`; `b?`: `number`; `g?`: `number`; `r?`: `number`; \}; `min?`: readonly \[`number`, `number`, `number`, `number`\] \| \{ `a?`: `number`; `b?`: `number`; `g?`: `number`; `r?`: `number`; \}; \} \| \{ `gradient?`: readonly [`GradientStop`](#gradientstop)[]; \}; `lifetime?`: `number` \| \{ `max?`: `number`; `min?`: `number`; \} \| \{ `curve?`: \{ `keys?`: readonly [`CurveKey`](#curvekey)[]; \}; \}; `rotation?`: `number` \| \{ `max?`: `number`; `min?`: `number`; \} \| \{ `curve?`: \{ `keys?`: readonly [`CurveKey`](#curvekey)[]; \}; \}; `size?`: `number` \| \{ `max?`: `number`; `min?`: `number`; \} \| \{ `curve?`: \{ `keys?`: readonly [`CurveKey`](#curvekey)[]; \}; \}; `size3D?`: \{ `x?`: `number`; `y?`: `number`; `z?`: `number`; \} \| `null`; `speed?`: `number` \| \{ `max?`: `number`; `min?`: `number`; \} \| \{ `curve?`: \{ `keys?`: readonly [`CurveKey`](#curvekey)[]; \}; \}; \}
+
+The `start` module.
+
+###### start.color?
+
+readonly \[`number`, `number`, `number`, `number`\] \| \{ `a?`: `number`; `b?`: `number`; `g?`: `number`; `r?`: `number`; \} \| \{ `max?`: readonly \[`number`, `number`, `number`, `number`\] \| \{ `a?`: `number`; `b?`: `number`; `g?`: `number`; `r?`: `number`; \}; `min?`: readonly \[`number`, `number`, `number`, `number`\] \| \{ `a?`: `number`; `b?`: `number`; `g?`: `number`; `r?`: `number`; \}; \} \| \{ `gradient?`: readonly [`GradientStop`](#gradientstop)[]; \}
+
+Defaults to opaque white.
+
+###### start.lifetime?
+
+`number` \| \{ `max?`: `number`; `min?`: `number`; \} \| \{ `curve?`: \{ `keys?`: readonly [`CurveKey`](#curvekey)[]; \}; \}
+
+Defaults to `2`.
+
+###### start.rotation?
+
+`number` \| \{ `max?`: `number`; `min?`: `number`; \} \| \{ `curve?`: \{ `keys?`: readonly [`CurveKey`](#curvekey)[]; \}; \}
+
+Defaults to `0`.
+
+###### start.size?
+
+`number` \| \{ `max?`: `number`; `min?`: `number`; \} \| \{ `curve?`: \{ `keys?`: readonly [`CurveKey`](#curvekey)[]; \}; \}
+
+Defaults to `0.2`.
+
+###### start.size3D?
+
+\{ `x?`: `number`; `y?`: `number`; `z?`: `number`; \} \| `null`
+
+Defaults to `null`.
+
+###### start.speed?
+
+`number` \| \{ `max?`: `number`; `min?`: `number`; \} \| \{ `curve?`: \{ `keys?`: readonly [`CurveKey`](#curvekey)[]; \}; \}
+
+Defaults to `2`.
+
+#### Returns
+
+[`ParticleDefinition`](#particledefinition-3)
+
+The definition, validated and baked.
+
+#### Throws
+
+IgnifxError with code `IGX-1704` for an unknown preset, or `IGX-1701` when the overrides
+make the document invalid.
+
+#### Example
+
+```ts
+const bigFire = particleDefinition("fire", { start: { size: { min: 0.8, max: 1.2 } } });
+```
+
+***
+
+### particlePresetInput()
+
+> **particlePresetInput**(`name`): [`ParticleDefinitionInput`](#particledefinitioninput)
+
+The document a preset starts from, before any override.
+
+#### Parameters
+
+##### name
+
+`"fire"` \| `"smoke"` \| `"sparks"` \| `"explosion"` \| `"dust"` \| `"sparkle"` \| `"rain"` \| `"snow"` \| `"leaves"`
+
+The preset.
+
+#### Returns
+
+[`ParticleDefinitionInput`](#particledefinitioninput)
+
+A fresh copy of the authored document.
+
+#### Throws
+
+IgnifxError with code `IGX-1704` for a name that is not a preset.
+
+***
+
+### particles2DError()
+
+> **particles2DError**(`code`, `message`, `options?`): [`IgnifxError`](#ignifxerror)
+
+Builds an `IgnifxError` carrying one of this package's codes.
+
+#### Parameters
+
+##### code
+
+[`Particles2DErrorCode`](#particles2derrorcode-1)
+
+The code from the `Particles2DErrorCode` table.
+
+##### message
+
+`string`
+
+The actionable development sentence.
+
+##### options?
+
+[`Particles2DErrorOptions`](#particles2derroroptions)
+
+Context identifiers, a remedy hint, and the wrapped cause.
+
+#### Returns
+
+[`IgnifxError`](#ignifxerror)
+
+The error to throw or to reject with.
+
+#### Example
+
+```ts
+throw particles2DError(Particles2DErrorCode.invalidArgument, "emit needs a count, not -1.", {
+  context: { method: "emit", expected: "a finite non-negative count", value: -1 },
+});
+```
+
+***
+
+### particlesError()
+
+> **particlesError**(`code`, `message`, `options?`): [`IgnifxError`](#ignifxerror)
+
+Builds an `IgnifxError` carrying one of this package's codes.
+
+#### Parameters
+
+##### code
+
+[`ParticlesErrorCode`](#particleserrorcode-1)
+
+The code from the `ParticlesErrorCode` table.
+
+##### message
+
+`string`
+
+The actionable development sentence.
+
+##### options?
+
+[`ParticlesErrorOptions`](#particleserroroptions)
+
+Context identifiers, a remedy hint, and the wrapped cause.
+
+#### Returns
+
+[`IgnifxError`](#ignifxerror)
+
+The error to throw or to reject with.
+
+#### Example
+
+```ts
+throw particlesError(ParticlesErrorCode.unknownPreset, "lava is not a particle preset.", {
+  context: { preset: "lava" },
+});
+```
+
+***
+
+### particlesFileSchema()
+
+> **particlesFileSchema**(): [`Schema`](#schema-44)
+
+The `ignifx.particles` document schema.
+
+#### Returns
+
+[`Schema`](#schema-44)
+
+The schema, built fresh so no module holds state (`CONSTITUTION.md` §3.5).
+
+***
+
+### particleShaderAddress()
+
+> **particleShaderAddress**(`source`): `string`
+
+**`Beta`**
+
+The `data:` address the generated program is published under, so the core shader loader — the
+only path that also loads core's shader adapter — reads it with no file and no network. Two
+definitions that generate the same program share one address, and so one `ShaderAsset`.
+
+#### Parameters
+
+##### source
+
+`string`
+
+The generated WGSL, which is ASCII.
+
+#### Returns
+
+`string`
+
+A `data:text/plain;base64,…` URL.
+
+***
+
+### particlesSettingsSchema()
+
+> **particlesSettingsSchema**(): [`Schema`](#schema-44)
+
+The schema the `particles` section is validated against.
+
+#### Returns
+
+[`Schema`](#schema-44)
+
+The schema, built fresh so no module holds state (`CONSTITUTION.md` §3.5).
+
+***
+
+### particleUnits()
+
+> **particleUnits**(`seed`, `out`, `scratch`): `Float32Array`
+
+**`Beta`**
+
+The three unit floats every per-particle derivation reads from a record's `seed`: the start
+colour pick, the angular speed pick, and the sheet's random frame.
+
+#### Parameters
+
+##### seed
+
+`number`
+
+The record's `seed` word.
+
+##### out
+
+`Float32Array`
+
+Receives three floats in `[0, 1)`.
+
+##### scratch
+
+`Uint32Array`
+
+Three words of scratch space.
+
+#### Returns
+
+`Float32Array`
+
+`out`.
+
+***
+
 ### pbrMaterialDefinition()
 
 > **pbrMaterialDefinition**(`overrides?`): [`PbrMaterialDefinition`](#pbrmaterialdefinition-3)
@@ -86510,6 +100539,48 @@ A complete declaration.
 ```ts
 pbrMaterialDefinition({ name: "gold", metallic: 1, roughness: 0.25 });
 ```
+
+***
+
+### pcg3d()
+
+> **pcg3d**(`x`, `y`, `z`, `out`): `Uint32Array`
+
+**`Beta`**
+
+Hashes three 32-bit words into three others, bit-identically to the WGSL `pcg3d`.
+
+#### Parameters
+
+##### x
+
+`number`
+
+The first lane; any number, wrapped to `u32`.
+
+##### y
+
+`number`
+
+The second lane.
+
+##### z
+
+`number`
+
+The third lane.
+
+##### out
+
+`Uint32Array`
+
+Receives the three hashed words.
+
+#### Returns
+
+`Uint32Array`
+
+`out`.
 
 ***
 
@@ -86557,13 +100628,13 @@ throw physics2DError(Physics2DErrorCode.unknownLayer, "physics2d.collisionMatrix
 
 ### physics2DSettingsSchema()
 
-> **physics2DSettingsSchema**(): [`Schema`](#schema-41)
+> **physics2DSettingsSchema**(): [`Schema`](#schema-44)
 
 Builds the schema the `physics2d` section is validated against.
 
 #### Returns
 
-[`Schema`](#schema-41)
+[`Schema`](#schema-44)
 
 The schema.
 
@@ -86618,13 +100689,13 @@ throw physicsError(PhysicsErrorCode.unknownLayer, "physics.collisionMatrix names
 
 ### physicsSettingsSchema()
 
-> **physicsSettingsSchema**(): [`Schema`](#schema-41)
+> **physicsSettingsSchema**(): [`Schema`](#schema-44)
 
 Builds the schema the `physics` section is validated against.
 
 #### Returns
 
-[`Schema`](#schema-41)
+[`Schema`](#schema-44)
 
 The schema.
 
@@ -86866,6 +100937,51 @@ The vector to write.
 
 ***
 
+### pngToRgba8()
+
+> **pngToRgba8**(`png`): `Uint8Array`
+
+Converts a decoded PNG into tightly packed RGBA8, the layout `TextureAsset.fromPixels` takes.
+
+#### Parameters
+
+##### png
+
+[`DecodedPng`](#decodedpng)
+
+The decoded image.
+
+#### Returns
+
+`Uint8Array`
+
+`width * height * 4` bytes, row-major, top row first, straight alpha.
+
+***
+
+### pngToSamples16()
+
+> **pngToSamples16**(`png`): `Uint16Array`
+
+Converts a decoded PNG into 16-bit height samples: greyscale as is, colour by luminance, 8-bit
+scaled by 257 so full white stays full height.
+
+#### Parameters
+
+##### png
+
+[`DecodedPng`](#decodedpng)
+
+The decoded image.
+
+#### Returns
+
+`Uint16Array`
+
+`width * height` samples, row-major.
+
+***
+
 ### progressFraction()
 
 > **progressFraction**(`progress`): `number`
@@ -86989,6 +101105,54 @@ The same angle in degrees.
 
 ***
 
+### readScalarRow()
+
+> **readScalarRow**(`definition`, `row`, `life`, `channel`, `fallback`): `number`
+
+**`Beta`**
+
+Reads a scalar row's decoded value at a normalized time.
+
+#### Parameters
+
+##### definition
+
+[`ParticleDefinition`](#particledefinition-3)
+
+The definition.
+
+##### row
+
+[`LookupRow`](#lookuprow) \| `null`
+
+The row, or `null` to return `fallback`.
+
+##### life
+
+`number`
+
+The normalized time.
+
+##### channel
+
+`number`
+
+Which channel holds the value.
+
+##### fallback
+
+`number`
+
+What to return when the row is absent.
+
+#### Returns
+
+`number`
+
+The decoded value.
+
+***
+
 ### readVec2()
 
 > **readVec2**(`value`, `fallback`): [`Vec2Like`](#vec2like)
@@ -87057,6 +101221,42 @@ The field definition.
 ```ts
 stats: record({ hp: i32(10), armor: f32(0) }); // { hp: number; armor: number }
 ```
+
+***
+
+### recordSeed()
+
+> **recordSeed**(`systemSeed`, `index`, `scratch`): `number`
+
+**`Beta`**
+
+The `seed` word a record gets from the system seed and its index.
+
+#### Parameters
+
+##### systemSeed
+
+`number`
+
+The system's seed.
+
+##### index
+
+`number`
+
+The record's index since `play()`.
+
+##### scratch
+
+`Uint32Array`
+
+Three words of scratch space.
+
+#### Returns
+
+`number`
+
+The record seed.
 
 ***
 
@@ -87190,6 +101390,47 @@ The indices in play order; empty when the clip names nothing the atlas has.
 endpoints to atlas **indices** and walks every index between them — ascending or descending — so
 a range over non-adjacent frames plays everything the packer put in between
 ([SpriteClipDefinition](#spriteclipdefinition)).
+
+***
+
+### resolveColor()
+
+> **resolveColor**(`value`, `unit`, `t`, `out`): `Float32Array`
+
+The colour a random or constant start colour resolves to for one particle, in sRGB, without
+allocating. A gradient start colour samples at `t`.
+
+#### Parameters
+
+##### value
+
+[`ColorValue`](#colorvalue)
+
+The colour value.
+
+##### unit
+
+`number`
+
+A uniform random number in `[0, 1)`; picks between `min` and `max`.
+
+##### t
+
+`number`
+
+The normalized cycle time, for a gradient.
+
+##### out
+
+`Float32Array`
+
+Receives `r, g, b, a`.
+
+#### Returns
+
+`Float32Array`
+
+`out`.
 
 ***
 
@@ -87341,6 +101582,274 @@ resolveRelative("2d/hero.atlas.json", "/sprites/hero.png"); // "/sprites/hero.pn
 
 ***
 
+### resolveScalar()
+
+> **resolveScalar**(`value`, `unit`, `t`): `number`
+
+Resolves a scalar at spawn: the constant, a pick inside the range by `unit`, or the curve sampled
+at `t` (the normalized position in the emission cycle).
+
+#### Parameters
+
+##### value
+
+[`ScalarValue`](#scalarvalue)
+
+The scalar.
+
+##### unit
+
+`number`
+
+A uniform random number in `[0, 1)`.
+
+##### t
+
+`number`
+
+The normalized cycle time, for a curve.
+
+#### Returns
+
+`number`
+
+The resolved number.
+
+***
+
+### resolveTerrainAddress()
+
+> **resolveTerrainAddress**(`base`, `reference`): `string`
+
+Resolves a document-relative reference against the document's own address.
+
+#### Parameters
+
+##### base
+
+`string`
+
+The address of the document holding the reference.
+
+##### reference
+
+`string`
+
+What the document wrote.
+
+#### Returns
+
+`string`
+
+The resolved address.
+
+#### Remarks
+
+A reference that is absolute — a recognised URL scheme, or one starting with `/` — is returned
+untouched. `.` and `..` segments are collapsed, and a base with no `/` is a file in the root.
+
+#### Example
+
+```ts
+resolveTerrainAddress("levels/island.terrain.json", "island.r16"); // "levels/island.r16"
+resolveTerrainAddress("levels/island.terrain.json", "../shared/grass.png"); // "shared/grass.png"
+```
+
+***
+
+### sampleControlWeight()
+
+> **sampleControlWeight**(`control`, `layer`, `u`, `v`): `number`
+
+The weight of a layer at a point, bilinearly filtered from its control map, in `0..1`.
+
+#### Parameters
+
+##### control
+
+[`ControlMaps`](#controlmaps)
+
+The control maps.
+
+##### layer
+
+`number`
+
+The layer index.
+
+##### u
+
+`number`
+
+The terrain-wide coordinate along X, `0..1`.
+
+##### v
+
+`number`
+
+The terrain-wide coordinate along Z, `0..1`.
+
+#### Returns
+
+`number`
+
+The weight.
+
+***
+
+### sampleRow()
+
+> **sampleRow**(`samples`, `t`): `number`
+
+Samples a baked scalar row with the linear rule both evaluators share: `x = t * 63`, then a lerp
+between samples `floor(x)` and `floor(x) + 1`.
+
+#### Parameters
+
+##### samples
+
+`Float32Array`
+
+A row of [LOOKUP\_SAMPLES](#lookup_samples) floats.
+
+##### t
+
+`number`
+
+The normalized time, clamped to `[0, 1]`.
+
+#### Returns
+
+`number`
+
+The interpolated value.
+
+***
+
+### sampleShape()
+
+> **sampleShape**(`shape`, `rng`, `mesh`, `position`, `direction`): `void`
+
+**`Beta`**
+
+Samples a start position and direction from a shape.
+
+#### Parameters
+
+##### shape
+
+[`ParticleShape`](#particleshape)
+
+The shape module.
+
+##### rng
+
+[`EmitterRandom`](#emitterrandom)
+
+The emitter's random stream.
+
+##### mesh
+
+[`MeshShapeTable`](#meshshapetable) \| `null`
+
+The triangle table, for a `"mesh"` shape; ignored otherwise.
+
+##### position
+
+`Float32Array`
+
+Receives the local position.
+
+##### direction
+
+`Float32Array`
+
+Receives the unit direction.
+
+#### Returns
+
+`void`
+
+***
+
+### scalarMax()
+
+> **scalarMax**(`value`): `number`
+
+The largest value a scalar can produce.
+
+#### Parameters
+
+##### value
+
+[`ScalarValue`](#scalarvalue)
+
+The scalar.
+
+#### Returns
+
+`number`
+
+The maximum.
+
+***
+
+### scalarMin()
+
+> **scalarMin**(`value`): `number`
+
+The smallest value a scalar can produce: the constant, the range's `min`, or the curve's minimum.
+
+#### Parameters
+
+##### value
+
+[`ScalarValue`](#scalarvalue)
+
+The scalar.
+
+#### Returns
+
+`number`
+
+The minimum.
+
+***
+
+### scatterCapacity()
+
+> **scatterCapacity**(`field`, `density`, `maxInstances`): `number`
+
+How many instances a density asks for over a field, before any rule rejects one.
+
+#### Parameters
+
+##### field
+
+[`HeightField`](#heightfield)
+
+The height field, which fixes the area.
+
+##### density
+
+`number`
+
+Instances per square metre.
+
+##### maxInstances
+
+`number`
+
+The cap.
+
+#### Returns
+
+`number`
+
+The candidate count.
+
+***
+
 ### sceneFileJsonSchema()
 
 > **sceneFileJsonSchema**(`registry`): [`JsonObject`](#jsonobject)
@@ -87384,7 +101893,7 @@ Picks the camera the frame draws through: the highest-priority enabled `Camera2D
 
 ##### world
 
-[`World`](#world-59)
+[`World`](#world-64)
 
 The world to search.
 
@@ -87393,6 +101902,59 @@ The world to search.
 [`Camera2D`](#camera2d) \| `null`
 
 The camera, or `null` when the world has none enabled.
+
+***
+
+### selectLod()
+
+> **selectLod**(`distance`, `lodDistance`, `lodBias`, `levels`, `current`): `number`
+
+Picks a chunk's level for a camera distance, with hysteresis around the level it shows now.
+
+#### Parameters
+
+##### distance
+
+`number`
+
+The camera's distance from the chunk, in metres.
+
+##### lodDistance
+
+`number`
+
+The terrain's `chunks.lodDistance`.
+
+##### lodBias
+
+`number`
+
+The `Terrain.lodBias` multiplier.
+
+##### levels
+
+`number`
+
+How many levels the chunk has.
+
+##### current
+
+`number`
+
+The level currently showing.
+
+#### Returns
+
+`number`
+
+The level to show.
+
+#### Example
+
+```ts
+selectLod(150, 96, 1, 4, 0); // 1: past 96 m, level 1 takes over
+selectLod(100, 96, 1, 4, 1); // 1: 100 m is inside the 10 % band, so level 1 stays
+```
 
 ***
 
@@ -87524,6 +102086,61 @@ diffing its current state against the instanced scene — unless `flatten` is se
 ```ts
 const text = stringifySceneFile(serializeScene(world.activeScene));
 ```
+
+***
+
+### shaderMaterialDefinition()
+
+> **shaderMaterialDefinition**(`input`): [`ShaderMaterialDefinition`](#shadermaterialdefinition-3)
+
+Builds a `"shader"` material declaration, recording the addresses of the handles it is given.
+
+#### Parameters
+
+##### input
+
+[`ShaderMaterialDefinitionInput`](#shadermaterialdefinitioninput)
+
+The shader, and whatever this material sets on it.
+
+#### Returns
+
+[`ShaderMaterialDefinition`](#shadermaterialdefinition-3)
+
+A complete declaration, ready for [createMaterialAsset](#creatematerialasset).
+
+#### Example
+
+```ts
+const definition = shaderMaterialDefinition({
+  shader: dissolveShader,
+  values: { progress: 0.25, edgeColor: { r: 1, g: 0.6, b: 0.2, a: 1 } },
+  textures: { noiseTexture: noise },
+  defines: { SOFT_EDGE: true },
+});
+```
+
+***
+
+### shaderSourceAddress()
+
+> **shaderSourceAddress**(`source`): `string`
+
+A `data:` address that fetches to a WGSL source, so the ordinary shader loader can load it.
+
+#### Parameters
+
+##### source
+
+`string`
+
+The `.wgsl` text.
+
+#### Returns
+
+`string`
+
+The address.
 
 ***
 
@@ -87756,6 +102373,35 @@ camera that is pulled far out still lands on a whole-texel scale.
 
 ***
 
+### solidControlMaps()
+
+> **solidControlMaps**(`size`, `layerCount`): [`ControlMaps`](#controlmaps)
+
+Control maps that paint the first layer everywhere: the fallback for a terrain with neither
+painted maps nor rules.
+
+#### Parameters
+
+##### size
+
+`number`
+
+Texels per side.
+
+##### layerCount
+
+`number`
+
+The terrain's layer count.
+
+#### Returns
+
+[`ControlMaps`](#controlmaps)
+
+The maps.
+
+***
+
 ### spawnTilemapObjects()
 
 > **spawnTilemapObjects**(`app`, `service`, `tilemap`): readonly [`Entity`](#entity-19)[]
@@ -87802,13 +102448,13 @@ app.twoD.registerTileObjectFactory("spawn", ({ world, position }) => {
 
 ### spriteAnimationFileSchema()
 
-> **spriteAnimationFileSchema**(): [`Schema`](#schema-41)
+> **spriteAnimationFileSchema**(): [`Schema`](#schema-44)
 
 The `ignifx.spriteanimation` document schema.
 
 #### Returns
 
-[`Schema`](#schema-41)
+[`Schema`](#schema-44)
 
 The schema, built fresh so no module holds state (`CONSTITUTION.md` §3.5).
 
@@ -87830,13 +102476,13 @@ The JSON Schema object.
 
 ### spriteAtlasFileSchema()
 
-> **spriteAtlasFileSchema**(): [`Schema`](#schema-41)
+> **spriteAtlasFileSchema**(): [`Schema`](#schema-44)
 
 The `ignifx.spriteatlas` document schema.
 
 #### Returns
 
-[`Schema`](#schema-41)
+[`Schema`](#schema-44)
 
 The schema, built fresh so no module holds state (`CONSTITUTION.md` §3.5).
 
@@ -87944,6 +102590,30 @@ The rotation to write to `Sprite2DProps.rotation`, in radians.
 Lite's +Y-down pixel space (`(corner - pivot) * sizePx`, then rotated), so the same visual turn is
 the negated angle there. Verified against the sprite vertex shader in
 `@babylonjs/lite@1.27.0`, `lib/sprite/sprite-pipeline.js` line 25.
+
+***
+
+### srgbToLinear()
+
+> **srgbToLinear**(`value`): `number`
+
+Decodes an sRGB channel to linear — the exact formula the generated WGSL uses, so the CPU
+evaluator and the shader agree (`Color.srgbToLinear` in core is the same function; it is
+restated here so the two hosts can be read side by side).
+
+#### Parameters
+
+##### value
+
+`number`
+
+The sRGB channel in `0`–`1`.
+
+#### Returns
+
+`number`
+
+The linear channel.
 
 ***
 
@@ -88075,6 +102745,154 @@ stringifySceneFile(serializeScene(instance)) === stringifySceneFile(serializeSce
 
 ***
 
+### terrainAssetFromDefinition()
+
+> **terrainAssetFromDefinition**(`app`, `input`, `options?`): `Promise`\<[`AssetHandle`](#assethandle)\<[`TerrainAsset`](#terrainasset-1)\>\>
+
+Builds a terrain asset from a definition written in code, without loading a file.
+
+#### Parameters
+
+##### app
+
+[`App`](#app-1)
+
+The app whose asset service publishes the result.
+
+##### input
+
+[`TerrainDefinitionInput`](#terraindefinitioninput)
+
+The document, with every defaulted field optional.
+
+##### options?
+
+[`TerrainAssetOptions`](#terrainassetoptions)
+
+The address and an explicit height array.
+
+#### Returns
+
+`Promise`\<[`AssetHandle`](#assethandle)\<[`TerrainAsset`](#terrainasset-1)\>\>
+
+The handle, with one holder — the caller.
+
+#### Remarks
+
+The terrain blends its layer **tints**: a texture array is assembled from decoded images, which
+only the `.terrain.json` loader has. Give the definition `noise`, or pass `heights`, for the
+shape; a definition that names a `heightmap` file is refused, because nothing here can fetch it.
+
+#### Throws
+
+IgnifxError with code `IGX-1601` when the definition names a heightmap file, `IGX-1602`
+for a resolution that does not fit the chunking, or `IGX-1608` when `heights` is the wrong length.
+
+#### Example
+
+```ts
+const island = await terrainAssetFromDefinition(app, {
+  size: { width: 256, depth: 256, height: 30 },
+  resolution: 257,
+  noise: { seed: 7, octaves: 5 },
+  layers: [{ name: "grass" }, { name: "rock", triplanar: true }],
+  splatRules: [{ layer: "grass" }, { layer: "rock", slope: [35, 90] }],
+});
+```
+
+***
+
+### terrainError()
+
+> **terrainError**(`code`, `message`, `options?`): [`IgnifxError`](#ignifxerror)
+
+Builds an `IgnifxError` carrying one of this package's codes.
+
+#### Parameters
+
+##### code
+
+[`TerrainErrorCode`](#terrainerrorcode-1)
+
+The code from the `TerrainErrorCode` table.
+
+##### message
+
+`string`
+
+The actionable development sentence.
+
+##### options?
+
+[`TerrainErrorOptions`](#terrainerroroptions)
+
+Context identifiers, a remedy hint, and the wrapped cause.
+
+#### Returns
+
+[`IgnifxError`](#ignifxerror)
+
+The error to throw or to reject with.
+
+#### Example
+
+```ts
+throw terrainError(TerrainErrorCode.unknownLayer, "island.terrain.json names no layer moss.", {
+  context: { file: "island.terrain.json", layer: "moss" },
+});
+```
+
+***
+
+### terrainFileSchema()
+
+> **terrainFileSchema**(): [`Schema`](#schema-44)
+
+The `ignifx.terrain` document schema.
+
+#### Returns
+
+[`Schema`](#schema-44)
+
+The schema, built fresh so no module holds state (`CONSTITUTION.md` §3.5).
+
+***
+
+### terrainSplatShaderSource()
+
+> **terrainSplatShaderSource**(`spec`): `string`
+
+Generates the `terrainSplat` surface shader for a terrain's shape.
+
+#### Parameters
+
+##### spec
+
+[`TerrainSplatShaderSpec`](#terrainsplatshaderspec)
+
+The layers and which arrays are bound.
+
+#### Returns
+
+`string`
+
+The `.surface.wgsl` source.
+
+#### Example
+
+```ts
+const source = terrainSplatShaderSource({
+  layers: [
+    { triplanar: false, hasNormal: false, color: { r: 0.3, g: 0.6, b: 0.2, a: 1 }, tiling: 8 },
+    { triplanar: true, hasNormal: false, color: { r: 0.5, g: 0.5, b: 0.5, a: 1 }, tiling: 6 },
+  ],
+  textured: false,
+  normals: false,
+});
+```
+
+***
+
 ### threeDError()
 
 > **threeDError**(`code`, `message`, `options?`): [`IgnifxError`](#ignifxerror)
@@ -88119,13 +102937,13 @@ throw threeDError(ThreeDErrorCode.unknownParameter, "hero.animator.json declares
 
 ### threeDSettingsSchema()
 
-> **threeDSettingsSchema**(): [`Schema`](#schema-41)
+> **threeDSettingsSchema**(): [`Schema`](#schema-44)
 
 The schema the `threeD` section is validated against.
 
 #### Returns
 
-[`Schema`](#schema-41)
+[`Schema`](#schema-44)
 
 The schema, built fresh so no module holds state (`CONSTITUTION.md` §3.5).
 
@@ -88251,13 +103069,13 @@ tileFrameName(map, 1); // "hero_0"
 
 ### tilemapFileSchema()
 
-> **tilemapFileSchema**(): [`Schema`](#schema-41)
+> **tilemapFileSchema**(): [`Schema`](#schema-44)
 
 The `ignifx.tilemap` document schema.
 
 #### Returns
 
-[`Schema`](#schema-41)
+[`Schema`](#schema-44)
 
 The schema, built fresh so no module holds state (`CONSTITUTION.md` §3.5).
 
@@ -88289,7 +103107,7 @@ editor autocompletion (`docs/architecture/06-serialization-and-scene-format.md` 
 
 ##### schema
 
-[`Schema`](#schema-41)
+[`Schema`](#schema-44)
 
 The schema to convert.
 
@@ -88405,14 +103223,14 @@ throw twoDError(TwoDErrorCode.unknownClip, "hero.spriteanim.json declares no cli
 
 ### twoDSettingsSchema()
 
-> **twoDSettingsSchema**(): [`Schema`](#schema-41)
+> **twoDSettingsSchema**(): [`Schema`](#schema-44)
 
 The schema the `twoD` section is validated against, in `ignifx.config.ts` and in a scene file
 alike.
 
 #### Returns
 
-[`Schema`](#schema-41)
+[`Schema`](#schema-44)
 
 The schema, built fresh so no module holds state (`CONSTITUTION.md` §3.5).
 
@@ -88491,13 +103309,13 @@ throw uiError(UiErrorCode.unknownLocale, "fr is not a locale strings.i18n.json d
 
 ### uiSettingsSchema()
 
-> **uiSettingsSchema**(): [`Schema`](#schema-41)
+> **uiSettingsSchema**(): [`Schema`](#schema-44)
 
 The schema the `ui` section is validated against.
 
 #### Returns
 
-[`Schema`](#schema-41)
+[`Schema`](#schema-44)
 
 The schema, built fresh so no module holds state (`CONSTITUTION.md` §3.5).
 
@@ -88553,7 +103371,7 @@ as `IGX-0607`; names the caller omits are legal, because omitted props take sche
 
 ##### schema
 
-[`Schema`](#schema-41)
+[`Schema`](#schema-44)
 
 The schema to check against.
 
@@ -89000,6 +103818,108 @@ The equivalent angle in `[-180, 180)`; exactly `180` wraps to `-180`.
 wrapAngleDegrees(370); // 10
 wrapAngleDegrees(-190); // 170
 ```
+
+***
+
+### writeChunkIndices()
+
+> **writeChunkIndices**(`chunkSize`, `lod`, `indices`): `void`
+
+Writes a chunk's index buffer at a level of detail. It depends on nothing but the sizes, so every
+chunk of a terrain shares one pattern per level.
+
+#### Parameters
+
+##### chunkSize
+
+`number`
+
+Quads per chunk side.
+
+##### lod
+
+`number`
+
+The level of detail.
+
+##### indices
+
+`Uint32Array`
+
+Receives [chunkIndexCount](#chunkindexcount) indices.
+
+#### Returns
+
+`void`
+
+***
+
+### writeChunkVertices()
+
+> **writeChunkVertices**(`field`, `chunkX`, `chunkZ`, `lod`, `chunkSize`, `skirtDepth`, `positions`, `normals`, `uvs?`): `void`
+
+Writes a chunk's positions and normals — and, when given, its UVs — into existing arrays. This
+is what a sculpt calls: the index buffer never changes, so only these are re-uploaded.
+
+#### Parameters
+
+##### field
+
+[`HeightField`](#heightfield)
+
+The height field.
+
+##### chunkX
+
+`number`
+
+The chunk column.
+
+##### chunkZ
+
+`number`
+
+The chunk row.
+
+##### lod
+
+`number`
+
+The level of detail.
+
+##### chunkSize
+
+`number`
+
+Quads per chunk side.
+
+##### skirtDepth
+
+`number`
+
+How far the skirts hang down, in metres.
+
+##### positions
+
+`Float32Array`
+
+Receives three floats per vertex.
+
+##### normals
+
+`Float32Array`
+
+Receives three floats per vertex.
+
+##### uvs?
+
+`Float32Array`\<`ArrayBufferLike`\>
+
+Receives two floats per vertex, or omitted to leave UVs alone.
+
+#### Returns
+
+`void`
 
 ***
 

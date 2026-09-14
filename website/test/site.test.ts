@@ -10,7 +10,7 @@ import { FONTS } from "../scripts/fonts.ts";
 import { STATS_TITLE } from "../scripts/frame.ts";
 import { JSON_LD, jsonLdHash } from "../scripts/layout.ts";
 import { slugify, stripFrontmatter } from "../scripts/markdown.ts";
-import { resolveGuideLink } from "../scripts/repo-content.ts";
+import { GUIDE_GROUPS, resolveGuideLink } from "../scripts/repo-content.ts";
 import { fileNameForRoute } from "../scripts/site.ts";
 import { findSkillPages, llmsUrls, repoPathOf } from "../scripts/skill-tree.ts";
 import { readText } from "../scripts/text.ts";
@@ -134,7 +134,7 @@ describe("routing", () => {
     const guides = [...documents.keys()].filter(
       (file) => file.startsWith("docs/guides/") && file !== "docs/guides/index.html",
     );
-    expect(guides.length).toBe(16);
+    expect(guides.length).toBe(GUIDE_GROUPS.flatMap((group) => group.recipes).length);
   });
 
   it("serves no skill page, because the skill lives in the repository (ADR-0020)", () => {

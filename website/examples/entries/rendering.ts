@@ -78,4 +78,34 @@ export const RENDERING: readonly ExampleOf<"Rendering">[] = [
       "rows on a lit grid floor, with the cylinder at the centre of the frame picked out in orange.",
     sourceFiles: ["main.ts", "scene.ts", "click-to-pick.ts"],
   },
+  {
+    slug: "instancing",
+    title: "Instancing",
+    category: "Rendering",
+    dimension: "3D",
+    priority: "P0",
+    status: "ready",
+    line: "Twenty thousand asteroids, one mesh, one draw call.",
+    paragraph:
+      "A ring of 20,000 rocks drawn by a single `InstancedMeshRenderer`. `setMatrices` hands Babylon Lite a " +
+      "reference to the example's own `Float32Array` — sixteen floats per instance, column-major — and Lite never " +
+      "copies it, so a foliage scatterer or a particle system can write into its own memory and call `markDirty()` " +
+      "with nothing allocating in between. `setCount` draws fewer of them without re-uploading anything. The two " +
+      "settings Lite fixes when the scene is registered, GPU culling and the LOD partner, are what the toggles on " +
+      "the right rebuild the renderer for: change one on a live component and it logs `IGX-0717` and writes the " +
+      "applied value back, so what the component reports is always what is being drawn.",
+    tries: [
+      "Pull Drawn down to two thousand and back up. The draw-call count never moves.",
+      "Turn the LOD partner off and orbit out: the far side of the belt is suddenly the full-detail mesh.",
+      "Turn GPU culling off. The renderer is rebuilt, because Lite bakes that flag into the renderable.",
+    ],
+    uses: ["InstancedMeshRenderer", "setMatrices", "setCount", "MeshAsset.sphere", "app.renderer.drawCalls"],
+    assets: [],
+    controls: ["mouse", "touch", "gamepad"],
+    posterAlt:
+      "A wide ring of thousands of small pale-grey rocks seen at a shallow angle against black, thousands deep, with " +
+      "an empty hole at its centre and the far side of the ring receding towards the top of the frame.",
+    sourceFiles: ["main.ts", "belt.ts"],
+    heavy: true,
+  },
 ];

@@ -1,0 +1,64 @@
+/**
+ * Play a particle effect
+ *
+ * An effect is a document — a `.particles.json`, or the same object built in code by
+ * `particleDefinition(preset, overrides)` — and a `ParticleSystem` component plays it. The nine
+ * presets (`fire`, `smoke`, `sparks`, `explosion`, `dust`, `sparkle`, `rain`, `snow`, `leaves`) are
+ * complete documents, so a campfire is two lines in a fresh project.
+ *
+ * Particles are stateless: the CPU writes one spawn record per particle and the GPU computes the
+ * rest from the record and the system's own clock. That is why `aliveCount` is exact headless,
+ * `simulate(seconds)` costs the same as playing them, and `pause()` freezes an effect precisely.
+ *
+ * `capacity` is the whole budget — the ring overwrites the oldest live particle rather than growing
+ * — so size it at about `rateOverTime × the longest lifetime` and watch `droppedCount`. Give a
+ * looping effect the player walks up to `prewarm: true`, or it starts empty and fills in.
+ */
+// docs:run
+import { Camera, createApp } from "@ignifx/core";
+import { ParticleSystem, particleAssetFromDefinition, particleDefinition, particles } from "@ignifx/particles";
+
+const app = await createApp({ headless: true, extensions: [particles({ maxParticles: 20_000 })] });
+
+const eye = app.world.createEntity("Main Camera", { position: { x: 0, y: 1.5, z: -4 } });
+eye.transform.lookAt({ x: 0, y: 0.5, z: 0 });
+eye.addComponent(Camera);
+
+// An override merges key by key; an array or a primitive replaces the whole value.
+const campfire = particleAssetFromDefinition(
+  app,
+  particleDefinition("fire", {
+    main: { capacity: 512, prewarm: true },
+    emission: { rateOverTime: 120 },
+    start: { lifetime: { min: 0.6, max: 1.1 }, size: { min: 0.25, max: 0.5 } },
+    forces: { noise: { strength: 0.6, frequency: 1.5 } },
+  }),
+  "campfire",
+);
+
+const fire = app.world
+  .createEntity("Campfire", { position: { x: 0, y: 0.2, z: 0 } })
+  .addComponent(ParticleSystem, { definition: campfire, seed: 7 });
+
+await app.start();
+for (let frame = 0; frame < 60; frame += 1) {
+  app.step(1 / 60);
+}
+// The clock already reads past a second: `prewarm` fast-forwarded one whole cycle at `play()`.
+app.log.info("alive:", fire.aliveCount, "dropped:", fire.droppedCount, "clock:", fire.time.toFixed(2));
+
+// Putting the fire out: emission stops and the live particles finish their lives. `stop({ clear:
+// true })` drops them all at once instead.
+fire.stop();
+for (let frame = 0; frame < 90; frame += 1) {
+  app.step(1 / 60);
+}
+app.log.info("after the fire goes out:", fire.aliveCount);
+
+// Fast-forward is exact, not an approximation: the same arithmetic frames would have done. The
+// counters are refreshed by the update system, so they read the new state on the next frame.
+fire.play();
+fire.simulate(2);
+app.step(1 / 60);
+app.log.info("two seconds fast-forwarded:", fire.aliveCount, "clock:", fire.time.toFixed(2));
+app.dispose();

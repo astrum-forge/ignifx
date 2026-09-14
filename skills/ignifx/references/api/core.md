@@ -222,7 +222,7 @@ At most one camera per entity: two views from one transform would be the same vi
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-10)
+> `static` **schema**: [`Schema`](#schema-11)
 
 The serialized field declarations (ADR-0004).
 
@@ -434,13 +434,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-10)
+> **get** **transform**(): [`Transform`](#transform-11)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-10)
+[`Transform`](#transform-11)
 
 The entity's transform.
 
@@ -470,13 +470,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-12)
+> **get** **world**(): [`World`](#world-13)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-12)
+[`World`](#world-13)
 
 The world.
 
@@ -1608,10 +1608,11 @@ class Health extends Component.define({ maximum: f32(100) }) {
 - [`Environment`](#environment)
 - [`Light`](#light)
 - [`MeshRenderer`](#meshrenderer)
+- [`InstancedMeshRenderer`](#instancedmeshrenderer)
 - [`Model`](#model)
 - [`PostProcessStack`](#postprocessstack)
 - [`Script`](#abstract-script)
-- [`Transform`](#transform-10)
+- [`Transform`](#transform-11)
 
 #### Implements
 
@@ -1722,7 +1723,7 @@ Whether the owner has already been destroyed.
 
 ###### Implementation of
 
-[`SignalOwner`](#signalowner).[`isDestroyed`](#isdestroyed-9)
+[`SignalOwner`](#signalowner).[`isDestroyed`](#isdestroyed-10)
 
 ##### isEnabledInHierarchy
 
@@ -1766,19 +1767,19 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Implementation of
 
-[`SignalOwner`](#signalowner).[`onDestroyed`](#ondestroyed-9)
+[`SignalOwner`](#signalowner).[`onDestroyed`](#ondestroyed-10)
 
 ##### transform
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-10)
+> **get** **transform**(): [`Transform`](#transform-11)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-10)
+[`Transform`](#transform-11)
 
 The entity's transform.
 
@@ -1800,13 +1801,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-12)
+> **get** **world**(): [`World`](#world-13)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-12)
+[`World`](#world-13)
 
 The world.
 
@@ -2909,13 +2910,13 @@ The tag set.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-10)
+> **get** **transform**(): [`Transform`](#transform-11)
 
 The entity's transform. Every entity has one; it can be neither removed nor disabled.
 
 ###### Returns
 
-[`Transform`](#transform-10)
+[`Transform`](#transform-11)
 
 The transform.
 
@@ -2937,13 +2938,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-12)
+> **get** **world**(): [`World`](#world-13)
 
 The world that owns the entity.
 
 ###### Returns
 
-[`World`](#world-12)
+[`World`](#world-13)
 
 The world.
 
@@ -3461,7 +3462,7 @@ One per entity, and effectively one per world: the fields are all scene state.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-10)
+> `static` **schema**: [`Schema`](#schema-11)
 
 The serialized field declarations (ADR-0004).
 
@@ -3659,13 +3660,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-10)
+> **get** **transform**(): [`Transform`](#transform-11)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-10)
+[`Transform`](#transform-11)
 
 The entity's transform.
 
@@ -3695,13 +3696,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-12)
+> **get** **world**(): [`World`](#world-13)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-12)
+[`World`](#world-13)
 
 The world.
 
@@ -4138,7 +4139,7 @@ The identifier that appears in error context.
 
 ###### Implementation of
 
-[`StorageBackend`](#storagebackend).[`name`](#name-17)
+[`StorageBackend`](#storagebackend).[`name`](#name-25)
 
 #### Methods
 
@@ -4208,7 +4209,7 @@ Closes the connection. The next call opens a new one.
 
 ###### Implementation of
 
-[`StorageBackend`](#storagebackend).[`dispose`](#dispose-9)
+[`StorageBackend`](#storagebackend).[`dispose`](#dispose-10)
 
 ##### get()
 
@@ -4305,6 +4306,642 @@ A promise that settles once the transaction commits.
 ###### Implementation of
 
 [`StorageBackend`](#storagebackend).[`set`](#set-11)
+
+***
+
+### InstancedMeshRenderer
+
+Draws one mesh many times from a caller-owned matrix slab, in a single draw call (the plan's
+§3.5).
+
+#### Example
+
+```ts
+using box = MeshAsset.box(app, { size: 0.5 });
+const field = world.createEntity("Asteroids");
+const renderer = field.addComponent(InstancedMeshRenderer, { mesh: box.retain(), capacity: 20_000 });
+
+const slab = new Float32Array(20_000 * 16);
+// ... write 16 column-major floats per instance ...
+renderer.setMatrices(slab, 20_000);
+```
+
+#### Extends
+
+- [`Component`](#abstract-component)
+
+#### Implements
+
+- [`ComponentHooks`](#componenthooks)
+
+#### Constructors
+
+##### Constructor
+
+> **new InstancedMeshRenderer**(): [`InstancedMeshRenderer`](#instancedmeshrenderer)
+
+Applies the schema defaults, exactly as `Component.define` would.
+
+###### Returns
+
+[`InstancedMeshRenderer`](#instancedmeshrenderer)
+
+###### Overrides
+
+[`Component`](#abstract-component).[`constructor`](#constructor-3)
+
+#### Properties
+
+##### allowMultiple
+
+> `static` **allowMultiple**: `boolean` = `true`
+
+Several instanced renderers on one entity draw several clouds from one transform.
+
+##### capacity
+
+> **capacity**: `number`
+
+##### castShadows
+
+> **castShadows**: `boolean`
+
+##### gpuCulling
+
+> **gpuCulling**: `boolean`
+
+##### lod
+
+> **lod**: [`InstancedMeshLod`](#instancedmeshlod) \| `null`
+
+##### materials
+
+> **materials**: ([`AssetHandle`](#assethandle)\<[`MaterialAsset`](#materialasset)\> \| `null`)[]
+
+##### mesh
+
+> **mesh**: [`AssetHandle`](#assethandle)\<[`MeshAsset`](#meshasset)\> \| `null`
+
+##### pickable
+
+> **pickable**: `boolean`
+
+##### receiveShadows
+
+> **receiveShadows**: `boolean`
+
+##### renderOrder
+
+> **renderOrder**: `number`
+
+##### schema
+
+> `static` **schema**: [`Schema`](#schema-11)
+
+The serialized field declarations (ADR-0004).
+
+##### typeId
+
+> `static` **typeId**: `string` = `"ignifx/InstancedMeshRenderer"`
+
+The namespaced registration id.
+
+#### Accessors
+
+##### app
+
+###### Get Signature
+
+> **get** **app**(): [`App`](#app)
+
+The app that owns the world.
+
+###### Returns
+
+[`App`](#app)
+
+The app.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`app`](#app-2)
+
+##### count
+
+###### Get Signature
+
+> **get** **count**(): `number`
+
+How many instances are drawn.
+
+###### Returns
+
+`number`
+
+The active count; `0` until [InstancedMeshRenderer.setMatrices](#setmatrices) has run.
+
+##### enabled
+
+###### Get Signature
+
+> **get** **enabled**(): `boolean`
+
+The component's own enabled flag; `true` by default. Setting it runs the enable or disable
+transition (`docs/architecture/01-lifecycle-and-time.md` §6): `onDisable` runs immediately,
+`awake`/`onEnable` run in the next lifecycle flush — or immediately and nested when the change
+happens inside a callback.
+
+###### Returns
+
+`boolean`
+
+`true` when the component's own flag is set.
+
+###### Set Signature
+
+> **set** **enabled**(`value`): `void`
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`enabled`](#enabled-2)
+
+##### entity
+
+###### Get Signature
+
+> **get** **entity**(): [`Entity`](#entity-2)
+
+The entity this component is attached to.
+
+###### Returns
+
+[`Entity`](#entity-2)
+
+The owning entity.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`entity`](#entity-1)
+
+##### handle
+
+###### Get Signature
+
+> **get** **handle**(): [`ComponentHandle`](#componenthandle-1)
+
+The dense runtime handle; invalid after destruction.
+
+###### Returns
+
+[`ComponentHandle`](#componenthandle-1)
+
+The handle.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`handle`](#handle-1)
+
+##### isDestroyed
+
+###### Get Signature
+
+> **get** **isDestroyed**(): `boolean`
+
+`true` from the moment `destroy()` is called, long before the destroy flush runs.
+
+###### Returns
+
+`boolean`
+
+`true` once the component has been queued for destruction.
+
+Whether the owner has already been destroyed.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-1)
+
+##### isEnabledInHierarchy
+
+###### Get Signature
+
+> **get** **isEnabledInHierarchy**(): `boolean`
+
+`true` when the component's own flag is set **and** its entity is active in the hierarchy.
+
+###### Returns
+
+`boolean`
+
+`true` when the component is effectively enabled.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-1)
+
+##### isVisible
+
+###### Get Signature
+
+> **get** **isVisible**(): `boolean`
+
+Whether the instanced mesh is currently drawn: its own `enabled` flag and its entity's
+`activeInHierarchy`, materialised onto Lite's `visible`.
+
+###### Returns
+
+`boolean`
+
+`true` when the meshes are visible.
+
+##### lite
+
+###### Get Signature
+
+> **get** **lite**(): [`InstancedMeshRendererLiteHandles`](#instancedmeshrendererlitehandles)
+
+The Babylon Lite meshes this renderer draws. Unstable escape hatch
+(`docs/architecture/00-overview.md` §3).
+
+###### Returns
+
+[`InstancedMeshRendererLiteHandles`](#instancedmeshrendererlitehandles)
+
+The instanced mesh and its LOD partner, either of which may be `null`.
+
+##### onDestroyed
+
+###### Get Signature
+
+> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+Emitted once when the component is destroyed, in the destroy flush. Connecting with
+`{ owner: this }` elsewhere uses it to detach handlers automatically
+(`docs/architecture/02-scene-graph.md` §8).
+
+###### Returns
+
+[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+
+The signal. It is created on first access, so a component nobody listens to allocates
+nothing.
+
+Emitted once when the owner is destroyed; the signal uses it to detach the handler.
+
+###### Remarks
+
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
+`docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
+invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-1)
+
+##### transform
+
+###### Get Signature
+
+> **get** **transform**(): [`Transform`](#transform-11)
+
+The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
+
+###### Returns
+
+[`Transform`](#transform-11)
+
+The entity's transform.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`transform`](#transform-1)
+
+##### uid
+
+###### Get Signature
+
+> **get** **uid**(): `string`
+
+The stable ULID; the key files use to reference this component.
+
+###### Returns
+
+`string`
+
+The identifier.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`uid`](#uid-1)
+
+##### world
+
+###### Get Signature
+
+> **get** **world**(): [`World`](#world-13)
+
+The world the entity belongs to.
+
+###### Returns
+
+[`World`](#world-13)
+
+The world.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`world`](#world-2)
+
+#### Methods
+
+##### define()
+
+> `static` **define**\<`S`\>(`schema`): [`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+Declares a component's serialized fields and returns the base class to extend (ADR-0004,
+`docs/architecture/03-scripting-and-components.md` §3). The returned class exposes every field
+as a typed instance property, applies the defaults in its constructor, and carries the schema
+for the serializer, the inspector, and the docs harness.
+
+###### Type Parameters
+
+###### S
+
+`S` *extends* `Readonly`\<`Record`\<`string`, [`FieldDefinition`](#fielddefinition)\<`unknown`\>\>\>
+
+The schema being declared.
+
+###### Parameters
+
+###### schema
+
+`S`
+
+The field definitions, keyed by the property name they become.
+
+###### Returns
+
+[`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+An abstract class to extend.
+
+###### Throws
+
+IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
+with a `Component`/`Script` member.
+
+###### Example
+
+```ts
+class Spinner extends Component.define({
+  degreesPerSecond: f32(90, { min: -360, max: 360 }),
+  axis: vec3({ x: 0, y: 1, z: 0 }),
+}) {
+  static typeId = "mygame/Spinner";
+}
+```
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`define`](#define-1)
+
+##### destroy()
+
+> **destroy**(): `void`
+
+Queues this component for destruction. It stays usable until the destroy flush of the current
+frame, but reports `isDestroyed === true` immediately
+(`docs/architecture/01-lifecycle-and-time.md` §6). Calling it twice is a no-op.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`destroy`](#destroy-1)
+
+##### getComponent()
+
+> **getComponent**\<`T`\>(`type`): `T` \| `null`
+
+Finds another component on the same entity — sugar for `this.entity.getComponent`.
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class; matching is by class identity **and** inheritance.
+
+###### Returns
+
+`T` \| `null`
+
+The first match in attach order, or `null`.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-1)
+
+##### markDirty()
+
+> **markDirty**(`range?`): `void`
+
+Says that the caller mutated the slab in place, so the next `PreRender` re-uploads it.
+
+###### Parameters
+
+###### range?
+
+[`InstanceRange`](#instancerange)
+
+Which instances moved. **Advisory in this version**: Lite 1.27.0 exposes no
+sub-range flush, so the whole active range `[0, count)` is re-uploaded either way. Pass it
+anyway; the day Lite grows one, callers that already declared their range get it for free.
+
+###### Returns
+
+`void`
+
+##### onAttach()
+
+> **onAttach**(): `void`
+
+Declares the thin-instance adapter chunk, so `app.start()` waits for it before the first
+reconciliation. The meshes themselves are built on the first sync, once `mesh` has decoded.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onAttach`](#onattach-1)
+
+##### onDetach()
+
+> **onDetach**(): `void`
+
+Removes both meshes from the scene, releasing their share of the templates' buffers.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-1)
+
+##### requireComponent()
+
+> **requireComponent**\<`T`\>(`type`): `T`
+
+Finds another component on the same entity, requiring it to be there — the supported way to
+link components (`docs/architecture/03-scripting-and-components.md` §8).
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class.
+
+###### Returns
+
+`T`
+
+The first match in attach order.
+
+###### Throws
+
+IgnifxError with code `IGX-0201` when the entity has no such component.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-1)
+
+##### setColors()
+
+> **setColors**(`colors`): `void`
+
+Installs, replaces, or removes the per-instance colours.
+
+###### Parameters
+
+###### colors
+
+`Float32Array`\<`ArrayBufferLike`\> \| `null`
+
+The slab; at least `count * 4` floats, or `null` to stop reading colours.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+Four floats per instance, **linear** RGBA in `0..1` — the same space a material's `baseColor`
+is uploaded in, not sRGB. The material has to be one that reads `instanceColor`; a stock PBR
+material ignores them.
+
+Adding or removing colours changes the compiled pipeline, so it costs the frame's one
+`rebuildSceneRenderables`. Editing them in place does not: mutate the slab and call
+[InstancedMeshRenderer.markDirty](#markdirty).
+
+###### Throws
+
+IgnifxError with code `IGX-0721` when the slab is too short for the current count.
+
+##### setCount()
+
+> **setCount**(`count`): `void`
+
+Changes how many instances are drawn, without re-uploading the slab.
+
+###### Parameters
+
+###### count
+
+`number`
+
+The new count, at most `capacity` and at most what the slab holds.
+
+###### Returns
+
+`void`
+
+###### Throws
+
+IgnifxError with code `IGX-0721` when `count` is not an integer in `[0, capacity]`, or
+when the matrix or colour slab is too short to hold that many instances.
+
+##### setMatrices()
+
+> **setMatrices**(`matrices`, `count`): `void`
+
+Points the renderer at a matrix slab.
+
+###### Parameters
+
+###### matrices
+
+`Float32Array`
+
+The slab; at least `count * 16` floats.
+
+###### count
+
+`number`
+
+How many instances to draw, at most `capacity`.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+The array is **not copied**: Lite reads the caller's memory for the life of the renderer, so it
+has to stay alive, and mutating it afterwards is the intended way to move instances — followed
+by [InstancedMeshRenderer.markDirty](#markdirty). Sixteen floats per instance, column-major, the
+layout Lite's `Mat4` and `Transform.worldMatrix` already use.
+
+The upload happens in the next `PreRender`, not here.
+
+###### Throws
+
+IgnifxError with code `IGX-0721` when `count` is not an integer in `[0, capacity]`, or
+when the slab (or the colour slab set earlier) is too short to hold that many instances.
 
 ***
 
@@ -4828,7 +5465,7 @@ At most one light per entity: two lights from one transform want two entities.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-10)
+> `static` **schema**: [`Schema`](#schema-11)
 
 The serialized field declarations (ADR-0004).
 
@@ -5055,13 +5692,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-10)
+> **get** **transform**(): [`Transform`](#transform-11)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-10)
+[`Transform`](#transform-11)
 
 The entity's transform.
 
@@ -5091,13 +5728,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-12)
+> **get** **world**(): [`World`](#world-13)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-12)
+[`World`](#world-13)
 
 The world.
 
@@ -6477,17 +7114,37 @@ The texture handles the material samples, in slot order. It does not own them.
 
 #### Accessors
 
+##### isDrawable
+
+###### Get Signature
+
+> **get** **isDrawable**(): `boolean`
+
+Whether Babylon Lite can draw the material yet.
+
+###### Remarks
+
+`false` only for a shader material whose file declares a `// @ignifx storage` binding that
+nothing has filled in: Lite refuses to build a bind group with an unbound storage buffer, so
+such a material must be given one before a mesh wears it. Everything else is always drawable.
+
+###### Returns
+
+`boolean`
+
+`true` when every declared binding has something bound.
+
 ##### kind
 
 ###### Get Signature
 
-> **get** **kind**(): `"standard"` \| `"pbr"` \| `"shader"`
+> **get** **kind**(): `"standard"` \| `"shader"` \| `"pbr"`
 
 The material family.
 
 ###### Returns
 
-`"standard"` \| `"pbr"` \| `"shader"`
+`"standard"` \| `"shader"` \| `"pbr"`
 
 `"pbr"` or `"standard"`.
 
@@ -6519,6 +7176,36 @@ The material's human-readable name.
 
 The declared name.
 
+##### shader
+
+###### Get Signature
+
+> **get** **shader**(): [`ShaderAsset`](#shaderasset) \| `null`
+
+The shader a `"shader"` material sets values on.
+
+###### Returns
+
+[`ShaderAsset`](#shaderasset) \| `null`
+
+The shader asset, or `null` for a PBR or Standard material. A hot reload of the
+`.wgsl` replaces it in place.
+
+##### surfaces
+
+###### Get Signature
+
+> **get** **surfaces**(): readonly [`SurfaceShaderBinding`](#surfaceshaderbinding)[]
+
+The surface shaders layered onto this material, in the order they were attached
+(`docs/plan/2026-09-terrain-particles-shaders.md` §3.2).
+
+###### Returns
+
+readonly [`SurfaceShaderBinding`](#surfaceshaderbinding)[]
+
+The bindings, or an empty array.
+
 #### Methods
 
 ##### clone()
@@ -6547,6 +7234,55 @@ The copy's handle, with one holder — the caller.
 The copy shares the original's *textures* (they are addressed assets, and the handles are
 retained by whoever loaded them) and nothing else: it is a second Lite material in the same
 family, so it costs no extra shader compilation.
+
+##### dispose()
+
+> **dispose**(): `void`
+
+Releases what the material holds beyond its Babylon Lite object: a shader material's per-frame
+uniform registration and its hot-reload hook.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+The `material` asset type's `unload` runs it when the last holder releases the handle, so a
+game that pairs `load`/`release` or uses `using` never has to. Calling it twice is a no-op, and
+it is a no-op on a PBR or Standard material, which own nothing of the kind.
+
+##### getUniform()
+
+> **getUniform**(`name`, `out?`): `number` \| `Float32Array`\<`ArrayBufferLike`\>
+
+Reads the current value of one of the shader's declared uniforms.
+
+###### Parameters
+
+###### name
+
+`string`
+
+The declared uniform's name.
+
+###### out?
+
+`Float32Array`\<`ArrayBufferLike`\>
+
+Receives a vector or matrix value; omit it to get a fresh array, or read a scalar
+uniform's number directly.
+
+###### Returns
+
+`number` \| `Float32Array`\<`ArrayBufferLike`\>
+
+The number for `f32`, `u32`, and `i32`, and the filled array for everything else.
+
+###### Throws
+
+IgnifxError with code `IGX-0718` unless this is a `"shader"` material, `IGX-0712` when
+the shader declares no such uniform, or `IGX-0713` when `out` is too short.
 
 ##### setAlpha()
 
@@ -6591,6 +7327,47 @@ The colour is sRGB, like every colour in ignifx's public API; the linear value t
 is derived here. The change marks the material's uniform block dirty, which is the cheap path:
 no pipeline is recompiled (`src/lite/material.ts`).
 
+###### Throws
+
+IgnifxError with code `IGX-0718` on a `"shader"` material, which has no base colour of
+the engine's choosing.
+
+##### setDefine()
+
+> **setDefine**(`name`, `value`): `void`
+
+Overrides one of the shader's declared `define` values.
+
+###### Parameters
+
+###### name
+
+`string`
+
+The declared define's name.
+
+###### value
+
+`number` \| `boolean`
+
+The new value; a boolean compiles to `bool`, a number to `f32`.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+A define is a WGSL `const` compiled into the pipeline, so this rebuilds the Babylon Lite
+material and replays every value, texture, and storage binding onto the new one. `MeshRenderer`
+picks the new material up on the next `PreRender`, and the frame after that draws with the new
+pipeline — so treat it as a level-load or settings-screen operation, not a per-frame one.
+
+###### Throws
+
+IgnifxError with code `IGX-0718` unless this is a `"shader"` material, or `IGX-0712`
+when the shader declares no such define.
+
 ##### setMetallicRoughness()
 
 > **setMetallicRoughness**(`metallic`, `roughness`): `void`
@@ -6615,6 +7392,142 @@ The roughness factor, 0 to 1.
 ###### Returns
 
 `void`
+
+##### setStorageBuffer()
+
+> **setStorageBuffer**(`name`, `buffer`): `void`
+
+Binds a read-only storage buffer to one of the shader's declared bindings.
+
+###### Parameters
+
+###### name
+
+`string`
+
+The declared binding's name.
+
+###### buffer
+
+[`AssetHandle`](#assethandle)\<[`StorageBufferAsset`](#storagebufferasset)\> \| `null`
+
+The buffer, or `null` to unbind. A shader material with an unbound declared
+storage buffer is not drawable ([MaterialAsset.isDrawable](#isdrawable)).
+
+###### Returns
+
+`void`
+
+###### Throws
+
+IgnifxError with code `IGX-0718` unless this is a `"shader"` material, or `IGX-0712`
+when the shader declares no such storage buffer.
+
+##### setTexture()
+
+> **setTexture**(`name`, `texture`): `void`
+
+Binds a texture to one of the shader's declared samplers.
+
+###### Parameters
+
+###### name
+
+`string`
+
+The declared sampler's name.
+
+###### texture
+
+[`AssetHandle`](#assethandle)\<[`TextureAsset`](#textureasset)\> \| `null`
+
+The texture, or `null` to restore the declaration's 1x1 fallback. There is no
+"unbound": Babylon Lite cannot build a bind group for a sampler with nothing in it, so a
+declaration with no `default` falls back to white.
+
+###### Returns
+
+`void`
+
+###### Throws
+
+IgnifxError with code `IGX-0718` unless this is a `"shader"` material, or `IGX-0712`
+when the shader declares no such sampler.
+
+##### setUniform()
+
+> **setUniform**(`name`, `value`): `void`
+
+Writes one of the shader's declared uniforms.
+
+###### Parameters
+
+###### name
+
+`string`
+
+The declared uniform's name.
+
+###### value
+
+`number` \| readonly `number`[] \| [`ColorLike`](#colorlike) \| `Float32Array`\<`ArrayBufferLike`\>
+
+A number, a numeric array of the declared length, or an sRGB colour.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+The value is checked against the `// @ignifx uniform` declaration in the `.wgsl`: an undeclared
+name is `IGX-0712` and a value of the wrong shape is `IGX-0713`, so a typo fails at the call
+site rather than showing up as a black surface. A uniform declared `color(…)` takes a
+[ColorLike](#colorlike) in **sRGB** and is uploaded linear, like every other colour in ignifx.
+
+###### Throws
+
+IgnifxError with code `IGX-0718` unless this is a `"shader"` material, `IGX-0712` when
+the shader declares no such uniform or the engine writes it, or `IGX-0713` when the value's
+shape does not match the declared type.
+
+###### Example
+
+```ts
+dissolve.value.setUniform("progress", 0.4);
+dissolve.value.setUniform("edgeColor", { r: 1, g: 0.45, b: 0.1, a: 1 });
+```
+
+##### surface()
+
+> **surface**(`name`): [`SurfaceShaderBinding`](#surfaceshaderbinding)
+
+One attached surface shader, by the name it answers to — the `.surface.wgsl` basename unless the
+material renamed it.
+
+###### Parameters
+
+###### name
+
+`string`
+
+The shader's name.
+
+###### Returns
+
+[`SurfaceShaderBinding`](#surfaceshaderbinding)
+
+The binding a game writes values through.
+
+###### Throws
+
+IgnifxError with code `IGX-0712` when the material carries no such surface shader.
+
+###### Example
+
+```ts
+rock.value.surface("snow").set("amount", 0.8);
+```
 
 ***
 
@@ -6652,7 +7565,7 @@ The identifier that appears in error context.
 
 ###### Implementation of
 
-[`StorageBackend`](#storagebackend).[`name`](#name-17)
+[`StorageBackend`](#storagebackend).[`name`](#name-25)
 
 #### Methods
 
@@ -6722,7 +7635,7 @@ Drops every namespace.
 
 ###### Implementation of
 
-[`StorageBackend`](#storagebackend).[`dispose`](#dispose-9)
+[`StorageBackend`](#storagebackend).[`dispose`](#dispose-10)
 
 ##### get()
 
@@ -6856,6 +7769,20 @@ A human-readable name, used in diagnostics and as the Lite mesh's name.
 
 #### Accessors
 
+##### indexCount
+
+###### Get Signature
+
+> **get** **indexCount**(): `number`
+
+How many indices the geometry has — three per triangle.
+
+###### Returns
+
+`number`
+
+The index count, or `0`; see [MeshAsset.vertexCount](#vertexcount).
+
 ##### isDisposed
 
 ###### Get Signature
@@ -6868,7 +7795,7 @@ Whether the template's GPU buffers have been released.
 
 `boolean`
 
-`true` once [MeshAsset.dispose](#dispose-6) has run.
+`true` once [MeshAsset.dispose](#dispose-7) has run.
 
 ##### lite
 
@@ -6884,6 +7811,26 @@ The Babylon Lite objects the asset owns. Unstable escape hatch
 [`MeshAssetLiteHandles`](#meshassetlitehandles)
 
 The template mesh, or `null` under a headless app.
+
+##### vertexCount
+
+###### Get Signature
+
+> **get** **vertexCount**(): `number`
+
+How many vertices the geometry has.
+
+###### Remarks
+
+Known for a mesh built with [MeshAsset.fromData](#fromdata) — headless included — and `0` for a
+primitive: Lite generates a primitive's arrays internally and 1.27.0's `Mesh` exposes no vertex
+count, only the opaque `MeshGPU` handle it says a user never touches (`index.d.ts` 7230).
+
+###### Returns
+
+`number`
+
+The vertex count, or `0`.
 
 #### Methods
 
@@ -7023,8 +7970,9 @@ A human-readable name.
 
 [`MeshGeometryData`](#meshgeometrydata)
 
-Positions, normals, indices, and optional texture coordinates. Lite keeps
-references to the arrays; do not mutate them afterwards.
+Positions, normals, indices, and any of the four optional attributes. Lite keeps
+references to the arrays; a caller that means to edit them afterwards does so through the
+`update*` methods, which keep Lite's own copy and its bounds in step.
 
 ###### Returns
 
@@ -7146,6 +8094,186 @@ Diameter, thickness, and tessellation.
 
 The handle, with one holder.
 
+##### updateColors()
+
+> **updateColors**(`data`, `vertexOffset?`, `vertexCount?`): `void`
+
+Re-uploads vertex colours.
+
+###### Parameters
+
+###### data
+
+`Float32Array`
+
+Four floats per vertex.
+
+###### vertexOffset?
+
+`number` = `0`
+
+The first vertex to overwrite. Defaults to `0`.
+
+###### vertexCount?
+
+`number`
+
+How many vertices to write. Defaults to as many as `data` holds.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+Four floats per vertex, linear RGBA. A no-op on the GPU when the mesh was created without
+colours, exactly as [MeshAsset.updateUvs](#updateuvs) is.
+
+###### Throws
+
+IgnifxError with code `IGX-0702` or `IGX-0725`; see
+[MeshAsset.updatePositions](#updatepositions).
+
+##### updateNormals()
+
+> **updateNormals**(`data`, `vertexOffset?`, `vertexCount?`): `void`
+
+Re-uploads vertex normals.
+
+###### Parameters
+
+###### data
+
+`Float32Array`
+
+Three floats per vertex.
+
+###### vertexOffset?
+
+`number` = `0`
+
+The first vertex to overwrite. Defaults to `0`.
+
+###### vertexCount?
+
+`number`
+
+How many vertices to write. Defaults to as many as `data` holds.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+The same rules as [MeshAsset.updatePositions](#updatepositions), minus the bounds: a normal cannot move a
+bounding box. The range is copied into the asset's own normal array so that a later
+`updatePositions` sees a consistent mesh.
+
+###### Throws
+
+IgnifxError with code `IGX-0702` or `IGX-0725`; see
+[MeshAsset.updatePositions](#updatepositions).
+
+##### updatePositions()
+
+> **updatePositions**(`data`, `vertexOffset?`, `vertexCount?`): `void`
+
+Re-uploads vertex positions and re-fits the bounds.
+
+###### Parameters
+
+###### data
+
+`Float32Array`
+
+Three floats per vertex, read from index 0.
+
+###### vertexOffset?
+
+`number` = `0`
+
+The first vertex to overwrite. Defaults to `0`.
+
+###### vertexCount?
+
+`number`
+
+How many vertices to write. Defaults to as many as `data` holds.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+Only a mesh from [MeshAsset.fromData](#fromdata) can be updated, and only while nothing has cloned it:
+Lite refuses to write a vertex buffer with more than one owner, and a `MeshRenderer` clone is a
+second owner.
+
+Lite's `updateMeshPositions` writes the GPU buffer and stops there, so this also copies the range
+into the asset's own position array — the one Lite retained and CPU picking reads — and rewrites
+the bounds from the whole of it, `O(vertexCount)` per call. Passing the asset's own array skips
+the copy.
+
+###### Throws
+
+IgnifxError with code `IGX-0702` when the mesh did not come from
+[MeshAsset.fromData](#fromdata), or has been disposed.
+
+###### Throws
+
+IgnifxError with code `IGX-0725` when the range falls outside the mesh or `data` is too
+short for it.
+
+###### Example
+
+```ts
+const grid = MeshAsset.fromData(app, "grid", { positions, normals, indices });
+positions[1] += 0.5;
+grid.value.updatePositions(positions);
+```
+
+##### updateUvs()
+
+> **updateUvs**(`data`, `vertexOffset?`, `vertexCount?`): `void`
+
+Re-uploads texture coordinates.
+
+###### Parameters
+
+###### data
+
+`Float32Array`
+
+Two floats per vertex.
+
+###### vertexOffset?
+
+`number` = `0`
+
+The first vertex to overwrite. Defaults to `0`.
+
+###### vertexCount?
+
+`number`
+
+How many vertices to write. Defaults to as many as `data` holds.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+Lite makes the upload a **no-op** when the mesh was created without UVs, rather than an error,
+so a mesh whose `MeshGeometryData` named none silently ignores this. The range check still runs.
+
+###### Throws
+
+IgnifxError with code `IGX-0702` or `IGX-0725`; see
+[MeshAsset.updatePositions](#updatepositions).
+
 ***
 
 ### MeshRenderer
@@ -7218,7 +8346,7 @@ Several renderers on one entity draw several meshes from one transform, which is
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-10)
+> `static` **schema**: [`Schema`](#schema-11)
 
 The serialized field declarations (ADR-0004).
 
@@ -7425,13 +8553,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-10)
+> **get** **transform**(): [`Transform`](#transform-11)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-10)
+[`Transform`](#transform-11)
 
 The entity's transform.
 
@@ -7461,13 +8589,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-12)
+> **get** **world**(): [`World`](#world-13)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-12)
+[`World`](#world-13)
 
 The world.
 
@@ -7710,7 +8838,7 @@ One model per entity: a second instance under the same transform wants its own e
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-10)
+> `static` **schema**: [`Schema`](#schema-11)
 
 The serialized field declarations (ADR-0004).
 
@@ -7959,13 +9087,13 @@ The skeletons.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-10)
+> **get** **transform**(): [`Transform`](#transform-11)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-10)
+[`Transform`](#transform-11)
 
 The entity's transform.
 
@@ -7995,13 +9123,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-12)
+> **get** **world**(): [`World`](#world-13)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-12)
+[`World`](#world-13)
 
 The world.
 
@@ -8423,13 +9551,17 @@ One chain per camera entity; a second would fight the first for the swapchain.
 
 > **bloom**: [`BloomEffectSettings`](#bloomeffectsettings)
 
+##### custom
+
+> **custom**: [`CustomEffectSettings`](#customeffectsettings)[]
+
 ##### imageProcessing
 
 > **imageProcessing**: [`ImageProcessingEffectSettings`](#imageprocessingeffectsettings)
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-10)
+> `static` **schema**: [`Schema`](#schema-11)
 
 The serialized field declarations (ADR-0004).
 
@@ -8621,13 +9753,13 @@ The task count; `0` before the chain is built, under a headless app, and when th
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-10)
+> **get** **transform**(): [`Transform`](#transform-11)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-10)
+[`Transform`](#transform-11)
 
 The entity's transform.
 
@@ -8657,13 +9789,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-12)
+> **get** **world**(): [`World`](#world-13)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-12)
+[`World`](#world-13)
 
 The world.
 
@@ -10237,7 +11369,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`PostProcessStack`](#postprocessstack).[`enabled`](#enabled-10)
+[`PostProcessStack`](#postprocessstack).[`enabled`](#enabled-13)
 
 ##### entity
 
@@ -10347,13 +11479,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-10)
+> **get** **transform**(): [`Transform`](#transform-11)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-10)
+[`Transform`](#transform-11)
 
 The entity's transform.
 
@@ -10383,13 +11515,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-12)
+> **get** **world**(): [`World`](#world-13)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-12)
+[`World`](#world-13)
 
 The world.
 
@@ -10596,6 +11728,68 @@ The handle [Script.startCoroutine](#startcoroutine) returned.
 
 ***
 
+### ShaderAsset
+
+A loaded `.wgsl` file: its source and what its pragmas declare
+(`docs/plan/2026-09-terrain-particles-shaders.md` §3.1).
+
+#### Remarks
+
+Shaders are shared: many materials reference one shader asset, and each material holds its own
+values. Editing the file in development re-parses the declaration and rebuilds every material
+built from it in place (`docs/architecture/05-assets-and-loading.md` §7).
+
+#### Example
+
+```ts
+const dissolve = await app.assets.loadAsync<ShaderAsset>("shaders/dissolve.wgsl");
+dissolve.value.declaration.uniforms.map((uniform) => uniform.name); // ["progress", "edgeColor"]
+```
+
+#### Properties
+
+##### address
+
+> `readonly` **address**: `string`
+
+The address the shader was loaded from.
+
+##### assetType
+
+> `static` **assetType**: `string` = `SHADER_ASSET_TYPE`
+
+The type name the asset service registers shaders under.
+
+##### declaration
+
+> `readonly` **declaration**: [`ShaderDeclaration`](#shaderdeclaration)
+
+What the file's `// @ignifx` pragmas declare.
+
+##### source
+
+> `readonly` **source**: `string`
+
+The whole file, as written. It is handed to Babylon Lite as both the vertex and the fragment source.
+
+#### Accessors
+
+##### kind
+
+###### Get Signature
+
+> **get** **kind**(): `"surface"` \| `"shader"` \| `"post"`
+
+Which of the three authoring forms the file declared.
+
+###### Returns
+
+`"surface"` \| `"shader"` \| `"post"`
+
+`"shader"`, `"surface"`, or `"post"`.
+
+***
+
 ### Signal
 
 A typed, synchronous, many-listener event (`docs/architecture/02-scene-graph.md` §8). Signals are
@@ -10782,6 +11976,163 @@ was constructed without an `onHandlerError` reporter.
 
 ***
 
+### StorageBufferAsset
+
+A read-only GPU buffer a custom shader indexes
+(`docs/plan/2026-09-terrain-particles-shaders.md` §2.2).
+
+#### Remarks
+
+Bind it to a material with `MaterialAsset.setStorageBuffer(name, handle)`, where `name` is a
+`// @ignifx storage` declaration in the shader file. The asset keeps a CPU copy of its contents,
+so a device loss recovers without the game re-uploading anything.
+
+#### Example
+
+```ts
+const records = new Float32Array(1024);
+using buffer = createStorageBufferAsset(app, "particles", records);
+buffer.value.update(records.subarray(0, 64), 0);
+```
+
+#### Properties
+
+##### assetType
+
+> `static` **assetType**: `string` = `STORAGE_BUFFER_ASSET_TYPE`
+
+The type name the asset service registers storage buffers under.
+
+##### byteLength
+
+> `readonly` **byteLength**: `number`
+
+The allocated capacity in bytes: the requested length rounded up to four, at least four.
+
+##### name
+
+> `readonly` **name**: `string`
+
+A human-readable name, used as the buffer's debug label and in diagnostics.
+
+#### Accessors
+
+##### address
+
+###### Get Signature
+
+> **get** **address**(): `string`
+
+The synthetic `memory:` address the asset service published the buffer at.
+
+###### Returns
+
+`string`
+
+The address, or `""` before [createStorageBufferAsset](#createstoragebufferasset) has published it.
+
+##### bytes
+
+###### Get Signature
+
+> **get** **bytes**(): `Uint8Array`
+
+The CPU-side copy of the buffer's contents.
+
+###### Remarks
+
+The asset's own array, not a copy: read it, do not write it. It is what a headless test asserts
+on and what a device-loss recovery re-uploads.
+
+###### Returns
+
+`Uint8Array`
+
+The bytes.
+
+##### isDisposed
+
+###### Get Signature
+
+> **get** **isDisposed**(): `boolean`
+
+Whether the GPU allocation has been given up.
+
+###### Returns
+
+`boolean`
+
+`true` once [StorageBufferAsset.dispose](#dispose-11) has run.
+
+##### lite
+
+###### Get Signature
+
+> **get** **lite**(): [`StorageBufferAssetLiteHandles`](#storagebufferassetlitehandles)
+
+The Babylon Lite objects the asset owns. Unstable escape hatch.
+
+###### Returns
+
+[`StorageBufferAssetLiteHandles`](#storagebufferassetlitehandles)
+
+The Lite buffer, or `null` under a headless app or after disposal.
+
+#### Methods
+
+##### dispose()
+
+> **dispose**(): `void`
+
+Destroys the GPU allocation. Calling it twice is a no-op, and it is a no-op under a headless
+app.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+The asset service calls this when the last holder releases the handle, so a game that uses
+`using` or pairs `load`/`release` never has to.
+
+##### update()
+
+> **update**(`data`, `byteOffset?`): `void`
+
+Overwrites part of the buffer.
+
+###### Parameters
+
+###### data
+
+`ArrayBufferView`
+
+The bytes to write. The byte length must be a multiple of four.
+
+###### byteOffset?
+
+`number` = `0`
+
+Where to start, in bytes; a multiple of four. Defaults to `0`.
+
+###### Returns
+
+`void`
+
+###### Throws
+
+IgnifxError with code `IGX-0720` when the offset or the length is not a multiple of
+four, or when the write would run past the end of the buffer.
+
+###### Example
+
+```ts
+buffer.value.update(new Float32Array([1, 2, 3, 4]), 16);
+```
+
+***
+
 ### TagSet
 
 The mutable set of tags on one entity.
@@ -10933,6 +12284,20 @@ The resolved import options, sidecar values merged onto the defaults.
 
 #### Accessors
 
+##### height
+
+###### Get Signature
+
+> **get** **height**(): `number`
+
+The texture's height, in texels.
+
+###### Returns
+
+`number`
+
+The height, or `0`; see [TextureAsset.width](#width-4).
+
 ##### isReleased
 
 ###### Get Signature
@@ -10961,7 +12326,102 @@ The Babylon Lite objects the asset owns. Unstable escape hatch.
 
 The GPU texture, or `null` under a headless app.
 
+##### width
+
+###### Get Signature
+
+> **get** **width**(): `number`
+
+The texture's width, in texels.
+
+###### Remarks
+
+Known for every texture that reached the GPU — Lite records it on the texture handle
+(`index.d.ts` 12876) — and for a headless [TextureAsset.fromPixels](#frompixels) texture, which
+remembers the size it was asked for. A texture **loaded** from a file under a headless app
+decoded nothing, so it reports `0`.
+
+###### Returns
+
+`number`
+
+The width, or `0` when nothing knows it.
+
 #### Methods
+
+##### fromPixels()
+
+> `static` **fromPixels**(`app`, `name`, `data`, `width`, `height`, `options?`): [`AssetHandle`](#assethandle)\<[`TextureAsset`](#textureasset)\>
+
+Creates a texture from tightly packed RGBA8 bytes and publishes it as an in-memory asset.
+
+###### Parameters
+
+###### app
+
+[`App`](#app)
+
+The app whose engine uploads the texture and whose asset service holds the handle.
+
+###### name
+
+`string`
+
+A human-readable name. It becomes the asset's `address` — the string diagnostics
+and the `IGX-0722` message name it by — while the handle's own address is the generated
+`memory:texture/<ulid>` the asset service published it at.
+
+###### data
+
+`Uint8Array`
+
+`width * height * 4` bytes.
+
+###### width
+
+`number`
+
+The width in texels, at least 1.
+
+###### height
+
+`number`
+
+The height in texels, at least 1.
+
+###### options?
+
+[`PixelTextureOptions`](#pixeltextureoptions)
+
+Sampler and colour-space overrides; `nearest`, `clamp`, no sRGB by default.
+
+###### Returns
+
+[`AssetHandle`](#assethandle)\<[`TextureAsset`](#textureasset)\>
+
+The handle, already loaded, with one holder — the caller.
+
+###### Remarks
+
+The bytes are `width * height * 4` long, row-major, **top row first**, with straight (not
+premultiplied) alpha. They are copied into the GPU texture and not retained.
+
+The result is the only kind of texture [TextureAsset.update](#update-5) accepts. Ownership follows
+the rule every in-code asset follows: the caller holds the handle, releasing it (or letting a
+`using` block do it) runs the `texture` type's unload, which releases the GPU share.
+
+###### Throws
+
+IgnifxError with code `IGX-0722` when `width` or `height` is not a positive integer, or
+`data` is not exactly `width * height * 4` bytes long.
+
+###### Example
+
+```ts
+const pixels = new Uint8Array(2 * 2 * 4);
+pixels.fill(255);
+using ramp = TextureAsset.fromPixels(app, "ramp", pixels, 2, 2, { filter: "nearest" });
+```
 
 ##### releaseGpu()
 
@@ -10990,6 +12450,76 @@ Claims an extra share of the GPU texture, so releasing the asset does not destro
 
 Only needed when a Lite object has to outlive the asset that loaded it. Ordinary sharing goes
 through `ctx.loadDependency`, which counts the asset handle instead.
+
+##### update()
+
+> **update**(`data`, `x?`, `y?`, `width?`, `height?`): `void`
+
+Writes a rectangular region of the texture from RGBA8 bytes.
+
+###### Parameters
+
+###### data
+
+`Uint8Array`
+
+`width * height * 4` bytes for the region, row-major, top row first.
+
+###### x?
+
+`number` = `0`
+
+The destination origin's column. Defaults to `0`.
+
+###### y?
+
+`number` = `0`
+
+The destination origin's row. Defaults to `0`.
+
+###### width?
+
+`number`
+
+The region's width. Defaults to the texture's width.
+
+###### height?
+
+`number`
+
+The region's height. Defaults to the texture's height.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+Only a texture from [TextureAsset.fromPixels](#frompixels) can be written to: that is the factory that
+asks WebGPU for `COPY_DST` usage. The region defaults to the whole texture. Nothing is uploaded
+under a headless app, but the size check still runs, so a generator's arithmetic is testable
+without a device.
+
+The texture has one mip level, so there is no chain to regenerate and an update is complete the
+moment the queue drains.
+
+###### Throws
+
+IgnifxError with code `IGX-0702` when the texture did not come from
+[TextureAsset.fromPixels](#frompixels).
+
+###### Throws
+
+IgnifxError with code `IGX-0722` when the region falls outside the texture or `data` is
+not exactly `width * height * 4` bytes long.
+
+###### Example
+
+```ts
+const splat = TextureAsset.fromPixels(app, "splat", pixels, 256, 256);
+pixels[0] = 255;
+splat.value.update(pixels.subarray(0, 4), 0, 0, 1, 1); // one texel
+```
 
 ***
 
@@ -11030,13 +12560,13 @@ class Follow extends Script implements ScriptCallbacks {
 
 ##### Constructor
 
-> **new Transform**(): [`Transform`](#transform-10)
+> **new Transform**(): [`Transform`](#transform-11)
 
 Creates an unbound transform. The entity constructor binds it to a Lite node immediately.
 
 ###### Returns
 
-[`Transform`](#transform-10)
+[`Transform`](#transform-11)
 
 ###### Overrides
 
@@ -11119,7 +12649,7 @@ happens inside a callback.
 
 ###### Overrides
 
-[`PostProcessStack`](#postprocessstack).[`enabled`](#enabled-10)
+[`PostProcessStack`](#postprocessstack).[`enabled`](#enabled-13)
 
 ##### entity
 
@@ -11576,13 +13106,13 @@ The angle in degrees.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-10)
+> **get** **transform**(): [`Transform`](#transform-11)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-10)
+[`Transform`](#transform-11)
 
 The entity's transform.
 
@@ -11626,13 +13156,13 @@ A freshly allocated vector. Use `Transform.upToRef` in hot code.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-12)
+> **get** **world**(): [`World`](#world-13)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-12)
+[`World`](#world-13)
 
 The world.
 
@@ -15888,7 +17418,7 @@ The app.
 
 > **get** **isDisposed**(): `boolean`
 
-`true` once [World.dispose](#dispose-11) has run.
+`true` once [World.dispose](#dispose-13) has run.
 
 ###### Returns
 
@@ -16050,13 +17580,13 @@ The live scene list.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-12)
+> **get** **world**(): [`World`](#world-13)
 
 The world itself; `WorldHost` names it so entities can reach it.
 
 ###### Returns
 
-[`World`](#world-12)
+[`World`](#world-13)
 
 This world.
 
@@ -16629,7 +18159,7 @@ Resolved project settings.
 
 ##### storage
 
-> `readonly` **storage**: [`Storage`](#storage-2)
+> `readonly` **storage**: [`Storage`](#storage-3)
 
 The asynchronous key-value store settings, save games, and input rebindings live in
 (`docs/architecture/14-platform-electron.md` §2). The backend is chosen from
@@ -16657,7 +18187,7 @@ The `@ignifx/core` version this app was built from.
 
 ##### world
 
-> `readonly` **world**: [`World`](#world-12)
+> `readonly` **world**: [`World`](#world-13)
 
 The running simulation.
 
@@ -19123,6 +20653,82 @@ The curve's keys, ordered by time.
 
 ***
 
+### CustomEffectInit
+
+What [customEffect](#customeffect) accepts: a shader and whichever fields differ from the defaults.
+
+#### Properties
+
+##### enabled?
+
+> `readonly` `optional` **enabled?**: `boolean`
+
+Whether the effect runs. Defaults to `true`.
+
+##### order?
+
+> `readonly` `optional` **order?**: `number`
+
+Position in the chain. Defaults to `10`, which is after the built-ins' defaults.
+
+##### shader
+
+> `readonly` **shader**: [`AssetHandle`](#assethandle)\<[`ShaderAsset`](#shaderasset)\> \| `null`
+
+The `// @ignifx post` shader.
+
+##### textures?
+
+> `readonly` `optional` **textures?**: `Readonly`\<`Record`\<`string`, [`AssetHandle`](#assethandle)\<[`TextureAsset`](#textureasset)\> \| `null`\>\>
+
+Textures for the file's declared samplers.
+
+##### values?
+
+> `readonly` `optional` **values?**: `Readonly`\<`Record`\<`string`, `number` \| readonly `number`[]\>\>
+
+Overrides of the file's declared uniform defaults.
+
+***
+
+### CustomEffectSettings
+
+One custom effect on a `PostProcessStack` (`docs/architecture/07-rendering.md` §2.7).
+
+#### Properties
+
+##### enabled
+
+> **enabled**: `boolean`
+
+Whether the effect runs.
+
+##### order
+
+> **order**: `number`
+
+Position in the chain; lower runs first, alongside bloom's and SMAA's `order`.
+
+##### shader
+
+> **shader**: [`AssetHandle`](#assethandle)\<[`ShaderAsset`](#shaderasset)\> \| `null`
+
+The `// @ignifx post` shader; `null` records nothing.
+
+##### textures
+
+> **textures**: `Record`\<`string`, [`AssetHandle`](#assethandle)\<[`TextureAsset`](#textureasset)\> \| `null`\>
+
+Textures for the file's declared samplers, by declared name.
+
+##### values
+
+> **values**: `Record`\<`string`, `number` \| readonly `number`[]\>
+
+Overrides of the file's declared uniform defaults, by declared name.
+
+***
+
 ### CustomFieldCodec
 
 The hand-written encoder and decoder behind a `custom()` field. The codec owns both the default
@@ -20300,7 +21906,7 @@ The section name as it appears in `ignifx.config.ts`.
 
 ###### schema
 
-[`Schema`](#schema-10)
+[`Schema`](#schema-11)
 
 The schema the section is validated against.
 
@@ -20324,7 +21930,7 @@ Registers a system in a phase.
 
 ###### system
 
-[`System`](#system)
+[`System`](#system-1)
 
 The system.
 
@@ -21111,6 +22717,79 @@ The tone-mapping curve.
 
 ***
 
+### InstancedMeshLod
+
+The `lod` field of an [InstancedMeshRenderer](#instancedmeshrenderer): a coarser mesh for far instances.
+
+#### Remarks
+
+Mutable, because a schema `record()` field is a plain object a script edits in place — and
+`distance` and `band` are meant to be edited, which Lite re-applies live. Replacing `mesh` after
+the scene is registered is refused with `IGX-0717`.
+
+#### Properties
+
+##### band
+
+> **band**: `number`
+
+The width of the per-instance dither window centred on `distance`.
+
+##### distance
+
+> **distance**: `number`
+
+The camera distance, in world units, at which an instance switches to the coarse mesh.
+
+##### mesh
+
+> **mesh**: [`AssetHandle`](#assethandle)\<[`MeshAsset`](#meshasset)\> \| `null`
+
+The coarse mesh drawn beyond `distance`.
+
+***
+
+### InstancedMeshRendererLiteHandles
+
+The Babylon Lite meshes an [InstancedMeshRenderer](#instancedmeshrenderer) draws. Unstable escape hatch
+(`docs/architecture/00-overview.md` §3).
+
+#### Properties
+
+##### lodMesh
+
+> `readonly` **lodMesh**: `Mesh` \| `null`
+
+The LOD partner, or `null` when the renderer declares none.
+
+##### mesh
+
+> `readonly` **mesh**: `Mesh` \| `null`
+
+The instanced mesh, or `null` when there is nothing to draw.
+
+***
+
+### InstanceRange
+
+The instance range [InstancedMeshRenderer.markDirty](#markdirty) is told about.
+
+#### Properties
+
+##### count
+
+> `readonly` **count**: `number`
+
+How many instances moved.
+
+##### start
+
+> `readonly` **start**: `number`
+
+The first instance index that moved.
+
+***
+
 ### InstantiateOptions
 
 Options accepted by [World.instantiate](#instantiate-1) and [World.instantiateAsync](#instantiateasync)
@@ -21546,7 +23225,7 @@ Options accepted by [World.loadScene](#loadscene) (`docs/architecture/02-scene-g
 
 ##### mode?
 
-> `readonly` `optional` **mode?**: `"single"` \| `"additive"`
+> `readonly` `optional` **mode?**: `"additive"` \| `"single"`
 
 `"single"` (the default) unloads every instance that is not `persistent` first; `"additive"`
 keeps them.
@@ -22082,6 +23761,108 @@ The Lite material. Present in headless mode too: a material is plain data.
 
 ***
 
+### MaterialPluginDefinition
+
+**`Beta`**
+
+What a raw material plugin declares: a name, the values and textures it wants beside the host
+material's own, and the WGSL it injects.
+
+#### Properties
+
+##### code
+
+> `readonly` **code**: `Readonly`\<`Partial`\<`Record`\<[`LiteMaterialPluginPoint`](#litematerialpluginpoint), `string`\>\>\>
+
+**`Beta`**
+
+The WGSL to inject, by point. Vertex points take statements; there are no vertex helpers.
+
+##### name
+
+> `readonly` **name**: `string`
+
+**`Beta`**
+
+The plugin's identity. It is part of Lite's pipeline cache key, so it must be stable.
+
+##### priority
+
+> `readonly` **priority**: `number`
+
+**`Beta`**
+
+Lower runs first; Lite's own default is [MATERIAL\_PLUGIN\_DEFAULT\_PRIORITY](#material_plugin_default_priority).
+
+##### textures
+
+> `readonly` **textures**: readonly [`ShaderTextureDeclaration`](#shadertexturedeclaration)[]
+
+**`Beta`**
+
+The `texture`/`sampler` pairs added to the host material's bind group. Fragment stage only.
+
+##### uniforms
+
+> `readonly` **uniforms**: readonly [`ShaderUniformDeclaration`](#shaderuniformdeclaration)[]
+
+**`Beta`**
+
+The uniform fields appended to the host material's uniform block. Fragment stage only.
+
+***
+
+### MaterialPluginDefinitionInit
+
+**`Beta`**
+
+The properties [defineMaterialPlugin](#definematerialplugin) accepts; everything but `name` and `code` has a
+default.
+
+#### Properties
+
+##### code
+
+> `readonly` **code**: `Readonly`\<`Partial`\<`Record`\<[`LiteMaterialPluginPoint`](#litematerialpluginpoint), `string`\>\>\>
+
+**`Beta`**
+
+The WGSL to inject, by point.
+
+##### name
+
+> `readonly` **name**: `string`
+
+**`Beta`**
+
+The plugin's identity.
+
+##### priority?
+
+> `readonly` `optional` **priority?**: `number`
+
+**`Beta`**
+
+Lower runs first. Defaults to [MATERIAL\_PLUGIN\_DEFAULT\_PRIORITY](#material_plugin_default_priority).
+
+##### textures?
+
+> `readonly` `optional` **textures?**: readonly [`ShaderTextureDeclaration`](#shadertexturedeclaration)[]
+
+**`Beta`**
+
+The samplers. Defaults to none.
+
+##### uniforms?
+
+> `readonly` `optional` **uniforms?**: readonly [`ShaderUniformDeclaration`](#shaderuniformdeclaration)[]
+
+**`Beta`**
+
+The uniform fields. Defaults to none.
+
+***
+
 ### MemorySink
 
 A [LogSink](#logsink-1) that keeps the most recent records in a fixed-size ring buffer. Used by the
@@ -22197,9 +23978,19 @@ Raw vertex data for [MeshAsset.fromData](#fromdata).
 #### Remarks
 
 Lite keeps references to these arrays rather than copying them — they are what its CPU ray pick
-and its bounds read (`lib/mesh/mesh-factories.js`) — so a caller must not mutate them afterwards.
+and its bounds read (`lib/mesh/mesh-factories.js`). Mutating one behind Lite's back changes what
+a pick reports without changing what the GPU draws; the sanctioned way to change geometry after
+the fact is [MeshAsset.updatePositions](#updatepositions) and its three siblings, which re-upload, keep this
+copy in step, and re-fit the bounds.
 
 #### Properties
+
+##### colors?
+
+> `readonly` `optional` **colors?**: `Float32Array`\<`ArrayBufferLike`\>
+
+Four floats per vertex, linear RGBA, or omitted. A material has to be one that reads the colour
+attribute; set `hasVertexAlpha` on the Lite mesh if the alpha is meant to blend.
 
 ##### indices
 
@@ -22219,11 +24010,24 @@ Three floats per vertex, one normal each.
 
 Three floats per vertex.
 
+##### tangents?
+
+> `readonly` `optional` **tangents?**: `Float32Array`\<`ArrayBufferLike`\>
+
+Four floats per vertex — `xyz` plus a handedness `w` — or omitted. A normal map needs them.
+
 ##### uvs?
 
 > `readonly` `optional` **uvs?**: `Float32Array`\<`ArrayBufferLike`\>
 
 Two floats per vertex, or omitted for a mesh with no texture coordinates.
+
+##### uvs2?
+
+> `readonly` `optional` **uvs2?**: `Float32Array`\<`ArrayBufferLike`\>
+
+Two floats per vertex for the second UV set (`uv2` in a shader), or omitted. Lightmaps, baked
+ambient occlusion, and the parent-LOD height a terrain morph reads all ride here.
 
 ***
 
@@ -22728,6 +24532,14 @@ How strongly ambient occlusion darkens the surface, 0 to 1.
 
 Roughness factor, 0 to 1.
 
+##### surfaces
+
+> `readonly` **surfaces**: readonly [`SurfaceShaderReference`](#surfaceshaderreference)[]
+
+The `.surface.wgsl` files layered onto this material, in the order they are applied
+(`docs/plan/2026-09-terrain-particles-shaders.md` §3.2). It needs
+`rendering.features.materialPlugins`.
+
 ##### textures
 
 > `readonly` **textures**: `Readonly`\<`Record`\<`string`, `string`\>\>
@@ -22739,6 +24551,39 @@ The addresses of the textures the material samples, by slot; absent slots are un
 > `readonly` **unlit**: `boolean`
 
 Whether lighting is skipped entirely.
+
+***
+
+### PixelTextureOptions
+
+How [TextureAsset.fromPixels](#frompixels) samples the texture it creates.
+
+#### Remarks
+
+A deliberately small subset of [TextureImportOptions](#textureimportoptions): a pixel texture has one mip level,
+so `mipMaps` has nothing to say, and the bytes are handed over already oriented and with straight
+alpha, so `invertY` and `premultiplyAlpha` have nothing to do. The defaults are Lite's own and
+they suit a data map — `nearest` filtering and `clamp` addressing, no sRGB decode.
+
+#### Properties
+
+##### filter?
+
+> `readonly` `optional` **filter?**: `"linear"` \| `"nearest"`
+
+How texels are filtered. `"nearest"` keeps a lookup table exact; the default.
+
+##### srgb?
+
+> `readonly` `optional` **srgb?**: `boolean`
+
+Decode to linear on sample (`rgba8unorm-srgb`). Leave it off for lookup tables and data maps.
+
+##### wrap?
+
+> `readonly` `optional` **wrap?**: `"repeat"` \| `"clamp"`
+
+What happens outside `0..1`. The default is `"clamp"`.
 
 ***
 
@@ -23006,7 +24851,7 @@ Kind-specific data for `record`.
 
 ##### fields
 
-> `readonly` **fields**: [`Schema`](#schema-10)
+> `readonly` **fields**: [`Schema`](#schema-11)
 
 The sub-fields, in declaration order.
 
@@ -24799,6 +26644,333 @@ API Extractor, and the qualified form it asks for is unresolvable to TypeDoc.
 
 ***
 
+### ShaderDeclaration
+
+Everything a `.wgsl` file declares about itself — the parsed pragmas, with defaults filled in.
+
+#### Properties
+
+##### attributes
+
+> `readonly` **attributes**: readonly (`"color"` \| `"position"` \| `"normal"` \| `"uv"` \| `"uv2"` \| `"tangent"` \| `"joints"` \| `"weights"` \| `"joints1"` \| `"weights1"`)[]
+
+The vertex attributes the vertex stage reads. A `"shader"` file always includes `position`.
+
+##### defines
+
+> `readonly` **defines**: readonly [`ShaderDefineDeclaration`](#shaderdefinedeclaration)[]
+
+The WGSL `const` declarations a material may override.
+
+##### ignifx
+
+> `readonly` **ignifx**: readonly (`"ambientColor"` \| `"time"` \| `"unscaledTime"` \| `"deltaTime"` \| `"mainLightDirection"` \| `"mainLightColor"`)[]
+
+The ignifx-provided uniforms, read as `shaderUniforms.<name>` and written every frame.
+
+##### kind
+
+> `readonly` **kind**: `"surface"` \| `"shader"` \| `"post"`
+
+Which of the three authoring forms the file is.
+
+##### pipeline
+
+> `readonly` **pipeline**: [`ShaderPipelineState`](#shaderpipelinestate)
+
+The pipeline state.
+
+##### storage
+
+> `readonly` **storage**: readonly [`ShaderStorageDeclaration`](#shaderstoragedeclaration)[]
+
+The read-only storage buffers.
+
+##### system
+
+> `readonly` **system**: readonly (`"world"` \| `"view"` \| `"projection"` \| `"viewProjection"` \| `"worldView"` \| `"worldViewProjection"` \| `"cameraPosition"` \| `"screenSize"` \| `"alphaCutoff"`)[]
+
+The Babylon Lite system uniforms, read as `shaderSystem.<name>`.
+
+##### textures
+
+> `readonly` **textures**: readonly [`ShaderTextureDeclaration`](#shadertexturedeclaration)[]
+
+The samplers, each generating `<name>` and `<name>Sampler`.
+
+##### uniforms
+
+> `readonly` **uniforms**: readonly [`ShaderUniformDeclaration`](#shaderuniformdeclaration)[]
+
+The custom uniforms, read as `shaderUniforms.<name>`.
+
+***
+
+### ShaderDefineDeclaration
+
+One `// @ignifx define …` line: a WGSL `const` a material may override.
+
+#### Properties
+
+##### name
+
+> `readonly` **name**: `string`
+
+The WGSL identifier.
+
+##### value
+
+> `readonly` **value**: `number` \| `boolean`
+
+The value; a boolean compiles to `bool`, a number to `f32`.
+
+***
+
+### ShaderMaterialDefinition
+
+The properties a `"shader"` material declares: which shader, and what to set on it
+(`docs/plan/2026-09-terrain-particles-shaders.md` §3.1).
+
+#### Properties
+
+##### defines
+
+> `readonly` **defines**: `Readonly`\<`Record`\<`string`, `boolean` \| `number`\>\>
+
+Overrides of the shader file's declared `define` values, by name.
+
+##### kind
+
+> `readonly` **kind**: `"shader"`
+
+The family discriminator.
+
+##### name
+
+> `readonly` **name**: `string`
+
+A human-readable name, used in GPU debug labels and diagnostics.
+
+##### shader
+
+> `readonly` **shader**: `string`
+
+The address of the `.wgsl` this material is values for.
+
+##### textures
+
+> `readonly` **textures**: `Readonly`\<`Record`\<`string`, `string`\>\>
+
+Texture asset addresses, by the declared sampler name.
+
+##### values
+
+> `readonly` **values**: `Readonly`\<`Record`\<`string`, `number` \| readonly `number`[] \| [`ColorLike`](#colorlike)\>\>
+
+Overrides of the shader file's declared uniform defaults, by uniform name. A colour uniform's
+value is sRGB, like every colour in ignifx's public API.
+
+***
+
+### ShaderMaterialDefinitionInput
+
+What [shaderMaterialDefinition](#shadermaterialdefinition) accepts.
+
+#### Properties
+
+##### defines?
+
+> `readonly` `optional` **defines?**: `Readonly`\<`Record`\<`string`, `number` \| `boolean`\>\>
+
+Overrides of the declared `define` values.
+
+##### name?
+
+> `readonly` `optional` **name?**: `string`
+
+A human-readable name; defaults to the shader's address.
+
+##### shader
+
+> `readonly` **shader**: `string` \| [`AssetHandle`](#assethandle)\<[`ShaderAsset`](#shaderasset)\>
+
+The `.wgsl` asset, as a loaded handle or an address.
+
+##### textures?
+
+> `readonly` `optional` **textures?**: `Readonly`\<`Record`\<`string`, `string` \| [`AssetHandle`](#assethandle)\<[`TextureAsset`](#textureasset)\>\>\>
+
+Textures for the declared samplers, as loaded handles or addresses.
+
+##### values?
+
+> `readonly` `optional` **values?**: `Readonly`\<`Record`\<`string`, `number` \| readonly `number`[] \| [`ColorLike`](#colorlike)\>\>
+
+Overrides of the declared uniform defaults. Colours are sRGB.
+
+***
+
+### ShaderPipelineState
+
+The pipeline state a `// @ignifx blend …` line declares.
+
+#### Properties
+
+##### blend
+
+> `readonly` **blend**: `"opaque"` \| `"premultiplied"` \| `"alpha"` \| `"additive"`
+
+How fragments are composited.
+
+##### cull
+
+> `readonly` **cull**: `"none"` \| `"back"` \| `"front"`
+
+Which faces are drawn.
+
+##### depthTest
+
+> `readonly` **depthTest**: `boolean`
+
+Whether the draw depth-tests at all; `false` compiles `depthCompare: "always"`.
+
+##### depthWrite
+
+> `readonly` **depthWrite**: `boolean`
+
+Whether the draw writes depth. Defaults to `true` for an opaque surface and `false` for a
+blended one — Babylon Lite's own rule — unless the file says `depthWrite on` explicitly.
+
+##### instancing
+
+> `readonly` **instancing**: `"none"` \| `"matrices"` \| `"matrices-colors"`
+
+Which instance streams the vertex stage reads.
+
+##### transmissive
+
+> `readonly` **transmissive**: `boolean`
+
+Whether the surface samples the opaque scene colour behind it. Requires a blended surface.
+
+***
+
+### ShaderStorageDeclaration
+
+One `// @ignifx storage …` line: a read-only storage buffer the shader indexes.
+
+#### Properties
+
+##### name
+
+> `readonly` **name**: `string`
+
+The WGSL identifier.
+
+##### type
+
+> `readonly` **type**: `string`
+
+The WGSL variable type, verbatim, for example `array<Particle>`.
+
+***
+
+### ShaderTextureDeclaration
+
+One `// @ignifx texture …` line: a `texture_2d<f32>` (or `texture_2d_array<f32>`) plus the
+`<name>Sampler` Babylon Lite generates beside it.
+
+#### Properties
+
+##### array
+
+> `readonly` **array**: `boolean`
+
+Whether the binding is a `texture_2d_array<f32>` rather than a `texture_2d<f32>`.
+
+##### fallback
+
+> `readonly` **fallback**: `"white"` \| `"black"` \| `"transparent"` \| `null`
+
+Which 1x1 texture is bound when a material binds nothing, or `null` for the implicit `"white"`.
+
+###### Remarks
+
+A declared sampler that nothing fills in cannot be left unbound: Babylon Lite refuses to build
+a bind group for it (error 309), so *something* is always bound.
+
+##### name
+
+> `readonly` **name**: `string`
+
+The WGSL identifier; the sampler is `<name>Sampler`.
+
+##### normal
+
+> `readonly` **normal**: `boolean`
+
+Whether the texture is a tangent-space normal map.
+
+##### srgb
+
+> `readonly` **srgb**: `boolean`
+
+Whether the texture holds sRGB-encoded colour, which the texture import needs to know.
+
+***
+
+### ShaderUniformDeclaration
+
+One `// @ignifx uniform …` line: a value a material sets and the vertex or fragment stage reads
+as `shaderUniforms.<name>`.
+
+#### Properties
+
+##### color
+
+> `readonly` **color**: `boolean`
+
+Whether the value is a colour, declared with `color(…)` or the bare `color` modifier.
+
+##### defaultValue
+
+> `readonly` **defaultValue**: `number` \| readonly `number`[]
+
+The value a material starts with. A colour default is the **sRGB** value the file wrote; the
+material layer decodes it to linear on the way to the GPU.
+
+##### name
+
+> `readonly` **name**: `string`
+
+The WGSL identifier.
+
+##### range
+
+> `readonly` **range**: readonly \[`number`, `number`\] \| `null`
+
+The inclusive slider bounds an inspector should offer, or `null`.
+
+##### step
+
+> `readonly` **step**: `number` \| `null`
+
+The slider increment an inspector should use, or `null`.
+
+##### tooltip
+
+> `readonly` **tooltip**: `string` \| `null`
+
+One sentence describing the uniform, or `null`.
+
+##### type
+
+> `readonly` **type**: `"f32"` \| `"i32"` \| `"u32"` \| `"vec2<f32>"` \| `"vec3<f32>"` \| `"vec4<f32>"` \| `"mat4x4<f32>"`
+
+The WGSL type.
+
+***
+
 ### SignalLike
 
 The read-only half of a [Signal](#signal-3): what a public API exposes when callers may subscribe but
@@ -25067,6 +27239,15 @@ sRGB specular colour.
 
 Specular exponent; higher values give a tighter highlight.
 
+##### surfaces
+
+> `readonly` **surfaces**: readonly [`SurfaceShaderReference`](#surfaceshaderreference)[]
+
+The `.surface.wgsl` files layered onto this material. **Refused on a Standard material**:
+Babylon Lite 1.27.0 cannot bake a Standard host's plugins in time (`./surface-shader.ts`). The
+field exists so the format is one shape for both families and so the refusal is a sentence
+rather than a silently ignored list.
+
 ##### textures
 
 > `readonly` **textures**: `Readonly`\<`Record`\<`string`, `string`\>\>
@@ -25189,7 +27370,7 @@ IgnifxError with code `IGX-1425` when the backend fails.
 
 ##### namespace()
 
-> **namespace**(`name`): [`Storage`](#storage-2)
+> **namespace**(`name`): [`Storage`](#storage-3)
 
 Narrows to a child namespace — `"saves"`, `"settings"`, `"input-overrides"`.
 
@@ -25203,7 +27384,7 @@ Narrows to a child namespace — `"saves"`, `"settings"`, `"input-overrides"`.
 
 ###### Returns
 
-[`Storage`](#storage-2)
+[`Storage`](#storage-3)
 
 The child store, which shares this store's backend and sees none of its keys.
 
@@ -25453,6 +27634,21 @@ A promise that settles once the value is durable.
 
 ***
 
+### StorageBufferAssetLiteHandles
+
+The Babylon Lite objects a [StorageBufferAsset](#storagebufferasset) owns. Unstable escape hatch
+(`docs/architecture/00-overview.md` §3).
+
+#### Properties
+
+##### buffer
+
+> `readonly` **buffer**: `StorageBuffer` \| `null`
+
+The Lite storage buffer, or `null` under a headless app or after disposal.
+
+***
+
 ### StringFieldSpec
 
 Kind-specific data for `str`.
@@ -25464,6 +27660,355 @@ Kind-specific data for `str`.
 > `readonly` **kind**: `"str"`
 
 The string kind.
+
+***
+
+### SurfaceHostCapabilities
+
+What the compiler has to know about the host material beyond its family.
+
+#### Remarks
+
+Both flags exist because Standard's template declares a varying or a variable only when something
+asks for it: `input.vu` exists only when the material carries a texture that samples UV
+(`standard-flags.js` `NEEDS_UV`), and `normalW` only when lighting is on. Referencing either
+without it is a WGSL compile error in Lite's own template, so the compiler substitutes a constant
+instead. A PBR host always has both.
+
+#### Properties
+
+##### family
+
+> `readonly` **family**: [`SurfaceHostFamily`](#surfacehostfamily)
+
+Which family's slots and variable names to generate for.
+
+##### hasNormal
+
+> `readonly` **hasNormal**: `boolean`
+
+Whether the host declares a shading normal. `false` makes a `normal` write a no-op.
+
+##### hasUv
+
+> `readonly` **hasUv**: `boolean`
+
+Whether the host declares a UV varying. `false` makes `in.uv` read `(0, 0)`.
+
+***
+
+### SurfaceShaderBinding
+
+One surface shader attached to one material: the handle a game holds to change its values.
+
+#### Remarks
+
+A material's bindings live as long as its attachment; reach them with `material.surfaces` and
+`material.surface(name)`.
+
+#### Properties
+
+##### name
+
+> `readonly` **name**: `string`
+
+The name the shader answers to on this material.
+
+##### priority
+
+> `readonly` **priority**: `number`
+
+Lower runs first among the material's surface shaders.
+
+##### shader
+
+> `readonly` **shader**: [`ShaderAsset`](#shaderasset)
+
+The `.surface.wgsl` this binding was compiled from.
+
+#### Accessors
+
+##### enabled
+
+###### Get Signature
+
+> **get** **enabled**(): `boolean`
+
+Whether the shader contributes anything.
+
+###### Returns
+
+`boolean`
+
+`true` while it does.
+
+###### Set Signature
+
+> **set** **enabled**(`value`): `void`
+
+Switches the shader off, which restores the host material's plain look.
+
+###### Remarks
+
+A disabled plugin contributes no WGSL but still changes Lite's pipeline cache key, so each
+toggle costs a pipeline rebuild — a settings-screen operation, not a per-frame one.
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+`false` to switch it off.
+
+###### Returns
+
+`void`
+
+##### lite
+
+###### Get Signature
+
+> **get** **lite**(): `MaterialPlugin` \| `null`
+
+The Babylon Lite plugin this binding drives. Unstable escape hatch
+(`docs/architecture/00-overview.md` §3).
+
+###### Returns
+
+`MaterialPlugin` \| `null`
+
+The plugin, or `null` under a headless app, which builds none.
+
+#### Methods
+
+##### get()
+
+> **get**(`name`, `out?`): `number` \| `Float32Array`\<`ArrayBufferLike`\>
+
+Reads a declared uniform's current value, as it stands on the CPU side. A colour reads back
+**linear**, which is what the shader sees.
+
+###### Parameters
+
+###### name
+
+`string`
+
+The declared uniform's name.
+
+###### out?
+
+`Float32Array`\<`ArrayBufferLike`\>
+
+Receives a vector or matrix value; omit it for a fresh array, or read a scalar's
+number directly.
+
+###### Returns
+
+`number` \| `Float32Array`\<`ArrayBufferLike`\>
+
+The number for `f32`, `u32`, and `i32`, and the filled array for everything else.
+
+###### Throws
+
+IgnifxError with code `IGX-0712` when the file declares no such uniform, or `IGX-0713`
+when `out` is shorter than the value.
+
+##### getTexture()
+
+> **getTexture**(`name`): [`AssetHandle`](#assethandle)\<[`TextureAsset`](#textureasset)\> \| `null`
+
+The texture currently bound to a declared sampler.
+
+###### Parameters
+
+###### name
+
+`string`
+
+The declared sampler's name.
+
+###### Returns
+
+[`AssetHandle`](#assethandle)\<[`TextureAsset`](#textureasset)\> \| `null`
+
+The handle, or `null` when the declaration's fallback is bound.
+
+###### Throws
+
+IgnifxError with code `IGX-0712` when the file declares no such sampler.
+
+##### set()
+
+> **set**(`name`, `value`): `void`
+
+Writes one of the shader's declared uniforms.
+
+###### Parameters
+
+###### name
+
+`string`
+
+The declared uniform's name, as the file wrote it.
+
+###### value
+
+`number` \| readonly `number`[] \| [`ColorLike`](#colorlike) \| `Float32Array`\<`ArrayBufferLike`\>
+
+A number, a numeric array of the declared length, or an sRGB colour.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+The value is checked against the `// @ignifx uniform` declaration in the file, so a typo fails
+at the call site rather than as a black surface. A uniform declared `color(…)` takes a
+[ColorLike](#colorlike) in **sRGB** and is uploaded linear, like every other colour in ignifx. The
+write re-uploads the host material's uniform block and recompiles nothing.
+
+###### Throws
+
+IgnifxError with code `IGX-0712` when the file declares no such uniform, or `IGX-0713`
+when the value's shape does not match the declared type.
+
+###### Example
+
+```ts
+snow.set("amount", 0.8);
+snow.set("snowColor", { r: 0.95, g: 0.97, b: 1, a: 1 });
+```
+
+##### setTexture()
+
+> **setTexture**(`name`, `texture`): `void`
+
+Binds a texture to one of the shader's declared samplers.
+
+###### Parameters
+
+###### name
+
+`string`
+
+The declared sampler's name.
+
+###### texture
+
+[`AssetHandle`](#assethandle)\<[`TextureAsset`](#textureasset)\> \| `null`
+
+The texture, or `null` for the fallback.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+There is no "unbound": a bind group with a missing entry fails WebGPU validation, so `null`
+restores the declaration's 1x1 fallback — white unless the file said
+`default black` or `default transparent`. The change rebuilds the material's renderables.
+
+###### Throws
+
+IgnifxError with code `IGX-0712` when the file declares no such sampler.
+
+***
+
+### SurfaceShaderInit
+
+What a material declares for one attached surface shader.
+
+#### Properties
+
+##### enabled?
+
+> `readonly` `optional` **enabled?**: `boolean`
+
+Whether the shader contributes anything. Defaults to `true`.
+
+##### name?
+
+> `readonly` `optional` **name?**: `string`
+
+The name the shader answers to on this material. Defaults to the address's basename with
+`.surface.wgsl` removed, so `shaders/snow.surface.wgsl` is `snow`.
+
+##### priority?
+
+> `readonly` `optional` **priority?**: `number`
+
+Lower runs first among the material's surface shaders. Defaults to `500`, Babylon Lite's own.
+
+##### shader
+
+> `readonly` **shader**: [`AssetHandle`](#assethandle)\<[`ShaderAsset`](#shaderasset)\>
+
+The loaded `.surface.wgsl`.
+
+##### textures?
+
+> `readonly` `optional` **textures?**: `Readonly`\<`Record`\<`string`, [`AssetHandle`](#assethandle)\<[`TextureAsset`](#textureasset)\>\>\>
+
+Textures for the file's declared samplers, by declared name.
+
+##### values?
+
+> `readonly` `optional` **values?**: `Readonly`\<`Record`\<`string`, `number` \| readonly `number`[] \| [`ColorLike`](#colorlike)\>\>
+
+Overrides of the file's declared uniform defaults, by declared name.
+
+***
+
+### SurfaceShaderReference
+
+What a `.material.json` writes for one surface shader: the shader's address and its values.
+
+#### Remarks
+
+The runtime shape is [SurfaceShaderInit](#surfaceshaderinit), which carries handles; this is the serialized one,
+which carries addresses, and is what a PBR or Standard material definition holds.
+
+#### Properties
+
+##### enabled
+
+> `readonly` **enabled**: `boolean`
+
+Whether the shader contributes anything.
+
+##### name
+
+> `readonly` **name**: `string`
+
+The name the shader answers to; empty takes the address's basename.
+
+##### priority
+
+> `readonly` **priority**: `number`
+
+Lower runs first.
+
+##### shader
+
+> `readonly` **shader**: `string`
+
+The address of the `.surface.wgsl`.
+
+##### textures
+
+> `readonly` **textures**: `Readonly`\<`Record`\<`string`, `string`\>\>
+
+Texture addresses by declared sampler name.
+
+##### values
+
+> `readonly` **values**: `Readonly`\<`Record`\<`string`, `number` \| readonly `number`[]\>\>
+
+Overrides of the file's declared uniform defaults.
 
 ***
 
@@ -25517,7 +28062,7 @@ Called once when the world the system belongs to has been created.
 
 ###### world
 
-[`World`](#world-12)
+[`World`](#world-13)
 
 The new world.
 
@@ -25535,7 +28080,7 @@ Called once when the world the system belongs to is being disposed.
 
 ###### world
 
-[`World`](#world-12)
+[`World`](#world-13)
 
 The world going away.
 
@@ -25565,7 +28110,7 @@ The world, clock, phase, and delta for this invocation.
 
 ### SystemContext
 
-What a [System](#system) is handed when its phase runs
+What a [System](#system-1) is handed when its phase runs
 (`docs/architecture/03-scripting-and-components.md` §6).
 
 #### Properties
@@ -25592,7 +28137,7 @@ The app clock.
 
 ##### world
 
-> `readonly` **world**: [`World`](#world-12)
+> `readonly` **world**: [`World`](#world-13)
 
 The world the system operates on.
 
@@ -26248,7 +28793,7 @@ able to write a plain `static typeId` without the `override` keyword.
 
 ##### S
 
-`S` *extends* [`Schema`](#schema-10)
+`S` *extends* [`Schema`](#schema-11)
 
 The schema the class was defined from.
 
@@ -26493,7 +29038,7 @@ what gives `this.speed` its `number` type inside a component declared with
 
 ##### S
 
-`S` *extends* [`Schema`](#schema-10)
+`S` *extends* [`Schema`](#schema-11)
 
 The schema to project.
 
@@ -26538,6 +29083,14 @@ What a class asks the engine to do with its live instances when its module is re
 keep their identity and every field value, and no lifecycle callback re-runs. `"recreate"` is
 required when the *field layout* changes, because a patched instance keeps whatever properties
 its constructor assigned and a renamed or added field would read `undefined`.
+
+***
+
+### IgnifxUniformName
+
+> **IgnifxUniformName** = *typeof* [`IGNIFX_UNIFORM_NAMES`](#ignifx_uniform_names)\[`number`\]
+
+The union of the ignifx-provided uniform names.
 
 ***
 
@@ -26704,6 +29257,16 @@ Unstable; excluded from the stability guarantees of `CONSTITUTION.md` Article IV
 
 ***
 
+### LiteMaterialPluginPoint
+
+> **LiteMaterialPluginPoint** = *typeof* [`LITE_MATERIAL_PLUGIN_POINTS`](#lite_material_plugin_points)\[`number`\]
+
+**`Beta`**
+
+One of Babylon Lite's ten material-plugin injection points.
+
+***
+
 ### LiteMesh
 
 > **LiteMesh** = `Mesh`
@@ -26759,6 +29322,19 @@ excluded from the stability guarantees of `CONSTITUTION.md` Article IV.
 
 ***
 
+### LiteShaderMaterial
+
+> **LiteShaderMaterial** = `ShaderMaterial`
+
+A Babylon Lite custom WGSL material, re-exported under an ignifx name
+(`CONSTITUTION.md` §3.4, coding standards §4).
+
+#### Remarks
+
+Unstable; excluded from the stability guarantees of `CONSTITUTION.md` Article IV.
+
+***
+
 ### LiteShadowGenerator
 
 > **LiteShadowGenerator** = `ShadowGenerator`
@@ -26796,6 +29372,27 @@ A Babylon Lite Babylon-Standard material, re-exported under an ignifx name.
 #### Remarks
 
 Unstable; excluded from the stability guarantees of `CONSTITUTION.md` Article IV.
+
+***
+
+### LiteStorageBuffer
+
+> **LiteStorageBuffer** = `StorageBuffer`
+
+A Babylon Lite read-only storage buffer, re-exported under an ignifx name
+(`CONSTITUTION.md` §3.4, coding standards §4).
+
+#### Remarks
+
+Unstable; excluded from the stability guarantees of `CONSTITUTION.md` Article IV.
+
+***
+
+### LiteSystemUniformName
+
+> **LiteSystemUniformName** = *typeof* [`LITE_SYSTEM_UNIFORM_NAMES`](#lite_system_uniform_names)\[`number`\]
+
+The union of the Babylon Lite system uniform names.
 
 ***
 
@@ -26856,7 +29453,7 @@ The union of the alpha modes a material can declare.
 
 ### MaterialDefinition
 
-> **MaterialDefinition** = [`PbrMaterialDefinition`](#pbrmaterialdefinition-3) \| [`StandardMaterialDefinition`](#standardmaterialdefinition-3)
+> **MaterialDefinition** = [`PbrMaterialDefinition`](#pbrmaterialdefinition-3) \| [`StandardMaterialDefinition`](#standardmaterialdefinition-3) \| [`ShaderMaterialDefinition`](#shadermaterialdefinition-3)
 
 The parsed body of a `.material.json`, discriminated by `kind`.
 
@@ -26905,7 +29502,7 @@ mean "take the schema default" here, so both are accepted (`applyInit`, `encodeP
 
 ##### S
 
-`S` *extends* [`Schema`](#schema-10)
+`S` *extends* [`Schema`](#schema-11)
 
 The schema to project.
 
@@ -27007,7 +29604,7 @@ The union of script callback ordinals.
 
 > **ScriptDefinition**\<`S`\> = () => [`Script`](#abstract-script) & [`FieldsOf`](#fieldsof)\<`S`\> & `object`
 
-The abstract base class [Script.define](#define-7) returns: a `Script` that also carries every field
+The abstract base class [Script.define](#define-8) returns: a `Script` that also carries every field
 the schema declares, typed.
 
 #### Type Declaration
@@ -27030,7 +29627,7 @@ to write a plain `static typeId` or `static executionOrder` without the `overrid
 
 ##### S
 
-`S` *extends* [`Schema`](#schema-10)
+`S` *extends* [`Schema`](#schema-11)
 
 The schema the class was defined from.
 
@@ -27103,6 +29700,66 @@ const app = await createApp({
   settings: { layers: ["Default", "Player"], time: { fixedDeltaTime: 1 / 120 } },
 });
 ```
+
+***
+
+### ShaderAttributeName
+
+> **ShaderAttributeName** = *typeof* [`SHADER_ATTRIBUTE_NAMES`](#shader_attribute_names)\[`number`\]
+
+The union of the attribute names a declaration may name.
+
+***
+
+### ShaderBlendMode
+
+> **ShaderBlendMode** = *typeof* [`SHADER_BLEND_MODES`](#shader_blend_modes)\[`number`\]
+
+The blend modes a declaration may ask for.
+
+***
+
+### ShaderCullMode
+
+> **ShaderCullMode** = *typeof* [`SHADER_CULL_MODES`](#shader_cull_modes)\[`number`\]
+
+The face-culling modes a declaration may ask for. `"front"` is refused: Babylon Lite 1.27.0
+exposes only `backFaceCulling`.
+
+***
+
+### ShaderInstancingMode
+
+> **ShaderInstancingMode** = *typeof* [`SHADER_INSTANCING_MODES`](#shader_instancing_modes)\[`number`\]
+
+How a declaration expects to be drawn: one mesh at a time, or thin-instanced with a matrix slab
+and optionally a per-instance colour.
+
+***
+
+### ShaderKind
+
+> **ShaderKind** = *typeof* [`SHADER_KINDS`](#shader_kinds)\[`number`\]
+
+Which of the three authoring forms a `.wgsl` file is: a full custom material, a surface shader
+that hooks into the engine's lit materials, or a full-screen post effect.
+
+***
+
+### ShaderTextureFallback
+
+> **ShaderTextureFallback** = *typeof* [`SHADER_TEXTURE_FALLBACKS`](#shader_texture_fallbacks)\[`number`\]
+
+Which 1x1 texture is bound to a declared sampler that nothing has filled in
+(Godot's `hint_default_*`).
+
+***
+
+### ShaderUniformType
+
+> **ShaderUniformType** = *typeof* [`SHADER_UNIFORM_TYPES`](#shader_uniform_types)\[`number`\]
+
+The union of the uniform types a declaration may name.
 
 ***
 
@@ -27210,6 +29867,23 @@ Which of the two representations a stored value uses.
 raw octets of a `Blob`, `ArrayBuffer`, or `Uint8Array` the caller handed to `set`. The kind is
 stored alongside the payload — a backend that loses it cannot round-trip, because JSON text and
 a UTF-8 byte array are indistinguishable once written.
+
+***
+
+### SurfaceHookName
+
+> **SurfaceHookName** = *typeof* [`SURFACE_HOOK_NAMES`](#surface_hook_names)\[`number`\]
+
+One of the three surface-shader hooks.
+
+***
+
+### SurfaceHostFamily
+
+> **SurfaceHostFamily** = `"pbr"` \| `"standard"`
+
+The material family a surface shader is compiled against. The generated WGSL differs: the two
+templates name their variables differently and Standard has fewer injection points.
 
 ***
 
@@ -27501,11 +30175,23 @@ The `requires` graph of the registered extensions contains a cycle.
 
 A hot-reloaded class kept the `"patch"` policy while its schema shape changed.
 
+##### instancedCapacityExceeded
+
+> `readonly` **instancedCapacityExceeded**: `"IGX-0721"` = `"IGX-0721"`
+
+More instances were written to an `InstancedMeshRenderer` than its capacity holds.
+
 ##### instanceHashMismatch
 
 > `readonly` **instanceHashMismatch**: `"IGX-0604"` = `"IGX-0604"`
 
 A scene instance's override hash does not match the scene file it was recorded against.
+
+##### instancingSettingTooLate
+
+> `readonly` **instancingSettingTooLate**: `"IGX-0717"` = `"IGX-0717"`
+
+An `InstancedMeshRenderer` setting Lite fixes at scene registration was changed afterwards.
 
 ##### invalidAssetFile
 
@@ -27513,11 +30199,23 @@ A scene instance's override hash does not match the scene file it was recorded a
 
 An asset file does not carry the format header its loader requires.
 
+##### invalidGeometryUpdate
+
+> `readonly` **invalidGeometryUpdate**: `"IGX-0725"` = `"IGX-0725"`
+
+A `MeshAsset` vertex update named a range the geometry cannot hold.
+
 ##### invalidOverridePath
 
 > `readonly` **invalidOverridePath**: `"IGX-0609"` = `"IGX-0609"`
 
 An instance override declares a `path` the override grammar does not accept.
+
+##### invalidPixelData
+
+> `readonly` **invalidPixelData**: `"IGX-0722"` = `"IGX-0722"`
+
+Pixel data handed to a texture does not match its declared size.
 
 ##### invalidRuntime
 
@@ -27530,6 +30228,12 @@ A runtime handle was used after disposal, or was not created by ignifx.
 > `readonly` **invalidSettings**: `"IGX-0408"` = `"IGX-0408"`
 
 A project settings section did not validate against the schema its extension registered.
+
+##### invalidShaderPragma
+
+> `readonly` **invalidShaderPragma**: `"IGX-0719"` = `"IGX-0719"`
+
+A `.wgsl` file carries an `@ignifx` pragma this build cannot read.
 
 ##### invalidTimeValue
 
@@ -27584,6 +30288,12 @@ A serialized number was `NaN` or infinite.
 > `readonly` **notASceneFile**: `"IGX-0308"` = `"IGX-0308"`
 
 A file handed to the scene loader does not carry the `ignifx.scene` format header.
+
+##### notAShaderMaterial
+
+> `readonly` **notAShaderMaterial**: `"IGX-0718"` = `"IGX-0718"`
+
+A shader-material method was called on a PBR or Standard material.
 
 ##### parentingCycle
 
@@ -27669,6 +30379,30 @@ A screenshot was requested with no render loop running, so no frame will ever be
 
 `ctx.require()` asked for a service that no earlier extension registered.
 
+##### shaderCompileFailed
+
+> `readonly` **shaderCompileFailed**: `"IGX-0715"` = `"IGX-0715"`
+
+A shader failed to compile or rebuild; the previous material stays in use.
+
+##### shaderLightUniformWithoutLight
+
+> `readonly` **shaderLightUniformWithoutLight**: `"IGX-0714"` = `"IGX-0714"`
+
+A shader declares a main-light uniform, but the world has no enabled directional light.
+
+##### shaderMaterialEsmCasterSkipped
+
+> `readonly` **shaderMaterialEsmCasterSkipped**: `"IGX-0724"` = `"IGX-0724"`
+
+A shader-material mesh was left out of an ESM shadow caster list, which Lite cannot render for it.
+
+##### shaderValueMismatch
+
+> `readonly` **shaderValueMismatch**: `"IGX-0713"` = `"IGX-0713"`
+
+A shader uniform was written with a value whose shape does not match its declared type.
+
 ##### shadowsUnsupportedForLight
 
 > `readonly` **shadowsUnsupportedForLight**: `"IGX-0703"` = `"IGX-0703"`
@@ -27705,6 +30439,12 @@ An `Environment.skybox` asks for a background the environment it installed canno
 
 The storage backend failed for a reason the engine cannot classify.
 
+##### storageBufferOutOfRange
+
+> `readonly` **storageBufferOutOfRange**: `"IGX-0720"` = `"IGX-0720"`
+
+A storage buffer update reaches past the buffer's capacity.
+
 ##### storageInvalidKey
 
 > `readonly` **storageInvalidKey**: `"IGX-1422"` = `"IGX-1422"`
@@ -27734,6 +30474,24 @@ A stored value could not be read back; the store was damaged or written by somet
 > `readonly` **storageValueNotSerializable**: `"IGX-1423"` = `"IGX-1423"`
 
 A value handed to `app.storage.set` has no JSON form.
+
+##### surfaceHookMissing
+
+> `readonly` **surfaceHookMissing**: `"IGX-0723"` = `"IGX-0723"`
+
+A surface shader cannot run on its host: no hook, a hook the host lacks, or a Standard host.
+
+##### surfaceSamplerBudgetExceeded
+
+> `readonly` **surfaceSamplerBudgetExceeded**: `"IGX-0726"` = `"IGX-0726"`
+
+The surface shaders attached to one material declare more samplers than fit beside the host material.
+
+##### surfaceShaderFeatureOff
+
+> `readonly` **surfaceShaderFeatureOff**: `"IGX-0716"` = `"IGX-0716"`
+
+A surface shader was attached without the `materialPlugins` rendering feature.
 
 ##### tooManyLayers
 
@@ -27776,6 +30534,12 @@ A layer name that the project settings do not declare was used.
 > `readonly` **unknownSettingsSection**: `"IGX-0407"` = `"IGX-0407"`
 
 `ctx.settings()` asked for a settings section that was never registered.
+
+##### unknownShaderBinding
+
+> `readonly` **unknownShaderBinding**: `"IGX-0712"` = `"IGX-0712"`
+
+A shader material was asked for a uniform, texture, or storage buffer its shader never declared.
 
 ##### unreachableCase
 
@@ -28054,6 +30818,12 @@ Input devices, actions, and bindings.
 
 App lifecycle, phases, time, coroutines, destruction.
 
+##### particles
+
+> `readonly` **particles**: `"17"` = `"17"`
+
+Particle systems, 3D and 2D.
+
 ##### physics
 
 > `readonly` **physics**: `"09"` = `"09"`
@@ -28083,6 +30853,12 @@ Scenes, scene instances, layers.
 > `readonly` **serialization**: `"06"` = `"06"`
 
 Schemas, scene/prefab JSON, references.
+
+##### terrain
+
+> `readonly` **terrain**: `"16"` = `"16"`
+
+Terrain assets, chunks, and queries.
 
 ##### threeD
 
@@ -28285,6 +31061,16 @@ what the devtools graphs plot (`docs/architecture/15-devtools-and-diagnostics.md
 
 ***
 
+### IGNIFX\_UNIFORM\_NAMES
+
+> `const` **IGNIFX\_UNIFORM\_NAMES**: readonly \[`"time"`, `"unscaledTime"`, `"deltaTime"`, `"mainLightDirection"`, `"mainLightColor"`, `"ambientColor"`\]
+
+The uniforms **ignifx** fills in every frame, read in WGSL as `shaderUniforms.<name>`
+(`docs/plan/2026-09-terrain-particles-shaders.md` §3.1). Babylon Lite has no clock and no light
+bindings for a shader material, so these are the engine's own addition.
+
+***
+
 ### INVALID\_HANDLE
 
 > `const` **INVALID\_HANDLE**: `0` = `0`
@@ -28320,6 +31106,37 @@ const config = app.assets.load<{ readonly hp: number }>("data/player.json");
 > `const` **LIGHT\_TYPES**: readonly \[`"directional"`, `"point"`, `"spot"`, `"hemispheric"`\]
 
 Supported light kinds.
+
+***
+
+### LITE\_MATERIAL\_PLUGIN\_POINTS
+
+> `const` **LITE\_MATERIAL\_PLUGIN\_POINTS**: readonly \[`"CUSTOM_FRAGMENT_DEFINITIONS"`, `"CUSTOM_FRAGMENT_MAIN_BEGIN"`, `"CUSTOM_FRAGMENT_UPDATE_ALPHA"`, `"CUSTOM_FRAGMENT_UPDATE_DIFFUSE"`, `"CUSTOM_FRAGMENT_BEFORE_LIGHTS"`, `"CUSTOM_FRAGMENT_BEFORE_FINALCOLORCOMPOSITION"`, `"CUSTOM_FRAGMENT_BEFORE_FRAGCOLOR"`, `"CUSTOM_VERTEX_MAIN_BEGIN"`, `"CUSTOM_VERTEX_UPDATE_WORLDPOS"`, `"CUSTOM_VERTEX_MAIN_END"`\]
+
+**`Beta`**
+
+The Babylon Lite injection points a [MaterialPluginDefinition](#materialplugindefinition) may fill in.
+
+#### Remarks
+
+The names are Lite's own (`MaterialPluginPoint`, `index.d.ts` 7084) and are taught verbatim,
+because a plugin's code is written against the template around the point.
+
+***
+
+### LITE\_SYSTEM\_UNIFORM\_NAMES
+
+> `const` **LITE\_SYSTEM\_UNIFORM\_NAMES**: readonly \[`"world"`, `"view"`, `"projection"`, `"viewProjection"`, `"worldView"`, `"worldViewProjection"`, `"cameraPosition"`, `"screenSize"`, `"alphaCutoff"`\]
+
+The uniforms Babylon Lite fills in itself every frame, read in WGSL as `shaderSystem.<name>`
+(`index.d.ts` 11432).
+
+#### Remarks
+
+Two of them lie under `rendering.useFloatingOrigin`: `cameraPosition` reads `(0, 0, 0)` and the
+world matrices are camera-relative. With instancing on, `world`, `worldView`, and
+`worldViewProjection` are **not** instance-aware — the shader composes
+`shaderSystem.world * mat4x4(input.world0, input.world1, input.world2, input.world3)`.
 
 ***
 
@@ -28433,6 +31250,54 @@ The only `.material.json` `formatVersion` this build reads.
 
 The material families `.material.json` can declare
 (`docs/architecture/07-rendering.md` §2.6).
+
+***
+
+### MATERIAL\_PLUGIN\_DEFAULT\_PRIORITY
+
+> `const` **MATERIAL\_PLUGIN\_DEFAULT\_PRIORITY**: `500` = `500`
+
+**`Beta`**
+
+The default priority Babylon Lite gives a plugin with none (`index.d.ts` 7057).
+
+***
+
+### MATERIAL\_PLUGIN\_RESERVED\_NAMES
+
+> `const` **MATERIAL\_PLUGIN\_RESERVED\_NAMES**: readonly `string`[]
+
+**`Beta`**
+
+The WGSL names the PBR and Standard templates already own, which a plugin may not reuse for a
+uniform field or a sampler.
+
+#### Remarks
+
+A plugin's fields land in the host's own uniform block and its samplers in the host's own bind
+group, so a collision is a duplicate WGSL declaration and the whole material stops compiling with
+a message that names neither the plugin nor the field. Refusing at attach time is the difference
+between a sentence and a shader dump. Read from `pbr-template.js` `_baseMaterialUboFields` and
+`_baseBindings`, and `standard-template.js` `materialStruct` and `_baseBindings`.
+
+***
+
+### MATERIAL\_PLUGIN\_SAMPLER\_BUDGET
+
+> `const` **MATERIAL\_PLUGIN\_SAMPLER\_BUDGET**: `9` = `9`
+
+**`Beta`**
+
+How many `texture`/`sampler` pairs one material's plugins may declare together.
+
+#### Remarks
+
+Measured on a device on 2026-09-08 (spike S0.2): a fully textured PBR material — base colour,
+normal, ORM, emissive — with image-based lighting and one PCF shadow light already binds seven
+textures and seven samplers of the sixteen per stage that every WebGPU implementation guarantees,
+SwiftShader included, and Lite requests no higher `requiredLimits`. Nine is what is left, and it
+drops to eight with a second shadow light and seven with a lightmap, so a material that means to
+be portable should stay well under the cap.
 
 ***
 
@@ -28627,6 +31492,29 @@ contract `@ignifx/physics` is written against.
 ```ts
 ctx.dispatchScriptCallback(entity, PhysicsCallbackName.onTriggerEnter, event);
 ```
+
+***
+
+### POST\_EFFECT\_BUILTIN\_UNIFORMS
+
+> `const` **POST\_EFFECT\_BUILTIN\_UNIFORMS**: readonly `object`[]
+
+The uniforms every post effect's `shaderUniforms` block carries before the file's own, in this
+order.
+
+#### Remarks
+
+`screenSize` is in backing-store pixels — `canvas.width`/`canvas.height` — like everything else
+the engine reports (`docs/architecture/07-rendering.md` §3). The three clocks are the app's, so
+`time` freezes under `app.pause()` and `unscaledTime` does not.
+
+***
+
+### POST\_EFFECT\_FUNCTION
+
+> `const` **POST\_EFFECT\_FUNCTION**: `"mainFragment"` = `"mainFragment"`
+
+The name a `// @ignifx post` file gives its fragment function.
 
 ***
 
@@ -28892,6 +31780,84 @@ dispatched from a phase and therefore get a sorted dispatch list.
 
 ***
 
+### SHADER\_ASSET\_TYPE
+
+> `const` **SHADER\_ASSET\_TYPE**: `"shader"` = `"shader"`
+
+The asset type shaders are registered under.
+
+***
+
+### SHADER\_ATTRIBUTE\_NAMES
+
+> `const` **SHADER\_ATTRIBUTE\_NAMES**: readonly \[`"position"`, `"normal"`, `"uv"`, `"uv2"`, `"tangent"`, `"color"`, `"joints"`, `"weights"`, `"joints1"`, `"weights1"`\]
+
+The vertex attributes a shader material can bind — Babylon Lite's fixed set
+(`index.d.ts` 11295). A name outside this list is reported with its line.
+
+***
+
+### SHADER\_BLEND\_MODES
+
+> `const` **SHADER\_BLEND\_MODES**: readonly \[`"opaque"`, `"alpha"`, `"additive"`, `"premultiplied"`\]
+
+How a shader material composites its fragments.
+
+***
+
+### SHADER\_CULL\_MODES
+
+> `const` **SHADER\_CULL\_MODES**: readonly \[`"back"`, `"front"`, `"none"`\]
+
+Which faces are drawn. `"front"` is accepted by the grammar and refused by the parser, because
+Babylon Lite 1.27.0 exposes only `backFaceCulling`.
+
+***
+
+### SHADER\_FILE\_EXTENSIONS
+
+> `const` **SHADER\_FILE\_EXTENSIONS**: readonly `string`[]
+
+The address extensions that select the shader loader.
+
+#### Remarks
+
+`.surface.wgsl` and `.post.wgsl` both end in `.wgsl`, so one extension covers all three forms.
+
+***
+
+### SHADER\_INSTANCING\_MODES
+
+> `const` **SHADER\_INSTANCING\_MODES**: readonly \[`"none"`, `"matrices"`, `"matrices-colors"`\]
+
+Which instance streams the vertex stage reads.
+
+***
+
+### SHADER\_KINDS
+
+> `const` **SHADER\_KINDS**: readonly \[`"shader"`, `"surface"`, `"post"`\]
+
+The three authoring forms the form directive names, in the order the documentation lists them.
+
+***
+
+### SHADER\_TEXTURE\_FALLBACKS
+
+> `const` **SHADER\_TEXTURE\_FALLBACKS**: readonly \[`"white"`, `"black"`, `"transparent"`\]
+
+The 1x1 fallback textures a declaration can bind when nothing else is.
+
+***
+
+### SHADER\_UNIFORM\_TYPES
+
+> `const` **SHADER\_UNIFORM\_TYPES**: readonly \[`"f32"`, `"u32"`, `"i32"`, `"vec2<f32>"`, `"vec3<f32>"`, `"vec4<f32>"`, `"mat4x4<f32>"`\]
+
+The WGSL types a declared uniform may have — Babylon Lite's set (`index.d.ts` 11445).
+
+***
+
 ### SHADOW\_TECHNIQUES
 
 > `const` **SHADOW\_TECHNIQUES**: readonly \[`"esm"`, `"pcf"`, `"csm"`\]
@@ -28908,6 +31874,14 @@ The texture slots a `"standard"` material may name.
 
 ***
 
+### STORAGE\_BUFFER\_ASSET\_TYPE
+
+> `const` **STORAGE\_BUFFER\_ASSET\_TYPE**: `"storagebuffer"` = `"storagebuffer"`
+
+The asset type storage buffers are registered under.
+
+***
+
 ### STORAGE\_KEY\_MAX\_LENGTH
 
 > `const` **STORAGE\_KEY\_MAX\_LENGTH**: `512` = `512`
@@ -28919,6 +31893,22 @@ The longest a storage key may be.
 512 UTF-16 code units is comfortably below the ~255 *byte* file-name limit once percent-encoding
 has expanded the key, which is why the file backend hashes nothing and truncates nothing: a key
 that passes this check always encodes to a name a file system accepts.
+
+***
+
+### SURFACE\_HOOK\_NAMES
+
+> `const` **SURFACE\_HOOK\_NAMES**: readonly \[`"displace"`, `"surface"`, `"composite"`\]
+
+The three hooks a `.surface.wgsl` file may provide.
+
+***
+
+### SURFACE\_UNIFORM\_BLOCK
+
+> `const` **SURFACE\_UNIFORM\_BLOCK**: `"surfaceUniforms"` = `"surfaceUniforms"`
+
+The uniform block name a surface shader reads its declared uniforms from.
 
 ***
 
@@ -30359,6 +33349,83 @@ ctx.registerService(StorageService, new LocalStorage());
 
 ***
 
+### createShaderLoader()
+
+> **createShaderLoader**(): [`AssetLoader`](#assetloader)\<[`ShaderAsset`](#shaderasset)\>
+
+Builds the loader for `.wgsl` addresses.
+
+#### Returns
+
+[`AssetLoader`](#assetloader)\<[`ShaderAsset`](#shaderasset)\>
+
+The loader to register with `ctx.registerAssetLoader`.
+
+#### Remarks
+
+A parse failure fails the load, unlike a malformed `.material.json` property: a shader whose
+declaration cannot be read has no usable fallback (`CONSTITUTION.md` §3.9).
+
+The loader is also where the custom-shader layers are pulled into memory. A `ShaderAsset` can only
+come from here, so awaiting them here is what lets `createMaterialAsset` and the `.material.json`
+loader build a shader material synchronously (`../shader-support.ts`).
+
+#### Example
+
+```ts
+ctx.registerAssetLoader(createShaderLoader());
+```
+
+***
+
+### createStorageBufferAsset()
+
+> **createStorageBufferAsset**(`app`, `name`, `data`): [`AssetHandle`](#assethandle)\<[`StorageBufferAsset`](#storagebufferasset)\>
+
+Allocates a read-only storage buffer and publishes it as an in-memory asset.
+
+#### Parameters
+
+##### app
+
+[`App`](#app)
+
+The app whose engine allocates it and whose asset service publishes it.
+
+##### name
+
+`string`
+
+A human-readable name, used as the GPU debug label.
+
+##### data
+
+`ArrayBufferView`
+
+The initial contents, which also fix the capacity.
+
+#### Returns
+
+[`AssetHandle`](#assethandle)\<[`StorageBufferAsset`](#storagebufferasset)\>
+
+The handle, with one holder — the caller.
+
+#### Remarks
+
+The capacity is fixed at creation: `data.byteLength` rounded up to four bytes. Allocate the whole
+ring or table once and [StorageBufferAsset.update](#update-3) the part that changed — that is the
+pattern the stateless particle design is built on, and it is what keeps the per-frame cost to one
+`writeBuffer`.
+
+#### Example
+
+```ts
+using table = createStorageBufferAsset(app, "spawns", new Float32Array(4096));
+material.value.setStorageBuffer("particles", table);
+```
+
+***
+
 ### createTextureLoader()
 
 > **createTextureLoader**(): [`AssetLoader`](#assetloader)\<[`TextureAsset`](#textureasset)\>
@@ -30496,6 +33563,34 @@ grid: custom({
   deserialize: (json) => Uint8Array.from(Array.isArray(json) ? json.map(Number) : []),
   jsonSchema: { type: "array", items: { type: "integer" } },
 });
+```
+
+***
+
+### customEffect()
+
+> **customEffect**(`init`): [`CustomEffectSettings`](#customeffectsettings)
+
+Fills in a custom effect's defaults, so a caller names only what it means to set.
+
+#### Parameters
+
+##### init
+
+[`CustomEffectInit`](#customeffectinit)
+
+The shader and the fields to set.
+
+#### Returns
+
+[`CustomEffectSettings`](#customeffectsettings)
+
+A complete settings record, ready to push onto `PostProcessStack.custom`.
+
+#### Example
+
+```ts
+stack.custom.push(customEffect({ shader: vignette, order: 5, values: { amount: 0.6 } }));
 ```
 
 ***
@@ -30673,6 +33768,56 @@ const app = await createApp({ headless: true, extensions: [spawner({ budget: 64 
 
 ***
 
+### defineMaterialPlugin()
+
+> **defineMaterialPlugin**(`definition`): [`MaterialPluginDefinition`](#materialplugindefinition)
+
+**`Beta`**
+
+Validates a raw material-plugin declaration and fills in its defaults.
+
+#### Parameters
+
+##### definition
+
+[`MaterialPluginDefinitionInit`](#materialplugindefinitioninit)
+
+The declaration.
+
+#### Returns
+
+[`MaterialPluginDefinition`](#materialplugindefinition)
+
+The same declaration with `priority`, `uniforms`, and `textures` filled in.
+
+#### Remarks
+
+Nothing here reaches a device: the result is plain data that `attachSurfaceShaders` and
+`attachMaterialPlugin` turn into a Lite plugin. The checks are the ones whose failure would
+otherwise surface as a WGSL compile error with no mention of the plugin — an empty `code`, a
+duplicate or reserved binding name, a name that is not a WGSL identifier, an unknown injection
+point, or more samplers than [MATERIAL\_PLUGIN\_SAMPLER\_BUDGET](#material_plugin_sampler_budget).
+
+The **surface-shader compiler produces one of these**, so a bug in this validation is a bug in
+every surface shader too, which is why it lives here rather than inside the compiler.
+
+#### Throws
+
+IgnifxError with code `IGX-0723` when `code` fills in no point, `IGX-0712` when a name is
+not a legal, unique, unreserved WGSL identifier or a point name is unknown, or `IGX-0726` when the
+plugin alone exceeds the sampler budget.
+
+#### Example
+
+```ts
+const tint = defineMaterialPlugin({
+  name: "tint",
+  code: { CUSTOM_FRAGMENT_UPDATE_ALPHA: "baseColor = baseColor * vec3<f32>(1.0, 0.5, 0.5);" },
+});
+```
+
+***
+
 ### defineSchema()
 
 > **defineSchema**\<`S`\>(`fields`): `S`
@@ -30840,7 +33985,7 @@ The component's namespaced registration id, for example `mygame/Mover`.
 
 ##### schema
 
-[`Schema`](#schema-10)
+[`Schema`](#schema-11)
 
 The component's declared fields.
 
@@ -31321,7 +34466,7 @@ every asset the file references is already loaded, which is what a `SceneAsset` 
 
 ##### world
 
-[`World`](#world-12)
+[`World`](#world-13)
 
 The world to build into.
 
@@ -31464,6 +34609,30 @@ app.onError.connect((report) => {
 
 ***
 
+### isLiteMaterialPluginPoint()
+
+> **isLiteMaterialPluginPoint**(`value`): value is "CUSTOM\_FRAGMENT\_DEFINITIONS" \| "CUSTOM\_FRAGMENT\_MAIN\_BEGIN" \| "CUSTOM\_FRAGMENT\_UPDATE\_ALPHA" \| "CUSTOM\_FRAGMENT\_UPDATE\_DIFFUSE" \| "CUSTOM\_FRAGMENT\_BEFORE\_LIGHTS" \| "CUSTOM\_FRAGMENT\_BEFORE\_FINALCOLORCOMPOSITION" \| "CUSTOM\_FRAGMENT\_BEFORE\_FRAGCOLOR" \| "CUSTOM\_VERTEX\_MAIN\_BEGIN" \| "CUSTOM\_VERTEX\_UPDATE\_WORLDPOS" \| "CUSTOM\_VERTEX\_MAIN\_END"
+
+**`Beta`**
+
+Whether a string is one of Lite's ten injection points.
+
+#### Parameters
+
+##### value
+
+`string`
+
+The candidate.
+
+#### Returns
+
+value is "CUSTOM\_FRAGMENT\_DEFINITIONS" \| "CUSTOM\_FRAGMENT\_MAIN\_BEGIN" \| "CUSTOM\_FRAGMENT\_UPDATE\_ALPHA" \| "CUSTOM\_FRAGMENT\_UPDATE\_DIFFUSE" \| "CUSTOM\_FRAGMENT\_BEFORE\_LIGHTS" \| "CUSTOM\_FRAGMENT\_BEFORE\_FINALCOLORCOMPOSITION" \| "CUSTOM\_FRAGMENT\_BEFORE\_FRAGCOLOR" \| "CUSTOM\_VERTEX\_MAIN\_BEGIN" \| "CUSTOM\_VERTEX\_UPDATE\_WORLDPOS" \| "CUSTOM\_VERTEX\_MAIN\_END"
+
+`true` when Lite accepts it.
+
+***
+
 ### isSceneFileHeader()
 
 > **isSceneFileHeader**(`value`): `boolean`
@@ -31552,7 +34721,7 @@ The rule has exactly two parts and the `ignifx/error-code-format` lint rule mirr
 ```ts
 isValidErrorCode("IGX-0701"); // true  — rendering
 isValidErrorCode("IGX-9042"); // true  — third party
-isValidErrorCode("IGX-1601"); // false — no subsystem owns 16
+isValidErrorCode("IGX-1801"); // false — no subsystem owns 18
 ```
 
 ***
@@ -32266,6 +35435,39 @@ const text = stringifySceneFile(serializeScene(world.activeScene));
 
 ***
 
+### shaderMaterialDefinition()
+
+> **shaderMaterialDefinition**(`input`): [`ShaderMaterialDefinition`](#shadermaterialdefinition-3)
+
+Builds a `"shader"` material declaration, recording the addresses of the handles it is given.
+
+#### Parameters
+
+##### input
+
+[`ShaderMaterialDefinitionInput`](#shadermaterialdefinitioninput)
+
+The shader, and whatever this material sets on it.
+
+#### Returns
+
+[`ShaderMaterialDefinition`](#shadermaterialdefinition-3)
+
+A complete declaration, ready for [createMaterialAsset](#creatematerialasset).
+
+#### Example
+
+```ts
+const definition = shaderMaterialDefinition({
+  shader: dissolveShader,
+  values: { progress: 0.25, edgeColor: { r: 1, g: 0.6, b: 0.2, a: 1 } },
+  textures: { noiseTexture: noise },
+  defines: { SOFT_EDGE: true },
+});
+```
+
+***
+
 ### sign()
 
 > **sign**(`value`): `number`
@@ -32424,7 +35626,7 @@ editor autocompletion (`docs/architecture/06-serialization-and-scene-format.md` 
 
 ##### schema
 
-[`Schema`](#schema-10)
+[`Schema`](#schema-11)
 
 The schema to convert.
 
@@ -32477,7 +35679,7 @@ as `IGX-0607`; names the caller omits are legal, because omitted props take sche
 
 ##### schema
 
-[`Schema`](#schema-10)
+[`Schema`](#schema-11)
 
 The schema to check against.
 

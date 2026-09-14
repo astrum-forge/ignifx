@@ -1,0 +1,107 @@
+/**
+ * Add a surface shader
+ *
+ * A surface shader is a small piece of WGSL layered onto a **PBR** material, so the engine keeps
+ * doing the lighting: shadows, image-based lighting, fog and tone mapping all still apply, and your
+ * code only says what the surface is made of. Three hooks are the whole contract — `displace` moves
+ * a vertex, `surface` rewrites base colour, alpha, emissive and the shading normal, and `composite`
+ * changes the lit colour on its way out.
+ *
+ * ```wgsl
+ * // shaders/snow.surface.wgsl
+ * // @ignifx surface
+ * // @ignifx uniform amount: f32 = 0.6 range(0, 1) tooltip("How much snow has settled")
+ * // @ignifx uniform snowColor: vec3<f32> = color(0.95, 0.97, 1.0)
+ * // @ignifx texture snowNoise default white
+ *
+ * fn surface(in: SurfaceInput, s: ptr<function, Surface>) {
+ *   let settled = smoothstep(0.55, 0.85, (*s).normal.y);
+ *   let mask = settled * textureSample(snowNoise, snowNoiseSampler, in.uv * 8.0).r;
+ *   (*s).baseColor = mix((*s).baseColor, surfaceUniforms.snowColor, mask * surfaceUniforms.amount);
+ * }
+ * ```
+ *
+ * `SurfaceInput` carries `uv`, `worldPosition`, `geometricNormal`, `viewDirection` and `color`;
+ * `Surface` carries `baseColor`, `alpha`, `emissive`, `normal`, and read-only `roughness` and
+ * `metallic`. A file's own uniforms live in `surfaceUniforms`, which is rewritten into the host
+ * material's uniform block, so two shaders on one material never collide.
+ *
+ * Three rules worth knowing before you write one: the `materialPlugins` rendering feature has to be
+ * declared before `app.start()` (`IGX-0716` otherwise), a Standard material cannot host one
+ * (`IGX-0723`), and `displace` runs in the vertex stage where Babylon Lite exposes no plugin uniform
+ * or texture at all — so wind that moves with the clock is a
+ * [`custom shader`](write-a-custom-shader.md), not a hook.
+ */
+import {
+  Camera,
+  Light,
+  MeshAsset,
+  MeshRenderer,
+  createApp,
+  createMaterialAsset,
+  pbrMaterialDefinition,
+} from "@ignifx/core";
+import type { ShaderAsset, TextureAsset } from "@ignifx/core";
+
+const canvas = document.querySelector("canvas");
+if (!(canvas instanceof HTMLCanvasElement)) {
+  throw new Error("ignifx renders into a <canvas> element.");
+}
+
+const app = await createApp({
+  canvas,
+  settings: {
+    assets: { root: "assets" },
+    // Babylon Lite bakes plugin signatures before the scene is registered, so both are declared up
+    // front; asking afterwards throws IGX-0704.
+    rendering: { features: { materialPlugins: true, shadows: true } },
+  },
+});
+
+// A surface shader and its textures are loaded like any other asset, and have to be **loaded**
+// before a material names them: an address the cache cannot answer for is IGX-0501.
+const snow = await app.assets.loadAsync<ShaderAsset>("shaders/snow.surface.wgsl");
+const grain = await app.assets.loadAsync<TextureAsset>("textures/snow-noise.png");
+
+const rock = createMaterialAsset(
+  app,
+  pbrMaterialDefinition({
+    name: "rock",
+    baseColor: { r: 0.32, g: 0.3, b: 0.28, a: 1 },
+    roughness: 0.85,
+    surfaces: [
+      {
+        shader: snow.address,
+        // The name `material.surface(name)` answers to; `""` uses the file name without its suffix.
+        name: "snow",
+        values: { amount: 0.35 },
+        textures: { snowNoise: grain.address },
+        enabled: true,
+        // Lower runs first when a material carries several; 500 is the default.
+        priority: 500,
+      },
+    ],
+  }),
+  [grain],
+);
+
+const eye = app.world.createEntity("Main Camera");
+eye.transform.localPosition.set(0, 1.4, -3.4);
+eye.transform.lookAt({ x: 0, y: 0.4, z: 0 });
+eye.addComponent(Camera, { fov: 55 });
+
+const sun = app.world.createEntity("Sun");
+sun.transform.localPosition.set(3, 6, -2);
+sun.transform.lookAt({ x: 0, y: 0, z: 0 });
+sun.addComponent(Light, { type: "directional", intensity: 3 }).shadows.enabled = true;
+
+const boulder = app.world.createEntity("Boulder");
+boulder.addComponent(MeshRenderer, { mesh: MeshAsset.sphere(app, { diameter: 1.6 }), materials: [rock] });
+
+await app.start();
+
+// Per-material values are live: a season slider writes the binding, not the file.
+const settled = rock.value.surface("snow");
+settled.set("amount", 0.9);
+// `enabled` rebuilds the pipeline, so toggle it on a menu, not every frame.
+settled.enabled = true;

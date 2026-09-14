@@ -1,5 +1,5 @@
 /**
- * Markdown → HTML for the pages that are rendered from a repository file: the sixteen guides
+ * Markdown → HTML for the pages that are rendered from a repository file: the guides
  * (`skills/ignifx/references/recipes/*.md`) and the examples' attribution page.
  *
  * The recipe is the documentation (`docs/architecture/16-docs-harness-and-skill.md`); this module
