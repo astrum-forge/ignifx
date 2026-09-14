@@ -1,6 +1,6 @@
 {
   "name": "@ignifx/terrain",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "ignifx terrain: heightmap and procedural terrains with chunked LOD, splat surface shaders, queries, and foliage scatter.",
   "keywords": [
     "ignifx",

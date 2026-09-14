@@ -3,7 +3,7 @@ name: particles-2d
 description: Draws ignifx particle effects as sprites with @ignifx/particles-2d: the ParticleSystem2D component, one .particles.json shared with the 3D system, sprite atlases and sheet frames, sorting layers and blend modes, and the budget it shares with app.particles. Use when adding, editing or debugging 2D particle effects — fire, dust, sparkles, weather — in a sprite game, or when the user mentions @ignifx/particles-2d or ParticleSystem2D.
 license: Apache-2.0
 metadata:
-  ignifx-version: "0.2.1"
+  ignifx-version: "0.3.0"
 ---
 
 # @ignifx/particles-2d
@@ -17,7 +17,7 @@ the effect belongs in a 3D scene. One document drives both.
 
 ## Environment
 
-- Engine: ignifx `0.2.1`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
+- Engine: ignifx `0.3.0`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
 - Needs `@ignifx/2d` (the sprite layers it draws into) and `@ignifx/particles` (the document, the
   presets, and `app.particles`). Register all three; nothing happens at import time.
 - No WGSL and no GPU work of its own: the particles are ordinary sprites, so everything here runs

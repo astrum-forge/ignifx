@@ -3,7 +3,7 @@ name: ui
 description: Builds game UI in ignifx with @ignifx/ui: the DOM overlay host and layers, scaling modes, input focus routing, world-space anchors, world and HUD text on Babylon Lite's text renderer, menus and menu stacks, virtual joysticks and buttons for touch, dialogs, toasts, loading screens, and localization. Use when adding or editing menus, title/pause/settings screens, HUDs, on-screen text, touch controls, or overlay UI in an ignifx project, or when the user mentions @ignifx/ui, Menu, MenuStack, HudText, WorldAnchor, VirtualJoystick, or app.i18n.
 license: Apache-2.0
 metadata:
-  ignifx-version: "0.2.1"
+  ignifx-version: "0.3.0"
 ---
 
 # @ignifx/ui
@@ -24,7 +24,7 @@ documented no-op, and the components keep their state — so the same script run
 
 ## Environment
 
-- Engine: ignifx `0.2.1`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
+- Engine: ignifx `0.3.0`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
 - WebGPU only, browser and Electron. Babylon Lite `1.27.0` is a peer dependency.
 - `@ignifx/input` is an **optional** peer: only `VirtualJoystick` and `VirtualButton` need it.
 - Register it like any extension; nothing happens at import time.

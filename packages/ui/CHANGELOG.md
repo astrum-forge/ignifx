@@ -1,5 +1,14 @@
 # @ignifx/ui
 
+## 0.3.0
+
+### Patch Changes
+
+- Updated dependencies [be82465]
+- Updated dependencies [6e1eed7]
+  - @ignifx/core@0.3.0
+  - @ignifx/input@0.3.0
+
 ## 0.2.1
 
 ### Patch Changes

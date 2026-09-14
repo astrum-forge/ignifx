@@ -3,7 +3,7 @@ name: physics
 description: Adds 3D physics to an ignifx game with @ignifx/physics: Havok simulation on a separate headless scene, Rigidbody, box/sphere/capsule/mesh colliders, physics materials, triggers, CharacterController, raycasts and shape queries, the collision layer matrix, and render interpolation. Use when adding or editing 3D physics bodies, colliders, triggers, character movement, or physics queries in an ignifx project, or when the user mentions @ignifx/physics, Rigidbody, Havok, or collision layers.
 license: Apache-2.0
 metadata:
-  ignifx-version: "0.2.1"
+  ignifx-version: "0.3.0"
 ---
 
 # @ignifx/physics
@@ -21,7 +21,7 @@ through, or has to be asked "what is under the crosshair".
 
 ## Environment
 
-- Engine: ignifx `0.2.1`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
+- Engine: ignifx `0.3.0`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
 - Peer dependencies: `@babylonjs/lite` (exactly `1.27.0`) and `@babylonjs/havok` (`^1.3.0`).
 - Browsers, Electron, and Node. The Vite plugin copies `HavokPhysics.wasm` into the public asset
   path, so the browser loads it from `assets/HavokPhysics.wasm`; under Node the extension reads the

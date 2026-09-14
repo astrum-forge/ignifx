@@ -1,6 +1,6 @@
 {
   "name": "@ignifx/particles-2d",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "ignifx 2D particles: ParticleSystem2D rendering shared particle definitions into sprite layers.",
   "keywords": [
     "ignifx",
