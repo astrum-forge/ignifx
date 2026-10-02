@@ -31,6 +31,13 @@ import { defineConfig } from "vitest/config";
  *
  * `coverage` is a root-level option in Vitest 5 — it is ignored inside `projects[].test`.
  */
+/**
+ * A unit test's timeout catches a hang; speed is the `perf` project's job. Vitest's 5 s default was
+ * too tight for a cold dynamic import of a package barrel under coverage while `pnpm check` runs
+ * lint, typecheck and the docs harness beside it (`@ignifx/audio`'s barrel test, 2026-10-03).
+ */
+const UNIT_TIMEOUT_MS = 15_000;
+
 /** Every headless test file, across the `node`, `node-isolated`, and `perf` projects. */
 const NODE_INCLUDE = [
   "packages/*/test/**/*.test.ts",
@@ -132,12 +139,14 @@ export default defineConfig({
           // and a file that cannot share — one that replaces a module — goes in `ISOLATED`.
           isolate: false,
           pool: "threads",
+          testTimeout: UNIT_TIMEOUT_MS,
         },
       },
       {
         test: {
           name: "node-isolated",
           environment: "node",
+          testTimeout: UNIT_TIMEOUT_MS,
           include: ISOLATED,
           exclude: NODE_EXCLUDE,
         },
