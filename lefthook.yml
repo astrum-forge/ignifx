@@ -1,9 +1,17 @@
 # Git hooks (coding standards §6, §11). Install with `pnpm lefthook install`.
+#
+# A passing commit prints nothing; a failing one prints the failing tool's own output. The banner,
+# the per-file task list and the summary were ~30 lines on every commit, and an agent reads all of
+# them.
+output:
+  - execution_out
+  - failure
+
 pre-commit:
   parallel: false
   commands:
     lint-staged:
-      run: pnpm exec lint-staged
+      run: pnpm exec lint-staged --quiet --relative
 
 commit-msg:
   commands:

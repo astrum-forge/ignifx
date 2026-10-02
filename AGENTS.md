@@ -2,23 +2,38 @@
 
 ignifx is a TypeScript, WebGPU-only game engine on Babylon Lite for browsers and Electron, by Astrum Forge Studios. This file is the tool-agnostic entry point for AI agents and new contributors; keep it under 200 lines and put detail in the linked documents.
 
-## Read first, in this order
+## Read what the task needs
 
-1. `CONSTITUTION.md` — the rules (numbered clauses; cite them).
-2. `docs/standards/coding-standards.md` — toolchain, tsconfig, lint, naming, testing, PR rules.
-3. `docs/architecture/00-overview.md` then the doc for the area you touch.
-4. `docs/plan/engineering-plan.md` — what is being built now and what is out of scope.
-5. `skills/ignifx/SKILL.md` — how to _use_ the engine (also available to Claude Code via `.claude/skills/ignifx`).
+Always: this file and `CONSTITUTION.md` (the rules; numbered clauses — cite them). Then only what the change touches:
+
+- Code style, tests, PR rules: the matching section of `docs/standards/coding-standards.md` (§5 language, §10 testing, §11 PRs, §15 finishing).
+- An engine area: `docs/architecture/00-overview.md` §2 for the layering, then that area's doc.
+- New planned work: the matching plan in `docs/plan/` (`engineering-plan.md` is the delivered 0.x plan — read its scope list, not all of it).
+- Usage examples, skill pages, templates: `skills/ignifx/SKILL.md` (also `.claude/skills/ignifx` in Claude Code) and the subsystem skill.
 
 Precedence when documents conflict: constitution → standards → architecture → ADRs → plan → skill → code comments (`CONSTITUTION.md` §10.1).
 
 ## Status
 
-Phases 0–12 of `docs/plan/engineering-plan.md` were delivered on `main` between 2026-09-05 and 2026-09-07; the local half of the plan's "Hardening and 1.0" section (API review, Electron security review, license notices, `Menu` widget, engine follow-ups) landed on 2026-09-07; what remains needs releases, other browsers, or 1.0 (see the plan's status line). `ignifx` and every `@ignifx/*` package are on npm at `0.2.0` (published 2026-09-08); `release.yml` publishes from the "Version Packages" pull request (no provenance while the repository is private — ADR-0009), and the scaffolder is `npx @ignifx/cli@latest` — there is no `create-ignifx` package, only the bin of that name. Every `@ignifx/*` package is real: `core` (kernel, rendering, assets, scene format, tweens, platform, storage, hot reload), `vite-plugin` (manifest, sidecars, validation, HMR, `virtual:ignifx/*` with shipped `client` types), `input`, `physics` (Havok), `audio`, `2d`, `physics-2d` (Rapier), `3d`, `ui`, `electron`, `devtools`, `cli` (`create-ignifx`, with `--desktop`), and the `ignifx` umbrella that re-exports all of them. `templates/*` are the four playable templates (menus, settings, rebinding, saves) with desktop variants, visual goldens and enforced frame budgets; `examples/hello-cube` and `examples/gltf-viewer` are real apps; `examples/recipes/*` are the compiled sources behind the skill's recipe pages; `website/` is the prerendered public site for Cloudflare Pages. The `feat/terrain-particles-shaders` branch (plan `docs/plan/2026-09-terrain-particles-shaders.md`, ADRs 0024–0026) adds custom shaders and `InstancedMeshRenderer` to `core`, `.wgsl` validation to `vite-plugin`, `SpriteBatch` to `2d`, and the packages `particles`, `particles-2d` and `terrain`, all unpublished until the next release.
+Phases 0–12 of the engineering plan and the local half of "Hardening and 1.0" are on `main`, as are custom shaders, `InstancedMeshRenderer`, `SpriteBatch` and the `particles`, `particles-2d` and `terrain` packages (plan `docs/plan/2026-09-terrain-particles-shaders.md`, ADRs 0024–0026). Versions are in each `package.json`; `release.yml` publishes from the "Version Packages" pull request (no provenance while the repository is private — ADR-0009). The scaffolder is `npx @ignifx/cli@latest`; there is no `create-ignifx` package, only the bin of that name. `templates/*` are four playable templates with desktop variants, visual goldens and frame budgets; `examples/*` are real apps and the compiled sources of the skill's recipes; `website/` is the public site (Cloudflare Pages).
 
 ## Commands
 
-Use Node 24 (`.nvmrc`); dependency-cruiser refuses to run on Node 25. `pnpm install` · `pnpm dev` · `pnpm check` (build, then format, lint, typecheck, unit tests with coverage, API report and docs harness in parallel; ~20 s warm; prints only failures; `--only`/`--skip`/`--full`) · `pnpm test` (~7 s, no coverage) · `pnpm test:coverage` · `pnpm test:perf` · `pnpm test:browser` · `pnpm test:visual` · `pnpm test:frame-budget` · `pnpm build` · `pnpm pack-check` · `pnpm deps` · `pnpm docs:api` · `pnpm docs:schemas` · `pnpm docs:recipes` · `pnpm docs:llms` · `pnpm docs:harness` · `pnpm changeset` · `pnpm release:verify`. A release runs `pnpm version-packages` — the Changesets version step plus the skill-version and schema regeneration it knows nothing about. See `CONTRIBUTING.md`.
+Use Node 24 (`.nvmrc`); dependency-cruiser refuses to run on Node 25. `CONTRIBUTING.md` lists every command.
+
+The fast loop — run the narrowest check that proves the change, and `pnpm check` once at the end:
+
+| Step                           | Command                                                                                                        | Cost          |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------- | ------------- |
+| Build what changed             | `pnpm build` (Turborepo; cached packages are skipped)                                                          | ~1 s warm     |
+| One package's unit tests       | `pnpm vitest run --project node packages/<name>` (or one file path)                                            | 1–3 s         |
+| All unit tests                 | `pnpm test` (no coverage)                                                                                      | ~7 s          |
+| GPU code                       | `pnpm vitest run --project browser <file>.browser.test.ts`                                                     | 5–30 s a file |
+| Some gate steps                | `pnpm check --only lint,typecheck`                                                                             |               |
+| The whole gate                 | `pnpm check` — build, format, lint, typecheck, unit tests with coverage, API report, docs harness, in parallel | ~20 s warm    |
+| Before rendering changes merge | `pnpm test:visual` (`--grep <name>` for one scene)                                                             | minutes       |
+
+`pnpm check` prints one line per step; a failed step prints its log tail and the path of its full log (`node_modules/.cache/ignifx-check/<step>.log`) — read that file rather than re-running with more output. `--full` adds `pack-check`, `perf` and `browser`. Other commands: `pnpm test:coverage` · `pnpm test:perf` (timing, heap and bundle-size budgets; run alone) · `pnpm test:browser` · `pnpm test:frame-budget` · `pnpm pack-check` · `pnpm deps` · `pnpm docs:api` · `pnpm docs:schemas` · `pnpm docs:recipes` · `pnpm docs:llms` · `pnpm docs:harness` · `pnpm changeset` · `pnpm release:verify`. A release runs `pnpm version-packages` — the Changesets version step plus the skill-version and schema regeneration it knows nothing about.
 
 ## Using the skill
 
@@ -37,9 +52,10 @@ The entry skill is `skills/ignifx/SKILL.md`; subsystem skills sit at `packages/<
 ## Repository lessons every agent should know
 
 - A package with tests needs `packages/<name>/test/tsconfig.json` (copy `packages/core/test/tsconfig.json`), or the type-aware linter types Node built-ins as `error`.
-- The pre-commit hook formats and reports lint; it never auto-fixes, and it skips generator-written template documents. Run `pnpm lint` after committing anyway.
-- Never pipe `git commit` through `head`: the hook prints every staged path and an early exit aborts the commit. Commitlint scopes are a fixed list (see `CONTRIBUTING.md`).
+- The pre-commit hook formats staged files and fails on lint errors in them; it never auto-fixes, and it skips generator-written template documents. A passing commit prints nothing. Commitlint scopes are a fixed list (`commitlint.config.ts`).
+- The `node` Vitest project shares modules between test files: dispose what a test creates, put a file that calls `vi.mock` in `node-isolated` and a wall-clock or heap assertion in `perf` (`vitest.config.ts`).
 - API Extractor's non-local `api-report` fails on warnings; run it, not only `api-report:update`, before claiming a package is green. `pnpm docs:harness` regenerates every generated page in place — use `--no-regenerate` while another agent is editing a package.
+- Parallel agents: give each a disjoint set of files, and let one of them (or the coordinator) run `pnpm install` and edit root files; concurrent installs race on the lockfile.
 - Asset loads awaited before `app.start()` settle as soon as they finish; after `start()` they settle in `PreUpdate`, so a headless test must `app.step()`. Systems keep running while the app is paused with a non-zero `dt`; an animating system checks `time.paused` itself.
 - The engine speaks backing-store pixels everywhere (`canvas.width`/`height`): `Camera.worldToScreen`, `pickAsync`, `<Pointer>/position`. DOM code converts.
 - Skill examples are compiled by the harness; run yours once in Node before shipping them (the `ts run` tag makes the harness do it).
