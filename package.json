@@ -9,6 +9,7 @@
     "prepare": "lefthook install",
     "dev": "turbo run dev",
     "build": "turbo run build",
+    "build:packages": "turbo run build --filter=./packages/* --filter=./tools/*",
     "typecheck": "tsc --project tsconfig.tools.json && turbo run typecheck",
     "lint": "oxlint --type-aware --quiet && eslint . --cache --cache-strategy content --cache-location node_modules/.cache/eslint/",
     "lint:warnings": "oxlint --type-aware && eslint .",

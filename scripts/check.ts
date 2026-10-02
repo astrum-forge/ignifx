@@ -40,7 +40,10 @@ interface Step {
 
 /** The gate. Order is only the print order; `after` decides when a step starts. */
 const STEPS: readonly Step[] = [
-  { name: "build", script: "build", after: [] },
+  // The packages and the lint plugin — what every other step reads. The apps (templates, examples,
+  // the site) are built by the CI `build` job and by the steps that serve them; leaving them out
+  // here takes a `core` change from ~13 s of build to ~4 s.
+  { name: "build", script: "build:packages", after: [] },
   { name: "format", script: "format:check", after: [] },
   { name: "lint", script: "lint", after: ["build"] },
   { name: "typecheck", script: "typecheck", after: ["build"] },
