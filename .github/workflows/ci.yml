@@ -185,9 +185,17 @@ jobs:
       - run: pnpm test:perf
 
   test-browser:
-    name: test-browser
+    name: test-browser (${{ matrix.shard }}/2)
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 20
+    # Two runners, because the suite is bound by Chromium's one GPU process: SwiftShader renders
+    # every page's frames there, so more pages in one browser do not go faster (2, 4 and 7 workers
+    # all measured 89–109 s locally, 2026-10-02), while a second browser on a second machine halves
+    # the work. This job is the longest on a pull request.
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
@@ -207,7 +215,7 @@ jobs:
       # proves WebGPU is available in CI"), so it must not be continue-on-error: if it goes red, the
       # flags are wrong and the fix belongs in vitest.config.ts, not in a suppression here.
       - run: pnpm build
-      - run: pnpm test:browser
+      - run: pnpm test:browser --shard=${{ matrix.shard }}/2
 
   test-visual:
     name: test-visual (${{ matrix.shard }}/3)
