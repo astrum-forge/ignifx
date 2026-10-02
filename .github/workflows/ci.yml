@@ -1,8 +1,9 @@
-# The gate every pull request has to clear. One job per numbered check in
-# docs/standards/coding-standards.md §12, so a red job names the rule it broke.
+# The gate every pull request has to clear (coding standards §12). A red job's name says which
+# rule broke; `static` and `typecheck` hold more than one check, and their step names say which.
 #
-# All jobs are independent and run in parallel: Turborepo rebuilds what a task needs
-# (`turbo.json` dependsOn), which is cheaper than serialising the workflow behind one build job.
+# Jobs run in parallel. Each one restores Turborepo's cache from earlier runs
+# (.github/actions/setup), so `pnpm build` only rebuilds what the commit changed rather than every
+# workspace member. `pnpm check` runs the same checks locally, in parallel, in about 20 s.
 name: CI
 
 on:
@@ -12,9 +13,13 @@ on:
   # Required checks have to report in the merge queue too, and merge_group is a separate event
   # from pull_request — without this the queue would wait forever on checks that never run.
   merge_group:
-  # The two GPU jobs below run on `push` and in the queue, not on every pull request. This is how
-  # they are run on demand — on a branch, before opening the pull request that changes them.
+  # The GPU jobs below run on `push`, in the queue and on the schedule, not on every pull request.
+  # This is how they are run on demand — on a branch, before opening the pull request that changes
+  # them.
   workflow_dispatch:
+  # Frame budgets, weekly (Monday 03:00 UTC). See the `frame-budget` job for why not on every push.
+  schedule:
+    - cron: "0 3 * * 1"
 
 # One run per ref. github.head_ref is only set for pull_request, hence the fallback; for
 # merge_group, github.ref is unique per merge group, so queued runs never cancel each other.
@@ -25,15 +30,87 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  TURBO_TELEMETRY_DISABLED: "1"
+
 jobs:
-  format:
-    name: format
+  # What the pull request touched, for the jobs that only matter to some changes. Every other
+  # event runs everything.
+  changes:
+    name: changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      desktop: ${{ steps.filter.outputs.desktop }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - id: filter
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          if [ "${GITHUB_EVENT_NAME}" != "pull_request" ]; then
+            echo "desktop=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          changed="$(git diff --name-only "${BASE}" HEAD)"
+          # The desktop packaging depends on the Electron package, the template it packages, the
+          # scaffolder that writes desktop variants, the lockfile and this workflow.
+          if printf '%s\n' "${changed}" | grep -qE '^(packages/(electron|cli)/|templates/3d-third-person/|tests/visual/playwright\.desktop|tests/visual/tests/desktop|pnpm-lock\.yaml|\.github/)'; then
+            echo "desktop=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "desktop=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  # The checks that need an install but no build.
+  static:
+    name: static
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
-      - run: pnpm format:check
+        with:
+          turbo-cache: "false"
+      - name: format
+        run: pnpm format:check
+      # CONSTITUTION.md §11.2: every third-party production dependency is recorded in
+      # THIRD_PARTY_NOTICES.md. The generator reads the installed tree, so a dependency added
+      # without regenerating the file is a red build rather than a discovery at release time.
+      # `pnpm audit` is deliberately NOT here: an advisory-database outage, or an advisory with no
+      # fix yet, would turn every unrelated pull request red. It is run and recorded by hand in
+      # docs/security/electron-review-2026-09.md.
+      - name: licenses
+        run: |
+          pnpm licenses:check
+          pnpm licenses:notices
+          git diff --exit-code -- THIRD_PARTY_NOTICES.md
+      # dependency-cruiser: no cycles, and the layering of docs/architecture/00-overview.md §2.1
+      # (standards §12 step 6).
+      - name: deps
+        run: pnpm deps
+      # CONSTITUTION.md §4.2 / standards §15: no migration documents are written before 1.0.
+      # docs/migrations/README.md is the placeholder that explains why the directory is empty.
+      - name: migrations-guard
+        run: |
+          set -euo pipefail
+          if [ ! -d docs/migrations ]; then
+            echo "docs/migrations/ does not exist — nothing to guard"
+            exit 0
+          fi
+          version="$(node -p "require('./packages/core/package.json').version")"
+          case "${version}" in
+            0.*) ;;
+            *) echo "version ${version} is 1.0 or later — migration documents are now required (§4.4)."; exit 0 ;;
+          esac
+          stray="$(find docs/migrations -type f ! -name 'README.md' -print)"
+          if [ -n "${stray}" ]; then
+            echo "::error title=CONSTITUTION.md §4.2::No migration documents are written before 1.0."
+            echo "${stray}"
+            exit 1
+          fi
 
   lint:
     name: lint
@@ -42,13 +119,22 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
+      # ESLint's content-keyed cache: only files that changed since the restored run are linted
+      # again (~27 s cold, ~2 s warm). The config, the plugin and the lockfile are in the key, so a
+      # rule change starts from nothing.
+      - uses: actions/cache@v6
+        with:
+          path: node_modules/.cache/eslint
+          key: eslint-${{ hashFiles('eslint.config.ts', 'pnpm-lock.yaml', 'tools/eslint-plugin-ignifx/src/**') }}-${{ github.sha }}
+          restore-keys: eslint-${{ hashFiles('eslint.config.ts', 'pnpm-lock.yaml', 'tools/eslint-plugin-ignifx/src/**') }}-
       # Workspace packages resolve through their `exports` to `dist/`, so anything that types or
-      # imports `@ignifx/*` needs the built output first (turbo caches it); a fresh checkout has
-      # none, and a missing dist surfaces as thousands of `error`-typed lint findings or TS2307.
+      # imports `@ignifx/*` needs the built output first; a missing dist surfaces as thousands of
+      # `error`-typed lint findings or TS2307.
       - run: pnpm build
-      # oxlint --type-aware, then ESLint for the rules Oxlint lacks (standards §6).
+      # oxlint --type-aware (errors only), then ESLint for the rules Oxlint lacks (standards §6).
       - run: pnpm lint
 
+  # Types and the API reports: both are the TypeScript view of the packages.
   typecheck:
     name: typecheck
     runs-on: ubuntu-latest
@@ -56,26 +142,24 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
-      # Workspace packages resolve through their `exports` to `dist/`, so anything that types or
-      # imports `@ignifx/*` needs the built output first (turbo caches it); a fresh checkout has
-      # none, and a missing dist surfaces as thousands of `error`-typed lint findings or TS2307.
       - run: pnpm build
-      - run: pnpm typecheck
+      - name: typecheck
+        run: pnpm typecheck
+      # API Extractor fails on any drift from the committed api/*.api.md (CONSTITUTION.md §4.5).
+      - name: api-report
+        run: pnpm api-report
 
   test-unit:
     name: test-unit
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
-      # Workspace packages resolve through their `exports` to `dist/`, so anything that types or
-      # imports `@ignifx/*` needs the built output first (turbo caches it); a fresh checkout has
-      # none, and a missing dist surfaces as thousands of `error`-typed lint findings or TS2307.
       - run: pnpm build
-      # Vitest `node` project on Lite's null engine, with the coverage floors of
+      # The `node` and `node-isolated` projects on Lite's null engine, with the coverage floors of
       # CONSTITUTION.md §6.2 enforced as thresholds in vitest.config.ts.
-      - run: pnpm test
+      - run: pnpm test:coverage
       - name: Upload coverage
         if: always()
         uses: actions/upload-artifact@v7
@@ -87,6 +171,19 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
+  # CONSTITUTION.md §6.4: budgets are tests. The `perf` Vitest project — bundle-size ceilings,
+  # retained heap, and the timing assertions — on a runner of its own, because a timing assertion
+  # beside the unit suite measured the unit suite (devtools-closed and spike-s6-1 went red that way).
+  perf:
+    name: perf
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: pnpm build
+      - run: pnpm test:perf
+
   test-browser:
     name: test-browser
     runs-on: ubuntu-latest
@@ -94,9 +191,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
-
-      - name: Install Chromium
-        run: pnpm exec playwright install --with-deps chromium
+        with:
+          playwright: "true"
 
       # The Chromium build is the variable that decides whether WebGPU works on a GPU-less runner,
       # so it is printed before the suite runs rather than guessed at afterwards.
@@ -106,72 +202,49 @@ jobs:
           echo "Playwright Chromium: ${CHROMIUM}"
           "${CHROMIUM}" --version || echo "could not query the Chromium build directly"
 
-      # Chromium flags live in vitest.config.ts, not here, and switch on the platform: the base pair
-      # `--enable-unsafe-webgpu --use-webgpu-adapter=swiftshader` everywhere, plus
-      # `--enable-features=Vulkan --use-vulkan=swiftshader --use-angle=swiftshader` on Linux, where
-      # the base pair alone loses the device at the first canvas present (ADR-0009, "WebGPU flags on
-      # Linux (2026-09-06)"). This job is the plan's Phase 0 exit criterion ("browser test job proves
-      # WebGPU is available in CI"), so it must not be continue-on-error: if it goes red, the flags
-      # are wrong and the fix belongs in vitest.config.ts, not in a suppression here.
-      # Workspace packages resolve through their `exports` to `dist/`, so anything that types or
-      # imports `@ignifx/*` needs the built output first (turbo caches it); a fresh checkout has
-      # none, and a missing dist surfaces as thousands of `error`-typed lint findings or TS2307.
+      # Chromium flags live in vitest.config.ts and switch on the platform (ADR-0009, "WebGPU flags
+      # on Linux (2026-09-06)"). This job is the plan's Phase 0 exit criterion ("browser test job
+      # proves WebGPU is available in CI"), so it must not be continue-on-error: if it goes red, the
+      # flags are wrong and the fix belongs in vitest.config.ts, not in a suppression here.
       - run: pnpm build
       - run: pnpm test:browser
 
-      - name: WebGPU-in-CI note
-        if: failure()
-        run: |
-          echo "::warning title=WebGPU on Linux is unverified::The Chromium flags in vitest.config.ts"
-          echo "(--enable-unsafe-webgpu --use-webgpu-adapter=swiftshader) were measured on macOS arm64"
-          echo "only; see docs/adr/0009-monorepo-tooling.md, 'WebGPU flags (S0.1)'. If requestAdapter()"
-          echo "returned null here, try adding --enable-features=Vulkan --use-angle=vulkan for Linux"
-          echo "(they must stay off for macOS) and record the result in ADR-0009 before merging."
-
   test-visual:
-    name: test-visual
-    # Standards §12 step 3: required on main, opt-in on pull requests. `push` covers main (the `on:`
-    # block has no other push branch) and merge_group covers the queue, so the required check still
-    # reports there; a pull request opts in with the `visual` label. The label has to be on the pull
-    # request when the run starts — `pull_request` fires on `opened`/`synchronize` and not on
-    # `labeled`, so labelling an open pull request takes effect on its next push. Goldens are one image per scene
-    # with no platform segment, so this job compares a Linux SwiftShader render against a macOS one
-    # (tests/visual/README.md) — the per-scene maxDiffPixelRatio is what absorbs the difference.
-    #
-    # This is the `goldens` project only. The frame budgets are the `frame-budget` job below: they
-    # are a measurement rather than an image comparison, and this runner cannot make it
-    # (tests/visual/playwright.config.ts, "Two projects").
+    name: test-visual (${{ matrix.shard }}/3)
+    # Standards §12 step 3: required on main, opt-in on pull requests. `push` covers main and
+    # merge_group covers the queue; a pull request opts in with the `visual` label, which has to be
+    # on it when the run starts (`pull_request` fires on `opened`/`synchronize`, not `labeled`).
+    # Goldens are one image per scene with no platform segment, so this compares a Linux SwiftShader
+    # render against a macOS one (tests/visual/README.md); the per-scene maxDiffPixelRatio absorbs
+    # the difference.
     if: >-
       github.event_name == 'push' || github.event_name == 'merge_group' ||
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'visual'))
     runs-on: ubuntu-latest
-    # 25, not 15: a failing Playwright test costs its whole timeout, and on 2026-09-07 twelve of them
-    # ran the job past 15 minutes, so it was *cancelled* — which prints no failure summary and skips
-    # the `if: failure()` upload below. A red job that says why is worth more than a fast one that
-    # does not. The suite itself is about four minutes when it passes.
-    timeout-minutes: 25
+    # Three shards of the `goldens` project, one worker each: the suite was 11–12 minutes on one
+    # runner (97 tests, 2026-09-14). Each shard starts every preview server, which costs ~30 s and is
+    # a cache hit after `pnpm build`.
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
-
-      # The full Chromium build, not chrome-headless-shell: the shell has no compositor and loses
-      # the WebGPU device after a few presented frames (tests/visual/playwright.config.ts).
-      - name: Install Chromium
-        run: pnpm exec playwright install --with-deps chromium
-
-      # `pnpm build` first, so the previews Playwright starts serve a production build of the two
-      # examples and the four templates rather than rebuilding @ignifx/core inside the webServer
-      # timeout. `turbo run build` covers `templates/*`, which are workspace members.
+        with:
+          playwright: "true"
+      # `pnpm build` first, so the previews Playwright starts serve a production build of the
+      # examples, the templates and the site rather than building them inside the webServer timeout.
       - run: pnpm build
-
-      - run: pnpm test:visual
+      - run: pnpm test:visual --shard=${{ matrix.shard }}/3
 
       - name: Upload the failing renders
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: visual-diffs
+          name: visual-diffs-${{ matrix.shard }}
           path: |
             tests/visual/test-results/**
             tests/visual/playwright-report/**
@@ -179,50 +252,44 @@ jobs:
           retention-days: 14
 
   frame-budget:
-    name: frame-budget
-    # CONSTITUTION.md §6.4: budgets are tests. This is the live half of the template frame-time gate
-    # — `benchmarks/template-frame-time.test.ts` asserts the recorded rows in `test-unit`, and this
-    # measures the running templates against them.
+    name: frame-budget (${{ matrix.shard }}/3)
+    # CONSTITUTION.md §6.4: budgets are tests. `benchmarks/template-frame-time.test.ts` asserts the
+    # recorded rows in `test-unit`; this measures the running templates and website examples
+    # against them.
     #
-    # macOS, and not the ubuntu runner every other job uses, because the ceilings in
-    # `benchmarks/baselines.json` were recorded on macOS arm64 with SwiftShader and a budget is only
-    # a budget against a comparable machine. Measured on GitHub's ubuntu-latest on 2026-09-06:
-    # `2d-topdown` came out at a 2.0 ms median against its 1.0 ms ceiling, and neither 3D template
-    # finished its 420 frames inside the 240 s per-test timeout. That job was measuring the runner.
-    # The trade-off is that macOS minutes bill at ten times the Linux rate on a private repository,
-    # which is why this job carries only the frame-budget project and runs on `push` and in the
-    # queue rather than on every pull request. The `visual` label opts a pull request in, and has
-    # to be there before the run starts — see the note on test-visual.
+    # macOS, because the ceilings in `benchmarks/baselines.json` were recorded on macOS arm64 with
+    # SwiftShader and a budget is only a budget against a comparable machine (on ubuntu-latest
+    # `2d-topdown` measured 2.0 ms against its 1.0 ms ceiling, 2026-09-06).
+    #
+    # Weekly, on dispatch, and with the `visual` label — not on every push to main. The project
+    # measures 29 pages for about 40 minutes of macOS time, which bills at ten times the Linux rate
+    # on a private repository, and on one runner it overran the 45-minute limit on every push to
+    # main from 2026-09-14 on (cancelled, so it reported nothing). Three shards bring each run under
+    # 20 minutes.
     if: >-
-      github.event_name == 'push' || github.event_name == 'merge_group' ||
-      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'visual'))
     runs-on: macos-latest
-    # 45, not 30: the project measures 29 pages — four templates and twenty-five website examples —
-    # and on 2026-09-08 the first full run on `main` reached page 24 in 28 minutes (the 3D templates
-    # take about three minutes each, `pbr-model` four) before the 30-minute limit cancelled it, which
-    # prints no summary and skips the upload below. The suite needs about 40 minutes on this runner.
-    timeout-minutes: 45
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
-
-      # The full Chromium build, not chrome-headless-shell — same reason as test-visual. No
-      # `--with-deps`: that installs Linux system libraries and has nothing to do on macOS.
-      - name: Install Chromium
-        run: pnpm exec playwright install chromium
-
+        with:
+          playwright: "true"
       - run: pnpm build
-
-      # Prints one `median / worst / ceiling` line per template before it asserts, so a re-record is
-      # a copy of two numbers out of this log rather than a second run.
-      - run: pnpm test:frame-budget
+      # Prints one `median / worst / ceiling` line per page before it asserts, so a re-record is a
+      # copy of two numbers out of this log rather than a second run.
+      - run: pnpm test:frame-budget --shard=${{ matrix.shard }}/3
 
       - name: Upload the failing runs
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: frame-budget-report
+          name: frame-budget-report-${{ matrix.shard }}
           path: |
             tests/visual/test-results/**
             tests/visual/playwright-report/**
@@ -232,7 +299,7 @@ jobs:
   build:
     name: build
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
@@ -246,15 +313,19 @@ jobs:
     # cross-compile most targets — a macOS app needs macOS, and a Windows installer needs Windows —
     # so "it builds" is only a claim about the runner it ran on.
     #
+    # On a pull request it runs only when the change can affect packaging (`changes` above); macOS
+    # and Windows minutes bill at 10× and 2× the Linux rate.
+    #
     # `--dir` on purpose: it produces an unpacked, runnable application without invoking any
     # platform installer tooling or any signing identity, which is what makes this job green on a
     # bare runner. Real installers (`--mac`, `--win`, `--linux`) and signing are a release concern,
     # documented after 1.0 (docs/adr/0018-electron-tooling.md).
     #
     # The Electron suite runs on macOS only, and that is a stated gap rather than an oversight: it
-    # is the one platform where this has been verified end to end (ADR-0018, S9.1). The Linux leg
-    # needs a display, hence `xvfb-run`; it builds and packages but does not run the suite.
+    # is the one platform where this has been verified end to end (ADR-0018, S9.1).
     name: desktop-build (${{ matrix.os }})
+    needs: changes
+    if: needs.changes.outputs.desktop == 'true'
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:
@@ -266,9 +337,11 @@ jobs:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
 
-      # `@ignifx/*` first: the desktop build bundles them, and `electron-vite` will not build a
-      # renderer whose workspace dependencies have no `dist/`.
-      - run: pnpm build
+      # The template and the `@ignifx/*` packages it bundles — `electron-vite` will not build a
+      # renderer whose workspace dependencies have no `dist/`. Not the whole workspace: the website
+      # build does not run on Windows (`website/dist/.examples-build` ENOENT, 2026-09-14) and
+      # nothing here needs it.
+      - run: pnpm exec turbo run build --filter=ignifx-template-3d-third-person...
 
       - name: Build the desktop bundles
         run: pnpm --filter ignifx-template-3d-third-person run build:desktop
@@ -303,61 +376,28 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-  bundle-size:
-    name: bundle-size
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup
-      # @ignifx/core has to be built before an example or a template can bundle it.
-      - run: pnpm build
-      # CONSTITUTION.md §6.4: the ceilings in benchmarks/baselines.json are a test, not a report.
-      # One entry per app — examples/hello-cube and all four templates — because they do not carry
-      # the same engine: the 2D templates pull in Rapier's inlined WebAssembly, while the 3D ones
-      # get Havok as a copied .wasm and Recast as a lazily imported chunk.
-      - run: pnpm bundle-size
-
-  api-report:
-    name: api-report
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup
-      # API Extractor fails on any drift from the committed api/*.api.md (CONSTITUTION.md §4.5).
-      - run: pnpm api-report
-
   docs-harness:
     name: docs-harness
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
     steps:
       # `fetch-depth: 0`, not the default 1: on a pull request this job runs `api-report-gate` and
       # `freshness`, which diff against the base commit, and a shallow checkout does not contain it
-      # — both gates reported "could not diff against <sha>" on the first pull request that ever
-      # reached this job (2026-09-07).
+      # (both reported "could not diff against <sha>" on 2026-09-07).
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - uses: ./.github/actions/setup
-      # CONSTITUTION.md §5.2/§5.5: examples compile and the skill matches the current API. On a
-      # pull request the harness also runs its two diff-based gates (api-report-gate, freshness)
-      # against the base commit; the `docs-not-needed` label waives the skill-change half of the
-      # API-report gate (16-docs-harness-and-skill.md §4), with the justification in the PR body.
-      # Workspace packages resolve through their `exports` to `dist/`, so anything that types or
-      # imports `@ignifx/*` needs the built output first (turbo caches it); a fresh checkout has
-      # none, and a missing dist surfaces as thousands of `error`-typed lint findings or TS2307.
       - run: pnpm build
-      - run: pnpm docs:harness -- ${{ github.event_name == 'pull_request' && format('--base {0}', github.event.pull_request.base.sha) || '' }} ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'docs-not-needed') && '--allow-docs-not-needed' || '' }}
-      # Every generator, not just docs:api: the drift step below covers everything they write.
-      - run: pnpm docs:api
-      - run: pnpm docs:schemas
-      - run: pnpm docs:recipes
-      - run: pnpm docs:llms
-      # Generated documentation is committed and never hand-edited (standards §15). A diff here
-      # means someone changed the public API, a component schema, a recipe, or a skill page without
-      # regenerating the references in the same PR.
+      # CONSTITUTION.md §5.2/§5.5: examples compile and run, and the skill matches the current API.
+      # `regeneration-diff` runs every generator (docs:api, docs:schemas, docs:recipes, docs:llms)
+      # and fails on any difference from the committed output (standards §15). On a pull request
+      # the harness also runs its two diff-based gates against the base commit; the
+      # `docs-not-needed` label waives the skill-change half of the API-report gate
+      # (16-docs-harness-and-skill.md §4), with the justification in the PR body.
+      - run: pnpm docs:harness ${{ github.event_name == 'pull_request' && format('--base {0}', github.event.pull_request.base.sha) || '' }} ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'docs-not-needed') && '--allow-docs-not-needed' || '' }}
+      # The harness compares the tree before and after it regenerates; this catches the other half
+      # — a generated file that is out of date in the commit itself.
       - name: Fail on generated-docs drift
         run: |
           git diff --exit-code -- \
@@ -366,66 +406,3 @@ jobs:
             skills/ignifx/references/recipes \
             website/public/llms.txt \
             'packages/*/api'
-
-  licenses:
-    name: licenses
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup
-      # CONSTITUTION.md §11.2: every third-party production dependency is recorded in
-      # THIRD_PARTY_NOTICES.md. The generator reads the installed tree, so a dependency added
-      # without regenerating the file is a red build rather than a discovery at release time.
-      - run: pnpm licenses:check
-      # Belt and braces: regenerate and diff, so a change in what pnpm reports (a new transitive
-      # dependency, an upstream licence change) shows up as a patch here rather than only as a
-      # "stale" message.
-      - name: Fail on notices drift
-        run: |
-          pnpm licenses:notices
-          git diff --exit-code -- THIRD_PARTY_NOTICES.md
-      # `pnpm audit` is deliberately NOT part of this job. It queries the npm advisory database over
-      # the network, and an outage there — or an advisory published against a transitive dependency
-      # with no fix yet — turns every unrelated pull request red. The audit is run and recorded by
-      # hand instead, in docs/security/electron-review-2026-09.md, alongside the Electron review.
-
-  deps:
-    name: deps
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup
-      # dependency-cruiser: no cycles, and the layering of
-      # docs/architecture/00-overview.md §2.1 (standards §12 step 6).
-      - run: pnpm deps
-
-  migrations-guard:
-    name: migrations-guard
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v7
-      # CONSTITUTION.md §4.2 / standards §15: no migration documents are written before 1.0.
-      # docs/migrations/README.md is the placeholder that explains why the directory is empty.
-      - name: No migration documents before 1.0
-        run: |
-          set -euo pipefail
-          if [ ! -d docs/migrations ]; then
-            echo "docs/migrations/ does not exist — nothing to guard"
-            exit 0
-          fi
-          version="$(node -p "require('./packages/core/package.json').version")"
-          echo "engine version: ${version}"
-          case "${version}" in
-            0.*) ;;
-            *) echo "version is 1.0 or later — migration documents are now required (§4.4)."; exit 0 ;;
-          esac
-          stray="$(find docs/migrations -type f ! -name 'README.md' -print)"
-          if [ -n "${stray}" ]; then
-            echo "::error title=CONSTITUTION.md §4.2::No migration documents are written before 1.0."
-            echo "${stray}"
-            exit 1
-          fi
-          echo "docs/migrations/ holds only README.md — OK"

@@ -67,7 +67,10 @@ jobs:
           # Changesets reads the history to work out what changed since the last release.
           fetch-depth: 0
 
+      # No Turborepo cache: what is published is built from this checkout, never restored.
       - uses: ./.github/actions/setup
+        with:
+          turbo-cache: "false"
 
       - name: Decide publish mode
         id: mode
