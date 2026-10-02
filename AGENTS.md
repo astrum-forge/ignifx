@@ -23,15 +23,15 @@ Use Node 24 (`.nvmrc`); dependency-cruiser refuses to run on Node 25. `CONTRIBUT
 
 The fast loop — run the narrowest check that proves the change, and `pnpm check` once at the end:
 
-| Step                           | Command                                                                                                        | Cost          |
-| ------------------------------ | -------------------------------------------------------------------------------------------------------------- | ------------- |
-| Build what changed             | `pnpm build` (Turborepo; cached packages are skipped)                                                          | ~1 s warm     |
-| One package's unit tests       | `pnpm vitest run --project node packages/<name>` (or one file path)                                            | 1–3 s         |
-| All unit tests                 | `pnpm test` (no coverage)                                                                                      | ~7 s          |
-| GPU code                       | `pnpm vitest run --project browser <file>.browser.test.ts`                                                     | 5–30 s a file |
-| Some gate steps                | `pnpm check --only lint,typecheck`                                                                             |               |
-| The whole gate                 | `pnpm check` — build, format, lint, typecheck, unit tests with coverage, API report, docs harness, in parallel | ~20 s warm    |
-| Before rendering changes merge | `pnpm test:visual` (`--grep <name>` for one scene)                                                             | minutes       |
+| Step                                               | Command                                                                                                        | Cost          |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------- |
+| Build what changed                                 | `pnpm build` (Turborepo; cached packages are skipped)                                                          | ~1 s warm     |
+| One package's unit tests                           | `pnpm vitest run --project node packages/<name>` (or one file path)                                            | 1–3 s         |
+| All unit tests                                     | `pnpm test` (no coverage)                                                                                      | ~7 s          |
+| GPU code                                           | `pnpm vitest run --project browser <file>.browser.test.ts`                                                     | 5–30 s a file |
+| Some gate steps                                    | `pnpm check --only lint,typecheck`                                                                             |               |
+| The whole gate                                     | `pnpm check` — build, format, lint, typecheck, unit tests with coverage, API report, docs harness, in parallel | ~20 s warm    |
+| Only if the change affects rendering or frame time | `pnpm test:visual` / `pnpm test:frame-budget` (`--grep <name>` for one scene; not in CI)                       | minutes       |
 
 `pnpm check` prints one line per step; a failed step prints its log tail and the path of its full log (`node_modules/.cache/ignifx-check/<step>.log`) — read that file rather than re-running with more output. `--full` adds `pack-check`, `perf` and `browser`. Other commands: `pnpm test:coverage` · `pnpm test:perf` (timing, heap and bundle-size budgets; run alone) · `pnpm test:browser` · `pnpm test:frame-budget` · `pnpm pack-check` · `pnpm deps` · `pnpm docs:api` · `pnpm docs:schemas` · `pnpm docs:recipes` · `pnpm docs:llms` · `pnpm docs:harness` · `pnpm changeset` · `pnpm release:verify`. A release runs `pnpm version-packages` — the Changesets version step plus the skill-version and schema regeneration it knows nothing about.
 

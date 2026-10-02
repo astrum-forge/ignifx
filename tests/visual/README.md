@@ -14,10 +14,13 @@ pnpm --filter ignifx-visual-tests run test:visual:update      # regenerate the g
 
 `playwright.config.ts` splits this directory in two, and the two are run separately.
 
-| Project        | Files                                                     | Command                  | Where it runs in CI               |
-| -------------- | --------------------------------------------------------- | ------------------------ | --------------------------------- |
-| `goldens`      | `scenes.spec.ts`, `templates.spec.ts`, `examples.spec.ts` | `pnpm test:visual`       | `test-visual`, on `ubuntu-latest` |
-| `frame-budget` | `frame-time.spec.ts`                                      | `pnpm test:frame-budget` | `frame-budget`, on `macos-latest` |
+| Project        | Files                                                     | Command                  |
+| -------------- | --------------------------------------------------------- | ------------------------ |
+| `goldens`      | `scenes.spec.ts`, `templates.spec.ts`, `examples.spec.ts` | `pnpm test:visual`       |
+| `frame-budget` | `frame-time.spec.ts`                                      | `pnpm test:frame-budget` |
+
+Neither runs in CI (owner decision, 2026-10-03). Both take minutes; run them locally, and only when a
+change can affect rendering or frame time (coding standards §12). `--grep <name>` runs one scene.
 
 A golden is an image comparison, and SwiftShader makes it reproducible on any machine. A frame
 budget is a **measurement** against ceilings recorded on one machine (`benchmarks/baselines.json`
@@ -25,14 +28,14 @@ records which), and a shared Linux runner is not that machine: on GitHub's `ubun
 2026-09-06, `2d-topdown` measured a 2.0 ms median against its 1.0 ms ceiling, and neither 3D
 template finished its 420 frames inside the 240 s per-test timeout — where the recording machine
 takes 60 to 70 s for the same work. Enforcing a ceiling there measures the runner, which is the
-mistake `frame-time.spec.ts`'s own header rejects for frames per second. So the budgets run on the
-macOS runner, and `test-visual` carries the goldens alone.
+mistake `frame-time.spec.ts`'s own header rejects for frames per second. So the budgets are only
+measured on a macOS arm64 machine like the one that recorded them.
 
 To re-record a budget: run `pnpm test:frame-budget`, take the `median` and `worst` the run prints
 per template and per example, and write them into the `frameTime.templates` and
 `frameTime.examples` rows in `baselines.json` with the machine and the date.
 `benchmarks/template-frame-time.test.ts` then holds those rows to the coding-standards §7 budget, in
-the `test-unit` job, on every runner.
+`pnpm test` and the CI `test-unit` job.
 
 `playwright.config.ts` builds and previews **seven** things before the first test, so a golden is
 always taken of a production build:

@@ -3,8 +3,11 @@
 #
 # Jobs run in parallel. Each one restores Turborepo's cache from earlier runs
 # (.github/actions/setup), so a build only redoes what the commit changed. Jobs that only read
-# `packages/*/dist` run `pnpm build:packages`; `build`, `test-visual` and `frame-budget`, which
-# serve the apps, build everything. `pnpm check` runs the same checks locally, in parallel, in about 20 s.
+# `packages/*/dist` run `pnpm build:packages`; `build` builds everything.
+#
+# There are no visual-golden or frame-budget jobs and nothing runs on a schedule (owner decision,
+# 2026-10-03): `pnpm test:visual` and `pnpm test:frame-budget` are run locally, and only when a change
+# needs them (coding standards §10, §12). `pnpm check` runs the same checks locally, in parallel, in about 20 s.
 name: CI
 
 on:
@@ -14,13 +17,8 @@ on:
   # Required checks have to report in the merge queue too, and merge_group is a separate event
   # from pull_request — without this the queue would wait forever on checks that never run.
   merge_group:
-  # The GPU jobs below run on `push`, in the queue and on the schedule, not on every pull request.
-  # This is how they are run on demand — on a branch, before opening the pull request that changes
-  # them.
+  # Run the gate by hand on a branch.
   workflow_dispatch:
-  # Frame budgets, weekly (Monday 03:00 UTC). See the `frame-budget` job for why not on every push.
-  schedule:
-    - cron: "0 3 * * 1"
 
 # One run per ref. github.head_ref is only set for pull_request, hence the fallback; for
 # merge_group, github.ref is unique per merge group, so queued runs never cancel each other.
@@ -217,93 +215,6 @@ jobs:
       # flags are wrong and the fix belongs in vitest.config.ts, not in a suppression here.
       - run: pnpm build:packages
       - run: pnpm test:browser --shard=${{ matrix.shard }}/2
-
-  test-visual:
-    name: test-visual (${{ matrix.shard }}/3)
-    # Standards §12 step 3: required on main, opt-in on pull requests. `push` covers main and
-    # merge_group covers the queue; a pull request opts in with the `visual` label, which has to be
-    # on it when the run starts (`pull_request` fires on `opened`/`synchronize`, not `labeled`).
-    # Goldens are one image per scene with no platform segment, so this compares a Linux SwiftShader
-    # render against a macOS one (tests/visual/README.md); the per-scene maxDiffPixelRatio absorbs
-    # the difference.
-    if: >-
-      github.event_name == 'push' || github.event_name == 'merge_group' ||
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'visual'))
-    runs-on: ubuntu-latest
-    # Three shards of the `goldens` project, one worker each: the suite was 11–12 minutes on one
-    # runner (97 tests, 2026-09-14). Each shard starts every preview server, which costs ~30 s and is
-    # a cache hit after `pnpm build`.
-    timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [1, 2, 3]
-    steps:
-      - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup
-        with:
-          playwright: "true"
-      # `pnpm build` first, so the previews Playwright starts serve a production build of the
-      # examples, the templates and the site rather than building them inside the webServer timeout.
-      - run: pnpm build
-      - run: pnpm test:visual --shard=${{ matrix.shard }}/3
-
-      - name: Upload the failing renders
-        if: failure()
-        uses: actions/upload-artifact@v7
-        with:
-          name: visual-diffs-${{ matrix.shard }}
-          path: |
-            tests/visual/test-results/**
-            tests/visual/playwright-report/**
-          if-no-files-found: warn
-          retention-days: 14
-
-  frame-budget:
-    name: frame-budget (${{ matrix.shard }}/3)
-    # CONSTITUTION.md §6.4: budgets are tests. `benchmarks/template-frame-time.test.ts` asserts the
-    # recorded rows in `test-unit`; this measures the running templates and website examples
-    # against them.
-    #
-    # macOS, because the ceilings in `benchmarks/baselines.json` were recorded on macOS arm64 with
-    # SwiftShader and a budget is only a budget against a comparable machine (on ubuntu-latest
-    # `2d-topdown` measured 2.0 ms against its 1.0 ms ceiling, 2026-09-06).
-    #
-    # Weekly, on dispatch, and with the `visual` label — not on every push to main. The project
-    # measures 29 pages for about 40 minutes of macOS time, which bills at ten times the Linux rate
-    # on a private repository, and on one runner it overran the 45-minute limit on every push to
-    # main from 2026-09-14 on (cancelled, so it reported nothing). Three shards bring each run under
-    # 20 minutes.
-    if: >-
-      github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'visual'))
-    runs-on: macos-latest
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [1, 2, 3]
-    steps:
-      - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup
-        with:
-          playwright: "true"
-      - run: pnpm build
-      # Prints one `median / worst / ceiling` line per page before it asserts, so a re-record is a
-      # copy of two numbers out of this log rather than a second run.
-      - run: pnpm test:frame-budget --shard=${{ matrix.shard }}/3
-
-      - name: Upload the failing runs
-        if: failure()
-        uses: actions/upload-artifact@v7
-        with:
-          name: frame-budget-report-${{ matrix.shard }}
-          path: |
-            tests/visual/test-results/**
-            tests/visual/playwright-report/**
-          if-no-files-found: warn
-          retention-days: 14
 
   build:
     name: build
