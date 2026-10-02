@@ -23,6 +23,12 @@
  * - `--base <ref>` — enable the two pull-request checks by diffing against a git ref.
  * - `--allow-docs-not-needed` — the CI workflow passes this when the PR carries the
  *   `docs-not-needed` label, which waives the "a skill file changed" half of `api-report-gate`.
+ * - `--verbose` — also print the notes under passing checks (per-block timings, skipped blocks).
+ *
+ * The three slow checks — `examples-compile`, `examples-run` and `regeneration-diff` — run side by
+ * side. They share no output: the first two work in throw-away projects under the OS temp
+ * directory, and the regeneration only rewrites generated pages, which `collectSkillExamples` has
+ * already read (and skips) before any of them starts.
  */
 import path from "node:path";
 import { parseArguments } from "./lib/args.ts";
@@ -40,14 +46,18 @@ import type { CheckResult, HarnessContext } from "./lib/check-result.ts";
  * Prints one check result and its notes.
  *
  * @param result - The result to print.
+ * @param verbose - Whether a passing check's notes are printed too.
  */
-function report(result: CheckResult): void {
+function report(result: CheckResult, verbose: boolean): void {
   if (result.status === "pass") {
     log(`${PASS_MARK} ${result.name} (${result.detail})`);
   } else if (result.status === "fail") {
     log(`${FAIL_MARK} ${result.name}: ${result.detail}`);
   } else {
     log(`${SKIP_MARK} ${result.name}: ${result.detail}`);
+  }
+  if (result.status === "pass" && !verbose) {
+    return;
   }
   for (const note of result.notes) {
     logDetail(`· ${note}`);
@@ -59,7 +69,7 @@ function report(result: CheckResult): void {
  *
  * @returns The process exit code: 1 when any check failed, otherwise 0.
  */
-function main(): number {
+async function main(): Promise<number> {
   const parsed = parseArguments(process.argv.slice(2), ["skills-dir", "base"]);
   const root = repositoryRoot(import.meta.url);
   const context: HarnessContext = {
@@ -72,20 +82,25 @@ function main(): number {
   const roots = findSkillRoots(root, context.skillsDirectory);
   const started = process.hrtime.bigint();
 
-  const results: CheckResult[] = [
-    checkSkillLint(context, roots),
+  const lint = checkSkillLint(context, roots);
+  const slow = await Promise.all([
     checkExamplesCompile(context, roots),
     checkExamplesRun(context, roots),
     parsed.flags.has("no-regenerate")
       ? skipped("regeneration-diff", "SKIPPED (--no-regenerate)")
       : checkRegeneration(context),
+  ]);
+  const results: CheckResult[] = [
+    lint,
+    ...slow,
     checkMigrationsGuard(context),
     checkApiReportGate(context),
     checkFreshness(context),
   ];
 
+  const verbose = parsed.flags.has("verbose");
   for (const result of results) {
-    report(result);
+    report(result, verbose);
   }
   const seconds = Number(process.hrtime.bigint() - started) / 1e9;
   const count = (status: CheckResult["status"]): number => results.filter((result) => result.status === status).length;
@@ -96,4 +111,4 @@ function main(): number {
   return count("fail") > 0 ? 1 : 0;
 }
 
-process.exitCode = main();
+process.exitCode = await main();

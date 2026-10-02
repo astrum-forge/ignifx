@@ -7,7 +7,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { failed, passed, summarize } from "./check-result.ts";
 import { exists, listFilesRecursive } from "./fs-tree.ts";
-import { runCommand, tailLines } from "./run.ts";
+import { runCommandAsync, tailLines } from "./run.ts";
 import type { CheckResult, HarnessContext } from "./check-result.ts";
 
 /**
@@ -83,7 +83,7 @@ function snapshot(root: string, files: readonly string[]): ReadonlyMap<string, s
  * @param root - Absolute repository root.
  * @returns A failed check result when a generator exits non-zero, otherwise `null`.
  */
-function runGenerators(root: string): CheckResult | null {
+async function runGenerators(root: string): Promise<CheckResult | null> {
   const generators: readonly (readonly [string, readonly string[]])[] = [
     ["pnpm", ["docs:api"]],
     ["node", [path.join("scripts", "docs-schemas.ts")]],
@@ -91,7 +91,8 @@ function runGenerators(root: string): CheckResult | null {
     ["node", [path.join("scripts", "docs-llms.ts")]],
   ];
   for (const [command, args] of generators) {
-    const result = runCommand(command, args, root);
+    // oxlint-disable-next-line no-await-in-loop -- in order: a later generator may read what an earlier one wrote.
+    const result = await runCommandAsync(command, args, root);
     if (result.code !== 0) {
       const label = `${command} ${args.join(" ")}`;
       return failed(
@@ -113,7 +114,7 @@ function runGenerators(root: string): CheckResult | null {
  * @param context - The tree being inspected.
  * @returns The check result.
  */
-export function checkRegeneration(context: HarnessContext): CheckResult {
+export async function checkRegeneration(context: HarnessContext): Promise<CheckResult> {
   const root = context.repositoryRoot;
   // Only generated output is compared: the hand-written concepts pages and the two READMEs are
   // edited by people and must not fail this check (16-docs-harness-and-skill.md §1).
@@ -124,7 +125,7 @@ export function checkRegeneration(context: HarnessContext): CheckResult {
     ...apiReportDirectories(root),
   ];
   const before = snapshot(root, generatedFiles(root, directories));
-  const failure = runGenerators(root);
+  const failure = await runGenerators(root);
   if (failure !== null) {
     return failure;
   }

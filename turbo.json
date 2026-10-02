@@ -5,11 +5,13 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**"]
+      "outputs": ["dist/**"],
+      "outputLogs": "errors-only"
     },
     "typecheck": {
       "dependsOn": ["^typecheck"],
-      "outputs": [".tsbuild/**", ".tsbuild-test/**"]
+      "outputs": [".tsbuild/**", ".tsbuild-test/**"],
+      "outputLogs": "errors-only"
     },
     "lint": {
       "dependsOn": ["^lint"],
@@ -17,20 +19,23 @@
     },
     "test": {
       "dependsOn": ["^build"],
-      "outputs": ["coverage/**"]
+      "outputs": ["coverage/**"],
+      "outputLogs": "errors-only"
     },
     "test:browser": {
       "dependsOn": ["^build"],
-      "outputs": []
+      "outputs": [],
+      "outputLogs": "errors-only"
     },
     "api-report": {
       "dependsOn": ["build"],
-      "outputs": []
+      "outputs": [],
+      "outputLogs": "errors-only"
     },
     "docs:api": {
       "dependsOn": ["build"],
       "outputs": [],
-      "cache": false
+      "outputLogs": "errors-only"
     },
     "dev": {
       "cache": false,
@@ -38,7 +43,92 @@
     },
     "pack-check": {
       "dependsOn": ["build"],
-      "outputs": []
+      "outputs": [],
+      "outputLogs": "errors-only"
+    },
+    "@ignifx/2d#docs:api": {
+      "dependsOn": ["build"],
+      "outputs": ["$TURBO_ROOT$/skills/ignifx/references/api/2d.md"],
+      "outputLogs": "errors-only"
+    },
+    "@ignifx/3d#docs:api": {
+      "dependsOn": ["build"],
+      "outputs": ["$TURBO_ROOT$/skills/ignifx/references/api/3d.md"],
+      "outputLogs": "errors-only"
+    },
+    "@ignifx/audio#docs:api": {
+      "dependsOn": ["build"],
+      "outputs": ["$TURBO_ROOT$/skills/ignifx/references/api/audio.md"],
+      "outputLogs": "errors-only"
+    },
+    "@ignifx/cli#docs:api": {
+      "dependsOn": ["build"],
+      "outputs": ["$TURBO_ROOT$/skills/ignifx/references/api/cli.md"],
+      "outputLogs": "errors-only"
+    },
+    "@ignifx/core#docs:api": {
+      "dependsOn": ["build"],
+      "outputs": ["$TURBO_ROOT$/skills/ignifx/references/api/core.md"],
+      "outputLogs": "errors-only"
+    },
+    "@ignifx/devtools#docs:api": {
+      "dependsOn": ["build"],
+      "outputs": ["$TURBO_ROOT$/skills/ignifx/references/api/devtools.md"],
+      "outputLogs": "errors-only"
+    },
+    "@ignifx/electron#docs:api": {
+      "dependsOn": ["build"],
+      "outputs": [
+        "$TURBO_ROOT$/skills/ignifx/references/api/electron.md",
+        "$TURBO_ROOT$/skills/ignifx/references/api/electron-main.md",
+        "$TURBO_ROOT$/skills/ignifx/references/api/electron-preload.md"
+      ],
+      "outputLogs": "errors-only"
+    },
+    "ignifx#docs:api": {
+      "dependsOn": ["build"],
+      "outputs": ["$TURBO_ROOT$/skills/ignifx/references/api/ignifx.md"],
+      "outputLogs": "errors-only"
+    },
+    "@ignifx/input#docs:api": {
+      "dependsOn": ["build"],
+      "outputs": ["$TURBO_ROOT$/skills/ignifx/references/api/input.md"],
+      "outputLogs": "errors-only"
+    },
+    "@ignifx/particles#docs:api": {
+      "dependsOn": ["build"],
+      "outputs": ["$TURBO_ROOT$/skills/ignifx/references/api/particles.md"],
+      "outputLogs": "errors-only"
+    },
+    "@ignifx/particles-2d#docs:api": {
+      "dependsOn": ["build"],
+      "outputs": ["$TURBO_ROOT$/skills/ignifx/references/api/particles-2d.md"],
+      "outputLogs": "errors-only"
+    },
+    "@ignifx/physics#docs:api": {
+      "dependsOn": ["build"],
+      "outputs": ["$TURBO_ROOT$/skills/ignifx/references/api/physics.md"],
+      "outputLogs": "errors-only"
+    },
+    "@ignifx/physics-2d#docs:api": {
+      "dependsOn": ["build"],
+      "outputs": ["$TURBO_ROOT$/skills/ignifx/references/api/physics-2d.md"],
+      "outputLogs": "errors-only"
+    },
+    "@ignifx/terrain#docs:api": {
+      "dependsOn": ["build"],
+      "outputs": ["$TURBO_ROOT$/skills/ignifx/references/api/terrain.md"],
+      "outputLogs": "errors-only"
+    },
+    "@ignifx/ui#docs:api": {
+      "dependsOn": ["build"],
+      "outputs": ["$TURBO_ROOT$/skills/ignifx/references/api/ui.md"],
+      "outputLogs": "errors-only"
+    },
+    "@ignifx/vite-plugin#docs:api": {
+      "dependsOn": ["build"],
+      "outputs": ["$TURBO_ROOT$/skills/ignifx/references/api/vite-plugin.md"],
+      "outputLogs": "errors-only"
     }
   }
 }

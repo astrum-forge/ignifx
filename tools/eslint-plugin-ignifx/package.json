@@ -19,7 +19,7 @@
   "scripts": {
     "build": "tsdown",
     "typecheck": "tsc --build tsconfig.json tsconfig.test.json",
-    "test": "vitest run --project node --root ../.. tools/eslint-plugin-ignifx"
+    "test": "vitest run --project node --project node-isolated --root ../.. tools/eslint-plugin-ignifx"
   },
   "devDependencies": {
     "@types/node": "catalog:",
