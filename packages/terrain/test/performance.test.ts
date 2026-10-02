@@ -76,7 +76,10 @@ function frameCost(harness: TerrainAppHarness): number {
   return (performance.now() - start) / FRAMES;
 }
 
-describe("the terrain-512 budgets", () => {
+// Each test generates the 512 m field (six octaves of noise over 513×513 samples). That is
+// ~100 ms alone and ~400 ms under coverage, and past Vitest's 5 s default when the machine is busy
+// with the rest of `pnpm check --full` (2026-10-02) — so the bound is the work, not a budget.
+describe("the terrain-512 budgets", { timeout: 30_000 }, () => {
   it("cuts the field into 64 chunks", async () => {
     const { harness, terrain } = await terrain512();
 
