@@ -2,8 +2,9 @@
 # rule broke; `static` and `typecheck` hold more than one check, and their step names say which.
 #
 # Jobs run in parallel. Each one restores Turborepo's cache from earlier runs
-# (.github/actions/setup), so `pnpm build` only rebuilds what the commit changed rather than every
-# workspace member. `pnpm check` runs the same checks locally, in parallel, in about 20 s.
+# (.github/actions/setup), so a build only redoes what the commit changed. Jobs that only read
+# `packages/*/dist` run `pnpm build:packages`; `build`, `test-visual` and `frame-budget`, which
+# serve the apps, build everything. `pnpm check` runs the same checks locally, in parallel, in about 20 s.
 name: CI
 
 on:
@@ -130,7 +131,7 @@ jobs:
       # Workspace packages resolve through their `exports` to `dist/`, so anything that types or
       # imports `@ignifx/*` needs the built output first; a missing dist surfaces as thousands of
       # `error`-typed lint findings or TS2307.
-      - run: pnpm build
+      - run: pnpm build:packages
       # oxlint --type-aware (errors only), then ESLint for the rules Oxlint lacks (standards §6).
       - run: pnpm lint
 
@@ -142,7 +143,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
-      - run: pnpm build
+      - run: pnpm build:packages
       - name: typecheck
         run: pnpm typecheck
       # API Extractor fails on any drift from the committed api/*.api.md (CONSTITUTION.md §4.5).
@@ -156,7 +157,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
-      - run: pnpm build
+      - run: pnpm build:packages
       # The `node` and `node-isolated` projects on Lite's null engine, with the coverage floors of
       # CONSTITUTION.md §6.2 enforced as thresholds in vitest.config.ts.
       - run: pnpm test:coverage
@@ -181,7 +182,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
-      - run: pnpm build
+      - run: pnpm build:packages
       - run: pnpm test:perf
 
   test-browser:
@@ -214,7 +215,7 @@ jobs:
       # on Linux (2026-09-06)"). This job is the plan's Phase 0 exit criterion ("browser test job
       # proves WebGPU is available in CI"), so it must not be continue-on-error: if it goes red, the
       # flags are wrong and the fix belongs in vitest.config.ts, not in a suppression here.
-      - run: pnpm build
+      - run: pnpm build:packages
       - run: pnpm test:browser --shard=${{ matrix.shard }}/2
 
   test-visual:
@@ -396,7 +397,7 @@ jobs:
         with:
           fetch-depth: 0
       - uses: ./.github/actions/setup
-      - run: pnpm build
+      - run: pnpm build:packages
       # CONSTITUTION.md §5.2/§5.5: examples compile and run, and the skill matches the current API.
       # `regeneration-diff` runs every generator (docs:api, docs:schemas, docs:recipes, docs:llms)
       # and fails on any difference from the committed output (standards §15). On a pull request
