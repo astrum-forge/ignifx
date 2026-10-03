@@ -1,5 +1,13 @@
 # @ignifx/3d
 
+## 0.3.1
+
+### Patch Changes
+
+- @ignifx/physics@0.3.1
+  - @ignifx/core@0.3.1
+  - @ignifx/input@0.3.1
+
 ## 0.3.0
 
 ### Patch Changes

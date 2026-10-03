@@ -1,5 +1,12 @@
 # @ignifx/physics-2d
 
+## 0.3.1
+
+### Patch Changes
+
+- @ignifx/2d@0.3.1
+  - @ignifx/core@0.3.1
+
 ## 0.3.0
 
 ### Patch Changes
