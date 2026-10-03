@@ -7,16 +7,17 @@ dependencies beyond the Node standard library — which means **erasable syntax 
 **relative imports must carry the `.ts` extension**. `tsconfig.tools.json` type-checks them for
 `pnpm typecheck`; `scripts/tsconfig.json` gives the type-aware linters a real program to use.
 
-| Script                   | npm script              | What it does                                                                                                                                             |
-| ------------------------ | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `docs-schemas.ts`        | `pnpm docs:schemas`     | Regenerates `skills/ignifx/references/formats/*.md` and `ignifx.schemas.json` from the component schemas the packages export.                            |
-| `docs-recipes.ts`        | `pnpm docs:recipes`     | Regenerates `skills/ignifx/references/recipes/<name>.md` from `examples/recipes/<name>/main.ts`.                                                         |
-| `docs-llms.ts`           | `pnpm docs:llms`        | Regenerates `website/public/llms.txt`, the site's index of the skill for agents.                                                                         |
-| `check.ts`               | `pnpm check`            | Runs the pre-PR gate as a graph of parallel steps; prints one line per step and the log tail of a failed one.                                            |
-| `docs-harness.ts`        | `pnpm docs:harness`     | Runs the CI `docs-harness` checks and exits non-zero on the first failure.                                                                               |
-| `licenses.ts`            | `pnpm licenses:notices` | Regenerates `THIRD_PARTY_NOTICES.md` from `pnpm licenses list --prod` and the workspace manifests.                                                       |
-| `verify-published.ts`    | `pnpm release:verify`   | Asks registry.npmjs.org whether every publishable package under `packages/` is really there at the version its manifest carries.                         |
-| `sync-skill-versions.ts` | `pnpm skills:version`   | Writes `@ignifx/core`'s version into every skill's `metadata.ignifx-version`. Runs inside `pnpm version-packages`, which is the Changesets version step. |
+| Script                    | npm script              | What it does                                                                                                                                                                                                  |
+| ------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `docs-schemas.ts`         | `pnpm docs:schemas`     | Regenerates `skills/ignifx/references/formats/*.md` and `ignifx.schemas.json` from the component schemas the packages export.                                                                                 |
+| `docs-recipes.ts`         | `pnpm docs:recipes`     | Regenerates `skills/ignifx/references/recipes/<name>.md` from `examples/recipes/<name>/main.ts`.                                                                                                              |
+| `docs-llms.ts`            | `pnpm docs:llms`        | Regenerates `website/public/llms.txt`, the site's index of the skill for agents.                                                                                                                              |
+| `check.ts`                | `pnpm check`            | Runs the pre-PR gate as a graph of parallel steps; prints one line per step and the log tail of a failed one.                                                                                                 |
+| `docs-harness.ts`         | `pnpm docs:harness`     | Runs the CI `docs-harness` checks and exits non-zero on the first failure.                                                                                                                                    |
+| `licenses.ts`             | `pnpm licenses:notices` | Regenerates `THIRD_PARTY_NOTICES.md` from `pnpm licenses list --prod` and the workspace manifests.                                                                                                            |
+| `verify-published.ts`     | `pnpm release:verify`   | Asks registry.npmjs.org whether every publishable package under `packages/` is really there at the version its manifest carries, and fails a version whose dependencies still say `workspace:` or `catalog:`. |
+| `require-pnpm-publish.ts` | `prepublishOnly`        | Run by every published package before a publish; refuses anything but `pnpm publish`, the only client that rewrites `workspace:` and `catalog:` dependencies.                                                 |
+| `sync-skill-versions.ts`  | `pnpm skills:version`   | Writes `@ignifx/core`'s version into every skill's `metadata.ignifx-version`. Runs inside `pnpm version-packages`, which is the Changesets version step.                                                      |
 
 Shared helpers live in `lib/`; they return results instead of exiting, so only the entry
 scripts decide the exit code, and all output goes through `lib/log.ts`. Their tests live in

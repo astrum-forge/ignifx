@@ -10,7 +10,9 @@
  * This exists because a publisher's exit code is not evidence. `changeset publish` publishes one
  * package at a time, so a failure part-way through leaves half a release on the registry, and a
  * Trusted Publisher configured against the wrong workflow file answers E404 for a scoped package
- * (npm/cli#8976) — exactly the shape `@ignifx/*` has.
+ * (npm/cli#8976) — exactly the shape `@ignifx/*` has. A version that arrived is also checked for
+ * dependencies still written as `workspace:` or `catalog:`, which a non-pnpm publish leaves behind
+ * and no consumer can install.
  *
  * Options:
  * - `--version <v>` — check this version instead of the one in each `package.json`.
@@ -179,8 +181,9 @@ async function main(): Promise<number> {
   const failed = report(expected, await resolveAll(registry, expected, attempts, delayMs));
   if (failed > 0) {
     logError(
-      `release:verify — ${String(failed)} of ${String(expected.length)} packages did not reach ${registry}. ` +
-        `Re-run the publish, or check the Trusted Publisher configuration for the packages listed above.`,
+      `release:verify — ${String(failed)} of ${String(expected.length)} packages are missing from, or unusable on, ${registry}. ` +
+        `Re-run the publish, or check the Trusted Publisher configuration for the packages listed above. ` +
+        `A version that is there but unusable cannot be replaced: publish the next version with pnpm.`,
     );
     return 1;
   }
