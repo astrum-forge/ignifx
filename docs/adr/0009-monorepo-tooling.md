@@ -256,3 +256,12 @@ Verified by simulating the release on 2026-09-07 — every package bumped to `0.
 
 The `api-report-gate` and `freshness` failures reported on the same run were the shallow checkout
 fixed above, and they passed here.
+
+### Visual goldens and frame budgets leave CI (2026-10-03)
+
+Owner decision: `ci.yml` has no `test-visual` or `frame-budget` job and no scheduled trigger. On
+every push to `main` the frame-budget job overran its 45-minute macOS limit and was cancelled, and
+three Linux gameplay goldens failed on runner speed rather than on engine changes. Both suites stay
+in `tests/visual/` and are run locally (`pnpm test:visual`, `pnpm test:frame-budget`), only when a
+change can affect rendering or frame time; the result goes in the pull request. The recorded rows in
+`benchmarks/baselines.json` are still checked in CI by `benchmarks/template-frame-time.test.ts`.

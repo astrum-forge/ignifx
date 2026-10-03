@@ -827,6 +827,7 @@ async function takePointer(page: Page): Promise<boolean> {
  * @param key - The key to hold, or `null` to poll without pressing anything.
  * @param done - What the test is waiting for.
  * @param budget - How many presented frames to allow.
+ * @param every - How many frames apart the readings are.
  * @returns Every reading taken, oldest first.
  */
 async function hold3DUntil(
@@ -834,6 +835,7 @@ async function hold3DUntil(
   key: string | null,
   done: (reading: Gameplay3DSnapshot) => boolean,
   budget: number = BUDGET_FRAMES_3D,
+  every: number = POLL_FRAMES_3D,
 ): Promise<readonly Gameplay3DSnapshot[]> {
   if (key !== null) {
     await page.keyboard.down(key);
@@ -842,8 +844,8 @@ async function hold3DUntil(
   let frames = 0;
   while (frames < budget && !done(newest(readings))) {
     // oxlint-disable-next-line eslint/no-await-in-loop -- frames are sequential by definition, and each reading has to be of the frame that was just presented.
-    await waitForFrames(page, POLL_FRAMES_3D);
-    frames += POLL_FRAMES_3D;
+    await waitForFrames(page, every);
+    frames += every;
     // oxlint-disable-next-line eslint/no-await-in-loop -- see above.
     readings.push(await read3D(page));
   }
@@ -1047,7 +1049,12 @@ test.describe("3d template gameplay", () => {
       expect(reading.headHeight ?? Number.NaN).toBeCloseTo(HEAD_REST_HEIGHT, 5);
     }
 
-    const walked = await hold3DUntil(page, "w", (reading) => reading.position.z > 4.5);
+    // Read every 3 frames, not every 5. On a runner slow enough that every frame is clamped to
+    // `maximumDeltaTime` (0.1 s), a 4 m/s walk at 0.5 bobs per metre advances the bob by exactly a
+    // fifth of a cycle per frame, so readings 5 frames apart all land on the same phase and the head
+    // looks perfectly still — which is how this failed on every Linux CI run from 2026-09-11 on.
+    // Three frames is 0.6 of a cycle, which walks the readings through the whole bob.
+    const walked = await hold3DUntil(page, "w", (reading) => reading.position.z > 4.5, BUDGET_FRAMES_3D, 3);
     // A character wedged in scenery still *reports* a walking speed, and would still bob; asserting
     // that it actually travelled is what stops this test passing over a spawn that cannot move.
     expect(newest(walked).position.z, "the character did not walk forward").toBeGreaterThan(4.5);

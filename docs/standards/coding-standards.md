@@ -26,8 +26,8 @@ Use Node 24 from [`.nvmrc`](../../.nvmrc); the dependency checker does not suppo
 - Changesets handles releases; Renovate updates dependencies; lefthook runs commit checks.
 
 Do not duplicate version tables or upgrade tools in unrelated work.
-`pnpm check` runs build → format → lint → typecheck → unit tests with coverage → API report → docs harness.
-Build comes first because workspace imports resolve to `dist/`. CI adds the checks in §12.
+`pnpm check` runs build, format, lint, typecheck, unit tests with coverage, API report, and docs harness, in parallel where they do not depend on each other (`scripts/check.ts`).
+Build comes before the steps that read `dist/`, because workspace imports resolve there. CI adds the checks in §12.
 
 ## 2. Repository layout
 
@@ -241,8 +241,9 @@ Do not copy the implementation into a test or assert private steps that can chan
 | Prose or contributor guidance only | Formatting, links, and consistency; no artificial runtime tests |
 
 Unit tests use Vitest, a headless app, a manual clock, and `*.test.ts`. Name tests as behaviours, such as “destroys children before parents”.
+The `node` project shares modules between the files in a worker, so a test disposes what it creates. A file that calls `vi.mock` goes in `node-isolated`, and a wall-clock or heap assertion in `perf` (both listed in `vitest.config.ts`).
 Browser tests use `*.browser.test.ts` and must pass with CI's SwiftShader adapter; skip GPU timing assertions there.
-Visual goldens use per-scene tolerances and change only in a pull request showing before/after images.
+Visual goldens use per-scene tolerances and change only in a pull request showing before/after images. They and the frame budgets run locally, only when the change needs them (§12).
 
 Keep coverage at 80% per package and 90% for core. Do not sleep on wall-clock time; use `app.step` or fake timers.
 Quarantine flaky tests with `test.skip` and an issue link, then fix or delete them within one release cycle. Do not mask flakes with CI retries.
@@ -259,8 +260,9 @@ Quarantine flaky tests with `test.skip` and an issue link, then fix or delete th
 
 ## 12. CI and releases
 
-[`ci.yml`](../../.github/workflows/ci.yml) defines the jobs: frozen install, build, formatting, lint, types, unit/browser/visual tests, frame/bundle budgets, package checks, API reports, docs, licenses, and dependency layers.
-Frame budgets use `macos-latest`, matching the recorded machine class (ADR-0009).
+[`ci.yml`](../../.github/workflows/ci.yml) defines the jobs: frozen install, build, formatting, lint, types, unit/browser tests, timing and bundle budgets, package checks, API reports, docs, licenses, and dependency layers.
+Every job restores Turborepo's cache from earlier runs, so a build only redoes what changed. Desktop packaging runs on a pull request only when it touches Electron, the CLI, or the packaged template. Nothing runs on a schedule.
+Visual goldens (`pnpm test:visual`) and frame budgets (`pnpm test:frame-budget`) are not in CI. They take minutes, so run them locally only when a change can affect rendering or frame time, and paste the result into the pull request. Frame budgets are measured on macOS arm64, the recorded machine class (ADR-0009).
 
 [`release.yml`](../../.github/workflows/release.yml) creates the **Version Packages** PR.
 Its `pnpm version-packages` step updates package versions, skill versions, and schemas.

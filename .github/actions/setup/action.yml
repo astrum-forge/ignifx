@@ -1,7 +1,18 @@
 name: Setup ignifx workspace
 description: >
-  Installs pnpm and Node, restores the pnpm store cache, and installs the workspace with a frozen
-  lockfile (CONSTITUTION.md §9.4). Every ci.yml/release.yml/website.yml job starts with this.
+  Installs pnpm and Node, restores the pnpm store and Turborepo caches, and installs the workspace
+  with a frozen lockfile (CONSTITUTION.md §9.4). Every ci.yml/release.yml/website.yml job starts
+  with this. With `playwright: true` it also installs Chromium from a cache.
+
+inputs:
+  turbo-cache:
+    description: >
+      Restore `.turbo/cache` from earlier runs and save it at the end of the job. On by default; the
+      release job turns it off so a publish never builds from a cached artifact.
+    default: "true"
+  playwright:
+    description: Install Playwright's Chromium (and its Linux system libraries) from a cache.
+    default: "false"
 
 runs:
   using: composite
@@ -19,6 +30,52 @@ runs:
         node-version-file: .nvmrc
         cache: pnpm
 
+    # Turborepo's local cache, carried between runs: a pull request that touches one package
+    # rebuilds that package and its dependents and restores the rest. The key is per job and per
+    # commit, so each job saves what it built (once — a key is immutable) and restores the newest
+    # entry from its own job first, then from any job. Without it every job rebuilt all 24 workspace
+    # members from nothing, which was 21–28 s of each job's time (CI run of 2026-09-14).
+    - if: inputs.turbo-cache == 'true'
+      uses: actions/cache@v6
+      with:
+        path: .turbo/cache
+        key: turbo-${{ runner.os }}-${{ github.job }}-${{ github.sha }}
+        restore-keys: |
+          turbo-${{ runner.os }}-${{ github.job }}-
+          turbo-${{ runner.os }}-
+
+    # Turborepo never evicts, so the carried directory would only grow. Artifacts a week old are
+    # dropped before the job adds its own; an old artifact that is still needed is rebuilt once.
+    - if: inputs.turbo-cache == 'true'
+      shell: bash
+      run: |
+        if [ -d .turbo/cache ]; then
+          find .turbo/cache -type f -mtime +7 -delete
+          du -sh .turbo/cache
+        fi
+
     - name: Install dependencies
       shell: bash
       run: pnpm install --frozen-lockfile
+
+    # The browser download is ~150 MB and only changes with the Playwright version, which the
+    # lockfile pins. The Linux system libraries are not in the cache (they live outside the home
+    # directory), so `install-deps` still runs on a hit; it is the cheaper half.
+    - if: inputs.playwright == 'true'
+      id: playwright-cache
+      uses: actions/cache@v6
+      with:
+        path: |
+          ~/.cache/ms-playwright
+          ~/Library/Caches/ms-playwright
+        key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+    # The full Chromium build, not chrome-headless-shell: the shell has no compositor and loses the
+    # WebGPU device after a few presented frames (vitest.config.ts, tests/visual/playwright.config.ts).
+    - if: inputs.playwright == 'true' && steps.playwright-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: pnpm exec playwright install chromium
+
+    - if: inputs.playwright == 'true' && runner.os == 'Linux'
+      shell: bash
+      run: pnpm exec playwright install-deps chromium

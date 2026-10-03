@@ -31,6 +31,48 @@ import { defineConfig } from "vitest/config";
  *
  * `coverage` is a root-level option in Vitest 5 — it is ignored inside `projects[].test`.
  */
+/**
+ * A unit test's timeout catches a hang; speed is the `perf` project's job. Vitest's 5 s default was
+ * too tight for a cold dynamic import of a package barrel under coverage while `pnpm check` runs
+ * lint, typecheck and the docs harness beside it (`@ignifx/audio`'s barrel test, 2026-10-03).
+ */
+const UNIT_TIMEOUT_MS = 15_000;
+
+/** Every headless test file, across the `node`, `node-isolated`, and `perf` projects. */
+const NODE_INCLUDE = [
+  "packages/*/test/**/*.test.ts",
+  "tools/*/test/**/*.test.ts",
+  // The documentation harness (`scripts/**`) is tooling, not a package, so its tests live beside it
+  // rather than under `packages/`.
+  "scripts/test/**/*.test.ts",
+  "benchmarks/**/*.test.ts",
+];
+
+const NODE_EXCLUDE = ["**/*.browser.test.ts", "**/node_modules/**", "**/dist/**"];
+
+/**
+ * Files that replace a module with `vi.mock`. The `node` project shares one module graph per
+ * worker, where a mock either never applies or leaks into the next file, so these keep Vitest's
+ * per-file isolation. A new `vi.mock` caller belongs here.
+ */
+const ISOLATED = [
+  "packages/core/test/render/rebuild-serialisation.test.ts",
+  // Everything that imports `test/support/electron-mock.ts`.
+  "packages/electron/test/**/*.test.ts",
+];
+
+/**
+ * Tests that assert a wall-clock or heap measurement, or build every app. They fail on a loaded
+ * machine (`devtools-closed` and `spike-s6-1` went red on CI beside the unit suite in 2026-09), so
+ * they are the `perf` project and run alone.
+ */
+const PERF = [
+  "benchmarks/alloc.test.ts",
+  "benchmarks/bundle-size.test.ts",
+  "benchmarks/devtools-closed.test.ts",
+  "packages/2d/test/lite/spike-s6-1-node.test.ts",
+];
+
 /** Chromium flags for a SwiftShader WebGPU adapter; the Linux half is explained above. */
 const chromiumArgs: string[] =
   process.platform === "linux"
@@ -47,7 +89,9 @@ export default defineConfig({
   test: {
     coverage: {
       provider: "v8",
-      reporter: ["text", "lcov"],
+      // `text-summary`, not `text`: the per-file table is ~400 lines nobody reads in a terminal or a CI log;
+      // the lcov file carries the detail (the CI job uploads it).
+      reporter: ["text-summary", "lcov"],
       include: ["packages/*/src/**/*.ts", "tools/*/src/**/*.ts"],
       // GPU-only files cannot be reached from Node. They are covered by the `browser` project
       // (`*.browser.test.ts`); measuring them in the unit run would report a number no unit test
@@ -87,15 +131,35 @@ export default defineConfig({
         test: {
           name: "node",
           environment: "node",
-          include: [
-            "packages/*/test/**/*.test.ts",
-            "tools/*/test/**/*.test.ts",
-            // The documentation harness (`scripts/**`) is tooling, not a package, so its tests
-            // live beside it rather than under `packages/`.
-            "scripts/test/**/*.test.ts",
-            "benchmarks/**/*.test.ts",
-          ],
-          exclude: ["**/*.browser.test.ts", "**/node_modules/**", "**/dist/**"],
+          include: NODE_INCLUDE,
+          exclude: [...NODE_EXCLUDE, ...ISOLATED, ...PERF],
+          // One module graph per worker instead of one per file: importing the engine is more than
+          // half of a unit run, and sharing it takes the suite from ~28 s to ~12 s (2026-10-02,
+          // 8 cores). It holds because a test owns what it creates (`afterEach` disposes the app),
+          // and a file that cannot share — one that replaces a module — goes in `ISOLATED`.
+          isolate: false,
+          pool: "threads",
+          testTimeout: UNIT_TIMEOUT_MS,
+        },
+      },
+      {
+        test: {
+          name: "node-isolated",
+          environment: "node",
+          testTimeout: UNIT_TIMEOUT_MS,
+          include: ISOLATED,
+          exclude: NODE_EXCLUDE,
+        },
+      },
+      {
+        test: {
+          name: "perf",
+          environment: "node",
+          include: PERF,
+          exclude: NODE_EXCLUDE,
+          // A timing assertion is only as good as the machine is quiet, so these run one file at a
+          // time and never beside the unit suite (`pnpm test:perf`, the CI `perf` job).
+          fileParallelism: false,
         },
       },
       {

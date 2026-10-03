@@ -70,7 +70,7 @@ When priorities conflict, the earlier one wins. Cite its clause when explaining 
 - **§6.1 Tests.** Runtime changes need headless unit tests and, when they touch the GPU, real Chromium WebGPU tests. Bug fixes need regression tests. Test observable behaviour, not the shape of the implementation.
 - **§6.2 Coverage.** Keep line coverage at least 80% per package and 90% for core. These are minimums, not a reason to write low-value tests.
 - **§6.3 Flaky tests.** Quarantine intermittent failures the same day. Fix or delete the test within one release cycle.
-- **§6.4 Budgets.** CI checks template bundle sizes and benchmark frame times. A regression in a scene that does not use the changed feature is a defect; do not hide it by raising the baseline.
+- **§6.4 Budgets.** CI checks template bundle sizes; frame times are measured locally (`pnpm test:frame-budget`) when a change can affect them. A regression in a scene that does not use the changed feature is a defect; do not hide it by raising the baseline.
 - **§6.5 Types.** Use strict TypeScript and the standards' additional checks everywhere. No `any`, non-null assertions, or `@ts-ignore`; use `unknown` and narrow it. Exceptions follow §10.3.
 - **§6.6 Done.** A change is ready for review when its implementation and relevant tests pass, affected docs are current, and any required generated files, changeset, and post-1.0 migration notes are included. Prose-only changes need no runtime tests. Contributor-only docs need no package release. Completion requires green CI and human maintainer approval. Standards §15 lists the checks.
 

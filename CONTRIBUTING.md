@@ -29,29 +29,35 @@ pnpm exec playwright install chromium
 pnpm check
 ```
 
-`pnpm install` sets up the Git hooks. `pnpm check` builds first, then checks formatting, lint, types, unit tests with coverage, API reports, and docs.
-The build is needed because workspace imports resolve to `dist/`. Browser, visual, frame-budget, dependency, and package checks are separate commands.
+`pnpm install` sets up the Git hooks. `pnpm check` builds, then checks formatting, lint, types, unit tests with coverage, API reports, and docs — in parallel, in about 20 s once Turborepo's cache is warm.
+It prints one line per step; a failed step also prints the end of its log, and the full log is in `node_modules/.cache/ignifx-check/<step>.log`.
+The build is needed because workspace imports resolve to `dist/`. `pnpm check --full` adds the package, perf, and browser checks; dependency checks are a separate command. Visual goldens and frame budgets are not in CI and take minutes: run them only when a change can affect rendering or frame time.
 
 ## Everyday commands
 
-| Command                             | Purpose                                          |
-| ----------------------------------- | ------------------------------------------------ |
-| `pnpm dev`                          | Run workspace development tasks                  |
-| `pnpm build`                        | Build the workspace                              |
-| `pnpm test`                         | Run headless unit tests with coverage            |
-| `pnpm test:browser`                 | Run Chromium WebGPU tests                        |
-| `pnpm test:visual`                  | Compare visual goldens                           |
-| `pnpm test:frame-budget`            | Check template frame budgets                     |
-| `pnpm typecheck`                    | Check TypeScript projects                        |
-| `pnpm lint`                         | Run Oxlint and ESLint                            |
-| `pnpm format` / `pnpm format:check` | Format files / check formatting                  |
-| `pnpm deps`                         | Check dependency layers and cycles               |
-| `pnpm pack-check`                   | Validate package exports and types               |
-| `pnpm api-report`                   | Validate API reports; fails on drift or warnings |
-| `pnpm docs:harness`                 | Regenerate and check docs, examples, and skills  |
-| `pnpm changeset`                    | Record a user-visible change for release         |
+| Command                             | Purpose                                              |
+| ----------------------------------- | ---------------------------------------------------- |
+| `pnpm dev`                          | Run workspace development tasks                      |
+| `pnpm build`                        | Build the workspace                                  |
+| `pnpm check --only lint,test`       | Run some `pnpm check` steps (`--skip` also works)    |
+| `pnpm test`                         | Run headless unit tests (~7 s)                       |
+| `pnpm test:coverage`                | Run them with coverage floors, as CI does            |
+| `pnpm test:perf`                    | Run timing, heap, and bundle-size budgets            |
+| `pnpm test:browser`                 | Run Chromium WebGPU tests                            |
+| `pnpm test:visual`                  | Compare visual goldens (only when needed; not in CI) |
+| `pnpm test:frame-budget`            | Check frame budgets (only when needed; not in CI)    |
+| `pnpm typecheck`                    | Check TypeScript projects                            |
+| `pnpm lint`                         | Run Oxlint (errors) and ESLint (cached)              |
+| `pnpm lint:warnings`                | Also list Oxlint's pedantic warnings                 |
+| `pnpm format` / `pnpm format:check` | Format files / check formatting                      |
+| `pnpm deps`                         | Check dependency layers and cycles                   |
+| `pnpm pack-check`                   | Validate package exports and types                   |
+| `pnpm api-report`                   | Validate API reports; fails on drift or warnings     |
+| `pnpm docs:harness`                 | Regenerate and check docs, examples, and skills      |
+| `pnpm changeset`                    | Record a user-visible change for release             |
 
 Start with checks relevant to the change, then run `pnpm check` before opening a PR.
+For one package: `pnpm vitest run --project node packages/<name>` or `pnpm --filter @ignifx/<name> test`.
 See [standards §10](docs/standards/coding-standards.md#10-testing) for which tests apply.
 
 ## Generated files
@@ -69,7 +75,7 @@ Edit the source, run the generator, and review the result. Never hand-edit gener
 
 Build changed packages before regenerating API reports. Run `pnpm api-report` afterwards; the update command alone does not validate the report.
 For benchmark baselines, use the relevant benchmark's recording procedure and include measurements in the PR.
-Use `pnpm docs:harness -- --no-regenerate` if another contributor is editing generated-doc sources at the same time.
+Use `pnpm docs:harness --no-regenerate` if another contributor is editing generated-doc sources at the same time.
 
 ## Make a change
 

@@ -9,7 +9,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { failed, passed, summarize } from "./check-result.ts";
-import { runCommand } from "./run.ts";
+import { runCommandAsync } from "./run.ts";
 import { collectSkillExamples, missingBuilds } from "./skill-examples.ts";
 import type { CheckResult, HarnessContext } from "./check-result.ts";
 import type { SkillExample } from "./skill-examples.ts";
@@ -86,7 +86,7 @@ function rewriteDiagnostics(output: string, examples: readonly SkillExample[]): 
  * @param roots - The skills found in that tree.
  * @returns The check result.
  */
-export function checkExamplesCompile(context: HarnessContext, roots: readonly SkillRoot[]): CheckResult {
+export async function checkExamplesCompile(context: HarnessContext, roots: readonly SkillRoot[]): Promise<CheckResult> {
   const { examples, ignored, generated } = collectSkillExamples(context, roots);
   const runnable = examples.filter((example) => example.run).length;
   const notes: string[] = [];
@@ -113,7 +113,7 @@ export function checkExamplesCompile(context: HarnessContext, roots: readonly Sk
   }
   const project = writeTemporaryProject(context.repositoryRoot, examples);
   try {
-    const result = runCommand("pnpm", ["exec", "tsc", "-p", project], context.repositoryRoot);
+    const result = await runCommandAsync("pnpm", ["exec", "tsc", "-p", project], context.repositoryRoot);
     if (result.code !== 0) {
       const diagnostics = rewriteDiagnostics(result.output, examples);
       return failed("examples-compile", `${detail} — tsc reported errors`, [...notes, ...summarize(diagnostics, 20)]);

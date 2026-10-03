@@ -40,7 +40,8 @@ import type { PlaywrightTestConfig } from "playwright/test";
  * ## Two projects, because they need different machines
  *
  * `goldens` is everything here except `frame-time.spec.ts`: image comparisons, which SwiftShader
- * makes reproducible anywhere. It is `pnpm test:visual`, and it is the required CI check. It now
+ * makes reproducible anywhere. It is `pnpm test:visual`, run locally when a change needs it (not in
+ * CI since 2026-10-03). It now
  * includes `tests/examples.spec.ts`, the website's runnable examples, whose pages come from the
  * site build previewed on 4179.
  *
@@ -50,7 +51,7 @@ import type { PlaywrightTestConfig } from "playwright/test";
  * against a 1.0 ms ceiling on 2026-09-06, and could not finish either 3D template's 420 frames
  * inside the 240 s per-test timeout, where the recording machine takes 60 to 70 s. Enforcing the
  * ceiling there measures the runner, which is the same mistake the spec's own header rejects for
- * frames per second. It is `pnpm test:frame-budget`, it runs on macOS in CI, and it is what a
+ * frames per second. It is `pnpm test:frame-budget`, run locally on macOS arm64, and it is what a
  * re-record runs (`README.md`).
  */
 
@@ -93,6 +94,18 @@ const VIEWPORT = { width: 512, height: 512 };
 const isCi = process.env["CI"] !== undefined && process.env["CI"] !== "";
 
 /**
+ * Builds one app through Turborepo and nothing else (`--only`: its dependencies are expected to be
+ * built, as they always were here). After `pnpm build` it is a cache hit, so CI no longer builds
+ * every app twice; a stale app is still rebuilt.
+ *
+ * @param packageName - The workspace package.
+ * @returns The shell command.
+ */
+function buildOnly(packageName: string): string {
+  return `pnpm exec turbo run build --filter=${packageName} --only --output-logs=errors-only`;
+}
+
+/**
  * Builds an example and previews the build output, which is what a golden should be taken of.
  *
  * @param packageName - The workspace package.
@@ -102,7 +115,7 @@ const isCi = process.env["CI"] !== undefined && process.env["CI"] !== "";
 function preview(packageName: string, port: number): PreviewServer {
   return {
     command:
-      `pnpm --filter ${packageName} run build && ` +
+      `${buildOnly(packageName)} && ` +
       `pnpm --filter ${packageName} exec vite preview --host 127.0.0.1 --port ${String(port)} --strictPort`,
     url: `http://127.0.0.1:${String(port)}/`,
     reuseExistingServer: !isCi,
@@ -126,7 +139,7 @@ function preview(packageName: string, port: number): PreviewServer {
 function previewWebsite(port: number): PreviewServer {
   return {
     command:
-      `pnpm --filter @ignifx/website run build && ` +
+      `${buildOnly("@ignifx/website")} && ` +
       `pnpm --filter @ignifx/website exec vite preview --host 127.0.0.1 --port ${String(port)} --strictPort`,
     url: `http://127.0.0.1:${String(port)}/examples/hello-cube/run/`,
     reuseExistingServer: !isCi,
@@ -151,7 +164,11 @@ const chromiumArgs: string[] =
 
 const config: PlaywrightTestConfig = defineConfig({
   testDir: "./tests",
-  fullyParallel: false,
+  // `fullyParallel` so `--shard` splits by test rather than by file (by file, one shard got 55 of
+  // the 97 goldens and the frame-budget file could not be split at all). Each test opens its own
+  // page and nothing is shared between tests. One worker, because the gameplay tests read
+  // frame-paced motion and two SwiftShader pages on one machine slow each other down.
+  fullyParallel: true,
   workers: 1,
   forbidOnly: isCi,
   retries: 0,

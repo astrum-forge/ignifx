@@ -12,6 +12,7 @@ dependencies beyond the Node standard library — which means **erasable syntax 
 | `docs-schemas.ts`        | `pnpm docs:schemas`     | Regenerates `skills/ignifx/references/formats/*.md` and `ignifx.schemas.json` from the component schemas the packages export.                            |
 | `docs-recipes.ts`        | `pnpm docs:recipes`     | Regenerates `skills/ignifx/references/recipes/<name>.md` from `examples/recipes/<name>/main.ts`.                                                         |
 | `docs-llms.ts`           | `pnpm docs:llms`        | Regenerates `website/public/llms.txt`, the site's index of the skill for agents.                                                                         |
+| `check.ts`               | `pnpm check`            | Runs the pre-PR gate as a graph of parallel steps; prints one line per step and the log tail of a failed one.                                            |
 | `docs-harness.ts`        | `pnpm docs:harness`     | Runs the CI `docs-harness` checks and exits non-zero on the first failure.                                                                               |
 | `licenses.ts`            | `pnpm licenses:notices` | Regenerates `THIRD_PARTY_NOTICES.md` from `pnpm licenses list --prod` and the workspace manifests.                                                       |
 | `verify-published.ts`    | `pnpm release:verify`   | Asks registry.npmjs.org whether every publishable package under `packages/` is really there at the version its manifest carries.                         |
@@ -26,9 +27,14 @@ scripts decide the exit code, and all output goes through `lib/log.ts`. Their te
 - `docs-schemas.ts --root <dir>` and `docs-recipes.ts --root <dir>` — run against a tree other than
   the repository, which is how they are tested without leaving fixtures in the repository.
 - `docs-harness.ts --skills-dir <dir>` — lint a different entry-skill directory.
-- `docs-harness.ts --no-regenerate` — skip the `regeneration-diff` check (it costs ~6 s, almost all
-  of it `pnpm docs:api`). `examples-run` costs another ~11 s, one Node process per tagged block; the
-  rest of the harness runs in ~0.2 s.
+- `docs-harness.ts --no-regenerate` — skip the `regeneration-diff` check. It runs `pnpm docs:api`,
+  which Turborepo caches per package, so it is ~1 s unless a package changed. `examples-compile`,
+  `examples-run` (one Node process per tagged block, one per core at a time) and the regeneration
+  run side by side; the whole harness is ~5 s warm.
+- `docs-harness.ts --verbose` — print the notes under passing checks too (per-block timings, the
+  blocks skipped by `ignore-check`).
+- `check.ts --only <a,b>` / `--skip <a,b>` — run some of the gate's steps; `--full` adds
+  `pack-check`, `perf` and `browser`; `--tail <n>` sets how many log lines a failed step prints.
 - `docs-harness.ts --base <ref>` — enable `api-report-gate` and `freshness`, which need a diff base
   and therefore report `SKIPPED` outside a pull request.
 - `docs-llms.ts --root <dir>` — the same, for the `llms.txt` generator.

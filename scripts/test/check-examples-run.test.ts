@@ -13,7 +13,7 @@ const fixtures: SkillFixture[] = [];
  * @param code - The block body.
  * @returns The check result.
  */
-function runBlock(info: string, code: string): CheckResult {
+function runBlock(info: string, code: string): Promise<CheckResult> {
   const fixture = writeSkill("demo", { bodies: { "First app": `\`\`\`${info}\n${code}\n\`\`\`` } });
   fixtures.push(fixture);
   return checkExamplesRun(fixture.context, [fixture.root]);
@@ -26,15 +26,18 @@ afterEach(() => {
 });
 
 describe("examples-run", () => {
-  it("passes a `ts run` block that exits 0, and reports its runtime", () => {
-    const result = runBlock("ts run", 'const greeting: string = "ok";\nif (greeting !== "ok") throw new Error("no");');
+  it("passes a `ts run` block that exits 0, and reports its runtime", async () => {
+    const result = await runBlock(
+      "ts run",
+      'const greeting: string = "ok";\nif (greeting !== "ok") throw new Error("no");',
+    );
     expect(result.status).toBe("pass");
     expect(result.detail).toContain("1 `ts run` blocks executed");
     expect(result.notes.join("\n")).toMatch(/SKILL\.md:\d+ — \d+ms/u);
   });
 
-  it("fails a `ts run` block that throws, naming the Markdown file and line", () => {
-    const result = runBlock("ts run", 'throw new Error("boom");');
+  it("fails a `ts run` block that throws, naming the Markdown file and line", async () => {
+    const result = await runBlock("ts run", 'throw new Error("boom");');
     expect(result.status).toBe("fail");
     const notes = result.notes.join("\n");
     // The fence sits on the line after the "## First app" heading and its blank line.
@@ -42,7 +45,7 @@ describe("examples-run", () => {
     expect(notes).toContain("boom");
   });
 
-  it("leaves untagged blocks alone", () => {
-    expect(runBlock("ts", 'throw new Error("never executed");').status).toBe("pass");
+  it("leaves untagged blocks alone", async () => {
+    expect((await runBlock("ts", 'throw new Error("never executed");')).status).toBe("pass");
   });
 });

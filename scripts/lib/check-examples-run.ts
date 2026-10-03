@@ -16,7 +16,7 @@
  *    and Linux, and they let `package.json` `exports` do the resolving instead of a second
  *    hand-written copy of it. `junction` is passed as the link type so a Windows checkout does not
  *    need elevated privileges; POSIX ignores the argument.
- * 3. Each block runs as its own `node <file>.ts` process. Node ≥ 24 strips types from `.ts` files
+ * 3. Each block runs as its own `node <file>.ts` process, one per core at a time. Node ≥ 24 strips types from `.ts` files
  *    without a flag (`--experimental-strip-types` is on by default since Node 23.6), so the blocks
  *    execute exactly as written, with no build step and no transform of the documented source.
  *
@@ -27,10 +27,10 @@
  * tagged `run`; they stay `ts` and are type-checked only.
  */
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { availableParallelism, tmpdir } from "node:os";
 import path from "node:path";
 import { failed, passed, summarize } from "./check-result.ts";
-import { runCommand, tailLines } from "./run.ts";
+import { mapConcurrent, runCommandAsync, tailLines } from "./run.ts";
 import { collectSkillExamples, missingBuilds } from "./skill-examples.ts";
 import { listWorkspacePackages } from "./workspace.ts";
 import type { CheckResult, HarnessContext } from "./check-result.ts";
@@ -94,9 +94,9 @@ function writeRunnableProject(repositoryRoot: string, examples: readonly SkillEx
  * @param example - The block to run.
  * @returns What the block cost and whether it failed.
  */
-function runExample(project: string, example: SkillExample): RunOutcome {
+async function runExample(project: string, example: SkillExample): Promise<RunOutcome> {
   const file = path.join("blocks", example.fileName);
-  const result = runCommand("node", [file], project, { timeoutMs: RUN_TIMEOUT_MS });
+  const result = await runCommandAsync("node", [file], project, { timeoutMs: RUN_TIMEOUT_MS });
   const location = `${example.label}:${String(example.line)}`;
   if (result.timedOut) {
     return {
@@ -150,7 +150,7 @@ function outcomeNotes(outcomes: readonly RunOutcome[]): readonly string[] {
  * @param roots - The skills found in that tree.
  * @returns The check result.
  */
-export function checkExamplesRun(context: HarnessContext, roots: readonly SkillRoot[]): CheckResult {
+export async function checkExamplesRun(context: HarnessContext, roots: readonly SkillRoot[]): Promise<CheckResult> {
   const runnable = collectSkillExamples(context, roots).examples.filter((example) => example.run);
   if (runnable.length === 0) {
     return passed("examples-run", "no blocks are tagged `ts run`");
@@ -162,11 +162,12 @@ export function checkExamplesRun(context: HarnessContext, roots: readonly SkillR
   const project = writeRunnableProject(context.repositoryRoot, runnable);
   let outcomes: readonly RunOutcome[];
   try {
-    outcomes = runnable.map((example) => runExample(project, example));
+    outcomes = await mapConcurrent(runnable, availableParallelism(), (example) => runExample(project, example));
   } finally {
     rmSync(project, { recursive: true, force: true });
   }
   const failures = outcomes.filter((outcome) => outcome.failure !== null).length;
+  // The sum of the blocks' own durations: what they cost, not the wall-clock time they took side by side.
   const totalMs = outcomes.reduce((sum, outcome) => sum + outcome.durationMs, 0);
   const notes = outcomeNotes(outcomes);
   if (failures > 0) {
@@ -174,7 +175,7 @@ export function checkExamplesRun(context: HarnessContext, roots: readonly SkillR
   }
   return passed(
     "examples-run",
-    `${String(runnable.length)} \`ts run\` blocks executed in ${(totalMs / 1000).toFixed(1)}s`,
+    `${String(runnable.length)} \`ts run\` blocks executed, ${(totalMs / 1000).toFixed(1)}s of process time`,
     notes,
   );
 }
