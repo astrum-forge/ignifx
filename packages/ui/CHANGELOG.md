@@ -1,5 +1,12 @@
 # @ignifx/ui
 
+## 0.3.1
+
+### Patch Changes
+
+- @ignifx/core@0.3.1
+  - @ignifx/input@0.3.1
+
 ## 0.3.0
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@ignifx/particles",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "ignifx particles: stateless GPU particle systems driven by declarative .particles.json definitions.",
   "keywords": [
     "ignifx",

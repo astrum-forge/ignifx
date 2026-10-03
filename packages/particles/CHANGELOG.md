@@ -1,5 +1,12 @@
 # @ignifx/particles
 
+## 0.3.1
+
+### Patch Changes
+
+- 00a6c5f: Fix installing `ignifx`, `@ignifx/particles`, `@ignifx/particles-2d` and `@ignifx/terrain`: 0.3.0 of the three new packages was published with unresolved `workspace:` and `catalog:` dependencies, so `npm install` failed with `Unsupported URL Type`. Upgrade to 0.3.1.
+- @ignifx/core@0.3.1
+
 ## 0.3.0
 
 ### Minor Changes
