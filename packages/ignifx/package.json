@@ -38,7 +38,8 @@
     "api-report": "api-extractor run --verbose",
     "docs:api": "typedoc",
     "api-report:update": "api-extractor run --local --verbose",
-    "pack-check": "publint && attw --pack . --profile esm-only"
+    "pack-check": "publint && attw --pack . --profile esm-only",
+    "prepublishOnly": "node ../../scripts/require-pnpm-publish.ts"
   },
   "dependencies": {
     "@ignifx/2d": "workspace:*",

@@ -46,7 +46,8 @@
     "api-report": "api-extractor run --verbose && api-extractor run --verbose -c api-extractor.main.json && api-extractor run --verbose -c api-extractor.preload.json",
     "docs:api": "typedoc && typedoc --options typedoc.main.json && typedoc --options typedoc.preload.json",
     "api-report:update": "api-extractor run --local --verbose && api-extractor run --local --verbose -c api-extractor.main.json && api-extractor run --local --verbose -c api-extractor.preload.json",
-    "pack-check": "publint && attw --pack . --profile esm-only"
+    "pack-check": "publint && attw --pack . --profile esm-only",
+    "prepublishOnly": "node ../../scripts/require-pnpm-publish.ts"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "catalog:",

@@ -11,8 +11,13 @@
  * (`scripts/README.md`).
  */
 
-/** How one package looked to the registry. */
-export type RegistryOutcome = "published" | "missing" | "error";
+/**
+ * How one package looked to the registry. `unusable` is a version that is there but cannot be
+ * installed: its manifest still names a dependency through pnpm's `workspace:` or `catalog:`
+ * protocol, which only `pnpm publish` rewrites (0.3.0 of three packages went out through a plain
+ * `npm publish` that way on 2026-10-03, and `npm install ignifx` failed with `Unsupported URL Type`).
+ */
+export type RegistryOutcome = "published" | "missing" | "unusable" | "error";
 
 /** The result of asking the registry about one package version. */
 export interface RegistryCheck {
@@ -100,24 +105,51 @@ async function readLatestTag(fetchLike: FetchLike, registry: string, name: strin
   }
 }
 
+/** The dependency fields of a manifest whose specifiers a consumer's package manager resolves. */
+const DEPENDENCY_FIELDS = ["dependencies", "peerDependencies", "optionalDependencies"] as const;
+
+/** Specifier protocols that only mean something inside the pnpm workspace that published them. */
+const WORKSPACE_PROTOCOL = /^(?:workspace|catalog):/u;
+
 /**
  * Reads the tarball URL out of a version document, which is what proves the version is really
  * there rather than merely named.
  *
- * @param body - The version document as text.
+ * @param document - The parsed version document.
  * @returns The tarball URL, or `null` when the document does not carry one.
  */
-function tarballOf(body: string): string | null {
-  const parsed: unknown = JSON.parse(body);
-  if (typeof parsed !== "object" || parsed === null || !("dist" in parsed)) {
+function tarballOf(document: object): string | null {
+  if (!("dist" in document)) {
     return null;
   }
-  const dist: unknown = parsed.dist;
+  const dist: unknown = document.dist;
   if (typeof dist !== "object" || dist === null || !("tarball" in dist)) {
     return null;
   }
   const tarball: unknown = dist.tarball;
   return typeof tarball === "string" ? tarball : null;
+}
+
+/**
+ * Lists the dependencies a published manifest still names through a workspace-only protocol.
+ *
+ * @param document - The parsed version document.
+ * @returns `name@specifier` for each one, empty when the manifest installs anywhere.
+ */
+export function unresolvedDependencies(document: object): readonly string[] {
+  const found: string[] = [];
+  for (const field of DEPENDENCY_FIELDS) {
+    const map: unknown = field in document ? Reflect.get(document, field) : undefined;
+    if (typeof map !== "object" || map === null) {
+      continue;
+    }
+    for (const [name, specifier] of Object.entries(map)) {
+      if (typeof specifier === "string" && WORKSPACE_PROTOCOL.test(specifier)) {
+        found.push(`${name}@${specifier}`);
+      }
+    }
+  }
+  return found;
 }
 
 /**
@@ -150,15 +182,25 @@ export async function checkPackage(
   if (response.status !== 200) {
     return { name, version, outcome: "error", detail: `the registry answered HTTP ${String(response.status)}` };
   }
-  let tarball: string | null;
+  let document: unknown;
   try {
-    tarball = tarballOf(await response.text());
+    document = JSON.parse(await response.text());
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return { name, version, outcome: "error", detail: `the version document did not parse: ${message}` };
   }
-  if (tarball === null) {
+  const tarball = typeof document === "object" && document !== null ? tarballOf(document) : null;
+  if (tarball === null || typeof document !== "object" || document === null) {
     return { name, version, outcome: "error", detail: "the version document carries no dist.tarball" };
+  }
+  const unresolved = unresolvedDependencies(document);
+  if (unresolved.length > 0) {
+    return {
+      name,
+      version,
+      outcome: "unusable",
+      detail: `published with unresolved dependencies (${unresolved.join(", ")}) — it was not published with pnpm`,
+    };
   }
   const latest = await readLatestTag(fetchLike, registry, name);
   const tag = latest === null ? "latest tag unreadable" : `latest: ${latest}`;
@@ -166,12 +208,13 @@ export async function checkPackage(
 }
 
 /**
- * Whether a check still has to be retried. Only a definite `published` ends the wait: the registry
- * is read through a CDN and a just-published version can 404 for a few seconds.
+ * Whether a check still has to be retried. `published` and `unusable` end the wait — the version
+ * is there either way, and waiting will not change its manifest. Anything else is retried: the
+ * registry is read through a CDN and a just-published version can 404 for a few seconds.
  *
  * @param check - One result.
  * @returns True when the package has not been seen on the registry yet.
  */
 export function isUnresolved(check: RegistryCheck): boolean {
-  return check.outcome !== "published";
+  return check.outcome !== "published" && check.outcome !== "unusable";
 }

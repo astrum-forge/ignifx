@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkPackage, distTagsUrl, isUnresolved, versionUrl } from "../lib/registry.ts";
+import { checkPackage, distTagsUrl, isUnresolved, unresolvedDependencies, versionUrl } from "../lib/registry.ts";
 import type { FetchLike, RegistryResponse } from "../lib/registry.ts";
 
 /** The registry the tests pretend to talk to. */
@@ -104,5 +104,34 @@ describe("checkPackage", () => {
     expect(check.outcome).toBe("published");
     expect(check.detail).toContain("latest tag unreadable");
     expect(isUnresolved(check)).toBe(false);
+  });
+});
+
+describe("a version published without pnpm", () => {
+  it("is unusable, names each workspace-only specifier, and is not retried", async () => {
+    const fetchLike = stub([
+      [
+        versionUrl(REGISTRY, "@ignifx/terrain", "0.3.0"),
+        {
+          status: 200,
+          body: JSON.stringify({
+            dist: { tarball: "https://example.test/terrain-0.3.0.tgz" },
+            dependencies: { "@ignifx/core": "workspace:*", "@babylonjs/lite": "catalog:", "fast-png": "^8.0.0" },
+          }),
+        },
+      ],
+    ]);
+    const check = await checkPackage(fetchLike, REGISTRY, "@ignifx/terrain", "0.3.0");
+    expect(check.outcome).toBe("unusable");
+    expect(check.detail).toContain("@ignifx/core@workspace:*");
+    expect(check.detail).toContain("@babylonjs/lite@catalog:");
+    expect(check.detail).not.toContain("fast-png");
+    expect(isUnresolved(check)).toBe(false);
+  });
+
+  it("looks at peer and optional dependencies too, and passes plain ranges", () => {
+    expect(unresolvedDependencies({ peerDependencies: { vite: "catalog:" } })).toEqual(["vite@catalog:"]);
+    expect(unresolvedDependencies({ optionalDependencies: { a: "workspace:^" } })).toEqual(["a@workspace:^"]);
+    expect(unresolvedDependencies({ dependencies: { "@ignifx/core": "0.3.1" } })).toEqual([]);
   });
 });
