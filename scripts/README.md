@@ -11,7 +11,6 @@ dependencies beyond the Node standard library — which means **erasable syntax 
 | ------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `docs-schemas.ts`         | `pnpm docs:schemas`     | Regenerates `skills/ignifx/references/formats/*.md` and `ignifx.schemas.json` from the component schemas the packages export.                                                                                 |
 | `docs-recipes.ts`         | `pnpm docs:recipes`     | Regenerates `skills/ignifx/references/recipes/<name>.md` from `examples/recipes/<name>/main.ts`.                                                                                                              |
-| `docs-llms.ts`            | `pnpm docs:llms`        | Regenerates `website/public/llms.txt`, the site's index of the skill for agents.                                                                                                                              |
 | `check.ts`                | `pnpm check`            | Runs the pre-PR gate as a graph of parallel steps; prints one line per step and the log tail of a failed one.                                                                                                 |
 | `docs-harness.ts`         | `pnpm docs:harness`     | Runs the CI `docs-harness` checks and exits non-zero on the first failure.                                                                                                                                    |
 | `licenses.ts`             | `pnpm licenses:notices` | Regenerates `THIRD_PARTY_NOTICES.md` from `pnpm licenses list --prod` and the workspace manifests.                                                                                                            |
@@ -38,7 +37,6 @@ scripts decide the exit code, and all output goes through `lib/log.ts`. Their te
   `pack-check`, `perf` and `browser`; `--tail <n>` sets how many log lines a failed step prints.
 - `docs-harness.ts --base <ref>` — enable `api-report-gate` and `freshness`, which need a diff base
   and therefore report `SKIPPED` outside a pull request.
-- `docs-llms.ts --root <dir>` — the same, for the `llms.txt` generator.
 - `licenses.ts --root <dir>` — the same, for the notices generator; `--check` compares the
   committed file against what the generator would write and exits non-zero on a difference
   (`pnpm licenses:check`, which the CI `licenses` job runs).

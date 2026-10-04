@@ -70,7 +70,6 @@ Edit the source, run the generator, and review the result. Never hand-edit gener
 | Skill API references            | `pnpm docs:api`                                                           |
 | Format schemas and field tables | `pnpm docs:schemas`                                                       |
 | Recipe pages                    | `pnpm docs:recipes`                                                       |
-| `llms.txt`                      | `pnpm docs:llms`                                                          |
 | License notices                 | `pnpm licenses:notices`                                                   |
 
 Build changed packages before regenerating API reports. Run `pnpm api-report` afterwards; the update command alone does not validate the report.

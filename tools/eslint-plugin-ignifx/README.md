@@ -46,9 +46,9 @@ constructors, and the callees in `allowCallees` (default `defineExtension`, `def
 are declarative, ADR-0004). `new Map()`/`new Set()`/`new WeakMap()`/`new WeakSet()` are **not**
 allowed: coding standards §4 says caches are created lazily inside functions.
 
-Default `exclude`: `**/bin.ts`, `**/*.test.ts`, `**/*.browser.test.ts`, `**/tools/**`. The website is
-switched off in `eslint.config.ts` instead, because it is an application that renders at import time
-on purpose.
+Default `exclude`: `**/bin.ts`, `**/*.test.ts`, `**/*.browser.test.ts`, `**/tools/**`. The examples
+and templates are switched off in `eslint.config.ts` instead, because they are applications that
+boot at import time on purpose.
 
 Known false negatives: static class property initialisers and static blocks (`class A { static x =
 compute(); }`) run at import time but are not reported, so that ordinary class fields are not; and
@@ -127,9 +127,9 @@ negative.
 Coding standards §5.5. Reports `console.<anything>` outside the files listed in `allow`. Oxlint's
 own `no-console` reports the same shape; this rule exists because the **allowlist** is a repository
 decision (coding standards §6 lists `ignifx/no-console` in the ESLint table): the log sink
-(`**/src/log/**`), build scripts, CLI entry points, configuration files, repository tooling, the
-website, and tests are all legitimate places to write to stdout, and that list belongs in one rule
-option rather than in a growing pile of Oxlint overrides.
+(`**/src/log/**`), build scripts, CLI entry points, configuration files, repository tooling, and
+tests are all legitimate places to write to stdout, and that list belongs in one rule option rather
+than in a growing pile of Oxlint overrides.
 
 ## Tests
 

@@ -7,8 +7,7 @@ third-party packages a production install of the published packages and the game
 in, with the licence each one is distributed under (`CONSTITUTION.md` §11.2).
 
 Sample art, audio and models shipped with a template are **not** listed here: each template
-records its own in `templates/<name>/ATTRIBUTION.md` (§11.3). The web fonts the project site uses
-are development-time packages and carry their licences in `website/public/licenses/`.
+records its own in `templates/<name>/ATTRIBUTION.md` (§11.3).
 
 12 packages.
 

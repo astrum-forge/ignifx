@@ -1,6 +1,0 @@
-{
-  "format": "ignifx.environment",
-  "formatVersion": 1,
-  "environment": "environments/studio.env",
-  "skyboxEnabled": false
-}

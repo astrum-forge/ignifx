@@ -1,6 +1,6 @@
 # ADR-0020 · The site builds the workspace to run the examples
 
-**Status:** Accepted · **Date:** 2026-09-07 · **Deciders:** Astrum Forge Studios (owner), website build coordinator
+**Status:** Superseded by ADR-0027 (the site moved to its own repository and builds from the published packages) · **Date:** 2026-09-07 · **Deciders:** Astrum Forge Studios (owner), website build coordinator
 **Supersedes in part:** ADR-0019 §1 ("imports **no workspace package**"), §2 ("no inline script"), §3's route list, and the "Impossible for now" paragraph of its Consequences. Everything else in ADR-0019 stands.
 **Related:** `CONSTITUTION.md` §9.1 (no third-party requests), §9.2 (the Electron security baseline), §1.5 (the name) · `docs/architecture/16-docs-harness-and-skill.md` §3 · `website/plan/06-engineering.md` §2, `website/plan/08-execution.md` §4
 

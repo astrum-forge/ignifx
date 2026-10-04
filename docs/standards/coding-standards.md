@@ -34,7 +34,6 @@ Build comes before the steps that read `dist/`, because workspace imports resolv
 - `packages/`: published packages and subsystem skills.
 - `templates/`, `examples/`: playable apps and recipe sources.
 - `benchmarks/`, `tests/visual/`: performance budgets and visual goldens.
-- `website/`: prerendered public site, built separately.
 - `docs/`: standards, architecture, ADRs, reviews, and the engineering plan.
 - `skills/ignifx/`: engine skill and references.
 - `scripts/`, `.github/workflows/`: generators, checks, and release automation.
@@ -269,7 +268,7 @@ Its `pnpm version-packages` step updates package versions, skill versions, and s
 After merge, CI builds, publishes through npm Trusted Publishing, runs `pnpm release:verify`, and creates tags and GitHub releases.
 Provenance is off while the repository is private (constitution §9.4; ADR-0009).
 
-`website.yml` checks the site; Cloudflare Pages builds and deploys it.
+The public site lives in `astrum-forge/ignifx-website`, with its own checks and deploy (ADR-0027).
 
 ## 13. Dependencies and licenses
 

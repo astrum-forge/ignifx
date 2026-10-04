@@ -11,7 +11,6 @@ ruleTester.run("no-console", noConsole, {
     { code: "console.log('usage');", filename: "packages/cli/src/bin.ts" },
     { code: "console.log('config');", filename: "vitest.config.ts" },
     { code: "console.log('tool');", filename: "tools/eslint-plugin-ignifx/src/index.ts" },
-    { code: "console.log('site');", filename: "website/src/main.ts" },
     { code: "console.log('test');", filename: "packages/core/test/app.test.ts" },
     {
       code: "console.log('anywhere');",

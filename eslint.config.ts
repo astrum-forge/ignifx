@@ -150,19 +150,9 @@ const config: Linter.Config[] = [
     },
   },
   {
-    // The website is an application, not a published package: it exports nothing (so the JSDoc
-    // completeness rule has nothing to check) and renders at import time on purpose —
+    // The examples are applications, not published packages: an example's entry point is a
+    // `main.ts` that boots a game at import time, which is exactly what a reader is meant to copy.
     // CONSTITUTION.md §3.5 governs published modules, not app entry points.
-    name: "ignifx/website",
-    files: ["website/**/*.ts"],
-    rules: {
-      "jsdoc/require-jsdoc": "off",
-      "ignifx/no-module-side-effects": "off",
-    },
-  },
-  {
-    // The examples are applications for the same reason the website is: an example's entry point is
-    // a `main.ts` that boots a game at import time, which is exactly what a reader is meant to copy.
     name: "ignifx/examples",
     files: ["examples/**/*.ts"],
     rules: {

@@ -1,8 +1,8 @@
 name: Setup ignifx workspace
 description: >
   Installs pnpm and Node, restores the pnpm store and Turborepo caches, and installs the workspace
-  with a frozen lockfile (CONSTITUTION.md §9.4). Every ci.yml/release.yml/website.yml job starts
-  with this. With `playwright: true` it also installs Chromium from a cache.
+  with a frozen lockfile (CONSTITUTION.md §9.4). Every ci.yml/release.yml job starts with this.
+  With `playwright: true` it also installs Chromium from a cache.
 
 inputs:
   turbo-cache:

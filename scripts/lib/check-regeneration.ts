@@ -27,19 +27,15 @@ function apiReportDirectories(repositoryRoot: string): readonly string[] {
     .toSorted((left, right) => left.localeCompare(right));
 }
 
-/** Generated files that are not `.md`/`.json` under a generated directory. */
-const GENERATED_FILES = ["website/public/llms.txt"] as const;
-
 /**
- * Generated files under a directory (recursively), excluding the hand-written READMEs, plus the
- * individually named generated files of {@link GENERATED_FILES}.
+ * Generated files under a directory (recursively), excluding the hand-written READMEs.
  *
  * @param root - Absolute repository root.
  * @param directories - Repository-relative directories holding generated output.
  * @returns Repository-relative file paths, sorted.
  */
 export function generatedFiles(root: string, directories: readonly string[]): readonly string[] {
-  const files: string[] = GENERATED_FILES.filter((file) => exists(path.join(root, file)));
+  const files: string[] = [];
   for (const directory of directories) {
     const absolute = path.join(root, directory);
     if (!exists(absolute)) {
@@ -88,7 +84,6 @@ async function runGenerators(root: string): Promise<CheckResult | null> {
     ["pnpm", ["docs:api"]],
     ["node", [path.join("scripts", "docs-schemas.ts")]],
     ["node", [path.join("scripts", "docs-recipes.ts")]],
-    ["node", [path.join("scripts", "docs-llms.ts")]],
   ];
   for (const [command, args] of generators) {
     // oxlint-disable-next-line no-await-in-loop -- in order: a later generator may read what an earlier one wrote.

@@ -50,7 +50,7 @@ All published packages live under the `@ignifx` npm scope and share one version 
 | `@ignifx/cli`          | `create-ignifx` scaffolder (templates), asset tooling commands                                                                                                                                                                                                                   | —                                                         |
 | `ignifx`               | Umbrella: re-exports core and the standard extensions with a one-call `createGame()`; ships the Agent Skill                                                                                                                                                                      | all of the above except electron/devtools/vite-plugin/cli |
 
-Non-published workspace members: `templates/*` (2d-topdown, 2d-sidescroller, 3d-third-person, 3d-first-person), `examples/*`, `website/` (public site, separate deploy), `docs/`, `skills/`.
+Non-published workspace members: `templates/*` (2d-topdown, 2d-sidescroller, 3d-third-person, 3d-first-person), `examples/*`, `docs/`, `skills/`. The public site is a separate repository, `astrum-forge/ignifx-website`, built from the published packages (ADR-0027).
 
 ### 2.1 Layering rule
 
