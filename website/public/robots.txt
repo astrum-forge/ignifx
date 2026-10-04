@@ -1,5 +1,0 @@
-# ignifx.com — everything here is public documentation. Crawl it.
-User-agent: *
-Allow: /
-
-Sitemap: https://ignifx.com/sitemap.xml

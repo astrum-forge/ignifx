@@ -258,9 +258,8 @@ jobs:
       - uses: ./.github/actions/setup
 
       # The template and the `@ignifx/*` packages it bundles — `electron-vite` will not build a
-      # renderer whose workspace dependencies have no `dist/`. Not the whole workspace: the website
-      # build does not run on Windows (`website/dist/.examples-build` ENOENT, 2026-09-14) and
-      # nothing here needs it.
+      # renderer whose workspace dependencies have no `dist/`. Not the whole workspace: nothing here
+      # needs it.
       - run: pnpm exec turbo run build --filter=ignifx-template-3d-third-person...
 
       - name: Build the desktop bundles
@@ -310,7 +309,7 @@ jobs:
       - uses: ./.github/actions/setup
       - run: pnpm build:packages
       # CONSTITUTION.md §5.2/§5.5: examples compile and run, and the skill matches the current API.
-      # `regeneration-diff` runs every generator (docs:api, docs:schemas, docs:recipes, docs:llms)
+      # `regeneration-diff` runs every generator (docs:api, docs:schemas, docs:recipes)
       # and fails on any difference from the committed output (standards §15). On a pull request
       # the harness also runs its two diff-based gates against the base commit; the
       # `docs-not-needed` label waives the skill-change half of the API-report gate
@@ -324,5 +323,4 @@ jobs:
             skills/ignifx/references/api \
             skills/ignifx/references/formats \
             skills/ignifx/references/recipes \
-            website/public/llms.txt \
             'packages/*/api'

@@ -11,7 +11,7 @@
  * | `skill-lint` | SKILL.md size, frontmatter, section template, links, nesting, deprecation, migration, wording and import rules |
  * | `examples-compile` | every fenced `ts` block in the skills type-checks against the built packages |
  * | `examples-run` | every block tagged `ts run` executes under Node and exits 0 |
- * | `regeneration-diff` | `docs:api` + `docs:schemas` + `docs:recipes` + `docs:llms` reproduce the committed output |
+ * | `regeneration-diff` | `docs:api` + `docs:schemas` + `docs:recipes` reproduce the committed output |
  * | `migrations-guard` | `docs/migrations/` holds only `README.md` while the version is `0.x` |
  * | `api-report-gate` | a changed `api/*.api.md` ships with a changeset and a skill update |
  * | `freshness` | a package whose `src/` changed ships a regenerated `references/api/<pkg>.md` |

@@ -29,7 +29,6 @@ const config: UserConfig = {
         "templates",
         "examples",
         "benchmarks",
-        "website",
         "docs",
         "skills",
         "repo",

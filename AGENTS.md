@@ -15,7 +15,7 @@ Precedence when documents conflict: constitution → standards → architecture 
 
 ## Status
 
-Phases 0–12 of the engineering plan and the local half of "Hardening and 1.0" are on `main`, as are custom shaders, `InstancedMeshRenderer`, `SpriteBatch` and the `particles`, `particles-2d` and `terrain` packages (plan `docs/plan/2026-09-terrain-particles-shaders.md`, ADRs 0024–0026). Versions are in each `package.json`; `release.yml` publishes from the "Version Packages" pull request (no provenance while the repository is private — ADR-0009). The scaffolder is `npx @ignifx/cli@latest`; there is no `create-ignifx` package, only the bin of that name. `templates/*` are four playable templates with desktop variants, visual goldens and frame budgets; `examples/*` are real apps and the compiled sources of the skill's recipes; `website/` is the public site (Cloudflare Pages).
+Phases 0–12 of the engineering plan and the local half of "Hardening and 1.0" are on `main`, as are custom shaders, `InstancedMeshRenderer`, `SpriteBatch` and the `particles`, `particles-2d` and `terrain` packages (plan `docs/plan/2026-09-terrain-particles-shaders.md`, ADRs 0024–0026). Versions are in each `package.json`; `release.yml` publishes from the "Version Packages" pull request (no provenance while the repository is private — ADR-0009). The scaffolder is `npx @ignifx/cli@latest`; there is no `create-ignifx` package, only the bin of that name. `templates/*` are four playable templates with desktop variants, visual goldens and frame budgets; `examples/*` are real apps and the compiled sources of the skill's recipes; the public site lives in `astrum-forge/ignifx-website` and builds from the published npm packages (ADR-0027).
 
 ## Commands
 
@@ -33,7 +33,7 @@ The fast loop — run the narrowest check that proves the change, and `pnpm chec
 | The whole gate                                     | `pnpm check` — build, format, lint, typecheck, unit tests with coverage, API report, docs harness, in parallel | ~20 s warm    |
 | Only if the change affects rendering or frame time | `pnpm test:visual` / `pnpm test:frame-budget` (`--grep <name>` for one scene; not in CI)                       | minutes       |
 
-`pnpm check` prints one line per step; a failed step prints its log tail and the path of its full log (`node_modules/.cache/ignifx-check/<step>.log`) — read that file rather than re-running with more output. `--full` adds `pack-check`, `perf` and `browser`. Other commands: `pnpm test:coverage` · `pnpm test:perf` (timing, heap and bundle-size budgets; run alone) · `pnpm test:browser` · `pnpm test:frame-budget` · `pnpm pack-check` · `pnpm deps` · `pnpm docs:api` · `pnpm docs:schemas` · `pnpm docs:recipes` · `pnpm docs:llms` · `pnpm docs:harness` · `pnpm changeset` · `pnpm release:verify`. A release runs `pnpm version-packages` — the Changesets version step plus the skill-version and schema regeneration it knows nothing about.
+`pnpm check` prints one line per step; a failed step prints its log tail and the path of its full log (`node_modules/.cache/ignifx-check/<step>.log`) — read that file rather than re-running with more output. `--full` adds `pack-check`, `perf` and `browser`. Other commands: `pnpm test:coverage` · `pnpm test:perf` (timing, heap and bundle-size budgets; run alone) · `pnpm test:browser` · `pnpm test:frame-budget` · `pnpm pack-check` · `pnpm deps` · `pnpm docs:api` · `pnpm docs:schemas` · `pnpm docs:recipes` · `pnpm docs:harness` · `pnpm changeset` · `pnpm release:verify`. A release runs `pnpm version-packages` — the Changesets version step plus the skill-version and schema regeneration it knows nothing about.
 
 ## Using the skill
 
@@ -63,4 +63,4 @@ The entry skill is `skills/ignifx/SKILL.md`; subsystem skills sit at `packages/<
 
 ## Layout
 
-`packages/*` (published `@ignifx/*`), `templates/*`, `examples/*`, `benchmarks/`, `website/` (public site, separate deploy), `docs/`, `skills/`, `tests/visual/`.
+`packages/*` (published `@ignifx/*`), `templates/*`, `examples/*`, `benchmarks/`, `docs/`, `skills/`, `tests/visual/`.

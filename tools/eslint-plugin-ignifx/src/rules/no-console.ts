@@ -10,9 +10,9 @@ import type { TSESTree } from "@typescript-eslint/utils";
  *
  * Oxlint's `no-console` already reports the same shape. This rule exists because the *allowlist* is
  * a repository decision (coding standards §6 lists `ignifx/no-console` in the ESLint table): the
- * sink itself, build scripts, CLI entry points, configuration files, repository tooling, and the
- * website are all legitimate places to write to stdout, and that list lives here as rule options
- * rather than as a growing pile of Oxlint overrides.
+ * sink itself, build scripts, CLI entry points, configuration files, repository tooling and tests
+ * are all legitimate places to write to stdout, and that list lives here as rule options rather
+ * than as a growing pile of Oxlint overrides.
  */
 
 /** Files where writing to the console is the intended behaviour. */
@@ -22,7 +22,6 @@ const DEFAULT_ALLOW = [
   "**/bin.ts",
   "**/*.config.ts",
   "**/tools/**",
-  "**/website/**",
   "**/test/**",
   "**/*.test.ts",
   "**/*.browser.test.ts",
