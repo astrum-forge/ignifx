@@ -3,7 +3,7 @@ import { element, setText } from "../dom/elements.js";
 import { DEVTOOLS_CLASS_NAMES } from "../dom/styles.js";
 import { devtoolsError, DevtoolsErrorCode } from "../errors.js";
 import type { DevtoolsPanelHost } from "../overlay/panel.js";
-import type { Component, FieldDefinition, ReferenceEncoder } from "@ignifx/core";
+import type { Component, FieldDefinition, JsonValue, ReferenceEncoder } from "@ignifx/core";
 
 /**
  * Edit supported schema fields through ordinary property assignments, just as scene loading does.
@@ -80,7 +80,16 @@ export function writeField(
 }
 
 /**
- * Renders a field's value as the JSON a scene file would carry.
+ * Renders a field's value as the JSON a scene file would carry, except that an asset shows as its
+ * address.
+ *
+ * @remarks
+ * The file encoder writes `null` for an asset created in code — a `memory:` address names no file a
+ * reader could resolve (`encodeValue`'s `asset` branch) — which is right for a scene file and wrong
+ * for a view of the live value: a `MeshRenderer` built from `createMaterialAsset` showed
+ * `materials [null]`, as if it had no material. So the containers an asset can sit inside are
+ * walked here and each handle is shown by its address, `memory:` or not; every other value goes
+ * through the file encoder unchanged.
  *
  * @param field - The field definition.
  * @param value - The current value.
@@ -90,9 +99,78 @@ export function writeField(
  */
 export function encodeForDisplay(field: FieldDefinition<unknown>, value: unknown): string {
   try {
-    return JSON.stringify(encodeValue(field, value, DISPLAY_REFERENCES));
+    return JSON.stringify(displayValue(field, value));
   } catch {
     return "<unencodable>";
+  }
+}
+
+/**
+ * Encodes one value for {@link encodeForDisplay}.
+ *
+ * @param field - The field definition.
+ * @param value - The current value.
+ * @returns The JSON value.
+ */
+function displayValue(field: FieldDefinition<unknown>, value: unknown): JsonValue {
+  const spec = field.spec;
+  if (value === null || typeof value !== "object") {
+    return encodeValue(field, value, DISPLAY_REFERENCES);
+  }
+  switch (spec.kind) {
+    case "asset": {
+      const address: unknown = Reflect.get(value, "address");
+      return typeof address === "string" ? address : encodeValue(field, value, DISPLAY_REFERENCES);
+    }
+    case "optional": {
+      return displayValue(spec.inner, value);
+    }
+    case "array": {
+      return Array.isArray(value)
+        ? value.map((item: unknown): JsonValue => displayValue(spec.item, item))
+        : encodeValue(field, value, DISPLAY_REFERENCES);
+    }
+    case "record": {
+      const shown: Record<string, JsonValue> = {};
+      for (const [name, member] of Object.entries(spec.fields)) {
+        if (member.options.transient !== true) {
+          // A member the value omits shows its default, as the file encoder writes it.
+          const supplied: unknown = Reflect.get(value, name);
+          shown[name] = displayValue(member, supplied === undefined ? member.createDefault() : supplied);
+        }
+      }
+      return shown;
+    }
+    case "map": {
+      const shown: Record<string, JsonValue> = {};
+      for (const key of Object.keys(value).toSorted()) {
+        shown[key] = displayValue(spec.value, Reflect.get(value, key));
+      }
+      return shown;
+    }
+    case "f32":
+    case "f64":
+    case "i32":
+    case "u32":
+    case "bool":
+    case "str":
+    case "enum":
+    case "vec2":
+    case "vec3":
+    case "vec4":
+    case "quat":
+    case "color":
+    case "entityRef":
+    case "componentRef":
+    case "layerMask":
+    case "curve":
+    case "custom": {
+      // No asset can sit inside these, so the file's own encoding is the display.
+      return encodeValue(field, value, DISPLAY_REFERENCES);
+    }
+    default: {
+      return assertNever(spec, "schema field kind");
+    }
   }
 }
 
