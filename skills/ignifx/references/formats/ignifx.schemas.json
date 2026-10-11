@@ -824,9 +824,9 @@
           "description": "Exposure, contrast, and tone mapping. Recompiles PBR pipelines when it changes."
         },
         "clearColor": {
-          "kind": "color",
-          "default": "[0,0,0,1]",
-          "description": "The colour the scene is cleared to, in sRGB."
+          "kind": "optional",
+          "default": "null",
+          "description": "The colour the scene is cleared to, in sRGB; null leaves the rendering.clearColor setting."
         }
       }
     },

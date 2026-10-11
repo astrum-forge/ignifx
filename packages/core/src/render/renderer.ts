@@ -866,7 +866,8 @@ export class RendererImpl implements Renderer {
    *
    * 1. **`Camera.clearColor` on the main camera**, when it is not `null`. The `PreRender` system
    *    writes it every frame the camera renders, so it always wins.
-   * 2. **`Environment.clearColor`** of the winning environment, written whenever the field changes.
+   * 2. **`Environment.clearColor`** of the winning environment, when it is not `null`, written
+   *    whenever the field changes and whenever that environment becomes the winner.
    * 3. **The `rendering.clearColor` setting**, written once by {@link RendererImpl.attachHandles}
    *    as the scene is created — before a frame has run, and therefore before either component.
    * 4. Babylon Lite's own default, a mid grey, when the project declared no section at all. The

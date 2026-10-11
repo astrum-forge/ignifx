@@ -177,6 +177,30 @@ describe("the environment", () => {
     expect(h.world.lite.scene.clearColor.r).toBeCloseTo(Color.srgbToLinear(1), 6);
   });
 
+  it("hands the scene back to an earlier winner when the newer one is disabled", async () => {
+    const h = await app();
+    const first = h.world.createEntity("EnvA").addComponent(Environment, {
+      clearColor: { r: 1, g: 0, b: 0, a: 1 },
+    });
+    first.fog.mode = "linear";
+    first.fog.start = 5;
+    h.frame();
+    const second = h.world.createEntity("EnvB").addComponent(Environment, {
+      clearColor: { r: 0, g: 0, b: 1, a: 1 },
+    });
+    second.fog.mode = "linear";
+    second.fog.start = 50;
+    h.frame();
+    expect(h.world.lite.scene.fog?.start).toBe(50);
+
+    // `first` wrote both before `second` took over; unchanged since, it must still write them again.
+    second.enabled = false;
+    h.frame();
+    expect(h.world.lite.scene.clearColor.r).toBeCloseTo(Color.srgbToLinear(1), 6);
+    expect(h.world.lite.scene.clearColor.b).toBeCloseTo(0, 6);
+    expect(h.world.lite.scene.fog?.start).toBe(5);
+  });
+
   it("records the loaded environment asset and skips the GPU half headlessly", async () => {
     const h = await app();
     const handle = h.app.assets.register(
