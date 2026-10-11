@@ -31,6 +31,11 @@ import type { MaterialAsset } from "../../src/render/material-asset.js";
  * mechanism, and `test/render/rebuild-serialisation.test.ts` pins the serialisation itself. The
  * soaks below are the integration side of that: fog, a shadow pass, and a generated program handed
  * to a live thin-instanced renderer over and over, which is what made the window wide enough to hit.
+ *
+ * The same message had a second cause, which only slow CI runners hit (2026-10-02, 2026-10-11): a
+ * frame that lands while one `rebuildSceneRenderables` is between groups makes Lite swap in a shadow
+ * task it never recorded. `src/lite/gpu/shadow-generator.ts` records the mechanism, and the
+ * "half way through" tests in `shadows.browser.test.ts` reproduce it on every run.
  */
 
 let harness: BrowserApp | null = null;
