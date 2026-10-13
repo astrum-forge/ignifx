@@ -1,5 +1,14 @@
 # @ignifx/physics
 
+## 0.5.0
+
+### Patch Changes
+
+- Updated dependencies [d617f2c]
+- Updated dependencies [6175ff5]
+- Updated dependencies [ee4f87b]
+  - @ignifx/core@0.5.0
+
 ## 0.4.0
 
 ### Patch Changes
