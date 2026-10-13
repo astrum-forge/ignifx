@@ -1,4 +1,4 @@
-import { Camera, Color } from "@ignifx/core";
+import { Camera } from "@ignifx/core";
 import { afterEach, describe, expect, it } from "vitest";
 import { Camera2D } from "../src/camera/camera-2d.js";
 import { createTwoDBrowserApp, distanceTo, SETTLE_FRAMES } from "./support/browser-harness.js";
@@ -15,14 +15,14 @@ import type { ColorLike } from "@ignifx/core";
  * is why the assertion lives here rather than in the node suite; `test/settings.test.ts` covers the
  * setting being read at all.
  *
- * ## The colour space, measured rather than assumed (2026-09-08, macOS arm64, SwiftShader)
+ * ## The colour space
  *
- * `rendering.clearColor` is sRGB, Lite's clear values are linear, and the surface is **not** an
- * sRGB-encoding format — so the decoded value is presented verbatim and a channel comes out at
- * `srgbToLinear(setting) * 255`, not at `setting * 255`. `{ r: 0.6, g: 0.2, b: 0.9 }` presents as
- * bytes `81, 8, 201`. That is the 3D path's behaviour, not a 2D quirk: the `"mixed"` case below
- * measures the same setting through `scene.clearColor` and gets the same three bytes, which is the
- * property that actually matters — one setting, one colour, whichever mode a game is in.
+ * `rendering.clearColor` is sRGB and presents as authored: a channel comes out at
+ * `setting * 255`, so `{ r: 0.6, g: 0.2, b: 0.9 }` presents as bytes `153, 51, 230`. Until 0.5.0
+ * the setting was decoded to linear and nothing re-encoded it, so the same colour presented as
+ * `81, 8, 201`. The `"mixed"` case below measures the same setting through `scene.clearColor` and
+ * gets the same three bytes, which is the property that actually matters — one setting, one
+ * colour, whichever mode a game is in.
  */
 
 let harness: TwoDBrowserApp | null = null;
@@ -45,7 +45,7 @@ const CLEAR: ColorLike = { r: 0.6, g: 0.2, b: 0.9, a: 1 };
  * @returns The presented byte.
  */
 function presented(channel: number): number {
-  return Math.round(Color.srgbToLinear(channel) * 255);
+  return Math.round(channel * 255);
 }
 
 describe('"sprite" mode', () => {

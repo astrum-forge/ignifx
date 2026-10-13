@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
+import { isSrgbEncodingFormat } from "../../src/lite/gpu/environment.js";
 import { toLiteEngineOptions } from "../../src/lite/render-diagnostics.js";
 import { NO_RENDERING_FEATURES } from "../../src/lite/render-features.js";
-import { Color } from "../../src/math/color.js";
 import { Camera } from "../../src/render/camera.js";
 import { Environment } from "../../src/render/environment.js";
 import {
@@ -178,9 +178,11 @@ describe("the clear colour the section declares", () => {
     });
     // Written as the scene is created, before a frame has run — so a world with no camera and no
     // `Environment` still clears to what the project asked for, rather than to Lite's mid grey.
+    // The value stays sRGB: Lite stores the clear as given and the surface is not an sRGB view, so
+    // that is what presents (`clear-color.browser.test.ts` reads the bytes).
     const scene = harness.world.lite.scene;
-    expect(scene.clearColor.r).toBeCloseTo(Color.srgbToLinear(1), 6);
-    expect(scene.clearColor.g).toBeCloseTo(Color.srgbToLinear(0.5), 6);
+    expect(scene.clearColor.r).toBeCloseTo(1, 6);
+    expect(scene.clearColor.g).toBeCloseTo(0.5, 6);
     expect(scene.clearColor.b).toBeCloseTo(0, 6);
     expect(scene.clearColor.a).toBe(1);
   });
@@ -203,14 +205,14 @@ describe("the clear colour the section declares", () => {
     });
     harness.frame();
     const scene = harness.world.lite.scene;
-    expect(scene.clearColor.b).toBeCloseTo(Color.srgbToLinear(1), 6);
+    expect(scene.clearColor.b).toBeCloseTo(1, 6);
     expect(scene.clearColor.r).toBeCloseTo(0, 6);
 
     // Clearing the override does not restore the setting: `null` means "leave the scene's clear
     // colour alone", and the setting was applied once, at creation (`07-rendering.md` §2.1).
     camera.clearColor = null;
     harness.frame();
-    expect(scene.clearColor.b).toBeCloseTo(Color.srgbToLinear(1), 6);
+    expect(scene.clearColor.b).toBeCloseTo(1, 6);
   });
 
   it("is left alone by an Environment whose own clearColor is null, the default", async () => {
@@ -222,22 +224,22 @@ describe("the clear colour the section declares", () => {
     harness.frame();
     const scene = harness.world.lite.scene;
     expect(environment.clearColor).toBeNull();
-    expect(scene.clearColor.r).toBeCloseTo(Color.srgbToLinear(1), 6);
+    expect(scene.clearColor.r).toBeCloseTo(1, 6);
 
     environment.clearColor = { r: 0, g: 1, b: 0, a: 1 };
     harness.frame();
-    expect(scene.clearColor.g).toBeCloseTo(Color.srgbToLinear(1), 6);
+    expect(scene.clearColor.g).toBeCloseTo(1, 6);
 
     // Back to `null` stops steering; like the camera's, it does not restore the setting.
     environment.clearColor = null;
     harness.frame();
-    expect(scene.clearColor.g).toBeCloseTo(Color.srgbToLinear(1), 6);
+    expect(scene.clearColor.g).toBeCloseTo(1, 6);
 
     // A colour assigned again is written, even the one written before.
     scene.clearColor.g = 0;
     environment.clearColor = { r: 0, g: 1, b: 0, a: 1 };
     harness.frame();
-    expect(scene.clearColor.g).toBeCloseTo(Color.srgbToLinear(1), 6);
+    expect(scene.clearColor.g).toBeCloseTo(1, 6);
   });
 
   it("is overridden by an Environment, which the main camera in turn overrides", async () => {
@@ -247,11 +249,21 @@ describe("the clear colour the section declares", () => {
     harness.world.createEntity("Env").addComponent(Environment, { clearColor: { r: 0, g: 1, b: 0, a: 1 } });
     harness.frame();
     const scene = harness.world.lite.scene;
-    expect(scene.clearColor.g).toBeCloseTo(Color.srgbToLinear(1), 6);
+    expect(scene.clearColor.g).toBeCloseTo(1, 6);
 
     harness.world.createEntity("Main Camera").addComponent(Camera, { clearColor: { r: 0, g: 0, b: 1, a: 1 } });
     harness.frame();
-    expect(scene.clearColor.b).toBeCloseTo(Color.srgbToLinear(1), 6);
+    expect(scene.clearColor.b).toBeCloseTo(1, 6);
     expect(scene.clearColor.g).toBeCloseTo(0, 6);
+  });
+
+  it("is decoded only for a surface that encodes to sRGB as it stores", () => {
+    // `rendering.srgb: true` renders through an `*-srgb` view; there the GPU re-encodes the clear,
+    // so it has to be handed over linear. Every other format stores it as given.
+    expect(isSrgbEncodingFormat("bgra8unorm-srgb")).toBe(true);
+    expect(isSrgbEncodingFormat("rgba8unorm-srgb")).toBe(true);
+    expect(isSrgbEncodingFormat("bgra8unorm")).toBe(false);
+    expect(isSrgbEncodingFormat("rgba16float")).toBe(false);
+    expect(isSrgbEncodingFormat(undefined)).toBe(false);
   });
 });

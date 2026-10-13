@@ -339,7 +339,7 @@ export class Environment extends Component implements ComponentHooks {
   }
 
   /**
-   * Writes the clear colour, decoded to linear.
+   * Writes the clear colour.
    *
    * @remarks
    * Nothing while the field is `null`, which is what leaves the `rendering.clearColor` setting
@@ -366,11 +366,11 @@ export class Environment extends Component implements ComponentHooks {
    * Writes the fog record.
    *
    * @remarks
-   * The colour goes across **encoded**, unlike every other colour this component writes: Lite's fog
-   * block decodes it itself — `color = mix(pow(scene.vFogColor.rgb, vec3(2.2)), color, fogFactor)`
+   * The colour goes across **encoded**: Lite's fog block decodes it itself —
+   * `color = mix(pow(scene.vFogColor.rgb, vec3(2.2)), color, fogFactor)`
    * (`lib/material/pbr/pbr-fog-wgsl.js` 4) — so handing it a linear value decodes it twice and the
-   * fog reads far darker than the swatch. The clear colour, which the render pass consumes as a
-   * linear clear value, is decoded by `RendererImpl.applyClearColor` instead.
+   * fog reads far darker than the swatch. The clear colour also goes across encoded, for its own
+   * reason (`RendererImpl.applyClearColor`).
    *
    * @param renderer - The rendering service, for the scene.
    */

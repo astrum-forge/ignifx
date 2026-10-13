@@ -1,5 +1,4 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { Color } from "../../src/math/color.js";
 import { Camera } from "../../src/render/camera.js";
 import { environmentDefinition, EnvironmentAsset } from "../../src/render/environment-asset.js";
 import { Environment } from "../../src/render/environment.js";
@@ -146,7 +145,7 @@ describe("the environment", () => {
     environment.fog.start = 5;
     environment.fog.end = 50;
     h.frame();
-    expect(h.world.lite.scene.clearColor.r).toBeCloseTo(Color.srgbToLinear(1), 6);
+    expect(h.world.lite.scene.clearColor.r).toBeCloseTo(1, 6);
     expect(h.world.lite.scene.fog).not.toBeNull();
     expect(h.world.lite.scene.fog?.start).toBe(5);
 
@@ -169,12 +168,12 @@ describe("the environment", () => {
     h.frame();
     h.frame();
     expect(warningsOf(h).filter((line) => line.includes("IGX-0705"))).toHaveLength(1);
-    expect(h.world.lite.scene.clearColor.b).toBeCloseTo(Color.srgbToLinear(1), 6);
+    expect(h.world.lite.scene.clearColor.b).toBeCloseTo(1, 6);
     expect(second).not.toBe(first);
 
     second.enabled = false;
     h.frame();
-    expect(h.world.lite.scene.clearColor.r).toBeCloseTo(Color.srgbToLinear(1), 6);
+    expect(h.world.lite.scene.clearColor.r).toBeCloseTo(1, 6);
   });
 
   it("hands the scene back to an earlier winner when the newer one is disabled", async () => {
@@ -196,7 +195,7 @@ describe("the environment", () => {
     // `first` wrote both before `second` took over; unchanged since, it must still write them again.
     second.enabled = false;
     h.frame();
-    expect(h.world.lite.scene.clearColor.r).toBeCloseTo(Color.srgbToLinear(1), 6);
+    expect(h.world.lite.scene.clearColor.r).toBeCloseTo(1, 6);
     expect(h.world.lite.scene.clearColor.b).toBeCloseTo(0, 6);
     expect(h.world.lite.scene.fog?.start).toBe(5);
   });
