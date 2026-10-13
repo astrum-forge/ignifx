@@ -1,6 +1,6 @@
 import { CoreErrorCode } from "../errors/error-codes.js";
 import { setSceneCamera } from "../lite/camera.js";
-import { forgetMaterialBindingLayouts, rebuildRenderables } from "../lite/shadow.js";
+import { forgetMaterialBindingLayouts, readMaterialEpoch, rebuildRenderables } from "../lite/shadow.js";
 import { Camera } from "./camera.js";
 import { Environment } from "./environment.js";
 import { InstancedMeshRenderer } from "./instanced-mesh-renderer.js";
@@ -116,6 +116,9 @@ export class RenderSyncSystem implements System {
 
   #areCastersDirty = false;
 
+  /** The scene's material epoch when the ESM caster lists were last handed over. */
+  #materialEpoch = 0;
+
   /**
    * Creates the system.
    *
@@ -195,6 +198,7 @@ export class RenderSyncSystem implements System {
       castersChanged = changed || castersChanged;
     }
 
+    castersChanged = this.#hasEsmMaterialChanged(lights) || castersChanged;
     this.#selectCamera(world, cameras);
     // An environment that installed a different cube map owes the frame a renderable rebuild: a PBR
     // bind group holds the cube map's texture view, so nothing re-binds without one.
@@ -390,6 +394,32 @@ export class RenderSyncSystem implements System {
         light.setShadowCasters(isEsmCaster(light) ? esmSnapshot : snapshot);
       }
     }
+  }
+
+  /**
+   * Whether a material was rebuilt since the caster lists were last handed over, while an ESM light
+   * is casting.
+   *
+   * @remarks
+   * An ESM generator only rebuilds its caster views for a new caster array (`readMaterialEpoch`), so
+   * a fresh array is what makes it draw a rebuilt material's new shape. PCF and CSM notice material
+   * changes themselves, which is why nothing is re-supplied without an ESM light.
+   *
+   * @param lights - The world's lights.
+   * @returns `true` when the caster lists should be rebuilt.
+   */
+  #hasEsmMaterialChanged(lights: readonly Light[]): boolean {
+    const epoch = readMaterialEpoch(this.#renderer.scene);
+    if (epoch === this.#materialEpoch) {
+      return false;
+    }
+    this.#materialEpoch = epoch;
+    for (let index = 0; index < lights.length; index += 1) {
+      if (isEsmCaster(lights[index])) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**

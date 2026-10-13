@@ -40,6 +40,13 @@ what they mean.
   it takes the receive flag. A hidden renderer or model casts nothing. A caster that appears at
   runtime joins the shadow maps a frame or two later than it appears on screen, because the caster
   lists are only rebuilt once the renderable rebuild it triggered has settled.
+- A light with shadows on and no caster renders the scene unshadowed. Switching a surface shader with
+  a `displace` hook on or off moves its shadow under every technique, ESM included.
+- An ESM or PCF directional map is fitted to its **casters' bounds** only, not to the receivers or
+  the camera. A single thin caster (a 3 cm pole) therefore gets a map a few centimetres wide, which
+  stretches ESM's blur along the pole and can leave a dark smear on the floor near it. The fix is in
+  the scene: let a thin prop not cast (`castShadows: false`), give the light a larger caster beside
+  it, or use `technique: "pcf"` for that light.
 - Exactly one thing clears the frame, so the three fields that can set it are ranked:
   `Camera.clearColor` on the main camera wins whenever it is not `null`, then
   `Environment.clearColor` whenever it is not `null`, then the `rendering.clearColor` setting (§4),

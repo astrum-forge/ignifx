@@ -186,6 +186,35 @@ export function rebuildRenderables(scene: SceneContext): Promise<void> {
   return rebuildSceneRenderables(scene);
 }
 
+/** The scene counter Lite bumps whenever a material's renderables are rebuilt. Absent from `index.d.ts`. */
+interface SceneMaterialEpoch {
+  /** Bumped by `rebuildMaterial`, a material swap, and every renderable rebuild. */
+  _materialEpoch?: number;
+}
+
+/**
+ * How many times the scene's materials have been rebuilt.
+ *
+ * @remarks
+ * An ESM generator keeps the caster views it built for a caster array until it is handed a
+ * different array, whatever happens to the materials (`ensureEsmShadowTaskState`,
+ * `lib/shadow/esm-directional-shadow-generator.js` 121-126; PCF and CSM compare each material's
+ * `_csmGen` instead). So a surface shader switched on or off went on drawing the old shape into an
+ * ESM map. The render sync system re-supplies the caster lists whenever this moves.
+ *
+ * @param scene - The scene.
+ * @returns The counter; `0` before anything was built.
+ *
+ * @internal
+ */
+export function readMaterialEpoch(scene: SceneContext): number {
+  // Boundary assertion (coding standards §5.2): every Lite 1.27.0 scene carries the counter.
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+  const counted = scene as SceneContext & SceneMaterialEpoch;
+  // oxlint-disable-next-line no-underscore-dangle
+  return counted._materialEpoch ?? 0;
+}
+
 /** The cache resets Lite parks on the engine after a material family's first build. Absent from `index.d.ts`. */
 interface MaterialCacheResets {
   /** Clears the PBR bindings cache (`lib/material/pbr/pbr-renderable.js` 362). */
