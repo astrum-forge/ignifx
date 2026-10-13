@@ -8,8 +8,8 @@ import { customEffect } from "../../../src/render/post-effect.js";
 import { PostProcessStack } from "../../../src/render/post-process-stack.js";
 import { createSurfaceBrowserApp, SURFACE_SETTLE_FRAMES } from "../../fixtures/shaders/surface-browser.js";
 import { PASS_THROUGH_POST_WGSL } from "../../fixtures/shaders/surfaces.js";
-import type { SurfaceBrowserApp } from "../../fixtures/shaders/surface-browser.js";
 import type { PixelRgba } from "../../../src/lite/screenshot.js";
+import type { SurfaceBrowserApp } from "../../fixtures/shaders/surface-browser.js";
 
 /**
  * A post-process chain presents the frame the right way up, whatever its length

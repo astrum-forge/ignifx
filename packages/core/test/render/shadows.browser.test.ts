@@ -112,6 +112,8 @@ async function buildShadowScene(
 function gpuDeviceErrors(): { readonly errors: string[]; stop(): void } {
   const errors: string[] = [];
   const adapterPrototype = GPUAdapter.prototype;
+  // Called below with the adapter as `this`, through `original.call`.
+  // oxlint-disable-next-line typescript/unbound-method
   const original = adapterPrototype.requestDevice;
   adapterPrototype.requestDevice = async function requestDevice(
     this: GPUAdapter,
