@@ -1,6 +1,6 @@
 import { CoreErrorCode } from "../errors/error-codes.js";
 import { setSceneCamera } from "../lite/camera.js";
-import { rebuildRenderables } from "../lite/shadow.js";
+import { forgetMaterialBindingLayouts, rebuildRenderables } from "../lite/shadow.js";
 import { Camera } from "./camera.js";
 import { Environment } from "./environment.js";
 import { InstancedMeshRenderer } from "./instanced-mesh-renderer.js";
@@ -520,6 +520,11 @@ export class RenderSyncSystem implements System {
           return;
         }
         try {
+          if (renderer.needsShadowLayoutReset) {
+            // A changed number of shadow maps needs new bind-group layouts; see the adapter.
+            renderer.needsShadowLayoutReset = false;
+            forgetMaterialBindingLayouts(renderer.engine);
+          }
           // oxlint-disable-next-line no-await-in-loop -- the whole point is that these never overlap.
           await rebuildRenderables(renderer.scene);
         } catch (error: unknown) {

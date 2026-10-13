@@ -3,6 +3,7 @@ import { CoreErrorCode } from "../errors/error-codes.js";
 import { IgnifxError } from "../errors/ignifx-error.js";
 import type {
   CsmDirectionalShadowGeneratorConfig,
+  EngineContext,
   EsmDirectionalShadowGeneratorConfig,
   LightBase,
   Mesh,
@@ -183,6 +184,41 @@ export function setShadowCasters(generator: ShadowGenerator, casters: readonly M
  */
 export function rebuildRenderables(scene: SceneContext): Promise<void> {
   return rebuildSceneRenderables(scene);
+}
+
+/** The cache resets Lite parks on the engine after a material family's first build. Absent from `index.d.ts`. */
+interface MaterialCacheResets {
+  /** Clears the PBR bindings cache (`lib/material/pbr/pbr-renderable.js` 362). */
+  _pbrCleanup?: () => void;
+  /** Clears the Standard bindings cache (`lib/material/standard/standard-renderable.js` 243). */
+  _standardCleanup?: () => void;
+}
+
+/**
+ * Makes the next renderable rebuild create fresh bind-group layouts for every material.
+ *
+ * @remarks
+ * Call it before {@link rebuildRenderables} whenever a light gained or lost a shadow generator.
+ * Lite caches a material's bindings, shadow bind-group layout included, under a key that does not
+ * name the shadow maps (`getOrCreatePbrBindings`, `lib/material/pbr/pbr-pipeline.js` 36). So after
+ * the number of shadow-casting lights changes, a rebuild reuses a layout sized for the old number
+ * and builds a bind group for the new one, and WebGPU rejects every frame ("Number of entries (3)
+ * did not match the expected number of entries (6)"). Clearing the cache costs one pipeline
+ * rebuild per material, only on a frame whose shadow casters changed.
+ *
+ * @param engine - The engine whose caches to clear.
+ *
+ * @internal
+ */
+export function forgetMaterialBindingLayouts(engine: EngineContext): void {
+  // Boundary assertion (coding standards §5.2): both fields are set by Lite on the engine object,
+  // and are absent until a material of that family has been built.
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+  const resets = engine as EngineContext & MaterialCacheResets;
+  // oxlint-disable-next-line no-underscore-dangle
+  resets._pbrCleanup?.();
+  // oxlint-disable-next-line no-underscore-dangle
+  resets._standardCleanup?.();
 }
 
 /**

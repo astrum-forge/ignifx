@@ -6,7 +6,13 @@ import { createMaterialAsset, pbrMaterialDefinition } from "../../src/render/mat
 import { MeshAsset } from "../../src/render/mesh-asset.js";
 import { MeshRenderer } from "../../src/render/mesh-renderer.js";
 import { Model } from "../../src/render/model.js";
-import { createBrowserApp, fixtureUrl, pixelLuminance, SETTLE_FRAMES } from "./support/browser-harness.js";
+import {
+  createBrowserApp,
+  fixtureUrl,
+  gpuDeviceErrors,
+  pixelLuminance,
+  SETTLE_FRAMES,
+} from "./support/browser-harness.js";
 import type { BrowserApp } from "./support/browser-harness.js";
 import type { Entity } from "../../src/entity/entity.js";
 import type { LiteMesh } from "../../src/lite/gpu/mesh.js";
@@ -97,40 +103,6 @@ async function buildShadowScene(
   await running.start();
   await running.advance(SETTLE_FRAMES * 4);
   return { running, light, caster };
-}
-
-/**
- * Collects the validation errors the next app's GPU device reports outside any error scope.
- *
- * @remarks
- * A rejected command buffer throws nothing in JavaScript: it only raises `uncapturederror`, and the
- * canvas keeps whatever it last showed. Wrapping `requestDevice` reaches the device before Lite
- * records its first frame.
- *
- * @returns The collected messages, and a function that restores `requestDevice`.
- */
-function gpuDeviceErrors(): { readonly errors: string[]; stop(): void } {
-  const errors: string[] = [];
-  const adapterPrototype = GPUAdapter.prototype;
-  // Called below with the adapter as `this`, through `original.call`.
-  // oxlint-disable-next-line typescript/unbound-method
-  const original = adapterPrototype.requestDevice;
-  adapterPrototype.requestDevice = async function requestDevice(
-    this: GPUAdapter,
-    descriptor?: GPUDeviceDescriptor,
-  ): Promise<GPUDevice> {
-    const device = await original.call(this, descriptor);
-    device.addEventListener("uncapturederror", (event) => {
-      errors.push(event.error.message);
-    });
-    return device;
-  };
-  return {
-    errors,
-    stop: (): void => {
-      adapterPrototype.requestDevice = original;
-    },
-  };
 }
 
 /**

@@ -347,6 +347,9 @@ export class RendererImpl implements Renderer {
   /** `true` once a `castShadows` or caster-set change needs the caster lists rebuilt this frame. */
   needsCasterRebuild = false;
 
+  /** `true` once a light gained or lost a shadow generator, so the next rebuild needs fresh layouts. */
+  needsShadowLayoutReset = false;
+
   /** `true` once a camera was added, removed, enabled, disabled, or re-prioritised. */
   needsCameraSelect = true;
 
