@@ -213,9 +213,11 @@ export interface MeshAssetLiteHandles {
  *
  * @example
  * ```ts
- * using box = MeshAsset.box(app, { size: 2 });
+ * const box = MeshAsset.box(app, { size: 2 }); // one reference, owned by this code
  * const cube = app.world.createEntity("Cube");
- * cube.addComponent(MeshRenderer, { mesh: box.retain() });
+ * cube.addComponent(MeshRenderer, { mesh: box }); // the field takes no reference
+ * // Once nothing draws the box any more:
+ * box.release();
  * ```
  *
  * @public

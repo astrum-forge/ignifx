@@ -347,8 +347,16 @@ document declares painted maps or rules, never both.
   draw calls.
 - **A rotated terrain is read as if it were not.** Queries honour translation and scale; a rotation
   logs `IGX-1604` once. Rotate the world, not the ground.
-- **`maxInstances` sizes the GPU buffer.** Babylon Lite fixes an instance buffer before the scene is
-  registered, so set it before `app.start()`; raising it afterwards is refused with `IGX-0717`.
+- **Swapping `definition` at runtime is safe to release behind.** Release your old handle as usual
+  right after assigning the new one: the terrain holds its own reference to the asset it draws and
+  drops it on the next frame, when it has switched. Registering another in-code terrain at the **same**
+  explicit `address` is different — the asset service unloads the old entry at once — so give each
+  rebuild its own address, or none.
+- **`maxInstances` and `lodMesh` are fixed at `app.start()`.** Babylon Lite fixes an instance buffer
+  and its LOD partner when the scene is registered, so set both before `app.start()`; changing either
+  afterwards is refused with `IGX-0717`. Placement can still arrive later — the scatter hands its
+  `mesh`, `material` and `lodMesh` to the renderer straight away, not when the terrain has loaded.
+  `lodDistance` can change at any time.
 - **Foliage is a shader material.** It casts shadows as a solid card and receives none, and gets no
   image-based lighting and no fog. A `displace` surface hook cannot replace it: plugin uniforms are
   fragment-stage only, so the hook has no clock.

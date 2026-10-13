@@ -7,6 +7,7 @@ import {
   removeSpriteRendererLayer,
   unregisterSpriteRenderer,
 } from "@babylonjs/lite";
+import { Color } from "@ignifx/core";
 import type {
   DeviceLostRecoveryHandle,
   EngineContext,
@@ -70,7 +71,9 @@ export interface ClearColor {
  * @param surface - The surface to draw into; the engine, for a single-canvas app.
  * @param clear - Whether the sprite pass clears first. `false` in `"mixed"` mode, so the 3D scene's
  * colour survives underneath.
- * @param clearColor - The clear value used when `clear` is `true`, as straight RGBA in `0` to `1`.
+ * @param clearColor - The sRGB colour the frame should present when `clear` is `true`, straight
+ * RGBA in `0` to `1`. Lite stores the clear value as given, so it is passed through unchanged,
+ * and decoded only for an `*-srgb` surface view, which encodes it again on write.
  * @param clearColor.r - The red channel.
  * @param clearColor.g - The green channel.
  * @param clearColor.b - The blue channel.
@@ -84,10 +87,16 @@ export function createRegisteredSpriteRenderer(
   clear: boolean,
   clearColor: ClearColor,
 ): SpriteRenderer {
+  const decode = surface.format.endsWith("-srgb");
   const renderer = createSpriteRenderer(surface, {
     layers: [],
     clear,
-    clearValue: { r: clearColor.r, g: clearColor.g, b: clearColor.b, a: clearColor.a },
+    clearValue: {
+      r: decode ? Color.srgbToLinear(clearColor.r) : clearColor.r,
+      g: decode ? Color.srgbToLinear(clearColor.g) : clearColor.g,
+      b: decode ? Color.srgbToLinear(clearColor.b) : clearColor.b,
+      a: clearColor.a,
+    },
   });
   registerSpriteRenderer(renderer);
   return renderer;

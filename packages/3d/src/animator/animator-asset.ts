@@ -15,7 +15,7 @@ import type { AnimatorDefinition, AnimatorLayerDefinition, AnimatorStateDefiniti
  *
  * @example
  * ```ts
- * const handle = app.assets.load<AnimatorAsset>("3d/hero.animator.json").retain();
+ * const handle = app.assets.load<AnimatorAsset>("3d/hero.animator.json");
  * await handle.promise;
  * handle.value?.stateNames; // ["idle", "locomotion", "jump"]
  * ```

@@ -127,7 +127,10 @@ app.dispose();
 - A scene loader resolves every `{ "$asset": … }` in the file **before** the components' props are
   written, so `awake` can already read `this.mesh.value`.
 - The field does not own the reference count: the scene instance that loaded the asset releases it
-  on unload. Code that loads an asset itself pairs the `load` with a `release`.
+  on unload. Code that loads an asset itself pairs the `load` with a `release`. Do not `retain()`
+  a handle just to assign it to a field — that extra reference is never released.
+- A component that keeps using an asset after you assign a replacement (`Terrain`, until its next
+  frame) holds a reference of its own while it does. That does not change who releases yours.
 - An address the resolver cannot answer decodes to `null` and reports `IGX-0602`; the component
   keeps working without it rather than failing the whole scene.
 - Serializing a component that holds an **in-code** (`memory:`) asset writes `null` and reports the

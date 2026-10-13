@@ -44,7 +44,7 @@ export interface TileChange {
  * @example
  * ```ts
  * const level = app.world.createEntity({ name: "level" }).addComponent(Tilemap);
- * level.map = app.assets.load<TilemapAsset>("2d/level-1.tilemap.json").retain();
+ * level.map = app.assets.load<TilemapAsset>("2d/level-1.tilemap.json");
  * level.setTile(0, 3, 2, 0); // carve a hole in the ground layer
  * ```
  *

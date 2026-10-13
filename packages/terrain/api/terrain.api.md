@@ -549,6 +549,8 @@ export class TerrainScatter extends Component implements ComponentHooks {
     constructor();
     alignToNormal: boolean;
     static allowMultiple: boolean;
+    // @internal
+    applyRendererSettings(): void;
     get count(): number;
     density: number;
     height: Vec2Like;

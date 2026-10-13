@@ -45,17 +45,18 @@ what they mean.
   `Environment.clearColor` whenever it is not `null`, then the `rendering.clearColor` setting (§4),
   which is applied as the scene is created. Both component fields default to `null`, so an
   `Environment` added for its fog or lighting leaves the setting alone. Setting either back to
-  `null` leaves whatever is there; it does not restore the setting. Every one of them is **sRGB and is presented as its linear value** — a channel lands
-  on screen at `srgbToLinear(value) * 255`, so `{ r: 0.6, g: 0.2, b: 0.9 }` reads back as bytes
-  `81, 8, 201` and a literal `#14181F` is almost black; pass the inverse to match a page colour.
-  In `@ignifx/2d`'s `"sprite"` mode the sprite pass owns the frame, so only the
-  `rendering.clearColor` setting applies (same decode, same bytes) and the two components do
-  nothing.
+  `null` leaves whatever is there; it does not restore the setting. Every one of them is **sRGB and
+  presents as authored** — a channel lands on screen at `value * 255`, so `{ r: 0.5, g: 0.5, b: 0.5 }`
+  reads back as bytes `128, 128, 128` and `#14181F` matches the same page colour. Tone mapping, an
+  sRGB surface (`rendering.srgb`), and bloom do not change it. The one exception is a
+  `PostProcessStack` with its `imageProcessing` effect on, which grades the whole frame, clear
+  included. In `@ignifx/2d`'s `"sprite"` mode the sprite pass owns the frame, so only the
+  `rendering.clearColor` setting applies (same bytes) and the two components do nothing.
 - **Switching environments at runtime works, switching skyboxes does not.** Assigning a different
   _loaded_ `AssetHandle<EnvironmentAsset>` to `Environment.environment` moves the scene onto that
   asset's cube map: the diffuse light changes on the next frame and the specular reflection one
   frame after that, when the render sync rebuilds the material groups. Both handles keep their GPU
-  resources while they are retained, so switching back and forth is free. `environment = null`
+  resources until you release them, so switching back and forth is free. `environment = null`
   means "stop steering", not "go dark" — Babylon Lite has no inverse of `loadEnvironment`, so the
   last installed environment keeps lighting the scene, and `environment.installed` keeps naming it.
   The **skybox** is the part Lite decides when the asset loads: setting `Environment.skybox` to
@@ -67,10 +68,15 @@ what they mean.
   ```ts
   import type { App, AssetHandle, Environment, EnvironmentAsset } from "@ignifx/core";
 
-  /** Switches the world's lighting to another prefiltered environment. */
-  export async function useEnvironment(app: App, env: Environment, address: string): Promise<void> {
+  /** Switches the world's lighting to another prefiltered environment; release it when done. */
+  export async function useEnvironment(
+    app: App,
+    env: Environment,
+    address: string,
+  ): Promise<AssetHandle<EnvironmentAsset>> {
     const next: AssetHandle<EnvironmentAsset> = await app.assets.loadAsync<EnvironmentAsset>(address);
-    env.environment = next.retain();
+    env.environment = next; // the field takes no reference; `next` is still yours to release
+    return next;
   }
   ```
 
@@ -80,6 +86,9 @@ what they mean.
   Unlike every other render component, the Lite light is **not** parented under the entity — ignifx
   writes the world pose onto it each frame instead, so that what the light shades and what it casts
   can never disagree.
+- `light.enabled = false`, or an inactive entity, turns a `Light` off: it lights nothing and casts
+  no shadow until it is enabled again. It stays in the scene at intensity `0`, so toggling it costs
+  no material rebuild (dropping its shadow generator still does, as `shadows.enabled = false` does).
 
 ## 2. The `PreRender` sync
 

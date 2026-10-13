@@ -91,11 +91,11 @@ if (canvas instanceof HTMLCanvasElement) {
   const hero = app.world.createEntity("Hero");
   hero.transform.position2D = new Vec2(0, 0);
   const sprite = hero.addComponent(SpriteRenderer);
-  sprite.sprite = atlas.retain();
+  sprite.sprite = atlas;
   sprite.sortingLayer = "Default";
 
   const animator = hero.addComponent(SpriteAnimator);
-  animator.animations = clips.retain();
+  animator.animations = clips;
   animator.play("idle");
 
   await app.start();
@@ -213,8 +213,8 @@ if (canvas instanceof HTMLCanvasElement) {
   await Promise.all([map.promise, tiles.promise]);
 
   const level = app.world.createEntity("Level");
-  level.addComponent(Tilemap).map = map.retain();
-  level.addComponent(TilemapRenderer).atlas = tiles.retain();
+  level.addComponent(Tilemap).map = map;
+  level.addComponent(TilemapRenderer).atlas = tiles;
   await app.start();
 }
 ```
@@ -284,11 +284,10 @@ Generated reference: `skills/ignifx/references/formats/`.
   the screen in a 2D game — and `Camera2D` has no `clearColor` field. Set it in `ignifx.config.ts`
   under `rendering`, not per camera. In `"mixed"` mode the render scene clears instead and the 3D
   precedence applies as usual.
-- **`clearColor` is sRGB and is presented as its linear value**, so a channel lands on screen at
-  `srgbToLinear(value) * 255` rather than `value * 255`: `{ r: 0.6, g: 0.2, b: 0.9 }` reads back as
-  bytes `81, 8, 201`, and a literal `#14181F` is almost black. That is the same in both 2D modes and
-  on the 3D path — one setting, one colour — so pass the inverse if you are matching a page colour.
-  Measured on 2026-09-08 (macOS arm64, SwiftShader, `packages/2d/test/clear-color.browser.test.ts`).
+- **`clearColor` is sRGB and presents as authored**, so a channel lands on screen at `value * 255`:
+  `{ r: 0.6, g: 0.2, b: 0.9 }` reads back as bytes `153, 51, 230`, and `#14181F` matches the same
+  page colour. That is the same in both 2D modes and on the 3D path — one setting, one colour
+  (`packages/2d/test/clear-color.browser.test.ts`).
 - **A world whose only camera is a `Camera2D` does not log `IGX-0706`.** Core's "no enabled camera"
   warning is suppressed while the sprite renderer has an active `Camera2D`, so a correct 2D-only
   scene is quiet. Build the camera **before** `app.start()`, as the templates do: a world that is

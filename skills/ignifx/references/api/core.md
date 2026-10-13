@@ -3392,16 +3392,17 @@ The world's lighting environment (`docs/architecture/07-rendering.md` §2.5).
 ```ts
 const studio = await app.assets.loadAsync<EnvironmentAsset>("environments/studio.env");
 const env = world.createEntity("Environment").addComponent(Environment, {
-  environment: studio.retain(),
+  environment: studio,
   imageProcessing: { exposure: 1.2, contrast: 1, toneMapping: "aces" },
 });
 ```
 
-Switching environments at runtime. Both handles stay retained, so switching back costs nothing.
+Switching environments at runtime. The field takes no reference of its own: both handles stay
+loaded until you release them, so switching back costs nothing.
 
 ```ts
 const night = await app.assets.loadAsync<EnvironmentAsset>("environments/night.env");
-env.environment = night.retain();
+env.environment = night;
 ```
 
 #### Extends
@@ -3893,7 +3894,7 @@ A loaded image-based lighting environment (`docs/architecture/07-rendering.md` �
 
 ```ts
 const studio = await app.assets.loadAsync<EnvironmentAsset>("environments/studio.env");
-world.createEntity("Env").addComponent(Environment, { environment: studio.retain() });
+world.createEntity("Env").addComponent(Environment, { environment: studio });
 ```
 
 #### Properties
@@ -4317,9 +4318,9 @@ Draws one mesh many times from a caller-owned matrix slab, in a single draw call
 #### Example
 
 ```ts
-using box = MeshAsset.box(app, { size: 0.5 });
+const box = MeshAsset.box(app, { size: 0.5 }); // release it once nothing draws it
 const field = world.createEntity("Asteroids");
-const renderer = field.addComponent(InstancedMeshRenderer, { mesh: box.retain(), capacity: 20_000 });
+const renderer = field.addComponent(InstancedMeshRenderer, { mesh: box, capacity: 20_000 });
 
 const slab = new Float32Array(20_000 * 16);
 // ... write 16 column-major floats per instance ...
@@ -5399,6 +5400,9 @@ The entity's transform defines the light: a directional or spot light points alo
 local `+Z`, a point light sits at its origin, and a hemispheric light's sky direction is its local
 `+Y`.
 
+A disabled light, or one on an inactive entity, contributes nothing: its intensity reaches Lite
+as `0` and its shadow generator is released. Enabling it again restores both on the next frame.
+
 #### Example
 
 ```ts
@@ -5589,7 +5593,7 @@ The handle.
 > **get** **isCastingShadows**(): `boolean`
 
 Whether this light currently casts shadows — which needs the `shadows` rendering feature, a
-light kind Lite can shadow, and `shadows.enabled`.
+light kind Lite can shadow, `shadows.enabled`, and the light enabled in the hierarchy.
 
 ###### Returns
 
@@ -7748,9 +7752,11 @@ instead — a glTF is a tree of meshes, materials, and animations, not one buffe
 #### Example
 
 ```ts
-using box = MeshAsset.box(app, { size: 2 });
+const box = MeshAsset.box(app, { size: 2 }); // one reference, owned by this code
 const cube = app.world.createEntity("Cube");
-cube.addComponent(MeshRenderer, { mesh: box.retain() });
+cube.addComponent(MeshRenderer, { mesh: box }); // the field takes no reference
+// Once nothing draws the box any more:
+box.release();
 ```
 
 #### Properties
@@ -8283,9 +8289,9 @@ Draws a mesh asset with a material (`docs/architecture/07-rendering.md` §2.3).
 #### Example
 
 ```ts
-using box = MeshAsset.box(app, { size: 1 });
+const box = MeshAsset.box(app, { size: 1 }); // release it once nothing draws it
 const cube = world.createEntity("Cube");
-cube.addComponent(MeshRenderer, { mesh: box.retain(), castShadows: true });
+cube.addComponent(MeshRenderer, { mesh: box, castShadows: true });
 ```
 
 #### Extends
@@ -8780,7 +8786,7 @@ One instance of a loaded model (`docs/architecture/07-rendering.md` §2.4).
 ```ts
 const hero = await app.assets.loadAsync<ModelAsset>("models/hero.glb");
 const entity = world.createEntity("Hero");
-const model = entity.addComponent(Model, { model: hero.retain() });
+const model = entity.addComponent(Model, { model: hero });
 model.attachToNode("hand.R", sword);
 ```
 

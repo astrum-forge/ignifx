@@ -125,6 +125,7 @@ app.dispose();
 | `devtools(options?)`               | The extension factory; pass it to `createApp({ extensions })`       |
 | `app.devtools.open/close/toggle()` | Builds or disposes the overlay; `open()` is a no-op with no canvas  |
 | `app.devtools.isOpen`              | Whether the overlay is up                                           |
+| `app.devtools.position`            | The edge it docks to: the resolved `position`, read-only            |
 | `app.devtools.panel(name)`         | `{ name, title, visible, show(), hide() }`; `IGX-1552` if unknown   |
 | `app.devtools.panels`              | Every panel this build carries, in tab order                        |
 | `app.devtools.select(entity)`      | What the Inspector shows; `null` clears it                          |

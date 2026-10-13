@@ -173,6 +173,7 @@ export class DevtoolsService {
     open(): void;
     panel(name: string): DevtoolsPanelHandle;
     get panels(): readonly DevtoolsPanelHandle[];
+    get position(): DevtoolsPosition;
     get reloadScenes(): boolean;
     set reloadScenes(value: boolean);
     // @internal

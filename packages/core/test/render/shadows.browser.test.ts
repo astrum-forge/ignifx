@@ -211,6 +211,25 @@ describe("caster lists", () => {
     expect(scene.light.lite.shadowGenerator).toBeNull();
     expect(scene.running.errors).toEqual([]);
   });
+
+  it("goes dark and releases the generator while the light is disabled, and restores both", async () => {
+    const scene = await buildShadowScene(true);
+    const lit = await meanLuminance(scene.running);
+
+    scene.light.enabled = false;
+    await scene.running.advance(SETTLE_FRAMES * 2);
+    expect(scene.light.isCastingShadows).toBe(false);
+    expect(scene.light.lite.shadowGenerator).toBeNull();
+    // The sun is the only light, so with it contributing nothing the frame is close to black.
+    const dark = await meanLuminance(scene.running);
+    expect(dark).toBeLessThan(lit / 4);
+
+    scene.light.enabled = true;
+    await scene.running.advance(SETTLE_FRAMES * 4);
+    expect(scene.light.isCastingShadows).toBe(true);
+    expect(await meanLuminance(scene.running)).toBeGreaterThan(lit * 0.75);
+    expect(scene.running.errors).toEqual([]);
+  });
 });
 
 /**

@@ -197,17 +197,18 @@ export interface ImageProcessingSettings {
  * ```ts
  * const studio = await app.assets.loadAsync<EnvironmentAsset>("environments/studio.env");
  * const env = world.createEntity("Environment").addComponent(Environment, {
- *   environment: studio.retain(),
+ *   environment: studio,
  *   imageProcessing: { exposure: 1.2, contrast: 1, toneMapping: "aces" },
  * });
  * ```
  *
  * @example
- * Switching environments at runtime. Both handles stay retained, so switching back costs nothing.
+ * Switching environments at runtime. The field takes no reference of its own: both handles stay
+ * loaded until you release them, so switching back costs nothing.
  *
  * ```ts
  * const night = await app.assets.loadAsync<EnvironmentAsset>("environments/night.env");
- * env.environment = night.retain();
+ * env.environment = night;
  * ```
  *
  * @public
@@ -339,7 +340,7 @@ export class Environment extends Component implements ComponentHooks {
   }
 
   /**
-   * Writes the clear colour, decoded to linear.
+   * Writes the clear colour.
    *
    * @remarks
    * Nothing while the field is `null`, which is what leaves the `rendering.clearColor` setting
@@ -366,11 +367,11 @@ export class Environment extends Component implements ComponentHooks {
    * Writes the fog record.
    *
    * @remarks
-   * The colour goes across **encoded**, unlike every other colour this component writes: Lite's fog
-   * block decodes it itself — `color = mix(pow(scene.vFogColor.rgb, vec3(2.2)), color, fogFactor)`
+   * The colour goes across **encoded**: Lite's fog block decodes it itself —
+   * `color = mix(pow(scene.vFogColor.rgb, vec3(2.2)), color, fogFactor)`
    * (`lib/material/pbr/pbr-fog-wgsl.js` 4) — so handing it a linear value decodes it twice and the
-   * fog reads far darker than the swatch. The clear colour, which the render pass consumes as a
-   * linear clear value, is decoded by `RendererImpl.applyClearColor` instead.
+   * fog reads far darker than the swatch. The clear colour also goes across encoded, for its own
+   * reason (`RendererImpl.applyClearColor`).
    *
    * @param renderer - The rendering service, for the scene.
    */

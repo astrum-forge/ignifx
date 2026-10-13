@@ -12,7 +12,6 @@ import { readPickedTag } from "../lite/picking.js";
 import { disableGpuTiming, readDrawCallCount, readGpuFrameTimeMs } from "../lite/render-diagnostics.js";
 import { assertRenderingFeatureAvailable } from "../lite/render-features.js";
 import { sceneLightCount } from "../lite/scene.js";
-import { Color } from "../math/color.js";
 import { clamp } from "../math/math-utils.js";
 import {
   applySurfaceScale,
@@ -857,7 +856,7 @@ export class RendererImpl implements Renderer {
   }
 
   /**
-   * Writes an sRGB colour onto the render scene's clear colour, decoded to linear.
+   * Writes an sRGB colour onto the render scene's clear colour, so it presents as authored.
    *
    * @remarks
    * The one place `scene.clearColor` is written, so the precedence
@@ -874,21 +873,18 @@ export class RendererImpl implements Renderer {
    *    ignifx default is opaque black (`src/render/rendering-settings.ts`), so Lite's grey is only
    *    ever seen by code that bypasses `createApp`.
    *
-   * Colours are stored in sRGB in every settings section and every component field, and Lite's
-   * `scene.clearColor` is linear, so each component is decoded on the way through.
+   * Colours are stored in sRGB in every settings section and every component field, and the clear
+   * reaches the swapchain without tone mapping or image processing, so an sRGB `0.5` presents as
+   * byte `128`. The value is written unchanged on the default surface and decoded only for an
+   * `*-srgb` surface view (`rendering.srgb: true`), which encodes it again on write
+   * (`setSceneClearColor`).
    *
    * @param value - The sRGB colour, `0` to `1` per channel.
    *
    * @internal
    */
   applyClearColor(value: ColorLike): void {
-    setSceneClearColor(
-      this.scene,
-      Color.srgbToLinear(value.r),
-      Color.srgbToLinear(value.g),
-      Color.srgbToLinear(value.b),
-      value.a,
-    );
+    setSceneClearColor(this.scene, value.r, value.g, value.b, value.a);
   }
 
   /**

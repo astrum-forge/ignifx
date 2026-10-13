@@ -52,6 +52,23 @@ describe("devtools()", () => {
     overridden.dispose();
   });
 
+  it("reports the docking edge it resolved from the settings and the extension options", async () => {
+    const defaults = await createDevtoolsApp();
+    expect(defaults.app.devtools.position).toBe("right");
+    defaults.dispose();
+
+    const fromSettings = await createDevtoolsApp({ settings: { devtools: { position: "bottom" } } });
+    expect(fromSettings.app.devtools.position).toBe("bottom");
+    fromSettings.dispose();
+
+    const overridden = await createDevtoolsApp({
+      settings: { devtools: { position: "bottom" } },
+      options: { position: "left" },
+    });
+    expect(overridden.app.devtools.position).toBe("left");
+    overridden.dispose();
+  });
+
   it("registers its IGX-155x codes on the app", async () => {
     const h = await createDevtoolsApp();
     // A code the extension registered formats through the app's registry rather than as a bare code.

@@ -182,6 +182,72 @@ describe("Terrain queries", () => {
   });
 });
 
+describe("Terrain asset ownership", () => {
+  /**
+   * Builds a second in-code terrain document of the fixture's shape.
+   *
+   * @param harness - The app.
+   * @param height - The flat height, in metres.
+   * @returns The handle, with the one reference the caller owns.
+   */
+  function flatTerrain(harness: TerrainAppHarness, height: number): ReturnType<typeof terrainAssetFromDefinition> {
+    return terrainAssetFromDefinition(
+      harness.app,
+      {
+        size: { width: WIDTH, depth: WIDTH, height: 10 },
+        resolution: RESOLUTION,
+        chunks: { size: CHUNK_SIZE, lodLevels: 2, lodDistance: 20, skirtDepth: 1 },
+        layers: [{ name: "ground" }],
+      },
+      { heights: new Float32Array(RESOLUTION * RESOLUTION).fill(height) },
+    );
+  }
+
+  it("keeps drawing an asset whose caller released it straight after assigning it", async () => {
+    const { harness, terrain } = await fixture();
+    const handle = terrain.definition;
+    // The caller's own reference, given back as the ownership rules ask.
+    handle?.release();
+    harness.app.assets.gc();
+    harness.step();
+
+    expect(handle?.state).toBe("loaded");
+    expect(terrain.heightAt(0, 0)).toBeCloseTo(2, 5);
+    harness.dispose();
+  });
+
+  it("lets go of the old asset once it has switched to the new one", async () => {
+    const { harness, terrain } = await fixture();
+    const first = terrain.definition;
+    const second = await flatTerrain(harness, 5);
+    terrain.definition = second;
+    first?.release();
+    harness.app.assets.gc();
+
+    // Until the next frame the chunks still draw the first asset, so it must not unload yet.
+    expect(first?.state).toBe("loaded");
+    harness.step();
+    harness.app.assets.gc();
+
+    expect(first?.state).toBe("released");
+    expect(second.state).toBe("loaded");
+    expect(terrain.heightAt(0, 0)).toBeCloseTo(5, 5);
+    harness.dispose();
+  });
+
+  it("drops its own reference when the component is removed, and only that one", async () => {
+    const { harness, terrain } = await fixture();
+    const handle = terrain.definition;
+    const before = handle?.refCount ?? 0;
+    terrain.destroy();
+    harness.step();
+
+    expect(handle?.refCount).toBe(before - 1);
+    expect(handle?.state).toBe("loaded");
+    harness.dispose();
+  });
+});
+
 describe("Terrain chunking", () => {
   it("cuts the field into chunks", async () => {
     const { harness, terrain } = await fixture();

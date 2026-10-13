@@ -201,9 +201,9 @@ app.registerComponents([HeroAnimation]);
 const hero = app.world.createEntity("Hero");
 hero.addComponent(CharacterController, { height: 1.8, radius: 0.35 });
 hero.addComponent(ThirdPersonController);
-hero.addComponent(Model, { model: app.assets.load<ModelAsset>("3d/rig.glb").retain() });
+hero.addComponent(Model, { model: app.assets.load<ModelAsset>("3d/rig.glb") });
 hero.addComponent(Animator, {
-  animator: app.assets.load<AnimatorAsset>("3d/hero.animator.json").retain(),
+  animator: app.assets.load<AnimatorAsset>("3d/hero.animator.json"),
 });
 hero.addComponent(HeroAnimation);
 ```

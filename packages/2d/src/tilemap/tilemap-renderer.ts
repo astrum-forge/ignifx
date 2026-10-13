@@ -32,9 +32,9 @@ interface ChunkRecord {
  * @example
  * ```ts
  * const level = app.world.createEntity({ name: "level" });
- * level.addComponent(Tilemap).map = app.assets.load<TilemapAsset>("2d/level-1.tilemap.json").retain();
+ * level.addComponent(Tilemap).map = app.assets.load<TilemapAsset>("2d/level-1.tilemap.json");
  * const renderer = level.addComponent(TilemapRenderer);
- * renderer.atlas = app.assets.load<SpriteAtlasAsset>("2d/tiles.atlas.json").retain();
+ * renderer.atlas = app.assets.load<SpriteAtlasAsset>("2d/tiles.atlas.json");
  * ```
  *
  * @public

@@ -10,6 +10,7 @@ import {
   StandardToneMapping,
 } from "@babylonjs/lite";
 import { assertNever } from "../../errors/ignifx-error.js";
+import { Color } from "../../math/color.js";
 import { degToRad } from "../../math/math-utils.js";
 import type { EnvironmentTextures, SceneContext, ToneMapping } from "@babylonjs/lite";
 
@@ -330,22 +331,45 @@ export function setSceneEnvironmentBlur(scene: SceneContext, blur: number): void
 }
 
 /**
- * Sets the colour the scene is cleared to each frame.
+ * Sets the colour the scene is cleared to each frame, so that it presents as the sRGB value given.
+ *
+ * @remarks
+ * Lite stores the clear value into the colour target untouched. Tone mapping, image processing and
+ * bloom's threshold never apply to it, and Lite's own transmission and solid-skybox paths read it
+ * as the colour that should come out (`lib/frame-graph/transmission.js` `executeRenderTaskLinear`,
+ * `lib/material/pbr/background-solid-skybox.js`). The default surface format is not an sRGB one,
+ * so the sRGB value is written unchanged. Only an `*-srgb` surface view (`rendering.srgb: true`)
+ * encodes on write; there the value is decoded first, so that the GPU's encoding gives it back.
+ * Every target ignifx renders the scene into uses the surface's format (`./render-path.ts`), so
+ * the same rule holds on the offscreen path.
  *
  * @param scene - The scene to change.
- * @param r - The linear red component, 0 to 1.
- * @param g - The linear green component, 0 to 1.
- * @param b - The linear blue component, 0 to 1.
+ * @param r - The sRGB red component, 0 to 1.
+ * @param g - The sRGB green component, 0 to 1.
+ * @param b - The sRGB blue component, 0 to 1.
  * @param a - The alpha component; only meaningful with a premultiplied canvas alpha mode.
  *
  * @internal
  */
 export function setSceneClearColor(scene: SceneContext, r: number, g: number, b: number, a: number): void {
   const clear = scene.clearColor;
-  clear.r = r;
-  clear.g = g;
-  clear.b = b;
+  const decode = isSrgbEncodingFormat(scene.surface.format);
+  clear.r = decode ? Color.srgbToLinear(r) : r;
+  clear.g = decode ? Color.srgbToLinear(g) : g;
+  clear.b = decode ? Color.srgbToLinear(b) : b;
   clear.a = a;
+}
+
+/**
+ * Whether a colour target of this format encodes linear values to sRGB as they are stored.
+ *
+ * @param format - The target's format. Lite's null engine has none.
+ * @returns `true` for an `*-srgb` format.
+ *
+ * @internal
+ */
+export function isSrgbEncodingFormat(format: string | undefined): boolean {
+  return format?.endsWith("-srgb") === true;
 }
 
 /**

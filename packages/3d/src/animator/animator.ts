@@ -33,7 +33,7 @@ function animatorSchema(): Schema {
  * @example
  * ```ts
  * const animator = hero.addComponent(Animator);
- * animator.animator = app.assets.load<AnimatorAsset>("3d/hero.animator.json").retain();
+ * animator.animator = app.assets.load<AnimatorAsset>("3d/hero.animator.json");
  * animator.onEvent.connect((name) => { if (name === "landed") thud(); }, { owner: animator });
  * animator.setFloat("speed", 4.5);
  * animator.setTrigger("jump");

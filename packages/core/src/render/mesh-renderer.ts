@@ -56,9 +56,9 @@ import type { Schema } from "../schema/types.js";
  *
  * @example
  * ```ts
- * using box = MeshAsset.box(app, { size: 1 });
+ * const box = MeshAsset.box(app, { size: 1 }); // release it once nothing draws it
  * const cube = world.createEntity("Cube");
- * cube.addComponent(MeshRenderer, { mesh: box.retain(), castShadows: true });
+ * cube.addComponent(MeshRenderer, { mesh: box, castShadows: true });
  * ```
  *
  * @public

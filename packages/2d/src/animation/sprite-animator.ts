@@ -32,7 +32,7 @@ export interface PlayClipOptions {
  * @example
  * ```ts
  * const animator = hero.addComponent(SpriteAnimator);
- * animator.animations = app.assets.load<SpriteAnimationAsset>("2d/hero.spriteanim.json").retain();
+ * animator.animations = app.assets.load<SpriteAnimationAsset>("2d/hero.spriteanim.json");
  * animator.onEvent.connect((name) => { if (name === "footstep") playStep(); }, { owner: animator });
  * animator.play("run");
  * ```
