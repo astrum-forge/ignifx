@@ -3,7 +3,7 @@ import { CoreErrorCode } from "../errors/error-codes.js";
 import { IgnifxError } from "../errors/ignifx-error.js";
 import { toComponentHandle, toEntityHandle } from "../handles/handle.js";
 import { forceDeviceLossForTesting } from "../lite/gpu/device-loss.js";
-import { setSceneClearColor } from "../lite/gpu/environment.js";
+import { readSceneImageProcessing, setSceneClearColor } from "../lite/gpu/environment.js";
 import { disposeScenePicker } from "../lite/gpu/picker.js";
 import { setSurfaceSizePx } from "../lite/gpu/render-diagnostics-gpu.js";
 import { captureFrame } from "../lite/gpu/screenshot-capture.js";
@@ -22,6 +22,7 @@ import {
   startGpuTiming,
   warmUpMaterialAssets,
 } from "./gpu/renderer-gpu.js";
+import { imageProcessedColor, sameImageProcessing } from "./image-processing-color.js";
 import {
   buildMaterialAsset,
   createDefaultMaterialAsset,
@@ -36,6 +37,7 @@ import type { AssetHandle } from "../assets/types.js";
 import type { Component } from "../component/component.js";
 import type { DiagnosticsGroup } from "../diagnostics/diagnostics-group.js";
 import type { Entity } from "../entity/entity.js";
+import type { ImageProcessingState } from "../lite/gpu/environment.js";
 import type { LiteGpuPicker } from "../lite/gpu/picker.js";
 import type { ScenePresenter } from "../lite/gpu/render-path.js";
 import type { MaterialWarmUp } from "../lite/gpu/warm-up.js";
@@ -399,6 +401,18 @@ export class RendererImpl implements Renderer {
   #isSceneRegistered = false;
 
   #isLoopRunning = false;
+
+  /** The clear colour as authored, in sRGB, before image processing. */
+  readonly #authoredClear = { r: 0, g: 0, b: 0, a: 1 };
+
+  /** The image processing the clear colour was last written with. */
+  readonly #clearProcessing: ImageProcessingState = { exposure: 1, contrast: 1, curve: "none" };
+
+  /** Scratch for {@link RendererImpl.refreshClearColor}'s per-frame read. */
+  readonly #processingScratch: ImageProcessingState = { exposure: 1, contrast: 1, curve: "none" };
+
+  /** Scratch for the processed clear colour. */
+  readonly #processedClear = { r: 0, g: 0, b: 0, a: 1 };
 
   /**
    * Creates the rendering service.
@@ -873,18 +887,56 @@ export class RendererImpl implements Renderer {
    *    ignifx default is opaque black (`src/render/rendering-settings.ts`), so Lite's grey is only
    *    ever seen by code that bypasses `createApp`.
    *
-   * Colours are stored in sRGB in every settings section and every component field, and the clear
-   * reaches the swapchain without tone mapping or image processing, so an sRGB `0.5` presents as
-   * byte `128`. The value is written unchanged on the default surface and decoded only for an
-   * `*-srgb` surface view (`rendering.srgb: true`), which encodes it again on write
-   * (`setSceneClearColor`).
+   * Colours are stored in sRGB in every settings section and every component field. The clear goes
+   * through the same exposure, curve and contrast as every PBR fragment, applied here on the CPU,
+   * so a fully fogged floor and a clear colour of the fog's colour present as the same bytes. With
+   * no image processing (exposure 1, contrast 1, curve `"none"`) an sRGB `0.5` presents as byte
+   * `128`; under ACES it presents as byte `104`. The value is decoded only for an `*-srgb` surface
+   * view (`rendering.srgb: true`), which encodes it again on write (`setSceneClearColor`).
    *
    * @param value - The sRGB colour, `0` to `1` per channel.
    *
    * @internal
    */
   applyClearColor(value: ColorLike): void {
-    setSceneClearColor(this.scene, value.r, value.g, value.b, value.a);
+    const authored = this.#authoredClear;
+    authored.r = value.r;
+    authored.g = value.g;
+    authored.b = value.b;
+    authored.a = value.a;
+    this.#writeClearColor(readSceneImageProcessing(this.scene, this.#processingScratch));
+  }
+
+  /**
+   * Re-applies the clear colour when the scene's image processing changed since it was written.
+   *
+   * @remarks
+   * The `PreRender` system calls it every frame, after the `Environment` has written its image
+   * processing. Lite's `loadEnvironment` changes image processing too, which is why the scene is
+   * read rather than the component.
+   *
+   * @internal
+   */
+  refreshClearColor(): void {
+    const current = readSceneImageProcessing(this.scene, this.#processingScratch);
+    if (!sameImageProcessing(current, this.#clearProcessing)) {
+      this.#writeClearColor(current);
+    }
+  }
+
+  /**
+   * Writes the authored clear colour, processed with `processing`, onto the scene.
+   *
+   * @param processing - The scene's current image processing.
+   */
+  #writeClearColor(processing: ImageProcessingState): void {
+    const applied = this.#clearProcessing;
+    applied.exposure = processing.exposure;
+    applied.contrast = processing.contrast;
+    applied.curve = processing.curve;
+    const authored = this.#authoredClear;
+    const out = imageProcessedColor(authored.r, authored.g, authored.b, authored.a, processing, this.#processedClear);
+    setSceneClearColor(this.scene, out.r, out.g, out.b, out.a);
   }
 
   /**

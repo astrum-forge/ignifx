@@ -826,7 +826,7 @@
         "clearColor": {
           "kind": "optional",
           "default": "null",
-          "description": "The colour the scene is cleared to, in sRGB; null leaves the rendering.clearColor setting."
+          "description": "The sRGB colour the scene is cleared to, through imageProcessing; null leaves the rendering.clearColor setting."
         }
       }
     },

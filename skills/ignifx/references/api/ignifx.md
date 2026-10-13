@@ -77270,7 +77270,9 @@ Applied to the render scene as it is created, which makes it the floor of a thre
 precedence (`docs/architecture/07-rendering.md` §2.1, §2.5): `Camera.clearColor` on the main
 camera wins whenever it is not `null`, an `Environment.clearColor` that is not `null` wins over
 this setting, and
-this setting wins over Babylon Lite's own mid grey.
+this setting wins over Babylon Lite's own mid grey. Whichever wins goes through
+`Environment.imageProcessing` like a fully fogged fragment of the same colour, so it presents as
+authored only while there is no exposure, contrast or tone-mapping curve.
 
 ##### features
 

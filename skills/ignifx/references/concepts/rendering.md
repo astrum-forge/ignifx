@@ -45,12 +45,15 @@ what they mean.
   `Environment.clearColor` whenever it is not `null`, then the `rendering.clearColor` setting (§4),
   which is applied as the scene is created. Both component fields default to `null`, so an
   `Environment` added for its fog or lighting leaves the setting alone. Setting either back to
-  `null` leaves whatever is there; it does not restore the setting. Every one of them is **sRGB and
-  presents as authored** — a channel lands on screen at `value * 255`, so `{ r: 0.5, g: 0.5, b: 0.5 }`
-  reads back as bytes `128, 128, 128` and `#14181F` matches the same page colour. Tone mapping, an
-  sRGB surface (`rendering.srgb`), and bloom do not change it. The one exception is a
-  `PostProcessStack` with its `imageProcessing` effect on, which grades the whole frame, clear
-  included. In `@ignifx/2d`'s `"sprite"` mode the sprite pass owns the frame, so only the
+  `null` leaves whatever is there; it does not restore the setting. Every one of them is **sRGB**,
+  and goes through `Environment.imageProcessing` exactly as a fully fogged fragment of that colour
+  does. With no image processing it presents as authored — a channel lands on screen at
+  `value * 255`, so `{ r: 0.5, g: 0.5, b: 0.5 }` reads back as bytes `128, 128, 128` and `#14181F`
+  matches the same page colour. Under a tone-mapping curve, exposure or contrast it presents
+  processed: under ACES that grey reads back as `104, 104, 104`. Set the fog colour to the clear
+  colour and the fogged floor fades into the background with no band, whatever the curve. An sRGB
+  surface (`rendering.srgb`) and bloom do not change it. A `PostProcessStack` with its
+  `imageProcessing` effect on grades the whole frame again, clear included. In `@ignifx/2d`'s `"sprite"` mode the sprite pass owns the frame, so only the
   `rendering.clearColor` setting applies (same bytes) and the two components do nothing.
 - **Switching environments at runtime works, switching skyboxes does not.** Assigning a different
   _loaded_ `AssetHandle<EnvironmentAsset>` to `Environment.environment` moves the scene onto that

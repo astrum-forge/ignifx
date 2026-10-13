@@ -231,7 +231,7 @@ The world's image-based lighting, skybox, fog, image processing, and clear colou
 | `skybox` | `record` | `{"enabled":true,"size":20}` | The background, as the installed .environment.json declared it. Read-only in practice. |
 | `fog` | `record` | `{"mode":"none","color":[0.784314,0.784314,0.784314,1],"density":0.01,"start":10,"end":100}` | Distance fog. |
 | `imageProcessing` | `record` | `{"exposure":1,"contrast":1,"toneMapping":"none"}` | Exposure, contrast, and tone mapping. Recompiles PBR pipelines when it changes. |
-| `clearColor` | `optional` | `null` | The colour the scene is cleared to, in sRGB; null leaves the rendering.clearColor setting. |
+| `clearColor` | `optional` | `null` | The sRGB colour the scene is cleared to, through imageProcessing; null leaves the rendering.clearColor setting. |
 
 ## First person controller (`ignifx/FirstPersonController`)
 
