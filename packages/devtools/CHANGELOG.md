@@ -1,5 +1,19 @@
 # @ignifx/devtools
 
+## 0.4.0
+
+### Patch Changes
+
+- 8c87816: Show assets created in code by their `memory:` address in the Inspector, so a `MeshRenderer` built with `createMaterialAsset` no longer reads `materials [null]`.
+- Updated dependencies [097d60b]
+- Updated dependencies [1f45e2f]
+  - @ignifx/core@0.4.0
+  - @ignifx/audio@0.4.0
+  - @ignifx/input@0.4.0
+  - @ignifx/physics@0.4.0
+  - @ignifx/physics-2d@0.4.0
+  - @ignifx/ui@0.4.0
+
 ## 0.3.1
 
 ### Patch Changes
