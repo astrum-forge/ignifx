@@ -1,5 +1,23 @@
 # @ignifx/devtools
 
+## 0.5.0
+
+### Minor Changes
+
+- c7a3c1b: Add a read-only `app.devtools.position`, the canvas edge the overlay docks to, so a game can keep its own HUD clear of it.
+
+### Patch Changes
+
+- Updated dependencies [d617f2c]
+- Updated dependencies [6175ff5]
+- Updated dependencies [ee4f87b]
+  - @ignifx/core@0.5.0
+  - @ignifx/audio@0.5.0
+  - @ignifx/input@0.5.0
+  - @ignifx/physics@0.5.0
+  - @ignifx/physics-2d@0.5.0
+  - @ignifx/ui@0.5.0
+
 ## 0.4.0
 
 ### Patch Changes

@@ -1,5 +1,23 @@
 # @ignifx/2d
 
+## 0.5.0
+
+### Minor Changes
+
+- 6175ff5: The clear colour now presents exactly as authored. `rendering.clearColor`, `Camera.clearColor` and `Environment.clearColor` used to present much darker than their sRGB value (an sRGB `0.5` showed as byte `55` instead of `128`), with or without tone mapping or bloom, and in both 2D modes.
+  
+  ### Breaking
+  
+  Backgrounds get brighter wherever a clear colour is not pure black or white. If you wrapped a clear colour in `Color.linearToSrgb(...)` or brightened it by hand to make up for this, remove that compensation and write the sRGB colour you want.
+
+### Patch Changes
+
+- d617f2c: Fix API and skill examples that called `.retain()` on an asset handle before assigning it to a component field. A field takes no reference of its own, so that extra reference was never released. The examples now assign the handle directly and release it when it is no longer used.
+- Updated dependencies [d617f2c]
+- Updated dependencies [6175ff5]
+- Updated dependencies [ee4f87b]
+  - @ignifx/core@0.5.0
+
 ## 0.4.0
 
 ### Patch Changes

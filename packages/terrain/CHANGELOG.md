@@ -1,5 +1,16 @@
 # @ignifx/terrain
 
+## 0.5.0
+
+### Patch Changes
+
+- 14d5716: Fix a `Terrain` drawing from an asset that had already been unloaded when the old `definition` handle was released right after a new one was assigned. The terrain now holds its own reference to the asset it draws until it has switched to the new one or is removed.
+- 2a2b876: Fix `TerrainScatter`'s `lodMesh` never taking effect when the terrain finished loading after `app.start()`, which logged `IGX-0717` once per scatter. The LOD mesh set before start is now applied.
+- Updated dependencies [d617f2c]
+- Updated dependencies [6175ff5]
+- Updated dependencies [ee4f87b]
+  - @ignifx/core@0.5.0
+
 ## 0.4.0
 
 ### Patch Changes

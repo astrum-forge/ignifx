@@ -1,5 +1,17 @@
 # @ignifx/3d
 
+## 0.5.0
+
+### Patch Changes
+
+- d617f2c: Fix API and skill examples that called `.retain()` on an asset handle before assigning it to a component field. A field takes no reference of its own, so that extra reference was never released. The examples now assign the handle directly and release it when it is no longer used.
+- Updated dependencies [d617f2c]
+- Updated dependencies [6175ff5]
+- Updated dependencies [ee4f87b]
+  - @ignifx/core@0.5.0
+  - @ignifx/input@0.5.0
+  - @ignifx/physics@0.5.0
+
 ## 0.4.0
 
 ### Patch Changes
