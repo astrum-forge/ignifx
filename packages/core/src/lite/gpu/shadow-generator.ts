@@ -40,12 +40,37 @@ import type { DirectionalLight, EngineContext, Mesh, SceneContext, ShadowGenerat
  * frame only when a later group waits on something real, such as a thin-instanced material swap,
  * so it showed up on slow CI runners and almost never locally.
  * `recordReplacedShadowTaskStates` records the replacement before it can draw.
+ *
+ * ## A generator with no casters draws the whole scene
+ *
+ * Lite builds each state's render task without `autoMirror: false`, and a render task that was
+ * given no mesh mirrors *every* scene renderable (`lib/frame-graph/render-task.js` 76, 233). With an
+ * empty caster list the shadow pass therefore draws the receivers with their full materials, which
+ * sample the very shadow map the pass writes, and Dawn rejects the whole frame ("includes writable
+ * usage and another usage in the same synchronization scope"). `stopMirroringEmptyStates` keeps
+ * such a task empty, so the pass only clears the map and nothing is in shadow.
  */
+
+/** The fields of a Lite render task the empty-caster fix touches. Absent from `index.d.ts`. */
+interface MirroringRenderTask {
+  /** Records the task; a task with no mesh copies the scene's renderables here. */
+  record(): void;
+  /** Whether the task re-copies the scene's renderables when they change. */
+  _af?: boolean;
+}
+
+/** The scene field a mirroring render task copies from. Absent from `index.d.ts`. */
+interface SceneRenderables {
+  /** Every renderable the scene draws. */
+  _renderables: unknown[];
+}
 
 /** A shadow task state, as every Lite 1.27.0 generator's hooks hand it out. Absent from `index.d.ts`. */
 interface ShadowTaskState {
   /** The render task (a composite of one per cascade for CSM) that draws the casters. */
-  readonly _task: { record(): void };
+  readonly _task: MirroringRenderTask;
+  /** CSM's one render task per cascade; absent for the single-map generators. */
+  readonly _tasks?: readonly MirroringRenderTask[];
   /** The caster array the state was built for. */
   readonly _casterMeshes: readonly Mesh[];
 }
@@ -120,6 +145,9 @@ function recordReplacedShadowTaskStates(generator: ShadowGenerator): void {
     // oxlint-disable-next-line no-underscore-dangle
     const previous = hooks._shadowTaskState;
     const state = ensure(engine, scene, casterMeshes);
+    if (state !== previous && casterMeshes.length === 0) {
+      stopMirroringEmptyStates(scene, state);
+    }
     // oxlint-disable-next-line no-underscore-dangle
     if (previous !== undefined && state !== previous && state._casterMeshes === previous._casterMeshes) {
       // oxlint-disable-next-line no-underscore-dangle
@@ -127,6 +155,42 @@ function recordReplacedShadowTaskStates(generator: ShadowGenerator): void {
     }
     return state;
   };
+}
+
+/**
+ * Keeps a shadow task state built for no casters from drawing the scene's renderables.
+ *
+ * @remarks
+ * Each render task records against an empty renderable list, and its mirroring flag is cleared
+ * afterwards so a later change to the scene's renderables does not copy them in either. The pass
+ * then only clears the map. See the module header.
+ *
+ * @param scene - The scene the state belongs to.
+ * @param state - A state whose caster list is empty.
+ */
+function stopMirroringEmptyStates(scene: SceneContext, state: ShadowTaskState): void {
+  // Boundary assertion (coding standards §5.2): every Lite 1.27.0 scene carries `_renderables`.
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+  const renderables = scene as SceneContext & SceneRenderables;
+  // oxlint-disable-next-line no-underscore-dangle
+  const tasks = state._tasks ?? [state._task];
+  for (const task of tasks) {
+    const record = task.record.bind(task);
+    task.record = (): void => {
+      // oxlint-disable-next-line no-underscore-dangle
+      const all = renderables._renderables;
+      // oxlint-disable-next-line no-underscore-dangle
+      renderables._renderables = [];
+      try {
+        record();
+      } finally {
+        // oxlint-disable-next-line no-underscore-dangle
+        renderables._renderables = all;
+      }
+      // oxlint-disable-next-line no-underscore-dangle
+      task._af = false;
+    };
+  }
 }
 
 /**

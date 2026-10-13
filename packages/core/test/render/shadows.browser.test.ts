@@ -47,11 +47,13 @@ const SIZE = 64;
  * @param shadows - Whether the `shadows` rendering feature is on. The light asks for shadows either
  * way, so the `false` case is also what proves the warning.
  * @param technique - The light's shadow technique.
+ * @param blockerCasts - Whether the box casts; `false` leaves the scene with no caster at all.
  * @returns The running app, the light, and the caster's renderer.
  */
 async function buildShadowScene(
   shadows: boolean,
   technique: ShadowTechniqueName = "pcf",
+  blockerCasts = true,
 ): Promise<{
   readonly running: BrowserApp;
   readonly light: Light;
@@ -90,11 +92,43 @@ async function buildShadowScene(
   const box = MeshAsset.box(running.app, { size: 2 });
   const blocker = running.world.createEntity("Blocker");
   blocker.transform.localPosition.set(0, 2, 0);
-  const caster = blocker.addComponent(MeshRenderer, { mesh: box, materials: [white] });
+  const caster = blocker.addComponent(MeshRenderer, { mesh: box, materials: [white], castShadows: blockerCasts });
 
   await running.start();
   await running.advance(SETTLE_FRAMES * 4);
   return { running, light, caster };
+}
+
+/**
+ * Collects the validation errors the next app's GPU device reports outside any error scope.
+ *
+ * @remarks
+ * A rejected command buffer throws nothing in JavaScript: it only raises `uncapturederror`, and the
+ * canvas keeps whatever it last showed. Wrapping `requestDevice` reaches the device before Lite
+ * records its first frame.
+ *
+ * @returns The collected messages, and a function that restores `requestDevice`.
+ */
+function gpuDeviceErrors(): { readonly errors: string[]; stop(): void } {
+  const errors: string[] = [];
+  const adapterPrototype = GPUAdapter.prototype;
+  const original = adapterPrototype.requestDevice;
+  adapterPrototype.requestDevice = async function requestDevice(
+    this: GPUAdapter,
+    descriptor?: GPUDeviceDescriptor,
+  ): Promise<GPUDevice> {
+    const device = await original.call(this, descriptor);
+    device.addEventListener("uncapturederror", (event) => {
+      errors.push(event.error.message);
+    });
+    return device;
+  };
+  return {
+    errors,
+    stop: (): void => {
+      adapterPrototype.requestDevice = original;
+    },
+  };
 }
 
 /**
@@ -151,12 +185,36 @@ describe("the shadows rendering feature", () => {
 });
 
 describe("caster lists", () => {
+  for (const technique of ["pcf", "esm", "csm"] as const) {
+    it(`presents frames when a ${technique} light has no caster from the start`, async () => {
+      const device = gpuDeviceErrors();
+      const scene = await buildShadowScene(true, technique, false);
+      expect(scene.light.isCastingShadows).toBe(true);
+      const empty = await meanLuminance(scene.running);
+      device.stop();
+      expect(device.errors).toEqual([]);
+      scene.running.app.stop();
+      await waitForGpuWork(scene.running.app.lite.engine);
+      scene.running.dispose();
+      harness = null;
+
+      // With nothing casting, the frame is the frame the same scene renders with shadows off.
+      const plain = await buildShadowScene(false, technique, false);
+      const unshadowed = await meanLuminance(plain.running);
+      expect(empty).toBeGreaterThan(unshadowed * 0.8);
+    });
+  }
+
   it("survives a renderer that stops casting", async () => {
+    const device = gpuDeviceErrors();
     const scene = await buildShadowScene(true);
+    device.stop();
     expect(scene.caster.castShadows).toBe(true);
     scene.caster.castShadows = false;
     await scene.running.advance(SETTLE_FRAMES * 2);
     expect(scene.running.errors).toEqual([]);
+    // The last caster leaving empties the list, which used to make the pass draw every receiver.
+    expect(device.errors).toEqual([]);
     expect(scene.light.isCastingShadows).toBe(true);
   });
 
