@@ -741,6 +741,13 @@ One terrain per entity.
 
 The terrain document this component draws.
 
+###### Remarks
+
+The field does not take over your reference: release what you loaded as usual. While the
+chunks draw an asset, the terrain holds a reference of its own and drops it when it switches to
+another asset or is removed, so releasing the old handle straight after assigning a new one is
+safe.
+
 ##### frustumCulling
 
 > **frustumCulling**: `boolean`
@@ -1910,8 +1917,9 @@ Seeded foliage on a terrain.
 
 #### Remarks
 
-`maxInstances` sizes the `InstancedMeshRenderer`'s instance buffer, which Babylon Lite fixes
-before the scene is registered, so set it before `app.start()`.
+`maxInstances` sizes the `InstancedMeshRenderer`'s instance buffer and `lodMesh` names its LOD
+partner. Babylon Lite fixes both when the scene is registered, so set them before `app.start()`.
+The placement itself may arrive later, once the terrain asset has loaded.
 
 #### Example
 
@@ -1997,7 +2005,8 @@ Metres past which the LOD mesh takes over.
 
 > **lodMesh**: `AssetHandle`\<`MeshAsset`\> \| `null`
 
-A cheaper mesh drawn past [TerrainScatter.lodDistance](#loddistance-1), or `null`.
+A cheaper mesh drawn past [TerrainScatter.lodDistance](#loddistance-1), or `null`. Fixed once the app has
+started, like `maxInstances`: a later change is refused with `IGX-0717`.
 
 ##### material
 

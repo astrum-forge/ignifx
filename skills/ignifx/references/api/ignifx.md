@@ -192,7 +192,7 @@ An animation state machine bound to the `Model` on its entity.
 
 ```ts
 const animator = hero.addComponent(Animator);
-animator.animator = app.assets.load<AnimatorAsset>("3d/hero.animator.json").retain();
+animator.animator = app.assets.load<AnimatorAsset>("3d/hero.animator.json");
 animator.onEvent.connect((name) => { if (name === "landed") thud(); }, { owner: animator });
 animator.setFloat("speed", 4.5);
 animator.setTrigger("jump");
@@ -997,7 +997,7 @@ A parsed animator document.
 #### Example
 
 ```ts
-const handle = app.assets.load<AnimatorAsset>("3d/hero.animator.json").retain();
+const handle = app.assets.load<AnimatorAsset>("3d/hero.animator.json");
 await handle.promise;
 handle.value?.stateNames; // ["idle", "locomotion", "jump"]
 ```
@@ -13558,6 +13558,21 @@ readonly [`DevtoolsPanelHandle`](#devtoolspanelhandle)[]
 
 The handles.
 
+##### position
+
+###### Get Signature
+
+> **get** **position**(): `"top"` \| `"left"` \| `"right"` \| `"bottom"`
+
+The canvas edge the overlay docks to: the resolved `devtools.position` setting, or the
+extension's `position` option when one was given. Fixed for the life of the app.
+
+###### Returns
+
+`"top"` \| `"left"` \| `"right"` \| `"bottom"`
+
+`"left"`, `"right"`, `"top"` or `"bottom"`.
+
 ##### reloadScenes
 
 ###### Get Signature
@@ -15902,16 +15917,17 @@ The world's lighting environment (`docs/architecture/07-rendering.md` §2.5).
 ```ts
 const studio = await app.assets.loadAsync<EnvironmentAsset>("environments/studio.env");
 const env = world.createEntity("Environment").addComponent(Environment, {
-  environment: studio.retain(),
+  environment: studio,
   imageProcessing: { exposure: 1.2, contrast: 1, toneMapping: "aces" },
 });
 ```
 
-Switching environments at runtime. Both handles stay retained, so switching back costs nothing.
+Switching environments at runtime. The field takes no reference of its own: both handles stay
+loaded until you release them, so switching back costs nothing.
 
 ```ts
 const night = await app.assets.loadAsync<EnvironmentAsset>("environments/night.env");
-env.environment = night.retain();
+env.environment = night;
 ```
 
 #### Extends
@@ -16403,7 +16419,7 @@ A loaded image-based lighting environment (`docs/architecture/07-rendering.md` �
 
 ```ts
 const studio = await app.assets.loadAsync<EnvironmentAsset>("environments/studio.env");
-world.createEntity("Env").addComponent(Environment, { environment: studio.retain() });
+world.createEntity("Env").addComponent(Environment, { environment: studio });
 ```
 
 #### Properties
@@ -19988,7 +20004,7 @@ One HUD label per entity; a second belongs on a second entity.
 
 > **anchor**: `"topLeft"` \| `"top"` \| `"topRight"` \| `"left"` \| `"center"` \| `"right"` \| `"bottomLeft"` \| `"bottom"` \| `"bottomRight"`
 
-Which point of the render target [HudText.position](#position-3) is measured from.
+Which point of the render target [HudText.position](#position-4) is measured from.
 
 ##### color
 
@@ -22405,9 +22421,9 @@ Draws one mesh many times from a caller-owned matrix slab, in a single draw call
 #### Example
 
 ```ts
-using box = MeshAsset.box(app, { size: 0.5 });
+const box = MeshAsset.box(app, { size: 0.5 }); // release it once nothing draws it
 const field = world.createEntity("Asteroids");
-const renderer = field.addComponent(InstancedMeshRenderer, { mesh: box.retain(), capacity: 20_000 });
+const renderer = field.addComponent(InstancedMeshRenderer, { mesh: box, capacity: 20_000 });
 
 const slab = new Float32Array(20_000 * 16);
 // ... write 16 column-major floats per instance ...
@@ -23616,6 +23632,9 @@ The entity's transform defines the light: a directional or spot light points alo
 local `+Z`, a point light sits at its origin, and a hemispheric light's sky direction is its local
 `+Y`.
 
+A disabled light, or one on an inactive entity, contributes nothing: its intensity reaches Lite
+as `0` and its shadow generator is released. Enabling it again restores both on the next frame.
+
 #### Example
 
 ```ts
@@ -23806,7 +23825,7 @@ The handle.
 > **get** **isCastingShadows**(): `boolean`
 
 Whether this light currently casts shadows — which needs the `shadows` rendering feature, a
-light kind Lite can shadow, and `shadows.enabled`.
+light kind Lite can shadow, `shadows.enabled`, and the light enabled in the hierarchy.
 
 ###### Returns
 
@@ -27365,9 +27384,11 @@ instead — a glTF is a tree of meshes, materials, and animations, not one buffe
 #### Example
 
 ```ts
-using box = MeshAsset.box(app, { size: 2 });
+const box = MeshAsset.box(app, { size: 2 }); // one reference, owned by this code
 const cube = app.world.createEntity("Cube");
-cube.addComponent(MeshRenderer, { mesh: box.retain() });
+cube.addComponent(MeshRenderer, { mesh: box }); // the field takes no reference
+// Once nothing draws the box any more:
+box.release();
 ```
 
 #### Properties
@@ -28510,9 +28531,9 @@ Draws a mesh asset with a material (`docs/architecture/07-rendering.md` §2.3).
 #### Example
 
 ```ts
-using box = MeshAsset.box(app, { size: 1 });
+const box = MeshAsset.box(app, { size: 1 }); // release it once nothing draws it
 const cube = world.createEntity("Cube");
-cube.addComponent(MeshRenderer, { mesh: box.retain(), castShadows: true });
+cube.addComponent(MeshRenderer, { mesh: box, castShadows: true });
 ```
 
 #### Extends
@@ -29073,7 +29094,7 @@ One instance of a loaded model (`docs/architecture/07-rendering.md` §2.4).
 ```ts
 const hero = await app.assets.loadAsync<ModelAsset>("models/hero.glb");
 const entity = world.createEntity("Hero");
-const model = entity.addComponent(Model, { model: hero.retain() });
+const model = entity.addComponent(Model, { model: hero });
 model.attachToNode("hand.R", sword);
 ```
 
@@ -33103,7 +33124,7 @@ A parsed particle document.
 #### Example
 
 ```ts
-const handle = app.assets.load<ParticleAsset>("fx/fire.particles.json").retain();
+const handle = app.assets.load<ParticleAsset>("fx/fire.particles.json");
 await handle.promise;
 handle.value.definition.main.capacity; // 1000
 ```
@@ -44498,7 +44519,7 @@ A sprite animator.
 
 ```ts
 const animator = hero.addComponent(SpriteAnimator);
-animator.animations = app.assets.load<SpriteAnimationAsset>("2d/hero.spriteanim.json").retain();
+animator.animations = app.assets.load<SpriteAnimationAsset>("2d/hero.spriteanim.json");
 animator.onEvent.connect((name) => { if (name === "footstep") playStep(); }, { owner: animator });
 animator.play("run");
 ```
@@ -45851,7 +45872,7 @@ costs nothing.
 ```ts
 const hero = app.world.createEntity({ name: "hero" });
 const sprite = hero.addComponent(SpriteRenderer);
-sprite.sprite = app.assets.load<SpriteAtlasAsset>("2d/hero.atlas.json").retain();
+sprite.sprite = app.assets.load<SpriteAtlasAsset>("2d/hero.atlas.json");
 sprite.sortingLayer = "Default";
 ```
 
@@ -46760,6 +46781,13 @@ One terrain per entity.
 > **definition**: [`AssetHandle`](#assethandle)\<[`TerrainAsset`](#terrainasset-1)\> \| `null`
 
 The terrain document this component draws.
+
+###### Remarks
+
+The field does not take over your reference: release what you loaded as usual. While the
+chunks draw an asset, the terrain holds a reference of its own and drops it when it switches to
+another asset or is removed, so releasing the old handle straight after assigning a new one is
+safe.
 
 ##### frustumCulling
 
@@ -47941,8 +47969,9 @@ Seeded foliage on a terrain.
 
 #### Remarks
 
-`maxInstances` sizes the `InstancedMeshRenderer`'s instance buffer, which Babylon Lite fixes
-before the scene is registered, so set it before `app.start()`.
+`maxInstances` sizes the `InstancedMeshRenderer`'s instance buffer and `lodMesh` names its LOD
+partner. Babylon Lite fixes both when the scene is registered, so set them before `app.start()`.
+The placement itself may arrive later, once the terrain asset has loaded.
 
 #### Example
 
@@ -48028,7 +48057,8 @@ Metres past which the LOD mesh takes over.
 
 > **lodMesh**: [`AssetHandle`](#assethandle)\<[`MeshAsset`](#meshasset)\> \| `null`
 
-A cheaper mesh drawn past [TerrainScatter.lodDistance](#loddistance-1), or `null`.
+A cheaper mesh drawn past [TerrainScatter.lodDistance](#loddistance-1), or `null`. Fixed once the app has
+started, like `maxInstances`: a later change is refused with `IGX-0717`.
 
 ##### material
 
@@ -50704,7 +50734,7 @@ A tilemap.
 
 ```ts
 const level = app.world.createEntity({ name: "level" }).addComponent(Tilemap);
-level.map = app.assets.load<TilemapAsset>("2d/level-1.tilemap.json").retain();
+level.map = app.assets.load<TilemapAsset>("2d/level-1.tilemap.json");
 level.setTile(0, 3, 2, 0); // carve a hole in the ground layer
 ```
 
@@ -52122,9 +52152,9 @@ A tilemap renderer.
 
 ```ts
 const level = app.world.createEntity({ name: "level" });
-level.addComponent(Tilemap).map = app.assets.load<TilemapAsset>("2d/level-1.tilemap.json").retain();
+level.addComponent(Tilemap).map = app.assets.load<TilemapAsset>("2d/level-1.tilemap.json");
 const renderer = level.addComponent(TilemapRenderer);
-renderer.atlas = app.assets.load<SpriteAtlasAsset>("2d/tiles.atlas.json").retain();
+renderer.atlas = app.assets.load<SpriteAtlasAsset>("2d/tiles.atlas.json");
 ```
 
 #### Extends
