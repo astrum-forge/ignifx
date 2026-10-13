@@ -1,5 +1,26 @@
 # ignifx
 
+## 0.4.0
+
+### Patch Changes
+
+- Updated dependencies [8c87816]
+- Updated dependencies [097d60b]
+- Updated dependencies [1f45e2f]
+  - @ignifx/devtools@0.4.0
+  - @ignifx/core@0.4.0
+  - @ignifx/2d@0.4.0
+  - @ignifx/3d@0.4.0
+  - @ignifx/audio@0.4.0
+  - @ignifx/electron@0.4.0
+  - @ignifx/input@0.4.0
+  - @ignifx/particles@0.4.0
+  - @ignifx/particles-2d@0.4.0
+  - @ignifx/physics@0.4.0
+  - @ignifx/physics-2d@0.4.0
+  - @ignifx/terrain@0.4.0
+  - @ignifx/ui@0.4.0
+
 ## 0.3.1
 
 ### Patch Changes

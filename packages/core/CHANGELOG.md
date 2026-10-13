@@ -1,5 +1,19 @@
 # @ignifx/core
 
+## 0.4.0
+
+### Minor Changes
+
+- 097d60b: An `Environment` that becomes the winner again, after a newer one is disabled or removed, now restores its own fog, clear colour and image processing instead of leaving the newer one's.
+  
+  ### Breaking
+  
+  `Environment.clearColor` is now `ColorLike | null` and defaults to `null`, like `Camera.clearColor`: an `Environment` no longer paints the background black over the `rendering.clearColor` setting unless you set its `clearColor`. Set `clearColor` explicitly where you relied on the black default, and handle `null` where you read the field.
+
+### Patch Changes
+
+- 1f45e2f: Fix PCF and CSM shadows throwing `beginRenderPass … colorAttachments[0].view … Required member is undefined` when a frame lands while a material rebuild is still running, which could leave the canvas black on slower machines.
+
 ## 0.3.1
 
 No changes in this release.
