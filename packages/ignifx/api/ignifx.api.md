@@ -210,6 +210,7 @@ import { ComponentDefinition } from '@ignifx/core';
 import { ComponentHandle } from '@ignifx/core';
 import { ComponentHooks } from '@ignifx/core';
 import { ComponentInit } from '@ignifx/core';
+import { ComponentInitValue } from '@ignifx/core';
 import { componentRef } from '@ignifx/core';
 import { ComponentRefFieldSpec } from '@ignifx/core';
 import { ComponentRegistry } from '@ignifx/core';
@@ -1928,6 +1929,8 @@ export { ComponentHandle }
 export { ComponentHooks }
 
 export { ComponentInit }
+
+export { ComponentInitValue }
 
 export { componentRef }
 

@@ -1,5 +1,6 @@
 import type { Component } from "./component.js";
-import type { Schema } from "../schema/types.js";
+import type { ColorLike, QuatLike, Vec2Like, Vec3Like, Vec4Like } from "../math/types.js";
+import type { CurveValue, Schema } from "../schema/types.js";
 
 /**
  * How component *classes* are named in APIs (`docs/architecture/03-scripting-and-components.md`
@@ -100,7 +101,8 @@ export interface ConcreteComponentType<T extends Component = Component> extends 
 /**
  * The values `entity.addComponent(Type, init)` accepts: the component's serialized fields, each
  * optional. Engine-owned members (`entity`, `enabled`, …) and methods are excluded, so an `init`
- * object can only set declared data.
+ * object can only set declared data. A `record` field may be given in part; the fields it leaves
+ * out keep their schema defaults.
  *
  * @typeParam T - The component instance type.
  *
@@ -118,5 +120,31 @@ export type ComponentInit<T extends Component> = {
       : NonNullable<T[K]> extends (...args: never[]) => unknown
         ? never
         : K
-  ]?: T[K];
+  ]?: ComponentInitValue<T[K]>;
 };
+
+/**
+ * What an `init` object accepts for one field: a plain-data record in part, at any depth, and every
+ * other value whole — vectors, colours, curves, arrays, assets and references included.
+ *
+ * @typeParam V - The field's value type.
+ *
+ * @example
+ * ```ts
+ * const bloom: ComponentInitValue<BloomEffectSettings> = { enabled: true };
+ * ```
+ *
+ * @public
+ */
+export type ComponentInitValue<V> = V extends readonly unknown[]
+  ? V
+  : V extends Vec2Like | Vec3Like | Vec4Like | QuatLike | ColorLike | CurveValue
+    ? V
+    : V extends object
+      ? // An object with no method is plain data, so a record; a class instance is kept whole.
+        [{ [P in keyof V]-?: NonNullable<V[P]> extends (...args: never[]) => unknown ? P : never }[keyof V]] extends [
+          never,
+        ]
+        ? { readonly [P in keyof V]?: ComponentInitValue<V[P]> }
+        : V
+      : V;

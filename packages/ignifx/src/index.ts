@@ -62,6 +62,7 @@ export {
   type ComponentHandle,
   type ComponentHooks,
   type ComponentInit,
+  type ComponentInitValue,
   componentRef,
   type ComponentRefFieldSpec,
   ComponentRegistry,

@@ -84388,11 +84388,12 @@ The dense runtime id of a component, with the same lifetime rules as [EntityHand
 
 ### ComponentInit
 
-> **ComponentInit**\<`T`\> = `{ readonly [K in keyof T as K extends keyof Component ? never : NonNullable<T[K]> extends (args: never[]) => unknown ? never : K]?: T[K] }`
+> **ComponentInit**\<`T`\> = `{ readonly [K in keyof T as K extends keyof Component ? never : NonNullable<T[K]> extends (args: never[]) => unknown ? never : K]?: ComponentInitValue<T[K]> }`
 
 The values `entity.addComponent(Type, init)` accepts: the component's serialized fields, each
 optional. Engine-owned members (`entity`, `enabled`, …) and methods are excluded, so an `init`
-object can only set declared data.
+object can only set declared data. A `record` field may be given in part; the fields it leaves
+out keep their schema defaults.
 
 #### Type Parameters
 
@@ -84406,6 +84407,29 @@ The component instance type.
 
 ```ts
 entity.addComponent(Mover, { speed: 12, label: "hero" });
+```
+
+***
+
+### ComponentInitValue
+
+> **ComponentInitValue**\<`V`\> = `V` *extends* readonly `unknown`[] ? `V` : `V` *extends* [`Vec2Like`](#vec2like) \| [`Vec3Like`](#vec3like) \| [`Vec4Like`](#vec4like) \| [`QuatLike`](#quatlike) \| [`ColorLike`](#colorlike) \| [`CurveValue`](#curvevalue) ? `V` : `V` *extends* `object` ? \[`{ [P in keyof V]-?: NonNullable<V[P]> extends (args: (...)[]) => unknown ? P : never }`\[keyof `V`\]\] *extends* \[`never`\] ? `{ readonly [P in keyof V]?: ComponentInitValue<V[P]> }` : `V` : `V`
+
+What an `init` object accepts for one field: a plain-data record in part, at any depth, and every
+other value whole — vectors, colours, curves, arrays, assets and references included.
+
+#### Type Parameters
+
+##### V
+
+`V`
+
+The field's value type.
+
+#### Example
+
+```ts
+const bloom: ComponentInitValue<BloomEffectSettings> = { enabled: true };
 ```
 
 ***

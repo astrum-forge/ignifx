@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { Component } from "../../src/component/component.js";
 import { isUlid } from "../../src/ids/ulid.js";
 import { readNodeTag } from "../../src/lite/node.js";
-import { f32, i32 } from "../../src/schema/field-kinds.js";
+import { PostProcessStack } from "../../src/render/post-process-stack.js";
+import { bool, color, f32, i32, optional, record } from "../../src/schema/field-kinds.js";
 import { Script } from "../../src/script/script.js";
 import { Transform } from "../../src/transform/transform.js";
 import { createTestWorld } from "../support/create-test-world.js";
@@ -13,6 +14,19 @@ import { RecordingScript } from "../support/recording-script.js";
 /** A component with two schema fields, for `init` and default assertions. */
 class Health extends Component.define({ maximum: f32(100), armor: i32(2) }) {
   static typeId = "test/Health";
+}
+
+/** A component with nested and optional records, for partial `init` assertions. */
+class Lamp extends Component.define({
+  glow: record({
+    enabled: bool(false),
+    strength: f32(0.5),
+    tint: color("#ff8000"),
+    flicker: record({ rate: f32(2), depth: f32(0.1) }),
+  }),
+  backup: optional(record({ enabled: bool(true), strength: f32(0.25) })),
+}) {
+  static typeId = "test/Lamp";
 }
 
 /** A component that may exist only once per entity. */
@@ -204,6 +218,29 @@ describe("components", () => {
     const custom = entity.addComponent(Health, { maximum: 250 });
     expect(custom.maximum).toBe(250);
     expect(custom.armor).toBe(2);
+    harness.dispose();
+  });
+
+  it("merges a partial record init over the schema defaults, at any depth", () => {
+    const harness = createTestWorld();
+    const entity = harness.world.createEntity("entity");
+    const lamp = entity.addComponent(Lamp, { glow: { enabled: true, flicker: { rate: 5 } } });
+    expect(lamp.glow.enabled).toBe(true);
+    expect(lamp.glow.strength).toBe(0.5);
+    expect(lamp.glow.tint).toEqual({ r: 1, g: 128 / 255, b: 0, a: 1 });
+    expect(lamp.glow.flicker).toEqual({ rate: 5, depth: 0.1 });
+    expect(lamp.backup).toBeNull();
+
+    const withBackup = harness.world.createEntity("other").addComponent(Lamp, { backup: { strength: 1 } });
+    expect(withBackup.backup).toEqual({ enabled: true, strength: 1 });
+    harness.dispose();
+  });
+
+  it("keeps PostProcessStack's own bloom defaults when only enabled is given", () => {
+    const harness = createTestWorld();
+    const stack = harness.world.createEntity("camera").addComponent(PostProcessStack, { bloom: { enabled: true } });
+    expect(stack.bloom).toEqual({ ...new PostProcessStack().bloom, enabled: true });
+    expect(stack.bloom.threshold).toBe(0.9);
     harness.dispose();
   });
 

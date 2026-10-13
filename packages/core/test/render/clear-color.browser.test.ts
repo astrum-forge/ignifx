@@ -83,8 +83,8 @@ async function presentedClear(writer: Writer, path: FramePath, srgb = false): Pr
     });
   }
   if (path === "bloom") {
-    // Switched on in place so every other bloom field keeps its schema default (threshold 0.9).
-    camera.entity.addComponent(PostProcessStack).bloom.enabled = true;
+    // Every other bloom field keeps its schema default (threshold 0.9).
+    camera.entity.addComponent(PostProcessStack, { bloom: { enabled: true } });
   }
   await running.start();
   await running.advance(SETTLE_FRAMES * 2);

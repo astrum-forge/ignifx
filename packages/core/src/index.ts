@@ -84,6 +84,7 @@ export {
 } from "./component/component-registry.js";
 export type {
   ComponentInit,
+  ComponentInitValue,
   ComponentStatics,
   ComponentType,
   ConcreteComponentType,

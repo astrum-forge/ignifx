@@ -482,7 +482,10 @@ export interface ComponentHooks {
 }
 
 // @public
-export type ComponentInit<T extends Component> = { readonly [K in keyof T as K extends keyof Component ? never : NonNullable<T[K]> extends ((...args: never[]) => unknown) ? never : K]?: T[K]; };
+export type ComponentInit<T extends Component> = { readonly [K in keyof T as K extends keyof Component ? never : NonNullable<T[K]> extends ((...args: never[]) => unknown) ? never : K]?: ComponentInitValue<T[K]>; };
+
+// @public
+export type ComponentInitValue<V> = V extends readonly unknown[] ? V : V extends Vec2Like | Vec3Like | Vec4Like | QuatLike | ColorLike | CurveValue ? V : V extends object ? [{ [P in keyof V]-?: NonNullable<V[P]> extends ((...args: never[]) => unknown) ? P : never; }[keyof V]] extends [never] ? { readonly [P in keyof V]?: ComponentInitValue<V[P]>; } : V : V;
 
 // @public
 export function componentRef<C>(type: ComponentTypeToken<C>, options?: FieldOptions): FieldDefinition<C | null>;
