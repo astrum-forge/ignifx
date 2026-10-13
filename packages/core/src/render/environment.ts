@@ -197,17 +197,18 @@ export interface ImageProcessingSettings {
  * ```ts
  * const studio = await app.assets.loadAsync<EnvironmentAsset>("environments/studio.env");
  * const env = world.createEntity("Environment").addComponent(Environment, {
- *   environment: studio.retain(),
+ *   environment: studio,
  *   imageProcessing: { exposure: 1.2, contrast: 1, toneMapping: "aces" },
  * });
  * ```
  *
  * @example
- * Switching environments at runtime. Both handles stay retained, so switching back costs nothing.
+ * Switching environments at runtime. The field takes no reference of its own: both handles stay
+ * loaded until you release them, so switching back costs nothing.
  *
  * ```ts
  * const night = await app.assets.loadAsync<EnvironmentAsset>("environments/night.env");
- * env.environment = night.retain();
+ * env.environment = night;
  * ```
  *
  * @public

@@ -72,7 +72,7 @@ const app = await createApp({
 app.world.createEntity("Camera").addComponent(Camera2D);
 
 // The atlas the particles draw frames of, and the effect they play.
-const atlas = app.assets.load<SpriteAtlasAsset>("2d/fx.atlas.json").retain();
+const atlas = app.assets.load<SpriteAtlasAsset>("2d/fx.atlas.json");
 await atlas.promise;
 const fire = particleAssetFromDefinition(app, particleDefinition("fire"), "memory:fire.particles.json");
 

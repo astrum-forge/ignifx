@@ -62,7 +62,7 @@ export interface SpriteLayerKey {
  * ```ts
  * const hero = app.world.createEntity({ name: "hero" });
  * const sprite = hero.addComponent(SpriteRenderer);
- * sprite.sprite = app.assets.load<SpriteAtlasAsset>("2d/hero.atlas.json").retain();
+ * sprite.sprite = app.assets.load<SpriteAtlasAsset>("2d/hero.atlas.json");
  * sprite.sortingLayer = "Default";
  * ```
  *

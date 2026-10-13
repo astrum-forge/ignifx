@@ -97,7 +97,7 @@ const NO_SKELETONS: readonly LiteSkeleton[] = Object.freeze([]);
  * ```ts
  * const hero = await app.assets.loadAsync<ModelAsset>("models/hero.glb");
  * const entity = world.createEntity("Hero");
- * const model = entity.addComponent(Model, { model: hero.retain() });
+ * const model = entity.addComponent(Model, { model: hero });
  * model.attachToNode("hand.R", sword);
  * ```
  *

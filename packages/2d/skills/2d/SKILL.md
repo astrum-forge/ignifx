@@ -91,11 +91,11 @@ if (canvas instanceof HTMLCanvasElement) {
   const hero = app.world.createEntity("Hero");
   hero.transform.position2D = new Vec2(0, 0);
   const sprite = hero.addComponent(SpriteRenderer);
-  sprite.sprite = atlas.retain();
+  sprite.sprite = atlas;
   sprite.sortingLayer = "Default";
 
   const animator = hero.addComponent(SpriteAnimator);
-  animator.animations = clips.retain();
+  animator.animations = clips;
   animator.play("idle");
 
   await app.start();
@@ -213,8 +213,8 @@ if (canvas instanceof HTMLCanvasElement) {
   await Promise.all([map.promise, tiles.promise]);
 
   const level = app.world.createEntity("Level");
-  level.addComponent(Tilemap).map = map.retain();
-  level.addComponent(TilemapRenderer).atlas = tiles.retain();
+  level.addComponent(Tilemap).map = map;
+  level.addComponent(TilemapRenderer).atlas = tiles;
   await app.start();
 }
 ```

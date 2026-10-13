@@ -11,7 +11,7 @@ import type { AssetHandle, TextureAsset } from "@ignifx/core";
  *
  * @example
  * ```ts
- * const handle = app.assets.load<ParticleAsset>("fx/fire.particles.json").retain();
+ * const handle = app.assets.load<ParticleAsset>("fx/fire.particles.json");
  * await handle.promise;
  * handle.value.definition.main.capacity; // 1000
  * ```

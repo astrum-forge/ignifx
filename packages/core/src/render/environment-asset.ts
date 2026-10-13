@@ -112,7 +112,7 @@ export interface EnvironmentAssetLiteHandles {
  * @example
  * ```ts
  * const studio = await app.assets.loadAsync<EnvironmentAsset>("environments/studio.env");
- * world.createEntity("Env").addComponent(Environment, { environment: studio.retain() });
+ * world.createEntity("Env").addComponent(Environment, { environment: studio });
  * ```
  *
  * @public

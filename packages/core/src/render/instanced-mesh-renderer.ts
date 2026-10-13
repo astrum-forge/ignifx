@@ -118,9 +118,9 @@ export interface InstanceRange {
  *
  * @example
  * ```ts
- * using box = MeshAsset.box(app, { size: 0.5 });
+ * const box = MeshAsset.box(app, { size: 0.5 }); // release it once nothing draws it
  * const field = world.createEntity("Asteroids");
- * const renderer = field.addComponent(InstancedMeshRenderer, { mesh: box.retain(), capacity: 20_000 });
+ * const renderer = field.addComponent(InstancedMeshRenderer, { mesh: box, capacity: 20_000 });
  *
  * const slab = new Float32Array(20_000 * 16);
  * // ... write 16 column-major floats per instance ...

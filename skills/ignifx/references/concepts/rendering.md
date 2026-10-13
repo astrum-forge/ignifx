@@ -56,7 +56,7 @@ what they mean.
   _loaded_ `AssetHandle<EnvironmentAsset>` to `Environment.environment` moves the scene onto that
   asset's cube map: the diffuse light changes on the next frame and the specular reflection one
   frame after that, when the render sync rebuilds the material groups. Both handles keep their GPU
-  resources while they are retained, so switching back and forth is free. `environment = null`
+  resources until you release them, so switching back and forth is free. `environment = null`
   means "stop steering", not "go dark" — Babylon Lite has no inverse of `loadEnvironment`, so the
   last installed environment keeps lighting the scene, and `environment.installed` keeps naming it.
   The **skybox** is the part Lite decides when the asset loads: setting `Environment.skybox` to
@@ -68,10 +68,15 @@ what they mean.
   ```ts
   import type { App, AssetHandle, Environment, EnvironmentAsset } from "@ignifx/core";
 
-  /** Switches the world's lighting to another prefiltered environment. */
-  export async function useEnvironment(app: App, env: Environment, address: string): Promise<void> {
+  /** Switches the world's lighting to another prefiltered environment; release it when done. */
+  export async function useEnvironment(
+    app: App,
+    env: Environment,
+    address: string,
+  ): Promise<AssetHandle<EnvironmentAsset>> {
     const next: AssetHandle<EnvironmentAsset> = await app.assets.loadAsync<EnvironmentAsset>(address);
-    env.environment = next.retain();
+    env.environment = next; // the field takes no reference; `next` is still yours to release
+    return next;
   }
   ```
 
