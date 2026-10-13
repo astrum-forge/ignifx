@@ -5,7 +5,7 @@ import { Terrain } from "./components/terrain.js";
 import { TERRAIN_ERROR_MESSAGES } from "./errors.js";
 import { TERRAIN_LOD_ORDER, TerrainLodSystem } from "./lod/terrain-lod-system.js";
 import { VERSION } from "./version.js";
-import type { Extension, ExtensionContext } from "@ignifx/core";
+import type { App, Extension, ExtensionContext } from "@ignifx/core";
 
 /**
  * The `@ignifx/terrain` extension (`docs/architecture/04-extensions.md` §1).
@@ -43,5 +43,14 @@ export const terrain: () => Extension = defineExtension(() => ({
     ctx.registerAssetLoader(createTerrainLoader());
     ctx.registerComponents([Terrain, TerrainScatter]);
     ctx.registerSystem(new TerrainLodSystem(), { phase: Phase.PreRender, order: TERRAIN_LOD_ORDER });
+  },
+  onStart(app: App): void {
+    // `app.start()` registers the scene right after this, and that is when an instanced renderer's
+    // LOD partner is fixed. A scatter whose fields were set after `addComponent` (a scene file, or
+    // a script before start) hands them over here, while they can still be used.
+    const scatters = app.world.components(TerrainScatter);
+    for (let index = 0; index < scatters.length; index += 1) {
+      scatters[index]?.applyRendererSettings();
+    }
   },
 }));

@@ -69,8 +69,9 @@ function scatterSchema(): Schema {
  * Seeded foliage on a terrain.
  *
  * @remarks
- * `maxInstances` sizes the `InstancedMeshRenderer`'s instance buffer, which Babylon Lite fixes
- * before the scene is registered, so set it before `app.start()`.
+ * `maxInstances` sizes the `InstancedMeshRenderer`'s instance buffer and `lodMesh` names its LOD
+ * partner. Babylon Lite fixes both when the scene is registered, so set them before `app.start()`.
+ * The placement itself may arrive later, once the terrain asset has loaded.
  *
  * @example
  * ```ts
@@ -104,7 +105,10 @@ export class TerrainScatter extends Component implements ComponentHooks {
   /** The material, normally built by `foliageMaterialDefinition`. */
   declare material: AssetHandle<MaterialAsset> | null;
 
-  /** A cheaper mesh drawn past {@link TerrainScatter.lodDistance}, or `null`. */
+  /**
+   * A cheaper mesh drawn past {@link TerrainScatter.lodDistance}, or `null`. Fixed once the app has
+   * started, like `maxInstances`: a later change is refused with `IGX-0717`.
+   */
   declare lodMesh: AssetHandle<MeshAsset> | null;
 
   /** Metres past which the LOD mesh takes over. */
@@ -152,6 +156,15 @@ export class TerrainScatter extends Component implements ComponentHooks {
 
   #needsPlacement = true;
 
+  /** Whether {@link TerrainScatter.applyRendererSettings} has written the renderer at all yet. */
+  #hasWrittenRenderer = false;
+
+  #writtenMesh: AssetHandle<MeshAsset> | null = null;
+
+  #writtenMaterial: AssetHandle<MaterialAsset> | null = null;
+
+  #writtenLodMesh: AssetHandle<MeshAsset> | null = null;
+
   readonly #point: MutableVec3 = new Vec3();
 
   readonly #normal: MutableVec3 = new Vec3();
@@ -182,6 +195,7 @@ export class TerrainScatter extends Component implements ComponentHooks {
     renderer.gpuCulling = true;
     renderer.castShadows = true;
     renderer.receiveShadows = false;
+    this.applyRendererSettings();
     this.#needsPlacement = true;
   }
 
@@ -230,6 +244,7 @@ export class TerrainScatter extends Component implements ComponentHooks {
    * @internal
    */
   syncPlacement(): void {
+    this.applyRendererSettings();
     const terrain = this.entity.getComponentInParent(Terrain);
     if (terrain === null) {
       return;
@@ -403,16 +418,53 @@ export class TerrainScatter extends Component implements ComponentHooks {
     out[at + 15] = 1;
   }
 
+  /**
+   * Copies `mesh`, `material`, `lodMesh` and `lodDistance` onto the `InstancedMeshRenderer`.
+   *
+   * @remarks
+   * The renderer fixes its LOD partner when the scene is registered (`IGX-0717`), and the placement
+   * usually lands later, once the terrain asset has loaded. So these fields are copied as soon as
+   * they are known — at attach, from the extension's `onStart` just before registration, and on
+   * every placement sync — rather than only with the matrices. A field is written only when this
+   * component's own value changed since it last wrote it, so a late `lodMesh` is refused once rather
+   * than re-sent every frame; `lodDistance` is edited in place, which the renderer accepts live.
+   *
+   * @internal
+   */
+  applyRendererSettings(): void {
+    const renderer = this.entity.getComponent(InstancedMeshRenderer);
+    if (renderer === null) {
+      return;
+    }
+    const isFirst = !this.#hasWrittenRenderer;
+    this.#hasWrittenRenderer = true;
+    if (isFirst || this.mesh !== this.#writtenMesh) {
+      this.#writtenMesh = this.mesh;
+      renderer.mesh = this.mesh;
+    }
+    if (isFirst || this.material !== this.#writtenMaterial) {
+      this.#writtenMaterial = this.material;
+      renderer.materials = [this.material];
+    }
+    const lodMesh = this.lodMesh;
+    if (isFirst || lodMesh !== this.#writtenLodMesh) {
+      this.#writtenLodMesh = lodMesh;
+      renderer.lod = lodMesh === null ? null : { mesh: lodMesh, distance: this.lodDistance, band: LOD_BAND };
+      return;
+    }
+    const lod = renderer.lod;
+    if (lod !== null) {
+      lod.distance = this.lodDistance;
+    }
+  }
+
   /** Pushes the mesh, material, LOD partner, and matrices onto the renderer. */
   #applyRenderer(): void {
     const renderer = this.entity.getComponent(InstancedMeshRenderer);
     if (renderer === null) {
       return;
     }
-    renderer.mesh = this.mesh;
-    renderer.materials = [this.material];
-    const lodMesh = this.lodMesh;
-    renderer.lod = lodMesh === null ? null : { mesh: lodMesh, distance: this.lodDistance, band: LOD_BAND };
+    this.applyRendererSettings();
     renderer.setMatrices(this.#matrices, this.#count);
   }
 }

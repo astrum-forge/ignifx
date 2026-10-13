@@ -1,4 +1,4 @@
-import { Camera, isIgnifxError, Light, MeshAsset, TextureAsset } from "@ignifx/core";
+import { Camera, InstancedMeshRenderer, isIgnifxError, Light, MeshAsset, TextureAsset } from "@ignifx/core";
 import { describe, expect, it } from "vitest";
 import { terrainAssetFromDefinition } from "../src/assets/terrain-asset.js";
 import { TerrainScatter } from "../src/components/terrain-scatter.js";
@@ -260,6 +260,49 @@ describe("a TerrainScatter on a real device", () => {
 
     expect(scatter.count).toBeGreaterThan(0);
     expect(codesOf(harness.errors)).not.toContain("IGX-0715");
+    harness.dispose();
+  });
+
+  it("pairs the LOD mesh from its options even when the terrain arrives after start", async () => {
+    // The website's foliage example: the scatter is declared before `app.start()`, but the terrain
+    // asset finishes later, so the first placement lands after the scene is registered — which is
+    // when the renderer fixes its LOD partner (`IGX-0717`).
+    const harness = await createTerrainBrowserApp();
+    const eye = harness.world.createEntity("Main Camera");
+    eye.transform.localPosition.set(0, 18, -24);
+    eye.transform.lookAt({ x: 0, y: 0, z: 0 });
+    eye.addComponent(Camera, { near: 0.1, far: 400, fov: 60 });
+    const ground = harness.world.createEntity("Terrain");
+    const terrain = ground.addComponent(Terrain);
+    const lodMesh = MeshAsset.plane(harness.app, { width: 0.5, height: 0.5 });
+    const scatter = ground.addComponent(TerrainScatter, {
+      mesh: MeshAsset.plane(harness.app, { width: 1, height: 1 }),
+      lodMesh,
+      lodDistance: 10,
+      density: 0.1,
+      slope: { x: 0, y: 90 },
+      maxInstances: 512,
+    });
+    await harness.start();
+    await harness.advance(SETTLE_FRAMES);
+
+    terrain.definition = await terrainAssetFromDefinition(
+      harness.app,
+      {
+        size: { width: WIDTH, depth: WIDTH, height: 16 },
+        resolution: RESOLUTION,
+        chunks: { size: 8, lodLevels: 3, lodDistance: 24, skirtDepth: 1 },
+        layers: [{ name: "ground", color: [0.2, 0.7, 0.3] }],
+      },
+      { heights: rampHeights() },
+    );
+    await harness.advance(SETTLE_FRAMES);
+
+    const renderer = ground.requireComponent(InstancedMeshRenderer);
+    expect(scatter.count).toBeGreaterThan(0);
+    expect(renderer.lod?.mesh).toBe(lodMesh);
+    expect(renderer.lite.lodMesh).not.toBeNull();
+    expect(harness.log.toArray().filter((record) => record.message.includes("IGX-0717"))).toEqual([]);
     harness.dispose();
   });
 });

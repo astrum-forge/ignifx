@@ -222,6 +222,54 @@ describe("TerrainScatter placement", () => {
     fixtureApp.harness.dispose();
   });
 
+  it("hands the renderer its LOD partner at attach, before the terrain has loaded", async () => {
+    // The renderer fixes its LOD partner when the scene is registered, and the first placement
+    // usually lands after that; waiting for it is what used to log IGX-0717.
+    const harness = await createTerrainApp();
+    const entity = harness.app.world.createEntity("Terrain");
+    entity.addComponent(Terrain);
+    const mesh = MeshAsset.plane(harness.app, { width: 1, height: 1 });
+    const lodMesh = MeshAsset.plane(harness.app, { width: 0.5, height: 0.5 });
+    entity.addComponent(TerrainScatter, { mesh, lodMesh, lodDistance: 30 });
+    const renderer = entity.requireComponent(InstancedMeshRenderer);
+
+    expect(renderer.mesh).toBe(mesh);
+    expect(renderer.lod?.mesh).toBe(lodMesh);
+    expect(renderer.lod?.distance).toBe(30);
+    harness.dispose();
+  });
+
+  it("hands over a LOD mesh assigned after addComponent when the app starts", async () => {
+    const harness = await createTerrainApp();
+    const entity = harness.app.world.createEntity("Terrain");
+    entity.addComponent(Terrain);
+    const scatter = entity.addComponent(TerrainScatter, {
+      mesh: MeshAsset.plane(harness.app, { width: 1, height: 1 }),
+    });
+    const lodMesh = MeshAsset.plane(harness.app, { width: 0.5, height: 0.5 });
+    scatter.lodMesh = lodMesh;
+    await harness.app.start();
+
+    expect(entity.requireComponent(InstancedMeshRenderer).lod?.mesh).toBe(lodMesh);
+    harness.dispose();
+  });
+
+  it("follows a lodDistance edit in place, keeping the same LOD record", async () => {
+    const harness = await createTerrainApp();
+    const lodMesh = MeshAsset.plane(harness.app, { width: 1, height: 1 });
+    const fixtureApp = await scatterFixture({ slope: { x: 0, y: 90 }, lodMesh, lodDistance: 25 });
+    const renderer = fixtureApp.scatter.entity.requireComponent(InstancedMeshRenderer);
+    const record = renderer.lod;
+
+    fixtureApp.scatter.lodDistance = 60;
+    fixtureApp.harness.step();
+
+    expect(renderer.lod).toBe(record);
+    expect(renderer.lod?.distance).toBe(60);
+    harness.dispose();
+    fixtureApp.harness.dispose();
+  });
+
   it("places nothing while the scatter is disabled", async () => {
     const { harness, scatter } = await scatterFixture({ slope: { x: 0, y: 90 } });
     const before = scatter.count;
