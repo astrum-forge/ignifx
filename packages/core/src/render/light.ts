@@ -107,6 +107,9 @@ const TRANSLATION_COLUMN = 12;
  * local `+Z`, a point light sits at its origin, and a hemispheric light's sky direction is its local
  * `+Y`.
  *
+ * A disabled light, or one on an inactive entity, contributes nothing: its intensity reaches Lite
+ * as `0` and its shadow generator is released. Enabling it again restores both on the next frame.
+ *
  * @example
  * ```ts
  * const sun = world.createEntity("Sun");
@@ -194,7 +197,7 @@ export class Light extends Component implements ComponentHooks {
 
   /**
    * Whether this light currently casts shadows — which needs the `shadows` rendering feature, a
-   * light kind Lite can shadow, and `shadows.enabled`.
+   * light kind Lite can shadow, `shadows.enabled`, and the light enabled in the hierarchy.
    *
    * @returns `true` when a shadow generator is attached.
    */
@@ -214,7 +217,8 @@ export class Light extends Component implements ComponentHooks {
 
   /**
    * Writes every field that changed onto the Lite light, keeps the lights uniform buffer honest for
-   * a moving parent, and re-fits a shadow frustum that follows one. The `PreRender` system calls it.
+   * a moving parent, and re-fits a shadow frustum that follows one. The `PreRender` system calls it
+   * for every light, enabled or not, because a disabled light is dimmed to `0` rather than skipped.
    *
    * @param renderer - The rendering service, for the scene and the feature flags.
    * @returns `true` when the call changed the scene's light topology, which the system coalesces
@@ -268,12 +272,13 @@ export class Light extends Component implements ComponentHooks {
       return false;
     }
     this.#teardown(renderer);
-    const light = createLightOfType(type, this.intensity);
+    const intensity = this.#effectiveIntensity();
+    const light = createLightOfType(type, intensity);
     this.#light = light;
     this.#appliedType = type;
     this.#appliedColor = "";
     this.#appliedGroundColor = "";
-    this.#appliedIntensity = this.intensity;
+    this.#appliedIntensity = intensity;
     this.#appliedRange = Number.NaN;
     this.#appliedSpotAngle = Number.NaN;
     this.#appliedSpotExponent = Number.NaN;
@@ -319,9 +324,10 @@ export class Light extends Component implements ComponentHooks {
    * @param light - The Lite light.
    */
   #applyScalars(light: AdapterLight): void {
-    if (this.#appliedIntensity !== this.intensity) {
-      this.#appliedIntensity = this.intensity;
-      setLightIntensity(light, this.intensity);
+    const intensity = this.#effectiveIntensity();
+    if (this.#appliedIntensity !== intensity) {
+      this.#appliedIntensity = intensity;
+      setLightIntensity(light, intensity);
     }
     if (isRanged(light) && this.#appliedRange !== this.range) {
       this.#appliedRange = this.range;
@@ -338,6 +344,19 @@ export class Light extends Component implements ComponentHooks {
       this.#appliedSpotExponent = this.spotExponent;
       setSpotExponent(light, this.spotExponent);
     }
+  }
+
+  /**
+   * The intensity Lite should use: the field, or `0` while the component or its entity is disabled.
+   *
+   * @remarks
+   * Dimming keeps the light in the scene. Removing it would change the light count every compiled
+   * PBR permutation bakes in, and so cost a renderable rebuild on every toggle.
+   *
+   * @returns The intensity to apply.
+   */
+  #effectiveIntensity(): number {
+    return this.isEnabledInHierarchy ? this.intensity : 0;
   }
 
   /**
@@ -369,7 +388,8 @@ export class Light extends Component implements ComponentHooks {
    */
   #applyShadows(renderer: RendererImpl): boolean {
     const light = this.#light;
-    const wanted = this.shadows.enabled && renderer.features.shadows && !renderer.isHeadless;
+    const wanted =
+      this.shadows.enabled && this.isEnabledInHierarchy && renderer.features.shadows && !renderer.isHeadless;
     if (light === null || wanted === this.#appliedShadows) {
       this.#warnAboutShadows(renderer);
       return false;

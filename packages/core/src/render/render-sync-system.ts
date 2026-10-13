@@ -32,7 +32,9 @@ import type { World } from "../world/world.js";
  *    components needing a dirty API of their own, and it is what makes a script's edit take effect
  *    on the next frame with no bookkeeping at the call site.
  * 2. **Visibility.** `entity.activeInHierarchy && component.enabled` is materialised onto each
- *    clone's `visible`. Never removal: Lite disposes a mesh that leaves its last scene.
+ *    clone's `visible`. Never removal: Lite disposes a mesh that leaves its last scene. A light gets
+ *    the same treatment as intensity `0` and a released shadow generator, which keeps the light
+ *    count every PBR permutation bakes in unchanged; a disabled camera or environment is skipped.
  * 3. **One `rebuildSceneRenderables` per frame, and never two at once.** Adding a mesh, adding a
  *    light, or giving a light a shadow generator all invalidate the per-mesh light index list and
  *    the compiled shader permutation that renderables bake in (`index.d.ts` 9465). The call is

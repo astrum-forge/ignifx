@@ -81,6 +81,9 @@ what they mean.
   Unlike every other render component, the Lite light is **not** parented under the entity — ignifx
   writes the world pose onto it each frame instead, so that what the light shades and what it casts
   can never disagree.
+- `light.enabled = false`, or an inactive entity, turns a `Light` off: it lights nothing and casts
+  no shadow until it is enabled again. It stays in the scene at intensity `0`, so toggling it costs
+  no material rebuild (dropping its shadow generator still does, as `shadows.enabled = false` does).
 
 ## 2. The `PreRender` sync
 

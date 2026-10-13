@@ -162,6 +162,60 @@ describe("kind-specific scalars", () => {
   });
 });
 
+describe("enabled", () => {
+  it("contributes nothing while the component is disabled, and comes back when re-enabled", async () => {
+    const h = await app();
+    const light = h.world.createEntity("Sun").addComponent(Light, { intensity: 3 });
+    h.frame();
+    expect(light.lite.light?.intensity).toBe(3);
+
+    light.enabled = false;
+    h.frame();
+    expect(light.lite.light?.intensity).toBe(0);
+    // Dimmed, not removed: the light count stays what every compiled material expects.
+    expect(h.world.lite.scene.lights).toContain(light.lite.light);
+
+    light.enabled = true;
+    h.frame();
+    expect(light.lite.light?.intensity).toBe(3);
+  });
+
+  it("contributes nothing while its entity is inactive in the hierarchy", async () => {
+    const h = await app();
+    const rig = h.world.createEntity("Rig");
+    const lamp = h.world.createEntity("Lamp");
+    lamp.setParent(rig);
+    const light = lamp.addComponent(Light, { type: "point", intensity: 2 });
+    h.frame();
+    expect(light.lite.light?.intensity).toBe(2);
+
+    rig.active = false;
+    h.frame();
+    expect(light.lite.light?.intensity).toBe(0);
+
+    rig.active = true;
+    h.frame();
+    expect(light.lite.light?.intensity).toBe(2);
+  });
+
+  it("starts dark when it is added already disabled, and keeps an intensity edit for later", async () => {
+    const h = await app();
+    const entity = h.world.createEntity("Sun");
+    entity.active = false;
+    const light = entity.addComponent(Light, { intensity: 4 });
+    h.frame();
+    expect(light.lite.light?.intensity).toBe(0);
+
+    light.intensity = 5;
+    h.frame();
+    expect(light.lite.light?.intensity).toBe(0);
+
+    entity.active = true;
+    h.frame();
+    expect(light.lite.light?.intensity).toBe(5);
+  });
+});
+
 describe("include and exclude lists", () => {
   it("turns entity references into the mesh-id sets Lite matches on", async () => {
     const h = await app();
