@@ -106,6 +106,21 @@ readonly [`DevtoolsPanelHandle`](#devtoolspanelhandle)[]
 
 The handles.
 
+##### position
+
+###### Get Signature
+
+> **get** **position**(): `"right"` \| `"left"` \| `"top"` \| `"bottom"`
+
+The canvas edge the overlay docks to: the resolved `devtools.position` setting, or the
+extension's `position` option when one was given. Fixed for the life of the app.
+
+###### Returns
+
+`"right"` \| `"left"` \| `"top"` \| `"bottom"`
+
+`"left"`, `"right"`, `"top"` or `"bottom"`.
+
 ##### reloadScenes
 
 ###### Get Signature

@@ -23,7 +23,7 @@ import type { HotReloadBridge, HotReloadReportView } from "./hot-reload.js";
 import type { DevtoolsLogSink } from "./log-sink.js";
 import type { DevtoolsErrorEntry, DevtoolsHotReloadEntry, DevtoolsPanel, DevtoolsPanelHost } from "./overlay/panel.js";
 import type { SceneReloadWatcher } from "./scene-reload.js";
-import type { DevtoolsPanelName, DevtoolsSettings } from "./settings.js";
+import type { DevtoolsPanelName, DevtoolsPosition, DevtoolsSettings } from "./settings.js";
 import type { App, Disconnect, Entity, ErrorReport, SignalLike, System } from "@ignifx/core";
 
 /**
@@ -197,6 +197,16 @@ export class DevtoolsService {
    */
   get isOpen(): boolean {
     return this.#isOpen;
+  }
+
+  /**
+   * The canvas edge the overlay docks to: the resolved `devtools.position` setting, or the
+   * extension's `position` option when one was given. Fixed for the life of the app.
+   *
+   * @returns `"left"`, `"right"`, `"top"` or `"bottom"`.
+   */
+  get position(): DevtoolsPosition {
+    return this.#settings.position;
   }
 
   /**
