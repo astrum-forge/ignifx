@@ -1093,7 +1093,7 @@ export class Environment extends Component implements ComponentHooks {
     // (undocumented)
     blur: number;
     // (undocumented)
-    clearColor: ColorLike;
+    clearColor: ColorLike | null;
     // (undocumented)
     environment: AssetHandle<EnvironmentAsset> | null;
     // (undocumented)
@@ -1103,6 +1103,8 @@ export class Environment extends Component implements ComponentHooks {
     get installed(): EnvironmentAsset | null;
     onAttach(): void;
     onDetach(): void;
+    // @internal
+    reclaim(): void;
     // (undocumented)
     rotation: number;
     static schema: Schema;

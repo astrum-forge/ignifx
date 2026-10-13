@@ -213,6 +213,33 @@ describe("the clear colour the section declares", () => {
     expect(scene.clearColor.b).toBeCloseTo(Color.srgbToLinear(1), 6);
   });
 
+  it("is left alone by an Environment whose own clearColor is null, the default", async () => {
+    harness = await createRenderHarness({
+      settings: { rendering: { clearColor: { r: 1, g: 0, b: 0, a: 1 } } },
+    });
+    const environment = harness.world.createEntity("Env").addComponent(Environment);
+    environment.fog.mode = "linear";
+    harness.frame();
+    const scene = harness.world.lite.scene;
+    expect(environment.clearColor).toBeNull();
+    expect(scene.clearColor.r).toBeCloseTo(Color.srgbToLinear(1), 6);
+
+    environment.clearColor = { r: 0, g: 1, b: 0, a: 1 };
+    harness.frame();
+    expect(scene.clearColor.g).toBeCloseTo(Color.srgbToLinear(1), 6);
+
+    // Back to `null` stops steering; like the camera's, it does not restore the setting.
+    environment.clearColor = null;
+    harness.frame();
+    expect(scene.clearColor.g).toBeCloseTo(Color.srgbToLinear(1), 6);
+
+    // A colour assigned again is written, even the one written before.
+    scene.clearColor.g = 0;
+    environment.clearColor = { r: 0, g: 1, b: 0, a: 1 };
+    harness.frame();
+    expect(scene.clearColor.g).toBeCloseTo(Color.srgbToLinear(1), 6);
+  });
+
   it("is overridden by an Environment, which the main camera in turn overrides", async () => {
     harness = await createRenderHarness({
       settings: { rendering: { clearColor: { r: 1, g: 0, b: 0, a: 1 } } },

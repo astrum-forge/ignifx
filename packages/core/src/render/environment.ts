@@ -1,7 +1,7 @@
 import { Component } from "../component/component.js";
 import { CoreErrorCode } from "../errors/error-codes.js";
 import { setSceneFog, TONE_MAPPING_NAMES } from "../lite/gpu/environment.js";
-import { asset, bool, color, enumOf, f32, record } from "../schema/field-kinds.js";
+import { asset, bool, color, enumOf, f32, optional, record } from "../schema/field-kinds.js";
 import { createDefaults, defineSchema } from "../schema/schema.js";
 import { EnvironmentAsset } from "./environment-asset.js";
 import {
@@ -83,6 +83,14 @@ import type { Schema } from "../schema/types.js";
  * now draws **its own** prefiltered cube map (`./loaders/environment-loader.ts`), where Lite's
  * default was a flat box painted in the clear colour. So a bare `.env` gets a real background, and
  * the component's default `skybox.enabled: true` agrees with it.
+ *
+ * ## `clearColor` is optional, as the camera's is
+ *
+ * `null`, the default, means "leave the scene's clear colour alone", exactly as on `Camera`: an
+ * environment added for its fog or its lighting keeps the `rendering.clearColor` setting standing.
+ * Until 2026-10-11 the field was a plain colour defaulting to black, and the first sync wrote that
+ * black over the setting whether or not anything had asked for it. Setting the field back to `null`
+ * does not restore the setting either — `null` stops steering, it does not undo.
  *
  * ## `ambientColor` does not exist
  *
@@ -226,7 +234,7 @@ export class Environment extends Component implements ComponentHooks {
 
   declare imageProcessing: ImageProcessingSettings;
 
-  declare clearColor: ColorLike;
+  declare clearColor: ColorLike | null;
 
   /** Applies the schema defaults, exactly as `Component.define` would. */
   constructor() {
@@ -251,6 +259,9 @@ export class Environment extends Component implements ComponentHooks {
   #installedEnvironment: EnvironmentAsset | null = null;
 
   #hasWarnedAboutSkybox = false;
+
+  /** Set by {@link Environment.reclaim}: the next sync re-installs even an unchanged asset. */
+  #isReclaimed = false;
 
   /**
    * The environment asset this component installed on the scene.
@@ -288,6 +299,26 @@ export class Environment extends Component implements ComponentHooks {
   }
 
   /**
+   * Forgets what this component last wrote, so its next sync writes every field again.
+   *
+   * @remarks
+   * The `PreRender` system calls it when this component becomes the winning environment. Another
+   * one may have written the scene since this one last did — it won, and has now been disabled or
+   * removed — and a component that only writes what changed since *its own* last write would
+   * otherwise leave the other's fog, clear colour and cube map in place.
+   *
+   * @internal
+   */
+  reclaim(): void {
+    this.#appliedRotation = Number.NaN;
+    this.#appliedBlur = Number.NaN;
+    this.#appliedFog = "";
+    this.#appliedClearColor = "";
+    this.#appliedImageProcessing = "";
+    this.#isReclaimed = true;
+  }
+
+  /**
    * Writes every field that changed onto the scene. The `PreRender` system calls it for the winning
    * environment only.
    *
@@ -311,13 +342,18 @@ export class Environment extends Component implements ComponentHooks {
    * Writes the clear colour, decoded to linear.
    *
    * @remarks
-   * Only when the field changed, which is what leaves the `rendering.clearColor` setting standing
-   * in a world whose `Environment` never touches its own — and what keeps the main camera's
+   * Nothing while the field is `null`, which is what leaves the `rendering.clearColor` setting
+   * standing; otherwise only when the colour changed, which is what keeps the main camera's
    * override, written every frame, on top of this one (`RendererImpl.applyClearColor`).
    *
    * @param renderer - The rendering service, for the scene.
    */
   #applyClearColor(renderer: RendererImpl): void {
+    if (this.clearColor === null) {
+      // Forgotten, so a colour assigned later is written even if it is the one written before.
+      this.#appliedClearColor = "";
+      return;
+    }
     const key = colorKey(this.clearColor);
     if (key === this.#appliedClearColor) {
       return;
@@ -366,7 +402,8 @@ export class Environment extends Component implements ComponentHooks {
    * at the asset's recorded Lite handles, the rotation and the blur are invalidated so they are
    * written against the new cube map, and the image-processing key is cleared — Lite's
    * `loadEnvironment` overwrote `scene.imageProcessing` while that asset was loading, so the
-   * component's own exposure, contrast and curve have to be written again.
+   * component's own exposure, contrast and curve have to be written again. The same happens, with the
+   * same asset, after {@link Environment.reclaim}: another environment may have moved the slot.
    *
    * A move to `null` is deliberately *not* an uninstall (see the module remarks): the field stops
    * steering, and the scene stays lit by whatever was installed last.
@@ -376,15 +413,19 @@ export class Environment extends Component implements ComponentHooks {
    */
   #applyEnvironment(renderer: RendererImpl): boolean {
     const loaded = this.environment?.state === "loaded" ? this.environment.value : null;
+    const reclaimed = this.#isReclaimed;
+    this.#isReclaimed = false;
     let installed = false;
-    if (loaded !== this.#trackedEnvironment) {
+    if (loaded !== this.#trackedEnvironment || reclaimed) {
       this.#trackedEnvironment = loaded;
-      if (loaded !== null && loaded !== this.#installedEnvironment) {
+      if (loaded !== null && (loaded !== this.#installedEnvironment || reclaimed)) {
+        if (loaded !== this.#installedEnvironment) {
+          this.#hasWarnedAboutSkybox = false;
+        }
         this.#installedEnvironment = loaded;
         this.#appliedRotation = Number.NaN;
         this.#appliedBlur = Number.NaN;
         this.#appliedImageProcessing = "";
-        this.#hasWarnedAboutSkybox = false;
         const textures = loaded.lite.textures;
         // A headless load produced none, and there is no scene slot to move: the asset is still
         // recorded, so `installed` answers.
@@ -550,6 +591,8 @@ function environmentSchema(): Schema {
       },
       { tooltip: "Exposure, contrast, and tone mapping. Recompiles PBR pipelines when it changes." },
     ),
-    clearColor: color("#000000", { tooltip: "The colour the scene is cleared to, in sRGB." }),
+    clearColor: optional(color("#000000"), {
+      tooltip: "The colour the scene is cleared to, in sRGB; null leaves the rendering.clearColor setting.",
+    }),
   });
 }

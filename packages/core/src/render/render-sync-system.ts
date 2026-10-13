@@ -102,6 +102,9 @@ export class RenderSyncSystem implements System {
 
   #hasLoggedMultipleEnvironments = false;
 
+  /** Each world's winning `Environment` last frame, so a change of winner is seen. */
+  readonly #lastEnvironment = new WeakMap<World, Environment | null>();
+
   #isRebuildDue = false;
 
   #isRebuildInFlight = false;
@@ -299,6 +302,13 @@ export class RenderSyncSystem implements System {
     if (enabledCount <= 1) {
       this.#hasLoggedMultipleEnvironments = false;
     }
+    // A winner writes only what changed since *its own* last write, so one taking the scene back
+    // from another — the newer one was disabled — must forget that, or the scene keeps the other's
+    // fog and clear colour (`07-rendering.md` §2.5: "disabling the winner hands the world back").
+    if (winner !== null && winner !== (this.#lastEnvironment.get(world) ?? null)) {
+      winner.reclaim();
+    }
+    this.#lastEnvironment.set(world, winner);
     return winner?.sync(this.#renderer) ?? false;
   }
 

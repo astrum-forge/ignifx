@@ -15952,7 +15952,7 @@ One per entity, and effectively one per world: the fields are all scene state.
 
 ##### clearColor
 
-> **clearColor**: [`ColorLike`](#colorlike)
+> **clearColor**: [`ColorLike`](#colorlike) \| `null`
 
 ##### environment
 
@@ -77238,7 +77238,8 @@ The colour the scene is cleared to each frame, in sRGB.
 
 Applied to the render scene as it is created, which makes it the floor of a three-step
 precedence (`docs/architecture/07-rendering.md` §2.1, §2.5): `Camera.clearColor` on the main
-camera wins whenever it is not `null`, an `Environment.clearColor` wins over this setting, and
+camera wins whenever it is not `null`, an `Environment.clearColor` that is not `null` wins over
+this setting, and
 this setting wins over Babylon Lite's own mid grey.
 
 ##### features

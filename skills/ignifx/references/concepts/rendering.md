@@ -42,9 +42,10 @@ what they mean.
   lists are only rebuilt once the renderable rebuild it triggered has settled.
 - Exactly one thing clears the frame, so the three fields that can set it are ranked:
   `Camera.clearColor` on the main camera wins whenever it is not `null`, then
-  `Environment.clearColor`, then the `rendering.clearColor` setting (§4), which is applied as the
-  scene is created. Setting a camera's back to `null` leaves whatever is there; it does not restore
-  the setting. Every one of them is **sRGB and is presented as its linear value** — a channel lands
+  `Environment.clearColor` whenever it is not `null`, then the `rendering.clearColor` setting (§4),
+  which is applied as the scene is created. Both component fields default to `null`, so an
+  `Environment` added for its fog or lighting leaves the setting alone. Setting either back to
+  `null` leaves whatever is there; it does not restore the setting. Every one of them is **sRGB and is presented as its linear value** — a channel lands
   on screen at `srgbToLinear(value) * 255`, so `{ r: 0.6, g: 0.2, b: 0.9 }` reads back as bytes
   `81, 8, 201` and a literal `#14181F` is almost black; pass the inverse to match a page colour.
   In `@ignifx/2d`'s `"sprite"` mode the sprite pass owns the frame, so only the
