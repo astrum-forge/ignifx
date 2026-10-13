@@ -136,8 +136,8 @@ function addPanel(
   const entity = app.world.createEntity(name, { position: { x, y: WALL_HEIGHT / 2, z } });
   entity.layer = app.world.layers.requireIndex("Level");
   entity.addComponent(MeshRenderer, {
-    mesh: panel.mesh.retain(),
-    materials: [material.retain()],
+    mesh: panel.mesh,
+    materials: [material],
     castShadows: true,
     receiveShadows: true,
   });
@@ -161,14 +161,15 @@ export function buildLevel(app: App, materials: LevelMaterials): Level {
   // `.env` cube map, which cannot be generated from arithmetic the way every other asset in this
   // repository is (CONSTITUTION.md §11.3) — a big sphere with `unlit` and `doubleSided` on gives
   // the same horizon for one draw call and one 2 KB PNG.
+  // The level keeps every mesh handle it creates for as long as the game runs. A component field
+  // takes no reference of its own, so releasing one here would let the mesh be collected mid-game.
   const skyMesh = MeshAsset.sphere(app, { diameter: SKY_DIAMETER, segments: 24 });
   app.world.createEntity("Sky").addComponent(MeshRenderer, {
-    mesh: skyMesh.retain(),
-    materials: [materials.sky.retain()],
+    mesh: skyMesh,
+    materials: [materials.sky],
     castShadows: false,
     receiveShadows: false,
   });
-  skyMesh.release();
 
   const sun = app.world.createEntity("Sun", { position: { x: -8, y: 14, z: -6 } });
   sun.transform.lookAt({ x: 0, y: 0, z: 0 });
@@ -192,7 +193,7 @@ export function buildLevel(app: App, materials: LevelMaterials): Level {
     // `uvScale` is why the 128-pixel slab texture is not smeared across 24 metres: the ground's
     // UVs are multiplied so one tile covers about two and a half metres.
     mesh: MeshAsset.ground(app, { width: ARENA_HALF * 2, height: ARENA_HALF * 2, subdivisions: 1, uvScale: [10, 10] }),
-    materials: [materials.floor.retain()],
+    materials: [materials.floor],
     castShadows: false,
     receiveShadows: true,
   });
@@ -233,9 +234,6 @@ export function buildLevel(app: App, materials: LevelMaterials): Level {
   // Neither stub is in the `?static=1` camera's view, which faces `-z` from the spawn.
   addPanel(app, alongX, materials.wall, "Stub A", -3, 3);
   addPanel(app, alongZ, materials.wall, "Stub B", -4, 5);
-  // The handles the two shared meshes were created with; every panel took its own reference.
-  alongX.mesh.release();
-  alongZ.mesh.release();
 
   const crateMesh = MeshAsset.box(app, { size: CRATE_SIZE });
   const random = rng(CRATE_SEED);
@@ -256,8 +254,8 @@ export function buildLevel(app: App, materials: LevelMaterials): Level {
     crate.layer = propLayer;
     crate.transform.localEulerAngles = { x: 0, y: random() * 90, z: 0 };
     crate.addComponent(MeshRenderer, {
-      mesh: crateMesh.retain(),
-      materials: [materials.crate.retain()],
+      mesh: crateMesh,
+      materials: [materials.crate],
       castShadows: true,
       receiveShadows: true,
     });
@@ -265,7 +263,6 @@ export function buildLevel(app: App, materials: LevelMaterials): Level {
     crate.addComponent(Rigidbody, { mass: 12 });
     crates.push(crate);
   }
-  crateMesh.release();
 
   // The pedestals. Each carries its **own** clone of the crate material, because
   // `setBaseColor` writes the Lite material every renderer sharing the asset draws with: without
@@ -284,8 +281,8 @@ export function buildLevel(app: App, materials: LevelMaterials): Level {
     });
     pedestal.layer = interactableLayer;
     pedestal.addComponent(MeshRenderer, {
-      mesh: pedestalMesh.retain(),
-      materials: [material.retain()],
+      mesh: pedestalMesh,
+      materials: [material],
       castShadows: true,
       receiveShadows: true,
     });
@@ -297,7 +294,7 @@ export function buildLevel(app: App, materials: LevelMaterials): Level {
     post.layer = levelLayer;
     post.addComponent(MeshRenderer, {
       mesh: MeshAsset.box(app, { width: 0.3, height: PEDESTAL_Y - PEDESTAL_SIZE / 2, depth: 0.3 }),
-      materials: [materials.wall.retain()],
+      materials: [materials.wall],
       castShadows: true,
       receiveShadows: true,
     });
@@ -307,14 +304,13 @@ export function buildLevel(app: App, materials: LevelMaterials): Level {
     cap.transform.localPosition.set(0, PEDESTAL_SIZE / 2 + 0.06, 0);
     const glow = cap.addComponent(MeshRenderer, {
       mesh: MeshAsset.box(app, { width: PEDESTAL_SIZE * 0.6, height: 0.12, depth: PEDESTAL_SIZE * 0.6 }),
-      materials: [materials.emissive.retain()],
+      materials: [materials.emissive],
       castShadows: false,
       receiveShadows: false,
     });
     glow.enabled = false;
     pedestals.push({ entity: pedestal, material, glow });
   }
-  pedestalMesh.release();
 
   return { crates, pedestals, sun: light };
 }

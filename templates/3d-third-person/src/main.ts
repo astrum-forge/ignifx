@@ -203,11 +203,11 @@ function buildPlayer(app: App, assets: Assets, isStatic: boolean): Entity {
 
   const body = app.world.createEntity("Player Body", { parent: player });
   body.transform.localPosition.set(0, -PLAYER_HEIGHT / 2, 0);
-  body.addComponent(Model, { model: assets.player.retain(), castShadows: true, receiveShadows: true });
+  body.addComponent(Model, { model: assets.player, castShadows: true, receiveShadows: true });
   // One `Animator` per **model asset**: `player.glb` and `companion.glb` are two copies of one
   // generated rig for exactly this reason. Babylon Lite binds an animation group to a single
   // manager, so two animators over one asset would fight over one pose.
-  body.addComponent(Animator, { animator: assets.stateMachine.retain() });
+  body.addComponent(Animator, { animator: assets.stateMachine });
 
   if (!isStatic) {
     player.addComponent(ThirdPersonController, {
@@ -237,8 +237,8 @@ function buildPlayer(app: App, assets: Assets, isStatic: boolean): Entity {
 function buildCompanion(app: App, assets: Assets, player: Entity, isStatic: boolean): Companion | null {
   const companion = app.world.createEntity("Companion", { position: COMPANION_SPAWN });
   companion.layer = app.world.layers.requireIndex("Companion");
-  companion.addComponent(Model, { model: assets.companion.retain(), castShadows: true, receiveShadows: true });
-  companion.addComponent(Animator, { animator: assets.stateMachine.retain() });
+  companion.addComponent(Model, { model: assets.companion, castShadows: true, receiveShadows: true });
+  companion.addComponent(Animator, { animator: assets.stateMachine });
   if (isStatic) {
     return null;
   }
@@ -467,7 +467,7 @@ async function installFrontEnd(
   // menus can duck it rather than silence it.
   if (clipOrNull(assets.ambient) !== null) {
     app.world.createEntity("Ambience").addComponent(AudioSource, {
-      clip: assets.ambient.retain(),
+      clip: assets.ambient,
       bus: "Music",
       loop: true,
       playOnAwake: true,
