@@ -203,7 +203,7 @@ jump.bindings[0].overridePath = "<Keyboard>/enter";
 
 ##### Constructor
 
-> **new Binding**(`definition`, `resolver`): [`Binding`](#binding)
+> **new Binding**(`definition`, `resolver`, `virtualKind?`): [`Binding`](#binding)
 
 Builds a binding from its document form.
 
@@ -220,6 +220,14 @@ The binding as it appears in an `ignifx.inputactions` document.
 [`BindingResolver`](#bindingresolver)
 
 How paths become controls, and how the owner is told they changed.
+
+###### virtualKind?
+
+[`ControlKind`](#controlkind-1) = `ControlKind.button`
+
+The kind a `<Virtual>` control this binding names is created with, when
+nothing has declared it yet: the owning action's type. Defaults to `"button"`. A composite's
+parts are always scalars.
 
 ###### Returns
 

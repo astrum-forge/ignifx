@@ -144,6 +144,20 @@ export const TONE_MAPPING_NAMES = ["none", "standard", "aces", "neutral"] as con
 export type ToneMappingName = (typeof TONE_MAPPING_NAMES)[number];
 
 /**
+ * The image processing Lite's PBR shaders apply: exposure, contrast and the tone-mapping curve.
+ *
+ * @internal
+ */
+export interface ImageProcessingState {
+  /** The exposure multiplier. */
+  exposure: number;
+  /** The contrast multiplier. */
+  contrast: number;
+  /** The tone-mapping curve, or `"none"`. */
+  curve: ToneMappingName;
+}
+
+/**
  * How an ignifx `Environment` component configures image based lighting.
  *
  * @internal
@@ -335,7 +349,8 @@ export function setSceneEnvironmentBlur(scene: SceneContext, blur: number): void
  *
  * @remarks
  * Lite stores the clear value into the colour target untouched. Tone mapping, image processing and
- * bloom's threshold never apply to it, and Lite's own transmission and solid-skybox paths read it
+ * bloom's threshold never apply to it on the GPU (the renderer applies image processing before this
+ * call, `src/render/image-processing-color.ts`), and Lite's own transmission and solid-skybox paths read it
  * as the colour that should come out (`lib/frame-graph/transmission.js` `executeRenderTaskLinear`,
  * `lib/material/pbr/background-solid-skybox.js`). The default surface format is not an sRGB one,
  * so the sRGB value is written unchanged. Only an `*-srgb` surface view (`rendering.srgb: true`)
@@ -434,6 +449,47 @@ export function setSceneImageProcessingOptions(
     toneMappingEnabled: true,
     toneMapping: toneMappingCurve(toneMapping),
   });
+}
+
+/**
+ * Reads the image processing the scene's PBR shaders currently apply.
+ *
+ * @remarks
+ * Read from Lite rather than from the `Environment` component, because Lite's `loadEnvironment`
+ * also writes it (exposure 0.8, contrast 1.2, the standard curve) and the clear colour has to match
+ * what the shaders actually do. A custom Lite curve set through `.lite` reads as `"none"`.
+ *
+ * @param scene - The scene.
+ * @param out - Receives the exposure, contrast and curve.
+ * @returns `out`.
+ *
+ * @internal
+ */
+export function readSceneImageProcessing(scene: SceneContext, out: ImageProcessingState): ImageProcessingState {
+  const processing = scene.imageProcessing;
+  out.exposure = processing.exposure;
+  out.contrast = processing.contrast;
+  out.curve = processing.toneMappingEnabled ? curveName(processing.toneMapping ?? StandardToneMapping) : "none";
+  return out;
+}
+
+/**
+ * Maps a Lite curve object back onto its ignifx name.
+ *
+ * @param curve - The Lite curve.
+ * @returns The name, or `"none"` for a curve ignifx does not know.
+ */
+function curveName(curve: ToneMapping): ToneMappingName {
+  switch (curve.id) {
+    case StandardToneMapping.id:
+      return "standard";
+    case AcesToneMapping.id:
+      return "aces";
+    case NeutralToneMapping.id:
+      return "neutral";
+    default:
+      return "none";
+  }
 }
 
 /**

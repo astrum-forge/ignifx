@@ -117,6 +117,14 @@ fn mainFragment(in: PostInput) -> vec4<f32> {
 }
 `;
 
+/** A post effect that returns its input unchanged, so only the chain's own effect on the frame shows. */
+export const PASS_THROUGH_POST_WGSL = `// @ignifx post
+
+fn mainFragment(in: PostInput) -> vec4<f32> {
+  return textureSample(inputTexture, inputTextureSampler, in.uv);
+}
+`;
+
 /** A post effect that inverts the frame. */
 export const INVERT_POST_WGSL = `// @ignifx post
 

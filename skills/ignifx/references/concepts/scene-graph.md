@@ -86,6 +86,9 @@ prefab.release();
 | Lifecycle  | `destroy()`, `destroyImmediate()`                                                                                                                                                                                                                 |
 | Signals    | `onChildAdded`, `onChildRemoved`, `onParentChanged`, `onActiveChanged`, `onDestroyed`                                                                                                                                                             |
 
+- `addComponent`'s `init` may give a `record` field in part, at any depth: the fields it leaves out
+  keep their schema defaults, as in a scene file. `addComponent(PostProcessStack, { bloom: { enabled: true } })`
+  keeps bloom's own threshold and weight.
 - `getComponent` matches by class identity **and** inheritance, and costs a linear scan; cache the
   result in `awake`.
 - `requireComponent` throws `IGX-0201` when the component is absent, which is the supported way to

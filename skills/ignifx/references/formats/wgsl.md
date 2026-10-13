@@ -147,7 +147,9 @@ fn mainFragment(in: PostInput) -> vec4<f32> {
 }
 ```
 
-`PostInput` carries `uv` and `position` (the fragment's pixel coordinates). `inputTexture` and
+`PostInput` carries `uv` and `position` (the fragment's pixel coordinates). Both start at the
+**top-left**: `uv` runs from `(0, 0)` there to `(1, 1)` at the bottom-right, so sampling `inputTexture`
+at `in.uv` reads the pixel being written. `inputTexture` and
 `inputTextureSampler` are the chain's current colour, bound by the engine, and `shaderUniforms`
 already holds `screenSize`, `time`, `unscaledTime` and `deltaTime` — none of which is declared. A
 post file declares no attributes and no `@ignifx system` line. Effects are attached through

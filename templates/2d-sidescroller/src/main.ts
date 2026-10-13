@@ -215,7 +215,7 @@ function buildParallax(app: App, assets: Assets): void {
       // `frame` is a runtime property rather than a schema field, so it is assigned after the
       // component exists; passing it to `addComponent` is `IGX-0607`.
       strip.addComponent(SpriteRenderer, {
-        sprite: assets.parallax.retain(),
+        sprite: assets.parallax,
         sortingLayer: band.layer,
       }).frame = atlas.requireFrame(band.frame);
     }
@@ -245,9 +245,9 @@ function registerObjectFactories(
     entity.layer = app.world.layers.requireIndex("Player");
     spawn = new Vec2(context.position.x, context.position.y);
     entity.transform.position2D = new Vec2(spawn.x, spawn.y);
-    entity.addComponent(SpriteRenderer, { sprite: assets.heroAtlas.retain(), sortingLayer: "Default" });
+    entity.addComponent(SpriteRenderer, { sprite: assets.heroAtlas, sortingLayer: "Default" });
     entity.addComponent(SpriteAnimator, {
-      animations: assets.heroClips.retain(),
+      animations: assets.heroClips,
       defaultClip: "idle",
       playOnAwake: true,
     });
@@ -278,9 +278,9 @@ function registerObjectFactories(
     const entity = app.world.createEntity(context.name);
     entity.layer = pickup;
     entity.transform.position2D = new Vec2(context.position.x, context.position.y);
-    entity.addComponent(SpriteRenderer, { sprite: assets.coinAtlas.retain(), sortingLayer: "Default" });
+    entity.addComponent(SpriteRenderer, { sprite: assets.coinAtlas, sortingLayer: "Default" });
     entity.addComponent(SpriteAnimator, {
-      animations: assets.coinClips.retain(),
+      animations: assets.coinClips,
       defaultClip: "spin",
       playOnAwake: true,
     });
@@ -310,8 +310,8 @@ function buildWorld(app: App, assets: Assets): World {
 
   const level = app.world.createEntity("Level");
   level.layer = app.world.layers.requireIndex("Terrain");
-  const map = level.addComponent(Tilemap, { map: assets.level.retain(), chunkSize: 16 });
-  level.addComponent(TilemapRenderer, { atlas: assets.tiles.retain(), cullChunks: true });
+  const map = level.addComponent(Tilemap, { map: assets.level, chunkSize: 16 });
+  level.addComponent(TilemapRenderer, { atlas: assets.tiles, cullChunks: true });
   // Solid tiles become merged outlines; a `oneWay` tile contributes only its top edge, which is
   // what `CharacterController2D.onOneWayPlatforms` collides against.
   level.addComponent(TilemapCollider2D).collisionData = map.collisionData;
@@ -420,7 +420,7 @@ async function installFrontEnd(
   // menus can duck it rather than silence it.
   if (clipOrNull(assets.ambient) !== null) {
     app.world.createEntity("Ambience").addComponent(AudioSource, {
-      clip: assets.ambient.retain(),
+      clip: assets.ambient,
       bus: "Music",
       loop: true,
       playOnAwake: true,

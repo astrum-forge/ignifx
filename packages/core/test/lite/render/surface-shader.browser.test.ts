@@ -76,11 +76,13 @@ interface Scene {
  *
  * @param build - Builds the sphere's material, so a test can make it PBR or Standard.
  * @param beforeStart - Runs once the material exists and before the app starts.
+ * @param technique - The light's shadow technique.
  * @returns The scene.
  */
 async function buildScene(
   build: (running: SurfaceBrowserApp) => AssetHandle<MaterialAsset>,
   beforeStart?: (running: SurfaceBrowserApp, material: MaterialAsset) => void,
+  technique: "pcf" | "esm" = "pcf",
 ): Promise<Scene> {
   const running = await createSurfaceBrowserApp({
     size: SIZE,
@@ -101,7 +103,7 @@ async function buildScene(
   sun.transform.lookAt({ x: 0, y: 0, z: 0 });
   const light = sun.addComponent(Light, { type: "directional", intensity: 3 });
   light.shadows.enabled = true;
-  light.shadows.technique = "pcf";
+  light.shadows.technique = technique;
   light.shadows.mapSize = 512;
 
   const white = createMaterialAsset(
@@ -279,6 +281,28 @@ describe("the composite hook", () => {
 });
 
 describe("the displace hook", () => {
+  for (const technique of ["pcf", "esm"] as const) {
+    it(`gives the ${technique} shadow back its plain shape when the shader is switched off`, async () => {
+      const scene = await buildScene(pbrSphere, undefined, technique);
+      const plain = await scene.running.pixelAt(SHADOW_X, SHADOW_Y);
+      const [binding] = attach(scene, "shaders/lift.surface.wgsl", LIFT_DISPLACE_WGSL);
+      await scene.running.advance(SURFACE_SETTLE_FRAMES);
+      const lifted = await scene.running.pixelAt(SHADOW_X, SHADOW_Y);
+      expect(lifted.r, "the lifted sphere's shadow moved away").toBeGreaterThan(plain.r + 40);
+
+      if (binding !== undefined) {
+        binding.enabled = false;
+      }
+      await scene.running.advance(SURFACE_SETTLE_FRAMES * 2);
+      const restored = await scene.running.pixelAt(SHADOW_X, SHADOW_Y);
+      // Before the fix an ESM light kept drawing the displaced caster, so this point stayed lit.
+      expect(Math.abs(restored.r - plain.r), `plain ${String(plain.r)}, restored ${String(restored.r)}`).toBeLessThan(
+        12,
+      );
+      expect(scene.running.errors).toStrictEqual([]);
+    });
+  }
+
   it("moves the mesh and its shadow, because the caster pass honours the vertex slot", async () => {
     const scene = await buildScene(pbrSphere);
     const groundBefore = await scene.running.pixelAt(SHADOW_X, SHADOW_Y);

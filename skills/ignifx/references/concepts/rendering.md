@@ -40,17 +40,27 @@ what they mean.
   it takes the receive flag. A hidden renderer or model casts nothing. A caster that appears at
   runtime joins the shadow maps a frame or two later than it appears on screen, because the caster
   lists are only rebuilt once the renderable rebuild it triggered has settled.
+- A light with shadows on and no caster renders the scene unshadowed. Switching a surface shader with
+  a `displace` hook on or off moves its shadow under every technique, ESM included.
+- An ESM or PCF directional map is fitted to its **casters' bounds** only, not to the receivers or
+  the camera. A single thin caster (a 3 cm pole) therefore gets a map a few centimetres wide, which
+  stretches ESM's blur along the pole and can leave a dark smear on the floor near it. The fix is in
+  the scene: let a thin prop not cast (`castShadows: false`), give the light a larger caster beside
+  it, or use `technique: "pcf"` for that light.
 - Exactly one thing clears the frame, so the three fields that can set it are ranked:
   `Camera.clearColor` on the main camera wins whenever it is not `null`, then
   `Environment.clearColor` whenever it is not `null`, then the `rendering.clearColor` setting (§4),
   which is applied as the scene is created. Both component fields default to `null`, so an
   `Environment` added for its fog or lighting leaves the setting alone. Setting either back to
-  `null` leaves whatever is there; it does not restore the setting. Every one of them is **sRGB and
-  presents as authored** — a channel lands on screen at `value * 255`, so `{ r: 0.5, g: 0.5, b: 0.5 }`
-  reads back as bytes `128, 128, 128` and `#14181F` matches the same page colour. Tone mapping, an
-  sRGB surface (`rendering.srgb`), and bloom do not change it. The one exception is a
-  `PostProcessStack` with its `imageProcessing` effect on, which grades the whole frame, clear
-  included. In `@ignifx/2d`'s `"sprite"` mode the sprite pass owns the frame, so only the
+  `null` leaves whatever is there; it does not restore the setting. Every one of them is **sRGB**,
+  and goes through `Environment.imageProcessing` exactly as a fully fogged fragment of that colour
+  does. With no image processing it presents as authored — a channel lands on screen at
+  `value * 255`, so `{ r: 0.5, g: 0.5, b: 0.5 }` reads back as bytes `128, 128, 128` and `#14181F`
+  matches the same page colour. Under a tone-mapping curve, exposure or contrast it presents
+  processed: under ACES that grey reads back as `104, 104, 104`. Set the fog colour to the clear
+  colour and the fogged floor fades into the background with no band, whatever the curve. An sRGB
+  surface (`rendering.srgb`) and bloom do not change it. A `PostProcessStack` with its
+  `imageProcessing` effect on grades the whole frame again, clear included. In `@ignifx/2d`'s `"sprite"` mode the sprite pass owns the frame, so only the
   `rendering.clearColor` setting applies (same bytes) and the two components do nothing.
 - **Switching environments at runtime works, switching skyboxes does not.** Assigning a different
   _loaded_ `AssetHandle<EnvironmentAsset>` to `Environment.environment` moves the scene onto that

@@ -1,6 +1,6 @@
 import { CoreErrorCode } from "../errors/error-codes.js";
 import { setSceneCamera } from "../lite/camera.js";
-import { rebuildRenderables } from "../lite/shadow.js";
+import { forgetMaterialBindingLayouts, readMaterialEpoch, rebuildRenderables } from "../lite/shadow.js";
 import { Camera } from "./camera.js";
 import { Environment } from "./environment.js";
 import { InstancedMeshRenderer } from "./instanced-mesh-renderer.js";
@@ -116,6 +116,9 @@ export class RenderSyncSystem implements System {
 
   #areCastersDirty = false;
 
+  /** The scene's material epoch when the ESM caster lists were last handed over. */
+  #materialEpoch = 0;
+
   /**
    * Creates the system.
    *
@@ -195,10 +198,13 @@ export class RenderSyncSystem implements System {
       castersChanged = changed || castersChanged;
     }
 
+    castersChanged = this.#hasEsmMaterialChanged(lights) || castersChanged;
     this.#selectCamera(world, cameras);
     // An environment that installed a different cube map owes the frame a renderable rebuild: a PBR
     // bind group holds the cube map's texture view, so nothing re-binds without one.
     topologyChanged = this.#applyEnvironment(world) || topologyChanged;
+    // After the environment, whose image processing the clear colour has to follow.
+    renderer.refreshClearColor();
     this.#applyStacks(world);
     this.#areCastersDirty = this.#areCastersDirty || castersChanged;
     // The rebuild is deferred by one frame on purpose; see `#rebuildRenderables`.
@@ -391,6 +397,32 @@ export class RenderSyncSystem implements System {
   }
 
   /**
+   * Whether a material was rebuilt since the caster lists were last handed over, while an ESM light
+   * is casting.
+   *
+   * @remarks
+   * An ESM generator only rebuilds its caster views for a new caster array (`readMaterialEpoch`), so
+   * a fresh array is what makes it draw a rebuilt material's new shape. PCF and CSM notice material
+   * changes themselves, which is why nothing is re-supplied without an ESM light.
+   *
+   * @param lights - The world's lights.
+   * @returns `true` when the caster lists should be rebuilt.
+   */
+  #hasEsmMaterialChanged(lights: readonly Light[]): boolean {
+    const epoch = readMaterialEpoch(this.#renderer.scene);
+    if (epoch === this.#materialEpoch) {
+      return false;
+    }
+    this.#materialEpoch = epoch;
+    for (let index = 0; index < lights.length; index += 1) {
+      if (isEsmCaster(lights[index])) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * Collects one renderer's casters into the full list and, unless it draws with a shader
    * material, into the ESM list too. A shader-material caster under an ESM light is reported once
    * with `IGX-0724` (Babylon Lite 1.27.0 has no ESM view for the shader family).
@@ -518,6 +550,11 @@ export class RenderSyncSystem implements System {
           return;
         }
         try {
+          if (renderer.needsShadowLayoutReset) {
+            // A changed number of shadow maps needs new bind-group layouts; see the adapter.
+            renderer.needsShadowLayoutReset = false;
+            forgetMaterialBindingLayouts(renderer.engine);
+          }
           // oxlint-disable-next-line no-await-in-loop -- the whole point is that these never overlap.
           await rebuildRenderables(renderer.scene);
         } catch (error: unknown) {

@@ -400,6 +400,7 @@ export class Light extends Component implements ComponentHooks {
       return true;
     }
     this.#generator = attachShadows(renderer.engine, light, this.shadows);
+    renderer.needsShadowLayoutReset = true;
     return true;
   }
 
@@ -465,6 +466,7 @@ export class Light extends Component implements ComponentHooks {
     this.#generator = null;
     if (generator !== null) {
       detachShadows(renderer.scene, light, generator);
+      renderer.needsShadowLayoutReset = true;
     }
   }
 

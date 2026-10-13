@@ -1,9 +1,9 @@
+import { ControlKind } from "../devices/control.js";
 import { DeviceKind } from "../devices/device.js";
 import { compositeIsVector, CompositeKind, compositeParts, parseComposite } from "./composites.js";
 import { applyProcessors, parseProcessors } from "./processors.js";
 import type { ControlValue, Processor } from "./processors.js";
 import type { BindingDefinition } from "../asset/definition.js";
-import type { ControlKind } from "../devices/control.js";
 import type { ControlRef } from "../devices/devices.js";
 
 /**
@@ -89,6 +89,9 @@ export class Binding {
 
   readonly #resolver: BindingResolver;
 
+  /** The kind a simple path's `<Virtual>` control is created with: the owning action's type. */
+  readonly #virtualKind: ControlKind;
+
   readonly #chain: readonly Processor[];
 
   #refs: readonly ControlRef[];
@@ -102,11 +105,15 @@ export class Binding {
    *
    * @param definition - The binding as it appears in an `ignifx.inputactions` document.
    * @param resolver - How paths become controls, and how the owner is told they changed.
+   * @param virtualKind - The kind a `<Virtual>` control this binding names is created with, when
+   * nothing has declared it yet: the owning action's type. Defaults to `"button"`. A composite's
+   * parts are always scalars.
    * @throws IgnifxError with code `IGX-0802`, `IGX-0803`, or `IGX-0806` when the definition names
    * an unknown processor, an unresolvable path, or an unknown composite.
    */
-  constructor(definition: BindingDefinition, resolver: BindingResolver) {
+  constructor(definition: BindingDefinition, resolver: BindingResolver, virtualKind: ControlKind = ControlKind.button) {
     this.#resolver = resolver;
+    this.#virtualKind = virtualKind;
     this.scheme = definition.scheme ?? "";
     this.processors = definition.processors ?? [];
     this.#chain = parseProcessors(this.processors);
@@ -281,7 +288,7 @@ export class Binding {
         this.#isVector = false;
         return;
       }
-      const ref = this.#resolver.resolveControl(path);
+      const ref = this.#resolver.resolveControl(path, this.#virtualKind);
       this.#refs = [ref];
       this.#isVector = ref.control.components > 1;
       return;

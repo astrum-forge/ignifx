@@ -593,7 +593,8 @@ function environmentSchema(): Schema {
       { tooltip: "Exposure, contrast, and tone mapping. Recompiles PBR pipelines when it changes." },
     ),
     clearColor: optional(color("#000000"), {
-      tooltip: "The colour the scene is cleared to, in sRGB; null leaves the rendering.clearColor setting.",
+      tooltip:
+        "The sRGB colour the scene is cleared to, through imageProcessing; null leaves the rendering.clearColor setting.",
     }),
   });
 }

@@ -199,12 +199,12 @@ function registerObjectFactories(
     entity.transform.position2D = new Vec2(spawn.x, spawn.y);
 
     entity.addComponent(SpriteRenderer, {
-      sprite: assets.heroAtlas.retain(),
+      sprite: assets.heroAtlas,
       sortingLayer: "Default",
       pickable: true,
     });
     entity.addComponent(SpriteAnimator, {
-      animations: assets.heroClips.retain(),
+      animations: assets.heroClips,
       defaultClip: "idle_down",
       playOnAwake: true,
     });
@@ -235,7 +235,7 @@ function registerObjectFactories(
     entity.transform.position2D = new Vec2(context.position.x, context.position.y);
     const frame = String(context.properties["frame"] ?? "crate");
     entity.addComponent(SpriteRenderer, {
-      sprite: assets.tiles.retain(),
+      sprite: assets.tiles,
       sortingLayer: "Default",
       pickable: true,
       // `frame` is a runtime property rather than a schema field, so it is assigned after the
@@ -252,7 +252,7 @@ function registerObjectFactories(
     entity.layer = triggerLayer;
     entity.transform.position2D = new Vec2(context.position.x, context.position.y);
     entity.addComponent(SpriteRenderer, {
-      sprite: assets.tiles.retain(),
+      sprite: assets.tiles,
       sortingLayer: "Decal",
     }).frame = atlas.requireFrame(String(context.properties["frame"] ?? "pad"));
     entity.addComponent(BoxCollider2D, {
@@ -285,8 +285,8 @@ function buildWorld(app: App, assets: Assets): World {
 
   const level = app.world.createEntity("Level");
   level.layer = app.world.layers.requireIndex("Solid");
-  const map = level.addComponent(Tilemap, { map: assets.level.retain(), chunkSize: 16 });
-  level.addComponent(TilemapRenderer, { atlas: assets.tiles.retain(), cullChunks: true });
+  const map = level.addComponent(Tilemap, { map: assets.level, chunkSize: 16 });
+  level.addComponent(TilemapRenderer, { atlas: assets.tiles, cullChunks: true });
   // The merged outlines of every solid tile, as one static compound body. `TilemapCollider2D`
   // watches the data's `version` each fixed step, so editing a tile at runtime reaches physics
   // with no subscription of our own.
@@ -408,7 +408,7 @@ async function installFrontEnd(
   // menus can duck it rather than silence it.
   if (clipOrNull(assets.ambient) !== null) {
     app.world.createEntity("Ambience").addComponent(AudioSource, {
-      clip: assets.ambient.retain(),
+      clip: assets.ambient,
       bus: "Music",
       loop: true,
       playOnAwake: true,

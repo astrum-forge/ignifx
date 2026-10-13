@@ -257,6 +257,31 @@ describe("the clear colour the section declares", () => {
     expect(scene.clearColor.g).toBeCloseTo(0, 6);
   });
 
+  it("follows the scene's image processing, as a fogged fragment of the same colour would", async () => {
+    harness = await createRenderHarness({
+      settings: { rendering: { clearColor: { r: 0.5, g: 0.5, b: 0.5, a: 1 } } },
+    });
+    harness.frame();
+    const scene = harness.world.lite.scene;
+    expect(scene.clearColor.r).toBe(0.5);
+
+    // Headless skips the asynchronous Lite call, so the scene's state is moved directly — which is
+    // also what Lite's `loadEnvironment` does behind the component's back.
+    scene.imageProcessing.exposure = 2;
+    harness.frame();
+    expect(scene.clearColor.r).toBeCloseTo(0.5 * 2 ** (1 / 2.2), 6);
+
+    // A colour written afterwards is processed too, and the alpha is left alone.
+    harness.world.createEntity("Main Camera").addComponent(Camera, { clearColor: { r: 0.25, g: 0.25, b: 0.25, a: 1 } });
+    harness.frame();
+    expect(scene.clearColor.r).toBeCloseTo(0.25 * 2 ** (1 / 2.2), 6);
+    expect(scene.clearColor.a).toBe(1);
+
+    scene.imageProcessing.exposure = 1;
+    harness.frame();
+    expect(scene.clearColor.r).toBe(0.25);
+  });
+
   it("is decoded only for a surface that encodes to sRGB as it stores", () => {
     // `rendering.srgb: true` renders through an `*-srgb` view; there the GPU re-encodes the clear,
     // so it has to be handed over linear. Every other format stores it as given.

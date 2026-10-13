@@ -195,8 +195,8 @@ function addPanel(
   const entity = app.world.createEntity(name, { position: { x, y: WALL_HEIGHT / 2, z } });
   entity.layer = app.world.layers.requireIndex("Level");
   entity.addComponent(MeshRenderer, {
-    mesh: panel.mesh.retain(),
-    materials: [material.retain()],
+    mesh: panel.mesh,
+    materials: [material],
     castShadows: true,
     receiveShadows: true,
   });
@@ -222,15 +222,16 @@ export function buildLevel(app: App, materials: LevelMaterials): Level {
   // `.env` cube map, which cannot be generated from arithmetic the way every other asset in this
   // repository is (CONSTITUTION.md §11.3) — a big sphere with `unlit` and `doubleSided` on gives
   // the same horizon for one draw call and one 2 KB PNG.
+  // The level keeps every mesh handle it creates for as long as the game runs. A component field
+  // takes no reference of its own, so releasing one here would let the mesh be collected mid-game.
   const skyMesh = MeshAsset.sphere(app, { diameter: SKY_DIAMETER, segments: 24 });
   const sky = app.world.createEntity("Sky");
   sky.addComponent(MeshRenderer, {
-    mesh: skyMesh.retain(),
-    materials: [materials.sky.retain()],
+    mesh: skyMesh,
+    materials: [materials.sky],
     castShadows: false,
     receiveShadows: false,
   });
-  skyMesh.release();
 
   const sun = app.world.createEntity("Sun", { position: { x: -8, y: 14, z: -6 } });
   sun.transform.lookAt({ x: 0, y: 0, z: 0 });
@@ -254,7 +255,7 @@ export function buildLevel(app: App, materials: LevelMaterials): Level {
     // `uvScale` is why the 128-pixel slab texture is not smeared across 24 metres: the ground's
     // UVs are multiplied so one tile covers about two and a half metres.
     mesh: MeshAsset.ground(app, { width: ARENA_HALF * 2, height: ARENA_HALF * 2, subdivisions: 1, uvScale: [10, 10] }),
-    materials: [materials.floor.retain()],
+    materials: [materials.floor],
     castShadows: false,
     receiveShadows: true,
   });
@@ -288,9 +289,6 @@ export function buildLevel(app: App, materials: LevelMaterials): Level {
   // player backs into the corner they make, and what the companion's path has to walk around.
   addPanel(app, alongX, materials.wall, nav, "Stub A", -2, 3);
   addPanel(app, alongZ, materials.wall, nav, "Stub B", -4, 5);
-  // The handles the two shared meshes were created with; every panel took its own reference.
-  alongX.mesh.release();
-  alongZ.mesh.release();
 
   const crateMesh = MeshAsset.box(app, { size: CRATE_SIZE });
   const random = rng(CRATE_SEED);
@@ -311,8 +309,8 @@ export function buildLevel(app: App, materials: LevelMaterials): Level {
     crate.layer = propLayer;
     crate.transform.localEulerAngles = { x: 0, y: random() * 90, z: 0 };
     crate.addComponent(MeshRenderer, {
-      mesh: crateMesh.retain(),
-      materials: [materials.crate.retain()],
+      mesh: crateMesh,
+      materials: [materials.crate],
       castShadows: true,
       receiveShadows: true,
     });
@@ -320,7 +318,6 @@ export function buildLevel(app: App, materials: LevelMaterials): Level {
     crate.addComponent(Rigidbody, { mass: 12 });
     crates.push(crate);
   }
-  crateMesh.release();
 
   // The beacons. Each is a dark base with an emissive column that is hidden until the player
   // reaches it; `src/scripts/beacon.ts` explains why the reach test is a distance and not a
@@ -338,8 +335,8 @@ export function buildLevel(app: App, materials: LevelMaterials): Level {
     });
     entity.layer = propLayer;
     entity.addComponent(MeshRenderer, {
-      mesh: baseMesh.retain(),
-      materials: [materials.wall.retain()],
+      mesh: baseMesh,
+      materials: [materials.wall],
       castShadows: true,
       receiveShadows: true,
     });
@@ -349,16 +346,16 @@ export function buildLevel(app: App, materials: LevelMaterials): Level {
     const dark = app.world.createEntity(`Beacon ${String(index)} Column`, { parent: entity });
     dark.transform.localPosition.set(0, BEACON_HEIGHT / 2 + 0.125, 0);
     const darkRenderer = dark.addComponent(MeshRenderer, {
-      mesh: columnMesh.retain(),
-      materials: [materials.wall.retain()],
+      mesh: columnMesh,
+      materials: [materials.wall],
       castShadows: true,
       receiveShadows: true,
     });
     const column = app.world.createEntity(`Beacon ${String(index)} Light`, { parent: entity });
     column.transform.localPosition.set(0, BEACON_HEIGHT / 2 + 0.125, 0);
     const renderer = column.addComponent(MeshRenderer, {
-      mesh: columnMesh.retain(),
-      materials: [materials.emissive.retain()],
+      mesh: columnMesh,
+      materials: [materials.emissive],
       castShadows: false,
       receiveShadows: false,
     });
@@ -368,8 +365,6 @@ export function buildLevel(app: App, materials: LevelMaterials): Level {
     beacon.setLit(false);
     beacons.push(beacon);
   }
-  baseMesh.release();
-  columnMesh.release();
 
   const soup = nav.build();
   return { navPositions: soup.positions, navIndices: soup.indices, crates, sun: light, beacons };

@@ -4,6 +4,7 @@ import { IgnifxError } from "../errors/ignifx-error.js";
 import { isValidLayer, MAX_LAYERS } from "../layers/layer-table.js";
 import { readCallback } from "../lifecycle/callbacks.js";
 import { linkParent, reparentKeepingWorld, setNodeName, setNodeSelfVisible, tagNode } from "../lite/node.js";
+import { isPlainObject } from "../schema/internal.js";
 import { validateProps } from "../schema/validate.js";
 import { Signal } from "../signal/signal.js";
 import { TagSet } from "../tags/tag-set.js";
@@ -18,7 +19,7 @@ import type { Component } from "../component/component.js";
 import type { EntityHandle } from "../handles/handle.js";
 import type { LiteSceneNode } from "../lite/node.js";
 import type { SceneInstance } from "../scene/scene-instance.js";
-import type { Schema } from "../schema/types.js";
+import type { FieldDefinition, Schema } from "../schema/types.js";
 import type { SceneAsset } from "../serialization/scene-asset.js";
 import type { TagSetObserver } from "../tags/tag-set.js";
 import type { WorldHost } from "../world/world-host.js";
@@ -981,12 +982,37 @@ function applyComponentInit(component: Component, schema: Schema, init: object, 
   // names, and the values have just been validated against it.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   const target = component as unknown as Record<string, unknown>;
-  for (const name of Object.keys(schema)) {
+  for (const [name, field] of Object.entries(schema)) {
     const value = values[name];
     if (value !== undefined) {
-      target[name] = value;
+      target[name] = withRecordDefaults(field, value);
     }
   }
+}
+
+/**
+ * Fills the fields a partial `record` value leaves out with their schema defaults, at any depth, as
+ * reading a scene file does.
+ *
+ * @param field - The field the value is for.
+ * @param value - The caller's validated value.
+ * @returns A fresh record for a `record` field (or an `optional` one holding a record), otherwise
+ * `value` itself.
+ */
+function withRecordDefaults(field: FieldDefinition<unknown>, value: unknown): unknown {
+  const spec = field.spec;
+  if (spec.kind === "optional") {
+    return value === null ? value : withRecordDefaults(spec.inner, value);
+  }
+  if (spec.kind !== "record" || !isPlainObject(value)) {
+    return value;
+  }
+  const merged: Record<string, unknown> = {};
+  for (const [name, inner] of Object.entries(spec.fields)) {
+    const given = value[name];
+    merged[name] = given === undefined ? inner.createDefault() : withRecordDefaults(inner, given);
+  }
+  return merged;
 }
 
 /**

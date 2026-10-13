@@ -215,8 +215,8 @@ function buildViewModel(app: App, assets: Assets, head: Entity): void {
   viewmodel.transform.localPosition.set(0.3, -0.84, 0.78);
   viewmodel.transform.localScale.set(0.38, 0.38, 0.38);
   viewmodel.transform.localEulerAngles = { x: 0, y: 150, z: 0 };
-  viewmodel.addComponent(Model, { model: assets.viewmodel.retain(), castShadows: false, receiveShadows: false });
-  viewmodel.addComponent(Animator, { animator: assets.stateMachine.retain() });
+  viewmodel.addComponent(Model, { model: assets.viewmodel, castShadows: false, receiveShadows: false });
+  viewmodel.addComponent(Animator, { animator: assets.stateMachine });
 
   // A small emissive bar standing in for a tool. It is created as a **root** entity and re-parented
   // by `attachToNode`, which is what puts it under the glTF node rather than under an ignifx entity.
@@ -415,7 +415,7 @@ async function installFrontEnd(
   // menus can duck it rather than silence it.
   if (clipOrNull(assets.ambient) !== null) {
     app.world.createEntity("Ambience").addComponent(AudioSource, {
-      clip: assets.ambient.retain(),
+      clip: assets.ambient,
       bus: "Music",
       loop: true,
       playOnAwake: true,
