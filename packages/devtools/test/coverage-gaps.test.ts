@@ -1,4 +1,4 @@
-import { Diagnostics, Signal } from "@ignifx/core";
+import { array, asset, Diagnostics, f32, map, optional, record, Signal, vec3 } from "@ignifx/core";
 import { describe, expect, it, vi } from "vitest";
 import { element, RowList, setText, toggleClass } from "../src/dom/elements.js";
 import { DEVTOOLS_CLASS_NAMES } from "../src/dom/styles.js";
@@ -6,7 +6,7 @@ import { createFieldEditor, encodeForDisplay, writeField } from "../src/inspecto
 import { createPanelHost } from "../src/overlay/panel-host.js";
 import { DevtoolsSampler } from "../src/overlay/sampler.js";
 import { WorldIndex } from "../src/overlay/world-index.js";
-import { createOverlayHarness, Probe } from "./support/app.js";
+import { createOverlayHarness, Probe, ProbeAsset } from "./support/app.js";
 import { createFakeDom } from "./support/fake-dom.js";
 import type { OverlayHarness } from "./support/app.js";
 import type { FakeElement } from "./support/fake-dom.js";
@@ -313,6 +313,23 @@ describe("the inspector's field plumbing", () => {
     };
 
     expect(encodeForDisplay(broken, null)).toBe("<unencodable>");
+  });
+
+  it("shows an in-code asset inside a container by its address, not as null", () => {
+    const inCode = { address: "memory:material/01J9Z6M7E5S3A0V2Q4R8T1Y6WX" };
+    const onDisk = { address: "models/crate.material.json" };
+
+    expect(encodeForDisplay(array(asset(ProbeAsset)), [inCode, onDisk, null])).toBe(
+      JSON.stringify([inCode.address, onDisk.address, null]),
+    );
+    expect(encodeForDisplay(optional(asset(ProbeAsset)), inCode)).toBe(JSON.stringify(inCode.address));
+    expect(encodeForDisplay(map(asset(ProbeAsset)), { b: onDisk, a: inCode })).toBe(
+      JSON.stringify({ a: inCode.address, b: onDisk.address }),
+    );
+    const look = record({ skin: asset(ProbeAsset), tint: f32(0.5), scratch: f32(1, { transient: true }) });
+    expect(encodeForDisplay(look, { skin: inCode })).toBe(JSON.stringify({ skin: inCode.address, tint: 0.5 }));
+    // Everything that is not an asset still goes through the file encoder.
+    expect(encodeForDisplay(array(vec3()), [{ x: 1, y: 2.0000004, z: -0 }])).toBe("[[1,2,0]]");
   });
 
   it("drops a hidden field and leaves a tooltip on the row", async () => {
