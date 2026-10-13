@@ -1,5 +1,20 @@
 # @ignifx/3d
 
+## 0.6.0
+
+### Patch Changes
+
+- Updated dependencies [3a8b165]
+- Updated dependencies [41450fb]
+- Updated dependencies [e198c1c]
+- Updated dependencies [96cdf34]
+- Updated dependencies [946e837]
+- Updated dependencies [09ef95f]
+- Updated dependencies [76203d8]
+  - @ignifx/core@0.6.0
+  - @ignifx/input@0.6.0
+  - @ignifx/physics@0.6.0
+
 ## 0.5.0
 
 ### Patch Changes

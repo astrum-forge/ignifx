@@ -1,5 +1,18 @@
 # @ignifx/input
 
+## 0.6.0
+
+### Patch Changes
+
+- 76203d8: Fix an on-screen joystick having no effect when the action map is loaded before the joystick is created: a `<Virtual>/joystick` bound by a `vector2` action was created as a button, so `VirtualJoystick`'s writes never reached the action and a `ThirdPersonController` reading it stood still. A `<Virtual>` control an action names first now takes that action's type.
+- Updated dependencies [3a8b165]
+- Updated dependencies [41450fb]
+- Updated dependencies [e198c1c]
+- Updated dependencies [96cdf34]
+- Updated dependencies [946e837]
+- Updated dependencies [09ef95f]
+  - @ignifx/core@0.6.0
+
 ## 0.5.0
 
 ### Patch Changes
