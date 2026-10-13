@@ -67,7 +67,7 @@ export function applyProcessors(chain: readonly Processor[], value: ControlValue
 
 // @public
 export class Binding {
-    constructor(definition: BindingDefinition, resolver: BindingResolver);
+    constructor(definition: BindingDefinition, resolver: BindingResolver, virtualKind?: ControlKind);
     readonly composite: CompositeKind | null;
     // @internal
     get deviceKind(): DeviceKind | null;

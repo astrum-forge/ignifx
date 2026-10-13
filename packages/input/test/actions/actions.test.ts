@@ -153,6 +153,28 @@ describe("action types", () => {
     expect(view.x).toBe(0);
   });
 
+  it("creates a <Virtual> control a vector2 action names first as a stick, so a pad's writes reach it", async () => {
+    const built = await createInputApp();
+    harness = built;
+    const { app, step } = built;
+    // The action is loaded before any on-screen pad declares the control, which is the order a
+    // game takes: actions at boot, the touch controls once it knows the device has a touch screen.
+    app.input.loadActions(
+      defineInputActions({
+        maps: [
+          { name: "Player", actions: [{ name: "Move", type: "vector2", bindings: [{ path: "<Virtual>/joystick" }] }] },
+        ],
+      }),
+    );
+    expect(app.input.devices.virtual.control("joystick")?.kind).toBe("vector2");
+
+    app.input.devices.virtual.setVector("joystick", 0.25, 0.75);
+    step();
+    const move = app.input.actions.get("Move");
+    expect(move.vector.x).toBeCloseTo(0.25, 5);
+    expect(move.vector.y).toBeCloseTo(0.75, 5);
+  });
+
   it("takes the highest-magnitude binding when several are actuated", async () => {
     const { app, step } = await withDemo();
     const move = app.input.actions.get("move");

@@ -161,7 +161,9 @@ export class InputAction {
     this.type = definition.type ?? "button";
     const bindings: Binding[] = [];
     for (const binding of definition.bindings) {
-      bindings.push(new Binding(binding, resolver));
+      // A `<Virtual>` control first named here takes the action's shape, so a vector2 action's
+      // `<Virtual>/joystick` is a stick before any on-screen widget writes it.
+      bindings.push(new Binding(binding, resolver, this.type));
     }
     this.#bindings = bindings;
     this.#vector = new ActionVector(this.#values);
