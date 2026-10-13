@@ -350,7 +350,9 @@ function buildFragmentModule(shader: ShaderAsset, fields: readonly PostEffectUni
     shader.source,
     "@fragment fn effectFragment(fragment:EffectVertexOutput)->@location(0)vec4<f32>{",
     "var ignifxPostInput:PostInput;",
-    "ignifxPostInput.uv=fragment.uv;",
+    // Lite's effect vertex puts uv (0, 0) at the bottom-left, but a texture's origin is the top-left,
+    // so an unflipped uv mirrors the frame on every pass (`lib/effect/effect-renderer.js` 7).
+    "ignifxPostInput.uv=vec2<f32>(fragment.uv.x,1.0-fragment.uv.y);",
     "ignifxPostInput.position=fragment.position.xy;",
     `return ${POST_EFFECT_FUNCTION}(ignifxPostInput);`,
     "}",
