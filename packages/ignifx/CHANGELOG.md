@@ -1,5 +1,32 @@
 # ignifx
 
+## 0.6.0
+
+### Patch Changes
+
+- 41450fb: Fix ESM shadows ignoring a material change: switching a surface shader with a `displace` hook on or off (or attaching one) left an ESM light drawing the old shape into its shadow map. The shadow now follows, as it already did under PCF and CSM. The rendering skill also notes that ESM and PCF directional maps are fitted to the casters only, and what to do about a lone thin caster.
+- e198c1c: Fix `addComponent` replacing a whole record field when its `init` gives only some of the record's fields: `addComponent(PostProcessStack, { bloom: { enabled: true } })` left bloom's other fields undefined, so Babylon Lite's own defaults applied instead of the schema's. The fields an `init` leaves out now keep their schema defaults, at any depth, as in a scene file, and `ComponentInit` accepts a record in part (new `ComponentInitValue` type).
+- Updated dependencies [3a8b165]
+- Updated dependencies [41450fb]
+- Updated dependencies [e198c1c]
+- Updated dependencies [96cdf34]
+- Updated dependencies [946e837]
+- Updated dependencies [09ef95f]
+- Updated dependencies [76203d8]
+  - @ignifx/core@0.6.0
+  - @ignifx/input@0.6.0
+  - @ignifx/2d@0.6.0
+  - @ignifx/3d@0.6.0
+  - @ignifx/audio@0.6.0
+  - @ignifx/devtools@0.6.0
+  - @ignifx/electron@0.6.0
+  - @ignifx/particles@0.6.0
+  - @ignifx/particles-2d@0.6.0
+  - @ignifx/physics@0.6.0
+  - @ignifx/physics-2d@0.6.0
+  - @ignifx/terrain@0.6.0
+  - @ignifx/ui@0.6.0
+
 ## 0.5.0
 
 ### Patch Changes

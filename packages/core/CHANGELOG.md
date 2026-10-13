@@ -1,5 +1,23 @@
 # @ignifx/core
 
+## 0.6.0
+
+### Minor Changes
+
+- 3a8b165: The clear colour now goes through `Environment.imageProcessing` (exposure, contrast and the tone-mapping curve) exactly as a fully fogged fragment does, so fog whose colour matches the clear colour fades into the background with no band, under any curve. It follows image-processing changes at runtime.
+  
+  ### Breaking
+  
+  A scene with exposure, contrast or a tone-mapping curve set presents a different background: under ACES an sRGB `0.5` clear colour now presents as byte `104` instead of `128`. Scenes without image processing are unchanged. If you tuned a clear colour by eye under tone mapping, check it again.
+
+### Patch Changes
+
+- 41450fb: Fix ESM shadows ignoring a material change: switching a surface shader with a `displace` hook on or off (or attaching one) left an ESM light drawing the old shape into its shadow map. The shadow now follows, as it already did under PCF and CSM. The rendering skill also notes that ESM and PCF directional maps are fitted to the casters only, and what to do about a lone thin caster.
+- e198c1c: Fix `addComponent` replacing a whole record field when its `init` gives only some of the record's fields: `addComponent(PostProcessStack, { bloom: { enabled: true } })` left bloom's other fields undefined, so Babylon Lite's own defaults applied instead of the schema's. The fields an `init` leaves out now keep their schema defaults, at any depth, as in a scene file, and `ComponentInit` accepts a record in part (new `ComponentInitValue` type).
+- 96cdf34: Fix custom post effects flipping the frame upside down: a `PostProcessStack` with an odd number of custom effects presented the image vertically mirrored. Every chain length now presents upright, and `in.uv` in a `.post.wgsl` starts at the top-left like `in.position`. If a shader flipped `uv.y` to work around this, remove the flip.
+- 946e837: Fix every frame being rejected after the number of shadow-casting lights changes while another light keeps casting: turning one of two casting lights' `shadows.enabled` (or `Light.enabled`) off, and on again, built a shadow bind group that did not match its layout. Both lights now keep casting through the toggle.
+- 09ef95f: Fix frames never presenting when `rendering.features.shadows` is on and a light casts shadows but no mesh does. The shadow pass drew every mesh into the shadow map it was also reading, and the GPU rejected the frame; it now only clears the map, so the scene renders unshadowed until something casts. The same happened when the last caster stopped casting.
+
 ## 0.5.0
 
 ### Minor Changes
