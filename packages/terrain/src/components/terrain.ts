@@ -126,7 +126,15 @@ export class Terrain extends Component implements ComponentHooks {
   /** The declarative fields (ADR-0004). */
   static schema: Schema = terrainSchema();
 
-  /** The terrain document this component draws. */
+  /**
+   * The terrain document this component draws.
+   *
+   * @remarks
+   * The field does not take over your reference: release what you loaded as usual. While the
+   * chunks draw an asset, the terrain holds a reference of its own and drops it when it switches to
+   * another asset or is removed, so releasing the old handle straight after assigning a new one is
+   * safe.
+   */
   declare definition: AssetHandle<TerrainAsset> | null;
 
   /** Multiplies every LOD threshold; above `1` keeps fine meshes further from the camera. */
@@ -139,6 +147,9 @@ export class Terrain extends Component implements ComponentHooks {
   declare frustumCulling: boolean;
 
   #asset: TerrainAsset | null = null;
+
+  /** The handle {@link Terrain.asset} came from, retained for as long as the chunks draw from it. */
+  #heldHandle: AssetHandle<TerrainAsset> | null = null;
 
   #material: AssetHandle<MaterialAsset> | null = null;
 
@@ -629,10 +640,14 @@ export class Terrain extends Component implements ComponentHooks {
       return;
     }
     this.#teardown();
-    this.#asset = next;
-    if (next !== null) {
-      this.#build(next);
+    if (handle === null || next === null) {
+      return;
     }
+    // The terrain's own reference, separate from the caller's: the chunks, the material and the
+    // queries keep reading this asset until the next swap or detach, so it must not unload first.
+    this.#heldHandle = handle.retain();
+    this.#asset = next;
+    this.#build(next);
   }
 
   /**
@@ -1013,7 +1028,7 @@ export class Terrain extends Component implements ComponentHooks {
     }
   }
 
-  /** Destroys every chunk mesh, releases the material, and forgets the asset. */
+  /** Destroys every chunk mesh, releases the material, and lets go of the asset. */
   #teardown(): void {
     if (this.#meshes.length > 0 && !this.app.isHeadless) {
       const scene = this.world.lite.scene;
@@ -1030,6 +1045,8 @@ export class Terrain extends Component implements ComponentHooks {
     this.#material = null;
     this.#splatBinding = null;
     this.#asset = null;
+    this.#heldHandle?.release();
+    this.#heldHandle = null;
     this.#chunksPerSide = 0;
     this.#lodLevels = 0;
     this.#visibleChunks = 0;
