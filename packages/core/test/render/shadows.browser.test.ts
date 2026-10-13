@@ -10,6 +10,7 @@ import { createBrowserApp, fixtureUrl, pixelLuminance, SETTLE_FRAMES } from "./s
 import type { BrowserApp } from "./support/browser-harness.js";
 import type { Entity } from "../../src/entity/entity.js";
 import type { LiteMesh } from "../../src/lite/gpu/mesh.js";
+import type { ShadowTechniqueName } from "../../src/render/light.js";
 import type { ModelAsset } from "../../src/render/model-asset.js";
 
 /**
@@ -45,9 +46,13 @@ const SIZE = 64;
  *
  * @param shadows - Whether the `shadows` rendering feature is on. The light asks for shadows either
  * way, so the `false` case is also what proves the warning.
+ * @param technique - The light's shadow technique.
  * @returns The running app, the light, and the caster's renderer.
  */
-async function buildShadowScene(shadows: boolean): Promise<{
+async function buildShadowScene(
+  shadows: boolean,
+  technique: ShadowTechniqueName = "pcf",
+): Promise<{
   readonly running: BrowserApp;
   readonly light: Light;
   readonly caster: MeshRenderer;
@@ -69,7 +74,7 @@ async function buildShadowScene(shadows: boolean): Promise<{
   sun.transform.lookAt({ x: 0, y: 0, z: 0 });
   const light = sun.addComponent(Light, { type: "directional", intensity: 3 });
   light.shadows.enabled = true;
-  light.shadows.technique = "pcf";
+  light.shadows.technique = technique;
   light.shadows.mapSize = 512;
 
   const white = createMaterialAsset(
@@ -168,6 +173,35 @@ describe("caster lists", () => {
     // The same-sized replacement casts the same shadow: still dark under the box.
     expect(after).toBeLessThan(Math.max(before * 1.25, before + 8));
   });
+
+  for (const technique of ["pcf", "csm"] as const) {
+    it(`keeps drawing ${technique} shadows while a material rebuild is half way through`, async () => {
+      const scene = await buildShadowScene(true, technique);
+      const frameErrors: string[] = [];
+      const onError = (event: ErrorEvent): void => {
+        frameErrors.push(event.message);
+      };
+      globalThis.addEventListener("error", onError);
+      // `rebuildSceneGroups` bumps a material's `_csmGen` when its group commits and the scene's
+      // renderable version only after every other group: a slow group leaves frames in between, and
+      // this is that state. Lite then swaps in a shadow task that was never recorded, whose pass
+      // has no colour view and throws out of the frame callback, where `app.onError` cannot see it
+      // (`src/lite/gpu/shadow-generator.ts`).
+      for (const mesh of scene.running.renderer.scene.meshes) {
+        // Boundary assertion: Lite materials are plain objects that carry this counter.
+        // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+        const material = mesh.material as { _csmGen?: number } | null;
+        if (material !== null) {
+          // oxlint-disable-next-line no-underscore-dangle
+          material._csmGen = (material._csmGen ?? 0) + 1;
+        }
+      }
+      await scene.running.advance(SETTLE_FRAMES);
+      globalThis.removeEventListener("error", onError);
+      expect(frameErrors).toEqual([]);
+      expect(scene.running.errors).toEqual([]);
+    });
+  }
 
   it("releases the generator when the light stops casting", async () => {
     const scene = await buildShadowScene(true);
