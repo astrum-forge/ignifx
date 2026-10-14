@@ -5,7 +5,13 @@ import { TilemapRenderer } from "../tilemap/tilemap-renderer.js";
 import { SpriteLayerRegistry } from "./layer-registry.js";
 import { SortingLayerTable } from "./sorting-layers.js";
 import type { Camera2D } from "../camera/camera-2d.js";
-import type { LiteBounds2D, LiteSprite2DLayer, LiteSpriteCustomShader, LiteSpriteRenderer } from "../lite/types.js";
+import type {
+  LiteBounds2D,
+  LiteSprite2DLayer,
+  LiteSprite2DView,
+  LiteSpriteCustomShader,
+  LiteSpriteRenderer,
+} from "../lite/types.js";
 import type { TwoDSettings } from "../settings.js";
 import type { App, Disconnect, SceneInstance, World } from "@ignifx/core";
 
@@ -78,8 +84,11 @@ export class TwoDRuntime {
   /** Reused by {@link TwoDRuntime.cameraBounds}. */
   readonly #bounds: LiteBounds2D = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
 
-  /** Reused when collecting layers for a bounds read. */
-  readonly #boundsLayers: LiteSprite2DLayer[] = [];
+  /**
+   * The camera's own view, before any parallax offset: what the world layers would carry if no
+   * `ParallaxLayer` slid them. Chunk culling and `visibleWorldBounds` measure against this.
+   */
+  readonly #cameraView: LiteSprite2DView = { positionPx: [0, 0], zoom: 1, rotation: 0 };
 
   /** The effects seen this frame, by sorting layer. */
   readonly #effects = new Map<string, SpriteLayerEffect>();
@@ -170,6 +179,22 @@ export class TwoDRuntime {
    */
   get renderer(): LiteSpriteRenderer | null {
     return this.#renderer;
+  }
+
+  /**
+   * The camera's view as the sync system last wrote it, before any parallax offset.
+   *
+   * @remarks
+   * A parallax band's layer view is slid by the camera's motion times `1 - factor`, so reading the
+   * visible rectangle off a layer's view measures that band, not the world. This view is the
+   * unshifted one.
+   *
+   * @returns The view; the sync system rewrites it in place every frame.
+   *
+   * @internal
+   */
+  get cameraView(): LiteSprite2DView {
+    return this.#cameraView;
   }
 
   /**
@@ -304,19 +329,18 @@ export class TwoDRuntime {
    * The layer-pixel rectangle the camera can currently see, for chunk culling.
    *
    * @remarks
-   * Read off the first world layer's view, which the sync system has already written this frame.
-   * Every world layer carries the same view, so any of them answers; `null` means there is no world
-   * layer yet, in which case a tilemap builds every chunk and culls from the next frame on.
+   * Read off {@link TwoDRuntime.cameraView}, which the sync system has already written this frame.
+   * Not off a layer's view: a `ParallaxLayer` slides its sorting layer's view, and when that layer
+   * sorts first the window would follow the backdrop instead of the camera. `null` means there is
+   * no surface to measure (a headless app), in which case a tilemap builds every chunk.
    *
    * @returns The bounds, or `null`.
    */
   cameraBounds(): LiteBounds2D | null {
-    const layers = this.#registry.collectLayers(true, this.#boundsLayers);
-    const first = layers[0];
-    if (first === undefined || this.viewportWidthPx === 0) {
+    if (this.viewportWidthPx === 0) {
       return null;
     }
-    return visibleBounds(first.view, this.viewportWidthPx, this.viewportHeightPx, this.#bounds);
+    return visibleBounds(this.#cameraView, this.viewportWidthPx, this.viewportHeightPx, this.#bounds);
   }
 
   /**
