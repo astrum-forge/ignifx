@@ -342,4 +342,11 @@ export interface ShaderDeclaration {
   readonly defines: readonly ShaderDefineDeclaration[];
   /** The pipeline state. */
   readonly pipeline: ShaderPipelineState;
+  /**
+   * The furthest, in world metres, the vertex stage moves a vertex from where the mesh puts it: the
+   * `// @ignifx displace <metres>` line, or `0` when the file has none. Every mesh drawn with the
+   * material gets bounds this much larger, so a directional shadow map and GPU instance culling
+   * still cover the moved shape.
+   */
+  readonly displace: number;
 }

@@ -144,6 +144,7 @@ export class MeshRenderer extends Component implements ComponentHooks {
       return changed;
     }
     instance.applyMaterial(this.#material(renderer));
+    instance.applyDisplacement(this.#displacement(), this.entity.transform);
     instance.applyFlags(this.receiveShadows, this.renderOrder, this.pickable);
     instance.applyVisible(this.isEnabledInHierarchy);
     return changed;
@@ -234,6 +235,16 @@ export class MeshRenderer extends Component implements ComponentHooks {
   #material(renderer: RendererImpl): LiteMaterial {
     const declared = this.materials[0];
     return declared?.state === "loaded" ? declared.value.lite.material : renderer.defaultMaterial().lite.material;
+  }
+
+  /**
+   * How far the material's vertex stage may move a vertex: its shaders' `// @ignifx displace`.
+   *
+   * @returns The distance in world metres; `0` for the default material or one still loading.
+   */
+  #displacement(): number {
+    const declared = this.materials[0];
+    return declared?.state === "loaded" ? declared.value.displacement : 0;
   }
 
   /**

@@ -98,6 +98,7 @@ interface DeclarationDraft {
   depthTest: boolean | null;
   transmissive: boolean;
   instancing: ShaderInstancingMode | null;
+  displace: number | null;
 }
 
 /**
@@ -136,6 +137,7 @@ export function parseShaderDeclaration(source: string, address: string): ShaderD
     depthTest: null,
     transmissive: false,
     instancing: null,
+    displace: null,
   };
   const lines = source.split("\n");
   for (let index = 0; index < lines.length; index += 1) {
@@ -194,6 +196,9 @@ function readDirective(draft: DeclarationDraft, text: string, address: string, l
     case "transmissive":
     case "instancing":
       readPipeline(draft, text, address, line);
+      return;
+    case "displace":
+      readDisplace(draft, rest, address, line);
       return;
     default:
       throw pragmaError(address, line, `${JSON.stringify(directive)} is not an @ignifx directive`);
@@ -567,6 +572,35 @@ function readDefine(draft: DeclarationDraft, rest: string, address: string, line
 }
 
 /**
+ * Reads the `// @ignifx displace <metres>` line: how far the vertex stage may move a vertex.
+ *
+ * @param draft - The declaration being built.
+ * @param rest - The directive body, which must be one number of zero or more.
+ * @param address - The asset address, for diagnostics.
+ * @param line - The 1-based line number, for diagnostics.
+ */
+function readDisplace(draft: DeclarationDraft, rest: string, address: string, line: number): void {
+  if (draft.displace !== null) {
+    throw pragmaError(address, line, "displace is declared twice");
+  }
+  const numberMatch = NUMBER_DEFAULT.exec(rest);
+  const value = numberMatch === null ? Number.NaN : Number(numberMatch[1]);
+  if (
+    numberMatch === null ||
+    numberMatch[0].trim().length !== rest.length ||
+    !(value >= 0) ||
+    !Number.isFinite(value)
+  ) {
+    throw pragmaError(
+      address,
+      line,
+      `displace ${JSON.stringify(rest)} is not a distance; write the furthest a vertex moves, in metres, such as displace 0.25`,
+    );
+  }
+  draft.displace = value;
+}
+
+/**
  * Reads a pipeline-state line, merging it into whatever earlier lines declared.
  *
  * @param draft - The declaration being built.
@@ -682,6 +716,9 @@ function finish(draft: DeclarationDraft, address: string): ShaderDeclaration {
     throw pragmaError(address, 1, "an @ignifx shader file must declare the position attribute");
   }
   const attributes: readonly ShaderAttributeName[] = declared ?? (kind === "shader" ? ["position"] : []);
+  if (kind === "post" && draft.displace !== null) {
+    throw pragmaError(address, 1, "an @ignifx post file draws no mesh, so it has nothing to displace");
+  }
   const blend = draft.blend ?? "opaque";
   if (draft.transmissive && blend === "opaque") {
     throw pragmaError(
@@ -710,6 +747,7 @@ function finish(draft: DeclarationDraft, address: string): ShaderDeclaration {
       transmissive: draft.transmissive,
       instancing: draft.instancing ?? "none",
     },
+    displace: draft.displace ?? 0,
   };
 }
 

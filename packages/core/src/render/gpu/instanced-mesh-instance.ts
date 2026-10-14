@@ -19,15 +19,18 @@ import {
   flushThinInstances,
   setThinInstanceColors,
   setThinInstanceCount,
+  setThinInstanceCullBoundsPad,
   setThinInstanceLodPartner,
   setThinInstances,
   trySetThinInstanceDrawCount,
 } from "../../lite/gpu/thin-instances.js";
 import { tagNode } from "../../lite/node.js";
+import { Vec3 } from "../../math/vec3.js";
 import type { LiteMesh } from "../../lite/gpu/mesh.js";
 import type { LiteMaterial } from "../../lite/material.js";
 import type { LiteSceneNode, NodeTag } from "../../lite/node.js";
 import type { LiteScene } from "../../lite/scene.js";
+import type { Transform } from "../../transform/transform.js";
 
 /**
  * One `InstancedMeshRenderer`'s near mesh and its optional LOD partner, and everything that writes
@@ -125,6 +128,15 @@ export class InstancedMeshInstance {
   readonly #lodBox: Float64Array | null;
 
   readonly #union = new Float64Array(6);
+
+  /** The world-space displacement the culling pad and the bounds were last widened by. */
+  #displacement = 0;
+
+  /** The same displacement in object units, per axis, as the published bounds carry it. */
+  readonly #margin = new Vec3();
+
+  /** Scratch for the entity's world scale. */
+  readonly #scale = new Vec3();
 
   /**
    * Clones the templates, gives them thin instances, applies the baked settings in Lite's required
@@ -361,19 +373,53 @@ export class InstancedMeshInstance {
     const near = this.#nearBox;
     const lodBox = this.#lodBox;
     const lod = this.lodMesh;
+    const margin = this.#margin;
     if (count <= 0) {
-      writeBox(this.mesh, near);
+      writeBox(this.mesh, near, margin);
       if (lod !== null && lodBox !== null) {
-        writeBox(lod, lodBox);
+        writeBox(lod, lodBox, margin);
       }
       return;
     }
     const union = this.#union;
     unionOfPlacements(matrices, count, near, union);
-    setMeshBounds(this.mesh, union[0] ?? 0, union[1] ?? 0, union[2] ?? 0, union[3] ?? 0, union[4] ?? 0, union[5] ?? 0);
+    writeBox(this.mesh, union, margin);
     if (lod !== null && lodBox !== null) {
       unionOfPlacements(matrices, count, lodBox, union);
-      setMeshBounds(lod, union[0] ?? 0, union[1] ?? 0, union[2] ?? 0, union[3] ?? 0, union[4] ?? 0, union[5] ?? 0);
+      writeBox(lod, union, margin);
+    }
+  }
+
+  /**
+   * Widens both meshes for a vertex stage that moves vertices up to `displacement` metres: the GPU
+   * culler pads every instance's sphere, and the bounds published for a shadow frustum grow too.
+   *
+   * @remarks
+   * The culling pad is world-space already. The bounds are object-local, so each axis is divided by
+   * the entity's world scale along it. A change clears `state.hasAppliedBounds`, so the next
+   * {@link InstancedMeshInstance.sync} re-publishes them.
+   *
+   * @param state - The component's upload state.
+   * @param displacement - The material's displacement, in world metres.
+   * @param transform - The entity's transform, whose world scale the meshes inherit.
+   */
+  applyDisplacement(state: InstancedUploadState, displacement: number, transform: Transform): void {
+    if (displacement !== this.#displacement) {
+      this.#displacement = displacement;
+      // Only the near mesh runs the culling pass; the partner draws from its output.
+      setThinInstanceCullBoundsPad(this.mesh, displacement);
+    }
+    const scale = this.#scale;
+    if (displacement > 0) {
+      transform.lossyScaleToRef(scale);
+    }
+    const x = objectMargin(displacement, scale.x);
+    const y = objectMargin(displacement, scale.y);
+    const z = objectMargin(displacement, scale.z);
+    const margin = this.#margin;
+    if (x !== margin.x || y !== margin.y || z !== margin.z) {
+      margin.set(x, y, z);
+      state.hasAppliedBounds = false;
     }
   }
 
@@ -618,13 +664,33 @@ function readBox(mesh: LiteMesh): Float64Array {
 }
 
 /**
- * Writes a six-number box back onto a mesh.
+ * Writes a six-number box back onto a mesh, grown by a margin on every side.
  *
  * @param mesh - The mesh to re-bound.
  * @param box - `minX, minY, minZ, maxX, maxY, maxZ`.
+ * @param margin - How far to grow each axis, in object units.
  */
-function writeBox(mesh: LiteMesh, box: Float64Array): void {
-  setMeshBounds(mesh, box[0] ?? 0, box[1] ?? 0, box[2] ?? 0, box[3] ?? 0, box[4] ?? 0, box[5] ?? 0);
+function writeBox(mesh: LiteMesh, box: Float64Array, margin: Vec3): void {
+  setMeshBounds(
+    mesh,
+    (box[0] ?? 0) - margin.x,
+    (box[1] ?? 0) - margin.y,
+    (box[2] ?? 0) - margin.z,
+    (box[3] ?? 0) + margin.x,
+    (box[4] ?? 0) + margin.y,
+    (box[5] ?? 0) + margin.z,
+  );
+}
+
+/**
+ * Converts a world-space margin into the object-space margin along one axis.
+ *
+ * @param margin - The margin, in world metres.
+ * @param scale - The entity's world scale along the axis.
+ * @returns The margin in object units; `0` for no margin or a collapsed axis.
+ */
+function objectMargin(margin: number, scale: number): number {
+  return margin > 0 && scale > 1e-9 ? margin / scale : 0;
 }
 
 /**

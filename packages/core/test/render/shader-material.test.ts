@@ -158,6 +158,17 @@ describe("building a shader material", () => {
     expect(material.isDrawable).toBe(true);
   });
 
+  it("reports the file's displace distance, and a PBR material without surface shaders none", async () => {
+    const h = await app();
+    const source = TINT_WGSL.replace("// @ignifx shader", "// @ignifx shader\n// @ignifx displace 0.4");
+    const shader = await h.load<ShaderAsset>("shaders/sway.wgsl", { "shaders/sway.wgsl": source });
+    const sway = createMaterialAsset(h.app, shaderMaterialDefinition({ shader: shader.address }), []).value;
+    expect(sway.displacement).toBe(0.4);
+    expect((await tintMaterial(h)).displacement).toBe(0);
+    const plain = createMaterialAsset(h.app, pbrMaterialDefinition({ name: "plain" }), []).value;
+    expect(plain.displacement).toBe(0);
+  });
+
   it("applies the definition's values over the file's defaults", async () => {
     const h = await app();
     const material = await tintMaterial(h, { pulse: 0.75 });
