@@ -3,8 +3,10 @@ import {
   createEsmDirectionalShadowGenerator,
   createPcfDirectionalShadowGenerator,
   createPcfSpotlightShadowGenerator,
+  enableSkeletonShadows,
 } from "@babylonjs/lite";
 import { assertNever } from "../../errors/ignifx-error.js";
+import { ShadowCasterShapes } from "../shadow-caster-shapes.js";
 import { toCsmConfig, toEsmConfig, toPcfConfig, toSpotConfig } from "../shadow.js";
 import type { ShadowSettings, ShadowTechnique } from "../shadow.js";
 import type { DirectionalLight, EngineContext, Mesh, SceneContext, ShadowGenerator, SpotLight } from "@babylonjs/lite";
@@ -49,6 +51,30 @@ import type { DirectionalLight, EngineContext, Mesh, SceneContext, ShadowGenerat
  * sample the very shadow map the pass writes, and Dawn rejects the whole frame ("includes writable
  * usage and another usage in the same synchronization scope"). `stopMirroringEmptyStates` keeps
  * such a task empty, so the pass only clears the map and nothing is in shadow.
+ *
+ * ## Casters that change shape without moving
+ *
+ * Every pass skips drawing unless a caster's world matrix, the light or the camera moved (see
+ * `../shadow.ts`). A skinned mesh posed by its skeleton, or a shader material moving vertices by a
+ * uniform, never moves its world matrix, so its shadow froze in the first pose drawn. Two layers fix
+ * that:
+ *
+ * - Lite's `enableSkeletonShadows` (`index.d.ts` 4569, `lib/shadow/enable-skeleton-shadows.js`)
+ *   swaps each skinned caster for a stand-in whose bounds follow the pose, so the directional and
+ *   cascade fits cover a raised arm instead of the bind pose's box (without it, the browser test's
+ *   raised arm is missing from a CSM map). It also redraws when those bounds change.
+ * - `redrawChangedCasterShapes` redraws whenever a bone pose or a shader material's uniforms
+ *   changed at all, which catches a pose that stays inside the same box
+ *   (`../shadow-caster-shapes.ts`).
+ *
+ * **Order.** Lite's skeleton layer is installed first, directly on the factory's hooks, and the
+ * engine's two wrappers go around it. Lite reads the hooks when it is enabled
+ * (`lib/shadow/deformable-shadow-casters.js` 78-80) and, after each call, puts the *source* caster
+ * array back on the state (`restoreSourceCasters`, 65-67, 102, 120). So the engine's wrappers see the
+ * array the shadow task passes and the same array on the state, and the caster-identity check in
+ * `recordReplacedShadowTaskStates` means what it says. Enabling the skeleton layer later instead
+ * would hand the inner hooks a new proxy array mid-life, replacing the state without the shadow task
+ * noticing that it needs recording.
  */
 
 /** The fields of a Lite render task the empty-caster fix touches. Absent from `index.d.ts`. */
@@ -73,6 +99,8 @@ interface ShadowTaskState {
   readonly _tasks?: readonly MirroringRenderTask[];
   /** The caster array the state was built for. */
   readonly _casterMeshes: readonly Mesh[];
+  /** The caster version the map was last drawn at; `-1` until the first draw. */
+  _lastCasterVersion: number;
 }
 
 /** The fields of a Lite generator that build and keep its shadow task state. Absent from `index.d.ts`. */
@@ -85,7 +113,12 @@ interface ShadowTaskHooks {
     scene: SceneContext,
     casterMeshes: readonly Mesh[],
   ) => ShadowTaskState;
+  /** Draws the map unless nothing it tracks moved since the last draw; returns the draw count. */
+  _renderShadowMap?: (engine: EngineContext, state: ShadowTaskState) => number;
 }
+
+/** What Lite's caster gate reads as "never drawn" (`lib/shadow/pcf-shadow-task-hooks.js` 90). */
+const NEVER_DRAWN = -1;
 
 /**
  * Builds the shadow generator a light's declared settings ask for.
@@ -114,7 +147,10 @@ export function createShadowGeneratorForLight(
     light.lightType === "spot"
       ? createPcfSpotlightShadowGenerator(engine, light, toSpotConfig(settings))
       : createDirectionalGenerator(engine, light, settings);
+  // Lite's skeleton layer first, then the engine's wrappers around it; the module header says why.
+  enableSkeletonShadows(generator);
   recordReplacedShadowTaskStates(generator);
+  redrawChangedCasterShapes(generator);
   return generator;
 }
 
@@ -123,7 +159,7 @@ export function createShadowGeneratorForLight(
  * can draw (see the module header for the frame this prevents).
  *
  * @remarks
- * Lite's own `enableDeformableShadowCasters` wraps the same hook the same way
+ * Lite's own `enableDeformableShadowBounds` wraps the same hook the same way
  * (`lib/shadow/deformable-shadow-casters.js` 98-104). A state built for a *new* caster array is
  * left alone, because the shadow task records that one itself.
  *
@@ -144,16 +180,57 @@ function recordReplacedShadowTaskStates(generator: ShadowGenerator): void {
   hooks._ensureShadowTaskState = (engine, scene, casterMeshes): ShadowTaskState => {
     // oxlint-disable-next-line no-underscore-dangle
     const previous = hooks._shadowTaskState;
+    // Read before `ensure`: Lite's skeleton layer points the previous state at its proxy array while
+    // it runs, and a state it then replaces keeps that array.
+    // oxlint-disable-next-line no-underscore-dangle
+    const previousCasters = previous?._casterMeshes;
     const state = ensure(engine, scene, casterMeshes);
     if (state !== previous && casterMeshes.length === 0) {
       stopMirroringEmptyStates(scene, state);
     }
     // oxlint-disable-next-line no-underscore-dangle
-    if (previous !== undefined && state !== previous && state._casterMeshes === previous._casterMeshes) {
+    if (previous !== undefined && state !== previous && state._casterMeshes === previousCasters) {
       // oxlint-disable-next-line no-underscore-dangle
       state._task.record();
     }
     return state;
+  };
+}
+
+/**
+ * Makes a generator redraw its map in any frame where a caster changed shape without moving: a new
+ * bone pose, or a shader material whose uniforms changed (see the module header).
+ *
+ * @remarks
+ * It forgets the caster version the map was drawn at, which is what Lite's own gate compares
+ * against, so the pass draws as if it never had. A pose change is found by comparing bone matrices,
+ * not by asking whether an animator ran: a paused animator, or a skinned model with no animator at
+ * all, costs no redraw, while bone control and every other writer is still caught.
+ *
+ * @param generator - A generator from one of Lite's four factories.
+ */
+function redrawChangedCasterShapes(generator: ShadowGenerator): void {
+  // Boundary assertion (coding standards §5.2): as in `recordReplacedShadowTaskStates`.
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+  const hooks = generator as ShadowGenerator & ShadowTaskHooks;
+  // oxlint-disable-next-line no-underscore-dangle
+  const render = hooks._renderShadowMap;
+  if (render === undefined) {
+    return;
+  }
+  const shapes = new ShadowCasterShapes();
+  let watched: ShadowTaskState | null = null;
+  // oxlint-disable-next-line no-underscore-dangle
+  hooks._renderShadowMap = (engine, state): number => {
+    if (state !== watched) {
+      watched = state;
+      // oxlint-disable-next-line no-underscore-dangle
+      shapes.watch(state._casterMeshes);
+    } else if (shapes.hasChanged()) {
+      // oxlint-disable-next-line no-underscore-dangle
+      state._lastCasterVersion = NEVER_DRAWN;
+    }
+    return render(engine, state);
   };
 }
 
