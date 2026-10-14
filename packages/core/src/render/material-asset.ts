@@ -373,7 +373,11 @@ export class MaterialAsset {
     if (shader !== null) {
       return shader.shader.declaration.displace;
     }
-    const bindings = this.surfaces;
+    const support = surfaceShaderSupport();
+    if (support === null) {
+      return 0;
+    }
+    const bindings = support.surfaceShaders(this);
     let total = 0;
     for (let index = 0; index < bindings.length; index += 1) {
       const binding = bindings[index];

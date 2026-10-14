@@ -108,6 +108,9 @@ export interface SurfaceShaderReference {
 /** Babylon Lite's own default plugin priority; the surface shaders of one material sort by it. */
 const DEFAULT_PRIORITY = 500;
 
+/** What a material with no surface shaders reports, shared so the per-frame read allocates nothing. */
+const NO_BINDINGS: readonly SurfaceShaderBinding[] = Object.freeze([]);
+
 /**
  * What a binding tells its attachment when something changes.
  *
@@ -534,7 +537,7 @@ export function detachSurfaceShaders(material: MaterialAsset): void {
  * @public
  */
 export function surfaceShaders(material: MaterialAsset): readonly SurfaceShaderBinding[] {
-  return attachments?.get(material)?.bindings ?? [];
+  return attachments?.get(material)?.bindings ?? NO_BINDINGS;
 }
 
 /**
