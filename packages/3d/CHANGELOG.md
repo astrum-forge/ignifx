@@ -1,5 +1,16 @@
 # @ignifx/3d
 
+## 0.8.0
+
+### Patch Changes
+
+- d13d1c5: Fix `ThirdPersonController.stepHeight` launching the character into the air: the step probe added `stepHeight / dt` to a displacement that is already a distance, so a 0.35 m step lifted the character about 21 m in one fixed step. It now lifts by the step height.
+- Updated dependencies [874d49b]
+- Updated dependencies [4da087b]
+  - @ignifx/core@0.8.0
+  - @ignifx/physics@0.8.0
+  - @ignifx/input@0.8.0
+
 ## 0.7.0
 
 ### Minor Changes

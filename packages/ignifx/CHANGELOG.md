@@ -1,5 +1,30 @@
 # ignifx
 
+## 0.8.0
+
+### Minor Changes
+
+- 874d49b: Add the `// @ignifx displace <metres>` pragma for `.wgsl` shader and surface files: it declares how far the vertex stage moves a vertex, and every `MeshRenderer` and `InstancedMeshRenderer` drawing with the material widens its bounds by that much. A caster moved beyond its mesh's own bounds now keeps its whole shadow under directional PCF and ESM lights, and a GPU-culled instance moved onto the screen is no longer culled.
+
+### Patch Changes
+
+- Updated dependencies [874d49b]
+- Updated dependencies [4da087b]
+- Updated dependencies [d13d1c5]
+  - @ignifx/core@0.8.0
+  - @ignifx/physics@0.8.0
+  - @ignifx/3d@0.8.0
+  - @ignifx/2d@0.8.0
+  - @ignifx/audio@0.8.0
+  - @ignifx/devtools@0.8.0
+  - @ignifx/electron@0.8.0
+  - @ignifx/input@0.8.0
+  - @ignifx/particles@0.8.0
+  - @ignifx/particles-2d@0.8.0
+  - @ignifx/physics-2d@0.8.0
+  - @ignifx/terrain@0.8.0
+  - @ignifx/ui@0.8.0
+
 ## 0.7.0
 
 ### Patch Changes
