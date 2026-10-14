@@ -35,6 +35,14 @@ import type {
  *   `index.d.ts` 10981, `lib/frame-graph/shadow-inputs.js`). Passing a new array parks the
  *   generator until an async preload of the shadow pipeline finishes, so the list is replaced as
  *   rarely as possible: once per frame in which the caster set actually changed.
+ * - A pass redraws its map only when something it tracks moved: the sum of every caster's
+ *   `worldMatrixVersion` plus its thin-instance version (`casterVersionSum`,
+ *   `lib/shadow/shadow-base.js` 138), the light's `worldMatrixVersion`, and the floating-origin
+ *   camera (CSM: the camera and its aspect). Otherwise the previous map is reused
+ *   (`lib/shadow/pcf-shadow-task-hooks.js` 135, `esm-directional-shadow-generator.js` 179,
+ *   `csm-shadow-task-hooks.js` 180). A caster that changes shape in place — a skinned mesh, a shader
+ *   material moving vertices by a uniform — moves none of those, so `./gpu/shadow-generator.ts`
+ *   adds Lite's skeleton layer and a shape check of its own to every generator.
  * - `computeDirectionalLightMatrix` (`lib/shadow/shadow-base.js` 54-55) fits the shadow frustum
  *   from the light's **own** `direction` and `position`, not from its world matrix, while the
  *   shader reads the world matrix. The two only agree when the light has no parent and its own

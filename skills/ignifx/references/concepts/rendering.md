@@ -42,6 +42,12 @@ what they mean.
   lists are only rebuilt once the renderable rebuild it triggered has settled.
 - A light with shadows on and no caster renders the scene unshadowed. Switching a surface shader with
   a `displace` hook on or off moves its shadow under every technique, ESM included.
+- A skinned model's shadow follows its pose under every technique, whether an `Animator`, a clip or
+  bone control moved it, and a shader material's shadow follows its vertex stage under PCF and CSM
+  whenever one of its uniforms changes, `time` included. A map is redrawn only in a frame where some
+  caster really changed, so a paused animator costs nothing. Keep vertex displacement inside the
+  mesh's own bounds, and change a uniform when you rewrite a storage buffer the vertex stage reads
+  ([`../gotchas.md`](../gotchas.md)).
 - An ESM or PCF directional map is fitted to its **casters' bounds** only, not to the receivers or
   the camera. A single thin caster (a 3 cm pole) therefore gets a map a few centimetres wide, which
   stretches ESM's blur along the pole and can leave a dark smear on the floor near it. The fix is in
