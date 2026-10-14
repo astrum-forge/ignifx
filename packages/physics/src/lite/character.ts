@@ -179,6 +179,19 @@ export function controllerBody(controller: LiteCharacterController): LitePhysics
 }
 
 /**
+ * The node of a controller's capsule body. Lite creates it for the controller, separate from the
+ * entity's node, so it is what a ray hit on the capsule reports (`RaycastResult.body.node`).
+ *
+ * @param controller - The controller.
+ * @returns The capsule body's node.
+ *
+ * @internal
+ */
+export function controllerNode(controller: LiteCharacterController): LiteSceneNode {
+  return controller.getBody().node;
+}
+
+/**
  * Reads the controller's resolved position.
  *
  * @param controller - The controller.

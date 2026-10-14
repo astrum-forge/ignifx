@@ -4,7 +4,8 @@ import type { Entity, LayerMask, Vec3Like } from "@ignifx/core";
 /**
  * Raycasts return backend body identities. Shape casts use backend hit geometry and the local
  * body-bounds index for identity; overlaps use that index entirely. Shape-cast identities and
- * overlap results are bounds-accurate, not exact shape intersections.
+ * overlap results are bounds-accurate, not exact shape intersections. Every query can hit a
+ * `Rigidbody`, a collider-only static body, or a `CharacterController` capsule.
  */
 
 /**
@@ -63,9 +64,12 @@ export type QueryShape =
  * @public
  */
 export interface RaycastHit {
-  /** The entity that was hit. */
+  /** The entity that was hit: a body's entity, or a `CharacterController`'s entity for its capsule. */
   readonly entity: Entity;
-  /** The collider on that entity, or `null` when the entity has none registered any more. */
+  /**
+   * The collider on that entity, or `null` for a `CharacterController` capsule or an entity with no
+   * collider registered any more.
+   */
   readonly collider: Collider | null;
   /** The world-space contact point. */
   readonly point: Vec3Like;
@@ -83,9 +87,12 @@ export interface RaycastHit {
  * @public
  */
 export interface ShapeCastHit {
-  /** The entity the swept shape hit, or `null` when the bounds index cannot identify it. */
+  /**
+   * The entity the swept shape hit — a `CharacterController`'s entity for its capsule — or `null`
+   * when the bounds index cannot identify it or `layerMask` excludes it.
+   */
   readonly entity: Entity | null;
-  /** The collider on that entity, or `null`. */
+  /** The collider on that entity, or `null`, which is always the case for a capsule. */
   readonly collider: Collider | null;
   /** The world-space contact point on the hit body. */
   readonly point: Vec3Like;

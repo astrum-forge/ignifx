@@ -113,6 +113,11 @@ app.log.info("crate at y:", crate.transform.position.y);
 Every query needs at least one completed fixed step — Havok builds its broadphase there — and
 reports `IGX-0902` before that.
 
+Queries hit `Rigidbody` bodies, collider-only statics, and `CharacterController` capsules. A capsule
+hit names the character's entity with `collider: null`. A ray whose `layerMask` leaves out the
+character's layer passes through the capsule; a `shapeCast` still stops on it, because a sweep
+cannot be layer-filtered, and reports `entity: null` — use `options.ignore` to sweep through it.
+
 ### `Rigidbody`
 
 | Field / member                                  | Default         | Meaning                                             |

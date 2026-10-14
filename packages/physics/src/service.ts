@@ -8,7 +8,7 @@ import type { LitePhysicsViewer } from "./lite/gpu/viewer.js";
 import type { LitePhysicsShape, LitePhysicsWorld } from "./lite/havok.js";
 import type { RayQueryResult, SweepQueryResult } from "./lite/queries.js";
 import type { QueryOptions, QueryShape, RaycastHit, ShapeCastHit, ShapeCastOptions } from "./queries.js";
-import type { BodyRecord } from "./runtime/body-record.js";
+import type { QueryTarget } from "./runtime/body-record.js";
 import type { PhysicsHost } from "./runtime/host.js";
 import type { PhysicsRuntime } from "./runtime/runtime.js";
 import type { PhysicsSettings } from "./settings.js";
@@ -21,6 +21,9 @@ import type { App, Entity, LiteScene, Vec3Like } from "@ignifx/core";
 
 /** How far a ray travels when the caller names no distance, in metres. */
 const DEFAULT_RAY_DISTANCE = 1e4;
+
+/** How far past a skipped character capsule's surface a ray resumes, in metres. */
+const RAY_RESUME_DISTANCE = 1e-3;
 
 /** How much slack the bounds index allows when it resolves a sweep contact to an entity. */
 const BOUNDS_EPSILON = 1e-3;
@@ -81,6 +84,8 @@ export class PhysicsService {
   readonly #point = new Vec3();
 
   readonly #normal = new Vec3();
+
+  readonly #rayFrom = new Vec3();
 
   readonly #overlapExtents = new Vec3();
 
@@ -147,6 +152,11 @@ export class PhysicsService {
   /**
    * Casts a ray and returns the first entity it hits (`09-physics.md` §5).
    *
+   * @remarks
+   * The ray hits `Rigidbody` and collider-only bodies and `CharacterController` capsules. A capsule
+   * hit reports the character's entity with `collider: null`. A ray passes through a capsule when
+   * `layerMask` leaves out the character's layer, or when the ray starts inside it.
+   *
    * @param origin - The world-space origin.
    * @param direction - The direction; it is normalised for you.
    * @param maxDistance - How far to travel; defaults to 10 km.
@@ -161,7 +171,8 @@ export class PhysicsService {
     options?: QueryOptions,
   ): RaycastHit | null {
     this.#requireStep("raycast");
-    this.#rt().countQuery();
+    const runtime = this.#rt();
+    runtime.countQuery();
     const length = Math.hypot(direction.x, direction.y, direction.z);
     if (length === 0) {
       return null;
@@ -172,32 +183,53 @@ export class PhysicsService {
       y: origin.y + direction.y * scale,
       z: origin.z + direction.z * scale,
     };
-    castRay(
-      this.#rt().world,
-      origin,
-      to,
-      ALL_LAYERS,
-      maskOf(options),
-      options?.hitTriggers === true,
-      this.#point,
-      this.#normal,
-      this.#rayResult,
-    );
-    if (!this.#rayResult.hit) {
-      return null;
+    const from = this.#rayFrom.set(origin.x, origin.y, origin.z);
+    let travelled = 0;
+    // Havok filters bodies by layer itself, but a character capsule is in every layer: Lite builds
+    // its shape with all filter bits set and gives no access to it. So a ray whose mask excludes a
+    // character resumes just inside the capsule, where Havok does not report it again. Each pass
+    // skips at least one capsule, which bounds the loop.
+    for (let pass = 0; pass <= runtime.queryTargetCount; pass += 1) {
+      castRay(
+        runtime.world,
+        from,
+        to,
+        ALL_LAYERS,
+        maskOf(options),
+        options?.hitTriggers === true,
+        this.#point,
+        this.#normal,
+        this.#rayResult,
+      );
+      if (!this.#rayResult.hit) {
+        return null;
+      }
+      const target = runtime.targetOfNode(this.#rayResult.node);
+      if (target === null) {
+        return null;
+      }
+      if (this.#accepts(target, options)) {
+        return {
+          entity: target.entity,
+          collider: target.colliders[0] ?? null,
+          point: this.#point.clone(),
+          normal: this.#normal.clone(),
+          distance: travelled + this.#rayResult.distance,
+          triangleIndex: this.#rayResult.triangleIndex,
+        };
+      }
+      travelled += this.#rayResult.distance + RAY_RESUME_DISTANCE;
+      if (travelled >= maxDistance) {
+        return null;
+      }
+      const step = RAY_RESUME_DISTANCE / length;
+      from.set(
+        this.#point.x + direction.x * step,
+        this.#point.y + direction.y * step,
+        this.#point.z + direction.z * step,
+      );
     }
-    const record = this.#rt().recordOfNode(this.#rayResult.node);
-    if (record === null) {
-      return null;
-    }
-    return {
-      entity: record.entity,
-      collider: record.colliders[0] ?? null,
-      point: this.#point.clone(),
-      normal: this.#normal.clone(),
-      distance: this.#rayResult.distance,
-      triangleIndex: this.#rayResult.triangleIndex,
-    };
+    return null;
   }
 
   /**
@@ -205,7 +237,9 @@ export class PhysicsService {
    *
    * @remarks
    * Lite's `shapeCast` reports no body (`index.d.ts` 11497), so `entity` is resolved against the
-   * extension's body-bounds index and is bounds-accurate rather than shape-accurate.
+   * extension's body-bounds index and is bounds-accurate rather than shape-accurate. The index holds
+   * every `Rigidbody` and collider-only body and every `CharacterController` capsule; a capsule
+   * contact reports the character's entity with `collider: null`.
    *
    * The sweep itself cannot be filtered by layer — Lite's `ShapeCastQuery` carries no collision
    * masks — so a body outside `layerMask` still stops the sweep; it is merely reported with
@@ -245,11 +279,11 @@ export class PhysicsService {
     if (!this.#sweepResult.hit) {
       return null;
     }
-    const record = this.#recordAt(this.#point, options, ignored);
+    const target = this.#targetAt(this.#point, options, ignored);
     const distance = Math.hypot(to.x - from.x, to.y - from.y, to.z - from.z) * this.#sweepResult.fraction;
     return {
-      entity: record?.entity ?? null,
-      collider: record?.colliders[0] ?? null,
+      entity: target?.entity ?? null,
+      collider: target?.colliders[0] ?? null,
       point: this.#point.clone(),
       normal: this.#normal.clone(),
       fraction: this.#sweepResult.fraction,
@@ -263,34 +297,42 @@ export class PhysicsService {
    * @remarks
    * Lite's `shapeProximity` reports one hit and no identity (`index.d.ts` 11540,
    * `lib/physics/havok-queries.js:7`), so this is answered from the extension's own bounds index:
-   * every registered body whose world bounding box intersects the query shape's. It is conservative
-   * — a body whose box overlaps but whose shape does not is listed.
+   * every `Rigidbody`, collider-only body and `CharacterController` capsule whose world bounding box
+   * intersects the query shape's. It is conservative — a body whose box overlaps but whose shape
+   * does not is listed.
    *
    * @param shape - The query shape.
    * @param position - Its world position.
    * @param rotation - Its world rotation; accepted for forward compatibility and currently unused,
    * because the bounds test is axis-aligned.
    * @param options - Layer mask and trigger behaviour.
-   * @returns The overlapping entities, in body creation order. The array is reused between calls.
+   * @returns The overlapping entities, each once: bodies in creation order, then characters in
+   * creation order. The array is reused between calls.
    * @throws IgnifxError with code `IGX-0902` in development when no fixed step has run yet.
    */
   overlap(shape: QueryShape, position: Vec3Like, rotation?: Quat, options?: QueryOptions): readonly Entity[] {
     void rotation;
     this.#requireStep("overlap");
-    this.#rt().countQuery();
+    const runtime = this.#rt();
+    runtime.countQuery();
     queryHalfExtents(shape, this.#overlapExtents);
-    this.#overlapResults.length = 0;
-    const records = this.#rt().records;
-    for (let index = 0; index < records.length; index += 1) {
-      const record = records[index];
-      if (record === undefined || !this.#accepts(record, options)) {
+    const results = this.#overlapResults;
+    results.length = 0;
+    const count = runtime.queryTargetCount;
+    for (let index = 0; index < count; index += 1) {
+      const target = runtime.queryTargetAt(index);
+      if (target === undefined || !this.#accepts(target, options)) {
         continue;
       }
-      if (boxesOverlap(position, this.#overlapExtents, record.currentPosition, record.halfExtents)) {
-        this.#overlapResults.push(record.entity);
+      if (
+        boxesOverlap(position, this.#overlapExtents, target.currentPosition, target.halfExtents) &&
+        // An entity can carry both a body and a character controller.
+        !results.includes(target.entity)
+      ) {
+        results.push(target.entity);
       }
     }
-    return this.#overlapResults;
+    return results;
   }
 
   /**
@@ -446,19 +488,20 @@ export class PhysicsService {
    * @param options - Layer mask and trigger behaviour.
    * @param ignored - The entity the sweep was told to pass through, which can therefore not be the
    * one it hit.
-   * @returns The record, or `null`.
+   * @returns The body or capsule, or `null`.
    */
-  #recordAt(point: Vec3Like, options: QueryOptions | undefined, ignored: Entity | null = null): BodyRecord | null {
-    const records = this.#rt().records;
-    let best: BodyRecord | null = null;
+  #targetAt(point: Vec3Like, options: QueryOptions | undefined, ignored: Entity | null = null): QueryTarget | null {
+    const runtime = this.#rt();
+    const count = runtime.queryTargetCount;
+    let best: QueryTarget | null = null;
     let bestDistance = Number.POSITIVE_INFINITY;
-    for (let index = 0; index < records.length; index += 1) {
-      const record = records[index];
-      if (record === undefined || record.entity === ignored || !this.#accepts(record, options)) {
+    for (let index = 0; index < count; index += 1) {
+      const target = runtime.queryTargetAt(index);
+      if (target === undefined || target.entity === ignored || !this.#accepts(target, options)) {
         continue;
       }
-      const centre = record.currentPosition;
-      const extents = record.halfExtents;
+      const centre = target.currentPosition;
+      const extents = target.halfExtents;
       if (
         Math.abs(point.x - centre.x) > extents.x + BOUNDS_EPSILON ||
         Math.abs(point.y - centre.y) > extents.y + BOUNDS_EPSILON ||
@@ -469,24 +512,24 @@ export class PhysicsService {
       const distance = Math.hypot(point.x - centre.x, point.y - centre.y, point.z - centre.z);
       if (distance < bestDistance) {
         bestDistance = distance;
-        best = record;
+        best = target;
       }
     }
     return best;
   }
 
   /**
-   * Whether a body passes a query's layer and trigger filters.
+   * Whether a body or capsule passes a query's layer and trigger filters.
    *
-   * @param record - The body.
+   * @param target - The body or capsule.
    * @param options - The query options.
-   * @returns `true` when the body may be reported.
+   * @returns `true` when it may be reported.
    */
-  #accepts(record: BodyRecord, options: QueryOptions | undefined): boolean {
-    if ((maskOf(options) & (1 << record.layer)) === 0) {
+  #accepts(target: QueryTarget, options: QueryOptions | undefined): boolean {
+    if ((maskOf(options) & (1 << target.layer)) === 0) {
       return false;
     }
-    return options?.hitTriggers === true || !allTriggers(record.colliders);
+    return options?.hitTriggers === true || !allTriggers(target.colliders);
   }
 }
 
