@@ -526,6 +526,40 @@ async function measureJump(page: Page, holdFrames: number): Promise<number> {
 }
 
 /**
+ * Holds "down", presses jump, and reports how high and how low the character went.
+ *
+ * @remarks
+ * The extremes are sampled frame by frame from the press, so a drop into the floor shows up as a
+ * low point even if something later puts the character back.
+ *
+ * @param page - The page under test.
+ * @returns The highest and lowest `y` the character reached, in metres.
+ */
+async function downJump(page: Page): Promise<{ readonly highest: number; readonly lowest: number }> {
+  await page.keyboard.down("s");
+  // `update` reads the stick before the jump edge arrives, so the press is seen as "down + jump".
+  await waitForFrames(page, KEY_HOLD_FRAMES);
+  await page.keyboard.down("Space");
+  let highest = Number.NEGATIVE_INFINITY;
+  let lowest = Number.POSITIVE_INFINITY;
+  for (let index = 0; index < FLIGHT_FRAMES; index += 1) {
+    // oxlint-disable-next-line eslint/no-await-in-loop -- frames are sequential by definition; the extremes are taken over them.
+    await waitForFrames(page, 1);
+    if (index === KEY_HOLD_FRAMES) {
+      // oxlint-disable-next-line eslint/no-await-in-loop -- see above.
+      await page.keyboard.up("Space");
+      // oxlint-disable-next-line eslint/no-await-in-loop -- see above.
+      await page.keyboard.up("s");
+    }
+    // oxlint-disable-next-line eslint/no-await-in-loop -- see above.
+    const reading = await readProbe(page);
+    highest = Math.max(highest, reading.position.y);
+    lowest = Math.min(lowest, reading.position.y);
+  }
+  return { highest, lowest };
+}
+
+/**
  * The gameplay half of the two 2D templates, driven through the `?probe=1` hook each of them
  * installs (`src/gameplay-probe.ts`) rather than through screenshots.
  *
@@ -640,6 +674,54 @@ test.describe("2d template gameplay", () => {
     const settled = await readProbe(page);
     expect(settled.grounded, "the character should be standing on the lip after the respawn").toBe(true);
     expect(settled.position.y, "the character fell back into the pit").toBeCloseTo(3, 0);
+    expect(failures, `the page reported errors: ${failures.join(" | ")}`).toEqual([]);
+  });
+
+  // "Down + jump" drops through a one-way plank and is an ordinary jump anywhere else. The ground is
+  // a tilemap outline, which is a thin closed line rather than a solid shape, so a probe that sits
+  // wholly inside the ground finds nothing there and reads solid ground as a plank.
+  test("2d-sidescroller: down and jump on solid ground jumps instead of dropping into the floor", async ({ page }) => {
+    const failures = await startGame(page, SIDESCROLLER);
+    const standing = await holdUntil(page, [], (reading) => reading.grounded === true, FLIGHT_FRAMES);
+    expect(standing.reading.position.y, "the spawn stands on the ground at y = 3").toBeCloseTo(3, 1);
+
+    const flight = await downJump(page);
+    expect(flight.lowest, "the character went into the floor").toBeGreaterThan(2.9);
+    expect(flight.highest, "down + jump on the ground should still be a jump").toBeGreaterThan(4);
+
+    const landed = await holdUntil(page, [], (reading) => reading.grounded === true, FLIGHT_FRAMES);
+    expect(landed.reading.grounded, "the character should land again").toBe(true);
+    expect(landed.reading.position.y, "and land on the ground it jumped from").toBeCloseTo(3, 1);
+    expect(failures, `the page reported errors: ${failures.join(" | ")}`).toEqual([]);
+  });
+
+  // The first plank spans x = 3 to 7 above the spawn's ground. A held jump from under it passes up
+  // through it and lands on top, and "down + jump" there has to put the character back on the
+  // ground below rather than jump.
+  test("2d-sidescroller: down and jump on a plank drops through it to the ground below", async ({ page }) => {
+    const failures = await startGame(page, SIDESCROLLER);
+    const under = await holdUntil(page, ["d"], (reading) => reading.position.x >= 4);
+    expect(under.reading.position.x, "the walk should stop under the plank").toBeLessThan(6);
+    await waitForFrames(page, KEY_HOLD_FRAMES);
+    await page.keyboard.down("Space");
+    await waitForFrames(page, 16);
+    await page.keyboard.up("Space");
+    const plank = await holdUntil(
+      page,
+      [],
+      (reading) => reading.grounded === true && reading.position.y > 5,
+      FLIGHT_FRAMES,
+    );
+    expect(plank.reading.position.y, "a held jump from under the plank should land on it").toBeGreaterThan(5);
+    const plankY = plank.reading.position.y;
+
+    const flight = await downJump(page);
+    expect(flight.highest, "dropping off a plank is not a jump").toBeLessThan(plankY + 0.1);
+    expect(flight.lowest, "the character should drop through the plank").toBeLessThan(plankY - 1);
+
+    const landed = await holdUntil(page, [], (reading) => reading.grounded === true, FLIGHT_FRAMES);
+    expect(landed.reading.grounded, "the character should land after the drop").toBe(true);
+    expect(landed.reading.position.y, "on the ground under the plank").toBeCloseTo(3, 1);
     expect(failures, `the page reported errors: ${failures.join(" | ")}`).toEqual([]);
   });
 
