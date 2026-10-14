@@ -41,15 +41,15 @@ describe("CharacterController", () => {
     expect(steep.state).not.toBe("supported");
   }, 30_000);
 
-  it("reports sliding on any incline, because a bare controller has no static friction", async () => {
-    // Measured against `@babylonjs/lite@1.27.0`: `PhysicsCharacterController.staticFriction`
-    // defaults to `0` (`index.d.ts` 8310), so a kinematic capsule pressed against *any* incline
-    // keeps a residual down-slope velocity and `checkSupport` classifies it as `SLIDING` — even at
-    // 10°, and regardless of `slopeLimit`. `slopeLimit` still decides what the character can climb,
-    // which is what the next test asserts, and the 3D toolkit's controllers (Phase 7) add the
-    // friction and gravity handling that make `supportState` read the way Unity's does.
+  it("reports supported on an incline inside slopeLimit", async () => {
+    // Until 2026-10-14 this read `sliding`: the support probe handed Lite's `checkSupport` raw
+    // gravity rather than a unit direction, which classifies anything past about 5° as too steep
+    // (`probeSupport`). The bare controller still creeps down an incline it is pressed into —
+    // `staticFriction` defaults to `0` (`index.d.ts` 8310) — but it is standing on it.
     const gentle = await standOn(10);
-    expect(gentle.state).toBe("sliding");
+    const ramp30 = await standOn(30);
+    expect(gentle).toEqual({ grounded: true, state: "supported" });
+    expect(ramp30).toEqual({ grounded: true, state: "supported" });
   }, 30_000);
 
   it("walks up a 30° slope and is stopped by a 60° one", async () => {
