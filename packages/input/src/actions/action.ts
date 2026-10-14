@@ -198,6 +198,10 @@ export class InputAction {
    * Whether the action became pressed in this frame. Stable for the whole frame, every fixed step
    * included.
    *
+   * @remarks
+   * A press and a release that both land between two frames — a quick click, a tap on a slow
+   * phone — are not lost: the action is pressed for the next frame and released in the one after.
+   *
    * @returns `true` in the one frame the press resolved.
    */
   get wasPressedThisFrame(): boolean {
