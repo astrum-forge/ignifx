@@ -235,7 +235,8 @@ interface MaterialCacheResets {
  * Makes the next renderable rebuild create fresh bind-group layouts for every material.
  *
  * @remarks
- * Call it before {@link rebuildRenderables} whenever a light gained or lost a shadow generator.
+ * Call it before {@link rebuildRenderables} whenever a light gained or lost a shadow generator,
+ * and when the scene gained its first skinned or morphed PBR mesh (`./pbr-deformers.ts`).
  * Lite caches a material's bindings, shadow bind-group layout included, under a key that does not
  * name the shadow maps (`getOrCreatePbrBindings`, `lib/material/pbr/pbr-pipeline.js` 36). So after
  * the number of shadow-casting lights changes, a rebuild reuses a layout sized for the old number
