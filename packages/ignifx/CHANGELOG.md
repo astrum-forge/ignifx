@@ -1,5 +1,32 @@
 # ignifx
 
+## 0.7.0
+
+### Patch Changes
+
+- a837a3e: Fix a black canvas when the first skinned or morph-target model in a page is added after `app.start()`: it now renders. A morph-target model can still cost a frame or two when it first appears.
+- f0f3f4f: Fix `CharacterController.isGrounded` reading false on any slope steeper than about 5°, a `HeightfieldCollider` included: a character now stands, and can jump, on every slope up to its `slopeLimit`.
+  
+  Fix tilemap chunk culling drawing only the first chunk column once the camera scrolled, when a `ParallaxLayer` band sorted first; `app.twoD.visibleWorldBounds` had the same fault.
+  
+  Fix a press and release that both land between two frames being lost: a quick click or a phone tap now resolves as a one-frame press, and its release in the frame after.
+- Updated dependencies [2ea5e9e]
+- Updated dependencies [a837a3e]
+- Updated dependencies [f0f3f4f]
+  - @ignifx/3d@0.7.0
+  - @ignifx/core@0.7.0
+  - @ignifx/devtools@0.7.0
+  - @ignifx/physics@0.7.0
+  - @ignifx/2d@0.7.0
+  - @ignifx/input@0.7.0
+  - @ignifx/audio@0.7.0
+  - @ignifx/electron@0.7.0
+  - @ignifx/particles@0.7.0
+  - @ignifx/particles-2d@0.7.0
+  - @ignifx/physics-2d@0.7.0
+  - @ignifx/terrain@0.7.0
+  - @ignifx/ui@0.7.0
+
 ## 0.6.1
 
 ### Patch Changes
