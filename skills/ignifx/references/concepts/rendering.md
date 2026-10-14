@@ -45,11 +45,14 @@ what they mean.
 - A skinned model's shadow follows its pose under every technique, whether an `Animator`, a clip or
   bone control moved it, and a shader material's shadow follows its vertex stage under PCF and CSM
   whenever one of its uniforms changes, `time` included. A map is redrawn only in a frame where some
-  caster really changed, so a paused animator costs nothing. Keep vertex displacement inside the
-  mesh's own bounds, and change a uniform when you rewrite a storage buffer the vertex stage reads
-  ([`../gotchas.md`](../gotchas.md)).
+  caster really changed, so a paused animator costs nothing. Change a uniform when you rewrite a
+  storage buffer the vertex stage reads ([`../gotchas.md`](../gotchas.md)).
 - An ESM or PCF directional map is fitted to its **casters' bounds** only, not to the receivers or
-  the camera. A single thin caster (a 3 cm pole) therefore gets a map a few centimetres wide, which
+  the camera. A vertex stage that moves vertices further than the mesh's own bounds therefore needs
+  `// @ignifx displace <metres>` in its `.wgsl` (the furthest any vertex moves, in world metres):
+  every renderer drawing with the material widens its bounds by that much, so the map still covers
+  the moved shape and GPU instance culling does not drop an instance it moved on screen
+  ([`../formats/wgsl.md`](../formats/wgsl.md)). A single thin caster (a 3 cm pole) therefore gets a map a few centimetres wide, which
   stretches ESM's blur along the pole and can leave a dark smear on the floor near it. The fix is in
   the scene: let a thin prop not cast (`castShadows: false`), give the light a larger caster beside
   it, or use `technique: "pcf"` for that light.

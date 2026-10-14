@@ -165,14 +165,17 @@ are repeated in `../SKILL.md`.
 44. **Do not assume device loss is recoverable.** Even with `features.deviceLostRecovery` on, Lite
     cannot rebuild PCF/CSM shadow generators or glTF `EXT_lights_image_based` environments, so a
     scene using either reaches `app.events.onDeviceRecoveryFailed`. Offer a page reload.
-45. **Do not move a shadow caster's vertices outside its own bounds, or from a storage buffer
-    alone.** Shadows of skinned models follow their pose under every technique, and a shader
-    material's shadow follows its vertex stage under PCF and CSM: the map is redrawn in any frame
-    a caster's bones or a shader material's uniforms (`time` included) change, and never otherwise.
-    Two cases stay stale or clipped. A directional PCF or ESM map is fitted to each caster's
-    **mesh** bounds, which know nothing of a vertex stage, so displacement beyond them is cut off
-    at the map's edge. And a storage buffer rewritten in place under the same handle is not seen;
-    change a uniform in the same frame (a counter will do).
+45. **Do not move a shadow caster's vertices outside its own bounds without `// @ignifx displace`,
+    or from a storage buffer alone.** Shadows of skinned models follow their pose under every
+    technique, and a shader material's shadow follows its vertex stage under PCF and CSM: the map
+    is redrawn in any frame a caster's bones or a shader material's uniforms (`time` included)
+    change, and never otherwise. Two cases stay stale or clipped. A directional PCF or ESM map is
+    fitted to each caster's **mesh** bounds, which know nothing of a vertex stage, so displacement
+    beyond them is cut off at the map's edge, and a GPU-culled instance moved onto the screen is
+    dropped. Declare the furthest a vertex moves with `// @ignifx displace <metres>` in the
+    `.wgsl`, and the engine widens the bounds of every mesh drawn with it. And a storage buffer
+    rewritten in place under the same handle is not seen; change a uniform in the same frame (a
+    counter will do).
 46. **Do not expect `Environment.blur` to soften reflections.** Babylon Lite's `setEnvironmentBlur`
     only blurs the visible skybox: it patches the skybox shader's cube-map sample level, and no
     material reads the value. Lighting and reflections stay as sharp as before, and with
