@@ -806,7 +806,7 @@
         "blur": {
           "kind": "f32",
           "default": "0",
-          "description": "How blurred the specular reflection is."
+          "description": "How blurred the visible skybox is, 0 to 1. Reflections and lighting are not blurred."
         },
         "skybox": {
           "kind": "record",
@@ -874,7 +874,7 @@
         "blur": {
           "kind": "f32",
           "default": "0",
-          "description": "How blurred the specular reflection is, 0 to 1."
+          "description": "How blurred the visible skybox is, 0 to 1; reflections are not blurred."
         },
         "rotation": {
           "kind": "f32",
@@ -1207,7 +1207,7 @@
         "gpuCulling": {
           "kind": "bool",
           "default": "true",
-          "description": "Cull instances on the GPU; fixed once the scene is registered."
+          "description": "Cull instances on the GPU; fixed once the scene is registered. The lod partner needs it."
         },
         "castShadows": {
           "kind": "bool",
@@ -1232,7 +1232,7 @@
         "lod": {
           "kind": "optional",
           "default": "null",
-          "description": "An optional coarse mesh for far instances; needs gpuCulling."
+          "description": "An optional coarse mesh for far instances; draws only while gpuCulling is on."
         }
       }
     },
@@ -2798,6 +2798,11 @@
           "kind": "f32",
           "default": "4.5",
           "description": "How far behind the target the camera sits, in metres."
+        },
+        "minDistance": {
+          "kind": "f32",
+          "default": "0.5",
+          "description": "The shortest the boom gets when geometry pulls it in, in metres. Below this the camera may enter the obstacle."
         },
         "minPitch": {
           "kind": "f32",

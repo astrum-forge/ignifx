@@ -89,7 +89,7 @@ export interface EnvironmentDefinition {
   readonly skyboxSize: number;
   /** Whether a skybox is drawn at all. */
   readonly skyboxEnabled: boolean;
-  /** How blurred the specular reflection is, 0 to 1. */
+  /** How blurred the visible skybox is, 0 to 1. Reflections are not blurred. */
   readonly blur: number;
   /** Rotation around the world Y axis, in degrees. */
   readonly rotation: number;

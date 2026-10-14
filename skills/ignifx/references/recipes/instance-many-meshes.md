@@ -10,6 +10,8 @@ so moving instances is writing into the slab and calling `markDirty(range)`.
 `capacity` sizes the GPU buffer once. `gpuCulling` and `lod` are applied when the meshes are
 created, before the scene is registered, so changing either after `app.start()` is refused with
 `IGX-0717`; `setCount` changes how many of the slab's instances are drawn without re-uploading.
+`lod` needs `gpuCulling`: the culling pass picks the far instances, so with it off the coarse
+mesh never draws (`IGX-0727`).
 
 Everything below runs headless: the component holds the slab and the count with no device, which
 is what lets a test assert an asteroid field it cannot see.

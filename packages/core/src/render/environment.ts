@@ -227,6 +227,14 @@ export class Environment extends Component implements ComponentHooks {
 
   declare rotation: number;
 
+  /**
+   * How blurred the visible skybox is, 0 to 1. Defaults to `0`.
+   *
+   * @remarks
+   * Babylon Lite blurs only the skybox it draws; lighting and reflections stay sharp, and with the
+   * skybox off this changes nothing on screen. Raise a material's `roughness` to soften its
+   * reflection.
+   */
   declare blur: number;
 
   declare skybox: EnvironmentSkyboxSettings;
@@ -561,7 +569,11 @@ function environmentSchema(): Schema {
   return defineSchema({
     environment: asset(EnvironmentAsset, { tooltip: "The .env image-based lighting to install." }),
     rotation: f32(0, { tooltip: "Rotation of the environment around world Y, in degrees." }),
-    blur: f32(0, { min: 0, max: 1, tooltip: "How blurred the specular reflection is." }),
+    blur: f32(0, {
+      min: 0,
+      max: 1,
+      tooltip: "How blurred the visible skybox is, 0 to 1. Reflections and lighting are not blurred.",
+    }),
     skybox: record(
       {
         enabled: bool(SKYBOX_ENABLED_DEFAULT, {

@@ -428,6 +428,40 @@ describe("settings Lite fixes at registerScene", () => {
     expect(warnings).toHaveLength(1);
   });
 
+  it("log IGX-0727 once when a LOD partner is declared with GPU culling off, since the partner never draws", async () => {
+    const running = await createRenderHarness();
+    harness = running;
+    running.app.registerComponents([InstancedMeshRenderer]);
+    const mesh = MeshAsset.box(running.app, { size: 1 });
+    const coarse = MeshAsset.box(running.app, { size: 0.25 });
+    const renderer = running.world.createEntity("Cloud").addComponent(InstancedMeshRenderer, {
+      mesh,
+      capacity: 4,
+      gpuCulling: false,
+      lod: { mesh: coarse, distance: 20, band: 2 },
+    });
+    await running.settle();
+    renderer.capacity = 8;
+    await running.settle();
+    const warnings = warningsOf(running).filter((message) => message.includes("IGX-0727"));
+    expect(warnings).toHaveLength(1);
+  });
+
+  it("stay quiet about a LOD partner while GPU culling is on", async () => {
+    const running = await createRenderHarness();
+    harness = running;
+    running.app.registerComponents([InstancedMeshRenderer]);
+    const mesh = MeshAsset.box(running.app, { size: 1 });
+    const coarse = MeshAsset.box(running.app, { size: 0.25 });
+    running.world.createEntity("Cloud").addComponent(InstancedMeshRenderer, {
+      mesh,
+      capacity: 4,
+      lod: { mesh: coarse, distance: 20, band: 2 },
+    });
+    await running.settle();
+    expect(warningsOf(running).join("\n")).not.toContain("IGX-0727");
+  });
+
   it("keep accepting a LOD distance and band change, which Lite re-sets live", async () => {
     const running = await createRenderHarness();
     harness = running;

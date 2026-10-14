@@ -72,6 +72,10 @@ function noMatrices(): Float32Array {
  * The `lod` field of an {@link InstancedMeshRenderer}: a coarser mesh for far instances.
  *
  * @remarks
+ * The far instances are chosen by the GPU culling pass, so the partner draws only while
+ * `gpuCulling` is on. With it off every instance draws the full mesh and the partner draws
+ * nothing; the renderer logs `IGX-0727` once.
+ *
  * Mutable, because a schema `record()` field is a plain object a script edits in place — and
  * `distance` and `band` are meant to be edited, which Lite re-applies live. Replacing `mesh` after
  * the scene is registered is refused with `IGX-0717`.
@@ -145,6 +149,10 @@ export class InstancedMeshRenderer extends Component implements ComponentHooks {
 
   declare capacity: number;
 
+  /**
+   * Whether instances are culled on the GPU. Defaults to `true`; fixed once the scene is registered.
+   * The `lod` partner needs it: with culling off the partner draws nothing (`IGX-0727`).
+   */
   declare gpuCulling: boolean;
 
   declare castShadows: boolean;
@@ -196,6 +204,8 @@ export class InstancedMeshRenderer extends Component implements ComponentHooks {
   #hasAppliedSettings = false;
 
   #hasWarnedAboutLateSetting = false;
+
+  #hasWarnedAboutLodWithoutCulling = false;
 
   /**
    * The Babylon Lite meshes this renderer draws. Unstable escape hatch
@@ -441,6 +451,24 @@ export class InstancedMeshRenderer extends Component implements ComponentHooks {
   }
 
   /**
+   * Says once, at warning level, that a LOD partner was declared with GPU culling off. Lite picks
+   * the far instances in the culling pass, so without it the partner never draws.
+   *
+   * @param lod - The `lod` field being applied.
+   */
+  #warnAboutLodWithoutCulling(lod: InstancedMeshLod | null): void {
+    if (this.#hasWarnedAboutLodWithoutCulling || this.gpuCulling || lod === null || lod.mesh === null) {
+      return;
+    }
+    this.#hasWarnedAboutLodWithoutCulling = true;
+    this.app.log.warn(
+      `${CoreErrorCode.instancingLodWithoutCulling}: {entity} declares an InstancedMeshRenderer lod with ` +
+        "gpuCulling off; the LOD mesh never draws. Turn gpuCulling on.",
+      this.entity.name,
+    );
+  }
+
+  /**
    * Builds or rebuilds the meshes when the template or a baked setting changed.
    *
    * @param renderer - The rendering service, for the scene.
@@ -468,6 +496,7 @@ export class InstancedMeshRenderer extends Component implements ComponentHooks {
     this.#appliedLodHandle = lodField?.mesh ?? null;
     this.#upload.appliedCapacity = capacity;
     this.#appliedGpuCulling = this.gpuCulling;
+    this.#warnAboutLodWithoutCulling(lodField);
     const template = loaded?.lite.mesh ?? null;
     if (template === null) {
       return removed;
@@ -620,7 +649,9 @@ function instancedMeshRendererSchema(): Schema {
     mesh: asset(MeshAsset, { tooltip: "The geometry template every instance draws." }),
     materials: array(asset(MaterialAsset), [], { tooltip: "Index 0 draws; empty uses the default material." }),
     capacity: u32(1024, { min: 1, tooltip: "The largest instance count; fixed once the scene is registered." }),
-    gpuCulling: bool(true, { tooltip: "Cull instances on the GPU; fixed once the scene is registered." }),
+    gpuCulling: bool(true, {
+      tooltip: "Cull instances on the GPU; fixed once the scene is registered. The lod partner needs it.",
+    }),
     castShadows: bool(true, { tooltip: "Whether the instances are rendered into shadow maps." }),
     receiveShadows: bool(true, { tooltip: "Whether shadow maps darken the instances." }),
     renderOrder: i32(0, { tooltip: "Sort key within the opaque or transparent phase; lower draws first." }),
@@ -631,7 +662,7 @@ function instancedMeshRendererSchema(): Schema {
         distance: f32(40, { min: 0, tooltip: "Camera distance, in metres, at which an instance switches." }),
         band: f32(6, { min: 0, tooltip: "Width of the per-instance dither window centred on the distance." }),
       }),
-      { tooltip: "An optional coarse mesh for far instances; needs gpuCulling." },
+      { tooltip: "An optional coarse mesh for far instances; draws only while gpuCulling is on." },
     ),
   });
 }
