@@ -4373,14 +4373,16 @@ Layer mask and trigger behaviour.
 
 readonly `Entity`[]
 
-The overlapping entities, in body creation order. The array is reused between calls.
+The overlapping entities, each once: bodies in creation order, then characters in
+creation order. The array is reused between calls.
 
 ###### Remarks
 
 Lite's `shapeProximity` reports one hit and no identity (`index.d.ts` 11540,
 `lib/physics/havok-queries.js:7`), so this is answered from the extension's own bounds index:
-every registered body whose world bounding box intersects the query shape's. It is conservative
-— a body whose box overlaps but whose shape does not is listed.
+every `Rigidbody`, collider-only body and `CharacterController` capsule whose world bounding box
+intersects the query shape's. It is conservative — a body whose box overlaps but whose shape
+does not is listed.
 
 ###### Throws
 
@@ -4423,6 +4425,12 @@ Layer mask and trigger behaviour.
 [`RaycastHit`](#raycasthit) \| `null`
 
 The hit, or `null` when the ray clears everything.
+
+###### Remarks
+
+The ray hits `Rigidbody` and collider-only bodies and `CharacterController` capsules. A capsule
+hit reports the character's entity with `collider: null`. A ray passes through a capsule when
+`layerMask` leaves out the character's layer, or when the ray starts inside it.
 
 ###### Throws
 
@@ -4487,7 +4495,9 @@ The hit, or `null`.
 ###### Remarks
 
 Lite's `shapeCast` reports no body (`index.d.ts` 11497), so `entity` is resolved against the
-extension's body-bounds index and is bounds-accurate rather than shape-accurate.
+extension's body-bounds index and is bounds-accurate rather than shape-accurate. The index holds
+every `Rigidbody` and collider-only body and every `CharacterController` capsule; a capsule
+contact reports the character's entity with `collider: null`.
 
 The sweep itself cannot be filtered by layer — Lite's `ShapeCastQuery` carries no collision
 masks — so a body outside `layerMask` still stops the sweep; it is merely reported with
@@ -6081,7 +6091,8 @@ copies out of it.
 
 > `readonly` **collider**: [`Collider`](#abstract-collider) \| `null`
 
-The collider on that entity, or `null` when the entity has none registered any more.
+The collider on that entity, or `null` for a `CharacterController` capsule or an entity with no
+collider registered any more.
 
 ##### distance
 
@@ -6093,7 +6104,7 @@ The distance from the ray origin, in metres.
 
 > `readonly` **entity**: `Entity`
 
-The entity that was hit.
+The entity that was hit: a body's entity, or a `CharacterController`'s entity for its capsule.
 
 ##### normal
 
@@ -6140,7 +6151,7 @@ What a shape sweep hit.
 
 > `readonly` **collider**: [`Collider`](#abstract-collider) \| `null`
 
-The collider on that entity, or `null`.
+The collider on that entity, or `null`, which is always the case for a capsule.
 
 ##### distance
 
@@ -6152,7 +6163,8 @@ The distance travelled before contact, in metres.
 
 > `readonly` **entity**: `Entity` \| `null`
 
-The entity the swept shape hit, or `null` when the bounds index cannot identify it.
+The entity the swept shape hit — a `CharacterController`'s entity for its capsule — or `null`
+when the bounds index cannot identify it or `layerMask` excludes it.
 
 ##### fraction
 

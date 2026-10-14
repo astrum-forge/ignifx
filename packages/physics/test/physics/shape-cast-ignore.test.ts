@@ -85,9 +85,8 @@ describe("shapeCast with an ignored entity", () => {
       const blocked = harness.app.physics.shapeCast(sweep, pivot, far);
       expect(blocked).not.toBeNull();
       expect(blocked?.fraction ?? 1).toBeLessThan(0.05);
-      // A controller's capsule is not in the body-bounds index, so the hit is geometry with no
-      // entity — which is exactly why a rig could not tell it apart from a wall.
-      expect(blocked?.entity ?? null).toBeNull();
+      // The capsule is attributed to the player since 2026-10-14; before that it came back with no entity.
+      expect(blocked?.entity).toBe(player);
 
       const through = harness.app.physics.shapeCast(sweep, pivot, far, { ignore: player });
       expect(through).not.toBeNull();

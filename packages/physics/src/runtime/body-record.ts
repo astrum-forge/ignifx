@@ -48,3 +48,22 @@ export interface BodyRecord {
   /** Signal connections the record owns, dropped when it is torn down. */
   disconnects: Disconnect[];
 }
+
+/**
+ * What a query can resolve a hit to: a {@link BodyRecord}, or a `CharacterController`'s capsule,
+ * which is a Havok body the runtime keeps with its controllers rather than its body records.
+ *
+ * @internal
+ */
+export interface QueryTarget {
+  /** The entity a hit is reported against. */
+  readonly entity: Entity;
+  /** The colliders that make up the body; empty for a character capsule. */
+  readonly colliders: readonly Collider[];
+  /** The layer queries filter by; a runtime `entity.layer` change lands on the next fixed step. */
+  readonly layer: number;
+  /** The centre of the world bounding box, as of the last fixed step. */
+  readonly currentPosition: Vec3;
+  /** Half the world bounding box. */
+  readonly halfExtents: Vec3;
+}

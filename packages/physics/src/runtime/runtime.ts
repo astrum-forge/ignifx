@@ -5,6 +5,7 @@ import { PhysicsErrorCode, physicsError } from "../errors.js";
 import {
   SupportState,
   controllerBody,
+  controllerNode,
   createController,
   disposeController,
   moveController,
@@ -55,7 +56,7 @@ import {
   writeNodePose,
 } from "../lite/havok.js";
 import { drainCollisionsWithBodies } from "../lite/internal/collision-drain.js";
-import type { BodyRecord } from "./body-record.js";
+import type { BodyRecord, QueryTarget } from "./body-record.js";
 import type { CharacterController, SupportStateName } from "../components/character-controller.js";
 import type { ContactPoint } from "../events.js";
 import type { CharacterPush, LiteCharacterController } from "../lite/character.js";
@@ -145,12 +146,19 @@ interface ContactSlot {
   second: BodyRecord | null;
 }
 
-/** One character controller's runtime state. */
-interface ControllerRecord {
+/**
+ * One character controller's runtime state. It is also the capsule's entry in the query index, so
+ * `currentPosition` is the capsule centre and `halfExtents` its bounding box.
+ */
+interface ControllerRecord extends QueryTarget {
   /** The component. */
   readonly component: CharacterController;
   /** Lite's controller. */
   readonly controller: LiteCharacterController;
+  /** The node of the capsule's Havok body, which a ray hit reports. */
+  readonly node: LiteSceneNode;
+  /** The entity's layer as of the last fixed step. */
+  layer: number;
   /** The pose at the end of the previous step. */
   readonly previousPosition: Vec3;
   /** The authoritative pose at the end of the last step. */
@@ -243,6 +251,8 @@ export class PhysicsRuntime {
   readonly #dirty = new Set<Entity>();
 
   readonly #controllers: ControllerRecord[] = [];
+
+  readonly #controllersByNode = new Map<LiteSceneNode, ControllerRecord>();
 
   readonly #dirtyControllers = new Set<CharacterController>();
 
@@ -538,6 +548,40 @@ export class PhysicsRuntime {
     return node === null ? null : (this.#byNode.get(node) ?? null);
   }
 
+  /**
+   * What a query hit on a Lite node: a body record, or a character controller's capsule.
+   *
+   * @param node - The node of the body that was hit.
+   * @returns The target, or `null` when the node belongs to neither.
+   */
+  targetOfNode(node: LiteSceneNode | null): QueryTarget | null {
+    if (node === null) {
+      return null;
+    }
+    return this.#byNode.get(node) ?? this.#controllersByNode.get(node) ?? null;
+  }
+
+  /**
+   * How many entries the query index holds: every body record, then every character controller.
+   *
+   * @returns The count.
+   */
+  get queryTargetCount(): number {
+    return this.#records.length + this.#controllers.length;
+  }
+
+  /**
+   * One entry of the query index. Bodies come first and controllers after, each in creation order,
+   * so `overlap` lists them in a stable order (`09-physics.md` §8).
+   *
+   * @param index - An index below {@link PhysicsRuntime.queryTargetCount}.
+   * @returns The target, or `undefined` past the end.
+   */
+  queryTargetAt(index: number): QueryTarget | undefined {
+    const bodies = this.#records.length;
+    return index < bodies ? this.#records[index] : this.#controllers[index - bodies];
+  }
+
   /** Counts one query for the diagnostics group. */
   countQuery(): void {
     this.#queries += 1;
@@ -693,6 +737,8 @@ export class PhysicsRuntime {
     const record = this.#controllerOf(component);
     if (record !== null) {
       resizeLiteController(record.controller, component.height, component.radius, preserveFeet);
+      // The centre catches up on the next fixed step, which is also when Havok moves the body.
+      capsuleHalfExtents(component.height, component.radius, record.halfExtents);
     }
   }
 
@@ -729,6 +775,7 @@ export class PhysicsRuntime {
         record.disconnect();
         disposeController(record.controller);
         this.#controllers.splice(index, 1);
+        this.#controllersByNode.delete(record.node);
         return;
       }
     }
@@ -751,6 +798,7 @@ export class PhysicsRuntime {
       }
     }
     this.#controllers.length = 0;
+    this.#controllersByNode.clear();
     for (let index = this.#records.length - 1; index >= 0; index -= 1) {
       const record = this.#records[index];
       if (record !== undefined) {
@@ -1171,6 +1219,14 @@ export class PhysicsRuntime {
       // `#rebuildEntity` carries the velocities across so the change is not felt as a teleport.
       this.markDirty(record.entity);
     }
+    // A capsule's layer only steers queries: Lite builds its shape with every filter bit set and
+    // gives no access to it, so there is nothing to rebuild.
+    for (let index = 0; index < this.#controllers.length; index += 1) {
+      const record = this.#controllers[index];
+      if (record !== undefined) {
+        record.layer = record.entity.layer;
+      }
+    }
   }
 
   /**
@@ -1290,6 +1346,11 @@ export class PhysicsRuntime {
     const record: ControllerRecord = {
       component,
       controller,
+      node: controllerNode(controller),
+      entity: component.entity,
+      colliders: NO_COLLIDERS,
+      layer: component.entity.layer,
+      halfExtents: capsuleHalfExtents(component.height, component.radius, new Vec3()),
       previousPosition: centre.clone(),
       currentPosition: centre.clone(),
       interpolate: this.#settings.interpolation && component.interpolation === "interpolate",
@@ -1301,6 +1362,7 @@ export class PhysicsRuntime {
       this.#reportPush(record, push);
     });
     this.#controllers.push(record);
+    this.#controllersByNode.set(record.node, record);
   }
 
   /**
@@ -1537,6 +1599,23 @@ export class PhysicsRuntime {
 
 /** Lite's own `characterStrength` default, which `pushStrength: 1` reproduces (`index.d.ts` 8320). */
 const DEFAULT_CHARACTER_STRENGTH = 1e38;
+
+/** The collider list of a character capsule, which is built from the controller, not from colliders. */
+const NO_COLLIDERS: readonly Collider[] = Object.freeze([]);
+
+/**
+ * The half-extents of a controller capsule's bounding box. Lite places the capsule's segment ends at
+ * `±(height / 2 - radius)` (`createPhysicsCharacterController`), and the capsule does not scale with
+ * the entity.
+ *
+ * @param height - The capsule's total height.
+ * @param radius - Its radius.
+ * @param out - The vector to write.
+ * @returns `out`.
+ */
+function capsuleHalfExtents(height: number, radius: number, out: Vec3): Vec3 {
+  return out.set(radius, Math.abs(height / 2 - radius) + radius, radius);
+}
 
 /**
  * The colliders that make up an entity's body: every enabled `Collider` on the entity itself.
