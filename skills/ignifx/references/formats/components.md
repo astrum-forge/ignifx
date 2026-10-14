@@ -227,7 +227,7 @@ The world's image-based lighting, skybox, fog, image processing, and clear colou
 |---|---|---|---|
 | `environment` | `asset` | `null` | The .env image-based lighting to install. |
 | `rotation` | `f32` | `0` | Rotation of the environment around world Y, in degrees. |
-| `blur` | `f32` | `0` | How blurred the specular reflection is. |
+| `blur` | `f32` | `0` | How blurred the visible skybox is, 0 to 1. Reflections and lighting are not blurred. |
 | `skybox` | `record` | `{"enabled":true,"size":20}` | The background, as the installed .environment.json declared it. Read-only in practice. |
 | `fog` | `record` | `{"mode":"none","color":[0.784314,0.784314,0.784314,1],"density":0.01,"start":10,"end":100}` | Distance fog. |
 | `imageProcessing` | `record` | `{"exposure":1,"contrast":1,"toneMapping":"none"}` | Exposure, contrast, and tone mapping. Recompiles PBR pipelines when it changes. |
@@ -305,12 +305,12 @@ Draws one mesh many times from a caller-owned matrix slab, in a single draw call
 | `mesh` | `asset` | `null` | The geometry template every instance draws. |
 | `materials` | `array` | `[]` | Index 0 draws; empty uses the default material. |
 | `capacity` | `u32` | `1024` | The largest instance count; fixed once the scene is registered. |
-| `gpuCulling` | `bool` | `true` | Cull instances on the GPU; fixed once the scene is registered. |
+| `gpuCulling` | `bool` | `true` | Cull instances on the GPU; fixed once the scene is registered. The lod partner needs it. |
 | `castShadows` | `bool` | `true` | Whether the instances are rendered into shadow maps. |
 | `receiveShadows` | `bool` | `true` | Whether shadow maps darken the instances. |
 | `renderOrder` | `i32` | `0` | Sort key within the opaque or transparent phase; lower draws first. |
 | `pickable` | `bool` | `false` | Whether picking considers the instances; a hit names no instance index. |
-| `lod` | `optional` | `null` | An optional coarse mesh for far instances; needs gpuCulling. |
+| `lod` | `optional` | `null` | An optional coarse mesh for far instances; draws only while gpuCulling is on. |
 
 ## Light (`ignifx/Light`)
 
@@ -667,6 +667,7 @@ One sprite drawn from one frame of one atlas, on one sorting layer.
 | `target` | `entityRef` | `null` | The entity the camera orbits. |
 | `lookAction` | `str` | `"Look"` | The vector2 action that orbits the camera. |
 | `distance` | `f32` | `4.5` | How far behind the target the camera sits, in metres. |
+| `minDistance` | `f32` | `0.5` | The shortest the boom gets when geometry pulls it in, in metres. Below this the camera may enter the obstacle. |
 | `minPitch` | `f32` | `-30` | The lowest pitch, in degrees. |
 | `maxPitch` | `f32` | `60` | The highest pitch, in degrees. |
 | `sensitivity` | `f32` | `0.2` | Degrees of orbit per unit of pointer look; for a mouse, degrees per CSS pixel. |

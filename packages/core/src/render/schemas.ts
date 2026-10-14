@@ -198,7 +198,11 @@ export function describeEnvironmentFileFormat(): SchemaDescription {
         default: true,
         description: "Whether a skybox is drawn at all; decided here, not on the component.",
       },
-      blur: { kind: "f32", default: 0, description: "How blurred the specular reflection is, 0 to 1." },
+      blur: {
+        kind: "f32",
+        default: 0,
+        description: "How blurred the visible skybox is, 0 to 1; reflections are not blurred.",
+      },
       rotation: { kind: "f32", default: 0, description: "Rotation around world Y, in degrees." },
     },
   };

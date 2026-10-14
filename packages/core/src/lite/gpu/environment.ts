@@ -333,7 +333,7 @@ export function setSceneEnvironmentRotation(scene: SceneContext, degrees: number
 }
 
 /**
- * Blurs the environment's specular reflection.
+ * Blurs the visible skybox. Babylon Lite patches only the skybox shader; no material reads the value.
  *
  * @param scene - The scene to change.
  * @param blur - The blur amount, 0 to 1.

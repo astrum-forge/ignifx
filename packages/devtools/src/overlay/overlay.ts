@@ -36,6 +36,12 @@ export const DEVTOOLS_LAYER_Z_INDEX = 1_000_000;
 export const DEVTOOLS_UI_LAYER = "devtools";
 
 /**
+ * How much of the page a side-docked overlay leaves uncovered, in CSS pixels, so a narrow page
+ * keeps a strip of its own controls visible beside the overlay.
+ */
+const SIDE_DOCK_MARGIN_PX = 40;
+
+/**
  * What {@link DevtoolsOverlay} is constructed with.
  *
  * @internal
@@ -51,6 +57,8 @@ export interface DevtoolsOverlayOptions {
   readonly panels: readonly DevtoolsPanel[];
   /** The resolved settings. */
   readonly settings: DevtoolsSettings;
+  /** Called when the overlay's own close button is pressed. */
+  readonly onClose: () => void;
 }
 
 /** One tab's live state. */
@@ -246,6 +254,17 @@ export class DevtoolsOverlay {
       layer.append(root);
     }
     const strip = element(target.document, "div", DEVTOOLS_CLASS_NAMES.tabs);
+    // A visible way out: on a phone there is no backtick key, and the overlay can cover the page's
+    // own controls.
+    const close = element(target.document, "button", DEVTOOLS_CLASS_NAMES.close);
+    close.type = "button";
+    close.title = "Close devtools";
+    close.setAttribute("aria-label", "Close devtools");
+    setText(close, "×");
+    close.addEventListener("click", (): void => {
+      this.#options.onClose();
+    });
+    strip.append(close);
     const body = element(target.document, "div", DEVTOOLS_CLASS_NAMES.body);
     root.append(strip, body);
     this.#root = root;
@@ -274,6 +293,7 @@ export class DevtoolsOverlay {
     style.setProperty("left", position === "right" ? "auto" : "0");
     style.setProperty("right", position === "left" ? "auto" : "0");
     style.setProperty("width", horizontal ? "380px" : "100%");
+    style.setProperty("max-width", horizontal ? `calc(100% - ${String(SIDE_DOCK_MARGIN_PX)}px)` : "100%");
     style.setProperty("height", horizontal ? "auto" : "40%");
   }
 

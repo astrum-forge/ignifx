@@ -13,6 +13,22 @@ export interface TouchButton {
   readonly control: string;
   /** The glyph or word drawn on the button. */
   readonly label: string;
+  /** What a screen reader announces for the button, already localized. */
+  readonly ariaLabel: string;
+}
+
+/** What {@link createGameUi} needs to know that is not on the app. */
+export interface GameUiOptions {
+  /** The loading screen's label, already localized. */
+  readonly loadingLabel: string;
+  /** The on-screen buttons to draw beside the stick, right to left. */
+  readonly buttons: readonly TouchButton[];
+  /** What a screen reader announces for the move stick, already localized. */
+  readonly moveLabel: string;
+  /** What a screen reader announces for the pause button, already localized. */
+  readonly pauseLabel: string;
+  /** Whether to build the on-screen controls at all. */
+  readonly touch: boolean;
 }
 
 /** What {@link createGameUi} hands back. */
@@ -38,13 +54,11 @@ export function hasTouch(): boolean {
  * Builds the overlay.
  *
  * @param app - The running app. `app.ui` is mounted by the time `createApp` resolves.
- * @param label - The loading screen's label, already localized.
- * @param buttons - The on-screen buttons to draw beside the stick, right to left.
- * @param touch - Whether to build the on-screen controls at all.
+ * @param options - The localized strings, the buttons, and whether touch controls are wanted.
  * @returns The widgets, and a way to remove them.
  */
-export function createGameUi(app: App, label: string, buttons: readonly TouchButton[], touch: boolean): GameUi {
-  const loading = new LoadingScreen(app.ui, { label });
+export function createGameUi(app: App, options: GameUiOptions): GameUi {
+  const loading = new LoadingScreen(app.ui, { label: options.loadingLabel });
   // Follows `app.assets.onProgress`, bytes-weighted where the build recorded sizes. It is
   // connected before the first `load` call so the bar starts at the first byte.
   loading.bindTo(app.assets);
@@ -58,9 +72,12 @@ export function createGameUi(app: App, label: string, buttons: readonly TouchBut
   }
 
   const widgets: { dispose(): void }[] = [];
-  if (touch) {
+  if (options.touch) {
     const bottom = "calc(2rem + var(--ignifx-safe-bottom, 0px))";
-    widgets.push(new VirtualJoystick(app, { control: "joystick", style: { left: "2rem", bottom } }));
+    widgets.push(
+      new VirtualJoystick(app, { control: "joystick", ariaLabel: options.moveLabel, style: { left: "2rem", bottom } }),
+    );
+    const buttons = options.buttons;
     for (let index = 0; index < buttons.length; index += 1) {
       const button = buttons[index];
       if (button !== undefined) {
@@ -68,6 +85,7 @@ export function createGameUi(app: App, label: string, buttons: readonly TouchBut
           new VirtualButton(app, {
             control: button.control,
             label: button.label,
+            ariaLabel: button.ariaLabel,
             style: { right: `${String(2 + index * 6)}rem`, bottom },
           }),
         );
@@ -77,6 +95,7 @@ export function createGameUi(app: App, label: string, buttons: readonly TouchBut
       new VirtualButton(app, {
         control: "pause",
         label: "II",
+        ariaLabel: options.pauseLabel,
         style: { right: "2rem", top: "calc(2rem + var(--ignifx-safe-top, 0px))", width: "3rem", height: "3rem" },
       }),
     );

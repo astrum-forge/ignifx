@@ -24,6 +24,22 @@ export interface GameUi {
   dispose(): void;
 }
 
+/** What a screen reader announces for each on-screen control, already localized. */
+export interface TouchLabels {
+  /** The move stick. */
+  readonly move: string;
+  /** The look stick. */
+  readonly look: string;
+  /** The jump button. */
+  readonly jump: string;
+  /** The interact button. */
+  readonly interact: string;
+  /** The crouch button. */
+  readonly crouch: string;
+  /** The pause button. */
+  readonly pause: string;
+}
+
 /** What {@link createGameUi} needs to know that is not on the app. */
 export interface GameUiOptions {
   /** The loading screen's label, already localized. */
@@ -32,6 +48,8 @@ export interface GameUiOptions {
   readonly lockHint: string;
   /** Whether to build the on-screen controls. */
   readonly touch: boolean;
+  /** The on-screen controls' accessible names. */
+  readonly touchLabels: TouchLabels;
 }
 
 /**
@@ -83,15 +101,34 @@ export function createGameUi(app: App, options: GameUiOptions): GameUi {
   const widgets: { dispose(): void }[] = [];
   if (options.touch) {
     const bottom = "calc(2rem + var(--ignifx-safe-bottom, 0px))";
+    const labels = options.touchLabels;
+    // Jump, interact and crouch stack in one column beside the look stick. A button placed from the
+    // right edge further left than this lands on the move stick on a phone-width screen.
     widgets.push(
-      new VirtualJoystick(app, { control: "joystick", style: { left: "2rem", bottom } }),
-      new VirtualJoystick(app, { control: "look", style: { right: "2rem", bottom } }),
-      new VirtualButton(app, { control: "jump", label: "▲", style: { right: "11rem", bottom } }),
-      new VirtualButton(app, { control: "interact", label: "E", style: { right: "11rem", bottom: "7rem" } }),
-      new VirtualButton(app, { control: "crouch", label: "▼", style: { right: "18rem", bottom } }),
+      new VirtualJoystick(app, { control: "joystick", ariaLabel: labels.move, style: { left: "2rem", bottom } }),
+      new VirtualJoystick(app, { control: "look", ariaLabel: labels.look, style: { right: "2rem", bottom } }),
+      new VirtualButton(app, {
+        control: "jump",
+        label: "▲",
+        ariaLabel: labels.jump,
+        style: { right: "11rem", bottom },
+      }),
+      new VirtualButton(app, {
+        control: "interact",
+        label: "E",
+        ariaLabel: labels.interact,
+        style: { right: "11rem", bottom: "7rem" },
+      }),
+      new VirtualButton(app, {
+        control: "crouch",
+        label: "▼",
+        ariaLabel: labels.crouch,
+        style: { right: "11rem", bottom: "12rem" },
+      }),
       new VirtualButton(app, {
         control: "pause",
         label: "II",
+        ariaLabel: labels.pause,
         style: { right: "2rem", top: "calc(2rem + var(--ignifx-safe-top, 0px))", width: "3rem", height: "3rem" },
       }),
     );

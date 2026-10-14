@@ -494,6 +494,14 @@ async function main(): Promise<AppStatus> {
     loadingLabel: app.i18n.t("loading.label"),
     lockHint: app.i18n.t("hint.lock"),
     touch: !isStatic && !isBench && hasTouch(),
+    touchLabels: {
+      move: app.i18n.t("action.move"),
+      look: app.i18n.t("action.look"),
+      jump: app.i18n.t("action.jump"),
+      interact: app.i18n.t("action.interact"),
+      crouch: app.i18n.t("action.crouch"),
+      pause: app.i18n.t("action.pause"),
+    },
   });
   // The golden is about the rendered scene, not about how this machine draws a system font, and a
   // frame-time run should not be measuring DOM layout either.

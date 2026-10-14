@@ -646,6 +646,7 @@ export const CoreErrorCode: {
     readonly shaderMaterialEsmCasterSkipped: "IGX-0724";
     readonly invalidGeometryUpdate: "IGX-0725";
     readonly surfaceSamplerBudgetExceeded: "IGX-0726";
+    readonly instancingLodWithoutCulling: "IGX-0727";
     readonly cryptoUnavailable: "IGX-1420";
     readonly storageInvalidNamespace: "IGX-1421";
     readonly storageInvalidKey: "IGX-1422";
@@ -1093,7 +1094,6 @@ export function enumOf<const T extends string>(values: readonly T[], defaultValu
 export class Environment extends Component implements ComponentHooks {
     constructor();
     static allowMultiple: boolean;
-    // (undocumented)
     blur: number;
     // (undocumented)
     clearColor: ColorLike | null;
@@ -1527,7 +1527,6 @@ export class InstancedMeshRenderer extends Component implements ComponentHooks {
     // @internal
     consumeCasterChange(): boolean;
     get count(): number;
-    // (undocumented)
     gpuCulling: boolean;
     get isVisible(): boolean;
     get lite(): InstancedMeshRendererLiteHandles;

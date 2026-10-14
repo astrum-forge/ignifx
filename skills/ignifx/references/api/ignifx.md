@@ -13493,7 +13493,7 @@ Whether the overlay is up.
 
 `boolean`
 
-`true` between [DevtoolsService.open](#open) and [DevtoolsService.close](#close).
+`true` between [DevtoolsService.open](#open) and [DevtoolsService.close](#close-1).
 
 ##### isSceneReloadDelegated
 
@@ -15973,6 +15973,14 @@ One per entity, and effectively one per world: the fields are all scene state.
 ##### blur
 
 > **blur**: `number`
+
+How blurred the visible skybox is, 0 to 1. Defaults to `0`.
+
+###### Remarks
+
+Babylon Lite blurs only the skybox it draws; lighting and reflections stay sharp, and with the
+skybox off this changes nothing on screen. Raise a material's `roughness` to soften its
+reflection.
 
 ##### clearColor
 
@@ -22486,6 +22494,9 @@ Several instanced renderers on one entity draw several clouds from one transform
 ##### gpuCulling
 
 > **gpuCulling**: `boolean`
+
+Whether instances are culled on the GPU. Defaults to `true`; fixed once the scene is registered.
+The `lod` partner needs it: with culling off the partner draws nothing (`IGX-0727`).
 
 ##### lod
 
@@ -49415,6 +49426,20 @@ The vector2 action that orbits the camera.
 
 The highest pitch, in degrees.
 
+##### minDistance
+
+> **minDistance**: `number`
+
+The shortest the boom gets when geometry pulls it in, in metres. Defaults to `0.5`; capped at
+`distance`.
+
+###### Remarks
+
+Without a floor, backing the target into a corner pulls the camera inside the target's own
+mesh. With one, the camera stops here and may enter the obstacle instead. Raise it if the
+near plane still clips the target; to hide the model when the camera is close, compare
+[ThirdPersonCamera.currentDistance](#currentdistance) with a threshold of your own each frame.
+
 ##### minPitch
 
 > **minPitch**: `number`
@@ -49483,13 +49508,14 @@ The app.
 
 > **get** **currentDistance**(): `number`
 
-Where the boom currently ends, after collision. Never longer than `distance`.
+Where the boom currently ends, after collision. Never longer than `distance`, and never shorter
+than `minDistance` unless `distance` is.
 
 ###### Returns
 
 `number`
 
-Where the boom currently ends, after collision. Never longer than `distance`.
+The boom length, in metres.
 
 ##### enabled
 
@@ -68629,7 +68655,7 @@ produces the same shape with everything but `environment` left at its default.
 
 > `readonly` **blur**: `number`
 
-How blurred the specular reflection is, 0 to 1.
+How blurred the visible skybox is, 0 to 1. Reflections are not blurred.
 
 ##### brdfLut
 
@@ -71483,6 +71509,10 @@ Defaults to `false`, which is Unity's behaviour and what most games want.
 The `lod` field of an [InstancedMeshRenderer](#instancedmeshrenderer): a coarser mesh for far instances.
 
 #### Remarks
+
+The far instances are chosen by the GPU culling pass, so the partner draws only while
+`gpuCulling` is on. With it off every instance draws the full mesh and the partner draws
+nothing; the renderer logs `IGX-0727` once.
 
 Mutable, because a schema `record()` field is a plain object a script edits in place — and
 `distance` and `band` are meant to be edited, which Lite re-applies live. Replacing `mesh` after
@@ -87325,6 +87355,12 @@ More instances were written to an `InstancedMeshRenderer` than its capacity hold
 
 A scene instance's override hash does not match the scene file it was recorded against.
 
+##### instancingLodWithoutCulling
+
+> `readonly` **instancingLodWithoutCulling**: `"IGX-0727"`
+
+An `InstancedMeshRenderer` declares a LOD partner with `gpuCulling` off, so the partner never draws.
+
 ##### instancingSettingTooLate
 
 > `readonly` **instancingSettingTooLate**: `"IGX-0717"`
@@ -88024,6 +88060,12 @@ A small push button.
 > `readonly` **canvas**: `"ignifx-devtools-canvas"`
 
 The timeline canvas.
+
+##### close
+
+> `readonly` **close**: `"ignifx-devtools-close"`
+
+The button at the end of the tab strip that closes the overlay.
 
 ##### heading
 

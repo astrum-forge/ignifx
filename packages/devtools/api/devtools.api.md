@@ -34,6 +34,7 @@ export const DEVTOOLS_CLASS_NAMES: {
     readonly root: "ignifx-devtools";
     readonly tabs: "ignifx-devtools-tabs";
     readonly tab: "ignifx-devtools-tab";
+    readonly close: "ignifx-devtools-close";
     readonly tabActive: "ignifx-devtools-tab-active";
     readonly body: "ignifx-devtools-body";
     readonly panel: "ignifx-devtools-panel";

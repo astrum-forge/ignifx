@@ -266,6 +266,8 @@ export const CoreErrorCode = {
   invalidGeometryUpdate: "IGX-0725",
   /** The surface shaders attached to one material declare more samplers than fit beside the host material. */
   surfaceSamplerBudgetExceeded: "IGX-0726",
+  /** An `InstancedMeshRenderer` declares a LOD partner with `gpuCulling` off, so the partner never draws. */
+  instancingLodWithoutCulling: "IGX-0727",
   /** The host exposes no Web Crypto implementation. */
   cryptoUnavailable: "IGX-1420",
   /** A storage namespace name is not a legal namespace segment. */
@@ -391,6 +393,8 @@ export const CORE_ERROR_MESSAGES: Readonly<Record<CoreErrorCode, string>> = {
     "{entity} uses a shader material under ESM shadows; Babylon Lite 1.27.0 cannot render it into an ESM map, so it casts no shadow. Use pcf shadows or castShadows: false.",
   "IGX-0725": "{asset}: an update of {count} vertices at offset {offset} does not fit the {total}-vertex mesh.",
   "IGX-0726": "{samplers} plugin samplers are declared; {budget} fit beside a textured PBR material.",
+  "IGX-0727":
+    "{entity} declares an InstancedMeshRenderer lod with gpuCulling off; the LOD mesh never draws. Turn gpuCulling on.",
   "IGX-1420": "This host does not expose Web Crypto.",
   "IGX-1421": "{namespace} is not a valid storage namespace.",
   "IGX-1422": "That storage key is empty, too long, or contains a control character.",

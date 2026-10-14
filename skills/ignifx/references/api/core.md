@@ -3441,6 +3441,14 @@ One per entity, and effectively one per world: the fields are all scene state.
 
 > **blur**: `number`
 
+How blurred the visible skybox is, 0 to 1. Defaults to `0`.
+
+###### Remarks
+
+Babylon Lite blurs only the skybox it draws; lighting and reflections stay sharp, and with the
+skybox off this changes nothing on screen. Raise a material's `roughness` to soften its
+reflection.
+
 ##### clearColor
 
 > **clearColor**: [`ColorLike`](#colorlike) \| `null`
@@ -4370,6 +4378,9 @@ Several instanced renderers on one entity draw several clouds from one transform
 ##### gpuCulling
 
 > **gpuCulling**: `boolean`
+
+Whether instances are culled on the GPU. Defaults to `true`; fixed once the scene is registered.
+The `lod` partner needs it: with culling off the partner draws nothing (`IGX-0727`).
 
 ##### lod
 
@@ -21215,7 +21226,7 @@ produces the same shape with everything but `environment` left at its default.
 
 > `readonly` **blur**: `number`
 
-How blurred the specular reflection is, 0 to 1.
+How blurred the visible skybox is, 0 to 1. Reflections are not blurred.
 
 ##### brdfLut
 
@@ -22728,6 +22739,10 @@ The tone-mapping curve.
 The `lod` field of an [InstancedMeshRenderer](#instancedmeshrenderer): a coarser mesh for far instances.
 
 #### Remarks
+
+The far instances are chosen by the GPU culling pass, so the partner draws only while
+`gpuCulling` is on. With it off every instance draws the full mesh and the partner draws
+nothing; the renderer logs `IGX-0727` once.
 
 Mutable, because a schema `record()` field is a plain object a script edits in place — and
 `distance` and `band` are meant to be edited, which Lite re-applies live. Replacing `mesh` after
@@ -30219,6 +30234,12 @@ More instances were written to an `InstancedMeshRenderer` than its capacity hold
 > `readonly` **instanceHashMismatch**: `"IGX-0604"` = `"IGX-0604"`
 
 A scene instance's override hash does not match the scene file it was recorded against.
+
+##### instancingLodWithoutCulling
+
+> `readonly` **instancingLodWithoutCulling**: `"IGX-0727"` = `"IGX-0727"`
+
+An `InstancedMeshRenderer` declares a LOD partner with `gpuCulling` off, so the partner never draws.
 
 ##### instancingSettingTooLate
 

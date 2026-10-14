@@ -611,6 +611,10 @@ test.describe("2d template gameplay", () => {
   // The pit at x = 20 to 24 has no floor. Falling into it used to be permanent — the character fell
   // for ever behind a camera clamped at the level's lower bound — and now puts it back on the last
   // ground it stood on, which is the lip it ran off, with the coins it had already taken.
+  //
+  // "Stood on" means ground under the character's centre. The box is still grounded while its centre
+  // hangs past the lip, and a checkpoint saved there (x = 20.29, review 2026-10-14) dropped the
+  // character back into the pit every half second, for ever.
   test("2d-sidescroller: falling into the pit puts the character back on its lip", async ({ page }) => {
     const failures = await startGame(page, SIDESCROLLER);
     const fall = await holdUntil(page, ["d"], (reading) => reading.position.y < -1);
@@ -624,11 +628,18 @@ test.describe("2d template gameplay", () => {
     const back = await holdUntil(page, [], (reading) => reading.position.y > 0, FLIGHT_FRAMES);
     expect(back.reading.position.y, "the fall should have ended").toBeGreaterThan(0);
     expect(back.reading.position.y).toBeCloseTo(3, 0);
-    // The lip of the first pit, not the spawn and not the far side.
+    // The lip of the first pit, not the spawn and not the far side; and with the centre over the
+    // last tile, which spans x = 19 to 20, so the character lands on it.
     expect(back.reading.position.x).toBeGreaterThan(19);
-    expect(back.reading.position.x).toBeLessThan(21);
+    expect(back.reading.position.x, "the respawn point must have ground under the centre").toBeLessThanOrEqual(20.1);
     expect(back.reading.respawn?.x).toBeCloseTo(back.reading.position.x, 1);
     expect(back.reading.score, "a fall costs progress through the level, not the coins already taken").toBe(score);
+
+    // And it stays there: standing, not falling back in.
+    await waitForFrames(page, FLIGHT_FRAMES);
+    const settled = await readProbe(page);
+    expect(settled.grounded, "the character should be standing on the lip after the respawn").toBe(true);
+    expect(settled.position.y, "the character fell back into the pit").toBeCloseTo(3, 0);
     expect(failures, `the page reported errors: ${failures.join(" | ")}`).toEqual([]);
   });
 
@@ -865,7 +876,7 @@ async function hold3DUntil(
  * the pad's 44-pixel radius, which is what full deflection means.
  *
  * @param page - The page under test.
- * @param control - The stick's `aria-label`, which `VirtualJoystick` sets to its control name.
+ * @param control - The stick's `aria-label`: its localized name, "Look" in English.
  * @param dx - Which way to push, horizontally.
  * @param dy - Which way to push, vertically; negative is up.
  * @param done - What the test is waiting for.
@@ -1091,7 +1102,7 @@ test.describe("3d template gameplay", () => {
       const failures = await start3D(page, THIRD_PERSON);
       await expect(page.locator(".lock-hint")).toHaveCount(0);
       const start = await read3D(page);
-      const readings = await pushStickUntil(page, "look", 70, 0, (reading) => reading.yaw - start.yaw >= 360);
+      const readings = await pushStickUntil(page, "Look", 70, 0, (reading) => reading.yaw - start.yaw >= 360);
       const end = newest(readings);
       expect(end.yaw - start.yaw, "the stick did not turn the camera all the way round").toBeGreaterThanOrEqual(360);
 
@@ -1108,7 +1119,7 @@ test.describe("3d template gameplay", () => {
       const failures = await start3D(page, FIRST_PERSON);
       const hud = page.locator(".hud");
       // Down about ten degrees, which is where the pedestal straight ahead of the spawn sits.
-      const aimed = await pushStickUntil(page, "look", 0, 70, (reading) => reading.pitch >= 9);
+      const aimed = await pushStickUntil(page, "Look", 0, 70, (reading) => reading.pitch >= 9);
       expect(newest(aimed).pitch, "the look pad did not aim down").toBeGreaterThanOrEqual(9);
       await hold3DUntil(page, "w", (reading) => reading.position.z > 4.4);
       await expect(hud).toHaveText(/press E or click/u);

@@ -29,7 +29,7 @@ import type { LiteScene } from "../../lite/scene.js";
  *
  * @param scene - The render scene.
  * @param rotationDegrees - The rotation around world Y, in degrees.
- * @param blur - How blurred the specular reflection is, 0 to 1.
+ * @param blur - How blurred the visible skybox is, 0 to 1.
  *
  * @internal
  */

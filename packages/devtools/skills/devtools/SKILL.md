@@ -19,7 +19,8 @@ game UI — that is `@ignifx/ui`. Do not ship it in a production bundle; it is a
 nothing in it is a stable runtime surface for game code.
 
 It costs nothing while it is closed: no system runs, no signal is subscribed to, and no DOM exists
-until `open()` is called.
+until `open()` is called. The × at the end of the tab strip closes it, which is the way out on a
+phone; docked to a side, it leaves a 40-pixel strip of the page uncovered.
 
 ## Environment
 

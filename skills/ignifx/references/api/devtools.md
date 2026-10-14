@@ -33,7 +33,7 @@ Whether the overlay is up.
 
 `boolean`
 
-`true` between [DevtoolsService.open](#open) and [DevtoolsService.close](#close).
+`true` between [DevtoolsService.open](#open) and [DevtoolsService.close](#close-1).
 
 ##### isSceneReloadDelegated
 
@@ -687,6 +687,12 @@ A small push button.
 > `readonly` **canvas**: `"ignifx-devtools-canvas"` = `"ignifx-devtools-canvas"`
 
 The timeline canvas.
+
+##### close
+
+> `readonly` **close**: `"ignifx-devtools-close"` = `"ignifx-devtools-close"`
+
+The button at the end of the tab strip that closes the overlay.
 
 ##### heading
 

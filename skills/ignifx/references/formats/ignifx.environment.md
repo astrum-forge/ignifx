@@ -15,5 +15,5 @@ An image-based lighting environment, its BRDF lookup table, and its skybox.
 | `skybox` | `str` | `""` | A .dds or .env skybox address; empty draws this environment's own cube map. |
 | `skyboxSize` | `f32` | `20` | The skybox cube's size, in metres. |
 | `skyboxEnabled` | `bool` | `true` | Whether a skybox is drawn at all; decided here, not on the component. |
-| `blur` | `f32` | `0` | How blurred the specular reflection is, 0 to 1. |
+| `blur` | `f32` | `0` | How blurred the visible skybox is, 0 to 1; reflections are not blurred. |
 | `rotation` | `f32` | `0` | Rotation around world Y, in degrees. |

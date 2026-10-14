@@ -1,13 +1,25 @@
 import { SpriteAnimator, SpriteRenderer } from "@ignifx/2d";
-import { bool, f32, Script, Vec2 } from "@ignifx/core";
+import { bool, f32, LayerMask, Script, Vec2 } from "@ignifx/core";
 import { CharacterController2D } from "@ignifx/physics-2d";
 import type { AudioClip } from "@ignifx/audio";
 import type { AssetHandle, MutableVec2, ScriptCallbacks, Vec2Like } from "@ignifx/core";
 import type { InputAction } from "@ignifx/input";
-import type { CharacterCollision2D } from "@ignifx/physics-2d";
+import type { CharacterCollision2D, QueryOptions2D } from "@ignifx/physics-2d";
 
 /** The probe box used to tell a thin platform from real ground, in metres. */
 const PROBE_SIZE: Vec2Like = { x: 0.3, y: 0.3 };
+
+/**
+ * The probe that checks for ground straight under the character's centre before a spot becomes the
+ * respawn point, in metres. Narrow, so a box hanging over a ledge does not count. It reaches from
+ * just above the feet to below them, because a tilemap collider is a thin outline: the probe has to
+ * cross the surface line, and the ground under the centre of a box on a 50-degree slope is 0.33 m
+ * below its feet.
+ */
+const FOOTING_PROBE_SIZE: Vec2Like = { x: 0.1, y: 0.5 };
+
+/** How far below the feet the footing probe's centre sits, in metres. */
+const FOOTING_PROBE_DEPTH = 0.2;
 
 /** Degrees to radians, for reading `slopeLimit` as an angle. */
 const DEGREES_TO_RADIANS = Math.PI / 180;
@@ -193,11 +205,17 @@ export class PlatformerController
   /** The `y` of {@link PlatformerController.#surface}, so the best of a step's normals wins. */
   #surfaceY = -2;
 
-  /** The last place the character stood, which is where a fall out of the level puts it back. */
+  /**
+   * The last place the character stood with ground under its centre, which is where a fall out of
+   * the level puts it back.
+   */
   readonly #safeGround: MutableVec2 = new Vec2();
 
-  /** Scratch for the drop-through probe, so the press path allocates nothing of its own. */
+  /** Scratch for the drop-through and footing probes, so neither allocates. */
   readonly #probe: MutableVec2 = new Vec2();
+
+  /** What the footing probe may hit: everything but the character's own layer. */
+  #footingQuery: QueryOptions2D = {};
 
   /** The clip that is playing, so `play` is called only when it changes. */
   #clip = "";
@@ -217,8 +235,8 @@ export class PlatformerController
   }
 
   /**
-   * Where a fall out of the level puts the character back: the last ground it stood on, or its
-   * spawn until it has stood anywhere.
+   * Where a fall out of the level puts the character back: the last place it stood with ground
+   * under its centre, or its spawn until it has stood anywhere.
    *
    * @returns A live view; copy it if you keep it.
    */
@@ -233,6 +251,8 @@ export class PlatformerController
     this.#sprite = this.entity.getComponent(SpriteRenderer);
     const here = this.transform.position2D;
     this.#safeGround.set(here.x, here.y);
+    // The probe starts above the feet, inside the character's own box, which must not count.
+    this.#footingQuery = { layerMask: LayerMask.everything().without(this.entity.layer) };
     // One handler per obstacle the move touched, raised from the step system at `FixedUpdate +100`
     // — after this script's `fixedUpdate`. Each normal is classified here and thrown away rather
     // than kept: the event object and its vectors are reused for every hit of every step.
@@ -295,9 +315,13 @@ export class PlatformerController
     this.#wasGrounded = grounded;
     this.#coyote = grounded ? this.coyoteTime : Math.max(0, this.#coyote - dt);
     if (grounded) {
-      // Standing anywhere makes that spot the place a fall puts the character back, which is the
-      // lip of the pit it just ran off rather than the far side of the level.
-      this.#safeGround.set(here.x, here.y);
+      // Standing on solid footing makes that spot the place a fall puts the character back: the lip
+      // of the pit it just ran off, not the far side of the level. The box is still grounded while
+      // its centre hangs over the edge, and a respawn there drops straight back in, so a spot only
+      // counts when there is ground under the centre.
+      if (this.#hasFootingAt(here)) {
+        this.#safeGround.set(here.x, here.y);
+      }
       this.#rising = false;
     }
 
@@ -517,6 +541,21 @@ export class PlatformerController
     }
     controller.teleport({ x: feet.x, y: feet.y - this.dropClearance });
     return true;
+  }
+
+  /**
+   * Whether there is ground straight under a point, so a respawn there lands on it.
+   *
+   * @remarks
+   * Only called while grounded, which means a fixed step has run and `overlapBox` is allowed
+   * (`IGX-1153`). Triggers such as coins are not ground and are left out by default.
+   *
+   * @param feet - The character's feet.
+   * @returns `true` when the probe under `feet` touches a collider.
+   */
+  #hasFootingAt(feet: Vec2Like): boolean {
+    this.#probe.set(feet.x, feet.y - FOOTING_PROBE_DEPTH);
+    return this.app.physics2d.overlapBox(this.#probe, FOOTING_PROBE_SIZE, 0, this.#footingQuery).length > 0;
   }
 
   /** Moves the horizontal velocity toward the wished-for speed at the right acceleration. */
