@@ -370,6 +370,28 @@ describe("the service", () => {
     expect(rig.service.visibleWorldBounds(box)).toBe(false);
   });
 
+  it("measures the world box through the camera, not through a parallax band that sorts first", async () => {
+    const rig = await createRig();
+    const world = harness?.app.world;
+    if (world === undefined) {
+      return;
+    }
+    // A fixed backdrop on the first sorting layer: its layer view stays pinned to the screen.
+    world.createEntity("band").addComponent(ParallaxLayer, { sortingLayer: "Background", factor: { x: 0, y: 0 } });
+    const backdrop = world.createEntity("sky").addComponent(SpriteRenderer);
+    backdrop.sprite = { state: "loaded", value: atlasAsset() } as never;
+    backdrop.sortingLayer = "Background";
+    const eye = world.createEntity("camera");
+    eye.addComponent(Camera2D);
+    eye.transform.position2D = new Vec2(30, 4);
+    rig.tick();
+    const box = { min: new Vec2(), max: new Vec2() };
+    expect(rig.service.visibleWorldBounds(box)).toBe(true);
+    // A headless app has a zero-sized viewport, so the box collapses onto the camera's centre.
+    expect(box.min.x).toBeCloseTo(30, 6);
+    expect(box.max.y).toBeCloseTo(4, 6);
+  });
+
   it("falls back to the origin without a camera", async () => {
     const rig = await createRig();
     expect(rig.service.screenToWorld(10, 10, new Vec2())).toEqual({ x: 0, y: 0 });

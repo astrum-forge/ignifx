@@ -453,12 +453,16 @@ export class InputDevice {
     // @internal
     protected appendControls(specs: readonly ControlSpec[]): readonly ControlDescriptor[];
     // @internal
+    beginFrame(): void;
+    // @internal
     clearQuietly(control: ControlDescriptor): void;
     // @internal
     clearSubscribers(): void;
     control(name: string): ControlDescriptor | null;
     get controls(): readonly ControlDescriptor[];
     readonly deviceIndex: number;
+    // @internal
+    endFrame(): void;
     get isConnected(): boolean;
     readonly kind: DeviceKind;
     // @internal
@@ -483,8 +487,12 @@ export class InputDevices {
     constructor();
     readonly all: readonly InputDevice[];
     // @internal
+    beginFrame(): void;
+    // @internal
     clearSubscribers(): void;
     device(kind: DeviceKind, deviceIndex: number): InputDevice | null;
+    // @internal
+    endFrame(): void;
     readonly gamepads: readonly GamepadDevice[];
     readonly keyboard: InputDevice;
     readonly mouse: InputDevice;

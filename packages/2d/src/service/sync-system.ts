@@ -282,6 +282,7 @@ export class TwoDSyncSystem implements System {
     const width = runtime.viewportWidthPx;
     const height = runtime.viewportHeightPx;
     if (camera === null) {
+      writeView(runtime.cameraView, 0, 0, 1, 0);
       runtime.layers.forEachLayer((layer): void => {
         writeView(layer.view, 0, 0, 1, 0);
       });
@@ -295,6 +296,7 @@ export class TwoDSyncSystem implements System {
     const zoom = camera.zoom;
     const centreX = centre.x;
     const centreY = centre.y;
+    centreView(runtime.cameraView, centreX, centreY, width, height, zoom, rotation);
     runtime.layers.forEachLayer((layer, screenSpace): void => {
       if (screenSpace) {
         writeView(layer.view, 0, 0, 1, 0);

@@ -144,7 +144,11 @@ entity's lossy scale when the shape is built; changing the scale afterwards need
 `move(displacement)` from `fixedUpdate` (displacements accumulate), then read `isGrounded`,
 `supportState`, `groundNormal`, and `velocity`. `setHeight(h, preserveFeet?)` crouches,
 `teleport(position)` relocates, and `onCollided` reports every dynamic body the capsule pushed.
-Gravity is **not** applied for you — a bare controller is purely kinematic.
+Gravity is **not** applied for you — a bare controller is purely kinematic. `isGrounded` is true
+on any surface up to `slopeLimit`, a `HeightfieldCollider` included; steeper reads
+`supportState === "sliding"`. A controller pressed into an incline creeps down it (Lite's
+character controller has no static friction), so cancel the down-slope part of a small ground-stick
+push yourself, as `ThirdPersonController` does.
 
 ## Recipes
 

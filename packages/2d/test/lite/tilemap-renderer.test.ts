@@ -1,11 +1,15 @@
-import { Phase } from "@ignifx/core";
+import { Phase, Vec2 } from "@ignifx/core";
 import { afterEach, describe, expect, it } from "vitest";
 import { defineSpriteAtlas } from "../../src/atlas/definition.js";
 import { SpriteAtlasAsset } from "../../src/atlas/sprite-atlas-asset.js";
+import { Camera2D } from "../../src/camera/camera-2d.js";
 import { buildAtlas } from "../../src/lite/atlas.js";
 import { TwoDRuntime } from "../../src/service/runtime.js";
 import { TwoDSyncSystem } from "../../src/service/sync-system.js";
 import { defaultTwoDSettings } from "../../src/settings.js";
+import { ParallaxLayer } from "../../src/sprite/parallax-layer.js";
+import { SpriteRenderer } from "../../src/sprite/sprite-renderer.js";
+import { defineTilemap } from "../../src/tilemap/definition.js";
 import { importTiledMap } from "../../src/tilemap/importers/tiled.js";
 import { TilemapAsset } from "../../src/tilemap/tilemap-asset.js";
 import { TilemapRenderer } from "../../src/tilemap/tilemap-renderer.js";
@@ -225,4 +229,96 @@ describe("disabled renderers", () => {
     rig.tick();
     expect(rig.renderer.chunkCount).toBe(0);
   });
+});
+
+/** A scrolling level: a 64 by 4 strip of tile 1, four cells to a chunk, one metre to a cell. */
+const STRIP_WIDTH = 64;
+const STRIP_HEIGHT = 4;
+const STRIP_CHUNK = 4;
+
+/** The viewport the culling suite pretends the surface has, in backing-store pixels. */
+const VIEW_WIDTH_PX = 320;
+const VIEW_HEIGHT_PX = 180;
+
+/** A side-scroller rig: a strip map, a camera over a sized viewport, and optionally a parallax band. */
+interface ScrollRig {
+  readonly renderer: TilemapRenderer;
+  readonly runtime: TwoDRuntime;
+  readonly camera: Camera2D;
+  readonly tick: () => void;
+}
+
+/** Builds the side-scroller rig. */
+async function createScrollRig(options: { readonly parallax: boolean }): Promise<ScrollRig> {
+  const created = await createTwoDApp();
+  harness = created;
+  const runtime = new TwoDRuntime({
+    app: created.app,
+    settings: defaultTwoDSettings(),
+    // The backdrop sorts first, which makes its layer the first world layer the registry lists.
+    sortingLayers: ["Sky", "Default"],
+    createRenderer: (): LiteSpriteRenderer => stubRenderer(),
+    attachLayer: (): void => {},
+    detachLayer: (): void => {},
+    destroyRenderer: (): void => {},
+  });
+  // A headless app has no surface; the culling window needs a viewport to measure.
+  Object.defineProperty(runtime, "viewportWidthPx", { get: (): number => VIEW_WIDTH_PX });
+  Object.defineProperty(runtime, "viewportHeightPx", { get: (): number => VIEW_HEIGHT_PX });
+  const system = new TwoDSyncSystem(runtime);
+  const world = created.app.world;
+  const atlas = tileAtlas();
+
+  if (options.parallax) {
+    // A fixed sky: factor 0 pins the band to the screen, so its layer's view never scrolls.
+    world.createEntity("sky band").addComponent(ParallaxLayer, { sortingLayer: "Sky", factor: { x: 0, y: 0 } });
+    const backdrop = world.createEntity("sky").addComponent(SpriteRenderer);
+    backdrop.sprite = { state: "loaded", value: atlas } as never;
+    backdrop.sortingLayer = "Sky";
+  }
+
+  const tiles = Array.from({ length: STRIP_WIDTH * STRIP_HEIGHT }, () => 1);
+  const definition = defineTilemap({
+    tileWidth: 32,
+    width: STRIP_WIDTH,
+    height: STRIP_HEIGHT,
+    tilesets: [{ name: "hero", atlas: "2d/hero.atlas.json", firstId: 1, tiles: [{ id: 0, frame: "hero_0" }] }],
+    layers: [{ name: "ground", width: STRIP_WIDTH, height: STRIP_HEIGHT, tiles }],
+  });
+  const level = world.createEntity("level");
+  const map = level.addComponent(Tilemap);
+  map.map = { state: "loaded", value: new TilemapAsset("2d/strip.tilemap.json", definition) } as never;
+  map.chunkSize = STRIP_CHUNK;
+  map.cellSizeOverride = 1;
+  const renderer = level.addComponent(TilemapRenderer);
+  renderer.atlas = { state: "loaded", value: atlas } as never;
+
+  const eye = world.createEntity("camera");
+  const camera = eye.addComponent(Camera2D);
+  // Two metres of half-height over a 320 by 180 viewport: the camera sees 7.1 m by 4 m.
+  camera.orthographicSize = 2;
+  eye.transform.position2D = new Vec2(2, 2);
+
+  const tick = (): void => {
+    system.update({ world, time: created.app.time, phase: Phase.PreRender, dt: 1 / 60 });
+  };
+  return { renderer, runtime, camera, tick };
+}
+
+describe("chunk culling against a scrolling camera", () => {
+  for (const parallax of [false, true]) {
+    const label = parallax ? "behind a fixed parallax band" : "with no parallax";
+    it(`keeps the chunks under a camera that has scrolled several chunks right, ${label}`, async () => {
+      const rig = await createScrollRig({ parallax });
+      rig.tick();
+      // At x = 2 the camera sees -1.6 m to 5.6 m: chunk columns 0 and 1.
+      expect(rig.renderer.chunkCount).toBe(2);
+
+      rig.camera.entity.transform.position2D = new Vec2(30, 2);
+      rig.tick();
+      // At x = 30 it sees 26.4 m to 33.6 m: columns 6, 7 and 8, sixteen tiles each.
+      expect(rig.renderer.chunkCount).toBe(3);
+      expect(rig.renderer.spriteCount).toBe(3 * STRIP_CHUNK * STRIP_CHUNK);
+    });
+  }
 });

@@ -100,7 +100,8 @@ describe("frame-consistent edge flags", () => {
     built.app.input.simulate({ "<Keyboard>/space": 1 });
     built.app.input.simulate({ "<Keyboard>/space": 0 });
     built.step(4 / 60);
-    // Both events land in the same drain, so the frame ends released and never reports a press.
-    expect(probe.fixedPressed).toEqual([false, false, false, false]);
+    // Both events land in the same drain. The tap is held for this frame (`InputDevice.write`), and
+    // every fixed step of the frame reads the same press.
+    expect(probe.fixedPressed).toEqual([true, true, true, true]);
   });
 });

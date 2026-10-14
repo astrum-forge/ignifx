@@ -169,10 +169,9 @@ describe("ThirdPersonController", () => {
   });
 
   it("walks up a 30-degree ramp and is stopped by a 60-degree one", async () => {
-    // Lite classifies *any* incline as `sliding` because its character controller has no static
-    // friction (`@ignifx/physics`'s own character suite says so in as many words), so the toolkit
-    // decides walkability from the slope angle against `CharacterController.slopeLimit`. This test
-    // is what proves that decision reaches the ground.
+    // `CharacterController` reports `supported` up to its `slopeLimit` and `sliding` past it; the
+    // toolkit also accepts `sliding` on a slope within the limit, which a contact's averaged normal
+    // can report on an edge. This test is what proves the decision reaches the ground.
     expect(await climb(30)).toBeGreaterThan(0.15);
     expect(await climb(60)).toBeLessThan(0.05);
   }, 30_000);

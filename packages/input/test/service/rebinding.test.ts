@@ -159,6 +159,23 @@ describe("interactive rebinding", () => {
     expect(required(jump.bindings[0], "binding 0").overridePath).toBeNull();
   });
 
+  it("cancels on an instant tap of the cancel key, pressed and released between two frames", async () => {
+    const { app, step } = await withDemo();
+    const jump = app.input.actions.get("jump");
+    const pending = app.input.performInteractiveRebind(jump, {
+      cancelPath: "<Keyboard>/escape",
+      timeoutSeconds: 1,
+    });
+    app.input.simulateEvent({ type: "keydown", code: "escape" });
+    app.input.simulateEvent({ type: "keyup", code: "escape" });
+    step();
+    // A lost tap would leave the rebind listening; the timeout then ends it instead.
+    step(2);
+    const result = await pending;
+    expect(result.canceled).toBe(true);
+    expect(result.timedOut).toBe(false);
+  });
+
   it("times out after the configured unscaled seconds", async () => {
     const { app, step } = await withDemo();
     const pending = app.input.performInteractiveRebind(app.input.actions.get("jump"), { timeoutSeconds: 0.1 });

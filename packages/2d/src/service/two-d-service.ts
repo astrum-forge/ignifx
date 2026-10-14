@@ -287,7 +287,14 @@ export class TwoDService {
     if (first === undefined) {
       return false;
     }
-    visibleBounds(first.view, this.#runtime.viewportWidthPx, this.#runtime.viewportHeightPx, this.#bounds);
+    // The camera's own view, not `first.view`: a parallax band's layer can sort first, and its
+    // view is slid away from the camera's.
+    visibleBounds(
+      this.#runtime.cameraView,
+      this.#runtime.viewportWidthPx,
+      this.#runtime.viewportHeightPx,
+      this.#bounds,
+    );
     const ppu = this.#runtime.pixelsPerUnit;
     // Layer pixels run +Y down, so the bounds' maxY is the world minimum.
     pixelsToWorldToRef(this.#bounds.minX, this.#bounds.maxY, ppu, out.min);

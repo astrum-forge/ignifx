@@ -135,9 +135,16 @@ export function moveController(controller: LiteCharacterController, displacement
 /**
  * Probes the surface under the character without moving it.
  *
+ * @remarks
+ * `checkSupport` wants a **unit** direction. It classifies by `1 - dot(slide, direction)²` against
+ * `maxSlopeCosine²` (`lib/physics/character-controller.js`, `checkSupport`), which is `cos²` of the
+ * slope only when `direction` has length 1. Passed raw gravity (length 9.81), the term fell below
+ * the limit on any incline steeper than 4° to 5°, so every walkable slope read as `SLIDING` and
+ * `isGrounded` was false on it (fixed 2026-10-14). Zero gravity probes straight down.
+ *
  * @param controller - The controller.
  * @param deltaSeconds - The fixed step.
- * @param gravity - The probe direction, normally gravity.
+ * @param gravity - The probe direction, normally gravity; only its direction is used.
  * @param groundNormal - Written with the averaged supporting normal.
  * @returns The support classification.
  *
@@ -149,7 +156,10 @@ export function probeSupport(
   gravity: Vec3Like,
   groundNormal: MutableVec3,
 ): SupportState {
-  const surface = controller.checkSupport(deltaSeconds, { x: gravity.x, y: gravity.y, z: gravity.z });
+  const length = Math.hypot(gravity.x, gravity.y, gravity.z);
+  const direction =
+    length > 0 ? { x: gravity.x / length, y: gravity.y / length, z: gravity.z / length } : { x: 0, y: -1, z: 0 };
+  const surface = controller.checkSupport(deltaSeconds, direction);
   const normal = surface.averageSurfaceNormal;
   groundNormal.set(normal.x, normal.y, normal.z);
   return toSupportState(surface.supportedState);

@@ -117,7 +117,7 @@ Full signatures: `skills/ignifx/references/api/2d.md`.
 | `mainCamera`                          | The highest-priority enabled `Camera2D`, or `null`         |
 | `pickAt(xPx, yPx)`                    | Topmost `SpriteRenderer` under a viewport pixel, or `null` |
 | `screenToWorld` · `worldToScreen`     | Through the active camera                                  |
-| `visibleWorldBounds(out)`             | The world rectangle the camera can see                     |
+| `visibleWorldBounds(out)`             | The world rectangle the camera sees (parallax not applied) |
 | `layers`                              | Diagnostics: every Lite layer in draw order                |
 | `registerTileObjectFactory(type, fn)` | What a tilemap's objects layer spawns                      |
 | `syncedLastFrame` · `spriteCount`     | How many sprites the last frame actually wrote             |
