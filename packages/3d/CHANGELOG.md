@@ -1,5 +1,14 @@
 # @ignifx/3d
 
+## 0.6.1
+
+### Patch Changes
+
+- Updated dependencies [d843b2e]
+  - @ignifx/core@0.6.1
+  - @ignifx/input@0.6.1
+  - @ignifx/physics@0.6.1
+
 ## 0.6.0
 
 ### Patch Changes

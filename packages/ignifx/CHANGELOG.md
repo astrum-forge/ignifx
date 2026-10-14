@@ -1,5 +1,26 @@
 # ignifx
 
+## 0.6.1
+
+### Patch Changes
+
+- d843b2e: - Fix shadows of animated skinned models staying frozen in their first pose: they now follow the skeleton under ESM, PCF, CSM and spot-light shadows, including small moves that keep the same bounding box.
+  - Fix shadows of shader materials whose vertex stage moves by a uniform such as `time`: PCF and CSM maps now redraw when the uniform changes. Displacement beyond the mesh's own bounds can still be clipped by a directional PCF or ESM map.
+- Updated dependencies [d843b2e]
+  - @ignifx/core@0.6.1
+  - @ignifx/2d@0.6.1
+  - @ignifx/3d@0.6.1
+  - @ignifx/audio@0.6.1
+  - @ignifx/devtools@0.6.1
+  - @ignifx/electron@0.6.1
+  - @ignifx/input@0.6.1
+  - @ignifx/particles@0.6.1
+  - @ignifx/particles-2d@0.6.1
+  - @ignifx/physics@0.6.1
+  - @ignifx/physics-2d@0.6.1
+  - @ignifx/terrain@0.6.1
+  - @ignifx/ui@0.6.1
+
 ## 0.6.0
 
 ### Patch Changes
