@@ -1,5 +1,13 @@
 # @ignifx/physics
 
+## 0.8.0
+
+### Patch Changes
+
+- 4da087b: Fix `app.physics.raycast` returning `null` when the ray hits a `CharacterController`: rays, `shapeCast` and `overlap` now report the character's entity, with `collider: null`, and a ray whose `layerMask` excludes the character passes through its capsule.
+- Updated dependencies [874d49b]
+  - @ignifx/core@0.8.0
+
 ## 0.7.0
 
 ### Patch Changes
