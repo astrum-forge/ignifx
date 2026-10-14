@@ -15,7 +15,7 @@ InputService (app.input)
  └─ raw event stream (for UI and text entry)
 ```
 
-- **Frame-consistent state.** Browser events are queued as they arrive and resolved once, in the `PreUpdate` phase. During a frame every read returns the same values; edge flags (`wasPressedThisFrame`) are valid for the whole frame including all fixed steps. Events are resolved in arrival order, so action callbacks are delivered deterministically (Unity documents its order as undefined; ignifx does not).
+- **Frame-consistent state.** Browser events are queued as they arrive and resolved once, in the `PreUpdate` phase. During a frame every read returns the same values; edge flags (`wasPressedThisFrame`) are valid for the whole frame including all fixed steps. A scalar control that leaves rest and returns to it between two frames is held for one frame, so a sub-frame tap resolves as a press in the next frame and a release in the one after (added 2026-10-14; `InputDevice.write`). Events are resolved in arrival order, so action callbacks are delivered deterministically (Unity documents its order as undefined; ignifx does not).
 - **Actions over raw keys.** Game code binds to actions (`"move"`, `"jump"`); devices are bound in a `.input.json` asset or in code. Raw device state remains available for tools and prototypes.
 
 ## 2. Actions

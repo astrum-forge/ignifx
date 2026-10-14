@@ -311,14 +311,19 @@ describe("action signals", () => {
     expect(reported).toEqual(["system"]);
   });
 
-  it("applies a press and a release in the same frame in arrival order", async () => {
+  it("resolves a press and a release in the same frame as a one-frame press", async () => {
+    // Until 2026-10-14 the release cancelled the press and the frame saw nothing. The cases for
+    // every device are in `sub-frame-taps.test.ts`.
     const { app, step } = await withDemo();
     const jump = app.input.actions.get("jump");
     app.input.simulateEvent({ type: "keydown", code: "space" });
     app.input.simulateEvent({ type: "keyup", code: "space" });
     step();
+    expect(jump.isPressed).toBe(true);
+    expect(jump.wasPressedThisFrame).toBe(true);
+    step();
     expect(jump.isPressed).toBe(false);
-    expect(jump.wasPressedThisFrame).toBe(false);
+    expect(jump.wasReleasedThisFrame).toBe(true);
   });
 });
 

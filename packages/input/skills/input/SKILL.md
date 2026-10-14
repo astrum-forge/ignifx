@@ -232,6 +232,10 @@ Overrides are a separate `ignifx.inputoverrides` document produced by `saveOverr
 - **Read input once per frame and trust it.** Values are captured at frame start; polling harder
   inside `fixedUpdate` changes nothing, and `wasPressedThisFrame` is `true` in _every_ fixed step of
   the frame it resolved in.
+- **A tap shorter than a frame is not lost.** A press and a release that both land between two
+  frames resolve as a one-frame press: `wasPressedThisFrame` and `isPressed` in the next frame,
+  `wasReleasedThisFrame` in the one after. The device holds the control down for that frame, so
+  `devices.keyboard.valueAt(...)` reads it too. `releaseAll()` (focus loss) releases at once.
 - **Disabling a map hides its actions; it does not neutralise them.** `app.input.actions.get(name)`
   searches enabled maps only and throws `IGX-0801` the moment the declaring map is disabled. Reach a
   hidden action through `actions.map(name).get(name)` or `actions.find(name)`, where it reads as

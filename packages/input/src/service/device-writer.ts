@@ -63,6 +63,12 @@ export class DeviceWriter {
   /** `pointerId` occupying each touch slot, or `-1` when the slot is free. */
   readonly #slotIds: Int32Array = new Int32Array(TOUCH_SLOTS).fill(-1);
 
+  /**
+   * Per keyboard control: `1` while the key is physically down. Read rather than the device value,
+   * which holds a sub-frame tap down for one extra frame (`InputDevice.write`).
+   */
+  readonly #keyDown: Uint8Array;
+
   #heldKeys = 0;
 
   #activePointers = 0;
@@ -79,6 +85,7 @@ export class DeviceWriter {
       keys.set(control.name, control);
     }
     this.#keys = keys;
+    this.#keyDown = new Uint8Array(devices.keyboard.controls.length);
     this.#anyKey = required(devices.keyboard, ANY_KEY_CONTROL);
     const mouseButtons: ControlDescriptor[] = [];
     const names = ["leftButton", "middleButton", "rightButton"];
@@ -175,6 +182,7 @@ export class DeviceWriter {
   releaseAll(): void {
     this.#devices.releaseAll();
     this.#heldKeys = 0;
+    this.#keyDown.fill(0);
     this.#activePointers = 0;
     this.#slotIds.fill(-1);
   }
@@ -194,14 +202,16 @@ export class DeviceWriter {
     if (descriptor === undefined) {
       return;
     }
-    const previous = this.#devices.keyboard.valueAt(descriptor.offset);
+    const wasDown = this.#keyDown[descriptor.index] === 1;
     this.#devices.keyboard.write(descriptor, value);
     if (repeat) {
       return;
     }
-    if (value > 0 && previous === 0) {
+    if (value > 0 && !wasDown) {
+      this.#keyDown[descriptor.index] = 1;
       this.#heldKeys += 1;
-    } else if (value === 0 && previous > 0) {
+    } else if (value === 0 && wasDown) {
+      this.#keyDown[descriptor.index] = 0;
       this.#heldKeys = Math.max(0, this.#heldKeys - 1);
     }
     this.#devices.keyboard.write(this.#anyKey, this.#heldKeys > 0 ? 1 : 0);

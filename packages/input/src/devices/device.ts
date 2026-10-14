@@ -60,6 +60,12 @@ export const DEVICE_KINDS: readonly DeviceKind[] = Object.freeze([
  */
 export type ControlTouchHandler = (actions: readonly number[]) => void;
 
+/** A held-over return to rest whose press the next frame has not resolved yet. */
+const HELD_OVER = 1;
+
+/** A held-over return to rest the next frame applies. */
+const RELEASE_DUE = 2;
+
 /**
  * One input device: a named control table and the values behind it
  * (`docs/architecture/08-input.md` §4).
@@ -97,6 +103,18 @@ export class InputDevice {
 
   #isConnected: boolean;
 
+  /** Per control: `1` when a scalar control left rest since the last frame was resolved. */
+  #raised: Uint8Array;
+
+  /**
+   * Per control: a return to rest that was held over. {@link HELD_OVER} until the frame that sees
+   * the press has been resolved, then {@link RELEASE_DUE} until the next frame applies it.
+   */
+  #heldOver: Uint8Array;
+
+  /** Whether any control is held over, so a quiet frame skips the scan. */
+  #hasHeldOver = false;
+
   /**
    * Builds a device from its control declarations.
    *
@@ -114,6 +132,8 @@ export class InputDevice {
     this.#values = new Float32Array(controlSlotCount(controls));
     this.#subscribers = Array.from<number[] | null>({ length: controls.length }).fill(null);
     this.#isConnected = isConnected;
+    this.#raised = new Uint8Array(controls.length);
+    this.#heldOver = new Uint8Array(controls.length);
   }
 
   /**
@@ -208,17 +228,93 @@ export class InputDevice {
   /**
    * Writes one scalar control and reports the change.
    *
+   * @remarks
+   * A scalar control that left rest since the last frame was resolved and is written back to rest
+   * before the next one keeps its value for that next frame, and returns to rest at the start of
+   * the frame after ({@link InputDevice.endFrame}, {@link InputDevice.beginFrame}). Actions resolve
+   * from device state once per frame, so without that a press and a release that both land between
+   * two frames — a quick click, a tap on a slow phone — would never be seen.
+   *
    * @param control - The descriptor to write.
    * @param value - The new value.
    *
    * @internal
    */
   write(control: ControlDescriptor, value: number): void {
-    if (this.#values[control.offset] === value) {
+    const index = control.index;
+    const previous = this.#values[control.offset];
+    if (previous === undefined) {
+      return;
+    }
+    if (value === 0) {
+      if (previous !== 0 && this.#raised[index] === 1) {
+        this.#heldOver[index] = HELD_OVER;
+        this.#hasHeldOver = true;
+        return;
+      }
+    } else {
+      // Pressed again before the held-over release was applied: the control is simply down.
+      this.#heldOver[index] = 0;
+      if (previous === 0) {
+        this.#raised[index] = 1;
+      }
+    }
+    if (previous === value) {
       return;
     }
     this.#values[control.offset] = value;
-    this.#touch(control.index);
+    this.#touch(index);
+  }
+
+  /**
+   * Starts a frame by applying the returns to rest that the previous frame was resolved with
+   * still held. The input system calls it before it drains the frame's events.
+   *
+   * @internal
+   */
+  beginFrame(): void {
+    if (!this.#hasHeldOver) {
+      return;
+    }
+    let stillHeld = false;
+    const held = this.#heldOver;
+    for (let index = 0; index < held.length; index += 1) {
+      const state = held[index];
+      if (state === HELD_OVER) {
+        stillHeld = true;
+        continue;
+      }
+      if (state !== RELEASE_DUE) {
+        continue;
+      }
+      held[index] = 0;
+      const control = this.#controls[index];
+      if (control !== undefined && this.#values[control.offset] !== 0) {
+        this.#values[control.offset] = 0;
+        this.#touch(index);
+      }
+    }
+    this.#hasHeldOver = stillHeld;
+  }
+
+  /**
+   * Ends a frame once its actions are resolved: every held-over return to rest is now due, and
+   * the record of which controls left rest starts again for the next frame. A control a page writes
+   * directly between frames — an on-screen button on {@link VirtualDevice} — counts towards the
+   * frame that follows the write.
+   *
+   * @internal
+   */
+  endFrame(): void {
+    if (this.#hasHeldOver) {
+      const held = this.#heldOver;
+      for (let index = 0; index < held.length; index += 1) {
+        if (held[index] === HELD_OVER) {
+          held[index] = RELEASE_DUE;
+        }
+      }
+    }
+    this.#raised.fill(0);
   }
 
   /**
@@ -268,6 +364,10 @@ export class InputDevice {
    * @internal
    */
   releaseAll(): void {
+    // Losing focus releases now: nothing is held over, so no key outlives a blur by a frame.
+    this.#heldOver.fill(0);
+    this.#hasHeldOver = false;
+    this.#raised.fill(0);
     const values = this.#values;
     for (let index = 0; index < this.#controls.length; index += 1) {
       const control = this.#controls[index];
@@ -326,6 +426,12 @@ export class InputDevice {
       subscribers[index] = this.#subscribers[index] ?? null;
     }
     this.#subscribers = subscribers;
+    const raised = new Uint8Array(controls.length);
+    raised.set(this.#raised.subarray(0, Math.min(this.#raised.length, raised.length)));
+    this.#raised = raised;
+    const heldOver = new Uint8Array(controls.length);
+    heldOver.set(this.#heldOver.subarray(0, Math.min(this.#heldOver.length, heldOver.length)));
+    this.#heldOver = heldOver;
     return controls.slice(merged.length - specs.length);
   }
 

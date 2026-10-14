@@ -633,6 +633,8 @@ export class InputService implements BindingResolver {
     }
     this.#pending.length = 0;
     this.#dirty.fill(false);
+    // Before the drain: a tap the last frame resolved as pressed releases now.
+    this.devices.beginFrame();
     this.#writer.beginFrame();
     if (this.#settings.gamepadPolling && this.#poller.isEnabled) {
       this.#pollGamepads();
@@ -647,6 +649,7 @@ export class InputService implements BindingResolver {
     this.#context.currentScheme = this.#currentScheme;
     this.#resolveActions(this.#context);
     this.#updateRebind(unscaledDeltaTime);
+    this.devices.endFrame();
     this.#publishDiagnostics(drained);
   }
 

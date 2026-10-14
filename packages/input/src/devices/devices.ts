@@ -172,6 +172,28 @@ export class InputDevices {
   }
 
   /**
+   * Starts a frame on every device: see {@link InputDevice.beginFrame}.
+   *
+   * @internal
+   */
+  beginFrame(): void {
+    for (const device of this.all) {
+      device.beginFrame();
+    }
+  }
+
+  /**
+   * Ends a frame on every device: see {@link InputDevice.endFrame}.
+   *
+   * @internal
+   */
+  endFrame(): void {
+    for (const device of this.all) {
+      device.endFrame();
+    }
+  }
+
+  /**
    * Returns every control of every device to rest.
    *
    * @internal
