@@ -495,12 +495,13 @@ async function main(): Promise<AppStatus> {
   }
 
   // The overlay comes up before the first asset is requested, so the loading bar sees every byte.
-  const gameUi = createGameUi(
-    app,
-    app.i18n.t("loading.label"),
-    [{ control: "jump", label: "▲" }],
-    !isStatic && hasTouch(),
-  );
+  const gameUi = createGameUi(app, {
+    loadingLabel: app.i18n.t("loading.label"),
+    buttons: [{ control: "jump", label: "▲", ariaLabel: app.i18n.t("action.jump") }],
+    moveLabel: app.i18n.t("action.move"),
+    pauseLabel: app.i18n.t("action.pause"),
+    touch: !isStatic && hasTouch(),
+  });
   app.ui.visible = showOverlay;
 
   const assets: Assets = {

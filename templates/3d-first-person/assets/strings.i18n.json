@@ -4,6 +4,7 @@
   "defaultLocale": "en",
   "locales": {
     "en": {
+      "action.crouch": "Crouch",
       "action.interact": "Interact",
       "action.jump": "Jump",
       "action.look": "Look",
@@ -70,6 +71,7 @@
       "toast.settingsReset": "Settings reset"
     },
     "fr": {
+      "action.crouch": "S'accroupir",
       "action.interact": "Interagir",
       "action.jump": "Sauter",
       "action.look": "Regarder",

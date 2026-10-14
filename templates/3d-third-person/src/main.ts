@@ -31,6 +31,7 @@ import { HeroAnimation } from "./scripts/hero-animation.js";
 import { HudLine } from "./scripts/hud-line.js";
 import { LockHint } from "./scripts/lock-hint.js";
 import { MenuController } from "./scripts/menu-controller.js";
+import { PortraitFov } from "./scripts/portrait-fov.js";
 import { SaveGame } from "./scripts/save-game.js";
 import type { Level } from "./level.js";
 import type { GameMenus } from "./menus/game-menus.js";
@@ -86,6 +87,9 @@ const PLAYER_SPAWN = { x: 0, y: 0, z: -3 } as const;
 
 /** Where the capsule's centre starts: the spawn, lifted by half the capsule's height. */
 const PLAYER_SPAWN_POSE = { x: PLAYER_SPAWN.x, y: PLAYER_HEIGHT / 2, z: PLAYER_SPAWN.z } as const;
+
+/** The camera's vertical field of view on a landscape screen, in degrees. `PortraitFov` widens it. */
+const CAMERA_FOV = 55;
 
 /** Where the companion starts, on the ground. */
 const COMPANION_SPAWN = { x: 5, y: 0, z: 6 } as const;
@@ -256,7 +260,7 @@ function buildCompanion(app: App, assets: Assets, player: Entity, isStatic: bool
  */
 function buildCamera(app: App, player: Entity, isStatic: boolean): Entity {
   const eye = app.world.createEntity("Main Camera");
-  eye.addComponent(Camera, { near: 0.1, far: 200, fov: 55 });
+  eye.addComponent(Camera, { near: 0.1, far: 200, fov: CAMERA_FOV });
   // The listener rides the camera, so a spatial sound is panned from where the player is looking.
   eye.addComponent(AudioListener);
 
@@ -300,6 +304,8 @@ function buildCamera(app: App, player: Entity, isStatic: boolean): Entity {
     // the companion drifting behind the camera still shortens the boom, as scenery does.
     collisionLayers: ["Level", "Prop"],
   });
+  // A phone held upright would otherwise see 27 degrees across, and the character fills the frame.
+  eye.addComponent(PortraitFov, { fov: CAMERA_FOV });
   return eye;
 }
 
@@ -551,6 +557,13 @@ async function main(): Promise<AppStatus> {
     loadingLabel: app.i18n.t("loading.label"),
     lockHint: app.i18n.t("hint.lock"),
     touch: !isStatic && !isBench && hasTouch(),
+    touchLabels: {
+      move: app.i18n.t("action.move"),
+      look: app.i18n.t("action.look"),
+      jump: app.i18n.t("action.jump"),
+      sprint: app.i18n.t("action.sprint"),
+      pause: app.i18n.t("action.pause"),
+    },
   });
   // The golden is about the rendered scene, not about how this machine draws a system font, and a
   // frame-time run should not be measuring DOM layout either.
@@ -622,8 +635,11 @@ async function main(): Promise<AppStatus> {
 
   if (isStatic && showOverlay && gameUi.hud !== null) {
     // `?static=1` leaves the front end out, so nothing writes the HUD. `?hud=1` says the overlay is
-    // wanted anyway — the gallery capture asks for exactly that — so the zero state is written once.
-    gameUi.hud.textContent = app.i18n.t("hud.status", { speed: "0.0", distance: "0.0" });
+    // wanted anyway — the gallery capture asks for exactly that — so the opening state is written
+    // once: standing still, with the companion as far away as it starts.
+    const player = world.player.transform.position;
+    const distance = Math.hypot(COMPANION_SPAWN.x - player.x, COMPANION_SPAWN.z - player.z);
+    gameUi.hud.textContent = app.i18n.t("hud.status", { speed: "0.0", distance: distance.toFixed(1) });
   }
 
   gameUi.loading.hide();
