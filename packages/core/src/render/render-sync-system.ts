@@ -1,5 +1,6 @@
 import { CoreErrorCode } from "../errors/error-codes.js";
 import { setSceneCamera } from "../lite/camera.js";
+import { readPbrDeformers } from "../lite/pbr-deformers.js";
 import { forgetMaterialBindingLayouts, readMaterialEpoch, rebuildRenderables } from "../lite/shadow.js";
 import { Camera } from "./camera.js";
 import { Environment } from "./environment.js";
@@ -550,13 +551,16 @@ export class RenderSyncSystem implements System {
           return;
         }
         try {
-          if (renderer.needsShadowLayoutReset) {
-            // A changed number of shadow maps needs new bind-group layouts; see the adapter.
+          // A changed number of shadow maps, or the first skinned or morphed PBR mesh added after
+          // start, needs new bind-group layouts; see `../lite/shadow.ts` and `../lite/pbr-deformers.ts`.
+          const deformers = readPbrDeformers(renderer.scene);
+          if (renderer.needsShadowLayoutReset || (deformers & ~renderer.builtPbrDeformers) !== 0) {
             renderer.needsShadowLayoutReset = false;
             forgetMaterialBindingLayouts(renderer.engine);
           }
           // oxlint-disable-next-line no-await-in-loop -- the whole point is that these never overlap.
           await rebuildRenderables(renderer.scene);
+          renderer.builtPbrDeformers |= deformers;
         } catch (error: unknown) {
           renderer.app.onError.emit({ error, source: "system", phase: null, entity: null, component: null });
         }

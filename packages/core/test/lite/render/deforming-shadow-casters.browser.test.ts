@@ -1,5 +1,5 @@
 import { setBonePosition } from "@babylonjs/lite";
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { waitForGpuWork } from "../../../src/lite/gpu/render-diagnostics-gpu.js";
 import { createPixelRgba, pixelLuminance, samplePixel } from "../../../src/lite/screenshot.js";
 import { Camera } from "../../../src/render/camera.js";
@@ -75,28 +75,6 @@ async function teardown(running: BrowserApp): Promise<void> {
   running.dispose();
   harness = null;
 }
-
-// The first skinned PBR material a page builds gets an invalid bind group ("Binding entry sampler
-// not set", group 1), and that frame and every later one is rejected until something rebuilds it.
-// Measured against Babylon Lite 1.27.0 on SwiftShader, 2026-10-14: only the first app in a page
-// that loads a skinned model fails, whatever else it contains, and every later one renders. That is
-// a separate defect, so one throwaway app takes the hit before these tests measure shadows.
-beforeAll(async () => {
-  const running = await createBrowserApp({
-    size: SIZE,
-    startEmpty: false,
-    assets: [{ address: "models/rig.glb", url: fixtureUrl("3d/rig.glb"), type: "model" }],
-  });
-  const eye = running.world.createEntity("Main Camera");
-  eye.transform.localPosition.set(0, 1, -3);
-  eye.addComponent(Camera, { near: 0.1, far: 100 });
-  running.world.createEntity("Sky").addComponent(Light, { type: "hemispheric", intensity: 1 });
-  await running.start();
-  const handle = await running.app.assets.loadAsync<ModelAsset>("models/rig.glb");
-  running.world.createEntity("Rig").addComponent(Model, { model: handle });
-  await running.advance(SETTLE_FRAMES);
-  await teardown(running);
-}, 60_000);
 
 /**
  * Builds a white ground, a light behind the origin, and a camera looking down at the ground in

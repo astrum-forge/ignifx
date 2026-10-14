@@ -8,6 +8,7 @@ import { disposeScenePicker } from "../lite/gpu/picker.js";
 import { setSurfaceSizePx } from "../lite/gpu/render-diagnostics-gpu.js";
 import { captureFrame } from "../lite/gpu/screenshot-capture.js";
 import { discardMaterialWarmUp } from "../lite/gpu/warm-up.js";
+import { readPbrDeformers } from "../lite/pbr-deformers.js";
 import { readPickedTag } from "../lite/picking.js";
 import { disableGpuTiming, readDrawCallCount, readGpuFrameTimeMs } from "../lite/render-diagnostics.js";
 import { assertRenderingFeatureAvailable } from "../lite/render-features.js";
@@ -349,6 +350,12 @@ export class RendererImpl implements Renderer {
 
   /** `true` once a light gained or lost a shadow generator, so the next rebuild needs fresh layouts. */
   needsShadowLayoutReset = false;
+
+  /**
+   * The PBR deformation kinds (`PBR_DEFORMER` bits) a full renderable build has already composed on
+   * this engine. A kind missing from it gets fresh layouts on its first rebuild (`../lite/pbr-deformers.ts`).
+   */
+  builtPbrDeformers = 0;
 
   /** `true` once a camera was added, removed, enabled, disabled, or re-prioritised. */
   needsCameraSelect = true;
@@ -1015,6 +1022,8 @@ export class RendererImpl implements Renderer {
    */
   markSceneRegistered(): void {
     this.#isSceneRegistered = true;
+    // Registration built every mesh already in the scene, so their deformation kinds are composed.
+    this.builtPbrDeformers = readPbrDeformers(this.scene);
   }
 
   /**
