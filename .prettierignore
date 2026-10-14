@@ -5,6 +5,8 @@ coverage/
 .turbo/
 .tsbuild/
 .tsbuild-test/
+# Agent worktrees are whole checkouts of their own (`.git/info/exclude`); they lint themselves.
+.claude/
 # Generated Markdown is never hand-formatted (standards §15).
 # Pack-time copy of the entry skill inside the umbrella package (packages/ignifx/.gitignore).
 packages/ignifx/skills/
