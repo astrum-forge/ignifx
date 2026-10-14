@@ -1,4 +1,4 @@
-import { SpriteAnimator, SpriteRenderer } from "@ignifx/2d";
+import { SpriteAnimator, SpriteRenderer, Tilemap } from "@ignifx/2d";
 import { bool, f32, LayerMask, Script, Vec2 } from "@ignifx/core";
 import { CharacterController2D } from "@ignifx/physics-2d";
 import type { AudioClip } from "@ignifx/audio";
@@ -6,12 +6,10 @@ import type { AssetHandle, MutableVec2, ScriptCallbacks, Vec2Like } from "@ignif
 import type { InputAction } from "@ignifx/input";
 import type { CharacterCollision2D, QueryOptions2D } from "@ignifx/physics-2d";
 
-/** The probe box used to tell a thin platform from real ground, in metres. */
-const PROBE_SIZE: Vec2Like = { x: 0.3, y: 0.3 };
-
 /**
  * The probe that checks for ground straight under the character's centre before a spot becomes the
- * respawn point, in metres. Narrow, so a box hanging over a ledge does not count. It reaches from
+ * respawn point, and finds what a drop-through would step off, in metres. Narrow, so a box hanging
+ * over a ledge does not count. It reaches from
  * just above the feet to below them, because a tilemap collider is a thin outline: the probe has to
  * cross the surface line, and the ground under the centre of a box on a 50-degree slope is 0.33 m
  * below its feet.
@@ -20,6 +18,12 @@ const FOOTING_PROBE_SIZE: Vec2Like = { x: 0.1, y: 0.5 };
 
 /** How far below the feet the footing probe's centre sits, in metres. */
 const FOOTING_PROBE_DEPTH = 0.2;
+
+/**
+ * How far below the feet the tile the character stands on is read, in metres: enough to be inside
+ * the cell under a surface the feet rest on, not enough to reach the cell below it.
+ */
+const STANDING_CELL_DEPTH = 0.1;
 
 /** Degrees to radians, for reading `slopeLimit` as an angle. */
 const DEGREES_TO_RADIANS = Math.PI / 180;
@@ -123,11 +127,6 @@ export class PlatformerController
     fallLimit: f32(-3),
     /** How far below its feet a drop-through moves the character, in metres. */
     dropClearance: f32(0.45),
-    /**
-     * How far below the feet the "is this thin enough to drop through?" probe looks, in metres.
-     * Anything solid there means the character is standing on ground, not on a platform.
-     */
-    dropProbe: f32(0.5),
     /** The downward speed a drop-through starts at, in metres per second. */
     dropSpeed: f32(6),
     /** Whether the sprite is mirrored when running left. */
@@ -213,6 +212,9 @@ export class PlatformerController
 
   /** Scratch for the drop-through and footing probes, so neither allocates. */
   readonly #probe: MutableVec2 = new Vec2();
+
+  /** Scratch for the tile cell under the feet, so the drop-through probe does not allocate. */
+  readonly #cell: MutableVec2 = new Vec2();
 
   /** What the footing probe may hit: everything but the character's own layer. */
   #footingQuery: QueryOptions2D = {};
@@ -526,21 +528,48 @@ export class PlatformerController
    * that top — after which the platform stops existing for this character until it lands on it
    * again.
    *
-   * The probe is what keeps that from being a hole in the world: a box half a metre under the feet
-   * finds solid ground under solid ground, and finds nothing under a plank. `overlapBox` needs one
-   * completed fixed step behind it (`IGX-1153`), which by definition it has here.
+   * Asking the tile is what keeps that from being a hole in the world. Geometry cannot tell the two
+   * apart: a tilemap collider is a thin closed outline, so under solid ground there is nothing to
+   * hit until its bottom edge, exactly as there is nothing under a plank, and a probe hung below
+   * the feet sent the character into the floor (review 2026-10-14). So the footing probe finds what
+   * the feet rest on, and the tile just under the feet says whether it is one-way.
    *
    * @param controller - The controller to move.
    * @returns `true` when the character was moved down through a platform.
    */
   #dropThrough(controller: CharacterController2D): boolean {
     const feet = this.transform.position2D;
-    this.#probe.set(feet.x, feet.y - this.dropProbe);
-    if (this.app.physics2d.overlapBox(this.#probe, PROBE_SIZE).length > 0) {
+    if (!this.#isOnOneWayTile(feet)) {
       return false;
     }
     controller.teleport({ x: feet.x, y: feet.y - this.dropClearance });
     return true;
+  }
+
+  /**
+   * Whether the character is standing on a one-way tile.
+   *
+   * @remarks
+   * Only called while grounded, so `overlapBox` is allowed (`IGX-1153`).
+   *
+   * @param feet - The character's feet.
+   * @returns `true` when a tilemap under `feet` has a one-way tile in the cell just below them.
+   */
+  #isOnOneWayTile(feet: Vec2Like): boolean {
+    this.#probe.set(feet.x, feet.y - FOOTING_PROBE_DEPTH);
+    const under = this.app.physics2d.overlapBox(this.#probe, FOOTING_PROBE_SIZE, 0, this.#footingQuery);
+    this.#probe.set(feet.x, feet.y - STANDING_CELL_DEPTH);
+    for (const entity of under) {
+      const tilemap = entity.getComponent(Tilemap);
+      if (tilemap === null) {
+        continue;
+      }
+      const cell = tilemap.worldToCell(this.#probe, this.#cell);
+      if (tilemap.collisionAt(cell.x, cell.y).oneWay) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
