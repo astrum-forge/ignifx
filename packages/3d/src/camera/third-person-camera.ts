@@ -28,6 +28,9 @@ import type { Entity, MutableVec3, Schema, Vec3Like } from "@ignifx/core";
 /** How far short of a hit the camera stops, in metres, so it never sits inside the surface. */
 const COLLISION_PADDING = 0.08;
 
+/** The default shortest boom, in metres: far enough out that the near plane stays off the target. */
+const DEFAULT_MIN_DISTANCE = 0.5;
+
 /** The default stick look rate, in degrees per second at full deflection. */
 const DEFAULT_STICK_LOOK_SPEED = 180;
 
@@ -41,6 +44,11 @@ function thirdPersonCameraSchema(): Schema {
     target: entityRef({ tooltip: "The entity the camera orbits." }),
     lookAction: str("Look", { tooltip: "The vector2 action that orbits the camera." }),
     distance: f32(4.5, { min: 0, tooltip: "How far behind the target the camera sits, in metres." }),
+    minDistance: f32(DEFAULT_MIN_DISTANCE, {
+      min: 0,
+      tooltip:
+        "The shortest the boom gets when geometry pulls it in, in metres. Below this the camera may enter the obstacle.",
+    }),
     minPitch: f32(-30, { min: -89, max: 89, tooltip: "The lowest pitch, in degrees." }),
     maxPitch: f32(60, { min: -89, max: 89, tooltip: "The highest pitch, in degrees." }),
     sensitivity: f32(0.2, {
@@ -105,6 +113,18 @@ export class ThirdPersonCamera extends Script {
 
   /** How far behind the target the camera sits, in metres. */
   declare distance: number;
+
+  /**
+   * The shortest the boom gets when geometry pulls it in, in metres. Defaults to `0.5`; capped at
+   * `distance`.
+   *
+   * @remarks
+   * Without a floor, backing the target into a corner pulls the camera inside the target's own
+   * mesh. With one, the camera stops here and may enter the obstacle instead. Raise it if the
+   * near plane still clips the target; to hide the model when the camera is close, compare
+   * {@link ThirdPersonCamera.currentDistance} with a threshold of your own each frame.
+   */
+  declare minDistance: number;
 
   /** The lowest pitch, in degrees. */
   declare minPitch: number;
@@ -176,9 +196,10 @@ export class ThirdPersonCamera extends Script {
   }
 
   /**
-   * Where the boom currently ends, after collision. Never longer than `distance`.
+   * Where the boom currently ends, after collision. Never longer than `distance`, and never shorter
+   * than `minDistance` unless `distance` is.
    *
-   * @returns Where the boom currently ends, after collision. Never longer than `distance`.
+   * @returns The boom length, in metres.
    */
   get currentDistance(): number {
     return Number.isNaN(this.#currentDistance) ? this.distance : this.#currentDistance;
@@ -330,8 +351,10 @@ export class ThirdPersonCamera extends Script {
       );
       return;
     }
-    // Going in is immediate: an eased pull-in spends its ease inside the wall.
-    this.#currentDistance = Math.max(0, Math.min(this.#currentDistance, hit.distance - COLLISION_PADDING));
+    // Going in is immediate: an eased pull-in spends its ease inside the wall. The floor keeps the
+    // camera out of the target's own mesh when the target backs into a corner.
+    const floor = clamp(this.minDistance, 0, this.distance);
+    this.#currentDistance = Math.max(floor, Math.min(this.#currentDistance, hit.distance - COLLISION_PADDING));
   }
 
   /**

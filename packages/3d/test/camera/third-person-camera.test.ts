@@ -166,6 +166,29 @@ describe("ThirdPersonCamera", () => {
     harness.dispose();
   });
 
+  it("stops pulling in at minDistance, so a wall right behind the target never puts the camera inside it", async () => {
+    const harness = await createThreeDApp();
+    const { rig } = buildRig(harness);
+    expect(rig.minDistance).toBe(0.5);
+    // The camera sits along -Z; a wall 0.3 m behind the pivot leaves a hit well inside the floor.
+    const wall = harness.world.createEntity("Wall", { position: { x: 0, y: 1, z: -0.5 } });
+    wall.addComponent(BoxCollider, { size: { x: 10, y: 4, z: 0.4 } });
+    wall.addComponent(Rigidbody, { bodyType: "static" });
+    harness.stepMany(3);
+    expect(rig.currentDistance).toBeCloseTo(0.5, 5);
+
+    // A floor of zero is the old behaviour: the boom collapses to the hit.
+    rig.minDistance = 0;
+    harness.stepMany(2);
+    expect(rig.currentDistance).toBeLessThan(0.1);
+
+    // A floor longer than the boom is capped at the boom.
+    rig.minDistance = 8;
+    harness.stepMany(2);
+    expect(rig.currentDistance).toBeCloseTo(5, 5);
+    harness.dispose();
+  });
+
   it("does not query physics on a frame before the first fixed step", async () => {
     const harness = await createThreeDApp();
     const reports: unknown[] = [];

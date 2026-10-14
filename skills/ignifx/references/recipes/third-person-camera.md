@@ -11,6 +11,8 @@ Wall collision is the part worth configuring. With `collisionEnabled`, the rig s
 the pivot toward the ideal eye position over `collisionLayers` and pulls in to `currentDistance`
 when something is in the way, then eases back out at `collisionRecoverySpeed`. Keep the layers to
 static level geometry: a cast that hits the character's own body would jam the camera at its nose.
+The boom never pulls in past `minDistance` (0.5 m by default), so backing the character into a
+corner leaves the camera behind its shoulder rather than inside its mesh.
 
 The rig reads the `Look` action and the controller reads `Move`, `Jump` and `Sprint`; both name
 them in fields (`lookAction`, `moveAction`, …), so renaming one is a field plus `rebind()`. An
