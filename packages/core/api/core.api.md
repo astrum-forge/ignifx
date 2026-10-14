@@ -2014,6 +2014,8 @@ export class MaterialAsset {
     static assetType: string;
     clone(app: App): AssetHandle<MaterialAsset>;
     readonly definition: MaterialDefinition;
+    // @internal
+    get displacement(): number;
     dispose(): void;
     getUniform(name: string, out?: Float32Array): number | Float32Array;
     get isDrawable(): boolean;
@@ -3061,6 +3063,7 @@ export type ShaderCullMode = (typeof SHADER_CULL_MODES)[number];
 export interface ShaderDeclaration {
     readonly attributes: readonly ShaderAttributeName[];
     readonly defines: readonly ShaderDefineDeclaration[];
+    readonly displace: number;
     readonly ignifx: readonly IgnifxUniformName[];
     readonly kind: ShaderKind;
     readonly pipeline: ShaderPipelineState;

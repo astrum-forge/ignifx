@@ -39,6 +39,7 @@ texture (which also claims `<name>Sampler`), a storage buffer and a define share
 | `@ignifx storage name: array<T>`                                                                          | `// @ignifx storage particles: array<Particle>`                     | A read-only storage buffer, bound with `material.setStorageBuffer(name, buffer)`                                                                        |
 | `@ignifx define NAME = true \| false \| number`                                                           | `// @ignifx define SOFT_EDGE = true`                                | A WGSL `const`; a material may override it with `setDefine`, which recompiles                                                                           |
 | `@ignifx blend … cull … depthWrite … depthTest … transmissive instancing …`                               | `// @ignifx blend additive cull none depthWrite off`                | Pipeline state, several keywords per line or one line each                                                                                              |
+| `@ignifx displace metres`                                                                                 | `// @ignifx displace 0.3`                                           | The furthest the vertex stage moves a vertex, in world metres. Renderers widen their bounds by it, so shadow maps and GPU culling see the moved shape. `shader` and `surface` files only |
 
 Pipeline keywords and their values: `blend opaque|alpha|additive|premultiplied`,
 `cull back|none`, `depthWrite on|off`, `depthTest on|off`, `transmissive` (no value, and it needs a
@@ -54,6 +55,7 @@ What an omitted directive means:
 | `depthWrite`      | On for `opaque`, off for every blended mode — Lite's own rule                       |
 | `depthTest`       | On                                                                                  |
 | `instancing`      | `none`                                                                              |
+| `displace`        | `0`: the vertex stage stays inside the mesh's own bounds                            |
 | A uniform default | `0` (or the identity, for `mat4x4<f32>`)                                            |
 | A texture default | Nothing is bound until the material binds it                                        |
 
@@ -128,6 +130,9 @@ host material's uniform block so two shaders on one material never collide.
 - `displace` cannot read a uniform, a texture or a helper function, and cannot loop or switch: Lite's
   plugin uniforms and samplers are fragment-visible only, and the hook is inlined. Time-driven wind
   is a `@ignifx shader` file, not a hook.
+- A `displace` that moves vertices further than the mesh's own bounds also needs
+  `// @ignifx displace <metres>`, or a directional shadow map cuts the moved part off. It does not
+  move the thin instances of an `InstancedMeshRenderer`; move those in a `@ignifx shader` file.
 - `in.color` reads white and there is no `uv2`: Lite gates both behind material state a plugin
   cannot see.
 - A write to `alpha` reaches blending, not the cutout test — an `alphaMode: "mask"` host has already

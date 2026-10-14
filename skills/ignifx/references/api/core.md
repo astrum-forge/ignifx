@@ -26686,6 +26686,15 @@ The vertex attributes the vertex stage reads. A `"shader"` file always includes 
 
 The WGSL `const` declarations a material may override.
 
+##### displace
+
+> `readonly` **displace**: `number`
+
+The furthest, in world metres, the vertex stage moves a vertex from where the mesh puts it: the
+`// @ignifx displace <metres>` line, or `0` when the file has none. Every mesh drawn with the
+material gets bounds this much larger, so a directional shadow map and GPU instance culling
+still cover the moved shape.
+
 ##### ignifx
 
 > `readonly` **ignifx**: readonly (`"ambientColor"` \| `"time"` \| `"unscaledTime"` \| `"deltaTime"` \| `"mainLightDirection"` \| `"mainLightColor"`)[]

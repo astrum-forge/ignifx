@@ -378,6 +378,34 @@ describe("pipeline state", () => {
   });
 });
 
+describe("displace", () => {
+  it("defaults to no displacement", () => {
+    expect(parse().displace).toBe(0);
+  });
+
+  it("reads a distance in metres", () => {
+    expect(parse("// @ignifx displace 0.25").displace).toBe(0.25);
+    expect(parseShaderDeclaration("// @ignifx surface\n// @ignifx displace 2", "s.surface.wgsl").displace).toBe(2);
+  });
+
+  it("refuses a negative, missing, or unreadable distance", () => {
+    expect(directiveFailure("// @ignifx displace -1").message).toContain("is not a distance");
+    expect(directiveFailure("// @ignifx displace").message).toContain("is not a distance");
+    expect(directiveFailure("// @ignifx displace far").message).toContain("is not a distance");
+    expect(directiveFailure("// @ignifx displace 0.5 metres").message).toContain("is not a distance");
+  });
+
+  it("refuses a second displace line", () => {
+    expect(directiveFailure("// @ignifx displace 1", "// @ignifx displace 2").message).toContain(
+      "displace is declared twice",
+    );
+  });
+
+  it("refuses it on a post effect, which draws no mesh", () => {
+    expect(failure("// @ignifx post\n// @ignifx displace 1").message).toContain("nothing to displace");
+  });
+});
+
 describe("the shipped fixtures", () => {
   it("parse the tint shader's whole declaration", () => {
     const declaration = parseShaderDeclaration(TINT_WGSL, "shaders/tint.wgsl");

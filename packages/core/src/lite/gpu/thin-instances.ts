@@ -6,6 +6,7 @@ import {
   flushThinInstances as liteFlushThinInstances,
   setThinInstanceColors as liteSetThinInstanceColors,
   setThinInstanceCount as liteSetThinInstanceCount,
+  setThinInstanceCullBoundsPad as liteSetThinInstanceCullBoundsPad,
   setThinInstanceDrawCount as liteSetThinInstanceDrawCount,
   setThinInstanceLodPartner as liteSetThinInstanceLodPartner,
   setThinInstances as liteSetThinInstances,
@@ -157,6 +158,24 @@ export function setThinInstanceColors(mesh: Mesh, colors: Float32Array | null): 
  */
 export function enableThinInstanceGpuCulling(mesh: Mesh, enabled: boolean): void {
   liteEnableThinInstanceGpuCulling(mesh, enabled);
+}
+
+/**
+ * Grows every instance's GPU-culling sphere by a world-space distance.
+ *
+ * @remarks
+ * The culler builds each sphere from the prototype's vertices (`lib/mesh/thin-instance-gpu-culling.js`
+ * 426), so a vertex stage that moves an instance outside it gets the instance culled while it is
+ * still on screen. Lite reads the pad on every culled pass (`index.d.ts` 11232), so it can change
+ * live. Needs {@link setThinInstances} first.
+ *
+ * @param mesh - The instanced mesh that owns the culling pass.
+ * @param pad - The extra radius in world units; `0` is the exact sphere.
+ *
+ * @internal
+ */
+export function setThinInstanceCullBoundsPad(mesh: Mesh, pad: number): void {
+  liteSetThinInstanceCullBoundsPad(mesh, pad);
 }
 
 /**

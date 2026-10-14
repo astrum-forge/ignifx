@@ -360,6 +360,35 @@ export class MaterialAsset {
   }
 
   /**
+   * How far, in world metres, drawing with this material may move a vertex: the shader's
+   * `// @ignifx displace`, or the sum over the enabled surface shaders. Renderers widen their
+   * bounds by it.
+   *
+   * @returns The distance; `0` for a material whose vertex stage moves nothing.
+   *
+   * @internal
+   */
+  get displacement(): number {
+    const shader = this.#shader;
+    if (shader !== null) {
+      return shader.shader.declaration.displace;
+    }
+    const support = surfaceShaderSupport();
+    if (support === null) {
+      return 0;
+    }
+    const bindings = support.surfaceShaders(this);
+    let total = 0;
+    for (let index = 0; index < bindings.length; index += 1) {
+      const binding = bindings[index];
+      if (binding?.enabled === true) {
+        total += binding.shader.declaration.displace;
+      }
+    }
+    return total;
+  }
+
+  /**
    * One attached surface shader, by the name it answers to — the `.surface.wgsl` basename unless the
    * material renamed it.
    *
