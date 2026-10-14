@@ -395,8 +395,9 @@ export class ThirdPersonController extends Script {
     if (clearAbove !== null) {
       return;
     }
-    // There is a step, and the space above it is clear: rise over it this step.
-    this.#displacement.y += this.stepHeight / dt;
+    // There is a step, and the space above it is clear: rise over it this step. `y` is a distance
+    // already (the caller scales only `x` and `z` by `dt`), so the lift is the step height itself.
+    this.#displacement.y += this.stepHeight;
     if (this.#verticalVelocity < 0) {
       this.#verticalVelocity = 0;
     }

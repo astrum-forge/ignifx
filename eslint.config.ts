@@ -23,6 +23,8 @@ const config: Linter.Config[] = [
       "**/node_modules/**",
       "**/coverage/**",
       "**/.turbo/**",
+      // Agent worktrees are whole checkouts of their own (`.git/info/exclude`); they lint themselves.
+      ".claude/**",
       // Electron desktop build output: `out/**` is what `electron-vite build` writes and
       // `release/**` what `electron-builder` writes. Both are bundled JavaScript, and linting them
       // reports tens of thousands of JSDoc failures against code nobody wrote.

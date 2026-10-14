@@ -42,7 +42,7 @@ function addStep(harness: ThreeDAppHarness, height: number, z: number): Entity {
 
 describe("ThirdPersonController step probe", () => {
   it("lifts the character over a kerb it would otherwise stop at", async () => {
-    const climbed = async (stepHeight: number): Promise<number> => {
+    const climbed = async (stepHeight: number): Promise<{ z: number; peakY: number }> => {
       const harness = await createThreeDApp();
       try {
         harness.app.input.loadActions(characterActions());
@@ -54,15 +54,22 @@ describe("ThirdPersonController step probe", () => {
         hero.addComponent(ThirdPersonController, { walkSpeed: 3, stepHeight });
         harness.stepMany(40);
         harness.app.input.simulate({ "<Keyboard>/w": 1 });
-        harness.stepMany(120);
-        return hero.transform.position.z;
+        let peakY = hero.transform.position.y;
+        for (let index = 0; index < 120; index += 1) {
+          harness.step();
+          peakY = Math.max(peakY, hero.transform.position.y);
+        }
+        return { z: hero.transform.position.z, peakY };
       } finally {
         harness.dispose();
       }
     };
     const withProbe = await climbed(0.4);
     const withoutProbe = await climbed(0);
-    expect(withProbe).toBeGreaterThan(withoutProbe);
+    expect(withProbe.z).toBeGreaterThan(withoutProbe.z);
+    // The lift is the step height, not the step height per second: a 0.4 m probe over a 0.3 m kerb
+    // never carries the character more than one probe height above where it rested.
+    expect(withProbe.peakY).toBeLessThan(withoutProbe.peakY + 0.4 + 0.1);
   }, 30_000);
 
   it("leaves the character alone when there is nothing in front of it", async () => {
