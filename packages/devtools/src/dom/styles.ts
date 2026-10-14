@@ -27,6 +27,8 @@ export const DEVTOOLS_CLASS_NAMES = {
   tabs: "ignifx-devtools-tabs",
   /** One tab button. */
   tab: "ignifx-devtools-tab",
+  /** The button at the end of the tab strip that closes the overlay. */
+  close: "ignifx-devtools-close",
   /** The active tab button. */
   tabActive: "ignifx-devtools-tab-active",
   /** The panel body under the tab strip. */
@@ -65,6 +67,7 @@ color:#e8eaf0;background:rgba(16,18,24,.92);border-left:1px solid #2b3040;pointe
 .${DEVTOOLS_CLASS_NAMES.tabs}{display:flex;flex-wrap:wrap;gap:2px;padding:4px;background:#0e1016;border-bottom:1px solid #2b3040}
 .${DEVTOOLS_CLASS_NAMES.tab}{appearance:none;border:0;padding:3px 7px;border-radius:3px;background:#1b1f2b;color:#9aa3b8;cursor:pointer;font:inherit}
 .${DEVTOOLS_CLASS_NAMES.tabActive}{background:#2f3a55;color:#fff}
+.${DEVTOOLS_CLASS_NAMES.close}{appearance:none;border:0;order:1;margin-left:auto;padding:3px 7px;border-radius:3px;background:transparent;color:#9aa3b8;cursor:pointer;font:inherit}
 .${DEVTOOLS_CLASS_NAMES.body}{flex:1;overflow:auto;padding:6px}
 .${DEVTOOLS_CLASS_NAMES.panel}{display:flex;flex-direction:column;gap:2px}
 .${DEVTOOLS_CLASS_NAMES.row}{display:flex;justify-content:space-between;gap:8px;padding:1px 2px}
@@ -72,10 +75,11 @@ color:#e8eaf0;background:rgba(16,18,24,.92);border-left:1px solid #2b3040;pointe
 .${DEVTOOLS_CLASS_NAMES.value}{color:#e8eaf0;text-align:right;overflow:hidden;text-overflow:ellipsis}
 .${DEVTOOLS_CLASS_NAMES.node}{display:flex;gap:4px;align-items:center;padding:1px 2px;border-radius:2px;cursor:pointer;white-space:nowrap}
 .${DEVTOOLS_CLASS_NAMES.nodeSelected}{background:#2f3a55}
-.${DEVTOOLS_CLASS_NAMES.button}{appearance:none;border:1px solid #2b3040;border-radius:3px;background:#1b1f2b;color:#c8cfdd;cursor:pointer;font:inherit;padding:1px 5px}
+.${DEVTOOLS_CLASS_NAMES.button}{appearance:none;border:1px solid #2b3040;border-radius:3px;background:#1b1f2b;color:#c8cfdd;cursor:pointer;font:inherit;padding:1px 5px;white-space:nowrap}
 .${DEVTOOLS_CLASS_NAMES.input}{background:#0e1016;border:1px solid #2b3040;border-radius:3px;color:#e8eaf0;font:inherit;padding:1px 4px;min-width:0;width:100%}
 .${DEVTOOLS_CLASS_NAMES.heading}{color:#7f8aa3;text-transform:uppercase;letter-spacing:.06em;margin-top:6px}
-.${DEVTOOLS_CLASS_NAMES.toolbar}{display:flex;gap:4px;align-items:center;margin-bottom:4px}
+.${DEVTOOLS_CLASS_NAMES.toolbar}{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-bottom:4px}
+.${DEVTOOLS_CLASS_NAMES.toolbar}>.${DEVTOOLS_CLASS_NAMES.label}{flex:1 1 8em;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .${DEVTOOLS_CLASS_NAMES.line}{white-space:pre-wrap;word-break:break-word;padding:1px 2px}
 .${DEVTOOLS_CLASS_NAMES.canvas}{width:100%;height:120px;display:block;background:#0e1016;border:1px solid #2b3040;border-radius:3px}
 `;

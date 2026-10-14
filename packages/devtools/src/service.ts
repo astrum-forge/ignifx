@@ -317,6 +317,9 @@ export class DevtoolsService {
       host: this.#host,
       panels: this.#panels,
       settings: this.#settings,
+      onClose: (): void => {
+        this.close();
+      },
     });
     for (const [name, visible] of this.#visible) {
       this.#overlay.setPanelVisible(name, visible);

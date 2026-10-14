@@ -205,6 +205,21 @@ describe("the devtools overlay", () => {
     h.dispose();
   });
 
+  it("leaves a strip of the page uncovered when docked to a side, and closes from its own button", async () => {
+    const h = await createOverlayHarness({ settings: { position: "left" } });
+    h.service.open();
+    const root = rootIn(h.dom.document.body);
+    expect(root?.style.getPropertyValue("max-width")).toBe("calc(100% - 40px)");
+
+    // A phone has no backtick key, so the overlay carries its own way out.
+    const close = root?.byClass(DEVTOOLS_CLASS_NAMES.close)[0];
+    expect(close).toBeDefined();
+    close?.dispatch("click");
+    expect(h.service.isOpen).toBe(false);
+    expect(rootIn(h.dom.document.body)).toBeNull();
+    h.dispose();
+  });
+
   it("toggles on the configured key and ignores keystrokes typed into a field", async () => {
     const h = await createOverlayHarness({ settings: { toggleKey: "F1" } });
     h.service.start();
