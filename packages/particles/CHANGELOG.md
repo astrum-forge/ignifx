@@ -1,5 +1,13 @@
 # @ignifx/particles
 
+## 0.7.0
+
+### Patch Changes
+
+- Updated dependencies [2ea5e9e]
+- Updated dependencies [a837a3e]
+  - @ignifx/core@0.7.0
+
 ## 0.6.1
 
 ### Patch Changes
