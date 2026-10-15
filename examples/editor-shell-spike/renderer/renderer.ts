@@ -4,6 +4,8 @@ interface SpikeBridge {
   readonly devOrigin: string;
   readonly play: boolean;
   readonly playOrigin: string;
+  readonly query: string;
+  onRpc(callback: (request: { id: number; method: string; params?: unknown }) => void): void;
   report(message: unknown): void;
   onServerReady(callback: () => void): void;
 }
@@ -47,7 +49,7 @@ window.addEventListener("securitypolicyviolation", (event) => {
 function openSceneView(): void {
   const iframeCreatedAt = performance.now();
   const iframe = document.createElement("iframe");
-  iframe.src = `${spike.devOrigin}/__ignifx_editor__/`;
+  iframe.src = `${spike.devOrigin}/__ignifx_editor__/${spike.query === "" ? "" : `?${spike.query}`}`;
   iframe.title = "scene view";
   // A new channel per document: a reloaded iframe is a new document and the old port is gone
   // (re-posting a transferred port throws DataCloneError "already neutered").
@@ -56,7 +58,7 @@ function openSceneView(): void {
   let nextId = 1;
   const waiting = new Map<number, (message: RpcMessage) => void>();
 
-  function call(method: string): Promise<{ message: RpcMessage; rttMs: number }> {
+  function call(method: string, params?: unknown): Promise<{ message: RpcMessage; rttMs: number }> {
     const id = nextId;
     nextId += 1;
     const sentAt = performance.now();
@@ -64,7 +66,7 @@ function openSceneView(): void {
       waiting.set(id, (message) => {
         resolve({ message, rttMs: performance.now() - sentAt });
       });
-      port.postMessage({ jsonrpc: "2.0", id, method });
+      port.postMessage({ jsonrpc: "2.0", id, method, params });
     });
   }
 
@@ -87,7 +89,13 @@ function openSceneView(): void {
       return;
     }
     if (message.method === "firstFrame") {
-      report("firstFrame", { load: loads, sinceIframeCreatedMs: performance.now() - iframeCreatedAt, params: message.params });
+      const rect = iframe.getBoundingClientRect();
+      report("firstFrame", {
+        load: loads,
+        sinceIframeCreatedMs: performance.now() - iframeCreatedAt,
+        params: message.params,
+        iframeRect: { left: rect.left, top: rect.top, width: rect.width, height: rect.height },
+      });
       say(`scene view: first frame ${Math.round(performance.now() - iframeCreatedAt)} ms after iframe creation`);
       if (loads === 1) {
         void measurePings();
@@ -110,6 +118,12 @@ function openSceneView(): void {
     iframe.contentWindow?.postMessage({ type: "ignifx-editor/connect", protocol: 0 }, spike.devOrigin, [channel.port2]);
     void call("ping").then(({ message, rttMs }) => {
       report("firstPong", { load: loads, sinceIframeCreatedMs: performance.now() - iframeCreatedAt, rttMs, result: message.result });
+    });
+  });
+  // S0.2: main drives the scene view through this relay (main -> renderer -> port -> host).
+  spike.onRpc((request) => {
+    void call(request.method, request.params).then(({ message, rttMs }) => {
+      report("rpcResult", { rpcId: request.id, method: request.method, rttMs, result: message.result ?? null, error: message.error ?? null });
     });
   });
   views?.append(iframe);

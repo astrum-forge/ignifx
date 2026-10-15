@@ -77,7 +77,7 @@ export function editorHostSpike(options: EditorHostSpikeOptions): Plugin {
         const html = [
           "<!doctype html>",
           '<html lang="en"><head><meta charset="utf-8" /><title>ignifx editor host (spike)</title>',
-          "<style>html,body{margin:0;height:100%;overflow:hidden;background:#000}canvas{display:block;width:100%;height:100%}</style>",
+          "<style>html,body{margin:0;height:100%;overflow:hidden;background:#000}body{position:relative}canvas{display:block;width:100%;height:100%}</style>",
           "</head><body>",
           '<canvas id="scene-view"></canvas>',
           `<script type="module" src="/@fs${hostModulePath.replaceAll("\\", "/")}"></script>`,

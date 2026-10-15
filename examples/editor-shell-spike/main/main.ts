@@ -11,6 +11,8 @@
 //   SPIKE_PLAY=1     also embed the play view (the project's own index.html)
 //   SPIKE_OUT        directory for the screenshot and the JSON result
 //   SPIKE_HOLD_MS    how long to keep the window open after the run (default 1500)
+//   SPIKE_S02        3d | 2d — run spike S0.2's scripted scene-view checks (main/s02.ts) instead of S0.1's
+//   SPIKE_QUERY      query string for the scene view, e.g. "mode=2d" or "outline=bbox"
 import { spawn } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -27,6 +29,7 @@ import {
 import { app, BrowserWindow, ipcMain } from "electron";
 import type { ChildProcess } from "node:child_process";
 import type { Session, WebContents } from "electron";
+import { runS02 } from "./s02.js";
 
 const processStartEpoch = Date.now() - performance.now();
 const env = process.env;
@@ -185,6 +188,20 @@ let firstFrameCount = 0;
 let lastFirstFrameEpoch = 0;
 let window: BrowserWindow | null = null;
 const hotReloads: Record<string, unknown>[] = [];
+// S0.2: every renderer message, an RPC relay, and the iframe's box in the window.
+const inbox: Record<string, unknown>[] = [];
+let nextRpcId = 1;
+const rpcWaiting = new Map<number, (message: Record<string, unknown>) => void>();
+let iframeRect = { left: 0, top: 0, width: 0, height: 0 };
+
+function rpc(method: string, params?: unknown): Promise<Record<string, unknown>> {
+  const id = nextRpcId;
+  nextRpcId += 1;
+  return new Promise((resolveRpc) => {
+    rpcWaiting.set(id, resolveRpc);
+    window?.webContents.send("spike:rpc", { id, method, params });
+  });
+}
 
 function describeFrames(contents: WebContents): unknown[] {
   return contents.mainFrame.framesInSubtree.map((frame) => {
@@ -280,6 +297,18 @@ async function afterFirstFrame(): Promise<void> {
     return;
   }
   const contents = window.webContents;
+  if (env["SPIKE_S02"] !== undefined) {
+    try {
+      await runS02({ contents, rpc, inbox, iframeRect, log, outDir, mode: env["SPIKE_S02"], query: env["SPIKE_QUERY"] ?? "" });
+    } catch (error) {
+      log("s02Failed", { error: error instanceof Error ? `${error.message}\n${error.stack ?? ""}` : String(error) });
+    }
+    writeFileSync(join(outDir, `s0.2-result-${env["SPIKE_S02"]}-${String(Date.now())}.json`), JSON.stringify(result, null, 2));
+    setTimeout(() => {
+      app.quit();
+    }, holdMs);
+    return;
+  }
   await new Promise((done) => setTimeout(done, 1500));
   log("frames", { frames: describeFrames(contents) });
   const metrics = app.getAppMetrics().map((metric) => ({
@@ -319,6 +348,16 @@ ipcMain.on("spike:report", (event, message: Record<string, unknown>) => {
     return;
   }
   const kind = String(message["kind"]);
+  inbox.push({ ...message, mainEpochMs: Date.now() });
+  if (kind === "rpcResult") {
+    const waiting = rpcWaiting.get(Number(message["rpcId"]));
+    rpcWaiting.delete(Number(message["rpcId"]));
+    waiting?.(message);
+    return;
+  }
+  if (kind === "firstFrame" && message["iframeRect"] !== undefined) {
+    iframeRect = message["iframeRect"] as typeof iframeRect;
+  }
   if (kind === "firstFrame") {
     firstFrameCount += 1;
     lastFirstFrameEpoch = Date.now();
@@ -352,7 +391,7 @@ app.whenReady().then(
       show: true,
       webPreferences: {
         ...base.webPreferences,
-        additionalArguments: [`--spike-dev-origin=${devOrigin}`, ...(env["SPIKE_PLAY"] === "1" ? ["--spike-play", `--spike-play-origin=${playOrigin}`] : [])],
+        additionalArguments: [`--spike-dev-origin=${devOrigin}`, `--spike-query=${env["SPIKE_QUERY"] ?? ""}`, ...(env["SPIKE_PLAY"] === "1" ? ["--spike-play", `--spike-play-origin=${playOrigin}`] : [])],
       },
     });
     log("webPreferences", { webPreferences: { ...base.webPreferences, preload: "(path)" } });

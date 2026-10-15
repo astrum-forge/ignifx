@@ -1,0 +1,356 @@
+{
+  "format": "ignifx.scene",
+  "formatVersion": 1,
+  "name": "EditorSpike2D",
+  "entities": [
+    {
+      "uid": "01JB0000000000000000000001",
+      "name": "Main Camera",
+      "parent": null,
+      "transform": {
+        "position": [
+          0,
+          0.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01JB0000000000000000000002",
+          "type": "ignifx/Camera2D",
+          "props": {
+            "orthographicSize": 4
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01JB0000000000000000000003",
+      "name": "Ground",
+      "parent": null,
+      "transform": {
+        "position": [
+          0,
+          0.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          10,
+          5,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01JB0000000000000000000004",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "tiles.atlas.json"
+            },
+            "sortingLayer": "Background"
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01JB0000000000000000000005",
+      "name": "Path Decal",
+      "parent": null,
+      "transform": {
+        "position": [
+          0,
+          0.3,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01JB0000000000000000000006",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "tiles.atlas.json"
+            },
+            "sortingLayer": "Decal"
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01JB0000000000000000000007",
+      "name": "Barrel",
+      "parent": null,
+      "transform": {
+        "position": [
+          0.5,
+          0.2,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01JB0000000000000000000008",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "tiles.atlas.json"
+            },
+            "sortingLayer": "Default"
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01JB0000000000000000000009",
+      "name": "Hero",
+      "parent": null,
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01JB0000000000000000000010",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "hero.atlas.json"
+            },
+            "sortingLayer": "Default"
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01JB0000000000000000000011",
+      "name": "Canopy",
+      "parent": null,
+      "transform": {
+        "position": [
+          -0.3,
+          0.8,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01JB0000000000000000000012",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "tiles.atlas.json"
+            },
+            "sortingLayer": "Foreground"
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01JB0000000000000000000013",
+      "name": "Rock",
+      "parent": null,
+      "transform": {
+        "position": [
+          3,
+          0.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01JB0000000000000000000014",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "tiles.atlas.json"
+            },
+            "sortingLayer": "Default"
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01JB0000000000000000000015",
+      "name": "Ghost",
+      "parent": null,
+      "transform": {
+        "position": [
+          3,
+          0.4,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01JB0000000000000000000016",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "tiles.atlas.json"
+            },
+            "sortingLayer": "Default",
+            "pickable": false
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01JB0000000000000000000017",
+      "name": "Sign A (order 5)",
+      "parent": null,
+      "transform": {
+        "position": [
+          -3,
+          0.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01JB0000000000000000000018",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "tiles.atlas.json"
+            },
+            "sortingLayer": "Foreground",
+            "orderInLayer": 5
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01JB0000000000000000000019",
+      "name": "Sign B (order 0)",
+      "parent": null,
+      "transform": {
+        "position": [
+          -2.8,
+          0.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01JB0000000000000000000020",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "tiles.atlas.json"
+            },
+            "sortingLayer": "Foreground"
+          }
+        }
+      ]
+    }
+  ]
+}

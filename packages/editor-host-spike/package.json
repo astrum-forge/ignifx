@@ -2,7 +2,7 @@
   "name": "@ignifx/editor-host-spike",
   "version": "0.0.0",
   "private": true,
-  "description": "THROWAWAY spike S0.1 (editor plan): host-in-project. Not for merge, not published.",
+  "description": "THROWAWAY spikes S0.1 and S0.2 (editor plan): host-in-project, gizmos and editor cameras. Not for merge, not published.",
   "license": "Apache-2.0",
   "type": "module",
   "exports": {
@@ -10,12 +10,21 @@
     "./host": "./host.ts"
   },
   "peerDependencies": {
+    "@babylonjs/lite": "catalog:",
+    "@ignifx/2d": "workspace:*",
     "@ignifx/core": "workspace:*",
     "vite": "catalog:"
   },
   "devDependencies": {
+    "@babylonjs/lite": "catalog:",
+    "@ignifx/2d": "workspace:*",
     "@ignifx/core": "workspace:*",
     "@ignifx/vite-plugin": "workspace:*",
     "vite": "catalog:"
+  },
+  "peerDependenciesMeta": {
+    "@ignifx/2d": {
+      "optional": true
+    }
   }
 }

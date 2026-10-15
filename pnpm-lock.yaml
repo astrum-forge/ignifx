@@ -586,6 +586,12 @@ importers:
 
   packages/editor-host-spike:
     devDependencies:
+      '@babylonjs/lite':
+        specifier: 'catalog:'
+        version: 1.34.0(@babylonjs/havok@1.3.14)(@types/webxr@0.5.24)(@webgpu/types@0.1.72)
+      '@ignifx/2d':
+        specifier: workspace:*
+        version: link:../2d
       '@ignifx/core':
         specifier: workspace:*
         version: link:../core
@@ -1119,6 +1125,9 @@ importers:
         specifier: workspace:*
         version: link:../../packages/ui
     devDependencies:
+      '@ignifx/editor-host-spike':
+        specifier: workspace:*
+        version: link:../../packages/editor-host-spike
       '@ignifx/electron':
         specifier: workspace:*
         version: link:../../packages/electron
