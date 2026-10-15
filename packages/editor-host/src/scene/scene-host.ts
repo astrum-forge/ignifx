@@ -681,6 +681,8 @@ export class SceneHost {
    * @param report - What `app.hotReload` did.
    */
   #hotReloaded(report: HotReloadReport): void {
+    // A "recreate" reload replaces component instances, which the document index holds.
+    this.#mirror?.invalidate();
     const params: HotReloadedParams = {
       report: {
         kind: report.kind,

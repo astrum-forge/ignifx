@@ -380,7 +380,8 @@ export function openChannel(options: ChannelOptions): Channel {
       return;
     }
     const next = queue.then(reply);
-    queue = next;
+    // `reply` turns every failure into an answer; the guard keeps one bug from stalling the queue.
+    queue = next.catch(() => undefined);
     await next;
   };
 
