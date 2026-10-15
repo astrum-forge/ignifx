@@ -1,6 +1,6 @@
 import { createRenderHarness } from "../../render/support/render-harness.js";
 import type { AssetHandle } from "../../../src/assets/types.js";
-import type { RenderHarness } from "../../render/support/render-harness.js";
+import type { RenderHarness, RenderHarnessOptions } from "../../render/support/render-harness.js";
 
 /**
  * The shader suites' harness. The `.wgsl` loader, the `PreRender` uniform system and the
@@ -19,10 +19,11 @@ export interface ShaderHarness extends RenderHarness {
 /**
  * Builds the harness.
  *
+ * @param options - Harness options; `editMode` builds an edit-mode app.
  * @returns The harness. Always `dispose()` it.
  */
-export async function createShaderHarness(): Promise<ShaderHarness> {
-  const base = await createRenderHarness();
+export async function createShaderHarness(options?: RenderHarnessOptions): Promise<ShaderHarness> {
+  const base = await createRenderHarness(options);
   const canned = (address: string, body: string): void => {
     base.net.canned.set(base.app.assets.resolveUrl(address), body);
   };

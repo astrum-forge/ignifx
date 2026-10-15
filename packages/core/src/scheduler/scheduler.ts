@@ -2,7 +2,7 @@ import { PHASES, Phase } from "../app/types.js";
 import { ScriptCallbackKind } from "../lifecycle/callbacks.js";
 import { updatesWhilePaused } from "../lifecycle/pause-filter.js";
 import type { EndOfFrameQueue } from "./deferred-queue.js";
-import type { RegisterSystemOptions, System, SystemContext, Time } from "../app/types.js";
+import type { RegisterSystemOptions, System, SystemContext, SystemEditMode, Time } from "../app/types.js";
 import type { CoroutineHostImpl } from "../coroutine/coroutine-host.js";
 import type { Diagnostics } from "../diagnostics/diagnostics.js";
 import type { FrameStateController } from "../lifecycle/frame-state.js";
@@ -38,6 +38,9 @@ import type { World } from "../world/world.js";
  *   not run" while paused, and a physics system that kept stepping with no `fixedUpdate` in front
  *   of it would be worse than either reading alone. Systems of every other phase keep running:
  *   rendering, audio, and UI must still work on a pause screen.
+ * - **Edit mode costs a game one comparison per system.** An entry's edit-mode behaviour is
+ *   resolved at registration, so in an app that is not in edit mode every entry is `"run"` and the
+ *   frame takes the same path it always did (ADR-0028).
  * - **`FrameSample.destroyed` counts entities.** The destroy flush reports no total, and the only
  *   world-level signal for a release is `onEntityDestroyed`; a component destroyed on a surviving
  *   entity is therefore not counted yet.
@@ -67,17 +70,22 @@ class SystemEntry {
   /** Registration serial, the tie-breaker. */
   readonly serial: number;
 
+  /** What the system does this app's frames: always `"run"` outside edit mode. */
+  readonly editMode: SystemEditMode;
+
   /**
    * Creates an entry.
    *
    * @param system - The system.
    * @param order - Its order within the phase.
    * @param serial - Its registration serial.
+   * @param editMode - What it does in this app's frames.
    */
-  constructor(system: System, order: number, serial: number) {
+  constructor(system: System, order: number, serial: number, editMode: SystemEditMode) {
     this.system = system;
     this.order = order;
     this.serial = serial;
+    this.editMode = editMode;
   }
 }
 
@@ -98,6 +106,9 @@ class SystemContextImpl implements SystemContext {
 
   /** Seconds elapsed. */
   dt = 0;
+
+  /** Whether the running system's clock is held. */
+  isClockHeld = false;
 
   /**
    * Creates the shared context.
@@ -131,6 +142,8 @@ export interface SchedulerOptions {
   readonly clock: Clock;
   /** Whether per-phase CPU timings are recorded. */
   readonly development: boolean;
+  /** Whether the app is in edit mode: no fixed loop, and systems run as they registered for it. */
+  readonly editMode: boolean;
   /**
    * Reports a system failure.
    *
@@ -160,6 +173,8 @@ export class Scheduler {
   readonly #clock: Clock;
 
   readonly #development: boolean;
+
+  readonly #isEditMode: boolean;
 
   readonly #report: (error: unknown, system: System, phase: Phase) => void;
 
@@ -237,6 +252,7 @@ export class Scheduler {
     this.#deferred = options.deferred;
     this.#clock = options.clock;
     this.#development = options.development;
+    this.#isEditMode = options.editMode;
     // Bound rather than assigned: `options.report` is declared as a method, so handing the raw
     // reference around would detach its `this` (coding standards §5.4).
     this.#report = (error: unknown, system: System, phase: Phase): void => {
@@ -270,7 +286,8 @@ export class Scheduler {
    * Registers a system in a phase (`docs/architecture/03-scripting-and-components.md` §6).
    *
    * @param system - The system.
-   * @param options - The phase and the ascending order within it; `order` defaults to `0`.
+   * @param options - The phase, the ascending order within it (`order` defaults to `0`), and what
+   * it does in edit mode (`editMode` defaults to `"run"`).
    */
   registerSystem(system: System, options: RegisterSystemOptions): void {
     const phase = options.phase;
@@ -279,7 +296,8 @@ export class Scheduler {
       return;
     }
     this.#serial += 1;
-    const entry = new SystemEntry(system, options.order ?? 0, this.#serial);
+    const editMode = this.#isEditMode ? (options.editMode ?? "run") : "run";
+    const entry = new SystemEntry(system, options.order ?? 0, this.#serial, editMode);
     // Sorted insertion, not a per-frame sort: both keys are fixed for the system's whole life.
     let index = list.length;
     while (index > 0) {
@@ -412,7 +430,8 @@ export class Scheduler {
     const start = this.#now();
     this.#phase = Phase.FixedUpdate;
     this.#internals?.setPhase(Phase.FixedUpdate);
-    if (!time.paused) {
+    // Edit mode never simulates: no fixed step, so no physics and no `fixedUpdate` (ADR-0028).
+    if (!time.paused && !this.#isEditMode) {
       this.#accumulator = snap(this.#accumulator + time.deltaTime, time.fixedDeltaTime);
       const step = time.fixedDeltaTime;
       this.#stepDt = step;
@@ -491,18 +510,37 @@ export class Scheduler {
     this.#phase = phase;
     this.#internals?.setPhase(phase);
     for (let index = from; index < end; index += 1) {
-      const system = list[index]?.system;
-      if (system === undefined) {
+      const entry = list[index];
+      if (entry === undefined) {
         continue;
       }
-      try {
-        system.update?.(context);
-      } catch (error) {
-        this.#report(error, system, phase);
+      if (entry.editMode === "run") {
+        this.#runSystem(entry.system, context, phase);
+      } else if (entry.editMode === "hold") {
+        context.dt = 0;
+        context.isClockHeld = true;
+        this.#runSystem(entry.system, context, phase);
+        context.dt = dt;
+        context.isClockHeld = false;
       }
     }
     this.#internals?.setPhase(previousPhase);
     this.#phase = previousPhase;
+  }
+
+  /**
+   * Runs one system, guarded.
+   *
+   * @param system - The system.
+   * @param context - The shared context, already set for this phase.
+   * @param phase - The phase, for the error report.
+   */
+  #runSystem(system: System, context: SystemContextImpl, phase: Phase): void {
+    try {
+      system.update?.(context);
+    } catch (error) {
+      this.#report(error, system, phase);
+    }
   }
 
   /**

@@ -104,7 +104,13 @@ async function createRig(options?: { readonly chunkSize?: number; readonly cull?
     renderer.cullChunks = false;
   }
   const tick = (): void => {
-    system.update({ world: created.app.world, time: created.app.time, phase: Phase.PreRender, dt: 1 / 60 });
+    system.update({
+      world: created.app.world,
+      time: created.app.time,
+      phase: Phase.PreRender,
+      dt: 1 / 60,
+      isClockHeld: false,
+    });
   };
   return { map, renderer, runtime, tick };
 }
@@ -300,7 +306,7 @@ async function createScrollRig(options: { readonly parallax: boolean }): Promise
   eye.transform.position2D = new Vec2(2, 2);
 
   const tick = (): void => {
-    system.update({ world, time: created.app.time, phase: Phase.PreRender, dt: 1 / 60 });
+    system.update({ world, time: created.app.time, phase: Phase.PreRender, dt: 1 / 60, isClockHeld: false });
   };
   return { renderer, runtime, camera, tick };
 }

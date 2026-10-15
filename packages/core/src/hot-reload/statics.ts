@@ -8,7 +8,7 @@
  */
 
 import type { HotReloadPolicy, HotReloadStatics } from "./contract.js";
-import type { ComponentType, ConcreteComponentType } from "../component/component-type.js";
+import type { ComponentType, ConcreteComponentType, ScriptStatics } from "../component/component-type.js";
 
 /**
  * Widens a class token to the hot-reload statics it may declare.
@@ -16,8 +16,20 @@ import type { ComponentType, ConcreteComponentType } from "../component/componen
  * @param type - The component class.
  * @returns The same class, seen as {@link HotReloadStatics}.
  */
-function readStatics(type: ComponentType): ComponentType & HotReloadStatics {
+function readStatics(type: ComponentType): ComponentType & HotReloadStatics & ScriptStatics {
   return type;
+}
+
+/**
+ * Whether a replacement class declares `static runInEditMode = true`.
+ *
+ * @param type - The component class.
+ * @returns `true` only when the class declares it.
+ *
+ * @internal
+ */
+export function declaresRunInEditMode(type: ComponentType): boolean {
+  return readStatics(type).runInEditMode === true;
 }
 
 /**

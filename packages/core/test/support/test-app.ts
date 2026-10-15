@@ -171,6 +171,7 @@ export class TestApp implements App {
   readonly events: AppEventsImpl;
   readonly renderer: RendererImpl;
   readonly isHeadless = true;
+  readonly isEditMode = false;
   readonly version = "0.0.0-test";
   readonly platform: PlatformInfo = detectPlatform();
   readonly storage: Storage = new StorageImpl(new MemoryStorageBackend());

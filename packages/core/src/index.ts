@@ -35,6 +35,7 @@ export {
   type SortingLayersSettings,
   type System,
   type SystemContext,
+  type SystemEditMode,
   type Time,
   type TimeSettings,
   type WaitInstruction,

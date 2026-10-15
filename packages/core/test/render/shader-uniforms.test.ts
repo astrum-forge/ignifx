@@ -144,6 +144,31 @@ describe("the clock uniforms", () => {
   });
 });
 
+describe("in an edit-mode app (ADR-0028)", () => {
+  it("hold the clock uniforms while the main light stays live", async () => {
+    harness = await createShaderHarness({ editMode: true });
+    const h = harness;
+    const material = await materialFor(
+      h,
+      "shaders/clock-lit.wgsl",
+      "// @ignifx shader\n// @ignifx system time, unscaledTime, deltaTime, mainLightColor\n",
+    );
+    const sun = h.world.createEntity("sun");
+    const light = sun.addComponent(Light, { type: "directional", intensity: 1, color: { r: 1, g: 0, b: 0, a: 1 } });
+    for (let index = 0; index < 10; index += 1) {
+      h.frame(0.25);
+    }
+    expect(material.getUniform("time")).toBe(0);
+    expect(material.getUniform("unscaledTime")).toBe(0);
+    expect(material.getUniform("deltaTime")).toBe(0);
+    expect(triple(material, "mainLightColor")[0]).toBeCloseTo(Color.srgbToLinear(1));
+
+    light.intensity = 2;
+    h.frame(0.25);
+    expect(triple(material, "mainLightColor")[0]).toBeCloseTo(Color.srgbToLinear(1) * 2);
+  });
+});
+
 describe("the main-light uniforms", () => {
   it("take the highest-intensity enabled directional light", async () => {
     const h = await app();

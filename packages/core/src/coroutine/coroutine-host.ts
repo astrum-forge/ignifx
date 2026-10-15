@@ -1,4 +1,6 @@
-import { assertNever } from "../errors/ignifx-error.js";
+import { componentInternals } from "../component/internals.js";
+import { CoreErrorCode } from "../errors/error-codes.js";
+import { IgnifxError, assertNever } from "../errors/ignifx-error.js";
 import type { Coroutine, CoroutineHandle, CoroutineHost, CoroutineYield, WaitInstruction } from "../app/types.js";
 import type { FrameStateController } from "../lifecycle/frame-state.js";
 import type { Script } from "../script/script.js";
@@ -129,6 +131,8 @@ class CoroutineRecord {
 export interface CoroutineHostOptions {
   /** The frame state, so a coroutine body counts as "inside a callback". */
   readonly frameState: FrameStateController;
+  /** Whether the app is in edit mode, where only scripts that run in edit mode may start one. */
+  readonly editMode: boolean;
   /**
    * Reports an exception a coroutine threw.
    *
@@ -145,6 +149,8 @@ export interface CoroutineHostOptions {
  */
 export class CoroutineHostImpl implements CoroutineHost {
   readonly #frameState: FrameStateController;
+
+  readonly #isEditMode: boolean;
 
   readonly #report: (error: unknown, owner: Script) => void;
 
@@ -163,6 +169,7 @@ export class CoroutineHostImpl implements CoroutineHost {
    */
   constructor(options: CoroutineHostOptions) {
     this.#frameState = options.frameState;
+    this.#isEditMode = options.editMode;
     this.#report = (error: unknown, owner: Script): void => {
       options.report(error, owner);
     };
@@ -184,8 +191,21 @@ export class CoroutineHostImpl implements CoroutineHost {
    * @param owner - The script whose enabled state gates the coroutine.
    * @param routine - The generator to drive.
    * @returns A handle for stopping it or waiting on it.
+   * @throws IgnifxError with code `IGX-0111` in edit mode when the owner's class does not set
+   * `static runInEditMode = true`.
    */
   start(owner: Script, routine: Coroutine): CoroutineHandle {
+    if (this.#isEditMode && componentInternals(owner).info?.script?.runInEditMode !== true) {
+      const script = owner.constructor.name;
+      throw new IgnifxError(
+        CoreErrorCode.coroutineInEditMode,
+        `${script} cannot start a coroutine in edit mode because its class does not run in edit mode.`,
+        {
+          context: { script },
+          hint: "Add `static runInEditMode = true` if the script is meant to run in an editor. Otherwise start the coroutine from a callback such as `start`, which only a game calls.",
+        },
+      );
+    }
     const record = new CoroutineRecord(owner, routine);
     this.#records.push(record);
     let owned = this.#byOwner.get(owner);

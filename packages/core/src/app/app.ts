@@ -167,6 +167,17 @@ export interface CreateAppOptions {
    * rebuilds the live instances built from it.
    */
   readonly hotReload?: HotReloadOptions;
+  /**
+   * Builds the app for an editor's scene view (ADR-0028,
+   * `docs/architecture/03-scripting-and-components.md` §10). Scripts get no lifecycle or frame
+   * callbacks unless their class sets `static runInEditMode = true`; the fixed loop, physics, and
+   * other simulation systems do not run; `startCoroutine` throws `IGX-0111` for a script that does
+   * not run in edit mode. Systems that turn component data into what is drawn keep running. Fixed
+   * for the app's life; `app.isEditMode` reports it.
+   *
+   * @defaultValue `false`
+   */
+  readonly editMode?: boolean;
 }
 
 /** The options after {@link createApp} has applied its defaults. */
@@ -192,6 +203,8 @@ interface ResolvedAppOptions {
   readonly logLevel: LogThreshold;
   /** Whether a changed scene file rebuilds its live instances. */
   readonly reloadScenes: boolean;
+  /** Whether the app runs in edit mode. */
+  readonly editMode: boolean;
 }
 
 /**
@@ -232,6 +245,9 @@ class AppImpl implements App {
 
   /** `true` when the app runs on Lite's null engine with no render surface. */
   readonly isHeadless: boolean;
+
+  /** `true` when the app was created for an editor's scene view. */
+  readonly isEditMode: boolean;
 
   /** The `@ignifx/core` version this app was built from. */
   readonly version: string = VERSION;
@@ -309,6 +325,7 @@ class AppImpl implements App {
     this.#clock = options.clock;
     this.#mode = options.mode;
     this.isHeadless = options.canvas === null;
+    this.isEditMode = options.editMode;
     this.platform = options.platform;
     this.storage = new StorageImpl(options.storage);
     const development = options.mode === "development";
@@ -344,6 +361,7 @@ class AppImpl implements App {
     });
     this.coroutines = new CoroutineHostImpl({
       frameState: this.#frameState,
+      editMode: options.editMode,
       report: (error: unknown, owner: Script): void => {
         this.#report({
           error,
@@ -362,6 +380,7 @@ class AppImpl implements App {
       deferred: this.#deferred,
       clock: options.clock,
       development,
+      editMode: options.editMode,
       report: (error: unknown, system: System, phase: Phase): void => {
         this.log.error(`The system ${system.name} threw in ${PHASE_NAMES[phase] ?? "no phase"}.`, error);
         this.#report({ error, source: "system", phase, entity: null, component: null });
@@ -920,6 +939,7 @@ export async function createApp(options: CreateAppOptions = {}): Promise<App> {
     logSink: options.logSink ?? createConsoleSink(),
     logLevel: options.logLevel ?? "info",
     reloadScenes: options.hotReload?.reloadScenes ?? false,
+    editMode: options.editMode ?? false,
   });
   await app.initialize(options.extensions ?? []);
   return app;

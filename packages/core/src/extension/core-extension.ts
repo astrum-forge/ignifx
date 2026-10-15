@@ -190,9 +190,11 @@ function registerRendering(ctx: ExtensionContext): void {
       }
     },
   });
+  // Held in edit mode: lights stay live, the `time` uniform stands still (ADR-0028).
   ctx.registerSystem(new ShaderUniformSystem(ctx.app), {
     phase: Phase.PreRender,
     order: SHADER_UNIFORM_ORDER,
+    editMode: "hold",
   });
   const sync = new RenderSyncSystem(renderer);
   renderer.attachSyncSystem(sync);

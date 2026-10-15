@@ -132,6 +132,8 @@ export const CoreErrorCode = {
   invalidTweenOptions: "IGX-0109",
   /** A tweened field is not a number, `Vec2`, `Vec3`, or `Quat`, or is not writable. */
   tweenFieldNotTweenable: "IGX-0110",
+  /** A coroutine was started in an edit-mode app by a script whose class does not run in edit mode. */
+  coroutineInEditMode: "IGX-0111",
   /** A component declared through `requires` is missing from the entity. */
   requiredComponentMissing: "IGX-0201",
   /** A second instance of a component type that does not allow multiples was added. */
@@ -323,6 +325,7 @@ export const CORE_ERROR_MESSAGES: Readonly<Record<CoreErrorCode, string>> = {
   "IGX-0108": "{property} must be {domain}; got {value}.",
   "IGX-0109": "The tween option {option} must be {domain}; got {value}.",
   "IGX-0110": "{field} is not a number, Vec2, Vec3, or Quat on the tween target.",
+  "IGX-0111": "{script} cannot start a coroutine in edit mode because its class does not run in edit mode.",
   "IGX-0201": "{component} requires {required} on the same entity.",
   "IGX-0202": "{component} does not allow multiple instances on one entity.",
   "IGX-0203": "The component type id {typeId} is already registered by {owner}.",

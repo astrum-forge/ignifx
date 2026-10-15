@@ -93,7 +93,13 @@ async function createRig(): Promise<Rig> {
     service: new TwoDService(runtime),
     attached,
     tick: (): void => {
-      system.update({ world: created.app.world, time: created.app.time, phase: Phase.PreRender, dt: 1 / 60 });
+      system.update({
+        world: created.app.world,
+        time: created.app.time,
+        phase: Phase.PreRender,
+        dt: 1 / 60,
+        isClockHeld: false,
+      });
     },
   };
 }

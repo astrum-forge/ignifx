@@ -270,6 +270,11 @@ export class Entity {
    * The immovability hint: `true` promises that the transform will not change after `awake`, which
    * lets the 2D batcher, physics, and navmesh treat the entity as static.
    *
+   * @remarks
+   * It can be changed only in files or before `awake`; afterwards the setter throws `IGX-0101`. In an
+   * edit-mode app it stays writable, because an editor's inspector edits it on loaded entities
+   * (ADR-0028).
+   *
    * @returns `true` when the entity is marked static.
    */
   get isStatic(): boolean {
@@ -278,7 +283,7 @@ export class Entity {
 
   set isStatic(value: boolean) {
     const internals = this.#mutable("isStatic");
-    if (internals.hasAwoken) {
+    if (internals.hasAwoken && !internals.host.app.isEditMode) {
       throw new IgnifxError(
         CoreErrorCode.mutationAfterDestroy,
         "isStatic is set in files or before awake, and cannot change afterwards.",

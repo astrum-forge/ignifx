@@ -18,12 +18,13 @@ import type { FieldsOf, Schema } from "../schema/types.js";
  * costs a call per frame and not defining it costs nothing.
  *
  * **The statics work the same way.** `typeId`, `schema`, `requires`, `allowMultiple`,
- * `executionOrder`, and `updateWhenPaused` are not members of `Component` or `Script` either: a
- * static declared on the base class is an override too, so `static typeId = "mygame/Mover"` would
- * have needed an `override` modifier. Their shape lives on {@link ComponentStatics} and
- * {@link ScriptStatics}, which the class-token types intersect, so a plain `static` on a subclass
- * satisfies them structurally; `ComponentRegistry` reads each one once per class and applies the
- * defaults (`executionOrder` `0`, `updateWhenPaused` `false`).
+ * `executionOrder`, `updateWhenPaused`, and `runInEditMode` are not members of `Component` or
+ * `Script` either: a static declared on the base class is an override too, so
+ * `static typeId = "mygame/Mover"` would have needed an `override` modifier. Their shape lives on
+ * {@link ComponentStatics} and {@link ScriptStatics}, which the class-token types intersect, so a
+ * plain `static` on a subclass satisfies them structurally; `ComponentRegistry` reads each one once
+ * per class and applies the defaults (`executionOrder` `0`, `updateWhenPaused` `false`,
+ * `runInEditMode` `false`).
  *
  * @example
  * ```ts
@@ -80,6 +81,8 @@ export abstract class Script extends Component {
    *
    * @param routine - The generator to drive. Call the generator function: `this.spawnLoop()`.
    * @returns A handle for stopping it or waiting on it.
+   * @throws IgnifxError with code `IGX-0111` in an edit-mode app when the class does not set
+   * `static runInEditMode = true` (ADR-0028).
    *
    * @example
    * ```ts

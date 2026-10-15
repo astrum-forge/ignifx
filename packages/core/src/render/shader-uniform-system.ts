@@ -23,7 +23,8 @@ import type { World } from "../world/world.js";
  * The clock is accumulated here rather than read from `app.time.time` because a system keeps running
  * with a non-zero `dt` while the app is paused and has to check `time.paused` itself
  * (`docs/architecture/01-lifecycle-and-time.md` §7); that is what freezes `time` under
- * `app.pause()` and resumes it without a jump.
+ * `app.pause()` and resumes it without a jump. A held clock (`ctx.isClockHeld`, edit mode) freezes
+ * it the same way.
  */
 
 /**
@@ -93,7 +94,7 @@ export class ShaderUniformSystem implements System {
    */
   update(ctx: SystemContext): void {
     const time = ctx.time;
-    const isPaused = time.paused;
+    const isPaused = time.paused || ctx.isClockHeld;
     if (!isPaused) {
       this.#time += time.deltaTime;
       this.#unscaledTime += time.unscaledDeltaTime;

@@ -225,7 +225,7 @@ export async function createOverlayHarness(options: OverlayHarnessOptions = {}):
       }
       app.step(deltaSeconds);
       for (const system of systems) {
-        system.update?.({ world: app.world, time: app.time, phase: 5, dt: deltaSeconds });
+        system.update?.({ world: app.world, time: app.time, phase: 5, dt: deltaSeconds, isClockHeld: false });
       }
     },
     dispose: (): void => {
