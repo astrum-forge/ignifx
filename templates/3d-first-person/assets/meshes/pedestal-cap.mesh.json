@@ -1,0 +1,6 @@
+{
+  "format": "ignifx.mesh",
+  "formatVersion": 1,
+  "primitive": "box",
+  "options": { "width": 0.54, "height": 0.12, "depth": 0.54 }
+}

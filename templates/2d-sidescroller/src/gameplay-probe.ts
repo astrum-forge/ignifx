@@ -1,8 +1,10 @@
 // oxlint-disable no-underscore-dangle -- `window.__ignifxGameplay` is a test hook, and the double
 // underscore is what says it is not part of the game's API. The visual suite reads it by name.
 import { CharacterController2D } from "@ignifx/physics-2d";
-import { PlatformerController } from "./scripts/platformer-controller.js";
+import { scriptType } from "./script-types.js";
 import type { Run } from "./run.js";
+// A type only, so the script module stays out of the entry's graph (`script-types.ts`).
+import type { PlatformerController } from "./scripts/platformer-controller.js";
 import type { App, Entity } from "@ignifx/core";
 
 /**
@@ -70,7 +72,7 @@ declare global {
  */
 export function installGameplayProbe(app: App, player: Entity, run: Run): void {
   const controller = player.getComponent(CharacterController2D);
-  const platformer = player.getComponent(PlatformerController);
+  const platformer = player.getComponent(scriptType<PlatformerController>(app, "sidescroller/PlatformerController"));
 
   window.__ignifxGameplay = {
     snapshot(): GameplaySnapshot {

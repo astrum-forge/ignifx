@@ -1,44 +1,36 @@
 // oxlint-disable no-underscore-dangle -- `window.__ignifxReady` is a test hook, and the double
 // underscore is what says it is not part of the game's API. The visual suite reads it by name.
-import { Animator, ANIMATOR_ASSET_TYPE, FirstPersonController, threeD } from "@ignifx/3d";
-import { audio, AUDIO_ASSET_TYPE, AUDIO_BUSES_ASSET_TYPE, AudioListener, AudioSource } from "@ignifx/audio";
-import {
-  Camera,
-  createApp,
-  createMaterialAsset,
-  isIgnifxError,
-  MeshAsset,
-  MeshRenderer,
-  Model,
-  pbrMaterialDefinition,
-  PostProcessStack,
-} from "@ignifx/core";
-import { electron } from "@ignifx/electron";
-import { input, INPUT_ACTIONS_ASSET_TYPE } from "@ignifx/input";
-import { CharacterController, physics } from "@ignifx/physics";
-import { I18N_ASSET_TYPE, ui } from "@ignifx/ui";
-// Vite virtual modules the plugin serves, typed by `@ignifx/vite-plugin/client`.
+import { FirstPersonController } from "@ignifx/3d";
+import { AUDIO_ASSET_TYPE, AUDIO_BUSES_ASSET_TYPE, AudioSource } from "@ignifx/audio";
+import { createApp, isIgnifxError, Light, PostProcessStack } from "@ignifx/core";
+import { INPUT_ACTIONS_ASSET_TYPE } from "@ignifx/input";
+import { I18N_ASSET_TYPE } from "@ignifx/ui";
+// Vite virtual modules the plugins serve, typed by `@ignifx/vite-plugin/client` and
+// `@ignifx/editor-host/client`.
+import { attachEditorPlayControls } from "virtual:ignifx/editor";
 import { manifest } from "virtual:ignifx/manifest";
 import { acceptHotReload, scripts } from "virtual:ignifx/scripts";
+import { extensions } from "./extensions.js";
 import { installFrameTimeProbe } from "./frame-time-probe.js";
 import { createGameUi, hasTouch } from "./game-ui.js";
 import { installGameplayProbe } from "./gameplay-probe.js";
-import { buildLevel } from "./level.js";
 import { createGameMenus } from "./menus/game-menus.js";
 import { applySettings, loadInputOverrides, loadSettings } from "./menus/settings-store.js";
+import { preparePedestals } from "./pedestals.js";
 import { createRun } from "./run.js";
-import { AttachToHand } from "./scripts/attach-to-hand.js";
-import { HudLine } from "./scripts/hud-line.js";
-import { Interactor } from "./scripts/interactor.js";
-import { LockHint } from "./scripts/lock-hint.js";
-import { MenuController } from "./scripts/menu-controller.js";
-import { SaveGame } from "./scripts/save-game.js";
-import type { Level } from "./level.js";
+import { scriptType } from "./script-types.js";
 import type { GameMenus } from "./menus/game-menus.js";
 import type { GraphicsHooks } from "./menus/settings-store.js";
-import type { AnimatorAsset } from "@ignifx/3d";
+import type { Interactable } from "./pedestals.js";
+// Types only: they are erased before the dev server sees this file, so no script module joins the
+// entry's graph and an edit to one hot-patches it instead of reloading the page (`script-types.ts`).
+import type { HudLine } from "./scripts/hud-line.js";
+import type { Interactor } from "./scripts/interactor.js";
+import type { LockHint } from "./scripts/lock-hint.js";
+import type { MenuController } from "./scripts/menu-controller.js";
+import type { SaveGame } from "./scripts/save-game.js";
 import type { AudioBusesAsset, AudioClip } from "@ignifx/audio";
-import type { App, AssetHandle, Entity, MaterialAsset, ModelAsset } from "@ignifx/core";
+import type { App, AssetHandle, Entity } from "@ignifx/core";
 import type { InputActionsAsset } from "@ignifx/input";
 import type { LocaleAsset } from "@ignifx/ui";
 
@@ -47,21 +39,24 @@ import type { LocaleAsset } from "@ignifx/ui";
  * pitch, pointer lock on a click, a crosshair ray that lights the pedestal it lands on, a view
  * model with a prop attached to the rig's `hand` node, a loading screen and a pause menu.
  *
- * The shape of this file is the shape of every ignifx game:
+ * The level is data: `assets/scenes/main.scene.json` holds every entity, component and reference,
+ * and this file loads it. The shape of this file is the shape of every ignifx game:
  *
- * 1. `createApp` with the extensions the game uses; `ignifx.config.ts` carries the settings.
- * 2. Load every asset and **await it before `app.start()`**. A load awaited before the loop runs
- *    settles as soon as it finishes; once the loop is running, delivery waits for a `PreUpdate`,
- *    so awaiting after `start()` needs frames to be pumped.
- * 3. Build the world.
- * 4. `app.start()`.
+ * 1. `createApp` with `extensions()` from `./extensions.ts`; `ignifx.config.ts` carries the settings.
+ * 2. Register the scripts from `virtual:ignifx/scripts`, accept hot reloads, and hand the app to
+ *    the ignifx editor's play controls.
+ * 3. Load what the scene's scripts read while it loads (input actions, audio buses), then the
+ *    scene itself. **Await it before `app.start()`**: a load awaited before the loop runs settles as
+ *    soon as it finishes; once the loop is running, delivery waits for a `PreUpdate`.
+ * 4. The post-load steps a scene file cannot express — the README's "The level" lists them.
+ * 5. `app.start()`.
  *
  * ## Query flags
  *
- * - `?static=1` builds the scene **without** the controller and without pointer lock, places the
- *   head by hand, and stops the clock before the first frame. No fixed step ever runs, so nothing
- *   falls and no clip advances: the frame is exactly what was authored. It is what the visual
- *   golden suite in `tests/visual/` opens.
+ * - `?static=1` loads the same scene, switches the controller and the crosshair ray off, turns the
+ *   character to face the pedestals by hand, and stops the clock before the first frame. No fixed
+ *   step ever runs, so nothing falls and no clip advances: the frame is exactly what was authored.
+ *   It is what the visual golden suite in `tests/visual/` opens.
  * - `?locale=fr` switches `app.i18n` before the menus are built.
  */
 
@@ -75,43 +70,11 @@ declare global {
 /** What `window.__ignifxReady` resolves to. */
 type AppStatus = "ready" | "unsupported";
 
+/** The level, by its asset address. */
+const MAIN_SCENE = "scenes/main.scene.json";
+
 /** How many animation frames the scene is given before the image is called settled. */
 const SETTLE_FRAMES = 12;
-
-/** The character's capsule height while standing, in metres. */
-const STAND_HEIGHT = 1.8;
-
-/** How high the eyes sit above the capsule's centre, in metres. */
-const EYE_OFFSET = 0.72;
-
-/** Ground speed while walking, in metres per second. The head bob is derived from it. */
-const WALK_SPEED = 4;
-
-/**
- * How far the head rises and falls while walking, in metres.
- *
- * @remarks
- * 0.025 m is a two-and-a-half-centimetre sway at the eye, which reads as weight without reading as
- * a camera shake. The template shipped 0.035 m at the engine's default 1.8 bobs per metre, which at
- * 4 m/s is seven bobs a second — a vibration, not a walk, and the "jumpy" the owner reported.
- */
-const HEAD_BOB_AMPLITUDE = 0.025;
-
-/**
- * How many head bobs one metre of travel is worth.
- *
- * @remarks
- * `FirstPersonController` advances the bob phase by distance, not by time, so a sprint bobs faster
- * than a walk for free and a stopped character does not bob at all. Two bobs a second at
- * {@link WALK_SPEED} — a walking cadence, one per footfall — is `2 / WALK_SPEED` bobs per metre.
- */
-const HEAD_BOB_FREQUENCY = 2 / WALK_SPEED;
-
-/** Where the character starts, on the ground. */
-const PLAYER_SPAWN = { x: 0, y: 0, z: 2.5 } as const;
-
-/** Where the capsule's centre starts: the spawn, lifted by half the standing capsule's height. */
-const PLAYER_SPAWN_POSE = { x: PLAYER_SPAWN.x, y: STAND_HEIGHT / 2, z: PLAYER_SPAWN.z } as const;
 
 /** The body's yaw in `?static=1`, in degrees: turned to face the pair of pedestals at `z = -6`. */
 const STATIC_YAW = 180;
@@ -120,23 +83,13 @@ const STATIC_YAW = 180;
 const STATIC_PITCH = 7;
 
 /** The asset type to load each document as; see the same table in the third-person template. */
-const MODEL = { type: "model" } as const;
-const MATERIAL = { type: "material" } as const;
-const ANIMATOR = { type: ANIMATOR_ASSET_TYPE } as const;
 const ACTIONS = { type: INPUT_ACTIONS_ASSET_TYPE } as const;
 const BUSES = { type: AUDIO_BUSES_ASSET_TYPE } as const;
 const CLIP = { type: AUDIO_ASSET_TYPE } as const;
 const STRINGS = { type: I18N_ASSET_TYPE } as const;
 
-/** Everything the world is built from. */
-interface Assets {
-  readonly viewmodel: AssetHandle<ModelAsset>;
-  readonly stateMachine: AssetHandle<AnimatorAsset>;
-  readonly floor: AssetHandle<MaterialAsset>;
-  readonly wall: AssetHandle<MaterialAsset>;
-  readonly crate: AssetHandle<MaterialAsset>;
-  readonly sky: AssetHandle<MaterialAsset>;
-  readonly emissive: AssetHandle<MaterialAsset>;
+/** The sounds, which stay out of the scene file: each one is optional (see `clipOrNull`). */
+interface Sounds {
   readonly pickup: AssetHandle<AudioClip>;
   readonly footstep: AssetHandle<AudioClip>;
   readonly jump: AssetHandle<AudioClip>;
@@ -196,129 +149,94 @@ function showUnsupported(): void {
   document.body.dataset["webgpu"] = "unavailable";
 }
 
-/**
- * Hangs the view model off the head, and a prop off the view model's `hand` node.
- *
- * @remarks
- * The rig is the same generated "box-man" the third-person template walks around with. In first
- * person you would normally see only arms; this template shows the whole thing, scaled down and
- * pushed forward and to the right of the eye, because that is what makes
- * `Model.attachToNode("hand", …)` visible — the point of the exercise is the bone attachment, and a
- * prop welded to a bone you cannot see demonstrates nothing.
- *
- * @param app - The running app.
- * @param assets - The loaded assets.
- * @param head - The entity the view model hangs from.
- */
-function buildViewModel(app: App, assets: Assets, head: Entity): void {
-  const viewmodel = app.world.createEntity("View Model", { parent: head });
-  viewmodel.transform.localPosition.set(0.3, -0.84, 0.78);
-  viewmodel.transform.localScale.set(0.38, 0.38, 0.38);
-  viewmodel.transform.localEulerAngles = { x: 0, y: 150, z: 0 };
-  viewmodel.addComponent(Model, { model: assets.viewmodel, castShadows: false, receiveShadows: false });
-  viewmodel.addComponent(Animator, { animator: assets.stateMachine });
-
-  // A small emissive bar standing in for a tool. It is created as a **root** entity and re-parented
-  // by `attachToNode`, which is what puts it under the glTF node rather than under an ignifx entity.
-  const prop = app.world.createEntity("Prop");
-  prop.addComponent(MeshRenderer, {
-    mesh: MeshAsset.box(app, { width: 0.12, height: 0.12, depth: 0.9 }),
-    materials: [
-      createMaterialAsset(
-        app,
-        pbrMaterialDefinition({
-          name: "prop",
-          baseColor: { r: 0.29, g: 0.82, b: 0.94, a: 1 },
-          emissive: { r: 0.06, g: 0.24, b: 0.3, a: 1 },
-          metallic: 0.6,
-          roughness: 0.3,
-        }),
-        [],
-      ),
-    ],
-    castShadows: false,
-    receiveShadows: false,
-  });
-  viewmodel.addComponent(AttachToHand).prop = prop;
-}
-
-/**
- * Builds the character: a capsule, a head that pitches, and the view model hanging off it.
- *
- * @param app - The running app.
- * @param assets - The loaded assets.
- * @param isStatic - Whether the scene is being built for a golden.
- * @returns The head entity, which is where the camera and the listener are.
- */
-function buildPlayer(app: App, assets: Assets, isStatic: boolean): { readonly player: Entity; readonly head: Entity } {
-  const player = app.world.createEntity("Player", {
-    position: { x: PLAYER_SPAWN.x, y: STAND_HEIGHT / 2, z: PLAYER_SPAWN.z },
-  });
-  player.layer = app.world.layers.requireIndex("Player");
-  player.addComponent(CharacterController, { height: STAND_HEIGHT, radius: 0.35, slopeLimit: 50 });
-
-  // Yaw lives on the body and pitch on this child. Rotating the capsule in pitch would tip the
-  // whole collider over, which is why `FirstPersonController` splits them.
-  const head = app.world.createEntity("Head", { parent: player });
-  head.transform.localPosition.set(0, EYE_OFFSET, 0);
-  head.addComponent(Camera, { near: 0.05, far: 200, fov: 68 });
-  // The listener rides the head, so a spatial sound is panned from where the player is looking.
-  head.addComponent(AudioListener);
-
-  buildViewModel(app, assets, head);
-
-  if (isStatic) {
-    // The split the controller would otherwise own: yaw on the body, pitch on the head.
-    player.transform.localEulerAngles = { x: 0, y: STATIC_YAW, z: 0 };
-    head.transform.localEulerAngles = { x: STATIC_PITCH, y: 0, z: 0 };
-    return { player, head };
-  }
-
-  player.addComponent(FirstPersonController, {
-    cameraPivot: head,
-    walkSpeed: WALK_SPEED,
-    sprintSpeed: 7,
-    crouchSpeed: 1.8,
-    standHeight: STAND_HEIGHT,
-    crouchHeight: 1.1,
-    jumpHeight: 1.1,
-    // Degrees per **CSS pixel**, so one figure suits a retina display and a 1080p monitor and does
-    // not move when the settings screen changes the render scale: a 180-degree turn is about 1,800
-    // pixels of hand, roughly one mouse mat.
-    sensitivity: 0.1,
-    // Degrees per **second** at full deflection: a stick is a rate, not a displacement.
-    stickLookSpeed: 180,
-    headBobAmplitude: HEAD_BOB_AMPLITUDE,
-    headBobFrequency: HEAD_BOB_FREQUENCY,
-    // Every click asks for the pointer while it is not held, and mouse look waits until it is
-    // granted; `src/scripts/lock-hint.ts` tells the player about the click and
-    // `src/scripts/interactor.ts` stops that click also flipping a pedestal. See the README.
-    lockPointerOnClick: true,
-  });
-  return { player, head };
-}
-
-/** What the front end is built over. */
-interface World {
-  /** The level. */
-  readonly level: Level;
-  /** The character's body, which carries the `CharacterController`. */
+/** The entities of the loaded scene that the code below wires up. */
+interface Level {
+  /** The character's body, which carries the `CharacterController` and the controller. */
   readonly player: Entity;
   /** The head, which carries the camera and the interaction ray. */
   readonly head: Entity;
-  /** The crosshair element, or `null` under an app with no DOM overlay. */
+  /** The sun, so the settings screen can turn its shadows off. */
+  readonly sun: Light;
+  /** The interactable pedestals, each with a material of its own. */
+  readonly pedestals: readonly Interactable[];
+}
+
+/** The DOM elements the front end writes to. */
+interface Overlay {
+  /** The HUD line, or `null` under an app with no DOM overlay. */
+  readonly hud: HTMLDivElement | null;
+  /** The crosshair, or `null` under an app with no DOM overlay. */
   readonly crosshair: HTMLElement | null;
   /** The "click to look" line, or `null` on a device with no pointer to lock. */
   readonly hint: HTMLElement | null;
 }
 
 /**
- * Builds the front end and the save file over a world that is already standing.
+ * Finds an entity of the loaded scene by name.
  *
  * @param app - The running app.
- * @param assets - The loaded assets.
- * @param world - The level and the character.
- * @param hud - The HUD element, or `null` under an app with no DOM overlay.
+ * @param name - The entity's name in `assets/scenes/main.scene.json`.
+ * @returns The entity.
+ * @throws Error when the scene has no entity of that name.
+ */
+function requireEntity(app: App, name: string): Entity {
+  const entity = app.world.findByName(name);
+  if (entity === null) {
+    throw new Error(`${MAIN_SCENE} has no entity named "${name}".`);
+  }
+  return entity;
+}
+
+/**
+ * Finds the entities the code below wires up, and gives each pedestal its own material.
+ *
+ * @param app - The app the scene was loaded in.
+ * @returns The character, its head, the sun and the pedestals.
+ */
+function findLevel(app: App): Level {
+  const sun = requireEntity(app, "Sun").getComponent(Light);
+  if (sun === null) {
+    throw new Error(`The Sun in ${MAIN_SCENE} has no Light.`);
+  }
+  return {
+    player: requireEntity(app, "Player"),
+    head: requireEntity(app, "Head"),
+    sun,
+    pedestals: preparePedestals(app),
+  };
+}
+
+/**
+ * Turns the loaded scene into the still frame the goldens are taken of.
+ *
+ * @remarks
+ * Loading the scene has already run every `awake`, which reads but writes nothing. What would move
+ * the picture is the controller's per-frame look and the crosshair ray, which also needs a physics
+ * step behind it, so both are switched off. `AttachToHand` stays on: welding the prop to the
+ * hand is part of the authored picture. The body and the head are then turned to face the pair of
+ * pedestals at `z = -6` — yaw on the body and pitch on the head, the split the controller owns.
+ *
+ * @param app - The app the scene was loaded in.
+ * @param level - The scene's entities.
+ */
+function freezeForGolden(app: App, level: Level): void {
+  // Stopping the clock *before* `start()` means no fixed step ever runs, so nothing falls and no
+  // clip advances: the frame is exactly what was authored.
+  app.time.timeScale = 0;
+  level.player.requireComponent(FirstPersonController).enabled = false;
+  level.head.requireComponent(scriptType<Interactor>(app, "first-person/Interactor")).enabled = false;
+  level.player.transform.localEulerAngles = { x: 0, y: STATIC_YAW, z: 0 };
+  level.head.transform.localEulerAngles = { x: STATIC_PITCH, y: 0, z: 0 };
+}
+
+/**
+ * Builds the front end and the save file over a level that is already loaded.
+ *
+ * @param app - The running app.
+ * @param sounds - The sounds that decoded, and the ones that did not.
+ * @param level - The scene's entities.
+ * @param overlay - The HUD, crosshair and "click to look" elements, each `null` under an app with
+ *   no DOM overlay (and the hint also on a device with no pointer to lock).
  * @param isBench - Whether the frame-time harness is driving, in which case the game starts
  *   immediately instead of waiting on a title screen.
  * @returns A promise for the callback that switches the post-process effects on; it has to run
@@ -326,9 +244,9 @@ interface World {
  */
 async function installFrontEnd(
   app: App,
-  assets: Assets,
-  world: World,
-  hud: HTMLDivElement | null,
+  sounds: Sounds,
+  level: Level,
+  overlay: Overlay,
   isBench: boolean,
 ): Promise<() => void> {
   // The chain is built once and switched with `enabled`, because `rendering.features.postProcessing`
@@ -336,12 +254,13 @@ async function installFrontEnd(
   // The two effects are switched on by the callback this function returns, **after** `app.start()`.
   // Enabling them earlier makes Lite record the first bloom task against a source that is still the
   // swapchain, and the frame is rejected with `sourceTexture has no color texture`: the offscreen
-  // target the presenter builds does not exist until the scene is registered.
-  const post = world.head.addComponent(PostProcessStack);
+  // target the presenter builds does not exist until the scene is registered. That ordering is
+  // also why the stack is added here and not authored in the scene file.
+  const post = level.head.addComponent(PostProcessStack);
   post.bloom.threshold = 0.8;
   post.bloom.weight = 0.4;
 
-  const sun = world.level.sun;
+  const sun = level.sun;
   const graphics: GraphicsHooks = {
     supportsShadows: true,
     supportsPostProcessing: true,
@@ -355,22 +274,27 @@ async function installFrontEnd(
     },
   };
 
-  const interactor = world.head.addComponent(Interactor, { eye: world.head, reach: 3.5 });
-  interactor.targets = world.level.pedestals;
-  if (clipOrNull(assets.pickup) !== null) {
-    interactor.clip = assets.pickup;
+  // The ray itself — its eye and its reach — is in the scene; what it lights, the sound it plays and
+  // the crosshair it updates are runtime objects a scene field cannot hold.
+  const interactor = level.head.requireComponent(scriptType<Interactor>(app, "first-person/Interactor"));
+  interactor.targets = level.pedestals;
+  if (clipOrNull(sounds.pickup) !== null) {
+    interactor.clip = sounds.pickup;
   }
-  interactor.crosshair = world.crosshair;
+  interactor.crosshair = overlay.crosshair;
 
   await loadInputOverrides(app);
   const settings = await loadSettings(app, app.i18n.locale);
   applySettings(app, settings, graphics);
 
   const host = app.world.createEntity("Game UI");
-  const saveGame = host.addComponent(SaveGame);
+  const saveGame = host.addComponent(scriptType<SaveGame>(app, "first-person/SaveGame"));
   let menus: GameMenus | null = null;
 
-  const run = createRun(world.player, interactor, world.level.pedestals, PLAYER_SPAWN_POSE, (): void => {
+  // Where the run restarts: wherever the scene puts the character.
+  const here = level.player.transform.position;
+  const spawn = { x: here.x, y: here.y, z: here.z };
+  const run = createRun(level.player, interactor, level.pedestals, spawn, (): void => {
     if (saveGame.checkpoint()) {
       menus?.toast(app.i18n.t("toast.checkpoint"));
     }
@@ -388,7 +312,7 @@ async function installFrontEnd(
       { action: "Pause", labelKey: "action.pause" },
     ],
     creditKeys: ["credits.engine", "credits.art", "credits.license"],
-    sounds: { click: clipOrNull(assets.uiClick), hover: clipOrNull(assets.uiHover) },
+    sounds: { click: clipOrNull(sounds.uiClick), hover: clipOrNull(sounds.uiHover) },
     onStartNew: (): void => {
       saveGame.restart();
     },
@@ -400,11 +324,11 @@ async function installFrontEnd(
       saveGame.restart();
     },
   });
-  host.addComponent(MenuController).menus = menus;
+  host.addComponent(scriptType<MenuController>(app, "first-person/MenuController")).menus = menus;
 
-  const line = host.addComponent(HudLine);
-  line.element = hud;
-  host.addComponent(LockHint).element = world.hint;
+  const line = host.addComponent(scriptType<HudLine>(app, "first-person/HudLine"));
+  line.element = overlay.hud;
+  host.addComponent(scriptType<LockHint>(app, "first-person/LockHint")).element = overlay.hint;
   line.render = (): string =>
     app.i18n.t("hud.status", {
       lit: interactor.litCount,
@@ -413,9 +337,9 @@ async function installFrontEnd(
 
   // The ambient pad loops on the `Music` bus, which `game.audio.json` marks as not pausable so the
   // menus can duck it rather than silence it.
-  if (clipOrNull(assets.ambient) !== null) {
+  if (clipOrNull(sounds.ambient) !== null) {
     app.world.createEntity("Ambience").addComponent(AudioSource, {
-      clip: assets.ambient,
+      clip: sounds.ambient,
       bus: "Music",
       loop: true,
       playOnAwake: true,
@@ -454,15 +378,11 @@ async function main(): Promise<AppStatus> {
     app = await createApp({
       canvas,
       settings: import.meta.env.IGNIFX_CONFIG,
+      // The address-to-URL table `@ignifx/vite-plugin` built from `assets/`. Importing the virtual
+      // module rather than fetching `assets.manifest.json` means the table is in the bundle, so
+      // the first asset request needs no round trip.
       assets: { manifest },
-      // `threeD()` requires `physics()` and `input()` to be registered before it, and `ui()` finds
-      // `@ignifx/input`'s focus flags structurally at registration time.
-      // `electron()` is registered in **both** builds. Without a preload bridge it is inert — one
-      // debug line, and an `app.desktop` that answers `isElectron === false` — so the browser build
-      // is unchanged and the desktop build needs no second entry point. It goes first because it
-      // only requires core, and because `app.storage` should be the file backend before any other
-      // extension reads a setting from it.
-      extensions: [electron(), physics(), input(), audio(), threeD(), ui()],
+      extensions: extensions(),
     });
   } catch (error) {
     // IGX-0701 is the one failure a shipped game must handle itself: the browser has no WebGPU and
@@ -474,14 +394,18 @@ async function main(): Promise<AppStatus> {
     throw error;
   }
 
-  // Every class under `src/scripts/**` with a `static typeId`, from the plugin's virtual registry; in
-
-  // development the registry hot-reloads edited scripts through `app.hotReload` (`"patch"` by default).
-
+  // Every class under `src/scripts/**` with a `static typeId`, from the plugin's virtual registry. It
+  // is the only way code reaches a script: the scene names them by `typeId`, and so does
+  // `scriptType`. In development the registry hot-reloads edited scripts through `app.hotReload`
+  // (`"patch"` by default).
   app.registerComponents(scripts);
-
   acceptHotReload(app);
+  // Under `vite dev`, lets the ignifx editor's play view play, pause, step and stop this app. In a
+  // production build it is an empty function (`vite.config.ts`).
+  attachEditorPlayControls(app);
 
+  // The strings come first and alone: every label below is read out of them, and the document is
+  // under a kilobyte, so nothing is gained by making the loading screen wait for it.
   const strings = app.assets.load<LocaleAsset>("strings.i18n.json", STRINGS);
   await strings.promise;
   await app.i18n.load(strings);
@@ -507,14 +431,7 @@ async function main(): Promise<AppStatus> {
   // frame-time run should not be measuring DOM layout either.
   app.ui.visible = showOverlay;
 
-  const assets: Assets = {
-    viewmodel: app.assets.load<ModelAsset>("viewmodel.glb", MODEL),
-    stateMachine: app.assets.load<AnimatorAsset>("hero.animator.json", ANIMATOR),
-    floor: app.assets.load<MaterialAsset>("floor.material.json", MATERIAL),
-    wall: app.assets.load<MaterialAsset>("wall.material.json", MATERIAL),
-    crate: app.assets.load<MaterialAsset>("crate.material.json", MATERIAL),
-    sky: app.assets.load<MaterialAsset>("sky.material.json", MATERIAL),
-    emissive: app.assets.load<MaterialAsset>("emissive.material.json", MATERIAL),
+  const sounds: Sounds = {
     pickup: app.assets.load<AudioClip>("pickup.wav", CLIP),
     footstep: app.assets.load<AudioClip>("footstep.wav", CLIP),
     jump: app.assets.load<AudioClip>("jump.wav", CLIP),
@@ -526,52 +443,37 @@ async function main(): Promise<AppStatus> {
   const actions = app.assets.load<InputActionsAsset>("game.input.json", ACTIONS);
   const buses = app.assets.load<AudioBusesAsset>("game.audio.json", BUSES);
 
-  await Promise.all([
-    assets.viewmodel.promise,
-    assets.stateMachine.promise,
-    assets.floor.promise,
-    assets.wall.promise,
-    assets.crate.promise,
-    assets.sky.promise,
-    assets.emissive.promise,
-    actions.promise,
-    buses.promise,
-  ]);
+  await Promise.all([actions.promise, buses.promise]);
   // The clips are awaited together and separately from the rest: a browser that refuses to decode
   // a sound should cost the game its audio, not its first frame.
   await Promise.all(
-    [assets.pickup, assets.footstep, assets.jump, assets.land, assets.uiClick, assets.uiHover, assets.ambient].map(
-      async (handle: AssetHandle<AudioClip>): Promise<void> => {
-        await handle.promise.catch((error: unknown) => {
-          app.log.warn("a sound could not be decoded: {error}", String(error));
-        });
-      },
-    ),
+    Object.values(sounds).map(async (handle: AssetHandle<AudioClip>): Promise<void> => {
+      await handle.promise.catch((error: unknown) => {
+        app.log.warn("a sound could not be decoded: {error}", String(error));
+      });
+    }),
   );
 
+  // Installed here rather than through `input.actions` in `ignifx.config.ts`, so that the maps
+  // exist before the scene loads: its controller and its crosshair ray resolve their action names
+  // in `awake`, which runs while `loadScene` builds them.
   app.input.loadActions(actions.value);
   await app.audio.buildBuses(buses.value.buses);
 
-  const level = buildLevel(app, {
-    floor: assets.floor,
-    wall: assets.wall,
-    crate: assets.crate,
-    sky: assets.sky,
-    emissive: assets.emissive,
-  });
-  const character = buildPlayer(app, assets, isStatic);
+  // Then the level itself: the loader fetches every mesh, model, material and animator the file
+  // names before it builds an entity.
+  await app.world.loadScene(MAIN_SCENE);
+  const level = findLevel(app);
   let enableEffects: (() => void) | null = null;
 
   if (isStatic) {
-    // No fixed step ever runs, so nothing falls, no clip advances and no ray is cast: the frame is
-    // exactly what was authored.
-    app.time.timeScale = 0;
+    freezeForGolden(app, level);
   } else {
     enableEffects = await installFrontEnd(
       app,
-      assets,
-      { level, ...character, crosshair: gameUi.crosshair, hint: gameUi.hint },
-      gameUi.hud,
+      sounds,
+      level,
+      { hud: gameUi.hud, crosshair: gameUi.crosshair, hint: gameUi.hint },
       isBench,
     );
   }
@@ -587,11 +489,8 @@ async function main(): Promise<AppStatus> {
   // A test-only hook, and only under `?probe=1`: the gameplay half of
   // `tests/visual/tests/templates.spec.ts` reads the view and the character as numbers rather than
   // as pixels. See `src/gameplay-probe.ts`.
-  if (flags.get("probe") === "1") {
-    const controller = character.player.getComponent(FirstPersonController);
-    if (controller !== null) {
-      installGameplayProbe(app, character.player, character.head, controller);
-    }
+  if (flags.get("probe") === "1" && !isStatic) {
+    installGameplayProbe(app, level.player, level.head, level.player.requireComponent(FirstPersonController));
   }
 
   if (isBench) {

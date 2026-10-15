@@ -38,17 +38,17 @@ function isTriggerEvent2D(value: unknown): value is TriggerEvent2D {
 export class Collectible extends Script implements ScriptCallbacks {
   static typeId = "sidescroller/Collectible";
 
-  /** The clip to play on pickup. Assigned when the coin is spawned. */
+  /** The clip to play on pickup, assigned by `main.ts` after the scene loads (sounds are optional). */
   clip: AssetHandle<AudioClip> | null = null;
 
-  /** Called the first time the player takes this coin. Assigned when the coin is spawned. */
+  /** Called the first time the player takes this coin. Assigned by `src/run.ts`. */
   onCollected: ((coin: Collectible) => void) | null = null;
 
   /** Whether the coin has been taken. */
   #taken = false;
 
   /**
-   * The coin's stable id, which is the name the tilemap's objects layer gave the entity.
+   * The coin's stable id, which is its entity name in the scene file.
    *
    * @returns The id a save file stores.
    */

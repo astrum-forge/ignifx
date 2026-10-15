@@ -1091,6 +1091,9 @@ importers:
         specifier: workspace:*
         version: link:../../packages/ui
     devDependencies:
+      '@ignifx/editor-host':
+        specifier: workspace:*
+        version: link:../../packages/editor-host
       '@ignifx/electron':
         specifier: workspace:*
         version: link:../../packages/electron
@@ -1140,6 +1143,9 @@ importers:
         specifier: workspace:*
         version: link:../../packages/ui
     devDependencies:
+      '@ignifx/editor-host':
+        specifier: workspace:*
+        version: link:../../packages/editor-host
       '@ignifx/electron':
         specifier: workspace:*
         version: link:../../packages/electron
@@ -1189,6 +1195,9 @@ importers:
         specifier: workspace:*
         version: link:../../packages/ui
     devDependencies:
+      '@ignifx/editor-host':
+        specifier: workspace:*
+        version: link:../../packages/editor-host
       '@ignifx/electron':
         specifier: workspace:*
         version: link:../../packages/electron

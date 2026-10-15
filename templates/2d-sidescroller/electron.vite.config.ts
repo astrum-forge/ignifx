@@ -1,5 +1,7 @@
+import { editorHostPlugin } from "@ignifx/editor-host/vite";
 import { ignifx } from "@ignifx/vite-plugin";
 import { defineConfig } from "electron-vite";
+import { loadEnv } from "vite";
 
 /**
  * The desktop build (`docs/architecture/14-platform-electron.md` §3).
@@ -23,7 +25,7 @@ import { defineConfig } from "electron-vite";
  * `external: ["electron"]` on both: Electron provides the module at runtime, and bundling it would
  * replace the real one with a copy that has no bindings.
  */
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   main: {
     build: {
       outDir: "out/main",
@@ -51,8 +53,14 @@ export default defineConfig({
     // is stated rather than inherited. `assetRoot` in the plugin is resolved against it, which is
     // what makes the desktop build read the same `assets/` directory as `vite build`.
     root: ".",
-    // The same plugin, the same asset root, the same manifest as the browser build.
-    plugins: [ignifx()],
+    // The same plugins, the same asset root, the same manifest as the browser build. The renderer
+    // runs `src/main.ts`, which imports `virtual:ignifx/editor`; see `vite.config.ts`.
+    plugins: [
+      ignifx(),
+      editorHostPlugin({
+        editorOrigin: loadEnv(mode, false, "IGNIFX_EDITOR_ORIGIN")["IGNIFX_EDITOR_ORIGIN"] ?? "ignifx-editor://app",
+      }),
+    ],
     // A packaged renderer is loaded from `ignifx://app/index.html`, so every asset URL has to be
     // relative to the document rather than rooted at `/`.
     base: "./",
@@ -62,4 +70,4 @@ export default defineConfig({
       rollupOptions: { input: "index.html" },
     },
   },
-});
+}));

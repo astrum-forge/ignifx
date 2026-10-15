@@ -1,4 +1,4 @@
-import { Model, Script, str } from "@ignifx/core";
+import { entityRef, Model, Script, str } from "@ignifx/core";
 import type { Entity, ScriptCallbacks } from "@ignifx/core";
 
 /**
@@ -22,13 +22,12 @@ export class AttachToHand
   extends Script.define({
     /** The glTF node to attach to, as the file spells it. */
     nodeName: str("hand"),
+    /** The entity to attach: a root entity of the scene, re-parented under the node once found. */
+    prop: entityRef<Entity>(),
   })
   implements ScriptCallbacks
 {
   static typeId = "first-person/AttachToHand";
-
-  /** The entity to attach. Assigned right after the component is added. */
-  prop: Entity | null = null;
 
   update(): void {
     const model = this.entity.getComponent(Model);

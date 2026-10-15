@@ -136,13 +136,13 @@ export class PlatformerController
 {
   static typeId = "sidescroller/PlatformerController";
 
-  /** The footstep clip, or `null`. Assigned when the character is spawned. */
+  /** The footstep clip, or `null`. Assigned by `main.ts` after the scene loads. */
   footstep: AssetHandle<AudioClip> | null = null;
 
-  /** The jump clip, or `null`. Assigned when the character is spawned. */
+  /** The jump clip, or `null`. Assigned by `main.ts` after the scene loads. */
   jumpSound: AssetHandle<AudioClip> | null = null;
 
-  /** The landing clip, or `null`. Assigned when the character is spawned. */
+  /** The landing clip, or `null`. Assigned by `main.ts` after the scene loads. */
   landSound: AssetHandle<AudioClip> | null = null;
 
   /** Whether the character was on the ground at the end of the previous fixed step. */

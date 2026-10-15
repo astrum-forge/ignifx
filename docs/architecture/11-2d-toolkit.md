@@ -50,6 +50,7 @@ class SpriteRenderer extends Component.define({
 
 - One Lite sprite handle (`addSprite2D`) in the layer matching (sortingLayer, atlas, blend, screenSpace). The 2D sync system (`PreRender`, order **−450** — `@ignifx/audio`'s spatial pump already holds −400, and equal orders are broken by extension-registration order, which would make the frame order depend on a game's argument list) writes `positionPx`, `rotation` (from `rotation2D`), `sizePx` (from scale), `frame`, `color`, `flipX/Y`, `visible` for sprites whose `worldMatrixVersion`, fields, or effective enabled state changed since the last frame. Static entities (`entity.isStatic`) are synced once.
 - Changing `sortingLayer`/`blend`/atlas moves the sprite to another layer (remove + add; the handle is replaced).
+- **As built, the field is the atlas and the frame is not a field.** `sprite` holds an `AssetHandle<SpriteAtlasAsset>`, and the frame drawn is `SpriteRenderer.frame`, a runtime index that `SpriteAnimator` and game code write and the serializer does not. A `#frame:` address is not read: its handle's value is a `SpriteAsset` (`{ atlas, frame, name }`), which the renderer takes for the atlas, and the frame stays 0 (checked headless, 2026-10-15). A scene file therefore cannot say which frame a still sprite shows; the 2D templates carry a project `SpriteFrame` script whose `frame` field names it and whose `awake` resolves it.
 
 ### 2.3 Sprite assets and atlases
 
@@ -69,6 +70,8 @@ class SpriteRenderer extends Component.define({
 - `.tilemap.json` (`ignifx.tilemap`): tile size, layers (`{ name, sortingLayer, orderInLayer, tiles: RLE or dense array of tile ids, opacity, parallax?, collision? }`), tilesets (`{ atlas, firstId, tiles: [{ id, frame, collider?: polygon|box|none, properties }] }`), objects layer (`{ name, type, x, y, w, h, properties }` → entities spawned via a registered `TileObjectFactory`). Importers for **Tiled** (`.tmj`, orthogonal; isometric post-MVP) and **LDtk** (`.ldtk`).
 - `TilemapRenderer` draws tiles as sprites in chunked Lite layers (`chunkSize` 32×32 tiles), creating sprites only for chunks intersecting the camera bounds (`getSprite2DVisibleBoundsToRef`) and marking chunks static. Animated tiles use the animation clock.
 - `TilemapCollider2D` merges tile collision shapes per chunk into polygons for `@ignifx/physics-2d`; one-way platforms and slopes are properties on tiles.
+- `TilemapCollider2D` does not find the `Tilemap` on its entity: its geometry is `collisionData`, a runtime property that code assigns (`collider.collisionData = tilemap.collisionData`). A scene file that carries both components therefore loads with no tile collision until that line runs after `loadScene`.
+- Tile objects become entities only through factories registered in code, and only at load. A scene file that lists those entities itself — as the templates' do, so the editor can show them — must not also register the factories, or every object is spawned twice; the map's objects layer is then inert.
 - `Tilemap` exposes `getTile(layer, x, y)`, `setTile(...)`, `worldToCell`, `cellToWorld`, and `onTileChanged` for runtime edits.
 
 ### 2.6 `ParallaxLayer`
@@ -102,7 +105,7 @@ Lite's 2D path has no lighting model. MVP: per-layer custom shaders (`createSpri
 
 ## 7. Scene settings for 2D
 
-`settings.twoD: { mode: "sprite" | "mixed", pixelsPerUnit, ySort: { "Default": true } }` inside the scene file, validated by the extension. Templates `2d-topdown` and `2d-sidescroller` set these.
+`settings.twoD: { mode: "sprite" | "mixed", pixelsPerUnit, ySort: { "Default": true } }` inside the scene file, validated by the extension. Templates `2d-topdown` and `2d-sidescroller` set these in `ignifx.config.ts` instead, and their scene files carry `"settings": {}`.
 
 `@ignifx/core` carries a scene's `settings` block through to `SceneInstance.settings` as raw JSON and fires `world.onSceneLoaded` once it is populated, but there is no _validated_ per-scene settings mechanism — no schema hook and no `IGX-0408` path. The extension therefore decodes its own block against the same schema `registerSettings` uses, overrides only the keys the block actually wrote (`decodeProps` fills absent fields with schema defaults, which would otherwise silently reset the project's values), and reports an invalid block to `app.onError` rather than failing the scene load. The hook is installed from `System.onWorldCreated`, not from the extension's `onStart`, because `onStart` runs only when a game calls `app.start()` and a headless tool may load a scene without ever starting a loop.
 
