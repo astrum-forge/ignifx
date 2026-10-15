@@ -33,6 +33,11 @@ cd my-game && pnpm install
 | `pnpm build:desktop` | `electron-vite build` — the main, preload, and renderer bundles into `out/`.                                                                               |
 | `pnpm dist:desktop`  | `electron-builder --dir` — an **unpacked, unsigned** app in `release/`. Add `--mac`, `--win`, or `--linux` to build an installer for one platform instead. |
 
+A desktop scaffold also gets a `pnpm-workspace.yaml` whose `allowBuilds` lets pnpm run the install
+scripts of `esbuild` and `electron` and skip `electron-winstaller`'s; without it, pnpm 11 stops the
+install at the first unreviewed install script. A target that already has a `pnpm-workspace.yaml`
+keeps its own.
+
 Cross-platform packaging needs the target OS (or a CI runner for it): `electron-builder` can only
 produce a macOS `.dmg` on macOS, and a Windows installer needs Windows for anything but the NSIS
 target. Code signing and auto-update are documented after 1.0.

@@ -95,6 +95,23 @@ export const DESKTOP_SCRIPT_SUFFIX = ":desktop";
  */
 export const DEFAULT_DEPENDENCY_RANGE: string = `^${VERSION}`;
 
+/** The file a desktop scaffold gets so that `pnpm install` can run its build tools' install scripts. */
+const PNPM_WORKSPACE_FILE = "pnpm-workspace.yaml";
+
+/**
+ * pnpm 11 stops an install when a dependency has an install script that is neither allowed nor
+ * denied. The desktop build tools bring two: `esbuild` (through electron-vite) and
+ * `electron-winstaller` (through electron-builder). The entries match the reviewed `allowBuilds` in
+ * this repository's own `pnpm-workspace.yaml` (constitution §9.3).
+ */
+const DESKTOP_PNPM_WORKSPACE = `# pnpm runs a dependency's install script only when it is allowed here.
+allowBuilds:
+  electron: true
+  # Windows Squirrel installer tooling pulled in by electron-builder; the NSIS target never runs it.
+  electron-winstaller: false
+  esbuild: true
+`;
+
 /** The dependency blocks {@link copyTemplate} rewrites. */
 const DEPENDENCY_BLOCKS: readonly string[] = [
   "dependencies",
@@ -157,7 +174,9 @@ export interface CopyTemplateOptions {
    *
    * @remarks
    * `false` skips {@link DESKTOP_ONLY_ENTRIES} and strips the desktop scripts and dependencies from
-   * the copied `package.json`; `true` copies the template whole. This is what `--desktop` sets.
+   * the copied `package.json`; `true` copies the template whole and adds a `pnpm-workspace.yaml`
+   * whose `allowBuilds` lets the Electron build tools install (an existing one is kept). This is
+   * what `--desktop` sets.
    *
    * @defaultValue `false`
    */
@@ -375,6 +394,24 @@ async function copyOne(source: string, destination: string, targetName: string, 
 }
 
 /**
+ * Writes the desktop scaffold's `pnpm-workspace.yaml`, unless the target already has one.
+ *
+ * @param targetDir - The project directory.
+ * @returns `true` when the file was written.
+ */
+async function writePnpmWorkspace(targetDir: string): Promise<boolean> {
+  try {
+    await writeFile(join(targetDir, PNPM_WORKSPACE_FILE), DESKTOP_PNPM_WORKSPACE, { encoding: "utf8", flag: "wx" });
+    return true;
+  } catch (error) {
+    if (errorCodeOf(error) === "EEXIST") {
+      return false;
+    }
+    throw error;
+  }
+}
+
+/**
  * Copies one directory level and recurses into its subdirectories.
  *
  * @param sourceDir - Directory being read.
@@ -431,7 +468,7 @@ async function copyDirectory(
  * The template tree is copied verbatim apart from four things: the `rename` map, the `ignore`
  * list, `package.json` — whose `workspace:` dependency specifiers are rewritten to
  * `dependencyRange` so that the generated project installs from the registry — and the desktop
- * variant, which is skipped unless `desktop` is `true`. Symbolic links are followed and written as
+ * variant, which is skipped unless `desktop` is `true` and then comes with a `pnpm-workspace.yaml`. Symbolic links are followed and written as
  * regular files, which is what a scaffolded project wants.
  *
  * @param options - Source, destination, and the documented defaults in {@link CopyTemplateOptions}.
@@ -487,6 +524,9 @@ export async function copyTemplate(options: CopyTemplateOptions): Promise<CopyTe
   };
   const files: string[] = [];
   await copyDirectory(templateDir, targetDir, "", context, files);
+  if (desktop && (await writePnpmWorkspace(targetDir))) {
+    files.push(PNPM_WORKSPACE_FILE);
+  }
   files.sort();
   return { files };
 }
