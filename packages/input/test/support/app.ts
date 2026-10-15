@@ -6,6 +6,8 @@ import type { App, FetchLike, SettingsInput } from "@ignifx/core";
 /** Options accepted by {@link createInputApp}. */
 export interface InputAppOptions {
   readonly settings?: SettingsInput;
+  /** Builds the app in edit mode (ADR-0028). */
+  readonly editMode?: boolean;
   readonly options?: InputOptions;
   readonly fetch?: FetchLike;
   readonly gamepadReader?: GamepadReader | null;
@@ -46,6 +48,7 @@ export async function createInputApp(options?: InputAppOptions): Promise<InputAp
     clock,
     extensions: [input({ gamepadReader: null, ...options?.options })],
     ...(options?.settings === undefined ? {} : { settings: options.settings }),
+    ...(options?.editMode === undefined ? {} : { editMode: options.editMode }),
     ...(options?.fetch === undefined ? {} : { fetch: options.fetch }),
   });
   const step = (deltaSeconds = 1 / 60): void => {
