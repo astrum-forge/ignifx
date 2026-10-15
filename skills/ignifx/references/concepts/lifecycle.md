@@ -152,3 +152,56 @@ for (let frame = 0; frame < 600; frame += 1) {
 app.log.info("z after 10 seconds", entity.transform.localPosition.z);
 app.dispose();
 ```
+
+## 8. Edit mode
+
+`createApp({ editMode: true })` builds an app for an editor's scene view: the scene shows, nothing
+plays (ADR-0028). `app.isEditMode` reports it; it never changes for the app's life.
+
+- **Scripts are inert unless they opt in.** A script gets no callback at all — not `awake`, not
+  `update`, not `onDestroy`, from no path — unless its class sets `static runInEditMode = true`.
+  An opted-in script gets its callbacks as in a game, with the real `dt`, but never `fixedUpdate`
+  or a physics callback. Constructors, `onAttach`, and `onDetach` still run.
+- **Nothing simulates.** The fixed loop does not run, so physics, navigation, and `fixedUpdate` stop;
+  `time.fixedTime` and `fixedStepAlpha` stay `0`. The rest of `app.time` advances.
+- **Coroutines.** `startCoroutine` throws `IGX-0111` for a script that does not run in edit mode.
+- **Systems** run, hold their clock (`ctx.dt === 0`, `ctx.isClockHeld === true`), or are skipped, as
+  they declared with `registerSystem(system, { phase, editMode })`; the default is `"run"`.
+  Animation, billboards, physics, and navigation are skipped; particles and the shader clock hold;
+  rendering, 2D, UI, terrain, audio, input, tweens, and asset delivery run.
+- `app.pause()`, `updateWhenPaused`, and `app.step(dt)` mean what they mean in a game, and
+  `entity.isStatic` stays writable after the first frame.
+
+```ts run
+import { Script, createApp, createManualClock } from "@ignifx/core";
+
+class Drift extends Script {
+  static typeId = "demo/EditDrift";
+
+  update(dt: number): void {
+    this.transform.localPosition.z += dt;
+  }
+}
+
+class EditorTool extends Script {
+  static typeId = "demo/EditorTool";
+  static runInEditMode = true;
+
+  frames = 0;
+
+  update(): void {
+    this.frames += 1;
+  }
+}
+
+const app = await createApp({ headless: true, editMode: true, clock: createManualClock() });
+const drifter = app.world.createEntity("Drifter");
+drifter.addComponent(Drift);
+const tool = app.world.createEntity("Tool").addComponent(EditorTool);
+for (let frame = 0; frame < 10; frame += 1) {
+  app.step(1 / 60);
+}
+// The game script never ran; the editor tool ran every frame.
+app.log.info("z", drifter.transform.localPosition.z, "tool frames", tool.frames);
+app.dispose();
+```

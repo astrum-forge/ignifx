@@ -165,6 +165,7 @@ app.audio.bus("SFX").volume = 0.5;
 | `mode`       | `"development" \| "production"` | `"development"`                  | Development adds phase timings, full messages, strict checks                          |
 | `logSink`    | `LogSink`                       | `createConsoleSink()`            | `createMemorySink()` captures records in tests                                        |
 | `logLevel`   | `LogThreshold`                  | `"info"`                         | Lowest level `app.log` writes; `"debug"` shows the kernel's own diagnostics           |
+| `editMode`   | `boolean`                       | `false`                          | An editor's scene view: scripts and simulation stay still (see "Edit mode" below)     |
 
 ### `App`
 
@@ -176,7 +177,7 @@ app.audio.bus("SFX").volume = 0.5;
 | `start()`, `stop()`, `pause()`, `resume()`, `dispose()`    | `start` is `async`; `stop` may be followed by `start` again                                                                                                                                                                                                                                                                            |
 | `step(deltaSeconds)`                                       | Headless only; throws `IGX-0105` otherwise                                                                                                                                                                                                                                                                                             |
 | `registerComponents(types)`                                | Makes game components known to the registry                                                                                                                                                                                                                                                                                            |
-| `isRunning`, `isHeadless`                                  | Loop and mode state                                                                                                                                                                                                                                                                                                                    |
+| `isRunning`, `isHeadless`, `isEditMode`                    | Loop and mode state                                                                                                                                                                                                                                                                                                                    |
 | `onError`                                                  | `Signal<ErrorReport>` — every callback, coroutine, system, extension failure                                                                                                                                                                                                                                                           |
 | `lite`                                                     | `{ engine, scene }`; unstable escape hatch                                                                                                                                                                                                                                                                                             |
 
@@ -304,7 +305,7 @@ Callbacks are not members of `Script`; implement the ones you need, optionally w
 | `onApplicationPause(paused)`, `onApplicationFocus(focused)` | Visibility and focus changes                                     | Per transition     |
 | `onCollisionEnter/Stay/Exit`, `onTriggerEnter/Exit`         | After the fixed step, by `@ignifx/physics` (see its skill)       | Per event          |
 
-Statics (`static typeId`, `requires`, `allowMultiple`, `executionOrder`, `updateWhenPaused`) and callbacks are written plainly with no `override`: they are not members of `Component`/`Script`; the class-token types match them structurally (`ComponentStatics`, `ScriptStatics`) and the registry applies the defaults.
+Statics (`static typeId`, `requires`, `allowMultiple`, `executionOrder`, `updateWhenPaused`, `runInEditMode`) and callbacks are written plainly with no `override`: they are not members of `Component`/`Script`; the class-token types match them structurally (`ComponentStatics`, `ScriptStatics`) and the registry applies the defaults. **Edit mode** (`createApp({ editMode: true })`, an editor's scene view): no script gets a callback unless its class sets `static runInEditMode = true`, and nothing simulates — [`references/concepts/lifecycle.md`](references/concepts/lifecycle.md) §8.
 
 ### Schema kinds
 
