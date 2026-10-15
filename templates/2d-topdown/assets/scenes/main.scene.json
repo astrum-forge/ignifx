@@ -103,6 +103,7 @@
               "$asset": "hero.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -193,6 +194,7 @@
               "$asset": "tiles.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -271,6 +273,7 @@
               "$asset": "tiles.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -349,6 +352,7 @@
               "$asset": "tiles.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -427,6 +431,7 @@
               "$asset": "tiles.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -505,6 +510,7 @@
               "$asset": "tiles.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -583,6 +589,7 @@
               "$asset": "tiles.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -661,6 +668,7 @@
               "$asset": "tiles.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -739,6 +747,7 @@
               "$asset": "tiles.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -817,6 +826,7 @@
               "$asset": "tiles.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -895,6 +905,7 @@
               "$asset": "tiles.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -973,6 +984,7 @@
               "$asset": "tiles.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -1051,6 +1063,7 @@
               "$asset": "tiles.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -1129,6 +1142,7 @@
               "$asset": "tiles.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -1207,6 +1221,7 @@
               "$asset": "tiles.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               0.55,
               0.55,

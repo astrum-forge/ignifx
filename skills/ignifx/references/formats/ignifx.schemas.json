@@ -2542,7 +2542,7 @@
         "frames": {
           "kind": "array",
           "default": "[]",
-          "description": "The frames, in the order they are indexed. Each is a record of name (str, what #frame: addresses), x/y (f32, the top-left corner in image pixels), w/h (f32, the size in image pixels), pivot (vec2 in [0,1] of the frame; [0,0] is top-left) and sourceSize (vec2, the untrimmed size when the packer trimmed the frame)."
+          "description": "The frames, in the order they are indexed. Each is a record of name (str, what SpriteRenderer.frameName names), x/y (f32, the top-left corner in image pixels), w/h (f32, the size in image pixels), pivot (vec2 in [0,1] of the frame; [0,0] is top-left) and sourceSize (vec2, the untrimmed size when the packer trimmed the frame)."
         }
       }
     },
@@ -2589,6 +2589,11 @@
           "kind": "asset",
           "default": "null",
           "description": "The atlas this sprite draws a frame of."
+        },
+        "frameName": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": "The atlas frame drawn, by name; empty draws the first frame."
         },
         "color": {
           "kind": "color",

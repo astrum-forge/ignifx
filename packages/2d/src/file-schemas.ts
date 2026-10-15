@@ -25,7 +25,7 @@ export function spriteAtlasFileSchema(): Schema {
     premultipliedAlpha: bool(false, { tooltip: "Whether the image's RGB is already multiplied by its alpha." }),
     frames: array(
       record({
-        name: str("", { tooltip: "The frame's name; what #frame: addresses." }),
+        name: str("", { tooltip: "The frame's name; what SpriteRenderer.frameName names." }),
         x: f32(0, { min: 0, tooltip: "The left edge, in image pixels." }),
         y: f32(0, { min: 0, tooltip: "The top edge, in image pixels." }),
         w: f32(0, { min: 0, tooltip: "The width, in image pixels." }),
@@ -37,7 +37,7 @@ export function spriteAtlasFileSchema(): Schema {
       {
         tooltip:
           "The frames, in the order they are indexed. Each is a record of " +
-          "name (str, what #frame: addresses), x/y (f32, the top-left corner in image pixels), " +
+          "name (str, what SpriteRenderer.frameName names), x/y (f32, the top-left corner in image pixels), " +
           "w/h (f32, the size in image pixels), pivot (vec2 in [0,1] of the frame; [0,0] is top-left) " +
           "and sourceSize (vec2, the untrimmed size when the packer trimmed the frame).",
       },

@@ -220,12 +220,19 @@ export class SpriteAtlasAsset {
 const DEFAULT_PIVOT: Vec2Like = Object.freeze({ x: 0.5, y: 0.5 });
 
 /**
- * A sprite: one frame of one atlas, which is what `SpriteRenderer.sprite` points at.
+ * One frame of one atlas: what a `"2d/hero.atlas.json#frame:idle_0"` address loads to.
  *
  * @remarks
- * A bare `"2d/hero.atlas.json"` address resolves to frame `0`; the `#frame:` fragment picks another
+ * This is for code that wants a frame by address. A `SpriteRenderer` does not take it: its `sprite`
+ * field names the atlas itself and its `frameName` field names the frame
  * (`docs/architecture/11-2d-toolkit.md` §2.2). The asset service shares the underlying atlas
- * between every fragment of the same address, so ten sprites off one atlas upload one texture.
+ * between every fragment of the same address, so a fragment loads no second texture.
+ *
+ * @example
+ * ```ts
+ * const idle = await app.assets.load<SpriteAsset>("2d/hero.atlas.json#frame:idle_1").promise;
+ * idle.frame; // 1
+ * ```
  *
  * @public
  */

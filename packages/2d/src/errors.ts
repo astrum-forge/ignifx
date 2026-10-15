@@ -60,6 +60,8 @@ export const TwoDErrorCode = {
   batchDisposed: "IGX-1116",
   /** `app.twoD.createSpriteBatch` was given an atlas handle that has not finished loading. */
   batchAtlasNotLoaded: "IGX-1117",
+  /** `SpriteRenderer.sprite` loaded something that is not a sprite atlas, such as a `#frame:` address. */
+  spriteNotAnAtlas: "IGX-1118",
 } as const;
 
 /**
@@ -92,6 +94,7 @@ export const TWO_D_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.fre
   "IGX-1115": "{index} is outside the sprite batch's 0..{capacity} slots.",
   "IGX-1116": "This sprite batch was disposed; create another one.",
   "IGX-1117": "The atlas handle for a sprite batch is {state}, not loaded.",
+  "IGX-1118": "SpriteRenderer.sprite names {address}, which is not a sprite atlas.",
 });
 
 /**

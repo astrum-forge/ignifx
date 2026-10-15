@@ -12,6 +12,7 @@ import {
   vec2,
 } from "@ignifx/core";
 import { SpriteAtlasAsset } from "../atlas/sprite-atlas-asset.js";
+import { twoDError, TwoDErrorCode } from "../errors.js";
 import { SPRITE_BLEND_MODES } from "../lite/sprite-layer.js";
 import { DEFAULT_SORTING_LAYER } from "../service/sorting-layers.js";
 import type { SpriteBlendName } from "../lite/sprite-layer.js";
@@ -53,16 +54,23 @@ export interface SpriteLayerKey {
  * A sprite.
  *
  * @remarks
- * The `sprite` field is an atlas handle; the frame inside it comes from the address's `#frame:`
- * fragment when there is one, and otherwise from {@link SpriteRenderer.frame}, which game code and
- * `SpriteAnimator` both write. A sprite whose atlas has not finished loading draws nothing and
- * costs nothing.
+ * The `sprite` field is an atlas handle, and two members pick the frame inside it.
+ * {@link SpriteRenderer.frameName} is the field a scene file stores: a frame name, or `""` for the
+ * first frame. {@link SpriteRenderer.frame} is the index drawn now, which `SpriteAnimator` and game
+ * code write. Whichever of the two was written last decides the frame; a name is looked up again
+ * whenever the atlas changes. A name the atlas does not declare is reported once (`IGX-1106`) and
+ * draws the first frame.
+ *
+ * `sprite` takes the atlas's own address. A `#frame:` address loads a `SpriteAsset`, not an atlas:
+ * the sprite draws nothing and reports `IGX-1118` once. A sprite whose atlas has not finished
+ * loading draws nothing and costs nothing.
  *
  * @example
  * ```ts
  * const hero = app.world.createEntity({ name: "hero" });
  * const sprite = hero.addComponent(SpriteRenderer);
  * sprite.sprite = app.assets.load<SpriteAtlasAsset>("2d/hero.atlas.json");
+ * sprite.frameName = "idle_0";
  * sprite.sortingLayer = "Default";
  * ```
  *
@@ -110,6 +118,18 @@ export class SpriteRenderer extends Component implements ComponentHooks {
 
   /** The atlas frame index drawn; `SpriteAnimator` writes this. */
   #frame = 0;
+
+  /** The frame's name as the scene file stores it; `""` is the first frame. */
+  #frameName = "";
+
+  /** Whether `frameName` was written after `frame`, so the name decides the index. */
+  #isFrameByName = true;
+
+  /** The atlas the name was last looked up in, so a new atlas looks it up again. */
+  #resolvedAtlas: SpriteAtlasAsset | null = null;
+
+  /** What was last reported (`atlas#frame`, or the non-atlas value), so each problem is reported once. */
+  #reported: unknown = null;
 
   /** The Lite handle, or `null` while the sprite is not in a layer. */
   #handle: LiteSprite2DHandle | null = null;
@@ -159,24 +179,61 @@ export class SpriteRenderer extends Component implements ComponentHooks {
   }
 
   /**
-   * The atlas frame drawn.
+   * The atlas frame index drawn.
+   *
+   * @remarks
+   * When {@link SpriteRenderer.frameName} was written last, this is that frame's index once the
+   * atlas has loaded. The index is not saved: a scene file stores `frameName`.
    *
    * @returns The frame index.
    */
   get frame(): number {
+    if (this.#isFrameByName) {
+      this.#resolveFrameName(this.atlas);
+    }
     return this.#frame;
   }
 
   /**
-   * Sets the atlas frame drawn, marking the sprite for the next sync when it changes.
+   * Sets the atlas frame drawn by index, marking the sprite for the next sync when it changes. The
+   * index then wins over {@link SpriteRenderer.frameName} until `frameName` is written again.
    *
    * @param value - The frame index.
    */
   set frame(value: number) {
+    this.#isFrameByName = false;
     if (value !== this.#frame) {
       this.#frame = value;
       this.#isDirty = true;
     }
+  }
+
+  /**
+   * The frame a scene file says this sprite draws, by the name the atlas gives it.
+   *
+   * @remarks
+   * A schema field: scene files store it and the inspector edits it. `""` draws the first frame.
+   * Writing it makes the name decide the frame until {@link SpriteRenderer.frame} is written, so a
+   * `SpriteAnimator` still animates a sprite that names a still frame, and a scene saved meanwhile
+   * keeps the name. A name the atlas does not declare is reported once through `app.onError`
+   * (`IGX-1106`) and draws the first frame.
+   *
+   * @returns The frame name, or `""`.
+   */
+  get frameName(): string {
+    return this.#frameName;
+  }
+
+  /**
+   * Picks the frame drawn by name.
+   *
+   * @param value - A frame name the atlas declares, or `""` for the first frame.
+   */
+  set frameName(value: string) {
+    this.#frameName = value;
+    this.#isFrameByName = true;
+    this.#resolvedAtlas = null;
+    this.#isDirty = true;
   }
 
   /**
@@ -215,7 +272,36 @@ export class SpriteRenderer extends Component implements ComponentHooks {
    */
   get atlas(): SpriteAtlasAsset | null {
     const handle = this.sprite;
-    return handle?.state === "loaded" ? handle.value : null;
+    // A `#frame:` address loads a `SpriteAsset`, which is not an atlas (`prepareSync` reports it).
+    return handle?.state === "loaded" && handle.value instanceof SpriteAtlasAsset ? handle.value : null;
+  }
+
+  /**
+   * The atlas to draw from, with the frame name looked up in it. The sync system calls this once
+   * per sprite per frame, before anything else.
+   *
+   * @remarks
+   * A loaded `sprite` handle whose value is not an atlas is reported once (`IGX-1118`) and draws
+   * nothing; a frame name the atlas does not declare is reported once (`IGX-1106`) and draws the
+   * first frame. Neither throws, so one bad sprite never stops the sync.
+   *
+   * @returns The atlas, or `null` when there is nothing to draw.
+   *
+   * @internal
+   */
+  prepareSync(): SpriteAtlasAsset | null {
+    const atlas = this.atlas;
+    if (atlas === null) {
+      const handle = this.sprite;
+      if (handle?.state === "loaded") {
+        this.#reportNotAnAtlas(handle.address, handle.value);
+      }
+      return null;
+    }
+    if (this.#isFrameByName) {
+      this.#resolveFrameName(atlas);
+    }
+    return atlas;
   }
 
   /**
@@ -301,6 +387,79 @@ export class SpriteRenderer extends Component implements ComponentHooks {
     this.#handle = handle;
     this.#layerKey = key;
   }
+
+  /**
+   * Turns {@link SpriteRenderer.frameName} into the index drawn, once per atlas.
+   *
+   * @param atlas - The loaded atlas, or `null` while it is loading.
+   */
+  #resolveFrameName(atlas: SpriteAtlasAsset | null): void {
+    const name = this.#frameName;
+    if (name !== "" && (atlas === null || atlas === this.#resolvedAtlas)) {
+      return;
+    }
+    this.#resolvedAtlas = atlas;
+    let index = name === "" ? 0 : (atlas?.frameIndex(name) ?? 0);
+    if (index < 0) {
+      index = 0;
+      if (atlas !== null) {
+        this.#reportUnknownFrame(atlas, name);
+      }
+    }
+    if (index !== this.#frame) {
+      this.#frame = index;
+      this.#isDirty = true;
+    }
+  }
+
+  /**
+   * Reports a frame name the atlas does not declare, once per atlas and name.
+   *
+   * @param atlas - The atlas.
+   * @param name - The name it lacks.
+   */
+  #reportUnknownFrame(atlas: SpriteAtlasAsset, name: string): void {
+    const key = `${atlas.address}#${name}`;
+    if (this.#reported === key || this.isDestroyed) {
+      return;
+    }
+    this.#reported = key;
+    const error = twoDError(
+      TwoDErrorCode.unknownFrame,
+      `${atlas.address} declares no frame named ${name}; ${this.entity.name} draws its first frame.`,
+      {
+        context: { atlas: atlas.address, frame: name, entity: this.entity.name },
+        hint: `Set SpriteRenderer.frameName to one of: ${atlas.frameNames().join(", ")}.`,
+      },
+    );
+    this.app.onError.emit({ error, source: "system", phase: null, entity: this.entity, component: this });
+  }
+
+  /**
+   * Reports a `sprite` handle whose value is not an atlas, once per value.
+   *
+   * @param address - The handle's address.
+   * @param value - What it loaded.
+   */
+  #reportNotAnAtlas(address: string, value: unknown): void {
+    if (this.#reported === value || this.isDestroyed) {
+      return;
+    }
+    this.#reported = value;
+    const hash = address.indexOf("#");
+    const error = twoDError(
+      TwoDErrorCode.spriteNotAnAtlas,
+      `SpriteRenderer.sprite on ${this.entity.name} names ${address}, which is not a sprite atlas; the sprite draws nothing.`,
+      {
+        context: { address, entity: this.entity.name },
+        hint:
+          hash < 0
+            ? "Name an .atlas.json file in sprite."
+            : `Name the atlas in sprite (${address.slice(0, hash)}) and the frame in frameName.`,
+      },
+    );
+    this.app.onError.emit({ error, source: "system", phase: null, entity: this.entity, component: this });
+  }
 }
 
 /**
@@ -311,6 +470,7 @@ export class SpriteRenderer extends Component implements ComponentHooks {
 function spriteRendererSchema(): Schema {
   return defineSchema({
     sprite: asset(SpriteAtlasAsset, { tooltip: "The atlas this sprite draws a frame of." }),
+    frameName: str("", { tooltip: "The atlas frame drawn, by name; empty draws the first frame." }),
     color: color("#ffffffff", { tooltip: "Tint multiplied into every texel." }),
     flipX: bool(false, { tooltip: "Mirror horizontally." }),
     flipY: bool(false, { tooltip: "Mirror vertically." }),

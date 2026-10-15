@@ -37,7 +37,8 @@ ignifx maps its 2D world (metres, **+Y up**, Z ignored for drawing) onto this. O
 
 ```ts
 class SpriteRenderer extends Component.define({
-  sprite: asset(SpriteAsset), // "sprites/hero.atlas.json#frame:idle_0" or an image address (single-frame atlas)
+  sprite: asset(SpriteAtlasAsset), // "sprites/hero.atlas.json"
+  frameName: str(""), // "idle_0"; "" draws the first frame
   color: color("#ffffffff"),
   flipX: bool(false),
   flipY: bool(false),
@@ -50,7 +51,9 @@ class SpriteRenderer extends Component.define({
 
 - One Lite sprite handle (`addSprite2D`) in the layer matching (sortingLayer, atlas, blend, screenSpace). The 2D sync system (`PreRender`, order **−450** — `@ignifx/audio`'s spatial pump already holds −400, and equal orders are broken by extension-registration order, which would make the frame order depend on a game's argument list) writes `positionPx`, `rotation` (from `rotation2D`), `sizePx` (from scale), `frame`, `color`, `flipX/Y`, `visible` for sprites whose `worldMatrixVersion`, fields, or effective enabled state changed since the last frame. Static entities (`entity.isStatic`) are synced once.
 - Changing `sortingLayer`/`blend`/atlas moves the sprite to another layer (remove + add; the handle is replaced).
-- **As built, the field is the atlas and the frame is not a field.** `sprite` holds an `AssetHandle<SpriteAtlasAsset>`, and the frame drawn is `SpriteRenderer.frame`, a runtime index that `SpriteAnimator` and game code write and the serializer does not. A `#frame:` address is not read: its handle's value is a `SpriteAsset` (`{ atlas, frame, name }`), which the renderer takes for the atlas, and the frame stays 0 (checked headless, 2026-10-15). A scene file therefore cannot say which frame a still sprite shows; the 2D templates carry a project `SpriteFrame` script whose `frame` field names it and whose `awake` resolves it.
+- **The atlas and the frame are two fields.** `sprite` names the atlas document; `frameName` names the frame, and is what a scene file stores and the inspector edits. The index drawn is `SpriteRenderer.frame`, a runtime property that `SpriteAnimator` and game code write and the serializer does not. Whichever of `frame` and `frameName` was written last decides the frame, so an animator still animates a sprite whose file names a still frame, and a scene saved mid-animation keeps the authored name. A name is looked up again when the sprite's atlas changes.
+- **Bad references are reported once and never throw in the sync.** A `frameName` the atlas does not declare reports `IGX-1106` through `app.onError`, once per atlas and name, and the sprite draws the atlas's first frame. A `sprite` handle whose value is not an atlas reports `IGX-1118` once, and the sprite draws nothing. The frame is a CPU-side index written into Lite's sprite props, so a test of the field needs no GPU.
+- **A `#frame:` address is not a sprite.** `"hero.atlas.json#frame:idle_0"` loads a `SpriteAsset` (`{ atlas, frame, name }`) for code that wants one frame by address. `SpriteRenderer.sprite` does not take it (it reports `IGX-1118`): the frame is a field, not part of the address, so the inspector edits one string, an animator and the field never disagree about where the frame lives, and the atlas handle stays one shared load. The fragment never worked on a renderer (it threw in the 2D sync every frame, spike S0.2), so no game depended on it.
 
 ### 2.3 Sprite assets and atlases
 

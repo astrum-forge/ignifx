@@ -152,9 +152,10 @@ export class TwoDSyncSystem implements System {
         continue;
       }
       this.#seen.add(sprite);
-      const atlas = sprite.atlas;
+      // Also looks up `frameName` and reports a bad one, or a `sprite` that is not an atlas, once.
+      const atlas = sprite.prepareSync();
       if (atlas === null || atlas.lite.atlas === null) {
-        // Still loading, failed, or headless: nothing to draw, and nothing to pay for.
+        // Still loading, failed, not an atlas, or headless: nothing to draw, and nothing to pay for.
         continue;
       }
       const entity = sprite.entity;
