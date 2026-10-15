@@ -3,10 +3,12 @@
  *
  * @remarks
  * A path that begins with `node_modules/` names a file inside one of the extension's own
- * dependencies (`@ignifx/physics` declares Havok's `.wasm` that way). pnpm links that dependency
- * into the extension's own `node_modules`, but a hoisting package manager installs it beside the
- * extension instead, so the path is tried against the extension's directory and then each ancestor
- * in turn; the nearest existing file wins. Any other path is relative to the extension's directory.
+ * dependencies (`@ignifx/physics` declares Havok's `.wasm` that way). The path is tried against the
+ * extension's directory and then each ancestor in turn, the way Node looks a package up; the
+ * nearest existing file wins. The walk starts from the extension's **real** path, as Node's does:
+ * a standalone pnpm project links `node_modules/@ignifx/physics` to a store directory, and Havok
+ * sits beside that store directory, not under the link. The linked path is walked afterwards, for
+ * layouts that only resolve from it. Any other path is relative to the extension's directory.
  * When nothing matches, the path relative to the extension is returned so that the `IGX-0553`
  * message names the declared location.
  *
@@ -19,11 +21,14 @@ async function resolveDeclaredPath(directory: string, relativePath: string): Pro
   if (!relativePath.startsWith("node_modules/")) {
     return direct;
   }
+  const realDirectory = await realpath(directory).catch(() => directory);
   const candidates: string[] = [];
-  for (let current = directory; ; current = dirname(current)) {
-    candidates.push(join(current, relativePath));
-    if (dirname(current) === current) {
-      break;
+  for (const start of new Set([realDirectory, directory])) {
+    for (let current = start; ; current = dirname(current)) {
+      candidates.push(join(current, relativePath));
+      if (dirname(current) === current) {
+        break;
+      }
     }
   }
   const existing = await Promise.all(candidates.map((candidate) => isExistingFile(candidate)));
@@ -54,7 +59,7 @@ async function isExistingFile(filePath: string): Promise<boolean> {
  * unhashed into the public asset path, and the assets service resolves them through `resolveUrl`.
  */
 
-import { readdir, readFile, stat } from "node:fs/promises";
+import { readdir, readFile, realpath, stat } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
 import { VitePluginError, VitePluginErrorCode } from "./errors.js";
 import { isJsonArray, isJsonObject, jsonProperty, parseJsonValue } from "./json.js";
