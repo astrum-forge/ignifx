@@ -1,5 +1,4 @@
 import { join } from "node:path";
-import { MESH_FILE_FORMAT, meshFileJsonSchema } from "@ignifx/core";
 import { afterAll, describe, expect, it } from "vitest";
 import { VitePluginErrorCode } from "../src/errors.js";
 import { scanAssetRoot } from "../src/manifest.js";
@@ -149,47 +148,29 @@ describe("validateJsonAssets", () => {
 });
 
 describe("mesh files", () => {
-  const MESH_SCHEMAS: JsonSchemaProvider = { formats: { [MESH_FILE_FORMAT]: meshFileJsonSchema() } };
+  // The plugin does not depend on the engine (dependency-cruiser's layering), so these check the
+  // header and the scan with no schema; core's own tests cover meshFileJsonSchema().
+  const MESH_HEADER = { format: "ignifx.mesh", formatVersion: 1 };
 
   it("requires a header, because .mesh.json is a format suffix", () => {
     expect(isFormatHeaderRequired("meshes/crate.mesh.json")).toBe(true);
   });
 
-  it("scans a .mesh.json as a mesh and accepts a valid one against core's schema", async () => {
+  it("scans a .mesh.json as a mesh and accepts one with a header", async () => {
     const root = await createFixtureTree({
-      "assets/meshes/crate.mesh.json": JSON.stringify({
-        format: MESH_FILE_FORMAT,
-        formatVersion: 1,
-        primitive: "box",
-        options: { size: 1 },
-      }),
+      "assets/meshes/crate.mesh.json": JSON.stringify({ ...MESH_HEADER, primitive: "box", options: { size: 1 } }),
       "assets/meshes/floor.mesh.json": JSON.stringify({
-        format: MESH_FILE_FORMAT,
-        formatVersion: 1,
-        name: "Floor",
+        ...MESH_HEADER,
         primitive: "ground",
         options: { width: 24, height: 24, subdivisions: 1, uvScale: [10, 10] },
       }),
     });
     const assets = await scanAssetRoot({ assetRoot: join(root, "assets") });
     expect(assets.map((asset) => asset.type)).toEqual(["mesh", "mesh"]);
-    expect(await validateJsonAssets(assets, MESH_SCHEMAS)).toEqual([]);
+    expect(await validateJsonAssets(assets, null)).toEqual([]);
   });
 
-  it.each([
-    ["an option the primitive does not take", { primitive: "sphere", options: { size: 1 } }],
-    ["a negative length", { primitive: "box", options: { size: -1 } }],
-    ["a fractional count", { primitive: "cylinder", options: { tessellation: 2.5 } }],
-    ["an unknown primitive", { primitive: "teapot" }],
-    ["no primitive", {}],
-  ])("fails the build on %s", (_label, fields) => {
-    const text = JSON.stringify({ format: MESH_FILE_FORMAT, formatVersion: 1, ...fields });
-    const problems = validateJsonAsset("meshes/bad.mesh.json", "/p/meshes/bad.mesh.json", text, MESH_SCHEMAS);
-    expect(problems.length).toBeGreaterThan(0);
-    expect(problems.every((problem) => problem.code === VitePluginErrorCode.schemaViolation)).toBe(true);
-  });
-
-  it("fails a .mesh.json with no header even without a schema", () => {
+  it("fails a .mesh.json with no header", () => {
     const [problem] = validateJsonAsset("meshes/bad.mesh.json", "/p/bad.mesh.json", '{"primitive":"box"}', null);
     expect(problem?.code).toBe(VitePluginErrorCode.missingFormatHeader);
   });
