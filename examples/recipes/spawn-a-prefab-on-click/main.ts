@@ -10,9 +10,9 @@
  * which is exactly what `screenToRay` reads, so nothing is converted between them. A physics query
  * needs one completed fixed step before it answers, or it throws `IGX-0902`.
  *
- * There is no mesh **file** format, so `crate.prefab.json` beside this file carries the material,
- * the collider and the body, and `CrateMesh` builds the box in `awake`: a primitive lives at a
- * `memory:` address that no file can name.
+ * `crate.prefab.json` beside this file carries the material, the collider and the body, and
+ * `CrateMesh` builds the box in `awake`, so its size is a script field. A prefab can also name a
+ * `.mesh.json` file for its mesh instead.
  */
 import { Camera, MeshAsset, MeshRenderer, Script, createApp, entityRef, f32 } from "@ignifx/core";
 import { defineInputActions, input } from "@ignifx/input";

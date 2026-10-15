@@ -12,6 +12,7 @@ pages beside them are maintained alongside `docs/architecture/06-serialization-a
 | [`material.md`](material.md)                     | prose     | `.material.json`: PBR and Standard, texture slots                   |
 | [`ignifx.material.md`](ignifx.material.md)       | generated | The material file's fields                                          |
 | [`ignifx.environment.md`](ignifx.environment.md) | generated | `.environment.json`: IBL, BRDF table, skybox                        |
+| [`ignifx.mesh.md`](ignifx.mesh.md)               | generated | `.mesh.json`: one primitive mesh and its options                    |
 | [`inputactions.md`](inputactions.md)             | prose     | `.input.json`: maps, actions, binding paths, composites, processors |
 | [`ignifx.inputactions.md`](ignifx.inputactions.md) | generated | The input actions file's top-level fields                         |
 | [`components.md`](components.md)                 | generated | Every built-in component's serialized fields and defaults           |

@@ -147,6 +147,35 @@ describe("validateJsonAssets", () => {
   });
 });
 
+describe("mesh files", () => {
+  // The plugin does not depend on the engine (dependency-cruiser's layering), so these check the
+  // header and the scan with no schema; core's own tests cover meshFileJsonSchema().
+  const MESH_HEADER = { format: "ignifx.mesh", formatVersion: 1 };
+
+  it("requires a header, because .mesh.json is a format suffix", () => {
+    expect(isFormatHeaderRequired("meshes/crate.mesh.json")).toBe(true);
+  });
+
+  it("scans a .mesh.json as a mesh and accepts one with a header", async () => {
+    const root = await createFixtureTree({
+      "assets/meshes/crate.mesh.json": JSON.stringify({ ...MESH_HEADER, primitive: "box", options: { size: 1 } }),
+      "assets/meshes/floor.mesh.json": JSON.stringify({
+        ...MESH_HEADER,
+        primitive: "ground",
+        options: { width: 24, height: 24, subdivisions: 1, uvScale: [10, 10] },
+      }),
+    });
+    const assets = await scanAssetRoot({ assetRoot: join(root, "assets") });
+    expect(assets.map((asset) => asset.type)).toEqual(["mesh", "mesh"]);
+    expect(await validateJsonAssets(assets, null)).toEqual([]);
+  });
+
+  it("fails a .mesh.json with no header", () => {
+    const [problem] = validateJsonAsset("meshes/bad.mesh.json", "/p/bad.mesh.json", '{"primitive":"box"}', null);
+    expect(problem?.code).toBe(VitePluginErrorCode.missingFormatHeader);
+  });
+});
+
 describe("formatValidationProblem", () => {
   it("renders address, pointer, message, and code", () => {
     expect(

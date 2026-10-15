@@ -1480,6 +1480,39 @@
         }
       }
     },
+    "ignifx/mesh-file": {
+      "title": "Mesh file",
+      "format": "ignifx.mesh",
+      "description": "One primitive mesh and the options its MeshAsset factory takes, so a scene file can name it by address. glTF meshes load as models instead.",
+      "package": "packages/core",
+      "fields": {
+        "format": {
+          "kind": "str",
+          "default": "\"ignifx.mesh\"",
+          "description": "Always \"ignifx.mesh\"."
+        },
+        "formatVersion": {
+          "kind": "u32",
+          "default": "1",
+          "description": "The file format version; 1 before ignifx 1.0."
+        },
+        "name": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": "A name for diagnostics; empty uses the file's address."
+        },
+        "primitive": {
+          "kind": "enum",
+          "default": "\"box\"",
+          "description": "The shape: box, sphere, plane, ground, cylinder, capsule, torus. Required; an unknown value is rejected with IGX-0507."
+        },
+        "options": {
+          "kind": "record",
+          "default": "{}",
+          "description": "The factory's options; omitted ones take its defaults. Lengths are metres, zero or more; counts are whole numbers, one or more; uvScale is two numbers. An unknown option or a bad value is IGX-0507. By primitive: box: size, width, height, depth; sphere: diameter, segments; plane: size, width, height; ground: width, height, subdivisions, uvScale; cylinder: height, diameter, diameterTop, diameterBottom, tessellation; capsule: height, radius, tessellation; torus: diameter, thickness, tessellation."
+        }
+      }
+    },
     "ignifx/MeshCollider": {
       "title": "MeshCollider",
       "format": "components",

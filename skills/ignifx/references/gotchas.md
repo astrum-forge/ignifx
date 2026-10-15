@@ -252,9 +252,10 @@ Each of these comes from a subsystem's own page; the link is where the detail li
 65. **Do not expect an in-code asset to survive a save.** `MeshAsset.box(app)`,
     `createMaterialAsset(app, …)`, and anything from `Assets.register` live at a `memory:` address
     that names no file, so serializing a component holding one writes `null` and reports `IGX-0602`.
-    Write a `.material.json` or ship a `.glb` when it has to round-trip.
-66. **Do not look for a mesh file format.** There is none: geometry is a primitive built in code or
-    part of a `ModelAsset`. A `"mesh"` address fails with `IGX-0504`.
+    Write a `.material.json` or a `.mesh.json`, or ship a `.glb`, when it has to round-trip.
+66. **Do not drop the suffix from a mesh file's address.** A primitive in a file is
+    `{ "$asset": "meshes/crate.mesh.json" }`; `"meshes/crate"` names no file, so it loads only if code
+    published a mesh at exactly that address first.
 67. **Do not load a scene before registering the components it names.** An unknown `typeId` is
     `IGX-0307` and the entity is built without that component. Call `app.registerComponents([...])`
     first — `virtual:ignifx/scripts` from `@ignifx/vite-plugin` generates the list for you.

@@ -17,6 +17,7 @@ export const ASSET_TYPE_BY_SUFFIX = {
   ".scene.json": "scene",
   ".prefab.json": "scene",
   ".material.json": "material",
+  ".mesh.json": "mesh",
   // Extension documents. The manifest is written once, by this plugin, for every extension that
   // will later read it (the same rule `ASSET_TYPE_BY_EXTENSION` applies to `audio`), so a document
   // suffix is typed here even though the loader lives in the extension package.

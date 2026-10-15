@@ -200,6 +200,8 @@ export const CoreErrorCode = {
   assetLoadFailed: "IGX-0505",
   /** Two loaders were registered for the same asset type. */
   duplicateAssetLoader: "IGX-0506",
+  /** A `.mesh.json` file names an unknown primitive, or an option the primitive does not take or cannot use. */
+  invalidMeshFile: "IGX-0507",
   /** A serialized number was `NaN` or infinite. */
   nonFiniteNumber: "IGX-0601",
   /** A serialized `$entity`/`$component` reference could not be resolved. */
@@ -360,6 +362,7 @@ export const CORE_ERROR_MESSAGES: Readonly<Record<CoreErrorCode, string>> = {
   "IGX-0504": "No loader is registered for {asset}.",
   "IGX-0505": "Loading {asset} from {url} failed after {attempts} attempts.",
   "IGX-0506": "A loader for the asset type {type} is already registered.",
+  "IGX-0507": "{file} is not a valid mesh file: {problem}",
   "IGX-0601": "{field} must be a finite number.",
   "IGX-0602": "The reference {reference} in {scene} could not be resolved.",
   "IGX-0603": "{file} declares format version {version}, which this build cannot read.",

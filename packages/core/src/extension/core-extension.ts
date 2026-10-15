@@ -14,10 +14,10 @@ import { Light } from "../render/light.js";
 import { createEnvironmentLoader } from "../render/loaders/environment-loader.js";
 import { createFontLoader } from "../render/loaders/font-loader.js";
 import { createMaterialLoader } from "../render/loaders/material-loader.js";
+import { createMeshLoader } from "../render/loaders/mesh-loader.js";
 import { createModelLoader } from "../render/loaders/model-loader.js";
 import { createShaderLoader } from "../render/loaders/shader-loader.js";
 import { createTextureLoader } from "../render/loaders/texture-loader.js";
-import { MESH_ASSET_TYPE, MeshAsset } from "../render/mesh-asset.js";
 import { MeshRenderer } from "../render/mesh-renderer.js";
 import { Model } from "../render/model.js";
 import { PostProcessStack } from "../render/post-process-stack.js";
@@ -177,19 +177,9 @@ function registerRendering(ctx: ExtensionContext): void {
       }
     },
   });
-  // `MeshAsset.box(...)` and friends publish through `Assets.register`, which needs the type to
-  // exist so a `memory:mesh/<n>` handle can be collected — and its `unload` is what frees the
-  // template's GPU buffers.
-  ctx.registerAssetLoader({
-    type: MESH_ASSET_TYPE,
-    extensions: [],
-    load: (): Promise<never> => Promise.reject(noMeshFileFormat()),
-    unload: (value: unknown): void => {
-      if (value instanceof MeshAsset) {
-        value.dispose();
-      }
-    },
-  });
+  // Also the type `MeshAsset.box(...)` and friends publish under: its `unload` frees a template's
+  // GPU buffers whether a file or code built it.
+  ctx.registerAssetLoader(createMeshLoader());
   // Held in edit mode: lights stay live, the `time` uniform stands still (ADR-0028).
   ctx.registerSystem(new ShaderUniformSystem(ctx.app), {
     phase: Phase.PreRender,
@@ -201,19 +191,6 @@ function registerRendering(ctx: ExtensionContext): void {
   ctx.registerSystem(sync, { phase: Phase.PreRender, order: RENDER_SYNC_ORDER });
   ctx.onDispose((): void => {
     renderer.dispose();
-  });
-}
-
-/**
- * Builds the failure a `mesh` **address** produces: there is no mesh file format, because geometry
- * arrives either as a primitive built in code or inside a `ModelAsset`.
- *
- * @returns The error to reject with.
- */
-function noMeshFileFormat(): IgnifxError {
-  return new IgnifxError(CoreErrorCode.assetNoLoader, "There is no mesh file format; build one in code.", {
-    context: { type: MESH_ASSET_TYPE },
-    hint: "Use MeshAsset.box/sphere/plane/ground/... for primitives, or load a .glb as a model.",
   });
 }
 

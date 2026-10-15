@@ -134,8 +134,9 @@ describe("in-code assets", () => {
     expect(asset.isDisposed).toBe(true);
   });
 
-  it("refuses to load a mesh address, because there is no mesh file format", async () => {
+  it("fails a mesh address whose file is not a mesh file", async () => {
     const h = await app();
+    h.net.canned.set(h.app.assets.resolveUrl("models/box.mesh"), "{}");
     const handle = h.app.assets.load("models/box.mesh", { type: MESH_ASSET_TYPE });
     // Three attempts with the documented exponential backoff (§9), driven by engine time.
     await h.settle(1);

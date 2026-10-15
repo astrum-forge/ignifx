@@ -267,6 +267,7 @@ export { Light, type LightShadowSettings, type LightType, type ShadowTechniqueNa
 export { createEnvironmentLoader } from "./render/loaders/environment-loader.js";
 export { createFontLoader } from "./render/loaders/font-loader.js";
 export { createMaterialLoader } from "./render/loaders/material-loader.js";
+export { createMeshLoader } from "./render/loaders/mesh-loader.js";
 export { createModelLoader } from "./render/loaders/model-loader.js";
 export { createTextureLoader } from "./render/loaders/texture-loader.js";
 export {
@@ -289,6 +290,7 @@ export {
 } from "./render/material-asset.js";
 export {
   MESH_ASSET_TYPE,
+  MESH_PRIMITIVES,
   MeshAsset,
   type BoxMeshOptions,
   type CapsuleMeshOptions,
@@ -296,10 +298,21 @@ export {
   type GroundMeshOptions,
   type MeshAssetLiteHandles,
   type MeshGeometryData,
+  type MeshPrimitive,
+  type MeshPrimitiveDefinition,
   type PlaneMeshOptions,
   type SphereMeshOptions,
   type TorusMeshOptions,
 } from "./render/mesh-asset.js";
+export {
+  MESH_FILE_EXTENSION,
+  MESH_FILE_FORMAT,
+  MESH_FORMAT_VERSION,
+  MESH_PRIMITIVE_OPTIONS,
+  meshFileJsonSchema,
+  type MeshOptionKind,
+  type MeshPrimitiveOptionKinds,
+} from "./render/mesh-file.js";
 export { MeshRenderer } from "./render/mesh-renderer.js";
 // Custom shaders (docs/plan/2026-09-terrain-particles-shaders.md §3). The pragma parser, the live
 // material state, the surface-shader layer and the post-effect compiler are reached through dynamic
@@ -411,7 +424,12 @@ export {
   type RenderingFeatureSettings,
   type RenderingSettings,
 } from "./render/rendering-settings.js";
-export { describeEnvironmentFileFormat, describeMaterialFileFormat, describeSchemas } from "./render/schemas.js";
+export {
+  describeEnvironmentFileFormat,
+  describeMaterialFileFormat,
+  describeMeshFileFormat,
+  describeSchemas,
+} from "./render/schemas.js";
 export {
   TEXTURE_ASSET_TYPE,
   TextureAsset,

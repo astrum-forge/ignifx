@@ -36,6 +36,7 @@ describe("describeSchemas", () => {
       "ignifx/PostProcessStack",
       "ignifx/environment-file",
       "ignifx/material-file",
+      "ignifx/mesh-file",
       "ignifx/scene-file",
     ]);
   });

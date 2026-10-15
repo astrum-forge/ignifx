@@ -279,6 +279,7 @@ import { createManualClock } from '@ignifx/core';
 import { createMaterialAsset } from '@ignifx/core';
 import { createMaterialLoader } from '@ignifx/core';
 import { createMemorySink } from '@ignifx/core';
+import { createMeshLoader } from '@ignifx/core';
 import { createModelLoader } from '@ignifx/core';
 import { createMouseDevice } from '@ignifx/input';
 import { createNavigatorGamepadReader } from '@ignifx/input';
@@ -377,6 +378,7 @@ import { describeInputActionsFormat } from '@ignifx/input';
 import { describeInputSchemas } from '@ignifx/input';
 import { describeLocaleFileFormat } from '@ignifx/ui';
 import { describeMaterialFileFormat } from '@ignifx/core';
+import { describeMeshFileFormat } from '@ignifx/core';
 import { describeParticlesFormat } from '@ignifx/particles';
 import { describePhysicsMaterialFileFormat } from '@ignifx/physics';
 import { describeSceneFileFormat } from '@ignifx/core';
@@ -811,10 +813,20 @@ import { MenuToggleRow } from '@ignifx/ui';
 import { MenuVectorSource } from '@ignifx/ui';
 import { mergeTileCollisions } from '@ignifx/2d';
 import { MESH_ASSET_TYPE } from '@ignifx/core';
+import { MESH_FILE_EXTENSION } from '@ignifx/core';
+import { MESH_FILE_FORMAT } from '@ignifx/core';
+import { MESH_FORMAT_VERSION } from '@ignifx/core';
+import { MESH_PRIMITIVE_OPTIONS } from '@ignifx/core';
+import { MESH_PRIMITIVES } from '@ignifx/core';
 import { MeshAsset } from '@ignifx/core';
 import { MeshAssetLiteHandles } from '@ignifx/core';
 import { MeshCollider } from '@ignifx/physics';
+import { meshFileJsonSchema } from '@ignifx/core';
 import { MeshGeometryData } from '@ignifx/core';
+import { MeshOptionKind } from '@ignifx/core';
+import { MeshPrimitive } from '@ignifx/core';
+import { MeshPrimitiveDefinition } from '@ignifx/core';
+import { MeshPrimitiveOptionKinds } from '@ignifx/core';
 import { MeshRenderer } from '@ignifx/core';
 import { MeshShapeTable } from '@ignifx/particles';
 import { MessageNode } from '@ignifx/ui';
@@ -2066,6 +2078,8 @@ export { createMaterialLoader }
 
 export { createMemorySink }
 
+export { createMeshLoader }
+
 export { createModelLoader }
 
 export { createMouseDevice }
@@ -2261,6 +2275,8 @@ export { describeInputSchemas }
 export { describeLocaleFileFormat }
 
 export { describeMaterialFileFormat }
+
+export { describeMeshFileFormat }
 
 export { describeParticlesFormat }
 
@@ -3130,13 +3146,33 @@ export { mergeTileCollisions }
 
 export { MESH_ASSET_TYPE }
 
+export { MESH_FILE_EXTENSION }
+
+export { MESH_FILE_FORMAT }
+
+export { MESH_FORMAT_VERSION }
+
+export { MESH_PRIMITIVE_OPTIONS }
+
+export { MESH_PRIMITIVES }
+
 export { MeshAsset }
 
 export { MeshAssetLiteHandles }
 
 export { MeshCollider }
 
+export { meshFileJsonSchema }
+
 export { MeshGeometryData }
+
+export { MeshOptionKind }
+
+export { MeshPrimitive }
+
+export { MeshPrimitiveDefinition }
+
+export { MeshPrimitiveOptionKinds }
 
 export { MeshRenderer }
 

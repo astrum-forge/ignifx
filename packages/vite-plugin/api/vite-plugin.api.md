@@ -55,6 +55,7 @@ export const ASSET_TYPE_BY_SUFFIX: {
     readonly ".scene.json": "scene";
     readonly ".prefab.json": "scene";
     readonly ".material.json": "material";
+    readonly ".mesh.json": "mesh";
     readonly ".input.json": "inputactions";
     readonly ".audio.json": "audiobuses";
     readonly ".physicsmaterial.json": "physicsmaterial";

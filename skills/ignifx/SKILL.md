@@ -239,8 +239,9 @@ they behave: [`references/concepts/rendering.md`](references/concepts/rendering.
 | `pbrMaterialDefinition({ surfaces: [...] })`, `materialAsset.surface(name)`            | `.surface.wgsl` layers on PBR, and their values |
 | `InstancedMeshRenderer` — `setMatrices(slab, count)`, `setCount`, `markDirty(range)`   | Thousands of copies of one mesh, one draw call  |
 
-There is no mesh **file** format: geometry is a primitive built in code or part of a `ModelAsset`.
-An in-code asset cannot be serialized into a scene file (`IGX-0602`). Custom shaders, their pragma
+A scene file names a primitive through a `.mesh.json` file (`{ "format": "ignifx.mesh",
+"formatVersion": 1, "primitive": "box", "options": { "size": 1 } }`); a primitive built in code is an
+in-code asset and cannot be serialized into a scene file (`IGX-0602`). Custom shaders, their pragma
 declarations and the WGSL rules are in [`references/formats/wgsl.md`](references/formats/wgsl.md)
 and [`references/concepts/rendering.md`](references/concepts/rendering.md) §6.
 
