@@ -193,6 +193,16 @@ describe("before anything has loaded", () => {
     expect(tilemap.collisionAt(0, 0).shape.kind).toBe("none");
     expect(tilemap.worldToCell({ x: 1, y: 1 }, new Vec2())).toEqual({ x: 0, y: 0 });
   });
+
+  it("builds the collision surface once a map read too early has loaded", async () => {
+    const created = await createTwoDApp({ files: { "2d/level.tilemap.json": fixtureDocument() } });
+    harness = created;
+    const tilemap = created.app.world.createEntity("late").addComponent(Tilemap);
+    expect(tilemap.collisionData.chunks).toEqual([]);
+    tilemap.map = (await created.load<TilemapAsset>("2d/level.tilemap.json")).retain();
+    expect(tilemap.collisionData.chunks).toHaveLength(1);
+    expect(tilemap.collisionData.version).toBeGreaterThan(0);
+  });
 });
 
 describe("tile objects", () => {
