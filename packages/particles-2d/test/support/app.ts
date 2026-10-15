@@ -24,6 +24,8 @@ const FIXTURE_ROOT = new URL("../../../../tests/fixtures/assets/2d/", import.met
 export interface Particles2DAppOptions {
   /** Project settings, merged into `createApp`. */
   readonly settings?: SettingsInput;
+  /** Builds the app in edit mode (ADR-0028). */
+  readonly editMode?: boolean;
   /** Extra files the injected `fetch` answers, beyond the 2D fixtures. */
   readonly files?: Readonly<Record<string, ArrayBuffer | string>>;
 }
@@ -272,6 +274,7 @@ export async function createParticles2DApp(options?: Particles2DAppOptions): Pro
     fetch: tableFetch({ ...fixtureFiles(), ...options?.files }),
     extensions: [twoD(), particles(), particles2D()],
     ...(options?.settings === undefined ? {} : { settings: options.settings }),
+    ...(options?.editMode === undefined ? {} : { editMode: options.editMode }),
   });
   return {
     app,
