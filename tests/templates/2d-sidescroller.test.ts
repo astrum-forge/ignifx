@@ -25,7 +25,7 @@ const BANDS: readonly (readonly [string, number])[] = [
   ["Trees", 5],
 ];
 
-/** How many coins the tilemap's objects layer used to spawn. */
+/** How many coins the scene holds. */
 const COIN_COUNT = 18;
 
 /** Every entity of the level, in tree order. */
@@ -91,7 +91,7 @@ describe("2d-sidescroller's scene file", () => {
     const camera = named(entities, "Main Camera");
     expect(field(camera, "ignifx/Camera2D", "follow")).toBe(player);
     expect(field(camera, "ignifx/Camera2D", "pixelPerfect")).toBe(true);
-    // The tilemap's objects layer spawns nothing: no factory is registered.
+    // Every entity is the scene's own, and there is exactly one player.
     expect(app.world.findByName("Player")).toBe(player);
 
     // Each strip draws its band's frame, which `SpriteFrame` resolved by name in `awake`.

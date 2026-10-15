@@ -18,7 +18,7 @@ const MAIN_SCENE = "scenes/main.scene.json";
 /** The level as it sits on disk. */
 const SCENE_TEXT = readFileSync(join(TOPDOWN.assetDir, MAIN_SCENE), "utf8");
 
-/** The still props, which the tilemap's objects layer used to spawn, and the frame each draws. */
+/** The still props, which are scene entities rather than map objects, and the frame each draws. */
 const PROPS: readonly (readonly [string, string])[] = [
   ["Chest", "chest"],
   ["Barrel", "barrel"],
@@ -84,8 +84,7 @@ describe("2d-topdown's scene file", () => {
     const player = named(entities, "Player");
     expect(player.transform.position2D).toMatchObject({ x: 9.5, y: 10.5 });
     expect(field(named(entities, "Main Camera"), "ignifx/Camera2D", "follow")).toBe(player);
-    // The tilemap's objects layer spawns nothing: no factory is registered, so every entity above
-    // is the scene's own and there is exactly one player.
+    // Every entity above is the scene's own, and there is exactly one player.
     expect(app.world.findByName("Player")).toBe(player);
 
     // `SpriteFrame` turned each frame name into the atlas index in `awake`.

@@ -83,11 +83,11 @@ reloading the page. The camera is `pixelPerfect` against a 320 x 180 reference r
 source texel covers a whole number of screen pixels; both are fields of its `Camera2D` in the file.
 
 The terrain, the slopes and the one-way planks stay in `assets/level.tilemap.json`.
-`TilemapCollider2D` reads the `Tilemap` on the same entity, so they collide as soon as the scene
-has loaded, with no code. Its objects
-layer still lists the spawn and every coin — the map generator writes it — but the game registers no
-`registerTileObjectFactory`, so loading the scene spawns nothing from it: the entities in the scene
-file are the ones the game has. Move the player or add a coin in the scene file, not in the map.
+`TilemapCollider2D` reads the `Tilemap` on the same entity, so they collide as soon as the scene has
+loaded, with no code. The map has no objects layer: the spawn and every coin are entities in the
+scene file, because ignifx never spawns entities from a map. Move the player or add a coin in the
+scene file. (A `.tilemap.json` that does carry objects, such as one converted from Tiled, moves them
+into a scene once with `ignifx import tilemap`.)
 
 The file is in the canonical form `stringifySceneFile` writes: keys in a fixed order, numbers
 rounded to six decimals, one value per line, no final newline. Edit it by hand, by an agent, or in

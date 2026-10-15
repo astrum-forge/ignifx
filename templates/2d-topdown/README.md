@@ -56,13 +56,13 @@ edit hot-patches the class instead of reloading the page.
 
 The tiles themselves stay in `assets/level.tilemap.json`: two tile layers, the tileset and the solid
 cells. `TilemapCollider2D` reads the `Tilemap` on the same entity, so the walls collide as soon as
-the scene has loaded, with no code. Its objects layer still lists the spawn, the props and the shrine — the map generator writes
-it — but the game registers no `registerTileObjectFactory`, so loading the scene spawns nothing from
-it: the entities in the scene file are the ones the game has. Move the player or add a prop in the
-scene file, not in the map. An object's declared width and height were its trigger box, so the
-shrine's `BoxCollider2D` is one cell, the size of the `pad` frame it is drawn with. The props along
-the path are solid at their base only, so walking east from the spawn means stepping around a barrel
-rather than through it.
+the scene has loaded, with no code. The map has no objects layer: the spawn, the props and the
+shrine are entities in the scene file, because ignifx never spawns entities from a map. Move the
+player or add a prop in the scene file. (A `.tilemap.json` that does carry objects, such as one
+converted from Tiled, moves them into a scene once with `ignifx import tilemap`.) The shrine's
+`BoxCollider2D` is one cell, the size of the `pad` frame it is drawn with. The props along the path
+are solid at their base only, so walking east from the spawn means stepping around a barrel rather
+than through it.
 
 The file is in the canonical form `stringifySceneFile` writes: keys in a fixed order, numbers
 rounded to six decimals, one value per line, no final newline. Edit it by hand, by an agent, or in

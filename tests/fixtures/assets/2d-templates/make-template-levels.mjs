@@ -4,7 +4,10 @@
 // A 40x24 and a 64x20 grid of tile ids are not something a human edits by hand, so the *level
 // design* lives here as rectangles and a column profile and the dense arrays are derived from it.
 // The output is a plain `.tilemap.json`, the format `@ignifx/2d`'s loader consumes directly — no
-// Tiled or LDtk import step is involved, and no editor file is redistributed.
+// Tiled or LDtk import step is involved, and no editor file is redistributed. It carries tiles
+// only: the spawn, the props, the shrine and the coins are entities in each template's
+// `assets/scenes/main.scene.json`, because a map's objects layer is authoring data the runtime
+// never spawns (ADR-0030).
 //
 // Coordinates: a document stores its rows **top first**, and `Tilemap` flips them on load so that
 // cell (0, 0) is the bottom-left of the map in a +Y-up world.
@@ -252,26 +255,6 @@ function topdownDocument() {
         tiles: { rle: inline(encodeRle(walls.cells)) },
       },
     ],
-    objects: [
-      { type: "spawn", name: "Player", x: 9.5, y: 10.5, width: 1, height: 1, properties: {} },
-      { type: "prop", name: "Chest", x: 13.5, y: 15.5, width: 1, height: 1, properties: { frame: "chest" } },
-      { type: "prop", name: "Barrel", x: 5.5, y: 14.5, width: 1, height: 1, properties: { frame: "barrel" } },
-      { type: "prop", name: "Crate", x: 6.5, y: 14.5, width: 1, height: 1, properties: { frame: "crate" } },
-      { type: "prop", name: "Signpost", x: 11.5, y: 11.5, width: 1, height: 1, properties: { frame: "sign" } },
-      { type: "prop", name: "Rock", x: 20.5, y: 6.5, width: 1, height: 1, properties: { frame: "rock" } },
-      { type: "prop", name: "Bush", x: 30.5, y: 5.5, width: 1, height: 1, properties: { frame: "bush" } },
-      { type: "prop", name: "Bush East", x: 31.5, y: 6.5, width: 1, height: 1, properties: { frame: "bush" } },
-      { type: "prop", name: "Crate East", x: 17.5, y: 11.6, width: 1, height: 1, properties: { frame: "crate" } },
-      { type: "prop", name: "Barrel East", x: 18.5, y: 10.2, width: 1, height: 1, properties: { frame: "barrel" } },
-      { type: "prop", name: "Rock North", x: 14.5, y: 8.4, width: 1, height: 1, properties: { frame: "rock" } },
-      { type: "prop", name: "Bush South", x: 22.5, y: 13.5, width: 1, height: 1, properties: { frame: "bush" } },
-      { type: "prop", name: "Waymarker", x: 27.5, y: 12.5, width: 1, height: 1, properties: { frame: "sign" } },
-      { type: "prop", name: "Cache", x: 21.5, y: 16.5, width: 1, height: 1, properties: { frame: "chest" } },
-      // One cell, because that is the size of the `pad` frame the shrine is drawn with: the
-      // template turns an object's declared size into its trigger box, and a 2x2 trigger over a
-      // 1x1 pad lights the shrine from a metre above the tile the player can see.
-      { type: "shrine", name: "Shrine", x: 25.5, y: 10.5, width: 1, height: 1, properties: { frame: "pad" } },
-    ],
     properties: { title: "Garden" },
   };
 }
@@ -363,28 +346,6 @@ function sidescrollerLevel() {
   return terrain;
 }
 
-/** A coin above every plank and block, plus a couple over the pits. */
-const COINS = [
-  [4, 6],
-  [5, 6],
-  [11, 7],
-  [12, 4],
-  [17, 6],
-  [18, 6],
-  [21, 5],
-  [22, 5],
-  [27, 6],
-  [28, 6],
-  [33, 5],
-  [39, 5],
-  [40, 8],
-  [41, 8],
-  [47, 7],
-  [53, 6],
-  [54, 6],
-  [58, 5],
-];
-
 /**
  * Builds the side-scroller `ignifx.tilemap` document.
  * @returns The document, ready to serialise.
@@ -424,18 +385,6 @@ function sidescrollerDocument() {
         collision: true,
         tiles: { rle: inline(encodeRle(terrain.cells)) },
       },
-    ],
-    objects: [
-      { type: "spawn", name: "Player", x: 2.5, y: 3, width: 1, height: 1, properties: {} },
-      ...COINS.map(([x, y], index) => ({
-        type: "coin",
-        name: `Coin ${String(index + 1)}`,
-        x: x + 0.5,
-        y: y + 0.5,
-        width: 1,
-        height: 1,
-        properties: {},
-      })),
     ],
     properties: { title: "Dusk Run" },
   };

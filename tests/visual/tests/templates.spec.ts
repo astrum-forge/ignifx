@@ -159,7 +159,7 @@ test.describe("template scenes", () => {
   test.use({ viewport: { width: 512, height: 288 } });
 
   // A Y-sorted tilemap with a collision layer, props with colliders, the shrines the run is scored
-  // in, and the character at the spawn point the objects layer names.
+  // in, and the character at the spawn point the scene file places it on.
   test("2d-topdown", async ({ page }) => {
     await openScene(page, `${TOPDOWN}/?static=1`);
     await expect(page).toHaveScreenshot("2d-topdown.png", { maxDiffPixelRatio: 0.02 });
