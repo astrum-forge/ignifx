@@ -24,9 +24,10 @@ import type { AssetLoader, LoaderContext, Logger, Vec2Like } from "@ignifx/core"
  * are all queryable, nothing is uploaded, and `asset.lite.atlas` is `null`
  * (`docs/architecture/07-rendering.md` §6).
  *
- * `parseFragment` is what makes `"2d/hero.atlas.json#frame:idle_0"` work: the base document is
+ * `parseFragment` is what makes `"2d/hero.atlas.json#frame:idle_0"` load: the base document is
  * loaded once and shared, and the fragment handle resolves to a {@link SpriteAsset} naming one
- * frame of it.
+ * frame of it. That is for code; a `SpriteRenderer` names the atlas and picks the frame with its
+ * `frameName` field.
  */
 
 /**

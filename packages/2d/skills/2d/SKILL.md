@@ -126,16 +126,16 @@ Full signatures: `skills/ignifx/references/api/2d.md`.
 
 ### Components
 
-| Component (`typeId`)                             | Key fields                                                                                                              |
-| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
-| `Camera2D` (`ignifx/Camera2D`)                   | `orthographicSize`, `pixelPerfect`, `referenceResolution`, `boundsMin`/`boundsMax`, `follow`, `deadZone`, `priority`    |
-| `SpriteRenderer` (`ignifx/SpriteRenderer`)       | `sprite`, `color`, `flipX`/`flipY`, `sortingLayer`, `orderInLayer`, `blend`, `pivotOverride`, `screenSpace`, `pickable` |
-| `SpriteAnimator` (`ignifx/SpriteAnimator`)       | `animations`, `defaultClip`, `playOnAwake`, `speed`; `play`/`stop`/`pause`/`resume`/`sample`, `onClipEnded`, `onEvent`  |
-| `Tilemap` (`ignifx/Tilemap`)                     | `map`, `chunkSize`; `getTile`/`setTile`, `worldToCell`/`cellToWorld`, `collisionData`, `onTileChanged`                  |
-| `TilemapRenderer` (`ignifx/TilemapRenderer`)     | `atlas`, `sortingLayer`, `cullChunks`                                                                                   |
-| `ParallaxLayer` (`ignifx/ParallaxLayer`)         | `sortingLayer`, `factor`, `repeatX`/`repeatY`, `repeatWidth`/`repeatHeight`                                             |
-| `SpriteLayerEffect` (`ignifx/SpriteLayerEffect`) | `sortingLayer`, `kind`, `tint`, `params`, `shader`                                                                      |
-| `Camera2DFollow` (`ignifx/Camera2DFollow`)       | A `Script`; reads `Camera2D`'s follow fields in `lateUpdate`                                                            |
+| Component (`typeId`)                             | Key fields                                                                                                                                            |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Camera2D` (`ignifx/Camera2D`)                   | `orthographicSize`, `pixelPerfect`, `referenceResolution`, `boundsMin`/`boundsMax`, `follow`, `deadZone`, `priority`                                  |
+| `SpriteRenderer` (`ignifx/SpriteRenderer`)       | `sprite`, `frameName`, `color`, `flipX`/`flipY`, `sortingLayer`, `orderInLayer`, `blend`, `pivotOverride`, `screenSpace`, `pickable`; runtime `frame` |
+| `SpriteAnimator` (`ignifx/SpriteAnimator`)       | `animations`, `defaultClip`, `playOnAwake`, `speed`; `play`/`stop`/`pause`/`resume`/`sample`, `onClipEnded`, `onEvent`                                |
+| `Tilemap` (`ignifx/Tilemap`)                     | `map`, `chunkSize`; `getTile`/`setTile`, `worldToCell`/`cellToWorld`, `collisionData`, `onTileChanged`                                                |
+| `TilemapRenderer` (`ignifx/TilemapRenderer`)     | `atlas`, `sortingLayer`, `cullChunks`                                                                                                                 |
+| `ParallaxLayer` (`ignifx/ParallaxLayer`)         | `sortingLayer`, `factor`, `repeatX`/`repeatY`, `repeatWidth`/`repeatHeight`                                                                           |
+| `SpriteLayerEffect` (`ignifx/SpriteLayerEffect`) | `sortingLayer`, `kind`, `tint`, `params`, `shader`                                                                                                    |
+| `Camera2DFollow` (`ignifx/Camera2DFollow`)       | A `Script`; reads `Camera2D`'s follow fields in `lateUpdate`                                                                                          |
 
 ### `SpriteBatch` — sprites without entities (`@beta`)
 
@@ -182,11 +182,12 @@ Pure functions, so a build step or a test can call them with no app:
 ### Error codes
 
 `IGX-1102` unextruded atlas frame (logged, not thrown) · `IGX-1103`/`IGX-1104`/`IGX-1105` unreadable
-document · `IGX-1106` unknown frame · `IGX-1107` unknown sorting layer · `IGX-1108` unknown clip ·
+document · `IGX-1106` unknown frame (a bad `frameName` is reported once, not thrown) · `IGX-1107` unknown sorting layer · `IGX-1108` unknown clip ·
 `IGX-1109` unsupported import · `IGX-1110` duplicate object factory · `IGX-1111` cell out of range ·
 `IGX-1112` duplicate extension · `IGX-1113` custom effect with no WGSL · `IGX-1114` bad sprite-batch
 capacity · `IGX-1115` sprite-batch slot or count out of range · `IGX-1116` sprite batch used after
-`dispose()` · `IGX-1117` sprite-batch atlas not loaded.
+`dispose()` · `IGX-1117` sprite-batch atlas not loaded · `IGX-1118` `SpriteRenderer.sprite` is not an
+atlas (reported once, not thrown).
 
 ## Recipes
 
@@ -243,7 +244,8 @@ Generated reference: `skills/ignifx/references/formats/`.
 - **`.atlas.json`** (`ignifx.spriteatlas`) — `image` (an address relative to the document, resolved through the manifest; `/x.png` and URLs verbatim), `sampling`,
   `premultipliedAlpha`, and `frames: [{ name, x, y, w, h, pivot?, sourceSize? }]` in **image pixels
   with a top-left origin**. A pivot is `[x, y]` or `{ x, y }` in `[0, 1]` of the frame; `[0, 0]` is
-  top-left. Address one frame with `"2d/hero.atlas.json#frame:idle_0"`.
+  top-left. A `SpriteRenderer` picks a frame by name with `frameName`. A
+  `"2d/hero.atlas.json#frame:idle_0"` address loads a `SpriteAsset` for code; it is not a sprite.
 - **`.spriteanim.json`** (`ignifx.spriteanimation`) — `atlas` plus
   `clips: [{ name, frames | from/to, fps, loop, events }]`. An event's `frame` is the index **within
   the clip**. `frames` is a list of frame names played in the order written and may skip around the
@@ -255,6 +257,11 @@ Generated reference: `skills/ignifx/references/formats/`.
 
 ## Gotchas
 
+- **A sprite's frame is a field, not part of its address.** `sprite` names the `.atlas.json`;
+  `frameName` names the frame and is what a scene file saves (`""` is the first frame). `frame` is
+  the index drawn now, which `SpriteAnimator` writes; whichever of the two was written last wins, so
+  saving mid-animation keeps the authored name. A `#frame:` fragment in `sprite` reports `IGX-1118`
+  and draws nothing; an unknown `frameName` reports `IGX-1106` once and draws the first frame.
 - **`pixelsPerUnit` is 100 by default.** A 32-px sprite is 0.32 metres wide, so a camera with
   `orthographicSize = 5` shows about 31 sprites vertically. Set it to your art's pixel size (16, 32)
   for pixel art.
@@ -293,7 +300,7 @@ Generated reference: `skills/ignifx/references/formats/`.
   scene is quiet. Build the camera **before** `app.start()`, as the templates do: a world that is
   still empty when the loop starts has no camera of any kind, and that does warn.
 - **In an edit-mode app (`createApp({ editMode: true })`) clips and animated tiles do not play.**
-  The renderer keeps its authored `frame`. To preview one, call `animator.sample("run", 2)`: it writes
+  The renderer keeps its authored `frameName`. To preview one, call `animator.sample("run", 2)`: it writes
   that frame, stops there, and fires no event; `resume()` plays on from it. It works in a game too.
 
 ## Deprecated (current window)

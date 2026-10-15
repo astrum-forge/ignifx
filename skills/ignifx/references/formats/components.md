@@ -622,6 +622,7 @@ One sprite drawn from one frame of one atlas, on one sorting layer.
 | Field | Kind | Default | Description |
 |---|---|---|---|
 | `sprite` | `asset` | `null` | The atlas this sprite draws a frame of. |
+| `frameName` | `str` | `""` | The atlas frame drawn, by name; empty draws the first frame. |
 | `color` | `color` | `[1,1,1,1]` | Tint multiplied into every texel. |
 | `flipX` | `bool` | `false` | Mirror horizontally. |
 | `flipY` | `bool` | `false` | Mirror vertically. |

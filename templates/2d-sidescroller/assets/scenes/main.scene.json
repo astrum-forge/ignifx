@@ -75,6 +75,7 @@
               "$asset": "parallax.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -171,6 +172,7 @@
               "$asset": "parallax.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -227,6 +229,7 @@
               "$asset": "parallax.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -283,6 +286,7 @@
               "$asset": "parallax.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -339,6 +343,7 @@
               "$asset": "parallax.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -395,6 +400,7 @@
               "$asset": "parallax.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -491,6 +497,7 @@
               "$asset": "parallax.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -547,6 +554,7 @@
               "$asset": "parallax.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -603,6 +611,7 @@
               "$asset": "parallax.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -659,6 +668,7 @@
               "$asset": "parallax.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -715,6 +725,7 @@
               "$asset": "parallax.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -839,6 +850,7 @@
               "$asset": "hero.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -942,6 +954,7 @@
               "$asset": "coin.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -1027,6 +1040,7 @@
               "$asset": "coin.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -1112,6 +1126,7 @@
               "$asset": "coin.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -1197,6 +1212,7 @@
               "$asset": "coin.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -1282,6 +1298,7 @@
               "$asset": "coin.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -1367,6 +1384,7 @@
               "$asset": "coin.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -1452,6 +1470,7 @@
               "$asset": "coin.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -1537,6 +1556,7 @@
               "$asset": "coin.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -1622,6 +1642,7 @@
               "$asset": "coin.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -1707,6 +1728,7 @@
               "$asset": "coin.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -1792,6 +1814,7 @@
               "$asset": "coin.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -1877,6 +1900,7 @@
               "$asset": "coin.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -1962,6 +1986,7 @@
               "$asset": "coin.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -2047,6 +2072,7 @@
               "$asset": "coin.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -2132,6 +2158,7 @@
               "$asset": "coin.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -2217,6 +2244,7 @@
               "$asset": "coin.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -2302,6 +2330,7 @@
               "$asset": "coin.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,
@@ -2387,6 +2416,7 @@
               "$asset": "coin.atlas.json",
               "type": "spriteatlas"
             },
+            "frameName": "",
             "color": [
               1,
               1,

@@ -64,11 +64,10 @@ lives at a `memory:` address no file can name, so a mesh built in code is assign
 address before the scene loads — `app.assets.register(box.value, { type: "mesh", address:
 "meshes/crate" })` — in which case the file loads only in an app that ran that step first.
 
-A 2D file cannot state which frame a still sprite draws: `SpriteRenderer.sprite` names the atlas,
-`frame` is a runtime index, and a `#frame:` address is not read by the renderer. Carry a small
-script whose string field names the frame and whose `awake` sets
-`sprite.frame = sprite.sprite.value.requireFrame(name)` (`templates/2d-topdown/src/scripts/sprite-frame.ts`).
-`TilemapCollider2D` likewise needs `collisionData = tilemap.collisionData` after the load. A file that
+A 2D file names a still sprite's frame in `SpriteRenderer`'s `frameName` field
+(`"frameName": "barrel"`; `""` is the first frame), next to the atlas in `sprite`. Do not put a
+`#frame:` fragment in `sprite`: the renderer reports `IGX-1118` and draws nothing. `frame`, the
+index drawn, is runtime-only. `TilemapCollider2D` needs `collisionData = tilemap.collisionData` after the load. A file that
 lists a tilemap's objects as entities must not also register their tile-object factories, which run
 on every load.
 
