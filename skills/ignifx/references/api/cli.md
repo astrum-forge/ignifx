@@ -643,7 +643,8 @@ browser-only scaffold.
 `electron()` unconditionally — the extension is inert without a preload bridge, which is what
 gives one renderer bundle both builds — so removing the package would break the browser scaffold
 it was meant to slim down. What is removed is the three build tools, which are large binary
-downloads a browser game never runs.
+downloads a browser game never runs, and `@types/node`, which only the desktop half type-checks
+against.
 
 ***
 

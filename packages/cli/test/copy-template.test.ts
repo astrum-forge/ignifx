@@ -289,6 +289,7 @@ async function addDesktopVariant(directory: string): Promise<void> {
         devDependencies: {
           "@ignifx/electron": "workspace:*",
           "@ignifx/vite-plugin": "workspace:*",
+          "@types/node": "catalog:",
           electron: "catalog:",
           "electron-builder": "catalog:",
           "electron-vite": "catalog:",
@@ -360,6 +361,7 @@ describe("the desktop variant", () => {
     expect(document.scripts["dist:desktop"]).toBe("electron-builder --dir");
     expect(document.devDependencies["@ignifx/electron"]).toBe("^9.9.9");
     expect(document.devDependencies["electron"]).toBe("catalog:");
+    expect(document.devDependencies["@types/node"]).toBe("catalog:");
   });
 
   it("adds a pnpm-workspace.yaml that lets the desktop build tools install", async () => {

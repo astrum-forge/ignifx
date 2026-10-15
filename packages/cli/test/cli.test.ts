@@ -320,6 +320,37 @@ describe("scaffolding the 2d-topdown template", () => {
   });
 });
 
+// `tsconfig.desktop.json` type-checks the Electron half against `"types": ["node"]`, which only
+// resolves when the project itself depends on `@types/node` (TS2688 otherwise).
+describe("the repository's templates and @types/node", () => {
+  const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
+  const templateNames = ["2d-sidescroller", "2d-topdown", "3d-first-person", "3d-third-person"];
+
+  /**
+   * Scaffolds one repository template and reads the generated devDependencies.
+   */
+  async function scaffoldDevDependencies(template: string, desktop: boolean): Promise<Record<string, string>> {
+    const target = join(workspace, `${template}-${desktop ? "desktop" : "browser"}`);
+    const args = desktop ? [target, "--template", template, "--desktop"] : [target, "--template", template];
+    await runCreate(args, recordingIo(join(repoRoot, "templates")));
+    const manifest = JSON.parse(await readFile(join(target, "package.json"), "utf8")) as {
+      readonly devDependencies: Record<string, string>;
+    };
+    return manifest.devDependencies;
+  }
+
+  it.each(templateNames)("%s --desktop depends on @types/node", async (template) => {
+    await expect(readFile(join(repoRoot, "templates", template, "tsconfig.desktop.json"), "utf8")).resolves.toMatch(
+      /"types":\s*\["node"\]/u,
+    );
+    expect(await scaffoldDevDependencies(template, true)).toHaveProperty(["@types/node"]);
+  });
+
+  it.each(templateNames)("%s without --desktop leaves @types/node out", async (template) => {
+    expect(await scaffoldDevDependencies(template, false)).not.toHaveProperty(["@types/node"]);
+  });
+});
+
 describe("runCreate --desktop", () => {
   /** Adds a desktop variant to the fixture template. */
   async function addDesktopVariant(): Promise<void> {

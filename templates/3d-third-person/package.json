@@ -26,6 +26,7 @@
   "devDependencies": {
     "@ignifx/electron": "workspace:*",
     "@ignifx/vite-plugin": "workspace:*",
+    "@types/node": "catalog:",
     "@webgpu/types": "catalog:",
     "electron": "catalog:",
     "electron-builder": "catalog:",
