@@ -29,7 +29,7 @@ import { degToRad } from "../math/math-utils.js";
  * `position`, `rotationQuaternion`, `scaling`, `parent` and a composed `worldMatrix`. Its
  * `direction` is **local**: the lights UBO writer and the shadow fit both rotate it by the world
  * matrix (`writeWorldLightDirection`, `lib/light/light-base.js`; `computeDirectionalLightMatrix`,
- * `lib/shadow/shadow-base.js` 76-78), and a point or spot light's world position is
+ * `lib/shadow/shadow-base.js` 76-79), and a point or spot light's world position is
  * `worldMatrix[12..14]` (`lib/light/point-light.js`, `lib/light/spot-light.js`).
  *
  * Parenting the light under the entity's node and driving its rotation would also work, but it
