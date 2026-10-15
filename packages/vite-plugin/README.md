@@ -163,7 +163,9 @@ When `schemas` is supplied, documents are also validated against the matching JS
 validator implements the subset the generated schemas use — `type`, `required`, `properties`,
 `additionalProperties`, `items`, `enum`, `const`, `minimum`, `maximum`, `minItems`, `maxItems`,
 `oneOf`, `anyOf`, and `$ref` to `#/$defs/*` — and reports anything outside it as `IGX-0653` rather
-than ignoring it. There is no runtime dependency (coding standards §13).
+than ignoring it. Annotations (`title`, `description`, `default`, `readOnly`, …) and `x-` extension
+keywords, such as the `x-ignifx-step` and `x-ignifx-group` core writes for the inspector, are
+skipped. There is no runtime dependency (coding standards §13).
 
 Problems are reported with a JSON pointer:
 

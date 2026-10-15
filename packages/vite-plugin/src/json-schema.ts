@@ -7,7 +7,9 @@
  * A general-purpose validator is several hundred kilobytes and compiles schemas with `new Function`,
  * which §5.3 bans outright; the generated schemas use twenty keywords in total, so the subset below
  * is both smaller and auditable. Anything outside the subset is reported as `IGX-0653` rather than
- * silently ignored, so a schema that needs a keyword this file lacks fails loudly.
+ * silently ignored, so a schema that needs a keyword this file lacks fails loudly. The one exception
+ * is an `x-` extension keyword, such as core's `x-ignifx-step`: it annotates and never constrains,
+ * so it is skipped.
  */
 
 import { VitePluginError, VitePluginErrorCode } from "./errors.js";
@@ -55,7 +57,8 @@ export interface ValidateJsonOptions {
 
 /**
  * The keywords this validator implements, plus the annotation keywords it deliberately ignores.
- * Anything else is an `IGX-0653` so that a schema is never silently under-enforced.
+ * Anything else, except an `x-` extension keyword, is an `IGX-0653` so that a schema is never
+ * silently under-enforced.
  */
 const KNOWN_KEYWORDS = [
   "$ref",
@@ -67,6 +70,7 @@ const KNOWN_KEYWORDS = [
   "default",
   "examples",
   "deprecated",
+  "readOnly",
   "type",
   "required",
   "properties",
@@ -81,6 +85,9 @@ const KNOWN_KEYWORDS = [
   "oneOf",
   "anyOf",
 ] as const;
+
+/** The prefix of an extension keyword (`x-ignifx-step`), an annotation the validator skips. */
+const EXTENSION_KEYWORD_PREFIX = "x-";
 
 /** The `type` names the validator understands. */
 const TYPE_NAMES = ["string", "number", "integer", "boolean", "object", "array", "null"] as const;
@@ -161,7 +168,7 @@ function describeValue(value: JsonValue): string {
  */
 function assertKnownKeywords(schema: JsonSchemaObject): void {
   for (const keyword of Object.keys(schema)) {
-    if (!KNOWN_KEYWORDS.some((known) => known === keyword)) {
+    if (!keyword.startsWith(EXTENSION_KEYWORD_PREFIX) && !KNOWN_KEYWORDS.some((known) => known === keyword)) {
       throw new VitePluginError(
         VitePluginErrorCode.unsupportedSchema,
         `The JSON Schema keyword "${keyword}" is not implemented by the ignifx build-time validator. ` +
