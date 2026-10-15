@@ -45,6 +45,8 @@ export interface AudioHarnessOptions {
   readonly audio?: AudioOptions;
   /** Project settings, as `ignifx.config.ts` would supply them. */
   readonly settings?: SettingsInput;
+  /** Builds the app in edit mode (ADR-0028). */
+  readonly editMode?: boolean;
   /** Address to body, for the injected `fetch`. Strings are sent as UTF-8. */
   readonly files?: Readonly<Record<string, ArrayBuffer | string>>;
   /** The manifest, when a test needs `.meta.json` sidecar data on an entry. */
@@ -146,6 +148,7 @@ export async function createAudioApp(options?: AudioHarnessOptions): Promise<Aud
     fetch: tableFetch(options?.files ?? {}),
     ...(options?.manifest === undefined ? {} : { assets: { manifest: options.manifest } }),
     ...(options?.settings === undefined ? {} : { settings: options.settings }),
+    ...(options?.editMode === undefined ? {} : { editMode: options.editMode }),
     extensions: [
       audio({
         createBackend: (context): HeadlessBackend =>
