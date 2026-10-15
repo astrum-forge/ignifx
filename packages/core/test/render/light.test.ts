@@ -288,9 +288,12 @@ describe("following the entity", () => {
     expect(lite.position.z).toBeCloseTo(10, 5);
     expect(lite.direction.y).toBeCloseTo(diagonal, 5);
     expect(lite.direction.z).toBeCloseTo(diagonal, 5);
-    // The world matrix's third column is what the shader reads; with no parent it is the direction.
-    expect(lite.worldMatrix[9]).toBeCloseTo(diagonal, 5);
-    expect(lite.worldMatrix[10]).toBeCloseTo(diagonal, 5);
+    // Lite shades with `direction` rotated by the light's world matrix; the unparented light's
+    // world matrix is a pure translation to the entity's position, so that is the direction itself.
+    const world = lite.worldMatrix;
+    expect([world[0], world[5], world[10], world[4], world[8], world[9]]).toEqual([1, 1, 1, 0, 0, 0]);
+    expect(world[13]).toBeCloseTo(10, 5);
+    expect(world[14]).toBeCloseTo(10, 5);
   });
 
   it("turns the light around when the entity turns around", async () => {
