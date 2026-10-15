@@ -70,7 +70,7 @@ export function scriptClasses(modules: Readonly<Record<string, Record<string, un
  * @param assetDir - The directory.
  * @returns A fetch that answers `assets/<address>` with the file's bytes, or a 404.
  */
-function fetchFrom(assetDir: string): FetchLike {
+export function fetchFrom(assetDir: string): FetchLike {
   return async (input: RequestInfo | URL): Promise<Response> => {
     const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
     const address = url.replace(/^.*?assets\//u, "");
