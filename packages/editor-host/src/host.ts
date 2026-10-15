@@ -78,17 +78,17 @@ export interface EditorHost {
   [Symbol.dispose](): void;
 }
 
-/** What core's `VERSION` reads before the release pipeline writes the real number into it. */
+/** What core's `VERSION` reads when core runs from source; its build stamps the real number. */
 const UNSTAMPED_VERSION = "0.0.0";
 
 /**
  * Chooses the engine version a host reports.
  *
  * @param fallback - The version the Vite plugin read from the project, if any.
+ * @param coreVersion - Core's `VERSION`; a parameter only so tests can give an unstamped one.
  * @returns Core's `VERSION` when it is stamped, else the fallback, else `VERSION`.
  */
-export function resolveEngineVersion(fallback: string | undefined): string {
-  const coreVersion: string = VERSION;
+export function resolveEngineVersion(fallback: string | undefined, coreVersion: string = VERSION): string {
   if (coreVersion !== UNSTAMPED_VERSION) {
     return coreVersion;
   }

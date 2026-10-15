@@ -11,6 +11,15 @@ import type { EditorPeer } from "./support/editor.js";
  * project's core, and the editor's channel to it over a `MessagePort`.
  */
 
+/** The version the Vite plugin would read from the project's `@ignifx/core/package.json`. */
+const PLUGIN_VERSION = "0.9.0";
+
+/**
+ * What a host given {@link PLUGIN_VERSION} reports: core's `VERSION` when the build has stamped it,
+ * as it has whenever core resolves to `dist/`, so the tests do not depend on the release number.
+ */
+const REPORTED_VERSION = resolveEngineVersion(PLUGIN_VERSION);
+
 const hosts: EditorHost[] = [];
 const peers: EditorPeer[] = [];
 
@@ -72,13 +81,18 @@ function editor(target: EventTarget, origin?: string): EditorPeer {
 
 describe("startEditorHost", () => {
   it("answers a compatible hello with ready", async () => {
-    const { host, target } = await startHost({ engineVersion: "0.9.0" });
+    const { host, target } = await startHost({ engineVersion: PLUGIN_VERSION });
     const response = await editor(target).hello();
 
     expect(response).toEqual({
       jsonrpc: JSON_RPC_VERSION,
       id: 1,
-      result: { engineVersion: "0.9.0", protocol: PROTOCOL_VERSION, capabilities: ["heartbeat"], hostKind: "scene" },
+      result: {
+        engineVersion: REPORTED_VERSION,
+        protocol: PROTOCOL_VERSION,
+        capabilities: ["heartbeat"],
+        hostKind: "scene",
+      },
     });
     expect(host.isConnected).toBe(true);
     expect(host.app.isRunning).toBe(true);
@@ -95,7 +109,7 @@ describe("startEditorHost", () => {
   });
 
   it("refuses a hello from another protocol minor while the major is 0", async () => {
-    const { target } = await startHost({ engineVersion: "0.9.0" });
+    const { target } = await startHost({ engineVersion: PLUGIN_VERSION });
     const response = await editor(target).hello({ major: 0, minor: 1 });
 
     expect(response["error"]).toEqual({
@@ -103,7 +117,7 @@ describe("startEditorHost", () => {
       message:
         "The editor speaks protocol 0.1 and this host speaks 0.2. Update the editor, or the project's " +
         "@ignifx packages, so the protocol versions match.",
-      data: { host: PROTOCOL_VERSION, engineVersion: "0.9.0" },
+      data: { host: PROTOCOL_VERSION, engineVersion: REPORTED_VERSION },
     });
   });
 
@@ -278,8 +292,16 @@ describe("startEditorHost", () => {
 
 describe("resolveEngineVersion", () => {
   it("reports the version the plugin read while core's VERSION is unstamped", () => {
-    expect(VERSION).toBe("0.0.0");
-    expect(resolveEngineVersion("0.9.0")).toBe("0.9.0");
-    expect(resolveEngineVersion(undefined)).toBe("0.0.0");
+    expect(resolveEngineVersion("0.9.0", "0.0.0")).toBe("0.9.0");
+    expect(resolveEngineVersion(undefined, "0.0.0")).toBe("0.0.0");
+  });
+
+  it("reports core's VERSION once the build has stamped it", () => {
+    expect(resolveEngineVersion("0.9.0", "1.2.3")).toBe("1.2.3");
+    expect(resolveEngineVersion(undefined, "1.2.3")).toBe("1.2.3");
+  });
+
+  it("reads core's own VERSION by default", () => {
+    expect(resolveEngineVersion(undefined)).toBe(VERSION);
   });
 });

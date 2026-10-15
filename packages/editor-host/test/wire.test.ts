@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { createApp } from "@ignifx/core";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { startEditorHost } from "../src/host.js";
+import { resolveEngineVersion, startEditorHost } from "../src/host.js";
 import { startEditorPlayControls } from "../src/play-controls.js";
 import {
   HandshakeMethod,
@@ -55,6 +55,15 @@ function fixtureMessages(): Readonly<Record<string, Received>> {
 
 const WIRE = fixtureMessages();
 
+/** The engine version the fixture records; the live hosts below are given it as `engineVersion`. */
+const FIXTURE_ENGINE_VERSION = "0.9.0";
+
+/**
+ * What those hosts report: core's `VERSION` when the build has stamped it, so it equals the fixture's
+ * number only while the engine is at 0.9.0. Responses are compared with this number in its place.
+ */
+const REPORTED_ENGINE_VERSION = resolveEngineVersion(FIXTURE_ENGINE_VERSION);
+
 /**
  * Reads one fixture message.
  *
@@ -82,6 +91,17 @@ function member(message: Received, key: string): Received {
     throw new Error(`Member "${key}" is not an object.`);
   }
   return Object.fromEntries(Object.entries(value));
+}
+
+/**
+ * Reads a fixture `ready` response with the engine version a live host reports.
+ *
+ * @param name - `readyScene` or `readyPlay`.
+ * @returns The response, with {@link REPORTED_ENGINE_VERSION} as its `engineVersion`.
+ */
+function asReady(name: "readyScene" | "readyPlay"): Received {
+  const ready = wire(name);
+  return { ...ready, result: { ...member(ready, "result"), engineVersion: REPORTED_ENGINE_VERSION } };
 }
 
 /**
@@ -269,7 +289,7 @@ describe("the editor's 0.2 wire fixture, through a live scene host", () => {
       editorOrigin: EDITOR_ORIGIN,
       headless: true,
       messageTarget: target,
-      engineVersion: "0.9.0",
+      engineVersion: FIXTURE_ENGINE_VERSION,
       heartbeatIntervalMs,
     });
     cleanups.push(() => {
@@ -295,10 +315,14 @@ describe("the editor's 0.2 wire fixture, through a live scene host", () => {
     expect(refusalMessage).toEqual(expect.stringContaining("so the protocol majors match."));
     expectWire(await exchange(peer, oldHello, refusal["id"]), {
       ...refusal,
-      error: { ...refusalError, message: String(refusalMessage).replace("protocol majors", "protocol versions") },
+      error: {
+        ...refusalError,
+        message: String(refusalMessage).replace("protocol majors", "protocol versions"),
+        data: { ...member(refusalError, "data"), engineVersion: REPORTED_ENGINE_VERSION },
+      },
     });
 
-    expectWire(await exchange(peer, hello, hello["id"]), wire("readyScene"));
+    expectWire(await exchange(peer, hello, hello["id"]), asReady("readyScene"));
     expectWire(
       await exchange(peer, asRequestFor(wire("playRequest"), wire("methodNotFound")), wire("methodNotFound")["id"]),
       wire("methodNotFound"),
@@ -322,7 +346,7 @@ describe("the editor's 0.2 wire fixture, through live play controls", () => {
     const controls = startEditorPlayControls(app, {
       editorOrigin: EDITOR_ORIGIN,
       messageTarget: target,
-      engineVersion: "0.9.0",
+      engineVersion: FIXTURE_ENGINE_VERSION,
       heartbeatIntervalMs: 60_000,
     });
     cleanups.push(() => {
@@ -335,7 +359,7 @@ describe("the editor's 0.2 wire fixture, through live play controls", () => {
     expectWire(await exchange(peer, asRequestFor(wire("playRequest"), notReady), notReady["id"]), notReady);
 
     const hello = wire("hello");
-    expectWire(await exchange(peer, hello, hello["id"]), wire("readyPlay"));
+    expectWire(await exchange(peer, hello, hello["id"]), asReady("readyPlay"));
 
     for (const [request, response] of [
       ["playRequest", "playResponse"],
