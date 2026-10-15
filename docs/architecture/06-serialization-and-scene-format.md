@@ -85,7 +85,8 @@ Field rules:
 - `transform`: always present; arrays `[x, y, z]`, `[x, y, z, w]`, `[x, y, z]`.
 - `components[i].props`: values according to the component's schema (§3). Omitted props take schema defaults.
 - `instance`: present only on instance roots. An instance root may also carry its own `components` (added to the instanced root entity) and `transform` (applied to the instance root). `instance.hash` records the content hash of the instanced scene asset at save time; a mismatch at load logs `IGX-0604` by default or fails when the loader option `strictInstanceHashes` is set, so save games notice prefab changes instead of silently reinterpreting overrides.
-- `settings`: scene-level values interpreted by systems (environment, clear color, 2D mode flags, physics overrides). Only the _first_ loaded scene's settings apply in additive loads unless a setting is marked `mergeable`.
+- `settings`: scene-level values interpreted by systems (environment, clear color, 2D mode flags, physics overrides). Only the _first_ loaded scene's settings apply in additive loads unless a setting is marked `mergeable`. Today only `@ignifx/2d` reads a key (`twoD`); core carries the block to `SceneInstance.settings` and nothing in 3D consumes it, so a 3D level's clear color, environment and gravity are still project settings or components.
+- An `instance` entry is an entity of its own: the instanced scene's roots are created as its **children**, so instancing a one-entity prefab adds a level to the hierarchy (unlike `world.instantiate`, where a single-root prefab's root stands for the instance).
 
 ## 3. Value encoding
 
@@ -105,6 +106,8 @@ Field rules:
 | `layerMask`           | array of layer names (not bit values, so renames survive) |
 | `curve`               | `{ "keys": [[t, v, inTangent, outTangent], …] }`          |
 | `custom`              | whatever the field's `serialize` returns; must be JSON    |
+
+An `asset` value whose address is a `memory:` one — every primitive from `MeshAsset.box` and friends, every `createMaterialAsset` — names no file and is written as `null` with `IGX-0602`. There is no mesh file format; a file can name a primitive only if the game publishes it at a plain address with `Assets.register(value, { type, address })` before loading, which makes the file load only in an app that ran that code.
 
 Numbers are canonicalized before writing: `x = Math.round(x * 1e6) / 1e6`, `-0` becomes `0`, and the value is emitted with JavaScript's shortest round-trip representation (`String(x)`), integers without a fraction. Loading stores the canonical value and the rule is idempotent, so save → load → save is byte-identical. `NaN`/`Infinity` are rejected (`IGX-0601`).
 

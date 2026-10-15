@@ -26,7 +26,7 @@ export interface Run {
  * Wires the level's beacons and its character into one run.
  *
  * @param player - The character entity.
- * @param beacons - Every beacon the level built.
+ * @param beacons - Every beacon in the loaded scene.
  * @param spawn - Where the character starts, in metres.
  * @param onCollected - Called whenever a beacon is lit for the first time; the template uses it to
  *   autosave.
@@ -41,8 +41,9 @@ export function createRun(
   const controller = player.getComponent(CharacterController);
   const collected = new Set<string>();
 
+  // Each beacon already names the character it measures against: `player` is a field of the
+  // `Beacon` in `assets/scenes/main.scene.json`. Only the callback is wiring that a file cannot hold.
   for (const beacon of beacons) {
-    beacon.player = player;
     beacon.onLit = (lit: Beacon): void => {
       collected.add(lit.id);
       onCollected(lit.id);

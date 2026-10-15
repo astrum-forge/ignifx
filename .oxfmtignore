@@ -15,6 +15,11 @@ skills/ignifx/references/api/**
 templates/*/assets/*.atlas.json
 templates/*/assets/level.tilemap.json
 
+# Written by core's `stringifySceneFile`, whose canonical text is the scene format's own (one value
+# per line, no final newline). The template tests compare a load-and-save of each file against it
+# byte for byte, so a formatter's layout would fail them.
+templates/*/assets/scenes/*.scene.json
+
 # Electron desktop build output. `templates/*/out/**` is bundled JavaScript from `electron-vite`
 # and `templates/*/release/**` is a packaged application; neither is hand-written.
 templates/*/out/**

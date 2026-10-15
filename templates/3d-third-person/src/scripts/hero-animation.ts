@@ -28,7 +28,10 @@ export class HeroAnimation
 {
   static typeId = "third-person/HeroAnimation";
 
-  /** The footstep clip. Assigned by `main.ts`, because an asset handle is not a schema field here. */
+  /**
+   * The footstep clip, assigned by `main.ts` after the scene loads. Not a schema field: a scene file
+   * that named a sound would fail to load in a browser that cannot decode it.
+   */
   footstep: AssetHandle<AudioClip> | null = null;
 
   /** The state machine this drives. */

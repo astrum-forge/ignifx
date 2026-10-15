@@ -1,0 +1,18 @@
+{
+  "name": "ignifx-template-tests",
+  "version": "0.0.0",
+  "private": true,
+  "description": "ignifx template tests: each template's scene files load headless, validate, and round-trip byte for byte.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@ignifx/core": "workspace:*",
+    "@types/node": "catalog:",
+    "@webgpu/types": "catalog:",
+    "typescript-native": "catalog:",
+    "vite": "catalog:"
+  }
+}

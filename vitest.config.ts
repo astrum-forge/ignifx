@@ -46,6 +46,8 @@ const NODE_INCLUDE = [
   // rather than under `packages/`.
   "scripts/test/**/*.test.ts",
   "benchmarks/**/*.test.ts",
+  // The templates' scene files, loaded headless through each template's own extensions and scripts.
+  "tests/templates/**/*.test.ts",
 ];
 
 const NODE_EXCLUDE = ["**/*.browser.test.ts", "**/node_modules/**", "**/dist/**"];
