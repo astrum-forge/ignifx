@@ -7763,8 +7763,10 @@ A geometry template a `MeshRenderer` draws (`docs/architecture/07-rendering.md` 
 #### Remarks
 
 Build one with a primitive factory or [MeshAsset.fromData](#fromdata); each returns the handle the
-`MeshRenderer.mesh` field takes. A mesh that came from a file arrives as part of a `ModelAsset`
-instead — a glTF is a tree of meshes, materials, and animations, not one buffer.
+`MeshRenderer.mesh` field takes. A `.mesh.json` file loads the same primitives by address
+(`app.assets.load("meshes/crate.mesh.json")`), so a scene file can name one. A glTF mesh
+arrives as part of a `ModelAsset` instead — a glTF is a tree of meshes, materials, and
+animations, not one buffer.
 
 #### Example
 
@@ -29611,6 +29613,39 @@ The union of the material families.
 
 ***
 
+### MeshOptionKind
+
+> **MeshOptionKind** = `"length"` \| `"count"` \| `"pair"`
+
+What a primitive option holds: a length in metres (finite, zero or more), a segment count
+(a whole number, one or more), or a pair of finite numbers.
+
+***
+
+### MeshPrimitive
+
+> **MeshPrimitive** = *typeof* [`MESH_PRIMITIVES`](#mesh_primitives)\[`number`\]
+
+One of [MESH\_PRIMITIVES](#mesh_primitives).
+
+***
+
+### MeshPrimitiveDefinition
+
+> **MeshPrimitiveDefinition** = \{ `options`: [`BoxMeshOptions`](#boxmeshoptions); `primitive`: `"box"`; \} \| \{ `options`: [`SphereMeshOptions`](#spheremeshoptions); `primitive`: `"sphere"`; \} \| \{ `options`: [`PlaneMeshOptions`](#planemeshoptions); `primitive`: `"plane"`; \} \| \{ `options`: [`GroundMeshOptions`](#groundmeshoptions); `primitive`: `"ground"`; \} \| \{ `options`: [`CylinderMeshOptions`](#cylindermeshoptions); `primitive`: `"cylinder"`; \} \| \{ `options`: [`CapsuleMeshOptions`](#capsulemeshoptions); `primitive`: `"capsule"`; \} \| \{ `options`: [`TorusMeshOptions`](#torusmeshoptions); `primitive`: `"torus"`; \}
+
+A primitive and the options its factory takes: what a `.mesh.json` file declares.
+
+***
+
+### MeshPrimitiveOptionKinds
+
+> **MeshPrimitiveOptionKinds** = `{ readonly [P in MeshPrimitive]: { readonly [K in keyof Extract<MeshPrimitiveDefinition, { primitive: P }>["options"]]-?: MeshOptionKind } }`
+
+For each primitive, every option its factory's options type declares, and what it holds.
+
+***
+
 ### OverridePath
 
 > **OverridePath** = \{ `entity`: `string`; `kind`: `"entity"`; \} \| \{ `entity`: `string`; `field`: [`EntityOverrideField`](#entityoverridefield); `kind`: `"entityField"`; \} \| \{ `channel`: keyof [`SceneFileTransform`](#scenefiletransform); `entity`: `string`; `kind`: `"transform"`; \} \| \{ `entity`: `string`; `kind`: `"componentList"`; \} \| \{ `component`: `string`; `entity`: `string`; `kind`: `"component"`; \} \| \{ `component`: `string`; `entity`: `string`; `kind`: `"componentField"`; \} \| \{ `component`: `string`; `entity`: `string`; `kind`: `"prop"`; `steps`: readonly `string`[]; \}
@@ -30384,6 +30419,12 @@ An asset file does not carry the format header its loader requires.
 > `readonly` **invalidGeometryUpdate**: `"IGX-0725"` = `"IGX-0725"`
 
 A `MeshAsset` vertex update named a range the geometry cannot hold.
+
+##### invalidMeshFile
+
+> `readonly` **invalidMeshFile**: `"IGX-0507"` = `"IGX-0507"`
+
+A `.mesh.json` file names an unknown primitive, or an option the primitive does not take or cannot use.
 
 ##### invalidOverridePath
 
@@ -31509,6 +31550,47 @@ are clamped rather than producing a malformed identifier.
 > `const` **MESH\_ASSET\_TYPE**: `"mesh"` = `"mesh"`
 
 The asset type primitives are registered under.
+
+***
+
+### MESH\_FILE\_EXTENSION
+
+> `const` **MESH\_FILE\_EXTENSION**: `".mesh.json"` = `".mesh.json"`
+
+The address suffix that selects the mesh loader.
+
+***
+
+### MESH\_FILE\_FORMAT
+
+> `const` **MESH\_FILE\_FORMAT**: `"ignifx.mesh"` = `"ignifx.mesh"`
+
+The `format` header a `.mesh.json` carries.
+
+***
+
+### MESH\_FORMAT\_VERSION
+
+> `const` **MESH\_FORMAT\_VERSION**: `1` = `1`
+
+The only `.mesh.json` `formatVersion` this build reads.
+
+***
+
+### MESH\_PRIMITIVE\_OPTIONS
+
+> `const` **MESH\_PRIMITIVE\_OPTIONS**: [`MeshPrimitiveOptionKinds`](#meshprimitiveoptionkinds)
+
+Every option each primitive takes, and what it holds. The keys are exactly the fields of the
+factory's options type (`BoxMeshOptions`, …); the compiler checks that.
+
+***
+
+### MESH\_PRIMITIVES
+
+> `const` **MESH\_PRIMITIVES**: readonly \[`"box"`, `"sphere"`, `"plane"`, `"ground"`, `"cylinder"`, `"capsule"`, `"torus"`\]
+
+The primitive shapes a `MeshAsset` factory and a `.mesh.json` file can build.
 
 ***
 
@@ -33326,6 +33408,35 @@ sink.at(0)?.level; // "warn"
 
 ***
 
+### createMeshLoader()
+
+> **createMeshLoader**(): [`AssetLoader`](#assetloader)\<[`MeshAsset`](#meshasset)\>
+
+Builds the `mesh` loader: `.mesh.json` to `MeshAsset` (ADR-0029).
+
+#### Returns
+
+[`AssetLoader`](#assetloader)\<[`MeshAsset`](#meshasset)\>
+
+The loader to register with `ctx.registerAssetLoader`.
+
+#### Remarks
+
+The file names a primitive and its options, and the loader builds it exactly as the matching
+`MeshAsset` factory would. The mesh is named after the file's `name`, or its address. A headless
+app builds no GPU geometry. A file that is not a mesh file fails the load with `IGX-0709`, a
+format version other than 1 with `IGX-0603`, and an unknown primitive or a bad option with
+`IGX-0507`. The same `mesh` type still holds the in-memory meshes the factories publish; the
+loader's `unload` frees both kinds.
+
+#### Example
+
+```ts
+ctx.registerAssetLoader(createMeshLoader());
+```
+
+***
+
 ### createModelLoader()
 
 > **createModelLoader**(): [`AssetLoader`](#assetloader)\<[`ModelAsset`](#modelasset)\>
@@ -34126,6 +34237,20 @@ The description of the top-level file fields.
 
 Describes the `ignifx.material` file format
 (`docs/architecture/06-serialization-and-scene-format.md` §6, `07-rendering.md` §2.6).
+
+#### Returns
+
+[`SchemaDescription`](#schemadescription)
+
+The description of the top-level file fields.
+
+***
+
+### describeMeshFileFormat()
+
+> **describeMeshFileFormat**(): [`SchemaDescription`](#schemadescription)
+
+Describes the `ignifx.mesh` file format (ADR-0029).
 
 #### Returns
 
@@ -35095,6 +35220,28 @@ The field definition.
 
 ```ts
 ammo: map(i32(0)); // Record<string, number>
+```
+
+***
+
+### meshFileJsonSchema()
+
+> **meshFileJsonSchema**(): [`JsonObject`](#jsonobject)
+
+The JSON Schema `@ignifx/vite-plugin` validates `.mesh.json` files against, built from
+[MESH\_PRIMITIVE\_OPTIONS](#mesh_primitive_options).
+
+#### Returns
+
+[`JsonObject`](#jsonobject)
+
+The schema document.
+
+#### Example
+
+```ts
+// vite.config.ts
+ignifx({ schemas: { formats: { [MESH_FILE_FORMAT]: meshFileJsonSchema() } } });
 ```
 
 ***

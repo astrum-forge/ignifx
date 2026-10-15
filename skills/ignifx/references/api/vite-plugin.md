@@ -1062,6 +1062,10 @@ before [ASSET\_TYPE\_BY\_EXTENSION](#asset_type_by_extension) because every one 
 
 > `readonly` **.material.json**: `"material"` = `"material"`
 
+###### .mesh.json
+
+> `readonly` **.mesh.json**: `"mesh"` = `"mesh"`
+
 ###### .particles.json
 
 > `readonly` **.particles.json**: `"particles"` = `"particles"`
