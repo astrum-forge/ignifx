@@ -1,0 +1,1328 @@
+{
+  "format": "ignifx.scene",
+  "formatVersion": 1,
+  "name": "main",
+  "settings": {},
+  "entities": [
+    {
+      "uid": "01M5019D56QN4RE9MGE5CG2Y05",
+      "name": "Level",
+      "parent": null,
+      "layer": "Solid",
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M5019D57GNWGM08AR6VY0BYX",
+          "type": "ignifx/Tilemap",
+          "props": {
+            "map": {
+              "$asset": "level.tilemap.json",
+              "type": "tilemap"
+            },
+            "chunkSize": 16,
+            "cellSizeOverride": 0
+          }
+        },
+        {
+          "uid": "01M5019D57GNWGM08AR6VY0BYY",
+          "type": "ignifx/TilemapRenderer",
+          "props": {
+            "atlas": {
+              "$asset": "tiles.atlas.json",
+              "type": "spriteatlas"
+            },
+            "sortingLayer": "Default",
+            "cullChunks": true
+          }
+        },
+        {
+          "uid": "01M5019D57GNWGM08AR6VY0BYZ",
+          "type": "ignifx/TilemapCollider2D",
+          "props": {
+            "offset": [
+              0,
+              0
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "frictionCombine": "average",
+            "restitutionCombine": "average",
+            "oneWay": false,
+            "layerOverride": ""
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M5019D57GNWGM08AR6VY0BZ0",
+      "name": "Player",
+      "parent": null,
+      "layer": "Player",
+      "transform": {
+        "position": [
+          9.5,
+          10.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M5019D57GNWGM08AR6VY0BZ2",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "hero.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Default",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M5019D57GNWGM08AR6VY0BZ3",
+          "type": "ignifx/SpriteAnimator",
+          "props": {
+            "animations": {
+              "$asset": "hero.spriteanim.json",
+              "type": "spriteanimation"
+            },
+            "defaultClip": "idle_down",
+            "playOnAwake": true,
+            "speed": 1
+          }
+        },
+        {
+          "uid": "01M5019D57GNWGM08AR6VY0BZ4",
+          "type": "ignifx/CharacterController2D",
+          "props": {
+            "shape": "box",
+            "radius": 0.3,
+            "height": 0.6,
+            "offset": [
+              0,
+              0.3
+            ],
+            "slopeLimit": 90,
+            "stepOffset": 0,
+            "snapToGround": 0,
+            "skinWidth": 0.01,
+            "onOneWayPlatforms": true,
+            "pushBodies": false,
+            "interpolation": "interpolate"
+          }
+        },
+        {
+          "uid": "01M5019D57GNWGM08AR6VY0BZ5",
+          "type": "topdown/PlayerController",
+          "props": {
+            "speed": 4.5
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M5019D582ETT9VQ4XC8W6QZK",
+      "name": "Chest",
+      "parent": null,
+      "layer": "Solid",
+      "transform": {
+        "position": [
+          13.5,
+          15.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M5019D582ETT9VQ4XC8W6QZN",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "tiles.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Default",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M5019D582ETT9VQ4XC8W6QZP",
+          "type": "topdown/SpriteFrame",
+          "props": {
+            "frame": "chest"
+          }
+        },
+        {
+          "uid": "01M5019D582ETT9VQ4XC8W6QZQ",
+          "type": "ignifx/BoxCollider2D",
+          "props": {
+            "offset": [
+              0,
+              0.25
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "frictionCombine": "average",
+            "restitutionCombine": "average",
+            "oneWay": false,
+            "layerOverride": "",
+            "size": [
+              0.9,
+              0.5
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M5019D582ETT9VQ4XC8W6QZR",
+      "name": "Barrel",
+      "parent": null,
+      "layer": "Solid",
+      "transform": {
+        "position": [
+          5.5,
+          14.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M5019D582ETT9VQ4XC8W6QZT",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "tiles.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Default",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M5019D582ETT9VQ4XC8W6QZV",
+          "type": "topdown/SpriteFrame",
+          "props": {
+            "frame": "barrel"
+          }
+        },
+        {
+          "uid": "01M5019D582ETT9VQ4XC8W6QZW",
+          "type": "ignifx/BoxCollider2D",
+          "props": {
+            "offset": [
+              0,
+              0.25
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "frictionCombine": "average",
+            "restitutionCombine": "average",
+            "oneWay": false,
+            "layerOverride": "",
+            "size": [
+              0.9,
+              0.5
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M5019D582ETT9VQ4XC8W6QZX",
+      "name": "Crate",
+      "parent": null,
+      "layer": "Solid",
+      "transform": {
+        "position": [
+          6.5,
+          14.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M5019D582ETT9VQ4XC8W6QZZ",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "tiles.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Default",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M5019D582ETT9VQ4XC8W6R00",
+          "type": "topdown/SpriteFrame",
+          "props": {
+            "frame": "crate"
+          }
+        },
+        {
+          "uid": "01M5019D582ETT9VQ4XC8W6R01",
+          "type": "ignifx/BoxCollider2D",
+          "props": {
+            "offset": [
+              0,
+              0.25
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "frictionCombine": "average",
+            "restitutionCombine": "average",
+            "oneWay": false,
+            "layerOverride": "",
+            "size": [
+              0.9,
+              0.5
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M5019D582ETT9VQ4XC8W6R02",
+      "name": "Signpost",
+      "parent": null,
+      "layer": "Solid",
+      "transform": {
+        "position": [
+          11.5,
+          11.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M5019D582ETT9VQ4XC8W6R04",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "tiles.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Default",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M5019D582ETT9VQ4XC8W6R05",
+          "type": "topdown/SpriteFrame",
+          "props": {
+            "frame": "sign"
+          }
+        },
+        {
+          "uid": "01M5019D582ETT9VQ4XC8W6R06",
+          "type": "ignifx/BoxCollider2D",
+          "props": {
+            "offset": [
+              0,
+              0.25
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "frictionCombine": "average",
+            "restitutionCombine": "average",
+            "oneWay": false,
+            "layerOverride": "",
+            "size": [
+              0.9,
+              0.5
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M5019D582ETT9VQ4XC8W6R07",
+      "name": "Rock",
+      "parent": null,
+      "layer": "Solid",
+      "transform": {
+        "position": [
+          20.5,
+          6.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M5019D582ETT9VQ4XC8W6R09",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "tiles.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Default",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M5019D582ETT9VQ4XC8W6R0A",
+          "type": "topdown/SpriteFrame",
+          "props": {
+            "frame": "rock"
+          }
+        },
+        {
+          "uid": "01M5019D582ETT9VQ4XC8W6R0B",
+          "type": "ignifx/BoxCollider2D",
+          "props": {
+            "offset": [
+              0,
+              0.25
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "frictionCombine": "average",
+            "restitutionCombine": "average",
+            "oneWay": false,
+            "layerOverride": "",
+            "size": [
+              0.9,
+              0.5
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M5019D582ETT9VQ4XC8W6R0C",
+      "name": "Bush",
+      "parent": null,
+      "layer": "Solid",
+      "transform": {
+        "position": [
+          30.5,
+          5.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M5019D582ETT9VQ4XC8W6R0E",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "tiles.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Default",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M5019D582ETT9VQ4XC8W6R0F",
+          "type": "topdown/SpriteFrame",
+          "props": {
+            "frame": "bush"
+          }
+        },
+        {
+          "uid": "01M5019D582ETT9VQ4XC8W6R0G",
+          "type": "ignifx/BoxCollider2D",
+          "props": {
+            "offset": [
+              0,
+              0.25
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "frictionCombine": "average",
+            "restitutionCombine": "average",
+            "oneWay": false,
+            "layerOverride": "",
+            "size": [
+              0.9,
+              0.5
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M5019D582ETT9VQ4XC8W6R0H",
+      "name": "Bush East",
+      "parent": null,
+      "layer": "Solid",
+      "transform": {
+        "position": [
+          31.5,
+          6.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M5019D582ETT9VQ4XC8W6R0K",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "tiles.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Default",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M5019D582ETT9VQ4XC8W6R0M",
+          "type": "topdown/SpriteFrame",
+          "props": {
+            "frame": "bush"
+          }
+        },
+        {
+          "uid": "01M5019D582ETT9VQ4XC8W6R0N",
+          "type": "ignifx/BoxCollider2D",
+          "props": {
+            "offset": [
+              0,
+              0.25
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "frictionCombine": "average",
+            "restitutionCombine": "average",
+            "oneWay": false,
+            "layerOverride": "",
+            "size": [
+              0.9,
+              0.5
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M5019D582ETT9VQ4XC8W6R0P",
+      "name": "Crate East",
+      "parent": null,
+      "layer": "Solid",
+      "transform": {
+        "position": [
+          17.5,
+          11.6,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M5019D582ETT9VQ4XC8W6R0R",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "tiles.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Default",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M5019D582ETT9VQ4XC8W6R0S",
+          "type": "topdown/SpriteFrame",
+          "props": {
+            "frame": "crate"
+          }
+        },
+        {
+          "uid": "01M5019D582ETT9VQ4XC8W6R0T",
+          "type": "ignifx/BoxCollider2D",
+          "props": {
+            "offset": [
+              0,
+              0.25
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "frictionCombine": "average",
+            "restitutionCombine": "average",
+            "oneWay": false,
+            "layerOverride": "",
+            "size": [
+              0.9,
+              0.5
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M5019D582ETT9VQ4XC8W6R0V",
+      "name": "Barrel East",
+      "parent": null,
+      "layer": "Solid",
+      "transform": {
+        "position": [
+          18.5,
+          10.2,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M5019D582ETT9VQ4XC8W6R0X",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "tiles.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Default",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M5019D582ETT9VQ4XC8W6R0Y",
+          "type": "topdown/SpriteFrame",
+          "props": {
+            "frame": "barrel"
+          }
+        },
+        {
+          "uid": "01M5019D582ETT9VQ4XC8W6R0Z",
+          "type": "ignifx/BoxCollider2D",
+          "props": {
+            "offset": [
+              0,
+              0.25
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "frictionCombine": "average",
+            "restitutionCombine": "average",
+            "oneWay": false,
+            "layerOverride": "",
+            "size": [
+              0.9,
+              0.5
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M5019D582ETT9VQ4XC8W6R10",
+      "name": "Rock North",
+      "parent": null,
+      "layer": "Solid",
+      "transform": {
+        "position": [
+          14.5,
+          8.4,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M5019D582ETT9VQ4XC8W6R12",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "tiles.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Default",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M5019D582ETT9VQ4XC8W6R13",
+          "type": "topdown/SpriteFrame",
+          "props": {
+            "frame": "rock"
+          }
+        },
+        {
+          "uid": "01M5019D59VD0PPWMX466Z5BYK",
+          "type": "ignifx/BoxCollider2D",
+          "props": {
+            "offset": [
+              0,
+              0.25
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "frictionCombine": "average",
+            "restitutionCombine": "average",
+            "oneWay": false,
+            "layerOverride": "",
+            "size": [
+              0.9,
+              0.5
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M5019D59VD0PPWMX466Z5BYM",
+      "name": "Bush South",
+      "parent": null,
+      "layer": "Solid",
+      "transform": {
+        "position": [
+          22.5,
+          13.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M5019D59VD0PPWMX466Z5BYP",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "tiles.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Default",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M5019D59VD0PPWMX466Z5BYQ",
+          "type": "topdown/SpriteFrame",
+          "props": {
+            "frame": "bush"
+          }
+        },
+        {
+          "uid": "01M5019D59VD0PPWMX466Z5BYR",
+          "type": "ignifx/BoxCollider2D",
+          "props": {
+            "offset": [
+              0,
+              0.25
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "frictionCombine": "average",
+            "restitutionCombine": "average",
+            "oneWay": false,
+            "layerOverride": "",
+            "size": [
+              0.9,
+              0.5
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M5019D59VD0PPWMX466Z5BYS",
+      "name": "Waymarker",
+      "parent": null,
+      "layer": "Solid",
+      "transform": {
+        "position": [
+          27.5,
+          12.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M5019D59VD0PPWMX466Z5BYV",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "tiles.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Default",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M5019D59VD0PPWMX466Z5BYW",
+          "type": "topdown/SpriteFrame",
+          "props": {
+            "frame": "sign"
+          }
+        },
+        {
+          "uid": "01M5019D59VD0PPWMX466Z5BYX",
+          "type": "ignifx/BoxCollider2D",
+          "props": {
+            "offset": [
+              0,
+              0.25
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "frictionCombine": "average",
+            "restitutionCombine": "average",
+            "oneWay": false,
+            "layerOverride": "",
+            "size": [
+              0.9,
+              0.5
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M5019D59VD0PPWMX466Z5BYY",
+      "name": "Cache",
+      "parent": null,
+      "layer": "Solid",
+      "transform": {
+        "position": [
+          21.5,
+          16.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M5019D59VD0PPWMX466Z5BZ0",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "tiles.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Default",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M5019D59VD0PPWMX466Z5BZ1",
+          "type": "topdown/SpriteFrame",
+          "props": {
+            "frame": "chest"
+          }
+        },
+        {
+          "uid": "01M5019D59VD0PPWMX466Z5BZ2",
+          "type": "ignifx/BoxCollider2D",
+          "props": {
+            "offset": [
+              0,
+              0.25
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "frictionCombine": "average",
+            "restitutionCombine": "average",
+            "oneWay": false,
+            "layerOverride": "",
+            "size": [
+              0.9,
+              0.5
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M5019D59VD0PPWMX466Z5BZ3",
+      "name": "Shrine",
+      "parent": null,
+      "layer": "Trigger",
+      "transform": {
+        "position": [
+          25.5,
+          10.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M5019D59VD0PPWMX466Z5BZ5",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "tiles.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              0.55,
+              0.55,
+              0.62,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Decal",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M5019D59VD0PPWMX466Z5BZ6",
+          "type": "topdown/SpriteFrame",
+          "props": {
+            "frame": "pad"
+          }
+        },
+        {
+          "uid": "01M5019D59VD0PPWMX466Z5BZ7",
+          "type": "ignifx/BoxCollider2D",
+          "props": {
+            "offset": [
+              0,
+              0.5
+            ],
+            "isTrigger": true,
+            "material": null,
+            "inlineMaterial": null,
+            "frictionCombine": "average",
+            "restitutionCombine": "average",
+            "oneWay": false,
+            "layerOverride": "",
+            "size": [
+              1,
+              1
+            ]
+          }
+        },
+        {
+          "uid": "01M5019D59VD0PPWMX466Z5BZ8",
+          "type": "topdown/Shrine"
+        }
+      ]
+    },
+    {
+      "uid": "01M5019D59VD0PPWMX466Z5BZ9",
+      "name": "Main Camera",
+      "parent": null,
+      "transform": {
+        "position": [
+          9.5,
+          10.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M5019D59VD0PPWMX466Z5BZB",
+          "type": "ignifx/Camera2D",
+          "props": {
+            "orthographicSize": 9,
+            "pixelPerfect": false,
+            "referenceResolution": [
+              640,
+              360
+            ],
+            "boundsMin": [
+              0,
+              0
+            ],
+            "boundsMax": [
+              40,
+              24
+            ],
+            "follow": {
+              "$entity": "01M5019D57GNWGM08AR6VY0BZ0"
+            },
+            "followDamping": 0.12,
+            "followOffset": [
+              0,
+              0
+            ],
+            "deadZone": [
+              1.5,
+              1
+            ],
+            "priority": 0
+          }
+        },
+        {
+          "uid": "01M5019D59VD0PPWMX466Z5BZC",
+          "type": "ignifx/Camera2DFollow"
+        },
+        {
+          "uid": "01M5019D59VD0PPWMX466Z5BZD",
+          "type": "ignifx/AudioListener",
+          "props": {}
+        }
+      ]
+    }
+  ]
+}

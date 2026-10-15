@@ -10,7 +10,7 @@ import { templatePaths } from "./headless-app.js";
  */
 
 /** The editor-ready templates. */
-const TEMPLATES = ["3d-third-person", "3d-first-person"] as const;
+const TEMPLATES = ["2d-topdown", "3d-third-person", "3d-first-person"] as const;
 
 /**
  * The templates whose scene loads in an app built from the extensions and the scripts alone, as

@@ -1,42 +1,34 @@
 // oxlint-disable no-underscore-dangle -- `window.__ignifxReady` is a test hook, and the double
 // underscore is what says it is not part of the game's API. The visual suite reads it by name.
-import {
-  Camera2D,
-  Camera2DFollow,
-  spawnTilemapObjects,
-  SPRITE_ANIMATION_ASSET_TYPE,
-  SPRITE_ATLAS_ASSET_TYPE,
-  SpriteAnimator,
-  SpriteRenderer,
-  Tilemap,
-  TILEMAP_ASSET_TYPE,
-  TilemapRenderer,
-  twoD,
-} from "@ignifx/2d";
-import { audio, AUDIO_ASSET_TYPE, AUDIO_BUSES_ASSET_TYPE, AudioListener, AudioSource } from "@ignifx/audio";
+import { Tilemap } from "@ignifx/2d";
+import { AUDIO_ASSET_TYPE, AUDIO_BUSES_ASSET_TYPE, AudioSource } from "@ignifx/audio";
 import { createApp, isIgnifxError, Vec2 } from "@ignifx/core";
-import { electron } from "@ignifx/electron";
-import { INPUT_ACTIONS_ASSET_TYPE, input } from "@ignifx/input";
-import { BoxCollider2D, CharacterController2D, physics2d, TilemapCollider2D } from "@ignifx/physics-2d";
-import { I18N_ASSET_TYPE, ui } from "@ignifx/ui";
-// Vite virtual modules the plugin serves, typed by `@ignifx/vite-plugin/client`.
+import { INPUT_ACTIONS_ASSET_TYPE } from "@ignifx/input";
+import { TilemapCollider2D } from "@ignifx/physics-2d";
+import { I18N_ASSET_TYPE } from "@ignifx/ui";
+// Vite virtual modules the plugins serve, typed by `@ignifx/vite-plugin/client` and
+// `@ignifx/editor-host/client`.
+import { attachEditorPlayControls } from "virtual:ignifx/editor";
 import { manifest } from "virtual:ignifx/manifest";
 import { acceptHotReload, scripts } from "virtual:ignifx/scripts";
+import { extensions } from "./extensions.js";
 import { installFrameTimeProbe } from "./frame-time-probe.js";
 import { createGameUi, hasTouch } from "./game-ui.js";
 import { installGameplayProbe } from "./gameplay-probe.js";
 import { createGameMenus } from "./menus/game-menus.js";
 import { applySettings, loadInputOverrides, loadSettings } from "./menus/settings-store.js";
 import { createRun } from "./run.js";
-import { HudLine } from "./scripts/hud-line.js";
-import { MenuController } from "./scripts/menu-controller.js";
-import { PlayerController } from "./scripts/player-controller.js";
-import { SaveGame } from "./scripts/save-game.js";
-import { Shrine } from "./scripts/shrine.js";
+import { scriptType } from "./script-types.js";
 import type { GameMenus } from "./menus/game-menus.js";
 import type { GraphicsHooks } from "./menus/settings-store.js";
 import type { Run } from "./run.js";
-import type { SpriteAnimationAsset, SpriteAtlasAsset, TileObjectContext, TilemapAsset } from "@ignifx/2d";
+// Types only: they are erased before the dev server sees this file, so no script module joins the
+// entry's graph and an edit to one hot-patches it instead of reloading the page (`script-types.ts`).
+import type { HudLine } from "./scripts/hud-line.js";
+import type { MenuController } from "./scripts/menu-controller.js";
+import type { PlayerController } from "./scripts/player-controller.js";
+import type { SaveGame } from "./scripts/save-game.js";
+import type { Shrine } from "./scripts/shrine.js";
 import type { AudioBusesAsset, AudioClip } from "@ignifx/audio";
 import type { App, AssetHandle, Entity } from "@ignifx/core";
 import type { InputActionsAsset } from "@ignifx/input";
@@ -47,14 +39,17 @@ import type { LocaleAsset } from "@ignifx/ui";
  * a dead-zoned camera follow, shrines to light, a title screen, a pause menu, a settings screen
  * with interactive rebinding, and a save file.
  *
- * The shape of this file is the shape of every ignifx game:
+ * The level is data: `assets/scenes/main.scene.json` holds every entity, component and reference,
+ * and this file loads it. The shape of this file is the shape of every ignifx game:
  *
- * 1. `createApp` with the extensions the game uses; `ignifx.config.ts` carries the settings.
- * 2. Load every asset and **await it before `app.start()`**. A load awaited before the loop runs
- *    settles as soon as it finishes; once the loop is running, delivery waits for a `PreUpdate`,
- *    so awaiting after `start()` needs frames to be pumped.
- * 3. Build the world.
- * 4. `app.start()`.
+ * 1. `createApp` with `extensions()` from `./extensions.ts`; `ignifx.config.ts` carries the settings.
+ * 2. Register the scripts from `virtual:ignifx/scripts`, accept hot reloads, and hand the app to
+ *    the ignifx editor's play controls.
+ * 3. Load what the scene's scripts read while it loads (input actions, audio buses), then the
+ *    scene itself. **Await it before `app.start()`**: a load awaited before the loop runs settles as
+ *    soon as it finishes; once the loop is running, delivery waits for a `PreUpdate`.
+ * 4. The post-load steps a scene file cannot express — the README's "The level" lists them.
+ * 5. `app.start()`.
  *
  * ## Query flags
  *
@@ -79,30 +74,20 @@ declare global {
 /** What `window.__ignifxReady` resolves to. */
 type AppStatus = "ready" | "unsupported";
 
+/** The level, by its asset address. */
+const MAIN_SCENE = "scenes/main.scene.json";
+
 /** How many animation frames the scene is given before the image is called settled. */
 const SETTLE_FRAMES = 12;
 
-/** Half the viewport height, in metres: 18 metres of world, which is 288 tile pixels. */
-const CAMERA_HALF_HEIGHT = 9;
-
-/** The map is 40 by 24 cells of one metre, and the camera may not leave it. */
-const LEVEL_SIZE = { x: 40, y: 24 };
-
 /** Explicit loader types for the template assets. */
-const ATLAS = { type: SPRITE_ATLAS_ASSET_TYPE } as const;
-const CLIPS = { type: SPRITE_ANIMATION_ASSET_TYPE } as const;
-const MAP = { type: TILEMAP_ASSET_TYPE } as const;
 const ACTIONS = { type: INPUT_ACTIONS_ASSET_TYPE } as const;
 const CLIP = { type: AUDIO_ASSET_TYPE } as const;
 const BUSES = { type: AUDIO_BUSES_ASSET_TYPE } as const;
 const STRINGS = { type: I18N_ASSET_TYPE } as const;
 
-/** Everything the world is built from. */
-interface Assets {
-  readonly tiles: AssetHandle<SpriteAtlasAsset>;
-  readonly heroAtlas: AssetHandle<SpriteAtlasAsset>;
-  readonly heroClips: AssetHandle<SpriteAnimationAsset>;
-  readonly level: AssetHandle<TilemapAsset>;
+/** The sounds, which stay out of the scene file: each one is optional (see `clipOrNull`). */
+interface Sounds {
   readonly pickup: AssetHandle<AudioClip>;
   readonly footstep: AssetHandle<AudioClip>;
   readonly uiClick: AssetHandle<AudioClip>;
@@ -110,15 +95,15 @@ interface Assets {
   readonly ambient: AssetHandle<AudioClip>;
 }
 
-/** What {@link buildWorld} produced. */
+/** The entities of the loaded scene that the code below wires up. */
 interface World {
   /** The character. */
   readonly player: Entity;
   /** The camera that follows it. */
   readonly camera: Entity;
-  /** Where the character starts. */
+  /** Where the character starts: wherever the scene puts it. */
   readonly spawn: Vec2;
-  /** Every shrine the objects layer spawned. */
+  /** Every shrine in the scene, in scene order. */
   readonly shrines: readonly Shrine[];
 }
 
@@ -173,157 +158,63 @@ function showUnsupported(): void {
 }
 
 /**
- * Registers the factories the tilemap's objects layer names, so a map edit can add a prop or move
- * the spawn point without touching this file.
+ * Finds an entity of the loaded scene by name.
  *
  * @param app - The running app.
- * @param assets - The loaded assets the factories draw from.
- * @param shrines - The list every spawned shrine is appended to.
- * @returns The player entity and its spawn point once the map has been walked.
+ * @param name - The entity's name in `assets/scenes/main.scene.json`.
+ * @returns The entity.
+ * @throws Error when the scene has no entity of that name.
  */
-function registerObjectFactories(
-  app: App,
-  assets: Assets,
-  shrines: Shrine[],
-): () => { readonly player: Entity | null; readonly spawn: Vec2 } {
-  let player: Entity | null = null;
-  let spawn = new Vec2();
-  const solid = app.world.layers.requireIndex("Solid");
-  const triggerLayer = app.world.layers.requireIndex("Trigger");
-  const atlas = assets.tiles.value;
-
-  app.twoD.registerTileObjectFactory("spawn", (context: TileObjectContext): Entity => {
-    const entity = app.world.createEntity(context.name);
-    entity.layer = app.world.layers.requireIndex("Player");
-    spawn = new Vec2(context.position.x, context.position.y);
-    entity.transform.position2D = new Vec2(spawn.x, spawn.y);
-
-    entity.addComponent(SpriteRenderer, {
-      sprite: assets.heroAtlas,
-      sortingLayer: "Default",
-      pickable: true,
-    });
-    entity.addComponent(SpriteAnimator, {
-      animations: assets.heroClips,
-      defaultClip: "idle_down",
-      playOnAwake: true,
-    });
-    // A box, not the default capsule: a top-down character slides along walls more predictably
-    // with square corners, and the shape is what `stepOffset` would need anyway. The offset lifts
-    // the box off the entity's origin, which sits at the sprite's feet.
-    entity.addComponent(CharacterController2D, {
-      shape: "box",
-      radius: 0.3,
-      height: 0.6,
-      offset: { x: 0, y: 0.3 },
-      slopeLimit: 90,
-      snapToGround: 0,
-    });
-    const controller = entity.addComponent(PlayerController, { speed: 4.5 });
-    // The clip is handed over rather than loaded inside the script, so a script that is hot-reloaded
-    // does not re-request a file the asset service has already delivered.
-    if (clipOrNull(assets.footstep) !== null) {
-      controller.footstep = assets.footstep;
-    }
-    player = entity;
-    return entity;
-  });
-
-  app.twoD.registerTileObjectFactory("prop", (context: TileObjectContext): Entity => {
-    const entity = app.world.createEntity(context.name);
-    entity.layer = solid;
-    entity.transform.position2D = new Vec2(context.position.x, context.position.y);
-    const frame = String(context.properties["frame"] ?? "crate");
-    entity.addComponent(SpriteRenderer, {
-      sprite: assets.tiles,
-      sortingLayer: "Default",
-      pickable: true,
-      // `frame` is a runtime property rather than a schema field, so it is assigned after the
-      // component exists; passing it to `addComponent` is `IGX-0607`.
-    }).frame = atlas.requireFrame(frame);
-    // The collider is shorter than the sprite: only the base of a prop blocks a character, which
-    // is what makes a Y-sorted scene feel like it has depth rather than like a wall of boxes.
-    entity.addComponent(BoxCollider2D, { size: { x: 0.9, y: 0.5 }, offset: { x: 0, y: 0.25 } });
-    return entity;
-  });
-
-  app.twoD.registerTileObjectFactory("shrine", (context: TileObjectContext): Entity => {
-    const entity = app.world.createEntity(context.name);
-    entity.layer = triggerLayer;
-    entity.transform.position2D = new Vec2(context.position.x, context.position.y);
-    entity.addComponent(SpriteRenderer, {
-      sprite: assets.tiles,
-      sortingLayer: "Decal",
-    }).frame = atlas.requireFrame(String(context.properties["frame"] ?? "pad"));
-    entity.addComponent(BoxCollider2D, {
-      size: { x: context.size.x, y: context.size.y },
-      offset: { x: 0, y: context.size.y / 2 },
-      isTrigger: true,
-    });
-    const shrine = entity.addComponent(Shrine);
-    if (clipOrNull(assets.pickup) !== null) {
-      shrine.clip = assets.pickup;
-    }
-    shrines.push(shrine);
-    return entity;
-  });
-
-  return () => ({ player, spawn });
+function requireEntity(app: App, name: string): Entity {
+  const entity = app.world.findByName(name);
+  if (entity === null) {
+    throw new Error(`${MAIN_SCENE} has no entity named "${name}".`);
+  }
+  return entity;
 }
 
 /**
- * Builds the world: the tilemap and its collider, everything the objects layer spawns, and the
- * camera that follows whatever the `spawn` object produced.
+ * Wires up the loaded scene: the tilemap's collision outlines, the optional sounds, and the
+ * entities the front end needs.
  *
- * @param app - The running app.
- * @param assets - The loaded assets.
- * @returns The character, its spawn point and the shrines.
+ * @param app - The app the scene was loaded in.
+ * @param sounds - The sounds that decoded, and the ones that did not.
+ * @returns The character, the camera, the spawn point and the shrines.
  */
-function buildWorld(app: App, assets: Assets): World {
-  const shrines: Shrine[] = [];
-  const take = registerObjectFactories(app, assets, shrines);
+function prepareWorld(app: App, sounds: Sounds): World {
+  // The merged outlines of every solid tile, as one static compound body. `TilemapCollider2D` does
+  // not find the tilemap beside it, so the data is handed over here; it watches the data's
+  // `version` each fixed step, so editing a tile at runtime reaches physics with no subscription.
+  const level = requireEntity(app, "Level");
+  level.requireComponent(TilemapCollider2D).collisionData = level.requireComponent(Tilemap).collisionData;
 
-  const level = app.world.createEntity("Level");
-  level.layer = app.world.layers.requireIndex("Solid");
-  const map = level.addComponent(Tilemap, { map: assets.level, chunkSize: 16 });
-  level.addComponent(TilemapRenderer, { atlas: assets.tiles, cullChunks: true });
-  // The merged outlines of every solid tile, as one static compound body. `TilemapCollider2D`
-  // watches the data's `version` each fixed step, so editing a tile at runtime reaches physics
-  // with no subscription of our own.
-  level.addComponent(TilemapCollider2D).collisionData = map.collisionData;
-
-  // Objects are normally spawned by the extension when a *scene file* finishes loading. This
-  // template builds its world in code, so it walks the objects layer itself.
-  spawnTilemapObjects(app, app.twoD, map);
-  const spawned = take();
-  if (spawned.player === null) {
-    throw new Error('level.tilemap.json has no object of type "spawn".');
+  const player = requireEntity(app, "Player");
+  // The clips are handed over rather than loaded inside the scripts, so a script that is
+  // hot-reloaded does not re-request a file the asset service has already delivered.
+  if (clipOrNull(sounds.footstep) !== null) {
+    player.requireComponent(scriptType<PlayerController>(app, "topdown/PlayerController")).footstep = sounds.footstep;
   }
-
-  const eye = app.world.createEntity("Main Camera");
-  eye.transform.position2D = new Vec2(spawned.spawn.x, spawned.spawn.y);
-  eye.addComponent(Camera2D, {
-    orthographicSize: CAMERA_HALF_HEIGHT,
-    follow: spawned.player,
-    followDamping: 0.12,
-    // The target rides the edge of this rectangle instead of being pinned to the middle of the
-    // screen, so small steps do not drag the whole world around.
-    deadZone: { x: 1.5, y: 1 },
-    boundsMin: { x: 0, y: 0 },
-    boundsMax: LEVEL_SIZE,
-  });
-  eye.addComponent(Camera2DFollow);
-  // The ears ride the camera, so a sound is panned from where the player is looking.
-  eye.addComponent(AudioListener);
-  return { player: spawned.player, camera: eye, spawn: spawned.spawn, shrines };
+  const shrines = app.world.components(scriptType<Shrine>(app, "topdown/Shrine"));
+  for (const shrine of shrines) {
+    if (clipOrNull(sounds.pickup) !== null) {
+      shrine.clip = sounds.pickup;
+    }
+  }
+  const here = player.transform.position2D;
+  return {
+    player,
+    camera: requireEntity(app, "Main Camera"),
+    spawn: new Vec2(here.x, here.y),
+    shrines: [...shrines],
+  };
 }
 
 /**
  * Builds the front end and the save file over a world that is already standing.
  *
  * @param app - The running app.
- * @param assets - The loaded assets.
- * @param world - What {@link buildWorld} produced.
+ * @param sounds - The sounds that decoded, and the ones that did not.
+ * @param world - What {@link prepareWorld} found.
  * @param hud - The HUD element, or `null` under an app with no DOM overlay.
  * @param isBench - Whether the frame-time harness is driving, in which case the game starts
  *   immediately instead of waiting on a title screen.
@@ -331,7 +222,7 @@ function buildWorld(app: App, assets: Assets): World {
  */
 async function installFrontEnd(
   app: App,
-  assets: Assets,
+  sounds: Sounds,
   world: World,
   hud: HTMLDivElement | null,
   isBench: boolean,
@@ -354,7 +245,7 @@ async function installFrontEnd(
   applySettings(app, settings, graphics);
 
   const host = app.world.createEntity("Game UI");
-  const saveGame = host.addComponent(SaveGame);
+  const saveGame = host.addComponent(scriptType<SaveGame>(app, "topdown/SaveGame"));
   let menus: GameMenus | null = null;
 
   const run = createRun(world.player, world.shrines, world.spawn, (): void => {
@@ -373,7 +264,7 @@ async function installFrontEnd(
       { action: "pause", labelKey: "action.pause" },
     ],
     creditKeys: ["credits.engine", "credits.art", "credits.license"],
-    sounds: { click: clipOrNull(assets.uiClick), hover: clipOrNull(assets.uiHover) },
+    sounds: { click: clipOrNull(sounds.uiClick), hover: clipOrNull(sounds.uiHover) },
     onStartNew: (): void => {
       saveGame.restart();
     },
@@ -385,15 +276,15 @@ async function installFrontEnd(
       saveGame.restart();
     },
   });
-  host.addComponent(MenuController).menus = menus;
+  host.addComponent(scriptType<MenuController>(app, "topdown/MenuController")).menus = menus;
 
-  const line = host.addComponent(HudLine);
+  const line = host.addComponent(scriptType<HudLine>(app, "topdown/HudLine"));
   line.element = hud;
   line.render = (): string => app.i18n.t("hud.status", { score: run.score() });
 
   // `interact` runs a shape query and now says what it found, because a control the player is told
   // to press has to do something the player can see.
-  const controller = world.player.getComponent(PlayerController);
+  const controller = world.player.getComponent(scriptType<PlayerController>(app, "topdown/PlayerController"));
   if (controller !== null) {
     controller.onLookAround = (names: readonly string[]): void => {
       menus.toast(
@@ -406,9 +297,9 @@ async function installFrontEnd(
 
   // The ambient pad loops on the `Music` bus, which `game.audio.json` marks as not pausable so the
   // menus can duck it rather than silence it.
-  if (clipOrNull(assets.ambient) !== null) {
+  if (clipOrNull(sounds.ambient) !== null) {
     app.world.createEntity("Ambience").addComponent(AudioSource, {
-      clip: assets.ambient,
+      clip: sounds.ambient,
       bus: "Music",
       loop: true,
       playOnAwake: true,
@@ -448,12 +339,7 @@ async function main(): Promise<AppStatus> {
       // module rather than fetching `assets.manifest.json` means the table is in the bundle, so
       // the first asset request needs no round trip.
       assets: { manifest },
-      // `electron()` is registered in **both** builds. Without a preload bridge it is inert — one
-      // debug line, and an `app.desktop` that answers `isElectron === false` — so the browser build
-      // is unchanged and the desktop build needs no second entry point. It goes first because it
-      // only requires core, and because `app.storage` should be the file backend before any other
-      // extension reads a setting from it.
-      extensions: [electron(), twoD(), physics2d(), input(), audio(), ui()],
+      extensions: extensions(),
     });
   } catch (error) {
     // IGX-0701 is the one failure a shipped game must handle itself: the browser has no WebGPU and
@@ -465,13 +351,15 @@ async function main(): Promise<AppStatus> {
     throw error;
   }
 
-  // Every class under `src/scripts/**` with a `static typeId`, from the plugin's virtual registry; in
-
-  // development the registry hot-reloads edited scripts through `app.hotReload` (`"patch"` by default).
-
+  // Every class under `src/scripts/**` with a `static typeId`, from the plugin's virtual registry. It
+  // is the only way code reaches a script: the scene names them by `typeId`, and so does
+  // `scriptType`. In development the registry hot-reloads edited scripts through `app.hotReload`
+  // (`"patch"` by default).
   app.registerComponents(scripts);
-
   acceptHotReload(app);
+  // Under `vite dev`, lets the ignifx editor's play view play, pause, step and stop this app. In a
+  // production build it is an empty function (`vite.config.ts`).
+  attachEditorPlayControls(app);
 
   // The strings come first and alone: every label below is read out of them, and the document is
   // under three kilobytes, so nothing is gained by making the loading screen wait for it.
@@ -493,11 +381,7 @@ async function main(): Promise<AppStatus> {
   });
   app.ui.visible = showOverlay;
 
-  const assets: Assets = {
-    tiles: app.assets.load<SpriteAtlasAsset>("tiles.atlas.json", ATLAS),
-    heroAtlas: app.assets.load<SpriteAtlasAsset>("hero.atlas.json", ATLAS),
-    heroClips: app.assets.load<SpriteAnimationAsset>("hero.spriteanim.json", CLIPS),
-    level: app.assets.load<TilemapAsset>("level.tilemap.json", MAP),
+  const sounds: Sounds = {
     pickup: app.assets.load<AudioClip>("pickup.wav", CLIP),
     footstep: app.assets.load<AudioClip>("footstep.wav", CLIP),
     uiClick: app.assets.load<AudioClip>("ui-click.wav", CLIP),
@@ -507,32 +391,27 @@ async function main(): Promise<AppStatus> {
   const actions = app.assets.load<InputActionsAsset>("game.input.json", ACTIONS);
   const buses = app.assets.load<AudioBusesAsset>("game.audio.json", BUSES);
 
-  await Promise.all([
-    assets.tiles.promise,
-    assets.heroAtlas.promise,
-    assets.heroClips.promise,
-    assets.level.promise,
-    actions.promise,
-    buses.promise,
-  ]);
+  await Promise.all([actions.promise, buses.promise]);
   // The clips are awaited together and separately from the rest: a browser that refuses to decode
   // a sound should cost the game its audio, not its first frame.
   await Promise.all(
-    [assets.pickup, assets.footstep, assets.uiClick, assets.uiHover, assets.ambient].map(
-      async (handle: AssetHandle<AudioClip>): Promise<void> => {
-        await handle.promise.catch((error: unknown) => {
-          app.log.warn("a sound could not be decoded: {error}", String(error));
-        });
-      },
-    ),
+    Object.values(sounds).map(async (handle: AssetHandle<AudioClip>): Promise<void> => {
+      await handle.promise.catch((error: unknown) => {
+        app.log.warn("a sound could not be decoded: {error}", String(error));
+      });
+    }),
   );
 
   // Installed here rather than through `input.actions` in `ignifx.config.ts`, so that the maps
-  // exist before the first `update` runs. See the comment in that file.
+  // exist before the scene loads: `PlayerController` resolves its action names in `awake`, which
+  // runs while `loadScene` builds it.
   app.input.loadActions(actions.value);
   await app.audio.buildBuses(buses.value.buses);
 
-  const world = buildWorld(app, assets);
+  // The level: the loader fetches every atlas, clip set and tilemap the file names before it builds
+  // an entity, so each `SpriteFrame` can resolve its frame name in `awake`.
+  await app.world.loadScene(MAIN_SCENE);
+  const world = prepareWorld(app, sounds);
 
   if (isStatic) {
     // Stopping the clock *before* `start()` means no fixed step ever runs, so nothing falls,
@@ -540,7 +419,7 @@ async function main(): Promise<AppStatus> {
     // front end is left out for the same reason.
     app.time.timeScale = 0;
   } else {
-    const run = await installFrontEnd(app, assets, world, gameUi.hud, isBench);
+    const run = await installFrontEnd(app, sounds, world, gameUi.hud, isBench);
     // A read-only test hook, and only under `?probe=1`: the gameplay half of the template spec
     // measures the character in metres rather than in pixels. See `src/gameplay-probe.ts`.
     if (flags.get("probe") === "1") {

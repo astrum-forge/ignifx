@@ -30,7 +30,7 @@ const LIT = { r: 1, g: 0.94, b: 0.72, a: 1 } as const;
  *
  * Lighting one is the template's unit of progress — it scores a point, plays the pickup sound and
  * asks `SaveGame` for a checkpoint — and its lit state is what a save file's `collected` list
- * holds, keyed by the entity name the tilemap's objects layer gave it.
+ * holds, keyed by its entity name in the scene file.
  *
  * The callbacks are the **3D names** — `onTriggerEnter` and `onTriggerExit` — even though the
  * simulation is `@ignifx/physics-2d`; only the payload differs. There is no `onTriggerEnter2D`.
@@ -38,10 +38,14 @@ const LIT = { r: 1, g: 0.94, b: 0.72, a: 1 } as const;
 export class Shrine extends Script implements ScriptCallbacks {
   static typeId = "topdown/Shrine";
 
-  /** The clip to play when the shrine lights. Assigned when the shrine is spawned. */
+  /**
+   * The clip to play when the shrine lights, assigned by `main.ts` after the scene loads. Not a
+   * schema field: a scene file that named a sound would fail to load in a browser that cannot
+   * decode it.
+   */
   clip: AssetHandle<AudioClip> | null = null;
 
-  /** Called the first time the player lights this shrine. Assigned when the shrine is spawned. */
+  /** Called the first time the player lights this shrine. Assigned by `src/run.ts`. */
   onLit: ((shrine: Shrine) => void) | null = null;
 
   /** The pad, so the tint can say whether the shrine is lit. */
@@ -56,7 +60,7 @@ export class Shrine extends Script implements ScriptCallbacks {
   }
 
   /**
-   * The shrine's stable id, which is the name the tilemap's objects layer gave the entity.
+   * The shrine's stable id, which is its entity name in the scene file.
    *
    * @returns The id a save file stores.
    */

@@ -36,9 +36,10 @@ export class PlayerController
   static typeId = "topdown/PlayerController";
 
   /**
-   * The footstep clip, or `null` when the browser refused to decode it. Assigned when the character
-   * is spawned, so a hot-reloaded script does not re-request a file the asset service has already
-   * delivered.
+   * The footstep clip, or `null` when the browser refused to decode it. Assigned by `main.ts` after
+   * the scene loads, so a hot-reloaded script does not re-request a file the asset service has
+   * already delivered; not a schema field, because a scene file that named a sound would fail to
+   * load in a browser that cannot decode it.
    */
   footstep: AssetHandle<AudioClip> | null = null;
 

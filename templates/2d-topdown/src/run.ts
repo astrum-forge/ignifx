@@ -27,7 +27,7 @@ export interface Run {
  * Wires the level's shrines and its character into one run.
  *
  * @param player - The character entity.
- * @param shrines - Every shrine the objects layer spawned.
+ * @param shrines - Every shrine in the scene.
  * @param spawn - Where the character starts, in metres.
  * @param onCollected - Called whenever a shrine is lit for the first time; the template uses it to
  *   autosave and to show a toast.

@@ -63,7 +63,7 @@ declare global {
  * @param app - The running app.
  * @param player - The character entity.
  * @param camera - The camera entity.
- * @param shrines - Every shrine the objects layer spawned.
+ * @param shrines - Every shrine in the scene.
  * @param run - The run the shrines are scored in.
  */
 export function installGameplayProbe(
