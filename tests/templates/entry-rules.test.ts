@@ -13,12 +13,6 @@ import { templatePaths } from "./headless-app.js";
 const TEMPLATES = ["2d-topdown", "2d-sidescroller", "3d-third-person", "3d-first-person"] as const;
 
 /**
- * The templates whose scene loads in an app built from the extensions and the scripts alone, as
- * `@ignifx/editor-host` builds one: nothing under `src/` publishes an asset before the load.
- */
-const PUBLISH_NOTHING = ["3d-third-person"] as const;
-
-/**
  * Every TypeScript file under a directory, recursively.
  *
  * @param directory - Where to start.
@@ -82,13 +76,13 @@ describe.each(TEMPLATES)("%s's entry", (name) => {
   });
 });
 
-describe.each(PUBLISH_NOTHING)("%s's scene", (name) => {
+describe.each(TEMPLATES)("%s's scene", (name) => {
   const { sourceDir } = templatePaths(name);
 
   // ignifx-editor plan, engine ask E15: the editor's scene view loads the scene with no game code
-  // before it, so a primitive mesh has to be a `.mesh.json` file rather than something `main.ts`
-  // publishes with `assets.register`.
-  it("needs no asset published in code: the primitive meshes are files", () => {
+  // before it, so nothing under `src/` may publish an asset the scene names; a primitive mesh is a
+  // `.mesh.json` file rather than something `main.ts` publishes with `assets.register`.
+  it("needs no asset published in code", () => {
     expect(existsSync(join(sourceDir, "level-meshes.ts"))).toBe(false);
     const publishers = sources(sourceDir).filter((file) => /\bassets\.register\(/u.test(readFileSync(file, "utf8")));
     expect(publishers).toEqual([]);

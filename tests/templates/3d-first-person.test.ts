@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { serializeScene, stringifySceneFile, validateSceneFile } from "@ignifx/core";
+import { MeshAsset, MeshRenderer, serializeScene, stringifySceneFile, validateSceneFile } from "@ignifx/core";
 import { afterEach, describe, expect, it } from "vitest";
 import { createFirstPersonApp, FIRST_PERSON } from "./first-person-app.js";
 import { entitiesInTreeOrder, field, named } from "./headless-app.js";
@@ -87,6 +87,22 @@ describe("3d-first-person's scene file", () => {
       expect(cap.parent).toBe(named(entities, `Pedestal ${String(index)}`));
       expect(field(cap, "ignifx/MeshRenderer", "enabled")).toBe(false);
     }
+  });
+
+  // ignifx-editor plan, engine ask E15: `@ignifx/editor-host` builds the app from the extensions and
+  // the scripts and loads the scene, with no game code in between. `createFirstPersonApp` does the
+  // same, so every primitive has to come from a `.mesh.json` file the scene names.
+  it("resolves every MeshRenderer's mesh from a .mesh.json file, with no code publishing one first", async () => {
+    const { entities } = await loadLevel();
+
+    const renderers = entities.flatMap((entity) => entity.getComponent(MeshRenderer) ?? []);
+    expect(renderers).toHaveLength(44);
+    for (const renderer of renderers) {
+      expect(renderer.mesh?.state).toBe("loaded");
+      expect(renderer.mesh?.value).toBeInstanceOf(MeshAsset);
+      expect(renderer.mesh?.address).toMatch(/^meshes\/[a-z-]+\.mesh\.json$/u);
+    }
+    expect(new Set(renderers.map((renderer) => renderer.mesh?.address)).size).toBe(9);
   });
 
   it("round-trips byte for byte through serializeScene and stringifySceneFile", async () => {

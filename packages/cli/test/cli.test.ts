@@ -326,7 +326,7 @@ describe("scaffolding the 2d-topdown template", () => {
     },
     {
       template: "3d-first-person",
-      files: ["assets/prop.material.json", "src/level-meshes.ts", "src/pedestals.ts", "src/script-types.ts"],
+      files: ["assets/meshes/pedestal.mesh.json", "assets/prop.material.json", "src/pedestals.ts"],
     },
   ])("scaffolds $template with its scene file and its extensions module", async ({ template, files }) => {
     const io = recordingIo(join(repoRoot, "templates"));
@@ -338,6 +338,7 @@ describe("scaffolding the 2d-topdown template", () => {
       expect.arrayContaining(["assets/scenes/main.scene.json", "src/extensions.ts", "src/main.ts", ...files]),
     );
     expect(result.files).not.toContain("src/level.ts");
+    expect(result.files).not.toContain("src/level-meshes.ts");
     const scene: unknown = JSON.parse(await readFile(join(target, "assets/scenes/main.scene.json"), "utf8"));
     expect(scene).toMatchObject({ format: "ignifx.scene", formatVersion: 1, name: "main" });
   });

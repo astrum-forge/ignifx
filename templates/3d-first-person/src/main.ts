@@ -14,7 +14,6 @@ import { extensions } from "./extensions.js";
 import { installFrameTimeProbe } from "./frame-time-probe.js";
 import { createGameUi, hasTouch } from "./game-ui.js";
 import { installGameplayProbe } from "./gameplay-probe.js";
-import { publishLevelMeshes } from "./level-meshes.js";
 import { createGameMenus } from "./menus/game-menus.js";
 import { applySettings, loadInputOverrides, loadSettings } from "./menus/settings-store.js";
 import { preparePedestals } from "./pedestals.js";
@@ -461,10 +460,8 @@ async function main(): Promise<AppStatus> {
   app.input.loadActions(actions.value);
   await app.audio.buildBuses(buses.value.buses);
 
-  // The scene names its primitive meshes by address; they are built in code and published first,
-  // because ignifx has no mesh file format (`src/level-meshes.ts`). Then the level itself: the
-  // loader fetches every model, material and animator the file names before it builds an entity.
-  publishLevelMeshes(app);
+  // Then the level itself: the loader fetches every mesh, model, material and animator the file
+  // names before it builds an entity.
   await app.world.loadScene(MAIN_SCENE);
   const level = findLevel(app);
   let enableEffects: (() => void) | null = null;

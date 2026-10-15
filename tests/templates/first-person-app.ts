@@ -1,13 +1,12 @@
 import settings from "../../templates/3d-first-person/ignifx.config.js";
 import { extensions } from "../../templates/3d-first-person/src/extensions.js";
-import { publishLevelMeshes } from "../../templates/3d-first-person/src/level-meshes.js";
 import { createTemplateApp, scriptClasses, templatePaths } from "./headless-app.js";
 import type { TemplateApp } from "./headless-app.js";
 
 /**
- * A headless `3d-first-person` app, built the way the template's `main.ts` builds one: the
- * template's own `extensions()`, its `ignifx.config.ts`, every script under `src/scripts/`, and the
- * level's primitive meshes published before any scene loads.
+ * A headless `3d-first-person` app, built the way the template's `main.ts` and the ignifx editor's
+ * scene view (`@ignifx/editor-host`) build one: the template's own `extensions()`, its
+ * `ignifx.config.ts` and every script under `src/scripts/`, and nothing else before a scene loads.
  */
 
 /** The template's directories. */
@@ -19,18 +18,15 @@ const SCRIPT_MODULES = import.meta.glob<Record<string, unknown>>("../../template
 });
 
 /**
- * Creates the headless app and publishes the level meshes, so `app.world.loadScene` can be called
- * next — the same two steps `main.ts` takes before it loads the level.
+ * Creates the headless app, so `app.world.loadScene` can be called next.
  *
  * @returns The app and its log sink. The caller disposes the app.
  */
 export async function createFirstPersonApp(): Promise<TemplateApp> {
-  const created = await createTemplateApp({
+  return createTemplateApp({
     assetDir: FIRST_PERSON.assetDir,
     settings,
     extensions: extensions(),
     scripts: scriptClasses(SCRIPT_MODULES),
   });
-  publishLevelMeshes(created.app);
-  return created;
 }

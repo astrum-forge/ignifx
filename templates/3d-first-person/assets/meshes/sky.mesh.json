@@ -1,0 +1,6 @@
+{
+  "format": "ignifx.mesh",
+  "formatVersion": 1,
+  "primitive": "sphere",
+  "options": { "diameter": 180, "segments": 24 }
+}

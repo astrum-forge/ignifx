@@ -89,6 +89,17 @@ edit hot-patches the class instead of reloading the page. The `FirstPersonContro
 crosshair ray (`Interactor`, its `eye` and `reach`) and `AttachToHand` (its `prop`) are scene
 components like any other.
 
+**The primitive meshes are files too**: `assets/meshes/*.mesh.json`, each naming one `MeshAsset`
+primitive and its options (`{ "format": "ignifx.mesh", "formatVersion": 1, "primitive": "box",
+"options": { "size": 1 } }`), and the scene names them by path, `meshes/crate.mesh.json`. No code
+runs before the scene loads, so any app built from `src/extensions.ts` and the scripts — a headless
+test, the ignifx editor's scene view — opens the level. The sky is an inverted 180-metre sphere with
+an unlit gradient, because `Environment.skybox` wants a cube map that cannot be generated from
+arithmetic. The floor's `uvScale` of 10 keeps the 128-pixel slab texture at about two and a half
+metres a tile. The walls are 4-metre panels sharing `wall-x` or `wall-z` rather than four long
+boxes, because a box gives every face the unit UV square and one 24-metre wall would stretch a
+single texture across it.
+
 The file is in the canonical form `stringifySceneFile` writes: keys in a fixed order, numbers
 rounded to six decimals, one value per line, no final newline. Edit it by hand, by an agent, or in
 the ignifx editor. The ignifx repository's `tests/templates` loads it headless, checks the entity
@@ -96,7 +107,7 @@ list, and saves it again to prove the text comes back byte for byte.
 
 **Adding an entity as data.** Copy an entity record, give it and each of its components a fresh
 ULID (`generateUlid()` from `@ignifx/core`), set `parent` to `null` or another entity's `uid`, and
-list it after its parent. A crate, say, is a `MeshRenderer` naming `meshes/crate` and
+list it after its parent. A crate, say, is a `MeshRenderer` naming `meshes/crate.mesh.json` and
 `crate.material.json`, a `BoxCollider` and a `Rigidbody`, on the `Prop` layer. A fourth pedestal is
 an entity on the `Interactable` layer with a `MeshRenderer`, a `BoxCollider` and a child renderer
 for its cap: the crosshair finds it, and it gets a material of its own, with no code change.
@@ -108,10 +119,6 @@ says why).
 
 **What stays in code**, because a scene file cannot say it:
 
-- **The primitive meshes** (`src/level-meshes.ts`). ignifx has no mesh file format and a primitive
-  lives at a `memory:` address no file can name, so each one is published a second time at a plain
-  address — `meshes/crate`, `meshes/pedestal`, … — before the scene loads. The scene loads only in
-  an app that ran that step first.
 - **Each pedestal's own material** (`src/pedestals.ts`). Lighting a pedestal recolours its
   material, which every renderer sharing it draws with. The scene can only name the shared
   `crate.material.json`, so each pedestal is given a `clone` after the load.
