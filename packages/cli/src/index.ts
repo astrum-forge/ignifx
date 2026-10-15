@@ -42,4 +42,12 @@ export {
   type ImportHeightmapResult,
   type ImportIo,
 } from "./import-heightmap.js";
+export {
+  IMPORT_TILEMAP_USAGE,
+  parseImportTilemapArgs,
+  runImportTilemap,
+  type ImportedTileObject,
+  type ImportTilemapCommand,
+  type ImportTilemapResult,
+} from "./import-tilemap.js";
 export { VERSION } from "./version.js";
