@@ -362,6 +362,41 @@ describe("the desktop variant", () => {
     expect(document.devDependencies["electron"]).toBe("catalog:");
   });
 
+  it("adds a pnpm-workspace.yaml that lets the desktop build tools install", async () => {
+    await addDesktopVariant(templateDir);
+    const target = join(workspace, "desktop-game");
+
+    const result = await copyTemplate({ templateDir, targetDir: target, desktop: true });
+    const workspaceFile = await readFile(join(target, "pnpm-workspace.yaml"), "utf8");
+
+    expect(result.files).toContain("pnpm-workspace.yaml");
+    // pnpm 11 fails the install on any install script that is neither allowed nor denied.
+    expect(workspaceFile).toMatch(/^allowBuilds:$/mu);
+    expect(workspaceFile).toMatch(/^ {2}electron: true$/mu);
+    expect(workspaceFile).toMatch(/^ {2}electron-winstaller: false$/mu);
+    expect(workspaceFile).toMatch(/^ {2}esbuild: true$/mu);
+  });
+
+  it("adds no pnpm-workspace.yaml to a browser-only scaffold", async () => {
+    await addDesktopVariant(templateDir);
+    const target = join(workspace, "browser-game");
+
+    const result = await copyTemplate({ templateDir, targetDir: target });
+
+    expect(result.files).not.toContain("pnpm-workspace.yaml");
+    await expect(readdir(target)).resolves.not.toContain("pnpm-workspace.yaml");
+  });
+
+  it("keeps a pnpm-workspace.yaml the target already has", async () => {
+    await addDesktopVariant(templateDir);
+    await writeFileAt(join(targetDir, "pnpm-workspace.yaml"), "packages:\n  - game\n");
+
+    const result = await copyTemplate({ templateDir, targetDir, desktop: true, overwrite: true });
+
+    expect(result.files).not.toContain("pnpm-workspace.yaml");
+    await expect(readFile(join(targetDir, "pnpm-workspace.yaml"), "utf8")).resolves.toBe("packages:\n  - game\n");
+  });
+
   it("still applies the _gitignore rename in both modes", async () => {
     await addDesktopVariant(templateDir);
     await writeFile(join(templateDir, "_gitignore"), "dist\nnode_modules\n", "utf8");

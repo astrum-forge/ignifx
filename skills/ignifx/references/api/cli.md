@@ -252,7 +252,9 @@ Whether the template's desktop variant is copied.
 ###### Remarks
 
 `false` skips [DESKTOP\_ONLY\_ENTRIES](#desktop_only_entries) and strips the desktop scripts and dependencies from
-the copied `package.json`; `true` copies the template whole. This is what `--desktop` sets.
+the copied `package.json`; `true` copies the template whole and adds a `pnpm-workspace.yaml`
+whose `allowBuilds` lets the Electron build tools install (an existing one is kept). This is
+what `--desktop` sets.
 
 ###### Default Value
 
@@ -738,7 +740,7 @@ The relative paths of the files written, sorted.
 The template tree is copied verbatim apart from four things: the `rename` map, the `ignore`
 list, `package.json` — whose `workspace:` dependency specifiers are rewritten to
 `dependencyRange` so that the generated project installs from the registry — and the desktop
-variant, which is skipped unless `desktop` is `true`. Symbolic links are followed and written as
+variant, which is skipped unless `desktop` is `true` and then comes with a `pnpm-workspace.yaml`. Symbolic links are followed and written as
 regular files, which is what a scaffolded project wants.
 
 #### Throws
