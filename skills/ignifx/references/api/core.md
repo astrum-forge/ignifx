@@ -404,7 +404,7 @@ The camera, or `null` before the component is attached.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -412,7 +412,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -421,7 +421,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -1743,7 +1743,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -1751,7 +1751,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -1760,7 +1760,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -2398,7 +2398,7 @@ worth knowing: when the group already exists it is returned **as it was register
 `counterNames` is ignored rather than merged — Lite-style counter arrays are indexed, and
 growing one under a subsystem that already holds indices into it would silently renumber its
 counters. A caller that then asks for a counter the first registration did not declare gets
-`IGX-1504` from [DiagnosticsGroup.index](#index), which names the group and the counter.
+`IGX-1504` from [DiagnosticsGroup.index](#index-1), which names the group and the counter.
 
 ###### Example
 
@@ -2496,7 +2496,7 @@ The counter names, in the order their indices are assigned.
 
 [`DiagnosticsGroup`](#diagnosticsgroup-1)
 
-The group, whose indices are resolved once with [DiagnosticsGroup.index](#index).
+The group, whose indices are resolved once with [DiagnosticsGroup.index](#index-1).
 
 ###### Remarks
 
@@ -2736,14 +2736,14 @@ The name.
 
 ###### Get Signature
 
-> **get** **onActiveChanged**(): [`Signal`](#signal-3)\<`boolean`\>
+> **get** **onActiveChanged**(): [`Signal`](#signal-5)\<`boolean`\>
 
 Emitted with the new value when the entity's **own** active flag changes. An ancestor's change
 does not emit it; read `activeInHierarchy` for the effective state.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<`boolean`\>
+[`Signal`](#signal-5)\<`boolean`\>
 
 The signal, created on first access.
 
@@ -2751,13 +2751,13 @@ The signal, created on first access.
 
 ###### Get Signature
 
-> **get** **onChildAdded**(): [`Signal`](#signal-3)\<[`Entity`](#entity-2)\>
+> **get** **onChildAdded**(): [`Signal`](#signal-5)\<[`Entity`](#entity-2)\>
 
 Emitted after a child is added, whether by creation or by reparenting.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Entity`](#entity-2)\>
+[`Signal`](#signal-5)\<[`Entity`](#entity-2)\>
 
 The signal, created on first access.
 
@@ -2765,13 +2765,13 @@ The signal, created on first access.
 
 ###### Get Signature
 
-> **get** **onChildRemoved**(): [`Signal`](#signal-3)\<[`Entity`](#entity-2)\>
+> **get** **onChildRemoved**(): [`Signal`](#signal-5)\<[`Entity`](#entity-2)\>
 
 Emitted after a child is removed.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Entity`](#entity-2)\>
+[`Signal`](#signal-5)\<[`Entity`](#entity-2)\>
 
 The signal, created on first access.
 
@@ -2779,7 +2779,7 @@ The signal, created on first access.
 
 ###### Get Signature
 
-> **get** **onComponentAdded**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onComponentAdded**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted with each component attached to this entity, synchronously at the end of
 `addComponent`, after the component's `onAttach` has run
@@ -2789,7 +2789,7 @@ than polling `entity.components`. Costs nothing until something connects.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal, created on first access.
 
@@ -2797,7 +2797,7 @@ The signal, created on first access.
 
 ###### Get Signature
 
-> **get** **onComponentRemoved**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onComponentRemoved**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted with each component the destroy flush removes from this entity, after it has left
 `entity.components` and before its `onDetach` runs. Removal is deferred, so this fires in the
@@ -2805,7 +2805,7 @@ destroy flush rather than inside `removeComponent`.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal, created on first access.
 
@@ -2813,14 +2813,14 @@ The signal, created on first access.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Entity`](#entity-2)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Entity`](#entity-2)\>
 
 Emitted in the destroy flush, after the entity's components have run `onDestroy`. `Signal`'s
 `{ owner }` option uses it to detach handlers automatically.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Entity`](#entity-2)\>
+[`Signal`](#signal-5)\<[`Entity`](#entity-2)\>
 
 The signal, created on first access.
 
@@ -2828,13 +2828,13 @@ The signal, created on first access.
 
 ###### Get Signature
 
-> **get** **onParentChanged**(): [`Signal`](#signal-3)\<[`Entity`](#entity-2) \| `null`\>
+> **get** **onParentChanged**(): [`Signal`](#signal-5)\<[`Entity`](#entity-2) \| `null`\>
 
 Emitted with the new parent after this entity is reparented.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Entity`](#entity-2) \| `null`\>
+[`Signal`](#signal-5)\<[`Entity`](#entity-2) \| `null`\>
 
 The signal, created on first access.
 
@@ -3387,6 +3387,37 @@ gun.setParent(hand);                                   // snaps to the hand, kee
 gun.setParent(hand, { worldPositionStays: false });     // keeps its local offset instead
 ```
 
+##### setSiblingIndex()
+
+> **setSiblingIndex**(`index`): `void`
+
+Moves the entity among its siblings: its parent's children, or its scene's roots when it has no
+parent. Sibling order is the order a scene file lists entities in and the order `children`
+reports.
+
+###### Parameters
+
+###### index
+
+`number`
+
+The entity's new index among its siblings. A value past either end is clamped
+to that end, and a fraction is truncated.
+
+###### Returns
+
+`void`
+
+###### Throws
+
+IgnifxError with code `IGX-0101` when the entity has been destroyed.
+
+###### Example
+
+```ts
+weapon.setSiblingIndex(0); // first child of its parent
+```
+
 ***
 
 ### Environment
@@ -3645,7 +3676,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -3653,7 +3684,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -3662,7 +3693,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -4154,7 +4185,7 @@ The identifier that appears in error context.
 
 ###### Implementation of
 
-[`StorageBackend`](#storagebackend).[`name`](#name-25)
+[`StorageBackend`](#storagebackend).[`name`](#name-26)
 
 #### Methods
 
@@ -4601,7 +4632,7 @@ The instanced mesh and its LOD partner, either of which may be `null`.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -4609,7 +4640,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -4618,7 +4649,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -5683,7 +5714,7 @@ The light and its shadow generator, either of which may be `null`.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -5691,7 +5722,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -5700,7 +5731,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -7586,7 +7617,7 @@ The identifier that appears in error context.
 
 ###### Implementation of
 
-[`StorageBackend`](#storagebackend).[`name`](#name-25)
+[`StorageBackend`](#storagebackend).[`name`](#name-26)
 
 #### Methods
 
@@ -8548,7 +8579,7 @@ The clone, or `null` when there is nothing to draw.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -8556,7 +8587,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -8565,7 +8596,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -9065,7 +9096,7 @@ The nodes, keyed by glTF node name.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -9073,7 +9104,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -9082,7 +9113,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -9733,7 +9764,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -9741,7 +9772,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -9750,7 +9781,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -11226,13 +11257,13 @@ Whether every entity of the instance has been constructed and its references res
 
 ###### Get Signature
 
-> **get** **onUnloading**(): [`Signal`](#signal-3)
+> **get** **onUnloading**(): [`Signal`](#signal-5)
 
 Emitted just before the instance is unloaded, while its entities are still valid.
 
 ###### Returns
 
-[`Signal`](#signal-3)
+[`Signal`](#signal-5)
 
 The signal.
 
@@ -11475,7 +11506,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -11483,7 +11514,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -11492,7 +11523,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -11869,7 +11900,7 @@ health.onDied.connect((entity) => this.spawnLoot(entity), { owner: this, once: t
 
 ##### Constructor
 
-> **new Signal**\<`T`\>(`options?`): [`Signal`](#signal-3)\<`T`\>
+> **new Signal**\<`T`\>(`options?`): [`Signal`](#signal-5)\<`T`\>
 
 Creates a signal.
 
@@ -11884,7 +11915,7 @@ supplied by the app for engine signals; a signal a script owns usually needs nei
 
 ###### Returns
 
-[`Signal`](#signal-3)\<`T`\>
+[`Signal`](#signal-5)\<`T`\>
 
 #### Accessors
 
@@ -12980,7 +13011,7 @@ A freshly allocated vector. Use `Transform.lossyScaleToRef` in hot code.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -12988,7 +13019,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -12997,7 +13028,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -13850,7 +13881,7 @@ tween.onComplete.connect(() => app.log.info("arrived"));
 
 ##### onComplete
 
-> `readonly` **onComplete**: [`Signal`](#signal-3)\<[`Tween`](#tween)\>
+> `readonly` **onComplete**: [`Signal`](#signal-5)\<[`Tween`](#tween)\>
 
 Fires once when the tween finishes, with the tween itself. Never fires after `stop`.
 
@@ -17523,13 +17554,13 @@ The main camera, or `null` when the world has none.
 
 ###### Get Signature
 
-> **get** **onEntityCreated**(): [`Signal`](#signal-3)\<[`Entity`](#entity-2)\>
+> **get** **onEntityCreated**(): [`Signal`](#signal-5)\<[`Entity`](#entity-2)\>
 
 Emitted for every entity the world creates.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Entity`](#entity-2)\>
+[`Signal`](#signal-5)\<[`Entity`](#entity-2)\>
 
 The signal.
 
@@ -17537,13 +17568,13 @@ The signal.
 
 ###### Get Signature
 
-> **get** **onEntityDestroyed**(): [`Signal`](#signal-3)\<[`Entity`](#entity-2)\>
+> **get** **onEntityDestroyed**(): [`Signal`](#signal-5)\<[`Entity`](#entity-2)\>
 
 Emitted for every entity the destroy flush releases.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Entity`](#entity-2)\>
+[`Signal`](#signal-5)\<[`Entity`](#entity-2)\>
 
 The signal.
 
@@ -17551,13 +17582,13 @@ The signal.
 
 ###### Get Signature
 
-> **get** **onSceneLoaded**(): [`Signal`](#signal-3)\<[`SceneInstance`](#sceneinstance)\>
+> **get** **onSceneLoaded**(): [`Signal`](#signal-5)\<[`SceneInstance`](#sceneinstance)\>
 
 Emitted when a scene instance finishes loading.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`SceneInstance`](#sceneinstance)\>
+[`Signal`](#signal-5)\<[`SceneInstance`](#sceneinstance)\>
 
 The signal.
 
@@ -17565,13 +17596,13 @@ The signal.
 
 ###### Get Signature
 
-> **get** **onSceneUnloaded**(): [`Signal`](#signal-3)\<[`SceneInstance`](#sceneinstance)\>
+> **get** **onSceneUnloaded**(): [`Signal`](#signal-5)\<[`SceneInstance`](#sceneinstance)\>
 
 Emitted when a scene instance is unloaded.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`SceneInstance`](#sceneinstance)\>
+[`Signal`](#signal-5)\<[`SceneInstance`](#sceneinstance)\>
 
 The signal.
 
@@ -17687,6 +17718,48 @@ The new entity, already active and registered.
 
 ```ts
 const hand = world.createEntity("Hand", { parent: player, position: { x: 0.3, y: 1.2, z: 0 } });
+```
+
+##### createScene()
+
+> **createScene**(`name`, `options?`): [`SceneInstance`](#sceneinstance)
+
+Creates an empty scene instance that is built in code rather than loaded from a file
+(`docs/architecture/02-scene-graph.md` §3).
+
+###### Parameters
+
+###### name
+
+`string`
+
+The instance's name.
+
+###### options?
+
+[`CreateSceneOptions`](#createsceneoptions)
+
+Whether it is persistent.
+
+###### Returns
+
+[`SceneInstance`](#sceneinstance)
+
+The new, empty instance, appended to `scenes`.
+
+###### Remarks
+
+Entities join it through `createEntity(name, { scene })` or `moveEntityToScene`. A persistent
+instance survives every `"single"` load, so it is where a tool keeps objects that must outlive
+the levels it loads: an editor's cameras, grid and gizmo roots. Like any instance other than the
+implicit `"default"` one, it can be unloaded with `unloadScene`. Creating it raises no
+`onSceneLoaded`, because nothing was loaded; `serializeScene` writes it only when it is passed.
+
+###### Example
+
+```ts
+const tools = world.createScene("editor", { persistent: true });
+const camera = world.createEntity("Editor Camera", { scene: tools });
 ```
 
 ##### dispose()
@@ -17966,6 +18039,61 @@ system throws for a missing or malformed file.
 const level = await world.loadScene("levels/level01.scene.json", { mode: "additive" });
 ```
 
+##### loadSceneFile()
+
+> **loadSceneFile**(`file`, `options`): `Promise`\<[`SceneInstance`](#sceneinstance)\>
+
+Builds a scene from a file that is already in memory, the way [World.loadScene](#loadscene) builds one
+from an address (`docs/architecture/02-scene-graph.md` §2).
+
+###### Parameters
+
+###### file
+
+[`SceneFile`](#scenefile)
+
+The scene file object, as `serializeScene` or `JSON.parse` produces it.
+
+###### options
+
+[`LoadSceneFileOptions`](#loadscenefileoptions)
+
+The address to publish it at, the mode, cancellation, and an issue collector.
+
+###### Returns
+
+`Promise`\<[`SceneInstance`](#sceneinstance)\>
+
+The instance, once every entity exists, every reference is resolved, and `awake` has
+run.
+
+###### Remarks
+
+Nothing is fetched for the file itself: it is validated, every asset it references is loaded
+through `app.assets` (the scene loader's own walk), and it is published there at
+`options.address` as a scene asset, so the instance's `asset` and everything that reads it
+behave as for a loaded file. Entity and component uids are the file's. The instance holds the
+asset and its dependencies and releases them when it is unloaded. The rest is
+[World.loadScene](#loadscene)'s: the same modes, the same synchronous build, `awake` before the
+promise settles, and `onSceneLoaded`.
+
+This is how a tool builds a scene it holds as an object, such as an editor's open document with
+unsaved edits.
+
+###### Throws
+
+IgnifxError with code `IGX-0308` when the object is not a scene file, `IGX-0603` for a
+format version this build cannot read, and `IGX-0608` when it does not match the scene format;
+nothing is unloaded then. `IGX-0502` when `options.signal` aborts, `IGX-0307` when the file
+names an unregistered component type (the half-built instance is unloaded first), and
+whatever the asset system throws for a dependency.
+
+###### Example
+
+```ts
+const level = await world.loadSceneFile(file, { address: "levels/level01.scene.json" });
+```
+
 ##### moveEntityToScene()
 
 > **moveEntityToScene**(`entity`, `scene`): `void`
@@ -18076,6 +18204,30 @@ await world.unloadScene(level);
 
 ## Interfaces
 
+### AddComponentFromRecordOptions
+
+Options accepted by [addComponentFromRecord](#addcomponentfromrecord).
+
+#### Properties
+
+##### index?
+
+> `readonly` `optional` **index?**: `number`
+
+The component's index among the entity's components as a scene file lists them (the transform
+and the components an instanced scene put on the entity do not count). Defaults to the end; a
+value past the end is clamped to it.
+
+##### references?
+
+> `readonly` `optional` **references?**: [`ReferenceDecoder`](#referencedecoder)
+
+How `$entity`, `$component` and `$asset` values in the record's `props` resolve. Without one
+every reference decodes as `null` and is reported (`IGX-0602`). An asset must already be loaded:
+decoding never starts a load.
+
+***
+
 ### App
 
 The root object of a game and the surface a script sees through `this.app`
@@ -18166,7 +18318,7 @@ The app-scoped logger.
 
 ##### onError
 
-> `readonly` **onError**: [`Signal`](#signal-3)\<[`ErrorReport`](#errorreport)\>
+> `readonly` **onError**: [`Signal`](#signal-5)\<[`ErrorReport`](#errorreport)\>
 
 Every failure the engine caught at a boundary rather than rethrowing.
 
@@ -19806,6 +19958,26 @@ The red channel.
 
 ***
 
+### ComponentBuildResult
+
+What [addComponentFromRecord](#addcomponentfromrecord) built.
+
+#### Properties
+
+##### component
+
+> `readonly` **component**: [`Component`](#abstract-component)
+
+The attached component, carrying the record's uid.
+
+##### issues
+
+> `readonly` **issues**: readonly [`SceneLoadIssue`](#sceneloadissue)[]
+
+Every recoverable problem found while decoding `props`, in discovery order.
+
+***
+
 ### ComponentClassInfo
 
 Everything the engine needs to know about a component class, computed once and cached.
@@ -20684,6 +20856,20 @@ scene never collide (`02-scene-graph.md` §10).
 
 ***
 
+### CreateSceneOptions
+
+Options accepted by [World.createScene](#createscene).
+
+#### Properties
+
+##### persistent?
+
+> `readonly` `optional` **persistent?**: `boolean`
+
+Whether the instance survives a `"single"` scene load. Defaults to `false`.
+
+***
+
 ### CurveFieldSpec
 
 Kind-specific data for `curve`.
@@ -21049,7 +21235,7 @@ Adds to a counter. Out-of-range indices are ignored.
 
 `number`
 
-The index from [DiagnosticsGroup.index](#index).
+The index from [DiagnosticsGroup.index](#index-1).
 
 ###### delta
 
@@ -21073,7 +21259,7 @@ Reads a counter.
 
 `number`
 
-The index from [DiagnosticsGroup.index](#index).
+The index from [DiagnosticsGroup.index](#index-1).
 
 ###### Returns
 
@@ -21127,7 +21313,7 @@ Replaces a counter's value. Out-of-range indices are ignored.
 
 `number`
 
-The index from [DiagnosticsGroup.index](#index).
+The index from [DiagnosticsGroup.index](#index-1).
 
 ###### value
 
@@ -23277,6 +23463,84 @@ The address being loaded.
 > `readonly` **fraction**: `number`
 
 How far along, in `[0, 1]`, counting every dependency the scene pulls in.
+
+***
+
+### LoadSceneDependenciesOptions
+
+Options accepted by [loadSceneDependencies](#loadscenedependencies).
+
+#### Properties
+
+##### signal?
+
+> `readonly` `optional` **signal?**: `AbortSignal`
+
+Aborts every request; the handles already loaded are released before the promise rejects.
+
+***
+
+### LoadSceneFileOptions
+
+Options accepted by [World.loadSceneFile](#loadscenefile).
+
+#### Properties
+
+##### address
+
+> `readonly` **address**: `string`
+
+The address the scene is published at in `app.assets`, for example
+`"levels/level01.scene.json"`, or a `memory:` address for a file that was never saved. It
+replaces whatever the cache held there. The file is never fetched from it.
+
+##### mode?
+
+> `readonly` `optional` **mode?**: `"additive"` \| `"single"`
+
+`"single"` (the default) unloads every instance that is not `persistent` first; `"additive"`
+keeps them.
+
+##### name?
+
+> `readonly` `optional` **name?**: `string`
+
+The instance's name; defaults to the file's `name`.
+
+##### onIssue?
+
+> `readonly` `optional` **onIssue?**: (`issue`) => `void`
+
+Receives every recoverable problem the build found (`SceneBuildResult.issues`), in order. They
+are also written to the app log as warnings, as for `loadScene`.
+
+###### Parameters
+
+###### issue
+
+[`SceneLoadIssue`](#sceneloadissue)
+
+###### Returns
+
+`void`
+
+##### setActive?
+
+> `readonly` `optional` **setActive?**: `boolean`
+
+Makes the instance `world.activeScene`. Defaults to `true` for `"single"`, `false` for `"additive"`.
+
+##### signal?
+
+> `readonly` `optional` **signal?**: `AbortSignal`
+
+Cancels the dependency loads; an abort rejects with `IGX-0502`.
+
+##### strictInstanceHashes?
+
+> `readonly` `optional` **strictInstanceHashes?**: `boolean`
+
+`true` turns an `IGX-0604` instance hash mismatch from a logged warning into a throw.
 
 ***
 
@@ -27087,7 +27351,7 @@ The WGSL type.
 
 ### SignalLike
 
-The read-only half of a [Signal](#signal-3): what a public API exposes when callers may subscribe but
+The read-only half of a [Signal](#signal-5): what a public API exposes when callers may subscribe but
 must not emit, where `T` is the payload the signal emits.
 
 #### Example
@@ -27144,7 +27408,7 @@ A function that detaches the handler.
 
 ### SignalOptions
 
-Options for the [Signal](#signal-3) constructor, where `T` is the payload the signal emits.
+Options for the [Signal](#signal-5) constructor, where `T` is the payload the signal emits.
 
 #### Type Parameters
 
@@ -27176,7 +27440,7 @@ passes a reporter that routes to `app.onError`. It must not throw.
 
 ###### signal
 
-[`Signal`](#signal-3)\<`T`\>
+[`Signal`](#signal-5)\<`T`\>
 
 ###### Returns
 
@@ -27207,7 +27471,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -29022,7 +29286,7 @@ One key of an animation curve: time, value, incoming tangent, outgoing tangent
 
 > **Disconnect** = () => `void`
 
-Detaches a handler from a [Signal](#signal-3). Calling it more than once is a no-op.
+Detaches a handler from a [Signal](#signal-5). Calling it more than once is a no-op.
 
 #### Returns
 
@@ -29954,7 +30218,7 @@ The union of the shadow techniques a directional light can use.
 
 > **SignalHandler**\<`T`\> = (`value`) => `void`
 
-A listener attached to a [Signal](#signal-3).
+A listener attached to a [Signal](#signal-5).
 
 #### Type Parameters
 
@@ -32340,6 +32604,62 @@ is not an option: that would be an import-time side effect and a bundler hazard
 (`CONSTITUTION.md` §3.5).
 
 ## Functions
+
+### addComponentFromRecord()
+
+> **addComponentFromRecord**(`entity`, `record`, `options?`): [`ComponentBuildResult`](#componentbuildresult)
+
+Attaches one component to a live entity from its scene file record, the way the scene loader
+builds it: the record's registered type, its uid, its `enabled` flag, and its `props` decoded
+against the schema (`docs/architecture/06-serialization-and-scene-format.md` §4).
+
+#### Parameters
+
+##### entity
+
+[`Entity`](#entity-2)
+
+The entity to attach to.
+
+##### record
+
+[`SceneFileComponent`](#scenefilecomponent)
+
+The component record, as a scene file writes it.
+
+##### options?
+
+[`AddComponentFromRecordOptions`](#addcomponentfromrecordoptions)
+
+Where it goes among the entity's components, and how references resolve.
+
+#### Returns
+
+[`ComponentBuildResult`](#componentbuildresult)
+
+The component and the decoding problems.
+
+#### Remarks
+
+This is the per-component step of [instantiateScene](#instantiatescene) for a world that already exists, which
+is what an editor mirroring a document into a live world needs. The component is attached with
+`entity.addComponent`, so `awake` follows that method's rules. The record's uid is adopted as is;
+keeping it unique within the scene is the caller's job. Decoding never throws: a value that does
+not match its field takes the field's default and is reported in `issues`.
+
+#### Throws
+
+IgnifxError with code `IGX-0307` when the record's type is not registered, and whatever
+`entity.addComponent` throws (`IGX-0202` for a second instance of a single-instance class,
+`IGX-0101` for a destroyed entity).
+
+#### Example
+
+```ts
+const { component } = addComponentFromRecord(player, { uid: "01J9Z6M7E5S3A0V2Q4R8T1Y6WY", type: "game/Health", props: { max: 120 } });
+```
+
+***
 
 ### applyInit()
 
@@ -35176,6 +35496,62 @@ The interpolated angle. It is not wrapped, so feeding the result back in is stab
 
 ```ts
 lerpAngleDegrees(350, 10, 0.5); // 360
+```
+
+***
+
+### loadSceneDependencies()
+
+> **loadSceneDependencies**(`assets`, `file`, `options?`): `Promise`\<readonly [`AssetHandle`](#assethandle)\<`unknown`\>[]\>
+
+Loads every asset a scene file references — in `settings`, in every component's `props`, and in
+every `instance.scene`, recursively through the scenes those pull in — the walk the scene loader
+runs before it builds anything (`docs/architecture/06-serialization-and-scene-format.md` §4
+step 2).
+
+#### Parameters
+
+##### assets
+
+[`Assets`](#assets-1)
+
+The asset service to load through, normally `app.assets`.
+
+##### file
+
+[`SceneFile`](#scenefile)
+
+The scene file.
+
+##### options?
+
+[`LoadSceneDependenciesOptions`](#loadscenedependenciesoptions)
+
+Cancellation.
+
+#### Returns
+
+`Promise`\<readonly [`AssetHandle`](#assethandle)\<`unknown`\>[]\>
+
+The loaded handles, deduplicated by address, in the loader's order.
+
+#### Remarks
+
+It is the half of the scene loader a file that is already in memory needs: pass the result to
+`createSceneAsset` and the asset can be built synchronously with `instantiateScene`. Each handle
+is returned with one holder, which the caller owns: release them all when the scene they serve
+is gone. `world.loadSceneFile` does that for a whole scene.
+
+#### Throws
+
+Whatever the asset service rejects a load with (an `AssetLoadError`); every handle
+loaded by then is released first.
+
+#### Example
+
+```ts
+const dependencies = await loadSceneDependencies(app.assets, file);
+const asset = await createSceneAsset("memory:scene/draft", file, dependencies);
 ```
 
 ***

@@ -1,17 +1,20 @@
 /**
- * The editor protocol, version 0.2, exactly as `@ignifx/editor-protocol` 0.2 defines it.
+ * The editor protocol, version 0.3, exactly as `@ignifx/editor-protocol` 0.3 defines it.
  *
  * These modules are a copy. `@ignifx/editor-protocol` is published from the editor repository
  * (`astrum-forge/ignifx-editor`), and once it is on npm this package depends on it and this
  * directory goes away (ADR-E008 in that repository). Until then each file here mirrors the editor's
  * `packages/editor-protocol/src/` module of the same name below its two-line header, and changes
  * only when that module changes. The code is byte-identical. The comments are too, except that a
- * `{@link X}` naming one of the six `as const` objects that share their name with a type
- * (`HandshakeMethod`, `HostKind`, `HostCapability`, `HostNotification`, `PlayMethod`,
- * `RpcErrorCode`) is written `` `X` ``: API Extractor cannot tell which of the two declarations
- * such a link means, and this package's API report fails on the warning. The editor's `ipc.ts`
- * names Electron IPC channels, which a host never opens, so it is not copied; otherwise this
- * barrel re-exports what the editor's `index.ts` does, in the same order.
+ * `{@link X}` or `{@link X.member}` naming one of the `as const` objects that share their name with
+ * a type (`HandshakeMethod`, `HostKind`, `HostCapability`, `HostNotification`, `PlayMethod`,
+ * `RpcErrorCode`, `SceneMethod`, `SceneNotification`, `ApplyOpFailureCode`, `GizmoMode`,
+ * `GizmoSpace`, `PickUnit`, `ScreenshotFormat`, `ViewMode`, `SceneOpKind`) is written `` `X` `` or
+ * `` `X.member` ``: API Extractor cannot tell which of the two declarations such a link means, and
+ * this package's API report fails on the warning. Two editor modules are not copied: `ipc.ts`
+ * names Electron IPC channels and `client.ts` is the editor's end of a channel (`RpcClient`),
+ * neither of which a host opens. Otherwise this barrel re-exports what the editor's `index.ts`
+ * does, in the same order.
  */
 
 export { EDITOR_CONNECT_MESSAGE_TYPE, isEditorConnectMessage, type EditorConnectMessage } from "./connect.js";
@@ -19,7 +22,11 @@ export {
   HandshakeMethod,
   HostCapability,
   HostKind,
+  isIncompatibleProtocolData,
+  isProtocolVersion,
+  isReadyResult,
   type HelloParams,
+  type IncompatibleProtocolData,
   type HelloRequest,
   type PingRequest,
   type PongResponse,
@@ -48,4 +55,126 @@ export {
   type RpcResponse,
   type RpcSuccessResponse,
 } from "./rpc.js";
+export {
+  ApplyOpFailureCode,
+  GizmoMode,
+  GizmoSpace,
+  isApplyOpsParams,
+  isApplyOpsResult,
+  isEntitySelection,
+  isFrameParams,
+  isHostErrorParams,
+  isHotReloadedParams,
+  isInvalidSceneFileData,
+  isLogParams,
+  isOpenSceneParams,
+  isOpenSceneResult,
+  isPickParams,
+  isPickResult,
+  isReadBackParams,
+  isReadBackResult,
+  isSceneIssue,
+  isSceneOpenedParams,
+  isSchemaSet,
+  isScreenshotParams,
+  isScreenshotResult,
+  isSetGizmoParams,
+  isSetViewModeParams,
+  isTransformDraggedParams,
+  isTransformDraggingParams,
+  PickUnit,
+  SceneMethod,
+  SceneNotification,
+  SCREENSHOT_MAX_SIZE,
+  ScreenshotFormat,
+  TRANSFORM_DRAGGING_INTERVAL_MS,
+  ViewMode,
+  type ApplyOpFailure,
+  type ApplyOpsParams,
+  type ApplyOpsResponse,
+  type ApplyOpsResult,
+  type EntitySelection,
+  type FrameParams,
+  type GetSchemasResponse,
+  type GizmoDragMode,
+  type GizmoSnap,
+  type HostErrorParams,
+  type HotReloadedParams,
+  type HotReloadError,
+  type HotReloadReport,
+  type InvalidSceneFileData,
+  type LogLevel,
+  type LogParams,
+  type NullResponse,
+  type OpenSceneParams,
+  type OpenSceneResponse,
+  type OpenSceneResult,
+  type PickParams,
+  type PickResponse,
+  type PickResult,
+  type ReadBackParams,
+  type ReadBackResponse,
+  type ReadBackResult,
+  type RpcNotificationWithParams,
+  type RpcRequestWithParams,
+  type SceneFileIssue,
+  type SceneHostNotification,
+  type SceneIssue,
+  type SceneOpenedParams,
+  type SceneRequest,
+  type SchemaDescription,
+  type SchemaFieldDescription,
+  type SchemaSet,
+  type ScreenshotParams,
+  type ScreenshotResponse,
+  type ScreenshotResult,
+  type SelectResponse,
+  type SetGizmoParams,
+  type SetViewModeParams,
+  type TransformDraggedParams,
+  type TransformDraggingParams,
+  type Vec3,
+} from "./scene.js";
+export {
+  isJsonObject,
+  isJsonValue,
+  isSceneFile,
+  isSceneFileAssetRef,
+  isSceneFileComponent,
+  isSceneFileEntity,
+  isSceneFileInstance,
+  isSceneFileOverride,
+  isSceneFileTransform,
+  type JsonArray,
+  type JsonObject,
+  type JsonValue,
+  type SceneFile,
+  type SceneFileAssetRef,
+  type SceneFileComponent,
+  type SceneFileEntity,
+  type SceneFileInstance,
+  type SceneFileOverride,
+  type SceneFileTransform,
+} from "./scene-file.js";
+export {
+  isSceneOp,
+  SceneOpKind,
+  type AddComponentOp,
+  type CreateEntityOp,
+  type DestroyEntityOp,
+  type EntityField,
+  type EntityFieldValues,
+  type InstantiateOp,
+  type JsonPath,
+  type RemoveComponentOp,
+  type RemoveOverrideOp,
+  type ReorderOp,
+  type ReparentOp,
+  type SceneOp,
+  type SetEntityFieldOp,
+  type SetOverrideOp,
+  type SetPropOp,
+  type SetSceneSettingOp,
+  type SetTransformOp,
+} from "./scene-ops.js";
 export { PROTOCOL_VERSION, protocolVersionIsCompatible, type ProtocolVersion } from "./version.js";

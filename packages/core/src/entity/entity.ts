@@ -492,6 +492,37 @@ export class Entity {
   }
 
   /**
+   * Moves the entity among its siblings: its parent's children, or its scene's roots when it has no
+   * parent. Sibling order is the order a scene file lists entities in and the order `children`
+   * reports.
+   *
+   * @param index - The entity's new index among its siblings. A value past either end is clamped
+   * to that end, and a fraction is truncated.
+   * @throws IgnifxError with code `IGX-0101` when the entity has been destroyed.
+   *
+   * @example
+   * ```ts
+   * weapon.setSiblingIndex(0); // first child of its parent
+   * ```
+   */
+  setSiblingIndex(index: number): void {
+    const internals = this.#mutable("setSiblingIndex");
+    const parent = internals.parent;
+    const siblings = parent === null ? internals.scene.roots : entityInternals(parent).children;
+    const at = Math.min(Math.max(Math.trunc(Number.isNaN(index) ? 0 : index), 0), siblings.length - 1);
+    if (parent === null) {
+      internals.scene.moveRoot(this, at);
+      return;
+    }
+    const children = entityInternals(parent).children;
+    const from = children.indexOf(this);
+    if (from >= 0 && from !== at) {
+      children.splice(from, 1);
+      children.splice(at, 0, this);
+    }
+  }
+
+  /**
    * Resolves a path relative to this entity — `"Body/Arm.L"`, `"../Sibling"`, `"/Root/Child"`.
    *
    * @remarks

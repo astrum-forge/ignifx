@@ -1,14 +1,15 @@
-// A copy of `packages/editor-protocol/src/handshake.ts` from `astrum-forge/ignifx-editor` (protocol 0.2).
+// A copy of `packages/editor-protocol/src/handshake.ts` from `astrum-forge/ignifx-editor` (protocol 0.3).
 // Below this comment it is byte-identical to that file, but for the link rule in `./index.ts`.
 /**
  * The handshake the editor runs with each host it embeds: the scene view (`@ignifx/editor-host`)
  * and the play view (`virtual:ignifx/editor`). Plan §3.3.
  *
  * The editor sends `hello`; the host answers with its `ready` result, or with an
- * {@link RpcErrorCode.incompatibleProtocol} error when `protocolVersionIsCompatible` refuses the
+ * `RpcErrorCode.incompatibleProtocol` error when `protocolVersionIsCompatible` refuses the
  * pair. Either side may send `ping` at any time after that. The editor posts a fresh port for every
  * load of a view (`connect.ts`), so the handshake runs again after every reload.
  */
+import { isRecord } from "./rpc.js";
 import type { RpcRequest, RpcSuccessResponse } from "./rpc.js";
 import type { ProtocolVersion } from "./version.js";
 
@@ -57,7 +58,9 @@ export type HostKind = (typeof HostKind)[keyof typeof HostKind];
  * The optional features a host lists in its `ready` result.
  *
  * @remarks
- * The scene host sends `["heartbeat"]`; the play controls send `["heartbeat", "playControls"]`.
+ * The play controls send `["heartbeat", "playControls"]`. The scene host sends `"heartbeat"` and
+ * whichever of `"gizmos"`, `"screenshot"`, `"viewMode2d"` and `"pick2d"` it supports; every
+ * `SceneMethod` not tied to one of them is required of a 0.3 scene host.
  *
  * @public
  */
@@ -66,6 +69,20 @@ export const HostCapability = {
   heartbeat: "heartbeat",
   /** The host answers the methods in `PlayMethod`. */
   playControls: "playControls",
+  /**
+   * The scene host draws gizmos on the primary selection, answers `setGizmo`, and sends
+   * `transformDragging` and `transformDragged`.
+   */
+  gizmos: "gizmos",
+  /** The scene host answers `screenshot`. */
+  screenshot: "screenshot",
+  /** The scene host accepts `setViewMode` with `"2d"`: a 2D editor camera and planar gizmos. */
+  viewMode2d: "viewMode2d",
+  /**
+   * The scene host picks sprites in 2D view mode (`app.twoD.pickAt` from `@ignifx/2d`); without it,
+   * `pick` and view clicks in 2D mode resolve through the 3D picker only.
+   */
+  pick2d: "pick2d",
 } as const;
 
 /**
@@ -136,3 +153,74 @@ export type PingRequest = RpcRequest<typeof HandshakeMethod.ping, never>;
  * @public
  */
 export type PongResponse = RpcSuccessResponse<"pong">;
+
+/**
+ * The `data` of the `RpcErrorCode.incompatibleProtocol` error a host answers `hello` with when
+ * the protocol versions differ.
+ *
+ * @public
+ */
+export interface IncompatibleProtocolData {
+  /** The protocol version the host speaks. */
+  readonly host: ProtocolVersion;
+  /** The version of `@ignifx/core` the project runs. */
+  readonly engineVersion: string;
+}
+
+/**
+ * Tells whether a value is a protocol version: two non-negative integers.
+ *
+ * @param value - The value to test.
+ * @returns True for `{ major, minor }` with non-negative safe integers.
+ *
+ * @public
+ */
+export function isProtocolVersion(value: unknown): value is ProtocolVersion {
+  if (!isRecord(value)) {
+    return false;
+  }
+  const { major, minor } = value;
+  return (
+    typeof major === "number" &&
+    typeof minor === "number" &&
+    Number.isSafeInteger(major) &&
+    Number.isSafeInteger(minor) &&
+    major >= 0 &&
+    minor >= 0
+  );
+}
+
+/**
+ * Checks the `result` of a `hello` answer.
+ *
+ * @param value - The received `result`.
+ * @returns True when it has a string `engineVersion`, a protocol version, an array of capability
+ * strings, and a known `hostKind`.
+ *
+ * @public
+ */
+export function isReadyResult(value: unknown): value is ReadyResult {
+  if (!isRecord(value)) {
+    return false;
+  }
+  const { capabilities, hostKind } = value;
+  return (
+    typeof value["engineVersion"] === "string" &&
+    isProtocolVersion(value["protocol"]) &&
+    Array.isArray(capabilities) &&
+    capabilities.every((name: unknown) => typeof name === "string") &&
+    Object.values(HostKind).some((kind) => kind === hostKind)
+  );
+}
+
+/**
+ * Checks the `data` of an `incompatibleProtocol` answer to `hello`.
+ *
+ * @param value - The received `error.data`.
+ * @returns True when it names the host's protocol version and the engine version.
+ *
+ * @public
+ */
+export function isIncompatibleProtocolData(value: unknown): value is IncompatibleProtocolData {
+  return isRecord(value) && isProtocolVersion(value["host"]) && typeof value["engineVersion"] === "string";
+}

@@ -2,6 +2,7 @@ import settings from "../../templates/3d-third-person/ignifx.config.js";
 import { extensions } from "../../templates/3d-third-person/src/extensions.js";
 import { createTemplateApp, scriptClasses, templatePaths } from "./headless-app.js";
 import type { TemplateApp } from "./headless-app.js";
+import type { ConcreteComponentType } from "@ignifx/core";
 
 /**
  * A headless `3d-third-person` app, built the way the template's `main.ts` and the ignifx editor's
@@ -18,6 +19,15 @@ const SCRIPT_MODULES = import.meta.glob<Record<string, unknown>>("../../template
 });
 
 /**
+ * The template's script classes, as `virtual:ignifx/scripts` would hand them to the app.
+ *
+ * @returns The classes.
+ */
+export function thirdPersonScripts(): ConcreteComponentType[] {
+  return scriptClasses(SCRIPT_MODULES);
+}
+
+/**
  * Creates the headless app, so `app.world.loadScene` can be called next.
  *
  * @returns The app and its log sink. The caller disposes the app.
@@ -27,6 +37,6 @@ export async function createThirdPersonApp(): Promise<TemplateApp> {
     assetDir: THIRD_PERSON.assetDir,
     settings,
     extensions: extensions(),
-    scripts: scriptClasses(SCRIPT_MODULES),
+    scripts: thirdPersonScripts(),
   });
 }

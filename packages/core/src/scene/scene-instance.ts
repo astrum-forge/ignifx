@@ -188,6 +188,22 @@ export class SceneInstance {
   }
 
   /**
+   * Moves a root to another place in the root list.
+   *
+   * @param entity - A root of this instance.
+   * @param index - Its new index, already clamped to the list.
+   *
+   * @internal
+   */
+  moveRoot(entity: Entity, index: number): void {
+    const from = this.#roots.indexOf(entity);
+    if (from >= 0) {
+      this.#roots.splice(from, 1);
+      this.#roots.splice(index, 0, entity);
+    }
+  }
+
+  /**
    * Removes an entity from the root list.
    *
    * @param entity - The entity that gained a parent or was destroyed.

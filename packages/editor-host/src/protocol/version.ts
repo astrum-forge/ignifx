@@ -1,4 +1,4 @@
-// A copy of `packages/editor-protocol/src/version.ts` from `astrum-forge/ignifx-editor` (protocol 0.2).
+// A copy of `packages/editor-protocol/src/version.ts` from `astrum-forge/ignifx-editor` (protocol 0.3).
 // Below this comment it is byte-identical to that file, but for the link rule in `./index.ts`.
 /**
  * The protocol's own version, separate from the editor's and the engine's package versions.
@@ -24,7 +24,7 @@ export interface ProtocolVersion {
  *
  * @public
  */
-export const PROTOCOL_VERSION: ProtocolVersion = { major: 0, minor: 2 };
+export const PROTOCOL_VERSION: ProtocolVersion = { major: 0, minor: 3 };
 
 /**
  * Tells whether two peers can talk.
@@ -39,7 +39,7 @@ export const PROTOCOL_VERSION: ProtocolVersion = { major: 0, minor: 2 };
  *
  * @example
  * ```ts
- * protocolVersionIsCompatible({ major: 0, minor: 2 }, { major: 0, minor: 1 }); // false
+ * protocolVersionIsCompatible({ major: 0, minor: 3 }, { major: 0, minor: 2 }); // false
  * protocolVersionIsCompatible({ major: 1, minor: 0 }, { major: 1, minor: 4 }); // true
  * ```
  *

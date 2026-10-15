@@ -1,0 +1,1161 @@
+{
+  "description": "Literal protocol 0.3 messages: the scene document transport between the editor and @ignifx/editor-host. Authored here as the specification for the host's implementation (engine task E16), which should replay these messages in its own tests; docs/protocol.md, \"0.3: scene documents\", explains each one. The applyOps message carries one of each of the thirteen scene ops, in an order that applies cleanly to the openScene file. Test: wire-0.3.test.ts.",
+  "messages": {
+    "hello": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "method": "hello",
+      "params": {
+        "editorVersion": "0.1.0",
+        "protocol": {
+          "major": 0,
+          "minor": 3
+        }
+      }
+    },
+    "readyScene": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+        "engineVersion": "0.9.0",
+        "protocol": {
+          "major": 0,
+          "minor": 3
+        },
+        "capabilities": ["heartbeat", "gizmos", "screenshot", "viewMode2d", "pick2d"],
+        "hostKind": "scene"
+      }
+    },
+    "schemasChangedAtStart": {
+      "jsonrpc": "2.0",
+      "method": "schemasChanged",
+      "params": {
+        "schemas": {
+          "ignifx/Camera": {
+            "title": "Camera",
+            "format": "components",
+            "description": "The camera an entity renders the world through; the entity's transform is the view.",
+            "fields": {
+              "fov": {
+                "kind": "f32",
+                "default": 60,
+                "description": "Vertical field of view, in degrees."
+              },
+              "near": {
+                "kind": "f32",
+                "default": 0.1
+              },
+              "far": {
+                "kind": "f32",
+                "default": 1000
+              },
+              "projection": {
+                "kind": "enum",
+                "default": "perspective"
+              }
+            },
+            "propsSchema": {
+              "type": "object",
+              "properties": {
+                "fov": {
+                  "type": "number",
+                  "description": "Vertical field of view, in degrees.",
+                  "minimum": 1,
+                  "maximum": 179,
+                  "default": 60
+                },
+                "near": {
+                  "type": "number",
+                  "default": 0.1
+                },
+                "far": {
+                  "type": "number",
+                  "default": 1000
+                },
+                "projection": {
+                  "type": "string",
+                  "enum": ["perspective", "orthographic"],
+                  "default": "perspective"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "game/Health": {
+            "title": "Health",
+            "format": "components",
+            "fields": {
+              "max": {
+                "kind": "u32",
+                "default": 100
+              },
+              "regenPerSecond": {
+                "kind": "f32",
+                "default": 0
+              }
+            },
+            "propsSchema": {
+              "type": "object",
+              "properties": {
+                "max": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 4294967295,
+                  "default": 100
+                },
+                "regenPerSecond": {
+                  "type": "number",
+                  "default": 0
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "ignifx/scene-file": {
+            "title": "Scene file",
+            "format": "ignifx.scene",
+            "description": "A level or a prefab: a tree of entities with components, instanced scenes, and overrides. One format for both (ADR-0005).",
+            "fields": {
+              "format": {
+                "kind": "str",
+                "default": "ignifx.scene",
+                "description": "Always \"ignifx.scene\"."
+              },
+              "name": {
+                "kind": "str",
+                "default": "",
+                "description": "The scene's name."
+              }
+            }
+          }
+        }
+      }
+    },
+    "openSceneBeforeStart": {
+      "jsonrpc": "2.0",
+      "id": 2,
+      "method": "openScene",
+      "params": {
+        "file": {
+          "format": "ignifx.scene",
+          "formatVersion": 1,
+          "engineVersion": "0.9.0",
+          "name": "level01",
+          "settings": {
+            "twoD": false
+          },
+          "entities": [
+            {
+              "uid": "01M4ZEB9E0GG0Q6R22YXV3AVK2",
+              "name": "Main Camera",
+              "parent": null,
+              "transform": {
+                "position": [0, 4, -10],
+                "rotation": [0.130526, 0, 0, 0.991445],
+                "scale": [1, 1, 1]
+              },
+              "components": [
+                {
+                  "uid": "01M4ZEB9E0GG0Q6R22YXV3AVK3",
+                  "type": "ignifx/Camera",
+                  "props": {
+                    "fov": 60,
+                    "near": 0.1,
+                    "far": 500
+                  }
+                }
+              ]
+            },
+            {
+              "uid": "01M4ZEB9E0GG0Q6R22YXV3AVK4",
+              "name": "Sun",
+              "parent": null,
+              "transform": {
+                "position": [-8, 14, -6],
+                "rotation": [0.409273, 0.397648, -0.204637, 0.795296],
+                "scale": [1, 1, 1]
+              },
+              "components": [
+                {
+                  "uid": "01M4ZEB9E0GG0Q6R22YXV3AVK5",
+                  "type": "ignifx/Light",
+                  "props": {
+                    "type": "directional",
+                    "intensity": 2.9
+                  }
+                }
+              ]
+            },
+            {
+              "uid": "01M4ZEB9E0GG0Q6R22YXV3AVK6",
+              "name": "Ground",
+              "parent": null,
+              "static": true,
+              "transform": {
+                "position": [0, 0, 0],
+                "rotation": [0, 0, 0, 1],
+                "scale": [40, 1, 40]
+              },
+              "components": [
+                {
+                  "uid": "01M4ZEB9E0GG0Q6R22YXV3AVK7",
+                  "type": "ignifx/MeshRenderer",
+                  "props": {
+                    "mesh": {
+                      "$asset": "meshes/ground.mesh.json"
+                    },
+                    "materials": [
+                      {
+                        "$asset": "materials/grass.material.json"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "uid": "01M4ZEB9E0GG0Q6R22YXV3AVK8",
+              "name": "Player",
+              "parent": null,
+              "tags": ["player"],
+              "transform": {
+                "position": [0, 0, 2],
+                "rotation": [0, 0, 0, 1],
+                "scale": [1, 1, 1]
+              },
+              "components": [
+                {
+                  "uid": "01M4ZEB9E0GG0Q6R22YXV3AVK9",
+                  "type": "ignifx/Model",
+                  "props": {
+                    "model": {
+                      "$asset": "models/player.glb"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "uid": "01M4ZEB9E0GG0Q6R22YXV3AVKA",
+              "name": "Crate",
+              "parent": null,
+              "transform": {
+                "position": [3, 0.5, 4],
+                "rotation": [0, 0, 0, 1],
+                "scale": [1, 1, 1]
+              },
+              "instance": {
+                "scene": {
+                  "$asset": "prefabs/crate.prefab.json"
+                },
+                "hash": "sha256:9f2c4e1b7a3d5f60e8c2b4a6d1f3e5c7a9b0d2f4e6a8c1b3d5f7e9a0c2b4d6f8",
+                "overrides": [
+                  {
+                    "path": "01M4XQ7K3N8V2D5R0B6G1HT9WS/components/01M4XQ7K3N8V2D5R0B6G1HT9WT/props/mass",
+                    "value": 12
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "address": "scenes/level01.scene.json"
+      }
+    },
+    "notReadyScene": {
+      "jsonrpc": "2.0",
+      "id": 2,
+      "error": {
+        "code": -32001,
+        "message": "The scene view is still starting; wait for schemasChanged before \"openScene\"."
+      }
+    },
+    "openScene": {
+      "jsonrpc": "2.0",
+      "id": 3,
+      "method": "openScene",
+      "params": {
+        "file": {
+          "format": "ignifx.scene",
+          "formatVersion": 1,
+          "engineVersion": "0.9.0",
+          "name": "level01",
+          "settings": {
+            "twoD": false
+          },
+          "entities": [
+            {
+              "uid": "01M4ZEB9E0GG0Q6R22YXV3AVK2",
+              "name": "Main Camera",
+              "parent": null,
+              "transform": {
+                "position": [0, 4, -10],
+                "rotation": [0.130526, 0, 0, 0.991445],
+                "scale": [1, 1, 1]
+              },
+              "components": [
+                {
+                  "uid": "01M4ZEB9E0GG0Q6R22YXV3AVK3",
+                  "type": "ignifx/Camera",
+                  "props": {
+                    "fov": 60,
+                    "near": 0.1,
+                    "far": 500
+                  }
+                }
+              ]
+            },
+            {
+              "uid": "01M4ZEB9E0GG0Q6R22YXV3AVK4",
+              "name": "Sun",
+              "parent": null,
+              "transform": {
+                "position": [-8, 14, -6],
+                "rotation": [0.409273, 0.397648, -0.204637, 0.795296],
+                "scale": [1, 1, 1]
+              },
+              "components": [
+                {
+                  "uid": "01M4ZEB9E0GG0Q6R22YXV3AVK5",
+                  "type": "ignifx/Light",
+                  "props": {
+                    "type": "directional",
+                    "intensity": 2.9
+                  }
+                }
+              ]
+            },
+            {
+              "uid": "01M4ZEB9E0GG0Q6R22YXV3AVK6",
+              "name": "Ground",
+              "parent": null,
+              "static": true,
+              "transform": {
+                "position": [0, 0, 0],
+                "rotation": [0, 0, 0, 1],
+                "scale": [40, 1, 40]
+              },
+              "components": [
+                {
+                  "uid": "01M4ZEB9E0GG0Q6R22YXV3AVK7",
+                  "type": "ignifx/MeshRenderer",
+                  "props": {
+                    "mesh": {
+                      "$asset": "meshes/ground.mesh.json"
+                    },
+                    "materials": [
+                      {
+                        "$asset": "materials/grass.material.json"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "uid": "01M4ZEB9E0GG0Q6R22YXV3AVK8",
+              "name": "Player",
+              "parent": null,
+              "tags": ["player"],
+              "transform": {
+                "position": [0, 0, 2],
+                "rotation": [0, 0, 0, 1],
+                "scale": [1, 1, 1]
+              },
+              "components": [
+                {
+                  "uid": "01M4ZEB9E0GG0Q6R22YXV3AVK9",
+                  "type": "ignifx/Model",
+                  "props": {
+                    "model": {
+                      "$asset": "models/player.glb"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "uid": "01M4ZEB9E0GG0Q6R22YXV3AVKA",
+              "name": "Crate",
+              "parent": null,
+              "transform": {
+                "position": [3, 0.5, 4],
+                "rotation": [0, 0, 0, 1],
+                "scale": [1, 1, 1]
+              },
+              "instance": {
+                "scene": {
+                  "$asset": "prefabs/crate.prefab.json"
+                },
+                "hash": "sha256:9f2c4e1b7a3d5f60e8c2b4a6d1f3e5c7a9b0d2f4e6a8c1b3d5f7e9a0c2b4d6f8",
+                "overrides": [
+                  {
+                    "path": "01M4XQ7K3N8V2D5R0B6G1HT9WS/components/01M4XQ7K3N8V2D5R0B6G1HT9WT/props/mass",
+                    "value": 12
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "address": "scenes/level01.scene.json"
+      }
+    },
+    "openSceneResponse": {
+      "jsonrpc": "2.0",
+      "id": 3,
+      "result": {
+        "entityCount": 7,
+        "warnings": [
+          {
+            "code": "IGX-0604",
+            "message": "Crate: prefabs/crate.prefab.json changed since the scene was saved (hash mismatch); its overrides were applied to the current prefab."
+          }
+        ]
+      }
+    },
+    "sceneOpened": {
+      "jsonrpc": "2.0",
+      "method": "sceneOpened",
+      "params": {
+        "address": "scenes/level01.scene.json",
+        "name": "level01",
+        "entityCount": 7,
+        "warnings": [
+          {
+            "code": "IGX-0604",
+            "message": "Crate: prefabs/crate.prefab.json changed since the scene was saved (hash mismatch); its overrides were applied to the current prefab."
+          }
+        ]
+      }
+    },
+    "openSceneInvalid": {
+      "jsonrpc": "2.0",
+      "id": 4,
+      "error": {
+        "code": -32602,
+        "message": "The scene file is not valid: entities/2/transform: rotation must be 4 numbers.",
+        "data": {
+          "issues": [
+            {
+              "path": "entities/2/transform",
+              "message": "rotation must be 4 numbers."
+            }
+          ]
+        }
+      }
+    },
+    "applyOps": {
+      "jsonrpc": "2.0",
+      "id": 5,
+      "method": "applyOps",
+      "params": {
+        "ops": [
+          {
+            "op": "createEntity",
+            "entity": {
+              "uid": "01M4ZEB9E0GG0Q6R22YXV3AVKB",
+              "name": "Spawn Point",
+              "parent": null,
+              "transform": {
+                "position": [0, 0, 6],
+                "rotation": [0, 0, 0, 1],
+                "scale": [1, 1, 1]
+              }
+            },
+            "index": 5,
+            "descendants": [
+              {
+                "uid": "01M4ZEB9E0GG0Q6R22YXV3AVKC",
+                "name": "Marker",
+                "parent": "01M4ZEB9E0GG0Q6R22YXV3AVKB",
+                "active": false,
+                "transform": {
+                  "position": [0, 1, 0],
+                  "rotation": [0, 0, 0, 1],
+                  "scale": [1, 1, 1]
+                }
+              }
+            ]
+          },
+          {
+            "op": "setEntityField",
+            "entity": "01M4ZEB9E0GG0Q6R22YXV3AVKB",
+            "field": "name",
+            "value": "Player Spawn"
+          },
+          {
+            "op": "setTransform",
+            "entity": "01M4ZEB9E0GG0Q6R22YXV3AVK8",
+            "after": {
+              "position": [1.5, 0, 2],
+              "rotation": [0, 0, 0, 1],
+              "scale": [1, 1, 1]
+            },
+            "before": {
+              "position": [0, 0, 2],
+              "rotation": [0, 0, 0, 1],
+              "scale": [1, 1, 1]
+            }
+          },
+          {
+            "op": "reparent",
+            "entity": "01M4ZEB9E0GG0Q6R22YXV3AVKB",
+            "parent": "01M4ZEB9E0GG0Q6R22YXV3AVK6",
+            "index": 0
+          },
+          {
+            "op": "reorder",
+            "entity": "01M4ZEB9E0GG0Q6R22YXV3AVK4",
+            "index": 0
+          },
+          {
+            "op": "addComponent",
+            "entity": "01M4ZEB9E0GG0Q6R22YXV3AVK8",
+            "component": {
+              "uid": "01M4ZEB9E0GG0Q6R22YXV3AVKD",
+              "type": "game/Health",
+              "props": {
+                "max": 100
+              }
+            }
+          },
+          {
+            "op": "setProp",
+            "component": "01M4ZEB9E0GG0Q6R22YXV3AVKD",
+            "path": ["max"],
+            "value": 120
+          },
+          {
+            "op": "removeComponent",
+            "component": "01M4ZEB9E0GG0Q6R22YXV3AVK5"
+          },
+          {
+            "op": "setSceneSetting",
+            "path": ["clearColor"],
+            "value": [0.1, 0.1, 0.12, 1]
+          },
+          {
+            "op": "instantiate",
+            "entity": "01M4ZEB9E0GG0Q6R22YXV3AVKE",
+            "name": "Crate (2)",
+            "parent": null,
+            "transform": {
+              "position": [5, 0.5, 4],
+              "rotation": [0, 0, 0, 1],
+              "scale": [1, 1, 1]
+            },
+            "instance": {
+              "scene": {
+                "$asset": "prefabs/crate.prefab.json"
+              },
+              "hash": "sha256:9f2c4e1b7a3d5f60e8c2b4a6d1f3e5c7a9b0d2f4e6a8c1b3d5f7e9a0c2b4d6f8"
+            }
+          },
+          {
+            "op": "setOverride",
+            "entity": "01M4ZEB9E0GG0Q6R22YXV3AVKE",
+            "override": {
+              "path": "01M4XQ7K3N8V2D5R0B6G1HT9WS/components/01M4XQ7K3N8V2D5R0B6G1HT9WT/props/mass",
+              "value": 4
+            }
+          },
+          {
+            "op": "removeOverride",
+            "entity": "01M4ZEB9E0GG0Q6R22YXV3AVKA",
+            "path": "01M4XQ7K3N8V2D5R0B6G1HT9WS/components/01M4XQ7K3N8V2D5R0B6G1HT9WT/props/mass"
+          },
+          {
+            "op": "destroyEntity",
+            "entity": "01M4ZEB9E0GG0Q6R22YXV3AVKC"
+          }
+        ],
+        "commandName": "Lay out spawn and crates",
+        "commandId": "cmd-0042"
+      }
+    },
+    "applyOpsResponse": {
+      "jsonrpc": "2.0",
+      "id": 5,
+      "result": {
+        "applied": 13,
+        "failures": []
+      }
+    },
+    "applyOpsPartial": {
+      "jsonrpc": "2.0",
+      "id": 6,
+      "method": "applyOps",
+      "params": {
+        "ops": [
+          {
+            "op": "setEntityField",
+            "entity": "01M4ZEB9E0GG0Q6R22YXV3AVK8",
+            "field": "layer",
+            "value": "Characters"
+          },
+          {
+            "op": "addComponent",
+            "entity": "01M4ZEB9E0GG0Q6R22YXV3AVK8",
+            "component": {
+              "uid": "01M4ZEB9E0GG0Q6R22YXV3AVKF",
+              "type": "game/Inventory",
+              "props": {
+                "slots": 8
+              }
+            }
+          }
+        ],
+        "commandName": "Add Inventory",
+        "commandId": "cmd-0043"
+      }
+    },
+    "applyOpsPartialResponse": {
+      "jsonrpc": "2.0",
+      "id": 6,
+      "result": {
+        "applied": 1,
+        "failures": [
+          {
+            "index": 1,
+            "code": "engineError",
+            "message": "The component type \"game/Inventory\" is not registered; register it with app.registerComponents or check its typeId.",
+            "diagnostic": "IGX-0307"
+          }
+        ]
+      }
+    },
+    "readBack": {
+      "jsonrpc": "2.0",
+      "id": 7,
+      "method": "readBack",
+      "params": {
+        "entities": ["01M4ZEB9E0GG0Q6R22YXV3AVK8", "01M4ZEB9E0GG0Q6R22YXV3AVKZ"]
+      }
+    },
+    "readBackResponse": {
+      "jsonrpc": "2.0",
+      "id": 7,
+      "result": {
+        "entities": [
+          {
+            "uid": "01M4ZEB9E0GG0Q6R22YXV3AVK8",
+            "name": "Player",
+            "parent": null,
+            "tags": ["player"],
+            "transform": {
+              "position": [1.5, 0, 2],
+              "rotation": [0, 0, 0, 1],
+              "scale": [1, 1, 1]
+            },
+            "components": [
+              {
+                "uid": "01M4ZEB9E0GG0Q6R22YXV3AVK9",
+                "type": "ignifx/Model",
+                "props": {
+                  "model": {
+                    "$asset": "models/player.glb"
+                  }
+                }
+              },
+              {
+                "uid": "01M4ZEB9E0GG0Q6R22YXV3AVKD",
+                "type": "game/Health",
+                "props": {
+                  "max": 120
+                }
+              }
+            ]
+          }
+        ],
+        "missing": ["01M4ZEB9E0GG0Q6R22YXV3AVKZ"],
+        "settings": {
+          "twoD": false,
+          "clearColor": [0.1, 0.1, 0.12, 1]
+        },
+        "issues": []
+      }
+    },
+    "readBackAll": {
+      "jsonrpc": "2.0",
+      "id": 8,
+      "method": "readBack",
+      "params": {}
+    },
+    "select": {
+      "jsonrpc": "2.0",
+      "id": 9,
+      "method": "select",
+      "params": {
+        "entities": ["01M4ZEB9E0GG0Q6R22YXV3AVKA", "01M4ZEB9E0GG0Q6R22YXV3AVK8"]
+      }
+    },
+    "selectResponse": {
+      "jsonrpc": "2.0",
+      "id": 9,
+      "result": {
+        "entities": ["01M4ZEB9E0GG0Q6R22YXV3AVKA", "01M4ZEB9E0GG0Q6R22YXV3AVK8"]
+      }
+    },
+    "setGizmo": {
+      "jsonrpc": "2.0",
+      "id": 10,
+      "method": "setGizmo",
+      "params": {
+        "mode": "translate",
+        "space": "world",
+        "snap": {
+          "translate": 0.25,
+          "rotate": 15,
+          "scale": 0.1
+        }
+      }
+    },
+    "setGizmoNoSnap": {
+      "jsonrpc": "2.0",
+      "id": 11,
+      "method": "setGizmo",
+      "params": {
+        "mode": "rotate",
+        "space": "local",
+        "snap": null
+      }
+    },
+    "nullResponse": {
+      "jsonrpc": "2.0",
+      "id": 10,
+      "result": null
+    },
+    "frame": {
+      "jsonrpc": "2.0",
+      "id": 12,
+      "method": "frame",
+      "params": {
+        "entities": ["01M4ZEB9E0GG0Q6R22YXV3AVK8"]
+      }
+    },
+    "frameAll": {
+      "jsonrpc": "2.0",
+      "id": 13,
+      "method": "frame",
+      "params": {
+        "entities": "all"
+      }
+    },
+    "pick": {
+      "jsonrpc": "2.0",
+      "id": 14,
+      "method": "pick",
+      "params": {
+        "x": 412.5,
+        "y": 230,
+        "unit": "css"
+      }
+    },
+    "pickResponse": {
+      "jsonrpc": "2.0",
+      "id": 14,
+      "result": {
+        "entity": "01M4ZEB9E0GG0Q6R22YXV3AVK8",
+        "point": [1.42, 1.1, 1.73],
+        "distance": 9.87
+      }
+    },
+    "pickBacking": {
+      "jsonrpc": "2.0",
+      "id": 15,
+      "method": "pick",
+      "params": {
+        "x": 825,
+        "y": 460,
+        "unit": "backing"
+      }
+    },
+    "pickMiss": {
+      "jsonrpc": "2.0",
+      "id": 15,
+      "result": {
+        "entity": null,
+        "point": null,
+        "distance": null
+      }
+    },
+    "screenshot": {
+      "jsonrpc": "2.0",
+      "id": 16,
+      "method": "screenshot",
+      "params": {
+        "width": 1280,
+        "height": 720,
+        "format": "png"
+      }
+    },
+    "screenshotJpeg": {
+      "jsonrpc": "2.0",
+      "id": 17,
+      "method": "screenshot",
+      "params": {
+        "format": "jpeg",
+        "quality": 0.8
+      }
+    },
+    "screenshotResponse": {
+      "jsonrpc": "2.0",
+      "id": 16,
+      "result": {
+        "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+        "width": 1280,
+        "height": 720
+      }
+    },
+    "getSchemas": {
+      "jsonrpc": "2.0",
+      "id": 18,
+      "method": "getSchemas"
+    },
+    "getSchemasResponse": {
+      "jsonrpc": "2.0",
+      "id": 18,
+      "result": {
+        "schemas": {
+          "ignifx/Camera": {
+            "title": "Camera",
+            "format": "components",
+            "description": "The camera an entity renders the world through; the entity's transform is the view.",
+            "fields": {
+              "fov": {
+                "kind": "f32",
+                "default": 60,
+                "description": "Vertical field of view, in degrees."
+              },
+              "near": {
+                "kind": "f32",
+                "default": 0.1
+              },
+              "far": {
+                "kind": "f32",
+                "default": 1000
+              },
+              "projection": {
+                "kind": "enum",
+                "default": "perspective"
+              }
+            },
+            "propsSchema": {
+              "type": "object",
+              "properties": {
+                "fov": {
+                  "type": "number",
+                  "description": "Vertical field of view, in degrees.",
+                  "minimum": 1,
+                  "maximum": 179,
+                  "default": 60
+                },
+                "near": {
+                  "type": "number",
+                  "default": 0.1
+                },
+                "far": {
+                  "type": "number",
+                  "default": 1000
+                },
+                "projection": {
+                  "type": "string",
+                  "enum": ["perspective", "orthographic"],
+                  "default": "perspective"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "game/Health": {
+            "title": "Health",
+            "format": "components",
+            "fields": {
+              "max": {
+                "kind": "u32",
+                "default": 100
+              },
+              "regenPerSecond": {
+                "kind": "f32",
+                "default": 0
+              }
+            },
+            "propsSchema": {
+              "type": "object",
+              "properties": {
+                "max": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 4294967295,
+                  "default": 100
+                },
+                "regenPerSecond": {
+                  "type": "number",
+                  "default": 0
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "ignifx/scene-file": {
+            "title": "Scene file",
+            "format": "ignifx.scene",
+            "description": "A level or a prefab: a tree of entities with components, instanced scenes, and overrides. One format for both (ADR-0005).",
+            "fields": {
+              "format": {
+                "kind": "str",
+                "default": "ignifx.scene",
+                "description": "Always \"ignifx.scene\"."
+              },
+              "name": {
+                "kind": "str",
+                "default": "",
+                "description": "The scene's name."
+              }
+            }
+          }
+        }
+      }
+    },
+    "setViewMode": {
+      "jsonrpc": "2.0",
+      "id": 19,
+      "method": "setViewMode",
+      "params": {
+        "mode": "2d"
+      }
+    },
+    "closeScene": {
+      "jsonrpc": "2.0",
+      "id": 20,
+      "method": "closeScene"
+    },
+    "noScene": {
+      "jsonrpc": "2.0",
+      "id": 21,
+      "error": {
+        "code": -32002,
+        "message": "No scene is open; send \"openScene\" before \"applyOps\"."
+      }
+    },
+    "screenshotTooLarge": {
+      "jsonrpc": "2.0",
+      "id": 22,
+      "error": {
+        "code": -32602,
+        "message": "screenshot takes a width and height from 1 to 2048 pixels."
+      }
+    },
+    "hotReloaded": {
+      "jsonrpc": "2.0",
+      "method": "hotReloaded",
+      "params": {
+        "report": {
+          "kind": "patch",
+          "typeIds": ["game/Health"],
+          "instances": 1,
+          "durationMs": 3.4,
+          "errors": []
+        }
+      }
+    },
+    "hotReloadedWithErrors": {
+      "jsonrpc": "2.0",
+      "method": "hotReloaded",
+      "params": {
+        "report": {
+          "kind": "recreate",
+          "typeIds": ["game/Inventory"],
+          "instances": 2,
+          "durationMs": 11.2,
+          "errors": [
+            {
+              "message": "Inventory.awake: slots must be positive.",
+              "code": null
+            }
+          ]
+        }
+      }
+    },
+    "schemasChanged": {
+      "jsonrpc": "2.0",
+      "method": "schemasChanged",
+      "params": {
+        "schemas": {
+          "ignifx/Camera": {
+            "title": "Camera",
+            "format": "components",
+            "description": "The camera an entity renders the world through; the entity's transform is the view.",
+            "fields": {
+              "fov": {
+                "kind": "f32",
+                "default": 60,
+                "description": "Vertical field of view, in degrees."
+              },
+              "near": {
+                "kind": "f32",
+                "default": 0.1
+              },
+              "far": {
+                "kind": "f32",
+                "default": 1000
+              },
+              "projection": {
+                "kind": "enum",
+                "default": "perspective"
+              }
+            },
+            "propsSchema": {
+              "type": "object",
+              "properties": {
+                "fov": {
+                  "type": "number",
+                  "description": "Vertical field of view, in degrees.",
+                  "minimum": 1,
+                  "maximum": 179,
+                  "default": 60
+                },
+                "near": {
+                  "type": "number",
+                  "default": 0.1
+                },
+                "far": {
+                  "type": "number",
+                  "default": 1000
+                },
+                "projection": {
+                  "type": "string",
+                  "enum": ["perspective", "orthographic"],
+                  "default": "perspective"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "game/Health": {
+            "title": "Health",
+            "format": "components",
+            "fields": {
+              "max": {
+                "kind": "u32",
+                "default": 100
+              },
+              "regenPerSecond": {
+                "kind": "f32",
+                "default": 0
+              }
+            },
+            "propsSchema": {
+              "type": "object",
+              "properties": {
+                "max": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 4294967295,
+                  "default": 100
+                },
+                "regenPerSecond": {
+                  "type": "number",
+                  "default": 0
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "ignifx/scene-file": {
+            "title": "Scene file",
+            "format": "ignifx.scene",
+            "description": "A level or a prefab: a tree of entities with components, instanced scenes, and overrides. One format for both (ADR-0005).",
+            "fields": {
+              "format": {
+                "kind": "str",
+                "default": "ignifx.scene",
+                "description": "Always \"ignifx.scene\"."
+              },
+              "name": {
+                "kind": "str",
+                "default": "",
+                "description": "The scene's name."
+              }
+            }
+          }
+        }
+      }
+    },
+    "selectionChanged": {
+      "jsonrpc": "2.0",
+      "method": "selectionChanged",
+      "params": {
+        "entities": ["01M4ZEB9E0GG0Q6R22YXV3AVK8"]
+      }
+    },
+    "selectionCleared": {
+      "jsonrpc": "2.0",
+      "method": "selectionChanged",
+      "params": {
+        "entities": []
+      }
+    },
+    "transformDragging": {
+      "jsonrpc": "2.0",
+      "method": "transformDragging",
+      "params": {
+        "entity": "01M4ZEB9E0GG0Q6R22YXV3AVK8",
+        "mode": "translate",
+        "after": {
+          "position": [1.2, 0, 2],
+          "rotation": [0, 0, 0, 1],
+          "scale": [1, 1, 1]
+        }
+      }
+    },
+    "transformDragged": {
+      "jsonrpc": "2.0",
+      "method": "transformDragged",
+      "params": {
+        "entity": "01M4ZEB9E0GG0Q6R22YXV3AVK8",
+        "mode": "translate",
+        "before": {
+          "position": [0, 0, 2],
+          "rotation": [0, 0, 0, 1],
+          "scale": [1, 1, 1]
+        },
+        "after": {
+          "position": [1.5, 0, 2],
+          "rotation": [0, 0, 0, 1],
+          "scale": [1, 1, 1]
+        }
+      }
+    },
+    "hostError": {
+      "jsonrpc": "2.0",
+      "method": "hostError",
+      "params": {
+        "code": "IGX-0707",
+        "message": "captureScreenshot() needs a running render loop; a headless app never presents a frame.",
+        "data": {
+          "member": "app.renderer.captureScreenshot()"
+        }
+      }
+    },
+    "hostErrorBare": {
+      "jsonrpc": "2.0",
+      "method": "hostError",
+      "params": {
+        "code": null,
+        "message": "Uncaught TypeError in game/Spinner.update: Cannot read properties of null (reading 'position')."
+      }
+    },
+    "log": {
+      "jsonrpc": "2.0",
+      "method": "log",
+      "params": {
+        "level": "warn",
+        "scope": "assets",
+        "message": "models/player.glb: 2 textures are not power-of-two; mipmaps are off.",
+        "timeMs": 1834.5
+      }
+    }
+  }
+}

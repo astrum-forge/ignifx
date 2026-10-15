@@ -66,6 +66,23 @@ export class EditorPeer {
   }
 
   /**
+   * Takes the next notification with a given method, dropping every other message before it.
+   *
+   * @param method - The notification's method.
+   * @returns The notification.
+   */
+  async nextNotification(method: string): Promise<Received> {
+    for (;;) {
+      // Messages arrive in order; awaiting them one at a time is the point.
+      // oxlint-disable-next-line no-await-in-loop -- see above.
+      const message = await this.next();
+      if (message["method"] === method && !("id" in message)) {
+        return message;
+      }
+    }
+  }
+
+  /**
    * Posts a raw value on the port.
    *
    * @param value - What to post.

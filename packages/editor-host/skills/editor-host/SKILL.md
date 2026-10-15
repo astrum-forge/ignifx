@@ -1,6 +1,6 @@
 ---
 name: editor-host
-description: Connects an ignifx project to the ignifx editor with @ignifx/editor-host: the Vite plugin that serves the editor's scene view from the project's own dev server, the virtual:ignifx/editor play controls a game's main.ts hands its app to, and the host half of the editor protocol (hello/ready, ping, heartbeat) over a MessagePort. Use when wiring a project or template for the editor, when the user mentions @ignifx/editor-host, editorHostPlugin, attachEditorPlayControls, virtual:ignifx/editor, startEditorHost or /__ignifx_editor__/, or when debugging why the editor cannot connect to a view.
+description: Connects an ignifx project to the ignifx editor with @ignifx/editor-host: the Vite plugin that serves the editor's scene view from the project's own dev server, the virtual:ignifx/editor play controls a game's main.ts hands its app to, and the host half of the editor protocol 0.3 over a MessagePort (hello/ready, heartbeat, and the scene document methods openScene, applyOps, readBack, select, pick, frame, setGizmo, screenshot, getSchemas). Use when wiring a project or template for the editor, when the user mentions @ignifx/editor-host, editorHostPlugin, attachEditorPlayControls, virtual:ignifx/editor, startEditorHost or /__ignifx_editor__/, or when debugging why the editor cannot connect to a view or why the scene view disagrees with the editor's document.
 license: Apache-2.0
 metadata:
   ignifx-version: "0.9.0"
@@ -26,7 +26,8 @@ editor's, even though its name starts with `editor-`.
 ## Environment
 
 - Engine: ignifx `0.9.0`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
-- Peers: `@ignifx/core`; for the `./vite` entry, `@ignifx/vite-plugin` and `vite`.
+- Peers: `@ignifx/core` and `@babylonjs/lite` (the scene view's gizmos); for the `./vite` entry,
+  `@ignifx/vite-plugin` and `vite`.
 - A development dependency of the project, at the same version as its `@ignifx/core`.
 - Nothing happens at import time; the plugin's generated page module is what starts the host.
 
@@ -58,18 +59,29 @@ editor window (ignifx://app)
 ├── <iframe> scene view   http://127.0.0.1:<port>/__ignifx_editor__/
 │     generated module → startEditorHost({ extensions(), scripts, settings, manifest })
 │     owns its app, in edit mode; hostKind "scene"
+│     world: the open document's scene  +  a persistent "editor" scene (camera, never saved)
 └── <iframe> play view    http://localhost:<port>/  (the game's own index.html)
       main.ts → attachEditorPlayControls(app)   (virtual:ignifx/editor; a no-op in builds)
       the game owns its app; hostKind "play"
 
-each view ◀── MessagePort ──▶ editor     JSON-RPC 2.0, protocol 0.2
-   connect (window message, origin-checked) → hello → ready → ping/pong, heartbeat, play/pause/step/stop
+each view ◀── MessagePort ──▶ editor     JSON-RPC 2.0, protocol 0.3
+   connect (window message, origin-checked) → hello → ready → ping/pong, heartbeat
+   scene view: schemasChanged → openScene → applyOps… / readBack / select / pick / frame / setGizmo / screenshot
+               ← sceneOpened, selectionChanged, transformDragging/Dragged, hotReloaded, hostError, log
+   play view:  play / pause / step / stop
 ```
 
 The editor posts `{ type: "ignifx-editor/connect" }` with a fresh `MessagePort` to each view on every
 `load`. A host takes a port only from `editorOrigin`, replaces its old port whenever a new one
 arrives, answers `hello` with `ready` (engine version, protocol, capabilities, host kind), and then
 sends a `heartbeat` notification every second so the editor notices a crashed view.
+
+The editor owns the scene document; the scene view mirrors it. `openScene` sends the whole file
+object (it may hold unsaved edits) and the host builds it with `world.loadSceneFile`, keeping the
+file's uids. Every command the editor applies to its document goes to the host as `applyOps`, the
+same ops; any failure means the mirror drifted, and the editor resends `openScene`. What the user
+does in the view comes back as notifications (`selectionChanged`, `transformDragged`) that the
+editor turns into commands. The host never edits the document.
 
 ## First app
 
@@ -113,16 +125,18 @@ host.dispose();
 
 `skills/ignifx/references/api/editor-host.md` and `editor-host-vite.md` have the generated surface.
 
-| Member                                                            | What it does                                                                                                                |
-| ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `editorHostPlugin(options)` (`/vite`)                             | The two Vite plugins: the scene view's page (dev only) and `virtual:ignifx/editor`                                          |
-| `attachEditorPlayControls(app)`                                   | From `virtual:ignifx/editor`: hands the game's app to the editor; returns a detach                                          |
-| `startEditorHost(options)`                                        | Starts the scene view's host and its edit-mode app; resolves to a disposable `EditorHost`                                   |
-| `startEditorPlayControls(app, options)`                           | What `attachEditorPlayControls` calls in development                                                                        |
-| `EDITOR_CONNECT_MESSAGE_TYPE`, `isEditorConnectMessage`           | The window message that carries the port, and its check                                                                     |
-| `PROTOCOL_VERSION`, `RpcErrorCode`, `isRpcMessage`, `isPlayState` | The protocol 0.2 values and checks, mirrored from `@ignifx/editor-protocol`; before 1.0 the major and minor must both match |
-| `PlayMethod`, `PlayState`                                         | `play`, `pause`, `step`, `stop`, and what each answers                                                                      |
-| `EditorHostErrorCode`                                             | `IGX-1801` bad origin, `IGX-1802` no window, `IGX-1803` bad option                                                          |
+| Member                                                               | What it does                                                                                                                |
+| -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `editorHostPlugin(options)` (`/vite`)                                | The two Vite plugins: the scene view's page (dev only) and `virtual:ignifx/editor`                                          |
+| `attachEditorPlayControls(app)`                                      | From `virtual:ignifx/editor`: hands the game's app to the editor; returns a detach                                          |
+| `startEditorHost(options)`                                           | Starts the scene view's host and its edit-mode app; resolves to a disposable `EditorHost`                                   |
+| `startEditorPlayControls(app, options)`                              | What `attachEditorPlayControls` calls in development                                                                        |
+| `EDITOR_CONNECT_MESSAGE_TYPE`, `isEditorConnectMessage`              | The window message that carries the port, and its check                                                                     |
+| `PROTOCOL_VERSION`, `RpcErrorCode`, `isRpcMessage`, `isPlayState`    | The protocol 0.3 values and checks, mirrored from `@ignifx/editor-protocol`; before 1.0 the major and minor must both match |
+| `SceneMethod`, `SceneNotification`, `SceneOp`, `isApplyOpsParams`, … | The scene document methods, notifications, the thirteen ops, and their guards                                               |
+| `EditorHost.editorScene`                                             | The persistent `editor` scene instance holding the host's own objects                                                       |
+| `PlayMethod`, `PlayState`                                            | `play`, `pause`, `step`, `stop`, and what each answers                                                                      |
+| `EditorHostErrorCode`                                                | `IGX-1801` bad origin, `IGX-1802` no window, `IGX-1803` bad option                                                          |
 
 ## Recipes
 
@@ -192,10 +206,64 @@ controls.dispose();
 app.dispose();
 ```
 
+### Open a scene document in the scene view
+
+```ts run
+import { EDITOR_CONNECT_MESSAGE_TYPE, PROTOCOL_VERSION, startEditorHost } from "@ignifx/editor-host";
+
+const frameWindow = new EventTarget();
+const host = await startEditorHost({ editorOrigin: "ignifx://app", headless: true, messageTarget: frameWindow });
+const channel = new MessageChannel();
+frameWindow.dispatchEvent(
+  new MessageEvent("message", {
+    data: { type: EDITOR_CONNECT_MESSAGE_TYPE },
+    origin: "ignifx://app",
+    ports: [channel.port2],
+  }),
+);
+
+// Answers by id; notifications (heartbeat, schemasChanged, sceneOpened, log) are skipped here.
+const waiting = new Map<number, (result: unknown) => void>();
+channel.port1.onmessage = (event: MessageEvent<{ id?: number; result?: unknown; error?: unknown }>): void => {
+  const { id } = event.data;
+  if (id !== undefined) {
+    waiting.get(id)?.(event.data.result ?? event.data.error);
+  }
+};
+let nextId = 0;
+const request = async (method: string, params: unknown): Promise<unknown> => {
+  nextId += 1;
+  const id = nextId;
+  const answer = new Promise<unknown>((resolve) => waiting.set(id, resolve));
+  channel.port1.postMessage({ jsonrpc: "2.0", id, method, params });
+  return answer;
+};
+
+await request("hello", { editorVersion: "0.1.0", protocol: PROTOCOL_VERSION });
+const transform = { position: [0, 0, 0], rotation: [0, 0, 0, 1], scale: [1, 1, 1] };
+const file = {
+  format: "ignifx.scene",
+  formatVersion: 1,
+  name: "level01",
+  entities: [{ uid: "01J9Z6M7E5S3A0V2Q4R8T1Y6WX", name: "Player", parent: null, transform }],
+};
+console.log(JSON.stringify(await request("openScene", { file, address: null })));
+await request("applyOps", {
+  ops: [{ op: "setEntityField", entity: "01J9Z6M7E5S3A0V2Q4R8T1Y6WX", field: "name", value: "Hero" }],
+  commandName: "Rename Player",
+  commandId: "cmd-1",
+});
+console.log(JSON.stringify(await request("readBack", {})));
+
+channel.port1.close();
+host.dispose();
+```
+
 ## File formats
 
-None. The scene view loads the project's own scene files through the normal loader; the editor's
-document model lives in the editor.
+None of its own. The scene view builds the editor's scene document (`ignifx.scene`) from the file
+object `openScene` sends, through `world.loadSceneFile`; `readBack` answers with the records
+`serializeScene` writes.
 
 ## Gotchas
 
@@ -217,6 +285,17 @@ document model lives in the editor.
 - **Script edits reload both views** while `main.ts` imports `src/scripts/**` statically: Vite's one
   module graph sends a full reload to every page when an update reaches a module that does not
   accept it.
+- **Scene methods answer `notReady` until the app has started.** The host answers `hello` at once;
+  its first `schemasChanged` is the cue that `openScene` and the rest are accepted. `applyOps`,
+  `readBack` and `frame` answer `noScene` while no scene is open.
+- **The scene view renders at `rendering.msaaSamples: 1`**, whatever the project sets: at MSAA 4
+  Lite's gizmo overlay cannot be composited into ignifx's frame and the gizmos are invisible (editor
+  plan ask E12). The play view keeps the project's setting.
+- **A headless host lists only `heartbeat`.** Without a canvas there are no gizmos, no `screenshot`,
+  and every `pick` misses; `setGizmo` and `screenshot` then answer `methodNotFound`. In headless
+  tests, asset loads after `start()` settle only when something calls `app.step()`.
+- **Document uids only.** Members of an instanced prefab and the editor's own entities never appear
+  in a selection, a pick or `readBack`; a pick on a prefab member resolves to its instance root.
 
 ## Deprecated (current window)
 

@@ -5,7 +5,8 @@ Hand-written companion to the generated field table in
 (ADR-0005): the extension only tells you what it is usually used for. Rationale in
 `docs/architecture/06-serialization-and-scene-format.md`.
 
-Loaded with `world.loadScene(address)`, instanced with `world.instantiate(sceneAsset)`, written with
+Loaded with `world.loadScene(address)` (or `world.loadSceneFile(file, { address })` for a file object
+already in memory), instanced with `world.instantiate(sceneAsset)`, written with
 `serializeScene(...)` + `stringifySceneFile(...)`, checked with `validateSceneFile(value)`, and
 validated at build time by `@ignifx/vite-plugin` against the schema `sceneFileJsonSchema(registry)`
 generates. `SCENE_FILE_FORMAT` is `"ignifx.scene"` and `SCENE_FORMAT_VERSION` is `1`.
@@ -141,6 +142,11 @@ expanded under the instance root instead.
    values, and `$entity`/`$component` references resolve through the remap (`IGX-0602` when they
    cannot, leaving the field `null`).
 5. `onAttach`, then `awake`/`onEnable` in tree order — all before `loadScene` resolves.
+
+`addComponentFromRecord(entity, record, { index?, references? })` runs steps 4–5 for one component
+record on a live entity: its registered type (`IGX-0307` otherwise), its uid, `enabled`, and its
+props decoded through the `references` you pass. Tools that mirror a document into a running world
+use it; a game adds components with `addComponent`.
 
 ## Saving
 

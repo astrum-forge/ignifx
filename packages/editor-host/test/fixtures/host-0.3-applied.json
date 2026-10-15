@@ -1,0 +1,150 @@
+{
+  "description": "The document editor-core produces from host-0.3-wire.json: the openScene file with the applyOps message's thirteen ops applied by @ignifx/editor-core's applyOp, one by one, at astrum-forge/ignifx-editor feat/protocol-0.3 (08ec42a). It is the expectation wire-0.3.test.ts holds a live host's readBack to: a mirror that is exact returns the document's own records.",
+  "file": {
+    "format": "ignifx.scene",
+    "formatVersion": 1,
+    "engineVersion": "0.9.0",
+    "name": "level01",
+    "settings": {
+      "twoD": false,
+      "clearColor": [0.1, 0.1, 0.12, 1]
+    },
+    "entities": [
+      {
+        "uid": "01M4ZEB9E0GG0Q6R22YXV3AVK4",
+        "name": "Sun",
+        "parent": null,
+        "transform": {
+          "position": [-8, 14, -6],
+          "rotation": [0.409273, 0.397648, -0.204637, 0.795296],
+          "scale": [1, 1, 1]
+        }
+      },
+      {
+        "uid": "01M4ZEB9E0GG0Q6R22YXV3AVK2",
+        "name": "Main Camera",
+        "parent": null,
+        "transform": {
+          "position": [0, 4, -10],
+          "rotation": [0.130526, 0, 0, 0.991445],
+          "scale": [1, 1, 1]
+        },
+        "components": [
+          {
+            "uid": "01M4ZEB9E0GG0Q6R22YXV3AVK3",
+            "type": "ignifx/Camera",
+            "props": {
+              "fov": 60,
+              "near": 0.1,
+              "far": 500
+            }
+          }
+        ]
+      },
+      {
+        "uid": "01M4ZEB9E0GG0Q6R22YXV3AVK6",
+        "name": "Ground",
+        "parent": null,
+        "static": true,
+        "transform": {
+          "position": [0, 0, 0],
+          "rotation": [0, 0, 0, 1],
+          "scale": [40, 1, 40]
+        },
+        "components": [
+          {
+            "uid": "01M4ZEB9E0GG0Q6R22YXV3AVK7",
+            "type": "ignifx/MeshRenderer",
+            "props": {
+              "mesh": {
+                "$asset": "meshes/ground.mesh.json"
+              },
+              "materials": [
+                {
+                  "$asset": "materials/grass.material.json"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "uid": "01M4ZEB9E0GG0Q6R22YXV3AVKB",
+        "name": "Player Spawn",
+        "parent": "01M4ZEB9E0GG0Q6R22YXV3AVK6",
+        "transform": {
+          "position": [0, 0, 6],
+          "rotation": [0, 0, 0, 1],
+          "scale": [1, 1, 1]
+        }
+      },
+      {
+        "uid": "01M4ZEB9E0GG0Q6R22YXV3AVK8",
+        "name": "Player",
+        "parent": null,
+        "tags": ["player"],
+        "transform": {
+          "position": [1.5, 0, 2],
+          "rotation": [0, 0, 0, 1],
+          "scale": [1, 1, 1]
+        },
+        "components": [
+          {
+            "uid": "01M4ZEB9E0GG0Q6R22YXV3AVK9",
+            "type": "ignifx/Model",
+            "props": {
+              "model": {
+                "$asset": "models/player.glb"
+              }
+            }
+          },
+          {
+            "uid": "01M4ZEB9E0GG0Q6R22YXV3AVKD",
+            "type": "game/Health",
+            "props": {
+              "max": 120
+            }
+          }
+        ]
+      },
+      {
+        "uid": "01M4ZEB9E0GG0Q6R22YXV3AVKA",
+        "name": "Crate",
+        "parent": null,
+        "transform": {
+          "position": [3, 0.5, 4],
+          "rotation": [0, 0, 0, 1],
+          "scale": [1, 1, 1]
+        },
+        "instance": {
+          "scene": {
+            "$asset": "prefabs/crate.prefab.json"
+          },
+          "hash": "sha256:9f2c4e1b7a3d5f60e8c2b4a6d1f3e5c7a9b0d2f4e6a8c1b3d5f7e9a0c2b4d6f8"
+        }
+      },
+      {
+        "uid": "01M4ZEB9E0GG0Q6R22YXV3AVKE",
+        "name": "Crate (2)",
+        "parent": null,
+        "transform": {
+          "position": [5, 0.5, 4],
+          "rotation": [0, 0, 0, 1],
+          "scale": [1, 1, 1]
+        },
+        "instance": {
+          "scene": {
+            "$asset": "prefabs/crate.prefab.json"
+          },
+          "hash": "sha256:9f2c4e1b7a3d5f60e8c2b4a6d1f3e5c7a9b0d2f4e6a8c1b3d5f7e9a0c2b4d6f8",
+          "overrides": [
+            {
+              "path": "01M4XQ7K3N8V2D5R0B6G1HT9WS/components/01M4XQ7K3N8V2D5R0B6G1HT9WT/props/mass",
+              "value": 4
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

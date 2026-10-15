@@ -15935,6 +15935,37 @@ gun.setParent(hand);                                   // snaps to the hand, kee
 gun.setParent(hand, { worldPositionStays: false });     // keeps its local offset instead
 ```
 
+##### setSiblingIndex()
+
+> **setSiblingIndex**(`index`): `void`
+
+Moves the entity among its siblings: its parent's children, or its scene's roots when it has no
+parent. Sibling order is the order a scene file lists entities in and the order `children`
+reports.
+
+###### Parameters
+
+###### index
+
+`number`
+
+The entity's new index among its siblings. A value past either end is clamped
+to that end, and a fraction is truncated.
+
+###### Returns
+
+`void`
+
+###### Throws
+
+IgnifxError with code `IGX-0101` when the entity has been destroyed.
+
+###### Example
+
+```ts
+weapon.setSiblingIndex(0); // first child of its parent
+```
+
 ***
 
 ### Environment
@@ -60281,6 +60312,48 @@ The new entity, already active and registered.
 const hand = world.createEntity("Hand", { parent: player, position: { x: 0.3, y: 1.2, z: 0 } });
 ```
 
+##### createScene()
+
+> **createScene**(`name`, `options?`): [`SceneInstance`](#sceneinstance)
+
+Creates an empty scene instance that is built in code rather than loaded from a file
+(`docs/architecture/02-scene-graph.md` §3).
+
+###### Parameters
+
+###### name
+
+`string`
+
+The instance's name.
+
+###### options?
+
+`CreateSceneOptions`
+
+Whether it is persistent.
+
+###### Returns
+
+[`SceneInstance`](#sceneinstance)
+
+The new, empty instance, appended to `scenes`.
+
+###### Remarks
+
+Entities join it through `createEntity(name, { scene })` or `moveEntityToScene`. A persistent
+instance survives every `"single"` load, so it is where a tool keeps objects that must outlive
+the levels it loads: an editor's cameras, grid and gizmo roots. Like any instance other than the
+implicit `"default"` one, it can be unloaded with `unloadScene`. Creating it raises no
+`onSceneLoaded`, because nothing was loaded; `serializeScene` writes it only when it is passed.
+
+###### Example
+
+```ts
+const tools = world.createScene("editor", { persistent: true });
+const camera = world.createEntity("Editor Camera", { scene: tools });
+```
+
 ##### dispose()
 
 > **dispose**(): `void`
@@ -60556,6 +60629,61 @@ system throws for a missing or malformed file.
 
 ```ts
 const level = await world.loadScene("levels/level01.scene.json", { mode: "additive" });
+```
+
+##### loadSceneFile()
+
+> **loadSceneFile**(`file`, `options`): `Promise`\<[`SceneInstance`](#sceneinstance)\>
+
+Builds a scene from a file that is already in memory, the way [World.loadScene](#loadscene) builds one
+from an address (`docs/architecture/02-scene-graph.md` §2).
+
+###### Parameters
+
+###### file
+
+[`SceneFile`](#scenefile)
+
+The scene file object, as `serializeScene` or `JSON.parse` produces it.
+
+###### options
+
+`LoadSceneFileOptions`
+
+The address to publish it at, the mode, cancellation, and an issue collector.
+
+###### Returns
+
+`Promise`\<[`SceneInstance`](#sceneinstance)\>
+
+The instance, once every entity exists, every reference is resolved, and `awake` has
+run.
+
+###### Remarks
+
+Nothing is fetched for the file itself: it is validated, every asset it references is loaded
+through `app.assets` (the scene loader's own walk), and it is published there at
+`options.address` as a scene asset, so the instance's `asset` and everything that reads it
+behave as for a loaded file. Entity and component uids are the file's. The instance holds the
+asset and its dependencies and releases them when it is unloaded. The rest is
+[World.loadScene](#loadscene)'s: the same modes, the same synchronous build, `awake` before the
+promise settles, and `onSceneLoaded`.
+
+This is how a tool builds a scene it holds as an object, such as an editor's open document with
+unsaved edits.
+
+###### Throws
+
+IgnifxError with code `IGX-0308` when the object is not a scene file, `IGX-0603` for a
+format version this build cannot read, and `IGX-0608` when it does not match the scene format;
+nothing is unloaded then. `IGX-0502` when `options.signal` aborts, `IGX-0307` when the file
+names an unregistered component type (the half-built instance is unloaded first), and
+whatever the asset system throws for a dependency.
+
+###### Example
+
+```ts
+const level = await world.loadSceneFile(file, { address: "levels/level01.scene.json" });
 ```
 
 ##### moveEntityToScene()

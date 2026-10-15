@@ -21,9 +21,10 @@ import type { Received } from "./support/editor.js";
 /**
  * Wire compatibility with the editor. `fixtures/host-0.2-wire.json` is copied unchanged from the
  * editor repository (`packages/editor-protocol/test/fixtures/`), where `wire.test.ts` checks it
- * against `@ignifx/editor-protocol` 0.2. Here every message in it goes through this package's
- * guards, and every response in it is produced by a live host from the matching request, so the
- * two repositories agree on what crosses the port.
+ * against `@ignifx/editor-protocol` 0.2. Protocol 0.3 keeps every one of its messages and changes
+ * only the version they carry, so here every message in it goes through this package's guards, and
+ * every response in it is produced by a live host from the matching request with the version
+ * read as 0.3 (`asCurrent`). `wire-0.3.test.ts` replays the 0.3 fixture.
  */
 
 /** The fixture file, parsed. */
@@ -78,6 +79,21 @@ function wire(name: string): Received {
   return message;
 }
 
+/** The protocol version the 0.2 fixture records. */
+const FIXTURE_PROTOCOL = { major: 0, minor: 2 };
+
+/**
+ * Reads a fixture message as protocol 0.3 sends it: the same message with every protocol version
+ * it carries replaced by {@link PROTOCOL_VERSION}.
+ *
+ * @param message - The fixture message.
+ * @returns The message as this host's protocol line has it.
+ */
+function asCurrent(message: Received): Received {
+  const text = JSON.stringify(message).replaceAll(JSON.stringify(FIXTURE_PROTOCOL), JSON.stringify(PROTOCOL_VERSION));
+  return Object.fromEntries(Object.entries(JSON.parse(text) as Record<string, unknown>));
+}
+
 /**
  * Reads an object member of a message.
  *
@@ -100,7 +116,7 @@ function member(message: Received, key: string): Received {
  * @returns The response, with {@link REPORTED_ENGINE_VERSION} as its `engineVersion`.
  */
 function asReady(name: "readyScene" | "readyPlay"): Received {
-  const ready = wire(name);
+  const ready = asCurrent(wire(name));
   return { ...ready, result: { ...member(ready, "result"), engineVersion: REPORTED_ENGINE_VERSION } };
 }
 
@@ -251,13 +267,14 @@ describe("the editor's 0.2 wire fixture, through the host's guards", () => {
     expect(methods).toContain(wire(name)["method"]);
   });
 
-  it("speaks this package's protocol version, capability names and notification", () => {
+  it("speaks the previous protocol line, with this package's capability names and notification", () => {
     const hello = member(wire("hello"), "params");
-    expect(member(hello, "protocol")).toEqual(PROTOCOL_VERSION);
-    expect(protocolVersionIsCompatible(PROTOCOL_VERSION, { major: 0, minor: 2 })).toBe(true);
+    expect(member(hello, "protocol")).toEqual(FIXTURE_PROTOCOL);
+    expect(protocolVersionIsCompatible(PROTOCOL_VERSION, FIXTURE_PROTOCOL)).toBe(false);
+    expect(member(member(asCurrent(wire("hello")), "params"), "protocol")).toEqual(PROTOCOL_VERSION);
     for (const name of ["readyScene", "readyPlay"]) {
       const result = member(wire(name), "result");
-      expect(member(result, "protocol")).toEqual(PROTOCOL_VERSION);
+      expect(member(result, "protocol")).toEqual(FIXTURE_PROTOCOL);
       const capabilities: readonly unknown[] = Object.values(HostCapability);
       for (const capability of [result["capabilities"]].flat()) {
         expect(capabilities).toContain(capability);
@@ -304,24 +321,28 @@ describe("the editor's 0.2 wire fixture, through a live scene host", () => {
     expectWire(await exchange(peer, { hello: "world" }, null), wire("invalidRequest"));
     expectWire(await exchange(peer, wire("ping"), wire("pong")["id"]), wire("pong"));
 
-    // The fixture records the editor 0.1 meeting this host; the request is the fixture's hello with
-    // that version. The fixture still has the 0.1 host's last word ("majors"); 0.2 says "versions",
-    // because before 1.0 a minor mismatch is refused too. That one word is the only difference.
-    const hello = wire("hello");
-    const oldHello = { ...hello, params: { ...member(hello, "params"), protocol: { major: 0, minor: 1 } } };
+    // The fixture records an editor one line older meeting the host (0.1 meeting 0.2); this host is
+    // 0.3, so the request is the fixture's own 0.2 hello and the versions in the answer move up one.
+    // The fixture still has the 0.1 host's last word ("majors"); since 0.2 the host says "versions",
+    // because before 1.0 a minor mismatch is refused too. Those are the only differences.
+    const oldHello = wire("hello");
     const refusal = wire("incompatibleProtocol");
     const refusalError = member(refusal, "error");
     const refusalMessage = refusalError["message"];
+    expect(refusalMessage).toEqual(expect.stringContaining("speaks protocol 0.1 and this host speaks 0.2."));
     expect(refusalMessage).toEqual(expect.stringContaining("so the protocol majors match."));
     expectWire(await exchange(peer, oldHello, refusal["id"]), {
       ...refusal,
       error: {
         ...refusalError,
-        message: String(refusalMessage).replace("protocol majors", "protocol versions"),
-        data: { ...member(refusalError, "data"), engineVersion: REPORTED_ENGINE_VERSION },
+        message: String(refusalMessage)
+          .replace("protocol 0.1 and this host speaks 0.2", "protocol 0.2 and this host speaks 0.3")
+          .replace("protocol majors", "protocol versions"),
+        data: { host: PROTOCOL_VERSION, engineVersion: REPORTED_ENGINE_VERSION },
       },
     });
 
+    const hello = asCurrent(wire("hello"));
     expectWire(await exchange(peer, hello, hello["id"]), asReady("readyScene"));
     expectWire(
       await exchange(peer, asRequestFor(wire("playRequest"), wire("methodNotFound")), wire("methodNotFound")["id"]),
@@ -332,10 +353,10 @@ describe("the editor's 0.2 wire fixture, through a live scene host", () => {
   it("sends the fixture's heartbeat after ready", async () => {
     vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
     const peer = connectWithFixture(await sceneHost(250));
-    await exchange(peer, wire("hello"), wire("hello")["id"]);
+    await exchange(peer, asCurrent(wire("hello")), wire("hello")["id"]);
 
     vi.advanceTimersByTime(250);
-    expectWire(await peer.next(), wire("heartbeat"));
+    expectWire(await peer.nextNotification("heartbeat"), wire("heartbeat"));
   });
 });
 
@@ -358,7 +379,7 @@ describe("the editor's 0.2 wire fixture, through live play controls", () => {
     const notReady = wire("notReady");
     expectWire(await exchange(peer, asRequestFor(wire("playRequest"), notReady), notReady["id"]), notReady);
 
-    const hello = wire("hello");
+    const hello = asCurrent(wire("hello"));
     expectWire(await exchange(peer, hello, hello["id"]), asReady("readyPlay"));
 
     for (const [request, response] of [

@@ -10,6 +10,7 @@ import { UidRemap, remapDecoder } from "./uid-remap.js";
 import type { ExpandedEntity, ExpandedInstance } from "./expand.js";
 import type { MutableSceneEntity } from "./overrides.js";
 import type { SceneAsset } from "./scene-asset.js";
+import type { SceneFileComponent } from "./scene-file.js";
 import type { AssetResolver } from "./uid-remap.js";
 import type { AssetHandle } from "../assets/types.js";
 import type { ConcreteComponentType } from "../component/component-type.js";
@@ -457,7 +458,7 @@ function decodeAllProps(context: BuildContext, assets: AssetResolver): void {
  * @param uid - The component's file uid, for diagnostics.
  */
 function applyProps(
-  context: BuildContext,
+  context: Pick<BuildContext, "report">,
   decoder: ReferenceDecoder,
   component: Component,
   schema: Schema,
@@ -582,6 +583,142 @@ function sceneAssetResolver(world: World, asset: SceneAsset): AssetResolver {
     const cached = world.app.assets.get(address);
     return cached !== null && cached.state === "loaded" ? cached : null;
   };
+}
+
+/** A decoder that resolves nothing, for a record built without one. */
+const NO_REFERENCES: ReferenceDecoder = Object.freeze({
+  entity: (): null => null,
+  component: (): null => null,
+  asset: (): null => null,
+});
+
+/**
+ * Options accepted by {@link addComponentFromRecord}.
+ *
+ * @public
+ */
+export interface AddComponentFromRecordOptions {
+  /**
+   * The component's index among the entity's components as a scene file lists them (the transform
+   * and the components an instanced scene put on the entity do not count). Defaults to the end; a
+   * value past the end is clamped to it.
+   */
+  readonly index?: number;
+  /**
+   * How `$entity`, `$component` and `$asset` values in the record's `props` resolve. Without one
+   * every reference decodes as `null` and is reported (`IGX-0602`). An asset must already be loaded:
+   * decoding never starts a load.
+   */
+  readonly references?: ReferenceDecoder;
+}
+
+/**
+ * What {@link addComponentFromRecord} built.
+ *
+ * @public
+ */
+export interface ComponentBuildResult {
+  /** The attached component, carrying the record's uid. */
+  readonly component: Component;
+  /** Every recoverable problem found while decoding `props`, in discovery order. */
+  readonly issues: readonly SceneLoadIssue[];
+}
+
+/**
+ * Attaches one component to a live entity from its scene file record, the way the scene loader
+ * builds it: the record's registered type, its uid, its `enabled` flag, and its `props` decoded
+ * against the schema (`docs/architecture/06-serialization-and-scene-format.md` §4).
+ *
+ * @remarks
+ * This is the per-component step of {@link instantiateScene} for a world that already exists, which
+ * is what an editor mirroring a document into a live world needs. The component is attached with
+ * `entity.addComponent`, so `awake` follows that method's rules. The record's uid is adopted as is;
+ * keeping it unique within the scene is the caller's job. Decoding never throws: a value that does
+ * not match its field takes the field's default and is reported in `issues`.
+ *
+ * @param entity - The entity to attach to.
+ * @param record - The component record, as a scene file writes it.
+ * @param options - Where it goes among the entity's components, and how references resolve.
+ * @returns The component and the decoding problems.
+ * @throws IgnifxError with code `IGX-0307` when the record's type is not registered, and whatever
+ * `entity.addComponent` throws (`IGX-0202` for a second instance of a single-instance class,
+ * `IGX-0101` for a destroyed entity).
+ *
+ * @example
+ * ```ts
+ * const { component } = addComponentFromRecord(player, { uid: "01J9Z6M7E5S3A0V2Q4R8T1Y6WY", type: "game/Health", props: { max: 120 } });
+ * ```
+ *
+ * @public
+ */
+export function addComponentFromRecord(
+  entity: Entity,
+  record: SceneFileComponent,
+  options?: AddComponentFromRecordOptions,
+): ComponentBuildResult {
+  const registry = entity.world.registry;
+  const type = registry.get(record.type);
+  if (type === null) {
+    throw new IgnifxError(
+      CoreErrorCode.unknownComponentTypeId,
+      `The component type "${record.type}" is not registered; register it with app.registerComponents or check its typeId.`,
+      { context: { typeId: record.type, entity: entity.uid } },
+    );
+  }
+  // Only a concrete class reaches the registry's type-id table, because `ComponentRegistry.register`
+  // takes a `ConcreteComponentType`.
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+  const component = entity.addComponent(type as ConcreteComponentType);
+  componentInternals(component).uid = record.uid;
+  if (record.enabled === false) {
+    component.enabled = false;
+  }
+  if (options?.index !== undefined) {
+    moveToFileIndex(entity, component, options.index);
+  }
+  const issues: SceneLoadIssue[] = [];
+  const schema = registry.describe(component.constructor).schema;
+  if (schema !== null) {
+    const context: Pick<BuildContext, "report"> = {
+      report: (code: string, message: string): void => {
+        issues.push({ code, message });
+      },
+    };
+    applyProps(context, options?.references ?? NO_REFERENCES, component, schema, record.props ?? {}, record.uid);
+  }
+  return { component, issues };
+}
+
+/**
+ * Moves a component to an index of the entity's component list as a scene file counts it: the
+ * transform, destroyed components, and the components an instanced scene merged in do not count.
+ *
+ * @param entity - The owner.
+ * @param component - One of its components.
+ * @param index - The index in file order; past the end means the end.
+ */
+function moveToFileIndex(entity: Entity, component: Component, index: number): void {
+  const internals = entityInternals(entity);
+  const list = internals.components;
+  const from = list.indexOf(component);
+  if (from < 0) {
+    return;
+  }
+  list.splice(from, 1);
+  const merged = internals.origin?.instanced?.root?.components ?? null;
+  let counted = 0;
+  for (let at = 0; at < list.length; at += 1) {
+    const other = list[at];
+    if (other === undefined || other === internals.transform || other.isDestroyed || merged?.has(other.uid) === true) {
+      continue;
+    }
+    if (counted >= index) {
+      list.splice(at, 0, component);
+      return;
+    }
+    counted += 1;
+  }
+  list.push(component);
 }
 
 /**

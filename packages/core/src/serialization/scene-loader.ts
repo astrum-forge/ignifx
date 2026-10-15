@@ -6,7 +6,7 @@ import { isSceneFileHeader, SCENE_ASSET_TYPE, SCENE_FILE_EXTENSIONS, SCENE_FORMA
 import { asSceneFile, validateSceneFile } from "./validate.js";
 import type { SceneAsset } from "./scene-asset.js";
 import type { SceneFile, SceneFileComponent, SceneFileEntity } from "./scene-file.js";
-import type { AssetHandle, AssetLoader, LoaderContext } from "../assets/types.js";
+import type { AssetHandle, AssetLoader, Assets, LoaderContext } from "../assets/types.js";
 import type { JsonValue } from "../schema/json.js";
 
 /**
@@ -109,17 +109,24 @@ export function readSceneFile(parsed: unknown, address: string, validate: boolea
   return asSceneFile(parsed);
 }
 
+/** One asset a scene file references: its address and the type the reference declares. */
+interface DependencyRequest {
+  /** The address, fragment included. */
+  readonly address: string;
+  /** The declared asset type, or `null` when the address's extension identifies it. */
+  readonly type: string | null;
+}
+
 /**
- * Loads every asset the file references, in a stable order: `settings` first, then each entity's
+ * Lists every asset the file references, in a stable order: `settings` first, then each entity's
  * `instance.scene`, then each component's `props`
  * (`docs/architecture/06-serialization-and-scene-format.md` §4 step 2).
  *
  * @param file - The parsed file.
- * @param ctx - The loader context.
- * @returns The loaded handles, deduplicated by address, in discovery order.
+ * @returns The references, deduplicated by address, in discovery order.
  */
-async function loadDependencies(file: SceneFile, ctx: LoaderContext): Promise<readonly AssetHandle[]> {
-  const requests: { readonly address: string; readonly type: string | null }[] = [];
+function dependencyRequests(file: SceneFile): readonly DependencyRequest[] {
+  const requests: DependencyRequest[] = [];
   const seen = new Set<string>();
   const add = (address: string, type: string | null): void => {
     if (address === "" || seen.has(address)) {
@@ -138,13 +145,85 @@ async function loadDependencies(file: SceneFile, ctx: LoaderContext): Promise<re
       collectEntityRefs(entity, add);
     }
   }
+  return requests;
+}
+
+/**
+ * Loads every asset the file references through the loader context, which retains each one for
+ * the scene asset being loaded.
+ *
+ * @param file - The parsed file.
+ * @param ctx - The loader context.
+ * @returns The loaded handles, deduplicated by address, in discovery order.
+ */
+async function loadDependencies(file: SceneFile, ctx: LoaderContext): Promise<readonly AssetHandle[]> {
   // Every dependency is requested at once and awaited together: the asset service already applies
   // the project's concurrency limit, so serialising here would only make a scene load slower.
   return Promise.all(
-    requests.map(async (request) =>
+    dependencyRequests(file).map(async (request) =>
       ctx.loadDependency(request.address, request.type === null ? undefined : { type: request.type }),
     ),
   );
+}
+
+/**
+ * Options accepted by {@link loadSceneDependencies}.
+ *
+ * @public
+ */
+export interface LoadSceneDependenciesOptions {
+  /** Aborts every request; the handles already loaded are released before the promise rejects. */
+  readonly signal?: AbortSignal;
+}
+
+/**
+ * Loads every asset a scene file references — in `settings`, in every component's `props`, and in
+ * every `instance.scene`, recursively through the scenes those pull in — the walk the scene loader
+ * runs before it builds anything (`docs/architecture/06-serialization-and-scene-format.md` §4
+ * step 2).
+ *
+ * @remarks
+ * It is the half of the scene loader a file that is already in memory needs: pass the result to
+ * `createSceneAsset` and the asset can be built synchronously with `instantiateScene`. Each handle
+ * is returned with one holder, which the caller owns: release them all when the scene they serve
+ * is gone. `world.loadSceneFile` does that for a whole scene.
+ *
+ * @param assets - The asset service to load through, normally `app.assets`.
+ * @param file - The scene file.
+ * @param options - Cancellation.
+ * @returns The loaded handles, deduplicated by address, in the loader's order.
+ * @throws Whatever the asset service rejects a load with (an `AssetLoadError`); every handle
+ * loaded by then is released first.
+ *
+ * @example
+ * ```ts
+ * const dependencies = await loadSceneDependencies(app.assets, file);
+ * const asset = await createSceneAsset("memory:scene/draft", file, dependencies);
+ * ```
+ *
+ * @public
+ */
+export async function loadSceneDependencies(
+  assets: Assets,
+  file: SceneFile,
+  options?: LoadSceneDependenciesOptions,
+): Promise<readonly AssetHandle[]> {
+  const signal = options?.signal;
+  const handles = dependencyRequests(file).map((request) =>
+    assets.load<unknown>(request.address, {
+      ...(request.type === null ? {} : { type: request.type }),
+      ...(signal === undefined ? {} : { signal }),
+    }),
+  );
+  try {
+    await Promise.all(handles.map(async (handle) => handle.promise));
+  } catch (error) {
+    for (let index = 0; index < handles.length; index += 1) {
+      handles[index]?.release();
+    }
+    throw error;
+  }
+  return handles;
 }
 
 /**
