@@ -192,11 +192,11 @@ Unchanged API, different backend: `userData/<namespace>/<encoded key>.json` (or 
 
 ### Building and shipping
 
-| Command              | Does                                                                    |
-| -------------------- | ----------------------------------------------------------------------- |
-| `pnpm dev:desktop`   | `electron-vite dev` — the game in a window, hot reload in the renderer. |
-| `pnpm build:desktop` | `electron-vite build` — `out/{main,preload,renderer}`.                  |
-| `pnpm dist:desktop`  | `electron-builder --dir` — an unpacked, **unsigned** app in `release/`. |
+| Command              | Does                                                                                                                                     |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm dev:desktop`   | `install-electron && electron-vite dev` — the game in a window, hot reload in the renderer. The first run downloads the Electron binary. |
+| `pnpm build:desktop` | `electron-vite build` — `out/{main,preload,renderer}`.                                                                                   |
+| `pnpm dist:desktop`  | `electron-builder --dir` — an unpacked, **unsigned** app in `release/`.                                                                  |
 
 Add `--mac`, `--win`, or `--linux` to `electron-builder` for a real installer, on a runner of that platform: cross-compilation is not available for most targets. Code signing, notarization, and auto-update are documented after 1.0.
 

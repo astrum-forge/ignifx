@@ -28,11 +28,11 @@ npx @ignifx/cli my-game --template 3d-third-person --desktop
 cd my-game && pnpm install
 ```
 
-| Script               | What it does                                                                                                                                               |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm dev:desktop`   | `electron-vite dev` — the game in an Electron window, with hot reload in the renderer.                                                                     |
-| `pnpm build:desktop` | `electron-vite build` — the main, preload, and renderer bundles into `out/`.                                                                               |
-| `pnpm dist:desktop`  | `electron-builder --dir` — an **unpacked, unsigned** app in `release/`. Add `--mac`, `--win`, or `--linux` to build an installer for one platform instead. |
+| Script               | What it does                                                                                                                                                          |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm dev:desktop`   | `install-electron && electron-vite dev` — downloads the Electron binary on the first run, then opens the game in an Electron window, with hot reload in the renderer. |
+| `pnpm build:desktop` | `electron-vite build` — the main, preload, and renderer bundles into `out/`.                                                                                          |
+| `pnpm dist:desktop`  | `electron-builder --dir` — an **unpacked, unsigned** app in `release/`. Add `--mac`, `--win`, or `--linux` to build an installer for one platform instead.            |
 
 A desktop scaffold also gets a `pnpm-workspace.yaml` whose `allowBuilds` lets pnpm run the install
 scripts of `esbuild` and `electron` and skip `electron-winstaller`'s; without it, pnpm 11 stops the

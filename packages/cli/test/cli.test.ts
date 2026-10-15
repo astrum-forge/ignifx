@@ -1,4 +1,5 @@
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -348,6 +349,29 @@ describe("the repository's templates and @types/node", () => {
 
   it.each(templateNames)("%s without --desktop leaves @types/node out", async (template) => {
     expect(await scaffoldDevDependencies(template, false)).not.toHaveProperty(["@types/node"]);
+  });
+});
+
+// Electron 44's npm package has no install script: it downloads its binary the first time
+// `require("electron")` runs. electron-vite reads `node_modules/electron/path.txt` directly, so
+// without that download `electron-vite dev` fails with "Electron uninstall".
+describe("the repository's templates and the Electron download", () => {
+  const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
+  const templateNames = ["2d-sidescroller", "2d-topdown", "3d-first-person", "3d-third-person"];
+
+  it.each(templateNames)("%s --desktop downloads Electron before electron-vite dev", async (template) => {
+    const target = join(workspace, template);
+    await runCreate([target, "--template", template, "--desktop"], recordingIo(join(repoRoot, "templates")));
+    const manifest = JSON.parse(await readFile(join(target, "package.json"), "utf8")) as {
+      readonly scripts: Record<string, string>;
+    };
+    expect(manifest.scripts["dev:desktop"]).toBe("install-electron && electron-vite dev");
+
+    // The command is the electron package's own bin, so the installed version must still ship it.
+    const electron = createRequire(join(repoRoot, "templates", template, "package.json"))("electron/package.json") as {
+      readonly bin: Record<string, string>;
+    };
+    expect(electron.bin).toHaveProperty(["install-electron"]);
   });
 });
 
