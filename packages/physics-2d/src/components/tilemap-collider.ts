@@ -87,11 +87,19 @@ export class TilemapCollider2D extends Collider2D {
    * Whether the supplied data has changed since the shapes were built. The runtime polls this once
    * per fixed step, which is how a tile edit reaches physics without a cross-package subscription.
    *
+   * @remarks
+   * A disabled collider, or one on an inactive entity, builds no shapes, so it answers `false`
+   * rather than asking for the same empty rebuild every step. Enabling it again finds the data
+   * changed and rebuilds.
+   *
    * @returns `true` when a rebuild is due.
    *
    * @internal
    */
   needsRebuild(): boolean {
+    if (!this.isEnabledInHierarchy) {
+      return false;
+    }
     const data = this.collisionData;
     return data !== this.#builtData || (data?.version ?? -1) !== this.#builtVersion;
   }

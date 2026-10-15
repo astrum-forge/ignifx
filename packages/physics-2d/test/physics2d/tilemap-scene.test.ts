@@ -255,6 +255,18 @@ describe("TilemapCollider2D in a scene file", () => {
     expect(hitBelow(app, 1)).toBe("Level");
   });
 
+  it("builds nothing for a disabled collider, and builds once it is enabled again", async () => {
+    const { app, collider, run } = await loadLevel();
+    collider.enabled = false;
+    await run(2);
+    expect(hitBelow(app, 1)).toBeNull();
+    // Nothing to build, so the runtime is not asked to rebuild the level on every step.
+    expect(collider.needsRebuild()).toBe(false);
+    collider.enabled = true;
+    await run(1);
+    expect(hitBelow(app, 1)).toBe("Level");
+  });
+
   it("round-trips the file byte for byte", async () => {
     const { app, text, run } = await loadLevel();
     await run(2);
