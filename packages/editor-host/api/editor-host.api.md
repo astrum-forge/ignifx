@@ -12,10 +12,13 @@ import { RenderSurface } from '@ignifx/core';
 import { SceneInstance } from '@ignifx/core';
 import { SettingsInput } from '@ignifx/core';
 
-// @beta
+// @public
+export const DEFAULT_HEARTBEAT_INTERVAL_MS = 1e3;
+
+// @public
 export const EDITOR_CONNECT_MESSAGE_TYPE = "ignifx-editor/connect";
 
-// @beta
+// @public
 export interface EditorConnectMessage {
     readonly type: typeof EDITOR_CONNECT_MESSAGE_TYPE;
 }
@@ -86,7 +89,7 @@ export const HandshakeMethod: {
 // @public
 export type HandshakeMethod = (typeof HandshakeMethod)[keyof typeof HandshakeMethod];
 
-// @beta
+// @public
 export type HeartbeatNotification = RpcNotification<typeof HostNotification.heartbeat, never>;
 
 // @public
@@ -100,13 +103,13 @@ export interface HelloRequest extends RpcRequest<typeof HandshakeMethod.hello, H
     readonly params: HelloParams;
 }
 
-// @beta
+// @public
 export const HostCapability: {
     readonly heartbeat: "heartbeat";
     readonly playControls: "playControls";
 };
 
-// @beta
+// @public
 export type HostCapability = (typeof HostCapability)[keyof typeof HostCapability];
 
 // @public
@@ -118,16 +121,22 @@ export const HostKind: {
 // @public
 export type HostKind = (typeof HostKind)[keyof typeof HostKind];
 
-// @beta
+// @public
 export const HostNotification: {
     readonly heartbeat: "heartbeat";
 };
 
-// @beta
+// @public
 export type HostNotification = (typeof HostNotification)[keyof typeof HostNotification];
+
+// @public
+export function isEditorConnectMessage(value: unknown): value is EditorConnectMessage;
 
 // @beta
 export function isEditorOrigin(value: string): boolean;
+
+// @public
+export function isPlayState(value: unknown): value is PlayState;
 
 // @public
 export function isRpcMessage(value: unknown): value is RpcMessage;
@@ -138,7 +147,7 @@ export const JSON_RPC_VERSION = "2.0";
 // @public
 export type PingRequest = RpcRequest<typeof HandshakeMethod.ping, never>;
 
-// @beta
+// @public
 export const PlayMethod: {
     readonly play: "play";
     readonly pause: "pause";
@@ -146,16 +155,16 @@ export const PlayMethod: {
     readonly stop: "stop";
 };
 
-// @beta
+// @public
 export type PlayMethod = (typeof PlayMethod)[keyof typeof PlayMethod];
 
-// @beta
+// @public
 export type PlayRequest = RpcRequest<typeof PlayMethod.play, never> | RpcRequest<typeof PlayMethod.pause, never> | RpcRequest<typeof PlayMethod.step, StepParams> | RpcRequest<typeof PlayMethod.stop, never>;
 
-// @beta
+// @public
 export type PlayResponse = RpcSuccessResponse<PlayState>;
 
-// @beta
+// @public
 export interface PlayState {
     readonly frameCount: number;
     readonly isPaused: boolean;
@@ -253,7 +262,7 @@ export function startEditorHost(options: EditorHostOptions): Promise<EditorHost>
 // @beta
 export function startEditorPlayControls(app: App, options: EditorPlayControlsOptions): EditorPlayControls;
 
-// @beta
+// @public
 export interface StepParams {
     readonly deltaSeconds?: number;
 }

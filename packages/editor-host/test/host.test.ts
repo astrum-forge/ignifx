@@ -1,7 +1,7 @@
 import { isIgnifxError, Script, VERSION } from "@ignifx/core";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { resolveEngineVersion, startEditorHost } from "../src/host.js";
-import { JSON_RPC_VERSION, PROTOCOL_VERSION, RpcErrorCode } from "../src/protocol.js";
+import { JSON_RPC_VERSION, PROTOCOL_VERSION, RpcErrorCode } from "../src/protocol/index.js";
 import { connect, CountingTarget, EDITOR_ORIGIN, flushMessages } from "./support/editor.js";
 import type { EditorHost, EditorHostOptions } from "../src/host.js";
 import type { EditorPeer } from "./support/editor.js";
@@ -94,11 +94,17 @@ describe("startEditorHost", () => {
     });
   });
 
-  it("accepts a hello from another protocol minor", async () => {
-    const { target } = await startHost();
-    const response = await editor(target).hello({ major: PROTOCOL_VERSION.major, minor: PROTOCOL_VERSION.minor + 5 });
+  it("refuses a hello from another protocol minor while the major is 0", async () => {
+    const { target } = await startHost({ engineVersion: "0.9.0" });
+    const response = await editor(target).hello({ major: 0, minor: 1 });
 
-    expect(response["result"]).toMatchObject({ hostKind: "scene" });
+    expect(response["error"]).toEqual({
+      code: RpcErrorCode.incompatibleProtocol,
+      message:
+        "The editor speaks protocol 0.1 and this host speaks 0.2. Update the editor, or the project's " +
+        "@ignifx packages, so the protocol versions match.",
+      data: { host: PROTOCOL_VERSION, engineVersion: "0.9.0" },
+    });
   });
 
   it("refuses a hello without an editor version and protocol", async () => {

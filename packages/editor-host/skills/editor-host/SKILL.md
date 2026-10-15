@@ -62,7 +62,7 @@ editor window (ignifx://app)
       main.ts → attachEditorPlayControls(app)   (virtual:ignifx/editor; a no-op in builds)
       the game owns its app; hostKind "play"
 
-each view ◀── MessagePort ──▶ editor     JSON-RPC 2.0, protocol 0.1
+each view ◀── MessagePort ──▶ editor     JSON-RPC 2.0, protocol 0.2
    connect (window message, origin-checked) → hello → ready → ping/pong, heartbeat, play/pause/step/stop
 ```
 
@@ -113,16 +113,16 @@ host.dispose();
 
 `skills/ignifx/references/api/editor-host.md` and `editor-host-vite.md` have the generated surface.
 
-| Member                                             | What it does                                                                       |
-| -------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `editorHostPlugin(options)` (`/vite`)              | The two Vite plugins: the scene view's page (dev only) and `virtual:ignifx/editor` |
-| `attachEditorPlayControls(app)`                    | From `virtual:ignifx/editor`: hands the game's app to the editor; returns a detach |
-| `startEditorHost(options)`                         | Starts the scene view's host and its app; resolves to a disposable `EditorHost`    |
-| `startEditorPlayControls(app, options)`            | What `attachEditorPlayControls` calls in development                               |
-| `EDITOR_CONNECT_MESSAGE_TYPE`                      | The window message that carries the port                                           |
-| `PROTOCOL_VERSION`, `RpcErrorCode`, `isRpcMessage` | The protocol 0.1 values and checks, mirrored from `@ignifx/editor-protocol`        |
-| `PlayMethod`, `PlayState`                          | `play`, `pause`, `step`, `stop`, and what each answers                             |
-| `EditorHostErrorCode`                              | `IGX-1801` bad origin, `IGX-1802` no window, `IGX-1803` bad option                 |
+| Member                                                            | What it does                                                                                                                |
+| ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `editorHostPlugin(options)` (`/vite`)                             | The two Vite plugins: the scene view's page (dev only) and `virtual:ignifx/editor`                                          |
+| `attachEditorPlayControls(app)`                                   | From `virtual:ignifx/editor`: hands the game's app to the editor; returns a detach                                          |
+| `startEditorHost(options)`                                        | Starts the scene view's host and its app; resolves to a disposable `EditorHost`                                             |
+| `startEditorPlayControls(app, options)`                           | What `attachEditorPlayControls` calls in development                                                                        |
+| `EDITOR_CONNECT_MESSAGE_TYPE`, `isEditorConnectMessage`           | The window message that carries the port, and its check                                                                     |
+| `PROTOCOL_VERSION`, `RpcErrorCode`, `isRpcMessage`, `isPlayState` | The protocol 0.2 values and checks, mirrored from `@ignifx/editor-protocol`; before 1.0 the major and minor must both match |
+| `PlayMethod`, `PlayState`                                         | `play`, `pause`, `step`, `stop`, and what each answers                                                                      |
+| `EditorHostErrorCode`                                             | `IGX-1801` bad origin, `IGX-1802` no window, `IGX-1803` bad option                                                          |
 
 ## Recipes
 

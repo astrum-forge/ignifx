@@ -4,15 +4,22 @@ import * as page from "../src/index.js";
 import * as vite from "../src/vite.js";
 
 /**
- * The protocol mirror and the two entries' surfaces. `protocol.ts` copies `@ignifx/editor-protocol`
- * 0.1; these values are the wire format, so a change here is a protocol change.
+ * The protocol mirror and the two entries' surfaces. `src/protocol/` copies `@ignifx/editor-protocol`
+ * 0.2; these values are the wire format, so a change here is a protocol change.
  */
 
 describe("the protocol mirror", () => {
-  it("speaks protocol 0.1 and agrees on majors only", () => {
-    expect(page.PROTOCOL_VERSION).toEqual({ major: 0, minor: 1 });
-    expect(page.protocolVersionIsCompatible({ major: 0, minor: 1 }, { major: 0, minor: 9 })).toBe(true);
-    expect(page.protocolVersionIsCompatible({ major: 0, minor: 1 }, { major: 1, minor: 1 })).toBe(false);
+  it("speaks protocol 0.2 and, before 1.0, agrees on the major and the minor", () => {
+    expect(page.PROTOCOL_VERSION).toEqual({ major: 0, minor: 2 });
+    expect(page.protocolVersionIsCompatible({ major: 0, minor: 2 }, { major: 0, minor: 2 })).toBe(true);
+    expect(page.protocolVersionIsCompatible({ major: 0, minor: 2 }, { major: 0, minor: 1 })).toBe(false);
+    expect(page.protocolVersionIsCompatible({ major: 0, minor: 1 }, { major: 0, minor: 2 })).toBe(false);
+    expect(page.protocolVersionIsCompatible({ major: 0, minor: 2 }, { major: 1, minor: 2 })).toBe(false);
+  });
+
+  it("lets minors differ from 1.0", () => {
+    expect(page.protocolVersionIsCompatible({ major: 1, minor: 0 }, { major: 1, minor: 4 })).toBe(true);
+    expect(page.protocolVersionIsCompatible({ major: 1, minor: 4 }, { major: 2, minor: 4 })).toBe(false);
   });
 
   it("keeps the JSON-RPC and editor error codes", () => {

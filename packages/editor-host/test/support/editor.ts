@@ -1,6 +1,5 @@
-import { EDITOR_CONNECT_MESSAGE_TYPE } from "../../src/messages.js";
-import { JSON_RPC_VERSION, PROTOCOL_VERSION } from "../../src/protocol.js";
-import type { ProtocolVersion } from "../../src/protocol.js";
+import { EDITOR_CONNECT_MESSAGE_TYPE, JSON_RPC_VERSION, PROTOCOL_VERSION } from "../../src/protocol/index.js";
+import type { ProtocolVersion } from "../../src/protocol/index.js";
 
 /** The origin the tests' editor is served from. */
 export const EDITOR_ORIGIN = "ignifx://app";

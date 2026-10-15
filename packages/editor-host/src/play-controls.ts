@@ -5,10 +5,9 @@
 
 import { checkChannelOptions, InvalidParamsError, openChannel, resolveMessageTarget } from "./channel.js";
 import { resolveEngineVersion } from "./host.js";
-import { HostCapability, PlayMethod } from "./messages.js";
-import { HostKind, PROTOCOL_VERSION } from "./protocol.js";
+import { HostCapability, HostKind, PlayMethod, PROTOCOL_VERSION } from "./protocol/index.js";
 import type { EditorMessageTarget, RequestHandler } from "./channel.js";
-import type { PlayState } from "./messages.js";
+import type { PlayState } from "./protocol/index.js";
 import type { App } from "@ignifx/core";
 
 /**

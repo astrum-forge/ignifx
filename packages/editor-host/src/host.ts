@@ -5,8 +5,7 @@
 
 import { createApp, VERSION } from "@ignifx/core";
 import { checkChannelOptions, openChannel, resolveMessageTarget } from "./channel.js";
-import { HostCapability } from "./messages.js";
-import { HostKind, PROTOCOL_VERSION } from "./protocol.js";
+import { HostCapability, HostKind, PROTOCOL_VERSION } from "./protocol/index.js";
 import type { EditorMessageTarget } from "./channel.js";
 import type {
   App,

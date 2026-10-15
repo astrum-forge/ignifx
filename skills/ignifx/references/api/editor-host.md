@@ -11,18 +11,14 @@ Explicit named re-exports only, no `export *` (coding standards §4).
 
 ### EditorConnectMessage
 
-**`Beta`**
-
 The window message that hands a host its `MessagePort`; the port travels as its one transferred
-object.
+object, not inside the data.
 
 #### Properties
 
 ##### type
 
 > `readonly` **type**: `"ignifx-editor/connect"`
-
-**`Beta`**
 
 Always [EDITOR\_CONNECT\_MESSAGE\_TYPE](#editor_connect_message_type).
 
@@ -430,8 +426,6 @@ What the editor says about itself.
 
 ### PlayState
 
-**`Beta`**
-
 What the play view reports after every `PlayMethod`.
 
 #### Properties
@@ -440,23 +434,17 @@ What the play view reports after every `PlayMethod`.
 
 > `readonly` **frameCount**: `number`
 
-**`Beta`**
-
 How many frames have started (`app.time.frameCount`).
 
 ##### isPaused
 
 > `readonly` **isPaused**: `boolean`
 
-**`Beta`**
-
 Whether game time is paused (`app.time.paused`).
 
 ##### isRunning
 
 > `readonly` **isRunning**: `boolean`
-
-**`Beta`**
 
 Whether the frame loop runs (`app.isRunning`).
 
@@ -465,7 +453,8 @@ Whether the frame loop runs (`app.isRunning`).
 ### ProtocolVersion
 
 A protocol version. `major` changes when a message changes incompatibly; `minor` when messages
-or fields are added in a way an older peer can ignore.
+or fields are added in a way an older peer can ignore. Before 1.0 the minor plays the role of the
+major (ADR-E008), so every 0.x minor is its own incompatible line.
 
 #### Properties
 
@@ -479,7 +468,7 @@ Incremented for incompatible changes. Peers must agree on it.
 
 > `readonly` **minor**: `number`
 
-Incremented for compatible additions. Peers may differ.
+Incremented for additions. From 1.0 peers may differ in it; before 1.0 they must agree on it too.
 
 ***
 
@@ -493,7 +482,8 @@ What a host says about itself in answer to `hello`.
 
 > `readonly` **capabilities**: readonly `string`[]
 
-Optional features the host supports. Names are added as the protocol grows; unknown names are ignored.
+Optional features the host supports, named by `HostCapability`. Names are added as the
+protocol grows; a peer ignores names it does not know.
 
 ##### engineVersion
 
@@ -693,8 +683,6 @@ What the method returned.
 
 ### StepParams
 
-**`Beta`**
-
 The parameters of the `step` method.
 
 #### Properties
@@ -703,9 +691,8 @@ The parameters of the `step` method.
 
 > `readonly` `optional` **deltaSeconds?**: `number`
 
-**`Beta`**
-
-The frame delta in seconds. Defaults to `app.time.fixedDeltaTime`.
+The frame delta in seconds, a positive finite number. Defaults to `app.time.fixedDeltaTime`;
+any other value fails with `RpcErrorCode.invalidParams`.
 
 ## Type Aliases
 
@@ -731,18 +718,14 @@ The union of the names in `HandshakeMethod`.
 
 > **HeartbeatNotification** = [`RpcNotification`](#rpcnotification)\<*typeof* [`heartbeat`](#heartbeat-1), `never`\>
 
-**`Beta`**
-
-Host → editor: the view is alive. It carries no parameters. A view whose heartbeats stop has
-crashed or hung; Chromium reports nothing else for a dead sub-frame.
+Host → editor: the view is alive. It carries no parameters, so `params` is absent on the wire:
+`{"jsonrpc":"2.0","method":"heartbeat"}`.
 
 ***
 
 ### HostCapability
 
 > **HostCapability** = *typeof* [`HostCapability`](#hostcapability)\[keyof *typeof* [`HostCapability`](#hostcapability)\]
-
-**`Beta`**
 
 The union of the names in `HostCapability`.
 
@@ -760,8 +743,6 @@ The union of the kinds in `HostKind`.
 
 > **HostNotification** = *typeof* [`HostNotification`](#hostnotification)\[keyof *typeof* [`HostNotification`](#hostnotification)\]
 
-**`Beta`**
-
 The union of the names in `HostNotification`.
 
 ***
@@ -778,8 +759,6 @@ Either direction: a liveness check. It takes no parameters.
 
 > **PlayMethod** = *typeof* [`PlayMethod`](#playmethod)\[keyof *typeof* [`PlayMethod`](#playmethod)\]
 
-**`Beta`**
-
 The union of the names in `PlayMethod`.
 
 ***
@@ -788,17 +767,13 @@ The union of the names in `PlayMethod`.
 
 > **PlayRequest** = [`RpcRequest`](#rpcrequest)\<*typeof* [`play`](#play-1), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`pause`](#pause), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`step`](#step), [`StepParams`](#stepparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`stop`](#stop), `never`\>
 
-**`Beta`**
-
-Editor → play view: one of the `PlayMethod`s.
+Editor → play view: one of the `PlayMethod`s. Only `step` takes parameters.
 
 ***
 
 ### PlayResponse
 
 > **PlayResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<[`PlayState`](#playstate)\>
-
-**`Beta`**
 
 Play view → editor: the answer to a [PlayRequest](#playrequest).
 
@@ -860,19 +835,35 @@ The result on success.
 
 ## Variables
 
+### DEFAULT\_HEARTBEAT\_INTERVAL\_MS
+
+> `const` **DEFAULT\_HEARTBEAT\_INTERVAL\_MS**: `1000` = `1000`
+
+The milliseconds between heartbeats when the host is not configured otherwise: one second, so a
+dead view is noticed within a few.
+
+#### Remarks
+
+A host starts its heartbeat after it has answered a compatible `hello` with `ready`, sends it on
+the current port only, and stops it when that port is replaced or closed. A host that lists
+`HostCapability.heartbeat` in `ready` sends it, and the editor treats a missing heartbeat as a
+dead view.
+
+***
+
 ### EDITOR\_CONNECT\_MESSAGE\_TYPE
 
 > `const` **EDITOR\_CONNECT\_MESSAGE\_TYPE**: `"ignifx-editor/connect"` = `"ignifx-editor/connect"`
-
-**`Beta`**
 
 The `type` of the window message that hands a host its `MessagePort`.
 
 #### Remarks
 
-The editor posts `{ type: EDITOR_CONNECT_MESSAGE_TYPE }` to the view's window with the port as
-the one transferred object, and posts a fresh one after every reload of the view: a port that has
-been transferred once cannot be sent again.
+The editor posts `{ type: EDITOR_CONNECT_MESSAGE_TYPE }` to the view's window, targeted at the
+view's origin, with the port as the one transferred object. It posts a fresh one after every load
+of the view: a port that has been transferred once cannot be sent again, and the newest port
+replaces the previous one. The host ignores the message unless `event.origin` is the editor's
+origin, the data is this shape, and exactly one port is attached.
 
 #### Example
 
@@ -943,8 +934,6 @@ Either direction: a liveness check, answered with `"pong"`.
 
 > `const` **HostCapability**: `object`
 
-**`Beta`**
-
 The optional features a host lists in its `ready` result.
 
 #### Type Declaration
@@ -953,13 +942,17 @@ The optional features a host lists in its `ready` result.
 
 > `readonly` **heartbeat**: `"heartbeat"` = `"heartbeat"`
 
-The host sends [HeartbeatNotification](#heartbeatnotification)s after `ready`.
+The host sends `heartbeat` notifications after `ready` (see `HostNotification`).
 
 ##### playControls
 
 > `readonly` **playControls**: `"playControls"` = `"playControls"`
 
 The host answers the methods in `PlayMethod`.
+
+#### Remarks
+
+The scene host sends `["heartbeat"]`; the play controls send `["heartbeat", "playControls"]`.
 
 ***
 
@@ -989,8 +982,6 @@ The scene view: an edit-mode app that applies document ops and draws gizmos.
 
 > `const` **HostNotification**: `object`
 
-**`Beta`**
-
 The notifications a host sends on its own.
 
 #### Type Declaration
@@ -999,7 +990,11 @@ The notifications a host sends on its own.
 
 > `readonly` **heartbeat**: `"heartbeat"` = `"heartbeat"`
 
-Host → editor, about once a second after `ready`: the view is alive.
+Host → editor, every [DEFAULT\_HEARTBEAT\_INTERVAL\_MS](#default_heartbeat_interval_ms) by default after `ready`: the view is alive.
+
+#### Remarks
+
+`as const` object plus derived union rather than an `enum` (engine coding standards §5.2, §5.3).
 
 ***
 
@@ -1014,8 +1009,6 @@ The value of every envelope's `jsonrpc` field.
 ### PlayMethod
 
 > `const` **PlayMethod**: `object`
-
-**`Beta`**
 
 The methods the play view answers after `ready`. Each one answers with a [PlayState](#playstate).
 
@@ -1045,13 +1038,19 @@ Stops the frame loop, then advances exactly one frame with `app.step()` and leav
 
 Stops the frame loop with `app.stop()`. The editor reloads the view to reset the game.
 
+#### Remarks
+
+A host that answers them lists `HostCapability.playControls` in `ready`. Sent before `ready`, they
+fail with `RpcErrorCode.notReady`; sent to a host without them, with `RpcErrorCode.methodNotFound`.
+
 ***
 
 ### PROTOCOL\_VERSION
 
 > `const` **PROTOCOL\_VERSION**: [`ProtocolVersion`](#protocolversion)
 
-The protocol version this package describes. Both sides send it in the handshake.
+The protocol version this package describes. The editor sends it in `hello` and the host in
+`ready`.
 
 ***
 
@@ -1068,7 +1067,7 @@ JSON-RPC reserves for implementations (-32000 to -32099).
 
 > `readonly` **incompatibleProtocol**: `-32000` = `-32_000`
 
-The peers' protocol majors differ (see `protocolVersionIsCompatible`).
+The peers' protocol versions are incompatible (see `protocolVersionIsCompatible`).
 
 ##### internalError
 
@@ -1112,6 +1111,29 @@ The message was not valid JSON.
 
 ## Functions
 
+### isEditorConnectMessage()
+
+> **isEditorConnectMessage**(`value`): `value is EditorConnectMessage`
+
+Tells whether a window message's data is the connect message. It checks the data only; the
+caller still checks `event.origin` and that `event.ports` holds exactly one port.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The `data` of a received `MessageEvent`.
+
+#### Returns
+
+`value is EditorConnectMessage`
+
+True when `value` is an object whose `type` is [EDITOR\_CONNECT\_MESSAGE\_TYPE](#editor_connect_message_type).
+
+***
+
 ### isEditorOrigin()
 
 > **isEditorOrigin**(`value`): `boolean`
@@ -1142,6 +1164,29 @@ editor's `ignifx://app`, it answers `"null"`, while Chromium reports `ignifx://a
 
 ***
 
+### isPlayState()
+
+> **isPlayState**(`value`): `value is PlayState`
+
+Checks the `result` of a play method's response.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `result`.
+
+#### Returns
+
+`value is PlayState`
+
+True when `value` has boolean `isRunning` and `isPaused` and a non-negative integer
+`frameCount`.
+
+***
+
 ### isRpcMessage()
 
 > **isRpcMessage**(`value`): `value is RpcMessage`
@@ -1169,7 +1214,7 @@ True when `value` is a well-formed JSON-RPC 2.0 message with a known error code,
 
 > **protocolVersionIsCompatible**(`a`, `b`): `boolean`
 
-Tells whether two peers can talk: they can when their major versions are equal.
+Tells whether two peers can talk.
 
 #### Parameters
 
@@ -1189,7 +1234,23 @@ The other peer's protocol version.
 
 `boolean`
 
-`true` when the majors match; the minors are free to differ.
+`true` when the versions are on the same compatible line.
+
+#### Remarks
+
+The rule is ADR-E008's: the protocol follows SemVer, and until 1.0 its minor plays the role of the
+major, as the engine's minors do. So from 1.0 two peers are compatible when their majors are
+equal and the minors are free to differ; before 1.0 the major and the minor must both be equal.
+The check is symmetric. Which versions the editor accepts beyond it (ADR-E008 has the editor
+support the current protocol line and the previous one) is the editor's decision, not this
+function's.
+
+#### Example
+
+```ts
+protocolVersionIsCompatible({ major: 0, minor: 2 }, { major: 0, minor: 1 }); // false
+protocolVersionIsCompatible({ major: 1, minor: 0 }, { major: 1, minor: 4 }); // true
+```
 
 ***
 

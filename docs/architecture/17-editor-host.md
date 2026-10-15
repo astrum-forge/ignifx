@@ -62,14 +62,14 @@ The game's `main.ts` calls `attachEditorPlayControls(app)` from `virtual:ignifx/
 
 ## 6. The protocol
 
-The host speaks protocol **0.1** of `@ignifx/editor-protocol`, which the editor repository publishes on its own version line (ADR-E008). Until that package is on npm, `src/protocol.ts` is a copy of its `rpc.ts`, `handshake.ts` and `version.ts`, kept identical; afterwards the host depends on it.
+The host speaks protocol **0.2** of `@ignifx/editor-protocol`, which the editor repository publishes on its own version line (ADR-E008). Until that package is on npm, `src/protocol/` is a copy of its modules, one file for each, with identical code; afterwards the host depends on it. `src/protocol/index.ts` lists the one difference, in comments only. `test/wire.test.ts` replays the editor's recorded host messages (`test/fixtures/host-0.2-wire.json`, copied from the editor repository) through a live host.
 
 1. **Connect.** The editor posts `{ type: "ignifx-editor/connect" }` to the view's window with a `MessagePort` as the one transferred object. The host accepts it only when `event.origin` equals `editorOrigin` (§7). A view reload is a new document that needs a new port, and the editor sends a fresh one on every `load`; the host also accepts a new port at any time, closing the previous one and stopping its heartbeat.
-2. **Handshake.** The editor sends `hello { editorVersion, protocol }`. A host whose protocol major matches answers `ready { engineVersion, protocol, capabilities, hostKind }`; otherwise it answers `incompatibleProtocol` with its own version in `data`. Malformed parameters get `invalidParams`.
+2. **Handshake.** The editor sends `hello { editorVersion, protocol }`. A host whose protocol version is compatible answers `ready { engineVersion, protocol, capabilities, hostKind }`; otherwise it answers `incompatibleProtocol` with its own version in `data`. Before 1.0 the minor plays the role of the major, so compatible means the same major and minor (0.2 refuses 0.1); from 1.0 only the majors must match. Malformed parameters get `invalidParams`.
 3. **Liveness.** `ping` is answered with `"pong"` at any time. After `ready`, the host sends a `heartbeat` notification every `heartbeatIntervalMs` (default 1000). Chromium reports nothing to the parent when an out-of-process iframe's renderer dies, so a stopped heartbeat is how the editor finds a dead view.
 4. **Everything else.** A method the host does not have gets `methodNotFound`; a known method before `hello` gets `notReady`; a message that is not a JSON-RPC envelope gets `invalidRequest` with `id: null`. A failing method gets `internalError`, with the `IgnifxError` code in `data.code` when there is one.
 
-The connect message, `heartbeat`, the capability names (`heartbeat`, `playControls`) and the play methods are not in protocol 0.1 yet. They are declared in `src/messages.ts` and proposed for the next protocol minor.
+The connect message, `heartbeat`, the capability names (`heartbeat`, `playControls`) and the play methods are part of protocol 0.2, in the editor's `connect.ts`, `heartbeat.ts`, `handshake.ts` and `play.ts`.
 
 ## 7. Security
 

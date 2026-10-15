@@ -6,16 +6,19 @@
 
 import { IgnifxError } from "@ignifx/core";
 import { EditorHostErrorCode, isEditorOrigin } from "./error-codes.js";
-import { EDITOR_CONNECT_MESSAGE_TYPE, HostNotification } from "./messages.js";
 import {
+  DEFAULT_HEARTBEAT_INTERVAL_MS,
   HandshakeMethod,
+  HostNotification,
+  isEditorConnectMessage,
   isRpcMessage,
   JSON_RPC_VERSION,
   PROTOCOL_VERSION,
   protocolVersionIsCompatible,
   RpcErrorCode,
-} from "./protocol.js";
-import type { HelloParams, ReadyResult, RpcErrorResponse, RpcId, RpcSuccessResponse } from "./protocol.js";
+} from "./protocol/index.js";
+import { isRecord } from "./protocol/rpc.js";
+import type { HelloParams, ReadyResult, RpcErrorResponse, RpcId, RpcSuccessResponse } from "./protocol/index.js";
 
 /**
  * Where a host listens for the editor's connect message: the view's `window` in a browser, or any
@@ -77,19 +80,6 @@ export interface Channel {
   readonly isConnected: boolean;
   /** Removes the window listener, stops the heartbeat, and closes the port. Idempotent. */
   dispose(): void;
-}
-
-/** The heartbeat's default period: one second, so a dead view is noticed within a few. */
-export const DEFAULT_HEARTBEAT_INTERVAL_MS = 1000;
-
-/**
- * Narrows to a plain object.
- *
- * @param value - The value to test.
- * @returns True when the value is a non-null, non-array object.
- */
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 /**
@@ -238,7 +228,7 @@ export function openChannel(options: ChannelOptions): Channel {
         RpcErrorCode.incompatibleProtocol,
         `The editor speaks protocol ${String(params.protocol.major)}.${String(params.protocol.minor)} and this ` +
           `host speaks ${String(PROTOCOL_VERSION.major)}.${String(PROTOCOL_VERSION.minor)}. Update the editor, ` +
-          "or the project's @ignifx packages, so the protocol majors match.",
+          "or the project's @ignifx packages, so the protocol versions match.",
         { host: PROTOCOL_VERSION, engineVersion: ready.engineVersion },
       );
     }
@@ -319,14 +309,8 @@ export function openChannel(options: ChannelOptions): Channel {
     if (!(event instanceof MessageEvent) || event.origin !== editorOrigin) {
       return;
     }
-    const data: unknown = event.data;
     const next = event.ports[0];
-    if (
-      !isRecord(data) ||
-      data["type"] !== EDITOR_CONNECT_MESSAGE_TYPE ||
-      event.ports.length !== 1 ||
-      next === undefined
-    ) {
+    if (!isEditorConnectMessage(event.data) || event.ports.length !== 1 || next === undefined) {
       return;
     }
     accept(next);

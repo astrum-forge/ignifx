@@ -1,7 +1,7 @@
 import { createApp } from "@ignifx/core";
 import { afterEach, describe, expect, it } from "vitest";
 import { startEditorPlayControls } from "../src/play-controls.js";
-import { RpcErrorCode } from "../src/protocol.js";
+import { RpcErrorCode } from "../src/protocol/index.js";
 import { connect, EDITOR_ORIGIN } from "./support/editor.js";
 import type { EditorPlayControls } from "../src/play-controls.js";
 import type { EditorPeer } from "./support/editor.js";

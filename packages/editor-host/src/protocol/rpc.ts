@@ -1,15 +1,9 @@
+// A copy of `packages/editor-protocol/src/rpc.ts` from `astrum-forge/ignifx-editor` (protocol 0.2).
+// Below this comment it is byte-identical to that file, but for the link rule in `./index.ts`.
 /**
- * The editor protocol, version 0.1: JSON-RPC 2.0 envelopes, the `hello`/`ready` handshake and
- * `ping`/`"pong"`, exactly as `@ignifx/editor-protocol` 0.1 defines them.
- *
- * These declarations are a copy. `@ignifx/editor-protocol` is published from the editor repository
- * (`astrum-forge/ignifx-editor`), and once it is on npm this package depends on it and this file
- * goes away (ADR-E008 in that repository). Until then, keep every shape here identical to the
- * editor's `packages/editor-protocol/src/{rpc,handshake,version}.ts`, and change it only when those
- * change. Messages the host speaks that 0.1 does not define yet live in `messages.ts`.
+ * JSON-RPC 2.0 envelopes (https://www.jsonrpc.org/specification) shared by every editor channel:
+ * editor↔host and editor↔play over a `MessagePort`.
  */
-
-// From `rpc.ts`.
 
 /**
  * The value of every envelope's `jsonrpc` field.
@@ -45,7 +39,7 @@ export const RpcErrorCode = {
   invalidParams: -32_602,
   /** The handler failed. */
   internalError: -32_603,
-  /** The peers' protocol majors differ (see `protocolVersionIsCompatible`). */
+  /** The peers' protocol versions are incompatible (see `protocolVersionIsCompatible`). */
   incompatibleProtocol: -32_000,
   /** The peer has not finished its handshake and cannot answer this method yet. */
   notReady: -32_001,
@@ -155,12 +149,15 @@ export type RpcResponse<R = unknown> = RpcSuccessResponse<R> | RpcErrorResponse;
 export type RpcMessage = RpcRequest | RpcNotification | RpcResponse;
 
 /**
- * Narrows to a plain object without an `as` assertion.
+ * Narrows to a plain object without an `as` assertion. Shared by this package's guards; not
+ * re-exported from the barrel.
  *
  * @param value - The value to test.
  * @returns True when the value is a non-null, non-array object.
+ *
+ * @internal
  */
-function isRecord(value: unknown): value is Record<string, unknown> {
+export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
@@ -217,141 +214,4 @@ export function isRpcMessage(value: unknown): value is RpcMessage {
     return isRpcId(value["id"]);
   }
   return (value["id"] === null || isRpcId(value["id"])) && isRpcError(value["error"]);
-}
-
-// From `handshake.ts`.
-
-/**
- * The method names of the handshake.
- *
- * @remarks
- * `as const` object plus derived union rather than an `enum` (engine coding standards §5.2, §5.3).
- *
- * @public
- */
-export const HandshakeMethod = {
-  /** Editor → host: the first message on a new channel. */
-  hello: "hello",
-  /** Either direction: a liveness check, answered with `"pong"`. */
-  ping: "ping",
-} as const;
-
-/**
- * The union of the names in `HandshakeMethod`.
- *
- * @public
- */
-export type HandshakeMethod = (typeof HandshakeMethod)[keyof typeof HandshakeMethod];
-
-/**
- * Which kind of view a host runs.
- *
- * @public
- */
-export const HostKind = {
-  /** The scene view: an edit-mode app that applies document ops and draws gizmos. */
-  scene: "scene",
-  /** The play view: the project's own page, running the game. */
-  play: "play",
-} as const;
-
-/**
- * The union of the kinds in `HostKind`.
- *
- * @public
- */
-export type HostKind = (typeof HostKind)[keyof typeof HostKind];
-
-/**
- * What the editor says about itself in `hello`.
- *
- * @public
- */
-export interface HelloParams {
-  /** The editor's own version, for example `"0.1.0"`. */
-  readonly editorVersion: string;
-  /** The protocol version the editor speaks. */
-  readonly protocol: ProtocolVersion;
-}
-
-/**
- * Editor → host: the first request on a new channel.
- *
- * @public
- */
-export interface HelloRequest extends RpcRequest<typeof HandshakeMethod.hello, HelloParams> {
-  /** What the editor says about itself. */
-  readonly params: HelloParams;
-}
-
-/**
- * What a host says about itself in answer to `hello`.
- *
- * @public
- */
-export interface ReadyResult {
-  /** The version of `@ignifx/core` the project runs, for example `"0.9.0"`. */
-  readonly engineVersion: string;
-  /** The protocol version the host speaks. */
-  readonly protocol: ProtocolVersion;
-  /** Optional features the host supports. Names are added as the protocol grows; unknown names are ignored. */
-  readonly capabilities: readonly string[];
-  /** Which view the host runs. */
-  readonly hostKind: HostKind;
-}
-
-/**
- * Host → editor: the successful answer to {@link HelloRequest}.
- *
- * @public
- */
-export type ReadyResponse = RpcSuccessResponse<ReadyResult>;
-
-/**
- * Either direction: a liveness check. It takes no parameters.
- *
- * @public
- */
-export type PingRequest = RpcRequest<typeof HandshakeMethod.ping, never>;
-
-/**
- * The answer to {@link PingRequest}.
- *
- * @public
- */
-export type PongResponse = RpcSuccessResponse<"pong">;
-
-// From `version.ts`.
-
-/**
- * A protocol version. `major` changes when a message changes incompatibly; `minor` when messages
- * or fields are added in a way an older peer can ignore.
- *
- * @public
- */
-export interface ProtocolVersion {
-  /** Incremented for incompatible changes. Peers must agree on it. */
-  readonly major: number;
-  /** Incremented for compatible additions. Peers may differ. */
-  readonly minor: number;
-}
-
-/**
- * The protocol version this package describes. Both sides send it in the handshake.
- *
- * @public
- */
-export const PROTOCOL_VERSION: ProtocolVersion = { major: 0, minor: 1 };
-
-/**
- * Tells whether two peers can talk: they can when their major versions are equal.
- *
- * @param a - One peer's protocol version.
- * @param b - The other peer's protocol version.
- * @returns `true` when the majors match; the minors are free to differ.
- *
- * @public
- */
-export function protocolVersionIsCompatible(a: ProtocolVersion, b: ProtocolVersion): boolean {
-  return a.major === b.major;
 }

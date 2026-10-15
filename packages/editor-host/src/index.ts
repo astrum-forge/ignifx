@@ -12,30 +12,30 @@
 export type { EditorMessageTarget } from "./channel.js";
 export { EditorHostErrorCode, isEditorOrigin } from "./error-codes.js";
 export { startEditorHost, type EditorHost, type EditorHostOptions } from "./host.js";
-export {
-  EDITOR_CONNECT_MESSAGE_TYPE,
-  HostCapability,
-  HostNotification,
-  PlayMethod,
-  type EditorConnectMessage,
-  type HeartbeatNotification,
-  type PlayRequest,
-  type PlayResponse,
-  type PlayState,
-  type StepParams,
-} from "./messages.js";
 export { startEditorPlayControls, type EditorPlayControls, type EditorPlayControlsOptions } from "./play-controls.js";
 export {
+  DEFAULT_HEARTBEAT_INTERVAL_MS,
+  EDITOR_CONNECT_MESSAGE_TYPE,
   HandshakeMethod,
+  HostCapability,
   HostKind,
+  HostNotification,
+  isEditorConnectMessage,
+  isPlayState,
   isRpcMessage,
   JSON_RPC_VERSION,
+  PlayMethod,
   PROTOCOL_VERSION,
   protocolVersionIsCompatible,
   RpcErrorCode,
+  type EditorConnectMessage,
+  type HeartbeatNotification,
   type HelloParams,
   type HelloRequest,
   type PingRequest,
+  type PlayRequest,
+  type PlayResponse,
+  type PlayState,
   type PongResponse,
   type ProtocolVersion,
   type ReadyResponse,
@@ -48,4 +48,5 @@ export {
   type RpcRequest,
   type RpcResponse,
   type RpcSuccessResponse,
-} from "./protocol.js";
+  type StepParams,
+} from "./protocol/index.js";
