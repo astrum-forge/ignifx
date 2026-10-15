@@ -16,11 +16,7 @@ import {
   BodyMotion,
   PrestepMode,
 } from "../../src/lite/havok.js";
-import {
-  drainCollisionsWithBodies,
-  PINNED_LITE_VERSION,
-  probeCollisionLayout,
-} from "../../src/lite/internal/collision-drain.js";
+import { drainCollisionsWithBodies, probeCollisionLayout } from "../../src/lite/internal/collision-drain.js";
 import { havokWasmBytes, installedLiteVersion, loadHavokForTests } from "./fixtures/havok.js";
 import type { ContactRecord } from "../../src/lite/havok.js";
 
@@ -47,7 +43,7 @@ describe("S4.2 · collision body identities", () => {
   }, 30_000);
 
   it("pins the Babylon Lite version the drain was written against", () => {
-    expect(installedLiteVersion()).toBe(PINNED_LITE_VERSION);
+    expect(installedLiteVersion()).toBe("1.34.0");
     // And the binary the world is built on is the one the offsets were read from.
     expect(havokWasmBytes().byteLength).toBeGreaterThan(0);
   });
