@@ -184,7 +184,7 @@ export class LodGroup extends Component implements ComponentHooks {
  * The `PreRender` order the LOD system runs at.
  *
  * @remarks
- * `-10` puts it before `@ignifx/core`'s render sync at `0`, so a renderer switched on this frame is
+ * `-10` puts it before `@ignifx/core`'s render sync at `900`, so a renderer switched on this frame is
  * reconciled with the Lite scene in the same frame rather than the next one.
  *
  * @public

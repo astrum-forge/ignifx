@@ -89430,7 +89430,7 @@ The `PreRender` order the LOD system runs at.
 
 #### Remarks
 
-`-10` puts it before `@ignifx/core`'s render sync at `0`, so a renderer switched on this frame is
+`-10` puts it before `@ignifx/core`'s render sync at `900`, so a renderer switched on this frame is
 reconciled with the Lite scene in the same frame rather than the next one.
 
 ***
@@ -91310,15 +91310,16 @@ The only `formatVersion` this build reads.
 
 ### TERRAIN\_LOD\_ORDER
 
-> `const` **TERRAIN\_LOD\_ORDER**: `10` = `10`
+> `const` **TERRAIN\_LOD\_ORDER**: `1010` = `1010`
 
 The `PreRender` order the terrain LOD system runs at.
 
 #### Remarks
 
-`10` puts it **after** core's render sync at `0`, because `Camera.getViewMatrix` reads the
-Babylon Lite camera and that is what the sync writes; running earlier would cull against last
-frame's view. Chunk meshes are not components, so nothing downstream needs them decided sooner.
+`1010` puts it **after** core's render sync at `900`, which picks `world.mainCamera` and writes
+the Babylon Lite camera that `Camera.getViewMatrix` reads; running earlier would cull against
+last frame's camera. Chunk meshes are not components, so nothing downstream needs them decided
+sooner.
 
 ***
 

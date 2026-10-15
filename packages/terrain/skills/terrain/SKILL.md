@@ -58,9 +58,9 @@ if (canvas instanceof HTMLCanvasElement) {
 The field is centred on the entity: local X spans `-width/2 .. +width/2`, Z the same, heights run
 `0 .. size.height`. Queries take **world** coordinates and honour the entity's position and scale.
 
-| System             | Phase       | Order | Why there                                                                         |
-| ------------------ | ----------- | ----- | --------------------------------------------------------------------------------- |
-| `TerrainLodSystem` | `PreRender` | `10`  | After core's render sync, which is what writes the camera the frustum test reads. |
+| System             | Phase       | Order  | Why there                                                                         |
+| ------------------ | ----------- | ------ | --------------------------------------------------------------------------------- |
+| `TerrainLodSystem` | `PreRender` | `1010` | After core's render sync, which is what writes the camera the frustum test reads. |
 
 ## First app
 

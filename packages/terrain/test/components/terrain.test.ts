@@ -53,9 +53,6 @@ async function fixture(heights?: Float32Array): Promise<Fixture> {
   const entity = harness.app.world.createEntity("Terrain");
   const terrain = entity.addComponent(Terrain, { definition: handle });
   await harness.app.start();
-  // Two frames: a camera joins the world during the first, so the first LOD pass has none to cull
-  // against.
-  harness.step();
   harness.step();
   return { harness, terrain, entity };
 }
@@ -286,6 +283,24 @@ describe("Terrain chunking", () => {
     camera?.entity.transform.lookAt({ x: 0, y: 200, z: -400 });
     harness.step();
 
+    expect(terrain.visibleChunks).toBe(0);
+    harness.dispose();
+  });
+
+  it("culls against a camera that becomes the main camera in the same frame", async () => {
+    const { harness, terrain } = await fixture();
+    const away = harness.app.world.createEntity("Away Camera");
+    away.transform.localPosition.set(0, 20, -20);
+    away.transform.lookAt({ x: 0, y: 200, z: -400 });
+    const camera = away.addComponent(Camera, { near: 0.1, far: 500, fov: 60, priority: -1 });
+    harness.step();
+
+    expect(terrain.visibleChunks).toBe(4);
+
+    camera.priority = 1;
+    harness.step();
+
+    expect(harness.app.world.mainCamera).toBe(camera);
     expect(terrain.visibleChunks).toBe(0);
     harness.dispose();
   });
