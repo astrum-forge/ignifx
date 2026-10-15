@@ -19,6 +19,8 @@ export const FIXED_STEP = 1 / 60;
 export interface Physics2DAppOptions {
   /** Project settings; the `physics2d` section is merged over the defaults. */
   readonly settings?: SettingsInput;
+  /** Builds the app in edit mode (ADR-0028). */
+  readonly editMode?: boolean;
   /** The build mode; defaults to `"development"`. */
   readonly mode?: "development" | "production";
   /** A fake `fetch`, for the suites that load an asset. */
@@ -62,6 +64,7 @@ export async function createPhysics2DApp(options?: Physics2DAppOptions): Promise
     logSink: sink,
     extensions: [...(options?.extensions ?? []), physics2d()],
     ...(options?.settings === undefined ? {} : { settings: options.settings }),
+    ...(options?.editMode === undefined ? {} : { editMode: options.editMode }),
     ...(options?.fetch === undefined ? {} : { fetch: options.fetch }),
     mode: options?.mode ?? "development",
   });

@@ -295,6 +295,9 @@ Component field tables: `skills/ignifx/references/formats/components.md`.
   the authoritative pose. Everything outside the fixed loop — `update`, `lateUpdate`, animation,
   `Camera2DFollow`, rendering — sees the interpolated one, because the display pose is written at the
   top of `Update`. That is what keeps a follow camera locked to the sprite the frame actually draws.
+- **In an edit-mode app (`createApp({ editMode: true })`) nothing simulates.** No fixed step runs, so
+  no body is built, nothing falls, interpolation never touches a transform, and a query throws
+  `IGX-1153` as it does before a game's first step. Draw collider gizmos from the component fields.
 
 ## Deprecated (current window)
 
