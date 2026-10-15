@@ -4,14 +4,13 @@ import { fileURLToPath } from "node:url";
 import { createApp, createManualClock, createMemorySink } from "@ignifx/core";
 import settings from "../../templates/3d-third-person/ignifx.config.js";
 import { extensions } from "../../templates/3d-third-person/src/extensions.js";
-import { publishLevelMeshes } from "../../templates/3d-third-person/src/level-meshes.js";
 import type { App, ConcreteComponentType, FetchLike, MemorySink } from "@ignifx/core";
 
 /**
- * A headless `3d-third-person` app, built the way the template's `main.ts` builds one: the
- * template's own `extensions()`, its `ignifx.config.ts`, every script under `src/scripts/`, and the
- * level's primitive meshes published before any scene loads. Only the renderer differs: there is no
- * canvas, so Lite's null engine runs and nothing is uploaded.
+ * A headless `3d-third-person` app, built the way the template's `main.ts` and the ignifx editor's
+ * scene view (`@ignifx/editor-host`) build one: the template's own `extensions()`, its
+ * `ignifx.config.ts` and every script under `src/scripts/`, and nothing else before a scene loads.
+ * Only the renderer differs: there is no canvas, so Lite's null engine runs and nothing is uploaded.
  */
 
 /** The template directory. */
@@ -71,8 +70,9 @@ const fetchFromDisk: FetchLike = async (input: RequestInfo | URL): Promise<Respo
 };
 
 /**
- * Creates the headless app and publishes the level meshes, so `app.world.loadScene` can be called
- * next — the same two steps `main.ts` takes before it loads the level.
+ * Creates the headless app, so `app.world.loadScene` can be called next. It runs no game code: the
+ * level's primitive meshes are `assets/meshes/*.mesh.json` files the scene names, not something
+ * published first.
  *
  * @returns The app and its log sink. The caller disposes the app.
  */
@@ -87,6 +87,5 @@ export async function createThirdPersonApp(): Promise<ThirdPersonApp> {
     extensions: extensions(),
   });
   app.registerComponents(templateScripts());
-  publishLevelMeshes(app);
   return { app, sink };
 }

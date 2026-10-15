@@ -32,7 +32,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/sky",
+              "$asset": "meshes/sky.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -198,7 +198,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/floor",
+              "$asset": "meshes/floor.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -264,7 +264,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/wall-x",
+              "$asset": "meshes/wall-x.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -330,7 +330,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/wall-x",
+              "$asset": "meshes/wall-x.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -396,7 +396,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/wall-z",
+              "$asset": "meshes/wall-z.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -462,7 +462,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/wall-z",
+              "$asset": "meshes/wall-z.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -528,7 +528,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/wall-x",
+              "$asset": "meshes/wall-x.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -594,7 +594,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/wall-x",
+              "$asset": "meshes/wall-x.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -660,7 +660,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/wall-z",
+              "$asset": "meshes/wall-z.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -726,7 +726,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/wall-z",
+              "$asset": "meshes/wall-z.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -792,7 +792,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/wall-x",
+              "$asset": "meshes/wall-x.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -858,7 +858,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/wall-x",
+              "$asset": "meshes/wall-x.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -924,7 +924,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/wall-z",
+              "$asset": "meshes/wall-z.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -990,7 +990,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/wall-z",
+              "$asset": "meshes/wall-z.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -1056,7 +1056,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/wall-x",
+              "$asset": "meshes/wall-x.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -1122,7 +1122,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/wall-x",
+              "$asset": "meshes/wall-x.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -1188,7 +1188,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/wall-z",
+              "$asset": "meshes/wall-z.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -1254,7 +1254,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/wall-z",
+              "$asset": "meshes/wall-z.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -1320,7 +1320,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/wall-x",
+              "$asset": "meshes/wall-x.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -1386,7 +1386,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/wall-x",
+              "$asset": "meshes/wall-x.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -1452,7 +1452,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/wall-z",
+              "$asset": "meshes/wall-z.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -1518,7 +1518,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/wall-z",
+              "$asset": "meshes/wall-z.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -1584,7 +1584,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/wall-x",
+              "$asset": "meshes/wall-x.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -1650,7 +1650,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/wall-x",
+              "$asset": "meshes/wall-x.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -1716,7 +1716,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/wall-z",
+              "$asset": "meshes/wall-z.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -1782,7 +1782,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/wall-z",
+              "$asset": "meshes/wall-z.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -1848,7 +1848,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/wall-x",
+              "$asset": "meshes/wall-x.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -1914,7 +1914,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/wall-z",
+              "$asset": "meshes/wall-z.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -1980,7 +1980,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/crate",
+              "$asset": "meshes/crate.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -2063,7 +2063,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/crate",
+              "$asset": "meshes/crate.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -2146,7 +2146,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/crate",
+              "$asset": "meshes/crate.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -2229,7 +2229,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/crate",
+              "$asset": "meshes/crate.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -2312,7 +2312,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/crate",
+              "$asset": "meshes/crate.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -2395,7 +2395,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/crate",
+              "$asset": "meshes/crate.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -2478,7 +2478,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/beacon-base",
+              "$asset": "meshes/beacon-base.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -2539,7 +2539,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/beacon-column",
+              "$asset": "meshes/beacon-column.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -2585,7 +2585,7 @@
           "enabled": false,
           "props": {
             "mesh": {
-              "$asset": "meshes/beacon-column",
+              "$asset": "meshes/beacon-column.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -2631,7 +2631,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/beacon-base",
+              "$asset": "meshes/beacon-base.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -2692,7 +2692,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/beacon-column",
+              "$asset": "meshes/beacon-column.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -2738,7 +2738,7 @@
           "enabled": false,
           "props": {
             "mesh": {
-              "$asset": "meshes/beacon-column",
+              "$asset": "meshes/beacon-column.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -2784,7 +2784,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/beacon-base",
+              "$asset": "meshes/beacon-base.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -2845,7 +2845,7 @@
           "type": "ignifx/MeshRenderer",
           "props": {
             "mesh": {
-              "$asset": "meshes/beacon-column",
+              "$asset": "meshes/beacon-column.mesh.json",
               "type": "mesh"
             },
             "materials": [
@@ -2891,7 +2891,7 @@
           "enabled": false,
           "props": {
             "mesh": {
-              "$asset": "meshes/beacon-column",
+              "$asset": "meshes/beacon-column.mesh.json",
               "type": "mesh"
             },
             "materials": [
