@@ -135,6 +135,7 @@ export {
   describeEnvironmentFileFormat,
   describeMaterialFileFormat,
   describeMeshFileFormat,
+  describeRegisteredSchemas,
   describeSceneFileFormat,
   describeSchema,
   describeSchemas,

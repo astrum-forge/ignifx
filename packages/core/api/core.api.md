@@ -518,8 +518,9 @@ export class ComponentRegistry {
     get(typeId: string): ComponentType | null;
     implementsCallback(type: ComponentType, kind: ScriptCallbackKind): boolean;
     isRegistered(type: ComponentType): boolean;
-    register(type: ConcreteComponentType, typeId?: string): ComponentClassInfo;
-    registerAll(types: readonly ConcreteComponentType[]): void;
+    register(type: ConcreteComponentType, typeId?: string, registrar?: string): ComponentClassInfo;
+    registerAll(types: readonly ConcreteComponentType[], registrar?: string): void;
+    registrarOf(typeId: string): string | null;
     registrations(): readonly (readonly [typeId: string, type: ComponentType])[];
     replace(type: ConcreteComponentType): ComponentReplacement;
     requireTypeId(type: ComponentType): string;
@@ -953,6 +954,9 @@ export function describeMaterialFileFormat(): SchemaDescription;
 
 // @public
 export function describeMeshFileFormat(): SchemaDescription;
+
+// @public
+export function describeRegisteredSchemas(registry: ComponentRegistry, curated?: Readonly<Record<string, SchemaDescriptionMeta>>): Readonly<Record<string, SchemaDescription>>;
 
 // @public
 export function describeSceneFileFormat(): SchemaDescription;
@@ -2961,24 +2965,42 @@ export type Schema = Readonly<Record<string, FieldDefinition<unknown>>>;
 
 // @public
 export interface SchemaDescription {
+    readonly allowMultiple?: boolean;
     readonly description?: string;
     readonly fields: Readonly<Record<string, SchemaFieldDescription>>;
     readonly format: string;
+    readonly package?: string;
     readonly title: string;
 }
 
 // @public
 export interface SchemaDescriptionMeta {
+    readonly allowMultiple?: boolean;
     readonly description?: string;
     readonly format?: string;
+    readonly package?: string;
     readonly title?: string;
 }
 
 // @public
 export interface SchemaFieldDescription {
+    readonly assetType?: string;
+    readonly componentType?: string | null;
     readonly default?: JsonValue;
     readonly description?: string;
+    readonly fields?: Readonly<Record<string, SchemaFieldDescription>>;
+    readonly group?: string;
+    readonly hidden?: boolean;
+    readonly inner?: SchemaFieldDescription;
+    readonly item?: SchemaFieldDescription;
     readonly kind: FieldKind;
+    readonly max?: number;
+    readonly min?: number;
+    readonly readonly?: boolean;
+    readonly step?: number;
+    readonly transient?: boolean;
+    readonly value?: SchemaFieldDescription;
+    readonly values?: readonly string[];
 }
 
 // @public

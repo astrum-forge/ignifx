@@ -103,6 +103,8 @@ export interface ComponentReplacement {
 export class ComponentRegistry {
   readonly #byTypeId = new Map<string, ComponentType>();
 
+  readonly #registrars = new Map<string, string>();
+
   readonly #info = new Map<ComponentType, ComponentClassInfo>();
 
   #nextClassIndex = 0;
@@ -121,11 +123,13 @@ export class ComponentRegistry {
    *
    * @param type - The component class.
    * @param typeId - An explicit id, when the class does not declare one.
+   * @param registrar - Who registers it, for example the extension's `name`; the first registrar of
+   * an id is kept, and {@link ComponentRegistry.registrarOf} reports it.
    * @returns What the registry worked out about the class.
    * @throws IgnifxError with code `IGX-0203` when the id is already registered by another class, or
    * when the id is not `<namespace>/<Name>`.
    */
-  register(type: ConcreteComponentType, typeId?: string): ComponentClassInfo {
+  register(type: ConcreteComponentType, typeId?: string, registrar?: string): ComponentClassInfo {
     const id = typeId ?? readStatics(type).typeId ?? null;
     if (id !== null) {
       if (!TYPE_ID_PATTERN.test(id)) {
@@ -143,6 +147,9 @@ export class ComponentRegistry {
         );
       }
       this.#byTypeId.set(id, type);
+      if (registrar !== undefined && !this.#registrars.has(id)) {
+        this.#registrars.set(id, registrar);
+      }
     }
     return this.describe(type);
   }
@@ -151,14 +158,33 @@ export class ComponentRegistry {
    * Registers several component classes.
    *
    * @param types - The component classes.
+   * @param registrar - Who registers them, as for {@link ComponentRegistry.register}.
    */
-  registerAll(types: readonly ConcreteComponentType[]): void {
+  registerAll(types: readonly ConcreteComponentType[], registrar?: string): void {
     for (let index = 0; index < types.length; index += 1) {
       const type = types[index];
       if (type !== undefined) {
-        this.register(type);
+        this.register(type, undefined, registrar);
       }
     }
+  }
+
+  /**
+   * Who registered a type id: the extension `name` an `ExtensionContext` registers under, or
+   * whatever a direct caller of {@link ComponentRegistry.register} passed. A hot-reload
+   * {@link ComponentRegistry.replace} keeps it.
+   *
+   * @param typeId - The namespaced id.
+   * @returns The registrar, or `null` when the id was registered without one (as
+   * `app.registerComponents` does) or is not registered.
+   *
+   * @example
+   * ```ts
+   * app.world.registry.registrarOf("ignifx/Camera"); // "@ignifx/core"
+   * ```
+   */
+  registrarOf(typeId: string): string | null {
+    return this.#registrars.get(typeId) ?? null;
   }
 
   /**

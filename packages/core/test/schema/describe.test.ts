@@ -42,6 +42,8 @@ describe("describeSchema", () => {
       kind: "f32",
       default: 5,
       description: "Units per second",
+      min: 0,
+      max: 50,
     });
   });
 
@@ -50,7 +52,11 @@ describe("describeSchema", () => {
     expect(described.fields["offset"]).toEqual({ kind: "vec3", default: [0, 1, 0] });
     expect(described.fields["tint"]).toEqual({ kind: "color", default: [1, 1, 1, 1] });
     expect(described.fields["target"]).toEqual({ kind: "entityRef", default: null });
-    expect(described.fields["stats"]).toEqual({ kind: "record", default: { hp: 10, armor: 0 } });
+    expect(described.fields["stats"]).toEqual({
+      kind: "record",
+      default: { hp: 10, armor: 0 },
+      fields: { hp: { kind: "i32", default: 10 }, armor: { kind: "f32", default: 0 } },
+    });
   });
 
   it("omits the description when the field has no tooltip", () => {

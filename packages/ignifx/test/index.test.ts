@@ -82,6 +82,7 @@ const expectedExports = [
   "describeEnvironmentFileFormat",
   "describeMaterialFileFormat",
   "describeMeshFileFormat",
+  "describeRegisteredSchemas",
   "describeSceneFileFormat",
   "describeSchema",
   "describeSchemas",
