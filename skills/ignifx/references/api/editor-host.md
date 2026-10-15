@@ -125,6 +125,17 @@ A scene address to load before the app starts, through the normal loader. Defaul
 
 The canvas to render into. Without one the app is headless.
 
+##### editMode?
+
+> `readonly` `optional` **editMode?**: `boolean`
+
+**`Beta`**
+
+Build the app in edit mode (`createApp({ editMode })`, ADR-0028), so the scene view shows the
+scene without playing it: only scripts whose class sets `static runInEditMode = true` get
+callbacks, and physics and other game-clock systems hold or skip. Defaults to `true`; pass
+`false` to run the scene view as a game.
+
 ##### editorOrigin
 
 > `readonly` **editorOrigin**: `string`
@@ -1261,8 +1272,8 @@ protocolVersionIsCompatible({ major: 1, minor: 0 }, { major: 1, minor: 4 }); // 
 **`Beta`**
 
 Starts the scene view's host: listens for the editor's port, creates the app from the project's
-own `@ignifx/core`, registers the project's scripts, loads `bootScene` if one is given, and
-starts the app.
+own `@ignifx/core` (in edit mode unless `editMode` is `false`), registers the project's scripts,
+loads `bootScene` if one is given, and starts the app.
 
 #### Parameters
 
