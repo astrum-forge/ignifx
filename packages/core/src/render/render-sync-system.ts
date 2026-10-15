@@ -556,10 +556,10 @@ export class RenderSyncSystem implements System {
           const deformers = readPbrDeformers(renderer.scene);
           if (renderer.needsShadowLayoutReset || (deformers & ~renderer.builtPbrDeformers) !== 0) {
             renderer.needsShadowLayoutReset = false;
-            forgetMaterialBindingLayouts(renderer.engine);
+            forgetMaterialBindingLayouts(renderer.materialCacheResets);
           }
           // oxlint-disable-next-line no-await-in-loop -- the whole point is that these never overlap.
-          await rebuildRenderables(renderer.scene);
+          await rebuildRenderables(renderer.scene, renderer.materialCacheResets);
           renderer.builtPbrDeformers |= deformers;
         } catch (error: unknown) {
           renderer.app.onError.emit({ error, source: "system", phase: null, entity: null, component: null });

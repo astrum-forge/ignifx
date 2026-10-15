@@ -13,6 +13,7 @@ import { readPickedTag } from "../lite/picking.js";
 import { disableGpuTiming, readDrawCallCount, readGpuFrameTimeMs } from "../lite/render-diagnostics.js";
 import { assertRenderingFeatureAvailable } from "../lite/render-features.js";
 import { sceneLightCount } from "../lite/scene.js";
+import { createMaterialCacheResets } from "../lite/shadow.js";
 import { clamp } from "../math/math-utils.js";
 import {
   applySurfaceScale,
@@ -46,6 +47,7 @@ import type { NodeTag } from "../lite/node.js";
 import type { LitePickInfo } from "../lite/picking.js";
 import type { RenderingFeatureName, RenderingFeatures } from "../lite/render-features.js";
 import type { LiteEngine, LiteScene } from "../lite/scene.js";
+import type { MaterialCacheResets } from "../lite/shadow.js";
 import type { ColorLike } from "../math/types.js";
 import type { RenderSurface } from "../platform/webgpu.js";
 import type { Disconnect } from "../signal/signal.js";
@@ -356,6 +358,9 @@ export class RendererImpl implements Renderer {
    * this engine. A kind missing from it gets fresh layouts on its first rebuild (`../lite/pbr-deformers.ts`).
    */
   builtPbrDeformers = 0;
+
+  /** Lite's material cache resets, as this scene's rebuilds identified them (`../lite/shadow.ts`). */
+  readonly materialCacheResets: MaterialCacheResets = createMaterialCacheResets();
 
   /** `true` once a camera was added, removed, enabled, disabled, or re-prioritised. */
   needsCameraSelect = true;
