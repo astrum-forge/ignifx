@@ -185,6 +185,21 @@ describe("a ParticleSystem on a headless app", () => {
     expect(running.system.time).toBeCloseTo(clock + 1, 5);
   });
 
+  it("plays on awake in an edit-mode app but holds its clock, and simulate still previews", async () => {
+    const held = await scene({ emission: { rateOverTime: 64 }, start: { lifetime: 2 } }, { editMode: true });
+    held.app.stepMany(64, FRAME);
+    expect(held.system.isPlaying).toBe(true);
+    expect(held.system.time).toBe(0);
+    const alive = held.system.aliveCount;
+
+    held.system.simulate(1);
+    held.app.stepMany(64, FRAME);
+    expect(held.system.time).toBeCloseTo(1, 5);
+    expect(held.system.aliveCount).toBeGreaterThan(alive);
+    // The render system keeps running: what the preview built is what the GPU draws.
+    expect(held.system.drawCount).toBeGreaterThanOrEqual(held.system.aliveCount);
+  });
+
   it("spawns exactly what emit asks for, whatever the rate", async () => {
     const running = await scene({ emission: { rateOverTime: 0 }, start: { lifetime: 10 } });
     running.app.step(FRAME);
