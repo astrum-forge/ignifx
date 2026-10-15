@@ -381,6 +381,7 @@ import { describeMaterialFileFormat } from '@ignifx/core';
 import { describeMeshFileFormat } from '@ignifx/core';
 import { describeParticlesFormat } from '@ignifx/particles';
 import { describePhysicsMaterialFileFormat } from '@ignifx/physics';
+import { describeRegisteredSchemas } from '@ignifx/core';
 import { describeSceneFileFormat } from '@ignifx/core';
 import { describeSchema } from '@ignifx/core';
 import { describeSchemas } from '@ignifx/core';
@@ -2278,6 +2279,8 @@ export { describeMeshFileFormat }
 export { describeParticlesFormat }
 
 export { describePhysicsMaterialFileFormat }
+
+export { describeRegisteredSchemas }
 
 export { describeSceneFileFormat }
 

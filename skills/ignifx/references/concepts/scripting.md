@@ -58,6 +58,24 @@ export class Mover
 Field kinds: `f32`, `f64`, `i32`, `u32`, `bool`, `str`, `vec2`, `vec3`, `vec4`, `quat`, `color`,
 `enumOf`, `entityRef`, `componentRef`, `asset`, `array`, `record`, `map`, `optional`, `layerMask`, `curve`, `custom`. Every kind takes a `FieldOptions` object last: `min`, `max`, `step`, `tooltip`, `group`, `hidden`, `readonly`, `transient`.
 
+Tools read a schema as data. `describeSchema(typeId, schema)` describes each field as
+`{ kind, default, description? }` plus the options it declares and what its kind declares (`values`,
+`assetType`, `componentType`, and a nested `item`, `fields`, `value` or `inner`).
+`describeRegisteredSchemas(app.world.registry)` does that for every registered component and adds
+`allowMultiple` and `package`: the registering extension's `name`, or the type id's namespace for a
+class the game registered itself. `toJsonSchema(schema)` writes the options as `x-ignifx-*` keywords:
+
+```ts run
+import { describeSchema, f32, toJsonSchema } from "@ignifx/core";
+
+const schema = { speed: f32(5, { min: 0, max: 50, step: 0.5, group: "Motion" }) };
+describeSchema("mygame/Mover", schema).fields["speed"];
+// { kind: "f32", default: 5, min: 0, max: 50, step: 0.5, group: "Motion" }
+const properties = toJsonSchema(schema)["properties"];
+// properties.speed: { type: "number", minimum: 0, maximum: 50, default: 5, "x-ignifx-step": 0.5, "x-ignifx-group": "Motion" }
+console.log(properties !== undefined);
+```
+
 Rules: a field name that collides with a `Component` member (`enabled`, `update`, …) throws
 `IGX-0607` at definition time; `entityRef`/`componentRef` fields are **tracked**, so the engine nulls
 them in the destroy flush when the target dies, before any `onDestroy` (plain class fields are not);

@@ -156,6 +156,56 @@ describe("validateJsonValue — rejects", () => {
   });
 });
 
+describe("validateJsonValue — extension keywords", () => {
+  /** A props fragment shaped like the one `@ignifx/core`'s `toJsonSchema` writes for an inspected field. */
+  const annotated: JsonSchemaObject = {
+    type: "object",
+    properties: {
+      speed: {
+        type: "number",
+        description: "Units per second",
+        minimum: 0,
+        maximum: 50,
+        default: 5,
+        readOnly: true,
+        "x-ignifx-step": 0.5,
+        "x-ignifx-hidden": false,
+        "x-ignifx-readonly": true,
+        "x-ignifx-group": "Motion",
+        "x-ignifx-transient": false,
+      },
+      clip: {
+        oneOf: [
+          {
+            type: "object",
+            properties: { $asset: { type: "string" }, type: { type: "string" } },
+            required: ["$asset"],
+            additionalProperties: false,
+          },
+          { type: "null" },
+        ],
+        "x-ignifx-asset-type": "audio",
+      },
+      waypoints: { type: "array", items: { type: "number", "x-ignifx-step": 0.25 } },
+    },
+    additionalProperties: false,
+  };
+
+  it("skips x- keywords and readOnly, at any depth", () => {
+    expect(problems({ speed: 5, clip: { $asset: "a.ogg" }, waypoints: [1, 2] }, annotated)).toEqual([]);
+  });
+
+  it("still enforces the constraints beside them", () => {
+    expect(problems({ speed: 99, clip: 3, waypoints: ["x"] }, annotated)).toHaveLength(3);
+  });
+
+  it("still rejects an unknown keyword without the x- prefix", () => {
+    expect(() => validateJsonValue(1, { type: "number", "ignifx-step": 1 })).toThrow(
+      expect.objectContaining({ code: VitePluginErrorCode.unsupportedSchema }),
+    );
+  });
+});
+
 describe("validateJsonValue — schema errors", () => {
   it("rejects an unimplemented keyword with IGX-0653", () => {
     expect(() => validateJsonValue(1, { type: "number", multipleOf: 2 })).toThrow(

@@ -12634,7 +12634,7 @@ The component class.
 
 ##### register()
 
-> **register**(`type`, `typeId?`): [`ComponentClassInfo`](#componentclassinfo)
+> **register**(`type`, `typeId?`, `registrar?`): [`ComponentClassInfo`](#componentclassinfo)
 
 Registers a component class so that scenes using it can be loaded and saved.
 
@@ -12652,6 +12652,13 @@ The component class.
 
 An explicit id, when the class does not declare one.
 
+###### registrar?
+
+`string`
+
+Who registers it, for example the extension's `name`; the first registrar of
+an id is kept, and [ComponentRegistry.registrarOf](#registrarof) reports it.
+
 ###### Returns
 
 [`ComponentClassInfo`](#componentclassinfo)
@@ -12665,7 +12672,7 @@ when the id is not `<namespace>/<Name>`.
 
 ##### registerAll()
 
-> **registerAll**(`types`): `void`
+> **registerAll**(`types`, `registrar?`): `void`
 
 Registers several component classes.
 
@@ -12677,9 +12684,44 @@ readonly [`ConcreteComponentType`](#concretecomponenttype)\<[`Component`](#abstr
 
 The component classes.
 
+###### registrar?
+
+`string`
+
+Who registers them, as for [ComponentRegistry.register](#register-1).
+
 ###### Returns
 
 `void`
+
+##### registrarOf()
+
+> **registrarOf**(`typeId`): `string` \| `null`
+
+Who registered a type id: the extension `name` an `ExtensionContext` registers under, or
+whatever a direct caller of [ComponentRegistry.register](#register-1) passed. A hot-reload
+[ComponentRegistry.replace](#replace) keeps it.
+
+###### Parameters
+
+###### typeId
+
+`string`
+
+The namespaced id.
+
+###### Returns
+
+`string` \| `null`
+
+The registrar, or `null` when the id was registered without one (as
+`app.registerComponents` does) or is not registered.
+
+###### Example
+
+```ts
+app.world.registry.registrarOf("ignifx/Camera"); // "@ignifx/core"
+```
 
 ##### registrations()
 
@@ -78368,6 +78410,14 @@ these, keyed by component `typeId`, from each built package's `schemas` export a
 
 #### Properties
 
+##### allowMultiple?
+
+> `readonly` `optional` **allowMultiple?**: `boolean`
+
+Whether an entity may hold more than one of the component (`static allowMultiple`, `true` when
+the class declares nothing). Set by [describeRegisteredSchemas](#describeregisteredschemas), or by the caller through
+[SchemaDescriptionMeta](#schemadescriptionmeta); absent on file formats.
+
 ##### description?
 
 > `readonly` `optional` **description?**: `string`
@@ -78386,6 +78436,14 @@ Every declared field, in declaration order.
 
 The format page the entry is grouped onto; `components` unless overridden.
 
+##### package?
+
+> `readonly` `optional` **package?**: `string`
+
+Who registered the component: the extension's `name` (the npm package name, for example
+`@ignifx/3d`), or, for a class the game registered itself, its type id's namespace (`mygame`).
+Set by [describeRegisteredSchemas](#describeregisteredschemas), or by the caller through [SchemaDescriptionMeta](#schemadescriptionmeta).
+
 ##### title
 
 > `readonly` **title**: `string`
@@ -78400,6 +78458,12 @@ Optional overrides for [describeSchema](#describeschema).
 
 #### Properties
 
+##### allowMultiple?
+
+> `readonly` `optional` **allowMultiple?**: `boolean`
+
+Whether an entity may hold more than one of the component, copied onto the description.
+
 ##### description?
 
 > `readonly` `optional` **description?**: `string`
@@ -78412,6 +78476,12 @@ A one-line summary of what the component does.
 
 Overrides the default `components` grouping.
 
+##### package?
+
+> `readonly` `optional` **package?**: `string`
+
+The package or extension that registered the component, copied onto the description.
+
 ##### title?
 
 > `readonly` `optional` **title?**: `string`
@@ -78422,10 +78492,28 @@ Overrides the title derived from the type id.
 
 ### SchemaFieldDescription
 
-One field as the documentation harness sees it (`scripts/README.md`, "Schema discovery
-convention").
+One field as the documentation harness and an external inspector see it (`scripts/README.md`,
+"Schema discovery convention"; `docs/architecture/03-scripting-and-components.md` §3).
+
+Every member past `kind` is present only when the declaration states it: a field with no
+`step` has no `step` here. The inspector members mirror [FieldOptions](#fieldoptions); the others carry
+what the field's kind declares: an enum's values, an asset's type, a nested field's own description.
 
 #### Properties
+
+##### assetType?
+
+> `readonly` `optional` **assetType?**: `string`
+
+An `asset` field's asset type name (`asset(TextureAsset)` → `"texture"`), the `type` an asset
+reference to it carries. Absent when the asset token names no type.
+
+##### componentType?
+
+> `readonly` `optional` **componentType?**: `string` \| `null`
+
+A `componentRef` field's accepted component, as its `typeId`, or `null` when the class it was
+declared with carries no `typeId`. Present on every `componentRef` field.
 
 ##### default?
 
@@ -78439,11 +78527,83 @@ The field's default value, already encoded as JSON.
 
 The field's tooltip, when it declares one.
 
+##### fields?
+
+> `readonly` `optional` **fields?**: `Readonly`\<`Record`\<`string`, [`SchemaFieldDescription`](#schemafielddescription)\>\>
+
+A `record` field's sub-fields, in declaration order, described the same way.
+
+##### group?
+
+> `readonly` `optional` **group?**: `string`
+
+`FieldOptions.group`: the inspector group the field folds into.
+
+##### hidden?
+
+> `readonly` `optional` **hidden?**: `boolean`
+
+`FieldOptions.hidden`: the inspector leaves the field out; it is still saved.
+
+##### inner?
+
+> `readonly` `optional` **inner?**: [`SchemaFieldDescription`](#schemafielddescription)
+
+An `optional` field's non-`null` value, described the same way.
+
+##### item?
+
+> `readonly` `optional` **item?**: [`SchemaFieldDescription`](#schemafielddescription)
+
+An `array` field's element, described the same way.
+
 ##### kind
 
 > `readonly` **kind**: [`FieldKind`](#fieldkind-1)
 
 The field kind, for example `f32` or `asset`.
+
+##### max?
+
+> `readonly` `optional` **max?**: `number`
+
+`FieldOptions.max`: the highest accepted value of a numeric field.
+
+##### min?
+
+> `readonly` `optional` **min?**: `number`
+
+`FieldOptions.min`: the lowest accepted value of a numeric field.
+
+##### readonly?
+
+> `readonly` `optional` **readonly?**: `boolean`
+
+`FieldOptions.readonly`: the inspector shows the field but does not let it be edited.
+
+##### step?
+
+> `readonly` `optional` **step?**: `number`
+
+`FieldOptions.step`: the increment of the inspector's drag and spinner controls.
+
+##### transient?
+
+> `readonly` `optional` **transient?**: `boolean`
+
+`FieldOptions.transient`: the field is never saved and takes its default on load.
+
+##### value?
+
+> `readonly` `optional` **value?**: [`SchemaFieldDescription`](#schemafielddescription)
+
+A `map` field's entry value, described the same way.
+
+##### values?
+
+> `readonly` `optional` **values?**: readonly `string`[]
+
+An `enum` field's accepted values, in declaration order.
 
 ***
 
@@ -96904,6 +97064,53 @@ The description of the top-level file fields.
 
 ***
 
+### describeRegisteredSchemas()
+
+> **describeRegisteredSchemas**(`registry`, `curated?`): `Readonly`\<`Record`\<`string`, [`SchemaDescription`](#schemadescription)\>\>
+
+Describes every component an app has registered, the engine's, its extensions' and the game's,
+the way [describeSchema](#describeschema) describes one, plus what only the registry knows: whether an
+entity may hold more than one (`allowMultiple`) and which package registered it (`package`).
+This is what an external inspector, such as the ignifx editor, is generated from.
+
+#### Parameters
+
+##### registry
+
+[`ComponentRegistry`](#componentregistry)
+
+The registry to walk, usually `app.world.registry`.
+
+##### curated?
+
+`Readonly`\<`Record`\<`string`, [`SchemaDescriptionMeta`](#schemadescriptionmeta)\>\>
+
+Titles, formats and summaries by type id, for example a package's own
+`describeSchemas()`; a component without an entry is titled from its type id.
+
+#### Returns
+
+`Readonly`\<`Record`\<`string`, [`SchemaDescription`](#schemadescription)\>\>
+
+The descriptions, keyed by type id, in registration order.
+
+#### Remarks
+
+`package` is the `name` of the extension whose `register(ctx)` registered the class, which is the
+npm package name for a published extension (`@ignifx/core`, `@ignifx/3d`). A class the game
+registered itself with `app.registerComponents` has no extension, so its `package` is its type
+id's namespace: everything before the last `/` (`third-person` for `third-person/Beacon`).
+
+#### Example
+
+```ts
+const schemas = describeRegisteredSchemas(app.world.registry, describeSchemas());
+schemas["ignifx/Camera"]?.package; // "@ignifx/core"
+schemas["ignifx/Camera"]?.allowMultiple; // false
+```
+
+***
+
 ### describeSceneFileFormat()
 
 > **describeSceneFileFormat**(): [`SchemaDescription`](#schemadescription)
@@ -96924,10 +97131,13 @@ The description of the top-level file fields.
 
 > **describeSchema**(`typeId`, `schema`, `meta?`): [`SchemaDescription`](#schemadescription)
 
-Describes a component schema in the shape the documentation harness consumes. A package exports
-a record of these keyed by `typeId`; `pnpm docs:schemas` reads it from the built entry point and
-regenerates the format pages and `ignifx.schemas.json` from it
-(`scripts/README.md`, `docs/architecture/16-docs-harness-and-skill.md` §3).
+Describes a component schema in the shape the documentation harness and an external inspector
+consume. A package exports a record of these keyed by `typeId`; `pnpm docs:schemas` reads it from
+the built entry point and regenerates the format pages and `ignifx.schemas.json` from it
+(`scripts/README.md`, `docs/architecture/16-docs-harness-and-skill.md` §3). Each field carries
+its inspector options and what its kind declares ([SchemaFieldDescription](#schemafielddescription)); to describe
+an app's registered components with `allowMultiple` and `package` filled in, use
+[describeRegisteredSchemas](#describeregisteredschemas).
 
 #### Parameters
 
@@ -96947,7 +97157,8 @@ The component's declared fields.
 
 [`SchemaDescriptionMeta`](#schemadescriptionmeta)
 
-Overrides for the title, format grouping, and summary.
+Overrides for the title, format grouping, and summary, and the component's
+`allowMultiple` and `package` when the caller knows them.
 
 #### Returns
 

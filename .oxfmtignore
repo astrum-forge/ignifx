@@ -3,6 +3,9 @@
 
 # Generated or vendored files are never hand-formatted.
 pnpm-lock.yaml
+# Written by `pnpm docs:schemas` as `JSON.stringify(…, null, 2)`; the regeneration check compares
+# it byte for byte, and a formatter would put a field's short `values` list on one line.
+skills/ignifx/references/formats/ignifx.schemas.json
 
 # Agent worktrees are whole checkouts of their own (`.git/info/exclude`); they lint themselves.
 .claude/**

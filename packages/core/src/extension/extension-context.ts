@@ -125,7 +125,7 @@ export class ExtensionContextImpl implements ExtensionContext {
    * @param options - An explicit `typeId`, when the class does not declare one.
    */
   registerComponent(type: ConcreteComponentType, options?: RegisterComponentOptions): void {
-    this.#registry.register(type, options?.typeId);
+    this.#registry.register(type, options?.typeId, this.#extension.name);
   }
 
   /**
@@ -134,7 +134,7 @@ export class ExtensionContextImpl implements ExtensionContext {
    * @param types - The component classes.
    */
   registerComponents(types: readonly ConcreteComponentType[]): void {
-    this.#registry.registerAll(types);
+    this.#registry.registerAll(types, this.#extension.name);
   }
 
   /**

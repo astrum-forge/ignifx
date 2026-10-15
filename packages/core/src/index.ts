@@ -496,6 +496,7 @@ export {
   type SchemaDescriptionMeta,
   type SchemaFieldDescription,
 } from "./schema/describe.js";
+export { describeRegisteredSchemas } from "./schema/describe-registry.js";
 export {
   canonicalizeNumber,
   decodeProps,

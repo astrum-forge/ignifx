@@ -79,7 +79,9 @@ function (preferred: it keeps module scope free of calls, `CONSTITUTION.md` §3.
 object from its built entry point, `packages/<dir>/dist/index.js`. The function returns the same
 record shape. The binding is a record keyed by component
 `typeId`; each entry may carry `title`, `format`, `description`, and must carry `fields`, a record
-of field name to `{ kind, default?, description? }`:
+of field name to `{ kind, default?, description? }` plus the inspector metadata `describeSchema`
+adds (`min`, `max`, `step`, `hidden`, `readonly`, `group`, `transient`, `values`, `assetType`,
+`componentType`), which the bundle copies when present:
 
 ```js
 export const schemas = {
