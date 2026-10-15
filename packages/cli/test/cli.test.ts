@@ -308,6 +308,28 @@ describe("scaffolding the 2d-topdown template", () => {
     expect(tsconfig).not.toContain("extends");
   });
 
+  // The editor-ready shape (ignifx-editor plan, engine ask E2): the level is a scene file, the
+  // extension list is a module of its own, and there is no `src/level.ts`.
+  it("scaffolds 3d-third-person with its scene file and its extensions module", async () => {
+    const io = recordingIo(join(repoRoot, "templates"));
+    const target = join(workspace, "courtyard");
+
+    const result = await runCreate([target, "--template", "3d-third-person"], io);
+
+    expect(result.files).toEqual(
+      expect.arrayContaining([
+        "assets/scenes/main.scene.json",
+        "src/extensions.ts",
+        "src/level-meshes.ts",
+        "src/main.ts",
+        "src/scripts/beacon.ts",
+      ]),
+    );
+    expect(result.files).not.toContain("src/level.ts");
+    const scene: unknown = JSON.parse(await readFile(join(target, "assets/scenes/main.scene.json"), "utf8"));
+    expect(scene).toMatchObject({ format: "ignifx.scene", formatVersion: 1, name: "main" });
+  });
+
   it("scaffolds the side-scroller too", async () => {
     const io = recordingIo(join(repoRoot, "templates"));
     const target = join(workspace, "runner");
