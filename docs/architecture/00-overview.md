@@ -132,7 +132,7 @@ Babylon Lite (`@babylonjs/lite`, pinned exactly; 1.34.0 at the time of writing) 
 
 ## 7. What is deliberately out of scope for the MVP
 
-- A visual editor. The runtime is editor-ready (schemas, inspector metadata, stable ids) but no editor ships before 1.0.
+- A visual editor inside the engine. The editor is a separate product (`astrum-forge/ignifx-editor`) built on the runtime through `@ignifx/editor-host` (`17-editor-host.md`) and developed alongside the engine before 1.0; the engine seams it needs are the asks E0 to E14 in §5 of the editor plan (ADR-E011 of the editor repository). The runtime stays editor-free: nothing in a game depends on the editor.
 - Multiple worlds per app, and multiple simultaneous render cameras (multi-viewport). Single active camera in the MVP; extra cameras via Lite render tasks after 1.0.
 - Networking. Deterministic fixed-step simulation is designed so that lockstep or server-authoritative networking can be added as an extension later.
 - WebXR (Lite's XR path is not yet runnable in shipping browsers).
