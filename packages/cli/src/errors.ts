@@ -1,5 +1,5 @@
 /**
- * Diagnostic codes for scaffolding failures, in the reserved `IGX-14xx` platform range.
+ * Diagnostic codes for scaffolding and import failures, in the reserved `IGX-14xx` platform range.
  * The CLI reports these through `CliError` without creating an engine app.
  *
  * @public
@@ -17,6 +17,8 @@ export const CliErrorCode = {
   fileNotAccessible: "IGX-1405",
   /** A converted heightmap's source was 8-bit, so its heights are terraced. Reported, never thrown. */
   eightBitHeightmapSource: "IGX-1406",
+  /** A file named on the command line is not the JSON document the command expects. */
+  invalidDocument: "IGX-1407",
 } as const;
 
 /**

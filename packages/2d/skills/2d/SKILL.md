@@ -59,8 +59,7 @@ app.twoD (TwoDService)
  ├─ pixelsPerUnit · mode · sortingLayers
  ├─ mainCamera        the highest-priority enabled Camera2D
  ├─ pickAt(x, y)      CPU pick over the sprite layers → { entity, component, u, v }
- ├─ layers            one Lite Sprite2DLayer per (sortingLayer × atlas × blend × space)
- └─ registerTileObjectFactory(type, factory)
+ └─ layers            one Lite Sprite2DLayer per (sortingLayer × atlas × blend × space)
 
 PostUpdate  → SpriteAnimator.advance + animated tiles   (ignifx's clock, so timeScale works)
 PreRender   → camera view, sprite sync, tilemap chunks  (order -450)
@@ -119,7 +118,6 @@ Full signatures: `skills/ignifx/references/api/2d.md`.
 | `screenToWorld` · `worldToScreen`     | Through the active camera                                  |
 | `visibleWorldBounds(out)`             | The world rectangle the camera sees (parallax not applied) |
 | `layers`                              | Diagnostics: every Lite layer in draw order                |
-| `registerTileObjectFactory(type, fn)` | What a tilemap's objects layer spawns                      |
 | `syncedLastFrame` · `spriteCount`     | How many sprites the last frame actually wrote             |
 | `createSpriteBatch(options)`          | A fixed-capacity crowd of entity-less sprites (`@beta`)    |
 | `lite.renderer`                       | The Lite `SpriteRenderer`, or `null` headless              |
@@ -183,7 +181,7 @@ Pure functions, so a build step or a test can call them with no app:
 
 `IGX-1102` unextruded atlas frame (logged, not thrown) · `IGX-1103`/`IGX-1104`/`IGX-1105` unreadable
 document · `IGX-1106` unknown frame (a bad `frameName` is reported once, not thrown) · `IGX-1107` unknown sorting layer · `IGX-1108` unknown clip ·
-`IGX-1109` unsupported import · `IGX-1110` duplicate object factory · `IGX-1111` cell out of range ·
+`IGX-1109` unsupported import · `IGX-1111` cell out of range ·
 `IGX-1112` duplicate extension · `IGX-1113` custom effect with no WGSL · `IGX-1114` bad sprite-batch
 capacity · `IGX-1115` sprite-batch slot or count out of range · `IGX-1116` sprite batch used after
 `dispose()` · `IGX-1117` sprite-batch atlas not loaded · `IGX-1118` `SpriteRenderer.sprite` is not an
@@ -191,23 +189,17 @@ atlas (reported once, not thrown).
 
 ## Recipes
 
-### Tilemap with spawned objects
+### Tilemap with collision and objects
 
 ```ts
 import { createApp, Vec2 } from "ignifx";
 import { Tilemap, TilemapRenderer, twoD } from "@ignifx/2d";
+import { physics2d, TilemapCollider2D } from "@ignifx/physics-2d";
 import type { SpriteAtlasAsset, TilemapAsset } from "@ignifx/2d";
-import type { Entity } from "ignifx";
 
 const canvas = document.querySelector("canvas");
 if (canvas instanceof HTMLCanvasElement) {
-  const app = await createApp({ canvas, extensions: [twoD()] });
-
-  app.twoD.registerTileObjectFactory("spawn", (context): Entity | null => {
-    const player = context.world.createEntity(context.name);
-    player.transform.position2D = new Vec2(context.position.x, context.position.y);
-    return player;
-  });
+  const app = await createApp({ canvas, extensions: [twoD(), physics2d()] });
 
   const map = app.assets.load<TilemapAsset>("2d/level-1.tilemap.json");
   const tiles = app.assets.load<SpriteAtlasAsset>("2d/tiles.atlas.json");
@@ -216,8 +208,26 @@ if (canvas instanceof HTMLCanvasElement) {
   const level = app.world.createEntity("Level");
   level.addComponent(Tilemap).map = map;
   level.addComponent(TilemapRenderer).atlas = tiles;
+  level.addComponent(TilemapCollider2D); // reads the Tilemap beside it
+
+  // A level built in code places its objects itself; a scene file holds them as entities.
+  for (const object of map.value.definition.objects) {
+    if (object.type === "spawn") {
+      const player = app.world.createEntity(object.name);
+      player.transform.position2D = new Vec2(object.x + object.width / 2, object.y + object.height / 2);
+    }
+  }
   await app.start();
 }
+```
+
+A level kept in a scene file gets its objects once, as entities, from the command line. Each
+becomes an entity named after the object and tagged with its type, at the object's centre, and the
+map's `objects` field is deleted. Add the components each type needs afterwards; the command prints
+every object's size and properties for that.
+
+```sh
+ignifx import tilemap assets/level.tilemap.json assets/scenes/main.scene.json --parent Level
 ```
 
 ### Picking a sprite under the pointer
@@ -253,7 +263,7 @@ Generated reference: `skills/ignifx/references/formats/`.
   endpoints plays — use `frames` when the run is not contiguous in the atlas.
 - **`.tilemap.json`** (`ignifx.tilemap`) — tile size, `cellSize` in metres, tilesets with colliders
   and animations, layers of tile ids (dense or RLE, **top row first**), and an objects layer in
-  world metres.
+  world metres (`x`, `y` is the bottom-left corner) that the runtime never spawns.
 
 ## Gotchas
 
@@ -274,6 +284,8 @@ Generated reference: `skills/ignifx/references/formats/`.
 - **`pixelPerfect` ignores `orthographicSize`** and scales `referenceResolution` by a whole number
   instead. It does **not** change an atlas's sampling: write `"sampling": "nearest"` in the
   `.atlas.json`, because a texture's sampler is fixed at upload.
+- **A tilemap's objects layer is authoring data.** Nothing spawns from it at runtime (ADR-0030):
+  move it into the scene with `ignifx import tilemap`, or read `tilemap.definition.objects` in code.
 - **Tiles are not pickable.** They have no component, so `pickAt` skips them; use
   `Tilemap.worldToCell`, which is exact and free.
 - **A `SpriteBatch` slot is centred on the position written and is never picked.** It ignores the

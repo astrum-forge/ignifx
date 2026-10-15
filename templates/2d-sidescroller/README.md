@@ -81,11 +81,14 @@ and the references between them (`{ "$entity": … }`, `{ "$asset": … }`). `ma
 scene names every script by its `typeId`, so a script edit hot-patches the class instead of
 reloading the page. The camera is `pixelPerfect` against a 320 x 180 reference resolution, so one
 source texel covers a whole number of screen pixels; both are fields of its `Camera2D` in the file.
+Each strip names the frame it draws in its `SpriteRenderer`'s `frameName` (`"hills"`).
 
-The terrain, the slopes and the one-way planks stay in `assets/level.tilemap.json`. Its objects
-layer still lists the spawn and every coin — the map generator writes it — but the game registers no
-`registerTileObjectFactory`, so loading the scene spawns nothing from it: the entities in the scene
-file are the ones the game has. Move the player or add a coin in the scene file, not in the map.
+The terrain, the slopes and the one-way planks stay in `assets/level.tilemap.json`.
+`TilemapCollider2D` reads the `Tilemap` on the same entity, so they collide as soon as the scene has
+loaded, with no code. The map has no objects layer: the spawn and every coin are entities in the
+scene file, because ignifx never spawns entities from a map. Move the player or add a coin in the
+scene file. (A `.tilemap.json` that does carry objects, such as one converted from Tiled, moves them
+into a scene once with `ignifx import tilemap`.)
 
 The file is in the canonical form `stringifySceneFile` writes: keys in a fixed order, numbers
 rounded to six decimals, one value per line, no final newline. Edit it by hand, by an agent, or in
@@ -105,11 +108,6 @@ says why).
 
 **What stays in code**, or needs a script, because a scene file cannot say it:
 
-- **Which frame a still sprite draws.** `SpriteRenderer.frame` is a runtime index, not a field, so
-  each parallax strip carries `SpriteFrame` (`src/scripts/sprite-frame.ts`), whose `frame` field
-  names the frame (`"hills"`) and whose `awake` looks it up in the loaded atlas.
-- **The tilemap's collision outlines.** `TilemapCollider2D` does not read the `Tilemap` beside it,
-  so `main.ts` hands it the tilemap's `collisionData` after the load.
 - **The sounds.** A clip referenced by a scene field is a dependency of the scene, and one the
   browser cannot decode would fail the whole load; every sound here is optional, so the footstep,
   jump, landing and coin sounds are assigned after the load and the ambient pad's `AudioSource` is

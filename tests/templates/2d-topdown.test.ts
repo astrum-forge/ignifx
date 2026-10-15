@@ -18,7 +18,7 @@ const MAIN_SCENE = "scenes/main.scene.json";
 /** The level as it sits on disk. */
 const SCENE_TEXT = readFileSync(join(TOPDOWN.assetDir, MAIN_SCENE), "utf8");
 
-/** The still props, which the tilemap's objects layer used to spawn, and the frame each draws. */
+/** The still props, which are scene entities rather than map objects, and the frame each draws. */
 const PROPS: readonly (readonly [string, string])[] = [
   ["Chest", "chest"],
   ["Barrel", "barrel"],
@@ -43,6 +43,11 @@ const EXPECTED_ENTITIES: readonly string[] = [
   "Shrine",
   "Main Camera",
 ];
+
+/** The part of `@ignifx/2d`'s `TilemapCollisionData` these checks read; this suite does not depend on it. */
+interface CollisionSurface {
+  readonly chunks: readonly { readonly polygons: readonly unknown[]; readonly oneWayEdges: readonly unknown[] }[];
+}
 
 const apps: App[] = [];
 
@@ -79,20 +84,28 @@ describe("2d-topdown's scene file", () => {
     const player = named(entities, "Player");
     expect(player.transform.position2D).toMatchObject({ x: 9.5, y: 10.5 });
     expect(field(named(entities, "Main Camera"), "ignifx/Camera2D", "follow")).toBe(player);
-    // The tilemap's objects layer spawns nothing: no factory is registered, so every entity above
-    // is the scene's own and there is exactly one player.
+    // Every entity above is the scene's own, and there is exactly one player.
     expect(app.world.findByName("Player")).toBe(player);
 
-    // `SpriteFrame` turned each frame name into the atlas index in `awake`.
+    // Each still sprite names its frame in `SpriteRenderer.frameName`, which the renderer turns into
+    // the atlas index with no script.
     for (const [name, frame] of [...PROPS, ["Shrine", "pad"] as const]) {
       const entity = named(entities, name);
       const sprite = entity.components.find((component) => Reflect.get(component, "sprite") !== undefined);
       const atlas = Reflect.get(Reflect.get(sprite as object, "sprite") as object, "value") as {
         requireFrame(frame: string): number;
       };
-      expect(field(entity, "topdown/SpriteFrame", "frame")).toBe(frame);
+      expect(field(entity, "ignifx/SpriteRenderer", "frameName")).toBe(frame);
       expect(Reflect.get(sprite as object, "frame")).toBe(atlas.requireFrame(frame));
     }
+  });
+
+  it("collides with the tilemap straight from the file, with no post-load code", async () => {
+    const { entities } = await loadLevel();
+    const level = named(entities, "Level");
+    const data = field(level, "ignifx/TilemapCollider2D", "collisionData") as CollisionSurface | null;
+    expect(data).toBe(field(level, "ignifx/Tilemap", "collisionData"));
+    expect(data?.chunks.some((chunk) => chunk.polygons.length > 0)).toBe(true);
   });
 
   it("round-trips byte for byte through serializeScene and stringifySceneFile", async () => {

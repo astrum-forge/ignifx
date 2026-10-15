@@ -141,14 +141,14 @@ export function tilemapFileSchema(): Schema {
     objects: array(
       record({
         name: str("", { tooltip: "The object's name." }),
-        type: str("", { tooltip: "The object's type; what selects a TileObjectFactory." }),
+        type: str("", { tooltip: "The object's type, which `ignifx import tilemap` writes as the entity's tag." }),
         x: f32(0, { tooltip: "The bottom-left corner, in world metres." }),
         y: f32(0, { tooltip: "The bottom-left corner, in world metres." }),
         width: f32(0, { min: 0, tooltip: "The width, in world metres." }),
         height: f32(0, { min: 0, tooltip: "The height, in world metres." }),
       }),
       [],
-      { tooltip: "The objects layer." },
+      { tooltip: "The objects layer: authoring data that `ignifx import tilemap` moves into a scene." },
     ),
     properties: map(str(), { tooltip: "The map's custom properties." }),
   });

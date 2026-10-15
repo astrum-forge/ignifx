@@ -194,7 +194,7 @@
               "$asset": "tiles.atlas.json",
               "type": "spriteatlas"
             },
-            "frameName": "",
+            "frameName": "chest",
             "color": [
               1,
               1,
@@ -209,13 +209,6 @@
             "pivotOverride": null,
             "screenSpace": false,
             "pickable": true
-          }
-        },
-        {
-          "uid": "01M5019D582ETT9VQ4XC8W6QZP",
-          "type": "topdown/SpriteFrame",
-          "props": {
-            "frame": "chest"
           }
         },
         {
@@ -273,7 +266,7 @@
               "$asset": "tiles.atlas.json",
               "type": "spriteatlas"
             },
-            "frameName": "",
+            "frameName": "barrel",
             "color": [
               1,
               1,
@@ -288,13 +281,6 @@
             "pivotOverride": null,
             "screenSpace": false,
             "pickable": true
-          }
-        },
-        {
-          "uid": "01M5019D582ETT9VQ4XC8W6QZV",
-          "type": "topdown/SpriteFrame",
-          "props": {
-            "frame": "barrel"
           }
         },
         {
@@ -352,7 +338,7 @@
               "$asset": "tiles.atlas.json",
               "type": "spriteatlas"
             },
-            "frameName": "",
+            "frameName": "crate",
             "color": [
               1,
               1,
@@ -367,13 +353,6 @@
             "pivotOverride": null,
             "screenSpace": false,
             "pickable": true
-          }
-        },
-        {
-          "uid": "01M5019D582ETT9VQ4XC8W6R00",
-          "type": "topdown/SpriteFrame",
-          "props": {
-            "frame": "crate"
           }
         },
         {
@@ -431,7 +410,7 @@
               "$asset": "tiles.atlas.json",
               "type": "spriteatlas"
             },
-            "frameName": "",
+            "frameName": "sign",
             "color": [
               1,
               1,
@@ -446,13 +425,6 @@
             "pivotOverride": null,
             "screenSpace": false,
             "pickable": true
-          }
-        },
-        {
-          "uid": "01M5019D582ETT9VQ4XC8W6R05",
-          "type": "topdown/SpriteFrame",
-          "props": {
-            "frame": "sign"
           }
         },
         {
@@ -510,7 +482,7 @@
               "$asset": "tiles.atlas.json",
               "type": "spriteatlas"
             },
-            "frameName": "",
+            "frameName": "rock",
             "color": [
               1,
               1,
@@ -525,13 +497,6 @@
             "pivotOverride": null,
             "screenSpace": false,
             "pickable": true
-          }
-        },
-        {
-          "uid": "01M5019D582ETT9VQ4XC8W6R0A",
-          "type": "topdown/SpriteFrame",
-          "props": {
-            "frame": "rock"
           }
         },
         {
@@ -589,7 +554,7 @@
               "$asset": "tiles.atlas.json",
               "type": "spriteatlas"
             },
-            "frameName": "",
+            "frameName": "bush",
             "color": [
               1,
               1,
@@ -604,13 +569,6 @@
             "pivotOverride": null,
             "screenSpace": false,
             "pickable": true
-          }
-        },
-        {
-          "uid": "01M5019D582ETT9VQ4XC8W6R0F",
-          "type": "topdown/SpriteFrame",
-          "props": {
-            "frame": "bush"
           }
         },
         {
@@ -668,7 +626,7 @@
               "$asset": "tiles.atlas.json",
               "type": "spriteatlas"
             },
-            "frameName": "",
+            "frameName": "bush",
             "color": [
               1,
               1,
@@ -683,13 +641,6 @@
             "pivotOverride": null,
             "screenSpace": false,
             "pickable": true
-          }
-        },
-        {
-          "uid": "01M5019D582ETT9VQ4XC8W6R0M",
-          "type": "topdown/SpriteFrame",
-          "props": {
-            "frame": "bush"
           }
         },
         {
@@ -747,7 +698,7 @@
               "$asset": "tiles.atlas.json",
               "type": "spriteatlas"
             },
-            "frameName": "",
+            "frameName": "crate",
             "color": [
               1,
               1,
@@ -762,13 +713,6 @@
             "pivotOverride": null,
             "screenSpace": false,
             "pickable": true
-          }
-        },
-        {
-          "uid": "01M5019D582ETT9VQ4XC8W6R0S",
-          "type": "topdown/SpriteFrame",
-          "props": {
-            "frame": "crate"
           }
         },
         {
@@ -826,7 +770,7 @@
               "$asset": "tiles.atlas.json",
               "type": "spriteatlas"
             },
-            "frameName": "",
+            "frameName": "barrel",
             "color": [
               1,
               1,
@@ -841,13 +785,6 @@
             "pivotOverride": null,
             "screenSpace": false,
             "pickable": true
-          }
-        },
-        {
-          "uid": "01M5019D582ETT9VQ4XC8W6R0Y",
-          "type": "topdown/SpriteFrame",
-          "props": {
-            "frame": "barrel"
           }
         },
         {
@@ -905,7 +842,7 @@
               "$asset": "tiles.atlas.json",
               "type": "spriteatlas"
             },
-            "frameName": "",
+            "frameName": "rock",
             "color": [
               1,
               1,
@@ -920,13 +857,6 @@
             "pivotOverride": null,
             "screenSpace": false,
             "pickable": true
-          }
-        },
-        {
-          "uid": "01M5019D582ETT9VQ4XC8W6R13",
-          "type": "topdown/SpriteFrame",
-          "props": {
-            "frame": "rock"
           }
         },
         {
@@ -984,7 +914,7 @@
               "$asset": "tiles.atlas.json",
               "type": "spriteatlas"
             },
-            "frameName": "",
+            "frameName": "bush",
             "color": [
               1,
               1,
@@ -999,13 +929,6 @@
             "pivotOverride": null,
             "screenSpace": false,
             "pickable": true
-          }
-        },
-        {
-          "uid": "01M5019D59VD0PPWMX466Z5BYQ",
-          "type": "topdown/SpriteFrame",
-          "props": {
-            "frame": "bush"
           }
         },
         {
@@ -1063,7 +986,7 @@
               "$asset": "tiles.atlas.json",
               "type": "spriteatlas"
             },
-            "frameName": "",
+            "frameName": "sign",
             "color": [
               1,
               1,
@@ -1078,13 +1001,6 @@
             "pivotOverride": null,
             "screenSpace": false,
             "pickable": true
-          }
-        },
-        {
-          "uid": "01M5019D59VD0PPWMX466Z5BYW",
-          "type": "topdown/SpriteFrame",
-          "props": {
-            "frame": "sign"
           }
         },
         {
@@ -1142,7 +1058,7 @@
               "$asset": "tiles.atlas.json",
               "type": "spriteatlas"
             },
-            "frameName": "",
+            "frameName": "chest",
             "color": [
               1,
               1,
@@ -1157,13 +1073,6 @@
             "pivotOverride": null,
             "screenSpace": false,
             "pickable": true
-          }
-        },
-        {
-          "uid": "01M5019D59VD0PPWMX466Z5BZ1",
-          "type": "topdown/SpriteFrame",
-          "props": {
-            "frame": "chest"
           }
         },
         {
@@ -1221,7 +1130,7 @@
               "$asset": "tiles.atlas.json",
               "type": "spriteatlas"
             },
-            "frameName": "",
+            "frameName": "pad",
             "color": [
               0.55,
               0.55,
@@ -1236,13 +1145,6 @@
             "pivotOverride": null,
             "screenSpace": false,
             "pickable": true
-          }
-        },
-        {
-          "uid": "01M5019D59VD0PPWMX466Z5BZ6",
-          "type": "topdown/SpriteFrame",
-          "props": {
-            "frame": "pad"
           }
         },
         {

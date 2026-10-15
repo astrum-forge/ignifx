@@ -1,10 +1,8 @@
 // oxlint-disable no-underscore-dangle -- `window.__ignifxReady` is a test hook, and the double
 // underscore is what says it is not part of the game's API. The visual suite reads it by name.
-import { Tilemap } from "@ignifx/2d";
 import { AUDIO_ASSET_TYPE, AUDIO_BUSES_ASSET_TYPE, AudioSource } from "@ignifx/audio";
 import { createApp, isIgnifxError, Vec2 } from "@ignifx/core";
 import { INPUT_ACTIONS_ASSET_TYPE } from "@ignifx/input";
-import { TilemapCollider2D } from "@ignifx/physics-2d";
 import { I18N_ASSET_TYPE } from "@ignifx/ui";
 // Vite virtual modules the plugins serve, typed by `@ignifx/vite-plugin/client` and
 // `@ignifx/editor-host/client`.
@@ -172,20 +170,13 @@ function requireEntity(app: App, name: string): Entity {
 }
 
 /**
- * Wires up the loaded scene: the tilemap's collision outlines, the optional sounds, and the
- * entities the front end needs.
+ * Wires up the loaded scene: the optional sounds, and the entities the front end needs.
  *
  * @param app - The app the scene was loaded in.
  * @param sounds - The sounds that decoded, and the ones that did not.
  * @returns The character, the spawn point and the coins.
  */
 function prepareWorld(app: App, sounds: Sounds): World {
-  // Solid tiles become merged outlines; a `oneWay` tile contributes only its top edge, which is
-  // what `CharacterController2D.onOneWayPlatforms` collides against. `TilemapCollider2D` does not
-  // find the tilemap beside it, so the data is handed over here.
-  const level = requireEntity(app, "Level");
-  level.requireComponent(TilemapCollider2D).collisionData = level.requireComponent(Tilemap).collisionData;
-
   const player = requireEntity(app, "Player");
   // The clips are handed over rather than loaded inside the scripts, so a hot-reloaded script does
   // not re-request a file the asset service has already delivered.
@@ -392,7 +383,7 @@ async function main(): Promise<AppStatus> {
   await app.audio.buildBuses(buses.value.buses);
 
   // The level: the loader fetches every atlas, clip set and tilemap the file names before it builds
-  // an entity, so each parallax strip's `SpriteFrame` can resolve its frame name in `awake`.
+  // an entity, so each parallax strip draws the frame its `frameName` names from the first frame.
   await app.world.loadScene(MAIN_SCENE);
   const world = prepareWorld(app, sounds);
 

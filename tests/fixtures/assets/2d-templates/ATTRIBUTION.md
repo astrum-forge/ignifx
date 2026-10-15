@@ -22,11 +22,11 @@ Both generators are deterministic — every random value comes from the seeded g
 `png.mjs` — so a regenerated file is byte for byte the file that is committed. Each asserts a
 64 KB per-file ceiling and throws if a file grows past it.
 
-| File                       | What it does                                                                                                                                                                           |
-| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `png.mjs`                  | A `Canvas`, a colour-type-6 PNG encoder (`node:zlib` and a hand-written chunk writer), a RIFF/WAVE encoder, and a seeded LCG.                                                          |
-| `make-template-art.mjs`    | Draws every tile, character frame, coin frame, sparkle frame and parallax band; packs each sheet with one pixel of padding and an extruded border; writes the `.atlas.json` alongside. |
-| `make-template-levels.mjs` | Turns a rectangle list (top-down) and a column profile (side-scroller) into `ignifx.tilemap` documents with run-length-encoded layers, tile colliders and an objects layer.            |
+| File                       | What it does                                                                                                                                                                              |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `png.mjs`                  | A `Canvas`, a colour-type-6 PNG encoder (`node:zlib` and a hand-written chunk writer), a RIFF/WAVE encoder, and a seeded LCG.                                                             |
+| `make-template-art.mjs`    | Draws every tile, character frame, coin frame, sparkle frame and parallax band; packs each sheet with one pixel of padding and an extruded border; writes the `.atlas.json` alongside.    |
+| `make-template-levels.mjs` | Turns a rectangle list (top-down) and a column profile (side-scroller) into `ignifx.tilemap` documents with run-length-encoded layers and tile colliders; the objects live in the scenes. |
 
 No image library, no audio library and no editor file is involved. The two 45-degree slope
 colliders and the one-way plank collider are written directly in the format's authoring space
@@ -75,15 +75,15 @@ root-relative name are gone.
 Every generated file is far inside the 64 KB per-file ceiling the generator asserts. The largest is
 the side-scroller's three-band parallax sheet at 5,607 bytes.
 
-| File                                        | Bytes | What it holds                                                                |
-| ------------------------------------------- | ----- | ---------------------------------------------------------------------------- |
-| `2d-topdown/assets/tiles.png`               | 1,279 | 16 frames of 16x16: eight terrain tiles and eight props                      |
-| `2d-topdown/assets/hero.png`                | 1,047 | 40 frames: an eight-frame walk cycle and a two-frame idle, in four facings   |
-| `2d-topdown/assets/fx.png`                  | 468   | Four 16x16 sparkle frames, in `bloomLight` over `gold`                       |
-| `2d-topdown/assets/level.tilemap.json`      | 7,516 | A 40x24 walled garden, two layers, nine objects                              |
-| `2d-sidescroller/assets/tiles.png`          | 685   | Eight frames: ground, dirt, two slopes, a plank, brick, two edges            |
-| `2d-sidescroller/assets/hero.png`           | 688   | 14 frames: idle, jump, fall and an eight-frame run                           |
-| `2d-sidescroller/assets/coin.png`           | 304   | Six spin frames                                                              |
-| `2d-sidescroller/assets/fx.png`             | 471   | Four 16x16 sparkle frames, in `coin` over `plankLight`                       |
-| `2d-sidescroller/assets/parallax.png`       | 5,607 | A 640x384 sky, a 320x112 hill band, a 320x176 treeline                       |
-| `2d-sidescroller/assets/level.tilemap.json` | 6,104 | A 64x20 course: two slopes each way, two pits, five one-way planks, 18 coins |
+| File                                        | Bytes | What it holds                                                              |
+| ------------------------------------------- | ----- | -------------------------------------------------------------------------- |
+| `2d-topdown/assets/tiles.png`               | 1,279 | 16 frames of 16x16: eight terrain tiles and eight props                    |
+| `2d-topdown/assets/hero.png`                | 1,047 | 40 frames: an eight-frame walk cycle and a two-frame idle, in four facings |
+| `2d-topdown/assets/fx.png`                  | 468   | Four 16x16 sparkle frames, in `bloomLight` over `gold`                     |
+| `2d-topdown/assets/level.tilemap.json`      | 3,849 | A 40x24 walled garden, two layers                                          |
+| `2d-sidescroller/assets/tiles.png`          | 685   | Eight frames: ground, dirt, two slopes, a plank, brick, two edges          |
+| `2d-sidescroller/assets/hero.png`           | 688   | 14 frames: idle, jump, fall and an eight-frame run                         |
+| `2d-sidescroller/assets/coin.png`           | 304   | Six spin frames                                                            |
+| `2d-sidescroller/assets/fx.png`             | 471   | Four 16x16 sparkle frames, in `coin` over `plankLight`                     |
+| `2d-sidescroller/assets/parallax.png`       | 5,607 | A 640x384 sky, a 320x112 hill band, a 320x176 treeline                     |
+| `2d-sidescroller/assets/level.tilemap.json` | 3,023 | A 64x20 course: two slopes each way, two pits, five one-way planks         |

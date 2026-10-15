@@ -27,7 +27,7 @@ A world uses **either** `physics()` **or** `physics2d()`. Registering both throw
 - Engine: ignifx `0.9.0`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
 - Dependency: `@dimforge/rapier2d-compat` `^0.20.0`. The `-compat` build **inlines** its WebAssembly
   as base64, so nothing has to be served and Node, the browser, and Electron all take the same path.
-- `@ignifx/2d` is an **optional** peer: you need it only for `TilemapCollider2D`'s data type, so a
+- `@ignifx/2d` is an **optional** peer: you need it only for `TilemapCollider2D`'s tilemap, so a
   game that draws its own graphics can use 2D physics on its own.
 - Register it like any extension; nothing happens at import time.
 
@@ -117,14 +117,14 @@ means "weigh the colliders at 1 kg/m²"), `gravityScale`, `linearDamping`, `angu
 Colliders share `offset`, `isTrigger`, `material` (a `.physicsmaterial.json` asset), the
 `inlineMaterial` fallback, `frictionCombine` / `restitutionCombine`, `oneWay`, and `layerOverride`:
 
-| Collider            | Geometry                                                    |
-| ------------------- | ----------------------------------------------------------- |
-| `BoxCollider2D`     | `size` — an axis-aligned rectangle                          |
-| `CircleCollider2D`  | `radius`; the larger scale axis wins                        |
-| `CapsuleCollider2D` | `radius`, `height` (tip to tip), `direction` (`"x" \| "y"`) |
-| `PolygonCollider2D` | `points` → the **convex hull** of the list                  |
-| `EdgeCollider2D`    | `points` → an open chain; infinitely thin                   |
-| `TilemapCollider2D` | `collisionData` from a `Tilemap`                            |
+| Collider            | Geometry                                                      |
+| ------------------- | ------------------------------------------------------------- |
+| `BoxCollider2D`     | `size` — an axis-aligned rectangle                            |
+| `CircleCollider2D`  | `radius`; the larger scale axis wins                          |
+| `CapsuleCollider2D` | `radius`, `height` (tip to tip), `direction` (`"x" \| "y"`)   |
+| `PolygonCollider2D` | `points` → the **convex hull** of the list                    |
+| `EdgeCollider2D`    | `points` → an open chain; infinitely thin                     |
+| `TilemapCollider2D` | the `Tilemap` on the same entity, or assigned `collisionData` |
 
 `CharacterController2D` — `shape` (`"capsule" | "box"`), `radius`, `height`, `offset`, `slopeLimit`
 (degrees), `stepOffset`, `snapToGround`, `skinWidth`, `onOneWayPlatforms`, `pushBodies`,
@@ -218,6 +218,27 @@ if (hit !== null) {
 
 ### Tilemap collision
 
+Put `TilemapCollider2D` on the entity that holds the `Tilemap`, in a scene file or in code. It reads
+that tilemap's `collisionData`, so a level loaded from a scene file collides with no code after
+`loadScene`, and a tile edit (`tilemap.setTile`) reaches physics at the next fixed step.
+
+```ts
+import { Tilemap } from "@ignifx/2d";
+import { TilemapCollider2D } from "@ignifx/physics-2d";
+import type { TilemapAsset } from "@ignifx/2d";
+import type { App } from "@ignifx/core";
+
+export function addLevel(app: App): void {
+  const level = app.world.createEntity("Level");
+  level.addComponent(Tilemap).map = app.assets.load<TilemapAsset>("level.tilemap.json");
+  level.addComponent(TilemapCollider2D);
+}
+```
+
+To use other geometry, such as data built in code or a tilemap on another entity, assign
+`collisionData`. Assigning `null` goes back to the tilemap. The runtime rebuilds the shapes whenever
+the data or its `version` changes.
+
 ```ts run
 import { createApp } from "@ignifx/core";
 import { physics2d, TilemapCollider2D } from "@ignifx/physics-2d";
@@ -248,10 +269,6 @@ collider.collisionData = {
 };
 app.step(1 / 60);
 ```
-
-Assign `tilemap.collisionData` from `@ignifx/2d` instead of building it by hand. The runtime watches
-the data's `version` every fixed step and rebuilds the shapes when it changes, so a tile edit reaches
-physics with no subscription of your own.
 
 ## File formats
 
@@ -297,7 +314,8 @@ Component field tables: `skills/ignifx/references/formats/components.md`.
   top of `Update`. That is what keeps a follow camera locked to the sprite the frame actually draws.
 - **In an edit-mode app (`createApp({ editMode: true })`) nothing simulates.** No fixed step runs, so
   no body is built, nothing falls, interpolation never touches a transform, and a query throws
-  `IGX-1153` as it does before a game's first step. Draw collider gizmos from the component fields.
+  `IGX-1153` as it does before a game's first step. Draw collider gizmos from the component fields;
+  `TilemapCollider2D.collisionData` still reads the tilemap, so tile outlines can be drawn too.
 
 ## Deprecated (current window)
 

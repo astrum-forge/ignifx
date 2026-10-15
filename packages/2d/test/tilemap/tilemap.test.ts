@@ -1,13 +1,11 @@
 import { Vec2 } from "@ignifx/core";
 import { afterEach, describe, expect, it } from "vitest";
 import { importTiledMap } from "../../src/tilemap/importers/tiled.js";
-import { spawnTilemapObjects } from "../../src/tilemap/spawn-objects.js";
 import { Tilemap } from "../../src/tilemap/tilemap.js";
 import { createTwoDApp, readFixtureJson } from "../support/app.js";
 import type { TilemapAsset } from "../../src/tilemap/tilemap-asset.js";
 import type { TileChange } from "../../src/tilemap/tilemap.js";
 import type { TwoDAppHarness } from "../support/app.js";
-import type { Entity } from "@ignifx/core";
 
 /**
  * The `Tilemap` component (`docs/architecture/11-2d-toolkit.md` §2.5): the grid, its cell
@@ -193,66 +191,55 @@ describe("before anything has loaded", () => {
     expect(tilemap.collisionAt(0, 0).shape.kind).toBe("none");
     expect(tilemap.worldToCell({ x: 1, y: 1 }, new Vec2())).toEqual({ x: 0, y: 0 });
   });
+
+  it("builds the collision surface once a map read too early has loaded", async () => {
+    const created = await createTwoDApp({ files: { "2d/level.tilemap.json": fixtureDocument() } });
+    harness = created;
+    const tilemap = created.app.world.createEntity("late").addComponent(Tilemap);
+    expect(tilemap.collisionData.chunks).toEqual([]);
+    tilemap.map = (await created.load<TilemapAsset>("2d/level.tilemap.json")).retain();
+    expect(tilemap.collisionData.chunks).toHaveLength(1);
+    expect(tilemap.collisionData.version).toBeGreaterThan(0);
+  });
 });
 
 describe("tile objects", () => {
-  it("hands a registered factory the object's world placement and properties", async () => {
-    const tilemap = await createMap(new Vec2(1, 2));
-    const created = harness;
-    expect(created).not.toBeNull();
-    if (created === null) {
-      return;
-    }
-    const seen: { readonly name: string; readonly type: string; readonly x: number; readonly y: number }[] = [];
-    created.app.twoD.registerTileObjectFactory("spawn", (context): Entity | null => {
-      seen.push({ name: context.name, type: context.type, x: context.position.x, y: context.position.y });
-      return created.app.world.createEntity(context.name);
+  it("are data: loading a scene with the map spawns nothing from them (ADR-0030)", async () => {
+    const scene = JSON.stringify({
+      format: "ignifx.scene",
+      formatVersion: 1,
+      name: "level",
+      settings: {},
+      entities: [
+        {
+          uid: "01M5019D56QN4RE9MGE5CG2Y05",
+          name: "Level",
+          parent: null,
+          transform: { position: [0, 0, 0], rotation: [0, 0, 0, 1], scale: [1, 1, 1] },
+          components: [
+            {
+              uid: "01M5019D57GNWGM08AR6VY0BYX",
+              type: "ignifx/Tilemap",
+              props: { map: { $asset: "2d/level.tilemap.json", type: "tilemap" } },
+            },
+          ],
+        },
+      ],
     });
-    const spawned = spawnTilemapObjects(created.app, created.app.twoD, tilemap);
-    expect(spawned).toHaveLength(1);
-    expect(seen[0]?.name).toBe("player-start");
-    expect(seen[0]?.type).toBe("spawn");
-    // The importer put the object at (0.96, 0.64) in map metres; the entity adds (1, 2).
-    expect(seen[0]?.x).toBeCloseTo(1.96, 6);
-    expect(seen[0]?.y).toBeCloseTo(2.64, 6);
-  });
-
-  it("skips an object type nothing registered", async () => {
-    const tilemap = await createMap();
-    const created = harness;
-    if (created === null) {
-      return;
-    }
-    expect(spawnTilemapObjects(created.app, created.app.twoD, tilemap)).toEqual([]);
-  });
-
-  it("contains a throwing factory and keeps going", async () => {
-    const tilemap = await createMap();
-    const created = harness;
-    if (created === null) {
-      return;
-    }
-    const reported: unknown[] = [];
-    created.app.onError.connect((report) => reported.push(report.error));
-    created.app.twoD.registerTileObjectFactory("spawn", (): Entity | null => {
-      throw new Error("factory blew up");
+    const created = await createTwoDApp({
+      files: { "2d/level.tilemap.json": fixtureDocument(), "levels/one.scene.json": scene },
     });
-    expect(spawnTilemapObjects(created.app, created.app.twoD, tilemap)).toEqual([]);
-    expect(reported).toHaveLength(1);
-  });
+    harness = created;
+    const instance = await created.app.world.loadScene("levels/one.scene.json");
+    created.step();
 
-  it("refuses a second factory for one type and forgets it on request", async () => {
-    harness = await createTwoDApp();
-    const service = harness.app.twoD;
-    service.registerTileObjectFactory("spawn", (): Entity | null => null);
-    let captured: unknown = null;
-    try {
-      service.registerTileObjectFactory("spawn", (): Entity | null => null);
-    } catch (error) {
-      captured = error;
-    }
-    expect((captured as { readonly code?: string }).code).toBe("IGX-1110");
-    expect(service.unregisterTileObjectFactory("spawn")).toBe(true);
-    expect(service.unregisterTileObjectFactory("spawn")).toBe(false);
+    expect(instance.roots.map((entity) => entity.name)).toEqual(["Level"]);
+    expect(created.app.world.findByName("player-start")).toBeNull();
+    const tilemap = instance.roots[0]?.requireComponent(Tilemap);
+    // The importer put the object at (0.96, 0.64) in map metres; code can still read it.
+    expect(tilemap?.definition?.objects.map((object) => [object.type, object.name])).toEqual([
+      ["spawn", "player-start"],
+    ]);
+    expect(tilemap?.definition?.objects[0]?.x).toBeCloseTo(0.96, 6);
   });
 });

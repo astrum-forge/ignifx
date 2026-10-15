@@ -1,5 +1,4 @@
 import { Vec2 } from "@ignifx/core";
-import { twoDError, TwoDErrorCode } from "../errors.js";
 import { pickSprite, screenToLayer, visibleBounds } from "../lite/sprite-layer.js";
 import { pixelsToWorldToRef } from "../math/coords.js";
 import { createSpriteBatch } from "./sprite-batch.js";
@@ -10,14 +9,14 @@ import type { Camera2D } from "../camera/camera-2d.js";
 import type { LiteBounds2D, LiteSprite2DLayer } from "../lite/types.js";
 import type { TwoDMode, TwoDSettings } from "../settings.js";
 import type { SpriteRenderer } from "../sprite/sprite-renderer.js";
-import type { Entity, MutableVec2, Vec2Like, World } from "@ignifx/core";
+import type { Entity, MutableVec2, Vec2Like } from "@ignifx/core";
 
 /**
  * `app.twoD` (`docs/architecture/11-2d-toolkit.md` §1 and §5): the 2D toolkit's runtime surface.
  *
  * Everything a game reaches for that is not attached to an entity lives here — the pixels-per-unit
- * conversion, the camera the frame is drawn through, sprite picking, the tile-object factory
- * registry, the per-layer diagnostics, and the Lite escape hatch.
+ * conversion, the camera the frame is drawn through, sprite picking, the per-layer diagnostics,
+ * and the Lite escape hatch.
  */
 
 /**
@@ -34,35 +33,6 @@ export interface TwoDPick {
   readonly u: number;
   /** Where inside the sprite's quad the hit landed, in `[0, 1]`. */
   readonly v: number;
-}
-
-/**
- * Builds the entities a tilemap's objects layer describes.
- *
- * @public
- */
-export type TileObjectFactory = (context: TileObjectContext) => Entity | null;
-
-/**
- * What a {@link TileObjectFactory} is handed.
- *
- * @public
- */
-export interface TileObjectContext {
-  /** The world to create the entity in. */
-  readonly world: World;
-  /** The object's name, as the map wrote it. */
-  readonly name: string;
-  /** The object's type, which selected this factory. */
-  readonly type: string;
-  /** The object's bottom-left corner, in world metres relative to the tilemap entity. */
-  readonly position: Vec2Like;
-  /** The object's size, in world metres. */
-  readonly size: Vec2Like;
-  /** The object's custom properties. */
-  readonly properties: Readonly<Record<string, string | number | boolean>>;
-  /** The tilemap entity the object came from, so a factory can parent to it. */
-  readonly tilemap: Entity;
 }
 
 /**
@@ -92,8 +62,6 @@ export interface WorldBox {
  */
 export class TwoDService {
   readonly #runtime: TwoDRuntime;
-
-  readonly #factories = new Map<string, TileObjectFactory>();
 
   /** Reused by `pickAt`, so picking allocates nothing. */
   readonly #pickLayers: LiteSprite2DLayer[] = [];
@@ -300,59 +268,6 @@ export class TwoDService {
     pixelsToWorldToRef(this.#bounds.minX, this.#bounds.maxY, ppu, out.min);
     pixelsToWorldToRef(this.#bounds.maxX, this.#bounds.minY, ppu, out.max);
     return true;
-  }
-
-  /**
-   * Registers the factory that turns one kind of tilemap object into an entity
-   * (`docs/architecture/11-2d-toolkit.md` §2.5).
-   *
-   * @param type - The object `type` the map writes.
-   * @param factory - Builds the entity, or returns `null` to spawn nothing.
-   * @throws IgnifxError with code `IGX-1110` when a factory for the type is already registered.
-   *
-   * @example
-   * ```ts
-   * app.twoD.registerTileObjectFactory("spawn", ({ world, position }) => {
-   *   const player = world.createEntity({ name: "player" });
-   *   player.transform.position2D = new Vec2(position.x, position.y);
-   *   return player;
-   * });
-   * ```
-   */
-  registerTileObjectFactory(type: string, factory: TileObjectFactory): void {
-    if (this.#factories.has(type)) {
-      throw twoDError(
-        TwoDErrorCode.duplicateObjectFactory,
-        `A tile object factory for ${type} is already registered.`,
-        {
-          context: { type },
-          hint: "Unregister the first one, or give the second object type its own name.",
-        },
-      );
-    }
-    this.#factories.set(type, factory);
-  }
-
-  /**
-   * Removes a tile-object factory.
-   *
-   * @param type - The object type.
-   * @returns `true` when a factory was registered.
-   */
-  unregisterTileObjectFactory(type: string): boolean {
-    return this.#factories.delete(type);
-  }
-
-  /**
-   * The factory registered for an object type.
-   *
-   * @param type - The object type.
-   * @returns The factory, or `null`.
-   *
-   * @internal
-   */
-  tileObjectFactory(type: string): TileObjectFactory | null {
-    return this.#factories.get(type) ?? null;
   }
 
   /**

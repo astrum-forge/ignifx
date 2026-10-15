@@ -186,9 +186,11 @@ export class Tilemap extends Component implements ComponentHooks {
    * the tilemap entity's origin, with adjacent full-cell tiles merged into as few counter-clockwise
    * rectangles as possible.
    *
-   * @returns The collision data.
+   * @returns The collision data; empty until the map has loaded.
    */
   get collisionData(): TilemapCollisionData {
+    // A map that finished loading, or was swapped, since the last read has to rebuild.
+    this.#ensureGrids();
     if (this.#collisionDirty) {
       this.#rebuildCollision();
     }

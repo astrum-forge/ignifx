@@ -430,6 +430,50 @@ Directory that holds one subdirectory per template.
 
 ***
 
+### ImportedTileObject
+
+One entity [runImportTilemap](#runimporttilemap) added.
+
+#### Properties
+
+##### name
+
+> `readonly` **name**: `string`
+
+The entity's name: the object's name, or its type when the name is empty.
+
+##### position
+
+> `readonly` **position**: readonly \[`number`, `number`\]
+
+The entity's position: the centre of the object, in metres relative to the map's origin.
+
+##### properties
+
+> `readonly` **properties**: `Readonly`\<`Record`\<`string`, `string` \| `number` \| `boolean`\>\>
+
+The object's custom properties, which no scene field holds.
+
+##### size
+
+> `readonly` **size**: readonly \[`number`, `number`\]
+
+The object's size, in metres.
+
+##### type
+
+> `readonly` **type**: `string`
+
+The object's type, which became the entity's tag; `""` when the object had none.
+
+##### uid
+
+> `readonly` **uid**: `string`
+
+The entity's uid in the scene file.
+
+***
+
 ### ImportHeightmapCommand
 
 A parsed `ignifx import heightmap` invocation.
@@ -525,6 +569,58 @@ The line, without a trailing newline.
 
 `void`
 
+***
+
+### ImportTilemapCommand
+
+A parsed `ignifx import tilemap` invocation.
+
+#### Properties
+
+##### map
+
+> `readonly` **map**: `string`
+
+The `.tilemap.json` whose objects move, exactly as the user typed it.
+
+##### parent
+
+> `readonly` **parent**: `string` \| `null`
+
+The name of the scene entity to parent the new entities to, or `null` for root entities.
+
+##### scene
+
+> `readonly` **scene**: `string`
+
+The scene or prefab file that receives them.
+
+***
+
+### ImportTilemapResult
+
+What [runImportTilemap](#runimporttilemap) did.
+
+#### Properties
+
+##### entities
+
+> `readonly` **entities**: readonly [`ImportedTileObject`](#importedtileobject)[]
+
+The entities added, in the map's object order. An empty list means nothing was written.
+
+##### map
+
+> `readonly` **map**: `string`
+
+The tilemap that lost its objects.
+
+##### scene
+
+> `readonly` **scene**: `string`
+
+The scene that gained them.
+
 ## Type Aliases
 
 ### CliErrorCode
@@ -539,7 +635,7 @@ The union of the error codes this package can throw.
 
 > `const` **CliErrorCode**: `object`
 
-Diagnostic codes for scaffolding failures, in the reserved `IGX-14xx` platform range.
+Diagnostic codes for scaffolding and import failures, in the reserved `IGX-14xx` platform range.
 The CLI reports these through `CliError` without creating an engine app.
 
 #### Type Declaration
@@ -561,6 +657,12 @@ A file named on the command line could not be read or written.
 > `readonly` **invalidArguments**: `"IGX-1403"` = `"IGX-1403"`
 
 The command line could not be parsed, or an argument is not usable.
+
+##### invalidDocument
+
+> `readonly` **invalidDocument**: `"IGX-1407"` = `"IGX-1407"`
+
+A file named on the command line is not the JSON document the command expects.
 
 ##### targetNotEmpty
 
@@ -675,6 +777,14 @@ The suffix marking a `package.json` script that belongs to the desktop variant.
 ### IMPORT\_HEIGHTMAP\_USAGE
 
 > `const` **IMPORT\_HEIGHTMAP\_USAGE**: `"Usage: ignifx import heightmap <in.png> <out.r16>"` = `"Usage: ignifx import heightmap <in.png> <out.r16>"`
+
+The one-line usage string printed with every argument error.
+
+***
+
+### IMPORT\_TILEMAP\_USAGE
+
+> `const` **IMPORT\_TILEMAP\_USAGE**: `"Usage: ignifx import tilemap <map.tilemap.json> <scene.scene.json> [--parent <entity name>]"` = `"Usage: ignifx import tilemap <map.tilemap.json> <scene.scene.json> [--parent <entity name>]"`
 
 The one-line usage string printed with every argument error.
 
@@ -896,6 +1006,39 @@ const command = parseImportHeightmapArgs(["island.png", "island.r16"]);
 
 ***
 
+### parseImportTilemapArgs()
+
+> **parseImportTilemapArgs**(`argv`): [`ImportTilemapCommand`](#importtilemapcommand)
+
+Parses the arguments of `ignifx import tilemap`.
+
+#### Parameters
+
+##### argv
+
+readonly `string`[]
+
+The arguments after `import tilemap`.
+
+#### Returns
+
+[`ImportTilemapCommand`](#importtilemapcommand)
+
+The parsed command.
+
+#### Throws
+
+A [CliError](#clierror) with code `IGX-1403` when the command line is unparseable or does not
+name exactly one map and one scene.
+
+#### Example
+
+```ts
+const command = parseImportTilemapArgs(["level.tilemap.json", "scenes/main.scene.json", "--parent", "Level"]);
+```
+
+***
+
 ### resolveTemplateDir()
 
 > **resolveTemplateDir**(`name`, `templatesRoot`): `Promise`\<`string`\>
@@ -1036,4 +1179,54 @@ command cannot read, or `IGX-1405` when a file cannot be read or written.
 
 ```ts
 await runImportHeightmap(["island.png", "island.r16"], { stdout: log, stderr: log });
+```
+
+***
+
+### runImportTilemap()
+
+> **runImportTilemap**(`argv`, `io`): `Promise`\<[`ImportTilemapResult`](#importtilemapresult)\>
+
+Moves a tilemap's objects into a scene file as entities, and removes them from the map.
+
+#### Parameters
+
+##### argv
+
+readonly `string`[]
+
+The arguments after `import tilemap`.
+
+##### io
+
+[`ImportIo`](#importio)
+
+The injected output sinks.
+
+#### Returns
+
+`Promise`\<[`ImportTilemapResult`](#importtilemapresult)\>
+
+What was moved.
+
+#### Remarks
+
+Each object becomes one entity, in the map's order, appended after the `--parent` entity's
+subtree or at the end of the file. The entity is named after the object, tagged with its type,
+and placed at the object's centre: the map's objects are in metres relative to the map's origin,
+so parent the entities to the tilemap's entity to keep them in place wherever the map sits. It has
+no components; the command prints each object's size and properties, because no scene field holds
+them. Both files are rewritten with two-space indentation, and the map loses its `objects` field,
+so a second run finds nothing to move. Numbers are rounded the way scene files store them.
+
+#### Throws
+
+A [CliError](#clierror) with code `IGX-1403` for bad arguments or a `--parent` that names no
+single entity, `IGX-1405` when a file cannot be read or written, or `IGX-1407` when a file is not
+the document the command expects.
+
+#### Example
+
+```ts
+await runImportTilemap(["level.tilemap.json", "scenes/main.scene.json", "--parent", "Level"], io);
 ```

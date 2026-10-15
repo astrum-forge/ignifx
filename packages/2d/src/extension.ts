@@ -21,7 +21,6 @@ import { defaultTwoDSettings, spriteClearColor, TWO_D_SETTINGS_SECTION, twoDSett
 import { ParallaxLayer } from "./sprite/parallax-layer.js";
 import { SpriteLayerEffect } from "./sprite/sprite-layer-effect.js";
 import { SpriteRenderer } from "./sprite/sprite-renderer.js";
-import { spawnTileObjects } from "./tilemap/spawn-objects.js";
 import { createTilemapLoader } from "./tilemap/tilemap-asset.js";
 import { TilemapRenderer } from "./tilemap/tilemap-renderer.js";
 import { Tilemap } from "./tilemap/tilemap.js";
@@ -208,7 +207,6 @@ function registerTwoD(ctx: ExtensionContext, options: TwoDOptions): void {
   ctx.registerComponents(components());
   runtime.setSceneHandler((scene: SceneInstance): void => {
     applySceneSettings(app, runtime, settings, scene);
-    spawnTileObjects(app, service, scene);
   });
   // A `Camera2D` is a camera as far as the frame is concerned, so a 2D-only world is not the
   // "nothing is drawn" case `IGX-0706` warns about. The world is re-examined on each ask rather

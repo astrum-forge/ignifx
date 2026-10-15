@@ -558,7 +558,6 @@ const expectedTwoDExports = [
   "sizeForZoom",
   "snapPixel",
   "snapZoomToInteger",
-  "spawnTilemapObjects",
   "spriteAnimationFileSchema",
   "spriteAnimationJsonSchema",
   "spriteAtlasFileSchema",

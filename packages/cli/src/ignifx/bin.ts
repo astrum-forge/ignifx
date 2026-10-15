@@ -5,12 +5,16 @@
 // rule (`tools/eslint-plugin-ignifx/src/rules/no-module-side-effects.ts`).
 import { CliError, CliErrorCode } from "../errors.js";
 import { runImportHeightmap } from "../import-heightmap.js";
+import { runImportTilemap } from "../import-tilemap.js";
 import type { ImportIo } from "../import-heightmap.js";
 
 /** What `ignifx` prints when it is given a command it does not have. */
-const USAGE = ["Usage: ignifx import heightmap <in.png> <out.r16>", "", "Scaffolding lives in `npx @ignifx/cli`."].join(
-  "\n",
-);
+const USAGE = [
+  "Usage: ignifx import heightmap <in.png> <out.r16>",
+  "       ignifx import tilemap <map.tilemap.json> <scene.scene.json> [--parent <entity name>]",
+  "",
+  "Scaffolding lives in `npx @ignifx/cli`.",
+].join("\n");
 
 const io: ImportIo = {
   // Coding standards §5.5 bans `console` outside the logging sink; this is the documented boundary
@@ -28,6 +32,8 @@ const argv = process.argv.slice(2);
 try {
   if (argv[0] === "import" && argv[1] === "heightmap") {
     await runImportHeightmap(argv.slice(2), io);
+  } else if (argv[0] === "import" && argv[1] === "tilemap") {
+    await runImportTilemap(argv.slice(2), io);
   } else {
     throw new CliError(CliErrorCode.invalidArguments, `Unknown command.\n${USAGE}`);
   }

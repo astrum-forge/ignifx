@@ -55,25 +55,26 @@ never builds a level entity itself, and the scene names every script by its `typ
 edit hot-patches the class instead of reloading the page.
 
 The tiles themselves stay in `assets/level.tilemap.json`: two tile layers, the tileset and the solid
-cells. Its objects layer still lists the spawn, the props and the shrine — the map generator writes
-it — but the game registers no `registerTileObjectFactory`, so loading the scene spawns nothing from
-it: the entities in the scene file are the ones the game has. Move the player or add a prop in the
-scene file, not in the map. An object's declared width and height were its trigger box, so the
-shrine's `BoxCollider2D` is one cell, the size of the `pad` frame it is drawn with. The props along
-the path are solid at their base only, so walking east from the spawn means stepping around a barrel
-rather than through it.
+cells. `TilemapCollider2D` reads the `Tilemap` on the same entity, so the walls collide as soon as
+the scene has loaded, with no code. The map has no objects layer: the spawn, the props and the
+shrine are entities in the scene file, because ignifx never spawns entities from a map. Move the
+player or add a prop in the scene file. (A `.tilemap.json` that does carry objects, such as one
+converted from Tiled, moves them into a scene once with `ignifx import tilemap`.) The shrine's
+`BoxCollider2D` is one cell, the size of the `pad` frame it is drawn with. The props along the path
+are solid at their base only, so walking east from the spawn means stepping around a barrel rather
+than through it.
 
 The file is in the canonical form `stringifySceneFile` writes: keys in a fixed order, numbers
 rounded to six decimals, one value per line, no final newline. Edit it by hand, by an agent, or in
 the ignifx editor. The ignifx repository's `tests/templates` loads it headless, checks the entity
 list, and saves it again to prove the text comes back byte for byte.
 
-**Adding an entity as data.** Copy an entity record, give it and each of its components a fresh
-ULID (`generateUlid()` from `@ignifx/core`), set `parent` to `null` or another entity's `uid`, and
-list it after its parent. A prop, say, is a `SpriteRenderer` naming `tiles.atlas.json` on the
-`Default` sorting layer, a `topdown/SpriteFrame` naming the frame (`"barrel"`), and a
-`BoxCollider2D`, on the `Solid` layer. A second shrine is a copy of `Shrine` with a new name, which
-is also its id in a save file.
+**Adding an entity as data.** Copy an entity record, give it and each of its components a fresh ULID
+(`generateUlid()` from `@ignifx/core`), set `parent` to `null` or another entity's `uid`, and list
+it after its parent. A prop, say, is a `SpriteRenderer` naming `tiles.atlas.json` in `sprite` and
+the frame in `frameName` (`"barrel"`), on the `Default` sorting layer, and a `BoxCollider2D`, on the
+`Solid` layer. A second shrine is a copy of `Shrine` with a new name, which is also its id in a save
+file.
 
 **Adding an entity in code.** Do it in `main.ts` after `loadScene`, the way the front end does:
 `app.world.createEntity("Name")`, then `addComponent`. A project script is reached by its type id,
@@ -82,11 +83,6 @@ says why).
 
 **What stays in code**, or needs a script, because a scene file cannot say it:
 
-- **Which frame a still sprite draws.** `SpriteRenderer.frame` is a runtime index, not a field, so
-  each prop and the shrine carry `SpriteFrame` (`src/scripts/sprite-frame.ts`), whose `frame` field
-  names the frame and whose `awake` looks it up in the loaded atlas.
-- **The tilemap's collision outlines.** `TilemapCollider2D` does not read the `Tilemap` beside it,
-  so `main.ts` hands it the tilemap's `collisionData` after the load.
 - **The sounds.** A clip referenced by a scene field is a dependency of the scene, and one the
   browser cannot decode would fail the whole load; every sound here is optional, so the footstep and
   the shrine's chime are assigned after the load and the ambient pad's `AudioSource` is created in
