@@ -7,6 +7,8 @@ import { Environment } from "./environment.js";
 import { InstancedMeshRenderer } from "./instanced-mesh-renderer.js";
 import { Light } from "./light.js";
 import { MATERIAL_FILE_FORMAT, MATERIAL_FORMAT_VERSION, MATERIAL_KINDS } from "./material-asset.js";
+import { MESH_PRIMITIVES } from "./mesh-asset.js";
+import { MESH_FILE_FORMAT, MESH_FORMAT_VERSION, MESH_PRIMITIVE_OPTIONS } from "./mesh-file.js";
 import { MeshRenderer } from "./mesh-renderer.js";
 import { Model } from "./model.js";
 import { PostProcessStack } from "./post-process-stack.js";
@@ -27,9 +29,10 @@ import type { SchemaDescription } from "../schema/describe.js";
  *
  * The harness requires every key to be a namespaced `<package>/<Name>` type id
  * (`scripts/lib/schema-source.ts` rejects a key with no `/`), and it groups entries onto a page by
- * their `format`. A *file* format is not a component and has no type id, so the three file formats
- * below are keyed `ignifx/scene-file`, `ignifx/material-file`, and `ignifx/environment-file` while
- * declaring `format: "ignifx.scene"`, `"ignifx.material"`, and `"ignifx.environment"`. The wave-1
+ * their `format`. A *file* format is not a component and has no type id, so the file formats
+ * below are keyed `ignifx/scene-file`, `ignifx/material-file`, `ignifx/environment-file`, and
+ * `ignifx/mesh-file` while declaring `format: "ignifx.scene"`, `"ignifx.material"`,
+ * `"ignifx.environment"`, and `"ignifx.mesh"`. The wave-1
  * hand-off asked for the key `"ignifx.scene"`; that key fails the namespacing check, and the
  * grouping — which is what actually decides the page — comes from `format` either way.
  */
@@ -75,6 +78,7 @@ export function describeSchemas(): Readonly<Record<string, SchemaDescription>> {
     "ignifx/scene-file": describeSceneFileFormat(),
     "ignifx/material-file": describeMaterialFileFormat(),
     "ignifx/environment-file": describeEnvironmentFileFormat(),
+    "ignifx/mesh-file": describeMeshFileFormat(),
   };
 }
 
@@ -204,6 +208,44 @@ export function describeEnvironmentFileFormat(): SchemaDescription {
         description: "How blurred the visible skybox is, 0 to 1; reflections are not blurred.",
       },
       rotation: { kind: "f32", default: 0, description: "Rotation around world Y, in degrees." },
+    },
+  };
+}
+
+/**
+ * Describes the `ignifx.mesh` file format (ADR-0029).
+ *
+ * @returns The description of the top-level file fields.
+ *
+ * @public
+ */
+export function describeMeshFileFormat(): SchemaDescription {
+  const optionsByPrimitive = MESH_PRIMITIVES.map(
+    (primitive) => `${primitive}: ${Object.keys(MESH_PRIMITIVE_OPTIONS[primitive]).join(", ")}`,
+  ).join("; ");
+  return {
+    title: "Mesh file",
+    format: MESH_FILE_FORMAT,
+    description:
+      "One primitive mesh and the options its MeshAsset factory takes, so a scene file can name it by address. glTF meshes load as models instead.",
+    fields: {
+      format: { kind: "str", default: MESH_FILE_FORMAT, description: `Always "${MESH_FILE_FORMAT}".` },
+      formatVersion: {
+        kind: "u32",
+        default: MESH_FORMAT_VERSION,
+        description: "The file format version; 1 before ignifx 1.0.",
+      },
+      name: { kind: "str", default: "", description: "A name for diagnostics; empty uses the file's address." },
+      primitive: {
+        kind: "enum",
+        default: "box",
+        description: `The shape: ${MESH_PRIMITIVES.join(", ")}. Required; an unknown value is rejected with IGX-0507.`,
+      },
+      options: {
+        kind: "record",
+        default: {},
+        description: `The factory's options; omitted ones take its defaults. Lengths are metres, zero or more; counts are whole numbers, one or more; uvScale is two numbers. An unknown option or a bad value is IGX-0507. By primitive: ${optionsByPrimitive}.`,
+      },
     },
   };
 }

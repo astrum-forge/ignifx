@@ -613,6 +613,7 @@ export const CoreErrorCode: {
     readonly assetNoLoader: "IGX-0504";
     readonly assetLoadFailed: "IGX-0505";
     readonly duplicateAssetLoader: "IGX-0506";
+    readonly invalidMeshFile: "IGX-0507";
     readonly nonFiniteNumber: "IGX-0601";
     readonly unresolvedReference: "IGX-0602";
     readonly unsupportedFormatVersion: "IGX-0603";
@@ -768,6 +769,9 @@ export function createMaterialLoader(): AssetLoader<MaterialAsset>;
 
 // @public
 export function createMemorySink(limit?: number): MemorySink;
+
+// @public
+export function createMeshLoader(): AssetLoader<MeshAsset>;
 
 // @public
 export function createModelLoader(): AssetLoader<ModelAsset>;
@@ -926,6 +930,9 @@ export function describeEnvironmentFileFormat(): SchemaDescription;
 
 // @public
 export function describeMaterialFileFormat(): SchemaDescription;
+
+// @public
+export function describeMeshFileFormat(): SchemaDescription;
 
 // @public
 export function describeSceneFileFormat(): SchemaDescription;
@@ -2098,6 +2105,21 @@ export class MemoryStorageBackend implements StorageBackend {
 export const MESH_ASSET_TYPE = "mesh";
 
 // @public
+export const MESH_FILE_EXTENSION = ".mesh.json";
+
+// @public
+export const MESH_FILE_FORMAT = "ignifx.mesh";
+
+// @public
+export const MESH_FORMAT_VERSION = 1;
+
+// @public
+export const MESH_PRIMITIVE_OPTIONS: MeshPrimitiveOptionKinds;
+
+// @public
+export const MESH_PRIMITIVES: readonly ["box", "sphere", "plane", "ground", "cylinder", "capsule", "torus"];
+
+// @public
 export class MeshAsset {
     [Symbol.dispose](): void;
     // @internal
@@ -2129,6 +2151,9 @@ export interface MeshAssetLiteHandles {
 }
 
 // @public
+export function meshFileJsonSchema(): JsonSchemaObject;
+
+// @public
 export interface MeshGeometryData {
     readonly colors?: Float32Array;
     readonly indices: Uint32Array;
@@ -2138,6 +2163,41 @@ export interface MeshGeometryData {
     readonly uvs?: Float32Array;
     readonly uvs2?: Float32Array;
 }
+
+// @public
+export type MeshOptionKind = "length" | "count" | "pair";
+
+// @public
+export type MeshPrimitive = (typeof MESH_PRIMITIVES)[number];
+
+// @public
+export type MeshPrimitiveDefinition = {
+    readonly primitive: "box";
+    readonly options: BoxMeshOptions;
+} | {
+    readonly primitive: "sphere";
+    readonly options: SphereMeshOptions;
+} | {
+    readonly primitive: "plane";
+    readonly options: PlaneMeshOptions;
+} | {
+    readonly primitive: "ground";
+    readonly options: GroundMeshOptions;
+} | {
+    readonly primitive: "cylinder";
+    readonly options: CylinderMeshOptions;
+} | {
+    readonly primitive: "capsule";
+    readonly options: CapsuleMeshOptions;
+} | {
+    readonly primitive: "torus";
+    readonly options: TorusMeshOptions;
+};
+
+// @public
+export type MeshPrimitiveOptionKinds = { readonly [P in MeshPrimitive]: { readonly [K in keyof Extract<MeshPrimitiveDefinition, {
+            readonly primitive: P;
+        }>["options"]]-?: MeshOptionKind; }; };
 
 // @public
 export class MeshRenderer extends Component implements ComponentHooks {

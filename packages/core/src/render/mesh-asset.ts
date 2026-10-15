@@ -1,5 +1,5 @@
 import { CoreErrorCode } from "../errors/error-codes.js";
-import { IgnifxError } from "../errors/ignifx-error.js";
+import { assertNever, IgnifxError } from "../errors/ignifx-error.js";
 import { createMeshFromGeometry } from "../lite/gpu/mesh.js";
 import {
   buildBoxTemplate,
@@ -158,6 +158,34 @@ export interface TorusMeshOptions {
 }
 
 /**
+ * The primitive shapes a `MeshAsset` factory and a `.mesh.json` file can build.
+ *
+ * @public
+ */
+export const MESH_PRIMITIVES = ["box", "sphere", "plane", "ground", "cylinder", "capsule", "torus"] as const;
+
+/**
+ * One of {@link MESH_PRIMITIVES}.
+ *
+ * @public
+ */
+export type MeshPrimitive = (typeof MESH_PRIMITIVES)[number];
+
+/**
+ * A primitive and the options its factory takes: what a `.mesh.json` file declares.
+ *
+ * @public
+ */
+export type MeshPrimitiveDefinition =
+  | { readonly primitive: "box"; readonly options: BoxMeshOptions }
+  | { readonly primitive: "sphere"; readonly options: SphereMeshOptions }
+  | { readonly primitive: "plane"; readonly options: PlaneMeshOptions }
+  | { readonly primitive: "ground"; readonly options: GroundMeshOptions }
+  | { readonly primitive: "cylinder"; readonly options: CylinderMeshOptions }
+  | { readonly primitive: "capsule"; readonly options: CapsuleMeshOptions }
+  | { readonly primitive: "torus"; readonly options: TorusMeshOptions };
+
+/**
  * Raw vertex data for {@link MeshAsset.fromData}.
  *
  * @remarks
@@ -208,8 +236,10 @@ export interface MeshAssetLiteHandles {
  *
  * @remarks
  * Build one with a primitive factory or {@link MeshAsset.fromData}; each returns the handle the
- * `MeshRenderer.mesh` field takes. A mesh that came from a file arrives as part of a `ModelAsset`
- * instead — a glTF is a tree of meshes, materials, and animations, not one buffer.
+ * `MeshRenderer.mesh` field takes. A `.mesh.json` file loads the same primitives by address
+ * (`app.assets.load("meshes/crate.mesh.json")`), so a scene file can name one. A glTF mesh
+ * arrives as part of a `ModelAsset` instead — a glTF is a tree of meshes, materials, and
+ * animations, not one buffer.
  *
  * @example
  * ```ts
@@ -515,7 +545,7 @@ export class MeshAsset {
    * ```
    */
   static box(app: App, options?: BoxMeshOptions): AssetHandle<MeshAsset> {
-    return publish(app, "box", (engine) => buildBoxTemplate(engine, options));
+    return publishPrimitive(app, { primitive: "box", options: options ?? {} });
   }
 
   /**
@@ -526,7 +556,7 @@ export class MeshAsset {
    * @returns The handle, with one holder.
    */
   static sphere(app: App, options?: SphereMeshOptions): AssetHandle<MeshAsset> {
-    return publish(app, "sphere", (engine) => buildSphereTemplate(engine, options));
+    return publishPrimitive(app, { primitive: "sphere", options: options ?? {} });
   }
 
   /**
@@ -537,7 +567,7 @@ export class MeshAsset {
    * @returns The handle, with one holder.
    */
   static plane(app: App, options?: PlaneMeshOptions): AssetHandle<MeshAsset> {
-    return publish(app, "plane", (engine) => buildPlaneTemplate(engine, options));
+    return publishPrimitive(app, { primitive: "plane", options: options ?? {} });
   }
 
   /**
@@ -548,8 +578,7 @@ export class MeshAsset {
    * @returns The handle, with one holder.
    */
   static ground(app: App, options?: GroundMeshOptions): AssetHandle<MeshAsset> {
-    const lite = toGroundOptions(options);
-    return publish(app, "ground", (engine) => buildGroundTemplate(engine, lite));
+    return publishPrimitive(app, { primitive: "ground", options: options ?? {} });
   }
 
   /**
@@ -560,7 +589,7 @@ export class MeshAsset {
    * @returns The handle, with one holder.
    */
   static cylinder(app: App, options?: CylinderMeshOptions): AssetHandle<MeshAsset> {
-    return publish(app, "cylinder", (engine) => buildCylinderTemplate(engine, options));
+    return publishPrimitive(app, { primitive: "cylinder", options: options ?? {} });
   }
 
   /**
@@ -571,7 +600,7 @@ export class MeshAsset {
    * @returns The handle, with one holder.
    */
   static capsule(app: App, options?: CapsuleMeshOptions): AssetHandle<MeshAsset> {
-    return publish(app, "capsule", (engine) => buildCapsuleTemplate(engine, options));
+    return publishPrimitive(app, { primitive: "capsule", options: options ?? {} });
   }
 
   /**
@@ -582,7 +611,7 @@ export class MeshAsset {
    * @returns The handle, with one holder.
    */
   static torus(app: App, options?: TorusMeshOptions): AssetHandle<MeshAsset> {
-    return publish(app, "torus", (engine) => buildTorusTemplate(engine, options));
+    return publishPrimitive(app, { primitive: "torus", options: options ?? {} });
   }
 
   /**
@@ -662,14 +691,14 @@ function copyRange(
  * Copies the ignifx ground options onto Lite's, which types `uvScale` as a mutable tuple.
  *
  * @param options - The declared options.
- * @returns Lite's options, or `undefined` when the caller declared none.
+ * @returns Lite's options.
  */
-function toGroundOptions(
-  options: GroundMeshOptions | undefined,
-): { width?: number; height?: number; subdivisions?: number; uvScale?: [number, number] } | undefined {
-  if (options === undefined) {
-    return undefined;
-  }
+function toGroundOptions(options: GroundMeshOptions): {
+  width?: number;
+  height?: number;
+  subdivisions?: number;
+  uvScale?: [number, number];
+} {
   const result: { width?: number; height?: number; subdivisions?: number; uvScale?: [number, number] } = {};
   if (options.width !== undefined) {
     result.width = options.width;
@@ -685,6 +714,64 @@ function toGroundOptions(
     result.uvScale = [uvScale[0], uvScale[1]];
   }
   return result;
+}
+
+/**
+ * Builds a primitive's Lite mesh.
+ *
+ * @param engine - The engine that owns the buffers.
+ * @param definition - The primitive and its options.
+ * @returns The template.
+ */
+function buildPrimitiveTemplate(engine: LiteEngine, definition: MeshPrimitiveDefinition): LiteMesh {
+  switch (definition.primitive) {
+    case "box":
+      return buildBoxTemplate(engine, definition.options);
+    case "sphere":
+      return buildSphereTemplate(engine, definition.options);
+    case "plane":
+      return buildPlaneTemplate(engine, definition.options);
+    case "ground":
+      return buildGroundTemplate(engine, toGroundOptions(definition.options));
+    case "cylinder":
+      return buildCylinderTemplate(engine, definition.options);
+    case "capsule":
+      return buildCapsuleTemplate(engine, definition.options);
+    case "torus":
+      return buildTorusTemplate(engine, definition.options);
+    default:
+      return assertNever(definition, "mesh primitive");
+  }
+}
+
+/**
+ * Builds a primitive mesh asset without publishing it. The factories and the `.mesh.json` loader
+ * both go through here, so a primitive is the same whether code or a file asked for it.
+ *
+ * @param app - The app whose engine uploads the geometry; a headless app uploads nothing.
+ * @param name - A human-readable name.
+ * @param definition - The primitive and its options.
+ * @returns The asset, owned by the caller.
+ *
+ * @internal
+ */
+export function createPrimitiveMeshAsset(app: App, name: string, definition: MeshPrimitiveDefinition): MeshAsset {
+  const handles = buildMeshTemplate(app.isHeadless, app.lite.scene, app.lite.engine, (engine) =>
+    buildPrimitiveTemplate(engine, definition),
+  );
+  return new MeshAsset(name, handles.mesh, handles.scene, null, handles.engine);
+}
+
+/**
+ * Builds a primitive and registers it as an in-memory asset named after the primitive.
+ *
+ * @param app - The app that owns the engine and the asset service.
+ * @param definition - The primitive and its options.
+ * @returns The handle, with one holder.
+ */
+function publishPrimitive(app: App, definition: MeshPrimitiveDefinition): AssetHandle<MeshAsset> {
+  const asset = createPrimitiveMeshAsset(app, definition.primitive, definition);
+  return app.assets.register(asset, { type: MESH_ASSET_TYPE });
 }
 
 /**
