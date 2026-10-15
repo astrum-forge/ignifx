@@ -1,17 +1,17 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { defineSpriteAtlas } from "../src/atlas/definition.js";
-import { SpriteAtlasAsset } from "../src/atlas/sprite-atlas-asset.js";
-import { Camera2D } from "../src/camera/camera-2d.js";
-import { buildAtlas } from "../src/lite/atlas.js";
-import { SpriteRenderer } from "../src/sprite/sprite-renderer.js";
-import { createTwoDApp } from "./support/app.js";
-import type { TwoDAppHarness } from "./support/app.js";
+import { defineSpriteAtlas } from "../../src/atlas/definition.js";
+import { SpriteAtlasAsset } from "../../src/atlas/sprite-atlas-asset.js";
+import { Camera2D } from "../../src/camera/camera-2d.js";
+import { buildAtlas } from "../../src/lite/atlas.js";
+import { SpriteRenderer } from "../../src/sprite/sprite-renderer.js";
+import { createTwoDApp } from "../support/app.js";
+import type { TwoDAppHarness } from "../support/app.js";
 import type { Texture2D } from "@babylonjs/lite";
 
 /**
  * The 2D sync in an edit-mode app (ADR-0028): it keeps turning sprites into what is drawn, so a
  * sprite the editor moves is written again. The animation half is in
- * `animation/sprite-animator.test.ts`.
+ * `../animation/sprite-animator.test.ts`.
  */
 
 let harness: TwoDAppHarness | null = null;
@@ -23,7 +23,7 @@ afterEach(() => {
 
 /**
  * A loaded atlas whose Lite half is real, over a stub texture, so a headless sync has something
- * to write (the pattern of `lite/sync-system.test.ts`).
+ * to write (the pattern of `sync-system.test.ts`).
  *
  * @returns The atlas.
  */
