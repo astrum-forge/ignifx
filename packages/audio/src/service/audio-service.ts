@@ -445,7 +445,7 @@ export class AudioService implements VoiceHost {
    */
   playOneShot(clip: AudioClip, options?: OneShotOptions): SoundInstance {
     const busName = options?.bus ?? DEFAULT_SOUND_BUS;
-    const key = `${clip.address} ${busName}`;
+    const key = `${clip.address}\u0000${busName}`;
     let voice = this.#oneShots.get(key);
     if (voice === undefined || voice.isDisposed) {
       voice = this.createVoice({
