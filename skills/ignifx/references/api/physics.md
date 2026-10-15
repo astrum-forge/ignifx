@@ -5781,13 +5781,21 @@ Where the impulse was applied.
 
 ### Collision
 
-What a script's `onCollisionEnter`/`onCollisionStay`/`onCollisionExit` is handed.
+What a script's `onCollisionEnter`/`onCollisionStay`/`onCollisionExit` is handed. Both entities in
+a contact receive it, each with the other one as `other`.
 
-#### Remarks
+#### Example
 
-`other` is `null` under the default `collisionIdentities: "upstream"` mode, because
-`@babylonjs/lite@1.27.0` reports collisions without body identities (§4, ADR-0013). Register
-`physics({ collisionIdentities: "internal" })` to opt into the waived drain that recovers them.
+```ts
+class Crate extends Script implements ScriptCallbacks {
+  static typeId = "mygame/Crate";
+  onCollisionEnter(collision: Collision): void {
+    if (collision.other?.tags.has("projectile") === true) {
+      this.entity.destroy();
+    }
+  }
+}
+```
 
 #### Properties
 
@@ -5801,7 +5809,7 @@ The contacts of this event. Pooled; valid only during the callback.
 
 > `readonly` **other**: `Entity` \| `null`
 
-The entity that was hit, or `null` when the identity is unavailable.
+The entity that was hit, or `null` when its body is not an entity's (a character controller's capsule).
 
 ##### otherCollider
 
@@ -5813,7 +5821,7 @@ The other entity's first collider, or `null`.
 
 > `readonly` **relativeVelocity**: `Vec3Like` \| `null`
 
-The relative velocity at the contact, or `null` when a body identity is unavailable.
+This body's velocity minus the other's at the contact, or `null` when `other` is `null`.
 
 ##### self
 
@@ -5970,14 +5978,6 @@ The static friction coefficient.
 What `physics()` accepts.
 
 #### Properties
-
-##### collisionIdentities?
-
-> `readonly` `optional` **collisionIdentities?**: `"upstream"` \| `"internal"`
-
-How collision callbacks learn which bodies took part (ADR-0013). `"upstream"` is the default and
-delivers contacts with `other === null`, because `@babylonjs/lite@1.27.0` reports no identities;
-`"internal"` opts into the waived adapter-internal drain that recovers them.
 
 ##### havok?
 
@@ -6319,14 +6319,6 @@ The union of [COLLISION\_EVENT\_MODES](#collision_event_modes).
 
 ***
 
-### CollisionIdentityMode
-
-> **CollisionIdentityMode** = *typeof* [`COLLISION_IDENTITY_MODES`](#collision_identity_modes)\[`number`\]
-
-The union of [COLLISION\_IDENTITY\_MODES](#collision_identity_modes).
-
-***
-
 ### InterpolationMode
 
 > **InterpolationMode** = *typeof* [`INTERPOLATION_MODES`](#interpolation_modes)\[`number`\]
@@ -6389,14 +6381,6 @@ The axis a capsule stands along.
 > `const` **COLLISION\_EVENT\_MODES**: readonly \[`"auto"`, `"on"`, `"off"`\]
 
 Whether collision callbacks are delivered for this body.
-
-***
-
-### COLLISION\_IDENTITY\_MODES
-
-> `const` **COLLISION\_IDENTITY\_MODES**: readonly \[`"upstream"`, `"internal"`\]
-
-How collision events learn which bodies took part (`09-physics.md` §4, ADR-0013).
 
 ***
 
@@ -6543,12 +6527,6 @@ A `MeshCollider` has no geometry to build a shape from.
 > `readonly` **havokUnavailable**: `"IGX-0903"` = `"IGX-0903"`
 
 The Havok WebAssembly module could not be loaded.
-
-##### internalDrainUnavailable
-
-> `readonly` **internalDrainUnavailable**: `"IGX-0908"` = `"IGX-0908"`
-
-The ADR-0013 collision drain refused to bind because Babylon Lite's internals moved.
 
 ##### invalidMaterialFile
 

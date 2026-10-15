@@ -190,10 +190,8 @@ import { Collision } from '@ignifx/physics';
 import { Collision2D } from '@ignifx/physics-2d';
 import { COLLISION_EVENT_MODES } from '@ignifx/physics';
 import { COLLISION_EVENT_MODES_2D } from '@ignifx/physics-2d';
-import { COLLISION_IDENTITY_MODES } from '@ignifx/physics';
 import { CollisionEventMode } from '@ignifx/physics';
 import { CollisionEventMode2D } from '@ignifx/physics-2d';
-import { CollisionIdentityMode } from '@ignifx/physics';
 import { CollisionMergeOptions } from '@ignifx/2d';
 import { Color } from '@ignifx/core';
 import { color } from '@ignifx/core';
@@ -1890,13 +1888,9 @@ export { COLLISION_EVENT_MODES }
 
 export { COLLISION_EVENT_MODES_2D }
 
-export { COLLISION_IDENTITY_MODES }
-
 export { CollisionEventMode }
 
 export { CollisionEventMode2D }
-
-export { CollisionIdentityMode }
 
 export { CollisionMergeOptions }
 

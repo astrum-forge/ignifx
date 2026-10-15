@@ -11,8 +11,8 @@ The effect here is not looping and has `playOnAwake` off: it exists to be hit. `
 `app.particles.qualityScale` — a script that asked for twenty-four sparks meant twenty-four —
 while `emission.rateOverTime` and bursts inside the document are scaled by it.
 
-Any hit source works the same way; this one uses a trigger volume because triggers carry both
-entities, and Babylon Lite 1.27.0 reports plain collisions with no body identity.
+Any hit source works the same way: this one uses a trigger volume, and `onCollisionEnter` on a
+solid collider would call `emit` just the same.
 
 ```ts run
 import { Camera, Script, createApp, u32 } from "@ignifx/core";

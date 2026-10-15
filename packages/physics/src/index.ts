@@ -59,13 +59,8 @@ export {
 // queries — what `app.physics` answers.
 export type { QueryOptions, QueryShape, RaycastHit, ShapeCastHit, ShapeCastOptions } from "./queries.js";
 
-// runtime — the diagnostics group name and the collision-identity modes the options accept.
-export {
-  COLLISION_IDENTITY_MODES,
-  PHYSICS_DIAGNOSTICS_COUNTERS,
-  PHYSICS_DIAGNOSTICS_GROUP,
-  type CollisionIdentityMode,
-} from "./runtime/runtime.js";
+// runtime — the diagnostics group name and its counters.
+export { PHYSICS_DIAGNOSTICS_COUNTERS, PHYSICS_DIAGNOSTICS_GROUP } from "./runtime/runtime.js";
 
 // schemas — the documentation harness entry point.
 export { describeSchemas } from "./schemas.js";

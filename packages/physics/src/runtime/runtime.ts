@@ -55,7 +55,6 @@ import {
   writeLinearVelocity,
   writeNodePose,
 } from "../lite/havok.js";
-import { drainCollisionsWithBodies } from "../lite/internal/collision-drain.js";
 import type { BodyRecord, QueryTarget } from "./body-record.js";
 import type { CharacterController, SupportStateName } from "../components/character-controller.js";
 import type { ContactPoint } from "../events.js";
@@ -90,20 +89,6 @@ import type {
  * colliders, and `CharacterController`.
  */
 
-/**
- * How collision events learn which bodies took part (`09-physics.md` §4, ADR-0013).
- *
- * @public
- */
-export const COLLISION_IDENTITY_MODES = ["upstream", "internal"] as const;
-
-/**
- * The union of {@link COLLISION_IDENTITY_MODES}.
- *
- * @public
- */
-export type CollisionIdentityMode = (typeof COLLISION_IDENTITY_MODES)[number];
-
 /** What the extension hands the runtime. */
 export interface PhysicsRuntimeOptions {
   /** The extension registration surface; the physics kernel hooks live on it. */
@@ -114,8 +99,6 @@ export interface PhysicsRuntimeOptions {
   readonly simulation: SimulationHandles;
   /** The Havok world. */
   readonly world: LitePhysicsWorld;
-  /** Which collision-identity path to use. */
-  readonly collisionIdentities: CollisionIdentityMode;
   /** The `physics` diagnostics group. */
   readonly counters: DiagnosticsGroup;
 }
@@ -140,9 +123,9 @@ interface ContactSlot {
   readonly normal: Vec3;
   /** The resolving impulse. */
   impulse: number;
-  /** The first participant, or `null` in upstream mode. */
+  /** The first participant, or `null` when its body is not an entity's (a character capsule). */
   first: BodyRecord | null;
-  /** The second participant, or `null` in upstream mode. */
+  /** The second participant, or `null`. */
   second: BodyRecord | null;
 }
 
@@ -189,7 +172,7 @@ interface MutableCollision {
   self: Entity;
   /** The one-element pooled contact list. */
   readonly contacts: readonly ContactPoint[];
-  /** The relative velocity, when both identities are known. */
+  /** The relative velocity, or `null` when the other participant is not an entity's body. */
   relativeVelocity: Vec3Like | null;
 }
 
@@ -237,8 +220,6 @@ export class PhysicsRuntime {
   readonly #simulation: SimulationHandles;
 
   readonly #world: LitePhysicsWorld;
-
-  readonly #identities: CollisionIdentityMode;
 
   readonly #counters: DiagnosticsGroup;
 
@@ -309,16 +290,14 @@ export class PhysicsRuntime {
   /**
    * Builds the runtime, applies the world settings, and registers the event drains.
    *
-   * @param options - The context, settings, scene, world, identity mode, and counters.
-   * @throws IgnifxError with code `IGX-0905` when the collision matrix names an unknown layer, or
-   * `IGX-0908` when the internal drain does not recognise this Babylon Lite build.
+   * @param options - The context, settings, scene, world, and counters.
+   * @throws IgnifxError with code `IGX-0905` when the collision matrix names an unknown layer.
    */
   constructor(options: PhysicsRuntimeOptions) {
     this.#ctx = options.ctx;
     this.#settings = options.settings;
     this.#simulation = options.simulation;
     this.#world = options.world;
-    this.#identities = options.collisionIdentities;
     this.#counters = options.counters;
     this.#contacts.push(this.#contactPoint);
 
@@ -336,15 +315,9 @@ export class PhysicsRuntime {
     onTriggerEvents(this.#world, (record): void => {
       this.#bufferTrigger(record);
     });
-    if (this.#identities === "internal") {
-      drainCollisionsWithBodies(this.#world, (record): void => {
-        this.#bufferContact(record);
-      });
-    } else {
-      onCollisionEvents(this.#world, (record): void => {
-        this.#bufferContact(record);
-      });
-    }
+    onCollisionEvents(this.#world, (record): void => {
+      this.#bufferContact(record);
+    });
     afterStep(this.#world, (): void => {
       // Registered last, so it runs after both drains have filled the buffers.
     });
@@ -1411,7 +1384,7 @@ export class PhysicsRuntime {
   /**
    * Buffers a collision event.
    *
-   * @param event - What the active drain reported.
+   * @param event - What the collision drain reported.
    */
   #bufferContact(event: ContactRecord): void {
     const slot = this.#contactSlot(this.#contactCount);
@@ -1499,28 +1472,8 @@ export class PhysicsRuntime {
         continue;
       }
       const kind = contactCallback(slot.phase);
-      if (slot.first === null && slot.second === null) {
-        this.#broadcastContact(slot, kind);
-        continue;
-      }
       this.#deliverContact(slot, slot.first, slot.second, kind);
       this.#deliverContact(slot, slot.second, slot.first, kind);
-    }
-  }
-
-  /**
-   * Delivers one collision to every entity that opted into collision events — the only thing that
-   * can be done in `"upstream"` mode, where Lite reports no identities at all (`09-physics.md` §4).
-   *
-   * @param slot - The buffered contact.
-   * @param kind - Which callback to deliver.
-   */
-  #broadcastContact(slot: ContactSlot, kind: PhysicsCallbackName): void {
-    for (let index = 0; index < this.#records.length; index += 1) {
-      const record = this.#records[index];
-      if (record !== undefined && record.collisionEvents) {
-        this.#deliverContact(slot, record, null, kind);
-      }
     }
   }
 

@@ -234,10 +234,9 @@ collides with everything. Havok tests a pair in both directions, so one side ref
 - **`MeshCollider` needs a GPU app.** Babylon Lite cannot build mesh or convex-hull shapes on the
   null engine and a headless `MeshAsset` uploads no geometry, so a headless mesh collider reports
   `IGX-0906`. Use a primitive collider in headless tests.
-- **`collision.other` is `null` by default.** `@babylonjs/lite@1.27.0` reports collisions without
-  body identities. Trigger events _do_ carry both entities, so they are the documented mechanism for
-  gameplay reactions; `physics({ collisionIdentities: "internal" })` opts into the ADR-0013 waiver
-  that recovers the identities.
+- **A collision reaches only the two entities in the contact**, and each gets the other as
+  `collision.other`. `other` is `null` only when the other body is not an entity's, such as a
+  `CharacterController`'s capsule; use `CharacterController.onCollided` for what a character pushes.
 - **Event objects are pooled.** `TriggerEvent` and `Collision` (and its `contacts`) are reused for
   every event of a step: copy anything you keep past the callback.
 - **Type the callback parameter, do not cast it.** Core declares `onTriggerEnter?(trigger: unknown)`
@@ -263,5 +262,4 @@ None (pre-1.0: no deprecation window; breaking changes are listed in the changel
 ## Where to look next
 
 `skills/ignifx/SKILL.md` for the engine entry skill · `skills/ignifx/references/api/physics.md` for
-the generated API · `docs/architecture/09-physics.md` and ADR-0003 / ADR-0013 for the design
-rationale.
+the generated API · `docs/architecture/09-physics.md` and ADR-0003 for the design rationale.

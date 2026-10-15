@@ -1,7 +1,6 @@
 import { createApp, createManualClock, createMemorySink } from "@ignifx/core";
 import { physics } from "../../src/extension.js";
 import { loadHavokForTests } from "../lite/fixtures/havok.js";
-import type { CollisionIdentityMode } from "../../src/runtime/runtime.js";
 import type { PhysicsSettings } from "../../src/settings.js";
 import type { App, FetchLike, ManualClock, MemorySink, SettingsInput, World } from "@ignifx/core";
 
@@ -20,8 +19,6 @@ export const FIXED_STEP = 1 / 60;
 export interface PhysicsAppOptions {
   /** Project settings; the `physics` section is merged over the defaults. */
   readonly settings?: SettingsInput;
-  /** Which collision-identity path to use. */
-  readonly collisionIdentities?: CollisionIdentityMode;
   /** The build mode; defaults to `"development"`. */
   readonly mode?: "development" | "production";
   /** A fake `fetch`, for the suites that load an asset. */
@@ -51,7 +48,7 @@ export interface PhysicsAppHarness {
 /**
  * Builds a started headless app with `@ignifx/physics` registered.
  *
- * @param options - Settings, collision-identity mode, and build mode.
+ * @param options - Settings, build mode, and a fake `fetch`.
  * @returns The harness.
  */
 export async function createPhysicsApp(options?: PhysicsAppOptions): Promise<PhysicsAppHarness> {
@@ -62,12 +59,7 @@ export async function createPhysicsApp(options?: PhysicsAppOptions): Promise<Phy
     headless: true,
     clock,
     logSink: sink,
-    extensions: [
-      physics({
-        havok,
-        ...(options?.collisionIdentities === undefined ? {} : { collisionIdentities: options.collisionIdentities }),
-      }),
-    ],
+    extensions: [physics({ havok })],
     ...(options?.settings === undefined ? {} : { settings: options.settings }),
     ...(options?.fetch === undefined ? {} : { fetch: options.fetch }),
     mode: options?.mode ?? "development",

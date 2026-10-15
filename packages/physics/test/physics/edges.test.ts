@@ -106,7 +106,7 @@ describe("collider edges", () => {
   }, 30_000);
 
   it("respects an explicit collisionEvents mode", async () => {
-    const harness = await createPhysicsApp({ collisionIdentities: "internal" });
+    const harness = await createPhysicsApp();
     try {
       const floor = harness.world.createEntity("Floor");
       floor.addComponent(BoxCollider, { size: { x: 40, y: 1, z: 40 } });

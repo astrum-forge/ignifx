@@ -8,8 +8,8 @@ import type { ScriptCallbacks } from "@ignifx/core";
 
 /**
  * Trigger and collision events (`docs/architecture/09-physics.md` §4): who receives them, what they
- * carry, and in what order. Collisions run with `collisionIdentities: "internal"`, the ADR-0013
- * path, because `@babylonjs/lite@1.27.0` reports no body identities on the public one.
+ * carry, and in what order. Both kinds name the other entity, because Babylon Lite reports both
+ * bodies of a trigger and of a collision.
  */
 
 /** One recorded delivery. */
@@ -127,9 +127,9 @@ describe("trigger events", () => {
   }, 30_000);
 });
 
-describe("collision events with collisionIdentities: internal", () => {
-  it("delivers enter, stay, and exit to both entities", async () => {
-    const harness = await createPhysicsApp({ collisionIdentities: "internal" });
+describe("collision events", () => {
+  it("delivers enter, stay, and exit to both entities with the other resolved", async () => {
+    const harness = await createPhysicsApp();
     try {
       const floor = harness.world.createEntity("Floor");
       floor.addComponent(BoxCollider, { size: { x: 20, y: 1, z: 20 } });
@@ -145,8 +145,10 @@ describe("collision events with collisionIdentities: internal", () => {
       expect(kinds(boxLog)).toContain("enter");
       expect(kinds(boxLog)).toContain("stay");
       expect(kinds(floorLog)).toContain("enter");
-      expect(boxLog.entries[0]?.other).toBe("Floor");
-      expect(floorLog.entries[0]?.other).toBe("Box");
+      expect(boxLog.entries[0]).toEqual({ kind: "enter", self: "Box", other: "Floor" });
+      expect(floorLog.entries[0]).toEqual({ kind: "enter", self: "Floor", other: "Box" });
+      expect(new Set(boxLog.entries.map((entry) => entry.other))).toEqual(new Set(["Floor"]));
+      expect(new Set(floorLog.entries.map((entry) => entry.other))).toEqual(new Set(["Box"]));
       expect(boxLog.firstImpulse).toBeGreaterThan(0);
 
       // Kick it off the floor: the contact ends and both sides are told.
@@ -160,7 +162,7 @@ describe("collision events with collisionIdentities: internal", () => {
   }, 30_000);
 
   it("enables collision events only for entities whose scripts implement a callback", async () => {
-    const harness = await createPhysicsApp({ collisionIdentities: "internal" });
+    const harness = await createPhysicsApp();
     try {
       const floor = harness.world.createEntity("Floor");
       floor.addComponent(BoxCollider, { size: { x: 20, y: 1, z: 20 } });
@@ -194,28 +196,61 @@ describe("collision events with collisionIdentities: internal", () => {
   }, 30_000);
 });
 
-describe("collision events with the default upstream mode", () => {
-  it("delivers contact data with no identity, which is what Lite 1.27.0 reports", async () => {
+describe("collision routing", () => {
+  it("reaches only the entities in the contact, and hands each the relative velocity", async () => {
     const harness = await createPhysicsApp();
     try {
       const floor = harness.world.createEntity("Floor");
       floor.addComponent(BoxCollider, { size: { x: 20, y: 1, z: 20 } });
+
       const box = harness.world.createEntity("Box");
       box.transform.position = { x: 0, y: 2, z: 0 };
       box.addComponent(BoxCollider);
       box.addComponent(Rigidbody, { interpolation: "none" });
-      const log = box.addComponent(CollisionLog);
+      const boxLog = box.addComponent(VelocityLog);
+
+      // Listening, far away, touching nothing. Before Lite reported identities this entity was
+      // handed every contact in the world with `other === null`.
+      const bystander = harness.world.createEntity("Bystander");
+      bystander.transform.position = { x: 50, y: 50, z: 50 };
+      bystander.addComponent(BoxCollider);
+      bystander.addComponent(Rigidbody, { bodyType: "kinematic", interpolation: "none" });
+      const bystanderLog = bystander.addComponent(CollisionLog);
 
       harness.stepMany(60);
-      // The timing is still right — enter arrives, then stay — but `other` is `null` (§4).
-      expect(kinds(log)).toContain("enter");
-      expect(kinds(log)).toContain("stay");
-      expect(new Set(log.entries.map((entry) => entry.other))).toEqual(new Set(["-"]));
+      expect(boxLog.others).toContain("Floor");
+      expect(boxLog.others).not.toContain("-");
+      // The falling box was moving down relative to the static floor when it landed.
+      expect(boxLog.firstRelativeY).toBeLessThan(0);
+      expect(bystanderLog.entries).toEqual([]);
     } finally {
       harness.dispose();
     }
   }, 30_000);
 });
+
+/** Records the other entity and the relative velocity of the first contact. */
+class VelocityLog extends Script implements ScriptCallbacks {
+  static typeId = "test/VelocityLog";
+
+  /** The other participant of every delivery, or `"-"`. */
+  readonly others: string[] = [];
+
+  /** The vertical relative velocity of the first `onCollisionEnter`, or `NaN` when it had none. */
+  firstRelativeY = Number.NaN;
+
+  onCollisionEnter(collision: unknown): void {
+    const event = collision as Collision;
+    if (this.others.length === 0) {
+      this.firstRelativeY = event.relativeVelocity?.y ?? Number.NaN;
+    }
+    this.others.push(event.other?.name ?? "-");
+  }
+
+  onCollisionStay(collision: unknown): void {
+    this.others.push((collision as Collision).other?.name ?? "-");
+  }
+}
 
 /**
  * The callback names a log recorded, in order.

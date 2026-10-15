@@ -156,13 +156,7 @@ export interface Collision {
 export const COLLISION_EVENT_MODES: readonly ["auto", "on", "off"];
 
 // @public
-export const COLLISION_IDENTITY_MODES: readonly ["upstream", "internal"];
-
-// @public
 export type CollisionEventMode = (typeof COLLISION_EVENT_MODES)[number];
-
-// @public
-export type CollisionIdentityMode = (typeof COLLISION_IDENTITY_MODES)[number];
 
 // @public
 export interface ContactPoint {
@@ -297,7 +291,6 @@ export const PhysicsErrorCode: {
     readonly unknownLayer: "IGX-0905";
     readonly colliderGeometryUnavailable: "IGX-0906";
     readonly bodyOnChildEntity: "IGX-0907";
-    readonly internalDrainUnavailable: "IGX-0908";
 };
 
 // @public
@@ -336,7 +329,6 @@ export interface PhysicsMaterialValues {
 
 // @public
 export interface PhysicsOptions {
-    readonly collisionIdentities?: CollisionIdentityMode;
     readonly havok?: unknown;
     readonly wasmBinary?: ArrayBuffer;
 }

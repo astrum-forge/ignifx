@@ -755,9 +755,7 @@ export function onTriggerEvents(world: LitePhysicsWorld, sink: (record: TriggerR
 }
 
 /**
- * What the upstream collision drain reports for one contact. Lite 1.27.0 carries **no** body
- * identities here (`09-physics.md` §4, ADR-0013); `src/lite/internal/collision-drain.ts` is the
- * waived path that recovers them.
+ * What the collision drain reports for one contact.
  *
  * @internal
  */
@@ -770,10 +768,10 @@ export interface ContactRecord {
   readonly normal: Vec3Like;
   /** The magnitude of the resolving impulse; `0` for a contact that just ended. */
   readonly impulse: number;
-  /** The first node, or `null` when the drain cannot resolve it. */
-  readonly nodeA: LiteSceneNode | null;
-  /** The second node, or `null`. */
-  readonly nodeB: LiteSceneNode | null;
+  /** The node of the first body (Lite's `collider`). */
+  readonly nodeA: LiteSceneNode;
+  /** The node of the second body (Lite's `collidedAgainst`). */
+  readonly nodeB: LiteSceneNode;
 }
 
 /** `ContactRecord.phase` for a contact that just started. */
@@ -786,8 +784,14 @@ export const CONTACT_CONTINUED: number = 1;
 export const CONTACT_FINISHED: number = 2;
 
 /**
- * Registers the upstream collision drain (`index.d.ts` 7764). It reports contact data with no body
- * identities, which is exactly what `09-physics.md` §4 documents for the default mode.
+ * Registers the collision drain (`onPhysicsCollision`, `index.d.ts` 9315). Each
+ * `PhysicsCollisionInfo` (10030) names both bodies as `collider` and `collidedAgainst`, and they are
+ * resolved to nodes the same way the trigger drain resolves `bodyA`/`bodyB`. Lite skips an event
+ * whose bodies it no longer tracks (`lib/physics/havok-collision.js:47-52`), so both are present.
+ *
+ * @remarks
+ * `colliderIndex` and `collidedAgainstIndex` are thin-instance indices. ignifx never creates
+ * thin-instance bodies, so they are always `0` and are ignored.
  *
  * @param world - The world handle.
  * @param sink - Called once per collision event.
@@ -802,8 +806,8 @@ export function onCollisionEvents(world: LitePhysicsWorld, sink: (record: Contac
       point: info.point,
       normal: info.normal,
       impulse: info.impulse,
-      nodeA: null,
-      nodeB: null,
+      nodeA: info.collider.node,
+      nodeB: info.collidedAgainst.node,
     });
   });
 }
