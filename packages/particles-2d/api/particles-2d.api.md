@@ -152,7 +152,7 @@ export class ParticleSystem2D extends Component implements ComponentHooks {
 }
 
 // @public
-export const VERSION = "0.2.1";
+export const VERSION: string;
 
 // (No @packageDocumentation comment for this package)
 

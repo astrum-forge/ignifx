@@ -1,4 +1,5 @@
 import { defineConfig } from "tsdown";
+import manifest from "./package.json" with { type: "json" };
 
 /**
  * ESM-only Node build with two entries: the library barrel and the `create-ignifx` executable.
@@ -23,4 +24,6 @@ export default defineConfig({
   clean: true,
   treeshake: true,
   dts: { isolatedDeclarations: true },
+  // Stamps `VERSION` (`src/version.ts`) with the version Changesets wrote into `package.json`.
+  define: { IGNIFX_BUILD_VERSION: JSON.stringify(manifest.version) },
 });

@@ -4512,9 +4512,15 @@ How many simultaneous touches `Touch` tracks; `<Touch>/touch0` … `<Touch>/touc
 
 ### VERSION
 
-> `const` **VERSION**: `"0.0.0"` = `"0.0.0"`
+> `const` **VERSION**: `string`
 
-The `@ignifx/input` version this build was cut from.
+The `@ignifx/input` version this build was cut from, reported as `Extension.version`
+(`docs/architecture/04-extensions.md` §1).
+
+#### Remarks
+
+The build stamps it from `package.json`; code run from source, such as this repository's tests,
+sees `"0.0.0"`.
 
 ## Functions
 

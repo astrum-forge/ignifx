@@ -777,7 +777,7 @@ export function touchControlNames(): readonly string[];
 export function validateInputActions(value: unknown, file: string): InputActionsDefinition;
 
 // @public
-export const VERSION = "0.0.0";
+export const VERSION: string;
 
 // @public
 export interface VibrationActuatorLike {
