@@ -123,8 +123,7 @@ describe("scriptsModuleSource with the HMR client", () => {
   const source = scriptsModuleSource("/src/scripts/*.ts", { hot: true });
 
   it("self-accepts so Vite hands it the replacement registry", () => {
-    expect(source).toContain("const hot = import.meta.hot;");
-    expect(source).toContain("hot.accept((next) => {");
+    expect(source).toContain("import.meta.hot.accept((next) => {");
   });
 
   it("keeps the subscribed apps in import.meta.hot.data, which survives the swap", () => {

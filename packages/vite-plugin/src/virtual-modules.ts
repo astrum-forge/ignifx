@@ -254,8 +254,10 @@ function hotClientLines(): readonly string[] {
     "    state.apps.delete(app);",
     "  };",
     "}",
-    "if (hot) {",
-    "  hot.accept((next) => {",
+    // Vite finds a self-accepting module only by the literal text `import.meta.hot.accept(`. Called
+    // through the `hot` alias, a script edit would reload the whole page instead.
+    "if (import.meta.hot) {",
+    "  import.meta.hot.accept((next) => {",
     "    if (!next) {",
     "      return;",
     "    }",

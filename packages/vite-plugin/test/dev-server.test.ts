@@ -1,9 +1,14 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { createServer } from "vite";
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it, vi } from "vitest";
 import { ignifx } from "../src/plugin.js";
-import { ASSET_CHANGED_EVENT, MANIFEST_MODULE_ID, SCRIPTS_MODULE_ID } from "../src/virtual-modules.js";
+import {
+  ASSET_CHANGED_EVENT,
+  MANIFEST_MODULE_ID,
+  RESOLVED_SCRIPTS_MODULE_ID,
+  SCRIPTS_MODULE_ID,
+} from "../src/virtual-modules.js";
 import { createFixtureTree, disposeFixtures, PNG_BYTES, writeFixture } from "./support/fixtures.js";
 import type { AssetManifest } from "../src/manifest.js";
 import type { Plugin } from "vite";
@@ -82,11 +87,53 @@ describe("vite dev with the ignifx plugin", () => {
       const code = result?.code ?? "";
 
       expect(code).toContain("createHotContext");
-      expect(code).toContain("accept(");
       expect(code).toContain("app.hotReload.apply");
       // The eager glob became a real static import of the script file, which is what puts the
       // module in Vite's HMR graph.
       expect(code).toContain("/src/scripts/mover.ts");
+      // Vite's own verdict: without it, a script edit finds no HMR boundary and reloads the page.
+      const module = server.environments.client.moduleGraph.getModuleById(RESOLVED_SCRIPTS_MODULE_ID);
+      expect(module?.isSelfAccepting).toBe(true);
+    } finally {
+      await server.close();
+    }
+  });
+
+  it("hot-updates an edited script instead of reloading the page", async () => {
+    const root = await createFixtureTree({
+      "index.html": '<!doctype html><html><body><script type="module" src="/src/main.ts"></script></body></html>',
+      "src/main.ts":
+        'import { acceptHotReload, scripts } from "virtual:ignifx/scripts";\nexport { acceptHotReload, scripts };\n',
+      "src/scripts/mover.ts": 'export class Mover {\n  static typeId = "mygame/Mover";\n}\n',
+    });
+    const sent: Record<string, unknown>[] = [];
+    const server = await createServer({
+      root,
+      configFile: false,
+      logLevel: "silent",
+      plugins: [ignifx(), hmrRecorder(sent)],
+      server: { middlewareMode: true },
+    });
+    try {
+      await server.transformRequest("/src/main.ts");
+      await server.transformRequest(SCRIPTS_MODULE_ID);
+      await server.transformRequest("/src/scripts/mover.ts");
+
+      const moverPath = await writeFixture(
+        server.config.root,
+        "src/scripts/mover.ts",
+        'export class Mover {\n  static typeId = "mygame/Mover";\n  speed = 2;\n}\n',
+      );
+      server.watcher.emit("change", moverPath);
+      await vi.waitFor(() => {
+        expect(sent.length).toBeGreaterThan(0);
+      });
+
+      // The registry is the boundary that takes the new script, so the page keeps running. A browser
+      // imports a `\0` virtual module at `/@id/__x00__<id>`.
+      const registryUrl = `/@id/__x00__${SCRIPTS_MODULE_ID}`;
+      expect(sent.map((payload) => payload["type"])).toEqual(["update"]);
+      expect(sent[0]?.["updates"]).toMatchObject([{ type: "js-update", path: registryUrl, acceptedPath: registryUrl }]);
     } finally {
       await server.close();
     }
