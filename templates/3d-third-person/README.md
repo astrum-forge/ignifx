@@ -127,6 +127,15 @@ build; `@ignifx/electron` is registered in both and is inert without a preload b
 of its own so that anything else that builds an app over this project — the ignifx editor's scene
 view, a headless test — registers the same extensions in the same order.
 
+## Open in the ignifx editor
+
+The project is ready for the ignifx editor. `vite.config.ts` lists `editorHostPlugin` from
+`@ignifx/editor-host`, and `main.ts` passes the app to `attachEditorPlayControls`. Under `pnpm dev`
+the editor's scene view is served at `/__ignifx_editor__/`, and the editor can play, pause, step and
+stop the game in its play view. Only the editor's origin can frame the scene view or connect to
+either view. The editor sets that origin in `IGNIFX_EDITOR_ORIGIN` when it starts the dev server,
+and it defaults to the packaged editor's `ignifx-editor://app`. `pnpm build` contains no editor code.
+
 ## Query flags
 
 - `?static=1` — loads the same scene, switches every script and the companion's agent off, places

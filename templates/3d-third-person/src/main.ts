@@ -6,7 +6,9 @@ import { createApp, isIgnifxError, Light, PostProcessStack, Script } from "@igni
 import { INPUT_ACTIONS_ASSET_TYPE } from "@ignifx/input";
 import { Rigidbody } from "@ignifx/physics";
 import { I18N_ASSET_TYPE } from "@ignifx/ui";
-// Vite virtual modules the plugin serves, typed by `@ignifx/vite-plugin/client`.
+// Vite virtual modules the plugins serve, typed by `@ignifx/vite-plugin/client` and
+// `@ignifx/editor-host/client`.
+import { attachEditorPlayControls } from "virtual:ignifx/editor";
 import { manifest } from "virtual:ignifx/manifest";
 import { acceptHotReload, scripts } from "virtual:ignifx/scripts";
 import { installDesktopProbe } from "./desktop-probe.js";
@@ -45,7 +47,8 @@ import type { LocaleAsset } from "@ignifx/ui";
  * and this file loads it. The shape of this file is the shape of every ignifx game:
  *
  * 1. `createApp` with `extensions()` from `./extensions.ts`; `ignifx.config.ts` carries the settings.
- * 2. Register the scripts from `virtual:ignifx/scripts`, and accept hot reloads.
+ * 2. Register the scripts from `virtual:ignifx/scripts`, accept hot reloads, and hand the app to
+ *    the ignifx editor's play controls.
  * 3. Load what the scene's scripts read while it loads (input actions, audio buses), then the
  *    scene itself. **Await it before `app.start()`**: a load awaited before the loop runs settles as
  *    soon as it finishes; once the loop is running, delivery waits for a `PreUpdate`.
@@ -402,6 +405,9 @@ async function main(): Promise<AppStatus> {
   // (`"patch"` by default).
   app.registerComponents(scripts);
   acceptHotReload(app);
+  // Under `vite dev`, lets the ignifx editor's play view play, pause, step and stop this app. In a
+  // production build it is an empty function (`vite.config.ts`).
+  attachEditorPlayControls(app);
 
   // The strings come first and alone: every label below is read out of them, and the document is
   // under a kilobyte, so nothing is gained by making the loading screen wait for it.
