@@ -85,8 +85,8 @@ instead of reloading the page.
 
 The file is in the canonical form `stringifySceneFile` writes: keys in a fixed order, numbers
 rounded to six decimals, one value per line, no final newline. Edit it by hand, by an agent, or —
-later — in the ignifx editor; `tests/templates` loads it, checks the entity list, and saves it again
-to prove the text comes back byte for byte.
+later — in the ignifx editor. The ignifx repository's `tests/templates` loads it headless, checks the
+entity list, and saves it again to prove the text comes back byte for byte.
 
 **Adding an entity as data.** Copy an entity record, give it and each of its components a fresh
 ULID (`generateUlid()` from `@ignifx/core`), set `parent` to `null` or another entity's `uid`, and
