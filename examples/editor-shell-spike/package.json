@@ -1,0 +1,19 @@
+{
+  "name": "ignifx-example-editor-shell-spike",
+  "version": "0.0.0",
+  "private": true,
+  "description": "THROWAWAY spike S0.1 (editor plan): an Electron shell embedding /__ignifx_editor__/ in a cross-origin iframe. Not for merge.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "out/main/index.js",
+  "scripts": {
+    "build": "electron-vite build",
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "@ignifx/electron": "workspace:*",
+    "electron": "catalog:",
+    "electron-vite": "catalog:",
+    "vite": "catalog:"
+  }
+}

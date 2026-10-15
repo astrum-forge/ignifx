@@ -274,6 +274,21 @@ importers:
         specifier: 'catalog:'
         version: 5.0.0(@types/node@24.13.3)(@vitest/browser-playwright@5.0.0)(@vitest/coverage-v8@5.0.0)(@vitest/ui@5.0.0)(vite@8.2.2(@types/node@24.13.3)(jiti@2.7.0)(yaml@2.9.0))
 
+  examples/editor-shell-spike:
+    devDependencies:
+      '@ignifx/electron':
+        specifier: workspace:*
+        version: link:../../packages/electron
+      electron:
+        specifier: 'catalog:'
+        version: 44.2.0(supports-color@8.1.1)
+      electron-vite:
+        specifier: 'catalog:'
+        version: 6.0.0-beta.1(supports-color@8.1.1)(vite@8.2.2(@types/node@26.4.1)(jiti@2.7.0)(yaml@2.9.0))
+      vite:
+        specifier: 'catalog:'
+        version: 8.2.2(@types/node@26.4.1)(jiti@2.7.0)(yaml@2.9.0)
+
   examples/gltf-viewer:
     dependencies:
       '@ignifx/core':
@@ -568,6 +583,18 @@ importers:
       vitest:
         specifier: 'catalog:'
         version: 5.0.0(@types/node@26.4.1)(@vitest/browser-playwright@5.0.0)(@vitest/coverage-v8@5.0.0)(@vitest/ui@5.0.0)(vite@8.2.2(@types/node@26.4.1)(jiti@2.7.0)(yaml@2.9.0))
+
+  packages/editor-host-spike:
+    devDependencies:
+      '@ignifx/core':
+        specifier: workspace:*
+        version: link:../core
+      '@ignifx/vite-plugin':
+        specifier: workspace:*
+        version: link:../vite-plugin
+      vite:
+        specifier: 'catalog:'
+        version: 8.2.2(@types/node@26.4.1)(jiti@2.7.0)(yaml@2.9.0)
 
   packages/electron:
     devDependencies:
@@ -1184,6 +1211,9 @@ importers:
         specifier: workspace:*
         version: link:../../packages/ui
     devDependencies:
+      '@ignifx/editor-host-spike':
+        specifier: workspace:*
+        version: link:../../packages/editor-host-spike
       '@ignifx/electron':
         specifier: workspace:*
         version: link:../../packages/electron

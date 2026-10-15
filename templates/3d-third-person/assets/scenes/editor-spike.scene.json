@@ -1,0 +1,61 @@
+{
+  "format": "ignifx.scene",
+  "formatVersion": 1,
+  "name": "EditorSpike",
+  "entities": [
+    {
+      "uid": "01JA0000000000000000000001",
+      "name": "Main Camera",
+      "parent": null,
+      "transform": { "position": [0, 2.2, -5.5], "rotation": [0.0998, 0, 0, 0.995], "scale": [1, 1, 1] },
+      "components": [
+        { "uid": "01JA0000000000000000000002", "type": "ignifx/Camera", "props": { "fov": 50, "near": 0.1, "far": 100 } }
+      ]
+    },
+    {
+      "uid": "01JA0000000000000000000003",
+      "name": "Sun",
+      "parent": null,
+      "transform": { "position": [-3, 6, -3], "rotation": [0.3535, 0.3535, -0.1464, 0.8536], "scale": [1, 1, 1] },
+      "components": [
+        { "uid": "01JA0000000000000000000004", "type": "ignifx/Light", "props": { "type": "directional", "intensity": 3 } }
+      ]
+    },
+    {
+      "uid": "01JA0000000000000000000005",
+      "name": "Fill",
+      "parent": null,
+      "transform": { "position": [0, 0, 0], "rotation": [0, 0, 0, 1], "scale": [1, 1, 1] },
+      "components": [
+        { "uid": "01JA0000000000000000000006", "type": "ignifx/Light", "props": { "type": "hemispheric", "intensity": 0.6 } }
+      ]
+    },
+    {
+      "uid": "01JA0000000000000000000007",
+      "name": "Player",
+      "parent": null,
+      "transform": { "position": [-1, 0, 0], "rotation": [0, 0.9659, 0, 0.2588], "scale": [1, 1, 1] },
+      "components": [
+        { "uid": "01JA0000000000000000000008", "type": "ignifx/Model", "props": { "model": { "$asset": "player.glb" } } }
+      ]
+    },
+    {
+      "uid": "01JA0000000000000000000009",
+      "name": "Companion",
+      "parent": null,
+      "transform": { "position": [1.2, 0, 0.5], "rotation": [0, 1, 0, 0], "scale": [1, 1, 1] },
+      "components": [
+        { "uid": "01JA000000000000000000000A", "type": "ignifx/Model", "props": { "model": { "$asset": "companion.glb" } } }
+      ]
+    },
+    {
+      "uid": "01JA000000000000000000000B",
+      "name": "Beacon",
+      "parent": null,
+      "transform": { "position": [0, 0, 2], "rotation": [0, 0, 0, 1], "scale": [1, 1, 1] },
+      "components": [
+        { "uid": "01JA000000000000000000000C", "type": "third-person/Beacon", "props": { "radius": 1.6 } }
+      ]
+    }
+  ]
+}

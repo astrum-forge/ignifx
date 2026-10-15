@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>editor shell spike</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #202024; color: #ddd; font: 12px ui-monospace, monospace; }
+      #views { position: absolute; inset: 24px 0 0 0; display: flex; }
+      #views iframe { flex: 1; border: 0; background: #000; }
+      #bar { height: 24px; line-height: 24px; padding: 0 8px; }
+    </style>
+  </head>
+  <body>
+    <div id="bar">editor shell spike: waiting for dev server</div>
+    <div id="views"></div>
+    <script type="module" src="./renderer/renderer.ts"></script>
+  </body>
+</html>

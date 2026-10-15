@@ -254,8 +254,11 @@ function hotClientLines(): readonly string[] {
     "    state.apps.delete(app);",
     "  };",
     "}",
-    "if (hot) {",
-    "  hot.accept((next) => {",
+    // SPIKE S0.1: Vite marks a module self-accepting only when it sees the literal
+    // `import.meta.hot.accept(`; through the `hot` alias it never did, so every script edit was a
+    // full page reload (vite/dist/node/chunks/node.js 28123-28135, Vite 8.2.2).
+    "if (import.meta.hot) {",
+    "  import.meta.hot.accept((next) => {",
     "    if (!next) {",
     "      return;",
     "    }",

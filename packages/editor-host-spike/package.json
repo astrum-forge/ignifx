@@ -1,0 +1,21 @@
+{
+  "name": "@ignifx/editor-host-spike",
+  "version": "0.0.0",
+  "private": true,
+  "description": "THROWAWAY spike S0.1 (editor plan): host-in-project. Not for merge, not published.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    "./vite": "./vite.ts",
+    "./host": "./host.ts"
+  },
+  "peerDependencies": {
+    "@ignifx/core": "workspace:*",
+    "vite": "catalog:"
+  },
+  "devDependencies": {
+    "@ignifx/core": "workspace:*",
+    "@ignifx/vite-plugin": "workspace:*",
+    "vite": "catalog:"
+  }
+}
