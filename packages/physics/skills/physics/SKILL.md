@@ -22,7 +22,7 @@ through, or has to be asked "what is under the crosshair".
 ## Environment
 
 - Engine: ignifx `0.8.0`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
-- Peer dependencies: `@babylonjs/lite` (exactly `1.27.0`) and `@babylonjs/havok` (`^1.3.0`).
+- Peer dependencies: `@babylonjs/lite` (exactly `1.34.0`) and `@babylonjs/havok` (`^1.3.0`).
 - Browsers, Electron, and Node. The Vite plugin copies `HavokPhysics.wasm` into the public asset
   path, so the browser loads it from `assets/HavokPhysics.wasm`; under Node the extension reads the
   binary out of the installed `@babylonjs/havok` package, so a headless test needs no setup.
