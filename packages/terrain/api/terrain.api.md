@@ -349,7 +349,7 @@ export const TERRAIN_FORMAT = "ignifx.terrain";
 export const TERRAIN_FORMAT_VERSION = 1;
 
 // @public
-export const TERRAIN_LOD_ORDER = 10;
+export const TERRAIN_LOD_ORDER = 1010;
 
 // @public
 export const TERRAIN_SPLAT_NAME = "terrainSplat";

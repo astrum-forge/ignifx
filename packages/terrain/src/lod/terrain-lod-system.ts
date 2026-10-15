@@ -36,13 +36,14 @@ export const TERRAIN_DIAGNOSTICS_GROUP = "terrain";
  * The `PreRender` order the terrain LOD system runs at.
  *
  * @remarks
- * `10` puts it **after** core's render sync at `0`, because `Camera.getViewMatrix` reads the
- * Babylon Lite camera and that is what the sync writes; running earlier would cull against last
- * frame's view. Chunk meshes are not components, so nothing downstream needs them decided sooner.
+ * `1010` puts it **after** core's render sync at `900`, which picks `world.mainCamera` and writes
+ * the Babylon Lite camera that `Camera.getViewMatrix` reads; running earlier would cull against
+ * last frame's camera. Chunk meshes are not components, so nothing downstream needs them decided
+ * sooner.
  *
  * @public
  */
-export const TERRAIN_LOD_ORDER = 10;
+export const TERRAIN_LOD_ORDER = 1010;
 
 /** The counter indices, in the order {@link TERRAIN_DIAGNOSTICS_COUNTERS} declares them. */
 const COUNTER_CHUNKS = 0;
