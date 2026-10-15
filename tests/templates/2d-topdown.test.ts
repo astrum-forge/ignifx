@@ -44,6 +44,11 @@ const EXPECTED_ENTITIES: readonly string[] = [
   "Main Camera",
 ];
 
+/** The part of `@ignifx/2d`'s `TilemapCollisionData` these checks read; this suite does not depend on it. */
+interface CollisionSurface {
+  readonly chunks: readonly { readonly polygons: readonly unknown[]; readonly oneWayEdges: readonly unknown[] }[];
+}
+
 const apps: App[] = [];
 
 afterEach(() => {
@@ -93,6 +98,14 @@ describe("2d-topdown's scene file", () => {
       expect(field(entity, "topdown/SpriteFrame", "frame")).toBe(frame);
       expect(Reflect.get(sprite as object, "frame")).toBe(atlas.requireFrame(frame));
     }
+  });
+
+  it("collides with the tilemap straight from the file, with no post-load code", async () => {
+    const { entities } = await loadLevel();
+    const level = named(entities, "Level");
+    const data = field(level, "ignifx/TilemapCollider2D", "collisionData") as CollisionSurface | null;
+    expect(data).toBe(field(level, "ignifx/Tilemap", "collisionData"));
+    expect(data?.chunks.some((chunk) => chunk.polygons.length > 0)).toBe(true);
   });
 
   it("round-trips byte for byte through serializeScene and stringifySceneFile", async () => {

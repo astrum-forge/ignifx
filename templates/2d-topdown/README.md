@@ -55,7 +55,8 @@ never builds a level entity itself, and the scene names every script by its `typ
 edit hot-patches the class instead of reloading the page.
 
 The tiles themselves stay in `assets/level.tilemap.json`: two tile layers, the tileset and the solid
-cells. Its objects layer still lists the spawn, the props and the shrine — the map generator writes
+cells. `TilemapCollider2D` reads the `Tilemap` on the same entity, so the walls collide as soon as
+the scene has loaded, with no code. Its objects layer still lists the spawn, the props and the shrine — the map generator writes
 it — but the game registers no `registerTileObjectFactory`, so loading the scene spawns nothing from
 it: the entities in the scene file are the ones the game has. Move the player or add a prop in the
 scene file, not in the map. An object's declared width and height were its trigger box, so the
@@ -85,8 +86,6 @@ says why).
 - **Which frame a still sprite draws.** `SpriteRenderer.frame` is a runtime index, not a field, so
   each prop and the shrine carry `SpriteFrame` (`src/scripts/sprite-frame.ts`), whose `frame` field
   names the frame and whose `awake` looks it up in the loaded atlas.
-- **The tilemap's collision outlines.** `TilemapCollider2D` does not read the `Tilemap` beside it,
-  so `main.ts` hands it the tilemap's `collisionData` after the load.
 - **The sounds.** A clip referenced by a scene field is a dependency of the scene, and one the
   browser cannot decode would fail the whole load; every sound here is optional, so the footstep and
   the shrine's chime are assigned after the load and the ambient pad's `AudioSource` is created in

@@ -40,6 +40,20 @@ const EXPECTED_ENTITIES: readonly string[] = [
   "Main Camera",
 ];
 
+/** The part of `@ignifx/2d`'s `TilemapCollisionData` these checks read; this suite does not depend on it. */
+interface CollisionSurface {
+  readonly chunks: readonly { readonly polygons: readonly unknown[]; readonly oneWayEdges: readonly unknown[] }[];
+}
+
+/** The part of `app.physics2d` the collision check calls. */
+interface RaycastService {
+  raycast(
+    origin: { x: number; y: number },
+    direction: { x: number; y: number },
+    maxDistance: number,
+  ): { readonly entity: Entity; readonly point: { readonly y: number } } | null;
+}
+
 const apps: App[] = [];
 
 afterEach(() => {
@@ -94,6 +108,23 @@ describe("2d-sidescroller's scene file", () => {
         expect(Reflect.get(sprite as object, "frame")).toBe(atlas.requireFrame(frame));
       }
     }
+  });
+
+  it("collides with the tilemap straight from the file, with no post-load code", async () => {
+    const { app, entities } = await loadLevel();
+    const level = named(entities, "Level");
+    const data = field(level, "ignifx/TilemapCollider2D", "collisionData") as CollisionSurface | null;
+    expect(data).toBe(field(level, "ignifx/Tilemap", "collisionData"));
+    expect(data?.chunks.some((chunk) => chunk.polygons.length > 0)).toBe(true);
+    expect(data?.chunks.some((chunk) => chunk.oneWayEdges.length > 0)).toBe(true);
+
+    // Bodies are built at the first fixed step. Column 0's ground is three cells high.
+    await app.start();
+    app.step(1 / 60);
+    const physics = Reflect.get(app, "physics2d") as RaycastService;
+    const hit = physics.raycast({ x: 0.5, y: 10 }, { x: 0, y: -1 }, 20);
+    expect(hit?.entity).toBe(level);
+    expect(hit?.point.y).toBeCloseTo(3, 5);
   });
 
   it("round-trips byte for byte through serializeScene and stringifySceneFile", async () => {
