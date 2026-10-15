@@ -29,6 +29,8 @@ const FIXTURE_ROOT = new URL("../../../../tests/fixtures/assets/ui/", import.met
 export interface UiAppOptions {
   /** Project settings, merged into `createApp`. */
   readonly settings?: SettingsInput;
+  /** Builds the app in edit mode (ADR-0028). */
+  readonly editMode?: boolean;
   /** What to pass `ui(...)`. */
   readonly options?: UiOptions;
   /** Address to body, for the injected `fetch`. Strings are sent as UTF-8. */
@@ -155,6 +157,7 @@ export async function createUiApp(options?: UiAppOptions): Promise<UiAppHarness>
     fetch: tableFetch(options?.files ?? {}),
     extensions: [ui(options?.options)],
     ...(options?.settings === undefined ? {} : { settings: options.settings }),
+    ...(options?.editMode === undefined ? {} : { editMode: options.editMode }),
   });
   const step = (deltaSeconds = 1 / 60): void => {
     clock.advance(deltaSeconds * MILLISECONDS_PER_SECOND);
