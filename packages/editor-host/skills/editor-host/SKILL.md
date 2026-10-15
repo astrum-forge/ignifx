@@ -209,8 +209,9 @@ document model lives in the editor.
   editor makes a fresh `MessageChannel` on each `load`, and the host closes the previous port.
 - **The scene view runs game scripts** until edit mode lands in core; it is a second copy of the game
   in its own app.
-- **The engine version is read from the project.** `VERSION` from `@ignifx/core` is `"0.0.0"` in
-  unreleased builds, so the plugin reads `@ignifx/core/package.json` and passes `engineVersion`.
+- **The engine version is read from the project.** `VERSION` from `@ignifx/core` is `"0.0.0"` when
+  core runs from source rather than its build, so the plugin reads `@ignifx/core/package.json` and
+  passes `engineVersion`; the host prefers a stamped `VERSION`.
 - **Script edits reload both views** while `main.ts` imports `src/scripts/**` statically: Vite's one
   module graph sends a full reload to every page when an update reaches a module that does not
   accept it.
