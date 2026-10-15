@@ -9,6 +9,7 @@ ruleTester.run("error-code-format", errorCodeFormat, {
     "const code = 'IGX-0501';",
     "const code = 'IGX-1503';",
     "const code = 'IGX-9042';",
+    "const code = 'IGX-1801';",
     "const code = `IGX-0201`;",
     "const message = 'entity not found';",
     "const doc = 'see IGX-0501 in the registry';",
@@ -31,7 +32,7 @@ ruleTester.run("error-code-format", errorCodeFormat, {
     { code: "const code = 'IGX-abcd';", errors: [{ messageId: "badFormat" }] },
     { code: "const code = `IGX-12`;", errors: [{ messageId: "badFormat" }] },
     { code: "const code = 'IGX-0001';", errors: [{ messageId: "unregisteredRange" }] },
-    { code: "const code = 'IGX-1801';", errors: [{ messageId: "unregisteredRange" }] },
+    { code: "const code = 'IGX-1901';", errors: [{ messageId: "unregisteredRange" }] },
     { code: "const code = 'IGX-8000';", errors: [{ messageId: "unregisteredRange" }] },
     {
       code: "throw new IgnifxError('nope', 'message');",

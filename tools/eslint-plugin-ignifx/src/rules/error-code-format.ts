@@ -8,7 +8,8 @@ import type { TSESTree } from "@typescript-eslint/utils";
  * and keep only the code. The four digits are a registered two-digit subsystem range followed by a
  * two-digit ordinal: `01` lifecycle, `02` components, `03` scenes, `04` extensions, `05` assets,
  * `06` serialization, `07` rendering, `08` input, `09` physics, `10` audio, `11` 2D, `12` 3D,
- * `13` UI, `14` platform, `15` devtools, and `9x` reserved for third-party extensions.
+ * `13` UI, `14` platform, `15` devtools, `16` terrain, `17` particles, `18` editor host, and `9x`
+ * reserved for third-party extensions.
  */
 
 /** The prefix that marks a string as an ignifx diagnostic code. */
@@ -19,8 +20,8 @@ const CODE_PREFIX = "IGX-";
 /** `IGX-` followed by exactly four digits — the shape, before the range is considered. */
 const CODE_SHAPE = /^IGX-\d{4}$/u;
 
-/** The shape plus a registered subsystem range (`01`–`17`) or the third-party range (`9x`). */
-const REGISTERED_CODE = /^IGX-(?:0[1-9]|1[0-7]|9\d)\d\d$/u;
+/** The shape plus a registered subsystem range (`01`–`18`) or the third-party range (`9x`). */
+const REGISTERED_CODE = /^IGX-(?:0[1-9]|1[0-8]|9\d)\d\d$/u;
 
 /**
  * Decides whether a bare string is meant to *be* a code rather than to *mention* one. A code never
@@ -66,14 +67,14 @@ export const errorCodeFormat = createRule<[Partial<Options>?], MessageId>({
         "`{{code}}` is not a diagnostic code. Codes read `IGX-` followed by exactly four digits, " +
         "for example `IGX-0501` (15-devtools-and-diagnostics.md §1).",
       unregisteredRange:
-        "`{{code}}` uses the unregistered range `{{range}}xx`. Registered ranges are 01–17 for engine " +
+        "`{{code}}` uses the unregistered range `{{range}}xx`. Registered ranges are 01–18 for engine " +
         "subsystems and 9x for third-party extensions (15-devtools-and-diagnostics.md §1).",
       badFormatInError:
         "The first argument of `{{constructor}}` is the diagnostic code and must read `IGX-` followed " +
         "by exactly four digits; `{{code}}` does not (CONSTITUTION.md §3.9).",
       unregisteredRangeInError:
         "`{{constructor}}` was given the code `{{code}}`, whose range `{{range}}xx` is not registered. " +
-        "Registered ranges are 01–17 for engine subsystems and 9x for third-party extensions " +
+        "Registered ranges are 01–18 for engine subsystems and 9x for third-party extensions " +
         "(15-devtools-and-diagnostics.md §1).",
     },
     schema: [
