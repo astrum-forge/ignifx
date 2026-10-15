@@ -10,7 +10,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "dev:desktop": "electron-vite dev",
+    "dev:desktop": "install-electron && electron-vite dev",
     "build:desktop": "electron-vite build",
     "dist:desktop": "electron-builder --dir --config electron-builder.yml",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.desktop.json"
