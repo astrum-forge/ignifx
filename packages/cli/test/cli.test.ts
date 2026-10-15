@@ -315,11 +315,11 @@ describe("scaffolding the 2d-topdown template", () => {
   it.each([
     {
       template: "2d-topdown",
-      files: ["src/script-types.ts", "src/scripts/sprite-frame.ts", "assets/level.tilemap.json"],
+      files: ["src/script-types.ts", "src/scripts/shrine.ts", "assets/level.tilemap.json"],
     },
     {
       template: "2d-sidescroller",
-      files: ["src/script-types.ts", "src/scripts/sprite-frame.ts", "assets/parallax.atlas.json"],
+      files: ["src/script-types.ts", "src/scripts/collectible.ts", "assets/parallax.atlas.json"],
     },
     {
       template: "3d-third-person",

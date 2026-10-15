@@ -69,12 +69,12 @@ rounded to six decimals, one value per line, no final newline. Edit it by hand, 
 the ignifx editor. The ignifx repository's `tests/templates` loads it headless, checks the entity
 list, and saves it again to prove the text comes back byte for byte.
 
-**Adding an entity as data.** Copy an entity record, give it and each of its components a fresh
-ULID (`generateUlid()` from `@ignifx/core`), set `parent` to `null` or another entity's `uid`, and
-list it after its parent. A prop, say, is a `SpriteRenderer` naming `tiles.atlas.json` on the
-`Default` sorting layer, a `topdown/SpriteFrame` naming the frame (`"barrel"`), and a
-`BoxCollider2D`, on the `Solid` layer. A second shrine is a copy of `Shrine` with a new name, which
-is also its id in a save file.
+**Adding an entity as data.** Copy an entity record, give it and each of its components a fresh ULID
+(`generateUlid()` from `@ignifx/core`), set `parent` to `null` or another entity's `uid`, and list
+it after its parent. A prop, say, is a `SpriteRenderer` naming `tiles.atlas.json` in `sprite` and
+the frame in `frameName` (`"barrel"`), on the `Default` sorting layer, and a `BoxCollider2D`, on the
+`Solid` layer. A second shrine is a copy of `Shrine` with a new name, which is also its id in a save
+file.
 
 **Adding an entity in code.** Do it in `main.ts` after `loadScene`, the way the front end does:
 `app.world.createEntity("Name")`, then `addComponent`. A project script is reached by its type id,
@@ -83,9 +83,6 @@ says why).
 
 **What stays in code**, or needs a script, because a scene file cannot say it:
 
-- **Which frame a still sprite draws.** `SpriteRenderer.frame` is a runtime index, not a field, so
-  each prop and the shrine carry `SpriteFrame` (`src/scripts/sprite-frame.ts`), whose `frame` field
-  names the frame and whose `awake` looks it up in the loaded atlas.
 - **The sounds.** A clip referenced by a scene field is a dependency of the scene, and one the
   browser cannot decode would fail the whole load; every sound here is optional, so the footstep and
   the shrine's chime are assigned after the load and the ambient pad's `AudioSource` is created in

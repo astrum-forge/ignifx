@@ -87,14 +87,15 @@ describe("2d-topdown's scene file", () => {
     // Every entity above is the scene's own, and there is exactly one player.
     expect(app.world.findByName("Player")).toBe(player);
 
-    // `SpriteFrame` turned each frame name into the atlas index in `awake`.
+    // Each still sprite names its frame in `SpriteRenderer.frameName`, which the renderer turns into
+    // the atlas index with no script.
     for (const [name, frame] of [...PROPS, ["Shrine", "pad"] as const]) {
       const entity = named(entities, name);
       const sprite = entity.components.find((component) => Reflect.get(component, "sprite") !== undefined);
       const atlas = Reflect.get(Reflect.get(sprite as object, "sprite") as object, "value") as {
         requireFrame(frame: string): number;
       };
-      expect(field(entity, "topdown/SpriteFrame", "frame")).toBe(frame);
+      expect(field(entity, "ignifx/SpriteRenderer", "frameName")).toBe(frame);
       expect(Reflect.get(sprite as object, "frame")).toBe(atlas.requireFrame(frame));
     }
   });

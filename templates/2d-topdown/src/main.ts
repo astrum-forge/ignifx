@@ -400,7 +400,7 @@ async function main(): Promise<AppStatus> {
   await app.audio.buildBuses(buses.value.buses);
 
   // The level: the loader fetches every atlas, clip set and tilemap the file names before it builds
-  // an entity, so each `SpriteFrame` can resolve its frame name in `awake`.
+  // an entity, so each still sprite draws the frame its `frameName` names from the first frame.
   await app.world.loadScene(MAIN_SCENE);
   const world = prepareWorld(app, sounds);
 

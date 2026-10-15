@@ -94,7 +94,7 @@ describe("2d-sidescroller's scene file", () => {
     // Every entity is the scene's own, and there is exactly one player.
     expect(app.world.findByName("Player")).toBe(player);
 
-    // Each strip draws its band's frame, which `SpriteFrame` resolved by name in `awake`.
+    // Each strip names its band's frame in `SpriteRenderer.frameName`, with no script.
     for (const [band, copies] of BANDS) {
       expect(field(named(entities, `Parallax ${band}`), "ignifx/ParallaxLayer", "sortingLayer")).toBe(band);
       for (let index = 0; index < copies; index += 1) {
@@ -104,7 +104,7 @@ describe("2d-sidescroller's scene file", () => {
         const atlas = Reflect.get(Reflect.get(sprite as object, "sprite") as object, "value") as {
           requireFrame(name: string): number;
         };
-        expect(field(strip, "sidescroller/SpriteFrame", "frame")).toBe(frame);
+        expect(field(strip, "ignifx/SpriteRenderer", "frameName")).toBe(frame);
         expect(Reflect.get(sprite as object, "frame")).toBe(atlas.requireFrame(frame));
       }
     }
