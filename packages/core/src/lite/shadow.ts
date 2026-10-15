@@ -290,12 +290,25 @@ export async function rebuildRenderables(scene: SceneContext, resets?: MaterialC
     return;
   }
   trackMaterialCacheResets(scene, resets);
-  resets.unconfirmed = false;
+  takeUnconfirmed(resets);
   await rebuildSceneRenderables(scene);
-  if (resets.unconfirmed) {
-    resets.unconfirmed = false;
+  if (takeUnconfirmed(resets)) {
+    // A family was built for the first time just now: build once more so it pushes its reset again.
+    // Whatever this one sees for the first time stays flagged for the render sync system.
     await rebuildSceneRenderables(scene);
   }
+}
+
+/**
+ * Reads and clears {@link MaterialCacheResets.unconfirmed}.
+ *
+ * @param resets - The record.
+ * @returns Whether a never-seen function was pushed since the flag was last cleared.
+ */
+function takeUnconfirmed(resets: MaterialCacheResets): boolean {
+  const unconfirmed = resets.unconfirmed;
+  resets.unconfirmed = false;
+  return unconfirmed;
 }
 
 /**
