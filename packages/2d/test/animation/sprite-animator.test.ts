@@ -47,9 +47,11 @@ interface Rig {
 async function createRig(options?: {
   readonly playOnAwake?: boolean;
   readonly maximumDeltaTime?: number;
+  readonly editMode?: boolean;
 }): Promise<Rig> {
   const created = await createTwoDApp({
     files: fixtureFiles(),
+    ...(options?.editMode === undefined ? {} : { editMode: options.editMode }),
     ...(options?.maximumDeltaTime === undefined
       ? {}
       : { settings: { time: { maximumDeltaTime: options.maximumDeltaTime } } }),
@@ -175,6 +177,73 @@ describe("playback", () => {
     harness?.app.resume();
     rig.advance(0.5);
     expect(rig.sprite.frame).toBe(1);
+  });
+});
+
+describe("sample", () => {
+  it("writes one frame of a clip, stops there, and fires no event", async () => {
+    const rig = await createRig();
+    rig.step();
+    const events: string[] = [];
+    const ended: string[] = [];
+    rig.animator.onEvent.connect((name) => events.push(name));
+    rig.animator.onClipEnded.connect((name) => ended.push(name));
+
+    expect(rig.animator.sample("run", 1)).toBe(true);
+
+    expect(rig.sprite.frame).toBe(3);
+    expect(rig.animator.clip?.name).toBe("run");
+    expect(rig.animator.isPlaying).toBe(false);
+    rig.advance(1);
+    expect(rig.sprite.frame).toBe(3);
+    expect(events).toEqual([]);
+    expect(ended).toEqual([]);
+  });
+
+  it("clamps the frame index to the clip and plays on from the sampled frame", async () => {
+    const rig = await createRig();
+    rig.step();
+    rig.animator.sample("idle", 99);
+    expect(rig.sprite.frame).toBe(1);
+    rig.animator.sample("idle", -3);
+    expect(rig.sprite.frame).toBe(0);
+
+    rig.animator.resume();
+    // A little over half a second, so the sum of 1/60 slices clears the frame boundary.
+    rig.advance(0.55);
+    expect(rig.sprite.frame).toBe(1);
+  });
+
+  it("answers false before the documents load, and refuses a clip the document lacks", async () => {
+    const created = await createTwoDApp({ files: fixtureFiles() });
+    harness = created;
+    const entity = created.app.world.createEntity("bare");
+    entity.addComponent(SpriteRenderer);
+    const animator = entity.addComponent(SpriteAnimator);
+    expect(animator.sample("idle", 0)).toBe(false);
+
+    const rig = await createRig();
+    expect(() => rig.animator.sample("fly", 0)).toThrow(/IGX-1108/u);
+  });
+});
+
+describe("in an edit-mode app (ADR-0028)", () => {
+  it("does not play the default clip; the renderer keeps its authored frame", async () => {
+    const rig = await createRig({ editMode: true });
+    const events: string[] = [];
+    rig.animator.onEvent.connect((name) => events.push(name));
+    rig.sprite.frame = 2;
+    rig.advance(2);
+    expect(rig.animator.isPlaying).toBe(false);
+    expect(rig.sprite.frame).toBe(2);
+    expect(events).toEqual([]);
+  });
+
+  it("shows a sampled frame and holds it", async () => {
+    const rig = await createRig({ editMode: true });
+    rig.animator.sample("run", 1);
+    rig.advance(2);
+    expect(rig.sprite.frame).toBe(3);
   });
 });
 

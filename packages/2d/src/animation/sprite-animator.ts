@@ -239,6 +239,45 @@ export class SpriteAnimator extends Component implements ComponentHooks {
   }
 
   /**
+   * Shows one frame of a clip without playing it, for an editor preview (ADR-0028) or a held pose.
+   * Playback stops on that frame and no `onEvent` or `onClipEnded` fires;
+   * {@link SpriteAnimator.resume} plays on from there.
+   *
+   * @param name - The clip's name.
+   * @param frameIndex - The frame within the clip, counting from `0`; clamped to the clip's frames.
+   * @returns `true` when the frame was written; `false` while the document or the atlas is still
+   * loading, or when the clip has no frames.
+   * @throws IgnifxError with code `IGX-1108` when the document declares no such clip.
+   *
+   * @example
+   * ```ts
+   * animator.sample("run", 2);
+   * ```
+   */
+  sample(name: string, frameIndex: number): boolean {
+    const clips = this.asset;
+    const atlas = this.#atlas();
+    if (clips === null || atlas === null) {
+      return false;
+    }
+    const clip = clips.requireClip(name, atlas);
+    const last = clip.frames.length - 1;
+    if (last < 0) {
+      return false;
+    }
+    const cursor = Math.min(Math.max(Math.trunc(frameIndex), 0), last);
+    const rate = clip.fps * this.speed;
+    this.#clip = clip;
+    this.#cursor = cursor;
+    this.#elapsed = rate > 0 ? cursor / rate : 0;
+    this.#isPlaying = false;
+    // A sampled frame replaces the default clip, so playing on later does not restart it.
+    this.#hasAutoPlayed = true;
+    this.#writeFrame();
+    return true;
+  }
+
+  /**
    * Advances playback by one frame's worth of scaled time. The animation system calls this in
    * `PostUpdate`.
    *
