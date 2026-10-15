@@ -15,10 +15,11 @@ create-ignifx <target-dir> [--template <name>] [--overwrite] [--desktop]
   target fails with `IGX-1401`.
 - `--desktop` also copies the template's Electron variant: its `desktop/` directory,
   `electron.vite.config.ts`, `electron-builder.yml`, and the `*:desktop` scripts and the
-  `electron` / `electron-vite` / `electron-builder` / `@ignifx/electron` dev dependencies that go
+  `electron` / `electron-vite` / `electron-builder` / `@types/node` dev dependencies that go
   with them. Without it the scaffold is browser-only, and those four entries and the scripts are
   stripped from the copied `package.json` — a browser game should not download an Electron binary
-  it never runs.
+  it never runs. `@ignifx/electron` stays in both, because `src/main.ts` registers its (inert in a
+  browser) extension.
 
 ## Desktop projects
 
