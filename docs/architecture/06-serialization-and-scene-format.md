@@ -133,6 +133,7 @@ All share the `format`/`formatVersion` header and JSON Schema validation:
 | ------------------------ | --------------------------------------------------------- | ------------------- |
 | `ignifx.material`        | `.material.json`                                          | core                |
 | `ignifx.environment`     | `.environment.json`                                       | core                |
+| `ignifx.mesh`            | `.mesh.json`                                              | core                |
 | `ignifx.spriteatlas`     | `.atlas.json`                                             | `@ignifx/2d`        |
 | `ignifx.spriteanimation` | `.spriteanim.json`                                        | `@ignifx/2d`        |
 | `ignifx.tilemap`         | `.tilemap.json` (import from Tiled `.tmj` / LDtk `.ldtk`) | `@ignifx/2d`        |
