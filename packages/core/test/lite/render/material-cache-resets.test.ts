@@ -197,6 +197,24 @@ describe("material cache resets", () => {
     }
   });
 
+  it("installs its recorder once, however often it is asked", () => {
+    const { scene } = createHeadlessScene();
+    try {
+      const first = createMaterialCacheResets();
+      const second = createMaterialCacheResets();
+      trackMaterialCacheResets(scene, first);
+      trackMaterialCacheResets(scene, second);
+
+      // oxlint-disable-next-line no-underscore-dangle
+      buildable(scene)._disposables.push(vi.fn());
+
+      expect(first.unconfirmed).toBe(true);
+      expect(second.unconfirmed).toBe(false);
+    } finally {
+      discard(scene);
+    }
+  });
+
   it("calls every recorded reset when the layouts must be forgotten", async () => {
     const { scene } = createHeadlessScene();
     const reset = vi.fn();

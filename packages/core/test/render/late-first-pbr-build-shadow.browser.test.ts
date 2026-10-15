@@ -1,4 +1,5 @@
 import { afterEach, expect, it } from "vitest";
+import { createPixelRgba, samplePixel } from "../../src/lite/screenshot.js";
 import { Camera } from "../../src/render/camera.js";
 import { Light } from "../../src/render/light.js";
 import {
@@ -8,10 +9,9 @@ import {
 } from "../../src/render/material-asset.js";
 import { MeshAsset } from "../../src/render/mesh-asset.js";
 import { MeshRenderer } from "../../src/render/mesh-renderer.js";
-import { createPixelRgba, samplePixel } from "../../src/lite/screenshot.js";
 import { createBrowserApp, gpuDeviceErrors, pixelLuminance, SETTLE_FRAMES } from "./support/browser-harness.js";
-import type { CapturedFrame } from "../../src/lite/screenshot.js";
 import type { BrowserApp } from "./support/browser-harness.js";
+import type { CapturedFrame } from "../../src/lite/screenshot.js";
 
 /**
  * A shadow turned on in a scene whose PBR material group was first built **after** start
