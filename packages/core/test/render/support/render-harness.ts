@@ -36,6 +36,8 @@ export interface RenderHarnessOptions {
   readonly settings?: SettingsInput;
   /** Extra extensions. */
   readonly extensions?: readonly Extension[];
+  /** Builds the app in edit mode. */
+  readonly editMode?: boolean;
 }
 
 /** The app, its world, the rendering service, and the fakes around them. */
@@ -86,6 +88,7 @@ export async function createRenderHarness(options?: RenderHarnessOptions): Promi
     ...(options?.manifest === undefined ? {} : { assets: { manifest: options.manifest } }),
     settings: { time: { maximumDeltaTime: 1000 }, ...options?.settings },
     ...(options?.extensions === undefined ? {} : { extensions: options.extensions }),
+    ...(options?.editMode === undefined ? {} : { editMode: options.editMode }),
   });
   app.onError.connect((report) => {
     errors.push(report);

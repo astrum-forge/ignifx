@@ -196,7 +196,12 @@ function registerTwoD(ctx: ExtensionContext, options: TwoDOptions): void {
   ctx.registerService(TwoDService, service);
   defineTwoDAppProperty(ctx, service);
   ctx.registerSystem(new TwoDSyncSystem(runtime), { phase: Phase.PreRender, order: TWO_D_SYNC_ORDER });
-  ctx.registerSystem(new TwoDAnimationSystem(runtime), { phase: Phase.PostUpdate, order: TWO_D_ANIMATION_ORDER });
+  // Clips and animated tiles do not play in edit mode; `SpriteAnimator.sample` shows a frame (ADR-0028).
+  ctx.registerSystem(new TwoDAnimationSystem(runtime), {
+    phase: Phase.PostUpdate,
+    order: TWO_D_ANIMATION_ORDER,
+    editMode: "skip",
+  });
   ctx.registerAssetLoader(createSpriteAtlasLoader());
   ctx.registerAssetLoader(createSpriteAnimationLoader());
   ctx.registerAssetLoader(createTilemapLoader());

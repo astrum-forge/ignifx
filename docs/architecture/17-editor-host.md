@@ -43,7 +43,7 @@ Importing either entry does nothing (`CONSTITUTION.md` §3.5). The only code wit
 
 ## 4. The scene view's host
 
-`startEditorHost(options)` opens the channel **before its first `await`** (the editor posts the port on the iframe's `load` event, which can fire while `createApp` is still running), then creates the app with the project's extensions, settings and manifest, calls `app.registerComponents(scripts)`, loads `bootScene` through `app.world.loadScene` if one is given, and starts the app. It resolves to an `EditorHost` handle that owns the app: `dispose()` stops the heartbeat, closes the port, removes the window listener and disposes the app. If creation, the scene load or `start()` fails, the channel is closed and the error is rethrown.
+`startEditorHost(options)` opens the channel **before its first `await`** (the editor posts the port on the iframe's `load` event, which can fire while `createApp` is still running), then creates the app with the project's extensions, settings and manifest, in edit mode (`createApp({ editMode: true })`, ADR-0028; `editMode: false` runs it as a game), calls `app.registerComponents(scripts)`, loads `bootScene` through `app.world.loadScene` if one is given, and starts the app. It resolves to an `EditorHost` handle that owns the app: `dispose()` stops the heartbeat, closes the port, removes the window listener and disposes the app. If creation, the scene load or `start()` fails, the channel is closed and the error is rethrown.
 
 The app is reached only through that handle, which lives in the generated module's scope. Nothing is global, so two apps (the scene view and the play view) stay independent even when Chromium puts both documents in one process (`CONSTITUTION.md` §3.6).
 
@@ -86,6 +86,5 @@ The package owns `IGX-1800`–`IGX-1899`. `IGX-1801`: `editorOrigin` is not an o
 
 ## 9. Not in this release
 
-- **Edit mode** (ask E1): `createApp({ editMode: true })`, so the scene view runs no script callbacks, physics or coroutines. Until then the scene view runs the game's scripts.
 - **Document ops, gizmos, editor cameras, picking and screenshots** (editor Phase 2, with asks E3 and E4): the scene view has no methods beyond the handshake yet.
 - **Editor-ready templates** (ask E2): `src/extensions.ts`, scenes as files, and no static imports of `src/scripts/**` from `main.ts`, without which a script edit reloads both views.

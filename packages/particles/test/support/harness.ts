@@ -55,6 +55,8 @@ function nextTurn(): Promise<void> {
 export interface ParticlesAppOptions {
   /** Project settings. */
   readonly settings?: SettingsInput;
+  /** Builds the app in edit mode (ADR-0028). */
+  readonly editMode?: boolean;
   /** Overrides for the `particles` settings section. */
   readonly particles?: ParticlesOptions;
   /** A fake `fetch`, for the suites that load a `.particles.json`. */
@@ -124,6 +126,7 @@ export async function createParticlesApp(options?: ParticlesAppOptions): Promise
       ...(options?.withExtension === false ? [] : [particles(options?.particles)]),
     ],
     ...(options?.settings === undefined ? {} : { settings: options.settings }),
+    ...(options?.editMode === undefined ? {} : { editMode: options.editMode }),
     ...(options?.fetch === undefined ? {} : { fetch: options.fetch }),
     mode: "development",
   });

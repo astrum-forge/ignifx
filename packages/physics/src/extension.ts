@@ -104,16 +104,24 @@ export const physics: (options?: PhysicsOptions) => Extension = defineExtension<
       ctx.registerService(PhysicsHostKey, host);
       ctx.registerService(PhysicsService, service);
       ctx.defineAppProperty("physics", (): unknown => service);
+      // None of the three runs in edit mode: an editor's scene view never simulates, and the
+      // interpolation would overwrite a transform the editor just moved (ADR-0028).
       ctx.registerSystem(new PhysicsRestoreSystem(host), {
         phase: Phase.FixedUpdate,
         order: PHYSICS_RESTORE_ORDER,
+        editMode: "skip",
       });
-      ctx.registerSystem(new PhysicsStepSystem(host), { phase: Phase.FixedUpdate, order: PHYSICS_STEP_ORDER });
+      ctx.registerSystem(new PhysicsStepSystem(host), {
+        phase: Phase.FixedUpdate,
+        order: PHYSICS_STEP_ORDER,
+        editMode: "skip",
+      });
       // `Update`, not `PreRender`: camera rigs and scripts must read the same pose the renderer
       // draws (`runtime/systems.ts`, `docs/architecture/01-lifecycle-and-time.md` §3).
       ctx.registerSystem(new PhysicsInterpolationSystem(host), {
         phase: Phase.Update,
         order: PHYSICS_INTERPOLATE_ORDER,
+        editMode: "skip",
       });
     },
 

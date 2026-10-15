@@ -254,6 +254,9 @@ collides with everything. Havok tests a pair in both directions, so one side ref
   of `Update`. That is deliberate: a follow camera in `lateUpdate` must frame the character where the
   frame draws it, or the two judder against each other.
 - **A resting body sleeps.** Changing `app.physics.gravity` does not wake it; apply an impulse.
+- **In an edit-mode app (`createApp({ editMode: true })`) nothing simulates.** No fixed step runs, so
+  no body is built, nothing falls, interpolation never touches a transform, and a query throws
+  `IGX-0902` as it does before a game's first step. Draw collider gizmos from the component fields.
 
 ## Deprecated (current window)
 

@@ -624,6 +624,11 @@ The generator to drive. Call the generator function: `this.spawnLoop()`.
 
 A handle for stopping it or waiting on it.
 
+###### Throws
+
+IgnifxError with code `IGX-0111` in an edit-mode app when the class does not set
+`static runInEditMode = true` (ADR-0028).
+
 ###### Example
 
 ```ts
@@ -1972,6 +1977,11 @@ The generator to drive. Call the generator function: `this.spawnLoop()`.
 `CoroutineHandle`
 
 A handle for stopping it or waiting on it.
+
+###### Throws
+
+IgnifxError with code `IGX-0111` in an edit-mode app when the class does not set
+`static runInEditMode = true` (ADR-0028).
 
 ###### Example
 
@@ -3589,6 +3599,11 @@ The generator to drive. Call the generator function: `this.spawnLoop()`.
 `CoroutineHandle`
 
 A handle for stopping it or waiting on it.
+
+###### Throws
+
+IgnifxError with code `IGX-0111` in an edit-mode app when the class does not set
+`static runInEditMode = true` (ADR-0028).
 
 ###### Example
 

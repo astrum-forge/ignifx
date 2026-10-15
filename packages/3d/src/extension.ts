@@ -124,10 +124,20 @@ function registerThreeD(ctx: ExtensionContext, options: ThreeDOptions): void {
   defineNavigationAppProperty(ctx, navigation);
   ctx.registerAssetLoader(createAnimatorLoader());
   ctx.registerComponents(components());
-  ctx.registerSystem(new ThreeDAnimationSystem(), { phase: Phase.PostUpdate, order: THREE_D_ANIMATION_ORDER });
-  ctx.registerSystem(new BillboardSystem(), { phase: Phase.PostUpdate, order: BILLBOARD_ORDER });
+  // In edit mode animation, billboards, and navigation stand still: animators do not play, a
+  // billboard's authored rotation is not overwritten, and nothing bakes or steps (ADR-0028).
+  ctx.registerSystem(new ThreeDAnimationSystem(), {
+    phase: Phase.PostUpdate,
+    order: THREE_D_ANIMATION_ORDER,
+    editMode: "skip",
+  });
+  ctx.registerSystem(new BillboardSystem(), { phase: Phase.PostUpdate, order: BILLBOARD_ORDER, editMode: "skip" });
   ctx.registerSystem(new LodSystem(), { phase: Phase.PreRender, order: LOD_ORDER });
-  ctx.registerSystem(new NavigationSystem(navigation), { phase: Phase.FixedUpdate, order: NAVIGATION_ORDER });
+  ctx.registerSystem(new NavigationSystem(navigation), {
+    phase: Phase.FixedUpdate,
+    order: NAVIGATION_ORDER,
+    editMode: "skip",
+  });
   ctx.onDispose((): void => {
     navigation.dispose();
   });

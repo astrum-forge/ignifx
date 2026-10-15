@@ -28,6 +28,8 @@ const FIXTURE_ROOT = new URL("../../../../tests/fixtures/assets/2d/", import.met
 export interface TwoDAppOptions {
   /** Project settings, merged into `createApp`. */
   readonly settings?: SettingsInput;
+  /** Builds the app in edit mode (ADR-0028). */
+  readonly editMode?: boolean;
   /** What to pass `twoD(...)`. */
   readonly options?: TwoDOptions;
   /** Address to body, for the injected `fetch`. Strings are sent as UTF-8. */
@@ -168,6 +170,7 @@ export async function createTwoDApp(options?: TwoDAppOptions): Promise<TwoDAppHa
     fetch: tableFetch(options?.files ?? {}),
     extensions: [twoD(options?.options)],
     ...(options?.settings === undefined ? {} : { settings: options.settings }),
+    ...(options?.editMode === undefined ? {} : { editMode: options.editMode }),
   });
   const step = (deltaSeconds = 1 / 60): void => {
     clock.advance(deltaSeconds * MILLISECONDS_PER_SECOND);

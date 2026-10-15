@@ -35,13 +35,14 @@ afterEach(() => {
 async function createSystem(
   input: ParticleDefinitionInput = steady(),
   fields?: { readonly playOnAwake?: boolean; readonly sortingLayer?: string },
+  editMode?: boolean,
 ): Promise<{
   readonly system: ParticleSystem2D;
   readonly entity: Entity;
   readonly recorder: BatchRecorder;
   readonly harness: Particles2DAppHarness;
 }> {
-  const created = await createParticles2DApp();
+  const created = await createParticles2DApp(editMode === undefined ? undefined : { editMode });
   harness = created;
   const recorder = recordBatches(created.app);
   const atlas = await created.load<SpriteAtlasAsset>("2d/hero.atlas.json");
@@ -109,6 +110,24 @@ describe("a 2D particle system", () => {
     scene.harness.step();
     expect(scene.system.aliveCount).toBe(5);
     expect(scene.recorder.first()?.count).toBe(5);
+  });
+
+  it("plays on awake in an edit-mode app but holds its clock, and simulate still previews", async () => {
+    const scene = await createSystem(steady(), undefined, true);
+    for (let frame = 0; frame < 30; frame += 1) {
+      scene.harness.step();
+    }
+    expect(scene.system.isPlaying).toBe(true);
+    expect(scene.system.time).toBe(0);
+    const alive = scene.system.aliveCount;
+
+    scene.system.simulate(0.5);
+    scene.harness.step();
+    scene.harness.step();
+    expect(scene.system.time).toBeCloseTo(0.5, 5);
+    expect(scene.system.aliveCount).toBeGreaterThan(alive);
+    // The write system keeps running: the preview reaches the sprite batch.
+    expect(scene.recorder.first()?.count).toBe(scene.system.aliveCount);
   });
 
   it("fast-forwards with simulate", async () => {

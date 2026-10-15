@@ -130,7 +130,7 @@ Full signatures: `skills/ignifx/references/api/2d.md`.
 | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
 | `Camera2D` (`ignifx/Camera2D`)                   | `orthographicSize`, `pixelPerfect`, `referenceResolution`, `boundsMin`/`boundsMax`, `follow`, `deadZone`, `priority`    |
 | `SpriteRenderer` (`ignifx/SpriteRenderer`)       | `sprite`, `color`, `flipX`/`flipY`, `sortingLayer`, `orderInLayer`, `blend`, `pivotOverride`, `screenSpace`, `pickable` |
-| `SpriteAnimator` (`ignifx/SpriteAnimator`)       | `animations`, `defaultClip`, `playOnAwake`, `speed`; `play`/`stop`/`pause`/`resume`, `onClipEnded`, `onEvent`           |
+| `SpriteAnimator` (`ignifx/SpriteAnimator`)       | `animations`, `defaultClip`, `playOnAwake`, `speed`; `play`/`stop`/`pause`/`resume`/`sample`, `onClipEnded`, `onEvent`  |
 | `Tilemap` (`ignifx/Tilemap`)                     | `map`, `chunkSize`; `getTile`/`setTile`, `worldToCell`/`cellToWorld`, `collisionData`, `onTileChanged`                  |
 | `TilemapRenderer` (`ignifx/TilemapRenderer`)     | `atlas`, `sortingLayer`, `cullChunks`                                                                                   |
 | `ParallaxLayer` (`ignifx/ParallaxLayer`)         | `sortingLayer`, `factor`, `repeatX`/`repeatY`, `repeatWidth`/`repeatHeight`                                             |
@@ -292,6 +292,9 @@ Generated reference: `skills/ignifx/references/formats/`.
   warning is suppressed while the sprite renderer has an active `Camera2D`, so a correct 2D-only
   scene is quiet. Build the camera **before** `app.start()`, as the templates do: a world that is
   still empty when the loop starts has no camera of any kind, and that does warn.
+- **In an edit-mode app (`createApp({ editMode: true })`) clips and animated tiles do not play.**
+  The renderer keeps its authored `frame`. To preview one, call `animator.sample("run", 2)`: it writes
+  that frame, stops there, and fires no event; `resume()` plays on from it. It works in a game too.
 
 ## Deprecated (current window)
 

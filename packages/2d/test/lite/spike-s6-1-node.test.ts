@@ -114,7 +114,7 @@ describe("S6.1 sprite sync at scale, headless", () => {
     }
 
     const tick = (): void => {
-      system.update({ world, time: created.app.time, phase: Phase.PreRender, dt: 1 / 60 });
+      system.update({ world, time: created.app.time, phase: Phase.PreRender, dt: 1 / 60, isClockHeld: false });
     };
     /** Runs `frames` syncs and returns their median and worst CPU milliseconds. */
     const measure = (frames: number, dirty: boolean): { median: number; worst: number } => {

@@ -50,7 +50,12 @@ function registerParticles2D(ctx: ExtensionContext): Particles2DService {
   service.setCounters(app.diagnostics.registerGroup(PARTICLES_2D_DIAGNOSTICS_GROUP, PARTICLES_2D_DIAGNOSTICS_COUNTERS));
   ctx.registerService(Particles2DService, service);
   ctx.registerComponents([ParticleSystem2D]);
-  ctx.registerSystem(new Particle2DUpdateSystem(service), { phase: Phase.Update, order: PARTICLE_2D_UPDATE_ORDER });
+  // Held in edit mode: a system still starts and shows its first frame, but its clock stands still (ADR-0028).
+  ctx.registerSystem(new Particle2DUpdateSystem(service), {
+    phase: Phase.Update,
+    order: PARTICLE_2D_UPDATE_ORDER,
+    editMode: "hold",
+  });
   ctx.registerSystem(new Particle2DWriteSystem(service), { phase: Phase.PreRender, order: PARTICLE_2D_WRITE_ORDER });
   ctx.onDispose((): void => {
     service.dispose();

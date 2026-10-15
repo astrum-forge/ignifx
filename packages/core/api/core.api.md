@@ -40,6 +40,7 @@ export interface App {
     dispose(): void;
     readonly events: AppEvents;
     readonly hotReload: HotReloadHost;
+    readonly isEditMode: boolean;
     readonly isHeadless: boolean;
     readonly isRunning: boolean;
     readonly lite: AppLiteHandles;
@@ -578,6 +579,7 @@ export const CoreErrorCode: {
     readonly invalidTimeValue: "IGX-0108";
     readonly invalidTweenOptions: "IGX-0109";
     readonly tweenFieldNotTweenable: "IGX-0110";
+    readonly coroutineInEditMode: "IGX-0111";
     readonly requiredComponentMissing: "IGX-0201";
     readonly multipleComponentsNotAllowed: "IGX-0202";
     readonly duplicateComponentTypeId: "IGX-0203";
@@ -697,6 +699,7 @@ export interface CreateAppOptions {
     readonly assets?: AssetsCreateOptions;
     readonly canvas?: RenderSurface;
     readonly clock?: Clock;
+    readonly editMode?: boolean;
     readonly extensions?: readonly Extension[];
     readonly fetch?: FetchLike;
     readonly headless?: boolean;
@@ -2602,6 +2605,7 @@ export interface RegisterComponentOptions {
 
 // @public
 export interface RegisterSystemOptions {
+    readonly editMode?: SystemEditMode;
     readonly order?: number;
     readonly phase: Phase;
 }
@@ -2947,6 +2951,7 @@ export interface ScriptCallbacks {
 export interface ScriptClassInfo {
     readonly callbacks: number;
     readonly executionOrder: number;
+    readonly runInEditMode: boolean;
     readonly updateWhenPaused: boolean;
 }
 
@@ -2959,6 +2964,7 @@ export type ScriptDefinition<S extends Schema> = (abstract new () => Script & Fi
 // @public
 export interface ScriptStatics extends ComponentStatics {
     readonly executionOrder?: number;
+    readonly runInEditMode?: boolean;
     readonly updateWhenPaused?: boolean;
 }
 
@@ -3384,10 +3390,14 @@ export interface System {
 // @public
 export interface SystemContext {
     readonly dt: number;
+    readonly isClockHeld: boolean;
     readonly phase: Phase;
     readonly time: Time;
     readonly world: World;
 }
+
+// @public
+export type SystemEditMode = "run" | "hold" | "skip";
 
 // @public
 export class TagSet {

@@ -90,7 +90,12 @@ function registerParticles(ctx: ExtensionContext, options: ParticlesOptions): Pa
   defineParticlesAppProperty(ctx, service);
   ctx.registerAssetLoader(createParticleLoader());
   ctx.registerComponents([ParticleSystem]);
-  ctx.registerSystem(new ParticleUpdateSystem(service), { phase: Phase.Update, order: PARTICLE_UPDATE_ORDER });
+  // Held in edit mode: a system still starts and shows its first frame, but its clock stands still (ADR-0028).
+  ctx.registerSystem(new ParticleUpdateSystem(service), {
+    phase: Phase.Update,
+    order: PARTICLE_UPDATE_ORDER,
+    editMode: "hold",
+  });
   ctx.registerSystem(new ParticleRenderSystem(service), { phase: Phase.PreRender, order: PARTICLE_RENDER_ORDER });
   ctx.onDispose((): void => {
     service.dispose();

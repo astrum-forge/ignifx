@@ -32,6 +32,8 @@ export interface ScriptClassInfo {
   readonly executionOrder: number;
   /** `static updateWhenPaused`, resolved at registration. */
   readonly updateWhenPaused: boolean;
+  /** `static runInEditMode`, resolved at registration. */
+  readonly runInEditMode: boolean;
   /** One bit per `ScriptCallbackKind`: set when the class implements that callback. */
   readonly callbacks: number;
 }
@@ -391,6 +393,7 @@ function buildScriptInfo(type: ComponentType): ScriptClassInfo {
   return {
     executionOrder: statics.executionOrder ?? 0,
     updateWhenPaused: statics.updateWhenPaused ?? false,
+    runInEditMode: statics.runInEditMode ?? false,
     callbacks,
   };
 }

@@ -354,6 +354,7 @@ document". A misspelled key is an error, not a silent no-op.
 | Expecting `stop()` to clear the screen                     | It stops emission; the live particles finish their lives, which is what a torch being put out looks like.                               | `stop({ clear: true })` to drop them all at once.                                                                                              |
 
 - `simulate(seconds)` advances the records at once, but `aliveCount` and the draw count refresh in the next `app.step()`, when the update system runs its census.
+- In an edit-mode app (`createApp({ editMode: true })`) a system still plays on awake and shows its first frame, but its clock stands still. `simulate(seconds)` previews it.
 
 ## Deprecated (current window)
 

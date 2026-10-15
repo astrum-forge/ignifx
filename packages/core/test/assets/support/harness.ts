@@ -32,6 +32,8 @@ export interface AssetHarnessOptions {
   readonly start?: boolean;
   /** Hot-reload options, for the suites that exercise `app.hotReload`. */
   readonly hotReload?: HotReloadOptions;
+  /** Builds the app in edit mode. */
+  readonly editMode?: boolean;
 }
 
 /** A headless app whose asset service is driven entirely by the test. */
@@ -82,6 +84,7 @@ export async function createAssetHarness(options?: AssetHarnessOptions): Promise
     settings: { time: { maximumDeltaTime: 1000 }, ...options?.settings },
     ...(options?.extensions === undefined ? {} : { extensions: options.extensions }),
     ...(options?.hotReload === undefined ? {} : { hotReload: options.hotReload }),
+    ...(options?.editMode === undefined ? {} : { editMode: options.editMode }),
   });
   app.onError.connect((report) => {
     errors.push(report);

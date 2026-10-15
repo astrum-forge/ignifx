@@ -158,6 +158,12 @@ export interface SystemContext {
    * `updateWhenPaused` — so a system that animates checks `time.paused` itself.
    */
   readonly dt: number;
+  /**
+   * `true` when the scheduler is holding this system's clock: in an edit-mode app, for a system
+   * registered with `editMode: "hold"` (ADR-0028). `dt` is `0` then, and a system that reads
+   * `time` directly treats the frame as paused.
+   */
+  readonly isClockHeld: boolean;
 }
 
 /**
@@ -442,6 +448,8 @@ export interface CoroutineHost {
    * @param owner - The script whose enabled state gates the coroutine.
    * @param routine - The generator to drive.
    * @returns A handle for stopping it or waiting on it.
+   * @throws IgnifxError with code `IGX-0111` in an edit-mode app when the owner's class does not
+   * set `static runInEditMode = true`.
    */
   start(owner: Script, routine: Coroutine): CoroutineHandle;
   /**
@@ -576,6 +584,12 @@ export interface App {
   readonly onError: Signal<ErrorReport>;
   /** `true` when the app runs on Lite's null engine with no render surface. */
   readonly isHeadless: boolean;
+  /**
+   * `true` when the app was created with `createApp({ editMode: true })`: an editor's scene view
+   * (ADR-0028). Scripts get no callbacks unless their class sets `static runInEditMode = true`,
+   * the fixed loop and physics do not run, and coroutines cannot start. Fixed for the app's life.
+   */
+  readonly isEditMode: boolean;
   /** `true` between `start()` and `stop()`/`dispose()`. */
   readonly isRunning: boolean;
   /** The `@ignifx/core` version this app was built from. */
@@ -672,7 +686,34 @@ export interface RegisterSystemOptions {
   readonly phase: Phase;
   /** Ascending order within the phase; core uses `[-1000, 1000]`, extensions `[1001, 9999]`. */
   readonly order?: number;
+  /**
+   * What the system does in an edit-mode app (ADR-0028). Defaults to `"run"`. Ignored when the app
+   * is not in edit mode.
+   */
+  readonly editMode?: SystemEditMode;
 }
+
+/**
+ * What a system does in an edit-mode app (`createApp({ editMode: true })`, ADR-0028).
+ *
+ * - `"run"`: runs as it does in a game. Right for systems that turn component data into what is
+ *   drawn, heard, or laid out.
+ * - `"hold"`: runs with `ctx.dt` set to `0` and `ctx.isClockHeld` set to `true`, so it shows its
+ *   current state without moving it forward.
+ * - `"skip"`: does not run. Right for simulation, and for systems that would overwrite authored
+ *   data such as a transform.
+ *
+ * A `FixedUpdate` system never runs in edit mode, whatever it declares, because the fixed loop does
+ * not run.
+ *
+ * @example
+ * ```ts
+ * ctx.registerSystem(new WindSystem(), { phase: Phase.Update, editMode: "skip" });
+ * ```
+ *
+ * @public
+ */
+export type SystemEditMode = "run" | "hold" | "skip";
 
 /**
  * An extension's registration surface (`docs/architecture/04-extensions.md` §1). Everything an

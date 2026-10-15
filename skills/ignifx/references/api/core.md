@@ -2647,6 +2647,12 @@ The handle.
 The immovability hint: `true` promises that the transform will not change after `awake`, which
 lets the 2D batcher, physics, and navmesh treat the entity as static.
 
+###### Remarks
+
+It can be changed only in files or before `awake`; afterwards the setter throws `IGX-0101`. In an
+edit-mode app it stays writable, because an editor's inspector edits it on loaded entities
+(ADR-0028).
+
 ###### Returns
 
 `boolean`
@@ -11293,12 +11299,13 @@ a class implements once, by inspecting the prototype at registration, so an empt
 costs a call per frame and not defining it costs nothing.
 
 **The statics work the same way.** `typeId`, `schema`, `requires`, `allowMultiple`,
-`executionOrder`, and `updateWhenPaused` are not members of `Component` or `Script` either: a
-static declared on the base class is an override too, so `static typeId = "mygame/Mover"` would
-have needed an `override` modifier. Their shape lives on [ComponentStatics](#componentstatics) and
-[ScriptStatics](#scriptstatics), which the class-token types intersect, so a plain `static` on a subclass
-satisfies them structurally; `ComponentRegistry` reads each one once per class and applies the
-defaults (`executionOrder` `0`, `updateWhenPaused` `false`).
+`executionOrder`, `updateWhenPaused`, and `runInEditMode` are not members of `Component` or
+`Script` either: a static declared on the base class is an override too, so
+`static typeId = "mygame/Mover"` would have needed an `override` modifier. Their shape lives on
+[ComponentStatics](#componentstatics) and [ScriptStatics](#scriptstatics), which the class-token types intersect, so a
+plain `static` on a subclass satisfies them structurally; `ComponentRegistry` reads each one once
+per class and applies the defaults (`executionOrder` `0`, `updateWhenPaused` `false`,
+`runInEditMode` `false`).
 
 #### Example
 
@@ -11700,6 +11707,11 @@ The generator to drive. Call the generator function: `this.spawnLoop()`.
 [`CoroutineHandle`](#coroutinehandle)
 
 A handle for stopping it or waiting on it.
+
+###### Throws
+
+IgnifxError with code `IGX-0111` in an edit-mode app when the class does not set
+`static runInEditMode = true` (ADR-0028).
 
 ###### Example
 
@@ -18118,6 +18130,14 @@ Engine-wide events (`docs/architecture/02-scene-graph.md` §8).
 Script and scene hot reload (`docs/architecture/15-devtools-and-diagnostics.md` §5). The Vite
 plugin's HMR client drives it in development; it works headlessly with no bundler at all.
 
+##### isEditMode
+
+> `readonly` **isEditMode**: `boolean`
+
+`true` when the app was created with `createApp({ editMode: true })`: an editor's scene view
+(ADR-0028). Scripts get no callbacks unless their class sets `static runInEditMode = true`,
+the fixed loop and physics do not run, and coroutines cannot start. Fixed for the app's life.
+
 ##### isHeadless
 
 > `readonly` **isHeadless**: `boolean`
@@ -20410,6 +20430,11 @@ The generator to drive.
 
 A handle for stopping it or waiting on it.
 
+###### Throws
+
+IgnifxError with code `IGX-0111` in an edit-mode app when the owner's class does not
+set `static runInEditMode = true`.
+
 ##### stop()
 
 > **stop**(`handle`): `void`
@@ -20487,6 +20512,21 @@ The canvas to render into. Ignored when `headless` is `true`.
 
 The wall clock behind `time.realtimeSinceStartup` and the development phase timings. Defaults
 to `performance.now()`; headless tests pass [createManualClock](#createmanualclock).
+
+##### editMode?
+
+> `readonly` `optional` **editMode?**: `boolean`
+
+Builds the app for an editor's scene view (ADR-0028,
+`docs/architecture/03-scripting-and-components.md` §10). Scripts get no lifecycle or frame
+callbacks unless their class sets `static runInEditMode = true`; the fixed loop, physics, and
+other simulation systems do not run; `startCoroutine` throws `IGX-0111` for a script that does
+not run in edit mode. Systems that turn component data into what is drawn keep running. Fixed
+for the app's life; `app.isEditMode` reports it.
+
+###### Default Value
+
+`false`
 
 ##### extensions?
 
@@ -25057,6 +25097,13 @@ Options accepted by `ExtensionContext.registerSystem`.
 
 #### Properties
 
+##### editMode?
+
+> `readonly` `optional` **editMode?**: [`SystemEditMode`](#systemeditmode)
+
+What the system does in an edit-mode app (ADR-0028). Defaults to `"run"`. Ignored when the app
+is not in edit mode.
+
 ##### order?
 
 > `readonly` `optional` **order?**: `number`
@@ -26380,6 +26427,12 @@ One bit per `ScriptCallbackKind`: set when the class implements that callback.
 
 `static executionOrder`, resolved at registration.
 
+##### runInEditMode
+
+> `readonly` **runInEditMode**: `boolean`
+
+`static runInEditMode`, resolved at registration.
+
 ##### updateWhenPaused
 
 > `readonly` **updateWhenPaused**: `boolean`
@@ -26391,8 +26444,8 @@ One bit per `ScriptCallbackKind`: set when the class implements that callback.
 ### ScriptStatics
 
 The static members a script class may declare: everything [ComponentStatics](#componentstatics) allows plus
-the two scheduling flags (`docs/architecture/01-lifecycle-and-time.md` §3). Structural and
-optional for the reason given on [ComponentStatics](#componentstatics).
+the scheduling flags (`docs/architecture/01-lifecycle-and-time.md` §3). Structural and optional
+for the reason given on [ComponentStatics](#componentstatics).
 
 #### Extends
 
@@ -26426,6 +26479,25 @@ Component types auto-added to, and validated on, any entity this one is attached
 ###### Inherited from
 
 [`ComponentStatics`](#componentstatics).[`requires`](#requires-1)
+
+##### runInEditMode?
+
+> `readonly` `optional` **runInEditMode?**: `boolean`
+
+When `true`, the script receives its callbacks in an edit-mode app
+(`createApp({ editMode: true })`, ADR-0028), as an editor camera or a tool script needs.
+Defaults to `false`: in edit mode a script gets no `awake`, `update`, or any other callback.
+
+###### Example
+
+```ts
+class EditorCamera extends Script {
+  static runInEditMode = true;
+  update(dt: number): void {
+    this.transform.translate({ x: 0, y: 0, z: dt });
+  }
+}
+```
 
 ##### schema?
 
@@ -28155,6 +28227,14 @@ What a [System](#system-1) is handed when its phase runs
 Seconds elapsed: `time.deltaTime`, or `time.fixedDeltaTime` inside the fixed loop. Systems run
 while the app is paused and `dt` is **not** zeroed then — only scripts are filtered by
 `updateWhenPaused` — so a system that animates checks `time.paused` itself.
+
+##### isClockHeld
+
+> `readonly` **isClockHeld**: `boolean`
+
+`true` when the scheduler is holding this system's clock: in an edit-mode app, for a system
+registered with `editMode: "hold"` (ADR-0028). `dt` is `0` then, and a system that reads
+`time` directly treats the frame as paused.
 
 ##### phase
 
@@ -29944,6 +30024,30 @@ templates name their variables differently and Standard has fewer injection poin
 
 ***
 
+### SystemEditMode
+
+> **SystemEditMode** = `"run"` \| `"hold"` \| `"skip"`
+
+What a system does in an edit-mode app (`createApp({ editMode: true })`, ADR-0028).
+
+- `"run"`: runs as it does in a game. Right for systems that turn component data into what is
+  drawn, heard, or laid out.
+- `"hold"`: runs with `ctx.dt` set to `0` and `ctx.isClockHeld` set to `true`, so it shows its
+  current state without moving it forward.
+- `"skip"`: does not run. Right for simulation, and for systems that would overwrite authored
+  data such as a transform.
+
+A `FixedUpdate` system never runs in edit mode, whatever it declares, because the fixed loop does
+not run.
+
+#### Example
+
+```ts
+ctx.registerSystem(new WindSystem(), { phase: Phase.Update, editMode: "skip" });
+```
+
+***
+
 ### ToneMappingCurve
 
 > **ToneMappingCurve** = *typeof* [`TONE_MAPPING_NAMES`](#tone_mapping_names)\[`number`\]
@@ -30141,6 +30245,12 @@ A component's engine-assigned state was read before the engine attached it to an
 > `readonly` **componentTypeIdMissing**: `"IGX-0204"` = `"IGX-0204"`
 
 A component without a `typeId` was serialized.
+
+##### coroutineInEditMode
+
+> `readonly` **coroutineInEditMode**: `"IGX-0111"` = `"IGX-0111"`
+
+A coroutine was started in an edit-mode app by a script whose class does not run in edit mode.
 
 ##### cryptoUnavailable
 

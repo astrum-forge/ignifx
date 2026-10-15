@@ -57,7 +57,7 @@ Add `/// <reference types="@ignifx/editor-host/client" />` beside `@ignifx/vite-
 editor window (ignifx://app)
 ├── <iframe> scene view   http://127.0.0.1:<port>/__ignifx_editor__/
 │     generated module → startEditorHost({ extensions(), scripts, settings, manifest })
-│     owns its app; hostKind "scene"
+│     owns its app, in edit mode; hostKind "scene"
 └── <iframe> play view    http://localhost:<port>/  (the game's own index.html)
       main.ts → attachEditorPlayControls(app)   (virtual:ignifx/editor; a no-op in builds)
       the game owns its app; hostKind "play"
@@ -117,7 +117,7 @@ host.dispose();
 | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | `editorHostPlugin(options)` (`/vite`)                             | The two Vite plugins: the scene view's page (dev only) and `virtual:ignifx/editor`                                          |
 | `attachEditorPlayControls(app)`                                   | From `virtual:ignifx/editor`: hands the game's app to the editor; returns a detach                                          |
-| `startEditorHost(options)`                                        | Starts the scene view's host and its app; resolves to a disposable `EditorHost`                                             |
+| `startEditorHost(options)`                                        | Starts the scene view's host and its edit-mode app; resolves to a disposable `EditorHost`                                   |
 | `startEditorPlayControls(app, options)`                           | What `attachEditorPlayControls` calls in development                                                                        |
 | `EDITOR_CONNECT_MESSAGE_TYPE`, `isEditorConnectMessage`           | The window message that carries the port, and its check                                                                     |
 | `PROTOCOL_VERSION`, `RpcErrorCode`, `isRpcMessage`, `isPlayState` | The protocol 0.2 values and checks, mirrored from `@ignifx/editor-protocol`; before 1.0 the major and minor must both match |
@@ -207,8 +207,10 @@ document model lives in the editor.
   own dev server. A mismatch is silent by design: the host just never connects.
 - **Every view reload needs a new port.** A transferred `MessagePort` cannot be posted twice; the
   editor makes a fresh `MessageChannel` on each `load`, and the host closes the previous port.
-- **The scene view runs game scripts** until edit mode lands in core; it is a second copy of the game
-  in its own app.
+- **The scene view runs in edit mode** (`createApp({ editMode: true })`, ADR-0028): a script gets no
+  callback unless its class sets `static runInEditMode = true`, and physics does not step. Pass
+  `editMode: false` to `startEditorHost` to run it as a second copy of the game. The play view is the
+  game's own app and is never in edit mode.
 - **The engine version is read from the project.** `VERSION` from `@ignifx/core` is `"0.0.0"` when
   core runs from source rather than its build, so the plugin reads `@ignifx/core/package.json` and
   passes `engineVersion`; the host prefers a stamped `VERSION`.

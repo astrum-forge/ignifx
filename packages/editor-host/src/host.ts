@@ -36,6 +36,13 @@ export interface EditorHostOptions {
   readonly canvas?: RenderSurface;
   /** Run on Babylon Lite's null engine. Defaults to `true` when there is no `canvas`. */
   readonly headless?: boolean;
+  /**
+   * Build the app in edit mode (`createApp({ editMode })`, ADR-0028), so the scene view shows the
+   * scene without playing it: only scripts whose class sets `static runInEditMode = true` get
+   * callbacks, and physics and other game-clock systems hold or skip. Defaults to `true`; pass
+   * `false` to run the scene view as a game.
+   */
+  readonly editMode?: boolean;
   /** The project's extensions, in the order its `main.ts` registers them. */
   readonly extensions?: readonly Extension[];
   /** The project's component classes, registered with `app.registerComponents`. */
@@ -97,8 +104,8 @@ export function resolveEngineVersion(fallback: string | undefined, coreVersion: 
 
 /**
  * Starts the scene view's host: listens for the editor's port, creates the app from the project's
- * own `@ignifx/core`, registers the project's scripts, loads `bootScene` if one is given, and
- * starts the app.
+ * own `@ignifx/core` (in edit mode unless `editMode` is `false`), registers the project's scripts,
+ * loads `bootScene` if one is given, and starts the app.
  *
  * @remarks
  * The host answers `hello` with `ready` and `ping` with `"pong"` as soon as a port arrives, even
@@ -178,6 +185,7 @@ export async function startEditorHost(options: EditorHostOptions): Promise<Edito
  */
 function appOptions(options: EditorHostOptions): CreateAppOptions {
   return {
+    editMode: options.editMode ?? true,
     ...(options.canvas === undefined ? {} : { canvas: options.canvas }),
     ...(options.headless === undefined ? {} : { headless: options.headless }),
     ...(options.extensions === undefined ? {} : { extensions: options.extensions }),

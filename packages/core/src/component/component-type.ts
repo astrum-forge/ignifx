@@ -42,8 +42,8 @@ export interface ComponentStatics {
 
 /**
  * The static members a script class may declare: everything {@link ComponentStatics} allows plus
- * the two scheduling flags (`docs/architecture/01-lifecycle-and-time.md` §3). Structural and
- * optional for the reason given on {@link ComponentStatics}.
+ * the scheduling flags (`docs/architecture/01-lifecycle-and-time.md` §3). Structural and optional
+ * for the reason given on {@link ComponentStatics}.
  *
  * @public
  */
@@ -58,6 +58,22 @@ export interface ScriptStatics extends ComponentStatics {
    * Defaults to `false`.
    */
   readonly updateWhenPaused?: boolean;
+  /**
+   * When `true`, the script receives its callbacks in an edit-mode app
+   * (`createApp({ editMode: true })`, ADR-0028), as an editor camera or a tool script needs.
+   * Defaults to `false`: in edit mode a script gets no `awake`, `update`, or any other callback.
+   *
+   * @example
+   * ```ts
+   * class EditorCamera extends Script {
+   *   static runInEditMode = true;
+   *   update(dt: number): void {
+   *     this.transform.translate({ x: 0, y: 0, z: dt });
+   *   }
+   * }
+   * ```
+   */
+  readonly runInEditMode?: boolean;
 }
 
 /**

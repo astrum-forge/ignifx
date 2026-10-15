@@ -15,6 +15,8 @@ export interface TestAppOptions {
   readonly settings?: SettingsInput;
   /** The build mode; defaults to `"development"`. */
   readonly mode?: "development" | "production";
+  /** Builds the app in edit mode. */
+  readonly editMode?: boolean;
 }
 
 /** Everything a runtime test needs, wired together. */
@@ -54,6 +56,7 @@ export async function createTestApp(options?: TestAppOptions): Promise<TestAppHa
     ...(options?.extensions === undefined ? {} : { extensions: options.extensions }),
     ...(options?.settings === undefined ? {} : { settings: options.settings }),
     ...(options?.mode === undefined ? {} : { mode: options.mode }),
+    ...(options?.editMode === undefined ? {} : { editMode: options.editMode }),
   });
   const log = sinkOf(app.world);
   log.length = 0;

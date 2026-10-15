@@ -26,6 +26,7 @@ App                         one per game; owns time, services, the extension hos
 - **Script** extends `Component` and receives the engine lifecycle callbacks (`awake`, `start`, `fixedUpdate`, `update`, `lateUpdate`, …). This is the Unity `MonoBehaviour` role and the primary way game code is written (see `01-lifecycle-and-time.md`, `03-scripting-and-components.md`).
 - **System** is engine-level logic that runs once per phase over many components (input polling, physics stepping, animation advance, render sync). Systems are registered by extensions and are not attached to entities.
 - **Extension** is a package that registers components, systems, asset loaders, and services with an app (see `04-extensions.md`). Core features are extensions too (`CONSTITUTION.md` §8.1).
+- **Edit mode** (`createApp({ editMode: true })`) runs the same loop for an editor's scene view: the one call site that delivers script callbacks skips every script whose class does not set `static runInEditMode = true`, the fixed loop does not run, and each system runs, holds its clock, or is skipped as it declared at registration (`03-scripting-and-components.md` §10, ADR-0028).
 
 ## 2. Package layout
 
@@ -132,7 +133,7 @@ Babylon Lite (`@babylonjs/lite`, pinned exactly; 1.34.0 at the time of writing) 
 
 ## 7. What is deliberately out of scope for the MVP
 
-- A visual editor inside the engine. The editor is a separate product (`astrum-forge/ignifx-editor`) built on the runtime through `@ignifx/editor-host` (`17-editor-host.md`) and developed alongside the engine before 1.0; the engine seams it needs are the asks E0 to E14 in §5 of the editor plan (ADR-E011 of the editor repository). The runtime stays editor-free: nothing in a game depends on the editor.
+- A visual editor inside the engine. The editor is a separate product (`astrum-forge/ignifx-editor`) built on the runtime through `@ignifx/editor-host` (`17-editor-host.md`) and developed alongside the engine before 1.0; the engine seams it needs are the asks E0 to E14 in §5 of the editor plan (ADR-E011 of the editor repository). The runtime is editor-ready (schemas, inspector metadata, stable ids, edit mode) and stays editor-free: nothing in a game depends on the editor.
 - Multiple worlds per app, and multiple simultaneous render cameras (multi-viewport). Single active camera in the MVP; extra cameras via Lite render tasks after 1.0.
 - Networking. Deterministic fixed-step simulation is designed so that lockstep or server-authoritative networking can be added as an extension later.
 - WebXR (Lite's XR path is not yet runnable in shipping browsers).

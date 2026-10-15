@@ -11,7 +11,7 @@ import { Signal } from "../signal/signal.js";
 import { patchInstances } from "./patch.js";
 import { recreateInstances } from "./recreate.js";
 import { schemaShapeKey } from "./schema-shape.js";
-import { declaredPolicy, migrationHook } from "./statics.js";
+import { declaredPolicy, declaresRunInEditMode, migrationHook } from "./statics.js";
 import type { HotReloadHost, HotReloadKind, HotReloadModule, HotReloadPolicy, HotReloadReport } from "./contract.js";
 import type { App, ErrorReport, FrameState } from "../app/types.js";
 import type { ComponentClassInfo } from "../component/component-registry.js";
@@ -268,6 +268,12 @@ export class HotReloadHostImpl implements HotReloadHost {
       this.#log.warn(
         `${CoreErrorCode.hotReloadSchemaChanged} ${typeId} changed its schema shape under the "patch" policy; its instances were re-created. Declare static hotReload = "recreate" to say so.`,
       );
+    }
+    const wasRunInEditMode = previousInfo.script?.runInEditMode ?? false;
+    if (policy === "patch" && this.#app.isEditMode && wasRunInEditMode !== declaresRunInEditMode(next)) {
+      // A patched instance would keep the setup it got under the old answer and be torn down under
+      // the new one; re-creating gives it `awake` and `onDestroy` under the same answer (ADR-0028).
+      policy = "recreate";
     }
     return {
       typeId,

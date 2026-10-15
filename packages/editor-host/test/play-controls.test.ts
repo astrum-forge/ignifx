@@ -1,4 +1,4 @@
-import { createApp } from "@ignifx/core";
+import { createApp, Script } from "@ignifx/core";
 import { afterEach, describe, expect, it } from "vitest";
 import { startEditorPlayControls } from "../src/play-controls.js";
 import { RpcErrorCode } from "../src/protocol/index.js";
@@ -74,6 +74,22 @@ describe("startEditorPlayControls", () => {
     expect((await peer.request("step"))["result"]).toEqual({ isRunning: false, isPaused: true, frameCount: 1 });
     expect((await peer.request("step", { deltaSeconds: 0.5 }))["result"]).toMatchObject({ frameCount: 2 });
     expect(app.time.unscaledDeltaTime).toBeCloseTo(app.time.maximumDeltaTime);
+  });
+
+  it("leaves the game out of edit mode, so its scripts update on a step", async () => {
+    let updates = 0;
+    class Mover extends Script {
+      static typeId = "test/Mover";
+      update(): void {
+        updates += 1;
+      }
+    }
+    const { app, peer } = await playView();
+    app.world.createEntity("Probe").addComponent(Mover);
+    await peer.request("step");
+
+    expect(app.isEditMode).toBe(false);
+    expect(updates).toBe(1);
   });
 
   it("refuses a step with a bad delta", async () => {

@@ -26,6 +26,8 @@ import type { WorldInternals } from "../world/world-internals.js";
  * `awake` waits until the component is effectively enabled. Outside callbacks, enables are queued
  * and disables are immediate; nested changes run synchronously.
  * Destroy children before parents and release each entity's components in attachment order.
+ * In edit mode the one call site is also the gate: a script whose class does not run in edit mode
+ * gets no callback at all, from any path (ADR-0028).
  */
 
 /** How many callbacks get a sorted dispatch list. */
@@ -56,6 +58,9 @@ export class LifecycleQueue implements WorldInternals {
   /** The phase the scheduler says is running, recorded in error reports. */
   #phase: Phase | null = null;
 
+  /** Whether the app is in edit mode, read once: it is fixed for the app's life. */
+  readonly #isEditMode: boolean;
+
   /**
    * Creates the queue.
    *
@@ -63,6 +68,7 @@ export class LifecycleQueue implements WorldInternals {
    */
   constructor(host: WorldHost) {
     this.#host = host;
+    this.#isEditMode = host.app.isEditMode;
     for (let index = 0; index < DISPATCH_LIST_COUNT; index += 1) {
       this.#lists.push(new ScriptList());
     }
@@ -244,6 +250,9 @@ export class LifecycleQueue implements WorldInternals {
     const state = componentInternals(component);
     const info = state.info;
     if (info === null || !implementsCallback(info.script, kind)) {
+      return;
+    }
+    if (this.#isEditMode && info.script?.runInEditMode !== true) {
       return;
     }
     const name = SCRIPT_CALLBACK_NAMES[kind];
@@ -481,7 +490,8 @@ export class LifecycleQueue implements WorldInternals {
    * @param info - Its class's callback mask and ordering, or `null` when it has none.
    */
   #addToDispatch(script: Script, info: ScriptClassInfo | null): void {
-    if (info === null) {
+    // A script that cannot be called in edit mode stays out of the lists, so it costs no frame work.
+    if (info === null || (this.#isEditMode && !info.runInEditMode)) {
       return;
     }
     for (let kind = FIRST_DISPATCHED_CALLBACK; kind < SCRIPT_CALLBACK_COUNT; kind += 1) {
@@ -498,7 +508,7 @@ export class LifecycleQueue implements WorldInternals {
    * @param info - Its class's callback mask, or `null` when it has none.
    */
   #removeFromDispatch(script: Script, info: ScriptClassInfo | null): void {
-    if (info === null) {
+    if (info === null || (this.#isEditMode && !info.runInEditMode)) {
       return;
     }
     for (let kind = FIRST_DISPATCHED_CALLBACK; kind < SCRIPT_CALLBACK_COUNT; kind += 1) {

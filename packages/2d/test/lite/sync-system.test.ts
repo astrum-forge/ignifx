@@ -90,7 +90,13 @@ async function createRig(settings?: Partial<TwoDSettings>): Promise<Rig> {
   const system = new TwoDSyncSystem(runtime);
   const service = new TwoDService(runtime);
   const tick = (): void => {
-    system.update({ world: created.app.world, time: created.app.time, phase: Phase.PreRender, dt: 1 / 60 });
+    system.update({
+      world: created.app.world,
+      time: created.app.time,
+      phase: Phase.PreRender,
+      dt: 1 / 60,
+      isClockHeld: false,
+    });
   };
   return { runtime, system, service, attached, renderers, tick };
 }
@@ -421,6 +427,7 @@ describe("world teardown", () => {
       time: harness?.app.time as never,
       phase: Phase.PreRender,
       dt: 0,
+      isClockHeld: false,
     };
     rig.system.update(context);
     expect(() => rig.system.onWorldDisposed(context.world)).not.toThrow();

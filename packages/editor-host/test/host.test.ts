@@ -264,6 +264,47 @@ describe("startEditorHost", () => {
     expect(host.app.world.findByName("Top")?.getComponent(Spinner)).toBeInstanceOf(Spinner);
   });
 
+  it("runs the scene view in edit mode, so a plain script gets no update", async () => {
+    const updated: string[] = [];
+    class Mover extends Script {
+      static typeId = "test/Mover";
+      update(): void {
+        updated.push("Mover");
+      }
+    }
+    class Gizmo extends Script {
+      static typeId = "test/Gizmo";
+      static runInEditMode = true;
+      update(): void {
+        updated.push("Gizmo");
+      }
+    }
+    const { host } = await startHost({ scripts: [Mover, Gizmo] });
+    const entity = host.app.world.createEntity("Probe");
+    entity.addComponent(Mover);
+    entity.addComponent(Gizmo);
+    host.app.step(1 / 60);
+
+    expect(host.app.isEditMode).toBe(true);
+    expect(updated).toEqual(["Gizmo"]);
+  });
+
+  it("runs the scene view as a game when editMode is false", async () => {
+    let updates = 0;
+    class Mover extends Script {
+      static typeId = "test/Mover";
+      update(): void {
+        updates += 1;
+      }
+    }
+    const { host } = await startHost({ scripts: [Mover], editMode: false });
+    host.app.world.createEntity("Probe").addComponent(Mover);
+    host.app.step(1 / 60);
+
+    expect(host.app.isEditMode).toBe(false);
+    expect(updates).toBe(1);
+  });
+
   it("closes the channel and rethrows when the app cannot start", async () => {
     const target = new CountingTarget();
     const failing = startEditorHost({

@@ -323,6 +323,8 @@ The component serializes as any other: `definition` and `atlas` are asset refere
   is never read, so two effects with the same seed stay in step whatever the frame rate.
 - **Sizes are metres, not pixels.** `start.size` of `0.5` is half a world unit wide, which is 8
   pixels at `pixelsPerUnit: 16`.
+- **In an edit-mode app (`createApp({ editMode: true })`) the clock stands still.** A system still
+  plays on awake and shows its first frame; `simulate(seconds)` previews it.
 
 ## Deprecated (current window)
 
