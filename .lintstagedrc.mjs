@@ -18,6 +18,7 @@
 const GENERATED = [
   /templates\/[^/]+\/assets\/[^/]+\.atlas\.json$/u,
   /templates\/[^/]+\/assets\/level\.tilemap\.json$/u,
+  /templates\/[^/]+\/assets\/scenes\/[^/]+\.scene\.json$/u,
 ];
 
 /**

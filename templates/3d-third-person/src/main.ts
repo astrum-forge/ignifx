@@ -1,44 +1,38 @@
 // oxlint-disable no-underscore-dangle -- `window.__ignifxReady` is a test hook, and the double
 // underscore is what says it is not part of the game's API. The visual suite reads it by name.
-import {
-  Animator,
-  ANIMATOR_ASSET_TYPE,
-  NavMeshAgent,
-  NavMeshSurface,
-  ThirdPersonCamera,
-  ThirdPersonController,
-  threeD,
-} from "@ignifx/3d";
-import { audio, AUDIO_ASSET_TYPE, AUDIO_BUSES_ASSET_TYPE, AudioListener, AudioSource } from "@ignifx/audio";
-import { Camera, createApp, isIgnifxError, Model, PostProcessStack } from "@ignifx/core";
-import { electron } from "@ignifx/electron";
-import { input, INPUT_ACTIONS_ASSET_TYPE } from "@ignifx/input";
-import { CharacterController, physics } from "@ignifx/physics";
-import { I18N_ASSET_TYPE, ui } from "@ignifx/ui";
+import { NavMeshAgent, ThirdPersonCamera, ThirdPersonController } from "@ignifx/3d";
+import { AUDIO_ASSET_TYPE, AUDIO_BUSES_ASSET_TYPE, AudioSource } from "@ignifx/audio";
+import { createApp, isIgnifxError, Light, PostProcessStack, Script } from "@ignifx/core";
+import { INPUT_ACTIONS_ASSET_TYPE } from "@ignifx/input";
+import { Rigidbody } from "@ignifx/physics";
+import { I18N_ASSET_TYPE } from "@ignifx/ui";
 // Vite virtual modules the plugin serves, typed by `@ignifx/vite-plugin/client`.
 import { manifest } from "virtual:ignifx/manifest";
 import { acceptHotReload, scripts } from "virtual:ignifx/scripts";
 import { installDesktopProbe } from "./desktop-probe.js";
+import { extensions } from "./extensions.js";
 import { installFrameTimeProbe } from "./frame-time-probe.js";
 import { createGameUi, hasTouch } from "./game-ui.js";
 import { installGameplayProbe } from "./gameplay-probe.js";
-import { buildLevel } from "./level.js";
+import { publishLevelMeshes } from "./level-meshes.js";
 import { createGameMenus } from "./menus/game-menus.js";
 import { applySettings, loadInputOverrides, loadSettings } from "./menus/settings-store.js";
+import { bakeNavigation } from "./navigation.js";
 import { createRun } from "./run.js";
-import { Companion } from "./scripts/companion.js";
-import { HeroAnimation } from "./scripts/hero-animation.js";
-import { HudLine } from "./scripts/hud-line.js";
-import { LockHint } from "./scripts/lock-hint.js";
-import { MenuController } from "./scripts/menu-controller.js";
-import { PortraitFov } from "./scripts/portrait-fov.js";
-import { SaveGame } from "./scripts/save-game.js";
-import type { Level } from "./level.js";
+import { scriptType } from "./script-types.js";
 import type { GameMenus } from "./menus/game-menus.js";
 import type { GraphicsHooks } from "./menus/settings-store.js";
-import type { AnimatorAsset } from "@ignifx/3d";
+// Types only: they are erased before the dev server sees this file, so no script module joins the
+// entry's graph and an edit to one hot-patches it instead of reloading the page (`script-types.ts`).
+import type { Beacon } from "./scripts/beacon.js";
+import type { Companion } from "./scripts/companion.js";
+import type { HeroAnimation } from "./scripts/hero-animation.js";
+import type { HudLine } from "./scripts/hud-line.js";
+import type { LockHint } from "./scripts/lock-hint.js";
+import type { MenuController } from "./scripts/menu-controller.js";
+import type { SaveGame } from "./scripts/save-game.js";
 import type { AudioBusesAsset, AudioClip } from "@ignifx/audio";
-import type { App, AssetHandle, Entity, MaterialAsset, ModelAsset } from "@ignifx/core";
+import type { App, AssetHandle, Entity } from "@ignifx/core";
 import type { InputActionsAsset } from "@ignifx/input";
 import type { LocaleAsset } from "@ignifx/ui";
 
@@ -47,21 +41,23 @@ import type { LocaleAsset } from "@ignifx/ui";
  * orbit camera that will not clip through a wall, an `Animator` state machine on a rigged model, a
  * navmesh-driven companion, pushable crates, a loading screen and a pause menu.
  *
- * The shape of this file is the shape of every ignifx game:
+ * The level is data: `assets/scenes/main.scene.json` holds every entity, component and reference,
+ * and this file loads it. The shape of this file is the shape of every ignifx game:
  *
- * 1. `createApp` with the extensions the game uses; `ignifx.config.ts` carries the settings.
- * 2. Load every asset and **await it before `app.start()`**. A load awaited before the loop runs
- *    settles as soon as it finishes; once the loop is running, delivery waits for a `PreUpdate`,
- *    so awaiting after `start()` needs frames to be pumped.
- * 3. Build the world.
- * 4. `app.start()`.
+ * 1. `createApp` with `extensions()` from `./extensions.ts`; `ignifx.config.ts` carries the settings.
+ * 2. Register the scripts from `virtual:ignifx/scripts`, and accept hot reloads.
+ * 3. Load what the scene's scripts read while it loads (input actions, audio buses), then the
+ *    scene itself. **Await it before `app.start()`**: a load awaited before the loop runs settles as
+ *    soon as it finishes; once the loop is running, delivery waits for a `PreUpdate`.
+ * 4. The post-load steps a scene file cannot express — the README's "The level" lists them.
+ * 5. `app.start()`.
  *
  * ## Query flags
  *
- * - `?static=1` builds the scene **without** the controllers, the camera rig and the navigating
- *   companion, places the camera by hand, and stops the clock before the first frame. No fixed step
- *   ever runs, so nothing falls, no clip advances and no path is computed: the frame is exactly
- *   what was authored. It is what the visual golden suite in `tests/visual/` opens.
+ * - `?static=1` loads the same scene, switches every script and the companion's agent off, places
+ *   the camera by hand, and stops the clock before the first frame. No fixed step ever runs, so
+ *   nothing falls, no clip advances and no path is computed: the frame is exactly what was
+ *   authored. It is what the visual golden suite in `tests/visual/` opens.
  * - `?locale=fr` switches `app.i18n` before the menus are built, which is the whole demonstration
  *   that the UI strings live in `assets/strings.i18n.json` and not in this file.
  */
@@ -76,23 +72,14 @@ declare global {
 /** What `window.__ignifxReady` resolves to. */
 type AppStatus = "ready" | "unsupported";
 
+/** The level, by its asset address. */
+const MAIN_SCENE = "scenes/main.scene.json";
+
 /** How many animation frames the scene is given before the image is called settled. */
 const SETTLE_FRAMES = 12;
 
-/** The character's capsule height, in metres. The rig is about 1.45 m tall. */
-const PLAYER_HEIGHT = 1.5;
-
-/** Where the character starts, on the ground. */
-const PLAYER_SPAWN = { x: 0, y: 0, z: -3 } as const;
-
-/** Where the capsule's centre starts: the spawn, lifted by half the capsule's height. */
-const PLAYER_SPAWN_POSE = { x: PLAYER_SPAWN.x, y: PLAYER_HEIGHT / 2, z: PLAYER_SPAWN.z } as const;
-
-/** The camera's vertical field of view on a landscape screen, in degrees. `PortraitFov` widens it. */
-const CAMERA_FOV = 55;
-
-/** Where the companion starts, on the ground. */
-const COMPANION_SPAWN = { x: 5, y: 0, z: 6 } as const;
+/** The tallest agent the navmesh has to clear: the character's capsule height, in metres. */
+const AGENT_HEIGHT = 1.5;
 
 /** The camera pose `?static=1` uses, chosen once so the golden frames the whole courtyard. */
 const STATIC_EYE = { x: 0, y: 3.6, z: -10.5 } as const;
@@ -107,24 +94,13 @@ const STATIC_FOCUS = { x: 0, y: 1, z: -2.5 } as const;
  * overrides are documentation rather than necessity: they say at the call site which loader is
  * meant, and they keep working if the file is ever renamed.
  */
-const MODEL = { type: "model" } as const;
-const MATERIAL = { type: "material" } as const;
-const ANIMATOR = { type: ANIMATOR_ASSET_TYPE } as const;
 const ACTIONS = { type: INPUT_ACTIONS_ASSET_TYPE } as const;
 const BUSES = { type: AUDIO_BUSES_ASSET_TYPE } as const;
 const CLIP = { type: AUDIO_ASSET_TYPE } as const;
 const STRINGS = { type: I18N_ASSET_TYPE } as const;
 
-/** Everything the world is built from. */
-interface Assets {
-  readonly player: AssetHandle<ModelAsset>;
-  readonly companion: AssetHandle<ModelAsset>;
-  readonly stateMachine: AssetHandle<AnimatorAsset>;
-  readonly floor: AssetHandle<MaterialAsset>;
-  readonly wall: AssetHandle<MaterialAsset>;
-  readonly crate: AssetHandle<MaterialAsset>;
-  readonly sky: AssetHandle<MaterialAsset>;
-  readonly emissive: AssetHandle<MaterialAsset>;
+/** The sounds, which stay out of the scene file: each one is optional (see `clipOrNull`). */
+interface Sounds {
   readonly footstep: AssetHandle<AudioClip>;
   readonly jump: AssetHandle<AudioClip>;
   readonly land: AssetHandle<AudioClip>;
@@ -132,6 +108,18 @@ interface Assets {
   readonly uiClick: AssetHandle<AudioClip>;
   readonly uiHover: AssetHandle<AudioClip>;
   readonly ambient: AssetHandle<AudioClip>;
+}
+
+/** The entities of the loaded scene that the code below wires up, found by name. */
+interface Level {
+  /** The character. */
+  readonly player: Entity;
+  /** The companion. */
+  readonly companion: Entity;
+  /** The camera. */
+  readonly eye: Entity;
+  /** The sun, so the settings screen can turn its shadows off. */
+  readonly sun: Light;
 }
 
 function noop(): void {
@@ -185,198 +173,73 @@ function showUnsupported(): void {
 }
 
 /**
- * Builds the character: a capsule that walks, a child that carries the model, and the state
- * machine that poses it.
+ * Finds an entity of the loaded scene by name.
+ *
+ * @param app - The running app.
+ * @param name - The entity's name in `assets/scenes/main.scene.json`.
+ * @returns The entity.
+ * @throws Error when the scene has no entity of that name.
+ */
+function requireEntity(app: App, name: string): Entity {
+  const entity = app.world.findByName(name);
+  if (entity === null) {
+    throw new Error(`${MAIN_SCENE} has no entity named "${name}".`);
+  }
+  return entity;
+}
+
+/**
+ * Finds the entities the code below wires up.
+ *
+ * @param app - The app the scene was loaded in.
+ * @returns The character, the companion, the camera and the sun.
+ */
+function findLevel(app: App): Level {
+  const sun = requireEntity(app, "Sun").getComponent(Light);
+  if (sun === null) {
+    throw new Error(`The Sun in ${MAIN_SCENE} has no Light.`);
+  }
+  return {
+    player: requireEntity(app, "Player"),
+    companion: requireEntity(app, "Companion"),
+    eye: requireEntity(app, "Main Camera"),
+    sun,
+  };
+}
+
+/**
+ * Turns the loaded scene into the still frame the goldens are taken of.
  *
  * @remarks
- * The model hangs off a **child** entity. A `CharacterController`'s capsule is centred on its own
- * entity, and the rig's origin is between its feet, so the two cannot share one transform without
- * the character being buried to the waist.
+ * The scene is the game's, controllers and camera rig included, and loading it has already run
+ * their `awake` — which reads, but writes nothing. What would move the picture is their per-frame
+ * work, so every script and the companion's agent are switched off before the first frame, and the
+ * camera is placed at a vantage chosen to frame the whole courtyard.
  *
- * @param app - The running app.
- * @param assets - The loaded assets.
- * @param isStatic - Whether the scene is being built for a golden.
- * @returns The character's entity.
+ * @param app - The app the scene was loaded in.
+ * @param level - The scene's entities.
  */
-function buildPlayer(app: App, assets: Assets, isStatic: boolean): Entity {
-  const player = app.world.createEntity("Player", {
-    position: { x: PLAYER_SPAWN.x, y: PLAYER_HEIGHT / 2, z: PLAYER_SPAWN.z },
-  });
-  player.layer = app.world.layers.requireIndex("Player");
-  player.addComponent(CharacterController, { height: PLAYER_HEIGHT, radius: 0.35, slopeLimit: 50 });
-
-  const body = app.world.createEntity("Player Body", { parent: player });
-  body.transform.localPosition.set(0, -PLAYER_HEIGHT / 2, 0);
-  body.addComponent(Model, { model: assets.player, castShadows: true, receiveShadows: true });
-  // One `Animator` per **model asset**: `player.glb` and `companion.glb` are two copies of one
-  // generated rig for exactly this reason. Babylon Lite binds an animation group to a single
-  // manager, so two animators over one asset would fight over one pose.
-  body.addComponent(Animator, { animator: assets.stateMachine });
-
-  if (!isStatic) {
-    player.addComponent(ThirdPersonController, {
-      walkSpeed: 3.5,
-      sprintSpeed: 6.5,
-      jumpHeight: 1.1,
-      stepHeight: 0.35,
-      rotateToMovement: true,
-    });
-    // The animation script lives on the same entity as the controller it reads, and reaches the
-    // `Animator` on the child through the entity tree.
-    const animation = player.addComponent(HeroAnimation);
-    animation.footstep = assets.footstep;
+function freezeForGolden(app: App, level: Level): void {
+  // Stopping the clock *before* `start()` means no fixed step ever runs, so nothing falls,
+  // nothing animates and no path is computed: the frame is exactly what was authored. That is
+  // stronger than freezing the scene after a frame or two, and it needs no navmesh at all.
+  app.time.timeScale = 0;
+  for (const script of app.world.components(Script)) {
+    script.enabled = false;
   }
-  return player;
-}
-
-/**
- * Builds the companion: a second copy of the rig, a crowd agent, and the follow script.
- *
- * @param app - The running app.
- * @param assets - The loaded assets.
- * @param player - The entity to follow.
- * @param isStatic - Whether the scene is being built for a golden.
- * @returns The companion's follow script, or `null` in a static scene.
- */
-function buildCompanion(app: App, assets: Assets, player: Entity, isStatic: boolean): Companion | null {
-  const companion = app.world.createEntity("Companion", { position: COMPANION_SPAWN });
-  companion.layer = app.world.layers.requireIndex("Companion");
-  companion.addComponent(Model, { model: assets.companion, castShadows: true, receiveShadows: true });
-  companion.addComponent(Animator, { animator: assets.stateMachine });
-  if (isStatic) {
-    return null;
+  for (const agent of app.world.components(NavMeshAgent)) {
+    agent.enabled = false;
   }
-  companion.addComponent(NavMeshAgent, { speed: 3.6, acceleration: 12, radius: 0.4, stoppingDistance: 0.4 });
-  return companion.addComponent(Companion, { target: player, followDistance: 2.5 });
+  level.eye.transform.position = STATIC_EYE;
+  level.eye.transform.lookAt(STATIC_FOCUS);
 }
 
 /**
- * Builds the camera: the orbit rig in a running game, a fixed vantage in a golden.
+ * Builds the front end and the save file over a level that is already loaded.
  *
  * @param app - The running app.
- * @param player - The entity the rig orbits.
- * @param isStatic - Whether the scene is being built for a golden.
- * @returns The camera's entity.
- */
-function buildCamera(app: App, player: Entity, isStatic: boolean): Entity {
-  const eye = app.world.createEntity("Main Camera");
-  eye.addComponent(Camera, { near: 0.1, far: 200, fov: CAMERA_FOV });
-  // The listener rides the camera, so a spatial sound is panned from where the player is looking.
-  eye.addComponent(AudioListener);
-
-  if (isStatic) {
-    eye.transform.position = STATIC_EYE;
-    eye.transform.lookAt(STATIC_FOCUS);
-    return eye;
-  }
-
-  // `ThirdPersonCamera.awake` reads the entity's current facing as the starting orbit, so the
-  // downward tilt is authored here rather than as a field.
-  eye.transform.localEulerAngles = { x: 12, y: 0, z: 0 };
-  eye.addComponent(ThirdPersonCamera, {
-    target: player,
-    distance: 4.5,
-    shoulderOffset: { x: 0.4, y: 0.55, z: 0 },
-    damping: 0.06,
-    minPitch: -20,
-    maxPitch: 55,
-    // Degrees per **CSS pixel** of mouse motion, so the same figure suits a retina display and a
-    // 1080p monitor and does not move when the settings screen changes the render scale. A full
-    // 180-degree turn is about 1,800 pixels of hand movement, which is roughly one mouse mat.
-    sensitivity: 0.1,
-    // Degrees per second at full deflection, not per frame: a stick is a rate. 150 is a little
-    // under the engine's 180 default because an orbit camera frames a character rather than aims,
-    // and it matches what the old `scale(18)` binding happened to give at 60 fps (18 x 0.12 x 60 =
-    // 130 deg/s) without being a hostage to the frame rate the way that arithmetic was.
-    stickLookSpeed: 150,
-    // The console-style rig: a click on the canvas asks the browser for the pointer, and mouse look
-    // waits until it is granted. Without it the camera swung whenever the cursor crossed the frame
-    // — on the way to a menu button, or on the way out of the page — and stopped dead the moment
-    // the cursor left. Gamepad and touch look are never gated; they have no cursor to lose.
-    // `src/scripts/lock-hint.ts` is what tells the player about the click.
-    lockPointerOnClick: true,
-    // `invertY` is deliberately left at its default: the rig normalises the pitch axis per device,
-    // so a mouse pushed forward and a stick pushed up both aim the camera up already.
-    collisionEnabled: true,
-    collisionRadius: 0.25,
-    // Which hit the boom attributes an entity to. The rig always sweeps *past* its own target's
-    // capsule — the shoulder pivot sits inside it — and Lite's sweep cannot be filtered by layer, so
-    // the companion drifting behind the camera still shortens the boom, as scenery does.
-    collisionLayers: ["Level", "Prop"],
-  });
-  // A phone held upright would otherwise see 27 degrees across, and the character fills the frame.
-  eye.addComponent(PortraitFov, { fov: CAMERA_FOV });
-  return eye;
-}
-
-/**
- * Builds the world.
- *
- * @param app - The running app.
- * @param assets - The loaded assets.
- * @param isStatic - Whether the scene is being built for a golden.
- * @returns The level, the character, the companion's script and the camera.
- */
-function buildWorld(app: App, assets: Assets, isStatic: boolean): World {
-  const level = buildLevel(app, {
-    floor: assets.floor,
-    wall: assets.wall,
-    crate: assets.crate,
-    sky: assets.sky,
-    emissive: assets.emissive,
-  });
-  const player = buildPlayer(app, assets, isStatic);
-  const companion = buildCompanion(app, assets, player, isStatic);
-  const eye = buildCamera(app, player, isStatic);
-  return { level, player, companion, eye };
-}
-
-/**
- * Bakes the navmesh from the level's own geometry.
- *
- * @remarks
- * From `addSource` triangles rather than from the scene's `MeshRenderer`s: the soup is world-space
- * and known before the first frame, so the bake does not depend on anything having been uploaded
- * to the GPU, and it is the same on a machine with no GPU at all. Babylon Lite 1.27.0 has no
- * navmesh serialization, so every bake is a runtime bake (`NavMeshSurface.prebaked` says so and
- * bakes anyway); keeping the source geometry this small is what keeps that cheap.
- *
- * @param app - The running app.
- * @param level - The level whose geometry is baked.
- * @returns A promise that settles once the crowd exists.
- */
-async function bakeNavigation(app: App, level: Level): Promise<void> {
-  const surface = app.world.createEntity("Navigation").addComponent(NavMeshSurface, {
-    bakeOnAwake: false,
-    agentRadius: 0.4,
-    agentHeight: PLAYER_HEIGHT,
-    agentClimb: 0.4,
-    cellSize: 0.2,
-    cellHeight: 0.2,
-    maxAgents: 8,
-  });
-  surface.addSource(level.navPositions, level.navIndices, null);
-  await surface.bake();
-}
-
-/** What {@link buildWorld} produced. */
-interface World {
-  /** The level. */
-  readonly level: Level;
-  /** The character. */
-  readonly player: Entity;
-  /** The companion's follow script, or `null` in a static scene. */
-  readonly companion: Companion | null;
-  /** The camera. */
-  readonly eye: Entity;
-}
-
-/**
- * Builds the front end and the save file over a world that is already standing.
- *
- * @param app - The running app.
- * @param assets - The loaded assets.
- * @param world - What {@link buildWorld} produced.
+ * @param sounds - The sounds that decoded, and the ones that did not.
+ * @param level - The scene's entities.
  * @param hud - The HUD element, or `null` under an app with no DOM overlay.
  * @param hint - The "click to look" line, or `null` on a device with no pointer to lock.
  * @param isBench - Whether the frame-time harness is driving, in which case the game starts
@@ -386,8 +249,8 @@ interface World {
  */
 async function installFrontEnd(
   app: App,
-  assets: Assets,
-  world: World,
+  sounds: Sounds,
+  level: Level,
   hud: HTMLDivElement | null,
   hint: HTMLDivElement | null,
   isBench: boolean,
@@ -400,12 +263,13 @@ async function installFrontEnd(
   // The two effects are switched on by the callback this function returns, **after** `app.start()`.
   // Enabling them earlier makes Lite record the first bloom task against a source that is still the
   // swapchain, and the frame is rejected with `sourceTexture has no color texture`: the offscreen
-  // target the presenter builds does not exist until the scene is registered.
-  const post = world.eye.addComponent(PostProcessStack);
+  // target the presenter builds does not exist until the scene is registered. That ordering is
+  // also why the stack is added here and not authored in the scene file.
+  const post = level.eye.addComponent(PostProcessStack);
   post.bloom.threshold = 0.85;
   post.bloom.weight = 0.35;
 
-  const sun = world.level.sun;
+  const sun = level.sun;
   const graphics: GraphicsHooks = {
     supportsShadows: true,
     supportsPostProcessing: true,
@@ -424,10 +288,14 @@ async function installFrontEnd(
   applySettings(app, settings, graphics);
 
   const host = app.world.createEntity("Game UI");
-  const saveGame = host.addComponent(SaveGame);
+  const saveGame = host.addComponent(scriptType<SaveGame>(app, "third-person/SaveGame"));
   let menus: GameMenus | null = null;
 
-  const run = createRun(world.player, world.level.beacons, PLAYER_SPAWN_POSE, (): void => {
+  const beacons = app.world.components(scriptType<Beacon>(app, "third-person/Beacon"));
+  // Where the run restarts: wherever the scene puts the character.
+  const here = level.player.transform.position;
+  const spawn = { x: here.x, y: here.y, z: here.z };
+  const run = createRun(level.player, beacons, spawn, (): void => {
     if (saveGame.checkpoint()) {
       menus?.toast(app.i18n.t("toast.checkpoint"));
     }
@@ -444,7 +312,7 @@ async function installFrontEnd(
       { action: "Pause", labelKey: "action.pause" },
     ],
     creditKeys: ["credits.engine", "credits.art", "credits.license"],
-    sounds: { click: clipOrNull(assets.uiClick), hover: clipOrNull(assets.uiHover) },
+    sounds: { click: clipOrNull(sounds.uiClick), hover: clipOrNull(sounds.uiHover) },
     onStartNew: (): void => {
       saveGame.restart();
     },
@@ -456,13 +324,13 @@ async function installFrontEnd(
       saveGame.restart();
     },
   });
-  host.addComponent(MenuController).menus = menus;
+  host.addComponent(scriptType<MenuController>(app, "third-person/MenuController")).menus = menus;
 
-  const line = host.addComponent(HudLine);
+  const line = host.addComponent(scriptType<HudLine>(app, "third-person/HudLine"));
   line.element = hud;
-  host.addComponent(LockHint).element = hint;
-  const controller = world.player.requireComponent(ThirdPersonController);
-  const companion = world.companion;
+  host.addComponent(scriptType<LockHint>(app, "third-person/LockHint")).element = hint;
+  const controller = level.player.requireComponent(ThirdPersonController);
+  const companion = level.companion.getComponent(scriptType<Companion>(app, "third-person/Companion"));
   line.render = (): string =>
     app.i18n.t("hud.status", {
       speed: controller.speed.toFixed(1),
@@ -471,9 +339,9 @@ async function installFrontEnd(
 
   // The ambient pad loops on the `Music` bus, which `game.audio.json` marks as not pausable so the
   // menus can duck it rather than silence it.
-  if (clipOrNull(assets.ambient) !== null) {
+  if (clipOrNull(sounds.ambient) !== null) {
     app.world.createEntity("Ambience").addComponent(AudioSource, {
-      clip: assets.ambient,
+      clip: sounds.ambient,
       bus: "Music",
       loop: true,
       playOnAwake: true,
@@ -516,14 +384,7 @@ async function main(): Promise<AppStatus> {
       // module rather than fetching `assets.manifest.json` means the table is in the bundle, so
       // the first asset request needs no round trip.
       assets: { manifest },
-      // Order matters twice: `threeD()` requires `physics()` and `input()` to be registered before
-      // it, and `ui()` finds `@ignifx/input`'s focus flags structurally at registration time.
-      // `electron()` is registered in **both** builds. Without a preload bridge it is inert — one
-      // debug line, and an `app.desktop` that answers `isElectron === false` — so the browser build
-      // is unchanged and the desktop build needs no second entry point. It goes first because it
-      // only requires core, and because `app.storage` should be the file backend before any other
-      // extension reads a setting from it.
-      extensions: [electron(), physics(), input(), audio(), threeD(), ui()],
+      extensions: extensions(),
     });
   } catch (error) {
     // IGX-0701 is the one failure a shipped game must handle itself: the browser has no WebGPU and
@@ -535,12 +396,11 @@ async function main(): Promise<AppStatus> {
     throw error;
   }
 
-  // Every class under `src/scripts/**` with a `static typeId`, from the plugin's virtual registry; in
-
-  // development the registry hot-reloads edited scripts through `app.hotReload` (`"patch"` by default).
-
+  // Every class under `src/scripts/**` with a `static typeId`, from the plugin's virtual registry. It
+  // is the only way code reaches a script: the scene names them by `typeId`, and so does
+  // `scriptType`. In development the registry hot-reloads edited scripts through `app.hotReload`
+  // (`"patch"` by default).
   app.registerComponents(scripts);
-
   acceptHotReload(app);
 
   // The strings come first and alone: every label below is read out of them, and the document is
@@ -569,15 +429,7 @@ async function main(): Promise<AppStatus> {
   // frame-time run should not be measuring DOM layout either.
   app.ui.visible = showOverlay;
 
-  const assets: Assets = {
-    player: app.assets.load<ModelAsset>("player.glb", MODEL),
-    companion: app.assets.load<ModelAsset>("companion.glb", MODEL),
-    stateMachine: app.assets.load<AnimatorAsset>("hero.animator.json", ANIMATOR),
-    floor: app.assets.load<MaterialAsset>("floor.material.json", MATERIAL),
-    wall: app.assets.load<MaterialAsset>("wall.material.json", MATERIAL),
-    crate: app.assets.load<MaterialAsset>("crate.material.json", MATERIAL),
-    sky: app.assets.load<MaterialAsset>("sky.material.json", MATERIAL),
-    emissive: app.assets.load<MaterialAsset>("emissive.material.json", MATERIAL),
+  const sounds: Sounds = {
     footstep: app.assets.load<AudioClip>("footstep.wav", CLIP),
     jump: app.assets.load<AudioClip>("jump.wav", CLIP),
     land: app.assets.load<AudioClip>("land.wav", CLIP),
@@ -589,56 +441,50 @@ async function main(): Promise<AppStatus> {
   const actions = app.assets.load<InputActionsAsset>("game.input.json", ACTIONS);
   const buses = app.assets.load<AudioBusesAsset>("game.audio.json", BUSES);
 
-  await Promise.all([
-    assets.player.promise,
-    assets.companion.promise,
-    assets.stateMachine.promise,
-    assets.floor.promise,
-    assets.wall.promise,
-    assets.crate.promise,
-    assets.sky.promise,
-    assets.emissive.promise,
-    actions.promise,
-    buses.promise,
-  ]);
+  await Promise.all([actions.promise, buses.promise]);
   // The clips are awaited together and separately from the rest: a browser that refuses to decode
   // a sound should cost the game its audio, not its first frame.
   await Promise.all(
-    [assets.footstep, assets.jump, assets.land, assets.pickup, assets.uiClick, assets.uiHover, assets.ambient].map(
-      async (handle: AssetHandle<AudioClip>): Promise<void> => {
-        await handle.promise.catch((error: unknown) => {
-          app.log.warn("a sound could not be decoded: {error}", String(error));
-        });
-      },
-    ),
+    Object.values(sounds).map(async (handle: AssetHandle<AudioClip>): Promise<void> => {
+      await handle.promise.catch((error: unknown) => {
+        app.log.warn("a sound could not be decoded: {error}", String(error));
+      });
+    }),
   );
 
   // Installed here rather than through `input.actions` in `ignifx.config.ts`, so that the maps
-  // exist before the first `update` runs. See the comment in that file.
+  // exist before the scene loads: its controllers resolve their action names in `awake`, which
+  // runs while `loadScene` builds them.
   app.input.loadActions(actions.value);
   await app.audio.buildBuses(buses.value.buses);
 
-  const world = buildWorld(app, assets, isStatic);
+  // The scene names its primitive meshes by address; they are built in code and published first,
+  // because ignifx has no mesh file format (`src/level-meshes.ts`). Then the level itself: the
+  // loader fetches every model, material and animator the file names before it builds an entity.
+  publishLevelMeshes(app);
+  await app.world.loadScene(MAIN_SCENE);
+  const level = findLevel(app);
   let enableEffects: (() => void) | null = null;
 
   if (isStatic) {
-    // Stopping the clock *before* `start()` means no fixed step ever runs, so nothing falls,
-    // nothing animates and no path is computed: the frame is exactly what was authored. That is
-    // stronger than freezing the scene after a frame or two, and it needs no navmesh at all.
-    app.time.timeScale = 0;
+    freezeForGolden(app, level);
   } else {
+    // A clip is a runtime field rather than a scene field (`src/scripts/hero-animation.ts`).
+    level.player.requireComponent(scriptType<HeroAnimation>(app, "third-person/HeroAnimation")).footstep =
+      sounds.footstep;
     // Recast is WebAssembly in a chunk of its own; this is the only thing that fetches it, and the
     // loading screen is still up while it does.
-    await bakeNavigation(app, world.level);
-    enableEffects = await installFrontEnd(app, assets, world, gameUi.hud, gameUi.hint, isBench);
+    await bakeNavigation(app, AGENT_HEIGHT);
+    enableEffects = await installFrontEnd(app, sounds, level, gameUi.hud, gameUi.hint, isBench);
   }
 
   if (isStatic && showOverlay && gameUi.hud !== null) {
     // `?static=1` leaves the front end out, so nothing writes the HUD. `?hud=1` says the overlay is
     // wanted anyway — the gallery capture asks for exactly that — so the opening state is written
     // once: standing still, with the companion as far away as it starts.
-    const player = world.player.transform.position;
-    const distance = Math.hypot(COMPANION_SPAWN.x - player.x, COMPANION_SPAWN.z - player.z);
+    const player = level.player.transform.position;
+    const companion = level.companion.transform.position;
+    const distance = Math.hypot(companion.x - player.x, companion.z - player.z);
     gameUi.hud.textContent = app.i18n.t("hud.status", { speed: "0.0", distance: distance.toFixed(1) });
   }
 
@@ -649,10 +495,13 @@ async function main(): Promise<AppStatus> {
   // `tests/visual/tests/templates.spec.ts` uses the second to read the camera and the character as
   // numbers rather than as pixels. See `src/desktop-probe.ts` and `src/gameplay-probe.ts`.
   if (flags.get("probe") === "1") {
-    installDesktopProbe(app, world.level.crates);
-    const rig = world.eye.getComponent(ThirdPersonCamera);
-    if (rig !== null) {
-      installGameplayProbe(app, world.player, rig);
+    installDesktopProbe(
+      app,
+      app.world.components(Rigidbody).map((body) => body.entity),
+    );
+    const rig = level.eye.getComponent(ThirdPersonCamera);
+    if (rig !== null && !isStatic) {
+      installGameplayProbe(app, level.player, rig);
     }
   }
 

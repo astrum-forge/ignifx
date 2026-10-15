@@ -1,0 +1,3205 @@
+{
+  "format": "ignifx.scene",
+  "formatVersion": 1,
+  "name": "main",
+  "settings": {},
+  "entities": [
+    {
+      "uid": "01M4ZJDVDPWVNM47PKVR5FN4R7",
+      "name": "Sky",
+      "parent": null,
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVDS73WEV8NS755RN0W1",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/sky",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "sky.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": false,
+            "receiveShadows": false,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVDS73WEV8NS755RN0W2",
+      "name": "Sun",
+      "parent": null,
+      "transform": {
+        "position": [
+          -8,
+          14,
+          -6
+        ],
+        "rotation": [
+          0.409273,
+          0.397648,
+          -0.204637,
+          0.795296
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVDXA0869GGK9XYBM1KP",
+          "type": "ignifx/Light",
+          "props": {
+            "type": "directional",
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "intensity": 2.9,
+            "range": 10,
+            "spotAngle": 45,
+            "spotExponent": 2,
+            "groundColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "shadows": {
+              "enabled": true,
+              "technique": "esm",
+              "mapSize": 1024,
+              "bias": 0.00005,
+              "normalBias": 0.02,
+              "darkness": 0,
+              "cascades": 4,
+              "maxDistance": 0
+            },
+            "includeOnly": [],
+            "exclude": []
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVDXA0869GGK9XYBM1KQ",
+      "name": "Fill",
+      "parent": null,
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVDXA0869GGK9XYBM1KS",
+          "type": "ignifx/Light",
+          "props": {
+            "type": "hemispheric",
+            "color": [
+              0.72,
+              0.79,
+              1,
+              1
+            ],
+            "intensity": 0.45,
+            "range": 10,
+            "spotAngle": 45,
+            "spotExponent": 2,
+            "groundColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "shadows": {
+              "enabled": false,
+              "technique": "pcf",
+              "mapSize": 1024,
+              "bias": 0.00005,
+              "normalBias": 0,
+              "darkness": 0,
+              "cascades": 4,
+              "maxDistance": 0
+            },
+            "includeOnly": [],
+            "exclude": []
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVDXA0869GGK9XYBM1KT",
+      "name": "Floor",
+      "parent": null,
+      "layer": "Level",
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVDYM36NEK6CFFHP4BW6",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/floor",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "floor.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": false,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVDZ8G58BY4JYQ8DVPPT",
+          "type": "ignifx/BoxCollider",
+          "props": {
+            "center": [
+              0,
+              -0.5,
+              0
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "layerOverride": "",
+            "size": [
+              24,
+              1,
+              24
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVDZ8G58BY4JYQ8DVPPV",
+      "name": "Wall N0",
+      "parent": null,
+      "layer": "Level",
+      "transform": {
+        "position": [
+          -10,
+          1.5,
+          -12
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE0FTC8EXXW8GNM8F1E",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/wall-x",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "wall.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE0FTC8EXXW8GNM8F1F",
+          "type": "ignifx/BoxCollider",
+          "props": {
+            "center": [
+              0,
+              0,
+              0
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "layerOverride": "",
+            "size": [
+              4,
+              3,
+              0.5
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE0FTC8EXXW8GNM8F1G",
+      "name": "Wall S0",
+      "parent": null,
+      "layer": "Level",
+      "transform": {
+        "position": [
+          -10,
+          1.5,
+          12
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE0FTC8EXXW8GNM8F1J",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/wall-x",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "wall.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE1QQBJ9XABZ3M661VA",
+          "type": "ignifx/BoxCollider",
+          "props": {
+            "center": [
+              0,
+              0,
+              0
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "layerOverride": "",
+            "size": [
+              4,
+              3,
+              0.5
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE1QQBJ9XABZ3M661VB",
+      "name": "Wall W0",
+      "parent": null,
+      "layer": "Level",
+      "transform": {
+        "position": [
+          -12,
+          1.5,
+          -10
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE1QQBJ9XABZ3M661VD",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/wall-z",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "wall.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE1QQBJ9XABZ3M661VE",
+          "type": "ignifx/BoxCollider",
+          "props": {
+            "center": [
+              0,
+              0,
+              0
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "layerOverride": "",
+            "size": [
+              0.5,
+              3,
+              4
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE1QQBJ9XABZ3M661VF",
+      "name": "Wall E0",
+      "parent": null,
+      "layer": "Level",
+      "transform": {
+        "position": [
+          12,
+          1.5,
+          -10
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE1QQBJ9XABZ3M661VH",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/wall-z",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "wall.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE1QQBJ9XABZ3M661VJ",
+          "type": "ignifx/BoxCollider",
+          "props": {
+            "center": [
+              0,
+              0,
+              0
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "layerOverride": "",
+            "size": [
+              0.5,
+              3,
+              4
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE1QQBJ9XABZ3M661VK",
+      "name": "Wall N1",
+      "parent": null,
+      "layer": "Level",
+      "transform": {
+        "position": [
+          -6,
+          1.5,
+          -12
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE1QQBJ9XABZ3M661VN",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/wall-x",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "wall.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE1QQBJ9XABZ3M661VP",
+          "type": "ignifx/BoxCollider",
+          "props": {
+            "center": [
+              0,
+              0,
+              0
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "layerOverride": "",
+            "size": [
+              4,
+              3,
+              0.5
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE1QQBJ9XABZ3M661VQ",
+      "name": "Wall S1",
+      "parent": null,
+      "layer": "Level",
+      "transform": {
+        "position": [
+          -6,
+          1.5,
+          12
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE1QQBJ9XABZ3M661VS",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/wall-x",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "wall.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE1QQBJ9XABZ3M661VT",
+          "type": "ignifx/BoxCollider",
+          "props": {
+            "center": [
+              0,
+              0,
+              0
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "layerOverride": "",
+            "size": [
+              4,
+              3,
+              0.5
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE1QQBJ9XABZ3M661VV",
+      "name": "Wall W1",
+      "parent": null,
+      "layer": "Level",
+      "transform": {
+        "position": [
+          -12,
+          1.5,
+          -6
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE1QQBJ9XABZ3M661VX",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/wall-z",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "wall.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE1QQBJ9XABZ3M661VY",
+          "type": "ignifx/BoxCollider",
+          "props": {
+            "center": [
+              0,
+              0,
+              0
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "layerOverride": "",
+            "size": [
+              0.5,
+              3,
+              4
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE1QQBJ9XABZ3M661VZ",
+      "name": "Wall E1",
+      "parent": null,
+      "layer": "Level",
+      "transform": {
+        "position": [
+          12,
+          1.5,
+          -6
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE1QQBJ9XABZ3M661W1",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/wall-z",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "wall.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE1QQBJ9XABZ3M661W2",
+          "type": "ignifx/BoxCollider",
+          "props": {
+            "center": [
+              0,
+              0,
+              0
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "layerOverride": "",
+            "size": [
+              0.5,
+              3,
+              4
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE1QQBJ9XABZ3M661W3",
+      "name": "Wall N2",
+      "parent": null,
+      "layer": "Level",
+      "transform": {
+        "position": [
+          -2,
+          1.5,
+          -12
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE1QQBJ9XABZ3M661W5",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/wall-x",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "wall.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE1QQBJ9XABZ3M661W6",
+          "type": "ignifx/BoxCollider",
+          "props": {
+            "center": [
+              0,
+              0,
+              0
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "layerOverride": "",
+            "size": [
+              4,
+              3,
+              0.5
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE1QQBJ9XABZ3M661W7",
+      "name": "Wall S2",
+      "parent": null,
+      "layer": "Level",
+      "transform": {
+        "position": [
+          -2,
+          1.5,
+          12
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJF85",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/wall-x",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "wall.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJF86",
+          "type": "ignifx/BoxCollider",
+          "props": {
+            "center": [
+              0,
+              0,
+              0
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "layerOverride": "",
+            "size": [
+              4,
+              3,
+              0.5
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE2FFFG0Y4CCREZJF87",
+      "name": "Wall W2",
+      "parent": null,
+      "layer": "Level",
+      "transform": {
+        "position": [
+          -12,
+          1.5,
+          -2
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJF89",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/wall-z",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "wall.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJF8A",
+          "type": "ignifx/BoxCollider",
+          "props": {
+            "center": [
+              0,
+              0,
+              0
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "layerOverride": "",
+            "size": [
+              0.5,
+              3,
+              4
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE2FFFG0Y4CCREZJF8B",
+      "name": "Wall E2",
+      "parent": null,
+      "layer": "Level",
+      "transform": {
+        "position": [
+          12,
+          1.5,
+          -2
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJF8D",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/wall-z",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "wall.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJF8E",
+          "type": "ignifx/BoxCollider",
+          "props": {
+            "center": [
+              0,
+              0,
+              0
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "layerOverride": "",
+            "size": [
+              0.5,
+              3,
+              4
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE2FFFG0Y4CCREZJF8F",
+      "name": "Wall N3",
+      "parent": null,
+      "layer": "Level",
+      "transform": {
+        "position": [
+          2,
+          1.5,
+          -12
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJF8H",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/wall-x",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "wall.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJF8J",
+          "type": "ignifx/BoxCollider",
+          "props": {
+            "center": [
+              0,
+              0,
+              0
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "layerOverride": "",
+            "size": [
+              4,
+              3,
+              0.5
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE2FFFG0Y4CCREZJF8K",
+      "name": "Wall S3",
+      "parent": null,
+      "layer": "Level",
+      "transform": {
+        "position": [
+          2,
+          1.5,
+          12
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJF8N",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/wall-x",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "wall.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJF8P",
+          "type": "ignifx/BoxCollider",
+          "props": {
+            "center": [
+              0,
+              0,
+              0
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "layerOverride": "",
+            "size": [
+              4,
+              3,
+              0.5
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE2FFFG0Y4CCREZJF8Q",
+      "name": "Wall W3",
+      "parent": null,
+      "layer": "Level",
+      "transform": {
+        "position": [
+          -12,
+          1.5,
+          2
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJF8S",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/wall-z",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "wall.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJF8T",
+          "type": "ignifx/BoxCollider",
+          "props": {
+            "center": [
+              0,
+              0,
+              0
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "layerOverride": "",
+            "size": [
+              0.5,
+              3,
+              4
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE2FFFG0Y4CCREZJF8V",
+      "name": "Wall E3",
+      "parent": null,
+      "layer": "Level",
+      "transform": {
+        "position": [
+          12,
+          1.5,
+          2
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJF8X",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/wall-z",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "wall.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJF8Y",
+          "type": "ignifx/BoxCollider",
+          "props": {
+            "center": [
+              0,
+              0,
+              0
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "layerOverride": "",
+            "size": [
+              0.5,
+              3,
+              4
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE2FFFG0Y4CCREZJF8Z",
+      "name": "Wall N4",
+      "parent": null,
+      "layer": "Level",
+      "transform": {
+        "position": [
+          6,
+          1.5,
+          -12
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJF91",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/wall-x",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "wall.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJF92",
+          "type": "ignifx/BoxCollider",
+          "props": {
+            "center": [
+              0,
+              0,
+              0
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "layerOverride": "",
+            "size": [
+              4,
+              3,
+              0.5
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE2FFFG0Y4CCREZJF93",
+      "name": "Wall S4",
+      "parent": null,
+      "layer": "Level",
+      "transform": {
+        "position": [
+          6,
+          1.5,
+          12
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJF95",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/wall-x",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "wall.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJF96",
+          "type": "ignifx/BoxCollider",
+          "props": {
+            "center": [
+              0,
+              0,
+              0
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "layerOverride": "",
+            "size": [
+              4,
+              3,
+              0.5
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE2FFFG0Y4CCREZJF97",
+      "name": "Wall W4",
+      "parent": null,
+      "layer": "Level",
+      "transform": {
+        "position": [
+          -12,
+          1.5,
+          6
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJF99",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/wall-z",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "wall.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJF9A",
+          "type": "ignifx/BoxCollider",
+          "props": {
+            "center": [
+              0,
+              0,
+              0
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "layerOverride": "",
+            "size": [
+              0.5,
+              3,
+              4
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE2FFFG0Y4CCREZJF9B",
+      "name": "Wall E4",
+      "parent": null,
+      "layer": "Level",
+      "transform": {
+        "position": [
+          12,
+          1.5,
+          6
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJF9D",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/wall-z",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "wall.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJF9E",
+          "type": "ignifx/BoxCollider",
+          "props": {
+            "center": [
+              0,
+              0,
+              0
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "layerOverride": "",
+            "size": [
+              0.5,
+              3,
+              4
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE2FFFG0Y4CCREZJF9F",
+      "name": "Wall N5",
+      "parent": null,
+      "layer": "Level",
+      "transform": {
+        "position": [
+          10,
+          1.5,
+          -12
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJF9H",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/wall-x",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "wall.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJF9J",
+          "type": "ignifx/BoxCollider",
+          "props": {
+            "center": [
+              0,
+              0,
+              0
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "layerOverride": "",
+            "size": [
+              4,
+              3,
+              0.5
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE2FFFG0Y4CCREZJF9K",
+      "name": "Wall S5",
+      "parent": null,
+      "layer": "Level",
+      "transform": {
+        "position": [
+          10,
+          1.5,
+          12
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJF9N",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/wall-x",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "wall.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJF9P",
+          "type": "ignifx/BoxCollider",
+          "props": {
+            "center": [
+              0,
+              0,
+              0
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "layerOverride": "",
+            "size": [
+              4,
+              3,
+              0.5
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE2FFFG0Y4CCREZJF9Q",
+      "name": "Wall W5",
+      "parent": null,
+      "layer": "Level",
+      "transform": {
+        "position": [
+          -12,
+          1.5,
+          10
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJF9S",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/wall-z",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "wall.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJF9T",
+          "type": "ignifx/BoxCollider",
+          "props": {
+            "center": [
+              0,
+              0,
+              0
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "layerOverride": "",
+            "size": [
+              0.5,
+              3,
+              4
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE2FFFG0Y4CCREZJF9V",
+      "name": "Wall E5",
+      "parent": null,
+      "layer": "Level",
+      "transform": {
+        "position": [
+          12,
+          1.5,
+          10
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJF9X",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/wall-z",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "wall.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJF9Y",
+          "type": "ignifx/BoxCollider",
+          "props": {
+            "center": [
+              0,
+              0,
+              0
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "layerOverride": "",
+            "size": [
+              0.5,
+              3,
+              4
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE2FFFG0Y4CCREZJF9Z",
+      "name": "Stub A",
+      "parent": null,
+      "layer": "Level",
+      "transform": {
+        "position": [
+          -2,
+          1.5,
+          3
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJFA1",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/wall-x",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "wall.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJFA2",
+          "type": "ignifx/BoxCollider",
+          "props": {
+            "center": [
+              0,
+              0,
+              0
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "layerOverride": "",
+            "size": [
+              4,
+              3,
+              0.5
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE2FFFG0Y4CCREZJFA3",
+      "name": "Stub B",
+      "parent": null,
+      "layer": "Level",
+      "transform": {
+        "position": [
+          -4,
+          1.5,
+          5
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJFA5",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/wall-z",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "wall.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJFA6",
+          "type": "ignifx/BoxCollider",
+          "props": {
+            "center": [
+              0,
+              0,
+              0
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "layerOverride": "",
+            "size": [
+              0.5,
+              3,
+              4
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE2FFFG0Y4CCREZJFA7",
+      "name": "Crate 0",
+      "parent": null,
+      "layer": "Prop",
+      "transform": {
+        "position": [
+          -4.621889,
+          0.5,
+          -2.59512
+        ],
+        "rotation": [
+          0,
+          0.619137,
+          0,
+          0.785283
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJFA9",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/crate",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "crate.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJFAA",
+          "type": "ignifx/BoxCollider",
+          "props": {
+            "center": [
+              0,
+              0,
+              0
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "layerOverride": "",
+            "size": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJFAB",
+          "type": "ignifx/Rigidbody",
+          "props": {
+            "bodyType": "dynamic",
+            "mass": 12,
+            "startAsleep": false,
+            "freezeRotation": {
+              "x": false,
+              "y": false,
+              "z": false
+            },
+            "interpolation": "interpolate",
+            "collisionEvents": "auto",
+            "kinematicSync": "teleport"
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE2FFFG0Y4CCREZJFAC",
+      "name": "Crate 1",
+      "parent": null,
+      "layer": "Prop",
+      "transform": {
+        "position": [
+          2.865301,
+          0.5,
+          -4.791404
+        ],
+        "rotation": [
+          0,
+          0.290107,
+          0,
+          0.956994
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJFAE",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/crate",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "crate.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE2FFFG0Y4CCREZJFAF",
+          "type": "ignifx/BoxCollider",
+          "props": {
+            "center": [
+              0,
+              0,
+              0
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "layerOverride": "",
+            "size": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        {
+          "uid": "01M4ZJDVE3XQNEDF2HMSQ4NHA5",
+          "type": "ignifx/Rigidbody",
+          "props": {
+            "bodyType": "dynamic",
+            "mass": 12,
+            "startAsleep": false,
+            "freezeRotation": {
+              "x": false,
+              "y": false,
+              "z": false
+            },
+            "interpolation": "interpolate",
+            "collisionEvents": "auto",
+            "kinematicSync": "teleport"
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE3XQNEDF2HMSQ4NHA6",
+      "name": "Crate 2",
+      "parent": null,
+      "layer": "Prop",
+      "transform": {
+        "position": [
+          7.271588,
+          0.5,
+          -3.105695
+        ],
+        "rotation": [
+          0,
+          0.340605,
+          0,
+          0.940206
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE3XQNEDF2HMSQ4NHA8",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/crate",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "crate.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE3XQNEDF2HMSQ4NHA9",
+          "type": "ignifx/BoxCollider",
+          "props": {
+            "center": [
+              0,
+              0,
+              0
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "layerOverride": "",
+            "size": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        {
+          "uid": "01M4ZJDVE3XQNEDF2HMSQ4NHAA",
+          "type": "ignifx/Rigidbody",
+          "props": {
+            "bodyType": "dynamic",
+            "mass": 12,
+            "startAsleep": false,
+            "freezeRotation": {
+              "x": false,
+              "y": false,
+              "z": false
+            },
+            "interpolation": "interpolate",
+            "collisionEvents": "auto",
+            "kinematicSync": "teleport"
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE3XQNEDF2HMSQ4NHAB",
+      "name": "Crate 3",
+      "parent": null,
+      "layer": "Prop",
+      "transform": {
+        "position": [
+          5.976811,
+          0.5,
+          4.592929
+        ],
+        "rotation": [
+          0,
+          0.38175,
+          0,
+          0.924266
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE3XQNEDF2HMSQ4NHAD",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/crate",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "crate.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE3XQNEDF2HMSQ4NHAE",
+          "type": "ignifx/BoxCollider",
+          "props": {
+            "center": [
+              0,
+              0,
+              0
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "layerOverride": "",
+            "size": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        {
+          "uid": "01M4ZJDVE3XQNEDF2HMSQ4NHAF",
+          "type": "ignifx/Rigidbody",
+          "props": {
+            "bodyType": "dynamic",
+            "mass": 12,
+            "startAsleep": false,
+            "freezeRotation": {
+              "x": false,
+              "y": false,
+              "z": false
+            },
+            "interpolation": "interpolate",
+            "collisionEvents": "auto",
+            "kinematicSync": "teleport"
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE3XQNEDF2HMSQ4NHAG",
+      "name": "Crate 4",
+      "parent": null,
+      "layer": "Prop",
+      "transform": {
+        "position": [
+          2.783632,
+          0.5,
+          7.671748
+        ],
+        "rotation": [
+          0,
+          0.598187,
+          0,
+          0.801357
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE3XQNEDF2HMSQ4NHAJ",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/crate",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "crate.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE3XQNEDF2HMSQ4NHAK",
+          "type": "ignifx/BoxCollider",
+          "props": {
+            "center": [
+              0,
+              0,
+              0
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "layerOverride": "",
+            "size": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        {
+          "uid": "01M4ZJDVE3XQNEDF2HMSQ4NHAM",
+          "type": "ignifx/Rigidbody",
+          "props": {
+            "bodyType": "dynamic",
+            "mass": 12,
+            "startAsleep": false,
+            "freezeRotation": {
+              "x": false,
+              "y": false,
+              "z": false
+            },
+            "interpolation": "interpolate",
+            "collisionEvents": "auto",
+            "kinematicSync": "teleport"
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE3XQNEDF2HMSQ4NHAN",
+      "name": "Crate 5",
+      "parent": null,
+      "layer": "Prop",
+      "transform": {
+        "position": [
+          -0.86183,
+          0.5,
+          -5.657839
+        ],
+        "rotation": [
+          0,
+          0.146841,
+          0,
+          0.98916
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE3XQNEDF2HMSQ4NHAQ",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/crate",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "crate.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE3XQNEDF2HMSQ4NHAR",
+          "type": "ignifx/BoxCollider",
+          "props": {
+            "center": [
+              0,
+              0,
+              0
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "layerOverride": "",
+            "size": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        {
+          "uid": "01M4ZJDVE3XQNEDF2HMSQ4NHAS",
+          "type": "ignifx/Rigidbody",
+          "props": {
+            "bodyType": "dynamic",
+            "mass": 12,
+            "startAsleep": false,
+            "freezeRotation": {
+              "x": false,
+              "y": false,
+              "z": false
+            },
+            "interpolation": "interpolate",
+            "collisionEvents": "auto",
+            "kinematicSync": "teleport"
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE3XQNEDF2HMSQ4NHAT",
+      "name": "Beacon 0",
+      "parent": null,
+      "layer": "Prop",
+      "transform": {
+        "position": [
+          -9.5,
+          0.125,
+          3
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE3XQNEDF2HMSQ4NHAW",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/beacon-base",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "wall.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE5ES6KBYMDWJ015RPY",
+          "type": "third-person/Beacon",
+          "props": {
+            "radius": 1.6,
+            "player": {
+              "$entity": "01M4ZJDVE66RYMFPXK2P3CV0KV"
+            },
+            "column": {
+              "$component": "01M4ZJDVE5ES6KBYMDWJ015RPX"
+            },
+            "unlitColumn": {
+              "$component": "01M4ZJDVE4JDMT1WSRTB0ZM0Q9"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE3XQNEDF2HMSQ4NHAX",
+      "name": "Beacon 0 Column",
+      "parent": "01M4ZJDVE3XQNEDF2HMSQ4NHAT",
+      "transform": {
+        "position": [
+          0,
+          1.325,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE4JDMT1WSRTB0ZM0Q9",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/beacon-column",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "wall.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE5ES6KBYMDWJ015RPV",
+      "name": "Beacon 0 Light",
+      "parent": "01M4ZJDVE3XQNEDF2HMSQ4NHAT",
+      "transform": {
+        "position": [
+          0,
+          1.325,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE5ES6KBYMDWJ015RPX",
+          "type": "ignifx/MeshRenderer",
+          "enabled": false,
+          "props": {
+            "mesh": {
+              "$asset": "meshes/beacon-column",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "emissive.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": false,
+            "receiveShadows": false,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE5ES6KBYMDWJ015RPZ",
+      "name": "Beacon 1",
+      "parent": null,
+      "layer": "Prop",
+      "transform": {
+        "position": [
+          9.5,
+          0.125,
+          3
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE5ES6KBYMDWJ015RQ1",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/beacon-base",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "wall.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE66RYMFPXK2P3CV0KG",
+          "type": "third-person/Beacon",
+          "props": {
+            "radius": 1.6,
+            "player": {
+              "$entity": "01M4ZJDVE66RYMFPXK2P3CV0KV"
+            },
+            "column": {
+              "$component": "01M4ZJDVE66RYMFPXK2P3CV0KF"
+            },
+            "unlitColumn": {
+              "$component": "01M4ZJDVE5ES6KBYMDWJ015RQ4"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE5ES6KBYMDWJ015RQ2",
+      "name": "Beacon 1 Column",
+      "parent": "01M4ZJDVE5ES6KBYMDWJ015RPZ",
+      "transform": {
+        "position": [
+          0,
+          1.325,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE5ES6KBYMDWJ015RQ4",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/beacon-column",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "wall.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE5ES6KBYMDWJ015RQ5",
+      "name": "Beacon 1 Light",
+      "parent": "01M4ZJDVE5ES6KBYMDWJ015RPZ",
+      "transform": {
+        "position": [
+          0,
+          1.325,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE66RYMFPXK2P3CV0KF",
+          "type": "ignifx/MeshRenderer",
+          "enabled": false,
+          "props": {
+            "mesh": {
+              "$asset": "meshes/beacon-column",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "emissive.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": false,
+            "receiveShadows": false,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE66RYMFPXK2P3CV0KH",
+      "name": "Beacon 2",
+      "parent": null,
+      "layer": "Prop",
+      "transform": {
+        "position": [
+          0,
+          0.125,
+          10
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE66RYMFPXK2P3CV0KK",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/beacon-base",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "wall.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE66RYMFPXK2P3CV0KT",
+          "type": "third-person/Beacon",
+          "props": {
+            "radius": 1.6,
+            "player": {
+              "$entity": "01M4ZJDVE66RYMFPXK2P3CV0KV"
+            },
+            "column": {
+              "$component": "01M4ZJDVE66RYMFPXK2P3CV0KS"
+            },
+            "unlitColumn": {
+              "$component": "01M4ZJDVE66RYMFPXK2P3CV0KP"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE66RYMFPXK2P3CV0KM",
+      "name": "Beacon 2 Column",
+      "parent": "01M4ZJDVE66RYMFPXK2P3CV0KH",
+      "transform": {
+        "position": [
+          0,
+          1.325,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE66RYMFPXK2P3CV0KP",
+          "type": "ignifx/MeshRenderer",
+          "props": {
+            "mesh": {
+              "$asset": "meshes/beacon-column",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "wall.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": true,
+            "receiveShadows": true,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE66RYMFPXK2P3CV0KQ",
+      "name": "Beacon 2 Light",
+      "parent": "01M4ZJDVE66RYMFPXK2P3CV0KH",
+      "transform": {
+        "position": [
+          0,
+          1.325,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE66RYMFPXK2P3CV0KS",
+          "type": "ignifx/MeshRenderer",
+          "enabled": false,
+          "props": {
+            "mesh": {
+              "$asset": "meshes/beacon-column",
+              "type": "mesh"
+            },
+            "materials": [
+              {
+                "$asset": "emissive.material.json",
+                "type": "material"
+              }
+            ],
+            "castShadows": false,
+            "receiveShadows": false,
+            "renderOrder": 0,
+            "pickable": true
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE66RYMFPXK2P3CV0KV",
+      "name": "Player",
+      "parent": null,
+      "layer": "Player",
+      "transform": {
+        "position": [
+          0,
+          0.75,
+          -3
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE66RYMFPXK2P3CV0KX",
+          "type": "ignifx/CharacterController",
+          "props": {
+            "radius": 0.35,
+            "height": 1.5,
+            "center": [
+              0,
+              0,
+              0
+            ],
+            "slopeLimit": 50,
+            "skinWidth": 0.05,
+            "pushStrength": 1,
+            "interpolation": "interpolate"
+          }
+        },
+        {
+          "uid": "01M4ZJDVE716K8EEYNYN5BX9RR",
+          "type": "ignifx/ThirdPersonController",
+          "props": {
+            "moveAction": "Move",
+            "jumpAction": "Jump",
+            "sprintAction": "Sprint",
+            "walkSpeed": 3.5,
+            "sprintSpeed": 6.5,
+            "turnSpeed": 720,
+            "gravity": 20,
+            "jumpHeight": 1.1,
+            "coyoteTime": 0.12,
+            "jumpBufferTime": 0.12,
+            "airControl": 0.4,
+            "stepHeight": 0.35,
+            "slideSpeed": 6,
+            "rotateToMovement": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE716K8EEYNYN5BX9RS",
+          "type": "third-person/HeroAnimation",
+          "props": {
+            "strideMetres": 1.9,
+            "walkThreshold": 0.6
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE66RYMFPXK2P3CV0KY",
+      "name": "Player Body",
+      "parent": "01M4ZJDVE66RYMFPXK2P3CV0KV",
+      "transform": {
+        "position": [
+          0,
+          -0.75,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE66RYMFPXK2P3CV0M0",
+          "type": "ignifx/Model",
+          "props": {
+            "model": {
+              "$asset": "player.glb",
+              "type": "model"
+            },
+            "materialOverrides": {},
+            "castShadows": true,
+            "receiveShadows": true,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE716K8EEYNYN5BX9RQ",
+          "type": "ignifx/Animator",
+          "props": {
+            "animator": {
+              "$asset": "hero.animator.json",
+              "type": "animator"
+            },
+            "defaultLayer": "",
+            "speed": 1,
+            "updateWhenPaused": false,
+            "applyOnAwake": true
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE716K8EEYNYN5BX9RT",
+      "name": "Companion",
+      "parent": null,
+      "layer": "Companion",
+      "transform": {
+        "position": [
+          5,
+          0,
+          6
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE716K8EEYNYN5BX9RW",
+          "type": "ignifx/Model",
+          "props": {
+            "model": {
+              "$asset": "companion.glb",
+              "type": "model"
+            },
+            "materialOverrides": {},
+            "castShadows": true,
+            "receiveShadows": true,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE716K8EEYNYN5BX9RX",
+          "type": "ignifx/Animator",
+          "props": {
+            "animator": {
+              "$asset": "hero.animator.json",
+              "type": "animator"
+            },
+            "defaultLayer": "",
+            "speed": 1,
+            "updateWhenPaused": false,
+            "applyOnAwake": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE8EMWFZY8E5PJKH576",
+          "type": "ignifx/NavMeshAgent",
+          "props": {
+            "surface": null,
+            "speed": 3.6,
+            "acceleration": 12,
+            "radius": 0.4,
+            "height": 2,
+            "stoppingDistance": 0.4,
+            "separationWeight": 0,
+            "updateRotation": true,
+            "updatePosition": true
+          }
+        },
+        {
+          "uid": "01M4ZJDVE8EMWFZY8E5PJKH577",
+          "type": "third-person/Companion",
+          "props": {
+            "target": {
+              "$entity": "01M4ZJDVE66RYMFPXK2P3CV0KV"
+            },
+            "followDistance": 2.5,
+            "repathDistance": 0.75,
+            "repathSeconds": 0.2
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M4ZJDVE8EMWFZY8E5PJKH578",
+      "name": "Main Camera",
+      "parent": null,
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0.104528,
+          0,
+          0,
+          0.994522
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M4ZJDVE8EMWFZY8E5PJKH57A",
+          "type": "ignifx/Camera",
+          "props": {
+            "projection": "perspective",
+            "fov": 55,
+            "orthographicSize": 5,
+            "near": 0.1,
+            "far": 200,
+            "viewport": {
+              "x": 0,
+              "y": 0,
+              "width": 1,
+              "height": 1
+            },
+            "clearColor": null,
+            "priority": 0
+          }
+        },
+        {
+          "uid": "01M4ZJDVE8EMWFZY8E5PJKH57B",
+          "type": "ignifx/AudioListener",
+          "props": {}
+        },
+        {
+          "uid": "01M4ZJDVE9HGMJGXJ9STSV0F3C",
+          "type": "ignifx/ThirdPersonCamera",
+          "props": {
+            "target": {
+              "$entity": "01M4ZJDVE66RYMFPXK2P3CV0KV"
+            },
+            "lookAction": "Look",
+            "distance": 4.5,
+            "minDistance": 0.5,
+            "minPitch": -20,
+            "maxPitch": 55,
+            "sensitivity": 0.1,
+            "stickLookSpeed": 150,
+            "lockPointerOnClick": true,
+            "damping": 0.06,
+            "shoulderOffset": [
+              0.4,
+              0.55,
+              0
+            ],
+            "invertY": false,
+            "collisionEnabled": true,
+            "collisionRadius": 0.25,
+            "collisionLayers": [
+              "Level",
+              "Prop"
+            ],
+            "collisionRecoverySpeed": 6
+          }
+        },
+        {
+          "uid": "01M4ZJDVE9HGMJGXJ9STSV0F3D",
+          "type": "third-person/PortraitFov",
+          "props": {
+            "fov": 55,
+            "maxFov": 90
+          }
+        }
+      ]
+    }
+  ]
+}

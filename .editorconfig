@@ -14,3 +14,8 @@ trim_trailing_whitespace = false
 
 [*.{yml,yaml}]
 indent_size = 2
+
+# Written by core's `stringifySceneFile`, which ends without a newline; adding one would break the
+# byte-for-byte round trip `tests/templates` checks.
+[templates/*/assets/scenes/*.scene.json]
+insert_final_newline = false

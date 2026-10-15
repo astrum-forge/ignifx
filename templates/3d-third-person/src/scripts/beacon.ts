@@ -1,6 +1,6 @@
-import { f32, Script } from "@ignifx/core";
+import { componentRef, entityRef, f32, MeshRenderer, Script } from "@ignifx/core";
 import type { AudioClip } from "@ignifx/audio";
-import type { AssetHandle, Entity, MeshRenderer, ScriptCallbacks } from "@ignifx/core";
+import type { AssetHandle, Entity, ScriptCallbacks } from "@ignifx/core";
 
 /**
  * A beacon: the emissive marker the player lights by walking up to it.
@@ -22,25 +22,25 @@ export class Beacon
   extends Script.define({
     /** How close the player has to come, in metres. */
     radius: f32(1.6),
+    /** The entity whose distance is measured. */
+    player: entityRef<Entity>(),
+    /** The emissive column, drawn only while the beacon is lit. */
+    column: componentRef(MeshRenderer),
+    /** The dark column, drawn only while the beacon is dark. */
+    unlitColumn: componentRef(MeshRenderer),
   })
   implements ScriptCallbacks
 {
   static typeId = "third-person/Beacon";
 
-  /** The entity whose distance is measured. Assigned when the beacon is built. */
-  player: Entity | null = null;
-
-  /** The clip to play when the beacon lights. Assigned when the beacon is built. */
+  /**
+   * The clip to play when the beacon lights. Not a schema field: a scene file that named a sound
+   * would fail to load in a browser that cannot decode it, and every sound here is optional.
+   */
   clip: AssetHandle<AudioClip> | null = null;
 
-  /** Called the first time the player lights this beacon. Assigned when the beacon is built. */
+  /** Called the first time the player lights this beacon. Assigned by `src/run.ts`. */
   onLit: ((beacon: Beacon) => void) | null = null;
-
-  /** The emissive column, shown only while the beacon is lit. Assigned when the beacon is built. */
-  column: MeshRenderer | null = null;
-
-  /** The dark column, shown only while the beacon is dark. Assigned when the beacon is built. */
-  unlitColumn: MeshRenderer | null = null;
 
   /** Whether the beacon has been lit. */
   #lit = false;
@@ -70,8 +70,8 @@ export class Beacon
    */
   setLit(lit: boolean): void {
     this.#lit = lit;
-    // Exactly one of the two columns is drawn; see `src/level.ts` for why it is two renderers and
-    // not one renderer with a swapped material.
+    // Exactly one of the two columns is drawn; see `README.md` ("The level") for why it is two
+    // renderers and not one renderer with a swapped material.
     if (this.column !== null) {
       this.column.enabled = lit;
     }

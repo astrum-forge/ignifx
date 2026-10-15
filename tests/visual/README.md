@@ -75,10 +75,12 @@ ever runs: no body falls, no clip advances, no navmesh bakes, and the camera nev
 target. The frame is the authored scene rather than the scene a few hundred milliseconds after it
 loaded.
 
-The two 3D templates go further still. A `?static=1` scene there leaves the character controllers
-and the camera rig **out** of the world altogether and places the camera by hand, because a rig that
-damps towards its target makes the picture a function of how many frames elapsed before the
-screenshot; and it sets `app.ui.visible = false`, so a golden never depends on how the runner draws
+The two 3D templates go further still. A `?static=1` scene there keeps the character controllers
+and the camera rig from running — `3d-first-person` leaves them out of the world, and
+`3d-third-person`, whose scene file carries them, switches every script off before the first frame —
+and places the camera by hand, because a rig that damps towards its target makes the picture a
+function of how many frames elapsed before the screenshot; and it sets `app.ui.visible = false`, so a
+golden never depends on how the runner draws
 a system font. Everything else — the seeded crate scatter, the character at its spawn, the animator
 at t = 0 — is the scene the game builds.
 
