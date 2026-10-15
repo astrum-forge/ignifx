@@ -22,6 +22,8 @@ export const FIXED_STEP = 1 / 60;
 export interface ThreeDAppOptions {
   /** Project settings. */
   readonly settings?: SettingsInput;
+  /** Builds the app in edit mode (ADR-0028). */
+  readonly editMode?: boolean;
   /** Overrides for the `threeD` settings section. */
   readonly threeD?: ThreeDOptions;
   /** A fake `fetch`, for the suites that load an asset. */
@@ -65,6 +67,7 @@ export async function createThreeDApp(options?: ThreeDAppOptions): Promise<Three
     logSink: sink,
     extensions: [...(havok === null ? [] : [physics({ havok })]), input(), threeD(options?.threeD)],
     ...(options?.settings === undefined ? {} : { settings: options.settings }),
+    ...(options?.editMode === undefined ? {} : { editMode: options.editMode }),
     ...(options?.fetch === undefined ? {} : { fetch: options.fetch }),
     mode: "development",
   });
