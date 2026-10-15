@@ -54,6 +54,8 @@ export const ErrorRange = {
   terrain: "16",
   /** Particle systems, 3D and 2D. */
   particles: "17",
+  /** The editor host (`@ignifx/editor-host`) and its Vite plugin. */
+  editorHost: "18",
 } as const;
 
 /**

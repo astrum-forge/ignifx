@@ -30863,6 +30863,12 @@ Components, scripts, and their registration.
 
 Devtools, logging, and diagnostics.
 
+##### editorHost
+
+> `readonly` **editorHost**: `"18"` = `"18"`
+
+The editor host (`@ignifx/editor-host`) and its Vite plugin.
+
 ##### extensions
 
 > `readonly` **extensions**: `"04"` = `"04"`
