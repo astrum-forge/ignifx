@@ -42,7 +42,7 @@ export function preparePedestals(app: App): Interactable[] {
     }
     const shared = renderer.materials[0];
     const glow = entity.children.map((child) => child.getComponent(MeshRenderer)).find((found) => found !== null);
-    if (shared === undefined || shared === null || glow === undefined || glow === null) {
+    if (shared === undefined || shared === null || glow === undefined) {
       throw new Error(`The pedestal "${entity.name}" needs a material and a child renderer for its cap.`);
     }
     const material = shared.value.clone(app);

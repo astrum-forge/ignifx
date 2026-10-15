@@ -2,8 +2,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { serializeScene, stringifySceneFile, validateSceneFile } from "@ignifx/core";
 import { afterEach, describe, expect, it } from "vitest";
-import { entitiesInTreeOrder, field, named } from "./headless-app.js";
 import { createFirstPersonApp, FIRST_PERSON } from "./first-person-app.js";
+import { entitiesInTreeOrder, field, named } from "./headless-app.js";
 import type { App, Entity, MemorySink } from "@ignifx/core";
 
 /**
