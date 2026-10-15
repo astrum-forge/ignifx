@@ -1,5 +1,28 @@
 # @ignifx/physics-2d
 
+## 0.10.0
+
+### Minor Changes
+
+- 0d32a0c: `TilemapCollider2D` reads the `Tilemap` on its own entity, so a scene file that holds both components has tile collision with no code after `loadScene`, and tile edits reach physics at the next fixed step. Assign `collisionData` only to use other geometry; assigning `null` goes back to the tilemap.
+
+### Patch Changes
+
+- 6d46060: In an edit-mode app, physics does not step or interpolate, so bodies stay where they were authored and a transform the editor moves is not overwritten.
+- Updated dependencies [4c6e200]
+- Updated dependencies [f5dac24]
+- Updated dependencies [37cf52e]
+- Updated dependencies [612ba87]
+- Updated dependencies [159ea03]
+- Updated dependencies [dc768d6]
+- Updated dependencies [738f68d]
+- Updated dependencies [254b63c]
+- Updated dependencies [fd0afe5]
+- Updated dependencies [3a8e47b]
+- Updated dependencies [3c02fb1]
+  - @ignifx/core@0.10.0
+  - @ignifx/2d@0.10.0
+
 ## 0.9.0
 
 ### Patch Changes

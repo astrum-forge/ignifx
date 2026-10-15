@@ -1,5 +1,32 @@
 # @ignifx/2d
 
+## 0.10.0
+
+### Minor Changes
+
+- f5dac24: - Add `SpriteAnimator.sample(clip, frameIndex)`: it shows one frame of a clip without playing it and fires no event; `resume()` plays on from there.
+  - In an edit-mode app, sprite clips and animated tiles do not play.
+- 254b63c: - Add `SpriteRenderer.frameName`, a saved field that names the frame a sprite draws, so a scene file can choose a still sprite's frame. Setting `frame`, as `SpriteAnimator` does, still takes over until `frameName` is set again.
+  - An unknown `frameName` reports `IGX-1106` once and draws the first frame.
+  - A `#frame:` address in `SpriteRenderer.sprite` now reports `IGX-1118` once and draws nothing, instead of throwing in the 2D sync every frame. Name the atlas in `sprite` and the frame in `frameName`.
+- 3a8e47b: ### Breaking
+  
+  A tilemap's objects layer no longer spawns entities when a scene loads (ADR-0030). `app.twoD.registerTileObjectFactory`, `unregisterTileObjectFactory`, `spawnTilemapObjects`, `TileObjectFactory` and `TileObjectContext` are removed, and `IGX-1110` is retired. Move the objects into your scene file once with `ignifx import tilemap <map.tilemap.json> <scene.scene.json>`, or, for a level built in code, create the entities from `tilemap.definition.objects` after the map has loaded.
+
+### Patch Changes
+
+- fd0afe5: - `create-ignifx` now pins a new project's `@ignifx/*` dependencies to its own release (for example `^0.9.1`) instead of `^0.0.0`, which installed the empty 0.0.0 packages.
+  - `VERSION`, `app.version`, each extension's `version` and the `engineVersion` written into saved scenes now report the installed release instead of `"0.0.0"` (or `"0.2.1"`). `VERSION` is typed `string` instead of a fixed literal.
+- 3c02fb1: `Tilemap.collisionData` read before the map finished loading no longer stays empty: the next read after the load builds the collision surface.
+- Updated dependencies [4c6e200]
+- Updated dependencies [37cf52e]
+- Updated dependencies [612ba87]
+- Updated dependencies [159ea03]
+- Updated dependencies [dc768d6]
+- Updated dependencies [738f68d]
+- Updated dependencies [fd0afe5]
+  - @ignifx/core@0.10.0
+
 ## 0.9.0
 
 ### Minor Changes

@@ -1,5 +1,22 @@
 # @ignifx/terrain
 
+## 0.10.0
+
+### Patch Changes
+
+- fd0afe5: - `create-ignifx` now pins a new project's `@ignifx/*` dependencies to its own release (for example `^0.9.1`) instead of `^0.0.0`, which installed the empty 0.0.0 packages.
+  - `VERSION`, `app.version`, each extension's `version` and the `engineVersion` written into saved scenes now report the installed release instead of `"0.0.0"` (or `"0.2.1"`). `VERSION` is typed `string` instead of a fixed literal.
+- 6e30980: - Terrain LOD and culling now see camera changes in the same frame. `TERRAIN_LOD_ORDER` moves from `10` to `1010`, after core's render sync at `900`; before, a new main camera or a changed `fov`, `near` or `far` took effect one frame late.
+  - Correct the `LOD_ORDER` docs: core's render sync runs at order `900`, not `0`.
+- Updated dependencies [4c6e200]
+- Updated dependencies [37cf52e]
+- Updated dependencies [612ba87]
+- Updated dependencies [159ea03]
+- Updated dependencies [dc768d6]
+- Updated dependencies [738f68d]
+- Updated dependencies [fd0afe5]
+  - @ignifx/core@0.10.0
+
 ## 0.9.0
 
 ### Minor Changes
