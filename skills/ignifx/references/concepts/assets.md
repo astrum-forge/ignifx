@@ -29,7 +29,8 @@ address ──▶ manifest ──▶ url ──▶ loader ──▶ value
   the packages installed **directly** in `node_modules`, so a project that reaches an extension only
   through the `ignifx` umbrella has to list that extension in its own `package.json`.
 - In-code assets live at a `memory:` address instead. `MeshAsset.box(app)` and
-  `createMaterialAsset(app, …)` publish through `Assets.register`, so they name **no file**.
+  `createMaterialAsset(app, …)` publish through `Assets.register`, so they name **no file**. A
+  primitive that a scene file has to name goes in a `.mesh.json` file instead (§5).
 
 ## 2. `AssetHandle<T>`
 
@@ -145,10 +146,43 @@ progress propagate), `reportProgress(fraction)`, `meta` (the `.meta.json` sideca
 `lite.engine`.
 
 The core extension registers: `texture` (`.png .jpg .jpeg .webp .ktx2 .basis`), `shader` (`.wgsl`), `model`
-(`.glb .gltf`), `scene` (`.scene.json .prefab.json`), `material` (`.material.json`), `environment`
-(`.env .hdr .dds`), `font` (`.ttf .otf`), and the generic `jsonAssetLoader`, `textAssetLoader`, and
-`binaryAssetLoader`. There is **no mesh file format**: geometry is either a primitive built in code
-or part of a `ModelAsset`, so a `"mesh"` address fails with `IGX-0504`.
+(`.glb .gltf`), `scene` (`.scene.json .prefab.json`), `material` (`.material.json`), `mesh`
+(`.mesh.json`), `environment` (`.env .hdr .dds`), `font` (`.ttf .otf`), and the generic
+`jsonAssetLoader`, `textAssetLoader`, and `binaryAssetLoader`.
+
+### Mesh files
+
+A `.mesh.json` names one primitive and the options its `MeshAsset` factory takes, so a scene file
+can reference it by address with no code publishing it first:
+
+```json
+{ "format": "ignifx.mesh", "formatVersion": 1, "primitive": "box", "options": { "size": 1 } }
+```
+
+`primitive` is `box`, `sphere`, `plane`, `ground`, `cylinder`, `capsule`, or `torus`; `options` is
+that factory's options (`BoxMeshOptions`, …), and omitted ones take its defaults. A scene names it
+like any asset, `"mesh": { "$asset": "meshes/crate.mesh.json" }`, and saving the scene writes the
+address back. An unknown primitive, an option the primitive does not take, or a bad value is
+`IGX-0507`. glTF meshes still arrive inside a `ModelAsset`; raw vertex data stays
+`MeshAsset.fromData`.
+
+```ts run
+import { createApp } from "@ignifx/core";
+import type { FetchLike, MeshAsset } from "@ignifx/core";
+
+const crate = { format: "ignifx.mesh", formatVersion: 1, primitive: "box", options: { size: 1 } };
+// Serve the one file; a real Node app maps addresses to files on disk (§3).
+const fetchCrate: FetchLike = async () => new Response(JSON.stringify(crate));
+
+const app = await createApp({ headless: true, fetch: fetchCrate });
+const box = await app.assets.loadAsync<MeshAsset>("meshes/crate.mesh.json");
+app.log.info("loaded", box.value.name); // "meshes/crate.mesh.json"
+box.release();
+app.dispose();
+```
+
+To validate mesh files at build time, pass core's schema to the Vite plugin:
+`ignifx({ schemas: { formats: { [MESH_FILE_FORMAT]: meshFileJsonSchema() } } })`.
 
 An extension adds its own with `ctx.registerAssetLoader(loader)` and `ctx.registerAssetType(type)`;
 a second loader for one type is `IGX-0506`.
@@ -169,6 +203,7 @@ already the new one when the handler runs, so a component re-reads it rather tha
 | `IGX-0504` | No loader claims that type or extension               |
 | `IGX-0505` | The fetch or the loader failed (an `AssetLoadError`)  |
 | `IGX-0506` | Two loaders registered for one type                   |
+| `IGX-0507` | A `.mesh.json` has a bad primitive or option          |
 
 `AssetLoadError` extends `IgnifxError` and carries `address` and `url`. Failures raised inside the
 loading path are also reported through `app.onError` with `source: "asset"`.

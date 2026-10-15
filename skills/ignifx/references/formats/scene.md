@@ -57,13 +57,12 @@ generates. `SCENE_FILE_FORMAT` is `"ignifx.scene"` and `SCENE_FORMAT_VERSION` is
 | `components[].props`      | Values per the component's schema; omitted props take schema defaults                             |
 | `settings`                | Scene-level values systems interpret; only the first loaded scene's settings apply                |
 
-A prefab cannot state a primitive: `MeshAsset.box(app)` lives at a `memory:` address no file can
-name. Leave `MeshRenderer.mesh` out of the file and assign it from a script's `awake` (the
-`PreRender` sync coalesces the topology change), or ship the geometry as a `.glb` and use `Model`.
-A level that shares primitives can also publish each one at a plain address before it loads —
-`app.assets.register(box.value, { type: "mesh", address: "meshes/crate" })` — and name
-`{ "$asset": "meshes/crate", "type": "mesh" }`; such a file then loads only in an app that ran that
-step first (`templates/3d-third-person/src/level-meshes.ts`).
+A scene or prefab names a primitive through a `.mesh.json` file:
+`"mesh": { "$asset": "meshes/crate.mesh.json" }` (`../concepts/assets.md` §5). `MeshAsset.box(app)`
+lives at a `memory:` address no file can name, so a mesh built in code is assigned from a script's
+`awake` instead (the `PreRender` sync coalesces the topology change), or published at a plain
+address before the scene loads — `app.assets.register(box.value, { type: "mesh", address:
+"meshes/crate" })` — in which case the file loads only in an app that ran that step first.
 
 ## Value encoding
 
