@@ -1,4 +1,4 @@
-// A copy of `packages/editor-protocol/src/connect.ts` from `astrum-forge/ignifx-editor` (protocol 0.2).
+// A copy of `packages/editor-protocol/src/connect.ts` from `astrum-forge/ignifx-editor` (protocol 0.3).
 // Below this comment it is byte-identical to that file, but for the link rule in `./index.ts`.
 /**
  * The window message that hands a view its `MessagePort`. It is the only message that travels

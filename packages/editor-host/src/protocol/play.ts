@@ -1,4 +1,4 @@
-// A copy of `packages/editor-protocol/src/play.ts` from `astrum-forge/ignifx-editor` (protocol 0.2).
+// A copy of `packages/editor-protocol/src/play.ts` from `astrum-forge/ignifx-editor` (protocol 0.3).
 // Below this comment it is byte-identical to that file, but for the link rule in `./index.ts`.
 /**
  * The play view's controls: the methods the editor calls on the project's own game page after the

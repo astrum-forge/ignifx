@@ -1,4 +1,4 @@
-// A copy of `packages/editor-protocol/src/heartbeat.ts` from `astrum-forge/ignifx-editor` (protocol 0.2).
+// A copy of `packages/editor-protocol/src/heartbeat.ts` from `astrum-forge/ignifx-editor` (protocol 0.3).
 // Below this comment it is byte-identical to that file, but for the link rule in `./index.ts`.
 /**
  * The heartbeat: how the editor tells a live view from a crashed or hung one. Chromium reports

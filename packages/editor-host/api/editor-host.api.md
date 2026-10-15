@@ -13,7 +13,72 @@ import { SceneInstance } from '@ignifx/core';
 import { SettingsInput } from '@ignifx/core';
 
 // @public
+export interface AddComponentOp {
+    readonly component: SceneFileComponent;
+    readonly entity: string;
+    readonly index?: number;
+    readonly op: "addComponent";
+}
+
+// @public
+export interface ApplyOpFailure {
+    readonly code: ApplyOpFailureCode;
+    readonly diagnostic?: string;
+    readonly index: number;
+    readonly message: string;
+}
+
+// @public
+export const ApplyOpFailureCode: {
+    readonly invalidOp: "invalidOp";
+    readonly unknownEntity: "unknownEntity";
+    readonly unknownComponent: "unknownComponent";
+    readonly duplicateUid: "duplicateUid";
+    readonly invalidParent: "invalidParent";
+    readonly invalidIndex: "invalidIndex";
+    readonly invalidValue: "invalidValue";
+    readonly invalidPath: "invalidPath";
+    readonly notAnInstance: "notAnInstance";
+    readonly unknownOverride: "unknownOverride";
+    readonly unsupportedOp: "unsupportedOp";
+    readonly engineError: "engineError";
+};
+
+// @public
+export type ApplyOpFailureCode = (typeof ApplyOpFailureCode)[keyof typeof ApplyOpFailureCode];
+
+// @public
+export interface ApplyOpsParams {
+    readonly commandId: string;
+    readonly commandName: string;
+    readonly ops: readonly SceneOp[];
+}
+
+// @public
+export type ApplyOpsResponse = RpcSuccessResponse<ApplyOpsResult>;
+
+// @public
+export interface ApplyOpsResult {
+    readonly applied: number;
+    readonly failures: readonly ApplyOpFailure[];
+}
+
+// @public
+export interface CreateEntityOp {
+    readonly descendants?: readonly SceneFileEntity[];
+    readonly entity: SceneFileEntity;
+    readonly index?: number;
+    readonly op: "createEntity";
+}
+
+// @public
 export const DEFAULT_HEARTBEAT_INTERVAL_MS = 1e3;
+
+// @public
+export interface DestroyEntityOp {
+    readonly entity: string;
+    readonly op: "destroyEntity";
+}
 
 // @public
 export const EDITOR_CONNECT_MESSAGE_TYPE = "ignifx-editor/connect";
@@ -82,6 +147,61 @@ export interface EditorPlayControlsOptions {
 }
 
 // @public
+export type EntityField = keyof EntityFieldValues;
+
+// @public
+export interface EntityFieldValues {
+    readonly active: boolean;
+    readonly layer: string;
+    readonly name: string;
+    readonly static: boolean;
+    readonly tags: readonly string[];
+}
+
+// @public
+export interface EntitySelection {
+    readonly entities: readonly string[];
+}
+
+// @public
+export interface FrameParams {
+    readonly entities: readonly string[] | "all";
+}
+
+// @public
+export type GetSchemasResponse = RpcSuccessResponse<SchemaSet>;
+
+// @public
+export type GizmoDragMode = Exclude<GizmoMode, typeof GizmoMode.none>;
+
+// @public
+export const GizmoMode: {
+    readonly translate: "translate";
+    readonly rotate: "rotate";
+    readonly scale: "scale";
+    readonly none: "none";
+};
+
+// @public
+export type GizmoMode = (typeof GizmoMode)[keyof typeof GizmoMode];
+
+// @public
+export interface GizmoSnap {
+    readonly rotate: number;
+    readonly scale: number;
+    readonly translate: number;
+}
+
+// @public
+export const GizmoSpace: {
+    readonly local: "local";
+    readonly world: "world";
+};
+
+// @public
+export type GizmoSpace = (typeof GizmoSpace)[keyof typeof GizmoSpace];
+
+// @public
 export const HandshakeMethod: {
     readonly hello: "hello";
     readonly ping: "ping";
@@ -108,10 +228,21 @@ export interface HelloRequest extends RpcRequest<typeof HandshakeMethod.hello, H
 export const HostCapability: {
     readonly heartbeat: "heartbeat";
     readonly playControls: "playControls";
+    readonly gizmos: "gizmos";
+    readonly screenshot: "screenshot";
+    readonly viewMode2d: "viewMode2d";
+    readonly pick2d: "pick2d";
 };
 
 // @public
 export type HostCapability = (typeof HostCapability)[keyof typeof HostCapability];
+
+// @public
+export interface HostErrorParams {
+    readonly code: string | null;
+    readonly data?: JsonValue;
+    readonly message: string;
+}
 
 // @public
 export const HostKind: {
@@ -131,19 +262,238 @@ export const HostNotification: {
 export type HostNotification = (typeof HostNotification)[keyof typeof HostNotification];
 
 // @public
+export interface HotReloadedParams {
+    readonly report: HotReloadReport;
+}
+
+// @public
+export interface HotReloadError {
+    readonly code: string | null;
+    readonly message: string;
+}
+
+// @public
+export interface HotReloadReport {
+    readonly durationMs: number;
+    readonly errors: readonly HotReloadError[];
+    readonly instances: number;
+    readonly kind: "patch" | "recreate" | "scene";
+    readonly typeIds: readonly string[];
+}
+
+// @public
+export interface IncompatibleProtocolData {
+    readonly engineVersion: string;
+    readonly host: ProtocolVersion;
+}
+
+// @public
+export interface InstantiateOp {
+    readonly entity: string;
+    readonly index?: number;
+    readonly instance: SceneFileInstance;
+    readonly name: string;
+    readonly op: "instantiate";
+    readonly parent: string | null;
+    readonly transform: SceneFileTransform;
+}
+
+// @public
+export interface InvalidSceneFileData {
+    readonly issues: readonly SceneFileIssue[];
+}
+
+// @public
+export function isApplyOpsParams(value: unknown): value is ApplyOpsParams;
+
+// @public
+export function isApplyOpsResult(value: unknown): value is ApplyOpsResult;
+
+// @public
 export function isEditorConnectMessage(value: unknown): value is EditorConnectMessage;
 
 // @beta
 export function isEditorOrigin(value: string): boolean;
 
 // @public
+export function isEntitySelection(value: unknown): value is EntitySelection;
+
+// @public
+export function isFrameParams(value: unknown): value is FrameParams;
+
+// @public
+export function isHostErrorParams(value: unknown): value is HostErrorParams;
+
+// @public
+export function isHotReloadedParams(value: unknown): value is HotReloadedParams;
+
+// @public
+export function isIncompatibleProtocolData(value: unknown): value is IncompatibleProtocolData;
+
+// @public
+export function isInvalidSceneFileData(value: unknown): value is InvalidSceneFileData;
+
+// @public
+export function isJsonObject(value: unknown): value is JsonObject;
+
+// @public
+export function isJsonValue(value: unknown): value is JsonValue;
+
+// @public
+export function isLogParams(value: unknown): value is LogParams;
+
+// @public
+export function isOpenSceneParams(value: unknown): value is OpenSceneParams;
+
+// @public
+export function isOpenSceneResult(value: unknown): value is OpenSceneResult;
+
+// @public
+export function isPickParams(value: unknown): value is PickParams;
+
+// @public
+export function isPickResult(value: unknown): value is PickResult;
+
+// @public
 export function isPlayState(value: unknown): value is PlayState;
+
+// @public
+export function isProtocolVersion(value: unknown): value is ProtocolVersion;
+
+// @public
+export function isReadBackParams(value: unknown): value is ReadBackParams;
+
+// @public
+export function isReadBackResult(value: unknown): value is ReadBackResult;
+
+// @public
+export function isReadyResult(value: unknown): value is ReadyResult;
 
 // @public
 export function isRpcMessage(value: unknown): value is RpcMessage;
 
 // @public
+export function isSceneFile(value: unknown): value is SceneFile;
+
+// @public
+export function isSceneFileAssetRef(value: unknown): value is SceneFileAssetRef;
+
+// @public
+export function isSceneFileComponent(value: unknown): value is SceneFileComponent;
+
+// @public
+export function isSceneFileEntity(value: unknown): value is SceneFileEntity;
+
+// @public
+export function isSceneFileInstance(value: unknown): value is SceneFileInstance;
+
+// @public
+export function isSceneFileOverride(value: unknown): value is SceneFileOverride;
+
+// @public
+export function isSceneFileTransform(value: unknown): value is SceneFileTransform;
+
+// @public
+export function isSceneIssue(value: unknown): value is SceneIssue;
+
+// @public
+export function isSceneOp(value: unknown): value is SceneOp;
+
+// @public
+export function isSceneOpenedParams(value: unknown): value is SceneOpenedParams;
+
+// @public
+export function isSchemaSet(value: unknown): value is SchemaSet;
+
+// @public
+export function isScreenshotParams(value: unknown): value is ScreenshotParams;
+
+// @public
+export function isScreenshotResult(value: unknown): value is ScreenshotResult;
+
+// @public
+export function isSetGizmoParams(value: unknown): value is SetGizmoParams;
+
+// @public
+export function isSetViewModeParams(value: unknown): value is SetViewModeParams;
+
+// @public
+export function isTransformDraggedParams(value: unknown): value is TransformDraggedParams;
+
+// @public
+export function isTransformDraggingParams(value: unknown): value is TransformDraggingParams;
+
+// @public
 export const JSON_RPC_VERSION = "2.0";
+
+// @public
+export type JsonArray = readonly JsonValue[];
+
+// @public
+export type JsonObject = {
+    readonly [key: string]: JsonValue;
+};
+
+// @public
+export type JsonPath = readonly (string | number)[];
+
+// @public
+export type JsonValue = string | number | boolean | null | JsonArray | JsonObject;
+
+// @public
+export type LogLevel = "debug" | "info" | "warn" | "error";
+
+// @public
+export interface LogParams {
+    readonly level: LogLevel;
+    readonly message: string;
+    readonly scope: string | null;
+    readonly timeMs: number;
+}
+
+// @public
+export type NullResponse = RpcSuccessResponse<null>;
+
+// @public
+export interface OpenSceneParams {
+    readonly address: string | null;
+    readonly file: SceneFile;
+}
+
+// @public
+export type OpenSceneResponse = RpcSuccessResponse<OpenSceneResult>;
+
+// @public
+export interface OpenSceneResult {
+    readonly entityCount: number;
+    readonly warnings: readonly SceneIssue[];
+}
+
+// @public
+export interface PickParams {
+    readonly unit: PickUnit;
+    readonly x: number;
+    readonly y: number;
+}
+
+// @public
+export type PickResponse = RpcSuccessResponse<PickResult>;
+
+// @public
+export interface PickResult {
+    readonly distance: number | null;
+    readonly entity: string | null;
+    readonly point: Vec3 | null;
+}
+
+// @public
+export const PickUnit: {
+    readonly css: "css";
+    readonly backing: "backing";
+};
+
+// @public
+export type PickUnit = (typeof PickUnit)[keyof typeof PickUnit];
 
 // @public
 export type PingRequest = RpcRequest<typeof HandshakeMethod.ping, never>;
@@ -188,6 +538,22 @@ export interface ProtocolVersion {
 export function protocolVersionIsCompatible(a: ProtocolVersion, b: ProtocolVersion): boolean;
 
 // @public
+export interface ReadBackParams {
+    readonly entities?: readonly string[];
+}
+
+// @public
+export type ReadBackResponse = RpcSuccessResponse<ReadBackResult>;
+
+// @public
+export interface ReadBackResult {
+    readonly entities: readonly SceneFileEntity[];
+    readonly issues: readonly SceneIssue[];
+    readonly missing: readonly string[];
+    readonly settings: JsonObject | null;
+}
+
+// @public
 export type ReadyResponse = RpcSuccessResponse<ReadyResult>;
 
 // @public
@@ -196,6 +562,36 @@ export interface ReadyResult {
     readonly engineVersion: string;
     readonly hostKind: HostKind;
     readonly protocol: ProtocolVersion;
+}
+
+// @public
+export interface RemoveComponentOp {
+    readonly component: string;
+    readonly op: "removeComponent";
+}
+
+// @public
+export interface RemoveOverrideOp {
+    readonly added?: string;
+    readonly entity: string;
+    readonly op: "removeOverride";
+    readonly overrideOp?: "replace" | "remove" | "add";
+    readonly path: string;
+}
+
+// @public
+export interface ReorderOp {
+    readonly entity: string;
+    readonly index: number;
+    readonly op: "reorder";
+}
+
+// @public
+export interface ReparentOp {
+    readonly entity: string;
+    readonly index?: number;
+    readonly op: "reparent";
+    readonly parent: string | null;
 }
 
 // @public
@@ -214,6 +610,7 @@ export const RpcErrorCode: {
     readonly internalError: -32_603;
     readonly incompatibleProtocol: -32_000;
     readonly notReady: -32_001;
+    readonly noScene: -32_002;
 };
 
 // @public
@@ -240,11 +637,21 @@ export interface RpcNotification<M extends string = string, P = unknown> {
 }
 
 // @public
+export interface RpcNotificationWithParams<M extends string, P> extends RpcNotification<M, P> {
+    readonly params: P;
+}
+
+// @public
 export interface RpcRequest<M extends string = string, P = unknown> {
     readonly id: RpcId;
     readonly jsonrpc: typeof JSON_RPC_VERSION;
     readonly method: M;
     readonly params?: P;
+}
+
+// @public
+export interface RpcRequestWithParams<M extends string, P> extends RpcRequest<M, P> {
+    readonly params: P;
 }
 
 // @public
@@ -257,6 +664,253 @@ export interface RpcSuccessResponse<R = unknown> {
     readonly result: R;
 }
 
+// @public
+export interface SceneFile {
+    readonly engineVersion?: string;
+    readonly entities: readonly SceneFileEntity[];
+    readonly format: string;
+    readonly formatVersion: number;
+    readonly name: string;
+    readonly settings?: JsonObject;
+}
+
+// @public
+export interface SceneFileAssetRef {
+    readonly $asset: string;
+    readonly type?: string;
+}
+
+// @public
+export interface SceneFileComponent {
+    readonly enabled?: boolean;
+    readonly props?: JsonObject;
+    readonly schemaVersion?: number;
+    readonly type: string;
+    readonly uid: string;
+}
+
+// @public
+export interface SceneFileEntity {
+    readonly active?: boolean;
+    readonly components?: readonly SceneFileComponent[];
+    readonly instance?: SceneFileInstance;
+    readonly layer?: string;
+    readonly name: string;
+    readonly parent: string | null;
+    readonly static?: boolean;
+    readonly tags?: readonly string[];
+    readonly transform: SceneFileTransform;
+    readonly uid: string;
+}
+
+// @public
+export interface SceneFileInstance {
+    readonly hash?: string;
+    readonly overrides?: readonly SceneFileOverride[];
+    readonly scene: SceneFileAssetRef;
+}
+
+// @public
+export interface SceneFileIssue {
+    readonly message: string;
+    readonly path: string;
+}
+
+// @public
+export interface SceneFileOverride {
+    readonly op?: "replace" | "remove" | "add";
+    readonly path: string;
+    readonly value?: JsonValue;
+}
+
+// @public
+export interface SceneFileTransform {
+    readonly position: readonly [number, number, number];
+    readonly rotation: readonly [number, number, number, number];
+    readonly scale: readonly [number, number, number];
+}
+
+// @public
+export type SceneHostNotification = RpcNotificationWithParams<typeof SceneNotification.sceneOpened, SceneOpenedParams> | RpcNotificationWithParams<typeof SceneNotification.schemasChanged, SchemaSet> | RpcNotificationWithParams<typeof SceneNotification.hotReloaded, HotReloadedParams> | RpcNotificationWithParams<typeof SceneNotification.selectionChanged, EntitySelection> | RpcNotificationWithParams<typeof SceneNotification.transformDragging, TransformDraggingParams> | RpcNotificationWithParams<typeof SceneNotification.transformDragged, TransformDraggedParams> | RpcNotificationWithParams<typeof SceneNotification.hostError, HostErrorParams> | RpcNotificationWithParams<typeof SceneNotification.log, LogParams>;
+
+// @public
+export interface SceneIssue {
+    readonly code: string;
+    readonly message: string;
+}
+
+// @public
+export const SceneMethod: {
+    readonly openScene: "openScene";
+    readonly closeScene: "closeScene";
+    readonly applyOps: "applyOps";
+    readonly readBack: "readBack";
+    readonly select: "select";
+    readonly setGizmo: "setGizmo";
+    readonly frame: "frame";
+    readonly pick: "pick";
+    readonly screenshot: "screenshot";
+    readonly getSchemas: "getSchemas";
+    readonly setViewMode: "setViewMode";
+};
+
+// @public
+export type SceneMethod = (typeof SceneMethod)[keyof typeof SceneMethod];
+
+// @public
+export const SceneNotification: {
+    readonly sceneOpened: "sceneOpened";
+    readonly schemasChanged: "schemasChanged";
+    readonly hotReloaded: "hotReloaded";
+    readonly selectionChanged: "selectionChanged";
+    readonly transformDragging: "transformDragging";
+    readonly transformDragged: "transformDragged";
+    readonly hostError: "hostError";
+    readonly log: "log";
+};
+
+// @public
+export type SceneNotification = (typeof SceneNotification)[keyof typeof SceneNotification];
+
+// @public
+export type SceneOp = CreateEntityOp | DestroyEntityOp | ReparentOp | ReorderOp | SetEntityFieldOp | SetTransformOp | AddComponentOp | RemoveComponentOp | SetPropOp | SetSceneSettingOp | InstantiateOp | SetOverrideOp | RemoveOverrideOp;
+
+// @public
+export interface SceneOpenedParams {
+    readonly address: string | null;
+    readonly entityCount: number;
+    readonly name: string;
+    readonly warnings: readonly SceneIssue[];
+}
+
+// @public
+export const SceneOpKind: {
+    readonly createEntity: "createEntity";
+    readonly destroyEntity: "destroyEntity";
+    readonly reparent: "reparent";
+    readonly reorder: "reorder";
+    readonly setEntityField: "setEntityField";
+    readonly setTransform: "setTransform";
+    readonly addComponent: "addComponent";
+    readonly removeComponent: "removeComponent";
+    readonly setProp: "setProp";
+    readonly setSceneSetting: "setSceneSetting";
+    readonly instantiate: "instantiate";
+    readonly setOverride: "setOverride";
+    readonly removeOverride: "removeOverride";
+};
+
+// @public
+export type SceneOpKind = (typeof SceneOpKind)[keyof typeof SceneOpKind];
+
+// @public
+export type SceneRequest = RpcRequestWithParams<typeof SceneMethod.openScene, OpenSceneParams> | RpcRequest<typeof SceneMethod.closeScene, never> | RpcRequestWithParams<typeof SceneMethod.applyOps, ApplyOpsParams> | RpcRequestWithParams<typeof SceneMethod.readBack, ReadBackParams> | RpcRequestWithParams<typeof SceneMethod.select, EntitySelection> | RpcRequestWithParams<typeof SceneMethod.setGizmo, SetGizmoParams> | RpcRequestWithParams<typeof SceneMethod.frame, FrameParams> | RpcRequestWithParams<typeof SceneMethod.pick, PickParams> | RpcRequestWithParams<typeof SceneMethod.screenshot, ScreenshotParams> | RpcRequest<typeof SceneMethod.getSchemas, never> | RpcRequestWithParams<typeof SceneMethod.setViewMode, SetViewModeParams>;
+
+// @public
+export interface SchemaDescription {
+    readonly description?: string;
+    readonly fields: Readonly<Record<string, SchemaFieldDescription>>;
+    readonly format: string;
+    readonly propsSchema?: JsonObject;
+    readonly title: string;
+}
+
+// @public
+export interface SchemaFieldDescription {
+    readonly default?: JsonValue;
+    readonly description?: string;
+    readonly kind: string;
+}
+
+// @public
+export interface SchemaSet {
+    readonly schemas: Readonly<Record<string, SchemaDescription>>;
+}
+
+// @public
+export const SCREENSHOT_MAX_SIZE = 2048;
+
+// @public
+export const ScreenshotFormat: {
+    readonly png: "png";
+    readonly jpeg: "jpeg";
+};
+
+// @public
+export type ScreenshotFormat = (typeof ScreenshotFormat)[keyof typeof ScreenshotFormat];
+
+// @public
+export interface ScreenshotParams {
+    readonly format: ScreenshotFormat;
+    readonly height?: number;
+    readonly quality?: number;
+    readonly width?: number;
+}
+
+// @public
+export type ScreenshotResponse = RpcSuccessResponse<ScreenshotResult>;
+
+// @public
+export interface ScreenshotResult {
+    readonly dataUrl: string;
+    readonly height: number;
+    readonly width: number;
+}
+
+// @public
+export type SelectResponse = RpcSuccessResponse<EntitySelection>;
+
+// @public
+export type SetEntityFieldOp = { readonly [F in EntityField]: {
+        readonly op: "setEntityField";
+        readonly entity: string;
+        readonly field: F;
+        readonly value: EntityFieldValues[F];
+    }; }[EntityField];
+
+// @public
+export interface SetGizmoParams {
+    readonly mode: GizmoMode;
+    readonly snap: GizmoSnap | null;
+    readonly space: GizmoSpace;
+}
+
+// @public
+export interface SetOverrideOp {
+    readonly entity: string;
+    readonly index?: number;
+    readonly op: "setOverride";
+    readonly override: SceneFileOverride;
+}
+
+// @public
+export interface SetPropOp {
+    readonly component: string;
+    readonly op: "setProp";
+    readonly path: JsonPath;
+    readonly value?: JsonValue;
+}
+
+// @public
+export interface SetSceneSettingOp {
+    readonly op: "setSceneSetting";
+    readonly path: JsonPath;
+    readonly value?: JsonValue;
+}
+
+// @public
+export interface SetTransformOp {
+    readonly after: SceneFileTransform;
+    readonly before?: SceneFileTransform;
+    readonly entity: string;
+    readonly op: "setTransform";
+}
+
+// @public
+export interface SetViewModeParams {
+    readonly mode: ViewMode;
+}
+
 // @beta
 export function startEditorHost(options: EditorHostOptions): Promise<EditorHost>;
 
@@ -267,6 +921,36 @@ export function startEditorPlayControls(app: App, options: EditorPlayControlsOpt
 export interface StepParams {
     readonly deltaSeconds?: number;
 }
+
+// @public
+export const TRANSFORM_DRAGGING_INTERVAL_MS = 50;
+
+// @public
+export interface TransformDraggedParams {
+    readonly after: SceneFileTransform;
+    readonly before: SceneFileTransform;
+    readonly entity: string;
+    readonly mode: GizmoDragMode;
+}
+
+// @public
+export interface TransformDraggingParams {
+    readonly after: SceneFileTransform;
+    readonly entity: string;
+    readonly mode: GizmoDragMode;
+}
+
+// @public
+export type Vec3 = readonly [number, number, number];
+
+// @public
+export const ViewMode: {
+    readonly threeD: "3d";
+    readonly twoD: "2d";
+};
+
+// @public
+export type ViewMode = (typeof ViewMode)[keyof typeof ViewMode];
 
 // (No @packageDocumentation comment for this package)
 

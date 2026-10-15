@@ -110,12 +110,12 @@ describe("startEditorHost", () => {
 
   it("refuses a hello from another protocol minor while the major is 0", async () => {
     const { target } = await startHost({ engineVersion: PLUGIN_VERSION });
-    const response = await editor(target).hello({ major: 0, minor: 1 });
+    const response = await editor(target).hello({ major: 0, minor: 2 });
 
     expect(response["error"]).toEqual({
       code: RpcErrorCode.incompatibleProtocol,
       message:
-        "The editor speaks protocol 0.1 and this host speaks 0.2. Update the editor, or the project's " +
+        "The editor speaks protocol 0.2 and this host speaks 0.3. Update the editor, or the project's " +
         "@ignifx packages, so the protocol versions match.",
       data: { host: PROTOCOL_VERSION, engineVersion: REPORTED_VERSION },
     });

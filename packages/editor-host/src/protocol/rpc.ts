@@ -1,4 +1,4 @@
-// A copy of `packages/editor-protocol/src/rpc.ts` from `astrum-forge/ignifx-editor` (protocol 0.2).
+// A copy of `packages/editor-protocol/src/rpc.ts` from `astrum-forge/ignifx-editor` (protocol 0.3).
 // Below this comment it is byte-identical to that file, but for the link rule in `./index.ts`.
 /**
  * JSON-RPC 2.0 envelopes (https://www.jsonrpc.org/specification) shared by every editor channel:
@@ -41,8 +41,13 @@ export const RpcErrorCode = {
   internalError: -32_603,
   /** The peers' protocol versions are incompatible (see `protocolVersionIsCompatible`). */
   incompatibleProtocol: -32_000,
-  /** The peer has not finished its handshake and cannot answer this method yet. */
+  /**
+   * The peer cannot answer this method yet: it has not finished its handshake, or (a scene host)
+   * its app has not started.
+   */
   notReady: -32_001,
+  /** A scene method that needs an open scene was called while none is open (`SceneMethod`). */
+  noScene: -32_002,
 } as const;
 
 /**

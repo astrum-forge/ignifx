@@ -5,16 +5,16 @@ import * as vite from "../src/vite.js";
 
 /**
  * The protocol mirror and the two entries' surfaces. `src/protocol/` copies `@ignifx/editor-protocol`
- * 0.2; these values are the wire format, so a change here is a protocol change.
+ * 0.3; these values are the wire format, so a change here is a protocol change.
  */
 
 describe("the protocol mirror", () => {
-  it("speaks protocol 0.2 and, before 1.0, agrees on the major and the minor", () => {
-    expect(page.PROTOCOL_VERSION).toEqual({ major: 0, minor: 2 });
-    expect(page.protocolVersionIsCompatible({ major: 0, minor: 2 }, { major: 0, minor: 2 })).toBe(true);
-    expect(page.protocolVersionIsCompatible({ major: 0, minor: 2 }, { major: 0, minor: 1 })).toBe(false);
-    expect(page.protocolVersionIsCompatible({ major: 0, minor: 1 }, { major: 0, minor: 2 })).toBe(false);
-    expect(page.protocolVersionIsCompatible({ major: 0, minor: 2 }, { major: 1, minor: 2 })).toBe(false);
+  it("speaks protocol 0.3 and, before 1.0, agrees on the major and the minor", () => {
+    expect(page.PROTOCOL_VERSION).toEqual({ major: 0, minor: 3 });
+    expect(page.protocolVersionIsCompatible({ major: 0, minor: 3 }, { major: 0, minor: 3 })).toBe(true);
+    expect(page.protocolVersionIsCompatible({ major: 0, minor: 3 }, { major: 0, minor: 2 })).toBe(false);
+    expect(page.protocolVersionIsCompatible({ major: 0, minor: 2 }, { major: 0, minor: 3 })).toBe(false);
+    expect(page.protocolVersionIsCompatible({ major: 0, minor: 3 }, { major: 1, minor: 3 })).toBe(false);
   });
 
   it("lets minors differ from 1.0", () => {
@@ -32,6 +32,7 @@ describe("the protocol mirror", () => {
       internalError: -32_603,
       incompatibleProtocol: -32_000,
       notReady: -32_001,
+      noScene: -32_002,
     });
     expect(page.HandshakeMethod).toEqual({ hello: "hello", ping: "ping" });
     expect(page.HostKind).toEqual({ scene: "scene", play: "play" });
