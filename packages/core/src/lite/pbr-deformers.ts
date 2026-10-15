@@ -7,25 +7,26 @@ import type { SceneContext } from "@babylonjs/lite";
  *
  * Everything here is `@internal`.
  *
- * ## Why the render layer has to know (verified against `@babylonjs/lite@1.27.0`)
+ * ## Why the render layer has to know (verified against `@babylonjs/lite@1.34.0`)
  *
  * Lite registers the PBR skinning and morph-target shader fragments only inside a full build of
  * the PBR group, and only when that build contains a skinned or morphed mesh (`buildPbrRenderables`,
- * `lib/material/pbr/pbr-renderable.js` 114-117). A mesh added after `registerScene` to a PBR group
+ * `lib/material/pbr/pbr-renderable.js` 112). A mesh added after `registerScene` to a PBR group
  * that already exists is built at once by the group's `rebuildSingle` instead
- * (`processMaterialSwaps`, `lib/scene/scene-material-swap.js` 22-45), and that never registers
+ * (`processMaterialSwaps`, `lib/scene/scene-material-swap.js` 4-45), and that never registers
  * them. ignifx's warm-up builds the PBR group at start whenever the scene has a light (ADR-0014).
  *
  * So the first skinned model a page adds after `app.start()` is composed without its skinning
  * fragment, and Lite caches that bind-group layout under a key that does not say which fragments
- * were registered (`getOrCreatePbrBindings`, `lib/material/pbr/pbr-pipeline.js` 33-36). The next
+ * were registered (`getOrCreatePbrBindings`, `lib/material/pbr/pbr-pipeline.js` 59-63). The next
  * renderable rebuild registers the fragment, reuses the cached layout, and builds a bind group with
  * one more entry than it: WebGPU rejects every frame from then on ("Binding entry sampler not set",
  * group 1, entries[3]) and the canvas stays black. The fragments are registered process-wide, so
  * every later app in the page was fine.
  *
  * The render sync system compares what this reports with what a full build has already composed,
- * and clears Lite's layout caches before the rebuild that first sees a new kind. Until that
+ * and clears Lite's layout caches (`forgetMaterialBindingLayouts`, `./shadow.ts`) before the
+ * rebuild that first sees a new kind. Until that
  * rebuild, one frame after the mesh arrives, a skinned mesh draws in its bind pose; a morphed one
  * gets a shader that does not compile, so WebGPU rejects that frame or two.
  */

@@ -24,7 +24,7 @@ Use it when you are packaging a game, or debugging one that behaves differently 
 
 ## Environment
 
-Engine `>=0.0.0 <1.0.0` · Electron 44.x (peer, optional) · Babylon Lite 1.27.0 through `@ignifx/core`.
+Engine `>=0.0.0 <1.0.0` · Electron 44.x (peer, optional) · Babylon Lite 1.34.0 through `@ignifx/core`.
 
 The fastest way in is the scaffolder — it writes everything below for you:
 
@@ -214,7 +214,7 @@ None of its own. It serves whatever `@ignifx/vite-plugin` built — the manifest
 | Calling `applyWebGpuSwitches()` or `registerIgnifxScheme()` after `app.whenReady()`. Both are inert, and the symptom is no `navigator.gpu`.                                                                    | Call both at the top of `desktop/main.ts`, before the `whenReady` await.                                                              |
 | Loading the packaged renderer over `file://`. Opaque origin: no secure context, so no WebGPU; `'self'` matches nothing; relative `fetch` fails.                                                                | `serveIgnifxProtocol(dir)` and `entry: "index.html"`.                                                                                 |
 | Expecting `onApplicationPause` when the window is minimised. An Electron renderer receives **no** DOM lifecycle events — no `visibilitychange`, no window `focus`/`blur`, and `document.hidden` never changes. | `onApplicationFocus` works (`electron()` forwards it). For minimise, subscribe to `app.desktop.onWindowEvent`.                        |
-| Expecting device-loss recovery with PCF or CSM shadows. Babylon Lite 1.27.0 rebuilds **only** ESM directional shadow generators; anything else fails recovery and the frame loop stops.                        | `light.shadows.technique = "esm"` on a game that must survive a lost device.                                                          |
+| Expecting device-loss recovery with PCF or spot-light shadows. Babylon Lite 1.34.0 rebuilds **only** ESM and CSM directional shadow generators; anything else fails recovery and the frame loop stops.         | `light.shadows.technique = "esm"` on a game that must survive a lost device.                                                          |
 | Importing `@ignifx/electron/main` from the renderer. It pulls `electron` and Node built-ins into a bundle that has neither.                                                                                    | Import the root `@ignifx/electron` in the renderer; `/main` and `/preload` belong to their own processes.                             |
 | Expecting `webContents.getWebPreferences()`. It does not exist in Electron 44.                                                                                                                                 | `getLastWebPreferences()` exists at runtime (though not in `electron.d.ts`), or assert `windowOptionsFor(...)` — it is pure.          |
 | Scaffolding with `--desktop` you did not want. The three Electron build tools are large binary downloads.                                                                                                      | Leave `--desktop` off; the scaffold stays browser-only and `electron()` is still there, inert.                                        |

@@ -18,6 +18,7 @@ import { enableSceneDeviceLossRecovery } from "../lite/gpu/device-loss.js";
 import { registerFrameCallback, startEngineLoop, stopRenderLoop, unregisterFrameCallback } from "../lite/loop.js";
 import { enableLiteErrorDecoding, toLiteEngineOptions } from "../lite/render-diagnostics.js";
 import { applyRenderingFeatures, registerRenderScene } from "../lite/render-features.js";
+import { learnMaterialCacheResets, trackMaterialCacheResets } from "../lite/shadow.js";
 import { createConsoleSink } from "../log/console-sink.js";
 import { createLogger } from "../log/logger.js";
 import { detectPlatform } from "../platform/platform.js";
@@ -719,7 +720,13 @@ class AppImpl implements App {
       renderer.syncBeforeRegister(world);
     }
     renderer.warmUpAtStart();
+    trackMaterialCacheResets(handles.scene, renderer.materialCacheResets);
     await registerRenderScene(handles.scene, { shadows: features.shadows });
+    // One rebuild before the first frame, so a shadow or skinning change right after start can
+    // reset Lite's layout caches (`../lite/shadow.ts`, `MaterialCacheResets`). It re-records the
+    // shadow task, so the caster lists are supplied again too.
+    await learnMaterialCacheResets(handles.scene, renderer.materialCacheResets);
+    renderer.needsCasterRebuild = true;
     renderer.markSceneRegistered();
   }
 

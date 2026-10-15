@@ -4,7 +4,7 @@ description: Builds 2D and 3D web games with the ignifx TypeScript game engine (
 license: Apache-2.0
 metadata:
   ignifx-version: "0.8.0"
-  babylon-lite-version: "1.27.0"
+  babylon-lite-version: "1.34.0"
 ---
 
 # ignifx
@@ -25,7 +25,7 @@ toolkits, UI, particles, terrain, Electron, and devtools; each subsystem has its
 | Item                | Value                                                                                                                                                                                                                                                                                                                                          |
 | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Engine version      | the `ignifx-version` in this file's frontmatter; `@ignifx/core`, `@ignifx/input`, `@ignifx/audio`, `@ignifx/physics`, `@ignifx/2d`, `@ignifx/physics-2d`, `@ignifx/3d`, `@ignifx/ui`, `@ignifx/particles`, `@ignifx/particles-2d`, `@ignifx/terrain`, `@ignifx/electron`, `@ignifx/devtools`, `@ignifx/vite-plugin`, and the `ignifx` umbrella |
-| Babylon Lite        | 1.27.0 (pinned; do not call Lite APIs directly outside adapter code)                                                                                                                                                                                                                                                                           |
+| Babylon Lite        | 1.34.0 (pinned; do not call Lite APIs directly outside adapter code)                                                                                                                                                                                                                                                                           |
 | Node / pnpm         | 24 LTS / 11                                                                                                                                                                                                                                                                                                                                    |
 | Browser requirement | WebGPU (Chrome/Edge 113+, Safari 26+, Firefox 141+ Windows / 145+ Apple Silicon); Electron needs `--enable-unsafe-webgpu` (handled by `@ignifx/electron`)                                                                                                                                                                                      |
 | Headless            | Node 24, no GPU: `createApp({ headless: true })` plus `app.step(dt)`                                                                                                                                                                                                                                                                           |

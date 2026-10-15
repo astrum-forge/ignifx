@@ -24,7 +24,7 @@ Use it for sound effects, footsteps, UI clicks, positional audio, music with cro
 ## Environment
 
 - Engine: ignifx `0.8.0`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
-- Peer dependency: `@babylonjs/lite` `1.27.0`, reached only from `src/lite/**`.
+- Peer dependency: `@babylonjs/lite` `1.34.0`, reached only from `src/lite/**`.
 - Browsers, Electron, and Node. Nothing happens at import time; registering the extension is the
   whole installation.
 

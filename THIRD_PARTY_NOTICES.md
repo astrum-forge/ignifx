@@ -20,7 +20,7 @@ records its own in `templates/<name>/ATTRIBUTION.md` (§11.3).
 
 ## @babylonjs/lite
 
-- Version: 1.27.0
+- Version: 1.34.0
 - License: Apache-2.0
 - Repository: <https://github.com/BabylonJS/Babylon-Lite>
 - Required by: @ignifx/2d, @ignifx/3d, @ignifx/audio, @ignifx/core, @ignifx/particles, @ignifx/particles-2d, @ignifx/physics, @ignifx/terrain, @ignifx/ui
@@ -33,7 +33,7 @@ Its `NOTICE` file, reproduced as Apache-2.0 §4(d) requires:
 Their license texts are reproduced below as required by their terms.
 
 ==============================================================================
-manifold-3d 3.5.1
+manifold-3d 3.5.4
 ==============================================================================
 
                                  Apache License

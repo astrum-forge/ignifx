@@ -1,6 +1,6 @@
 import {
   createTransformNode,
-  mat4Decompose,
+  decomposeMat4,
   setParent,
   setSubtreeVisible,
   type IWorldMatrixProvider,
@@ -220,7 +220,7 @@ export function linkParent(child: SceneNode, parent: SceneNode | null): void {
  *   link and copies the child's world *position* into its local position, leaving rotation and
  *   scale uncompensated. Non-uniform-but-invertible parents are fine; zero scale on any axis is
  *   not.
- * - **Canonical, not sign-faithful, decomposition.** The local TRS comes from `mat4Decompose`,
+ * - **Canonical, not sign-faithful, decomposition.** The local TRS comes from `decomposeMat4`,
  *   which folds a reflection into a negative Y scale. The world matrix is reproduced exactly, but a
  *   child that had a negative X scale comes back with a negative Y scale and a different rotation.
  *
@@ -290,7 +290,7 @@ export function worldMatrixVersion(node: SceneNode): number {
  * back as a negative Y scale plus a different rotation. A degenerate axis (scale below `1e-8`) is
  * tolerated: the rotation stays finite but is meaningless for that axis.
  *
- * ignifx allocates nothing here, but Lite's `mat4Decompose` allocates its own TRS triple per call
+ * ignifx allocates nothing here, but Lite's `decomposeMat4` allocates its own TRS triple per call
  * (`lib/math/mat4-decompose.js`), so this is not yet a zero-allocation path in the sense of coding
  * standards §7. The math module's in-place decomposition replaces the Lite call when it lands.
  *
@@ -307,7 +307,7 @@ export function decomposeWorld(
   outRotation: MutableQuatLike,
   outScale: MutableVec3Like,
 ): void {
-  const decomposed = mat4Decompose(node.worldMatrix);
+  const decomposed = decomposeMat4(node.worldMatrix);
   outPosition.x = decomposed.translation.x;
   outPosition.y = decomposed.translation.y;
   outPosition.z = decomposed.translation.z;

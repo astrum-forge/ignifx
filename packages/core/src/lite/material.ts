@@ -397,7 +397,7 @@ export function markMaterialDirty(material: Material): void {
  *
  * @remarks
  * Needed after binding or clearing a texture, changing culling, or toggling a sub-feature
- * (`index.d.ts` 9413). `rebuildFrameGraph` is left off so a component can batch several material
+ * (`index.d.ts` 11133). `rebuildFrameGraph` is left off so a component can batch several material
  * edits and rebuild the frame graph once.
  *
  * @param scene - The scene the material renders in.
@@ -406,7 +406,9 @@ export function markMaterialDirty(material: Material): void {
  * @internal
  */
 export function rebuildMaterialPipelines(scene: SceneContext, material: Material): void {
-  rebuildMaterial(scene, material);
+  // Since 1.34 a PBR rebuild in a built scene finishes asynchronously, and Lite reports its failure
+  // itself (`lib/material/material-rebuild.js`, `rebuildMaterial`), so nothing is left to await.
+  void rebuildMaterial(scene, material);
 }
 
 /**

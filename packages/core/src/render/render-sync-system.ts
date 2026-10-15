@@ -208,6 +208,11 @@ export class RenderSyncSystem implements System {
     renderer.refreshClearColor();
     this.#applyStacks(world);
     this.#areCastersDirty = this.#areCastersDirty || castersChanged;
+    // Lite built a material family on its own (a runtime build of its first mesh) and pushed a
+    // cache reset nothing has confirmed yet: one rebuild confirms it (`../lite/shadow.ts`).
+    if (renderer.materialCacheResets.unconfirmed && !this.#isRebuildDue && !this.#isRebuildInFlight) {
+      this.#rebuildRenderables();
+    }
     // The rebuild is deferred by one frame on purpose; see `#rebuildRenderables`.
     if (this.#isRebuildDue && !topologyChanged) {
       this.#isRebuildDue = false;
@@ -556,10 +561,10 @@ export class RenderSyncSystem implements System {
           const deformers = readPbrDeformers(renderer.scene);
           if (renderer.needsShadowLayoutReset || (deformers & ~renderer.builtPbrDeformers) !== 0) {
             renderer.needsShadowLayoutReset = false;
-            forgetMaterialBindingLayouts(renderer.engine);
+            forgetMaterialBindingLayouts(renderer.materialCacheResets);
           }
           // oxlint-disable-next-line no-await-in-loop -- the whole point is that these never overlap.
-          await rebuildRenderables(renderer.scene);
+          await rebuildRenderables(renderer.scene, renderer.materialCacheResets);
           renderer.builtPbrDeformers |= deformers;
         } catch (error: unknown) {
           renderer.app.onError.emit({ error, source: "system", phase: null, entity: null, component: null });

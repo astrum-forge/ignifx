@@ -24,44 +24,44 @@ import { degToRad } from "../math/math-utils.js";
  *
  * ## Why an ignifx light is never parented in Lite
  *
- * A Lite light is an `IParentable` with a world matrix (`LightBase`, `index.d.ts` 6589), so
- * parenting it under the entity's node looks like the obvious mirror of what `Camera` and
- * `MeshRenderer` do. It is wrong, and the visual suite caught it:
+ * Since Lite 1.30 a light is a full scene node (`LightBase extends SceneNode`, `index.d.ts` 7620):
+ * `createLightBase` builds it with `initSceneNodeTransform` (`lib/light/light-base.js`), so it has
+ * `position`, `rotationQuaternion`, `scaling`, `parent` and a composed `worldMatrix`. Its
+ * `direction` is **local**: the lights UBO writer and the shadow fit both rotate it by the world
+ * matrix (`writeWorldLightDirection`, `lib/light/light-base.js`; `computeDirectionalLightMatrix`,
+ * `lib/shadow/shadow-base.js` 76-79), and a point or spot light's world position is
+ * `worldMatrix[12..14]` (`lib/light/point-light.js`, `lib/light/spot-light.js`).
  *
- * - Lite composes a light's world matrix as `parentWorld × localMatrixFromDirection(direction,
- *   position)` (`lib/light/directional-light.js` 8-10, `lib/light/light-matrix.js`), and the shader
- *   reads the **third column of that world matrix** as the light direction
- *   (`lib/light/directional-light.js` 20-22 copies `w[8]`, `w[9]`, `w[10]`; the spot light also
- *   takes its position from `w[12..14]`, `lib/light/spot-light.js` 28-30). Writing the entity's
- *   **world** forward into `direction` while the light is **also** parented applies the entity's
- *   rotation twice, so the light shades from a direction that is neither the local nor the world
- *   one.
- * - The shadow frustum does not go through the world matrix at all:
- *   `computeDirectionalLightMatrix` fits it from `light.direction` and `light.position` directly
- *   (`lib/shadow/shadow-base.js` 54-55). A parented light therefore shades from one direction and
- *   casts along another.
+ * Parenting the light under the entity's node and driving its rotation would also work, but it
+ * needs a quaternion that turns `+Z` into the light's axis — which differs per kind (a hemispheric
+ * light follows the entity's **up**) — and it ties the light's lifetime to the entity's node. The
+ * adapter keeps the simpler arrangement it already had: every light is created with
+ * `parent = null` and an identity rotation and scale, and {@link syncLightWorldPose} writes the
+ * entity's **world** direction into `direction` and its **world** position into `position` in each
+ * frame the entity moved. The world matrix is then a pure translation, so Lite's rotation of
+ * `direction` changes nothing and shading, the lights UBO and the shadow frustum all see the pose
+ * that was written. Nothing here writes `rotationQuaternion` or `scaling`; doing so would rotate
+ * the written direction a second time.
  *
- * One pose, written once, is the only arrangement in which shading, the lights UBO, and the shadow
- * frustum agree: the adapter creates every light with `parent = null` and the component writes the
- * entity's **world** direction and position into the light's own observables with
- * {@link syncLightWorldPose} in each frame the entity moved. With no parent, `worldMatrix` is the
- * local matrix, whose third column is exactly the direction that was written.
+ * ## The lights uniform buffer and the shadow refit follow `_lightVersion`
  *
- * ## The lights uniform buffer only follows the light's own observables
- *
- * It is re-uploaded when the summed `_lightVersion` of the scene's lights changes
- * (`lib/render/lights-ubo.js`, `refreshSceneLightsUBO`), and that counter is bumped by writes to the
- * light's **own** observable vectors (`lib/light/light-base.js`, `onDirty`). `ObservableVec3.set`
- * fires its dirty hook unconditionally (`lib/math/observable-vec3.js`), so {@link syncLightWorldPose}
- * re-marks the light as a side effect of posing it, and {@link markLightTransformDirty} is the
- * allocation-free nudge for a caller that has nothing new to write.
+ * The lights UBO is re-uploaded when the summed `_lightVersion` of the scene's lights changes
+ * (`computeLightsVersion`, `lib/render/scene-lights-ubo.js`), and a shadow pass refits its frustum
+ * when its light's `_lightVersion` changes (`renderPcfShadowMap`, `lib/shadow/pcf-shadow-task-hooks.js`
+ * 114; the ESM and CSM hooks do the same). That counter is `lvs._lightVersion + worldMatrixVersion`
+ * (`applyLightBase`, `lib/light/light-base.js`): writing `direction` bumps the first term, writing
+ * `position` bumps the second through the scene-node transform. `ObservableVec3.set` fires its
+ * dirty hook unconditionally (`lib/math/observable-vec3.js`), so {@link syncLightWorldPose} re-marks
+ * the light as a side effect of posing it, and {@link markLightTransformDirty} is the
+ * allocation-free nudge for a change Lite cannot see (a colour, a range, an exponent written as a
+ * plain field).
  *
  * ## Two more things Lite spells its own way
  *
  * - Include/exclude lists are sets of `Mesh.id` **strings**, not mesh references
- *   (`lib/render/lights-ubo.js`, `affectsMesh`), and a mesh with no `id` is never excluded.
+ *   (`lib/render/mesh-light-selection.js`, `affectsMesh`), and a mesh with no `id` is never excluded.
  * - Hemispheric lights spell their colours `diffuseColor`/`specularColor`, not `diffuse`/`specular`
- *   (`index.d.ts` 6286) — `docs/architecture/07-rendering.md` §2.2 says "`diffuse`/`specular`" for
+ *   (`index.d.ts` 7283) — `docs/architecture/07-rendering.md` §2.2 says "`diffuse`/`specular`" for
  *   every type, which is wrong for this one.
  */
 
@@ -150,10 +150,10 @@ export function createHemisphericLightInWorld(intensity: number): HemisphericLig
  * from, in the one place every consumer reads them.
  *
  * @remarks
- * The light's world matrix is its local matrix (there is no parent), so `worldMatrix[8..10]` — what
- * the shader reads as the direction — is exactly what was written to `direction`,
- * `worldMatrix[12..14]` — what a spot light reports as its position — is exactly `position`, and
- * `computeDirectionalLightMatrix` fits the shadow frustum from the same two vectors.
+ * The light has no parent and an identity rotation, so its world matrix is a pure translation:
+ * the world direction Lite derives from `direction` is `direction` itself, and `worldMatrix[12..14]`
+ * — where a point or spot light shines from, and where the shadow frustum is fitted from — is
+ * exactly `position`.
  *
  * Each kind is written only what it uses, and each kind reads a different axis of the entity:
  *
@@ -163,8 +163,8 @@ export function createHemisphericLightInWorld(intensity: number): HemisphericLig
  * | `point` | — | yes |
  * | `hemispheric` | the entity's world **up**: it is a sky direction, not a beam | — |
  *
- * Both writes fire `ObservableVec3`'s dirty hook, so the lights uniform buffer re-uploads without a
- * separate {@link markLightTransformDirty}.
+ * Both writes bump the light's `_lightVersion`, so the lights uniform buffer re-uploads and a
+ * shadow refits without a separate {@link markLightTransformDirty}.
  *
  * @param light - The light to pose.
  * @param forwardX - The entity's world-space forward x.
@@ -325,7 +325,7 @@ export function setSpotExponent(light: SpotLight, exponent: number): void {
  *
  * @remarks
  * Lite matches on `Mesh.id`, a string a loader or the adapter assigns; the include list wins over
- * the exclude list when both are present (`lib/render/lights-ubo.js`, `affectsMesh`).
+ * the exclude list when both are present (`lib/render/mesh-light-selection.js`, `affectsMesh`).
  *
  * @param light - The light to restrict.
  * @param meshIds - The mesh ids that may be lit, or `null` to light everything.
@@ -360,12 +360,12 @@ export function setLightExcludedMeshIds(light: LightBase, meshIds: ReadonlySet<s
  * Tells Lite that a light's row in the lights uniform buffer is stale, without changing its pose.
  *
  * @remarks
- * Lite bumps a light's version only when the light's own `direction`/`position` are written
- * (`lib/light/light-base.js`), so anything that changes what the light contributes *without*
- * touching those vectors — a colour, an intensity, a cone angle — has to say so. This re-sets the
- * light's own vector to the value it already holds, which fires `ObservableVec3`'s dirty hook
- * unconditionally and costs no allocation. A pose change goes through {@link syncLightWorldPose}
- * instead, which marks the light as a side effect of writing it.
+ * Lite bumps a light's `_lightVersion` when its `direction` or transform is written
+ * (`lib/light/light-base.js`), not when a plain field such as a colour, a range or an exponent is,
+ * so a change to one of those has to say so. This re-sets the light's own vector to the value it
+ * already holds, which fires `ObservableVec3`'s dirty hook unconditionally and costs no allocation.
+ * A pose change goes through {@link syncLightWorldPose} instead, which marks the light as a side
+ * effect of writing it.
  *
  * @param light - The light whose uniform row is stale.
  *

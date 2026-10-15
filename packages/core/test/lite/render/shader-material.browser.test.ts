@@ -19,6 +19,9 @@ import type { ShaderBrowserApp } from "../../fixtures/shaders/browser-harness.js
 
 let harness: ShaderBrowserApp | null = null;
 
+/** How many later frames the animation test samples against the first one. */
+const ANIMATION_SAMPLES = 6;
+
 afterEach(() => {
   harness?.dispose();
   harness = null;
@@ -66,9 +69,18 @@ describe("a shader material drawing a quad", () => {
   it("animates from the ignifx clock and freezes under app.pause()", async () => {
     const scene = await quadScene(TINT_WGSL, { tint: [0, 0, 1], pulse: 1 });
     const first = await scene.app.centrePixel();
-    await scene.app.advance(6);
-    const second = await scene.app.centrePixel();
-    expect(Math.abs(second.b - first.b)).toBeGreaterThan(4);
+    // Several samples, not one: on a loaded machine every frame is clamped to
+    // `time.maximumDeltaTime` (0.1 s), and a single sample taken ten frames later lands on the same
+    // phase of the shader's one-second pulse. Consecutive samples cannot all do that.
+    let largestChange = 0;
+    for (let sample = 0; sample < ANIMATION_SAMPLES; sample += 1) {
+      // oxlint-disable-next-line no-await-in-loop -- each sample is a later frame than the last.
+      await scene.app.advance(2);
+      // oxlint-disable-next-line no-await-in-loop -- see above.
+      const later = await scene.app.centrePixel();
+      largestChange = Math.max(largestChange, Math.abs(later.b - first.b));
+    }
+    expect(largestChange).toBeGreaterThan(4);
     scene.app.app.pause();
     await scene.app.advance(4);
     const paused = await scene.app.centrePixel();

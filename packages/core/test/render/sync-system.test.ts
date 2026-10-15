@@ -99,6 +99,20 @@ describe("renderable rebuild batching", () => {
     expect(h.renderer.renderableRebuilds).toBe(1);
   });
 
+  it("asks for a rebuild when Lite registered a cache reset nothing has confirmed yet", async () => {
+    // A runtime build of a family's first mesh pushes its cache reset outside any rebuild; one
+    // rebuild confirms it (`src/lite/shadow.ts`, `MaterialCacheResets`).
+    const h = await app();
+    h.frame();
+    const before = h.renderer.renderableRebuilds;
+    h.renderer.materialCacheResets.unconfirmed = true;
+    h.frame();
+    expect(h.renderer.renderableRebuilds).toBe(before + 1);
+    h.renderer.materialCacheResets.unconfirmed = false;
+    h.frame();
+    expect(h.renderer.renderableRebuilds).toBe(before + 1);
+  });
+
   it("fires nothing in a frame where nothing changed", async () => {
     const h = await app();
     h.world.createEntity("Sun").addComponent(Light);

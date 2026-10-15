@@ -3,7 +3,6 @@ import { CoreErrorCode } from "../errors/error-codes.js";
 import { IgnifxError } from "../errors/ignifx-error.js";
 import type {
   CsmDirectionalShadowGeneratorConfig,
-  EngineContext,
   EsmDirectionalShadowGeneratorConfig,
   LightBase,
   Mesh,
@@ -20,35 +19,35 @@ import type {
  *
  * Everything here is `@internal`.
  *
- * ## How Lite renders shadows (verified against `@babylonjs/lite@1.27.0`)
+ * ## How Lite renders shadows (verified against `@babylonjs/lite@1.34.0`)
  *
  * - A scene grows a shadow pass only through `registerSceneWithShadowSupport`
- *   (`index.d.ts` 9542), which unshifts a task named `"shadow"` at the front of the frame graph
+ *   (`index.d.ts` 11275), which unshifts a task named `"shadow"` at the front of the frame graph
  *   (`lib/scene/scene-core.js`, `ensureShadowTask`). `registerScene` never adds one, and there is
  *   no public call that adds it later — so the decision is made once, at start, from whether any
  *   shadow-casting light exists (`docs/architecture/07-rendering.md` §1).
  * - The shadow task finds its work by walking `scene.lights` and reading `light.shadowGenerator`
  *   (`lib/frame-graph/shadow-task.js`). Assigning that property is what turns shadows on for a
- *   light; `scene.shadowGenerators` is **never written** by Lite in 1.27.0 — only read by
- *   device-loss recovery — so the adapter does not maintain it either.
+ *   light; Lite never adds to `scene.shadowGenerators` — it only reads it during device-loss
+ *   recovery and splices from it on removal — so the adapter does not maintain it either.
  * - The caster list is a side table keyed by generator (`setShadowTaskCasterMeshes`,
- *   `index.d.ts` 10981, `lib/frame-graph/shadow-inputs.js`). Passing a new array parks the
+ *   `index.d.ts` 12986, `lib/frame-graph/shadow-inputs.js`). Passing a new array parks the
  *   generator until an async preload of the shadow pipeline finishes, so the list is replaced as
  *   rarely as possible: once per frame in which the caster set actually changed.
  * - A pass redraws its map only when something it tracks moved: the sum of every caster's
  *   `worldMatrixVersion` plus its thin-instance version (`casterVersionSum`,
- *   `lib/shadow/shadow-base.js` 138), the light's `worldMatrixVersion`, and the floating-origin
- *   camera (CSM: the camera and its aspect). Otherwise the previous map is reused
- *   (`lib/shadow/pcf-shadow-task-hooks.js` 135, `esm-directional-shadow-generator.js` 179,
- *   `csm-shadow-task-hooks.js` 180). A caster that changes shape in place — a skinned mesh, a shader
- *   material moving vertices by a uniform — moves none of those, so `./gpu/shadow-generator.ts`
- *   adds Lite's skeleton layer and a shape check of its own to every generator.
- * - `computeDirectionalLightMatrix` (`lib/shadow/shadow-base.js` 54-55) fits the shadow frustum
- *   from the light's **own** `direction` and `position`, not from its world matrix, while the
- *   shader reads the world matrix. The two only agree when the light has no parent and its own
- *   vectors hold the world pose, which is what `syncLightWorldPose` in `./light.ts` writes and why
- *   this adapter parents no light. Nothing extra is needed here: a posed light casts where it
- *   shades.
+ *   `lib/shadow/shadow-base.js` 186), the light's `_lightVersion` (see `./light.ts`), and the
+ *   floating-origin camera (CSM: the camera and its aspect). Otherwise the previous map is reused
+ *   (`lib/shadow/pcf-shadow-task-hooks.js` 120, `_chunks/esm-directional-shadow-generator-*.js`
+ *   173, `lib/shadow/csm-shadow-task-hooks.js` 303). A caster that changes shape in place — a
+ *   skinned mesh, a shader material moving vertices by a uniform — moves none of those, so
+ *   `./gpu/shadow-generator.ts` adds Lite's skeleton layer and a shape check of its own to every
+ *   generator.
+ * - `computeDirectionalLightMatrix` (`lib/shadow/shadow-base.js` 76-79) fits the shadow frustum
+ *   from the light's `direction` rotated by its world matrix and from the world matrix's
+ *   translation, the same pose the lights uniform buffer is written from. `./light.ts` keeps every
+ *   light unparented and unrotated and writes the world pose into its own vectors, so a posed light
+ *   casts where it shades and nothing extra is needed here.
  */
 
 /**
@@ -175,23 +174,163 @@ export function setShadowCasters(generator: ShadowGenerator, casters: readonly M
 }
 
 /**
+ * Lite's process-wide pipeline-cache resets that one scene has been seen to register, so the
+ * adapter can call them before a rebuild that needs fresh bind-group layouts.
+ *
+ * @remarks
+ * Babylon Lite 1.31 removed the per-engine cache resets (`engine._pbrCleanup`,
+ * `engine._standardCleanup`) that 1.27 parked on the engine. The only remaining handle on the PBR
+ * and Standard bindings caches is the reset each material-group builder pushes onto
+ * `scene._disposables` at the end of every build (`buildPbrRenderables`,
+ * `lib/material/pbr/pbr-renderable.js` 306; `buildStandardMeshRenderables`,
+ * `lib/material/standard/standard-renderable.js` 178). A reset is a module-level function, so a
+ * group rebuild pushes the **same** function again, and Lite drops the duplicate
+ * (`dedupeGroupCleanup`, `lib/scene/scene-rebuild.js`). That re-push is how the adapter tells a
+ * cache reset from a scene's own disposers without relying on function names, which an app's
+ * minifier rewrites.
+ *
+ * {@link trackMaterialCacheResets} watches every push: a function already in the list is a reset
+ * and goes into `found`, and a function never seen before raises `unconfirmed`. A rebuild that
+ * raised it rebuilds once more at once, and a family Lite built on its own (a runtime build of the
+ * first mesh of a family, after start) is confirmed by the next rebuild the render sync system
+ * schedules for it. Each function raises `unconfirmed` once, so a scene's one-off disposers cost
+ * one extra rebuild in total, never a loop.
+ *
+ * @internal
+ */
+export interface MaterialCacheResets {
+  /** The resets identified so far. */
+  readonly found: Set<() => void>;
+  /** Every function seen pushed, so each one asks for at most one confirming rebuild. */
+  readonly seen: WeakSet<() => void>;
+  /** `true` when a function nobody had seen was pushed since the last rebuild started. */
+  unconfirmed: boolean;
+}
+
+/** The scene's disposer list, which Lite runs when the scene is disposed. Absent from `index.d.ts`. */
+interface SceneDisposables {
+  /** Callbacks `disposeScene` runs; material-group builders add their cache resets here. */
+  _disposables?: (() => void)[];
+}
+
+/**
+ * Creates an empty record of a scene's material cache resets.
+ *
+ * @returns The record; install it with {@link trackMaterialCacheResets}.
+ *
+ * @internal
+ */
+export function createMaterialCacheResets(): MaterialCacheResets {
+  return { found: new Set(), seen: new WeakSet(), unconfirmed: false };
+}
+
+/**
+ * Starts recording what the scene's disposer list is handed, for the scene's lifetime.
+ *
+ * @remarks
+ * Call it before the scene is registered, so the builds `registerScene` runs are seen too. It is
+ * idempotent. An own `push` shadows `Array.prototype.push` on that one array; Lite only ever appends
+ * to it with `push`.
+ *
+ * @param scene - The scene.
+ * @param resets - Where to record.
+ *
+ * @internal
+ */
+export function trackMaterialCacheResets(scene: SceneContext, resets: MaterialCacheResets): void {
+  // Boundary assertion (coding standards §5.2): every Lite 1.34.0 scene carries the list.
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+  const listed = scene as SceneContext & SceneDisposables;
+  // oxlint-disable-next-line no-underscore-dangle
+  const disposables = listed._disposables;
+  if (disposables === undefined || Object.hasOwn(disposables, "push")) {
+    return;
+  }
+  Object.defineProperty(disposables, "push", {
+    configurable: true,
+    writable: true,
+    value: (...items: (() => void)[]): number => {
+      for (const item of items) {
+        if (disposables.includes(item)) {
+          resets.found.add(item);
+        } else if (!resets.seen.has(item)) {
+          resets.seen.add(item);
+          resets.unconfirmed = true;
+        }
+      }
+      return Array.prototype.push.apply(disposables, items);
+    },
+  });
+}
+
+/**
  * Rebuilds every material group of a registered scene so renderables pick up the current light and
  * shadow topology.
  *
  * @remarks
  * Renderables bake the per-mesh light index list, the single- versus multi-light shader
  * permutation, and each generator's shadow bind group at build time; none of that follows a light
- * being added, removed, or given a generator (`index.d.ts` 9465). The call is a no-op before the
- * scene's first build, and it is expensive, so the component layer coalesces every topology change
- * in a frame into one call.
+ * being added, removed, or given a generator (`rebuildSceneRenderables`, `index.d.ts` 11165). The
+ * call is a no-op before the scene's first build, and it is expensive, so the component layer
+ * coalesces every topology change in a frame into one call.
+ *
+ * With `resets`, a rebuild that built a material family for the first time rebuilds once more
+ * straight away, so the family's cache reset is known before anything needs it; see
+ * {@link MaterialCacheResets}.
  *
  * @param scene - The scene to rebuild.
+ * @param resets - The scene's record of cache resets.
  * @returns A promise that resolves when the rebuild has finished.
  *
  * @internal
  */
-export function rebuildRenderables(scene: SceneContext): Promise<void> {
-  return rebuildSceneRenderables(scene);
+export async function rebuildRenderables(scene: SceneContext, resets?: MaterialCacheResets): Promise<void> {
+  if (resets === undefined) {
+    await rebuildSceneRenderables(scene);
+    return;
+  }
+  trackMaterialCacheResets(scene, resets);
+  takeUnconfirmed(resets);
+  await rebuildSceneRenderables(scene);
+  if (takeUnconfirmed(resets)) {
+    // A family was built for the first time just now: build once more so it pushes its reset again.
+    // Whatever this one sees for the first time stays flagged for the render sync system.
+    await rebuildSceneRenderables(scene);
+  }
+}
+
+/**
+ * Reads and clears {@link MaterialCacheResets.unconfirmed}.
+ *
+ * @param resets - The record.
+ * @returns Whether a never-seen function was pushed since the flag was last cleared.
+ */
+function takeUnconfirmed(resets: MaterialCacheResets): boolean {
+  const unconfirmed = resets.unconfirmed;
+  resets.unconfirmed = false;
+  return unconfirmed;
+}
+
+/**
+ * Rebuilds a freshly registered scene once when its registration built anything, so Lite pushes
+ * its cache resets again and {@link forgetMaterialBindingLayouts} can call them from the first
+ * frame on.
+ *
+ * @remarks
+ * Nothing has changed since registration, so every pipeline and layout comes from Lite's caches and
+ * the rebuild only re-creates uniform buffers and bind groups.
+ *
+ * @param scene - The registered scene.
+ * @param resets - The scene's record, installed with {@link trackMaterialCacheResets} before
+ * registration.
+ * @returns A promise that resolves when the rebuild has finished.
+ *
+ * @internal
+ */
+export async function learnMaterialCacheResets(scene: SceneContext, resets: MaterialCacheResets): Promise<void> {
+  if (resets.unconfirmed) {
+    await rebuildRenderables(scene, resets);
+  }
 }
 
 /** The scene counter Lite bumps whenever a material's renderables are rebuilt. Absent from `index.d.ts`. */
@@ -216,19 +355,11 @@ interface SceneMaterialEpoch {
  * @internal
  */
 export function readMaterialEpoch(scene: SceneContext): number {
-  // Boundary assertion (coding standards §5.2): every Lite 1.27.0 scene carries the counter.
+  // Boundary assertion (coding standards §5.2): every Lite 1.34.0 scene carries the counter.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   const counted = scene as SceneContext & SceneMaterialEpoch;
   // oxlint-disable-next-line no-underscore-dangle
   return counted._materialEpoch ?? 0;
-}
-
-/** The cache resets Lite parks on the engine after a material family's first build. Absent from `index.d.ts`. */
-interface MaterialCacheResets {
-  /** Clears the PBR bindings cache (`lib/material/pbr/pbr-renderable.js` 362). */
-  _pbrCleanup?: () => void;
-  /** Clears the Standard bindings cache (`lib/material/standard/standard-renderable.js` 243). */
-  _standardCleanup?: () => void;
 }
 
 /**
@@ -237,26 +368,21 @@ interface MaterialCacheResets {
  * @remarks
  * Call it before {@link rebuildRenderables} whenever a light gained or lost a shadow generator,
  * and when the scene gained its first skinned or morphed PBR mesh (`./pbr-deformers.ts`).
- * Lite caches a material's bindings, shadow bind-group layout included, under a key that does not
- * name the shadow maps (`getOrCreatePbrBindings`, `lib/material/pbr/pbr-pipeline.js` 36). So after
- * the number of shadow-casting lights changes, a rebuild reuses a layout sized for the old number
- * and builds a bind group for the new one, and WebGPU rejects every frame ("Number of entries (3)
- * did not match the expected number of entries (6)"). Clearing the cache costs one pipeline
- * rebuild per material, only on a frame whose shadow casters changed.
+ * Lite caches a PBR material's bindings, shadow bind-group layout included, under a key that does
+ * not name the shadow maps (`getOrCreatePbrBindings`, `lib/material/pbr/pbr-pipeline.js` 59-63).
+ * So after the number of shadow-casting lights changes, a rebuild reuses a layout sized for the old
+ * number and builds a bind group for the new one, and WebGPU rejects every frame ("Number of
+ * entries (3) did not match the expected number of entries (6)"). Clearing the caches costs one
+ * pipeline rebuild per material, only on a frame whose shadow casters changed.
  *
- * @param engine - The engine whose caches to clear.
+ * @param resets - The resets the scene's rebuilds identified; see {@link MaterialCacheResets}.
  *
  * @internal
  */
-export function forgetMaterialBindingLayouts(engine: EngineContext): void {
-  // Boundary assertion (coding standards §5.2): both fields are set by Lite on the engine object,
-  // and are absent until a material of that family has been built.
-  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
-  const resets = engine as EngineContext & MaterialCacheResets;
-  // oxlint-disable-next-line no-underscore-dangle
-  resets._pbrCleanup?.();
-  // oxlint-disable-next-line no-underscore-dangle
-  resets._standardCleanup?.();
+export function forgetMaterialBindingLayouts(resets: MaterialCacheResets): void {
+  for (const reset of resets.found) {
+    reset();
+  }
 }
 
 /**
