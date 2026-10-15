@@ -10,9 +10,9 @@ import type { ScriptCallbacks } from "@ignifx/core";
  * Trigger and collision events in 2D (`docs/architecture/11-2d-toolkit.md` §8): who receives them,
  * what they carry, and in what order.
  *
- * Rapier reports **both** collider handles for every event (`pipeline/event_queue.d.ts`), so unlike
- * 3D there is no identity gap and no ADR-0013 waiver: `other` is always the real entity and
- * `otherCollider` is the exact collider.
+ * Rapier reports **both** collider handles for every event (`pipeline/event_queue.d.ts`), so `other`
+ * is always the real entity and `otherCollider` is the exact collider. 3D learns only the body, so
+ * its `otherCollider` is the other entity's first collider.
  *
  * The callbacks are the 3D names — `onCollisionEnter`, not `onCollisionEnter2D` — because the
  * kernel's `PhysicsCallbackName` union has no `2D` variants and a world runs one physics extension.

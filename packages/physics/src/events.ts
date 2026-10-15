@@ -51,17 +51,25 @@ export interface TriggerEvent {
 }
 
 /**
- * What a script's `onCollisionEnter`/`onCollisionStay`/`onCollisionExit` is handed.
+ * What a script's `onCollisionEnter`/`onCollisionStay`/`onCollisionExit` is handed. Both entities in
+ * a contact receive it, each with the other one as `other`.
  *
- * @remarks
- * `other` is `null` under the default `collisionIdentities: "upstream"` mode, because
- * `@babylonjs/lite@1.27.0` reports collisions without body identities (§4, ADR-0013). Register
- * `physics({ collisionIdentities: "internal" })` to opt into the waived drain that recovers them.
+ * @example
+ * ```ts
+ * class Crate extends Script implements ScriptCallbacks {
+ *   static typeId = "mygame/Crate";
+ *   onCollisionEnter(collision: Collision): void {
+ *     if (collision.other?.tags.has("projectile") === true) {
+ *       this.entity.destroy();
+ *     }
+ *   }
+ * }
+ * ```
  *
  * @public
  */
 export interface Collision {
-  /** The entity that was hit, or `null` when the identity is unavailable. */
+  /** The entity that was hit, or `null` when its body is not an entity's (a character controller's capsule). */
   readonly other: Entity | null;
   /** The other entity's first collider, or `null`. */
   readonly otherCollider: Collider | null;
@@ -69,7 +77,7 @@ export interface Collision {
   readonly self: Entity;
   /** The contacts of this event. Pooled; valid only during the callback. */
   readonly contacts: readonly ContactPoint[];
-  /** The relative velocity at the contact, or `null` when a body identity is unavailable. */
+  /** This body's velocity minus the other's at the contact, or `null` when `other` is `null`. */
   readonly relativeVelocity: Vec3Like | null;
 }
 

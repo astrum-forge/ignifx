@@ -81,7 +81,7 @@ macOS 26 (Darwin 25.5, arm64), Node 24.20.0, and Playwright Chromium with `--ena
 --use-webgpu-adapter=swiftshader`. The adapter modules they produced are
 `packages/physics/src/lite/**`; the tests are `packages/physics/test/lite/**` and
 `packages/physics/test/physics/**`. Line numbers are `@babylonjs/lite/index.d.ts` unless a `lib/`
-path is given. S4.2 is recorded in ADR-0013 instead, because its outcome activates that waiver.
+path is given. S4.2 is recorded in ADR-0013 instead, because its outcome activated that waiver (superseded on 2026-10-15, when upstream Lite reported collision identities).
 
 ### S4.1 — the simulation scene
 

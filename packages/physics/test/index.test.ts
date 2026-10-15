@@ -13,7 +13,6 @@ const EXPECTED_VALUES: readonly string[] = [
   "BoxCollider",
   "CAPSULE_DIRECTIONS",
   "COLLISION_EVENT_MODES",
-  "COLLISION_IDENTITY_MODES",
   "CapsuleCollider",
   "CharacterController",
   "Collider",

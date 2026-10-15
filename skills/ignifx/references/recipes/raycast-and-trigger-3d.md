@@ -8,9 +8,7 @@ volume is a push: a collider with `isTrigger: true` reports every body that ente
 the scripts on its own entity, through `onTriggerEnter` and `onTriggerExit`.
 
 Both need one completed fixed step first — Havok builds its broadphase there — so a query before
-`app.step` throws `IGX-0902`. Prefer triggers for gameplay: `@babylonjs/lite@1.27.0` reports
-collisions with no body identity, so `collision.other` is `null`, while a trigger event always
-carries both entities.
+`app.step` throws `IGX-0902`. Both trigger and collision events name the other entity as `other`.
 
 Event objects are pooled and reused for every event of a step, so copy anything you keep.
 

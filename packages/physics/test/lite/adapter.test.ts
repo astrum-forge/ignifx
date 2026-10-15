@@ -1,10 +1,8 @@
-// oxlint-disable eslint/no-underscore-dangle -- the stubs below mimic Babylon Lite's own internal field names, which is the whole point of the ADR-0013 layout guard
 import { CharacterSupportedState, PhysicsMotionType, PhysicsPrestepType, PhysicsShapeType } from "@babylonjs/lite";
 import { describe, expect, it } from "vitest";
 import { SupportState } from "../../src/lite/character.js";
 import { loadHavok } from "../../src/lite/havok-module.js";
 import { BodyMotion, PrestepMode, ShapeGeometry } from "../../src/lite/havok.js";
-import { probeCollisionLayout } from "../../src/lite/internal/collision-drain.js";
 import { havokWasmBytes } from "./fixtures/havok.js";
 
 /**
@@ -39,41 +37,6 @@ describe("the adapter's mirrored enums", () => {
       sliding: CharacterSupportedState.SLIDING,
       supported: CharacterSupportedState.SUPPORTED,
     });
-  });
-});
-
-describe("the ADR-0013 layout probe", () => {
-  it("rejects every shape that is not the world it was written against", () => {
-    const events = { COLLISION_STARTED: { value: 1 }, COLLISION_CONTINUED: { value: 2 } };
-    const complete = {
-      _hknp: {
-        HEAPU8: { buffer: new ArrayBuffer(8) },
-        EventType: events,
-        HP_World_GetCollisionEvents: (): readonly [unknown, number] => [0, 0],
-        HP_World_GetNextCollisionEvent: (): number => 0,
-      },
-      _hkWorld: {},
-      _bodies: [],
-    };
-    expect(probeCollisionLayout(complete)).toBe(true);
-
-    // Each field the drain reads is removed in turn; every one of them is a kill switch.
-    expect(probeCollisionLayout({ ...complete, _hknp: undefined })).toBe(false);
-    expect(probeCollisionLayout({ ...complete, _hkWorld: undefined })).toBe(false);
-    expect(probeCollisionLayout({ ...complete, _bodies: undefined })).toBe(false);
-    expect(
-      probeCollisionLayout({ ...complete, _hknp: { ...complete._hknp, HP_World_GetCollisionEvents: undefined } }),
-    ).toBe(false);
-    expect(
-      probeCollisionLayout({ ...complete, _hknp: { ...complete._hknp, HP_World_GetNextCollisionEvent: undefined } }),
-    ).toBe(false);
-    expect(probeCollisionLayout({ ...complete, _hknp: { ...complete._hknp, EventType: {} } })).toBe(false);
-    expect(
-      probeCollisionLayout({
-        ...complete,
-        _hknp: { ...complete._hknp, EventType: { COLLISION_STARTED: { value: 1 } } },
-      }),
-    ).toBe(false);
   });
 });
 

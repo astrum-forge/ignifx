@@ -24,7 +24,7 @@ weights, every query, `colliderInit()`, and the whole scatter placement.
 ## Environment
 
 - Engine: ignifx `0.8.0`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
-- WebGPU only, browser and Electron. Babylon Lite `1.27.0` is a peer dependency.
+- WebGPU only, browser and Electron. Babylon Lite `1.34.0` is a peer dependency.
 - Needs the `materialPlugins` rendering feature. `terrain()` declares it for you at registration.
 - Nothing happens at import time.
 

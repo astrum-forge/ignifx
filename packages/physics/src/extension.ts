@@ -32,7 +32,6 @@ import {
   physicsSettingsSchema,
 } from "./settings.js";
 import type { Collider } from "./components/collider.js";
-import type { CollisionIdentityMode } from "./runtime/runtime.js";
 import type { PhysicsSettings } from "./settings.js";
 import type { App, ComponentType, ConcreteComponentType, Extension, ExtensionContext } from "@ignifx/core";
 
@@ -48,12 +47,6 @@ import type { App, ComponentType, ConcreteComponentType, Extension, ExtensionCon
  * @public
  */
 export interface PhysicsOptions {
-  /**
-   * How collision callbacks learn which bodies took part (ADR-0013). `"upstream"` is the default and
-   * delivers contacts with `other === null`, because `@babylonjs/lite@1.27.0` reports no identities;
-   * `"internal"` opts into the waived adapter-internal drain that recovers them.
-   */
-  readonly collisionIdentities?: CollisionIdentityMode;
   /** An already-instantiated Havok module, which skips loading entirely. */
   readonly havok?: unknown;
   /** The `HavokPhysics.wasm` bytes, for a host that reads them itself. */
@@ -149,7 +142,6 @@ export const physics: (options?: PhysicsOptions) => Extension = defineExtension<
         settings,
         simulation,
         world,
-        collisionIdentities: options.collisionIdentities ?? "upstream",
         counters,
       });
       ctx.setSimulationScene(simulation.scene);

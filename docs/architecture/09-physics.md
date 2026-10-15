@@ -113,11 +113,9 @@ class CharacterController extends Component.define({
 ## 4. Events
 
 - **Triggers:** `onPhysicsTriggerBodies` gives `bodyA`/`bodyB`; the adapter resolves bodies to entities and delivers `onTriggerEnter`/`onTriggerExit` to scripts on both entities with `TriggerEvent { other: Entity | null, otherCollider, self }`. Lite reports no _shape_ identity, only a body, so `otherCollider` is the other entity's first collider.
-- **Collisions:** `onPhysicsCollision` currently reports `type`, `point`, `normal`, `impulse` **without body identities**. Delivering `onCollisionEnter/Stay/Exit` to the right entities requires one of:
-  1. an upstream addition `onPhysicsCollisionBodies` (mirrors the trigger API) — the preferred path; Phase 4 includes the pull request; or
-  2. an adapter-internal drain that reads Havok's collision event buffer through the world's internal handles (same offsets Lite uses). This deliberately crosses the adapter boundary and is therefore governed by its own waiver, ADR-0013: opt-in through `physics({ collisionIdentities: "internal" })`, guarded by a version-pinned layout test, and removed the release after upstream support lands.
-     The plan carries this as risk R-4. Phase 4 checked: `onPhysicsCollisionBodies` does not exist in the pinned version, so ADR-0013 is active and the drain ships behind the flag. Until upstream lands, trigger events (which carry identities) are the documented mechanism for gameplay reactions, and in the default `"upstream"` mode a collision event — which carries no identity at all — is delivered with `other === null` to **every** entity that opted into collision events, because there is nothing to route it by.
-- `Collision { other: Entity | null, otherCollider, self, contacts: [{ point, normal, impulse }], relativeVelocity }`. The `Collision`, its `contacts`, and the `TriggerEvent` are all pooled and only valid during the callback. `relativeVelocity` is `null` whenever the identities are unavailable.
+- **Collisions:** `onPhysicsCollision` reports `type`, `point`, `normal`, `impulse` and both bodies, as `collider` and `collidedAgainst` (`@babylonjs/lite@1.34.0` `index.d.ts` 9315, 10030; added in 1.29.0). The adapter resolves them to entities through the same node map the trigger drain uses and delivers `onCollisionEnter/Stay/Exit` to scripts on both entities, each with the other as `other`. A contact reaches only its two entities. `other` is `null` only when the other body is not an entity's, such as a `CharacterController`'s capsule. ignifx creates no thin-instance bodies, so it ignores Lite's `colliderIndex`/`collidedAgainstIndex`. Triggers and collisions are both valid ways to react in gameplay.
+  Lite 1.27.0, pinned until 2026-10-15, reported no collision identities, so ADR-0013 waived the adapter boundary for an opt-in internal drain behind `physics({ collisionIdentities: "internal" })`. Upstream support retired that waiver; the drain and the option are gone (plan risk R-4, closed).
+- `Collision { other: Entity | null, otherCollider, self, contacts: [{ point, normal, impulse }], relativeVelocity }`. The `Collision`, its `contacts`, and the `TriggerEvent` are all pooled and only valid during the callback. `relativeVelocity` is `null` whenever `other` is.
 
 ## 5. Queries (`app.physics`)
 
@@ -135,7 +133,7 @@ a temporary Havok shape for the call.
 one completed step (Lite builds the broadphase on the first step); calling earlier throws
 `IGX-0902`.
 
-**Identity is only available for rays.** Lite 1.27.0 reports a body for `physicsRaycast` alone:
+**Identity is only available for rays.** Lite 1.34.0 still reports a body for `physicsRaycast` alone:
 `ShapeCastResult` and `ShapeProximityResult` carry points and normals but no body, and
 `shapeProximity`'s collector has capacity `1`, so it can never list more than one hit. So
 `shapeCast` runs Lite's sweep for the geometry and resolves `entity` against the extension's own

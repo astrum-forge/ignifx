@@ -38,8 +38,8 @@ export const PhysicsErrorCode = {
   colliderGeometryUnavailable: "IGX-0906",
   /** A physics body was built for an entity that has a parent, whose node pose is not world space. */
   bodyOnChildEntity: "IGX-0907",
-  /** The ADR-0013 collision drain refused to bind because Babylon Lite's internals moved. */
-  internalDrainUnavailable: "IGX-0908",
+  // IGX-0908 is retired: it was the ADR-0013 collision drain's guard, removed with the drain.
+  // Do not reuse it, so an old log or bug report never points at the wrong failure.
 } as const;
 
 /**
@@ -63,7 +63,6 @@ export const PHYSICS_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.f
   "IGX-0905": "physics.collisionMatrix names the layer {layer}, which the project does not declare.",
   "IGX-0906": "{entity} has a MeshCollider with no geometry to build a shape from.",
   "IGX-0907": "{entity} carries a physics body but is not a root entity; Havok writes its local pose.",
-  "IGX-0908": "The adapter-internal collision drain does not recognise Babylon Lite {version}.",
 });
 
 /**
