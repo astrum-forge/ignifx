@@ -98,6 +98,7 @@ Notes:
 - **Why animation sits between `update` and `lateUpdate`.** `lateUpdate` is where camera follow logic and bone-relative attachments read final poses. This matches Unity. Babylon Lite would otherwise advance glTF animation _after_ our callback; the adapter therefore detaches animation groups from Lite's scene-owned ticking and advances them itself (`12-3d-toolkit.md` §Animator).
 - **Destroy before render** matches Unity: an entity destroyed during frame N is not drawn in frame N.
 - The fixed loop is bounded by `maximumDeltaTime`; with defaults, at most six fixed steps run per frame. Dropped time is reported in diagnostics.
+- **Edit mode** (`createApp({ editMode: true })`, ADR-0028) runs the same steps with three differences: step 4 does not run at all, a script receives a callback in any step only if its class sets `static runInEditMode = true`, and each system runs, runs with `dt = 0`, or is skipped as it declared at registration (`03-scripting-and-components.md` §10).
 - The accumulator snaps to the nearest multiple of `fixedDeltaTime` whenever it is within `1e-6 × fixedDeltaTime` of one, so floating-point drift never produces a spurious zero- or double-step frame.
 
 ## 4. Script callbacks

@@ -51,6 +51,7 @@ interface ComponentHooks {
 abstract class Script extends Component {
   static executionOrder: number = 0; // lower runs first within a phase
   static updateWhenPaused: boolean = false;
+  static runInEditMode: boolean = false; // §10
 
   startCoroutine(routine: Coroutine): CoroutineHandle;
   stopCoroutine(handle: CoroutineHandle): void;
@@ -78,7 +79,7 @@ interface ScriptCallbacks {
 }
 ```
 
-- **Why the callbacks are an interface, not members of `Script`.** The coding standards (§3, which outrank this document per `CONSTITUTION.md` §10.1) turn on `noImplicitOverride`. Any declaration of `update` on the base class — optional method, `declare` field, or interface merge — would make every game script's `update` an override and force the `override` keyword on every callback in every game. Keeping the signatures on `ScriptCallbacks` (and the component hooks on `ComponentHooks`) costs nothing at runtime, keeps the examples in §3 valid as written, and still gives full signature checking to scripts that opt in with `implements`. The same reasoning applies to the statics listed in §1 and §2: `typeId`, `schema`, `requires`, `allowMultiple`, `executionOrder`, and `updateWhenPaused` are not declared on `Component` or `Script` either — their shape lives on the `ComponentStatics`/`ScriptStatics` interfaces that `ComponentType` and `ConcreteComponentType` intersect, so a class satisfies them structurally with a plain `static typeId = "mygame/Mover"`, and `ComponentRegistry` reads each one once per class and applies the defaults.
+- **Why the callbacks are an interface, not members of `Script`.** The coding standards (§3, which outrank this document per `CONSTITUTION.md` §10.1) turn on `noImplicitOverride`. Any declaration of `update` on the base class — optional method, `declare` field, or interface merge — would make every game script's `update` an override and force the `override` keyword on every callback in every game. Keeping the signatures on `ScriptCallbacks` (and the component hooks on `ComponentHooks`) costs nothing at runtime, keeps the examples in §3 valid as written, and still gives full signature checking to scripts that opt in with `implements`. The same reasoning applies to the statics listed in §1 and §2: `typeId`, `schema`, `requires`, `allowMultiple`, `executionOrder`, `updateWhenPaused`, and `runInEditMode` are not declared on `Component` or `Script` either — their shape lives on the `ComponentStatics`/`ScriptStatics` interfaces that `ComponentType` and `ConcreteComponentType` intersect, so a class satisfies them structurally with a plain `static typeId = "mygame/Mover"`, and `ComponentRegistry` reads each one once per class and applies the defaults.
 - The scheduler detects which callbacks a class implements once per class (prototype inspection at registration) and only iterates scripts that implement a given callback. An empty `update() {}` therefore costs a call; not defining it costs nothing.
 - Callback timing and guarantees are defined in `01-lifecycle-and-time.md` §4. Callbacks are ordinary methods; `this` is the script.
 - Scripts reach engine services through `this.app` (`this.app.time`, `this.app.input`, `this.app.audio`, …). Extensions add typed properties to `App` via module augmentation (§7), so `this.app.physics` is fully typed when `@ignifx/physics` is installed and a compile error when it is not.
@@ -180,14 +181,17 @@ interface SystemContext {
   readonly time: Time;
   readonly phase: Phase;
   readonly dt: number;
+  readonly isClockHeld: boolean; // §10: true for a "hold" system in edit mode, with dt = 0
 }
 
 ctx.registerSystem(new SpriteSyncSystem(), { phase: Phase.PreRender, order: 100 });
+ctx.registerSystem(new WindSystem(), { phase: Phase.Update, editMode: "skip" }); // §10
 ```
 
 - Phases: `EndOfFrame`, `PreUpdate`, `FixedUpdate`, `Update`, `PostUpdate`, `PreRender` (see `01-lifecycle-and-time.md` §3). Within a phase, systems run by ascending `order`; ties are broken by registration order. Core systems use orders in `[-1000, 1000]`; extensions should use `[1001, 9999]` unless they must interleave with core.
 - Systems iterate components with `world.components(Type)`. They must not hold references to destroyed components; subscribe to `onEntityDestroyed` or check `isDestroyed`.
 - Systems never call script callbacks directly; the scheduler does.
+- `editMode` (`"run"` by default, `"hold"`, or `"skip"`) says what the system does in an edit-mode app (§10). Reconcilers keep the default; simulation declares `"skip"`.
 
 ## 7. Typed service access
 
@@ -220,3 +224,26 @@ declare module "@ignifx/core" {
 - Global singletons for game state; use a persistent scene with a `GameState` script, or `app.services`.
 - Mutating `transform` from `onCollision*` callbacks of the _other_ entity's script; each script manages its own entity.
 - Long-running work in `update`; move to coroutines, systems, or workers.
+
+## 10. Edit mode
+
+An editor shows a scene without playing it. `createApp({ editMode: true })` builds such an app; `app.isEditMode` reports it, and it never changes for the app's life (ADR-0028).
+
+```ts
+class EditorCamera extends Script {
+  static runInEditMode = true; // without this, edit mode never calls the script
+
+  update(dt: number): void {
+    this.transform.translate({ x: 0, y: 0, z: 2 * dt });
+  }
+}
+```
+
+- **Scripts are inert unless they opt in.** A script whose class does not set `static runInEditMode = true` receives none of the `ScriptCallbacks` of §2, from any path: frames, `world.loadScene`, `destroy`/`destroyImmediate`, application focus and visibility, physics, hot reload. The gate is the one guarded call site the scheduler and the scene graph already share. It never gets `awake`, so it never gets `onDisable` or `onDestroy` either.
+- **Opted-in scripts follow the game's rules** (`01-lifecycle-and-time.md` §4) with the real frame delta, except that they get no `fixedUpdate` and no physics callback.
+- **Not gated:** constructors, field initialisers, `onAttach`/`onDetach` (§1), setters, signal handlers, and `static onHotReload`. Keep game work out of them.
+- **No fixed loop.** No `FixedUpdate` system, no `fixedUpdate`, no physics, no `waitFixedUpdate()` resume. `time.fixedTime`, `time.fixedStepAlpha`, and `diagnostics.frame.fixedSteps` stay `0`; the rest of the clock runs.
+- **Coroutines.** `startCoroutine` (and `app.coroutines.start`) throws `IGX-0111` for a script that does not run in edit mode.
+- **Systems** run, hold, or skip as they registered (§6). A held system gets `dt = 0` and `isClockHeld = true` and treats the frame as paused.
+- **`time.paused` and `app.step()`** mean what they mean in a game. **`entity.isStatic`** stays writable after the first frame.
+- **Hot reload.** A `"patch"` that changes a class's `runInEditMode` is applied as `"recreate"`, so an instance is set up and torn down under the same answer.
