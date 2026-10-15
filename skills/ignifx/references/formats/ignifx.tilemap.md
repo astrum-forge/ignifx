@@ -17,5 +17,5 @@ Tile size, layers of tile ids, tilesets with colliders, and an objects layer.
 | `height` | `u32` | `0` | The map's height, in cells. |
 | `tilesets` | `array` | `[]` | The tilesets, ascending by firstId. |
 | `layers` | `array` | `[]` | The tile layers, back to front. |
-| `objects` | `array` | `[]` | The objects layer. |
+| `objects` | `array` | `[]` | The objects layer: authoring data that `ignifx import tilemap` moves into a scene. |
 | `properties` | `map` | `{}` | The map's custom properties. |

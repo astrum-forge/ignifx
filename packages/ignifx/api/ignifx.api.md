@@ -1221,7 +1221,6 @@ import { SortingLayerTable } from '@ignifx/2d';
 import { SoundInstance } from '@ignifx/audio';
 import { SoundVoice } from '@ignifx/audio';
 import { SpawnRecordRing } from '@ignifx/particles';
-import { spawnTilemapObjects } from '@ignifx/2d';
 import { SphereCollider } from '@ignifx/physics';
 import { SphereMeshOptions } from '@ignifx/core';
 import { SPRITE_ANIMATION_ASSET_TYPE } from '@ignifx/2d';
@@ -1389,8 +1388,6 @@ import { TilemapLayerDefinition } from '@ignifx/2d';
 import { TilemapLayerInput } from '@ignifx/2d';
 import { TilemapObjectDefinition } from '@ignifx/2d';
 import { TilemapRenderer } from '@ignifx/2d';
-import { TileObjectContext } from '@ignifx/2d';
-import { TileObjectFactory } from '@ignifx/2d';
 import { TileRleData } from '@ignifx/2d';
 import { TilesetDefinition } from '@ignifx/2d';
 import { Time } from '@ignifx/core';
@@ -3962,8 +3959,6 @@ export { SoundVoice }
 
 export { SpawnRecordRing }
 
-export { spawnTilemapObjects }
-
 export { SphereCollider }
 
 export { SphereMeshOptions }
@@ -4297,10 +4292,6 @@ export { TilemapLayerInput }
 export { TilemapObjectDefinition }
 
 export { TilemapRenderer }
-
-export { TileObjectContext }
-
-export { TileObjectFactory }
 
 export { TileRleData }
 

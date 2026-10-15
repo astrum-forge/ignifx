@@ -176,9 +176,13 @@ export interface TilemapLayerDefinition {
 }
 
 /**
- * One object placed on the map, to be turned into an entity by a registered `TileObjectFactory`.
+ * One object placed on the map: a spawn point, a prop, a trigger area.
  *
  * @remarks
+ * Objects are authoring data (ADR-0030). The runtime never creates entities from them;
+ * `ignifx import tilemap` moves them into a scene file once, as entities, and code can still read
+ * them from {@link TilemapDefinition.objects}.
+ *
  * `x`, `y`, `width` and `height` are **world metres with +Y up**, and `x`/`y` name the object's
  * **bottom-left** corner. Importers do the conversion out of the editor's top-left pixel space, so
  * nothing downstream has to know what editor the map came from.
@@ -188,7 +192,7 @@ export interface TilemapLayerDefinition {
 export interface TilemapObjectDefinition {
   /** The object's name, as authored; not required to be unique. */
   readonly name: string;
-  /** The object's type — what `app.twoD.registerTileObjectFactory` keys on. */
+  /** The object's type, such as `"spawn"` or `"coin"`. */
   readonly type: string;
   /** The left edge, in world metres. */
   readonly x: number;

@@ -560,13 +560,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -2176,13 +2176,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -3433,13 +3433,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -4093,13 +4093,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -4760,13 +4760,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -5386,13 +5386,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -5940,13 +5940,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -6668,13 +6668,13 @@ A read-only view of the size.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -7154,13 +7154,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -7732,13 +7732,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -8366,13 +8366,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -8951,13 +8951,13 @@ A freshly allocated vector.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -9585,13 +9585,13 @@ A freshly allocated vector in metres per second.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -10147,13 +10147,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -10650,13 +10650,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -11164,13 +11164,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -12360,13 +12360,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -13196,13 +13196,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -14544,13 +14544,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -15492,13 +15492,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world that owns the entity.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -16259,13 +16259,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -16993,13 +16993,13 @@ The character's vertical speed, positive upwards.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -19462,13 +19462,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -20401,13 +20401,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -22803,13 +22803,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -24014,13 +24014,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -24733,13 +24733,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -28283,13 +28283,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -28889,13 +28889,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -29489,13 +29489,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -30221,13 +30221,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -31221,13 +31221,13 @@ The agent's current world velocity, as the crowd reports it. Reused each frame.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -31722,13 +31722,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -32402,13 +32402,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -33020,13 +33020,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -34385,13 +34385,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -35094,13 +35094,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -36636,13 +36636,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -37187,13 +37187,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -37810,13 +37810,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -38333,13 +38333,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -38817,13 +38817,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -40610,13 +40610,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -41304,13 +41304,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -41905,13 +41905,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -42566,13 +42566,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -44182,13 +44182,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -44983,13 +44983,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -45729,13 +45729,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -46454,13 +46454,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -47353,13 +47353,13 @@ The count.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -48513,13 +48513,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -49026,13 +49026,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -49880,13 +49880,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -50591,13 +50591,13 @@ The character's vertical speed, positive upwards.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -51315,13 +51315,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -52136,13 +52136,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -52680,13 +52680,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -53651,13 +53651,13 @@ A freshly allocated vector. Use `Transform.upToRef` in hot code.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -54741,45 +54741,6 @@ readback and no frame of latency, which is what makes it usable from a click han
 resolves only `SpriteRenderer` components: a tilemap's tiles have no component, so use
 `Tilemap.worldToCell` for those.
 
-##### registerTileObjectFactory()
-
-> **registerTileObjectFactory**(`type`, `factory`): `void`
-
-Registers the factory that turns one kind of tilemap object into an entity
-(`docs/architecture/11-2d-toolkit.md` §2.5).
-
-###### Parameters
-
-###### type
-
-`string`
-
-The object `type` the map writes.
-
-###### factory
-
-[`TileObjectFactory`](#tileobjectfactory)
-
-Builds the entity, or returns `null` to spawn nothing.
-
-###### Returns
-
-`void`
-
-###### Throws
-
-IgnifxError with code `IGX-1110` when a factory for the type is already registered.
-
-###### Example
-
-```ts
-app.twoD.registerTileObjectFactory("spawn", ({ world, position }) => {
-  const player = world.createEntity({ name: "player" });
-  player.transform.position2D = new Vec2(position.x, position.y);
-  return player;
-});
-```
-
 ##### screenToWorld()
 
 > **screenToWorld**(`xPx`, `yPx`, `out?`): [`MutableVec2`](#mutablevec2)
@@ -54811,26 +54772,6 @@ The vector to write; omitting it allocates one.
 [`MutableVec2`](#mutablevec2)
 
 `out`, or the origin when no camera is active.
-
-##### unregisterTileObjectFactory()
-
-> **unregisterTileObjectFactory**(`type`): `boolean`
-
-Removes a tile-object factory.
-
-###### Parameters
-
-###### type
-
-`string`
-
-The object type.
-
-###### Returns
-
-`boolean`
-
-`true` when a factory was registered.
 
 ##### visibleWorldBounds()
 
@@ -54912,7 +54853,7 @@ Connects the scene hook to a new world.
 
 ###### world
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The new world.
 
@@ -54940,7 +54881,7 @@ Drops every layer when the world goes away.
 
 ###### \_world
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world being disposed.
 
@@ -55502,7 +55443,7 @@ Builds the overlay, now that the engine and its canvas exist.
 
 ###### \_world
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The new world, which the overlay does not need.
 
@@ -60218,13 +60159,13 @@ The live scene list.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world itself; `WorldHost` names it so entities can reach it.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 This world.
 
@@ -61005,13 +60946,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -61592,13 +61533,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -62209,13 +62150,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-64)
+> **get** **world**(): [`World`](#world-63)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world.
 
@@ -62607,7 +62548,7 @@ Advances every animated tile by one frame's worth of scaled time.
 
 ###### world
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world holding the tilemaps.
 
@@ -63231,7 +63172,7 @@ The `@ignifx/core` version this app was built from.
 
 ##### world
 
-> `readonly` **world**: [`World`](#world-64)
+> `readonly` **world**: [`World`](#world-63)
 
 The running simulation.
 
@@ -81245,7 +81186,7 @@ Called once when the world the system belongs to has been created.
 
 ###### world
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The new world.
 
@@ -81263,7 +81204,7 @@ Called once when the world the system belongs to is being disposed.
 
 ###### world
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world going away.
 
@@ -81328,7 +81269,7 @@ The app clock.
 
 ##### world
 
-> `readonly` **world**: [`World`](#world-64)
+> `readonly` **world**: [`World`](#world-63)
 
 The world the system operates on.
 
@@ -82838,9 +82779,13 @@ The layer's width in cells. Defaults to the map's width.
 
 ### TilemapObjectDefinition
 
-One object placed on the map, to be turned into an entity by a registered `TileObjectFactory`.
+One object placed on the map: a spawn point, a prop, a trigger area.
 
 #### Remarks
+
+Objects are authoring data (ADR-0030). The runtime never creates entities from them;
+`ignifx import tilemap` moves them into a scene file once, as entities, and code can still read
+them from [TilemapDefinition.objects](#objects).
 
 `x`, `y`, `width` and `height` are **world metres with +Y up**, and `x`/`y` name the object's
 **bottom-left** corner. Importers do the conversion out of the editor's top-left pixel space, so
@@ -82870,7 +82815,7 @@ The object's custom properties.
 
 > `readonly` **type**: `string`
 
-The object's type — what `app.twoD.registerTileObjectFactory` keys on.
+The object's type, such as `"spawn"` or `"coin"`.
 
 ##### width
 
@@ -82889,56 +82834,6 @@ The left edge, in world metres.
 > `readonly` **y**: `number`
 
 The bottom edge, in world metres, +Y up.
-
-***
-
-### TileObjectContext
-
-What a [TileObjectFactory](#tileobjectfactory) is handed.
-
-#### Properties
-
-##### name
-
-> `readonly` **name**: `string`
-
-The object's name, as the map wrote it.
-
-##### position
-
-> `readonly` **position**: [`Vec2Like`](#vec2like)
-
-The object's bottom-left corner, in world metres relative to the tilemap entity.
-
-##### properties
-
-> `readonly` **properties**: `Readonly`\<`Record`\<`string`, `string` \| `number` \| `boolean`\>\>
-
-The object's custom properties.
-
-##### size
-
-> `readonly` **size**: [`Vec2Like`](#vec2like)
-
-The object's size, in world metres.
-
-##### tilemap
-
-> `readonly` **tilemap**: [`Entity`](#entity-19)
-
-The tilemap entity the object came from, so a factory can parent to it.
-
-##### type
-
-> `readonly` **type**: `string`
-
-The object's type, which selected this factory.
-
-##### world
-
-> `readonly` **world**: [`World`](#world-64)
-
-The world to create the entity in.
 
 ***
 
@@ -86827,24 +86722,6 @@ Discriminant: the tile does not collide.
 
 `"none"` is the shape of a tile that renders but does not collide; it is the default for a tile
 whose tileset entry declares no collider.
-
-***
-
-### TileObjectFactory
-
-> **TileObjectFactory** = (`context`) => [`Entity`](#entity-19) \| `null`
-
-Builds the entities a tilemap's objects layer describes.
-
-#### Parameters
-
-##### context
-
-[`TileObjectContext`](#tileobjectcontext)
-
-#### Returns
-
-[`Entity`](#entity-19) \| `null`
 
 ***
 
@@ -92190,12 +92067,6 @@ A sprite batch was handed a slot index, or a `count`, outside `0 .. capacity`.
 > `readonly` **duplicateExtension**: `"IGX-1112"`
 
 A second `twoD()` extension was registered on one app.
-
-##### duplicateObjectFactory
-
-> `readonly` **duplicateObjectFactory**: `"IGX-1110"`
-
-`app.twoD.registerTileObjectFactory` was called twice for one object type.
 
 ##### invalidAnimationFile
 
@@ -98836,7 +98707,7 @@ every asset the file references is already loaded, which is what a `SceneAsset` 
 
 ##### world
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world to build into.
 
@@ -99575,7 +99446,7 @@ The camera the player is looking through.
 
 ##### world
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world to look in.
 
@@ -99603,7 +99474,7 @@ The main camera's forward vector.
 
 ##### world
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world to look in.
 
@@ -102421,7 +102292,7 @@ Picks the camera the frame draws through: the highest-priority enabled `Camera2D
 
 ##### world
 
-[`World`](#world-64)
+[`World`](#world-63)
 
 The world to search.
 
@@ -102927,50 +102798,6 @@ The terrain's layer count.
 [`ControlMaps`](#controlmaps)
 
 The maps.
-
-***
-
-### spawnTilemapObjects()
-
-> **spawnTilemapObjects**(`app`, `service`, `tilemap`): readonly [`Entity`](#entity-19)[]
-
-Runs the registered factory for every object in one tilemap.
-
-#### Parameters
-
-##### app
-
-[`App`](#app-1)
-
-The app.
-
-##### service
-
-[`TwoDService`](#twodservice)
-
-The 2D service holding the factory registry.
-
-##### tilemap
-
-[`Tilemap`](#tilemap)
-
-The tilemap whose objects layer to walk.
-
-#### Returns
-
-readonly [`Entity`](#entity-19)[]
-
-The entities that were created, in document order.
-
-#### Example
-
-```ts
-app.twoD.registerTileObjectFactory("spawn", ({ world, position }) => {
-  const player = world.createEntity({ name: "player" });
-  player.transform.position2D = new Vec2(position.x, position.y);
-  return player;
-});
-```
 
 ***
 

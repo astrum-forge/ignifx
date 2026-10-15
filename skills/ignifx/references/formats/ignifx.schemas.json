@@ -3082,7 +3082,7 @@
         "objects": {
           "kind": "array",
           "default": "[]",
-          "description": "The objects layer."
+          "description": "The objects layer: authoring data that `ignifx import tilemap` moves into a scene."
         },
         "properties": {
           "kind": "map",

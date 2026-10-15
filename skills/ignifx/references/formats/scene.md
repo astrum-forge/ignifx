@@ -68,9 +68,8 @@ A 2D file names a still sprite's frame in `SpriteRenderer`'s `frameName` field
 (`"frameName": "barrel"`; `""` is the first frame), next to the atlas in `sprite`. Do not put a
 `#frame:` fragment in `sprite`: the renderer reports `IGX-1118` and draws nothing. `frame`, the
 index drawn, is runtime-only. `TilemapCollider2D` reads the `Tilemap` on the same entity, so a file
-that holds both has tile collision with no code. A file that
-lists a tilemap's objects as entities must not also register their tile-object factories, which run
-on every load.
+that holds both has tile collision with no code. A tilemap's objects layer never spawns at runtime:
+`ignifx import tilemap` moves it into the scene file once, as entities (ADR-0030).
 
 ## Value encoding
 

@@ -44,8 +44,8 @@ export const TwoDErrorCode = {
   unknownClip: "IGX-1108",
   /** A tilemap importer was handed a document it cannot read, or an unsupported projection. */
   unsupportedImport: "IGX-1109",
-  /** `app.twoD.registerTileObjectFactory` was called twice for one object type. */
-  duplicateObjectFactory: "IGX-1110",
+  // IGX-1110 is retired: it was the duplicate tile-object factory, removed with the factories
+  // (ADR-0030). Do not reuse it, so an old log or bug report never points at the wrong failure.
   /** A tile coordinate is outside the tilemap layer's bounds. */
   tileOutOfRange: "IGX-1111",
   /** A second `twoD()` extension was registered on one app. */
@@ -86,7 +86,6 @@ export const TWO_D_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.fre
   "IGX-1107": "{sortingLayer} is not a sorting layer declared by the sortingLayers settings section.",
   "IGX-1108": "{asset} declares no clip named {clip}.",
   "IGX-1109": "{importer} cannot read this document: {reason}.",
-  "IGX-1110": "A tile object factory for {type} is already registered.",
   "IGX-1111": "Cell {x},{y} is outside layer {layer}.",
   "IGX-1112": "The twoD() extension is already registered on this app.",
   "IGX-1113": "A custom SpriteLayerEffect needs a WGSL fragment body in its shader field.",
