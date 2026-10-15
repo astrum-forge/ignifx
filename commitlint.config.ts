@@ -23,6 +23,7 @@ const config: UserConfig = {
         "ui",
         "electron",
         "devtools",
+        "editor-host",
         "vite-plugin",
         "cli",
         "ignifx",
