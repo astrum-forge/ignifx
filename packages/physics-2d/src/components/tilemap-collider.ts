@@ -1,23 +1,35 @@
 import { createDefaults, defineSchema } from "@ignifx/core";
 import { Collider2D, collider2DFields } from "./collider.js";
 import type { CollectedShape2D } from "./collider.js";
-import type { TilemapCollisionData } from "@ignifx/2d";
-import type { Schema, Vec2Like } from "@ignifx/core";
+import type { Tilemap, TilemapCollisionData } from "@ignifx/2d";
+import type { Component, Schema, Vec2Like } from "@ignifx/core";
 
 /**
- * Read tile collision data through the optional 2D toolkit's type and rebuild when its version changes.
- * Closed polylines preserve concave tile outlines that convex hulls would fill in. They are thin
- * surfaces, so a body starting inside the map is not pushed out.
+ * Read tile collision data through the optional 2D toolkit's type and rebuild when it changes.
+ * The sibling `Tilemap` is found by its registered type id, because `@ignifx/2d` is an optional
+ * peer and must not be imported as a value. Closed polylines preserve concave tile outlines that
+ * convex hulls would fill in. They are thin surfaces, so a body starting inside the map is not
+ * pushed out.
  */
+
+/** The type id `@ignifx/2d` registers `Tilemap` under. */
+const TILEMAP_TYPE_ID = "ignifx/Tilemap";
 
 /**
  * The collision surface of a tilemap, as one static body's worth of Rapier shapes.
  *
+ * @remarks
+ * The collider reads the `Tilemap` on its own entity, so a scene file that holds both components
+ * has tile collision as soon as it loads. It follows that tilemap: a tile edit, a new map, or a
+ * tilemap added later all reach physics at the next fixed step. Assign
+ * {@link TilemapCollider2D.collisionData} only to use other geometry, such as data you built in
+ * code or a tilemap on another entity.
+ *
  * @example
  * ```ts
- * const map = world.createEntity("Map");
- * const collider = map.addComponent(TilemapCollider2D);
- * collider.collisionData = tilemap.collisionData;
+ * const level = world.createEntity("Level");
+ * level.addComponent(Tilemap).map = app.assets.load<TilemapAsset>("level.tilemap.json");
+ * level.addComponent(TilemapCollider2D); // reads the Tilemap beside it
  * ```
  *
  * @public
@@ -29,10 +41,13 @@ export class TilemapCollider2D extends Collider2D {
   /** The serialized field declarations; the geometry itself comes from the tilemap asset. */
   static schema: Schema = tilemapSchema();
 
-  /** The merged chunk geometry, or `null` until a tilemap supplies it. */
-  #data: TilemapCollisionData | null = null;
+  /** Geometry that code assigned, which takes the place of the sibling tilemap's. */
+  #override: TilemapCollisionData | null = null;
 
-  /** The `version` of the data the current shapes were built from. */
+  /** The data the current shapes were built from. */
+  #builtData: TilemapCollisionData | null = null;
+
+  /** The `version` of that data when the shapes were built. */
   #builtVersion = -1;
 
   /** Applies the shared defaults. */
@@ -42,21 +57,28 @@ export class TilemapCollider2D extends Collider2D {
   }
 
   /**
-   * The merged chunk geometry this collider builds shapes from.
+   * The merged chunk geometry this collider builds shapes from: the assigned data, or else the
+   * `Tilemap` on the same entity.
    *
-   * @returns The data, or `null` when none has been supplied.
+   * @remarks
+   * Reading it works in an edit-mode app too, where no body is built (ADR-0028), so an editor can
+   * draw the outlines.
+   *
+   * @returns The data, or `null` when nothing was assigned and the entity has no `Tilemap`.
    */
   get collisionData(): TilemapCollisionData | null {
-    return this.#data;
+    return this.#override ?? siblingCollisionData(this);
   }
 
   /**
-   * Replaces the tilemap geometry and schedules a rebuild.
+   * Uses other geometry instead of the sibling tilemap's, and schedules a rebuild.
    *
-   * @param value - The merged chunk geometry, or `null` to drop the shapes.
+   * @param value - The merged chunk geometry, or `null` to go back to the `Tilemap` on the same
+   * entity (no shapes when there is none).
    */
   set collisionData(value: TilemapCollisionData | null) {
-    this.#data = value;
+    this.#override = value;
+    this.#builtData = null;
     this.#builtVersion = -1;
     this.rebuild();
   }
@@ -70,7 +92,8 @@ export class TilemapCollider2D extends Collider2D {
    * @internal
    */
   needsRebuild(): boolean {
-    return (this.#data?.version ?? -1) !== this.#builtVersion;
+    const data = this.collisionData;
+    return data !== this.#builtData || (data?.version ?? -1) !== this.#builtVersion;
   }
 
   /**
@@ -82,7 +105,8 @@ export class TilemapCollider2D extends Collider2D {
    * @internal
    */
   collectShapes(scale: Vec2Like, out: CollectedShape2D[]): void {
-    const data = this.#data;
+    const data = this.collisionData;
+    this.#builtData = data;
     this.#builtVersion = data?.version ?? -1;
     if (data === null) {
       return;
@@ -110,6 +134,29 @@ export class TilemapCollider2D extends Collider2D {
       }
     }
   }
+}
+
+/**
+ * Reads the collision data of the `Tilemap` on a collider's entity.
+ *
+ * @param collider - The collider.
+ * @returns The tilemap's merged geometry, or `null` when the entity has no `Tilemap` or the 2D
+ * toolkit is not registered.
+ */
+function siblingCollisionData(collider: TilemapCollider2D): TilemapCollisionData | null {
+  const type = collider.world.registry.get(TILEMAP_TYPE_ID);
+  const tilemap = type === null ? null : collider.entity.getComponent(type);
+  return tilemap !== null && isTilemap(tilemap) ? tilemap.collisionData : null;
+}
+
+/**
+ * Whether a component registered as `ignifx/Tilemap` has the shape this package reads.
+ *
+ * @param component - The component.
+ * @returns `true` when it carries `collisionData`.
+ */
+function isTilemap(component: Component): component is Tilemap {
+  return "collisionData" in component;
 }
 
 /**

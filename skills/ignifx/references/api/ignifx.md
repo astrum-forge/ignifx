@@ -51071,7 +51071,7 @@ rectangles as possible.
 
 [`TilemapCollisionData`](#tilemapcollisiondata-1)
 
-The collision data.
+The collision data; empty until the map has loaded.
 
 ##### definition
 
@@ -51756,12 +51756,20 @@ The address, or `""` when the index is out of range.
 
 The collision surface of a tilemap, as one static body's worth of Rapier shapes.
 
+#### Remarks
+
+The collider reads the `Tilemap` on its own entity, so a scene file that holds both components
+has tile collision as soon as it loads. It follows that tilemap: a tile edit, a new map, or a
+tilemap added later all reach physics at the next fixed step. Assign
+[TilemapCollider2D.collisionData](#collisiondata-1) only to use other geometry, such as data you built in
+code or a tilemap on another entity.
+
 #### Example
 
 ```ts
-const map = world.createEntity("Map");
-const collider = map.addComponent(TilemapCollider2D);
-collider.collisionData = tilemap.collisionData;
+const level = world.createEntity("Level");
+level.addComponent(Tilemap).map = app.assets.load<TilemapAsset>("level.tilemap.json");
+level.addComponent(TilemapCollider2D); // reads the Tilemap beside it
 ```
 
 #### Extends
@@ -51916,19 +51924,25 @@ The app.
 
 > **get** **collisionData**(): [`TilemapCollisionData`](#tilemapcollisiondata-1) \| `null`
 
-The merged chunk geometry this collider builds shapes from.
+The merged chunk geometry this collider builds shapes from: the assigned data, or else the
+`Tilemap` on the same entity.
+
+###### Remarks
+
+Reading it works in an edit-mode app too, where no body is built (ADR-0028), so an editor can
+draw the outlines.
 
 ###### Returns
 
 [`TilemapCollisionData`](#tilemapcollisiondata-1) \| `null`
 
-The data, or `null` when none has been supplied.
+The data, or `null` when nothing was assigned and the entity has no `Tilemap`.
 
 ###### Set Signature
 
 > **set** **collisionData**(`value`): `void`
 
-Replaces the tilemap geometry and schedules a rebuild.
+Uses other geometry instead of the sibling tilemap's, and schedules a rebuild.
 
 ###### Parameters
 
@@ -51936,7 +51950,8 @@ Replaces the tilemap geometry and schedules a rebuild.
 
 [`TilemapCollisionData`](#tilemapcollisiondata-1) \| `null`
 
-The merged chunk geometry, or `null` to drop the shapes.
+The merged chunk geometry, or `null` to go back to the `Tilemap` on the same
+entity (no shapes when there is none).
 
 ###### Returns
 
