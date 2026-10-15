@@ -5498,7 +5498,7 @@ The serialized field declarations (ADR-0004).
 
 ##### type
 
-> **type**: `"point"` \| `"directional"` \| `"spot"` \| `"hemispheric"`
+> **type**: `"directional"` \| `"spot"` \| `"point"` \| `"hemispheric"`
 
 ##### typeId
 
