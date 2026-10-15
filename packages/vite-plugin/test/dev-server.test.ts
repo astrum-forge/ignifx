@@ -112,7 +112,9 @@ describe("vite dev with the ignifx plugin", () => {
       configFile: false,
       logLevel: "silent",
       plugins: [ignifx(), hmrRecorder(sent)],
-      server: { middlewareMode: true },
+      // No real file watcher: it would report the write too, racing the `change` emitted below with a
+      // second identical update. The emitted event is then the only one Vite sees.
+      server: { middlewareMode: true, watch: null },
     });
     try {
       await server.transformRequest("/src/main.ts");
@@ -130,15 +132,15 @@ describe("vite dev with the ignifx plugin", () => {
       });
 
       // The registry is the boundary that takes the new script, so the page keeps running. A browser
-      // imports a `\0` virtual module at `/@id/__x00__<id>`. The real file watcher can report the
-      // write as well as the `change` emitted above, so the same update may arrive twice; no payload
-      // may be anything else, a full reload above all.
+      // imports a `\0` virtual module at `/@id/__x00__<id>`. Exactly one payload: an update, never a
+      // full reload.
       const registryUrl = `/@id/__x00__${SCRIPTS_MODULE_ID}`;
-      const registryUpdate = {
-        type: "update",
-        updates: [expect.objectContaining({ type: "js-update", path: registryUrl, acceptedPath: registryUrl })],
-      };
-      expect(sent).toEqual(sent.map(() => registryUpdate));
+      expect(sent).toEqual([
+        {
+          type: "update",
+          updates: [expect.objectContaining({ type: "js-update", path: registryUrl, acceptedPath: registryUrl })],
+        },
+      ]);
     } finally {
       await server.close();
     }
