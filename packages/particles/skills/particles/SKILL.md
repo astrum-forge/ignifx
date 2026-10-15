@@ -24,7 +24,7 @@ trades those away, and "Gotchas" below says what to do instead. For 2D sprite pa
 - Engine: ignifx `0.8.0`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
 - Requires nothing but `@ignifx/core`. `@ignifx/physics` is optional: when it is registered, an
   effect that asks for "the world's gravity" reads the `physics` settings section.
-- WebGPU only, browser and Electron. Babylon Lite `1.27.0` is a peer dependency, and this package
+- WebGPU only, browser and Electron. Babylon Lite `1.34.0` is a peer dependency, and this package
   imports none of it.
 - Everything except the GPU upload runs under `createApp({ headless: true })`.
 - Nothing happens at import time.

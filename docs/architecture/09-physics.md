@@ -133,7 +133,7 @@ a temporary Havok shape for the call.
 one completed step (Lite builds the broadphase on the first step); calling earlier throws
 `IGX-0902`.
 
-**Identity is only available for rays.** Lite 1.27.0 reports a body for `physicsRaycast` alone:
+**Identity is only available for rays.** Lite 1.34.0 still reports a body for `physicsRaycast` alone:
 `ShapeCastResult` and `ShapeProximityResult` carry points and normals but no body, and
 `shapeProximity`'s collector has capacity `1`, so it can never list more than one hit. So
 `shapeCast` runs Lite's sweep for the geometry and resolves `entity` against the extension's own
