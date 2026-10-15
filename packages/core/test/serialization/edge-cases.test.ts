@@ -158,8 +158,8 @@ describe("references inside a prefab", () => {
     );
     const harness = world();
     const built = instantiateScene(harness.world, level);
-    const first = built.roots[0]?.children[0];
-    const second = built.roots[1]?.children[0];
+    const first = built.roots[0];
+    const second = built.roots[1];
     const firstMover = first?.getComponent(Everything);
     expect(firstMover?.target).toBe(first?.children[0]);
     expect(firstMover?.follow).toBe(first?.children[0]?.getComponent(Tagger));
@@ -168,9 +168,16 @@ describe("references inside a prefab", () => {
   });
 });
 
-/** A prefab whose single entity differs from what the test then makes of it. */
+/**
+ * A prefab whose one child entity differs from what the test then makes of it. The entity sits
+ * below a root because the root itself merges into the entity carrying the `instance` entry, whose
+ * own fields are not overrides.
+ */
 function prefabFor(entity: Parameters<typeof entityRecord>[0]): Promise<SceneAsset> {
-  return createSceneAsset("p.prefab.json", buildFile({ entities: [entityRecord(entity)] }));
+  return createSceneAsset(
+    "p.prefab.json",
+    buildFile({ entities: [entityRecord({ uid: "ROOT" }), entityRecord({ parent: "ROOT", ...entity })] }),
+  );
 }
 
 /** Instances a prefab once into a level and builds the result into a world. */
@@ -233,10 +240,11 @@ describe("override diffing", () => {
     const prefab = await createSceneAsset("p.prefab.json", {
       ...buildFile({ entities: [] }),
       entities: [
+        entityRecord({ uid: "ROOT" }),
         {
           uid: "P",
           name: "P",
-          parent: null,
+          parent: "ROOT",
           transform: { position: [0, 0], rotation: [0, 0, 0, 1], scale: [1, 1, 1] },
         },
       ],
@@ -368,7 +376,12 @@ describe("more degraded shapes", () => {
   it("emits a tags override when the count differs", async () => {
     const prefab = await createSceneAsset(
       "p.prefab.json",
-      buildFile({ entities: [entityRecord({ uid: "P", name: "P", tags: ["a", "b"] })] }),
+      buildFile({
+        entities: [
+          entityRecord({ uid: "ROOT" }),
+          entityRecord({ uid: "P", name: "P", parent: "ROOT", tags: ["a", "b"] }),
+        ],
+      }),
     );
     const level = await createSceneAsset(
       "l.scene.json",

@@ -85,8 +85,11 @@ Canonicalization is idempotent, so save → load → save is byte-identical.
 
 ## Instances and overrides
 
-An entity that carries an `instance` block is an instance root: the referenced scene is expanded
-under it and the overrides are applied in order.
+An entity that carries an `instance` block is an instance root, and the overrides are applied in
+order. When the referenced scene has exactly one root, the instance root _is_ that root, as with
+`world.instantiate`: it gets the root's components and then its own `components`, keeps its own
+`uid`, `name` and `transform`, and adopts the root's children. A scene with several roots is
+expanded under the instance root instead.
 
 ```json
 {

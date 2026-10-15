@@ -195,7 +195,7 @@ interface Transform extends Component {
 ## 6. Scenes as assets, prefabs as instanced scenes
 
 - A scene file (`06-serialization-and-scene-format.md`) describes a tree of entities. There is one file format for levels and prefabs (ADR-0005); the `.prefab.json` suffix is a convention for scenes meant to be instantiated many times.
-- An entity in a scene file may be an **instance** of another scene asset: `{"instance": {"scene": "prefabs/enemy.prefab.json", "overrides": [...]}}`. On load the instanced scene's entities are created under that entity, and overrides (property patches addressed by the _instanced_ file's entity/component uids) are applied. Nested instances are allowed to any depth; cycles are rejected (`IGX-0302`).
+- An entity in a scene file may be an **instance** of another scene asset: `{"instance": {"scene": "prefabs/enemy.prefab.json", "overrides": [...]}}`. On load a single-root scene's root merges into that entity, as `world.instantiate` answers with that root; a scene with several roots is created under it. Then overrides (property patches addressed by the _instanced_ file's entity/component uids) are applied. Nested instances are allowed to any depth; cycles are rejected (`IGX-0302`).
 - At runtime, `Entity.prefab` (`{ asset, instanceRoot }`) identifies entities that came from an instance, so tooling can show the link. The engine itself does not maintain a live link back to the prefab after load; "apply changes to prefab" is editor work, post-1.0.
 - `persistent` scene instances model Unity's `DontDestroyOnLoad`; moving a single entity between scenes uses `moveEntityToScene`.
 

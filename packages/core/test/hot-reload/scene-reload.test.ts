@@ -121,8 +121,8 @@ describe("reloadScene", () => {
     expect(harness.app.world.scenes).not.toContain(first);
     expect(harness.app.world.activeScene).toBe(rebuilt);
     const spawn = rebuilt.roots[0]?.children[0];
-    expect(spawn?.children[0]?.name).toBe("Boss");
-    expect(spawn?.children[0]?.getComponent(Tagger)?.note).toBe("elite");
+    expect(spawn?.name).toBe("Boss");
+    expect(spawn?.getComponent(Tagger)?.note).toBe("elite");
     expect(reports.map((report) => report.kind)).toEqual(["scene"]);
     expect(reports[0]?.typeIds).toEqual([LEVEL]);
     expect(reports[0]?.instances).toBeGreaterThan(0);

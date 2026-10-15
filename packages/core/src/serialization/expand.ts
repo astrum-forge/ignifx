@@ -11,7 +11,8 @@ import type { JsonObject, JsonValue } from "../schema/json.js";
 
 /**
  * One entity of a fully expanded scene: every `instance` entry has been replaced by the entities of
- * the scene it named, with a fresh uid per copy and its overrides already applied
+ * the scene it named — a single root merged into the entity carrying the entry — with a fresh uid
+ * per copy and its overrides already applied
  * (`docs/architecture/06-serialization-and-scene-format.md` §4 step 3).
  *
  * @internal
@@ -43,6 +44,24 @@ export interface ExpandedInstance {
   readonly scene: SceneAsset;
   /** The expanded uid of the entity carrying the entry, or `null` when the builder decides. */
   readonly rootUid: string | null;
+  /**
+   * Set when the entity carrying the entry *is* the instanced scene's single root, which merged
+   * into it, rather than a container holding the scene's roots
+   * (`docs/architecture/06-serialization-and-scene-format.md` §2).
+   */
+  readonly root: ExpandedRoot | null;
+}
+
+/**
+ * The instanced root that merged into the entity carrying an `instance` entry.
+ *
+ * @internal
+ */
+export interface ExpandedRoot {
+  /** The uid of the root's record in the instanced file, which overrides address. */
+  readonly sourceUid: string;
+  /** Expanded component uid to the uid the root's record gives that component. */
+  readonly componentSourceUids: ReadonlyMap<string, string>;
 }
 
 /**
@@ -55,6 +74,11 @@ export interface ExpandedScene {
   readonly entities: readonly ExpandedEntity[];
   /** Every instance the expansion produced, in expansion order. */
   readonly instances: readonly ExpandedInstance[];
+  /**
+   * Expanded entity uid to the components an instanced root merged into it, at any depth: the
+   * ones its own record did not declare. Filled before overrides run.
+   */
+  readonly merged: ReadonlyMap<string, ReadonlySet<string>>;
 }
 
 /**
@@ -91,23 +115,33 @@ export interface ExpandOptions {
 export function expandScene(asset: SceneAsset, options: ExpandOptions): ExpandedScene {
   const entities: ExpandedEntity[] = [];
   const instances: ExpandedInstance[] = [];
-  const state: ExpandState = { entities, instances, options, counter: 0 };
+  const merged = new Map<string, Set<string>>();
+  const state: ExpandState = { entities, instances, merged, options, counter: 0 };
   if (options.asInstance === true) {
     const key = nextInstanceKey(state);
-    instances.push({ key, address: asset.address, asset: null, scene: asset, rootUid: null });
-    expandFile(asset, null, key, true, [asset.address], state);
-    return { entities, instances };
+    instances.push({ key, address: asset.address, asset: null, scene: asset, rootUid: null, root: null });
+    expandFile(asset, null, key, true, [asset.address], state, null);
+    return { entities, instances, merged };
   }
-  expandFile(asset, null, null, false, [asset.address], state);
-  return { entities, instances };
+  expandFile(asset, null, null, false, [asset.address], state, null);
+  return { entities, instances, merged };
 }
 
 /** Everything the recursive expansion threads through. */
 interface ExpandState {
   readonly entities: ExpandedEntity[];
   readonly instances: ExpandedInstance[];
+  readonly merged: Map<string, Set<string>>;
   readonly options: ExpandOptions;
   counter: number;
+}
+
+/** Where a single-root scene's root merges, and the component uid table that merge fills. */
+interface MergeTarget {
+  /** The record of the entity carrying the `instance` entry. */
+  readonly into: MutableSceneEntity;
+  /** Filled with expanded component uid to the uid the instanced root's record gives it. */
+  readonly componentSourceUids: Map<string, string>;
 }
 
 /**
@@ -119,6 +153,7 @@ interface ExpandState {
  * @param freshUids - `true` mints a new uid per entity and component; `false` keeps the file's own.
  * @param chain - The addresses of the scenes currently being expanded, for the cycle check.
  * @param state - The accumulating output.
+ * @param merge - Where the file's single root merges, or `null` to create every entity.
  * @returns The override targets produced, keyed by the uid each entity carries in `asset`'s own
  * file.
  */
@@ -129,6 +164,7 @@ function expandFile(
   freshUids: boolean,
   chain: readonly string[],
   state: ExpandState,
+  merge: MergeTarget | null,
 ): Map<string, OverrideTarget> {
   const source = asset.file.entities;
   const keys = new Map<string, string>();
@@ -138,7 +174,9 @@ function expandFile(
       if (entity === undefined) {
         continue;
       }
-      keys.set(entity.uid, state.options.nextUid());
+      // The merging root takes the carrier's uid, so its children and the references to it land
+      // on the carrier.
+      keys.set(entity.uid, merge !== null && entity.parent === null ? merge.into.uid : state.options.nextUid());
       const components = entity.components ?? [];
       for (let inner = 0; inner < components.length; inner += 1) {
         const component = components[inner];
@@ -152,6 +190,13 @@ function expandFile(
   for (let index = 0; index < source.length; index += 1) {
     const entity = source[index];
     if (entity === undefined) {
+      continue;
+    }
+    if (merge !== null && entity.parent === null) {
+      produced.set(entity.uid, mergeRoot(entity, merge, keys, state));
+      if (entity.instance !== undefined) {
+        expandInstance(asset, entity.instance, merge.into, chain, state);
+      }
       continue;
     }
     const uid = keys.get(entity.uid) ?? entity.uid;
@@ -175,28 +220,65 @@ function expandFile(
     state.entities.push({ data, sourceUid: entity.uid, instanceKey, componentSourceUids });
     const nested = entity.instance;
     if (nested !== undefined) {
-      expandInstance(asset, nested, uid, chain, state);
+      expandInstance(asset, nested, data, chain, state);
     }
   }
   return produced;
 }
 
 /**
- * Expands one `instance` entry under the entity that carries it.
+ * Merges an instanced scene's single root into the entity carrying the `instance` entry: the
+ * root's components come first, then the carrier's own. The carrier keeps its own uid, name,
+ * transform, and other entity fields, as `world.instantiate` keeps the placement it is given.
+ *
+ * @param entity - The instanced root's record.
+ * @param merge - The carrier and the component uid table to fill.
+ * @param keys - Source uid to expanded uid for the instanced file.
+ * @param state - The accumulating output.
+ * @returns The override target for the root, which is the carrier.
+ */
+function mergeRoot(
+  entity: SceneFileEntity,
+  merge: MergeTarget,
+  keys: ReadonlyMap<string, string>,
+  state: ExpandState,
+): OverrideTarget {
+  const into = merge.into;
+  const components = cloneComponents(entity, keys, merge.componentSourceUids);
+  into.components = [...components, ...into.components];
+  let merged = state.merged.get(into.uid);
+  if (merged === undefined) {
+    merged = new Set<string>();
+    state.merged.set(into.uid, merged);
+  }
+  for (let index = 0; index < components.length; index += 1) {
+    const component = components[index];
+    if (component !== undefined) {
+      merged.add(component.uid);
+    }
+  }
+  return { data: into, components: reverse(merge.componentSourceUids) };
+}
+
+/**
+ * Expands one `instance` entry on the entity that carries it. A scene with exactly one root merges
+ * that root into the carrier, as `world.instantiate` answers with that root; any other scene's
+ * roots become the carrier's children.
  *
  * @param asset - The scene the entry was declared in, whose dependencies resolve the reference.
  * @param instance - The entry.
- * @param rootUid - The expanded uid of the entity carrying it.
+ * @param carrier - The expanded record of the entity carrying it.
  * @param chain - The addresses currently being expanded.
  * @param state - The accumulating output.
  */
 function expandInstance(
   asset: SceneAsset,
   instance: NonNullable<SceneFileEntity["instance"]>,
-  rootUid: string,
+  carrier: MutableSceneEntity,
   chain: readonly string[],
   state: ExpandState,
 ): void {
+  const rootUid = carrier.uid;
   const address = instance.scene.$asset;
   if (chain.includes(address)) {
     throw new IgnifxError(
@@ -221,8 +303,15 @@ function expandInstance(
     reportHashMismatch(address, recorded, resolved.value.hash, state.options);
   }
   const key = nextInstanceKey(state);
-  state.instances.push({ key, address, asset: resolved.handle, scene: resolved.value, rootUid });
-  const produced = expandFile(resolved.value, rootUid, key, true, [...chain, address], state);
+  const single = singleRoot(resolved.value);
+  let merge: MergeTarget | null = null;
+  let root: ExpandedRoot | null = null;
+  if (single !== null) {
+    merge = { into: carrier, componentSourceUids: new Map<string, string>() };
+    root = { sourceUid: single.uid, componentSourceUids: merge.componentSourceUids };
+  }
+  state.instances.push({ key, address, asset: resolved.handle, scene: resolved.value, rootUid, root });
+  const produced = expandFile(resolved.value, rootUid, key, true, [...chain, address], state, merge);
   const overrides = instance.overrides;
   if (overrides !== undefined && overrides.length > 0) {
     applyOverrides(overrides, produced, (message) => {
@@ -248,6 +337,30 @@ function reportHashMismatch(address: string, recorded: string, actual: string, o
     });
   }
   options.report(CoreErrorCode.instanceHashMismatch, message);
+}
+
+/**
+ * The record of a scene's only root.
+ *
+ * @param asset - The scene.
+ * @returns The root's record, or `null` when the scene declares no root or several.
+ *
+ * @internal
+ */
+export function singleRoot(asset: SceneAsset): SceneFileEntity | null {
+  let found: SceneFileEntity | null = null;
+  const entities = asset.file.entities;
+  for (let index = 0; index < entities.length; index += 1) {
+    const entity = entities[index];
+    if (entity === undefined || entity.parent !== null) {
+      continue;
+    }
+    if (found !== null) {
+      return null;
+    }
+    found = entity;
+  }
+  return found;
 }
 
 /**

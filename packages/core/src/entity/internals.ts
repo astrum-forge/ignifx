@@ -56,6 +56,28 @@ export interface EntityInstanceLink {
   readonly asset: AssetHandle<SceneAsset> | null;
   /** The scene value, so the serializer can diff current state against it. */
   readonly scene: SceneAsset;
+  /**
+   * Set when the instance root *is* the instanced scene's single root, rather than a container
+   * holding the scene's roots (`06-serialization-and-scene-format.md` §2).
+   */
+  readonly root: InstancedRoot | null;
+}
+
+/**
+ * What an instance root that stands for its scene's single root took from that root.
+ *
+ * @internal
+ */
+export interface InstancedRoot {
+  /** The uid of the root's record in the instanced file, which overrides address. */
+  readonly sourceUid: string;
+  /** Expanded component uid to the uid the instanced root's record gives that component. */
+  readonly componentSourceUids: ReadonlyMap<string, string>;
+  /**
+   * Every component the instancing put on the entity, including those a variant's own instance
+   * merged in; the serializer writes the others as the entry's own `components`.
+   */
+  readonly components: ReadonlySet<string>;
 }
 
 /**

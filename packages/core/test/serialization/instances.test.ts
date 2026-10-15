@@ -63,7 +63,7 @@ async function levelInstancing(
 }
 
 describe("instance expansion", () => {
-  it("expands the instanced scene under the instance root with fresh uids", async () => {
+  it("merges a single-root scene into the instance root, with fresh uids below it", async () => {
     const prefab = await enemyPrefab();
     const level = await levelInstancing(prefab, { scene: { $asset: prefab.address }, hash: prefab.hash });
     const harness = world();
@@ -71,11 +71,38 @@ describe("instance expansion", () => {
     expect(built.issues).toEqual([]);
     const spawn = built.roots[0];
     expect(spawn?.name).toBe("Enemy_01");
-    expect(spawn?.children.map((child) => child.name)).toEqual(["Enemy"]);
-    const enemy = spawn?.children[0];
-    expect(enemy?.uid).not.toBe("P-ROOT");
-    expect(enemy?.children.map((child) => child.name)).toEqual(["Weapon"]);
-    expect(enemy?.getComponent(Everything)?.speed).toBe(3);
+    expect(spawn?.uid).toBe("L-SPAWN");
+    expect(spawn?.children.map((child) => child.name)).toEqual(["Weapon"]);
+    expect(spawn?.children[0]?.uid).not.toBe("P-CHILD");
+    expect(spawn?.getComponent(Everything)?.speed).toBe(3);
+    expect(spawn?.getComponents(Tagger)).toHaveLength(1);
+  });
+
+  it("expands a multi-root scene under the instance root, which stays a container", async () => {
+    const pair = await createSceneAsset(
+      "prefabs/pair.prefab.json",
+      buildFile({
+        name: "Pair",
+        entities: [
+          entityRecord({ uid: "A", name: "Left", components: [{ uid: "A-TAG", type: "test/Tagger" }] }),
+          entityRecord({ uid: "B", name: "Right" }),
+        ],
+      }),
+    );
+    const level = await createSceneAsset(
+      "levels/pair.scene.json",
+      buildFile({
+        entities: [entityRecord({ uid: "L", name: "Pair_01", instance: { scene: { $asset: pair.address } } })],
+      }),
+      [fakeHandle(pair.address, pair)],
+    );
+    const harness = world();
+    const spawn = instantiateScene(harness.world, level).roots[0];
+    expect(spawn?.getComponents(Tagger)).toHaveLength(0);
+    expect(spawn?.children.map((child) => child.name)).toEqual(["Left", "Right"]);
+    expect(spawn?.children[0]?.uid).not.toBe("A");
+    expect(spawn?.children[0]?.getComponents(Tagger)).toHaveLength(1);
+    expect(spawn?.children[0]?.prefab?.instanceRoot).toBe(spawn);
   });
 
   it("gives each instance of one prefab its own uids", async () => {
@@ -95,7 +122,7 @@ describe("instance expansion", () => {
     const first = built.roots[0]?.children[0];
     const second = built.roots[1]?.children[0];
     expect(first?.uid).not.toBe(second?.uid);
-    expect(harness.world.findAllByName("Enemy")).toHaveLength(2);
+    expect(harness.world.findAllByName("Weapon")).toHaveLength(2);
   });
 
   it("sets Entity.prefab on the instance root and on every instanced entity", async () => {
@@ -104,11 +131,9 @@ describe("instance expansion", () => {
     const harness = world();
     const built = instantiateScene(harness.world, level);
     const spawn = built.roots[0];
-    const enemy = spawn?.children[0];
-    const weapon = enemy?.children[0];
+    const weapon = spawn?.children[0];
     expect(spawn?.prefab?.address).toBe(prefab.address);
     expect(spawn?.prefab?.instanceRoot).toBe(spawn);
-    expect(enemy?.prefab?.instanceRoot).toBe(spawn);
     expect(weapon?.prefab?.instanceRoot).toBe(spawn);
     expect(spawn?.prefab?.asset?.address).toBe(prefab.address);
   });
@@ -129,7 +154,7 @@ describe("instance expansion", () => {
       ],
     });
     const harness = world();
-    const enemy = instantiateScene(harness.world, level).roots[0]?.children[0];
+    const enemy = instantiateScene(harness.world, level).roots[0];
     expect(enemy?.name).toBe("Boss");
     expect(enemy?.getComponent(Everything)?.speed).toBe(9);
     expect(enemy?.getComponent(Tagger)?.note).toBe("loot");
@@ -149,7 +174,7 @@ describe("instance expansion", () => {
       ],
     });
     const harness = world();
-    const enemy = instantiateScene(harness.world, level).roots[0]?.children[0];
+    const enemy = instantiateScene(harness.world, level).roots[0];
     const weapon = enemy?.children[0];
     expect(weapon?.transform.localPosition.x).toBe(1);
     expect([...(enemy?.tags.values() ?? [])]).toEqual(["boss"]);
@@ -167,7 +192,7 @@ describe("instance expansion", () => {
     const harness = world();
     const built = instantiateScene(harness.world, level);
     expect(built.issues[0]?.code).toBe(CoreErrorCode.instanceHashMismatch);
-    expect(built.roots[0]?.children[0]?.name).toBe("Enemy");
+    expect(built.roots[0]?.name).toBe("Enemy_01");
   });
 
   it("nests instances to any depth", async () => {
@@ -267,7 +292,7 @@ describe("re-serializing an instance", () => {
     });
     const harness = world();
     const built = instantiateScene(harness.world, level);
-    const enemy = built.roots[0]?.children[0];
+    const enemy = built.roots[0];
     const ai = enemy?.getComponent(Everything);
     if (ai !== undefined && ai !== null) {
       ai.label = "angry";
@@ -281,28 +306,35 @@ describe("re-serializing an instance", () => {
     expect(paths).toContain("P-ROOT/components/P-AI/props/speed");
     expect(paths).toContain("P-ROOT/components/P-AI/props/label");
     expect(spawn?.instance?.overrides).toHaveLength(2);
+    expect(spawn?.components).toBeUndefined();
   });
 
-  it("emits add and remove overrides for components changed at run time", async () => {
+  it("writes a removed root component as remove and an added one as the entry's own", async () => {
     const prefab = await enemyPrefab();
     const level = await levelInstancing(prefab, { scene: { $asset: prefab.address } });
     const harness = world();
     const built = instantiateScene(harness.world, level);
-    const enemy = built.roots[0]?.children[0];
+    const enemy = built.roots[0];
     const debug = enemy?.getComponent(Tagger) ?? null;
     if (enemy !== undefined && debug !== null) {
       enemy.removeComponent(debug);
     }
     harness.flushDestroy();
     enemy?.addComponent(Tagger, { note: "loot" });
+    const spawn = serializeScene(harness.world.activeScene, { engineVersion: null }).entities[0];
+    expect(spawn?.instance?.overrides).toEqual([{ op: "remove", path: "P-ROOT/components/P-DEBUG" }]);
+    expect(spawn?.components).toEqual([expect.objectContaining({ type: "test/Tagger", props: { note: "loot" } })]);
+  });
+
+  it("emits add and remove overrides for components changed at run time below the root", async () => {
+    const prefab = await enemyPrefab();
+    const level = await levelInstancing(prefab, { scene: { $asset: prefab.address } });
+    const harness = world();
+    const weapon = instantiateScene(harness.world, level).roots[0]?.children[0];
+    weapon?.addComponent(Tagger, { note: "sharp" });
     const overrides = serializeScene(harness.world.activeScene, { engineVersion: null }).entities[0]?.instance
       ?.overrides;
-    expect(overrides).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ op: "remove", path: "P-ROOT/components/P-DEBUG" }),
-        expect.objectContaining({ op: "add", path: "P-ROOT/components" }),
-      ]),
-    );
+    expect(overrides).toEqual([expect.objectContaining({ op: "add", path: "P-CHILD/components" })]);
   });
 
   it("round trips an instanced scene byte-identically", async () => {
@@ -328,7 +360,11 @@ describe("re-serializing an instance", () => {
     const harness = world();
     instantiateScene(harness.world, level);
     const file = serializeScene(harness.world.activeScene, { engineVersion: null, flatten: true });
-    expect(file.entities.map((entity) => entity.name)).toEqual(["Enemy_01", "Enemy", "Weapon"]);
+    expect(file.entities.map((entity) => entity.name)).toEqual(["Enemy_01", "Weapon"]);
+    expect(file.entities[0]?.components?.map((component) => component.type)).toEqual([
+      "test/Everything",
+      "test/Tagger",
+    ]);
     expect(file.entities.every((entity) => entity.instance === undefined)).toBe(true);
   });
 });
