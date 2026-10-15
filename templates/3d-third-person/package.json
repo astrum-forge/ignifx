@@ -24,6 +24,7 @@
     "@ignifx/ui": "workspace:*"
   },
   "devDependencies": {
+    "@ignifx/editor-host": "workspace:*",
     "@ignifx/electron": "workspace:*",
     "@ignifx/vite-plugin": "workspace:*",
     "@types/node": "catalog:",
