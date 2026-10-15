@@ -187,15 +187,24 @@ export function setShadowCasters(generator: ShadowGenerator, casters: readonly M
  * group rebuild pushes the **same** function again, and Lite drops the duplicate
  * (`dedupeGroupCleanup`, `lib/scene/scene-rebuild.js`). That re-push is how the adapter tells a
  * cache reset from a scene's own disposers without relying on function names, which an app's
- * minifier rewrites: every function pushed while {@link rebuildRenderables} runs that is already in
- * the list is recorded here. {@link learnMaterialCacheResets} runs one such rebuild right after
- * registration, so the resets are known before the first rebuild that needs them.
+ * minifier rewrites.
+ *
+ * {@link trackMaterialCacheResets} watches every push: a function already in the list is a reset
+ * and goes into `found`, and a function never seen before raises `unconfirmed`. A rebuild that
+ * raised it rebuilds once more at once, and a family Lite built on its own (a runtime build of the
+ * first mesh of a family, after start) is confirmed by the next rebuild the render sync system
+ * schedules for it. Each function raises `unconfirmed` once, so a scene's one-off disposers cost
+ * one extra rebuild in total, never a loop.
  *
  * @internal
  */
 export interface MaterialCacheResets {
-  /** The resets identified so far; empty until a rebuild re-registered one. */
+  /** The resets identified so far. */
   readonly found: Set<() => void>;
+  /** Every function seen pushed, so each one asks for at most one confirming rebuild. */
+  readonly seen: WeakSet<() => void>;
+  /** `true` when a function nobody had seen was pushed since the last rebuild started. */
+  unconfirmed: boolean;
 }
 
 /** The scene's disposer list, which Lite runs when the scene is disposed. Absent from `index.d.ts`. */
@@ -207,12 +216,51 @@ interface SceneDisposables {
 /**
  * Creates an empty record of a scene's material cache resets.
  *
- * @returns The record; fill it with {@link rebuildRenderables} or {@link learnMaterialCacheResets}.
+ * @returns The record; install it with {@link trackMaterialCacheResets}.
  *
  * @internal
  */
 export function createMaterialCacheResets(): MaterialCacheResets {
-  return { found: new Set() };
+  return { found: new Set(), seen: new WeakSet(), unconfirmed: false };
+}
+
+/**
+ * Starts recording what the scene's disposer list is handed, for the scene's lifetime.
+ *
+ * @remarks
+ * Call it before the scene is registered, so the builds `registerScene` runs are seen too. It is
+ * idempotent. An own `push` shadows `Array.prototype.push` on that one array; Lite only ever appends
+ * to it with `push`.
+ *
+ * @param scene - The scene.
+ * @param resets - Where to record.
+ *
+ * @internal
+ */
+export function trackMaterialCacheResets(scene: SceneContext, resets: MaterialCacheResets): void {
+  // Boundary assertion (coding standards §5.2): every Lite 1.34.0 scene carries the list.
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+  const listed = scene as SceneContext & SceneDisposables;
+  // oxlint-disable-next-line no-underscore-dangle
+  const disposables = listed._disposables;
+  if (disposables === undefined || Object.hasOwn(disposables, "push")) {
+    return;
+  }
+  Object.defineProperty(disposables, "push", {
+    configurable: true,
+    writable: true,
+    value: (...items: (() => void)[]): number => {
+      for (const item of items) {
+        if (disposables.includes(item)) {
+          resets.found.add(item);
+        } else if (!resets.seen.has(item)) {
+          resets.seen.add(item);
+          resets.unconfirmed = true;
+        }
+      }
+      return Array.prototype.push.apply(disposables, items);
+    },
+  });
 }
 
 /**
@@ -226,61 +274,48 @@ export function createMaterialCacheResets(): MaterialCacheResets {
  * call is a no-op before the scene's first build, and it is expensive, so the component layer
  * coalesces every topology change in a frame into one call.
  *
- * @param scene - The scene to rebuild.
- * @param resets - Where to record the cache resets the rebuild re-registers; see
+ * With `resets`, a rebuild that built a material family for the first time rebuilds once more
+ * straight away, so the family's cache reset is known before anything needs it; see
  * {@link MaterialCacheResets}.
+ *
+ * @param scene - The scene to rebuild.
+ * @param resets - The scene's record of cache resets.
  * @returns A promise that resolves when the rebuild has finished.
  *
  * @internal
  */
 export async function rebuildRenderables(scene: SceneContext, resets?: MaterialCacheResets): Promise<void> {
-  // Boundary assertion (coding standards §5.2): every Lite 1.34.0 scene carries the list.
-  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
-  const listed = scene as SceneContext & SceneDisposables;
-  // oxlint-disable-next-line no-underscore-dangle
-  const disposables = listed._disposables;
-  if (resets === undefined || disposables === undefined) {
+  if (resets === undefined) {
     await rebuildSceneRenderables(scene);
     return;
   }
-  const found = resets.found;
-  // An own `push` shadows `Array.prototype.push` for this one array, only while the rebuild runs.
-  Object.defineProperty(disposables, "push", {
-    configurable: true,
-    writable: true,
-    value: (...items: (() => void)[]): number => {
-      for (const item of items) {
-        if (disposables.includes(item)) {
-          found.add(item);
-        }
-      }
-      return Array.prototype.push.apply(disposables, items);
-    },
-  });
-  try {
+  trackMaterialCacheResets(scene, resets);
+  resets.unconfirmed = false;
+  await rebuildSceneRenderables(scene);
+  if (resets.unconfirmed) {
+    resets.unconfirmed = false;
     await rebuildSceneRenderables(scene);
-  } finally {
-    Reflect.deleteProperty(disposables, "push");
   }
 }
 
 /**
- * Rebuilds a freshly registered scene once, so Lite re-registers its material cache resets and
- * {@link forgetMaterialBindingLayouts} can call them from the first rebuild that needs them.
+ * Rebuilds a freshly registered scene once when its registration built anything, so Lite pushes
+ * its cache resets again and {@link forgetMaterialBindingLayouts} can call them from the first
+ * frame on.
  *
  * @remarks
  * Nothing has changed since registration, so every pipeline and layout comes from Lite's caches and
- * the rebuild only re-creates uniform buffers and bind groups. It is skipped once the resets are
- * known.
+ * the rebuild only re-creates uniform buffers and bind groups.
  *
  * @param scene - The registered scene.
- * @param resets - The scene's record.
+ * @param resets - The scene's record, installed with {@link trackMaterialCacheResets} before
+ * registration.
  * @returns A promise that resolves when the rebuild has finished.
  *
  * @internal
  */
 export async function learnMaterialCacheResets(scene: SceneContext, resets: MaterialCacheResets): Promise<void> {
-  if (resets.found.size === 0) {
+  if (resets.unconfirmed) {
     await rebuildRenderables(scene, resets);
   }
 }

@@ -208,6 +208,11 @@ export class RenderSyncSystem implements System {
     renderer.refreshClearColor();
     this.#applyStacks(world);
     this.#areCastersDirty = this.#areCastersDirty || castersChanged;
+    // Lite built a material family on its own (a runtime build of its first mesh) and pushed a
+    // cache reset nothing has confirmed yet: one rebuild confirms it (`../lite/shadow.ts`).
+    if (renderer.materialCacheResets.unconfirmed && !this.#isRebuildDue && !this.#isRebuildInFlight) {
+      this.#rebuildRenderables();
+    }
     // The rebuild is deferred by one frame on purpose; see `#rebuildRenderables`.
     if (this.#isRebuildDue && !topologyChanged) {
       this.#isRebuildDue = false;
