@@ -1,4 +1,5 @@
 import { defineConfig } from "tsdown";
+import manifest from "./package.json" with { type: "json" };
 
 /**
  * ESM-only library build. Declarations are emitted from `isolatedDeclarations`, so this build
@@ -16,6 +17,8 @@ export default defineConfig({
   clean: true,
   treeshake: true,
   dts: { isolatedDeclarations: true },
+  // Stamps `VERSION` (`src/version.ts`) with the version Changesets wrote into `package.json`.
+  define: { IGNIFX_BUILD_VERSION: JSON.stringify(manifest.version) },
   // Peer and runtime dependencies are resolved by the consumer, never bundled
   // (00-overview.md §2.1).
   deps: { neverBundle: ["@ignifx/core"] },

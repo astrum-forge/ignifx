@@ -757,7 +757,7 @@ export class UiSystem implements System {
 }
 
 // @public
-export const VERSION = "0.0.0";
+export const VERSION: string;
 
 // @public
 export class VirtualButton {

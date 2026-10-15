@@ -621,7 +621,7 @@ export class SoundVoice implements SoundInstance {
 }
 
 // @public
-export const VERSION = "0.0.0";
+export const VERSION: string;
 
 // @public
 export interface VoiceHost {

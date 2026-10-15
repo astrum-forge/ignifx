@@ -620,7 +620,7 @@ export interface TerrainSplatShaderSpec {
 }
 
 // @public
-export const VERSION = "0.2.1";
+export const VERSION: string;
 
 // @public
 export function writeChunkIndices(chunkSize: number, lod: number, indices: Uint32Array): void;

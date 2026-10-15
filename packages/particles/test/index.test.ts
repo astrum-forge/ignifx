@@ -11,7 +11,7 @@ describe("the @ignifx/particles barrel", () => {
     expect(typeof barrel.ParticleSystem).toBe("function");
     expect(typeof barrel.particles).toBe("function");
     expect(typeof barrel.ParticlesService).toBe("function");
-    expect(barrel.VERSION).toBe("0.2.1");
+    expect(barrel.VERSION).toBe("0.0.0");
   });
 
   it("exports the definition layer another renderer reads", () => {

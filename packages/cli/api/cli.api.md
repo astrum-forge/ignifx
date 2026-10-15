@@ -136,7 +136,7 @@ export const TEMPLATE_ROOT_CANDIDATES: readonly string[];
 export const USAGE = "Usage: create-ignifx <target-dir> [--template <name>] [--overwrite] [--desktop]";
 
 // @public
-export const VERSION = "0.0.0";
+export const VERSION: string;
 
 // (No @packageDocumentation comment for this package)
 
