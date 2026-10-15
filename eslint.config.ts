@@ -53,9 +53,10 @@ const config: Linter.Config[] = [
     },
     settings: {
       "import-x/resolver-next": [createTypeScriptImportResolver({ alwaysTryTypes: true })],
-      // The Vite plugin's virtual modules exist only inside Vite; their types come from
-      // `@ignifx/vite-plugin/client`, which the resolver cannot follow.
-      "import-x/core-modules": ["virtual:ignifx/manifest", "virtual:ignifx/scripts"],
+      // The Vite plugins' virtual modules exist only inside Vite; their types come from
+      // `@ignifx/vite-plugin/client` and `@ignifx/editor-host/client`, which the resolver cannot
+      // follow.
+      "import-x/core-modules": ["virtual:ignifx/editor", "virtual:ignifx/manifest", "virtual:ignifx/scripts"],
       // TSDoc and API Extractor require `@typeParam`; the plugin's default preference would
       // rewrite it to JSDoc's `@template` (CONSTITUTION.md §5.4).
       jsdoc: { tagNamePreference: { template: "typeParam" } },
