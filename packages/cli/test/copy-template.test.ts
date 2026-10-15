@@ -1,6 +1,7 @@
 import { mkdir, mkdtemp, readdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   CliError,
@@ -410,5 +411,40 @@ describe("the desktop variant", () => {
     expect(browser.files).not.toContain("_gitignore");
     expect(desktop.files).toContain(".gitignore");
     expect(desktop.files).not.toContain("_gitignore");
+  });
+});
+
+/** The repository's editor-ready template, scaffolded as `create-ignifx --template 3d-third-person` would. */
+const THIRD_PERSON_TEMPLATE = fileURLToPath(new URL("../../../templates/3d-third-person/", import.meta.url));
+
+describe("the 3d-third-person template", () => {
+  it("scaffolds a project the ignifx editor can open", async () => {
+    const target = join(workspace, "third-person");
+
+    await copyTemplate({ templateDir: THIRD_PERSON_TEMPLATE, targetDir: target });
+    const manifest = JSON.parse(await readFile(join(target, "package.json"), "utf8")) as {
+      devDependencies: Record<string, string>;
+    };
+    const viteConfig = await readFile(join(target, "vite.config.ts"), "utf8");
+    const main = await readFile(join(target, "src", "main.ts"), "utf8");
+    const viteEnv = await readFile(join(target, "src", "vite-env.d.ts"), "utf8");
+
+    // The host is on the engine's version line, so it gets the same range as `@ignifx/core`.
+    expect(manifest.devDependencies["@ignifx/editor-host"]).toBe(DEFAULT_DEPENDENCY_RANGE);
+    expect(viteConfig).toContain('import { editorHostPlugin } from "@ignifx/editor-host/vite";');
+    expect(viteConfig).toMatch(/^ {4}editorHostPlugin\(\{$/mu);
+    expect(main).toContain('import { attachEditorPlayControls } from "virtual:ignifx/editor";');
+    expect(main).toMatch(/^ {2}attachEditorPlayControls\(app\);$/mu);
+    expect(viteEnv).toContain('/// <reference types="@ignifx/editor-host/client" />');
+  });
+
+  it("lists the editor host in the desktop renderer too, which runs the same main.ts", async () => {
+    const target = join(workspace, "third-person-desktop");
+
+    await copyTemplate({ templateDir: THIRD_PERSON_TEMPLATE, targetDir: target, desktop: true });
+    const electronConfig = await readFile(join(target, "electron.vite.config.ts"), "utf8");
+
+    expect(electronConfig).toContain('import { editorHostPlugin } from "@ignifx/editor-host/vite";');
+    expect(electronConfig).toMatch(/^ {6}editorHostPlugin\(\{$/mu);
   });
 });
