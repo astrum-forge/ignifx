@@ -50,6 +50,7 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "catalog:",
+    "@babylonjs/lite": "catalog:",
     "@ignifx/core": "workspace:*",
     "@ignifx/vite-plugin": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
@@ -65,6 +66,7 @@
     "vitest": "catalog:"
   },
   "peerDependencies": {
+    "@babylonjs/lite": "catalog:",
     "@ignifx/core": "workspace:*",
     "@ignifx/vite-plugin": "workspace:*",
     "vite": "catalog:"

@@ -574,6 +574,9 @@ importers:
       '@arethetypeswrong/cli':
         specifier: 'catalog:'
         version: 0.18.5
+      '@babylonjs/lite':
+        specifier: 'catalog:'
+        version: 1.34.0(@babylonjs/havok@1.3.14)(@types/webxr@0.5.24)(@webgpu/types@0.1.72)
       '@ignifx/core':
         specifier: workspace:*
         version: link:../core
@@ -1283,6 +1286,9 @@ importers:
       '@ignifx/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@ignifx/editor-host':
+        specifier: workspace:*
+        version: link:../../packages/editor-host
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3

@@ -6,7 +6,9 @@
 import { createApp, VERSION } from "@ignifx/core";
 import { checkChannelOptions, openChannel, resolveMessageTarget } from "./channel.js";
 import { HostCapability, HostKind, PROTOCOL_VERSION } from "./protocol/index.js";
-import type { EditorMessageTarget } from "./channel.js";
+import { isRecord } from "./protocol/rpc.js";
+import { SceneHost } from "./scene/scene-host.js";
+import type { Channel, EditorMessageTarget } from "./channel.js";
 import type {
   App,
   AssetsCreateOptions,
@@ -75,6 +77,11 @@ export interface EditorHost {
   readonly app: App;
   /** The instance of `bootScene`, or `null` when none was given. */
   readonly bootScene: SceneInstance | null;
+  /**
+   * The persistent scene instance named `editor` that holds the host's own objects, such as the
+   * editor camera. It survives every scene the editor opens and is never part of the document.
+   */
+  readonly editorScene: SceneInstance;
   /** The engine version the host reports in `ready`. */
   readonly engineVersion: string;
   /** Whether the editor has handed the host a port that is still open. */
@@ -105,12 +112,19 @@ export function resolveEngineVersion(fallback: string | undefined, coreVersion: 
 /**
  * Starts the scene view's host: listens for the editor's port, creates the app from the project's
  * own `@ignifx/core` (in edit mode unless `editMode` is `false`), registers the project's scripts,
- * loads `bootScene` if one is given, and starts the app.
+ * loads `bootScene` if one is given, starts the app, and serves the editor protocol's scene methods
+ * (protocol 0.3, `docs/architecture/17-editor-host.md` §6).
  *
  * @remarks
  * The host answers `hello` with `ready` and `ping` with `"pong"` as soon as a port arrives, even
- * while the app is still being created, and refuses every other method with `methodNotFound`. It
- * accepts a new port whenever the editor sends one, closing the previous port.
+ * while the app is still being created; the scene methods answer `notReady` until the app has
+ * started, and the host's first `schemasChanged` says they are accepted. It accepts a new port
+ * whenever the editor sends one, closing the previous port.
+ *
+ * With a `canvas` the host draws Babylon Lite's gizmos and a selection outline and answers
+ * `screenshot`, and it runs the view at `rendering.msaaSamples: 1`: at a higher setting Lite's
+ * overlay cannot be composited into ignifx's frame, and the gizmos would be invisible (editor plan
+ * ask E12). A headless host serves every method that needs no GPU.
  *
  * @param options - The editor's origin and the project's app options.
  * @returns The running host, once the app has started.
@@ -130,51 +144,98 @@ export function resolveEngineVersion(fallback: string | undefined, coreVersion: 
 export async function startEditorHost(options: EditorHostOptions): Promise<EditorHost> {
   const heartbeatIntervalMs = checkChannelOptions(options.editorOrigin, options.heartbeatIntervalMs);
   const engineVersion = resolveEngineVersion(options.engineVersion);
+  const capabilities = hasGpuView(options)
+    ? [HostCapability.heartbeat, HostCapability.gizmos, HostCapability.screenshot]
+    : [HostCapability.heartbeat];
+  let channel: Channel | null = null;
+  const scene = new SceneHost({
+    capabilities,
+    notify: (method, params) => {
+      channel?.notify(method, params);
+    },
+  });
   // The channel opens before the first `await`, so a port posted while the app is created is kept.
-  const channel = openChannel({
+  const opened = openChannel({
     target: resolveMessageTarget(options.messageTarget),
     editorOrigin: options.editorOrigin,
     ready: {
       engineVersion,
       protocol: PROTOCOL_VERSION,
-      capabilities: [HostCapability.heartbeat],
+      capabilities,
       hostKind: options.hostKind ?? HostKind.scene,
     },
-    methods: new Map(),
+    methods: scene.methods,
     heartbeatIntervalMs,
+    onReady: () => {
+      scene.sendSchemas();
+    },
   });
+  channel = opened;
 
   let app: App | null = null;
   let bootScene: SceneInstance | null = null;
   try {
     app = await createApp(appOptions(options));
     app.registerComponents(options.scripts ?? []);
+    scene.prepare(app);
     // Loaded before `start()`, so the load settles without frames being pumped.
     if (options.bootScene !== undefined && options.bootScene !== null) {
       bootScene = await app.world.loadScene(options.bootScene);
     }
     await app.start();
+    await scene.start(options.canvas ?? null);
   } catch (error) {
-    channel.dispose();
+    scene.dispose();
+    opened.dispose();
     app?.dispose();
     throw error;
   }
 
   const started = app;
+  const editorScene = scene.editorScene ?? started.world.activeScene;
   const dispose = (): void => {
-    channel.dispose();
+    scene.dispose();
+    opened.dispose();
     started.dispose();
   };
   return {
     app: started,
     bootScene,
+    editorScene,
     engineVersion,
     get isConnected(): boolean {
-      return channel.isConnected;
+      return opened.isConnected;
     },
     dispose,
     [Symbol.dispose]: dispose,
   };
+}
+
+/**
+ * Tells whether a host renders: it has a canvas and is not forced headless.
+ *
+ * @param options - The host options.
+ * @returns True when the view draws gizmos and can be captured.
+ */
+function hasGpuView(options: EditorHostOptions): boolean {
+  return options.canvas !== undefined && options.headless !== true;
+}
+
+/**
+ * The project's settings with the scene view's MSAA set to 1 when the view renders.
+ *
+ * @param options - The host options.
+ * @returns The settings to create the app with.
+ */
+function viewSettings(options: EditorHostOptions): SettingsInput | undefined {
+  if (!hasGpuView(options)) {
+    return options.settings;
+  }
+  const settings = options.settings ?? {};
+  const rendering = settings["rendering"];
+  // Until core composites the gizmo overlay at every MSAA setting (editor plan ask E12), the scene
+  // view renders without MSAA; at 4 Lite's utility layer draws nothing (S0.2 §3.2).
+  return { ...settings, rendering: { ...(isRecord(rendering) ? rendering : {}), msaaSamples: 1 } };
 }
 
 /**
@@ -184,12 +245,13 @@ export async function startEditorHost(options: EditorHostOptions): Promise<Edito
  * @returns The app options.
  */
 function appOptions(options: EditorHostOptions): CreateAppOptions {
+  const settings = viewSettings(options);
   return {
     editMode: options.editMode ?? true,
     ...(options.canvas === undefined ? {} : { canvas: options.canvas }),
     ...(options.headless === undefined ? {} : { headless: options.headless }),
     ...(options.extensions === undefined ? {} : { extensions: options.extensions }),
-    ...(options.settings === undefined ? {} : { settings: options.settings }),
+    ...(settings === undefined ? {} : { settings }),
     ...(options.assets === undefined ? {} : { assets: options.assets }),
   };
 }

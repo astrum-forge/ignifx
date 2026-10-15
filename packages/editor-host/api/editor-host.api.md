@@ -94,6 +94,7 @@ export interface EditorHost {
     readonly app: App;
     readonly bootScene: SceneInstance | null;
     dispose(): void;
+    readonly editorScene: SceneInstance;
     readonly engineVersion: string;
     readonly isConnected: boolean;
 }

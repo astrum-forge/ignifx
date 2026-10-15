@@ -356,7 +356,7 @@ describe("the editor's 0.2 wire fixture, through a live scene host", () => {
     await exchange(peer, asCurrent(wire("hello")), wire("hello")["id"]);
 
     vi.advanceTimersByTime(250);
-    expectWire(await peer.next(), wire("heartbeat"));
+    expectWire(await peer.nextNotification("heartbeat"), wire("heartbeat"));
   });
 });
 

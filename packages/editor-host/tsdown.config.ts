@@ -23,5 +23,5 @@ export default defineConfig({
   // Peer dependencies are resolved by the consumer, never bundled (00-overview.md §2.1). Bundling
   // `@ignifx/core` would give the scene view a second copy of `Component`.
   // The plugin half imports Node built-ins, which Vite provides; the neutral platform does not know them.
-  deps: { neverBundle: ["@ignifx/core", "@ignifx/vite-plugin", "vite", /^node:/u] },
+  deps: { neverBundle: ["@babylonjs/lite", "@ignifx/core", "@ignifx/vite-plugin", "vite", /^node:/u] },
 });

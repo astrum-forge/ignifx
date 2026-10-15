@@ -47,15 +47,62 @@ export interface EditorMessageTarget {
 /** A request handler. It may be asynchronous; whatever it throws becomes an `internalError` reply. */
 export type RequestHandler = (params: unknown) => unknown;
 
+/**
+ * A handler's answer that has work to do once the answer is on the port, such as a notification
+ * the protocol orders after it (`sceneOpened` after the answer to `openScene`).
+ */
+export class Reply {
+  /** The method's result. */
+  readonly result: unknown;
+
+  /** Runs right after the answer has been sent on the port that asked. */
+  readonly after: () => void;
+
+  /**
+   * Creates the reply.
+   *
+   * @param result - The method's result.
+   * @param after - What to run once the answer is sent.
+   */
+  constructor(result: unknown, after: () => void) {
+    this.result = result;
+    this.after = after;
+  }
+}
+
+/** A handler's way of answering with a protocol error of its choice rather than `internalError`. */
+export class RpcFailure extends Error {
+  /** The JSON-RPC error code. */
+  readonly code: RpcErrorCode;
+
+  /** The error's `data`, when it has any. */
+  readonly data: unknown;
+
+  /**
+   * Creates the failure.
+   *
+   * @param code - The error code.
+   * @param message - What went wrong.
+   * @param data - Extra detail, as JSON.
+   */
+  constructor(code: RpcErrorCode, message: string, data?: unknown) {
+    super(message);
+    this.name = "RpcFailure";
+    this.code = code;
+    this.data = data;
+  }
+}
+
 /** A handler's way of refusing its parameters with `invalidParams` rather than `internalError`. */
-export class InvalidParamsError extends Error {
+export class InvalidParamsError extends RpcFailure {
   /**
    * Creates the refusal.
    *
    * @param message - What is wrong with the parameters.
+   * @param data - Extra detail, as JSON.
    */
-  constructor(message: string) {
-    super(message);
+  constructor(message: string, data?: unknown) {
+    super(RpcErrorCode.invalidParams, message, data);
     this.name = "InvalidParamsError";
   }
 }
@@ -72,14 +119,34 @@ export interface ChannelOptions {
   readonly methods: ReadonlyMap<string, RequestHandler>;
   /** Milliseconds between heartbeats. */
   readonly heartbeatIntervalMs: number;
+  /** Called each time a port's `hello` has been answered with `ready`, after the answer is sent. */
+  readonly onReady?: () => void;
 }
 
 /** An open channel. */
 export interface Channel {
   /** Whether a port has been accepted and not replaced or closed. */
   readonly isConnected: boolean;
+  /** Whether the current port has completed the handshake. */
+  readonly isReady: boolean;
+  /**
+   * Sends a notification on the current port, once it has completed the handshake; otherwise drops
+   * it, since the editor re-sends what a new port needs.
+   *
+   * @param method - The notification's name.
+   * @param params - Its parameters, if any.
+   */
+  notify(method: string, params?: unknown): void;
   /** Removes the window listener, stops the heartbeat, and closes the port. Idempotent. */
   dispose(): void;
+}
+
+/** A request's answer, and what to run once it is on the port. */
+interface Answer {
+  /** The response envelope. */
+  readonly response: RpcSuccessResponse | RpcErrorResponse;
+  /** Runs right after the response is sent, or `null`. */
+  readonly after: (() => void) | null;
 }
 
 /**
@@ -193,12 +260,15 @@ export function resolveMessageTarget(target: EditorMessageTarget | undefined): E
  * @returns The channel; dispose it with the host.
  */
 export function openChannel(options: ChannelOptions): Channel {
-  const { target, editorOrigin, ready, methods, heartbeatIntervalMs } = options;
+  const { target, editorOrigin, ready, methods, heartbeatIntervalMs, onReady } = options;
   let port: MessagePort | null = null;
   let portListener: ((event: MessageEvent) => void) | null = null;
   let isReady = false;
   let heartbeat: ReturnType<typeof setInterval> | null = null;
   let isDisposed = false;
+  // Requests are answered one at a time, in arrival order (protocol 0.3): an `applyOps` sent right
+  // after an `openScene` must see the scene that request opens.
+  let queue: Promise<void> = Promise.resolve();
 
   const stopHeartbeat = (): void => {
     if (heartbeat !== null) {
@@ -236,29 +306,35 @@ export function openChannel(options: ChannelOptions): Channel {
     return success(id, ready);
   };
 
-  const answer = async (id: RpcId, method: string, params: unknown): Promise<RpcSuccessResponse | RpcErrorResponse> => {
+  const answer = async (id: RpcId, method: string, params: unknown): Promise<Answer> => {
     if (method === HandshakeMethod.hello) {
-      return handshake(id, params);
+      return { response: handshake(id, params), after: null };
     }
     if (method === HandshakeMethod.ping) {
-      return success(id, "pong");
+      return { response: success(id, "pong"), after: null };
     }
     const handler = methods.get(method);
     if (handler === undefined) {
-      return failure(id, RpcErrorCode.methodNotFound, `This host has no method "${method}".`);
+      return {
+        response: failure(id, RpcErrorCode.methodNotFound, `This host has no method "${method}".`),
+        after: null,
+      };
     }
     if (!isReady) {
-      return failure(id, RpcErrorCode.notReady, `Send hello before "${method}".`);
+      return { response: failure(id, RpcErrorCode.notReady, `Send hello before "${method}".`), after: null };
     }
     try {
-      return success(id, await handler(params));
+      const value: unknown = await handler(params);
+      return value instanceof Reply
+        ? { response: success(id, value.result), after: value.after }
+        : { response: success(id, value), after: null };
     } catch (error) {
-      if (error instanceof InvalidParamsError) {
-        return failure(id, RpcErrorCode.invalidParams, error.message);
+      if (error instanceof RpcFailure) {
+        return { response: failure(id, error.code, error.message, error.data), after: null };
       }
       const message = error instanceof Error ? error.message : String(error);
       const code = error instanceof IgnifxError ? error.code : null;
-      return failure(id, RpcErrorCode.internalError, message, { code });
+      return { response: failure(id, RpcErrorCode.internalError, message, { code }), after: null };
     }
   };
 
@@ -281,15 +357,31 @@ export function openChannel(options: ChannelOptions): Channel {
     if (!("method" in data) || !("id" in data)) {
       return;
     }
-    const response = await answer(data.id, data.method, data.params);
-    // A reload or a reconnect may have replaced the port while an asynchronous method ran.
-    if (current !== port) {
+    const { id, method, params } = data;
+    const reply = async (): Promise<void> => {
+      const wasReady = isReady;
+      const { response, after } = await answer(id, method, params);
+      // A reload or a reconnect may have replaced the port while an asynchronous method ran.
+      if (current !== port) {
+        return;
+      }
+      send(current, response);
+      after?.();
+      if (isReady) {
+        startHeartbeat(current);
+        if (!wasReady && method === HandshakeMethod.hello) {
+          onReady?.();
+        }
+      }
+    };
+    // `ping` jumps the queue, so a long `openScene` does not look like a hung view.
+    if (method === HandshakeMethod.ping) {
+      await reply();
       return;
     }
-    send(current, response);
-    if (isReady) {
-      startHeartbeat(current);
-    }
+    const next = queue.then(reply);
+    queue = next;
+    await next;
   };
 
   const accept = (next: MessagePort): void => {
@@ -321,6 +413,17 @@ export function openChannel(options: ChannelOptions): Channel {
   return {
     get isConnected(): boolean {
       return port !== null;
+    },
+    get isReady(): boolean {
+      return port !== null && isReady;
+    },
+    notify(method: string, params?: unknown): void {
+      if (port !== null && isReady) {
+        send(
+          port,
+          params === undefined ? { jsonrpc: JSON_RPC_VERSION, method } : { jsonrpc: JSON_RPC_VERSION, method, params },
+        );
+      }
     },
     dispose(): void {
       if (isDisposed) {

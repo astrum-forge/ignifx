@@ -137,13 +137,17 @@ describe("startEditorHost", () => {
     expect((await peer.request("ping"))["result"]).toBe("pong");
   });
 
-  it("refuses any other method with methodNotFound", async () => {
+  it("refuses a method it does not have, and a headless host the GPU methods, with methodNotFound", async () => {
     const { target } = await startHost();
     const peer = editor(target);
     await peer.hello();
 
-    const response = await peer.request("applyOps", { ops: [] });
-    expect(response["error"]).toMatchObject({ code: RpcErrorCode.methodNotFound });
+    for (const method of ["reloadScripts", "setGizmo", "screenshot", "play"]) {
+      // One request at a time, as the editor sends them.
+      // oxlint-disable-next-line no-await-in-loop -- see above.
+      const response = await peer.request(method, {});
+      expect(response["error"], method).toMatchObject({ code: RpcErrorCode.methodNotFound });
+    }
   });
 
   it("answers a message that is not JSON-RPC with invalidRequest and no id", async () => {
@@ -209,8 +213,8 @@ describe("startEditorHost", () => {
     await peer.hello();
     expect(vi.getTimerCount()).toBe(1);
     vi.advanceTimersByTime(500);
-    expect(await peer.next()).toEqual({ jsonrpc: JSON_RPC_VERSION, method: "heartbeat" });
-    expect(await peer.next()).toEqual({ jsonrpc: JSON_RPC_VERSION, method: "heartbeat" });
+    expect(await peer.nextNotification("heartbeat")).toEqual({ jsonrpc: JSON_RPC_VERSION, method: "heartbeat" });
+    expect(await peer.nextNotification("heartbeat")).toEqual({ jsonrpc: JSON_RPC_VERSION, method: "heartbeat" });
 
     host.dispose();
     expect(vi.getTimerCount()).toBe(0);
