@@ -1,6 +1,8 @@
 # ADR-0013 · Waiver: adapter-internal Havok collision-event drain
 
-**Status:** Accepted-with-conditions (activated 2026-09-06; the upstream path does not exist in the pinned Babylon Lite) · **Date:** 2026-09-05 · **Waiver under:** `CONSTITUTION.md` §10.3, exception to §3.4 / ADR-0002
+**Status:** Superseded (2026-10-15: upstream Babylon Lite now reports both bodies of a collision, so the waiver is lifted; see [Superseded](#superseded--2026-10-15)) · **Date:** 2026-09-05 · **Waiver under:** `CONSTITUTION.md` §10.3, exception to §3.4 / ADR-0002
+
+The sections below the Status line record the waiver as it stood while it was active (2026-09-06 to 2026-10-15).
 
 ## Context
 
@@ -69,3 +71,34 @@ entity that opted into collision events, and the physics skill documents **trigg
 mechanism for gameplay reactions. `09-physics.md` §4 said "`onCollision*` callbacks deliver contact
 data with `other` set to `null`" without saying who receives them; that broadcast is the only
 implementable reading, and it is why the flag exists.
+
+## Superseded — 2026-10-15
+
+Upstream support shipped, so this waiver is removed on its own terms: the drain file is deleted and
+this ADR is marked Superseded.
+
+`@babylonjs/lite` added body identities to `PhysicsCollisionInfo` in **1.29.0** (2026-09-14, Babylon
+Lite pull request #647, "add Havok thin-instance bodies"); 1.28.0 still declares the four-field
+interface. ignifx adopts it with the pin to 1.34.0. The upstream API kept its name: there is still
+exactly one export beginning `onPhysicsCollision`, and no `onPhysicsCollisionBodies`.
+
+| Fact in `@babylonjs/lite@1.34.0`                                                                                                                             | Evidence                                                                     |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| `onPhysicsCollision(world, cb)` is the one collision listener                                                                                                | `index.d.ts` 9315                                                            |
+| `PhysicsCollisionInfo` carries `collider`, `colliderIndex`, `collidedAgainst`, `collidedAgainstIndex`, plus `type`, `point`, `normal`, `impulse`, `distance` | `index.d.ts` 10030-10049                                                     |
+| The indices are thin-instance indices, `0` for an ordinary body                                                                                              | `index.d.ts` 10034, 10038                                                    |
+| Lite resolves both native ids through a body map, and skips an event whose bodies it no longer tracks                                                        | `lib/physics/havok-collision.js:47-52, 68-72`; `lib/physics/havok-events.js` |
+
+What changed in `@ignifx/physics`:
+
+- The adapter's `onCollisionEvents` (`src/lite/havok.ts`) maps `collider.node` and
+  `collidedAgainst.node` to entities through the same node-to-record map the trigger drain uses, and
+  delivers each contact to both entities with `other` set. ignifx creates no thin-instance bodies, so
+  it ignores the two indices.
+- `src/lite/internal/collision-drain.ts` and its layout-guard test are deleted. The
+  `physics({ collisionIdentities })` option and the `CollisionIdentityMode` type are removed, and the
+  "broadcast to every listening entity with `other === null`" delivery is gone.
+- `IGX-0908`, the drain's guard, is retired and not reused.
+- `test/lite/collision-identities.test.ts` drives two real Havok bodies into contact through the public
+  API and checks both bodies come back; `test/physics/events.test.ts` checks both entities receive
+  `other` and that an entity outside the contact receives nothing.
