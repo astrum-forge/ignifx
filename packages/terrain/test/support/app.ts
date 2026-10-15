@@ -17,6 +17,8 @@ const MILLISECONDS_PER_SECOND = 1000;
 export interface TerrainAppOptions {
   /** Address to body, for the injected `fetch`. Strings are sent as UTF-8. */
   readonly files?: Readonly<Record<string, ArrayBuffer | Uint8Array | string>>;
+  /** Builds the app in edit mode (ADR-0028). */
+  readonly editMode?: boolean;
 }
 
 /** A headless app with `@ignifx/terrain` registered, plus the stepping helpers. */
@@ -86,6 +88,7 @@ export async function createTerrainApp(options?: TerrainAppOptions): Promise<Ter
     logLevel: "debug",
     fetch: tableFetch(options?.files ?? {}),
     extensions: [terrain()],
+    ...(options?.editMode === undefined ? {} : { editMode: options.editMode }),
   });
   const step = (deltaSeconds = 1 / 60): void => {
     clock.advance(deltaSeconds * MILLISECONDS_PER_SECOND);
