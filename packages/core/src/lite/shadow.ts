@@ -3,6 +3,7 @@ import { CoreErrorCode } from "../errors/error-codes.js";
 import { IgnifxError } from "../errors/ignifx-error.js";
 import type {
   CsmDirectionalShadowGeneratorConfig,
+  EngineContext,
   EsmDirectionalShadowGeneratorConfig,
   LightBase,
   Mesh,
@@ -278,6 +279,9 @@ export function trackMaterialCacheResets(scene: SceneContext, resets: MaterialCa
  * straight away, so the family's cache reset is known before anything needs it; see
  * {@link MaterialCacheResets}.
  *
+ * The engine frees nothing the rebuild retires until the rebuild has finished; see
+ * `holdGpuRetirements`.
+ *
  * @param scene - The scene to rebuild.
  * @param resets - The scene's record of cache resets.
  * @returns A promise that resolves when the rebuild has finished.
@@ -285,18 +289,97 @@ export function trackMaterialCacheResets(scene: SceneContext, resets: MaterialCa
  * @internal
  */
 export async function rebuildRenderables(scene: SceneContext, resets?: MaterialCacheResets): Promise<void> {
-  if (resets === undefined) {
+  const release = holdGpuRetirements(scene.surface.engine);
+  try {
+    if (resets === undefined) {
+      await rebuildSceneRenderables(scene);
+      return;
+    }
+    trackMaterialCacheResets(scene, resets);
+    takeUnconfirmed(resets);
     await rebuildSceneRenderables(scene);
-    return;
+    if (takeUnconfirmed(resets)) {
+      // A family was built for the first time just now: build once more so it pushes its reset again.
+      // Whatever this one sees for the first time stays flagged for the render sync system.
+      await rebuildSceneRenderables(scene);
+    }
+  } finally {
+    release();
   }
-  trackMaterialCacheResets(scene, resets);
-  takeUnconfirmed(resets);
-  await rebuildSceneRenderables(scene);
-  if (takeUnconfirmed(resets)) {
-    // A family was built for the first time just now: build once more so it pushes its reset again.
-    // Whatever this one sees for the first time stays flagged for the render sync system.
-    await rebuildSceneRenderables(scene);
+}
+
+/** The hook `renderFrame` calls after each submit to release retired GPU resources. Absent from `index.d.ts`. */
+interface RetirementFlush {
+  /** Fences the resources retired so far behind the frame just submitted, then frees them. */
+  _flushGpuRetirements?: (engine: EngineContext) => void;
+  /** The adapter's hold on that hook while a rebuild runs; see `holdGpuRetirements`. */
+  _igxRetirementHold?: RetirementHold;
+}
+
+/** One engine's held releases: how many rebuilds hold them, and Lite's own flush. */
+interface RetirementHold {
+  count: number;
+  flush: RetirementFlush["_flushGpuRetirements"];
+}
+
+/**
+ * Keeps an engine from freeing retired GPU resources until the returned function is called.
+ *
+ * @remarks
+ * `rebuildSceneRenderables` rebuilds one material group at a time and retires each group's old
+ * uniform buffers and bind groups as soon as that group is done, but it only bumps
+ * `_renderableVersion` and re-records the frame graph after the **last** group
+ * (`rebuildSceneGroups`, `lib/scene/scene-rebuild.js`). Until then every frame still draws the old
+ * renderables. Lite frees a retired resource once the next submitted frame has finished
+ * (`flushGpuResourceRetirements`, `lib/engine/gpu-resource-retirement.js`), so when a later group
+ * takes two frames or more to build — a slow machine, or a pipeline to compile — the following
+ * frames submit buffers that are already destroyed, and WebGPU rejects them ("[Buffer] used in
+ * submit while destroyed"). Holding the releases until the whole rebuild has finished means they
+ * are fenced behind the first frame that draws the new renderables.
+ *
+ * While a hold is active, `_flushGpuRetirements` reads as absent, so `renderFrame` skips it and
+ * the retired resources wait in the engine's list. Lite installs the flush with `??=`, so an
+ * assignment it makes meanwhile is kept only when it had none before. Holds nest.
+ *
+ * @param engine - The engine that renders the scene being rebuilt.
+ * @returns A function that ends this hold. Call it once.
+ */
+function holdGpuRetirements(engine: EngineContext): () => void {
+  // Boundary assertion (coding standards §5.2): every Lite 1.34.0 engine may carry the hook.
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+  const target = engine as EngineContext & RetirementFlush;
+  // oxlint-disable-next-line no-underscore-dangle
+  let hold = target._igxRetirementHold;
+  if (hold === undefined) {
+    // oxlint-disable-next-line no-underscore-dangle
+    const state: RetirementHold = { count: 0, flush: target._flushGpuRetirements };
+    Object.defineProperty(target, "_flushGpuRetirements", {
+      configurable: true,
+      enumerable: true,
+      get: (): RetirementFlush["_flushGpuRetirements"] => (state.count > 0 ? undefined : state.flush),
+      // Lite only ever assigns it with `??=`, so keep the one it installed before the hold.
+      set: (flush: RetirementFlush["_flushGpuRetirements"]): void => {
+        state.flush ??= flush;
+      },
+    });
+    Object.defineProperty(target, "_igxRetirementHold", { configurable: true, value: state });
+    hold = state;
   }
+  const held = hold;
+  held.count += 1;
+  return (): void => {
+    held.count -= 1;
+    if (held.count === 0) {
+      Object.defineProperty(target, "_flushGpuRetirements", {
+        configurable: true,
+        enumerable: true,
+        writable: true,
+        value: held.flush,
+      });
+      // oxlint-disable-next-line no-underscore-dangle
+      delete target._igxRetirementHold;
+    }
+  };
 }
 
 /**
