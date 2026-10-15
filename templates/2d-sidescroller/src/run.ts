@@ -27,7 +27,7 @@ export interface Run {
  * Wires the level's coins and its character into one run.
  *
  * @param player - The character entity.
- * @param coins - Every coin the objects layer spawned.
+ * @param coins - Every coin in the scene.
  * @param spawn - Where the character starts, in metres.
  * @param onCollected - Called whenever a coin is taken; the template uses it to autosave.
  * @returns The run.

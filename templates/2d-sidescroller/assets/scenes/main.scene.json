@@ -1,0 +1,2511 @@
+{
+  "format": "ignifx.scene",
+  "formatVersion": 1,
+  "name": "main",
+  "settings": {},
+  "entities": [
+    {
+      "uid": "01M501HPFQTMX205N83QNWKEX9",
+      "name": "Parallax Sky",
+      "parent": null,
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M501HPFR7J9YK253NXRGG7NF",
+          "type": "ignifx/ParallaxLayer",
+          "props": {
+            "sortingLayer": "Sky",
+            "factor": [
+              0,
+              0
+            ],
+            "repeatX": false,
+            "repeatY": false,
+            "repeatWidth": 40,
+            "repeatHeight": 0
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M501HPFR7J9YK253NXRGG7NG",
+      "name": "Sky 0",
+      "parent": null,
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M501HPFR7J9YK253NXRGG7NJ",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "parallax.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Sky",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M501HPFR7J9YK253NXRGG7NK",
+          "type": "sidescroller/SpriteFrame",
+          "props": {
+            "frame": "sky"
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M501HPFR7J9YK253NXRGG7NM",
+      "name": "Parallax Hills",
+      "parent": null,
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M501HPFR7J9YK253NXRGG7NP",
+          "type": "ignifx/ParallaxLayer",
+          "props": {
+            "sortingLayer": "Hills",
+            "factor": [
+              0.25,
+              1
+            ],
+            "repeatX": true,
+            "repeatY": false,
+            "repeatWidth": 20,
+            "repeatHeight": 0
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M501HPFR7J9YK253NXRGG7NQ",
+      "name": "Hills 0",
+      "parent": null,
+      "transform": {
+        "position": [
+          -40,
+          6,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M501HPFR7J9YK253NXRGG7NS",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "parallax.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Hills",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M501HPFR7J9YK253NXRGG7NT",
+          "type": "sidescroller/SpriteFrame",
+          "props": {
+            "frame": "hills"
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M501HPFR7J9YK253NXRGG7NV",
+      "name": "Hills 1",
+      "parent": null,
+      "transform": {
+        "position": [
+          -20,
+          6,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M501HPFSX406JBGGMASMPY81",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "parallax.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Hills",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M501HPFSX406JBGGMASMPY82",
+          "type": "sidescroller/SpriteFrame",
+          "props": {
+            "frame": "hills"
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M501HPFSX406JBGGMASMPY83",
+      "name": "Hills 2",
+      "parent": null,
+      "transform": {
+        "position": [
+          0,
+          6,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M501HPFSX406JBGGMASMPY85",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "parallax.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Hills",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M501HPFSX406JBGGMASMPY86",
+          "type": "sidescroller/SpriteFrame",
+          "props": {
+            "frame": "hills"
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M501HPFSX406JBGGMASMPY87",
+      "name": "Hills 3",
+      "parent": null,
+      "transform": {
+        "position": [
+          20,
+          6,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M501HPFSX406JBGGMASMPY89",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "parallax.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Hills",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M501HPFSX406JBGGMASMPY8A",
+          "type": "sidescroller/SpriteFrame",
+          "props": {
+            "frame": "hills"
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M501HPFSX406JBGGMASMPY8B",
+      "name": "Hills 4",
+      "parent": null,
+      "transform": {
+        "position": [
+          40,
+          6,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M501HPFSX406JBGGMASMPY8D",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "parallax.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Hills",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M501HPFSX406JBGGMASMPY8E",
+          "type": "sidescroller/SpriteFrame",
+          "props": {
+            "frame": "hills"
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M501HPFSX406JBGGMASMPY8F",
+      "name": "Parallax Trees",
+      "parent": null,
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M501HPFSX406JBGGMASMPY8H",
+          "type": "ignifx/ParallaxLayer",
+          "props": {
+            "sortingLayer": "Trees",
+            "factor": [
+              0.5,
+              1
+            ],
+            "repeatX": true,
+            "repeatY": false,
+            "repeatWidth": 20,
+            "repeatHeight": 0
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M501HPFSX406JBGGMASMPY8J",
+      "name": "Trees 0",
+      "parent": null,
+      "transform": {
+        "position": [
+          -40,
+          1.75,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M501HPFSX406JBGGMASMPY8M",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "parallax.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Trees",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M501HPFSX406JBGGMASMPY8N",
+          "type": "sidescroller/SpriteFrame",
+          "props": {
+            "frame": "trees"
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M501HPFSX406JBGGMASMPY8P",
+      "name": "Trees 1",
+      "parent": null,
+      "transform": {
+        "position": [
+          -20,
+          1.75,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M501HPFSX406JBGGMASMPY8R",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "parallax.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Trees",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M501HPFSX406JBGGMASMPY8S",
+          "type": "sidescroller/SpriteFrame",
+          "props": {
+            "frame": "trees"
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M501HPFSX406JBGGMASMPY8T",
+      "name": "Trees 2",
+      "parent": null,
+      "transform": {
+        "position": [
+          0,
+          1.75,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M501HPFSX406JBGGMASMPY8W",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "parallax.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Trees",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M501HPFSX406JBGGMASMPY8X",
+          "type": "sidescroller/SpriteFrame",
+          "props": {
+            "frame": "trees"
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M501HPFSX406JBGGMASMPY8Y",
+      "name": "Trees 3",
+      "parent": null,
+      "transform": {
+        "position": [
+          20,
+          1.75,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M501HPFSX406JBGGMASMPY90",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "parallax.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Trees",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M501HPFSX406JBGGMASMPY91",
+          "type": "sidescroller/SpriteFrame",
+          "props": {
+            "frame": "trees"
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M501HPFSX406JBGGMASMPY92",
+      "name": "Trees 4",
+      "parent": null,
+      "transform": {
+        "position": [
+          40,
+          1.75,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M501HPFSX406JBGGMASMPY94",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "parallax.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Trees",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M501HPFSX406JBGGMASMPY95",
+          "type": "sidescroller/SpriteFrame",
+          "props": {
+            "frame": "trees"
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M501HPFSX406JBGGMASMPY96",
+      "name": "Level",
+      "parent": null,
+      "layer": "Terrain",
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M501HPFSX406JBGGMASMPY98",
+          "type": "ignifx/Tilemap",
+          "props": {
+            "map": {
+              "$asset": "level.tilemap.json",
+              "type": "tilemap"
+            },
+            "chunkSize": 16,
+            "cellSizeOverride": 0
+          }
+        },
+        {
+          "uid": "01M501HPFSX406JBGGMASMPY99",
+          "type": "ignifx/TilemapRenderer",
+          "props": {
+            "atlas": {
+              "$asset": "tiles.atlas.json",
+              "type": "spriteatlas"
+            },
+            "sortingLayer": "Default",
+            "cullChunks": true
+          }
+        },
+        {
+          "uid": "01M501HPFSX406JBGGMASMPY9A",
+          "type": "ignifx/TilemapCollider2D",
+          "props": {
+            "offset": [
+              0,
+              0
+            ],
+            "isTrigger": false,
+            "material": null,
+            "inlineMaterial": null,
+            "frictionCombine": "average",
+            "restitutionCombine": "average",
+            "oneWay": false,
+            "layerOverride": ""
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M501HPFSX406JBGGMASMPY9B",
+      "name": "Player",
+      "parent": null,
+      "layer": "Player",
+      "transform": {
+        "position": [
+          2.5,
+          3,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M501HPFSX406JBGGMASMPY9D",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "hero.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Default",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M501HPFSX406JBGGMASMPY9E",
+          "type": "ignifx/SpriteAnimator",
+          "props": {
+            "animations": {
+              "$asset": "hero.spriteanim.json",
+              "type": "spriteanimation"
+            },
+            "defaultClip": "idle",
+            "playOnAwake": true,
+            "speed": 1
+          }
+        },
+        {
+          "uid": "01M501HPFSX406JBGGMASMPY9F",
+          "type": "ignifx/CharacterController2D",
+          "props": {
+            "shape": "box",
+            "radius": 0.28,
+            "height": 0.9,
+            "offset": [
+              0,
+              0.45
+            ],
+            "slopeLimit": 50,
+            "stepOffset": 0.3,
+            "snapToGround": 0.25,
+            "skinWidth": 0.01,
+            "onOneWayPlatforms": true,
+            "pushBodies": false,
+            "interpolation": "interpolate"
+          }
+        },
+        {
+          "uid": "01M501HPFSX406JBGGMASMPY9G",
+          "type": "sidescroller/PlatformerController",
+          "props": {
+            "speed": 7,
+            "groundAcceleration": 70,
+            "airAcceleration": 35,
+            "jumpSpeed": 16,
+            "riseGravity": 36,
+            "fallGravity": 52,
+            "terminalVelocity": 24,
+            "coyoteTime": 0.1,
+            "jumpBuffer": 0.12,
+            "minJumpHeight": 1.1,
+            "fallLimit": -3,
+            "dropClearance": 0.45,
+            "dropSpeed": 6,
+            "flipSprite": true
+          }
+        }
+      ]
+    },
+    {
+      "uid": "01M501HPFSX406JBGGMASMPY9H",
+      "name": "Coin 1",
+      "parent": null,
+      "layer": "Pickup",
+      "transform": {
+        "position": [
+          4.5,
+          6.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5RA",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "coin.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Default",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5RB",
+          "type": "ignifx/SpriteAnimator",
+          "props": {
+            "animations": {
+              "$asset": "coin.spriteanim.json",
+              "type": "spriteanimation"
+            },
+            "defaultClip": "spin",
+            "playOnAwake": true,
+            "speed": 1
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5RC",
+          "type": "ignifx/CircleCollider2D",
+          "props": {
+            "offset": [
+              0,
+              0
+            ],
+            "isTrigger": true,
+            "material": null,
+            "inlineMaterial": null,
+            "frictionCombine": "average",
+            "restitutionCombine": "average",
+            "oneWay": false,
+            "layerOverride": "",
+            "radius": 0.35
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5RD",
+          "type": "sidescroller/Collectible"
+        }
+      ]
+    },
+    {
+      "uid": "01M501HPFT5R3F6GNC626DH5RE",
+      "name": "Coin 2",
+      "parent": null,
+      "layer": "Pickup",
+      "transform": {
+        "position": [
+          5.5,
+          6.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5RG",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "coin.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Default",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5RH",
+          "type": "ignifx/SpriteAnimator",
+          "props": {
+            "animations": {
+              "$asset": "coin.spriteanim.json",
+              "type": "spriteanimation"
+            },
+            "defaultClip": "spin",
+            "playOnAwake": true,
+            "speed": 1
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5RJ",
+          "type": "ignifx/CircleCollider2D",
+          "props": {
+            "offset": [
+              0,
+              0
+            ],
+            "isTrigger": true,
+            "material": null,
+            "inlineMaterial": null,
+            "frictionCombine": "average",
+            "restitutionCombine": "average",
+            "oneWay": false,
+            "layerOverride": "",
+            "radius": 0.35
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5RK",
+          "type": "sidescroller/Collectible"
+        }
+      ]
+    },
+    {
+      "uid": "01M501HPFT5R3F6GNC626DH5RM",
+      "name": "Coin 3",
+      "parent": null,
+      "layer": "Pickup",
+      "transform": {
+        "position": [
+          11.5,
+          7.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5RP",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "coin.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Default",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5RQ",
+          "type": "ignifx/SpriteAnimator",
+          "props": {
+            "animations": {
+              "$asset": "coin.spriteanim.json",
+              "type": "spriteanimation"
+            },
+            "defaultClip": "spin",
+            "playOnAwake": true,
+            "speed": 1
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5RR",
+          "type": "ignifx/CircleCollider2D",
+          "props": {
+            "offset": [
+              0,
+              0
+            ],
+            "isTrigger": true,
+            "material": null,
+            "inlineMaterial": null,
+            "frictionCombine": "average",
+            "restitutionCombine": "average",
+            "oneWay": false,
+            "layerOverride": "",
+            "radius": 0.35
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5RS",
+          "type": "sidescroller/Collectible"
+        }
+      ]
+    },
+    {
+      "uid": "01M501HPFT5R3F6GNC626DH5RT",
+      "name": "Coin 4",
+      "parent": null,
+      "layer": "Pickup",
+      "transform": {
+        "position": [
+          12.5,
+          4.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5RW",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "coin.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Default",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5RX",
+          "type": "ignifx/SpriteAnimator",
+          "props": {
+            "animations": {
+              "$asset": "coin.spriteanim.json",
+              "type": "spriteanimation"
+            },
+            "defaultClip": "spin",
+            "playOnAwake": true,
+            "speed": 1
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5RY",
+          "type": "ignifx/CircleCollider2D",
+          "props": {
+            "offset": [
+              0,
+              0
+            ],
+            "isTrigger": true,
+            "material": null,
+            "inlineMaterial": null,
+            "frictionCombine": "average",
+            "restitutionCombine": "average",
+            "oneWay": false,
+            "layerOverride": "",
+            "radius": 0.35
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5RZ",
+          "type": "sidescroller/Collectible"
+        }
+      ]
+    },
+    {
+      "uid": "01M501HPFT5R3F6GNC626DH5S0",
+      "name": "Coin 5",
+      "parent": null,
+      "layer": "Pickup",
+      "transform": {
+        "position": [
+          17.5,
+          6.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5S2",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "coin.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Default",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5S3",
+          "type": "ignifx/SpriteAnimator",
+          "props": {
+            "animations": {
+              "$asset": "coin.spriteanim.json",
+              "type": "spriteanimation"
+            },
+            "defaultClip": "spin",
+            "playOnAwake": true,
+            "speed": 1
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5S4",
+          "type": "ignifx/CircleCollider2D",
+          "props": {
+            "offset": [
+              0,
+              0
+            ],
+            "isTrigger": true,
+            "material": null,
+            "inlineMaterial": null,
+            "frictionCombine": "average",
+            "restitutionCombine": "average",
+            "oneWay": false,
+            "layerOverride": "",
+            "radius": 0.35
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5S5",
+          "type": "sidescroller/Collectible"
+        }
+      ]
+    },
+    {
+      "uid": "01M501HPFT5R3F6GNC626DH5S6",
+      "name": "Coin 6",
+      "parent": null,
+      "layer": "Pickup",
+      "transform": {
+        "position": [
+          18.5,
+          6.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5S8",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "coin.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Default",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5S9",
+          "type": "ignifx/SpriteAnimator",
+          "props": {
+            "animations": {
+              "$asset": "coin.spriteanim.json",
+              "type": "spriteanimation"
+            },
+            "defaultClip": "spin",
+            "playOnAwake": true,
+            "speed": 1
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5SA",
+          "type": "ignifx/CircleCollider2D",
+          "props": {
+            "offset": [
+              0,
+              0
+            ],
+            "isTrigger": true,
+            "material": null,
+            "inlineMaterial": null,
+            "frictionCombine": "average",
+            "restitutionCombine": "average",
+            "oneWay": false,
+            "layerOverride": "",
+            "radius": 0.35
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5SB",
+          "type": "sidescroller/Collectible"
+        }
+      ]
+    },
+    {
+      "uid": "01M501HPFT5R3F6GNC626DH5SC",
+      "name": "Coin 7",
+      "parent": null,
+      "layer": "Pickup",
+      "transform": {
+        "position": [
+          21.5,
+          5.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5SE",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "coin.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Default",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5SF",
+          "type": "ignifx/SpriteAnimator",
+          "props": {
+            "animations": {
+              "$asset": "coin.spriteanim.json",
+              "type": "spriteanimation"
+            },
+            "defaultClip": "spin",
+            "playOnAwake": true,
+            "speed": 1
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5SG",
+          "type": "ignifx/CircleCollider2D",
+          "props": {
+            "offset": [
+              0,
+              0
+            ],
+            "isTrigger": true,
+            "material": null,
+            "inlineMaterial": null,
+            "frictionCombine": "average",
+            "restitutionCombine": "average",
+            "oneWay": false,
+            "layerOverride": "",
+            "radius": 0.35
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5SH",
+          "type": "sidescroller/Collectible"
+        }
+      ]
+    },
+    {
+      "uid": "01M501HPFT5R3F6GNC626DH5SJ",
+      "name": "Coin 8",
+      "parent": null,
+      "layer": "Pickup",
+      "transform": {
+        "position": [
+          22.5,
+          5.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5SM",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "coin.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Default",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5SN",
+          "type": "ignifx/SpriteAnimator",
+          "props": {
+            "animations": {
+              "$asset": "coin.spriteanim.json",
+              "type": "spriteanimation"
+            },
+            "defaultClip": "spin",
+            "playOnAwake": true,
+            "speed": 1
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5SP",
+          "type": "ignifx/CircleCollider2D",
+          "props": {
+            "offset": [
+              0,
+              0
+            ],
+            "isTrigger": true,
+            "material": null,
+            "inlineMaterial": null,
+            "frictionCombine": "average",
+            "restitutionCombine": "average",
+            "oneWay": false,
+            "layerOverride": "",
+            "radius": 0.35
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5SQ",
+          "type": "sidescroller/Collectible"
+        }
+      ]
+    },
+    {
+      "uid": "01M501HPFT5R3F6GNC626DH5SR",
+      "name": "Coin 9",
+      "parent": null,
+      "layer": "Pickup",
+      "transform": {
+        "position": [
+          27.5,
+          6.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5ST",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "coin.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Default",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5SV",
+          "type": "ignifx/SpriteAnimator",
+          "props": {
+            "animations": {
+              "$asset": "coin.spriteanim.json",
+              "type": "spriteanimation"
+            },
+            "defaultClip": "spin",
+            "playOnAwake": true,
+            "speed": 1
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5SW",
+          "type": "ignifx/CircleCollider2D",
+          "props": {
+            "offset": [
+              0,
+              0
+            ],
+            "isTrigger": true,
+            "material": null,
+            "inlineMaterial": null,
+            "frictionCombine": "average",
+            "restitutionCombine": "average",
+            "oneWay": false,
+            "layerOverride": "",
+            "radius": 0.35
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5SX",
+          "type": "sidescroller/Collectible"
+        }
+      ]
+    },
+    {
+      "uid": "01M501HPFT5R3F6GNC626DH5SY",
+      "name": "Coin 10",
+      "parent": null,
+      "layer": "Pickup",
+      "transform": {
+        "position": [
+          28.5,
+          6.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5T0",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "coin.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Default",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5T1",
+          "type": "ignifx/SpriteAnimator",
+          "props": {
+            "animations": {
+              "$asset": "coin.spriteanim.json",
+              "type": "spriteanimation"
+            },
+            "defaultClip": "spin",
+            "playOnAwake": true,
+            "speed": 1
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5T2",
+          "type": "ignifx/CircleCollider2D",
+          "props": {
+            "offset": [
+              0,
+              0
+            ],
+            "isTrigger": true,
+            "material": null,
+            "inlineMaterial": null,
+            "frictionCombine": "average",
+            "restitutionCombine": "average",
+            "oneWay": false,
+            "layerOverride": "",
+            "radius": 0.35
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5T3",
+          "type": "sidescroller/Collectible"
+        }
+      ]
+    },
+    {
+      "uid": "01M501HPFT5R3F6GNC626DH5T4",
+      "name": "Coin 11",
+      "parent": null,
+      "layer": "Pickup",
+      "transform": {
+        "position": [
+          33.5,
+          5.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5T6",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "coin.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Default",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5T7",
+          "type": "ignifx/SpriteAnimator",
+          "props": {
+            "animations": {
+              "$asset": "coin.spriteanim.json",
+              "type": "spriteanimation"
+            },
+            "defaultClip": "spin",
+            "playOnAwake": true,
+            "speed": 1
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5T8",
+          "type": "ignifx/CircleCollider2D",
+          "props": {
+            "offset": [
+              0,
+              0
+            ],
+            "isTrigger": true,
+            "material": null,
+            "inlineMaterial": null,
+            "frictionCombine": "average",
+            "restitutionCombine": "average",
+            "oneWay": false,
+            "layerOverride": "",
+            "radius": 0.35
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5T9",
+          "type": "sidescroller/Collectible"
+        }
+      ]
+    },
+    {
+      "uid": "01M501HPFT5R3F6GNC626DH5TA",
+      "name": "Coin 12",
+      "parent": null,
+      "layer": "Pickup",
+      "transform": {
+        "position": [
+          39.5,
+          5.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5TC",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "coin.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Default",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5TD",
+          "type": "ignifx/SpriteAnimator",
+          "props": {
+            "animations": {
+              "$asset": "coin.spriteanim.json",
+              "type": "spriteanimation"
+            },
+            "defaultClip": "spin",
+            "playOnAwake": true,
+            "speed": 1
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5TE",
+          "type": "ignifx/CircleCollider2D",
+          "props": {
+            "offset": [
+              0,
+              0
+            ],
+            "isTrigger": true,
+            "material": null,
+            "inlineMaterial": null,
+            "frictionCombine": "average",
+            "restitutionCombine": "average",
+            "oneWay": false,
+            "layerOverride": "",
+            "radius": 0.35
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5TF",
+          "type": "sidescroller/Collectible"
+        }
+      ]
+    },
+    {
+      "uid": "01M501HPFT5R3F6GNC626DH5TG",
+      "name": "Coin 13",
+      "parent": null,
+      "layer": "Pickup",
+      "transform": {
+        "position": [
+          40.5,
+          8.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5TJ",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "coin.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Default",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5TK",
+          "type": "ignifx/SpriteAnimator",
+          "props": {
+            "animations": {
+              "$asset": "coin.spriteanim.json",
+              "type": "spriteanimation"
+            },
+            "defaultClip": "spin",
+            "playOnAwake": true,
+            "speed": 1
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5TM",
+          "type": "ignifx/CircleCollider2D",
+          "props": {
+            "offset": [
+              0,
+              0
+            ],
+            "isTrigger": true,
+            "material": null,
+            "inlineMaterial": null,
+            "frictionCombine": "average",
+            "restitutionCombine": "average",
+            "oneWay": false,
+            "layerOverride": "",
+            "radius": 0.35
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5TN",
+          "type": "sidescroller/Collectible"
+        }
+      ]
+    },
+    {
+      "uid": "01M501HPFT5R3F6GNC626DH5TP",
+      "name": "Coin 14",
+      "parent": null,
+      "layer": "Pickup",
+      "transform": {
+        "position": [
+          41.5,
+          8.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5TR",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "coin.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Default",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5TS",
+          "type": "ignifx/SpriteAnimator",
+          "props": {
+            "animations": {
+              "$asset": "coin.spriteanim.json",
+              "type": "spriteanimation"
+            },
+            "defaultClip": "spin",
+            "playOnAwake": true,
+            "speed": 1
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5TT",
+          "type": "ignifx/CircleCollider2D",
+          "props": {
+            "offset": [
+              0,
+              0
+            ],
+            "isTrigger": true,
+            "material": null,
+            "inlineMaterial": null,
+            "frictionCombine": "average",
+            "restitutionCombine": "average",
+            "oneWay": false,
+            "layerOverride": "",
+            "radius": 0.35
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5TV",
+          "type": "sidescroller/Collectible"
+        }
+      ]
+    },
+    {
+      "uid": "01M501HPFT5R3F6GNC626DH5TW",
+      "name": "Coin 15",
+      "parent": null,
+      "layer": "Pickup",
+      "transform": {
+        "position": [
+          47.5,
+          7.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5TY",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "coin.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Default",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5TZ",
+          "type": "ignifx/SpriteAnimator",
+          "props": {
+            "animations": {
+              "$asset": "coin.spriteanim.json",
+              "type": "spriteanimation"
+            },
+            "defaultClip": "spin",
+            "playOnAwake": true,
+            "speed": 1
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5V0",
+          "type": "ignifx/CircleCollider2D",
+          "props": {
+            "offset": [
+              0,
+              0
+            ],
+            "isTrigger": true,
+            "material": null,
+            "inlineMaterial": null,
+            "frictionCombine": "average",
+            "restitutionCombine": "average",
+            "oneWay": false,
+            "layerOverride": "",
+            "radius": 0.35
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5V1",
+          "type": "sidescroller/Collectible"
+        }
+      ]
+    },
+    {
+      "uid": "01M501HPFT5R3F6GNC626DH5V2",
+      "name": "Coin 16",
+      "parent": null,
+      "layer": "Pickup",
+      "transform": {
+        "position": [
+          53.5,
+          6.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5V4",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "coin.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Default",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5V5",
+          "type": "ignifx/SpriteAnimator",
+          "props": {
+            "animations": {
+              "$asset": "coin.spriteanim.json",
+              "type": "spriteanimation"
+            },
+            "defaultClip": "spin",
+            "playOnAwake": true,
+            "speed": 1
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5V6",
+          "type": "ignifx/CircleCollider2D",
+          "props": {
+            "offset": [
+              0,
+              0
+            ],
+            "isTrigger": true,
+            "material": null,
+            "inlineMaterial": null,
+            "frictionCombine": "average",
+            "restitutionCombine": "average",
+            "oneWay": false,
+            "layerOverride": "",
+            "radius": 0.35
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5V7",
+          "type": "sidescroller/Collectible"
+        }
+      ]
+    },
+    {
+      "uid": "01M501HPFT5R3F6GNC626DH5V8",
+      "name": "Coin 17",
+      "parent": null,
+      "layer": "Pickup",
+      "transform": {
+        "position": [
+          54.5,
+          6.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5VA",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "coin.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Default",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5VB",
+          "type": "ignifx/SpriteAnimator",
+          "props": {
+            "animations": {
+              "$asset": "coin.spriteanim.json",
+              "type": "spriteanimation"
+            },
+            "defaultClip": "spin",
+            "playOnAwake": true,
+            "speed": 1
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5VC",
+          "type": "ignifx/CircleCollider2D",
+          "props": {
+            "offset": [
+              0,
+              0
+            ],
+            "isTrigger": true,
+            "material": null,
+            "inlineMaterial": null,
+            "frictionCombine": "average",
+            "restitutionCombine": "average",
+            "oneWay": false,
+            "layerOverride": "",
+            "radius": 0.35
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5VD",
+          "type": "sidescroller/Collectible"
+        }
+      ]
+    },
+    {
+      "uid": "01M501HPFT5R3F6GNC626DH5VE",
+      "name": "Coin 18",
+      "parent": null,
+      "layer": "Pickup",
+      "transform": {
+        "position": [
+          58.5,
+          5.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5VG",
+          "type": "ignifx/SpriteRenderer",
+          "props": {
+            "sprite": {
+              "$asset": "coin.atlas.json",
+              "type": "spriteatlas"
+            },
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "flipX": false,
+            "flipY": false,
+            "sortingLayer": "Default",
+            "orderInLayer": 0,
+            "blend": "alpha",
+            "pivotOverride": null,
+            "screenSpace": false,
+            "pickable": true
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5VH",
+          "type": "ignifx/SpriteAnimator",
+          "props": {
+            "animations": {
+              "$asset": "coin.spriteanim.json",
+              "type": "spriteanimation"
+            },
+            "defaultClip": "spin",
+            "playOnAwake": true,
+            "speed": 1
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5VJ",
+          "type": "ignifx/CircleCollider2D",
+          "props": {
+            "offset": [
+              0,
+              0
+            ],
+            "isTrigger": true,
+            "material": null,
+            "inlineMaterial": null,
+            "frictionCombine": "average",
+            "restitutionCombine": "average",
+            "oneWay": false,
+            "layerOverride": "",
+            "radius": 0.35
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5VK",
+          "type": "sidescroller/Collectible"
+        }
+      ]
+    },
+    {
+      "uid": "01M501HPFT5R3F6GNC626DH5VM",
+      "name": "Main Camera",
+      "parent": null,
+      "transform": {
+        "position": [
+          2.5,
+          4.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "components": [
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5VP",
+          "type": "ignifx/Camera2D",
+          "props": {
+            "orthographicSize": 5,
+            "pixelPerfect": true,
+            "referenceResolution": [
+              320,
+              180
+            ],
+            "boundsMin": [
+              0,
+              0
+            ],
+            "boundsMax": [
+              64,
+              20
+            ],
+            "follow": {
+              "$entity": "01M501HPFSX406JBGGMASMPY9B"
+            },
+            "followDamping": 0.1,
+            "followOffset": [
+              0,
+              1.5
+            ],
+            "deadZone": [
+              1.2,
+              1.5
+            ],
+            "priority": 0
+          }
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5VQ",
+          "type": "ignifx/Camera2DFollow"
+        },
+        {
+          "uid": "01M501HPFT5R3F6GNC626DH5VR",
+          "type": "ignifx/AudioListener",
+          "props": {}
+        }
+      ]
+    }
+  ]
+}
