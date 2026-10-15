@@ -1,4 +1,11 @@
-import { createApp, createManualClock, createMemorySink, defineSchema, vec3 } from "@ignifx/core";
+import {
+  ASSET_DIAGNOSTICS_GROUP,
+  createApp,
+  createManualClock,
+  createMemorySink,
+  defineSchema,
+  vec3,
+} from "@ignifx/core";
 import { particles } from "../../src/extension.js";
 import type { ParticlesOptions } from "../../src/extension.js";
 import type {
@@ -25,7 +32,12 @@ const MILLISECONDS_PER_SECOND = 1000;
 /** The default frame length, matching `time.fixedDeltaTime`. */
 export const FRAME = 1 / 60;
 
-/** How many zero-length frames {@link ParticlesAppHarness.settle} runs before it gives up. */
+/**
+ * How many zero-length frames {@link ParticlesAppHarness.settle} runs with no asset load in flight
+ * before it gives up. Frames run while a load is in flight do not count: a load's length is wall
+ * clock (a cold `import()` the loader makes, served over Vitest's RPC by a main process that may be
+ * busy with every other worker), so no number of turns is ever enough for it.
+ */
 const DEFAULT_SETTLE_TURNS = 64;
 
 /**
@@ -83,7 +95,9 @@ export interface ParticlesAppHarness {
   stepAsync(count: number, deltaSeconds?: number): Promise<void>;
   /**
    * Steps zero-length frames until `isReady` holds, so an asset can arrive without the system clock
-   * moving. Gives up after `maxTurns`, leaving the caller's own assertion to report the failure.
+   * moving. Waits for as long as an asset load is in flight or queued (a load that never ends is the
+   * test timeout's to report), then gives up after `maxTurns` more, leaving the caller's own
+   * assertion to report the failure.
    */
   settle(isReady?: () => boolean, maxTurns?: number): Promise<void>;
   /** Disposes the app. */
@@ -119,6 +133,14 @@ export async function createParticlesApp(options?: ParticlesAppOptions): Promise
   if (options?.start !== false) {
     await app.start();
   }
+  const assetCounters = app.diagnostics.group(ASSET_DIAGNOSTICS_GROUP);
+  if (assetCounters === null) {
+    throw new Error("The asset service registered no diagnostics group; `settle` cannot see its loads.");
+  }
+  const inFlight = assetCounters.index("inFlight");
+  const queued = assetCounters.index("queued");
+  // Read after a frame: the asset service publishes its counters in `PreUpdate`.
+  const isLoading = (): boolean => assetCounters.get(inFlight) + assetCounters.get(queued) > 0;
   const step = (deltaSeconds: number = FRAME): void => {
     clock.advance(deltaSeconds * MILLISECONDS_PER_SECOND);
     app.step(deltaSeconds);
@@ -144,12 +166,17 @@ export async function createParticlesApp(options?: ParticlesAppOptions): Promise
       }
     },
     settle: async (isReady?: () => boolean, maxTurns: number = DEFAULT_SETTLE_TURNS): Promise<void> => {
-      for (let turn = 0; turn < maxTurns; turn += 1) {
+      let idleTurns = 0;
+      while (idleTurns < maxTurns) {
         step(0);
+        const loading = isLoading();
         // oxlint-disable-next-line eslint/no-await-in-loop -- the next turn depends on this one.
         await nextTurn();
         if (isReady?.() === true) {
           return;
+        }
+        if (!loading) {
+          idleTurns += 1;
         }
       }
     },

@@ -11,7 +11,7 @@ import { createParticlesApp } from "../support/harness.js";
 import type { ParticleAsset } from "../../src/assets/particle-asset.js";
 import type { ParticleDefinitionInput } from "../../src/definition/types.js";
 import type { ParticlesAppHarness, ParticlesAppOptions } from "../support/harness.js";
-import type { AssetHandle, Entity } from "@ignifx/core";
+import type { AssetHandle, Entity, FetchLike } from "@ignifx/core";
 
 /** A sixty-fourth of a second: exact in binary, so an emitted count can be asserted. */
 const FRAME = 1 / 64;
@@ -22,6 +22,30 @@ afterEach(() => {
   harness?.dispose();
   harness = null;
 });
+
+/**
+ * More macrotask turns than `settle` spends idle, so a load held this long outlasts a settle that
+ * counts every turn.
+ */
+const HELD_TURNS = 256;
+
+/**
+ * A `fetch` that holds every response for {@link HELD_TURNS} macrotask turns: what a cold loader
+ * looks like to a worker whose module requests wait on a busy Vitest main process.
+ *
+ * @returns The fake.
+ */
+function slowFetch(): FetchLike {
+  return async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+    for (let turn = 0; turn < HELD_TURNS; turn += 1) {
+      // oxlint-disable-next-line eslint/no-await-in-loop -- each turn waits for the one before it.
+      await new Promise((resolve) => {
+        setTimeout(resolve, 0);
+      });
+    }
+    return globalThis.fetch(input, init);
+  };
+}
 
 /** A system, its entity, and the handle it plays. */
 interface Scene {
@@ -427,6 +451,15 @@ describe("the GPU side of a ParticleSystem", () => {
     expect(running.system.material?.state).toBe("loaded");
     expect(running.system.renderer).not.toBeNull();
     expect(running.system.renderer?.capacity).toBe(running.system.capacity);
+    expect(running.app.errors).toEqual([]);
+  });
+
+  it("builds the GPU side however many frames the shader load outlasts", async () => {
+    // Regression: `settle` gave up after 64 turns whether or not a load was in flight, and the first
+    // shader a worker loads waits on a cold `import()`; under `pnpm check` that took longer.
+    const running = await scene({ emission: { rateOverTime: 64 } }, { fetch: slowFetch() });
+    await running.app.settle(() => running.system.renderer !== null);
+    expect(running.system.storage?.state).toBe("loaded");
     expect(running.app.errors).toEqual([]);
   });
 
