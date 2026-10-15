@@ -1,5 +1,38 @@
 # ignifx
 
+## 0.9.0
+
+### Minor Changes
+
+- 2c61694: ### Breaking
+  
+  ignifx now runs on Babylon Lite 1.34.0. `@babylonjs/lite` is pinned exactly, so install `@babylonjs/lite@1.34.0` alongside ignifx; the packages that declare it as a peer dependency accept no other version.
+  
+  - `app.start()` now runs one extra renderable rebuild before the first frame, so that turning a shadow-casting light on or off and adding the first skinned or morph-target model after start keep rendering on Lite 1.34.
+- b017771: ### Breaking
+  
+  - `onCollisionEnter`, `onCollisionStay` and `onCollisionExit` now reach only the two entities in a contact, and each receives the other as `collision.other`.
+  - Remove the `collisionIdentities` option of `physics()` and the `CollisionIdentityMode` type and `COLLISION_IDENTITY_MODES` constant. Delete the option from your `physics({ ... })` call; identities are always on.
+  - Remove `PhysicsErrorCode.internalDrainUnavailable` (`IGX-0908`), which nothing can throw any more.
+
+### Patch Changes
+
+- Updated dependencies [2c61694]
+- Updated dependencies [b017771]
+  - @ignifx/core@0.9.0
+  - @ignifx/2d@0.9.0
+  - @ignifx/3d@0.9.0
+  - @ignifx/audio@0.9.0
+  - @ignifx/particles@0.9.0
+  - @ignifx/particles-2d@0.9.0
+  - @ignifx/physics@0.9.0
+  - @ignifx/terrain@0.9.0
+  - @ignifx/ui@0.9.0
+  - @ignifx/devtools@0.9.0
+  - @ignifx/electron@0.9.0
+  - @ignifx/input@0.9.0
+  - @ignifx/physics-2d@0.9.0
+
 ## 0.8.0
 
 ### Minor Changes

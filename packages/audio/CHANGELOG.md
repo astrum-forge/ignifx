@@ -1,5 +1,20 @@
 # @ignifx/audio
 
+## 0.9.0
+
+### Minor Changes
+
+- 2c61694: ### Breaking
+  
+  ignifx now runs on Babylon Lite 1.34.0. `@babylonjs/lite` is pinned exactly, so install `@babylonjs/lite@1.34.0` alongside ignifx; the packages that declare it as a peer dependency accept no other version.
+  
+  - `app.start()` now runs one extra renderable rebuild before the first frame, so that turning a shadow-casting light on or off and adding the first skinned or morph-target model after start keep rendering on Lite 1.34.
+
+### Patch Changes
+
+- Updated dependencies [2c61694]
+  - @ignifx/core@0.9.0
+
 ## 0.8.0
 
 ### Patch Changes
