@@ -552,7 +552,7 @@ flag will run closure compiler from third_party/).
 - License: MIT
 - Copyright (c) 2019-present, VoidZero Inc. and Vite contributors
 - Repository: <https://github.com/vitejs/vite>
-- Required by: @ignifx/vite-plugin
+- Required by: @ignifx/editor-host, @ignifx/vite-plugin
 
 ## wgsl_reflect
 
