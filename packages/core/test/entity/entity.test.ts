@@ -145,6 +145,34 @@ describe("hierarchy", () => {
     harness.dispose();
   });
 
+  it("moves an entity among its siblings with setSiblingIndex, clamping the index", () => {
+    const harness = createTestWorld();
+    const parent = harness.world.createEntity("parent");
+    const [a, b, c] = ["a", "b", "c"].map((name) => harness.world.createEntity(name, { parent }));
+    const names = (): string[] => parent.children.map((child) => child.name);
+
+    c?.setSiblingIndex(0);
+    expect(names()).toEqual(["c", "a", "b"]);
+    c?.setSiblingIndex(1.7);
+    expect(names()).toEqual(["a", "c", "b"]);
+    a?.setSiblingIndex(99);
+    expect(names()).toEqual(["c", "b", "a"]);
+    b?.setSiblingIndex(-3);
+    expect(names()).toEqual(["b", "c", "a"]);
+    harness.dispose();
+  });
+
+  it("orders the scene's roots with setSiblingIndex on a root", () => {
+    const harness = createTestWorld();
+    const [a, b, c] = ["a", "b", "c"].map((name) => harness.world.createEntity(name));
+
+    c?.setSiblingIndex(0);
+    expect(harness.world.activeScene.roots).toEqual([c, a, b]);
+    a?.destroyImmediate();
+    expect(() => a?.setSiblingIndex(0)).toThrow(/IGX-0101/u);
+    harness.dispose();
+  });
+
   it("finds a descendant by predicate, deep or shallow", () => {
     const harness = createTestWorld();
     const a = harness.world.createEntity("a");

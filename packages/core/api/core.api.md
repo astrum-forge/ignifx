@@ -33,6 +33,15 @@ import { StorageBuffer } from '@babylonjs/lite';
 import { Texture2D } from '@babylonjs/lite';
 
 // @public
+export function addComponentFromRecord(entity: Entity, record: SceneFileComponent, options?: AddComponentFromRecordOptions): ComponentBuildResult;
+
+// @public
+export interface AddComponentFromRecordOptions {
+    readonly index?: number;
+    readonly references?: ReferenceDecoder;
+}
+
+// @public
 export interface App {
     readonly assets: Assets;
     readonly coroutines: CoroutineHost;
@@ -452,6 +461,12 @@ export interface Component {
 }
 
 // @public
+export interface ComponentBuildResult {
+    readonly component: Component;
+    readonly issues: readonly SceneLoadIssue[];
+}
+
+// @public
 export interface ComponentClassInfo {
     readonly allowMultiple: boolean;
     readonly ancestors: readonly ComponentType[];
@@ -789,6 +804,11 @@ export function createSceneAsset(address: string, file: SceneFile, dependencies?
 export function createSceneLoader(options?: SceneLoaderOptions): AssetLoader<SceneAsset>;
 
 // @public
+export interface CreateSceneOptions {
+    readonly persistent?: boolean;
+}
+
+// @public
 export function createSeededRandom(seed: number): RandomSource;
 
 // @public
@@ -1054,6 +1074,7 @@ export class Entity {
     root(): Entity;
     get scene(): SceneInstance;
     setParent(parent: Entity | null, options?: SetParentOptions): void;
+    setSiblingIndex(index: number): void;
     get tags(): TagSet;
     get transform(): Transform;
     get uid(): string;
@@ -1849,6 +1870,25 @@ export interface LoadOptions {
 export interface LoadProgress {
     readonly address: string;
     readonly fraction: number;
+}
+
+// @public
+export function loadSceneDependencies(assets: Assets, file: SceneFile, options?: LoadSceneDependenciesOptions): Promise<readonly AssetHandle[]>;
+
+// @public
+export interface LoadSceneDependenciesOptions {
+    readonly signal?: AbortSignal;
+}
+
+// @public
+export interface LoadSceneFileOptions {
+    readonly address: string;
+    readonly mode?: "single" | "additive";
+    readonly name?: string;
+    readonly onIssue?: (issue: SceneLoadIssue) => void;
+    readonly setActive?: boolean;
+    readonly signal?: AbortSignal;
+    readonly strictInstanceHashes?: boolean;
 }
 
 // @public
@@ -2884,6 +2924,8 @@ export class SceneInstance {
     addRoot(entity: Entity): void;
     get asset(): AssetHandle<SceneAsset> | null;
     get isLoaded(): boolean;
+    // @internal
+    moveRoot(entity: Entity, index: number): void;
     readonly name: string;
     get onUnloading(): Signal;
     persistent: boolean;
@@ -3973,6 +4015,7 @@ export class World implements WorldHost {
     get app(): App;
     components<T extends Component>(type: ComponentType<T>): readonly T[];
     createEntity(name?: string, options?: CreateEntityOptions): Entity;
+    createScene(name: string, options?: CreateSceneOptions): SceneInstance;
     // @internal
     createSignal<T>(): Signal<T>;
     dispose(): void;
@@ -3996,6 +4039,7 @@ export class World implements WorldHost {
     get lifecycle(): WorldInternals;
     get lite(): WorldLiteHandles;
     loadScene(scene: AssetRef<SceneAsset> | string, options?: LoadSceneOptions): Promise<SceneInstance>;
+    loadSceneFile(file: SceneFile, options: LoadSceneFileOptions): Promise<SceneInstance>;
     get mainCamera(): Camera | null;
     moveEntityToScene(entity: Entity, scene: SceneInstance): void;
     // @internal

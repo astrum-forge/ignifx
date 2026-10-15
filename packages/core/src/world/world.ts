@@ -14,6 +14,9 @@ import { createNode } from "../lite/node.js";
 import { raycastRenderScene } from "../render/raycast.js";
 import { SceneInstance } from "../scene/scene-instance.js";
 import { assertSceneDependenciesLoaded, instantiateScene } from "../serialization/load.js";
+import { createSceneAsset } from "../serialization/scene-asset.js";
+import { SCENE_ASSET_TYPE } from "../serialization/scene-file.js";
+import { loadSceneDependencies, readSceneFile } from "../serialization/scene-loader.js";
 import { Signal } from "../signal/signal.js";
 import type { WorldHost } from "./world-host.js";
 import type { WorldInternals } from "./world-internals.js";
@@ -28,7 +31,7 @@ import type { LiteScene } from "../lite/scene.js";
 import type { QuatLike, Vec3Like } from "../math/types.js";
 import type { Camera, Ray } from "../render/camera.js";
 import type { RenderPick, RenderPickOptions } from "../render/renderer.js";
-import type { SceneLoadIssue } from "../serialization/load.js";
+import type { SceneBuildResult, SceneLoadIssue } from "../serialization/load.js";
 import type { SceneAsset } from "../serialization/scene-asset.js";
 import type { SceneFile } from "../serialization/scene-file.js";
 import type { DeferredQueue } from "../signal/signal.js";
@@ -599,6 +602,125 @@ export class World implements WorldHost {
   }
 
   /**
+   * Builds a scene from a file that is already in memory, the way {@link World.loadScene} builds one
+   * from an address (`docs/architecture/02-scene-graph.md` §2).
+   *
+   * @remarks
+   * Nothing is fetched for the file itself: it is validated, every asset it references is loaded
+   * through `app.assets` (the scene loader's own walk), and it is published there at
+   * `options.address` as a scene asset, so the instance's `asset` and everything that reads it
+   * behave as for a loaded file. Entity and component uids are the file's. The instance holds the
+   * asset and its dependencies and releases them when it is unloaded. The rest is
+   * {@link World.loadScene}'s: the same modes, the same synchronous build, `awake` before the
+   * promise settles, and `onSceneLoaded`.
+   *
+   * This is how a tool builds a scene it holds as an object, such as an editor's open document with
+   * unsaved edits.
+   *
+   * @param file - The scene file object, as `serializeScene` or `JSON.parse` produces it.
+   * @param options - The address to publish it at, the mode, cancellation, and an issue collector.
+   * @returns The instance, once every entity exists, every reference is resolved, and `awake` has
+   * run.
+   * @throws IgnifxError with code `IGX-0308` when the object is not a scene file, `IGX-0603` for a
+   * format version this build cannot read, and `IGX-0608` when it does not match the scene format;
+   * nothing is unloaded then. `IGX-0502` when `options.signal` aborts, `IGX-0307` when the file
+   * names an unregistered component type (the half-built instance is unloaded first), and
+   * whatever the asset system throws for a dependency.
+   *
+   * @example
+   * ```ts
+   * const level = await world.loadSceneFile(file, { address: "levels/level01.scene.json" });
+   * ```
+   */
+  async loadSceneFile(file: SceneFile, options: LoadSceneFileOptions): Promise<SceneInstance> {
+    const { address, signal } = options;
+    const checked = readSceneFile(file, address, true);
+    const mode = options.mode ?? "single";
+    if (mode === "single") {
+      await this.#unloadNonPersistent();
+    }
+    const dependencies = await loadSceneDependencies(
+      this.#assets(),
+      checked,
+      signal === undefined ? undefined : { signal },
+    );
+    const release = (): void => {
+      for (let index = 0; index < dependencies.length; index += 1) {
+        dependencies[index]?.release();
+      }
+    };
+    if (signal?.aborted === true) {
+      release();
+      throw new IgnifxError(CoreErrorCode.assetLoadAborted, `Loading ${address} was aborted.`, {
+        context: { asset: address },
+      });
+    }
+    const asset = await createSceneAsset(address, checked, dependencies);
+    const handle = this.#assets().register<SceneAsset>(asset, { type: SCENE_ASSET_TYPE, address });
+    const instance = new SceneInstance(this.#nextUid(), options.name ?? checked.name, false);
+    instance.setAsset(handle);
+    instance.onUnloading.connect(release, { once: true });
+    instance.setLoaded(false);
+    this.#scenes.push(instance);
+    let built: SceneBuildResult;
+    try {
+      built = instantiateScene(this, asset, {
+        scene: instance,
+        ...(options.strictInstanceHashes === undefined ? {} : { strictInstanceHashes: options.strictInstanceHashes }),
+      });
+    } catch (error) {
+      await this.unloadScene(instance);
+      throw error;
+    }
+    instance.setRemap(built.remap);
+    instance.setSettings(checked.settings ?? null);
+    instance.setLoaded(true);
+    this.#reportSceneIssues(address, built.issues);
+    const onIssue = options.onIssue;
+    if (onIssue !== undefined) {
+      for (let index = 0; index < built.issues.length; index += 1) {
+        const issue = built.issues[index];
+        if (issue !== undefined) {
+          onIssue(issue);
+        }
+      }
+    }
+    if (options.setActive ?? mode === "single") {
+      this.#activeScene = instance;
+    }
+    this.#lifecycle.flushAwakeAndEnable();
+    this.#onSceneLoaded.emit(instance);
+    return instance;
+  }
+
+  /**
+   * Creates an empty scene instance that is built in code rather than loaded from a file
+   * (`docs/architecture/02-scene-graph.md` §3).
+   *
+   * @remarks
+   * Entities join it through `createEntity(name, { scene })` or `moveEntityToScene`. A persistent
+   * instance survives every `"single"` load, so it is where a tool keeps objects that must outlive
+   * the levels it loads: an editor's cameras, grid and gizmo roots. Like any instance other than the
+   * implicit `"default"` one, it can be unloaded with `unloadScene`. Creating it raises no
+   * `onSceneLoaded`, because nothing was loaded; `serializeScene` writes it only when it is passed.
+   *
+   * @param name - The instance's name.
+   * @param options - Whether it is persistent.
+   * @returns The new, empty instance, appended to `scenes`.
+   *
+   * @example
+   * ```ts
+   * const tools = world.createScene("editor", { persistent: true });
+   * const camera = world.createEntity("Editor Camera", { scene: tools });
+   * ```
+   */
+  createScene(name: string, options?: CreateSceneOptions): SceneInstance {
+    const instance = new SceneInstance(this.#nextUid(), name, options?.persistent ?? false);
+    this.#scenes.push(instance);
+    return instance;
+  }
+
+  /**
    * Unloads a scene instance: `onUnloading` fires while its entities are still valid, its roots are
    * destroyed through the normal destroy path (children before parents, `onDisable` then
    * `onDestroy`), and the assets it held are released
@@ -1092,6 +1214,48 @@ export interface LoadSceneOptions {
   readonly setActive?: boolean;
   /** `true` turns an `IGX-0604` instance hash mismatch from a logged warning into a throw. */
   readonly strictInstanceHashes?: boolean;
+}
+
+/**
+ * Options accepted by {@link World.loadSceneFile}.
+ *
+ * @public
+ */
+export interface LoadSceneFileOptions {
+  /**
+   * The address the scene is published at in `app.assets`, for example
+   * `"levels/level01.scene.json"`, or a `memory:` address for a file that was never saved. It
+   * replaces whatever the cache held there. The file is never fetched from it.
+   */
+  readonly address: string;
+  /** The instance's name; defaults to the file's `name`. */
+  readonly name?: string;
+  /**
+   * `"single"` (the default) unloads every instance that is not `persistent` first; `"additive"`
+   * keeps them.
+   */
+  readonly mode?: "single" | "additive";
+  /** Cancels the dependency loads; an abort rejects with `IGX-0502`. */
+  readonly signal?: AbortSignal;
+  /** Makes the instance `world.activeScene`. Defaults to `true` for `"single"`, `false` for `"additive"`. */
+  readonly setActive?: boolean;
+  /** `true` turns an `IGX-0604` instance hash mismatch from a logged warning into a throw. */
+  readonly strictInstanceHashes?: boolean;
+  /**
+   * Receives every recoverable problem the build found (`SceneBuildResult.issues`), in order. They
+   * are also written to the app log as warnings, as for `loadScene`.
+   */
+  readonly onIssue?: (issue: SceneLoadIssue) => void;
+}
+
+/**
+ * Options accepted by {@link World.createScene}.
+ *
+ * @public
+ */
+export interface CreateSceneOptions {
+  /** Whether the instance survives a `"single"` scene load. Defaults to `false`. */
+  readonly persistent?: boolean;
 }
 
 /**

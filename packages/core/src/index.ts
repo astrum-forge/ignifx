@@ -443,8 +443,11 @@ export { SceneInstance } from "./scene/scene-instance.js";
 
 // serialization — the scene/prefab file format, its loader, and the round trip through it.
 export {
+  addComponentFromRecord,
   assertSceneDependenciesLoaded,
   instantiateScene,
+  type AddComponentFromRecordOptions,
+  type ComponentBuildResult,
   type InstantiateSceneOptions,
   type SceneBuildResult,
   type SceneLoadIssue,
@@ -468,7 +471,12 @@ export {
   type SceneFileOverride,
   type SceneFileTransform,
 } from "./serialization/scene-file.js";
-export { createSceneLoader, type SceneLoaderOptions } from "./serialization/scene-loader.js";
+export {
+  createSceneLoader,
+  loadSceneDependencies,
+  type LoadSceneDependenciesOptions,
+  type SceneLoaderOptions,
+} from "./serialization/scene-loader.js";
 export {
   serializeComponent,
   serializeEntity,
@@ -605,7 +613,9 @@ export { TWEEN_VALUE_KINDS, type TweenableValue, type TweenValueKind } from "./t
 export {
   World,
   type CreateEntityOptions,
+  type CreateSceneOptions,
   type InstantiateOptions,
+  type LoadSceneFileOptions,
   type LoadSceneOptions,
   type WorldLiteHandles,
 } from "./world/world.js";

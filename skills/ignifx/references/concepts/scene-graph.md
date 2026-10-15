@@ -10,25 +10,27 @@ World ──▶ SceneInstance ──▶ Entity (roots) ──▶ Entity (childre
 
 ## 1. `World` (`app.world`)
 
-| Member                                                                        | Returns                       | Notes                                                            |
-| ----------------------------------------------------------------------------- | ----------------------------- | ---------------------------------------------------------------- |
-| `createEntity(name?, options?)`                                               | `Entity`                      | `options`: `parent`, `scene`, `position`, `rotation`             |
-| `getEntity(uid)` / `getEntityByHandle(handle)`                                | `Entity \| null`              | `uid` is the ULID files use; the handle is a dense runtime id    |
-| `findByName(name)` / `findAllByName(name)`                                    | `Entity \| null` / `Entity[]` | Depth-first; prototyping and tooling only                        |
-| `findByTag(tag)`                                                              | `readonly Entity[]`           | Live indexed view; order is **not** stable                       |
-| `components(Type)`                                                            | `readonly T[]`                | Live per-type registry systems iterate; order is **not** stable  |
-| `activeScene`                                                                 | `SceneInstance`               | Default owner of entities created in code; assignable            |
-| `scenes`                                                                      | `readonly SceneInstance[]`    | Every loaded instance                                            |
-| `layers`                                                                      | `LayerTable`                  | Names resolved from the `layers` settings section                |
-| `registry`                                                                    | `ComponentRegistry`           | `typeId` ↔ class, and the derived class metadata                 |
-| `loadScene(ref, options?)`                                                    | `Promise<SceneInstance>`      | Loads a `.scene.json` and everything it references               |
-| `unloadScene(instance)`                                                       | `Promise<void>`               | Destroys its entities and releases its asset handles             |
-| `instantiate(asset, options?)` / `instantiateAsync(ref, options?)`            | `Entity` / `Promise<Entity>`  | Stamps out a prefab; answers with one root entity                |
-| `moveEntityToScene(entity, instance)`                                         | `void`                        | Moves a **root** and its subtree; `IGX-0309` for a child         |
-| `mainCamera`                                                                  | `Camera \| null`              | The enabled camera with the highest `priority`                   |
-| `raycastRender(ray, options?)`                                                | `RenderPick \| null`          | Synchronous CPU pick against renderable meshes                   |
-| `onEntityCreated` / `onEntityDestroyed` / `onSceneLoaded` / `onSceneUnloaded` | `Signal<…>`                   | World-level events, also mirrored on `app.events`                |
-| `lite`                                                                        | `{ scene, simulationScene }`  | Unstable escape hatch; `simulationScene` is `null` until physics |
+| Member                                                                        | Returns                       | Notes                                                             |
+| ----------------------------------------------------------------------------- | ----------------------------- | ----------------------------------------------------------------- |
+| `createEntity(name?, options?)`                                               | `Entity`                      | `options`: `parent`, `scene`, `position`, `rotation`              |
+| `getEntity(uid)` / `getEntityByHandle(handle)`                                | `Entity \| null`              | `uid` is the ULID files use; the handle is a dense runtime id     |
+| `findByName(name)` / `findAllByName(name)`                                    | `Entity \| null` / `Entity[]` | Depth-first; prototyping and tooling only                         |
+| `findByTag(tag)`                                                              | `readonly Entity[]`           | Live indexed view; order is **not** stable                        |
+| `components(Type)`                                                            | `readonly T[]`                | Live per-type registry systems iterate; order is **not** stable   |
+| `activeScene`                                                                 | `SceneInstance`               | Default owner of entities created in code; assignable             |
+| `scenes`                                                                      | `readonly SceneInstance[]`    | Every loaded instance                                             |
+| `layers`                                                                      | `LayerTable`                  | Names resolved from the `layers` settings section                 |
+| `registry`                                                                    | `ComponentRegistry`           | `typeId` ↔ class, and the derived class metadata                  |
+| `loadScene(ref, options?)`                                                    | `Promise<SceneInstance>`      | Loads a `.scene.json` and everything it references                |
+| `loadSceneFile(file, { address })`                                            | `Promise<SceneInstance>`      | Builds a `SceneFile` object already in memory, loading its assets |
+| `createScene(name, { persistent? })`                                          | `SceneInstance`               | An empty instance built in code, for tools                        |
+| `unloadScene(instance)`                                                       | `Promise<void>`               | Destroys its entities and releases its asset handles              |
+| `instantiate(asset, options?)` / `instantiateAsync(ref, options?)`            | `Entity` / `Promise<Entity>`  | Stamps out a prefab; answers with one root entity                 |
+| `moveEntityToScene(entity, instance)`                                         | `void`                        | Moves a **root** and its subtree; `IGX-0309` for a child          |
+| `mainCamera`                                                                  | `Camera \| null`              | The enabled camera with the highest `priority`                    |
+| `raycastRender(ray, options?)`                                                | `RenderPick \| null`          | Synchronous CPU pick against renderable meshes                    |
+| `onEntityCreated` / `onEntityDestroyed` / `onSceneLoaded` / `onSceneUnloaded` | `Signal<…>`                   | World-level events, also mirrored on `app.events`                 |
+| `lite`                                                                        | `{ scene, simulationScene }`  | Unstable escape hatch; `simulationScene` is `null` until physics  |
 
 Every app starts with one implicit, **persistent** `SceneInstance` named `"default"`, so
 `createEntity` works immediately and entities created in code survive a `"single"` scene load.
@@ -62,6 +64,15 @@ prefab.release();
   `strictInstanceHashes`. The asset and every dependency it names are loaded **before** the first
   entity exists, which is what lets `awake` read an `asset()` field; construction then happens in one
   synchronous block, and `awake`/`onEnable` run before the promise settles. An abort is `IGX-0502`.
+- **`loadSceneFile(file, options)`** — builds a scene from a `SceneFile` object instead of an
+  address: a tool's in-memory document, say. `address` is where the scene is published in
+  `app.assets` (a `memory:` address for an unsaved one); the file is never fetched. The other
+  options are `loadScene`'s plus `name` and `onIssue`, which receives the build's warnings.
+  `loadSceneDependencies(app.assets, file)` is the asset walk on its own, for building with
+  `createSceneAsset` and `instantiateScene` yourself.
+- **`createScene(name, { persistent })`** — an empty instance for objects that are not part of any
+  level; with `persistent: true` it survives every `"single"` load. Put entities in it with
+  `createEntity(name, { scene })`. `serializeScene` writes it only when passed it.
 - **`instantiate(asset, options?)`** — `parent`, `scene`, `name`, `position`, `rotation`,
   `worldSpace`, `strictInstanceHashes`. Synchronous, because a `SceneAsset` arrives with its
   dependencies loaded. A file with one root answers with that root; a file with several gets a
@@ -69,8 +80,8 @@ prefab.release();
   entity gets a fresh uid and an `entity.prefab` link. `instantiateAsync(ref)` loads first.
 - **`SceneInstance`** — `uid`, `name`, `roots`, `isLoaded`, `persistent`, `settings`,
   `onUnloading`, `asset` (the `AssetHandle<SceneAsset>` it was built from, or `null`), and `remap`
-  (the file-uid → runtime-object table, a `UidRemap`). Instances are created by the kernel and the
-  loader; a game reads them off `world.scenes` and sets `world.activeScene`.
+  (the file-uid → runtime-object table, a `UidRemap`). Instances are created by the loader and
+  `createScene`; a game reads them off `world.scenes` and sets `world.activeScene`.
 - **Saving** — `serializeScene(instanceOrRoots, options?)` produces a `SceneFile`;
   `stringifySceneFile(file)` renders it, `validateSceneFile(value)` checks one, and
   `computeSceneHash(file)` is what instance hashes compare against.
@@ -80,7 +91,7 @@ prefab.release();
 | Group      | Members                                                                                                                                                                                                                                           |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Identity   | `uid` (ULID, stable across files), `handle` (dense, invalid after destroy), `name`, `world`, `scene`, `transform`, `prefab` (the instance link, or `null`)                                                                                        |
-| Hierarchy  | `parent`, `children`, `setParent(parent, { worldPositionStays })`, `root()`, `isDescendantOf(other)`, `findChild(predicate, deep?)`, `find(path)`                                                                                                 |
+| Hierarchy  | `parent`, `children`, `setParent(parent, { worldPositionStays })`, `setSiblingIndex(index)`, `root()`, `isDescendantOf(other)`, `findChild(predicate, deep?)`, `find(path)`                                                                       |
 | Components | `addComponent(Type, init?)`, `getComponent(Type)`, `requireComponent(Type)`, `getComponents(Type)`, `getComponentInChildren`, `getComponentsInChildren`, `getComponentInParent`, `hasComponent(Type)`, `removeComponent(component)`, `components` |
 | State      | `active`, `activeInHierarchy`, `isStatic`, `layer`, `tags`, `isDestroyed`                                                                                                                                                                         |
 | Lifecycle  | `destroy()`, `destroyImmediate()`                                                                                                                                                                                                                 |
@@ -95,7 +106,9 @@ prefab.release();
   express a hard dependency together with `static requires`.
 - `find(path)` ("`Body/Arm.L`", "`../Sibling`") is deliberately fragile and allowed only in tests,
   examples, and tools. Link objects with `entityRef`/`componentRef` fields instead.
-- `setParent` defaults to `worldPositionStays: true`; a cycle throws `IGX-0306`.
+- `setParent` defaults to `worldPositionStays: true`; a cycle throws `IGX-0306`. It appends to the
+  new parent's children; `setSiblingIndex(index)` then moves the entity among its siblings (or its
+  scene's roots), clamping the index. Sibling order is the order a scene file lists entities in.
 
 ## 4. `Transform`
 
