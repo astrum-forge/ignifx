@@ -135,7 +135,7 @@ describe("Mat4 compose and decompose", () => {
     expect(Quat.angleDegrees(outRotation, rotation)).toBeCloseTo(0, 3);
   });
 
-  it("reports a mirrored matrix as a negative Y scale, the way Lite's mat4Decompose does", () => {
+  it("reports a mirrored matrix as a negative Y scale, the way Lite's decomposeMat4 does", () => {
     const m = Mat4.compose({ x: 0, y: 0, z: 0 }, Quat.identity(), { x: 1, y: -1, z: 1 });
     const outScale = new Vec3();
     expect(Mat4.decomposeToRef(m.elements, new Vec3(), new Quat(), outScale)).toBe(true);
