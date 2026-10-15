@@ -63,7 +63,7 @@ export function renderSchemaBundle(version: string, schemas: readonly SchemaDoc[
           fields: Object.fromEntries(
             schema.fields.map((field) => [
               field.name,
-              { kind: field.kind, default: field.defaultValue, description: field.description },
+              { kind: field.kind, default: field.defaultValue, description: field.description, ...field.metadata },
             ]),
           ),
         },

@@ -15,7 +15,30 @@ export interface SchemaFieldDoc {
   readonly defaultValue: string | null;
   /** One-line description, or an empty string. */
   readonly description: string;
+  /**
+   * The inspector metadata the field declares (`min`, `step`, `group`, `assetType`, …), copied from
+   * the description as is; only the members in {@link FIELD_METADATA_KEYS}, and only when present.
+   */
+  readonly metadata: Readonly<Record<string, unknown>>;
 }
+
+/**
+ * The scalar members of a core `SchemaFieldDescription` the bundle carries besides `kind`,
+ * `default`, and `description`. Nested descriptions (`item`, `fields`, `value`, `inner`) are left
+ * out: the bundle documents top-level fields.
+ */
+export const FIELD_METADATA_KEYS = [
+  "min",
+  "max",
+  "step",
+  "hidden",
+  "readonly",
+  "group",
+  "transient",
+  "values",
+  "assetType",
+  "componentType",
+] as const;
 
 /** One component schema, normalized for rendering. */
 export interface SchemaDoc {
@@ -99,11 +122,18 @@ function normalizeFields(typeId: string, value: unknown, errors: string[]): read
       continue;
     }
     const hasDefault = Object.hasOwn(field, "default");
+    const metadata: Record<string, unknown> = {};
+    for (const key of FIELD_METADATA_KEYS) {
+      if (field[key] !== undefined) {
+        metadata[key] = field[key];
+      }
+    }
     normalized.push({
       name,
       kind,
       defaultValue: hasDefault ? JSON.stringify(field["default"] ?? null) : null,
       description: optionalString(field, "description", ""),
+      metadata,
     });
   }
   return normalized;
