@@ -1,0 +1,84 @@
+{
+  "name": "@ignifx/editor-host",
+  "version": "0.9.0",
+  "description": "ignifx editor host: runs a project's own engine inside the ignifx editor's scene view and play view, over a versioned protocol.",
+  "keywords": [
+    "ignifx"
+  ],
+  "homepage": "https://ignifx.com",
+  "license": "Apache-2.0",
+  "author": "Astrum Forge Studios",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/astrum-forge/ignifx.git",
+    "directory": "packages/editor-host"
+  },
+  "files": [
+    "dist",
+    "skills",
+    "client.d.ts"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./vite": {
+      "types": "./dist/vite.d.ts",
+      "import": "./dist/vite.js"
+    },
+    "./client": {
+      "types": "./client.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": false
+  },
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --build tsconfig.json tsconfig.test.json",
+    "test": "vitest run --project node --project node-isolated --root ../.. packages/editor-host",
+    "api-report": "api-extractor run --verbose && api-extractor run --verbose -c api-extractor.vite.json",
+    "docs:api": "typedoc && typedoc --options typedoc.vite.json",
+    "api-report:update": "api-extractor run --local --verbose && api-extractor run --local --verbose -c api-extractor.vite.json",
+    "pack-check": "publint && attw --pack . --profile esm-only",
+    "prepublishOnly": "node ../../scripts/require-pnpm-publish.ts"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "catalog:",
+    "@ignifx/core": "workspace:*",
+    "@ignifx/vite-plugin": "workspace:*",
+    "@microsoft/api-extractor": "catalog:",
+    "@types/node": "catalog:",
+    "@types/webxr": "catalog:",
+    "@webgpu/types": "catalog:",
+    "publint": "catalog:",
+    "tsdown": "catalog:",
+    "typedoc": "catalog:",
+    "typedoc-plugin-markdown": "catalog:",
+    "typescript-native": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "@ignifx/core": "workspace:*",
+    "@ignifx/vite-plugin": "workspace:*",
+    "vite": "catalog:"
+  },
+  "peerDependenciesMeta": {
+    "@ignifx/vite-plugin": {
+      "optional": true
+    },
+    "vite": {
+      "optional": true
+    }
+  },
+  "ignifx": {
+    "engine": ">=0.0.0 <1.0.0",
+    "skill": "./skills/editor-host/SKILL.md"
+  }
+}

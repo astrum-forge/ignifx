@@ -76,6 +76,14 @@
       "outputs": ["$TURBO_ROOT$/skills/ignifx/references/api/devtools.md"],
       "outputLogs": "errors-only"
     },
+    "@ignifx/editor-host#docs:api": {
+      "dependsOn": ["build"],
+      "outputs": [
+        "$TURBO_ROOT$/skills/ignifx/references/api/editor-host.md",
+        "$TURBO_ROOT$/skills/ignifx/references/api/editor-host-vite.md"
+      ],
+      "outputLogs": "errors-only"
+    },
     "@ignifx/electron#docs:api": {
       "dependsOn": ["build"],
       "outputs": [
