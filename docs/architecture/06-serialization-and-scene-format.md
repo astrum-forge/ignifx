@@ -84,9 +84,8 @@ Field rules:
 - `active`, `static`, `layer`, `tags`, `enabled`: omitted when equal to defaults (`true`, `false`, `"Default"`, `[]`, `true`). `layer` is a layer **name** resolved against project settings at load; an unknown name resolves to `Default` with `IGX-0303`.
 - `transform`: always present; arrays `[x, y, z]`, `[x, y, z, w]`, `[x, y, z]`.
 - `components[i].props`: values according to the component's schema (§3). Omitted props take schema defaults.
-- `instance`: present only on instance roots. An instance root may also carry its own `components` (added to the instanced root entity) and `transform` (applied to the instance root). `instance.hash` records the content hash of the instanced scene asset at save time; a mismatch at load logs `IGX-0604` by default or fails when the loader option `strictInstanceHashes` is set, so save games notice prefab changes instead of silently reinterpreting overrides.
+- `instance`: present only on instance roots. When the instanced scene has exactly one root, the instance root _is_ that root, as with `world.instantiate`: the root's components come first, then the entry's own `components`, and the entry's `uid`, `name`, `transform` and other entity fields replace the root's. Otherwise the instance root is a container: the instanced scene's roots become its children, and its own `components` and `transform` are its own. `instance.hash` records the content hash of the instanced scene asset at save time; a mismatch at load logs `IGX-0604` by default or fails when the loader option `strictInstanceHashes` is set, so save games notice prefab changes instead of silently reinterpreting overrides.
 - `settings`: scene-level values interpreted by systems (environment, clear color, 2D mode flags, physics overrides). Only the _first_ loaded scene's settings apply in additive loads unless a setting is marked `mergeable`. Today only `@ignifx/2d` reads a key (`twoD`); core carries the block to `SceneInstance.settings` and nothing in 3D consumes it, so a 3D level's clear color, environment and gravity are still project settings or components.
-- An `instance` entry is an entity of its own: the instanced scene's roots are created as its **children**, so instancing a one-entity prefab adds a level to the hierarchy (unlike `world.instantiate`, where a single-root prefab's root stands for the instance).
 
 ## 3. Value encoding
 
@@ -115,14 +114,14 @@ Numbers are canonicalized before writing: `x = Math.round(x * 1e6) / 1e6`, `-0` 
 
 1. Parse and validate the file against the generated JSON Schema (development builds) and check `formatVersion` (§7).
 2. Resolve every `$asset` in the file (including inside instanced scenes, recursively) through the asset system; wait for all handles. This guarantees `asset()` fields are loaded before `awake`.
-3. Expand `instance` entries: load the referenced scene asset, clone its entity list under the instance root with a per-instance uid remap (file-local uid → runtime uid), apply overrides in order.
+3. Expand `instance` entries: load the referenced scene asset, clone its entity list under the instance root with a per-instance uid remap (file-local uid → runtime uid), apply overrides in order. A single-root scene's root merges into the instance root (§2), so overrides addressing it patch the instance root.
 4. Create entities in file order (parents first, since tree order is guaranteed by the serializer; loaders tolerate any order by deferring parenting).
 5. Create components, assign props from schema defaults then file values; `entityRef`/`componentRef` are resolved through the remap table; unresolved references are set to `null` with a diagnostic (`IGX-0602`).
 6. Run `onAttach` hooks, then `awake`/`onEnable` in tree order (`01-lifecycle-and-time.md` §4).
 
 ## 5. Saving
 
-- `serializeScene(instance | entities, options)` returns a scene file object. Runtime entities created in code are included if they belong to the instance. Entities that came from an `instance` are re-emitted as `instance` entries with computed overrides (diffing current props against the instanced asset's values), unless `options.flatten` is set.
+- `serializeScene(instance | entities, options)` returns a scene file object. Runtime entities created in code are included if they belong to the instance. Entities that came from an `instance` are re-emitted as `instance` entries with computed overrides (diffing current props against the instanced asset's values), unless `options.flatten` is set. An instance root that is its scene's single root writes its own entity fields, and the components it gained, on the entry; the components the scene gave it are written only as overrides, so loading the file rebuilds the same one entity.
 - `serializeEntity(entity)` / `serializeComponent(component)` exist for tooling and tests.
 - Save games use the same machinery: a game serializes the scene instances it considers "state" and stores the JSON through `app.storage` (`14-platform-electron.md` §2). Fields that must not be saved are marked `transient: true` in the schema.
 

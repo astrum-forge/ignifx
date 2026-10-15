@@ -125,9 +125,8 @@ describe("a save game through app.storage", () => {
     const rebuilt = instantiateScene(second.world, asset);
     expect(rebuilt.issues).toEqual([]);
 
-    const spawn = second.world.activeScene.roots.find((entity) => entity.name === "Enemy_01");
-    const enemy = spawn?.children[0];
-    expect(enemy?.name).toBe("Enemy");
+    // The prefab's single root merged into the entity carrying the `instance` entry.
+    const enemy = second.world.activeScene.roots.find((entity) => entity.name === "Enemy_01");
     expect(enemy?.getComponent(Everything)?.speed).toBe(9);
     expect(enemy?.getComponent(Everything)?.label).toBe("furious");
     expect(enemy?.getComponent(Tagger)).toBeNull();
@@ -185,7 +184,7 @@ describe("a save whose prefab has changed since it was written", () => {
     expect(rebuilt.issues.map((issue) => issue.code)).toContain(CoreErrorCode.instanceHashMismatch);
     expect(rebuilt.issues[0]?.message).toMatch(/were saved against/u);
     // "Best effort" means the overrides still land on the entities the paths still name.
-    const enemy = second.world.activeScene.roots.find((entity) => entity.name === "Enemy_01")?.children[0];
+    const enemy = second.world.activeScene.roots.find((entity) => entity.name === "Enemy_01");
     expect(enemy?.getComponent(Everything)?.speed).toBe(9);
   });
 

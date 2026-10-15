@@ -4,7 +4,6 @@ import { CoreErrorCode } from "../errors/error-codes.js";
 import { canonicalizeNumber, encodeProps, encodeValue } from "../schema/encode.js";
 import { SCENE_FILE_FORMAT, SCENE_FORMAT_VERSION } from "./scene-file.js";
 import { membershipEncoder } from "./uid-remap.js";
-import type { SceneAsset } from "./scene-asset.js";
 import type {
   SceneFile,
   SceneFileComponent,
@@ -15,7 +14,7 @@ import type {
 } from "./scene-file.js";
 import type { Component } from "../component/component.js";
 import type { Entity } from "../entity/entity.js";
-import type { EntityOrigin } from "../entity/internals.js";
+import type { EntityInstanceLink, EntityOrigin } from "../entity/internals.js";
 import type { SceneInstance } from "../scene/scene-instance.js";
 import type { ReferenceEncoder } from "../schema/encode.js";
 import type { SchemaIssue } from "../schema/issues.js";
@@ -315,7 +314,10 @@ function writeEntity(
   const layerName = entity.world.layers.nameOf(entity.layer);
   const origin = planned.origin;
   const instance = origin === null ? null : writeInstance(entity, origin, references, report);
-  const components = writeComponents(entity, references, report);
+  // An instance root that stands for its scene's single root writes only the components the
+  // instancing did not put there; the rest are the scene's, diffed into overrides.
+  const instanced = origin?.instanced?.root?.components ?? null;
+  const components = writeComponents(entity, references, report, instanced);
   return {
     uid: entity.uid,
     name: entity.name,
@@ -336,18 +338,25 @@ function writeEntity(
  * @param entity - The entity.
  * @param references - How references resolve.
  * @param report - Receives problems.
+ * @param skip - The uids of components an instanced scene put on the entity, which are not written.
  * @returns The records, in attach order.
  */
 function writeComponents(
   entity: Entity,
   references: ReferenceEncoder,
   report: (code: string, message: string) => void,
+  skip: ReadonlySet<string> | null,
 ): SceneFileComponent[] {
   const records: SceneFileComponent[] = [];
   const components = entity.components;
   for (let index = 0; index < components.length; index += 1) {
     const component = components[index];
-    if (component === undefined || component === entity.transform || component.isDestroyed) {
+    if (
+      component === undefined ||
+      component === entity.transform ||
+      component.isDestroyed ||
+      skip?.has(component.uid) === true
+    ) {
       continue;
     }
     const info = component.world.registry.describe(component.constructor);
@@ -410,7 +419,7 @@ function writeInstance(
   if (link === null) {
     return null;
   }
-  const overrides = computeOverrides(root, link.scene, references, report);
+  const overrides = computeOverrides(root, link, references, report);
   return {
     scene: { $asset: link.address },
     hash: link.scene.hash,
@@ -427,8 +436,12 @@ function writeInstance(
  * a third file — so deep edits inside a nested prefab are not written back; `flatten: true` is the
  * escape hatch.
  *
+ * An instance root that stands for its scene's single root is diffed against that root's record
+ * too, but only for the components the scene put on it: its name, transform, and other entity
+ * fields, and the components it gained, are the entry's own.
+ *
  * @param root - The instance root.
- * @param scene - The instanced scene.
+ * @param link - Its link to the instanced scene.
  * @param references - How references resolve.
  * @param report - Receives problems.
  * @returns The overrides, in a stable order: entity records in file order, then per entity its
@@ -436,14 +449,18 @@ function writeInstance(
  */
 function computeOverrides(
   root: Entity,
-  scene: SceneAsset,
+  link: EntityInstanceLink,
   references: ReferenceEncoder,
   report: (code: string, message: string) => void,
 ): SceneFileOverride[] {
   const current = new Map<string, Entity>();
+  const single = link.root;
+  if (single !== null) {
+    current.set(single.sourceUid, root);
+  }
   collectDirectMembers(root, root, current);
   const overrides: SceneFileOverride[] = [];
-  const source = scene.file.entities;
+  const source = link.scene.file.entities;
   for (let index = 0; index < source.length; index += 1) {
     const record = source[index];
     if (record === undefined) {
@@ -451,6 +468,11 @@ function computeOverrides(
     }
     const entity = current.get(record.uid);
     if (entity === undefined) {
+      continue;
+    }
+    if (entity === root && single !== null) {
+      const diff: ComponentDiff = { sourceUids: single.componentSourceUids, from: single.components, inside: true };
+      diffComponents(entity, record, diff, overrides, references, report);
       continue;
     }
     diffEntity(entity, record, overrides, references, report);
@@ -516,7 +538,26 @@ function diffEntity(
     overrides.push({ path: `${uid}/tags`, value: tags });
   }
   diffTransform(entity, record, uid, overrides);
-  diffComponents(entity, record, uid, overrides, references, report);
+  // A member that is itself the merged root of a nested instance brought that scene's components
+  // along; those are the nested scene's to diff, not this one's.
+  const origin = entityInternals(entity).origin;
+  const nested = origin?.instanced?.root?.components ?? new Set<string>();
+  const diff: ComponentDiff = {
+    sourceUids: origin?.componentSourceUids ?? new Map<string, string>(),
+    from: nested,
+    inside: false,
+  };
+  diffComponents(entity, record, diff, overrides, references, report);
+}
+
+/** Which of an entity's components a diff covers, and where they came from. */
+interface ComponentDiff {
+  /** Runtime component uid to the uid the record gives it. */
+  readonly sourceUids: ReadonlyMap<string, string>;
+  /** The uids of components an instanced scene put on the entity. */
+  readonly from: ReadonlySet<string>;
+  /** `true` diffs only the components in `from`; `false` diffs only the others. */
+  readonly inside: boolean;
 }
 
 /**
@@ -546,7 +587,7 @@ function diffTransform(entity: Entity, record: SceneFileEntity, uid: string, ove
  *
  * @param entity - The runtime entity.
  * @param record - Its file record.
- * @param uid - The record's uid, for paths.
+ * @param diff - Which components to diff, and their record uids.
  * @param overrides - Where patches are appended.
  * @param references - How references resolve.
  * @param report - Receives problems.
@@ -554,13 +595,13 @@ function diffTransform(entity: Entity, record: SceneFileEntity, uid: string, ove
 function diffComponents(
   entity: Entity,
   record: SceneFileEntity,
-  uid: string,
+  diff: ComponentDiff,
   overrides: SceneFileOverride[],
   references: ReferenceEncoder,
   report: (code: string, message: string) => void,
 ): void {
-  const origin = entityInternals(entity).origin;
-  const sourceUids = origin?.componentSourceUids ?? new Map<string, string>();
+  const uid = record.uid;
+  const sourceUids = diff.sourceUids;
   const declared = record.components ?? [];
   const seen = new Set<string>();
   const components = entity.components;
@@ -569,10 +610,17 @@ function diffComponents(
     if (component === undefined || component === entity.transform || component.isDestroyed) {
       continue;
     }
+    if (diff.from.has(component.uid) !== diff.inside) {
+      continue;
+    }
     if (component.world.registry.describe(component.constructor).typeId === null) {
       continue;
     }
     const sourceUid = sourceUids.get(component.uid);
+    if (sourceUid === undefined && diff.inside) {
+      // Merged in by a scene this one instances: not addressable from here (see computeOverrides).
+      continue;
+    }
     const written = serializeComponent(component, references, (issue) => {
       report(issue.code, issue.message);
     });

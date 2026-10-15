@@ -4,7 +4,7 @@ import { CoreErrorCode } from "../errors/error-codes.js";
 import { IgnifxError } from "../errors/ignifx-error.js";
 import { DEFAULT_LAYER } from "../layers/layer-table.js";
 import { decodeProps } from "../schema/encode.js";
-import { expandScene } from "./expand.js";
+import { expandScene, singleRoot } from "./expand.js";
 import { findSceneDependency } from "./scene-asset.js";
 import { UidRemap, remapDecoder } from "./uid-remap.js";
 import type { ExpandedEntity, ExpandedInstance } from "./expand.js";
@@ -15,7 +15,7 @@ import type { AssetHandle } from "../assets/types.js";
 import type { ConcreteComponentType } from "../component/component-type.js";
 import type { Component } from "../component/component.js";
 import type { Entity } from "../entity/entity.js";
-import type { EntityInstanceLink, EntityOrigin } from "../entity/internals.js";
+import type { EntityInstanceLink, EntityOrigin, InstancedRoot } from "../entity/internals.js";
 import type { SceneInstance } from "../scene/scene-instance.js";
 import type { ReferenceDecoder } from "../schema/encode.js";
 import type { JsonObject } from "../schema/json.js";
@@ -129,6 +129,7 @@ export function instantiateScene(world: World, asset: SceneAsset, options?: Inst
     remap: new UidRemap(),
     report,
     instances: indexInstances(expanded.instances),
+    merged: expanded.merged,
     roots: [],
     built: [],
   };
@@ -150,8 +151,10 @@ interface BuildContext {
   readonly remap: UidRemap;
   /** Where recoverable problems go. */
   readonly report: (code: string, message: string) => void;
-  /** The expansion's instances, by key. */
+  /** The expansion's instances, by key, in expansion order. */
   readonly instances: ReadonlyMap<string, ExpandedInstance>;
+  /** Expanded entity uid to the components an instanced root merged into it. */
+  readonly merged: ReadonlyMap<string, ReadonlySet<string>>;
   /** The parentless entities produced, in file order. */
   readonly roots: Entity[];
   /** Every entity produced, in file order, with the record that produced it. */
@@ -278,23 +281,26 @@ function attachComponents(context: BuildContext): void {
  * @param rootEntity - The entity that stands for the outermost instance, when the caller made one.
  */
 function linkInstances(context: BuildContext, handle: AssetHandle<SceneAsset> | null, rootEntity: Entity | null): void {
-  const rootOfInstance = new Map<string, Entity>();
+  const firstMember = new Map<string, Entity>();
   for (let index = 0; index < context.built.length; index += 1) {
     const built = context.built[index];
     const key = built?.source.instanceKey ?? null;
-    if (built === undefined || key === null || rootOfInstance.has(key)) {
-      continue;
+    if (built !== undefined && key !== null && !firstMember.has(key)) {
+      firstMember.set(key, built.entity);
     }
-    const instance = context.instances.get(key);
-    if (instance === undefined) {
-      continue;
-    }
-    // A nested `instance` entry names the entity it sat on; the outermost instance of a
-    // `world.instantiate` has no such entity, so the caller's container — or, when the file has a
-    // single root, that root — stands for it.
+  }
+  // In expansion order, so an entity that roots several instances — a variant merged with the
+  // scene it instances — links the outermost one. A nested `instance` entry names the entity it
+  // sat on; the outermost instance of a `world.instantiate` has no such entity, so the caller's
+  // container — or, when the file has a single root, that root — stands for it.
+  const rootOfInstance = new Map<string, Entity>();
+  for (const instance of context.instances.values()) {
     const declared = instance.rootUid;
-    const resolved = declared === null ? (rootEntity ?? built.entity) : context.remap.entity(declared);
-    rootOfInstance.set(key, resolved ?? built.entity);
+    const resolved =
+      declared === null ? (rootEntity ?? firstMember.get(instance.key) ?? null) : context.remap.entity(declared);
+    if (resolved !== null) {
+      rootOfInstance.set(instance.key, resolved);
+    }
   }
   const insideOf = new Map<Entity, Entity>();
   for (let index = 0; index < context.built.length; index += 1) {
@@ -309,7 +315,7 @@ function linkInstances(context: BuildContext, handle: AssetHandle<SceneAsset> | 
     }
   }
   if (rootEntity !== null) {
-    const own = ownedInstance(context, rootEntity, rootOfInstance, handle);
+    const own = ownedInstance(context, rootEntity, null, rootOfInstance, handle);
     if (own !== null) {
       entityInternals(rootEntity).origin = {
         sourceUid: "",
@@ -324,7 +330,7 @@ function linkInstances(context: BuildContext, handle: AssetHandle<SceneAsset> | 
     if (built === undefined) {
       continue;
     }
-    const own = ownedInstance(context, built.entity, rootOfInstance, handle);
+    const own = ownedInstance(context, built.entity, built.source, rootOfInstance, handle);
     const inside = insideOf.get(built.entity) ?? null;
     if (own === null && inside === null) {
       continue;
@@ -344,6 +350,7 @@ function linkInstances(context: BuildContext, handle: AssetHandle<SceneAsset> | 
  *
  * @param context - The build state.
  * @param entity - The candidate root.
+ * @param source - The expanded record that produced it, or `null` for a caller's container.
  * @param rootOfInstance - Instance key to its root entity.
  * @param handle - The handle the whole file was loaded through, for `asInstance` builds.
  * @returns The link, or `null` when the entity roots no instance.
@@ -351,6 +358,7 @@ function linkInstances(context: BuildContext, handle: AssetHandle<SceneAsset> | 
 function ownedInstance(
   context: BuildContext,
   entity: Entity,
+  source: ExpandedEntity | null,
   rootOfInstance: ReadonlyMap<string, Entity>,
   handle: AssetHandle<SceneAsset> | null,
 ): EntityInstanceLink | null {
@@ -366,9 +374,47 @@ function ownedInstance(
       address: instance.address,
       asset: instance.rootUid === null ? handle : instance.asset,
       scene: instance.scene,
+      root: instancedRoot(context, instance, source),
     };
   }
   return null;
+}
+
+/**
+ * What an instance root took from its scene's single root, when it stands for that root rather
+ * than for a container (`docs/architecture/06-serialization-and-scene-format.md` §2).
+ *
+ * @param context - The build state.
+ * @param instance - The instance the entity roots.
+ * @param source - The expanded record that produced the entity, or `null` for a caller's container.
+ * @returns The root's record uid and the components it brought, or `null` for a container.
+ */
+function instancedRoot(
+  context: BuildContext,
+  instance: ExpandedInstance,
+  source: ExpandedEntity | null,
+): InstancedRoot | null {
+  if (source === null) {
+    return null;
+  }
+  const merged = context.merged.get(source.data.uid) ?? new Set<string>();
+  if (instance.root !== null) {
+    return {
+      sourceUid: instance.root.sourceUid,
+      componentSourceUids: instance.root.componentSourceUids,
+      components: merged,
+    };
+  }
+  if (instance.rootUid !== null || singleRoot(instance.scene)?.uid !== source.sourceUid) {
+    return null;
+  }
+  // `world.instantiate` of a single-root file: the root is a member of the instance it roots, so
+  // every component its record declared came from the instancing too.
+  return {
+    sourceUid: source.sourceUid,
+    componentSourceUids: source.componentSourceUids,
+    components: new Set([...source.componentSourceUids.keys(), ...merged]),
+  };
 }
 
 /**

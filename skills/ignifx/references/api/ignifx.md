@@ -78068,6 +78068,13 @@ ULID, unique within the file.
 The `instance` entry that turns an entity into the root of an instanced scene — what other
 engines call a prefab instance (ADR-0005).
 
+#### Remarks
+
+When the instanced scene has exactly one root, the entity carrying the entry _is_ that root, as
+with `world.instantiate`: it gets the root's components, then its own, and keeps its own uid,
+name, and transform. A scene with several roots is expanded under the entity instead
+(`docs/architecture/06-serialization-and-scene-format.md` §2).
+
 #### Properties
 
 ##### hash?
