@@ -83,6 +83,17 @@ loads it with `app.world.loadScene("scenes/main.scene.json")` and never builds a
 itself, and the scene names every script by its `typeId`, so a script edit hot-patches the class
 instead of reloading the page.
 
+**The primitive meshes are files too**: `assets/meshes/*.mesh.json`, each naming one `MeshAsset`
+primitive and its options (`{ "format": "ignifx.mesh", "formatVersion": 1, "primitive": "box",
+"options": { "size": 1 } }`), and the scene names them by path, `meshes/crate.mesh.json`. No code
+runs before the scene loads, so any app built from `src/extensions.ts` and the scripts — a headless
+test, the ignifx editor's scene view — opens the level. The sky is an inverted 180-metre sphere with
+an unlit gradient, because `Environment.skybox` wants a cube map that cannot be generated from
+arithmetic. The floor's `uvScale` of 10 keeps the 128-pixel slab texture at about two and a half
+metres a tile. The walls are 4-metre panels sharing `wall-x` or `wall-z` rather than four long
+boxes, because a box gives every face the unit UV square and one 24-metre wall would stretch a
+single texture across it.
+
 The file is in the canonical form `stringifySceneFile` writes: keys in a fixed order, numbers
 rounded to six decimals, one value per line, no final newline. Edit it by hand, by an agent, or —
 later — in the ignifx editor. The ignifx repository's `tests/templates` loads it headless, checks the
@@ -90,8 +101,8 @@ entity list, and saves it again to prove the text comes back byte for byte.
 
 **Adding an entity as data.** Copy an entity record, give it and each of its components a fresh
 ULID (`generateUlid()` from `@ignifx/core`), set `parent` to `null` or another entity's `uid`, and
-list it after its parent. A wall panel, say, is a `MeshRenderer` naming `meshes/wall-x` or
-`meshes/wall-z` and `wall.material.json`, plus a `BoxCollider`, on the `Level` layer — and the
+list it after its parent. A wall panel, say, is a `MeshRenderer` naming `meshes/wall-x.mesh.json` or
+`meshes/wall-z.mesh.json` and `wall.material.json`, plus a `BoxCollider`, on the `Level` layer — and the
 navmesh walks around it with no code change, because the bake reads every `Level` collider.
 
 **Adding an entity in code.** Do it in `main.ts` after `loadScene`, the way the front end does:
@@ -101,10 +112,6 @@ says why).
 
 **What stays in code**, because a scene file cannot say it:
 
-- **The primitive meshes** (`src/level-meshes.ts`). ignifx has no mesh file format and a primitive
-  lives at a `memory:` address no file can name, so each one is published a second time at a plain
-  address — `meshes/crate`, `meshes/wall-x`, … — before the scene loads. The scene loads only in an
-  app that ran that step first.
 - **The navmesh** (`src/navigation.ts`). `NavMeshSurface` takes its geometry from `addSource`
   arrays, so the bake runs after the load, from the scene's `Level` colliders.
 - **The sounds.** A clip referenced by a scene field is a dependency of the scene, and one the

@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
-import { serializeScene, stringifySceneFile, validateSceneFile } from "@ignifx/core";
+import { MeshAsset, MeshRenderer, serializeScene, stringifySceneFile, validateSceneFile } from "@ignifx/core";
 import { afterEach, describe, expect, it } from "vitest";
 import { ASSET_DIR, createThirdPersonApp, TEMPLATE_DIR } from "./third-person-app.js";
 import type { App, Component, Entity, MemorySink } from "@ignifx/core";
@@ -143,6 +143,22 @@ describe("3d-third-person's scene file", () => {
     }
   });
 
+  // ignifx-editor plan, engine ask E15: `@ignifx/editor-host` builds the app from the extensions and
+  // the scripts and loads the scene, with no game code in between. `createThirdPersonApp` does the
+  // same, so every primitive has to come from a `.mesh.json` file the scene names.
+  it("resolves every MeshRenderer's mesh from a .mesh.json file, with no code publishing one first", async () => {
+    const { entities } = await loadLevel();
+
+    const renderers = entities.flatMap((entity) => entity.getComponent(MeshRenderer) ?? []);
+    expect(renderers).toHaveLength(43);
+    for (const renderer of renderers) {
+      expect(renderer.mesh?.state).toBe("loaded");
+      expect(renderer.mesh?.value).toBeInstanceOf(MeshAsset);
+      expect(renderer.mesh?.address).toMatch(/^meshes\/[a-z-]+\.mesh\.json$/u);
+    }
+    expect(new Set(renderers.map((renderer) => renderer.mesh?.address)).size).toBe(7);
+  });
+
   it("round-trips byte for byte through serializeScene and stringifySceneFile", async () => {
     const { app } = await createThirdPersonApp();
     apps.push(app);
@@ -161,6 +177,12 @@ describe("3d-third-person's entry", () => {
 
   it("has no level.ts: the level is the scene file", () => {
     expect(existsSync(join(source, "level.ts"))).toBe(false);
+  });
+
+  it("publishes no asset in code: the primitive meshes are files", () => {
+    expect(existsSync(join(source, "level-meshes.ts"))).toBe(false);
+    const publishers = sources(source).filter((file) => /\bassets\.register\(/u.test(readFileSync(file, "utf8")));
+    expect(publishers).toEqual([]);
   });
 
   // ignifx-editor spike S0.1 §6: an edit to a script that a module of the entry imports at run time

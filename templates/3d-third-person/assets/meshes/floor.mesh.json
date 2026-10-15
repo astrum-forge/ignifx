@@ -1,0 +1,6 @@
+{
+  "format": "ignifx.mesh",
+  "formatVersion": 1,
+  "primitive": "ground",
+  "options": { "width": 24, "height": 24, "subdivisions": 1, "uvScale": [10, 10] }
+}
