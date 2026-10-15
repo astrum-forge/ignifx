@@ -48,6 +48,8 @@ const ALLOWED_IMPORTS = {
   // Layer 3 — platform, tooling and the umbrella.
   electron: ["core"],
   devtools: ["core", "ui", "input", "audio", "physics", "physics-2d"],
+  // The page half imports core; the `./vite` entry imports the Vite plugin's module ids.
+  "editor-host": ["core", "vite-plugin"],
   ignifx: [
     "core",
     "input",

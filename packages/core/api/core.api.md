@@ -1226,6 +1226,7 @@ export const ErrorRange: {
     readonly devtools: "15";
     readonly terrain: "16";
     readonly particles: "17";
+    readonly editorHost: "18";
 };
 
 // @public

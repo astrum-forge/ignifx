@@ -1,0 +1,99 @@
+{
+  "description": "Literal messages as @ignifx/editor-host (astrum-forge/ignifx#41, branch feat/editor-host) puts them on the wire, copied from its channel.ts, host.ts and play-controls.ts with the protocol version set to 0.2. Key order is the host's. Test: wire.test.ts.",
+  "messages": {
+    "connect": { "type": "ignifx-editor/connect" },
+    "hello": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "method": "hello",
+      "params": { "editorVersion": "0.1.0", "protocol": { "major": 0, "minor": 2 } }
+    },
+    "readyScene": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+        "engineVersion": "0.9.0",
+        "protocol": { "major": 0, "minor": 2 },
+        "capabilities": ["heartbeat"],
+        "hostKind": "scene"
+      }
+    },
+    "readyPlay": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+        "engineVersion": "0.9.0",
+        "protocol": { "major": 0, "minor": 2 },
+        "capabilities": ["heartbeat", "playControls"],
+        "hostKind": "play"
+      }
+    },
+    "incompatibleProtocol": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "error": {
+        "code": -32000,
+        "message": "The editor speaks protocol 0.1 and this host speaks 0.2. Update the editor, or the project's @ignifx packages, so the protocol majors match.",
+        "data": { "host": { "major": 0, "minor": 2 }, "engineVersion": "0.9.0" }
+      }
+    },
+    "heartbeat": { "jsonrpc": "2.0", "method": "heartbeat" },
+    "ping": { "jsonrpc": "2.0", "id": "ping-1", "method": "ping" },
+    "pong": { "jsonrpc": "2.0", "id": "ping-1", "result": "pong" },
+    "playRequest": { "jsonrpc": "2.0", "id": 2, "method": "play" },
+    "playResponse": {
+      "jsonrpc": "2.0",
+      "id": 2,
+      "result": { "isRunning": true, "isPaused": false, "frameCount": 0 }
+    },
+    "pauseRequest": { "jsonrpc": "2.0", "id": 3, "method": "pause" },
+    "pauseResponse": {
+      "jsonrpc": "2.0",
+      "id": 3,
+      "result": { "isRunning": true, "isPaused": true, "frameCount": 42 }
+    },
+    "stepRequest": { "jsonrpc": "2.0", "id": 4, "method": "step" },
+    "stepResponse": {
+      "jsonrpc": "2.0",
+      "id": 4,
+      "result": { "isRunning": false, "isPaused": true, "frameCount": 43 }
+    },
+    "stepRequestWithDelta": { "jsonrpc": "2.0", "id": 5, "method": "step", "params": { "deltaSeconds": 0.02 } },
+    "stepResponseWithDelta": {
+      "jsonrpc": "2.0",
+      "id": 5,
+      "result": { "isRunning": false, "isPaused": true, "frameCount": 44 }
+    },
+    "stopRequest": { "jsonrpc": "2.0", "id": 6, "method": "stop" },
+    "stopResponse": {
+      "jsonrpc": "2.0",
+      "id": 6,
+      "result": { "isRunning": false, "isPaused": true, "frameCount": 44 }
+    },
+    "stepInvalidParams": {
+      "jsonrpc": "2.0",
+      "id": 7,
+      "error": { "code": -32602, "message": "step needs deltaSeconds to be a positive number of seconds." }
+    },
+    "notReady": {
+      "jsonrpc": "2.0",
+      "id": 8,
+      "error": { "code": -32001, "message": "Send hello before \"play\"." }
+    },
+    "methodNotFound": {
+      "jsonrpc": "2.0",
+      "id": 9,
+      "error": { "code": -32601, "message": "This host has no method \"play\"." }
+    },
+    "internalError": {
+      "jsonrpc": "2.0",
+      "id": 10,
+      "error": { "code": -32603, "message": "The frame loop failed to start.", "data": { "code": null } }
+    },
+    "invalidRequest": {
+      "jsonrpc": "2.0",
+      "id": null,
+      "error": { "code": -32600, "message": "Not a JSON-RPC 2.0 message." }
+    }
+  }
+}

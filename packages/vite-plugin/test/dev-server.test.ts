@@ -130,10 +130,15 @@ describe("vite dev with the ignifx plugin", () => {
       });
 
       // The registry is the boundary that takes the new script, so the page keeps running. A browser
-      // imports a `\0` virtual module at `/@id/__x00__<id>`.
+      // imports a `\0` virtual module at `/@id/__x00__<id>`. The real file watcher can report the
+      // write as well as the `change` emitted above, so the same update may arrive twice; no payload
+      // may be anything else, a full reload above all.
       const registryUrl = `/@id/__x00__${SCRIPTS_MODULE_ID}`;
-      expect(sent.map((payload) => payload["type"])).toEqual(["update"]);
-      expect(sent[0]?.["updates"]).toMatchObject([{ type: "js-update", path: registryUrl, acceptedPath: registryUrl }]);
+      const registryUpdate = {
+        type: "update",
+        updates: [expect.objectContaining({ type: "js-update", path: registryUrl, acceptedPath: registryUrl })],
+      };
+      expect(sent).toEqual(sent.map(() => registryUpdate));
     } finally {
       await server.close();
     }

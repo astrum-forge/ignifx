@@ -1,0 +1,138 @@
+// A copy of `packages/editor-protocol/src/handshake.ts` from `astrum-forge/ignifx-editor` (protocol 0.2).
+// Below this comment it is byte-identical to that file, but for the link rule in `./index.ts`.
+/**
+ * The handshake the editor runs with each host it embeds: the scene view (`@ignifx/editor-host`)
+ * and the play view (`virtual:ignifx/editor`). Plan §3.3.
+ *
+ * The editor sends `hello`; the host answers with its `ready` result, or with an
+ * {@link RpcErrorCode.incompatibleProtocol} error when `protocolVersionIsCompatible` refuses the
+ * pair. Either side may send `ping` at any time after that. The editor posts a fresh port for every
+ * load of a view (`connect.ts`), so the handshake runs again after every reload.
+ */
+import type { RpcRequest, RpcSuccessResponse } from "./rpc.js";
+import type { ProtocolVersion } from "./version.js";
+
+/**
+ * The method names of the handshake.
+ *
+ * @remarks
+ * `as const` object plus derived union rather than an `enum` (engine coding standards §5.2, §5.3).
+ *
+ * @public
+ */
+export const HandshakeMethod = {
+  /** Editor → host: the first message on a new channel. */
+  hello: "hello",
+  /** Either direction: a liveness check, answered with `"pong"`. */
+  ping: "ping",
+} as const;
+
+/**
+ * The union of the names in `HandshakeMethod`.
+ *
+ * @public
+ */
+export type HandshakeMethod = (typeof HandshakeMethod)[keyof typeof HandshakeMethod];
+
+/**
+ * Which kind of view a host runs.
+ *
+ * @public
+ */
+export const HostKind = {
+  /** The scene view: an edit-mode app that applies document ops and draws gizmos. */
+  scene: "scene",
+  /** The play view: the project's own page, running the game. */
+  play: "play",
+} as const;
+
+/**
+ * The union of the kinds in `HostKind`.
+ *
+ * @public
+ */
+export type HostKind = (typeof HostKind)[keyof typeof HostKind];
+
+/**
+ * The optional features a host lists in its `ready` result.
+ *
+ * @remarks
+ * The scene host sends `["heartbeat"]`; the play controls send `["heartbeat", "playControls"]`.
+ *
+ * @public
+ */
+export const HostCapability = {
+  /** The host sends `heartbeat` notifications after `ready` (see `HostNotification`). */
+  heartbeat: "heartbeat",
+  /** The host answers the methods in `PlayMethod`. */
+  playControls: "playControls",
+} as const;
+
+/**
+ * The union of the names in `HostCapability`.
+ *
+ * @public
+ */
+export type HostCapability = (typeof HostCapability)[keyof typeof HostCapability];
+
+/**
+ * What the editor says about itself in `hello`.
+ *
+ * @public
+ */
+export interface HelloParams {
+  /** The editor's own version, for example `"0.1.0"`. */
+  readonly editorVersion: string;
+  /** The protocol version the editor speaks. */
+  readonly protocol: ProtocolVersion;
+}
+
+/**
+ * Editor → host: the first request on a new channel.
+ *
+ * @public
+ */
+export interface HelloRequest extends RpcRequest<typeof HandshakeMethod.hello, HelloParams> {
+  /** What the editor says about itself. */
+  readonly params: HelloParams;
+}
+
+/**
+ * What a host says about itself in answer to `hello`.
+ *
+ * @public
+ */
+export interface ReadyResult {
+  /** The version of `@ignifx/core` the project runs, for example `"0.9.0"`. */
+  readonly engineVersion: string;
+  /** The protocol version the host speaks. */
+  readonly protocol: ProtocolVersion;
+  /**
+   * Optional features the host supports, named by `HostCapability`. Names are added as the
+   * protocol grows; a peer ignores names it does not know.
+   */
+  readonly capabilities: readonly string[];
+  /** Which view the host runs. */
+  readonly hostKind: HostKind;
+}
+
+/**
+ * Host → editor: the successful answer to {@link HelloRequest}.
+ *
+ * @public
+ */
+export type ReadyResponse = RpcSuccessResponse<ReadyResult>;
+
+/**
+ * Either direction: a liveness check. It takes no parameters.
+ *
+ * @public
+ */
+export type PingRequest = RpcRequest<typeof HandshakeMethod.ping, never>;
+
+/**
+ * The answer to {@link PingRequest}.
+ *
+ * @public
+ */
+export type PongResponse = RpcSuccessResponse<"pong">;
