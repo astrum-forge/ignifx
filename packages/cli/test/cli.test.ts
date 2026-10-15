@@ -309,27 +309,35 @@ describe("scaffolding the 2d-topdown template", () => {
     expect(tsconfig).not.toContain("extends");
   });
 
-  // The editor-ready shape (ignifx-editor plan, engine asks E2 and E15): the level is a scene file
-  // whose primitive meshes are `.mesh.json` files, the extension list is a module of its own, and
-  // there is no `src/level.ts`.
-  it("scaffolds 3d-third-person with its scene file and its extensions module", async () => {
+  // The editor-ready shape (ignifx-editor plan, engine asks E2 and E15): the level is a scene file,
+  // the extension list is a module of its own, and there is no `src/level.ts`.
+  it.each([
+    {
+      template: "2d-topdown",
+      files: ["src/script-types.ts", "src/scripts/sprite-frame.ts", "assets/level.tilemap.json"],
+    },
+    {
+      template: "2d-sidescroller",
+      files: ["src/script-types.ts", "src/scripts/sprite-frame.ts", "assets/parallax.atlas.json"],
+    },
+    {
+      template: "3d-third-person",
+      files: ["assets/meshes/crate.mesh.json", "assets/meshes/wall-x.mesh.json", "src/scripts/beacon.ts"],
+    },
+    {
+      template: "3d-first-person",
+      files: ["assets/prop.material.json", "src/level-meshes.ts", "src/pedestals.ts", "src/script-types.ts"],
+    },
+  ])("scaffolds $template with its scene file and its extensions module", async ({ template, files }) => {
     const io = recordingIo(join(repoRoot, "templates"));
-    const target = join(workspace, "courtyard");
+    const target = join(workspace, template);
 
-    const result = await runCreate([target, "--template", "3d-third-person"], io);
+    const result = await runCreate([target, "--template", template], io);
 
     expect(result.files).toEqual(
-      expect.arrayContaining([
-        "assets/meshes/crate.mesh.json",
-        "assets/meshes/wall-x.mesh.json",
-        "assets/scenes/main.scene.json",
-        "src/extensions.ts",
-        "src/main.ts",
-        "src/scripts/beacon.ts",
-      ]),
+      expect.arrayContaining(["assets/scenes/main.scene.json", "src/extensions.ts", "src/main.ts", ...files]),
     );
     expect(result.files).not.toContain("src/level.ts");
-    expect(result.files).not.toContain("src/level-meshes.ts");
     const scene: unknown = JSON.parse(await readFile(join(target, "assets/scenes/main.scene.json"), "utf8"));
     expect(scene).toMatchObject({ format: "ignifx.scene", formatVersion: 1, name: "main" });
   });
