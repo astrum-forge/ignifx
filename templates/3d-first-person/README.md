@@ -77,23 +77,80 @@ level rather than the progress through it. Lighting a pedestal autosaves, at mos
 seconds; a save from an older build is discarded with an `IGX-TPL-0011` warning rather than
 migrated, which is what makes regenerating the art safe.
 
-## Level and assets
+## The level
 
-`src/level.ts` builds the room in code: a floor slab, a ring of wall panels sharing one mesh, two
-interior stubs, a seeded crate scatter, three interactable pedestals — each with its own material
-clone and an emissive cap — and an inverted sphere with an unlit gradient for the sky, because
-`Environment.skybox` wants a cube map that cannot be generated from arithmetic. `pnpm dev:desktop` /
-`build:desktop` / `dist:desktop` run the Electron build; `@ignifx/electron` is registered in both and
-is inert without a preload bridge.
+The level is data: **`assets/scenes/main.scene.json`** holds every entity — the sky, the sun and
+the fill light, the floor slab, 24 wall panels and two interior stubs, six crates, three pedestals
+with their posts and emissive caps, the character with its head, view model and the prop it holds —
+with its components, their fields, and the references between them (`{ "$entity": … }`,
+`{ "$asset": … }`). `main.ts` loads it with `app.world.loadScene("scenes/main.scene.json")` and
+never builds a level entity itself, and the scene names every script by its `typeId`, so a script
+edit hot-patches the class instead of reloading the page. The `FirstPersonController`, the
+crosshair ray (`Interactor`, its `eye` and `reach`) and `AttachToHand` (its `prop`) are scene
+components like any other.
+
+The file is in the canonical form `stringifySceneFile` writes: keys in a fixed order, numbers
+rounded to six decimals, one value per line, no final newline. Edit it by hand, by an agent, or in
+the ignifx editor. The ignifx repository's `tests/templates` loads it headless, checks the entity
+list, and saves it again to prove the text comes back byte for byte.
+
+**Adding an entity as data.** Copy an entity record, give it and each of its components a fresh
+ULID (`generateUlid()` from `@ignifx/core`), set `parent` to `null` or another entity's `uid`, and
+list it after its parent. A crate, say, is a `MeshRenderer` naming `meshes/crate` and
+`crate.material.json`, a `BoxCollider` and a `Rigidbody`, on the `Prop` layer. A fourth pedestal is
+an entity on the `Interactable` layer with a `MeshRenderer`, a `BoxCollider` and a child renderer
+for its cap: the crosshair finds it, and it gets a material of its own, with no code change.
+
+**Adding an entity in code.** Do it in `main.ts` after `loadScene`, the way the front end does:
+`app.world.createEntity("Name")`, then `addComponent`. A project script is reached by its type id,
+`scriptType<MyScript>(app, "my-game/MyScript")`, never by importing its module (`src/script-types.ts`
+says why).
+
+**What stays in code**, because a scene file cannot say it:
+
+- **The primitive meshes** (`src/level-meshes.ts`). ignifx has no mesh file format and a primitive
+  lives at a `memory:` address no file can name, so each one is published a second time at a plain
+  address — `meshes/crate`, `meshes/pedestal`, … — before the scene loads. The scene loads only in
+  an app that ran that step first.
+- **Each pedestal's own material** (`src/pedestals.ts`). Lighting a pedestal recolours its
+  material, which every renderer sharing it draws with. The scene can only name the shared
+  `crate.material.json`, so each pedestal is given a `clone` after the load.
+- **The sounds.** A clip referenced by a scene field is a dependency of the scene, and one the
+  browser cannot decode would fail the whole load; every sound here is optional, so the crosshair's
+  pickup blip is assigned after the load and the ambient pad's `AudioSource` is created in code.
+- **The post-process stack.** Its effects can only be switched on after `app.start()`.
+- **The front end**: menus, HUD, saves, input overrides, the crosshair ray's targets, crosshair
+  element and `onToggled` callback, and the `Game UI` entity that carries the front end's scripts.
+  They hold DOM elements and closures.
+- **The input actions and audio buses** are assets, loaded before the scene because the controller
+  and the crosshair ray resolve their actions in `awake`, which runs inside `loadScene`.
 
 Every pixel and every sample comes from a committed, seeded script; nothing is downloaded
 (`CONSTITUTION.md` §11.3). Regenerate from the repository root with `pnpm assets:3d`
-and `pnpm assets:audio`.
+and `pnpm assets:audio`. `pnpm dev:desktop` / `build:desktop` / `dist:desktop` run the Electron
+build; `@ignifx/electron` is registered in both and is inert without a preload bridge.
+
+## Extensions
+
+`src/extensions.ts` exports `extensions()`, the list `main.ts` passes to `createApp`. It is a module
+of its own so that anything else that builds an app over this project — the ignifx editor's scene
+view, a headless test — registers the same extensions in the same order.
+
+## Open in the ignifx editor
+
+The project is ready for the ignifx editor. `vite.config.ts` lists `editorHostPlugin` from
+`@ignifx/editor-host`, and `main.ts` passes the app to `attachEditorPlayControls`. Under `pnpm dev`
+the editor's scene view is served at `/__ignifx_editor__/`, and the editor can play, pause, step and
+stop the game in its play view. Only the editor's origin can frame the scene view or connect to
+either view. The editor sets that origin in `IGNIFX_EDITOR_ORIGIN` when it starts the dev server,
+and it defaults to the packaged editor's `ignifx-editor://app`. `pnpm build` contains no editor code.
 
 ## Query flags
 
-- `?static=1` — stops the clock **before** `app.start()` and leaves the front end out, so no fixed
-  step runs and the frame is exactly the authored scene. The visual goldens open it.
+- `?static=1` — loads the same scene, switches the controller and the crosshair ray off, turns the
+  character to face the pedestals by hand, stops the clock **before** `app.start()` and leaves the
+  front end out, so no fixed step runs and the frame is exactly the authored scene. The visual
+  goldens open it.
 - `?hud=1` — keeps the overlay visible in a static scene; the gallery capture uses it.
 - `?bench=1` — skips the title screen and installs `window.__ignifxFrameTime` for
   `tests/visual/tests/frame-time.spec.ts`.

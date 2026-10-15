@@ -1,5 +1,5 @@
 import { CharacterController } from "@ignifx/physics";
-import type { Interactable } from "./level.js";
+import type { Interactable } from "./pedestals.js";
 import type { SavePoint } from "./menus/save-store.js";
 import type { Interactor } from "./scripts/interactor.js";
 import type { RunState } from "./scripts/save-game.js";

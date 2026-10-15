@@ -183,7 +183,7 @@ export class Interactor
       this.#lit.delete(name);
     }
     // `setBaseColor` writes the Lite material, which every renderer sharing this asset draws with.
-    // `src/level.ts` gives each pedestal its own `clone`, which is what makes that safe here.
+    // `src/pedestals.ts` gives each pedestal its own `clone`, which is what makes that safe here.
     target.material.value.setBaseColor(lit ? LIT_COLOR : IDLE_COLOR);
     target.glow.enabled = lit;
   }
