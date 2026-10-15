@@ -1,5 +1,31 @@
 # @ignifx/vite-plugin
 
+## 0.10.0
+
+### Minor Changes
+
+- 159ea03: Add `.mesh.json` mesh files: a file names one primitive (`box`, `sphere`, `plane`, `ground`, `cylinder`, `capsule`, `torus`) and its `MeshAsset` factory options, so a scene file can reference a primitive by address (`{ "$asset": "meshes/crate.mesh.json" }`) without code publishing it first. A bad primitive or option fails the load with `IGX-0507`.
+  
+  - `@ignifx/vite-plugin` records `.mesh.json` files as `mesh` assets and checks their header; pass `meshFileJsonSchema()` from `@ignifx/core` in `schemas.formats` to validate their options at build time.
+
+### Patch Changes
+
+- dc768d6: - `describeSchema` now describes each field's inspector options (`min`, `max`, `step`, `hidden`, `readonly`, `group`, `transient`), an enum's `values`, an asset field's `assetType`, a `componentRef` field's `componentType`, and the nested field of an `array`, `record`, `map` or `optional`.
+  - Add `describeRegisteredSchemas(app.world.registry)`, which describes every registered component with `allowMultiple` and the `package` that registered it, for inspectors outside the engine.
+  - `toJsonSchema` writes the same options as `x-ignifx-*` keywords (`x-ignifx-step`, `x-ignifx-group`, `x-ignifx-asset-type`, …) and marks read-only fields with `readOnly`.
+  - Add `ComponentRegistry.registrarOf(typeId)`, the extension that registered a component.
+  - The Vite plugin's JSON Schema validator skips `x-` extension keywords and `readOnly` instead of rejecting them with `IGX-0653`.
+- 08e4b01: Fixed: editing a script in `src/scripts/` (or your `scripts` glob) now hot-reloads it through `app.hotReload` instead of reloading the whole page.
+- 6573ebf: `vite build` and `vite dev` now find `@ignifx/physics`'s Havok WebAssembly in a standalone pnpm project, instead of failing with `IGX-0553` unless `@babylonjs/havok` was a direct dependency.
+- Updated dependencies [4c6e200]
+- Updated dependencies [37cf52e]
+- Updated dependencies [612ba87]
+- Updated dependencies [159ea03]
+- Updated dependencies [dc768d6]
+- Updated dependencies [738f68d]
+- Updated dependencies [fd0afe5]
+  - @ignifx/core@0.10.0
+
 ## 0.9.0
 
 ### Patch Changes

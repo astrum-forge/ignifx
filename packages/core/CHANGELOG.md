@@ -1,5 +1,44 @@
 # @ignifx/core
 
+## 0.10.0
+
+### Minor Changes
+
+- 4c6e200: Add `world.loadSceneFile(file, { address })` to build a scene from a `SceneFile` object already in memory, and `loadSceneDependencies` for the asset walk on its own.
+  Add `world.createScene(name, { persistent })` for an empty scene instance built in code, `entity.setSiblingIndex(index)` to order siblings, and `addComponentFromRecord` to attach a component from its scene file record.
+- 37cf52e: Add edit mode for editors: `createApp({ editMode: true })` shows a scene without playing it.
+  
+  - No script gets a callback unless its class sets `static runInEditMode = true`; the fixed loop and physics do not run; `app.isEditMode` reports the mode.
+  - `startCoroutine` throws `IGX-0111` in edit mode for a script that does not run in edit mode.
+  - `registerSystem` takes `editMode: "run" | "hold" | "skip"` (default `"run"`) to say what a system does in edit mode; a held system sees `ctx.dt === 0` and `ctx.isClockHeld === true`.
+  - In edit mode `entity.isStatic` stays writable, the shader `time` uniforms hold still, and a hot-reload patch that changes `runInEditMode` re-creates the instances.
+  
+  ### Breaking
+  
+  `SystemContext` has a new required `isClockHeld` field. Code that builds a `SystemContext` by hand, usually a test, must add `isClockHeld: false`.
+- 612ba87: Add `@ignifx/editor-host`, which lets the ignifx editor run a project's own engine. Its Vite plugin (`editorHostPlugin` from `@ignifx/editor-host/vite`) serves the editor's scene view at `/__ignifx_editor__/` from the project's dev server, and adds `virtual:ignifx/editor`, whose `attachEditorPlayControls(app)` lets the editor play, pause, step and stop the game in development and does nothing in a production build.
+  
+  - The host speaks editor protocol 0.3 over a `MessagePort`: `hello`/`ready`, `ping`, and a heartbeat. Before 1.0 the editor and the host must agree on the protocol's major and minor. It accepts a port only from the editor's origin, and the scene view may be framed only by that origin.
+  - `ErrorRange.editorHost` (`"18"`) registers the `IGX-18xx` codes the new package throws.
+- 159ea03: Add `.mesh.json` mesh files: a file names one primitive (`box`, `sphere`, `plane`, `ground`, `cylinder`, `capsule`, `torus`) and its `MeshAsset` factory options, so a scene file can reference a primitive by address (`{ "$asset": "meshes/crate.mesh.json" }`) without code publishing it first. A bad primitive or option fails the load with `IGX-0507`.
+  
+  - `@ignifx/vite-plugin` records `.mesh.json` files as `mesh` assets and checks their header; pass `meshFileJsonSchema()` from `@ignifx/core` in `schemas.formats` to validate their options at build time.
+- dc768d6: - `describeSchema` now describes each field's inspector options (`min`, `max`, `step`, `hidden`, `readonly`, `group`, `transient`), an enum's `values`, an asset field's `assetType`, a `componentRef` field's `componentType`, and the nested field of an `array`, `record`, `map` or `optional`.
+  - Add `describeRegisteredSchemas(app.world.registry)`, which describes every registered component with `allowMultiple` and the `package` that registered it, for inspectors outside the engine.
+  - `toJsonSchema` writes the same options as `x-ignifx-*` keywords (`x-ignifx-step`, `x-ignifx-group`, `x-ignifx-asset-type`, …) and marks read-only fields with `readOnly`.
+  - Add `ComponentRegistry.registrarOf(typeId)`, the extension that registered a component.
+  - The Vite plugin's JSON Schema validator skips `x-` extension keywords and `readOnly` instead of rejecting them with `IGX-0653`.
+- 738f68d: Fixed: a single-root prefab placed with `world.instantiate` now loads back from `serializeScene` as the same one entity; before, the loaded copy had its components twice and its offset applied twice.
+  
+  ### Breaking
+  
+  A scene file's `instance` entry whose scene has exactly one root now is that root, as `world.instantiate` already was: the root's components and children land on the entity carrying the entry, which keeps its own uid, name and transform. Code that reached the instanced root through `entity.children[0]` should use the entity itself.
+
+### Patch Changes
+
+- fd0afe5: - `create-ignifx` now pins a new project's `@ignifx/*` dependencies to its own release (for example `^0.9.1`) instead of `^0.0.0`, which installed the empty 0.0.0 packages.
+  - `VERSION`, `app.version`, each extension's `version` and the `engineVersion` written into saved scenes now report the installed release instead of `"0.0.0"` (or `"0.2.1"`). `VERSION` is typed `string` instead of a fixed literal.
+
 ## 0.9.0
 
 ### Minor Changes

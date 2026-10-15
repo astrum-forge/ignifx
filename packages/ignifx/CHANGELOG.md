@@ -1,5 +1,59 @@
 # ignifx
 
+## 0.10.0
+
+### Minor Changes
+
+- 159ea03: Add `.mesh.json` mesh files: a file names one primitive (`box`, `sphere`, `plane`, `ground`, `cylinder`, `capsule`, `torus`) and its `MeshAsset` factory options, so a scene file can reference a primitive by address (`{ "$asset": "meshes/crate.mesh.json" }`) without code publishing it first. A bad primitive or option fails the load with `IGX-0507`.
+  
+  - `@ignifx/vite-plugin` records `.mesh.json` files as `mesh` assets and checks their header; pass `meshFileJsonSchema()` from `@ignifx/core` in `schemas.formats` to validate their options at build time.
+- dc768d6: - `describeSchema` now describes each field's inspector options (`min`, `max`, `step`, `hidden`, `readonly`, `group`, `transient`), an enum's `values`, an asset field's `assetType`, a `componentRef` field's `componentType`, and the nested field of an `array`, `record`, `map` or `optional`.
+  - Add `describeRegisteredSchemas(app.world.registry)`, which describes every registered component with `allowMultiple` and the `package` that registered it, for inspectors outside the engine.
+  - `toJsonSchema` writes the same options as `x-ignifx-*` keywords (`x-ignifx-step`, `x-ignifx-group`, `x-ignifx-asset-type`, …) and marks read-only fields with `readOnly`.
+  - Add `ComponentRegistry.registrarOf(typeId)`, the extension that registered a component.
+  - The Vite plugin's JSON Schema validator skips `x-` extension keywords and `readOnly` instead of rejecting them with `IGX-0653`.
+- 3a8e47b: ### Breaking
+  
+  A tilemap's objects layer no longer spawns entities when a scene loads (ADR-0030). `app.twoD.registerTileObjectFactory`, `unregisterTileObjectFactory`, `spawnTilemapObjects`, `TileObjectFactory` and `TileObjectContext` are removed, and `IGX-1110` is retired. Move the objects into your scene file once with `ignifx import tilemap <map.tilemap.json> <scene.scene.json>`, or, for a level built in code, create the entities from `tilemap.definition.objects` after the map has loaded.
+
+### Patch Changes
+
+- 3fe6239: The scene format guide in the skill says how a 2D level names a still sprite's frame (`SpriteRenderer.frameName`) that `TilemapCollider2D` reads the `Tilemap` beside it, and that a tilemap's objects become scene entities through `ignifx import tilemap`. The tilemap recipe places its objects from `definition.objects`.
+- c55c9a6: The scene format guide in the skill shows how a level can name primitive meshes by publishing them at a plain address before it loads.
+- Updated dependencies [4c6e200]
+- Updated dependencies [f5dac24]
+- Updated dependencies [fdb4289]
+- Updated dependencies [37cf52e]
+- Updated dependencies [2911237]
+- Updated dependencies [451c503]
+- Updated dependencies [6d46060]
+- Updated dependencies [310c661]
+- Updated dependencies [612ba87]
+- Updated dependencies [159ea03]
+- Updated dependencies [dc768d6]
+- Updated dependencies [738f68d]
+- Updated dependencies [7597442]
+- Updated dependencies [254b63c]
+- Updated dependencies [fd0afe5]
+- Updated dependencies [ebc919e]
+- Updated dependencies [6e30980]
+- Updated dependencies [3a8e47b]
+- Updated dependencies [0d32a0c]
+- Updated dependencies [3c02fb1]
+  - @ignifx/core@0.10.0
+  - @ignifx/2d@0.10.0
+  - @ignifx/3d@0.10.0
+  - @ignifx/particles-2d@0.10.0
+  - @ignifx/particles@0.10.0
+  - @ignifx/physics-2d@0.10.0
+  - @ignifx/physics@0.10.0
+  - @ignifx/audio@0.10.0
+  - @ignifx/ui@0.10.0
+  - @ignifx/devtools@0.10.0
+  - @ignifx/electron@0.10.0
+  - @ignifx/input@0.10.0
+  - @ignifx/terrain@0.10.0
+
 ## 0.9.0
 
 ### Minor Changes
