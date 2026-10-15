@@ -165,6 +165,10 @@ describe("the mesh loader", () => {
     expect(causeCode(handle)).toBe(CoreErrorCode.invalidAssetFile);
   });
 
+  it("refuses a file with no format version as IGX-0603", () => {
+    expect(() => readMeshFile({ format: "ignifx.mesh", primitive: "box" }, "meshes/a.mesh.json")).toThrow(/IGX-0603/u);
+  });
+
   it("refuses an unreadable format version as IGX-0603", async () => {
     const h = await app();
     serve(h, "meshes/future.mesh.json", { format: "ignifx.mesh", formatVersion: 2, primitive: "box" });

@@ -1,15 +1,9 @@
 import { CoreErrorCode } from "../errors/error-codes.js";
-import { assertNever, IgnifxError } from "../errors/ignifx-error.js";
+import { IgnifxError } from "../errors/ignifx-error.js";
 import { createMeshFromGeometry } from "../lite/gpu/mesh.js";
 import {
-  buildBoxTemplate,
-  buildCapsuleTemplate,
-  buildCylinderTemplate,
-  buildGroundTemplate,
   buildMeshTemplate,
-  buildPlaneTemplate,
-  buildSphereTemplate,
-  buildTorusTemplate,
+  buildPrimitiveTemplate,
   releaseMeshTemplate,
   uploadMeshColors,
   uploadMeshNormals,
@@ -685,63 +679,6 @@ function copyRange(
     return;
   }
   target.set(source.subarray(0, floats), base);
-}
-
-/**
- * Copies the ignifx ground options onto Lite's, which types `uvScale` as a mutable tuple.
- *
- * @param options - The declared options.
- * @returns Lite's options.
- */
-function toGroundOptions(options: GroundMeshOptions): {
-  width?: number;
-  height?: number;
-  subdivisions?: number;
-  uvScale?: [number, number];
-} {
-  const result: { width?: number; height?: number; subdivisions?: number; uvScale?: [number, number] } = {};
-  if (options.width !== undefined) {
-    result.width = options.width;
-  }
-  if (options.height !== undefined) {
-    result.height = options.height;
-  }
-  if (options.subdivisions !== undefined) {
-    result.subdivisions = options.subdivisions;
-  }
-  const uvScale = options.uvScale;
-  if (uvScale !== undefined) {
-    result.uvScale = [uvScale[0], uvScale[1]];
-  }
-  return result;
-}
-
-/**
- * Builds a primitive's Lite mesh.
- *
- * @param engine - The engine that owns the buffers.
- * @param definition - The primitive and its options.
- * @returns The template.
- */
-function buildPrimitiveTemplate(engine: LiteEngine, definition: MeshPrimitiveDefinition): LiteMesh {
-  switch (definition.primitive) {
-    case "box":
-      return buildBoxTemplate(engine, definition.options);
-    case "sphere":
-      return buildSphereTemplate(engine, definition.options);
-    case "plane":
-      return buildPlaneTemplate(engine, definition.options);
-    case "ground":
-      return buildGroundTemplate(engine, toGroundOptions(definition.options));
-    case "cylinder":
-      return buildCylinderTemplate(engine, definition.options);
-    case "capsule":
-      return buildCapsuleTemplate(engine, definition.options);
-    case "torus":
-      return buildTorusTemplate(engine, definition.options);
-    default:
-      return assertNever(definition, "mesh primitive");
-  }
 }
 
 /**

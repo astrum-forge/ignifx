@@ -1,5 +1,5 @@
 import { CoreErrorCode } from "../errors/error-codes.js";
-import { assertNever, IgnifxError } from "../errors/ignifx-error.js";
+import { IgnifxError } from "../errors/ignifx-error.js";
 import { MESH_PRIMITIVES } from "./mesh-asset.js";
 import type { MeshPrimitive, MeshPrimitiveDefinition } from "./mesh-asset.js";
 import type { JsonSchemaObject } from "../schema/describe.js";
@@ -285,20 +285,17 @@ const OPTION_KIND_TEXT: Readonly<Record<MeshOptionKind, string>> = {
  * @returns `true` when the value fits.
  */
 function isOptionValue(value: unknown, kind: MeshOptionKind): boolean {
-  switch (kind) {
-    case "length":
-      return typeof value === "number" && Number.isFinite(value) && value >= 0;
-    case "count":
-      return typeof value === "number" && Number.isInteger(value) && value >= 1;
-    case "pair":
-      return (
-        Array.isArray(value) &&
-        value.length === 2 &&
-        value.every((item: unknown) => typeof item === "number" && Number.isFinite(item))
-      );
-    default:
-      return assertNever(kind, "mesh option kind");
+  if (kind === "length") {
+    return typeof value === "number" && Number.isFinite(value) && value >= 0;
   }
+  if (kind === "count") {
+    return typeof value === "number" && Number.isInteger(value) && value >= 1;
+  }
+  return (
+    Array.isArray(value) &&
+    value.length === 2 &&
+    value.every((item: unknown) => typeof item === "number" && Number.isFinite(item))
+  );
 }
 
 /**
