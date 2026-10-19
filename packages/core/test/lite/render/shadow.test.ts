@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { CoreErrorCode } from "../../../src/errors/error-codes.js";
 import { IgnifxError } from "../../../src/errors/ignifx-error.js";
 import { createDirectionalLightInWorld, createPointLightInWorld } from "../../../src/lite/light.js";
@@ -17,7 +17,7 @@ import {
   toSpotConfig,
 } from "../../../src/lite/shadow.js";
 import type { ShadowSettings } from "../../../src/lite/shadow.js";
-import type { ShadowGenerator } from "@babylonjs/lite";
+import type { EngineContext, SceneContext, ShadowGenerator } from "@babylonjs/lite";
 
 /**
  * The shadow adapter's headless half: which light kinds Lite can shadow, how ignifx settings map
@@ -148,4 +148,109 @@ describe("rebuilding renderables", () => {
       disposeSceneOnly(scene);
     }
   });
+
+  it("frees nothing the rebuild retires until the whole rebuild has finished", async () => {
+    const { engine, scene } = createHeadlessScene();
+    const lite = releasable(engine);
+    let open = doNothing;
+    let reached = doNothing;
+    const isBuilding = new Promise<void>((resolve) => {
+      reached = resolve;
+    });
+    const group = gatedGroup(scene, async () => {
+      reached();
+      await new Promise<void>((resolve) => {
+        open = resolve;
+      });
+    });
+    // Lite installs its flush the first time it retires something, and `renderFrame` calls it after
+    // every submit.
+    const flush = vi.fn();
+    // oxlint-disable-next-line no-underscore-dangle
+    lite._flushGpuRetirements = flush;
+    try {
+      const rebuilding = rebuildRenderables(scene);
+      await isBuilding;
+      finishFrame(engine);
+      expect(flush).not.toHaveBeenCalled();
+
+      open();
+      await rebuilding;
+      finishFrame(engine);
+      expect(flush).toHaveBeenCalledExactlyOnceWith(engine);
+    } finally {
+      group.discard();
+      disposeSceneOnly(scene);
+    }
+  });
 });
+
+/** The engine hook `renderFrame` calls after each submit. Absent from `index.d.ts`. */
+interface ReleasableEngine {
+  _flushGpuRetirements?: (engine: EngineContext) => void;
+}
+
+/** A placeholder until a promise hands over its resolver. */
+function doNothing(): void {
+  // Replaced before it is called.
+}
+
+/**
+ * Does what `renderFrame` does after its submit: releases what was retired, if a flush is installed.
+ *
+ * @param engine - The engine.
+ */
+function finishFrame(engine: EngineContext): void {
+  // oxlint-disable-next-line no-underscore-dangle
+  releasable(engine)._flushGpuRetirements?.(engine);
+}
+
+/**
+ * Reads an engine through Lite's release hook.
+ *
+ * @param engine - The engine.
+ * @returns The same engine.
+ */
+function releasable(engine: EngineContext): ReleasableEngine {
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+  return engine as unknown as ReleasableEngine;
+}
+
+/** The Lite fields a stand-in group touches. Absent from `index.d.ts`. */
+interface BuildableScene {
+  _built: boolean;
+  _groups: Map<unknown, unknown[]>;
+  meshes: unknown[];
+}
+
+/**
+ * Gives a headless scene one built group whose builder runs `build` — a real group build needs a
+ * device.
+ *
+ * @param scene - The headless scene.
+ * @param build - What the builder does before it returns an empty result.
+ * @returns A function that takes the stand-in back out before the scene is disposed.
+ */
+function gatedGroup(scene: SceneContext, build: () => Promise<void>): { discard(): void } {
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+  const target = scene as unknown as BuildableScene;
+  const builder = async (): Promise<unknown> => {
+    await build();
+    return { renderables: [], rebuildSingle: (): undefined => undefined };
+  };
+  const mesh = { material: { _buildGroup: builder } };
+  const group: unknown[] & { r?: unknown } = [mesh];
+  group.r = (): undefined => undefined;
+  target.meshes.push(mesh);
+  // oxlint-disable-next-line no-underscore-dangle
+  target._groups.set(builder, group);
+  // oxlint-disable-next-line no-underscore-dangle
+  target._built = true;
+  return {
+    discard: (): void => {
+      target.meshes.length = 0;
+      // oxlint-disable-next-line no-underscore-dangle
+      target._groups.clear();
+    },
+  };
+}
