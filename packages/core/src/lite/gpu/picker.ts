@@ -23,7 +23,8 @@ import type { GpuPicker, Mesh, PickIgnore, PickingInfo, PickOptions, SceneContex
  *   `OffscreenCanvas` or a canvas with no layout box has a ratio of 1) before it does anything else
  *   (`lib/picking/gpu-picker.js` lines 186–195 in 1.34.0; `index.d.ts`: "CSS-space canvas
  *   coordinates"). ignifx speaks backing-store pixels, so {@link pickScenePixel} divides by the same
- *   ratio first and Lite's multiplication lands back on the caller's pixel.
+ *   ratio first and Lite's multiplication lands back on the caller's point. Lite samples that exact
+ *   point: a whole-number coordinate is a pixel corner.
  * - The pixel is mapped through the camera's **pixel** viewport, and a pick outside that viewport
  *   returns a miss rather than a clamped hit.
  * - Without detailed picking a hit still carries `pickedPoint` and `distance`: Lite reads the depth
@@ -77,9 +78,12 @@ function liteScale(backing: number, client: number): number {
  * Converts a backing-store coordinate to the CSS coordinate Lite's picker multiplies back.
  *
  * @remarks
- * `x / scale * scale` can land one unit in the last place below `x`, and Lite floors the product to
- * choose a pixel, so a whole-pixel `x` could select the pixel before it. The result is nudged up
- * until Lite's product is not below `x`.
+ * Lite renders its 1×1 target at the exact sub-pixel point it computes (`computePickVP`,
+ * `lib/picking/gpu-picker.js` ~96 and ~224 in 1.34.0), so a whole-number coordinate samples a
+ * pixel **corner**, not a centre; add 0.5 for the centre. The floored value only feeds the viewport
+ * bounds check, the clamp and the discard rule's `fragmentCoord`. `x / scale * scale` can land one
+ * unit in the last place below `x`, which would put a point on the viewport's edge outside it, or
+ * floor to the pixel before; the result is nudged up until Lite's product is not below `x`.
  *
  * @param value - The backing-store coordinate.
  * @param scale - Lite's ratio on that axis.

@@ -140,7 +140,7 @@ describe("pickAsync coordinates", () => {
     expect(await running.app.renderer.pickAsync(running.canvas.width + 1, screen.y)).toBeNull();
   });
 
-  it("hit the whole-pixel corners of the backing store exactly", async () => {
+  it("hit the backing store's corner pixels, at their outer corners", async () => {
     Object.defineProperty(globalThis, "devicePixelRatio", { configurable: true, value: 2 });
     const { running } = await pickApp();
     const wall = addBox(running, "Wall", 20, 2);

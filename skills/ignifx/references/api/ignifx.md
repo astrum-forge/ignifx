@@ -77482,7 +77482,8 @@ Coordinates are **backing-store pixels** — the canvas's `width`/`height`, the 
 `Camera.worldToScreen` answers in and `<Pointer>/position` reports — not CSS pixels. Multiply a
 DOM event's `offsetX`/`offsetY` by `canvas.width / canvas.clientWidth` first. The renderer
 converts to the CSS pixels Lite's picker takes, so the same call hits at every device pixel
-ratio and resolution scale.
+ratio and resolution scale. The point is sampled exactly: whole numbers are pixel corners, so
+add 0.5 for a pixel's centre.
 
 A hit on any mesh of a glTF `Model`, or of any renderable built from several Lite nodes,
 resolves through the nearest node an entity owns. Picks are serialised per app: Lite's picker
