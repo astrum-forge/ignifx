@@ -94,13 +94,13 @@ function recordDecoderEval(): void {
 
 beforeAll(() => {
   globalThis.Function = new Proxy(NativeFunction, {
-    construct(target, args, newTarget): object {
+    construct(target, args: string[]): object {
       recordDecoderEval();
-      return Reflect.construct(target, args, newTarget);
+      return new target(...args);
     },
-    apply(target, thisArgument, args): unknown {
+    apply(target, _thisArgument, args: string[]): unknown {
       recordDecoderEval();
-      return Reflect.apply(target, thisArgument, args);
+      return target(...args);
     },
   });
   // Vitest's own module loads fill the default 250-entry buffer long before a test runs, and a full
