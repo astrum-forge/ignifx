@@ -75,6 +75,9 @@ export interface CreateEntityOp {
 export const DEFAULT_HEARTBEAT_INTERVAL_MS = 1e3;
 
 // @public
+export type DescribeSettingsResponse = RpcSuccessResponse<SettingsSet>;
+
+// @public
 export interface DestroyEntityOp {
     readonly entity: string;
     readonly op: "destroyEntity";
@@ -416,6 +419,9 @@ export function isScreenshotResult(value: unknown): value is ScreenshotResult;
 export function isSetGizmoParams(value: unknown): value is SetGizmoParams;
 
 // @public
+export function isSettingsSet(value: unknown): value is SettingsSet;
+
+// @public
 export function isSetViewModeParams(value: unknown): value is SetViewModeParams;
 
 // @public
@@ -478,13 +484,21 @@ export interface PickParams {
 }
 
 // @public
+export interface PickRay {
+    readonly direction: Vec3;
+    readonly origin: Vec3;
+}
+
+// @public
 export type PickResponse = RpcSuccessResponse<PickResult>;
 
 // @public
 export interface PickResult {
     readonly distance: number | null;
     readonly entity: string | null;
+    readonly plane?: Vec3;
     readonly point: Vec3 | null;
+    readonly ray?: PickRay;
 }
 
 // @public
@@ -752,6 +766,7 @@ export const SceneMethod: {
     readonly pick: "pick";
     readonly screenshot: "screenshot";
     readonly getSchemas: "getSchemas";
+    readonly describeSettings: "describeSettings";
     readonly setViewMode: "setViewMode";
 };
 
@@ -805,23 +820,30 @@ export const SceneOpKind: {
 export type SceneOpKind = (typeof SceneOpKind)[keyof typeof SceneOpKind];
 
 // @public
-export type SceneRequest = RpcRequestWithParams<typeof SceneMethod.openScene, OpenSceneParams> | RpcRequest<typeof SceneMethod.closeScene, never> | RpcRequestWithParams<typeof SceneMethod.applyOps, ApplyOpsParams> | RpcRequestWithParams<typeof SceneMethod.readBack, ReadBackParams> | RpcRequestWithParams<typeof SceneMethod.select, EntitySelection> | RpcRequestWithParams<typeof SceneMethod.setGizmo, SetGizmoParams> | RpcRequestWithParams<typeof SceneMethod.frame, FrameParams> | RpcRequestWithParams<typeof SceneMethod.pick, PickParams> | RpcRequestWithParams<typeof SceneMethod.screenshot, ScreenshotParams> | RpcRequest<typeof SceneMethod.getSchemas, never> | RpcRequestWithParams<typeof SceneMethod.setViewMode, SetViewModeParams>;
+export type SceneRequest = RpcRequestWithParams<typeof SceneMethod.openScene, OpenSceneParams> | RpcRequest<typeof SceneMethod.closeScene, never> | RpcRequestWithParams<typeof SceneMethod.applyOps, ApplyOpsParams> | RpcRequestWithParams<typeof SceneMethod.readBack, ReadBackParams> | RpcRequestWithParams<typeof SceneMethod.select, EntitySelection> | RpcRequestWithParams<typeof SceneMethod.setGizmo, SetGizmoParams> | RpcRequestWithParams<typeof SceneMethod.frame, FrameParams> | RpcRequestWithParams<typeof SceneMethod.pick, PickParams> | RpcRequestWithParams<typeof SceneMethod.screenshot, ScreenshotParams> | RpcRequest<typeof SceneMethod.getSchemas, never> | RpcRequest<typeof SceneMethod.describeSettings, never> | RpcRequestWithParams<typeof SceneMethod.setViewMode, SetViewModeParams>;
 
 // @public
 export interface SchemaDescription {
+    readonly allowMultiple?: boolean;
     readonly builtIn?: boolean;
     readonly description?: string;
     readonly fields: Readonly<Record<string, SchemaFieldDescription>>;
     readonly format: string;
+    readonly package?: string;
     readonly propsSchema?: JsonObject;
     readonly title: string;
 }
 
 // @public
 export interface SchemaFieldDescription {
+    readonly assetType?: string;
+    readonly componentType?: string | null;
     readonly default?: JsonValue;
     readonly description?: string;
+    readonly group?: string;
+    readonly hidden?: boolean;
     readonly kind: string;
+    readonly readonly?: boolean;
     readonly step?: number;
 }
 
@@ -899,6 +921,12 @@ export interface SetSceneSettingOp {
     readonly op: "setSceneSetting";
     readonly path: JsonPath;
     readonly value?: JsonValue;
+}
+
+// @public
+export interface SettingsSet {
+    readonly sections: Readonly<Record<string, SchemaDescription>>;
+    readonly values: Readonly<Record<string, JsonObject>>;
 }
 
 // @public

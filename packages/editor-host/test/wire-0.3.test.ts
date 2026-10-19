@@ -1,5 +1,12 @@
 import { readFileSync } from "node:fs";
-import { decodeProps, describeSchemas, encodeProps, toJsonSchema, transformSchema } from "@ignifx/core";
+import {
+  decodeProps,
+  describeSchemas,
+  describeSettings,
+  encodeProps,
+  toJsonSchema,
+  transformSchema,
+} from "@ignifx/core";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   HostCapability,
@@ -23,6 +30,7 @@ import {
   isScreenshotParams,
   isScreenshotResult,
   isSetGizmoParams,
+  isSettingsSet,
   isSetViewModeParams,
   isTransformDraggedParams,
   isTransformDraggingParams,
@@ -42,8 +50,8 @@ import type { App, JsonObject, SceneFile, SceneFileEntity } from "@ignifx/core";
  * `wire-0.3.test.ts` checks it against `@ignifx/editor-protocol` 0.3; change it there first.
  * Here every message in it goes through this package's guards, and its requests go through a live
  * headless host, whose answers must be the fixture's: the `game/Health` and `ignifx/Transform`
- * schema entries byte for byte, but for the two members core adds that protocol 0.3 does not
- * declare (`allowMultiple`, `package`), so that the two copies cannot drift apart unnoticed.
+ * schema entries byte for byte, `allowMultiple` and `package` included, so that the two copies
+ * cannot drift apart unnoticed.
  *
  * Where the host's answer cannot be the fixture's byte for byte, the difference is the host's
  * truth and is stated where it is checked: a headless host lists only `heartbeat` (no gizmos, no
@@ -112,25 +120,18 @@ function expectWire(actual: Received, expected: unknown): void {
   expect(JSON.stringify(actual)).toBe(JSON.stringify(expected));
 }
 
-/** What the host adds to a component's schema entry beyond protocol 0.3, by type id. */
-const HOST_ADDITIONS: Readonly<Record<string, Received>> = {
-  "game/Health": { allowMultiple: true, package: "game" },
-  "ignifx/Transform": { allowMultiple: false, package: "@ignifx/core" },
-};
+/** The schema entries the live host must send byte for byte as the fixture has them. */
+const WIRE_SCHEMAS: readonly string[] = ["game/Health", "ignifx/Transform"];
 
 /**
- * Asserts a live schema entry is the fixture's, byte for byte, once the members core's
- * `describeRegisteredSchemas` adds and protocol 0.3 does not declare (`allowMultiple`, `package`)
- * are checked and taken out.
+ * Asserts a live schema entry is the fixture's, byte for byte.
  *
  * @param schemas - The host's `schemas`.
  * @param expected - The fixture's `schemas`.
  * @param typeId - The entry to compare.
  */
 function expectSchemaWire(schemas: Received, expected: Received, typeId: string): void {
-  const { allowMultiple, package: owner, ...rest } = member(schemas, typeId);
-  expect({ allowMultiple, package: owner }, typeId).toEqual(HOST_ADDITIONS[typeId]);
-  expectWire(rest, expected[typeId]);
+  expectWire(member(schemas, typeId), expected[typeId]);
 }
 
 /** Each params guard of the protocol, by the fixture messages it checks. */
@@ -174,8 +175,11 @@ const RESULT_GUARDS: Readonly<Record<string, (value: unknown) => boolean>> = {
   selectResponse: isEntitySelection,
   pickResponse: isPickResult,
   pickMiss: isPickResult,
+  pickMissRay: isPickResult,
+  pickMissRay2d: isPickResult,
   screenshotResponse: isScreenshotResult,
   getSchemasResponse: isSchemaSet,
+  describeSettingsResponse: isSettingsSet,
 };
 
 describe("the editor's 0.3 wire fixture, through the host's guards", () => {
@@ -221,6 +225,26 @@ describe("the editor's 0.3 wire fixture, through the host's guards", () => {
     expect(isSchemaSet(withStep(0))).toBe(false);
     expect(isSchemaSet(withStep("0.01"))).toBe(false);
     expect(isSchemaSet({ schemas: { "ignifx/Transform": { ...transform, builtIn: "yes" } } })).toBe(false);
+  });
+
+  it("accepts a pick answer with or without its ray, and refuses a malformed ray or plane point", () => {
+    const answer = member(wire("pickMissRay"), "result");
+    const ray = member(answer, "ray");
+    expect(isPickResult(member(wire("pickMiss"), "result"))).toBe(true);
+    expect(isPickResult({ ...answer, plane: undefined })).toBe(true);
+    expect(isPickResult({ ...answer, ray: { ...ray, origin: [0, 1] } })).toBe(false);
+    expect(isPickResult({ ...answer, ray: { origin: ray["origin"] } })).toBe(false);
+    expect(isPickResult({ ...answer, ray: null })).toBe(false);
+    expect(isPickResult({ ...answer, plane: [1, 2, Number.NaN] })).toBe(false);
+  });
+
+  it("refuses settings whose sections are not schema descriptions or whose values are not objects", () => {
+    const result = member(wire("describeSettingsResponse"), "result");
+    const sections = member(result, "sections");
+    expect(isSettingsSet({ ...result, values: { ...member(result, "values"), time: 1 } })).toBe(false);
+    expect(isSettingsSet({ ...result, sections: { ...sections, time: { title: "time" } } })).toBe(false);
+    expect(isSettingsSet({ sections })).toBe(false);
+    expect(isSettingsSet({ sections: {}, values: {} })).toBe(true);
   });
 });
 
@@ -327,7 +351,7 @@ describe("the editor's 0.3 wire fixture, through a live headless host", () => {
     expect(isSchemaSet(schemas)).toBe(true);
     const expected = member(member(wire("schemasChangedAtStart"), "params"), "schemas");
     const actual = member(schemas, "schemas");
-    for (const typeId of Object.keys(HOST_ADDITIONS)) {
+    for (const typeId of WIRE_SCHEMAS) {
       expectSchemaWire(actual, expected, typeId);
     }
     expect(member(actual, "ignifx/Camera")["description"]).toBe(member(expected, "ignifx/Camera")["description"]);
@@ -342,7 +366,7 @@ describe("the editor's 0.3 wire fixture, through a live headless host", () => {
     expect(isSchemaSet(answer["result"])).toBe(true);
     const actual = member(member(answer, "result"), "schemas");
     const expected = member(member(wire("getSchemasResponse"), "result"), "schemas");
-    for (const typeId of Object.keys(HOST_ADDITIONS)) {
+    for (const typeId of WIRE_SCHEMAS) {
       expectSchemaWire(actual, expected, typeId);
     }
   });
@@ -475,6 +499,25 @@ describe("the editor's 0.3 wire fixture, through a live headless host", () => {
       wire("noScene"),
     );
     expectWire(await peer.request({ ...wire("select"), id: 41 }), { jsonrpc: "2.0", id: 41, result: { entities: [] } });
+  });
+
+  it("answers describeSettings with every registered section and the values the app resolved", async () => {
+    const { app, peer } = await started();
+    const answer = await peer.request(wire("describeSettings"));
+    const result = member(answer, "result");
+    expect(isSettingsSet(result)).toBe(true);
+    const expected = member(wire("describeSettingsResponse"), "result");
+    const sections = member(result, "sections");
+    const values = member(result, "values");
+    expect(Object.keys(sections)).toEqual(Object.keys(describeSettings(app)));
+    expect(Object.keys(values)).toEqual(Object.keys(sections));
+    // The fixture carries two of core's sections; the live host must send them byte for byte.
+    for (const name of ["layers", "time"]) {
+      expectWire(member(sections, name), member(expected, "sections")[name]);
+      expectWire(member(values, name), member(expected, "values")[name]);
+    }
+    expect(member(values, "rendering")["clearColor"]).toEqual({ r: 0, g: 0, b: 0, a: 1 });
+    expect(answer["id"]).toBe(wire("describeSettingsResponse")["id"]);
   });
 
   it("misses every pick on a headless view, in either unit", async () => {

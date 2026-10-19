@@ -32,8 +32,10 @@ import { EDITOR_CAMERA_FOV, EditorCamera } from "./editor-camera.js";
 import { applyOps } from "./ops.js";
 import { schemaSet } from "./schemas.js";
 import { encodeCapture } from "./screenshot.js";
+import { settingsSet } from "./settings.js";
 import {
   DragSnapper,
+  pickRayMembers,
   readLocalTransform,
   sameTransform,
   screenshotSize,
@@ -54,6 +56,7 @@ import type {
   SceneFileTransform,
   SchemaSet,
   ScreenshotResult,
+  SettingsSet,
 } from "../protocol/index.js";
 import type { App, Entity, HotReloadReport, RenderSurface, SceneInstance } from "@ignifx/core";
 
@@ -132,6 +135,8 @@ export class SceneHost {
 
   #camera: EditorCamera | null = null;
 
+  #eye: Camera | null = null;
+
   #canvas: RenderSurface | null = null;
 
   #view: EditorView | null = null;
@@ -163,6 +168,7 @@ export class SceneHost {
       [SceneMethod.frame, (params) => this.#frame(params)],
       [SceneMethod.pick, async (params) => this.#pick(params)],
       [SceneMethod.getSchemas, () => this.#getSchemas()],
+      [SceneMethod.describeSettings, () => this.#describeSettings()],
       [SceneMethod.setViewMode, (params) => this.#setViewMode(params)],
     ]);
     if (has(HostCapability.gizmos)) {
@@ -196,7 +202,12 @@ export class SceneHost {
     this.#editorScene = scene;
     app.registerComponents([EditorCamera]);
     const eye = app.world.createEntity("Editor Camera", { scene });
-    eye.addComponent(Camera, { fov: EDITOR_CAMERA_FOV, near: 0.05, far: 5000, priority: EDITOR_CAMERA_PRIORITY });
+    this.#eye = eye.addComponent(Camera, {
+      fov: EDITOR_CAMERA_FOV,
+      near: 0.05,
+      far: 5000,
+      priority: EDITOR_CAMERA_PRIORITY,
+    });
     const camera = eye.addComponent(EditorCamera);
     camera.apply();
     this.#camera = camera;
@@ -479,6 +490,17 @@ export class SceneHost {
   }
 
   /**
+   * `describeSettings`: the project's settings sections and their resolved values. Sent only on
+   * request.
+   *
+   * @returns The set.
+   */
+  #describeSettings(): SettingsSet {
+    this.#requireMirror(SceneMethod.describeSettings);
+    return settingsSet(this.#requireApp());
+  }
+
+  /**
    * `setViewMode`: this host has the 3D editor camera only.
    *
    * @param params - `{ mode }`.
@@ -536,23 +558,29 @@ export class SceneHost {
 
   /**
    * Picks the document's scene at a point of the view with `app.renderer.pickAsync`, which resolves
-   * a glTF model through its nearest entity node; the hit resolves to its document entity.
+   * a glTF model through its nearest entity node; the hit resolves to its document entity. Hit or
+   * miss, the answer carries the editor camera's ray through the point and where it meets `z = 0`.
    *
    * @param params - The point and its unit; it is converted to backing-store pixels once.
-   * @returns The pick result; a point outside the canvas, or a headless view, misses.
+   * @returns The pick result; a point outside the canvas, or a headless view, misses without a ray.
    */
   async #pickAt(params: PickParams): Promise<PickResult> {
     const app = this.#requireApp();
     const scene = this.#mirror?.scene ?? null;
     const canvas = this.#canvas;
     const at = canvas === null ? null : toBackingPixels(params, viewSurfaceOf(canvas));
-    if (scene === null || at === null) {
+    if (at === null) {
       return { entity: null, point: null, distance: null };
+    }
+    const ray = this.#eye?.screenToRay(at.x, at.y) ?? null;
+    const cast = ray === null ? {} : pickRayMembers(ray);
+    if (scene === null) {
+      return { entity: null, point: null, distance: null, ...cast };
     }
     const hit = await app.renderer.pickAsync(at.x, at.y, { filter: (entity) => entity.scene === scene });
     const entity = this.#mirror?.documentEntityOf(hit?.entity ?? null) ?? null;
     if (hit === null || entity === null) {
-      return { entity: null, point: null, distance: null };
+      return { entity: null, point: null, distance: null, ...cast };
     }
     const c = canonicalizeNumber;
     const point = hit.point;
@@ -560,6 +588,7 @@ export class SceneHost {
       entity: entity.uid,
       point: point === null ? null : [c(point[0]), c(point[1]), c(point[2])],
       distance: c(hit.distance),
+      ...cast,
     };
   }
 

@@ -1,7 +1,7 @@
 import { f32, Script, Vec3 } from "@ignifx/core";
 import { afterEach, describe, expect, it } from "vitest";
 import { startEditorHost } from "../src/host.js";
-import { HostCapability, isSchemaSet, SceneNotification } from "../src/protocol/index.js";
+import { HostCapability, isPickResult, isSchemaSet, SceneNotification } from "../src/protocol/index.js";
 import { connect, EDITOR_ORIGIN } from "./support/editor.js";
 import type { EditorHost } from "../src/host.js";
 import type { EditorPeer, Received } from "./support/editor.js";
@@ -9,8 +9,8 @@ import type { App, FetchLike, SceneFile } from "@ignifx/core";
 
 /**
  * The scene view on a real WebGPU canvas: Lite's gizmo and the selection outline draw over the
- * scene, `pick` resolves what is under a point in both units, and `screenshot` encodes the view.
- * The headless suites cover everything else.
+ * scene, `pick` resolves what is under a point in both units and answers with the camera's ray, and
+ * `screenshot` encodes the view. The headless suites cover everything else.
  */
 
 /** The canvas size, in pixels. */
@@ -194,6 +194,58 @@ async function call(method: string, params?: unknown): Promise<unknown> {
   return answer["result"];
 }
 
+/** A `pick` answer's ray. */
+interface WireRay {
+  /** Where it starts. */
+  readonly origin: readonly [number, number, number];
+  /** Its unit direction. */
+  readonly direction: readonly [number, number, number];
+}
+
+/**
+ * Reads the ray of a `pick` answer.
+ *
+ * @param answer - The answer.
+ * @returns Its ray.
+ */
+function rayOf(answer: unknown): WireRay {
+  const ray: unknown = Reflect.get(Object(answer), "ray");
+  if (!isPickResult(answer) || typeof ray !== "object" || ray === null) {
+    throw new Error(`The pick answer has no ray: ${JSON.stringify(answer)}`);
+  }
+  return ray as WireRay;
+}
+
+/**
+ * Where a ray meets the plane on which one coordinate is zero, as the editor computes it.
+ *
+ * @param ray - The ray.
+ * @param axis - The coordinate that is zero on the plane: 1 for the ground `y = 0`, 2 for the 2D plane `z = 0`.
+ * @returns The point.
+ */
+function meetPlane(ray: WireRay, axis: 1 | 2): [number, number, number] {
+  const t = -ray.origin[axis] / ray.direction[axis];
+  expect(t).toBeGreaterThan(0);
+  return [0, 1, 2].map((index) => (ray.origin[index] ?? 0) + (ray.direction[index] ?? 0) * t) as [
+    number,
+    number,
+    number,
+  ];
+}
+
+/**
+ * Asserts two points agree to a millimetre.
+ *
+ * @param actual - The point found.
+ * @param expected - The point wanted.
+ */
+function expectNear(actual: readonly number[], expected: readonly number[]): void {
+  expect(actual).toHaveLength(expected.length);
+  expected.forEach((value, index) => {
+    expect(actual[index]).toBeCloseTo(value, 3);
+  });
+}
+
 /**
  * Starts a host on a canvas, opens a scene, and frames an entity.
  *
@@ -279,19 +331,73 @@ describe("the scene view on a WebGPU canvas", () => {
     expect(await call("pick", { x: screen.x / ratio, y: screen.y / ratio, unit: "css" })).toMatchObject({
       entity: "BOX",
     });
-    // The same numbers as backing pixels are off the box.
-    expect(await call("pick", { x: screen.x / ratio, y: screen.y / ratio, unit: "backing" })).toEqual({
+    // The same numbers as backing pixels are off the box: a miss, with the ray through the point.
+    const off = await call("pick", { x: screen.x / ratio, y: screen.y / ratio, unit: "backing" });
+    expect(off).toMatchObject({ entity: null, point: null, distance: null });
+    expect(rayOf(off).direction).toHaveLength(3);
+    expect(await call("pick", { x: 2, y: 2, unit: "css" })).toMatchObject({
       entity: null,
       point: null,
       distance: null,
     });
-    expect(await call("pick", { x: 2, y: 2, unit: "css" })).toEqual({ entity: null, point: null, distance: null });
+    // Outside the canvas there is no ray either.
     expect(await call("pick", { x: WIDTH * 4, y: 2, unit: "backing" })).toEqual({
       entity: null,
       point: null,
       distance: null,
     });
   }, 60_000);
+
+  it.each([1, 2])(
+    "answers a miss with the camera ray, which lands on y = 0 and z = 0 at device pixel ratio %i",
+    async (dpr) => {
+      Object.defineProperty(globalThis, "devicePixelRatio", { configurable: true, value: dpr });
+      const view = await sceneView();
+      await call("frame", { entities: "all" });
+      await frames(2);
+      expect(canvas?.width).toBe(WIDTH * dpr);
+      const camera = view.app.world.mainCamera;
+      const screen = new Vec3();
+
+      // A ground point beside the box (3D drop): the editor intersects the ray with y = 0.
+      const ground: [number, number, number] = [1.5, 0, 1.25];
+      expect(camera?.worldToScreen({ x: ground[0], y: ground[1], z: ground[2] }, screen)).toBe(true);
+      expect(screen.x).toBeGreaterThan(0);
+      expect(screen.x).toBeLessThan(WIDTH * dpr);
+      const onGround = await call("pick", { x: screen.x / dpr, y: screen.y / dpr, unit: "css" });
+      expect(onGround).toMatchObject({ entity: null, point: null, distance: null });
+      const ray = rayOf(onGround);
+      expect(Math.hypot(...ray.direction)).toBeCloseTo(1, 5);
+      expectNear(meetPlane(ray, 1), ground);
+      // The same point in backing pixels is the same ray.
+      expect(await call("pick", { x: screen.x, y: screen.y, unit: "backing" })).toEqual(onGround);
+
+      // A point of the 2D plane beside the box: the answer's `plane` is it, and so is the ray at z = 0.
+      const flat: [number, number, number] = [-1.5, 0.75, 0];
+      expect(camera?.worldToScreen({ x: flat[0], y: flat[1], z: flat[2] }, screen)).toBe(true);
+      const onPlane = await call("pick", { x: screen.x / dpr, y: screen.y / dpr, unit: "css" });
+      expect(onPlane).toMatchObject({ entity: null, point: null, distance: null });
+      expectNear(meetPlane(rayOf(onPlane), 2), flat);
+      const plane: unknown = Reflect.get(Object(onPlane), "plane");
+      expectNear(Array.isArray(plane) ? plane : [], flat);
+      expect(Array.isArray(plane) ? plane[2] : null).toBe(0);
+
+      // A hit carries the ray too, and its point lies on it.
+      expect(camera?.worldToScreen({ x: 0, y: 0, z: 0 }, screen)).toBe(true);
+      const hit = await call("pick", { x: screen.x / dpr, y: screen.y / dpr, unit: "css" });
+      expect(hit).toMatchObject({ entity: "BOX" });
+      const point: unknown = Reflect.get(Object(hit), "point");
+      if (Array.isArray(point)) {
+        const along = rayOf(hit);
+        const t = (point[2] - along.origin[2]) / along.direction[2];
+        expectNear(
+          point,
+          [0, 1, 2].map((index) => (along.origin[index] ?? 0) + (along.direction[index] ?? 0) * t),
+        );
+      }
+    },
+    60_000,
+  );
 
   it("describes the project's scripts and core's components with their inspector metadata", async () => {
     await sceneView();

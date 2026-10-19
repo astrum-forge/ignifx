@@ -67,6 +67,11 @@ export const SceneMethod = {
   screenshot: "screenshot",
   /** Describes every registered component's schema. Answers {@link SchemaSet}. */
   getSchemas: "getSchemas",
+  /**
+   * Describes the project's settings sections and the values the app resolved for them. Answers
+   * {@link SettingsSet}. A host from before it answers `RpcErrorCode.methodNotFound`.
+   */
+  describeSettings: "describeSettings",
   /** Switches the view between the 3D and the 2D editor camera. Answers `null`. */
   setViewMode: "setViewMode",
 } as const;
@@ -456,6 +461,18 @@ export interface PickParams {
 }
 
 /**
+ * A world-space ray from the view's camera through a point of the view.
+ *
+ * @public
+ */
+export interface PickRay {
+  /** Where the ray starts, in metres: the point under the cursor on the camera's near plane. */
+  readonly origin: Vec3;
+  /** Which way it points: a unit vector. */
+  readonly direction: Vec3;
+}
+
+/**
  * The answer to `pick`.
  *
  * @public
@@ -467,6 +484,19 @@ export interface PickResult {
   readonly point: Vec3 | null;
   /** How far along the camera ray the hit is, in metres, or `null` for a miss or a 2D pick. */
   readonly distance: number | null;
+  /**
+   * The ray the view's camera casts through the point, hit or miss, so that an editor can place
+   * something where nothing was hit (a 3D editor intersects it with its ground plane, `y = 0`).
+   * Absent when the host builds no ray (a headless view, a point outside the canvas) and from a host
+   * from before it.
+   */
+  readonly ray?: PickRay;
+  /**
+   * Where `ray` meets the 2D world plane `z = 0`, as `[x, y, 0]`: in a 2D scene, the world point
+   * under the cursor. Absent when `ray` is, and when the ray runs parallel to the plane or meets it
+   * behind its origin.
+   */
+  readonly plane?: Vec3;
 }
 
 /**
@@ -536,6 +566,23 @@ export interface SchemaFieldDescription {
    * angles.
    */
   readonly step?: number;
+  /** `FieldOptions.hidden`: the inspector leaves the field out; it is still saved. */
+  readonly hidden?: boolean;
+  /** `FieldOptions.readonly`: the inspector shows the field but does not let it be edited. */
+  readonly readonly?: boolean;
+  /** `FieldOptions.group`: the inspector group the field folds into. */
+  readonly group?: string;
+  /**
+   * An `asset` field's asset type name (`asset(TextureAsset)` → `"texture"`), the `type` an asset
+   * reference to it carries; absent when the asset token names no type.
+   */
+  readonly assetType?: string;
+  /**
+   * A `componentRef` field's accepted component, as its `typeId`, or `null` when the class it was
+   * declared with carries no `typeId`; present on every `componentRef` field a 0.3 host describes
+   * with core's `describeRegisteredSchemas`.
+   */
+  readonly componentType?: string | null;
 }
 
 /**
@@ -552,6 +599,19 @@ export interface SchemaDescription {
   readonly description?: string;
   /** Every declared field, in declaration order. */
   readonly fields: Readonly<Record<string, SchemaFieldDescription>>;
+  /**
+   * Whether an entity may hold more than one of the component (the class's `static allowMultiple`,
+   * `true` when it declares nothing); absent on file-format entries and from a host from before
+   * core's `describeRegisteredSchemas`, where an editor assumes `true`.
+   */
+  readonly allowMultiple?: boolean;
+  /**
+   * Who registered the component: the extension's `name` (the npm package name, for example
+   * `@ignifx/3d`), or, for a class the game registered itself, its type id's namespace (`game` for
+   * `game/Health`); absent on file-format entries and from a host from before
+   * `describeRegisteredSchemas`.
+   */
+  readonly package?: string;
   /**
    * `true` for the one component every entity carries itself, `ignifx/Transform`: it is never in a
    * scene file's `components` list, an editor neither adds nor removes it, and its fields are the
@@ -576,6 +636,29 @@ export interface SchemaDescription {
 export interface SchemaSet {
   /** The descriptions, keyed by component `typeId` (file formats by `ignifx/<format>-file`). */
   readonly schemas: Readonly<Record<string, SchemaDescription>>;
+}
+
+/**
+ * The project's settings as the host's app has them: the answer to `describeSettings`.
+ *
+ * @public
+ */
+export interface SettingsSet {
+  /**
+   * Every settings section the app registered (core's and each extension's), keyed by section name,
+   * in registration order: the engine's `describeSettings(app)`. Each has `format: "settings"`, the
+   * registering extension as `package`, field defaults in the settings form (a vector is
+   * `{ x, y, z }` and a colour `{ r, g, b, a }`, not the scene file's arrays), and as `propsSchema`
+   * the JSON Schema of the section as `ignifx.settings.json` may write it (its entry in the engine's
+   * `settingsJsonSchema(app)`).
+   */
+  readonly sections: Readonly<Record<string, SchemaDescription>>;
+  /**
+   * The values the app resolved for each section, keyed by section name, in the same settings form:
+   * the project's settings over the section's defaults. A value JSON cannot carry (a function, a
+   * non-finite number) is left out.
+   */
+  readonly values: Readonly<Record<string, JsonObject>>;
 }
 
 /**
@@ -757,7 +840,8 @@ export interface RpcNotificationWithParams<M extends string, P> extends RpcNotif
 }
 
 /**
- * Editor → scene host: one of the `SceneMethod`s. `closeScene` and `getSchemas` take no parameters.
+ * Editor → scene host: one of the `SceneMethod`s. `closeScene`, `getSchemas` and `describeSettings`
+ * take no parameters.
  *
  * @public
  */
@@ -772,6 +856,7 @@ export type SceneRequest =
   | RpcRequestWithParams<typeof SceneMethod.pick, PickParams>
   | RpcRequestWithParams<typeof SceneMethod.screenshot, ScreenshotParams>
   | RpcRequest<typeof SceneMethod.getSchemas, never>
+  | RpcRequest<typeof SceneMethod.describeSettings, never>
   | RpcRequestWithParams<typeof SceneMethod.setViewMode, SetViewModeParams>;
 
 /**
@@ -830,6 +915,13 @@ export type ScreenshotResponse = RpcSuccessResponse<ScreenshotResult>;
  * @public
  */
 export type GetSchemasResponse = RpcSuccessResponse<SchemaSet>;
+
+/**
+ * The success answer to `describeSettings`.
+ *
+ * @public
+ */
+export type DescribeSettingsResponse = RpcSuccessResponse<SettingsSet>;
 
 /**
  * Scene host → editor: one of the `SceneNotification`s.
@@ -1096,10 +1188,21 @@ export function isPickParams(value: unknown): value is PickParams {
 }
 
 /**
+ * Checks a pick ray.
+ *
+ * @param value - The value to test.
+ * @returns True for `{ origin, direction }`, each three finite numbers.
+ */
+function isPickRay(value: unknown): value is PickRay {
+  return isRecord(value) && isNumberTuple(value["origin"], 3) && isNumberTuple(value["direction"], 3);
+}
+
+/**
  * Checks the result of `pick`.
  *
  * @param value - The received `result`.
- * @returns True for a uid or `null`, a point or `null`, and a non-negative distance or `null`.
+ * @returns True for a uid or `null`, a point or `null`, a non-negative distance or `null`, an
+ * optional ray and an optional plane point.
  *
  * @public
  */
@@ -1111,7 +1214,9 @@ export function isPickResult(value: unknown): value is PickResult {
   return (
     (entity === null || isUidString(entity)) &&
     (point === null || isNumberTuple(point, 3)) &&
-    (distance === null || isNonNegative(distance))
+    (distance === null || isNonNegative(distance)) &&
+    optionalField(value, "ray", isPickRay) &&
+    optionalField(value, "plane", (plane) => isNumberTuple(plane, 3))
   );
 }
 
@@ -1165,7 +1270,8 @@ export function isScreenshotResult(value: unknown): value is ScreenshotResult {
  * Checks one field description.
  *
  * @param value - The value to test.
- * @returns True for `{ kind, default?, description?, step? }`.
+ * @returns True for `{ kind, default?, description?, step?, hidden?, readonly?, group?, assetType?,
+ * componentType? }`, ignoring members it does not declare.
  */
 function isSchemaFieldDescription(value: unknown): value is SchemaFieldDescription {
   return (
@@ -1173,7 +1279,12 @@ function isSchemaFieldDescription(value: unknown): value is SchemaFieldDescripti
     isString(value["kind"]) &&
     optionalField(value, "default", (fallback) => isJsonValue(fallback)) &&
     optionalField(value, "description", isString) &&
-    optionalField(value, "step", (step) => isFiniteNumber(step) && step > 0)
+    optionalField(value, "step", (step) => isFiniteNumber(step) && step > 0) &&
+    optionalField(value, "hidden", isBoolean) &&
+    optionalField(value, "readonly", isBoolean) &&
+    optionalField(value, "group", isString) &&
+    optionalField(value, "assetType", isString) &&
+    optionalField(value, "componentType", (type) => type === null || isString(type))
   );
 }
 
@@ -1181,7 +1292,8 @@ function isSchemaFieldDescription(value: unknown): value is SchemaFieldDescripti
  * Checks one schema description.
  *
  * @param value - The value to test.
- * @returns True for `{ title, format, description?, fields, builtIn?, propsSchema? }`.
+ * @returns True for `{ title, format, description?, fields, allowMultiple?, package?, builtIn?,
+ * propsSchema? }`, ignoring members it does not declare.
  */
 function isSchemaDescription(value: unknown): value is SchemaDescription {
   return (
@@ -1191,6 +1303,8 @@ function isSchemaDescription(value: unknown): value is SchemaDescription {
     optionalField(value, "description", isString) &&
     isRecord(value["fields"]) &&
     Object.values(value["fields"]).every((field) => isSchemaFieldDescription(field)) &&
+    optionalField(value, "allowMultiple", isBoolean) &&
+    optionalField(value, "package", isString) &&
     optionalField(value, "builtIn", isBoolean) &&
     optionalField(value, "propsSchema", isJsonObject)
   );
@@ -1207,6 +1321,28 @@ function isSchemaDescription(value: unknown): value is SchemaDescription {
 export function isSchemaSet(value: unknown): value is SchemaSet {
   const schemas = isRecord(value) ? value["schemas"] : undefined;
   return isRecord(schemas) && Object.values(schemas).every((schema) => isSchemaDescription(schema));
+}
+
+/**
+ * Checks the result of `describeSettings`.
+ *
+ * @param value - The received `result`.
+ * @returns True for `{ sections, values }`: every section a schema description, every value an
+ * object.
+ *
+ * @public
+ */
+export function isSettingsSet(value: unknown): value is SettingsSet {
+  if (!isRecord(value)) {
+    return false;
+  }
+  const { sections, values } = value;
+  return (
+    isRecord(sections) &&
+    Object.values(sections).every((section) => isSchemaDescription(section)) &&
+    isRecord(values) &&
+    Object.values(values).every((section) => isJsonObject(section))
+  );
 }
 
 /**

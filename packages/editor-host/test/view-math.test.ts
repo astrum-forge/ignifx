@@ -3,12 +3,19 @@ import { afterEach, describe, expect, it } from "vitest";
 import { RpcFailure } from "../src/channel.js";
 import { HostCapability, PickUnit, RpcErrorCode, SCREENSHOT_MAX_SIZE } from "../src/protocol/index.js";
 import { SceneHost } from "../src/scene/scene-host.js";
-import { DragSnapper, readLocalTransform, screenshotSize, toBackingPixels } from "../src/scene/view-math.js";
-import type { App } from "@ignifx/core";
+import {
+  DragSnapper,
+  pickRayMembers,
+  readLocalTransform,
+  screenshotSize,
+  toBackingPixels,
+} from "../src/scene/view-math.js";
+import type { App, Vec3Like } from "@ignifx/core";
 
 /**
- * The scene view's arithmetic that needs no GPU: the `pick` unit rule, the `screenshot` size rule,
- * the transforms the drag notifications carry, and gizmo snapping.
+ * The scene view's arithmetic that needs no GPU: the `pick` unit rule, the ray and plane point a
+ * `pick` answers with, the `screenshot` size rule, the transforms the drag notifications carry, and
+ * gizmo snapping.
  */
 
 /** A canvas 400 × 300 CSS pixels at device pixel ratio 2. */
@@ -36,6 +43,49 @@ describe("the pick unit rule", () => {
     expect(toBackingPixels({ x: -1, y: 10, unit: PickUnit.css }, RETINA)).toBeNull();
     expect(toBackingPixels({ x: 400, y: 10, unit: PickUnit.css }, RETINA)).toBeNull();
     expect(toBackingPixels({ x: 10, y: 600, unit: PickUnit.backing }, RETINA)).toBeNull();
+  });
+});
+
+/**
+ * A ray from `origin` towards `target`, with a unit direction, as `Camera.screenToRay` builds it.
+ *
+ * @param origin - Where it starts.
+ * @param target - A point it passes through.
+ * @returns The ray.
+ */
+function rayTowards(
+  origin: readonly [number, number, number],
+  target: readonly [number, number, number],
+): { origin: Vec3Like; direction: Vec3Like; length: number } {
+  const [dx, dy, dz] = [target[0] - origin[0], target[1] - origin[1], target[2] - origin[2]];
+  const length = Math.hypot(dx, dy, dz);
+  return {
+    origin: { x: origin[0], y: origin[1], z: origin[2] },
+    direction: { x: dx / length, y: dy / length, z: dz / length },
+    length: 1,
+  };
+}
+
+describe("the ray a pick answers with", () => {
+  it("rounds the ray and puts the plane point where it meets z = 0", () => {
+    const members = pickRayMembers(rayTowards([0, 4.95, 9.9], [2.5, 0, -1.5]));
+    expect(members).toEqual({
+      ray: { origin: [0, 4.95, 9.9], direction: [0.197204, -0.390463, -0.899249] },
+      plane: [2.171053, 0.651316, 0],
+    });
+  });
+
+  it("gives the 2D world point straight down an orthographic camera's axis", () => {
+    const members = pickRayMembers(rayTowards([3.5, -1.25, 9.95], [3.5, -1.25, -1]));
+    expect(members).toEqual({ ray: { origin: [3.5, -1.25, 9.95], direction: [0, 0, -1] }, plane: [3.5, -1.25, 0] });
+    expect(Object.is(members.plane?.[2], 0)).toBe(true);
+  });
+
+  it("leaves the plane point out for a ray parallel to z = 0 or one that meets it behind the camera", () => {
+    expect(pickRayMembers(rayTowards([0, 2, 5], [1, 2, 5]))).not.toHaveProperty("plane");
+    expect(pickRayMembers(rayTowards([0, 2, 5], [0, 1, 6]))).not.toHaveProperty("plane");
+    // A ray that starts on the plane meets it at its origin.
+    expect(pickRayMembers(rayTowards([0, 2, 0], [0, 1, 1]))).toMatchObject({ plane: [0, 2, 0] });
   });
 });
 
