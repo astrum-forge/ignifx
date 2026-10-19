@@ -8,9 +8,11 @@ import { MeshRenderer } from "../../src/render/mesh-renderer.js";
 import { Model } from "../../src/render/model.js";
 import { addCameraAndLight, createBrowserApp, fixtureUrl, SETTLE_FRAMES } from "./support/browser-harness.js";
 import type { BrowserApp } from "./support/browser-harness.js";
+import type { App } from "../../src/app/types.js";
 import type { Entity } from "../../src/entity/entity.js";
 import type { Camera } from "../../src/render/camera.js";
 import type { ModelAsset } from "../../src/render/model-asset.js";
+import type { RenderPick } from "../../src/render/renderer.js";
 
 /**
  * The `app.renderer.pickAsync` contract (`docs/architecture/07-rendering.md` §3, engine ask E3):
@@ -68,6 +70,49 @@ function addBox(
   entity.transform.localPosition.set(0, 0, z);
   const renderer = entity.addComponent(MeshRenderer, { mesh, materials: [material] });
   return { entity, renderer };
+}
+
+/**
+ * A translation matrix along the camera's axis, column-major.
+ *
+ * @param z - The depth.
+ * @returns The 16 floats.
+ */
+function at(z: number): number[] {
+  return [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, z, 1];
+}
+
+/**
+ * Whether two hits name the same mesh, or the same instance of it.
+ *
+ * @param a - One hit.
+ * @param b - The other.
+ * @returns `true` for a repeat.
+ */
+function sameHit(a: RenderPick, b: RenderPick): boolean {
+  return a.entity === b.entity && a.meshName === b.meshName && a.thinInstanceIndex === b.thinInstanceIndex;
+}
+
+/**
+ * The walk-through loop of `skills/ignifx/references/concepts/rendering.md` §7, kept identical.
+ *
+ * @param app - The app.
+ * @param x - The backing-store pixel x.
+ * @param y - The backing-store pixel y.
+ * @param limit - The most hits to collect.
+ * @returns The hits, nearest first.
+ */
+async function pickAllAt(app: App, x: number, y: number, limit = 8): Promise<RenderPick[]> {
+  const hits: RenderPick[] = [];
+  while (hits.length < limit) {
+    // oxlint-disable-next-line no-await-in-loop -- each pick looks through the ones before it
+    const hit = await app.renderer.pickAsync(x, y, { ignore: hits });
+    if (hit === null || hits.some((seen) => sameHit(seen, hit))) {
+      break;
+    }
+    hits.push(hit);
+  }
+  return hits;
 }
 
 describe("pickAsync coordinates", () => {
@@ -252,6 +297,41 @@ describe("pickAsync ignore", () => {
     }
     const behind = await running.app.renderer.pickAsync(centre, centre, { ignore: [first] });
     expect(behind?.thinInstanceIndex).toBe(0);
+    expect(running.errors).toEqual([]);
+  });
+
+  it("can return an ignored instance again, and the walk-through loop stops there", async () => {
+    const running = await createBrowserApp({ size: CSS_SIZE, startEmpty: false });
+    harness = running;
+    running.app.registerComponents([InstancedMeshRenderer]);
+    addCameraAndLight(running, 4);
+    const material = createMaterialAsset(running.app, pbrMaterialDefinition({ metallic: 0, roughness: 1 }), []);
+    const instanced = running.world.createEntity("Row").addComponent(InstancedMeshRenderer, {
+      mesh: MeshAsset.box(running.app, { size: 1 }),
+      materials: [material],
+      capacity: 3,
+      castShadows: false,
+      pickable: true,
+    });
+    // Front to back along the camera's axis: instance 0 (z = 0), 2 (z = 2), 1 (z = 4).
+    instanced.setMatrices(Float32Array.from([...at(0), ...at(4), ...at(2)]), 3);
+    await running.start();
+    await running.advance(SETTLE_FRAMES);
+    const centre = running.canvas.width >> 1;
+    const renderer = running.app.renderer;
+
+    const first = await renderer.pickAsync(centre, centre);
+    const second = first === null ? null : await renderer.pickAsync(centre, centre, { ignore: [first] });
+    expect([first?.thinInstanceIndex, second?.thinInstanceIndex]).toEqual([0, 2]);
+    if (first === null || second === null) {
+      return;
+    }
+    // Instances 0 and 2 are not contiguous: Lite keeps one entry per mesh, so only 0 is skipped.
+    const third = await renderer.pickAsync(centre, centre, { ignore: [first, second] });
+    expect(third?.thinInstanceIndex).toBe(2);
+
+    const walked = await pickAllAt(running.app, centre, centre);
+    expect(walked.map((hit) => hit.thinInstanceIndex)).toEqual([0, 2]);
     expect(running.errors).toEqual([]);
   });
 });

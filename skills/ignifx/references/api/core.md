@@ -26052,6 +26052,12 @@ front to back — an editor's click-to-cycle.
 Only a GPU pick can skip one instance of an instanced mesh; `world.raycastRender` skips the
 whole mesh. A hit from another app is not recognised and is skipped.
 
+**Limit (Babylon Lite 1.34).** Lite keeps one ignore entry per mesh. Several hits on instances
+of one `InstancedMeshRenderer` are merged into a range when their indices are contiguous;
+otherwise only the lowest index is skipped, and the pick can return a hit already in the list.
+A loop that walks through a pixel must stop when a hit repeats (the same `entity`, `meshName`
+and `thinInstanceIndex`), or it never gets past such a renderer.
+
 ***
 
 ### RenderTaskTiming

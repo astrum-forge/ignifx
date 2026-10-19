@@ -332,18 +332,28 @@ material that compiled keeps drawing — which is also what makes `.wgsl` hot re
   `meshName` says which part of the file was hit. `point` is set on every GPU hit, `normal` only by
   a raycast.
 - `ignore` takes entities, components and earlier hits. Passing the hits so far walks through what
-  is under one pixel, front to back:
+  is under one pixel, front to back. Lite 1.34 keeps one ignore entry per mesh, so instances of one
+  `InstancedMeshRenderer` that are not contiguous are not all skipped and a hit can come back again:
+  stop when one repeats.
 
   ```ts
   import type { App, RenderPick } from "@ignifx/core";
 
+  /** Whether two hits name the same mesh, or the same instance of it. */
+  function sameHit(a: RenderPick, b: RenderPick): boolean {
+    return a.entity === b.entity && a.meshName === b.meshName && a.thinInstanceIndex === b.thinInstanceIndex;
+  }
+
   /** Up to `limit` objects under one backing-store pixel, nearest first. */
   export async function pickAllAt(app: App, x: number, y: number, limit = 8): Promise<RenderPick[]> {
     const hits: RenderPick[] = [];
-    for (let hit = await app.renderer.pickAsync(x, y); hit !== null && hits.length < limit;) {
-      hits.push(hit);
+    while (hits.length < limit) {
       // oxlint-disable-next-line no-await-in-loop -- each pick looks through the ones before it
-      hit = await app.renderer.pickAsync(x, y, { ignore: hits });
+      const hit = await app.renderer.pickAsync(x, y, { ignore: hits });
+      if (hit === null || hits.some((seen) => sameHit(seen, hit))) {
+        break;
+      }
+      hits.push(hit);
     }
     return hits;
   }
