@@ -119,6 +119,65 @@ describe("vite build with the ignifx plugin", () => {
     expect(code).toContain("/assets/HavokPhysics.wasm");
   });
 
+  it("leaves an unpublished asset out of the manifest and dist, and strips the editor's sidecar keys", async () => {
+    const editorFields = {
+      guid: "01K7R5X8W2T9Z4A1B6C3D5E7F9",
+      importer: { name: "image", version: 3 },
+      source: { hash: "sha256:00" },
+    };
+    const root = await createFixtureTree({
+      "index.html": '<!doctype html><html><body><script type="module" src="/src/main.ts"></script></body></html>',
+      "src/main.ts": 'import { manifest } from "virtual:ignifx/manifest";\ndocument.title = JSON.stringify(manifest);',
+      "assets/textures/rock_source.png": PNG_BYTES,
+      "assets/textures/rock_source.png.meta.json": JSON.stringify({
+        ...editorFields,
+        publish: false,
+        outputs: ["textures/rock.png"],
+      }),
+      "assets/textures/rock.png": PNG_BYTES.toReversed(),
+      "assets/textures/rock.png.meta.json": JSON.stringify({
+        ...editorFields,
+        publish: true,
+        groups: ["level1"],
+        texture: { srgb: true },
+        studio: { reviewed: true },
+      }),
+      // An unpublished file is not validated: a broken source cannot fail the build it is not in.
+      "assets/levels/draft.scene.json": "{}",
+      "assets/levels/draft.scene.json.meta.json": JSON.stringify({ publish: false }),
+    });
+    await build({
+      root,
+      configFile: false,
+      logLevel: "silent",
+      plugins: [ignifx()],
+      build: { outDir: "dist", emptyOutDir: true },
+    });
+
+    const outDir = join(root, "dist");
+    const files = await listFiles(outDir);
+    const manifestText = await readFile(join(outDir, "assets.manifest.json"), "utf8");
+    const manifest = JSON.parse(manifestText) as AssetManifest;
+
+    expect(manifest.entries.map((entry) => entry.address)).toEqual(["textures/rock.png"]);
+    expect(files.filter((file) => file.startsWith("assets/") && !file.endsWith(".js")).length).toBe(1);
+    expect(files.some((file) => file.includes("rock_source") || file.includes("draft"))).toBe(false);
+
+    const [rock] = manifest.entries;
+    expect(rock?.groups).toEqual(["level1"]);
+    expect(rock?.meta).toEqual({ texture: { srgb: true }, studio: { reviewed: true } });
+    for (const key of ["guid", "importer", "source", "outputs", "publish", "01K7R5X8W2T9Z4A1B6C3D5E7F9"]) {
+      expect(manifestText).not.toContain(key);
+    }
+
+    // The manifest baked into the bundle agrees with the one on disk.
+    const bundle = files.find((file) => file.startsWith("assets/index") && file.endsWith(".js"));
+    const code = await readFile(join(outDir, bundle ?? ""), "utf8");
+    expect(code).toContain("textures/rock.png");
+    expect(code).not.toContain("rock_source");
+    expect(code).not.toContain("01K7R5X8W2T9Z4A1B6C3D5E7F9");
+  });
+
   it("respects base when it writes the extension public asset's URL", async () => {
     const root = await fixtureProject();
     await build({

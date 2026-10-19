@@ -178,7 +178,8 @@ export interface IgnifxPluginApi {
  * - `config` resolves `ignifx.config.ts` and injects it as `import.meta.env.IGNIFX_CONFIG`
  *   (`docs/architecture/04-extensions.md` §5).
  * - `buildStart` scans the asset root, hashes every file, reads `.meta.json` sidecars, and
- *   validates every format-headed JSON file. A validation failure fails the build.
+ *   validates every format-headed JSON file. A validation failure fails the build. An asset whose
+ *   sidecar says `"publish": false` is left out of everything that follows.
  * - `virtual:ignifx/manifest` and `virtual:ignifx/scripts` are served from `resolveId`/`load`.
  * - In development the manifest is also served from `/<manifestFileName>`, the asset root is
  *   watched, and every change is announced on the `ignifx:asset-changed` HMR channel; editing the
@@ -388,7 +389,10 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
     // build whose two manifests disagreed, and the one game code reads was the incomplete one.
     await refreshExtensionAssets();
     try {
-      assets = await scanAssetRoot({ assetRoot: assetRootPath(), hashLength: settings.hashLength });
+      const scannedAssets = await scanAssetRoot({ assetRoot: assetRootPath(), hashLength: settings.hashLength });
+      // An unpublished asset is a source the build leaves behind: no manifest entry, no copy in
+      // `dist/`, no validation, and no claim on an output file name.
+      assets = scannedAssets.filter((asset) => asset.publish !== false);
     } catch (error) {
       if (!(error instanceof VitePluginError) || error.code !== VitePluginErrorCode.assetRootMissing) {
         throw error;

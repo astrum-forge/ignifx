@@ -49,7 +49,10 @@ export interface AssetManifestEntry {
   readonly type: AssetType;
   /** Group labels from the `.meta.json` sidecar; `[]` when the asset declares none. */
   readonly groups: readonly string[];
-  /** The rest of the sidecar, passed through untouched for the loader that understands it. */
+  /**
+   * The rest of the sidecar, passed through untouched for the loader that understands it, minus
+   * `publish` and the {@link EDITOR_SIDECAR_KEYS}.
+   */
   readonly meta?: JsonObject;
 }
 
@@ -87,7 +90,15 @@ export interface ScannedAsset {
   readonly type: AssetType;
   /** Group labels from the sidecar, or `[]`. */
   readonly groups: readonly string[];
-  /** The sidecar minus its `groups` key, or `null` when there is no sidecar or nothing is left. */
+  /**
+   * `false` when the sidecar says `"publish": false`: the asset stays out of the manifest and the
+   * build. Absent or `true` means the asset is published.
+   */
+  readonly publish?: boolean;
+  /**
+   * The sidecar minus its `groups` and `publish` keys, or `null` when there is no sidecar or nothing
+   * is left. Editor-owned keys are still here; {@link buildManifest} drops them.
+   */
   readonly meta: JsonObject | null;
 }
 
@@ -108,6 +119,14 @@ export interface ScanAssetRootOptions {
 }
 
 /**
+ * Sidecar keys the ignifx editor owns. They describe how an asset was imported, not how it loads,
+ * so {@link buildManifest} leaves them out of an entry's `meta`; a loader never sees them.
+ *
+ * @public
+ */
+export const EDITOR_SIDECAR_KEYS: readonly string[] = ["guid", "importer", "source", "outputs", "options"];
+
+/**
  * The default number of hex characters kept from a content hash, matching the length Vite itself
  * uses for asset file names.
  *
@@ -119,16 +138,18 @@ export const DEFAULT_HASH_LENGTH = 8;
  * Reads a `.meta.json` sidecar next to an asset.
  *
  * @param filePath - The absolute path of the asset, without the sidecar suffix.
- * @returns The groups the asset belongs to and the remaining sidecar fields.
- * @throws A {@link VitePluginError} with code `IGX-0551` when the sidecar is not a JSON object or
- * its `groups` field is not an array of strings.
+ * @returns The groups the asset belongs to, whether it is published, and the remaining fields.
+ * @throws A {@link VitePluginError} with code `IGX-0551` when the sidecar is not a JSON object, its
+ * `groups` field is not an array of strings, or its `publish` field is not a boolean.
  */
-async function readSidecar(filePath: string): Promise<{ groups: readonly string[]; meta: JsonObject | null }> {
+async function readSidecar(
+  filePath: string,
+): Promise<{ groups: readonly string[]; publish: boolean; meta: JsonObject | null }> {
   let text: string;
   try {
     text = await readFile(`${filePath}${META_SUFFIX}`, "utf8");
   } catch {
-    return { groups: [], meta: null };
+    return { groups: [], publish: true, meta: null };
   }
 
   let parsed: JsonValue;
@@ -148,6 +169,7 @@ async function readSidecar(filePath: string): Promise<{ groups: readonly string[
 
   const rest: Record<string, JsonValue> = {};
   let groups: readonly string[] = [];
+  let publish = true;
   for (const key of Object.keys(parsed)) {
     const value = parsed[key];
     if (value === undefined) {
@@ -163,10 +185,20 @@ async function readSidecar(filePath: string): Promise<{ groups: readonly string[
       groups = value.filter((item): item is string => typeof item === "string");
       continue;
     }
+    if (key === "publish") {
+      if (typeof value !== "boolean") {
+        throw new VitePluginError(
+          VitePluginErrorCode.invalidSidecar,
+          `"${filePath}${META_SUFFIX}" declares "publish" as ${JSON.stringify(value)}; it must be true or false.`,
+        );
+      }
+      publish = value;
+      continue;
+    }
     rest[key] = value;
   }
 
-  return { groups, meta: Object.keys(rest).length === 0 ? null : rest };
+  return { groups, publish, meta: Object.keys(rest).length === 0 ? null : rest };
 }
 
 /**
@@ -200,7 +232,8 @@ async function collectAddresses(directory: string, prefix: string, addresses: st
  *
  * @remarks
  * Dot-prefixed files and directories are skipped, and so are `*.meta.json` sidecars — they are read
- * for the asset they belong to instead of listed as assets of their own.
+ * for the asset they belong to instead of listed as assets of their own. An asset whose sidecar
+ * says `"publish": false` is still listed, with `publish: false`; {@link buildManifest} drops it.
  *
  * @param options - The directory to scan and the hash length; see {@link ScanAssetRootOptions}.
  * @returns Every asset found, sorted by address.
@@ -253,6 +286,7 @@ export async function scanAssetRoot(options: ScanAssetRootOptions): Promise<read
         hash: createHash("sha256").update(contents).digest("hex").slice(0, hashLength),
         type: assetTypeForAddress(address),
         groups: sidecar.groups,
+        publish: sidecar.publish,
         meta: sidecar.meta,
       };
     }),
@@ -260,7 +294,30 @@ export async function scanAssetRoot(options: ScanAssetRootOptions): Promise<read
 }
 
 /**
+ * The part of a sidecar's remaining fields that a loader may read.
+ *
+ * @param meta - The sidecar minus `groups` and `publish`, as {@link ScannedAsset.meta} holds it.
+ * @returns `meta` without the {@link EDITOR_SIDECAR_KEYS}, or `null` when nothing is left.
+ */
+function loaderMeta(meta: JsonObject | null): JsonObject | null {
+  if (meta === null) {
+    return null;
+  }
+  const kept: Record<string, JsonValue> = {};
+  for (const [key, value] of Object.entries(meta)) {
+    if (value !== undefined && !EDITOR_SIDECAR_KEYS.includes(key)) {
+      kept[key] = value;
+    }
+  }
+  return Object.keys(kept).length === 0 ? null : kept;
+}
+
+/**
  * Turns scanned assets into a manifest.
+ *
+ * @remarks
+ * An asset with `publish: false` gets no entry, and an entry's `meta` leaves out the
+ * {@link EDITOR_SIDECAR_KEYS}.
  *
  * @param assets - The assets to list, already sorted by address.
  * @param root - The asset root as configured, recorded in the manifest for diagnostics.
@@ -281,6 +338,10 @@ export function buildManifest(
 ): AssetManifest {
   const entries: AssetManifestEntry[] = [];
   for (const asset of assets) {
+    if (asset.publish === false) {
+      continue;
+    }
+    const meta = loaderMeta(asset.meta);
     const entry: AssetManifestEntry = {
       address: asset.address,
       url: urlFor(asset),
@@ -288,7 +349,7 @@ export function buildManifest(
       hash: asset.hash,
       type: asset.type,
       groups: asset.groups,
-      ...(asset.meta === null ? {} : { meta: asset.meta }),
+      ...(meta === null ? {} : { meta }),
     };
     entries.push(entry);
   }

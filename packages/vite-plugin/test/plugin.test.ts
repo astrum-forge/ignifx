@@ -401,6 +401,30 @@ describe("configureServer", () => {
     expect(manifest.entries.find((entry) => entry.address === "sprites/hero.png")?.groups).toEqual(["level2"]);
   });
 
+  it("leaves an unpublished asset out of the development manifest, and follows a sidecar that flips it", async () => {
+    const root = await createFixtureTree({
+      "assets/sprites/hero.png": PNG_BYTES,
+      "assets/sprites/hero.png.meta.json": JSON.stringify({ guid: "01K7R5X8W2T9Z4A1B6C3D5E7F9", publish: false }),
+      "assets/sprites/enemy.png": PNG_BYTES,
+      "assets/sprites/enemy.png.meta.json": JSON.stringify({ guid: "01K7R5X8W2T9Z4A1B6C3D5E7FA", tint: "red" }),
+    });
+    const plugin = ignifx();
+    await configure(plugin, root, "serve");
+    const server = new FakeDevServer(root);
+    await harness(plugin).configureServer(asViteServer(server));
+
+    const served = (): AssetManifest => JSON.parse(server.request("/assets.manifest.json").body ?? "") as AssetManifest;
+    expect(served().entries.map((entry) => [entry.address, entry.meta])).toEqual([
+      ["sprites/enemy.png", { tint: "red" }],
+    ]);
+    const source = await harness(plugin).load.call(new FakePluginContext(), RESOLVED_MANIFEST_MODULE_ID);
+    expect(parseManifestModule(source ?? "").entries.map((entry) => entry.address)).toEqual(["sprites/enemy.png"]);
+
+    await writeFixture(root, "assets/sprites/hero.png.meta.json", JSON.stringify({ publish: true }));
+    await emitAndSettle(plugin, server, "change", join(root, "assets", "sprites", "hero.png.meta.json"));
+    expect(served().entries.map((entry) => entry.address)).toEqual(["sprites/enemy.png", "sprites/hero.png"]);
+  });
+
   it("triggers a full reload when the project config changes", async () => {
     const root = await projectTree();
     const plugin = ignifx();

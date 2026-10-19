@@ -7,6 +7,7 @@ import {
   ASSET_MANIFEST_FORMAT,
   ASSET_MANIFEST_VERSION,
   buildManifest,
+  EDITOR_SIDECAR_KEYS,
   scanAssetRoot,
   serializeManifest,
 } from "../src/manifest.js";
@@ -78,6 +79,45 @@ describe("scanAssetRoot", () => {
     expect(asset?.meta).toBeNull();
   });
 
+  it("lists an unpublished asset with publish false and keeps publish out of meta", async () => {
+    const root = await createFixtureTree({
+      "assets/hidden.png": PNG_BYTES,
+      "assets/hidden.png.meta.json": JSON.stringify({ publish: false, texture: { srgb: true } }),
+      "assets/shown.png": PNG_BYTES,
+      "assets/shown.png.meta.json": JSON.stringify({ publish: true }),
+      "assets/plain.png": PNG_BYTES,
+    });
+    const assets = await scanAssetRoot({ assetRoot: join(root, "assets") });
+    expect(assets.map((asset) => [asset.address, asset.publish, asset.meta])).toEqual([
+      ["hidden.png", false, { texture: { srgb: true } }],
+      ["plain.png", true, null],
+      ["shown.png", true, null],
+    ]);
+  });
+
+  it("keeps editor-owned keys in meta, for tools that read the sidecar through the scan", async () => {
+    const editorFields = { guid: "01K7R5X8W2T9Z4A1B6C3D5E7F9", importer: { name: "image", version: 3 } };
+    const root = await createFixtureTree({
+      "assets/a.png": PNG_BYTES,
+      "assets/a.png.meta.json": JSON.stringify(editorFields),
+    });
+    const [asset] = await scanAssetRoot({ assetRoot: join(root, "assets") });
+    expect(asset?.meta).toEqual(editorFields);
+  });
+
+  it("fails with IGX-0551 when publish is not a boolean", async () => {
+    const root = await createFixtureTree({
+      "assets/a.png": PNG_BYTES,
+      "assets/a.png.meta.json": JSON.stringify({ publish: "false" }),
+    });
+    await expect(scanAssetRoot({ assetRoot: join(root, "assets") })).rejects.toThrow(
+      expect.objectContaining({
+        code: VitePluginErrorCode.invalidSidecar,
+        message: expect.stringContaining('"publish"'),
+      }),
+    );
+  });
+
   it("fails with IGX-0550 when the asset root does not exist", async () => {
     const root = await createFixtureTree({ "keep.txt": "x" });
     await expect(scanAssetRoot({ assetRoot: join(root, "assets") })).rejects.toThrow(
@@ -147,6 +187,74 @@ describe("buildManifest", () => {
     const [entry] = buildManifest([withMeta], "assets", () => "/u").entries;
     expect(Object.keys(entry ?? {})).toEqual(["address", "url", "bytes", "hash", "type", "groups", "meta"]);
     expect(entry?.meta).toEqual({ texture: { srgb: true } });
+  });
+});
+
+describe("buildManifest and the sidecar's publish flag", () => {
+  const asset: ScannedAsset = {
+    address: "sprites/hero.png",
+    filePath: "/p/assets/sprites/hero.png",
+    bytes: 10,
+    hash: "0a1b2c3d",
+    type: "texture",
+    groups: [],
+    meta: null,
+  };
+
+  it("leaves out an asset with publish false", () => {
+    const hidden: ScannedAsset = { ...asset, address: "sources/hero.psd", publish: false };
+    const manifest = buildManifest([hidden, asset], "assets", () => "/u");
+    expect(manifest.entries.map((entry) => entry.address)).toEqual(["sprites/hero.png"]);
+  });
+
+  it("lists an asset with publish true exactly as one with no publish field", () => {
+    const shown: ScannedAsset = { ...asset, publish: true, meta: { texture: { srgb: true } } };
+    const plain: ScannedAsset = { ...asset, meta: { texture: { srgb: true } } };
+    expect(buildManifest([shown], "assets", () => "/u")).toEqual(buildManifest([plain], "assets", () => "/u"));
+  });
+});
+
+describe("buildManifest and editor-owned sidecar keys", () => {
+  const editorFields = {
+    guid: "01K7R5X8W2T9Z4A1B6C3D5E7F9",
+    importer: { name: "image", version: 3 },
+    source: { hash: "sha256:00" },
+    outputs: ["textures/rock.ktx2"],
+    options: { srgb: true, mipmaps: true },
+  };
+  const asset: ScannedAsset = {
+    address: "textures/rock.png",
+    filePath: "/p/assets/textures/rock.png",
+    bytes: 10,
+    hash: "0a1b2c3d",
+    type: "texture",
+    groups: ["level1"],
+    meta: null,
+  };
+
+  it("names every key the editor writes", () => {
+    expect([...EDITOR_SIDECAR_KEYS].toSorted()).toEqual(Object.keys(editorFields).toSorted());
+  });
+
+  it("strips the editor's keys from meta and passes every other key through", () => {
+    const withFields: ScannedAsset = {
+      ...asset,
+      meta: { ...editorFields, texture: { srgb: true }, custom: { anything: [1, "two", null] } },
+    };
+    const [entry] = buildManifest([withFields], "assets", () => "/u").entries;
+    expect(entry?.meta).toEqual({ texture: { srgb: true }, custom: { anything: [1, "two", null] } });
+    expect(entry?.groups).toEqual(["level1"]);
+  });
+
+  it("omits meta when the sidecar held only editor keys", () => {
+    const [entry] = buildManifest([{ ...asset, meta: editorFields }], "assets", () => "/u").entries;
+    expect(entry).not.toHaveProperty("meta");
+  });
+
+  it("keeps an editor key name nested inside a loader's block", () => {
+    const nested: ScannedAsset = { ...asset, meta: { texture: { source: "albedo", options: {} } } };
+    const [entry] = buildManifest([nested], "assets", () => "/u").entries;
+    expect(entry?.meta).toEqual({ texture: { source: "albedo", options: {} } });
   });
 });
 
