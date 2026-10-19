@@ -43,26 +43,6 @@ async function sceneApp(files: Readonly<Record<string, string>> = {}): Promise<A
   return harness;
 }
 
-/**
- * Drives frames until a promise settles: a started app delivers loads in `PreUpdate`.
- *
- * @param harness - The app.
- * @param work - The promise.
- * @returns What it resolved with.
- */
-async function settled<T>(harness: AssetHarness, work: Promise<T>): Promise<T> {
-  const state = { done: false };
-  const finish = (): void => {
-    state.done = true;
-  };
-  void work.then(finish, finish);
-  for (let index = 0; index < 200 && !state.done; index += 1) {
-    // oxlint-disable-next-line eslint/no-await-in-loop -- one frame at a time is the point
-    await harness.settle();
-  }
-  return work;
-}
-
 /** A prefab with one root and a child, so an instance of it expands to two entities. */
 const CRATE: SceneFile = buildFile({
   name: "Crate",
@@ -117,8 +97,7 @@ describe("world.loadSceneFile", () => {
       loaded.push(instance.name);
     });
 
-    const instance = await settled(
-      harness,
+    const instance = await harness.settleUntil(
       harness.app.world.loadSceneFile(file, { address: "levels/draft.scene.json" }),
     );
 
@@ -138,8 +117,7 @@ describe("world.loadSceneFile", () => {
 
   it("publishes the file at its address and releases what it holds when unloaded", async () => {
     const harness = await sceneApp(NETWORK);
-    const instance = await settled(
-      harness,
+    const instance = await harness.settleUntil(
       harness.app.world.loadSceneFile(levelFile(), { address: "levels/draft.scene.json", name: "Draft" }),
     );
     const prefab = harness.app.assets.get("prefabs/crate.prefab.json");
@@ -161,8 +139,7 @@ describe("world.loadSceneFile", () => {
     const issues: SceneLoadIssue[] = [];
     const file = buildFile({ entities: [entityRecord({ uid: "A", layer: "Nope" })] });
 
-    await settled(
-      harness,
+    await harness.settleUntil(
       harness.app.world.loadSceneFile(file, { address: "memory:scene/a", onIssue: (issue) => issues.push(issue) }),
     );
 
@@ -171,8 +148,7 @@ describe("world.loadSceneFile", () => {
 
   it("refuses a file that does not match the format and unloads nothing", async () => {
     const harness = await sceneApp(NETWORK);
-    const first = await settled(
-      harness,
+    const first = await harness.settleUntil(
       harness.app.world.loadSceneFile(levelFile(), { address: "levels/a.scene.json" }),
     );
     const broken = {
@@ -196,8 +172,7 @@ describe("world.loadSceneFile", () => {
       entities: [entityRecord({ uid: "A", components: [{ uid: "C", type: "test/Unknown" }] })],
     });
 
-    const error: unknown = await settled(
-      harness,
+    const error: unknown = await harness.settleUntil(
       harness.app.world.loadSceneFile(file, { address: "memory:scene/a" }).catch((thrown: unknown) => thrown),
     );
 
@@ -208,14 +183,12 @@ describe("world.loadSceneFile", () => {
 
   it("additive keeps the other scenes and leaves the active scene alone", async () => {
     const harness = await sceneApp(NETWORK);
-    const first = await settled(
-      harness,
+    const first = await harness.settleUntil(
       harness.app.world.loadSceneFile(levelFile(), { address: "levels/a.scene.json" }),
     );
     const file = buildFile({ name: "Extra", entities: [entityRecord({ uid: "E" })] });
 
-    const second = await settled(
-      harness,
+    const second = await harness.settleUntil(
       harness.app.world.loadSceneFile(file, { address: "levels/b.scene.json", mode: "additive" }),
     );
 
@@ -238,7 +211,7 @@ describe("world.createScene", () => {
     expect(tools.roots).toEqual([camera]);
     expect(world.scenes.map((scene) => scene.name)).toEqual(["default", "editor", "scratch"]);
 
-    const level = await settled(harness, world.loadSceneFile(levelFile(), { address: "levels/a.scene.json" }));
+    const level = await harness.settleUntil(world.loadSceneFile(levelFile(), { address: "levels/a.scene.json" }));
 
     expect(world.scenes.map((scene) => scene.name)).toEqual(["default", "editor", "Level"]);
     expect(camera.isDestroyed).toBe(false);
@@ -258,7 +231,7 @@ describe("world.createScene", () => {
 describe("loadSceneDependencies", () => {
   it("loads every referenced asset once, in the loader's order, with one holder each", async () => {
     const harness = await sceneApp(NETWORK);
-    const handles = await settled(harness, loadSceneDependencies(harness.app.assets, levelFile()));
+    const handles = await harness.settleUntil(loadSceneDependencies(harness.app.assets, levelFile()));
 
     expect(handles.map((handle) => handle.address)).toEqual(["prefabs/crate.prefab.json"]);
     expect(handles.map((handle) => handle.refCount)).toEqual([1]);
@@ -274,8 +247,7 @@ describe("loadSceneDependencies", () => {
     });
     harness.net.canned.set(harness.app.assets.resolveUrl("prefabs/missing.prefab.json"), "not json");
 
-    const error: unknown = await settled(
-      harness,
+    const error: unknown = await harness.settleUntil(
       loadSceneDependencies(harness.app.assets, file).catch((thrown: unknown) => thrown),
     );
 

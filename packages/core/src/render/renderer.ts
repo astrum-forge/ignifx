@@ -479,6 +479,15 @@ export class RendererImpl implements Renderer {
   needsShadowLayoutReset = false;
 
   /**
+   * `true` from the moment the render sync system queues a renderable rebuild until the last one it
+   * owes has finished. A light waits for it to be `false` before it gains or loses a shadow generator.
+   */
+  isRebuildInFlight = false;
+
+  /** Scene changes held back until the rebuild in flight has finished; see {@link RendererImpl.afterRebuild}. */
+  readonly #afterRebuild: (() => void)[] = [];
+
+  /**
    * The PBR deformation kinds (`PBR_DEFORMER` bits) a full renderable build has already composed on
    * this engine. A kind missing from it gets fresh layouts on its first rebuild (`../lite/pbr-deformers.ts`).
    */
@@ -1313,6 +1322,40 @@ export class RendererImpl implements Renderer {
   }
 
   /**
+   * Runs a scene change now, or holds it until the render sync system's rebuild has finished when
+   * one is in flight.
+   *
+   * @remarks
+   * For a change a rebuild must not see half-way: one that changes how many shadow generators the
+   * scene has. A rebuild reads them group by group against layouts cached without that number, so
+   * a group built after the change gets a bind group the layout does not match.
+   *
+   * @param change - The change.
+   *
+   * @internal
+   */
+  afterRebuild(change: () => void): void {
+    if (this.isRebuildInFlight) {
+      this.#afterRebuild.push(change);
+      return;
+    }
+    change();
+  }
+
+  /**
+   * Takes the changes {@link RendererImpl.afterRebuild} held back. The render sync system runs them
+   * once its rebuild has finished. A disposed renderer hands back none: its scene is gone.
+   *
+   * @returns The changes, oldest first.
+   *
+   * @internal
+   */
+  takeHeldChanges(): (() => void)[] {
+    const held = this.#afterRebuild.splice(0);
+    return this.#isDisposed ? [] : held;
+  }
+
+  /**
    * Releases the open overlays, the picker and the warm-up probes. The core extension registers it
    * as a disposer.
    *
@@ -1320,6 +1363,7 @@ export class RendererImpl implements Renderer {
    */
   dispose(): void {
     this.#isDisposed = true;
+    this.#afterRebuild.length = 0;
     // Each overlay removes itself from the map as it is disposed, which a `Map` iteration allows.
     for (const overlay of this.#overlays.values()) {
       overlay.dispose();

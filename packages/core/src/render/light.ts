@@ -394,6 +394,13 @@ export class Light extends Component implements ComponentHooks {
       this.#warnAboutShadows(renderer);
       return false;
     }
+    if (renderer.isRebuildInFlight) {
+      // A rebuild in flight reads every light's generator group by group, and Lite's cached layouts
+      // are keyed without the number of shadow maps: a generator attached between two groups gets a
+      // bind group for one more map than the layout it is checked against, and WebGPU rejects it.
+      // The change lands on the first frame after the rebuild, which then rebuilds with fresh layouts.
+      return false;
+    }
     this.#appliedShadows = wanted;
     if (!wanted) {
       this.#releaseGenerator(renderer);
@@ -476,13 +483,27 @@ export class Light extends Component implements ComponentHooks {
    * @param renderer - The rendering service, for the scene.
    */
   #teardown(renderer: RendererImpl): void {
-    this.#releaseGenerator(renderer);
+    const generator = this.#generator;
     const light = this.#light;
+    this.#generator = null;
     this.#light = null;
     this.#appliedType = null;
     this.#appliedShadows = false;
-    if (light !== null) {
-      removeLightFromScene(renderer.scene, light);
+    const remove = (): void => {
+      if (generator !== null) {
+        detachShadows(renderer.scene, light, generator);
+        renderer.needsShadowLayoutReset = true;
+      }
+      if (light !== null) {
+        removeLightFromScene(renderer.scene, light);
+      }
+    };
+    // A caster leaving mid-rebuild changes the number of shadow maps under it, as attaching one
+    // would (`#applyShadows`); the light and its generator stay in the scene until it has finished.
+    if (generator === null) {
+      remove();
+    } else {
+      renderer.afterRebuild(remove);
     }
   }
 }

@@ -15,6 +15,9 @@ const MILLISECONDS_PER_SECOND = 1000;
 /** The frame delta every step uses unless a test passes its own. */
 export const STEP = 1 / 60;
 
+/** How many frames `settleUntil` runs before it calls a load stuck. */
+export const SETTLE_UNTIL_FRAMES = 5000;
+
 /** Options accepted by {@link createAssetHarness}. */
 export interface AssetHarnessOptions {
   /** The address-to-URL table. */
@@ -54,6 +57,24 @@ export interface AssetHarness {
   flush(): Promise<void>;
   /** Flushes, runs one frame, and flushes again — the usual "make it happen" call. */
   settle(deltaSeconds?: number): Promise<void>;
+  /**
+   * Runs {@link AssetHarness.settle} until a promise settles, then answers with it.
+   *
+   * @remarks
+   * A started app delivers a load in `PreUpdate`, so a load needs frames, but part of a scene load
+   * runs neither in a frame nor on the microtask queue: its content hash is `crypto.subtle.digest`,
+   * which Node computes on libuv's thread pool. A fixed number of frames races that pool, and a
+   * loaded runner loses: the frames run out, and the load waits for a frame that never comes
+   * (`edit-mode.test.ts` on CI, 2026-10-19). So the cap is far above any load's real need,
+   * {@link SETTLE_UNTIL_FRAMES} frames, and only there to fail a stuck load by name.
+   *
+   * @param work - The promise to drive.
+   * @param what - What it is, for the error, such as the address being loaded.
+   * @returns What `work` resolved with.
+   * @throws Error naming `what` and the requests still open, when `work` has not settled after
+   * {@link SETTLE_UNTIL_FRAMES} frames.
+   */
+  settleUntil<T>(work: Promise<T>, what?: string): Promise<T>;
   /** Disposes the app. */
   dispose(): void;
 }
@@ -103,6 +124,11 @@ export async function createAssetHarness(options?: AssetHarnessOptions): Promise
     clock.advance(deltaSeconds * MILLISECONDS_PER_SECOND);
     app.step(deltaSeconds);
   };
+  const settle = async (deltaSeconds: number = STEP): Promise<void> => {
+    await flushMicrotasks();
+    step(deltaSeconds);
+    await flushMicrotasks();
+  };
   return {
     app,
     assets: assetsInternals(app.assets),
@@ -111,10 +137,24 @@ export async function createAssetHarness(options?: AssetHarnessOptions): Promise
     errors,
     step,
     flush: flushMicrotasks,
-    settle: async (deltaSeconds: number = STEP): Promise<void> => {
-      await flushMicrotasks();
-      step(deltaSeconds);
-      await flushMicrotasks();
+    settle,
+    settleUntil: async <T>(work: Promise<T>, what = "the promise"): Promise<T> => {
+      const state = { done: false };
+      const finish = (): void => {
+        state.done = true;
+      };
+      void work.then(finish, finish);
+      for (let frame = 0; frame < SETTLE_UNTIL_FRAMES && !state.done; frame += 1) {
+        // oxlint-disable-next-line eslint/no-await-in-loop -- one frame at a time is the point
+        await settle();
+      }
+      if (!state.done) {
+        const open = net.requests.filter((request) => !request.isSettled).map((request) => request.url);
+        throw new Error(
+          `${what} did not settle within ${String(SETTLE_UNTIL_FRAMES)} frames; open requests: [${open.join(", ")}].`,
+        );
+      }
+      return work;
     },
     dispose: (): void => {
       app.dispose();

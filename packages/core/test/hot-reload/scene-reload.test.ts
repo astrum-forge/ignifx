@@ -83,37 +83,17 @@ async function sceneHarness(reloadScenes: boolean): Promise<AssetHarness> {
   return harness;
 }
 
-/**
- * Drives the fake network and the frame loop until a promise settles.
- *
- * @param harness - The harness.
- * @param work - The promise to drive.
- * @returns What the promise resolved with.
- */
-async function settle<T>(harness: AssetHarness, work: Promise<T>): Promise<T> {
-  const state: { done: boolean } = { done: false };
-  const finish = (): void => {
-    state.done = true;
-  };
-  void work.then(finish, finish);
-  for (let index = 0; index < 200 && !state.done; index += 1) {
-    // oxlint-disable-next-line eslint/no-await-in-loop -- draining a queue is sequential by nature.
-    await harness.settle();
-  }
-  return work;
-}
-
 describe("reloadScene", () => {
   it("rebuilds the instance from the file, overrides included", async () => {
     const harness = await sceneHarness(false);
-    const first = await settle(harness, harness.app.world.loadScene(LEVEL));
+    const first = await harness.settleUntil(harness.app.world.loadScene(LEVEL));
     const reports: HotReloadReport[] = [];
     harness.app.hotReload.onApplied.connect((report) => {
       reports.push(report);
     });
     const rootBefore = first.roots[0];
 
-    const rebuilt = await settle(harness, harness.app.hotReload.reloadScene(first));
+    const rebuilt = await harness.settleUntil(harness.app.hotReload.reloadScene(first));
 
     expect(rebuilt).not.toBe(first);
     expect(rootBefore?.isDestroyed).toBe(true);
@@ -130,11 +110,11 @@ describe("reloadScene", () => {
 
   it("picks up the file's new content", async () => {
     const harness = await sceneHarness(false);
-    const first = await settle(harness, harness.app.world.loadScene(LEVEL));
+    const first = await harness.settleUntil(harness.app.world.loadScene(LEVEL));
     expect(first.roots[0]?.getComponent(Everything)?.speed).toBe(1);
 
-    await settle(harness, replaceFile(harness, levelFile(7)));
-    const rebuilt = await settle(harness, harness.app.hotReload.reloadScene(first));
+    await harness.settleUntil(replaceFile(harness, levelFile(7)));
+    const rebuilt = await harness.settleUntil(harness.app.hotReload.reloadScene(first));
 
     expect(rebuilt.roots[0]?.getComponent(Everything)?.speed).toBe(7);
   });
@@ -153,12 +133,12 @@ describe("reloadScene", () => {
 describe("reloadScenes", () => {
   it("rebuilds a live instance when its scene asset is replaced", async () => {
     const harness = await sceneHarness(true);
-    const first = await settle(harness, harness.app.world.loadScene(LEVEL));
+    const first = await harness.settleUntil(harness.app.world.loadScene(LEVEL));
     expect(first.roots[0]?.getComponent(Everything)?.speed).toBe(1);
 
     const rebuild = waitForRebuild(harness, first);
     void replaceFile(harness, levelFile(5));
-    const rebuilt = await settle(harness, rebuild);
+    const rebuilt = await harness.settleUntil(rebuild);
 
     expect(rebuilt).not.toBe(first);
     expect(rebuilt.roots[0]?.getComponent(Everything)?.speed).toBe(5);
@@ -166,9 +146,9 @@ describe("reloadScenes", () => {
 
   it("leaves the instance alone when the toggle is off", async () => {
     const harness = await sceneHarness(false);
-    const first = await settle(harness, harness.app.world.loadScene(LEVEL));
+    const first = await harness.settleUntil(harness.app.world.loadScene(LEVEL));
 
-    await settle(harness, replaceFile(harness, levelFile(5)));
+    await harness.settleUntil(replaceFile(harness, levelFile(5)));
     for (let index = 0; index < 10; index += 1) {
       // oxlint-disable-next-line eslint/no-await-in-loop -- the frames have to run one at a time.
       await harness.settle();

@@ -110,8 +110,6 @@ export class RenderSyncSystem implements System {
 
   #isRebuildDue = false;
 
-  #isRebuildInFlight = false;
-
   /** A rebuild asked for while one was already running; it is run once the in-flight one lands. */
   #isRebuildPending = false;
 
@@ -210,7 +208,7 @@ export class RenderSyncSystem implements System {
     this.#areCastersDirty = this.#areCastersDirty || castersChanged;
     // Lite built a material family on its own (a runtime build of its first mesh) and pushed a
     // cache reset nothing has confirmed yet: one rebuild confirms it (`../lite/shadow.ts`).
-    if (renderer.materialCacheResets.unconfirmed && !this.#isRebuildDue && !this.#isRebuildInFlight) {
+    if (renderer.materialCacheResets.unconfirmed && !this.#isRebuildDue && !renderer.isRebuildInFlight) {
       this.#rebuildRenderables();
     }
     // The rebuild is deferred by one frame on purpose; see `#rebuildRenderables`.
@@ -220,7 +218,7 @@ export class RenderSyncSystem implements System {
     }
     this.#isRebuildDue = this.#isRebuildDue || topologyChanged;
     // Caster lists come **after** the renderable rebuild has settled; see `#rebuildCasters`.
-    if (this.#areCastersDirty && !this.#isRebuildDue && !this.#isRebuildInFlight) {
+    if (this.#areCastersDirty && !this.#isRebuildDue && !renderer.isRebuildInFlight) {
       this.#areCastersDirty = false;
       this.#rebuildCasters(meshes, models, instanced, lights);
     }
@@ -502,13 +500,13 @@ export class RenderSyncSystem implements System {
     if (renderer.isHeadless || !renderer.isSceneRegistered) {
       return;
     }
-    if (this.#isRebuildInFlight) {
+    if (renderer.isRebuildInFlight) {
       // Never a second concurrent run; see `#drainRebuilds`. One more pass covers whatever changed
       // since this one started, and several requests in the same window collapse into that one.
       this.#isRebuildPending = true;
       return;
     }
-    this.#isRebuildInFlight = true;
+    renderer.isRebuildInFlight = true;
     // Out of the frame callback as well as out of the frame: the whole ignifx frame runs inside
     // Lite's `onBeforeRender`, and rebuilding a scene's material groups from in there rebuilds them
     // against a frame that has not been recorded yet. A microtask runs once the rendered frame's
@@ -571,8 +569,22 @@ export class RenderSyncSystem implements System {
         }
       } while (this.#takePendingRebuild());
     } finally {
-      this.#isRebuildInFlight = false;
+      renderer.isRebuildInFlight = false;
       this.#isRebuildPending = false;
+      this.#runHeldChanges();
+    }
+  }
+
+  /** Runs the scene changes `RendererImpl.afterRebuild` held back while the rebuild ran. */
+  #runHeldChanges(): void {
+    const renderer = this.#renderer;
+    const held = renderer.takeHeldChanges();
+    for (let index = 0; index < held.length; index += 1) {
+      try {
+        held[index]?.();
+      } catch (error: unknown) {
+        renderer.app.onError.emit({ error, source: "system", phase: null, entity: null, component: null });
+      }
     }
   }
 
