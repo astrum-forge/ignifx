@@ -126,17 +126,18 @@ node, so an entity that moved is already where it should be.
 
 ## 3. `app.renderer`
 
-| Member                          | Purpose                                                                            |
-| ------------------------------- | ---------------------------------------------------------------------------------- |
-| `pixelRatio`, `resolutionScale` | DPR clamp (`0` does not clamp) and a `0.25…1` downscale                            |
-| `setSize(width, height)`        | `OffscreenCanvas` only; a laid-out DOM canvas re-reads its layout size every frame |
-| `features`                      | The resolved `RenderingFeatureSettings`, read-only after `app.start()`             |
-| `requireFeature(feature)`       | Turns a feature on **before** start; afterwards it throws `IGX-0704`               |
-| `warmUp(materials)`             | Compiles a material family now instead of on the frame a mesh first appears        |
-| `pickAsync(x, y, options?)`     | GPU pick → `RenderPick \| null`; resolves to `null` headless                       |
-| `captureScreenshot()`           | `RenderCapture`; rejects with `IGX-0707` when no render loop is running            |
-| `drawCalls`, `gpuFrameTimeMs`   | Per-frame counters, mirrored in the `render` diagnostics group                     |
-| `profileTasks`, `taskTimings()` | Per-task GPU timings; `status` is `"unsupported"` headless                         |
+| Member                          | Purpose                                                                                       |
+| ------------------------------- | --------------------------------------------------------------------------------------------- |
+| `pixelRatio`, `resolutionScale` | DPR clamp (`0` does not clamp) and a `0.25…1` downscale                                       |
+| `setSize(width, height)`        | `OffscreenCanvas` only; a laid-out DOM canvas re-reads its layout size every frame            |
+| `features`                      | The resolved `RenderingFeatureSettings`, read-only after `app.start()`                        |
+| `requireFeature(feature)`       | Turns a feature on **before** start; afterwards it throws `IGX-0704`                          |
+| `warmUp(materials)`             | Compiles a material family now instead of on the frame a mesh first appears                   |
+| `pickAsync(x, y, options?)`     | GPU pick → `RenderPick \| null`; resolves to `null` headless                                  |
+| `captureScreenshot()`           | `RenderCapture`; rejects with `IGX-0707` when no render loop is running                       |
+| `drawCalls`, `gpuFrameTimeMs`   | Per-frame counters, mirrored in the `render` diagnostics group                                |
+| `profileTasks`, `taskTimings()` | Per-task GPU timings; `status` is `"unsupported"` headless                                    |
+| `openOverlay()` (`@beta`)       | A Lite scene drawn over the frame, for editor gizmos; `IGX-0728` headless or before `start()` |
 
 ## 4. Settings and feature opt-ins
 

@@ -284,7 +284,7 @@ name a code-built primitive — see [`references/formats/scene.md`](references/f
 
 `surface` (the canvas, `null` headless), `pixelRatio`, `resolutionScale`, `setSize(w, h)` (`OffscreenCanvas` only), `features`,
 `requireFeature(name)`, `warmUp(materials)`, `pickAsync(x, y, options?)`, `captureScreenshot()`,
-`drawCalls`, `gpuFrameTimeMs`, `profileTasks`, `taskTimings()`.
+`drawCalls`, `gpuFrameTimeMs`, `profileTasks`, `taskTimings()`, `openOverlay()` (`@beta`: an editor's gizmo layer).
 
 The `rendering` section is read once, at `createApp`: `features` (`shadows`, `postProcessing`, `skeletons`, `boneControl`, `stencil`, `lightmaps`, `materialPlugins`, `asyncPipelines`, `deviceLostRecovery` — all `false` by default and refused after start with `IGX-0704`), `msaaSamples` (1 or 4, default 4), `alphaMode`, `srgb`, `format`, `maxDevicePixelRatio`, `useHighPrecisionMatrix`, `useFloatingOrigin`, `requiredLimits`, `clearColor` (a colour object; a non-null `Camera.clearColor` beats a non-null `Environment.clearColor`, which beats this), and `brdfLut` (`DEFAULT_BRDF_LUT_ADDRESS`). There is no `powerPreference`. The `assets` section takes `root`, `preload`, `concurrency`, `gcDelay`, `retries`.
 

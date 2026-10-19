@@ -274,6 +274,8 @@ export const CoreErrorCode = {
   surfaceSamplerBudgetExceeded: "IGX-0726",
   /** An `InstancedMeshRenderer` declares a LOD partner with `gpuCulling` off, so the partner never draws. */
   instancingLodWithoutCulling: "IGX-0727",
+  /** `app.renderer.openOverlay()` was called on a headless app, or before `app.start()` registered the render scene. */
+  overlayNeedsRenderScene: "IGX-0728",
   /** The host exposes no Web Crypto implementation. */
   cryptoUnavailable: "IGX-1420",
   /** A storage namespace name is not a legal namespace segment. */
@@ -403,6 +405,7 @@ export const CORE_ERROR_MESSAGES: Readonly<Record<CoreErrorCode, string>> = {
   "IGX-0726": "{samplers} plugin samplers are declared; {budget} fit beside a textured PBR material.",
   "IGX-0727":
     "{entity} declares an InstancedMeshRenderer lod with gpuCulling off; the LOD mesh never draws. Turn gpuCulling on.",
+  "IGX-0728": "openOverlay() needs a canvas-backed app whose render scene is registered.",
   "IGX-1420": "This host does not expose Web Crypto.",
   "IGX-1421": "{namespace} is not a valid storage namespace.",
   "IGX-1422": "That storage key is empty, too long, or contains a control character.",
