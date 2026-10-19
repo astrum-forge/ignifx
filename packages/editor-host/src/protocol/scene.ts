@@ -200,6 +200,13 @@ export interface OpenSceneResult {
   readonly entityCount: number;
   /** Every recoverable problem the build reported, in order (`SceneBuildResult.issues`). */
   readonly warnings: readonly SceneIssue[];
+  /**
+   * The editor camera the scene is made for, as the host's engine sees it: `"2d"` when the project
+   * draws sprites only (`twoD.mode: "sprite"`) or the scene's cameras are all `Camera2D`, else
+   * `"3d"`. The host does not switch to it; the editor sends `setViewMode`. Absent from a host from
+   * before it.
+   */
+  readonly viewMode?: ViewMode;
 }
 
 /**
@@ -704,6 +711,8 @@ export interface SceneOpenedParams {
   readonly entityCount: number;
   /** As in {@link OpenSceneResult}. */
   readonly warnings: readonly SceneIssue[];
+  /** As in {@link OpenSceneResult}. */
+  readonly viewMode?: ViewMode;
 }
 
 /**
@@ -1021,12 +1030,17 @@ export function isOpenSceneParams(value: unknown): value is OpenSceneParams {
  * Checks the result of `openScene`.
  *
  * @param value - The received `result`.
- * @returns True for a count and a list of issues.
+ * @returns True for a count, a list of issues, and an optional view mode.
  *
  * @public
  */
 export function isOpenSceneResult(value: unknown): value is OpenSceneResult {
-  return isRecord(value) && isCount(value["entityCount"]) && isArrayOf(value["warnings"], isSceneIssue);
+  return (
+    isRecord(value) &&
+    isCount(value["entityCount"]) &&
+    isArrayOf(value["warnings"], isSceneIssue) &&
+    optionalField(value, "viewMode", (mode) => isOneOf(ViewMode, mode))
+  );
 }
 
 /**
@@ -1361,7 +1375,7 @@ export function isSetViewModeParams(value: unknown): value is SetViewModeParams 
  * Checks the parameters of `sceneOpened`.
  *
  * @param value - The received `params`.
- * @returns True for an address or `null`, a name, a count and issues.
+ * @returns True for an address or `null`, a name, a count, issues, and an optional view mode.
  *
  * @public
  */
@@ -1370,7 +1384,7 @@ export function isSceneOpenedParams(value: unknown): value is SceneOpenedParams 
     isRecord(value) &&
     isStringOrNull(value["address"]) &&
     isString(value["name"]) &&
-    isOpenSceneResult({ entityCount: value["entityCount"], warnings: value["warnings"] })
+    isOpenSceneResult({ entityCount: value["entityCount"], warnings: value["warnings"], viewMode: value["viewMode"] })
   );
 }
 
