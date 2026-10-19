@@ -7,6 +7,7 @@
  */
 
 import { Script } from "@ignifx/core";
+import { setCapture } from "./editor-camera.js";
 import {
   DEFAULT_PIXELS_PER_UNIT,
   fitView,
@@ -15,7 +16,6 @@ import {
   stepZoom,
   zoomAbout,
 } from "./view-2d.js";
-import { setCapture } from "./editor-camera.js";
 import type { PointerClaims, ViewClick } from "./editor-camera.js";
 import type { Box2D, Camera2DLike, View2D } from "./view-2d.js";
 import type { Camera, ScriptCallbacks } from "@ignifx/core";

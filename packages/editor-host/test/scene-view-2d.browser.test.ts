@@ -219,6 +219,14 @@ function memberOf(answer: unknown, key: string): unknown {
   return Reflect.get(Object(answer), key);
 }
 
+/** A point of the view, in CSS pixels from its top-left corner. */
+interface CssPoint {
+  /** From the left edge. */
+  readonly x: number;
+  /** From the top edge. */
+  readonly y: number;
+}
+
 /**
  * Clicks the view the way a mouse does, through the host's own listeners: a primary-button
  * `pointerdown` and `pointerup` at one CSS point of the canvas. Synthetic events keep the test off
@@ -226,7 +234,7 @@ function memberOf(answer: unknown, key: string): unknown {
  *
  * @param at - The CSS point, from the canvas's top-left corner.
  */
-function click(at: { readonly x: number; readonly y: number }): void {
+function click(at: CssPoint): void {
   if (canvas === null) {
     throw new Error("no canvas");
   }
