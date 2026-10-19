@@ -19590,6 +19590,13 @@ The asset's address.
 
 `void`
 
+###### Remarks
+
+A call made while a reload of the same handle is running reloads once more after it, however
+many calls arrive meanwhile, and only the newest value is delivered. A failed reload keeps the
+value the handle had and reports an `IGX-0505` [AssetLoadError](#assetloaderror) naming the address through
+`app.onError`.
+
 ##### resolveUrl()
 
 > **resolveUrl**(`address`): `string`

@@ -195,6 +195,9 @@ a second loader for one type is `IGX-0506`.
 `@ignifx/vite-plugin` sends `ignifx:asset-changed` over Vite HMR in development. The service reloads
 the affected handle in place and emits `handle.onReplaced` with the new value; `handle.value` is
 already the new one when the handler runs, so a component re-reads it rather than reloading.
+Saves that arrive while a reload is running trigger one more reload, and only the newest value is
+delivered. A failed reload keeps the old value and reports an `IGX-0505` `AssetLoadError`, with the
+asset's `address`, through `app.onError`.
 
 ## 7. Errors
 

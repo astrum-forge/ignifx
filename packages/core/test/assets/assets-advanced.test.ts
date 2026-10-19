@@ -1,17 +1,51 @@
 import { describe, expect, it } from "vitest";
 import { AppEventsImpl } from "../../src/app/events.js";
 import { createAssetManifest } from "../../src/assets/manifest.js";
+import { AssetLoadError } from "../../src/assets/types.js";
 import { CoreErrorCode } from "../../src/errors/error-codes.js";
 import { Script } from "../../src/script/script.js";
 import { createAssetHarness } from "./support/harness.js";
 import type { Coroutine } from "../../src/app/types.js";
-import type { AssetHandle, AssetLoadError, AssetLoader, AssetProgress } from "../../src/assets/types.js";
+import type { AssetHandle, AssetLoader, AssetProgress } from "../../src/assets/types.js";
 
 /**
  * Fragments, dependencies, progress, batches, hot reload, disposal, and diagnostics
  * (`docs/architecture/05-assets-and-loading.md` §2, §4–§5, §7, §9,
  * `15-devtools-and-diagnostics.md` §3).
  */
+
+/** A load the test finishes by hand: the next version of the file, or a failure. */
+interface PendingVersion {
+  readonly resolve: (value: string) => void;
+  readonly reject: (error: Error) => void;
+}
+
+/**
+ * A loader whose every load waits until the test settles it, so a test can save the file again
+ * while a reload is still running.
+ *
+ * @returns The loader, the loads it is waiting on in call order, and the values it unloaded.
+ */
+function controllableLoader(): {
+  readonly loader: AssetLoader<string>;
+  readonly pending: PendingVersion[];
+  readonly unloaded: string[];
+} {
+  const pending: PendingVersion[] = [];
+  const unloaded: string[] = [];
+  const loader: AssetLoader<string> = {
+    type: "versioned",
+    extensions: [".ver"],
+    load: () =>
+      new Promise<string>((resolve, reject) => {
+        pending.push({ resolve, reject });
+      }),
+    unload: (value) => {
+      unloaded.push(value);
+    },
+  };
+  return { loader, pending, unloaded };
+}
 
 /** An atlas whose fragments name entries of the parsed object. */
 const atlasLoader: AssetLoader<Record<string, number>> = {
@@ -300,6 +334,81 @@ describe("hot reload", () => {
     await h.settle();
     expect(handle.value).toEqual({ v: 1 });
     expect(h.errors.some((report) => report.source === "asset")).toBe(true);
+    h.dispose();
+  });
+
+  it("reports a failed reload with the address, keeping the previous value", async () => {
+    const h = await createAssetHarness();
+    const handle = h.app.assets.load<{ readonly v: number }>("data/a.json");
+    h.net.expect("assets/data/a.json").respond('{"v":1}');
+    await h.settle();
+    h.assets.reload("data/a.json");
+    h.net.expect("assets/data/a.json").fail();
+    await h.settle();
+    const error = h.errors.find((report) => report.source === "asset")?.error;
+    expect(error).toBeInstanceOf(AssetLoadError);
+    if (!(error instanceof AssetLoadError)) {
+      throw new TypeError("expected an AssetLoadError");
+    }
+    expect(error.code).toBe(CoreErrorCode.assetLoadFailed);
+    expect(error.address).toBe("data/a.json");
+    expect(error.message).toContain("data/a.json");
+    expect(error.context).toMatchObject({ asset: "data/a.json", reload: true, kept: "previous" });
+    expect(error.cause).toBeInstanceOf(Error);
+    expect(handle.value).toEqual({ v: 1 });
+    h.dispose();
+  });
+
+  it("reloads once more for saves that arrive while a reload runs, and delivers only the newest", async () => {
+    const { loader, pending, unloaded } = controllableLoader();
+    const h = await createAssetHarness({ loaders: [loader] });
+    const handle = h.app.assets.load<string>("a.ver");
+    pending[0]?.resolve("v1");
+    await h.settle();
+    const replaced: string[] = [];
+    handle.onReplaced.connect((value) => {
+      replaced.push(value);
+    });
+    h.assets.reload("a.ver");
+    h.assets.reload("a.ver");
+    h.assets.reload("a.ver");
+    expect(pending).toHaveLength(2);
+    pending[1]?.resolve("v2");
+    await h.settle();
+    expect(pending).toHaveLength(3);
+    expect(handle.value).toBe("v1");
+    pending[2]?.resolve("v3");
+    await h.settle();
+    expect(handle.value).toBe("v3");
+    expect(replaced).toEqual(["v3"]);
+    expect(unloaded).toEqual(["v1", "v2"]);
+    h.assets.reload("a.ver");
+    expect(pending).toHaveLength(4);
+    pending[3]?.resolve("v4");
+    await h.settle();
+    expect(handle.value).toBe("v4");
+    h.dispose();
+  });
+
+  it("keeps the version an earlier pass loaded when the queued reload fails", async () => {
+    const { loader, pending } = controllableLoader();
+    const h = await createAssetHarness({ loaders: [loader] });
+    const handle = h.app.assets.load<string>("a.ver");
+    pending[0]?.resolve("v1");
+    await h.settle();
+    h.assets.reload("a.ver");
+    h.assets.reload("a.ver");
+    pending[1]?.resolve("v2");
+    await h.flush();
+    pending[2]?.reject(new Error("half-written file"));
+    await h.settle();
+    expect(handle.value).toBe("v2");
+    const error = h.errors.find((report) => report.source === "asset")?.error;
+    expect(error).toBeInstanceOf(AssetLoadError);
+    expect(error instanceof AssetLoadError ? error.context : null).toMatchObject({
+      asset: "a.ver",
+      kept: "earlier reload",
+    });
     h.dispose();
   });
 
