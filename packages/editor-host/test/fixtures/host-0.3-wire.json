@@ -851,6 +851,34 @@
         "distance": null
       }
     },
+    "pickMissRay": {
+      "jsonrpc": "2.0",
+      "id": 14,
+      "result": {
+        "entity": null,
+        "point": null,
+        "distance": null,
+        "ray": {
+          "origin": [0, 4.95, 9.9],
+          "direction": [0.197204, -0.390463, -0.899249]
+        },
+        "plane": [2.171053, 0.651316, 0]
+      }
+    },
+    "pickMissRay2d": {
+      "jsonrpc": "2.0",
+      "id": 14,
+      "result": {
+        "entity": null,
+        "point": null,
+        "distance": null,
+        "ray": {
+          "origin": [3.5, -1.25, 9.95],
+          "direction": [0, 0, -1]
+        },
+        "plane": [3.5, -1.25, 0]
+      }
+    },
     "screenshot": {
       "jsonrpc": "2.0",
       "id": 16,
@@ -1056,6 +1084,111 @@
                 "description": "The scene's name."
               }
             }
+          }
+        }
+      }
+    },
+    "describeSettings": {
+      "jsonrpc": "2.0",
+      "id": 23,
+      "method": "describeSettings"
+    },
+    "describeSettingsResponse": {
+      "jsonrpc": "2.0",
+      "id": 23,
+      "result": {
+        "sections": {
+          "layers": {
+            "title": "layers",
+            "format": "settings",
+            "fields": {
+              "layers": {
+                "kind": "array",
+                "default": ["Default", "TransparentFX", "IgnoreRaycast", "Water", "UI"],
+                "item": {
+                  "kind": "str",
+                  "default": ""
+                }
+              }
+            },
+            "package": "@ignifx/core",
+            "propsSchema": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "layers": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "default": ["Default", "TransparentFX", "IgnoreRaycast", "Water", "UI"]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "default": ["Default", "TransparentFX", "IgnoreRaycast", "Water", "UI"]
+                }
+              ]
+            }
+          },
+          "time": {
+            "title": "time",
+            "format": "settings",
+            "fields": {
+              "fixedDeltaTime": {
+                "kind": "f64",
+                "min": 2.220446049250313e-16,
+                "default": 0.016666666666666666
+              },
+              "maximumDeltaTime": {
+                "kind": "f64",
+                "min": 2.220446049250313e-16,
+                "default": 0.1
+              },
+              "timeScale": {
+                "kind": "f64",
+                "min": 0,
+                "default": 1
+              }
+            },
+            "package": "@ignifx/core",
+            "propsSchema": {
+              "type": "object",
+              "properties": {
+                "fixedDeltaTime": {
+                  "type": "number",
+                  "minimum": 2.220446049250313e-16,
+                  "default": 0.016666666666666666
+                },
+                "maximumDeltaTime": {
+                  "type": "number",
+                  "minimum": 2.220446049250313e-16,
+                  "default": 0.1
+                },
+                "timeScale": {
+                  "type": "number",
+                  "minimum": 0,
+                  "default": 1
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "values": {
+          "layers": {
+            "layers": ["Default", "Characters"]
+          },
+          "time": {
+            "fixedDeltaTime": 0.016666666666666666,
+            "maximumDeltaTime": 0.1,
+            "timeScale": 1
           }
         }
       }

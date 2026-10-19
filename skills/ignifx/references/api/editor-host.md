@@ -992,6 +992,26 @@ The point's y, from the view's top edge, in `unit`.
 
 ***
 
+### PickRay
+
+A world-space ray from the view's camera through a point of the view.
+
+#### Properties
+
+##### direction
+
+> `readonly` **direction**: [`Vec3`](#vec3)
+
+Which way it points: a unit vector.
+
+##### origin
+
+> `readonly` **origin**: [`Vec3`](#vec3)
+
+Where the ray starts, in metres: the point under the cursor on the camera's near plane.
+
+***
+
 ### PickResult
 
 The answer to `pick`.
@@ -1010,11 +1030,28 @@ How far along the camera ray the hit is, in metres, or `null` for a miss or a 2D
 
 The scene entity hit, or `null` for a miss. A hit inside an instanced scene names its instance root.
 
+##### plane?
+
+> `readonly` `optional` **plane?**: [`Vec3`](#vec3)
+
+Where `ray` meets the 2D world plane `z = 0`, as `[x, y, 0]`: in a 2D scene, the world point
+under the cursor. Absent when `ray` is, and when the ray runs parallel to the plane or meets it
+behind its origin.
+
 ##### point
 
 > `readonly` **point**: [`Vec3`](#vec3) \| `null`
 
 The world-space hit point, or `null` for a miss or when the picker does not report one.
+
+##### ray?
+
+> `readonly` `optional` **ray?**: [`PickRay`](#pickray)
+
+The ray the view's camera casts through the point, hit or miss, so that an editor can place
+something where nothing was hit (a 3D editor intersects it with its ground plane, `y = 0`).
+Absent when the host builds no ray (a headless view, a point outside the canvas) and from a host
+from before it.
 
 ***
 
@@ -1894,6 +1931,14 @@ One component schema: the engine's `SchemaDescription`, plus the JSON Schema of 
 
 #### Properties
 
+##### allowMultiple?
+
+> `readonly` `optional` **allowMultiple?**: `boolean`
+
+Whether an entity may hold more than one of the component (the class's `static allowMultiple`,
+`true` when it declares nothing); absent on file-format entries and from a host from before
+core's `describeRegisteredSchemas`, where an editor assumes `true`.
+
 ##### builtIn?
 
 > `readonly` `optional` **builtIn?**: `boolean`
@@ -1922,6 +1967,15 @@ Every declared field, in declaration order.
 
 `"components"` for a component; a file format's name for the engine's file-format entries.
 
+##### package?
+
+> `readonly` `optional` **package?**: `string`
+
+Who registered the component: the extension's `name` (the npm package name, for example
+`@ignifx/3d`), or, for a class the game registered itself, its type id's namespace (`game` for
+`game/Health`); absent on file-format entries and from a host from before
+`describeRegisteredSchemas`.
+
 ##### propsSchema?
 
 > `readonly` `optional` **propsSchema?**: [`JsonObject`](#jsonobject)
@@ -1943,6 +1997,21 @@ One field of a component schema: the engine's `SchemaFieldDescription`.
 
 #### Properties
 
+##### assetType?
+
+> `readonly` `optional` **assetType?**: `string`
+
+An `asset` field's asset type name (`asset(TextureAsset)` → `"texture"`), the `type` an asset
+reference to it carries; absent when the asset token names no type.
+
+##### componentType?
+
+> `readonly` `optional` **componentType?**: `string` \| `null`
+
+A `componentRef` field's accepted component, as its `typeId`, or `null` when the class it was
+declared with carries no `typeId`; present on every `componentRef` field a 0.3 host describes
+with core's `describeRegisteredSchemas`.
+
 ##### default?
 
 > `readonly` `optional` **default?**: [`JsonValue`](#jsonvalue)
@@ -1955,11 +2024,29 @@ The field's default value, encoded as JSON.
 
 The field's tooltip.
 
+##### group?
+
+> `readonly` `optional` **group?**: `string`
+
+`FieldOptions.group`: the inspector group the field folds into.
+
+##### hidden?
+
+> `readonly` `optional` **hidden?**: `boolean`
+
+`FieldOptions.hidden`: the inspector leaves the field out; it is still saved.
+
 ##### kind
 
 > `readonly` **kind**: `string`
 
 The field kind, for example `"f32"` or `"asset"`; an editor shows a kind it does not know as JSON.
+
+##### readonly?
+
+> `readonly` `optional` **readonly?**: `boolean`
+
+`FieldOptions.readonly`: the inspector shows the field but does not let it be edited.
 
 ##### step?
 
@@ -2162,6 +2249,33 @@ The new value; absent removes the key.
 
 ***
 
+### SettingsSet
+
+The project's settings as the host's app has them: the answer to `describeSettings`.
+
+#### Properties
+
+##### sections
+
+> `readonly` **sections**: `Readonly`\<`Record`\<`string`, [`SchemaDescription`](#schemadescription)\>\>
+
+Every settings section the app registered (core's and each extension's), keyed by section name,
+in registration order: the engine's `describeSettings(app)`. Each has `format: "settings"`, the
+registering extension as `package`, field defaults in the settings form (a vector is
+`{ x, y, z }` and a colour `{ r, g, b, a }`, not the scene file's arrays), and as `propsSchema`
+the JSON Schema of the section as `ignifx.settings.json` may write it (its entry in the engine's
+`settingsJsonSchema(app)`).
+
+##### values
+
+> `readonly` **values**: `Readonly`\<`Record`\<`string`, [`JsonObject`](#jsonobject)\>\>
+
+The values the app resolved for each section, keyed by section name, in the same settings form:
+the project's settings over the section's defaults. A value JSON cannot carry (a function, a
+non-finite number) is left out.
+
+***
+
 ### SetTransformOp
 
 Sets an entity's local transform. `before` is informational and ignored when applying.
@@ -2294,6 +2408,14 @@ The union of the codes in `ApplyOpFailureCode`.
 > **ApplyOpsResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<[`ApplyOpsResult`](#applyopsresult)\>
 
 The success answer to `applyOps`.
+
+***
+
+### DescribeSettingsResponse
+
+> **DescribeSettingsResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<[`SettingsSet`](#settingsset)\>
+
+The success answer to `describeSettings`.
 
 ***
 
@@ -2603,9 +2725,10 @@ The union of the names in `SceneOpKind`.
 
 ### SceneRequest
 
-> **SceneRequest** = [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`openScene`](#openscene), [`OpenSceneParams`](#opensceneparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`closeScene`](#closescene), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`applyOps`](#applyops), [`ApplyOpsParams`](#applyopsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`readBack`](#readback), [`ReadBackParams`](#readbackparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`select`](#select), [`EntitySelection`](#entityselection)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setGizmo`](#setgizmo), [`SetGizmoParams`](#setgizmoparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`frame`](#frame), [`FrameParams`](#frameparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`pick`](#pick), [`PickParams`](#pickparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`screenshot`](#screenshot-1), [`ScreenshotParams`](#screenshotparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`getSchemas`](#getschemas), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setViewMode`](#setviewmode), [`SetViewModeParams`](#setviewmodeparams)\>
+> **SceneRequest** = [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`openScene`](#openscene), [`OpenSceneParams`](#opensceneparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`closeScene`](#closescene), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`applyOps`](#applyops), [`ApplyOpsParams`](#applyopsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`readBack`](#readback), [`ReadBackParams`](#readbackparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`select`](#select), [`EntitySelection`](#entityselection)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setGizmo`](#setgizmo), [`SetGizmoParams`](#setgizmoparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`frame`](#frame), [`FrameParams`](#frameparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`pick`](#pick), [`PickParams`](#pickparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`screenshot`](#screenshot-1), [`ScreenshotParams`](#screenshotparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`getSchemas`](#getschemas), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`describeSettings`](#describesettings), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setViewMode`](#setviewmode), [`SetViewModeParams`](#setviewmodeparams)\>
 
-Editor → scene host: one of the `SceneMethod`s. `closeScene` and `getSchemas` take no parameters.
+Editor → scene host: one of the `SceneMethod`s. `closeScene`, `getSchemas` and `describeSettings`
+take no parameters.
 
 ***
 
@@ -3152,6 +3275,13 @@ Applies one command's ops to the open scene, in order. Answers [ApplyOpsResult](
 > `readonly` **closeScene**: `"closeScene"` = `"closeScene"`
 
 Unloads the open scene, if any. Answers `null`.
+
+##### describeSettings
+
+> `readonly` **describeSettings**: `"describeSettings"` = `"describeSettings"`
+
+Describes the project's settings sections and the values the app resolved for them. Answers
+[SettingsSet](#settingsset). A host from before it answers `RpcErrorCode.methodNotFound`.
 
 ##### frame
 
@@ -3823,7 +3953,8 @@ The received `result`.
 
 `value is PickResult`
 
-True for a uid or `null`, a point or `null`, and a non-negative distance or `null`.
+True for a uid or `null`, a point or `null`, a non-negative distance or `null`, an
+optional ray and an optional plane point.
 
 ***
 
@@ -4282,6 +4413,29 @@ The received `params`.
 `value is SetGizmoParams`
 
 True for a known mode and space and a snap of three non-negative numbers, or `null`.
+
+***
+
+### isSettingsSet()
+
+> **isSettingsSet**(`value`): `value is SettingsSet`
+
+Checks the result of `describeSettings`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `result`.
+
+#### Returns
+
+`value is SettingsSet`
+
+True for `{ sections, values }`: every section a schema description, every value an
+object.
 
 ***
 
