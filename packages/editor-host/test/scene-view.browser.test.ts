@@ -65,15 +65,37 @@ const SCENE: SceneFile = {
   ],
 };
 
+/** A glTF model, lit, at the origin: only its root node is tagged with its entity. */
+const MODEL_SCENE: SceneFile = {
+  format: "ignifx.scene",
+  formatVersion: 1,
+  name: "model",
+  entities: [
+    ...SCENE.entities.filter((entity) => entity.uid === "SUN"),
+    {
+      uid: "CRATE",
+      name: "Crate",
+      parent: null,
+      transform: { position: [0, 0, 0], rotation: [0, 0, 0, 1], scale: [1, 1, 1] },
+      components: [{ uid: "CRATE-M", type: "ignifx/Model", props: { model: { $asset: "models/Box.glb" } } }],
+    },
+  ],
+};
+
 /**
- * Serves {@link FILES}.
+ * Serves {@link FILES}, and the repository's `Box.glb` fixture.
  *
  * @param input - The request.
  * @returns The file, or a 404.
  */
 const fetchFiles: FetchLike = async (input: RequestInfo | URL): Promise<Response> => {
   const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
-  const body = FILES[url.replace(/^.*?assets\//u, "").replace(/^\//u, "")];
+  const address = url.replace(/^.*?assets\//u, "").replace(/^\//u, "");
+  if (address === "models/Box.glb") {
+    // Vitest's browser project serves the repository root.
+    return fetch("/tests/fixtures/assets/Box.glb");
+  }
+  const body = FILES[address];
   return Promise.resolve(body === undefined ? new Response(null, { status: 404 }) : new Response(body));
 };
 
@@ -89,6 +111,8 @@ let peer: EditorPeer | null = null;
 let canvas: HTMLCanvasElement | null = null;
 
 afterEach(() => {
+  // The ratio override is an own property shadowing `Window.prototype`'s getter.
+  Reflect.deleteProperty(globalThis, "devicePixelRatio");
   peer?.close();
   host?.dispose();
   canvas?.remove();
@@ -171,11 +195,13 @@ async function call(method: string, params?: unknown): Promise<unknown> {
 }
 
 /**
- * Starts a host on a canvas, opens the box scene, and frames it.
+ * Starts a host on a canvas, opens a scene, and frames an entity.
  *
+ * @param scene - The scene to open.
+ * @param framed - The uid to frame.
  * @returns The running host.
  */
-async function sceneView(): Promise<EditorHost> {
+async function sceneView(scene: SceneFile = SCENE, framed = "BOX"): Promise<EditorHost> {
   canvas = document.createElement("canvas");
   canvas.width = WIDTH;
   canvas.height = HEIGHT;
@@ -202,8 +228,8 @@ async function sceneView(): Promise<EditorHost> {
   ]);
   host = await starting;
   announced = (await peer.nextNotification(SceneNotification.schemasChanged))["params"];
-  await call("openScene", { file: SCENE, address: "scenes/box.scene.json" });
-  await call("frame", { entities: ["BOX"] });
+  await call("openScene", { file: scene, address: `scenes/${scene.name}.scene.json` });
+  await call("frame", { entities: [framed] });
   await frames(6);
   return host;
 }
@@ -270,6 +296,28 @@ describe("the scene view on a WebGPU canvas", () => {
     });
     expect(announced).toHaveProperty(["schemas", "ignifx/MeshRenderer", "package"], "@ignifx/core");
     expect(announced).toHaveProperty(["schemas", "ignifx/Transform", "builtIn"], true);
+  }, 60_000);
+
+  it("picks a glTF model through the renderer alone, in both units at device pixel ratio 2", async () => {
+    Object.defineProperty(globalThis, "devicePixelRatio", { configurable: true, value: 2 });
+    const view = await sceneView(MODEL_SCENE, "CRATE");
+    // The model loads after `openScene`; wait for it to reach the screen.
+    await frames(20);
+    expect(canvas?.width).toBe(WIDTH * 2);
+    const camera = view.app.world.mainCamera;
+    const screen = new Vec3();
+    expect(camera?.worldToScreen({ x: 0, y: 0, z: 0 }, screen)).toBe(true);
+
+    const backing = await call("pick", { x: screen.x, y: screen.y, unit: "backing" });
+    expect(backing).toMatchObject({ entity: "CRATE" });
+    expect(Reflect.get(Object(backing), "distance")).toBeGreaterThan(0);
+    expect(await call("pick", { x: screen.x / 2, y: screen.y / 2, unit: "css" })).toMatchObject({ entity: "CRATE" });
+    // A CSS point past the CSS width is inside the backing store's width, but outside the canvas.
+    expect(await call("pick", { x: WIDTH + 1, y: screen.y / 2, unit: "css" })).toEqual({
+      entity: null,
+      point: null,
+      distance: null,
+    });
   }, 60_000);
 
   it("captures the view as a PNG or JPEG data URL at the requested size", async () => {

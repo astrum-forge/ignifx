@@ -19,6 +19,7 @@ import {
   isScreenshotParams,
   isSetGizmoParams,
   isSetViewModeParams,
+  PickUnit,
   RpcErrorCode,
   SCREENSHOT_MAX_SIZE,
   SceneMethod,
@@ -36,7 +37,7 @@ import {
   readLocalTransform,
   sameTransform,
   screenshotSize,
-  toCssPixels,
+  toBackingPixels,
   viewSurfaceOf,
 } from "./view-math.js";
 import type { RequestHandler } from "../channel.js";
@@ -48,6 +49,7 @@ import type {
   HostErrorParams,
   HotReloadedParams,
   LogParams,
+  PickParams,
   PickResult,
   SceneFileTransform,
   SchemaSet,
@@ -427,9 +429,7 @@ export class SceneHost {
     if (!isPickParams(params)) {
       throw new InvalidParamsError('pick takes { x, y, unit: "css" | "backing" }.');
     }
-    const canvas = this.#canvas;
-    const point = canvas === null ? null : toCssPixels(params, viewSurfaceOf(canvas));
-    return point === null ? { entity: null, point: null, distance: null } : this.#pickCss(point.x, point.y);
+    return this.#pickAt(params);
   }
 
   /**
@@ -535,39 +535,31 @@ export class SceneHost {
   }
 
   /**
-   * Picks at a CSS pixel: the renderer's pick first, then Lite's pick through the picked mesh's
-   * ancestors, which also finds glTF models (S0.2 §6.1); the hit resolves to its document entity.
+   * Picks the document's scene at a point of the view with `app.renderer.pickAsync`, which resolves
+   * a glTF model through its nearest entity node; the hit resolves to its document entity.
    *
-   * @param x - The CSS pixel x.
-   * @param y - The CSS pixel y.
-   * @returns The pick result.
+   * @param params - The point and its unit; it is converted to backing-store pixels once.
+   * @returns The pick result; a point outside the canvas, or a headless view, misses.
    */
-  async #pickCss(x: number, y: number): Promise<PickResult> {
+  async #pickAt(params: PickParams): Promise<PickResult> {
     const app = this.#requireApp();
-    const mirror = this.#mirror;
-    const scene = mirror?.scene ?? null;
-    if (mirror === null || scene === null) {
+    const scene = this.#mirror?.scene ?? null;
+    const canvas = this.#canvas;
+    const at = canvas === null ? null : toBackingPixels(params, viewSurfaceOf(canvas));
+    if (scene === null || at === null) {
       return { entity: null, point: null, distance: null };
     }
-    const hit = await app.renderer.pickAsync(x, y, { filter: (entity) => entity.scene === scene });
-    let entity = mirror.documentEntityOf(hit?.entity ?? null);
-    let point = hit?.point ?? null;
-    let distance = hit?.distance ?? null;
-    if (entity === null && this.#view !== null) {
-      const owners = nodeOwners(scene);
-      const raw = await this.#view.pick(x, y, (node) => owners.get(node) ?? null);
-      entity = mirror.documentEntityOf(raw?.entity ?? null);
-      point = raw?.point ?? null;
-      distance = raw?.distance ?? null;
-    }
-    if (entity === null) {
+    const hit = await app.renderer.pickAsync(at.x, at.y, { filter: (entity) => entity.scene === scene });
+    const entity = this.#mirror?.documentEntityOf(hit?.entity ?? null) ?? null;
+    if (hit === null || entity === null) {
       return { entity: null, point: null, distance: null };
     }
     const c = canonicalizeNumber;
+    const point = hit.point;
     return {
       entity: entity.uid,
       point: point === null ? null : [c(point[0]), c(point[1]), c(point[2])],
-      distance: distance === null ? null : c(distance),
+      distance: c(hit.distance),
     };
   }
 
@@ -578,7 +570,7 @@ export class SceneHost {
    * @param click - Where, and whether it toggles.
    */
   async #onClick(click: ViewClick): Promise<void> {
-    const { entity } = await this.#pickCss(click.x, click.y);
+    const { entity } = await this.#pickAt({ x: click.x, y: click.y, unit: PickUnit.css });
     const current = this.#selection;
     let next: readonly string[];
     if (click.toggle) {
@@ -757,20 +749,4 @@ export class SceneHost {
  */
 function isDomCanvas(surface: RenderSurface): surface is HTMLCanvasElement {
   return typeof HTMLCanvasElement !== "undefined" && surface instanceof HTMLCanvasElement;
-}
-
-/**
- * Maps every entity node of a scene instance to its entity, by identity.
- *
- * @param scene - The instance.
- * @returns Node to entity.
- */
-function nodeOwners(scene: SceneInstance): Map<object, Entity> {
-  const owners = new Map<object, Entity>();
-  const pending: Entity[] = [...scene.roots];
-  for (let entity = pending.pop(); entity !== undefined; entity = pending.pop()) {
-    owners.set(entity.transform.lite, entity);
-    pending.push(...entity.children);
-  }
-  return owners;
 }

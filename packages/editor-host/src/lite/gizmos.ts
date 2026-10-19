@@ -1,6 +1,6 @@
 /**
  * The scene view's overlay: Babylon Lite's position, rotation and scale gizmos and the selection
- * outline, in core's render overlay over the app's frame, plus a pick that resolves glTF models.
+ * outline, in core's render overlay over the app's frame. Picking is `app.renderer.pickAsync`'s.
  *
  * This is the only module of the editor host that imports Lite (`CONSTITUTION.md` §3.4). The rest
  * of the host reaches it through {@link createEditorView}, which takes and returns ignifx objects
@@ -14,7 +14,6 @@ import {
   attachPositionGizmoToNode,
   attachRotationGizmoToNode,
   attachScaleGizmoToNode,
-  createGpuPicker,
   createLines,
   createPositionGizmo,
   createRotationGizmo,
@@ -23,12 +22,11 @@ import {
   isGizmoInteracting,
   isGizmoPickPending,
   onBeforeRender,
-  pickAsync,
   setPositionGizmoLocalCoordinates,
   setRotationGizmoLocalCoordinates,
   setScaleGizmoLocalCoordinates,
 } from "@babylonjs/lite";
-import type { GpuPicker, Mesh, PointerDrag, SceneContext, SceneNode, Vec3 } from "@babylonjs/lite";
+import type { Mesh, PointerDrag, SceneContext, SceneNode, Vec3 } from "@babylonjs/lite";
 import type { AppLiteHandles, Entity, RenderOverlay } from "@ignifx/core";
 
 /** What a gizmo drag does. */
@@ -61,16 +59,6 @@ export interface WorldBounds {
   readonly min: { readonly x: number; readonly y: number; readonly z: number };
   /** The high corner. */
   readonly max: { readonly x: number; readonly y: number; readonly z: number };
-}
-
-/** What a raw pick hit. */
-export interface ViewPick {
-  /** The entity that owns the nearest tagged ancestor of the picked mesh. */
-  readonly entity: Entity;
-  /** The world-space hit point, when Lite reports one. */
-  readonly point: readonly [number, number, number] | null;
-  /** How far along the ray the hit is, in metres. */
-  readonly distance: number;
 }
 
 /** The overlay of one scene view. */
@@ -124,15 +112,6 @@ export interface EditorView {
    * @returns The box, or `null` when nothing under it is drawn.
    */
   worldBounds(entity: Entity): WorldBounds | null;
-  /**
-   * Picks the render scene at a CSS pixel and resolves the hit through the picked mesh's ancestors.
-   *
-   * @param x - The CSS pixel x, from the canvas's left edge.
-   * @param y - The CSS pixel y, from the canvas's top edge.
-   * @param owner - Maps a Lite node (by identity, an entity's `transform.lite`) to its entity, or `null`.
-   * @returns The hit, or `null` for a miss.
-   */
-  pick(x: number, y: number, owner: (node: object) => Entity | null): Promise<ViewPick | null>;
   /** Disposes the overlay and everything in it. */
   dispose(): void;
 }
@@ -195,7 +174,6 @@ export function createEditorView(
   let mode: ViewGizmoMode | null = "translate";
   let target: SceneNode | null = null;
   let visible = true;
-  let picker: GpuPicker | null = null;
 
   const wire = (drag: PointerDrag, info: ViewDrag): void => {
     const emit = (phase: "start" | "move" | "end"): void => {
@@ -325,19 +303,6 @@ export function createEditorView(
     },
     worldBounds(entity: Entity): WorldBounds | null {
       return computeWorldBounds(entity.transform.lite, scene);
-    },
-    async pick(x: number, y: number, owner: (node: object) => Entity | null): Promise<ViewPick | null> {
-      picker ??= createGpuPicker(scene);
-      const info = await pickAsync(picker, x, y);
-      // A glTF model tags only its cloned root, so the picked mesh is walked up to the nearest node
-      // an entity owns (S0.2 §6.1; engine ask E3).
-      for (let node: object | null = info.hit ? info.pickedMesh : null; node !== null; node = parentNode(node)) {
-        const entity = owner(node);
-        if (entity !== null) {
-          return { entity, point: info.pickedPoint, distance: info.distance };
-        }
-      }
-      return null;
     },
     dispose(): void {
       listeners.length = 0;

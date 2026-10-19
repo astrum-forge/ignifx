@@ -48,20 +48,21 @@ export function viewSurfaceOf(surface: HTMLCanvasElement | OffscreenCanvas): Vie
 }
 
 /**
- * Converts a `pick` point to the CSS pixels `app.renderer.pickAsync` and Lite's picker consume
- * (protocol 0.3, "The pick unit rule"; S0.2 §6.1).
+ * Converts a `pick` point to the backing-store pixels `app.renderer.pickAsync` takes (protocol 0.3,
+ * "The pick unit rule"; engine ask E3). This is the host's one conversion: the renderer converts
+ * on to the CSS pixels Lite's picker wants.
  *
  * @param params - The point and its unit.
  * @param surface - The canvas's sizes.
- * @returns The point in CSS pixels, or `null` when it is outside the canvas (a miss).
+ * @returns The point in backing-store pixels, or `null` when it is outside the canvas (a miss).
  */
-export function toCssPixels(
+export function toBackingPixels(
   params: PickParams,
   surface: ViewSurface,
 ): { readonly x: number; readonly y: number } | null {
-  const x = params.unit === PickUnit.css ? params.x : (params.x * surface.clientWidth) / surface.width;
-  const y = params.unit === PickUnit.css ? params.y : (params.y * surface.clientHeight) / surface.height;
-  if (x < 0 || y < 0 || x >= surface.clientWidth || y >= surface.clientHeight) {
+  const x = params.unit === PickUnit.backing ? params.x : (params.x * surface.width) / surface.clientWidth;
+  const y = params.unit === PickUnit.backing ? params.y : (params.y * surface.height) / surface.clientHeight;
+  if (x < 0 || y < 0 || x >= surface.width || y >= surface.height) {
     return null;
   }
   return { x, y };
