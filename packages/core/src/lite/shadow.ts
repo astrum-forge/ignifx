@@ -292,19 +292,55 @@ export async function rebuildRenderables(scene: SceneContext, resets?: MaterialC
   const release = holdGpuRetirements(scene.surface.engine);
   try {
     if (resets === undefined) {
-      await rebuildSceneRenderables(scene);
+      await rebuildAcrossMaterialSwaps(scene);
       return;
     }
     trackMaterialCacheResets(scene, resets);
     takeUnconfirmed(resets);
-    await rebuildSceneRenderables(scene);
+    await rebuildAcrossMaterialSwaps(scene);
     if (takeUnconfirmed(resets)) {
       // A family was built for the first time just now: build once more so it pushes its reset again.
       // Whatever this one sees for the first time stays flagged for the render sync system.
-      await rebuildSceneRenderables(scene);
+      await rebuildAcrossMaterialSwaps(scene);
     }
   } finally {
     release();
+  }
+}
+
+/** How many times {@link rebuildAcrossMaterialSwaps} starts over after a swap broke a rebuild. */
+const MAX_SWAP_RETRIES = 2;
+
+/**
+ * Runs `rebuildSceneRenderables`, and runs it again when a material swap landed during it and made
+ * it throw.
+ *
+ * @remarks
+ * A group builder awaits its shader modules (`import()`) before it reads each mesh's material, and
+ * on a loaded machine that await spans frames. A mesh given a material of another family meanwhile
+ * reaches the old family's builder: the Standard one reads `diffuseColor[0]` off a PBR material and
+ * throws `Cannot read properties of undefined (reading '0')` (`buildStandardMeshRenderables`,
+ * `writeStdMaterialData`, `lib/material/standard/standard-pipeline.js` 278). Lite expects swaps to
+ * land mid-build — it puts the group's old renderables back on a throw, and a rebuild that does not
+ * throw re-sorts the groups and goes round again (`membershipDrifted`, `lib/scene/scene-rebuild.js`)
+ * — but it rethrows, so the rest of the rebuild is skipped. Starting over sorts the groups from the
+ * current materials. A throw with every material unchanged is not this race, and is rethrown.
+ *
+ * @param scene - The scene to rebuild.
+ * @param retries - How many more times to start over.
+ * @returns A promise that resolves when a rebuild has finished.
+ */
+async function rebuildAcrossMaterialSwaps(scene: SceneContext, retries = MAX_SWAP_RETRIES): Promise<void> {
+  const meshes = scene.meshes;
+  const materials = meshes.map((mesh) => mesh.material);
+  try {
+    await rebuildSceneRenderables(scene);
+  } catch (error: unknown) {
+    const swapped = scene.meshes !== meshes || meshes.some((mesh, index) => mesh.material !== materials[index]);
+    if (!swapped || retries <= 0) {
+      throw error;
+    }
+    await rebuildAcrossMaterialSwaps(scene, retries - 1);
   }
 }
 

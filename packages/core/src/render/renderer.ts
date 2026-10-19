@@ -479,6 +479,12 @@ export class RendererImpl implements Renderer {
   needsShadowLayoutReset = false;
 
   /**
+   * `true` from the moment the render sync system queues a renderable rebuild until the last one it
+   * owes has finished. A light waits for it to be `false` before it gains or loses a shadow generator.
+   */
+  isRebuildInFlight = false;
+
+  /**
    * The PBR deformation kinds (`PBR_DEFORMER` bits) a full renderable build has already composed on
    * this engine. A kind missing from it gets fresh layouts on its first rebuild (`../lite/pbr-deformers.ts`).
    */

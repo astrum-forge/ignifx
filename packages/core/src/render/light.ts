@@ -394,6 +394,13 @@ export class Light extends Component implements ComponentHooks {
       this.#warnAboutShadows(renderer);
       return false;
     }
+    if (renderer.isRebuildInFlight) {
+      // A rebuild in flight reads every light's generator group by group, and Lite's cached layouts
+      // are keyed without the number of shadow maps: a generator attached between two groups gets a
+      // bind group for one more map than the layout it is checked against, and WebGPU rejects it.
+      // The change lands on the first frame after the rebuild, which then rebuilds with fresh layouts.
+      return false;
+    }
     this.#appliedShadows = wanted;
     if (!wanted) {
       this.#releaseGenerator(renderer);
