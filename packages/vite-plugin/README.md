@@ -95,11 +95,23 @@ address so that two builds of the same tree produce the same bytes:
 ### Sidecars
 
 A file named `<asset>.meta.json` next to an asset carries its group membership and per-loader import
-options. `groups` becomes the entry's `groups`; everything else is passed through as `meta`.
+options. `groups` becomes the entry's `groups`; everything else is passed through as `meta`, except
+the keys below.
 
 ```json
 { "groups": ["boot", "level1"], "texture": { "srgb": true, "mipmaps": true } }
 ```
+
+| Key                                                | Meaning                                                                                                                                                                                       |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `groups`                                           | An array of strings; the entry's `groups`.                                                                                                                                                    |
+| `publish`                                          | `false` leaves the asset out: no manifest entry in dev or in a build, no copy in `dist/`, no validation. `true` or no key publishes it. Anything else is `IGX-0551`. It never reaches `meta`. |
+| `guid`, `importer`, `source`, `outputs`, `options` | Owned by the ignifx editor (`EDITOR_SIDECAR_KEYS`). They describe how the asset was imported, so they never reach `meta`; `scanAssetRoot` still reports them.                                 |
+| anything else                                      | Passed through to `meta` unchanged, at every depth, for the loader that reads it (`texture`, `audio`, …).                                                                                     |
+
+An unpublished asset is typically an editor source whose imported output ships instead, such as a
+4K `.png` beside the `.ktx2` made from it. In `vite dev` the file is still on disk, so a fetch by
+path still works; only the manifest leaves it out.
 
 Sidecars are never listed as assets of their own. Dot-prefixed files and directories are skipped.
 

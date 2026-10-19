@@ -323,7 +323,8 @@ The truncated lowercase hex sha256 of the file's contents.
 
 > `readonly` `optional` **meta?**: [`JsonObject`](#jsonobject)
 
-The rest of the sidecar, passed through untouched for the loader that understands it.
+The rest of the sidecar, passed through untouched for the loader that understands it, minus
+`publish` and the [EDITOR\_SIDECAR\_KEYS](#editor_sidecar_keys).
 
 ##### type
 
@@ -680,7 +681,15 @@ The truncated lowercase hex sha256 of the file's contents.
 
 > `readonly` **meta**: [`JsonObject`](#jsonobject) \| `null`
 
-The sidecar minus its `groups` key, or `null` when there is no sidecar or nothing is left.
+The sidecar minus its `groups` and `publish` keys, or `null` when there is no sidecar or nothing
+is left. Editor-owned keys are still here; [buildManifest](#buildmanifest) drops them.
+
+##### publish?
+
+> `readonly` `optional` **publish?**: `boolean`
+
+`false` when the sidecar says `"publish": false`: the asset stays out of the manifest and the
+build. Absent or `true` means the asset is published.
 
 ##### type
 
@@ -1146,6 +1155,15 @@ The default glob the script registry is built from, relative to the Vite root.
 
 ***
 
+### EDITOR\_SIDECAR\_KEYS
+
+> `const` **EDITOR\_SIDECAR\_KEYS**: readonly `string`[]
+
+Sidecar keys the ignifx editor owns. They describe how an asset was imported, not how it loads,
+so [buildManifest](#buildmanifest) leaves them out of an entry's `meta`; a loader never sees them.
+
+***
+
 ### EXTENSION\_KEYWORD
 
 > `const` **EXTENSION\_KEYWORD**: `"ignifx-extension"` = `"ignifx-extension"`
@@ -1316,7 +1334,8 @@ A plugin option is outside its documented domain.
 
 > `readonly` **invalidSidecar**: `"IGX-0551"` = `"IGX-0551"`
 
-A `.meta.json` sidecar could not be parsed, or its `groups` field is not an array of strings.
+A `.meta.json` sidecar could not be parsed, its `groups` field is not an array of strings, or its
+`publish` field is not a boolean.
 
 ##### malformedJson
 
@@ -1485,6 +1504,11 @@ Maps an asset to the URL the runtime fetches it from.
 [`AssetManifest`](#assetmanifest)
 
 The manifest, ready to be serialized.
+
+#### Remarks
+
+An asset with `publish: false` gets no entry, and an entry's `meta` leaves out the
+[EDITOR\_SIDECAR\_KEYS](#editor_sidecar_keys).
 
 #### Example
 
@@ -1698,7 +1722,8 @@ What it does, in the order the hooks run:
 - `config` resolves `ignifx.config.ts` and injects it as `import.meta.env.IGNIFX_CONFIG`
   (`docs/architecture/04-extensions.md` §5).
 - `buildStart` scans the asset root, hashes every file, reads `.meta.json` sidecars, and
-  validates every format-headed JSON file. A validation failure fails the build.
+  validates every format-headed JSON file. A validation failure fails the build. An asset whose
+  sidecar says `"publish": false` is left out of everything that follows.
 - `virtual:ignifx/manifest` and `virtual:ignifx/scripts` are served from `resolveId`/`load`.
 - In development the manifest is also served from `/<manifestFileName>`, the asset root is
   watched, and every change is announced on the `ignifx:asset-changed` HMR channel; editing the
@@ -2092,7 +2117,8 @@ Every asset found, sorted by address.
 #### Remarks
 
 Dot-prefixed files and directories are skipped, and so are `*.meta.json` sidecars — they are read
-for the asset they belong to instead of listed as assets of their own.
+for the asset they belong to instead of listed as assets of their own. An asset whose sidecar
+says `"publish": false` is still listed, with `publish: false`; [buildManifest](#buildmanifest) drops it.
 
 #### Throws
 

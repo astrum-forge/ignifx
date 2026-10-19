@@ -22,6 +22,9 @@ address ──▶ manifest ──▶ url ──▶ loader ──▶ value
   `"level1"`, …). `@ignifx/vite-plugin` generates it (`ASSET_MANIFEST_FORMAT`, version 1);
   `EMPTY_ASSET_MANIFEST` is what an app without one uses. `assets.resolveUrl(address)` is the
   lookup, and it is what a loader fetches.
+- A `.meta.json` sidecar with `"publish": false` keeps its asset out of the manifest and the build
+  (an editor source whose imported output ships instead). The editor's own sidecar keys (`guid`,
+  `importer`, `source`, `outputs`, `options`) never reach a loader's `meta`; every other key does.
 - An extension's **public assets** — `@ignifx/physics`'s `HavokPhysics.wasm` — are listed too, at
   their bare file name, with the served URL and `base` already applied. That is what makes
   `resolveUrl("HavokPhysics.wasm")` correct on a page served from a sub-path; an address the manifest
