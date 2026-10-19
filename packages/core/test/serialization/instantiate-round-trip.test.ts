@@ -8,6 +8,7 @@ import { createAssetHarness } from "../assets/support/harness.js";
 import { Everything, Tagger, buildFile, entityRecord } from "./fixtures.js";
 import type { Entity } from "../../src/entity/entity.js";
 import type { SceneInstance } from "../../src/scene/scene-instance.js";
+import type { SceneAsset } from "../../src/serialization/scene-asset.js";
 import type { SceneFile } from "../../src/serialization/scene-file.js";
 import type { AssetHarness } from "../assets/support/harness.js";
 
@@ -316,7 +317,7 @@ describe("asset references inside an instanced prefab", () => {
   it("still writes an override when the reference names another address", async () => {
     const first = await sceneApp({ [CRATE]: crateFile, [PAIR]: pairFile, [SPAWNER]: spawnerFile({ $asset: CRATE }) });
     const spawner = await first.settleUntil(first.app.world.instantiateAsync(SPAWNER));
-    const pair = await first.settleUntil(first.app.assets.loadAsync(PAIR));
+    const pair = await first.settleUntil(first.app.assets.loadAsync<SceneAsset>(PAIR));
     const component = spawner.getComponent(Spawner);
     if (component !== null) {
       component.prefab = pair;

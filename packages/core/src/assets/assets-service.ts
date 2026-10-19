@@ -1014,9 +1014,6 @@ export class AssetsImpl implements Assets, AssetHandleHost, LoaderContextHost {
           current = value;
           isReplaced = true;
         } catch (error) {
-          if (this.#isDisposed) {
-            return;
-          }
           this.#report(this.#reloadError(handle, error, isReplaced));
         }
       } while (handle.isReloadQueued && handle.state === "loaded");
