@@ -81,6 +81,62 @@ export function loadTexture(engine: EngineContext, url: string, options?: Textur
 }
 
 /**
+ * Loads a KTX2 (Basis Universal) texture from a URL, transcoded to the device's best compressed
+ * format.
+ *
+ * @remarks
+ * Lite's KTX2 glue is imported on first use (`./decoders.ts`), so a game that never loads a `.ktx2`
+ * does not carry it. The decoder script and its transcoders load from wherever
+ * `applyLiteDecoderUrls` last pointed Lite, or from `cdn.babylonjs.com` when nothing did. Sampler and
+ * sRGB options apply; `mipMaps`, `invertY` and `premultiplyAlpha` do not — the file's rows and mips
+ * are uploaded as stored (`./decoders.ts` explains the orientation).
+ *
+ * @param engine - The engine that owns the GPU texture.
+ * @param url - Where to fetch it from.
+ * @param options - Colour space and sampler.
+ * @returns The texture. Its reference count starts at an implicit one.
+ *
+ * @example
+ * ```ts
+ * const albedo = await loadKtx2Texture(engine, "textures/hero-albedo.ktx2", { srgb: true });
+ * ```
+ *
+ * @internal
+ */
+export async function loadKtx2Texture(
+  engine: EngineContext,
+  url: string,
+  options: Texture2DOptions = {},
+): Promise<Texture2D> {
+  const decoders = await import("./decoders.js");
+  return decoders.loadKtx2TextureWithOptions(engine, url, options);
+}
+
+/**
+ * Loads a Basis Universal (`.basis`) texture from a URL.
+ *
+ * @remarks
+ * Babylon Lite 1.34 always fetches the Basis transcoder from `cdn.babylonjs.com` and offers no
+ * setter for it, so this works only where the page may load scripts from that origin. Prefer
+ * `.ktx2`, which carries the same Basis payloads and whose decoder is served locally.
+ *
+ * @param engine - The engine that owns the GPU texture.
+ * @param url - Where to fetch it from.
+ * @param options - Colour space and sampler.
+ * @returns The texture.
+ *
+ * @internal
+ */
+export async function loadBasisTexture(
+  engine: EngineContext,
+  url: string,
+  options: Texture2DOptions = {},
+): Promise<Texture2D> {
+  const decoders = await import("./decoders.js");
+  return decoders.loadBasisTextureWithOptions(engine, url, options);
+}
+
+/**
  * The sampler and colour-space overrides {@link createTextureFromPixels} accepts.
  *
  * @remarks
