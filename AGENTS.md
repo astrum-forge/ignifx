@@ -57,7 +57,7 @@ The entry skill is `skills/ignifx/SKILL.md`; subsystem skills sit at `packages/<
 - API Extractor's non-local `api-report` fails on warnings; run it, not only `api-report:update`, before claiming a package is green. `pnpm docs:harness` regenerates every generated page in place — use `--no-regenerate` while another agent is editing a package.
 - Parallel agents: give each a disjoint set of files, and let one of them (or the coordinator) run `pnpm install` and edit root files; concurrent installs race on the lockfile.
 - Asset loads awaited before `app.start()` settle as soon as they finish; after `start()` they settle in `PreUpdate`, so a headless test must `app.step()`. Systems keep running while the app is paused with a non-zero `dt`; an animating system checks `time.paused` itself.
-- The engine speaks backing-store pixels everywhere (`canvas.width`/`height`): `Camera.worldToScreen`, `pickAsync`, `<Pointer>/position`. DOM code converts.
+- The engine speaks backing-store pixels everywhere (`canvas.width`/`height`): `Camera.worldToScreen`, `pickAsync`, `<Pointer>/position`. DOM code converts (× `canvas.width / canvas.clientWidth`); Lite's picker takes CSS pixels, and `src/lite/gpu/picker.ts` converts for it.
 - Never publish by hand. Releases go through `release.yml`; each package's `prepublishOnly` refuses anything but `pnpm publish`, because `npm publish` ships `workspace:`/`catalog:` dependencies nobody can install (0.3.0 of three packages, 2026-10-03).
 - Skill examples are compiled by the harness; run yours once in Node before shipping them (the `ts run` tag makes the harness do it).
 

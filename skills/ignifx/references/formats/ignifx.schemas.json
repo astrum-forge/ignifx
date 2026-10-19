@@ -1401,7 +1401,7 @@
         "pickable": {
           "kind": "bool",
           "default": "false",
-          "description": "Whether picking considers the instances; a hit names no instance index."
+          "description": "Whether picking considers the instances; a hit names the instance it hit."
         },
         "lod": {
           "kind": "optional",
