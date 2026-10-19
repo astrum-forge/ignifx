@@ -239,6 +239,22 @@ describe("picking", () => {
     await scene.running.advance(SETTLE_FRAMES);
     expect(scene.running.app.twoD.pickAt(32, 32)).toBeNull();
   });
+
+  it("looks under a rejected sprite without disturbing what is drawn", async () => {
+    const scene = await createScene();
+    const blue = addSprite(scene, 0, 0, BLUE);
+    // Same sorting layer, drawn later, so yellow covers blue.
+    const yellow = addSprite(scene, 0, 0, YELLOW);
+    yellow.pickable = false;
+    await scene.running.advance(SETTLE_FRAMES);
+    expect(scene.running.app.twoD.pickAt(32, 32)?.component).toBe(blue);
+    const stack = scene.running.app.twoD.pickAllAt(32, 32, { includeUnpickable: true });
+    expect(stack.map((hit) => hit.component)).toEqual([yellow, blue]);
+    await scene.running.advance(SETTLE_FRAMES);
+    // The pick hid yellow to look under it and showed it again: it still covers blue on screen.
+    expect(distanceTo(await scene.running.centrePixel(), 255, 255, 0)).toBeLessThan(TOLERANCE);
+    expect(scene.running.errors).toEqual([]);
+  });
 });
 
 describe("the atlas on a device", () => {

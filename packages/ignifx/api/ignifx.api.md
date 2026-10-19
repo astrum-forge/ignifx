@@ -341,6 +341,7 @@ import { DEFAULT_LAYER } from '@ignifx/core';
 import { DEFAULT_MEMORY_SINK_LIMIT } from '@ignifx/core';
 import { DEFAULT_ORTHOGRAPHIC_SIZE } from '@ignifx/2d';
 import { DEFAULT_PAUSABLE_BUSES } from '@ignifx/audio';
+import { DEFAULT_PICK_ALL_LIMIT } from '@ignifx/2d';
 import { DEFAULT_PIXELS_PER_UNIT } from '@ignifx/2d';
 import { DEFAULT_REFERENCE_RESOLUTION } from '@ignifx/2d';
 import { DEFAULT_SORTING_LAYER } from '@ignifx/2d';
@@ -1394,6 +1395,7 @@ import { TilemapObjectDefinition } from '@ignifx/2d';
 import { TilemapRenderer } from '@ignifx/2d';
 import { TileRleData } from '@ignifx/2d';
 import { TilesetDefinition } from '@ignifx/2d';
+import { TileWrite } from '@ignifx/2d';
 import { Time } from '@ignifx/core';
 import { TimeSettings } from '@ignifx/core';
 import { TINT_EFFECT_WGSL } from '@ignifx/2d';
@@ -1434,6 +1436,8 @@ import { TwoDLiteHandles } from '@ignifx/2d';
 import { TwoDMode } from '@ignifx/2d';
 import { TwoDOptions } from '@ignifx/2d';
 import { TwoDPick } from '@ignifx/2d';
+import { TwoDPickAllOptions } from '@ignifx/2d';
+import { TwoDPickOptions } from '@ignifx/2d';
 import { TwoDService } from '@ignifx/2d';
 import { TwoDSettings } from '@ignifx/2d';
 import { twoDSettingsSchema } from '@ignifx/2d';
@@ -2203,6 +2207,8 @@ export { DEFAULT_MEMORY_SINK_LIMIT }
 export { DEFAULT_ORTHOGRAPHIC_SIZE }
 
 export { DEFAULT_PAUSABLE_BUSES }
+
+export { DEFAULT_PICK_ALL_LIMIT }
 
 export { DEFAULT_PIXELS_PER_UNIT }
 
@@ -4310,6 +4316,8 @@ export { TileRleData }
 
 export { TilesetDefinition }
 
+export { TileWrite }
+
 export { Time }
 
 export { TimeSettings }
@@ -4389,6 +4397,10 @@ export { TwoDMode }
 export { TwoDOptions }
 
 export { TwoDPick }
+
+export { TwoDPickAllOptions }
+
+export { TwoDPickOptions }
 
 export { TwoDService }
 

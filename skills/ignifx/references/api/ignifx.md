@@ -160,7 +160,7 @@ The x component.
 
 ###### Implementation of
 
-[`Vec2Like`](#vec2like).[`x`](#x-20)
+[`Vec2Like`](#vec2like).[`x`](#x-21)
 
 ##### y
 
@@ -180,7 +180,7 @@ The y component.
 
 ###### Implementation of
 
-[`Vec2Like`](#vec2like).[`y`](#y-19)
+[`Vec2Like`](#vec2like).[`y`](#y-20)
 
 ***
 
@@ -51016,6 +51016,10 @@ A tilemap.
 const level = app.world.createEntity({ name: "level" }).addComponent(Tilemap);
 level.map = app.assets.load<TilemapAsset>("2d/level-1.tilemap.json");
 level.setTile(0, 3, 2, 0); // carve a hole in the ground layer
+level.setCells([
+  { layer: 0, x: 4, y: 2, tileId: 0 },
+  { layer: 0, x: 5, y: 2, tileId: 0 },
+]);
 ```
 
 #### Extends
@@ -51342,7 +51346,7 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 > **get** **onTileChanged**(): [`Signal`](#signal-3)\<[`TileChange`](#tilechange)\>
 
-Emitted whenever `setTile` changes a cell.
+Emitted whenever `setTile` or `setCells` changes a cell.
 
 ###### Returns
 
@@ -51685,6 +51689,51 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 ###### Inherited from
 
 [`Component`](#abstract-component).[`requireComponent`](#requirecomponent-16)
+
+##### setCells()
+
+> **setCells**(`cells`): `number`
+
+Writes many tiles as one change.
+
+###### Parameters
+
+###### cells
+
+readonly [`TileWrite`](#tilewrite)[]
+
+The writes.
+
+###### Returns
+
+`number`
+
+How many writes changed a cell.
+
+###### Remarks
+
+Each write means what the same `setTile` call means, applied in order, so a cell named twice
+ends with the later id. The batch is checked before anything is written: one out-of-range cell
+throws and leaves the map untouched. The renderer rebuilds each touched chunk once and the
+collision surface merges once, however many cells changed; `onTileChanged` then fires once per
+changed cell, after every write has landed.
+
+###### Throws
+
+IgnifxError with code `IGX-1111` when a cell is outside its layer.
+
+###### Example
+
+```ts
+// Clear a 3x3 room on layer 0.
+const cells: TileWrite[] = [];
+for (let y = 4; y < 7; y += 1) {
+  for (let x = 2; x < 5; x += 1) {
+    cells.push({ layer: 0, x, y, tileId: 0 });
+  }
+}
+level.setCells(cells);
+```
 
 ##### setTile()
 
@@ -54783,9 +54832,61 @@ batch.count = 1;
 batch.write(0, 0, 0, 0.2, 0.2, 0, 0, 1, 0.8, 0.3, 1);
 ```
 
+##### pickAllAt()
+
+> **pickAllAt**(`xPx`, `yPx`, `options?`): [`TwoDPick`](#twodpick)[]
+
+Picks every sprite under a viewport pixel, topmost first.
+
+###### Parameters
+
+###### xPx
+
+`number`
+
+The viewport x, in pixels from the left edge.
+
+###### yPx
+
+`number`
+
+The viewport y, in pixels from the top edge.
+
+###### options?
+
+[`TwoDPickAllOptions`](#twodpickalloptions)
+
+A limit, a filter, an ignore list, and whether unpickable sprites count.
+
+###### Returns
+
+[`TwoDPick`](#twodpick)[]
+
+The hits, freshly allocated; empty for a miss or a `limit` below 1.
+
+###### Remarks
+
+The order is the draw order reversed: sorting layers front to back, and within a layer the
+order `pickAt` would have reached them in. The same sprites are rejected as by
+[TwoDService.pickAt](#pickat). Use it for click-cycling through a stack.
+
+Cost: one scan of a layer's sprites per sprite examined in it, so `k` hits over a layer of `n`
+cost `O(k·n)`; hence the default `limit` of [DEFAULT\_PICK\_ALL\_LIMIT](#default_pick_all_limit).
+
+###### Throws
+
+IgnifxError with code `IGX-1119` when called from inside a pick's `filter`.
+
+###### Example
+
+```ts
+const stack = app.twoD.pickAllAt(x, y);
+const next = stack[(stack.findIndex((hit) => hit.entity === selected) + 1) % stack.length];
+```
+
 ##### pickAt()
 
-> **pickAt**(`xPx`, `yPx`): [`TwoDPick`](#twodpick) \| `null`
+> **pickAt**(`xPx`, `yPx`, `options?`): [`TwoDPick`](#twodpick) \| `null`
 
 Picks the topmost sprite under a viewport pixel (`docs/architecture/11-2d-toolkit.md` §5).
 
@@ -54803,6 +54904,12 @@ The viewport x, in pixels from the left edge.
 
 The viewport y, in pixels from the top edge.
 
+###### options?
+
+[`TwoDPickOptions`](#twodpickoptions)
+
+A filter, an ignore list, and whether unpickable sprites count.
+
 ###### Returns
 
 [`TwoDPick`](#twodpick) \| `null`
@@ -54811,10 +54918,32 @@ The hit, or `null` for a miss.
 
 ###### Remarks
 
-Picking is a CPU test against every world layer's instance data, in draw order — no GPU
-readback and no frame of latency, which is what makes it usable from a click handler. It
-resolves only `SpriteRenderer` components: a tilemap's tiles have no component, so use
+Picking is a CPU test against every layer's instance data, in draw order — no GPU readback and
+no frame of latency, which is what makes it usable from a click handler. It resolves only
+`SpriteRenderer` components: a tilemap's tiles have no component, so use
 `Tilemap.worldToCell` for those.
+
+A sprite that is rejected — unpickable, destroyed, ignored, refused by `options.filter`, or a
+tile or batch slot with no component — does not occlude: the pick goes on to the sprite under
+it in the same sorting layer, then to the layers below.
+
+Cost: one scan of a layer's sprites per sprite examined in it. With nothing rejected that is one
+scan per layer; looking under `m` rejected sprites in a layer of `n` costs `O(m·n)`, and every
+hidden sprite costs one slot upload on the next frame.
+
+###### Throws
+
+IgnifxError with code `IGX-1119` when called from inside a pick's `filter`.
+
+###### Example
+
+```ts
+// An editor selecting what the game cannot pick, minus locked entities.
+const hit = app.twoD.pickAt(x, y, {
+  includeUnpickable: true,
+  filter: (entity) => !locked.has(entity),
+});
+```
 
 ##### screenToWorld()
 
@@ -83274,6 +83403,38 @@ The tiles, indexed by their local [TileDefinition.id](#id-15).
 
 ***
 
+### TileWrite
+
+One cell write in a [Tilemap.setCells](#setcells) batch.
+
+#### Properties
+
+##### layer
+
+> `readonly` **layer**: `number`
+
+The layer's index in the document.
+
+##### tileId
+
+> `readonly` **tileId**: `number`
+
+The tile id, or `0` to clear the cell.
+
+##### x
+
+> `readonly` **x**: `number`
+
+The cell's column, with `0` at the left.
+
+##### y
+
+> `readonly` **y**: `number`
+
+The cell's row, with `0` at the **bottom**.
+
+***
+
 ### Time
 
 The clock reached as `app.time` (`docs/architecture/01-lifecycle-and-time.md` §2). Every value is
@@ -83793,6 +83954,144 @@ Where inside the sprite's quad the hit landed, in `[0, 1]`.
 
 ***
 
+### TwoDPickAllOptions
+
+Options for `app.twoD.pickAllAt`.
+
+#### Extends
+
+- [`TwoDPickOptions`](#twodpickoptions)
+
+#### Properties
+
+##### filter?
+
+> `readonly` `optional` **filter?**: (`entity`, `component`) => `boolean`
+
+Restricts the pick to the sprites this accepts. A rejected sprite neither occludes nor returns:
+the pick goes on to the next sprite under the point in the same sorting layer, then to the
+layers below.
+
+###### Parameters
+
+###### entity
+
+[`Entity`](#entity-19)
+
+The entity carrying the candidate sprite.
+
+###### component
+
+[`SpriteRenderer`](#spriterenderer)
+
+The candidate sprite.
+
+###### Returns
+
+`boolean`
+
+`true` to consider the sprite.
+
+###### Remarks
+
+Called synchronously, topmost candidate first, while the pick has the sprites above the
+candidate hidden. It must not add, remove or change sprites, and must not pick again: a nested
+`pickAt` or `pickAllAt` throws `IGX-1119`. If it throws, the pick restores every sprite it hid
+and rethrows.
+
+###### Inherited from
+
+[`TwoDPickOptions`](#twodpickoptions).[`filter`](#filter-3)
+
+##### ignore?
+
+> `readonly` `optional` **ignore?**: readonly [`Entity`](#entity-19)[]
+
+Entities whose sprites are skipped, as if `filter` had rejected them.
+
+###### Inherited from
+
+[`TwoDPickOptions`](#twodpickoptions).[`ignore`](#ignore-2)
+
+##### includeUnpickable?
+
+> `readonly` `optional` **includeUnpickable?**: `boolean`
+
+Whether sprites marked `pickable: false` are candidates too. An editor sets it to select what
+the game itself never picks. Defaults to `false`.
+
+###### Inherited from
+
+[`TwoDPickOptions`](#twodpickoptions).[`includeUnpickable`](#includeunpickable-1)
+
+##### limit?
+
+> `readonly` `optional` **limit?**: `number`
+
+The most hits to return, topmost first. Defaults to [DEFAULT\_PICK\_ALL\_LIMIT](#default_pick_all_limit).
+
+***
+
+### TwoDPickOptions
+
+Options for `app.twoD.pickAt`, named after core's `RenderPickOptions`.
+
+#### Extended by
+
+- [`TwoDPickAllOptions`](#twodpickalloptions)
+
+#### Properties
+
+##### filter?
+
+> `readonly` `optional` **filter?**: (`entity`, `component`) => `boolean`
+
+Restricts the pick to the sprites this accepts. A rejected sprite neither occludes nor returns:
+the pick goes on to the next sprite under the point in the same sorting layer, then to the
+layers below.
+
+###### Parameters
+
+###### entity
+
+[`Entity`](#entity-19)
+
+The entity carrying the candidate sprite.
+
+###### component
+
+[`SpriteRenderer`](#spriterenderer)
+
+The candidate sprite.
+
+###### Returns
+
+`boolean`
+
+`true` to consider the sprite.
+
+###### Remarks
+
+Called synchronously, topmost candidate first, while the pick has the sprites above the
+candidate hidden. It must not add, remove or change sprites, and must not pick again: a nested
+`pickAt` or `pickAllAt` throws `IGX-1119`. If it throws, the pick restores every sprite it hid
+and rethrows.
+
+##### ignore?
+
+> `readonly` `optional` **ignore?**: readonly [`Entity`](#entity-19)[]
+
+Entities whose sprites are skipped, as if `filter` had rejected them.
+
+##### includeUnpickable?
+
+> `readonly` `optional` **includeUnpickable?**: `boolean`
+
+Whether sprites marked `pickable: false` are candidates too. An editor sets it to select what
+the game itself never picks. Defaults to `false`.
+
+***
+
 ### TwoDSettings
 
 The resolved `twoD` settings section.
@@ -84052,7 +84351,7 @@ export default defineConfig({
 > `readonly` **layers**: readonly `string`[]
 
 The layers created eagerly, back to front. Declaring them here is what makes their stacking
-order independent of the order the game happens to call [UiHost.layer](#layer-16) in.
+order independent of the order the game happens to call [UiHost.layer](#layer-17) in.
 
 ##### referenceResolution
 
@@ -88473,6 +88772,19 @@ click (`docs/architecture/10-audio.md` §6).
 
 ***
 
+### DEFAULT\_PICK\_ALL\_LIMIT
+
+> `const` **DEFAULT\_PICK\_ALL\_LIMIT**: `64` = `64`
+
+How many hits `app.twoD.pickAllAt` returns when no `limit` is given.
+
+#### Remarks
+
+Every hit costs one more scan of its layer, so an unbounded walk over a dense stack is quadratic;
+64 is far deeper than any click-cycle needs. Pass `limit: Infinity` to walk the whole stack.
+
+***
+
 ### DEFAULT\_PIXELS\_PER\_UNIT
 
 > `const` **DEFAULT\_PIXELS\_PER\_UNIT**: `100` = `100`
@@ -92503,6 +92815,12 @@ A `.tilemap.json` file is not an `ignifx.tilemap` document this build can read.
 > `readonly` **missingShaderSource**: `"IGX-1113"`
 
 A `SpriteLayerEffect` declared the `custom` kind without a WGSL fragment body.
+
+##### nestedPick
+
+> `readonly` **nestedPick**: `"IGX-1119"`
+
+`app.twoD.pickAt` or `pickAllAt` was called from inside a pick's own `filter`.
 
 ##### spriteNotAnAtlas
 

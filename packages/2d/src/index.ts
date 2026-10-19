@@ -128,7 +128,14 @@ export { spriteLayerKey, SpriteLayerRegistry, type SpriteLayerEntry } from "./se
 export { DEFAULT_SORTING_LAYER, SORTING_LAYER_ORDER_STEP, SortingLayerTable } from "./service/sorting-layers.js";
 export type { SpriteBatch, SpriteBatchLiteHandles, SpriteBatchOptions } from "./service/sprite-batch.js";
 export { selectCamera, TWO_D_SYNC_ORDER, TwoDSyncSystem } from "./service/sync-system.js";
-export { TwoDService, type TwoDPick, type WorldBox } from "./service/two-d-service.js";
+export {
+  DEFAULT_PICK_ALL_LIMIT,
+  TwoDService,
+  type TwoDPick,
+  type TwoDPickAllOptions,
+  type TwoDPickOptions,
+  type WorldBox,
+} from "./service/two-d-service.js";
 export type { TwoDLiteHandles } from "./service/runtime.js";
 
 // settings — the `twoD` project section, which a scene file's `settings.twoD` overrides.
@@ -193,7 +200,7 @@ export {
 export { importTiledMap, tiledPropertiesToRecord, type TiledImportOptions } from "./tilemap/importers/tiled.js";
 export { createTilemapLoader, TilemapAsset } from "./tilemap/tilemap-asset.js";
 export { TilemapRenderer } from "./tilemap/tilemap-renderer.js";
-export { DEFAULT_CHUNK_SIZE, Tilemap, type TileChange } from "./tilemap/tilemap.js";
+export { DEFAULT_CHUNK_SIZE, Tilemap, type TileChange, type TileWrite } from "./tilemap/tilemap.js";
 
 // version — the package's own release line.
 export { VERSION } from "./version.js";

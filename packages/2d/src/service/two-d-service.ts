@@ -1,5 +1,12 @@
 import { Vec2 } from "@ignifx/core";
-import { pickSprite, screenToLayer, visibleBounds } from "../lite/sprite-layer.js";
+import { twoDError, TwoDErrorCode } from "../errors.js";
+import {
+  createSpriteVisibilityScratch,
+  pickSprite,
+  screenToLayer,
+  setSpriteVisibleAt,
+  visibleBounds,
+} from "../lite/sprite-layer.js";
 import { pixelsToWorldToRef } from "../math/coords.js";
 import { createSpriteBatch } from "./sprite-batch.js";
 import type { SpriteLayerEntry } from "./layer-registry.js";
@@ -34,6 +41,58 @@ export interface TwoDPick {
   /** Where inside the sprite's quad the hit landed, in `[0, 1]`. */
   readonly v: number;
 }
+
+/**
+ * Options for `app.twoD.pickAt`, named after core's `RenderPickOptions`.
+ *
+ * @public
+ */
+export interface TwoDPickOptions {
+  /**
+   * Restricts the pick to the sprites this accepts. A rejected sprite neither occludes nor returns:
+   * the pick goes on to the next sprite under the point in the same sorting layer, then to the
+   * layers below.
+   *
+   * @remarks
+   * Called synchronously, topmost candidate first, while the pick has the sprites above the
+   * candidate hidden. It must not add, remove or change sprites, and must not pick again: a nested
+   * `pickAt` or `pickAllAt` throws `IGX-1119`. If it throws, the pick restores every sprite it hid
+   * and rethrows.
+   *
+   * @param entity - The entity carrying the candidate sprite.
+   * @param component - The candidate sprite.
+   * @returns `true` to consider the sprite.
+   */
+  readonly filter?: (entity: Entity, component: SpriteRenderer) => boolean;
+  /**
+   * Whether sprites marked `pickable: false` are candidates too. An editor sets it to select what
+   * the game itself never picks. Defaults to `false`.
+   */
+  readonly includeUnpickable?: boolean;
+  /** Entities whose sprites are skipped, as if `filter` had rejected them. */
+  readonly ignore?: readonly Entity[];
+}
+
+/**
+ * Options for `app.twoD.pickAllAt`.
+ *
+ * @public
+ */
+export interface TwoDPickAllOptions extends TwoDPickOptions {
+  /** The most hits to return, topmost first. Defaults to {@link DEFAULT_PICK_ALL_LIMIT}. */
+  readonly limit?: number;
+}
+
+/**
+ * How many hits `app.twoD.pickAllAt` returns when no `limit` is given.
+ *
+ * @remarks
+ * Every hit costs one more scan of its layer, so an unbounded walk over a dense stack is quadratic;
+ * 64 is far deeper than any click-cycle needs. Pass `limit: Infinity` to walk the whole stack.
+ *
+ * @public
+ */
+export const DEFAULT_PICK_ALL_LIMIT = 64;
 
 /**
  * A caller-owned world-space box, so reading the camera's bounds allocates nothing.
@@ -74,6 +133,18 @@ export class TwoDService {
 
   /** A one-element array reused by `pickAt`, because Lite's picker takes a list. */
   readonly #oneLayer: LiteSprite2DLayer[] = [];
+
+  /** The layers of the sprites a pick hid to look under them, restored before it returns. */
+  readonly #hiddenLayers: LiteSprite2DLayer[] = [];
+
+  /** The dense indices matching {@link TwoDService.#hiddenLayers}. */
+  readonly #hiddenIndices: number[] = [];
+
+  /** The visibility patch a pick hides and restores sprites with. */
+  readonly #visibility = createSpriteVisibilityScratch();
+
+  /** Whether a pick is walking, so one called from its own `filter` is refused. */
+  #picking = false;
 
   /**
    * Builds the service.
@@ -179,37 +250,174 @@ export class TwoDService {
    * Picks the topmost sprite under a viewport pixel (`docs/architecture/11-2d-toolkit.md` §5).
    *
    * @remarks
-   * Picking is a CPU test against every world layer's instance data, in draw order — no GPU
-   * readback and no frame of latency, which is what makes it usable from a click handler. It
-   * resolves only `SpriteRenderer` components: a tilemap's tiles have no component, so use
+   * Picking is a CPU test against every layer's instance data, in draw order — no GPU readback and
+   * no frame of latency, which is what makes it usable from a click handler. It resolves only
+   * `SpriteRenderer` components: a tilemap's tiles have no component, so use
    * `Tilemap.worldToCell` for those.
+   *
+   * A sprite that is rejected — unpickable, destroyed, ignored, refused by `options.filter`, or a
+   * tile or batch slot with no component — does not occlude: the pick goes on to the sprite under
+   * it in the same sorting layer, then to the layers below.
+   *
+   * Cost: one scan of a layer's sprites per sprite examined in it. With nothing rejected that is one
+   * scan per layer; looking under `m` rejected sprites in a layer of `n` costs `O(m·n)`, and every
+   * hidden sprite costs one slot upload on the next frame.
    *
    * @param xPx - The viewport x, in pixels from the left edge.
    * @param yPx - The viewport y, in pixels from the top edge.
+   * @param options - A filter, an ignore list, and whether unpickable sprites count.
    * @returns The hit, or `null` for a miss.
+   * @throws IgnifxError with code `IGX-1119` when called from inside a pick's `filter`.
+   *
+   * @example
+   * ```ts
+   * // An editor selecting what the game cannot pick, minus locked entities.
+   * const hit = app.twoD.pickAt(x, y, {
+   *   includeUnpickable: true,
+   *   filter: (entity) => !locked.has(entity),
+   * });
+   * ```
    */
-  pickAt(xPx: number, yPx: number): TwoDPick | null {
+  pickAt(xPx: number, yPx: number, options?: TwoDPickOptions): TwoDPick | null {
+    return this.#pick(xPx, yPx, options, 1, null);
+  }
+
+  /**
+   * Picks every sprite under a viewport pixel, topmost first.
+   *
+   * @remarks
+   * The order is the draw order reversed: sorting layers front to back, and within a layer the
+   * order `pickAt` would have reached them in. The same sprites are rejected as by
+   * {@link TwoDService.pickAt}. Use it for click-cycling through a stack.
+   *
+   * Cost: one scan of a layer's sprites per sprite examined in it, so `k` hits over a layer of `n`
+   * cost `O(k·n)`; hence the default `limit` of {@link DEFAULT_PICK_ALL_LIMIT}.
+   *
+   * @param xPx - The viewport x, in pixels from the left edge.
+   * @param yPx - The viewport y, in pixels from the top edge.
+   * @param options - A limit, a filter, an ignore list, and whether unpickable sprites count.
+   * @returns The hits, freshly allocated; empty for a miss or a `limit` below 1.
+   * @throws IgnifxError with code `IGX-1119` when called from inside a pick's `filter`.
+   *
+   * @example
+   * ```ts
+   * const stack = app.twoD.pickAllAt(x, y);
+   * const next = stack[(stack.findIndex((hit) => hit.entity === selected) + 1) % stack.length];
+   * ```
+   */
+  pickAllAt(xPx: number, yPx: number, options?: TwoDPickAllOptions): TwoDPick[] {
+    const out: TwoDPick[] = [];
+    const limit = options?.limit ?? DEFAULT_PICK_ALL_LIMIT;
+    if (!(limit >= 1)) {
+      return out;
+    }
+    this.#pick(xPx, yPx, options, limit, out);
+    return out;
+  }
+
+  /**
+   * The walk behind `pickAt` and `pickAllAt`.
+   *
+   * @param xPx - The viewport x.
+   * @param yPx - The viewport y.
+   * @param options - The caller's options.
+   * @param limit - How many hits to accept before stopping.
+   * @param out - Where to push every accepted hit, or `null` to return the first.
+   * @returns The first accepted hit, or `null`.
+   */
+  // oxlint-disable-next-line max-params -- private; an options object would allocate per pick.
+  #pick(
+    xPx: number,
+    yPx: number,
+    options: TwoDPickOptions | undefined,
+    limit: number,
+    out: TwoDPick[] | null,
+  ): TwoDPick | null {
+    if (this.#picking) {
+      // The nested walk's restore would show the outer walk's hidden sprites and loop it forever.
+      throw twoDError(TwoDErrorCode.nestedPick, "app.twoD.pickAt was called from inside a pick filter.", {
+        hint: "Collect what the filter needs before picking, or pick again after this pick returns.",
+      });
+    }
+    this.#picking = true;
     const layers = this.#runtime.layers.collectLayers(false, this.#pickLayers);
-    // Front to back, one layer at a time: Lite's picker compares the point against each sprite's
-    // stored `positionPx` without applying the view, so the point has to be unprojected through
-    // *that* layer's view — and a world layer and a screen-space layer do not share one.
-    for (let index = layers.length - 1; index >= 0; index -= 1) {
-      const layer = layers[index];
-      if (layer === undefined) {
-        continue;
+    let found: TwoDPick | null = null;
+    let accepted = 0;
+    try {
+      // Front to back, one layer at a time: Lite's picker compares the point against each sprite's
+      // stored `positionPx` without applying the view, so the point has to be unprojected through
+      // *that* layer's view — and a world layer and a screen-space layer do not share one.
+      for (let index = layers.length - 1; index >= 0 && accepted < limit; index -= 1) {
+        const layer = layers[index];
+        if (layer === undefined) {
+          continue;
+        }
+        const point = screenToLayer(layer.view, xPx, yPx, this.#pickPoint);
+        this.#oneLayer[0] = layer;
+        // Lite reports only the topmost hit in a layer, so look under one by hiding it and asking
+        // again; the `finally` below shows every hidden sprite before anything can draw.
+        for (let hit = pickSprite(this.#oneLayer, point.x, point.y); hit !== null;) {
+          const component = this.#runtime.layers.componentAt(hit.layer, hit.spriteIndex);
+          if (component !== null && this.#accepts(component, options)) {
+            const pick: TwoDPick = { entity: component.entity, component, u: hit.u, v: hit.v };
+            accepted += 1;
+            if (out === null) {
+              found = pick;
+              break;
+            }
+            out.push(pick);
+            if (accepted >= limit) {
+              break;
+            }
+          }
+          setSpriteVisibleAt(hit.layer, hit.spriteIndex, this.#visibility, false);
+          this.#hiddenLayers.push(hit.layer);
+          this.#hiddenIndices.push(hit.spriteIndex);
+          hit = pickSprite(this.#oneLayer, point.x, point.y);
+        }
       }
-      const point = screenToLayer(layer.view, xPx, yPx, this.#pickPoint);
-      this.#oneLayer[0] = layer;
-      const hit = pickSprite(this.#oneLayer, point.x, point.y);
-      if (hit === null) {
-        continue;
-      }
-      const component = this.#runtime.layers.componentAt(hit.layer, hit.spriteIndex);
-      if (component !== null && component.pickable && !component.isDestroyed) {
-        return { entity: component.entity, component, u: hit.u, v: hit.v };
+    } finally {
+      this.#restoreHidden();
+      this.#picking = false;
+    }
+    return found;
+  }
+
+  /**
+   * Whether a candidate sprite passes the pick's rules.
+   *
+   * @param component - The candidate.
+   * @param options - The caller's options.
+   * @returns `true` to accept it.
+   */
+  #accepts(component: SpriteRenderer, options: TwoDPickOptions | undefined): boolean {
+    if (component.isDestroyed) {
+      return false;
+    }
+    if (!component.pickable && options?.includeUnpickable !== true) {
+      return false;
+    }
+    if (options === undefined) {
+      return true;
+    }
+    const entity = component.entity;
+    if (options.ignore?.includes(entity) === true) {
+      return false;
+    }
+    return options.filter === undefined || options.filter(entity, component);
+  }
+
+  /** Shows every sprite a pick hid, last hidden first. */
+  #restoreHidden(): void {
+    for (let index = this.#hiddenLayers.length - 1; index >= 0; index -= 1) {
+      const layer = this.#hiddenLayers[index];
+      const spriteIndex = this.#hiddenIndices[index];
+      if (layer !== undefined && spriteIndex !== undefined) {
+        setSpriteVisibleAt(layer, spriteIndex, this.#visibility, true);
       }
     }
-    return null;
+    this.#hiddenLayers.length = 0;
+    this.#hiddenIndices.length = 0;
   }
 
   /**

@@ -24,6 +24,8 @@ interface ChunkRecord {
   readonly chunkY: number;
   /** The layer keys and handles of every sprite in the chunk. */
   readonly sprites: { readonly key: string; readonly handle: LiteSprite2DHandle }[];
+  /** `Tilemap.chunkStamp` when the chunk was built; a different stamp means a tile changed. */
+  readonly stamp: number;
 }
 
 /**
@@ -131,9 +133,9 @@ export class TilemapRenderer extends Component implements ComponentHooks {
    * Forces every chunk to be rebuilt on the next sync.
    *
    * @remarks
-   * `Tilemap.onTileChanged` is what normally calls this — a rewritten cell has to reach the sprite
-   * that draws it, and rebuilding the chunk is both simpler and, for anything short of a per-frame
-   * rewrite, cheaper than tracking one sprite per cell.
+   * A rewritten cell does not need this: `Tilemap.setTile` and `setCells` stamp the chunk they
+   * touched, and the next sync rebuilds just that chunk — simpler and, for anything short of a
+   * per-frame rewrite, cheaper than tracking one sprite per cell.
    *
    * @internal
    */
@@ -172,7 +174,8 @@ export class TilemapRenderer extends Component implements ComponentHooks {
     const window = this.#chunkWindow(bounds, chunkSize, cellSize, pixelsPerUnit, chunksX, chunksY);
     let written = 0;
     for (const [key, chunk] of this.#chunks) {
-      if (!inWindow(chunk.chunkX, chunk.chunkY, window)) {
+      // A chunk whose tiles changed is dropped here and rebuilt below, once however many changed.
+      if (!inWindow(chunk.chunkX, chunk.chunkY, window) || map.chunkStamp(chunk.chunkX, chunk.chunkY) !== chunk.stamp) {
         this.#drop(registry, key, chunk);
       }
     }
@@ -303,6 +306,7 @@ export class TilemapRenderer extends Component implements ComponentHooks {
     const originY = matrix[13] ?? 0;
     const sizePx = cellSize * pixelsPerUnit;
     const sprites: { key: string; handle: LiteSprite2DHandle }[] = [];
+    const stamp = map.chunkStamp(chunkX, chunkY);
     for (let layerIndex = 0; layerIndex < definition.layers.length; layerIndex += 1) {
       const layer = definition.layers[layerIndex];
       if (layer === undefined) {
@@ -331,7 +335,7 @@ export class TilemapRenderer extends Component implements ComponentHooks {
         }
       }
     }
-    this.#chunks.set(`${String(chunkX)},${String(chunkY)}`, { chunkX, chunkY, sprites });
+    this.#chunks.set(`${String(chunkX)},${String(chunkY)}`, { chunkX, chunkY, sprites, stamp });
     return sprites.length;
   }
 
