@@ -308,7 +308,7 @@ function taggedReferenceSchema(tag: "$entity" | "$component"): JsonSchemaObject 
  *
  * @internal
  */
-function annotatedFieldJsonSchema(field: FieldDefinition<unknown>): JsonSchemaObject {
+export function annotatedFieldJsonSchema(field: FieldDefinition<unknown>): JsonSchemaObject {
   const base: Record<string, JsonValue> = { ...fieldJsonSchema(field) };
   const { tooltip, min, max } = field.options;
   if (tooltip !== undefined) {

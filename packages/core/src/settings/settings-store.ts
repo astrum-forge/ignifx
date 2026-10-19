@@ -14,14 +14,20 @@ import type { Schema } from "../schema/types.js";
  * multi-field sections use named properties.
  */
 
-/** One registered section. */
-interface Section {
+/**
+ * One registered section.
+ *
+ * @internal
+ */
+export interface SettingsSection {
   /** The schema the section is validated against. */
   readonly schema: Schema;
   /** The extension that registered it. */
   readonly owner: string;
+  /** The values used for everything the project omits, as a bag of named props. */
+  readonly defaults: Readonly<Record<string, unknown>>;
   /** The resolved, frozen value. */
-  value: Readonly<Record<string, unknown>>;
+  readonly value: Readonly<Record<string, unknown>>;
 }
 
 /**
@@ -40,7 +46,7 @@ function isPropertyBag(value: unknown): value is Record<string, unknown> {
  * @internal
  */
 export class SettingsStore implements AppSettings {
-  readonly #sections = new Map<string, Section>();
+  readonly #sections = new Map<string, SettingsSection>();
 
   readonly #input: SettingsInput;
 
@@ -131,7 +137,16 @@ export class SettingsStore implements AppSettings {
   register(name: string, schema: Schema, defaults: unknown, owner: string): void {
     const base = isPropertyBag(defaults) ? defaults : createDefaults(schema);
     const value = this.#resolve(name, schema, base);
-    this.#sections.set(name, { schema, owner, value: Object.freeze(value) });
+    this.#sections.set(name, { schema, owner, defaults: base, value: Object.freeze(value) });
+  }
+
+  /**
+   * Every registered section, in registration order, for `describeSettings`.
+   *
+   * @returns The sections, keyed by name.
+   */
+  registrations(): ReadonlyMap<string, SettingsSection> {
+    return this.#sections;
   }
 
   /**

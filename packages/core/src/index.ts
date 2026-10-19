@@ -574,7 +574,8 @@ export { validateProps, validateValue } from "./schema/validate.js";
 export { Script, type ScriptCallbacks, type ScriptDefinition } from "./script/script.js";
 export { waitFixedUpdate, waitSeconds, waitSecondsRealtime, waitUntil, waitWhile } from "./script/wait.js";
 
-// settings — what a project hands `createApp`.
+// settings — what a project hands `createApp`, and the description of every registered section.
+export { describeSettings, SETTINGS_DESCRIPTION_FORMAT, settingsJsonSchema } from "./settings/describe-settings.js";
 export type { SettingsInput } from "./settings/settings-input.js";
 
 // signal — the observer primitive the whole engine communicates through.
