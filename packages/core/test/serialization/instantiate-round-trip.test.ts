@@ -1,4 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
+import { Component } from "../../src/component/component.js";
+import { asset } from "../../src/schema/field-kinds.js";
+import { SceneAssetToken } from "../../src/serialization/scene-asset.js";
 import { stringifySceneFile } from "../../src/serialization/scene-file.js";
 import { serializeScene } from "../../src/serialization/serialize.js";
 import { createAssetHarness } from "../assets/support/harness.js";
@@ -71,6 +74,30 @@ const yardFile: SceneFile = buildFile({
   ],
 });
 
+/** A component that names a prefab to spawn, the way a spawner or a projectile launcher does. */
+class Spawner extends Component.define({ prefab: asset(SceneAssetToken) }) {
+  static typeId = "test/Spawner";
+}
+
+/**
+ * A prefab whose root names the crate prefab through an asset field.
+ *
+ * @param scene - The reference exactly as the file writes it.
+ * @returns The file.
+ */
+function spawnerFile(scene: Readonly<Record<string, string>>): SceneFile {
+  return buildFile({
+    name: "Spawner",
+    entities: [
+      entityRecord({
+        uid: "S-ROOT",
+        name: "Spawner",
+        components: [{ uid: "S-SPAWN", type: "test/Spawner", props: { prefab: scene } }],
+      }),
+    ],
+  });
+}
+
 let harnesses: AssetHarness[] = [];
 
 afterEach(() => {
@@ -84,7 +111,7 @@ afterEach(() => {
 async function sceneApp(files: Readonly<Record<string, SceneFile | string>>): Promise<AssetHarness> {
   const harness = await createAssetHarness();
   harnesses.push(harness);
-  harness.app.registerComponents([Everything, Tagger]);
+  harness.app.registerComponents([Everything, Tagger, Spawner]);
   for (const [address, file] of Object.entries(files)) {
     const text = typeof file === "string" ? file : stringifySceneFile(file);
     harness.net.canned.set(harness.app.assets.resolveUrl(address), text);
@@ -263,5 +290,40 @@ describe("instantiate, save, and load", () => {
     expect(moved?.getComponents(Tagger)).toHaveLength(1);
     expect(worldPosition(moved)).toEqual([5, 0, 0]);
     expect(again).toBe(text);
+  });
+});
+
+describe("asset references inside an instanced prefab", () => {
+  const SPAWNER = "prefabs/spawner.prefab.json";
+
+  it.each([
+    ["without a type", { $asset: CRATE }],
+    ["with its type", { $asset: CRATE, type: "scene" }],
+  ])("writes no override for an unchanged reference written %s", async (_form, reference) => {
+    const first = await sceneApp({ [CRATE]: crateFile, [SPAWNER]: spawnerFile(reference) });
+    const spawner = await first.settleUntil(first.app.world.instantiateAsync(SPAWNER));
+    expect(spawner.getComponent(Spawner)?.prefab?.address).toBe(CRATE);
+    const file = serializeScene(first.app.world.activeScene, { engineVersion: null, name: "Level" });
+    expect(file.entities[0]?.instance?.overrides).toBeUndefined();
+    const text = stringifySceneFile(file);
+
+    const second = await sceneApp({ [CRATE]: crateFile, [SPAWNER]: spawnerFile(reference), [LEVEL]: text });
+    const loaded = await second.settleUntil(second.app.world.loadScene(LEVEL));
+    expect(loaded.roots[0]?.getComponent(Spawner)?.prefab?.address).toBe(CRATE);
+    expect(save(loaded)).toBe(text);
+  });
+
+  it("still writes an override when the reference names another address", async () => {
+    const first = await sceneApp({ [CRATE]: crateFile, [PAIR]: pairFile, [SPAWNER]: spawnerFile({ $asset: CRATE }) });
+    const spawner = await first.settleUntil(first.app.world.instantiateAsync(SPAWNER));
+    const pair = await first.settleUntil(first.app.assets.loadAsync(PAIR));
+    const component = spawner.getComponent(Spawner);
+    if (component !== null) {
+      component.prefab = pair;
+    }
+    const file = serializeScene(first.app.world.activeScene, { engineVersion: null, name: "Level" });
+    expect(file.entities[0]?.instance?.overrides).toEqual([
+      { path: "S-ROOT/components/S-SPAWN/props/prefab", value: { $asset: PAIR, type: "scene" } },
+    ]);
   });
 });

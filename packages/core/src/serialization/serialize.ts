@@ -2,6 +2,7 @@ import { VERSION } from "../app/version.js";
 import { entityInternals } from "../entity/internals.js";
 import { CoreErrorCode } from "../errors/error-codes.js";
 import { canonicalizeNumber, encodeProps, encodeValue } from "../schema/encode.js";
+import { asJsonArray, asJsonObject } from "./json-view.js";
 import { SCENE_FILE_FORMAT, SCENE_FORMAT_VERSION } from "./scene-file.js";
 import { membershipEncoder } from "./uid-remap.js";
 import type {
@@ -810,13 +811,69 @@ function sameNumbers(left: readonly number[], right: readonly number[]): boolean
 }
 
 /**
- * Compares two JSON values structurally. Both sides come out of the same canonical encoder, so
- * comparing their canonical text is exact and cheap.
+ * Compares two JSON values structurally, counting both spellings of one asset reference as equal.
+ *
+ * @remarks
+ * One side is what the instanced file says, written by hand or by any tool; the other comes out of
+ * the encoder. A file may leave out an asset reference's `type`, which the loader then infers from
+ * the address, but the encoder always writes the type of the handle it holds. So
+ * `{ "$asset": a }` and `{ "$asset": a, "type": t }` name the same asset; comparing them as text
+ * would save every terse reference in an instanced prefab as an override.
  *
  * @param left - The first.
  * @param right - The second.
- * @returns `true` when they encode identically.
+ * @returns `true` when they hold the same data.
  */
 function sameJson(left: JsonValue, right: JsonValue): boolean {
-  return JSON.stringify(left) === JSON.stringify(right);
+  if (left === right) {
+    return true;
+  }
+  const leftArray = asJsonArray(left);
+  const rightArray = asJsonArray(right);
+  if (leftArray !== null || rightArray !== null) {
+    if (leftArray === null || rightArray === null || leftArray.length !== rightArray.length) {
+      return false;
+    }
+    for (let index = 0; index < leftArray.length; index += 1) {
+      if (!sameJson(leftArray[index] ?? null, rightArray[index] ?? null)) {
+        return false;
+      }
+    }
+    return true;
+  }
+  const leftObject = asJsonObject(left);
+  const rightObject = asJsonObject(right);
+  if (leftObject === null || rightObject === null) {
+    return false;
+  }
+  if (typeof leftObject["$asset"] === "string" && typeof rightObject["$asset"] === "string") {
+    return sameAssetReference(leftObject, rightObject);
+  }
+  const keys = Object.keys(leftObject);
+  if (keys.length !== Object.keys(rightObject).length) {
+    return false;
+  }
+  for (const key of keys) {
+    if (!Object.hasOwn(rightObject, key) || !sameJson(leftObject[key] ?? null, rightObject[key] ?? null)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Compares two `{ "$asset": … }` references: the same address, and the same type unless one side
+ * leaves the type for the loader to infer.
+ *
+ * @param left - The first reference.
+ * @param right - The second reference.
+ * @returns `true` when they name the same asset.
+ */
+function sameAssetReference(left: JsonObject, right: JsonObject): boolean {
+  if (left["$asset"] !== right["$asset"]) {
+    return false;
+  }
+  const leftType = left["type"];
+  const rightType = right["type"];
+  return leftType === undefined || rightType === undefined || leftType === rightType;
 }
