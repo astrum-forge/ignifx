@@ -265,7 +265,10 @@ import.meta.hot?.on("ignifx:asset-changed", ({ address, kind, url }) => {
 `@ignifx/core`'s assets service subscribes to this and fires `AssetHandle.onReplaced`
 (`docs/architecture/05-assets-and-loading.md` §7). Editing `ignifx.config.ts` or
 `ignifx.settings.json` restarts the dev server instead: the settings are injected as a `define`,
-which only a restart recomputes, and they are frozen at app construction anyway.
+which only a restart recomputes, and they are frozen at app construction anyway. The plugin loads
+and validates the edited settings first: if they fail (malformed JSON, a config file that throws, a
+`schemas.settings` violation), the server is not restarted, the game keeps its previous settings,
+and the `IGX-0554` error goes to the terminal and the browser's error overlay.
 
 `plugin.api.whenIdle()` resolves once the plugin has finished reacting to every file-system event it
 has seen — useful in tests and in other plugins that read the served manifest.

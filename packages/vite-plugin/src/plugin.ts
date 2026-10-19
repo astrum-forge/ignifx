@@ -178,6 +178,22 @@ export interface IgnifxPluginApi {
   whenIdle(): Promise<void>;
 }
 
+/** What {@link ignifx}'s settings resolution produces. */
+interface ResolvedProjectSettings {
+  /** The merged settings injected into the game. */
+  readonly config: JsonObject;
+  /** The config file loaded, or `null`. */
+  readonly configFilePath: string | null;
+  /** Files the config file imported. */
+  readonly dependencies: readonly string[];
+  /** The settings data file the dev server reacts to, whether or not it exists yet. */
+  readonly settingsFilePath: string | null;
+  /** Sections the config file overrode with a different value. */
+  readonly shadowed: readonly string[];
+  /** Sections `schemas.settings` does not list. */
+  readonly unknown: readonly string[];
+}
+
 /**
  * The ignifx Vite plugin.
  *
@@ -222,6 +238,7 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
   let root = process.cwd();
   let base = "/";
   let command: ConfigEnv["command"] = "serve";
+  let configEnv: ConfigEnv = { command: "serve", mode: "development" };
   let configFilePath: string | null = null;
   let configDependencies: readonly string[] = [];
   /** The settings data file the dev server reacts to, whether or not it exists yet. */
@@ -459,6 +476,47 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
   }
 
   /**
+   * Reads, merges and validates both settings forms at the current root, without touching the
+   * plugin's state, so the dev server can try a change before it restarts on it.
+   *
+   * @param env - The Vite command and mode.
+   * @returns The merged settings and what the plugin tracks about them.
+   * @throws A {@link VitePluginError} with code `IGX-0554` when either file cannot be loaded or the
+   * merged settings fail `schemas.settings`.
+   */
+  async function resolveProjectSettings(env: ConfigEnv): Promise<ResolvedProjectSettings> {
+    const file =
+      settings.configFile === false
+        ? null
+        : settings.configFile === null
+          ? await findIgnifxConfigFile(root)
+          : resolve(root, settings.configFile);
+    const watchedSettingsFile =
+      settings.settingsFile === false
+        ? null
+        : settings.settingsFile === null
+          ? join(root, IGNIFX_SETTINGS_FILE_NAME)
+          : resolve(root, settings.settingsFile);
+    const settingsFile = settings.settingsFile === null ? await findIgnifxSettingsFile(root) : watchedSettingsFile;
+    const [loaded, data] = await Promise.all([loadIgnifxConfig(file, root, env), loadIgnifxSettings(settingsFile)]);
+    const merged = mergeProjectSettings(data.settings, loaded.config);
+    const settingsSchema = settings.schemas?.settings;
+    const sources = [data.path, loaded.path].filter((path): path is string => path !== null);
+    const unknown =
+      settings.validate && settingsSchema !== undefined
+        ? validateProjectSettings(merged.config, settingsSchema, sources)
+        : [];
+    return {
+      config: merged.config,
+      configFilePath: loaded.path,
+      dependencies: loaded.dependencies,
+      settingsFilePath: watchedSettingsFile,
+      shadowed: merged.shadowed,
+      unknown,
+    };
+  }
+
+  /**
    * Reports whether a changed file is the project config or something it imported.
    *
    * @param file - The absolute path of the changed file.
@@ -490,6 +548,16 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
     if (isProjectConfigFile(absolute)) {
       // The settings reach the game as a `define`, which only the `config` hook computes, so a page
       // reload alone would serve the old values; a restart re-runs the hook and reloads the page.
+      // Vite keeps the old server when a restart fails and says so only in its log, so the change
+      // is tried first and a failure goes to the browser's error overlay as well.
+      try {
+        await resolveProjectSettings(configEnv);
+      } catch (error) {
+        const message = `${describeError(error)} The game keeps the previous settings until this is fixed.`;
+        server.config.logger.error(`[${PLUGIN_NAME}] ${message}`, { timestamp: true });
+        server.ws.send({ type: "error", err: { message, stack: "", plugin: PLUGIN_NAME } });
+        return;
+      }
       server.config.logger.info(`[${PLUGIN_NAME}] project settings changed, restarting`, { timestamp: true });
       await server.restart();
       return;
@@ -696,31 +764,14 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
     async config(userConfig, env) {
       command = env.command;
       root = resolve(process.cwd(), userConfig.root ?? ".");
-      const file =
-        settings.configFile === false
-          ? null
-          : settings.configFile === null
-            ? await findIgnifxConfigFile(root)
-            : resolve(root, settings.configFile);
-      settingsFilePath =
-        settings.settingsFile === false
-          ? null
-          : settings.settingsFile === null
-            ? join(root, IGNIFX_SETTINGS_FILE_NAME)
-            : resolve(root, settings.settingsFile);
-      const settingsFile = settings.settingsFile === null ? await findIgnifxSettingsFile(root) : settingsFilePath;
-      const [loaded, data] = await Promise.all([loadIgnifxConfig(file, root, env), loadIgnifxSettings(settingsFile)]);
-      configFilePath = loaded.path;
-      configDependencies = loaded.dependencies;
-      const merged = mergeProjectSettings(data.settings, loaded.config);
-      shadowedSections = merged.shadowed;
-      const settingsSchema = settings.schemas?.settings;
-      if (settings.validate && settingsSchema !== undefined) {
-        const sources = [data.path, loaded.path].filter((path): path is string => path !== null);
-        unknownSections = validateProjectSettings(merged.config, settingsSchema, sources);
-      }
-      const projectConfig: JsonObject = merged.config;
-      return { define: { [IGNIFX_CONFIG_DEFINE_KEY]: JSON.stringify(projectConfig) } };
+      configEnv = env;
+      const resolved = await resolveProjectSettings(env);
+      settingsFilePath = resolved.settingsFilePath;
+      configFilePath = resolved.configFilePath;
+      configDependencies = resolved.dependencies;
+      shadowedSections = resolved.shadowed;
+      unknownSections = resolved.unknown;
+      return { define: { [IGNIFX_CONFIG_DEFINE_KEY]: JSON.stringify(resolved.config) } };
     },
 
     configResolved(resolvedConfig) {

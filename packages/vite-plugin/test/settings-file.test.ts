@@ -12,7 +12,7 @@ import {
   validateProjectSettings,
 } from "../src/ignifx-config.js";
 import { ignifx } from "../src/plugin.js";
-import { createFixtureTree, disposeFixtures, PNG_BYTES } from "./support/fixtures.js";
+import { createFixtureTree, disposeFixtures, PNG_BYTES, writeFixture } from "./support/fixtures.js";
 import { asViteServer, FakeDevServer, harness } from "./support/plugin-harness.js";
 import type { JsonSchemaObject } from "../src/json-schema.js";
 import type { IgnifxPluginApi } from "../src/plugin.js";
@@ -279,5 +279,33 @@ describe("the dev server and ignifx.settings.json", () => {
     await plugin.api?.whenIdle();
     expect(server.restarts).toBe(2);
     expect(server.sent).toEqual([]);
+  });
+
+  it("keeps the server and shows the error overlay when the edited settings do not load", async () => {
+    const root = await createFixtureTree({
+      [IGNIFX_SETTINGS_FILE_NAME]: JSON.stringify({ time: { timeScale: 1 } }),
+      "assets/a.png": PNG_BYTES,
+    });
+    const plugin: Plugin<IgnifxPluginApi> = ignifx({ schemas: { settings: coreSettingsSchema } });
+    const hooks = harness(plugin);
+    await hooks.config({ root }, { command: "serve", mode: "development" });
+    hooks.configResolved({ root, base: "/", command: "serve" });
+    const server = new FakeDevServer(root);
+    await hooks.configureServer(asViteServer(server));
+
+    const file = await writeFixture(root, IGNIFX_SETTINGS_FILE_NAME, '{ "time": ');
+    server.emit("change", file);
+    await plugin.api?.whenIdle();
+    await writeFixture(root, IGNIFX_SETTINGS_FILE_NAME, JSON.stringify({ time: { timeScal: 1 } }));
+    server.emit("change", file);
+    await plugin.api?.whenIdle();
+
+    expect(server.restarts).toBe(0);
+    const overlays = server.sent.map((payload) => JSON.stringify(payload));
+    expect(overlays).toHaveLength(2);
+    expect(overlays[0]).toContain("IGX-0554");
+    expect(overlays[0]).toContain("is not valid JSON");
+    expect(overlays[1]).toContain("/time/timeScal");
+    expect(overlays[1]).toContain("keeps the previous settings");
   });
 });
