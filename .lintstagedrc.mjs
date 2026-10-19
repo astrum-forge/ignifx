@@ -19,6 +19,9 @@ const GENERATED = [
   /templates\/[^/]+\/assets\/[^/]+\.atlas\.json$/u,
   /templates\/[^/]+\/assets\/level\.tilemap\.json$/u,
   /templates\/[^/]+\/assets\/scenes\/[^/]+\.scene\.json$/u,
+  // `pnpm docs:schemas` writes it byte for byte; `.oxfmtignore` excludes it, and oxfmt exits 1 when
+  // every path it is handed is ignored.
+  /skills\/ignifx\/references\/formats\/ignifx\.schemas\.json$/u,
 ];
 
 /**
