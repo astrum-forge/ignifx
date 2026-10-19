@@ -1,13 +1,14 @@
 /**
- * The arithmetic of the scene view's methods that needs no GPU: the `pick` unit rule, the
- * `screenshot` size rule, the transform the drag notifications carry, and gizmo snapping. Each is a
- * pure function, so the headless tests check it directly.
+ * The arithmetic of the scene view's methods that needs no GPU: the `pick` unit rule, the ray and
+ * plane point a `pick` answers with, the `screenshot` size rule, the transform the drag
+ * notifications carry, and gizmo snapping. Each is a pure function, so the headless tests check it
+ * directly.
  */
 
 import { canonicalizeNumber } from "@ignifx/core";
 import { PickUnit, SCREENSHOT_MAX_SIZE } from "../protocol/index.js";
-import type { GizmoSnap, PickParams, ScreenshotParams, SceneFileTransform } from "../protocol/index.js";
-import type { Entity, MutableQuat, MutableVec3 } from "@ignifx/core";
+import type { GizmoSnap, PickParams, PickRay, ScreenshotParams, SceneFileTransform, Vec3 } from "../protocol/index.js";
+import type { Entity, MutableQuat, MutableVec3, Ray } from "@ignifx/core";
 
 /** An image or frame size, in pixels. */
 export interface PixelSize {
@@ -66,6 +67,39 @@ export function toBackingPixels(
     return null;
   }
   return { x, y };
+}
+
+/** The members a `pick` answer gains from the camera ray. */
+export interface PickRayMembers {
+  /** The ray, rounded to the file format's precision. */
+  readonly ray: PickRay;
+  /** Where the ray meets `z = 0`, or absent when it runs parallel to the plane or meets it behind its origin. */
+  readonly plane?: Vec3;
+}
+
+/**
+ * Turns a camera ray into a `pick` answer's `ray` and `plane` members (protocol 0.3, additive): the
+ * ray as it is, and the point where it meets the 2D world plane `z = 0`. The plane point is
+ * computed before rounding, and its `z` is exactly `0`.
+ *
+ * @param ray - The world-space ray, from `Camera.screenToRay`, with a unit direction.
+ * @returns The members, every number rounded with `canonicalizeNumber`.
+ */
+export function pickRayMembers(ray: Ray): PickRayMembers {
+  const c = canonicalizeNumber;
+  const { origin, direction } = ray;
+  const members: PickRayMembers = {
+    ray: {
+      origin: [c(origin.x), c(origin.y), c(origin.z)],
+      direction: [c(direction.x), c(direction.y), c(direction.z)],
+    },
+  };
+  // A ray parallel to the plane never meets it; one whose `t` is negative meets it behind the camera.
+  const t = direction.z === 0 ? Number.NaN : -origin.z / direction.z;
+  if (!Number.isFinite(t) || t < 0) {
+    return members;
+  }
+  return { ...members, plane: [c(origin.x + direction.x * t), c(origin.y + direction.y * t), 0] };
 }
 
 /**

@@ -1,5 +1,12 @@
 import { readFileSync } from "node:fs";
-import { decodeProps, describeSchemas, encodeProps, toJsonSchema, transformSchema } from "@ignifx/core";
+import {
+  decodeProps,
+  describeSchemas,
+  describeSettings,
+  encodeProps,
+  toJsonSchema,
+  transformSchema,
+} from "@ignifx/core";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   HostCapability,
@@ -23,6 +30,7 @@ import {
   isScreenshotParams,
   isScreenshotResult,
   isSetGizmoParams,
+  isSettingsSet,
   isSetViewModeParams,
   isTransformDraggedParams,
   isTransformDraggingParams,
@@ -167,8 +175,11 @@ const RESULT_GUARDS: Readonly<Record<string, (value: unknown) => boolean>> = {
   selectResponse: isEntitySelection,
   pickResponse: isPickResult,
   pickMiss: isPickResult,
+  pickMissRay: isPickResult,
+  pickMissRay2d: isPickResult,
   screenshotResponse: isScreenshotResult,
   getSchemasResponse: isSchemaSet,
+  describeSettingsResponse: isSettingsSet,
 };
 
 describe("the editor's 0.3 wire fixture, through the host's guards", () => {
@@ -214,6 +225,26 @@ describe("the editor's 0.3 wire fixture, through the host's guards", () => {
     expect(isSchemaSet(withStep(0))).toBe(false);
     expect(isSchemaSet(withStep("0.01"))).toBe(false);
     expect(isSchemaSet({ schemas: { "ignifx/Transform": { ...transform, builtIn: "yes" } } })).toBe(false);
+  });
+
+  it("accepts a pick answer with or without its ray, and refuses a malformed ray or plane point", () => {
+    const answer = member(wire("pickMissRay"), "result");
+    const ray = member(answer, "ray");
+    expect(isPickResult(member(wire("pickMiss"), "result"))).toBe(true);
+    expect(isPickResult({ ...answer, plane: undefined })).toBe(true);
+    expect(isPickResult({ ...answer, ray: { ...ray, origin: [0, 1] } })).toBe(false);
+    expect(isPickResult({ ...answer, ray: { origin: ray["origin"] } })).toBe(false);
+    expect(isPickResult({ ...answer, ray: null })).toBe(false);
+    expect(isPickResult({ ...answer, plane: [1, 2, Number.NaN] })).toBe(false);
+  });
+
+  it("refuses settings whose sections are not schema descriptions or whose values are not objects", () => {
+    const result = member(wire("describeSettingsResponse"), "result");
+    const sections = member(result, "sections");
+    expect(isSettingsSet({ ...result, values: { ...member(result, "values"), time: 1 } })).toBe(false);
+    expect(isSettingsSet({ ...result, sections: { ...sections, time: { title: "time" } } })).toBe(false);
+    expect(isSettingsSet({ sections })).toBe(false);
+    expect(isSettingsSet({ sections: {}, values: {} })).toBe(true);
   });
 });
 
@@ -468,6 +499,25 @@ describe("the editor's 0.3 wire fixture, through a live headless host", () => {
       wire("noScene"),
     );
     expectWire(await peer.request({ ...wire("select"), id: 41 }), { jsonrpc: "2.0", id: 41, result: { entities: [] } });
+  });
+
+  it("answers describeSettings with every registered section and the values the app resolved", async () => {
+    const { app, peer } = await started();
+    const answer = await peer.request(wire("describeSettings"));
+    const result = member(answer, "result");
+    expect(isSettingsSet(result)).toBe(true);
+    const expected = member(wire("describeSettingsResponse"), "result");
+    const sections = member(result, "sections");
+    const values = member(result, "values");
+    expect(Object.keys(sections)).toEqual(Object.keys(describeSettings(app)));
+    expect(Object.keys(values)).toEqual(Object.keys(sections));
+    // The fixture carries two of core's sections; the live host must send them byte for byte.
+    for (const name of ["layers", "time"]) {
+      expectWire(member(sections, name), member(expected, "sections")[name]);
+      expectWire(member(values, name), member(expected, "values")[name]);
+    }
+    expect(member(values, "rendering")["clearColor"]).toEqual({ r: 0, g: 0, b: 0, a: 1 });
+    expect(answer["id"]).toBe(wire("describeSettingsResponse")["id"]);
   });
 
   it("misses every pick on a headless view, in either unit", async () => {

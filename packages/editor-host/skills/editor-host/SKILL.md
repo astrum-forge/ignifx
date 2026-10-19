@@ -1,6 +1,6 @@
 ---
 name: editor-host
-description: Connects an ignifx project to the ignifx editor with @ignifx/editor-host: the Vite plugin that serves the editor's scene view from the project's own dev server, the virtual:ignifx/editor play controls a game's main.ts hands its app to, and the host half of the editor protocol 0.3 over a MessagePort (hello/ready, heartbeat, and the scene document methods openScene, applyOps, readBack, select, pick, frame, setGizmo, screenshot, getSchemas). Use when wiring a project or template for the editor, when the user mentions @ignifx/editor-host, editorHostPlugin, attachEditorPlayControls, virtual:ignifx/editor, startEditorHost or /__ignifx_editor__/, or when debugging why the editor cannot connect to a view or why the scene view disagrees with the editor's document.
+description: Connects an ignifx project to the ignifx editor with @ignifx/editor-host: the Vite plugin that serves the editor's scene view from the project's own dev server, the virtual:ignifx/editor play controls a game's main.ts hands its app to, and the host half of the editor protocol 0.3 over a MessagePort (hello/ready, heartbeat, and the scene document methods openScene, applyOps, readBack, select, pick, frame, setGizmo, screenshot, getSchemas, describeSettings). Use when wiring a project or template for the editor, when the user mentions @ignifx/editor-host, editorHostPlugin, attachEditorPlayControls, virtual:ignifx/editor, startEditorHost or /__ignifx_editor__/, or when debugging why the editor cannot connect to a view or why the scene view disagrees with the editor's document.
 license: Apache-2.0
 metadata:
   ignifx-version: "0.9.0"
@@ -67,6 +67,7 @@ editor window (ignifx://app)
 each view ◀── MessagePort ──▶ editor     JSON-RPC 2.0, protocol 0.3
    connect (window message, origin-checked) → hello → ready → ping/pong, heartbeat
    scene view: schemasChanged → openScene → applyOps… / readBack / select / pick / frame / setGizmo / screenshot
+               / getSchemas / describeSettings (on request only)
                ← sceneOpened, selectionChanged, transformDragging/Dragged, hotReloaded, hostError, log
    play view:  play / pause / step / stop
 ```
@@ -291,8 +292,16 @@ object `openScene` sends, through `world.loadSceneFile`; `readBack` answers with
 - **The scene view keeps the project's `rendering.msaaSamples`.** The gizmos and the outline draw in
   core's render overlay (`app.renderer.openOverlay()`), which works at every MSAA setting.
 - **A headless host lists only `heartbeat`.** Without a canvas there are no gizmos, no `screenshot`,
-  and every `pick` misses; `setGizmo` and `screenshot` then answer `methodNotFound`. In headless
+  and every `pick` misses without a `ray`; `setGizmo` and `screenshot` then answer `methodNotFound`. In headless
   tests, asset loads after `start()` settle only when something calls `app.step()`.
+- **A `pick` carries the camera ray, hit or miss.** On a canvas the answer adds
+  `ray: { origin, direction }` (world space, from the editor camera's `screenToRay` at the converted
+  backing pixel) and, when the ray crosses `z = 0` ahead of the camera, `plane: [x, y, 0]`. A 3D
+  editor drops an asset where `ray` meets `y = 0`; a 2D one uses `plane`.
+- **Settings over the protocol.** `describeSettings` answers `{ sections, values }`: core's
+  `describeSettings(app)` with each section's `settingsJsonSchema` entry as `propsSchema`, and the
+  values the app resolved, in the settings form (`{ x, y, z }`, `{ r, g, b, a }`). No notification
+  announces settings; ask again after the project's settings change.
 - **Document uids only.** Members of an instanced prefab and the editor's own entities never appear
   in a selection, a pick or `readBack`; a pick on a prefab member resolves to its instance root.
 
