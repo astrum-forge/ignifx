@@ -149,7 +149,7 @@ All share the `format`/`formatVersion` header and JSON Schema validation:
 - `formatVersion` is an integer per format. Before 1.0 it stays `1` and incompatible changes simply invalidate files (`CONSTITUTION.md` §4.2); the loader reports `IGX-0603` for an unknown `formatVersion` and `IGX-0608` with the offending path for a file that fails structural validation.
 - After 1.0, a format bump ships with a migration function registered by the owning extension (`registerFileMigration(format, from, to, fn)`) and a document in `docs/migrations/`. Loaders migrate in memory; tooling (`ignifx migrate`) rewrites files.
 - Components version their schema independently with `static schemaVersion = 1` and `static migrate(fromVersion, props)`. The file records the schema version per component only when it differs from `1`, keeping files terse.
-- Layer and sorting-layer names in files are validated against `ignifx.config.ts` by the Vite plugin at build time and by the loader at runtime; `ignifx rename-layer` and `ignifx rename-sorting-layer` rewrite files when settings change.
+- Layer and sorting-layer names in files are validated against `ignifx.config.ts` by the Vite plugin at build time and by the loader at runtime; renaming one is meant to rewrite the files through `ignifx rename-layer` and `ignifx rename-sorting-layer`, but **neither command is implemented yet** (`packages/cli` has no such command; the sorting-layer rename is a deferred part of editor ask E10, PR #64). Until then, rename by hand in every scene, prefab and `.tilemap.json` that names the layer.
 
 ## 8. Generated JSON Schemas
 
