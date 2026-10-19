@@ -83,6 +83,18 @@ export class EditorPeer {
   }
 
   /**
+   * Takes a notification with a given method that has already arrived, without waiting and
+   * without dropping anything else, so a test can poll for it a bounded number of frames.
+   *
+   * @param method - The notification's method.
+   * @returns The notification, or `null` when none has arrived yet.
+   */
+  takeNotification(method: string): Received | null {
+    const index = this.#inbox.findIndex((message) => message["method"] === method && !("id" in message));
+    return index < 0 ? null : (this.#inbox.splice(index, 1)[0] ?? null);
+  }
+
+  /**
    * Posts a raw value on the port.
    *
    * @param value - What to post.

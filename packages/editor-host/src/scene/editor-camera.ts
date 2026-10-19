@@ -34,6 +34,30 @@ export interface ViewClick {
   readonly toggle: boolean;
 }
 
+/**
+ * Captures a pointer on the canvas. The pointer may already be gone (released before the listener
+ * ran, or an event no device produced), which `setPointerCapture` reports by throwing; the gesture
+ * then simply runs uncaptured.
+ *
+ * @param canvas - The canvas, or `null`.
+ * @param pointerId - The pointer.
+ * @param capture - `true` to capture, `false` to release.
+ */
+export function setCapture(canvas: HTMLCanvasElement | null, pointerId: number, capture: boolean): void {
+  if (canvas === null) {
+    return;
+  }
+  try {
+    if (capture) {
+      canvas.setPointerCapture(pointerId);
+    } else if (canvas.hasPointerCapture(pointerId)) {
+      canvas.releasePointerCapture(pointerId);
+    }
+  } catch {
+    // An inactive pointer cannot be captured; nothing else depends on the capture.
+  }
+}
+
 /** The camera's vertical field of view, in degrees. */
 export const EDITOR_CAMERA_FOV = 50;
 
@@ -127,7 +151,7 @@ export class EditorCamera extends Script implements ScriptCallbacks {
       return;
     }
     this.#pointer = event.pointerId;
-    this.#canvas?.setPointerCapture(event.pointerId);
+    setCapture(this.#canvas, event.pointerId, true);
   };
 
   readonly #onPointerMove = (event: PointerEvent): void => {
@@ -179,7 +203,7 @@ export class EditorCamera extends Script implements ScriptCallbacks {
     if (event.pointerId !== this.#pointer) {
       return;
     }
-    this.#canvas?.releasePointerCapture(event.pointerId);
+    setCapture(this.#canvas, event.pointerId, false);
     this.#pointer = -1;
     this.#gesture = "none";
     this.#keys.clear();

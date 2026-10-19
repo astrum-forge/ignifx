@@ -1,7 +1,6 @@
 import { Camera2D, twoD } from "@ignifx/2d";
 import { createAssetManifest, Vec2 } from "@ignifx/core";
 import { afterEach, describe, expect, it } from "vitest";
-import { userEvent } from "vitest/browser";
 import { startEditorHost } from "../src/host.js";
 import { HostCapability, isPickResult, SceneNotification } from "../src/protocol/index.js";
 import { connect, EDITOR_ORIGIN } from "./support/editor.js";
@@ -220,6 +219,55 @@ function memberOf(answer: unknown, key: string): unknown {
   return Reflect.get(Object(answer), key);
 }
 
+/**
+ * Clicks the view the way a mouse does, through the host's own listeners: a primary-button
+ * `pointerdown` and `pointerup` at one CSS point of the canvas. Synthetic events keep the test off
+ * the real pointer, which a parallel browser run shares and moves.
+ *
+ * @param at - The CSS point, from the canvas's top-left corner.
+ */
+function click(at: { readonly x: number; readonly y: number }): void {
+  if (canvas === null) {
+    throw new Error("no canvas");
+  }
+  const rect = canvas.getBoundingClientRect();
+  const init = {
+    bubbles: true,
+    cancelable: true,
+    composed: true,
+    pointerId: 1,
+    pointerType: "mouse",
+    isPrimary: true,
+    button: 0,
+    clientX: rect.left + at.x,
+    clientY: rect.top + at.y,
+  };
+  canvas.dispatchEvent(new PointerEvent("pointerdown", { ...init, buttons: 1 }));
+  canvas.dispatchEvent(new PointerEvent("pointerup", { ...init, buttons: 0 }));
+}
+
+/** The most frames a test waits for a notification before it fails. */
+const NOTIFICATION_FRAMES = 120;
+
+/**
+ * Waits for a notification, a bounded number of frames.
+ *
+ * @param method - The notification's method.
+ * @returns The notification.
+ * @throws When it has not arrived after {@link NOTIFICATION_FRAMES} frames.
+ */
+async function notified(method: string): Promise<Received> {
+  for (let frame = 0; frame < NOTIFICATION_FRAMES; frame += 1) {
+    const message = peer?.takeNotification(method) ?? null;
+    if (message !== null) {
+      return message;
+    }
+    // oxlint-disable-next-line no-await-in-loop -- one frame at a time is the point
+    await frames(1);
+  }
+  throw new Error(`No ${method} after ${String(NOTIFICATION_FRAMES)} frames.`);
+}
+
 describe("the scene view's 2D mode", () => {
   it("reports the level as 2D, and swaps in its own Camera2D without touching the level's", async () => {
     const { view, opened } = await sceneView();
@@ -325,19 +373,16 @@ describe("the scene view's 2D mode", () => {
     await call("setViewMode", { mode: "2d" });
     await call("frame", { entities: "all" });
     await frames(4);
-    if (canvas === null) {
-      throw new Error("no canvas");
-    }
+
     const onHero = cssPointOf(view, 3, 1);
-    await userEvent.click(canvas, { position: { x: onHero.x, y: onHero.y } });
-    expect((await peer?.nextNotification(SceneNotification.selectionChanged))?.["params"]).toEqual({
-      entities: ["HERO"],
-    });
-    const empty = cssPointOf(view, 8, -3);
-    await userEvent.click(canvas, { position: { x: empty.x, y: empty.y } });
-    expect((await peer?.nextNotification(SceneNotification.selectionChanged))?.["params"]).toEqual({ entities: [] });
-    // Lite's gizmo dispatcher reads back a GPU pick on every press and hover; let it settle first.
-    await userEvent.unhover(canvas);
+    click(onHero);
+    expect((await notified(SceneNotification.selectionChanged))["params"]).toEqual({ entities: ["HERO"] });
+    // Up and to the left of everything, and clear of the gizmo now drawn on the hero, whose arms
+    // point right and up from it.
+    const empty = cssPointOf(view, -3, 6);
+    click(empty);
+    expect((await notified(SceneNotification.selectionChanged))["params"]).toEqual({ entities: [] });
+    // Lite's gizmo dispatcher reads back a GPU pick on every press; let it settle before disposal.
     await frames(10);
   }, 60_000);
 });

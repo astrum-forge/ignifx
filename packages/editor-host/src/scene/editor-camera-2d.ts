@@ -15,6 +15,7 @@ import {
   stepZoom,
   zoomAbout,
 } from "./view-2d.js";
+import { setCapture } from "./editor-camera.js";
 import type { PointerClaims, ViewClick } from "./editor-camera.js";
 import type { Box2D, Camera2DLike, View2D } from "./view-2d.js";
 import type { Camera, ScriptCallbacks } from "@ignifx/core";
@@ -116,7 +117,7 @@ export class EditorCamera2D extends Script implements ScriptCallbacks {
       return;
     }
     this.#pointer = event.pointerId;
-    this.#canvas?.setPointerCapture(event.pointerId);
+    setCapture(this.#canvas, event.pointerId, true);
   };
 
   readonly #onPointerMove = (event: PointerEvent): void => {
@@ -142,7 +143,7 @@ export class EditorCamera2D extends Script implements ScriptCallbacks {
     if (event.pointerId !== this.#pointer) {
       return;
     }
-    this.#canvas?.releasePointerCapture(event.pointerId);
+    setCapture(this.#canvas, event.pointerId, false);
     this.#pointer = -1;
     const gesture = this.#gesture;
     this.#gesture = "none";
