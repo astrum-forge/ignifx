@@ -150,6 +150,14 @@ export interface EditorMessageTarget {
 }
 
 // @beta
+export interface EditorPlayConnector {
+    [Symbol.dispose](): void;
+    attach(app: App): EditorPlayControls;
+    dispose(): void;
+    readonly hasPendingPort: boolean;
+}
+
+// @beta
 export interface EditorPlayControls {
     [Symbol.dispose](): void;
     dispose(): void;
@@ -379,6 +387,9 @@ export function isPickResult(value: unknown): value is PickResult;
 export function isPlayState(value: unknown): value is PlayState;
 
 // @public
+export function isPlayStateReport(value: unknown): value is PlayStateReport;
+
+// @public
 export function isProtocolVersion(value: unknown): value is ProtocolVersion;
 
 // @public
@@ -464,6 +475,9 @@ export type JsonPath = readonly (string | number)[];
 // @public
 export type JsonValue = string | number | boolean | null | JsonArray | JsonObject;
 
+// @beta
+export function listenForEditorPlayControls(options: EditorPlayControlsOptions): EditorPlayConnector;
+
 // @public
 export type LogLevel = "debug" | "info" | "warn" | "error";
 
@@ -537,13 +551,32 @@ export const PlayMethod: {
     readonly pause: "pause";
     readonly step: "step";
     readonly stop: "stop";
+    readonly playState: "playState";
 };
 
 // @public
 export type PlayMethod = (typeof PlayMethod)[keyof typeof PlayMethod];
 
 // @public
-export type PlayRequest = RpcRequest<typeof PlayMethod.play, never> | RpcRequest<typeof PlayMethod.pause, never> | RpcRequest<typeof PlayMethod.step, StepParams> | RpcRequest<typeof PlayMethod.stop, never>;
+export const PlayNotification: {
+    readonly playStateChanged: "playStateChanged";
+};
+
+// @public
+export type PlayNotification = (typeof PlayNotification)[keyof typeof PlayNotification];
+
+// @public
+export const PlayPhase: {
+    readonly playing: "playing";
+    readonly paused: "paused";
+    readonly stopped: "stopped";
+};
+
+// @public
+export type PlayPhase = (typeof PlayPhase)[keyof typeof PlayPhase];
+
+// @public
+export type PlayRequest = RpcRequest<typeof PlayMethod.play, never> | RpcRequest<typeof PlayMethod.pause, never> | RpcRequest<typeof PlayMethod.step, StepParams> | RpcRequest<typeof PlayMethod.stop, never> | RpcRequest<typeof PlayMethod.playState, never>;
 
 // @public
 export type PlayResponse = RpcSuccessResponse<PlayState>;
@@ -554,6 +587,21 @@ export interface PlayState {
     readonly isPaused: boolean;
     readonly isRunning: boolean;
 }
+
+// @public
+export interface PlayStateChangedNotification extends RpcNotification<typeof PlayNotification.playStateChanged, PlayStateReport> {
+    readonly params: PlayStateReport;
+}
+
+// @public
+export interface PlayStateReport {
+    readonly frameCount: number;
+    readonly state: PlayPhase;
+    readonly time: number;
+}
+
+// @public
+export type PlayStateResponse = RpcSuccessResponse<PlayStateReport>;
 
 // @public
 export type PongResponse = RpcSuccessResponse<"pong">;

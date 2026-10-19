@@ -552,6 +552,75 @@ The listener to remove.
 
 ***
 
+### EditorPlayConnector
+
+**`Beta`**
+
+A play view whose page listens for the editor's port before the game's app exists, so the
+editor's first connect message is kept rather than lost.
+
+#### Properties
+
+##### hasPendingPort
+
+> `readonly` **hasPendingPort**: `boolean`
+
+**`Beta`**
+
+Whether a port has arrived and waits for [EditorPlayConnector.attach](#attach).
+
+#### Methods
+
+##### \[dispose\]()
+
+> **\[dispose\]**(): `void`
+
+**`Beta`**
+
+Same as [EditorPlayConnector.dispose](#dispose-3), for `using`.
+
+###### Returns
+
+`void`
+
+##### attach()
+
+> **attach**(`app`): [`EditorPlayControls`](#editorplaycontrols)
+
+**`Beta`**
+
+Starts the play controls for the game's app on the port that has arrived, if any, and from
+then on on every new one. Only the first call takes the waiting port; a later call, or one after
+`dispose`, opens controls that wait for the editor's next port.
+
+###### Parameters
+
+###### app
+
+`App`
+
+The game's app. The controls never dispose it.
+
+###### Returns
+
+[`EditorPlayControls`](#editorplaycontrols)
+
+The controls.
+
+##### dispose()
+
+> **dispose**(): `void`
+
+**`Beta`**
+
+Stops listening, closes a waiting port, and disposes the controls it attached. Idempotent.
+
+###### Returns
+
+`void`
+
+***
+
 ### EditorPlayControls
 
 **`Beta`**
@@ -576,7 +645,7 @@ Whether the editor has handed the page a port that is still open.
 
 **`Beta`**
 
-Same as [EditorPlayControls.dispose](#dispose-3), for `using`.
+Same as [EditorPlayControls.dispose](#dispose-5), for `using`.
 
 ###### Returns
 
@@ -778,7 +847,7 @@ Always `"2.0"`.
 
 ###### Inherited from
 
-[`RpcRequest`](#rpcrequest).[`jsonrpc`](#jsonrpc-4)
+[`RpcRequest`](#rpcrequest).[`jsonrpc`](#jsonrpc-5)
 
 ##### method
 
@@ -788,7 +857,7 @@ The method to call.
 
 ###### Inherited from
 
-[`RpcRequest`](#rpcrequest).[`method`](#method-3)
+[`RpcRequest`](#rpcrequest).[`method`](#method-4)
 
 ##### params
 
@@ -798,7 +867,7 @@ What the editor says about itself.
 
 ###### Overrides
 
-[`RpcRequest`](#rpcrequest).[`params`](#params-3)
+[`RpcRequest`](#rpcrequest).[`params`](#params-4)
 
 ***
 
@@ -1186,6 +1255,74 @@ Whether the frame loop runs (`app.isRunning`).
 
 ***
 
+### PlayStateChangedNotification
+
+Play view → editor: the game's state changed.
+
+#### Extends
+
+- [`RpcNotification`](#rpcnotification)\<*typeof* [`playStateChanged`](#playstatechanged), [`PlayStateReport`](#playstatereport)\>
+
+#### Properties
+
+##### jsonrpc
+
+> `readonly` **jsonrpc**: `"2.0"`
+
+Always `"2.0"`.
+
+###### Inherited from
+
+[`RpcNotification`](#rpcnotification).[`jsonrpc`](#jsonrpc-3)
+
+##### method
+
+> `readonly` **method**: `"playStateChanged"`
+
+The event or method being signalled.
+
+###### Inherited from
+
+[`RpcNotification`](#rpcnotification).[`method`](#method-2)
+
+##### params
+
+> `readonly` **params**: [`PlayStateReport`](#playstatereport)
+
+The game's state after the change.
+
+###### Overrides
+
+[`RpcNotification`](#rpcnotification).[`params`](#params-2)
+
+***
+
+### PlayStateReport
+
+The game's state as `playState` answers it and `playStateChanged` reports it.
+
+#### Properties
+
+##### frameCount
+
+> `readonly` **frameCount**: `number`
+
+How many frames have started (`app.time.frameCount`).
+
+##### state
+
+> `readonly` **state**: [`PlayPhase`](#playphase-1)
+
+Whether the game plays, is paused, or is stopped.
+
+##### time
+
+> `readonly` **time**: `number`
+
+Scaled seconds of game time since the app started running frames (`app.time.time`).
+
+***
+
 ### ProtocolVersion
 
 A protocol version. `major` changes when a message changes incompatibly; `minor` when messages
@@ -1462,6 +1599,7 @@ A one-way message: like a request, but with no `id` and no response.
 
 #### Extended by
 
+- [`PlayStateChangedNotification`](#playstatechangednotification)
 - [`RpcNotificationWithParams`](#rpcnotificationwithparams)
 
 #### Type Parameters
@@ -1532,7 +1670,7 @@ Always `"2.0"`.
 
 ###### Inherited from
 
-[`RpcNotification`](#rpcnotification).[`jsonrpc`](#jsonrpc-2)
+[`RpcNotification`](#rpcnotification).[`jsonrpc`](#jsonrpc-3)
 
 ##### method
 
@@ -1542,7 +1680,7 @@ The event or method being signalled.
 
 ###### Inherited from
 
-[`RpcNotification`](#rpcnotification).[`method`](#method-1)
+[`RpcNotification`](#rpcnotification).[`method`](#method-2)
 
 ##### params
 
@@ -1552,7 +1690,7 @@ The notification's parameters.
 
 ###### Overrides
 
-[`RpcNotification`](#rpcnotification).[`params`](#params-1)
+[`RpcNotification`](#rpcnotification).[`params`](#params-2)
 
 ***
 
@@ -1649,7 +1787,7 @@ Always `"2.0"`.
 
 ###### Inherited from
 
-[`RpcRequest`](#rpcrequest).[`jsonrpc`](#jsonrpc-4)
+[`RpcRequest`](#rpcrequest).[`jsonrpc`](#jsonrpc-5)
 
 ##### method
 
@@ -1659,7 +1797,7 @@ The method to call.
 
 ###### Inherited from
 
-[`RpcRequest`](#rpcrequest).[`method`](#method-3)
+[`RpcRequest`](#rpcrequest).[`method`](#method-4)
 
 ##### params
 
@@ -1669,7 +1807,7 @@ The method's parameters.
 
 ###### Overrides
 
-[`RpcRequest`](#rpcrequest).[`params`](#params-3)
+[`RpcRequest`](#rpcrequest).[`params`](#params-4)
 
 ***
 
@@ -2714,9 +2852,25 @@ The union of the names in `PlayMethod`.
 
 ***
 
+### PlayNotification
+
+> **PlayNotification** = *typeof* [`PlayNotification`](#playnotification)\[keyof *typeof* [`PlayNotification`](#playnotification)\]
+
+The union of the names in `PlayNotification`.
+
+***
+
+### PlayPhase
+
+> **PlayPhase** = *typeof* [`PlayPhase`](#playphase)\[keyof *typeof* [`PlayPhase`](#playphase)\]
+
+The union of the names in `PlayPhase`.
+
+***
+
 ### PlayRequest
 
-> **PlayRequest** = [`RpcRequest`](#rpcrequest)\<*typeof* [`play`](#play-1), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`pause`](#pause), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`step`](#step), [`StepParams`](#stepparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`stop`](#stop), `never`\>
+> **PlayRequest** = [`RpcRequest`](#rpcrequest)\<*typeof* [`play`](#play-1), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`pause`](#pause), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`step`](#step), [`StepParams`](#stepparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`stop`](#stop), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`playState`](#playstate), `never`\>
 
 Editor → play view: one of the `PlayMethod`s. Only `step` takes parameters.
 
@@ -2724,9 +2878,17 @@ Editor → play view: one of the `PlayMethod`s. Only `step` takes parameters.
 
 ### PlayResponse
 
-> **PlayResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<[`PlayState`](#playstate)\>
+> **PlayResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<[`PlayState`](#playstate-1)\>
 
-Play view → editor: the answer to a [PlayRequest](#playrequest).
+Play view → editor: the answer to `play`, `pause`, `step` or `stop`.
+
+***
+
+### PlayStateResponse
+
+> **PlayStateResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<[`PlayStateReport`](#playstatereport)\>
+
+Play view → editor: the answer to `playState`.
 
 ***
 
@@ -3259,7 +3421,8 @@ CSS pixels from the view's top-left corner: a DOM event's `offsetX` and `offsetY
 
 > `const` **PlayMethod**: `object`
 
-The methods the play view answers after `ready`. Each one answers with a [PlayState](#playstate).
+The methods the play view answers after `ready`. `play`, `pause`, `step` and `stop` answer with a
+[PlayState](#playstate-1); `playState` answers with a [PlayStateReport](#playstatereport).
 
 #### Type Declaration
 
@@ -3274,6 +3437,12 @@ Sets `app.time.paused`; scripts marked `updateWhenPaused` keep running.
 > `readonly` **play**: `"play"` = `"play"`
 
 Clears `app.time.paused` and starts the frame loop if it is stopped.
+
+##### playState
+
+> `readonly` **playState**: `"playState"` = `"playState"`
+
+Reads the game's state without changing it. Takes no parameters.
 
 ##### step
 
@@ -3291,6 +3460,60 @@ Stops the frame loop with `app.stop()`. The editor reloads the view to reset the
 
 A host that answers them lists `HostCapability.playControls` in `ready`. Sent before `ready`, they
 fail with `RpcErrorCode.notReady`; sent to a host without them, with `RpcErrorCode.methodNotFound`.
+`playState` is an additive 0.3 method: a host from before it answers it with
+`RpcErrorCode.methodNotFound`.
+
+***
+
+### PlayNotification
+
+> `const` **PlayNotification**: `object`
+
+The notifications the play view sends after `ready`.
+
+#### Type Declaration
+
+##### playStateChanged
+
+> `readonly` **playStateChanged**: `"playStateChanged"` = `"playStateChanged"`
+
+After the game's [PlayStateReport.state](#state) changed. A change a `PlayMethod` makes is sent
+right after that method's answer; one the game makes itself, such as setting
+`app.time.paused`, within one heartbeat interval.
+
+#### Remarks
+
+Additive in 0.3: a host from before them sends none, and answers `playState` with
+`RpcErrorCode.methodNotFound`.
+
+***
+
+### PlayPhase
+
+> `const` **PlayPhase**: `object`
+
+Whether the game plays, is paused, or is stopped, as [PlayStateReport.state](#state) reports it.
+
+#### Type Declaration
+
+##### paused
+
+> `readonly` **paused**: `"paused"` = `"paused"`
+
+Game time is paused (`app.time.paused`): after `pause`, or after `step`, which leaves the frame
+loop stopped on the stepped frame.
+
+##### playing
+
+> `readonly` **playing**: `"playing"` = `"playing"`
+
+The frame loop runs (`app.isRunning`) and game time is not paused.
+
+##### stopped
+
+> `readonly` **stopped**: `"stopped"` = `"stopped"`
+
+The frame loop does not run: before the game starts it, or after `stop`.
 
 ***
 
@@ -4121,6 +4344,29 @@ True when `value` has boolean `isRunning` and `isPaused` and a non-negative inte
 
 ***
 
+### isPlayStateReport()
+
+> **isPlayStateReport**(`value`): `value is PlayStateReport`
+
+Checks the `result` of `playState` and the `params` of `playStateChanged`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received value.
+
+#### Returns
+
+`value is PlayStateReport`
+
+True when `value` has a `state` that is a `PlayPhase`, a non-negative integer
+`frameCount`, and a non-negative finite `time`.
+
+***
+
 ### isProtocolVersion()
 
 > **isProtocolVersion**(`value`): `value is ProtocolVersion`
@@ -4645,6 +4891,54 @@ True for an entity, a drag mode and a transform.
 
 ***
 
+### listenForEditorPlayControls()
+
+> **listenForEditorPlayControls**(`options`): [`EditorPlayConnector`](#editorplayconnector)
+
+**`Beta`**
+
+Listens for the editor's connect message before the game's app exists, and keeps the newest port
+until [EditorPlayConnector.attach](#attach) hands it the app.
+
+#### Parameters
+
+##### options
+
+[`EditorPlayControlsOptions`](#editorplaycontrolsoptions)
+
+The editor's origin and the reporting options.
+
+#### Returns
+
+[`EditorPlayConnector`](#editorplayconnector)
+
+The connector; dispose it to stop listening.
+
+#### Remarks
+
+The editor posts its port on the play view's `load` event, which can fire while the game's
+`main.ts` still awaits `createApp`. `virtual:ignifx/editor` calls this when the module is
+evaluated, which is before `main.ts` runs, and `attachEditorPlayControls(app)` calls `attach`, so
+the handshake runs on the port the editor sent first. A port is accepted only from exactly
+`editorOrigin`; a newer one replaces and closes the one waiting. Nothing is read from the port
+before `attach`: the editor's `hello` waits in it.
+
+#### Throws
+
+IgnifxError `IGX-1801` for a malformed `editorOrigin`, `IGX-1802` with no window and no
+`messageTarget`, `IGX-1803` for a bad `heartbeatIntervalMs`.
+
+#### Example
+
+```ts
+const connector = listenForEditorPlayControls({ editorOrigin: "ignifx://app" });
+const app = await createApp({ headless: true });
+const controls = connector.attach(app);
+connector.dispose();
+```
+
+***
+
 ### protocolVersionIsCompatible()
 
 > **protocolVersionIsCompatible**(`a`, `b`): `boolean`
@@ -4750,7 +5044,8 @@ const host = await startEditorHost({ editorOrigin: "ignifx://app", canvas, exten
 **`Beta`**
 
 Lets the editor drive a running game: answers the handshake with `hostKind: "play"`, then `play`,
-`pause`, `step` and `stop`.
+`pause`, `step`, `stop` and `playState`, and sends `playStateChanged` when the game's phase
+changes.
 
 #### Parameters
 

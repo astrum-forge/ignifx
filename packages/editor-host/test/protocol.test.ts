@@ -69,8 +69,17 @@ describe("@ignifx/editor-host entries", () => {
   it("exports the host and the play controls from the page entry", () => {
     expect(typeof page.startEditorHost).toBe("function");
     expect(typeof page.startEditorPlayControls).toBe("function");
+    expect(typeof page.listenForEditorPlayControls).toBe("function");
     expect(page.EDITOR_CONNECT_MESSAGE_TYPE).toBe("ignifx-editor/connect");
-    expect(page.PlayMethod).toEqual({ play: "play", pause: "pause", step: "step", stop: "stop" });
+    expect(page.PlayMethod).toEqual({
+      play: "play",
+      pause: "pause",
+      step: "step",
+      stop: "stop",
+      playState: "playState",
+    });
+    expect(page.PlayNotification).toEqual({ playStateChanged: "playStateChanged" });
+    expect(page.PlayPhase).toEqual({ playing: "playing", paused: "paused", stopped: "stopped" });
   });
 
   it("exports the plugin from the vite entry", () => {

@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import {
   computeSceneHash,
+  createApp,
   decodeProps,
   describeSchemas,
   describeSettings,
@@ -10,6 +11,7 @@ import {
   transformSchema,
 } from "@ignifx/core";
 import { afterEach, describe, expect, it } from "vitest";
+import { startEditorPlayControls } from "../src/play-controls.js";
 import {
   HostCapability,
   isApplyOpsParams,
@@ -25,6 +27,7 @@ import {
   isOpenSceneResult,
   isPickParams,
   isPickResult,
+  isPlayStateReport,
   isReadBackParams,
   isReadBackResult,
   isRpcMessage,
@@ -37,14 +40,17 @@ import {
   isSetViewModeParams,
   isTransformDraggedParams,
   isTransformDraggingParams,
+  PlayMethod,
+  PlayNotification,
   PROTOCOL_VERSION,
   RpcErrorCode,
   SceneMethod,
   SceneNotification,
 } from "../src/protocol/index.js";
-import { CRATE_PREFAB, Exploder, Health, startLiveHost } from "./support/scene-project.js";
+import { connect, EDITOR_ORIGIN } from "./support/editor.js";
+import { CRATE_PREFAB, Exploder, Health, startLiveHost, Wire } from "./support/scene-project.js";
 import type { Received } from "./support/editor.js";
-import type { LiveHost, Wire } from "./support/scene-project.js";
+import type { LiveHost } from "./support/scene-project.js";
 import type { App, JsonObject, SceneFile, SceneFileEntity } from "@ignifx/core";
 
 /**
@@ -170,6 +176,8 @@ const PARAMS_GUARDS: Readonly<Record<string, (value: unknown) => boolean>> = {
   log: isLogParams,
   assetReloaded: isAssetReloadedParams,
   assetReloadedModel: isAssetReloadedParams,
+  playStateChanged: isPlayStateReport,
+  playStateChangedStopped: isPlayStateReport,
 };
 
 /** Each result guard, by the fixture messages it checks. */
@@ -187,6 +195,7 @@ const RESULT_GUARDS: Readonly<Record<string, (value: unknown) => boolean>> = {
   screenshotResponse: isScreenshotResult,
   getSchemasResponse: isSchemaSet,
   describeSettingsResponse: isSettingsSet,
+  playStateResponse: isPlayStateReport,
 };
 
 describe("the editor's 0.3 wire fixture, through the host's guards", () => {
@@ -203,7 +212,13 @@ describe("the editor's 0.3 wire fixture, through the host's guards", () => {
   });
 
   it("names only this package's methods, notifications, capabilities and error codes", () => {
-    const names: readonly unknown[] = [...Object.values(SceneMethod), ...Object.values(SceneNotification), "hello"];
+    const names: readonly unknown[] = [
+      ...Object.values(SceneMethod),
+      ...Object.values(SceneNotification),
+      ...Object.values(PlayMethod),
+      ...Object.values(PlayNotification),
+      "hello",
+    ];
     const codes: readonly unknown[] = Object.values(RpcErrorCode);
     for (const [name, message] of Object.entries(WIRE)) {
       const record = wire(name);
@@ -263,6 +278,17 @@ describe("the editor's 0.3 wire fixture, through the host's guards", () => {
     expect(isAssetReloadedParams({ ...params, entities: undefined })).toBe(false);
     expect(isAssetReloadedParams({ ...params, entities: [3] })).toBe(false);
     expect(isAssetReloadedParams({ ...params, entities: [] })).toBe(true);
+  });
+
+  it("refuses a play state with an unknown state, a fractional frame count or a negative time (E24)", () => {
+    const report = member(wire("playStateResponse"), "result");
+    expect(isPlayStateReport(report)).toBe(true);
+    expect(isPlayStateReport({ ...report, state: "running" })).toBe(false);
+    expect(isPlayStateReport({ ...report, frameCount: 1.5 })).toBe(false);
+    expect(isPlayStateReport({ ...report, time: -1 })).toBe(false);
+    expect(isPlayStateReport({ ...report, time: Number.NaN })).toBe(false);
+    expect(isPlayStateReport({ state: "paused", frameCount: 1 })).toBe(false);
+    expect(isPlayStateReport(null)).toBe(false);
   });
 
   it("refuses settings whose sections are not schema descriptions or whose values are not objects", () => {
@@ -642,3 +668,34 @@ describe("the editor's 0.3 wire fixture, through a live headless host", () => {
 function isRecord(value: unknown): value is JsonObject {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
+
+describe("the editor's 0.3 wire fixture, through live play controls", () => {
+  it("answers playState and reports each change, after the answer to the method that made it (E24)", async () => {
+    const app = await createApp({ headless: true });
+    const target = new EventTarget();
+    const controls = startEditorPlayControls(app, {
+      editorOrigin: EDITOR_ORIGIN,
+      messageTarget: target,
+      heartbeatIntervalMs: 60_000,
+    });
+    const peer = new Wire(connect(target));
+    try {
+      await peer.request(wire("hello"));
+
+      // The 0.2 fixture's step with a delta: one frame of 0.02 s, then paused on it.
+      const step = { jsonrpc: "2.0", id: 23, method: PlayMethod.step, params: { deltaSeconds: 0.02 } };
+      await peer.request(step);
+      expect(peer.notifications).toEqual([]);
+      expectWire(await peer.notification(PlayNotification.playStateChanged), wire("playStateChanged"));
+
+      expectWire(await peer.request(wire("playState")), wire("playStateResponse"));
+
+      await peer.request({ jsonrpc: "2.0", id: 25, method: PlayMethod.stop });
+      expectWire(await peer.notification(PlayNotification.playStateChanged), wire("playStateChangedStopped"));
+    } finally {
+      peer.close();
+      controls.dispose();
+      app.dispose();
+    }
+  });
+});

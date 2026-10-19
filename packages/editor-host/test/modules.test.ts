@@ -56,6 +56,39 @@ describe("generated sources", () => {
     expect(source).toBe("export function attachEditorPlayControls() {\n  return () => {};\n}\n");
   });
 
+  it("writes a development play-controls module that listens before the game attaches (E24)", () => {
+    const source = playControlsModuleSource({
+      editorOrigin: "ignifx://app",
+      engineVersion: null,
+      heartbeatIntervalMs: null,
+      hot: true,
+    });
+
+    expect(source).toBe(
+      [
+        'import { listenForEditorPlayControls } from "@ignifx/editor-host";',
+        "",
+        "// Listens now, before main.ts awaits createApp, so the editor's first port is kept.",
+        "const connector = listenForEditorPlayControls({",
+        '  editorOrigin: "ignifx://app",',
+        "});",
+        "if (import.meta.hot) {",
+        "  import.meta.hot.dispose(() => {",
+        "    connector.dispose();",
+        "  });",
+        "}",
+        "",
+        "export function attachEditorPlayControls(app) {",
+        "  const controls = connector.attach(app);",
+        "  return () => {",
+        "    controls.dispose();",
+        "  };",
+        "}",
+        "",
+      ].join("\n"),
+    );
+  });
+
   it("references the entry module from the page", () => {
     expect(editorPageHtml()).toContain('<script type="module" src="/@id/virtual:ignifx/editor-host-entry">');
   });

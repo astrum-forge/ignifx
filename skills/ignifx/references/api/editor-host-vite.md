@@ -296,7 +296,7 @@ A scene address the scene view loads before it starts. Defaults to none.
 
 The origin the editor is served from, for example `"ignifx://app"` when packaged or
 `"http://localhost:5173"` while the editor itself runs from a dev server. Only this origin may
-frame the scene view, and only it can hand either view a port.
+frame either view in `vite dev`, and only it can hand either view a port.
 
 ##### extensions?
 
@@ -551,7 +551,9 @@ The plugins, to be listed in `vite.config.ts`.
 It is two plugins, because the two halves run under different commands:
 
 - `ignifx-editor-host` (`vite dev` only) serves the scene view at `/__ignifx_editor__/` with
-  `Content-Security-Policy: frame-ancestors <editorOrigin>`. The page's module imports the host,
+  `Content-Security-Policy: frame-ancestors <editorOrigin>`, and adds the same header to every
+  page a browser navigates to, so the game's own `index.html` (the play view) can be framed by the
+  editor and by nothing else. A `Content-Security-Policy` in `server.headers` replaces it. The page's module imports the host,
   `virtual:ignifx/scripts`, `virtual:ignifx/manifest` and the project's extensions module from
   the project's own graph, and calls `startEditorHost`. It adds the extensions module to
   `optimizeDeps.entries` (keeping Vite's default crawl) and keeps `@ignifx/editor-host` out of
@@ -680,8 +682,11 @@ The ES module source.
 
 #### Remarks
 
-In development, `attachEditorPlayControls(app)` starts the play controls and stops them again
-when Vite replaces the module. The `import.meta.hot` calls are written out literally because Vite
+In development, the module listens for the editor's connect message as soon as it is evaluated,
+which is before the game's `main.ts` runs, and keeps the port
+(`listenForEditorPlayControls`); `attachEditorPlayControls(app)` then starts the play controls on
+it, so the editor's first connect message is never lost to `await createApp(...)`. Vite replacing
+the module stops both. The `import.meta.hot` calls are written out literally because Vite
 finds them by reading the source, not by running it. In a production build the export is an empty
 function, the same shape as `acceptHotReload` from `virtual:ignifx/scripts`, so the game's
 `main.ts` builds either way and ships no editor code.
