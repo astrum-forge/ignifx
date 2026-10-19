@@ -253,6 +253,42 @@ describe("a render overlay", () => {
     expectNoDeviceErrors();
   }, 60_000);
 
+  it("lets two overlays follow each other, both after a later context, without moving again", async () => {
+    const running = await startScene({ msaa: 4, path: "plain" });
+    const first = await running.app.renderer.openOverlay();
+    const second = await running.app.renderer.openOverlay();
+    addGreenBox(running, second);
+    registerSpriteRenderer(createSpriteRenderer(running.renderer.engine, { layers: [], clear: false }));
+    await running.advance(SETTLE_FRAMES);
+
+    const contexts = getRenderingContexts(running.renderer.engine);
+    expect(contexts.slice(-2)).toEqual([first.lite.scene, second.lite.scene]);
+    const settled = [...contexts];
+    await running.advance(SETTLE_FRAMES);
+    expect([...getRenderingContexts(running.renderer.engine)]).toEqual(settled);
+    expectDominant(await running.centrePixel(), "g");
+    expectNoDeviceErrors();
+  }, 60_000);
+
+  it("follows a canvas resize, depth target included", async () => {
+    const running = await startScene({ msaa: 4, path: "postProcessing" });
+    const overlay = await running.app.renderer.openOverlay();
+    addGreenBox(running, overlay);
+    await running.advance(SETTLE_FRAMES);
+    const larger = SIZE + 32;
+    running.canvas.style.width = `${String(larger)}px`;
+    running.canvas.style.height = `${String(larger)}px`;
+    await running.advance(SETTLE_FRAMES);
+
+    const frame = await running.app.renderer.captureScreenshot();
+    expect(frame.width).toBeGreaterThan(SIZE);
+    const centre = frame.width >> 1;
+    expectDominant(await running.pixelAt(centre, centre), "g");
+    expectDominant(await running.pixelAt(centre, frame.width >> 2), "r");
+    expectGrey(await running.pixelAt(CORNER.x, CORNER.y));
+    expectNoDeviceErrors();
+  }, 60_000);
+
   it("stops drawing once disposed, and the scene keeps rendering", async () => {
     const running = await startScene({ msaa: 4, path: "plain" });
     const overlay = await running.app.renderer.openOverlay();
