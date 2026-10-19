@@ -228,6 +228,8 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
   let settingsFilePath: string | null = null;
   /** Sections `ignifx.config.ts` overrode with a different value, reported once the logger exists. */
   let shadowedSections: readonly string[] = [];
+  /** Sections `schemas.settings` does not list, reported once the logger exists. */
+  let unknownSections: readonly string[] = [];
   let assets: readonly ScannedAsset[] = [];
   let problems: readonly ValidationProblem[] = [];
   let extensionAssets: readonly DescribedExtensionAsset[] = [];
@@ -715,7 +717,7 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
       const settingsSchema = settings.schemas?.settings;
       if (settings.validate && settingsSchema !== undefined) {
         const sources = [data.path, loaded.path].filter((path): path is string => path !== null);
-        validateProjectSettings(merged.config, settingsSchema, sources);
+        unknownSections = validateProjectSettings(merged.config, settingsSchema, sources);
       }
       const projectConfig: JsonObject = merged.config;
       return { define: { [IGNIFX_CONFIG_DEFINE_KEY]: JSON.stringify(projectConfig) } };
@@ -726,6 +728,12 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
         resolvedConfig.logger.warn(
           `[${PLUGIN_NAME}] ${configFilePath ?? "the config file"} overrides the ${shadowedSections.join(", ")} ` +
             `section(s) of ${IGNIFX_SETTINGS_FILE_NAME}; edits to them in the settings file have no effect.`,
+        );
+      }
+      if (unknownSections.length > 0) {
+        resolvedConfig.logger.warn(
+          `[${PLUGIN_NAME}] schemas.settings lists no ${unknownSections.join(", ")} section(s); ` +
+            "createApp reports an unregistered section as IGX-0407 (an error in development).",
         );
       }
       root = resolvedConfig.root;

@@ -245,10 +245,10 @@ describe("describeSettings", () => {
 });
 
 describe("settingsJsonSchema", () => {
-  it("lists every section as an optional property and refuses unknown sections", async () => {
+  it("lists every section as an optional property and leaves unknown sections to createApp", async () => {
     const schema = settingsJsonSchema(await build({}, [WEATHER]));
     expect(schema["type"]).toBe("object");
-    expect(schema["additionalProperties"]).toBe(false);
+    expect(schema["additionalProperties"]).toBeUndefined();
     expect(schema["required"]).toBeUndefined();
     expect(Object.keys(schema["properties"] as object)).toEqual([
       "layers",

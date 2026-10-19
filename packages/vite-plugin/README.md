@@ -185,8 +185,9 @@ export default defineConfig({ ...settings, time: { fixedDeltaTime: 1 / 120 } });
 
 Pass `schemas: { settings }`, the JSON Schema `@ignifx/core`'s `settingsJsonSchema(app)` generates
 from every registered section, to validate the merged settings when the dev server starts and when
-the build runs: a misspelled key or unknown section fails with `IGX-0554` and the key's JSON pointer
-(`/time/fixedDeltaTim`). Without it, `createApp` still validates every section when the game starts
+the build runs: a misspelled key inside a section fails with `IGX-0554` and the key's JSON pointer
+(`/time/fixedDeltaTim`). A section the schema does not list only warns, because the schema is a
+snapshot of one app's extensions and `createApp` reports an unregistered section itself. Without it, `createApp` still validates every section when the game starts
 (`IGX-0407` for an unknown section, `IGX-0408` for a bad value or key).
 
 ## Validation

@@ -386,9 +386,15 @@ function jsonEqualAt(a: JsonValue | undefined, b: JsonValue | undefined): boolea
  * Validates the merged project settings against the JSON Schema `@ignifx/core`'s
  * `settingsJsonSchema(app)` generates.
  *
+ * @remarks
+ * A section the schema does not list is returned rather than refused: the schema is a snapshot of
+ * one app's extensions, and `createApp` itself only reports an unknown section (`IGX-0407`), so the
+ * plugin warns about it instead of stopping the dev server.
+ *
  * @param config - The merged settings.
  * @param schema - The settings schema.
  * @param sources - The files the settings came from, named in the error.
+ * @returns The sections the schema does not list, in the settings' order.
  * @throws A {@link VitePluginError} with code `IGX-0554` listing every violation, each addressed by
  * a JSON pointer such as `/time/fixedDeltaTim`, when the settings do not validate.
  *
@@ -398,10 +404,13 @@ export function validateProjectSettings(
   config: JsonObject,
   schema: JsonSchemaObject,
   sources: readonly string[],
-): void {
+): readonly string[] {
+  const properties = jsonProperty(schema, "properties");
+  const known = properties !== undefined && isJsonObject(properties) ? properties : {};
+  const unknown = Object.keys(config).filter((section) => !Object.hasOwn(known, section));
   const violations = validateJsonValue(config, schema);
   if (violations.length === 0) {
-    return;
+    return unknown;
   }
   const detail = violations.map((entry) => `${entry.pointer === "" ? "/" : entry.pointer}: ${entry.message}`);
   const from = sources.length === 0 ? "The project settings" : `The project settings in ${sources.join(" and ")}`;

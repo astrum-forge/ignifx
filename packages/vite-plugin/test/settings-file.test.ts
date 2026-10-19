@@ -185,10 +185,16 @@ describe("validateProjectSettings against core's settingsJsonSchema", () => {
     expect(error?.message).toContain('/time/fixedDeltaTim: property "fixedDeltaTim" is not allowed here');
   });
 
-  it("fails with IGX-0554 on a section no extension registered and on a value out of range", () => {
+  it("returns a section the schema does not list instead of failing on it", () => {
+    expect(validateProjectSettings({ weather: { wind: 1 }, layers: ["Default"] }, coreSettingsSchema, [])).toEqual([
+      "weather",
+    ]);
+  });
+
+  it("fails with IGX-0554 on a value out of range and on a channel missing from a colour", () => {
     expect(() => {
-      validateProjectSettings({ weather: { wind: 1 } }, coreSettingsSchema, []);
-    }).toThrow(/\/weather: property "weather" is not allowed here/u);
+      validateProjectSettings({ rendering: { clearColor: { r: 0, g: 0, b: 0 } } }, coreSettingsSchema, []);
+    }).toThrow(/\/rendering\/clearColor: missing required property "a"/u);
     expect(() => {
       validateProjectSettings({ time: { timeScale: -1 } }, coreSettingsSchema, []);
     }).toThrow(/\/time\/timeScale: expected a value >= 0/u);
@@ -243,6 +249,17 @@ describe("the plugin's config hook with ignifx.settings.json", () => {
     // With validation off, the settings pass through and createApp reports them at runtime instead.
     const plugin = ignifx({ schemas: { settings: coreSettingsSchema }, validate: false });
     expect(await injected(plugin, root)).toEqual({ time: { fixedDeltaTim: 0.01 } });
+  });
+
+  it("warns about, rather than fails on, a section the settings schema does not list", async () => {
+    const root = await createFixtureTree({
+      [IGNIFX_SETTINGS_FILE_NAME]: JSON.stringify({ weather: { wind: 1 }, time: { timeScale: 2 } }),
+      "assets/a.png": PNG_BYTES,
+    });
+    const warnings: string[] = [];
+    const settings = await injected(ignifx({ schemas: { settings: coreSettingsSchema } }), root, warnings);
+    expect(settings).toEqual({ weather: { wind: 1 }, time: { timeScale: 2 } });
+    expect(warnings).toEqual([expect.stringContaining("lists no weather section(s)")]);
   });
 });
 

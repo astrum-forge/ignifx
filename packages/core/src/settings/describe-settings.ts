@@ -202,8 +202,10 @@ function sectionJsonSchema(section: SettingsSection): JsonSchemaObject {
  * @remarks
  * The schema describes the settings form `createApp` reads (vectors as `{ x, y, z }`, colours as
  * `{ r, g, b, a }` with every channel required), so a document it accepts also passes `createApp`'s
- * own validation (`IGX-0408`). Every section is optional and a section omitted takes its defaults;
- * an unknown section or key is a violation (`IGX-0407`, `IGX-0408` at runtime).
+ * own validation (`IGX-0408`). Every section is optional and a section omitted takes its defaults.
+ * An unknown key inside a section is a violation. The top level stays open: a section this app did
+ * not register, perhaps one of an extension it lacks, is left to `createApp`, which reports it
+ * (`IGX-0407`), and to the Vite plugin, which warns about it.
  *
  * @param app - The app whose sections to describe.
  * @returns The object schema, one property per section.
@@ -223,5 +225,8 @@ export function settingsJsonSchema(app: App): JsonSchemaObject {
   for (const [name, section] of settingsStoreOf(app).registrations()) {
     properties[name] = sectionJsonSchema(section);
   }
-  return { type: "object", properties, additionalProperties: false };
+  // The top level stays open: a section this app did not register may belong to an extension the
+  // app lacks, and `createApp` itself only reports one (`IGX-0407`), so a tool warns about it
+  // rather than failing on it.
+  return { type: "object", properties };
 }
