@@ -62,6 +62,8 @@ export const TwoDErrorCode = {
   batchAtlasNotLoaded: "IGX-1117",
   /** `SpriteRenderer.sprite` loaded something that is not a sprite atlas, such as a `#frame:` address. */
   spriteNotAnAtlas: "IGX-1118",
+  /** `app.twoD.pickAt` or `pickAllAt` was called from inside a pick's own `filter`. */
+  nestedPick: "IGX-1119",
 } as const;
 
 /**
@@ -94,6 +96,7 @@ export const TWO_D_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.fre
   "IGX-1116": "This sprite batch was disposed; create another one.",
   "IGX-1117": "The atlas handle for a sprite batch is {state}, not loaded.",
   "IGX-1118": "SpriteRenderer.sprite names {address}, which is not a sprite atlas.",
+  "IGX-1119": "app.twoD.pickAt and pickAllAt cannot be called from inside a pick filter.",
 });
 
 /**

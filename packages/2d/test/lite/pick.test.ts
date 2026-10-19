@@ -165,6 +165,52 @@ describe("pickAt", () => {
   });
 });
 
+describe("a filter that misbehaves", () => {
+  it("refuses a pick from inside a filter instead of looping, and restores the sprites", async () => {
+    const rig = await createRig();
+    rig.add("rock");
+    rig.add("tree");
+    rig.tick();
+    let calls = 0;
+    expect(() =>
+      rig.service.pickAt(0, 0, {
+        filter: () => {
+          calls += 1;
+          rig.service.pickAt(0, 0);
+          return false;
+        },
+      }),
+    ).toThrow(expect.objectContaining({ code: "IGX-1119" }));
+    expect(calls).toBe(1);
+    expect(() => rig.service.pickAllAt(0, 0, { filter: () => rig.service.pickAllAt(0, 0).length > 0 })).toThrow(
+      expect.objectContaining({ code: "IGX-1119" }),
+    );
+    // Both walks unwound: the next pick sees the whole stack and is allowed again.
+    expect(names(rig.service.pickAllAt(0, 0))).toEqual(["tree", "rock"]);
+  });
+
+  it("restores every hidden sprite when the filter throws", async () => {
+    const rig = await createRig();
+    rig.add("ground", "Background");
+    rig.add("rock");
+    rig.add("tree");
+    rig.tick();
+    const failure = new Error("filter failed");
+    expect(() =>
+      rig.service.pickAt(0, 0, {
+        filter: (entity) => {
+          if (entity.name === "ground") {
+            throw failure;
+          }
+          return false;
+        },
+      }),
+    ).toThrow(failure);
+    // tree and rock were hidden when ground's filter threw; both draw and pick again.
+    expect(names(rig.service.pickAllAt(0, 0))).toEqual(["tree", "rock", "ground"]);
+  });
+});
+
 describe("pickAllAt", () => {
   it("returns the whole stack topmost first, across layers", async () => {
     const rig = await createRig();

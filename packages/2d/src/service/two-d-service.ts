@@ -6,6 +6,7 @@ import {
   setSpriteVisibleAt,
   visibleBounds,
 } from "../lite/sprite-layer.js";
+import { twoDError, TwoDErrorCode } from "../errors.js";
 import { pixelsToWorldToRef } from "../math/coords.js";
 import { createSpriteBatch } from "./sprite-batch.js";
 import type { SpriteLayerEntry } from "./layer-registry.js";
@@ -53,7 +54,10 @@ export interface TwoDPickOptions {
    * layers below.
    *
    * @remarks
-   * Called synchronously, topmost candidate first. It must not add, remove or change sprites.
+   * Called synchronously, topmost candidate first, while the pick has the sprites above the
+   * candidate hidden. It must not add, remove or change sprites, and must not pick again: a nested
+   * `pickAt` or `pickAllAt` throws `IGX-1119`. If it throws, the pick restores every sprite it hid
+   * and rethrows.
    *
    * @param entity - The entity carrying the candidate sprite.
    * @param component - The candidate sprite.
@@ -127,6 +131,9 @@ export class TwoDService {
 
   /** The visibility patch a pick hides and restores sprites with. */
   readonly #visibility = createSpriteVisibilityScratch();
+
+  /** Whether a pick is walking, so one called from its own `filter` is refused. */
+  #picking = false;
 
   /**
    * Builds the service.
@@ -240,11 +247,13 @@ export class TwoDService {
    * A sprite that is rejected — unpickable, destroyed, ignored, refused by `options.filter`, or a
    * tile or batch slot with no component — does not occlude: the pick goes on to the sprite under
    * it in the same sorting layer, then to the layers below.
+
    *
    * @param xPx - The viewport x, in pixels from the left edge.
    * @param yPx - The viewport y, in pixels from the top edge.
    * @param options - A filter, an ignore list, and whether unpickable sprites count.
    * @returns The hit, or `null` for a miss.
+   * @throws IgnifxError with code `IGX-1119` when called from inside a pick's `filter`.
    *
    * @example
    * ```ts
@@ -266,11 +275,13 @@ export class TwoDService {
    * The order is the draw order reversed: sorting layers front to back, and within a layer the
    * order `pickAt` would have reached them in. The same sprites are rejected as by
    * {@link TwoDService.pickAt}. Use it for click-cycling through a stack.
+
    *
    * @param xPx - The viewport x, in pixels from the left edge.
    * @param yPx - The viewport y, in pixels from the top edge.
    * @param options - A limit, a filter, an ignore list, and whether unpickable sprites count.
    * @returns The hits, freshly allocated; empty for a miss or a `limit` below 1.
+   * @throws IgnifxError with code `IGX-1119` when called from inside a pick's `filter`.
    *
    * @example
    * ```ts
@@ -306,6 +317,13 @@ export class TwoDService {
     limit: number,
     out: TwoDPick[] | null,
   ): TwoDPick | null {
+    if (this.#picking) {
+      // The nested walk's restore would show the outer walk's hidden sprites and loop it forever.
+      throw twoDError(TwoDErrorCode.nestedPick, "app.twoD.pickAt was called from inside a pick filter.", {
+        hint: "Collect what the filter needs before picking, or pick again after this pick returns.",
+      });
+    }
+    this.#picking = true;
     const layers = this.#runtime.layers.collectLayers(false, this.#pickLayers);
     let found: TwoDPick | null = null;
     let accepted = 0;
@@ -344,6 +362,7 @@ export class TwoDService {
       }
     } finally {
       this.#restoreHidden();
+      this.#picking = false;
     }
     return found;
   }
