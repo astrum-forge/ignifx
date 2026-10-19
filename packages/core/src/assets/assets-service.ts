@@ -681,10 +681,10 @@ export class AssetsImpl implements Assets, AssetHandleHost, LoaderContextHost {
       if (handle.fragment !== null && handle.loader.parseFragment !== undefined) {
         continue;
       }
+      handle.reloadRequests += 1;
       if (handle.isRunning) {
-        // The file changed again while the last change was still loading: read it once more when
-        // that finishes, so the newest file wins however many saves arrive in between.
-        handle.isReloadQueued = true;
+        // The file changed again while the last change was still loading: the running reload reads
+        // it once more when it finishes, so the newest file wins however many saves arrive.
         continue;
       }
       void this.#runReload(handle);
@@ -996,10 +996,11 @@ export class AssetsImpl implements Assets, AssetHandleHost, LoaderContextHost {
     const controller = new AbortController();
     let current = handle.value;
     let isReplaced = false;
+    let served = -1;
     handle.isRunning = true;
     try {
-      do {
-        handle.isReloadQueued = false;
+      while (served !== handle.reloadRequests && handle.state === "loaded") {
+        served = handle.reloadRequests;
         try {
           // oxlint-disable-next-line no-await-in-loop -- each pass reloads from the previous one's value.
           const value = await this.#invokeLoader(handle, controller.signal, true, current);
@@ -1016,13 +1017,12 @@ export class AssetsImpl implements Assets, AssetHandleHost, LoaderContextHost {
         } catch (error) {
           this.#report(this.#reloadError(handle, error, isReplaced));
         }
-      } while (handle.isReloadQueued && handle.state === "loaded");
+      }
       if (isReplaced) {
         this.#enqueueDelivery({ kind: "replaced", handle, value: current });
       }
     } finally {
       handle.isRunning = false;
-      handle.isReloadQueued = false;
     }
   }
 

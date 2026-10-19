@@ -88,8 +88,11 @@ export class AssetHandleImpl implements AssetHandle {
   /** `true` while the loader is running. */
   isRunning = false;
 
-  /** `true` when a reload was asked for while one was running; it runs once that one finishes. */
-  isReloadQueued = false;
+  /**
+   * How many reloads were asked for. A running reload compares it with the count it last served,
+   * so one asked for meanwhile runs once more when the current pass finishes.
+   */
+  reloadRequests = 0;
 
   /** Bytes received so far. */
   bytesLoaded = 0;
