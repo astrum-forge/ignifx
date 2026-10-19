@@ -316,6 +316,22 @@ extension reached transitively â€” through the `ignifx` umbrella, for instance â
 project that registers `physics()` through the umbrella must also list `@ignifx/physics` in its own
 `package.json` for `HavokPhysics.wasm` to be copied and listed.
 
+### Babylon Lite's decoders
+
+`@ignifx/core` publishes Babylon Lite's run-time decoders this way: the KTX2 decoder
+(`babylon.ktx2Decoder.js`), its transcoders (`msc_basis_transcoder.js` and `.wasm`, six
+`uastc_*.wasm`, `zstddec.wasm`) and the meshopt decoder (`meshopt_decoder.js`), 740 KB in all. Lite
+fetches them from `cdn.babylonjs.com` unless told otherwise, and a packaged game's `script-src 'self'`
+refuses that origin. With core installed directly in the project, the plugin serves the eleven files
+from `/assets/<name>` in `vite dev`, copies them unhashed into `<outDir>/assets/`, and lists each in
+the manifest; core's texture and model loaders read those entries and point Lite at them before the
+first `.ktx2` texture or glTF load. Every decoder request then stays on the game's origin, which
+`script-src 'self' 'wasm-unsafe-eval'` and `connect-src 'self'` (`@ignifx/electron`'s `cspFor()`)
+allow. The files are fetched only when a game loads a `.ktx2` or a meshopt-compressed glTF.
+
+A `.basis` texture is the exception: Lite 1.34 always fetches its transcoder from the CDN. Use
+`.ktx2`. Draco-compressed glTF is not covered yet (engine ask E9).
+
 ## Error codes
 
 The plugin runs before an `App` exists, so it throws its own `VitePluginError` with a code from the
