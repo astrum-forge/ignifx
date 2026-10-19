@@ -19,6 +19,7 @@ import {
   spriteBlendOpaque,
   spriteBlendPremultiplied,
   updateSprite2D,
+  updateSprite2DIndex,
 } from "@babylonjs/lite";
 import type {
   Bounds2D,
@@ -533,6 +534,35 @@ export function screenToLayer(view: Sprite2DView, screenXPx: number, screenYPx: 
  */
 export function pickSprite(layers: readonly Sprite2DLayer[], xPx: number, yPx: number): SpritePickInfo | null {
   return pickSprite2D(layers, xPx, yPx);
+}
+
+/**
+ * Shows or hides one sprite by its dense index, leaving every other field alone.
+ *
+ * @remarks
+ * Picking uses this to look **under** a sprite it has rejected: Lite's picker only ever reports the
+ * topmost hit in a layer, so the caller hides that hit, picks again, and restores every sprite it
+ * hid before returning. Hiding zeroes the GPU size and keeps the true size in Lite's shadow copy,
+ * and the Y-sort key is the position plus the bias, so a hide-then-show pair restores the sprite
+ * and its draw order exactly (`lib/sprite/sprite-2d.js`, `writeInstance`;
+ * `lib/sprite/sprite-2d-y-sort.js`, `keyAt`). The pair marks the slot dirty, which costs one
+ * slot's upload on the next frame.
+ *
+ * @param layer - The layer.
+ * @param index - The sprite's dense index, as a pick reported it.
+ * @param scratch - The reusable visibility patch.
+ * @param visible - Whether the sprite draws.
+ *
+ * @internal
+ */
+export function setSpriteVisibleAt(
+  layer: Sprite2DLayer,
+  index: number,
+  scratch: SpriteVisibilityScratch,
+  visible: boolean,
+): void {
+  scratch.patch.visible = visible;
+  updateSprite2DIndex(layer, index, scratch.patch);
 }
 
 /**
