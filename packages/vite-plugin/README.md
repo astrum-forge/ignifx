@@ -327,7 +327,7 @@ from `/assets/<name>` in `vite dev`, copies them unhashed into `<outDir>/assets/
 the manifest; core's texture and model loaders read those entries and point Lite at them before the
 first `.ktx2` texture or glTF load. Every decoder request then stays on the game's origin, which
 `script-src 'self' 'wasm-unsafe-eval'` and `connect-src 'self'` (`@ignifx/electron`'s `cspFor()`)
-allow. The files are fetched only when a game loads a `.ktx2` or a meshopt-compressed glTF.
+allow; core's copy of the Basis transcoder is patched to compile nothing from strings, so the policy needs no `'unsafe-eval'`. The files are fetched only when a game loads a `.ktx2` or a meshopt-compressed glTF.
 
 A `.basis` texture is the exception: Lite 1.34 always fetches its transcoder from the CDN. Use
 `.ktx2`. Draco-compressed glTF is not covered yet (engine ask E9).

@@ -30,7 +30,8 @@
         {
           "file": "msc_basis_transcoder.js",
           "from": "wasm/msc_basis_transcoder.js",
-          "sha256": "b8906bae7e55606aba070642eb3bce790a2b5aea774874e120e9fd41f7c7d60b"
+          "sha256": "5be8235b0d33936d2a6bf35f3854771ca3da1f04603bbe756577fc79990249af",
+          "note": "patched: 4 embind code generators replaced with closures"
         },
         {
           "file": "msc_basis_transcoder.wasm",

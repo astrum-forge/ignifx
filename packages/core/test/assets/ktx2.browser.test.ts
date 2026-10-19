@@ -1,4 +1,4 @@
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { KTX2_DECODER_FILE, KTX2_TRANSCODER_FILES, MESHOPT_DECODER_FILE } from "../../src/render/decoder-urls.js";
 import { createMaterialAsset, pbrMaterialDefinition } from "../../src/render/material-asset.js";
 import { MeshAsset } from "../../src/render/mesh-asset.js";
@@ -74,11 +74,43 @@ const SIZE = 64;
 
 let harness: BrowserApp | null = null;
 
+/** The global `Function` constructor, restored after the file. */
+const NativeFunction = globalThis.Function;
+
+/** Stacks of every string-to-code compilation a decoder script attempted. */
+const decoderEvals: string[] = [];
+
+/**
+ * Records a `Function` construction when a decoder script is on the stack. A packaged game's
+ * `script-src 'self' 'wasm-unsafe-eval'` refuses it, and Vitest's page has no such policy, so the
+ * trap is how this file sees what that policy would block.
+ */
+function recordDecoderEval(): void {
+  const stack = new Error("eval").stack ?? "";
+  if (stack.includes(DECODER_ROOT)) {
+    decoderEvals.push(stack);
+  }
+}
+
 beforeAll(() => {
+  globalThis.Function = new Proxy(NativeFunction, {
+    construct(target, args, newTarget): object {
+      recordDecoderEval();
+      return Reflect.construct(target, args, newTarget);
+    },
+    apply(target, thisArgument, args): unknown {
+      recordDecoderEval();
+      return Reflect.apply(target, thisArgument, args);
+    },
+  });
   // Vitest's own module loads fill the default 250-entry buffer long before a test runs, and a full
   // buffer silently drops every later entry — including the decoder requests this file checks.
   performance.clearResourceTimings();
   performance.setResourceTimingBufferSize(10_000);
+});
+
+afterAll(() => {
+  globalThis.Function = NativeFunction;
 });
 
 afterEach(() => {
@@ -202,5 +234,8 @@ describe("a .ktx2 texture loaded through app.assets", () => {
     await drawQuadrants("textures/quadrants-uastc.ktx2");
     expect(requestedUrls().filter((url) => url.includes("cdn.babylonjs.com"))).toEqual([]);
     expect(requestedUrls().map((url) => new URL(url).pathname)).toContain(`${DECODER_ROOT}zstddec.wasm`);
+    // The vendored Basis transcoder is patched to generate no code from strings (embind's
+    // `new Function`), which `script-src` without 'unsafe-eval' would refuse.
+    expect(decoderEvals).toEqual([]);
   });
 });

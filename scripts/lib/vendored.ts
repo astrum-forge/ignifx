@@ -25,6 +25,8 @@ export interface VendoredFile {
   readonly from: string;
   /** The lowercase hex SHA-256 of its bytes, so a hand edit or a formatter run is caught. */
   readonly sha256: string;
+  /** What the vendoring script changed in it, when it is not a byte-for-byte copy. */
+  readonly note?: string;
 }
 
 /** One upstream npm package that files were taken from. */
@@ -83,10 +85,15 @@ function parseFile(value: unknown, where: string): VendoredFile {
   if (!isRecord(value)) {
     throw new TypeError(`${where}: a file must be an object`);
   }
+  const note = value["note"];
+  if (note !== undefined && typeof note !== "string") {
+    throw new TypeError(`${where}: "note" must be a string`);
+  }
   return {
     file: stringField(value, "file", where),
     from: stringField(value, "from", where),
     sha256: stringField(value, "sha256", where),
+    ...(note === undefined ? {} : { note }),
   };
 }
 

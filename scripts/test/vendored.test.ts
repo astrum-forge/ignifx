@@ -53,6 +53,19 @@ describe("the committed decoders", () => {
     expect(verifyVendoredFiles(file)).toEqual([]);
   });
 
+  it("generate no code from strings, which a CSP without 'unsafe-eval' refuses", () => {
+    const directory = path.join(ROOT, "packages", "core", "decoders");
+    const scripts = readVendoredManifest(path.join(directory, "vendored.json"))
+      .components.flatMap((component) => component.files.map((entry) => entry.file))
+      .filter((file) => file.endsWith(".js"));
+    expect(scripts.length).toBeGreaterThan(0);
+    for (const file of scripts) {
+      // The first line of a patched script is a comment that names what was patched.
+      const code = readFileSync(path.join(directory, file), "utf8").replace(/^\/\*[^\n]*\*\/\n/u, "");
+      expect(code, file).not.toMatch(/new Function\(|new_\(Function|[^.\w]eval\(/u);
+    }
+  });
+
   it("are every file @ignifx/core publishes through ignifx.assets.public, and nothing else", () => {
     const file = path.join(ROOT, "packages", "core", "decoders", "vendored.json");
     const vendored = readVendoredManifest(file)
