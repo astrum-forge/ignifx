@@ -129,6 +129,7 @@ export { DEFAULT_SORTING_LAYER, SORTING_LAYER_ORDER_STEP, SortingLayerTable } fr
 export type { SpriteBatch, SpriteBatchLiteHandles, SpriteBatchOptions } from "./service/sprite-batch.js";
 export { selectCamera, TWO_D_SYNC_ORDER, TwoDSyncSystem } from "./service/sync-system.js";
 export {
+  DEFAULT_PICK_ALL_LIMIT,
   TwoDService,
   type TwoDPick,
   type TwoDPickAllOptions,

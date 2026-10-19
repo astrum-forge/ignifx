@@ -79,9 +79,20 @@ export interface TwoDPickOptions {
  * @public
  */
 export interface TwoDPickAllOptions extends TwoDPickOptions {
-  /** The most hits to return, topmost first. Defaults to every sprite under the point. */
+  /** The most hits to return, topmost first. Defaults to {@link DEFAULT_PICK_ALL_LIMIT}. */
   readonly limit?: number;
 }
+
+/**
+ * How many hits `app.twoD.pickAllAt` returns when no `limit` is given.
+ *
+ * @remarks
+ * Every hit costs one more scan of its layer, so an unbounded walk over a dense stack is quadratic;
+ * 64 is far deeper than any click-cycle needs. Pass `limit: Infinity` to walk the whole stack.
+ *
+ * @public
+ */
+export const DEFAULT_PICK_ALL_LIMIT = 64;
 
 /**
  * A caller-owned world-space box, so reading the camera's bounds allocates nothing.
@@ -247,7 +258,10 @@ export class TwoDService {
    * A sprite that is rejected — unpickable, destroyed, ignored, refused by `options.filter`, or a
    * tile or batch slot with no component — does not occlude: the pick goes on to the sprite under
    * it in the same sorting layer, then to the layers below.
-
+   *
+   * Cost: one scan of a layer's sprites per sprite examined in it. With nothing rejected that is one
+   * scan per layer; looking under `m` rejected sprites in a layer of `n` costs `O(m·n)`, and every
+   * hidden sprite costs one slot upload on the next frame.
    *
    * @param xPx - The viewport x, in pixels from the left edge.
    * @param yPx - The viewport y, in pixels from the top edge.
@@ -275,7 +289,9 @@ export class TwoDService {
    * The order is the draw order reversed: sorting layers front to back, and within a layer the
    * order `pickAt` would have reached them in. The same sprites are rejected as by
    * {@link TwoDService.pickAt}. Use it for click-cycling through a stack.
-
+   *
+   * Cost: one scan of a layer's sprites per sprite examined in it, so `k` hits over a layer of `n`
+   * cost `O(k·n)`; hence the default `limit` of {@link DEFAULT_PICK_ALL_LIMIT}.
    *
    * @param xPx - The viewport x, in pixels from the left edge.
    * @param yPx - The viewport y, in pixels from the top edge.
@@ -291,7 +307,7 @@ export class TwoDService {
    */
   pickAllAt(xPx: number, yPx: number, options?: TwoDPickAllOptions): TwoDPick[] {
     const out: TwoDPick[] = [];
-    const limit = options?.limit ?? Number.POSITIVE_INFINITY;
+    const limit = options?.limit ?? DEFAULT_PICK_ALL_LIMIT;
     if (!(limit >= 1)) {
       return out;
     }

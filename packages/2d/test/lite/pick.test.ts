@@ -5,7 +5,7 @@ import { SpriteAtlasAsset } from "../../src/atlas/sprite-atlas-asset.js";
 import { buildAtlas } from "../../src/lite/atlas.js";
 import { TwoDRuntime } from "../../src/service/runtime.js";
 import { TwoDSyncSystem } from "../../src/service/sync-system.js";
-import { TwoDService } from "../../src/service/two-d-service.js";
+import { DEFAULT_PICK_ALL_LIMIT, TwoDService } from "../../src/service/two-d-service.js";
 import { defaultTwoDSettings } from "../../src/settings.js";
 import { SpriteRenderer } from "../../src/sprite/sprite-renderer.js";
 import { createTwoDApp } from "../support/app.js";
@@ -245,6 +245,17 @@ describe("pickAllAt", () => {
     expect(names(rig.service.pickAllAt(0, 0))).toEqual(["tree", "ground"]);
     expect(names(rig.service.pickAllAt(0, 0, { includeUnpickable: true }))).toEqual(["tree", "rock", "ground"]);
     expect(names(rig.service.pickAllAt(0, 0, { filter: (e) => e.name !== "tree" }))).toEqual(["ground"]);
+  });
+
+  it("stops at 64 hits unless told otherwise", async () => {
+    const rig = await createRig();
+    for (let index = 0; index < DEFAULT_PICK_ALL_LIMIT + 6; index += 1) {
+      rig.add(`s${String(index)}`);
+    }
+    rig.tick();
+    expect(DEFAULT_PICK_ALL_LIMIT).toBe(64);
+    expect(rig.service.pickAllAt(0, 0)).toHaveLength(DEFAULT_PICK_ALL_LIMIT);
+    expect(rig.service.pickAllAt(0, 0, { limit: Number.POSITIVE_INFINITY })).toHaveLength(DEFAULT_PICK_ALL_LIMIT + 6);
   });
 
   it("misses with an empty list", async () => {
