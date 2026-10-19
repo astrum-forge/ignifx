@@ -153,19 +153,19 @@ app.audio.bus("SFX").volume = 0.5;
 
 ### `createApp(options?): Promise<App>`
 
-| Option       | Type                            | Default                          | Notes                                                                                 |
-| ------------ | ------------------------------- | -------------------------------- | ------------------------------------------------------------------------------------- |
-| `headless`   | `boolean`                       | `true` when no `canvas` is given | Lite's null engine; the only mode where `app.step` is legal                           |
-| `canvas`     | `RenderSurface`                 | —                                | `HTMLCanvasElement \| OffscreenCanvas`; rejects `IGX-0701` when WebGPU is unavailable |
-| `extensions` | `readonly Extension[]`          | `[]`                             | Registered after the implicit `coreExtension()`                                       |
-| `settings`   | `SettingsInput`                 | `{}`                             | Sections: `layers`, `sortingLayers`, `time`, `assets`, `rendering`                    |
-| `assets`     | `AssetsCreateOptions`           | —                                | Supplies the manifest ahead of the network fetch                                      |
-| `fetch`      | `FetchLike`                     | `globalThis.fetch`               | How a Node app maps addresses to files                                                |
-| `clock`      | `Clock`                         | `createPerformanceClock()`       | Tests pass `createManualClock()`                                                      |
-| `mode`       | `"development" \| "production"` | `"development"`                  | Development adds phase timings, full messages, strict checks                          |
-| `logSink`    | `LogSink`                       | `createConsoleSink()`            | `createMemorySink()` captures records in tests                                        |
-| `logLevel`   | `LogThreshold`                  | `"info"`                         | Lowest level `app.log` writes; `"debug"` shows the kernel's own diagnostics           |
-| `editMode`   | `boolean`                       | `false`                          | An editor's scene view: scripts and simulation stay still (see "Edit mode" below)     |
+| Option       | Type                            | Default                          | Notes                                                                                                                                                                        |
+| ------------ | ------------------------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `headless`   | `boolean`                       | `true` when no `canvas` is given | Lite's null engine; the only mode where `app.step` is legal                                                                                                                  |
+| `canvas`     | `RenderSurface`                 | —                                | `HTMLCanvasElement \| OffscreenCanvas`; rejects `IGX-0701` when WebGPU is unavailable                                                                                        |
+| `extensions` | `readonly Extension[]`          | `[]`                             | Registered after the implicit `coreExtension()`                                                                                                                              |
+| `settings`   | `SettingsInput`                 | `{}`                             | Core sections `layers`, `sortingLayers`, `time`, `assets`, `rendering`; `describeSettings(app)` lists all; data in `ignifx.settings.json`, `ignifx.config.ts` wins a section |
+| `assets`     | `AssetsCreateOptions`           | —                                | Supplies the manifest ahead of the network fetch                                                                                                                             |
+| `fetch`      | `FetchLike`                     | `globalThis.fetch`               | How a Node app maps addresses to files                                                                                                                                       |
+| `clock`      | `Clock`                         | `createPerformanceClock()`       | Tests pass `createManualClock()`                                                                                                                                             |
+| `mode`       | `"development" \| "production"` | `"development"`                  | Development adds phase timings, full messages, strict checks                                                                                                                 |
+| `logSink`    | `LogSink`                       | `createConsoleSink()`            | `createMemorySink()` captures records in tests                                                                                                                               |
+| `logLevel`   | `LogThreshold`                  | `"info"`                         | Lowest level `app.log` writes; `"debug"` shows the kernel's own diagnostics                                                                                                  |
+| `editMode`   | `boolean`                       | `false`                          | An editor's scene view: scripts and simulation stay still (see "Edit mode" below)                                                                                            |
 
 ### `App`
 

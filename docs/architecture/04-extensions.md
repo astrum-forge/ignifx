@@ -171,7 +171,11 @@ export default defineConfig({
 ```
 
 - The Vite plugin resolves the config at build time and injects it as `import.meta.env.IGNIFX_CONFIG`; `createApp` also accepts `settings` directly (tests, Electron main-process tooling).
-- Each section is validated against the schema the owning extension registered. Unknown sections are an error in development (`IGX-0407`).
+- Each section is validated against the schema the owning extension registered. Unknown sections are an error in development (`IGX-0407`); a bad value or key is `IGX-0408`.
+
+**Settings as data.** The same object may live in `ignifx.settings.json` at the Vite root, which is the form a tool writes (the ignifx editor's Settings panel). The plugin reads both files and merges them a section at a time: **`ignifx.config.ts` wins a section both define, whole**, nothing of the JSON section is merged into it, and the plugin warns when the two differ. A project that keeps its settings as data needs no config file; one that wants both spreads the JSON in code (`defineConfig({ ...settings, time: { … } })`). Editing either file restarts the dev server, because the settings are a `define` that only the plugin's `config` hook computes.
+
+**Describing the sections.** `ctx.registerSettings(section, schema, defaults)` is the only registration seam: `describeSettings(app)` returns every registered section, core's and each extension's, as a `SchemaDescription` (`format: "settings"`, `package` = the registering extension, field `default` = the registered default), the shape `describeRegisteredSchemas` gives components, so a settings panel is generated the way the inspector is. `settingsJsonSchema(app)` is the JSON Schema of the whole settings object; passed to the plugin as `schemas.settings`, it validates the merged settings at dev-server start and build time (`IGX-0554` with the key's JSON pointer). The plugin cannot compute it itself: it does not depend on core (`00-overview.md` §2), and only a constructed app knows which extensions registered which sections.
 
 ## 6. Third-party extension guidelines
 
