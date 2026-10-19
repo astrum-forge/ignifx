@@ -10,6 +10,7 @@ import { MeshAsset } from "../../src/render/mesh-asset.js";
 import { MeshRenderer } from "../../src/render/mesh-renderer.js";
 import { createBrowserApp, gpuDeviceErrors, SETTLE_FRAMES } from "./support/browser-harness.js";
 import type { BrowserApp } from "./support/browser-harness.js";
+import type { ErrorReport } from "../../src/app/types.js";
 
 /**
  * Scene changes that land while a renderable rebuild is in flight (`src/lite/shadow.ts`,
@@ -22,10 +23,74 @@ import type { BrowserApp } from "./support/browser-harness.js";
 
 let harness: BrowserApp | null = null;
 
-afterEach(() => {
-  harness?.dispose();
+/** The current test's device error collector, so `afterEach` can read what arrives after dispose. */
+let device: { readonly errors: string[]; stop(): void } | null = null;
+
+afterEach(async () => {
+  const running = harness;
+  const collector = device;
   harness = null;
+  device = null;
+  if (running === null) {
+    return;
+  }
+  const reported = running.errors.length;
+  const rejected = collector?.errors.length ?? 0;
+  running.dispose();
+  // A rebuild still in flight finishes after dispose; whatever it reports belongs to this test.
+  await running.advance(SETTLE_FRAMES);
+  const late = {
+    errors: running.errors.slice(reported).map(describeReport),
+    device: collector?.errors.slice(rejected) ?? [],
+  };
+  expect(late, "errors reported after the app was disposed").toEqual({ errors: [], device: [] });
 });
+
+/**
+ * One error report as text, with its stack and where it came from.
+ *
+ * @param report - The report.
+ * @returns The text.
+ */
+function describeReport(report: ErrorReport): string {
+  const error = report.error;
+  const text = error instanceof Error ? (error.stack ?? error.message) : String(error);
+  return `${report.source}/${String(report.phase)}: ${text}`;
+}
+
+/**
+ * The state worth reading when an assertion about errors fails.
+ *
+ * @param running - The harness.
+ * @returns A message for `expect`.
+ */
+function diagnostics(running: BrowserApp): string {
+  const renderer = running.renderer;
+  return JSON.stringify(
+    {
+      errors: running.errors.map(describeReport),
+      device: device?.errors ?? [],
+      renderableRebuilds: renderer.renderableRebuilds,
+      isRebuildInFlight: renderer.isRebuildInFlight,
+      unconfirmed: renderer.materialCacheResets.unconfirmed,
+      retries: renderer.materialCacheResets.retries,
+    },
+    null,
+    2,
+  );
+}
+
+/**
+ * Asserts that neither the app nor the device reported anything, with the state that explains it
+ * when either did.
+ *
+ * @param running - The harness.
+ */
+function expectNoErrors(running: BrowserApp): void {
+  const message = diagnostics(running);
+  expect(running.errors.map(describeReport), message).toEqual([]);
+  expect(device?.errors ?? [], message).toEqual([]);
+}
 
 /** The Lite fields the tests reach into. Absent from `index.d.ts`. */
 interface RebuildInternals {
@@ -68,21 +133,63 @@ function onNextGroupBuild(scene: RebuildInternals, change: () => void): () => bo
   return (): boolean => hasRun;
 }
 
+/** The most frames {@link framesUntil} waits before it gives up. */
+const MAX_WAIT_FRAMES = 600;
+
 /**
  * Waits for real frames until a condition holds. A rebuild takes as many frames as the machine
- * makes it take, so the tests wait on what they need rather than on a frame count; the test's
- * timeout bounds a condition that never holds.
+ * makes it take, so the tests wait on what they need rather than on a frame count.
  *
  * @param running - The harness.
+ * @param what - What is being waited for, for the error.
  * @param done - The condition, read before each frame.
+ * @param left - How many more frames to wait.
  * @returns A promise that settles once `done` holds.
+ * @throws Error when it still does not hold after {@link MAX_WAIT_FRAMES} frames.
  */
-async function framesUntil(running: BrowserApp, done: () => boolean): Promise<void> {
+async function framesUntil(
+  running: BrowserApp,
+  what: string,
+  done: () => boolean,
+  left = MAX_WAIT_FRAMES,
+): Promise<void> {
   if (done()) {
     return;
   }
+  if (left <= 0) {
+    throw new Error(`Still waiting for ${what} after ${String(MAX_WAIT_FRAMES)} frames.\n${diagnostics(running)}`);
+  }
   await running.nextFrame();
-  return framesUntil(running, done);
+  return framesUntil(running, what, done, left - 1);
+}
+
+/**
+ * Waits until the render sync system has run a rebuild after `before` and owes no more.
+ *
+ * @remarks
+ * The rebuild a change asks for starts a frame later (`#rebuildRenderables`), and a family built for
+ * the first time asks for one more to confirm its cache reset. So the test waits for the count to
+ * move, for nothing to be in flight or unconfirmed, and then for a few frames in which no new
+ * rebuild starts.
+ *
+ * @param running - The harness.
+ * @param before - `renderer.renderableRebuilds` before the change.
+ * @param rounds - How many more times a late rebuild may restart the wait.
+ * @returns A promise that settles once the rebuilds are done.
+ */
+async function rebuildsDone(running: BrowserApp, before: number, rounds = 10): Promise<void> {
+  const renderer = running.renderer;
+  await framesUntil(
+    running,
+    "the owed rebuilds",
+    () =>
+      renderer.renderableRebuilds > before && !renderer.isRebuildInFlight && !renderer.materialCacheResets.unconfirmed,
+  );
+  const count = renderer.renderableRebuilds;
+  await running.advance(SETTLE_FRAMES);
+  if ((renderer.renderableRebuilds !== count || renderer.isRebuildInFlight) && rounds > 0) {
+    return rebuildsDone(running, count, rounds - 1);
+  }
 }
 
 /** A placeholder until a promise hands over its resolver. */
@@ -177,7 +284,7 @@ async function buildScene(): Promise<{
 }
 
 it("finishes a rebuild that a material swap to another family landed in", async () => {
-  const device = gpuDeviceErrors();
+  device = gpuDeviceErrors();
   const { running, ground, pbr, addLight } = await buildScene();
   device.stop();
   const liteGround = ground.lite.mesh as unknown as LiteMeshMaterial | null;
@@ -196,49 +303,54 @@ it("finishes a rebuild that a material swap to another family landed in", async 
     ground.materials = [pbr];
   });
   // A second light is a topology change, so the render sync system rebuilds every group.
+  const before = running.renderer.renderableRebuilds;
   addLight("Right", 6, false);
-  await framesUntil(running, () => hasSwapped() && !running.renderer.isRebuildInFlight);
-  await running.advance(SETTLE_FRAMES);
+  await framesUntil(running, "the swap", hasSwapped);
+  await rebuildsDone(running, before);
 
-  expect(running.errors).toEqual([]);
-  expect(device.errors).toEqual([]);
+  expect(running.renderer.materialCacheResets.retries, diagnostics(running)).toBeGreaterThan(0);
+  expectNoErrors(running);
 }, 60_000);
 
 it("switches a shadow on only once the rebuild in flight has finished", async () => {
-  const device = gpuDeviceErrors();
+  device = gpuDeviceErrors();
   const { running, ground, pbr, addLight } = await buildScene();
   device.stop();
   // Two families, so a rebuild has a gap between groups for a generator to land in.
+  const swapped = running.renderer.renderableRebuilds;
   ground.materials = [pbr];
-  await running.advance(SETTLE_FRAMES * 4);
+  // Lite builds the PBR family on its own; the sync system then owes a rebuild to confirm its reset.
+  await rebuildsDone(running, swapped);
 
   // Boundary assertion: the scene is a Lite 1.34.0 scene.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   const stall = stallAfterFirstGroup(running.renderer.scene as unknown as RebuildInternals);
   // A second light is a topology change, so the render sync system rebuilds every group.
   const right = addLight("Right", 6, false);
-  await framesUntil(running, () => stall.isStalled());
+  await framesUntil(running, "the stall", () => stall.isStalled());
   expect(running.renderer.isRebuildInFlight).toBe(true);
 
   right.shadows.enabled = true;
   await running.advance(SETTLE_FRAMES);
   expect(right.isCastingShadows).toBe(false);
 
+  const stalled = running.renderer.renderableRebuilds;
   stall.release();
-  await framesUntil(running, () => right.isCastingShadows && !running.renderer.isRebuildInFlight);
-  await running.advance(SETTLE_FRAMES);
-  expect(running.errors).toEqual([]);
-  expect(device.errors).toEqual([]);
+  await framesUntil(running, "the generator", () => right.isCastingShadows);
+  // The generator attaches on the first frame after the stalled rebuild; its own rebuild follows.
+  await rebuildsDone(running, stalled);
+  expectNoErrors(running);
 }, 60_000);
 
 it("keeps a destroyed caster's light and generator in the scene until the rebuild in flight has finished", async () => {
-  const device = gpuDeviceErrors();
+  device = gpuDeviceErrors();
   const { running, ground, pbr, addLight } = await buildScene();
   device.stop();
+  const before = running.renderer.renderableRebuilds;
   ground.materials = [pbr];
   const right = addLight("Right", 6, true);
-  await framesUntil(running, () => right.isCastingShadows && !running.renderer.isRebuildInFlight);
-  await running.advance(SETTLE_FRAMES);
+  await framesUntil(running, "the generator", () => right.isCastingShadows);
+  await rebuildsDone(running, before);
   const liteLight = right.lite.light;
   expect(liteLight).not.toBeNull();
 
@@ -246,16 +358,17 @@ it("keeps a destroyed caster's light and generator in the scene until the rebuil
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   const stall = stallAfterFirstGroup(running.renderer.scene as unknown as RebuildInternals);
   addLight("Top", 0.5, false);
-  await framesUntil(running, () => stall.isStalled());
+  await framesUntil(running, "the stall", () => stall.isStalled());
 
   right.entity.destroy();
   await running.advance(SETTLE_FRAMES);
   expect(running.renderer.scene.lights).toContain(liteLight);
 
+  const stalled = running.renderer.renderableRebuilds;
   stall.release();
-  await framesUntil(running, () => !running.renderer.isRebuildInFlight);
-  await running.advance(SETTLE_FRAMES);
+  await framesUntil(running, "the stalled rebuild", () => !running.renderer.isRebuildInFlight);
   expect(running.renderer.scene.lights).not.toContain(liteLight);
-  expect(running.errors).toEqual([]);
-  expect(device.errors).toEqual([]);
+  // A destroyed light owes no rebuild of the sync system's own, so only the stalled one is waited on.
+  await rebuildsDone(running, stalled - 1);
+  expectNoErrors(running);
 }, 60_000);

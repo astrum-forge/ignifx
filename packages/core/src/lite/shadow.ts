@@ -206,6 +206,8 @@ export interface MaterialCacheResets {
   readonly seen: WeakSet<() => void>;
   /** `true` when a function nobody had seen was pushed since the last rebuild started. */
   unconfirmed: boolean;
+  /** How many rebuilds started over because a material swap landed in them; for diagnostics. */
+  retries: number;
 }
 
 /** The scene's disposer list, which Lite runs when the scene is disposed. Absent from `index.d.ts`. */
@@ -222,7 +224,7 @@ interface SceneDisposables {
  * @internal
  */
 export function createMaterialCacheResets(): MaterialCacheResets {
-  return { found: new Set(), seen: new WeakSet(), unconfirmed: false };
+  return { found: new Set(), seen: new WeakSet(), unconfirmed: false, retries: 0 };
 }
 
 /**
@@ -297,11 +299,11 @@ export async function rebuildRenderables(scene: SceneContext, resets?: MaterialC
     }
     trackMaterialCacheResets(scene, resets);
     takeUnconfirmed(resets);
-    await rebuildAcrossMaterialSwaps(scene);
+    await rebuildAcrossMaterialSwaps(scene, resets);
     if (takeUnconfirmed(resets)) {
       // A family was built for the first time just now: build once more so it pushes its reset again.
       // Whatever this one sees for the first time stays flagged for the render sync system.
-      await rebuildAcrossMaterialSwaps(scene);
+      await rebuildAcrossMaterialSwaps(scene, resets);
     }
   } finally {
     release();
@@ -327,10 +329,15 @@ const MAX_SWAP_RETRIES = 2;
  * current materials. A throw with every material unchanged is not this race, and is rethrown.
  *
  * @param scene - The scene to rebuild.
+ * @param resets - The scene's record, which counts the restarts.
  * @param retries - How many more times to start over.
  * @returns A promise that resolves when a rebuild has finished.
  */
-async function rebuildAcrossMaterialSwaps(scene: SceneContext, retries = MAX_SWAP_RETRIES): Promise<void> {
+async function rebuildAcrossMaterialSwaps(
+  scene: SceneContext,
+  resets?: MaterialCacheResets,
+  retries = MAX_SWAP_RETRIES,
+): Promise<void> {
   const meshes = scene.meshes;
   const materials = meshes.map((mesh) => mesh.material);
   try {
@@ -340,7 +347,10 @@ async function rebuildAcrossMaterialSwaps(scene: SceneContext, retries = MAX_SWA
     if (!swapped || retries <= 0) {
       throw error;
     }
-    await rebuildAcrossMaterialSwaps(scene, retries - 1);
+    if (resets !== undefined) {
+      resets.retries += 1;
+    }
+    await rebuildAcrossMaterialSwaps(scene, resets, retries - 1);
   }
 }
 
