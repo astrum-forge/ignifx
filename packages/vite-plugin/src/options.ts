@@ -62,12 +62,21 @@ export interface IgnifxPluginOptions {
    */
   readonly manifestFileName?: string;
   /**
-   * Path to the project config injected as `import.meta.env.IGNIFX_CONFIG`
-   * (`docs/architecture/04-extensions.md` §5). Pass `false` to inject `{}` and load nothing.
+   * Path to the project config, the code form of the settings injected as
+   * `import.meta.env.IGNIFX_CONFIG` (`docs/architecture/04-extensions.md` §5). Pass `false` to load
+   * no config file; `settingsFile` is still read.
    *
    * @defaultValue auto-detected at the Vite root: `ignifx.config.ts`, `.mts`, `.js`, then `.mjs`.
    */
   readonly config?: string | false;
+  /**
+   * Path to the project settings data file, merged under the config file: a section both define is
+   * taken whole from the config file. Pass `false` to read no settings file; with `config: false`
+   * as well, `{}` is injected.
+   *
+   * @defaultValue `ignifx.settings.json` at the Vite root, when it exists.
+   */
+  readonly settingsFile?: string | false;
   /**
    * Whether format-headed JSON under the asset root is validated. A failure fails the build.
    *
@@ -109,8 +118,10 @@ export interface ResolvedIgnifxPluginOptions {
   readonly publicPath: string;
   /** The manifest file name, without a leading `/`. */
   readonly manifestFileName: string;
-  /** The configured config path, `null` to auto-detect, or `false` to inject `{}`. */
+  /** The configured config path, `null` to auto-detect, or `false` to load none. */
   readonly configFile: string | null | false;
+  /** The configured settings data path, `null` to auto-detect, or `false` to read none. */
+  readonly settingsFile: string | null | false;
   /** Whether validation runs. */
   readonly validate: boolean;
   /** The supplied schemas, or `null`. */
@@ -191,6 +202,7 @@ export function resolvePluginOptions(options: IgnifxPluginOptions): ResolvedIgni
       false,
     ),
     configFile: options.config ?? null,
+    settingsFile: options.settingsFile ?? null,
     validate: options.validate ?? true,
     schemas: options.schemas ?? null,
     hashLength,

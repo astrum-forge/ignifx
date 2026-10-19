@@ -1,7 +1,8 @@
 # @ignifx/vite-plugin
 
 The build-time half of the ignifx asset pipeline: it generates the asset manifest, validates the
-JSON file formats and the WGSL shaders, injects `ignifx.config.ts`, copies the static files
+JSON file formats and the WGSL shaders, injects the project settings (`ignifx.settings.json` and
+`ignifx.config.ts`), copies the static files
 extensions need, and carries asset changes to the running game over HMR.
 
 The package depends on nothing from the engine (`docs/architecture/00-overview.md` §2). It produces
@@ -33,15 +34,15 @@ There is no default export: the plugin is the named factory `ignifx` (coding sta
 
 ## What it does
 
-| Concern              | Development                                                         | Build                                                           |
-| -------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------- |
-| Manifest             | served from `/assets.manifest.json` and `virtual:ignifx/manifest`   | written to `<outDir>/assets.manifest.json`, URLs content-hashed |
-| Assets               | served by Vite from the asset root                                  | copied to `<outDir>/assets/` with immutable-cacheable names     |
-| Project config       | `import.meta.env.IGNIFX_CONFIG`                                     | same                                                            |
-| Validation           | reported in the terminal and the browser error overlay              | fails the build                                                 |
-| Shaders              | `.wgsl` files are `shader` assets, validated with the JSON assets   | same                                                            |
-| Extension WASM/fonts | served from `/assets/<name>`                                        | copied unhashed to `<outDir>/assets/<name>`                     |
-| Changes              | `ignifx:asset-changed` over HMR; a config edit forces a full reload | —                                                               |
+| Concern              | Development                                                          | Build                                                           |
+| -------------------- | -------------------------------------------------------------------- | --------------------------------------------------------------- |
+| Manifest             | served from `/assets.manifest.json` and `virtual:ignifx/manifest`    | written to `<outDir>/assets.manifest.json`, URLs content-hashed |
+| Assets               | served by Vite from the asset root                                   | copied to `<outDir>/assets/` with immutable-cacheable names     |
+| Project config       | `import.meta.env.IGNIFX_CONFIG`                                      | same                                                            |
+| Validation           | reported in the terminal and the browser error overlay               | fails the build                                                 |
+| Shaders              | `.wgsl` files are `shader` assets, validated with the JSON assets    | same                                                            |
+| Extension WASM/fonts | served from `/assets/<name>`                                         | copied unhashed to `<outDir>/assets/<name>`                     |
+| Changes              | `ignifx:asset-changed` over HMR; a settings edit restarts the server | —                                                               |
 
 ## Options
 
@@ -51,8 +52,9 @@ ignifx({
   publicPath: "assets/", // where hashed assets land inside build.outDir
   manifestFileName: "assets.manifest.json",
   config: undefined, // path to ignifx.config.ts; `false` disables loading
+  settingsFile: undefined, // path to ignifx.settings.json; `false` disables loading
   validate: true, // header + JSON Schema validation; a failure fails the build
-  schemas: undefined, // { scene?, formats? } — supplied by the game from @ignifx/core
+  schemas: undefined, // { scene?, formats?, settings? } — supplied by the game from @ignifx/core
   hashLength: 8, // hex characters kept from each asset's sha256
   scripts: "src/scripts/**/*.ts", // glob behind virtual:ignifx/scripts
 });
@@ -146,9 +148,18 @@ declare module "virtual:ignifx/scripts" {
 
 ## Project config
 
-`ignifx.config.ts` at the Vite root is loaded with Vite's own config loader and injected as
-`import.meta.env.IGNIFX_CONFIG` (`docs/architecture/04-extensions.md` §5). It must export a plain,
-JSON-serializable object by default.
+Project settings come in two forms at the Vite root, and either, both, or neither may exist:
+
+- **Data:** `ignifx.settings.json`, a JSON object with one property per settings section. This is
+  the form a tool such as the ignifx editor writes.
+- **Code:** `ignifx.config.ts` (or `.mts`, `.js`, `.mjs`), loaded with Vite's own config loader. It
+  must export a plain, JSON-serializable object by default.
+
+The plugin merges them and injects the result as `import.meta.env.IGNIFX_CONFIG`
+(`docs/architecture/04-extensions.md` §5). **Precedence: the config file wins, a whole section at a
+time.** A section only one form defines comes from that form; a section both define comes entirely
+from `ignifx.config.ts`, and the plugin warns that the JSON section has no effect (unless the two
+are equal, as when the config file spreads the JSON).
 
 ```ts
 // ignifx.config.ts
@@ -161,7 +172,22 @@ export default defineConfig({
 });
 ```
 
-From Phase 12 the same helper is re-exported as `ignifx/config`.
+From Phase 12 the same helper is re-exported as `ignifx/config`. `defineConfig` takes any JSON
+object, so a config file can keep the data in `ignifx.settings.json` and add to it in code:
+
+```ts
+// ignifx.config.ts
+import { defineConfig } from "@ignifx/vite-plugin";
+import settings from "./ignifx.settings.json";
+
+export default defineConfig({ ...settings, time: { fixedDeltaTime: 1 / 120 } });
+```
+
+Pass `schemas: { settings }`, the JSON Schema `@ignifx/core`'s `settingsJsonSchema(app)` generates
+from every registered section, to validate the merged settings when the dev server starts and when
+the build runs: a misspelled key or unknown section fails with `IGX-0554` and the key's JSON pointer
+(`/time/fixedDeltaTim`). Without it, `createApp` still validates every section when the game starts
+(`IGX-0407` for an unknown section, `IGX-0408` for a bad value or key).
 
 ## Validation
 
@@ -236,8 +262,9 @@ import.meta.hot?.on("ignifx:asset-changed", ({ address, kind, url }) => {
 ```
 
 `@ignifx/core`'s assets service subscribes to this and fires `AssetHandle.onReplaced`
-(`docs/architecture/05-assets-and-loading.md` §7). Editing `ignifx.config.ts` triggers a full reload
-instead, because project settings are frozen at app construction.
+(`docs/architecture/05-assets-and-loading.md` §7). Editing `ignifx.config.ts` or
+`ignifx.settings.json` restarts the dev server instead: the settings are injected as a `define`,
+which only a restart recomputes, and they are frozen at app construction anyway.
 
 `plugin.api.whenIdle()` resolves once the plugin has finished reacting to every file-system event it
 has seen — useful in tests and in other plugins that read the served manifest.
@@ -286,7 +313,7 @@ collide with them.
 | `IGX-0551` | A `.meta.json` sidecar is malformed                                                                                |
 | `IGX-0552` | Two files build to the same output name                                                                            |
 | `IGX-0553` | An extension's `ignifx.assets.public` entry is missing or ambiguous                                                |
-| `IGX-0554` | `ignifx.config.ts` could not be loaded                                                                             |
+| `IGX-0554` | `ignifx.config.ts` or `ignifx.settings.json` could not be loaded, or the settings fail `schemas.settings`          |
 | `IGX-0555` | A plugin option is outside its domain                                                                              |
 | `IGX-0650` | A JSON asset is not parseable                                                                                      |
 | `IGX-0651` | A format-headed file has no usable `format`/`formatVersion` header                                                 |

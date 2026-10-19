@@ -28,7 +28,10 @@ export const VitePluginErrorCode = {
   duplicateOutputFile: "IGX-0552",
   /** An `ignifx.assets.public` entry of an extension package could not be read. */
   extensionAssetMissing: "IGX-0553",
-  /** `ignifx.config.ts` could not be loaded, or its default export is not an object. */
+  /**
+   * `ignifx.config.ts` could not be loaded or its default export is not an object,
+   * `ignifx.settings.json` is not a JSON object, or the merged settings fail `schemas.settings`.
+   */
   invalidProjectConfig: "IGX-0554",
   /** A plugin option is outside its documented domain. */
   invalidOption: "IGX-0555",

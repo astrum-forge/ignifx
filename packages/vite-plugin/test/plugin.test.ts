@@ -425,7 +425,7 @@ describe("configureServer", () => {
     expect(served().entries.map((entry) => entry.address)).toEqual(["sprites/enemy.png", "sprites/hero.png"]);
   });
 
-  it("triggers a full reload when the project config changes", async () => {
+  it("restarts the server when the project config changes, so the new settings are injected", async () => {
     const root = await projectTree();
     const plugin = ignifx();
     await configure(plugin, root, "serve");
@@ -433,7 +433,7 @@ describe("configureServer", () => {
     await harness(plugin).configureServer(asViteServer(server));
 
     await emitAndSettle(plugin, server, "change", join(root, "ignifx.config.ts"));
-    expect(server.sent).toContainEqual({ type: "full-reload", path: "*" });
+    expect(server.restarts).toBe(1);
   });
 
   it("ignores changes outside the asset root", async () => {

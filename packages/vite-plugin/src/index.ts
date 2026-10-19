@@ -33,10 +33,16 @@ export { collectExtensionPublicAssets, EXTENSION_KEYWORD, type ExtensionPublicAs
 export {
   defineConfig,
   findIgnifxConfigFile,
+  findIgnifxSettingsFile,
   IGNIFX_CONFIG_DEFINE_KEY,
   IGNIFX_CONFIG_FILE_NAMES,
+  IGNIFX_SETTINGS_FILE_NAME,
   loadIgnifxConfig,
+  loadIgnifxSettings,
+  mergeProjectSettings,
+  type MergedProjectSettings,
   type ResolvedIgnifxConfig,
+  type ResolvedIgnifxSettings,
 } from "./ignifx-config.js";
 export {
   appendPointer,

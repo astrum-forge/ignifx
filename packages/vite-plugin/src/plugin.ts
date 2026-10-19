@@ -8,11 +8,20 @@
 import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
 import { readFile, stat } from "node:fs/promises";
-import { basename, isAbsolute, relative, resolve } from "node:path";
+import { basename, isAbsolute, join, relative, resolve } from "node:path";
 import { assetTypeForAddress, hashedAddress, isSidecarFileName, META_SUFFIX } from "./asset-types.js";
 import { VitePluginError, VitePluginErrorCode } from "./errors.js";
 import { collectExtensionPublicAssets } from "./extension-assets.js";
-import { findIgnifxConfigFile, IGNIFX_CONFIG_DEFINE_KEY, loadIgnifxConfig } from "./ignifx-config.js";
+import {
+  findIgnifxConfigFile,
+  findIgnifxSettingsFile,
+  IGNIFX_CONFIG_DEFINE_KEY,
+  IGNIFX_SETTINGS_FILE_NAME,
+  loadIgnifxConfig,
+  loadIgnifxSettings,
+  mergeProjectSettings,
+  validateProjectSettings,
+} from "./ignifx-config.js";
 import { addressFromRelativePath, buildManifest, scanAssetRoot, serializeManifest } from "./manifest.js";
 import { resolvePluginOptions } from "./options.js";
 import { formatValidationProblem, validateJsonAssets } from "./validate.js";
@@ -175,15 +184,17 @@ export interface IgnifxPluginApi {
  * @remarks
  * What it does, in the order the hooks run:
  *
- * - `config` resolves `ignifx.config.ts` and injects it as `import.meta.env.IGNIFX_CONFIG`
- *   (`docs/architecture/04-extensions.md` §5).
+ * - `config` reads `ignifx.settings.json` and `ignifx.config.ts`, merges them a section at a time
+ *   with the config file winning, validates the result when `schemas.settings` is supplied, and
+ *   injects it as `import.meta.env.IGNIFX_CONFIG` (`docs/architecture/04-extensions.md` §5).
  * - `buildStart` scans the asset root, hashes every file, reads `.meta.json` sidecars, and
  *   validates every format-headed JSON file. A validation failure fails the build. An asset whose
  *   sidecar says `"publish": false` is left out of everything that follows.
  * - `virtual:ignifx/manifest` and `virtual:ignifx/scripts` are served from `resolveId`/`load`.
  * - In development the manifest is also served from `/<manifestFileName>`, the asset root is
  *   watched, and every change is announced on the `ignifx:asset-changed` HMR channel; editing the
- *   project config triggers a full reload.
+ *   project config or settings file restarts the dev server, which injects the new values and
+ *   reloads the page.
  * - `generateBundle` emits every asset under `<outDir>/<publicPath>` with a content-hashed,
  *   immutable-cacheable name, copies each extension's `ignifx.assets.public` files unhashed next to
  *   them, and writes the manifest with the hashed URLs.
@@ -213,6 +224,10 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
   let command: ConfigEnv["command"] = "serve";
   let configFilePath: string | null = null;
   let configDependencies: readonly string[] = [];
+  /** The settings data file the dev server reacts to, whether or not it exists yet. */
+  let settingsFilePath: string | null = null;
+  /** Sections `ignifx.config.ts` overrode with a different value, reported once the logger exists. */
+  let shadowedSections: readonly string[] = [];
   let assets: readonly ScannedAsset[] = [];
   let problems: readonly ValidationProblem[] = [];
   let extensionAssets: readonly DescribedExtensionAsset[] = [];
@@ -448,7 +463,10 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
    * @returns `true` when the change must trigger a full reload.
    */
   function isProjectConfigFile(file: string): boolean {
-    if (configFilePath !== null && file === configFilePath) {
+    if (
+      (configFilePath !== null && file === configFilePath) ||
+      (settingsFilePath !== null && file === settingsFilePath)
+    ) {
       return true;
     }
     return configDependencies.some((dependency) => resolve(root, dependency) === file);
@@ -468,8 +486,10 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
   ): Promise<void> {
     const absolute = resolve(file);
     if (isProjectConfigFile(absolute)) {
-      server.config.logger.info(`[${PLUGIN_NAME}] project config changed, reloading`, { timestamp: true });
-      server.ws.send({ type: "full-reload", path: "*" });
+      // The settings reach the game as a `define`, which only the `config` hook computes, so a page
+      // reload alone would serve the old values; a restart re-runs the hook and reloads the page.
+      server.config.logger.info(`[${PLUGIN_NAME}] project settings changed, restarting`, { timestamp: true });
+      await server.restart();
       return;
     }
 
@@ -680,14 +700,34 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
           : settings.configFile === null
             ? await findIgnifxConfigFile(root)
             : resolve(root, settings.configFile);
-      const loaded = await loadIgnifxConfig(file, root, env);
+      settingsFilePath =
+        settings.settingsFile === false
+          ? null
+          : settings.settingsFile === null
+            ? join(root, IGNIFX_SETTINGS_FILE_NAME)
+            : resolve(root, settings.settingsFile);
+      const settingsFile = settings.settingsFile === null ? await findIgnifxSettingsFile(root) : settingsFilePath;
+      const [loaded, data] = await Promise.all([loadIgnifxConfig(file, root, env), loadIgnifxSettings(settingsFile)]);
       configFilePath = loaded.path;
       configDependencies = loaded.dependencies;
-      const projectConfig: JsonObject = loaded.config;
+      const merged = mergeProjectSettings(data.settings, loaded.config);
+      shadowedSections = merged.shadowed;
+      const settingsSchema = settings.schemas?.settings;
+      if (settings.validate && settingsSchema !== undefined) {
+        const sources = [data.path, loaded.path].filter((path): path is string => path !== null);
+        validateProjectSettings(merged.config, settingsSchema, sources);
+      }
+      const projectConfig: JsonObject = merged.config;
       return { define: { [IGNIFX_CONFIG_DEFINE_KEY]: JSON.stringify(projectConfig) } };
     },
 
     configResolved(resolvedConfig) {
+      if (shadowedSections.length > 0) {
+        resolvedConfig.logger.warn(
+          `[${PLUGIN_NAME}] ${configFilePath ?? "the config file"} overrides the ${shadowedSections.join(", ")} ` +
+            `section(s) of ${IGNIFX_SETTINGS_FILE_NAME}; edits to them in the settings file have no effect.`,
+        );
+      }
       root = resolvedConfig.root;
       base = resolvedConfig.base;
       command = resolvedConfig.command;
