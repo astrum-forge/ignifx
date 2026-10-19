@@ -95549,7 +95549,9 @@ A fresh ray. **Allocates** — make one per call site, not per frame.
 
 ```ts
 const ray = createRay();
-camera.screenToRay(event.offsetX, event.offsetY, ray);
+// A DOM event is in CSS pixels; the camera speaks the canvas's backing-store pixels.
+const scale = canvas.width / canvas.clientWidth;
+camera.screenToRay(event.offsetX * scale, event.offsetY * scale, ray);
 ```
 
 ***
