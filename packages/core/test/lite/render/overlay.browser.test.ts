@@ -249,9 +249,13 @@ describe("a render overlay", () => {
   it("is disposed with the app", async () => {
     const running = await startScene({ msaa: 1, path: "plain" });
     const overlay = await running.app.renderer.openOverlay();
-    const engine = running.renderer.engine;
+    addGreenBox(running, overlay);
+    await running.advance(2);
+    expect(overlay.lite.scene.meshes.length).toBe(1);
     running.dispose();
     harness = null;
-    expect(getRenderingContexts(engine)).not.toContain(overlay.lite.scene);
+    // `disposeScene` clears both; disposing the engine alone does not.
+    expect(overlay.lite.scene.meshes.length).toBe(0);
+    expect(overlay.lite.scene.camera).toBeNull();
   }, 60_000);
 });
