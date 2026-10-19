@@ -958,6 +958,15 @@ The answer to `openScene`, once every entity is built.
 
 How many entities the host built, including those expanded from instanced scenes.
 
+##### viewMode?
+
+> `readonly` `optional` **viewMode?**: [`ViewMode`](#viewmode-3)
+
+The editor camera the scene is made for, as the host's engine sees it: `"2d"` when the project
+draws sprites only (`twoD.mode: "sprite"`) or the scene's cameras are all `Camera2D`, else
+`"3d"`. The host does not switch to it; the editor sends `setViewMode`. Absent from a host from
+before it.
+
 ##### warnings
 
 > `readonly` **warnings**: readonly [`SceneIssue`](#sceneissue)[]
@@ -1917,6 +1926,12 @@ As in [OpenSceneResult](#opensceneresult).
 
 The file's `name`.
 
+##### viewMode?
+
+> `readonly` `optional` **viewMode?**: [`ViewMode`](#viewmode-3)
+
+As in [OpenSceneResult](#opensceneresult).
+
 ##### warnings
 
 > `readonly` **warnings**: readonly [`SceneIssue`](#sceneissue)[]
@@ -2316,7 +2331,7 @@ The parameters of `setViewMode`.
 
 ##### mode
 
-> `readonly` **mode**: [`ViewMode`](#viewmode-1)
+> `readonly` **mode**: [`ViewMode`](#viewmode-3)
 
 The editor camera to use.
 
@@ -2774,7 +2789,7 @@ A world-space point, `[x, y, z]`, in metres.
 
 ### ViewMode
 
-> **ViewMode** = *typeof* [`ViewMode`](#viewmode)\[keyof *typeof* [`ViewMode`](#viewmode)\]
+> **ViewMode** = *typeof* [`ViewMode`](#viewmode-2)\[keyof *typeof* [`ViewMode`](#viewmode-2)\]
 
 The union of the modes in `ViewMode`.
 
@@ -3909,7 +3924,7 @@ The received `result`.
 
 `value is OpenSceneResult`
 
-True for a count and a list of issues.
+True for a count, a list of issues, and an optional view mode.
 
 ***
 
@@ -4324,7 +4339,7 @@ The received `params`.
 
 `value is SceneOpenedParams`
 
-True for an address or `null`, a name, a count and issues.
+True for an address or `null`, a name, a count, issues, and an optional view mode.
 
 ***
 
@@ -4582,8 +4597,10 @@ started, and the host's first `schemasChanged` says they are accepted. It accept
 whenever the editor sends one, closing the previous port.
 
 With a `canvas` the host draws Babylon Lite's gizmos and a selection outline in core's render
-overlay (`app.renderer.openOverlay()`) and answers `screenshot`. A headless host serves every
-method that needs no GPU.
+overlay (`app.renderer.openOverlay()`), answers `screenshot`, and has a 2D view mode
+(`setViewMode`), which shows the sprites through an editor-owned `Camera2D` and picks them with
+`app.twoD.pickAt` when the project registers `@ignifx/2d`. A headless host serves every method
+that needs no GPU.
 
 #### Throws
 

@@ -51,6 +51,7 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "catalog:",
     "@babylonjs/lite": "catalog:",
+    "@ignifx/2d": "workspace:*",
     "@ignifx/core": "workspace:*",
     "@ignifx/vite-plugin": "workspace:*",
     "@microsoft/api-extractor": "catalog:",

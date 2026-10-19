@@ -153,6 +153,7 @@ const PARAMS_GUARDS: Readonly<Record<string, (value: unknown) => boolean>> = {
   screenshotJpeg: isScreenshotParams,
   setViewMode: isSetViewModeParams,
   sceneOpened: isSceneOpenedParams,
+  sceneOpened2d: isSceneOpenedParams,
   schemasChangedAtStart: isSchemaSet,
   schemasChanged: isSchemaSet,
   hotReloaded: isHotReloadedParams,
@@ -177,6 +178,7 @@ const RESULT_GUARDS: Readonly<Record<string, (value: unknown) => boolean>> = {
   pickMiss: isPickResult,
   pickMissRay: isPickResult,
   pickMissRay2d: isPickResult,
+  pickHit2d: isPickResult,
   screenshotResponse: isScreenshotResult,
   getSchemasResponse: isSchemaSet,
   describeSettingsResponse: isSettingsSet,
@@ -236,6 +238,17 @@ describe("the editor's 0.3 wire fixture, through the host's guards", () => {
     expect(isPickResult({ ...answer, ray: { origin: ray["origin"] } })).toBe(false);
     expect(isPickResult({ ...answer, ray: null })).toBe(false);
     expect(isPickResult({ ...answer, plane: [1, 2, Number.NaN] })).toBe(false);
+  });
+
+  it("accepts an open answer and sceneOpened with or without a view mode, and refuses an unknown one", () => {
+    const result = member(wire("openSceneResponse"), "result");
+    const opened = member(wire("sceneOpened2d"), "params");
+    expect(result["viewMode"]).toBe("3d");
+    expect(opened["viewMode"]).toBe("2d");
+    expect(isOpenSceneResult({ ...result, viewMode: undefined })).toBe(true);
+    expect(isOpenSceneResult({ ...result, viewMode: "iso" })).toBe(false);
+    expect(isSceneOpenedParams({ ...opened, viewMode: undefined })).toBe(true);
+    expect(isSceneOpenedParams({ ...opened, viewMode: 2 })).toBe(false);
   });
 
   it("refuses settings whose sections are not schema descriptions or whose values are not objects", () => {
@@ -403,6 +416,8 @@ describe("the editor's 0.3 wire fixture, through a live headless host", () => {
       codes.push(code);
     }
     expect(codes).toEqual(["IGX-0604"]);
+    // The fixture's level has a 3D camera and the project no 2D toolkit: a 3D scene.
+    expect(result["viewMode"]).toBe(member(response, "result")["viewMode"]);
     expectWire(opened, { ...response, result });
     const sceneOpened = wire("sceneOpened");
     expectWire(await peer.notification(SceneNotification.sceneOpened), {

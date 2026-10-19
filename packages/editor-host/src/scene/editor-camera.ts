@@ -34,6 +34,30 @@ export interface ViewClick {
   readonly toggle: boolean;
 }
 
+/**
+ * Captures a pointer on the canvas. The pointer may already be gone (released before the listener
+ * ran, or an event no device produced), which `setPointerCapture` reports by throwing; the gesture
+ * then simply runs uncaptured.
+ *
+ * @param canvas - The canvas, or `null`.
+ * @param pointerId - The pointer.
+ * @param capture - `true` to capture, `false` to release.
+ */
+export function setCapture(canvas: HTMLCanvasElement | null, pointerId: number, capture: boolean): void {
+  if (canvas === null) {
+    return;
+  }
+  try {
+    if (capture) {
+      canvas.setPointerCapture(pointerId);
+    } else if (canvas.hasPointerCapture(pointerId)) {
+      canvas.releasePointerCapture(pointerId);
+    }
+  } catch {
+    // An inactive pointer cannot be captured; nothing else depends on the capture.
+  }
+}
+
 /** The camera's vertical field of view, in degrees. */
 export const EDITOR_CAMERA_FOV = 50;
 
@@ -76,6 +100,9 @@ export class EditorCamera extends Script implements ScriptCallbacks {
   /** How far the eye is from the focus, in metres. */
   distance = 12;
 
+  /** Whether the camera answers the view's input; the host clears it while the view is in 2D mode. */
+  active = true;
+
   /** The gizmo dispatcher, once the view has one. */
   claims: PointerClaims | null = null;
 
@@ -103,7 +130,7 @@ export class EditorCamera extends Script implements ScriptCallbacks {
   readonly #keys = new Set<string>();
 
   readonly #onPointerDown = (event: PointerEvent): void => {
-    if (this.#pointer !== -1) {
+    if (!this.active || this.#pointer !== -1) {
       return;
     }
     this.#downX = event.offsetX;
@@ -124,7 +151,7 @@ export class EditorCamera extends Script implements ScriptCallbacks {
       return;
     }
     this.#pointer = event.pointerId;
-    this.#canvas?.setPointerCapture(event.pointerId);
+    setCapture(this.#canvas, event.pointerId, true);
   };
 
   readonly #onPointerMove = (event: PointerEvent): void => {
@@ -176,7 +203,7 @@ export class EditorCamera extends Script implements ScriptCallbacks {
     if (event.pointerId !== this.#pointer) {
       return;
     }
-    this.#canvas?.releasePointerCapture(event.pointerId);
+    setCapture(this.#canvas, event.pointerId, false);
     this.#pointer = -1;
     this.#gesture = "none";
     this.#keys.clear();
@@ -195,6 +222,9 @@ export class EditorCamera extends Script implements ScriptCallbacks {
   };
 
   readonly #onWheel = (event: WheelEvent): void => {
+    if (!this.active) {
+      return;
+    }
     event.preventDefault();
     this.distance = clamp(this.distance * Math.exp(event.deltaY * 0.0015), 0.2, 5000);
     this.apply();
@@ -264,7 +294,7 @@ export class EditorCamera extends Script implements ScriptCallbacks {
    * @param deltaTime - The frame's unscaled delta, in seconds.
    */
   update(deltaTime: number): void {
-    if (this.#gesture !== "fly" || this.#keys.size === 0) {
+    if (!this.active || this.#gesture !== "fly" || this.#keys.size === 0) {
       return;
     }
     const speed = 5 * (this.#keys.has("ShiftLeft") || this.#keys.has("ShiftRight") ? 4 : 1) * deltaTime;

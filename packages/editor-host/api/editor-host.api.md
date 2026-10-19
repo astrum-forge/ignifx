@@ -473,6 +473,7 @@ export type OpenSceneResponse = RpcSuccessResponse<OpenSceneResult>;
 // @public
 export interface OpenSceneResult {
     readonly entityCount: number;
+    readonly viewMode?: ViewMode;
     readonly warnings: readonly SceneIssue[];
 }
 
@@ -796,6 +797,7 @@ export interface SceneOpenedParams {
     readonly address: string | null;
     readonly entityCount: number;
     readonly name: string;
+    readonly viewMode?: ViewMode;
     readonly warnings: readonly SceneIssue[];
 }
 

@@ -482,7 +482,8 @@
             "code": "IGX-0604",
             "message": "Crate: prefabs/crate.prefab.json changed since the scene was saved (hash mismatch); its overrides were applied to the current prefab."
           }
-        ]
+        ],
+        "viewMode": "3d"
       }
     },
     "sceneOpened": {
@@ -497,7 +498,19 @@
             "code": "IGX-0604",
             "message": "Crate: prefabs/crate.prefab.json changed since the scene was saved (hash mismatch); its overrides were applied to the current prefab."
           }
-        ]
+        ],
+        "viewMode": "3d"
+      }
+    },
+    "sceneOpened2d": {
+      "jsonrpc": "2.0",
+      "method": "sceneOpened",
+      "params": {
+        "address": "scenes/main.scene.json",
+        "name": "main",
+        "entityCount": 18,
+        "warnings": [],
+        "viewMode": "2d"
       }
     },
     "openSceneInvalid": {
@@ -875,6 +888,20 @@
         "ray": {
           "origin": [3.5, -1.25, 9.95],
           "direction": [0, 0, -1]
+        },
+        "plane": [3.5, -1.25, 0]
+      }
+    },
+    "pickHit2d": {
+      "jsonrpc": "2.0",
+      "id": 14,
+      "result": {
+        "entity": "01M4ZEB9E0GG0Q6R22YXV3AVK8",
+        "point": [3.5, -1.25, 0],
+        "distance": null,
+        "ray": {
+          "origin": [3.5, -1.25, -499.95],
+          "direction": [0, 0, 1]
         },
         "plane": [3.5, -1.25, 0]
       }
