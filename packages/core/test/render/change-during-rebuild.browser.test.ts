@@ -230,3 +230,32 @@ it("switches a shadow on only once the rebuild in flight has finished", async ()
   expect(running.errors).toEqual([]);
   expect(device.errors).toEqual([]);
 }, 60_000);
+
+it("keeps a destroyed caster's light and generator in the scene until the rebuild in flight has finished", async () => {
+  const device = gpuDeviceErrors();
+  const { running, ground, pbr, addLight } = await buildScene();
+  device.stop();
+  ground.materials = [pbr];
+  const right = addLight("Right", 6, true);
+  await framesUntil(running, () => right.isCastingShadows && !running.renderer.isRebuildInFlight);
+  await running.advance(SETTLE_FRAMES);
+  const liteLight = right.lite.light;
+  expect(liteLight).not.toBeNull();
+
+  // Boundary assertion: the scene is a Lite 1.34.0 scene.
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+  const stall = stallAfterFirstGroup(running.renderer.scene as unknown as RebuildInternals);
+  addLight("Top", 0.5, false);
+  await framesUntil(running, () => stall.isStalled());
+
+  right.entity.destroy();
+  await running.advance(SETTLE_FRAMES);
+  expect(running.renderer.scene.lights).toContain(liteLight);
+
+  stall.release();
+  await framesUntil(running, () => !running.renderer.isRebuildInFlight);
+  await running.advance(SETTLE_FRAMES);
+  expect(running.renderer.scene.lights).not.toContain(liteLight);
+  expect(running.errors).toEqual([]);
+  expect(device.errors).toEqual([]);
+}, 60_000);

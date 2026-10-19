@@ -483,13 +483,27 @@ export class Light extends Component implements ComponentHooks {
    * @param renderer - The rendering service, for the scene.
    */
   #teardown(renderer: RendererImpl): void {
-    this.#releaseGenerator(renderer);
+    const generator = this.#generator;
     const light = this.#light;
+    this.#generator = null;
     this.#light = null;
     this.#appliedType = null;
     this.#appliedShadows = false;
-    if (light !== null) {
-      removeLightFromScene(renderer.scene, light);
+    const remove = (): void => {
+      if (generator !== null) {
+        detachShadows(renderer.scene, light, generator);
+        renderer.needsShadowLayoutReset = true;
+      }
+      if (light !== null) {
+        removeLightFromScene(renderer.scene, light);
+      }
+    };
+    // A caster leaving mid-rebuild changes the number of shadow maps under it, as attaching one
+    // would (`#applyShadows`); the light and its generator stay in the scene until it has finished.
+    if (generator === null) {
+      remove();
+    } else {
+      renderer.afterRebuild(remove);
     }
   }
 }

@@ -571,6 +571,20 @@ export class RenderSyncSystem implements System {
     } finally {
       renderer.isRebuildInFlight = false;
       this.#isRebuildPending = false;
+      this.#runHeldChanges();
+    }
+  }
+
+  /** Runs the scene changes `RendererImpl.afterRebuild` held back while the rebuild ran. */
+  #runHeldChanges(): void {
+    const renderer = this.#renderer;
+    const held = renderer.takeHeldChanges();
+    for (let index = 0; index < held.length; index += 1) {
+      try {
+        held[index]?.();
+      } catch (error: unknown) {
+        renderer.app.onError.emit({ error, source: "system", phase: null, entity: null, component: null });
+      }
     }
   }
 
