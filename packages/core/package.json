@@ -11,7 +11,8 @@
     "directory": "packages/core"
   },
   "files": [
-    "dist"
+    "dist",
+    "decoders"
   ],
   "type": "module",
   "sideEffects": false,
@@ -51,5 +52,22 @@
     "typedoc-plugin-markdown": "catalog:",
     "typescript-native": "catalog:",
     "vitest": "catalog:"
+  },
+  "ignifx": {
+    "assets": {
+      "public": [
+        "decoders/babylon.ktx2Decoder.js",
+        "decoders/msc_basis_transcoder.js",
+        "decoders/msc_basis_transcoder.wasm",
+        "decoders/uastc_astc.wasm",
+        "decoders/uastc_bc7.wasm",
+        "decoders/uastc_r8_unorm.wasm",
+        "decoders/uastc_rg8_unorm.wasm",
+        "decoders/uastc_rgba8_srgb_v2.wasm",
+        "decoders/uastc_rgba8_unorm_v2.wasm",
+        "decoders/zstddec.wasm",
+        "decoders/meshopt_decoder.js"
+      ]
+    }
   }
 }

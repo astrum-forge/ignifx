@@ -32,6 +32,8 @@ const config: Linter.Config[] = [
       "**/release/**",
       // The pack-time copy of `templates/*`, rebuilt by `packages/cli`'s `prepack`.
       "packages/cli/templates/**",
+      // Third-party decoders Babylon Lite loads at run time (`pnpm vendor:decoders`).
+      "packages/core/decoders/**",
     ],
   },
   jsConfigs.recommended,

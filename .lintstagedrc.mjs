@@ -22,6 +22,8 @@ const GENERATED = [
   // `pnpm docs:schemas` writes it byte for byte; `.oxfmtignore` excludes it, and oxfmt exits 1 when
   // every path it is handed is ignored.
   /skills\/ignifx\/references\/formats\/ignifx\.schemas\.json$/u,
+  // `pnpm vendor:decoders` copies these byte for byte and records their SHA-256 digests.
+  /packages\/core\/decoders\//u,
 ];
 
 /**

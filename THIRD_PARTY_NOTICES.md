@@ -9,7 +9,7 @@ in, with the licence each one is distributed under (`CONSTITUTION.md` §11.2).
 Sample art, audio and models shipped with a template are **not** listed here: each template
 records its own in `templates/<name>/ATTRIBUTION.md` (§11.3).
 
-12 packages.
+15 packages.
 
 ## @babylonjs/havok
 
@@ -17,6 +17,34 @@ records its own in `templates/<name>/ATTRIBUTION.md` (§11.3).
 - License: MIT
 - Copyright (c) 2023 Babylon.js
 - Required by: @ignifx/physics
+
+## @babylonjs/ktx2decoder
+
+- Version: 9.30.0
+- License: Apache-2.0
+- Copyright 2024 The Babylon.js team
+- Repository: <https://github.com/BabylonJS/Babylon.js>
+- Required by: @ignifx/core (vendored in packages/core/decoders)
+
+Its `NOTICE` file, reproduced as Apache-2.0 §4(d) requires:
+
+```text
+Babylon.js KTX2 Decoder
+Copyright 2024 The Babylon.js team
+
+This package contains compiled js andd binary wasm files developed by The Khronos Group (https://github.com/KhronosGroup/KTX-Software/)
+Copyright 2024 The Khronos Group (https://www.khronos.org/),
+Licensed under the Apache 2.0 license.
+
+This package contains compiled js andd binary wasm files developed by The Khronos Group (https://github.com/KhronosGroup/Basis-Universal-Transcoders)
+Copyright 2024 The Khronos Group (https://www.khronos.org/),
+Licensed under the Apache 2.0 license.
+
+This package contains a compiled binary wasm file (zstddec.wasm) from https://github.com/donmccurdy/zstddec by Don McCurdy,
+which contains the Zstandard decompression library.
+Copyright (c) 2016-present, Yann Collet, Facebook, Inc.
+Licensed under the BSD 3-Clause license.
+```
 
 ## @babylonjs/lite
 
@@ -516,6 +544,14 @@ flag will run closure compiler from third_party/).
 - Copyright 2022 WebGPU Developers
 - Repository: <https://github.com/gpuweb/types>
 
+## babylonjs-ktx2decoder
+
+- Version: 9.30.0
+- License: Apache-2.0
+- Copyright 2024 The Babylon.js team
+- Repository: <https://github.com/BabylonJS/Babylon.js>
+- Required by: @ignifx/core (vendored in packages/core/decoders)
+
 ## electron
 
 - Version: 44.2.0
@@ -545,6 +581,14 @@ flag will run closure compiler from third_party/).
 - License: MIT
 - Copyright (c) 2015 Michaël Zasso
 - Repository: <https://github.com/image-js/iobuffer>
+
+## meshoptimizer
+
+- Version: 1.3.0
+- License: MIT
+- Copyright (c) 2016-2026 Arseny Kapoulkine
+- Repository: <https://github.com/zeux/meshoptimizer>
+- Required by: @ignifx/core (vendored in packages/core/decoders)
 
 ## vite
 

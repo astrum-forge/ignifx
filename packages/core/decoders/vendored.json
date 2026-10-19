@@ -1,0 +1,95 @@
+{
+  "components": [
+    {
+      "name": "babylonjs-ktx2decoder",
+      "version": "9.30.0",
+      "integrity": "sha512-fmD4vcq9CIpM0bLhMQqe7jybz1RM+S3UDW3/A98d0Xb2uLB5OnCfo6Ie+xVO3y4ItP2NjIpa7/9UnjAW3nmUUg==",
+      "license": "Apache-2.0",
+      "repository": "https://github.com/BabylonJS/Babylon.js",
+      "copyright": "Copyright 2024 The Babylon.js team",
+      "licenseFile": "babylonjs-ktx2decoder.LICENSE.md",
+      "noticeFile": null,
+      "files": [
+        {
+          "file": "babylon.ktx2Decoder.js",
+          "from": "babylon.ktx2Decoder.js",
+          "sha256": "cf3d851f01d3e333368f1e0d5cdcbe9b346037ab1859287f5368a11163018942"
+        }
+      ]
+    },
+    {
+      "name": "@babylonjs/ktx2decoder",
+      "version": "9.30.0",
+      "integrity": "sha512-5G8vZ7vpA7l7UkoHz2wuSmQp6zILu8V2z30l8HAOOUi9PfVEdY+nN55ZZhzYXI9IqLNwHa0BcZRGpgEOdob8tg==",
+      "license": "Apache-2.0",
+      "repository": "https://github.com/BabylonJS/Babylon.js",
+      "copyright": "Copyright 2024 The Babylon.js team",
+      "licenseFile": "scoped-babylonjs-ktx2decoder.LICENSE.md",
+      "noticeFile": "scoped-babylonjs-ktx2decoder.NOTICE.md",
+      "files": [
+        {
+          "file": "msc_basis_transcoder.js",
+          "from": "wasm/msc_basis_transcoder.js",
+          "sha256": "b8906bae7e55606aba070642eb3bce790a2b5aea774874e120e9fd41f7c7d60b"
+        },
+        {
+          "file": "msc_basis_transcoder.wasm",
+          "from": "wasm/msc_basis_transcoder.wasm",
+          "sha256": "29becbf0eef2ce9f6d72109ad217704ec3799c432da0c26e3893b793ecab6bdc"
+        },
+        {
+          "file": "uastc_astc.wasm",
+          "from": "wasm/uastc_astc.wasm",
+          "sha256": "6846c972b4a52d938866f43896fd2b2450052da807cdd1285e898be80614d612"
+        },
+        {
+          "file": "uastc_bc7.wasm",
+          "from": "wasm/uastc_bc7.wasm",
+          "sha256": "be442ab8c0cbf734ded98e6ad38112aaba23c83bfeecac4213ded54631fc4eef"
+        },
+        {
+          "file": "uastc_r8_unorm.wasm",
+          "from": "wasm/uastc_r8_unorm.wasm",
+          "sha256": "0467c98b150a630e5a51f7810843e8b7fd9aad22e3888baf70aad255c55d02bc"
+        },
+        {
+          "file": "uastc_rg8_unorm.wasm",
+          "from": "wasm/uastc_rg8_unorm.wasm",
+          "sha256": "fb45a2c103c59cec21c3708a6534d43cd4381669f66d3292dd8a6e4e1956d773"
+        },
+        {
+          "file": "uastc_rgba8_srgb_v2.wasm",
+          "from": "wasm/uastc_rgba8_srgb_v2.wasm",
+          "sha256": "1f4d2e8bfef4e31679b23d473e1c410c29f7e485a739e76c5b357628f4190874"
+        },
+        {
+          "file": "uastc_rgba8_unorm_v2.wasm",
+          "from": "wasm/uastc_rgba8_unorm_v2.wasm",
+          "sha256": "b7470b26a847994cdeb9226eeba1e3711688e378ee438b7dd941e83cb598b694"
+        },
+        {
+          "file": "zstddec.wasm",
+          "from": "wasm/zstddec.wasm",
+          "sha256": "67d12d34f82ef700ec3a3795a77590252858c70330908a87ed1e73efc268cb4b"
+        }
+      ]
+    },
+    {
+      "name": "meshoptimizer",
+      "version": "1.3.0",
+      "integrity": "sha512-2oZqMAcEEiCtXWUjIGtZ71oPx1B0ZxYGTqIKsXB1wzWFhleNsCFxQuUJzgCV706bRcwPWtMGf1odmQvAcqKkIw==",
+      "license": "MIT",
+      "repository": "https://github.com/zeux/meshoptimizer",
+      "copyright": "Copyright (c) 2016-2026 Arseny Kapoulkine",
+      "licenseFile": "meshoptimizer.LICENSE.md",
+      "noticeFile": null,
+      "files": [
+        {
+          "file": "meshopt_decoder.js",
+          "from": "meshopt_decoder.cjs",
+          "sha256": "fabafaaa29cbb1cfa367f20e896d7f6e95b86e575e2ea86ddb6f8cca1a87152d"
+        }
+      ]
+    }
+  ]
+}

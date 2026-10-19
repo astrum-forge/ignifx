@@ -27,3 +27,7 @@ templates/*/assets/scenes/*.scene.json
 # and `templates/*/release/**` is a packaged application; neither is hand-written.
 templates/*/out/**
 templates/*/release/**
+
+# Third-party decoders Babylon Lite loads at run time, written by `pnpm vendor:decoders` with the
+# SHA-256 of each file recorded in `vendored.json`; a formatter run would break the digests.
+packages/core/decoders/**

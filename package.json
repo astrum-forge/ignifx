@@ -42,7 +42,8 @@
     "version-packages": "pnpm exec changeset version && pnpm run skills:version && pnpm run docs:schemas",
     "release": "pnpm build && pnpm exec changeset publish",
     "release:verify": "node scripts/verify-published.ts",
-    "check": "node scripts/check.ts"
+    "check": "node scripts/check.ts",
+    "vendor:decoders": "node scripts/vendor-decoders.ts"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "catalog:",
