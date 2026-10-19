@@ -155,6 +155,44 @@ describe("chunk building", () => {
     expect(rig.renderer.spriteCount).toBe(7);
   });
 
+  it("rebuilds after setTile without being told to", async () => {
+    const rig = await createRig();
+    rig.tick();
+    rig.map.setTile(0, 0, 0, 0);
+    rig.tick();
+    expect(rig.renderer.spriteCount).toBe(7);
+    rig.map.setTile(0, 0, 0, 1);
+    rig.tick();
+    expect(rig.renderer.spriteCount).toBe(8);
+  });
+
+  it("rebuilds only the chunks a setCells batch touched, once", async () => {
+    const rig = await createRig({ chunkSize: 2 });
+    rig.tick();
+    const layers = rig.runtime.layers;
+    // Nothing changed, so a sync writes nothing.
+    expect(rig.renderer.sync(rig.map, layers, null, rig.runtime.pixelsPerUnit)).toBe(0);
+    // Cells (0, 0) and (1, 0) share the bottom-left chunk, which holds four solid tiles.
+    rig.map.setCells([
+      { layer: 0, x: 0, y: 0, tileId: 0 },
+      { layer: 0, x: 1, y: 0, tileId: 0 },
+    ]);
+    expect(rig.renderer.sync(rig.map, layers, null, rig.runtime.pixelsPerUnit)).toBe(2);
+    expect(rig.renderer.spriteCount).toBe(6);
+    expect(rig.renderer.chunkCount).toBe(4);
+    expect(rig.renderer.sync(rig.map, layers, null, rig.runtime.pixelsPerUnit)).toBe(0);
+  });
+
+  it("rebuilds every chunk when the chunk size changes", async () => {
+    const rig = await createRig({ chunkSize: 2 });
+    rig.tick();
+    expect(rig.renderer.chunkCount).toBe(4);
+    rig.map.chunkSize = 4;
+    rig.tick();
+    expect(rig.renderer.chunkCount).toBe(1);
+    expect(rig.renderer.spriteCount).toBe(8);
+  });
+
   it("drops every chunk on request", async () => {
     const rig = await createRig();
     rig.tick();

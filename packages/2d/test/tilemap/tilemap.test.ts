@@ -111,6 +111,86 @@ describe("setTile", () => {
   });
 });
 
+describe("setCells", () => {
+  it("writes a batch, reports each changed cell after the writes, and counts the changes", async () => {
+    const tilemap = await createMap();
+    const seen: { readonly change: TileChange; readonly after: number }[] = [];
+    tilemap.onTileChanged.connect((change) => {
+      // Every write has landed by the time the first change is reported.
+      seen.push({ change, after: tilemap.getTile(0, 1, 0) });
+    });
+    const changed = tilemap.setCells([
+      { layer: 0, x: 0, y: 0, tileId: 0 },
+      { layer: 0, x: 1, y: 0, tileId: 0 },
+      { layer: 0, x: 3, y: 1, tileId: 0 }, // already empty, so not a change
+    ]);
+    expect(changed).toBe(2);
+    expect(seen.map((entry) => entry.change)).toEqual([
+      { layer: 0, x: 0, y: 0, previous: 1, current: 0 },
+      { layer: 0, x: 1, y: 0, previous: 1, current: 0 },
+    ]);
+    expect(seen.every((entry) => entry.after === 0)).toBe(true);
+    expect(tilemap.getTile(0, 0, 0)).toBe(0);
+    expect(tilemap.getTile(0, 1, 0)).toBe(0);
+  });
+
+  it("applies writes in order, so a repeated cell ends with the later id", async () => {
+    const tilemap = await createMap();
+    const seen: TileChange[] = [];
+    tilemap.onTileChanged.connect((change) => seen.push(change));
+    tilemap.setCells([
+      { layer: 0, x: 3, y: 3, tileId: 2 },
+      { layer: 0, x: 3, y: 3, tileId: 3 },
+    ]);
+    expect(tilemap.getTile(0, 3, 3)).toBe(3);
+    expect(seen.map((change) => [change.previous, change.current])).toEqual([
+      [0, 2],
+      [2, 3],
+    ]);
+  });
+
+  it("is a no-op for an empty or unchanged batch", async () => {
+    const tilemap = await createMap();
+    const first = tilemap.collisionData.version;
+    expect(tilemap.setCells([])).toBe(0);
+    expect(tilemap.setCells([{ layer: 0, x: 0, y: 0, tileId: 1 }])).toBe(0);
+    expect(tilemap.collisionData.version).toBe(first);
+  });
+
+  it("checks the whole batch before writing any of it", async () => {
+    const tilemap = await createMap();
+    let captured: unknown = null;
+    try {
+      tilemap.setCells([
+        { layer: 0, x: 0, y: 0, tileId: 0 },
+        { layer: 0, x: 99, y: 0, tileId: 1 },
+      ]);
+    } catch (error) {
+      captured = error;
+    }
+    expect((captured as { readonly code?: string }).code).toBe("IGX-1111");
+    expect(tilemap.getTile(0, 0, 0)).toBe(1);
+  });
+
+  it("merges collision once for the whole batch", async () => {
+    const tilemap = await createMap();
+    let fired = 0;
+    tilemap.onCollisionChanged.connect(() => {
+      fired += 1;
+    });
+    const first = tilemap.collisionData.version;
+    tilemap.setCells([
+      { layer: 0, x: 0, y: 0, tileId: 0 },
+      { layer: 0, x: 1, y: 0, tileId: 0 },
+      { layer: 0, x: 2, y: 0, tileId: 0 },
+    ]);
+    const second = tilemap.collisionData.version;
+    expect(second).toBe(first + 1);
+    expect(fired).toBe(2);
+    expect(tilemap.collisionAt(1, 0).shape.kind).toBe("none");
+  });
+});
+
 describe("cell arithmetic", () => {
   it("round trips a cell centre through world space", async () => {
     const tilemap = await createMap();

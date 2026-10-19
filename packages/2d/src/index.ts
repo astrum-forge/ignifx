@@ -199,7 +199,7 @@ export {
 export { importTiledMap, tiledPropertiesToRecord, type TiledImportOptions } from "./tilemap/importers/tiled.js";
 export { createTilemapLoader, TilemapAsset } from "./tilemap/tilemap-asset.js";
 export { TilemapRenderer } from "./tilemap/tilemap-renderer.js";
-export { DEFAULT_CHUNK_SIZE, Tilemap, type TileChange } from "./tilemap/tilemap.js";
+export { DEFAULT_CHUNK_SIZE, Tilemap, type TileChange, type TileWrite } from "./tilemap/tilemap.js";
 
 // version — the package's own release line.
 export { VERSION } from "./version.js";

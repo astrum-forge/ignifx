@@ -4,7 +4,7 @@ import { mergeTileCollisions } from "./collision-merge.js";
 import { tileCollisionInfo } from "./definition.js";
 import { TilemapAsset } from "./tilemap-asset.js";
 import type { TileCollisionInfo, TilemapCollisionData } from "./collision-data.js";
-import type { TilemapDefinition } from "./definition.js";
+import type { TilemapDefinition, TilemapLayerDefinition } from "./definition.js";
 import type { AssetHandle, ComponentHooks, MutableVec2, Schema, Vec2Like } from "@ignifx/core";
 
 /**
@@ -39,6 +39,22 @@ export interface TileChange {
 }
 
 /**
+ * One cell write in a {@link Tilemap.setCells} batch.
+ *
+ * @public
+ */
+export interface TileWrite {
+  /** The layer's index in the document. */
+  readonly layer: number;
+  /** The cell's column, with `0` at the left. */
+  readonly x: number;
+  /** The cell's row, with `0` at the **bottom**. */
+  readonly y: number;
+  /** The tile id, or `0` to clear the cell. */
+  readonly tileId: number;
+}
+
+/**
  * A tilemap.
  *
  * @example
@@ -46,6 +62,10 @@ export interface TileChange {
  * const level = app.world.createEntity({ name: "level" }).addComponent(Tilemap);
  * level.map = app.assets.load<TilemapAsset>("2d/level-1.tilemap.json");
  * level.setTile(0, 3, 2, 0); // carve a hole in the ground layer
+ * level.setCells([
+ *   { layer: 0, x: 4, y: 2, tileId: 0 },
+ *   { layer: 0, x: 5, y: 2, tileId: 0 },
+ * ]);
  * ```
  *
  * @public
@@ -84,6 +104,18 @@ export class Tilemap extends Component implements ComponentHooks {
   /** Bumped on every collision rebuild, so a physics backend can skip unchanged frames. */
   #version = 0;
 
+  /** Bumped once per `setTile` or `setCells` call that changed a cell, and on a layout change. */
+  #tileVersion = 0;
+
+  /** Per render chunk, the `#tileVersion` of its last change; row-major, `#stampChunksX` wide. */
+  #chunkStamps = new Uint32Array(0);
+
+  /** The chunk size `#chunkStamps` was laid out for; `0` forces a new layout. */
+  #stampChunkSize = 0;
+
+  /** How many chunk columns `#chunkStamps` has. */
+  #stampChunksX = 0;
+
   readonly #onTileChanged = new Signal<TileChange>();
 
   readonly #onCollisionChanged = new Signal();
@@ -102,6 +134,7 @@ export class Tilemap extends Component implements ComponentHooks {
   onAttach(): void {
     this.#grids = [];
     this.#built = null;
+    this.#stampChunkSize = 0;
     this.#collision = EMPTY_COLLISION;
     this.#collisionDirty = true;
   }
@@ -115,7 +148,7 @@ export class Tilemap extends Component implements ComponentHooks {
   }
 
   /**
-   * Emitted whenever `setTile` changes a cell.
+   * Emitted whenever `setTile` or `setCells` changes a cell.
    *
    * @returns The signal.
    */
@@ -227,29 +260,106 @@ export class Tilemap extends Component implements ComponentHooks {
    */
   setTile(layer: number, x: number, y: number, tileId: number): void {
     this.#ensureGrids();
-    const definition = this.definition;
+    const declared = this.#checkCell(layer, x, y);
     const grid = this.#grids[layer];
-    const declared = definition?.layers[layer];
-    if (grid === undefined || declared === undefined || !inRange(x, y, declared.width, declared.height)) {
-      throw twoDError(
-        TwoDErrorCode.tileOutOfRange,
-        `Cell ${String(x)},${String(y)} is outside layer ${String(layer)}.`,
-        {
-          context: { x, y, layer },
-          hint: "Check the cell against Tilemap.layerSize; cell (0, 0) is the bottom-left.",
-        },
-      );
-    }
     const offset = y * declared.width + x;
-    const previous = grid[offset] ?? 0;
-    if (previous === tileId) {
+    const previous = grid?.[offset] ?? 0;
+    if (grid === undefined || previous === tileId) {
       return;
     }
+    this.#tileVersion += 1;
     grid[offset] = tileId;
+    this.#stampCell(x, y);
     if (declared.collision) {
       this.#collisionDirty = true;
     }
     this.#onTileChanged.emit({ layer, x, y, previous, current: tileId });
+  }
+
+  /**
+   * Writes many tiles as one change.
+   *
+   * @remarks
+   * Each write means what the same `setTile` call means, applied in order, so a cell named twice
+   * ends with the later id. The batch is checked before anything is written: one out-of-range cell
+   * throws and leaves the map untouched. The renderer rebuilds each touched chunk once and the
+   * collision surface merges once, however many cells changed; `onTileChanged` then fires once per
+   * changed cell, after every write has landed.
+   *
+   * @param cells - The writes.
+   * @returns How many writes changed a cell.
+   * @throws IgnifxError with code `IGX-1111` when a cell is outside its layer.
+   *
+   * @example
+   * ```ts
+   * // Clear a 3x3 room on layer 0.
+   * const cells: TileWrite[] = [];
+   * for (let y = 4; y < 7; y += 1) {
+   *   for (let x = 2; x < 5; x += 1) {
+   *     cells.push({ layer: 0, x, y, tileId: 0 });
+   *   }
+   * }
+   * level.setCells(cells);
+   * ```
+   */
+  setCells(cells: readonly TileWrite[]): number {
+    this.#ensureGrids();
+    for (let index = 0; index < cells.length; index += 1) {
+      const cell = cells[index];
+      if (cell !== undefined) {
+        this.#checkCell(cell.layer, cell.x, cell.y);
+      }
+    }
+    const changes: TileChange[] = [];
+    const definition = this.definition;
+    for (let index = 0; index < cells.length; index += 1) {
+      const cell = cells[index];
+      const grid = cell === undefined ? undefined : this.#grids[cell.layer];
+      const declared = cell === undefined ? undefined : definition?.layers[cell.layer];
+      if (cell === undefined || grid === undefined || declared === undefined) {
+        continue;
+      }
+      const offset = cell.y * declared.width + cell.x;
+      const previous = grid[offset] ?? 0;
+      if (previous === cell.tileId) {
+        continue;
+      }
+      if (changes.length === 0) {
+        this.#tileVersion += 1;
+      }
+      grid[offset] = cell.tileId;
+      this.#stampCell(cell.x, cell.y);
+      if (declared.collision) {
+        this.#collisionDirty = true;
+      }
+      changes.push({ layer: cell.layer, x: cell.x, y: cell.y, previous, current: cell.tileId });
+    }
+    for (let index = 0; index < changes.length; index += 1) {
+      const change = changes[index];
+      if (change !== undefined) {
+        this.#onTileChanged.emit(change);
+      }
+    }
+    return changes.length;
+  }
+
+  /**
+   * When a render chunk's tiles last changed, so a `TilemapRenderer` rebuilds only the chunks a
+   * `setTile` or `setCells` touched.
+   *
+   * @param chunkX - The chunk's column, in chunks of `chunkSize` cells.
+   * @param chunkY - The chunk's row.
+   * @returns An opaque stamp; it differs from the last one read exactly when the chunk changed.
+   *
+   * @internal
+   */
+  chunkStamp(chunkX: number, chunkY: number): number {
+    this.#ensureGrids();
+    this.#ensureStamps();
+    if (chunkX < 0 || chunkX >= this.#stampChunksX) {
+      return this.#tileVersion;
+    }
+    return this.#chunkStamps[chunkY * this.#stampChunksX + chunkX] ?? this.#tileVersion;
   }
 
   /**
@@ -341,6 +451,67 @@ export class Tilemap extends Component implements ComponentHooks {
   }
 
   /**
+   * Checks a cell against its layer.
+   *
+   * @param layer - The layer's index.
+   * @param x - The column.
+   * @param y - The row.
+   * @returns The layer's declaration.
+   * @throws IgnifxError with code `IGX-1111` when the cell is outside the layer.
+   */
+  #checkCell(layer: number, x: number, y: number): TilemapLayerDefinition {
+    const declared = this.definition?.layers[layer];
+    if (this.#grids[layer] === undefined || declared === undefined || !inRange(x, y, declared.width, declared.height)) {
+      throw twoDError(
+        TwoDErrorCode.tileOutOfRange,
+        `Cell ${String(x)},${String(y)} is outside layer ${String(layer)}.`,
+        {
+          context: { x, y, layer },
+          hint: "Check the cell against Tilemap.layerSize; cell (0, 0) is the bottom-left.",
+        },
+      );
+    }
+    return declared;
+  }
+
+  /**
+   * Stamps the chunk holding a cell with the current tile version.
+   *
+   * @param x - The column.
+   * @param y - The row.
+   */
+  #stampCell(x: number, y: number): void {
+    this.#ensureStamps();
+    const chunkSize = this.#stampChunkSize;
+    const chunkX = Math.floor(x / chunkSize);
+    const index = Math.floor(y / chunkSize) * this.#stampChunksX + chunkX;
+    if (chunkX < this.#stampChunksX && index < this.#chunkStamps.length) {
+      this.#chunkStamps[index] = this.#tileVersion;
+    }
+  }
+
+  /**
+   * Lays the chunk stamps out for the current map and chunk size.
+   *
+   * @remarks
+   * A new layout stamps every chunk with a fresh version, so whatever a renderer built under the
+   * old one is rebuilt.
+   */
+  #ensureStamps(): void {
+    const chunkSize = Math.max(1, this.chunkSize);
+    if (chunkSize === this.#stampChunkSize) {
+      return;
+    }
+    const definition = this.definition;
+    const chunksX = definition === null ? 0 : Math.ceil(definition.width / chunkSize);
+    const chunksY = definition === null ? 0 : Math.ceil(definition.height / chunkSize);
+    this.#tileVersion += 1;
+    this.#chunkStamps = new Uint32Array(chunksX * chunksY).fill(this.#tileVersion);
+    this.#stampChunkSize = chunkSize;
+    this.#stampChunksX = chunksX;
+  }
+
+  /**
    * Builds the mutable grids from the document, flipping each layer bottom-row-first.
    */
   #ensureGrids(): void {
@@ -350,6 +521,7 @@ export class Tilemap extends Component implements ComponentHooks {
     }
     this.#built = loaded;
     this.#collisionDirty = true;
+    this.#stampChunkSize = 0;
     const grids: Int32Array[] = [];
     const layers = loaded.definition.layers;
     for (let index = 0; index < layers.length; index += 1) {
