@@ -4,7 +4,7 @@ import { startEditorHost } from "../../src/host.js";
 import { connect, EDITOR_ORIGIN } from "./editor.js";
 import type { EditorPeer, Received } from "./editor.js";
 import type { EditorHost } from "../../src/host.js";
-import type { Entity, FetchLike, SceneFile } from "@ignifx/core";
+import type { ConcreteComponentType, Entity, FetchLike, SceneFile } from "@ignifx/core";
 
 /**
  * The project the 0.3 wire fixture's scene belongs to, served to a live headless host: the two
@@ -129,9 +129,10 @@ export interface LiveHost {
  * Starts a headless host over the fixture project and connects an editor to it. The app starts
  * only once `release` is called, so the editor can meet a host whose app is still starting.
  *
+ * @param scripts - Classes the project registers besides the fixture's own.
  * @returns The host and the editor's end.
  */
-export function startLiveHost(): LiveHost {
+export function startLiveHost(scripts: readonly ConcreteComponentType[] = []): LiveHost {
   const gate = new Gate();
   const fetch: FetchLike = async (input: RequestInfo | URL): Promise<Response> => {
     const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
@@ -150,7 +151,7 @@ export function startLiveHost(): LiveHost {
     engineVersion: "0.9.0",
     heartbeatIntervalMs: 60_000,
     settings: { layers: { layers: ["Default", "Characters"] } },
-    scripts: [Health, CrateBody, Follow, Exploder],
+    scripts: [Health, CrateBody, Follow, Exploder, ...scripts],
     assets: { fetch },
     bootScene: BOOT_SCENE,
   });
