@@ -121,8 +121,10 @@ export function resolveEngineVersion(fallback: string | undefined, coreVersion: 
  * whenever the editor sends one, closing the previous port.
  *
  * With a `canvas` the host draws Babylon Lite's gizmos and a selection outline in core's render
- * overlay (`app.renderer.openOverlay()`) and answers `screenshot`. A headless host serves every
- * method that needs no GPU.
+ * overlay (`app.renderer.openOverlay()`), answers `screenshot`, and has a 2D view mode
+ * (`setViewMode`), which shows the sprites through an editor-owned `Camera2D` and picks them with
+ * `app.twoD.pickAt` when the project registers `@ignifx/2d`. A headless host serves every method
+ * that needs no GPU.
  *
  * @param options - The editor's origin and the project's app options.
  * @returns The running host, once the app has started.
@@ -143,7 +145,13 @@ export async function startEditorHost(options: EditorHostOptions): Promise<Edito
   const heartbeatIntervalMs = checkChannelOptions(options.editorOrigin, options.heartbeatIntervalMs);
   const engineVersion = resolveEngineVersion(options.engineVersion);
   const capabilities = hasGpuView(options)
-    ? [HostCapability.heartbeat, HostCapability.gizmos, HostCapability.screenshot]
+    ? [
+        HostCapability.heartbeat,
+        HostCapability.gizmos,
+        HostCapability.screenshot,
+        HostCapability.viewMode2d,
+        HostCapability.pick2d,
+      ]
     : [HostCapability.heartbeat];
   let channel: Channel | null = null;
   const scene = new SceneHost({

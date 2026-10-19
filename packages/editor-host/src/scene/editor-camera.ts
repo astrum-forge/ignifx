@@ -76,6 +76,9 @@ export class EditorCamera extends Script implements ScriptCallbacks {
   /** How far the eye is from the focus, in metres. */
   distance = 12;
 
+  /** Whether the camera answers the view's input; the host clears it while the view is in 2D mode. */
+  active = true;
+
   /** The gizmo dispatcher, once the view has one. */
   claims: PointerClaims | null = null;
 
@@ -103,7 +106,7 @@ export class EditorCamera extends Script implements ScriptCallbacks {
   readonly #keys = new Set<string>();
 
   readonly #onPointerDown = (event: PointerEvent): void => {
-    if (this.#pointer !== -1) {
+    if (!this.active || this.#pointer !== -1) {
       return;
     }
     this.#downX = event.offsetX;
@@ -195,6 +198,9 @@ export class EditorCamera extends Script implements ScriptCallbacks {
   };
 
   readonly #onWheel = (event: WheelEvent): void => {
+    if (!this.active) {
+      return;
+    }
     event.preventDefault();
     this.distance = clamp(this.distance * Math.exp(event.deltaY * 0.0015), 0.2, 5000);
     this.apply();
@@ -264,7 +270,7 @@ export class EditorCamera extends Script implements ScriptCallbacks {
    * @param deltaTime - The frame's unscaled delta, in seconds.
    */
   update(deltaTime: number): void {
-    if (this.#gesture !== "fly" || this.#keys.size === 0) {
+    if (!this.active || this.#gesture !== "fly" || this.#keys.size === 0) {
       return;
     }
     const speed = 5 * (this.#keys.has("ShiftLeft") || this.#keys.has("ShiftRight") ? 4 : 1) * deltaTime;

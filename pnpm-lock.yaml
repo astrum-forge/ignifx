@@ -577,6 +577,9 @@ importers:
       '@babylonjs/lite':
         specifier: 'catalog:'
         version: 1.34.0(@babylonjs/havok@1.3.14)(@types/webxr@0.5.24)(@webgpu/types@0.1.72)
+      '@ignifx/2d':
+        specifier: workspace:*
+        version: link:../2d
       '@ignifx/core':
         specifier: workspace:*
         version: link:../core

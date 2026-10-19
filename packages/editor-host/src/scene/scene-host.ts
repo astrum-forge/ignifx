@@ -3,7 +3,7 @@
  * editor's document (`docs/architecture/17-editor-host.md` §6).
  */
 
-import { Camera, canonicalizeNumber, isIgnifxError, validateSceneFile } from "@ignifx/core";
+import { Camera, canonicalizeNumber, createRay, isIgnifxError, validateSceneFile } from "@ignifx/core";
 import { InvalidParamsError, Reply, RpcFailure } from "../channel.js";
 import { createEditorView } from "../lite/gizmos.js";
 import {
@@ -28,11 +28,23 @@ import {
   ViewMode,
 } from "../protocol/index.js";
 import { DocumentMirror } from "./document.js";
+import { EditorCamera2D, EYE_DISTANCE_2D } from "./editor-camera-2d.js";
 import { EDITOR_CAMERA_FOV, EditorCamera } from "./editor-camera.js";
 import { applyOps } from "./ops.js";
 import { schemaSet } from "./schemas.js";
 import { encodeCapture } from "./screenshot.js";
 import { settingsSet } from "./settings.js";
+import {
+  boundsOf2D,
+  CAMERA_2D_TYPE,
+  componentTypeOf,
+  DEFAULT_PIXELS_PER_UNIT,
+  isCamera2DLike,
+  levelCamera2D,
+  sceneViewMode,
+  twoDServiceOf,
+  zoomForSize,
+} from "./view-2d.js";
 import {
   DragSnapper,
   pickRayMembers,
@@ -44,6 +56,7 @@ import {
 } from "./view-math.js";
 import type { RequestHandler } from "../channel.js";
 import type { ViewClick } from "./editor-camera.js";
+import type { PickRayMembers } from "./view-math.js";
 import type { EditorView, ViewDrag, WorldBounds } from "../lite/gizmos.js";
 import type {
   GizmoDragMode,
@@ -77,6 +90,14 @@ export interface SceneHostOptions {
    * @param params - Its parameters.
    */
   readonly notify: (method: string, params: unknown) => void;
+}
+
+/** A point of the view, in backing-store pixels. */
+interface BackingPoint {
+  /** From the left edge. */
+  readonly x: number;
+  /** From the top edge. */
+  readonly y: number;
 }
 
 /** The gizmo's settings, as `setGizmo` last set them. */
@@ -135,6 +156,17 @@ export class SceneHost {
 
   #camera: EditorCamera | null = null;
 
+  #camera2D: EditorCamera2D | null = null;
+
+  /** The editor camera the view uses, as `setViewMode` last set it. */
+  #viewMode: ViewMode = ViewMode.threeD;
+
+  /** The document the 2D camera was last placed on (see `#documentKey`), or `undefined` for none. */
+  #placed2D: string | null | undefined = undefined;
+
+  /** Whether the host lists `viewMode2d`. */
+  readonly #hasViewMode2D: boolean;
+
   #eye: Camera | null = null;
 
   #canvas: RenderSurface | null = null;
@@ -159,6 +191,7 @@ export class SceneHost {
   constructor(options: SceneHostOptions) {
     this.#notify = options.notify;
     const has = (capability: string): boolean => options.capabilities.includes(capability);
+    this.#hasViewMode2D = has(HostCapability.viewMode2d);
     const methods = new Map<string, RequestHandler>([
       [SceneMethod.openScene, async (params) => this.#openScene(params)],
       [SceneMethod.closeScene, async () => this.#closeScene()],
@@ -200,7 +233,7 @@ export class SceneHost {
     this.#mirror = new DocumentMirror(app);
     const scene = app.world.createScene(EDITOR_SCENE_NAME, { persistent: true });
     this.#editorScene = scene;
-    app.registerComponents([EditorCamera]);
+    app.registerComponents([EditorCamera, EditorCamera2D]);
     const eye = app.world.createEntity("Editor Camera", { scene });
     this.#eye = eye.addComponent(Camera, {
       fov: EDITOR_CAMERA_FOV,
@@ -211,6 +244,19 @@ export class SceneHost {
     const camera = eye.addComponent(EditorCamera);
     camera.apply();
     this.#camera = camera;
+    // The 2D toolkit's camera, found by its type id: highest priority wins, so while it is enabled
+    // the sprites draw through it and the level's own `Camera2D` is left as the file has it.
+    const camera2DType = componentTypeOf(app, CAMERA_2D_TYPE);
+    const camera2D = camera2DType === null ? null : eye.addComponent(camera2DType);
+    if (isCamera2DLike(camera2D)) {
+      camera2D.priority = EDITOR_CAMERA_PRIORITY;
+      camera2D.pixelPerfect = false;
+      camera2D.enabled = false;
+    }
+    const twoD = eye.addComponent(EditorCamera2D);
+    twoD.attach(this.#eye, isCamera2DLike(camera2D) ? camera2D : null);
+    twoD.pixelsPerUnit = (): number => twoDServiceOf(app)?.pixelsPerUnit ?? DEFAULT_PIXELS_PER_UNIT;
+    this.#camera2D = twoD;
     this.#cleanups.push(
       app.log.addSink({
         write: (record): void => {
@@ -254,13 +300,15 @@ export class SceneHost {
       });
       this.#view = view;
       this.#applyGizmo();
-      const camera = this.#camera;
-      if (camera !== null) {
-        camera.claims = view;
-        camera.onClick = (click): void => {
-          void this.#onClick(click);
-        };
-        camera.bind(canvas);
+      const onClick = (click: ViewClick): void => {
+        void this.#onClick(click);
+      };
+      for (const camera of [this.#camera, this.#camera2D]) {
+        if (camera !== null) {
+          camera.claims = view;
+          camera.onClick = onClick;
+          camera.bind(canvas);
+        }
       }
     }
     this.#started = true;
@@ -306,13 +354,19 @@ export class SceneHost {
     if (!isOpenSceneParams(params)) {
       throw new InvalidParamsError("openScene takes { file: SceneFile, address: string | null }.");
     }
-    const result = await mirror.open(params.file, params.address);
+    const opened = await mirror.open(params.file, params.address);
+    const viewMode = sceneViewMode(this.#requireApp(), mirror.scene);
+    const result = { entityCount: opened.entityCount, warnings: opened.warnings, viewMode };
+    if (this.#viewMode === ViewMode.twoD && this.#placed2D !== this.#documentKey()) {
+      this.#place2D();
+    }
     return new Reply(result, () => {
       this.#notify(SceneNotification.sceneOpened, {
         address: params.address,
         name: mirror.name,
         entityCount: result.entityCount,
         warnings: result.warnings,
+        viewMode,
       });
     });
   }
@@ -416,6 +470,13 @@ export class SceneHost {
             const entity = index?.entities.get(uid);
             return entity === undefined ? [] : [entity];
           });
+    if (this.#viewMode === ViewMode.twoD) {
+      const box = boundsOf2D(this.#requireApp(), entities);
+      if (box !== null) {
+        this.#camera2D?.frame(box);
+      }
+      return null;
+    }
     const bounds = this.#boundsOf(entities);
     if (bounds !== null) {
       const center = {
@@ -501,7 +562,8 @@ export class SceneHost {
   }
 
   /**
-   * `setViewMode`: this host has the 3D editor camera only.
+   * `setViewMode`: switches the view between the 3D editor camera and the 2D one. The first switch
+   * to 2D on a document starts where the level's own `Camera2D` looks, or frames the document.
    *
    * @param params - `{ mode }`.
    * @returns `null`.
@@ -511,10 +573,72 @@ export class SceneHost {
     if (!isSetViewModeParams(params)) {
       throw new InvalidParamsError('setViewMode takes { mode: "3d" | "2d" }.');
     }
-    if (params.mode === ViewMode.twoD) {
+    if (params.mode === ViewMode.twoD && (!this.#hasViewMode2D || this.#camera2D === null)) {
       throw new InvalidParamsError("This scene view has no 2D view mode; it does not list the viewMode2d capability.");
     }
+    if (params.mode === this.#viewMode) {
+      return null;
+    }
+    this.#viewMode = params.mode;
+    const camera = this.#camera;
+    const camera2D = this.#camera2D;
+    if (params.mode === ViewMode.twoD) {
+      if (camera !== null) {
+        camera.active = false;
+      }
+      camera2D?.activate();
+      if (this.#placed2D !== this.#documentKey()) {
+        this.#place2D();
+      }
+    } else {
+      camera2D?.deactivate();
+      if (camera !== null) {
+        camera.active = true;
+        camera.apply();
+      }
+    }
     return null;
+  }
+
+  /**
+   * Names the open document for the 2D camera's placement: its address, or `undefined` when none is
+   * open. A reopen of the same address (the editor resends `openScene` after a failed op) keeps
+   * the view where the user left it.
+   *
+   * @returns The key.
+   */
+  #documentKey(): string | null | undefined {
+    const mirror = this.#mirror;
+    return mirror === null || mirror.scene === null ? undefined : mirror.address;
+  }
+
+  /**
+   * Places the 2D editor camera on the open document: where the level's own `Camera2D` looks, at
+   * the half-height it shows, or, without one, around the whole document.
+   */
+  #place2D(): void {
+    const camera2D = this.#camera2D;
+    const mirror = this.#mirror;
+    if (camera2D === null || mirror === null) {
+      return;
+    }
+    const app = this.#requireApp();
+    const scene = mirror.scene;
+    this.#placed2D = this.#documentKey();
+    const level = levelCamera2D(app, scene);
+    if (level !== null) {
+      const view = camera2D.view();
+      const position = level.entity.transform.position;
+      camera2D.centerX = position.x;
+      camera2D.centerY = position.y;
+      camera2D.zoom = zoomForSize(level.orthographicSize, view.heightPx, view.pixelsPerUnit);
+      camera2D.apply();
+      return;
+    }
+    const box = boundsOf2D(app, [...(scene?.roots ?? [])]);
+    if (box !== null) {
+      camera2D.frame(box);
+    }
   }
 
   // -------------------------------------------------------------------------------------------
@@ -557,26 +681,81 @@ export class SceneHost {
   }
 
   /**
-   * Picks the document's scene at a point of the view with `app.renderer.pickAsync`, which resolves
-   * a glTF model through its nearest entity node; the hit resolves to its document entity. Hit or
-   * miss, the answer carries the editor camera's ray through the point and where it meets `z = 0`.
+   * Picks the document's scene at a point of the view: in 3D mode with `app.renderer.pickAsync`,
+   * which resolves a glTF model through its nearest entity node, and in 2D mode with
+   * `app.twoD.pickAt` first. The hit resolves to its document entity. Hit or miss, the answer
+   * carries the editor camera's ray through the point and where it meets `z = 0`.
    *
    * @param params - The point and its unit; it is converted to backing-store pixels once.
    * @returns The pick result; a point outside the canvas, or a headless view, misses without a ray.
    */
   async #pickAt(params: PickParams): Promise<PickResult> {
-    const app = this.#requireApp();
     const scene = this.#mirror?.scene ?? null;
     const canvas = this.#canvas;
     const at = canvas === null ? null : toBackingPixels(params, viewSurfaceOf(canvas));
     if (at === null) {
       return { entity: null, point: null, distance: null };
     }
+    const camera2D = this.#camera2D;
+    if (this.#viewMode === ViewMode.twoD && camera2D !== null) {
+      return this.#pick2D(at, camera2D, scene);
+    }
     const ray = this.#eye?.screenToRay(at.x, at.y) ?? null;
     const cast = ray === null ? {} : pickRayMembers(ray);
     if (scene === null) {
       return { entity: null, point: null, distance: null, ...cast };
     }
+    return this.#pick3D(at, scene, cast);
+  }
+
+  /**
+   * Picks in 2D mode: the topmost sprite of the document under the point with `app.twoD.pickAt`,
+   * unpickable sprites included, answered with the world point on `z = 0` and no distance. Without
+   * a sprite hit, a `"mixed"` project (or one without `@ignifx/2d`) goes on to the 3D picker through
+   * the orthographic eye. The ray is the eye's, straight down +Z, built from the 2D camera's own
+   * arithmetic so it never lags a frame behind a pan.
+   *
+   * @param at - The point, in backing-store pixels.
+   * @param camera2D - The 2D editor camera.
+   * @param scene - The document's scene instance, or `null`.
+   * @returns The pick result.
+   */
+  async #pick2D(at: BackingPoint, camera2D: EditorCamera2D, scene: SceneInstance | null): Promise<PickResult> {
+    const world = camera2D.screenToWorld(at.x, at.y);
+    const ray = createRay();
+    ray.origin.x = world.x;
+    ray.origin.y = world.y;
+    ray.origin.z = -EYE_DISTANCE_2D + (this.#eye?.near ?? 0);
+    ray.direction.x = 0;
+    ray.direction.y = 0;
+    ray.direction.z = 1;
+    const cast = pickRayMembers(ray);
+    if (scene === null) {
+      return { entity: null, point: null, distance: null, ...cast };
+    }
+    const twoD = twoDServiceOf(this.#requireApp());
+    const hit = twoD?.pickAt(at.x, at.y, { includeUnpickable: true, filter: (entity) => entity.scene === scene });
+    const entity = this.#mirror?.documentEntityOf(hit?.entity ?? null) ?? null;
+    if (entity !== null) {
+      const c = canonicalizeNumber;
+      return { entity: entity.uid, point: [c(world.x), c(world.y), 0], distance: null, ...cast };
+    }
+    if (twoD !== null && twoD.mode === "sprite") {
+      return { entity: null, point: null, distance: null, ...cast };
+    }
+    return this.#pick3D(at, scene, cast);
+  }
+
+  /**
+   * Picks the document's meshes with `app.renderer.pickAsync`.
+   *
+   * @param at - The point, in backing-store pixels.
+   * @param scene - The document's scene instance.
+   * @param cast - The answer's `ray` and `plane`.
+   * @returns The pick result.
+   */
+  async #pick3D(at: BackingPoint, scene: SceneInstance, cast: Partial<PickRayMembers>): Promise<PickResult> {
+    const app = this.#requireApp();
     const hit = await app.renderer.pickAsync(at.x, at.y, { filter: (entity) => entity.scene === scene });
     const entity = this.#mirror?.documentEntityOf(hit?.entity ?? null) ?? null;
     if (hit === null || entity === null) {
@@ -725,7 +904,7 @@ export class SceneHost {
    * @returns The set.
    */
   #schemas(): SchemaSet {
-    return schemaSet(this.#requireApp(), new Set([EditorCamera.typeId]));
+    return schemaSet(this.#requireApp(), new Set([EditorCamera.typeId, EditorCamera2D.typeId]));
   }
 
   /**

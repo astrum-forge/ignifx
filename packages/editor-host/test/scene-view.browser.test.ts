@@ -277,10 +277,16 @@ async function sceneView(scene: SceneFile = SCENE, framed = "BOX"): Promise<Edit
     HostCapability.heartbeat,
     HostCapability.gizmos,
     HostCapability.screenshot,
+    HostCapability.viewMode2d,
+    HostCapability.pick2d,
   ]);
   host = await starting;
   announced = (await peer.nextNotification(SceneNotification.schemasChanged))["params"];
-  await call("openScene", { file: scene, address: `scenes/${scene.name}.scene.json` });
+  // A level with a 3D camera, or none, in a project without the 2D toolkit is a 3D scene.
+  expect(await call("openScene", { file: scene, address: `scenes/${scene.name}.scene.json` })).toHaveProperty(
+    "viewMode",
+    "3d",
+  );
   await call("frame", { entities: [framed] });
   await frames(6);
   return host;
