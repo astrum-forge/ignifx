@@ -156,7 +156,7 @@ Published extensions declare an `ignifx` block in `package.json`:
 Games configure engine and extension settings in `ignifx.config.ts`:
 
 ```ts
-import { defineConfig } from "ignifx/config";
+import { defineConfig } from "@ignifx/vite-plugin";
 export default defineConfig({
   layers: ["Default", "Ground", "Player", "Enemy", "Projectile"],
   sortingLayers: ["Background", "Default", "Foreground", "UI"],

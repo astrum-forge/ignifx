@@ -513,7 +513,9 @@ as well, `{}` is injected.
 
 > `readonly` `optional` **validate?**: `boolean`
 
-Whether format-headed JSON under the asset root is validated. A failure fails the build.
+Whether format-headed JSON under the asset root is validated, and whether the merged project
+settings are validated against `schemas.settings`. A failure fails the build; a settings
+failure also stops the dev server from starting.
 
 ###### Default Value
 
@@ -551,9 +553,10 @@ The schema for `ignifx.scene` files — `*.scene.json` and `*.prefab.json` alike
 > `readonly` `optional` **settings?**: [`JsonObject`](#jsonobject)
 
 The schema of the merged project settings (`ignifx.settings.json` plus `ignifx.config.ts`), as
-`@ignifx/core`'s `settingsJsonSchema(app)` generates it. A violation, such as a misspelled key,
-fails the dev server and the build with `IGX-0554`; without it, `createApp` still validates
-every section when the game starts (`IGX-0407`, `IGX-0408`).
+`@ignifx/core`'s `settingsJsonSchema(app)` generates it. A violation inside a section, such as
+a misspelled key, fails the dev server and the build with `IGX-0554`; a section the schema does
+not list only warns, since the schema may predate an extension. Without it, `createApp` still
+validates every section when the game starts (`IGX-0407`, `IGX-0408`).
 
 ***
 
@@ -1644,7 +1647,7 @@ const files = await collectExtensionPublicAssets("/project");
 > **defineConfig**\<`T`\>(`config`): `T`
 
 Type a project config while preserving inferred literal types.
-Also available as `defineConfig` from `ignifx/config`.
+Exported by `@ignifx/vite-plugin` only; the `ignifx` umbrella has no `ignifx/config` entry point.
 
 #### Type Parameters
 

@@ -50,7 +50,7 @@ export const IGNIFX_SETTINGS_FILE_NAME = "ignifx.settings.json";
 
 /**
  * Type a project config while preserving inferred literal types.
- * Also available as `defineConfig` from `ignifx/config`.
+ * Exported by `@ignifx/vite-plugin` only; the `ignifx` umbrella has no `ignifx/config` entry point.
  *
  * @remarks
  * The argument may be any JSON object, including the parsed content of `ignifx.settings.json`

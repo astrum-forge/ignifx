@@ -172,7 +172,8 @@ export default defineConfig({
 });
 ```
 
-From Phase 12 the same helper is re-exported as `ignifx/config`. `defineConfig` takes any JSON
+`defineConfig` is exported by `@ignifx/vite-plugin` only; the `ignifx` umbrella has no
+`ignifx/config` entry point. It takes any JSON
 object, so a config file can keep the data in `ignifx.settings.json` and add to it in code:
 
 ```ts

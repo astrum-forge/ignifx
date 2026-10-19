@@ -78,7 +78,9 @@ export interface IgnifxPluginOptions {
    */
   readonly settingsFile?: string | false;
   /**
-   * Whether format-headed JSON under the asset root is validated. A failure fails the build.
+   * Whether format-headed JSON under the asset root is validated, and whether the merged project
+   * settings are validated against `schemas.settings`. A failure fails the build; a settings
+   * failure also stops the dev server from starting.
    *
    * @defaultValue `true`
    */
