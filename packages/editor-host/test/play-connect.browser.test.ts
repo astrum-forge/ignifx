@@ -1,6 +1,12 @@
-import { createApp } from "@ignifx/core";
+import { createApp, Script } from "@ignifx/core";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { EDITOR_CONNECT_MESSAGE_TYPE, PlayMethod } from "../src/protocol/index.js";
+import {
+  EDITOR_CONNECT_MESSAGE_TYPE,
+  isAppErrorData,
+  isHostErrorParams,
+  PlayMethod,
+  PlayNotification,
+} from "../src/protocol/index.js";
 import { EDITOR_PLAY_CONTROLS_EXPORT, playControlsModuleSource } from "../src/vite/modules.js";
 import { EditorPeer } from "./support/editor.js";
 import type { App } from "@ignifx/core";
@@ -125,12 +131,56 @@ describe("virtual:ignifx/editor in a page", () => {
     });
 
     const ready = await peer.hello();
-    expect(ready["result"]).toMatchObject({ hostKind: "play", capabilities: ["heartbeat", "playControls"] });
+    expect(ready["result"]).toMatchObject({
+      hostKind: "play",
+      capabilities: ["heartbeat", "playControls", "logRelay"],
+    });
     expect((await peer.request(PlayMethod.playState))["result"]).toEqual({ state: "stopped", frameCount: 0, time: 0 });
 
     // One answer for each request: no second channel answered the hello.
     await settle();
     expect(answers).toHaveLength(2);
+  });
+
+  it("relays a script's error with the page's stack, kept from before the handshake", async () => {
+    /** Fails in `update`, on purpose. */
+    class Faulty extends Script {
+      static typeId = "test/Faulty";
+      update(): void {
+        throw new Error("Faulty.update: boom.");
+      }
+    }
+    const editorOrigin = window.location.origin;
+    const attach = await evaluatePlayControlsModule(editorOrigin);
+    const peer = await postConnect(editorOrigin);
+    cleanups.push(() => {
+      peer.close();
+    });
+    const app = await createApp({ headless: true });
+    cleanups.push(() => {
+      app.dispose();
+    });
+    cleanups.push(attach(app));
+    const probe = app.world.createEntity("Probe");
+    probe.addComponent(Faulty);
+    // The game fails before the editor has said hello: the report waits for the handshake.
+    app.step(1 / 60);
+
+    await peer.hello();
+    const params = (await peer.nextNotification(PlayNotification.hostError))["params"];
+    expect(isHostErrorParams(params)).toBe(true);
+    const data = isHostErrorParams(params) ? params.data : null;
+    expect(isAppErrorData(data)).toBe(true);
+    expect(data).toMatchObject({
+      entity: probe.uid,
+      entityName: "Probe",
+      component: "test/Faulty",
+      phaseName: "Update",
+    });
+    // Chromium's format: the throwing frame names this module's URL, line and column.
+    const stack = isAppErrorData(data) ? (data.stack ?? "") : "";
+    expect(stack).toMatch(/^Error: Faulty\.update: boom\.\n\s+at /u);
+    expect(stack).toMatch(/play-connect\.browser\.test\.ts(\?[^:]*)?:\d+:\d+\)?$/mu);
   });
 
   it("ignores a port posted from any other origin", async () => {

@@ -19,6 +19,7 @@ import {
   isAssetReloadedParams,
   isEntitySelection,
   isFrameParams,
+  isAppErrorData,
   isHostErrorParams,
   isHotReloadedParams,
   isInvalidSceneFileData,
@@ -388,11 +389,12 @@ describe("the editor's 0.3 wire fixture, through a live headless host", () => {
     live = startLiveHost();
     const peer = live.wire;
 
-    // A headless host lists only `heartbeat`: it draws no gizmos, captures nothing, has no 2D view.
+    // A headless host lists only `heartbeat` and `logRelay`: it draws no gizmos, captures nothing,
+    // has no 2D view.
     const ready = wire("readyScene");
     expectWire(await peer.request(wire("hello")), {
       ...ready,
-      result: { ...member(ready, "result"), capabilities: [HostCapability.heartbeat] },
+      result: { ...member(ready, "result"), capabilities: [HostCapability.heartbeat, HostCapability.logRelay] },
     });
     expect(member(member(ready, "result"), "protocol")).toEqual(PROTOCOL_VERSION);
 
@@ -656,6 +658,11 @@ describe("the editor's 0.3 wire fixture, through a live headless host", () => {
     const error = member(await peer.notification(SceneNotification.hostError), "params");
     expect(isHostErrorParams(error)).toBe(true);
     expect(error).toMatchObject({ code: null, message: "Exploder.awake: boom." });
+    // Where it was caught (`HostCapability.logRelay`): the entity, the component, the stack.
+    const data = member(error, "data");
+    expect(isAppErrorData(data)).toBe(true);
+    expect(data).toMatchObject({ source: "lifecycle", entityName: "Bomb", component: "game/Exploder" });
+    expect(data["stack"]).toEqual(expect.stringContaining("Exploder.awake: boom."));
   });
 });
 
@@ -685,7 +692,10 @@ describe("the editor's 0.3 wire fixture, through live play controls", () => {
       // The 0.2 fixture's step with a delta: one frame of 0.02 s, then paused on it.
       const step = { jsonrpc: "2.0", id: 23, method: PlayMethod.step, params: { deltaSeconds: 0.02 } };
       await peer.request(step);
-      expect(peer.notifications).toEqual([]);
+      // The game's log lines (`HostCapability.logRelay`) may come first; no state change does.
+      expect(peer.notifications.filter((message) => message["method"] === PlayNotification.playStateChanged)).toEqual(
+        [],
+      );
       expectWire(await peer.notification(PlayNotification.playStateChanged), wire("playStateChanged"));
 
       expectWire(await peer.request(wire("playState")), wire("playStateResponse"));

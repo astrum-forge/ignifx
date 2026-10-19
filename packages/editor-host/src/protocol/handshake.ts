@@ -83,6 +83,13 @@ export const HostCapability = {
    * `pick` and view clicks in 2D mode resolve through the 3D picker only.
    */
   pick2d: "pick2d",
+  /**
+   * The host relays the app's reports: `log` lines with the first `Error` each carries, a
+   * `hostError` with `AppErrorData` (entity, component, phase, stack) for every `app.onError`
+   * report, and `hotReloaded` with each error's stack. The scene view sends them as scene
+   * notifications, the play view as play notifications. Additive in 0.3.
+   */
+  logRelay: "logRelay",
 } as const;
 
 /**

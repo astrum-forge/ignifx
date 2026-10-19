@@ -3,6 +3,7 @@
  * game's `main.ts` hands to `attachEditorPlayControls(app)` from `virtual:ignifx/editor`.
  */
 
+import { hotReloadedParamsOf, relayAppReports } from "./app-reports.js";
 import {
   checkChannelOptions,
   connectPortOf,
@@ -76,6 +77,63 @@ export interface EditorPlayConnector {
   dispose(): void;
   /** Same as {@link EditorPlayConnector.dispose}, for `using`. */
   [Symbol.dispose](): void;
+}
+
+/**
+ * How many reports the play view keeps while no editor has said `hello`; older ones are dropped.
+ */
+const EARLY_REPORT_LIMIT = 256;
+
+/** One report waiting for the handshake. */
+interface EarlyReport {
+  /** The notification's method. */
+  readonly method: string;
+  /** Its parameters. */
+  readonly params: unknown;
+}
+
+/**
+ * Sends the game's log lines, error reports and hot reloads to the editor, keeping the newest
+ * {@link EARLY_REPORT_LIMIT} while no handshake has completed and sending them once one has.
+ *
+ * @param app - The game's app.
+ * @param channel - The channel, read when a report arrives.
+ * @returns A function that sends what was kept, for the handshake, and one that stops following.
+ */
+function relayPlayReports(
+  app: App,
+  channel: () => { readonly isReady: boolean; notify(method: string, params?: unknown): void },
+): { readonly flush: () => void; readonly dispose: () => void } {
+  const early: EarlyReport[] = [];
+  const send = (method: string, params: unknown): void => {
+    const current = channel();
+    if (current.isReady) {
+      current.notify(method, params);
+      return;
+    }
+    early.push({ method, params });
+    if (early.length > EARLY_REPORT_LIMIT) {
+      early.shift();
+    }
+  };
+  const dispose = relayAppReports(app, {
+    log: (params): void => {
+      send(PlayNotification.log, params);
+    },
+    error: (params): void => {
+      send(PlayNotification.hostError, params);
+    },
+    hotReloaded: (report): void => {
+      send(PlayNotification.hotReloaded, hotReloadedParamsOf(report));
+    },
+  });
+  const flush = (): void => {
+    const current = channel();
+    for (const report of early.splice(0)) {
+      current.notify(report.method, report.params);
+    }
+  };
+  return { flush, dispose };
 }
 
 /**
@@ -246,18 +304,23 @@ function openPlayControls(
     ready: {
       engineVersion: resolveEngineVersion(options.engineVersion),
       protocol: PROTOCOL_VERSION,
-      capabilities: [HostCapability.heartbeat, HostCapability.playControls],
+      capabilities: [HostCapability.heartbeat, HostCapability.playControls, HostCapability.logRelay],
       hostKind: HostKind.play,
     },
     methods: playMethods(app, tracker),
     heartbeatIntervalMs,
-    onReady: tracker.reset,
+    onReady: (): void => {
+      tracker.reset();
+      reports.flush();
+    },
     port,
   });
+  const reports = relayPlayReports(app, () => channel);
   // The game can pause, stop or start itself; nothing in core announces it, so the controls look.
   const watch = setInterval(tracker.report, heartbeatIntervalMs);
   const dispose = (): void => {
     clearInterval(watch);
+    reports.dispose();
     channel.dispose();
   };
   return {
@@ -272,7 +335,8 @@ function openPlayControls(
 /**
  * Lets the editor drive a running game: answers the handshake with `hostKind: "play"`, then `play`,
  * `pause`, `step`, `stop` and `playState`, and sends `playStateChanged` when the game's phase
- * changes.
+ * changes, and `log`, `hostError` and `hotReloaded` for the game's log lines, `app.onError` reports
+ * and hot reloads (the newest 256 from before the handshake right after it).
  *
  * @remarks
  * A game does not call this directly. It calls `attachEditorPlayControls(app)` from

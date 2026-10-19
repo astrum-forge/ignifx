@@ -41,6 +41,62 @@ The discriminant.
 
 ***
 
+### AppErrorData
+
+The `data` of a `hostError` the host sends for an error the app reported through `app.onError`:
+where it was caught. The host's `message` and `code` are the thrown error's.
+
+#### Remarks
+
+`source`, `phase` and `entity` are in every 0.3 host; the other fields are additive in 0.3, sent by
+a host that lists `HostCapability.logRelay`.
+
+#### Properties
+
+##### component?
+
+> `readonly` `optional` **component?**: `string` \| `null`
+
+The `typeId` of the component involved (its class name when it has none), or `null`.
+
+##### entity
+
+> `readonly` **entity**: `string` \| `null`
+
+The uid of the entity involved, or `null`.
+
+##### entityName?
+
+> `readonly` `optional` **entityName?**: `string` \| `null`
+
+The name of the entity involved, or `null`.
+
+##### phase
+
+> `readonly` **phase**: `number` \| `null`
+
+The phase that was running, as the engine's `Phase` value, or `null` outside a phase.
+
+##### phaseName?
+
+> `readonly` `optional` **phaseName?**: `string` \| `null`
+
+That phase's name in the engine's `Phase`, such as `"Update"`, or `null`.
+
+##### source
+
+> `readonly` **source**: `string`
+
+Which boundary caught it: the engine's `ErrorReport.source`, such as `"lifecycle"`.
+
+##### stack?
+
+> `readonly` `optional` **stack?**: `string` \| `null`
+
+The thrown error's `stack`, or `null` when it has none.
+
+***
+
 ### ApplyOpFailure
 
 One op the host could not apply.
@@ -929,6 +985,12 @@ Its `IGX-` code when it is an `IgnifxError`, else `null`.
 
 The error's message (`String(error)` when it is not an `Error`).
 
+##### stack?
+
+> `readonly` `optional` **stack?**: `string` \| `null`
+
+Its `stack`, or `null` when it has none. Additive in 0.3: a host from before it leaves it out.
+
 ***
 
 ### HotReloadReport
@@ -1055,11 +1117,45 @@ What `validateSceneFile` reported.
 
 ***
 
-### LogParams
+### LoggedError
 
-The parameters of `log`: the engine's `LogRecord` without its `data`, which is not JSON.
+An `Error` a log line carried among its extras, made JSON.
 
 #### Properties
+
+##### code
+
+> `readonly` **code**: `string` \| `null`
+
+Its `IGX-` code when it is an `IgnifxError`, else `null`.
+
+##### message
+
+> `readonly` **message**: `string`
+
+The error's message.
+
+##### stack
+
+> `readonly` **stack**: `string` \| `null`
+
+Its `stack`, or `null` when it has none.
+
+***
+
+### LogParams
+
+The parameters of `log`: the engine's `LogRecord` without its `data`, which is not JSON, but for
+the first `Error` in it.
+
+#### Properties
+
+##### error?
+
+> `readonly` `optional` **error?**: [`LoggedError`](#loggederror)
+
+The first `Error` among the record's extras, such as the one the app's default `onError` handler
+logs. Additive in 0.3: a host from before it leaves it out.
 
 ##### level
 
@@ -2958,7 +3054,7 @@ The result on success.
 
 ### SceneHostNotification
 
-> **SceneHostNotification** = [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`sceneOpened`](#sceneopened), [`SceneOpenedParams`](#sceneopenedparams)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`schemasChanged`](#schemaschanged), [`SchemaSet`](#schemaset)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`hotReloaded`](#hotreloaded), [`HotReloadedParams`](#hotreloadedparams)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`selectionChanged`](#selectionchanged), [`EntitySelection`](#entityselection)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`transformDragging`](#transformdragging), [`TransformDraggingParams`](#transformdraggingparams)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`transformDragged`](#transformdragged), [`TransformDraggedParams`](#transformdraggedparams)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`hostError`](#hosterror), [`HostErrorParams`](#hosterrorparams)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`log`](#log), [`LogParams`](#logparams)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`assetReloaded`](#assetreloaded), [`AssetReloadedParams`](#assetreloadedparams)\>
+> **SceneHostNotification** = [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`sceneOpened`](#sceneopened), [`SceneOpenedParams`](#sceneopenedparams)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`schemasChanged`](#schemaschanged), [`SchemaSet`](#schemaset)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`hotReloaded`](#hotreloaded-1), [`HotReloadedParams`](#hotreloadedparams)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`selectionChanged`](#selectionchanged), [`EntitySelection`](#entityselection)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`transformDragging`](#transformdragging), [`TransformDraggingParams`](#transformdraggingparams)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`transformDragged`](#transformdragged), [`TransformDraggedParams`](#transformdraggedparams)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`hostError`](#hosterror-1), [`HostErrorParams`](#hosterrorparams)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`log`](#log-1), [`LogParams`](#logparams)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`assetReloaded`](#assetreloaded), [`AssetReloadedParams`](#assetreloadedparams)\>
 
 Scene host → editor: one of the `SceneNotification`s.
 
@@ -3312,6 +3408,15 @@ The scene host draws gizmos on the primary selection, answers `setGizmo`, and se
 
 The host sends `heartbeat` notifications after `ready` (see `HostNotification`).
 
+##### logRelay
+
+> `readonly` **logRelay**: `"logRelay"` = `"logRelay"`
+
+The host relays the app's reports: `log` lines with the first `Error` each carries, a
+`hostError` with `AppErrorData` (entity, component, phase, stack) for every `app.onError`
+report, and `hotReloaded` with each error's stack. The scene view sends them as scene
+notifications, the play view as play notifications. Additive in 0.3.
+
 ##### pick2d
 
 > `readonly` **pick2d**: `"pick2d"` = `"pick2d"`
@@ -3473,6 +3578,29 @@ The notifications the play view sends after `ready`.
 
 #### Type Declaration
 
+##### hostError
+
+> `readonly` **hostError**: `"hostError"` = `"hostError"`
+
+An error the game's app reported through `app.onError`: the same `HostErrorParams` as the scene
+view's `hostError`, with `AppErrorData` as its `data`. Sent by a host that lists
+`HostCapability.logRelay`, kept before the handshake as `log` is.
+
+##### hotReloaded
+
+> `readonly` **hotReloaded**: `"hotReloaded"` = `"hotReloaded"`
+
+After every `app.hotReload` operation in the game: the same `HotReloadedParams` as the scene
+view's `hotReloaded`. Sent by a host that lists `HostCapability.logRelay`.
+
+##### log
+
+> `readonly` **log**: `"log"` = `"log"`
+
+One line from the game's logger, with the same `LogParams` as the scene view's `log`. Sent by a
+host that lists `HostCapability.logRelay`; lines logged before the handshake are kept (the
+newest few hundred) and sent right after `ready`.
+
 ##### playStateChanged
 
 > `readonly` **playStateChanged**: `"playStateChanged"` = `"playStateChanged"`
@@ -3484,7 +3612,8 @@ right after that method's answer; one the game makes itself, such as setting
 #### Remarks
 
 Additive in 0.3: a host from before them sends none, and answers `playState` with
-`RpcErrorCode.methodNotFound`.
+`RpcErrorCode.methodNotFound`. `log`, `hostError` and `hotReloaded` came later still: only a host
+that lists `HostCapability.logRelay` in `ready` sends them.
 
 ***
 
@@ -3911,6 +4040,29 @@ The 3D editor camera, gizmos and grid.
 The 2D editor camera, planar gizmos and pixel grid. Needs `HostCapability.viewMode2d`.
 
 ## Functions
+
+### isAppErrorData()
+
+> **isAppErrorData**(`value`): `value is AppErrorData`
+
+Checks the `data` of a `hostError` for an error the app reported.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `data`.
+
+#### Returns
+
+`value is AppErrorData`
+
+True for a boundary name, a phase or `null`, an entity uid or `null`, and, when present,
+a phase name, an entity name, a component and a stack, each a string or `null`.
+
+***
 
 ### isApplyOpsParams()
 
@@ -5045,7 +5197,8 @@ const host = await startEditorHost({ editorOrigin: "ignifx://app", canvas, exten
 
 Lets the editor drive a running game: answers the handshake with `hostKind: "play"`, then `play`,
 `pause`, `step`, `stop` and `playState`, and sends `playStateChanged` when the game's phase
-changes.
+changes, and `log`, `hostError` and `hotReloaded` for the game's log lines, `app.onError` reports
+and hot reloads (the newest 256 from before the handshake right after it).
 
 #### Parameters
 

@@ -1,7 +1,14 @@
 import { createApp, Script } from "@ignifx/core";
 import { afterEach, describe, expect, it } from "vitest";
 import { listenForEditorPlayControls, startEditorPlayControls } from "../src/play-controls.js";
-import { PlayNotification, RpcErrorCode } from "../src/protocol/index.js";
+import {
+  isAppErrorData,
+  isHostErrorParams,
+  isHotReloadedParams,
+  isLogParams,
+  PlayNotification,
+  RpcErrorCode,
+} from "../src/protocol/index.js";
 import { connect, CountingTarget, EDITOR_ORIGIN } from "./support/editor.js";
 import type { EditorPlayControls } from "../src/play-controls.js";
 import type { EditorPeer } from "./support/editor.js";
@@ -72,7 +79,7 @@ describe("startEditorPlayControls", () => {
 
     expect((await peer.hello())["result"]).toMatchObject({
       hostKind: "play",
-      capabilities: ["heartbeat", "playControls"],
+      capabilities: ["heartbeat", "playControls", "logRelay"],
     });
   });
 
@@ -314,5 +321,109 @@ describe("listenForEditorPlayControls (engine ask E24)", () => {
   it("checks its options before it listens", () => {
     expect(() => listenForEditorPlayControls({ editorOrigin: "*" })).toThrow(/IGX-1801|not an origin/u);
     expect(() => listenForEditorPlayControls({ editorOrigin: EDITOR_ORIGIN })).toThrow(/window/u);
+  });
+});
+
+describe("the play view's reports (HostCapability.logRelay)", () => {
+  /** A script that fails in `update`, on purpose. */
+  class Faulty extends Script {
+    static typeId = "test/Faulty";
+    update(): void {
+      throw new Error("Faulty.update: boom.");
+    }
+  }
+
+  it("relays the game's log lines, with the Error a line carries", async () => {
+    const { app, peer } = await playView();
+
+    app.log.warn("low on ammo", new RangeError("ammo < 0"));
+    const log = await peer.nextNotification(PlayNotification.log);
+    expect(isLogParams(log["params"])).toBe(true);
+    expect(log["params"]).toMatchObject({
+      level: "warn",
+      scope: null,
+      message: "low on ammo",
+      error: { message: "ammo < 0", code: null },
+    });
+    const logged = isLogParams(log["params"]) ? log["params"].error : undefined;
+    expect(logged?.stack).toContain("RangeError: ammo < 0");
+  });
+
+  it("relays an error a script throws, with its entity, component, phase and stack", async () => {
+    const { app, peer } = await playView();
+    const probe = app.world.createEntity("Probe");
+    probe.addComponent(Faulty);
+    // Stepped by the game itself: a request's answer would skip the notification on the way.
+    app.step(1 / 60);
+
+    const error = await peer.nextNotification(PlayNotification.hostError);
+    const params = error["params"];
+    expect(isHostErrorParams(params)).toBe(true);
+    expect(params).toMatchObject({ code: null, message: "Faulty.update: boom." });
+    const data = isHostErrorParams(params) ? params.data : null;
+    expect(isAppErrorData(data)).toBe(true);
+    expect(data).toMatchObject({
+      source: "lifecycle",
+      phaseName: "Update",
+      entity: probe.uid,
+      entityName: "Probe",
+      component: "test/Faulty",
+    });
+    expect(isAppErrorData(data) ? data.stack : null).toContain("Faulty.update: boom.");
+  });
+
+  it("relays hot reloads with their errors' stacks", async () => {
+    const { app, peer } = await playView();
+    class Mover extends Script {
+      static typeId = "test/Mover";
+    }
+    app.registerComponents([Mover]);
+    app.world.createEntity("Probe").addComponent(Mover);
+    class MoverV2 extends Mover {
+      static onHotReload(): void {
+        throw new Error("MoverV2.onHotReload: cannot migrate.");
+      }
+    }
+    app.hotReload.apply([{ types: [MoverV2] }]);
+
+    const reloaded = await peer.nextNotification(PlayNotification.hotReloaded);
+    expect(isHotReloadedParams(reloaded["params"])).toBe(true);
+    expect(reloaded["params"]).toMatchObject({
+      report: {
+        typeIds: ["test/Mover"],
+        errors: [{ message: "MoverV2.onHotReload: cannot migrate.", code: null }],
+      },
+    });
+    const params = reloaded["params"];
+    const [failure] = isHotReloadedParams(params) ? params.report.errors : [];
+    expect(failure?.stack).toContain("MoverV2.onHotReload: cannot migrate.");
+  });
+
+  it("keeps what the game reports before the handshake and sends it right after ready", async () => {
+    const { app, peer } = await playView(false);
+    for (let line = 0; line < 300; line += 1) {
+      app.log.info(`line ${String(line)}`);
+    }
+    await peer.hello();
+
+    // The newest 256 lines, oldest first.
+    const first = await peer.nextNotification(PlayNotification.log);
+    expect(first["params"]).toMatchObject({ message: "line 44" });
+    let last = first;
+    for (let count = 1; count < 256; count += 1) {
+      // oxlint-disable-next-line no-await-in-loop -- one notification at a time
+      last = await peer.nextNotification(PlayNotification.log);
+    }
+    expect(last["params"]).toMatchObject({ message: "line 299" });
+  });
+
+  it("stops relaying once disposed", async () => {
+    const { app, controls, peer } = await playView();
+    controls.dispose();
+    app.log.warn("after dispose");
+    await new Promise((resolve) => {
+      setTimeout(resolve, 20);
+    });
+    expect(peer.takeNotification(PlayNotification.log)).toBeNull();
   });
 });

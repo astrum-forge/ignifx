@@ -90,7 +90,8 @@ export type PlayResponse = RpcSuccessResponse<PlayState>;
  *
  * @remarks
  * Additive in 0.3: a host from before them sends none, and answers `playState` with
- * `RpcErrorCode.methodNotFound`.
+ * `RpcErrorCode.methodNotFound`. `log`, `hostError` and `hotReloaded` came later still: only a host
+ * that lists `HostCapability.logRelay` in `ready` sends them.
  *
  * @public
  */
@@ -101,6 +102,23 @@ export const PlayNotification = {
    * `app.time.paused`, within one heartbeat interval.
    */
   playStateChanged: "playStateChanged",
+  /**
+   * One line from the game's logger, with the same `LogParams` as the scene view's `log`. Sent by a
+   * host that lists `HostCapability.logRelay`; lines logged before the handshake are kept (the
+   * newest few hundred) and sent right after `ready`.
+   */
+  log: "log",
+  /**
+   * An error the game's app reported through `app.onError`: the same `HostErrorParams` as the scene
+   * view's `hostError`, with `AppErrorData` as its `data`. Sent by a host that lists
+   * `HostCapability.logRelay`, kept before the handshake as `log` is.
+   */
+  hostError: "hostError",
+  /**
+   * After every `app.hotReload` operation in the game: the same `HotReloadedParams` as the scene
+   * view's `hotReloaded`. Sent by a host that lists `HostCapability.logRelay`.
+   */
+  hotReloaded: "hotReloaded",
 } as const;
 
 /**

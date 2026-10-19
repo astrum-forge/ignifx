@@ -170,8 +170,9 @@ export async function startEditorHost(options: EditorHostOptions): Promise<Edito
         HostCapability.screenshot,
         HostCapability.viewMode2d,
         HostCapability.pick2d,
+        HostCapability.logRelay,
       ]
-    : [HostCapability.heartbeat];
+    : [HostCapability.heartbeat, HostCapability.logRelay];
   let channel: Channel | null = null;
   const scene = new SceneHost({
     capabilities,

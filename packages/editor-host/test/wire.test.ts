@@ -117,7 +117,10 @@ function member(message: Received, key: string): Received {
  */
 function asReady(name: "readyScene" | "readyPlay"): Received {
   const ready = asCurrent(wire(name));
-  return { ...ready, result: { ...member(ready, "result"), engineVersion: REPORTED_ENGINE_VERSION } };
+  const result = member(ready, "result");
+  // `logRelay` is additive in 0.3, so a current host lists it after the fixture's capabilities.
+  const capabilities = [result["capabilities"], HostCapability.logRelay].flat();
+  return { ...ready, result: { ...result, engineVersion: REPORTED_ENGINE_VERSION, capabilities } };
 }
 
 /**

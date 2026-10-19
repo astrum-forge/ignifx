@@ -4,6 +4,7 @@
  */
 
 import { Camera, canonicalizeNumber, createRay, isIgnifxError, validateSceneFile } from "@ignifx/core";
+import { hotReloadedParamsOf, messageOf, relayAppReports } from "../app-reports.js";
 import { InvalidParamsError, Reply, RpcFailure } from "../channel.js";
 import { createEditorView } from "../lite/gizmos.js";
 import {
@@ -65,8 +66,6 @@ import type {
   GizmoDragMode,
   GizmoSnap,
   HostErrorParams,
-  HotReloadedParams,
-  LogParams,
   PickParams,
   PickResult,
   SceneFileTransform,
@@ -125,16 +124,6 @@ interface DragState {
   readonly snapper: DragSnapper | null;
   /** When the last `transformDragging` went out, in milliseconds. */
   lastSentMs: number;
-}
-
-/**
- * Turns whatever a hot reload or the app threw into a message.
- *
- * @param error - The thrown value.
- * @returns Its message.
- */
-function messageOf(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
 }
 
 /**
@@ -270,27 +259,16 @@ export class SceneHost {
     twoD.pixelsPerUnit = (): number => twoDServiceOf(app)?.pixelsPerUnit ?? DEFAULT_PIXELS_PER_UNIT;
     this.#camera2D = twoD;
     this.#cleanups.push(
-      app.log.addSink({
-        write: (record): void => {
-          const params: LogParams = {
-            level: record.level,
-            scope: record.scope,
-            message: record.message,
-            timeMs: record.timeMs,
-          };
+      relayAppReports(app, {
+        log: (params): void => {
           this.#notify(SceneNotification.log, params);
         },
-      }),
-      app.onError.connect((report) => {
-        const params: HostErrorParams = {
-          code: isIgnifxError(report.error) ? report.error.code : null,
-          message: messageOf(report.error),
-          data: { source: report.source, phase: report.phase, entity: report.entity?.uid ?? null },
-        };
-        this.#notify(SceneNotification.hostError, params);
-      }),
-      app.hotReload.onApplied.connect((report) => {
-        this.#hotReloaded(report);
+        error: (params): void => {
+          this.#notify(SceneNotification.hostError, params);
+        },
+        hotReloaded: (report): void => {
+          this.#hotReloaded(report);
+        },
       }),
     );
   }
@@ -957,18 +935,7 @@ export class SceneHost {
   #hotReloaded(report: HotReloadReport): void {
     // A "recreate" reload replaces component instances, which the document index holds.
     this.#mirror?.invalidate();
-    const params: HotReloadedParams = {
-      report: {
-        kind: report.kind,
-        typeIds: report.typeIds,
-        instances: report.instances,
-        durationMs: report.durationMs,
-        errors: report.errors.map((error) => ({
-          message: messageOf(error),
-          code: isIgnifxError(error) ? error.code : null,
-        })),
-      },
-    };
+    const params = hotReloadedParamsOf(report);
     this.#notify(SceneNotification.hotReloaded, params);
     this.sendSchemas();
   }
