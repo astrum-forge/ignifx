@@ -232,3 +232,98 @@ describe("material cache resets", () => {
     }
   });
 });
+
+describe("a material swap that lands in a rebuild", () => {
+  /**
+   * Gives the stand-in mesh a builder that throws on its first `failures` builds, after running
+   * `during` — what a group builder does when the mesh changed family while it awaited.
+   *
+   * @param scene - The headless scene.
+   * @param failures - How many builds throw.
+   * @param during - What happens to the mesh before each throwing build throws.
+   * @returns The mesh, and a second family's material to swap it to.
+   */
+  function withFailingGroup(
+    scene: SceneContext,
+    failures: number,
+    during: (mesh: { material: unknown }, other: unknown, own: unknown) => void,
+  ): { readonly builds: () => number } {
+    const other = {
+      _buildGroup: (): Promise<unknown> =>
+        Promise.resolve({ renderables: [], rebuildSingle: (): undefined => undefined }),
+    };
+    let builds = 0;
+    const own: { _buildGroup?: unknown } = {};
+    const mesh: { material: unknown } = { material: own };
+    // oxlint-disable-next-line no-underscore-dangle
+    own._buildGroup = (): Promise<unknown> => {
+      builds += 1;
+      if (builds <= failures) {
+        during(mesh, other, own);
+        return Promise.reject(new TypeError("Cannot read properties of undefined (reading '0')"));
+      }
+      return Promise.resolve({ renderables: [], rebuildSingle: (): undefined => undefined });
+    };
+    const target = buildable(scene);
+    target.meshes.push(mesh);
+    // oxlint-disable-next-line no-underscore-dangle
+    target._groups.set(own._buildGroup, [mesh]);
+    // oxlint-disable-next-line no-underscore-dangle
+    target._built = true;
+    return { builds: (): number => builds };
+  }
+
+  it("starts the rebuild over when the mesh changed family meanwhile", async () => {
+    const { scene } = createHeadlessScene();
+    try {
+      withFailingGroup(scene, 1, (mesh, other) => {
+        mesh.material = other;
+      });
+      const resets = createMaterialCacheResets();
+      await expect(rebuildRenderables(scene, resets)).resolves.toBeUndefined();
+      expect(resets.retries).toBe(1);
+    } finally {
+      discard(scene);
+    }
+  });
+
+  it("starts over without a record of resets too", async () => {
+    const { scene } = createHeadlessScene();
+    try {
+      withFailingGroup(scene, 1, (mesh, other) => {
+        mesh.material = other;
+      });
+      await expect(rebuildRenderables(scene)).resolves.toBeUndefined();
+    } finally {
+      discard(scene);
+    }
+  });
+
+  it("rethrows a failure with every material unchanged", async () => {
+    const { scene } = createHeadlessScene();
+    try {
+      const group = withFailingGroup(scene, 1, () => undefined);
+      const resets = createMaterialCacheResets();
+      await expect(rebuildRenderables(scene, resets)).rejects.toThrow(TypeError);
+      expect(resets.retries).toBe(0);
+      expect(group.builds()).toBe(1);
+    } finally {
+      discard(scene);
+    }
+  });
+
+  it("gives up after two restarts", async () => {
+    const { scene } = createHeadlessScene();
+    try {
+      // Each build leaves the mesh on a fresh material of its own family, so every attempt sees a swap.
+      withFailingGroup(scene, Number.POSITIVE_INFINITY, (mesh, _other, own) => {
+        mesh.material = { ...(own as object) };
+      });
+      const resets = createMaterialCacheResets();
+      await expect(rebuildRenderables(scene, resets)).rejects.toThrow(TypeError);
+      expect(resets.retries).toBe(2);
+    } finally {
+      discard(scene);
+    }
+  });
+});
