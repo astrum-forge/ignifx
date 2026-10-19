@@ -734,7 +734,9 @@ or a camera that is not attached.
 
 Coordinates are backing-store pixels — the canvas's `width`/`height`, the space
 [Camera.worldToScreen](#worldtoscreen) answers in and `@ignifx/input` reports `<Pointer>/position` in — not
-CSS pixels; multiply a DOM event's `offsetX`/`offsetY` by `devicePixelRatio` first.
+CSS pixels; multiply a DOM event's `offsetX`/`offsetY` by `canvas.width / canvas.clientWidth`
+first (`devicePixelRatio` is that ratio only while `renderer.pixelRatio` and
+`renderer.resolutionScale` leave it alone).
 
 ###### Example
 
@@ -18192,7 +18194,7 @@ The ray to cast.
 
 [`RenderPickOptions`](#renderpickoptions)
 
-An entity filter.
+An entity filter, and what to look through.
 
 ###### Returns
 
@@ -25469,7 +25471,9 @@ The rendering service, reached as `app.renderer`
 
 ```ts
 app.renderer.resolutionScale = 0.75;
-const hit = await app.renderer.pickAsync(event.offsetX, event.offsetY);
+// A DOM event is in CSS pixels; the renderer speaks the canvas's backing-store pixels.
+const scale = canvas.width / canvas.clientWidth;
+const hit = await app.renderer.pickAsync(event.offsetX * scale, event.offsetY * scale);
 hit?.entity.name;
 ```
 
@@ -25604,7 +25608,7 @@ The backing-store pixel y, from the canvas's top edge.
 
 [`RenderPickOptions`](#renderpickoptions)
 
-An entity filter.
+An entity filter, and what to look through.
 
 ###### Returns
 
@@ -25615,10 +25619,16 @@ What was hit, or `null` for a miss.
 ###### Remarks
 
 Coordinates are **backing-store pixels** — the canvas's `width`/`height`, the space
-`Camera.worldToScreen` answers in — not CSS pixels; multiply a DOM event's `offsetX`/`offsetY`
-by `devicePixelRatio` first. Picks are serialised per app: Lite's picker owns one set of staging
-buffers and chains each call onto the previous one's promise. A headless app has no picker and
-always misses.
+`Camera.worldToScreen` answers in and `<Pointer>/position` reports — not CSS pixels. Multiply a
+DOM event's `offsetX`/`offsetY` by `canvas.width / canvas.clientWidth` first. The renderer
+converts to the CSS pixels Lite's picker takes, so the same call hits at every device pixel
+ratio and resolution scale. The point is sampled exactly: whole numbers are pixel corners, so
+add 0.5 for a pixel's centre.
+
+A hit on any mesh of a glTF `Model`, or of any renderable built from several Lite nodes,
+resolves through the nearest node an entity owns. Picks are serialised per app: Lite's picker
+owns one set of staging buffers and chains each call onto the previous one's promise. A
+headless app has no picker and always misses.
 
 ##### requireFeature()
 
@@ -25946,7 +25956,12 @@ The overlay's own scene. What is added to it draws over the frame.
 
 ### RenderPick
 
-What a GPU pick found (`docs/architecture/07-rendering.md` §3).
+What a GPU pick or a render raycast found (`docs/architecture/07-rendering.md` §3).
+
+#### Remarks
+
+A hit on any mesh resolves to the nearest node on its way to the root that an entity owns, so a
+click on any part of a glTF `Model` names the model's entity and the `Model` component.
 
 #### Properties
 
@@ -25960,7 +25975,7 @@ The component that created the mesh, when it was not the entity's own transform.
 
 > `readonly` **distance**: `number`
 
-How far along the ray the hit is, in metres.
+How far the hit is from the camera (GPU pick) or the ray's origin (raycast), in metres.
 
 ##### entity
 
@@ -25968,23 +25983,39 @@ How far along the ray the hit is, in metres.
 
 The entity that owns the mesh the ray hit.
 
+##### meshName
+
+> `readonly` **meshName**: `string`
+
+The name of the mesh the ray hit: for a `Model`, the name the glTF file gives that node or
+primitive; for a `MeshRenderer`, its mesh's. `""` when the mesh has none.
+
 ##### normal
 
 > `readonly` **normal**: readonly \[`number`, `number`, `number`\] \| `null`
 
-The world-space surface normal, or `null` unless detailed picking is on.
+The world-space surface normal, or `null` from a GPU pick, which does not compute one.
 
 ##### point
 
 > `readonly` **point**: readonly \[`number`, `number`, `number`\] \| `null`
 
-The world-space hit point, or `null` unless detailed picking is on.
+The world-space hit point. A GPU pick reads it from the depth of the winning pixel, a render
+raycast from the triangle it hit; `null` only when the camera's matrix cannot be inverted.
+
+##### thinInstanceIndex
+
+> `readonly` **thinInstanceIndex**: `number` \| `null`
+
+Which instance of an `InstancedMeshRenderer` was hit, or `null` when the mesh is not instanced.
+Lite's sub-mesh index is not reported: a glTF primitive is a mesh of its own in Lite, so
+[RenderPick.meshName](#meshname) already tells the parts of a model apart.
 
 ***
 
 ### RenderPickOptions
 
-How a GPU pick is restricted (`docs/architecture/07-rendering.md` §3).
+How a GPU pick or a render raycast is restricted (`docs/architecture/07-rendering.md` §3).
 
 #### Properties
 
@@ -26008,6 +26039,25 @@ The candidate.
 `boolean`
 
 `true` to consider the entity.
+
+##### ignore?
+
+> `readonly` `optional` **ignore?**: readonly [`RenderPickIgnore`](#renderpickignore)[]
+
+What to look through: each entity, component or earlier hit listed neither occludes nor
+returns. Passing the previous hit each time walks through the objects under one pixel from
+front to back — an editor's click-to-cycle.
+
+###### Remarks
+
+Only a GPU pick can skip one instance of an instanced mesh; `world.raycastRender` skips the
+whole mesh. A hit from another app is not recognised and is skipped.
+
+**Limit (Babylon Lite 1.34).** Lite keeps one ignore entry per mesh. Several hits on instances
+of one `InstancedMeshRenderer` are merged into a range when their indices are contiguous;
+otherwise only the lowest index is skipped, and the pick can return a hit already in the list.
+A loop that walks through a pixel must stop when a hit repeats (the same `entity`, `meshName`
+and `thinInstanceIndex`), or it never gets past such a renderer.
 
 ***
 
@@ -30293,6 +30343,15 @@ A rendering feature a project or an extension asks for
 
 ***
 
+### RenderPickIgnore
+
+> **RenderPickIgnore** = [`Entity`](#entity-2) \| [`Component`](#abstract-component) \| [`RenderPick`](#renderpick)
+
+Something a pick looks through: an entity (every mesh it owns), a component (every mesh it
+created), or an earlier hit (that mesh, or that one instance of an instanced mesh).
+
+***
+
 ### RenderSurface
 
 > **RenderSurface** = `HTMLCanvasElement` \| `OffscreenCanvas`
@@ -34098,7 +34157,9 @@ A fresh ray. **Allocates** — make one per call site, not per frame.
 
 ```ts
 const ray = createRay();
-camera.screenToRay(event.offsetX, event.offsetY, ray);
+// A DOM event is in CSS pixels; the camera speaks the canvas's backing-store pixels.
+const scale = canvas.width / canvas.clientWidth;
+camera.screenToRay(event.offsetX * scale, event.offsetY * scale, ray);
 ```
 
 ***

@@ -31,9 +31,9 @@ import type { Schema } from "../schema/types.js";
  * abort every other renderable's reconciliation. The LOD pairing's `distance` and `band` are not in
  * that set and are reconciled every frame.
  *
- * `pickable` defaults to `false`, the opposite of `MeshRenderer`: Lite's picker reports
- * `thinInstanceIndex` (`index.d.ts` 8720) but `RenderPick` does not carry it, so a hit would name
- * the entity without saying which instance. Headless, the component keeps its slab, count, colours
+ * `pickable` defaults to `false`, the opposite of `MeshRenderer`: a scatter of thousands of
+ * instances is rarely what a click means. Set it to `true` and `RenderPick.thinInstanceIndex` says
+ * which instance was hit. Headless, the component keeps its slab, count, colours
  * and flags and touches no scene (`docs/architecture/07-rendering.md` §6).
  */
 
@@ -666,7 +666,7 @@ function instancedMeshRendererSchema(): Schema {
     castShadows: bool(true, { tooltip: "Whether the instances are rendered into shadow maps." }),
     receiveShadows: bool(true, { tooltip: "Whether shadow maps darken the instances." }),
     renderOrder: i32(0, { tooltip: "Sort key within the opaque or transparent phase; lower draws first." }),
-    pickable: bool(false, { tooltip: "Whether picking considers the instances; a hit names no instance index." }),
+    pickable: bool(false, { tooltip: "Whether picking considers the instances; a hit names the instance it hit." }),
     lod: optional(
       record({
         mesh: asset(MeshAsset, { tooltip: "The coarse mesh drawn beyond the switch distance." }),

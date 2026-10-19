@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { RpcFailure } from "../src/channel.js";
 import { HostCapability, PickUnit, RpcErrorCode, SCREENSHOT_MAX_SIZE } from "../src/protocol/index.js";
 import { SceneHost } from "../src/scene/scene-host.js";
-import { DragSnapper, readLocalTransform, screenshotSize, toCssPixels } from "../src/scene/view-math.js";
+import { DragSnapper, readLocalTransform, screenshotSize, toBackingPixels } from "../src/scene/view-math.js";
 import type { App } from "@ignifx/core";
 
 /**
@@ -23,19 +23,19 @@ afterEach(() => {
 });
 
 describe("the pick unit rule", () => {
-  it("passes CSS pixels through and converts backing pixels at the canvas's own ratio", () => {
-    expect(toCssPixels({ x: 412.5 / 2, y: 115, unit: PickUnit.css }, RETINA)).toEqual({ x: 206.25, y: 115 });
-    expect(toCssPixels({ x: 412.5, y: 230, unit: PickUnit.backing }, RETINA)).toEqual({ x: 206.25, y: 115 });
-    expect(toCssPixels({ x: 10, y: 10, unit: PickUnit.backing }, { ...RETINA, width: 400, height: 300 })).toEqual({
+  it("passes backing pixels through and converts CSS pixels at the canvas's own ratio", () => {
+    expect(toBackingPixels({ x: 412.5, y: 230, unit: PickUnit.backing }, RETINA)).toEqual({ x: 412.5, y: 230 });
+    expect(toBackingPixels({ x: 206.25, y: 115, unit: PickUnit.css }, RETINA)).toEqual({ x: 412.5, y: 230 });
+    expect(toBackingPixels({ x: 10, y: 10, unit: PickUnit.css }, { ...RETINA, width: 400, height: 300 })).toEqual({
       x: 10,
       y: 10,
     });
   });
 
   it("misses a point outside the canvas", () => {
-    expect(toCssPixels({ x: -1, y: 10, unit: PickUnit.css }, RETINA)).toBeNull();
-    expect(toCssPixels({ x: 400, y: 10, unit: PickUnit.css }, RETINA)).toBeNull();
-    expect(toCssPixels({ x: 10, y: 600, unit: PickUnit.backing }, RETINA)).toBeNull();
+    expect(toBackingPixels({ x: -1, y: 10, unit: PickUnit.css }, RETINA)).toBeNull();
+    expect(toBackingPixels({ x: 400, y: 10, unit: PickUnit.css }, RETINA)).toBeNull();
+    expect(toBackingPixels({ x: 10, y: 600, unit: PickUnit.backing }, RETINA)).toBeNull();
   });
 });
 

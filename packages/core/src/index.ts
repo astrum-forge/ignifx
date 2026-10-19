@@ -413,6 +413,7 @@ export {
   type RenderOverlay,
   type RenderOverlayLiteHandles,
   type RenderPick,
+  type RenderPickIgnore,
   type RenderPickOptions,
   type RenderTaskTiming,
   type RenderTaskTimings,

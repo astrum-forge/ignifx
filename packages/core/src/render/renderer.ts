@@ -9,7 +9,7 @@ import { setSurfaceSizePx } from "../lite/gpu/render-diagnostics-gpu.js";
 import { captureFrame } from "../lite/gpu/screenshot-capture.js";
 import { discardMaterialWarmUp } from "../lite/gpu/warm-up.js";
 import { readPbrDeformers } from "../lite/pbr-deformers.js";
-import { readPickedTag } from "../lite/picking.js";
+import { readPickedIdentity, readPickedMeshName, readPickedTag } from "../lite/picking.js";
 import { disableGpuTiming, readDrawCallCount, readGpuFrameTimeMs } from "../lite/render-diagnostics.js";
 import { assertRenderingFeatureAvailable } from "../lite/render-features.js";
 import { sceneLightCount } from "../lite/scene.js";
@@ -45,7 +45,7 @@ import type { LiteGpuPicker } from "../lite/gpu/picker.js";
 import type { ScenePresenter } from "../lite/gpu/render-path.js";
 import type { MaterialWarmUp } from "../lite/gpu/warm-up.js";
 import type { NodeTag } from "../lite/node.js";
-import type { LitePickInfo } from "../lite/picking.js";
+import type { LitePickInfo, PickAccept, PickedIdentity } from "../lite/picking.js";
 import type { RenderingFeatureName, RenderingFeatures } from "../lite/render-features.js";
 import type { LiteEngine, LiteScene } from "../lite/scene.js";
 import type { MaterialCacheResets } from "../lite/shadow.js";
@@ -112,6 +112,19 @@ export const RENDER_DIAGNOSTICS_COUNTERS: readonly string[] = Object.freeze([
   "renderableRebuilds",
 ]);
 
+/**
+ * A pick's options as Lite consumes them: a mesh predicate over the owning tag, and the earlier hits
+ * to look through.
+ *
+ * @internal
+ */
+export interface PickPlan {
+  /** Decides whether a mesh may be picked; `null` considers every mesh. */
+  readonly accept: PickAccept | null;
+  /** The earlier hits to ignore. */
+  readonly hits: readonly PickedIdentity[];
+}
+
 /** The feature record while the service still owns it: `requireFeature` writes into it before start. */
 type MutableRenderingFeatures = { -readonly [Name in RenderingFeatureName]: boolean };
 
@@ -130,7 +143,11 @@ const MAX_RESOLUTION_SCALE = 1;
 export type RenderingFeature = keyof RenderingFeatureSettings;
 
 /**
- * What a GPU pick found (`docs/architecture/07-rendering.md` §3).
+ * What a GPU pick or a render raycast found (`docs/architecture/07-rendering.md` §3).
+ *
+ * @remarks
+ * A hit on any mesh resolves to the nearest node on its way to the root that an entity owns, so a
+ * click on any part of a glTF `Model` names the model's entity and the `Model` component.
  *
  * @public
  */
@@ -139,16 +156,38 @@ export interface RenderPick {
   readonly entity: Entity;
   /** The component that created the mesh, when it was not the entity's own transform. */
   readonly component: Component | null;
-  /** The world-space hit point, or `null` unless detailed picking is on. */
+  /**
+   * The world-space hit point. A GPU pick reads it from the depth of the winning pixel, a render
+   * raycast from the triangle it hit; `null` only when the camera's matrix cannot be inverted.
+   */
   readonly point: readonly [number, number, number] | null;
-  /** The world-space surface normal, or `null` unless detailed picking is on. */
+  /** The world-space surface normal, or `null` from a GPU pick, which does not compute one. */
   readonly normal: readonly [number, number, number] | null;
-  /** How far along the ray the hit is, in metres. */
+  /** How far the hit is from the camera (GPU pick) or the ray's origin (raycast), in metres. */
   readonly distance: number;
+  /**
+   * The name of the mesh the ray hit: for a `Model`, the name the glTF file gives that node or
+   * primitive; for a `MeshRenderer`, its mesh's. `""` when the mesh has none.
+   */
+  readonly meshName: string;
+  /**
+   * Which instance of an `InstancedMeshRenderer` was hit, or `null` when the mesh is not instanced.
+   * Lite's sub-mesh index is not reported: a glTF primitive is a mesh of its own in Lite, so
+   * {@link RenderPick.meshName} already tells the parts of a model apart.
+   */
+  readonly thinInstanceIndex: number | null;
 }
 
 /**
- * How a GPU pick is restricted (`docs/architecture/07-rendering.md` §3).
+ * Something a pick looks through: an entity (every mesh it owns), a component (every mesh it
+ * created), or an earlier hit (that mesh, or that one instance of an instanced mesh).
+ *
+ * @public
+ */
+export type RenderPickIgnore = Entity | Component | RenderPick;
+
+/**
+ * How a GPU pick or a render raycast is restricted (`docs/architecture/07-rendering.md` §3).
  *
  * @public
  */
@@ -161,6 +200,22 @@ export interface RenderPickOptions {
    * @returns `true` to consider the entity.
    */
   readonly filter?: (entity: Entity) => boolean;
+  /**
+   * What to look through: each entity, component or earlier hit listed neither occludes nor
+   * returns. Passing the previous hit each time walks through the objects under one pixel from
+   * front to back — an editor's click-to-cycle.
+   *
+   * @remarks
+   * Only a GPU pick can skip one instance of an instanced mesh; `world.raycastRender` skips the
+   * whole mesh. A hit from another app is not recognised and is skipped.
+   *
+   * **Limit (Babylon Lite 1.34).** Lite keeps one ignore entry per mesh. Several hits on instances
+   * of one `InstancedMeshRenderer` are merged into a range when their indices are contiguous;
+   * otherwise only the lowest index is skipped, and the pick can return a hit already in the list.
+   * A loop that walks through a pixel must stop when a hit repeats (the same `entity`, `meshName`
+   * and `thinInstanceIndex`), or it never gets past such a renderer.
+   */
+  readonly ignore?: readonly RenderPickIgnore[];
 }
 
 /**
@@ -254,7 +309,9 @@ export interface RenderOverlay {
  * @example
  * ```ts
  * app.renderer.resolutionScale = 0.75;
- * const hit = await app.renderer.pickAsync(event.offsetX, event.offsetY);
+ * // A DOM event is in CSS pixels; the renderer speaks the canvas's backing-store pixels.
+ * const scale = canvas.width / canvas.clientWidth;
+ * const hit = await app.renderer.pickAsync(event.offsetX * scale, event.offsetY * scale);
  * hit?.entity.name;
  * ```
  *
@@ -317,14 +374,20 @@ export interface Renderer {
    *
    * @remarks
    * Coordinates are **backing-store pixels** — the canvas's `width`/`height`, the space
-   * `Camera.worldToScreen` answers in — not CSS pixels; multiply a DOM event's `offsetX`/`offsetY`
-   * by `devicePixelRatio` first. Picks are serialised per app: Lite's picker owns one set of staging
-   * buffers and chains each call onto the previous one's promise. A headless app has no picker and
-   * always misses.
+   * `Camera.worldToScreen` answers in and `<Pointer>/position` reports — not CSS pixels. Multiply a
+   * DOM event's `offsetX`/`offsetY` by `canvas.width / canvas.clientWidth` first. The renderer
+   * converts to the CSS pixels Lite's picker takes, so the same call hits at every device pixel
+   * ratio and resolution scale. The point is sampled exactly: whole numbers are pixel corners, so
+   * add 0.5 for a pixel's centre.
+   *
+   * A hit on any mesh of a glTF `Model`, or of any renderable built from several Lite nodes,
+   * resolves through the nearest node an entity owns. Picks are serialised per app: Lite's picker
+   * owns one set of staging buffers and chains each call onto the previous one's promise. A
+   * headless app has no picker and always misses.
    *
    * @param x - The backing-store pixel x, from the canvas's left edge.
    * @param y - The backing-store pixel y, from the canvas's top edge.
-   * @param options - An entity filter.
+   * @param options - An entity filter, and what to look through.
    * @returns What was hit, or `null` for a miss.
    */
   pickAsync(x: number, y: number, options?: RenderPickOptions): Promise<RenderPick | null>;
@@ -455,6 +518,9 @@ export class RendererImpl implements Renderer {
   readonly #countersRebuilds: number;
 
   #picker: LiteGpuPicker | null = null;
+
+  /** The mesh behind each hit this renderer returned, so a later pick can be told to ignore it. */
+  readonly #pickIdentities = new WeakMap<object, PickedIdentity>();
 
   /** The open overlays, by their Lite scene. */
   readonly #overlays = new Map<object, RenderOverlay>();
@@ -758,7 +824,7 @@ export class RendererImpl implements Renderer {
    *
    * @param x - The backing-store pixel x, from the canvas's left edge.
    * @param y - The backing-store pixel y, from the canvas's top edge.
-   * @param options - An entity filter.
+   * @param options - An entity filter, and what to look through.
    * @returns What was hit, or `null` for a miss.
    */
   async pickAsync(x: number, y: number, options?: RenderPickOptions): Promise<RenderPick | null> {
@@ -766,13 +832,8 @@ export class RendererImpl implements Renderer {
       return null;
     }
     const picker = (this.#picker ??= createPicker(this.scene));
-    const filter = options?.filter;
-    const info: LitePickInfo = await pickPixel(
-      picker,
-      x,
-      y,
-      filter === undefined ? null : (tag: NodeTag | null): boolean => acceptsEntityTag(this.#app.world, tag, filter),
-    );
+    const plan = this.planPick(options);
+    const info: LitePickInfo = await pickPixel(picker, this.scene, x, y, plan.accept, plan.hits);
     return this.resolvePick(info);
   }
 
@@ -957,10 +1018,62 @@ export class RendererImpl implements Renderer {
   }
 
   /**
+   * Turns a pick's options into the mesh predicate and the earlier hits Lite looks through.
+   *
+   * @param options - The caller's options.
+   * @returns The predicate — `null` when every mesh may be picked — and the hits to ignore.
+   *
+   * @internal
+   */
+  planPick(options: RenderPickOptions | undefined): PickPlan {
+    const filter = options?.filter;
+    const ignore = options?.ignore;
+    if (ignore === undefined || ignore.length === 0) {
+      const world = this.#app.world;
+      return {
+        accept: filter === undefined ? null : (tag: NodeTag | null): boolean => acceptsEntityTag(world, tag, filter),
+        hits: [],
+      };
+    }
+    const world = this.#app.world;
+    const entities = new Set<number>();
+    const components = new Set<number>();
+    const hits: PickedIdentity[] = [];
+    for (const item of ignore) {
+      const identity = this.#pickIdentities.get(item);
+      if (identity !== undefined) {
+        hits.push(identity);
+      } else if ("children" in item) {
+        if (!item.isDestroyed && world.getEntityByHandle(item.handle) === item) {
+          entities.add(item.handle);
+        }
+      } else if ("isDestroyed" in item && !item.isDestroyed && world.getComponentByHandle(item.handle) === item) {
+        components.add(item.handle);
+      }
+    }
+    if (filter === undefined && entities.size === 0 && components.size === 0) {
+      return { accept: null, hits };
+    }
+    return {
+      accept: (tag: NodeTag | null): boolean => {
+        if (tag === null) {
+          // A mesh no entity owns is kept unless the caller filters by entity.
+          return filter === undefined;
+        }
+        if (entities.has(tag.entity) || (tag.component !== undefined && components.has(tag.component))) {
+          return false;
+        }
+        return filter === undefined || acceptsEntityTag(world, tag, filter);
+      },
+      hits,
+    };
+  }
+
+  /**
    * Resolves a Lite pick result back to the entity and component that own the mesh.
    *
    * @param info - Lite's picking info, from the GPU picker or a CPU ray cast.
-   * @returns What was hit, or `null` for a miss or a mesh ignifx did not create.
+   * @returns What was hit, or `null` for a miss or a mesh no entity owns.
    *
    * @internal
    */
@@ -978,13 +1091,21 @@ export class RendererImpl implements Renderer {
       return null;
     }
     const component = tag.component;
-    return {
+    const thinInstanceIndex = info.thinInstanceIndex >= 0 ? info.thinInstanceIndex : null;
+    const pick: RenderPick = {
       entity,
       component: component === undefined ? null : world.getComponentByHandle(toComponentHandle(component)),
       point: info.pickedPoint,
       normal: info.pickedNormalWorld ?? info.pickedNormal,
       distance: info.distance,
+      meshName: readPickedMeshName(info),
+      thinInstanceIndex,
     };
+    const identity = readPickedIdentity(info);
+    if (identity !== null) {
+      this.#pickIdentities.set(pick, identity);
+    }
+    return pick;
   }
 
   /**

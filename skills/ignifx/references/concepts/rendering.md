@@ -322,11 +322,46 @@ material that compiled keeps drawing — which is also what makes `.wgsl` hot re
 
 ## 7. Picking
 
-- `app.renderer.pickAsync(x, y, { filter })` — a GPU pick in backing-store pixels (the canvas's
-  `width`/`height`; `<Pointer>/position` and `Camera.worldToScreen` use the same space), resolving to
-  `{ entity, component, point, normal, distance }` or `null`. Calls are serialized per picker.
-- `world.raycastRender(ray, { filter })` — the synchronous CPU path, against renderable meshes.
-  Build the ray with `camera.screenToRay(x, y)` or `createRay()`.
+- `app.renderer.pickAsync(x, y, { filter, ignore })` — a GPU pick in backing-store pixels (the
+  canvas's `width`/`height`; `<Pointer>/position` and `Camera.worldToScreen` use the same space, and
+  the renderer converts to Lite's CSS pixels itself). A DOM event's `offsetX`/`offsetY` are CSS
+  pixels: multiply them by `canvas.width / canvas.clientWidth` first. Resolves to
+  `{ entity, component, point, normal, distance, meshName, thinInstanceIndex }` or `null`; calls are
+  serialized per picker.
+- A hit on any mesh of a glTF `Model` resolves to the model's entity and the `Model` component;
+  `meshName` says which part of the file was hit. `point` is set on every GPU hit, `normal` only by
+  a raycast.
+- `ignore` takes entities, components and earlier hits. Passing the hits so far walks through what
+  is under one pixel, front to back. Lite 1.34 keeps one ignore entry per mesh, so instances of one
+  `InstancedMeshRenderer` that are not contiguous are not all skipped and a hit can come back again:
+  stop when one repeats.
+
+  ```ts
+  import type { App, RenderPick } from "@ignifx/core";
+
+  /** Whether two hits name the same mesh, or the same instance of it. */
+  function sameHit(a: RenderPick, b: RenderPick): boolean {
+    return a.entity === b.entity && a.meshName === b.meshName && a.thinInstanceIndex === b.thinInstanceIndex;
+  }
+
+  /** Up to `limit` objects under one backing-store pixel, nearest first. */
+  export async function pickAllAt(app: App, x: number, y: number, limit = 8): Promise<RenderPick[]> {
+    const hits: RenderPick[] = [];
+    while (hits.length < limit) {
+      // oxlint-disable-next-line no-await-in-loop -- each pick looks through the ones before it
+      const hit = await app.renderer.pickAsync(x, y, { ignore: hits });
+      if (hit === null || hits.some((seen) => sameHit(seen, hit))) {
+        break;
+      }
+      hits.push(hit);
+    }
+    return hits;
+  }
+  ```
+
+- `world.raycastRender(ray, { filter, ignore })` — the synchronous CPU path, against renderable
+  meshes; it skips an ignored instance's whole mesh. Build the ray with `camera.screenToRay(x, y)`
+  or `createRay()`.
 - Both skip a renderer whose `pickable` is `false`. Physics raycasts are a different thing and
   arrive with `@ignifx/physics`.
 

@@ -309,7 +309,7 @@ Draws one mesh many times from a caller-owned matrix slab, in a single draw call
 | `castShadows` | `bool` | `true` | Whether the instances are rendered into shadow maps. |
 | `receiveShadows` | `bool` | `true` | Whether shadow maps darken the instances. |
 | `renderOrder` | `i32` | `0` | Sort key within the opaque or transparent phase; lower draws first. |
-| `pickable` | `bool` | `false` | Whether picking considers the instances; a hit names no instance index. |
+| `pickable` | `bool` | `false` | Whether picking considers the instances; a hit names the instance it hit. |
 | `lod` | `optional` | `null` | An optional coarse mesh for far instances; draws only while gpuCulling is on. |
 
 ## Light (`ignifx/Light`)

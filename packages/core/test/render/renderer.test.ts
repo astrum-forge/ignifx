@@ -292,7 +292,108 @@ describe("resolving a pick back to its entity", () => {
     expect(
       h.renderer.resolvePick({ hit: true, pickedMesh: { metadata: { ignifx: { entity: 9999 } } } } as never),
     ).toBeNull();
-    expect(h.renderer.resolvePick({ hit: true, pickedMesh: { metadata: {} } } as never)).toBeNull();
+    expect(h.renderer.resolvePick({ hit: true, pickedMesh: { metadata: {}, parent: null } } as never)).toBeNull();
+  });
+});
+
+describe("resolving through the nearest tagged ancestor", () => {
+  it("resolves an untagged glTF mesh to the tag on its model's root, with the mesh detail", async () => {
+    const h = await app();
+    const entity = h.world.createEntity("Crate");
+    const renderer = entity.addComponent(MeshRenderer);
+    const root = { children: [], metadata: { ignifx: { entity: entity.handle, component: renderer.handle } } };
+    const node = { children: [], parent: root };
+    const mesh = { name: "Crate_primitive0", material: null, parent: node };
+    const pick = h.renderer.resolvePick({
+      hit: true,
+      distance: 2,
+      pickedPoint: [0, 0, 1],
+      pickedNormal: null,
+      pickedNormalWorld: null,
+      pickedMesh: mesh,
+      thinInstanceIndex: -1,
+    } as never);
+    expect(pick?.entity).toBe(entity);
+    expect(pick?.component).toBe(renderer);
+    expect(pick?.meshName).toBe("Crate_primitive0");
+    expect(pick?.thinInstanceIndex).toBeNull();
+  });
+
+  it("stops at the nearest tag and reports a thin instance", async () => {
+    const h = await app();
+    const outer = h.world.createEntity("Outer");
+    const inner = h.world.createEntity("Inner");
+    const parent = { children: [], metadata: { ignifx: { entity: outer.handle } } };
+    const mesh = { metadata: { ignifx: { entity: inner.handle } }, parent, material: null };
+    const pick = h.renderer.resolvePick({ hit: true, distance: 1, pickedMesh: mesh, thinInstanceIndex: 4 } as never);
+    expect(pick?.entity).toBe(inner);
+    expect(pick?.meshName).toBe("");
+    expect(pick?.thinInstanceIndex).toBe(4);
+  });
+
+  it("answers null when no node on the way to the root is tagged", async () => {
+    const h = await app();
+    const mesh = { parent: { children: [], parent: null } };
+    expect(h.renderer.resolvePick({ hit: true, pickedMesh: mesh } as never)).toBeNull();
+  });
+});
+
+describe("planning a pick's filter and ignore list", () => {
+  it("considers every mesh when nothing restricts the pick", async () => {
+    const h = await app();
+    expect(h.renderer.planPick(undefined)).toEqual({ accept: null, hits: [] });
+    expect(h.renderer.planPick({ ignore: [] })).toEqual({ accept: null, hits: [] });
+  });
+
+  it("rejects untagged meshes once an entity filter is given", async () => {
+    const h = await app();
+    const cube = h.world.createEntity("Cube");
+    const plan = h.renderer.planPick({ filter: (entity) => entity === cube });
+    const mesh = {} as never;
+    expect(plan.accept?.(null, mesh)).toBe(false);
+    expect(plan.accept?.({ entity: cube.handle }, mesh)).toBe(true);
+  });
+
+  it("skips ignored entities and components, keeps untagged meshes, and drops strangers", async () => {
+    const h = await app();
+    const a = h.world.createEntity("A");
+    const b = h.world.createEntity("B");
+    const renderer = b.addComponent(MeshRenderer);
+    const gone = h.world.createEntity("Gone");
+    gone.destroy();
+    h.frame();
+    const stranger = {
+      entity: a,
+      component: null,
+      point: null,
+      normal: null,
+      distance: 1,
+      meshName: "",
+      thinInstanceIndex: null,
+    };
+    const plan = h.renderer.planPick({ ignore: [a, renderer, gone, stranger] });
+    const mesh = {} as never;
+    expect(plan.hits).toEqual([]);
+    expect(plan.accept?.(null, mesh)).toBe(true);
+    expect(plan.accept?.({ entity: a.handle }, mesh)).toBe(false);
+    expect(plan.accept?.({ entity: b.handle, component: renderer.handle }, mesh)).toBe(false);
+    expect(plan.accept?.({ entity: b.handle }, mesh)).toBe(true);
+  });
+
+  it("turns an earlier hit into the identity Lite ignores", async () => {
+    const h = await app();
+    const entity = h.world.createEntity("Cube");
+    const mesh = { material: null, metadata: { ignifx: { entity: entity.handle } } };
+    const pick = h.renderer.resolvePick({ hit: true, distance: 1, pickedMesh: mesh, thinInstanceIndex: 2 } as never);
+    expect(pick).not.toBeNull();
+    if (pick === null) {
+      return;
+    }
+    const plan = h.renderer.planPick({ ignore: [pick] });
+    expect(plan.accept).toBeNull();
+    expect(plan.hits).toEqual([{ mesh, thinInstanceIndex: 2 }]);
+    const filtered = h.renderer.planPick({ ignore: [pick], filter: () => true });
+    expect(filtered.accept?.({ entity: entity.handle }, mesh as never)).toBe(true);
   });
 });
 

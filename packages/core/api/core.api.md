@@ -2800,13 +2800,19 @@ export interface RenderPick {
     readonly component: Component | null;
     readonly distance: number;
     readonly entity: Entity;
+    readonly meshName: string;
     readonly normal: readonly [number, number, number] | null;
     readonly point: readonly [number, number, number] | null;
+    readonly thinInstanceIndex: number | null;
 }
+
+// @public
+export type RenderPickIgnore = Entity | Component | RenderPick;
 
 // @public
 export interface RenderPickOptions {
     readonly filter?: (entity: Entity) => boolean;
+    readonly ignore?: readonly RenderPickIgnore[];
 }
 
 // @public

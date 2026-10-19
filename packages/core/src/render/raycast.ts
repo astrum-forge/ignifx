@@ -1,8 +1,7 @@
 import { createPickRay, raycastScene, raycastSceneWhere, setPickRay } from "../lite/picking.js";
-import { acceptsEntityTag, rendererInternals } from "./renderer.js";
+import { rendererInternals } from "./renderer.js";
 import type { Ray } from "./camera.js";
 import type { RenderPick, RenderPickOptions } from "./renderer.js";
-import type { NodeTag } from "../lite/node.js";
 import type { PickRay } from "../lite/picking.js";
 import type { LiteScene } from "../lite/scene.js";
 import type { World } from "../world/world.js";
@@ -37,7 +36,7 @@ let scratch: PickRay | null = null;
  * @param world - The world being picked in, for the handle tables.
  * @param scene - The Lite render scene.
  * @param ray - The ray to cast.
- * @param options - An entity filter.
+ * @param options - An entity filter, and what to look through.
  * @returns What was hit, or `null` for a miss.
  *
  * @internal
@@ -60,10 +59,17 @@ export function raycastRenderScene(
     ray.direction.z,
     ray.length,
   );
-  const filter = options?.filter;
-  const info =
-    filter === undefined
-      ? raycastScene(scene, pickRay)
-      : raycastSceneWhere(scene, pickRay, (tag: NodeTag | null): boolean => acceptsEntityTag(world, tag, filter));
+  const plan = renderer.planPick(options);
+  const accept = plan.accept;
+  const hits = plan.hits;
+  if (accept === null && hits.length === 0) {
+    return renderer.resolvePick(raycastScene(scene, pickRay));
+  }
+  // A CPU ray has no per-instance discard, so an ignored instance skips its whole mesh.
+  const info = raycastSceneWhere(
+    scene,
+    pickRay,
+    (tag, mesh): boolean => (accept === null || accept(tag, mesh)) && !hits.some((hit) => hit.mesh === mesh),
+  );
   return renderer.resolvePick(info);
 }

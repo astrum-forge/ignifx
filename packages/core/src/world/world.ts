@@ -439,7 +439,7 @@ export class World implements WorldHost {
    * answer.
    *
    * @param ray - The ray to cast.
-   * @param options - An entity filter.
+   * @param options - An entity filter, and what to look through.
    * @returns What was hit, or `null` for a miss.
    *
    * @example

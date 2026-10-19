@@ -90,7 +90,7 @@ describe("GPU picking", () => {
     const { harness, box } = await buildPickScene();
     const picker = createScenePicker(harness.scene);
     try {
-      const hit = await pickScenePixel(picker, 32, 32);
+      const hit = await pickScenePixel(picker, harness.scene, 32, 32, null, []);
       expect(hit.hit).toBe(true);
       expect(hit.pickedMesh).toBe(box);
       expect(readPickedTag(hit)).toEqual({ entity: BOX_ENTITY });
@@ -103,7 +103,7 @@ describe("GPU picking", () => {
     const { harness } = await buildPickScene();
     const picker = createScenePicker(harness.scene);
     try {
-      expect((await pickScenePixel(picker, 1, 1)).hit).toBe(false);
+      expect((await pickScenePixel(picker, harness.scene, 1, 1, null, [])).hit).toBe(false);
     } finally {
       disposeScenePicker(picker);
     }
@@ -114,7 +114,7 @@ describe("GPU picking", () => {
     setMeshPickable(box, false);
     const picker = createScenePicker(harness.scene);
     try {
-      expect((await pickScenePixel(picker, 32, 32)).hit).toBe(false);
+      expect((await pickScenePixel(picker, harness.scene, 32, 32, null, [])).hit).toBe(false);
     } finally {
       disposeScenePicker(picker);
     }
@@ -124,7 +124,7 @@ describe("GPU picking", () => {
     const { harness } = await buildPickScene();
     const picker = createScenePicker(harness.scene);
     try {
-      expect((await pickScenePixel(picker, 32, 32, { filter: () => false })).hit).toBe(false);
+      expect((await pickScenePixel(picker, harness.scene, 32, 32, () => false, [])).hit).toBe(false);
     } finally {
       disposeScenePicker(picker);
     }
@@ -135,9 +135,9 @@ describe("GPU picking", () => {
     const picker = createScenePicker(harness.scene);
     try {
       const hits = await Promise.all([
-        pickScenePixel(picker, 32, 32),
-        pickScenePixel(picker, 32, 32),
-        pickScenePixel(picker, 32, 32),
+        pickScenePixel(picker, harness.scene, 32, 32, null, []),
+        pickScenePixel(picker, harness.scene, 32, 32, null, []),
+        pickScenePixel(picker, harness.scene, 32, 32, null, []),
       ]);
       for (const hit of hits) {
         expect(hit.pickedMesh).toBe(box);
@@ -152,7 +152,7 @@ describe("GPU picking", () => {
     const picker = createScenePicker(harness.scene);
     try {
       enableScenePickerDetail(picker);
-      const hit = await pickScenePixel(picker, 32, 32);
+      const hit = await pickScenePixel(picker, harness.scene, 32, 32, null, []);
       expect(hit.hit).toBe(true);
       expect(hit.pickedPoint).not.toBeNull();
       // `faceId` stays at -1 on the CI software adapter even with detailed picking on, so the

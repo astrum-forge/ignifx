@@ -1,4 +1,4 @@
-import { createScenePicker, pickScenePixel, pickScenePixelWhere } from "../../lite/gpu/picker.js";
+import { createScenePicker, pickScenePixel } from "../../lite/gpu/picker.js";
 import {
   enableGpuTiming,
   readRenderTaskGpuTimings,
@@ -10,8 +10,7 @@ import { warmUpMaterials } from "../../lite/gpu/warm-up.js";
 import type { openOverlayScene } from "../../lite/gpu/overlay.js";
 import type { LiteGpuPicker } from "../../lite/gpu/picker.js";
 import type { MaterialWarmUp } from "../../lite/gpu/warm-up.js";
-import type { NodeTag } from "../../lite/node.js";
-import type { LitePickInfo } from "../../lite/picking.js";
+import type { LitePickInfo, PickAccept, PickedIdentity } from "../../lite/picking.js";
 import type { LiteEngine, LiteScene } from "../../lite/scene.js";
 import type { MaterialAsset } from "../material-asset.js";
 import type { RenderTaskTiming, RenderTaskTimings } from "../renderer.js";
@@ -55,23 +54,28 @@ export async function loadOverlayOpener(): Promise<typeof openOverlayScene> {
 }
 
 /**
- * Picks the object under one CSS pixel, optionally restricted to the meshes a predicate accepts.
+ * Picks the object under one backing-store pixel, optionally restricted to the meshes a predicate
+ * accepts and looking through earlier hits.
  *
  * @param picker - The app's picker.
- * @param x - The CSS pixel x, from the canvas's left edge.
- * @param y - The CSS pixel y, from the canvas's top edge.
+ * @param scene - The scene the picker belongs to.
+ * @param x - The backing-store pixel x, from the canvas's left edge.
+ * @param y - The backing-store pixel y, from the canvas's top edge.
  * @param accept - The tag predicate, or `null` to consider every mesh.
+ * @param ignore - Earlier hits to look through.
  * @returns Lite's picking info.
  *
  * @internal
  */
 export function pickPixel(
   picker: LiteGpuPicker,
+  scene: LiteScene,
   x: number,
   y: number,
-  accept: ((tag: NodeTag | null) => boolean) | null,
+  accept: PickAccept | null,
+  ignore: readonly PickedIdentity[],
 ): Promise<LitePickInfo> {
-  return accept === null ? pickScenePixel(picker, x, y) : pickScenePixelWhere(picker, x, y, accept);
+  return pickScenePixel(picker, scene, x, y, accept, ignore);
 }
 
 /**

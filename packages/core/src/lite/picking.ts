@@ -1,7 +1,7 @@
 import { pickMeshesWithRay, pickWithRay } from "@babylonjs/lite";
-import { readNodeTag } from "./node.js";
+import { parentNode, readNodeTag } from "./node.js";
 import type { NodeTag } from "./node.js";
-import type { Mesh, PickingInfo, Ray, RayPickOptions, SceneContext } from "@babylonjs/lite";
+import type { Mesh, PickingInfo, Ray, RayPickOptions, SceneContext, SceneNode } from "@babylonjs/lite";
 
 /**
  * CPU picking half of the Babylon Lite adapter (`docs/architecture/07-rendering.md` §3): the
@@ -130,27 +130,59 @@ export function raycastMeshes(meshes: Iterable<Mesh>, ray: PickRay, options?: Ra
 }
 
 /**
- * Casts a ray against a scene's renderable meshes, considering only the meshes whose ignifx tag a
- * predicate accepts.
+ * Decides whether a mesh may be picked, from the ignifx tag that owns it and the mesh itself.
  *
  * @remarks
- * The predicate is stated over the *tag* rather than over Lite's `Mesh` so the component layer can
- * filter by entity without naming a Lite type (`CONSTITUTION.md` §3.4). Lite's own
+ * The tag is the one {@link readOwnerTag} finds, so a glTF mesh inside a `Model` is judged by the
+ * model's entity. The mesh is passed only so a caller can compare it by identity against an earlier
+ * hit; nothing outside `src/lite/**` reads it.
+ *
+ * @internal
+ */
+export type PickAccept = (tag: NodeTag | null, mesh: Mesh) => boolean;
+
+/**
+ * The ignifx tag that owns a node: its own, or the nearest tagged ancestor's.
+ *
+ * @remarks
+ * A `MeshRenderer` tags the mesh it clones, but a `Model` tags only the cloned glTF root, and the
+ * meshes Lite draws are that root's descendants (`render/gpu/model-instance.ts`). Walking up to the
+ * nearest tag resolves both, and any other renderable that parents several Lite nodes under one
+ * tagged node, to the entity and component that created them (editor spike S0.2 §6.1). The walk
+ * stops at the first tag, so an entity parented under a model's bone still owns its own meshes.
+ *
+ * @param node - The picked node, usually a mesh.
+ * @returns The nearest tag, or `null` when no node on the way to the root carries one.
+ *
+ * @internal
+ */
+export function readOwnerTag(node: SceneNode): NodeTag | null {
+  for (let current: SceneNode | null = node; current !== null; current = parentNode(current)) {
+    const tag = readNodeTag(current);
+    if (tag !== null) {
+      return tag;
+    }
+  }
+  return null;
+}
+
+/**
+ * Casts a ray against a scene's renderable meshes, considering only the meshes a predicate accepts.
+ *
+ * @remarks
+ * The predicate is stated over the owning *tag* rather than over Lite's `Mesh` so the component
+ * layer can filter by entity without naming a Lite type (`CONSTITUTION.md` §3.4). Lite's own
  * `pickable === false` exclusion still runs first.
  *
  * @param scene - The render scene.
  * @param ray - The ray to cast.
- * @param accept - Decides whether a mesh may be picked, from the ignifx tag its node carries.
+ * @param accept - Decides whether a mesh may be picked, from the ignifx tag that owns it.
  * @returns Lite's picking info.
  *
  * @internal
  */
-export function raycastSceneWhere(
-  scene: SceneContext,
-  ray: PickRay,
-  accept: (tag: NodeTag | null) => boolean,
-): PickingInfo {
-  const options: RayPickOptions = { predicate: (mesh: Mesh): boolean => accept(readNodeTag(mesh)) };
+export function raycastSceneWhere(scene: SceneContext, ray: PickRay, accept: PickAccept): PickingInfo {
+  const options: RayPickOptions = { predicate: (mesh: Mesh): boolean => accept(readOwnerTag(mesh), mesh) };
   return pickWithRay(scene, ray, options);
 }
 
@@ -158,8 +190,9 @@ export function raycastSceneWhere(
  * Resolves a hit back to the ignifx entity and component that own the mesh.
  *
  * @param info - A result from {@link raycastScene}, {@link raycastMeshes}, or the GPU picker.
- * @returns The owning entity's tag, or `null` when the ray missed or the mesh is not one ignifx
- * created (a glTF child node inside a `Model`, for instance, whose tag lives on the model's root).
+ * @returns The owning tag — the picked mesh's own or its nearest tagged ancestor's, so a glTF mesh
+ * inside a `Model` resolves to the model — or `null` when the ray missed or no node on the way to
+ * the root is one ignifx created.
  *
  * @internal
  */
@@ -168,5 +201,48 @@ export function readPickedTag(info: PickingInfo): NodeTag | null {
   if (mesh === null) {
     return null;
   }
-  return readNodeTag(mesh);
+  return readOwnerTag(mesh);
+}
+
+/**
+ * The name of the mesh a hit landed on.
+ *
+ * @param info - A hit.
+ * @returns The Lite mesh's name — for a glTF model, the name the file gives the node or primitive —
+ * or `""` for a miss or an unnamed mesh.
+ *
+ * @internal
+ */
+export function readPickedMeshName(info: PickingInfo): string {
+  const name: unknown = info.pickedMesh?.name;
+  return typeof name === "string" ? name : "";
+}
+
+/**
+ * The identity of one earlier hit, which a pick can be told to look through.
+ *
+ * @internal
+ */
+export interface PickedIdentity {
+  /** The mesh that was hit. */
+  readonly mesh: Mesh;
+  /** The thin instance that was hit, or `-1` when the mesh has none. */
+  readonly thinInstanceIndex: number;
+}
+
+/**
+ * Reads the identity of a hit, for a later pick to ignore.
+ *
+ * @param info - A hit.
+ * @returns The mesh and thin instance, or `null` for a miss or a hit on something other than a
+ * regular Lite mesh (a Gaussian-splatting mesh, which Lite's `ignore` cannot name).
+ *
+ * @internal
+ */
+export function readPickedIdentity(info: PickingInfo): PickedIdentity | null {
+  const mesh = info.pickedMesh;
+  if (mesh === null || !("material" in mesh)) {
+    return null;
+  }
+  return { mesh, thinInstanceIndex: info.thinInstanceIndex };
 }

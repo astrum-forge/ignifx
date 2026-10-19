@@ -123,7 +123,9 @@ export interface RayVector {
  * @example
  * ```ts
  * const ray = createRay();
- * camera.screenToRay(event.offsetX, event.offsetY, ray);
+ * // A DOM event is in CSS pixels; the camera speaks the canvas's backing-store pixels.
+ * const scale = canvas.width / canvas.clientWidth;
+ * camera.screenToRay(event.offsetX * scale, event.offsetY * scale, ray);
  * ```
  *
  * @public
@@ -245,7 +247,9 @@ export class Camera extends Component implements ComponentHooks {
    * @remarks
    * Coordinates are backing-store pixels — the canvas's `width`/`height`, the space
    * {@link Camera.worldToScreen} answers in and `@ignifx/input` reports `<Pointer>/position` in — not
-   * CSS pixels; multiply a DOM event's `offsetX`/`offsetY` by `devicePixelRatio` first.
+   * CSS pixels; multiply a DOM event's `offsetX`/`offsetY` by `canvas.width / canvas.clientWidth`
+   * first (`devicePixelRatio` is that ratio only while `renderer.pixelRatio` and
+   * `renderer.resolutionScale` leave it alone).
    *
    * @param x - The backing-store pixel x, from the canvas's left edge.
    * @param y - The backing-store pixel y, from the canvas's top edge.
