@@ -363,7 +363,8 @@ export interface Renderer {
    *
    * @returns The overlay, drawing from the next frame.
    * @throws IgnifxError with code `IGX-0728` on a headless app or before `app.start()` has
-   * registered the render scene.
+   * registered the render scene, and `IGX-0106` when the app is disposed, also while the overlay
+   * was opening.
    *
    * @example
    * ```ts
@@ -480,6 +481,8 @@ export class RendererImpl implements Renderer {
   #isSceneRegistered = false;
 
   #isLoopRunning = false;
+
+  #isDisposed = false;
 
   /** The clear colour as authored, in sRGB, before image processing. */
   readonly #authoredClear = { r: 0, g: 0, b: 0, a: 1 };
@@ -817,31 +820,50 @@ export class RendererImpl implements Renderer {
    * Opens an overlay drawn over the finished frame.
    *
    * @returns The overlay.
-   * @throws IgnifxError with code `IGX-0728` on a headless app or before the render scene is registered.
+   * @throws IgnifxError with code `IGX-0728` on a headless app or before the render scene is
+   * registered, and `IGX-0106` when the app is disposed, also while the overlay was opening.
    */
   async openOverlay(): Promise<RenderOverlay> {
     this.#assertOverlayAllowed();
     const open = await loadOverlayOpener();
+    this.#assertOverlayAllowed();
     const overlays = this.#overlays;
-    const overlay = await open(this.engine, this.scene, {
-      isPeer: (context: object): boolean => overlays.has(context),
-      onDispose: (scene: object): void => {
-        overlays.delete(scene);
-      },
-      onError: (error: unknown): void => {
-        this.#app.onError.emit({ error, source: "system", phase: null, entity: null, component: null });
-      },
-    });
+    let overlay: RenderOverlay;
+    try {
+      overlay = await open(this.engine, this.scene, {
+        isPeer: (context: object): boolean => overlays.has(context),
+        onDispose: (scene: object): void => {
+          overlays.delete(scene);
+        },
+        onError: (error: unknown): void => {
+          this.#app.onError.emit({ error, source: "system", phase: null, entity: null, component: null });
+        },
+      });
+    } catch (error) {
+      // A registration cut short by the app's disposal says so, rather than with Lite's error.
+      if (this.#isDisposed) {
+        throw overlayAfterDisposeError();
+      }
+      throw error;
+    }
+    if (this.#isDisposed) {
+      // The app was disposed while the overlay registered; nothing else would release it.
+      overlay.dispose();
+      throw overlayAfterDisposeError();
+    }
     overlays.set(overlay.lite.scene, overlay);
     return overlay;
   }
 
   /**
-   * Refuses an overlay on a headless app, or before the render scene is registered.
+   * Refuses an overlay on a disposed or headless app, or before the render scene is registered.
    *
-   * @throws IgnifxError with code `IGX-0728`.
+   * @throws IgnifxError with code `IGX-0106` once the app is disposed, `IGX-0728` otherwise.
    */
   #assertOverlayAllowed(): void {
+    if (this.#isDisposed) {
+      throw overlayAfterDisposeError();
+    }
     if (this.isHeadless || !this.#isSceneRegistered) {
       throw new IgnifxError(
         CoreErrorCode.overlayNeedsRenderScene,
@@ -1176,6 +1198,7 @@ export class RendererImpl implements Renderer {
    * @internal
    */
   dispose(): void {
+    this.#isDisposed = true;
     // Each overlay removes itself from the map as it is disposed, which a `Map` iteration allows.
     for (const overlay of this.#overlays.values()) {
       overlay.dispose();
@@ -1276,4 +1299,17 @@ export function rendererInternals(renderer: Renderer): RendererImpl {
  */
 export function forceRendererDeviceLossForTesting(renderer: Renderer): void {
   rendererInternals(renderer).forceDeviceLossForTesting();
+}
+
+/**
+ * The error an overlay request gets once the app is disposed.
+ *
+ * @returns `IGX-0106`.
+ */
+function overlayAfterDisposeError(): IgnifxError {
+  return new IgnifxError(
+    CoreErrorCode.appDisposed,
+    "The app has been disposed; app.renderer.openOverlay() is no longer available.",
+    { context: { member: "app.renderer.openOverlay()" } },
+  );
 }

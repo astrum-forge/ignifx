@@ -25568,7 +25568,8 @@ are still open.
 ###### Throws
 
 IgnifxError with code `IGX-0728` on a headless app or before `app.start()` has
-registered the render scene.
+registered the render scene, and `IGX-0106` when the app is disposed, also while the overlay
+was opening.
 
 ###### Example
 

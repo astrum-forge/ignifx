@@ -17,6 +17,7 @@ import {
   addCameraAndLight,
   createBrowserApp,
   gpuDeviceErrors,
+  nextFrame,
   SETTLE_FRAMES,
 } from "../../render/support/browser-harness.js";
 import type { PixelRgba } from "../../../src/lite/screenshot.js";
@@ -169,6 +170,35 @@ async function expectOverlayOverScene(running: BrowserApp): Promise<void> {
   expectGrey(await running.pixelAt(CORNER.x, CORNER.y));
 }
 
+/**
+ * Disposes the app a number of microtasks into an `openOverlay()` call, and asserts that the call
+ * either rejected with `IGX-0106` or returned an overlay that was disposed, and that nothing stays
+ * registered on the engine.
+ *
+ * @param ticks - How many microtasks pass between the call and `app.dispose()`.
+ */
+async function disposeWhileOpening(ticks: number): Promise<void> {
+  const running = await startScene({ msaa: 4, path: "plain" });
+  // Loaded once, so the next call reaches the registration within a few microtasks.
+  (await running.app.renderer.openOverlay()).dispose();
+  const engine = running.renderer.engine;
+  const pending = running.app.renderer.openOverlay();
+  await Array.from({ length: ticks }).reduce<Promise<void>>((chain) => chain.then(() => undefined), Promise.resolve());
+  running.dispose();
+  harness = null;
+  const settled: unknown = await pending.then(
+    (overlay) => overlay,
+    (error: unknown) => error,
+  );
+  if (typeof settled === "object" && settled !== null && "lite" in settled) {
+    expect((settled as RenderOverlay).lite.scene.camera).toBeNull();
+  } else {
+    expect(settled).toMatchObject({ code: "IGX-0106" });
+  }
+  await nextFrame();
+  expect(getRenderingContexts(engine)).toEqual([]);
+}
+
 /** Asserts the device reported no validation error, which would mean a rejected frame. */
 function expectNoDeviceErrors(): void {
   expect(deviceErrors?.errors).toEqual([]);
@@ -258,4 +288,12 @@ describe("a render overlay", () => {
     expect(overlay.lite.scene.meshes.length).toBe(0);
     expect(overlay.lite.scene.camera).toBeNull();
   }, 60_000);
+
+  // How long after `openOverlay()` the app is disposed: before the module loads, while the scene
+  // registers, or later. Whichever it is, nothing may stay registered on the disposed engine.
+  for (const ticks of [0, 1, 2, 4, 8, 16, 32]) {
+    it(`leaves nothing behind when the app is disposed ${String(ticks)} microtasks into openOverlay()`, async () => {
+      await disposeWhileOpening(ticks);
+    }, 60_000);
+  }
 });
