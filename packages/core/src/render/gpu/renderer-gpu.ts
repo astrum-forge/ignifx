@@ -7,13 +7,13 @@ import {
   setSurfaceMaxDevicePixelRatio,
 } from "../../lite/gpu/render-diagnostics-gpu.js";
 import { warmUpMaterials } from "../../lite/gpu/warm-up.js";
+import type { openOverlayScene } from "../../lite/gpu/overlay.js";
 import type { LiteGpuPicker } from "../../lite/gpu/picker.js";
 import type { MaterialWarmUp } from "../../lite/gpu/warm-up.js";
 import type { NodeTag } from "../../lite/node.js";
 import type { LitePickInfo } from "../../lite/picking.js";
 import type { LiteEngine, LiteScene } from "../../lite/scene.js";
 import type { MaterialAsset } from "../material-asset.js";
-import type { openOverlayScene } from "../../lite/gpu/overlay.js";
 import type { RenderTaskTiming, RenderTaskTimings } from "../renderer.js";
 
 /**
