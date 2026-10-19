@@ -8,6 +8,7 @@ import { checkChannelOptions, openChannel, resolveMessageTarget } from "./channe
 import { HostCapability, HostKind, PROTOCOL_VERSION } from "./protocol/index.js";
 import { SceneHost } from "./scene/scene-host.js";
 import type { Channel, EditorMessageTarget } from "./channel.js";
+import type { EditorAssetChange } from "./scene/asset-reload.js";
 import type {
   App,
   AssetsCreateOptions,
@@ -85,6 +86,24 @@ export interface EditorHost {
   readonly engineVersion: string;
   /** Whether the editor has handed the host a port that is still open. */
   readonly isConnected: boolean;
+  /**
+   * Reloads an asset that changed on disk, in place, through `app.assets.reload`. The generated
+   * scene-view module calls it on every `ignifx:asset-changed` event.
+   *
+   * @remarks
+   * Only an asset the app has loaded is reloaded, and only one of the types the renderers follow:
+   * a scene or prefab, whose instances in the open document are then rebuilt from the new file with
+   * their uids, transforms and overrides, or a model, mesh, material, sprite atlas or shader, which
+   * the renderers pick up on their next frame. A texture, a removed file and the open document's
+   * own file are left alone. Once the new value is in, the host sends `assetReloaded` with the
+   * address, the type and the rebuilt instance roots, so the editor can compare its document with
+   * the view instead of reloading it.
+   *
+   * @param change - The address and what happened to it.
+   * @returns Whether the asset was reloaded; `false` when it was left alone or the reload failed,
+   * which the app reports as an error (`hostError`).
+   */
+  assetChanged(change: EditorAssetChange): Promise<boolean>;
   /** Stops the heartbeat, closes the port, and disposes the app. Idempotent. */
   dispose(): void;
   /** Same as {@link EditorHost.dispose}, for `using`. */
@@ -212,6 +231,7 @@ export async function startEditorHost(options: EditorHostOptions): Promise<Edito
     get isConnected(): boolean {
       return opened.isConnected;
     },
+    assetChanged: async (change: EditorAssetChange): Promise<boolean> => scene.assetChanged(change),
     dispose,
     [Symbol.dispose]: dispose,
   };

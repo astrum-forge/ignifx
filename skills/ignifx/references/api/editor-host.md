@@ -125,6 +125,41 @@ The ops that were not, in order.
 
 ***
 
+### AssetReloadedParams
+
+The parameters of `assetReloaded`.
+
+#### Remarks
+
+The host reloads an asset in place when the dev server reports it changed on disk and the scene
+view's app has it loaded: a scene or prefab (`"scene"`), whose document instances it rebuilds from
+the new file with their uids, transforms and overrides, and a model, mesh, material, sprite atlas
+or shader, which the renderers pick up on their next frame. Any other type, such as a texture, is
+left as it was loaded and sends nothing. The open document's own file is never reloaded.
+
+#### Properties
+
+##### address
+
+> `readonly` **address**: `string`
+
+The asset's address, relative to the asset root.
+
+##### entities
+
+> `readonly` **entities**: readonly `string`[]
+
+The uids of the document's instance roots rebuilt from the new file, in document order: those
+that instance it, directly or through another scene. Empty for any other type.
+
+##### type
+
+> `readonly` **type**: `string`
+
+Its asset type, as the manifest records it: `"scene"` for a scene or a prefab.
+
+***
+
 ### CreateEntityOp
 
 Creates an entity, optionally with a whole subtree below it. `entity.parent` places it; `index`
@@ -176,6 +211,33 @@ The entity's uid.
 > `readonly` **op**: `"destroyEntity"`
 
 The discriminant.
+
+***
+
+### EditorAssetChange
+
+**`Beta`**
+
+A change on disk to one asset, as `@ignifx/vite-plugin`'s `ignifx:asset-changed` event reports
+it; the event's payload is accepted as it is.
+
+#### Properties
+
+##### address
+
+> `readonly` **address**: `string`
+
+**`Beta`**
+
+The asset's address, relative to the asset root.
+
+##### kind
+
+> `readonly` **kind**: `"added"` \| `"changed"` \| `"removed"`
+
+**`Beta`**
+
+What happened to the file.
 
 ***
 
@@ -256,6 +318,40 @@ Same as [EditorHost.dispose](#dispose-1), for `using`.
 ###### Returns
 
 `void`
+
+##### assetChanged()
+
+> **assetChanged**(`change`): `Promise`\<`boolean`\>
+
+**`Beta`**
+
+Reloads an asset that changed on disk, in place, through `app.assets.reload`. The generated
+scene-view module calls it on every `ignifx:asset-changed` event.
+
+###### Parameters
+
+###### change
+
+[`EditorAssetChange`](#editorassetchange)
+
+The address and what happened to it.
+
+###### Returns
+
+`Promise`\<`boolean`\>
+
+Whether the asset was reloaded; `false` when it was left alone or the reload failed,
+which the app reports as an error (`hostError`).
+
+###### Remarks
+
+Only an asset the app has loaded is reloaded, and only one of the types the renderers follow:
+a scene or prefab, whose instances in the open document are then rebuilt from the new file with
+their uids, transforms and overrides, or a model, mesh, material, sprite atlas or shader, which
+the renderers pick up on their next frame. A texture, a removed file and the open document's
+own file are left alone. Once the new value is in, the host sends `assetReloaded` with the
+address, the type and the rebuilt instance roots, so the editor can compare its document with
+the view instead of reloading it.
 
 ##### dispose()
 
@@ -2700,7 +2796,7 @@ The result on success.
 
 ### SceneHostNotification
 
-> **SceneHostNotification** = [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`sceneOpened`](#sceneopened), [`SceneOpenedParams`](#sceneopenedparams)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`schemasChanged`](#schemaschanged), [`SchemaSet`](#schemaset)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`hotReloaded`](#hotreloaded), [`HotReloadedParams`](#hotreloadedparams)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`selectionChanged`](#selectionchanged), [`EntitySelection`](#entityselection)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`transformDragging`](#transformdragging), [`TransformDraggingParams`](#transformdraggingparams)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`transformDragged`](#transformdragged), [`TransformDraggedParams`](#transformdraggedparams)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`hostError`](#hosterror), [`HostErrorParams`](#hosterrorparams)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`log`](#log), [`LogParams`](#logparams)\>
+> **SceneHostNotification** = [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`sceneOpened`](#sceneopened), [`SceneOpenedParams`](#sceneopenedparams)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`schemasChanged`](#schemaschanged), [`SchemaSet`](#schemaset)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`hotReloaded`](#hotreloaded), [`HotReloadedParams`](#hotreloadedparams)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`selectionChanged`](#selectionchanged), [`EntitySelection`](#entityselection)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`transformDragging`](#transformdragging), [`TransformDraggingParams`](#transformdraggingparams)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`transformDragged`](#transformdragged), [`TransformDraggedParams`](#transformdraggedparams)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`hostError`](#hosterror), [`HostErrorParams`](#hosterrorparams)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`log`](#log), [`LogParams`](#logparams)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`assetReloaded`](#assetreloaded), [`AssetReloadedParams`](#assetreloadedparams)\>
 
 Scene host → editor: one of the `SceneNotification`s.
 
@@ -3373,6 +3469,13 @@ Scene host → editor: the notifications of protocol 0.3. None has an answer.
 
 #### Type Declaration
 
+##### assetReloaded
+
+> `readonly` **assetReloaded**: `"assetReloaded"` = `"assetReloaded"`
+
+After the host reloaded an asset that changed on disk, in place: its address, its type, and
+the document's instance roots rebuilt from it. A host from before it sends nothing.
+
 ##### hostError
 
 > `readonly` **hostError**: `"hostError"` = `"hostError"`
@@ -3627,6 +3730,28 @@ The received `result`.
 `value is ApplyOpsResult`
 
 True for a count of applied ops and a list of failures with known codes.
+
+***
+
+### isAssetReloadedParams()
+
+> **isAssetReloadedParams**(`value`): `value is AssetReloadedParams`
+
+Checks the parameters of `assetReloaded`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `params`.
+
+#### Returns
+
+`value is AssetReloadedParams`
+
+True for `{ address, type, entities }` with a non-empty address and type.
 
 ***
 

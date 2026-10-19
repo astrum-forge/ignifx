@@ -68,7 +68,8 @@ each view ◀── MessagePort ──▶ editor     JSON-RPC 2.0, protocol 0.3
    connect (window message, origin-checked) → hello → ready → ping/pong, heartbeat
    scene view: schemasChanged → openScene → applyOps… / readBack / select / pick / frame / setGizmo / screenshot
                / setViewMode / getSchemas / describeSettings (on request only)
-               ← sceneOpened, selectionChanged, transformDragging/Dragged, hotReloaded, hostError, log
+               ← sceneOpened, selectionChanged, transformDragging/Dragged, hotReloaded, assetReloaded,
+                 hostError, log
    play view:  play / pause / step / stop
 ```
 
@@ -136,6 +137,7 @@ host.dispose();
 | `PROTOCOL_VERSION`, `RpcErrorCode`, `isRpcMessage`, `isPlayState`    | The protocol 0.3 values and checks, mirrored from `@ignifx/editor-protocol`; before 1.0 the major and minor must both match |
 | `SceneMethod`, `SceneNotification`, `SceneOp`, `isApplyOpsParams`, … | The scene document methods, notifications, the thirteen ops, and their guards                                               |
 | `EditorHost.editorScene`                                             | The persistent `editor` scene instance holding the host's own objects                                                       |
+| `EditorHost.assetChanged(change)`                                    | Reloads an asset changed on disk in place and sends `assetReloaded`; the generated page calls it on `ignifx:asset-changed`  |
 | `PlayMethod`, `PlayState`                                            | `play`, `pause`, `step`, `stop`, and what each answers                                                                      |
 | `EditorHostErrorCode`                                                | `IGX-1801` bad origin, `IGX-1802` no window, `IGX-1803` bad option                                                          |
 
@@ -310,6 +312,14 @@ object `openScene` sends, through `world.loadSceneFile`; `readBack` answers with
   `describeSettings(app)` with each section's `settingsJsonSchema` entry as `propsSchema`, and the
   values the app resolved, in the settings form (`{ x, y, z }`, `{ r, g, b, a }`). No notification
   announces settings; ask again after the project's settings change.
+- **A changed asset reloads in place, not the view.** The scene view's page hands every
+  `ignifx:asset-changed` event to `host.assetChanged`, which calls `app.assets.reload(address)` for an
+  asset the app has loaded, of type `scene` (a scene or prefab), `model`, `mesh`, `material`,
+  `spriteatlas` or `shader`. A changed prefab rebuilds the document's instances of it, directly or
+  through another prefab, with their uids, transforms, overrides and document children; `readBack`
+  then writes the new prefab's hash. The host sends `assetReloaded { address, type, entities }`
+  (the rebuilt instance roots) once the new value is in. A texture, a removed file and the open
+  document's own file are left alone and send nothing.
 - **Document uids only.** Members of an instanced prefab and the editor's own entities never appear
   in a selection, a pick or `readBack`; a pick on a prefab member resolves to its instance root.
 

@@ -1529,6 +1529,24 @@
         "message": "models/player.glb: 2 textures are not power-of-two; mipmaps are off.",
         "timeMs": 1834.5
       }
+    },
+    "assetReloaded": {
+      "jsonrpc": "2.0",
+      "method": "assetReloaded",
+      "params": {
+        "address": "prefabs/crate.prefab.json",
+        "type": "scene",
+        "entities": ["01M4ZEB9E0GG0Q6R22YXV3AVKA"]
+      }
+    },
+    "assetReloadedModel": {
+      "jsonrpc": "2.0",
+      "method": "assetReloaded",
+      "params": {
+        "address": "models/player.glb",
+        "type": "model",
+        "entities": []
+      }
     }
   }
 }

@@ -518,7 +518,9 @@ The ES module source.
 The module is the only code with an import-time effect: it creates the host. The package itself
 creates nothing when imported (`CONSTITUTION.md` §3.5). Every import is resolved from the
 project's root, so the host, the scripts, and the extensions share the project's one copy of
-`@ignifx/core`.
+`@ignifx/core`. It hands every `ignifx:asset-changed` event to `host.assetChanged`, which
+reloads the asset in place; the `import.meta.hot` calls are written out literally, because Vite
+finds them by reading the source.
 
 ***
 

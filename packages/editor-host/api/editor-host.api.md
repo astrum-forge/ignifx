@@ -64,6 +64,13 @@ export interface ApplyOpsResult {
 }
 
 // @public
+export interface AssetReloadedParams {
+    readonly address: string;
+    readonly entities: readonly string[];
+    readonly type: string;
+}
+
+// @public
 export interface CreateEntityOp {
     readonly descendants?: readonly SceneFileEntity[];
     readonly entity: SceneFileEntity;
@@ -86,6 +93,12 @@ export interface DestroyEntityOp {
 // @public
 export const EDITOR_CONNECT_MESSAGE_TYPE = "ignifx-editor/connect";
 
+// @beta
+export interface EditorAssetChange {
+    readonly address: string;
+    readonly kind: "added" | "changed" | "removed";
+}
+
 // @public
 export interface EditorConnectMessage {
     readonly type: typeof EDITOR_CONNECT_MESSAGE_TYPE;
@@ -95,6 +108,7 @@ export interface EditorConnectMessage {
 export interface EditorHost {
     [Symbol.dispose](): void;
     readonly app: App;
+    assetChanged(change: EditorAssetChange): Promise<boolean>;
     readonly bootScene: SceneInstance | null;
     dispose(): void;
     readonly editorScene: SceneInstance;
@@ -312,6 +326,9 @@ export function isApplyOpsParams(value: unknown): value is ApplyOpsParams;
 
 // @public
 export function isApplyOpsResult(value: unknown): value is ApplyOpsResult;
+
+// @public
+export function isAssetReloadedParams(value: unknown): value is AssetReloadedParams;
 
 // @public
 export function isEditorConnectMessage(value: unknown): value is EditorConnectMessage;
@@ -747,7 +764,7 @@ export interface SceneFileTransform {
 }
 
 // @public
-export type SceneHostNotification = RpcNotificationWithParams<typeof SceneNotification.sceneOpened, SceneOpenedParams> | RpcNotificationWithParams<typeof SceneNotification.schemasChanged, SchemaSet> | RpcNotificationWithParams<typeof SceneNotification.hotReloaded, HotReloadedParams> | RpcNotificationWithParams<typeof SceneNotification.selectionChanged, EntitySelection> | RpcNotificationWithParams<typeof SceneNotification.transformDragging, TransformDraggingParams> | RpcNotificationWithParams<typeof SceneNotification.transformDragged, TransformDraggedParams> | RpcNotificationWithParams<typeof SceneNotification.hostError, HostErrorParams> | RpcNotificationWithParams<typeof SceneNotification.log, LogParams>;
+export type SceneHostNotification = RpcNotificationWithParams<typeof SceneNotification.sceneOpened, SceneOpenedParams> | RpcNotificationWithParams<typeof SceneNotification.schemasChanged, SchemaSet> | RpcNotificationWithParams<typeof SceneNotification.hotReloaded, HotReloadedParams> | RpcNotificationWithParams<typeof SceneNotification.selectionChanged, EntitySelection> | RpcNotificationWithParams<typeof SceneNotification.transformDragging, TransformDraggingParams> | RpcNotificationWithParams<typeof SceneNotification.transformDragged, TransformDraggedParams> | RpcNotificationWithParams<typeof SceneNotification.hostError, HostErrorParams> | RpcNotificationWithParams<typeof SceneNotification.log, LogParams> | RpcNotificationWithParams<typeof SceneNotification.assetReloaded, AssetReloadedParams>;
 
 // @public
 export interface SceneIssue {
@@ -784,6 +801,7 @@ export const SceneNotification: {
     readonly transformDragged: "transformDragged";
     readonly hostError: "hostError";
     readonly log: "log";
+    readonly assetReloaded: "assetReloaded";
 };
 
 // @public

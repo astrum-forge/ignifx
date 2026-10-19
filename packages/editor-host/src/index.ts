@@ -12,6 +12,7 @@
 export type { EditorMessageTarget } from "./channel.js";
 export { EditorHostErrorCode, isEditorOrigin } from "./error-codes.js";
 export { startEditorHost, type EditorHost, type EditorHostOptions } from "./host.js";
+export type { EditorAssetChange } from "./scene/asset-reload.js";
 export { startEditorPlayControls, type EditorPlayControls, type EditorPlayControlsOptions } from "./play-controls.js";
 export {
   ApplyOpFailureCode,
@@ -25,6 +26,7 @@ export {
   HostNotification,
   isApplyOpsParams,
   isApplyOpsResult,
+  isAssetReloadedParams,
   isEditorConnectMessage,
   isEntitySelection,
   isFrameParams,
@@ -81,6 +83,7 @@ export {
   type ApplyOpsParams,
   type ApplyOpsResponse,
   type ApplyOpsResult,
+  type AssetReloadedParams,
   type CreateEntityOp,
   type DescribeSettingsResponse,
   type DestroyEntityOp,

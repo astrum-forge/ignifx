@@ -25,6 +25,26 @@ describe("generated sources", () => {
     expect(source).toContain("acceptHotReload(host.app);");
   });
 
+  it("hands every asset-change event to the host, through a literal import.meta.hot call", () => {
+    const source = editorEntryModuleSource({
+      editorOrigin: "ignifx://app",
+      extensionsModule: "/src/extensions.ts",
+      bootScene: null,
+      engineVersion: null,
+      heartbeatIntervalMs: null,
+    });
+
+    expect(source).toContain(
+      [
+        "if (import.meta.hot) {",
+        '  import.meta.hot.on("ignifx:asset-changed", (change) => {',
+        "    void host.assetChanged(change);",
+        "  });",
+        "}",
+      ].join("\n"),
+    );
+  });
+
   it("writes a production play-controls module with no editor code", () => {
     const source = playControlsModuleSource({
       editorOrigin: "ignifx://app",

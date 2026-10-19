@@ -112,6 +112,11 @@ export const SceneNotification = {
   hostError: "hostError",
   /** One line from the app's logger, for the editor's Console. */
   log: "log",
+  /**
+   * After the host reloaded an asset that changed on disk, in place: its address, its type, and
+   * the document's instance roots rebuilt from it. A host from before it sends nothing.
+   */
+  assetReloaded: "assetReloaded",
 } as const;
 
 /**
@@ -756,6 +761,30 @@ export interface HotReloadedParams {
 }
 
 /**
+ * The parameters of `assetReloaded`.
+ *
+ * @remarks
+ * The host reloads an asset in place when the dev server reports it changed on disk and the scene
+ * view's app has it loaded: a scene or prefab (`"scene"`), whose document instances it rebuilds from
+ * the new file with their uids, transforms and overrides, and a model, mesh, material, sprite atlas
+ * or shader, which the renderers pick up on their next frame. Any other type, such as a texture, is
+ * left as it was loaded and sends nothing. The open document's own file is never reloaded.
+ *
+ * @public
+ */
+export interface AssetReloadedParams {
+  /** The asset's address, relative to the asset root. */
+  readonly address: string;
+  /** Its asset type, as the manifest records it: `"scene"` for a scene or a prefab. */
+  readonly type: string;
+  /**
+   * The uids of the document's instance roots rebuilt from the new file, in document order: those
+   * that instance it, directly or through another scene. Empty for any other type.
+   */
+  readonly entities: readonly string[];
+}
+
+/**
  * The parameters of `transformDragging`.
  *
  * @public
@@ -945,7 +974,8 @@ export type SceneHostNotification =
   | RpcNotificationWithParams<typeof SceneNotification.transformDragging, TransformDraggingParams>
   | RpcNotificationWithParams<typeof SceneNotification.transformDragged, TransformDraggedParams>
   | RpcNotificationWithParams<typeof SceneNotification.hostError, HostErrorParams>
-  | RpcNotificationWithParams<typeof SceneNotification.log, LogParams>;
+  | RpcNotificationWithParams<typeof SceneNotification.log, LogParams>
+  | RpcNotificationWithParams<typeof SceneNotification.assetReloaded, AssetReloadedParams>;
 
 // ---------------------------------------------------------------------------------------------
 // Guards
@@ -1412,6 +1442,25 @@ export function isHotReloadedParams(value: unknown): value is HotReloadedParams 
       (error): error is HotReloadError =>
         isRecord(error) && isString(error["message"]) && isStringOrNull(error["code"]),
     )
+  );
+}
+
+/**
+ * Checks the parameters of `assetReloaded`.
+ *
+ * @param value - The received `params`.
+ * @returns True for `{ address, type, entities }` with a non-empty address and type.
+ *
+ * @public
+ */
+export function isAssetReloadedParams(value: unknown): value is AssetReloadedParams {
+  return (
+    isRecord(value) &&
+    isString(value["address"]) &&
+    value["address"] !== "" &&
+    isString(value["type"]) &&
+    value["type"] !== "" &&
+    isUidList(value["entities"])
   );
 }
 
