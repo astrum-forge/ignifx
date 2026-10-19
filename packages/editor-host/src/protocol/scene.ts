@@ -14,6 +14,7 @@
 import { isRecord } from "./rpc.js";
 import {
   isArrayOf,
+  isBoolean,
   isFiniteNumber,
   isJsonObject,
   isJsonValue,
@@ -529,6 +530,12 @@ export interface SchemaFieldDescription {
   readonly default?: JsonValue;
   /** The field's tooltip. */
   readonly description?: string;
+  /**
+   * The increment of the inspector's drag and spinner controls (`FieldOptions.step`), present only
+   * when the field declares one; in degrees for a `quat` field, which an inspector edits as Euler
+   * angles.
+   */
+  readonly step?: number;
 }
 
 /**
@@ -545,6 +552,14 @@ export interface SchemaDescription {
   readonly description?: string;
   /** Every declared field, in declaration order. */
   readonly fields: Readonly<Record<string, SchemaFieldDescription>>;
+  /**
+   * `true` for the one component every entity carries itself, `ignifx/Transform`: it is never in a
+   * scene file's `components` list, an editor neither adds nor removes it, and its fields are the
+   * entity record's `transform` block, edited whole with the `setTransform` op rather than prop by
+   * prop. Absent on every other entry. A host from before the engine described the transform (engine
+   * ask E4) sends no such member.
+   */
+  readonly builtIn?: boolean;
   /**
    * The JSON Schema of the component's `props` (the engine's `toJsonSchema(schema)`), which adds
    * each field's `minimum`, `maximum`, `enum` and nested shapes; absent for file-format entries.
@@ -1150,14 +1165,15 @@ export function isScreenshotResult(value: unknown): value is ScreenshotResult {
  * Checks one field description.
  *
  * @param value - The value to test.
- * @returns True for `{ kind, default?, description? }`.
+ * @returns True for `{ kind, default?, description?, step? }`.
  */
 function isSchemaFieldDescription(value: unknown): value is SchemaFieldDescription {
   return (
     isRecord(value) &&
     isString(value["kind"]) &&
     optionalField(value, "default", (fallback) => isJsonValue(fallback)) &&
-    optionalField(value, "description", isString)
+    optionalField(value, "description", isString) &&
+    optionalField(value, "step", (step) => isFiniteNumber(step) && step > 0)
   );
 }
 
@@ -1165,7 +1181,7 @@ function isSchemaFieldDescription(value: unknown): value is SchemaFieldDescripti
  * Checks one schema description.
  *
  * @param value - The value to test.
- * @returns True for `{ title, format, description?, fields, propsSchema? }`.
+ * @returns True for `{ title, format, description?, fields, builtIn?, propsSchema? }`.
  */
 function isSchemaDescription(value: unknown): value is SchemaDescription {
   return (
@@ -1175,6 +1191,7 @@ function isSchemaDescription(value: unknown): value is SchemaDescription {
     optionalField(value, "description", isString) &&
     isRecord(value["fields"]) &&
     Object.values(value["fields"]).every((field) => isSchemaFieldDescription(field)) &&
+    optionalField(value, "builtIn", isBoolean) &&
     optionalField(value, "propsSchema", isJsonObject)
   );
 }

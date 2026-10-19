@@ -1894,6 +1894,16 @@ One component schema: the engine's `SchemaDescription`, plus the JSON Schema of 
 
 #### Properties
 
+##### builtIn?
+
+> `readonly` `optional` **builtIn?**: `boolean`
+
+`true` for the one component every entity carries itself, `ignifx/Transform`: it is never in a
+scene file's `components` list, an editor neither adds nor removes it, and its fields are the
+entity record's `transform` block, edited whole with the `setTransform` op rather than prop by
+prop. Absent on every other entry. A host from before the engine described the transform (engine
+ask E4) sends no such member.
+
 ##### description?
 
 > `readonly` `optional` **description?**: `string`
@@ -1950,6 +1960,14 @@ The field's tooltip.
 > `readonly` **kind**: `string`
 
 The field kind, for example `"f32"` or `"asset"`; an editor shows a kind it does not know as JSON.
+
+##### step?
+
+> `readonly` `optional` **step?**: `number`
+
+The increment of the inspector's drag and spinner controls (`FieldOptions.step`), present only
+when the field declares one; in degrees for a `quat` field, which an inspector edits as Euler
+angles.
 
 ***
 

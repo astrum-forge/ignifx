@@ -1,7 +1,7 @@
-import { Vec3 } from "@ignifx/core";
+import { f32, Script, Vec3 } from "@ignifx/core";
 import { afterEach, describe, expect, it } from "vitest";
 import { startEditorHost } from "../src/host.js";
-import { HostCapability, SceneNotification } from "../src/protocol/index.js";
+import { HostCapability, isSchemaSet, SceneNotification } from "../src/protocol/index.js";
 import { connect, EDITOR_ORIGIN } from "./support/editor.js";
 import type { EditorHost } from "../src/host.js";
 import type { EditorPeer, Received } from "./support/editor.js";
@@ -77,7 +77,14 @@ const fetchFiles: FetchLike = async (input: RequestInfo | URL): Promise<Response
   return Promise.resolve(body === undefined ? new Response(null, { status: 404 }) : new Response(body));
 };
 
+/** A project script, registered the way a project's `main.ts` registers its scripts. */
+class Spinner extends Script.define({ turnsPerSecond: f32(0.5, { step: 0.05, group: "Motion" }) }) {
+  static typeId = "game/Spinner";
+}
+
 let host: EditorHost | null = null;
+/** The `params` of the host's first `schemasChanged`. */
+let announced: unknown = null;
 let peer: EditorPeer | null = null;
 let canvas: HTMLCanvasElement | null = null;
 
@@ -88,6 +95,7 @@ afterEach(() => {
   host = null;
   peer = null;
   canvas = null;
+  announced = null;
 });
 
 /**
@@ -183,6 +191,7 @@ async function sceneView(): Promise<EditorHost> {
     settings: { rendering: { msaaSamples: 4 } },
     assets: { fetch: fetchFiles },
     heartbeatIntervalMs: 60_000,
+    scripts: [Spinner],
   });
   peer = connect(target);
   const ready = await peer.hello();
@@ -192,7 +201,7 @@ async function sceneView(): Promise<EditorHost> {
     HostCapability.screenshot,
   ]);
   host = await starting;
-  await peer.nextNotification(SceneNotification.schemasChanged);
+  announced = (await peer.nextNotification(SceneNotification.schemasChanged))["params"];
   await call("openScene", { file: SCENE, address: "scenes/box.scene.json" });
   await call("frame", { entities: ["BOX"] });
   await frames(6);
@@ -246,6 +255,21 @@ describe("the scene view on a WebGPU canvas", () => {
       point: null,
       distance: null,
     });
+  }, 60_000);
+
+  it("describes the project's scripts and core's components with their inspector metadata", async () => {
+    await sceneView();
+    expect(isSchemaSet(announced)).toBe(true);
+    expect(announced).toHaveProperty(["schemas", "game/Spinner"], {
+      title: "Spinner",
+      format: "components",
+      fields: { turnsPerSecond: { kind: "f32", default: 0.5, step: 0.05, group: "Motion" } },
+      allowMultiple: true,
+      package: "game",
+      propsSchema: expect.objectContaining({ type: "object" }) as unknown,
+    });
+    expect(announced).toHaveProperty(["schemas", "ignifx/MeshRenderer", "package"], "@ignifx/core");
+    expect(announced).toHaveProperty(["schemas", "ignifx/Transform", "builtIn"], true);
   }, 60_000);
 
   it("captures the view as a PNG or JPEG data URL at the requested size", async () => {
