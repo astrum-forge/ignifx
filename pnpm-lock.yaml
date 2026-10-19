@@ -1289,6 +1289,9 @@ importers:
       '@ignifx/editor-host':
         specifier: workspace:*
         version: link:../../packages/editor-host
+      '@ignifx/vite-plugin':
+        specifier: workspace:*
+        version: link:../../packages/vite-plugin
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3

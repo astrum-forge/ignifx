@@ -1,14 +1,13 @@
 import { CoreErrorCode } from "../errors/error-codes.js";
 import { IgnifxError } from "../errors/ignifx-error.js";
-import { annotatedFieldJsonSchema, describeSchema, toJsonSchema } from "../schema/describe.js";
-import { encodeValue } from "../schema/encode.js";
+import { describeSchema } from "../schema/describe.js";
+import { settingsFieldJsonSchema, settingsObjectJsonSchema, settingsValueToJson } from "./settings-json.js";
 import { SettingsStore } from "./settings-store.js";
 import type { SettingsSection } from "./settings-store.js";
 import type { App } from "../app/types.js";
 import type { JsonSchemaObject, SchemaDescription, SchemaFieldDescription } from "../schema/describe.js";
-import type { ReferenceEncoder } from "../schema/encode.js";
 import type { JsonValue } from "../schema/json.js";
-import type { FieldKind, Schema } from "../schema/types.js";
+import type { FieldDefinition, FieldKind } from "../schema/types.js";
 
 /**
  * The `format` every settings section description carries, so a consumer that merges settings and
@@ -21,7 +20,8 @@ export const SETTINGS_DESCRIPTION_FORMAT = "settings";
 /**
  * Whether a single field of each kind may stand for its whole section: a one-field section may be
  * written as the field's value (`layers: ["Default"]`) only when that value cannot be mistaken for
- * the section's object form, so a kind whose JSON form may be an object never qualifies.
+ * the section's object form, so a kind whose runtime form may be an object (a vector or colour is
+ * `{ x, y, z }` or `{ r, g, b, a }` in settings) never qualifies.
  */
 const ALLOWS_SHORTHAND: Readonly<Record<FieldKind, boolean>> = {
   f32: true,
@@ -30,11 +30,11 @@ const ALLOWS_SHORTHAND: Readonly<Record<FieldKind, boolean>> = {
   u32: true,
   bool: true,
   str: true,
-  vec2: true,
-  vec3: true,
-  vec4: true,
-  quat: true,
-  color: true,
+  vec2: false,
+  vec3: false,
+  vec4: false,
+  quat: false,
+  color: false,
   enum: true,
   array: true,
   layerMask: true,
@@ -47,15 +47,6 @@ const ALLOWS_SHORTHAND: Readonly<Record<FieldKind, boolean>> = {
   curve: false,
   custom: false,
 };
-
-/**
- * Settings defaults hold no entity or component references, so every reference encodes to `null`.
- *
- * @returns An encoder that resolves every reference to `null`.
- */
-function noReferences(): ReferenceEncoder {
-  return { entityUid: () => null, componentUid: () => null };
-}
 
 /**
  * Reaches the settings table behind `app.settings`.
@@ -90,15 +81,51 @@ function describeSection(name: string, section: SettingsSection): SchemaDescript
     package: section.owner,
   });
   const fields: Record<string, SchemaFieldDescription> = {};
-  for (const [fieldName, description] of Object.entries(described.fields)) {
-    const field = section.schema[fieldName];
-    const registered = section.defaults[fieldName];
-    fields[fieldName] =
-      field === undefined || registered === undefined
-        ? description
-        : { ...description, default: encodeValue(field, registered, noReferences()) };
+  for (const [fieldName, field] of Object.entries(section.schema)) {
+    const description = described.fields[fieldName];
+    if (description !== undefined) {
+      fields[fieldName] = settingsFieldDescription(field, description, section.defaults[fieldName]);
+    }
   }
   return { ...described, fields };
+}
+
+/**
+ * Rewrites a field description's defaults, at every depth, into the runtime form settings are
+ * written in: `{ x, y, z }` rather than the scene file's `[x, y, z]`.
+ *
+ * @param field - The field.
+ * @param description - Its description, with defaults in the scene-file form.
+ * @param value - The runtime default, or `undefined` to leave `default` off.
+ * @returns The description in the settings form.
+ */
+function settingsFieldDescription(
+  field: FieldDefinition<unknown>,
+  description: SchemaFieldDescription,
+  value: unknown,
+): SchemaFieldDescription {
+  const { default: _encoded, item, fields, value: entry, inner, ...rest } = description;
+  const { spec } = field;
+  const converted = value === undefined ? undefined : settingsValueToJson(field, value);
+  const nested: Partial<Record<"item" | "value" | "inner", SchemaFieldDescription>> & {
+    fields?: Record<string, SchemaFieldDescription>;
+  } = {};
+  if (spec.kind === "array" && item !== undefined) {
+    nested.item = settingsFieldDescription(spec.item, item, spec.item.createDefault());
+  } else if (spec.kind === "map" && entry !== undefined) {
+    nested.value = settingsFieldDescription(spec.value, entry, spec.value.createDefault());
+  } else if (spec.kind === "optional" && inner !== undefined) {
+    nested.inner = settingsFieldDescription(spec.inner, inner, spec.inner.createDefault());
+  } else if (spec.kind === "record" && fields !== undefined) {
+    nested.fields = {};
+    for (const [name, sub] of Object.entries(spec.fields)) {
+      const subDescription = fields[name];
+      if (subDescription !== undefined) {
+        nested.fields[name] = settingsFieldDescription(sub, subDescription, sub.createDefault());
+      }
+    }
+  }
+  return { ...rest, ...(converted === undefined ? {} : { default: converted }), ...nested };
 }
 
 /**
@@ -111,12 +138,19 @@ function describeSection(name: string, section: SettingsSection): SchemaDescript
  * Each entry is keyed and titled by its section name, has `format: "settings"`
  * ({@link SETTINGS_DESCRIPTION_FORMAT}), and names the extension that registered it as `package`
  * (`@ignifx/core`, `@ignifx/physics`). A field's `default` is the value the owner registered for it,
- * which is what the project gets when it omits the field.
+ * which is what the project gets when it omits the field; a field the owner's defaults leave out has
+ * no `default`, because the resolved section has no value for it either.
+ *
+ * Defaults are in the **settings form**, the form `createApp` reads, which differs from the scene
+ * file's for vectors and colours: a `vec3` default is `{ "x": 0, "y": -9.81, "z": 0 }` and a `color`
+ * default is `{ "r": 0, "g": 0, "b": 0, "a": 1 }`, not an array. A tool writes values back in this
+ * form.
  *
  * The registration seam is `ctx.registerSettings(section, schema, defaults)`: an extension that
  * declares a section there is described here with no further work. A section is written in project
  * settings (`ignifx.settings.json` or `ignifx.config.ts`) as an object of these fields; a section
- * with exactly one field of a non-object kind may also be written as that field's value.
+ * with exactly one field of a non-object kind (a number, string, enum or array, not a vector or
+ * colour) may also be written as that field's value.
  *
  * @param app - The app whose sections to describe; its extensions have all registered by the time
  * `createApp` resolves.
@@ -128,7 +162,7 @@ function describeSection(name: string, section: SettingsSection): SchemaDescript
  * ```ts
  * const sections = describeSettings(app);
  * sections["time"]?.package; // "@ignifx/core"
- * sections["time"]?.fields["fixedDeltaTime"]?.default; // 0.016667, canonical JSON
+ * sections["time"]?.fields["fixedDeltaTime"]?.default; // 0.016666666666666666
  * ```
  *
  * @public
@@ -145,18 +179,18 @@ export function describeSettings(app: App): Readonly<Record<string, SchemaDescri
  * The JSON Schema of one section as project settings may write it: the object form, or, for a
  * single field of a non-object kind, also that field's value on its own.
  *
- * @param schema - The section's schema.
+ * @param section - The registered section.
  * @returns The fragment.
  */
-function sectionJsonSchema(schema: Schema): JsonSchemaObject {
-  const objectForm = toJsonSchema(schema);
-  const names = Object.keys(schema);
-  const only = names[0];
-  const field = only === undefined ? undefined : schema[only];
-  if (names.length !== 1 || only === undefined || field === undefined || !ALLOWS_SHORTHAND[field.kind]) {
+function sectionJsonSchema(section: SettingsSection): JsonSchemaObject {
+  const { schema, defaults } = section;
+  const objectForm = settingsObjectJsonSchema(schema, defaults);
+  const entries = Object.entries(schema);
+  const [only] = entries;
+  if (entries.length !== 1 || only === undefined || !ALLOWS_SHORTHAND[only[1].kind]) {
     return objectForm;
   }
-  return { oneOf: [objectForm, annotatedFieldJsonSchema(field)] };
+  return { oneOf: [objectForm, settingsFieldJsonSchema(only[1], defaults[only[0]])] };
 }
 
 /**
@@ -166,8 +200,10 @@ function sectionJsonSchema(schema: Schema): JsonSchemaObject {
  * it with `ignifx.settings.json` in a text editor.
  *
  * @remarks
- * Every section is optional, a section omitted takes its defaults, and an unknown section is a
- * violation, which matches what `createApp` enforces at runtime (`IGX-0407`, `IGX-0408`).
+ * The schema describes the settings form `createApp` reads (vectors as `{ x, y, z }`, colours as
+ * `{ r, g, b, a }` with every channel required), so a document it accepts also passes `createApp`'s
+ * own validation (`IGX-0408`). Every section is optional and a section omitted takes its defaults;
+ * an unknown section or key is a violation (`IGX-0407`, `IGX-0408` at runtime).
  *
  * @param app - The app whose sections to describe.
  * @returns The object schema, one property per section.
@@ -185,7 +221,7 @@ function sectionJsonSchema(schema: Schema): JsonSchemaObject {
 export function settingsJsonSchema(app: App): JsonSchemaObject {
   const properties: Record<string, JsonValue> = {};
   for (const [name, section] of settingsStoreOf(app).registrations()) {
-    properties[name] = sectionJsonSchema(section.schema);
+    properties[name] = sectionJsonSchema(section);
   }
   return { type: "object", properties, additionalProperties: false };
 }

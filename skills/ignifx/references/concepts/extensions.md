@@ -133,7 +133,9 @@ app.log.info("enemy layer", app.world.layers.requireIndex("Enemy"));
 `describeSettings(app)` lists every registered section, core's and each extension's, as a
 `SchemaDescription` with `format: "settings"`, the registering `package`, and each field's kind,
 registered default and inspector options; an extension's section appears there as soon as it calls
-`ctx.registerSettings`. `settingsJsonSchema(app)` is the JSON Schema of the whole settings object,
+`ctx.registerSettings`. Both use the form `createApp` reads, not the scene file's: a vector is
+`{ x, y, z }` and a colour `{ r, g, b, a }`, never an array. `settingsJsonSchema(app)` is the JSON
+Schema of the whole settings object,
 which `ignifx({ schemas: { settings } })` uses to fail a bad key at build time with `IGX-0554`.
 
 ```ts run
@@ -142,7 +144,7 @@ import { createApp, describeSettings, settingsJsonSchema } from "@ignifx/core";
 const app = await createApp({ headless: true });
 const sections = describeSettings(app);
 app.log.info("sections", Object.keys(sections)); // layers, sortingLayers, time, assets, rendering
-app.log.info("time step", sections["time"]?.fields["fixedDeltaTime"]?.default); // 0.016667
+app.log.info("time step", sections["time"]?.fields["fixedDeltaTime"]?.default); // 1 / 60
 app.log.info("schema", Object.keys(settingsJsonSchema(app)));
 app.dispose();
 ```
