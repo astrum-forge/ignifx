@@ -229,14 +229,13 @@ export class SceneHost {
    * camera's controls, and the first `schemasChanged`.
    *
    * @param canvas - The view's canvas, or `null` for a headless host.
-   * @throws Whatever registering Lite's utility layer throws.
+   * @throws Whatever opening the render overlay throws.
    */
   async start(canvas: RenderSurface | null): Promise<void> {
     const app = this.#requireApp();
     this.#canvas = canvas;
     if (canvas !== null && !app.isHeadless && this.methods.has(SceneMethod.setGizmo) && isDomCanvas(canvas)) {
-      const view = createEditorView(app.lite, canvas);
-      await view.register();
+      const view = createEditorView(app.lite, await app.renderer.openOverlay(), canvas);
       view.onDrag((phase, drag) => {
         this.#onDrag(phase, drag);
       });

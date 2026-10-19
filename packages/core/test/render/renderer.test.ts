@@ -171,6 +171,17 @@ describe("picking and screenshots", () => {
     expect(code).toBe("IGX-0707");
   });
 
+  it("refuses an overlay on a headless app with IGX-0728, since nothing is drawn", async () => {
+    const h = await app();
+    let code: string | null = null;
+    try {
+      await h.app.renderer.openOverlay();
+    } catch (error) {
+      code = isIgnifxError(error) ? error.code : null;
+    }
+    expect(code).toBe("IGX-0728");
+  });
+
   it("resolves a pick that hit nothing to null", async () => {
     const h = await app();
     expect(h.renderer.resolvePick({ hit: false } as never)).toBeNull();

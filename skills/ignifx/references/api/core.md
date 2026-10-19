@@ -4297,7 +4297,7 @@ Closes the connection. The next call opens a new one.
 
 ###### Implementation of
 
-[`StorageBackend`](#storagebackend).[`dispose`](#dispose-10)
+[`StorageBackend`](#storagebackend).[`dispose`](#dispose-11)
 
 ##### get()
 
@@ -7729,7 +7729,7 @@ Drops every namespace.
 
 ###### Implementation of
 
-[`StorageBackend`](#storagebackend).[`dispose`](#dispose-10)
+[`StorageBackend`](#storagebackend).[`dispose`](#dispose-11)
 
 ##### get()
 
@@ -12166,7 +12166,7 @@ Whether the GPU allocation has been given up.
 
 `boolean`
 
-`true` once [StorageBufferAsset.dispose](#dispose-11) has run.
+`true` once [StorageBufferAsset.dispose](#dispose-12) has run.
 
 ##### lite
 
@@ -17522,7 +17522,7 @@ The app.
 
 > **get** **isDisposed**(): `boolean`
 
-`true` once [World.dispose](#dispose-13) has run.
+`true` once [World.dispose](#dispose-14) has run.
 
 ###### Returns
 
@@ -25543,6 +25543,42 @@ The frame, as tightly packed RGBA8 with the top row first.
 IgnifxError with code `IGX-0707` when no render loop is running, because the capture
 would never settle.
 
+##### openOverlay()
+
+> **openOverlay**(): `Promise`\<[`RenderOverlay`](#renderoverlay)\>
+
+**`Beta`**
+
+Opens an overlay: a Babylon Lite scene drawn over the finished frame, for an editor's gizmos
+and selection outlines (`docs/architecture/07-rendering.md` §2.10).
+
+###### Returns
+
+`Promise`\<[`RenderOverlay`](#renderoverlay)\>
+
+The overlay, drawing from the next frame.
+
+###### Remarks
+
+Add Lite meshes, or Lite's gizmos, to `overlay.lite.scene`. The overlay follows the render
+scene's camera, draws over every other rendering context, and works at every MSAA setting and
+on both render paths. Dispose it when it is no longer needed; `app.dispose()` disposes any that
+are still open.
+
+###### Throws
+
+IgnifxError with code `IGX-0728` on a headless app or before `app.start()` has
+registered the render scene, and `IGX-0106` when the app is disposed, also while the overlay
+was opening.
+
+###### Example
+
+```ts
+const overlay = await app.renderer.openOverlay();
+// Lite code under src/lite/ adds gizmos to overlay.lite.scene.
+overlay.dispose();
+```
+
 ##### pickAsync()
 
 > **pickAsync**(`x`, `y`, `options?`): `Promise`\<[`RenderPick`](#renderpick) \| `null`\>
@@ -25833,6 +25869,78 @@ Eye-relative upload for large-world coordinates. Requires `useHighPrecisionMatri
 > `readonly` **useHighPrecisionMatrix**: `boolean`
 
 Float64 intermediate precision for world matrices, for large worlds.
+
+***
+
+### RenderOverlay
+
+**`Beta`**
+
+A Babylon Lite scene drawn over the finished frame, for an editor's gizmos, selection outlines,
+and grids (`docs/architecture/07-rendering.md` §2.10, ADR-0031).
+
+#### Remarks
+
+The overlay draws after everything else on the canvas, the render scene, its post-processing,
+sprites and text included, at every `rendering.msaaSamples` setting. It has a depth buffer of its
+own, cleared every frame, so what it holds is never hidden by the scene; within the overlay,
+depth testing works as usual. It is drawn without MSAA. Screenshots include it.
+
+#### Properties
+
+##### lite
+
+> `readonly` **lite**: [`RenderOverlayLiteHandles`](#renderoverlaylitehandles)
+
+**`Beta`**
+
+The overlay's Lite scenes (unstable, `CONSTITUTION.md` §3.4).
+
+#### Methods
+
+##### dispose()
+
+> **dispose**(): `void`
+
+**`Beta`**
+
+Stops drawing the overlay and releases its scene and everything in it. Calling it again does nothing.
+
+###### Returns
+
+`void`
+
+***
+
+### RenderOverlayLiteHandles
+
+**`Beta`**
+
+The Babylon Lite scenes behind a [RenderOverlay](#renderoverlay): the escape hatch an editor hands to Lite's
+gizmo constructors, which take this shape as a `UtilityLayer` (`CONSTITUTION.md` §3.4).
+
+#### Remarks
+
+Unstable: these are Lite's own objects, excluded from the stability guarantees of
+`CONSTITUTION.md` Article IV.
+
+#### Properties
+
+##### mainScene
+
+> `readonly` **mainScene**: `SceneContext`
+
+**`Beta`**
+
+The render scene. The overlay scene uses its camera.
+
+##### scene
+
+> `readonly` **scene**: `SceneContext`
+
+**`Beta`**
+
+The overlay's own scene. What is added to it draws over the frame.
 
 ***
 
@@ -30956,6 +31064,12 @@ A file handed to the scene loader does not carry the `ignifx.scene` format heade
 > `readonly` **notAShaderMaterial**: `"IGX-0718"` = `"IGX-0718"`
 
 A shader-material method was called on a PBR or Standard material.
+
+##### overlayNeedsRenderScene
+
+> `readonly` **overlayNeedsRenderScene**: `"IGX-0728"` = `"IGX-0728"`
+
+`app.renderer.openOverlay()` was called on a headless app, or before `app.start()` registered the render scene.
 
 ##### parentingCycle
 

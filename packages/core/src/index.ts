@@ -410,6 +410,8 @@ export {
   type RenderCapture,
   type Renderer,
   type RenderingFeature,
+  type RenderOverlay,
+  type RenderOverlayLiteHandles,
   type RenderPick,
   type RenderPickOptions,
   type RenderTaskTiming,

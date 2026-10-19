@@ -7,6 +7,7 @@ import {
   setSurfaceMaxDevicePixelRatio,
 } from "../../lite/gpu/render-diagnostics-gpu.js";
 import { warmUpMaterials } from "../../lite/gpu/warm-up.js";
+import type { openOverlayScene } from "../../lite/gpu/overlay.js";
 import type { LiteGpuPicker } from "../../lite/gpu/picker.js";
 import type { MaterialWarmUp } from "../../lite/gpu/warm-up.js";
 import type { NodeTag } from "../../lite/node.js";
@@ -35,6 +36,22 @@ import type { RenderTaskTiming, RenderTaskTimings } from "../renderer.js";
  */
 export function createPicker(scene: LiteScene): LiteGpuPicker {
   return createScenePicker(scene);
+}
+
+/**
+ * Loads the overlay module (`docs/architecture/07-rendering.md` §2.10).
+ *
+ * @remarks
+ * It is loaded on first use, so a game that never opens an overlay ships none of it
+ * (`CONSTITUTION.md` §2.5).
+ *
+ * @returns The function that opens an overlay scene.
+ *
+ * @internal
+ */
+export async function loadOverlayOpener(): Promise<typeof openOverlayScene> {
+  const module = await import("../../lite/gpu/overlay.js");
+  return module.openOverlayScene;
 }
 
 /**

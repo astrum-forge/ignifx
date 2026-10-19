@@ -666,6 +666,7 @@ export const CoreErrorCode: {
     readonly invalidGeometryUpdate: "IGX-0725";
     readonly surfaceSamplerBudgetExceeded: "IGX-0726";
     readonly instancingLodWithoutCulling: "IGX-0727";
+    readonly overlayNeedsRenderScene: "IGX-0728";
     readonly cryptoUnavailable: "IGX-1420";
     readonly storageInvalidNamespace: "IGX-1421";
     readonly storageInvalidKey: "IGX-1422";
@@ -2735,6 +2736,8 @@ export interface Renderer {
     readonly drawCalls: number;
     readonly features: Readonly<RenderingFeatureSettings>;
     readonly gpuFrameTimeMs: number;
+    // @beta
+    openOverlay(): Promise<RenderOverlay>;
     pickAsync(x: number, y: number, options?: RenderPickOptions): Promise<RenderPick | null>;
     pixelRatio: number;
     profileTasks: boolean;
@@ -2778,6 +2781,18 @@ export interface RenderingSettings {
     readonly srgb: boolean;
     readonly useFloatingOrigin: boolean;
     readonly useHighPrecisionMatrix: boolean;
+}
+
+// @beta
+export interface RenderOverlay {
+    dispose(): void;
+    readonly lite: RenderOverlayLiteHandles;
+}
+
+// @beta
+export interface RenderOverlayLiteHandles {
+    readonly mainScene: LiteScene;
+    readonly scene: LiteScene;
 }
 
 // @public

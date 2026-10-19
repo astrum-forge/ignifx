@@ -18,6 +18,7 @@ import { clamp } from "../math/math-utils.js";
 import {
   applySurfaceScale,
   createPicker,
+  loadOverlayOpener,
   pickPixel,
   readTargetSizePx,
   readTaskTimings,
@@ -211,6 +212,42 @@ export interface RenderTaskTimings {
 }
 
 /**
+ * The Babylon Lite scenes behind a {@link RenderOverlay}: the escape hatch an editor hands to Lite's
+ * gizmo constructors, which take this shape as a `UtilityLayer` (`CONSTITUTION.md` §3.4).
+ *
+ * @remarks
+ * Unstable: these are Lite's own objects, excluded from the stability guarantees of
+ * `CONSTITUTION.md` Article IV.
+ *
+ * @beta
+ */
+export interface RenderOverlayLiteHandles {
+  /** The overlay's own scene. What is added to it draws over the frame. */
+  readonly scene: LiteScene;
+  /** The render scene. The overlay scene uses its camera. */
+  readonly mainScene: LiteScene;
+}
+
+/**
+ * A Babylon Lite scene drawn over the finished frame, for an editor's gizmos, selection outlines,
+ * and grids (`docs/architecture/07-rendering.md` §2.10, ADR-0031).
+ *
+ * @remarks
+ * The overlay draws after everything else on the canvas, the render scene, its post-processing,
+ * sprites and text included, at every `rendering.msaaSamples` setting. It has a depth buffer of its
+ * own, cleared every frame, so what it holds is never hidden by the scene; within the overlay,
+ * depth testing works as usual. It is drawn without MSAA. Screenshots include it.
+ *
+ * @beta
+ */
+export interface RenderOverlay {
+  /** The overlay's Lite scenes (unstable, `CONSTITUTION.md` §3.4). */
+  readonly lite: RenderOverlayLiteHandles;
+  /** Stops drawing the overlay and releases its scene and everything in it. Calling it again does nothing. */
+  dispose(): void;
+}
+
+/**
  * The rendering service, reached as `app.renderer`
  * (`docs/architecture/07-rendering.md` §1, §3, §5).
  *
@@ -315,6 +352,31 @@ export interface Renderer {
    */
   requireFeature(feature: RenderingFeature): void;
   /**
+   * Opens an overlay: a Babylon Lite scene drawn over the finished frame, for an editor's gizmos
+   * and selection outlines (`docs/architecture/07-rendering.md` §2.10).
+   *
+   * @remarks
+   * Add Lite meshes, or Lite's gizmos, to `overlay.lite.scene`. The overlay follows the render
+   * scene's camera, draws over every other rendering context, and works at every MSAA setting and
+   * on both render paths. Dispose it when it is no longer needed; `app.dispose()` disposes any that
+   * are still open.
+   *
+   * @returns The overlay, drawing from the next frame.
+   * @throws IgnifxError with code `IGX-0728` on a headless app or before `app.start()` has
+   * registered the render scene, and `IGX-0106` when the app is disposed, also while the overlay
+   * was opening.
+   *
+   * @example
+   * ```ts
+   * const overlay = await app.renderer.openOverlay();
+   * // Lite code under src/lite/ adds gizmos to overlay.lite.scene.
+   * overlay.dispose();
+   * ```
+   *
+   * @beta
+   */
+  openOverlay(): Promise<RenderOverlay>;
+  /**
    * Registers a probe that answers whether a rendering context **other than the render scene** is
    * drawing a world through a camera of its own.
    *
@@ -394,6 +456,9 @@ export class RendererImpl implements Renderer {
 
   #picker: LiteGpuPicker | null = null;
 
+  /** The open overlays, by their Lite scene. */
+  readonly #overlays = new Map<object, RenderOverlay>();
+
   #warmUp: MaterialWarmUp | null = null;
 
   #syncSystem: { sync(world: World): void } | null = null;
@@ -416,6 +481,8 @@ export class RendererImpl implements Renderer {
   #isSceneRegistered = false;
 
   #isLoopRunning = false;
+
+  #isDisposed = false;
 
   /** The clear colour as authored, in sRGB, before image processing. */
   readonly #authoredClear = { r: 0, g: 0, b: 0, a: 1 };
@@ -750,6 +817,68 @@ export class RendererImpl implements Renderer {
   }
 
   /**
+   * Opens an overlay drawn over the finished frame.
+   *
+   * @returns The overlay.
+   * @throws IgnifxError with code `IGX-0728` on a headless app or before the render scene is
+   * registered, and `IGX-0106` when the app is disposed, also while the overlay was opening.
+   */
+  async openOverlay(): Promise<RenderOverlay> {
+    this.#assertOverlayAllowed();
+    const open = await loadOverlayOpener();
+    this.#assertOverlayAllowed();
+    const overlays = this.#overlays;
+    let overlay: RenderOverlay;
+    try {
+      overlay = await open(this.engine, this.scene, {
+        isPeer: (context: object): boolean => overlays.has(context),
+        onDispose: (scene: object): void => {
+          overlays.delete(scene);
+        },
+        onError: (error: unknown): void => {
+          this.#app.onError.emit({ error, source: "system", phase: null, entity: null, component: null });
+        },
+      });
+    } catch (error) {
+      // A registration cut short by the app's disposal says so, rather than with Lite's error.
+      if (this.#isDisposed) {
+        throw overlayAfterDisposeError();
+      }
+      throw error;
+    }
+    if (this.#isDisposed) {
+      // The app was disposed while the overlay registered; nothing else would release it.
+      overlay.dispose();
+      throw overlayAfterDisposeError();
+    }
+    overlays.set(overlay.lite.scene, overlay);
+    return overlay;
+  }
+
+  /**
+   * Refuses an overlay on a disposed or headless app, or before the render scene is registered.
+   *
+   * @throws IgnifxError with code `IGX-0106` once the app is disposed, `IGX-0728` otherwise.
+   */
+  #assertOverlayAllowed(): void {
+    if (this.#isDisposed) {
+      throw overlayAfterDisposeError();
+    }
+    if (this.isHeadless || !this.#isSceneRegistered) {
+      throw new IgnifxError(
+        CoreErrorCode.overlayNeedsRenderScene,
+        "openOverlay() needs a canvas-backed app whose render scene is registered.",
+        {
+          context: { member: "app.renderer.openOverlay()", headless: this.isHeadless },
+          hint: this.isHeadless
+            ? "A headless app draws nothing, so it has no overlay. Create the app with a canvas."
+            : "Call it after app.start() has resolved.",
+        },
+      );
+    }
+  }
+
+  /**
    * Registers a probe that answers whether another rendering context has a camera of its own.
    *
    * @param probe - Answers `true` while the caller has an active camera for the world.
@@ -1063,11 +1192,17 @@ export class RendererImpl implements Renderer {
   }
 
   /**
-   * Releases the picker and the warm-up probes. The core extension registers it as a disposer.
+   * Releases the open overlays, the picker and the warm-up probes. The core extension registers it
+   * as a disposer.
    *
    * @internal
    */
   dispose(): void {
+    this.#isDisposed = true;
+    // Each overlay removes itself from the map as it is disposed, which a `Map` iteration allows.
+    for (const overlay of this.#overlays.values()) {
+      overlay.dispose();
+    }
     const picker = this.#picker;
     this.#picker = null;
     if (picker !== null) {
@@ -1164,4 +1299,17 @@ export function rendererInternals(renderer: Renderer): RendererImpl {
  */
 export function forceRendererDeviceLossForTesting(renderer: Renderer): void {
   rendererInternals(renderer).forceDeviceLossForTesting();
+}
+
+/**
+ * The error an overlay request gets once the app is disposed.
+ *
+ * @returns `IGX-0106`.
+ */
+function overlayAfterDisposeError(): IgnifxError {
+  return new IgnifxError(
+    CoreErrorCode.appDisposed,
+    "The app has been disposed; app.renderer.openOverlay() is no longer available.",
+    { context: { member: "app.renderer.openOverlay()" } },
+  );
 }

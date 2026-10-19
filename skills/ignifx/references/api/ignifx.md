@@ -77403,6 +77403,42 @@ The frame, as tightly packed RGBA8 with the top row first.
 IgnifxError with code `IGX-0707` when no render loop is running, because the capture
 would never settle.
 
+##### openOverlay()
+
+> **openOverlay**(): `Promise`\<`RenderOverlay`\>
+
+**`Beta`**
+
+Opens an overlay: a Babylon Lite scene drawn over the finished frame, for an editor's gizmos
+and selection outlines (`docs/architecture/07-rendering.md` §2.10).
+
+###### Returns
+
+`Promise`\<`RenderOverlay`\>
+
+The overlay, drawing from the next frame.
+
+###### Remarks
+
+Add Lite meshes, or Lite's gizmos, to `overlay.lite.scene`. The overlay follows the render
+scene's camera, draws over every other rendering context, and works at every MSAA setting and
+on both render paths. Dispose it when it is no longer needed; `app.dispose()` disposes any that
+are still open.
+
+###### Throws
+
+IgnifxError with code `IGX-0728` on a headless app or before `app.start()` has
+registered the render scene, and `IGX-0106` when the app is disposed, also while the overlay
+was opening.
+
+###### Example
+
+```ts
+const overlay = await app.renderer.openOverlay();
+// Lite code under src/lite/ adds gizmos to overlay.lite.scene.
+overlay.dispose();
+```
+
 ##### pickAsync()
 
 > **pickAsync**(`x`, `y`, `options?`): `Promise`\<[`RenderPick`](#renderpick) \| `null`\>
@@ -87954,6 +87990,12 @@ A file handed to the scene loader does not carry the `ignifx.scene` format heade
 > `readonly` **notAShaderMaterial**: `"IGX-0718"`
 
 A shader-material method was called on a PBR or Standard material.
+
+##### overlayNeedsRenderScene
+
+> `readonly` **overlayNeedsRenderScene**: `"IGX-0728"`
+
+`app.renderer.openOverlay()` was called on a headless app, or before `app.start()` registered the render scene.
 
 ##### parentingCycle
 
