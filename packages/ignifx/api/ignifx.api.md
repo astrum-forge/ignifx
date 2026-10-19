@@ -1394,6 +1394,7 @@ import { TilemapObjectDefinition } from '@ignifx/2d';
 import { TilemapRenderer } from '@ignifx/2d';
 import { TileRleData } from '@ignifx/2d';
 import { TilesetDefinition } from '@ignifx/2d';
+import { TileWrite } from '@ignifx/2d';
 import { Time } from '@ignifx/core';
 import { TimeSettings } from '@ignifx/core';
 import { TINT_EFFECT_WGSL } from '@ignifx/2d';
@@ -1434,6 +1435,8 @@ import { TwoDLiteHandles } from '@ignifx/2d';
 import { TwoDMode } from '@ignifx/2d';
 import { TwoDOptions } from '@ignifx/2d';
 import { TwoDPick } from '@ignifx/2d';
+import { TwoDPickAllOptions } from '@ignifx/2d';
+import { TwoDPickOptions } from '@ignifx/2d';
 import { TwoDService } from '@ignifx/2d';
 import { TwoDSettings } from '@ignifx/2d';
 import { twoDSettingsSchema } from '@ignifx/2d';
@@ -4310,6 +4313,8 @@ export { TileRleData }
 
 export { TilesetDefinition }
 
+export { TileWrite }
+
 export { Time }
 
 export { TimeSettings }
@@ -4389,6 +4394,10 @@ export { TwoDMode }
 export { TwoDOptions }
 
 export { TwoDPick }
+
+export { TwoDPickAllOptions }
+
+export { TwoDPickOptions }
 
 export { TwoDService }
 
