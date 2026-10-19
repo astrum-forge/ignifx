@@ -261,7 +261,10 @@ describe("the scene view on a WebGPU canvas", () => {
     expect(changedPixels(unselected.data, cleared.data)).toBeLessThan(20);
   }, 60_000);
 
-  it("picks the box in CSS and backing pixels, and misses beside it", async () => {
+  it("picks the box in CSS and backing pixels at device pixel ratio 2, and misses beside it", async () => {
+    // At ratio 2 the box's CSS point read as a backing point lies off the box, so a host that
+    // skipped its conversion would miss.
+    Object.defineProperty(globalThis, "devicePixelRatio", { configurable: true, value: 2 });
     const view = await sceneView();
     // Framing the sun too leaves the box small and low in the view, with empty sky above it.
     await call("frame", { entities: "all" });
@@ -269,11 +272,18 @@ describe("the scene view on a WebGPU canvas", () => {
     const camera = view.app.world.mainCamera;
     const screen = new Vec3();
     expect(camera?.worldToScreen({ x: 0, y: 0, z: 0 }, screen)).toBe(true);
-    const ratio = WIDTH / (canvas?.clientWidth ?? WIDTH);
+    const ratio = (canvas?.width ?? WIDTH) / (canvas?.clientWidth ?? WIDTH);
+    expect(ratio).toBe(2);
 
     expect(await call("pick", { x: screen.x, y: screen.y, unit: "backing" })).toMatchObject({ entity: "BOX" });
     expect(await call("pick", { x: screen.x / ratio, y: screen.y / ratio, unit: "css" })).toMatchObject({
       entity: "BOX",
+    });
+    // The same numbers as backing pixels are off the box.
+    expect(await call("pick", { x: screen.x / ratio, y: screen.y / ratio, unit: "backing" })).toEqual({
+      entity: null,
+      point: null,
+      distance: null,
     });
     expect(await call("pick", { x: 2, y: 2, unit: "css" })).toEqual({ entity: null, point: null, distance: null });
     expect(await call("pick", { x: WIDTH * 4, y: 2, unit: "backing" })).toEqual({
