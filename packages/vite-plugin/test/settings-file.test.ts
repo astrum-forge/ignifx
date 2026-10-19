@@ -1,6 +1,5 @@
 import { join } from "node:path";
-import { createApp, createManualClock, createMemorySink, settingsJsonSchema } from "@ignifx/core";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it } from "vitest";
 import { VitePluginErrorCode } from "../src/errors.js";
 import {
   findIgnifxSettingsFile,
@@ -20,17 +19,63 @@ import type { Plugin } from "vite";
 
 /** `ignifx.settings.json`: the data form of the project settings, and its precedence rule. */
 
-/** The real settings schema of a project with only core's sections, as the editor would supply it. */
-let coreSettingsSchema: JsonSchemaObject = {};
-
-beforeAll(async () => {
-  const app = await createApp({ headless: true, clock: createManualClock(), logSink: createMemorySink() });
-  try {
-    coreSettingsSchema = settingsJsonSchema(app);
-  } finally {
-    app.dispose();
-  }
-});
+/**
+ * A settings schema shaped like the one `@ignifx/core`'s `settingsJsonSchema(app)` writes for a
+ * few core sections: the plugin may not import core (`.dependency-cruiser.cjs`,
+ * `layering-vite-plugin`), so `tests/templates/settings-schema.test.ts` checks the real schema
+ * against this validator instead.
+ */
+const coreSettingsSchema: JsonSchemaObject = {
+  type: "object",
+  properties: {
+    layers: {
+      oneOf: [
+        {
+          type: "object",
+          properties: { layers: { type: "array", items: { type: "string" } } },
+          additionalProperties: false,
+        },
+        { type: "array", items: { type: "string" } },
+      ],
+    },
+    sortingLayers: {
+      oneOf: [
+        {
+          type: "object",
+          properties: { sortingLayers: { type: "array", items: { type: "string" } } },
+          additionalProperties: false,
+        },
+        { type: "array", items: { type: "string" } },
+      ],
+    },
+    time: {
+      type: "object",
+      properties: {
+        fixedDeltaTime: { type: "number", minimum: 2.220446049250313e-16 },
+        maximumDeltaTime: { type: "number", minimum: 2.220446049250313e-16 },
+        timeScale: { type: "number", minimum: 0, default: 1 },
+      },
+      additionalProperties: false,
+    },
+    rendering: {
+      type: "object",
+      properties: {
+        clearColor: {
+          type: "object",
+          properties: {
+            r: { type: "number", minimum: 0, maximum: 1 },
+            g: { type: "number", minimum: 0, maximum: 1 },
+            b: { type: "number", minimum: 0, maximum: 1 },
+            a: { type: "number", minimum: 0, maximum: 1 },
+          },
+          required: ["r", "g", "b", "a"],
+          "x-ignifx-group": "Clear",
+        },
+      },
+      additionalProperties: false,
+    },
+  },
+};
 
 afterAll(disposeFixtures);
 
@@ -162,7 +207,7 @@ describe("defineConfig over the JSON form", () => {
   });
 });
 
-describe("validateProjectSettings against core's settingsJsonSchema", () => {
+describe("validateProjectSettings against a settings schema", () => {
   it("accepts valid settings, including the one-field shorthand", () => {
     expect(() => {
       validateProjectSettings(

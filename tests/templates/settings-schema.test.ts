@@ -67,6 +67,22 @@ function asJson(settings: SettingsInput): JsonValue {
   return JSON.parse(JSON.stringify(settings)) as JsonValue;
 }
 
+describe("core's settings schema under the Vite plugin's validator", () => {
+  it("addresses a misspelled key, a missing colour channel and an unregistered section", async () => {
+    const schema = settingsJsonSchema(await build("3d-third-person", {}, thirdPersonExtensions));
+    const violations = validateJsonValue(
+      {
+        time: { fixedDeltaTim: 0.01 },
+        rendering: { clearColor: { r: 0, g: 0, b: 0 } },
+        layers: ["Default", "Player"],
+        weather: { wind: 1 },
+      },
+      schema,
+    );
+    expect(violations.map((violation) => violation.pointer)).toEqual(["/time/fixedDeltaTim", "/rendering/clearColor"]);
+  });
+});
+
 describe.each(TEMPLATES)("$name: settings in the form createApp reads", ({ name, settings, extensions }) => {
   it("validates its ignifx.config.ts against the schema its own app generates", async () => {
     const app = await build(name, settings, extensions);
