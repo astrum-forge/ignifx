@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { decodeProps, encodeProps } from "@ignifx/core";
+import { decodeProps, describeSchemas, encodeProps, toJsonSchema, transformSchema } from "@ignifx/core";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   HostCapability,
@@ -306,6 +306,22 @@ describe("the editor's 0.3 wire fixture, through a live headless host", () => {
     expect(member(member(answer, "result"), "schemas")["game/Health"]).toEqual(
       member(member(member(wire("getSchemasResponse"), "result"), "schemas"), "game/Health"),
     );
+  });
+
+  it("describes the transform with core's schema, marked built-in (engine ask E4)", async () => {
+    const { peer } = await started();
+    const answer = await peer.request(wire("getSchemas"));
+    const schemas = member(member(answer, "result"), "schemas");
+    const transform = member(schemas, "ignifx/Transform");
+    const core = describeSchemas()["ignifx/Transform"];
+    expect(transform["title"]).toBe("Transform");
+    expect(transform["builtIn"]).toBe(true);
+    expect(transform["fields"]).toEqual(core?.fields);
+    expect(transform["propsSchema"]).toEqual(toJsonSchema(transformSchema()));
+    // Nothing else the host describes is built-in.
+    expect(Object.keys(schemas).filter((typeId) => member(schemas, typeId)["builtIn"] === true)).toEqual([
+      "ignifx/Transform",
+    ]);
   });
 
   it("opens the fixture's scene, applies its ops, and reads back the document editor-core produces", async () => {

@@ -406,6 +406,7 @@ export {
   type ToneMappingCurve,
   type TorusMeshOptions,
   Transform,
+  transformSchema,
   u32,
   UidRemap,
   type UlidFactoryOptions,

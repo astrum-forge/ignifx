@@ -25,7 +25,10 @@ export interface SchemaFieldDescription {
   readonly min?: number;
   /** `FieldOptions.max`: the highest accepted value of a numeric field. */
   readonly max?: number;
-  /** `FieldOptions.step`: the increment of the inspector's drag and spinner controls. */
+  /**
+   * `FieldOptions.step`: the increment of the inspector's drag and spinner controls; in degrees for
+   * a `quat` field, which an inspector edits as Euler angles.
+   */
   readonly step?: number;
   /** `FieldOptions.hidden`: the inspector leaves the field out; it is still saved. */
   readonly hidden?: boolean;
@@ -85,6 +88,13 @@ export interface SchemaDescription {
    * Set by {@link describeRegisteredSchemas}, or by the caller through {@link SchemaDescriptionMeta}.
    */
   readonly package?: string;
+  /**
+   * `true` for the one component every entity carries itself, `ignifx/Transform`: it is never in a
+   * scene file's `components` list, an editor cannot add or remove it, and its fields are the
+   * entity record's `transform` block, edited whole (the editor protocol's `setTransform`), not
+   * prop by prop. Absent on every other component and on file formats.
+   */
+  readonly builtIn?: boolean;
 }
 
 /**
@@ -103,6 +113,8 @@ export interface SchemaDescriptionMeta {
   readonly allowMultiple?: boolean;
   /** The package or extension that registered the component, copied onto the description. */
   readonly package?: string;
+  /** Whether the component is the entity's own built-in block, copied onto the description. */
+  readonly builtIn?: boolean;
 }
 
 /**
@@ -342,7 +354,7 @@ function schemaJsonSchema(schema: Schema): JsonSchemaObject {
  * @param typeId - The component's namespaced registration id, for example `mygame/Mover`.
  * @param schema - The component's declared fields.
  * @param meta - Overrides for the title, format grouping, and summary, and the component's
- * `allowMultiple` and `package` when the caller knows them.
+ * `allowMultiple`, `package` and `builtIn` when the caller knows them.
  * @returns The description entry.
  *
  * @example
@@ -363,6 +375,7 @@ export function describeSchema(typeId: string, schema: Schema, meta?: SchemaDesc
     fields: describeFields(schema, noReferences()),
     ...(meta?.allowMultiple === undefined ? {} : { allowMultiple: meta.allowMultiple }),
     ...(meta?.package === undefined ? {} : { package: meta.package }),
+    ...(meta?.builtIn === undefined ? {} : { builtIn: meta.builtIn }),
   };
 }
 

@@ -74,7 +74,10 @@ export interface FieldOptions {
   readonly min?: number;
   /** Highest accepted value for numeric kinds; validation reports `IGX-0606` above it. */
   readonly max?: number;
-  /** Increment used by the inspector's drag and spinner controls. */
+  /**
+   * Increment used by the inspector's drag and spinner controls. A `quat` field is edited as
+   * intrinsic XYZ Euler angles, so its step is in degrees.
+   */
   readonly step?: number;
   /** Hides the field from the inspector while still serializing it. */
   readonly hidden?: boolean;

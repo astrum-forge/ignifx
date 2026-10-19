@@ -3,7 +3,7 @@
  * it, plus core's file-format entries.
  */
 
-import { describeSchema, describeSchemas, toJsonSchema } from "@ignifx/core";
+import { describeSchema, describeSchemas, toJsonSchema, Transform, transformSchema } from "@ignifx/core";
 import type { SchemaDescription, SchemaSet } from "../protocol/index.js";
 import type { App } from "@ignifx/core";
 
@@ -16,7 +16,10 @@ const COMPONENTS_FORMAT = "components";
  *
  * @remarks
  * A component core describes keeps core's title and summary; any other is titled from its type id.
- * The host's own classes are left out: they are not the document's.
+ * The host's own classes are left out: they are not the document's. `ignifx/Transform`, whose
+ * class declares no schema, is described with core's `transformSchema()` and carries `builtIn`:
+ * its fields are each entity's `transform` block, edited with `setTransform`, and it is never added
+ * or removed.
  *
  * @param app - The scene view's app.
  * @param hidden - Type ids to leave out.
@@ -29,12 +32,17 @@ export function schemaSet(app: App, hidden: ReadonlySet<string>): SchemaSet {
     if (hidden.has(typeId)) {
       continue;
     }
-    const schema = app.world.registry.describe(type).schema ?? {};
+    const builtIn = type === Transform;
+    const schema = builtIn ? transformSchema() : (app.world.registry.describe(type).schema ?? {});
     const known = core[typeId];
     const meta =
       known === undefined
         ? undefined
-        : { title: known.title, ...(known.description === undefined ? {} : { description: known.description }) };
+        : {
+            title: known.title,
+            ...(known.description === undefined ? {} : { description: known.description }),
+            ...(builtIn ? { builtIn } : {}),
+          };
     schemas[typeId] = { ...describeSchema(typeId, schema, meta), propsSchema: toJsonSchema(schema) };
   }
   for (const [id, description] of Object.entries(core)) {
