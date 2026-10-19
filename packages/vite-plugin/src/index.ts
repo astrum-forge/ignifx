@@ -60,6 +60,7 @@ export {
   ASSET_MANIFEST_VERSION,
   buildManifest,
   DEFAULT_HASH_LENGTH,
+  EDITOR_SIDECAR_KEYS,
   scanAssetRoot,
   serializeManifest,
   type AssetManifest,

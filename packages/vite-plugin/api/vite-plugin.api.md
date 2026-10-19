@@ -128,6 +128,9 @@ export const DEFAULT_SCRIPTS_PATTERN = "src/scripts/**/*.ts";
 export function defineConfig<T>(config: T): T;
 
 // @public
+export const EDITOR_SIDECAR_KEYS: readonly string[];
+
+// @public
 export const EXTENSION_KEYWORD = "ignifx-extension";
 
 // @public
@@ -285,6 +288,7 @@ export interface ScannedAsset {
     readonly groups: readonly string[];
     readonly hash: string;
     readonly meta: JsonObject | null;
+    readonly publish?: boolean;
     readonly type: AssetType;
 }
 

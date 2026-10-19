@@ -19,7 +19,10 @@
 export const VitePluginErrorCode = {
   /** The configured asset root does not exist or is not a directory. */
   assetRootMissing: "IGX-0550",
-  /** A `.meta.json` sidecar could not be parsed, or its `groups` field is not an array of strings. */
+  /**
+   * A `.meta.json` sidecar could not be parsed, its `groups` field is not an array of strings, or its
+   * `publish` field is not a boolean.
+   */
   invalidSidecar: "IGX-0551",
   /** Two assets hash to the same output file name, so one would overwrite the other. */
   duplicateOutputFile: "IGX-0552",

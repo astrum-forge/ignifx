@@ -21,6 +21,7 @@ describe("@ignifx/vite-plugin barrel", () => {
       "DEFAULT_MANIFEST_FILE_NAME",
       "DEFAULT_PUBLIC_PATH",
       "DEFAULT_SCRIPTS_PATTERN",
+      "EDITOR_SIDECAR_KEYS",
       "EXTENSION_KEYWORD",
       "IGNIFX_CONFIG_DEFINE_KEY",
       "IGNIFX_CONFIG_FILE_NAMES",
