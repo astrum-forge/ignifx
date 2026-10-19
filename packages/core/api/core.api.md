@@ -969,6 +969,9 @@ export function describeSchema(typeId: string, schema: Schema, meta?: SchemaDesc
 export function describeSchemas(): Readonly<Record<string, SchemaDescription>>;
 
 // @public
+export function describeSettings(app: App): Readonly<Record<string, SchemaDescription>>;
+
+// @public
 export interface DeviceLostInfo {
     readonly message: string;
     readonly reason: string | null;
@@ -3164,7 +3167,13 @@ export interface SetParentOptions {
 }
 
 // @public
+export const SETTINGS_DESCRIPTION_FORMAT = "settings";
+
+// @public
 export type SettingsInput = Readonly<Record<string, unknown>>;
+
+// @public
+export function settingsJsonSchema(app: App): JsonSchemaObject;
 
 // @public
 export const SHADER_ASSET_TYPE = "shader";

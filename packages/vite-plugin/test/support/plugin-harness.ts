@@ -52,6 +52,8 @@ export class FakeDevServer {
   readonly middlewares: MiddlewareHandler[] = [];
   readonly watched: string[] = [];
   readonly invalidated: string[] = [];
+  /** How many times the plugin asked for a restart. */
+  restarts = 0;
   readonly #listeners = new Map<string, ((file: string) => void)[]>();
 
   readonly config = {
@@ -96,6 +98,12 @@ export class FakeDevServer {
 
   constructor(root: string) {
     this.config.root = root;
+  }
+
+  /** Records a restart; the real one re-runs the plugin's `config` hook. */
+  restart(): Promise<void> {
+    this.restarts += 1;
+    return Promise.resolve();
   }
 
   /** Registers a middleware the way Vite's connect app does. */
@@ -166,7 +174,12 @@ export interface PluginHarness {
     userConfig: { root?: string },
     env: { command: "build" | "serve"; mode: string },
   ): Promise<{ define?: Record<string, string> } | undefined>;
-  configResolved(config: { root: string; base: string; command: "build" | "serve" }): void;
+  configResolved(config: {
+    root: string;
+    base: string;
+    command: "build" | "serve";
+    logger?: { warn(message: string): void };
+  }): void;
   buildStart(this: FakePluginContext): Promise<void>;
   resolveId(id: string): string | null;
   load(this: FakePluginContext, id: string): Promise<string | null>;
@@ -196,6 +209,7 @@ export function asViteServer(server: FakeDevServer): unknown {
     watcher: server.watcher,
     ws: server.ws,
     moduleGraph: server.moduleGraph,
+    restart: (): Promise<void> => server.restart(),
     middlewares: {
       use: (handler: MiddlewareHandler): void => {
         server.use(handler);

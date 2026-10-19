@@ -14,6 +14,7 @@ describe("resolvePluginOptions", () => {
       publicPath: DEFAULT_PUBLIC_PATH,
       manifestFileName: DEFAULT_MANIFEST_FILE_NAME,
       configFile: null,
+      settingsFile: null,
       validate: true,
       schemas: null,
       hashLength: 8,
@@ -36,6 +37,11 @@ describe("resolvePluginOptions", () => {
   it("keeps config: false distinct from an unset config", () => {
     expect(resolvePluginOptions({ config: false }).configFile).toBe(false);
     expect(resolvePluginOptions({ config: "./custom.config.ts" }).configFile).toBe("./custom.config.ts");
+  });
+
+  it("keeps settingsFile: false distinct from an unset settings file", () => {
+    expect(resolvePluginOptions({ settingsFile: false }).settingsFile).toBe(false);
+    expect(resolvePluginOptions({ settingsFile: "./custom.json" }).settingsFile).toBe("./custom.json");
   });
 
   it("rewrites the scripts glob to be root-absolute", () => {

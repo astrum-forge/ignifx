@@ -432,8 +432,9 @@ The directory scanned for assets, relative to the Vite root (or absolute).
 
 > `readonly` `optional` **config?**: `string` \| `false`
 
-Path to the project config injected as `import.meta.env.IGNIFX_CONFIG`
-(`docs/architecture/04-extensions.md` §5). Pass `false` to inject `{}` and load nothing.
+Path to the project config, the code form of the settings injected as
+`import.meta.env.IGNIFX_CONFIG` (`docs/architecture/04-extensions.md` §5). Pass `false` to load
+no config file; `settingsFile` is still read.
 
 ###### Default Value
 
@@ -496,11 +497,25 @@ script classes from.
 
 [DEFAULT\_SCRIPTS\_PATTERN](#default_scripts_pattern)
 
+##### settingsFile?
+
+> `readonly` `optional` **settingsFile?**: `string` \| `false`
+
+Path to the project settings data file, merged under the config file: a section both define is
+taken whole from the config file. Pass `false` to read no settings file; with `config: false`
+as well, `{}` is injected.
+
+###### Default Value
+
+`ignifx.settings.json` at the Vite root, when it exists.
+
 ##### validate?
 
 > `readonly` `optional` **validate?**: `boolean`
 
-Whether format-headed JSON under the asset root is validated. A failure fails the build.
+Whether format-headed JSON under the asset root is validated, and whether the merged project
+settings are validated against `schemas.settings`. A failure fails the build; a settings
+failure also stops the dev server from starting.
 
 ###### Default Value
 
@@ -532,6 +547,38 @@ Schemas keyed by the file's `format` header, for every other format.
 > `readonly` `optional` **scene?**: [`JsonObject`](#jsonobject)
 
 The schema for `ignifx.scene` files — `*.scene.json` and `*.prefab.json` alike (ADR-0005).
+
+##### settings?
+
+> `readonly` `optional` **settings?**: [`JsonObject`](#jsonobject)
+
+The schema of the merged project settings (`ignifx.settings.json` plus `ignifx.config.ts`), as
+`@ignifx/core`'s `settingsJsonSchema(app)` generates it. A violation inside a section, such as
+a misspelled key, fails the dev server and the build with `IGX-0554`; a section the schema does
+not list only warns, since the schema may predate an extension. Without it, `createApp` still
+validates every section when the game starts (`IGX-0407`, `IGX-0408`).
+
+***
+
+### MergedProjectSettings
+
+The project settings after both forms are merged.
+
+#### Properties
+
+##### config
+
+> `readonly` **config**: [`JsonObject`](#jsonobject)
+
+The settings `createApp` receives, one property per section.
+
+##### shadowed
+
+> `readonly` **shadowed**: readonly `string`[]
+
+The sections both forms define with different values, which the code form decided; a tool that
+edits the data form shows these as overridden by `ignifx.config.ts`. A section both define
+identically, as when the config file spreads the JSON, is not listed.
 
 ***
 
@@ -577,7 +624,7 @@ The asset root exactly as configured; the plugin resolves it against the Vite ro
 
 > `readonly` **configFile**: `string` \| `false` \| `null`
 
-The configured config path, `null` to auto-detect, or `false` to inject `{}`.
+The configured config path, `null` to auto-detect, or `false` to load none.
 
 ##### hashLength
 
@@ -609,11 +656,37 @@ The supplied schemas, or `null`.
 
 The scripts glob, rewritten to be root-absolute.
 
+##### settingsFile
+
+> `readonly` **settingsFile**: `string` \| `false` \| `null`
+
+The configured settings data path, `null` to auto-detect, or `false` to read none.
+
 ##### validate
 
 > `readonly` **validate**: `boolean`
 
 Whether validation runs.
+
+***
+
+### ResolvedIgnifxSettings
+
+The outcome of reading the project settings data file.
+
+#### Properties
+
+##### path
+
+> `readonly` **path**: `string` \| `null`
+
+The absolute path of the file that was read, or `null` when there is none.
+
+##### settings
+
+> `readonly` **settings**: [`JsonObject`](#jsonobject)
+
+The settings object; `{}` when there is no file.
 
 ***
 
@@ -1190,6 +1263,15 @@ The file names auto-detected at the Vite root, in the order they are tried.
 
 ***
 
+### IGNIFX\_SETTINGS\_FILE\_NAME
+
+> `const` **IGNIFX\_SETTINGS\_FILE\_NAME**: `"ignifx.settings.json"` = `"ignifx.settings.json"`
+
+The project settings data file auto-detected at the Vite root: the JSON form of what
+`ignifx.config.ts` exports, one property per settings section.
+
+***
+
 ### IGNIFX\_SYSTEM\_UNIFORMS
 
 > `const` **IGNIFX\_SYSTEM\_UNIFORMS**: readonly `string`[]
@@ -1328,7 +1410,8 @@ A plugin option is outside its documented domain.
 
 > `readonly` **invalidProjectConfig**: `"IGX-0554"` = `"IGX-0554"`
 
-`ignifx.config.ts` could not be loaded, or its default export is not an object.
+`ignifx.config.ts` could not be loaded or its default export is not an object,
+`ignifx.settings.json` is not a JSON object, or the merged settings fail `schemas.settings`.
 
 ##### invalidSidecar
 
@@ -1564,7 +1647,7 @@ const files = await collectExtensionPublicAssets("/project");
 > **defineConfig**\<`T`\>(`config`): `T`
 
 Type a project config while preserving inferred literal types.
-Also available as `defineConfig` from `ignifx/config`.
+Exported by `@ignifx/vite-plugin` only; the `ignifx` umbrella has no `ignifx/config` entry point.
 
 #### Type Parameters
 
@@ -1588,7 +1671,13 @@ The project config object.
 
 The same object, unchanged.
 
-#### Example
+#### Remarks
+
+The argument may be any JSON object, including the parsed content of `ignifx.settings.json`
+imported by the config file. A project that keeps its settings only as data needs no config file
+at all: the plugin reads `ignifx.settings.json` itself ([loadIgnifxSettings](#loadignifxsettings)).
+
+#### Examples
 
 ```ts
 // ignifx.config.ts
@@ -1599,6 +1688,14 @@ export default defineConfig({
   time: { fixedDeltaTime: 1 / 60 },
   assets: { root: "./assets", preload: ["boot"] },
 });
+```
+
+```ts
+// ignifx.config.ts, keeping the data in ignifx.settings.json and adding one section in code
+import { defineConfig } from "@ignifx/vite-plugin";
+import settings from "./ignifx.settings.json";
+
+export default defineConfig({ ...settings, time: { fixedDeltaTime: 1 / 120 } });
 ```
 
 ***
@@ -1623,6 +1720,28 @@ The absolute Vite root directory.
 
 The absolute path of the first name in [IGNIFX\_CONFIG\_FILE\_NAMES](#ignifx_config_file_names) that exists, or
 `null` when the project has no config file.
+
+***
+
+### findIgnifxSettingsFile()
+
+> **findIgnifxSettingsFile**(`root`): `Promise`\<`string` \| `null`\>
+
+Finds `ignifx.settings.json` at a Vite root.
+
+#### Parameters
+
+##### root
+
+`string`
+
+The absolute Vite root directory.
+
+#### Returns
+
+`Promise`\<`string` \| `null`\>
+
+The file's absolute path, or `null` when the project has no settings data file.
 
 ***
 
@@ -1719,15 +1838,17 @@ The Vite plugin, to be listed in `vite.config.ts`.
 
 What it does, in the order the hooks run:
 
-- `config` resolves `ignifx.config.ts` and injects it as `import.meta.env.IGNIFX_CONFIG`
-  (`docs/architecture/04-extensions.md` §5).
+- `config` reads `ignifx.settings.json` and `ignifx.config.ts`, merges them a section at a time
+  with the config file winning, validates the result when `schemas.settings` is supplied, and
+  injects it as `import.meta.env.IGNIFX_CONFIG` (`docs/architecture/04-extensions.md` §5).
 - `buildStart` scans the asset root, hashes every file, reads `.meta.json` sidecars, and
   validates every format-headed JSON file. A validation failure fails the build. An asset whose
   sidecar says `"publish": false` is left out of everything that follows.
 - `virtual:ignifx/manifest` and `virtual:ignifx/scripts` are served from `resolveId`/`load`.
 - In development the manifest is also served from `/<manifestFileName>`, the asset root is
   watched, and every change is announced on the `ignifx:asset-changed` HMR channel; editing the
-  project config triggers a full reload.
+  project config or settings file restarts the dev server, which injects the new values and
+  reloads the page.
 - `generateBundle` emits every asset under `<outDir>/<publicPath>` with a content-hashed,
   immutable-cacheable name, copies each extension's `ignifx.assets.public` files unhashed next to
   them, and writes the manifest with the hashed URLs.
@@ -1946,6 +2067,40 @@ resolved.config; // { layers: [...], time: {...} }
 
 ***
 
+### loadIgnifxSettings()
+
+> **loadIgnifxSettings**(`settingsFile`): `Promise`\<[`ResolvedIgnifxSettings`](#resolvedignifxsettings)\>
+
+Reads `ignifx.settings.json`, the data form of the project settings.
+
+#### Parameters
+
+##### settingsFile
+
+`string` \| `null`
+
+Absolute path of the file, or `null` to resolve to no settings.
+
+#### Returns
+
+`Promise`\<[`ResolvedIgnifxSettings`](#resolvedignifxsettings)\>
+
+The settings object and the path it came from.
+
+#### Throws
+
+A [VitePluginError](#vitepluginerror) with code `IGX-0554` when the file cannot be read, is not JSON,
+or does not hold a JSON object.
+
+#### Example
+
+```ts
+const resolved = await loadIgnifxSettings("/project/ignifx.settings.json");
+resolved.settings; // { layers: ["Default", "Player"], time: { fixedDeltaTime: 0.016667 } }
+```
+
+***
+
 ### manifestModuleSource()
 
 > **manifestModuleSource**(`manifest`): `string`
@@ -1965,6 +2120,49 @@ The manifest to embed.
 `string`
 
 An ES module exporting the manifest as `manifest`.
+
+***
+
+### mergeProjectSettings()
+
+> **mergeProjectSettings**(`data`, `code`): [`MergedProjectSettings`](#mergedprojectsettings)
+
+Merges the data form of the project settings (`ignifx.settings.json`) with the code form
+(`ignifx.config.ts`).
+
+#### Parameters
+
+##### data
+
+[`JsonObject`](#jsonobject)
+
+The parsed `ignifx.settings.json`.
+
+##### code
+
+[`JsonObject`](#jsonobject)
+
+The default export of `ignifx.config.ts`.
+
+#### Returns
+
+[`MergedProjectSettings`](#mergedprojectsettings)
+
+The merged settings and the sections the config file shadowed.
+
+#### Remarks
+
+The rule is one line: **the config file wins, a whole section at a time.** A section only one form
+defines is taken from that form; a section both define is taken from `ignifx.config.ts` entirely,
+with nothing of the JSON section merged into it. Within a section, values the project omits take
+the defaults the owning extension registered, as always.
+
+#### Example
+
+```ts
+mergeProjectSettings({ layers: ["Default"], time: { timeScale: 2 } }, { time: { timeScale: 1 } });
+// { config: { layers: ["Default"], time: { timeScale: 1 } }, shadowed: ["time"] }
+```
 
 ***
 

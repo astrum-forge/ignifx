@@ -144,6 +144,9 @@ export interface ExtensionPublicAsset {
 export function findIgnifxConfigFile(root: string): Promise<string | null>;
 
 // @public
+export function findIgnifxSettingsFile(root: string): Promise<string | null>;
+
+// @public
 export interface FormatHeader {
     readonly format: string;
     readonly formatVersion: number;
@@ -165,6 +168,9 @@ export const IGNIFX_CONFIG_DEFINE_KEY = "import.meta.env.IGNIFX_CONFIG";
 export const IGNIFX_CONFIG_FILE_NAMES: readonly ["ignifx.config.ts", "ignifx.config.mts", "ignifx.config.js", "ignifx.config.mjs"];
 
 // @public
+export const IGNIFX_SETTINGS_FILE_NAME = "ignifx.settings.json";
+
+// @public
 export const IGNIFX_SYSTEM_UNIFORMS: readonly string[];
 
 // @public
@@ -181,6 +187,7 @@ export interface IgnifxPluginOptions {
     readonly publicPath?: string;
     readonly schemas?: JsonSchemaProvider;
     readonly scripts?: string;
+    readonly settingsFile?: string | false;
     readonly validate?: boolean;
 }
 
@@ -214,6 +221,7 @@ export type JsonSchemaObject = JsonObject;
 export interface JsonSchemaProvider {
     readonly formats?: Readonly<Record<string, JsonSchemaObject>>;
     readonly scene?: JsonSchemaObject;
+    readonly settings?: JsonSchemaObject;
 }
 
 // @public
@@ -226,10 +234,22 @@ export const LITE_SYSTEM_UNIFORMS: readonly string[];
 export function loadIgnifxConfig(configFile: string | null, root: string, env: ConfigEnv): Promise<ResolvedIgnifxConfig>;
 
 // @public
+export function loadIgnifxSettings(settingsFile: string | null): Promise<ResolvedIgnifxSettings>;
+
+// @public
 export const MANIFEST_MODULE_ID = "virtual:ignifx/manifest";
 
 // @public
 export function manifestModuleSource(manifest: AssetManifest): string;
+
+// @public
+export interface MergedProjectSettings {
+    readonly config: JsonObject;
+    readonly shadowed: readonly string[];
+}
+
+// @public
+export function mergeProjectSettings(data: JsonObject, code: JsonObject): MergedProjectSettings;
 
 // @public
 export function normalizeScriptsPattern(pattern: string): string;
@@ -262,7 +282,14 @@ export interface ResolvedIgnifxPluginOptions {
     readonly publicPath: string;
     readonly schemas: JsonSchemaProvider | null;
     readonly scriptsPattern: string;
+    readonly settingsFile: string | null | false;
     readonly validate: boolean;
+}
+
+// @public
+export interface ResolvedIgnifxSettings {
+    readonly path: string | null;
+    readonly settings: JsonObject;
 }
 
 // @public

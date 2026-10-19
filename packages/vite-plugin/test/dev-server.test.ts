@@ -271,3 +271,33 @@ describe("vite dev with the ignifx plugin", () => {
     }
   });
 });
+
+describe("vite dev and the project settings", () => {
+  it("serves the edited ignifx.settings.json after a change, not the values it started with", async () => {
+    const root = await createFixtureTree({
+      "index.html": '<!doctype html><html><body><script type="module" src="/src/main.ts"></script></body></html>',
+      "src/main.ts": "export const settings = import.meta.env.IGNIFX_CONFIG;\n",
+      "ignifx.settings.json": JSON.stringify({ time: { timeScale: 1 } }),
+      "assets/a.png": PNG_BYTES,
+    });
+    const plugin = ignifx();
+    const server = await createServer({
+      root,
+      configFile: false,
+      logLevel: "silent",
+      plugins: [plugin],
+      server: { middlewareMode: true, watch: null },
+    });
+    try {
+      expect((await server.transformRequest("/src/main.ts"))?.code).toContain('"timeScale":1');
+
+      const settingsPath = await writeFixture(root, "ignifx.settings.json", JSON.stringify({ time: { timeScale: 2 } }));
+      server.watcher.emit("change", settingsPath);
+      await plugin.api?.whenIdle();
+
+      expect((await server.transformRequest("/src/main.ts"))?.code).toContain('"timeScale":2');
+    } finally {
+      await server.close();
+    }
+  });
+});

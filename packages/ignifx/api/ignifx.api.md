@@ -385,6 +385,7 @@ import { describeRegisteredSchemas } from '@ignifx/core';
 import { describeSceneFileFormat } from '@ignifx/core';
 import { describeSchema } from '@ignifx/core';
 import { describeSchemas } from '@ignifx/core';
+import { describeSettings } from '@ignifx/core';
 import { describeSpriteAnimationFormat } from '@ignifx/2d';
 import { describeSpriteAtlasFormat } from '@ignifx/2d';
 import { describeTerrainFormat } from '@ignifx/terrain';
@@ -1169,7 +1170,9 @@ import { ServiceKey } from '@ignifx/core';
 import { ServiceNameKey } from '@ignifx/core';
 import { ServiceRegistry } from '@ignifx/core';
 import { SetParentOptions } from '@ignifx/core';
+import { SETTINGS_DESCRIPTION_FORMAT } from '@ignifx/core';
 import { SettingsInput } from '@ignifx/core';
+import { settingsJsonSchema } from '@ignifx/core';
 import { SHADER_ASSET_TYPE } from '@ignifx/core';
 import { SHADER_ATTRIBUTE_NAMES } from '@ignifx/core';
 import { SHADER_BLEND_MODES } from '@ignifx/core';
@@ -2288,6 +2291,8 @@ export { describeSceneFileFormat }
 export { describeSchema }
 
 export { describeSchemas }
+
+export { describeSettings }
 
 export { describeSpriteAnimationFormat }
 
@@ -3857,7 +3862,11 @@ export { ServiceRegistry }
 
 export { SetParentOptions }
 
+export { SETTINGS_DESCRIPTION_FORMAT }
+
 export { SettingsInput }
+
+export { settingsJsonSchema }
 
 export { SHADER_ASSET_TYPE }
 

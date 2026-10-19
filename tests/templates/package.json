@@ -11,6 +11,7 @@
   "devDependencies": {
     "@ignifx/core": "workspace:*",
     "@ignifx/editor-host": "workspace:*",
+    "@ignifx/vite-plugin": "workspace:*",
     "@types/node": "catalog:",
     "@webgpu/types": "catalog:",
     "typescript-native": "catalog:",

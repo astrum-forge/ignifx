@@ -91579,6 +91579,15 @@ dispatched from a phase and therefore get a sorted dispatch list.
 
 ***
 
+### SETTINGS\_DESCRIPTION\_FORMAT
+
+> `const` **SETTINGS\_DESCRIPTION\_FORMAT**: `"settings"` = `"settings"`
+
+The `format` every settings section description carries, so a consumer that merges settings and
+component descriptions can tell them apart.
+
+***
+
 ### SHADER\_ASSET\_TYPE
 
 > `const` **SHADER\_ASSET\_TYPE**: `"shader"` = `"shader"`
@@ -97312,6 +97321,64 @@ schemas["ignifx/Camera"].fields["fov"].default; // 60
 
 ***
 
+### describeSettings()
+
+> **describeSettings**(`app`): `Readonly`\<`Record`\<`string`, [`SchemaDescription`](#schemadescription)\>\>
+
+Describes every project settings section an app has registered (core's own `layers`,
+`sortingLayers`, `time`, `assets` and `rendering`, and every section an extension declared with
+`ctx.registerSettings`) in the same shape [describeRegisteredSchemas](#describeregisteredschemas) describes components.
+This is what an external settings panel, such as the ignifx editor's, is generated from.
+
+#### Parameters
+
+##### app
+
+[`App`](#app-1)
+
+The app whose sections to describe; its extensions have all registered by the time
+`createApp` resolves.
+
+#### Returns
+
+`Readonly`\<`Record`\<`string`, [`SchemaDescription`](#schemadescription)\>\>
+
+The descriptions, keyed by section name, in registration order.
+
+#### Remarks
+
+Each entry is keyed and titled by its section name, has `format: "settings"`
+([SETTINGS\_DESCRIPTION\_FORMAT](#settings_description_format)), and names the extension that registered it as `package`
+(`@ignifx/core`, `@ignifx/physics`). A field's `default` is the value the owner registered for it,
+which is what the project gets when it omits the field; a field the owner's defaults leave out has
+no `default`, because the resolved section has no value for it either.
+
+Defaults are in the **settings form**, the form `createApp` reads, which differs from the scene
+file's for vectors and colours: a `vec3` default is `{ "x": 0, "y": -9.81, "z": 0 }` and a `color`
+default is `{ "r": 0, "g": 0, "b": 0, "a": 1 }`, not an array. A tool writes values back in this
+form.
+
+The registration seam is `ctx.registerSettings(section, schema, defaults)`: an extension that
+declares a section there is described here with no further work. A section is written in project
+settings (`ignifx.settings.json` or `ignifx.config.ts`) as an object of these fields; a section
+with exactly one field of a non-object kind (a number, string, enum or array, not a vector or
+colour) may also be written as that field's value.
+
+#### Throws
+
+IgnifxError with code `IGX-0702` when `app` was not created by this copy of
+`@ignifx/core`.
+
+#### Example
+
+```ts
+const sections = describeSettings(app);
+sections["time"]?.package; // "@ignifx/core"
+sections["time"]?.fields["fixedDeltaTime"]?.default; // 0.016666666666666666
+```
+
+***
+
 ### describeSpriteAnimationFormat()
 
 > **describeSpriteAnimationFormat**(): [`SchemaDescription`](#schemadescription)
@@ -102938,6 +103005,52 @@ diffing its current state against the instanced scene — unless `flatten` is se
 
 ```ts
 const text = stringifySceneFile(serializeScene(world.activeScene));
+```
+
+***
+
+### settingsJsonSchema()
+
+> **settingsJsonSchema**(`app`): [`JsonObject`](#jsonobject)
+
+Generates the JSON Schema (draft 2020-12) of a project's settings object, the content of
+`ignifx.settings.json`, from every section the app registered. Pass it to the Vite plugin as
+`ignifx({ schemas: { settings } })` to validate the project settings at build time, or associate
+it with `ignifx.settings.json` in a text editor.
+
+#### Parameters
+
+##### app
+
+[`App`](#app-1)
+
+The app whose sections to describe.
+
+#### Returns
+
+[`JsonObject`](#jsonobject)
+
+The object schema, one property per section.
+
+#### Remarks
+
+The schema describes the settings form `createApp` reads (vectors as `{ x, y, z }`, colours as
+`{ r, g, b, a }` with every channel required), so a document it accepts also passes `createApp`'s
+own validation (`IGX-0408`). Every section is optional and a section omitted takes its defaults.
+An unknown key inside a section is a violation. The top level stays open: a section this app did
+not register, perhaps one of an extension it lacks, is left to `createApp`, which reports it
+(`IGX-0407`), and to the Vite plugin, which warns about it.
+
+#### Throws
+
+IgnifxError with code `IGX-0702` when `app` was not created by this copy of
+`@ignifx/core`.
+
+#### Example
+
+```ts
+const schema = settingsJsonSchema(app);
+Object.keys(schema["properties"] ?? {}); // ["layers", "sortingLayers", "time", "assets", "rendering"]
 ```
 
 ***

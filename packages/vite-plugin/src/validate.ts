@@ -32,6 +32,14 @@ export interface JsonSchemaProvider {
   readonly scene?: JsonSchemaObject;
   /** Schemas keyed by the file's `format` header, for every other format. */
   readonly formats?: Readonly<Record<string, JsonSchemaObject>>;
+  /**
+   * The schema of the merged project settings (`ignifx.settings.json` plus `ignifx.config.ts`), as
+   * `@ignifx/core`'s `settingsJsonSchema(app)` generates it. A violation inside a section, such as
+   * a misspelled key, fails the dev server and the build with `IGX-0554`; a section the schema does
+   * not list only warns, since the schema may predate an extension. Without it, `createApp` still
+   * validates every section when the game starts (`IGX-0407`, `IGX-0408`).
+   */
+  readonly settings?: JsonSchemaObject;
 }
 
 /**
