@@ -341,6 +341,7 @@ import { DEFAULT_LAYER } from '@ignifx/core';
 import { DEFAULT_MEMORY_SINK_LIMIT } from '@ignifx/core';
 import { DEFAULT_ORTHOGRAPHIC_SIZE } from '@ignifx/2d';
 import { DEFAULT_PAUSABLE_BUSES } from '@ignifx/audio';
+import { DEFAULT_PICK_ALL_LIMIT } from '@ignifx/2d';
 import { DEFAULT_PIXELS_PER_UNIT } from '@ignifx/2d';
 import { DEFAULT_REFERENCE_RESOLUTION } from '@ignifx/2d';
 import { DEFAULT_SORTING_LAYER } from '@ignifx/2d';
@@ -2206,6 +2207,8 @@ export { DEFAULT_MEMORY_SINK_LIMIT }
 export { DEFAULT_ORTHOGRAPHIC_SIZE }
 
 export { DEFAULT_PAUSABLE_BUSES }
+
+export { DEFAULT_PICK_ALL_LIMIT }
 
 export { DEFAULT_PIXELS_PER_UNIT }
 

@@ -187,7 +187,7 @@ document · `IGX-1106` unknown frame (a bad `frameName` is reported once, not th
 `IGX-1112` duplicate extension · `IGX-1113` custom effect with no WGSL · `IGX-1114` bad sprite-batch
 capacity · `IGX-1115` sprite-batch slot or count out of range · `IGX-1116` sprite batch used after
 `dispose()` · `IGX-1117` sprite-batch atlas not loaded · `IGX-1118` `SpriteRenderer.sprite` is not an
-atlas (reported once, not thrown).
+atlas (reported once, not thrown) · `IGX-1119` a pick called from inside a pick `filter`.
 
 ## Recipes
 
@@ -251,8 +251,9 @@ export class ClickToSelect extends Script {
 
 `pickAt` and `pickAllAt` take options named after core's `RenderPickOptions`: `filter(entity,
 component)`, `ignore` (a list of entities), and `includeUnpickable` (also consider sprites with
-`pickable: false`). `pickAllAt` also takes `limit`. A rejected sprite never hides the sprites under
-it: the pick looks further down the same sorting layer, then the layers below.
+`pickable: false`). `pickAllAt` also takes `limit`, which defaults to `DEFAULT_PICK_ALL_LIMIT` (64).
+A rejected sprite never hides the sprites under it: the pick looks further down the same sorting
+layer, then the layers below. Each sprite examined costs one more scan of its layer.
 
 ```ts
 import type { App, Entity, TwoDPick } from "ignifx";
@@ -333,8 +334,9 @@ Generated reference: `skills/ignifx/references/formats/`.
   move it into the scene with `ignifx import tilemap`, or read `tilemap.definition.objects` in code.
 - **Tiles are not pickable.** They have no component, so `pickAt` skips them and looks underneath; use
   `Tilemap.worldToCell`, which is exact and free.
-- **A pick `filter` must not change sprites.** It runs in the middle of the pick, which briefly
-  hides each rejected sprite to look under it and restores them all before returning.
+- **A pick `filter` must not change sprites or pick again.** It runs in the middle of the pick, which
+  briefly hides each rejected sprite to look under it and restores them all before returning (also
+  when the filter throws). A `pickAt` or `pickAllAt` from inside a filter throws `IGX-1119`.
 - **A `SpriteBatch` slot is centred on the position written and is never picked.** It ignores the
   frame's pivot — offset the position yourself if you need feet on the ground — and holds no
   component for `pickAt` to resolve. It also does not sort its own slots: on a Y-sorted sorting layer

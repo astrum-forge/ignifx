@@ -54870,6 +54870,13 @@ The order is the draw order reversed: sorting layers front to back, and within a
 order `pickAt` would have reached them in. The same sprites are rejected as by
 [TwoDService.pickAt](#pickat). Use it for click-cycling through a stack.
 
+Cost: one scan of a layer's sprites per sprite examined in it, so `k` hits over a layer of `n`
+cost `O(k·n)`; hence the default `limit` of [DEFAULT\_PICK\_ALL\_LIMIT](#default_pick_all_limit).
+
+###### Throws
+
+IgnifxError with code `IGX-1119` when called from inside a pick's `filter`.
+
 ###### Example
 
 ```ts
@@ -54919,6 +54926,14 @@ no frame of latency, which is what makes it usable from a click handler. It reso
 A sprite that is rejected — unpickable, destroyed, ignored, refused by `options.filter`, or a
 tile or batch slot with no component — does not occlude: the pick goes on to the sprite under
 it in the same sorting layer, then to the layers below.
+
+Cost: one scan of a layer's sprites per sprite examined in it. With nothing rejected that is one
+scan per layer; looking under `m` rejected sprites in a layer of `n` costs `O(m·n)`, and every
+hidden sprite costs one slot upload on the next frame.
+
+###### Throws
+
+IgnifxError with code `IGX-1119` when called from inside a pick's `filter`.
 
 ###### Example
 
@@ -83979,7 +83994,10 @@ The candidate sprite.
 
 ###### Remarks
 
-Called synchronously, topmost candidate first. It must not add, remove or change sprites.
+Called synchronously, topmost candidate first, while the pick has the sprites above the
+candidate hidden. It must not add, remove or change sprites, and must not pick again: a nested
+`pickAt` or `pickAllAt` throws `IGX-1119`. If it throws, the pick restores every sprite it hid
+and rethrows.
 
 ###### Inherited from
 
@@ -83993,7 +84011,7 @@ Entities whose sprites are skipped, as if `filter` had rejected them.
 
 ###### Inherited from
 
-[`TwoDPickOptions`](#twodpickoptions).[`ignore`](#ignore-1)
+[`TwoDPickOptions`](#twodpickoptions).[`ignore`](#ignore-2)
 
 ##### includeUnpickable?
 
@@ -84010,7 +84028,7 @@ the game itself never picks. Defaults to `false`.
 
 > `readonly` `optional` **limit?**: `number`
 
-The most hits to return, topmost first. Defaults to every sprite under the point.
+The most hits to return, topmost first. Defaults to [DEFAULT\_PICK\_ALL\_LIMIT](#default_pick_all_limit).
 
 ***
 
@@ -84054,7 +84072,10 @@ The candidate sprite.
 
 ###### Remarks
 
-Called synchronously, topmost candidate first. It must not add, remove or change sprites.
+Called synchronously, topmost candidate first, while the pick has the sprites above the
+candidate hidden. It must not add, remove or change sprites, and must not pick again: a nested
+`pickAt` or `pickAllAt` throws `IGX-1119`. If it throws, the pick restores every sprite it hid
+and rethrows.
 
 ##### ignore?
 
@@ -88751,6 +88772,19 @@ click (`docs/architecture/10-audio.md` §6).
 
 ***
 
+### DEFAULT\_PICK\_ALL\_LIMIT
+
+> `const` **DEFAULT\_PICK\_ALL\_LIMIT**: `64` = `64`
+
+How many hits `app.twoD.pickAllAt` returns when no `limit` is given.
+
+#### Remarks
+
+Every hit costs one more scan of its layer, so an unbounded walk over a dense stack is quadratic;
+64 is far deeper than any click-cycle needs. Pass `limit: Infinity` to walk the whole stack.
+
+***
+
 ### DEFAULT\_PIXELS\_PER\_UNIT
 
 > `const` **DEFAULT\_PIXELS\_PER\_UNIT**: `100` = `100`
@@ -92781,6 +92815,12 @@ A `.tilemap.json` file is not an `ignifx.tilemap` document this build can read.
 > `readonly` **missingShaderSource**: `"IGX-1113"`
 
 A `SpriteLayerEffect` declared the `custom` kind without a WGSL fragment body.
+
+##### nestedPick
+
+> `readonly` **nestedPick**: `"IGX-1119"`
+
+`app.twoD.pickAt` or `pickAllAt` was called from inside a pick's own `filter`.
 
 ##### spriteNotAnAtlas
 
