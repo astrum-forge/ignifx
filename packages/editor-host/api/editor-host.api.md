@@ -809,6 +809,7 @@ export type SceneRequest = RpcRequestWithParams<typeof SceneMethod.openScene, Op
 
 // @public
 export interface SchemaDescription {
+    readonly builtIn?: boolean;
     readonly description?: string;
     readonly fields: Readonly<Record<string, SchemaFieldDescription>>;
     readonly format: string;
@@ -821,6 +822,7 @@ export interface SchemaFieldDescription {
     readonly default?: JsonValue;
     readonly description?: string;
     readonly kind: string;
+    readonly step?: number;
 }
 
 // @public

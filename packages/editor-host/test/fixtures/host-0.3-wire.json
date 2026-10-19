@@ -31,6 +31,71 @@
       "method": "schemasChanged",
       "params": {
         "schemas": {
+          "ignifx/Transform": {
+            "title": "Transform",
+            "format": "components",
+            "description": "The entity's local position, rotation, and scale; every entity has exactly one, stored as its transform block.",
+            "fields": {
+              "position": {
+                "kind": "vec3",
+                "default": [0, 0, 0],
+                "description": "Local position relative to the parent, in metres.",
+                "step": 0.01
+              },
+              "rotation": {
+                "kind": "quat",
+                "default": [0, 0, 0, 1],
+                "description": "Local rotation relative to the parent: a unit quaternion [x, y, z, w], shown as intrinsic XYZ Euler angles in degrees.",
+                "step": 0.5
+              },
+              "scale": {
+                "kind": "vec3",
+                "default": [1, 1, 1],
+                "description": "Local scale relative to the parent.",
+                "step": 0.01
+              }
+            },
+            "builtIn": true,
+            "propsSchema": {
+              "type": "object",
+              "properties": {
+                "position": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 3,
+                  "maxItems": 3,
+                  "x-ignifx-step": 0.01,
+                  "description": "Local position relative to the parent, in metres.",
+                  "default": [0, 0, 0]
+                },
+                "rotation": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 4,
+                  "maxItems": 4,
+                  "x-ignifx-step": 0.5,
+                  "description": "Local rotation relative to the parent: a unit quaternion [x, y, z, w], shown as intrinsic XYZ Euler angles in degrees.",
+                  "default": [0, 0, 0, 1]
+                },
+                "scale": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 3,
+                  "maxItems": 3,
+                  "x-ignifx-step": 0.01,
+                  "description": "Local scale relative to the parent.",
+                  "default": [1, 1, 1]
+                }
+              },
+              "additionalProperties": false
+            }
+          },
           "ignifx/Camera": {
             "title": "Camera",
             "format": "components",
@@ -818,6 +883,71 @@
       "id": 18,
       "result": {
         "schemas": {
+          "ignifx/Transform": {
+            "title": "Transform",
+            "format": "components",
+            "description": "The entity's local position, rotation, and scale; every entity has exactly one, stored as its transform block.",
+            "fields": {
+              "position": {
+                "kind": "vec3",
+                "default": [0, 0, 0],
+                "description": "Local position relative to the parent, in metres.",
+                "step": 0.01
+              },
+              "rotation": {
+                "kind": "quat",
+                "default": [0, 0, 0, 1],
+                "description": "Local rotation relative to the parent: a unit quaternion [x, y, z, w], shown as intrinsic XYZ Euler angles in degrees.",
+                "step": 0.5
+              },
+              "scale": {
+                "kind": "vec3",
+                "default": [1, 1, 1],
+                "description": "Local scale relative to the parent.",
+                "step": 0.01
+              }
+            },
+            "builtIn": true,
+            "propsSchema": {
+              "type": "object",
+              "properties": {
+                "position": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 3,
+                  "maxItems": 3,
+                  "x-ignifx-step": 0.01,
+                  "description": "Local position relative to the parent, in metres.",
+                  "default": [0, 0, 0]
+                },
+                "rotation": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 4,
+                  "maxItems": 4,
+                  "x-ignifx-step": 0.5,
+                  "description": "Local rotation relative to the parent: a unit quaternion [x, y, z, w], shown as intrinsic XYZ Euler angles in degrees.",
+                  "default": [0, 0, 0, 1]
+                },
+                "scale": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 3,
+                  "maxItems": 3,
+                  "x-ignifx-step": 0.01,
+                  "description": "Local scale relative to the parent.",
+                  "default": [1, 1, 1]
+                }
+              },
+              "additionalProperties": false
+            }
+          },
           "ignifx/Camera": {
             "title": "Camera",
             "format": "components",
@@ -983,6 +1113,71 @@
       "method": "schemasChanged",
       "params": {
         "schemas": {
+          "ignifx/Transform": {
+            "title": "Transform",
+            "format": "components",
+            "description": "The entity's local position, rotation, and scale; every entity has exactly one, stored as its transform block.",
+            "fields": {
+              "position": {
+                "kind": "vec3",
+                "default": [0, 0, 0],
+                "description": "Local position relative to the parent, in metres.",
+                "step": 0.01
+              },
+              "rotation": {
+                "kind": "quat",
+                "default": [0, 0, 0, 1],
+                "description": "Local rotation relative to the parent: a unit quaternion [x, y, z, w], shown as intrinsic XYZ Euler angles in degrees.",
+                "step": 0.5
+              },
+              "scale": {
+                "kind": "vec3",
+                "default": [1, 1, 1],
+                "description": "Local scale relative to the parent.",
+                "step": 0.01
+              }
+            },
+            "builtIn": true,
+            "propsSchema": {
+              "type": "object",
+              "properties": {
+                "position": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 3,
+                  "maxItems": 3,
+                  "x-ignifx-step": 0.01,
+                  "description": "Local position relative to the parent, in metres.",
+                  "default": [0, 0, 0]
+                },
+                "rotation": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 4,
+                  "maxItems": 4,
+                  "x-ignifx-step": 0.5,
+                  "description": "Local rotation relative to the parent: a unit quaternion [x, y, z, w], shown as intrinsic XYZ Euler angles in degrees.",
+                  "default": [0, 0, 0, 1]
+                },
+                "scale": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 3,
+                  "maxItems": 3,
+                  "x-ignifx-step": 0.01,
+                  "description": "Local scale relative to the parent.",
+                  "default": [1, 1, 1]
+                }
+              },
+              "additionalProperties": false
+            }
+          },
           "ignifx/Camera": {
             "title": "Camera",
             "format": "components",

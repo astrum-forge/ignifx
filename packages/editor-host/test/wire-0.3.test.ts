@@ -38,10 +38,11 @@ import type { App, JsonObject, SceneFile, SceneFileEntity } from "@ignifx/core";
 
 /**
  * Wire compatibility with the editor, protocol 0.3. `fixtures/host-0.3-wire.json` is copied
- * unchanged from the editor repository (`packages/editor-protocol/test/fixtures/`, branch
- * `feat/protocol-0.3`), where `wire-0.3.test.ts` checks it against `@ignifx/editor-protocol` 0.3.
+ * unchanged from the editor repository (`packages/editor-protocol/test/fixtures/`), where
+ * `wire-0.3.test.ts` checks it against `@ignifx/editor-protocol` 0.3; change it there first.
  * Here every message in it goes through this package's guards, and its requests go through a live
- * headless host, whose answers must be the fixture's.
+ * headless host, whose answers must be the fixture's: the `game/Health` and `ignifx/Transform`
+ * schema entries byte for byte, so that the two copies cannot drift apart unnoticed.
  *
  * Where the host's answer cannot be the fixture's byte for byte, the difference is the host's
  * truth and is stated where it is checked: a headless host lists only `heartbeat` (no gizmos, no
@@ -187,6 +188,18 @@ describe("the editor's 0.3 wire fixture, through the host's guards", () => {
     }
     expect(isInvalidSceneFileData(member(wire("openSceneInvalid"), "error")["data"])).toBe(true);
   });
+
+  it("refuses a schema whose step is not positive or whose builtIn is not a boolean", () => {
+    const transform = member(member(member(wire("getSchemasResponse"), "result"), "schemas"), "ignifx/Transform");
+    const fields = member(transform, "fields");
+    const withStep = (step: unknown): unknown => ({
+      schemas: { "ignifx/Transform": { ...transform, fields: { ...fields, scale: { kind: "vec3", step } } } },
+    });
+    expect(isSchemaSet(withStep(0.01))).toBe(true);
+    expect(isSchemaSet(withStep(0))).toBe(false);
+    expect(isSchemaSet(withStep("0.01"))).toBe(false);
+    expect(isSchemaSet({ schemas: { "ignifx/Transform": { ...transform, builtIn: "yes" } } })).toBe(false);
+  });
 });
 
 /**
@@ -292,7 +305,8 @@ describe("the editor's 0.3 wire fixture, through a live headless host", () => {
     expect(isSchemaSet(schemas)).toBe(true);
     const expected = member(member(wire("schemasChangedAtStart"), "params"), "schemas");
     const actual = member(schemas, "schemas");
-    expect(actual["game/Health"]).toEqual(expected["game/Health"]);
+    expectWire(member(actual, "game/Health"), expected["game/Health"]);
+    expectWire(member(actual, "ignifx/Transform"), expected["ignifx/Transform"]);
     expect(member(actual, "ignifx/Camera")["description"]).toBe(member(expected, "ignifx/Camera")["description"]);
     expect(member(actual, "ignifx/scene-file")["format"]).toBe("ignifx.scene");
     expect(Object.keys(actual)).not.toContain("ignifx-editor/EditorCamera");
@@ -303,9 +317,11 @@ describe("the editor's 0.3 wire fixture, through a live headless host", () => {
     const { peer } = await started();
     const answer = await peer.request(wire("getSchemas"));
     expect(isSchemaSet(answer["result"])).toBe(true);
-    expect(member(member(answer, "result"), "schemas")["game/Health"]).toEqual(
-      member(member(member(wire("getSchemasResponse"), "result"), "schemas"), "game/Health"),
-    );
+    const actual = member(member(answer, "result"), "schemas");
+    const expected = member(member(wire("getSchemasResponse"), "result"), "schemas");
+    for (const typeId of ["game/Health", "ignifx/Transform"]) {
+      expectWire(member(actual, typeId), expected[typeId]);
+    }
   });
 
   it("describes the transform with core's schema, marked built-in (engine ask E4)", async () => {
