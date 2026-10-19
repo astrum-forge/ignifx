@@ -40,6 +40,8 @@ const WEATHER: Extension = {
       { wind: 0.25, kind: "rain", tint: { name: "none" } },
     );
     ctx.registerSettings("biomes", defineSchema({ biomes: array(str(), ["forest"]) }), { biomes: ["forest"] });
+    // Registered without a defaults bag: the schema's own defaults are the section's defaults.
+    ctx.registerSettings("fog", defineSchema({ density: f64(0.1), color: str("grey") }), undefined);
   },
 };
 
@@ -84,7 +86,8 @@ describe("describeSettings", () => {
 
   it("describes a section an extension registered, with its package, metadata and registered defaults", async () => {
     const sections = describeSettings(await build({}, [WEATHER]));
-    expect(Object.keys(sections).slice(-2)).toEqual(["weather", "biomes"]);
+    expect(Object.keys(sections).slice(-3)).toEqual(["weather", "biomes", "fog"]);
+    expect(sections["fog"]?.fields["density"]?.default).toBe(0.1);
     const weather = sections["weather"];
     expect(weather?.package).toBe("@game/weather");
     expect(weather?.format).toBe("settings");
@@ -137,6 +140,7 @@ describe("settingsJsonSchema", () => {
       "rendering",
       "weather",
       "biomes",
+      "fog",
     ]);
   });
 

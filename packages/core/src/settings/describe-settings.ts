@@ -1,5 +1,5 @@
 import { CoreErrorCode } from "../errors/error-codes.js";
-import { assertNever, IgnifxError } from "../errors/ignifx-error.js";
+import { IgnifxError } from "../errors/ignifx-error.js";
 import { annotatedFieldJsonSchema, describeSchema, toJsonSchema } from "../schema/describe.js";
 import { encodeValue } from "../schema/encode.js";
 import { SettingsStore } from "./settings-store.js";
@@ -19,46 +19,34 @@ import type { FieldKind, Schema } from "../schema/types.js";
 export const SETTINGS_DESCRIPTION_FORMAT = "settings";
 
 /**
- * Reports whether a field of this kind may stand for its whole section: a single-field section may
- * be written as the field's value (`layers: ["Default"]`) only when that value cannot be mistaken for
+ * Whether a single field of each kind may stand for its whole section: a one-field section may be
+ * written as the field's value (`layers: ["Default"]`) only when that value cannot be mistaken for
  * the section's object form, so a kind whose JSON form may be an object never qualifies.
- *
- * @param kind - The field kind.
- * @returns `true` when the kind's JSON form is never an object.
  */
-function allowsShorthand(kind: FieldKind): boolean {
-  switch (kind) {
-    case "f32":
-    case "f64":
-    case "i32":
-    case "u32":
-    case "bool":
-    case "str":
-    case "vec2":
-    case "vec3":
-    case "vec4":
-    case "quat":
-    case "color":
-    case "enum":
-    case "array":
-    case "layerMask": {
-      return true;
-    }
-    case "entityRef":
-    case "componentRef":
-    case "asset":
-    case "record":
-    case "map":
-    case "optional":
-    case "curve":
-    case "custom": {
-      return false;
-    }
-    default: {
-      return assertNever(kind, "schema field kind");
-    }
-  }
-}
+const ALLOWS_SHORTHAND: Readonly<Record<FieldKind, boolean>> = {
+  f32: true,
+  f64: true,
+  i32: true,
+  u32: true,
+  bool: true,
+  str: true,
+  vec2: true,
+  vec3: true,
+  vec4: true,
+  quat: true,
+  color: true,
+  enum: true,
+  array: true,
+  layerMask: true,
+  entityRef: false,
+  componentRef: false,
+  asset: false,
+  record: false,
+  map: false,
+  optional: false,
+  curve: false,
+  custom: false,
+};
 
 /**
  * Settings defaults hold no entity or component references, so every reference encodes to `null`.
@@ -102,14 +90,11 @@ function describeSection(name: string, section: SettingsSection): SchemaDescript
     package: section.owner,
   });
   const fields: Record<string, SchemaFieldDescription> = {};
-  for (const [fieldName, field] of Object.entries(section.schema)) {
-    const description = described.fields[fieldName];
-    if (description === undefined) {
-      continue;
-    }
+  for (const [fieldName, description] of Object.entries(described.fields)) {
+    const field = section.schema[fieldName];
     const registered = section.defaults[fieldName];
     fields[fieldName] =
-      registered === undefined
+      field === undefined || registered === undefined
         ? description
         : { ...description, default: encodeValue(field, registered, noReferences()) };
   }
@@ -168,7 +153,7 @@ function sectionJsonSchema(schema: Schema): JsonSchemaObject {
   const names = Object.keys(schema);
   const only = names[0];
   const field = only === undefined ? undefined : schema[only];
-  if (names.length !== 1 || only === undefined || field === undefined || !allowsShorthand(field.kind)) {
+  if (names.length !== 1 || only === undefined || field === undefined || !ALLOWS_SHORTHAND[field.kind]) {
     return objectForm;
   }
   return { oneOf: [objectForm, annotatedFieldJsonSchema(field)] };
