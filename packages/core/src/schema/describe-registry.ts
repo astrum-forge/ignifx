@@ -1,3 +1,5 @@
+import { transformSchema } from "../transform/transform-schema.js";
+import { Transform } from "../transform/transform.js";
 import { describeSchema } from "./describe.js";
 import type { SchemaDescription, SchemaDescriptionMeta } from "./describe.js";
 import type { ComponentRegistry } from "../component/component-registry.js";
@@ -29,6 +31,10 @@ function componentPackage(registry: ComponentRegistry, typeId: string): string {
  * registered itself with `app.registerComponents` has no extension, so its `package` is its type
  * id's namespace: everything before the last `/` (`third-person` for `third-person/Beacon`).
  *
+ * `ignifx/Transform` declares no schema on its class; it is described with {@link transformSchema}
+ * and marked `builtIn`, because every entity carries exactly one and a scene file stores it as the
+ * entity's `transform` block rather than in its `components`.
+ *
  * @param registry - The registry to walk, usually `app.world.registry`.
  * @param curated - Titles, formats and summaries by type id, for example a package's own
  * `describeSchemas()`; a component without an entry is titled from its type id.
@@ -51,12 +57,14 @@ export function describeRegisteredSchemas(
   for (const [typeId, type] of registry.registrations()) {
     const info = registry.describe(type);
     const meta = curated?.[typeId];
-    described[typeId] = describeSchema(typeId, info.schema ?? {}, {
+    const builtIn = type === Transform;
+    described[typeId] = describeSchema(typeId, builtIn ? transformSchema() : (info.schema ?? {}), {
       ...(meta?.title === undefined ? {} : { title: meta.title }),
       ...(meta?.format === undefined ? {} : { format: meta.format }),
       ...(meta?.description === undefined ? {} : { description: meta.description }),
       allowMultiple: info.allowMultiple,
       package: componentPackage(registry, typeId),
+      ...(builtIn ? { builtIn } : {}),
     });
   }
   return described;

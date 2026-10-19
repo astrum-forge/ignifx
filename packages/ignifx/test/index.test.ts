@@ -245,6 +245,7 @@ const expectedExports = [
   "toJsonSchema",
   "TONE_MAPPING_NAMES",
   "Transform",
+  "transformSchema",
   "Tween",
   "TWEEN_LOOP_FOREVER",
   "TWEEN_SYSTEM_ORDER",

@@ -746,6 +746,16 @@ Draws a Tilemap's cells as sprites, materialising only the chunks the camera see
 | `sortingLayer` | `str` | `"Default"` | Sorting layer used when a map layer names none. |
 | `cullChunks` | `bool` | `true` | Drop chunks outside the camera's visible bounds. |
 
+## Transform (`ignifx/Transform`)
+
+The entity's local position, rotation, and scale; every entity has exactly one, stored as its transform block.
+
+| Field | Kind | Default | Description |
+|---|---|---|---|
+| `position` | `vec3` | `[0,0,0]` | Local position relative to the parent, in metres. |
+| `rotation` | `quat` | `[0,0,0,1]` | Local rotation relative to the parent: a unit quaternion [x, y, z, w], shown as intrinsic XYZ Euler angles in degrees. |
+| `scale` | `vec3` | `[1,1,1]` | Local scale relative to the parent. |
+
 ## WorldAnchor (`ignifx/WorldAnchor`)
 
 Keeps a DOM element at an entity's screen position, with clamping and distance scaling.

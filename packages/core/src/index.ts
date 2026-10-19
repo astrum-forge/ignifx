@@ -602,6 +602,7 @@ export { createManualClock, createPerformanceClock, type Clock, type ManualClock
 
 // transform — the component every entity carries.
 export { Transform } from "./transform/transform.js";
+export { transformSchema } from "./transform/transform-schema.js";
 
 // tween — `app.tweens`, the property animator both toolkits use.
 export { EASING_NAMES, EASINGS, resolveEase, type EasingFunction, type EasingName } from "./tween/easing.js";

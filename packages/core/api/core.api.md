@@ -2966,6 +2966,7 @@ export type Schema = Readonly<Record<string, FieldDefinition<unknown>>>;
 // @public
 export interface SchemaDescription {
     readonly allowMultiple?: boolean;
+    readonly builtIn?: boolean;
     readonly description?: string;
     readonly fields: Readonly<Record<string, SchemaFieldDescription>>;
     readonly format: string;
@@ -2976,6 +2977,7 @@ export interface SchemaDescription {
 // @public
 export interface SchemaDescriptionMeta {
     readonly allowMultiple?: boolean;
+    readonly builtIn?: boolean;
     readonly description?: string;
     readonly format?: string;
     readonly package?: string;
@@ -3685,6 +3687,9 @@ export interface Transform {
     // @internal
     [TRANSFORM_NODE]: LiteSceneNode | null;
 }
+
+// @public
+export function transformSchema(): Schema;
 
 // @public
 export class Tween {

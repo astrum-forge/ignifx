@@ -1403,6 +1403,7 @@ import { TorusMeshOptions } from '@ignifx/core';
 import { TOUCH_SLOTS } from '@ignifx/input';
 import { touchControlNames } from '@ignifx/input';
 import { Transform } from '@ignifx/core';
+import { transformSchema } from '@ignifx/core';
 import { TriggerEvent } from '@ignifx/physics';
 import { TriggerEvent2D } from '@ignifx/physics-2d';
 import { turnTowardsDegrees } from '@ignifx/3d';
@@ -4323,6 +4324,8 @@ export { TOUCH_SLOTS }
 export { touchControlNames }
 
 export { Transform }
+
+export { transformSchema }
 
 export { TriggerEvent }
 

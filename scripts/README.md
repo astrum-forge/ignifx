@@ -100,8 +100,9 @@ contributes nothing. One `typeId` is documented once — the `ignifx` umbrella r
 umbrella's copy is dropped. Entries are grouped onto `references/formats/<format>.md` by their
 `format` (default `components`) and bundled into `references/formats/ignifx.schemas.json`. The
 generator only writes those files, so `formats/README.md` and the hand-written prose pages survive
-regeneration. Today `@ignifx/core` contributes nine records: six components on `components.md` and
-the three file formats on `ignifx.scene.md`, `ignifx.material.md`, and `ignifx.environment.md`.
+regeneration. Today `@ignifx/core` contributes twelve records: eight components on `components.md`,
+the built-in `ignifx/Transform` among them, and the four file formats on `ignifx.scene.md`,
+`ignifx.material.md`, `ignifx.environment.md`, and `ignifx.mesh.md`.
 
 ## Recipe extraction convention
 

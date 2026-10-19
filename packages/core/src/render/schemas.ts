@@ -1,6 +1,7 @@
 import { MATERIAL_ALPHA_MODES } from "../lite/material.js";
 import { describeSchema } from "../schema/describe.js";
 import { describeSceneFileFormat } from "../serialization/scene-file.js";
+import { transformSchema } from "../transform/transform-schema.js";
 import { Camera } from "./camera.js";
 import { ENVIRONMENT_FILE_FORMAT, ENVIRONMENT_FORMAT_VERSION } from "./environment-asset.js";
 import { Environment } from "./environment.js";
@@ -35,6 +36,13 @@ import type { SchemaDescription } from "../schema/describe.js";
  * `"ignifx.environment"`, and `"ignifx.mesh"`. The wave-1
  * hand-off asked for the key `"ignifx.scene"`; that key fails the namespacing check, and the
  * grouping — which is what actually decides the page — comes from `format` either way.
+ *
+ * ## The transform
+ *
+ * `ignifx/Transform` is described like a component, from `transformSchema()`, though its class
+ * declares no schema: it is the scene file's per-entity `transform` block. Its entry is the only one
+ * that sets `builtIn` (with `allowMultiple: false` and `package: "@ignifx/core"`), so an editor
+ * shows it with the components but never offers to add or remove it.
  */
 
 /**
@@ -52,6 +60,13 @@ import type { SchemaDescription } from "../schema/describe.js";
  */
 export function describeSchemas(): Readonly<Record<string, SchemaDescription>> {
   return {
+    "ignifx/Transform": describeSchema("ignifx/Transform", transformSchema(), {
+      description:
+        "The entity's local position, rotation, and scale; every entity has exactly one, stored as its transform block.",
+      allowMultiple: false,
+      package: "@ignifx/core",
+      builtIn: true,
+    }),
     "ignifx/Camera": describeSchema("ignifx/Camera", Camera.schema, {
       description: "The camera an entity renders the world through; the entity's transform is the view.",
     }),
