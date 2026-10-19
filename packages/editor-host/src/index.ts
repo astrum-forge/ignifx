@@ -13,7 +13,13 @@ export type { EditorMessageTarget } from "./channel.js";
 export { EditorHostErrorCode, isEditorOrigin } from "./error-codes.js";
 export { startEditorHost, type EditorHost, type EditorHostOptions } from "./host.js";
 export type { EditorAssetChange } from "./scene/asset-reload.js";
-export { startEditorPlayControls, type EditorPlayControls, type EditorPlayControlsOptions } from "./play-controls.js";
+export {
+  listenForEditorPlayControls,
+  startEditorPlayControls,
+  type EditorPlayConnector,
+  type EditorPlayControls,
+  type EditorPlayControlsOptions,
+} from "./play-controls.js";
 export {
   ApplyOpFailureCode,
   DEFAULT_HEARTBEAT_INTERVAL_MS,
@@ -42,6 +48,7 @@ export {
   isPickParams,
   isPickResult,
   isPlayState,
+  isPlayStateReport,
   isProtocolVersion,
   isReadBackParams,
   isReadBackResult,
@@ -68,6 +75,8 @@ export {
   JSON_RPC_VERSION,
   PickUnit,
   PlayMethod,
+  PlayNotification,
+  PlayPhase,
   PROTOCOL_VERSION,
   protocolVersionIsCompatible,
   RpcErrorCode,
@@ -123,6 +132,9 @@ export {
   type PlayRequest,
   type PlayResponse,
   type PlayState,
+  type PlayStateChangedNotification,
+  type PlayStateReport,
+  type PlayStateResponse,
   type PongResponse,
   type ProtocolVersion,
   type ReadBackParams,

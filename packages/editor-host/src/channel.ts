@@ -121,6 +121,11 @@ export interface ChannelOptions {
   readonly heartbeatIntervalMs: number;
   /** Called each time a port's `hello` has been answered with `ready`, after the answer is sent. */
   readonly onReady?: () => void;
+  /**
+   * A port that arrived before the channel opened (see {@link connectPortOf}), served at once as
+   * though it had just been posted. Its queued messages are read only from then on.
+   */
+  readonly port?: MessagePort | null;
 }
 
 /** An open channel. */
@@ -247,6 +252,29 @@ export function resolveMessageTarget(target: EditorMessageTarget | undefined): E
     );
   }
   return window;
+}
+
+/**
+ * Reads the port out of a window message, if it is the editor's connect message.
+ *
+ * @remarks
+ * Anyone can post to a window; only the editor's own origin may hand a host a port. The message
+ * must come from exactly `editorOrigin`, carry the connect message's data, and transfer exactly
+ * one port.
+ *
+ * @param event - A window message.
+ * @param editorOrigin - The only origin a port is accepted from.
+ * @returns The port, or `null` when the message is anything else.
+ */
+export function connectPortOf(event: Event, editorOrigin: string): MessagePort | null {
+  if (!(event instanceof MessageEvent) || event.origin !== editorOrigin) {
+    return null;
+  }
+  const port = event.ports[0];
+  if (!isEditorConnectMessage(event.data) || event.ports.length !== 1 || port === undefined) {
+    return null;
+  }
+  return port;
 }
 
 /**
@@ -398,18 +426,16 @@ export function openChannel(options: ChannelOptions): Channel {
   };
 
   const onWindowMessage = (event: Event): void => {
-    // Anyone can post to a window; only the editor's own origin may hand the host a port.
-    if (!(event instanceof MessageEvent) || event.origin !== editorOrigin) {
-      return;
+    const next = connectPortOf(event, editorOrigin);
+    if (next !== null) {
+      accept(next);
     }
-    const next = event.ports[0];
-    if (!isEditorConnectMessage(event.data) || event.ports.length !== 1 || next === undefined) {
-      return;
-    }
-    accept(next);
   };
 
   target.addEventListener("message", onWindowMessage);
+  if (options.port !== undefined && options.port !== null) {
+    accept(options.port);
+  }
 
   return {
     get isConnected(): boolean {

@@ -229,8 +229,11 @@ export function editorPageHtml(): string {
  * Generates `virtual:ignifx/editor`.
  *
  * @remarks
- * In development, `attachEditorPlayControls(app)` starts the play controls and stops them again
- * when Vite replaces the module. The `import.meta.hot` calls are written out literally because Vite
+ * In development, the module listens for the editor's connect message as soon as it is evaluated,
+ * which is before the game's `main.ts` runs, and keeps the port
+ * (`listenForEditorPlayControls`); `attachEditorPlayControls(app)` then starts the play controls on
+ * it, so the editor's first connect message is never lost to `await createApp(...)`. Vite replacing
+ * the module stops both. The `import.meta.hot` calls are written out literally because Vite
  * finds them by reading the source, not by running it. In a production build the export is an empty
  * function, the same shape as `acceptHotReload` from `virtual:ignifx/scripts`, so the game's
  * `main.ts` builds either way and ships no editor code.
@@ -245,20 +248,21 @@ export function playControlsModuleSource(options: PlayControlsModuleOptions): st
     return [`export function ${EDITOR_PLAY_CONTROLS_EXPORT}() {`, "  return () => {};", "}", ""].join("\n");
   }
   return [
-    `import { startEditorPlayControls } from ${JSON.stringify(HOST_PACKAGE)};`,
+    `import { listenForEditorPlayControls } from ${JSON.stringify(HOST_PACKAGE)};`,
     "",
-    "const options = {",
+    "// Listens now, before main.ts awaits createApp, so the editor's first port is kept.",
+    "const connector = listenForEditorPlayControls({",
     `  editorOrigin: ${JSON.stringify(options.editorOrigin)},`,
     ...reportingLines(options.engineVersion, options.heartbeatIntervalMs),
-    "};",
+    "});",
+    "if (import.meta.hot) {",
+    "  import.meta.hot.dispose(() => {",
+    "    connector.dispose();",
+    "  });",
+    "}",
     "",
     `export function ${EDITOR_PLAY_CONTROLS_EXPORT}(app) {`,
-    "  const controls = startEditorPlayControls(app, options);",
-    "  if (import.meta.hot) {",
-    "    import.meta.hot.dispose(() => {",
-    "      controls.dispose();",
-    "    });",
-    "  }",
+    "  const controls = connector.attach(app);",
     "  return () => {",
     "    controls.dispose();",
     "  };",
