@@ -6,7 +6,6 @@
 import { createApp, VERSION } from "@ignifx/core";
 import { checkChannelOptions, openChannel, resolveMessageTarget } from "./channel.js";
 import { HostCapability, HostKind, PROTOCOL_VERSION } from "./protocol/index.js";
-import { isRecord } from "./protocol/rpc.js";
 import { SceneHost } from "./scene/scene-host.js";
 import type { Channel, EditorMessageTarget } from "./channel.js";
 import type {
@@ -121,10 +120,9 @@ export function resolveEngineVersion(fallback: string | undefined, coreVersion: 
  * started, and the host's first `schemasChanged` says they are accepted. It accepts a new port
  * whenever the editor sends one, closing the previous port.
  *
- * With a `canvas` the host draws Babylon Lite's gizmos and a selection outline and answers
- * `screenshot`, and it runs the view at `rendering.msaaSamples: 1`: at a higher setting Lite's
- * overlay cannot be composited into ignifx's frame, and the gizmos would be invisible (editor plan
- * ask E12). A headless host serves every method that needs no GPU.
+ * With a `canvas` the host draws Babylon Lite's gizmos and a selection outline in core's render
+ * overlay (`app.renderer.openOverlay()`) and answers `screenshot`. A headless host serves every
+ * method that needs no GPU.
  *
  * @param options - The editor's origin and the project's app options.
  * @returns The running host, once the app has started.
@@ -222,36 +220,18 @@ function hasGpuView(options: EditorHostOptions): boolean {
 }
 
 /**
- * The project's settings with the scene view's MSAA set to 1 when the view renders.
- *
- * @param options - The host options.
- * @returns The settings to create the app with.
- */
-function viewSettings(options: EditorHostOptions): SettingsInput | undefined {
-  if (!hasGpuView(options)) {
-    return options.settings;
-  }
-  const settings = options.settings ?? {};
-  const rendering = settings["rendering"];
-  // Until core composites the gizmo overlay at every MSAA setting (editor plan ask E12), the scene
-  // view renders without MSAA; at 4 Lite's utility layer draws nothing (S0.2 §3.2).
-  return { ...settings, rendering: { ...(isRecord(rendering) ? rendering : {}), msaaSamples: 1 } };
-}
-
-/**
  * Picks the `createApp` options out of the host options, leaving out the ones that were not given.
  *
  * @param options - The host options.
  * @returns The app options.
  */
 function appOptions(options: EditorHostOptions): CreateAppOptions {
-  const settings = viewSettings(options);
   return {
     editMode: options.editMode ?? true,
     ...(options.canvas === undefined ? {} : { canvas: options.canvas }),
     ...(options.headless === undefined ? {} : { headless: options.headless }),
     ...(options.extensions === undefined ? {} : { extensions: options.extensions }),
-    ...(settings === undefined ? {} : { settings }),
+    ...(options.settings === undefined ? {} : { settings: options.settings }),
     ...(options.assets === undefined ? {} : { assets: options.assets }),
   };
 }

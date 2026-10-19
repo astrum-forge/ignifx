@@ -4409,10 +4409,9 @@ while the app is still being created; the scene methods answer `notReady` until 
 started, and the host's first `schemasChanged` says they are accepted. It accepts a new port
 whenever the editor sends one, closing the previous port.
 
-With a `canvas` the host draws Babylon Lite's gizmos and a selection outline and answers
-`screenshot`, and it runs the view at `rendering.msaaSamples: 1`: at a higher setting Lite's
-overlay cannot be composited into ignifx's frame, and the gizmos would be invisible (editor plan
-ask E12). A headless host serves every method that needs no GPU.
+With a `canvas` the host draws Babylon Lite's gizmos and a selection outline in core's render
+overlay (`app.renderer.openOverlay()`) and answers `screenshot`. A headless host serves every
+method that needs no GPU.
 
 #### Throws
 

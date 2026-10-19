@@ -1,6 +1,6 @@
 /**
  * The scene view's overlay: Babylon Lite's position, rotation and scale gizmos and the selection
- * outline, in one utility layer over the app's render scene, plus a pick that resolves glTF models.
+ * outline, in core's render overlay over the app's frame, plus a pick that resolves glTF models.
  *
  * This is the only module of the editor host that imports Lite (`CONSTITUTION.md` §3.4). The rest
  * of the host reaches it through {@link createEditorView}, which takes and returns ignifx objects
@@ -19,20 +19,17 @@ import {
   createPositionGizmo,
   createRotationGizmo,
   createScaleGizmo,
-  createUtilityLayer,
-  disposeUtilityLayer,
   isGizmoDragging,
   isGizmoInteracting,
   isGizmoPickPending,
   onBeforeRender,
   pickAsync,
-  registerUtilityLayer,
   setPositionGizmoLocalCoordinates,
   setRotationGizmoLocalCoordinates,
   setScaleGizmoLocalCoordinates,
 } from "@babylonjs/lite";
 import type { GpuPicker, Mesh, PointerDrag, SceneContext, SceneNode, Vec3 } from "@babylonjs/lite";
-import type { AppLiteHandles, Entity } from "@ignifx/core";
+import type { AppLiteHandles, Entity, RenderOverlay } from "@ignifx/core";
 
 /** What a gizmo drag does. */
 export type ViewGizmoMode = "translate" | "rotate" | "scale";
@@ -78,11 +75,6 @@ export interface ViewPick {
 
 /** The overlay of one scene view. */
 export interface EditorView {
-  /**
-   * Registers the utility layer. Lite requires the render scene to be registered first, so call it
-   * after `app.start()`.
-   */
-  register(): Promise<void>;
   /**
    * Sets what the gizmo does; `null` hides every gizmo.
    *
@@ -141,7 +133,7 @@ export interface EditorView {
    * @returns The hit, or `null` for a miss.
    */
   pick(x: number, y: number, owner: (node: object) => Entity | null): Promise<ViewPick | null>;
-  /** Removes the utility layer and everything in it. */
+  /** Disposes the overlay and everything in it. */
   dispose(): void;
 }
 
@@ -173,28 +165,27 @@ const MIN_OUTLINE_SIDE = 1e-3;
  * Builds the overlay of one scene view.
  *
  * @remarks
- * Two things here work around the engine, both tracked by the editor plan's ask E12 (a core
- * overlay render seam):
- *
- * - Lite configures an overlay scene against the **last** registered rendering context. After
- *   `app.start()` ignifx may have registered contexts behind the render scene (`@ignifx/ui`'s text
- *   renderer), and a plain `registerUtilityLayer` then clears the render scene to transparent black.
- *   So registration moves those contexts out of Lite's private context list, registers, and puts
- *   them back (S0.2 §3.2). When the list is not where S0.2 found it, the layer registers plainly.
- * - At MSAA 4 Lite cannot composite the layer into ignifx's offscreen target, so the gizmos are
- *   invisible though still draggable. The host therefore runs the scene view at `msaaSamples: 1`.
+ * The gizmos and the outline live in core's render overlay (`app.renderer.openOverlay()`, ADR-0031),
+ * whose Lite scenes have the shape Lite's gizmo constructors take as a utility layer. Core draws it
+ * over the finished frame at every MSAA setting; Lite's own utility layer blacks out the scene or
+ * draws nothing in an ignifx app (S0.2 §3.2).
  *
  * A detached Lite gizmo keeps drawing at its last pose, so a hidden sub-gizmo is collapsed to zero
  * scale; Lite restores the scale when it is attached again (S0.2 §3.3). The outline is a line box,
  * because Lite's bounding-box gizmo drags whatever is pressed inside it (S0.2 §7).
  *
  * @param handles - The app's Lite engine and render scene (`app.lite`).
+ * @param overlay - An open render overlay of the same app, which the view now owns.
  * @param canvas - The canvas the gizmo dispatcher listens on.
- * @returns The overlay.
+ * @returns The view.
  */
-export function createEditorView(handles: AppLiteHandles, canvas: HTMLCanvasElement): EditorView {
+export function createEditorView(
+  handles: AppLiteHandles,
+  overlay: RenderOverlay,
+  canvas: HTMLCanvasElement,
+): EditorView {
   const { engine, scene } = handles;
-  const layer = createUtilityLayer(engine, scene);
+  const layer = overlay.lite;
   const position = createPositionGizmo(engine, layer);
   const rotation = createRotationGizmo(engine, layer);
   const scale = createScaleGizmo(engine, layer);
@@ -291,19 +282,6 @@ export function createEditorView(handles: AppLiteHandles, canvas: HTMLCanvasElem
   });
 
   return {
-    async register(): Promise<void> {
-      // Private Lite state, see the remarks above: until E12 gives core an overlay seam.
-      const contexts: unknown = Reflect.get(scene.surface, "_renderingContexts");
-      const at = Array.isArray(contexts) ? contexts.indexOf(scene) : -1;
-      const tail: unknown[] = Array.isArray(contexts) && at >= 0 ? contexts.splice(at + 1) : [];
-      try {
-        await registerUtilityLayer(layer);
-      } finally {
-        if (Array.isArray(contexts)) {
-          contexts.push(...tail);
-        }
-      }
-    },
     setMode(next: ViewGizmoMode | null): void {
       mode = next;
       applyAttachment();
@@ -363,7 +341,7 @@ export function createEditorView(handles: AppLiteHandles, canvas: HTMLCanvasElem
     },
     dispose(): void {
       listeners.length = 0;
-      disposeUtilityLayer(layer);
+      overlay.dispose();
     },
   };
 }

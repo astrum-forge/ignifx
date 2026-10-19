@@ -288,9 +288,8 @@ object `openScene` sends, through `world.loadSceneFile`; `readBack` answers with
 - **Scene methods answer `notReady` until the app has started.** The host answers `hello` at once;
   its first `schemasChanged` is the cue that `openScene` and the rest are accepted. `applyOps`,
   `readBack` and `frame` answer `noScene` while no scene is open.
-- **The scene view renders at `rendering.msaaSamples: 1`**, whatever the project sets: at MSAA 4
-  Lite's gizmo overlay cannot be composited into ignifx's frame and the gizmos are invisible (editor
-  plan ask E12). The play view keeps the project's setting.
+- **The scene view keeps the project's `rendering.msaaSamples`.** The gizmos and the outline draw in
+  core's render overlay (`app.renderer.openOverlay()`), which works at every MSAA setting.
 - **A headless host lists only `heartbeat`.** Without a canvas there are no gizmos, no `screenshot`,
   and every `pick` misses; `setGizmo` and `screenshot` then answer `methodNotFound`. In headless
   tests, asset loads after `start()` settle only when something calls `app.step()`.

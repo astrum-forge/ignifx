@@ -179,7 +179,7 @@ async function sceneView(): Promise<EditorHost> {
     editorOrigin: EDITOR_ORIGIN,
     canvas,
     messageTarget: target,
-    // The project asks for MSAA 4; the scene view runs at 1 so the gizmos draw (ask E12).
+    // The engine's default: core's render overlay draws the gizmos at every MSAA setting (ADR-0031).
     settings: { rendering: { msaaSamples: 4 } },
     assets: { fetch: fetchFiles },
     heartbeatIntervalMs: 60_000,
@@ -200,10 +200,10 @@ async function sceneView(): Promise<EditorHost> {
 }
 
 describe("the scene view on a WebGPU canvas", () => {
-  it("runs at MSAA 1 and draws the outline and the gizmo on the selection", async () => {
+  it("runs at the project's MSAA 4 and draws the outline and the gizmo on the selection", async () => {
     const view = await sceneView();
     const surface: unknown = Reflect.get(view.app.lite.scene, "surface");
-    expect(typeof surface === "object" && surface !== null ? Reflect.get(surface, "msaaSamples") : null).toBe(1);
+    expect(typeof surface === "object" && surface !== null ? Reflect.get(surface, "msaaSamples") : null).toBe(4);
 
     const unselected = await view.app.renderer.captureScreenshot();
     expect(await outlinePixels(view.app)).toBe(0);
