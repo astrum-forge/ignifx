@@ -134,8 +134,8 @@ view, a headless test — registers the same extensions in the same order.
 The project is ready for the ignifx editor. `vite.config.ts` lists `editorHostPlugin` from
 `@ignifx/editor-host`, and `main.ts` passes the app to `attachEditorPlayControls`. Under `pnpm dev`
 the editor's scene view is served at `/__ignifx_editor__/`, and the editor can play, pause, step and
-stop the game in its play view. Only the editor's origin can frame the scene view or connect to
-either view. The editor sets that origin in `IGNIFX_EDITOR_ORIGIN` when it starts the dev server,
+stop the game in its play view. Only the editor's origin can frame either view or connect to
+it. The editor sets that origin in `IGNIFX_EDITOR_ORIGIN` when it starts the dev server,
 and it defaults to the packaged editor's `ignifx-editor://app`. `pnpm build` contains no editor code.
 
 ## Query flags
