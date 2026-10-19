@@ -5,9 +5,9 @@ import settings from "../../templates/3d-third-person/ignifx.config.js";
 import { extensions } from "../../templates/3d-third-person/src/extensions.js";
 import { startTemplateSceneView } from "./editor-host-app.js";
 import { THIRD_PERSON, thirdPersonScripts } from "./third-person-app.js";
+import type { Editor } from "./editor-host-app.js";
 import type { SceneFile } from "@ignifx/core";
 import type { EditorHost } from "@ignifx/editor-host";
-import type { Editor } from "./editor-host-app.js";
 
 /**
  * The ignifx editor's scene view over `templates/3d-third-person` (ignifx-editor plan ask E16): the
