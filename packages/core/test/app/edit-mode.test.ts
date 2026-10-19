@@ -336,7 +336,10 @@ describe("scene loading in edit mode", () => {
     });
     harness.net.canned.set(harness.app.assets.resolveUrl("levels/a.scene.json"), stringifySceneFile(file));
 
-    const instance = await harness.settleUntil(harness.app.world.loadScene("levels/a.scene.json"));
+    const instance = await harness.settleUntil(
+      harness.app.world.loadScene("levels/a.scene.json"),
+      "loadScene(levels/a.scene.json)",
+    );
 
     expect(instance.roots.map((entity) => entity.name)).toEqual(["Root"]);
     expect(harness.app.world.getEntity("E-ROOT")?.getComponent(AwakeRecorder)).not.toBeNull();
