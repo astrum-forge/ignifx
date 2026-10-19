@@ -95,6 +95,9 @@ export class EditorCamera2D extends Script implements ScriptCallbacks {
 
   #wheel = 0;
 
+  /** Whether the entity holds the 2D pose since the last {@link EditorCamera2D.activate}. */
+  #posed = false;
+
   readonly #onPointerDown = (event: PointerEvent): void => {
     if (!this.#active || this.#pointer !== -1) {
       return;
@@ -203,6 +206,8 @@ export class EditorCamera2D extends Script implements ScriptCallbacks {
   /** Enters 2D mode: enables the editor's `Camera2D` and makes the 3D editor camera orthographic. */
   activate(): void {
     this.#active = true;
+    // The 3D camera left the entity turned; the next apply writes the pose whatever it is.
+    this.#posed = false;
     if (this.#camera2D !== null) {
       this.#camera2D.enabled = true;
     }
@@ -331,8 +336,13 @@ export class EditorCamera2D extends Script implements ScriptCallbacks {
     }
     const view = this.view();
     const size = orthographicSizeFor(view.zoom, view.heightPx, view.pixelsPerUnit);
-    this.transform.localPosition.set(this.centerX, this.centerY, -EYE_DISTANCE_2D);
-    this.transform.lookAt({ x: this.centerX, y: this.centerY, z: 0 });
+    const position = this.transform.localPosition;
+    // Called every frame; an unchanged pose is not rewritten, so the transform stays clean.
+    if (!this.#posed || position.x !== this.centerX || position.y !== this.centerY) {
+      position.set(this.centerX, this.centerY, -EYE_DISTANCE_2D);
+      this.transform.lookAt({ x: this.centerX, y: this.centerY, z: 0 });
+      this.#posed = true;
+    }
     if (this.#eye !== null && this.#eye.orthographicSize !== size) {
       this.#eye.orthographicSize = size;
     }
