@@ -1,4 +1,5 @@
 import { Vec2 } from "@ignifx/core";
+import { twoDError, TwoDErrorCode } from "../errors.js";
 import {
   createSpriteVisibilityScratch,
   pickSprite,
@@ -6,7 +7,6 @@ import {
   setSpriteVisibleAt,
   visibleBounds,
 } from "../lite/sprite-layer.js";
-import { twoDError, TwoDErrorCode } from "../errors.js";
 import { pixelsToWorldToRef } from "../math/coords.js";
 import { createSpriteBatch } from "./sprite-batch.js";
 import type { SpriteLayerEntry } from "./layer-registry.js";
