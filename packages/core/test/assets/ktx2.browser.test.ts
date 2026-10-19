@@ -12,9 +12,9 @@ import type { BrowserApp } from "../render/support/browser-harness.js";
 /**
  * KTX2 textures through `app.assets`, on a real device (engine ask E13).
  *
- * The fixture is one 32×32 image with four solid quadrants, as a PNG and as two ETC1S `.ktx2` files
- * from the editor's importer (`tests/fixtures/assets/ATTRIBUTION.md`): one encoded from the image as
- * is (top row first) and one from the image flipped vertically. Each is drawn unlit on a plane
+ * The fixture is one 32×32 image with four solid quadrants, as a PNG and as three `.ktx2` files from
+ * the editor's importer (`tests/fixtures/assets/ATTRIBUTION.md`): ETC1S and Zstandard UASTC
+ * encoded from the image flipped vertically, and ETC1S encoded from the image as is (top row first). Each is drawn unlit on a plane
  * facing the camera and the four quadrants on screen are compared. A `.ktx2` is uploaded with its
  * rows as stored, so the flipped encode matches the PNG under the default `invertY: true` and the
  * as-is encode draws upside down (`src/lite/gpu/decoders.ts`, "Orientation").
@@ -50,6 +50,12 @@ const TEXTURE_ENTRIES = [
     meta: { texture: { srgb: true } },
   },
   {
+    address: "textures/quadrants-uastc.ktx2",
+    url: fixtureUrl("ktx2/quadrants-uastc.ktx2"),
+    type: "texture",
+    meta: { texture: { srgb: true } },
+  },
+  {
     address: "textures/quadrants-top-first.ktx2",
     url: fixtureUrl("ktx2/quadrants-etc1s-top-first.ktx2"),
     type: "texture",
@@ -59,6 +65,9 @@ const TEXTURE_ENTRIES = [
 
 /** The GPU formats Lite may transcode an ETC1S file to, by device features, as sRGB. */
 const ETC1S_TARGETS = ["etc2-rgb8unorm-srgb", "etc2-rgba8unorm-srgb", "bc7-rgba-unorm-srgb", "rgba8unorm-srgb"];
+
+/** The GPU formats Lite may transcode a UASTC file to, by device features, as sRGB. */
+const UASTC_TARGETS = ["astc-4x4-unorm-srgb", ...ETC1S_TARGETS];
 
 /** The canvas edge. Large enough that each quadrant covers a block of pixels well away from edges. */
 const SIZE = 64;
@@ -162,6 +171,13 @@ describe("a .ktx2 texture loaded through app.assets", () => {
     expect(ktx2.quadrants).toEqual(png.quadrants);
   });
 
+  it("transcodes a Zstandard-supercompressed UASTC file the same way", async () => {
+    const png = await drawQuadrants("textures/quadrants.png");
+    const uastc = await drawQuadrants("textures/quadrants-uastc.ktx2");
+    expect(UASTC_TARGETS).toContain(uastc.handle.value.lite.texture?.texture.format);
+    expect(uastc.quadrants).toEqual(png.quadrants);
+  });
+
   it("uploads the rows as stored, so a top-row-first file draws upside down next to the PNG", async () => {
     const png = await drawQuadrants("textures/quadrants.png");
     const [topLeft, topRight, bottomLeft, bottomRight] = png.quadrants;
@@ -182,5 +198,9 @@ describe("a .ktx2 texture loaded through app.assets", () => {
     // ETC1S goes through the Basis transcoder whatever the target format.
     expect(paths).toContain(`${DECODER_ROOT}msc_basis_transcoder.js`);
     expect(paths).toContain(`${DECODER_ROOT}msc_basis_transcoder.wasm`);
+    // UASTC files carry Zstandard supercompression.
+    await drawQuadrants("textures/quadrants-uastc.ktx2");
+    expect(requestedUrls().filter((url) => url.includes("cdn.babylonjs.com"))).toEqual([]);
+    expect(requestedUrls().map((url) => new URL(url).pathname)).toContain(`${DECODER_ROOT}zstddec.wasm`);
   });
 });
