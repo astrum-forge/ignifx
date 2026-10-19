@@ -13,7 +13,8 @@ import type { NodeTag } from "../../lite/node.js";
 import type { LitePickInfo } from "../../lite/picking.js";
 import type { LiteEngine, LiteScene } from "../../lite/scene.js";
 import type { MaterialAsset } from "../material-asset.js";
-import type { RenderOverlay, RenderTaskTiming, RenderTaskTimings } from "../renderer.js";
+import type { openOverlayScene } from "../../lite/gpu/overlay.js";
+import type { RenderTaskTiming, RenderTaskTimings } from "../renderer.js";
 
 /**
  * The device-only half of `app.renderer` (`docs/architecture/07-rendering.md` §1, §3, §5).
@@ -38,31 +39,19 @@ export function createPicker(scene: LiteScene): LiteGpuPicker {
 }
 
 /**
- * Opens an overlay scene over the render scene (`docs/architecture/07-rendering.md` §2.10).
+ * Loads the overlay module (`docs/architecture/07-rendering.md` §2.10).
  *
  * @remarks
- * The overlay module is loaded on first use, so a game that never opens an overlay ships none of it
+ * It is loaded on first use, so a game that never opens an overlay ships none of it
  * (`CONSTITUTION.md` §2.5).
  *
- * @param engine - The WebGPU engine.
- * @param scene - The registered render scene.
- * @param isPeer - Answers whether a rendering context is another open overlay.
- * @param onDispose - Called with the overlay's scene once it is disposed.
- * @returns The overlay.
+ * @returns The function that opens an overlay scene.
  *
  * @internal
  */
-export async function openOverlayLayer(
-  engine: LiteEngine,
-  scene: LiteScene,
-  isPeer: (context: object) => boolean,
-  onDispose: (scene: object) => void,
-): Promise<RenderOverlay> {
-  const { openOverlayScene } = await import("../../lite/gpu/overlay.js");
-  const overlay = await openOverlayScene(engine, scene, isPeer, () => {
-    onDispose(overlay.lite.scene);
-  });
-  return overlay;
+export async function loadOverlayOpener(): Promise<typeof openOverlayScene> {
+  const module = await import("../../lite/gpu/overlay.js");
+  return module.openOverlayScene;
 }
 
 /**

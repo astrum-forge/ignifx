@@ -60,7 +60,9 @@ import type { EngineContext, RenderTask, SceneContext } from "@babylonjs/lite";
  * erase it. Each frame the overlay checks `getRenderingContexts` (6921); when a context other than
  * another overlay follows it, it moves itself to the end after the frame: unregister, drop its task
  * so the re-registration again finds no swapchain task, register, and build a fresh task. The frame
- * in between draws no overlay.
+ * in between draws no overlay. A move that fails (a lost device, a pipeline that does not compile) is
+ * reported and tried again on the next animation frame, {@link MOVE_ATTEMPTS} times in all; after
+ * that the overlay stays detached until it is disposed.
  *
  * A screenshot is taken after every context has recorded (`_captureService`, same function), so it
  * includes the overlay.
@@ -77,6 +79,36 @@ const LIGHT_INTENSITY = 2;
 
 /** The ground colour of that light. */
 const LIGHT_GROUND = 0.5;
+
+/** How many times a move to the end of the context list is tried before the overlay gives up. */
+const MOVE_ATTEMPTS = 3;
+
+/**
+ * What an overlay reports to its owner.
+ *
+ * @internal
+ */
+export interface OverlayCallbacks {
+  /**
+   * Answers whether a rendering context is another overlay, which may follow this one.
+   *
+   * @param context - A registered rendering context.
+   * @returns `true` for another overlay.
+   */
+  isPeer(context: object): boolean;
+  /**
+   * Called once when the overlay is disposed.
+   *
+   * @param scene - The overlay's scene.
+   */
+  onDispose(scene: object): void;
+  /**
+   * Receives a failed move to the end of the context list.
+   *
+   * @param error - What `registerScene` rejected with.
+   */
+  onError(error: unknown): void;
+}
 
 /**
  * The overlay scene and the render scene, in the shape Lite's gizmo constructors take as a
@@ -112,13 +144,17 @@ export interface OverlayScene {
  *
  * @param engine - The WebGPU engine, which is also the primary surface.
  * @param mainScene - The render scene whose camera the overlay follows.
- * @param isPeer - Answers whether a rendering context is another overlay, which may follow this one.
- * @param onDispose - Called once when the overlay is disposed.
+ * @param callbacks - The owner's peer test, disposal hook and error sink.
  * @returns The overlay, drawing from the next frame.
+ * @throws Whatever the first `registerScene` rejects with; the overlay is disposed first.
  *
  * @example
  * ```ts
- * const overlay = await openOverlayScene(engine, scene, () => false, () => {});
+ * const overlay = await openOverlayScene(engine, scene, {
+ *   isPeer: () => false,
+ *   onDispose: () => {},
+ *   onError: (error) => console.error(error),
+ * });
  * overlay.dispose();
  * ```
  *
@@ -127,11 +163,15 @@ export interface OverlayScene {
 export async function openOverlayScene(
   engine: EngineContext,
   mainScene: SceneContext,
-  isPeer: (context: object) => boolean,
-  onDispose: () => void,
+  callbacks: OverlayCallbacks,
 ): Promise<OverlayScene> {
-  const overlay = new LiteOverlayScene(engine, mainScene, isPeer, onDispose);
-  await overlay.attach();
+  const overlay = new LiteOverlayScene(engine, mainScene, callbacks);
+  try {
+    await overlay.attach();
+  } catch (error) {
+    overlay.dispose();
+    throw error;
+  }
   return overlay;
 }
 
@@ -143,9 +183,7 @@ class LiteOverlayScene implements OverlayScene {
 
   readonly #scene: SceneContext;
 
-  readonly #isPeer: (context: object) => boolean;
-
-  readonly #onDispose: () => void;
+  readonly #callbacks: OverlayCallbacks;
 
   #isDisposed = false;
 
@@ -157,15 +195,9 @@ class LiteOverlayScene implements OverlayScene {
    *
    * @param engine - The WebGPU engine.
    * @param mainScene - The render scene.
-   * @param isPeer - Answers whether a rendering context is another overlay.
-   * @param onDispose - Called once when the overlay is disposed.
+   * @param callbacks - The owner's peer test, disposal hook and error sink.
    */
-  constructor(
-    engine: EngineContext,
-    mainScene: SceneContext,
-    isPeer: (context: object) => boolean,
-    onDispose: () => void,
-  ) {
+  constructor(engine: EngineContext, mainScene: SceneContext, callbacks: OverlayCallbacks) {
     const scene = createSceneContext(engine, { defaultRenderTask: false });
     scene.name = OVERLAY_TASK_NAME;
     scene.camera = mainScene.camera;
@@ -175,8 +207,7 @@ class LiteOverlayScene implements OverlayScene {
     this.lite = { scene, mainScene };
     this.#engine = engine;
     this.#scene = scene;
-    this.#isPeer = isPeer;
-    this.#onDispose = onDispose;
+    this.#callbacks = callbacks;
     onBeforeRender(scene, () => {
       // The render scene's camera can change from frame to frame (the highest-priority `Camera` wins).
       if (scene.camera !== mainScene.camera) {
@@ -209,7 +240,7 @@ class LiteOverlayScene implements OverlayScene {
     this.#isDisposed = true;
     unregisterScene(this.#scene);
     disposeScene(this.#scene);
-    this.#onDispose();
+    this.#callbacks.onDispose(this.#scene);
   }
 
   /** Schedules a move to the end of the context list when a context that is not an overlay follows. */
@@ -220,10 +251,32 @@ class LiteOverlayScene implements OverlayScene {
     // Not now: Lite is walking the context list. The microtask runs once the frame has been submitted.
     this.#isMoving = true;
     queueMicrotask(() => {
-      void this.#moveToEnd().finally(() => {
-        this.#isMoving = false;
-      });
+      this.#move(MOVE_ATTEMPTS);
     });
+  }
+
+  /**
+   * Moves the overlay to the end, reporting a failure and trying again on the next animation frame.
+   *
+   * @param attemptsLeft - How many attempts remain, this one included.
+   */
+  #move(attemptsLeft: number): void {
+    this.#moveToEnd().then(
+      () => {
+        this.#isMoving = false;
+      },
+      (error: unknown) => {
+        this.#callbacks.onError(error);
+        if (attemptsLeft > 1 && !this.#isDisposed) {
+          // The overlay is unregistered now, so its own frame callback no longer runs to retry.
+          requestAnimationFrame(() => {
+            this.#move(attemptsLeft - 1);
+          });
+          return;
+        }
+        this.#isMoving = false;
+      },
+    );
   }
 
   /**
@@ -235,7 +288,7 @@ class LiteOverlayScene implements OverlayScene {
     const contexts = getRenderingContexts(this.#engine);
     for (let index = contexts.indexOf(this.#scene) + 1; index < contexts.length; index += 1) {
       const context = contexts[index];
-      if (context !== undefined && !this.#isPeer(context)) {
+      if (context !== undefined && !this.#callbacks.isPeer(context)) {
         return true;
       }
     }

@@ -18,7 +18,7 @@ import { clamp } from "../math/math-utils.js";
 import {
   applySurfaceScale,
   createPicker,
-  openOverlayLayer,
+  loadOverlayOpener,
   pickPixel,
   readTargetSizePx,
   readTaskTimings,
@@ -820,6 +820,28 @@ export class RendererImpl implements Renderer {
    * @throws IgnifxError with code `IGX-0728` on a headless app or before the render scene is registered.
    */
   async openOverlay(): Promise<RenderOverlay> {
+    this.#assertOverlayAllowed();
+    const open = await loadOverlayOpener();
+    const overlays = this.#overlays;
+    const overlay = await open(this.engine, this.scene, {
+      isPeer: (context: object): boolean => overlays.has(context),
+      onDispose: (scene: object): void => {
+        overlays.delete(scene);
+      },
+      onError: (error: unknown): void => {
+        this.#app.onError.emit({ error, source: "system", phase: null, entity: null, component: null });
+      },
+    });
+    overlays.set(overlay.lite.scene, overlay);
+    return overlay;
+  }
+
+  /**
+   * Refuses an overlay on a headless app, or before the render scene is registered.
+   *
+   * @throws IgnifxError with code `IGX-0728`.
+   */
+  #assertOverlayAllowed(): void {
     if (this.isHeadless || !this.#isSceneRegistered) {
       throw new IgnifxError(
         CoreErrorCode.overlayNeedsRenderScene,
@@ -832,17 +854,6 @@ export class RendererImpl implements Renderer {
         },
       );
     }
-    const overlays = this.#overlays;
-    const overlay = await openOverlayLayer(
-      this.engine,
-      this.scene,
-      (context: object): boolean => overlays.has(context),
-      (scene: object): void => {
-        overlays.delete(scene);
-      },
-    );
-    overlays.set(overlay.lite.scene, overlay);
-    return overlay;
   }
 
   /**
