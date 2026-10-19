@@ -1547,6 +1547,38 @@
         "type": "model",
         "entities": []
       }
+    },
+    "playState": {
+      "jsonrpc": "2.0",
+      "id": 24,
+      "method": "playState"
+    },
+    "playStateResponse": {
+      "jsonrpc": "2.0",
+      "id": 24,
+      "result": {
+        "state": "paused",
+        "frameCount": 1,
+        "time": 0.02
+      }
+    },
+    "playStateChanged": {
+      "jsonrpc": "2.0",
+      "method": "playStateChanged",
+      "params": {
+        "state": "paused",
+        "frameCount": 1,
+        "time": 0.02
+      }
+    },
+    "playStateChangedStopped": {
+      "jsonrpc": "2.0",
+      "method": "playStateChanged",
+      "params": {
+        "state": "stopped",
+        "frameCount": 1,
+        "time": 0.02
+      }
     }
   }
 }

@@ -8,13 +8,13 @@
  * only when that module changes. The code is byte-identical. The comments are too, except that a
  * `{@link X}` or `{@link X.member}` naming one of the `as const` objects that share their name with
  * a type (`HandshakeMethod`, `HostKind`, `HostCapability`, `HostNotification`, `PlayMethod`,
- * `RpcErrorCode`, `SceneMethod`, `SceneNotification`, `ApplyOpFailureCode`, `GizmoMode`,
- * `GizmoSpace`, `PickUnit`, `ScreenshotFormat`, `ViewMode`, `SceneOpKind`) is written `` `X` `` or
- * `` `X.member` ``: API Extractor cannot tell which of the two declarations such a link means, and
- * this package's API report fails on the warning. Two editor modules are not copied: `ipc.ts`
- * names Electron IPC channels and `client.ts` is the editor's end of a channel (`RpcClient`),
- * neither of which a host opens. Otherwise this barrel re-exports what the editor's `index.ts`
- * does, in the same order.
+ * `PlayNotification`, `PlayPhase`, `RpcErrorCode`, `SceneMethod`, `SceneNotification`,
+ * `ApplyOpFailureCode`, `GizmoMode`, `GizmoSpace`, `PickUnit`, `ScreenshotFormat`, `ViewMode`,
+ * `SceneOpKind`) is written `` `X` `` or `` `X.member` ``: API Extractor cannot tell which of the
+ * two declarations such a link means, and this package's API report fails on the warning. Two
+ * editor modules are not copied: `ipc.ts` names Electron IPC channels and `client.ts` is the
+ * editor's end of a channel (`RpcClient`), neither of which a host opens. Otherwise this barrel
+ * re-exports what the editor's `index.ts` does, in the same order.
  */
 
 export { EDITOR_CONNECT_MESSAGE_TYPE, isEditorConnectMessage, type EditorConnectMessage } from "./connect.js";
@@ -36,10 +36,16 @@ export {
 export { DEFAULT_HEARTBEAT_INTERVAL_MS, HostNotification, type HeartbeatNotification } from "./heartbeat.js";
 export {
   isPlayState,
+  isPlayStateReport,
   PlayMethod,
+  PlayNotification,
+  PlayPhase,
   type PlayRequest,
   type PlayResponse,
   type PlayState,
+  type PlayStateChangedNotification,
+  type PlayStateReport,
+  type PlayStateResponse,
   type StepParams,
 } from "./play.js";
 export {
