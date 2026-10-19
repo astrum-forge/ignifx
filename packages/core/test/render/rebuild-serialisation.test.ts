@@ -144,4 +144,47 @@ describe("renderable rebuilds", () => {
     expect(rebuild).toHaveBeenCalledTimes(2);
     expect(h.errors.map((report) => report.error)).toContain(failure);
   });
+
+  it("holds a scene change until the rebuild in flight has finished, and reports one that throws", async () => {
+    harness = await createRenderHarness();
+    const h = harness;
+    const rebuild = vi.mocked(rebuildRenderables);
+    vi.spyOn(h.renderer, "isHeadless", "get").mockReturnValue(false);
+    vi.spyOn(h.renderer, "isSceneRegistered", "get").mockReturnValue(true);
+    const first = gate();
+    rebuild.mockClear();
+    rebuild.mockReturnValue(first.promise);
+
+    const ran: string[] = [];
+    h.renderer.afterRebuild(() => ran.push("idle"));
+    expect(ran).toEqual(["idle"]);
+
+    h.world.createEntity("Sun").addComponent(Light, { type: "directional" });
+    h.frame();
+    h.frame();
+    await h.flush();
+    expect(h.renderer.isRebuildInFlight).toBe(true);
+    const failure = new Error("held change failed");
+    h.renderer.afterRebuild(() => ran.push("held"));
+    h.renderer.afterRebuild((): never => {
+      throw failure;
+    });
+    expect(ran).toEqual(["idle"]);
+
+    first.open();
+    await h.flush();
+    expect(ran).toEqual(["idle", "held"]);
+    expect(h.errors.map((report) => report.error)).toContain(failure);
+  });
+
+  it("drops the held changes of a disposed renderer", async () => {
+    harness = await createRenderHarness();
+    const h = harness;
+    h.renderer.isRebuildInFlight = true;
+    const ran: string[] = [];
+    h.renderer.afterRebuild(() => ran.push("held"));
+    h.renderer.dispose();
+    expect(h.renderer.takeHeldChanges()).toEqual([]);
+    expect(ran).toEqual([]);
+  });
 });
