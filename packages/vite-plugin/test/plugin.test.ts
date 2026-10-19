@@ -329,7 +329,11 @@ describe("configureServer", () => {
     await configure(plugin, root, "serve");
     const server = new FakeDevServer(root);
     await harness(plugin).configureServer(asViteServer(server));
-    expect(server.watched).toEqual([join(root, "assets")]);
+    expect(server.watched).toEqual([
+      join(root, "assets"),
+      join(root, "ignifx.settings.json"),
+      join(root, "ignifx.config.ts"),
+    ]);
   });
 
   it("announces a changed asset on the ignifx:asset-changed channel", async () => {

@@ -825,6 +825,13 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
       installMiddleware(server);
 
       server.watcher.add(assetRootPath());
+      // Vite watches its root only; a settings or config file named outside it must be added, or
+      // editing it would never restart the server.
+      for (const file of [settingsFilePath, configFilePath]) {
+        if (file !== null) {
+          server.watcher.add(file);
+        }
+      }
       watchFor(server, "add", "added");
       watchFor(server, "change", "changed");
       watchFor(server, "unlink", "removed");

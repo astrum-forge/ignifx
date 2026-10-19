@@ -281,6 +281,26 @@ describe("the dev server and ignifx.settings.json", () => {
     expect(server.sent).toEqual([]);
   });
 
+  it("watches and restarts on a settings file outside the Vite root", async () => {
+    const root = await createFixtureTree({
+      "game/assets/a.png": PNG_BYTES,
+      "shared/settings.json": JSON.stringify({ time: { timeScale: 2 } }),
+    });
+    const gameRoot = join(root, "game");
+    const outside = join(root, "shared", "settings.json");
+    const plugin: Plugin<IgnifxPluginApi> = ignifx({ settingsFile: "../shared/settings.json" });
+    const hooks = harness(plugin);
+    await hooks.config({ root: gameRoot }, { command: "serve", mode: "development" });
+    hooks.configResolved({ root: gameRoot, base: "/", command: "serve" });
+    const server = new FakeDevServer(gameRoot);
+    await hooks.configureServer(asViteServer(server));
+
+    expect(server.watched).toContain(outside);
+    server.emit("change", outside);
+    await plugin.api?.whenIdle();
+    expect(server.restarts).toBe(1);
+  });
+
   it("keeps the server and shows the error overlay when the edited settings do not load", async () => {
     const root = await createFixtureTree({
       [IGNIFX_SETTINGS_FILE_NAME]: JSON.stringify({ time: { timeScale: 1 } }),
