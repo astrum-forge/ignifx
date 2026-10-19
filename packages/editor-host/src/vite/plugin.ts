@@ -31,7 +31,7 @@ export interface EditorHostPluginOptions {
   /**
    * The origin the editor is served from, for example `"ignifx://app"` when packaged or
    * `"http://localhost:5173"` while the editor itself runs from a dev server. Only this origin may
-   * frame the scene view, and only it can hand either view a port.
+   * frame either view in `vite dev`, and only it can hand either view a port.
    */
   readonly editorOrigin: string;
   /**
@@ -109,7 +109,9 @@ function checkOptions(options: EditorHostPluginOptions): { extensions: string; h
  * It is two plugins, because the two halves run under different commands:
  *
  * - `ignifx-editor-host` (`vite dev` only) serves the scene view at `/__ignifx_editor__/` with
- *   `Content-Security-Policy: frame-ancestors <editorOrigin>`. The page's module imports the host,
+ *   `Content-Security-Policy: frame-ancestors <editorOrigin>`, and adds the same header to every
+ *   page a browser navigates to, so the game's own `index.html` (the play view) can be framed by the
+ *   editor and by nothing else. A `Content-Security-Policy` in `server.headers` replaces it. The page's module imports the host,
  *   `virtual:ignifx/scripts`, `virtual:ignifx/manifest` and the project's extensions module from
  *   the project's own graph, and calls `startEditorHost`. It adds the extensions module to
  *   `optimizeDeps.entries` (keeping Vite's default crawl) and keeps `@ignifx/editor-host` out of
@@ -148,6 +150,26 @@ export function editorHostPlugin(options: EditorHostPluginOptions): Plugin[] {
   let engineVersion: string | null = null;
 
   const extensionsFile = (): string => resolve(root, `.${extensions}`);
+  // Only the editor may put either view in a frame; any other page that tries is blocked. A tab the
+  // developer opens on the dev server is not a frame, so the policy leaves it alone.
+  const framePolicy = `frame-ancestors ${editorOrigin}`;
+
+  /**
+   * Sends the frame policy with every page a browser navigates to, the game's `index.html` (the
+   * play view) included. Navigations and frames ask for `text/html`; module and asset requests do
+   * not, and a policy on them would do nothing anyway.
+   *
+   * @param server - The dev server.
+   */
+  const installPlayViewPolicy = (server: ViteDevServer): void => {
+    server.middlewares.use((request, response, next) => {
+      const isRead = request.method === "GET" || request.method === "HEAD";
+      if (isRead && (request.headers.accept ?? "").includes("text/html")) {
+        response.setHeader("Content-Security-Policy", framePolicy);
+      }
+      next();
+    });
+  };
 
   /**
    * Serves the scene view's page and redirects the path without its trailing slash.
@@ -174,8 +196,7 @@ export function editorHostPlugin(options: EditorHostPluginOptions): Plugin[] {
           response.statusCode = 200;
           response.setHeader("Content-Type", "text/html; charset=utf-8");
           response.setHeader("Cache-Control", "no-store");
-          // Only the editor may put the scene view in a frame; any other page that tries is blocked.
-          response.setHeader("Content-Security-Policy", `frame-ancestors ${editorOrigin}`);
+          response.setHeader("Content-Security-Policy", framePolicy);
           response.end(html);
         },
         (error: unknown) => {
@@ -216,8 +237,9 @@ export function editorHostPlugin(options: EditorHostPluginOptions): Plugin[] {
     },
 
     configureServer(server) {
-      // Registered directly rather than returned as a post hook, so it answers before Vite's own
-      // HTML fallback does.
+      // Registered directly rather than returned as a post hook, so they run before Vite's own HTML
+      // fallback and index middleware.
+      installPlayViewPolicy(server);
       installPage(server);
     },
 

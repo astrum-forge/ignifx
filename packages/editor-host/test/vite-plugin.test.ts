@@ -48,16 +48,20 @@ async function devServer(
  *
  * @param server - The dev server.
  * @param path - The path to request.
+ * @param headers - Request headers to send.
  * @returns The response.
  */
-async function request(server: ViteDevServer, path: string): Promise<Response> {
+async function request(server: ViteDevServer, path: string, headers?: Record<string, string>): Promise<Response> {
   const http = createHttpServer(server.middlewares);
   await new Promise<void>((resolve) => {
     http.listen(0, "127.0.0.1", resolve);
   });
   try {
     const { port } = http.address() as AddressInfo;
-    return await fetch(`http://127.0.0.1:${String(port)}${path}`, { redirect: "manual" });
+    return await fetch(`http://127.0.0.1:${String(port)}${path}`, {
+      redirect: "manual",
+      ...(headers ? { headers } : {}),
+    });
   } finally {
     http.close();
   }
@@ -112,9 +116,46 @@ describe("the scene view's page", () => {
       const game = await request(server, "/");
 
       expect(game.status).toBe(200);
-      expect(game.headers.get("content-security-policy")).toBeNull();
       expect(await game.text()).toContain("/src/main.ts");
       expect((await request(server, "/__ignifx_editor__/other.js")).headers.get("content-security-policy")).toBeNull();
+      expect((await request(server, "/src/main.ts")).headers.get("content-security-policy")).toBeNull();
+    } finally {
+      await server.close();
+    }
+  });
+
+  it("serves the game's own page, the play view, with frame-ancestors limited to the editor (E24)", async () => {
+    const server = await devServer(await createFixtureTree(PROJECT));
+    try {
+      // What a browser sends when it navigates a frame, or a tab, to the page.
+      for (const path of ["/", "/index.html"]) {
+        // oxlint-disable-next-line no-await-in-loop -- one request at a time
+        const game = await request(server, path, { accept: "text/html,application/xhtml+xml,*/*;q=0.8" });
+
+        expect(game.status).toBe(200);
+        expect(game.headers.get("content-security-policy")).toBe(`frame-ancestors ${EDITOR_ORIGIN}`);
+        expect(game.headers.get("content-type")).toContain("text/html");
+        // oxlint-disable-next-line no-await-in-loop -- one request at a time
+        expect(await game.text()).toContain("/@vite/client");
+      }
+    } finally {
+      await server.close();
+    }
+  });
+
+  it("leaves a policy the project sets in server.headers in place (E24)", async () => {
+    const own = "frame-ancestors 'none'";
+    const server = await devServer(
+      await createFixtureTree(PROJECT),
+      {},
+      {
+        server: { middlewareMode: true, headers: { "Content-Security-Policy": own } },
+      },
+    );
+    try {
+      const game = await request(server, "/", { accept: "text/html" });
+
+      expect(game.headers.get("content-security-policy")).toBe(own);
     } finally {
       await server.close();
     }
@@ -192,10 +233,15 @@ describe("virtual:ignifx/editor", () => {
     try {
       const source = await loadVirtual(server, EDITOR_MODULE_ID);
 
-      expect(source).toContain('import { startEditorPlayControls } from "@ignifx/editor-host";');
+      expect(source).toContain('import { listenForEditorPlayControls } from "@ignifx/editor-host";');
       expect(source).toContain("export function attachEditorPlayControls(app) {");
       expect(source).toContain("import.meta.hot.dispose(");
       expect(source).toContain("heartbeatIntervalMs: 500,");
+      // The listener is registered when the module is evaluated, before the game's main.ts runs.
+      expect(source.indexOf("listenForEditorPlayControls({")).toBeLessThan(
+        source.indexOf("export function attachEditorPlayControls"),
+      );
+      expect(source).toContain(`editorOrigin: "${EDITOR_ORIGIN}",`);
 
       const transformed = await server.transformRequest(EDITOR_MODULE_ID);
       expect(transformed?.code).toContain("createHotContext");
@@ -238,6 +284,7 @@ describe("virtual:ignifx/editor", () => {
     expect(code).not.toContain("import.meta.hot");
     expect(code).not.toContain("@ignifx/editor-host");
     expect(code).not.toContain("startEditorPlayControls");
+    expect(code).not.toContain("listenForEditorPlayControls");
     expect(pluginNames).toContain("ignifx-editor-host:play-controls");
     expect(pluginNames).not.toContain("ignifx-editor-host");
   });
