@@ -183,6 +183,27 @@ describe("chunk building", () => {
     expect(rig.renderer.sync(rig.map, layers, null, rig.runtime.pixelsPerUnit)).toBe(0);
   });
 
+  it("rebuilds both chunks when a setCells batch crosses a chunk boundary", async () => {
+    const rig = await createRig({ chunkSize: 2 });
+    rig.tick();
+    const layers = rig.runtime.layers;
+    const ppu = rig.runtime.pixelsPerUnit;
+    const before = rig.renderer.spriteCount;
+    // Cells (1, 0) and (2, 0) sit in the bottom-left and bottom-right chunks, which hold four and
+    // three tiles.
+    expect(
+      rig.map.setCells([
+        { layer: 0, x: 1, y: 0, tileId: 0 },
+        { layer: 0, x: 2, y: 0, tileId: 0 },
+      ]),
+    ).toBe(2);
+    // Both chunks are rebuilt, once each: 3 + 2 sprites rewritten, and the other two chunks not.
+    expect(rig.renderer.sync(rig.map, layers, null, ppu)).toBe(5);
+    expect(rig.renderer.spriteCount).toBe(before - 2);
+    expect(rig.renderer.chunkCount).toBe(4);
+    expect(rig.renderer.sync(rig.map, layers, null, ppu)).toBe(0);
+  });
+
   it("rebuilds every chunk when the chunk size changes", async () => {
     const rig = await createRig({ chunkSize: 2 });
     rig.tick();
