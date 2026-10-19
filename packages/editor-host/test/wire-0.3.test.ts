@@ -42,8 +42,8 @@ import type { App, JsonObject, SceneFile, SceneFileEntity } from "@ignifx/core";
  * `wire-0.3.test.ts` checks it against `@ignifx/editor-protocol` 0.3; change it there first.
  * Here every message in it goes through this package's guards, and its requests go through a live
  * headless host, whose answers must be the fixture's: the `game/Health` and `ignifx/Transform`
- * schema entries byte for byte, but for the two members core adds that protocol 0.3 does not
- * declare (`allowMultiple`, `package`), so that the two copies cannot drift apart unnoticed.
+ * schema entries byte for byte, `allowMultiple` and `package` included, so that the two copies
+ * cannot drift apart unnoticed.
  *
  * Where the host's answer cannot be the fixture's byte for byte, the difference is the host's
  * truth and is stated where it is checked: a headless host lists only `heartbeat` (no gizmos, no
@@ -112,25 +112,18 @@ function expectWire(actual: Received, expected: unknown): void {
   expect(JSON.stringify(actual)).toBe(JSON.stringify(expected));
 }
 
-/** What the host adds to a component's schema entry beyond protocol 0.3, by type id. */
-const HOST_ADDITIONS: Readonly<Record<string, Received>> = {
-  "game/Health": { allowMultiple: true, package: "game" },
-  "ignifx/Transform": { allowMultiple: false, package: "@ignifx/core" },
-};
+/** The schema entries the live host must send byte for byte as the fixture has them. */
+const WIRE_SCHEMAS: readonly string[] = ["game/Health", "ignifx/Transform"];
 
 /**
- * Asserts a live schema entry is the fixture's, byte for byte, once the members core's
- * `describeRegisteredSchemas` adds and protocol 0.3 does not declare (`allowMultiple`, `package`)
- * are checked and taken out.
+ * Asserts a live schema entry is the fixture's, byte for byte.
  *
  * @param schemas - The host's `schemas`.
  * @param expected - The fixture's `schemas`.
  * @param typeId - The entry to compare.
  */
 function expectSchemaWire(schemas: Received, expected: Received, typeId: string): void {
-  const { allowMultiple, package: owner, ...rest } = member(schemas, typeId);
-  expect({ allowMultiple, package: owner }, typeId).toEqual(HOST_ADDITIONS[typeId]);
-  expectWire(rest, expected[typeId]);
+  expectWire(member(schemas, typeId), expected[typeId]);
 }
 
 /** Each params guard of the protocol, by the fixture messages it checks. */
@@ -327,7 +320,7 @@ describe("the editor's 0.3 wire fixture, through a live headless host", () => {
     expect(isSchemaSet(schemas)).toBe(true);
     const expected = member(member(wire("schemasChangedAtStart"), "params"), "schemas");
     const actual = member(schemas, "schemas");
-    for (const typeId of Object.keys(HOST_ADDITIONS)) {
+    for (const typeId of WIRE_SCHEMAS) {
       expectSchemaWire(actual, expected, typeId);
     }
     expect(member(actual, "ignifx/Camera")["description"]).toBe(member(expected, "ignifx/Camera")["description"]);
@@ -342,7 +335,7 @@ describe("the editor's 0.3 wire fixture, through a live headless host", () => {
     expect(isSchemaSet(answer["result"])).toBe(true);
     const actual = member(member(answer, "result"), "schemas");
     const expected = member(member(wire("getSchemasResponse"), "result"), "schemas");
-    for (const typeId of Object.keys(HOST_ADDITIONS)) {
+    for (const typeId of WIRE_SCHEMAS) {
       expectSchemaWire(actual, expected, typeId);
     }
   });

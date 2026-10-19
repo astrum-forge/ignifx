@@ -536,6 +536,23 @@ export interface SchemaFieldDescription {
    * angles.
    */
   readonly step?: number;
+  /** `FieldOptions.hidden`: the inspector leaves the field out; it is still saved. */
+  readonly hidden?: boolean;
+  /** `FieldOptions.readonly`: the inspector shows the field but does not let it be edited. */
+  readonly readonly?: boolean;
+  /** `FieldOptions.group`: the inspector group the field folds into. */
+  readonly group?: string;
+  /**
+   * An `asset` field's asset type name (`asset(TextureAsset)` → `"texture"`), the `type` an asset
+   * reference to it carries; absent when the asset token names no type.
+   */
+  readonly assetType?: string;
+  /**
+   * A `componentRef` field's accepted component, as its `typeId`, or `null` when the class it was
+   * declared with carries no `typeId`; present on every `componentRef` field a 0.3 host describes
+   * with core's `describeRegisteredSchemas`.
+   */
+  readonly componentType?: string | null;
 }
 
 /**
@@ -552,6 +569,19 @@ export interface SchemaDescription {
   readonly description?: string;
   /** Every declared field, in declaration order. */
   readonly fields: Readonly<Record<string, SchemaFieldDescription>>;
+  /**
+   * Whether an entity may hold more than one of the component (the class's `static allowMultiple`,
+   * `true` when it declares nothing); absent on file-format entries and from a host from before
+   * core's `describeRegisteredSchemas`, where an editor assumes `true`.
+   */
+  readonly allowMultiple?: boolean;
+  /**
+   * Who registered the component: the extension's `name` (the npm package name, for example
+   * `@ignifx/3d`), or, for a class the game registered itself, its type id's namespace (`game` for
+   * `game/Health`); absent on file-format entries and from a host from before
+   * `describeRegisteredSchemas`.
+   */
+  readonly package?: string;
   /**
    * `true` for the one component every entity carries itself, `ignifx/Transform`: it is never in a
    * scene file's `components` list, an editor neither adds nor removes it, and its fields are the
@@ -1165,7 +1195,8 @@ export function isScreenshotResult(value: unknown): value is ScreenshotResult {
  * Checks one field description.
  *
  * @param value - The value to test.
- * @returns True for `{ kind, default?, description?, step? }`.
+ * @returns True for `{ kind, default?, description?, step?, hidden?, readonly?, group?, assetType?,
+ * componentType? }`, ignoring members it does not declare.
  */
 function isSchemaFieldDescription(value: unknown): value is SchemaFieldDescription {
   return (
@@ -1173,7 +1204,12 @@ function isSchemaFieldDescription(value: unknown): value is SchemaFieldDescripti
     isString(value["kind"]) &&
     optionalField(value, "default", (fallback) => isJsonValue(fallback)) &&
     optionalField(value, "description", isString) &&
-    optionalField(value, "step", (step) => isFiniteNumber(step) && step > 0)
+    optionalField(value, "step", (step) => isFiniteNumber(step) && step > 0) &&
+    optionalField(value, "hidden", isBoolean) &&
+    optionalField(value, "readonly", isBoolean) &&
+    optionalField(value, "group", isString) &&
+    optionalField(value, "assetType", isString) &&
+    optionalField(value, "componentType", (type) => type === null || isString(type))
   );
 }
 
@@ -1181,7 +1217,8 @@ function isSchemaFieldDescription(value: unknown): value is SchemaFieldDescripti
  * Checks one schema description.
  *
  * @param value - The value to test.
- * @returns True for `{ title, format, description?, fields, builtIn?, propsSchema? }`.
+ * @returns True for `{ title, format, description?, fields, allowMultiple?, package?, builtIn?,
+ * propsSchema? }`, ignoring members it does not declare.
  */
 function isSchemaDescription(value: unknown): value is SchemaDescription {
   return (
@@ -1191,6 +1228,8 @@ function isSchemaDescription(value: unknown): value is SchemaDescription {
     optionalField(value, "description", isString) &&
     isRecord(value["fields"]) &&
     Object.values(value["fields"]).every((field) => isSchemaFieldDescription(field)) &&
+    optionalField(value, "allowMultiple", isBoolean) &&
+    optionalField(value, "package", isString) &&
     optionalField(value, "builtIn", isBoolean) &&
     optionalField(value, "propsSchema", isJsonObject)
   );
