@@ -938,6 +938,24 @@ async function rebuildInstance(
 }
 
 /**
+ * Rebuilds one instance root from its scene asset's current value, keeping its uid, its record
+ * (transform, overrides, components) and its document children, as `setOverride` does: what the
+ * host does after a hot reload replaced the scene the root instances.
+ *
+ * @param app - The scene view's app.
+ * @param mirror - The open document.
+ * @param uid - The instance root.
+ * @throws OpFailure when the uid names no document entity or one without an instance entry.
+ */
+export async function reloadInstance(app: App, mirror: DocumentMirror, uid: string): Promise<void> {
+  try {
+    await rebuildInstance({ app, mirror }, uid, (overrides) => overrides);
+  } finally {
+    mirror.invalidate();
+  }
+}
+
+/**
  * Tells whether JSON references an entity or component of a set.
  *
  * @param value - The JSON.

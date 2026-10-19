@@ -121,6 +121,13 @@ export interface LiveHost {
   readonly wire: Wire;
   /** Lets the boot scene load, so the app starts. */
   release(): void;
+  /**
+   * Changes a file of this host's project, as an edit on disk would; the next fetch reads it.
+   *
+   * @param address - The file's address.
+   * @param body - Its new content.
+   */
+  setFile(address: string, body: string): void;
   /** Stops pumping frames and disposes everything. */
   dispose(): Promise<void>;
 }
@@ -134,13 +141,14 @@ export interface LiveHost {
  */
 export function startLiveHost(scripts: readonly ConcreteComponentType[] = []): LiveHost {
   const gate = new Gate();
+  const edited = new Map<string, string>();
   const fetch: FetchLike = async (input: RequestInfo | URL): Promise<Response> => {
     const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
     const address = url.replace(/^.*?assets\//u, "").replace(/^\//u, "");
     if (address === BOOT_SCENE) {
       await gate.promise;
     }
-    const body = FILES[address];
+    const body = edited.get(address) ?? FILES[address];
     return body === undefined ? new Response(null, { status: 404 }) : new Response(body);
   };
   const target = new EventTarget();
@@ -170,6 +178,9 @@ export function startLiveHost(scripts: readonly ConcreteComponentType[] = []): L
     wire,
     release: (): void => {
       gate.open();
+    },
+    setFile: (address: string, body: string): void => {
+      edited.set(address, body);
     },
     async dispose(): Promise<void> {
       gate.open();

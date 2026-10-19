@@ -1,9 +1,11 @@
 import { readFileSync } from "node:fs";
 import {
+  computeSceneHash,
   decodeProps,
   describeSchemas,
   describeSettings,
   encodeProps,
+  stringifySceneFile,
   toJsonSchema,
   transformSchema,
 } from "@ignifx/core";
@@ -12,6 +14,7 @@ import {
   HostCapability,
   isApplyOpsParams,
   isApplyOpsResult,
+  isAssetReloadedParams,
   isEntitySelection,
   isFrameParams,
   isHostErrorParams,
@@ -39,7 +42,7 @@ import {
   SceneMethod,
   SceneNotification,
 } from "../src/protocol/index.js";
-import { Exploder, Health, startLiveHost } from "./support/scene-project.js";
+import { CRATE_PREFAB, Exploder, Health, startLiveHost } from "./support/scene-project.js";
 import type { Received } from "./support/editor.js";
 import type { LiveHost, Wire } from "./support/scene-project.js";
 import type { App, JsonObject, SceneFile, SceneFileEntity } from "@ignifx/core";
@@ -165,6 +168,8 @@ const PARAMS_GUARDS: Readonly<Record<string, (value: unknown) => boolean>> = {
   hostError: isHostErrorParams,
   hostErrorBare: isHostErrorParams,
   log: isLogParams,
+  assetReloaded: isAssetReloadedParams,
+  assetReloadedModel: isAssetReloadedParams,
 };
 
 /** Each result guard, by the fixture messages it checks. */
@@ -249,6 +254,15 @@ describe("the editor's 0.3 wire fixture, through the host's guards", () => {
     expect(isOpenSceneResult({ ...result, viewMode: "iso" })).toBe(false);
     expect(isSceneOpenedParams({ ...opened, viewMode: undefined })).toBe(true);
     expect(isSceneOpenedParams({ ...opened, viewMode: 2 })).toBe(false);
+  });
+
+  it("refuses an assetReloaded without an address, a type, or a list of uids (engine ask E23)", () => {
+    const params = member(wire("assetReloaded"), "params");
+    expect(isAssetReloadedParams({ ...params, address: "" })).toBe(false);
+    expect(isAssetReloadedParams({ ...params, type: undefined })).toBe(false);
+    expect(isAssetReloadedParams({ ...params, entities: undefined })).toBe(false);
+    expect(isAssetReloadedParams({ ...params, entities: [3] })).toBe(false);
+    expect(isAssetReloadedParams({ ...params, entities: [] })).toBe(true);
   });
 
   it("refuses settings whose sections are not schema descriptions or whose values are not objects", () => {
@@ -540,6 +554,55 @@ describe("the editor's 0.3 wire fixture, through a live headless host", () => {
     await peer.request(wire("openScene"));
     expectWire(await peer.request({ ...wire("pick"), id: wire("pickMiss")["id"] }), wire("pickMiss"));
     expectWire(await peer.request(wire("pickBacking")), wire("pickMiss"));
+  });
+
+  it("reloads a changed prefab in place and announces it as the fixture's assetReloaded (E23)", async () => {
+    const { app, peer } = await started();
+    const host = await (live?.host ?? Promise.reject(new Error("No live host.")));
+    await peer.request(wire("openScene"));
+    await peer.notification(SceneNotification.sceneOpened);
+    const crate = "01M4ZEB9E0GG0Q6R22YXV3AVKA";
+    const before = app.world.getEntity(crate);
+    const readCrate = async (id: number): Promise<unknown> => {
+      const read = member(await peer.request({ ...wire("readBack"), id, params: { entities: [crate] } }), "result");
+      return [read["entities"]].flat()[0];
+    };
+    const recordBefore = await readCrate(60);
+
+    const prefab = {
+      ...CRATE_PREFAB,
+      entities: [
+        ...CRATE_PREFAB.entities,
+        {
+          uid: "01M4XQ7K3N8V2D5R0B6G1HT9WW",
+          name: "Handle",
+          parent: "01M4XQ7K3N8V2D5R0B6G1HT9WS",
+          transform: { position: [0, 1, 0], rotation: [0, 0, 0, 1], scale: [1, 1, 1] },
+        },
+      ],
+    } satisfies SceneFile;
+    live?.setFile("prefabs/crate.prefab.json", stringifySceneFile(prefab));
+    const reloaded = host.assetChanged({ address: "prefabs/crate.prefab.json", kind: "changed" });
+
+    expectWire(await peer.notification(SceneNotification.assetReloaded), wire("assetReloaded"));
+    expect(await reloaded).toBe(true);
+    const after = app.world.getEntity(crate);
+    expect(after).not.toBeNull();
+    expect(after).not.toBe(before);
+    expect(after?.children.map((child) => child.name)).toEqual(expect.arrayContaining(["Lid", "Base", "Handle"]));
+    // The record is the one the editor holds, transform and overrides included, at the new hash.
+    const record = await readCrate(61);
+    expect(isRecord(record) ? member(record, "instance")["hash"] : null).toBe(await computeSceneHash(prefab));
+    expect(maskHashes([record])).toEqual(maskHashes([recordBefore]));
+  });
+
+  it("leaves a texture, a removed file and an asset it never loaded alone (E23)", async () => {
+    const { peer } = await started();
+    const host = await (live?.host ?? Promise.reject(new Error("No live host.")));
+    await peer.request(wire("openScene"));
+    expect(await host.assetChanged({ address: "prefabs/crate.prefab.json", kind: "removed" })).toBe(false);
+    expect(await host.assetChanged({ address: "textures/unused.png", kind: "changed" })).toBe(false);
+    expect(await host.assetChanged({ address: "scenes/level01.scene.json", kind: "changed" })).toBe(false);
   });
 
   it("relays hot reloads, the app's errors, and its log", async () => {

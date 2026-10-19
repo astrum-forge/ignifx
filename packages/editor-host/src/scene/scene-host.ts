@@ -27,10 +27,11 @@ import {
   TRANSFORM_DRAGGING_INTERVAL_MS,
   ViewMode,
 } from "../protocol/index.js";
+import { IN_PLACE_ASSET_TYPES, instancesOf, SCENE_ASSET_TYPE, waitForReplacement } from "./asset-reload.js";
 import { DocumentMirror } from "./document.js";
 import { EditorCamera2D, EYE_DISTANCE_2D } from "./editor-camera-2d.js";
 import { EDITOR_CAMERA_FOV, EditorCamera } from "./editor-camera.js";
-import { applyOps } from "./ops.js";
+import { applyOps, reloadInstance } from "./ops.js";
 import { schemaSet } from "./schemas.js";
 import { encodeCapture } from "./screenshot.js";
 import { settingsSet } from "./settings.js";
@@ -55,10 +56,12 @@ import {
   viewSurfaceOf,
 } from "./view-math.js";
 import type { RequestHandler } from "../channel.js";
+import type { EditorAssetChange, PendingReload } from "./asset-reload.js";
 import type { ViewClick } from "./editor-camera.js";
 import type { PickRayMembers } from "./view-math.js";
 import type { EditorView, ViewDrag, WorldBounds } from "../lite/gizmos.js";
 import type {
+  AssetReloadedParams,
   GizmoDragMode,
   GizmoSnap,
   HostErrorParams,
@@ -183,6 +186,12 @@ export class SceneHost {
 
   readonly #cleanups: (() => void)[] = [];
 
+  /** The reloads waiting for their new value; disposing the host cancels them. */
+  readonly #reloads = new Set<PendingReload>();
+
+  /** The tail of the work that touches the document, run one task at a time. */
+  #queue: Promise<unknown> = Promise.resolve();
+
   /**
    * Creates the methods; none answers until the app has started.
    *
@@ -210,7 +219,10 @@ export class SceneHost {
     if (has(HostCapability.screenshot)) {
       methods.set(SceneMethod.screenshot, async (params) => this.#screenshot(params));
     }
-    this.methods = methods;
+    // The channel answers one request at a time; an asset reload's rebuild queues with them.
+    this.methods = new Map(
+      [...methods].map(([name, handler]) => [name, async (params: unknown) => this.#serial(() => handler(params))]),
+    );
   }
 
   /**
@@ -322,8 +334,71 @@ export class SceneHost {
     }
   }
 
+  /**
+   * Reloads an asset that changed on disk, in place, when the app has it loaded and its type is one
+   * the renderers follow: a scene or prefab, whose instances in the open document are rebuilt from
+   * the new file with their uids, transforms and overrides, or a model, mesh, material, sprite atlas
+   * or shader. Sends `assetReloaded` once the new value is in. The open document's own file, a
+   * removed file and any other type are left alone.
+   *
+   * @param change - The address and what happened to it.
+   * @returns Whether the asset was reloaded; `false` also when the reload failed, which the app
+   * reports as an error.
+   */
+  async assetChanged(change: EditorAssetChange): Promise<boolean> {
+    const app = this.#app;
+    const mirror = this.#mirror;
+    const { address } = change;
+    if (app === null || mirror === null || !this.#started || change.kind === "removed") {
+      return false;
+    }
+    const handle = app.assets.get(address);
+    if (
+      handle === null ||
+      handle.state !== "loaded" ||
+      !IN_PLACE_ASSET_TYPES.includes(handle.type) ||
+      (mirror.scene !== null && address === mirror.address)
+    ) {
+      return false;
+    }
+    const pending = waitForReplacement(app, handle);
+    this.#reloads.add(pending);
+    app.assets.reload(address);
+    const replaced = await pending.replaced;
+    this.#reloads.delete(pending);
+    if (!replaced) {
+      return false;
+    }
+    return this.#serial(async () => {
+      const index = handle.type === SCENE_ASSET_TYPE ? mirror.index() : null;
+      const entities: string[] = [];
+      for (const uid of index === null ? [] : instancesOf(app, index, address)) {
+        try {
+          // Each rebuild reads the document the previous one left.
+          // oxlint-disable-next-line no-await-in-loop -- see above
+          await reloadInstance(app, mirror, uid);
+          entities.push(uid);
+        } catch (error) {
+          const params: HostErrorParams = {
+            code: isIgnifxError(error) ? error.code : null,
+            message: `Rebuilding ${uid} from ${address}: ${messageOf(error)}`,
+            data: { address, entity: uid },
+          };
+          this.#notify(SceneNotification.hostError, params);
+        }
+      }
+      this.#setSelection(this.#selection);
+      const params: AssetReloadedParams = { address, type: handle.type, entities };
+      this.#notify(SceneNotification.assetReloaded, params);
+      return true;
+    });
+  }
+
   /** Removes the relays and the overlay; the host disposes the app. */
   dispose(): void {
+    for (const pending of this.#reloads) {
+      pending.cancel();
+    }
     for (const cleanup of this.#cleanups.splice(0)) {
       cleanup();
     }
@@ -896,6 +971,18 @@ export class SceneHost {
     };
     this.#notify(SceneNotification.hotReloaded, params);
     this.sendSchemas();
+  }
+
+  /**
+   * Runs work that touches the document after everything queued before it.
+   *
+   * @param task - The work.
+   * @returns What the task returns.
+   */
+  async #serial<T>(task: () => T | Promise<T>): Promise<T> {
+    const run = this.#queue.then(task);
+    this.#queue = run.catch(() => undefined);
+    return run;
   }
 
   /**

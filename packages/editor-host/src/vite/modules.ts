@@ -3,7 +3,12 @@
  * page runs, and `virtual:ignifx/editor`, the play view's controls.
  */
 
-import { IGNIFX_CONFIG_DEFINE_KEY, MANIFEST_MODULE_ID, SCRIPTS_MODULE_ID } from "@ignifx/vite-plugin";
+import {
+  ASSET_CHANGED_EVENT,
+  IGNIFX_CONFIG_DEFINE_KEY,
+  MANIFEST_MODULE_ID,
+  SCRIPTS_MODULE_ID,
+} from "@ignifx/vite-plugin";
 import { EditorHostErrorCode } from "../error-codes.js";
 import { EditorHostPluginError } from "./errors.js";
 
@@ -153,7 +158,9 @@ function reportingLines(engineVersion: string | null, heartbeatIntervalMs: numbe
  * The module is the only code with an import-time effect: it creates the host. The package itself
  * creates nothing when imported (`CONSTITUTION.md` §3.5). Every import is resolved from the
  * project's root, so the host, the scripts, and the extensions share the project's one copy of
- * `@ignifx/core`.
+ * `@ignifx/core`. It hands every `ignifx:asset-changed` event to `host.assetChanged`, which
+ * reloads the asset in place; the `import.meta.hot` calls are written out literally, because Vite
+ * finds them by reading the source.
  *
  * @param options - The editor origin, the project's extensions module, and the reporting options.
  * @returns The ES module source.
@@ -180,6 +187,11 @@ export function editorEntryModuleSource(options: EditorEntryModuleOptions): stri
     ...reportingLines(options.engineVersion, options.heartbeatIntervalMs),
     "});",
     "acceptHotReload(host.app);",
+    "if (import.meta.hot) {",
+    `  import.meta.hot.on(${JSON.stringify(ASSET_CHANGED_EVENT)}, (change) => {`,
+    "    void host.assetChanged(change);",
+    "  });",
+    "}",
     "",
   ].join("\n");
 }
