@@ -68,6 +68,23 @@ function onNextGroupBuild(scene: RebuildInternals, change: () => void): () => bo
   return (): boolean => hasRun;
 }
 
+/**
+ * Waits for real frames until a condition holds. A rebuild takes as many frames as the machine
+ * makes it take, so the tests wait on what they need rather than on a frame count; the test's
+ * timeout bounds a condition that never holds.
+ *
+ * @param running - The harness.
+ * @param done - The condition, read before each frame.
+ * @returns A promise that settles once `done` holds.
+ */
+async function framesUntil(running: BrowserApp, done: () => boolean): Promise<void> {
+  if (done()) {
+    return;
+  }
+  await running.nextFrame();
+  return framesUntil(running, done);
+}
+
 /** A placeholder until a promise hands over its resolver. */
 function doNothing(): void {
   // Replaced before it is called.
@@ -164,9 +181,8 @@ it("finishes a rebuild that a material swap to another family landed in", async 
   const { running, ground, pbr, addLight } = await buildScene();
   device.stop();
   const liteGround = ground.lite.mesh as unknown as LiteMeshMaterial | null;
-  const pbrMaterial = pbr.value?.lite.material;
+  const pbrMaterial = pbr.value.lite.material;
   expect(liteGround).not.toBeNull();
-  expect(pbrMaterial).toBeDefined();
 
   // Boundary assertion: the scene is a Lite 1.34.0 scene.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
@@ -181,9 +197,9 @@ it("finishes a rebuild that a material swap to another family landed in", async 
   });
   // A second light is a topology change, so the render sync system rebuilds every group.
   addLight("Right", 6, false);
-  await running.advance(SETTLE_FRAMES * 4);
+  await framesUntil(running, () => hasSwapped() && !running.renderer.isRebuildInFlight);
+  await running.advance(SETTLE_FRAMES);
 
-  expect(hasSwapped()).toBe(true);
   expect(running.errors).toEqual([]);
   expect(device.errors).toEqual([]);
 }, 60_000);
@@ -201,8 +217,7 @@ it("switches a shadow on only once the rebuild in flight has finished", async ()
   const stall = stallAfterFirstGroup(running.renderer.scene as unknown as RebuildInternals);
   // A second light is a topology change, so the render sync system rebuilds every group.
   const right = addLight("Right", 6, false);
-  await running.advance(SETTLE_FRAMES);
-  expect(stall.isStalled()).toBe(true);
+  await framesUntil(running, () => stall.isStalled());
   expect(running.renderer.isRebuildInFlight).toBe(true);
 
   right.shadows.enabled = true;
@@ -210,9 +225,8 @@ it("switches a shadow on only once the rebuild in flight has finished", async ()
   expect(right.isCastingShadows).toBe(false);
 
   stall.release();
-  await running.advance(SETTLE_FRAMES * 4);
-  expect(running.renderer.isRebuildInFlight).toBe(false);
-  expect(right.isCastingShadows).toBe(true);
+  await framesUntil(running, () => right.isCastingShadows && !running.renderer.isRebuildInFlight);
+  await running.advance(SETTLE_FRAMES);
   expect(running.errors).toEqual([]);
   expect(device.errors).toEqual([]);
 }, 60_000);
