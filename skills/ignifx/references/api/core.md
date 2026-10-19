@@ -22495,7 +22495,8 @@ Shows the field in the inspector but forbids editing it there.
 
 > `readonly` `optional` **step?**: `number`
 
-Increment used by the inspector's drag and spinner controls.
+Increment used by the inspector's drag and spinner controls. A `quat` field is edited as
+intrinsic XYZ Euler angles, so its step is in degrees.
 
 ##### tooltip?
 
@@ -26364,6 +26365,15 @@ Whether an entity may hold more than one of the component (`static allowMultiple
 the class declares nothing). Set by [describeRegisteredSchemas](#describeregisteredschemas), or by the caller through
 [SchemaDescriptionMeta](#schemadescriptionmeta); absent on file formats.
 
+##### builtIn?
+
+> `readonly` `optional` **builtIn?**: `boolean`
+
+`true` for the one component every entity carries itself, `ignifx/Transform`: it is never in a
+scene file's `components` list, an editor cannot add or remove it, and its fields are the
+entity record's `transform` block, edited whole (the editor protocol's `setTransform`), not
+prop by prop. Absent on every other component and on file formats.
+
 ##### description?
 
 > `readonly` `optional` **description?**: `string`
@@ -26409,6 +26419,12 @@ Optional overrides for [describeSchema](#describeschema).
 > `readonly` `optional` **allowMultiple?**: `boolean`
 
 Whether an entity may hold more than one of the component, copied onto the description.
+
+##### builtIn?
+
+> `readonly` `optional` **builtIn?**: `boolean`
+
+Whether the component is the entity's own built-in block, copied onto the description.
 
 ##### description?
 
@@ -26531,7 +26547,8 @@ The field kind, for example `f32` or `asset`.
 
 > `readonly` `optional` **step?**: `number`
 
-`FieldOptions.step`: the increment of the inspector's drag and spinner controls.
+`FieldOptions.step`: the increment of the inspector's drag and spinner controls; in degrees for
+a `quat` field, which an inspector edits as Euler angles.
 
 ##### transient?
 
@@ -34777,6 +34794,10 @@ npm package name for a published extension (`@ignifx/core`, `@ignifx/3d`). A cla
 registered itself with `app.registerComponents` has no extension, so its `package` is its type
 id's namespace: everything before the last `/` (`third-person` for `third-person/Beacon`).
 
+`ignifx/Transform` declares no schema on its class; it is described with [transformSchema](#transformschema)
+and marked `builtIn`, because every entity carries exactly one and a scene file stores it as the
+entity's `transform` block rather than in its `components`.
+
 #### Example
 
 ```ts
@@ -34834,7 +34855,7 @@ The component's declared fields.
 [`SchemaDescriptionMeta`](#schemadescriptionmeta)
 
 Overrides for the title, format grouping, and summary, and the component's
-`allowMultiple` and `package` when the caller knows them.
+`allowMultiple`, `package` and `builtIn` when the caller knows them.
 
 #### Returns
 
@@ -36554,6 +36575,42 @@ The schema to convert.
 [`JsonObject`](#jsonobject)
 
 The object fragment describing every declared prop.
+
+***
+
+### transformSchema()
+
+> **transformSchema**(): [`Schema`](#schema-11)
+
+The entity transform as a schema: the fields of a scene file's `transform` block, so an
+inspector and its ops can treat the transform like any component
+(`docs/architecture/06-serialization-and-scene-format.md` §2).
+
+#### Returns
+
+[`Schema`](#schema-11)
+
+A new schema: `position` (`vec3`, origin, step 0.01), `rotation` (`quat`, identity,
+step 0.5 degrees), `scale` (`vec3`, one, step 0.01).
+
+#### Remarks
+
+The schema **describes** the transform; (Transform:class) does not declare it. The class keeps
+no schema because its `position` and `rotation` are world-space getters, while the file, this
+schema, and the editor's `setTransform` op all carry **local** values. Every entity has exactly
+one transform, which is never in a file's `components` list, so `describeSchemas()` and
+`describeRegisteredSchemas()` mark `ignifx/Transform` as `builtIn`: it cannot be added or
+removed, and its values are edited as the whole block, not with a per-prop op.
+
+`rotation` is a `quat` field: files and ops store a unit quaternion, and an inspector shows
+intrinsic XYZ Euler angles in degrees (ADR-0011), so its `step` is in degrees.
+
+#### Example
+
+```ts
+const fields = describeSchema("ignifx/Transform", transformSchema()).fields;
+fields["rotation"]?.default; // [0, 0, 0, 1]
+```
 
 ***
 

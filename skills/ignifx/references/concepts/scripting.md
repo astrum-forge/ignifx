@@ -63,7 +63,10 @@ Tools read a schema as data. `describeSchema(typeId, schema)` describes each fie
 `assetType`, `componentType`, and a nested `item`, `fields`, `value` or `inner`).
 `describeRegisteredSchemas(app.world.registry)` does that for every registered component and adds
 `allowMultiple` and `package`: the registering extension's `name`, or the type id's namespace for a
-class the game registered itself. `toJsonSchema(schema)` writes the options as `x-ignifx-*` keywords:
+class the game registered itself. The transform is described too: `transformSchema()` gives an
+entity's `transform` block as `position` (`vec3`), `rotation` (`quat`, whose `step` is in Euler
+degrees) and `scale` (`vec3`), and `ignifx/Transform` is the one entry marked `builtIn`, which an
+inspector never adds or removes. `toJsonSchema(schema)` writes the options as `x-ignifx-*` keywords:
 
 ```ts run
 import { describeSchema, f32, toJsonSchema } from "@ignifx/core";

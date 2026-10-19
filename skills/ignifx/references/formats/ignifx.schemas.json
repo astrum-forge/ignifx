@@ -3521,6 +3521,32 @@
         }
       }
     },
+    "ignifx/Transform": {
+      "title": "Transform",
+      "format": "components",
+      "description": "The entity's local position, rotation, and scale; every entity has exactly one, stored as its transform block.",
+      "package": "packages/core",
+      "fields": {
+        "position": {
+          "kind": "vec3",
+          "default": "[0,0,0]",
+          "description": "Local position relative to the parent, in metres.",
+          "step": 0.01
+        },
+        "rotation": {
+          "kind": "quat",
+          "default": "[0,0,0,1]",
+          "description": "Local rotation relative to the parent: a unit quaternion [x, y, z, w], shown as intrinsic XYZ Euler angles in degrees.",
+          "step": 0.5
+        },
+        "scale": {
+          "kind": "vec3",
+          "default": "[1,1,1]",
+          "description": "Local scale relative to the parent.",
+          "step": 0.01
+        }
+      }
+    },
     "ignifx/WorldAnchor": {
       "title": "WorldAnchor",
       "format": "components",
