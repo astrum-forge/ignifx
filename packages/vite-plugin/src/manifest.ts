@@ -305,7 +305,7 @@ function loaderMeta(meta: JsonObject | null): JsonObject | null {
   }
   const kept: Record<string, JsonValue> = {};
   for (const [key, value] of Object.entries(meta)) {
-    if (value !== undefined && !EDITOR_SIDECAR_KEYS.includes(key)) {
+    if (!EDITOR_SIDECAR_KEYS.includes(key)) {
       kept[key] = value;
     }
   }

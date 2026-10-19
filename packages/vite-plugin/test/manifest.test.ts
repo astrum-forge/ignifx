@@ -110,12 +110,9 @@ describe("scanAssetRoot", () => {
       "assets/a.png": PNG_BYTES,
       "assets/a.png.meta.json": JSON.stringify({ publish: "false" }),
     });
-    await expect(scanAssetRoot({ assetRoot: join(root, "assets") })).rejects.toThrow(
-      expect.objectContaining({
-        code: VitePluginErrorCode.invalidSidecar,
-        message: expect.stringContaining('"publish"'),
-      }),
-    );
+    const scan = scanAssetRoot({ assetRoot: join(root, "assets") });
+    await expect(scan).rejects.toThrow(expect.objectContaining({ code: VitePluginErrorCode.invalidSidecar }));
+    await expect(scan).rejects.toThrow(/"publish"/u);
   });
 
   it("fails with IGX-0550 when the asset root does not exist", async () => {
