@@ -54,6 +54,18 @@ export interface AssetHarness {
   flush(): Promise<void>;
   /** Flushes, runs one frame, and flushes again — the usual "make it happen" call. */
   settle(deltaSeconds?: number): Promise<void>;
+  /**
+   * Runs {@link AssetHarness.settle} until a promise settles, then answers with it.
+   *
+   * @remarks
+   * A started app delivers a load in `PreUpdate`, so a load needs frames, but part of a scene load
+   * runs neither in a frame nor on the microtask queue: its content hash is `crypto.subtle.digest`,
+   * which Node computes on libuv's thread pool. A fixed number of frames races that pool, and a
+   * loaded runner loses: the frames run out, and the load waits for a frame that never comes
+   * (`edit-mode.test.ts` on CI, 2026-10-19). There is no frame cap; the test's timeout bounds a load
+   * that never settles.
+   */
+  settleUntil<T>(work: Promise<T>): Promise<T>;
   /** Disposes the app. */
   dispose(): void;
 }
@@ -103,6 +115,11 @@ export async function createAssetHarness(options?: AssetHarnessOptions): Promise
     clock.advance(deltaSeconds * MILLISECONDS_PER_SECOND);
     app.step(deltaSeconds);
   };
+  const settle = async (deltaSeconds: number = STEP): Promise<void> => {
+    await flushMicrotasks();
+    step(deltaSeconds);
+    await flushMicrotasks();
+  };
   return {
     app,
     assets: assetsInternals(app.assets),
@@ -111,10 +128,18 @@ export async function createAssetHarness(options?: AssetHarnessOptions): Promise
     errors,
     step,
     flush: flushMicrotasks,
-    settle: async (deltaSeconds: number = STEP): Promise<void> => {
-      await flushMicrotasks();
-      step(deltaSeconds);
-      await flushMicrotasks();
+    settle,
+    settleUntil: async <T>(work: Promise<T>): Promise<T> => {
+      const state = { done: false };
+      const finish = (): void => {
+        state.done = true;
+      };
+      void work.then(finish, finish);
+      while (!state.done) {
+        // oxlint-disable-next-line eslint/no-await-in-loop -- one frame at a time is the point
+        await settle();
+      }
+      return work;
     },
     dispose: (): void => {
       app.dispose();

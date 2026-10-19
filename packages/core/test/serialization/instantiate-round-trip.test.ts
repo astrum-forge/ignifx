@@ -92,20 +92,6 @@ async function sceneApp(files: Readonly<Record<string, SceneFile | string>>): Pr
   return harness;
 }
 
-/** Drives the fake network until a promise settles, then answers with its value. */
-async function settled<T>(harness: AssetHarness, work: Promise<T>): Promise<T> {
-  const state = { done: false };
-  const finish = (): void => {
-    state.done = true;
-  };
-  void work.then(finish, finish);
-  for (let index = 0; index < 200 && !state.done; index += 1) {
-    // oxlint-disable-next-line eslint/no-await-in-loop -- each frame delivers the next response
-    await harness.settle();
-  }
-  return work;
-}
-
 /** Saves a scene instance as canonical text. */
 function save(instance: SceneInstance): string {
   return stringifySceneFile(serializeScene(instance, { engineVersion: null, name: "Level" }));
@@ -120,7 +106,7 @@ async function reload(text: string): Promise<{ readonly instance: SceneInstance;
     [YARD]: yardFile,
     [LEVEL]: text,
   });
-  const instance = await settled(harness, harness.app.world.loadScene(LEVEL));
+  const instance = await harness.settleUntil(harness.app.world.loadScene(LEVEL));
   return { instance, again: save(instance) };
 }
 
@@ -133,8 +119,7 @@ function worldPosition(entity: Entity | undefined): number[] {
 describe("instantiate, save, and load", () => {
   it("restores a single-root prefab as one entity with its component once and its offset once", async () => {
     const first = await sceneApp({ [CRATE]: crateFile });
-    const crate = await settled(
-      first,
+    const crate = await first.settleUntil(
       first.app.world.instantiateAsync(CRATE, { name: "Crate 0", position: { x: 3, y: 0.5, z: 0 } }),
     );
     const text = save(first.app.world.activeScene);
@@ -154,7 +139,7 @@ describe("instantiate, save, and load", () => {
 
   it("restores a multi-root prefab under one container, each root's component once", async () => {
     const first = await sceneApp({ [PAIR]: pairFile });
-    await settled(first, first.app.world.instantiateAsync(PAIR, { position: { x: 3, y: 0, z: 0 } }));
+    await first.settleUntil(first.app.world.instantiateAsync(PAIR, { position: { x: 3, y: 0, z: 0 } }));
     const text = save(first.app.world.activeScene);
 
     const { instance, again } = await reload(text);
@@ -171,7 +156,9 @@ describe("instantiate, save, and load", () => {
 
   it("writes run-time edits to a single-root instance as overrides and restores them once", async () => {
     const first = await sceneApp({ [CRATE]: crateFile });
-    const crate = await settled(first, first.app.world.instantiateAsync(CRATE, { position: { x: 3, y: 0.5, z: 0 } }));
+    const crate = await first.settleUntil(
+      first.app.world.instantiateAsync(CRATE, { position: { x: 3, y: 0.5, z: 0 } }),
+    );
     const tag = crate.getComponent(Tagger);
     if (tag !== null) {
       tag.note = "edited";
@@ -195,7 +182,7 @@ describe("instantiate, save, and load", () => {
 
   it("writes a component removed from a single-root instance as a remove override", async () => {
     const first = await sceneApp({ [CRATE]: crateFile });
-    const crate = await settled(first, first.app.world.instantiateAsync(CRATE));
+    const crate = await first.settleUntil(first.app.world.instantiateAsync(CRATE));
     const tag = crate.getComponent(Tagger);
     if (tag !== null) {
       crate.removeComponent(tag);
@@ -238,7 +225,9 @@ describe("instantiate, save, and load", () => {
 
   it("restores a variant whose root instances another prefab with every component once", async () => {
     const first = await sceneApp({ [CRATE]: crateFile, [VARIANT]: variantFile });
-    const crate = await settled(first, first.app.world.instantiateAsync(VARIANT, { position: { x: 2, y: 0, z: 0 } }));
+    const crate = await first.settleUntil(
+      first.app.world.instantiateAsync(VARIANT, { position: { x: 2, y: 0, z: 0 } }),
+    );
     expect(crate.getComponents(Tagger).map((component) => component.note)).toEqual(["big"]);
     const text = save(first.app.world.activeScene);
 
@@ -254,7 +243,7 @@ describe("instantiate, save, and load", () => {
 
   it("keeps edits to a single-root instance nested inside another prefab", async () => {
     const first = await sceneApp({ [CRATE]: crateFile, [YARD]: yardFile });
-    const yard = await settled(first, first.app.world.instantiateAsync(YARD));
+    const yard = await first.settleUntil(first.app.world.instantiateAsync(YARD));
     const slot = yard.children[0];
     expect(slot?.getComponents(Tagger)).toHaveLength(1);
     if (slot !== undefined) {
