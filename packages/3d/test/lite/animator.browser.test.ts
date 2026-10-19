@@ -60,6 +60,44 @@ async function loadRig(): Promise<{ running: ThreeDBrowserApp; model: Model; ani
   return { running, model, animator };
 }
 
+/** The most frames {@link framesUntil} waits before it gives up. */
+const MAX_WAIT_FRAMES = 600;
+
+/**
+ * Waits for real frames until a condition holds.
+ *
+ * @param running - The harness.
+ * @param done - The condition, read before each frame.
+ * @param left - How many more frames to wait.
+ * @returns A promise that settles once `done` holds.
+ */
+async function framesUntil(running: ThreeDBrowserApp, done: () => boolean, left = MAX_WAIT_FRAMES): Promise<void> {
+  if (done()) {
+    return;
+  }
+  if (left <= 0) {
+    throw new Error(`The condition did not hold within ${String(MAX_WAIT_FRAMES)} frames.`);
+  }
+  await running.nextFrame();
+  return framesUntil(running, done, left - 1);
+}
+
+/**
+ * Whether a cycle position is in the half of the swing opposite the pose at `0.25`.
+ *
+ * @remarks
+ * The fixture's clips swing each joint on a sine of the cycle (`make-rig.mjs`), so the pose at
+ * `0.25` is the peak and anything from `0.6` to `0.9` swings the other way by at least half the
+ * amplitude. The window is wider than a clamped frame's `0.1` step, so the loop cannot skip it.
+ *
+ * @param normalizedTime - The animator's normalized time.
+ * @returns Whether it is in the window.
+ */
+function isInOppositeHalf(normalizedTime: number): boolean {
+  const cycle = normalizedTime - Math.floor(normalizedTime);
+  return cycle >= 0.6 && cycle <= 0.9;
+}
+
 /**
  * Poses the animator at one state and time, then captures the frame.
  *
@@ -127,21 +165,29 @@ describe("Animator on a real device", () => {
   it("freezes the pose while the app is paused, and moves again on resume", async () => {
     const { running, animator } = await loadRig();
     animator.setFloat("speed", 6);
-    animator.play("locomotion");
-    await running.advance(4);
-
-    // Running: ten frames of a half-second clip move a lot of pixels.
-    const running1 = await running.capture();
-    await running.advance(10);
-    const running2 = await running.capture();
-    expect(differingBytes(running1, running2)).toBeGreaterThan(POSE_DELTA_BYTES);
-
-    // Paused: the same ten frames move nothing at all.
+    // The cycle starts at a pose set by hand, with the app already paused, so the render loop
+    // cannot move it before the first capture.
     running.app.pause();
-    const frozen1 = await running.capture();
+    animator.play("locomotion");
+    animator.advance(0.25);
+    await running.advance(2);
+    const peak = await running.capture();
+
+    // Paused: ten real frames move nothing at all.
     await running.advance(10);
-    const frozen2 = await running.capture();
-    expect(differingBytes(frozen1, frozen2)).toBe(0);
+    expect(animator.normalizedTime()).toBeCloseTo(0.25, 6);
+    expect(differingBytes(peak, await running.capture())).toBe(0);
+
+    // Resumed: the render loop carries the cycle, on ignifx's clock, into its opposite half. The
+    // test waits on the cycle rather than on a frame count: on a loaded runner every frame is
+    // clamped to `maximumDeltaTime`, and ten of them are exactly one 1 s cycle, the same pose.
+    running.app.resume();
+    await framesUntil(running, () => isInOppositeHalf(animator.normalizedTime()));
+    running.app.pause();
+    const opposite = animator.normalizedTime();
+    expect(isInOppositeHalf(opposite)).toBe(true);
+    expect(differingBytes(peak, await running.capture())).toBeGreaterThan(POSE_DELTA_BYTES);
+    expect(animator.normalizedTime()).toBe(opposite);
     running.app.resume();
   }, 60_000);
 
