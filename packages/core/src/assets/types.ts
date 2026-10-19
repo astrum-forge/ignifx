@@ -467,6 +467,12 @@ export interface Assets {
    * development hot reload does (`docs/architecture/05-assets-and-loading.md` §7); a handle that is
    * not loaded is left alone. The Vite plugin's HMR channel and the devtools Assets panel call it.
    *
+   * @remarks
+   * A call made while a reload of the same handle is running reloads once more after it, however
+   * many calls arrive meanwhile, and only the newest value is delivered. A failed reload keeps the
+   * value the handle had and reports an `IGX-0505` {@link AssetLoadError} naming the address through
+   * `app.onError`.
+   *
    * @param address - The asset's address.
    */
   reload(address: string): void;

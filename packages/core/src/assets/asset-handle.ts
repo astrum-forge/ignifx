@@ -88,6 +88,9 @@ export class AssetHandleImpl implements AssetHandle {
   /** `true` while the loader is running. */
   isRunning = false;
 
+  /** `true` when a reload was asked for while one was running; it runs once that one finishes. */
+  isReloadQueued = false;
+
   /** Bytes received so far. */
   bytesLoaded = 0;
 

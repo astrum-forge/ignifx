@@ -664,6 +664,9 @@ export class AssetsImpl implements Assets, AssetHandleHost, LoaderContextHost {
    * own: it is re-derived from the base's new value when that base is delivered, which is the only
    * order that cannot show a fragment of the old file next to a fragment of the new one.
    *
+   * A call that finds a reload of the handle already running queues one more pass instead of being
+   * dropped, so a second save inside the first reload's window still lands.
+   *
    * @param address - The address that changed on disk, with or without a fragment.
    */
   reload(address: string): void {
@@ -672,10 +675,16 @@ export class AssetsImpl implements Assets, AssetHandleHost, LoaderContextHost {
       if (handle.address !== address && handle.path !== path) {
         continue;
       }
-      if (handle.state !== "loaded" || handle.isRunning) {
+      if (handle.state !== "loaded") {
         continue;
       }
       if (handle.fragment !== null && handle.loader.parseFragment !== undefined) {
+        continue;
+      }
+      if (handle.isRunning) {
+        // The file changed again while the last change was still loading: read it once more when
+        // that finishes, so the newest file wins however many saves arrive in between.
+        handle.isReloadQueued = true;
         continue;
       }
       void this.#runReload(handle);
@@ -977,30 +986,77 @@ export class AssetsImpl implements Assets, AssetHandleHost, LoaderContextHost {
   }
 
   /**
-   * Runs one hot-reload attempt.
+   * Runs a hot reload, and again for each reload asked for while it ran, then delivers the newest
+   * value once. Each pass starts from the value the previous pass produced, so the default reload
+   * releases every intermediate value exactly once.
    *
    * @param handle - The loaded handle to refresh.
    */
   async #runReload(handle: AssetHandleImpl): Promise<void> {
     const controller = new AbortController();
-    const previous = handle.value;
+    let current = handle.value;
+    let isReplaced = false;
     handle.isRunning = true;
     try {
-      const value = await this.#invokeLoader(handle, controller.signal, true, previous);
-      if (this.#isDisposed) {
-        return;
+      do {
+        handle.isReloadQueued = false;
+        try {
+          // oxlint-disable-next-line no-await-in-loop -- each pass reloads from the previous one's value.
+          const value = await this.#invokeLoader(handle, controller.signal, true, current);
+          if (this.#isDisposed) {
+            return;
+          }
+          if (handle.loader.reload === undefined) {
+            // The default reload is "unload + load" (§5) done in the safe order: the old value is
+            // only released once the new one exists, so a failed reload leaves the asset working.
+            this.#runUnload(handle, current);
+          }
+          current = value;
+          isReplaced = true;
+        } catch (error) {
+          if (this.#isDisposed) {
+            return;
+          }
+          this.#report(this.#reloadError(handle, error, isReplaced));
+        }
+      } while (handle.isReloadQueued && handle.state === "loaded");
+      if (isReplaced) {
+        this.#enqueueDelivery({ kind: "replaced", handle, value: current });
       }
-      if (handle.loader.reload === undefined) {
-        // The default reload is "unload + load" (§5) done in the safe order: the old value is only
-        // released once the new one exists, so a failed reload leaves the asset working.
-        this.#runUnload(handle, previous);
-      }
-      this.#enqueueDelivery({ kind: "replaced", handle, value });
-    } catch (error) {
-      this.#report(error);
     } finally {
       handle.isRunning = false;
+      handle.isReloadQueued = false;
     }
+  }
+
+  /**
+   * Builds the failure a hot reload reports through `app.onError`.
+   *
+   * @param handle - The handle whose reload failed.
+   * @param error - What the loader threw.
+   * @param isReplaced - Whether an earlier pass of the same reload produced a value, which the
+   * handle keeps instead of the one it held before.
+   * @returns The `IGX-0505` failure, with the loader's error as `cause`.
+   */
+  #reloadError(handle: AssetHandleImpl, error: unknown, isReplaced: boolean): AssetLoadError {
+    const kept = isReplaced ? "the last version that loaded" : "its previous value";
+    return new AssetLoadError(
+      CoreErrorCode.assetLoadFailed,
+      `Reloading ${handle.address} from ${handle.url} failed; the asset keeps ${kept}.`,
+      {
+        address: handle.address,
+        url: handle.url,
+        cause: error,
+        context: {
+          asset: handle.address,
+          url: handle.url,
+          attempts: 1,
+          reload: true,
+          kept: isReplaced ? "earlier reload" : "previous",
+        },
+        hint: "Fix the file and save it again; the next save reloads it.",
+      },
+    );
   }
 
   /**
