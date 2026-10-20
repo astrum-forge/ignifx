@@ -1,5 +1,27 @@
 # @ignifx/physics
 
+## 0.10.0
+
+### Patch Changes
+
+- 310c661: In an edit-mode app, physics does not step or interpolate, so bodies stay where they were authored and a transform the editor moves is not overwritten.
+- Updated dependencies [6f197c9]
+- Updated dependencies [1804a62]
+- Updated dependencies [e0276f8]
+- Updated dependencies [4c6e200]
+- Updated dependencies [324ce73]
+- Updated dependencies [37cf52e]
+- Updated dependencies [612ba87]
+- Updated dependencies [159ea03]
+- Updated dependencies [b0480a0]
+- Updated dependencies [1fba2ea]
+- Updated dependencies [df7b73f]
+- Updated dependencies [dc768d6]
+- Updated dependencies [738f68d]
+- Updated dependencies [fd0afe5]
+- Updated dependencies [63d4e86]
+  - @ignifx/core@0.10.0
+
 ## 0.9.0
 
 ### Minor Changes

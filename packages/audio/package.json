@@ -1,6 +1,6 @@
 {
   "name": "@ignifx/audio",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "ignifx audio: bus tree, AudioSource, AudioListener, AudioClip assets, unlock handling.",
   "keywords": [
     "ignifx",
