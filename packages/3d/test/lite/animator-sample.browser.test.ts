@@ -1,8 +1,9 @@
 import { Camera, Light, Model, Vec3 } from "@ignifx/core";
 import { afterEach, describe, expect, it } from "vitest";
+import { AnimatorAsset } from "../../src/animator/animator-asset.js";
 import { Animator } from "../../src/animator/animator.js";
+import { ANIMATOR_ASSET_TYPE, defineAnimator } from "../../src/animator/definition.js";
 import { createThreeDBrowserApp, differingBytes, SETTLE_FRAMES } from "../support/browser-harness.js";
-import type { AnimatorAsset } from "../../src/animator/animator-asset.js";
 import type { Capture, ThreeDBrowserApp } from "../support/browser-harness.js";
 import type { ModelAsset } from "@ignifx/core";
 
@@ -26,13 +27,33 @@ const CANVAS = 160;
 /** How many bytes of the frame have to change before it counts as a different pose. */
 const POSE_DELTA_BYTES = 150;
 
+/** A two-layer document: `run` on the base layer, and arm states on an upper layer masked to the arms. */
+const LAYERED = defineAnimator(
+  {
+    layers: [
+      { name: "Base", weight: 1, defaultState: "run" },
+      { name: "Arms", weight: 1, mask: ["armL", "armR"], maskMode: "include", defaultState: "armsIdle" },
+    ],
+    states: [
+      { name: "run", clip: "run", layer: "Base" },
+      { name: "armsIdle", clip: "idle", layer: "Arms" },
+      { name: "armsJump", clip: "jump", layer: "Arms" },
+    ],
+  },
+  "memory:layered.animator.json",
+);
+
 /**
  * Builds a lit scene with the rigged fixture and an animator on it.
  *
  * @param editMode - Whether the app is an edit-mode app.
- * @returns The harness and the animator.
+ * @param layered - Whether the animator runs {@link LAYERED} rather than the hero document.
+ * @returns The harness, the model, and the animator.
  */
-async function loadRig(editMode: boolean): Promise<{ running: ThreeDBrowserApp; animator: Animator }> {
+async function loadRig(
+  editMode: boolean,
+  layered = false,
+): Promise<{ running: ThreeDBrowserApp; model: Model; animator: Animator }> {
   const running = await createThreeDBrowserApp({ width: CANVAS, height: CANVAS, editMode });
   harness = running;
   const eye = running.world.createEntity("Main Camera", { position: { x: 0, y: 1, z: -1.9 } });
@@ -40,15 +61,19 @@ async function loadRig(editMode: boolean): Promise<{ running: ThreeDBrowserApp; 
   eye.transform.lookAt(new Vec3(0, 1, 0));
   running.world.createEntity("Sun").addComponent(Light, { type: "hemispheric", intensity: 1 });
   const modelHandle = running.app.assets.load<ModelAsset>("3d/rig.glb").retain();
-  const animatorHandle = running.app.assets.load<AnimatorAsset>("3d/hero.animator.json").retain();
+  const animatorHandle = layered
+    ? running.app.assets
+        .register(new AnimatorAsset("memory:layered.animator.json", LAYERED), { type: ANIMATOR_ASSET_TYPE })
+        .retain()
+    : running.app.assets.load<AnimatorAsset>("3d/hero.animator.json").retain();
   const character = running.world.createEntity("Hero");
-  character.addComponent(Model, { model: modelHandle });
+  const model = character.addComponent(Model, { model: modelHandle });
   const animator = character.addComponent(Animator, { animator: animatorHandle });
   await running.advance(SETTLE_FRAMES);
   await modelHandle.promise;
   await animatorHandle.promise;
   await running.advance(SETTLE_FRAMES);
-  return { running, animator };
+  return { running, model, animator };
 }
 
 /**
@@ -89,6 +114,55 @@ describe("Animator.sample on a real device", () => {
     animator.setFloat("speed", 6);
     const current = await sampled(running, () => animator.sample("locomotion", 0.25));
     expect(differingBytes(run, current)).toBe(0);
+  }, 60_000);
+
+  it("shows a one-shot state's last key at 1, also when clamped from beyond it", async () => {
+    const { running, model, animator } = await loadRig(true);
+    const jump = model.animations.find((clip) => clip.name === "jump");
+    expect(jump).toBeDefined();
+    // The rig's clips start and end on the same key, so the playhead Lite evaluated is the
+    // evidence: a looping group would have wrapped a playhead at the end back to 0.
+    expect(animator.sample("jump", 0)).toBe(true);
+    expect(jump?.currentTime).toBe(0);
+    const end = await sampled(running, () => animator.sample("jump", 1));
+    expect(jump?.currentTime).toBeCloseTo(jump?.duration ?? -1, 6);
+    expect(jump?.currentTime).toBeGreaterThan(0);
+    const clamped = await sampled(running, () => animator.sample("jump", 1.25));
+    expect(jump?.currentTime).toBeCloseTo(jump?.duration ?? -1, 6);
+    expect(differingBytes(end, clamped)).toBe(0);
+  }, 60_000);
+
+  it("keeps looping a looping state in play", async () => {
+    const { running, model, animator } = await loadRig(false);
+    running.app.pause();
+    animator.setFloat("speed", 6);
+    animator.play("locomotion");
+    const run = model.animations.find((clip) => clip.name === "run");
+    // A blend tree lasts as long as its longest child, the one-second idle.
+    animator.advance(0.25);
+    await running.advance(2);
+    const quarter = await running.capture();
+    // One and a quarter cycles: the machine wraps, and so does the pose.
+    animator.advance(1);
+    await running.advance(2);
+    expect(animator.normalizedTime()).toBeCloseTo(0.25, 6);
+    expect(run?.currentTime).toBeCloseTo(0.125, 6);
+    expect(differingBytes(quarter, await running.capture())).toBe(0);
+    animator.advance(0.5);
+    await running.advance(2);
+    expect(differingBytes(quarter, await running.capture())).toBeGreaterThan(POSE_DELTA_BYTES);
+  }, 60_000);
+
+  it("keeps the other layers' pose when it samples a masked layer's state", async () => {
+    const { running, animator } = await loadRig(true, true);
+    // The base layer's run at a quarter, then at three quarters: opposite swings of the hips.
+    animator.advance(0.125);
+    const early = await sampled(running, () => animator.sample("armsJump", 0.5));
+    animator.advance(0.25);
+    const late = await sampled(running, () => animator.sample("armsJump", 0.5));
+    expect(animator.currentState("Base")).toBe("run");
+    // Were the base layer dropped, both frames would show the hips at rest and be identical.
+    expect(differingBytes(early, late)).toBeGreaterThan(POSE_DELTA_BYTES);
   }, 60_000);
 
   it("lasts until the next advance in a playing app", async () => {
