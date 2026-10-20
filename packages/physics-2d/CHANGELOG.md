@@ -1,5 +1,20 @@
 # @ignifx/physics-2d
 
+## 0.11.0
+
+### Minor Changes
+
+- fac8cc9: Add the `ComponentHooks.onValidate(fields)` hook, which the editor host calls after an inspector edit or a hot-reload default changes a component's fields; colliders, rigidbodies and character controllers rebuild their body there.
+- 71dbb16: In an edit-mode app, 2D physics bodies now exist and follow the transforms an editor moves, without stepping, so queries work there; add `app.physics2d.colliderOutlines(entity)` for an editor's collider gizmos.
+
+### Patch Changes
+
+- Updated dependencies [2964d6e]
+- Updated dependencies [fac8cc9]
+- Updated dependencies [3b5b8ed]
+  - @ignifx/core@0.11.0
+  - @ignifx/2d@0.11.0
+
 ## 0.10.0
 
 ### Minor Changes

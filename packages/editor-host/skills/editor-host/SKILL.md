@@ -3,7 +3,7 @@ name: editor-host
 description: Connects an ignifx project to the ignifx editor with @ignifx/editor-host: the Vite plugin that serves the editor's scene view from the project's own dev server, the virtual:ignifx/editor play controls a game's main.ts hands its app to (play, pause, step, stop, playState, playStateChanged, playStats), and the host half of the editor protocol 0.3 over a MessagePort (hello/ready, heartbeat, and the scene document methods openScene, applyOps, readBack, select, pick, frame, setGizmo, setViewMode, screenshot, getSchemas, describeSettings, setAnimateMaterials, getColliderOutlines, sampleAnimation), including the 2D view mode (an editor Camera2D and app.twoD.pickAt picking). Use when wiring a project or template for the editor, when the user mentions @ignifx/editor-host, editorHostPlugin, attachEditorPlayControls, virtual:ignifx/editor, startEditorHost or /__ignifx_editor__/, or when debugging why the editor cannot connect to a view or why the scene view disagrees with the editor's document.
 license: Apache-2.0
 metadata:
-  ignifx-version: "0.10.0"
+  ignifx-version: "0.11.0"
 ---
 
 # @ignifx/editor-host
@@ -25,7 +25,7 @@ editor's, even though its name starts with `editor-`.
 
 ## Environment
 
-- Engine: ignifx `0.10.0`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
+- Engine: ignifx `0.11.0`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
 - Peers: `@ignifx/core` and `@babylonjs/lite` (the scene view's gizmos); for the `./vite` entry,
   `@ignifx/vite-plugin` and `vite`.
 - A development dependency of the project, at the same version as its `@ignifx/core`.

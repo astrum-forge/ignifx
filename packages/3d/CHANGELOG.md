@@ -1,5 +1,22 @@
 # @ignifx/3d
 
+## 0.11.0
+
+### Minor Changes
+
+- 7901536: Add `Animator.sample(state, normalizedTime, options?)`, which poses a model at one point of one animation state at once, without playing it; an editor uses it to preview poses in edit mode.
+  In a playing app the sampled pose lasts until the animator next advances, and the state machine itself does not change.
+
+### Patch Changes
+
+- Updated dependencies [2964d6e]
+- Updated dependencies [fac8cc9]
+- Updated dependencies [5320bfc]
+- Updated dependencies [3b5b8ed]
+  - @ignifx/core@0.11.0
+  - @ignifx/physics@0.11.0
+  - @ignifx/input@0.11.0
+
 ## 0.10.0
 
 ### Patch Changes

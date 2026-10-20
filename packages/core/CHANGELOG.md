@@ -1,5 +1,15 @@
 # @ignifx/core
 
+## 0.11.0
+
+### Minor Changes
+
+- 2964d6e: Add `app.renderer.animateMaterialsInEditMode`, an editor's "animate materials" toggle: in an edit-mode app the shader clock of shader materials and custom post effects now runs by default, and setting it to `false` holds it.
+- fac8cc9: Add the `ComponentHooks.onValidate(fields)` hook, which the editor host calls after an inspector edit or a hot-reload default changes a component's fields; colliders, rigidbodies and character controllers rebuild their body there.
+- 3b5b8ed: Load `.ktx2` textures through `app.assets`, transcoded to the device's compressed format (BC7, ETC2, ASTC or RGBA8), and `.basis` through Lite's Basis loader. A `.ktx2` keeps its rows as stored, so encode it vertically flipped to draw like its PNG under the default `invertY`.
+  
+  Ship Babylon Lite's KTX2 and meshopt decoders in `@ignifx/core` and load them from the game's own origin whenever the manifest lists them, so games no longer fetch them from `cdn.babylonjs.com`.
+
 ## 0.10.0
 
 ### Minor Changes
