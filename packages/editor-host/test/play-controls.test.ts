@@ -156,6 +156,62 @@ describe("startEditorPlayControls", () => {
   });
 });
 
+describe("playStats (engine ask E25)", () => {
+  it("averages the newest second of frames, and counts every scene's entities", async () => {
+    const { app, peer } = await playView();
+    const parent = app.world.createEntity("Parent");
+    app.world.createEntity("Child", { parent });
+    app.world.createEntity("Kept", { scene: app.world.createScene("hud", { persistent: true }) });
+
+    expect((await peer.request("playStats"))["result"]).toEqual({
+      fps: 0,
+      frameTimeMs: 0,
+      entityCount: 3,
+      frameCount: 0,
+    });
+    // A headless app has no loop: once started, each step is one frame of the given delta.
+    await app.start();
+    for (let frame = 0; frame < 30; frame += 1) {
+      app.step(0.1);
+    }
+    for (let frame = 0; frame < 50; frame += 1) {
+      app.step(0.02);
+    }
+    parent.destroyImmediate();
+    // The newest 50 frames fill the second; the older, slower ones are left out.
+    expect((await peer.request("playStats"))["result"]).toEqual({
+      fps: 50,
+      frameTimeMs: 20,
+      entityCount: 1,
+      frameCount: 80,
+    });
+    // Paused game time still renders frames.
+    app.time.paused = true;
+    app.step(0.02);
+    expect((await peer.request("playStats"))["result"]).toMatchObject({ fps: 50, frameCount: 81 });
+  });
+
+  it("reports no rate once the loop is stopped, and changes nothing", async () => {
+    const { app, peer } = await playView();
+    await peer.request("step", { deltaSeconds: 0.02 });
+
+    expect((await peer.request("playStats"))["result"]).toEqual({
+      fps: 0,
+      frameTimeMs: 0,
+      entityCount: 0,
+      frameCount: 1,
+    });
+    expect(app.isRunning).toBe(false);
+    expect(app.time.paused).toBe(true);
+  });
+
+  it("refuses playStats before the handshake", async () => {
+    const { peer } = await playView(false);
+
+    expect((await peer.request("playStats"))["error"]).toMatchObject({ code: RpcErrorCode.notReady });
+  });
+});
+
 describe("playState and playStateChanged (engine ask E24)", () => {
   it("reads the game's state without changing it", async () => {
     const { app, peer } = await playView();

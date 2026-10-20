@@ -6,6 +6,7 @@
  */
 
 import { decodeProps, serializeScene } from "@ignifx/core";
+import { countEntities } from "../play-stats.js";
 import type { OpenSceneResult, ReadBackParams, ReadBackResult, SceneIssue } from "../protocol/index.js";
 import type {
   App,
@@ -36,24 +37,6 @@ export interface DocumentIndex {
   readonly records: ReadonlyMap<string, SceneFileEntity>;
   /** Each document component, by uid. */
   readonly components: ReadonlyMap<string, Component>;
-}
-
-/**
- * Counts the entities of a scene instance, members of instanced scenes included.
- *
- * @param scene - The instance.
- * @returns How many entities it holds.
- */
-function countEntities(scene: SceneInstance): number {
-  let count = 0;
-  const pending: Entity[] = [...scene.roots];
-  for (let entity = pending.pop(); entity !== undefined; entity = pending.pop()) {
-    if (!entity.isDestroyed) {
-      count += 1;
-      pending.push(...entity.children);
-    }
-  }
-  return count;
 }
 
 /**
