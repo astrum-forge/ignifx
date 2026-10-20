@@ -703,7 +703,7 @@ export class SceneHost {
    * project's physics extensions, for the editor's collider gizmos. Changes nothing.
    *
    * @param params - `{ entities }`.
-   * @returns The outlines; uids the open scene does not have are skipped.
+   * @returns The outlines, within the protocol's caps; uids the open scene does not have are skipped.
    */
   #getColliderOutlines(params: unknown): ColliderOutlineSet {
     const mirror = this.#requireMirror(SceneMethod.getColliderOutlines);
@@ -712,11 +712,7 @@ export class SceneHost {
     }
     this.#requireOpen(SceneMethod.getColliderOutlines);
     const index = mirror.index();
-    const entities = [...new Set(params.entities)].flatMap((uid) => {
-      const entity = index?.entities.get(uid);
-      return entity === undefined ? [] : [[uid, entity] as const];
-    });
-    return { outlines: colliderOutlinesOf(this.#requireApp(), entities) };
+    return colliderOutlinesOf(this.#requireApp(), params.entities, (uid) => index?.entities.get(uid));
   }
 
   /**

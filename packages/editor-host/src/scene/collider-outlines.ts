@@ -6,7 +6,8 @@
  */
 
 import { Component } from "@ignifx/core";
-import type { ColliderOutlineRecord } from "../protocol/index.js";
+import { COLLIDER_OUTLINES_MAX_ENTITIES, COLLIDER_OUTLINES_MAX_NUMBERS } from "../protocol/index.js";
+import type { ColliderOutlineRecord, ColliderOutlineSet } from "../protocol/index.js";
 import type { App, Entity } from "@ignifx/core";
 
 /** One outline as a physics service answers it. */
@@ -97,41 +98,51 @@ function lines2D(lines: Float32Array, z: number): number[] {
 }
 
 /**
- * Outlines the colliders of document entities, 3D first and then 2D for each entity.
+ * Outlines the colliders of document entities, 3D first and then 2D for each entity, within the
+ * protocol's caps: at most `COLLIDER_OUTLINES_MAX_ENTITIES` entities and
+ * `COLLIDER_OUTLINES_MAX_NUMBERS` numbers of lines. What passes a cap is left out, whole, and the
+ * answer says `truncated`.
  *
  * @param app - The scene view's app.
- * @param entities - The requested entities that the open scene has, as `[uid, entity]` pairs in
- * request order.
- * @returns One record per outlined collider.
+ * @param requested - The requested entities, as many as asked, before any is looked up.
+ * @param resolve - Finds a requested uid's entity in the open scene, or `undefined`.
+ * @returns The answer to `getColliderOutlines`.
  */
 export function colliderOutlinesOf(
   app: App,
-  entities: readonly (readonly [string, Entity])[],
-): ColliderOutlineRecord[] {
+  requested: readonly string[],
+  resolve: (uid: string) => Entity | undefined,
+): ColliderOutlineSet {
   const outline3D = outlinerOf(app, "physics");
   const outline2D = outlinerOf(app, "physics2d");
-  const records: ColliderOutlineRecord[] = [];
-  for (const [uid, entity] of entities) {
-    for (const outline of outline3D?.(entity) ?? []) {
-      records.push({
+  const outlines: ColliderOutlineRecord[] = [];
+  const uids = [...new Set(requested)];
+  let truncated = uids.length > COLLIDER_OUTLINES_MAX_ENTITIES;
+  let numbers = 0;
+  for (const uid of uids.slice(0, COLLIDER_OUTLINES_MAX_ENTITIES)) {
+    const entity = resolve(uid);
+    if (entity === undefined) {
+      continue;
+    }
+    const z = entity.transform.position.z;
+    const found: (readonly [OutlineLike, boolean])[] = [
+      ...(outline3D?.(entity) ?? []).map((outline) => [outline, false] as const),
+      ...(outline2D?.(entity) ?? []).map((outline) => [outline, true] as const),
+    ];
+    for (const [outline, is2D] of found) {
+      const count = is2D ? (outline.lines.length / 2) * 3 : outline.lines.length;
+      if (numbers + count > COLLIDER_OUTLINES_MAX_NUMBERS) {
+        truncated = true;
+        return { outlines, truncated };
+      }
+      numbers += count;
+      outlines.push({
         entity: uid,
         component: outline.collider.uid,
         isTrigger: outline.isTrigger,
-        lines: lines3D(outline.lines),
+        lines: is2D ? lines2D(outline.lines, z) : lines3D(outline.lines),
       });
     }
-    const outlines2D = outline2D?.(entity) ?? [];
-    if (outlines2D.length > 0) {
-      const z = entity.transform.position.z;
-      for (const outline of outlines2D) {
-        records.push({
-          entity: uid,
-          component: outline.collider.uid,
-          isTrigger: outline.isTrigger,
-          lines: lines2D(outline.lines, z),
-        });
-      }
-    }
   }
-  return records;
+  return { outlines, truncated };
 }

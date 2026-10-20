@@ -66,6 +66,8 @@ export {
 } from "./rpc.js";
 export {
   ApplyOpFailureCode,
+  COLLIDER_OUTLINES_MAX_ENTITIES,
+  COLLIDER_OUTLINES_MAX_NUMBERS,
   GizmoMode,
   GizmoSpace,
   isAppErrorData,

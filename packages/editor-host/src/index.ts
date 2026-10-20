@@ -22,6 +22,8 @@ export {
 } from "./play-controls.js";
 export {
   ApplyOpFailureCode,
+  COLLIDER_OUTLINES_MAX_ENTITIES,
+  COLLIDER_OUTLINES_MAX_NUMBERS,
   DEFAULT_HEARTBEAT_INTERVAL_MS,
   EDITOR_CONNECT_MESSAGE_TYPE,
   GizmoMode,

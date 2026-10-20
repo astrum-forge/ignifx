@@ -156,6 +156,23 @@ export const TRANSFORM_DRAGGING_INTERVAL_MS = 50;
 export const SCREENSHOT_MAX_SIZE = 2048;
 
 /**
+ * The most entities one `getColliderOutlines` request outlines; the rest of a longer list are left
+ * out and the answer says `truncated`.
+ *
+ * @public
+ */
+export const COLLIDER_OUTLINES_MAX_ENTITIES = 256;
+
+/**
+ * The most numbers all the `lines` of one `getColliderOutlines` answer hold together, 100 000
+ * segments: an outline that would pass it is left out, with every one after it, and the answer
+ * says `truncated`.
+ *
+ * @public
+ */
+export const COLLIDER_OUTLINES_MAX_NUMBERS = 600_000;
+
+/**
  * A world-space point, `[x, y, z]`, in metres.
  *
  * @public
@@ -755,6 +772,12 @@ export interface ColliderOutlineSet {
    * order and then component order. Empty when the project registers no physics extension.
    */
   readonly outlines: readonly ColliderOutlineRecord[];
+  /**
+   * True when outlines were left out: the request named more than
+   * {@link COLLIDER_OUTLINES_MAX_ENTITIES} entities, or the lines would have passed
+   * {@link COLLIDER_OUTLINES_MAX_NUMBERS} numbers. The outlines sent are whole.
+   */
+  readonly truncated: boolean;
 }
 
 /**
@@ -1553,12 +1576,12 @@ export function isColliderOutlineRecord(value: unknown): value is ColliderOutlin
  * Checks the result of `getColliderOutlines`.
  *
  * @param value - The received `result`.
- * @returns True for a list of outline records.
+ * @returns True for a list of outline records and a boolean `truncated`.
  *
  * @public
  */
 export function isColliderOutlineSet(value: unknown): value is ColliderOutlineSet {
-  return isRecord(value) && isArrayOf(value["outlines"], isColliderOutlineRecord);
+  return isRecord(value) && isArrayOf(value["outlines"], isColliderOutlineRecord) && isBoolean(value["truncated"]);
 }
 
 /**

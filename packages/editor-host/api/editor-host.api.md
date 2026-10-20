@@ -82,6 +82,12 @@ export interface AssetReloadedParams {
 }
 
 // @public
+export const COLLIDER_OUTLINES_MAX_ENTITIES = 256;
+
+// @public
+export const COLLIDER_OUTLINES_MAX_NUMBERS = 6e5;
+
+// @public
 export interface ColliderOutlineRecord {
     readonly component: string;
     readonly entity: string;
@@ -92,6 +98,7 @@ export interface ColliderOutlineRecord {
 // @public
 export interface ColliderOutlineSet {
     readonly outlines: readonly ColliderOutlineRecord[];
+    readonly truncated: boolean;
 }
 
 // @public

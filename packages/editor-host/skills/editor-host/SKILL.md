@@ -333,7 +333,8 @@ object `openScene` sends, through `world.loadSceneFile`; `readBack` answers with
   `app.renderer.animateMaterialsInEditMode` (on at every start, so re-send it after `ready`).
   `getColliderOutlines { entities }` answers `{ outlines }`: per enabled collider of each open
   entity, its uid, the component's uid, `isTrigger`, and world-space `lines` (six numbers a
-  segment), read from `app.physics` / `app.physics2d` by shape. Edit mode keeps physics bodies on the
+  segment), read from `app.physics` / `app.physics2d` by shape, plus `truncated` when the request
+  passed 256 entities or the lines 600 000 numbers. Edit mode keeps physics bodies on the
   transforms the editor moves without stepping, so the outlines and physics queries follow.
 - **A changed asset reloads in place, not the view.** The scene view's page hands every
   `ignifx:asset-changed` event to `host.assetChanged`, which calls `app.assets.reload(address)` for an
