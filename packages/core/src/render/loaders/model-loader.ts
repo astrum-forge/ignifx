@@ -1,4 +1,5 @@
 import { loadGltfFromBytes } from "../../lite/gpu/gltf.js";
+import { configureDecoders } from "../decoder-urls.js";
 import { createModelAsset, MODEL_ASSET_TYPE, MODEL_FILE_EXTENSIONS } from "../model-asset.js";
 import type { AssetLoader, LoaderContext } from "../../assets/types.js";
 import type { ModelAsset } from "../model-asset.js";
@@ -18,6 +19,13 @@ import type { ModelAsset } from "../model-asset.js";
  * `.glb`; a `.gltf` with siblings fails inside Lite and surfaces as `IGX-0505`. `.glb` is what the
  * asset pipeline produces, and the fix — passing the URL through for that one shape — is a
  * three-line change whenever a project needs it.
+ *
+ * ## Decoders
+ *
+ * A glTF may need one of Lite's run-time decoders: `KHR_texture_basisu` images go through the KTX2
+ * decoder and `EXT_meshopt_compression` buffers through the meshopt decoder. Both load from
+ * `cdn.babylonjs.com` unless told otherwise, so the loader calls `configureDecoders` first, which
+ * points Lite at the copies `@ignifx/vite-plugin` serves (`../decoder-urls.ts`).
  *
  * ## Headless
  *
@@ -49,6 +57,7 @@ export function createModelLoader(): AssetLoader<ModelAsset> {
       if (ctx.app.isHeadless) {
         return createModelAsset(ctx.address, null, null);
       }
+      await configureDecoders(ctx.app);
       const container = await loadGltfFromBytes(ctx.lite.engine, bytes);
       return createModelAsset(ctx.address, container, ctx.app.lite.scene);
     },

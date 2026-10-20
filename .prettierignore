@@ -19,3 +19,5 @@ skills/ignifx/references/recipes/
 # Electron desktop build output (see .oxfmtignore).
 templates/*/out/
 templates/*/release/
+# Third-party decoders and their licence texts, written by `pnpm vendor:decoders`.
+packages/core/decoders/

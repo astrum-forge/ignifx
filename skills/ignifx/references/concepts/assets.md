@@ -153,6 +153,26 @@ The core extension registers: `texture` (`.png .jpg .jpeg .webp .ktx2 .basis`), 
 (`.mesh.json`), `environment` (`.env .hdr .dds`), `font` (`.ttf .otf`), and the generic
 `jsonAssetLoader`, `textAssetLoader`, and `binaryAssetLoader`.
 
+### Compressed textures (`.ktx2`)
+
+A `.ktx2` (Basis Universal, ETC1S or UASTC) is a `texture` like a `.png` and loads the same way,
+`app.assets.loadAsync<TextureAsset>("textures/rock.ktx2")`. Lite transcodes it to the device's best
+compressed format — BC7 on Windows and Linux desktops, ETC2 (ETC1S) or ASTC (UASTC) on Apple
+silicon and mobile, RGBA8 without compression support — so it stays compressed in VRAM.
+
+- The sidecar's `srgb` and sampler options apply; `mipMaps`, `premultiplyAlpha` and `invertY` do
+  not: the file's own mips and rows are uploaded as stored. To draw like the same PNG under the
+  default `invertY: true`, encode the `.ktx2` from the image flipped vertically (Basis
+  `setYFlip(true)`); a top-row-first `.ktx2` draws upside down on ignifx's built-in meshes.
+- The decoder and its transcoders ship in `@ignifx/core` and `@ignifx/vite-plugin` serves them from
+  the game's own origin, in `vite dev` and in the build, so a packaged game with
+  `script-src 'self'` needs nothing from `cdn.babylonjs.com`. The project must depend on
+  `@ignifx/core` directly (the scaffolded templates do). Without the plugin, copy
+  `node_modules/@ignifx/core/decoders/*` beside the assets and list each file in the manifest at
+  its bare name.
+- `.basis` loads too, but its transcoder always comes from `cdn.babylonjs.com` (Lite 1.34 has no
+  setter), so it fails under a strict CSP. Prefer `.ktx2`.
+
 ### Mesh files
 
 A `.mesh.json` names one primitive and the options its `MeshAsset` factory takes, so a scene file

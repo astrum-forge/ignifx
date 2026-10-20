@@ -55,5 +55,12 @@
       }
     }
   ],
-  "ignorePatterns": ["**/dist/**", "**/node_modules/**", "**/coverage/**", "**/.turbo/**", ".claude/**"]
+  "ignorePatterns": [
+    "**/dist/**",
+    "**/node_modules/**",
+    "**/coverage/**",
+    "**/.turbo/**",
+    ".claude/**",
+    "packages/core/decoders/**"
+  ]
 }

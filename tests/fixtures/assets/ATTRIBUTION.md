@@ -58,6 +58,30 @@ name, provenance command — is in [`ui/ATTRIBUTION.md`](ui/ATTRIBUTION.md), alo
 - **Source:** <https://github.com/google/fonts/tree/main/ofl/sharetechmono>
 - **SHA-256:** `9ceab1f87414829af259c0f537573ae03ef7dd3147c0b27a36a1a0beb6732677`
 
+## `ktx2/` — `quadrants.png` (108 bytes) and three `.ktx2` files (710, 709 and 750 bytes)
+
+Added 2026-10-19 for engine ask E13 (KTX2 in games). One 32×32 image with four solid quadrants —
+red top-left, green top-right, blue bottom-left, white bottom-right, top row first — as a PNG and
+as three KTX2 files with sRGB transfer and a full six-level mip chain: `quadrants-etc1s.ktx2`
+(ETC1S, BasisLZ) and `quadrants-uastc.ktx2` (UASTC, Zstandard) are encoded from the image flipped
+vertically (bottom row first), which is how a `.ktx2` must be stored to draw like the PNG under the
+default `invertY: true`, and `quadrants-etc1s-top-first.ktx2` (ETC1S) from the image as is. `packages/core/test/assets/ktx2.browser.test.ts`
+draws all four.
+
+All four are original files made for this repository, not downloads. The PNG is written by hand
+(one `IHDR`, one zlib `IDAT`); the KTX2 files are the ignifx editor importer's own output:
+`encodeKtx2(source, { mode, mipmaps: true, srgb: true })` with `mode` `"etc1s"` or `"uastc"` from
+`ignifx-editor/packages/importers/src/ktx2/encoder.ts` at `a50fb80`, which wraps `ktx2-encoder`
+0.6.0 (Basis Universal v2.5). Re-encoding with another encoder version may change the bytes.
+
+- **Licence:** Apache License 2.0, as the rest of this repository
+- **Copyright:** © 2026 Astrum Forge Studios
+- **SHA-256:** `cd1b81c1311a4309d0f677c9c0f326b220278ebd6df8a8fdc085507414f67652`
+  (`quadrants-etc1s.ktx2`), `7f1affb0b02527774a13b9044d0bb46e5a5cbcfed3fdfeb788d08ffa0561d8e1`
+  (`quadrants-etc1s-top-first.ktx2`), `cf6d383807283f56cd5395a877fd1786092e93388b92e6eb91f3884995b43c42`
+  (`quadrants-uastc.ktx2`),
+  `44287e3f4bee1a3a0a5a4b497646b39fbcb9aeb2fbae02210c83556de9f3a312` (`quadrants.png`)
+
 ---
 
 ## Note on CC-BY-4.0

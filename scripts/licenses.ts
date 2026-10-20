@@ -26,6 +26,7 @@ import {
   renderNotices,
 } from "./lib/licenses.ts";
 import { log, logError } from "./lib/log.ts";
+import { findVendoredManifests, readVendoredManifest } from "./lib/vendored.ts";
 import { readJsonObject, repositoryRoot } from "./lib/workspace.ts";
 import type { NoticeEntry, PnpmLicenseRecord } from "./lib/licenses.ts";
 
@@ -82,6 +83,33 @@ function declaredRuntimeDependencies(root: string): ReadonlyMap<string, string[]
 }
 
 /**
+ * The notice entries for third-party files committed inside a workspace package
+ * (`scripts/lib/vendored.ts`). No `package.json` names them, so `pnpm licenses list` cannot.
+ *
+ * @param root - The repository root.
+ * @returns One entry per vendored upstream package.
+ */
+function vendoredNotices(root: string): readonly NoticeEntry[] {
+  const entries: NoticeEntry[] = [];
+  for (const { packageDirectory, file } of findVendoredManifests(root)) {
+    const owner = readWorkspaceManifest(readJsonObject(path.join(packageDirectory, "package.json"))).name;
+    for (const component of readVendoredManifest(file).components) {
+      entries.push({
+        name: component.name,
+        versions: [component.version],
+        license: component.license,
+        copyright: component.copyright,
+        repository: component.repository,
+        requiredBy: [`${owner} (vendored in ${path.relative(root, path.dirname(file))})`],
+        notice:
+          component.noticeFile === null ? null : readText(path.join(path.dirname(file), component.noticeFile)).trim(),
+      });
+    }
+  }
+  return entries;
+}
+
+/**
  * Collects the notice entries for a repository.
  *
  * @param root - The repository root.
@@ -101,6 +129,13 @@ function collectNotices(root: string): readonly NoticeEntry[] {
     }
     const record: PnpmLicenseRecord | null = production.get(name) ?? all.get(name) ?? null;
     entries.push(noticeEntryFor(name, record, declared.get(name) ?? []));
+  }
+  const installed = new Set(entries.map((entry) => entry.name));
+  for (const vendored of vendoredNotices(root)) {
+    if (installed.has(vendored.name)) {
+      throw new Error(`${vendored.name} is both installed and vendored; drop one of them so the notice has one source`);
+    }
+    entries.push(vendored);
   }
   return entries;
 }
