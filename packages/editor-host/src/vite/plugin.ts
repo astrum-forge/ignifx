@@ -5,7 +5,7 @@
 
 import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { join, resolve } from "node:path";
+import { isAbsolute, join, resolve } from "node:path";
 import { EditorHostErrorCode, isEditorOrigin } from "../error-codes.js";
 import { EditorHostPluginError } from "./errors.js";
 import {
@@ -20,6 +20,7 @@ import {
   RESOLVED_EDITOR_ENTRY_MODULE_ID,
   RESOLVED_EDITOR_MODULE_ID,
 } from "./modules.js";
+import { createPrivateDirGuard, isPrivateRealPath, realPathOrSelf } from "./private-dir.js";
 import type { ConfigEnv, Plugin, ViteDevServer } from "vite";
 
 /**
@@ -117,7 +118,10 @@ function checkOptions(options: EditorHostPluginOptions): { extensions: string; h
  *   `optimizeDeps.entries` (keeping Vite's default crawl) and keeps `@ignifx/editor-host` out of
  *   pre-bundling, so the host reaches the same pre-bundled `@ignifx/core` as the game.
  * - `ignifx-editor-host:play-controls` (every command) serves `virtual:ignifx/editor`: the play
- *   controls under `vite dev`, an empty function under `vite build`.
+ *   controls under `vite dev`, an empty function under `vite build`. Under `vite dev` and
+ *   `vite preview` it also answers 404 to any request into `.ignifx/`, the editor's private
+ *   directory, by path or through a symbolic link, as `ignifx()` does; this covers a config that
+ *   lists this plugin without `ignifx()`.
  *
  * List it after `ignifx()` from `@ignifx/vite-plugin`, which serves the two modules the scene
  * view imports.
@@ -270,15 +274,54 @@ export function editorHostPlugin(options: EditorHostPluginOptions): Plugin[] {
       engineVersion = readProjectEngineVersion(root);
     },
 
+    // Defence in depth for a config without `ignifx()`, whose guard otherwise keeps `.ignifx/` (the
+    // editor's MCP token) off the server; registered in the hook body, ahead of Vite's file serving.
+    configureServer(server) {
+      const realRoot = realPathOrSelf(server.config.root);
+      const { publicDir } = server.config;
+      server.middlewares.use(
+        createPrivateDirGuard(() => ({
+          realRoot,
+          base: server.config.base,
+          serveDirs: publicDir === "" ? [server.config.root] : [server.config.root, publicDir],
+          alias: server.config.resolve.alias,
+          extensions: server.config.resolve.extensions,
+        })),
+      );
+    },
+
+    configurePreviewServer(server) {
+      const realRoot = realPathOrSelf(server.config.root);
+      const outDir = resolve(server.config.root, server.config.build.outDir);
+      server.middlewares.use(
+        createPrivateDirGuard(() => ({
+          realRoot,
+          base: server.config.base,
+          serveDirs: [outDir],
+          alias: [],
+          extensions: [],
+        })),
+      );
+    },
+
     resolveId(id) {
       return id === EDITOR_MODULE_ID ? RESOLVED_EDITOR_MODULE_ID : null;
     },
 
     load(id) {
-      if (id !== RESOLVED_EDITOR_MODULE_ID) {
-        return null;
+      if (id === RESOLVED_EDITOR_MODULE_ID) {
+        return playControlsModuleSource({ editorOrigin, engineVersion, heartbeatIntervalMs, hot: command === "serve" });
       }
-      return playControlsModuleSource({ editorOrigin, engineVersion, heartbeatIntervalMs, hot: command === "serve" });
+      // Whatever resolved to it (an alias, `/@id/`, an import through a link), a module whose real
+      // path is in `.ignifx/` is never loaded: in dev it would be served, in a build bundled.
+      const file = id.split("?", 1)[0] ?? "";
+      if (!id.startsWith("\0") && isAbsolute(file) && isPrivateRealPath(realPathOrSelf(root), file)) {
+        this.error(
+          `"${file}" is in the editor-private .ignifx/ directory, which holds the editor's MCP token; ` +
+            "nothing may import or serve it. Remove the import or link.",
+        );
+      }
+      return null;
     },
   };
 

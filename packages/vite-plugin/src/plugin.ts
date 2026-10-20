@@ -8,7 +8,7 @@
 import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
 import { readFile, stat } from "node:fs/promises";
-import { basename, isAbsolute, join, relative, resolve } from "node:path";
+import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { assetTypeForAddress, hashedAddress, isSidecarFileName, META_SUFFIX } from "./asset-types.js";
 import { VitePluginError, VitePluginErrorCode } from "./errors.js";
 import { collectExtensionPublicAssets } from "./extension-assets.js";
@@ -24,7 +24,14 @@ import {
 } from "./ignifx-config.js";
 import { addressFromRelativePath, buildManifest, scanAssetRoot, serializeManifest } from "./manifest.js";
 import { resolvePluginOptions } from "./options.js";
-import { privateDirDenyPatterns, privateDirMiddleware } from "./private-dir.js";
+import {
+  createPrivateDirGuard,
+  findPrivateOutputs,
+  isPrivateRealPath,
+  privateDirDenyPatterns,
+  realPathOrSelf,
+  removePrivateOutputs,
+} from "./private-dir.js";
 import { formatValidationProblem, validateJsonAssets } from "./validate.js";
 import {
   ASSET_CHANGED_EVENT,
@@ -41,7 +48,7 @@ import type { AssetManifest, AssetManifestEntry, ScannedAsset } from "./manifest
 import type { IgnifxPluginOptions } from "./options.js";
 import type { ValidationProblem } from "./validate.js";
 import type { AssetChangedPayload } from "./virtual-modules.js";
-import type { ConfigEnv, Plugin, Rollup, ViteDevServer } from "vite";
+import type { ConfigEnv, Plugin, ResolvedConfig, Rollup, ViteDevServer } from "vite";
 
 /**
  * The plugin's name, as it appears in Vite logs and in `PLUGIN_ERROR` diagnostics.
@@ -214,10 +221,14 @@ interface ResolvedProjectSettings {
  *   project config or settings file restarts the dev server, which injects the new values and
  *   reloads the page.
  * - `vite dev` and `vite preview` answer 404 to any request whose decoded path has a `.ignifx`
- *   segment, in any case or encoding, ahead of every middleware that serves a file.
+ *   segment, in any case or encoding, or whose file lies in `.ignifx/` once symbolic links are
+ *   followed, ahead of every middleware that serves a file. `load` refuses (`IGX-0556`) a module
+ *   whose real path is in `.ignifx/`, and the asset scan skips links into it with a warning.
  * - `generateBundle` emits every asset under `<outDir>/<publicPath>` with a content-hashed,
  *   immutable-cacheable name, copies each extension's `ignifx.assets.public` files unhashed next to
  *   them, and writes the manifest with the hashed URLs.
+ * - `writeBundle` fails the build with `IGX-0556`, after removing them, when the output holds a
+ *   `.ignifx` directory at any depth or a copy of a `publicDir` file that links into one.
  *
  * @param options - Plugin options and their documented defaults; see {@link IgnifxPluginOptions}.
  * @returns The Vite plugin, to be listed in `vite.config.ts`.
@@ -242,6 +253,15 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
   let root = process.cwd();
   let base = "/";
   let command: ConfigEnv["command"] = "serve";
+  let viteConfig: ResolvedConfig | null = null;
+  /** The real path of `root`, resolved once per root. */
+  let realRoot: { readonly root: string; readonly real: string } | null = null;
+  const realRootPath = (): string => {
+    if (realRoot?.root !== root) {
+      realRoot = { root, real: realPathOrSelf(root) };
+    }
+    return realRoot.real;
+  };
   let configEnv: ConfigEnv = { command: "serve", mode: "development" };
   let configFilePath: string | null = null;
   let configDependencies: readonly string[] = [];
@@ -427,7 +447,7 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
     // build whose two manifests disagreed, and the one game code reads was the incomplete one.
     await refreshExtensionAssets();
     try {
-      const scannedAssets = await scanAssetRoot({ assetRoot: assetRootPath(), hashLength: settings.hashLength });
+      const scannedAssets = await scanAssetRoot({ assetRoot: assetRootPath(), hashLength: settings.hashLength, warn });
       // An unpublished asset is a source the build leaves behind: no manifest entry, no copy in
       // `dist/`, no validation, and no claim on an output file name.
       assets = scannedAssets.filter((asset) => asset.publish !== false);
@@ -799,6 +819,7 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
       root = resolvedConfig.root;
       base = resolvedConfig.base;
       command = resolvedConfig.command;
+      viteConfig = resolvedConfig;
     },
 
     async buildStart() {
@@ -827,12 +848,31 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
         // (`docs/architecture/15-devtools-and-diagnostics.md` §5).
         return scriptsModuleSource(settings.scriptsPattern, { hot: command !== "build" });
       }
+      // Whatever resolved to it (an alias, `/@id/`, an import through a link), a module whose real
+      // path is in `.ignifx/` is never loaded: in dev it would be served, in a build bundled.
+      const file = id.split("?", 1)[0] ?? "";
+      if (!id.startsWith("\0") && isAbsolute(file) && isPrivateRealPath(realRootPath(), file)) {
+        this.error(
+          `${VitePluginErrorCode.privateDirExposed} "${file}" is in the editor-private .ignifx/ directory, ` +
+            "which holds the editor's MCP token; nothing may import or serve it. Remove the import or link.",
+        );
+      }
       return null;
     },
 
     async configureServer(server) {
-      // Registered in the hook body, ahead of every middleware that serves a file.
-      server.middlewares.use(privateDirMiddleware);
+      // Registered in the hook body, ahead of every middleware that serves a file. It also follows
+      // links, so `src/link -> ../.ignifx` serves nothing either.
+      const { publicDir: servedPublicDir } = server.config;
+      server.middlewares.use(
+        createPrivateDirGuard(() => ({
+          realRoot: realRootPath(),
+          base: server.config.base,
+          serveDirs: servedPublicDir === "" ? [server.config.root] : [server.config.root, servedPublicDir],
+          alias: server.config.resolve.alias,
+          extensions: server.config.resolve.extensions,
+        })),
+      );
       installMiddleware(server);
 
       server.watcher.add(assetRootPath());
@@ -854,7 +894,16 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
     },
 
     configurePreviewServer(server) {
-      server.middlewares.use(privateDirMiddleware);
+      const outDir = resolve(server.config.root, server.config.build.outDir);
+      server.middlewares.use(
+        createPrivateDirGuard(() => ({
+          realRoot: realRootPath(),
+          base: server.config.base,
+          serveDirs: [outDir],
+          alias: [],
+          extensions: [],
+        })),
+      );
     },
 
     async generateBundle(_output, bundle) {
@@ -881,6 +930,29 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
         fileName: settings.manifestFileName,
         source: serializeManifest(currentManifest()),
       });
+    },
+
+    async writeBundle(output) {
+      // Vite copies `publicDir` into the output whole, dot-directories and link targets included,
+      // so `public/.ignifx/mcp.json` or `public/tok.json -> ../.ignifx/mcp.json` would ship the
+      // MCP token to whatever static host serves `dist/`.
+      const outDir = output.dir ?? (output.file === undefined ? null : dirname(output.file));
+      if (outDir === null) {
+        return;
+      }
+      const copied =
+        viteConfig?.build.copyPublicDir === true && viteConfig.publicDir !== "" ? viteConfig.publicDir : null;
+      const leaked = await findPrivateOutputs(outDir, copied);
+      if (leaked.length === 0) {
+        return;
+      }
+      await removePrivateOutputs(leaked);
+      this.error(
+        `${VitePluginErrorCode.privateDirExposed} The build output held files from the editor-private ` +
+          `.ignifx/ directory, which holds the editor's MCP token: ${leaked.map((path) => relative(outDir, path)).join(", ")}. ` +
+          "They were removed and the build failed. Move .ignifx/ out of publicDir and remove any link " +
+          "into it from publicDir.",
+      );
     },
   };
 }

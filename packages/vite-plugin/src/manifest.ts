@@ -13,6 +13,7 @@ import { join, sep } from "node:path";
 import { assetTypeForAddress, isSidecarFileName, META_SUFFIX } from "./asset-types.js";
 import { VitePluginError, VitePluginErrorCode } from "./errors.js";
 import { isJsonArray, isJsonObject, parseJsonValue } from "./json.js";
+import { isPrivateRealPath, realPathOrSelf } from "./private-dir.js";
 import type { AssetType } from "./asset-types.js";
 import type { JsonObject, JsonValue } from "./json.js";
 
@@ -116,6 +117,11 @@ export interface ScanAssetRootOptions {
    * @defaultValue `8`
    */
   readonly hashLength?: number;
+  /**
+   * Receives a message for each file the scan skips because it is a symbolic link into the
+   * editor-private `.ignifx/` directory. Without it such files are skipped silently.
+   */
+  readonly warn?: (message: string) => void;
 }
 
 /**
@@ -201,14 +207,33 @@ async function readSidecar(
   return { groups, publish, meta: Object.keys(rest).length === 0 ? null : rest };
 }
 
+/** Where {@link collectAddresses} reports to and what it measures real paths from. */
+interface CollectContext {
+  /** The real path of the asset root. */
+  readonly realRoot: string;
+  /** Receives the "skipped a link into `.ignifx/`" warnings. */
+  readonly warn: (message: string) => void;
+}
+
 /**
- * Collects every file below a directory, skipping dot-prefixed entries and sidecars.
+ * Collects every file below a directory, skipping dot-prefixed entries, sidecars, and symbolic
+ * links whose real path is in the editor-private `.ignifx/` directory.
+ *
+ * @remarks
+ * Only links need `realpath`: the walk descends into real directories only (a `Dirent` for a link
+ * is never a directory), so any other entry's real path is its parent's plus its own name.
  *
  * @param directory - The absolute directory to read.
  * @param prefix - The `/`-separated address prefix of `directory`, `""` at the root.
  * @param addresses - Accumulator that receives one address per file found.
+ * @param context - The asset root's real path and the warning sink.
  */
-async function collectAddresses(directory: string, prefix: string, addresses: string[]): Promise<void> {
+async function collectAddresses(
+  directory: string,
+  prefix: string,
+  addresses: string[],
+  context: CollectContext,
+): Promise<void> {
   const entries = await readdir(directory, { withFileTypes: true });
   // Sibling directories are independent, so they are read concurrently; the caller sorts once at
   // the end, which is what makes the result deterministic rather than the traversal order.
@@ -218,8 +243,15 @@ async function collectAddresses(directory: string, prefix: string, addresses: st
         return;
       }
       const address = prefix === "" ? entry.name : `${prefix}/${entry.name}`;
+      if (entry.isSymbolicLink() && isPrivateRealPath(context.realRoot, join(directory, entry.name))) {
+        context.warn(
+          `${VitePluginErrorCode.privateDirExposed} Skipped "${address}": it links into the editor-private ` +
+            ".ignifx/ directory, which holds the editor's MCP token and never ships. Remove the link.",
+        );
+        return;
+      }
       if (entry.isDirectory()) {
-        await collectAddresses(join(directory, entry.name), address, addresses);
+        await collectAddresses(join(directory, entry.name), address, addresses, context);
       } else if (!isSidecarFileName(entry.name)) {
         addresses.push(address);
       }
@@ -232,8 +264,10 @@ async function collectAddresses(directory: string, prefix: string, addresses: st
  *
  * @remarks
  * Dot-prefixed files and directories are skipped, and so are `*.meta.json` sidecars — they are read
- * for the asset they belong to instead of listed as assets of their own. An asset whose sidecar
- * says `"publish": false` is still listed, with `publish: false`; {@link buildManifest} drops it.
+ * for the asset they belong to instead of listed as assets of their own. A symbolic link into the
+ * editor-private `.ignifx/` directory is skipped too, with a message to `options.warn`. An asset
+ * whose sidecar says `"publish": false` is still listed, with `publish: false`; {@link buildManifest}
+ * drops it.
  *
  * @param options - The directory to scan and the hash length; see {@link ScanAssetRootOptions}.
  * @returns Every asset found, sorted by address.
@@ -272,7 +306,10 @@ export async function scanAssetRoot(options: ScanAssetRootOptions): Promise<read
   }
 
   const addresses: string[] = [];
-  await collectAddresses(assetRoot, "", addresses);
+  await collectAddresses(assetRoot, "", addresses, {
+    realRoot: realPathOrSelf(assetRoot),
+    warn: options.warn ?? (() => undefined),
+  });
   addresses.sort();
 
   return Promise.all(

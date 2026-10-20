@@ -51,8 +51,12 @@ The ignifx editor keeps per-project private state in `.ignifx/` at the project r
 `.ignifx/mcp.json` with the token of the project's MCP server. The plugin adds `.ignifx` and
 `**/.ignifx/**` to `server.fs.deny` (merged with yours; Vite's defaults are kept), and `vite dev`
 and `vite preview` answer 404 to any request whose path has a `.ignifx` segment, however it is
-encoded or cased, `/@fs/` and `?raw`/`?url`/`?import` forms included. `vite build` never copies
-it: it is not under `public/`, and the asset scan skips dot-prefixed directories. Never move
+encoded or cased, `/@fs/` and `?raw`/`?url`/`?import` forms included. They also follow symbolic
+links: a request whose file lies in `.ignifx/` once links are resolved (`src/link -> ../.ignifx`)
+gets 404 as well, and a module whose real path is there is never loaded or bundled (`IGX-0556`).
+The asset scan skips dot-prefixed directories and, with an `IGX-0556` warning, any link into
+`.ignifx/`. `vite build` fails with `IGX-0556`, after removing the copies, if its output ends up
+with a `.ignifx` directory at any depth or a `publicDir` file that links into one. Never move
 `.ignifx/` under `public/` or point a server at it, and do not import from it.
 
 ## Options
@@ -339,20 +343,21 @@ ranges `docs/architecture/15-devtools-and-diagnostics.md` §1 reserves. The code
 the top of each range so that the runtime codes `@ignifx/core` allocates from the bottom cannot
 collide with them.
 
-| Code       | Meaning                                                                                                            |
-| ---------- | ------------------------------------------------------------------------------------------------------------------ |
-| `IGX-0550` | The asset root does not exist or is not a directory (a warning in the plugin, which then builds an empty manifest) |
-| `IGX-0551` | A `.meta.json` sidecar is malformed                                                                                |
-| `IGX-0552` | Two files build to the same output name                                                                            |
-| `IGX-0553` | An extension's `ignifx.assets.public` entry is missing or ambiguous                                                |
-| `IGX-0554` | `ignifx.config.ts` or `ignifx.settings.json` could not be loaded, or the settings fail `schemas.settings`          |
-| `IGX-0555` | A plugin option is outside its domain                                                                              |
-| `IGX-0650` | A JSON asset is not parseable                                                                                      |
-| `IGX-0651` | A format-headed file has no usable `format`/`formatVersion` header                                                 |
-| `IGX-0652` | A document failed its JSON Schema                                                                                  |
-| `IGX-0653` | A supplied schema uses a keyword this validator does not implement                                                 |
-| `IGX-0654` | A `.wgsl` shader asset does not parse as WGSL                                                                      |
-| `IGX-0655` | A `.wgsl` shader asset breaks the ignifx WGSL contract (see [Shaders](#shaders))                                   |
+| Code       | Meaning                                                                                                                   |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `IGX-0550` | The asset root does not exist or is not a directory (a warning in the plugin, which then builds an empty manifest)        |
+| `IGX-0551` | A `.meta.json` sidecar is malformed                                                                                       |
+| `IGX-0552` | Two files build to the same output name                                                                                   |
+| `IGX-0553` | An extension's `ignifx.assets.public` entry is missing or ambiguous                                                       |
+| `IGX-0554` | `ignifx.config.ts` or `ignifx.settings.json` could not be loaded, or the settings fail `schemas.settings`                 |
+| `IGX-0555` | A plugin option is outside its domain                                                                                     |
+| `IGX-0556` | A file from the editor-private `.ignifx/` reached the build output or a module load, or an asset link into it was skipped |
+| `IGX-0650` | A JSON asset is not parseable                                                                                             |
+| `IGX-0651` | A format-headed file has no usable `format`/`formatVersion` header                                                        |
+| `IGX-0652` | A document failed its JSON Schema                                                                                         |
+| `IGX-0653` | A supplied schema uses a keyword this validator does not implement                                                        |
+| `IGX-0654` | A `.wgsl` shader asset does not parse as WGSL                                                                             |
+| `IGX-0655` | A `.wgsl` shader asset breaks the ignifx WGSL contract (see [Shaders](#shaders))                                          |
 
 ## License
 

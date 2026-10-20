@@ -712,6 +712,23 @@ How many hex characters of the sha256 to keep.
 
 `8`
 
+##### warn?
+
+> `readonly` `optional` **warn?**: (`message`) => `void`
+
+Receives a message for each file the scan skips because it is a symbolic link into the
+editor-private `.ignifx/` directory. Without it such files are skipped silently.
+
+###### Parameters
+
+###### message
+
+`string`
+
+###### Returns
+
+`void`
+
 ***
 
 ### ScannedAsset
@@ -1432,6 +1449,13 @@ A JSON asset under the asset root is not parseable JSON.
 
 A format-headed JSON file is missing its `format`/`formatVersion` header or the header is malformed.
 
+##### privateDirExposed
+
+> `readonly` **privateDirExposed**: `"IGX-0556"` = `"IGX-0556"`
+
+A file from the editor-private `.ignifx/` directory, which holds the editor's MCP token, reached
+the build output or a module load, or an asset-root link into it was skipped (a warning).
+
 ##### schemaViolation
 
 > `readonly` **schemaViolation**: `"IGX-0652"` = `"IGX-0652"`
@@ -1851,10 +1875,14 @@ What it does, in the order the hooks run:
   project config or settings file restarts the dev server, which injects the new values and
   reloads the page.
 - `vite dev` and `vite preview` answer 404 to any request whose decoded path has a `.ignifx`
-  segment, in any case or encoding, ahead of every middleware that serves a file.
+  segment, in any case or encoding, or whose file lies in `.ignifx/` once symbolic links are
+  followed, ahead of every middleware that serves a file. `load` refuses (`IGX-0556`) a module
+  whose real path is in `.ignifx/`, and the asset scan skips links into it with a warning.
 - `generateBundle` emits every asset under `<outDir>/<publicPath>` with a content-hashed,
   immutable-cacheable name, copies each extension's `ignifx.assets.public` files unhashed next to
   them, and writes the manifest with the hashed URLs.
+- `writeBundle` fails the build with `IGX-0556`, after removing them, when the output holds a
+  `.ignifx` directory at any depth or a copy of a `publicDir` file that links into one.
 
 #### Throws
 
@@ -2318,8 +2346,10 @@ Every asset found, sorted by address.
 #### Remarks
 
 Dot-prefixed files and directories are skipped, and so are `*.meta.json` sidecars — they are read
-for the asset they belong to instead of listed as assets of their own. An asset whose sidecar
-says `"publish": false` is still listed, with `publish: false`; [buildManifest](#buildmanifest) drops it.
+for the asset they belong to instead of listed as assets of their own. A symbolic link into the
+editor-private `.ignifx/` directory is skipped too, with a message to `options.warn`. An asset
+whose sidecar says `"publish": false` is still listed, with `publish: false`; [buildManifest](#buildmanifest)
+drops it.
 
 #### Throws
 
