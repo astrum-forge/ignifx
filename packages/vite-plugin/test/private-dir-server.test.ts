@@ -1,11 +1,10 @@
 import { readdir, readFile, realpath } from "node:fs/promises";
-import { request } from "node:http";
 import { join, relative, sep } from "node:path";
 import { build, createServer, isFileLoadingAllowed, preview } from "vite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { ignifx } from "../src/plugin.js";
 import { createFixtureTree, disposeFixtures, PNG_BYTES, writeFixture } from "./support/fixtures.js";
-import type { AddressInfo } from "node:net";
+import { portOf, rawGet } from "./support/raw-http.js";
 import type { PluginOption, PreviewServer, ViteDevServer } from "vite";
 
 /**
@@ -27,45 +26,6 @@ function fixtureProject(): Promise<string> {
     "my.ignifx.txt": "not private",
     ".ignifx/mcp.json": MCP_JSON,
   });
-}
-
-interface RawResponse {
-  readonly status: number;
-  readonly body: string;
-}
-
-/**
- * Sends a request with the path exactly as given: `fetch` would resolve `..`, `./` and `\` first.
- *
- * @param port - The server's port on 127.0.0.1.
- * @param path - The raw request target.
- * @param headers - Extra request headers.
- */
-function rawGet(port: number, path: string, headers: Record<string, string> = {}): Promise<RawResponse> {
-  return new Promise((resolve, reject) => {
-    const outgoing = request(
-      { host: "127.0.0.1", port, path, method: "GET", headers: { Accept: "*/*", ...headers } },
-      (response) => {
-        const chunks: Buffer[] = [];
-        response.on("data", (chunk: Buffer) => chunks.push(chunk));
-        response.on("end", () => {
-          resolve({ status: response.statusCode ?? 0, body: Buffer.concat(chunks).toString("utf8") });
-        });
-        response.on("error", reject);
-      },
-    );
-    outgoing.on("error", reject);
-    outgoing.end();
-  });
-}
-
-/** The port a listening server bound. */
-function portOf(server: ViteDevServer | PreviewServer): number {
-  const address = server.httpServer?.address();
-  if (address === null || address === undefined || typeof address === "string") {
-    throw new Error("The server is not listening on a TCP port.");
-  }
-  return (address satisfies AddressInfo).port;
 }
 
 /**

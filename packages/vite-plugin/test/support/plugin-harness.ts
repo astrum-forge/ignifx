@@ -59,6 +59,7 @@ export class FakeDevServer {
   readonly config = {
     root: "",
     base: "/",
+    publicDir: "",
     logger: {
       info: (message: string): void => {
         this.logs.push({ level: "info", message });

@@ -305,6 +305,7 @@ export function scanAssetRoot(options: ScanAssetRootOptions): Promise<readonly S
 export interface ScanAssetRootOptions {
     readonly assetRoot: string;
     readonly hashLength?: number;
+    readonly warn?: (message: string) => void;
 }
 
 // @public
@@ -395,6 +396,7 @@ export const VitePluginErrorCode: {
     readonly extensionAssetMissing: "IGX-0553";
     readonly invalidProjectConfig: "IGX-0554";
     readonly invalidOption: "IGX-0555";
+    readonly privateDirExposed: "IGX-0556";
     readonly malformedJson: "IGX-0650";
     readonly missingFormatHeader: "IGX-0651";
     readonly schemaViolation: "IGX-0652";

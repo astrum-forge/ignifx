@@ -35,6 +35,11 @@ export const VitePluginErrorCode = {
   invalidProjectConfig: "IGX-0554",
   /** A plugin option is outside its documented domain. */
   invalidOption: "IGX-0555",
+  /**
+   * A file from the editor-private `.ignifx/` directory, which holds the editor's MCP token, reached
+   * the build output or a module load, or an asset-root link into it was skipped (a warning).
+   */
+  privateDirExposed: "IGX-0556",
   /** A JSON asset under the asset root is not parseable JSON. */
   malformedJson: "IGX-0650",
   /** A format-headed JSON file is missing its `format`/`formatVersion` header or the header is malformed. */
