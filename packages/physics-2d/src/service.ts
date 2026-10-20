@@ -10,8 +10,8 @@ import {
   overlapShape,
   toRadians,
 } from "./lite/rapier/world.js";
-import type { RapierShape2D, RapierWorld, RayResult2D, ShapeCastResult2D } from "./lite/rapier/world.js";
 import type { Collider2D } from "./components/collider.js";
+import type { RapierShape2D, RapierWorld, RayResult2D, ShapeCastResult2D } from "./lite/rapier/world.js";
 import type { QueryOptions2D, RaycastHit2D, ShapeCastHit2D } from "./queries.js";
 import type { Physics2DHost } from "./runtime/host.js";
 import type { Physics2DRuntime } from "./runtime/runtime.js";

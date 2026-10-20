@@ -36,8 +36,8 @@ import {
   SCENE_ASSET_TYPE,
   waitForReplacement,
 } from "./asset-reload.js";
-import { applyDefaults, DefaultsTracker, instancesHolding } from "./defaults.js";
 import { colliderOutlinesOf } from "./collider-outlines.js";
+import { applyDefaults, DefaultsTracker, instancesHolding } from "./defaults.js";
 import { DocumentMirror } from "./document.js";
 import { EditorCamera2D, EYE_DISTANCE_2D } from "./editor-camera-2d.js";
 import { EDITOR_CAMERA_FOV, EditorCamera } from "./editor-camera.js";

@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { Color } from "../../src/math/color.js";
 import { Light } from "../../src/render/light.js";
-import { rendererInternals } from "../../src/render/renderer.js";
 import { createMaterialAsset } from "../../src/render/material-asset.js";
+import { rendererInternals } from "../../src/render/renderer.js";
 import { shaderMaterialDefinition } from "../../src/render/shader-material-definition.js";
 import { createShaderHarness } from "../fixtures/shaders/harness.js";
 import { LIT_WGSL, TINT_WGSL } from "../fixtures/shaders/sources.js";

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { BoxCollider2D, CircleCollider2D } from "../../src/components/colliders.js";
 import { CharacterController2D } from "../../src/components/character-controller.js";
+import { BoxCollider2D, CircleCollider2D } from "../../src/components/colliders.js";
 import { createPhysics2DApp } from "../support/harness.js";
 
 /**

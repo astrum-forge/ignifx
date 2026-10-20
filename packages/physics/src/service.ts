@@ -1,10 +1,10 @@
 import { Quat, Vec3 } from "@ignifx/core";
+import { Collider } from "./components/collider.js";
 import { PhysicsErrorCode, physicsError } from "./errors.js";
 import { createViewer, destroyViewer, hideBody, showBody } from "./lite/gpu/viewer.js";
 import { createShape, destroyShape, ShapeGeometry } from "./lite/havok.js";
 import { castRay, nearestDistance, sweepShape } from "./lite/queries.js";
 import { placeOutline } from "./runtime/outline.js";
-import { Collider } from "./components/collider.js";
 import type { LitePhysicsViewer } from "./lite/gpu/viewer.js";
 import type { LitePhysicsShape, LitePhysicsWorld } from "./lite/havok.js";
 import type { RayQueryResult, SweepQueryResult } from "./lite/queries.js";
