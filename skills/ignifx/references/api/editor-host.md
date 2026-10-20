@@ -1419,6 +1419,41 @@ Scaled seconds of game time since the app started running frames (`app.time.time
 
 ***
 
+### PlayStats
+
+The game's performance as `playStats` answers it.
+
+#### Properties
+
+##### entityCount
+
+> `readonly` **entityCount**: `number`
+
+How many entities the game's world holds, in every scene instance, persistent ones included.
+
+##### fps
+
+> `readonly` **fps**: `number`
+
+Frames per second: `1000 / frameTimeMs`, or `0` when `frameTimeMs` is `0`. Rendered frames
+count whether or not game time is paused.
+
+##### frameCount
+
+> `readonly` **frameCount**: `number`
+
+How many frames have started (`app.time.frameCount`).
+
+##### frameTimeMs
+
+> `readonly` **frameTimeMs**: `number`
+
+The mean wall-clock time between the frames of the last second, in milliseconds, from the
+frame history in `app.diagnostics` (each frame's `rawDeltaMs`); `0` while the frame loop does
+not run (stopped, or stepped and paused on a frame) or before its first frame.
+
+***
+
 ### ProtocolVersion
 
 A protocol version. `major` changes when a message changes incompatibly; `minor` when messages
@@ -2966,7 +3001,7 @@ The union of the names in `PlayPhase`.
 
 ### PlayRequest
 
-> **PlayRequest** = [`RpcRequest`](#rpcrequest)\<*typeof* [`play`](#play-1), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`pause`](#pause), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`step`](#step), [`StepParams`](#stepparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`stop`](#stop), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`playState`](#playstate), `never`\>
+> **PlayRequest** = [`RpcRequest`](#rpcrequest)\<*typeof* [`play`](#play-1), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`pause`](#pause), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`step`](#step), [`StepParams`](#stepparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`stop`](#stop), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`playState`](#playstate), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`playStats`](#playstats), `never`\>
 
 Editor → play view: one of the `PlayMethod`s. Only `step` takes parameters.
 
@@ -2985,6 +3020,14 @@ Play view → editor: the answer to `play`, `pause`, `step` or `stop`.
 > **PlayStateResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<[`PlayStateReport`](#playstatereport)\>
 
 Play view → editor: the answer to `playState`.
+
+***
+
+### PlayStatsResponse
+
+> **PlayStatsResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<[`PlayStats`](#playstats-1)\>
+
+Play view → editor: the answer to `playStats`.
 
 ***
 
@@ -3408,6 +3451,16 @@ The scene host draws gizmos on the primary selection, answers `setGizmo`, and se
 
 The host sends `heartbeat` notifications after `ready` (see `HostNotification`).
 
+##### hotReloadDefaults
+
+> `readonly` **hotReloadDefaults**: `"hotReloadDefaults"` = `"hotReloadDefaults"`
+
+After a script's hot reload changes a field's default, the scene host gives the field its new
+default wherever the document leaves it out: on each document component whose record omits the
+field, and on the members of each prefab instance (rebuilt from the prefab, with the instance's
+overrides). A value the document sets is kept. An editor need not reopen the scene for changed
+defaults. Additive in 0.3.
+
 ##### logRelay
 
 > `readonly` **logRelay**: `"logRelay"` = `"logRelay"`
@@ -3527,7 +3580,8 @@ CSS pixels from the view's top-left corner: a DOM event's `offsetX` and `offsetY
 > `const` **PlayMethod**: `object`
 
 The methods the play view answers after `ready`. `play`, `pause`, `step` and `stop` answer with a
-[PlayState](#playstate-1); `playState` answers with a [PlayStateReport](#playstatereport).
+[PlayState](#playstate-1); `playState` answers with a [PlayStateReport](#playstatereport); `playStats` answers with
+[PlayStats](#playstats-1).
 
 #### Type Declaration
 
@@ -3549,6 +3603,13 @@ Clears `app.time.paused` and starts the frame loop if it is stopped.
 
 Reads the game's state without changing it. Takes no parameters.
 
+##### playStats
+
+> `readonly` **playStats**: `"playStats"` = `"playStats"`
+
+Reads the game's frame rate, frame time, entity count and frame count without changing
+anything. Takes no parameters. The editor polls it; no notification carries it.
+
 ##### step
 
 > `readonly` **step**: `"step"` = `"step"`
@@ -3565,7 +3626,7 @@ Stops the frame loop with `app.stop()`. The editor reloads the view to reset the
 
 A host that answers them lists `HostCapability.playControls` in `ready`. Sent before `ready`, they
 fail with `RpcErrorCode.notReady`; sent to a host without them, with `RpcErrorCode.methodNotFound`.
-`playState` is an additive 0.3 method: a host from before it answers it with
+`playState` and `playStats` are additive 0.3 methods: a host from before one answers it with
 `RpcErrorCode.methodNotFound`.
 
 ***
@@ -4519,6 +4580,29 @@ True when `value` has a `state` that is a `PlayPhase`, a non-negative integer
 
 ***
 
+### isPlayStats()
+
+> **isPlayStats**(`value`): `value is PlayStats`
+
+Checks the `result` of `playStats`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `result`.
+
+#### Returns
+
+`value is PlayStats`
+
+True when `value` has non-negative finite `fps` and `frameTimeMs` and non-negative
+integer `entityCount` and `frameCount`.
+
+***
+
 ### isProtocolVersion()
 
 > **isProtocolVersion**(`value`): `value is ProtocolVersion`
@@ -5196,7 +5280,7 @@ const host = await startEditorHost({ editorOrigin: "ignifx://app", canvas, exten
 **`Beta`**
 
 Lets the editor drive a running game: answers the handshake with `hostKind: "play"`, then `play`,
-`pause`, `step`, `stop` and `playState`, and sends `playStateChanged` when the game's phase
+`pause`, `step`, `stop`, `playState` and `playStats`, and sends `playStateChanged` when the game's phase
 changes, and `log`, `hostError` and `hotReloaded` for the game's log lines, `app.onError` reports
 and hot reloads (the newest 256 from before the handshake right after it).
 

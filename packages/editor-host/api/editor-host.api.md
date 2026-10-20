@@ -270,6 +270,7 @@ export const HostCapability: {
     readonly viewMode2d: "viewMode2d";
     readonly pick2d: "pick2d";
     readonly logRelay: "logRelay";
+    readonly hotReloadDefaults: "hotReloadDefaults";
 };
 
 // @public
@@ -404,6 +405,9 @@ export function isPlayState(value: unknown): value is PlayState;
 
 // @public
 export function isPlayStateReport(value: unknown): value is PlayStateReport;
+
+// @public
+export function isPlayStats(value: unknown): value is PlayStats;
 
 // @public
 export function isProtocolVersion(value: unknown): value is ProtocolVersion;
@@ -576,6 +580,7 @@ export const PlayMethod: {
     readonly step: "step";
     readonly stop: "stop";
     readonly playState: "playState";
+    readonly playStats: "playStats";
 };
 
 // @public
@@ -603,7 +608,7 @@ export const PlayPhase: {
 export type PlayPhase = (typeof PlayPhase)[keyof typeof PlayPhase];
 
 // @public
-export type PlayRequest = RpcRequest<typeof PlayMethod.play, never> | RpcRequest<typeof PlayMethod.pause, never> | RpcRequest<typeof PlayMethod.step, StepParams> | RpcRequest<typeof PlayMethod.stop, never> | RpcRequest<typeof PlayMethod.playState, never>;
+export type PlayRequest = RpcRequest<typeof PlayMethod.play, never> | RpcRequest<typeof PlayMethod.pause, never> | RpcRequest<typeof PlayMethod.step, StepParams> | RpcRequest<typeof PlayMethod.stop, never> | RpcRequest<typeof PlayMethod.playState, never> | RpcRequest<typeof PlayMethod.playStats, never>;
 
 // @public
 export type PlayResponse = RpcSuccessResponse<PlayState>;
@@ -629,6 +634,17 @@ export interface PlayStateReport {
 
 // @public
 export type PlayStateResponse = RpcSuccessResponse<PlayStateReport>;
+
+// @public
+export interface PlayStats {
+    readonly entityCount: number;
+    readonly fps: number;
+    readonly frameCount: number;
+    readonly frameTimeMs: number;
+}
+
+// @public
+export type PlayStatsResponse = RpcSuccessResponse<PlayStats>;
 
 // @public
 export type PongResponse = RpcSuccessResponse<"pong">;
