@@ -1579,6 +1579,31 @@
         "frameCount": 1,
         "time": 0.02
       }
+    },
+    "playStats": {
+      "jsonrpc": "2.0",
+      "id": 26,
+      "method": "playStats"
+    },
+    "playStatsResponse": {
+      "jsonrpc": "2.0",
+      "id": 26,
+      "result": {
+        "fps": 60,
+        "frameTimeMs": 16.67,
+        "entityCount": 1204,
+        "frameCount": 3600
+      }
+    },
+    "playStatsStoppedResponse": {
+      "jsonrpc": "2.0",
+      "id": 26,
+      "result": {
+        "fps": 0,
+        "frameTimeMs": 0,
+        "entityCount": 3,
+        "frameCount": 1
+      }
     }
   }
 }

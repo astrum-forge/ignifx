@@ -37,6 +37,7 @@ export { DEFAULT_HEARTBEAT_INTERVAL_MS, HostNotification, type HeartbeatNotifica
 export {
   isPlayState,
   isPlayStateReport,
+  isPlayStats,
   PlayMethod,
   PlayNotification,
   PlayPhase,
@@ -46,6 +47,8 @@ export {
   type PlayStateChangedNotification,
   type PlayStateReport,
   type PlayStateResponse,
+  type PlayStats,
+  type PlayStatsResponse,
   type StepParams,
 } from "./play.js";
 export {
