@@ -28,7 +28,14 @@ import {
   TRANSFORM_DRAGGING_INTERVAL_MS,
   ViewMode,
 } from "../protocol/index.js";
-import { IN_PLACE_ASSET_TYPES, instancesOf, SCENE_ASSET_TYPE, waitForReplacement } from "./asset-reload.js";
+import {
+  IN_PLACE_ASSET_TYPES,
+  instancesOf,
+  outermostRoots,
+  SCENE_ASSET_TYPE,
+  waitForReplacement,
+} from "./asset-reload.js";
+import { applyDefaults, DefaultsTracker, instancesHolding } from "./defaults.js";
 import { DocumentMirror } from "./document.js";
 import { EditorCamera2D, EYE_DISTANCE_2D } from "./editor-camera-2d.js";
 import { EDITOR_CAMERA_FOV, EditorCamera } from "./editor-camera.js";
@@ -58,6 +65,7 @@ import {
 } from "./view-math.js";
 import type { RequestHandler } from "../channel.js";
 import type { EditorAssetChange, PendingReload } from "./asset-reload.js";
+import type { ChangedDefaults } from "./defaults.js";
 import type { ViewClick } from "./editor-camera.js";
 import type { PickRayMembers } from "./view-math.js";
 import type { EditorView, ViewDrag, WorldBounds } from "../lite/gizmos.js";
@@ -172,6 +180,9 @@ export class SceneHost {
   #drag: DragState | null = null;
 
   #started = false;
+
+  /** The field defaults seen at start and after each hot reload, from {@link SceneHost.start} on. */
+  #defaults: DefaultsTracker | null = null;
 
   readonly #cleanups: (() => void)[] = [];
 
@@ -301,6 +312,7 @@ export class SceneHost {
         }
       }
     }
+    this.#defaults = new DefaultsTracker(app);
     this.#started = true;
     this.sendSchemas();
   }
@@ -349,27 +361,78 @@ export class SceneHost {
     }
     return this.#serial(async () => {
       const index = handle.type === SCENE_ASSET_TYPE ? mirror.index() : null;
-      const entities: string[] = [];
-      for (const uid of index === null ? [] : instancesOf(app, index, address)) {
-        try {
-          // Each rebuild reads the document the previous one left.
-          // oxlint-disable-next-line no-await-in-loop -- see above
-          await reloadInstance(app, mirror, uid);
-          entities.push(uid);
-        } catch (error) {
-          const params: HostErrorParams = {
-            code: isIgnifxError(error) ? error.code : null,
-            message: `Rebuilding ${uid} from ${address}: ${messageOf(error)}`,
-            data: { address, entity: uid },
-          };
-          this.#notify(SceneNotification.hostError, params);
-        }
-      }
+      const roots = index === null ? [] : instancesOf(app, index, address);
+      const entities = await this.#rebuildInstances(app, mirror, roots, address, { address }, false);
       this.#setSelection(this.#selection);
       const params: AssetReloadedParams = { address, type: handle.type, entities };
       this.#notify(SceneNotification.assetReloaded, params);
       return true;
     });
+  }
+
+  /**
+   * Rebuilds instance roots from their scenes, one after the other; a root that fails is a
+   * `hostError`.
+   *
+   * @param app - The scene view's app.
+   * @param mirror - The open document.
+   * @param roots - The roots' uids, none inside another.
+   * @param cause - What the rebuild follows, for the error's message.
+   * @param data - What the error's `data` carries besides the root's uid.
+   * @param documentOverrides - Whether to rebuild with the document's override lists.
+   * @returns The roots rebuilt.
+   */
+  async #rebuildInstances(
+    app: App,
+    mirror: DocumentMirror,
+    roots: readonly string[],
+    cause: string,
+    data: Readonly<Record<string, string | readonly string[]>>,
+    documentOverrides: boolean,
+  ): Promise<string[]> {
+    const rebuilt: string[] = [];
+    for (const uid of roots) {
+      try {
+        // Each rebuild reads the document the previous one left.
+        // oxlint-disable-next-line no-await-in-loop -- see above
+        await reloadInstance(app, mirror, uid, documentOverrides);
+        rebuilt.push(uid);
+      } catch (error) {
+        const params: HostErrorParams = {
+          code: isIgnifxError(error) ? error.code : null,
+          message: `Rebuilding ${uid} from ${cause}: ${messageOf(error)}`,
+          data: { ...data, entity: uid },
+        };
+        this.#notify(SceneNotification.hostError, params);
+      }
+    }
+    return rebuilt;
+  }
+
+  /**
+   * Gives the open document the defaults a hot reload changed, where it leaves them out (engine ask
+   * E25): each document component's omitted fields take the new default, then each prefab instance
+   * whose members hold a changed type is rebuilt from its prefab with its overrides.
+   *
+   * @param changed - The changed fields, by type id.
+   */
+  async #followDefaults(changed: ChangedDefaults): Promise<void> {
+    const app = this.#app;
+    const mirror = this.#mirror;
+    const index = mirror?.index() ?? null;
+    if (app === null || mirror === null || index === null) {
+      return;
+    }
+    applyDefaults(app, mirror, index, changed);
+    mirror.invalidate();
+    const rebuilt = mirror.index();
+    const roots = rebuilt === null ? [] : outermostRoots(rebuilt, instancesHolding(app, rebuilt, changed));
+    if (roots.length > 0) {
+      const typeIds = [...changed.keys()];
+      const cause = `the new defaults of ${typeIds.join(", ")}`;
+      await this.#rebuildInstances(app, mirror, roots, cause, { typeIds }, true);
+      this.#setSelection(this.#selection);
+    }
   }
 
   /** Removes the relays and the overlay; the host disposes the app. */
@@ -935,6 +998,11 @@ export class SceneHost {
   #hotReloaded(report: HotReloadReport): void {
     // A "recreate" reload replaces component instances, which the document index holds.
     this.#mirror?.invalidate();
+    const changed = this.#defaults?.changed(report.typeIds) ?? new Map<string, readonly string[]>();
+    if (changed.size > 0) {
+      // Queued with the requests, so a request the editor sends after `schemasChanged` sees it done.
+      void this.#serial(async () => this.#followDefaults(changed));
+    }
     const params = hotReloadedParamsOf(report);
     this.#notify(SceneNotification.hotReloaded, params);
     this.sendSchemas();

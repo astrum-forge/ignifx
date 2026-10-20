@@ -403,12 +403,13 @@ describe("the editor's 0.3 wire fixture, through a live headless host", () => {
     live = startLiveHost();
     const peer = live.wire;
 
-    // A headless host lists only `heartbeat` and `logRelay`: it draws no gizmos, captures nothing,
-    // has no 2D view.
+    // A headless host lists only `heartbeat`, `logRelay` and `hotReloadDefaults`: it draws no
+    // gizmos, captures nothing, has no 2D view.
     const ready = wire("readyScene");
+    const capabilities = [HostCapability.heartbeat, HostCapability.logRelay, HostCapability.hotReloadDefaults];
     expectWire(await peer.request(wire("hello")), {
       ...ready,
-      result: { ...member(ready, "result"), capabilities: [HostCapability.heartbeat, HostCapability.logRelay] },
+      result: { ...member(ready, "result"), capabilities },
     });
     expect(member(member(ready, "result"), "protocol")).toEqual(PROTOCOL_VERSION);
 

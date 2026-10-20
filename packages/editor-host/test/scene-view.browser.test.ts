@@ -280,6 +280,7 @@ async function sceneView(scene: SceneFile = SCENE, framed = "BOX"): Promise<Edit
     HostCapability.viewMode2d,
     HostCapability.pick2d,
     HostCapability.logRelay,
+    HostCapability.hotReloadDefaults,
   ]);
   host = await starting;
   announced = (await peer.nextNotification(SceneNotification.schemasChanged))["params"];
