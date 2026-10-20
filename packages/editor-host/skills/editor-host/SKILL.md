@@ -1,6 +1,6 @@
 ---
 name: editor-host
-description: Connects an ignifx project to the ignifx editor with @ignifx/editor-host: the Vite plugin that serves the editor's scene view from the project's own dev server, the virtual:ignifx/editor play controls a game's main.ts hands its app to (play, pause, step, stop, playState, playStateChanged), and the host half of the editor protocol 0.3 over a MessagePort (hello/ready, heartbeat, and the scene document methods openScene, applyOps, readBack, select, pick, frame, setGizmo, setViewMode, screenshot, getSchemas, describeSettings), including the 2D view mode (an editor Camera2D and app.twoD.pickAt picking). Use when wiring a project or template for the editor, when the user mentions @ignifx/editor-host, editorHostPlugin, attachEditorPlayControls, virtual:ignifx/editor, startEditorHost or /__ignifx_editor__/, or when debugging why the editor cannot connect to a view or why the scene view disagrees with the editor's document.
+description: Connects an ignifx project to the ignifx editor with @ignifx/editor-host: the Vite plugin that serves the editor's scene view from the project's own dev server, the virtual:ignifx/editor play controls a game's main.ts hands its app to (play, pause, step, stop, playState, playStateChanged, playStats), and the host half of the editor protocol 0.3 over a MessagePort (hello/ready, heartbeat, and the scene document methods openScene, applyOps, readBack, select, pick, frame, setGizmo, setViewMode, screenshot, getSchemas, describeSettings), including the 2D view mode (an editor Camera2D and app.twoD.pickAt picking). Use when wiring a project or template for the editor, when the user mentions @ignifx/editor-host, editorHostPlugin, attachEditorPlayControls, virtual:ignifx/editor, startEditorHost or /__ignifx_editor__/, or when debugging why the editor cannot connect to a view or why the scene view disagrees with the editor's document.
 license: Apache-2.0
 metadata:
   ignifx-version: "0.9.0"
@@ -70,7 +70,7 @@ each view ◀── MessagePort ──▶ editor     JSON-RPC 2.0, protocol 0.3
                / setViewMode / getSchemas / describeSettings (on request only)
                ← sceneOpened, selectionChanged, transformDragging/Dragged, hotReloaded, assetReloaded,
                  hostError, log
-   play view:  play / pause / step / stop / playState
+   play view:  play / pause / step / stop / playState / playStats
                ← playStateChanged, log, hostError, hotReloaded (logRelay; kept from before hello)
 ```
 
@@ -87,7 +87,10 @@ object (it may hold unsaved edits) and the host builds it with `world.loadSceneF
 file's uids. Every command the editor applies to its document goes to the host as `applyOps`, the
 same ops; any failure means the mirror drifted, and the editor resends `openScene`. What the user
 does in the view comes back as notifications (`selectionChanged`, `transformDragged`) that the
-editor turns into commands. The host never edits the document.
+editor turns into commands. The host never edits the document. When a script's hot reload changes a
+field's default, the host gives the field its new default wherever the document leaves it out, and
+keeps the values and overrides the document sets (`hotReloadDefaults`), so the editor need not
+reopen the scene.
 
 ## First app
 
@@ -131,22 +134,24 @@ host.dispose();
 
 `skills/ignifx/references/api/editor-host.md` and `editor-host-vite.md` have the generated surface.
 
-| Member                                                               | What it does                                                                                                                    |
-| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `editorHostPlugin(options)` (`/vite`)                                | The two Vite plugins: the scene view's page (dev only) and `virtual:ignifx/editor`                                              |
-| `attachEditorPlayControls(app)`                                      | From `virtual:ignifx/editor`: hands the game's app to the editor; returns a detach                                              |
-| `startEditorHost(options)`                                           | Starts the scene view's host and its edit-mode app; resolves to a disposable `EditorHost`                                       |
-| `listenForEditorPlayControls(options)`                               | What `virtual:ignifx/editor` calls in development: keeps the editor's port until `attach(app)` starts the controls on it        |
-| `startEditorPlayControls(app, options)`                              | The play controls on their own, listening from the call                                                                         |
-| `EDITOR_CONNECT_MESSAGE_TYPE`, `isEditorConnectMessage`              | The window message that carries the port, and its check                                                                         |
-| `PROTOCOL_VERSION`, `RpcErrorCode`, `isRpcMessage`, `isPlayState`    | The protocol 0.3 values and checks, mirrored from `@ignifx/editor-protocol`; before 1.0 the major and minor must both match     |
-| `SceneMethod`, `SceneNotification`, `SceneOp`, `isApplyOpsParams`, … | The scene document methods, notifications, the thirteen ops, and their guards                                                   |
-| `EditorHost.editorScene`                                             | The persistent `editor` scene instance holding the host's own objects                                                           |
-| `EditorHost.assetChanged(change)`                                    | Reloads an asset changed on disk in place and sends `assetReloaded`; the generated page calls it on `ignifx:asset-changed`      |
-| `PlayMethod`, `PlayState`                                            | `play`, `pause`, `step`, `stop`, and what each answers; `playState` reads the state without changing it                         |
-| `PlayNotification`, `PlayPhase`, `isPlayStateReport`                 | `playStateChanged` and `playState`'s `{ state: "playing" \| "paused" \| "stopped", frameCount, time }`                          |
-| `HostCapability.logRelay`, `isAppErrorData`, `LoggedError`           | Both views relay `log` (with the first `Error` a line carries), `hostError` (entity, component, phase, stack) and `hotReloaded` |
-| `EditorHostErrorCode`                                                | `IGX-1801` bad origin, `IGX-1802` no window, `IGX-1803` bad option                                                              |
+| Member                                                               | What it does                                                                                                                       |
+| -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `editorHostPlugin(options)` (`/vite`)                                | The two Vite plugins: the scene view's page (dev only) and `virtual:ignifx/editor`                                                 |
+| `attachEditorPlayControls(app)`                                      | From `virtual:ignifx/editor`: hands the game's app to the editor; returns a detach                                                 |
+| `startEditorHost(options)`                                           | Starts the scene view's host and its edit-mode app; resolves to a disposable `EditorHost`                                          |
+| `listenForEditorPlayControls(options)`                               | What `virtual:ignifx/editor` calls in development: keeps the editor's port until `attach(app)` starts the controls on it           |
+| `startEditorPlayControls(app, options)`                              | The play controls on their own, listening from the call                                                                            |
+| `EDITOR_CONNECT_MESSAGE_TYPE`, `isEditorConnectMessage`              | The window message that carries the port, and its check                                                                            |
+| `PROTOCOL_VERSION`, `RpcErrorCode`, `isRpcMessage`, `isPlayState`    | The protocol 0.3 values and checks, mirrored from `@ignifx/editor-protocol`; before 1.0 the major and minor must both match        |
+| `SceneMethod`, `SceneNotification`, `SceneOp`, `isApplyOpsParams`, … | The scene document methods, notifications, the thirteen ops, and their guards                                                      |
+| `EditorHost.editorScene`                                             | The persistent `editor` scene instance holding the host's own objects                                                              |
+| `EditorHost.assetChanged(change)`                                    | Reloads an asset changed on disk in place and sends `assetReloaded`; the generated page calls it on `ignifx:asset-changed`         |
+| `PlayMethod`, `PlayState`                                            | `play`, `pause`, `step`, `stop`, and what each answers; `playState` reads the state without changing it                            |
+| `PlayNotification`, `PlayPhase`, `isPlayStateReport`                 | `playStateChanged` and `playState`'s `{ state: "playing" \| "paused" \| "stopped", frameCount, time }`                             |
+| `PlayStats`, `isPlayStats`                                           | `playStats`'s `{ fps, frameTimeMs, entityCount, frameCount }`: the newest second of `app.diagnostics` frames, the world's entities |
+| `HostCapability.hotReloadDefaults`                                   | The scene view gives fields the document leaves out their new default after a script's hot reload                                  |
+| `HostCapability.logRelay`, `isAppErrorData`, `LoggedError`           | Both views relay `log` (with the first `Error` a line carries), `hostError` (entity, component, phase, stack) and `hotReloaded`    |
+| `EditorHostErrorCode`                                                | `IGX-1801` bad origin, `IGX-1802` no window, `IGX-1803` bad option                                                                 |
 
 ## Recipes
 

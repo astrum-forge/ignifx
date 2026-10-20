@@ -9,12 +9,13 @@ import type { RpcNotification, RpcRequest, RpcSuccessResponse } from "./rpc.js";
 
 /**
  * The methods the play view answers after `ready`. `play`, `pause`, `step` and `stop` answer with a
- * {@link PlayState}; `playState` answers with a {@link PlayStateReport}.
+ * {@link PlayState}; `playState` answers with a {@link PlayStateReport}; `playStats` answers with
+ * {@link PlayStats}.
  *
  * @remarks
  * A host that answers them lists `HostCapability.playControls` in `ready`. Sent before `ready`, they
  * fail with `RpcErrorCode.notReady`; sent to a host without them, with `RpcErrorCode.methodNotFound`.
- * `playState` is an additive 0.3 method: a host from before it answers it with
+ * `playState` and `playStats` are additive 0.3 methods: a host from before one answers it with
  * `RpcErrorCode.methodNotFound`.
  *
  * @public
@@ -30,6 +31,11 @@ export const PlayMethod = {
   stop: "stop",
   /** Reads the game's state without changing it. Takes no parameters. */
   playState: "playState",
+  /**
+   * Reads the game's frame rate, frame time, entity count and frame count without changing
+   * anything. Takes no parameters. The editor polls it; no notification carries it.
+   */
+  playStats: "playStats",
 } as const;
 
 /**
@@ -62,7 +68,8 @@ export type PlayRequest =
   | RpcRequest<typeof PlayMethod.pause, never>
   | RpcRequest<typeof PlayMethod.step, StepParams>
   | RpcRequest<typeof PlayMethod.stop, never>
-  | RpcRequest<typeof PlayMethod.playState, never>;
+  | RpcRequest<typeof PlayMethod.playState, never>
+  | RpcRequest<typeof PlayMethod.playStats, never>;
 
 /**
  * What the play view reports after every `PlayMethod`.
@@ -174,6 +181,36 @@ export interface PlayStateReport {
 export type PlayStateResponse = RpcSuccessResponse<PlayStateReport>;
 
 /**
+ * The game's performance as `playStats` answers it.
+ *
+ * @public
+ */
+export interface PlayStats {
+  /**
+   * Frames per second: `1000 / frameTimeMs`, or `0` when `frameTimeMs` is `0`. Rendered frames
+   * count whether or not game time is paused.
+   */
+  readonly fps: number;
+  /**
+   * The mean wall-clock time between the frames of the last second, in milliseconds, from the
+   * frame history in `app.diagnostics` (each frame's `rawDeltaMs`); `0` while the frame loop does
+   * not run (stopped, or stepped and paused on a frame) or before its first frame.
+   */
+  readonly frameTimeMs: number;
+  /** How many entities the game's world holds, in every scene instance, persistent ones included. */
+  readonly entityCount: number;
+  /** How many frames have started (`app.time.frameCount`). */
+  readonly frameCount: number;
+}
+
+/**
+ * Play view → editor: the answer to `playStats`.
+ *
+ * @public
+ */
+export type PlayStatsResponse = RpcSuccessResponse<PlayStats>;
+
+/**
  * Play view → editor: the game's state changed.
  *
  * @public
@@ -234,5 +271,38 @@ export function isPlayStateReport(value: unknown): value is PlayStateReport {
     typeof time === "number" &&
     Number.isFinite(time) &&
     time >= 0
+  );
+}
+
+/**
+ * Checks the `result` of `playStats`.
+ *
+ * @param value - The received `result`.
+ * @returns True when `value` has non-negative finite `fps` and `frameTimeMs` and non-negative
+ * integer `entityCount` and `frameCount`.
+ *
+ * @public
+ */
+export function isPlayStats(value: unknown): value is PlayStats {
+  if (!isRecord(value)) {
+    return false;
+  }
+  const fps = value["fps"];
+  const frameTimeMs = value["frameTimeMs"];
+  const entityCount = value["entityCount"];
+  const frameCount = value["frameCount"];
+  return (
+    typeof fps === "number" &&
+    Number.isFinite(fps) &&
+    fps >= 0 &&
+    typeof frameTimeMs === "number" &&
+    Number.isFinite(frameTimeMs) &&
+    frameTimeMs >= 0 &&
+    typeof entityCount === "number" &&
+    Number.isSafeInteger(entityCount) &&
+    entityCount >= 0 &&
+    typeof frameCount === "number" &&
+    Number.isSafeInteger(frameCount) &&
+    frameCount >= 0
   );
 }

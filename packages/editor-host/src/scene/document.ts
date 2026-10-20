@@ -6,6 +6,7 @@
  */
 
 import { decodeProps, serializeScene } from "@ignifx/core";
+import { countEntities } from "../play-stats.js";
 import type { OpenSceneResult, ReadBackParams, ReadBackResult, SceneIssue } from "../protocol/index.js";
 import type {
   App,
@@ -16,7 +17,9 @@ import type {
   JsonValue,
   ReferenceDecoder,
   SceneFile,
+  SceneFileComponent,
   SceneFileEntity,
+  SceneFileOverride,
   SceneInstance,
   UidRemap,
 } from "@ignifx/core";
@@ -36,24 +39,6 @@ export interface DocumentIndex {
   readonly records: ReadonlyMap<string, SceneFileEntity>;
   /** Each document component, by uid. */
   readonly components: ReadonlyMap<string, Component>;
-}
-
-/**
- * Counts the entities of a scene instance, members of instanced scenes included.
- *
- * @param scene - The instance.
- * @returns How many entities it holds.
- */
-function countEntities(scene: SceneInstance): number {
-  let count = 0;
-  const pending: Entity[] = [...scene.roots];
-  for (let entity = pending.pop(); entity !== undefined; entity = pending.pop()) {
-    if (!entity.isDestroyed) {
-      count += 1;
-      pending.push(...entity.children);
-    }
-  }
-  return count;
 }
 
 /**
@@ -104,6 +89,19 @@ export class DocumentMirror {
   #settings: JsonObject | null = null;
 
   #index: DocumentIndex | null = null;
+
+  /**
+   * The fields each document component's record sets, by component uid: the keys of its `props` as
+   * the file and the ops since have written them. A field left out takes the schema's default.
+   */
+  readonly #explicit = new Map<string, Set<string>>();
+
+  /**
+   * Each instance root's override list as the document holds it, by root uid. The serializer
+   * recomputes overrides by diffing the live members with their scene, which after a hot reload
+   * that changed a default reads every stale member value as an override.
+   */
+  readonly #overrides = new Map<string, readonly SceneFileOverride[]>();
 
   /** Assets loaded for ops, held until the document closes. */
   readonly #handles: AssetHandle[] = [];
@@ -183,6 +181,8 @@ export class DocumentMirror {
     this.#address = address;
     this.#name = file.name;
     this.#settings = file.settings === undefined ? null : copyJson(file.settings);
+    this.recordComponents(file.entities.flatMap((record) => record.components ?? []));
+    this.recordInstances(file.entities);
     return { entityCount: countEntities(scene), warnings };
   }
 
@@ -194,6 +194,8 @@ export class DocumentMirror {
     this.#name = "";
     this.#settings = null;
     this.#index = null;
+    this.#explicit.clear();
+    this.#overrides.clear();
     if (scene !== null) {
       await this.#app.world.unloadScene(scene);
     }
@@ -209,6 +211,91 @@ export class DocumentMirror {
    */
   retain(handles: readonly AssetHandle[]): void {
     this.#handles.push(...handles);
+  }
+
+  /**
+   * Records which fields document components' records set, replacing what was known of each uid.
+   *
+   * @param components - The component records, as a file or an op carries them.
+   */
+  recordComponents(components: readonly SceneFileComponent[]): void {
+    for (const component of components) {
+      this.recordProps(component.uid, Object.keys(component.props ?? {}));
+    }
+  }
+
+  /**
+   * Records the whole set of fields a component's record sets.
+   *
+   * @param uid - The component's uid.
+   * @param fields - The fields.
+   */
+  recordProps(uid: string, fields: Iterable<string>): void {
+    this.#explicit.set(uid, new Set(fields));
+  }
+
+  /**
+   * Records that a component's record now sets a field, or leaves it out.
+   *
+   * @param uid - The component's uid.
+   * @param field - The field.
+   * @param isSet - Whether the record sets it.
+   */
+  recordProp(uid: string, field: string, isSet: boolean): void {
+    let fields = this.#explicit.get(uid);
+    if (fields === undefined) {
+      fields = new Set();
+      this.#explicit.set(uid, fields);
+    }
+    if (isSet) {
+      fields.add(field);
+    } else {
+      fields.delete(field);
+    }
+  }
+
+  /**
+   * The fields a document component's record sets.
+   *
+   * @param uid - The component's uid.
+   * @returns The field names, or `null` when the mirror has no record of the component.
+   */
+  propsSetBy(uid: string): ReadonlySet<string> | null {
+    return this.#explicit.get(uid) ?? null;
+  }
+
+  /**
+   * Records the override lists of the instance roots among some entity records.
+   *
+   * @param records - The records, as a file or an op carries them.
+   */
+  recordInstances(records: readonly SceneFileEntity[]): void {
+    for (const record of records) {
+      if (record.instance !== undefined) {
+        this.recordOverrides(record.uid, record.instance.overrides ?? []);
+      }
+    }
+  }
+
+  /**
+   * Records an instance root's override list.
+   *
+   * @param uid - The root's uid.
+   * @param overrides - The list.
+   */
+  recordOverrides(uid: string, overrides: readonly SceneFileOverride[]): void {
+    // A copy, so the list never shares an object with the editor's message.
+    this.#overrides.set(uid, structuredClone(overrides));
+  }
+
+  /**
+   * An instance root's override list as the document holds it.
+   *
+   * @param uid - The root's uid.
+   * @returns The list, or `null` when the mirror has no record of the root.
+   */
+  overridesOf(uid: string): readonly SceneFileOverride[] | null {
+    return this.#overrides.get(uid) ?? null;
   }
 
   /** Forgets the cached index; call it after anything changed the document's structure. */

@@ -131,9 +131,21 @@ export function instancesOf(app: App, index: DocumentIndex, address: string): re
       affected.add(record.uid);
     }
   }
-  return [...affected].filter((uid) => {
+  return outermostRoots(index, affected);
+}
+
+/**
+ * The document entities of a set that have no ancestor in the set, in the set's order: rebuilding
+ * an instance root rebuilds every instance root under it.
+ *
+ * @param index - The open document's index.
+ * @param roots - The uids.
+ * @returns The outermost ones.
+ */
+export function outermostRoots(index: DocumentIndex, roots: ReadonlySet<string>): readonly string[] {
+  return [...roots].filter((uid) => {
     for (let parent = index.records.get(uid)?.parent ?? null; parent !== null;) {
-      if (affected.has(parent)) {
+      if (roots.has(parent)) {
         return false;
       }
       parent = index.records.get(parent)?.parent ?? null;

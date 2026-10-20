@@ -29,6 +29,7 @@ import {
   isPickParams,
   isPickResult,
   isPlayStateReport,
+  isPlayStats,
   isReadBackParams,
   isReadBackResult,
   isRpcMessage,
@@ -197,6 +198,8 @@ const RESULT_GUARDS: Readonly<Record<string, (value: unknown) => boolean>> = {
   getSchemasResponse: isSchemaSet,
   describeSettingsResponse: isSettingsSet,
   playStateResponse: isPlayStateReport,
+  playStatsResponse: isPlayStats,
+  playStatsStoppedResponse: isPlayStats,
 };
 
 describe("the editor's 0.3 wire fixture, through the host's guards", () => {
@@ -290,6 +293,17 @@ describe("the editor's 0.3 wire fixture, through the host's guards", () => {
     expect(isPlayStateReport({ ...report, time: Number.NaN })).toBe(false);
     expect(isPlayStateReport({ state: "paused", frameCount: 1 })).toBe(false);
     expect(isPlayStateReport(null)).toBe(false);
+  });
+
+  it("refuses play stats with a negative or non-finite rate or a fractional count (E25)", () => {
+    const stats = member(wire("playStatsResponse"), "result");
+    expect(isPlayStats(stats)).toBe(true);
+    expect(isPlayStats({ ...stats, fps: -1 })).toBe(false);
+    expect(isPlayStats({ ...stats, frameTimeMs: Number.POSITIVE_INFINITY })).toBe(false);
+    expect(isPlayStats({ ...stats, entityCount: 1.5 })).toBe(false);
+    expect(isPlayStats({ ...stats, frameCount: -1 })).toBe(false);
+    expect(isPlayStats({ fps: 60, frameTimeMs: 16.67, entityCount: 3 })).toBe(false);
+    expect(isPlayStats(null)).toBe(false);
   });
 
   it("refuses settings whose sections are not schema descriptions or whose values are not objects", () => {
@@ -389,12 +403,13 @@ describe("the editor's 0.3 wire fixture, through a live headless host", () => {
     live = startLiveHost();
     const peer = live.wire;
 
-    // A headless host lists only `heartbeat` and `logRelay`: it draws no gizmos, captures nothing,
-    // has no 2D view.
+    // A headless host lists only `heartbeat`, `logRelay` and `hotReloadDefaults`: it draws no
+    // gizmos, captures nothing, has no 2D view.
     const ready = wire("readyScene");
+    const capabilities = [HostCapability.heartbeat, HostCapability.logRelay, HostCapability.hotReloadDefaults];
     expectWire(await peer.request(wire("hello")), {
       ...ready,
-      result: { ...member(ready, "result"), capabilities: [HostCapability.heartbeat, HostCapability.logRelay] },
+      result: { ...member(ready, "result"), capabilities },
     });
     expect(member(member(ready, "result"), "protocol")).toEqual(PROTOCOL_VERSION);
 
@@ -702,6 +717,12 @@ describe("the editor's 0.3 wire fixture, through live play controls", () => {
 
       await peer.request({ jsonrpc: "2.0", id: 25, method: PlayMethod.stop });
       expectWire(await peer.notification(PlayNotification.playStateChanged), wire("playStateChangedStopped"));
+
+      // Stopped on its one frame, with three entities: no rate, the world's count (E25).
+      for (const name of ["Player", "Crate", "Sun"]) {
+        app.world.createEntity(name);
+      }
+      expectWire(await peer.request(wire("playStats")), wire("playStatsStoppedResponse"));
     } finally {
       peer.close();
       controls.dispose();

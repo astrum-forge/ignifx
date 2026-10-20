@@ -90,6 +90,14 @@ export const HostCapability = {
    * notifications, the play view as play notifications. Additive in 0.3.
    */
   logRelay: "logRelay",
+  /**
+   * After a script's hot reload changes a field's default, the scene host gives the field its new
+   * default wherever the document leaves it out: on each document component whose record omits the
+   * field, and on the members of each prefab instance (rebuilt from the prefab, with the instance's
+   * overrides). A value the document sets is kept. An editor need not reopen the scene for changed
+   * defaults. Additive in 0.3.
+   */
+  hotReloadDefaults: "hotReloadDefaults",
 } as const;
 
 /**

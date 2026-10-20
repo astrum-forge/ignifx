@@ -77,6 +77,7 @@ describe("@ignifx/editor-host entries", () => {
       step: "step",
       stop: "stop",
       playState: "playState",
+      playStats: "playStats",
     });
     expect(page.PlayNotification).toEqual({
       playStateChanged: "playStateChanged",

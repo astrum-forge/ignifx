@@ -13,6 +13,7 @@ import {
   resolveMessageTarget,
 } from "./channel.js";
 import { resolveEngineVersion } from "./host.js";
+import { PlayStatsReader } from "./play-stats.js";
 import {
   HostCapability,
   HostKind,
@@ -22,7 +23,7 @@ import {
   PROTOCOL_VERSION,
 } from "./protocol/index.js";
 import type { EditorMessageTarget, RequestHandler } from "./channel.js";
-import type { PlayState, PlayStateReport } from "./protocol/index.js";
+import type { PlayState, PlayStateReport, PlayStats } from "./protocol/index.js";
 import type { App } from "@ignifx/core";
 
 /**
@@ -190,6 +191,7 @@ function stepDelta(app: App, params: unknown): number {
 function playMethods(app: App, tracker: PhaseTracker): ReadonlyMap<string, RequestHandler> {
   // Every control answers first, then reports the change it made, in that order on the port.
   const answer = (): Reply => new Reply(playState(app), tracker.report);
+  const stats = new PlayStatsReader(app);
   return new Map<string, RequestHandler>([
     [
       PlayMethod.play,
@@ -229,6 +231,7 @@ function playMethods(app: App, tracker: PhaseTracker): ReadonlyMap<string, Reque
       },
     ],
     [PlayMethod.playState, (): PlayStateReport => tracker.read()],
+    [PlayMethod.playStats, (): PlayStats => stats.read()],
   ]);
 }
 
@@ -334,7 +337,7 @@ function openPlayControls(
 
 /**
  * Lets the editor drive a running game: answers the handshake with `hostKind: "play"`, then `play`,
- * `pause`, `step`, `stop` and `playState`, and sends `playStateChanged` when the game's phase
+ * `pause`, `step`, `stop`, `playState` and `playStats`, and sends `playStateChanged` when the game's phase
  * changes, and `log`, `hostError` and `hotReloaded` for the game's log lines, `app.onError` reports
  * and hot reloads (the newest 256 from before the handshake right after it).
  *

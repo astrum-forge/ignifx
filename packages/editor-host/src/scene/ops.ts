@@ -50,6 +50,7 @@ import type {
   SceneFile,
   SceneFileComponent,
   SceneFileEntity,
+  SceneFileInstance,
   SceneFileOverride,
 } from "@ignifx/core";
 
@@ -465,11 +466,11 @@ async function createEntity(context: OpContext, op: CreateEntityOp): Promise<voi
     }
     inside.add(record.uid);
   }
-  requireTypes(
-    context,
-    records.flatMap((record) => record.components ?? []),
-  );
+  const components = records.flatMap((record) => record.components ?? []);
+  requireTypes(context, components);
   await buildSubtree(context, records, parent, op.index);
+  context.mirror.recordComponents(components);
+  context.mirror.recordInstances(records);
 }
 
 /**
@@ -606,6 +607,7 @@ async function addComponent(context: OpContext, op: AddComponentOp): Promise<voi
     ...(op.index === undefined ? {} : { index: op.index }),
     references: context.mirror.decoder(),
   });
+  context.mirror.recordComponents([op.component]);
   const first = issues[0];
   if (first !== undefined) {
     throw new OpFailure(ApplyOpFailureCode.invalidValue, first.message, first.code);
@@ -630,6 +632,7 @@ async function instantiate(context: OpContext, op: InstantiateOp): Promise<void>
   };
   requireFreeUids(context, [record]);
   await buildSubtree(context, [record], parent, op.index);
+  context.mirror.recordInstances([record]);
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -758,6 +761,7 @@ async function setProp(context: OpContext, op: SetPropOp): Promise<void> {
       throw new OpFailure(ApplyOpFailureCode.invalidValue, "props must be an object.");
     }
     rejectIssues(assignProps(component, props, references));
+    context.mirror.recordProps(op.component, Object.keys(props));
     return;
   }
   const field = typeof name === "string" && Object.hasOwn(schema, name) ? schema[name] : undefined;
@@ -766,6 +770,7 @@ async function setProp(context: OpContext, op: SetPropOp): Promise<void> {
   }
   if (rest.length === 0 && op.value === undefined) {
     Reflect.set(component, name, field.createDefault());
+    context.mirror.recordProp(op.component, name, false);
     return;
   }
   const json =
@@ -778,6 +783,7 @@ async function setProp(context: OpContext, op: SetPropOp): Promise<void> {
     })),
   );
   Reflect.set(component, name, decoded.value);
+  context.mirror.recordProp(op.component, name, true);
 }
 
 /**
@@ -884,15 +890,34 @@ function findOverride(
  * @param context - The app and the document.
  * @param uid - The instance root.
  * @param edit - Returns the new override list from the current one.
+ * @param documentOverrides - Whether the root and the instance roots under it are rebuilt with the
+ * override lists the document holds rather than the ones the serializer recomputes from the live
+ * members, which a hot reload that changed a default has left stale.
  */
 async function rebuildInstance(
   context: OpContext,
   uid: string,
   edit: (overrides: readonly SceneFileOverride[]) => readonly SceneFileOverride[],
+  documentOverrides = false,
 ): Promise<void> {
   const index = indexOf(context);
   const root = requireEntity(context, uid);
-  const record = index.records.get(uid);
+  const mirror = context.mirror;
+  const withDocumentOverrides = (record: SceneFileEntity): SceneFileEntity => {
+    const listed = documentOverrides && record.instance !== undefined ? mirror.overridesOf(record.uid) : null;
+    if (listed === null || record.instance === undefined) {
+      return record;
+    }
+    const { scene, hash } = record.instance;
+    const instance: SceneFileInstance = {
+      scene,
+      ...(hash === undefined ? {} : { hash }),
+      ...(listed.length === 0 ? {} : { overrides: listed }),
+    };
+    return { ...record, instance };
+  };
+  const found = index.records.get(uid);
+  const record = found === undefined ? undefined : withDocumentOverrides(found);
   const instance = record?.instance;
   if (record === undefined || instance === undefined) {
     throw new OpFailure(ApplyOpFailureCode.notAnInstance, `${root.name} (${uid}) has no instance entry.`);
@@ -911,7 +936,7 @@ async function rebuildInstance(
   for (const candidate of index.file.entities) {
     if (candidate.parent !== null && inside.has(candidate.parent)) {
       inside.add(candidate.uid);
-      records.push(candidate);
+      records.push(withDocumentOverrides(candidate));
     }
   }
   const insideComponents = new Set(
@@ -922,6 +947,7 @@ async function rebuildInstance(
   root.destroyImmediate();
   context.mirror.invalidate();
   await buildSubtree(context, records, parent, at);
+  mirror.recordInstances(records);
   const references = context.mirror.decoder();
   const rebuilt = indexOf(context);
   for (const outside of index.file.entities) {
@@ -940,16 +966,24 @@ async function rebuildInstance(
 /**
  * Rebuilds one instance root from its scene asset's current value, keeping its uid, its record
  * (transform, overrides, components) and its document children, as `setOverride` does: what the
- * host does after a hot reload replaced the scene the root instances.
+ * host does after a hot reload replaced the scene the root instances, or changed a default its
+ * members leave out.
  *
  * @param app - The scene view's app.
  * @param mirror - The open document.
  * @param uid - The instance root.
+ * @param documentOverrides - Whether to rebuild with the override lists the document holds rather
+ * than the ones the live members read as; `true` after a hot reload changed a default.
  * @throws OpFailure when the uid names no document entity or one without an instance entry.
  */
-export async function reloadInstance(app: App, mirror: DocumentMirror, uid: string): Promise<void> {
+export async function reloadInstance(
+  app: App,
+  mirror: DocumentMirror,
+  uid: string,
+  documentOverrides = false,
+): Promise<void> {
   try {
-    await rebuildInstance({ app, mirror }, uid, (overrides) => overrides);
+    await rebuildInstance({ app, mirror }, uid, (overrides) => overrides, documentOverrides);
   } finally {
     mirror.invalidate();
   }
