@@ -195,19 +195,24 @@ describe("in an edit-mode app (ADR-0028)", () => {
     expect(Number(material.getUniform("time")) - before).toBeCloseTo(0.25);
   });
 
-  it("hold the clock custom post effects upload as well", async () => {
+  it("give custom post effects the materials' clock, which resumes without a jump", async () => {
     harness = await createShaderHarness({ editMode: true });
     const h = harness;
     const renderer = rendererInternals(h.app.renderer);
+    const material = await materialFor(h, "shaders/clock-lit.wgsl", CLOCK_LIT);
     h.frame(0.25);
-    expect(renderer.effectClock.time).toBeCloseTo(h.app.time.time);
+    expect(renderer.effectClock.time).toBe(material.getUniform("time"));
     h.app.renderer.animateMaterialsInEditMode = false;
-    const held = h.app.time.time;
+    const held = renderer.effectClock.time;
     h.frame(0.5);
     expect(renderer.effectClock.time).toBe(held);
     expect(renderer.effectClock.deltaTime).toBe(0);
     h.app.renderer.animateMaterialsInEditMode = true;
-    expect(renderer.effectClock.time).toBe(h.app.time.time);
+    h.frame(0.25);
+    // No jump: the held half second is not caught up, and both clocks still agree.
+    expect(renderer.effectClock.time - held).toBeCloseTo(0.25);
+    expect(renderer.effectClock.time).toBe(material.getUniform("time"));
+    expect(renderer.effectClock.deltaTime).toBeCloseTo(0.25);
   });
 
   it("ignore the toggle in a game app", async () => {

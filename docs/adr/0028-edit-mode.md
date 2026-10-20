@@ -134,7 +134,7 @@ An editor needs the physics world for collider gizmos and for queries against th
 ### An "animate materials" toggle
 
 - **M1 · The setting.** `app.renderer.animateMaterialsInEditMode: boolean`, `true` by default. In an edit-mode app it decides whether the shader clock (`time`, `unscaledTime`, `deltaTime` of shader materials and of custom post effects) runs. Outside edit mode it is ignored.
-- **M2 · How it holds.** `ignifx/shader-uniforms` now registers as `"run"` (it was `"hold"`), because a registration cannot change and the toggle can; the system holds the clock itself while the toggle is off, exactly as `app.pause()` holds it, and resumes without a jump. The main-light and ambient uniforms stay live either way. Custom post effects read the clock the renderer captured when the toggle went off.
+- **M2 · How it holds.** `ignifx/shader-uniforms` now registers as `"run"` (it was `"hold"`), because a registration cannot change and the toggle can; the system holds the clock itself while the toggle is off, exactly as `app.pause()` holds it, and resumes without a jump. The main-light and ambient uniforms stay live either way. In an edit-mode app custom post effects read the same accumulated clock as materials, so the two never drift apart when the clock is held and resumed (a game's post effects keep reading `app.time`).
 - **M3 · The host.** `@ignifx/editor-host` sets it with `setAnimateMaterials { enabled }`. The host starts with it on, so an editor sends its own state after each `ready`.
 
 The R9 table above shows both changes: the `ignifx/shader-uniforms` row and the edit-mode sync row.

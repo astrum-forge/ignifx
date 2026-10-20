@@ -573,8 +573,8 @@ export class RendererImpl implements Renderer {
 
   #animateMaterialsInEditMode = true;
 
-  /** The clock custom post effects read while edit mode holds it; captured when the toggle goes off. */
-  readonly #heldEffectClock = { time: 0, unscaledTime: 0, deltaTime: 0 };
+  /** The shader clock `ShaderUniformSystem` accumulates, which edit mode's post effects read too. */
+  readonly #shaderClock = { time: 0, unscaledTime: 0, deltaTime: 0 };
 
   #isSceneRegistered = false;
 
@@ -774,12 +774,23 @@ export class RendererImpl implements Renderer {
   }
 
   set animateMaterialsInEditMode(value: boolean) {
-    if (this.#animateMaterialsInEditMode && !value) {
-      const time = this.#app.time;
-      this.#heldEffectClock.time = time.time;
-      this.#heldEffectClock.unscaledTime = time.unscaledTime;
-    }
     this.#animateMaterialsInEditMode = value;
+  }
+
+  /**
+   * Records this frame's shader clock, as `ShaderUniformSystem` accumulated it: the one clock both
+   * shader materials and, in edit mode, custom post effects read.
+   *
+   * @param time - Scaled seconds the clock has run.
+   * @param unscaledTime - Unscaled seconds the clock has run.
+   * @param deltaTime - This frame's step; `0` while the clock is held.
+   *
+   * @internal
+   */
+  setShaderClock(time: number, unscaledTime: number, deltaTime: number): void {
+    this.#shaderClock.time = time;
+    this.#shaderClock.unscaledTime = unscaledTime;
+    this.#shaderClock.deltaTime = deltaTime;
   }
 
   /**
@@ -795,15 +806,16 @@ export class RendererImpl implements Renderer {
   }
 
   /**
-   * The clock custom post effects upload: the app's own, or the values it had when an edit-mode
-   * app turned material animation off, with a zero delta.
+   * The clock custom post effects upload. In an edit-mode app it is the shader clock materials read
+   * (`setShaderClock`), so the two never drift apart when the editor holds and resumes it
+   * (ADR-0028, amendment of 2026-10-20). A game keeps the app's own clock.
    *
    * @returns The clock.
    *
    * @internal
    */
   get effectClock(): { readonly time: number; readonly unscaledTime: number; readonly deltaTime: number } {
-    return this.isShaderClockHeld ? this.#heldEffectClock : this.#app.time;
+    return this.#app.isEditMode ? this.#shaderClock : this.#app.time;
   }
 
   /**

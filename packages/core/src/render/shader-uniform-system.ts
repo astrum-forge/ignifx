@@ -96,11 +96,14 @@ export class ShaderUniformSystem implements System {
    */
   update(ctx: SystemContext): void {
     const time = ctx.time;
-    const isPaused = time.paused || ctx.isClockHeld || rendererInternals(this.#app.renderer).isShaderClockHeld;
+    const renderer = rendererInternals(this.#app.renderer);
+    const isPaused = time.paused || ctx.isClockHeld || renderer.isShaderClockHeld;
     if (!isPaused) {
       this.#time += time.deltaTime;
       this.#unscaledTime += time.unscaledDeltaTime;
     }
+    const delta = isPaused ? 0 : time.deltaTime;
+    renderer.setShaderClock(this.#time, this.#unscaledTime, delta);
     const support = shaderSupport();
     if (support === null) {
       return;
@@ -111,7 +114,6 @@ export class ShaderUniformSystem implements System {
     }
     const hasLight = this.#readMainLight(ctx.world);
     this.#readAmbient();
-    const delta = isPaused ? 0 : time.deltaTime;
     for (let index = 0; index < materials.length; index += 1) {
       materials[index]?.writeFrameUniforms(this.#time, this.#unscaledTime, delta, this.#frame, hasLight);
     }
