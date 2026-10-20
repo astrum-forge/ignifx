@@ -131,7 +131,7 @@ a temporary Havok shape for the call.
 
 `RaycastHit { entity, collider, point, normal, distance, triangleIndex }`. Queries require at least
 one completed step (Lite builds the broadphase on the first step); calling earlier throws
-`IGX-0902`.
+`IGX-0902`. An edit-mode app is the exception (§11).
 
 **Identity is only available for rays.** Lite 1.34.0 still reports a body for `physicsRaycast` alone:
 `ShapeCastResult` and `ShapeProximityResult` carry points and normals but no body, and
@@ -179,8 +179,21 @@ package, so `app.isHeadless` only changes _where the bytes come from_. The world
 render scene); `@ignifx/devtools` wires the UI in Phase 10 and shows the `physics` diagnostics group
 (`bodies`, `activeBodies`, `stepsThisFrame`, `collisionEvents`, `triggerEvents`, `queries`,
 `stepMs`). The viewer builds a `Mesh` per body, so it needs a GPU device and is a no-op with a
-warning on a headless app.
+warning on a headless app. It follows bodies built, rebuilt or removed after it was switched on.
+`app.physics.colliderOutlines(entity)` (and `app.physics2d.colliderOutlines`) gives the same
+information as data: each enabled collider's outline as world-space line segments, for an editor's
+collider gizmos (§11).
 
 ## 10. 2D physics
 
 2D games use `@ignifx/physics-2d` (ADR-0006), which exposes the same component vocabulary with a `2D` suffix (`Rigidbody2D`, `BoxCollider2D`, `CircleCollider2D`, `CapsuleCollider2D`, `PolygonCollider2D`, `TilemapCollider2D`, `CharacterController2D`) and the same stepping model (§1) on its own backend. A world uses either the 3D or the 2D physics extension, not both, in the MVP.
+
+## 11. Edit mode (ADR-0028, amendment of 2026-10-20)
+
+In an edit-mode app (`createApp({ editMode: true })`) both physics extensions keep bodies but never simulate them:
+
+- **Bodies follow the scene.** A `physics-edit-sync` (`physics2d-edit-sync`) system, registered only in an edit-mode app at `PreRender` −800, builds, rebuilds and removes bodies for component, layer and tile changes and places every body whose transform the editor moved. A 3D body is removed and added again with its shapes, because a Havok teleport leaves the broadphase behind until a step; a changed scale rebuilds the shapes. 2D runs Rapier's zero-length priming step after a change and drops its events. Interpolation is off.
+- **Nothing steps.** No fixed step runs, so nothing falls, no collision or trigger callback fires, no simulated pose is written to a transform, and `hasStepped` stays `false`.
+- **Queries answer** from the first frame without a step: each one first brings the bodies in line with the world, so it sees a move the editor made a moment ago.
+- **Collider gizmos.** `colliderOutlines(entity)` on either service returns world-space line segments per enabled collider. 3D outlines come from the collider's fields, world pose and lossy scale (a `MeshCollider` has none; a `HeightfieldCollider` outlines the box of its samples); 2D outlines are Rapier's debug drawing, tile collision included. `@ignifx/editor-host` serves them as `getColliderOutlines`.
+- The Havok and Rapier WebAssembly modules load as they do in a game.

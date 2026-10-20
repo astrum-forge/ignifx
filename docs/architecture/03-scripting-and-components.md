@@ -248,6 +248,6 @@ class EditorCamera extends Script {
 - **Coroutines.** `startCoroutine` (and `app.coroutines.start`) throws `IGX-0111` for a script that does not run in edit mode.
 - **Systems** run, hold, or skip as they registered (§6). A held system gets `dt = 0` and `isClockHeld = true` and treats the frame as paused.
 - **Materials animate by default.** The shader clock (`time`, `unscaledTime`, `deltaTime` of shader materials and custom post effects) runs as in a game; an editor's "animate materials" toggle sets `app.renderer.animateMaterialsInEditMode = false` to hold it (ADR-0028, amendment of 2026-10-20).
-- **Physics bodies exist but never simulate.** Both physics extensions build, update and remove bodies from component changes and follow transforms the editor moves, so queries and the debug viewer work; nothing steps, no collision or trigger callback fires, and no simulated pose is written back (`09-physics.md` §10).
+- **Physics bodies exist but never simulate.** Both physics extensions build, update and remove bodies from component changes and follow transforms the editor moves, so queries and the debug viewer work; nothing steps, no collision or trigger callback fires, and no simulated pose is written back (`09-physics.md` §11).
 - **`time.paused` and `app.step()`** mean what they mean in a game. **`entity.isStatic`** stays writable after the first frame.
 - **Hot reload.** A `"patch"` that changes a class's `runInEditMode` is applied as `"recreate"`, so an instance is set up and torn down under the same answer.
