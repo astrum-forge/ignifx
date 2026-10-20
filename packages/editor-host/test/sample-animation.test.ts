@@ -1,7 +1,13 @@
 import { readFileSync } from "node:fs";
 import { Component, IgnifxError } from "@ignifx/core";
 import { afterEach, describe, expect, it } from "vitest";
-import { RpcErrorCode, SceneNotification } from "../src/protocol/index.js";
+import {
+  isSampleAnimationParams,
+  RpcErrorCode,
+  SAMPLE_ANIMATION_MAX_NAME_LENGTH,
+  SAMPLE_ANIMATION_MAX_PARAMETERS,
+  SceneNotification,
+} from "../src/protocol/index.js";
 import { startLiveHost } from "./support/scene-project.js";
 import type { Received } from "./support/editor.js";
 import type { LiveHost, Wire } from "./support/scene-project.js";
@@ -102,6 +108,35 @@ function openSceneWithAnimator(): Received {
   return { ...request, params: { ...params, file: { ...params.file, entities } } };
 }
 
+/**
+ * Parameter values `0` under `count` distinct names.
+ *
+ * @param count - How many.
+ * @returns The record.
+ */
+function parameters(count: number): Record<string, number> {
+  return Object.fromEntries(Array.from({ length: count }, (_, index) => [`p${String(index)}`, 0]));
+}
+
+describe("isSampleAnimationParams", () => {
+  const at = { entity: PLAYER, state: "s".repeat(SAMPLE_ANIMATION_MAX_NAME_LENGTH), normalizedTime: 0 };
+
+  it("accepts names and parameter counts up to the caps", () => {
+    expect(isSampleAnimationParams(at)).toBe(true);
+    expect(isSampleAnimationParams({ ...at, parameters: parameters(SAMPLE_ANIMATION_MAX_PARAMETERS) })).toBe(true);
+    const longKey = "k".repeat(SAMPLE_ANIMATION_MAX_NAME_LENGTH);
+    expect(isSampleAnimationParams({ ...at, parameters: { [longKey]: true } })).toBe(true);
+  });
+
+  it("refuses a longer state, entity or parameter name, and more parameters", () => {
+    const tooLong = "s".repeat(SAMPLE_ANIMATION_MAX_NAME_LENGTH + 1);
+    expect(isSampleAnimationParams({ ...at, state: tooLong })).toBe(false);
+    expect(isSampleAnimationParams({ ...at, entity: tooLong })).toBe(false);
+    expect(isSampleAnimationParams({ ...at, parameters: { [tooLong]: 1 } })).toBe(false);
+    expect(isSampleAnimationParams({ ...at, parameters: parameters(SAMPLE_ANIMATION_MAX_PARAMETERS + 1) })).toBe(false);
+  });
+});
+
 describe("sampleAnimation through a live headless host", () => {
   let live: LiveHost | null = null;
 
@@ -169,6 +204,7 @@ describe("sampleAnimation through a live headless host", () => {
       { ...params, normalizedTime: "half" },
       { ...params, parameters: { speed: "fast" } },
       { entity: PLAYER, state: "jump" },
+      { ...params, state: "s".repeat(SAMPLE_ANIMATION_MAX_NAME_LENGTH + 1) },
     ]) {
       // The wire answers one request at a time; awaiting them in turn is the point.
       // oxlint-disable-next-line no-await-in-loop -- see above

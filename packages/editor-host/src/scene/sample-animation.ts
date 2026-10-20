@@ -6,7 +6,11 @@
 
 import { isIgnifxError } from "@ignifx/core";
 import { InvalidParamsError } from "../channel.js";
-import { isSampleAnimationParams } from "../protocol/index.js";
+import {
+  isSampleAnimationParams,
+  SAMPLE_ANIMATION_MAX_NAME_LENGTH,
+  SAMPLE_ANIMATION_MAX_PARAMETERS,
+} from "../protocol/index.js";
 import { componentTypeOf } from "./view-2d.js";
 import type { DocumentMirror } from "./document.js";
 import type { SampleAnimationResult } from "../protocol/index.js";
@@ -28,7 +32,7 @@ export const ANIMATOR_TYPE_ID = "ignifx/Animator";
 export function sampleAnimation(app: App, mirror: DocumentMirror, params: unknown): SampleAnimationResult {
   if (!isSampleAnimationParams(params)) {
     throw new InvalidParamsError(
-      "sampleAnimation takes { entity: uid, state: string, normalizedTime: number, parameters?: { [name]: number | boolean } }.",
+      `sampleAnimation takes { entity: uid, state: string, normalizedTime: number, parameters?: { [name]: number | boolean } }, with names of at most ${String(SAMPLE_ANIMATION_MAX_NAME_LENGTH)} characters and at most ${String(SAMPLE_ANIMATION_MAX_PARAMETERS)} parameters.`,
     );
   }
   const entity = mirror.index()?.entities.get(params.entity);

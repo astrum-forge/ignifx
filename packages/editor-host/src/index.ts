@@ -89,6 +89,8 @@ export {
   PROTOCOL_VERSION,
   protocolVersionIsCompatible,
   RpcErrorCode,
+  SAMPLE_ANIMATION_MAX_NAME_LENGTH,
+  SAMPLE_ANIMATION_MAX_PARAMETERS,
   SceneMethod,
   SceneNotification,
   SceneOpKind,

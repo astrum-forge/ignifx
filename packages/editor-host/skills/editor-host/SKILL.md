@@ -327,7 +327,8 @@ object `openScene` sends, through `world.loadSceneFile`; `readBack` answers with
   by name, so a project without `@ignifx/2d` still gets an orthographic 2D view of its meshes.
 - **A pose on demand.** `sampleAnimation { entity, state, normalizedTime, parameters? }` calls
   `Animator.sample` on the entity's `Animator` and answers `{ posed }`; the edit-mode view keeps
-  the pose until the next sample. `posed` is `false` while the clips load, and always headless. An
+  the pose until the next sample. `posed` is `false` while the clips load, when the model lacks a clip the state names, and
+  always headless. Names are capped at 256 characters and `parameters` at 64 values. An
   entity without an `Animator`, or an engine refusal such as an unknown state (`data.code`
   `IGX-1202`), is `invalidParams`. The host finds `ignifx/Animator` by type id, so a project
   without `@ignifx/3d` simply has none.

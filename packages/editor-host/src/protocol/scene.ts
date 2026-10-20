@@ -179,6 +179,23 @@ export const COLLIDER_OUTLINES_MAX_ENTITIES = 256;
 export const COLLIDER_OUTLINES_MAX_NUMBERS = 600_000;
 
 /**
+ * The most parameter values one `sampleAnimation` request may carry. A request with more fails
+ * with `invalidParams`.
+ *
+ * @public
+ */
+export const SAMPLE_ANIMATION_MAX_PARAMETERS = 64;
+
+/**
+ * The longest `entity`, `state` or parameter name, in UTF-16 code units, one `sampleAnimation`
+ * request may carry. A request with a longer one fails with `invalidParams`. It also bounds the
+ * names an error message echoes back.
+ *
+ * @public
+ */
+export const SAMPLE_ANIMATION_MAX_NAME_LENGTH = 256;
+
+/**
  * A world-space point, `[x, y, z]`, in metres.
  *
  * @public
@@ -792,8 +809,10 @@ export interface ColliderOutlineSet {
  * @remarks
  * The host calls the engine's `Animator.sample(state, normalizedTime, { parameters })` on the
  * entity's `Animator`. A time inside `[0, 1]` is used as given; outside it a looping state wraps
- * and a one-shot state clamps. The pose is the state alone; nothing else about the animator
- * changes, and in an edit-mode scene view it stays until the next sample. An entity the open scene
+ * and a one-shot state clamps. The state replaces its own layer and every other layer keeps its
+ * current pose; nothing else about the animator changes, and in an edit-mode scene view the pose
+ * stays until the next sample. Names are at most {@link SAMPLE_ANIMATION_MAX_NAME_LENGTH} long and
+ * `parameters` holds at most {@link SAMPLE_ANIMATION_MAX_PARAMETERS} values. An entity the open scene
  * lacks, or one without an `Animator`, is refused with `RpcErrorCode.invalidParams`, and so is
  * whatever the engine refuses (an unknown state or parameter, an entity with no model to pose),
  * with the engine's code as `data.code`.
@@ -1644,7 +1663,8 @@ export function isColliderOutlineSet(value: unknown): value is ColliderOutlineSe
  *
  * @param value - The received `params`.
  * @returns True for a uid, a state name, a finite time, and optional parameter values that are
- * finite numbers or booleans.
+ * finite numbers or booleans, within {@link SAMPLE_ANIMATION_MAX_NAME_LENGTH} and
+ * {@link SAMPLE_ANIMATION_MAX_PARAMETERS}.
  *
  * @public
  */
@@ -1652,14 +1672,41 @@ export function isSampleAnimationParams(value: unknown): value is SampleAnimatio
   return (
     isRecord(value) &&
     isUidString(value["entity"]) &&
-    isString(value["state"]) &&
+    isBoundedName(value["entity"]) &&
+    isBoundedName(value["state"]) &&
     isFiniteNumber(value["normalizedTime"]) &&
-    optionalField(
-      value,
-      "parameters",
-      (parameters) =>
-        isRecord(parameters) && Object.values(parameters).every((entry) => isFiniteNumber(entry) || isBoolean(entry)),
-    )
+    optionalField(value, "parameters", isSampleParameters)
+  );
+}
+
+/**
+ * Tells whether a value is a string no longer than {@link SAMPLE_ANIMATION_MAX_NAME_LENGTH}.
+ *
+ * @param value - The value to test.
+ * @returns True for such a string.
+ */
+function isBoundedName(value: unknown): value is string {
+  return isString(value) && value.length <= SAMPLE_ANIMATION_MAX_NAME_LENGTH;
+}
+
+/**
+ * Checks the `parameters` of `sampleAnimation`.
+ *
+ * @param value - The value to test.
+ * @returns True for at most {@link SAMPLE_ANIMATION_MAX_PARAMETERS} bounded names, each with a
+ * finite number or a boolean.
+ */
+function isSampleParameters(value: unknown): boolean {
+  if (!isRecord(value)) {
+    return false;
+  }
+  const names = Object.keys(value);
+  return (
+    names.length <= SAMPLE_ANIMATION_MAX_PARAMETERS &&
+    names.every((name) => {
+      const entry = value[name];
+      return name.length <= SAMPLE_ANIMATION_MAX_NAME_LENGTH && (isFiniteNumber(entry) || isBoolean(entry));
+    })
   );
 }
 

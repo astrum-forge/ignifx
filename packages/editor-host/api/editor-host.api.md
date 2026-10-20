@@ -827,6 +827,12 @@ export interface RpcSuccessResponse<R = unknown> {
 }
 
 // @public
+export const SAMPLE_ANIMATION_MAX_NAME_LENGTH = 256;
+
+// @public
+export const SAMPLE_ANIMATION_MAX_PARAMETERS = 64;
+
+// @public
 export interface SampleAnimationParams {
     readonly entity: string;
     readonly normalizedTime: number;
