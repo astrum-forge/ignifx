@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { resolveEngineVersion, startEditorHost } from "../src/host.js";
 import { JSON_RPC_VERSION, PROTOCOL_VERSION, RpcErrorCode } from "../src/protocol/index.js";
 import { connect, CountingTarget, EDITOR_ORIGIN, flushMessages } from "./support/editor.js";
+import { ENGINE_VERSION } from "./support/engine-version.js";
 import type { EditorHost, EditorHostOptions } from "../src/host.js";
 import type { EditorPeer } from "./support/editor.js";
 
@@ -12,7 +13,7 @@ import type { EditorPeer } from "./support/editor.js";
  */
 
 /** The version the Vite plugin would read from the project's `@ignifx/core/package.json`. */
-const PLUGIN_VERSION = "0.9.0";
+const PLUGIN_VERSION = ENGINE_VERSION;
 
 /**
  * What a host given {@link PLUGIN_VERSION} reports: core's `VERSION` when the build has stamped it,

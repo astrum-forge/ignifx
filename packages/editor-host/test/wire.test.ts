@@ -16,6 +16,7 @@ import {
   RpcErrorCode,
 } from "../src/protocol/index.js";
 import { EDITOR_ORIGIN, EditorPeer } from "./support/editor.js";
+import { ENGINE_VERSION } from "./support/engine-version.js";
 import type { Received } from "./support/editor.js";
 
 /**
@@ -56,14 +57,12 @@ function fixtureMessages(): Readonly<Record<string, Received>> {
 
 const WIRE = fixtureMessages();
 
-/** The engine version the fixture records; the live hosts below are given it as `engineVersion`. */
-const FIXTURE_ENGINE_VERSION = "0.9.0";
-
 /**
- * What those hosts report: core's `VERSION` when the build has stamped it, so it equals the fixture's
- * number only while the engine is at 0.9.0. Responses are compared with this number in its place.
+ * What the live hosts below report, given {@link ENGINE_VERSION} as `engineVersion`: core's `VERSION`
+ * when the build has stamped it, else that number. The fixture records whatever version the editor's
+ * copy was made at, so responses are compared with this number in the place of the fixture's.
  */
-const REPORTED_ENGINE_VERSION = resolveEngineVersion(FIXTURE_ENGINE_VERSION);
+const REPORTED_ENGINE_VERSION = resolveEngineVersion(ENGINE_VERSION);
 
 /**
  * Reads one fixture message.
@@ -312,7 +311,7 @@ describe("the editor's 0.2 wire fixture, through a live scene host", () => {
       editorOrigin: EDITOR_ORIGIN,
       headless: true,
       messageTarget: target,
-      engineVersion: FIXTURE_ENGINE_VERSION,
+      engineVersion: ENGINE_VERSION,
       heartbeatIntervalMs,
     });
     cleanups.push(() => {
@@ -373,7 +372,7 @@ describe("the editor's 0.2 wire fixture, through live play controls", () => {
     const controls = startEditorPlayControls(app, {
       editorOrigin: EDITOR_ORIGIN,
       messageTarget: target,
-      engineVersion: FIXTURE_ENGINE_VERSION,
+      engineVersion: ENGINE_VERSION,
       heartbeatIntervalMs: 60_000,
     });
     cleanups.push(() => {

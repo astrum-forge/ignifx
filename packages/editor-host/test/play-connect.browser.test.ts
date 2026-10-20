@@ -9,6 +9,7 @@ import {
 } from "../src/protocol/index.js";
 import { EDITOR_PLAY_CONTROLS_EXPORT, playControlsModuleSource } from "../src/vite/modules.js";
 import { EditorPeer } from "./support/editor.js";
+import { ENGINE_VERSION } from "./support/engine-version.js";
 import type { App } from "@ignifx/core";
 
 /**
@@ -53,7 +54,7 @@ async function evaluatePlayControlsModule(editorOrigin: string): Promise<AttachE
   const host = new URL("../src/play-controls.ts", import.meta.url).href;
   const source = playControlsModuleSource({
     editorOrigin,
-    engineVersion: "0.9.0",
+    engineVersion: ENGINE_VERSION,
     heartbeatIntervalMs: 60_000,
     hot: true,
   }).replace('"@ignifx/editor-host"', JSON.stringify(host));
