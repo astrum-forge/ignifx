@@ -181,10 +181,11 @@ function registerRendering(ctx: ExtensionContext): void {
   // GPU buffers whether a file or code built it.
   ctx.registerAssetLoader(createMeshLoader());
   // Held in edit mode: lights stay live, the `time` uniform stands still (ADR-0028).
+  // Runs in edit mode: the system itself holds the clock while `animateMaterialsInEditMode` is off,
+  // because a registration cannot change and the editor's toggle can (ADR-0028, 2026-10-20).
   ctx.registerSystem(new ShaderUniformSystem(ctx.app), {
     phase: Phase.PreRender,
     order: SHADER_UNIFORM_ORDER,
-    editMode: "hold",
   });
   const sync = new RenderSyncSystem(renderer);
   renderer.attachSyncSystem(sync);

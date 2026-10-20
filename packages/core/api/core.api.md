@@ -2735,6 +2735,7 @@ export interface RenderCapture {
 export interface Renderer {
     // @internal
     addCameraSource(probe: (world: World) => boolean): Disconnect;
+    animateMaterialsInEditMode: boolean;
     captureScreenshot(): Promise<RenderCapture>;
     readonly drawCalls: number;
     readonly features: Readonly<RenderingFeatureSettings>;

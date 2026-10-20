@@ -275,7 +275,7 @@ export class PostProcessStack extends Component implements ComponentHooks {
       this.isEnabledInHierarchy,
       this.bloom,
       this.smaa,
-      renderer.app.time,
+      renderer.effectClock,
       surface?.width ?? 0,
       surface?.height ?? 0,
       renderer.isSceneRegistered,

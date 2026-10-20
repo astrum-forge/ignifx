@@ -42,6 +42,8 @@ export interface BrowserAppOptions {
    * one the material warm-up needs (ADR-0014).
    */
   readonly startEmpty?: boolean;
+  /** Builds the app in edit mode (ADR-0028). */
+  readonly editMode?: boolean;
 }
 
 /** A running app on a real device. */
@@ -115,6 +117,7 @@ export async function createBrowserApp(options: BrowserAppOptions = {}): Promise
     canvas,
     logSink: log,
     logLevel: "debug",
+    editMode: options.editMode === true,
     assets: { manifest: createAssetManifest(options.assets ?? []) },
     settings: {
       ...options.settings,

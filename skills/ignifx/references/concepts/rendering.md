@@ -138,6 +138,7 @@ node, so an entity that moved is already where it should be.
 | `drawCalls`, `gpuFrameTimeMs`   | Per-frame counters, mirrored in the `render` diagnostics group                                |
 | `profileTasks`, `taskTimings()` | Per-task GPU timings; `status` is `"unsupported"` headless                                    |
 | `openOverlay()` (`@beta`)       | A Lite scene drawn over the frame, for editor gizmos; `IGX-0728` headless or before `start()` |
+| `animateMaterialsInEditMode`    | Edit mode only: `false` holds the shader clock of materials and post effects; default `true`  |
 
 ## 4. Settings and feature opt-ins
 

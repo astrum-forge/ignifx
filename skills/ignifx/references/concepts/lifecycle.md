@@ -163,12 +163,15 @@ plays (ADR-0028). `app.isEditMode` reports it; it never changes for the app's li
   An opted-in script gets its callbacks as in a game, with the real `dt`, but never `fixedUpdate`
   or a physics callback. Constructors, `onAttach`, and `onDetach` still run.
 - **Nothing simulates.** The fixed loop does not run, so physics, navigation, and `fixedUpdate` stop;
-  `time.fixedTime` and `fixedStepAlpha` stay `0`. The rest of `app.time` advances.
+  `time.fixedTime` and `fixedStepAlpha` stay `0`. The rest of `app.time` advances. Physics bodies
+  still exist and follow the transforms an editor moves, so `app.physics.raycast` and the other
+  queries answer; no collision or trigger callback fires.
 - **Coroutines.** `startCoroutine` throws `IGX-0111` for a script that does not run in edit mode.
 - **Systems** run, hold their clock (`ctx.dt === 0`, `ctx.isClockHeld === true`), or are skipped, as
   they declared with `registerSystem(system, { phase, editMode })`; the default is `"run"`.
-  Animation, billboards, physics, and navigation are skipped; particles and the shader clock hold;
-  rendering, 2D, UI, terrain, audio, input, tweens, and asset delivery run.
+  Animation, billboards, physics stepping, and navigation are skipped; particles hold; rendering,
+  2D, UI, terrain, audio, input, tweens, and asset delivery run. The shader clock runs unless
+  `app.renderer.animateMaterialsInEditMode` is set to `false`.
 - `app.pause()`, `updateWhenPaused`, and `app.step(dt)` mean what they mean in a game, and
   `entity.isStatic` stays writable after the first frame.
 
