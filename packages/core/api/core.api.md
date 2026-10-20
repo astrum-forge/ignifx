@@ -495,6 +495,7 @@ export type ComponentHandle = number & {
 export interface ComponentHooks {
     onAttach?(): void;
     onDetach?(): void;
+    onValidate?(fields: readonly string[]): void;
 }
 
 // @public

@@ -100,6 +100,7 @@ export class CharacterController2D extends Component implements ComponentHooks {
     onDetach(): void;
     // (undocumented)
     onOneWayPlatforms: boolean;
+    onValidate(fields: readonly string[]): void;
     // (undocumented)
     pushBodies: boolean;
     // (undocumented)
@@ -154,6 +155,7 @@ export abstract class Collider2D extends Component implements ComponentHooks {
     onAttach(): void;
     onDetach(): void;
     oneWay: boolean;
+    onValidate(fields: readonly string[]): void;
     rebuild(): void;
     resolveMaterial(fallback: Physics2DMaterialValues): Physics2DMaterialValues;
     restitutionCombine: CombineRule;
@@ -393,6 +395,7 @@ export class Rigidbody2D extends Component implements ComponentHooks {
     mass: number;
     onAttach(): void;
     onDetach(): void;
+    onValidate(fields: readonly string[]): void;
     get rapier(): Rigidbody2DRapierHandles;
     rebuild(): void;
     static schema: Schema;

@@ -20,7 +20,7 @@ import {
   SCENE_FORMAT_VERSION,
 } from "@ignifx/core";
 import { ApplyOpFailureCode } from "../protocol/index.js";
-import { assignProps, copyJson } from "./document.js";
+import { assignProps, copyJson, validateFields } from "./document.js";
 import type { DocumentIndex, DocumentMirror } from "./document.js";
 import type {
   AddComponentOp,
@@ -762,6 +762,7 @@ async function setProp(context: OpContext, op: SetPropOp): Promise<void> {
     }
     rejectIssues(assignProps(component, props, references));
     context.mirror.recordProps(op.component, Object.keys(props));
+    validateFields(component, Object.keys(schema));
     return;
   }
   const field = typeof name === "string" && Object.hasOwn(schema, name) ? schema[name] : undefined;
@@ -771,6 +772,7 @@ async function setProp(context: OpContext, op: SetPropOp): Promise<void> {
   if (rest.length === 0 && op.value === undefined) {
     Reflect.set(component, name, field.createDefault());
     context.mirror.recordProp(op.component, name, false);
+    validateFields(component, [name]);
     return;
   }
   const json =
@@ -784,6 +786,7 @@ async function setProp(context: OpContext, op: SetPropOp): Promise<void> {
   );
   Reflect.set(component, name, decoded.value);
   context.mirror.recordProp(op.component, name, true);
+  validateFields(component, [name]);
 }
 
 /**

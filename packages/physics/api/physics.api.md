@@ -103,6 +103,7 @@ export class CharacterController extends Component implements ComponentHooks {
     onAttach(): void;
     get onCollided(): Signal<CharacterCollision>;
     onDetach(): void;
+    onValidate(fields: readonly string[]): void;
     // (undocumented)
     pushStrength: number;
     // (undocumented)
@@ -140,6 +141,7 @@ export abstract class Collider extends Component implements ComponentHooks {
     material: AssetHandle<PhysicsMaterial> | null;
     onAttach(): void;
     onDetach(): void;
+    onValidate(fields: readonly string[]): void;
     // @internal
     outlineToRef(scale: Vec3Like, out: number[]): void;
     rebuild(): void;
@@ -440,6 +442,7 @@ export class Rigidbody extends Component implements ComponentHooks {
     mass: number;
     onAttach(): void;
     onDetach(): void;
+    onValidate(fields: readonly string[]): void;
     rebuild(): void;
     static schema: Schema;
     // (undocumented)
