@@ -33,6 +33,7 @@ async function project(): Promise<string> {
   });
   if (!linksUnsupported) {
     await symlink("../.ignifx", join(root, "src", "link"));
+    await symlink("../.ignifx/mcp.json", join(root, "src", "tok.json"));
     await mkdir(join(root, "public"), { recursive: true });
     await symlink("../.ignifx/mcp.json", join(root, "public", "tok.json"));
   }
@@ -157,11 +158,37 @@ describe("vite dev with editorHostPlugin() and no ignifx()", () => {
     expect(await leaks(port, paths)).toEqual([]);
   });
 
+  it.skipIf(linksUnsupported)("never serves a linked file Vite completes with an extension", async () => {
+    // The `load` hook refuses the real path Vite resolves `/src/tok` to.
+    const paths = ["/src/tok", "/src/tok?import"];
+    const responses = await Promise.all(paths.map(async (path) => Object.assign(await rawGet(port, path), { path })));
+    for (const { path, status, body } of responses) {
+      expect(status, path).not.toBe(200);
+      expect(body, path).not.toContain(TOKEN);
+    }
+  });
+
   it("still serves ordinary files", async () => {
     expect((await rawGet(port, "/src/main.ts")).status).toBe(200);
     const text = await rawGet(port, "/my.ignifx.txt");
     expect(text.status).toBe(200);
     expect(text.body).toBe("not private");
+  });
+});
+
+describe.skipIf(linksUnsupported)("editorHostPlugin() alone in a build", () => {
+  it("fails a build whose code imports the token through a link (the load hook)", async () => {
+    const root = await project();
+    await writeFile(join(root, "src", "main.ts"), 'import mcp from "./link/mcp.json";\ndocument.title = mcp.token;\n');
+    const outcome = build({
+      root,
+      configFile: false,
+      logLevel: "silent",
+      publicDir: false,
+      plugins: [editorHostPlugin({ editorOrigin: EDITOR_ORIGIN })],
+      build: { outDir: "dist" },
+    });
+    await expect(outcome).rejects.toThrow(/\.ignifx/u);
   });
 });
 

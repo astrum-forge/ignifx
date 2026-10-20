@@ -5,7 +5,7 @@
 
 import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { join, resolve } from "node:path";
+import { isAbsolute, join, resolve } from "node:path";
 import { EditorHostErrorCode, isEditorOrigin } from "../error-codes.js";
 import { EditorHostPluginError } from "./errors.js";
 import {
@@ -20,7 +20,7 @@ import {
   RESOLVED_EDITOR_ENTRY_MODULE_ID,
   RESOLVED_EDITOR_MODULE_ID,
 } from "./modules.js";
-import { createPrivateDirGuard, realPathOrSelf } from "./private-dir.js";
+import { createPrivateDirGuard, isPrivateRealPath, realPathOrSelf } from "./private-dir.js";
 import type { ConfigEnv, Plugin, ViteDevServer } from "vite";
 
 /**
@@ -301,10 +301,19 @@ export function editorHostPlugin(options: EditorHostPluginOptions): Plugin[] {
     },
 
     load(id) {
-      if (id !== RESOLVED_EDITOR_MODULE_ID) {
-        return null;
+      if (id === RESOLVED_EDITOR_MODULE_ID) {
+        return playControlsModuleSource({ editorOrigin, engineVersion, heartbeatIntervalMs, hot: command === "serve" });
       }
-      return playControlsModuleSource({ editorOrigin, engineVersion, heartbeatIntervalMs, hot: command === "serve" });
+      // Whatever resolved to it (an alias, `/@id/`, an import through a link), a module whose real
+      // path is in `.ignifx/` is never loaded: in dev it would be served, in a build bundled.
+      const file = id.split("?", 1)[0] ?? "";
+      if (!id.startsWith("\0") && isAbsolute(file) && isPrivateRealPath(realPathOrSelf(root), file)) {
+        this.error(
+          `"${file}" is in the editor-private .ignifx/ directory, which holds the editor's MCP token; ` +
+            "nothing may import or serve it. Remove the import or link.",
+        );
+      }
+      return null;
     },
   };
 

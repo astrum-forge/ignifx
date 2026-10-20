@@ -105,7 +105,7 @@ function hasPrivateSegment(path: string): boolean {
  *
  * It is synchronous, like Vite's own file lookups: a few `realpath` calls per request or module.
  */
-function isPrivateRealPath(realBase: string, path: string): boolean {
+export function isPrivateRealPath(realBase: string, path: string): boolean {
   let current = path;
   const rest: string[] = [];
   for (;;) {
