@@ -292,6 +292,9 @@ export class PhysicsRuntime {
 
   #observer: BodyObserver | null = null;
 
+  /** The last failure reported for each entity whose body could not be built, in edit mode. */
+  readonly #failures = new WeakMap<Entity, string>();
+
   #disposed = false;
 
   #queries = 0;
@@ -966,14 +969,45 @@ export class PhysicsRuntime {
       const pending = [...this.#dirty];
       this.#dirty.clear();
       for (const entity of pending) {
-        this.#rebuildEntity(entity);
+        this.#guarded(entity, null, (): void => {
+          this.#rebuildEntity(entity);
+        });
       }
     }
     if (this.#dirtyControllers.size > 0) {
       const pending = [...this.#dirtyControllers];
       this.#dirtyControllers.clear();
       for (const component of pending) {
-        this.#rebuildController(component);
+        this.#guarded(component.entity, component, (): void => {
+          this.#rebuildController(component);
+        });
+      }
+    }
+  }
+
+  /**
+   * Runs one entity's rebuild. In an edit-mode app a failure (a collider naming an undeclared
+   * layer, say) is reported through `app.onError` once per entity and message and the other
+   * entities still build, so one broken entity never stops the editor's queries; the entity
+   * builds again when its components change. A game rethrows, as before.
+   *
+   * @param entity - The entity being rebuilt.
+   * @param component - The controller being rebuilt, or `null` for a body.
+   * @param rebuild - The work.
+   */
+  #guarded(entity: Entity, component: Component | null, rebuild: () => void): void {
+    if (!this.#isEditMode) {
+      rebuild();
+      return;
+    }
+    try {
+      rebuild();
+      this.#failures.delete(entity);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (this.#failures.get(entity) !== message) {
+        this.#failures.set(entity, message);
+        this.#ctx.app.onError.emit({ error, source: "extension", phase: null, entity, component });
       }
     }
   }
@@ -1138,10 +1172,19 @@ export class PhysicsRuntime {
       return shapes;
     }
     const root = createContainer(this.#world);
-    for (const collider of colliders) {
-      const child = this.#buildShape(collider, scale, node, layer, defaults);
-      shapes.push(child);
-      addContainerChild(this.#world, root, child, Vec3.zero(), Quat.identity());
+    try {
+      for (const collider of colliders) {
+        const child = this.#buildShape(collider, scale, node, layer, defaults);
+        shapes.push(child);
+        addContainerChild(this.#world, root, child, Vec3.zero(), Quat.identity());
+      }
+    } catch (error: unknown) {
+      // A collider that cannot be built releases the shapes its siblings already made.
+      destroyShape(this.#world, root);
+      for (const shape of shapes) {
+        destroyShape(this.#world, shape);
+      }
+      throw error;
     }
     setShapeFilter(this.#world, root, membershipOf(layer), this.#collideMaskOf(layer));
     shapes.push(root);
@@ -1194,8 +1237,9 @@ export class PhysicsRuntime {
     layer: number,
     defaults: PhysicsMaterialValues,
   ): LitePhysicsShape {
-    const shape = collider.createShape(this.#world, scale, node);
+    // The layer is resolved first, so an undeclared one throws before a shape exists to leak.
     const effective = this.#layerOf(collider, layer);
+    const shape = collider.createShape(this.#world, scale, node);
     setShapeFilter(this.#world, shape, membershipOf(effective), this.#collideMaskOf(effective));
     const material = collider.resolveMaterial(defaults);
     setShapeMaterial(this.#world, shape, material.friction, material.restitution, material.staticFriction);

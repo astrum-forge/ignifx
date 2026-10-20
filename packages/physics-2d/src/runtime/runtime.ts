@@ -268,6 +268,9 @@ export class Physics2DRuntime {
   /** Whether the app is an editor's scene view, where bodies exist and nothing steps (ADR-0028). */
   readonly #isEditMode: boolean;
 
+  /** The last failure reported for each entity whose body could not be built, in edit mode. */
+  readonly #failures = new WeakMap<Entity, string>();
+
   #disposed = false;
 
   #stepsThisFrame = 0;
@@ -800,9 +803,37 @@ export class Physics2DRuntime {
     const pending = [...this.#dirty];
     this.#dirty.clear();
     for (const entity of pending) {
-      this.#rebuildEntity(entity);
+      this.#guarded(entity, (): void => {
+        this.#rebuildEntity(entity);
+      });
     }
     this.#colliderSetChanged = true;
+  }
+
+  /**
+   * Runs one entity's rebuild. In an edit-mode app a failure (a collider naming an undeclared
+   * layer, say) is reported through `app.onError` once per entity and message and the other
+   * entities still build, so one broken entity never stops the editor's queries; the entity
+   * builds again when its components change. A game rethrows, as before.
+   *
+   * @param entity - The entity being rebuilt.
+   * @param rebuild - The work.
+   */
+  #guarded(entity: Entity, rebuild: () => void): void {
+    if (!this.#isEditMode) {
+      rebuild();
+      return;
+    }
+    try {
+      rebuild();
+      this.#failures.delete(entity);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (this.#failures.get(entity) !== message) {
+        this.#failures.set(entity, message);
+        this.#ctx.app.onError.emit({ error, source: "extension", phase: null, entity, component: null });
+      }
+    }
   }
 
   /**
@@ -903,9 +934,16 @@ export class Physics2DRuntime {
       disconnects: [],
     };
     this.#byEntity.set(entity, record);
-    this.#attachColliders(record, colliders, layer);
-    if (controller !== null) {
-      this.#attachController(record, controller, layer);
+    try {
+      this.#attachColliders(record, colliders, layer);
+      if (controller !== null) {
+        this.#attachController(record, controller, layer);
+      }
+    } catch (error: unknown) {
+      // A collider that cannot be built takes the half-built body down with it.
+      this.#teardown(record);
+      this.#byEntity.delete(entity);
+      throw error;
     }
     if (record.colliders.length === 0) {
       this.#byEntity.delete(entity);

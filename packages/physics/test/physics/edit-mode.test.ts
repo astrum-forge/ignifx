@@ -221,6 +221,34 @@ describe("physics in an edit-mode app", () => {
     }
   }, 30_000);
 
+  it("builds every other body when one collider cannot be built, and reports it once", async () => {
+    const harness = await createPhysicsApp({ editMode: true });
+    try {
+      const reports: unknown[] = [];
+      harness.app.onError.connect((report) => {
+        if (report.entity?.name === "Broken") {
+          reports.push(report.error);
+        }
+      });
+      const broken = harness.world.createEntity("Broken");
+      broken.transform.position = { x: -3, y: 0, z: 0 };
+      const bad = broken.addComponent(BoxCollider, { layerOverride: "nope" });
+      harness.world.createEntity("Fine").addComponent(BoxCollider);
+      // The query builds the bodies itself, and does not throw for the broken one.
+      expect(hitBelow(harness, 0, 0)).toBe("Fine");
+      harness.stepMany(5);
+      expect(hitBelow(harness, -3, 0)).toBeNull();
+      expect(reports).toHaveLength(1);
+      expect(String(reports[0])).toMatch(/IGX-0905/u);
+
+      bad.layerOverride = "";
+      bad.onValidate(["layerOverride"]);
+      expect(hitBelow(harness, -3, 0)).toBe("Broken");
+    } finally {
+      harness.dispose();
+    }
+  }, 30_000);
+
   it("leaves a game app as it was: a query before the first step is still refused", async () => {
     const harness = await createPhysicsApp();
     try {
