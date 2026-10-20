@@ -4961,6 +4961,29 @@ Marks the entity's body for a rebuild, which removes this collider from it.
 
 [`Collider`](#abstract-collider).[`onDetach`](#ondetach-9)
 
+##### onValidate()
+
+> **onValidate**(`fields`): `void`
+
+Rebuilds the body after a tool changed fields from outside: an editor's inspector, or a hot
+reload's new default (`ComponentHooks.onValidate`).
+
+###### Parameters
+
+###### fields
+
+readonly `string`[]
+
+The fields that changed.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Collider`](#abstract-collider).[`onValidate`](#onvalidate-7)
+
 ##### rebuild()
 
 > **rebuild**(): `void`
@@ -5528,6 +5551,29 @@ Marks the entity's body for a rebuild, which removes this collider from it.
 ###### Inherited from
 
 [`Collider2D`](#abstract-collider2d).[`onDetach`](#ondetach-10)
+
+##### onValidate()
+
+> **onValidate**(`fields`): `void`
+
+Rebuilds the body after a tool changed fields from outside: an editor's inspector, or a hot
+reload's new default (`ComponentHooks.onValidate`).
+
+###### Parameters
+
+###### fields
+
+readonly `string`[]
+
+The fields that changed.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`onValidate`](#onvalidate-8)
 
 ##### rebuild()
 
@@ -7935,6 +7981,29 @@ Marks the entity's body for a rebuild, which removes this collider from it.
 
 [`Collider`](#abstract-collider).[`onDetach`](#ondetach-9)
 
+##### onValidate()
+
+> **onValidate**(`fields`): `void`
+
+Rebuilds the body after a tool changed fields from outside: an editor's inspector, or a hot
+reload's new default (`ComponentHooks.onValidate`).
+
+###### Parameters
+
+###### fields
+
+readonly `string`[]
+
+The fields that changed.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Collider`](#abstract-collider).[`onValidate`](#onvalidate-7)
+
 ##### rebuild()
 
 > **rebuild**(): `void`
@@ -8510,6 +8579,29 @@ Marks the entity's body for a rebuild, which removes this collider from it.
 ###### Inherited from
 
 [`Collider2D`](#abstract-collider2d).[`onDetach`](#ondetach-10)
+
+##### onValidate()
+
+> **onValidate**(`fields`): `void`
+
+Rebuilds the body after a tool changed fields from outside: an editor's inspector, or a hot
+reload's new default (`ComponentHooks.onValidate`).
+
+###### Parameters
+
+###### fields
+
+readonly `string`[]
+
+The fields that changed.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`onValidate`](#onvalidate-8)
 
 ##### rebuild()
 
@@ -9113,6 +9205,29 @@ Releases the Lite controller.
 ###### Implementation of
 
 [`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-11)
+
+##### onValidate()
+
+> **onValidate**(`fields`): `void`
+
+Rebuilds the body after a tool changed fields from outside: an editor's inspector, or a hot
+reload's new default (`ComponentHooks.onValidate`).
+
+###### Parameters
+
+###### fields
+
+readonly `string`[]
+
+The fields that changed.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onValidate`](#onvalidate-9)
 
 ##### rebuild()
 
@@ -9748,6 +9863,29 @@ Releases the Rapier controller and its collider.
 
 [`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-11)
 
+##### onValidate()
+
+> **onValidate**(`fields`): `void`
+
+Rebuilds the body after a tool changed fields from outside: an editor's inspector, or a hot
+reload's new default (`ComponentHooks.onValidate`).
+
+###### Parameters
+
+###### fields
+
+readonly `string`[]
+
+The fields that changed.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onValidate`](#onvalidate-9)
+
 ##### rebuild()
 
 > **rebuild**(): `void`
@@ -10292,6 +10430,29 @@ Marks the entity's body for a rebuild, which removes this collider from it.
 
 [`Collider2D`](#abstract-collider2d).[`onDetach`](#ondetach-10)
 
+##### onValidate()
+
+> **onValidate**(`fields`): `void`
+
+Rebuilds the body after a tool changed fields from outside: an editor's inspector, or a hot
+reload's new default (`ComponentHooks.onValidate`).
+
+###### Parameters
+
+###### fields
+
+readonly `string`[]
+
+The fields that changed.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`onValidate`](#onvalidate-8)
+
 ##### rebuild()
 
 > **rebuild**(): `void`
@@ -10794,6 +10955,29 @@ Marks the entity's body for a rebuild, which removes this collider from it.
 ###### Implementation of
 
 [`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-11)
+
+##### onValidate()
+
+> **onValidate**(`fields`): `void`
+
+Rebuilds the body after a tool changed fields from outside: an editor's inspector, or a hot
+reload's new default (`ComponentHooks.onValidate`).
+
+###### Parameters
+
+###### fields
+
+readonly `string`[]
+
+The fields that changed.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onValidate`](#onvalidate-9)
 
 ##### rebuild()
 
@@ -11308,6 +11492,29 @@ Marks the entity's body for a rebuild, which removes this collider from it.
 ###### Implementation of
 
 [`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-11)
+
+##### onValidate()
+
+> **onValidate**(`fields`): `void`
+
+Rebuilds the body after a tool changed fields from outside: an editor's inspector, or a hot
+reload's new default (`ComponentHooks.onValidate`).
+
+###### Parameters
+
+###### fields
+
+readonly `string`[]
+
+The fields that changed.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onValidate`](#onvalidate-9)
 
 ##### rebuild()
 
@@ -13441,6 +13648,29 @@ Marks the entity's body for a rebuild, which removes this collider from it.
 
 [`Collider`](#abstract-collider).[`onDetach`](#ondetach-9)
 
+##### onValidate()
+
+> **onValidate**(`fields`): `void`
+
+Rebuilds the body after a tool changed fields from outside: an editor's inspector, or a hot
+reload's new default (`ComponentHooks.onValidate`).
+
+###### Parameters
+
+###### fields
+
+readonly `string`[]
+
+The fields that changed.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Collider`](#abstract-collider).[`onValidate`](#onvalidate-7)
+
 ##### rebuild()
 
 > **rebuild**(): `void`
@@ -14730,6 +14960,29 @@ Marks the entity's body for a rebuild, which removes this collider from it.
 ###### Inherited from
 
 [`Collider2D`](#abstract-collider2d).[`onDetach`](#ondetach-10)
+
+##### onValidate()
+
+> **onValidate**(`fields`): `void`
+
+Rebuilds the body after a tool changed fields from outside: an editor's inspector, or a hot
+reload's new default (`ComponentHooks.onValidate`).
+
+###### Parameters
+
+###### fields
+
+readonly `string`[]
+
+The fields that changed.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`onValidate`](#onvalidate-8)
 
 ##### rebuild()
 
@@ -19737,6 +19990,29 @@ Marks the entity's body for a rebuild, which removes this collider from it.
 ###### Inherited from
 
 [`Collider`](#abstract-collider).[`onDetach`](#ondetach-9)
+
+##### onValidate()
+
+> **onValidate**(`fields`): `void`
+
+Rebuilds the body after a tool changed fields from outside: an editor's inspector, or a hot
+reload's new default (`ComponentHooks.onValidate`).
+
+###### Parameters
+
+###### fields
+
+readonly `string`[]
+
+The fields that changed.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Collider`](#abstract-collider).[`onValidate`](#onvalidate-7)
 
 ##### rebuild()
 
@@ -28566,6 +28842,29 @@ Marks the entity's body for a rebuild, which removes this collider from it.
 
 [`Collider`](#abstract-collider).[`onDetach`](#ondetach-9)
 
+##### onValidate()
+
+> **onValidate**(`fields`): `void`
+
+Rebuilds the body after a tool changed fields from outside: an editor's inspector, or a hot
+reload's new default (`ComponentHooks.onValidate`).
+
+###### Parameters
+
+###### fields
+
+readonly `string`[]
+
+The fields that changed.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Collider`](#abstract-collider).[`onValidate`](#onvalidate-7)
+
 ##### rebuild()
 
 > **rebuild**(): `void`
@@ -36211,7 +36510,8 @@ The entity whose colliders to outline.
 
 readonly `ColliderOutline`[]
 
-One outline per enabled collider, in component order; empty when it has none.
+One outline per enabled collider, in component order; empty when it has none or the
+entity is inactive in the hierarchy, which builds no body.
 
 ###### Remarks
 
@@ -38108,6 +38408,29 @@ Marks the entity's body for a rebuild, which removes this collider from it.
 ###### Inherited from
 
 [`Collider2D`](#abstract-collider2d).[`onDetach`](#ondetach-10)
+
+##### onValidate()
+
+> **onValidate**(`fields`): `void`
+
+Rebuilds the body after a tool changed fields from outside: an editor's inspector, or a hot
+reload's new default (`ComponentHooks.onValidate`).
+
+###### Parameters
+
+###### fields
+
+readonly `string`[]
+
+The fields that changed.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`onValidate`](#onvalidate-8)
 
 ##### rebuild()
 
@@ -41005,6 +41328,29 @@ Marks the entity's body for a rebuild, which turns it back into an implicit stat
 
 [`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-11)
 
+##### onValidate()
+
+> **onValidate**(`fields`): `void`
+
+Rebuilds the body after a tool changed fields from outside: an editor's inspector, or a hot
+reload's new default (`ComponentHooks.onValidate`).
+
+###### Parameters
+
+###### fields
+
+readonly `string`[]
+
+The fields that changed.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onValidate`](#onvalidate-9)
+
 ##### rebuild()
 
 > **rebuild**(): `void`
@@ -41696,6 +42042,29 @@ Marks the entity's body for a rebuild, which turns it back into an implicit stat
 ###### Implementation of
 
 [`ComponentHooks`](#componenthooks).[`onDetach`](#ondetach-11)
+
+##### onValidate()
+
+> **onValidate**(`fields`): `void`
+
+Rebuilds the body after a tool changed fields from outside: an editor's inspector, or a hot
+reload's new default (`ComponentHooks.onValidate`).
+
+###### Parameters
+
+###### fields
+
+readonly `string`[]
+
+The fields that changed.
+
+###### Returns
+
+`void`
+
+###### Implementation of
+
+[`ComponentHooks`](#componenthooks).[`onValidate`](#onvalidate-9)
 
 ##### rebuild()
 
@@ -44538,6 +44907,29 @@ Marks the entity's body for a rebuild, which removes this collider from it.
 ###### Inherited from
 
 [`Collider`](#abstract-collider).[`onDetach`](#ondetach-9)
+
+##### onValidate()
+
+> **onValidate**(`fields`): `void`
+
+Rebuilds the body after a tool changed fields from outside: an editor's inspector, or a hot
+reload's new default (`ComponentHooks.onValidate`).
+
+###### Parameters
+
+###### fields
+
+readonly `string`[]
+
+The fields that changed.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Collider`](#abstract-collider).[`onValidate`](#onvalidate-7)
 
 ##### rebuild()
 
@@ -52484,6 +52876,29 @@ Marks the entity's body for a rebuild, which removes this collider from it.
 ###### Inherited from
 
 [`Collider2D`](#abstract-collider2d).[`onDetach`](#ondetach-10)
+
+##### onValidate()
+
+> **onValidate**(`fields`): `void`
+
+Rebuilds the body after a tool changed fields from outside: an editor's inspector, or a hot
+reload's new default (`ComponentHooks.onValidate`).
+
+###### Parameters
+
+###### fields
+
+readonly `string`[]
+
+The fields that changed.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Collider2D`](#abstract-collider2d).[`onValidate`](#onvalidate-8)
 
 ##### rebuild()
 
@@ -66849,6 +67264,27 @@ is inactive, so it must not assume the component is enabled.
 > `optional` **onDetach**(): `void`
 
 Runs just before the component is removed, after `onDestroy`.
+
+###### Returns
+
+`void`
+
+##### onValidate()?
+
+> `optional` **onValidate**(`fields`): `void`
+
+Runs after a tool changed the component's serialized fields from outside it: an editor's
+inspector or document op, or a hot reload that gave a field its new default. The engine's own
+loads and a script's assignments do not call it. A component that builds something from its
+fields (a physics shape, say) rebuilds it here. Not gated in edit mode (ADR-0028).
+
+###### Parameters
+
+###### fields
+
+readonly `string`[]
+
+The names of the fields that changed.
 
 ###### Returns
 

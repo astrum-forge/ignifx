@@ -20136,6 +20136,27 @@ Runs just before the component is removed, after `onDestroy`.
 
 `void`
 
+##### onValidate()?
+
+> `optional` **onValidate**(`fields`): `void`
+
+Runs after a tool changed the component's serialized fields from outside it: an editor's
+inspector or document op, or a hot reload that gave a field its new default. The engine's own
+loads and a script's assignments do not call it. A component that builds something from its
+fields (a physics shape, say) rebuilds it here. Not gated in edit mode (ADR-0028).
+
+###### Parameters
+
+###### fields
+
+readonly `string`[]
+
+The names of the fields that changed.
+
+###### Returns
+
+`void`
+
 ***
 
 ### ComponentRefFieldSpec

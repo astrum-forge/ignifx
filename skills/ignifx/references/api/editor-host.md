@@ -263,6 +263,14 @@ The answer to `getColliderOutlines`.
 One record per enabled collider of each requested entity that the open scene has, in request
 order and then component order. Empty when the project registers no physics extension.
 
+##### truncated
+
+> `readonly` **truncated**: `boolean`
+
+True when outlines were left out: the request named more than
+[COLLIDER\_OUTLINES\_MAX\_ENTITIES](#collider_outlines_max_entities) entities, or the lines would have passed
+[COLLIDER\_OUTLINES\_MAX\_NUMBERS](#collider_outlines_max_numbers) numbers. The outlines sent are whole.
+
 ***
 
 ### CreateEntityOp
@@ -3350,6 +3358,25 @@ disagrees with the document the op was checked against. The last two are the hos
 
 ***
 
+### COLLIDER\_OUTLINES\_MAX\_ENTITIES
+
+> `const` **COLLIDER\_OUTLINES\_MAX\_ENTITIES**: `256` = `256`
+
+The most entities one `getColliderOutlines` request outlines; the rest of a longer list are left
+out and the answer says `truncated`.
+
+***
+
+### COLLIDER\_OUTLINES\_MAX\_NUMBERS
+
+> `const` **COLLIDER\_OUTLINES\_MAX\_NUMBERS**: `600000` = `600_000`
+
+The most numbers all the `lines` of one `getColliderOutlines` answer hold together, 100 000
+segments: an outline that would pass it is left out, with every one after it, and the answer
+says `truncated`.
+
+***
+
 ### DEFAULT\_HEARTBEAT\_INTERVAL\_MS
 
 > `const` **DEFAULT\_HEARTBEAT\_INTERVAL\_MS**: `1000` = `1000`
@@ -4319,7 +4346,7 @@ The received `result`.
 
 `value is ColliderOutlineSet`
 
-True for a list of outline records.
+True for a list of outline records and a boolean `truncated`.
 
 ***
 
