@@ -122,13 +122,17 @@ describe("colliderOutlines", () => {
     }
   }, 30_000);
 
-  it("leaves out disabled colliders and answers nothing for an entity without one", async () => {
+  it("leaves out disabled colliders, inactive entities, and entities without a collider", async () => {
     const harness = await createPhysicsApp();
     try {
       const thing = harness.world.createEntity("Thing");
       expect(harness.app.physics.colliderOutlines(thing)).toEqual([]);
       thing.addComponent(BoxCollider).enabled = false;
       expect(harness.app.physics.colliderOutlines(thing)).toEqual([]);
+      const hidden = harness.world.createEntity("Hidden");
+      hidden.addComponent(BoxCollider);
+      hidden.active = false;
+      expect(harness.app.physics.colliderOutlines(hidden)).toEqual([]);
     } finally {
       harness.dispose();
     }

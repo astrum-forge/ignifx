@@ -6,7 +6,7 @@ import { createShape, destroyShape, ShapeGeometry } from "./lite/havok.js";
 import { castRay, nearestDistance, sweepShape } from "./lite/queries.js";
 import { placeOutline } from "./runtime/outline.js";
 import type { LitePhysicsViewer } from "./lite/gpu/viewer.js";
-import type { LitePhysicsShape, LitePhysicsWorld } from "./lite/havok.js";
+import type { LitePhysicsBody, LitePhysicsShape, LitePhysicsWorld } from "./lite/havok.js";
 import type { RayQueryResult, SweepQueryResult } from "./lite/queries.js";
 import type { QueryOptions, QueryShape, RaycastHit, ShapeCastHit, ShapeCastOptions } from "./queries.js";
 import type { QueryTarget } from "./runtime/body-record.js";
@@ -418,13 +418,21 @@ export class PhysicsService {
         showBody(viewer, record.body);
       }
     }
-    // Bodies built, rebuilt, or re-placed later are drawn too, and removed ones stop drawing.
+    // Bodies built or rebuilt later are drawn too, and removed ones stop drawing. A re-placed body
+    // keeps the mesh drawn for the body it replaced, which follows the node, so dragging a body in
+    // an editor rebuilds no debug mesh; `shown` maps each current body to the one the viewer knows.
+    const shown = new Map<LitePhysicsBody, LitePhysicsBody>();
     runtime.setBodyObserver({
       added: (body): void => {
         showBody(viewer, body);
       },
       removed: (body): void => {
-        hideBody(viewer, body);
+        hideBody(viewer, shown.get(body) ?? body);
+        shown.delete(body);
+      },
+      replaced: (previous, next): void => {
+        shown.set(next, shown.get(previous) ?? previous);
+        shown.delete(previous);
       },
     });
   }
@@ -442,7 +450,8 @@ export class PhysicsService {
    * `lines` is empty, and an editor draws the mesh's own wireframe instead.
    *
    * @param entity - The entity whose colliders to outline.
-   * @returns One outline per enabled collider, in component order; empty when it has none.
+   * @returns One outline per enabled collider, in component order; empty when it has none or the
+   * entity is inactive in the hierarchy, which builds no body.
    *
    * @example
    * ```ts
@@ -453,7 +462,7 @@ export class PhysicsService {
    */
   colliderOutlines(entity: Entity): readonly ColliderOutline[] {
     const outlines: ColliderOutline[] = [];
-    if (entity.isDestroyed) {
+    if (entity.isDestroyed || !entity.activeInHierarchy) {
       return outlines;
     }
     const transform = entity.transform;

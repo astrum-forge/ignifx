@@ -164,6 +164,11 @@ export interface BodyObserver {
   added(body: LitePhysicsBody): void;
   /** A body is about to leave the world. */
   removed(body: LitePhysicsBody): void;
+  /**
+   * A body was re-placed: `next` stands in for `previous` on the same node with the same shapes, so
+   * whatever was drawn for `previous` still fits and follows the node.
+   */
+  replaced(previous: LitePhysicsBody, next: LitePhysicsBody): void;
 }
 
 /** The pooled `TriggerEvent`, whose fields the dispatcher rewrites for each delivery. */
@@ -294,6 +299,9 @@ export class PhysicsRuntime {
 
   /** The last failure reported for each entity whose body could not be built, in edit mode. */
   readonly #failures = new WeakMap<Entity, string>();
+
+  /** The entities `IGX-0907` (a body on a child entity) has been logged for, once each. */
+  readonly #warnedChildren = new WeakSet<Entity>();
 
   #disposed = false;
 
@@ -949,8 +957,8 @@ export class PhysicsRuntime {
       this.markDirty(record.entity);
       return;
     }
-    this.#observer?.removed(record.body);
-    destroyBody(this.#world, record.body);
+    const previous = record.body;
+    destroyBody(this.#world, previous);
     record.body = this.#createBody(record.node, root, record.rigidbody, record.motion);
     record.collisionEvents = false;
     this.#applyCollisionEvents(record);
@@ -958,7 +966,7 @@ export class PhysicsRuntime {
     record.previousPosition.copyFrom(record.currentPosition);
     record.previousRotation.copyFrom(record.currentRotation);
     record.placedVersion = record.entity.transform.worldMatrixVersion;
-    this.#observer?.added(record.body);
+    this.#observer?.replaced(previous, record.body);
   }
 
   /**
@@ -1044,7 +1052,8 @@ export class PhysicsRuntime {
       return;
     }
     const rigidbody = entity.getComponent(Rigidbody);
-    if (entity.parent !== null) {
+    if (entity.parent !== null && !this.#warnedChildren.has(entity)) {
+      this.#warnedChildren.add(entity);
       this.#ctx.log.warn(
         `${PhysicsErrorCode.bodyOnChildEntity}: {entity} carries a physics body but is not a root entity; Havok writes its local pose.`,
         entity.name,

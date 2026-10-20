@@ -249,6 +249,23 @@ describe("physics in an edit-mode app", () => {
     }
   }, 30_000);
 
+  it("warns once about a body on a child entity, however often the editor rescales it", async () => {
+    const harness = await createPhysicsApp({ editMode: true });
+    try {
+      const parent = harness.world.createEntity("Parent");
+      const child = harness.world.createEntity("Child");
+      child.setParent(parent);
+      child.addComponent(BoxCollider);
+      for (let frame = 1; frame <= 5; frame += 1) {
+        child.transform.localScale.set(frame, 1, 1);
+        harness.step();
+      }
+      expect(harness.sink.toArray().filter((record) => record.message.includes("IGX-0907"))).toHaveLength(1);
+    } finally {
+      harness.dispose();
+    }
+  }, 30_000);
+
   it("leaves a game app as it was: a query before the first step is still refused", async () => {
     const harness = await createPhysicsApp();
     try {

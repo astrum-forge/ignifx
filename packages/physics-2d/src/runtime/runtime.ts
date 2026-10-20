@@ -271,6 +271,9 @@ export class Physics2DRuntime {
   /** The last failure reported for each entity whose body could not be built, in edit mode. */
   readonly #failures = new WeakMap<Entity, string>();
 
+  /** The entities `IGX-1157` (a body on a child entity) has been logged for, once each. */
+  readonly #warnedChildren = new WeakSet<Entity>();
+
   #disposed = false;
 
   #stepsThisFrame = 0;
@@ -861,7 +864,8 @@ export class Physics2DRuntime {
     if (colliders.length === 0 && controller === null) {
       return;
     }
-    if (entity.parent !== null) {
+    if (entity.parent !== null && !this.#warnedChildren.has(entity)) {
+      this.#warnedChildren.add(entity);
       this.#ctx.log.warn(
         `${Physics2DErrorCode.bodyOnChildEntity}: {entity} carries a 2D physics body but is not a root entity; Rapier writes its world pose.`,
         entity.name,
