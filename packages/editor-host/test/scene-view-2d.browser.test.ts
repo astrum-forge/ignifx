@@ -170,6 +170,7 @@ async function sceneView(): Promise<{ readonly view: EditorHost; readonly opened
     HostCapability.screenshot,
     HostCapability.viewMode2d,
     HostCapability.pick2d,
+    HostCapability.logRelay,
   ]);
   host = await starting;
   await peer.nextNotification(SceneNotification.schemasChanged);
