@@ -1,6 +1,6 @@
 # ADR-0031 · A render overlay drawn over the finished frame
 
-**Status:** Proposed · **Date:** 2026-10-19 · **Deciders:** Astrum Forge Studios (owner)
+**Status:** Accepted (2026-10-20, ratified by the owner) · **Date:** 2026-10-19 · **Deciders:** Astrum Forge Studios (owner)
 
 ## Context
 
