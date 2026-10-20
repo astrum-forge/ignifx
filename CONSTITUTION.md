@@ -1,6 +1,6 @@
 # ignifx Constitution
 
-**Status:** Revision proposed 2026-09-11 ([ADR-0021](docs/adr/0021-clear-development-guidance.md)); ratified baseline v1 (2026-09-05) · **Owner:** Astrum Forge Studios · **Precedence:** highest
+**Status:** Amended 2026-10-20 (§1.3, [ADR-0032](docs/adr/0032-editor-alongside-the-engine.md), ratified by the owner); revision proposed 2026-09-11 ([ADR-0021](docs/adr/0021-clear-development-guidance.md)); ratified baseline v1 (2026-09-05) · **Owner:** Astrum Forge Studios · **Precedence:** highest
 
 This document sets the project's rules. The [coding standards](docs/standards/coding-standards.md) explain how to apply them.
 Clause numbers are stable so reviews and ADRs can cite them, for example `§3.4`.
@@ -12,7 +12,7 @@ Keep code and writing easy to read. The standards' [development workflow](docs/s
 
 - **§1.1 Engine.** ignifx is a code-first TypeScript game engine. It uses Babylon Lite (`@babylonjs/lite`) to render through WebGPU in browsers and Electron.
 - **§1.2 Audience.** Build for independent developers, small teams, and their coding agents making 2D and 3D games.
-- **§1.3 Scope.** No WebGL fallback, Babylon.js fork, or general-purpose 3D viewer. A visual editor may follow 1.0; it must build on the runtime.
+- **§1.3 Scope.** No WebGL fallback, Babylon.js fork, or general-purpose 3D viewer. A visual editor is a separate product developed alongside the engine, before and after 1.0; neither blocks the other. It must build on the runtime, and nothing in a built game may depend on it.
 - **§1.4 Design influences.** Use Unity-style script lifecycles and Godot-style scene trees, signals, resources, and extensions. When those models conflict, prefer explicit, type-safe behaviour.
 - **§1.5 Names.** Write `ignifx` in lowercase. Publish as `@ignifx/*` and the `ignifx` umbrella. The studio is Astrum Forge Studios (`astrumforge.com`); the project site is `ignifx.com`.
 

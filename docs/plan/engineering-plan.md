@@ -263,7 +263,7 @@ Status (2026-09-07): the items that can be done without publishing are delivered
 | R-9  | Rapier 2D bundle/determinism issues                          | Low / Medium                        | S6.2 spike; Box2D v3 fallback (ADR-0006)                                                                                                                          |
 | R-10 | Performance of sprite sync and tilemaps in Lite layers       | Medium / High for 2D                | S6.1 spike early in Phase 6; chunking, static flags, SoA buffers                                                                                                  |
 | R-11 | Agents drift docs or introduce undocumented API              | Medium / Medium                     | Harness gates, API report gate, review rules (standards §15)                                                                                                      |
-| R-12 | Scope creep toward an editor                                 | Medium / High                       | Constitution §1.3; editor explicitly post-1.0; schemas/inspector metadata keep the door open                                                                      |
+| R-12 | Scope creep toward an editor                                 | Medium / High                       | Constitution §1.3 and ADR-0032: the editor is developed alongside the engine and neither blocks the other; nothing in a game depends on the editor                |
 | R-13 | WASM payloads (Havok ~2 MB, Recast, Rapier) hurt first load  | Medium / Medium                     | Lazy loading options, preload groups, manifest-served `.wasm` with caching                                                                                        |
 | R-14 | Determinism differences across CPUs/WASM engines             | Medium / High for future networking | Three-OS determinism gate from Phase 4; published list of guaranteed vs best-effort operations; per-platform determinism is the only promise (`09-physics.md` §8) |
 
@@ -307,7 +307,9 @@ Ticked 2026-09-07 against the phase status lines above; "feature complete" here 
 
 ## 8. Post-1.0 roadmap (not committed)
 
-Editor (schema-driven inspector → scene editor), multi-camera/render targets, worker rendering (`OffscreenCanvas`), 2D lighting, networking (lockstep/server-authoritative on the deterministic loop), XR when Lite's path is runnable, asset packs, audio effects, root motion, 2D blend spaces, save-game migrations tooling.
+Multi-camera/render targets, worker rendering (`OffscreenCanvas`), 2D lighting, networking (lockstep/server-authoritative on the deterministic loop), XR when Lite's path is runnable, asset packs, audio effects, root motion, 2D blend spaces, save-game migrations tooling.
+
+The editor left this list on 2026-10-20: it is a separate product developed alongside the engine, before and after 1.0 (ADR-0032).
 
 Particles, instancing, terrain and custom shaders left this list on 2026-09-08: `2026-09-terrain-particles-shaders.md` delivers them before 1.0 as `@ignifx/particles`, `@ignifx/particles-2d`, `@ignifx/terrain` and core additions.
 
