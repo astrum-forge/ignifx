@@ -43,6 +43,17 @@ There is no default export: the plugin is the named factory `ignifx` (coding sta
 | Shaders              | `.wgsl` files are `shader` assets, validated with the JSON assets    | same                                                            |
 | Extension WASM/fonts | served from `/assets/<name>`                                         | copied unhashed to `<outDir>/assets/<name>`                     |
 | Changes              | `ignifx:asset-changed` over HMR; a settings edit restarts the server | —                                                               |
+| `.ignifx/`           | never served: 404 in `vite dev` and `vite preview`                   | never copied                                                    |
+
+### `.ignifx/` is editor-private
+
+The ignifx editor keeps per-project private state in `.ignifx/` at the project root, among it
+`.ignifx/mcp.json` with the token of the project's MCP server. The plugin adds `.ignifx` and
+`**/.ignifx/**` to `server.fs.deny` (merged with yours; Vite's defaults are kept), and `vite dev`
+and `vite preview` answer 404 to any request whose path has a `.ignifx` segment, however it is
+encoded or cased, `/@fs/` and `?raw`/`?url`/`?import` forms included. `vite build` never copies
+it: it is not under `public/`, and the asset scan skips dot-prefixed directories. Never move
+`.ignifx/` under `public/` or point a server at it, and do not import from it.
 
 ## Options
 

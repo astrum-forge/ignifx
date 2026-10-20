@@ -1840,7 +1840,8 @@ What it does, in the order the hooks run:
 
 - `config` reads `ignifx.settings.json` and `ignifx.config.ts`, merges them a section at a time
   with the config file winning, validates the result when `schemas.settings` is supplied, and
-  injects it as `import.meta.env.IGNIFX_CONFIG` (`docs/architecture/04-extensions.md` §5).
+  injects it as `import.meta.env.IGNIFX_CONFIG` (`docs/architecture/04-extensions.md` §5). It
+  also adds `.ignifx/`, the editor's private directory, to `server.fs.deny`.
 - `buildStart` scans the asset root, hashes every file, reads `.meta.json` sidecars, and
   validates every format-headed JSON file. A validation failure fails the build. An asset whose
   sidecar says `"publish": false` is left out of everything that follows.
@@ -1849,6 +1850,8 @@ What it does, in the order the hooks run:
   watched, and every change is announced on the `ignifx:asset-changed` HMR channel; editing the
   project config or settings file restarts the dev server, which injects the new values and
   reloads the page.
+- `vite dev` and `vite preview` answer 404 to any request whose decoded path has a `.ignifx`
+  segment, in any case or encoding, ahead of every middleware that serves a file.
 - `generateBundle` emits every asset under `<outDir>/<publicPath>` with a content-hashed,
   immutable-cacheable name, copies each extension's `ignifx.assets.public` files unhashed next to
   them, and writes the manifest with the hashed URLs.
