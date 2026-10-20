@@ -870,6 +870,7 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
           base: server.config.base,
           serveDirs: servedPublicDir === "" ? [server.config.root] : [server.config.root, servedPublicDir],
           alias: server.config.resolve.alias,
+          extensions: server.config.resolve.extensions,
         })),
       );
       installMiddleware(server);
@@ -900,6 +901,7 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
           base: server.config.base,
           serveDirs: [outDir],
           alias: [],
+          extensions: [],
         })),
       );
     },

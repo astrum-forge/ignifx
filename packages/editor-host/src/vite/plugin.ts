@@ -285,6 +285,7 @@ export function editorHostPlugin(options: EditorHostPluginOptions): Plugin[] {
           base: server.config.base,
           serveDirs: publicDir === "" ? [server.config.root] : [server.config.root, publicDir],
           alias: server.config.resolve.alias,
+          extensions: server.config.resolve.extensions,
         })),
       );
     },
@@ -293,7 +294,13 @@ export function editorHostPlugin(options: EditorHostPluginOptions): Plugin[] {
       const realRoot = realPathOrSelf(server.config.root);
       const outDir = resolve(server.config.root, server.config.build.outDir);
       server.middlewares.use(
-        createPrivateDirGuard(() => ({ realRoot, base: server.config.base, serveDirs: [outDir], alias: [] })),
+        createPrivateDirGuard(() => ({
+          realRoot,
+          base: server.config.base,
+          serveDirs: [outDir],
+          alias: [],
+          extensions: [],
+        })),
       );
     },
 

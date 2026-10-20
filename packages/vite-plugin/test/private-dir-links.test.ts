@@ -193,15 +193,10 @@ describe.skipIf(linksUnsupported)("vite dev refuses files reached through a link
     expect(await leaks(port, paths)).toEqual([]);
   });
 
-  it("never serves the token for a path Vite completes with an extension", async () => {
-    // `/src/tok` exists only once Vite's resolver adds `.json`; the plugin's `load` hook refuses
-    // the real path, so the transform fails rather than answering with the file.
-    const paths = ["/src/tok", "/src/tok?import", "/src/tok?raw"];
-    const responses = await Promise.all(paths.map(async (path) => Object.assign(await rawGet(port, path), { path })));
-    for (const { path, status, body } of responses) {
-      expect(status, path).not.toBe(200);
-      expect(body, path).not.toContain(TOKEN);
-    }
+  it("refuses a path Vite completes with an extension", async () => {
+    // `/src/tok` exists only once Vite's resolver adds `.json`; the guard tries
+    // `resolve.extensions` the same way, so the answer is a 404 and not the `load` hook's 500.
+    expect(await leaks(port, ["/src/tok", "/src/tok?import", "/src/tok?raw", "/src/link/mcp"])).toEqual([]);
   });
 
   it("still serves ordinary files", async () => {

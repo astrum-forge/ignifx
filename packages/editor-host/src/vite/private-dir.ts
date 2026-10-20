@@ -5,7 +5,7 @@
  * `@ignifx/vite-plugin` is an optional peer, so this package cannot import it; keep the two in step.
  */
 
-import { realpathSync } from "node:fs";
+import { existsSync, realpathSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import type { Connect } from "vite";
 
@@ -169,6 +169,8 @@ interface PrivateDirGuardOptions {
   readonly serveDirs: readonly string[];
   /** `resolve.alias`, which Vite's static middleware applies to request paths in dev; `[]` in preview. */
   readonly alias: readonly { readonly find: string | RegExp; readonly replacement: string }[];
+  /** `resolve.extensions`, which Vite tries for a module request whose file does not exist. */
+  readonly extensions: readonly string[];
 }
 
 /** The `/@fs/` prefix Vite serves absolute paths under, and `/@id/` for unresolved ids. */
@@ -217,6 +219,25 @@ function candidateFiles(path: string, options: PrivateDirGuardOptions): string[]
 }
 
 /**
+ * Reports whether a candidate file, or the file Vite would find by adding an extension to it, is
+ * private once links are followed.
+ *
+ * @param file - An absolute candidate path.
+ * @param options - The real root and `resolve.extensions`.
+ * @returns `true` when the request must be refused.
+ */
+function isPrivateCandidate(file: string, options: PrivateDirGuardOptions): boolean {
+  if (isPrivateRealPath(options.realRoot, file)) {
+    return true;
+  }
+  // Extensions are only worth trying where Vite would: the file is missing and its directory is not.
+  if (existsSync(file) || !existsSync(dirname(file))) {
+    return false;
+  }
+  return options.extensions.some((extension) => isPrivateRealPath(options.realRoot, `${file}${extension}`));
+}
+
+/**
  * Connect middleware that answers 404, with no body, to every request into the private directory:
  * one whose path names it ({@link isPrivateRequestPath}), and one whose file lies in it once
  * symbolic links are followed (`src/link -> ../.ignifx`).
@@ -225,8 +246,9 @@ function candidateFiles(path: string, options: PrivateDirGuardOptions): string[]
  * For the second, it maps the URL to the files Vite could serve for it (root, `publicDir` or
  * `outDir`, `/@fs/` and `/@id/` absolute paths, with and without `base`, and the path a
  * `resolve.alias` entry rewrites it to) and checks each with {@link isPrivateRealPath}. A missing
- * file is judged by its deepest existing ancestor, so a path Vite would complete with an extension
- * is covered when the link is a directory; the plugin's `load` hook covers the rest.
+ * file is judged by its deepest existing ancestor and, when its directory exists, with each of
+ * `resolve.extensions` appended, as Vite completes a module request. The plugin's `load` hook
+ * covers what Vite resolves some other way.
  *
  * @param options - Returns the server's directories; read per request, as they are only known once
  * the config is resolved.
@@ -241,7 +263,7 @@ export function createPrivateDirGuard(options: () => PrivateDirGuardOptions): Co
     }
     const resolved = options();
     const path = decoded.replaceAll("\\", "/");
-    if (candidateFiles(path, resolved).some((file) => isPrivateRealPath(resolved.realRoot, file))) {
+    if (candidateFiles(path, resolved).some((file) => isPrivateCandidate(file, resolved))) {
       refuse(response);
       return;
     }

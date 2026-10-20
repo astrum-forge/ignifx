@@ -158,14 +158,10 @@ describe("vite dev with editorHostPlugin() and no ignifx()", () => {
     expect(await leaks(port, paths)).toEqual([]);
   });
 
-  it.skipIf(linksUnsupported)("never serves a linked file Vite completes with an extension", async () => {
-    // The `load` hook refuses the real path Vite resolves `/src/tok` to.
-    const paths = ["/src/tok", "/src/tok?import"];
-    const responses = await Promise.all(paths.map(async (path) => Object.assign(await rawGet(port, path), { path })));
-    for (const { path, status, body } of responses) {
-      expect(status, path).not.toBe(200);
-      expect(body, path).not.toContain(TOKEN);
-    }
+  it.skipIf(linksUnsupported)("refuses a linked file Vite would complete with an extension", async () => {
+    // The guard tries `resolve.extensions` as Vite does, so `/src/tok` is a 404 rather than the
+    // `load` hook's 500, whose body names the project's path.
+    expect(await leaks(port, ["/src/tok", "/src/tok?import", "/src/tok?raw", "/src/tok.json"])).toEqual([]);
   });
 
   it("still serves ordinary files", async () => {
