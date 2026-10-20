@@ -66,6 +66,32 @@ export function nextFrame(): Promise<void> {
   });
 }
 
+/** The most frames {@link framesUntil} waits before it gives up. */
+export const MAX_WAIT_FRAMES = 600;
+
+/**
+ * Waits for animation frames until a condition holds.
+ *
+ * @remarks
+ * A particle system builds its renderer once its generated shader has loaded, and that load settles
+ * on wall-clock time, not on a frame count: it fetches a `data:` address and imports the custom-shader
+ * modules, which a loaded CI runner serves later than {@link SETTLE_FRAMES} frames (2026-10-20).
+ *
+ * @param done - The condition, read before each frame.
+ * @param left - How many more frames to wait.
+ * @returns A promise of whether the condition holds; `false` after {@link MAX_WAIT_FRAMES} frames.
+ */
+export async function framesUntil(done: () => boolean, left = MAX_WAIT_FRAMES): Promise<boolean> {
+  if (done()) {
+    return true;
+  }
+  if (left <= 0) {
+    return false;
+  }
+  await nextFrame();
+  return framesUntil(done, left - 1);
+}
+
 /**
  * Builds a running particles app on a real WebGPU device.
  *
