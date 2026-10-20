@@ -1,5 +1,7 @@
+import { existsSync } from "node:fs";
 import { mkdir, realpath, symlink, writeFile } from "node:fs/promises";
 import { request } from "node:http";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { build, createServer, preview } from "vite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -22,6 +24,12 @@ const EDITOR_ORIGIN = "ignifx://app";
 
 /** Windows needs a privilege to create symbolic links; CI runs these on macOS and Linux. */
 const linksUnsupported = process.platform === "win32";
+
+/**
+ * Whether the filesystem under the temp directory folds case (macOS, Windows). On Linux an
+ * upper-cased link path names no file at all, and Vite's HTML fallback answers it with the page.
+ */
+const foldsCase = existsSync(tmpdir().toUpperCase()) && existsSync(tmpdir().toLowerCase());
 
 /** A project with the editor's private file and a link to its directory. */
 async function project(): Promise<string> {
@@ -90,7 +98,7 @@ function attackPaths(roots: readonly string[], dir: string): string[] {
     `/./${dir}/mcp.json`,
     `/x/../${dir}/mcp.json`,
     `/\\${dir.replaceAll("/", "\\")}\\mcp.json`,
-    `/${dir.toUpperCase()}/mcp.json`,
+    ...(dir === ".ignifx" || foldsCase ? [`/${dir.toUpperCase()}/mcp.json`] : []),
     `/@id/${dir}/mcp.json`,
     `/${dir}/`,
     ...roots.flatMap((root) => [

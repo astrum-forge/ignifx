@@ -1,4 +1,6 @@
+import { existsSync } from "node:fs";
 import { mkdir, readdir, readFile, realpath, rm, symlink } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { dirname, join, relative, sep } from "node:path";
 import { build, createLogger, createServer, preview } from "vite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -22,6 +24,12 @@ const INDEX_HTML = '<!doctype html><html><body><script type="module" src="/src/m
 
 /** Windows needs a privilege to create symbolic links; CI runs these on macOS and Linux. */
 const linksUnsupported = process.platform === "win32";
+
+/**
+ * Whether the filesystem under the temp directory folds case (macOS, Windows). On Linux an
+ * upper-cased link path names no file at all, and Vite's HTML fallback answers it with the page.
+ */
+const foldsCase = existsSync(tmpdir().toUpperCase()) && existsSync(tmpdir().toLowerCase());
 
 /**
  * Writes a project with the editor's private file and adds symbolic links to it.
@@ -376,7 +384,12 @@ describe.skipIf(linksUnsupported)("vite preview refuses files reached through a 
   });
 
   it("refuses every request form through a linked directory and a linked file", async () => {
-    const paths = [...linkAttackPaths(roots, "link"), "/tok.json", "/tok.json?raw", "/TOK.JSON"];
+    const paths = [
+      ...linkAttackPaths(roots, "link"),
+      "/tok.json",
+      "/tok.json?raw",
+      ...(foldsCase ? ["/TOK.JSON"] : []),
+    ];
     expect(await leaks(port, paths)).toEqual([]);
   });
 
