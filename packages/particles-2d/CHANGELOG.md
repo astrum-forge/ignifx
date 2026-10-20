@@ -1,5 +1,37 @@
 # @ignifx/particles-2d
 
+## 0.10.0
+
+### Patch Changes
+
+- 2911237: In an edit-mode app, a particle system still plays on awake and shows its first frame, but its clock stands still; `simulate(seconds)` previews it.
+- fd0afe5: - `create-ignifx` now pins a new project's `@ignifx/*` dependencies to its own release (for example `^0.9.1`) instead of `^0.0.0`, which installed the empty 0.0.0 packages.
+  - `VERSION`, `app.version`, each extension's `version` and the `engineVersion` written into saved scenes now report the installed release instead of `"0.0.0"` (or `"0.2.1"`). `VERSION` is typed `string` instead of a fixed literal.
+- Updated dependencies [5de1886]
+- Updated dependencies [6f197c9]
+- Updated dependencies [1804a62]
+- Updated dependencies [e0276f8]
+- Updated dependencies [4c6e200]
+- Updated dependencies [324ce73]
+- Updated dependencies [f5dac24]
+- Updated dependencies [37cf52e]
+- Updated dependencies [451c503]
+- Updated dependencies [612ba87]
+- Updated dependencies [159ea03]
+- Updated dependencies [b0480a0]
+- Updated dependencies [1fba2ea]
+- Updated dependencies [df7b73f]
+- Updated dependencies [dc768d6]
+- Updated dependencies [738f68d]
+- Updated dependencies [254b63c]
+- Updated dependencies [fd0afe5]
+- Updated dependencies [3a8e47b]
+- Updated dependencies [3c02fb1]
+- Updated dependencies [63d4e86]
+  - @ignifx/2d@0.10.0
+  - @ignifx/core@0.10.0
+  - @ignifx/particles@0.10.0
+
 ## 0.9.0
 
 ### Minor Changes

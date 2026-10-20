@@ -1,6 +1,6 @@
 {
   "name": "@ignifx/editor-host",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "ignifx editor host: runs a project's own engine inside the ignifx editor's scene view and play view, over a versioned protocol.",
   "keywords": [
     "ignifx"
