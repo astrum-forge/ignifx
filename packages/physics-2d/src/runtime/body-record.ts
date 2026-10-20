@@ -2,7 +2,7 @@ import type { CharacterController2D } from "../components/character-controller.j
 import type { Collider2D } from "../components/collider.js";
 import type { Rigidbody2D } from "../components/rigidbody.js";
 import type { BodyMotion2D, RapierBody, RapierCollider } from "../lite/rapier/world.js";
-import type { Disconnect, Entity, Vec2 } from "@ignifx/core";
+import type { Disconnect, Entity, Vec2, Vec3 } from "@ignifx/core";
 
 /**
  * One entity's 2D physics representation. The runtime keeps these in creation order, which is the
@@ -52,6 +52,13 @@ export interface BodyRecord2D {
   staticVersion: number;
   /** Whether the `IGX-1151` diagnostic has already been reported for this body. */
   reportedMove: boolean;
+  /**
+   * `Transform.worldMatrixVersion` when the body was last placed. An edit-mode app compares it each
+   * frame to follow a transform the editor moved (ADR-0028, amendment of 2026-10-20).
+   */
+  placedVersion: number;
+  /** The lossy scale the colliders were built at; a different scale needs new colliders. */
+  readonly placedScale: Vec3;
   /** Signal connections the record owns, dropped when it is torn down. */
   disconnects: Disconnect[];
 }

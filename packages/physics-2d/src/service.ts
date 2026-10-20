@@ -1,7 +1,17 @@
 import { Vec2 } from "@ignifx/core";
 import { Physics2DErrorCode, physics2DError } from "./errors.js";
-import { castRay, castRayAll, castShape, interactionGroups, overlapShape, toRadians } from "./lite/rapier/world.js";
+import {
+  castRay,
+  castRayAll,
+  castShape,
+  colliderHandle,
+  colliderLines,
+  interactionGroups,
+  overlapShape,
+  toRadians,
+} from "./lite/rapier/world.js";
 import type { RapierShape2D, RapierWorld, RayResult2D, ShapeCastResult2D } from "./lite/rapier/world.js";
+import type { Collider2D } from "./components/collider.js";
 import type { QueryOptions2D, RaycastHit2D, ShapeCastHit2D } from "./queries.js";
 import type { Physics2DHost } from "./runtime/host.js";
 import type { Physics2DRuntime } from "./runtime/runtime.js";
@@ -32,6 +42,24 @@ const ALL_LAYERS = 0xff_ff;
 export interface Physics2DRapierHandles {
   /** Rapier's `World`. */
   readonly world: RapierWorld;
+}
+
+/**
+ * One 2D collider's outline, from `app.physics2d.colliderOutlines`: what an editor draws as a
+ * collider gizmo (ADR-0028, amendment of 2026-10-20).
+ *
+ * @public
+ */
+export interface ColliderOutline2D {
+  /** The collider the outline is of. */
+  readonly collider: Collider2D;
+  /** Whether the collider is a trigger, which an editor usually draws in another colour. */
+  readonly isTrigger: boolean;
+  /**
+   * The outline as world-space line segments in the XY plane: every four numbers are one segment,
+   * the `x, y` of its two ends, in metres.
+   */
+  readonly lines: Float32Array;
 }
 
 /**
@@ -113,7 +141,7 @@ export class Physics2DService {
    * @param maxDistance - How far to travel; defaults to 10 km.
    * @param options - Layer mask and trigger behaviour.
    * @returns The hit, or `null` when the ray clears everything.
-   * @throws IgnifxError with code `IGX-1153` when no fixed step has run yet.
+   * @throws IgnifxError with code `IGX-1153` when no fixed step has run yet, outside edit mode.
    */
   raycast(
     origin: Vec2Like,
@@ -148,7 +176,7 @@ export class Physics2DService {
    * @param maxDistance - How far to travel; defaults to 10 km.
    * @param options - Layer mask and trigger behaviour.
    * @returns The hits, in increasing distance. The array is reused between calls.
-   * @throws IgnifxError with code `IGX-1153` when no fixed step has run yet.
+   * @throws IgnifxError with code `IGX-1153` when no fixed step has run yet, outside edit mode.
    */
   raycastAll(
     origin: Vec2Like,
@@ -195,7 +223,7 @@ export class Physics2DService {
    * @param radius - Its radius in metres.
    * @param options - Layer mask and trigger behaviour.
    * @returns The overlapping entities, in Rapier's order. The array is reused between calls.
-   * @throws IgnifxError with code `IGX-1153` when no fixed step has run yet.
+   * @throws IgnifxError with code `IGX-1153` when no fixed step has run yet, outside edit mode.
    */
   overlapCircle(centre: Vec2Like, radius: number, options?: QueryOptions2D): readonly Entity[] {
     return this.#overlap({ kind: "circle", radius }, centre, 0, options, "overlapCircle");
@@ -209,7 +237,7 @@ export class Physics2DService {
    * @param rotation - Its rotation in degrees counter-clockwise; defaults to `0`.
    * @param options - Layer mask and trigger behaviour.
    * @returns The overlapping entities. The array is reused between calls.
-   * @throws IgnifxError with code `IGX-1153` when no fixed step has run yet.
+   * @throws IgnifxError with code `IGX-1153` when no fixed step has run yet, outside edit mode.
    */
   overlapBox(centre: Vec2Like, size: Vec2Like, rotation: number = 0, options?: QueryOptions2D): readonly Entity[] {
     return this.#overlap(
@@ -230,7 +258,7 @@ export class Physics2DService {
    * @param maxDistance - How far to sweep.
    * @param options - Layer mask and trigger behaviour.
    * @returns The hit, or `null`.
-   * @throws IgnifxError with code `IGX-1153` when no fixed step has run yet.
+   * @throws IgnifxError with code `IGX-1153` when no fixed step has run yet, outside edit mode.
    */
   shapeCast(
     centre: Vec2Like,
@@ -348,13 +376,75 @@ export class Physics2DService {
   }
 
   /**
-   * Refuses a query that ran before Rapier built its broadphase (spike S6.2).
+   * The outlines of an entity's 2D colliders, as world-space line segments: what an editor draws as
+   * collider gizmos (ADR-0028, amendment of 2026-10-20).
+   *
+   * @remarks
+   * The segments are Rapier's own debug drawing of the colliders the entity's body is built from,
+   * so a polygon, an edge chain, a capsule, a one-way platform, and every piece of a
+   * `TilemapCollider2D` are outlined exactly. A body exists from the first fixed step in a game,
+   * and from the first frame or query in an edit-mode app, which keeps bodies on the transforms the
+   * editor moves; an entity without one (no enabled collider yet, or before that point) has no
+   * outline. A `CharacterController2D`'s own shape is not a collider and is not outlined.
+   *
+   * @param entity - The entity whose colliders to outline.
+   * @returns One outline per collider that produced a shape, in component order; empty when none.
+   *
+   * @example
+   * ```ts
+   * for (const outline of app.physics2d.colliderOutlines(selected)) {
+   *   drawLines2D(outline.lines, outline.isTrigger ? "orange" : "green");
+   * }
+   * ```
+   */
+  colliderOutlines(entity: Entity): readonly ColliderOutline2D[] {
+    const runtime = this.#host.runtime;
+    const outlines: ColliderOutline2D[] = [];
+    if (runtime === null || entity.isDestroyed) {
+      return outlines;
+    }
+    if (runtime.isEditMode) {
+      runtime.syncEditMode();
+    }
+    const record = runtime.recordOf(entity);
+    if (record === null) {
+      return outlines;
+    }
+    const byOwner = new Map<Collider2D, Set<number>>();
+    for (let index = 0; index < record.colliders.length; index += 1) {
+      const owner = record.owners[index] ?? null;
+      const collider = record.colliders[index];
+      if (owner === null || collider === undefined) {
+        continue;
+      }
+      let handles = byOwner.get(owner);
+      if (handles === undefined) {
+        handles = new Set();
+        byOwner.set(owner, handles);
+      }
+      handles.add(colliderHandle(collider));
+    }
+    for (const [owner, handles] of byOwner) {
+      outlines.push({ collider: owner, isTrigger: owner.isTrigger, lines: colliderLines(runtime.world, handles) });
+    }
+    return outlines;
+  }
+
+  /**
+   * Refuses a query that ran before Rapier built its broadphase (spike S6.2). In an edit-mode app,
+   * which never steps, it brings the bodies in line with the world instead, so the query sees what
+   * the editor shows (ADR-0028, amendment of 2026-10-20).
    *
    * @param query - The query name, for the diagnostic.
-   * @throws IgnifxError with code `IGX-1153` when no step has completed.
+   * @throws IgnifxError with code `IGX-1153` when no step has completed, outside edit mode.
    */
   #requireStep(query: string): void {
-    if (this.#rt().hasStepped) {
+    const runtime = this.#rt();
+    if (runtime.isEditMode) {
+      runtime.syncEditMode();
+      return;
+    }
+    if (runtime.hasStepped) {
       return;
     }
     throw physics2DError(Physics2DErrorCode.queryBeforeStep, `${query}() ran before the first fixed step.`, {

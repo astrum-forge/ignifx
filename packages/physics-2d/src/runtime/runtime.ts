@@ -63,6 +63,7 @@ import type {
   MutableVec2,
   PhysicsCallbackName,
   Vec2Like,
+  Vec3Like,
 } from "@ignifx/core";
 
 /**
@@ -264,6 +265,9 @@ export class Physics2DRuntime {
 
   #stepped = false;
 
+  /** Whether the app is an editor's scene view, where bodies exist and nothing steps (ADR-0028). */
+  readonly #isEditMode: boolean;
+
   #disposed = false;
 
   #stepsThisFrame = 0;
@@ -287,6 +291,7 @@ export class Physics2DRuntime {
     this.#settings = options.settings;
     this.#world = options.world;
     this.#counters = options.counters;
+    this.#isEditMode = options.ctx.app.isEditMode;
     this.#queue = createEventQueue();
     this.#contacts.push(this.#contactPoint);
     setGravity(this.#world, this.#settings.gravity);
@@ -313,6 +318,16 @@ export class Physics2DRuntime {
    */
   get hasStepped(): boolean {
     return this.#stepped;
+  }
+
+  /**
+   * Whether this runtime belongs to an edit-mode app, where bodies are kept in sync with the world
+   * by {@link Physics2DRuntime.syncEditMode} and never stepped (ADR-0028, amendment of 2026-10-20).
+   *
+   * @returns `true` in an editor's scene view.
+   */
+  get isEditMode(): boolean {
+    return this.#isEditMode;
   }
 
   /**
@@ -582,6 +597,34 @@ export class Physics2DRuntime {
   }
 
   /**
+   * Brings the bodies in line with the world without stepping, which is all an edit-mode app ever
+   * does with them (ADR-0028, amendment of 2026-10-20): it builds, rebuilds, and removes bodies for
+   * component, layer, and tile changes, and places every body whose transform moved where the
+   * transform now is, so a query sees what the editor shows. The world is never stepped, so nothing
+   * falls, no contact or trigger callback fires, and no pose is written back to a transform.
+   *
+   * @remarks
+   * Rapier refreshes its broadphase only inside a step, so after a change this runs the same
+   * zero-length step a game runs before its first real one (S6.2). With a zero timestep nothing
+   * moves; the events it reports are dropped. A changed scale rebuilds the body's colliders.
+   */
+  syncEditMode(): void {
+    if (this.#disposed) {
+      return;
+    }
+    this.#syncLayers();
+    this.#pollTilemaps();
+    this.#followTransforms();
+    this.#reconcile();
+    if (this.#colliderSetChanged) {
+      primeWorld(this.#world, this.#queue);
+      this.#colliderSetChanged = false;
+      drainCollisions(this.#queue, ignoreEvent);
+    }
+    this.#publishCounters();
+  }
+
+  /**
    * Writes the interpolated display pose of every interpolated body.
    *
    * @param alpha - `time.fixedStepAlpha`, in `[0, 1)`.
@@ -705,6 +748,39 @@ export class Physics2DRuntime {
     }
   }
 
+  /**
+   * Places every body whose transform changed since it was placed where the transform now is, for
+   * {@link Physics2DRuntime.syncEditMode}. A body whose lossy scale changed is rebuilt instead.
+   */
+  #followTransforms(): void {
+    for (let index = 0; index < this.#records.length; index += 1) {
+      const record = this.#records[index];
+      if (record === undefined || this.#dirty.has(record.entity)) {
+        continue;
+      }
+      const transform = record.entity.transform;
+      const version = transform.worldMatrixVersion;
+      if (version === record.placedVersion) {
+        continue;
+      }
+      const scale = transform.lossyScale;
+      if (!sameVector(scale, record.placedScale)) {
+        this.markDirty(record.entity);
+        continue;
+      }
+      transform.positionToRef(this.#scratchPose);
+      const radians = toRadians(transform.rotation2D);
+      this.#scratchVector.set(this.#scratchPose.x, this.#scratchPose.y);
+      setBodyPose(record.body, this.#scratchVector, radians);
+      record.currentPosition.copyFrom(this.#scratchVector);
+      record.previousPosition.copyFrom(this.#scratchVector);
+      record.currentRotation = radians;
+      record.previousRotation = radians;
+      record.placedVersion = version;
+      this.#colliderSetChanged = true;
+    }
+  }
+
   /** Marks every entity whose tilemap collision data changed since its shapes were built. */
   #pollTilemaps(): void {
     const colliders = this.#ctx.app.world.components(TilemapCollider2D);
@@ -822,6 +898,8 @@ export class Physics2DRuntime {
       preStepVelocity: new Vec2(),
       staticVersion: transform.worldMatrixVersion,
       reportedMove: false,
+      placedVersion: transform.worldMatrixVersion,
+      placedScale: transform.lossyScale,
       disconnects: [],
     };
     this.#byEntity.set(entity, record);
@@ -1469,7 +1547,7 @@ export class Physics2DRuntime {
     controller: CharacterController2D | null,
     motion: BodyMotion2D,
   ): boolean {
-    if (!this.#settings.interpolation || motion === BodyMotion2D.static) {
+    if (this.#isEditMode || !this.#settings.interpolation || motion === BodyMotion2D.static) {
       return false;
     }
     if (controller !== null) {
@@ -1477,6 +1555,29 @@ export class Physics2DRuntime {
     }
     return rigidbody !== null && rigidbody.interpolation === "interpolate";
   }
+}
+
+/** How far apart two scales may be and still count as the same, for edit mode's follow pass. */
+const SCALE_EPSILON = 1e-6;
+
+/**
+ * Whether two vectors match to within {@link SCALE_EPSILON}.
+ *
+ * @param first - One vector.
+ * @param second - The other.
+ * @returns `true` when every component matches.
+ */
+function sameVector(first: Vec3Like, second: Vec3Like): boolean {
+  return (
+    Math.abs(first.x - second.x) < SCALE_EPSILON &&
+    Math.abs(first.y - second.y) < SCALE_EPSILON &&
+    Math.abs(first.z - second.z) < SCALE_EPSILON
+  );
+}
+
+/** Drops an event an edit-mode priming step reported; nothing in edit mode delivers one. */
+function ignoreEvent(): void {
+  // Edit mode never dispatches collision or trigger callbacks (ADR-0028, amendment of 2026-10-20).
 }
 
 /** How far below a one-way platform's top the character's feet may be and still land on it. */

@@ -928,6 +928,23 @@ export function toRadians(degrees: number): number {
 }
 
 /**
+ * The outline Rapier's debug renderer draws for some colliders, as world-space line segments
+ * (`pipeline/world.d.ts`, `debugRender`; `DebugRenderBuffers.vertices`: four numbers a segment, the
+ * `x, y` of its two ends). It reads where the colliders were after the last step, or after the
+ * zero-length step an edit-mode app runs instead.
+ *
+ * @param world - The world.
+ * @param handles - The handles of the colliders to draw.
+ * @returns The segments; a copy, because Rapier reuses its buffer.
+ *
+ * @internal
+ */
+export function colliderLines(world: RapierWorld, handles: ReadonlySet<number>): Float32Array {
+  const buffers = world.debugRender(undefined, (collider: Collider): boolean => handles.has(collider.handle));
+  return buffers.vertices.slice();
+}
+
+/**
  * Turns Rapier's radians into the degrees `Transform.rotation2D` uses.
  *
  * @param radians - The angle in radians.

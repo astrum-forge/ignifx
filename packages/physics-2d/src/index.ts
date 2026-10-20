@@ -66,7 +66,7 @@ export { PHYSICS_2D_DIAGNOSTICS_COUNTERS, PHYSICS_2D_DIAGNOSTICS_GROUP } from ".
 export { describeSchemas } from "./schemas.js";
 
 // service — `app.physics2d`.
-export { Physics2DService, type Physics2DRapierHandles } from "./service.js";
+export { Physics2DService, type ColliderOutline2D, type Physics2DRapierHandles } from "./service.js";
 
 // settings — the `physics2d` project settings section.
 export {

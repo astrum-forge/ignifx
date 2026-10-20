@@ -61,8 +61,9 @@ export class TilemapCollider2D extends Collider2D {
    * `Tilemap` on the same entity.
    *
    * @remarks
-   * Reading it works in an edit-mode app too, where no body is built (ADR-0028), so an editor can
-   * draw the outlines.
+   * Reading it works in any app, before any body is built. An edit-mode app also builds the body
+   * without stepping (ADR-0028, amendment of 2026-10-20), so `app.physics2d.colliderOutlines` draws
+   * the same outlines from Rapier.
    *
    * @returns The data, or `null` when nothing was assigned and the entity has no `Tilemap`.
    */

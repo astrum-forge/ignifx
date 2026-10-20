@@ -26,6 +26,7 @@ import { Signal } from '@ignifx/core';
 import { TilemapCollisionData } from '@ignifx/2d';
 import { Vec2 } from '@ignifx/core';
 import { Vec2Like } from '@ignifx/core';
+import { Vec3 } from '@ignifx/core';
 import { World } from '@dimforge/rapier2d-compat';
 
 // @public
@@ -162,6 +163,13 @@ export abstract class Collider2D extends Component implements ComponentHooks {
 export function collider2DFields(): Schema;
 
 // @public
+export interface ColliderOutline2D {
+    readonly collider: Collider2D;
+    readonly isTrigger: boolean;
+    readonly lines: Float32Array;
+}
+
+// @public
 export interface Collision2D {
     readonly contacts: readonly ContactPoint2D[];
     readonly other: Entity | null;
@@ -271,6 +279,7 @@ export class Physics2DService {
     //
     // @internal
     constructor(host: Physics2DHost, settings: Physics2DSettings);
+    colliderOutlines(entity: Entity): readonly ColliderOutline2D[];
     get gravity(): Vec2;
     set gravity(value: Vec2Like);
     overlapBox(centre: Vec2Like, size: Vec2Like, rotation?: number, options?: QueryOptions2D): readonly Entity[];

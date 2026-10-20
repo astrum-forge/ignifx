@@ -277,10 +277,15 @@ describe("TilemapCollider2D in a scene file", () => {
     }
   });
 
-  it("exposes the geometry in an edit-mode app, which builds no body", async () => {
+  it("exposes the geometry in an edit-mode app, which builds the body without stepping", async () => {
     const { app, collider, run } = await loadLevel({ editMode: true });
     await run(5);
     expect(collider.collisionData?.chunks.flatMap((chunk) => chunk.polygons)).toHaveLength(2);
-    expect(() => hitBelow(app, 1)).toThrow(/IGX-1153/u);
+    expect(hitBelow(app, 1)).toBe("Level");
+    expect(app.diagnostics.frame.fixedSteps).toBe(0);
+    // Rapier's outline of every piece of the tile collision, for an editor's gizmo.
+    const [outline] = app.physics2d.colliderOutlines(collider.entity);
+    expect(outline?.collider).toBe(collider);
+    expect(outline?.lines.length).toBeGreaterThan(0);
   });
 });

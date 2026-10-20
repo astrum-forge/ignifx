@@ -128,3 +128,37 @@ export class Physics2DInterpolationSystem implements System {
     this.#host.runtime?.interpolate(ctx.time.fixedStepAlpha);
   }
 }
+
+/**
+ * Where the edit-mode sync system runs: in `PreRender`, after every script, tween and animation of
+ * the frame has moved what it moves, and before the 2D render sync.
+ */
+export const PHYSICS_2D_EDIT_SYNC_ORDER = -800;
+
+/**
+ * Keeps the bodies of an edit-mode app in line with the world, without stepping
+ * (ADR-0028, amendment of 2026-10-20). It is registered only in an edit-mode app, so a game never
+ * pays for it.
+ *
+ * @internal
+ */
+export class Physics2DEditSyncSystem implements System {
+  /** The name diagnostics and error reports use. */
+  readonly name = "physics2d-edit-sync";
+
+  readonly #host: Physics2DHost;
+
+  /**
+   * Binds the system to the runtime holder.
+   *
+   * @param host - The holder the runtime lands in.
+   */
+  constructor(host: Physics2DHost) {
+    this.#host = host;
+  }
+
+  /** Builds, re-places, and removes bodies for this frame's changes. */
+  update(): void {
+    this.#host.runtime?.syncEditMode();
+  }
+}
