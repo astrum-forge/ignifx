@@ -297,9 +297,10 @@ export class Animator extends Component implements ComponentHooks {
    * @param state - The state's name.
    * @param normalizedTime - How far into the state, where `0` is its start and `1` its end.
    * @param options - Parameter values for this sample only.
-   * @returns `true` when the pose was written; `false` while the document or the model's clips are
-   * still loading, and always under a headless app, which has nothing to pose. The arguments are
-   * checked either way once the document has loaded.
+   * @returns `true` when the pose was written in full; `false` while the document or the model's
+   * clips are still loading, when the model lacks a clip the state names or another `Animator`
+   * holds it (the rest of the pose is still written), and always under a headless app, which has
+   * nothing to pose. The arguments are checked either way once the document has loaded.
    * @throws IgnifxError with code `IGX-1215` when the entity has no `Model`, its `Model` names no
    * file, or the loaded file has no clips; `IGX-1216` when `normalizedTime` or a parameter value is
    * not a finite number; `IGX-1202` when the state is not declared; `IGX-1203` or `IGX-1204` when a
@@ -328,7 +329,7 @@ export class Animator extends Component implements ComponentHooks {
       return false;
     }
     this.#writeClips(clips);
-    return true;
+    return this.#drivesClipsOf(state);
   }
 
   /**
@@ -440,6 +441,22 @@ export class Animator extends Component implements ComponentHooks {
     if (loaded !== null && !this.app.isHeadless && loaded.animations.length === 0) {
       throw nothingToPose(this.entity.name, "its model file declares no animation clips");
     }
+  }
+
+  /**
+   * Whether the mixer drives every clip a state names.
+   *
+   * @param state - The state's name, already known to be declared.
+   * @returns `false` when the model lacks one of them or another animator holds it.
+   */
+  #drivesClipsOf(state: string): boolean {
+    const mixer = this.#mixer;
+    const definition = this.#boundAsset?.definition;
+    const declared = definition?.states.find((candidate) => candidate.name === state);
+    if (mixer === null || definition === undefined || declared === undefined) {
+      return false;
+    }
+    return clipsOfState(definition, declared.clip, declared.blendTree).every((clip) => mixer.has(clip));
   }
 
   /**

@@ -147,6 +147,16 @@ export class AnimatorMixer {
   }
 
   /**
+   * Whether this mixer drives a clip: the model declares it and no other animator holds it.
+   *
+   * @param clip - The animation-group name.
+   * @returns `true` when the clip can be posed.
+   */
+  has(clip: string): boolean {
+    return this.#groups.has(clip);
+  }
+
+  /**
    * The length of one clip, in seconds.
    *
    * @param clip - The animation-group name.

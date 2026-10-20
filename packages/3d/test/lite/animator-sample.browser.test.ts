@@ -38,6 +38,7 @@ const LAYERED = defineAnimator(
       { name: "run", clip: "run", layer: "Base" },
       { name: "armsIdle", clip: "idle", layer: "Arms" },
       { name: "armsJump", clip: "jump", layer: "Arms" },
+      { name: "armsWave", clip: "wave", layer: "Arms" },
     ],
   },
   "memory:layered.animator.json",
@@ -163,6 +164,17 @@ describe("Animator.sample on a real device", () => {
     expect(animator.currentState("Base")).toBe("run");
     // Were the base layer dropped, both frames would show the hips at rest and be identical.
     expect(differingBytes(early, late)).toBeGreaterThan(POSE_DELTA_BYTES);
+  }, 60_000);
+
+  it("answers false for a state whose clip the model lacks, and still poses the rest", async () => {
+    const { running, animator } = await loadRig(true, true);
+    animator.advance(0.125);
+    const base = await sampled(running, () => animator.sample("armsJump", 0.5));
+    expect(animator.sample("armsWave", 0.5)).toBe(false);
+    await running.advance(2);
+    // The base layer's run is still written; only the arms lose the jump.
+    expect(differingBytes(base, await running.capture())).toBeGreaterThan(0);
+    expect(animator.sample("run", 0.25)).toBe(true);
   }, 60_000);
 
   it("lasts until the next advance in a playing app", async () => {
