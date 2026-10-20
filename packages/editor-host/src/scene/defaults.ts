@@ -7,6 +7,7 @@
  */
 
 import { encodeProps } from "@ignifx/core";
+import { validateFields } from "./document.js";
 import type { DocumentIndex, DocumentMirror } from "./document.js";
 import type { App, Component, ComponentType, Entity, ReferenceEncoder } from "@ignifx/core";
 
@@ -115,12 +116,15 @@ export function applyDefaults(app: App, mirror: DocumentMirror, index: DocumentI
     if (fields === undefined || set === null || schema === null) {
       continue;
     }
+    const assigned: string[] = [];
     for (const name of fields) {
       const field = Object.hasOwn(schema, name) ? schema[name] : undefined;
       if (field !== undefined && !set.has(name)) {
         Reflect.set(component, name, field.createDefault());
+        assigned.push(name);
       }
     }
+    validateFields(component, assigned);
   }
 }
 

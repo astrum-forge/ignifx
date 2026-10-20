@@ -39,6 +39,7 @@ abstract class Component {
 interface ComponentHooks {
   onAttach?(): void; // after fields are assigned, before awake; may run while entity is inactive
   onDetach?(): void; // just before removal, after onDestroy
+  onValidate?(fields: readonly string[]): void; // a tool (editor, hot-reload defaults) changed these fields
 }
 ```
 
@@ -243,9 +244,11 @@ class EditorCamera extends Script {
 
 - **Scripts are inert unless they opt in.** A script whose class does not set `static runInEditMode = true` receives none of the `ScriptCallbacks` of §2, from any path: frames, `world.loadScene`, `destroy`/`destroyImmediate`, application focus and visibility, physics, hot reload. The gate is the one guarded call site the scheduler and the scene graph already share. It never gets `awake`, so it never gets `onDisable` or `onDestroy` either.
 - **Opted-in scripts follow the game's rules** (`01-lifecycle-and-time.md` §4) with the real frame delta, except that they get no `fixedUpdate` and no physics callback.
-- **Not gated:** constructors, field initialisers, `onAttach`/`onDetach` (§1), setters, signal handlers, and `static onHotReload`. Keep game work out of them.
+- **Not gated:** constructors, field initialisers, `onAttach`/`onDetach`/`onValidate` (§1), setters, signal handlers, and `static onHotReload`. Keep game work out of them.
 - **No fixed loop.** No `FixedUpdate` system, no `fixedUpdate`, no physics, no `waitFixedUpdate()` resume. `time.fixedTime`, `time.fixedStepAlpha`, and `diagnostics.frame.fixedSteps` stay `0`; the rest of the clock runs.
 - **Coroutines.** `startCoroutine` (and `app.coroutines.start`) throws `IGX-0111` for a script that does not run in edit mode.
 - **Systems** run, hold, or skip as they registered (§6). A held system gets `dt = 0` and `isClockHeld = true` and treats the frame as paused.
+- **Materials animate by default.** The shader clock (`time`, `unscaledTime`, `deltaTime` of shader materials and custom post effects) runs as in a game; an editor's "animate materials" toggle sets `app.renderer.animateMaterialsInEditMode = false` to hold it (ADR-0028, amendment of 2026-10-20).
+- **Physics bodies exist but never simulate.** Both physics extensions build, update and remove bodies from component changes and follow transforms the editor moves, so queries and the debug viewer work; nothing steps, no collision or trigger callback fires, and no simulated pose is written back (`09-physics.md` §11).
 - **`time.paused` and `app.step()`** mean what they mean in a game. **`entity.isStatic`** stays writable after the first frame.
 - **Hot reload.** A `"patch"` that changes a class's `runInEditMode` is applied as `"recreate"`, so an instance is set up and torn down under the same answer.

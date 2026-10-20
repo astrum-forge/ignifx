@@ -26,6 +26,7 @@ import { Signal } from '@ignifx/core';
 import { TilemapCollisionData } from '@ignifx/2d';
 import { Vec2 } from '@ignifx/core';
 import { Vec2Like } from '@ignifx/core';
+import { Vec3 } from '@ignifx/core';
 import { World } from '@dimforge/rapier2d-compat';
 
 // @public
@@ -99,6 +100,7 @@ export class CharacterController2D extends Component implements ComponentHooks {
     onDetach(): void;
     // (undocumented)
     onOneWayPlatforms: boolean;
+    onValidate(fields: readonly string[]): void;
     // (undocumented)
     pushBodies: boolean;
     // (undocumented)
@@ -153,6 +155,7 @@ export abstract class Collider2D extends Component implements ComponentHooks {
     onAttach(): void;
     onDetach(): void;
     oneWay: boolean;
+    onValidate(fields: readonly string[]): void;
     rebuild(): void;
     resolveMaterial(fallback: Physics2DMaterialValues): Physics2DMaterialValues;
     restitutionCombine: CombineRule;
@@ -160,6 +163,13 @@ export abstract class Collider2D extends Component implements ComponentHooks {
 
 // @public
 export function collider2DFields(): Schema;
+
+// @public
+export interface ColliderOutline2D {
+    readonly collider: Collider2D;
+    readonly isTrigger: boolean;
+    readonly lines: Float32Array;
+}
 
 // @public
 export interface Collision2D {
@@ -271,6 +281,7 @@ export class Physics2DService {
     //
     // @internal
     constructor(host: Physics2DHost, settings: Physics2DSettings);
+    colliderOutlines(entity: Entity): readonly ColliderOutline2D[];
     get gravity(): Vec2;
     set gravity(value: Vec2Like);
     overlapBox(centre: Vec2Like, size: Vec2Like, rotation?: number, options?: QueryOptions2D): readonly Entity[];
@@ -384,6 +395,7 @@ export class Rigidbody2D extends Component implements ComponentHooks {
     mass: number;
     onAttach(): void;
     onDetach(): void;
+    onValidate(fields: readonly string[]): void;
     get rapier(): Rigidbody2DRapierHandles;
     rebuild(): void;
     static schema: Schema;

@@ -330,6 +330,24 @@ export interface Renderer {
   resolutionScale: number;
   /** Whether per-task GPU timings are collected. Off by default; it costs timestamp queries. */
   profileTasks: boolean;
+  /**
+   * Whether the shader clock runs in an edit-mode app (ADR-0028, amendment of 2026-10-20): an
+   * editor's "animate materials" toggle. `true` by default.
+   *
+   * @remarks
+   * The clock is the `time`, `unscaledTime` and `deltaTime` that shader materials and custom post
+   * effects declare. While this is `false` in an edit-mode app the clock stands still, as it does
+   * under `app.pause()`: `time` keeps its value, `deltaTime` is `0`, and setting it back to `true`
+   * resumes from there without a jump. The main-light and ambient uniforms stay live either way.
+   * Outside edit mode the value is ignored and the clock always runs.
+   *
+   * @example
+   * ```ts
+   * const app = await createApp({ canvas, editMode: true });
+   * app.renderer.animateMaterialsInEditMode = false; // the editor's toggle is off
+   * ```
+   */
+  animateMaterialsInEditMode: boolean;
   /** Which rendering features are on. Read-only once `app.start()` has registered the scene. */
   readonly features: Readonly<RenderingFeatureSettings>;
   /**
@@ -553,6 +571,11 @@ export class RendererImpl implements Renderer {
 
   #profileTasks = false;
 
+  #animateMaterialsInEditMode = true;
+
+  /** The shader clock `ShaderUniformSystem` accumulates, which edit mode's post effects read too. */
+  readonly #shaderClock = { time: 0, unscaledTime: 0, deltaTime: 0 };
+
   #isSceneRegistered = false;
 
   #isLoopRunning = false;
@@ -739,6 +762,60 @@ export class RendererImpl implements Renderer {
     } else {
       disableGpuTiming(this.engine);
     }
+  }
+
+  /**
+   * Whether the shader clock runs in an edit-mode app.
+   *
+   * @returns `true` unless an editor turned material animation off.
+   */
+  get animateMaterialsInEditMode(): boolean {
+    return this.#animateMaterialsInEditMode;
+  }
+
+  set animateMaterialsInEditMode(value: boolean) {
+    this.#animateMaterialsInEditMode = value;
+  }
+
+  /**
+   * Records this frame's shader clock, as `ShaderUniformSystem` accumulated it: the one clock both
+   * shader materials and, in edit mode, custom post effects read.
+   *
+   * @param time - Scaled seconds the clock has run.
+   * @param unscaledTime - Unscaled seconds the clock has run.
+   * @param deltaTime - This frame's step; `0` while the clock is held.
+   *
+   * @internal
+   */
+  setShaderClock(time: number, unscaledTime: number, deltaTime: number): void {
+    this.#shaderClock.time = time;
+    this.#shaderClock.unscaledTime = unscaledTime;
+    this.#shaderClock.deltaTime = deltaTime;
+  }
+
+  /**
+   * Whether the shader clock stands still this frame because an edit-mode app turned material
+   * animation off. `app.pause()` is checked separately, by each reader.
+   *
+   * @returns `true` while the editor's toggle holds the clock.
+   *
+   * @internal
+   */
+  get isShaderClockHeld(): boolean {
+    return this.#app.isEditMode && !this.#animateMaterialsInEditMode;
+  }
+
+  /**
+   * The clock custom post effects upload. In an edit-mode app it is the shader clock materials read
+   * (`setShaderClock`), so the two never drift apart when the editor holds and resumes it
+   * (ADR-0028, amendment of 2026-10-20). A game keeps the app's own clock.
+   *
+   * @returns The clock.
+   *
+   * @internal
+   */
+  get effectClock(): { readonly time: number; readonly unscaledTime: number; readonly deltaTime: number } {
+    return this.#app.isEditMode ? this.#shaderClock : this.#app.time;
   }
 
   /**

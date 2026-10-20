@@ -583,6 +583,12 @@ importers:
       '@ignifx/core':
         specifier: workspace:*
         version: link:../core
+      '@ignifx/physics':
+        specifier: workspace:*
+        version: link:../physics
+      '@ignifx/physics-2d':
+        specifier: workspace:*
+        version: link:../physics-2d
       '@ignifx/vite-plugin':
         specifier: workspace:*
         version: link:../vite-plugin

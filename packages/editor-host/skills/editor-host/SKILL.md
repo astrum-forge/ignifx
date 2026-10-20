@@ -1,6 +1,6 @@
 ---
 name: editor-host
-description: Connects an ignifx project to the ignifx editor with @ignifx/editor-host: the Vite plugin that serves the editor's scene view from the project's own dev server, the virtual:ignifx/editor play controls a game's main.ts hands its app to (play, pause, step, stop, playState, playStateChanged, playStats), and the host half of the editor protocol 0.3 over a MessagePort (hello/ready, heartbeat, and the scene document methods openScene, applyOps, readBack, select, pick, frame, setGizmo, setViewMode, screenshot, getSchemas, describeSettings), including the 2D view mode (an editor Camera2D and app.twoD.pickAt picking). Use when wiring a project or template for the editor, when the user mentions @ignifx/editor-host, editorHostPlugin, attachEditorPlayControls, virtual:ignifx/editor, startEditorHost or /__ignifx_editor__/, or when debugging why the editor cannot connect to a view or why the scene view disagrees with the editor's document.
+description: Connects an ignifx project to the ignifx editor with @ignifx/editor-host: the Vite plugin that serves the editor's scene view from the project's own dev server, the virtual:ignifx/editor play controls a game's main.ts hands its app to (play, pause, step, stop, playState, playStateChanged, playStats), and the host half of the editor protocol 0.3 over a MessagePort (hello/ready, heartbeat, and the scene document methods openScene, applyOps, readBack, select, pick, frame, setGizmo, setViewMode, screenshot, getSchemas, describeSettings, setAnimateMaterials, getColliderOutlines), including the 2D view mode (an editor Camera2D and app.twoD.pickAt picking). Use when wiring a project or template for the editor, when the user mentions @ignifx/editor-host, editorHostPlugin, attachEditorPlayControls, virtual:ignifx/editor, startEditorHost or /__ignifx_editor__/, or when debugging why the editor cannot connect to a view or why the scene view disagrees with the editor's document.
 license: Apache-2.0
 metadata:
   ignifx-version: "0.10.0"
@@ -68,6 +68,7 @@ each view ◀── MessagePort ──▶ editor     JSON-RPC 2.0, protocol 0.3
    connect (window message, origin-checked) → hello → ready → ping/pong, heartbeat
    scene view: schemasChanged → openScene → applyOps… / readBack / select / pick / frame / setGizmo / screenshot
                / setViewMode / getSchemas / describeSettings (on request only)
+               / setAnimateMaterials / getColliderOutlines
                ← sceneOpened, selectionChanged, transformDragging/Dragged, hotReloaded, assetReloaded,
                  hostError, log
    play view:  play / pause / step / stop / playState / playStats
@@ -328,6 +329,13 @@ object `openScene` sends, through `world.loadSceneFile`; `readBack` answers with
   `describeSettings(app)` with each section's `settingsJsonSchema` entry as `propsSchema`, and the
   values the app resolved, in the settings form (`{ x, y, z }`, `{ r, g, b, a }`). No notification
   announces settings; ask again after the project's settings change.
+- **Materials and collider gizmos.** `setAnimateMaterials { enabled }` sets
+  `app.renderer.animateMaterialsInEditMode` (on at every start, so re-send it after `ready`).
+  `getColliderOutlines { entities }` answers `{ outlines }`: per enabled collider of each open
+  entity, its uid, the component's uid, `isTrigger`, and world-space `lines` (six numbers a
+  segment), read from `app.physics` / `app.physics2d` by shape, plus `truncated` when the request
+  passed 256 entities or the lines 600 000 numbers. Edit mode keeps physics bodies on the
+  transforms the editor moves without stepping, so the outlines and physics queries follow.
 - **A changed asset reloads in place, not the view.** The scene view's page hands every
   `ignifx:asset-changed` event to `host.assetChanged`, which calls `app.assets.reload(address)` for an
   asset the app has loaded, of type `scene` (a scene or prefab), `model`, `mesh`, `material`,

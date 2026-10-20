@@ -14,10 +14,13 @@ import { afterEach, describe, expect, it } from "vitest";
 import { resolveEngineVersion } from "../src/host.js";
 import { startEditorPlayControls } from "../src/play-controls.js";
 import {
+  COLLIDER_OUTLINES_MAX_ENTITIES,
+  COLLIDER_OUTLINES_MAX_NUMBERS,
   HostCapability,
   isApplyOpsParams,
   isApplyOpsResult,
   isAssetReloadedParams,
+  isColliderOutlineSet,
   isEntitySelection,
   isFrameParams,
   isAppErrorData,
@@ -38,6 +41,7 @@ import {
   isSchemaSet,
   isScreenshotParams,
   isScreenshotResult,
+  isSetAnimateMaterialsParams,
   isSetGizmoParams,
   isSettingsSet,
   isSetViewModeParams,
@@ -165,6 +169,8 @@ const PARAMS_GUARDS: Readonly<Record<string, (value: unknown) => boolean>> = {
   screenshot: isScreenshotParams,
   screenshotJpeg: isScreenshotParams,
   setViewMode: isSetViewModeParams,
+  setAnimateMaterials: isSetAnimateMaterialsParams,
+  getColliderOutlines: isEntitySelection,
   sceneOpened: isSceneOpenedParams,
   sceneOpened2d: isSceneOpenedParams,
   schemasChangedAtStart: isSchemaSet,
@@ -199,6 +205,7 @@ const RESULT_GUARDS: Readonly<Record<string, (value: unknown) => boolean>> = {
   screenshotResponse: isScreenshotResult,
   getSchemasResponse: isSchemaSet,
   describeSettingsResponse: isSettingsSet,
+  getColliderOutlinesResponse: isColliderOutlineSet,
   playStateResponse: isPlayStateReport,
   playStatsResponse: isPlayStats,
   playStatsStoppedResponse: isPlayStats,
@@ -594,6 +601,106 @@ describe("the editor's 0.3 wire fixture, through a live headless host", () => {
     }
     expect(member(values, "rendering")["clearColor"]).toEqual({ r: 0, g: 0, b: 0, a: 1 });
     expect(answer["id"]).toBe(wire("describeSettingsResponse")["id"]);
+  });
+
+  it("turns the scene view's material animation off and on with setAnimateMaterials", async () => {
+    const { app, peer } = await started();
+    expect(app.renderer.animateMaterialsInEditMode).toBe(true);
+    expectWire(await peer.request(wire("setAnimateMaterials")), {
+      ...wire("nullResponse"),
+      id: wire("setAnimateMaterials")["id"],
+    });
+    expect(app.renderer.animateMaterialsInEditMode).toBe(false);
+    await peer.request({ ...wire("setAnimateMaterials"), params: { enabled: true } });
+    expect(app.renderer.animateMaterialsInEditMode).toBe(true);
+    const refused = await peer.request({ ...wire("setAnimateMaterials"), params: { enabled: "no" } });
+    expect(member(refused, "error")["code"]).toBe(RpcErrorCode.invalidParams);
+  });
+
+  it("answers getColliderOutlines from the project's physics services, as the fixture has it", async () => {
+    const { app, peer } = await started();
+    const request = wire("getColliderOutlines");
+    expect(member(await peer.request(request), "error")["code"]).toBe(RpcErrorCode.noScene);
+    await peer.request(wire("openScene"));
+    // A project without a physics extension has nothing to outline.
+    expectWire(await peer.request(request), {
+      jsonrpc: "2.0",
+      id: request["id"],
+      result: { outlines: [], truncated: false },
+    });
+
+    // Stand-ins for `app.physics` and `app.physics2d`, which the host reads by shape. The collider is
+    // a document component with the fixture's uid.
+    const expected = member(wire("getColliderOutlinesResponse"), "result");
+    const [record] = expected["outlines"] as readonly Received[];
+    const crateUid = String(record?.["entity"]);
+    const colliderUid = String(record?.["component"]);
+    await peer.request({
+      jsonrpc: "2.0",
+      id: 42,
+      method: "applyOps",
+      params: {
+        ops: [
+          { op: "addComponent", entity: crateUid, component: { uid: colliderUid, type: "game/Health", props: {} } },
+        ],
+        commandName: "Add a collider",
+        commandId: "cmd-collider",
+      },
+    });
+    const crate = app.world.findByName("Crate");
+    const collider = crate?.components.find((component) => component.uid === colliderUid);
+    expect(collider).toBeDefined();
+    const lines = new Float32Array(record?.["lines"] as readonly number[]);
+    Object.defineProperty(app, "physics", {
+      configurable: true,
+      value: {
+        colliderOutlines: (entity: unknown) => (entity === crate ? [{ collider, isTrigger: false, lines }] : []),
+      },
+    });
+    expectWire(
+      await peer.request({ ...request, params: { entities: [crateUid, "nope", crateUid] } }),
+      wire("getColliderOutlinesResponse"),
+    );
+
+    // A 2D outline's x, y pairs arrive at the entity's world z, rounded to a hundredth of a millimetre.
+    Object.defineProperty(app, "physics2d", {
+      configurable: true,
+      value: {
+        colliderOutlines: (entity: unknown) =>
+          entity === crate ? [{ collider, isTrigger: true, lines: new Float32Array([0, 0, 1, 0.1]) }] : [],
+      },
+    });
+    const both = member(await peer.request(request), "result");
+    expect(both).toEqual({
+      outlines: [record, { entity: crateUid, component: colliderUid, isTrigger: true, lines: [0, 0, 4, 1, 0.1, 4] }],
+      truncated: false,
+    });
+
+    // Past the caps, whole outlines are left out and the answer says so.
+    const many = Array.from(
+      { length: COLLIDER_OUTLINES_MAX_ENTITIES },
+      (_, index) => `01M4ZEB9E0GG0Q6R22YX${String(index).padStart(6, "0")}`,
+    );
+    const tooMany = member(await peer.request({ ...request, params: { entities: [...many, crateUid] } }), "result");
+    expect(tooMany).toEqual({ outlines: [], truncated: true });
+    const huge = new Float32Array(COLLIDER_OUTLINES_MAX_NUMBERS - 6);
+    Object.defineProperty(app, "physics", {
+      configurable: true,
+      value: {
+        colliderOutlines: (entity: unknown) =>
+          entity === crate
+            ? [
+                { collider, isTrigger: false, lines: huge },
+                { collider, isTrigger: false, lines },
+              ]
+            : [],
+      },
+    });
+    const capped = member(await peer.request(request), "result");
+    expect(capped["truncated"]).toBe(true);
+    expect((capped["outlines"] as readonly Received[]).map((outline) => (outline["lines"] as number[]).length)).toEqual(
+      [COLLIDER_OUTLINES_MAX_NUMBERS - 6],
+    );
   });
 
   it("misses every pick on a headless view, in either unit", async () => {

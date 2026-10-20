@@ -146,6 +146,17 @@ export class Rigidbody extends Component implements ComponentHooks {
   }
 
   /**
+   * Rebuilds the body after a tool changed fields from outside: an editor's inspector, or a hot
+   * reload's new default (`ComponentHooks.onValidate`).
+   *
+   * @param fields - The fields that changed.
+   */
+  onValidate(fields: readonly string[]): void {
+    void fields;
+    this.rebuild();
+  }
+
+  /**
    * Rebuilds the body at the start of the next fixed step. Call it after changing `bodyType`,
    * `mass`, `freezeRotation`, or the entity's scale.
    */

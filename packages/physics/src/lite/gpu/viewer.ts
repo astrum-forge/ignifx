@@ -1,4 +1,4 @@
-import { createPhysicsViewer, disposePhysicsViewer, showPhysicsBody } from "@babylonjs/lite";
+import { createPhysicsViewer, disposePhysicsViewer, hidePhysicsBody, showPhysicsBody } from "@babylonjs/lite";
 import type { LitePhysicsBody, LitePhysicsWorld } from "../havok.js";
 import type { PhysicsViewer } from "@babylonjs/lite";
 import type { LiteScene } from "@ignifx/core";
@@ -49,6 +49,18 @@ export function createViewer(scene: LiteScene, world: LitePhysicsWorld): LitePhy
  */
 export function showBody(viewer: LitePhysicsViewer, body: LitePhysicsBody): void {
   showPhysicsBody(viewer, body);
+}
+
+/**
+ * Stops drawing one body and disposes its debug mesh. A body the viewer is not drawing is ignored.
+ *
+ * @param viewer - The viewer.
+ * @param body - The body to hide.
+ *
+ * @internal
+ */
+export function hideBody(viewer: LitePhysicsViewer, body: LitePhysicsBody): void {
+  hidePhysicsBody(viewer, body);
 }
 
 /**

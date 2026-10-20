@@ -82,6 +82,29 @@ export interface AssetReloadedParams {
 }
 
 // @public
+export const COLLIDER_OUTLINES_MAX_ENTITIES = 256;
+
+// @public
+export const COLLIDER_OUTLINES_MAX_NUMBERS = 6e5;
+
+// @public
+export interface ColliderOutlineRecord {
+    readonly component: string;
+    readonly entity: string;
+    readonly isTrigger: boolean;
+    readonly lines: readonly number[];
+}
+
+// @public
+export interface ColliderOutlineSet {
+    readonly outlines: readonly ColliderOutlineRecord[];
+    readonly truncated: boolean;
+}
+
+// @public
+export type ColliderOutlinesResponse = RpcSuccessResponse<ColliderOutlineSet>;
+
+// @public
 export interface CreateEntityOp {
     readonly descendants?: readonly SceneFileEntity[];
     readonly entity: SceneFileEntity;
@@ -356,6 +379,12 @@ export function isApplyOpsResult(value: unknown): value is ApplyOpsResult;
 export function isAssetReloadedParams(value: unknown): value is AssetReloadedParams;
 
 // @public
+export function isColliderOutlineRecord(value: unknown): value is ColliderOutlineRecord;
+
+// @public
+export function isColliderOutlineSet(value: unknown): value is ColliderOutlineSet;
+
+// @public
 export function isEditorConnectMessage(value: unknown): value is EditorConnectMessage;
 
 // @beta
@@ -462,6 +491,9 @@ export function isScreenshotParams(value: unknown): value is ScreenshotParams;
 
 // @public
 export function isScreenshotResult(value: unknown): value is ScreenshotResult;
+
+// @public
+export function isSetAnimateMaterialsParams(value: unknown): value is SetAnimateMaterialsParams;
 
 // @public
 export function isSetGizmoParams(value: unknown): value is SetGizmoParams;
@@ -877,6 +909,8 @@ export const SceneMethod: {
     readonly getSchemas: "getSchemas";
     readonly describeSettings: "describeSettings";
     readonly setViewMode: "setViewMode";
+    readonly setAnimateMaterials: "setAnimateMaterials";
+    readonly getColliderOutlines: "getColliderOutlines";
 };
 
 // @public
@@ -931,7 +965,7 @@ export const SceneOpKind: {
 export type SceneOpKind = (typeof SceneOpKind)[keyof typeof SceneOpKind];
 
 // @public
-export type SceneRequest = RpcRequestWithParams<typeof SceneMethod.openScene, OpenSceneParams> | RpcRequest<typeof SceneMethod.closeScene, never> | RpcRequestWithParams<typeof SceneMethod.applyOps, ApplyOpsParams> | RpcRequestWithParams<typeof SceneMethod.readBack, ReadBackParams> | RpcRequestWithParams<typeof SceneMethod.select, EntitySelection> | RpcRequestWithParams<typeof SceneMethod.setGizmo, SetGizmoParams> | RpcRequestWithParams<typeof SceneMethod.frame, FrameParams> | RpcRequestWithParams<typeof SceneMethod.pick, PickParams> | RpcRequestWithParams<typeof SceneMethod.screenshot, ScreenshotParams> | RpcRequest<typeof SceneMethod.getSchemas, never> | RpcRequest<typeof SceneMethod.describeSettings, never> | RpcRequestWithParams<typeof SceneMethod.setViewMode, SetViewModeParams>;
+export type SceneRequest = RpcRequestWithParams<typeof SceneMethod.openScene, OpenSceneParams> | RpcRequest<typeof SceneMethod.closeScene, never> | RpcRequestWithParams<typeof SceneMethod.applyOps, ApplyOpsParams> | RpcRequestWithParams<typeof SceneMethod.readBack, ReadBackParams> | RpcRequestWithParams<typeof SceneMethod.select, EntitySelection> | RpcRequestWithParams<typeof SceneMethod.setGizmo, SetGizmoParams> | RpcRequestWithParams<typeof SceneMethod.frame, FrameParams> | RpcRequestWithParams<typeof SceneMethod.pick, PickParams> | RpcRequestWithParams<typeof SceneMethod.screenshot, ScreenshotParams> | RpcRequest<typeof SceneMethod.getSchemas, never> | RpcRequest<typeof SceneMethod.describeSettings, never> | RpcRequestWithParams<typeof SceneMethod.setViewMode, SetViewModeParams> | RpcRequestWithParams<typeof SceneMethod.setAnimateMaterials, SetAnimateMaterialsParams> | RpcRequestWithParams<typeof SceneMethod.getColliderOutlines, EntitySelection>;
 
 // @public
 export interface SchemaDescription {
@@ -995,6 +1029,11 @@ export interface ScreenshotResult {
 
 // @public
 export type SelectResponse = RpcSuccessResponse<EntitySelection>;
+
+// @public
+export interface SetAnimateMaterialsParams {
+    readonly enabled: boolean;
+}
 
 // @public
 export type SetEntityFieldOp = { readonly [F in EntityField]: {

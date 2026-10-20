@@ -311,6 +311,15 @@ export interface ComponentHooks {
   onAttach?(): void;
   /** Runs just before the component is removed, after `onDestroy`. */
   onDetach?(): void;
+  /**
+   * Runs after a tool changed the component's serialized fields from outside it: an editor's
+   * inspector or document op, or a hot reload that gave a field its new default. The engine's own
+   * loads and a script's assignments do not call it. A component that builds something from its
+   * fields (a physics shape, say) rebuilds it here. Not gated in edit mode (ADR-0028).
+   *
+   * @param fields - The names of the fields that changed.
+   */
+  onValidate?(fields: readonly string[]): void;
 }
 
 /**

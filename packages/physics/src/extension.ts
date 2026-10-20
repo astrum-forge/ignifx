@@ -17,9 +17,11 @@ import { PhysicsHost } from "./runtime/host.js";
 import { PhysicsHostKey } from "./runtime/runtime-key.js";
 import { PhysicsRuntime, PHYSICS_DIAGNOSTICS_COUNTERS, PHYSICS_DIAGNOSTICS_GROUP } from "./runtime/runtime.js";
 import {
+  PHYSICS_EDIT_SYNC_ORDER,
   PHYSICS_INTERPOLATE_ORDER,
   PHYSICS_RESTORE_ORDER,
   PHYSICS_STEP_ORDER,
+  PhysicsEditSyncSystem,
   PhysicsInterpolationSystem,
   PhysicsRestoreSystem,
   PhysicsStepSystem,
@@ -123,6 +125,15 @@ export const physics: (options?: PhysicsOptions) => Extension = defineExtension<
         order: PHYSICS_INTERPOLATE_ORDER,
         editMode: "skip",
       });
+      // An edit-mode app keeps its bodies in line with the scene instead, without stepping, so an
+      // editor can query them and draw them (ADR-0028, amendment of 2026-10-20). A game never
+      // registers it.
+      if (ctx.app.isEditMode) {
+        ctx.registerSystem(new PhysicsEditSyncSystem(host), {
+          phase: Phase.PreRender,
+          order: PHYSICS_EDIT_SYNC_ORDER,
+        });
+      }
     },
 
     async onStart(app: App): Promise<void> {

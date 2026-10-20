@@ -76,6 +76,20 @@ export function assignProps(component: Component, props: JsonObject, references:
   }));
 }
 
+/**
+ * Tells a component that the host changed some of its fields, through its `onValidate` hook
+ * (`ComponentHooks`), so one that builds something from them (a physics body) rebuilds it.
+ *
+ * @param component - The component.
+ * @param fields - The fields that changed; nothing is called when the list is empty.
+ */
+export function validateFields(component: Component, fields: readonly string[]): void {
+  const hook: unknown = Reflect.get(component, "onValidate");
+  if (fields.length > 0 && typeof hook === "function") {
+    Reflect.apply(hook, component, [fields]);
+  }
+}
+
 /** The live mirror of the editor's open scene document. */
 export class DocumentMirror {
   readonly #app: App;

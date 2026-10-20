@@ -53,6 +53,8 @@
     "@babylonjs/lite": "catalog:",
     "@ignifx/2d": "workspace:*",
     "@ignifx/core": "workspace:*",
+    "@ignifx/physics": "workspace:*",
+    "@ignifx/physics-2d": "workspace:*",
     "@ignifx/vite-plugin": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
     "@types/node": "catalog:",

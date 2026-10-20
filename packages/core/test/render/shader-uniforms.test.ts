@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { Color } from "../../src/math/color.js";
 import { Light } from "../../src/render/light.js";
 import { createMaterialAsset } from "../../src/render/material-asset.js";
+import { rendererInternals } from "../../src/render/renderer.js";
 import { shaderMaterialDefinition } from "../../src/render/shader-material-definition.js";
 import { createShaderHarness } from "../fixtures/shaders/harness.js";
 import { LIT_WGSL, TINT_WGSL } from "../fixtures/shaders/sources.js";
@@ -145,14 +146,26 @@ describe("the clock uniforms", () => {
 });
 
 describe("in an edit-mode app (ADR-0028)", () => {
-  it("hold the clock uniforms while the main light stays live", async () => {
+  /** A material on the three clock uniforms and the main light's colour. */
+  const CLOCK_LIT = "// @ignifx shader\n// @ignifx system time, unscaledTime, deltaTime, mainLightColor\n";
+
+  it("animate by default: the clock runs as it does in a game", async () => {
     harness = await createShaderHarness({ editMode: true });
     const h = harness;
-    const material = await materialFor(
-      h,
-      "shaders/clock-lit.wgsl",
-      "// @ignifx shader\n// @ignifx system time, unscaledTime, deltaTime, mainLightColor\n",
-    );
+    expect(h.app.renderer.animateMaterialsInEditMode).toBe(true);
+    const material = await materialFor(h, "shaders/clock-lit.wgsl", CLOCK_LIT);
+    for (let index = 0; index < 4; index += 1) {
+      h.frame(0.25);
+    }
+    expect(material.getUniform("time")).toBeCloseTo(h.app.time.time);
+    expect(material.getUniform("deltaTime")).toBeCloseTo(0.25);
+  });
+
+  it("hold the clock uniforms while animateMaterialsInEditMode is off, and the main light stays live", async () => {
+    harness = await createShaderHarness({ editMode: true });
+    const h = harness;
+    h.app.renderer.animateMaterialsInEditMode = false;
+    const material = await materialFor(h, "shaders/clock-lit.wgsl", CLOCK_LIT);
     const sun = h.world.createEntity("sun");
     const light = sun.addComponent(Light, { type: "directional", intensity: 1, color: { r: 1, g: 0, b: 0, a: 1 } });
     for (let index = 0; index < 10; index += 1) {
@@ -166,6 +179,49 @@ describe("in an edit-mode app (ADR-0028)", () => {
     light.intensity = 2;
     h.frame(0.25);
     expect(triple(material, "mainLightColor")[0]).toBeCloseTo(Color.srgbToLinear(1) * 2);
+  });
+
+  it("resume without a jump when the toggle goes back on", async () => {
+    harness = await createShaderHarness({ editMode: true });
+    const h = harness;
+    const material = await materialFor(h, "shaders/clock-lit.wgsl", CLOCK_LIT);
+    h.frame(0.25);
+    const before = Number(material.getUniform("time"));
+    h.app.renderer.animateMaterialsInEditMode = false;
+    h.frame(4);
+    expect(material.getUniform("time")).toBe(before);
+    h.app.renderer.animateMaterialsInEditMode = true;
+    h.frame(0.25);
+    expect(Number(material.getUniform("time")) - before).toBeCloseTo(0.25);
+  });
+
+  it("give custom post effects the materials' clock, which resumes without a jump", async () => {
+    harness = await createShaderHarness({ editMode: true });
+    const h = harness;
+    const renderer = rendererInternals(h.app.renderer);
+    const material = await materialFor(h, "shaders/clock-lit.wgsl", CLOCK_LIT);
+    h.frame(0.25);
+    expect(renderer.effectClock.time).toBe(material.getUniform("time"));
+    h.app.renderer.animateMaterialsInEditMode = false;
+    const held = renderer.effectClock.time;
+    h.frame(0.5);
+    expect(renderer.effectClock.time).toBe(held);
+    expect(renderer.effectClock.deltaTime).toBe(0);
+    h.app.renderer.animateMaterialsInEditMode = true;
+    h.frame(0.25);
+    // No jump: the held half second is not caught up, and both clocks still agree.
+    expect(renderer.effectClock.time - held).toBeCloseTo(0.25);
+    expect(renderer.effectClock.time).toBe(material.getUniform("time"));
+    expect(renderer.effectClock.deltaTime).toBeCloseTo(0.25);
+  });
+
+  it("ignore the toggle in a game app", async () => {
+    const h = await app();
+    h.app.renderer.animateMaterialsInEditMode = false;
+    const material = await materialFor(h, "shaders/clock-lit.wgsl", CLOCK_LIT);
+    h.frame(0.25);
+    h.frame(0.25);
+    expect(material.getUniform("time")).toBeCloseTo(h.app.time.time);
   });
 });
 

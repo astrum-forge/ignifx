@@ -94,6 +94,17 @@ export class CharacterController extends Component implements ComponentHooks {
     this.#runtime()?.releaseController(this);
   }
 
+  /**
+   * Rebuilds the body after a tool changed fields from outside: an editor's inspector, or a hot
+   * reload's new default (`ComponentHooks.onValidate`).
+   *
+   * @param fields - The fields that changed.
+   */
+  onValidate(fields: readonly string[]): void {
+    void fields;
+    this.rebuild();
+  }
+
   /** Rebuilds the capsule at the start of the next fixed step. */
   rebuild(): void {
     this.#runtime()?.markControllerDirty(this);

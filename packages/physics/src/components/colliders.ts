@@ -14,6 +14,7 @@ import {
 } from "@ignifx/core";
 import { PhysicsErrorCode, physicsError } from "../errors.js";
 import { createHeightfieldShape, createMeshShape, createShape, ShapeGeometry } from "../lite/havok.js";
+import { pushBox, pushCapsule, pushCylinder, pushSphere } from "../runtime/outline.js";
 import { Collider, colliderFields } from "./collider.js";
 import type { LitePhysicsShape, LitePhysicsWorld } from "../lite/havok.js";
 import type { AssetHandle, LiteSceneNode, MutableVec3, Schema, Vec3Like } from "@ignifx/core";
@@ -91,6 +92,20 @@ export class BoxCollider extends Collider {
   halfExtentsToRef(scale: Vec3Like, out: MutableVec3): void {
     out.set((this.size.x * abs(scale.x)) / 2, (this.size.y * abs(scale.y)) / 2, (this.size.z * abs(scale.z)) / 2);
   }
+
+  /**
+   * Appends the box's twelve edges.
+   *
+   * @param scale - The entity's lossy scale.
+   * @param out - The segment list.
+   *
+   * @internal
+   */
+  override outlineToRef(scale: Vec3Like, out: number[]): void {
+    const half = new Vec3();
+    this.halfExtentsToRef(scale, half);
+    pushBox(out, scaled(this.center, scale), half);
+  }
 }
 
 /**
@@ -137,6 +152,18 @@ export class SphereCollider extends Collider {
   halfExtentsToRef(scale: Vec3Like, out: MutableVec3): void {
     const radius = this.radius * maxAxis(scale);
     out.set(radius, radius, radius);
+  }
+
+  /**
+   * Appends the sphere's three great circles.
+   *
+   * @param scale - The entity's lossy scale.
+   * @param out - The segment list.
+   *
+   * @internal
+   */
+  override outlineToRef(scale: Vec3Like, out: number[]): void {
+    pushSphere(out, scaled(this.center, scale), this.radius * maxAxis(scale));
   }
 }
 
@@ -201,6 +228,20 @@ export class CapsuleCollider extends Collider {
       this.direction === "z" ? half : radius,
     );
   }
+
+  /**
+   * Appends the capsule's end rings, its sides, and its caps.
+   *
+   * @param scale - The entity's lossy scale.
+   * @param out - The segment list.
+   *
+   * @internal
+   */
+  override outlineToRef(scale: Vec3Like, out: number[]): void {
+    const radius = this.radius * radialScale(this.direction, scale);
+    const half = Math.max(0, (this.height * axisScale(this.direction, scale)) / 2 - radius);
+    pushCapsule(out, scaled(this.center, scale), this.direction, radius, half);
+  }
 }
 
 /**
@@ -252,6 +293,19 @@ export class CylinderCollider extends Collider {
   halfExtentsToRef(scale: Vec3Like, out: MutableVec3): void {
     const radius = this.radius * Math.max(abs(scale.x), abs(scale.z));
     out.set(radius, (this.height * abs(scale.y)) / 2, radius);
+  }
+
+  /**
+   * Appends the cylinder's end rings and its sides.
+   *
+   * @param scale - The entity's lossy scale.
+   * @param out - The segment list.
+   *
+   * @internal
+   */
+  override outlineToRef(scale: Vec3Like, out: number[]): void {
+    const radius = this.radius * Math.max(abs(scale.x), abs(scale.z));
+    pushCylinder(out, scaled(this.center, scale), radius, (this.height * abs(scale.y)) / 2);
   }
 }
 
@@ -418,6 +472,34 @@ export class HeightfieldCollider extends Collider {
    */
   halfExtentsToRef(scale: Vec3Like, out: MutableVec3): void {
     out.set((this.size.x * abs(scale.x)) / 2, (this.size.y * abs(scale.y)) / 2, (this.size.z * abs(scale.z)) / 2);
+  }
+
+  /**
+   * Appends the bounding box of the samples: the field's extent across, centred on the entity as
+   * Havok places it, and from its lowest to its highest sample in height. `center` does not apply
+   * to a heightfield.
+   *
+   * @param scale - The entity's lossy scale.
+   * @param out - The segment list.
+   *
+   * @internal
+   */
+  override outlineToRef(scale: Vec3Like, out: number[]): void {
+    let low = Number.POSITIVE_INFINITY;
+    let high = Number.NEGATIVE_INFINITY;
+    for (const height of this.heights) {
+      low = Math.min(low, height);
+      high = Math.max(high, height);
+    }
+    if (low > high) {
+      return;
+    }
+    const y = abs(scale.y);
+    pushBox(
+      out,
+      { x: 0, y: ((low + high) / 2) * y, z: 0 },
+      { x: (this.size.x * abs(scale.x)) / 2, y: ((high - low) / 2) * y, z: (this.size.z * abs(scale.z)) / 2 },
+    );
   }
 }
 

@@ -132,7 +132,8 @@ Colliders share `offset`, `isTrigger`, `material` (a `.physicsmaterial.json` ass
 `groundNormal`, and `onCollided`.
 
 `app.physics2d` — `gravity`, `raycast`, `raycastAll`, `overlapCircle`, `overlapBox`, `shapeCast`,
-and `rapier` (the unstable escape hatch). Full signatures:
+`colliderOutlines(entity)` (Rapier's drawing of each collider as world-space XY segments, for an
+editor's gizmos), and `rapier` (the unstable escape hatch). Full signatures:
 `skills/ignifx/references/api/physics-2d.md`.
 
 ## Recipes
@@ -312,10 +313,11 @@ Component field tables: `skills/ignifx/references/formats/components.md`.
   the authoritative pose. Everything outside the fixed loop — `update`, `lateUpdate`, animation,
   `Camera2DFollow`, rendering — sees the interpolated one, because the display pose is written at the
   top of `Update`. That is what keeps a follow camera locked to the sprite the frame actually draws.
-- **In an edit-mode app (`createApp({ editMode: true })`) nothing simulates.** No fixed step runs, so
-  no body is built, nothing falls, interpolation never touches a transform, and a query throws
-  `IGX-1153` as it does before a game's first step. Draw collider gizmos from the component fields;
-  `TilemapCollider2D.collisionData` still reads the tilemap, so tile outlines can be drawn too.
+- **In an edit-mode app (`createApp({ editMode: true })`) bodies exist but nothing simulates.**
+  Bodies are built, rebuilt, and removed as components and tiles change and follow every transform
+  the editor moves, so queries answer from the first frame. No fixed step runs: nothing falls, no
+  collision or trigger callback fires, and no simulated pose is written to a transform.
+  `colliderOutlines(entity)` gives an editor its collider gizmos, tile collision included.
 
 ## Deprecated (current window)
 
