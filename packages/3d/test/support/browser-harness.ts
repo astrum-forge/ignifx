@@ -66,6 +66,8 @@ export interface ThreeDBrowserOptions {
   readonly options?: ThreeDOptions;
   /** Manifest entries for the fixture assets a test loads. */
   readonly assets?: readonly AssetManifestEntry[];
+  /** Whether to build an edit-mode app (ADR-0028). */
+  readonly editMode?: boolean;
 }
 
 /** A running 3D app on a real device. */
@@ -164,6 +166,7 @@ export async function createThreeDBrowserApp(options: ThreeDBrowserOptions = {})
   const errors: ErrorReport[] = [];
   const app = await createApp({
     canvas,
+    ...(options.editMode === undefined ? {} : { editMode: options.editMode }),
     logSink: log,
     logLevel: "debug",
     assets: { manifest: createAssetManifest(options.assets ?? fixtureAssets()) },

@@ -68,6 +68,31 @@ export interface AnimatorPlayOptions {
   readonly transitionSeconds?: number;
 }
 
+/**
+ * What {@link AnimatorStateMachine.sample} and {@link Animator.sample} accept.
+ *
+ * @public
+ */
+export interface AnimatorSampleOptions {
+  /**
+   * Parameter values this one sample reads instead of the machine's own, by name. A blend-tree
+   * state reads its parameter from here first and from the machine's current value otherwise.
+   * Nothing is written back: the next sample or frame reads the machine's values again. A `float`
+   * or `int` takes a number (an `int` is truncated towards zero), a `bool` a boolean.
+   */
+  readonly parameters?: Readonly<Record<string, number | boolean>>;
+}
+
+/**
+ * One clip of a sampled pose, as {@link AnimatorStateMachine.sample} returns it.
+ *
+ * @public
+ */
+export interface ClipSample extends ClipWeight {
+  /** Where the clip's playhead sits, in `[0, 1]` of its own length. */
+  readonly normalizedTime: number;
+}
+
 /** The mutable per-layer runtime the machine keeps. */
 interface LayerRuntime {
   /** The layer's declaration. */
@@ -126,6 +151,42 @@ function kindMismatch(parameter: string, kind: AnimatorParameterKind, wanted: st
     `The parameter ${parameter} is a ${kind}, and ${wanted} cannot write it.`,
     { context: { parameter, kind, wanted } },
   );
+}
+
+/**
+ * Builds the failure a non-finite sample input produces. `Animator.sample` uses it too, to refuse a
+ * bad time before its document has loaded.
+ *
+ * @param argument - What was given: `normalizedTime`, or a parameter's name.
+ * @param value - The value.
+ * @returns The error to throw.
+ *
+ * @internal
+ */
+export function invalidSample(argument: string, value: number): Error {
+  return threeDError(
+    ThreeDErrorCode.invalidSample,
+    `Animator.sample was given ${String(value)} for ${argument}; it takes a finite number.`,
+    {
+      context: { argument, value: String(value) },
+      hint: "Pass a normalized time such as 0.5; values outside [0, 1] wrap or clamp by the state's loop.",
+    },
+  );
+}
+
+/**
+ * Where a sample's playhead sits: as given inside `[0, 1]`; outside it, a looping state wraps and a
+ * one-shot state clamps.
+ *
+ * @param normalizedTime - The requested time, already known to be finite.
+ * @param loop - Whether the state loops.
+ * @returns The time in `[0, 1]`.
+ */
+function sampleTime(normalizedTime: number, loop: boolean): number {
+  if (normalizedTime >= 0 && normalizedTime <= 1) {
+    return normalizedTime;
+  }
+  return loop ? normalizedTime - Math.floor(normalizedTime) : clamp01(normalizedTime);
 }
 
 /**
@@ -395,6 +456,55 @@ export class AnimatorStateMachine {
   }
 
   /**
+   * The clips one state shows at one point, without changing the machine.
+   *
+   * @remarks
+   * This is the headless half of {@link Animator.sample}. The result is the state alone at full
+   * weight: no other layer and no crossfade contributes. A blend tree splits that weight between
+   * its children by its parameter, read from `options.parameters` and otherwise from the machine.
+   * Every clip's playhead is the sample's time. A time inside `[0, 1]` is used as given; outside
+   * it, a looping state wraps (`1.25` → `0.25`) and a one-shot state clamps. The machine's states,
+   * cursors, parameters, triggers, events and {@link AnimatorStateMachine.clips} are left as they
+   * were, and nothing is queued for {@link AnimatorStateMachine.drainEvents} or
+   * {@link AnimatorStateMachine.drainStateChanges}.
+   *
+   * @param state - The state's name.
+   * @param normalizedTime - How far into the state, where `0` is its start and `1` its end.
+   * @param options - Parameter values for this sample only.
+   * @returns The clips, with their weights and playheads; a new array each call.
+   * @throws IgnifxError with code `IGX-1216` when `normalizedTime` or a parameter value is not a
+   * finite number, `IGX-1202` when the state is not declared, `IGX-1203` when a parameter is not
+   * declared, or `IGX-1204` when a value does not fit its parameter's kind or names a trigger.
+   *
+   * @example
+   * ```ts
+   * const clips = machine.sample("locomotion", 0.5, { parameters: { speed: 4 } });
+   * ```
+   */
+  sample(state: string, normalizedTime: number, options?: AnimatorSampleOptions): readonly ClipSample[] {
+    if (!Number.isFinite(normalizedTime)) {
+      throw invalidSample("normalizedTime", normalizedTime);
+    }
+    const target = this.#states.get(state);
+    if (target === undefined) {
+      throw unknownState(state);
+    }
+    const overrides = this.#sampleOverrides(options?.parameters);
+    const layer = this.#layerOf(target.layer);
+    const weights: ClipWeight[] = [];
+    this.#addState(layer, target, 1, weights, overrides);
+    const time = sampleTime(normalizedTime, target.loop);
+    return weights.map((clip): ClipSample => ({
+      clip: clip.clip,
+      weight: clip.weight,
+      speed: clip.speed,
+      additive: clip.additive,
+      layer: clip.layer,
+      normalizedTime: time,
+    }));
+  }
+
+  /**
    * Advances every layer by one frame and recomputes the clip weights.
    *
    * @param deltaSeconds - The frame delta, already scaled by whatever clock the caller uses.
@@ -447,6 +557,34 @@ export class AnimatorStateMachine {
       throw kindMismatch(name, kind, `set${wanted[0]?.toUpperCase() ?? ""}${wanted.slice(1)}`);
     }
     this.#floats.set(name, value);
+  }
+
+  /**
+   * Checks a sample's parameter values and converts them to the numbers the machine stores.
+   *
+   * @param parameters - The values by name, or `undefined`.
+   * @returns The numbers by name; empty when nothing was given.
+   */
+  #sampleOverrides(parameters: Readonly<Record<string, number | boolean>> | undefined): ReadonlyMap<string, number> {
+    const overrides = new Map<string, number>();
+    for (const [name, value] of Object.entries(parameters ?? {})) {
+      const kind = this.#kinds.get(name);
+      if (kind === undefined) {
+        throw unknownParameter(name);
+      }
+      if (kind === "trigger" || (kind === "bool") !== (typeof value === "boolean")) {
+        throw kindMismatch(name, kind, "Animator.sample");
+      }
+      if (typeof value === "boolean") {
+        overrides.set(name, value ? 1 : 0);
+        continue;
+      }
+      if (!Number.isFinite(value)) {
+        throw invalidSample(name, value);
+      }
+      overrides.set(name, kind === "int" ? Math.trunc(value) : value);
+    }
+    return overrides;
   }
 
   /**
@@ -697,21 +835,29 @@ export class AnimatorStateMachine {
    * @param layer - The owning layer.
    * @param state - The state.
    * @param weight - The state's share of the layer.
+   * @param out - Where the clips go: the machine's own list, or a sample's.
+   * @param overrides - Parameter values that win over the machine's, for a sample.
    */
-  #addState(layer: LayerRuntime, state: AnimatorStateDefinition, weight: number): void {
+  #addState(
+    layer: LayerRuntime,
+    state: AnimatorStateDefinition,
+    weight: number,
+    out: ClipWeight[] = this.#clips,
+    overrides?: ReadonlyMap<string, number>,
+  ): void {
     if (weight <= 0) {
       return;
     }
     const speed = state.speed * this.speed;
     if (state.clip !== "") {
-      this.#push(layer, state.clip, weight, speed);
+      push(out, layer, state.clip, weight, speed);
       return;
     }
     const tree = this.#definition.blendTrees1D.find((candidate) => candidate.name === state.blendTree);
     if (tree === undefined || tree.children.length === 0) {
       return;
     }
-    const value = this.#floats.get(tree.param) ?? 0;
+    const value = overrides?.get(tree.param) ?? this.#floats.get(tree.param) ?? 0;
     const children = tree.children;
     const first = children[0];
     const last = children[children.length - 1];
@@ -719,11 +865,11 @@ export class AnimatorStateMachine {
       return;
     }
     if (children.length === 1 || value <= first.threshold) {
-      this.#push(layer, first.clip, weight, speed);
+      push(out, layer, first.clip, weight, speed);
       return;
     }
     if (value >= last.threshold) {
-      this.#push(layer, last.clip, weight, speed);
+      push(out, layer, last.clip, weight, speed);
       return;
     }
     for (let index = 0; index < children.length - 1; index += 1) {
@@ -734,37 +880,38 @@ export class AnimatorStateMachine {
       }
       const span = high.threshold - low.threshold;
       const alpha = span <= 0 ? 0 : (value - low.threshold) / span;
-      this.#push(layer, low.clip, weight * (1 - alpha), speed);
-      this.#push(layer, high.clip, weight * alpha, speed);
+      push(out, layer, low.clip, weight * (1 - alpha), speed);
+      push(out, layer, high.clip, weight * alpha, speed);
       return;
     }
   }
+}
 
-  /**
-   * Appends one clip contribution, merging it with an existing entry for the same clip and layer.
-   *
-   * @param layer - The owning layer.
-   * @param clip - The animation-group name.
-   * @param weight - Its weight.
-   * @param speed - Its rate.
-   */
-  #push(layer: LayerRuntime, clip: string, weight: number, speed: number): void {
-    if (weight <= 0) {
+/**
+ * Appends one clip contribution, merging it with an existing entry for the same clip and layer.
+ *
+ * @param out - The list to append to.
+ * @param layer - The owning layer.
+ * @param clip - The animation-group name.
+ * @param weight - Its weight.
+ * @param speed - Its rate.
+ */
+function push(out: ClipWeight[], layer: LayerRuntime, clip: string, weight: number, speed: number): void {
+  if (weight <= 0) {
+    return;
+  }
+  for (let index = 0; index < out.length; index += 1) {
+    const existing = out[index];
+    if (existing !== undefined && existing.clip === clip && existing.layer === layer.definition.name) {
+      out[index] = {
+        clip,
+        weight: existing.weight + weight,
+        speed,
+        additive: existing.additive,
+        layer: existing.layer,
+      };
       return;
     }
-    for (let index = 0; index < this.#clips.length; index += 1) {
-      const existing = this.#clips[index];
-      if (existing !== undefined && existing.clip === clip && existing.layer === layer.definition.name) {
-        this.#clips[index] = {
-          clip,
-          weight: existing.weight + weight,
-          speed,
-          additive: existing.additive,
-          layer: existing.layer,
-        };
-        return;
-      }
-    }
-    this.#clips.push({ clip, weight, speed, additive: layer.definition.additive, layer: layer.definition.name });
   }
+  out.push({ clip, weight, speed, additive: layer.definition.additive, layer: layer.definition.name });
 }

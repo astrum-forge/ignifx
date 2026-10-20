@@ -1,9 +1,10 @@
 import { asset, bool, Component, createDefaults, defineSchema, f32, Model, Signal, str } from "@ignifx/core";
+import { threeDError, ThreeDErrorCode } from "../errors.js";
 import { AnimatorMixer } from "../lite/gpu/animation-mixer.js";
 import { AnimatorAsset } from "./animator-asset.js";
-import { AnimatorStateMachine } from "./state-machine.js";
+import { AnimatorStateMachine, invalidSample } from "./state-machine.js";
 import type { AnimatorDefinition } from "./definition.js";
-import type { AnimatorPlayOptions, StateChange } from "./state-machine.js";
+import type { AnimatorPlayOptions, AnimatorSampleOptions, ClipSample, StateChange } from "./state-machine.js";
 import type { LiteAnimationManager } from "../lite/types.js";
 import type { AssetHandle, ComponentHooks, Schema } from "@ignifx/core";
 
@@ -275,6 +276,60 @@ export class Animator extends Component implements ComponentHooks {
   }
 
   /**
+   * Poses the model at one point of one state, at once, without playing it: an editor's preview
+   * (ADR-0028) or a held pose.
+   *
+   * @remarks
+   * The pose is the state alone at full weight; no other layer and no crossfade contributes, and
+   * the state's layer mask and additive setting still apply. A blend-tree state reads its
+   * parameter from `options.parameters` and otherwise from the animator's current value. A time
+   * inside `[0, 1]` is used as given; outside it, a looping state wraps (`1.25` → `0.25`) and a
+   * one-shot state clamps.
+   *
+   * Sampling changes only the pose. The state machine keeps its states, times, parameters and
+   * triggers, and no `onEvent`, `onStateEntered` or `onStateExited` fires. In an edit-mode app the
+   * animation system does not run, so the pose stays until the next `sample`. In a playing app it
+   * lasts until the animation system next advances this animator, which writes the machine's own
+   * pose again: call it from `lateUpdate`, or while the animator is paused or disabled, to see it.
+   *
+   * @param state - The state's name.
+   * @param normalizedTime - How far into the state, where `0` is its start and `1` its end.
+   * @param options - Parameter values for this sample only.
+   * @returns `true` when the pose was written; `false` while the document or the model's clips are
+   * still loading, and always under a headless app, which has nothing to pose. The arguments are
+   * checked either way once the document has loaded.
+   * @throws IgnifxError with code `IGX-1215` when the entity has no `Model`, its `Model` names no
+   * file, or the loaded file has no clips; `IGX-1216` when `normalizedTime` or a parameter value is
+   * not a finite number; `IGX-1202` when the state is not declared; `IGX-1203` or `IGX-1204` when a
+   * parameter value names no parameter or does not fit its kind.
+   *
+   * @example
+   * ```ts
+   * animator.sample("jump", 0.5);
+   * animator.sample("locomotion", 0.25, { parameters: { speed: 4 } });
+   * ```
+   */
+  sample(state: string, normalizedTime: number, options?: AnimatorSampleOptions): boolean {
+    if (!Number.isFinite(normalizedTime)) {
+      throw invalidSample("normalizedTime", normalizedTime);
+    }
+    this.#requirePoseTarget();
+    this.#syncAsset(false);
+    const machine = this.#machine;
+    if (machine === null) {
+      return false;
+    }
+    machine.speed = this.speed;
+    const clips = machine.sample(state, normalizedTime, options);
+    this.#syncMixer();
+    if (this.#mixer === null) {
+      return false;
+    }
+    this.#writeClips(clips);
+    return true;
+  }
+
+  /**
    * Advances the state machine and writes the pose. The `PostUpdate` system calls it.
    *
    * @param deltaSeconds - The frame delta, already chosen for `updateWhenPaused`.
@@ -282,7 +337,7 @@ export class Animator extends Component implements ComponentHooks {
    * @internal
    */
   advance(deltaSeconds: number): void {
-    this.#syncAsset();
+    this.#syncAsset(true);
     const machine = this.#machine;
     if (machine === null) {
       return;
@@ -294,8 +349,13 @@ export class Animator extends Component implements ComponentHooks {
     this.#drain();
   }
 
-  /** Builds or drops the state machine when the `animator` handle changes. */
-  #syncAsset(): void {
+  /**
+   * Builds or drops the state machine when the `animator` handle changes.
+   *
+   * @param drain - Whether a new machine's first state entries are emitted now, as `applyOnAwake`
+   * asks; `sample` leaves them queued for the first `advance`.
+   */
+  #syncAsset(drain: boolean): void {
     const value = this.animator?.value ?? null;
     if (value === this.#boundAsset) {
       return;
@@ -305,7 +365,7 @@ export class Animator extends Component implements ComponentHooks {
     this.#lengthsResolved = false;
     this.#boundAsset = value;
     this.#machine = value === null ? null : new AnimatorStateMachine(value.definition);
-    if (this.#machine !== null && this.applyOnAwake) {
+    if (drain && this.#machine !== null && this.applyOnAwake) {
       this.#drain();
     }
   }
@@ -316,6 +376,7 @@ export class Animator extends Component implements ComponentHooks {
     if (machine === null || this.#lengthsResolved) {
       return;
     }
+    this.#model ??= this.entity.getComponent(Model);
     const clips = this.#model?.animations ?? [];
     if (clips.length === 0) {
       return;
@@ -359,6 +420,43 @@ export class Animator extends Component implements ComponentHooks {
     }
   }
 
+  /**
+   * Refuses to sample an animator that has nothing to pose: no `Model` on its entity, a `Model`
+   * that names no file, or a loaded file without clips. A headless app's models carry no clips, so
+   * the last check is made only where a file can have them.
+   */
+  #requirePoseTarget(): void {
+    this.#model ??= this.entity.getComponent(Model);
+    const model = this.#model;
+    const loaded = model?.model?.value ?? null;
+    if (model === null) {
+      throw nothingToPose(this.entity.name, "it has no Model component");
+    }
+    if (model.model === null) {
+      throw nothingToPose(this.entity.name, "its Model names no model file");
+    }
+    if (loaded !== null && !this.app.isHeadless && loaded.animations.length === 0) {
+      throw nothingToPose(this.entity.name, "its model file declares no animation clips");
+    }
+  }
+
+  /**
+   * Writes a sampled pose into Lite and ticks the manager.
+   *
+   * @param clips - The clips, with their weights and playheads.
+   */
+  #writeClips(clips: readonly ClipSample[]): void {
+    const mixer = this.#mixer;
+    if (mixer === null) {
+      return;
+    }
+    mixer.clearWeights();
+    for (const clip of clips) {
+      mixer.apply(clip.clip, clip.weight, clip.speed, clip.normalizedTime);
+    }
+    mixer.tick(0);
+  }
+
   /** Pushes the machine's clip weights into Lite and ticks the manager. */
   #writePose(): void {
     const mixer = this.#mixer;
@@ -400,6 +498,20 @@ export class Animator extends Component implements ComponentHooks {
     }
     this.#changes.length = 0;
   }
+}
+
+/**
+ * Builds the failure sampling an animator with nothing to pose produces.
+ *
+ * @param entity - The entity's name.
+ * @param reason - What is missing, as a clause.
+ * @returns The error to throw.
+ */
+function nothingToPose(entity: string, reason: string): Error {
+  return threeDError(ThreeDErrorCode.nothingToPose, `Animator.sample cannot pose ${entity}: ${reason}.`, {
+    context: { entity },
+    hint: "Put the Animator on the entity whose Model loads a rigged glTF with animation clips.",
+  });
 }
 
 /**

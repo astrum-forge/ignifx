@@ -52,6 +52,10 @@ export const ThreeDErrorCode = {
   duplicateExtension: "IGX-1213",
   /** A `LodGroup` level names a renderer that is not under the group's entity. */
   invalidLodLevel: "IGX-1214",
+  /** `Animator.sample` was called on an entity with no `Model`, or a `Model` whose file has no clips. */
+  nothingToPose: "IGX-1215",
+  /** `Animator.sample` was given a normalized time or a parameter value that is not a finite number. */
+  invalidSample: "IGX-1216",
 } as const;
 
 /**
@@ -82,6 +86,8 @@ export const THREE_D_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.f
   "IGX-1212": "{component} reads the input action {action}, which no loaded action map declares.",
   "IGX-1213": "The threeD() extension is already registered on this app.",
   "IGX-1214": "{renderer} is not a MeshRenderer this LodGroup can switch.",
+  "IGX-1215": "{entity} has no Model with animation clips for its Animator to pose.",
+  "IGX-1216": "Animator.sample was given {value} for {argument}; it takes a finite number.",
 });
 
 /**

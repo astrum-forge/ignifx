@@ -47,6 +47,8 @@ export {
   AnimatorStateMachine,
   DEFAULT_CLIP_LENGTH,
   type AnimatorPlayOptions,
+  type AnimatorSampleOptions,
+  type ClipSample,
   type ClipWeight,
   type StateChange,
 } from "./animator/state-machine.js";
