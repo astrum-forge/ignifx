@@ -127,3 +127,38 @@ export class PhysicsInterpolationSystem implements System {
     this.#host.runtime?.interpolate(ctx.time.fixedStepAlpha);
   }
 }
+
+/**
+ * Where the edit-mode sync system runs: in `PreRender`, after every script, tween and animation of
+ * the frame has moved what it moves, and before the render sync, so the debug viewer draws bodies
+ * where the frame shows their entities.
+ */
+export const PHYSICS_EDIT_SYNC_ORDER = -800;
+
+/**
+ * Keeps the bodies of an edit-mode app in line with the world, without stepping
+ * (ADR-0028, amendment of 2026-10-20). It is registered only in an edit-mode app, so a game never
+ * pays for it.
+ *
+ * @internal
+ */
+export class PhysicsEditSyncSystem implements System {
+  /** The name diagnostics and error reports use. */
+  readonly name = "physics-edit-sync";
+
+  readonly #host: PhysicsHost;
+
+  /**
+   * Binds the system to the runtime holder.
+   *
+   * @param host - The holder the runtime lands in.
+   */
+  constructor(host: PhysicsHost) {
+    this.#host = host;
+  }
+
+  /** Builds, re-places, and removes bodies for this frame's changes. */
+  update(): void {
+    this.#host.runtime?.syncEditMode();
+  }
+}

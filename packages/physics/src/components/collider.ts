@@ -123,4 +123,19 @@ export abstract class Collider extends Component implements ComponentHooks {
    * @internal
    */
   abstract halfExtentsToRef(scale: Vec3Like, out: MutableVec3): void;
+
+  /**
+   * Appends this collider's outline, as line segments in the body's space with the scale applied,
+   * for `PhysicsService.colliderOutlines`. A collider whose shape cannot be outlined without its
+   * geometry appends nothing.
+   *
+   * @param scale - The entity's lossy scale.
+   * @param out - The segment list: six numbers per segment.
+   *
+   * @internal
+   */
+  outlineToRef(scale: Vec3Like, out: number[]): void {
+    void scale;
+    void out;
+  }
 }

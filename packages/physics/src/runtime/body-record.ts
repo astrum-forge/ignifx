@@ -45,6 +45,13 @@ export interface BodyRecord {
   staticVersion: number;
   /** Whether the `IGX-0901` diagnostic has already been reported for this body. */
   reportedMove: boolean;
+  /**
+   * `Transform.worldMatrixVersion` when the body was last placed. An edit-mode app compares it each
+   * frame to follow a transform the editor moved (ADR-0028, amendment of 2026-10-20).
+   */
+  placedVersion: number;
+  /** The lossy scale the shapes were built at; a different scale needs new shapes. */
+  readonly placedScale: Vec3;
   /** Signal connections the record owns, dropped when it is torn down. */
   disconnects: Disconnect[];
 }

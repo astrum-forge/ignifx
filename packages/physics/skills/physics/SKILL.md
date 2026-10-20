@@ -108,10 +108,11 @@ app.log.info("crate at y:", crate.transform.position.y);
 | `overlap(shape, position, rotation?, options?)`             | Entities whose world bounds the shape touches (array is reused)                                                                                                                |
 | `distanceToNearest(shape, position, maxDistance, options?)` | Distance to the closest body, or `Infinity`                                                                                                                                    |
 | `debugViewer.enabled`                                       | Lite's wireframe overlay on the render scene (needs a GPU)                                                                                                                     |
+| `colliderOutlines(entity)`                                  | Each enabled collider's outline as world-space line segments (`Float32Array`, six numbers a segment) and `isTrigger`: an editor's collider gizmos; works headless              |
 | `lite`                                                      | Unstable escape hatch: the Havok world and the simulation scene                                                                                                                |
 
 Every query needs at least one completed fixed step — Havok builds its broadphase there — and
-reports `IGX-0902` before that.
+reports `IGX-0902` before that, except in an edit-mode app (below).
 
 Queries hit `Rigidbody` bodies, collider-only statics, and `CharacterController` capsules. A capsule
 hit names the character's entity with `collider: null`. A ray whose `layerMask` leaves out the
@@ -254,9 +255,12 @@ collides with everything. Havok tests a pair in both directions, so one side ref
   of `Update`. That is deliberate: a follow camera in `lateUpdate` must frame the character where the
   frame draws it, or the two judder against each other.
 - **A resting body sleeps.** Changing `app.physics.gravity` does not wake it; apply an impulse.
-- **In an edit-mode app (`createApp({ editMode: true })`) nothing simulates.** No fixed step runs, so
-  no body is built, nothing falls, interpolation never touches a transform, and a query throws
-  `IGX-0902` as it does before a game's first step. Draw collider gizmos from the component fields.
+- **In an edit-mode app (`createApp({ editMode: true })`) bodies exist but nothing simulates.**
+  Bodies are built, rebuilt, and removed as components change and follow every transform the editor
+  moves, so queries answer from the first frame and `debugViewer` draws them. No fixed step runs:
+  nothing falls, no collision or trigger callback fires, `hasStepped` stays `false`, and no
+  simulated pose is written to a transform. `colliderOutlines(entity)` gives an editor its collider
+  gizmos.
 
 ## Deprecated (current window)
 

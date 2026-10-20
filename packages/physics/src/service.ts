@@ -1,9 +1,10 @@
 import { Quat, Vec3 } from "@ignifx/core";
 import { PhysicsErrorCode, physicsError } from "./errors.js";
-import { createViewer, destroyViewer, showBody } from "./lite/gpu/viewer.js";
+import { createViewer, destroyViewer, hideBody, showBody } from "./lite/gpu/viewer.js";
 import { createShape, destroyShape, ShapeGeometry } from "./lite/havok.js";
 import { castRay, nearestDistance, sweepShape } from "./lite/queries.js";
-import type { Collider } from "./components/collider.js";
+import { placeOutline } from "./runtime/outline.js";
+import { Collider } from "./components/collider.js";
 import type { LitePhysicsViewer } from "./lite/gpu/viewer.js";
 import type { LitePhysicsShape, LitePhysicsWorld } from "./lite/havok.js";
 import type { RayQueryResult, SweepQueryResult } from "./lite/queries.js";
@@ -55,6 +56,24 @@ export interface PhysicsDebugViewer {
    * device, so switching it on in a headless app is a no-op that logs a warning.
    */
   enabled: boolean;
+}
+
+/**
+ * One collider's outline, from `app.physics.colliderOutlines`: what an editor draws as a collider
+ * gizmo (ADR-0028, amendment of 2026-10-20).
+ *
+ * @public
+ */
+export interface ColliderOutline {
+  /** The collider the outline is of. */
+  readonly collider: Collider;
+  /** Whether the collider is a trigger, which an editor usually draws in another colour. */
+  readonly isTrigger: boolean;
+  /**
+   * The outline as world-space line segments: every six numbers are one segment, the `x, y, z` of
+   * its two ends, in metres.
+   */
+  readonly lines: Float32Array;
 }
 
 /**
@@ -162,7 +181,8 @@ export class PhysicsService {
    * @param maxDistance - How far to travel; defaults to 10 km.
    * @param options - Layer mask and trigger behaviour.
    * @returns The hit, or `null` when the ray clears everything.
-   * @throws IgnifxError with code `IGX-0902` in development when no fixed step has run yet.
+   * @throws IgnifxError with code `IGX-0902` in development when no fixed step has run yet, outside
+   * edit mode.
    */
   raycast(
     origin: Vec3Like,
@@ -252,7 +272,8 @@ export class PhysicsService {
    * @param to - The end position.
    * @param options - Layer mask, trigger behaviour, and the one entity to sweep through.
    * @returns The hit, or `null`.
-   * @throws IgnifxError with code `IGX-0902` in development when no fixed step has run yet.
+   * @throws IgnifxError with code `IGX-0902` in development when no fixed step has run yet, outside
+   * edit mode.
    */
   shapeCast(shape: QueryShape, from: Vec3Like, to: Vec3Like, options?: ShapeCastOptions): ShapeCastHit | null {
     this.#requireStep("shapeCast");
@@ -308,7 +329,8 @@ export class PhysicsService {
    * @param options - Layer mask and trigger behaviour.
    * @returns The overlapping entities, each once: bodies in creation order, then characters in
    * creation order. The array is reused between calls.
-   * @throws IgnifxError with code `IGX-0902` in development when no fixed step has run yet.
+   * @throws IgnifxError with code `IGX-0902` in development when no fixed step has run yet, outside
+   * edit mode.
    */
   overlap(shape: QueryShape, position: Vec3Like, rotation?: Quat, options?: QueryOptions): readonly Entity[] {
     void rotation;
@@ -344,7 +366,8 @@ export class PhysicsService {
    * @param maxDistance - How far to search.
    * @param options - Trigger behaviour.
    * @returns The distance, or `Number.POSITIVE_INFINITY` when nothing is in range.
-   * @throws IgnifxError with code `IGX-0902` in development when no fixed step has run yet.
+   * @throws IgnifxError with code `IGX-0902` in development when no fixed step has run yet, outside
+   * edit mode.
    */
   distanceToNearest(shape: QueryShape, position: Vec3Like, maxDistance: number, options?: QueryOptions): number {
     this.#requireStep("distanceToNearest");
@@ -375,6 +398,7 @@ export class PhysicsService {
     }
     if (!enabled) {
       if (this.#viewer !== null) {
+        this.#host.runtime?.setBodyObserver(null);
         destroyViewer(this.#viewer);
         this.#viewer = null;
       }
@@ -384,15 +408,72 @@ export class PhysicsService {
       this.#app.log.warn("The physics debug viewer needs a GPU device; a headless app has none.");
       return;
     }
-    const viewer = createViewer(this.#app.lite.scene, this.#rt().world);
+    const runtime = this.#rt();
+    const viewer = createViewer(this.#app.lite.scene, runtime.world);
     this.#viewer = viewer;
-    const records = this.#rt().records;
+    const records = runtime.records;
     for (let index = 0; index < records.length; index += 1) {
       const record = records[index];
       if (record !== undefined) {
         showBody(viewer, record.body);
       }
     }
+    // Bodies built, rebuilt, or re-placed later are drawn too, and removed ones stop drawing.
+    runtime.setBodyObserver({
+      added: (body): void => {
+        showBody(viewer, body);
+      },
+      removed: (body): void => {
+        hideBody(viewer, body);
+      },
+    });
+  }
+
+  /**
+   * The outlines of an entity's enabled colliders, as world-space line segments: what an editor
+   * draws as collider gizmos (ADR-0028, amendment of 2026-10-20).
+   *
+   * @remarks
+   * Each outline is built from the collider's fields, the entity's world pose, and its lossy scale,
+   * the same inputs Havok's shape is built from, so it works in any app, headless included, and
+   * before the first step. A box draws its edges; a sphere its three great circles; a capsule and a
+   * cylinder their end rings, sides, and (for a capsule) caps; a `HeightfieldCollider` the bounding
+   * box of its samples. A `MeshCollider` has no outline, because its triangles live on the GPU: its
+   * `lines` is empty, and an editor draws the mesh's own wireframe instead.
+   *
+   * @param entity - The entity whose colliders to outline.
+   * @returns One outline per enabled collider, in component order; empty when it has none.
+   *
+   * @example
+   * ```ts
+   * for (const outline of app.physics.colliderOutlines(selected)) {
+   *   drawLines(outline.lines, outline.isTrigger ? "orange" : "green");
+   * }
+   * ```
+   */
+  colliderOutlines(entity: Entity): readonly ColliderOutline[] {
+    const outlines: ColliderOutline[] = [];
+    if (entity.isDestroyed) {
+      return outlines;
+    }
+    const transform = entity.transform;
+    const position = transform.position;
+    const rotation = transform.rotation;
+    const scale = transform.lossyScale;
+    const local: number[] = [];
+    for (const component of entity.components) {
+      if (!(component instanceof Collider) || !component.enabled) {
+        continue;
+      }
+      local.length = 0;
+      component.outlineToRef(scale, local);
+      outlines.push({
+        collider: component,
+        isTrigger: component.isTrigger,
+        lines: placeOutline(local, position, rotation),
+      });
+    }
+    return outlines;
   }
 
   /**
@@ -430,7 +511,8 @@ export class PhysicsService {
    * Whether at least one fixed step has completed, which is when Havok has built its broadphase and
    * queries become legal (`09-physics.md` §5). A script that queries from `lateUpdate` or `update`
    * checks this on the first frame, where the fixed loop may not have run yet, instead of catching
-   * `IGX-0902`.
+   * `IGX-0902`. An edit-mode app never steps, so this stays `false` there, and its queries answer
+   * anyway (ADR-0028, amendment of 2026-10-20).
    *
    * @returns `true` once the first step has run.
    */
@@ -439,13 +521,20 @@ export class PhysicsService {
   }
 
   /**
-   * Refuses a query that ran before Havok built its broadphase (`09-physics.md` §5).
+   * Refuses a query that ran before Havok built its broadphase (`09-physics.md` §5). In an
+   * edit-mode app, which never steps, it brings the bodies in line with the world instead, so the
+   * query sees what the editor shows (ADR-0028, amendment of 2026-10-20).
    *
    * @param query - The query name, for the diagnostic.
-   * @throws IgnifxError with code `IGX-0902` when no step has completed.
+   * @throws IgnifxError with code `IGX-0902` when no step has completed, outside edit mode.
    */
   #requireStep(query: string): void {
-    if (this.#rt().hasStepped) {
+    const runtime = this.#rt();
+    if (runtime.isEditMode) {
+      runtime.syncEditMode();
+      return;
+    }
+    if (runtime.hasStepped) {
       return;
     }
     throw physicsError(PhysicsErrorCode.queryBeforeStep, `${query}() ran before the first fixed step.`, {

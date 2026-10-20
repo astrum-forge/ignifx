@@ -29,7 +29,8 @@ import type { App, Coroutine, ErrorReport, RenderCapture, ScriptCallbacks } from
  * - A forced device loss with active bodies and a running coroutine recovers with the simulation
  *   intact: the poses continue from where they were, matching a headless twin stepped the same
  *   number of times (Phase 4 exit criterion).
- * - `app.physics.debugViewer.enabled` toggles Lite's wireframe viewer without throwing.
+ * - `app.physics.debugViewer.enabled` toggles Lite's wireframe viewer without throwing, and in an
+ *   edit-mode app it draws the bodies, which follow the transforms an editor moves (ADR-0028).
  *
  * The file lives under `test/lite/` because it calls Lite's own
  * `forceWebGpuDeviceLossForTesting` (`index.d.ts` 5364); that directory is the documented exception
@@ -106,7 +107,7 @@ function advance(frames: number): Promise<void> {
  * @param errors - Collects everything `app.onError` reports.
  * @returns The app and its canvas.
  */
-async function createGpuApp(errors: ErrorReport[]): Promise<App> {
+async function createGpuApp(errors: ErrorReport[], editMode = false): Promise<App> {
   const canvas = document.createElement("canvas");
   canvas.width = CANVAS_SIZE;
   canvas.height = CANVAS_SIZE;
@@ -123,6 +124,7 @@ async function createGpuApp(errors: ErrorReport[]): Promise<App> {
     assets: { manifest: createAssetManifest([{ address: HAVOK_WASM_FILE_NAME, url: HAVOK_URL }]) },
     settings: { rendering: { msaaSamples: 1, features: { deviceLostRecovery: true } } },
     extensions: [physics()],
+    editMode,
   });
   app.onError.connect((report) => {
     errors.push(report);
@@ -130,6 +132,22 @@ async function createGpuApp(errors: ErrorReport[]): Promise<App> {
   running = { app, canvas };
   await app.start();
   return app;
+}
+
+/**
+ * Counts the pixels of a capture that are not black.
+ *
+ * @param frame - The captured frame.
+ * @returns How many pixels have a non-zero colour channel.
+ */
+function litPixels(frame: RenderCapture): number {
+  let lit = 0;
+  for (let offset = 0; offset < frame.data.length; offset += 4) {
+    if ((frame.data[offset] ?? 0) + (frame.data[offset + 1] ?? 0) + (frame.data[offset + 2] ?? 0) > 0) {
+      lit += 1;
+    }
+  }
+  return lit;
 }
 
 /**
@@ -226,6 +244,42 @@ describe("@ignifx/physics on a real device", () => {
     app.physics.debugViewer.enabled = false;
     expect(app.physics.debugViewer.enabled).toBe(false);
     await advance(SETTLE_FRAMES);
+    expect(errors).toEqual([]);
+  }, 60_000);
+
+  it("draws an edit-mode app's bodies in the debug viewer and follows one the editor moves", async () => {
+    const errors: ErrorReport[] = [];
+    const app = await createGpuApp(errors, true);
+    const eye = app.world.createEntity("Main Camera");
+    eye.transform.localPosition.set(0, 0, -6);
+    eye.addComponent(Camera, { near: 0.1, far: 100 });
+    // A collider with no renderer: only the viewer can put it on screen.
+    const box = app.world.createEntity("Box");
+    box.addComponent(BoxCollider, { size: { x: 2, y: 2, z: 2 } });
+    box.addComponent(Rigidbody, { mass: 1 });
+    await advance(SETTLE_FRAMES);
+    expect(litPixels(await app.renderer.captureScreenshot())).toBe(0);
+
+    app.physics.debugViewer.enabled = true;
+    let lit = 0;
+    for (let attempt = 0; attempt < LIT_ATTEMPTS && lit === 0; attempt += 1) {
+      // oxlint-disable-next-line no-await-in-loop -- frames are sequential; that is the point.
+      await advance(SETTLE_FRAMES);
+      // oxlint-disable-next-line no-await-in-loop -- see above.
+      lit = litPixels(await app.renderer.captureScreenshot());
+    }
+    expect(lit).toBeGreaterThan(0);
+
+    // Moved out of view, the body is re-placed; the viewer drops the old wireframe with it.
+    box.transform.position = { x: 100, y: 0, z: 0 };
+    await advance(SETTLE_FRAMES);
+    expect(litPixels(await app.renderer.captureScreenshot())).toBe(0);
+    box.transform.position = { x: 0, y: 0, z: 0 };
+    await advance(SETTLE_FRAMES);
+    expect(litPixels(await app.renderer.captureScreenshot())).toBeGreaterThan(0);
+    // Never simulated: the dynamic body has not fallen.
+    expect(box.transform.position.y).toBe(0);
+    app.physics.debugViewer.enabled = false;
     expect(errors).toEqual([]);
   }, 60_000);
 

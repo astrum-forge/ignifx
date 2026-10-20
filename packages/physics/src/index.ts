@@ -66,7 +66,7 @@ export { PHYSICS_DIAGNOSTICS_COUNTERS, PHYSICS_DIAGNOSTICS_GROUP } from "./runti
 export { describeSchemas } from "./schemas.js";
 
 // service — `app.physics`.
-export { PhysicsService, type PhysicsDebugViewer, type PhysicsLiteHandles } from "./service.js";
+export { PhysicsService, type ColliderOutline, type PhysicsDebugViewer, type PhysicsLiteHandles } from "./service.js";
 
 // settings — the `physics` project settings section.
 export {

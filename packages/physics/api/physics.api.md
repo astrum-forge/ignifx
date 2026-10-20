@@ -47,6 +47,8 @@ export class BoxCollider extends Collider {
     // Warning: (ae-forgotten-export) The symbol "LitePhysicsShape" needs to be exported by the entry point index.d.ts
     createShape(world: LitePhysicsWorld, scale: Vec3Like): LitePhysicsShape;
     halfExtentsToRef(scale: Vec3Like, out: MutableVec3): void;
+    // @internal
+    override outlineToRef(scale: Vec3Like, out: number[]): void;
     static schema: Schema;
     // (undocumented)
     size: Vec3Like;
@@ -65,6 +67,8 @@ export class CapsuleCollider extends Collider {
     halfExtentsToRef(scale: Vec3Like, out: MutableVec3): void;
     // (undocumented)
     height: number;
+    // @internal
+    override outlineToRef(scale: Vec3Like, out: number[]): void;
     // (undocumented)
     radius: number;
     static schema: Schema;
@@ -136,12 +140,21 @@ export abstract class Collider extends Component implements ComponentHooks {
     material: AssetHandle<PhysicsMaterial> | null;
     onAttach(): void;
     onDetach(): void;
+    // @internal
+    outlineToRef(scale: Vec3Like, out: number[]): void;
     rebuild(): void;
     resolveMaterial(fallback: PhysicsMaterialValues): PhysicsMaterialValues;
 }
 
 // @public
 export function colliderFields(): Schema;
+
+// @public
+export interface ColliderOutline {
+    readonly collider: Collider;
+    readonly isTrigger: boolean;
+    readonly lines: Float32Array;
+}
 
 // @public
 export interface Collision {
@@ -175,6 +188,8 @@ export class CylinderCollider extends Collider {
     halfExtentsToRef(scale: Vec3Like, out: MutableVec3): void;
     // (undocumented)
     height: number;
+    // @internal
+    override outlineToRef(scale: Vec3Like, out: number[]): void;
     // (undocumented)
     radius: number;
     static schema: Schema;
@@ -207,6 +222,8 @@ export class HeightfieldCollider extends Collider {
     halfExtentsToRef(scale: Vec3Like, out: MutableVec3): void;
     // (undocumented)
     heights: number[];
+    // @internal
+    override outlineToRef(scale: Vec3Like, out: number[]): void;
     // (undocumented)
     samplesX: number;
     // (undocumented)
@@ -339,6 +356,7 @@ export class PhysicsService {
     //
     // @internal
     constructor(app: App, host: PhysicsHost, settings: PhysicsSettings);
+    colliderOutlines(entity: Entity): readonly ColliderOutline[];
     get debugViewer(): PhysicsDebugViewer;
     dispose(): void;
     distanceToNearest(shape: QueryShape, position: Vec3Like, maxDistance: number, options?: QueryOptions): number;
@@ -456,6 +474,8 @@ export class SphereCollider extends Collider {
     constructor();
     createShape(world: LitePhysicsWorld, scale: Vec3Like): LitePhysicsShape;
     halfExtentsToRef(scale: Vec3Like, out: MutableVec3): void;
+    // @internal
+    override outlineToRef(scale: Vec3Like, out: number[]): void;
     // (undocumented)
     radius: number;
     static schema: Schema;

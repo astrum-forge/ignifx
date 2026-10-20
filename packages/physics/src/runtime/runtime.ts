@@ -148,8 +148,22 @@ interface ControllerRecord extends QueryTarget {
   readonly currentPosition: Vec3;
   /** Whether the display position is interpolated. */
   interpolate: boolean;
+  /** `Transform.worldMatrixVersion` when the capsule was placed; edit mode follows a move. */
+  placedVersion: number;
   /** The subscription to Lite's push observable. */
   disconnect: () => void;
+}
+
+/**
+ * Who hears about bodies coming and going: the debug viewer, which draws each one.
+ *
+ * @internal
+ */
+export interface BodyObserver {
+  /** A body was added to the world. */
+  added(body: LitePhysicsBody): void;
+  /** A body is about to leave the world. */
+  removed(body: LitePhysicsBody): void;
 }
 
 /** The pooled `TriggerEvent`, whose fields the dispatcher rewrites for each delivery. */
@@ -273,6 +287,11 @@ export class PhysicsRuntime {
 
   #stepped = false;
 
+  /** Whether the app is an editor's scene view, where bodies exist and nothing steps (ADR-0028). */
+  readonly #isEditMode: boolean;
+
+  #observer: BodyObserver | null = null;
+
   #disposed = false;
 
   #queries = 0;
@@ -299,6 +318,7 @@ export class PhysicsRuntime {
     this.#simulation = options.simulation;
     this.#world = options.world;
     this.#counters = options.counters;
+    this.#isEditMode = options.ctx.app.isEditMode;
     this.#contacts.push(this.#contactPoint);
 
     setGravity(this.#world, this.#settings.gravity);
@@ -340,6 +360,25 @@ export class PhysicsRuntime {
    */
   get hasStepped(): boolean {
     return this.#stepped;
+  }
+
+  /**
+   * Whether this runtime belongs to an edit-mode app, where bodies are kept in sync with the world
+   * by {@link PhysicsRuntime.syncEditMode} and never stepped (ADR-0028, amendment of 2026-10-20).
+   *
+   * @returns `true` in an editor's scene view.
+   */
+  get isEditMode(): boolean {
+    return this.#isEditMode;
+  }
+
+  /**
+   * Sets who hears about bodies coming and going.
+   *
+   * @param observer - The observer, or `null` to stop.
+   */
+  setBodyObserver(observer: BodyObserver | null): void {
+    this.#observer = observer;
   }
 
   /**
@@ -431,6 +470,28 @@ export class PhysicsRuntime {
     this.#snapshot(fixedDeltaSeconds);
     this.#dispatchTriggers();
     this.#dispatchContacts();
+  }
+
+  /**
+   * Brings the bodies in line with the world without stepping, which is all an edit-mode app ever
+   * does with them (ADR-0028, amendment of 2026-10-20): it builds, rebuilds, and removes bodies for
+   * component and layer changes, and re-places every body and capsule whose transform moved, so a
+   * query sees what the editor shows. Havok is never stepped, so nothing falls, no contact or
+   * trigger event is produced, and no pose is written back to a transform.
+   *
+   * @remarks
+   * A moved body is removed and added again with the shapes it has: a teleport alone leaves Havok's
+   * broadphase where the body was, so a ray at the new place would miss it until a step. A changed
+   * scale rebuilds the shapes too.
+   */
+  syncEditMode(): void {
+    if (this.#disposed) {
+      return;
+    }
+    this.#syncLayers();
+    this.#followTransforms();
+    this.#reconcile();
+    this.#publishCounters();
   }
 
   /**
@@ -847,6 +908,57 @@ export class PhysicsRuntime {
   }
 
   /**
+   * Re-places every body and capsule whose transform changed since it was placed, for
+   * {@link PhysicsRuntime.syncEditMode}. A body whose lossy scale changed is rebuilt instead.
+   */
+  #followTransforms(): void {
+    for (let index = 0; index < this.#records.length; index += 1) {
+      const record = this.#records[index];
+      if (record === undefined || this.#dirty.has(record.entity)) {
+        continue;
+      }
+      const transform = record.entity.transform;
+      if (transform.worldMatrixVersion === record.placedVersion) {
+        continue;
+      }
+      if (nearlyEqual(transform.lossyScale, record.placedScale)) {
+        this.#replace(record);
+      } else {
+        this.markDirty(record.entity);
+      }
+    }
+    for (let index = 0; index < this.#controllers.length; index += 1) {
+      const record = this.#controllers[index];
+      if (record !== undefined && record.entity.transform.worldMatrixVersion !== record.placedVersion) {
+        this.markControllerDirty(record.component);
+      }
+    }
+  }
+
+  /**
+   * Removes a body and adds it again where its node now is, keeping its shapes.
+   *
+   * @param record - The record whose entity moved.
+   */
+  #replace(record: BodyRecord): void {
+    const root = record.shapes.at(-1);
+    if (root === undefined) {
+      this.markDirty(record.entity);
+      return;
+    }
+    this.#observer?.removed(record.body);
+    destroyBody(this.#world, record.body);
+    record.body = this.#createBody(record.node, root, record.rigidbody, record.motion);
+    record.collisionEvents = false;
+    this.#applyCollisionEvents(record);
+    readNodePose(record.node, record.currentPosition, record.currentRotation);
+    record.previousPosition.copyFrom(record.currentPosition);
+    record.previousRotation.copyFrom(record.currentRotation);
+    record.placedVersion = record.entity.transform.worldMatrixVersion;
+    this.#observer?.added(record.body);
+  }
+
+  /**
    * Rebuilds every body marked dirty, and every controller.
    */
   #reconcile(): void {
@@ -971,6 +1083,8 @@ export class PhysicsRuntime {
       halfExtents: boundsOf(colliders, scale),
       staticVersion: entity.transform.worldMatrixVersion,
       reportedMove: false,
+      placedVersion: entity.transform.worldMatrixVersion,
+      placedScale: scale.clone(),
       disconnects: [],
     };
     readNodePose(node, record.currentPosition, record.currentRotation);
@@ -981,6 +1095,7 @@ export class PhysicsRuntime {
     this.#byNode.set(node, record);
     this.#applyCollisionEvents(record);
     this.#watchEntity(record);
+    this.#observer?.added(body);
     return record;
   }
 
@@ -1127,7 +1242,7 @@ export class PhysicsRuntime {
    * @returns `true` when interpolation applies.
    */
   #shouldInterpolate(rigidbody: Rigidbody | null, motion: BodyMotion): boolean {
-    if (!this.#settings.interpolation || motion === BodyMotion.static || rigidbody === null) {
+    if (this.#isEditMode || !this.#settings.interpolation || motion === BodyMotion.static || rigidbody === null) {
       return false;
     }
     return rigidbody.interpolation === "interpolate";
@@ -1326,7 +1441,8 @@ export class PhysicsRuntime {
       halfExtents: capsuleHalfExtents(component.height, component.radius, new Vec3()),
       previousPosition: centre.clone(),
       currentPosition: centre.clone(),
-      interpolate: this.#settings.interpolation && component.interpolation === "interpolate",
+      interpolate: !this.#isEditMode && this.#settings.interpolation && component.interpolation === "interpolate",
+      placedVersion: component.transform.worldMatrixVersion,
       disconnect: (): void => {
         // Replaced immediately below; a record is never observed with this placeholder.
       },
@@ -1539,6 +1655,7 @@ export class PhysicsRuntime {
       disconnect();
     }
     record.disconnects = [];
+    this.#observer?.removed(record.body);
     destroyBody(this.#world, record.body);
     for (let index = record.shapes.length - 1; index >= 0; index -= 1) {
       const shape = record.shapes[index];
