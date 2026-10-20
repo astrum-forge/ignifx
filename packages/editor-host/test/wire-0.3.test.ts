@@ -11,6 +11,7 @@ import {
   transformSchema,
 } from "@ignifx/core";
 import { afterEach, describe, expect, it } from "vitest";
+import { resolveEngineVersion } from "../src/host.js";
 import { startEditorPlayControls } from "../src/play-controls.js";
 import {
   HostCapability,
@@ -50,6 +51,7 @@ import {
   SceneNotification,
 } from "../src/protocol/index.js";
 import { connect, EDITOR_ORIGIN } from "./support/editor.js";
+import { ENGINE_VERSION } from "./support/engine-version.js";
 import { CRATE_PREFAB, Exploder, Health, startLiveHost, Wire } from "./support/scene-project.js";
 import type { Received } from "./support/editor.js";
 import type { LiveHost } from "./support/scene-project.js";
@@ -404,12 +406,14 @@ describe("the editor's 0.3 wire fixture, through a live headless host", () => {
     const peer = live.wire;
 
     // A headless host lists only `heartbeat`, `logRelay` and `hotReloadDefaults`: it draws no
-    // gizmos, captures nothing, has no 2D view.
+    // gizmos, captures nothing, has no 2D view. The fixture records the engine version the editor's
+    // copy was made at; the host reports the one it runs, so that field is the live one on both sides.
     const ready = wire("readyScene");
     const capabilities = [HostCapability.heartbeat, HostCapability.logRelay, HostCapability.hotReloadDefaults];
+    const engineVersion = resolveEngineVersion(ENGINE_VERSION);
     expectWire(await peer.request(wire("hello")), {
       ...ready,
-      result: { ...member(ready, "result"), capabilities },
+      result: { ...member(ready, "result"), engineVersion, capabilities },
     });
     expect(member(member(ready, "result"), "protocol")).toEqual(PROTOCOL_VERSION);
 

@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { Component, entityRef, f32, Script, stringifySceneFile, u32 } from "@ignifx/core";
 import { startEditorHost } from "../../src/host.js";
 import { connect, EDITOR_ORIGIN } from "./editor.js";
+import { ENGINE_VERSION } from "./engine-version.js";
 import type { EditorPeer, Received } from "./editor.js";
 import type { EditorHost } from "../../src/host.js";
 import type { ConcreteComponentType, Entity, FetchLike, SceneFile } from "@ignifx/core";
@@ -156,7 +157,7 @@ export function startLiveHost(scripts: readonly ConcreteComponentType[] = []): L
     editorOrigin: EDITOR_ORIGIN,
     headless: true,
     messageTarget: target,
-    engineVersion: "0.9.0",
+    engineVersion: ENGINE_VERSION,
     heartbeatIntervalMs: 60_000,
     settings: { layers: { layers: ["Default", "Characters"] } },
     scripts: [Health, CrateBody, Follow, Exploder, ...scripts],
