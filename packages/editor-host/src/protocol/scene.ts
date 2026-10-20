@@ -730,6 +730,8 @@ export interface HotReloadError {
   readonly message: string;
   /** Its `IGX-` code when it is an `IgnifxError`, else `null`. */
   readonly code: string | null;
+  /** Its `stack`, or `null` when it has none. Additive in 0.3: a host from before it leaves it out. */
+  readonly stack?: string | null;
 }
 
 /**
@@ -829,6 +831,33 @@ export interface HostErrorParams {
 }
 
 /**
+ * The `data` of a `hostError` the host sends for an error the app reported through `app.onError`:
+ * where it was caught. The host's `message` and `code` are the thrown error's.
+ *
+ * @remarks
+ * `source`, `phase` and `entity` are in every 0.3 host; the other fields are additive in 0.3, sent by
+ * a host that lists `HostCapability.logRelay`.
+ *
+ * @public
+ */
+export interface AppErrorData {
+  /** Which boundary caught it: the engine's `ErrorReport.source`, such as `"lifecycle"`. */
+  readonly source: string;
+  /** The phase that was running, as the engine's `Phase` value, or `null` outside a phase. */
+  readonly phase: number | null;
+  /** That phase's name in the engine's `Phase`, such as `"Update"`, or `null`. */
+  readonly phaseName?: string | null;
+  /** The uid of the entity involved, or `null`. */
+  readonly entity: string | null;
+  /** The name of the entity involved, or `null`. */
+  readonly entityName?: string | null;
+  /** The `typeId` of the component involved (its class name when it has none), or `null`. */
+  readonly component?: string | null;
+  /** The thrown error's `stack`, or `null` when it has none. */
+  readonly stack?: string | null;
+}
+
+/**
  * A log line's severity: the engine's `LogLevel`.
  *
  * @public
@@ -836,7 +865,22 @@ export interface HostErrorParams {
 export type LogLevel = "debug" | "info" | "warn" | "error";
 
 /**
- * The parameters of `log`: the engine's `LogRecord` without its `data`, which is not JSON.
+ * An `Error` a log line carried among its extras, made JSON.
+ *
+ * @public
+ */
+export interface LoggedError {
+  /** The error's message. */
+  readonly message: string;
+  /** Its `IGX-` code when it is an `IgnifxError`, else `null`. */
+  readonly code: string | null;
+  /** Its `stack`, or `null` when it has none. */
+  readonly stack: string | null;
+}
+
+/**
+ * The parameters of `log`: the engine's `LogRecord` without its `data`, which is not JSON, but for
+ * the first `Error` in it.
  *
  * @public
  */
@@ -849,6 +893,11 @@ export interface LogParams {
   readonly message: string;
   /** The logger clock's reading, in milliseconds. */
   readonly timeMs: number;
+  /**
+   * The first `Error` among the record's extras, such as the one the app's default `onError` handler
+   * logs. Additive in 0.3: a host from before it leaves it out.
+   */
+  readonly error?: LoggedError;
 }
 
 /**
@@ -1440,7 +1489,10 @@ export function isHotReloadedParams(value: unknown): value is HotReloadedParams 
     isArrayOf(
       report["errors"],
       (error): error is HotReloadError =>
-        isRecord(error) && isString(error["message"]) && isStringOrNull(error["code"]),
+        isRecord(error) &&
+        isString(error["message"]) &&
+        isStringOrNull(error["code"]) &&
+        optionalField(error, "stack", isStringOrNull),
     )
   );
 }
@@ -1517,6 +1569,28 @@ export function isHostErrorParams(value: unknown): value is HostErrorParams {
   );
 }
 
+/**
+ * Checks the `data` of a `hostError` for an error the app reported.
+ *
+ * @param value - The received `data`.
+ * @returns True for a boundary name, a phase or `null`, an entity uid or `null`, and, when present,
+ * a phase name, an entity name, a component and a stack, each a string or `null`.
+ *
+ * @public
+ */
+export function isAppErrorData(value: unknown): value is AppErrorData {
+  return (
+    isRecord(value) &&
+    isString(value["source"]) &&
+    (value["phase"] === null || isCount(value["phase"])) &&
+    (value["entity"] === null || isUidString(value["entity"])) &&
+    optionalField(value, "phaseName", isStringOrNull) &&
+    optionalField(value, "entityName", isStringOrNull) &&
+    optionalField(value, "component", isStringOrNull) &&
+    optionalField(value, "stack", isStringOrNull)
+  );
+}
+
 /** The severities of a log line. */
 const LOG_LEVELS: Readonly<Record<string, string>> = { debug: "debug", info: "info", warn: "warn", error: "error" };
 
@@ -1534,6 +1608,15 @@ export function isLogParams(value: unknown): value is LogParams {
     isOneOf(LOG_LEVELS, value["level"]) &&
     isStringOrNull(value["scope"]) &&
     isString(value["message"]) &&
-    isFiniteNumber(value["timeMs"])
+    isFiniteNumber(value["timeMs"]) &&
+    optionalField(
+      value,
+      "error",
+      (error) =>
+        isRecord(error) &&
+        isString(error["message"]) &&
+        isStringOrNull(error["code"]) &&
+        isStringOrNull(error["stack"]),
+    )
   );
 }

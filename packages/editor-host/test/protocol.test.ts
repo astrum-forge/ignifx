@@ -78,7 +78,12 @@ describe("@ignifx/editor-host entries", () => {
       stop: "stop",
       playState: "playState",
     });
-    expect(page.PlayNotification).toEqual({ playStateChanged: "playStateChanged" });
+    expect(page.PlayNotification).toEqual({
+      playStateChanged: "playStateChanged",
+      log: "log",
+      hostError: "hostError",
+      hotReloaded: "hotReloaded",
+    });
     expect(page.PlayPhase).toEqual({ playing: "playing", paused: "paused", stopped: "stopped" });
   });
 

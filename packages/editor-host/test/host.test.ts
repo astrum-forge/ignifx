@@ -90,7 +90,7 @@ describe("startEditorHost", () => {
       result: {
         engineVersion: REPORTED_VERSION,
         protocol: PROTOCOL_VERSION,
-        capabilities: ["heartbeat"],
+        capabilities: ["heartbeat", "logRelay"],
         hostKind: "scene",
       },
     });

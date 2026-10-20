@@ -21,6 +21,17 @@ export interface AddComponentOp {
 }
 
 // @public
+export interface AppErrorData {
+    readonly component?: string | null;
+    readonly entity: string | null;
+    readonly entityName?: string | null;
+    readonly phase: number | null;
+    readonly phaseName?: string | null;
+    readonly source: string;
+    readonly stack?: string | null;
+}
+
+// @public
 export interface ApplyOpFailure {
     readonly code: ApplyOpFailureCode;
     readonly diagnostic?: string;
@@ -258,6 +269,7 @@ export const HostCapability: {
     readonly screenshot: "screenshot";
     readonly viewMode2d: "viewMode2d";
     readonly pick2d: "pick2d";
+    readonly logRelay: "logRelay";
 };
 
 // @public
@@ -296,6 +308,7 @@ export interface HotReloadedParams {
 export interface HotReloadError {
     readonly code: string | null;
     readonly message: string;
+    readonly stack?: string | null;
 }
 
 // @public
@@ -328,6 +341,9 @@ export interface InstantiateOp {
 export interface InvalidSceneFileData {
     readonly issues: readonly SceneFileIssue[];
 }
+
+// @public
+export function isAppErrorData(value: unknown): value is AppErrorData;
 
 // @public
 export function isApplyOpsParams(value: unknown): value is ApplyOpsParams;
@@ -479,10 +495,18 @@ export type JsonValue = string | number | boolean | null | JsonArray | JsonObjec
 export function listenForEditorPlayControls(options: EditorPlayControlsOptions): EditorPlayConnector;
 
 // @public
+export interface LoggedError {
+    readonly code: string | null;
+    readonly message: string;
+    readonly stack: string | null;
+}
+
+// @public
 export type LogLevel = "debug" | "info" | "warn" | "error";
 
 // @public
 export interface LogParams {
+    readonly error?: LoggedError;
     readonly level: LogLevel;
     readonly message: string;
     readonly scope: string | null;
@@ -560,6 +584,9 @@ export type PlayMethod = (typeof PlayMethod)[keyof typeof PlayMethod];
 // @public
 export const PlayNotification: {
     readonly playStateChanged: "playStateChanged";
+    readonly log: "log";
+    readonly hostError: "hostError";
+    readonly hotReloaded: "hotReloaded";
 };
 
 // @public
