@@ -8,6 +8,7 @@ import { ParticleSystem } from "../../src/gpu/particle-system.js";
 import {
   brightCentroid,
   createParticlesBrowserApp,
+  framesUntil,
   meanBrightColor,
   SETTLE_FRAMES,
 } from "../support/browser-harness.js";
@@ -44,6 +45,9 @@ describe("the shipped presets on a WebGPU device", () => {
       return running.world.createEntity(name).addComponent(ParticleSystem, { definition: handle });
     });
 
+    // Each renderer is built once its shader has loaded; a failed load leaves it null, and the
+    // assertions below then name the preset and the log says why.
+    await framesUntil(() => systems.every((system) => system.renderer !== null));
     await running.advance(SETTLE_FRAMES);
 
     for (const [index, system] of systems.entries()) {
@@ -80,6 +84,7 @@ describe("the renderer's instance count", () => {
       "tail",
     );
     const system = running.world.createEntity("Effect").addComponent(ParticleSystem, { definition: handle });
+    await framesUntil(() => system.renderer !== null);
     await running.advance(SETTLE_FRAMES);
     expect(system.renderer).not.toBeNull();
     expect(system.renderer?.count).toBe(0);
@@ -114,6 +119,7 @@ describe("a drawn particle", () => {
       "conformance",
     );
     const system = running.world.createEntity("Effect").addComponent(ParticleSystem, { definition: handle });
+    await framesUntil(() => system.renderer !== null);
     await running.advance(SETTLE_FRAMES);
     expect(system.renderer).not.toBeNull();
 
@@ -170,6 +176,7 @@ describe("a drawn particle", () => {
       "gradient",
     );
     const system = running.world.createEntity("Effect").addComponent(ParticleSystem, { definition: handle });
+    await framesUntil(() => system.renderer !== null);
     await running.advance(SETTLE_FRAMES);
     running.app.pause();
     await running.advance(3);

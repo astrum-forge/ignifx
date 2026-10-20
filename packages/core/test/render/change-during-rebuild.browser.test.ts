@@ -111,11 +111,21 @@ interface LiteMeshMaterial {
 /**
  * Runs `change` once, the next time a rebuild has chosen a group's meshes but not yet built them.
  *
+ * @remarks
+ * Call it only while no group is being built. A group build in flight owns `_p` and deletes it in
+ * its `finally`, which would delete this hook with it, and the next rebuild would then assign a
+ * plain `_p` and never run `change` (a CI runner on 2026-10-20, where the previous rebuild was
+ * still building when the hook went in).
+ *
  * @param scene - The scene's Lite internals.
  * @param change - What to do in that window.
  * @returns Whether the change has run.
+ * @throws Error when a group build is in flight.
  */
 function onNextGroupBuild(scene: RebuildInternals, change: () => void): () => boolean {
+  if (Object.hasOwn(scene, "_p")) {
+    throw new Error("A group build is in flight; its `finally` would delete the hook.");
+  }
   let hasRun = false;
   // `rebuildSceneGroups` assigns `_p` and later deletes it, which removes this accessor with it.
   Object.defineProperty(scene, "_p", {
@@ -278,8 +288,11 @@ async function buildScene(): Promise<{
   };
   await running.start();
   await running.advance(SETTLE_FRAMES);
+  // A shadow-casting light is a topology change. Its rebuild can outlast a fixed number of frames on
+  // a slow runner, and a test that hooks the next rebuild must start after it.
+  const before = running.renderer.renderableRebuilds;
   addLight("Left", -6, true);
-  await running.advance(SETTLE_FRAMES);
+  await rebuildsDone(running, before);
   return { running, ground, pbr, addLight };
 }
 
