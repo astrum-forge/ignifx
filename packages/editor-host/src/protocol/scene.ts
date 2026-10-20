@@ -74,6 +74,18 @@ export const SceneMethod = {
   describeSettings: "describeSettings",
   /** Switches the view between the 3D and the 2D editor camera. Answers `null`. */
   setViewMode: "setViewMode",
+  /**
+   * Turns the editor's "animate materials" toggle on or off: whether the shader clock runs in the
+   * scene view. Answers `null`. The host starts with it on, after every load. A host from before it
+   * answers `RpcErrorCode.methodNotFound`. Additive in 0.3.
+   */
+  setAnimateMaterials: "setAnimateMaterials",
+  /**
+   * Outlines the colliders of entities of the open scene, as world-space line segments, for the
+   * editor's collider gizmos. Answers {@link ColliderOutlineSet}. A host from before it answers
+   * `RpcErrorCode.methodNotFound`. Additive in 0.3.
+   */
+  getColliderOutlines: "getColliderOutlines",
 } as const;
 
 /**
@@ -703,6 +715,49 @@ export interface SetViewModeParams {
 }
 
 /**
+ * The parameters of `setAnimateMaterials`.
+ *
+ * @public
+ */
+export interface SetAnimateMaterialsParams {
+  /** Whether the shader clock (`time` in shader materials and custom post effects) runs. */
+  readonly enabled: boolean;
+}
+
+/**
+ * One collider's outline in the answer to `getColliderOutlines`.
+ *
+ * @public
+ */
+export interface ColliderOutlineRecord {
+  /** The uid of the entity the collider is on. */
+  readonly entity: string;
+  /** The collider component's uid. */
+  readonly component: string;
+  /** Whether the collider is a trigger. */
+  readonly isTrigger: boolean;
+  /**
+   * World-space line segments in metres: every six numbers are one segment, the `x, y, z` of its
+   * two ends. A 2D collider's segments lie at its entity's world `z`. Empty for a collider the
+   * engine cannot outline, such as a 3D `MeshCollider`.
+   */
+  readonly lines: readonly number[];
+}
+
+/**
+ * The answer to `getColliderOutlines`.
+ *
+ * @public
+ */
+export interface ColliderOutlineSet {
+  /**
+   * One record per enabled collider of each requested entity that the open scene has, in request
+   * order and then component order. Empty when the project registers no physics extension.
+   */
+  readonly outlines: readonly ColliderOutlineRecord[];
+}
+
+/**
  * The parameters of `sceneOpened`.
  *
  * @public
@@ -944,11 +999,13 @@ export type SceneRequest =
   | RpcRequestWithParams<typeof SceneMethod.screenshot, ScreenshotParams>
   | RpcRequest<typeof SceneMethod.getSchemas, never>
   | RpcRequest<typeof SceneMethod.describeSettings, never>
-  | RpcRequestWithParams<typeof SceneMethod.setViewMode, SetViewModeParams>;
+  | RpcRequestWithParams<typeof SceneMethod.setViewMode, SetViewModeParams>
+  | RpcRequestWithParams<typeof SceneMethod.setAnimateMaterials, SetAnimateMaterialsParams>
+  | RpcRequestWithParams<typeof SceneMethod.getColliderOutlines, EntitySelection>;
 
 /**
- * The success answer of the `SceneMethod`s that return nothing: `closeScene`, `setGizmo`, `frame`
- * and `setViewMode`.
+ * The success answer of the `SceneMethod`s that return nothing: `closeScene`, `setGizmo`, `frame`,
+ * `setViewMode` and `setAnimateMaterials`.
  *
  * @public
  */
@@ -1009,6 +1066,13 @@ export type GetSchemasResponse = RpcSuccessResponse<SchemaSet>;
  * @public
  */
 export type DescribeSettingsResponse = RpcSuccessResponse<SettingsSet>;
+
+/**
+ * The success answer to `getColliderOutlines`.
+ *
+ * @public
+ */
+export type ColliderOutlinesResponse = RpcSuccessResponse<ColliderOutlineSet>;
 
 /**
  * Scene host → editor: one of the `SceneNotification`s.
@@ -1448,6 +1512,53 @@ export function isSettingsSet(value: unknown): value is SettingsSet {
  */
 export function isSetViewModeParams(value: unknown): value is SetViewModeParams {
   return isRecord(value) && isOneOf(ViewMode, value["mode"]);
+}
+
+/**
+ * Checks the parameters of `setAnimateMaterials`.
+ *
+ * @param value - The received `params`.
+ * @returns True for a boolean `enabled`.
+ *
+ * @public
+ */
+export function isSetAnimateMaterialsParams(value: unknown): value is SetAnimateMaterialsParams {
+  return isRecord(value) && isBoolean(value["enabled"]);
+}
+
+/**
+ * Checks one record of `getColliderOutlines`.
+ *
+ * @param value - The value to test.
+ * @returns True for two uids, a boolean, and a list of finite numbers whose length is a multiple of
+ * six.
+ *
+ * @public
+ */
+export function isColliderOutlineRecord(value: unknown): value is ColliderOutlineRecord {
+  if (!isRecord(value)) {
+    return false;
+  }
+  const lines = value["lines"];
+  return (
+    isUidString(value["entity"]) &&
+    isUidString(value["component"]) &&
+    isBoolean(value["isTrigger"]) &&
+    isArrayOf(lines, isFiniteNumber) &&
+    lines.length % 6 === 0
+  );
+}
+
+/**
+ * Checks the result of `getColliderOutlines`.
+ *
+ * @param value - The received `result`.
+ * @returns True for a list of outline records.
+ *
+ * @public
+ */
+export function isColliderOutlineSet(value: unknown): value is ColliderOutlineSet {
+  return isRecord(value) && isArrayOf(value["outlines"], isColliderOutlineRecord);
 }
 
 /**

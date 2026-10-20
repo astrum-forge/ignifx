@@ -18,6 +18,7 @@ import {
   isPickParams,
   isReadBackParams,
   isScreenshotParams,
+  isSetAnimateMaterialsParams,
   isSetGizmoParams,
   isSetViewModeParams,
   PickUnit,
@@ -36,6 +37,7 @@ import {
   waitForReplacement,
 } from "./asset-reload.js";
 import { applyDefaults, DefaultsTracker, instancesHolding } from "./defaults.js";
+import { colliderOutlinesOf } from "./collider-outlines.js";
 import { DocumentMirror } from "./document.js";
 import { EditorCamera2D, EYE_DISTANCE_2D } from "./editor-camera-2d.js";
 import { EDITOR_CAMERA_FOV, EditorCamera } from "./editor-camera.js";
@@ -71,6 +73,7 @@ import type { PickRayMembers } from "./view-math.js";
 import type { EditorView, ViewDrag, WorldBounds } from "../lite/gizmos.js";
 import type {
   AssetReloadedParams,
+  ColliderOutlineSet,
   GizmoDragMode,
   GizmoSnap,
   HostErrorParams,
@@ -212,6 +215,8 @@ export class SceneHost {
       [SceneMethod.getSchemas, () => this.#getSchemas()],
       [SceneMethod.describeSettings, () => this.#describeSettings()],
       [SceneMethod.setViewMode, (params) => this.#setViewMode(params)],
+      [SceneMethod.setAnimateMaterials, (params) => this.#setAnimateMaterials(params)],
+      [SceneMethod.getColliderOutlines, (params) => this.#getColliderOutlines(params)],
     ]);
     if (has(HostCapability.gizmos)) {
       methods.set(SceneMethod.setGizmo, (params) => this.#setGizmo(params));
@@ -675,6 +680,43 @@ export class SceneHost {
   #describeSettings(): SettingsSet {
     this.#requireMirror(SceneMethod.describeSettings);
     return settingsSet(this.#requireApp());
+  }
+
+  /**
+   * `setAnimateMaterials`: the editor's "animate materials" toggle, which runs or holds the shader
+   * clock of the scene view (`app.renderer.animateMaterialsInEditMode`).
+   *
+   * @param params - `{ enabled }`.
+   * @returns `null`.
+   */
+  #setAnimateMaterials(params: unknown): null {
+    this.#requireMirror(SceneMethod.setAnimateMaterials);
+    if (!isSetAnimateMaterialsParams(params)) {
+      throw new InvalidParamsError("setAnimateMaterials takes { enabled: boolean }.");
+    }
+    this.#requireApp().renderer.animateMaterialsInEditMode = params.enabled;
+    return null;
+  }
+
+  /**
+   * `getColliderOutlines`: the world-space outlines of the requested entities' colliders, from the
+   * project's physics extensions, for the editor's collider gizmos. Changes nothing.
+   *
+   * @param params - `{ entities }`.
+   * @returns The outlines; uids the open scene does not have are skipped.
+   */
+  #getColliderOutlines(params: unknown): ColliderOutlineSet {
+    const mirror = this.#requireMirror(SceneMethod.getColliderOutlines);
+    if (!isEntitySelection(params)) {
+      throw new InvalidParamsError("getColliderOutlines takes { entities: uid[] }.");
+    }
+    this.#requireOpen(SceneMethod.getColliderOutlines);
+    const index = mirror.index();
+    const entities = [...new Set(params.entities)].flatMap((uid) => {
+      const entity = index?.entities.get(uid);
+      return entity === undefined ? [] : [[uid, entity] as const];
+    });
+    return { outlines: colliderOutlinesOf(this.#requireApp(), entities) };
   }
 
   /**
