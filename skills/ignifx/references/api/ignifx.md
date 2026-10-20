@@ -35613,6 +35613,44 @@ The world.
 
 #### Methods
 
+##### colliderOutlines()
+
+> **colliderOutlines**(`entity`): readonly `ColliderOutline2D`[]
+
+The outlines of an entity's 2D colliders, as world-space line segments: what an editor draws as
+collider gizmos (ADR-0028, amendment of 2026-10-20).
+
+###### Parameters
+
+###### entity
+
+[`Entity`](#entity-19)
+
+The entity whose colliders to outline.
+
+###### Returns
+
+readonly `ColliderOutline2D`[]
+
+One outline per collider that produced a shape, in component order; empty when none.
+
+###### Remarks
+
+The segments are Rapier's own debug drawing of the colliders the entity's body is built from,
+so a polygon, an edge chain, a capsule, a one-way platform, and every piece of a
+`TilemapCollider2D` are outlined exactly. A body exists from the first fixed step in a game,
+and from the first frame or query in an edit-mode app, which keeps bodies on the transforms the
+editor moves; an entity without one (no enabled collider yet, or before that point) has no
+outline. A `CharacterController2D`'s own shape is not a collider and is not outlined.
+
+###### Example
+
+```ts
+for (const outline of app.physics2d.colliderOutlines(selected)) {
+  drawLines2D(outline.lines, outline.isTrigger ? "orange" : "green");
+}
+```
+
 ##### overlapBox()
 
 > **overlapBox**(`centre`, `size`, `rotation?`, `options?`): readonly [`Entity`](#entity-19)[]
@@ -35653,7 +35691,7 @@ The overlapping entities. The array is reused between calls.
 
 ###### Throws
 
-IgnifxError with code `IGX-1153` when no fixed step has run yet.
+IgnifxError with code `IGX-1153` when no fixed step has run yet, outside edit mode.
 
 ##### overlapCircle()
 
@@ -35689,7 +35727,7 @@ The overlapping entities, in Rapier's order. The array is reused between calls.
 
 ###### Throws
 
-IgnifxError with code `IGX-1153` when no fixed step has run yet.
+IgnifxError with code `IGX-1153` when no fixed step has run yet, outside edit mode.
 
 ##### raycast()
 
@@ -35731,7 +35769,7 @@ The hit, or `null` when the ray clears everything.
 
 ###### Throws
 
-IgnifxError with code `IGX-1153` when no fixed step has run yet.
+IgnifxError with code `IGX-1153` when no fixed step has run yet, outside edit mode.
 
 ##### raycastAll()
 
@@ -35773,7 +35811,7 @@ The hits, in increasing distance. The array is reused between calls.
 
 ###### Throws
 
-IgnifxError with code `IGX-1153` when no fixed step has run yet.
+IgnifxError with code `IGX-1153` when no fixed step has run yet, outside edit mode.
 
 ##### shapeCast()
 
@@ -35821,7 +35859,7 @@ The hit, or `null`.
 
 ###### Throws
 
-IgnifxError with code `IGX-1153` when no fixed step has run yet.
+IgnifxError with code `IGX-1153` when no fixed step has run yet, outside edit mode.
 
 ***
 
@@ -36129,7 +36167,8 @@ The new acceleration vector, in metres per second squared.
 Whether at least one fixed step has completed, which is when Havok has built its broadphase and
 queries become legal (`09-physics.md` §5). A script that queries from `lateUpdate` or `update`
 checks this on the first frame, where the fixed loop may not have run yet, instead of catching
-`IGX-0902`.
+`IGX-0902`. An edit-mode app never steps, so this stays `false` there, and its queries answer
+anyway (ADR-0028, amendment of 2026-10-20).
 
 ###### Returns
 
@@ -36152,6 +36191,44 @@ The Babylon Lite handles.
 The Havok world and the simulation scene.
 
 #### Methods
+
+##### colliderOutlines()
+
+> **colliderOutlines**(`entity`): readonly `ColliderOutline`[]
+
+The outlines of an entity's enabled colliders, as world-space line segments: what an editor
+draws as collider gizmos (ADR-0028, amendment of 2026-10-20).
+
+###### Parameters
+
+###### entity
+
+[`Entity`](#entity-19)
+
+The entity whose colliders to outline.
+
+###### Returns
+
+readonly `ColliderOutline`[]
+
+One outline per enabled collider, in component order; empty when it has none.
+
+###### Remarks
+
+Each outline is built from the collider's fields, the entity's world pose, and its lossy scale,
+the same inputs Havok's shape is built from, so it works in any app, headless included, and
+before the first step. A box draws its edges; a sphere its three great circles; a capsule and a
+cylinder their end rings, sides, and (for a capsule) caps; a `HeightfieldCollider` the bounding
+box of its samples. A `MeshCollider` has no outline, because its triangles live on the GPU: its
+`lines` is empty, and an editor draws the mesh's own wireframe instead.
+
+###### Example
+
+```ts
+for (const outline of app.physics.colliderOutlines(selected)) {
+  drawLines(outline.lines, outline.isTrigger ? "orange" : "green");
+}
+```
 
 ##### dispose()
 
@@ -36204,7 +36281,8 @@ The distance, or `Number.POSITIVE_INFINITY` when nothing is in range.
 
 ###### Throws
 
-IgnifxError with code `IGX-0902` in development when no fixed step has run yet.
+IgnifxError with code `IGX-0902` in development when no fixed step has run yet, outside
+edit mode.
 
 ##### isDebugViewerEnabled()
 
@@ -36268,7 +36346,8 @@ does not is listed.
 
 ###### Throws
 
-IgnifxError with code `IGX-0902` in development when no fixed step has run yet.
+IgnifxError with code `IGX-0902` in development when no fixed step has run yet, outside
+edit mode.
 
 ##### raycast()
 
@@ -36316,7 +36395,8 @@ hit reports the character's entity with `collider: null`. A ray passes through a
 
 ###### Throws
 
-IgnifxError with code `IGX-0902` in development when no fixed step has run yet.
+IgnifxError with code `IGX-0902` in development when no fixed step has run yet, outside
+edit mode.
 
 ##### setDebugViewerEnabled()
 
@@ -36389,7 +36469,8 @@ without reporting them at fraction zero (2026-09-08).
 
 ###### Throws
 
-IgnifxError with code `IGX-0902` in development when no fixed step has run yet.
+IgnifxError with code `IGX-0902` in development when no fixed step has run yet, outside
+edit mode.
 
 ***
 
@@ -52053,8 +52134,9 @@ The merged chunk geometry this collider builds shapes from: the assigned data, o
 
 ###### Remarks
 
-Reading it works in an edit-mode app too, where no body is built (ADR-0028), so an editor can
-draw the outlines.
+Reading it works in any app, before any body is built. An edit-mode app also builds the body
+without stepping (ADR-0028, amendment of 2026-10-20), so `app.physics2d.colliderOutlines` draws
+the same outlines from Rapier.
 
 ###### Returns
 
@@ -77474,6 +77556,28 @@ hit?.entity.name;
 ```
 
 #### Properties
+
+##### animateMaterialsInEditMode
+
+> **animateMaterialsInEditMode**: `boolean`
+
+Whether the shader clock runs in an edit-mode app (ADR-0028, amendment of 2026-10-20): an
+editor's "animate materials" toggle. `true` by default.
+
+###### Remarks
+
+The clock is the `time`, `unscaledTime` and `deltaTime` that shader materials and custom post
+effects declare. While this is `false` in an edit-mode app the clock stands still, as it does
+under `app.pause()`: `time` keeps its value, `deltaTime` is `0`, and setting it back to `true`
+resumes from there without a jump. The main-light and ambient uniforms stay live either way.
+Outside edit mode the value is ignored and the clock always runs.
+
+###### Example
+
+```ts
+const app = await createApp({ canvas, editMode: true });
+app.renderer.animateMaterialsInEditMode = false; // the editor's toggle is off
+```
 
 ##### drawCalls
 

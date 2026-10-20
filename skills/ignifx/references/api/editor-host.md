@@ -216,6 +216,55 @@ Its asset type, as the manifest records it: `"scene"` for a scene or a prefab.
 
 ***
 
+### ColliderOutlineRecord
+
+One collider's outline in the answer to `getColliderOutlines`.
+
+#### Properties
+
+##### component
+
+> `readonly` **component**: `string`
+
+The collider component's uid.
+
+##### entity
+
+> `readonly` **entity**: `string`
+
+The uid of the entity the collider is on.
+
+##### isTrigger
+
+> `readonly` **isTrigger**: `boolean`
+
+Whether the collider is a trigger.
+
+##### lines
+
+> `readonly` **lines**: readonly `number`[]
+
+World-space line segments in metres: every six numbers are one segment, the `x, y, z` of its
+two ends. A 2D collider's segments lie at its entity's world `z`. Empty for a collider the
+engine cannot outline, such as a 3D `MeshCollider`.
+
+***
+
+### ColliderOutlineSet
+
+The answer to `getColliderOutlines`.
+
+#### Properties
+
+##### outlines
+
+> `readonly` **outlines**: readonly [`ColliderOutlineRecord`](#collideroutlinerecord)[]
+
+One record per enabled collider of each requested entity that the open scene has, in request
+order and then component order. Empty when the project registers no physics extension.
+
+***
+
 ### CreateEntityOp
 
 Creates an entity, optionally with a whole subtree below it. `entity.parent` places it; `index`
@@ -2511,6 +2560,20 @@ The image width in pixels.
 
 ***
 
+### SetAnimateMaterialsParams
+
+The parameters of `setAnimateMaterials`.
+
+#### Properties
+
+##### enabled
+
+> `readonly` **enabled**: `boolean`
+
+Whether the shader clock (`time` in shader materials and custom post effects) runs.
+
+***
+
 ### SetGizmoParams
 
 The parameters of `setGizmo`.
@@ -2791,6 +2854,14 @@ The success answer to `applyOps`.
 
 ***
 
+### ColliderOutlinesResponse
+
+> **ColliderOutlinesResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<[`ColliderOutlineSet`](#collideroutlineset)\>
+
+The success answer to `getColliderOutlines`.
+
+***
+
 ### DescribeSettingsResponse
 
 > **DescribeSettingsResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<[`SettingsSet`](#settingsset)\>
@@ -2938,8 +3009,8 @@ A log line's severity: the engine's `LogLevel`.
 
 > **NullResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<`null`\>
 
-The success answer of the `SceneMethod`s that return nothing: `closeScene`, `setGizmo`, `frame`
-and `setViewMode`.
+The success answer of the `SceneMethod`s that return nothing: `closeScene`, `setGizmo`, `frame`,
+`setViewMode` and `setAnimateMaterials`.
 
 ***
 
@@ -3137,7 +3208,7 @@ The union of the names in `SceneOpKind`.
 
 ### SceneRequest
 
-> **SceneRequest** = [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`openScene`](#openscene), [`OpenSceneParams`](#opensceneparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`closeScene`](#closescene), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`applyOps`](#applyops), [`ApplyOpsParams`](#applyopsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`readBack`](#readback), [`ReadBackParams`](#readbackparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`select`](#select), [`EntitySelection`](#entityselection)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setGizmo`](#setgizmo), [`SetGizmoParams`](#setgizmoparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`frame`](#frame), [`FrameParams`](#frameparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`pick`](#pick), [`PickParams`](#pickparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`screenshot`](#screenshot-1), [`ScreenshotParams`](#screenshotparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`getSchemas`](#getschemas), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`describeSettings`](#describesettings), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setViewMode`](#setviewmode), [`SetViewModeParams`](#setviewmodeparams)\>
+> **SceneRequest** = [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`openScene`](#openscene), [`OpenSceneParams`](#opensceneparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`closeScene`](#closescene), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`applyOps`](#applyops), [`ApplyOpsParams`](#applyopsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`readBack`](#readback), [`ReadBackParams`](#readbackparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`select`](#select), [`EntitySelection`](#entityselection)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setGizmo`](#setgizmo), [`SetGizmoParams`](#setgizmoparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`frame`](#frame), [`FrameParams`](#frameparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`pick`](#pick), [`PickParams`](#pickparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`screenshot`](#screenshot-1), [`ScreenshotParams`](#screenshotparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`getSchemas`](#getschemas), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`describeSettings`](#describesettings), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setViewMode`](#setviewmode), [`SetViewModeParams`](#setviewmodeparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setAnimateMaterials`](#setanimatematerials), [`SetAnimateMaterialsParams`](#setanimatematerialsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`getColliderOutlines`](#getcollideroutlines), [`EntitySelection`](#entityselection)\>
 
 Editor → scene host: one of the `SceneMethod`s. `closeScene`, `getSchemas` and `describeSettings`
 take no parameters.
@@ -3813,6 +3884,14 @@ Describes the project's settings sections and the values the app resolved for th
 
 Moves the editor camera to frame entities. Answers `null`.
 
+##### getColliderOutlines
+
+> `readonly` **getColliderOutlines**: `"getColliderOutlines"` = `"getColliderOutlines"`
+
+Outlines the colliders of entities of the open scene, as world-space line segments, for the
+editor's collider gizmos. Answers [ColliderOutlineSet](#collideroutlineset). A host from before it answers
+`RpcErrorCode.methodNotFound`. Additive in 0.3.
+
 ##### getSchemas
 
 > `readonly` **getSchemas**: `"getSchemas"` = `"getSchemas"`
@@ -3848,6 +3927,14 @@ Captures the view as an image. Needs `HostCapability.screenshot`. Answers [Scree
 > `readonly` **select**: `"select"` = `"select"`
 
 Sets the selection the view outlines and attaches the gizmo to. Answers [EntitySelection](#entityselection).
+
+##### setAnimateMaterials
+
+> `readonly` **setAnimateMaterials**: `"setAnimateMaterials"` = `"setAnimateMaterials"`
+
+Turns the editor's "animate materials" toggle on or off: whether the shader clock runs in the
+scene view. Answers `null`. The host starts with it on, after every load. A host from before it
+answers `RpcErrorCode.methodNotFound`. Additive in 0.3.
 
 ##### setGizmo
 
@@ -4188,6 +4275,51 @@ The received `params`.
 `value is AssetReloadedParams`
 
 True for `{ address, type, entities }` with a non-empty address and type.
+
+***
+
+### isColliderOutlineRecord()
+
+> **isColliderOutlineRecord**(`value`): `value is ColliderOutlineRecord`
+
+Checks one record of `getColliderOutlines`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The value to test.
+
+#### Returns
+
+`value is ColliderOutlineRecord`
+
+True for two uids, a boolean, and a list of finite numbers whose length is a multiple of
+six.
+
+***
+
+### isColliderOutlineSet()
+
+> **isColliderOutlineSet**(`value`): `value is ColliderOutlineSet`
+
+Checks the result of `getColliderOutlines`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `result`.
+
+#### Returns
+
+`value is ColliderOutlineSet`
+
+True for a list of outline records.
 
 ***
 
@@ -5013,6 +5145,28 @@ The received `result`.
 `value is ScreenshotResult`
 
 True for a PNG or JPEG data URL and sizes in range.
+
+***
+
+### isSetAnimateMaterialsParams()
+
+> **isSetAnimateMaterialsParams**(`value`): `value is SetAnimateMaterialsParams`
+
+Checks the parameters of `setAnimateMaterials`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `params`.
+
+#### Returns
+
+`value is SetAnimateMaterialsParams`
+
+True for a boolean `enabled`.
 
 ***
 

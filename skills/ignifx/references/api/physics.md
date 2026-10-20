@@ -4247,7 +4247,8 @@ The new acceleration vector, in metres per second squared.
 Whether at least one fixed step has completed, which is when Havok has built its broadphase and
 queries become legal (`09-physics.md` §5). A script that queries from `lateUpdate` or `update`
 checks this on the first frame, where the fixed loop may not have run yet, instead of catching
-`IGX-0902`.
+`IGX-0902`. An edit-mode app never steps, so this stays `false` there, and its queries answer
+anyway (ADR-0028, amendment of 2026-10-20).
 
 ###### Returns
 
@@ -4270,6 +4271,44 @@ The Babylon Lite handles.
 The Havok world and the simulation scene.
 
 #### Methods
+
+##### colliderOutlines()
+
+> **colliderOutlines**(`entity`): readonly [`ColliderOutline`](#collideroutline)[]
+
+The outlines of an entity's enabled colliders, as world-space line segments: what an editor
+draws as collider gizmos (ADR-0028, amendment of 2026-10-20).
+
+###### Parameters
+
+###### entity
+
+`Entity`
+
+The entity whose colliders to outline.
+
+###### Returns
+
+readonly [`ColliderOutline`](#collideroutline)[]
+
+One outline per enabled collider, in component order; empty when it has none.
+
+###### Remarks
+
+Each outline is built from the collider's fields, the entity's world pose, and its lossy scale,
+the same inputs Havok's shape is built from, so it works in any app, headless included, and
+before the first step. A box draws its edges; a sphere its three great circles; a capsule and a
+cylinder their end rings, sides, and (for a capsule) caps; a `HeightfieldCollider` the bounding
+box of its samples. A `MeshCollider` has no outline, because its triangles live on the GPU: its
+`lines` is empty, and an editor draws the mesh's own wireframe instead.
+
+###### Example
+
+```ts
+for (const outline of app.physics.colliderOutlines(selected)) {
+  drawLines(outline.lines, outline.isTrigger ? "orange" : "green");
+}
+```
 
 ##### dispose()
 
@@ -4322,7 +4361,8 @@ The distance, or `Number.POSITIVE_INFINITY` when nothing is in range.
 
 ###### Throws
 
-IgnifxError with code `IGX-0902` in development when no fixed step has run yet.
+IgnifxError with code `IGX-0902` in development when no fixed step has run yet, outside
+edit mode.
 
 ##### isDebugViewerEnabled()
 
@@ -4386,7 +4426,8 @@ does not is listed.
 
 ###### Throws
 
-IgnifxError with code `IGX-0902` in development when no fixed step has run yet.
+IgnifxError with code `IGX-0902` in development when no fixed step has run yet, outside
+edit mode.
 
 ##### raycast()
 
@@ -4434,7 +4475,8 @@ hit reports the character's entity with `collider: null`. A ray passes through a
 
 ###### Throws
 
-IgnifxError with code `IGX-0902` in development when no fixed step has run yet.
+IgnifxError with code `IGX-0902` in development when no fixed step has run yet, outside
+edit mode.
 
 ##### setDebugViewerEnabled()
 
@@ -4507,7 +4549,8 @@ without reporting them at fraction zero (2026-09-08).
 
 ###### Throws
 
-IgnifxError with code `IGX-0902` in development when no fixed step has run yet.
+IgnifxError with code `IGX-0902` in development when no fixed step has run yet, outside
+edit mode.
 
 ***
 
@@ -5776,6 +5819,34 @@ The entity that was pushed, or `null` when it is not an ignifx body.
 > `readonly` **point**: `Vec3Like`
 
 Where the impulse was applied.
+
+***
+
+### ColliderOutline
+
+One collider's outline, from `app.physics.colliderOutlines`: what an editor draws as a collider
+gizmo (ADR-0028, amendment of 2026-10-20).
+
+#### Properties
+
+##### collider
+
+> `readonly` **collider**: [`Collider`](#abstract-collider)
+
+The collider the outline is of.
+
+##### isTrigger
+
+> `readonly` **isTrigger**: `boolean`
+
+Whether the collider is a trigger, which an editor usually draws in another colour.
+
+##### lines
+
+> `readonly` **lines**: `Float32Array`
+
+The outline as world-space line segments: every six numbers are one segment, the `x, y, z` of
+its two ends, in metres.
 
 ***
 

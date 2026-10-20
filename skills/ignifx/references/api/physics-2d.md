@@ -3378,6 +3378,44 @@ The world.
 
 #### Methods
 
+##### colliderOutlines()
+
+> **colliderOutlines**(`entity`): readonly [`ColliderOutline2D`](#collideroutline2d)[]
+
+The outlines of an entity's 2D colliders, as world-space line segments: what an editor draws as
+collider gizmos (ADR-0028, amendment of 2026-10-20).
+
+###### Parameters
+
+###### entity
+
+`Entity`
+
+The entity whose colliders to outline.
+
+###### Returns
+
+readonly [`ColliderOutline2D`](#collideroutline2d)[]
+
+One outline per collider that produced a shape, in component order; empty when none.
+
+###### Remarks
+
+The segments are Rapier's own debug drawing of the colliders the entity's body is built from,
+so a polygon, an edge chain, a capsule, a one-way platform, and every piece of a
+`TilemapCollider2D` are outlined exactly. A body exists from the first fixed step in a game,
+and from the first frame or query in an edit-mode app, which keeps bodies on the transforms the
+editor moves; an entity without one (no enabled collider yet, or before that point) has no
+outline. A `CharacterController2D`'s own shape is not a collider and is not outlined.
+
+###### Example
+
+```ts
+for (const outline of app.physics2d.colliderOutlines(selected)) {
+  drawLines2D(outline.lines, outline.isTrigger ? "orange" : "green");
+}
+```
+
 ##### overlapBox()
 
 > **overlapBox**(`centre`, `size`, `rotation?`, `options?`): readonly `Entity`[]
@@ -3418,7 +3456,7 @@ The overlapping entities. The array is reused between calls.
 
 ###### Throws
 
-IgnifxError with code `IGX-1153` when no fixed step has run yet.
+IgnifxError with code `IGX-1153` when no fixed step has run yet, outside edit mode.
 
 ##### overlapCircle()
 
@@ -3454,7 +3492,7 @@ The overlapping entities, in Rapier's order. The array is reused between calls.
 
 ###### Throws
 
-IgnifxError with code `IGX-1153` when no fixed step has run yet.
+IgnifxError with code `IGX-1153` when no fixed step has run yet, outside edit mode.
 
 ##### raycast()
 
@@ -3496,7 +3534,7 @@ The hit, or `null` when the ray clears everything.
 
 ###### Throws
 
-IgnifxError with code `IGX-1153` when no fixed step has run yet.
+IgnifxError with code `IGX-1153` when no fixed step has run yet, outside edit mode.
 
 ##### raycastAll()
 
@@ -3538,7 +3576,7 @@ The hits, in increasing distance. The array is reused between calls.
 
 ###### Throws
 
-IgnifxError with code `IGX-1153` when no fixed step has run yet.
+IgnifxError with code `IGX-1153` when no fixed step has run yet, outside edit mode.
 
 ##### shapeCast()
 
@@ -3586,7 +3624,7 @@ The hit, or `null`.
 
 ###### Throws
 
-IgnifxError with code `IGX-1153` when no fixed step has run yet.
+IgnifxError with code `IGX-1153` when no fixed step has run yet, outside edit mode.
 
 ***
 
@@ -5115,8 +5153,9 @@ The merged chunk geometry this collider builds shapes from: the assigned data, o
 
 ###### Remarks
 
-Reading it works in an edit-mode app too, where no body is built (ADR-0028), so an editor can
-draw the outlines.
+Reading it works in any app, before any body is built. An edit-mode app also builds the body
+without stepping (ADR-0028, amendment of 2026-10-20), so `app.physics2d.colliderOutlines` draws
+the same outlines from Rapier.
 
 ###### Returns
 
@@ -5568,6 +5607,34 @@ The collider that was hit, or `null`.
 > `readonly` **point**: `Vec2Like`
 
 The world-space contact point.
+
+***
+
+### ColliderOutline2D
+
+One 2D collider's outline, from `app.physics2d.colliderOutlines`: what an editor draws as a
+collider gizmo (ADR-0028, amendment of 2026-10-20).
+
+#### Properties
+
+##### collider
+
+> `readonly` **collider**: [`Collider2D`](#abstract-collider2d)
+
+The collider the outline is of.
+
+##### isTrigger
+
+> `readonly` **isTrigger**: `boolean`
+
+Whether the collider is a trigger, which an editor usually draws in another colour.
+
+##### lines
+
+> `readonly` **lines**: `Float32Array`
+
+The outline as world-space line segments in the XY plane: every four numbers are one segment,
+the `x, y` of its two ends, in metres.
 
 ***
 

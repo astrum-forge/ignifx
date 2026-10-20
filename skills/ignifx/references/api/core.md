@@ -25486,6 +25486,28 @@ hit?.entity.name;
 
 #### Properties
 
+##### animateMaterialsInEditMode
+
+> **animateMaterialsInEditMode**: `boolean`
+
+Whether the shader clock runs in an edit-mode app (ADR-0028, amendment of 2026-10-20): an
+editor's "animate materials" toggle. `true` by default.
+
+###### Remarks
+
+The clock is the `time`, `unscaledTime` and `deltaTime` that shader materials and custom post
+effects declare. While this is `false` in an edit-mode app the clock stands still, as it does
+under `app.pause()`: `time` keeps its value, `deltaTime` is `0`, and setting it back to `true`
+resumes from there without a jump. The main-light and ambient uniforms stay live either way.
+Outside edit mode the value is ignored and the clock always runs.
+
+###### Example
+
+```ts
+const app = await createApp({ canvas, editMode: true });
+app.renderer.animateMaterialsInEditMode = false; // the editor's toggle is off
+```
+
 ##### drawCalls
 
 > `readonly` **drawCalls**: `number`
