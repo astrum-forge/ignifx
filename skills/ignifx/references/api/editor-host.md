@@ -2041,8 +2041,10 @@ The parameters of `sampleAnimation`.
 
 The host calls the engine's `Animator.sample(state, normalizedTime, { parameters })` on the
 entity's `Animator`. A time inside `[0, 1]` is used as given; outside it a looping state wraps
-and a one-shot state clamps. The pose is the state alone; nothing else about the animator
-changes, and in an edit-mode scene view it stays until the next sample. An entity the open scene
+and a one-shot state clamps. The state replaces its own layer and every other layer keeps its
+current pose; nothing else about the animator changes, and in an edit-mode scene view the pose
+stays until the next sample. Names are at most [SAMPLE\_ANIMATION\_MAX\_NAME\_LENGTH](#sample_animation_max_name_length) long and
+`parameters` holds at most [SAMPLE\_ANIMATION\_MAX\_PARAMETERS](#sample_animation_max_parameters) values. An entity the open scene
 lacks, or one without an `Animator`, is refused with `RpcErrorCode.invalidParams`, and so is
 whatever the engine refuses (an unknown state or parameter, an entity with no model to pose),
 with the engine's code as `data.code`.
@@ -3944,6 +3946,25 @@ The message was not valid JSON.
 
 ***
 
+### SAMPLE\_ANIMATION\_MAX\_NAME\_LENGTH
+
+> `const` **SAMPLE\_ANIMATION\_MAX\_NAME\_LENGTH**: `256` = `256`
+
+The longest `entity`, `state` or parameter name, in UTF-16 code units, one `sampleAnimation`
+request may carry. A request with a longer one fails with `invalidParams`. It also bounds the
+names an error message echoes back.
+
+***
+
+### SAMPLE\_ANIMATION\_MAX\_PARAMETERS
+
+> `const` **SAMPLE\_ANIMATION\_MAX\_PARAMETERS**: `64` = `64`
+
+The most parameter values one `sampleAnimation` request may carry. A request with more fails
+with `invalidParams`.
+
+***
+
 ### SceneMethod
 
 > `const` **SceneMethod**: `object`
@@ -4967,7 +4988,8 @@ The received `params`.
 `value is SampleAnimationParams`
 
 True for a uid, a state name, a finite time, and optional parameter values that are
-finite numbers or booleans.
+finite numbers or booleans, within [SAMPLE\_ANIMATION\_MAX\_NAME\_LENGTH](#sample_animation_max_name_length) and
+[SAMPLE\_ANIMATION\_MAX\_PARAMETERS](#sample_animation_max_parameters).
 
 ***
 
