@@ -1,6 +1,6 @@
 # ADR-0030 · Tile objects are authoring data
 
-**Status:** Proposed · **Date:** 2026-10-15 · **Deciders:** Astrum Forge Studios (owner)
+**Status:** Accepted (2026-10-20, ratified by the owner) · **Date:** 2026-10-15 · **Deciders:** Astrum Forge Studios (owner)
 
 ## Context
 
