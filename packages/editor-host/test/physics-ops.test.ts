@@ -5,7 +5,7 @@ import { SceneNotification } from "../src/protocol/index.js";
 import { startLiveHost } from "./support/scene-project.js";
 import type { Received } from "./support/editor.js";
 import type { LiveHost, Wire } from "./support/scene-project.js";
-import type { App, Extension, SceneFile } from "@ignifx/core";
+import type { App, Extension, JsonObject, SceneFile } from "@ignifx/core";
 
 /**
  * An inspector edit reaches the physics world (ADR-0028, amendment of 2026-10-20): `applyOps`
@@ -28,7 +28,7 @@ afterEach(async () => {
  * @param props - Its props.
  * @returns The file.
  */
-function padScene(type: string, props: Record<string, unknown>): SceneFile {
+function padScene(type: string, props: JsonObject): SceneFile {
   return {
     format: "ignifx.scene",
     formatVersion: 1,
@@ -39,10 +39,10 @@ function padScene(type: string, props: Record<string, unknown>): SceneFile {
         name: "Pad",
         parent: null,
         transform: { position: [0, 0, 0], rotation: [0, 0, 0, 1], scale: [1, 1, 1] },
-        components: [{ uid: "PAD-C", type, props: props as never }],
+        components: [{ uid: "PAD-C", type, props }],
       },
     ],
-  } as SceneFile;
+  };
 }
 
 /**
