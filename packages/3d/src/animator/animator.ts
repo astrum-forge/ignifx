@@ -280,9 +280,11 @@ export class Animator extends Component implements ComponentHooks {
    * (ADR-0028) or a held pose.
    *
    * @remarks
-   * The pose is the state alone at full weight; no other layer and no crossfade contributes, and
-   * the state's layer mask and additive setting still apply. A blend-tree state reads its
-   * parameter from `options.parameters` and otherwise from the animator's current value. A time
+   * The sampled state replaces its layer, at the layer's weight and with no crossfade; the layer's
+   * mask and additive setting still apply. Every other layer keeps contributing at its current
+   * weights and times, so a masked upper-body state shows over the base layer's pose and an
+   * additive state over the pose it adds to. A blend-tree state reads its parameter from
+   * `options.parameters` and otherwise from the animator's current value. A time
    * inside `[0, 1]` is used as given; outside it, a looping state wraps (`1.25` → `0.25`) and a
    * one-shot state clamps.
    *

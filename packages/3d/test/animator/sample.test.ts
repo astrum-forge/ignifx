@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { AnimatorAsset } from "../../src/animator/animator-asset.js";
 import { Animator } from "../../src/animator/animator.js";
 import { ANIMATOR_ASSET_TYPE } from "../../src/animator/definition.js";
+import { defineAnimator } from "../../src/animator/definition.js";
 import { AnimatorStateMachine } from "../../src/animator/state-machine.js";
 import { ThreeDErrorCode } from "../../src/errors.js";
 import { heroAnimator } from "../support/animator-fixture.js";
@@ -104,6 +105,43 @@ describe("AnimatorStateMachine.sample", () => {
     machine.drainStateChanges(changes);
     expect(events).toEqual([]);
     expect(changes).toEqual([]);
+  });
+
+  it("replaces only the sampled state's layer; every other layer keeps its current pose", () => {
+    const machine = new AnimatorStateMachine(
+      defineAnimator(
+        {
+          layers: [
+            { name: "Base", weight: 1, defaultState: "walk" },
+            { name: "Upper", weight: 0.5, additive: true, mask: ["torso"], maskMode: "include", defaultState: "aim" },
+          ],
+          states: [
+            { name: "walk", clip: "walk", layer: "Base" },
+            { name: "idle", clip: "idle", layer: "Base" },
+            { name: "aim", clip: "aim", layer: "Upper" },
+            { name: "wave", clip: "wave", layer: "Upper" },
+          ],
+        },
+        "test/layers.animator.json",
+      ),
+    );
+    for (const clip of ["walk", "idle", "aim", "wave"]) {
+      machine.setClipLength(clip, 1);
+    }
+    machine.advance(0.25);
+
+    const upper = machine.sample("wave", 0.5);
+    expect(summary(upper)).toEqual(["walk@1.00/0.25", "wave@0.50/0.50"]);
+    expect(upper.find((clip) => clip.clip === "wave")).toMatchObject({ additive: true, layer: "Upper" });
+
+    expect(summary(machine.sample("idle", 0.75))).toEqual(["idle@1.00/0.75", "aim@0.50/0.25"]);
+  });
+
+  it("rebuilds one list in place, so a sample without parameters allocates no new array", () => {
+    const machine = heroMachine();
+    const first = machine.sample("jump", 0.25);
+    expect(machine.sample("jump", 0.75)).toBe(first);
+    expect(summary(first)).toEqual(["jump@1.00/0.75"]);
   });
 
   it("refuses a non-finite time, an unknown state and a bad parameter value", () => {
