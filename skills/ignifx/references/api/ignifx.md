@@ -89459,7 +89459,7 @@ Devtools, logging, and diagnostics.
 
 > `readonly` **editorHost**: `"18"`
 
-The editor host (`@ignifx/editor-host`) and its Vite plugin.
+The editor host package and its Vite plugin.
 
 ##### extensions
 
