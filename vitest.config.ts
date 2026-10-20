@@ -59,6 +59,7 @@ const NODE_EXCLUDE = ["**/*.browser.test.ts", "**/node_modules/**", "**/dist/**"
  */
 const ISOLATED = [
   "packages/core/test/render/rebuild-serialisation.test.ts",
+  "packages/core/test/assets/texture-loader-routing.test.ts",
   // Everything that imports `test/support/electron-mock.ts`.
   "packages/electron/test/**/*.test.ts",
 ];
