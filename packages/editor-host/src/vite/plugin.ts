@@ -20,6 +20,7 @@ import {
   RESOLVED_EDITOR_ENTRY_MODULE_ID,
   RESOLVED_EDITOR_MODULE_ID,
 } from "./modules.js";
+import { createPrivateDirGuard, realPathOrSelf } from "./private-dir.js";
 import type { ConfigEnv, Plugin, ViteDevServer } from "vite";
 
 /**
@@ -117,7 +118,10 @@ function checkOptions(options: EditorHostPluginOptions): { extensions: string; h
  *   `optimizeDeps.entries` (keeping Vite's default crawl) and keeps `@ignifx/editor-host` out of
  *   pre-bundling, so the host reaches the same pre-bundled `@ignifx/core` as the game.
  * - `ignifx-editor-host:play-controls` (every command) serves `virtual:ignifx/editor`: the play
- *   controls under `vite dev`, an empty function under `vite build`.
+ *   controls under `vite dev`, an empty function under `vite build`. Under `vite dev` and
+ *   `vite preview` it also answers 404 to any request into `.ignifx/`, the editor's private
+ *   directory, by path or through a symbolic link, as `ignifx()` does; this covers a config that
+ *   lists this plugin without `ignifx()`.
  *
  * List it after `ignifx()` from `@ignifx/vite-plugin`, which serves the two modules the scene
  * view imports.
@@ -268,6 +272,28 @@ export function editorHostPlugin(options: EditorHostPluginOptions): Plugin[] {
       root = resolvedConfig.root;
       command = resolvedConfig.command;
       engineVersion = readProjectEngineVersion(root);
+    },
+
+    // Defence in depth for a config without `ignifx()`, whose guard otherwise keeps `.ignifx/` (the
+    // editor's MCP token) off the server; registered in the hook body, ahead of Vite's file serving.
+    configureServer(server) {
+      const realRoot = realPathOrSelf(server.config.root);
+      const { publicDir } = server.config;
+      server.middlewares.use(
+        createPrivateDirGuard(() => ({
+          realRoot,
+          base: server.config.base,
+          serveDirs: publicDir === "" ? [server.config.root] : [server.config.root, publicDir],
+        })),
+      );
+    },
+
+    configurePreviewServer(server) {
+      const realRoot = realPathOrSelf(server.config.root);
+      const outDir = resolve(server.config.root, server.config.build.outDir);
+      server.middlewares.use(
+        createPrivateDirGuard(() => ({ realRoot, base: server.config.base, serveDirs: [outDir] })),
+      );
     },
 
     resolveId(id) {
