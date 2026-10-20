@@ -1,6 +1,6 @@
 ---
 name: editor-host
-description: Connects an ignifx project to the ignifx editor with @ignifx/editor-host: the Vite plugin that serves the editor's scene view from the project's own dev server, the virtual:ignifx/editor play controls a game's main.ts hands its app to (play, pause, step, stop, playState, playStateChanged, playStats), and the host half of the editor protocol 0.3 over a MessagePort (hello/ready, heartbeat, and the scene document methods openScene, applyOps, readBack, select, pick, frame, setGizmo, setViewMode, screenshot, getSchemas, describeSettings, setAnimateMaterials, getColliderOutlines), including the 2D view mode (an editor Camera2D and app.twoD.pickAt picking). Use when wiring a project or template for the editor, when the user mentions @ignifx/editor-host, editorHostPlugin, attachEditorPlayControls, virtual:ignifx/editor, startEditorHost or /__ignifx_editor__/, or when debugging why the editor cannot connect to a view or why the scene view disagrees with the editor's document.
+description: Connects an ignifx project to the ignifx editor with @ignifx/editor-host: the Vite plugin that serves the editor's scene view from the project's own dev server, the virtual:ignifx/editor play controls a game's main.ts hands its app to (play, pause, step, stop, playState, playStateChanged, playStats), and the host half of the editor protocol 0.3 over a MessagePort (hello/ready, heartbeat, and the scene document methods openScene, applyOps, readBack, select, pick, frame, setGizmo, setViewMode, screenshot, getSchemas, describeSettings, setAnimateMaterials, getColliderOutlines, sampleAnimation), including the 2D view mode (an editor Camera2D and app.twoD.pickAt picking). Use when wiring a project or template for the editor, when the user mentions @ignifx/editor-host, editorHostPlugin, attachEditorPlayControls, virtual:ignifx/editor, startEditorHost or /__ignifx_editor__/, or when debugging why the editor cannot connect to a view or why the scene view disagrees with the editor's document.
 license: Apache-2.0
 metadata:
   ignifx-version: "0.10.0"
@@ -68,7 +68,7 @@ each view ◀── MessagePort ──▶ editor     JSON-RPC 2.0, protocol 0.3
    connect (window message, origin-checked) → hello → ready → ping/pong, heartbeat
    scene view: schemasChanged → openScene → applyOps… / readBack / select / pick / frame / setGizmo / screenshot
                / setViewMode / getSchemas / describeSettings (on request only)
-               / setAnimateMaterials / getColliderOutlines
+               / setAnimateMaterials / getColliderOutlines / sampleAnimation
                ← sceneOpened, selectionChanged, transformDragging/Dragged, hotReloaded, assetReloaded,
                  hostError, log
    play view:  play / pause / step / stop / playState / playStats
@@ -325,6 +325,12 @@ object `openScene` sends, through `world.loadSceneFile`; `readBack` answers with
   tilemaps, and `pick` and clicks use `app.twoD.pickAt` (unpickable sprites included): a hit's
   `point` is on `z = 0` and its `distance` is `null`. The host finds `app.twoD` and the 2D classes
   by name, so a project without `@ignifx/2d` still gets an orthographic 2D view of its meshes.
+- **A pose on demand.** `sampleAnimation { entity, state, normalizedTime, parameters? }` calls
+  `Animator.sample` on the entity's `Animator` and answers `{ posed }`; the edit-mode view keeps
+  the pose until the next sample. `posed` is `false` while the clips load, and always headless. An
+  entity without an `Animator`, or an engine refusal such as an unknown state (`data.code`
+  `IGX-1202`), is `invalidParams`. The host finds `ignifx/Animator` by type id, so a project
+  without `@ignifx/3d` simply has none.
 - **Settings over the protocol.** `describeSettings` answers `{ sections, values }`: core's
   `describeSettings(app)` with each section's `settingsJsonSchema` entry as `propsSchema`, and the
   values the app resolved, in the settings form (`{ x, y, z }`, `{ r, g, b, a }`). No notification

@@ -42,6 +42,7 @@ import { DocumentMirror } from "./document.js";
 import { EditorCamera2D, EYE_DISTANCE_2D } from "./editor-camera-2d.js";
 import { EDITOR_CAMERA_FOV, EditorCamera } from "./editor-camera.js";
 import { applyOps, reloadInstance } from "./ops.js";
+import { sampleAnimation } from "./sample-animation.js";
 import { schemaSet } from "./schemas.js";
 import { encodeCapture } from "./screenshot.js";
 import { settingsSet } from "./settings.js";
@@ -217,6 +218,7 @@ export class SceneHost {
       [SceneMethod.setViewMode, (params) => this.#setViewMode(params)],
       [SceneMethod.setAnimateMaterials, (params) => this.#setAnimateMaterials(params)],
       [SceneMethod.getColliderOutlines, (params) => this.#getColliderOutlines(params)],
+      [SceneMethod.sampleAnimation, (params) => this.#sampleAnimation(params)],
     ]);
     if (has(HostCapability.gizmos)) {
       methods.set(SceneMethod.setGizmo, (params) => this.#setGizmo(params));
@@ -713,6 +715,18 @@ export class SceneHost {
     this.#requireOpen(SceneMethod.getColliderOutlines);
     const index = mirror.index();
     return colliderOutlinesOf(this.#requireApp(), params.entities, (uid) => index?.entities.get(uid));
+  }
+
+  /**
+   * `sampleAnimation`: poses an entity's `Animator` at one point of one state.
+   *
+   * @param params - `{ entity, state, normalizedTime, parameters? }`.
+   * @returns `{ posed }`.
+   */
+  #sampleAnimation(params: unknown): unknown {
+    const mirror = this.#requireMirror(SceneMethod.sampleAnimation);
+    this.#requireOpen(SceneMethod.sampleAnimation);
+    return sampleAnimation(this.#requireApp(), mirror, params);
   }
 
   /**

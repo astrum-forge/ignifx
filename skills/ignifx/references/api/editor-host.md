@@ -2033,6 +2033,64 @@ What the method returned.
 
 ***
 
+### SampleAnimationParams
+
+The parameters of `sampleAnimation`.
+
+#### Remarks
+
+The host calls the engine's `Animator.sample(state, normalizedTime, { parameters })` on the
+entity's `Animator`. A time inside `[0, 1]` is used as given; outside it a looping state wraps
+and a one-shot state clamps. The pose is the state alone; nothing else about the animator
+changes, and in an edit-mode scene view it stays until the next sample. An entity the open scene
+lacks, or one without an `Animator`, is refused with `RpcErrorCode.invalidParams`, and so is
+whatever the engine refuses (an unknown state or parameter, an entity with no model to pose),
+with the engine's code as `data.code`.
+
+#### Properties
+
+##### entity
+
+> `readonly` **entity**: `string`
+
+The uid of the document entity whose `Animator` is posed.
+
+##### normalizedTime
+
+> `readonly` **normalizedTime**: `number`
+
+How far into the state, where `0` is its start and `1` its end.
+
+##### parameters?
+
+> `readonly` `optional` **parameters?**: `Readonly`\<`Record`\<`string`, `number` \| `boolean`\>\>
+
+Parameter values this sample reads instead of the animator's own, by name: a number for a
+`float` or `int`, a boolean for a `bool`. A blend-tree state reads its parameter here first.
+
+##### state
+
+> `readonly` **state**: `string`
+
+The state's name in the animator document.
+
+***
+
+### SampleAnimationResult
+
+The answer to `sampleAnimation`.
+
+#### Properties
+
+##### posed
+
+> `readonly` **posed**: `boolean`
+
+Whether the pose was written. `false` while the animator document or the model's clips are
+still loading, and always in a headless host; the editor may send the request again later.
+
+***
+
 ### SceneFile
 
 A whole scene or prefab file. The engine's `SceneFile`.
@@ -3174,6 +3232,14 @@ The result on success.
 
 ***
 
+### SampleAnimationResponse
+
+> **SampleAnimationResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<[`SampleAnimationResult`](#sampleanimationresult)\>
+
+The success answer to `sampleAnimation`.
+
+***
+
 ### SceneHostNotification
 
 > **SceneHostNotification** = [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`sceneOpened`](#sceneopened), [`SceneOpenedParams`](#sceneopenedparams)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`schemasChanged`](#schemaschanged), [`SchemaSet`](#schemaset)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`hotReloaded`](#hotreloaded-1), [`HotReloadedParams`](#hotreloadedparams)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`selectionChanged`](#selectionchanged), [`EntitySelection`](#entityselection)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`transformDragging`](#transformdragging), [`TransformDraggingParams`](#transformdraggingparams)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`transformDragged`](#transformdragged), [`TransformDraggedParams`](#transformdraggedparams)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`hostError`](#hosterror-1), [`HostErrorParams`](#hosterrorparams)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`log`](#log-1), [`LogParams`](#logparams)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`assetReloaded`](#assetreloaded), [`AssetReloadedParams`](#assetreloadedparams)\>
@@ -3216,7 +3282,7 @@ The union of the names in `SceneOpKind`.
 
 ### SceneRequest
 
-> **SceneRequest** = [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`openScene`](#openscene), [`OpenSceneParams`](#opensceneparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`closeScene`](#closescene), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`applyOps`](#applyops), [`ApplyOpsParams`](#applyopsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`readBack`](#readback), [`ReadBackParams`](#readbackparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`select`](#select), [`EntitySelection`](#entityselection)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setGizmo`](#setgizmo), [`SetGizmoParams`](#setgizmoparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`frame`](#frame), [`FrameParams`](#frameparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`pick`](#pick), [`PickParams`](#pickparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`screenshot`](#screenshot-1), [`ScreenshotParams`](#screenshotparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`getSchemas`](#getschemas), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`describeSettings`](#describesettings), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setViewMode`](#setviewmode), [`SetViewModeParams`](#setviewmodeparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setAnimateMaterials`](#setanimatematerials), [`SetAnimateMaterialsParams`](#setanimatematerialsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`getColliderOutlines`](#getcollideroutlines), [`EntitySelection`](#entityselection)\>
+> **SceneRequest** = [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`openScene`](#openscene), [`OpenSceneParams`](#opensceneparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`closeScene`](#closescene), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`applyOps`](#applyops), [`ApplyOpsParams`](#applyopsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`readBack`](#readback), [`ReadBackParams`](#readbackparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`select`](#select), [`EntitySelection`](#entityselection)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setGizmo`](#setgizmo), [`SetGizmoParams`](#setgizmoparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`frame`](#frame), [`FrameParams`](#frameparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`pick`](#pick), [`PickParams`](#pickparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`screenshot`](#screenshot-1), [`ScreenshotParams`](#screenshotparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`getSchemas`](#getschemas), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`describeSettings`](#describesettings), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setViewMode`](#setviewmode), [`SetViewModeParams`](#setviewmodeparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setAnimateMaterials`](#setanimatematerials), [`SetAnimateMaterialsParams`](#setanimatematerialsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`getColliderOutlines`](#getcollideroutlines), [`EntitySelection`](#entityselection)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`sampleAnimation`](#sampleanimation), [`SampleAnimationParams`](#sampleanimationparams)\>
 
 Editor → scene host: one of the `SceneMethod`s. `closeScene`, `getSchemas` and `describeSettings`
 take no parameters.
@@ -3942,6 +4008,14 @@ Asks which entity is under a point of the view, without selecting it. Answers [P
 > `readonly` **readBack**: `"readBack"` = `"readBack"`
 
 Serializes entities of the open scene as the live world has them. Answers [ReadBackResult](#readbackresult).
+
+##### sampleAnimation
+
+> `readonly` **sampleAnimation**: `"sampleAnimation"` = `"sampleAnimation"`
+
+Poses an entity's `Animator` at one point of one state without playing it (engine ADR-0028,
+amendment 2026-10-20). Answers [SampleAnimationResult](#sampleanimationresult). A host from before it answers
+`RpcErrorCode.methodNotFound`. Additive in 0.3.
 
 ##### screenshot
 
@@ -4871,6 +4945,51 @@ A value parsed from JSON or received through `postMessage`.
 `value is RpcMessage`
 
 True when `value` is a well-formed JSON-RPC 2.0 message with a known error code, if any.
+
+***
+
+### isSampleAnimationParams()
+
+> **isSampleAnimationParams**(`value`): `value is SampleAnimationParams`
+
+Checks the parameters of `sampleAnimation`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `params`.
+
+#### Returns
+
+`value is SampleAnimationParams`
+
+True for a uid, a state name, a finite time, and optional parameter values that are
+finite numbers or booleans.
+
+***
+
+### isSampleAnimationResult()
+
+> **isSampleAnimationResult**(`value`): `value is SampleAnimationResult`
+
+Checks the result of `sampleAnimation`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `result`.
+
+#### Returns
+
+`value is SampleAnimationResult`
+
+True for `{ posed: boolean }`.
 
 ***
 

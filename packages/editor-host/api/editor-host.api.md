@@ -454,6 +454,12 @@ export function isReadyResult(value: unknown): value is ReadyResult;
 export function isRpcMessage(value: unknown): value is RpcMessage;
 
 // @public
+export function isSampleAnimationParams(value: unknown): value is SampleAnimationParams;
+
+// @public
+export function isSampleAnimationResult(value: unknown): value is SampleAnimationResult;
+
+// @public
 export function isSceneFile(value: unknown): value is SceneFile;
 
 // @public
@@ -821,6 +827,22 @@ export interface RpcSuccessResponse<R = unknown> {
 }
 
 // @public
+export interface SampleAnimationParams {
+    readonly entity: string;
+    readonly normalizedTime: number;
+    readonly parameters?: Readonly<Record<string, number | boolean>>;
+    readonly state: string;
+}
+
+// @public
+export type SampleAnimationResponse = RpcSuccessResponse<SampleAnimationResult>;
+
+// @public
+export interface SampleAnimationResult {
+    readonly posed: boolean;
+}
+
+// @public
 export interface SceneFile {
     readonly engineVersion?: string;
     readonly entities: readonly SceneFileEntity[];
@@ -911,6 +933,7 @@ export const SceneMethod: {
     readonly setViewMode: "setViewMode";
     readonly setAnimateMaterials: "setAnimateMaterials";
     readonly getColliderOutlines: "getColliderOutlines";
+    readonly sampleAnimation: "sampleAnimation";
 };
 
 // @public
@@ -965,7 +988,7 @@ export const SceneOpKind: {
 export type SceneOpKind = (typeof SceneOpKind)[keyof typeof SceneOpKind];
 
 // @public
-export type SceneRequest = RpcRequestWithParams<typeof SceneMethod.openScene, OpenSceneParams> | RpcRequest<typeof SceneMethod.closeScene, never> | RpcRequestWithParams<typeof SceneMethod.applyOps, ApplyOpsParams> | RpcRequestWithParams<typeof SceneMethod.readBack, ReadBackParams> | RpcRequestWithParams<typeof SceneMethod.select, EntitySelection> | RpcRequestWithParams<typeof SceneMethod.setGizmo, SetGizmoParams> | RpcRequestWithParams<typeof SceneMethod.frame, FrameParams> | RpcRequestWithParams<typeof SceneMethod.pick, PickParams> | RpcRequestWithParams<typeof SceneMethod.screenshot, ScreenshotParams> | RpcRequest<typeof SceneMethod.getSchemas, never> | RpcRequest<typeof SceneMethod.describeSettings, never> | RpcRequestWithParams<typeof SceneMethod.setViewMode, SetViewModeParams> | RpcRequestWithParams<typeof SceneMethod.setAnimateMaterials, SetAnimateMaterialsParams> | RpcRequestWithParams<typeof SceneMethod.getColliderOutlines, EntitySelection>;
+export type SceneRequest = RpcRequestWithParams<typeof SceneMethod.openScene, OpenSceneParams> | RpcRequest<typeof SceneMethod.closeScene, never> | RpcRequestWithParams<typeof SceneMethod.applyOps, ApplyOpsParams> | RpcRequestWithParams<typeof SceneMethod.readBack, ReadBackParams> | RpcRequestWithParams<typeof SceneMethod.select, EntitySelection> | RpcRequestWithParams<typeof SceneMethod.setGizmo, SetGizmoParams> | RpcRequestWithParams<typeof SceneMethod.frame, FrameParams> | RpcRequestWithParams<typeof SceneMethod.pick, PickParams> | RpcRequestWithParams<typeof SceneMethod.screenshot, ScreenshotParams> | RpcRequest<typeof SceneMethod.getSchemas, never> | RpcRequest<typeof SceneMethod.describeSettings, never> | RpcRequestWithParams<typeof SceneMethod.setViewMode, SetViewModeParams> | RpcRequestWithParams<typeof SceneMethod.setAnimateMaterials, SetAnimateMaterialsParams> | RpcRequestWithParams<typeof SceneMethod.getColliderOutlines, EntitySelection> | RpcRequestWithParams<typeof SceneMethod.sampleAnimation, SampleAnimationParams>;
 
 // @public
 export interface SchemaDescription {

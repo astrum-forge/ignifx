@@ -1639,6 +1639,62 @@
         "entityCount": 3,
         "frameCount": 1
       }
+    },
+    "sampleAnimation": {
+      "jsonrpc": "2.0",
+      "id": 29,
+      "method": "sampleAnimation",
+      "params": {
+        "entity": "01M4ZEB9E0GG0Q6R22YXV3AVK8",
+        "state": "jump",
+        "normalizedTime": 0.5
+      }
+    },
+    "sampleAnimationResponse": {
+      "jsonrpc": "2.0",
+      "id": 29,
+      "result": {
+        "posed": true
+      }
+    },
+    "sampleAnimationBlend": {
+      "jsonrpc": "2.0",
+      "id": 30,
+      "method": "sampleAnimation",
+      "params": {
+        "entity": "01M4ZEB9E0GG0Q6R22YXV3AVK8",
+        "state": "locomotion",
+        "normalizedTime": 0.25,
+        "parameters": {
+          "speed": 4
+        }
+      }
+    },
+    "sampleAnimationLoadingResponse": {
+      "jsonrpc": "2.0",
+      "id": 30,
+      "result": {
+        "posed": false
+      }
+    },
+    "sampleAnimationNoAnimator": {
+      "jsonrpc": "2.0",
+      "id": 29,
+      "error": {
+        "code": -32602,
+        "message": "The entity 01M4ZEB9E0GG0Q6R22YXV3AVK8 has no Animator to sample."
+      }
+    },
+    "sampleAnimationUnknownState": {
+      "jsonrpc": "2.0",
+      "id": 29,
+      "error": {
+        "code": -32602,
+        "message": "IGX-1202: The animator declares no state named jump. [state=jump] Hint: Check the state names in the .animator.json document.",
+        "data": {
+          "code": "IGX-1202"
+        }
+      }
     }
   }
 }
