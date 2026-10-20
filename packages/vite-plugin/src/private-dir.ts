@@ -198,6 +198,8 @@ export interface PrivateDirGuardOptions {
   readonly base: string;
   /** The directories a root-relative URL is served from: the root and `publicDir` in dev, `outDir` in preview. */
   readonly serveDirs: readonly string[];
+  /** `resolve.alias`, which Vite's static middleware applies to request paths in dev; `[]` in preview. */
+  readonly alias: readonly { readonly find: string | RegExp; readonly replacement: string }[];
 }
 
 /** The `/@fs/` prefix Vite serves absolute paths under, and `/@id/` for unresolved ids. */
@@ -221,6 +223,15 @@ function candidateFiles(path: string, options: PrivateDirGuardOptions): string[]
   const candidates: string[] = [];
   for (const form of forms) {
     const relativeForms = [form];
+    // Vite's static middleware rewrites a path the first alias matches and serves it from the root.
+    const alias = options.alias.find(({ find }) =>
+      typeof find === "string" ? form.startsWith(find) : find.test(form),
+    );
+    if (alias !== undefined) {
+      const redirected = form.replace(alias.find, alias.replacement);
+      candidates.push(redirected);
+      relativeForms.push(redirected);
+    }
     for (const prefix of [FS_PREFIX, ID_PREFIX]) {
       if (form.startsWith(prefix)) {
         const rest = form.slice(prefix.length);
@@ -243,10 +254,10 @@ function candidateFiles(path: string, options: PrivateDirGuardOptions): string[]
  *
  * @remarks
  * For the second, it maps the URL to the files Vite could serve for it (root, `publicDir` or
- * `outDir`, `/@fs/` and `/@id/` absolute paths, with and without `base`) and checks each with
- * {@link isPrivateRealPath}. A missing file is judged by its deepest existing ancestor, so a path
- * Vite would complete with an extension is covered when the link is a directory; the plugin's
- * `load` hook covers the rest.
+ * `outDir`, `/@fs/` and `/@id/` absolute paths, with and without `base`, and the path a
+ * `resolve.alias` entry rewrites it to) and checks each with {@link isPrivateRealPath}. A missing
+ * file is judged by its deepest existing ancestor, so a path Vite would complete with an extension
+ * is covered when the link is a directory; the plugin's `load` hook covers the rest.
  *
  * @param options - Returns the server's directories; read per request, as they are only known once
  * the config is resolved.

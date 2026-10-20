@@ -234,6 +234,42 @@ describe.skipIf(linksUnsupported)("vite dev with a base refuses links into .igni
   });
 });
 
+describe.skipIf(linksUnsupported)("vite dev with resolve.alias refuses an alias to a link into .ignifx/", () => {
+  it("refuses aliased paths, string and RegExp, and still serves an ordinary alias", async () => {
+    const root = await linkedProject({ "src/link": "../.ignifx" });
+    const server = await createServer({
+      root,
+      configFile: false,
+      logLevel: "silent",
+      resolve: {
+        alias: [
+          { find: "/al", replacement: join(root, "src", "link") },
+          { find: /^\/rx\//u, replacement: "/src/link/" },
+          { find: "/ok", replacement: join(root, "src") },
+        ],
+      },
+      server: { host: "127.0.0.1", port: 0, strictPort: false, ws: false },
+      plugins: [ignifx()],
+    });
+    await server.listen();
+    try {
+      const port = portOf(server);
+      const paths = [
+        "/al/mcp.json",
+        "/al/mcp.json?raw",
+        "/al/mcp.json?import",
+        "/al/mcp",
+        "/rx/mcp.json",
+        "/rx/mcp.json?raw",
+      ];
+      expect(await leaks(port, paths)).toEqual([]);
+      expect((await rawGet(port, "/ok/main.ts")).status).toBe(200);
+    } finally {
+      await server.close();
+    }
+  });
+});
+
 describe.skipIf(linksUnsupported)("vite build keeps .ignifx/ out of dist", () => {
   it("skips an asset-root link into .ignifx/ with a warning", async () => {
     const root = await linkedProject({ "assets/tok.json": "../.ignifx/mcp.json", "assets/dir": "../.ignifx" });

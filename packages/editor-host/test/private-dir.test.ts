@@ -176,6 +176,26 @@ describe("vite dev with editorHostPlugin() and no ignifx()", () => {
   });
 });
 
+describe.skipIf(linksUnsupported)("editorHostPlugin() alone with resolve.alias", () => {
+  it("refuses an alias to a link into .ignifx/", async () => {
+    const root = await project();
+    const server = await createServer({
+      root,
+      configFile: false,
+      logLevel: "silent",
+      resolve: { alias: [{ find: "/al", replacement: join(root, "src", "link") }] },
+      server: { host: "127.0.0.1", port: 0, strictPort: false, ws: false },
+      plugins: [editorHostPlugin({ editorOrigin: EDITOR_ORIGIN })],
+    });
+    await server.listen();
+    try {
+      expect(await leaks(portOf(server), ["/al/mcp.json", "/al/mcp.json?raw", "/al/mcp"])).toEqual([]);
+    } finally {
+      await server.close();
+    }
+  });
+});
+
 describe.skipIf(linksUnsupported)("editorHostPlugin() alone in a build", () => {
   it("fails a build whose code imports the token through a link (the load hook)", async () => {
     const root = await project();

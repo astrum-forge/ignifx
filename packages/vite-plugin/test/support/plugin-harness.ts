@@ -60,6 +60,7 @@ export class FakeDevServer {
     root: "",
     base: "/",
     publicDir: "",
+    resolve: { alias: [] },
     logger: {
       info: (message: string): void => {
         this.logs.push({ level: "info", message });

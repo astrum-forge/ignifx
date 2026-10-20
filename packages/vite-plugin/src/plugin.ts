@@ -869,6 +869,7 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
           realRoot: realRootPath(),
           base: server.config.base,
           serveDirs: servedPublicDir === "" ? [server.config.root] : [server.config.root, servedPublicDir],
+          alias: server.config.resolve.alias,
         })),
       );
       installMiddleware(server);
@@ -894,7 +895,12 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
     configurePreviewServer(server) {
       const outDir = resolve(server.config.root, server.config.build.outDir);
       server.middlewares.use(
-        createPrivateDirGuard(() => ({ realRoot: realRootPath(), base: server.config.base, serveDirs: [outDir] })),
+        createPrivateDirGuard(() => ({
+          realRoot: realRootPath(),
+          base: server.config.base,
+          serveDirs: [outDir],
+          alias: [],
+        })),
       );
     },
 
