@@ -37,6 +37,8 @@ import {
   isReadBackParams,
   isReadBackResult,
   isRpcMessage,
+  isSampleAnimationParams,
+  isSampleAnimationResult,
   isSceneOpenedParams,
   isSchemaSet,
   isScreenshotParams,
@@ -188,6 +190,8 @@ const PARAMS_GUARDS: Readonly<Record<string, (value: unknown) => boolean>> = {
   assetReloadedModel: isAssetReloadedParams,
   playStateChanged: isPlayStateReport,
   playStateChangedStopped: isPlayStateReport,
+  sampleAnimation: isSampleAnimationParams,
+  sampleAnimationBlend: isSampleAnimationParams,
 };
 
 /** Each result guard, by the fixture messages it checks. */
@@ -209,6 +213,8 @@ const RESULT_GUARDS: Readonly<Record<string, (value: unknown) => boolean>> = {
   playStateResponse: isPlayStateReport,
   playStatsResponse: isPlayStats,
   playStatsStoppedResponse: isPlayStats,
+  sampleAnimationResponse: isSampleAnimationResult,
+  sampleAnimationLoadingResponse: isSampleAnimationResult,
 };
 
 describe("the editor's 0.3 wire fixture, through the host's guards", () => {

@@ -86,6 +86,12 @@ export const SceneMethod = {
    * `RpcErrorCode.methodNotFound`. Additive in 0.3.
    */
   getColliderOutlines: "getColliderOutlines",
+  /**
+   * Poses an entity's `Animator` at one point of one state without playing it (engine ADR-0028,
+   * amendment 2026-10-20). Answers {@link SampleAnimationResult}. A host from before it answers
+   * `RpcErrorCode.methodNotFound`. Additive in 0.3.
+   */
+  sampleAnimation: "sampleAnimation",
 } as const;
 
 /**
@@ -171,6 +177,23 @@ export const COLLIDER_OUTLINES_MAX_ENTITIES = 256;
  * @public
  */
 export const COLLIDER_OUTLINES_MAX_NUMBERS = 600_000;
+
+/**
+ * The most parameter values one `sampleAnimation` request may carry. A request with more fails
+ * with `invalidParams`.
+ *
+ * @public
+ */
+export const SAMPLE_ANIMATION_MAX_PARAMETERS = 64;
+
+/**
+ * The longest `entity`, `state` or parameter name, in UTF-16 code units, one `sampleAnimation`
+ * request may carry. A request with a longer one fails with `invalidParams`. It also bounds the
+ * names an error message echoes back.
+ *
+ * @public
+ */
+export const SAMPLE_ANIMATION_MAX_NAME_LENGTH = 256;
 
 /**
  * A world-space point, `[x, y, z]`, in metres.
@@ -781,6 +804,49 @@ export interface ColliderOutlineSet {
 }
 
 /**
+ * The parameters of `sampleAnimation`.
+ *
+ * @remarks
+ * The host calls the engine's `Animator.sample(state, normalizedTime, { parameters })` on the
+ * entity's `Animator`. A time inside `[0, 1]` is used as given; outside it a looping state wraps
+ * and a one-shot state clamps. The state replaces its own layer and every other layer keeps its
+ * current pose; nothing else about the animator changes, and in an edit-mode scene view the pose
+ * stays until the next sample. Names are at most {@link SAMPLE_ANIMATION_MAX_NAME_LENGTH} long and
+ * `parameters` holds at most {@link SAMPLE_ANIMATION_MAX_PARAMETERS} values. An entity the open scene
+ * lacks, or one without an `Animator`, is refused with `RpcErrorCode.invalidParams`, and so is
+ * whatever the engine refuses (an unknown state or parameter, an entity with no model to pose),
+ * with the engine's code as `data.code`.
+ *
+ * @public
+ */
+export interface SampleAnimationParams {
+  /** The uid of the document entity whose `Animator` is posed. */
+  readonly entity: string;
+  /** The state's name in the animator document. */
+  readonly state: string;
+  /** How far into the state, where `0` is its start and `1` its end. */
+  readonly normalizedTime: number;
+  /**
+   * Parameter values this sample reads instead of the animator's own, by name: a number for a
+   * `float` or `int`, a boolean for a `bool`. A blend-tree state reads its parameter here first.
+   */
+  readonly parameters?: Readonly<Record<string, number | boolean>>;
+}
+
+/**
+ * The answer to `sampleAnimation`.
+ *
+ * @public
+ */
+export interface SampleAnimationResult {
+  /**
+   * Whether the pose was written. `false` while the animator document or the model's clips are
+   * still loading, and always in a headless host; the editor may send the request again later.
+   */
+  readonly posed: boolean;
+}
+
+/**
  * The parameters of `sceneOpened`.
  *
  * @public
@@ -1024,7 +1090,8 @@ export type SceneRequest =
   | RpcRequest<typeof SceneMethod.describeSettings, never>
   | RpcRequestWithParams<typeof SceneMethod.setViewMode, SetViewModeParams>
   | RpcRequestWithParams<typeof SceneMethod.setAnimateMaterials, SetAnimateMaterialsParams>
-  | RpcRequestWithParams<typeof SceneMethod.getColliderOutlines, EntitySelection>;
+  | RpcRequestWithParams<typeof SceneMethod.getColliderOutlines, EntitySelection>
+  | RpcRequestWithParams<typeof SceneMethod.sampleAnimation, SampleAnimationParams>;
 
 /**
  * The success answer of the `SceneMethod`s that return nothing: `closeScene`, `setGizmo`, `frame`,
@@ -1096,6 +1163,13 @@ export type DescribeSettingsResponse = RpcSuccessResponse<SettingsSet>;
  * @public
  */
 export type ColliderOutlinesResponse = RpcSuccessResponse<ColliderOutlineSet>;
+
+/**
+ * The success answer to `sampleAnimation`.
+ *
+ * @public
+ */
+export type SampleAnimationResponse = RpcSuccessResponse<SampleAnimationResult>;
 
 /**
  * Scene host → editor: one of the `SceneNotification`s.
@@ -1582,6 +1656,70 @@ export function isColliderOutlineRecord(value: unknown): value is ColliderOutlin
  */
 export function isColliderOutlineSet(value: unknown): value is ColliderOutlineSet {
   return isRecord(value) && isArrayOf(value["outlines"], isColliderOutlineRecord) && isBoolean(value["truncated"]);
+}
+
+/**
+ * Checks the parameters of `sampleAnimation`.
+ *
+ * @param value - The received `params`.
+ * @returns True for a uid, a state name, a finite time, and optional parameter values that are
+ * finite numbers or booleans, within {@link SAMPLE_ANIMATION_MAX_NAME_LENGTH} and
+ * {@link SAMPLE_ANIMATION_MAX_PARAMETERS}.
+ *
+ * @public
+ */
+export function isSampleAnimationParams(value: unknown): value is SampleAnimationParams {
+  return (
+    isRecord(value) &&
+    isUidString(value["entity"]) &&
+    isBoundedName(value["entity"]) &&
+    isBoundedName(value["state"]) &&
+    isFiniteNumber(value["normalizedTime"]) &&
+    optionalField(value, "parameters", isSampleParameters)
+  );
+}
+
+/**
+ * Tells whether a value is a string no longer than {@link SAMPLE_ANIMATION_MAX_NAME_LENGTH}.
+ *
+ * @param value - The value to test.
+ * @returns True for such a string.
+ */
+function isBoundedName(value: unknown): value is string {
+  return isString(value) && value.length <= SAMPLE_ANIMATION_MAX_NAME_LENGTH;
+}
+
+/**
+ * Checks the `parameters` of `sampleAnimation`.
+ *
+ * @param value - The value to test.
+ * @returns True for at most {@link SAMPLE_ANIMATION_MAX_PARAMETERS} bounded names, each with a
+ * finite number or a boolean.
+ */
+function isSampleParameters(value: unknown): boolean {
+  if (!isRecord(value)) {
+    return false;
+  }
+  const names = Object.keys(value);
+  return (
+    names.length <= SAMPLE_ANIMATION_MAX_PARAMETERS &&
+    names.every((name) => {
+      const entry = value[name];
+      return name.length <= SAMPLE_ANIMATION_MAX_NAME_LENGTH && (isFiniteNumber(entry) || isBoolean(entry));
+    })
+  );
+}
+
+/**
+ * Checks the result of `sampleAnimation`.
+ *
+ * @param value - The received `result`.
+ * @returns True for `{ posed: boolean }`.
+ *
+ * @public
+ */
+export function isSampleAnimationResult(value: unknown): value is SampleAnimationResult {
+  return isRecord(value) && isBoolean(value["posed"]);
 }
 
 /**

@@ -34,6 +34,7 @@ import { AnimatorMaskMode } from '@ignifx/3d';
 import { AnimatorParameterDefinition } from '@ignifx/3d';
 import { AnimatorParameterKind } from '@ignifx/3d';
 import { AnimatorPlayOptions } from '@ignifx/3d';
+import { AnimatorSampleOptions } from '@ignifx/3d';
 import { AnimatorStateDefinition } from '@ignifx/3d';
 import { AnimatorStateMachine } from '@ignifx/3d';
 import { AnimatorTransitionDefinition } from '@ignifx/3d';
@@ -179,6 +180,7 @@ import { CircleCollider2D } from '@ignifx/physics-2d';
 import { clamp } from '@ignifx/core';
 import { clamp01 } from '@ignifx/core';
 import { clearOverrides } from '@ignifx/input';
+import { ClipSample } from '@ignifx/3d';
 import { ClipWeight } from '@ignifx/3d';
 import { Clock } from '@ignifx/core';
 import { collectOverrides } from '@ignifx/input';
@@ -1594,6 +1596,8 @@ export { AnimatorParameterKind }
 
 export { AnimatorPlayOptions }
 
+export { AnimatorSampleOptions }
+
 export { AnimatorStateDefinition }
 
 export { AnimatorStateMachine }
@@ -1883,6 +1887,8 @@ export { clamp }
 export { clamp01 }
 
 export { clearOverrides }
+
+export { ClipSample }
 
 export { ClipWeight }
 

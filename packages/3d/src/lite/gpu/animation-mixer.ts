@@ -116,7 +116,12 @@ export class AnimatorMixer {
       // Setting `isPlaying` alone leaves the internal stopped flag set, and every clip but the
       // first is silently never posed. Measured against 1.27.0 in the browser suite.
       playAnimation(group);
-      group.loopAnimation = true;
+      // Not looping: the state machine owns wrapping and writes a playhead already in range. A
+      // looping group would wrap `(t - start) % duration` again, so a playhead at the very end (a
+      // one-shot clip finished or sampled at 1) would show the first key instead of the last
+      // (`weighted-gltf-mixer.js` `advanceGroupTime`, `skeleton-updater.js` 149, Lite 1.34.0). A
+      // group that does not loop is clamped to its end instead.
+      group.loopAnimation = false;
       group.weight = 0;
       this.#groups.set(group.name, group);
       this.#claimed.push(group);
@@ -139,6 +144,16 @@ export class AnimatorMixer {
    */
   get clipNames(): readonly string[] {
     return [...this.#groups.keys()];
+  }
+
+  /**
+   * Whether this mixer drives a clip: the model declares it and no other animator holds it.
+   *
+   * @param clip - The animation-group name.
+   * @returns `true` when the clip can be posed.
+   */
+  has(clip: string): boolean {
+    return this.#groups.has(clip);
   }
 
   /**

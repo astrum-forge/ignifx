@@ -882,6 +882,72 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 [`Component`](#abstract-component).[`requireComponent`](#requirecomponent-16)
 
+##### sample()
+
+> **sample**(`state`, `normalizedTime`, `options?`): `boolean`
+
+Poses the model at one point of one state, at once, without playing it: an editor's preview
+(ADR-0028) or a held pose.
+
+###### Parameters
+
+###### state
+
+`string`
+
+The state's name.
+
+###### normalizedTime
+
+`number`
+
+How far into the state, where `0` is its start and `1` its end.
+
+###### options?
+
+[`AnimatorSampleOptions`](#animatorsampleoptions)
+
+Parameter values for this sample only.
+
+###### Returns
+
+`boolean`
+
+`true` when the pose was written in full; `false` while the document or the model's
+clips are still loading, when the model lacks a clip the state names or another `Animator`
+holds it (the rest of the pose is still written), and always under a headless app, which has
+nothing to pose. The arguments are checked either way once the document has loaded.
+
+###### Remarks
+
+The sampled state replaces its layer, at the layer's weight and with no crossfade; the layer's
+mask and additive setting still apply. Every other layer keeps contributing at its current
+weights and times, so a masked upper-body state shows over the base layer's pose and an
+additive state over the pose it adds to. A blend-tree state reads its parameter from
+`options.parameters` and otherwise from the animator's current value. A time
+inside `[0, 1]` is used as given; outside it, a looping state wraps (`1.25` → `0.25`) and a
+one-shot state clamps.
+
+Sampling changes only the pose. The state machine keeps its states, times, parameters and
+triggers, and no `onEvent`, `onStateEntered` or `onStateExited` fires. In an edit-mode app the
+animation system does not run, so the pose stays until the next `sample`. In a playing app it
+lasts until the animation system next advances this animator, which writes the machine's own
+pose again: call it from `lateUpdate`, or while the animator is paused or disabled, to see it.
+
+###### Throws
+
+IgnifxError with code `IGX-1215` when the entity has no `Model`, its `Model` names no
+file, or the loaded file has no clips; `IGX-1216` when `normalizedTime` or a parameter value is
+not a finite number; `IGX-1202` when the state is not declared; `IGX-1203` or `IGX-1204` when a
+parameter value names no parameter or does not fit its kind.
+
+###### Example
+
+```ts
+animator.sample("jump", 0.5);
+animator.sample("locomotion", 0.25, { parameters: { speed: 4 } });
+```
+
 ##### setBool()
 
 > **setBool**(`name`, `value`): `void`
@@ -1474,6 +1540,64 @@ The parameter's name.
 ###### Returns
 
 `void`
+
+##### sample()
+
+> **sample**(`state`, `normalizedTime`, `options?`): readonly [`ClipSample`](#clipsample)[]
+
+The pose with one state at one point, without changing the machine.
+
+###### Parameters
+
+###### state
+
+`string`
+
+The state's name.
+
+###### normalizedTime
+
+`number`
+
+How far into the state, where `0` is its start and `1` its end.
+
+###### options?
+
+[`AnimatorSampleOptions`](#animatorsampleoptions)
+
+Parameter values for this sample only.
+
+###### Returns
+
+readonly [`ClipSample`](#clipsample)[]
+
+The clips of every layer, with their weights and playheads. The list is rebuilt in
+place by the next call; copy it to keep it.
+
+###### Remarks
+
+This is the headless half of [Animator.sample](#sample). The sampled state replaces its layer: at
+the layer's weight, with no crossfade, every clip's playhead at the sample's time. Every other
+layer contributes as the machine has it now, at its current weights and times, so a masked
+upper-body state shows over the base layer's pose and an additive state over the pose it adds
+to. A blend tree in the sampled state reads its parameter from `options.parameters` and
+otherwise from the machine. A time inside `[0, 1]` is used as given; outside it, a looping state
+wraps (`1.25` → `0.25`) and a one-shot state clamps. The machine's states, cursors, parameters,
+triggers, events and [AnimatorStateMachine.clips](#clips) are left as they were, and nothing is
+queued for [AnimatorStateMachine.drainEvents](#drainevents) or
+[AnimatorStateMachine.drainStateChanges](#drainstatechanges).
+
+###### Throws
+
+IgnifxError with code `IGX-1216` when `normalizedTime` or a parameter value is not a
+finite number, `IGX-1202` when the state is not declared, `IGX-1203` when a parameter is not
+declared, or `IGX-1204` when a value does not fit its parameter's kind or names a trigger.
+
+###### Example
+
+```ts
+const clips = machine.sample("locomotion", 0.5, { parameters: { speed: 4 } });
+```
 
 ##### setBool()
 
@@ -43732,7 +43856,7 @@ The clip being played.
 
 ###### Implementation of
 
-[`SoundInstance`](#soundinstance).[`clip`](#clip-6)
+[`SoundInstance`](#soundinstance).[`clip`](#clip-7)
 
 #### Accessors
 
@@ -63645,6 +63769,23 @@ How long to crossfade for, in seconds. `0` — the default — cuts.
 
 ***
 
+### AnimatorSampleOptions
+
+What [AnimatorStateMachine.sample](#sample-1) and [Animator.sample](#sample) accept.
+
+#### Properties
+
+##### parameters?
+
+> `readonly` `optional` **parameters?**: `Readonly`\<`Record`\<`string`, `number` \| `boolean`\>\>
+
+Parameter values this one sample reads instead of the machine's own, by name. A blend-tree
+state reads its parameter from here first and from the machine's current value otherwise.
+Nothing is written back: the next sample or frame reads the machine's values again. A `float`
+or `int` takes a number (an `int` is truncated towards zero), a `bool` a boolean.
+
+***
+
 ### AnimatorStateDefinition
 
 One state of one layer.
@@ -66912,9 +67053,81 @@ Two floats per vertex: the terrain-wide `0..1` coordinate.
 
 ***
 
+### ClipSample
+
+One clip of a sampled pose, as [AnimatorStateMachine.sample](#sample-1) returns it.
+
+#### Extends
+
+- [`ClipWeight`](#clipweight)
+
+#### Properties
+
+##### additive
+
+> `readonly` **additive**: `boolean`
+
+Whether the clip belongs to an additive layer.
+
+###### Inherited from
+
+[`ClipWeight`](#clipweight).[`additive`](#additive-2)
+
+##### clip
+
+> `readonly` **clip**: `string`
+
+The animation-group name.
+
+###### Inherited from
+
+[`ClipWeight`](#clipweight).[`clip`](#clip-5)
+
+##### layer
+
+> `readonly` **layer**: `string`
+
+The layer the clip came from, so the adapter can find the mask.
+
+###### Inherited from
+
+[`ClipWeight`](#clipweight).[`layer`](#layer-4)
+
+##### normalizedTime
+
+> `readonly` **normalizedTime**: `number`
+
+Where the clip's playhead sits, in `[0, 1]` of its own length.
+
+##### speed
+
+> `readonly` **speed**: `number`
+
+The playback rate to set on the group.
+
+###### Inherited from
+
+[`ClipWeight`](#clipweight).[`speed`](#speed-4)
+
+##### weight
+
+> `readonly` **weight**: `number`
+
+How much of the pose it contributes, before Lite normalizes anything.
+
+###### Inherited from
+
+[`ClipWeight`](#clipweight).[`weight`](#weight-3)
+
+***
+
 ### ClipWeight
 
 One clip's contribution to the pose this frame.
+
+#### Extended by
+
+- [`ClipSample`](#clipsample)
 
 #### Properties
 
@@ -84898,7 +85111,7 @@ export default defineConfig({
 > `readonly` **layers**: readonly `string`[]
 
 The layers created eagerly, back to front. Declaring them here is what makes their stacking
-order independent of the order the game happens to call [UiHost.layer](#layer-17) in.
+order independent of the order the game happens to call [UiHost.layer](#layer-18) in.
 
 ##### referenceResolution
 
@@ -93055,6 +93268,12 @@ A `.animator.json` file is not an `ignifx.animator` document this build can read
 
 A `LodGroup` level names a renderer that is not under the group's entity.
 
+##### invalidSample
+
+> `readonly` **invalidSample**: `"IGX-1216"`
+
+`Animator.sample` was given a normalized time or a parameter value that is not a finite number.
+
 ##### navigationNotReady
 
 > `readonly` **navigationNotReady**: `"IGX-1205"`
@@ -93072,6 +93291,12 @@ The Recast WebAssembly module could not be loaded at all.
 > `readonly` **noMainCamera**: `"IGX-1211"`
 
 A rig needs the main camera and the world has none enabled.
+
+##### nothingToPose
+
+> `readonly` **nothingToPose**: `"IGX-1215"`
+
+`Animator.sample` was called on an entity with no `Model`, or a `Model` whose file has no clips.
 
 ##### obstaclesNotEnabled
 
