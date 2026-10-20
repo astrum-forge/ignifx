@@ -1,5 +1,19 @@
 # @ignifx/vite-plugin
 
+## 0.11.0
+
+### Minor Changes
+
+- 3b5b8ed: Serve and bundle the Babylon Lite KTX2 and meshopt decoders that `@ignifx/core` publishes, so a packaged game with `script-src 'self'` loads `.ktx2` textures and meshopt-compressed glTF without `cdn.babylonjs.com`.
+
+### Patch Changes
+
+- 8ee8a2f: Keep the editor-private `.ignifx/` directory out of `vite build` output and off `vite dev` and `vite preview` when reached through a symbolic link or a copy in `publicDir`; such a build now fails with `IGX-0556`.
+- Updated dependencies [2964d6e]
+- Updated dependencies [fac8cc9]
+- Updated dependencies [3b5b8ed]
+  - @ignifx/core@0.11.0
+
 ## 0.10.0
 
 ### Minor Changes

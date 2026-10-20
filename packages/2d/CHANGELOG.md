@@ -1,5 +1,14 @@
 # @ignifx/2d
 
+## 0.11.0
+
+### Patch Changes
+
+- Updated dependencies [2964d6e]
+- Updated dependencies [fac8cc9]
+- Updated dependencies [3b5b8ed]
+  - @ignifx/core@0.11.0
+
 ## 0.10.0
 
 ### Minor Changes

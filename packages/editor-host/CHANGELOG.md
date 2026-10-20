@@ -1,5 +1,24 @@
 # @ignifx/editor-host
 
+## 0.11.0
+
+### Minor Changes
+
+- fac8cc9: Add the `ComponentHooks.onValidate(fields)` hook, which the editor host calls after an inspector edit or a hot-reload default changes a component's fields; colliders, rigidbodies and character controllers rebuild their body there.
+- 52dcdc8: Add the scene view's `setAnimateMaterials` and `getColliderOutlines` methods, additive in protocol 0.3: the editor's "animate materials" toggle, and world-space collider outlines from the project's physics extensions for its collider gizmos.
+- 4b7d654: Add the `sampleAnimation { entity, state, normalizedTime, parameters? }` scene method, which poses an entity's `Animator` through `Animator.sample` and answers `{ posed }`; it is additive within protocol 0.3, and an older host answers `methodNotFound`.
+
+### Patch Changes
+
+- 429d305: `editorHostPlugin()` now answers 404 to requests into the editor-private `.ignifx/` directory under `vite dev` and `vite preview`, by path or through a symbolic link, even in a Vite config without `ignifx()`.
+- Updated dependencies [2964d6e]
+- Updated dependencies [fac8cc9]
+- Updated dependencies [3b5b8ed]
+- Updated dependencies [3b5b8ed]
+- Updated dependencies [8ee8a2f]
+  - @ignifx/core@0.11.0
+  - @ignifx/vite-plugin@0.11.0
+
 ## 0.10.0
 
 ### Minor Changes
