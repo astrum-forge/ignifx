@@ -561,8 +561,10 @@ It is two plugins, because the two halves run under different commands:
 - `ignifx-editor-host:play-controls` (every command) serves `virtual:ignifx/editor`: the play
   controls under `vite dev`, an empty function under `vite build`. Under `vite dev` and
   `vite preview` it also answers 404 to any request into `.ignifx/`, the editor's private
-  directory, by path or through a symbolic link, as `ignifx()` does; this covers a config that
-  lists this plugin without `ignifx()`.
+  directory, by path or through a symbolic link, as `ignifx()` does; under `vite build` it fails
+  the build, after removing them, when the output holds a `.ignifx` directory or a copy of a
+  `publicDir` file that links into one. This covers a config that lists this plugin without
+  `ignifx()`.
 
 List it after `ignifx()` from `@ignifx/vite-plugin`, which serves the two modules the scene
 view imports.

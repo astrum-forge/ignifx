@@ -5,7 +5,7 @@
 
 import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { isAbsolute, join, resolve } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { EditorHostErrorCode, isEditorOrigin } from "../error-codes.js";
 import { EditorHostPluginError } from "./errors.js";
 import {
@@ -20,7 +20,13 @@ import {
   RESOLVED_EDITOR_ENTRY_MODULE_ID,
   RESOLVED_EDITOR_MODULE_ID,
 } from "./modules.js";
-import { createPrivateDirGuard, isPrivateRealPath, realPathOrSelf } from "./private-dir.js";
+import {
+  createPrivateDirGuard,
+  findPrivateOutputs,
+  isPrivateRealPath,
+  realPathOrSelf,
+  removePrivateOutputs,
+} from "./private-dir.js";
 import type { ConfigEnv, Plugin, ViteDevServer } from "vite";
 
 /**
@@ -120,8 +126,10 @@ function checkOptions(options: EditorHostPluginOptions): { extensions: string; h
  * - `ignifx-editor-host:play-controls` (every command) serves `virtual:ignifx/editor`: the play
  *   controls under `vite dev`, an empty function under `vite build`. Under `vite dev` and
  *   `vite preview` it also answers 404 to any request into `.ignifx/`, the editor's private
- *   directory, by path or through a symbolic link, as `ignifx()` does; this covers a config that
- *   lists this plugin without `ignifx()`.
+ *   directory, by path or through a symbolic link, as `ignifx()` does; under `vite build` it fails
+ *   the build, after removing them, when the output holds a `.ignifx` directory or a copy of a
+ *   `publicDir` file that links into one. This covers a config that lists this plugin without
+ *   `ignifx()`.
  *
  * List it after `ignifx()` from `@ignifx/vite-plugin`, which serves the two modules the scene
  * view imports.
@@ -152,6 +160,7 @@ export function editorHostPlugin(options: EditorHostPluginOptions): Plugin[] {
   let base = "/";
   let command: ConfigEnv["command"] = "serve";
   let engineVersion: string | null = null;
+  let copiedPublicDir: string | null = null;
 
   const extensionsFile = (): string => resolve(root, `.${extensions}`);
   // Only the editor may put either view in a frame; any other page that tries is blocked. A tab the
@@ -272,6 +281,8 @@ export function editorHostPlugin(options: EditorHostPluginOptions): Plugin[] {
       root = resolvedConfig.root;
       command = resolvedConfig.command;
       engineVersion = readProjectEngineVersion(root);
+      const { publicDir } = resolvedConfig;
+      copiedPublicDir = resolvedConfig.build.copyPublicDir && publicDir !== "" ? publicDir : null;
     },
 
     // Defence in depth for a config without `ignifx()`, whose guard otherwise keeps `.ignifx/` (the
@@ -322,6 +333,26 @@ export function editorHostPlugin(options: EditorHostPluginOptions): Plugin[] {
         );
       }
       return null;
+    },
+
+    // As `ignifx()` does: Vite copies `publicDir` into the output whole, dot-directories and link
+    // targets included, so `public/tok.json -> ../.ignifx/mcp.json` would ship the MCP token.
+    async writeBundle(output) {
+      const outDir = output.dir ?? (output.file === undefined ? null : dirname(output.file));
+      if (outDir === null) {
+        return;
+      }
+      const leaked = await findPrivateOutputs(outDir, copiedPublicDir);
+      if (leaked.length === 0) {
+        return;
+      }
+      await removePrivateOutputs(leaked);
+      this.error(
+        "The build output held files from the editor-private .ignifx/ directory, which holds the " +
+          `editor's MCP token: ${leaked.map((path) => relative(outDir, path)).join(", ")}. They were ` +
+          "removed and the build failed. Move .ignifx/ out of publicDir and remove any link into it " +
+          "from publicDir.",
+      );
     },
   };
 
