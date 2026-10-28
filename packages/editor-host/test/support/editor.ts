@@ -2,7 +2,7 @@ import { EDITOR_CONNECT_MESSAGE_TYPE, JSON_RPC_VERSION, PROTOCOL_VERSION } from 
 import type { ProtocolVersion } from "../../src/protocol/index.js";
 
 /** The origin the tests' editor is served from. */
-export const EDITOR_ORIGIN = "ignifx://app";
+export const EDITOR_ORIGIN = "ignifx-editor://app";
 
 /** A received message, as a loose record the tests read fields from. */
 export type Received = Readonly<Record<string, unknown>>;

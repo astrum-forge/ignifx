@@ -18,7 +18,7 @@ import type { InlineConfig, Rollup, ViteDevServer } from "vite";
 
 afterAll(disposeFixtures);
 
-const EDITOR_ORIGIN = "ignifx://app";
+const EDITOR_ORIGIN = "ignifx-editor://app";
 
 /**
  * Starts a dev server over a fixture project.

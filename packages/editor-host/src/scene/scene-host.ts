@@ -286,7 +286,14 @@ export class SceneHost {
       this.#view = view;
       this.#applyGizmo();
       const onClick = (click: ViewClick): void => {
-        void this.#onClick(click);
+        this.#onClick(click).catch((error: unknown) => {
+          const params: HostErrorParams = {
+            code: isIgnifxError(error) ? error.code : null,
+            message: clipHostText(`Selecting what a click in the view hit: ${messageOf(error)}`),
+            data: { x: click.x, y: click.y },
+          };
+          this.#notify(SceneNotification.hostError, params);
+        });
       };
       for (const camera of [this.#camera, this.#camera2D]) {
         if (camera !== null) {

@@ -2,7 +2,8 @@
  * Keeps `.ignifx/` off every server the plugin runs in and out of every build. The ignifx editor
  * writes per-project private state there, among it `.ignifx/mcp.json` with the bearer token of the
  * project's MCP server, and Vite's CORS lets any `http://localhost:*` page read what the dev server
- * answers.
+ * answers. `@ignifx/editor-host` keeps a copy (`src/vite/private-dir.ts`), byte-identical below the
+ * header comment; its test fails when the two differ, so change both together.
  */
 
 import { existsSync, realpathSync } from "node:fs";
