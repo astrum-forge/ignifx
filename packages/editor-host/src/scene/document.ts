@@ -5,7 +5,7 @@
  * the editor's objects never are (protocol 0.3, "Document uids only").
  */
 
-import { decodeProps, serializeScene } from "@ignifx/core";
+import { canonicalizeNumber, decodeProps, parseOverridePath, serializeScene } from "@ignifx/core";
 import { countEntities } from "../play-stats.js";
 import type { OpenSceneResult, ReadBackParams, ReadBackResult, SceneIssue } from "../protocol/index.js";
 import type {
@@ -19,6 +19,7 @@ import type {
   SceneFile,
   SceneFileComponent,
   SceneFileEntity,
+  SceneFileInstance,
   SceneFileOverride,
   SceneInstance,
   UidRemap,
@@ -90,6 +91,61 @@ export function validateFields(component: Component, fields: readonly string[]):
   }
 }
 
+/**
+ * An override in the form the scene file writes it, which editor-core's document holds: an op
+ * sent as `{ op: "replace" }` or a transform value with more than six decimals still reads back
+ * as the document has it.
+ *
+ * @param override - The override as an op or a file carried it.
+ * @returns The canonical override.
+ */
+function canonicalOverride(override: SceneFileOverride): SceneFileOverride {
+  const op = override.op ?? "replace";
+  const value = op === "remove" ? undefined : canonicalOverrideValue(override.path, override.value);
+  return {
+    ...(op === "replace" ? {} : { op }),
+    path: override.path,
+    ...(value === undefined ? {} : { value }),
+  };
+}
+
+/**
+ * A transform override's value with each number canonical; any other value as it is.
+ *
+ * @param path - The override's path.
+ * @param value - Its value.
+ * @returns The value to keep.
+ */
+function canonicalOverrideValue(path: string, value: JsonValue | undefined): JsonValue | undefined {
+  const list: unknown = value;
+  if (!Array.isArray(list) || !isTransformPath(path)) {
+    return value;
+  }
+  const items: readonly unknown[] = list;
+  const numbers: number[] = [];
+  for (const item of items) {
+    if (typeof item !== "number") {
+      return value;
+    }
+    numbers.push(canonicalizeNumber(item));
+  }
+  return numbers;
+}
+
+/**
+ * Whether an override path names a transform field.
+ *
+ * @param path - The path.
+ * @returns `false` too for a path the engine's grammar refuses.
+ */
+function isTransformPath(path: string): boolean {
+  try {
+    return parseOverridePath(path).kind === "transform";
+  } catch {
+    return false;
+  }
+}
+
 /** The live mirror of the editor's open scene document. */
 export class DocumentMirror {
   readonly #app: App;
@@ -116,6 +172,13 @@ export class DocumentMirror {
    * that changed a default reads every stale member value as an override.
    */
   readonly #overrides = new Map<string, readonly SceneFileOverride[]>();
+
+  /**
+   * Each instance root's overrides as the serializer read them right after the host built the root,
+   * as JSON text, by root uid. While the serializer still reads the same, the members are as the
+   * document's list built them, and `readBack` writes that list.
+   */
+  readonly #builtAs = new Map<string, string>();
 
   /** Assets loaded for ops, held until the document closes. */
   readonly #handles: AssetHandle[] = [];
@@ -210,6 +273,7 @@ export class DocumentMirror {
     this.#index = null;
     this.#explicit.clear();
     this.#overrides.clear();
+    this.#builtAs.clear();
     if (scene !== null) {
       await this.#app.world.unloadScene(scene);
     }
@@ -279,27 +343,43 @@ export class DocumentMirror {
   }
 
   /**
-   * Records the override lists of the instance roots among some entity records.
+   * Records the override lists of the instance roots among some entity records the host has just
+   * built, and what the serializer reads from those roots now, before anything else can change
+   * their members.
    *
    * @param records - The records, as a file or an op carries them.
    */
   recordInstances(records: readonly SceneFileEntity[]): void {
-    for (const record of records) {
-      if (record.instance !== undefined) {
-        this.recordOverrides(record.uid, record.instance.overrides ?? []);
+    const roots = records.filter((record) => record.instance !== undefined);
+    for (const record of roots) {
+      this.recordOverrides(record.uid, record.instance?.overrides ?? []);
+    }
+    if (roots.length === 0) {
+      return;
+    }
+    this.#index = null;
+    const index = this.index();
+    for (const record of roots) {
+      const read = index?.records.get(record.uid)?.instance;
+      if (read === undefined) {
+        this.#builtAs.delete(record.uid);
+      } else {
+        this.#builtAs.set(record.uid, JSON.stringify(read.overrides ?? []));
       }
     }
   }
 
   /**
-   * Records an instance root's override list.
+   * Records an instance root's override list, each override in the form the scene file writes and
+   * editor-core's document holds: no `op` for a `replace`, no value for a `remove`, and a
+   * transform's numbers canonical.
    *
    * @param uid - The root's uid.
    * @param overrides - The list.
    */
   recordOverrides(uid: string, overrides: readonly SceneFileOverride[]): void {
     // A copy, so the list never shares an object with the editor's message.
-    this.#overrides.set(uid, structuredClone(overrides));
+    this.#overrides.set(uid, structuredClone(overrides).map(canonicalOverride));
   }
 
   /**
@@ -334,6 +414,13 @@ export class DocumentMirror {
   /**
    * Serializes the requested entities as the live world has them (protocol `readBack`).
    *
+   * @remarks
+   * An instance root's overrides are the list the document holds, in its order, while the
+   * serializer still reads its members as they were built from that list. The serializer's own
+   * list is a diff in file order that writes an added component whole and leaves out an override
+   * equal to the instanced scene's value, so it never equals the document's; it is written instead
+   * once the members read differently, so a change the document did not make still shows.
+   *
    * @param params - The uids to read, or none for all.
    * @returns The records in file order, the uids not found, the settings, and the serializer's issues.
    */
@@ -345,7 +432,9 @@ export class DocumentMirror {
     const requested = params.entities;
     const wanted = requested === undefined ? null : new Set(requested);
     return {
-      entities: index.file.entities.filter((record) => wanted === null || wanted.has(record.uid)),
+      entities: index.file.entities
+        .filter((record) => wanted === null || wanted.has(record.uid))
+        .map((record) => this.#withDocumentOverrides(record)),
       missing: requested === undefined ? [] : [...new Set(requested)].filter((uid) => !index.records.has(uid)),
       settings: index.file.settings ?? null,
       issues: index.issues,
@@ -390,6 +479,28 @@ export class DocumentMirror {
         return handle !== null && handle.state === "loaded" && (type === null || handle.type === type) ? handle : null;
       },
     };
+  }
+
+  /**
+   * An entity's record with the document's override list, when it is an instance root whose
+   * members still read as they were built from that list.
+   *
+   * @param record - The record as the serializer wrote it.
+   * @returns The record to read back.
+   */
+  #withDocumentOverrides(record: SceneFileEntity): SceneFileEntity {
+    const read = record.instance;
+    const listed = this.#overrides.get(record.uid);
+    const built = this.#builtAs.get(record.uid);
+    if (read === undefined || listed === undefined || JSON.stringify(read.overrides ?? []) !== built) {
+      return record;
+    }
+    const instance: SceneFileInstance = {
+      scene: read.scene,
+      ...(read.hash === undefined ? {} : { hash: read.hash }),
+      ...(listed.length === 0 ? {} : { overrides: structuredClone(listed) }),
+    };
+    return { ...record, instance };
   }
 
   /**

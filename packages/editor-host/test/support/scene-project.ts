@@ -74,12 +74,36 @@ export const CRATE_PREFAB: SceneFile = {
   ],
 };
 
+/** A prefab with two roots, each with a `game/CrateBody`: its instances have no single root. */
+export const PAIR_PREFAB: SceneFile = {
+  format: "ignifx.scene",
+  formatVersion: 1,
+  name: "Pair",
+  entities: [
+    {
+      uid: "01M4XQ7K3N8V2D5R0B6G1HT9X0",
+      name: "Left",
+      parent: null,
+      transform: { position: [-1, 0, 0], rotation: [0, 0, 0, 1], scale: [1, 1, 1] },
+      components: [{ uid: "01M4XQ7K3N8V2D5R0B6G1HT9X1", type: "game/CrateBody", props: { mass: 1 } }],
+    },
+    {
+      uid: "01M4XQ7K3N8V2D5R0B6G1HT9X2",
+      name: "Right",
+      parent: null,
+      transform: { position: [1, 0, 0], rotation: [0, 0, 0, 1], scale: [1, 1, 1] },
+      components: [{ uid: "01M4XQ7K3N8V2D5R0B6G1HT9X3", type: "game/CrateBody", props: { mass: 1 } }],
+    },
+  ],
+};
+
 /** A boot scene, which a test can hold back to keep the app from starting. */
 export const BOOT_SCENE = "scenes/boot.scene.json";
 
 /** The project's files, by address. */
 const FILES: Readonly<Record<string, string | Uint8Array<ArrayBuffer>>> = {
   "prefabs/crate.prefab.json": stringifySceneFile(CRATE_PREFAB),
+  "prefabs/pair.prefab.json": stringifySceneFile(PAIR_PREFAB),
   "meshes/ground.mesh.json": JSON.stringify({
     format: "ignifx.mesh",
     formatVersion: 1,
