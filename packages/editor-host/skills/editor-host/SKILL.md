@@ -38,7 +38,7 @@ import { editorHostPlugin } from "@ignifx/editor-host/vite";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  plugins: [ignifx(), editorHostPlugin({ editorOrigin: process.env.IGNIFX_EDITOR_ORIGIN ?? "ignifx://app" })],
+  plugins: [ignifx(), editorHostPlugin({ editorOrigin: process.env.IGNIFX_EDITOR_ORIGIN ?? "ignifx-editor://app" })],
 });
 ```
 
@@ -55,7 +55,7 @@ Add `/// <reference types="@ignifx/editor-host/client" />` beside `@ignifx/vite-
 ## Mental model
 
 ```
-editor window (ignifx://app)
+editor window (ignifx-editor://app)
 ├── <iframe> scene view   http://127.0.0.1:<port>/__ignifx_editor__/
 │     generated module → startEditorHost({ extensions(), scripts, settings, manifest })
 │     owns its app, in edit mode; hostKind "scene"
@@ -102,14 +102,14 @@ A headless scene-view host and the editor's side of the handshake, in one Node p
 import { EDITOR_CONNECT_MESSAGE_TYPE, PROTOCOL_VERSION, startEditorHost } from "@ignifx/editor-host";
 
 const frameWindow = new EventTarget();
-const host = await startEditorHost({ editorOrigin: "ignifx://app", headless: true, messageTarget: frameWindow });
+const host = await startEditorHost({ editorOrigin: "ignifx-editor://app", headless: true, messageTarget: frameWindow });
 
 // The editor's side: a fresh channel, with one end posted to the view's window.
 const channel = new MessageChannel();
 frameWindow.dispatchEvent(
   new MessageEvent("message", {
     data: { type: EDITOR_CONNECT_MESSAGE_TYPE },
-    origin: "ignifx://app",
+    origin: "ignifx-editor://app",
     ports: [channel.port2],
   }),
 );
@@ -188,13 +188,13 @@ import { EDITOR_CONNECT_MESSAGE_TYPE, PROTOCOL_VERSION, startEditorPlayControls 
 
 const app = await createApp({ headless: true });
 const pageWindow = new EventTarget();
-const controls = startEditorPlayControls(app, { editorOrigin: "ignifx://app", messageTarget: pageWindow });
+const controls = startEditorPlayControls(app, { editorOrigin: "ignifx-editor://app", messageTarget: pageWindow });
 
 const channel = new MessageChannel();
 pageWindow.dispatchEvent(
   new MessageEvent("message", {
     data: { type: EDITOR_CONNECT_MESSAGE_TYPE },
-    origin: "ignifx://app",
+    origin: "ignifx-editor://app",
     ports: [channel.port2],
   }),
 );
@@ -232,12 +232,12 @@ app.dispose();
 import { EDITOR_CONNECT_MESSAGE_TYPE, PROTOCOL_VERSION, startEditorHost } from "@ignifx/editor-host";
 
 const frameWindow = new EventTarget();
-const host = await startEditorHost({ editorOrigin: "ignifx://app", headless: true, messageTarget: frameWindow });
+const host = await startEditorHost({ editorOrigin: "ignifx-editor://app", headless: true, messageTarget: frameWindow });
 const channel = new MessageChannel();
 frameWindow.dispatchEvent(
   new MessageEvent("message", {
     data: { type: EDITOR_CONNECT_MESSAGE_TYPE },
-    origin: "ignifx://app",
+    origin: "ignifx-editor://app",
     ports: [channel.port2],
   }),
 );
@@ -291,7 +291,7 @@ object `openScene` sends, through `world.loadSceneFile`; `readBack` answers with
   the build half is what turns it into an empty function. Without the plugin the import does not
   resolve.
 - **`editorOrigin` is exact.** It must equal `event.origin` as the browser reports it, with no path or
-  trailing slash: `ignifx://app` for the packaged editor, `http://localhost:<port>` for the editor's
+  trailing slash: `ignifx-editor://app` for the packaged editor, `http://localhost:<port>` for the editor's
   own dev server. A mismatch is silent by design: the host just never connects.
 - **Every view reload needs a new port.** A transferred `MessagePort` cannot be posted twice; the
   editor makes a fresh `MessageChannel` on each `load`, and the host closes the previous port.

@@ -129,7 +129,7 @@ The host page drives a live engine, so two independent checks keep other pages a
 - **`frame-ancestors`.** Under `vite dev` both views are served with `Content-Security-Policy: frame-ancestors <editorOrigin>`. A website the developer has open cannot frame `127.0.0.1:<port>/__ignifx_editor__/` or the game's `index.html`. The scene view's page sets the header itself; for the play view the plugin adds it to every request a browser makes for a page (a `GET` or `HEAD` whose `Accept` names `text/html`), leaving the page's content unchanged. A tab opened on the dev server is not a frame, so the game still runs standalone. A `Content-Security-Policy` the project sets in `server.headers` replaces the plugin's on the play view.
 - **The origin check.** Both hosts ignore a connect message whose `event.origin` is not exactly `editorOrigin`, so only the editor can hand either view a port, framed or not.
 
-`editorOrigin` must be `scheme://host[:port]` with no path, wildcard, quote, comma or semicolon (`IGX-1801`), which also keeps it from ending the CSP directive early. The editor passes it when it spawns the dev server; it differs between the packaged editor (`ignifx://app`) and the editor's own development server, so it is never hard-coded. Keep the dev server on loopback. Production builds contain no host code at all.
+`editorOrigin` must be `scheme://host[:port]` with no path, wildcard, quote, comma or semicolon (`IGX-1801`), which also keeps it from ending the CSP directive early. The editor passes it when it spawns the dev server; it differs between the packaged editor (`ignifx-editor://app`) and the editor's own development server, so it is never hard-coded. Keep the dev server on loopback. Production builds contain no host code at all.
 
 ## 8. Errors
 

@@ -1,8 +1,8 @@
 import { existsSync } from "node:fs";
-import { mkdir, realpath, symlink, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, realpath, symlink, writeFile } from "node:fs/promises";
 import { request } from "node:http";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, relative, sep } from "node:path";
 import { build, createServer, preview } from "vite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { editorHostPlugin } from "../src/vite/plugin.js";
@@ -46,6 +46,40 @@ async function project(): Promise<string> {
     await symlink("../.ignifx/mcp.json", join(root, "public", "tok.json"));
   }
   return root;
+}
+
+/**
+ * Runs `vite build` with `editorHostPlugin()` alone and returns the error it failed with, or `null`.
+ *
+ * @param root - The project.
+ */
+async function buildError(root: string): Promise<Error | null> {
+  try {
+    await build({
+      root,
+      configFile: false,
+      logLevel: "silent",
+      plugins: [editorHostPlugin({ editorOrigin: EDITOR_ORIGIN })],
+      build: { outDir: "dist", emptyOutDir: true },
+    });
+    return null;
+  } catch (error) {
+    return error instanceof Error ? error : new Error(String(error));
+  }
+}
+
+/**
+ * Every file under a directory: its path segments, lower-cased, and its text.
+ *
+ * @param directory - The directory.
+ */
+async function readTree(directory: string): Promise<{ segments: string[]; texts: string[] }> {
+  const entries = await readdir(directory, { recursive: true, withFileTypes: true });
+  const files = entries.filter((entry) => entry.isFile()).map((entry) => join(entry.parentPath, entry.name));
+  return {
+    segments: files.flatMap((file) => relative(directory, file).toLowerCase().split(sep)),
+    texts: await Promise.all(files.map(async (file) => readFile(file, "utf8"))),
+  };
 }
 
 /**
@@ -214,6 +248,43 @@ describe.skipIf(linksUnsupported)("editorHostPlugin() alone in a build", () => {
     });
     await expect(outcome).rejects.toThrow(/\.ignifx/u);
   });
+
+  it("fails, and removes the copy, when publicDir links into .ignifx/ (the writeBundle check)", async () => {
+    const root = await project();
+    await symlink("../.ignifx", join(root, "public", "dir"));
+    const error = await buildError(root);
+    expect(error?.message).toContain("Move .ignifx/ out of publicDir");
+    expect(error?.message).toContain("tok.json");
+    const dist = await readTree(join(root, "dist"));
+    expect(dist.segments).not.toContain("tok.json");
+    expect(dist.segments).not.toContain("dir");
+    expect(dist.texts.some((text) => text.includes(TOKEN))).toBe(false);
+  });
+
+  it("fails, and removes the copy, when publicDir holds .ignifx/ at any depth and in any case", async () => {
+    const root = await createFixtureTree({
+      "index.html": "<!doctype html><html><body></body></html>",
+      "public/.ignifx/mcp.json": MCP_JSON,
+      "public/deep/.IGNIFX/mcp.json": MCP_JSON,
+      "public/ok.txt": "ok",
+    });
+    const error = await buildError(root);
+    expect(error?.message).toContain(join("deep", ".IGNIFX"));
+    const dist = await readTree(join(root, "dist"));
+    expect(dist.segments).not.toContain(".ignifx");
+    expect(dist.texts.some((text) => text.includes(TOKEN))).toBe(false);
+    expect(dist.segments).toContain("ok.txt");
+  });
+
+  it("builds a clean project", async () => {
+    const root = await createFixtureTree({
+      "index.html": "<!doctype html><html><body></body></html>",
+      "public/ok.txt": "ok",
+      "public/my.ignifx.txt": "fine",
+      ".ignifx/mcp.json": MCP_JSON,
+    });
+    expect(await buildError(root)).toBeNull();
+  });
 });
 
 describe("vite preview with editorHostPlugin() and no ignifx()", () => {
@@ -224,7 +295,7 @@ describe("vite preview with editorHostPlugin() and no ignifx()", () => {
   beforeAll(async () => {
     const root = await project();
     const plugins = [editorHostPlugin({ editorOrigin: EDITOR_ORIGIN })];
-    // `publicDir: false`: without `ignifx()` nothing stops Vite copying the linked token into dist.
+    // `publicDir: false`: the project's `public/tok.json` link into `.ignifx/` would fail the build.
     // The private file is planted in `dist` afterwards, so a 404 proves the guard.
     await build({ root, configFile: false, logLevel: "silent", publicDir: false, plugins, build: { outDir: "dist" } });
     const dist = join(root, "dist");

@@ -101,30 +101,43 @@ function typeIdOf(app: App, component: Component): string | null {
 
 /**
  * Gives every document component the new default of each changed field its record leaves out. A
- * component the mirror has no record of is left alone.
+ * component the mirror has no record of is left alone. A component whose setter or `onValidate`
+ * throws is handed to `failed`, and the others still get their defaults.
  *
  * @param app - The scene view's app.
  * @param mirror - The open document.
  * @param index - Its index.
  * @param changed - The changed fields, by type id.
+ * @param failed - Called with each component that threw, its type id, and what it threw.
  */
-export function applyDefaults(app: App, mirror: DocumentMirror, index: DocumentIndex, changed: ChangedDefaults): void {
+export function applyDefaults(
+  app: App,
+  mirror: DocumentMirror,
+  index: DocumentIndex,
+  changed: ChangedDefaults,
+  failed: (component: Component, typeId: string, error: unknown) => void,
+): void {
   for (const [uid, component] of index.components) {
-    const fields = changed.get(typeIdOf(app, component) ?? "");
+    const typeId = typeIdOf(app, component) ?? "";
+    const fields = changed.get(typeId);
     const set = mirror.propsSetBy(uid);
     const schema = app.world.registry.describe(component.constructor).schema;
     if (fields === undefined || set === null || schema === null) {
       continue;
     }
     const assigned: string[] = [];
-    for (const name of fields) {
-      const field = Object.hasOwn(schema, name) ? schema[name] : undefined;
-      if (field !== undefined && !set.has(name)) {
-        Reflect.set(component, name, field.createDefault());
-        assigned.push(name);
+    try {
+      for (const name of fields) {
+        const field = Object.hasOwn(schema, name) ? schema[name] : undefined;
+        if (field !== undefined && !set.has(name)) {
+          Reflect.set(component, name, field.createDefault());
+          assigned.push(name);
+        }
       }
+      validateFields(component, assigned);
+    } catch (error) {
+      failed(component, typeId, error);
     }
-    validateFields(component, assigned);
   }
 }
 

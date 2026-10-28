@@ -1,11 +1,13 @@
 /**
- * A copy of `@ignifx/vite-plugin`'s `.ignifx/` request guard (`src/private-dir.ts` there), kept
- * here as defence in depth: a project whose Vite config lists `editorHostPlugin()` without
- * `ignifx()` would otherwise serve `.ignifx/mcp.json`, the editor's MCP token, to any page.
- * `@ignifx/vite-plugin` is an optional peer, so this package cannot import it; keep the two in step.
+ * A copy of `@ignifx/vite-plugin`'s `.ignifx/` request guard and build-output check
+ * (`src/private-dir.ts` there), kept here as defence in depth: a project whose Vite config lists
+ * `editorHostPlugin()` without `ignifx()` would otherwise serve `.ignifx/mcp.json`, the editor's MCP
+ * token, to any page, or copy it into `dist/` through a link under `public/`. `@ignifx/vite-plugin`
+ * is an optional peer, so this package cannot import it; keep the two in step.
  */
 
 import { existsSync, realpathSync } from "node:fs";
+import { readdir, rm, stat } from "node:fs/promises";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import type { Connect } from "vite";
 
@@ -269,4 +271,82 @@ export function createPrivateDirGuard(options: () => PrivateDirGuardOptions): Co
     }
     next();
   };
+}
+
+/**
+ * Lists what a build put in its output directory from a private directory: any entry with a
+ * `.ignifx` segment, any link whose real path is private, and the copy of any `publicDir` entry
+ * whose real path is private (Vite copies `publicDir` following symbolic links, so
+ * `public/tok.json -> ../.ignifx/mcp.json` arrives as a plain file holding the token).
+ *
+ * @param outDir - The absolute output directory.
+ * @param publicDir - The absolute `publicDir` the build copied, or `null` when it copied none.
+ * @returns The absolute paths to remove from `outDir`, outermost first; `[]` when there are none.
+ */
+export async function findPrivateOutputs(outDir: string, publicDir: string | null): Promise<string[]> {
+  const found = new Set<string>();
+  const entries = await readdir(outDir, { recursive: true, withFileTypes: true }).catch(() => []);
+  const realOutDir = realPathOrSelf(outDir);
+  for (const entry of entries) {
+    const path = join(entry.parentPath, entry.name);
+    const segments = relative(outDir, path).split(/[/\\]/u);
+    const index = segments.findIndex(isPrivateSegment);
+    if (index !== -1) {
+      found.add(join(outDir, ...segments.slice(0, index + 1)));
+    } else if (entry.isSymbolicLink() && isPrivateRealPath(realOutDir, path)) {
+      found.add(path);
+    }
+  }
+  if (publicDir !== null) {
+    const realPublic = realPathOrSelf(publicDir);
+    await collectPrivatePublicEntries(publicDir, realPublic, outDir, new Set([realPublic]), found);
+  }
+  return [...found].toSorted();
+}
+
+/**
+ * Walks `publicDir` the way Vite's copy does and records the output path of every private entry.
+ *
+ * @param directory - The directory being read.
+ * @param realPublic - The real path of `publicDir`.
+ * @param outDirectory - Where `directory`'s entries are copied to.
+ * @param visited - Real directories already walked, so a link cycle ends.
+ * @param found - Receives the output paths.
+ */
+async function collectPrivatePublicEntries(
+  directory: string,
+  realPublic: string,
+  outDirectory: string,
+  visited: Set<string>,
+  found: Set<string>,
+): Promise<void> {
+  const names = await readdir(directory).catch(() => []);
+  await Promise.all(
+    names.map(async (name) => {
+      const source = join(directory, name);
+      const target = join(outDirectory, name);
+      if (isPrivateRealPath(realPublic, source)) {
+        found.add(target);
+        return;
+      }
+      const isDirectory = await stat(source).then(
+        (stats) => stats.isDirectory(),
+        () => false,
+      );
+      const real = realPathOrSelf(source);
+      if (isDirectory && !visited.has(real)) {
+        visited.add(real);
+        await collectPrivatePublicEntries(source, realPublic, target, visited, found);
+      }
+    }),
+  );
+}
+
+/**
+ * Removes the private entries {@link findPrivateOutputs} found.
+ *
+ * @param paths - The paths to remove.
+ */
+export async function removePrivateOutputs(paths: readonly string[]): Promise<void> {
+  await Promise.all(paths.map((path) => rm(path, { recursive: true, force: true })));
 }

@@ -294,7 +294,7 @@ A scene address the scene view loads before it starts. Defaults to none.
 
 **`Beta`**
 
-The origin the editor is served from, for example `"ignifx://app"` when packaged or
+The origin the editor is served from, for example `"ignifx-editor://app"` when packaged or
 `"http://localhost:5173"` while the editor itself runs from a dev server. Only this origin may
 frame either view in `vite dev`, and only it can hand either view a port.
 
@@ -455,7 +455,7 @@ Every diagnostic code `@ignifx/editor-host` can throw, keyed by an intention-rev
 
 > `readonly` **invalidEditorOrigin**: `"IGX-1801"` = `"IGX-1801"`
 
-`editorOrigin` is not an origin such as `"ignifx://app"` or `"http://localhost:5173"`.
+`editorOrigin` is not an origin such as `"ignifx-editor://app"` or `"http://localhost:5173"`.
 
 ##### invalidOption
 
@@ -561,8 +561,10 @@ It is two plugins, because the two halves run under different commands:
 - `ignifx-editor-host:play-controls` (every command) serves `virtual:ignifx/editor`: the play
   controls under `vite dev`, an empty function under `vite build`. Under `vite dev` and
   `vite preview` it also answers 404 to any request into `.ignifx/`, the editor's private
-  directory, by path or through a symbolic link, as `ignifx()` does; this covers a config that
-  lists this plugin without `ignifx()`.
+  directory, by path or through a symbolic link, as `ignifx()` does; under `vite build` it fails
+  the build, after removing them, when the output holds a `.ignifx` directory or a copy of a
+  `publicDir` file that links into one. This covers a config that lists this plugin without
+  `ignifx()`.
 
 List it after `ignifx()` from `@ignifx/vite-plugin`, which serves the two modules the scene
 view imports.
@@ -581,7 +583,7 @@ import { editorHostPlugin } from "@ignifx/editor-host/vite";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  plugins: [ignifx(), editorHostPlugin({ editorOrigin: "ignifx://app" })],
+  plugins: [ignifx(), editorHostPlugin({ editorOrigin: "ignifx-editor://app" })],
 });
 ```
 
@@ -617,7 +619,7 @@ Tells whether a string is an origin the editor can be served from.
 
 `string`
 
-The candidate, for example `"ignifx://app"` or `"http://localhost:5173"`.
+The candidate, for example `"ignifx-editor://app"` or `"http://localhost:5173"`.
 
 #### Returns
 
@@ -628,7 +630,7 @@ The candidate, for example `"ignifx://app"` or `"http://localhost:5173"`.
 #### Remarks
 
 `new URL(value).origin` is not usable here: for a scheme Node does not know, such as the
-editor's `ignifx://app`, it answers `"null"`, while Chromium reports `ignifx://app` as
+editor's `ignifx-editor://app`, it answers `"null"`, while Chromium reports `ignifx-editor://app` as
 `event.origin` because Electron registers the scheme as standard.
 
 ***

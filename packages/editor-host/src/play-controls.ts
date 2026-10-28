@@ -354,7 +354,7 @@ function openPlayControls(
  *
  * @example
  * ```ts
- * const controls = startEditorPlayControls(app, { editorOrigin: "ignifx://app" });
+ * const controls = startEditorPlayControls(app, { editorOrigin: "ignifx-editor://app" });
  * controls.dispose();
  * ```
  *
@@ -384,7 +384,7 @@ export function startEditorPlayControls(app: App, options: EditorPlayControlsOpt
  *
  * @example
  * ```ts
- * const connector = listenForEditorPlayControls({ editorOrigin: "ignifx://app" });
+ * const connector = listenForEditorPlayControls({ editorOrigin: "ignifx-editor://app" });
  * const app = await createApp({ headless: true });
  * const controls = connector.attach(app);
  * connector.dispose();

@@ -259,6 +259,33 @@ describe("changed defaults after a script's hot reload, headless (E25)", () => {
     expect(answer).toMatchObject({ applied: 2, failures: [] });
   });
 
+  it("reports a component that throws taking a new default, and still updates the rest and rebuilds", async () => {
+    class LampTouchy extends Component.define({ brightness: f32(4), radius: f32(2) }) {
+      static typeId = "game/Lamp";
+
+      onValidate(): void {
+        if (this.uid === "OMITS-LAMP") {
+          throw new Error("The lamp refuses its new brightness.");
+        }
+      }
+    }
+    const running = await sceneView(level);
+    const outer = running.app.world.getEntity("STREET-POST");
+
+    running.app.hotReload.apply([{ types: [LampTouchy] }]);
+    const report = await peer?.nextNotification(SceneNotification.hostError);
+    await call("getSchemas");
+
+    expect(report?.["params"]).toEqual({
+      code: null,
+      message: "Applying the new defaults of game/Lamp to OMITS-LAMP: The lamp refuses its new brightness.",
+      data: { typeIds: ["game/Lamp"], entity: "OMITS", component: "game/Lamp" },
+    });
+    expect(brightness(running, "SIGN-LAMP")).toBe(4);
+    expect(running.app.world.getEntity("STREET-POST")).not.toBe(outer);
+    expect(brightness(running, "Lamp Post")).toBe(4);
+  });
+
   it("rebuilds nothing when no default changed, for a new type, or with no document open", async () => {
     const running = await sceneView(level);
     const post = running.app.world.getEntity("STREET-POST");

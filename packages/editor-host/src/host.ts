@@ -28,7 +28,7 @@ import type {
  */
 export interface EditorHostOptions {
   /**
-   * The origin the editor is served from, for example `"ignifx://app"`. A port posted from any
+   * The origin the editor is served from, for example `"ignifx-editor://app"`. A port posted from any
    * other origin is ignored.
    */
   readonly editorOrigin: string;
@@ -155,7 +155,7 @@ export function resolveEngineVersion(fallback: string | undefined, coreVersion: 
  * ```ts
  * import { startEditorHost } from "@ignifx/editor-host";
  *
- * const host = await startEditorHost({ editorOrigin: "ignifx://app", canvas, extensions: [], scripts });
+ * const host = await startEditorHost({ editorOrigin: "ignifx-editor://app", canvas, extensions: [], scripts });
  * ```
  *
  * @beta
