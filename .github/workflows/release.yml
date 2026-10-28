@@ -25,11 +25,14 @@
 #
 # A dry run is still one `workflow_dispatch` away (from `main`), and `RELEASE_DRY_RUN` below turns
 # the whole pipeline back into one. A dry run does everything a publish does except contact the
-# registry. A `workflow_dispatch` from any other branch, dry run or not, skips the job and runs
-# nothing.
+# registry. A `workflow_dispatch` started from any other branch, dry run or not, skips the job.
 #
 # Hardened as the editor's release.yml was (ignifx-editor #67): the job runs only on `main` of this
 # repository, one release at a time, with job-level permissions and no token left in .git/config.
+# The `main` guard protects against accidents (a dispatch from the wrong branch, a fork's copy), not
+# against someone with write access: a dispatch runs the workflow file from its own branch, so that
+# branch can drop the guard. The real boundary is a GitHub environment that only `main` can deploy
+# to, named in each npm Trusted Publisher (an owner follow-up).
 # Third-party actions here are pinned to full commit SHAs, the release tag beside each (the commits
 # the floating `v7` / `v2` refs named on 2026-10-28, so the pin changes nothing that runs).
 name: Release
@@ -46,11 +49,6 @@ on:
         type: boolean
         default: false
 
-# One release at a time, whatever the ref: a fixed group, so two runs never race a publish.
-concurrency:
-  group: release
-  cancel-in-progress: false
-
 # Nothing at the workflow level; the release job asks for exactly what it needs.
 permissions: {}
 
@@ -61,9 +59,15 @@ env:
 jobs:
   release:
     name: release
-    # `workflow_dispatch` can run on any ref, and the Trusted Publishers name no environment, so
-    # without this anyone with write access could publish from a feature branch (or a fork's copy).
+    # `workflow_dispatch` can run on any ref and the Trusted Publishers name no environment, so this
+    # stops a dispatch from the wrong branch, or a fork's copy, from publishing by accident. It is
+    # not a security boundary: the dispatched branch's own copy of this file decides (see the header).
     if: github.ref == 'refs/heads/main' && github.repository == 'astrum-forge/ignifx'
+    # One release at a time, whatever the ref: a fixed group, so two runs never race a publish. It
+    # sits on the job, not the workflow, so a skipped dispatch from a branch never joins the group.
+    concurrency:
+      group: release
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
