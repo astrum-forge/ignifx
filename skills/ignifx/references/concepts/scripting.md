@@ -62,8 +62,8 @@ Tools read a schema as data. `describeSchema(typeId, schema)` describes each fie
 `{ kind, default, description? }` plus the options it declares and what its kind declares (`values`,
 `assetType`, `componentType`, and a nested `item`, `fields`, `value` or `inner`).
 `describeRegisteredSchemas(app.world.registry)` does that for every registered component and adds
-`allowMultiple` and `package`: the registering extension's `name`, or the type id's namespace for a
-class the game registered itself. The transform is described too: `transformSchema()` gives an
+`allowMultiple`, `package` (the registering extension's `name`, or the type id's namespace for a
+class the game registered itself) and, when the class has any, `requires` as type ids. The transform is described too: `transformSchema()` gives an
 entity's `transform` block as `position` (`vec3`), `rotation` (`quat`, whose `step` is in Euler
 degrees) and `scale` (`vec3`), and `ignifx/Transform` is the one entry marked `builtIn`, which an
 inspector never adds or removes. `toJsonSchema(schema)` writes the options as `x-ignifx-*` keywords:
@@ -97,7 +97,8 @@ schema is a file-format change, which before 1.0 simply invalidates old files (`
 - Register before any scene that uses the component loads: `app.registerComponents([Mover, Health])`
   from a game, `ctx.registerComponents([...])` from an extension. Two classes with the same `typeId`
   throw `IGX-0203`; serializing a class without one throws `IGX-0204`.
-- `static requires = [Health]` auto-adds and validates dependencies on attach (`IGX-0201`);
+- `static requires = [Health]` auto-adds and validates dependencies on attach (`IGX-0201`); a scene
+  file may list `Health` before or after the class that requires it.
   `static allowMultiple = false` limits the entity to one (`IGX-0202`).
 
 ## 4. Value encoding

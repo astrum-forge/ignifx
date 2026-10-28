@@ -26,6 +26,8 @@ class Turret extends Script.define({
   static typeId = "game/Turret";
 
   static allowMultiple = false;
+
+  static requires = [Health];
 }
 
 /** The same script after an edit that adds a field. */
@@ -96,7 +98,14 @@ describe("the host's schema descriptions", () => {
     const turret = member(schemas, "game/Turret");
     const { propsSchema, ...description } = turret;
     expect(description).toEqual(describeRegisteredSchemas(app.world.registry)["game/Turret"]);
-    expect(turret).toMatchObject({ title: "Turret", format: "components", allowMultiple: false, package: "game" });
+    // Engine ask E33: `requires` reaches the editor, which adds the required components itself.
+    expect(turret).toMatchObject({
+      title: "Turret",
+      format: "components",
+      allowMultiple: false,
+      package: "game",
+      requires: ["game/Health"],
+    });
     expect(member(turret, "fields")).toEqual({
       speed: {
         kind: "f32",
@@ -114,6 +123,7 @@ describe("the host's schema descriptions", () => {
     expect(member(member(propsSchema, "properties"), "speed")).toMatchObject({ "x-ignifx-step": 0.25 });
     // A component the project registers allows several per entity unless it says otherwise.
     expect(member(schemas, "game/Health")).toMatchObject({ allowMultiple: true, package: "game" });
+    expect(member(schemas, "game/Health")).not.toHaveProperty("requires");
   });
 
   it("names the extension that registered an engine component", async () => {

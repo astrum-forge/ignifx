@@ -232,6 +232,12 @@ function createEntities(context: BuildContext, entities: readonly ExpandedEntity
  * Pass 2: attaches every component with its schema defaults, so the reference table is complete
  * before any prop is decoded.
  *
+ * @remarks
+ * A file may list a component before one its class `requires` (an editor reorder does that).
+ * `addComponent` would then add a second, fresh instance of the required class, or throw `IGX-0202`
+ * when the file's own record comes. So a record that a class requires is attached first, and the
+ * entity's components are put back in file order afterwards.
+ *
  * @param context - The build state.
  * @throws IgnifxError with code `IGX-0307` when the file names an unregistered component type: the
  * file cannot be honoured with a component missing, so this one is not recoverable.
@@ -239,36 +245,107 @@ function createEntities(context: BuildContext, entities: readonly ExpandedEntity
 function attachComponents(context: BuildContext): void {
   for (let index = 0; index < context.built.length; index += 1) {
     const built = context.built[index];
-    if (built === undefined) {
-      continue;
+    if (built !== undefined) {
+      attachEntityComponents(context, built);
     }
-    const records = built.source.data.components;
-    for (let inner = 0; inner < records.length; inner += 1) {
-      const record = records[inner];
-      if (record === undefined) {
+  }
+}
+
+/**
+ * Attaches one entity's component records, each record's required records first.
+ *
+ * @param context - The build state.
+ * @param built - The entity and its file record.
+ */
+function attachEntityComponents(context: BuildContext, built: BuiltEntity): void {
+  const registry = context.world.registry;
+  const records = built.source.data.components;
+  const types = records.map((record) => registeredType(context, record, built.source.data.uid));
+  const attached: (Component | undefined)[] = [];
+  const started = new Set<number>();
+  const order: number[] = [];
+  const attach = (at: number): void => {
+    const record = records[at];
+    const type = types[at];
+    if (record === undefined || type === undefined || started.has(at)) {
+      return;
+    }
+    started.add(at);
+    const requires = registry.describe(type).requires;
+    for (let inner = 0; inner < requires.length; inner += 1) {
+      const required = requires[inner];
+      if (required === undefined || built.entity.getComponent(required) !== null) {
         continue;
       }
-      const type = context.world.registry.get(record.type);
-      if (type === null) {
-        throw new IgnifxError(
-          CoreErrorCode.unknownComponentTypeId,
-          `${record.type} is not a registered component type.`,
-          {
-            context: { typeId: record.type, entity: built.source.data.uid },
-            hint: "Register the class with app.registerComponents before loading a scene that uses it.",
-          },
-        );
+      const supplier = types.findIndex(
+        (candidate, other) => !started.has(other) && registry.describe(candidate).ancestors.includes(required),
+      );
+      if (supplier >= 0) {
+        attach(supplier);
       }
-      // Only a concrete class reaches the registry's
-      // type-id table, because `ComponentRegistry.register` takes a `ConcreteComponentType`.
-      // oxlint-disable-next-line typescript/no-unsafe-type-assertion
-      const component = built.entity.addComponent(type as ConcreteComponentType);
-      componentInternals(component).uid = record.uid;
-      if (record.enabled === false) {
-        component.enabled = false;
-      }
-      context.remap.addComponent(record.uid, component);
+    }
+    const component = built.entity.addComponent(type);
+    componentInternals(component).uid = record.uid;
+    if (record.enabled === false) {
+      component.enabled = false;
+    }
+    context.remap.addComponent(record.uid, component);
+    attached[at] = component;
+    order.push(at);
+  };
+  for (let at = 0; at < records.length; at += 1) {
+    attach(at);
+  }
+  for (let at = 0; at < attached.length; at += 1) {
+    const component = attached[at];
+    if (component !== undefined) {
       built.components.push(component);
+    }
+  }
+  if (order.some((at, position) => at !== position)) {
+    restoreFileOrder(built.entity, built.components);
+  }
+}
+
+/**
+ * Looks up a record's component class.
+ *
+ * @param context - The build state.
+ * @param record - The component record.
+ * @param entityUid - The owning entity's file uid, for the error.
+ * @returns The registered class.
+ * @throws IgnifxError with code `IGX-0307` when the type is not registered.
+ */
+function registeredType(context: BuildContext, record: SceneFileComponent, entityUid: string): ConcreteComponentType {
+  const type = context.world.registry.get(record.type);
+  if (type === null) {
+    throw new IgnifxError(CoreErrorCode.unknownComponentTypeId, `${record.type} is not a registered component type.`, {
+      context: { typeId: record.type, entity: entityUid },
+      hint: "Register the class with app.registerComponents before loading a scene that uses it.",
+    });
+  }
+  // Only a concrete class reaches the registry's
+  // type-id table, because `ComponentRegistry.register` takes a `ConcreteComponentType`.
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+  return type as ConcreteComponentType;
+}
+
+/**
+ * Puts the file's components back in file order within the slots they occupy on the entity, so
+ * `getComponent`, `awake` and a later save see the order the file wrote. Other components (the
+ * transform, any auto-added one) keep their places.
+ *
+ * @param entity - The entity.
+ * @param inFileOrder - The components the file listed, in file order.
+ */
+function restoreFileOrder(entity: Entity, inFileOrder: readonly Component[]): void {
+  const list = entityInternals(entity).components;
+  const slots = inFileOrder.map((component) => list.indexOf(component)).toSorted((a, b) => a - b);
+  for (let at = 0; at < slots.length; at += 1) {
+    const slot = slots[at];
+    const component = inFileOrder[at];
+    if (slot !== undefined && component !== undefined) {
+      list[slot] = component;
     }
   }
 }

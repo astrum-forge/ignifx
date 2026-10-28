@@ -203,8 +203,13 @@ describe("describeSchema: inspector metadata", () => {
     const bare = describeSchema("mygame/Bare", {});
     expect(Object.hasOwn(bare, "allowMultiple")).toBe(false);
     expect(Object.hasOwn(bare, "package")).toBe(false);
-    const given = describeSchema("mygame/Bare", {}, { allowMultiple: false, package: "mygame" });
-    expect(given).toMatchObject({ allowMultiple: false, package: "mygame" });
+    expect(Object.hasOwn(bare, "requires")).toBe(false);
+    const given = describeSchema(
+      "mygame/Bare",
+      {},
+      { allowMultiple: false, package: "mygame", requires: ["mygame/Body"] },
+    );
+    expect(given).toMatchObject({ allowMultiple: false, package: "mygame", requires: ["mygame/Body"] });
   });
 });
 
@@ -323,6 +328,20 @@ describe("describeRegisteredSchemas", () => {
     expect(described["mygame/notes/Note"]).toMatchObject({ allowMultiple: true, package: "mygame/notes" });
     // File formats are not registered components.
     expect(described["ignifx/scene-file"]).toBeUndefined();
+  });
+
+  it("lists what a class requires, as type ids, and nothing for a class that requires nothing", () => {
+    // Engine ask E33 (audit defect B2): the editor adds required components itself, so it has to see them.
+    class Anonymous extends Component {}
+    class Needy extends Component {
+      static typeId = "mygame/Needy";
+      static requires = [Beacon, Note, Anonymous];
+    }
+    const registry = new ComponentRegistry();
+    registry.registerAll([Beacon, Note, Needy]);
+    const described = describeRegisteredSchemas(registry);
+    expect(described["mygame/Needy"]?.requires).toEqual(["acme/Beacon", "mygame/notes/Note", null]);
+    expect(described["acme/Beacon"]).not.toHaveProperty("requires");
   });
 
   it("works on a bare registry", () => {

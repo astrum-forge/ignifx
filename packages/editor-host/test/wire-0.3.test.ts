@@ -140,7 +140,7 @@ function expectWire(actual: Received, expected: unknown): void {
 }
 
 /** The schema entries the live host must send byte for byte as the fixture has them. */
-const WIRE_SCHEMAS: readonly string[] = ["game/Health", "ignifx/Transform"];
+const WIRE_SCHEMAS: readonly string[] = ["game/Health", "game/Regen", "ignifx/Transform"];
 
 /**
  * Asserts a live schema entry is the fixture's, byte for byte.
@@ -266,6 +266,14 @@ describe("the editor's 0.3 wire fixture, through the host's guards", () => {
     expect(isSchemaSet(withStep(0))).toBe(false);
     expect(isSchemaSet(withStep("0.01"))).toBe(false);
     expect(isSchemaSet({ schemas: { "ignifx/Transform": { ...transform, builtIn: "yes" } } })).toBe(false);
+  });
+
+  it("accepts a schema's requires as type ids or null, and refuses anything else", () => {
+    const transform = member(member(member(wire("getSchemasResponse"), "result"), "schemas"), "ignifx/Transform");
+    const withRequires = (requires: unknown): unknown => ({ schemas: { "game/Turret": { ...transform, requires } } });
+    expect(isSchemaSet(withRequires(["game/Health", null]))).toBe(true);
+    expect(isSchemaSet(withRequires("game/Health"))).toBe(false);
+    expect(isSchemaSet(withRequires([3]))).toBe(false);
   });
 
   it("accepts a pick answer with or without its ray, and refuses a malformed ray or plane point", () => {

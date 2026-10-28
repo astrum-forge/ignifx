@@ -27,6 +27,13 @@ export class Follow extends Component.define({ target: entityRef<Entity>() }) {
   static typeId = "game/Follow";
 }
 
+/** The fixture's `game/Regen`, whose schema description lists `requires` (engine ask E33). */
+export class Regen extends Component.define({ perSecond: f32(1) }) {
+  static typeId = "game/Regen";
+
+  static requires = [Health];
+}
+
 /** A script whose `awake` throws, for `hostError`. It runs in edit mode, as the scene view is. */
 export class Exploder extends Script {
   static typeId = "game/Exploder";
@@ -164,7 +171,7 @@ export function startLiveHost(
     engineVersion: ENGINE_VERSION,
     heartbeatIntervalMs: 60_000,
     settings: { layers: { layers: ["Default", "Characters"] } },
-    scripts: [Health, CrateBody, Follow, Exploder, ...scripts],
+    scripts: [Health, CrateBody, Follow, Exploder, Regen, ...scripts],
     extensions: [...extensions],
     assets: { fetch },
     bootScene: BOOT_SCENE,
