@@ -1,4 +1,4 @@
-import { createApp, Script } from "@ignifx/core";
+import { createApp, createMemorySink, Script } from "@ignifx/core";
 import { afterEach, describe, expect, it } from "vitest";
 import { CLIPPED_MARKER } from "../src/app-reports.js";
 import { listenForEditorPlayControls, startEditorPlayControls } from "../src/play-controls.js";
@@ -14,7 +14,7 @@ import {
 import { connect, CountingTarget, EDITOR_ORIGIN } from "./support/editor.js";
 import type { EditorPlayControls } from "../src/play-controls.js";
 import type { EditorPeer } from "./support/editor.js";
-import type { App } from "@ignifx/core";
+import type { App, LogSink } from "@ignifx/core";
 
 /**
  * The play view's controls (`docs/architecture/17-editor-host.md` §5): the game keeps its app, and
@@ -33,13 +33,16 @@ afterEach(() => {
  * Builds a headless game with play controls and a connected, handshaken editor.
  *
  * @param handshake - Whether to send `hello` first.
+ * @param heartbeatIntervalMs - The host's heartbeat interval, or its default.
+ * @param logSink - Where the app's log goes; the console by default.
  * @returns The app, the controls, and the editor's end.
  */
 async function playView(
   handshake = true,
   heartbeatIntervalMs?: number,
+  logSink?: LogSink,
 ): Promise<{ app: App; controls: EditorPlayControls; peer: EditorPeer }> {
-  const app = await createApp({ headless: true });
+  const app = await createApp({ headless: true, ...(logSink === undefined ? {} : { logSink }) });
   const target = new EventTarget();
   const controls = startEditorPlayControls(app, {
     editorOrigin: EDITOR_ORIGIN,
@@ -430,8 +433,10 @@ describe("the play view's reports (HostCapability.logRelay)", () => {
     expect(isAppErrorData(data) ? data.stack : null).toContain("Faulty.update: boom.");
   });
 
+  // These two keep the app's log off the console: a line of a mebibyte or more stalls the GitHub
+  // Actions runner, which then never finishes the job.
   it("clips an oversized log line, its Error's message and stack, so the editor keeps it", async () => {
-    const { app, peer } = await playView();
+    const { app, peer } = await playView(true, undefined, createMemorySink());
     const huge = "m".repeat(HOST_TEXT_MAX_LENGTH + 10);
 
     app.log.warn(huge, new RangeError(huge));
@@ -449,7 +454,7 @@ describe("the play view's reports (HostCapability.logRelay)", () => {
   });
 
   it("clips an oversized script error's message and stack, so the editor keeps it", async () => {
-    const { app, peer } = await playView();
+    const { app, peer } = await playView(true, undefined, createMemorySink());
     const huge = "e".repeat(HOST_TEXT_MAX_LENGTH * 2);
     class Loud extends Script {
       static typeId = "test/Loud";
