@@ -79,10 +79,11 @@ const ALLOWED_IMPORTS = {
 const TEST_ONLY_IMPORTS = {
   // packages/physics/test/terrain-heightfield.test.ts drives a HeightfieldCollider from Terrain.colliderInit().
   physics: ["terrain"],
-  // packages/editor-host/test drives the scene view's 2D mode on a real @ignifx/2d app, and edits
-  // colliders through applyOps on real physics apps; the host itself reaches the 2D toolkit by type
-  // id and `app.twoD`, and physics through `app.physics`/`app.physics2d`, never by import.
-  "editor-host": ["2d", "physics", "physics-2d"],
+  // packages/editor-host/test drives the scene view's 2D mode on a real @ignifx/2d app, edits
+  // colliders through applyOps on real physics apps, and reads back a real @ignifx/3d LodGroup scene
+  // (which needs input); the host itself reaches the 2D toolkit by type id and `app.twoD`, and
+  // physics through `app.physics`/`app.physics2d`, never by import.
+  "editor-host": ["2d", "3d", "input", "physics", "physics-2d"],
 };
 
 /** Directory names under `packages/` that are not published engine packages. */

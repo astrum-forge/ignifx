@@ -4,15 +4,15 @@ import { AnimatorAsset } from "../src/animator/animator-asset.js";
 import { Animator } from "../src/animator/animator.js";
 import { ANIMATOR_ASSET_TYPE } from "../src/animator/definition.js";
 import { Billboard } from "../src/environment/billboard.js";
-import { LodGroup } from "../src/environment/lod-group.js";
+import { LOD_CULLED, LodGroup } from "../src/environment/lod-group.js";
 import { NavMeshSurface } from "../src/navigation/nav-mesh-surface.js";
 import { heroAnimator } from "./support/animator-fixture.js";
 import { floorGeometry } from "./support/geometry.js";
 import { createThreeDApp } from "./support/harness.js";
 
 /**
- * `@ignifx/3d` in an edit-mode app (ADR-0028): animators and billboards stand still and navigation
- * neither bakes nor steps, while level of detail keeps following the camera.
+ * `@ignifx/3d` in an edit-mode app (ADR-0028): animators, billboards, and level of detail stand
+ * still, and navigation neither bakes nor steps.
  */
 
 describe("the 3D toolkit in an edit-mode app", () => {
@@ -65,9 +65,9 @@ describe("the 3D toolkit in an edit-mode app", () => {
     harness.dispose();
   });
 
-  it("switches a LodGroup by its distance to the camera", async () => {
+  it("leaves every LodGroup level's authored enabled alone while the camera moves", async () => {
     const harness = await createThreeDApp({ editMode: true });
-    harness.world.createEntity("EditorCamera").addComponent(Camera, { priority: 1_000_000 });
+    const camera = harness.world.createEntity("EditorCamera").addComponent(Camera, { priority: 1_000_000 });
     const tree = harness.world.createEntity("Tree", { position: { x: 5, y: 0, z: 0 } });
     const near = tree.addComponent(MeshRenderer);
     const far = harness.world.createEntity("TreeFar", { parent: tree }).addComponent(MeshRenderer);
@@ -79,11 +79,16 @@ describe("the 3D toolkit in an edit-mode app", () => {
       hysteresis: 0,
     });
 
+    for (const x of [0, 20, 100]) {
+      camera.entity.transform.position = { x, y: 0, z: 0 };
+      harness.step();
+      expect([near.enabled, far.enabled]).toEqual([true, true]);
+    }
+    expect(group.level).toBe(LOD_CULLED);
+
+    group.destroy();
     harness.step();
-    expect(group.level).toBe(0);
-    tree.transform.position = { x: 20, y: 0, z: 0 };
-    harness.step();
-    expect(group.level).toBe(1);
+    expect([near.enabled, far.enabled]).toEqual([true, true]);
     harness.dispose();
   });
 });

@@ -20,6 +20,12 @@ import type { ComponentHooks, Schema, System, SystemContext } from "@ignifx/core
  * `PreRender` against the main camera. Exactly one level's renderer is enabled at a time; past the
  * last level's distance every one of them is off, which is how a group culls itself entirely.
  *
+ * ## Edit mode
+ *
+ * The switch writes `MeshRenderer.enabled`, which scene files save, so an edit-mode app skips the
+ * system (ADR-0028): an editor's camera moving must not change the document. Every level keeps its
+ * authored `enabled` there.
+ *
  * ## Hysteresis
  *
  * A camera sitting exactly on a threshold would otherwise flip a renderer on and off every frame,
@@ -126,15 +132,21 @@ export class LodGroup extends Component implements ComponentHooks {
     return this.#level;
   }
 
-  /** Turns every level off, so a disabled group leaves nothing drawn. */
+  /**
+   * Turns every level off, so a removed group leaves nothing drawn. In an edit-mode app it leaves
+   * them as authored: the LOD system does not run there, and `enabled` is saved to the scene file.
+   */
   onDetach(): void {
+    this.#level = LOD_CULLED;
+    if (this.app.isEditMode) {
+      return;
+    }
     for (const level of this.levels) {
       const renderer = level.renderer;
       if (renderer !== null && !renderer.isDestroyed) {
         renderer.enabled = false;
       }
     }
-    this.#level = LOD_CULLED;
   }
 
   /**

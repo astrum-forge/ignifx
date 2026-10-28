@@ -169,9 +169,9 @@ plays (ADR-0028). `app.isEditMode` reports it; it never changes for the app's li
 - **Coroutines.** `startCoroutine` throws `IGX-0111` for a script that does not run in edit mode.
 - **Systems** run, hold their clock (`ctx.dt === 0`, `ctx.isClockHeld === true`), or are skipped, as
   they declared with `registerSystem(system, { phase, editMode })`; the default is `"run"`.
-  Animation, billboards, physics stepping, and navigation are skipped; particles hold; rendering,
-  2D, UI, terrain, audio, input, tweens, and asset delivery run. The shader clock runs unless
-  `app.renderer.animateMaterialsInEditMode` is set to `false`.
+  Animation, billboards, level of detail, physics stepping, and navigation are skipped; particles
+  hold; rendering, 2D, UI, terrain, audio, input, tweens, and asset delivery run. The shader clock
+  runs unless `app.renderer.animateMaterialsInEditMode` is set to `false`.
 - `app.pause()`, `updateWhenPaused`, and `app.step(dt)` mean what they mean in a game, and
   `entity.isStatic` stays writable after the first frame.
 

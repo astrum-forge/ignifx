@@ -580,9 +580,15 @@ importers:
       '@ignifx/2d':
         specifier: workspace:*
         version: link:../2d
+      '@ignifx/3d':
+        specifier: workspace:*
+        version: link:../3d
       '@ignifx/core':
         specifier: workspace:*
         version: link:../core
+      '@ignifx/input':
+        specifier: workspace:*
+        version: link:../input
       '@ignifx/physics':
         specifier: workspace:*
         version: link:../physics
