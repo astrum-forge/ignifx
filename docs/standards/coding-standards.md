@@ -55,7 +55,7 @@ Extend [`tsconfig.base.json`](../../tsconfig.base.json). Do not weaken its check
 ## 4. Modules and packages
 
 - Use ESM, `"type": "module"`, and explicit `.js` relative imports. Sandboxed Electron preloads build as CommonJS (ADR-0018).
-- Use one public `src/index.ts` barrel with named re-exports. No `export *` or feature barrels. Subpaths need a tooling/platform purpose: `/main`, `/preload`, `/client`, `/config`, or `./package.json`.
+- Use one public `src/index.ts` barrel with named re-exports. No `export *` or feature barrels. Subpaths need a tooling/platform purpose: `/main`, `/preload`, `/client`, `/vite`, `/config`, or `./package.json`.
 - Default exports are allowed only in configuration files.
 - No import-time side effects (constitution §3.5). Module scope holds declarations and immutable constants, including typed arrays. Create caches and services inside functions. Set `sideEffects: false`.
 - Lite and native/WASM backend imports stay inside each package's `src/lite/**` adapters.
