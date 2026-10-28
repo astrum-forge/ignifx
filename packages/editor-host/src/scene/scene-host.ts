@@ -369,7 +369,7 @@ export class SceneHost {
     return this.#serial(async () => {
       const index = handle.type === SCENE_ASSET_TYPE ? mirror.index() : null;
       const roots = index === null ? [] : instancesOf(app, index, address);
-      const entities = await this.#rebuildInstances(app, mirror, roots, address, { address }, false);
+      const entities = await this.#rebuildInstances(app, mirror, roots, address, { address });
       this.#setSelection(this.#selection);
       const params: AssetReloadedParams = { address, type: handle.type, entities };
       this.#notify(SceneNotification.assetReloaded, params);
@@ -386,7 +386,6 @@ export class SceneHost {
    * @param roots - The roots' uids, none inside another.
    * @param cause - What the rebuild follows, for the error's message.
    * @param data - What the error's `data` carries besides the root's uid.
-   * @param documentOverrides - Whether to rebuild with the document's override lists.
    * @returns The roots rebuilt.
    */
   async #rebuildInstances(
@@ -395,14 +394,13 @@ export class SceneHost {
     roots: readonly string[],
     cause: string,
     data: Readonly<Record<string, string | readonly string[]>>,
-    documentOverrides: boolean,
   ): Promise<string[]> {
     const rebuilt: string[] = [];
     for (const uid of roots) {
       try {
         // Each rebuild reads the document the previous one left.
         // oxlint-disable-next-line no-await-in-loop -- see above
-        await reloadInstance(app, mirror, uid, documentOverrides);
+        await reloadInstance(app, mirror, uid);
         rebuilt.push(uid);
       } catch (error) {
         const params: HostErrorParams = {
@@ -437,7 +435,7 @@ export class SceneHost {
     if (roots.length > 0) {
       const typeIds = [...changed.keys()];
       const cause = `the new defaults of ${typeIds.join(", ")}`;
-      await this.#rebuildInstances(app, mirror, roots, cause, { typeIds }, true);
+      await this.#rebuildInstances(app, mirror, roots, cause, { typeIds });
       this.#setSelection(this.#selection);
     }
   }

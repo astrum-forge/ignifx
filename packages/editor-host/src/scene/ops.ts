@@ -890,24 +890,26 @@ function findOverride(
  * again from the instanced scene with the new list. References from the rest of the document into
  * the rebuilt subtree are resolved again.
  *
+ * The root and the instance roots under it are built with the override lists the document holds, and
+ * the edit applies to the root's: the serializer recomputes a list by diffing the live members with
+ * their scene, which writes an added component as its whole record and drops an override that
+ * matches the scene, so a list read from it no longer follows a default or a prefab the document
+ * leaves to them.
+ *
  * @param context - The app and the document.
  * @param uid - The instance root.
- * @param edit - Returns the new override list from the current one.
- * @param documentOverrides - Whether the root and the instance roots under it are rebuilt with the
- * override lists the document holds rather than the ones the serializer recomputes from the live
- * members, which a hot reload that changed a default has left stale.
+ * @param edit - Returns the new override list from the document's current one.
  */
 async function rebuildInstance(
   context: OpContext,
   uid: string,
   edit: (overrides: readonly SceneFileOverride[]) => readonly SceneFileOverride[],
-  documentOverrides = false,
 ): Promise<void> {
   const index = indexOf(context);
   const root = requireEntity(context, uid);
   const mirror = context.mirror;
   const withDocumentOverrides = (record: SceneFileEntity): SceneFileEntity => {
-    const listed = documentOverrides && record.instance !== undefined ? mirror.overridesOf(record.uid) : null;
+    const listed = record.instance === undefined ? null : mirror.overridesOf(record.uid);
     if (listed === null || record.instance === undefined) {
       return record;
     }
@@ -975,18 +977,11 @@ async function rebuildInstance(
  * @param app - The scene view's app.
  * @param mirror - The open document.
  * @param uid - The instance root.
- * @param documentOverrides - Whether to rebuild with the override lists the document holds rather
- * than the ones the live members read as; `true` after a hot reload changed a default.
  * @throws OpFailure when the uid names no document entity or one without an instance entry.
  */
-export async function reloadInstance(
-  app: App,
-  mirror: DocumentMirror,
-  uid: string,
-  documentOverrides = false,
-): Promise<void> {
+export async function reloadInstance(app: App, mirror: DocumentMirror, uid: string): Promise<void> {
   try {
-    await rebuildInstance({ app, mirror }, uid, (overrides) => overrides, documentOverrides);
+    await rebuildInstance({ app, mirror }, uid, (overrides) => overrides);
   } finally {
     mirror.invalidate();
   }
