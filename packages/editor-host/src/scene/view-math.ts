@@ -153,17 +153,6 @@ export function readLocalTransform(entity: Entity): SceneFileTransform {
 }
 
 /**
- * Tells whether two transforms are equal number for number.
- *
- * @param a - One transform.
- * @param b - The other.
- * @returns True when every channel matches.
- */
-export function sameTransform(a: SceneFileTransform, b: SceneFileTransform): boolean {
-  return JSON.stringify(a) === JSON.stringify(b);
-}
-
-/**
  * Rounds a value to a step; a step of 0 leaves it alone.
  *
  * @param value - The value.
