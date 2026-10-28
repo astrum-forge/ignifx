@@ -182,6 +182,29 @@
               "additionalProperties": false
             }
           },
+          "game/Regen": {
+            "title": "Regen",
+            "format": "components",
+            "fields": {
+              "perSecond": {
+                "kind": "f32",
+                "default": 1
+              }
+            },
+            "allowMultiple": true,
+            "package": "game",
+            "requires": ["game/Health"],
+            "propsSchema": {
+              "type": "object",
+              "properties": {
+                "perSecond": {
+                  "type": "number",
+                  "default": 1
+                }
+              },
+              "additionalProperties": false
+            }
+          },
           "ignifx/scene-file": {
             "title": "Scene file",
             "format": "ignifx.scene",
@@ -1090,6 +1113,29 @@
                 "regenPerSecond": {
                   "type": "number",
                   "default": 0
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "game/Regen": {
+            "title": "Regen",
+            "format": "components",
+            "fields": {
+              "perSecond": {
+                "kind": "f32",
+                "default": 1
+              }
+            },
+            "allowMultiple": true,
+            "package": "game",
+            "requires": ["game/Health"],
+            "propsSchema": {
+              "type": "object",
+              "properties": {
+                "perSecond": {
+                  "type": "number",
+                  "default": 1
                 }
               },
               "additionalProperties": false

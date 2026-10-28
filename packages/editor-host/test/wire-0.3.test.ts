@@ -140,7 +140,7 @@ function expectWire(actual: Received, expected: unknown): void {
 }
 
 /** The schema entries the live host must send byte for byte as the fixture has them. */
-const WIRE_SCHEMAS: readonly string[] = ["game/Health", "ignifx/Transform"];
+const WIRE_SCHEMAS: readonly string[] = ["game/Health", "game/Regen", "ignifx/Transform"];
 
 /**
  * Asserts a live schema entry is the fixture's, byte for byte.
