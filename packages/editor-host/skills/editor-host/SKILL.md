@@ -152,6 +152,7 @@ host.dispose();
 | `PlayStats`, `isPlayStats`                                           | `playStats`'s `{ fps, frameTimeMs, entityCount, frameCount }`: the newest second of `app.diagnostics` frames, the world's entities |
 | `HostCapability.hotReloadDefaults`                                   | The scene view gives fields the document leaves out their new default after a script's hot reload                                  |
 | `HostCapability.logRelay`, `isAppErrorData`, `LoggedError`           | Both views relay `log` (with the first `Error` a line carries), `hostError` (entity, component, phase, stack) and `hotReloaded`    |
+| `HOST_TEXT_MAX_LENGTH`, `HOST_LIST_MAX_LENGTH`                       | The editor's caps on a report's strings (1 MiB) and lists (4096); both views clip to them, a string ending `… [clipped]`           |
 | `EditorHostErrorCode`                                                | `IGX-1801` bad origin, `IGX-1802` no window, `IGX-1803` bad option                                                                 |
 
 ## Recipes

@@ -1,7 +1,9 @@
 import { createApp, Script } from "@ignifx/core";
 import { afterEach, describe, expect, it } from "vitest";
+import { CLIPPED_MARKER } from "../src/app-reports.js";
 import { listenForEditorPlayControls, startEditorPlayControls } from "../src/play-controls.js";
 import {
+  HOST_TEXT_MAX_LENGTH,
   isAppErrorData,
   isHostErrorParams,
   isHotReloadedParams,
@@ -426,6 +428,48 @@ describe("the play view's reports (HostCapability.logRelay)", () => {
       component: "test/Faulty",
     });
     expect(isAppErrorData(data) ? data.stack : null).toContain("Faulty.update: boom.");
+  });
+
+  it("clips an oversized log line, its Error's message and stack, so the editor keeps it", async () => {
+    const { app, peer } = await playView();
+    const huge = "m".repeat(HOST_TEXT_MAX_LENGTH + 10);
+
+    app.log.warn(huge, new RangeError(huge));
+    const log = await peer.nextNotification(PlayNotification.log);
+    const params = log["params"];
+    expect(isLogParams(params)).toBe(true);
+    const message = isLogParams(params) ? params.message : "";
+    expect(message).toHaveLength(HOST_TEXT_MAX_LENGTH);
+    expect(message.endsWith(`m${CLIPPED_MARKER}`)).toBe(true);
+    const logged = isLogParams(params) ? params.error : undefined;
+    expect(logged?.message).toHaveLength(HOST_TEXT_MAX_LENGTH);
+    expect(logged?.stack?.startsWith("RangeError: mmm")).toBe(true);
+    expect(logged?.stack).toHaveLength(HOST_TEXT_MAX_LENGTH);
+    expect(logged?.stack?.endsWith(CLIPPED_MARKER)).toBe(true);
+  });
+
+  it("clips an oversized script error's message and stack, so the editor keeps it", async () => {
+    const { app, peer } = await playView();
+    const huge = "e".repeat(HOST_TEXT_MAX_LENGTH * 2);
+    class Loud extends Script {
+      static typeId = "test/Loud";
+      update(): void {
+        throw new Error(huge);
+      }
+    }
+    app.world.createEntity("Probe").addComponent(Loud);
+    app.step(1 / 60);
+
+    const error = await peer.nextNotification(PlayNotification.hostError);
+    const params = error["params"];
+    expect(isHostErrorParams(params)).toBe(true);
+    const data = isHostErrorParams(params) ? params.data : null;
+    expect(isAppErrorData(data)).toBe(true);
+    expect(isHostErrorParams(params) ? params.message : "").toHaveLength(HOST_TEXT_MAX_LENGTH);
+    const stack = isAppErrorData(data) ? data.stack : null;
+    expect(stack?.startsWith("Error: eee")).toBe(true);
+    expect(stack).toHaveLength(HOST_TEXT_MAX_LENGTH);
+    expect(stack?.endsWith(CLIPPED_MARKER)).toBe(true);
   });
 
   it("relays hot reloads with their errors' stacks", async () => {

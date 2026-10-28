@@ -4,7 +4,7 @@
  */
 
 import { Camera, canonicalizeNumber, createRay, isIgnifxError, validateSceneFile } from "@ignifx/core";
-import { hotReloadedParamsOf, messageOf, relayAppReports } from "../app-reports.js";
+import { clipHostText, hotReloadedParamsOf, messageOf, relayAppReports } from "../app-reports.js";
 import { InvalidParamsError, Reply, RpcFailure } from "../channel.js";
 import { createEditorView } from "../lite/gizmos.js";
 import {
@@ -405,7 +405,7 @@ export class SceneHost {
       } catch (error) {
         const params: HostErrorParams = {
           code: isIgnifxError(error) ? error.code : null,
-          message: `Rebuilding ${uid} from ${cause}: ${messageOf(error)}`,
+          message: clipHostText(`Rebuilding ${uid} from ${cause}: ${messageOf(error)}`),
           data: { ...data, entity: uid },
         };
         this.#notify(SceneNotification.hostError, params);
@@ -432,7 +432,7 @@ export class SceneHost {
     applyDefaults(app, mirror, index, changed, (component, typeId, error) => {
       const params: HostErrorParams = {
         code: isIgnifxError(error) ? error.code : null,
-        message: `Applying the new defaults of ${typeId} to ${component.uid}: ${messageOf(error)}`,
+        message: clipHostText(`Applying the new defaults of ${typeId} to ${component.uid}: ${messageOf(error)}`),
         data: { typeIds: [typeId], entity: component.entity.uid, component: typeId },
       };
       this.#notify(SceneNotification.hostError, params);
@@ -1062,7 +1062,7 @@ export class SceneHost {
       this.#serial(async () => this.#followDefaults(changed)).catch((error: unknown) => {
         const params: HostErrorParams = {
           code: isIgnifxError(error) ? error.code : null,
-          message: `Following the new defaults of ${[...changed.keys()].join(", ")}: ${messageOf(error)}`,
+          message: clipHostText(`Following the new defaults of ${[...changed.keys()].join(", ")}: ${messageOf(error)}`),
           data: { typeIds: [...changed.keys()] },
         };
         this.#notify(SceneNotification.hostError, params);

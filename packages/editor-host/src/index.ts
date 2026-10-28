@@ -29,6 +29,8 @@ export {
   GizmoMode,
   GizmoSpace,
   HandshakeMethod,
+  HOST_LIST_MAX_LENGTH,
+  HOST_TEXT_MAX_LENGTH,
   HostCapability,
   HostKind,
   HostNotification,
