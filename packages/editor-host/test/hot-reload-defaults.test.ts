@@ -6,7 +6,7 @@ import { connect, EDITOR_ORIGIN } from "./support/editor.js";
 import { brightnessIn, Lamp, LAMP_POST, LampBrighter, level, PREFAB } from "./support/lamps.js";
 import type { EditorHost } from "../src/host.js";
 import type { EditorPeer } from "./support/editor.js";
-import type { ConcreteComponentType, FetchLike, SceneFile } from "@ignifx/core";
+import type { ConcreteComponentType, FetchLike, SceneFile, SceneFileOverride } from "@ignifx/core";
 
 /**
  * A script's hot reload that changes a field's default, in a headless scene view (engine ask E25):
@@ -74,6 +74,29 @@ function nestedStreet(hash: string): SceneFile {
         },
       },
     ],
+  };
+}
+
+/**
+ * The street, with more overrides on the lamp post.
+ *
+ * @param extra - The overrides appended to the post's list.
+ * @returns The scene file for a prefab hash.
+ */
+function withPostOverrides(extra: readonly SceneFileOverride[]): (hash: string) => SceneFile {
+  return (hash) => {
+    const street = level(hash);
+    const entities = [...street.entities];
+    const at = entities.findIndex((record) => record.uid === "STREET-POST");
+    const post = entities[at];
+    if (post?.instance === undefined) {
+      throw new Error("The street has no lamp post instance.");
+    }
+    entities[at] = {
+      ...post,
+      instance: { ...post.instance, overrides: [...(post.instance.overrides ?? []), ...extra] },
+    };
+    return { ...street, entities };
   };
 }
 
@@ -180,6 +203,60 @@ describe("changed defaults after a script's hot reload, headless (E25)", () => {
         },
       ],
     });
+  });
+
+  it("keeps the document's override list through an override op, so a sparse added lamp follows the new default", async () => {
+    // The bulb's lamp is swapped for an added one that leaves `brightness` out. The serializer
+    // writes an added component as its whole record, so a list read back from the live members
+    // after a rebuild would pin `brightness` at the old default.
+    const running = await sceneView(
+      withPostOverrides([
+        { op: "remove", path: "BULB/components/BULB-LAMP" },
+        {
+          op: "add",
+          path: "BULB/components",
+          value: { uid: "ADDED-BULB-LAMP", type: "game/Lamp", props: { radius: 3 } },
+        },
+      ]),
+    );
+    const answer = await call("applyOps", {
+      commandId: "c1",
+      commandName: "Spare brighter",
+      ops: [
+        {
+          op: "setOverride",
+          entity: "STREET-POST",
+          override: { path: "SPARE/components/SPARE-LAMP/props/brightness", value: 8 },
+        },
+      ],
+    });
+    expect(answer).toMatchObject({ failures: [] });
+    expect(brightness(running, "Bulb")).toBe(1);
+
+    await reload(running, [LampBrighter]);
+
+    expect(brightness(running, "Bulb")).toBe(4);
+    expect(brightness(running, "Spare")).toBe(8);
+    expect(brightness(running, "Lamp Post")).toBe(4);
+  });
+
+  it("edits the document's override list, with an override equal to the prefab's value", async () => {
+    // The serializer leaves out an override that matches the prefab, so only the document's list
+    // still holds it for `removeOverride` to find.
+    await sceneView(withPostOverrides([{ path: "BULB/components/BULB-LAMP/props/brightness", value: 3 }]));
+    const answer = await call("applyOps", {
+      commandId: "c1",
+      commandName: "Spare brighter",
+      ops: [
+        {
+          op: "setOverride",
+          entity: "STREET-POST",
+          override: { path: "SPARE/components/SPARE-LAMP/props/brightness", value: 8 },
+        },
+        { op: "removeOverride", entity: "STREET-POST", path: "BULB/components/BULB-LAMP/props/brightness" },
+      ],
+    });
+    expect(answer).toMatchObject({ applied: 2, failures: [] });
   });
 
   it("rebuilds nothing when no default changed, for a new type, or with no document open", async () => {
