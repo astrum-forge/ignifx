@@ -2480,6 +2480,16 @@ Who registered the component: the extension's `name` (the npm package name, for 
 The JSON Schema of the component's `props` (the engine's `toJsonSchema(schema)`), which adds
 each field's `minimum`, `maximum`, `enum` and nested shapes; absent for file-format entries.
 
+##### requires?
+
+> `readonly` `optional` **requires?**: readonly (`string` \| `null`)[]
+
+The components the class lists in `static requires`, as type ids (`null` for a class without a
+`typeId`), in declaration order. The engine adds each one that is missing whenever the component
+is added, so an editor adds them itself as part of the same command; a component whose class
+extends a required one counts. Absent when the class requires nothing, on file-format entries,
+and from a host from before engine ask E33.
+
 ##### title
 
 > `readonly` **title**: `string`

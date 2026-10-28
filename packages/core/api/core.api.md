@@ -2997,6 +2997,7 @@ export interface SchemaDescription {
     readonly fields: Readonly<Record<string, SchemaFieldDescription>>;
     readonly format: string;
     readonly package?: string;
+    readonly requires?: readonly (string | null)[];
     readonly title: string;
 }
 
@@ -3007,6 +3008,7 @@ export interface SchemaDescriptionMeta {
     readonly description?: string;
     readonly format?: string;
     readonly package?: string;
+    readonly requires?: readonly (string | null)[];
     readonly title?: string;
 }
 

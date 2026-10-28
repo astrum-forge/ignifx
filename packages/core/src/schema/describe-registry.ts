@@ -22,7 +22,8 @@ function componentPackage(registry: ComponentRegistry, typeId: string): string {
 /**
  * Describes every component an app has registered, the engine's, its extensions' and the game's,
  * the way {@link describeSchema} describes one, plus what only the registry knows: whether an
- * entity may hold more than one (`allowMultiple`) and which package registered it (`package`).
+ * entity may hold more than one (`allowMultiple`), which package registered it (`package`), and
+ * which components it adds when they are missing (`requires`, its classes' type ids).
  * This is what an external inspector, such as the ignifx editor, is generated from.
  *
  * @remarks
@@ -45,6 +46,7 @@ function componentPackage(registry: ComponentRegistry, typeId: string): string {
  * const schemas = describeRegisteredSchemas(app.world.registry, describeSchemas());
  * schemas["ignifx/Camera"]?.package; // "@ignifx/core"
  * schemas["ignifx/Camera"]?.allowMultiple; // false
+ * schemas["ignifx/ThirdPersonController"]?.requires; // ["ignifx/CharacterController"] once @ignifx/3d is registered
  * ```
  *
  * @public
@@ -65,6 +67,7 @@ export function describeRegisteredSchemas(
       allowMultiple: info.allowMultiple,
       package: componentPackage(registry, typeId),
       ...(builtIn ? { builtIn } : {}),
+      ...(info.requires.length === 0 ? {} : { requires: info.requires.map((required) => required.typeId ?? null) }),
     });
   }
   return described;

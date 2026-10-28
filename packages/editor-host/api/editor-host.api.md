@@ -1005,6 +1005,7 @@ export interface SchemaDescription {
     readonly format: string;
     readonly package?: string;
     readonly propsSchema?: JsonObject;
+    readonly requires?: readonly (string | null)[];
     readonly title: string;
 }
 

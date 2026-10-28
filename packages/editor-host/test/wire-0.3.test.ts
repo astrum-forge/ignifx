@@ -268,6 +268,14 @@ describe("the editor's 0.3 wire fixture, through the host's guards", () => {
     expect(isSchemaSet({ schemas: { "ignifx/Transform": { ...transform, builtIn: "yes" } } })).toBe(false);
   });
 
+  it("accepts a schema's requires as type ids or null, and refuses anything else", () => {
+    const transform = member(member(member(wire("getSchemasResponse"), "result"), "schemas"), "ignifx/Transform");
+    const withRequires = (requires: unknown): unknown => ({ schemas: { "game/Turret": { ...transform, requires } } });
+    expect(isSchemaSet(withRequires(["game/Health", null]))).toBe(true);
+    expect(isSchemaSet(withRequires("game/Health"))).toBe(false);
+    expect(isSchemaSet(withRequires([3]))).toBe(false);
+  });
+
   it("accepts a pick answer with or without its ray, and refuses a malformed ray or plane point", () => {
     const answer = member(wire("pickMissRay"), "result");
     const ray = member(answer, "ray");

@@ -79429,6 +79429,16 @@ Who registered the component: the extension's `name` (the npm package name, for 
 `@ignifx/3d`), or, for a class the game registered itself, its type id's namespace (`mygame`).
 Set by [describeRegisteredSchemas](#describeregisteredschemas), or by the caller through [SchemaDescriptionMeta](#schemadescriptionmeta).
 
+##### requires?
+
+> `readonly` `optional` **requires?**: readonly (`string` \| `null`)[]
+
+The components the class lists in `static requires`, as type ids (`null` for a class without a
+`typeId`), in declaration order. `addComponent` adds each one that is missing, so an editor adds
+them itself, and a scene file may list them in any order. A component on the entity whose class
+extends a required class counts as present. Set by [describeRegisteredSchemas](#describeregisteredschemas), or by the
+caller through [SchemaDescriptionMeta](#schemadescriptionmeta); absent when the class requires nothing.
+
 ##### title
 
 > `readonly` **title**: `string`
@@ -79472,6 +79482,12 @@ Overrides the default `components` grouping.
 > `readonly` `optional` **package?**: `string`
 
 The package or extension that registered the component, copied onto the description.
+
+##### requires?
+
+> `readonly` `optional` **requires?**: readonly (`string` \| `null`)[]
+
+The type ids of the components the class requires, copied onto the description.
 
 ##### title?
 
@@ -98280,7 +98296,8 @@ The description of the top-level file fields.
 
 Describes every component an app has registered, the engine's, its extensions' and the game's,
 the way [describeSchema](#describeschema) describes one, plus what only the registry knows: whether an
-entity may hold more than one (`allowMultiple`) and which package registered it (`package`).
+entity may hold more than one (`allowMultiple`), which package registered it (`package`), and
+which components it adds when they are missing (`requires`, its classes' type ids).
 This is what an external inspector, such as the ignifx editor, is generated from.
 
 #### Parameters
@@ -98321,6 +98338,7 @@ entity's `transform` block rather than in its `components`.
 const schemas = describeRegisteredSchemas(app.world.registry, describeSchemas());
 schemas["ignifx/Camera"]?.package; // "@ignifx/core"
 schemas["ignifx/Camera"]?.allowMultiple; // false
+schemas["ignifx/ThirdPersonController"]?.requires; // ["ignifx/CharacterController"] once @ignifx/3d is registered
 ```
 
 ***
@@ -98372,7 +98390,7 @@ The component's declared fields.
 [`SchemaDescriptionMeta`](#schemadescriptionmeta)
 
 Overrides for the title, format grouping, and summary, and the component's
-`allowMultiple`, `package` and `builtIn` when the caller knows them.
+`allowMultiple`, `package`, `builtIn` and `requires` when the caller knows them.
 
 #### Returns
 

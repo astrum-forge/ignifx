@@ -95,6 +95,14 @@ export interface SchemaDescription {
    * prop by prop. Absent on every other component and on file formats.
    */
   readonly builtIn?: boolean;
+  /**
+   * The components the class lists in `static requires`, as type ids (`null` for a class without a
+   * `typeId`), in declaration order. `addComponent` adds each one that is missing, so an editor adds
+   * them itself, and a scene file may list them in any order. A component on the entity whose class
+   * extends a required class counts as present. Set by {@link describeRegisteredSchemas}, or by the
+   * caller through {@link SchemaDescriptionMeta}; absent when the class requires nothing.
+   */
+  readonly requires?: readonly (string | null)[];
 }
 
 /**
@@ -115,6 +123,8 @@ export interface SchemaDescriptionMeta {
   readonly package?: string;
   /** Whether the component is the entity's own built-in block, copied onto the description. */
   readonly builtIn?: boolean;
+  /** The type ids of the components the class requires, copied onto the description. */
+  readonly requires?: readonly (string | null)[];
 }
 
 /**
@@ -354,7 +364,7 @@ function schemaJsonSchema(schema: Schema): JsonSchemaObject {
  * @param typeId - The component's namespaced registration id, for example `mygame/Mover`.
  * @param schema - The component's declared fields.
  * @param meta - Overrides for the title, format grouping, and summary, and the component's
- * `allowMultiple`, `package` and `builtIn` when the caller knows them.
+ * `allowMultiple`, `package`, `builtIn` and `requires` when the caller knows them.
  * @returns The description entry.
  *
  * @example
@@ -376,6 +386,7 @@ export function describeSchema(typeId: string, schema: Schema, meta?: SchemaDesc
     ...(meta?.allowMultiple === undefined ? {} : { allowMultiple: meta.allowMultiple }),
     ...(meta?.package === undefined ? {} : { package: meta.package }),
     ...(meta?.builtIn === undefined ? {} : { builtIn: meta.builtIn }),
+    ...(meta?.requires === undefined ? {} : { requires: meta.requires }),
   };
 }
 

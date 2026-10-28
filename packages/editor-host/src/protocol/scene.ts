@@ -685,6 +685,14 @@ export interface SchemaDescription {
    */
   readonly builtIn?: boolean;
   /**
+   * The components the class lists in `static requires`, as type ids (`null` for a class without a
+   * `typeId`), in declaration order. The engine adds each one that is missing whenever the component
+   * is added, so an editor adds them itself as part of the same command; a component whose class
+   * extends a required one counts. Absent when the class requires nothing, on file-format entries,
+   * and from a host from before engine ask E33.
+   */
+  readonly requires?: readonly (string | null)[];
+  /**
    * The JSON Schema of the component's `props` (the engine's `toJsonSchema(schema)`), which adds
    * each field's `minimum`, `maximum`, `enum` and nested shapes; absent for file-format entries.
    */
@@ -1547,7 +1555,7 @@ function isSchemaFieldDescription(value: unknown): value is SchemaFieldDescripti
  *
  * @param value - The value to test.
  * @returns True for `{ title, format, description?, fields, allowMultiple?, package?, builtIn?,
- * propsSchema? }`, ignoring members it does not declare.
+ * requires?, propsSchema? }`, ignoring members it does not declare.
  */
 function isSchemaDescription(value: unknown): value is SchemaDescription {
   return (
@@ -1560,6 +1568,7 @@ function isSchemaDescription(value: unknown): value is SchemaDescription {
     optionalField(value, "allowMultiple", isBoolean) &&
     optionalField(value, "package", isString) &&
     optionalField(value, "builtIn", isBoolean) &&
+    optionalField(value, "requires", (ids) => Array.isArray(ids) && ids.every((id) => isStringOrNull(id))) &&
     optionalField(value, "propsSchema", isJsonObject)
   );
 }
