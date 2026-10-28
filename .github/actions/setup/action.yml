@@ -20,12 +20,12 @@ runs:
     # pnpm must be on PATH before setup-node, because `cache: pnpm` shells out to the package
     # manager to find its store. No `version:` input — the action reads `packageManager` from
     # package.json (pnpm 11.17.0), which keeps CI and local installs on one version.
-    - uses: pnpm/action-setup@v6
+    - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
 
     # Node comes from .nvmrc (24 LTS, coding standards §1). setup-node auto-enables its cache only
     # for npm projects, so `cache: pnpm` has to be explicit; it caches the pnpm store, not
     # node_modules, keyed on pnpm-lock.yaml.
-    - uses: actions/setup-node@v7
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
       with:
         node-version-file: .nvmrc
         cache: pnpm
@@ -36,7 +36,7 @@ runs:
     # entry from its own job first, then from any job. Without it every job rebuilt all 24 workspace
     # members from nothing, which was 21–28 s of each job's time (CI run of 2026-09-14).
     - if: inputs.turbo-cache == 'true'
-      uses: actions/cache@v6
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: .turbo/cache
         key: turbo-${{ runner.os }}-${{ github.job }}-${{ github.sha }}
@@ -63,7 +63,7 @@ runs:
     # directory), so `install-deps` still runs on a hit; it is the cheaper half.
     - if: inputs.playwright == 'true'
       id: playwright-cache
-      uses: actions/cache@v6
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: |
           ~/.cache/ms-playwright
