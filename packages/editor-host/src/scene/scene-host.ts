@@ -417,7 +417,8 @@ export class SceneHost {
   /**
    * Gives the open document the defaults a hot reload changed, where it leaves them out (engine ask
    * E25): each document component's omitted fields take the new default, then each prefab instance
-   * whose members hold a changed type is rebuilt from its prefab with its overrides.
+   * whose members hold a changed type is rebuilt from its prefab with its overrides. A component
+   * that throws while taking a default is a `hostError`, and the rest still runs.
    *
    * @param changed - The changed fields, by type id.
    */
@@ -428,7 +429,14 @@ export class SceneHost {
     if (app === null || mirror === null || index === null) {
       return;
     }
-    applyDefaults(app, mirror, index, changed);
+    applyDefaults(app, mirror, index, changed, (component, typeId, error) => {
+      const params: HostErrorParams = {
+        code: isIgnifxError(error) ? error.code : null,
+        message: `Applying the new defaults of ${typeId} to ${component.uid}: ${messageOf(error)}`,
+        data: { typeIds: [typeId], entity: component.entity.uid, component: typeId },
+      };
+      this.#notify(SceneNotification.hostError, params);
+    });
     mirror.invalidate();
     const rebuilt = mirror.index();
     const roots = rebuilt === null ? [] : outermostRoots(rebuilt, instancesHolding(app, rebuilt, changed));
@@ -1051,7 +1059,14 @@ export class SceneHost {
     const changed = this.#defaults?.changed(report.typeIds) ?? new Map<string, readonly string[]>();
     if (changed.size > 0) {
       // Queued with the requests, so a request the editor sends after `schemasChanged` sees it done.
-      void this.#serial(async () => this.#followDefaults(changed));
+      this.#serial(async () => this.#followDefaults(changed)).catch((error: unknown) => {
+        const params: HostErrorParams = {
+          code: isIgnifxError(error) ? error.code : null,
+          message: `Following the new defaults of ${[...changed.keys()].join(", ")}: ${messageOf(error)}`,
+          data: { typeIds: [...changed.keys()] },
+        };
+        this.#notify(SceneNotification.hostError, params);
+      });
     }
     const params = hotReloadedParamsOf(report);
     this.#notify(SceneNotification.hotReloaded, params);
