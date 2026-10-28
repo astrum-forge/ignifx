@@ -23,8 +23,15 @@
 # restores it, and the flip is then `"provenance": true` in the 13 manifests and nothing here.
 # Recorded in docs/adr/0009-monorepo-tooling.md.
 #
-# A dry run is still one `workflow_dispatch` away, and `RELEASE_DRY_RUN` below turns the whole
-# pipeline back into one. A dry run does everything a publish does except contact the registry.
+# A dry run is still one `workflow_dispatch` away (from `main`), and `RELEASE_DRY_RUN` below turns
+# the whole pipeline back into one. A dry run does everything a publish does except contact the
+# registry. A `workflow_dispatch` from any other branch, dry run or not, skips the job and runs
+# nothing.
+#
+# Hardened as the editor's release.yml was (ignifx-editor #67): the job runs only on `main` of this
+# repository, one release at a time, with job-level permissions and no token left in .git/config.
+# Third-party actions here are pinned to full commit SHAs, the release tag beside each (the commits
+# the floating `v7` / `v2` refs named on 2026-10-28, so the pin changes nothing that runs).
 name: Release
 
 on:
@@ -39,18 +46,13 @@ on:
         type: boolean
         default: false
 
+# One release at a time, whatever the ref: a fixed group, so two runs never race a publish.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: release
   cancel-in-progress: false
 
-permissions:
-  # contents: write and pull-requests: write — changesets/action commits the version bump and
-  # opens the Version Packages pull request.
-  # id-token: write — the OIDC token npm Trusted Publishing mints. This is the credential; there is
-  # no NPM_TOKEN secret in this repository and there should not be one.
-  contents: write
-  pull-requests: write
-  id-token: write
+# Nothing at the workflow level; the release job asks for exactly what it needs.
+permissions: {}
 
 env:
   # Flip to "true" to turn every push into a dry run again (a bad release, a registry incident).
@@ -59,13 +61,28 @@ env:
 jobs:
   release:
     name: release
+    # `workflow_dispatch` can run on any ref, and the Trusted Publishers name no environment, so
+    # without this anyone with write access could publish from a feature branch (or a fork's copy).
+    if: github.ref == 'refs/heads/main' && github.repository == 'astrum-forge/ignifx'
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      # contents: write and pull-requests: write — changesets/action commits the version bump, opens
+      # the Version Packages pull request, and pushes the release tags and GitHub releases.
+      # id-token: write — the OIDC token npm Trusted Publishing mints. This is the credential; there
+      # is no NPM_TOKEN secret in this repository and there should not be one.
+      contents: write
+      pull-requests: write
+      id-token: write
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # Changesets reads the history to work out what changed since the last release.
           fetch-depth: 0
+          # No token left in .git/config for the build and publish scripts to read: changesets/action
+          # v2 pushes commits and tags through the GitHub API with its own `github-token` input, and
+          # never uses the credentials checkout would persist.
+          persist-credentials: false
 
       # No Turborepo cache: what is published is built from this checkout, never restored.
       - uses: ./.github/actions/setup
@@ -92,7 +109,7 @@ jobs:
 
       - name: Changesets version / publish
         id: changesets
-        uses: changesets/action@v2
+        uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
         with:
           # `pnpm version-packages`, not a bare `changeset version`: the bump has to reach two more
           # places that Changesets knows nothing about. Every skill declares the engine version it
