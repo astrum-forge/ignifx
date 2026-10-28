@@ -27,7 +27,7 @@ describe("generated sources", () => {
 
   it("hands every asset-change event to the host, through a literal import.meta.hot call", () => {
     const source = editorEntryModuleSource({
-      editorOrigin: "ignifx://app",
+      editorOrigin: "ignifx-editor://app",
       extensionsModule: "/src/extensions.ts",
       bootScene: null,
       engineVersion: null,
@@ -47,7 +47,7 @@ describe("generated sources", () => {
 
   it("writes a production play-controls module with no editor code", () => {
     const source = playControlsModuleSource({
-      editorOrigin: "ignifx://app",
+      editorOrigin: "ignifx-editor://app",
       engineVersion: "1.2.3",
       heartbeatIntervalMs: null,
       hot: false,
@@ -58,7 +58,7 @@ describe("generated sources", () => {
 
   it("writes a development play-controls module that listens before the game attaches (E24)", () => {
     const source = playControlsModuleSource({
-      editorOrigin: "ignifx://app",
+      editorOrigin: "ignifx-editor://app",
       engineVersion: null,
       heartbeatIntervalMs: null,
       hot: true,
@@ -70,7 +70,7 @@ describe("generated sources", () => {
         "",
         "// Listens now, before main.ts awaits createApp, so the editor's first port is kept.",
         "const connector = listenForEditorPlayControls({",
-        '  editorOrigin: "ignifx://app",',
+        '  editorOrigin: "ignifx-editor://app",',
         "});",
         "if (import.meta.hot) {",
         "  import.meta.hot.dispose(() => {",

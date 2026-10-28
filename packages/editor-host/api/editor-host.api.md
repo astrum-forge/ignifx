@@ -285,6 +285,12 @@ export interface HelloRequest extends RpcRequest<typeof HandshakeMethod.hello, H
 }
 
 // @public
+export const HOST_LIST_MAX_LENGTH = 4096;
+
+// @public
+export const HOST_TEXT_MAX_LENGTH = 1048576;
+
+// @public
 export const HostCapability: {
     readonly heartbeat: "heartbeat";
     readonly playControls: "playControls";

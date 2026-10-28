@@ -20,6 +20,8 @@
 export { EDITOR_CONNECT_MESSAGE_TYPE, isEditorConnectMessage, type EditorConnectMessage } from "./connect.js";
 export {
   HandshakeMethod,
+  HOST_LIST_MAX_LENGTH,
+  HOST_TEXT_MAX_LENGTH,
   HostCapability,
   HostKind,
   isIncompatibleProtocolData,

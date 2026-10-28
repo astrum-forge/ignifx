@@ -11,6 +11,7 @@
  * `docs/protocol.md`, "0.3: scene documents", gives the sequences and what the host must do per
  * method.
  */
+import { isHostList, isHostText, isHostTextOrNull } from "./handshake.js";
 import { isRecord } from "./rpc.js";
 import {
   isArrayOf,
@@ -1755,7 +1756,8 @@ const HOT_RELOAD_KINDS: Readonly<Record<string, string>> = { patch: "patch", rec
  * Checks the parameters of `hotReloaded`.
  *
  * @param value - The received `params`.
- * @returns True for `{ report }` with a known kind, type ids, counts and JSON errors.
+ * @returns True for `{ report }` with a known kind, type ids, counts and JSON errors, its strings and
+ * lists within `HOST_TEXT_MAX_LENGTH` and `HOST_LIST_MAX_LENGTH`.
  *
  * @public
  */
@@ -1764,16 +1766,16 @@ export function isHotReloadedParams(value: unknown): value is HotReloadedParams 
   return (
     isRecord(report) &&
     isOneOf(HOT_RELOAD_KINDS, report["kind"]) &&
-    isArrayOf(report["typeIds"], isString) &&
+    isHostList(report["typeIds"], isHostText) &&
     isCount(report["instances"]) &&
     isNonNegative(report["durationMs"]) &&
-    isArrayOf(
+    isHostList(
       report["errors"],
       (error): error is HotReloadError =>
         isRecord(error) &&
-        isString(error["message"]) &&
-        isStringOrNull(error["code"]) &&
-        optionalField(error, "stack", isStringOrNull),
+        isHostText(error["message"]) &&
+        isHostTextOrNull(error["code"]) &&
+        optionalField(error, "stack", isHostTextOrNull),
     )
   );
 }
@@ -1837,15 +1839,16 @@ export function isTransformDraggedParams(value: unknown): value is TransformDrag
  * Checks the parameters of `hostError`.
  *
  * @param value - The received `params`.
- * @returns True for a code or `null`, a message and optional JSON data.
+ * @returns True for a code or `null`, a message and optional JSON data, the strings within
+ * `HOST_TEXT_MAX_LENGTH`.
  *
  * @public
  */
 export function isHostErrorParams(value: unknown): value is HostErrorParams {
   return (
     isRecord(value) &&
-    isStringOrNull(value["code"]) &&
-    isString(value["message"]) &&
+    isHostTextOrNull(value["code"]) &&
+    isHostText(value["message"]) &&
     optionalField(value, "data", (data) => isJsonValue(data))
   );
 }
@@ -1855,20 +1858,21 @@ export function isHostErrorParams(value: unknown): value is HostErrorParams {
  *
  * @param value - The received `data`.
  * @returns True for a boundary name, a phase or `null`, an entity uid or `null`, and, when present,
- * a phase name, an entity name, a component and a stack, each a string or `null`.
+ * a phase name, an entity name, a component and a stack, each a string or `null`; the strings within
+ * `HOST_TEXT_MAX_LENGTH`.
  *
  * @public
  */
 export function isAppErrorData(value: unknown): value is AppErrorData {
   return (
     isRecord(value) &&
-    isString(value["source"]) &&
+    isHostText(value["source"]) &&
     (value["phase"] === null || isCount(value["phase"])) &&
     (value["entity"] === null || isUidString(value["entity"])) &&
-    optionalField(value, "phaseName", isStringOrNull) &&
-    optionalField(value, "entityName", isStringOrNull) &&
-    optionalField(value, "component", isStringOrNull) &&
-    optionalField(value, "stack", isStringOrNull)
+    optionalField(value, "phaseName", isHostTextOrNull) &&
+    optionalField(value, "entityName", isHostTextOrNull) &&
+    optionalField(value, "component", isHostTextOrNull) &&
+    optionalField(value, "stack", isHostTextOrNull)
   );
 }
 
@@ -1879,7 +1883,8 @@ const LOG_LEVELS: Readonly<Record<string, string>> = { debug: "debug", info: "in
  * Checks the parameters of `log`.
  *
  * @param value - The received `params`.
- * @returns True for a known level, a scope or `null`, a message and a finite time.
+ * @returns True for a known level, a scope or `null`, a message and a finite time, the strings
+ * within `HOST_TEXT_MAX_LENGTH`.
  *
  * @public
  */
@@ -1887,17 +1892,17 @@ export function isLogParams(value: unknown): value is LogParams {
   return (
     isRecord(value) &&
     isOneOf(LOG_LEVELS, value["level"]) &&
-    isStringOrNull(value["scope"]) &&
-    isString(value["message"]) &&
+    isHostTextOrNull(value["scope"]) &&
+    isHostText(value["message"]) &&
     isFiniteNumber(value["timeMs"]) &&
     optionalField(
       value,
       "error",
       (error) =>
         isRecord(error) &&
-        isString(error["message"]) &&
-        isStringOrNull(error["code"]) &&
-        isStringOrNull(error["stack"]),
+        isHostText(error["message"]) &&
+        isHostTextOrNull(error["code"]) &&
+        isHostTextOrNull(error["stack"]),
     )
   );
 }

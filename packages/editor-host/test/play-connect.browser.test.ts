@@ -185,7 +185,7 @@ describe("virtual:ignifx/editor in a page", () => {
   });
 
   it("ignores a port posted from any other origin", async () => {
-    const attach = await evaluatePlayControlsModule("ignifx://app");
+    const attach = await evaluatePlayControlsModule("ignifx-editor://app");
     const peer = await postConnect(window.location.origin);
     cleanups.push(() => {
       peer.close();

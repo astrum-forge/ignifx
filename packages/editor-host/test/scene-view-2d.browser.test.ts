@@ -395,4 +395,31 @@ describe("the scene view's 2D mode", () => {
     // Lite's gizmo dispatcher reads back a GPU pick on every press; let it settle before disposal.
     await frames(10);
   }, 60_000);
+
+  it("reports a click whose pick throws as a hostError, and keeps the selection", async () => {
+    const { view } = await sceneView();
+    await call("setViewMode", { mode: "2d" });
+    await call("frame", { entities: "all" });
+    await frames(4);
+    Object.defineProperty(view.app.twoD, "pickAt", {
+      configurable: true,
+      value: (): never => {
+        throw new Error("The picker is gone.");
+      },
+    });
+
+    const onHero = cssPointOf(view, 3, 1);
+    click(onHero);
+    const report = await notified(SceneNotification.hostError);
+    const params = report["params"];
+    expect(params).toMatchObject({
+      code: null,
+      message: "Selecting what a click in the view hit: The picker is gone.",
+    });
+    const data: unknown = Reflect.get(Object(params), "data");
+    expect(Reflect.get(Object(data), "x")).toBeCloseTo(onHero.x, 3);
+    expect(Reflect.get(Object(data), "y")).toBeCloseTo(onHero.y, 3);
+    expect(peer?.takeNotification(SceneNotification.selectionChanged) ?? null).toBeNull();
+    await frames(10);
+  }, 60_000);
 });

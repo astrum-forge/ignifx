@@ -3,7 +3,8 @@
  * (`src/private-dir.ts` there), kept here as defence in depth: a project whose Vite config lists
  * `editorHostPlugin()` without `ignifx()` would otherwise serve `.ignifx/mcp.json`, the editor's MCP
  * token, to any page, or copy it into `dist/` through a link under `public/`. `@ignifx/vite-plugin`
- * is an optional peer, so this package cannot import it; keep the two in step.
+ * is an optional peer, so this package cannot import it. Below this comment the file is
+ * byte-identical to that one, which `test/private-dir-copy.test.ts` checks; change both together.
  */
 
 import { existsSync, realpathSync } from "node:fs";
@@ -12,13 +13,43 @@ import { basename, dirname, isAbsolute, join, relative, resolve } from "node:pat
 import type { Connect } from "vite";
 
 /** The editor-private directory at a project's root. */
-const PRIVATE_DIR_NAME = ".ignifx";
+export const PRIVATE_DIR_NAME = ".ignifx";
+
+/**
+ * `server.fs.deny` patterns for the private directory. Vite matches a pattern without a `/` at any
+ * depth, so `.ignifx` denies the directory itself wherever it is and the glob denies its contents.
+ */
+export const PRIVATE_DIR_DENY: readonly string[] = [PRIVATE_DIR_NAME, `**/${PRIVATE_DIR_NAME}/**`];
+
+/**
+ * Vite 8's own `server.fs.deny` defaults. A deny list returned from a `config` hook replaces them
+ * when the user set none, so the plugin restates them; a test compares this list with Vite's.
+ */
+export const VITE_DEFAULT_FS_DENY: readonly string[] = [
+  ".env",
+  ".env.*",
+  "*.{crt,pem,key,p12,pfx,cer,der}",
+  ".npmrc",
+  ".yarnrc.yml",
+  "**/.git/**",
+];
 
 /** Percent-decoding passes before a path counts as private regardless of what it decodes to. */
 const MAX_DECODE_PASSES = 8;
 
 /** Windows 8.3 short names of `.ignifx` (`IGNIFX~1`), which resolve to it on NTFS. */
 const SHORT_NAME_RE = /^ignifx~\d+$/u;
+
+/**
+ * The `server.fs.deny` list the plugin contributes to the user's config.
+ *
+ * @param userDeny - The deny list the config holds so far, or `undefined` when none is set.
+ * @returns The patterns to return from the `config` hook. Vite concatenates them with a list the user
+ * set; with none set, Vite's defaults come first so returning a list does not drop them.
+ */
+export function privateDirDenyPatterns(userDeny: readonly string[] | undefined): string[] {
+  return userDeny === undefined ? [...VITE_DEFAULT_FS_DENY, ...PRIVATE_DIR_DENY] : [...PRIVATE_DIR_DENY];
+}
 
 /**
  * Decodes every `%XX` escape, byte by byte, so a malformed sequence never stops decoding.
@@ -85,7 +116,7 @@ function decodedRequestPath(url: string): string | null {
  * @param path - A path with `/` or `\` separators, relative or absolute.
  * @returns `true` when a segment between separators is a spelling of `.ignifx`.
  */
-function hasPrivateSegment(path: string): boolean {
+export function hasPrivateSegment(path: string): boolean {
   return path.split(/[/\\?#]/u).some(isPrivateSegment);
 }
 
@@ -162,7 +193,7 @@ function refuse(response: Parameters<Connect.NextHandleFunction>[1]): void {
 }
 
 /** Where a server finds the file a request URL names. */
-interface PrivateDirGuardOptions {
+export interface PrivateDirGuardOptions {
   /** The real path of the project root, which real paths are judged against. */
   readonly realRoot: string;
   /** The server's `base`; a URL is tried with and without it. */

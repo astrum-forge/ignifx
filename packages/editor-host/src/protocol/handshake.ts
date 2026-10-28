@@ -108,6 +108,64 @@ export const HostCapability = {
 export type HostCapability = (typeof HostCapability)[keyof typeof HostCapability];
 
 /**
+ * The longest string, in UTF-16 code units, the editor accepts from a host in `ready` (the engine
+ * version, each capability name) and in the reports `log`, `hostError` (with `AppErrorData`) and
+ * `hotReloaded` (messages, codes, scopes, stacks, type ids). A message holding a longer one fails
+ * its guard and is dropped whole. It is far above what the Console keeps (which clips a message or
+ * a stack it shows), so it only stops a runaway report from crossing the editor's processes. The
+ * host does not clip to it.
+ *
+ * @public
+ */
+export const HOST_TEXT_MAX_LENGTH = 1_048_576;
+
+/**
+ * The longest list the editor accepts from a host in `ready` (the capabilities) and in a
+ * `hotReloaded` report (the type ids, the errors). A message holding a longer one fails its guard
+ * and is dropped whole.
+ *
+ * @public
+ */
+export const HOST_LIST_MAX_LENGTH = 4096;
+
+/**
+ * Tells whether a value is a string no longer than {@link HOST_TEXT_MAX_LENGTH}.
+ *
+ * @param value - The value to test.
+ * @returns True for such a string.
+ *
+ * @internal
+ */
+export function isHostText(value: unknown): value is string {
+  return typeof value === "string" && value.length <= HOST_TEXT_MAX_LENGTH;
+}
+
+/**
+ * Tells whether a value is `null` or a string no longer than {@link HOST_TEXT_MAX_LENGTH}.
+ *
+ * @param value - The value to test.
+ * @returns True for `null` or such a string.
+ *
+ * @internal
+ */
+export function isHostTextOrNull(value: unknown): value is string | null {
+  return value === null || isHostText(value);
+}
+
+/**
+ * Tells whether a value is a list of at most {@link HOST_LIST_MAX_LENGTH} passing items.
+ *
+ * @param value - The value to test.
+ * @param item - The test for one item.
+ * @returns True for such a list.
+ *
+ * @internal
+ */
+export function isHostList<T>(value: unknown, item: (entry: unknown) => entry is T): value is readonly T[] {
+  return Array.isArray(value) && value.length <= HOST_LIST_MAX_LENGTH && value.every((entry: unknown) => item(entry));
+}
+
+/**
  * What the editor says about itself in `hello`.
  *
  * @public
@@ -210,7 +268,8 @@ export function isProtocolVersion(value: unknown): value is ProtocolVersion {
  *
  * @param value - The received `result`.
  * @returns True when it has a string `engineVersion`, a protocol version, an array of capability
- * strings, and a known `hostKind`.
+ * strings, and a known `hostKind`; the strings and the list within {@link HOST_TEXT_MAX_LENGTH}
+ * and {@link HOST_LIST_MAX_LENGTH}.
  *
  * @public
  */
@@ -220,10 +279,9 @@ export function isReadyResult(value: unknown): value is ReadyResult {
   }
   const { capabilities, hostKind } = value;
   return (
-    typeof value["engineVersion"] === "string" &&
+    isHostText(value["engineVersion"]) &&
     isProtocolVersion(value["protocol"]) &&
-    Array.isArray(capabilities) &&
-    capabilities.every((name: unknown) => typeof name === "string") &&
+    isHostList(capabilities, isHostText) &&
     Object.values(HostKind).some((kind) => kind === hostKind)
   );
 }

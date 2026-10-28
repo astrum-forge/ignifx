@@ -3606,6 +3606,29 @@ Either direction: a liveness check, answered with `"pong"`.
 
 ***
 
+### HOST\_LIST\_MAX\_LENGTH
+
+> `const` **HOST\_LIST\_MAX\_LENGTH**: `4096` = `4096`
+
+The longest list the editor accepts from a host in `ready` (the capabilities) and in a
+`hotReloaded` report (the type ids, the errors). A message holding a longer one fails its guard
+and is dropped whole.
+
+***
+
+### HOST\_TEXT\_MAX\_LENGTH
+
+> `const` **HOST\_TEXT\_MAX\_LENGTH**: `1048576` = `1_048_576`
+
+The longest string, in UTF-16 code units, the editor accepts from a host in `ready` (the engine
+version, each capability name) and in the reports `log`, `hostError` (with `AppErrorData`) and
+`hotReloaded` (messages, codes, scopes, stacks, type ids). A message holding a longer one fails
+its guard and is dropped whole. It is far above what the Console keeps (which clips a message or
+a stack it shows), so it only stops a runaway report from crossing the editor's processes. The
+host does not clip to it.
+
+***
+
 ### HostCapability
 
 > `const` **HostCapability**: `object`
@@ -4340,7 +4363,8 @@ The received `data`.
 `value is AppErrorData`
 
 True for a boundary name, a phase or `null`, an entity uid or `null`, and, when present,
-a phase name, an entity name, a component and a stack, each a string or `null`.
+a phase name, an entity name, a component and a stack, each a string or `null`; the strings within
+`HOST_TEXT_MAX_LENGTH`.
 
 ***
 
@@ -4571,7 +4595,8 @@ The received `params`.
 
 `value is HostErrorParams`
 
-True for a code or `null`, a message and optional JSON data.
+True for a code or `null`, a message and optional JSON data, the strings within
+`HOST_TEXT_MAX_LENGTH`.
 
 ***
 
@@ -4593,7 +4618,8 @@ The received `params`.
 
 `value is HotReloadedParams`
 
-True for `{ report }` with a known kind, type ids, counts and JSON errors.
+True for `{ report }` with a known kind, type ids, counts and JSON errors, its strings and
+lists within `HOST_TEXT_MAX_LENGTH` and `HOST_LIST_MAX_LENGTH`.
 
 ***
 
@@ -4705,7 +4731,8 @@ The received `params`.
 
 `value is LogParams`
 
-True for a known level, a scope or `null`, a message and a finite time.
+True for a known level, a scope or `null`, a message and a finite time, the strings
+within `HOST_TEXT_MAX_LENGTH`.
 
 ***
 
@@ -4952,7 +4979,8 @@ The received `result`.
 `value is ReadyResult`
 
 True when it has a string `engineVersion`, a protocol version, an array of capability
-strings, and a known `hostKind`.
+strings, and a known `hostKind`; the strings and the list within [HOST\_TEXT\_MAX\_LENGTH](#host_text_max_length)
+and [HOST\_LIST\_MAX\_LENGTH](#host_list_max_length).
 
 ***
 

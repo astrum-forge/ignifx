@@ -20,7 +20,7 @@ afterAll(disposeFixtures);
 
 const TOKEN = "e28-editor-host-token-0123456789";
 const MCP_JSON = JSON.stringify({ port: 4321, token: TOKEN, host: "127.0.0.1", url: "http://127.0.0.1:4321/mcp" });
-const EDITOR_ORIGIN = "ignifx://app";
+const EDITOR_ORIGIN = "ignifx-editor://app";
 
 /** Windows needs a privilege to create symbolic links; CI runs these on macOS and Linux. */
 const linksUnsupported = process.platform === "win32";
