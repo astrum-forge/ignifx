@@ -26,7 +26,6 @@ import {
   SCREENSHOT_MAX_SIZE,
   SceneMethod,
   SceneNotification,
-  TRANSFORM_DRAGGING_INTERVAL_MS,
   ViewMode,
 } from "../protocol/index.js";
 import {
@@ -41,6 +40,7 @@ import { applyDefaults, DefaultsTracker, instancesHolding } from "./defaults.js"
 import { DocumentMirror } from "./document.js";
 import { EditorCamera2D, EYE_DISTANCE_2D } from "./editor-camera-2d.js";
 import { EDITOR_CAMERA_FOV, EditorCamera } from "./editor-camera.js";
+import { GizmoDragRelay } from "./gizmo-drag.js";
 import { applyOps, reloadInstance } from "./ops.js";
 import { sampleAnimation } from "./sample-animation.js";
 import { schemaSet } from "./schemas.js";
@@ -57,15 +57,7 @@ import {
   twoDServiceOf,
   zoomForSize,
 } from "./view-2d.js";
-import {
-  DragSnapper,
-  pickRayMembers,
-  readLocalTransform,
-  sameTransform,
-  screenshotSize,
-  toBackingPixels,
-  viewSurfaceOf,
-} from "./view-math.js";
+import { pickRayMembers, screenshotSize, toBackingPixels, viewSurfaceOf } from "./view-math.js";
 import type { RequestHandler } from "../channel.js";
 import type { EditorAssetChange, PendingReload } from "./asset-reload.js";
 import type { ChangedDefaults } from "./defaults.js";
@@ -75,12 +67,10 @@ import type { EditorView, ViewDrag, WorldBounds } from "../lite/gizmos.js";
 import type {
   AssetReloadedParams,
   ColliderOutlineSet,
-  GizmoDragMode,
   GizmoSnap,
   HostErrorParams,
   PickParams,
   PickResult,
-  SceneFileTransform,
   SchemaSet,
   ScreenshotResult,
   SettingsSet,
@@ -122,20 +112,6 @@ interface GizmoSettings {
   readonly space: GizmoSpace;
   /** The snapping steps, or `null`. */
   readonly snap: GizmoSnap | null;
-}
-
-/** One gizmo drag in progress. */
-interface DragState {
-  /** The dragged entity. */
-  readonly entity: Entity;
-  /** The drag's mode. */
-  readonly mode: GizmoDragMode;
-  /** The local transform at drag start. */
-  readonly before: SceneFileTransform;
-  /** The snapping, or `null`. */
-  readonly snapper: DragSnapper | null;
-  /** When the last `transformDragging` went out, in milliseconds. */
-  lastSentMs: number;
 }
 
 /**
@@ -181,7 +157,7 @@ export class SceneHost {
 
   #gizmo: GizmoSettings = { mode: GizmoMode.translate, space: GizmoSpace.world, snap: null };
 
-  #drag: DragState | null = null;
+  readonly #drag: GizmoDragRelay;
 
   #started = false;
 
@@ -203,6 +179,7 @@ export class SceneHost {
    */
   constructor(options: SceneHostOptions) {
     this.#notify = options.notify;
+    this.#drag = new GizmoDragRelay(options.notify);
     const has = (capability: string): boolean => options.capabilities.includes(capability);
     this.#hasViewMode2D = has(HostCapability.viewMode2d);
     const methods = new Map<string, RequestHandler>([
@@ -973,7 +950,7 @@ export class SceneHost {
   }
 
   /**
-   * Turns a gizmo drag into `transformDragging` (at most every 50 ms) and `transformDragged`.
+   * Hands a gizmo drag of the selection's last entity to {@link GizmoDragRelay}.
    *
    * @param phase - Which part of the gesture.
    * @param drag - The handle.
@@ -983,45 +960,14 @@ export class SceneHost {
       const uid = this.#selection.at(-1);
       const entity = uid === undefined ? undefined : this.#mirror?.index()?.entities.get(uid);
       if (entity === undefined) {
-        this.#drag = null;
-        return;
+        this.#drag.clear();
+      } else {
+        this.#drag.start(entity, drag.mode, this.#gizmo.snap);
       }
-      const snap = this.#gizmo.snap;
-      this.#drag = {
-        entity,
-        mode: drag.mode,
-        before: readLocalTransform(entity),
-        snapper: snap === null ? null : new DragSnapper(drag.mode, snap, entity),
-        lastSentMs: Number.NEGATIVE_INFINITY,
-      };
-      return;
-    }
-    const state = this.#drag;
-    if (state === null) {
-      return;
-    }
-    if (phase === "move") {
-      state.snapper?.apply(state.entity);
-      const now = performance.now();
-      if (now - state.lastSentMs >= TRANSFORM_DRAGGING_INTERVAL_MS) {
-        state.lastSentMs = now;
-        this.#notify(SceneNotification.transformDragging, {
-          entity: state.entity.uid,
-          mode: state.mode,
-          after: readLocalTransform(state.entity),
-        });
-      }
-      return;
-    }
-    this.#drag = null;
-    const after = readLocalTransform(state.entity);
-    if (!sameTransform(state.before, after)) {
-      this.#notify(SceneNotification.transformDragged, {
-        entity: state.entity.uid,
-        mode: state.mode,
-        before: state.before,
-        after,
-      });
+    } else if (phase === "move") {
+      this.#drag.move();
+    } else {
+      this.#drag.end();
     }
   }
 
