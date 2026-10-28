@@ -219,7 +219,7 @@ export function checkChannelOptions(editorOrigin: string, heartbeatIntervalMs: n
     throw new IgnifxError(
       EditorHostErrorCode.invalidEditorOrigin,
       `"${editorOrigin}" is not an origin the editor can be served from.`,
-      { hint: 'Pass the editor\'s origin exactly as the browser reports it, for example "ignifx://app".' },
+      { hint: 'Pass the editor\'s origin exactly as the browser reports it, for example "ignifx-editor://app".' },
     );
   }
   const interval = heartbeatIntervalMs ?? DEFAULT_HEARTBEAT_INTERVAL_MS;

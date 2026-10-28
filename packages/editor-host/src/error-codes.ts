@@ -12,7 +12,7 @@
  * @beta
  */
 export const EditorHostErrorCode = {
-  /** `editorOrigin` is not an origin such as `"ignifx://app"` or `"http://localhost:5173"`. */
+  /** `editorOrigin` is not an origin such as `"ignifx-editor://app"` or `"http://localhost:5173"`. */
   invalidEditorOrigin: "IGX-1801",
   /** The host was started where there is no `window` to receive the editor's port, and was given no `messageTarget`. */
   noMessageTarget: "IGX-1802",
@@ -38,10 +38,10 @@ const ORIGIN_SHAPE = /^[a-z][a-z\d+.-]*:\/\/[^\s/?#;,'"*]+$/iu;
  *
  * @remarks
  * `new URL(value).origin` is not usable here: for a scheme Node does not know, such as the
- * editor's `ignifx://app`, it answers `"null"`, while Chromium reports `ignifx://app` as
+ * editor's `ignifx-editor://app`, it answers `"null"`, while Chromium reports `ignifx-editor://app` as
  * `event.origin` because Electron registers the scheme as standard.
  *
- * @param value - The candidate, for example `"ignifx://app"` or `"http://localhost:5173"`.
+ * @param value - The candidate, for example `"ignifx-editor://app"` or `"http://localhost:5173"`.
  * @returns `true` when the value is a scheme, `://`, and a host with an optional port.
  *
  * @beta

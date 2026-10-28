@@ -530,7 +530,7 @@ callbacks, and physics and other game-clock systems hold or skip. Defaults to `t
 
 **`Beta`**
 
-The origin the editor is served from, for example `"ignifx://app"`. A port posted from any
+The origin the editor is served from, for example `"ignifx-editor://app"`. A port posted from any
 other origin is ignored.
 
 ##### engineVersion?
@@ -3508,7 +3508,7 @@ Every diagnostic code `@ignifx/editor-host` can throw, keyed by an intention-rev
 
 > `readonly` **invalidEditorOrigin**: `"IGX-1801"` = `"IGX-1801"`
 
-`editorOrigin` is not an origin such as `"ignifx://app"` or `"http://localhost:5173"`.
+`editorOrigin` is not an origin such as `"ignifx-editor://app"` or `"http://localhost:5173"`.
 
 ##### invalidOption
 
@@ -4492,7 +4492,7 @@ Tells whether a string is an origin the editor can be served from.
 
 `string`
 
-The candidate, for example `"ignifx://app"` or `"http://localhost:5173"`.
+The candidate, for example `"ignifx-editor://app"` or `"http://localhost:5173"`.
 
 #### Returns
 
@@ -4503,7 +4503,7 @@ The candidate, for example `"ignifx://app"` or `"http://localhost:5173"`.
 #### Remarks
 
 `new URL(value).origin` is not usable here: for a scheme Node does not know, such as the
-editor's `ignifx://app`, it answers `"null"`, while Chromium reports `ignifx://app` as
+editor's `ignifx-editor://app`, it answers `"null"`, while Chromium reports `ignifx-editor://app` as
 `event.origin` because Electron registers the scheme as standard.
 
 ***
@@ -5499,7 +5499,7 @@ IgnifxError `IGX-1801` for a malformed `editorOrigin`, `IGX-1802` with no window
 #### Example
 
 ```ts
-const connector = listenForEditorPlayControls({ editorOrigin: "ignifx://app" });
+const connector = listenForEditorPlayControls({ editorOrigin: "ignifx-editor://app" });
 const app = await createApp({ headless: true });
 const controls = connector.attach(app);
 connector.dispose();
@@ -5600,7 +5600,7 @@ load, or `start` throws is rethrown after the channel is closed.
 ```ts
 import { startEditorHost } from "@ignifx/editor-host";
 
-const host = await startEditorHost({ editorOrigin: "ignifx://app", canvas, extensions: [], scripts });
+const host = await startEditorHost({ editorOrigin: "ignifx-editor://app", canvas, extensions: [], scripts });
 ```
 
 ***
@@ -5650,6 +5650,6 @@ IgnifxError `IGX-1801` for a malformed `editorOrigin`, `IGX-1802` with no window
 #### Example
 
 ```ts
-const controls = startEditorPlayControls(app, { editorOrigin: "ignifx://app" });
+const controls = startEditorPlayControls(app, { editorOrigin: "ignifx-editor://app" });
 controls.dispose();
 ```

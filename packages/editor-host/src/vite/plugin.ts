@@ -36,7 +36,7 @@ import type { ConfigEnv, Plugin, ViteDevServer } from "vite";
  */
 export interface EditorHostPluginOptions {
   /**
-   * The origin the editor is served from, for example `"ignifx://app"` when packaged or
+   * The origin the editor is served from, for example `"ignifx-editor://app"` when packaged or
    * `"http://localhost:5173"` while the editor itself runs from a dev server. Only this origin may
    * frame either view in `vite dev`, and only it can hand either view a port.
    */
@@ -93,7 +93,7 @@ function checkOptions(options: EditorHostPluginOptions): { extensions: string; h
   if (!isEditorOrigin(options.editorOrigin)) {
     throw new EditorHostPluginError(
       EditorHostErrorCode.invalidEditorOrigin,
-      `editorOrigin "${options.editorOrigin}" is not an origin; pass one such as "ignifx://app" or "http://localhost:5173".`,
+      `editorOrigin "${options.editorOrigin}" is not an origin; pass one such as "ignifx-editor://app" or "http://localhost:5173".`,
     );
   }
   const interval = options.heartbeatIntervalMs;
@@ -147,7 +147,7 @@ function checkOptions(options: EditorHostPluginOptions): { extensions: string; h
  * import { defineConfig } from "vite";
  *
  * export default defineConfig({
- *   plugins: [ignifx(), editorHostPlugin({ editorOrigin: "ignifx://app" })],
+ *   plugins: [ignifx(), editorHostPlugin({ editorOrigin: "ignifx-editor://app" })],
  * });
  * ```
  *
