@@ -116,7 +116,7 @@ options. `groups` becomes the entry's `groups`; everything else is passed throug
 the keys below.
 
 ```json
-{ "groups": ["boot", "level1"], "texture": { "srgb": true, "mipmaps": true } }
+{ "groups": ["boot", "level1"], "texture": { "srgb": true, "mipMaps": true } }
 ```
 
 | Key                                                | Meaning                                                                                                                                                                                       |
