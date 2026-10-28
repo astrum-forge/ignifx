@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { ApplyOpFailureCode, SceneNotification } from "../src/protocol/index.js";
-import { CRATE_PREFAB, startLiveHost } from "./support/scene-project.js";
+import { CRATE_PREFAB, PAIR_PREFAB, startLiveHost } from "./support/scene-project.js";
 import type { Received } from "./support/editor.js";
 import type { LiveHost, Wire } from "./support/scene-project.js";
 import type { SceneOp } from "../src/protocol/index.js";
@@ -276,6 +276,91 @@ describe("applyOps on a live world", () => {
     expect(all.byUid.get("B")?.components).toEqual([
       { uid: "B-F", type: "game/Follow", props: { target: { $entity: "P" } } },
     ]);
+  });
+
+  it("reads an instance's overrides back as the document lists them, until its members change (B4)", async () => {
+    const { app, peer } = await opened();
+    const [crate, lid, base] = CRATE_PREFAB.entities.map((record) => record.uid);
+    // A member's transform before the root's prop, against the serializer's file order, and an
+    // override equal to the prefab's value, which the serializer leaves out.
+    const overrides = [
+      { path: `${lid ?? ""}/transform/position`, value: [0, 2, 0] },
+      { path: `${crate ?? ""}/components/01M4XQ7K3N8V2D5R0B6G1HT9WT/props/mass`, value: 3 },
+      { path: `${base ?? ""}/transform/position`, value: [0, -0.5, 0] },
+    ];
+    const instance = { scene: { $asset: "prefabs/crate.prefab.json" }, overrides };
+    const file: SceneFile = {
+      ...FILE,
+      entities: FILE.entities.map((record) => (record.uid === "P" ? Object.assign({}, record, { instance }) : record)),
+    };
+    expect(await call(peer, "openScene", { file, address: "scenes/ops.scene.json" })).toHaveProperty("result");
+    expect(
+      await apply(peer, [
+        { op: "instantiate", entity: "Q", name: "Crate 2", parent: null, transform: at(7), instance },
+      ]),
+    ).toEqual({ applied: 1, failures: [] });
+
+    const all = await readAll(peer);
+    expect(all.byUid.get("P")?.instance?.overrides).toEqual(overrides);
+    expect(all.byUid.get("Q")?.instance?.overrides).toEqual(overrides);
+
+    // Something other than an op moves a member: the serializer's list shows it once the cached
+    // index is read again (an unrelated op).
+    const member = app.world.getEntity("P")?.children.find((child) => child.name === "Lid");
+    member?.transform.localPosition.set(0, 4, 0);
+    await apply(peer, [{ op: "setEntityField", entity: "B", field: "name", value: "B2" }]);
+    const moved = await readAll(peer);
+    expect(moved.byUid.get("P")?.instance?.overrides).toEqual([overrides[1], { ...overrides[0], value: [0, 4, 0] }]);
+    expect(moved.byUid.get("Q")?.instance?.overrides).toEqual(overrides);
+  });
+
+  it("reads a multi-root member's prop override set before its transform override in that order (B4)", async () => {
+    const { peer } = await opened();
+    const right = PAIR_PREFAB.entities[1];
+    const body = right?.components?.[0]?.uid ?? "";
+    const mass = { path: `${right?.uid ?? ""}/components/${body}/props/mass`, value: 6 };
+    const position = { path: `${right?.uid ?? ""}/transform/position`, value: [1, 0.3, 0] };
+    const scene = { $asset: "prefabs/pair.prefab.json" };
+    // The editor's order: the prop first, then the transform, each appended by its own command. The
+    // serializer writes an entity's transform before its components. The transform's op is sent as
+    // the editor's command has it, which editor-core's document holds canonical.
+    expect(
+      await apply(peer, [
+        { op: "instantiate", entity: "R", name: "Pair", parent: null, transform: at(9), instance: { scene } },
+      ]),
+    ).toEqual({ applied: 1, failures: [] });
+    expect(await apply(peer, [{ op: "setOverride", entity: "R", override: mass }])).toEqual({
+      applied: 1,
+      failures: [],
+    });
+    const sent = { op: "replace" as const, path: position.path, value: [1, 0.1 + 0.2, 0] };
+    expect(await apply(peer, [{ op: "setOverride", entity: "R", override: sent }])).toEqual({
+      applied: 1,
+      failures: [],
+    });
+    expect((await readAll(peer)).byUid.get("R")?.instance?.overrides).toEqual([mass, position]);
+
+    // Editing the first one in place keeps its place.
+    const heavier = { ...mass, value: 8 };
+    expect(await apply(peer, [{ op: "setOverride", entity: "R", override: heavier }])).toEqual({
+      applied: 1,
+      failures: [],
+    });
+    const edited = await readAll(peer);
+    expect(edited.byUid.get("R")?.instance?.overrides).toEqual([heavier, position]);
+
+    // Reopened from the document, the order holds.
+    const record = edited.byUid.get("R");
+    expect(record).toBeDefined();
+    const file: SceneFile = {
+      ...FILE,
+      entities: [
+        ...FILE.entities,
+        { ...(record as SceneFileEntity), instance: { scene, overrides: [heavier, position] } },
+      ],
+    };
+    expect(await call(peer, "openScene", { file, address: "scenes/ops.scene.json" })).toHaveProperty("result");
+    expect((await readAll(peer)).byUid.get("R")?.instance?.overrides).toEqual([heavier, position]);
   });
 
   it("reports each op the world disagrees with, and applies the rest", async () => {
