@@ -977,28 +977,34 @@ async function rebuildInstance(
   await buildSubtree(context, records, parent, at);
   mirror.recordInstances(records);
   const references = context.mirror.decoder();
-  // Every uid the subtree had resolves, so decoding with it reports only the problems a field had
-  // when it was built.
-  const asBuilt: ReferenceDecoder = {
-    entity: (target) => (inside.has(target) ? target : references.entity(target)),
-    component: (target) => (insideComponents.has(target) ? target : references.component(target)),
-    asset: (address, type) => references.asset(address, type),
-  };
   const rebuilt = indexOf(context);
   const issues: SceneIssue[] = [];
-  const repoint = (live: Component | undefined, props: JsonObject | undefined): void => {
+  const repoint = (
+    live: Component | undefined,
+    props: JsonObject | undefined,
+    decoder: ReferenceDecoder = references,
+  ): void => {
     const fields = new Set(
       Object.entries(props ?? {})
         .filter(([, value]) => pointsInto(value, inside, insideComponents))
         .map(([name]) => name),
     );
-    if (live === undefined || props === undefined || fields.size === 0) {
+    // A script's `onDestroy` may have taken the component down with the subtree.
+    if (live === undefined || live.isDestroyed || props === undefined || fields.size === 0) {
       return;
     }
+    // Every component uid the subtree had resolves, so this decode reports only the problems the
+    // fields had when they were built. A rebuild keeps the subtree's document entities, so their
+    // uids resolve anyway.
+    const asBuilt: ReferenceDecoder = {
+      entity: (target) => decoder.entity(target),
+      component: (target) => (insideComponents.has(target) ? target : decoder.component(target)),
+      asset: (address, type) => decoder.asset(address, type),
+    };
     // Only the fields that point in, and only their problems that are new: another reference in
     // the same field that resolves nowhere was reported when it was built.
     const reported = new Set(propIssues(live, props, asBuilt, fields).map((issue) => issue.message));
-    issues.push(...assignProps(live, props, references, fields).filter((issue) => !reported.has(issue.message)));
+    issues.push(...assignProps(live, props, decoder, fields).filter((issue) => !reported.has(issue.message)));
   };
   for (const outside of index.file.entities) {
     if (inside.has(outside.uid)) {
@@ -1017,8 +1023,16 @@ async function rebuildInstance(
     }
   }
   // The fields other instances' overrides aimed into the subtree, on members that were not rebuilt.
-  for (const [component, props] of held) {
-    repoint(component, props);
+  // Their other references (to their own instance's members, which the document cannot name) keep
+  // the objects they held.
+  const keep: ReferenceDecoder = {
+    entity: (target) => (inside.has(target) ? null : held.entities.get(target)) ?? references.entity(target),
+    component: (target) =>
+      (insideComponents.has(target) ? null : held.components.get(target)) ?? references.component(target),
+    asset: (address, type) => references.asset(address, type),
+  };
+  for (const [component, props] of held.fields) {
+    repoint(component, props, keep);
   }
   // Read as a reopen's: a reference into the subtree that the edit left with nothing to name.
   reportBuildIssues(context, issues);
@@ -1043,18 +1057,29 @@ export async function reloadInstance(app: App, mirror: DocumentMirror, uid: stri
   }
 }
 
+/** What {@link heldByMembers} read from the live world before a subtree was destroyed. */
+interface HeldReferences {
+  /** Each member component with a field that points into the subtree, and those fields as JSON. */
+  readonly fields: ReadonlyMap<Component, JsonObject>;
+  /** The entities those fields held, by uid. */
+  readonly entities: ReadonlyMap<string, unknown>;
+  /** The components those fields held, by uid. */
+  readonly components: ReadonlyMap<string, unknown>;
+}
+
 /**
  * The reference fields of instance members outside a subtree that point into it, read from the live
  * world as JSON: what another instance's overrides aimed at the subtree's document entities, or at
  * the components its `add` overrides give. A member is not in the document, so only its live
- * component knows the field; a document component and an added one are read from the document.
+ * component knows the field; a document component and an added one are read from the document. Only
+ * the instances whose override lists point into the subtree are read.
  *
  * @param context - The app and the document.
  * @param index - The document, read before the subtree is destroyed.
  * @param subtree - The subtree's root.
  * @param entities - The subtree's document entity uids.
  * @param components - The uids of its document components and the components its overrides add.
- * @returns Each member component with a field that points in, and those fields as JSON.
+ * @returns The fields, and the objects they held.
  */
 function heldByMembers(
   context: OpContext,
@@ -1062,8 +1087,10 @@ function heldByMembers(
   subtree: Entity,
   entities: ReadonlySet<string>,
   components: ReadonlySet<string>,
-): Map<Component, JsonObject> {
-  const held = new Map<Component, JsonObject>();
+): HeldReferences {
+  const fields = new Map<Component, JsonObject>();
+  const heldEntities = new Map<string, unknown>();
+  const heldComponents = new Map<string, unknown>();
   const registry = context.app.world.registry;
   const visit = (entity: Entity): void => {
     if (entity === subtree) {
@@ -1076,25 +1103,59 @@ function heldByMembers(
       }
       const props: Record<string, JsonValue> = {};
       for (const [name, field] of Object.entries(registry.describe(component.constructor).schema ?? {})) {
-        if (holdsReferences(field)) {
-          const json = encodeLive(field, Reflect.get(component, name));
-          if (pointsInto(json, entities, components)) {
-            props[name] = json;
+        if (!holdsReferences(field)) {
+          continue;
+        }
+        const targets: [Map<string, unknown>, string, unknown][] = [];
+        const json = encodeValue(field, Reflect.get(component, name), {
+          entityUid: (value) => remember(targets, heldEntities, value),
+          componentUid: (value) => remember(targets, heldComponents, value),
+        });
+        if (pointsInto(json, entities, components)) {
+          props[name] = json;
+          for (const [into, target, value] of targets) {
+            into.set(target, value);
           }
         }
       }
       if (Object.keys(props).length > 0) {
-        held.set(component, props);
+        fields.set(component, props);
       }
     }
     for (const child of entity.children) {
       visit(child);
     }
   };
-  for (const root of context.mirror.scene?.roots ?? []) {
-    visit(root);
+  for (const record of index.file.entities) {
+    const root = index.entities.get(record.uid);
+    const aims = (context.mirror.overridesOf(record.uid) ?? []).some(
+      (override) => (override.op ?? "replace") === "replace" && pointsInto(override.value, entities, components),
+    );
+    if (root !== undefined && !entities.has(record.uid) && aims) {
+      visit(root);
+    }
   }
-  return held;
+  return { fields, entities: heldEntities, components: heldComponents };
+}
+
+/**
+ * Notes a referenced object by its uid, to keep if its field turns out to point into a subtree.
+ *
+ * @param targets - The field's notes.
+ * @param into - Where the note goes if it is kept.
+ * @param value - The referenced object.
+ * @returns Its uid, or `null` for anything without one.
+ */
+function remember(
+  targets: [Map<string, unknown>, string, unknown][],
+  into: Map<string, unknown>,
+  value: unknown,
+): string | null {
+  const uid = uidOf(value);
+  if (uid !== null) {
+    targets.push([into, uid, value]);
+  }
+  return uid;
 }
 
 /**

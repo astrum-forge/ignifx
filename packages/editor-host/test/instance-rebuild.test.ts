@@ -541,8 +541,8 @@ describe("references an instance's overrides hold, through a rebuild, headless",
 });
 
 /**
- * The lamp post prefab with a `Follow`, a `Watch` and a `Crowd` on the bulb, all pointing at nothing,
- * which an instance's overrides aim.
+ * The lamp post prefab with a `Follow`, a `Watch` and a `Crowd` on the bulb, which an instance's
+ * overrides aim; only the `Crowd` points somewhere, at the spare of its own lamp post.
  *
  * @returns The prefab file.
  */
@@ -556,7 +556,11 @@ function bulbAims(): SceneFile {
   }
   const aimed = [
     { uid: "BULB-WATCH", type: "game/Watch" },
-    { uid: "BULB-CROWD", type: "game/Crowd" },
+    {
+      uid: "BULB-CROWD",
+      type: "game/Crowd",
+      props: { members: [{ $entity: "SPARE" }, null], named: { own: { $entity: "SPARE" } } },
+    },
   ];
   entities[at] = { ...bulb, components: [...(bulb.components ?? []), ...aimed] };
   return { ...prefab, entities };
@@ -669,6 +673,28 @@ describe("another instance's member overrides that point into a rebuilt instance
     expect(crowd?.named["sign"]).toBe(sign);
     expect(crowd?.pair.first).toBe(sign);
     expect(crowd?.maybe).toBe(sign);
+    expect(await overridesOf("SECOND-POST")).toEqual(second);
+    expect(warnings).toEqual([]);
+  });
+
+  it("keeps a member's references to its own instance beside the ones it re-points", async () => {
+    const second: SceneFileOverride[] = [
+      { path: "BULB/components/BULB-CROWD/props/members/1", value: { $entity: "SIGN" } },
+      { path: "BULB/components/BULB-CROWD/props/named/sign", value: { $entity: "SIGN" } },
+    ];
+    const { running, warnings } = await sceneView(twoPosts([], second), bulbAims());
+    const spare = running.app.world.getEntity("SECOND-POST")?.children.find((member) => member.name === "Spare");
+    expect(bulbOf(running, "SECOND-POST", Crowd)?.members[0]).toBe(spare);
+
+    await applyOne({ op: "setOverride", entity: "STREET-POST", override: SPARE_7 });
+
+    const sign = running.app.world.getEntity("SIGN");
+    const crowd = bulbOf(running, "SECOND-POST", Crowd);
+    expect(spare?.isDestroyed).toBe(false);
+    expect(crowd?.members[0]).toBe(spare);
+    expect(crowd?.members[1]).toBe(sign);
+    expect(crowd?.named["own"]).toBe(spare);
+    expect(crowd?.named["sign"]).toBe(sign);
     expect(await overridesOf("SECOND-POST")).toEqual(second);
     expect(warnings).toEqual([]);
   });
