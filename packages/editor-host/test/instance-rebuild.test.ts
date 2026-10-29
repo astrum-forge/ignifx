@@ -10,8 +10,9 @@ import {
   Script,
   stringifySceneFile,
 } from "@ignifx/core";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { startEditorHost } from "../src/host.js";
+import * as heldReferences from "../src/scene/held-references.js";
 import { SceneNotification } from "../src/protocol/index.js";
 import { connect, EDITOR_ORIGIN } from "./support/editor.js";
 import { brightnessIn, Lamp, LAMP_POST, level, PREFAB } from "./support/lamps.js";
@@ -920,7 +921,7 @@ describe("a held member that the rebuild itself destroys, headless", () => {
 
 /**
  * Counts the reads of a component's field that the walk for held references makes, by putting an
- * accessor in place of the field.
+ * accessor in place of the field and wrapping the walk in a spy that marks when it runs.
  *
  * @param component - The component.
  * @param field - The field's name.
@@ -937,7 +938,7 @@ function walkReads(component: Component | undefined, field: string): () => numbe
     enumerable: true,
     get: () => {
       // The serializer and the destroy read the field too; only the walk's reads count.
-      if (new Error("read").stack?.includes("heldByMembers") === true) {
+      if (walking) {
         reads += 1;
       }
       return value;
@@ -947,6 +948,26 @@ function walkReads(component: Component | undefined, field: string): () => numbe
     },
   });
   return () => reads;
+}
+
+/** Whether the walk for held references is running, while {@link spyOnWalk}'s spy is in place. */
+let walking = false;
+
+/**
+ * Wraps the walk for held references so {@link walkReads} counts only the reads it makes.
+ *
+ * @returns The spy; restore it when done.
+ */
+function spyOnWalk(): { mockRestore: () => void } {
+  const walk = heldReferences.heldByMembers;
+  return vi.spyOn(heldReferences, "heldByMembers").mockImplementation((...args) => {
+    walking = true;
+    try {
+      return walk(...args);
+    } finally {
+      walking = false;
+    }
+  });
 }
 
 describe("the walk for references held by other instances' members, headless", () => {
@@ -964,8 +985,13 @@ describe("the walk for references held by other instances' members, headless", (
     }, bulbAims());
     const pointing = walkReads(bulbOf(running, "SECOND-POST", Follow), "target");
     const elsewhere = walkReads(bulbOf(running, "THIRD-POST", Follow), "target");
+    const spy = spyOnWalk();
 
-    await applyOne({ op: "setOverride", entity: "STREET-POST", override: SPARE_7 });
+    try {
+      await applyOne({ op: "setOverride", entity: "STREET-POST", override: SPARE_7 });
+    } finally {
+      spy.mockRestore();
+    }
 
     expect(pointing()).toBeGreaterThan(0);
     expect(elsewhere()).toBe(0);
