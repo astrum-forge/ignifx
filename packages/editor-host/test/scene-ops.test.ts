@@ -432,4 +432,21 @@ describe("readBack on a live world", () => {
       { path: `${CRATE_PREFAB.entities[0]?.uid ?? ""}/components/01M4XQ7K3N8V2D5R0B6G1HT9WT/props/mass`, value: 3 },
     ]);
   });
+
+  it("drops an entity destroyed between openScene and the first lookup (B4b)", async () => {
+    const { app, peer } = await opened();
+    // What a `runInEditMode` script's first frame may do.
+    app.world.getEntity("C")?.destroy();
+    expect((await call(peer, "select", { entities: ["C"] }))["result"]).toEqual({ entities: [] });
+  });
+
+  it("finds an entity spawned between openScene and the first lookup (B4b)", async () => {
+    const { app, peer } = await opened();
+    const scene = app.world.getEntity("A")?.scene ?? null;
+    if (scene === null) {
+      throw new Error("A is in no scene.");
+    }
+    app.world.createEntity("Spawned", { scene, uid: "Z" });
+    expect((await call(peer, "select", { entities: ["Z"] }))["result"]).toEqual({ entities: ["Z"] });
+  });
 });

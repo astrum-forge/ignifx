@@ -400,8 +400,10 @@ export class DocumentMirror {
   }
 
   /**
-   * The document as the live world holds it, serialized once and cached until an op changes the
-   * document. `readBack` always serializes it again.
+   * The document as the live world holds it, serialized once and cached until an op, `open` or
+   * `readBack` drops it; the next call serializes the world again. Every lookup (selection, picks,
+   * the ops' references) reads this cache, so a lookup after a `readBack` sees the world as that
+   * `readBack` did.
    *
    * @returns The index, or `null` while no document is open.
    */
