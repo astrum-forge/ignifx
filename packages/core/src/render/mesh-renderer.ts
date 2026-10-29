@@ -127,6 +127,11 @@ export class MeshRenderer extends Component implements ComponentHooks {
    * clone is also made unpickable while hidden: `app.renderer.pickAsync` and `world.raycastRender`
    * neither return it nor let it occlude, as with `pickable: false`.
    *
+   * It is one flag with one owner, not a count. In an edit-mode app the `LodGroup` that lists the
+   * renderer as a level owns it: the group sets and clears it whenever it switches, so a value
+   * written by anything else lasts only until then. A renderer belongs to at most one `LodGroup`; a
+   * second group that lists it leaves it alone and warns with `IGX-1217`.
+   *
    * @returns `true` while the mesh is hidden for display.
    *
    * @example

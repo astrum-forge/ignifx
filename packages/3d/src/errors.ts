@@ -56,6 +56,8 @@ export const ThreeDErrorCode = {
   nothingToPose: "IGX-1215",
   /** `Animator.sample` was given a normalized time or a parameter value that is not a finite number. */
   invalidSample: "IGX-1216",
+  /** A `MeshRenderer` is a level of two `LodGroup`s; in an edit-mode app the first keeps it (a warning). */
+  sharedLodLevel: "IGX-1217",
 } as const;
 
 /**
@@ -88,6 +90,7 @@ export const THREE_D_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.f
   "IGX-1214": "{renderer} is not a MeshRenderer this LodGroup can switch.",
   "IGX-1215": "{entity} has no Model with animation clips for its Animator to pose.",
   "IGX-1216": "Animator.sample was given {value} for {argument}; it takes a finite number.",
+  "IGX-1217": "{renderer} is a level of two LodGroups; the first to claim it switches it, the other leaves it alone.",
 });
 
 /**

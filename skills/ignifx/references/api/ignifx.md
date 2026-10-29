@@ -29207,6 +29207,11 @@ an edit-mode app (ADR-0028). It starts `false` and takes effect at the next rend
 clone is also made unpickable while hidden: `app.renderer.pickAsync` and `world.raycastRender`
 neither return it nor let it occlude, as with `pickable: false`.
 
+It is one flag with one owner, not a count. In an edit-mode app the `LodGroup` that lists the
+renderer as a level owns it: the group sets and clears it whenever it switches, so a value
+written by anything else lasts only until then. A renderer belongs to at most one `LodGroup`; a
+second group that lists it leaves it alone and warns with `IGX-1217`.
+
 ###### Example
 
 ```ts
@@ -93419,6 +93424,12 @@ A parameter was written with a value of the wrong kind for its declaration.
 
 A pre-baked `.navmesh.bin` was named; Babylon Lite 1.27.0 cannot deserialize one.
 
+##### sharedLodLevel
+
+> `readonly` **sharedLodLevel**: `"IGX-1217"`
+
+A `MeshRenderer` is a level of two `LodGroup`s; in an edit-mode app the first keeps it (a warning).
+
 ##### unknownInputAction
 
 > `readonly` **unknownInputAction**: `"IGX-1212"`
@@ -98011,7 +98022,8 @@ The same object, with its precise type preserved.
 
 IgnifxError with code `IGX-0607` when a field name is not identifier-like, starts with
 `_`, collides with a `Component`/`Script` member such as `enabled` or `update`, or names an
-`Object.prototype` member such as `constructor` or `toString`.
+`Object.prototype` member such as `constructor` or `toString`, or when `fields` is not a plain
+object (a literal `__proto__: …` key sets its prototype rather than declaring a field).
 
 #### Example
 
