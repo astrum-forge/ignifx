@@ -927,7 +927,7 @@ async function rebuildInstance(
       ...(hash === undefined || !keepHashes ? {} : { hash }),
       ...(listed.length === 0 ? {} : { overrides: listed }),
     };
-    return withOverrideList(context.app, record, instance);
+    return withOverrideList(record, instance, mirror.rootPathOf(record.uid));
   };
   const found = index.records.get(uid);
   const record = found === undefined ? undefined : withDocumentOverrides(found);
@@ -936,11 +936,15 @@ async function rebuildInstance(
     throw new OpFailure(ApplyOpFailureCode.notAnInstance, `${root.name} (${uid}) has no instance entry.`);
   }
   const overrides = edit(instance.overrides ?? []);
-  const top = withOverrideList(context.app, record, {
-    scene: instance.scene,
-    ...(instance.hash === undefined ? {} : { hash: instance.hash }),
-    ...(overrides.length === 0 ? {} : { overrides }),
-  });
+  const top = withOverrideList(
+    record,
+    {
+      scene: instance.scene,
+      ...(instance.hash === undefined ? {} : { hash: instance.hash }),
+      ...(overrides.length === 0 ? {} : { overrides }),
+    },
+    mirror.rootPathOf(uid),
+  );
   const inside = new Set([uid]);
   const records: SceneFileEntity[] = [top];
   for (const candidate of index.file.entities) {

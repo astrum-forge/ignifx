@@ -243,6 +243,14 @@ export class DocumentMirror {
    */
   readonly #builtAs = new Map<string, string>();
 
+  /**
+   * Where an `add` puts a component on each instance root itself (`<root>/components` of a one-root
+   * scene), or `null`, by root uid, read from the scene the root was last built from. A reload that
+   * changes the scene's roots replaces the scene in the cache before the root is rebuilt, while the
+   * serializer still writes the root as that build made it.
+   */
+  readonly #rootPaths = new Map<string, string | null>();
+
   /** Assets loaded for ops, held until the document closes. */
   readonly #handles: AssetHandle[] = [];
 
@@ -378,6 +386,7 @@ export class DocumentMirror {
     this.#explicit.clear();
     this.#overrides.clear();
     this.#builtAs.clear();
+    this.#rootPaths.clear();
     if (scene !== null) {
       await this.#app.world.unloadScene(scene);
     }
@@ -457,6 +466,10 @@ export class DocumentMirror {
     const roots = records.filter((record) => record.instance !== undefined);
     for (const record of roots) {
       this.recordOverrides(record.uid, record.instance?.overrides ?? []);
+      this.#rootPaths.set(
+        record.uid,
+        record.instance === undefined ? null : rootComponentsPath(this.#app, record.instance),
+      );
     }
     if (roots.length === 0) {
       return;
@@ -484,6 +497,17 @@ export class DocumentMirror {
   recordOverrides(uid: string, overrides: readonly SceneFileOverride[]): void {
     // A copy, so the list never shares an object with the editor's message.
     this.#overrides.set(uid, structuredClone(overrides).map(canonicalOverride));
+  }
+
+  /**
+   * Where an `add` override puts a component on an instance root itself, in the scene the root was
+   * last built from.
+   *
+   * @param uid - The root's uid.
+   * @returns `<scene root uid>/components` when that scene has one root, or `null`.
+   */
+  rootPathOf(uid: string): string | null {
+    return this.#rootPaths.get(uid) ?? null;
   }
 
   /**
@@ -613,7 +637,7 @@ export class DocumentMirror {
       ...(read.hash === undefined ? {} : { hash: read.hash }),
       ...(listed.length === 0 ? {} : { overrides: structuredClone(listed) }),
     };
-    return withOverrideList(this.#app, record, instance);
+    return withOverrideList(record, instance, this.rootPathOf(record.uid));
   }
 
   /**
@@ -686,7 +710,7 @@ function withoutDoubleAdds(
     if (instance === undefined || record.components === undefined) {
       return record;
     }
-    const single = withOverrideList(app, record, instance);
+    const single = withOverrideList(record, instance, rootComponentsPath(app, instance));
     const kept = new Set((single.components ?? []).map((component) => component.uid));
     const adds = new Set((instance.overrides ?? []).flatMap((override) => addedUids(override)));
     for (const component of record.components) {
@@ -723,13 +747,17 @@ function withoutDoubleAdds(
  * the root's own, so the record leaves out each component the list adds there; a rebuild or a
  * reopen would otherwise add it twice.
  *
- * @param app - The scene view's app, whose cache holds the instanced scene.
  * @param record - The record as the serializer wrote it.
  * @param instance - The instance entry, with the document's list.
+ * @param path - `<scene root uid>/components` of the scene the record was written against, when
+ * that scene has one root, or `null`.
  * @returns The record.
  */
-export function withOverrideList(app: App, record: SceneFileEntity, instance: SceneFileInstance): SceneFileEntity {
-  const path = rootComponentsPath(app, instance);
+export function withOverrideList(
+  record: SceneFileEntity,
+  instance: SceneFileInstance,
+  path: string | null,
+): SceneFileEntity {
   const adds = new Set(
     (instance.overrides ?? []).filter((override) => override.path === path).flatMap((override) => addedUids(override)),
   );

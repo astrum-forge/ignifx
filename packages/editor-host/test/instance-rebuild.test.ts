@@ -300,6 +300,106 @@ describe("an asset reload of a prefab, headless (E23)", () => {
   });
 });
 
+describe("a reload that changes how many roots the prefab has, headless", () => {
+  /** The lamp post prefab with a second root, so an instance root no longer stands for the post. */
+  const twoRoots: SceneFile = {
+    ...LAMP_POST,
+    entities: [
+      ...LAMP_POST.entities,
+      {
+        uid: "POLE",
+        name: "Pole",
+        parent: null,
+        transform: { position: [0, 0, 1], rotation: [0, 0, 0, 1], scale: [1, 1, 1] },
+      },
+    ],
+  };
+
+  /**
+   * The street with a second lamp post under the first; each post's list adds a `Follow` to the
+   * prefab's root.
+   *
+   * @param hash - The prefab's hash.
+   * @returns The scene file.
+   */
+  function nestedPosts(hash: string): SceneFile {
+    const street = streetWith([addFollow("OMITS")])(hash);
+    const inner: SceneFileEntity = {
+      uid: "INNER-POST",
+      name: "Inner Post",
+      parent: "STREET-POST",
+      transform: { position: [0, 0, 1], rotation: [0, 0, 0, 1], scale: [1, 1, 1] },
+      instance: { scene: { $asset: PREFAB }, hash, overrides: [addFollow("OMITS", "INNER-FOLLOW")] },
+    };
+    return { ...street, entities: [...street.entities, inner] };
+  }
+
+  /**
+   * The names of the entities at or under an instance root that hold a `Follow` with a uid.
+   *
+   * @param running - The host.
+   * @param root - The instance root's uid.
+   * @param uid - The component's uid.
+   * @returns The holders' names.
+   */
+  function holdersOf(running: EditorHost, root: string, uid: string): string[] {
+    const post = running.app.world.getEntity(root);
+    return [post, ...(post?.children ?? [])]
+      .filter((entity) => entity?.getComponents(Follow).some((component) => component.uid === uid) === true)
+      .map((entity) => entity?.name ?? "");
+  }
+
+  /**
+   * The records `readBack` writes for both lamp posts.
+   *
+   * @returns The records.
+   */
+  async function readPosts(): Promise<readonly unknown[]> {
+    const read = (await call("readBack", { entities: ["STREET-POST", "INNER-POST"] })) as {
+      entities: readonly unknown[];
+    };
+    return read.entities;
+  }
+
+  it("builds each root's add once when the prefab gains a second root", async () => {
+    const { running, warnings } = await sceneView(nestedPosts);
+    expect(holdersOf(running, "STREET-POST", "ADDED-FOLLOW")).toEqual(["Lamp Post"]);
+    expect(holdersOf(running, "INNER-POST", "INNER-FOLLOW")).toEqual(["Inner Post"]);
+
+    await editPrefab(running, twoRoots);
+
+    expect(holdersOf(running, "STREET-POST", "ADDED-FOLLOW")).toEqual(["Post"]);
+    expect(holdersOf(running, "INNER-POST", "INNER-FOLLOW")).toEqual(["Post"]);
+    const read = await readPosts();
+    expect(read).toHaveLength(2);
+    for (const record of read) {
+      expect(record).not.toHaveProperty("components");
+    }
+    expect(read).toMatchObject([
+      { instance: { overrides: [addFollow("OMITS")] } },
+      { instance: { overrides: [addFollow("OMITS", "INNER-FOLLOW")] } },
+    ]);
+    expect(warnings).toEqual([]);
+  });
+
+  it("builds each root's add once when the prefab loses its second root", async () => {
+    const { running, warnings } = await sceneView(nestedPosts, twoRoots);
+    expect(holdersOf(running, "STREET-POST", "ADDED-FOLLOW")).toEqual(["Post"]);
+    expect(holdersOf(running, "INNER-POST", "INNER-FOLLOW")).toEqual(["Post"]);
+
+    await editPrefab(running, LAMP_POST);
+
+    expect(holdersOf(running, "STREET-POST", "ADDED-FOLLOW")).toEqual(["Lamp Post"]);
+    expect(holdersOf(running, "INNER-POST", "INNER-FOLLOW")).toEqual(["Inner Post"]);
+    const read = await readPosts();
+    expect(read).toHaveLength(2);
+    for (const record of read) {
+      expect(record).not.toHaveProperty("components");
+    }
+    expect(warnings).toEqual([]);
+  });
+});
+
 describe("setOverride's index, headless", () => {
   it("is relative to the document's override list, not the serializer's", async () => {
     // The serializer would read this list as [SPARE_7] alone: the bulb's override equals the prefab.
