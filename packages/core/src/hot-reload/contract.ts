@@ -121,7 +121,9 @@ export interface HotReloadHost {
    * Applies replaced component classes to the running app.
    *
    * @param modules - The replaced modules and the classes they export.
-   * @returns What was reloaded.
+   * @returns What was reloaded. A replacement the registry refuses — for example one whose
+   * `static requires` loops (`IGX-0209`) — is collected in `errors`, and the class it would have
+   * replaced stays registered.
    * @throws IgnifxError with code `IGX-0208` when called from inside a lifecycle callback, where a
    * half-swapped world would be observable.
    */
@@ -132,7 +134,7 @@ export interface HotReloadHost {
    *
    * @param instance - The instance to rebuild. It is unloaded and a fresh one takes its place.
    * @returns The new instance.
-   * @throws IgnifxError with code `IGX-0209` when the instance was not built from a scene asset.
+   * @throws IgnifxError with code `IGX-1506` when the instance was not built from a scene asset.
    */
   reloadScene(instance: SceneInstance): Promise<SceneInstance>;
 }

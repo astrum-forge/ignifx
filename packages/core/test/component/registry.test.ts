@@ -44,6 +44,81 @@ describe("registration", () => {
     harnessSize(registry, 1);
   });
 
+  it("refuses a requires cycle at registration with IGX-0209 and binds no id", () => {
+    const registry = new ComponentRegistry();
+    class Self extends Component {
+      static typeId = "test/Self";
+      static requires: readonly (typeof Component)[] = [];
+    }
+    Self.requires = [Self];
+    class Left extends Component {
+      static typeId = "test/Left";
+      static requires: readonly (typeof Component)[] = [];
+    }
+    class Right extends Component {
+      static requires: readonly (typeof Component)[] = [Left];
+    }
+    Left.requires = [Right];
+    class Outside extends Component {
+      static typeId = "test/Outside";
+      static requires = [Right];
+    }
+    expect(() => registry.register(Self)).toThrow(/IGX-0209.*Self -> Self/u);
+    expect(() => registry.register(Left)).toThrow(/IGX-0209.*Left -> Right -> Left/u);
+    // A cycle reachable through a class's requires is refused too: adding it would recurse the same way.
+    expect(() => registry.register(Outside)).toThrow(/IGX-0209.*Right -> Left -> Right/u);
+    expect(registry.get("test/Self")).toBeNull();
+    expect(registry.get("test/Left")).toBeNull();
+    expect(registry.get("test/Outside")).toBeNull();
+    expect(registry.size).toBe(0);
+  });
+
+  it("leaves the registry untouched when a replace is refused with IGX-0209", () => {
+    const registry = new ComponentRegistry();
+    class Current extends Component {
+      static typeId = "test/Swapped";
+    }
+    class Looping extends Component {
+      static typeId = "test/Swapped";
+      static requires: readonly (typeof Component)[] = [];
+    }
+    Looping.requires = [Looping];
+    registry.register(Plain);
+    const before = registry.register(Current);
+    expect(() => registry.replace(Looping)).toThrow(/IGX-0209/u);
+    expect(registry.get("test/Swapped")).toBe(Current);
+    expect(registry.describe(Current)).toBe(before);
+    expect(registry.describe(Current).classIndex).toBe(1);
+    expect(registry.size).toBe(2);
+  });
+
+  it("caches a frozen copy of requires, so a later in-place change cannot form an unchecked cycle", () => {
+    const registry = new ComponentRegistry();
+    class Needed extends Component {}
+    class Needy extends Component {
+      static requires: (typeof Component)[] = [Needed];
+    }
+    const info = registry.describe(Needy);
+    Needy.requires.push(Needy);
+    expect(info.requires).toEqual([Needed]);
+    expect(Object.isFrozen(info.requires)).toBe(true);
+  });
+
+  it("accepts a requires diamond, which shares a class but has no cycle", () => {
+    const registry = new ComponentRegistry();
+    class Base extends Component {}
+    class Wing extends Component {
+      static requires = [Base];
+    }
+    class Tail extends Component {
+      static requires = [Base];
+    }
+    class Plane extends Component {
+      static requires = [Wing, Tail, Base];
+    }
+    expect(registry.describe(Plane).requires).toEqual([Wing, Tail, Base]);
+  });
+
   it("registers several classes at once", () => {
     const registry = new ComponentRegistry();
     registry.registerAll([Partial, Bare, Plain]);

@@ -147,6 +147,17 @@ describe("encodeValue", () => {
     expect(encodeValue(map(i32()), 1 as never, encoder)).toBeNull();
   });
 
+  it("keeps a map key named __proto__ as an entry in both directions", () => {
+    const value: unknown = JSON.parse('{ "a": 1, "__proto__": 2 }');
+    const encoded = encodeValue(map(i32()), value as Record<string, number>, encoder);
+    const decoded = decodeValue(map(i32()), encoded, decoder).value;
+    for (const result of [encoded, decoded]) {
+      expect(Object.getPrototypeOf(result)).toBe(Object.prototype);
+      expect(Object.keys(result as Record<string, unknown>)).toEqual(["__proto__", "a"]);
+      expect(Object.getOwnPropertyDescriptor(result, "__proto__")?.value).toBe(2);
+    }
+  });
+
   it("writes layer names and curves", () => {
     expect(encodeValue(layerMask(), ["Default", "Enemy"], encoder)).toEqual(["Default", "Enemy"]);
     expect(encodeValue(layerMask(), 1 as never, encoder)).toBeNull();

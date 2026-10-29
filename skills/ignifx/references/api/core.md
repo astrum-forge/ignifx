@@ -2000,6 +2000,11 @@ The component class.
 
 The cached class info.
 
+###### Throws
+
+IgnifxError with code `IGX-0209` when the class's `static requires` graph contains a
+cycle.
+
 ##### get()
 
 > **get**(`typeId`): [`ComponentType`](#componenttype-1)\<[`Component`](#abstract-component)\> \| `null`
@@ -2111,7 +2116,8 @@ What the registry worked out about the class.
 ###### Throws
 
 IgnifxError with code `IGX-0203` when the id is already registered by another class, or
-when the id is not `<namespace>/<Name>`.
+when the id is not `<namespace>/<Name>`, and `IGX-0209` when the class's `static requires`
+graph contains a cycle.
 
 ##### registerAll()
 
@@ -2215,7 +2221,9 @@ Additive and hot-reload-only: nothing on the normal path replaces a registration
 
 ###### Throws
 
-IgnifxError with code `IGX-0204` when the replacement declares no `typeId`.
+IgnifxError with code `IGX-0204` when the replacement declares no `typeId`, and
+`IGX-0209` when its `static requires` graph contains a cycle; either way the registry is left
+unchanged.
 
 ###### Example
 
@@ -3046,7 +3054,8 @@ inside a callback (`docs/architecture/01-lifecycle-and-time.md` §4). Everything
 
 IgnifxError with code `IGX-0202` when the class does not allow multiple instances and
 the entity already has one, `IGX-0605`/`IGX-0606`/`IGX-0607` when `init` does not match the
-schema, and `IGX-0101` when the entity has been destroyed.
+schema, `IGX-0209` when the class's `static requires` graph contains a cycle, and `IGX-0101`
+when the entity has been destroyed.
 
 ##### destroy()
 
@@ -22791,7 +22800,9 @@ The replaced modules and the classes they export.
 
 [`HotReloadReport`](#hotreloadreport)
 
-What was reloaded.
+What was reloaded. A replacement the registry refuses — for example one whose
+`static requires` loops (`IGX-0209`) — is collected in `errors`, and the class it would have
+replaced stays registered.
 
 ###### Throws
 
@@ -22821,7 +22832,7 @@ The new instance.
 
 ###### Throws
 
-IgnifxError with code `IGX-0209` when the instance was not built from a scene asset.
+IgnifxError with code `IGX-1506` when the instance was not built from a scene asset.
 
 ***
 
@@ -31226,6 +31237,12 @@ A rendering feature opt-in was requested after the render scene had been registe
 
 A component declared through `requires` is missing from the entity.
 
+##### requiresCycle
+
+> `readonly` **requiresCycle**: `"IGX-0209"` = `"IGX-0209"`
+
+A component class's `static requires` chain loops, through the class itself or a class it requires.
+
 ##### sceneFileInvalid
 
 > `readonly` **sceneFileInvalid**: `"IGX-0608"` = `"IGX-0608"`
@@ -36270,7 +36287,8 @@ The parsed path.
 
 #### Throws
 
-IgnifxError with code `IGX-0609` when the path does not match the grammar.
+IgnifxError with code `IGX-0609` when the path does not match the grammar, or when a
+property step is `__proto__`.
 
 #### Example
 

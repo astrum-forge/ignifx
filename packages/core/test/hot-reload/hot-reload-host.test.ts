@@ -120,6 +120,33 @@ describe("app.hotReload", () => {
     expect(report.typeIds).toEqual(["test/Mover"]);
   });
 
+  it("collects a replacement refused with IGX-0209 and keeps the class it would have replaced", () => {
+    const errors: ErrorReport[] = [];
+    harness.app.onError.connect((report) => {
+      errors.push(report);
+    });
+    const mover = harness.world.createEntity("Player").addComponent(MoverV1);
+    harness.step(1 / 60);
+    const classIndex = harness.world.registry.describe(MoverV1).classIndex;
+    class LoopingMover extends Script {
+      static typeId = "test/Mover";
+      static requires: readonly (typeof Script)[] = [];
+    }
+    LoopingMover.requires = [LoopingMover];
+
+    const report = harness.app.hotReload.apply([{ types: [LoopingMover, HookedV2] }]);
+
+    expect(report.errors).toHaveLength(1);
+    expect(errors).toHaveLength(1);
+    expect(isIgnifxError(report.errors[0]) ? report.errors[0].code : null).toBe(CoreErrorCode.requiresCycle);
+    expect(report.typeIds).toEqual(["test/Hooked"]);
+    expect(harness.world.registry.get("test/Mover")).toBe(MoverV1);
+    expect(harness.world.registry.describe(MoverV1).classIndex).toBe(classIndex);
+    expect(Object.getPrototypeOf(mover)).toBe(MoverV1.prototype);
+    harness.step(1 / 60);
+    expect(mover.hits).toBe(2);
+  });
+
   it("defaults reloadScenes to false and takes it from createApp", async () => {
     expect(harness.app.hotReload.reloadScenes).toBe(false);
     const app = await createApp({ headless: true, clock: createManualClock(), hotReload: { reloadScenes: true } });

@@ -1,5 +1,6 @@
 import { CoreErrorCode } from "../errors/error-codes.js";
 import { IgnifxError } from "../errors/ignifx-error.js";
+import { setOwnJsonProperty } from "../schema/json.js";
 import { asJsonArray, asJsonObject } from "./json-view.js";
 import type { SceneFileComponent, SceneFileEntity, SceneFileOverride, SceneFileTransform } from "./scene-file.js";
 import type { JsonObject, JsonValue } from "../schema/json.js";
@@ -56,7 +57,8 @@ const TRANSFORM_CHANNELS: readonly (keyof SceneFileTransform)[] = Object.freeze(
  *
  * @param path - The `path` string from the file.
  * @returns The parsed path.
- * @throws IgnifxError with code `IGX-0609` when the path does not match the grammar.
+ * @throws IgnifxError with code `IGX-0609` when the path does not match the grammar, or when a
+ * property step is `__proto__`.
  *
  * @example
  * ```ts
@@ -110,7 +112,11 @@ export function parseOverridePath(path: string): OverridePath {
   if (fourth !== "props" || segments.length < 5) {
     throw invalidPath(path, "a property override is <uid>/components/<uid>/props/<field>.");
   }
-  return { kind: "prop", entity, component, steps: segments.slice(4) };
+  const steps = segments.slice(4);
+  if (steps.includes("__proto__")) {
+    throw invalidPath(path, '"__proto__" is not a property name an override may address.');
+  }
+  return { kind: "prop", entity, component, steps };
 }
 
 /**
@@ -364,18 +370,20 @@ function writeStep(
       const { [key]: _removed, ...rest } = copy;
       return rest;
     }
-    copy[key] = value;
+    // Defined, not assigned, and read only when own: a key such as `constructor` must not reach
+    // `Object.prototype` through the copy (`__proto__` itself is refused by `parseOverridePath`).
+    setOwnJsonProperty(copy, key, value);
     return copy;
   }
-  const next = copy[key];
+  const next = Object.hasOwn(copy, key) ? copy[key] : undefined;
   const nextArray = asJsonArray(next);
   if (nextArray !== null) {
-    copy[key] = writeArrayStep(nextArray, steps, at + 1, op, value, path, report);
+    setOwnJsonProperty(copy, key, writeArrayStep(nextArray, steps, at + 1, op, value, path, report));
     return copy;
   }
   const nextObject = asJsonObject(next);
   if (nextObject !== null) {
-    copy[key] = writeStep(nextObject, steps, at + 1, op, value, path, report);
+    setOwnJsonProperty(copy, key, writeStep(nextObject, steps, at + 1, op, value, path, report));
     return copy;
   }
   report(`"${path}" descends into ${key}, which is not an object or an array.`);

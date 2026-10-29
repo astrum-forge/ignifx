@@ -150,6 +150,8 @@ export const CoreErrorCode = {
   hotReloadSchemaChanged: "IGX-0207",
   /** `app.hotReload.apply()` was called from inside a lifecycle callback. */
   hotReloadInsideCallback: "IGX-0208",
+  /** A component class's `static requires` chain loops, through the class itself or a class it requires. */
+  requiresCycle: "IGX-0209",
   /** A scene was instantiated before it had finished loading. */
   sceneNotLoaded: "IGX-0301",
   /** Instantiating a scene would place an instance inside itself. */
@@ -339,6 +341,7 @@ export const CORE_ERROR_MESSAGES: Readonly<Record<CoreErrorCode, string>> = {
   "IGX-0207":
     '{component} changed its schema shape under the "patch" hot-reload policy; its instances were re-created.',
   "IGX-0208": "app.hotReload.apply() cannot run inside the {phase} callback; apply it between frames.",
+  "IGX-0209": "{component} has a static requires cycle: {cycle}.",
   "IGX-0301": "The scene {scene} is not loaded yet.",
   "IGX-0302": "Instantiating {scene} under {entity} would nest the scene inside itself.",
   "IGX-0303": "{layer} is not a layer declared in the project settings.",

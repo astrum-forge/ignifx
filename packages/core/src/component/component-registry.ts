@@ -127,7 +127,8 @@ export class ComponentRegistry {
    * an id is kept, and {@link ComponentRegistry.registrarOf} reports it.
    * @returns What the registry worked out about the class.
    * @throws IgnifxError with code `IGX-0203` when the id is already registered by another class, or
-   * when the id is not `<namespace>/<Name>`.
+   * when the id is not `<namespace>/<Name>`, and `IGX-0209` when the class's `static requires`
+   * graph contains a cycle.
    */
   register(type: ConcreteComponentType, typeId?: string, registrar?: string): ComponentClassInfo {
     const id = typeId ?? readStatics(type).typeId ?? null;
@@ -146,10 +147,13 @@ export class ComponentRegistry {
           { context: { typeId: id, owner: existing.prototype.constructor.name } },
         );
       }
+      // Described before the id is bound, so a class refused here (`IGX-0209`) leaves no entry.
+      const info = this.describe(type);
       this.#byTypeId.set(id, type);
       if (registrar !== undefined && !this.#registrars.has(id)) {
         this.#registrars.set(id, registrar);
       }
+      return info;
     }
     return this.describe(type);
   }
@@ -199,7 +203,9 @@ export class ComponentRegistry {
    *
    * @param type - The replacement class. It must declare the `typeId` it replaces.
    * @returns The freshly built info for the replacement, and the class it replaced.
-   * @throws IgnifxError with code `IGX-0204` when the replacement declares no `typeId`.
+   * @throws IgnifxError with code `IGX-0204` when the replacement declares no `typeId`, and
+   * `IGX-0209` when its `static requires` graph contains a cycle; either way the registry is left
+   * unchanged.
    *
    * @example
    * ```ts
@@ -212,6 +218,9 @@ export class ComponentRegistry {
     if (previous === type) {
       return { previous, info: this.describe(type) };
     }
+    // Checked before anything is unbound: a refused replacement must leave the previous class
+    // registered with its info and `classIndex`, because its live instances still use them.
+    assertNoRequiresCycle(type);
     const inherited = previous === null ? null : (this.#info.get(previous)?.classIndex ?? null);
     if (previous !== null) {
       this.#info.delete(previous);
@@ -230,12 +239,15 @@ export class ComponentRegistry {
    *
    * @param type - The component class.
    * @returns The cached class info.
+   * @throws IgnifxError with code `IGX-0209` when the class's `static requires` graph contains a
+   * cycle.
    */
   describe(type: ComponentType): ComponentClassInfo {
     const cached = this.#info.get(type);
     if (cached !== undefined) {
       return cached;
     }
+    assertNoRequiresCycle(type);
     const info = this.#build(type);
     this.#info.set(type, info);
     return info;
@@ -344,7 +356,9 @@ export class ComponentRegistry {
       type,
       typeId: statics.typeId ?? null,
       schema,
-      requires: statics.requires ?? EMPTY_TYPES,
+      // A frozen copy: the cycle check saw the array as it is now, so a later in-place change to
+      // the class's static must not reach the list `addComponent` walks.
+      requires: statics.requires === undefined ? EMPTY_TYPES : Object.freeze([...statics.requires]),
       allowMultiple: statics.allowMultiple ?? true,
       ancestors,
       trackedFields: schema === null ? EMPTY_NAMES : collectTrackedFields(schema),
@@ -353,6 +367,48 @@ export class ComponentRegistry {
       classIndex,
     };
   }
+}
+
+/**
+ * Refuses a class whose `static requires` graph contains a cycle — through the class itself or
+ * through any class it reaches. `addComponent` adds each missing
+ * required class before the requiring one, so a cycle — a self-require, or A requiring B requiring
+ * A — would otherwise recurse until the stack overflows on the first `addComponent`.
+ *
+ * @param type - The class being described.
+ * @throws IgnifxError with code `IGX-0209` when a cycle is reachable from the class.
+ */
+function assertNoRequiresCycle(type: ComponentType): void {
+  const finished = new Set<ComponentType>();
+  const path: ComponentType[] = [];
+  const visit = (current: ComponentType): void => {
+    const at = path.indexOf(current);
+    if (at >= 0) {
+      const cycle = [...path.slice(at), current].map((entry) => entry.prototype.constructor.name).join(" -> ");
+      throw new IgnifxError(
+        CoreErrorCode.requiresCycle,
+        `${type.prototype.constructor.name} has a static requires cycle: ${cycle}.`,
+        {
+          context: { component: type.prototype.constructor.name, cycle },
+          hint: "Remove a class from one of the `static requires` lists so the chain never loops back; shared requirements are fine.",
+        },
+      );
+    }
+    if (finished.has(current)) {
+      return;
+    }
+    const requires = readStatics(current).requires ?? EMPTY_TYPES;
+    path.push(current);
+    for (let index = 0; index < requires.length; index += 1) {
+      const required = requires[index];
+      if (required !== undefined) {
+        visit(required);
+      }
+    }
+    path.pop();
+    finished.add(current);
+  };
+  visit(type);
 }
 
 /** Shared empty lists so the common case allocates nothing. */
