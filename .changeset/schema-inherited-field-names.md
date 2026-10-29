@@ -1,7 +1,9 @@
 ---
-"@ignifx/core": patch
+"@ignifx/core": minor
 ---
 
-Fix schema fields named after a member every object inherits: `defineSchema`, `Component.define`, `Script.define` and `record()` now refuse `__proto__`, `constructor`, `toString` and the other `Object.prototype` names with `IGX-0607`.
+Fix schema fields named after a member every object inherits: such a field read the inherited member whenever a value or file omitted it, and a `record` field named `__proto__` replaced the record's prototype instead of holding a value.
 
-**Behaviour change:** such a field used to read the inherited member whenever a value or file omitted it, and a `record` field named `__proto__` replaced the record's prototype instead of holding a value. If a schema now throws `IGX-0607` when it is defined, rename the field; `prototype` stays allowed.
+### Breaking
+
+`defineSchema`, `Component.define`, `Script.define`, `record()`, `ComponentRegistry` (for a hand-written `static schema`) and `registerSettings` now refuse a field named `__proto__`, `constructor`, `toString`, `valueOf` or any other `Object.prototype` member with `IGX-0607`. Rename the field; `prototype` stays allowed.

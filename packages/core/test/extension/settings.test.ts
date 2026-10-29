@@ -154,6 +154,18 @@ describe("extension settings sections", () => {
     expect(await codeOf(build({ demo: 7 }, [demoExtension(seen)]))).toBe("IGX-0408");
   });
 
+  it("refuses a schema passed as a plain object that names a field constructor, with IGX-0607", async () => {
+    // A schema that skipped `defineSchema`; the computed key is an own property.
+    const raw: Extension = {
+      name: "game/raw",
+      version: "1.0.0",
+      register(ctx: ExtensionContext): void {
+        ctx.registerSettings("raw", { ["constructor"]: f64(0) }, {});
+      },
+    };
+    expect(await codeOf(build({}, [raw]))).toBe("IGX-0607");
+  });
+
   it("falls back to the defaults with a warning in production", async () => {
     const seen: ResolvedBox = { value: null };
     await build({ demo: { gravity: "heavy" } }, [demoExtension(seen)], "production");

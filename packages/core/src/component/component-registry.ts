@@ -6,6 +6,7 @@ import {
   readCallback,
   type ScriptCallbackKind,
 } from "../lifecycle/callbacks.js";
+import { assertNoInheritedFieldNames } from "../schema/schema.js";
 import { Script } from "../script/script.js";
 import { Component } from "./component.js";
 import type { ComponentType, ConcreteComponentType, ScriptStatics } from "./component-type.js";
@@ -127,8 +128,9 @@ export class ComponentRegistry {
    * an id is kept, and {@link ComponentRegistry.registrarOf} reports it.
    * @returns What the registry worked out about the class.
    * @throws IgnifxError with code `IGX-0203` when the id is already registered by another class, or
-   * when the id is not `<namespace>/<Name>`, and `IGX-0209` when the class's `static requires`
-   * graph contains a cycle.
+   * when the id is not `<namespace>/<Name>`, `IGX-0209` when the class's `static requires`
+   * graph contains a cycle, and `IGX-0607` when its `static schema` names a field after an
+   * `Object.prototype` member.
    */
   register(type: ConcreteComponentType, typeId?: string, registrar?: string): ComponentClassInfo {
     const id = typeId ?? readStatics(type).typeId ?? null;
@@ -203,9 +205,10 @@ export class ComponentRegistry {
    *
    * @param type - The replacement class. It must declare the `typeId` it replaces.
    * @returns The freshly built info for the replacement, and the class it replaced.
-   * @throws IgnifxError with code `IGX-0204` when the replacement declares no `typeId`, and
-   * `IGX-0209` when its `static requires` graph contains a cycle; either way the registry is left
-   * unchanged.
+   * @throws IgnifxError with code `IGX-0204` when the replacement declares no `typeId`,
+   * `IGX-0209` when its `static requires` graph contains a cycle, and `IGX-0607` when its
+   * `static schema` names a field after an `Object.prototype` member; in every case the registry is
+   * left unchanged.
    *
    * @example
    * ```ts
@@ -221,6 +224,7 @@ export class ComponentRegistry {
     // Checked before anything is unbound: a refused replacement must leave the previous class
     // registered with its info and `classIndex`, because its live instances still use them.
     assertNoRequiresCycle(type);
+    assertSchemaFieldNames(type);
     const inherited = previous === null ? null : (this.#info.get(previous)?.classIndex ?? null);
     if (previous !== null) {
       this.#info.delete(previous);
@@ -240,7 +244,7 @@ export class ComponentRegistry {
    * @param type - The component class.
    * @returns The cached class info.
    * @throws IgnifxError with code `IGX-0209` when the class's `static requires` graph contains a
-   * cycle.
+   * cycle, and `IGX-0607` when its `static schema` names a field after an `Object.prototype` member.
    */
   describe(type: ComponentType): ComponentClassInfo {
     const cached = this.#info.get(type);
@@ -248,6 +252,7 @@ export class ComponentRegistry {
       return cached;
     }
     assertNoRequiresCycle(type);
+    assertSchemaFieldNames(type);
     const info = this.#build(type);
     this.#info.set(type, info);
     return info;
@@ -366,6 +371,22 @@ export class ComponentRegistry {
       script: isScript ? buildScriptInfo(type) : null,
       classIndex,
     };
+  }
+}
+
+/**
+ * Refuses a class whose `static schema` names a field after an `Object.prototype` member.
+ * `Component.define` and `Script.define` check this already; a hand-written `static schema` skips
+ * them, so the registry checks every class it describes.
+ *
+ * @param type - The class being described.
+ * @throws IgnifxError with code `IGX-0607` when a field is named `constructor`, `__proto__`, or
+ * another inherited member.
+ */
+function assertSchemaFieldNames(type: ComponentType): void {
+  const schema = readStatics(type).schema;
+  if (schema !== undefined) {
+    assertNoInheritedFieldNames(schema, "schema");
   }
 }
 

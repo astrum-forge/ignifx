@@ -216,7 +216,11 @@ export const CoreErrorCode = {
   schemaTypeMismatch: "IGX-0605",
   /** A value had the right type but fell outside its schema field's declared value domain. */
   schemaOutOfRange: "IGX-0606",
-  /** A schema declaration or a property bag named a field the schema does not declare. */
+  /**
+   * A property bag named a field the schema does not declare, or a schema declaration named a field
+   * it may not use: not identifier-like, a `Component`/`Script` member, or an `Object.prototype`
+   * member such as `constructor` or `__proto__`.
+   */
   schemaUnknownField: "IGX-0607",
   /** A scene file failed structural validation against the generated scene-file JSON Schema. */
   sceneFileInvalid: "IGX-0608",
@@ -374,7 +378,7 @@ export const CORE_ERROR_MESSAGES: Readonly<Record<CoreErrorCode, string>> = {
   "IGX-0604": "The overrides recorded for {scene} do not match the scene file.",
   "IGX-0605": "{field} has the wrong type for a {kind} field.",
   "IGX-0606": "{field} is outside the declared value domain.",
-  "IGX-0607": "{field} is not a field this schema declares.",
+  "IGX-0607": "{field} is not a field this schema declares, or not a name a schema field may use.",
   "IGX-0608": "{file} does not match the scene file schema.",
   "IGX-0609": "{path} is not a valid instance override path.",
   "IGX-0701": "WebGPU is not available in this environment.",

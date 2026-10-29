@@ -210,7 +210,8 @@ export class ExtensionContextImpl implements ExtensionContext {
    * @param schema - The schema the section is validated against.
    * @param defaults - The values used when the project omits the section.
    * @throws IgnifxError with code `IGX-0408` in development when the project's values do not
-   * validate against the schema.
+   * validate against the schema, and with code `IGX-0607` when a field is named after an
+   * `Object.prototype` member such as `constructor`.
    */
   // oxlint-disable-next-line typescript/no-unnecessary-type-parameters -- see `AppSettings.section`.
   registerSettings<S>(section: string, schema: Schema, defaults: S): void {

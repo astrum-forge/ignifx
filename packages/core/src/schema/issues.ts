@@ -17,7 +17,11 @@ export const SchemaIssueCode = {
   typeMismatch: "IGX-0605",
   /** A value had the right type but fell outside the field's declared value domain. */
   outOfRange: "IGX-0606",
-  /** A property was supplied that the schema does not declare. */
+  /**
+   * A property was supplied that the schema does not declare, or a schema declaration named a field
+   * it may not use: not identifier-like, a `Component`/`Script` member, or an `Object.prototype`
+   * member such as `constructor` or `__proto__`.
+   */
   unknownField: "IGX-0607",
 } as const;
 

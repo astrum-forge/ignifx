@@ -133,6 +133,30 @@ describe("registration", () => {
     expect(registry.get("test/Anonymous")).toBe(Anonymous);
   });
 
+  it("refuses a hand-written static schema with an inherited field name, by register, describe, and replace", () => {
+    const registry = new ComponentRegistry();
+    // A computed key is an own property, as `defineSchema` would see it; this class skips `define`.
+    class Raw extends Component {
+      static typeId = "test/Raw";
+      static schema = { speed: f32(1), ["constructor"]: f32(0) };
+    }
+    class Anonymous extends Component {
+      static schema = { ["__proto__"]: f32(0) };
+    }
+    expect(() => registry.register(Raw)).toThrow(/IGX-0607.*"constructor" names a member every object inherits/u);
+    expect(() => registry.describe(Anonymous)).toThrow(/IGX-0607.*"__proto__"/u);
+    expect(registry.get("test/Raw")).toBeNull();
+    registry.register(Plain);
+    class Replacement extends Component {
+      static typeId = "test/Plain";
+      static schema = { ["toString"]: f32(0) };
+    }
+    expect(() => registry.replace(Replacement)).toThrow(/IGX-0607/u);
+    // A refused replacement leaves the registered class in place.
+    expect(registry.get("test/Plain")).toBe(Plain);
+    expect(registry.size).toBe(1);
+  });
+
   it("throws IGX-0203 when two classes claim one type id", () => {
     const registry = new ComponentRegistry();
     class Other extends Script {
