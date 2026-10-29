@@ -156,7 +156,7 @@ describe("applyOps on a live world", () => {
         ],
       },
     ]);
-    expect(result).toEqual({ applied: 1, failures: [] });
+    expect(result).toEqual({ applied: 1, failures: [], warnings: [] });
     const all = await readAll(peer);
     expect(all.order).toEqual(["A", "N", "N1", "C", "B", "P"]);
     expect(all.byUid.get("N")?.components).toEqual([
@@ -174,7 +174,7 @@ describe("applyOps on a live world", () => {
         { op: "reorder", entity: "P", index: 0 },
         { op: "destroyEntity", entity: "C" },
       ]),
-    ).toEqual({ applied: 3, failures: [] });
+    ).toEqual({ applied: 3, failures: [], warnings: [] });
     const all = await readAll(peer);
     expect(all.order).toEqual(["P", "A", "B"]);
     expect(all.byUid.get("B")).toMatchObject({ parent: "A", transform: at(2) });
@@ -222,7 +222,7 @@ describe("applyOps on a live world", () => {
         { op: "setProp", component: "B-G", path: [], value: { max: 7 } },
         { op: "removeComponent", component: "A-H" },
       ]),
-    ).toEqual({ applied: 6, failures: [] });
+    ).toEqual({ applied: 6, failures: [], warnings: [] });
     const all = await readAll(peer);
     expect(all.byUid.get("B")?.components?.map((component) => component.uid)).toEqual(["B-G", "B-F", "B-H"]);
     expect(all.byUid.get("B")?.components?.[0]).toEqual({
@@ -267,7 +267,7 @@ describe("applyOps on a live world", () => {
         { op: "setOverride", entity: "P", override: { path: mass, value: 4 } },
         { op: "removeOverride", entity: "P", path: mass },
       ]),
-    ).toEqual({ applied: 4, failures: [] });
+    ).toEqual({ applied: 4, failures: [], warnings: [] });
     const all = await readAll(peer);
     expect(all.order).toEqual(["A", "C", "Q", "B", "P"]);
     expect(all.byUid.get("Q")?.instance?.overrides).toEqual([{ path: mass, value: 9 }]);
@@ -298,7 +298,7 @@ describe("applyOps on a live world", () => {
       await apply(peer, [
         { op: "instantiate", entity: "Q", name: "Crate 2", parent: null, transform: at(7), instance },
       ]),
-    ).toEqual({ applied: 1, failures: [] });
+    ).toEqual({ applied: 1, failures: [], warnings: [] });
 
     const all = await readAll(peer);
     expect(all.byUid.get("P")?.instance?.overrides).toEqual(overrides);
@@ -328,15 +328,17 @@ describe("applyOps on a live world", () => {
       await apply(peer, [
         { op: "instantiate", entity: "R", name: "Pair", parent: null, transform: at(9), instance: { scene } },
       ]),
-    ).toEqual({ applied: 1, failures: [] });
+    ).toEqual({ applied: 1, failures: [], warnings: [] });
     expect(await apply(peer, [{ op: "setOverride", entity: "R", override: mass }])).toEqual({
       applied: 1,
       failures: [],
+      warnings: [],
     });
     const sent = { op: "replace" as const, path: position.path, value: [1, 0.1 + 0.2, 0] };
     expect(await apply(peer, [{ op: "setOverride", entity: "R", override: sent }])).toEqual({
       applied: 1,
       failures: [],
+      warnings: [],
     });
     expect((await readAll(peer)).byUid.get("R")?.instance?.overrides).toEqual([mass, position]);
 
@@ -345,6 +347,7 @@ describe("applyOps on a live world", () => {
     expect(await apply(peer, [{ op: "setOverride", entity: "R", override: heavier }])).toEqual({
       applied: 1,
       failures: [],
+      warnings: [],
     });
     const edited = await readAll(peer);
     expect(edited.byUid.get("R")?.instance?.overrides).toEqual([heavier, position]);

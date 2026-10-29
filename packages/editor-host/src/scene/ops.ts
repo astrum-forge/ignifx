@@ -95,6 +95,8 @@ interface OpContext {
   readonly app: App;
   /** The open document. */
   readonly mirror: DocumentMirror;
+  /** Gets the build problems {@link reportBuildIssues} logs, for `applyOps`' result; absent outside it. */
+  readonly warnings?: SceneIssue[];
 }
 
 /**
@@ -103,10 +105,11 @@ interface OpContext {
  * @param app - The scene view's app.
  * @param mirror - The open document.
  * @param params - The ops and the command they belong to.
- * @returns How many applied, and the failures in order.
+ * @returns How many applied, the failures in order, and the build problems the ops met, in order.
  */
 export async function applyOps(app: App, mirror: DocumentMirror, params: ApplyOpsParams): Promise<ApplyOpsResult> {
-  const context: OpContext = { app, mirror };
+  const warnings: SceneIssue[] = [];
+  const context: OpContext = { app, mirror, warnings };
   const failures: ApplyOpFailure[] = [];
   let applied = 0;
   for (const [index, op] of params.ops.entries()) {
@@ -125,7 +128,7 @@ export async function applyOps(app: App, mirror: DocumentMirror, params: ApplyOp
       mirror.invalidate();
     }
   }
-  return { applied, failures };
+  return { applied, failures, warnings };
 }
 
 /**
@@ -473,6 +476,7 @@ function documentAddress(context: OpContext): string {
  * Writes a subtree build's recoverable problems to the app log, one warning each, the way
  * `world.loadSceneFile` writes a scene's (so a reopen of the document writes the same lines); the
  * host relays them to the editor as `log`. A stale override met while an instance is rebuilt is one.
+ * Inside `applyOps` each also goes to the command's `warnings`, as `openScene` reports a build's.
  *
  * @param context - The app and the document.
  * @param issues - The problems, in the order found.
@@ -481,6 +485,7 @@ function reportBuildIssues(context: OpContext, issues: readonly SceneIssue[]): v
   const address = documentAddress(context);
   for (const issue of issues) {
     context.app.log.warn(`${issue.code}: ${address}: ${issue.message}`);
+    context.warnings?.push({ code: issue.code, message: issue.message });
   }
 }
 

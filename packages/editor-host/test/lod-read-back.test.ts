@@ -168,7 +168,7 @@ async function readBack(peer: Wire): Promise<readonly SceneFileEntity[]> {
 async function applyOne(peer: Wire, op: SceneOp): Promise<void> {
   next += 1;
   const answer = await call(peer, "applyOps", { ops: [op], commandName: "Test", commandId: `cmd-${String(next)}` });
-  expect(answer["result"]).toEqual({ applied: 1, failures: [] });
+  expect(answer["result"]).toEqual({ applied: 1, failures: [], warnings: [] });
 }
 
 /**

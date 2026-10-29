@@ -366,6 +366,15 @@ export interface ApplyOpsResult {
   readonly applied: number;
   /** The ops that were not, in order. */
   readonly failures: readonly ApplyOpFailure[];
+  /**
+   * Every recoverable problem the engine reported while the host applied these ops, in order: what
+   * a subtree an op or an instance rebuild built reported (an override that names nothing in the
+   * prefab, a reference that resolves nowhere in the document), in the form of
+   * {@link OpenSceneResult}'s `warnings`. The host also logs each one as a `log` warning; this list
+   * is the one tied to the command. Empty when there were none; absent from a host from before it,
+   * which an editor treats as unknown, not as none.
+   */
+  readonly warnings?: readonly SceneIssue[];
 }
 
 /**
@@ -1348,12 +1357,18 @@ function isApplyOpFailure(value: unknown): value is ApplyOpFailure {
  * Checks the result of `applyOps`.
  *
  * @param value - The received `result`.
- * @returns True for a count of applied ops and a list of failures with known codes.
+ * @returns True for a count of applied ops, a list of failures with known codes, and an optional
+ * list of issues.
  *
  * @public
  */
 export function isApplyOpsResult(value: unknown): value is ApplyOpsResult {
-  return isRecord(value) && isCount(value["applied"]) && isArrayOf(value["failures"], isApplyOpFailure);
+  return (
+    isRecord(value) &&
+    isCount(value["applied"]) &&
+    isArrayOf(value["failures"], isApplyOpFailure) &&
+    optionalField(value, "warnings", (warnings) => isArrayOf(warnings, isSceneIssue))
+  );
 }
 
 /**

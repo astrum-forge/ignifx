@@ -12,13 +12,13 @@ import {
 } from "@ignifx/core";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { startEditorHost } from "../src/host.js";
-import { SceneNotification } from "../src/protocol/index.js";
+import { isApplyOpsResult, SceneNotification } from "../src/protocol/index.js";
 import * as heldReferences from "../src/scene/held-references.js";
 import { connect, EDITOR_ORIGIN } from "./support/editor.js";
 import { brightnessIn, Lamp, LAMP_POST, level, PREFAB } from "./support/lamps.js";
 import type { EditorHost } from "../src/host.js";
 import type { EditorPeer } from "./support/editor.js";
-import type { LogParams } from "../src/protocol/index.js";
+import type { LogParams, SceneIssue } from "../src/protocol/index.js";
 import type {
   ComponentType,
   Entity,
@@ -33,7 +33,8 @@ import type {
  * Rebuilding a prefab instance in a headless scene view, from the override list the document
  * holds: after the prefab changes on disk (engine ask E23), and for `setOverride`, whose `index` is
  * relative to the document's order. A build problem met on the way (a stale override, a reference
- * that does not resolve) reaches the editor as a `log` warning, as a reopen's would.
+ * that does not resolve) reaches the editor as a `log` warning, as a reopen's would, and in the
+ * `warnings` of the `applyOps` answer whose op met it.
  */
 
 /** The document's address. */
@@ -102,6 +103,8 @@ const files = new Map<string, string>();
 let host: EditorHost | null = null;
 let peer: EditorPeer | null = null;
 let pump: ReturnType<typeof setInterval> | null = null;
+/** The `log` warnings the running host has sent, in order. */
+let logged: string[] = [];
 
 afterEach(() => {
   if (pump !== null) {
@@ -197,6 +200,7 @@ async function sceneView(
   const editor = connect(target);
   peer = editor;
   const warnings: string[] = [];
+  logged = warnings;
   // `request` drops the notifications it reads past, so the warnings are taken off the port itself.
   editor.port.addEventListener("message", (event: MessageEvent) => {
     const message = event.data as { method?: unknown; params?: LogParams };
@@ -435,7 +439,18 @@ describe("setOverride's index, headless", () => {
 });
 
 describe("build problems of an op's subtree, headless", () => {
-  it("reports an override that names no member as a warning, as a reopen does, and applies the op", async () => {
+  /**
+   * The issue a stale override is in a result's `warnings`, as `openScene` reports it.
+   *
+   * @param path - The override's path.
+   * @returns The issue.
+   */
+  const staleIssue = (path: string): SceneIssue => ({
+    code: "IGX-0604",
+    message: `${STREET}: the override path "${path}" names no entity of the instanced scene.`,
+  });
+
+  it("answers and logs an override that names no member, as a reopen reports it, and applies the op", async () => {
     const { warnings } = await sceneView(level);
     const stale: SceneFileOverride = { path: "GONE/components/GONE-LAMP/props/brightness", value: 2 };
 
@@ -445,15 +460,19 @@ describe("build problems of an op's subtree, headless", () => {
       ops: [{ op: "setOverride", entity: "STREET-POST", override: stale }],
     });
 
-    expect(answer).toEqual({ applied: 1, failures: [] });
+    expect(answer).toEqual({ applied: 1, failures: [], warnings: [staleIssue(stale.path)] });
     expect(warnings).toEqual([staleOverride(stale.path)]);
 
-    // The editor reopens the document with the override: the same line.
-    await call("openScene", { file: streetWith([SPARE_7, stale])(await computeSceneHash(LAMP_POST)), address: STREET });
+    // The editor reopens the document with the override: the same issue, and the same line.
+    const reopened = await call("openScene", {
+      file: streetWith([SPARE_7, stale])(await computeSceneHash(LAMP_POST)),
+      address: STREET,
+    });
+    expect(reopened).toMatchObject({ warnings: [staleIssue(stale.path)] });
     expect(warnings).toEqual([staleOverride(stale.path), staleOverride(stale.path)]);
   });
 
-  it("reports a reference that resolves nowhere in the document, and not one into the rest of it", async () => {
+  it("answers and logs a reference that resolves nowhere in the document, and not one into the rest of it", async () => {
     const { running, warnings } = await sceneView(level);
     const answer = await call("applyOps", {
       commandId: "c1",
@@ -461,12 +480,53 @@ describe("build problems of an op's subtree, headless", () => {
       ops: [follower("TO-OMITS", "OMITS"), follower("TO-NOWHERE", "NOWHERE")],
     });
 
-    expect(answer).toEqual({ applied: 2, failures: [] });
+    expect(answer).toMatchObject({ applied: 2, failures: [] });
+    const issues = isApplyOpsResult(answer) ? (answer.warnings ?? []) : [];
+    expect(issues.map((issue) => issue.code)).toEqual(["IGX-0602"]);
+    expect(issues[0]?.message).toMatch(/^TO-NOWHERE-FOLLOW\.target: /u);
     expect(running.app.world.getEntity("TO-OMITS")?.getComponent(Follow)?.target).toBe(
       running.app.world.getEntity("OMITS"),
     );
     expect(warnings).toEqual([
       expect.stringMatching(/^IGX-0602: scenes\/street\.scene\.json: TO-NOWHERE-FOLLOW\.target: /u),
+    ]);
+  });
+
+  it("answers an empty list for a command whose builds met no problem, as openScene does", async () => {
+    const { warnings } = await sceneView(level);
+
+    const answer = await call("applyOps", {
+      commandId: "c1",
+      commandName: "Follower",
+      ops: [follower("TO-OMITS", "OMITS")],
+    });
+
+    expect(answer).toEqual({ applied: 1, failures: [], warnings: [] });
+    expect(warnings).toEqual([]);
+  });
+
+  it("keeps the problems of the ops that applied beside a later failure", async () => {
+    const { warnings } = await sceneView(level);
+    const stale: SceneFileOverride = { path: "GONE/components/GONE-LAMP/props/brightness", value: 2 };
+
+    const answer = await call("applyOps", {
+      commandId: "c1",
+      commandName: "Stale, then missing",
+      ops: [
+        { op: "setOverride", entity: "STREET-POST", override: stale },
+        { op: "destroyEntity", entity: "NO-SUCH-ENTITY" },
+      ],
+    });
+
+    expect(answer).toEqual({
+      applied: 1,
+      failures: [{ index: 1, code: "unknownEntity", message: "No entity NO-SUCH-ENTITY is in the open scene." }],
+      warnings: [staleIssue(stale.path)],
+    });
+    // The failure is a log line of its own, and not a warning of the result: it is in `failures`.
+    expect(warnings).toEqual([
+      staleOverride(stale.path),
+      expect.stringMatching(/^applyOps c1 \(Stale, then missing\): op 1 \(destroyEntity\) failed: unknownEntity/u),
     ]);
   });
 });
@@ -531,15 +591,23 @@ function followOf(running: EditorHost, member: string): Follow | undefined {
 }
 
 /**
- * Applies one op and expects it to succeed.
+ * Applies one op and expects it to succeed, with its build problems both in the answer's
+ * `warnings` and in the `log` warnings it sent, one line each.
  *
  * @param op - The op.
+ * @returns The answer's `warnings`.
  */
-async function applyOne(op: unknown): Promise<void> {
-  expect(await call("applyOps", { commandId: "c1", commandName: "Edit", ops: [op] })).toEqual({
-    applied: 1,
-    failures: [],
-  });
+async function applyOne(op: unknown): Promise<readonly SceneIssue[]> {
+  const before = logged.length;
+  const answer = await call("applyOps", { commandId: "c1", commandName: "Edit", ops: [op] });
+  if (!isApplyOpsResult(answer)) {
+    throw new Error(`Not an applyOps answer: ${JSON.stringify(answer)}`);
+  }
+  expect(answer).toMatchObject({ applied: 1, failures: [] });
+  const warnings = answer.warnings ?? [];
+  // The log line is the issue with the document's address, as `world.loadSceneFile` writes it.
+  expect(warnings.map((issue) => `${issue.code}: ${STREET}: ${issue.message}`)).toEqual(logged.slice(before));
+  return warnings;
 }
 
 describe("references an instance's overrides hold, through a rebuild, headless", () => {

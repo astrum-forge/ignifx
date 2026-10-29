@@ -86,7 +86,8 @@ carry `Content-Security-Policy: frame-ancestors <editorOrigin>`.
 The editor owns the scene document; the scene view mirrors it. `openScene` sends the whole file
 object (it may hold unsaved edits) and the host builds it with `world.loadSceneFile`, keeping the
 file's uids. Every command the editor applies to its document goes to the host as `applyOps`, the
-same ops; any failure means the mirror drifted, and the editor resends `openScene`. What the user
+same ops; any failure means the mirror drifted, and the editor resends `openScene`. The answer's
+`warnings` lists what building the command's entities reported, as `openScene`'s does. What the user
 does in the view comes back as notifications (`selectionChanged`, `transformDragged`) that the
 editor turns into commands. The host never edits the document. When a script's hot reload changes a
 field's default, the host gives the field its new default wherever the document leaves it out, and
@@ -306,6 +307,12 @@ object `openScene` sends, through `world.loadSceneFile`; `readBack` answers with
 - **Script edits reload both views** while `main.ts` imports `src/scripts/**` statically: Vite's one
   module graph sends a full reload to every page when an update reaches a module that does not
   accept it.
+- **An op's build problems come back with its command.** `applyOps` answers
+  `{ applied, failures, warnings }`. `warnings` holds `{ code, message }` issues, as `openScene`'s
+  does, for everything the subtrees its ops built or rebuilt reported: an override that names
+  nothing in the prefab, or a reference that resolves nowhere in the document. The op still
+  applies. Each issue is also a `log` warning for the Console. The answer is the record tied to the
+  command. A host from before this field sends no `warnings`.
 - **Scene methods answer `notReady` until the app has started.** The host answers `hello` at once;
   its first `schemasChanged` is the cue that `openScene` and the rest are accepted. `applyOps`,
   `readBack` and `frame` answer `noScene` while no scene is open.
@@ -350,7 +357,8 @@ object `openScene` sends, through `world.loadSceneFile`; `readBack` answers with
   `spriteatlas` or `shader`. A changed prefab rebuilds the document's instances of it, directly or
   through another prefab, with their uids, transforms, overrides and document children; `readBack`
   then writes the new prefab's hash. An override the new prefab no longer has, like any problem
-  building an op's subtree, is a `log` warning worded as a reopen's. A rebuilt subtree resolves its
+  building an op's subtree, is a `log` warning worded as a reopen's (an op's problems also come back
+  in `applyOps`' `warnings`). A rebuilt subtree resolves its
   references, the ones its overrides hold included, against the whole document, as a reopen does,
   and so do the references into it from the rest of the document, other instances' overrides
   included. The host sends `assetReloaded { address, type, entities }` (the rebuilt instance
