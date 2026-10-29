@@ -1,5 +1,22 @@
 # @ignifx/2d
 
+## 0.12.0
+
+### Patch Changes
+
+- fa3384f: Fix a Tiled property or LDtk field named `__proto__`: `tiledPropertiesToRecord` and `fieldInstancesToRecord` now keep it as a property instead of dropping it.
+- Updated dependencies [8ea4101]
+- Updated dependencies [3999551]
+- Updated dependencies [8d7f8ef]
+- Updated dependencies [0dbe07f]
+- Updated dependencies [234534b]
+- Updated dependencies [5dcbff1]
+- Updated dependencies [a71c607]
+- Updated dependencies [38ddd7a]
+- Updated dependencies [51efbc6]
+- Updated dependencies [7f5b116]
+  - @ignifx/core@0.12.0
+
 ## 0.11.0
 
 ### Patch Changes

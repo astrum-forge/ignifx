@@ -1,5 +1,47 @@
 # @ignifx/core
 
+## 0.12.0
+
+### Minor Changes
+
+- 8ea4101: A component class whose `static requires` chain loops, through the class itself or a class it requires, is now refused at registration or first `addComponent` with the new error code `IGX-0209` (`CoreErrorCode.requiresCycle`) instead of overflowing the stack. `app.hotReload.apply()` reports such a replacement in `errors` and keeps the previous class.
+- 3999551: Fix loading a scene file that lists a component before one its class `requires`: the file's own record is used instead of a second, auto-added instance (or an `IGX-0202` error).
+  
+  `describeRegisteredSchemas` and the editor host's schema descriptions now list each component's `requires` as type ids.
+- 8d7f8ef: Fix prefab instances with two overrides of one identity, which a merge conflict can leave: the first had no effect, and an editor that edited or removed the override reached only one of the two.
+  
+  ### Breaking
+  
+  `validateSceneFile` and the scene loader now refuse an instance whose overrides repeat an identity (the same `path` and `op`, and for an `add` to `<uid>/components` the same added component uid) with `IGX-0608`, and the editor host refuses such a file at `openScene` and such an entry in `createEntity` or `instantiate`. If a scene fails to load with `IGX-0608` naming `overrides/<n>`, keep one of the two overrides it names.
+- 234534b: Fix a reference that a prefab instance's override holds in the scene view becoming `null` after an override edit, an asset reload or a changed default; it now resolves as it does when the scene opens.
+  
+  A component added to the root of a one-root prefab instance is no longer built twice when the scene view rebuilds the instance.
+  
+  `instantiateScene` takes `outsideReferences`, which resolves a reference to a uid the file does not declare.
+- 5dcbff1: Add `MeshRenderer.displayHidden`, which hides a mesh from drawing and picking without changing `enabled`, `pickable`, or anything a scene file saves.
+  
+  In an edit-mode app a `LodGroup` shows one level, chosen by the editor camera's distance, instead of switching the saved `MeshRenderer.enabled`, so moving an editor's camera no longer changes the scene file and a removed or disabled group shows every level again.
+- a71c607: Fix `__proto__` keys in material files, post-effect values and settings defaults: a material's `values`, `textures` and `defines`, a surface shader's `textures`, a post effect's `values`, and a settings `map` default now keep such a key as a name instead of changing an object's prototype.
+  
+  ### Breaking
+  
+  A shader material whose `values` or `defines` has a key named `__proto__` used to load with that key silently dropped; it is now refused with `IGX-0712`, like any other name the shader does not declare. A `defines` key named after any other inherited member, such as `toString`, is also refused with `IGX-0712` now; before, it was taken as declared. If a material file fails to load with `IGX-0712` after this update, remove the key or declare it in the shader.
+- 51efbc6: Fix schema fields named after a member every object inherits: such a field read the inherited member whenever a value or file omitted it, and a `record` field named `__proto__` replaced the record's prototype instead of holding a value.
+  
+  ### Breaking
+  
+  `defineSchema`, `Component.define`, `Script.define`, `record()`, `ComponentRegistry` (for a hand-written `static schema`) and `registerSettings` now refuse a field named `__proto__`, `constructor`, `toString`, `valueOf` or any other `Object.prototype` member with `IGX-0607`. Rename the field; `prototype` stays allowed.
+
+### Patch Changes
+
+- 0dbe07f: Fix a prefab instance member's overridden reference into another instance becoming `null` in the scene view when that other instance is rebuilt (an override edit, an asset reload or a changed default); it now points at the rebuilt entity or component, as it does when the scene opens.
+  
+  A reference that resolves nowhere is no longer reported again each time a reference beside it in the same field is resolved after a rebuild.
+  
+  The `outsideReferences` documentation of `instantiateScene` now says it also resolves a reference to a component an instance's `remove` override deleted.
+- 38ddd7a: Fix `__proto__` keys in scene files: an instanced prefab's props and `map` fields keep such a key as plain data instead of changing an object's prototype, and an override path with a `__proto__` property step is refused with `IGX-0609`.
+- 7f5b116: `defineSchema`, `record()`, a hand-written `static schema` and `registerSettings` refuse a fields object written with a literal `__proto__: …` key with `IGX-0607`, instead of dropping that field silently.
+
 ## 0.11.0
 
 ### Minor Changes

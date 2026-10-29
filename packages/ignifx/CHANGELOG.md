@@ -1,5 +1,53 @@
 # ignifx
 
+## 0.12.0
+
+### Minor Changes
+
+- 3999551: Fix loading a scene file that lists a component before one its class `requires`: the file's own record is used instead of a second, auto-added instance (or an `IGX-0202` error).
+  
+  `describeRegisteredSchemas` and the editor host's schema descriptions now list each component's `requires` as type ids.
+- 234534b: Fix a reference that a prefab instance's override holds in the scene view becoming `null` after an override edit, an asset reload or a changed default; it now resolves as it does when the scene opens.
+  
+  A component added to the root of a one-root prefab instance is no longer built twice when the scene view rebuilds the instance.
+  
+  `instantiateScene` takes `outsideReferences`, which resolves a reference to a uid the file does not declare.
+
+### Patch Changes
+
+- 5dcbff1: Add `MeshRenderer.displayHidden`, which hides a mesh from drawing and picking without changing `enabled`, `pickable`, or anything a scene file saves.
+  
+  In an edit-mode app a `LodGroup` shows one level, chosen by the editor camera's distance, instead of switching the saved `MeshRenderer.enabled`, so moving an editor's camera no longer changes the scene file and a removed or disabled group shows every level again.
+- 0abb0bb: In an edit-mode app a `MeshRenderer` listed as a level by two `LodGroup`s belongs to the first: the other group leaves it alone and warns once with the new `IGX-1217` (`ThreeDErrorCode.sharedLodLevel`), so removing or disabling one group no longer shows a level the other still hides.
+- Updated dependencies [8ea4101]
+- Updated dependencies [3999551]
+- Updated dependencies [8d7f8ef]
+- Updated dependencies [0dbe07f]
+- Updated dependencies [234534b]
+- Updated dependencies [5dcbff1]
+- Updated dependencies [0abb0bb]
+- Updated dependencies [16dca59]
+- Updated dependencies [fa3384f]
+- Updated dependencies [a71c607]
+- Updated dependencies [91e0916]
+- Updated dependencies [5665015]
+- Updated dependencies [38ddd7a]
+- Updated dependencies [51efbc6]
+- Updated dependencies [7f5b116]
+  - @ignifx/core@0.12.0
+  - @ignifx/3d@0.12.0
+  - @ignifx/particles@0.12.0
+  - @ignifx/2d@0.12.0
+  - @ignifx/devtools@0.12.0
+  - @ignifx/ui@0.12.0
+  - @ignifx/audio@0.12.0
+  - @ignifx/electron@0.12.0
+  - @ignifx/input@0.12.0
+  - @ignifx/particles-2d@0.12.0
+  - @ignifx/physics@0.12.0
+  - @ignifx/physics-2d@0.12.0
+  - @ignifx/terrain@0.12.0
+
 ## 0.11.0
 
 ### Minor Changes
