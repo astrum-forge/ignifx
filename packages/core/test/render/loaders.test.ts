@@ -317,6 +317,31 @@ describe("the material loader", () => {
     expect(bound?.kind === "shader" ? Object.keys(bound.textures) : null).toEqual(["__proto__"]);
   });
 
+  it("binds a surface shader's texture named __proto__, on load and on clone", async () => {
+    const h = await app();
+    const surface = "shaders/proto.surface.wgsl";
+    canned(
+      h,
+      surface,
+      "// @ignifx surface\n// @ignifx texture __proto__\nfn surface(in: SurfaceInput, s: ptr<function, Surface>) { (*s).baseColor = vec3<f32>(1.0); }\n",
+    );
+    // `JSON.stringify` drops an object literal's `__proto__`, so the body is written by hand.
+    canned(
+      h,
+      "materials/proto-surface.material.json",
+      `{ "format": "ignifx.material", "formatVersion": 1, "type": "pbr", "name": "proto", ` +
+        `"surfaces": [{ "shader": "${surface}", "textures": { "__proto__": "textures/a.png" } }] }`,
+    );
+    const handle = h.app.assets.load<MaterialAsset>("materials/proto-surface.material.json");
+    await handle.promise.catch((): null => null);
+    await h.settle(1);
+    expect(handle.state).toBe("loaded");
+    // Assigned instead of defined, the texture set the record's prototype and was never bound.
+    expect(handle.value.surfaces[0]?.getTexture("__proto__")?.address).toBe("textures/a.png");
+    const copy = handle.value.clone(h.app);
+    expect(copy.value.surfaces[0]?.getTexture("__proto__")?.address).toBe("textures/a.png");
+  });
+
   it("reads a surfaces list written as an address, an $asset reference, and an object", async () => {
     const h = await app();
     const surface = "shaders/snow.surface.wgsl";

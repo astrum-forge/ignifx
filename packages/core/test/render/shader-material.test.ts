@@ -183,6 +183,17 @@ describe("building a shader material", () => {
     ).toThrow(/IGX-0712/);
   });
 
+  it("builds and rebuilds with a declared define named __proto__", async () => {
+    const h = await app();
+    const source = TINT_WGSL.replace("// @ignifx shader", "// @ignifx shader\n// @ignifx define __proto__ = false");
+    const shader = await h.load<ShaderAsset>("shaders/proto.wgsl", { "shaders/proto.wgsl": source });
+    const material = createMaterialAsset(h.app, shaderMaterialDefinition({ shader: shader.address }), []).value;
+    const defines = (): unknown => (material.lite.material as unknown as { readonly defines: unknown }).defines;
+    expect(defines()).toEqual([{ name: "__proto__", value: false }]);
+    material.setDefine("__proto__", true);
+    expect(defines()).toEqual([{ name: "__proto__", value: true }]);
+  });
+
   it("does nothing when the value is the one the file already declares", async () => {
     const h = await app();
     const shader = await h.load<ShaderAsset>("shaders/textured.wgsl", { "shaders/textured.wgsl": TEXTURED_WGSL });
