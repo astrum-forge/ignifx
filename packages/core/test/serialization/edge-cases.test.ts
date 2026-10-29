@@ -88,6 +88,7 @@ describe("loading a degraded file", () => {
     const outside = harness.world.createEntity("Outside");
     const tagger = outside.addComponent(Tagger);
     const decoy = harness.world.createEntity("Decoy");
+    const decoyTagger = decoy.addComponent(Tagger);
     const asset = await createSceneAsset(
       "a.scene.json",
       buildFile({
@@ -105,24 +106,70 @@ describe("loading a degraded file", () => {
                 type: "test/Everything",
                 props: { target: { $entity: "B" }, follow: { $component: "GONE" } },
               },
+              { uid: "E", type: "test/Everything", props: { follow: { $component: "B-T" } } },
             ],
           }),
-          entityRecord({ uid: "B", name: "B" }),
+          entityRecord({ uid: "B", name: "B", components: [{ uid: "B-T", type: "test/Tagger" }] }),
         ],
       }),
     );
     const built = instantiateScene(harness.world, asset, {
       outsideReferences: {
         entity: (uid) => (uid === "OUT" ? outside : uid === "B" ? decoy : null),
-        component: (uid) => (uid === "OUT-T" ? tagger : null),
+        component: (uid) => (uid === "OUT-T" ? tagger : uid === "B-T" ? decoyTagger : null),
       },
     });
-    const [resolved, own] = harness.world.getEntity("A")?.getComponents(Everything) ?? [];
+    const [resolved, own, ownComponent] = harness.world.getEntity("A")?.getComponents(Everything) ?? [];
     expect(resolved?.target).toBe(outside);
     expect(resolved?.follow).toBe(tagger);
     expect(own?.target).toBe(harness.world.getEntity("B"));
     expect(own?.follow).toBeNull();
+    expect(ownComponent?.follow).toBe(harness.world.getEntity("B")?.getComponent(Tagger));
     expect(built.issues.map((issue) => issue.message)).toEqual([expect.stringMatching(/^D\.follow: .*"GONE"/u)]);
+  });
+
+  it("resolves a reference to a component a remove override deleted through outsideReferences", async () => {
+    const harness = world();
+    const stand = harness.world.createEntity("Stand-in").addComponent(Tagger);
+    const asked: string[] = [];
+    const prefab = await createSceneAsset(
+      "prefabs/p.prefab.json",
+      buildFile({
+        entities: [
+          entityRecord({ uid: "P", name: "P", components: [{ uid: "P-T", type: "test/Tagger" }] }),
+          entityRecord({
+            uid: "P-CHILD",
+            name: "Child",
+            parent: "P",
+            components: [{ uid: "P-E", type: "test/Everything", props: { follow: { $component: "P-T" } } }],
+          }),
+        ],
+      }),
+    );
+    const asset = await createSceneAsset(
+      "a.scene.json",
+      buildFile({
+        entities: [
+          entityRecord({
+            uid: "A",
+            instance: { scene: { $asset: prefab.address }, overrides: [{ op: "remove", path: "P/components/P-T" }] },
+          }),
+        ],
+      }),
+      [fakeHandle(prefab.address, prefab)],
+    );
+    instantiateScene(harness.world, asset, {
+      outsideReferences: {
+        entity: () => null,
+        component: (uid) => {
+          asked.push(uid);
+          return stand;
+        },
+      },
+    });
+    // The file declares the component, but the build made nothing with its uid.
+    expect(harness.world.getEntity("A")?.children[0]?.getComponent(Everything)?.follow).toBe(stand);
+    expect(asked).toHaveLength(1);
   });
 
   it("fills short transform arrays with the identity and skips empty tags", async () => {

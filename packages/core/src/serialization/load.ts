@@ -65,11 +65,12 @@ export interface InstantiateSceneOptions {
   /** `true` turns an `IGX-0604` hash mismatch from a diagnostic into a throw. */
   readonly strictInstanceHashes?: boolean;
   /**
-   * How an `entityRef` or `componentRef` to a uid the file does not declare resolves. A tool that
-   * builds part of a larger document, such as an editor rebuilding one prefab instance, resolves
-   * the rest of the document here, so the part decodes as the whole file would; this includes a
-   * reference an instance's overrides hold. The file's own uids come first, and `asset()` fields
-   * never use it. Omitted, such a reference is `null` with an `IGX-0602` issue.
+   * How an `entityRef` or `componentRef` resolves when the build made nothing with its uid: a uid
+   * the file does not declare, or one of a component an instance's `remove` override deleted. A
+   * tool that builds part of a larger document, such as an editor rebuilding one prefab instance,
+   * resolves the rest of the document here, so the part decodes as the whole file would; this
+   * includes a reference an instance's overrides hold. The uids the build made come first, and
+   * `asset()` fields never use it. Omitted, such a reference is `null` with an `IGX-0602` issue.
    */
   readonly outsideReferences?: Pick<ReferenceDecoder, "entity" | "component">;
 }
@@ -509,7 +510,7 @@ function instancedRoot(
  *
  * @param context - The build state.
  * @param assets - How an `asset()` field's address becomes the handle the scene already retains.
- * @param outside - How a uid the file does not declare resolves, if at all.
+ * @param outside - How a uid the build made nothing with resolves, if at all.
  */
 function decodeAllProps(
   context: BuildContext,

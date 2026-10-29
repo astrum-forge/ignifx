@@ -70,8 +70,8 @@ prefab.release();
   options are `loadScene`'s plus `name` and `onIssue`, which receives the build's warnings.
   `loadSceneDependencies(app.assets, file)` is the asset walk on its own, for building with
   `createSceneAsset` and `instantiateScene` yourself; `instantiateScene`'s `outsideReferences`
-  resolves a reference to a uid the file does not declare, for a tool that builds part of a larger
-  document.
+  resolves a reference to a uid the build made nothing with, for a tool that builds part of a
+  larger document.
 - **`createScene(name, { persistent })`** — an empty instance for objects that are not part of any
   level; with `persistent: true` it survives every `"single"` load. Put entities in it with
   `createEntity(name, { scene })`. `serializeScene` writes it only when passed it.
