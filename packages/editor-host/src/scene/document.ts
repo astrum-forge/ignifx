@@ -744,7 +744,7 @@ export function withOverrideList(app: App, record: SceneFileEntity, instance: Sc
 
 /**
  * The override path of the component list of an instanced scene's root, when the scene has one
- * root: the members an `add` there joins are the instance root's own.
+ * root: a component an `add` there gives is the instance root's own.
  *
  * @param app - The scene view's app.
  * @param instance - The instance entry.
