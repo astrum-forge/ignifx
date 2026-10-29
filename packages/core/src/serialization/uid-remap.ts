@@ -123,14 +123,19 @@ export function noAssets(): null {
  * @param remap - The table filled while the scene was being constructed.
  * @param assets - How an asset address becomes a handle; defaults to resolving nothing, which makes
  * every `asset()` field `null` with an `IGX-0602` issue.
+ * @param outside - How a uid the remap does not hold resolves; omitted, it resolves to `null`.
  * @returns The decoder to hand `decodeProps`.
  *
  * @internal
  */
-export function remapDecoder(remap: UidRemap, assets: AssetResolver = noAssets): ReferenceDecoder {
+export function remapDecoder(
+  remap: UidRemap,
+  assets: AssetResolver = noAssets,
+  outside?: Pick<ReferenceDecoder, "entity" | "component">,
+): ReferenceDecoder {
   return {
-    entity: (uid: string): unknown => remap.entity(uid),
-    component: (uid: string): unknown => remap.component(uid),
+    entity: (uid: string): unknown => remap.entity(uid) ?? outside?.entity(uid) ?? null,
+    component: (uid: string): unknown => remap.component(uid) ?? outside?.component(uid) ?? null,
     asset: (address: string, type: string | null): unknown => assets(address, type),
   };
 }

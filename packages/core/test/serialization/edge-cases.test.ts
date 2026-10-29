@@ -83,6 +83,48 @@ describe("loading a degraded file", () => {
     expect(mover?.speed).toBe(5);
   });
 
+  it("resolves a uid the file does not declare through outsideReferences, its own uids first", async () => {
+    const harness = world();
+    const outside = harness.world.createEntity("Outside");
+    const tagger = outside.addComponent(Tagger);
+    const decoy = harness.world.createEntity("Decoy");
+    const asset = await createSceneAsset(
+      "a.scene.json",
+      buildFile({
+        entities: [
+          entityRecord({
+            uid: "A",
+            components: [
+              {
+                uid: "C",
+                type: "test/Everything",
+                props: { target: { $entity: "OUT" }, follow: { $component: "OUT-T" } },
+              },
+              {
+                uid: "D",
+                type: "test/Everything",
+                props: { target: { $entity: "B" }, follow: { $component: "GONE" } },
+              },
+            ],
+          }),
+          entityRecord({ uid: "B", name: "B" }),
+        ],
+      }),
+    );
+    const built = instantiateScene(harness.world, asset, {
+      outsideReferences: {
+        entity: (uid) => (uid === "OUT" ? outside : uid === "B" ? decoy : null),
+        component: (uid) => (uid === "OUT-T" ? tagger : null),
+      },
+    });
+    const [resolved, own] = harness.world.getEntity("A")?.getComponents(Everything) ?? [];
+    expect(resolved?.target).toBe(outside);
+    expect(resolved?.follow).toBe(tagger);
+    expect(own?.target).toBe(harness.world.getEntity("B"));
+    expect(own?.follow).toBeNull();
+    expect(built.issues.map((issue) => issue.message)).toEqual([expect.stringMatching(/^D\.follow: .*"GONE"/u)]);
+  });
+
   it("fills short transform arrays with the identity and skips empty tags", async () => {
     const asset = await createSceneAsset("a.scene.json", {
       ...buildFile({ entities: [] }),
