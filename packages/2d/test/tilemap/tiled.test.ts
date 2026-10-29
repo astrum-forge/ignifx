@@ -379,6 +379,12 @@ describe("tiledPropertiesToRecord", () => {
     ).toEqual({ ok: 3 });
   });
 
+  it("keeps a property named __proto__ as a property", () => {
+    const record = tiledPropertiesToRecord([{ name: "__proto__", type: "string", value: "odd" }]);
+    expect(Object.keys(record)).toEqual(["__proto__"]);
+    expect(Object.getOwnPropertyDescriptor(record, "__proto__")?.value).toBe("odd");
+  });
+
   it("returns an empty record for anything that is not an array", () => {
     expect(tiledPropertiesToRecord(undefined)).toEqual({});
     expect(tiledPropertiesToRecord({ biome: "cave" })).toEqual({});
