@@ -7,6 +7,7 @@ import {
   map,
   optional,
   record as recordOf,
+  Script,
   stringifySceneFile,
 } from "@ignifx/core";
 import { afterEach, describe, expect, it } from "vitest";
@@ -731,6 +732,88 @@ describe("another instance's member overrides that point into a rebuilt instance
     expect(world.getEntity("SECOND-SIGN")?.isDestroyed).toBe(false);
     expect(await overridesOf("STREET-POST")).toEqual([aimFollow("SECOND-SIGN")]);
     expect(await overridesOf("SECOND-POST")).toEqual([aimFollow("SIGN")]);
+    expect(warnings).toEqual([]);
+  });
+});
+
+describe("a held member that the rebuild itself destroys, headless", () => {
+  it("is not re-pointed, so nothing is reported for it", async () => {
+    const add = addFollow("OMITS");
+    const { running, warnings } = await sceneView(twoPosts([add], [aimWatch("ADDED-FOLLOW")]), bulbAims());
+    const held = bulbOf(running, "SECOND-POST", Watch);
+    expect(held?.target).toBe(followOf(running, "Lamp Post"));
+    // An edit-mode script on the rebuilt root that takes the held member down with it.
+    class Saboteur extends Script {
+      static typeId = "test/Saboteur";
+      static runInEditMode = true;
+      onDestroy(): void {
+        held?.destroy();
+      }
+    }
+    running.app.registerComponents([Saboteur]);
+    running.app.world.getEntity("STREET-POST")?.addComponent(Saboteur);
+
+    // Without the added component a live member's field would resolve nowhere and be reported.
+    await applyOne({ op: "removeOverride", entity: "STREET-POST", path: add.path, added: "ADDED-FOLLOW" });
+
+    expect(held?.isDestroyed).toBe(true);
+    expect(warnings).toEqual([]);
+  });
+});
+
+/**
+ * Counts the reads of a component's field that the walk for held references makes, by putting an
+ * accessor in place of the field.
+ *
+ * @param component - The component.
+ * @param field - The field's name.
+ * @returns The count so far.
+ */
+function walkReads(component: Component | undefined, field: string): () => number {
+  if (component === undefined) {
+    throw new Error(`No component to count the reads of ${field} on.`);
+  }
+  let reads = 0;
+  let value: unknown = Reflect.get(component, field);
+  Object.defineProperty(component, field, {
+    configurable: true,
+    enumerable: true,
+    get: () => {
+      // The serializer and the destroy read the field too; only the walk's reads count.
+      if (new Error("read").stack?.includes("heldByMembers") === true) {
+        reads += 1;
+      }
+      return value;
+    },
+    set: (next: unknown) => {
+      value = next;
+    },
+  });
+  return () => reads;
+}
+
+describe("the walk for references held by other instances' members, headless", () => {
+  it("reads only the instances whose override lists point into the rebuilt one", async () => {
+    const { running, warnings } = await sceneView((hash) => {
+      const street = twoPosts([], [aimFollow("SIGN")])(hash);
+      const third: SceneFileEntity = {
+        uid: "THIRD-POST",
+        name: "Third Post",
+        parent: null,
+        transform: { position: [16, 0, 0], rotation: [0, 0, 0, 1], scale: [1, 1, 1] },
+        instance: { scene: { $asset: PREFAB }, hash, overrides: [aimFollow("OMITS")] },
+      };
+      return { ...street, entities: [...street.entities, third] };
+    }, bulbAims());
+    const pointing = walkReads(bulbOf(running, "SECOND-POST", Follow), "target");
+    const elsewhere = walkReads(bulbOf(running, "THIRD-POST", Follow), "target");
+
+    await applyOne({ op: "setOverride", entity: "STREET-POST", override: SPARE_7 });
+
+    expect(pointing()).toBeGreaterThan(0);
+    expect(elsewhere()).toBe(0);
+    expect(bulbOf(running, "SECOND-POST", Follow)?.target).toBe(running.app.world.getEntity("SIGN"));
+    expect(bulbOf(running, "THIRD-POST", Follow)?.target).toBe(running.app.world.getEntity("OMITS"));
     expect(warnings).toEqual([]);
   });
 });
