@@ -1628,6 +1628,7 @@ export function instantiateScene(world: World, asset: SceneAsset, options?: Inst
 export interface InstantiateSceneOptions {
     readonly asInstance?: boolean;
     readonly assetHandle?: AssetHandle<SceneAsset> | null;
+    readonly outsideReferences?: Pick<ReferenceDecoder, "entity" | "component">;
     readonly parent?: Entity | null;
     readonly rootEntity?: Entity | null;
     readonly scene?: SceneInstance;

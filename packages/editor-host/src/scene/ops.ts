@@ -20,7 +20,7 @@ import {
   SCENE_FORMAT_VERSION,
 } from "@ignifx/core";
 import { ApplyOpFailureCode } from "../protocol/index.js";
-import { assignProps, copyJson, UNSAVED_SCENE_ADDRESS, validateFields } from "./document.js";
+import { assignProps, copyJson, UNSAVED_SCENE_ADDRESS, validateFields, withOverrideList } from "./document.js";
 import type { DocumentIndex, DocumentMirror } from "./document.js";
 import type {
   AddComponentOp,
@@ -376,28 +376,11 @@ function requireFreeUids(context: OpContext, records: readonly SceneFileEntity[]
 }
 
 /**
- * Tells whether JSON holds an entity or component reference anywhere.
- *
- * @param value - The JSON.
- * @returns True when a `$entity` or `$component` object is in it.
- */
-function hasReferences(value: JsonValue | undefined): boolean {
-  const array = asJsonArray(value);
-  if (array !== null) {
-    return array.some((item) => hasReferences(item));
-  }
-  const object = asJsonObject(value);
-  return (
-    object !== null &&
-    ("$entity" in object || "$component" in object || Object.values(object).some((item) => hasReferences(item)))
-  );
-}
-
-/**
  * Builds a subtree from entity records under a live parent, with the records' uids, loading the
- * assets they reference first; then resolves references to the rest of the document, which a
- * subtree built on its own cannot see. The build's problems are logged as warnings
- * ({@link reportBuildIssues}).
+ * assets they reference first. A reference to a uid the subtree does not declare resolves against
+ * the rest of the document, as it would in the whole file: one a document component holds, and one
+ * an instance's overrides hold (an added component's, or a member's overridden field). The build's
+ * problems are logged as warnings ({@link reportBuildIssues}).
  *
  * @param context - The app and the document.
  * @param records - The subtree's records, parents first; the first is its root.
@@ -426,24 +409,16 @@ async function buildSubtree(
   context.mirror.retain(dependencies);
   // Named by the document, so its diagnostics read as a reopen's.
   const asset = await createSceneAsset(documentAddress(context), file, dependencies);
-  const built = instantiateScene(context.app.world, asset, { scene, ...(parent === null ? {} : { parent }) });
+  // The document as it stands without the subtree: an op's new uids are free in it, and a rebuild
+  // destroyed the old subtree first.
+  const outsideReferences = context.mirror.decoder();
+  const built = instantiateScene(context.app.world, asset, {
+    scene,
+    outsideReferences,
+    ...(parent === null ? {} : { parent }),
+  });
   context.mirror.invalidate();
-  const references = context.mirror.decoder(built.remap);
-  const redecoded = new Set<string>();
-  const issues: SceneIssue[] = [];
-  for (const record of file.entities) {
-    for (const component of record.components ?? []) {
-      const live = built.remap.component(component.uid);
-      if (live !== null && hasReferences(component.props)) {
-        redecoded.add(component.uid);
-        issues.push(...assignProps(live, component.props ?? {}, references));
-      }
-    }
-  }
-  // A re-decoded component's problems are the second decode's: the first could not see the rest
-  // of the document, so it reported every reference into it as unresolved.
-  const kept = built.issues.filter((issue) => ![...redecoded].some((uid) => issue.message.startsWith(`${uid}.`)));
-  reportBuildIssues(context, [...kept, ...issues]);
+  reportBuildIssues(context, built.issues);
   const root = built.roots[0] ?? built.remap.entity(top.uid);
   if (root === null) {
     throw new OpFailure(ApplyOpFailureCode.engineError, `The engine built no entity for ${top.uid}.`);
@@ -955,7 +930,7 @@ async function rebuildInstance(
       ...(hash === undefined || !keepHashes ? {} : { hash }),
       ...(listed.length === 0 ? {} : { overrides: listed }),
     };
-    return { ...record, instance };
+    return withOverrideList(record, instance);
   };
   const found = index.records.get(uid);
   const record = found === undefined ? undefined : withDocumentOverrides(found);
@@ -964,14 +939,11 @@ async function rebuildInstance(
     throw new OpFailure(ApplyOpFailureCode.notAnInstance, `${root.name} (${uid}) has no instance entry.`);
   }
   const overrides = edit(instance.overrides ?? []);
-  const top: SceneFileEntity = {
-    ...record,
-    instance: {
-      scene: instance.scene,
-      ...(instance.hash === undefined ? {} : { hash: instance.hash }),
-      ...(overrides.length === 0 ? {} : { overrides }),
-    },
-  };
+  const top = withOverrideList(record, {
+    scene: instance.scene,
+    ...(instance.hash === undefined ? {} : { hash: instance.hash }),
+    ...(overrides.length === 0 ? {} : { overrides }),
+  });
   const inside = new Set([uid]);
   const records: SceneFileEntity[] = [top];
   for (const candidate of index.file.entities) {
@@ -980,9 +952,14 @@ async function rebuildInstance(
       records.push(withDocumentOverrides(candidate));
     }
   }
-  const insideComponents = new Set(
-    records.flatMap((entry_) => (entry_.components ?? []).map((component) => component.uid)),
-  );
+  // An `add` override's component keeps its uid, so the rest of the document may name it, before
+  // the edit or after.
+  const insideComponents = new Set([
+    ...records.flatMap((entry_) => (entry_.components ?? []).map((component) => component.uid)),
+    ...[...(instance.overrides ?? []), ...records.flatMap((entry_) => entry_.instance?.overrides ?? [])].flatMap(
+      (override) => addedUid(override) ?? [],
+    ),
+  ]);
   const parent = root.parent;
   const at = documentSiblings(context, parent, null).indexOf(root);
   root.destroyImmediate();
@@ -991,17 +968,36 @@ async function rebuildInstance(
   mirror.recordInstances(records);
   const references = context.mirror.decoder();
   const rebuilt = indexOf(context);
+  const issues: SceneIssue[] = [];
+  const repoint = (live: Component | undefined, props: JsonObject | undefined): void => {
+    const fields = new Set(
+      Object.entries(props ?? {})
+        .filter(([, value]) => pointsInto(value, inside, insideComponents))
+        .map(([name]) => name),
+    );
+    if (live !== undefined && props !== undefined && fields.size > 0) {
+      // Only the fields that point in: the others were decoded, and reported, when they were built.
+      issues.push(...assignProps(live, props, references, fields));
+    }
+  };
   for (const outside of index.file.entities) {
     if (inside.has(outside.uid)) {
       continue;
     }
     for (const component of outside.components ?? []) {
-      const live = rebuilt.components.get(component.uid);
-      if (live !== undefined && pointsInto(component.props, inside, insideComponents)) {
-        assignProps(live, component.props ?? {}, references);
+      repoint(rebuilt.components.get(component.uid), component.props);
+    }
+    // A component another instance's override adds, as the document's list holds it.
+    for (const override of mirror.overridesOf(outside.uid) ?? []) {
+      const added = addedUid(override);
+      const props = asJsonObject(asJsonObject(override.value)?.["props"]);
+      if (added !== null && props !== null) {
+        repoint(rebuilt.added.get(added), props);
       }
     }
   }
+  // Read as a reopen's: a reference into the subtree that the edit left with nothing to name.
+  reportBuildIssues(context, issues);
 }
 
 /**

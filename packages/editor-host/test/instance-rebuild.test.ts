@@ -1,4 +1,4 @@
-import { Component, computeSceneHash, entityRef, stringifySceneFile } from "@ignifx/core";
+import { Component, componentRef, computeSceneHash, entityRef, stringifySceneFile } from "@ignifx/core";
 import { afterEach, describe, expect, it } from "vitest";
 import { startEditorHost } from "../src/host.js";
 import { SceneNotification } from "../src/protocol/index.js";
@@ -7,7 +7,7 @@ import { brightnessIn, Lamp, LAMP_POST, level, PREFAB } from "./support/lamps.js
 import type { EditorHost } from "../src/host.js";
 import type { EditorPeer } from "./support/editor.js";
 import type { LogParams } from "../src/protocol/index.js";
-import type { Entity, FetchLike, SceneFile, SceneFileOverride } from "@ignifx/core";
+import type { Entity, FetchLike, SceneFile, SceneFileEntity, SceneFileOverride } from "@ignifx/core";
 
 /**
  * Rebuilding a prefab instance in a headless scene view, from the override list the document
@@ -36,9 +36,14 @@ function staleOverride(path: string): string {
   return `IGX-0604: ${STREET}: ${STREET}: the override path "${path}" names no entity of the instanced scene.`;
 }
 
-/** A component that points at another entity. */
-class Follow extends Component.define({ target: entityRef<Entity>() }) {
+/** A component that points at another entity, and at a second one. */
+class Follow extends Component.define({ target: entityRef<Entity>(), also: entityRef<Entity>() }) {
   static typeId = "game/Follow";
+}
+
+/** A component that points at another component. */
+class Watch extends Component.define({ target: componentRef(Follow) }) {
+  static typeId = "game/Watch";
 }
 
 /**
@@ -137,10 +142,14 @@ function lampPost(bulb: number, spare: boolean): SceneFile {
  * Starts a headless host with the street open, and collects the `log` warnings it sends.
  *
  * @param open - The street for a prefab hash.
+ * @param prefab - The lamp post prefab on disk.
  * @returns The running host and the warnings, in order.
  */
-async function sceneView(open: (hash: string) => SceneFile): Promise<{ running: EditorHost; warnings: string[] }> {
-  files.set(PREFAB, stringifySceneFile(LAMP_POST));
+async function sceneView(
+  open: (hash: string) => SceneFile,
+  prefab: SceneFile = LAMP_POST,
+): Promise<{ running: EditorHost; warnings: string[] }> {
+  files.set(PREFAB, stringifySceneFile(prefab));
   const fetch: FetchLike = async (input: RequestInfo | URL): Promise<Response> => {
     const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
     const body = files.get(url.replace(/^.*?assets\//u, "").replace(/^\//u, ""));
@@ -153,7 +162,7 @@ async function sceneView(open: (hash: string) => SceneFile): Promise<{ running: 
     messageTarget: target,
     heartbeatIntervalMs: 60_000,
     assets: { fetch },
-    scripts: [Lamp, Follow],
+    scripts: [Lamp, Follow, Watch],
   });
   const editor = connect(target);
   peer = editor;
@@ -173,7 +182,7 @@ async function sceneView(open: (hash: string) => SceneFile): Promise<{ running: 
     running.app.step(1 / 60);
   }, 1);
   await editor.nextNotification(SceneNotification.schemasChanged);
-  await call("openScene", { file: open(await computeSceneHash(LAMP_POST)), address: STREET });
+  await call("openScene", { file: open(await computeSceneHash(prefab)), address: STREET });
   return { running, warnings };
 }
 
@@ -329,5 +338,184 @@ describe("build problems of an op's subtree, headless", () => {
     expect(warnings).toEqual([
       expect.stringMatching(/^IGX-0602: scenes\/street\.scene\.json: TO-NOWHERE-FOLLOW\.target: /u),
     ]);
+  });
+});
+
+/**
+ * An `add` override that gives a lamp post's root a `Follow` pointing at a document entity.
+ *
+ * @param target - The uid the `Follow` points at.
+ * @param uid - The added component's uid.
+ * @returns The override.
+ */
+function addFollow(target: string, uid = "ADDED-FOLLOW"): SceneFileOverride {
+  return {
+    path: "POST/components",
+    op: "add",
+    value: { uid, type: "game/Follow", props: { target: { $entity: target } } },
+  };
+}
+
+/**
+ * The lamp post prefab with a `Follow` on the bulb, which the prefab leaves pointing at nothing.
+ *
+ * @returns The prefab file.
+ */
+function bulbFollows(): SceneFile {
+  const entities = [...LAMP_POST.entities];
+  const at = entities.findIndex((record) => record.uid === "BULB");
+  const bulb = entities[at];
+  if (bulb === undefined) {
+    throw new Error("The lamp post has no bulb.");
+  }
+  entities[at] = { ...bulb, components: [...(bulb.components ?? []), { uid: "BULB-FOLLOW", type: "game/Follow" }] };
+  return { ...LAMP_POST, entities };
+}
+
+/** A document entity outside the lamp post whose `Watch` points at the added `Follow`. */
+const WATCHER: SceneFileEntity = {
+  uid: "WATCHER",
+  name: "Watcher",
+  parent: null,
+  transform: { position: [0, 0, 0], rotation: [0, 0, 0, 1], scale: [1, 1, 1] },
+  components: [
+    {
+      uid: "WATCHER-WATCH",
+      type: "game/Watch",
+      props: { target: { $component: "ADDED-FOLLOW" } },
+    },
+  ],
+};
+
+/**
+ * The live `Follow` of a lamp post member.
+ *
+ * @param running - The host.
+ * @param member - The member's name.
+ * @returns The component, or `undefined`.
+ */
+function followOf(running: EditorHost, member: string): Follow | undefined {
+  const post = running.app.world.getEntity("STREET-POST");
+  const entity = [post, ...(post?.children ?? [])].find((candidate) => candidate?.name === member);
+  return entity?.getComponent(Follow) ?? undefined;
+}
+
+/**
+ * Applies one op and expects it to succeed.
+ *
+ * @param op - The op.
+ */
+async function applyOne(op: unknown): Promise<void> {
+  expect(await call("applyOps", { commandId: "c1", commandName: "Edit", ops: [op] })).toEqual({
+    applied: 1,
+    failures: [],
+  });
+}
+
+describe("references an instance's overrides hold, through a rebuild, headless", () => {
+  it("keeps an added component's reference to the rest of the document, as a reopen does", async () => {
+    const { running, warnings } = await sceneView(streetWith([SPARE_7, addFollow("OMITS")]));
+    const omits = running.app.world.getEntity("OMITS");
+    expect(followOf(running, "Lamp Post")?.target).toBe(omits);
+
+    await applyOne({ op: "setOverride", entity: "STREET-POST", override: BULB_AS_PREFAB });
+    expect(followOf(running, "Lamp Post")?.target).toBe(omits);
+    await applyOne({ op: "removeOverride", entity: "STREET-POST", path: SPARE_7.path });
+    expect(followOf(running, "Lamp Post")?.target).toBe(omits);
+    await editPrefab(running, lampPost(6, true));
+    expect(followOf(running, "Lamp Post")?.target).toBe(omits);
+
+    // Added once, not also as the root's own component, which the serializer writes it as.
+    expect(running.app.world.getEntity("STREET-POST")?.getComponents(Follow)).toHaveLength(1);
+    const read = (await call("readBack", { entities: ["STREET-POST"] })) as { entities: readonly unknown[] };
+    expect(read.entities[0]).not.toHaveProperty("components");
+    expect(await postInstance()).toMatchObject({ overrides: [addFollow("OMITS"), BULB_AS_PREFAB] });
+    expect(warnings).toEqual([]);
+  });
+
+  it("keeps a member's overridden reference to the rest of the document", async () => {
+    const aim: SceneFileOverride = { path: "BULB/components/BULB-FOLLOW/props/target", value: { $entity: "OMITS" } };
+    const { running, warnings } = await sceneView(streetWith([aim]), bulbFollows());
+    const omits = running.app.world.getEntity("OMITS");
+    expect(followOf(running, "Bulb")?.target).toBe(omits);
+
+    await applyOne({ op: "setOverride", entity: "STREET-POST", override: SPARE_7 });
+
+    expect(followOf(running, "Bulb")?.target).toBe(omits);
+    expect(warnings).toEqual([]);
+  });
+
+  it("still reports an overridden reference that resolves nowhere, once a build, as a reopen does", async () => {
+    const { running, warnings } = await sceneView(streetWith([addFollow("NOWHERE")]));
+    const line = 'IGX-0602: scenes/street.scene.json: ADDED-FOLLOW.target: no target in this file has uid "NOWHERE".';
+    expect(warnings).toEqual([line]);
+
+    await applyOne({ op: "setOverride", entity: "STREET-POST", override: SPARE_7 });
+
+    expect(followOf(running, "Lamp Post")?.target).toBeNull();
+    expect(warnings).toEqual([line, line]);
+  });
+
+  it("re-points a reference from the rest of the document to an added component", async () => {
+    const add = addFollow("OMITS");
+    const { running, warnings } = await sceneView((hash) => {
+      const street = streetWith([add])(hash);
+      return { ...street, entities: [...street.entities, WATCHER] };
+    });
+    const watch = (): Watch | null | undefined => running.app.world.getEntity("WATCHER")?.getComponent(Watch);
+    expect(watch()?.target).toBe(followOf(running, "Lamp Post"));
+
+    await applyOne({ op: "setOverride", entity: "STREET-POST", override: SPARE_7 });
+    const added = followOf(running, "Lamp Post");
+    expect(added?.isDestroyed).toBe(false);
+    expect(watch()?.target).toBe(added);
+    expect(running.app.world.getEntity("STREET-POST")?.getComponents(Follow)).toHaveLength(1);
+    expect(warnings).toEqual([]);
+
+    // Without the component the reference resolves nowhere, which a reopen would report.
+    await applyOne({ op: "removeOverride", entity: "STREET-POST", path: add.path, added: "ADDED-FOLLOW" });
+    expect(watch()?.target).toBeNull();
+    expect(warnings).toEqual([
+      'IGX-0602: scenes/street.scene.json: WATCHER-WATCH.target: no target in this file has uid "ADDED-FOLLOW".',
+    ]);
+  });
+
+  it("re-points a component another instance adds to a member, which points into the rebuilt one", async () => {
+    const add: SceneFileOverride = {
+      path: "BULB/components",
+      op: "add",
+      value: {
+        uid: "SECOND-FOLLOW",
+        type: "game/Follow",
+        props: { target: { $entity: "SIGN" }, also: { $entity: "NOWHERE" } },
+      },
+    };
+    const { running, warnings } = await sceneView((hash) => {
+      const street = level(hash);
+      const second: SceneFileEntity = {
+        uid: "SECOND-POST",
+        name: "Second Post",
+        parent: null,
+        transform: { position: [8, 0, 0], rotation: [0, 0, 0, 1], scale: [1, 1, 1] },
+        instance: { scene: { $asset: PREFAB }, hash, overrides: [add] },
+      };
+      return { ...street, entities: [...street.entities, second] };
+    });
+    const follow = (): Follow | null | undefined =>
+      running.app.world
+        .getEntity("SECOND-POST")
+        ?.children.find((member) => member.name === "Bulb")
+        ?.getComponent(Follow);
+    expect(follow()?.target).toBe(running.app.world.getEntity("SIGN"));
+    const nowhere = 'IGX-0602: scenes/street.scene.json: SECOND-FOLLOW.also: no target in this file has uid "NOWHERE".';
+    expect(warnings).toEqual([nowhere]);
+
+    await applyOne({ op: "setOverride", entity: "STREET-POST", override: BULB_AS_PREFAB });
+
+    const sign = running.app.world.getEntity("SIGN");
+    expect(sign?.isDestroyed).toBe(false);
+    expect(follow()?.target).toBe(sign);
+    // Only the field that points in is decoded again: `also` was reported when it was built.
+    expect(warnings).toEqual([nowhere]);
   });
 });

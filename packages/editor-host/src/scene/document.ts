@@ -40,6 +40,11 @@ export interface DocumentIndex {
   readonly records: ReadonlyMap<string, SceneFileEntity>;
   /** Each document component, by uid. */
   readonly components: ReadonlyMap<string, Component>;
+  /**
+   * Each component an instance root's `add` override gives a member, by uid: not a document
+   * component (no op edits it), but a reference in the document may name it, as one in a file may.
+   */
+  readonly added: ReadonlyMap<string, Component>;
 }
 
 /**
@@ -59,9 +64,15 @@ export function copyJson<T extends JsonValue>(value: T): T {
  * @param component - The component.
  * @param props - The `props` object.
  * @param references - How references resolve.
+ * @param only - The fields to assign, if not every one; only their problems are returned.
  * @returns The decoding problems, as `{ code, message }`.
  */
-export function assignProps(component: Component, props: JsonObject, references: ReferenceDecoder): SceneIssue[] {
+export function assignProps(
+  component: Component,
+  props: JsonObject,
+  references: ReferenceDecoder,
+  only?: ReadonlySet<string>,
+): SceneIssue[] {
   const schema = component.world.registry.describe(component.constructor).schema;
   if (schema === null) {
     return [];
@@ -69,12 +80,14 @@ export function assignProps(component: Component, props: JsonObject, references:
   const decoded = decodeProps(schema, props, references);
   const values = new Map<string, unknown>(Object.entries(decoded.value));
   for (const name of Object.keys(schema)) {
-    Reflect.set(component, name, values.get(name));
+    if (only === undefined || only.has(name)) {
+      Reflect.set(component, name, values.get(name));
+    }
   }
-  return decoded.issues.map((issue) => ({
-    code: issue.code,
-    message: `${component.uid}.${issue.path}: ${issue.message}`,
-  }));
+  // An issue's path starts with its field's name, then `.` or `[` for a deeper step.
+  return decoded.issues
+    .filter((issue) => only === undefined || only.has(issue.path.split(/[.[]/u, 1)[0] ?? ""))
+    .map((issue) => ({ code: issue.code, message: `${component.uid}.${issue.path}: ${issue.message}` }));
 }
 
 /**
@@ -472,6 +485,7 @@ export class DocumentMirror {
 
   /**
    * How references in props resolve: document uids first, then the uids of a subtree just built,
+   * then the components instances' `add` overrides gave their members, as a reopen resolves them;
    * and assets already loaded in the app's cache.
    *
    * @param built - The uid table of a subtree an op just built, if any.
@@ -482,7 +496,8 @@ export class DocumentMirror {
     const assets = this.#app.assets;
     return {
       entity: (uid: string): Entity | null => index?.entities.get(uid) ?? built?.entity(uid) ?? null,
-      component: (uid: string): Component | null => index?.components.get(uid) ?? built?.component(uid) ?? null,
+      component: (uid: string): Component | null =>
+        index?.components.get(uid) ?? built?.component(uid) ?? index?.added.get(uid) ?? null,
       asset: (address: string, type: string | null): AssetHandle | null => {
         const handle = assets.get(address);
         return handle !== null && handle.state === "loaded" && (type === null || handle.type === type) ? handle : null;
@@ -509,7 +524,7 @@ export class DocumentMirror {
       ...(read.hash === undefined ? {} : { hash: read.hash }),
       ...(listed.length === 0 ? {} : { overrides: structuredClone(listed) }),
     };
-    return { ...record, instance };
+    return withOverrideList(record, instance);
   }
 
   /**
@@ -531,6 +546,7 @@ export class DocumentMirror {
     const entities = new Map<string, Entity>();
     const records = new Map<string, SceneFileEntity>();
     const components = new Map<string, Component>();
+    const added = new Map<string, Component>();
     for (const record of file.entities) {
       const entity = world.getEntity(record.uid);
       if (entity === null) {
@@ -544,7 +560,63 @@ export class DocumentMirror {
           components.set(component.uid, component);
         }
       }
+      const adds = new Set((record.instance?.overrides ?? []).flatMap((override) => addedUids(override)));
+      if (adds.size > 0) {
+        collectComponents(entity, adds, added);
+      }
     }
-    return { file, issues, entities, records, components };
+    return { file, issues, entities, records, components, added };
+  }
+}
+
+/**
+ * An instance root's record with an instance entry whose override list replaces the serializer's.
+ * The serializer writes a component that an `add` override gives the root of a one-root scene as
+ * the root's own, so the record leaves out each component the list adds; a rebuild or a reopen
+ * would otherwise add it twice.
+ *
+ * @param record - The record as the serializer wrote it.
+ * @param instance - The instance entry, with the document's list.
+ * @returns The record.
+ */
+export function withOverrideList(record: SceneFileEntity, instance: SceneFileInstance): SceneFileEntity {
+  const adds = new Set((instance.overrides ?? []).flatMap((override) => addedUids(override)));
+  const own = record.components ?? [];
+  const components = own.filter((component) => !adds.has(component.uid));
+  if (components.length === own.length) {
+    return { ...record, instance };
+  }
+  const { components: _written, ...rest } = record;
+  return { ...rest, instance, ...(components.length === 0 ? {} : { components }) };
+}
+
+/**
+ * The uid of the component an `add` override of a component list adds, as a list.
+ *
+ * @param override - The override.
+ * @returns The uid, or nothing.
+ */
+function addedUids(override: SceneFileOverride): string[] {
+  const value = override.value;
+  const uid: unknown =
+    override.op === "add" && typeof value === "object" && value !== null ? Reflect.get(value, "uid") : null;
+  return typeof uid === "string" ? [uid] : [];
+}
+
+/**
+ * Finds the live components with some uids in a subtree.
+ *
+ * @param entity - The subtree's root.
+ * @param uids - The uids.
+ * @param into - Filled with each one found, by uid.
+ */
+function collectComponents(entity: Entity, uids: ReadonlySet<string>, into: Map<string, Component>): void {
+  for (const component of entity.components) {
+    if (uids.has(component.uid) && !component.isDestroyed) {
+      into.set(component.uid, component);
+    }
+  }
+  for (const child of entity.children) {
+    collectComponents(child, uids, into);
   }
 }
