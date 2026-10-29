@@ -132,7 +132,10 @@ function mergeDeep(
 }
 
 /**
- * Merges two plain records recursively: objects merge, everything else is replaced.
+ * Merges two plain records recursively: objects merge, everything else is replaced. Only own keys
+ * are read, and each result is defined rather than assigned, so an override key such as
+ * `__proto__` (an own key in parsed JSON) stays a field that `defineParticles` then refuses,
+ * instead of merging with `Object.prototype` and replacing the result's prototype.
  *
  * @param base - The record being overridden.
  * @param overrides - The overrides.
@@ -146,12 +149,9 @@ function mergeRecords(base: object, overrides: object): Record<string, unknown> 
     if (value === undefined) {
       continue;
     }
-    const existing = out[key];
-    if (isPlainRecord(value) && isPlainRecord(existing)) {
-      out[key] = mergeRecords(existing, value);
-    } else {
-      out[key] = value;
-    }
+    const existing = Object.hasOwn(out, key) ? out[key] : undefined;
+    const merged = isPlainRecord(value) && isPlainRecord(existing) ? mergeRecords(existing, value) : value;
+    Object.defineProperty(out, key, { value: merged, enumerable: true, writable: true, configurable: true });
   }
   return out;
 }
