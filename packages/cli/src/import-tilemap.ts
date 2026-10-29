@@ -323,7 +323,7 @@ function readObject(entry: unknown, where: string): TileObject {
   if (!isRecord(rawProperties)) {
     throw new CliError(CliErrorCode.invalidDocument, `${where}.properties is not an object.`);
   }
-  const properties: Record<string, string | number | boolean> = {};
+  const properties: [string, string | number | boolean][] = [];
   for (const [key, value] of Object.entries(rawProperties)) {
     if (typeof value !== "string" && typeof value !== "number" && typeof value !== "boolean") {
       throw new CliError(
@@ -331,7 +331,7 @@ function readObject(entry: unknown, where: string): TileObject {
         `${where}.properties.${key} is not a string, number or boolean.`,
       );
     }
-    properties[key] = value;
+    properties.push([key, value]);
   }
   return {
     name: text("name"),
@@ -340,7 +340,8 @@ function readObject(entry: unknown, where: string): TileObject {
     y: number("y"),
     width: number("width"),
     height: number("height"),
-    properties,
+    // `fromEntries` defines own properties, so a property named `__proto__` stays a property.
+    properties: Object.fromEntries(properties),
   };
 }
 
