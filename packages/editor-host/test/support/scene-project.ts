@@ -34,6 +34,15 @@ export class Regen extends Component.define({ perSecond: f32(1) }) {
   static requires = [Health];
 }
 
+/**
+ * A subclass of the fixture's `game/Health`: the engine counts it as the `Health` that
+ * {@link Regen} requires, and its schema description lists `game/Health` in `extends` (engine ask
+ * E44).
+ */
+export class ArmoredHealth extends Health {
+  static override typeId = "game/ArmoredHealth";
+}
+
 /** A script whose `awake` throws, for `hostError`. It runs in edit mode, as the scene view is. */
 export class Exploder extends Script {
   static typeId = "game/Exploder";
@@ -195,7 +204,7 @@ export function startLiveHost(
     engineVersion: ENGINE_VERSION,
     heartbeatIntervalMs: 60_000,
     settings: { layers: { layers: ["Default", "Characters"] } },
-    scripts: [Health, CrateBody, Follow, Exploder, Regen, ...scripts],
+    scripts: [Health, CrateBody, Follow, Exploder, Regen, ArmoredHealth, ...scripts],
     extensions: [...extensions],
     assets: { fetch },
     bootScene: BOOT_SCENE,

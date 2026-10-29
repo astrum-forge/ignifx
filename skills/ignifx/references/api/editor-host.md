@@ -2463,6 +2463,18 @@ ask E4) sends no such member.
 
 A one-line summary.
 
+##### extends?
+
+> `readonly` `optional` **extends?**: readonly `string`[]
+
+The type ids of the registered components the class extends, nearest first: each ancestor class
+registered under its own `static typeId`. The class itself and its unregistered ancestors (an
+abstract base, `Component`, `Script`) are left out. The engine counts a component whose class
+extends a required one as present, so an editor treats a `requires` entry as present on an
+entity when one of its components has that type id or lists it here. Empty when the class
+extends no registered component; absent on file-format entries and from a host from before
+engine ask E44, which an editor treats as unknown, not as none.
+
 ##### fields
 
 > `readonly` **fields**: `Readonly`\<`Record`\<`string`, [`SchemaFieldDescription`](#schemafielddescription)\>\>

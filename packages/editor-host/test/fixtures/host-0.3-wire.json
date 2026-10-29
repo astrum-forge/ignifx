@@ -58,6 +58,7 @@
             "allowMultiple": false,
             "package": "@ignifx/core",
             "builtIn": true,
+            "extends": [],
             "propsSchema": {
               "type": "object",
               "properties": {
@@ -123,6 +124,7 @@
             },
             "allowMultiple": false,
             "package": "@ignifx/core",
+            "extends": [],
             "propsSchema": {
               "type": "object",
               "properties": {
@@ -165,6 +167,7 @@
             },
             "allowMultiple": true,
             "package": "game",
+            "extends": [],
             "propsSchema": {
               "type": "object",
               "properties": {
@@ -194,12 +197,46 @@
             "allowMultiple": true,
             "package": "game",
             "requires": ["game/Health"],
+            "extends": [],
             "propsSchema": {
               "type": "object",
               "properties": {
                 "perSecond": {
                   "type": "number",
                   "default": 1
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "game/ArmoredHealth": {
+            "title": "ArmoredHealth",
+            "format": "components",
+            "fields": {
+              "max": {
+                "kind": "u32",
+                "default": 100
+              },
+              "regenPerSecond": {
+                "kind": "f32",
+                "default": 0
+              }
+            },
+            "allowMultiple": true,
+            "package": "game",
+            "extends": ["game/Health"],
+            "propsSchema": {
+              "type": "object",
+              "properties": {
+                "max": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 4294967295,
+                  "default": 100
+                },
+                "regenPerSecond": {
+                  "type": "number",
+                  "default": 0
                 }
               },
               "additionalProperties": false
@@ -1001,6 +1038,7 @@
             "allowMultiple": false,
             "package": "@ignifx/core",
             "builtIn": true,
+            "extends": [],
             "propsSchema": {
               "type": "object",
               "properties": {
@@ -1066,6 +1104,7 @@
             },
             "allowMultiple": false,
             "package": "@ignifx/core",
+            "extends": [],
             "propsSchema": {
               "type": "object",
               "properties": {
@@ -1108,6 +1147,7 @@
             },
             "allowMultiple": true,
             "package": "game",
+            "extends": [],
             "propsSchema": {
               "type": "object",
               "properties": {
@@ -1137,12 +1177,46 @@
             "allowMultiple": true,
             "package": "game",
             "requires": ["game/Health"],
+            "extends": [],
             "propsSchema": {
               "type": "object",
               "properties": {
                 "perSecond": {
                   "type": "number",
                   "default": 1
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "game/ArmoredHealth": {
+            "title": "ArmoredHealth",
+            "format": "components",
+            "fields": {
+              "max": {
+                "kind": "u32",
+                "default": 100
+              },
+              "regenPerSecond": {
+                "kind": "f32",
+                "default": 0
+              }
+            },
+            "allowMultiple": true,
+            "package": "game",
+            "extends": ["game/Health"],
+            "propsSchema": {
+              "type": "object",
+              "properties": {
+                "max": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 4294967295,
+                  "default": 100
+                },
+                "regenPerSecond": {
+                  "type": "number",
+                  "default": 0
                 }
               },
               "additionalProperties": false
@@ -1400,6 +1474,7 @@
             "allowMultiple": false,
             "package": "@ignifx/core",
             "builtIn": true,
+            "extends": [],
             "propsSchema": {
               "type": "object",
               "properties": {
@@ -1465,6 +1540,7 @@
             },
             "allowMultiple": false,
             "package": "@ignifx/core",
+            "extends": [],
             "propsSchema": {
               "type": "object",
               "properties": {
@@ -1507,6 +1583,7 @@
             },
             "allowMultiple": true,
             "package": "game",
+            "extends": [],
             "propsSchema": {
               "type": "object",
               "properties": {

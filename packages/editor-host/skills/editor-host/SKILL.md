@@ -313,6 +313,11 @@ object `openScene` sends, through `world.loadSceneFile`; `readBack` answers with
   nothing in the prefab, or a reference that resolves nowhere in the document. The op still
   applies. Each issue is also a `log` warning for the Console. The answer is the record tied to the
   command. A host from before this field sends no `warnings`.
+- **A schema says what its class requires and what it extends.** A component's `getSchemas` entry
+  carries `requires` (the type ids `addComponent` adds when missing) and `extends` (the registered
+  classes its class derives from, nearest first; `[]` when none). The engine counts a component
+  whose class extends a required one as present, so a required id is present on an entity when a
+  component has that id or lists it in `extends`. A host from before `extends` sends no such member.
 - **Scene methods answer `notReady` until the app has started.** The host answers `hello` at once;
   its first `schemasChanged` is the cue that `openScene` and the rest are accepted. `applyOps`,
   `readBack` and `frame` answer `noScene` while no scene is open.

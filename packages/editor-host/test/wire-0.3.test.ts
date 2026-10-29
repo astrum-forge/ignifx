@@ -140,7 +140,7 @@ function expectWire(actual: Received, expected: unknown): void {
 }
 
 /** The schema entries the live host must send byte for byte as the fixture has them. */
-const WIRE_SCHEMAS: readonly string[] = ["game/Health", "game/Regen", "ignifx/Transform"];
+const WIRE_SCHEMAS: readonly string[] = ["game/Health", "game/Regen", "game/ArmoredHealth", "ignifx/Transform"];
 
 /**
  * Asserts a live schema entry is the fixture's, byte for byte.
@@ -274,6 +274,19 @@ describe("the editor's 0.3 wire fixture, through the host's guards", () => {
     expect(isSchemaSet(withRequires(["game/Health", null]))).toBe(true);
     expect(isSchemaSet(withRequires("game/Health"))).toBe(false);
     expect(isSchemaSet(withRequires([3]))).toBe(false);
+  });
+
+  it("accepts a schema with or without its extends, as type ids, and refuses anything else", () => {
+    const armored = member(member(member(wire("getSchemasResponse"), "result"), "schemas"), "game/ArmoredHealth");
+    const withExtends = (ancestry: unknown): unknown => ({
+      schemas: { "game/ArmoredHealth": { ...armored, extends: ancestry } },
+    });
+    expect(armored["extends"]).toEqual(["game/Health"]);
+    expect(isSchemaSet(withExtends(undefined))).toBe(true);
+    expect(isSchemaSet(withExtends([]))).toBe(true);
+    expect(isSchemaSet(withExtends(["game/Health", null]))).toBe(false);
+    expect(isSchemaSet(withExtends("game/Health"))).toBe(false);
+    expect(isSchemaSet(withExtends(null))).toBe(false);
   });
 
   it("accepts a pick answer with or without its ray, and refuses a malformed ray or plane point", () => {
