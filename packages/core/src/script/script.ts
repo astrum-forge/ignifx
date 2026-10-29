@@ -48,8 +48,8 @@ export abstract class Script extends Component {
    * @typeParam S - The schema being declared.
    * @param schema - The field definitions, keyed by the property name they become.
    * @returns An abstract class to extend.
-   * @throws IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-   * with a `Component`/`Script` member.
+   * @throws IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+   * with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
    *
    * @example
    * ```ts

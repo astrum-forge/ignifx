@@ -1,5 +1,5 @@
 import { SchemaIssueCode, throwSchemaError } from "./issues.js";
-import { createDefaults } from "./schema.js";
+import { assertNoInheritedFieldNames, createDefaults } from "./schema.js";
 import { FieldKind } from "./types.js";
 import type {
   AssetTypeToken,
@@ -427,6 +427,8 @@ export function array<T>(
  * @param fields - The sub-fields.
  * @param options - Inspector and serializer metadata.
  * @returns The field definition.
+ * @throws IgnifxError with code `IGX-0607` when a sub-field name is an `Object.prototype` member
+ * such as `__proto__`, `constructor`, or `toString`.
  *
  * @example
  * ```ts
@@ -436,6 +438,7 @@ export function array<T>(
  * @public
  */
 export function record<S extends Schema>(fields: S, options?: FieldOptions): FieldDefinition<FieldsOf<S>> {
+  assertNoInheritedFieldNames(fields, "record");
   return field({ kind: FieldKind.record, fields }, options, () => createDefaults(fields));
 }
 

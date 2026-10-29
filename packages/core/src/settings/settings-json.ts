@@ -101,7 +101,8 @@ export function settingsValueToJson(field: FieldDefinition<unknown>, value: unkn
       for (const [name, sub] of Object.entries(spec.fields)) {
         const converted = settingsValueToJson(sub, value[name]);
         if (converted !== undefined) {
-          setOwnJsonProperty(object, name, converted);
+          // Assigned: `record()` refuses `__proto__` and every other inherited name.
+          object[name] = converted;
         }
       }
       return object;

@@ -79,7 +79,8 @@ const properties = toJsonSchema(schema)["properties"];
 console.log(properties !== undefined);
 ```
 
-Rules: a field name that collides with a `Component` member (`enabled`, `update`, …) throws
+Rules: a field name that collides with a `Component` member (`enabled`, `update`, …) or with a
+member every object inherits (`constructor`, `toString`, `__proto__`, …, also inside `record`) throws
 `IGX-0607` at definition time; `entityRef`/`componentRef` fields are **tracked**, so the engine nulls
 them in the destroy flush when the target dies, before any `onDestroy` (plain class fields are not);
 non-serialized state is an ordinary class field with a name no schema field uses; and changing a

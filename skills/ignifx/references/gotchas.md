@@ -94,7 +94,8 @@ are repeated in `../SKILL.md`.
     namespaced `static typeId = "mygame/Mover"`; a duplicate throws `IGX-0203` and a
     missing one throws `IGX-0204` at serialization time.
 29. **Do not name a schema field after a `Component` member.** `enabled`, `update`, `entity`, and
-    the rest throw `IGX-0607` when the class is defined.
+    the rest throw `IGX-0607` when the class is defined. So do names every object inherits
+    (`constructor`, `toString`, `valueOf`, `__proto__`), there and inside a `record({...})`.
 30. **Do not forget `app.registerComponents([...])`.** A class the registry does not know cannot be
     resolved from a file, and `requires` validation (`IGX-0201`) and the single-instance rule
     (`IGX-0202`) run off the same metadata.

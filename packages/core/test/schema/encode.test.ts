@@ -31,6 +31,7 @@ import {
   moverSchema,
 } from "./mover-fixture.js";
 import type { SchemaIssue } from "../../src/schema/issues.js";
+import type { JsonObject } from "../../src/schema/json.js";
 
 const target = new FakeEntity("01ENTITY");
 const follow = new Camera("01CAMERA");
@@ -293,6 +294,24 @@ describe("decodeProps", () => {
     expect(decoded.value.speed).toBe(9);
     expect(decoded.value.jumpHeight).toBe(2);
     expect(decoded.issues.map((found) => found.code)).toEqual(["IGX-0607"]);
+  });
+
+  it("refuses __proto__ and constructor keys in a file as undeclared fields, at any depth", () => {
+    // `JSON.parse` makes both keys own data properties, as reading a scene file does.
+    const json: unknown = JSON.parse(
+      '{ "speed": 9, "__proto__": { "speed": 1 }, "constructor": 2, "stats": { "hp": 3, "__proto__": { "hp": 4 } } }',
+    );
+    const schema = { speed: f32(1), stats: record({ hp: i32(10) }) };
+    const decoded = decodeProps(schema, json as JsonObject, decoder);
+    expect(decoded.issues.map((found) => [found.code, found.path])).toEqual([
+      ["IGX-0607", "__proto__"],
+      ["IGX-0607", "constructor"],
+      ["IGX-0607", "stats.__proto__"],
+    ]);
+    expect(decoded.value).toEqual({ speed: 9, stats: { hp: 3 } });
+    expect(Object.getPrototypeOf(decoded.value)).toBe(Object.prototype);
+    expect(Object.getPrototypeOf(decoded.value.stats)).toBe(Object.prototype);
+    expect(Object.keys(decoded.value.stats)).toEqual(["hp"]);
   });
 });
 
