@@ -173,7 +173,7 @@ async function readSidecar(
     );
   }
 
-  const rest: Record<string, JsonValue> = {};
+  const rest: [string, JsonValue][] = [];
   let groups: readonly string[] = [];
   let publish = true;
   for (const key of Object.keys(parsed)) {
@@ -201,10 +201,11 @@ async function readSidecar(
       publish = value;
       continue;
     }
-    rest[key] = value;
+    rest.push([key, value]);
   }
 
-  return { groups, publish, meta: Object.keys(rest).length === 0 ? null : rest };
+  // `fromEntries` defines own properties, so a `__proto__` key stays data instead of a prototype.
+  return { groups, publish, meta: rest.length === 0 ? null : Object.fromEntries(rest) };
 }
 
 /** Where {@link collectAddresses} reports to and what it measures real paths from. */
@@ -340,13 +341,8 @@ function loaderMeta(meta: JsonObject | null): JsonObject | null {
   if (meta === null) {
     return null;
   }
-  const kept: Record<string, JsonValue> = {};
-  for (const [key, value] of Object.entries(meta)) {
-    if (!EDITOR_SIDECAR_KEYS.includes(key)) {
-      kept[key] = value;
-    }
-  }
-  return Object.keys(kept).length === 0 ? null : kept;
+  const kept = Object.entries(meta).filter(([key]) => !EDITOR_SIDECAR_KEYS.includes(key));
+  return kept.length === 0 ? null : Object.fromEntries(kept);
 }
 
 /**
