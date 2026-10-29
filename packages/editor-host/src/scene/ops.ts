@@ -20,7 +20,7 @@ import {
   SCENE_FORMAT_VERSION,
 } from "@ignifx/core";
 import { ApplyOpFailureCode } from "../protocol/index.js";
-import { assignProps, copyJson, validateFields } from "./document.js";
+import { assignProps, copyJson, UNSAVED_SCENE_ADDRESS, validateFields } from "./document.js";
 import type { DocumentIndex, DocumentMirror } from "./document.js";
 import type {
   AddComponentOp,
@@ -32,6 +32,7 @@ import type {
   JsonPath,
   RemoveOverrideOp,
   ReparentOp,
+  SceneIssue,
   SceneOp,
   SetEntityFieldOp,
   SetOverrideOp,
@@ -53,9 +54,6 @@ import type {
   SceneFileInstance,
   SceneFileOverride,
 } from "@ignifx/core";
-
-/** The address the subtrees ops build are named by, in the engine's diagnostics. */
-const SUBTREE_ADDRESS = "memory:scene/editor-op";
 
 /** Why one op failed, as `applyOps` reports it. */
 export class OpFailure extends Error {
@@ -398,7 +396,8 @@ function hasReferences(value: JsonValue | undefined): boolean {
 /**
  * Builds a subtree from entity records under a live parent, with the records' uids, loading the
  * assets they reference first; then resolves references to the rest of the document, which a
- * subtree built on its own cannot see.
+ * subtree built on its own cannot see. The build's problems are logged as warnings
+ * ({@link reportBuildIssues}).
  *
  * @param context - The app and the document.
  * @param records - The subtree's records, parents first; the first is its root.
@@ -425,24 +424,57 @@ async function buildSubtree(
   };
   const dependencies = await loadSceneDependencies(context.app.assets, file);
   context.mirror.retain(dependencies);
-  const asset = await createSceneAsset(SUBTREE_ADDRESS, file, dependencies);
+  // Named by the document, so its diagnostics read as a reopen's.
+  const asset = await createSceneAsset(documentAddress(context), file, dependencies);
   const built = instantiateScene(context.app.world, asset, { scene, ...(parent === null ? {} : { parent }) });
   context.mirror.invalidate();
   const references = context.mirror.decoder(built.remap);
+  const redecoded = new Set<string>();
+  const issues: SceneIssue[] = [];
   for (const record of file.entities) {
     for (const component of record.components ?? []) {
       const live = built.remap.component(component.uid);
       if (live !== null && hasReferences(component.props)) {
-        assignProps(live, component.props ?? {}, references);
+        redecoded.add(component.uid);
+        issues.push(...assignProps(live, component.props ?? {}, references));
       }
     }
   }
+  // A re-decoded component's problems are the second decode's: the first could not see the rest
+  // of the document, so it reported every reference into it as unresolved.
+  const kept = built.issues.filter((issue) => ![...redecoded].some((uid) => issue.message.startsWith(`${uid}.`)));
+  reportBuildIssues(context, [...kept, ...issues]);
   const root = built.roots[0] ?? built.remap.entity(top.uid);
   if (root === null) {
     throw new OpFailure(ApplyOpFailureCode.engineError, `The engine built no entity for ${top.uid}.`);
   }
   placeAmongSiblings(context, root, index);
   return root;
+}
+
+/**
+ * The open document's address, which names the subtrees ops build.
+ *
+ * @param context - The app and the document.
+ * @returns Where the document is saved, or `memory:scene/unsaved`.
+ */
+function documentAddress(context: OpContext): string {
+  return context.mirror.address ?? UNSAVED_SCENE_ADDRESS;
+}
+
+/**
+ * Writes a subtree build's recoverable problems to the app log, one warning each, the way
+ * `world.loadSceneFile` writes a scene's (so a reopen of the document writes the same lines); the
+ * host relays them to the editor as `log`. A stale override met while an instance is rebuilt is one.
+ *
+ * @param context - The app and the document.
+ * @param issues - The problems, in the order found.
+ */
+function reportBuildIssues(context: OpContext, issues: readonly SceneIssue[]): void {
+  const address = documentAddress(context);
+  for (const issue of issues) {
+    context.app.log.warn(`${issue.code}: ${address}: ${issue.message}`);
+  }
 }
 
 /**
@@ -899,24 +931,27 @@ function findOverride(
  * @param context - The app and the document.
  * @param uid - The instance root.
  * @param edit - Returns the new override list from the document's current one.
+ * @param keepHashes - Whether the instances keep the hashes they were built against; without them
+ * they build from their scenes' current files without an `IGX-0604` mismatch, as after a reload.
  */
 async function rebuildInstance(
   context: OpContext,
   uid: string,
   edit: (overrides: readonly SceneFileOverride[]) => readonly SceneFileOverride[],
+  keepHashes = true,
 ): Promise<void> {
   const index = indexOf(context);
   const root = requireEntity(context, uid);
   const mirror = context.mirror;
   const withDocumentOverrides = (record: SceneFileEntity): SceneFileEntity => {
-    const listed = record.instance === undefined ? null : mirror.overridesOf(record.uid);
-    if (listed === null || record.instance === undefined) {
+    if (record.instance === undefined) {
       return record;
     }
-    const { scene, hash } = record.instance;
+    const { scene, hash, overrides: serialized } = record.instance;
+    const listed = mirror.overridesOf(record.uid) ?? serialized ?? [];
     const instance: SceneFileInstance = {
       scene,
-      ...(hash === undefined ? {} : { hash }),
+      ...(hash === undefined || !keepHashes ? {} : { hash }),
       ...(listed.length === 0 ? {} : { overrides: listed }),
     };
     return { ...record, instance };
@@ -981,7 +1016,7 @@ async function rebuildInstance(
  */
 export async function reloadInstance(app: App, mirror: DocumentMirror, uid: string): Promise<void> {
   try {
-    await rebuildInstance({ app, mirror }, uid, (overrides) => overrides);
+    await rebuildInstance({ app, mirror }, uid, (overrides) => overrides, false);
   } finally {
     mirror.invalidate();
   }
