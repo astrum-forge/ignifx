@@ -24,8 +24,8 @@ const DEFAULT_SIZE = 96;
 /** How many frames a change is given to reach the screen before a test reads it. */
 export const SETTLE_FRAMES = 6;
 
-/** The most frames {@link ThreeDBrowserApp.settle} and {@link ThreeDBrowserApp.stableCapture} wait. */
-const MAX_WAIT_FRAMES = 600;
+/** The most checks {@link ThreeDBrowserApp.settle} makes, and captures {@link ThreeDBrowserApp.stableCapture} takes. */
+const MAX_WAIT_STEPS = 600;
 
 /** One pixel of a capture, as straight RGBA bytes. */
 export interface Rgba {
@@ -92,7 +92,8 @@ export interface ThreeDBrowserApp {
   /** Captures a whole frame. */
   capture(): Promise<Capture>;
   /**
-   * Waits until the renderer owes no renderable rebuild, then for {@link SETTLE_FRAMES} more frames.
+   * Waits until the renderer owes no renderable rebuild and no cache-reset confirmation, then for
+   * {@link SETTLE_FRAMES} more frames.
    *
    * @remarks
    * Adding a model queues a rebuild that runs between frames and takes as long as the machine makes
@@ -228,38 +229,44 @@ export async function createThreeDBrowserApp(options: ThreeDBrowserOptions = {})
     };
   };
 
-  // `isRebuildInFlight` is `@internal` to `@ignifx/core` (`RendererImpl`); core's own
-  // `change-during-rebuild.browser.test.ts` waits on the same flag. Read it by name so a rename
-  // fails here loudly instead of passing silently.
-  const isRebuildInFlight = (): boolean => {
-    const flag: unknown = Reflect.get(app.renderer, "isRebuildInFlight");
-    if (typeof flag !== "boolean") {
-      throw new TypeError("app.renderer.isRebuildInFlight is gone; update the 3D browser harness.");
+  // `isRebuildInFlight` and `materialCacheResets.unconfirmed` are `@internal` to `@ignifx/core`
+  // (`RendererImpl`); core's own `change-during-rebuild.browser.test.ts` waits on the same two. Read
+  // them by name so a rename fails here loudly instead of passing silently.
+  const owesRebuild = (): boolean => {
+    const inFlight: unknown = Reflect.get(app.renderer, "isRebuildInFlight");
+    const resets: unknown = Reflect.get(app.renderer, "materialCacheResets");
+    const unconfirmed: unknown =
+      typeof resets === "object" && resets !== null ? Reflect.get(resets, "unconfirmed") : undefined;
+    if (typeof inFlight !== "boolean" || typeof unconfirmed !== "boolean") {
+      throw new TypeError(
+        "app.renderer.isRebuildInFlight or materialCacheResets.unconfirmed is gone; update the 3D browser harness.",
+      );
     }
-    return flag;
+    return inFlight || unconfirmed;
   };
 
-  const settle = async (left = MAX_WAIT_FRAMES): Promise<void> => {
-    if (!isRebuildInFlight()) {
+  // Each check waits one frame, or `SETTLE_FRAMES` once nothing is owed, so the cap counts checks.
+  const settle = async (left = MAX_WAIT_STEPS): Promise<void> => {
+    if (!owesRebuild()) {
       await advance(SETTLE_FRAMES);
-      if (!isRebuildInFlight()) {
+      if (!owesRebuild()) {
         return;
       }
     }
     if (left <= 0) {
-      throw new Error(`The renderer was still rebuilding after ${String(MAX_WAIT_FRAMES)} frames.`);
+      throw new Error(`The renderer still owed a rebuild after ${String(MAX_WAIT_STEPS)} checks.`);
     }
     await nextFrame();
     return settle(left - 1);
   };
 
-  const stableCapture = async (previous?: Capture, left = MAX_WAIT_FRAMES): Promise<Capture> => {
+  const stableCapture = async (previous?: Capture, left = MAX_WAIT_STEPS): Promise<Capture> => {
     const frame = await capture();
     if (previous !== undefined && differingBytes(previous, frame, 0) === 0) {
       return frame;
     }
     if (left <= 0) {
-      throw new Error(`The frame was still changing after ${String(MAX_WAIT_FRAMES)} captures.`);
+      throw new Error(`The frame was still changing after ${String(MAX_WAIT_STEPS)} captures.`);
     }
     return stableCapture(frame, left - 1);
   };

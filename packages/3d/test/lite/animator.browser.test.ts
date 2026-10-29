@@ -56,7 +56,8 @@ async function loadRig(): Promise<{ running: ThreeDBrowserApp; model: Model; ani
   await running.advance(SETTLE_FRAMES);
   await modelHandle.promise;
   await animatorHandle.promise;
-  await running.advance(SETTLE_FRAMES);
+  // Wait for the model's rebuild itself, not a frame count; see `ThreeDBrowserApp.settle`.
+  await running.settle();
   return { running, model, animator };
 }
 

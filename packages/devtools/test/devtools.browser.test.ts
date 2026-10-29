@@ -243,6 +243,8 @@ describe("the devtools overlay in Chromium", () => {
       }),
     );
     expect(picks).toHaveLength(1);
+    // The inspector chained its `.then(select)` onto this promise during the click, before this
+    // `await` did, so it has run by the time the `await` resumes.
     const hit = await picks[0];
     expect(hit?.entity).toBe(cube);
 
