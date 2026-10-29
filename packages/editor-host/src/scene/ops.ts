@@ -18,6 +18,7 @@ import {
   parseOverridePath,
   SCENE_FILE_FORMAT,
   SCENE_FORMAT_VERSION,
+  validateSceneFile,
 } from "@ignifx/core";
 import { ApplyOpFailureCode } from "../protocol/index.js";
 import {
@@ -384,6 +385,27 @@ function requireFreeUids(context: OpContext, records: readonly SceneFileEntity[]
 }
 
 /**
+ * Checks that new entity records form a scene file `validateSceneFile` accepts, before anything is
+ * built: the protocol guard checks their shapes, and this adds the file's rules over them, among
+ * them that no instance entry holds two overrides with one identity, which `setOverride` and
+ * `removeOverride` could then reach only one of.
+ *
+ * @param records - The new entity records, parents first.
+ */
+function requireValidRecords(records: readonly SceneFileEntity[]): void {
+  const file: SceneFile = {
+    format: SCENE_FILE_FORMAT,
+    formatVersion: SCENE_FORMAT_VERSION,
+    name: "",
+    entities: records,
+  };
+  const issue = validateSceneFile(file)[0];
+  if (issue !== undefined) {
+    throw new OpFailure(ApplyOpFailureCode.invalidValue, `${issue.path}: ${issue.message}`, "IGX-0608");
+  }
+}
+
+/**
  * Builds a subtree from entity records under a live parent, with the records' uids, loading the
  * assets they reference first. A reference to a uid the subtree does not declare resolves against
  * the rest of the document, as it would in the whole file: one a document component holds, and one
@@ -471,6 +493,7 @@ async function createEntity(context: OpContext, op: CreateEntityOp): Promise<voi
   const parent = requireParent(context, op.entity.parent);
   checkIndex(op.index, documentSiblings(context, parent, null).length);
   requireFreeUids(context, records);
+  requireValidRecords(records);
   const inside = new Set([op.entity.uid]);
   for (const record of op.descendants ?? []) {
     if (record.parent === null || !inside.has(record.parent)) {
@@ -646,6 +669,7 @@ async function instantiate(context: OpContext, op: InstantiateOp): Promise<void>
     instance: op.instance,
   };
   requireFreeUids(context, [record]);
+  requireValidRecords([record]);
   await buildSubtree(context, [record], parent, op.index);
   context.mirror.recordInstances([record]);
 }

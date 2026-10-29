@@ -105584,6 +105584,10 @@ because the engine ships no JSON Schema runtime and takes no dependency to gain 
 (`CONSTITUTION.md` §2.3). The generated document remains the artefact the Vite plugin and editors
 validate against; this is the same rule set, executable at load time.
 
+Two checks go beyond what JSON Schema can say: uids are unique within the file, and no two
+overrides of one instance share an identity (path, `op`, and an added component's uid), both
+reported as issues like any other.
+
 Component `props` are *not* checked here: `decodeProps` already reports every field problem with
 a schema issue code, per field, which is more precise than a document-level match.
 
