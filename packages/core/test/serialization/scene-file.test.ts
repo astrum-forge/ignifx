@@ -17,6 +17,7 @@ import {
   sceneFileJsonSchema,
   stringifySceneFile,
 } from "../../src/serialization/scene-file.js";
+import { readSceneFile } from "../../src/serialization/scene-loader.js";
 import { validateSceneFile } from "../../src/serialization/validate.js";
 import {
   Anonymous,
@@ -28,6 +29,7 @@ import {
   fakeHandle,
 } from "./fixtures.js";
 import type { JsonObject } from "../../src/schema/json.js";
+import type { SceneFile, SceneFileOverride } from "../../src/serialization/scene-file.js";
 import type { TestWorld } from "../support/create-test-world.js";
 
 /** The file types, the generated JSON Schema, the structural validator, and the content hash. */
@@ -107,6 +109,18 @@ describe("describeSceneFileFormat", () => {
   });
 });
 
+/**
+ * A file with one instance root holding the given overrides.
+ *
+ * @param overrides - The instance's list.
+ * @returns The file.
+ */
+function instanceWith(overrides: readonly SceneFileOverride[]): SceneFile {
+  return buildFile({
+    entities: [entityRecord({ uid: "A", instance: { scene: { $asset: "p.prefab.json" }, overrides: [...overrides] } })],
+  });
+}
+
 describe("validateSceneFile", () => {
   it("accepts a well-formed file", () => {
     const file = buildFile({
@@ -184,6 +198,85 @@ describe("validateSceneFile", () => {
       buildFile({ entities: [entityRecord({ uid: "A", tags: 3 as never }), entityRecord({ uid: "A" })] }),
     );
     expect(issues.map((issue) => issue.path)).toEqual(["entities/0/tags", "entities/1/uid"]);
+  });
+
+  describe("override identities", () => {
+    const prop = "P/components/Q/props/speed";
+    const lamp = { uid: "L", type: "test/Tagger" };
+
+    it.each([
+      [
+        "two prop replaces",
+        [
+          { path: prop, value: 1 },
+          { path: prop, value: 2 },
+        ],
+        `"replace" of "${prop}"`,
+      ],
+      [
+        "an implied and an explicit replace",
+        [
+          { path: prop, value: 1 },
+          { op: "replace", path: prop, value: 2 },
+        ],
+        `"replace" of "${prop}"`,
+      ],
+      [
+        "two removes of one component",
+        [
+          { op: "remove", path: "P/components/Q" },
+          { op: "remove", path: "P/components/Q" },
+        ],
+        '"remove" of "P/components/Q"',
+      ],
+      [
+        "two adds of one component uid",
+        [
+          { op: "add", path: "P/components", value: lamp },
+          { op: "add", path: "P/components", value: { ...lamp, enabled: false } },
+        ],
+        'component L to "P/components"',
+      ],
+    ] satisfies [string, SceneFileOverride[], string][])(
+      "refuses %s, naming both indices",
+      (_kind, overrides, what) => {
+        const issues = validateSceneFile(instanceWith(overrides));
+        expect(issues).toEqual([
+          {
+            path: "entities/0/instance/overrides/1",
+            message: expect.stringContaining("duplicates overrides/0") as unknown,
+          },
+        ]);
+        expect(issues[0]?.message).toContain(what);
+      },
+    );
+
+    it("accepts overrides that differ in op, or add different components to one list", () => {
+      const issues = validateSceneFile(
+        instanceWith([
+          { path: prop, value: 1 },
+          { op: "remove", path: prop },
+          { op: "add", path: "P/components", value: lamp },
+          { op: "add", path: "P/components", value: { ...lamp, uid: "M" } },
+        ]),
+      );
+      expect(issues).toEqual([]);
+    });
+
+    it("makes the loader refuse the file with IGX-0608", () => {
+      const file = instanceWith([
+        { path: prop, value: 1 },
+        { path: prop, value: 2 },
+      ]);
+      let caught: unknown = null;
+      try {
+        readSceneFile(file, "levels/dup.scene.json", true);
+      } catch (error) {
+        caught = error;
+      }
+      expect(isIgnifxError(caught) && caught.code).toBe(CoreErrorCode.sceneFileInvalid);
+      expect(String(caught)).toContain("entities/0/instance/overrides/1: duplicates overrides/0");
+    });
   });
 });
 

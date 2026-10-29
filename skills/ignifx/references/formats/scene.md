@@ -116,6 +116,9 @@ expanded under the instance root instead.
 ```
 
 - `op` is `"replace"` (the default), `"remove"`, or `"add"`.
+- One override per identity — `path`, `op`, and for an `add` to `<uid>/components` the added
+  component's uid. A second with the same identity (a merge conflict leaves them) fails validation
+  with `IGX-0608`; keep one.
 - `hash` is the instanced asset's content hash at save time (`computeSceneHash`). A mismatch logs
   `IGX-0604`, or throws when `strictInstanceHashes` is passed to `loadScene`/`instantiate`.
 - The `path` grammar — every path starts with the uid of an entity **inside the instanced file**, so

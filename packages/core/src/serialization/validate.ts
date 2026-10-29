@@ -24,6 +24,10 @@ export interface SceneFileIssue {
  * (`CONSTITUTION.md` §2.3). The generated document remains the artefact the Vite plugin and editors
  * validate against; this is the same rule set, executable at load time.
  *
+ * Two checks go beyond what JSON Schema can say: uids are unique within the file, and no two
+ * overrides of one instance share an identity (path, `op`, and an added component's uid), both
+ * reported as issues like any other.
+ *
  * Component `props` are *not* checked here: `decodeProps` already reports every field problem with
  * a schema issue code, per field, which is more precise than a document-level match.
  *
@@ -191,6 +195,7 @@ function validateInstance(value: unknown, path: string, issues: SceneFileIssue[]
     issues.push({ path: `${path}/overrides`, message: "expected an array." });
     return;
   }
+  const identities = new Map<string, number>();
   for (let index = 0; index < overrides.length; index += 1) {
     const at = `${path}/overrides/${String(index)}`;
     const override = asRecord(overrides[index]);
@@ -201,8 +206,67 @@ function validateInstance(value: unknown, path: string, issues: SceneFileIssue[]
     const op = override["op"];
     if (op !== undefined && op !== "replace" && op !== "remove" && op !== "add") {
       issues.push({ path: `${at}/op`, message: 'expected "replace", "remove", or "add".' });
+      continue;
     }
+    checkOverrideIdentity(override["path"], op ?? "replace", override["value"], index, at, identities, issues);
   }
+}
+
+/**
+ * Appends an issue when an override has the identity of an earlier override of the same instance.
+ *
+ * @remarks
+ * An override's identity is its `path`, its `op` (`"replace"` when absent), and for an `add` to a
+ * component list (`<uid>/components`) the uid of the component it adds — what the editor's ops
+ * address an override by. The loader applies overrides in order, so of two with one identity the
+ * first has no effect, and an editor that edits or removes "the" override at that identity reaches
+ * only one of them. The engine's serializer never writes two; a hand edit or a merge conflict does.
+ * Like a uid used twice, it is a file defect, refused rather than resolved.
+ *
+ * @param overridePath - The override's path.
+ * @param op - Its op, defaulted.
+ * @param value - Its value.
+ * @param index - Its index in the list.
+ * @param at - Its path in the file, for the issue.
+ * @param identities - The identities already seen in the list, with the index of each.
+ * @param issues - Where problems are appended.
+ */
+function checkOverrideIdentity(
+  overridePath: string,
+  op: "replace" | "remove" | "add",
+  value: unknown,
+  index: number,
+  at: string,
+  identities: Map<string, number>,
+  issues: SceneFileIssue[],
+): void {
+  const uid = asRecord(value)?.["uid"];
+  const added = op === "add" && isComponentListPath(overridePath) && typeof uid === "string" ? uid : null;
+  const identity = JSON.stringify([overridePath, op, added]);
+  const first = identities.get(identity);
+  if (first === undefined) {
+    identities.set(identity, index);
+    return;
+  }
+  const what = added === null ? `"${op}" of "${overridePath}"` : `"add" of component ${added} to "${overridePath}"`;
+  issues.push({
+    path: at,
+    message:
+      `duplicates overrides/${String(first)}: both are the ${what}. ` +
+      "An instance holds one override per path and op (a merge conflict can leave two); keep one.",
+  });
+}
+
+/**
+ * Whether an override path addresses an entity's component list (`<uid>/components`), the one kind
+ * whose `add` overrides are told apart by the uid they add.
+ *
+ * @param overridePath - The path.
+ * @returns True for `<uid>/components`.
+ */
+function isComponentListPath(overridePath: string): boolean {
+  const segments = overridePath.split("/");
+  return segments.length === 2 && segments[0] !== "" && segments[1] === "components";
 }
 
 /**
