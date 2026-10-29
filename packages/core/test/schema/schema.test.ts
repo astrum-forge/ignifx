@@ -76,6 +76,16 @@ describe("defineSchema", () => {
     },
   );
 
+  it("rejects a literal __proto__ key, which sets the prototype and would drop the field silently", () => {
+    expect(() => defineSchema({ speed: f32(1), __proto__: f32(0) })).toThrow(/IGX-0607.*literal "__proto__: …"/u);
+  });
+
+  it("accepts a schema object with no prototype", () => {
+    const fields = Object.create(null) as Record<string, ReturnType<typeof f32>>;
+    fields["speed"] = f32(1);
+    expect(defineSchema(fields)).toBe(fields);
+  });
+
   it("accepts prototype, which plain objects do not inherit", () => {
     expect(() => defineSchema({ prototype: f32(1) })).not.toThrow();
   });
