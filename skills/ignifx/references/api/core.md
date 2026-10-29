@@ -8485,6 +8485,55 @@ The app.
 
 [`Component`](#abstract-component).[`app`](#app-2)
 
+##### displayHidden
+
+###### Get Signature
+
+> **get** **displayHidden**(): `boolean`
+
+A display-only hide: while `true` the mesh is neither drawn nor picked, whatever `enabled` and
+`pickable` say.
+
+###### Remarks
+
+It is not a schema field, so scene files do not save it, a serializer never reads it, and
+`enabled` keeps its authored value. That makes it the switch for a system that chooses what is
+drawn without changing the document: `@ignifx/3d`'s `LodGroup` uses it in place of `enabled` in
+an edit-mode app (ADR-0028). It starts `false` and takes effect at the next render sync;
+[MeshRenderer.isVisible](#isvisible-1) reports the outcome. Lite's pickers ignore visibility, so the
+clone is also made unpickable while hidden: `app.renderer.pickAsync` and `world.raycastRender`
+neither return it nor let it occlude, as with `pickable: false`.
+
+###### Example
+
+```ts
+renderer.displayHidden = true; // not drawn, and `renderer.enabled` is still `true`
+```
+
+###### Returns
+
+`boolean`
+
+`true` while the mesh is hidden for display.
+
+###### Set Signature
+
+> **set** **displayHidden**(`value`): `void`
+
+Hides the mesh for display, or shows it again; `enabled` is not touched.
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+`true` to hide it.
+
+###### Returns
+
+`void`
+
 ##### enabled
 
 ###### Get Signature
@@ -8601,7 +8650,8 @@ Whether the owner has already been destroyed.
 > **get** **isVisible**(): `boolean`
 
 Whether the mesh is currently drawn: its own `enabled` flag and its entity's
-`activeInHierarchy`, materialised onto Lite's `visible`.
+`activeInHierarchy`, less [MeshRenderer.displayHidden](#displayhidden), materialised onto Lite's
+`visible`.
 
 ###### Returns
 

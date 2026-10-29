@@ -1,4 +1,4 @@
-import { f32, Script, Vec3 } from "@ignifx/core";
+import { f32, MeshRenderer, Script, Vec3 } from "@ignifx/core";
 import { afterEach, describe, expect, it } from "vitest";
 import { startEditorHost } from "../src/host.js";
 import { HostCapability, isPickResult, isSchemaSet, SceneNotification } from "../src/protocol/index.js";
@@ -406,6 +406,31 @@ describe("the scene view on a WebGPU canvas", () => {
     },
     60_000,
   );
+
+  it("does not pick a mesh hidden for display, as an edit-mode LodGroup hides its other levels", async () => {
+    const view = await sceneView();
+    const camera = view.app.world.mainCamera;
+    const screen = new Vec3();
+    expect(camera?.worldToScreen({ x: 0, y: 0, z: 0 }, screen)).toBe(true);
+    const at = { x: screen.x, y: screen.y, unit: "backing" };
+    expect(await call("pick", at)).toMatchObject({ entity: "BOX" });
+
+    const renderer = view.app.world.getEntity("BOX")?.getComponent(MeshRenderer);
+    expect(renderer).toBeDefined();
+    if (renderer === undefined || renderer === null) {
+      return;
+    }
+    // Lite's picker ignores visibility, so a hidden level would still be clicked without this.
+    renderer.displayHidden = true;
+    await frames(2);
+    expect(await call("pick", at)).toMatchObject({ entity: null, point: null, distance: null });
+    expect(renderer.enabled).toBe(true);
+    expect(renderer.pickable).toBe(true);
+
+    renderer.displayHidden = false;
+    await frames(2);
+    expect(await call("pick", at)).toMatchObject({ entity: "BOX" });
+  }, 60_000);
 
   it("describes the project's scripts and core's components with their inspector metadata", async () => {
     await sceneView();

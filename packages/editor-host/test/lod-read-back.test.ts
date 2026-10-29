@@ -1,5 +1,5 @@
 import { threeD } from "@ignifx/3d";
-import { Camera } from "@ignifx/core";
+import { Camera, MeshRenderer } from "@ignifx/core";
 import { input } from "@ignifx/input";
 import { physics } from "@ignifx/physics";
 import { afterEach, describe, expect, it } from "vitest";
@@ -11,9 +11,10 @@ import type { SceneOp } from "../src/protocol/index.js";
 import type { App, SceneFile, SceneFileEntity, Vec3Like } from "@ignifx/core";
 
 /**
- * A `LodGroup` in the scene view (engine ADR-0028; editor audit defect B1): the LOD switch writes
- * `MeshRenderer.enabled`, which scene files save, so moving the editor camera must not change what
- * `readBack` returns, and removing the group must not switch its levels off.
+ * A `LodGroup` in the scene view (engine ADR-0028; editor audit defect B1, E41): in a game the LOD
+ * switch writes `MeshRenderer.enabled`, which scene files save, so in the scene view it is
+ * display-only. The editor camera's distance picks the one level drawn, `readBack` does not change
+ * as the camera moves, and removing the group neither switches its levels off nor leaves any hidden.
  */
 
 let live: LiveHost | null = null;
@@ -138,6 +139,16 @@ function eye(app: App): Vec3Like {
 }
 
 /**
+ * Which level renderers are hidden for display.
+ *
+ * @param app - The host's app.
+ * @returns `displayHidden` of the `NEAR` and `FAR` renderers.
+ */
+function hidden(app: App): boolean[] {
+  return ["NEAR", "FAR"].map((uid) => app.world.getEntity(uid)?.getComponent(MeshRenderer)?.displayHidden ?? false);
+}
+
+/**
  * Reads the whole document back.
  *
  * @param peer - The editor's end.
@@ -202,6 +213,7 @@ describe("a LodGroup in the scene view", () => {
     expect(levelsOf(before)).toEqual([authored("NEAR-R"), authored("FAR-R")]);
 
     const eyes: number[] = [];
+    const shown: boolean[][] = [];
     for (const entities of [["TREE"], "all", ["TREE"]]) {
       // oxlint-disable-next-line no-await-in-loop -- each move must be drawn before it is read back
       expect(await call(peer, "frame", { entities })).toHaveProperty("result", null);
@@ -209,6 +221,7 @@ describe("a LodGroup in the scene view", () => {
       await frames(app);
       const position = eye(app);
       eyes.push(Math.hypot(position.x, position.y, position.z));
+      shown.push(hidden(app));
       // The host serializes once per change, so an unrelated edit makes it read the world again.
       // oxlint-disable-next-line no-await-in-loop -- see above
       await rename(peer, `Marker ${String(eyes.length)}`);
@@ -222,6 +235,12 @@ describe("a LodGroup in the scene view", () => {
     // The camera really went inside the first level and past the last one.
     expect(eyes[0]).toBeLessThan(10);
     expect(eyes[1]).toBeGreaterThan(50);
+    // One level is drawn near and none past the last threshold, by the display-only hide alone.
+    expect(shown).toEqual([
+      [false, true],
+      [true, true],
+      [false, true],
+    ]);
   });
 
   it("leaves the levels enabled when the group is removed", async () => {
@@ -231,5 +250,6 @@ describe("a LodGroup in the scene view", () => {
     await applyOne(peer, { op: "removeComponent", component: "TREE-LOD" });
     await frames(app);
     expect(levelsOf(await readBack(peer))).toEqual([authored("NEAR-R"), authored("FAR-R")]);
+    expect(hidden(app)).toEqual([false, false]);
   });
 });

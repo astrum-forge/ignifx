@@ -2260,6 +2260,8 @@ export class MeshRenderer extends Component implements ComponentHooks {
     collectCasters(out: LiteMesh[]): void;
     // @internal
     consumeCasterChange(): boolean;
+    get displayHidden(): boolean;
+    set displayHidden(value: boolean);
     get isVisible(): boolean;
     get lite(): {
         readonly mesh: LiteSceneNode | null;

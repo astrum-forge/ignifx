@@ -108,6 +108,25 @@ describe("hiding a renderer", () => {
     expect(scene.renderer.isVisible).toBe(true);
   });
 
+  it("hides for display without touching enabled", async () => {
+    const scene = await buildCubeScene();
+    const lit = pixelLuminance(await scene.harness.centrePixel());
+    const clone = scene.renderer.lite.mesh;
+
+    // The display-only hide an edit-mode LodGroup uses: drawn nothing, saved nothing.
+    scene.renderer.displayHidden = true;
+    await scene.harness.advance(SETTLE_FRAMES);
+    expect(pixelLuminance(await scene.harness.centrePixel())).toBeLessThan(lit / 2);
+    expect(scene.renderer.enabled).toBe(true);
+    expect(scene.renderer.isVisible).toBe(false);
+    expect(scene.renderer.lite.mesh).toBe(clone);
+
+    scene.renderer.displayHidden = false;
+    await scene.harness.advance(SETTLE_FRAMES);
+    expect(pixelLuminance(await scene.harness.centrePixel())).toBeGreaterThan(lit / 2);
+    expect(scene.renderer.isVisible).toBe(true);
+  });
+
   it("hides with the entity as well as with the component", async () => {
     const scene = await buildCubeScene();
     const lit = pixelLuminance(await scene.harness.centrePixel());

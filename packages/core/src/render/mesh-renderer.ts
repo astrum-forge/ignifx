@@ -34,6 +34,11 @@ import type { Schema } from "../schema/types.js";
  * flag flips. That is `07-rendering.md` §2.3's rule, and the browser test asserts both halves: the
  * pixel returns to the clear colour, and the mesh is still in the scene.
  *
+ * `displayHidden` hides the same way, and makes the clone unpickable too, but is not a field: scene
+ * files do not save it, so a system
+ * that chooses what is drawn without changing the document (a `LodGroup` in an edit-mode app,
+ * ADR-0028) switches it instead of `enabled`.
+ *
  * ## Decisions the documents left open
  *
  * - **The clone's Lite `id` is the entity's uid.** Lite's light include/exclude lists match on
@@ -97,6 +102,8 @@ export class MeshRenderer extends Component implements ComponentHooks {
 
   #appliedCastShadows = true;
 
+  #displayHidden = false;
+
   /**
    * The Babylon Lite mesh this renderer draws. Unstable escape hatch
    * (`docs/architecture/00-overview.md` §3).
@@ -108,8 +115,42 @@ export class MeshRenderer extends Component implements ComponentHooks {
   }
 
   /**
+   * A display-only hide: while `true` the mesh is neither drawn nor picked, whatever `enabled` and
+   * `pickable` say.
+   *
+   * @remarks
+   * It is not a schema field, so scene files do not save it, a serializer never reads it, and
+   * `enabled` keeps its authored value. That makes it the switch for a system that chooses what is
+   * drawn without changing the document: `@ignifx/3d`'s `LodGroup` uses it in place of `enabled` in
+   * an edit-mode app (ADR-0028). It starts `false` and takes effect at the next render sync;
+   * {@link MeshRenderer.isVisible} reports the outcome. Lite's pickers ignore visibility, so the
+   * clone is also made unpickable while hidden: `app.renderer.pickAsync` and `world.raycastRender`
+   * neither return it nor let it occlude, as with `pickable: false`.
+   *
+   * @returns `true` while the mesh is hidden for display.
+   *
+   * @example
+   * ```ts
+   * renderer.displayHidden = true; // not drawn, and `renderer.enabled` is still `true`
+   * ```
+   */
+  get displayHidden(): boolean {
+    return this.#displayHidden;
+  }
+
+  /**
+   * Hides the mesh for display, or shows it again; `enabled` is not touched.
+   *
+   * @param value - `true` to hide it.
+   */
+  set displayHidden(value: boolean) {
+    this.#displayHidden = value;
+  }
+
+  /**
    * Whether the mesh is currently drawn: its own `enabled` flag and its entity's
-   * `activeInHierarchy`, materialised onto Lite's `visible`.
+   * `activeInHierarchy`, less {@link MeshRenderer.displayHidden}, materialised onto Lite's
+   * `visible`.
    *
    * @returns `true` when the clone is visible.
    */
@@ -145,8 +186,8 @@ export class MeshRenderer extends Component implements ComponentHooks {
     }
     instance.applyMaterial(this.#material(renderer));
     instance.applyDisplacement(this.#displacement(), this.entity.transform);
-    instance.applyFlags(this.receiveShadows, this.renderOrder, this.pickable);
-    instance.applyVisible(this.isEnabledInHierarchy);
+    instance.applyFlags(this.receiveShadows, this.renderOrder, this.pickable && !this.#displayHidden);
+    instance.applyVisible(this.isEnabledInHierarchy && !this.#displayHidden);
     return changed;
   }
 

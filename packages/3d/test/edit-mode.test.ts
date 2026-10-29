@@ -1,5 +1,5 @@
 import { Camera, MeshRenderer, Quat } from "@ignifx/core";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { AnimatorAsset } from "../src/animator/animator-asset.js";
 import { Animator } from "../src/animator/animator.js";
 import { ANIMATOR_ASSET_TYPE } from "../src/animator/definition.js";
@@ -11,8 +11,8 @@ import { floorGeometry } from "./support/geometry.js";
 import { createThreeDApp } from "./support/harness.js";
 
 /**
- * `@ignifx/3d` in an edit-mode app (ADR-0028): animators, billboards, and level of detail stand
- * still, and navigation neither bakes nor steps.
+ * `@ignifx/3d` in an edit-mode app (ADR-0028): animators and billboards stand still, level of
+ * detail switches for display only, and navigation neither bakes nor steps.
  */
 
 describe("the 3D toolkit in an edit-mode app", () => {
@@ -65,7 +65,7 @@ describe("the 3D toolkit in an edit-mode app", () => {
     harness.dispose();
   });
 
-  it("leaves every LodGroup level's authored enabled alone while the camera moves", async () => {
+  it("shows one LodGroup level for display while leaving every authored enabled alone", async () => {
     const harness = await createThreeDApp({ editMode: true });
     const camera = harness.world.createEntity("EditorCamera").addComponent(Camera, { priority: 1_000_000 });
     const tree = harness.world.createEntity("Tree", { position: { x: 5, y: 0, z: 0 } });
@@ -79,16 +79,45 @@ describe("the 3D toolkit in an edit-mode app", () => {
       hysteresis: 0,
     });
 
-    for (const x of [0, 20, 100]) {
+    // The editor camera's distance picks the level, as in a game, but only `displayHidden` moves.
+    const shown: [number, boolean, boolean][] = [];
+    for (const x of [0, 20, 100, 0]) {
       camera.entity.transform.position = { x, y: 0, z: 0 };
       harness.step();
       expect([near.enabled, far.enabled]).toEqual([true, true]);
+      shown.push([group.level, near.displayHidden, far.displayHidden]);
     }
-    expect(group.level).toBe(LOD_CULLED);
+    expect(shown).toEqual([
+      [0, false, true],
+      [1, true, false],
+      [LOD_CULLED, true, true],
+      [0, false, true],
+    ]);
+
+    // While the level stays the same the group writes nothing.
+    const writes = vi.spyOn(far, "displayHidden", "set");
+    harness.stepMany(3);
+    expect(writes).not.toHaveBeenCalled();
+    writes.mockRestore();
+
+    // A disabled group shows every level again, and a re-enabled one picks up where it was.
+    group.enabled = false;
+    harness.step();
+    expect([near.displayHidden, far.displayHidden]).toEqual([false, false]);
+    group.enabled = true;
+    harness.step();
+    expect([near.displayHidden, far.displayHidden]).toEqual([false, true]);
+
+    // A renderer dropped from the level list is shown again.
+    group.levels = [{ distance: 10, renderer: far }];
+    camera.entity.transform.position = { x: 100, y: 0, z: 0 };
+    harness.step();
+    expect([near.displayHidden, far.displayHidden]).toEqual([false, true]);
 
     group.destroy();
     harness.step();
     expect([near.enabled, far.enabled]).toEqual([true, true]);
+    expect([near.displayHidden, far.displayHidden]).toEqual([false, false]);
     harness.dispose();
   });
 });
