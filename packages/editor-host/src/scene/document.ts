@@ -260,6 +260,8 @@ export class DocumentMirror {
     this.#settings = file.settings === undefined ? null : copyJson(file.settings);
     this.recordComponents(file.entities.flatMap((record) => record.components ?? []));
     this.recordInstances(file.entities);
+    // That index was read before the first frame; the next lookup reads the world again.
+    this.invalidate();
     return { entityCount: countEntities(scene), warnings };
   }
 
@@ -398,7 +400,10 @@ export class DocumentMirror {
   }
 
   /**
-   * The document as the live world holds it, serialized once and cached until the next change.
+   * The document as the live world holds it, serialized once and cached until an op, `open` or
+   * `readBack` drops it; the next call serializes the world again. Every lookup (selection, picks,
+   * the ops' references) reads this cache, so a lookup after a `readBack` sees the world as that
+   * `readBack` did.
    *
    * @returns The index, or `null` while no document is open.
    */
@@ -415,6 +420,9 @@ export class DocumentMirror {
    * Serializes the requested entities as the live world has them (protocol `readBack`).
    *
    * @remarks
+   * The world is serialized again on every call, not read from the cache, because a `"run"`
+   * system or a `runInEditMode` script can change it outside an op.
+   *
    * An instance root's overrides are the list the document holds, in its order, while the
    * serializer still reads its members as they were built from that list. The serializer's own
    * list is a diff in file order that writes an added component whole and leaves out an override
@@ -425,6 +433,7 @@ export class DocumentMirror {
    * @returns The records in file order, the uids not found, the settings, and the serializer's issues.
    */
   readBack(params: ReadBackParams): ReadBackResult | null {
+    this.invalidate();
     const index = this.index();
     if (index === null) {
       return null;
