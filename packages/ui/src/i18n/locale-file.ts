@@ -91,17 +91,18 @@ function asObject(value: unknown): Record<string, unknown> | null {
  */
 function readTable(value: unknown): Record<string, string> {
   const source = asObject(value);
-  const table: Record<string, string> = {};
+  const table: [string, string][] = [];
   if (source === null) {
-    return table;
+    return {};
   }
   for (const key of Object.keys(source).toSorted()) {
     const message = source[key];
     if (typeof message === "string") {
-      table[key] = message;
+      table.push([key, message]);
     }
   }
-  return table;
+  // `fromEntries` defines own properties, so a `__proto__` key stays a message, not a prototype.
+  return Object.fromEntries(table);
 }
 
 /**
@@ -140,10 +141,9 @@ export function parseLocaleFile(value: unknown, address: string): LocaleDocument
       hint: 'Add at least one entry to the "locales" object, keyed by BCP 47 tag.',
     });
   }
-  const locales: Record<string, Readonly<Record<string, string>>> = {};
-  for (const tag of tags) {
-    locales[tag] = readTable(raw?.[tag]);
-  }
+  const locales: Record<string, Readonly<Record<string, string>>> = Object.fromEntries(
+    tags.map((tag) => [tag, readTable(raw?.[tag])]),
+  );
   const declared = file["defaultLocale"];
   const fallback = tags[0] ?? "";
   const defaultLocale = typeof declared === "string" && Object.hasOwn(locales, declared) ? declared : fallback;

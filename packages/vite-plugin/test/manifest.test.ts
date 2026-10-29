@@ -105,6 +105,19 @@ describe("scanAssetRoot", () => {
     expect(asset?.meta).toEqual(editorFields);
   });
 
+  it("keeps a sidecar key named __proto__ as data, in the scan and in the manifest", async () => {
+    const root = await createFixtureTree({
+      "assets/a.png": PNG_BYTES,
+      "assets/a.png.meta.json": '{ "__proto__": { "srgb": true }, "guid": "01K7R5X8W2T9Z4A1B6C3D5E7F9" }',
+    });
+    const assets = await scanAssetRoot({ assetRoot: join(root, "assets") });
+    const meta = assets[0]?.meta;
+    expect(Object.getPrototypeOf(meta)).toBe(Object.prototype);
+    expect(Object.keys(meta ?? {})).toEqual(["__proto__", "guid"]);
+    const entry = buildManifest(assets, "assets", () => "").entries[0];
+    expect(JSON.stringify(entry?.meta)).toBe('{"__proto__":{"srgb":true}}');
+  });
+
   it("fails with IGX-0551 when publish is not a boolean", async () => {
     const root = await createFixtureTree({
       "assets/a.png": PNG_BYTES,

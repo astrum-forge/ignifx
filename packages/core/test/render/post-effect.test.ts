@@ -233,6 +233,15 @@ describe("the values codec", () => {
     expect(postEffectValuesCodec().deserialize(7)).toStrictEqual({});
   });
 
+  it("keeps a __proto__ entry from a file as a value in both directions", () => {
+    const codec = postEffectValuesCodec();
+    const file: unknown = JSON.parse('{ "__proto__": [1, 2], "amount": 3 }');
+    const value = codec.deserialize(file as Record<string, number[]>);
+    expect(Object.getPrototypeOf(value)).toBe(Object.prototype);
+    expect(Object.keys(value)).toEqual(["__proto__", "amount"]);
+    expect(JSON.stringify(codec.serialize(value))).toBe('{"__proto__":[1,2],"amount":3}');
+  });
+
   it("drops an entry that is neither a number nor an array of numbers", () => {
     expect(postEffectValuesCodec().deserialize({ amount: "loud", tint: [1, 2] })).toStrictEqual({ tint: [1, 2] });
   });

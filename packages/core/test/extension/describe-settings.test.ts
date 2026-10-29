@@ -222,6 +222,33 @@ describe("describeSettings", () => {
     expect(weather?.fields["tint"]?.fields?.["name"]).toEqual({ kind: "str", default: "none" });
   });
 
+  it("keeps a __proto__ key in a default as an entry, in a map and a record", async () => {
+    // A key parsed from JSON is an ordinary own key, `__proto__` included.
+    const tags: unknown = JSON.parse('{ "__proto__": { "x": 1, "y": 2 }, "a": { "x": 3, "y": 4 } }');
+    const named: unknown = JSON.parse('{ "__proto__": "first" }');
+    const proto: Extension = {
+      name: "@game/proto",
+      version: "1.0.0",
+      register(ctx): void {
+        ctx.registerSettings(
+          "proto",
+          defineSchema({ tags: map(vec2()), named: record({ ["__proto__"]: str("none") }) }),
+          { tags, named } as never,
+        );
+      },
+    };
+    const fields = describeSettings(await build({}, [proto]))["proto"]?.fields;
+    for (const [value, keys] of [
+      [fields?.["tags"]?.default, ["__proto__", "a"]],
+      [fields?.["named"]?.default, ["__proto__"]],
+    ] as const) {
+      expect(Object.getPrototypeOf(value)).toBe(Object.prototype);
+      expect(Object.keys(value as object)).toEqual(keys);
+    }
+    expect(Object.getOwnPropertyDescriptor(fields?.["tags"]?.default, "__proto__")?.value).toEqual({ x: 1, y: 2 });
+    expect(Object.getOwnPropertyDescriptor(fields?.["named"]?.default, "__proto__")?.value).toBe("first");
+  });
+
   it("describes defaults, not the project's values", async () => {
     const sections = describeSettings(await build({ time: { timeScale: 2 } }));
     expect(sections["time"]?.fields["timeScale"]?.default).toBe(1);

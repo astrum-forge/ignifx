@@ -183,6 +183,16 @@ describe("runImportTilemap", () => {
     expect(io.err).toEqual([]);
   });
 
+  it("prints a property named __proto__ like any other", async () => {
+    const objects: unknown = JSON.parse(
+      '[{ "type": "prop", "name": "Odd", "x": 0, "y": 0, "width": 1, "height": 1, "properties": { "__proto__": "odd" } }]',
+    );
+    const paths = await writeFiles({ ...MAP, objects });
+    const io = recordingIo();
+    await runImportTilemap([paths.map, paths.scene], io);
+    expect(io.out.join("\n")).toContain('__proto__="odd"');
+  });
+
   it("writes canonical scene text and removes the objects from the map", async () => {
     const paths = await writeFiles();
     await runImportTilemap([paths.map, paths.scene], recordingIo());

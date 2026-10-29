@@ -66,7 +66,7 @@ export function tiledPropertiesToRecord(properties: unknown): Readonly<Record<st
   if (!isUnknownArray(properties)) {
     return {};
   }
-  const out: Record<string, string | number | boolean> = {};
+  const out: [string, string | number | boolean][] = [];
   for (let index = 0; index < properties.length; index += 1) {
     const entry = properties[index];
     if (!isRecord(entry)) {
@@ -78,10 +78,11 @@ export function tiledPropertiesToRecord(properties: unknown): Readonly<Record<st
       continue;
     }
     if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
-      out[name] = value;
+      out.push([name, value]);
     }
   }
-  return out;
+  // `fromEntries` defines own properties, so a property named `__proto__` stays a property.
+  return Object.fromEntries(out);
 }
 
 /**

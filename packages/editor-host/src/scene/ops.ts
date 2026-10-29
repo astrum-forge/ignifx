@@ -749,7 +749,8 @@ function withValueAt(container: JsonValue, path: JsonPath, value: JsonValue | un
   const object = asJsonObject(container);
   if (object !== null && typeof step === "string") {
     if (rest.length > 0) {
-      const next = object[step];
+      // Own keys only: an inherited one, such as `__proto__`, is not in the document.
+      const next = Object.hasOwn(object, step) ? object[step] : undefined;
       if (next === undefined) {
         throw invalidPath(path);
       }

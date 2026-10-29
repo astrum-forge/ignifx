@@ -1,4 +1,14 @@
-import { color, createApp, defineSchema, describeSettings, f64, settingsJsonSchema, str, vec3 } from "@ignifx/core";
+import {
+  color,
+  createApp,
+  defineSchema,
+  describeSettings,
+  f64,
+  map,
+  settingsJsonSchema,
+  str,
+  vec3,
+} from "@ignifx/core";
 import { afterEach, describe, expect, it } from "vitest";
 import { isSettingsSet } from "../src/protocol/index.js";
 import { settingsSet } from "../src/scene/settings.js";
@@ -70,5 +80,22 @@ describe("describeSettings", () => {
     created = app;
     expect(app.settings.section<{ gust: number }>("weather").gust).toBe(Infinity);
     expect(settingsSet(app).values["weather"]).not.toHaveProperty("gust");
+  });
+
+  it("keeps a map entry named __proto__ as an entry", async () => {
+    const tagged: Extension = {
+      ...WEATHER,
+      register(ctx): void {
+        ctx.registerSettings("weather", defineSchema({ tags: map(str()) }), { tags: {} });
+      },
+    };
+    // A settings file is parsed JSON, where `__proto__` is an ordinary own key.
+    const weather = JSON.parse('{ "tags": { "__proto__": "storm", "a": "rain" } }') as Record<string, unknown>;
+    const app = await createApp({ headless: true, extensions: [tagged], settings: { weather } });
+    created = app;
+    const tags = settingsSet(app).values["weather"]?.["tags"];
+    expect(Object.getPrototypeOf(tags)).toBe(Object.prototype);
+    expect(Object.keys(tags as object)).toEqual(["__proto__", "a"]);
+    expect(Object.getOwnPropertyDescriptor(tags, "__proto__")?.value).toBe("storm");
   });
 });

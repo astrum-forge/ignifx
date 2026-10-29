@@ -253,7 +253,7 @@ export function fieldInstancesToRecord(fields: unknown): Readonly<Record<string,
   if (!isUnknownArray(fields)) {
     return {};
   }
-  const out: Record<string, string | number | boolean> = {};
+  const out: [string, string | number | boolean][] = [];
   for (let index = 0; index < fields.length; index += 1) {
     const field = fields[index];
     if (!isRecord(field)) {
@@ -265,10 +265,11 @@ export function fieldInstancesToRecord(fields: unknown): Readonly<Record<string,
       continue;
     }
     if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
-      out[name] = value;
+      out.push([name, value]);
     }
   }
-  return out;
+  // `fromEntries` defines own properties, so a property named `__proto__` stays a property.
+  return Object.fromEntries(out);
 }
 
 /**

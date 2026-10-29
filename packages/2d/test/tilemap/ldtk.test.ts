@@ -291,6 +291,12 @@ describe("fieldInstancesToRecord", () => {
     ).toEqual({ ok: 2 });
   });
 
+  it("keeps a field named __proto__ as a property", () => {
+    const record = fieldInstancesToRecord([{ __identifier: "__proto__", __value: "odd" }]);
+    expect(Object.keys(record)).toEqual(["__proto__"]);
+    expect(Object.getOwnPropertyDescriptor(record, "__proto__")?.value).toBe("odd");
+  });
+
   it("returns an empty record for anything that is not an array", () => {
     expect(fieldInstancesToRecord(undefined)).toEqual({});
   });

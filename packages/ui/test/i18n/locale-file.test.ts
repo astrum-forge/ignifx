@@ -49,6 +49,17 @@ describe("parseLocaleFile", () => {
     expect(parsed.defaultLocale).toBe("en");
   });
 
+  it("keeps a locale tag or a message key named __proto__ as data", () => {
+    const parsed = parseLocaleFile(
+      document({ locales: JSON.parse('{ "en": { "__proto__": "Proto", "ok": "OK" }, "__proto__": { "ok": "Hi" } }') }),
+      "x",
+    );
+    expect(Object.keys(parsed.locales)).toEqual(["__proto__", "en"]);
+    expect(Object.getPrototypeOf(parsed.locales)).toBe(Object.prototype);
+    expect(Object.getOwnPropertyDescriptor(parsed.locales, "__proto__")?.value).toEqual({ ok: "Hi" });
+    expect(Object.keys(parsed.locales["en"] ?? {})).toEqual(["__proto__", "ok"]);
+  });
+
   it("treats a locale whose table is not an object as empty", () => {
     const parsed = parseLocaleFile(document({ locales: { en: 7 } }), "x");
     expect(parsed.locales["en"]).toEqual({});
