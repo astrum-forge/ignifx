@@ -282,6 +282,41 @@ describe("the material loader", () => {
     expect(handle.value.definition).toMatchObject({ kind: "shader", name: "dissolve" });
   });
 
+  it("reads a __proto__ key in a shader material's values, textures, or defines as a name", async () => {
+    const h = await app();
+    const shader = "shaders/proto.wgsl";
+    canned(h, shader, "// @ignifx shader\n// @ignifx uniform progress: f32 = 0\n// @ignifx texture noise\n");
+    // Assigned instead of defined, each key set its record's prototype and vanished. Read as a name,
+    // a value or a define the shader does not declare is refused, and a texture is kept unbound.
+    // `JSON.stringify` drops an object literal's `__proto__`, so the bodies are written by hand.
+    const records = [
+      '"values": { "__proto__": [1, 2], "progress": 0.5 }',
+      '"defines": { "__proto__": true }',
+      '"textures": { "__proto__": "textures/a.png" }',
+      // An inherited name was taken for a declared define.
+      '"defines": { "toString": true }',
+    ];
+    const [values, defines, textures, inherited] = records.map((record, index) => {
+      const address = `materials/proto-${String(index)}.material.json`;
+      canned(
+        h,
+        address,
+        `{ "format": "ignifx.material", "formatVersion": 1, "type": "shader", "shader": "${shader}", ${record} }`,
+      );
+      return h.app.assets.load<MaterialAsset>(address);
+    });
+    await Promise.all(
+      [values, defines, textures, inherited].map(async (handle) => handle?.promise.catch((): null => null)),
+    );
+    await h.settle(1);
+    expect(String(values?.error?.cause)).toContain("IGX-0712");
+    expect(String(defines?.error?.cause)).toContain("IGX-0712");
+    expect(String(inherited?.error?.cause)).toContain("IGX-0712");
+    expect(textures?.state).toBe("loaded");
+    const bound = textures?.state === "loaded" ? textures.value.definition : null;
+    expect(bound?.kind === "shader" ? Object.keys(bound.textures) : null).toEqual(["__proto__"]);
+  });
+
   it("reads a surfaces list written as an address, an $asset reference, and an object", async () => {
     const h = await app();
     const surface = "shaders/snow.surface.wgsl";

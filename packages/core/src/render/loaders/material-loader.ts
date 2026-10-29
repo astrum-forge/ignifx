@@ -1,5 +1,6 @@
 import { CoreErrorCode } from "../../errors/error-codes.js";
 import { IgnifxError } from "../../errors/ignifx-error.js";
+import { setOwnJsonProperty } from "../../schema/json.js";
 import {
   buildMaterialAsset,
   MATERIAL_ASSET_TYPE,
@@ -420,7 +421,7 @@ async function loadSurfaceShaders(
       const handle = resolved.handles[index];
       const name = names[index];
       if (handle !== undefined && name !== undefined) {
-        textures[name] = handle;
+        setOwnJsonProperty(textures, name, handle);
       }
     }
     return {
@@ -567,14 +568,14 @@ function readTextureRecord(file: Record<string, unknown>): Record<string, string
   for (const name of Object.keys(entries)) {
     const value: unknown = entries[name];
     if (typeof value === "string" && value !== "") {
-      record[name] = value;
+      setOwnJsonProperty(record, name, value);
       continue;
     }
     if (typeof value === "object" && value !== null && !Array.isArray(value)) {
       // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- a JSON object read by name.
       const address = (value as Record<string, unknown>)["$asset"];
       if (typeof address === "string" && address !== "") {
-        record[name] = address;
+        setOwnJsonProperty(record, name, address);
       }
     }
   }
@@ -613,7 +614,7 @@ async function loadNamedTextures(
     if (handle === null || handle === undefined || name === undefined || address === undefined) {
       continue;
     }
-    addresses[name] = address;
+    setOwnJsonProperty(addresses, name, address);
     handles.push(handle);
   }
   return { addresses, handles };
@@ -637,7 +638,7 @@ function readValues(file: Record<string, unknown>): Record<string, number | read
   for (const name of Object.keys(entries)) {
     const value: unknown = entries[name];
     if (typeof value === "number" && Number.isFinite(value)) {
-      values[name] = value;
+      setOwnJsonProperty(values, name, value);
       continue;
     }
     if (Array.isArray(value)) {
@@ -645,7 +646,7 @@ function readValues(file: Record<string, unknown>): Record<string, number | read
       for (const element of value) {
         numbers.push(typeof element === "number" && Number.isFinite(element) ? element : 0);
       }
-      values[name] = numbers;
+      setOwnJsonProperty(values, name, numbers);
     }
   }
   return values;
@@ -668,7 +669,7 @@ function readDefines(file: Record<string, unknown>): Record<string, boolean | nu
   for (const name of Object.keys(entries)) {
     const value: unknown = entries[name];
     if (typeof value === "boolean" || (typeof value === "number" && Number.isFinite(value))) {
-      defines[name] = value;
+      setOwnJsonProperty(defines, name, value);
     }
   }
   return defines;

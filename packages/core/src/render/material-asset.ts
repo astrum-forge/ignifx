@@ -10,6 +10,7 @@ import {
   setPbrMetallicRoughness,
 } from "../lite/material.js";
 import { Color } from "../math/color.js";
+import { setOwnJsonProperty } from "../schema/json.js";
 import { shaderSupport, surfaceShaderSupport } from "./shader-support.js";
 import type { ShaderAsset } from "./shader-asset.js";
 import type { ShaderMaterialDefinition } from "./shader-material-definition.js";
@@ -696,7 +697,7 @@ function resolveSurfaceShaders(app: App, references: readonly SurfaceShaderRefer
     for (const name of Object.keys(reference.textures)) {
       const handle = app.assets.get<TextureAsset>(reference.textures[name] ?? "");
       if (handle !== null && handle.state === "loaded") {
-        textures[name] = handle;
+        setOwnJsonProperty(textures, name, handle);
       }
     }
     inits.push({

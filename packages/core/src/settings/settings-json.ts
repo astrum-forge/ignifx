@@ -6,6 +6,7 @@
 
 import { assertNever } from "../errors/ignifx-error.js";
 import { COLOR_CHANNELS, VECTOR_COMPONENTS } from "../schema/internal.js";
+import { setOwnJsonProperty } from "../schema/json.js";
 import type { JsonSchemaObject } from "../schema/describe.js";
 import type { JsonObject, JsonValue } from "../schema/json.js";
 import type { FieldDefinition } from "../schema/types.js";
@@ -57,7 +58,8 @@ function entriesToJson(
   for (const [name, value] of entries) {
     const converted = convert(value, name);
     if (converted !== undefined) {
-      object[name] = converted;
+      // Defined, not assigned: a `__proto__` key stays an entry instead of changing the prototype.
+      setOwnJsonProperty(object, name, converted);
     }
   }
   return object;
@@ -99,7 +101,7 @@ export function settingsValueToJson(field: FieldDefinition<unknown>, value: unkn
       for (const [name, sub] of Object.entries(spec.fields)) {
         const converted = settingsValueToJson(sub, value[name]);
         if (converted !== undefined) {
-          object[name] = converted;
+          setOwnJsonProperty(object, name, converted);
         }
       }
       return object;

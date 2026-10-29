@@ -1,3 +1,4 @@
+import { setOwnJsonProperty } from "../schema/json.js";
 import { asJsonObject } from "../serialization/json-view.js";
 import type { ShaderAsset } from "./shader-asset.js";
 import type { ShaderTextureDeclaration, ShaderUniformType } from "./shader-declaration.js";
@@ -189,7 +190,7 @@ export function postEffectValuesCodec(): CustomFieldCodec<Record<string, number 
       // (`docs/architecture/06-serialization-and-scene-format.md` §1).
       for (const name of Object.keys(value).toSorted()) {
         const entry = value[name];
-        json[name] = typeof entry === "number" ? entry : [...(entry ?? [])];
+        setOwnJsonProperty(json, name, typeof entry === "number" ? entry : [...(entry ?? [])]);
       }
       return json;
     },
@@ -201,10 +202,15 @@ export function postEffectValuesCodec(): CustomFieldCodec<Record<string, number 
       }
       for (const name of Object.keys(object)) {
         const entry = object[name];
+        // Defined, not assigned: a `__proto__` key from a file stays a name instead of a prototype.
         if (typeof entry === "number") {
-          value[name] = entry;
+          setOwnJsonProperty(value, name, entry);
         } else if (Array.isArray(entry)) {
-          value[name] = entry.map((component) => (typeof component === "number" ? component : 0));
+          setOwnJsonProperty(
+            value,
+            name,
+            entry.map((component) => (typeof component === "number" ? component : 0)),
+          );
         }
       }
       return value;

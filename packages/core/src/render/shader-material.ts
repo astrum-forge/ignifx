@@ -1,6 +1,7 @@
 import { CoreErrorCode } from "../errors/error-codes.js";
 import { IgnifxError } from "../errors/ignifx-error.js";
 import { Color } from "../math/color.js";
+import { setOwnJsonProperty } from "../schema/json.js";
 import { IGNIFX_UNIFORM_TYPES, IGNIFX_UNIFORM_NAMES, LITE_SYSTEM_UNIFORM_NAMES } from "./shader-declaration.js";
 import type { ShaderAsset } from "./shader-asset.js";
 import type {
@@ -821,7 +822,7 @@ export class ShaderMaterialState {
       if (define === undefined) {
         continue;
       }
-      resolved[define.name] = this.#defines.get(define.name) ?? define.value;
+      setOwnJsonProperty(resolved, define.name, this.#defines.get(define.name) ?? define.value);
     }
     return resolved;
   }
@@ -1076,11 +1077,12 @@ export function buildShaderMaterialState(
   for (let index = 0; index < declared.length; index += 1) {
     const define = declared[index];
     if (define !== undefined) {
-      defines[define.name] = definition.defines[define.name] ?? define.value;
+      const given = Object.hasOwn(definition.defines, define.name) ? definition.defines[define.name] : undefined;
+      setOwnJsonProperty(defines, define.name, given ?? define.value);
     }
   }
   for (const name of Object.keys(definition.defines)) {
-    if (!(name in defines)) {
+    if (!Object.hasOwn(defines, name)) {
       throw new IgnifxError(
         CoreErrorCode.unknownShaderBinding,
         `${definition.name} declares no define named ${name}.`,

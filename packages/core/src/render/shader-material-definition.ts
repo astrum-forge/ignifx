@@ -1,3 +1,4 @@
+import { setOwnJsonProperty } from "../schema/json.js";
 import type { ShaderAsset } from "./shader-asset.js";
 import type { TextureAsset } from "./texture-asset.js";
 import type { AssetHandle } from "../assets/types.js";
@@ -78,7 +79,7 @@ export function shaderMaterialDefinition(input: ShaderMaterialDefinitionInput): 
   for (const name of Object.keys(declared)) {
     const bound = declared[name];
     if (bound !== undefined) {
-      textures[name] = typeof bound === "string" ? bound : bound.address;
+      setOwnJsonProperty(textures, name, typeof bound === "string" ? bound : bound.address);
     }
   }
   return {
