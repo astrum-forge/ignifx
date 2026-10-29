@@ -1,5 +1,61 @@
 # @ignifx/editor-host
 
+## 0.12.0
+
+### Minor Changes
+
+- 3999551: Fix loading a scene file that lists a component before one its class `requires`: the file's own record is used instead of a second, auto-added instance (or an `IGX-0202` error).
+  
+  `describeRegisteredSchemas` and the editor host's schema descriptions now list each component's `requires` as type ids.
+- 8d7f8ef: Fix prefab instances with two overrides of one identity, which a merge conflict can leave: the first had no effect, and an editor that edited or removed the override reached only one of the two.
+  
+  ### Breaking
+  
+  `validateSceneFile` and the scene loader now refuse an instance whose overrides repeat an identity (the same `path` and `op`, and for an `add` to `<uid>/components` the same added component uid) with `IGX-0608`, and the editor host refuses such a file at `openScene` and such an entry in `createEntity` or `instantiate`. If a scene fails to load with `IGX-0608` naming `overrides/<n>`, keep one of the two overrides it names.
+- 921bc63: Return the build problems of an `applyOps` command, such as an override that names nothing in the prefab, in its result's new optional `warnings`, as `openScene` does; they are still logged as well.
+- 9c2b5a3: The editor host clips each string in a `log`, `hostError` or `hotReloaded` report to the new `HOST_TEXT_MAX_LENGTH` (1 MiB, ending `… [clipped]`) and each list to the new `HOST_LIST_MAX_LENGTH` (4096), so the editor no longer drops an oversized report. The wire stays protocol 0.3.
+- a7f40bb: Describe each component's ancestry in `getSchemas`: the new optional `extends` lists the type ids of the registered classes the component's class derives from, nearest first, so an editor can tell that a subclass of a required component already satisfies `requires`, as the engine does.
+
+### Patch Changes
+
+- 0a851bb: `editorHostPlugin()` now fails a `vite build`, and removes the copies, when the output holds files from the editor-private `.ignifx/` directory (such as a link under `public/` into it), as `ignifx()` already does, so a config without `ignifx()` cannot ship the editor's MCP token.
+- 9b48827: The scene view reports a click whose selection pick fails as a `hostError` instead of an unhandled promise rejection.
+- c0f6775: The scene view reports a component that throws while taking a hot-reloaded default as a `hostError`, and still gives the other components their defaults and rebuilds prefab instances.
+- 12ffc27: Fix a prefab instance in the scene view drifting from the document after an override edit: a component the instance adds now follows a changed script default, and removing an override that equals the prefab's value no longer fails.
+- 863c3ff: The scene view now sends `transformDragging` when a gizmo drag starts and `transformDragged` when every drag ends, even one that ends where it started, so the editor can hold undo until the drag is over.
+- 0dbe07f: Fix a prefab instance member's overridden reference into another instance becoming `null` in the scene view when that other instance is rebuilt (an override edit, an asset reload or a changed default); it now points at the rebuilt entity or component, as it does when the scene opens.
+  
+  A reference that resolves nowhere is no longer reported again each time a reference beside it in the same field is resolved after a rebuild.
+  
+  The `outsideReferences` documentation of `instantiateScene` now says it also resolves a reference to a component an instance's `remove` override deleted.
+- 7de8dda: `openScene` builds a component once when an older editor's `readBack` saved it both as an instance root's own and as an `add` override with the same uid, and warns once with `IGX-0608`, so `readBack` no longer changes after the first rebuild.
+- 234534b: Fix a reference that a prefab instance's override holds in the scene view becoming `null` after an override edit, an asset reload or a changed default; it now resolves as it does when the scene opens.
+  
+  A component added to the root of a one-root prefab instance is no longer built twice when the scene view rebuilds the instance.
+  
+  `instantiateScene` takes `outsideReferences`, which resolves a reference to a uid the file does not declare.
+- fa7049d: The editor host's skill, examples and error hints now name the packaged ignifx editor's origin, `ignifx-editor://app`, instead of a packaged game's `ignifx://app`; a `vite.config.ts` copied from the skill falls back to an origin the editor can frame.
+- 9fe45bb: `readBack` now shows changes a `"run"` system or a `runInEditMode` script made outside an op, including right after `openScene`, instead of the document as it was at the last op.
+- 18a5f55: Fix the editor's scene mirror check failing for a prefab instance whose overrides are not in the serializer's order (a member's prop override set before its transform override), include one equal to the prefab's value, or were sent as `op: "replace"` or with unrounded transform numbers: `readBack` now returns the instance's override list as the document holds it while its members are unchanged.
+- cf1a7e7: A component that an instance's `add` override gives the root of a one-root prefab now follows a default changed by a script's hot reload.
+  
+  `openScene` keeps an instance root's own component when an `add` on another member reuses its uid, and warns with `IGX-0608` that the file uses the uid twice, instead of dropping the component as an older editor's double form.
+- 4089adc: Report the build problems of a scene view op or prefab rebuild, such as an override a hot-reloaded prefab no longer has, as `log` warnings worded as a reopen's, instead of dropping them.
+- 4ba8966: Fix `__proto__` keys in the editor host: a settings `map` entry named `__proto__` now reaches the settings panel instead of being dropped, and an `applyOps` path through `__proto__` resolves only when the document holds that key as data; otherwise it fails with `invalidPath`.
+- Updated dependencies [8ea4101]
+- Updated dependencies [3999551]
+- Updated dependencies [8d7f8ef]
+- Updated dependencies [0dbe07f]
+- Updated dependencies [234534b]
+- Updated dependencies [5dcbff1]
+- Updated dependencies [a71c607]
+- Updated dependencies [1c7878c]
+- Updated dependencies [38ddd7a]
+- Updated dependencies [51efbc6]
+- Updated dependencies [7f5b116]
+  - @ignifx/core@0.12.0
+  - @ignifx/vite-plugin@0.12.0
+
 ## 0.11.0
 
 ### Minor Changes

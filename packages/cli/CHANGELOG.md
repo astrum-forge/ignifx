@@ -1,5 +1,11 @@
 # @ignifx/cli
 
+## 0.12.0
+
+### Patch Changes
+
+- d3740bb: Fix `ignifx import tilemap` dropping an object property named `__proto__`: it is now printed with the object's other properties.
+
 ## 0.11.0
 
 No changes in this release.

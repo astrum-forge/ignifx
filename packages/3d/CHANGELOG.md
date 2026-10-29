@@ -1,5 +1,30 @@
 # @ignifx/3d
 
+## 0.12.0
+
+### Minor Changes
+
+- 0abb0bb: In an edit-mode app a `MeshRenderer` listed as a level by two `LodGroup`s belongs to the first: the other group leaves it alone and warns once with the new `IGX-1217` (`ThreeDErrorCode.sharedLodLevel`), so removing or disabling one group no longer shows a level the other still hides.
+
+### Patch Changes
+
+- 5dcbff1: Add `MeshRenderer.displayHidden`, which hides a mesh from drawing and picking without changing `enabled`, `pickable`, or anything a scene file saves.
+  
+  In an edit-mode app a `LodGroup` shows one level, chosen by the editor camera's distance, instead of switching the saved `MeshRenderer.enabled`, so moving an editor's camera no longer changes the scene file and a removed or disabled group shows every level again.
+- Updated dependencies [8ea4101]
+- Updated dependencies [3999551]
+- Updated dependencies [8d7f8ef]
+- Updated dependencies [0dbe07f]
+- Updated dependencies [234534b]
+- Updated dependencies [5dcbff1]
+- Updated dependencies [a71c607]
+- Updated dependencies [38ddd7a]
+- Updated dependencies [51efbc6]
+- Updated dependencies [7f5b116]
+  - @ignifx/core@0.12.0
+  - @ignifx/input@0.12.0
+  - @ignifx/physics@0.12.0
+
 ## 0.11.0
 
 ### Minor Changes
