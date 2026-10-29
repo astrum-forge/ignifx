@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { ApplyOpFailureCode, SceneNotification } from "../src/protocol/index.js";
-import { CRATE_PREFAB, PAIR_PREFAB, startLiveHost } from "./support/scene-project.js";
+import { CRATE_PREFAB, CrateBody, Health, PAIR_PREFAB, startLiveHost } from "./support/scene-project.js";
 import type { Received } from "./support/editor.js";
 import type { LiveHost, Wire } from "./support/scene-project.js";
 import type { SceneOp } from "../src/protocol/index.js";
@@ -405,5 +405,31 @@ describe("applyOps on a live world", () => {
     expect((await call(peer, "select", { entities: ["B", "C"] }))["result"]).toEqual({ entities: ["B", "C"] });
     await apply(peer, [{ op: "destroyEntity", entity: "C" }]);
     expect((await call(peer, "select", { entities: ["B", "C"] }))["result"]).toEqual({ entities: ["B"] });
+  });
+});
+
+describe("readBack on a live world", () => {
+  it("shows a change made outside an op, after an earlier readBack (E40)", async () => {
+    const { app, peer } = await opened();
+    expect((await readAll(peer)).byUid.get("A")?.components?.[0]?.props).toEqual({ max: 10, regenPerSecond: 0 });
+    // What a "run" system or a `runInEditMode` script does between two requests.
+    const health = app.world.getEntity("A")?.getComponent(Health) ?? null;
+    if (health === null) {
+      throw new Error("A has no game/Health.");
+    }
+    health.max = 42;
+    expect((await readAll(peer)).byUid.get("A")?.components?.[0]?.props).toEqual({ max: 42, regenPerSecond: 0 });
+  });
+
+  it("shows a change made to an instance between openScene and the first request after it (B4b)", async () => {
+    const { app, peer } = await opened();
+    const body = app.world.getEntity("P")?.getComponent(CrateBody) ?? null;
+    if (body === null) {
+      throw new Error("The crate instance has no game/CrateBody.");
+    }
+    body.mass = 3;
+    expect((await readAll(peer)).byUid.get("P")?.instance?.overrides).toEqual([
+      { path: `${CRATE_PREFAB.entities[0]?.uid ?? ""}/components/01M4XQ7K3N8V2D5R0B6G1HT9WT/props/mass`, value: 3 },
+    ]);
   });
 });
