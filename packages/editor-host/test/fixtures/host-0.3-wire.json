@@ -686,7 +686,13 @@
       "id": 5,
       "result": {
         "applied": 13,
-        "failures": []
+        "failures": [],
+        "warnings": [
+          {
+            "code": "IGX-0604",
+            "message": "Crate (2): prefabs/crate.prefab.json changed since the instance was saved (hash mismatch); its overrides were applied to the current prefab."
+          }
+        ]
       }
     },
     "applyOpsPartial": {
@@ -729,7 +735,8 @@
             "message": "The component type \"game/Inventory\" is not registered; register it with app.registerComponents or check its typeId.",
             "diagnostic": "IGX-0307"
           }
-        ]
+        ],
+        "warnings": []
       }
     },
     "readBack": {

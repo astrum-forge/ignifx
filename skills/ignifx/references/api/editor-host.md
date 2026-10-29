@@ -179,6 +179,17 @@ How many ops were applied.
 
 The ops that were not, in order.
 
+##### warnings?
+
+> `readonly` `optional` **warnings?**: readonly [`SceneIssue`](#sceneissue)[]
+
+Every recoverable problem the engine reported while the host applied these ops, in order: what
+a subtree an op or an instance rebuild built reported (an override that names nothing in the
+prefab, a reference that resolves nowhere in the document), in the form of
+[OpenSceneResult](#opensceneresult)'s `warnings`. The host also logs each one as a `log` warning; this list
+is the one tied to the command. Empty when there were none; absent from a host from before it,
+which an editor treats as unknown, not as none.
+
 ***
 
 ### AssetReloadedParams
@@ -4408,7 +4419,8 @@ The received `result`.
 
 `value is ApplyOpsResult`
 
-True for a count of applied ops and a list of failures with known codes.
+True for a count of applied ops, a list of failures with known codes, and an optional
+list of issues.
 
 ***
 

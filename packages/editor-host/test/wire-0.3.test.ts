@@ -287,6 +287,15 @@ describe("the editor's 0.3 wire fixture, through the host's guards", () => {
     expect(isPickResult({ ...answer, plane: [1, 2, Number.NaN] })).toBe(false);
   });
 
+  it("accepts an applyOps answer with or without its warnings, and refuses malformed ones", () => {
+    const result = member(wire("applyOpsResponse"), "result");
+    expect(isApplyOpsResult({ ...result, warnings: undefined })).toBe(true);
+    expect(isApplyOpsResult({ ...result, warnings: [] })).toBe(true);
+    expect(isApplyOpsResult({ ...result, warnings: [{ code: "IGX-0604" }] })).toBe(false);
+    expect(isApplyOpsResult({ ...result, warnings: "IGX-0604" })).toBe(false);
+    expect(isApplyOpsResult({ ...result, warnings: null })).toBe(false);
+  });
+
   it("accepts an open answer and sceneOpened with or without a view mode, and refuses an unknown one", () => {
     const result = member(wire("openSceneResponse"), "result");
     const opened = member(wire("sceneOpened2d"), "params");
@@ -507,7 +516,15 @@ describe("the editor's 0.3 wire fixture, through a live headless host", () => {
       params: { ...member(sceneOpened, "params"), warnings: result["warnings"] },
     });
 
-    expectWire(await peer.request(wire("applyOps")), wire("applyOpsResponse"));
+    // The instantiated crate carries the same made-up hash: the same IGX-0604, in the same words,
+    // in the answer's warnings (and as a log line).
+    const applied = await peer.request(wire("applyOps"));
+    const appliedResponse = wire("applyOpsResponse");
+    const appliedResult = member(appliedResponse, "result");
+    const appliedWarnings = member(applied, "result")["warnings"];
+    expect(appliedWarnings).toEqual(warnings);
+    expect([appliedResult["warnings"]].flat()).toMatchObject([{ code: "IGX-0604" }]);
+    expectWire(applied, { ...appliedResponse, result: { ...appliedResult, warnings: appliedWarnings } });
 
     const read = await peer.request(wire("readBack"));
     const expected = member(wire("readBackResponse"), "result");

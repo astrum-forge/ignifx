@@ -93,6 +93,7 @@ describe("an op path through __proto__", () => {
     expect(await apply(peer, [{ op: "setSceneSetting", path: ["__proto__", "density"], value: 2 }])).toEqual({
       applied: 1,
       failures: [],
+      warnings: [],
     });
     const read = await settings(peer);
     expect(Object.getOwnPropertyDescriptor(read, "__proto__")?.value).toEqual({ density: 2 });

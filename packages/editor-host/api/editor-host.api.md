@@ -72,6 +72,7 @@ export type ApplyOpsResponse = RpcSuccessResponse<ApplyOpsResult>;
 export interface ApplyOpsResult {
     readonly applied: number;
     readonly failures: readonly ApplyOpFailure[];
+    readonly warnings?: readonly SceneIssue[];
 }
 
 // @public

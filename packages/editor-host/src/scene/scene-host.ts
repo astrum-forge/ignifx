@@ -500,7 +500,7 @@ export class SceneHost {
    * `applyOps`: one command's ops, in order.
    *
    * @param params - `{ ops, commandName, commandId }`.
-   * @returns How many applied, and the failures.
+   * @returns How many applied, the failures, and the build problems.
    */
   async #applyOps(params: unknown): Promise<unknown> {
     const mirror = this.#requireMirror(SceneMethod.applyOps);

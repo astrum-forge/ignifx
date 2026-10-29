@@ -148,7 +148,7 @@ describe("duplicate override identities, headless", () => {
       entities: readonly { instance?: { overrides?: unknown } }[];
     };
 
-    expect(answer).toEqual({ applied: 2, failures: [] });
+    expect(answer).toEqual({ applied: 2, failures: [], warnings: [] });
     expect(read.entities[0]?.instance?.overrides).toEqual([{ ...SPARE_7, value: 9 }]);
   });
 
