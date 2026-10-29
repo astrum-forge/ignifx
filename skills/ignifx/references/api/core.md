@@ -2000,6 +2000,11 @@ The component class.
 
 The cached class info.
 
+###### Throws
+
+IgnifxError with code `IGX-0209` when the class's `static requires` graph contains a
+cycle.
+
 ##### get()
 
 > **get**(`typeId`): [`ComponentType`](#componenttype-1)\<[`Component`](#abstract-component)\> \| `null`
@@ -2111,7 +2116,8 @@ What the registry worked out about the class.
 ###### Throws
 
 IgnifxError with code `IGX-0203` when the id is already registered by another class, or
-when the id is not `<namespace>/<Name>`.
+when the id is not `<namespace>/<Name>`, and `IGX-0209` when the class's `static requires`
+graph contains a cycle.
 
 ##### registerAll()
 
@@ -3046,7 +3052,8 @@ inside a callback (`docs/architecture/01-lifecycle-and-time.md` §4). Everything
 
 IgnifxError with code `IGX-0202` when the class does not allow multiple instances and
 the entity already has one, `IGX-0605`/`IGX-0606`/`IGX-0607` when `init` does not match the
-schema, and `IGX-0101` when the entity has been destroyed.
+schema, `IGX-0209` when the class's `static requires` graph contains a cycle, and `IGX-0101`
+when the entity has been destroyed.
 
 ##### destroy()
 
@@ -31225,6 +31232,12 @@ A rendering feature opt-in was requested after the render scene had been registe
 > `readonly` **requiredComponentMissing**: `"IGX-0201"` = `"IGX-0201"`
 
 A component declared through `requires` is missing from the entity.
+
+##### requiresCycle
+
+> `readonly` **requiresCycle**: `"IGX-0209"` = `"IGX-0209"`
+
+A component class's `static requires` reaches the class itself, directly or through others.
 
 ##### sceneFileInvalid
 

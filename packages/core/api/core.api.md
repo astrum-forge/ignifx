@@ -605,6 +605,7 @@ export const CoreErrorCode: {
     readonly componentNotAttached: "IGX-0206";
     readonly hotReloadSchemaChanged: "IGX-0207";
     readonly hotReloadInsideCallback: "IGX-0208";
+    readonly requiresCycle: "IGX-0209";
     readonly sceneNotLoaded: "IGX-0301";
     readonly sceneInstanceCycle: "IGX-0302";
     readonly unknownLayer: "IGX-0303";

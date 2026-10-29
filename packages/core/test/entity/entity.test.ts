@@ -288,6 +288,35 @@ describe("components", () => {
     harness.dispose();
   });
 
+  it("throws IGX-0209 for a class that requires itself instead of overflowing the stack", () => {
+    const harness = createTestWorld();
+    const entity = harness.world.createEntity("entity");
+    class Narcissus extends Component {
+      static requires: readonly (typeof Component)[] = [];
+    }
+    Narcissus.requires = [Narcissus];
+    expect(() => entity.addComponent(Narcissus)).toThrow(/IGX-0209/u);
+    expect(entity.getComponent(Narcissus)).toBeNull();
+    harness.dispose();
+  });
+
+  it("throws IGX-0209 for a requires cycle between two classes, from either end", () => {
+    const harness = createTestWorld();
+    const entity = harness.world.createEntity("entity");
+    class Ping extends Component {
+      static requires: readonly (typeof Component)[] = [];
+    }
+    class Pong extends Component {
+      static requires: readonly (typeof Component)[] = [Ping];
+    }
+    Ping.requires = [Pong];
+    expect(() => entity.addComponent(Ping)).toThrow(/IGX-0209.*Ping -> Pong -> Ping/u);
+    expect(() => entity.addComponent(Pong)).toThrow(/IGX-0209.*Pong -> Ping -> Pong/u);
+    expect(entity.getComponent(Ping)).toBeNull();
+    expect(entity.getComponent(Pong)).toBeNull();
+    harness.dispose();
+  });
+
   it("throws IGX-0202 for a second instance of a single-instance class", () => {
     const harness = createTestWorld();
     const entity = harness.world.createEntity("entity");

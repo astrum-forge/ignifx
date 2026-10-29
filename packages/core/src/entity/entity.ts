@@ -608,7 +608,8 @@ export class Entity {
    * @returns The attached component.
    * @throws IgnifxError with code `IGX-0202` when the class does not allow multiple instances and
    * the entity already has one, `IGX-0605`/`IGX-0606`/`IGX-0607` when `init` does not match the
-   * schema, and `IGX-0101` when the entity has been destroyed.
+   * schema, `IGX-0209` when the class's `static requires` graph contains a cycle, and `IGX-0101`
+   * when the entity has been destroyed.
    */
   addComponent<T extends Component>(type: ConcreteComponentType<T>, init?: ComponentInit<T>): T {
     const internals = this.#mutable("addComponent");

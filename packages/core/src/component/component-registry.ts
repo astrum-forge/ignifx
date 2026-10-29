@@ -127,7 +127,8 @@ export class ComponentRegistry {
    * an id is kept, and {@link ComponentRegistry.registrarOf} reports it.
    * @returns What the registry worked out about the class.
    * @throws IgnifxError with code `IGX-0203` when the id is already registered by another class, or
-   * when the id is not `<namespace>/<Name>`.
+   * when the id is not `<namespace>/<Name>`, and `IGX-0209` when the class's `static requires`
+   * graph contains a cycle.
    */
   register(type: ConcreteComponentType, typeId?: string, registrar?: string): ComponentClassInfo {
     const id = typeId ?? readStatics(type).typeId ?? null;
@@ -146,10 +147,13 @@ export class ComponentRegistry {
           { context: { typeId: id, owner: existing.prototype.constructor.name } },
         );
       }
+      // Described before the id is bound, so a class refused here (`IGX-0209`) leaves no entry.
+      const info = this.describe(type);
       this.#byTypeId.set(id, type);
       if (registrar !== undefined && !this.#registrars.has(id)) {
         this.#registrars.set(id, registrar);
       }
+      return info;
     }
     return this.describe(type);
   }
@@ -230,6 +234,8 @@ export class ComponentRegistry {
    *
    * @param type - The component class.
    * @returns The cached class info.
+   * @throws IgnifxError with code `IGX-0209` when the class's `static requires` graph contains a
+   * cycle.
    */
   describe(type: ComponentType): ComponentClassInfo {
     const cached = this.#info.get(type);
@@ -332,6 +338,7 @@ export class ComponentRegistry {
    */
   #build(type: ComponentType, inheritedClassIndex: number | null = null): ComponentClassInfo {
     const statics = readStatics(type);
+    assertNoRequiresCycle(type);
     const ancestors = collectAncestors(type);
     const schema = statics.schema ?? null;
     const isScript = ancestors.includes(Script);
@@ -353,6 +360,47 @@ export class ComponentRegistry {
       classIndex,
     };
   }
+}
+
+/**
+ * Refuses a class whose `static requires` graph contains a cycle. `addComponent` adds each missing
+ * required class before the requiring one, so a cycle — a self-require, or A requiring B requiring
+ * A — would otherwise recurse until the stack overflows on the first `addComponent`.
+ *
+ * @param type - The class being described.
+ * @throws IgnifxError with code `IGX-0209` when a cycle is reachable from the class.
+ */
+function assertNoRequiresCycle(type: ComponentType): void {
+  const finished = new Set<ComponentType>();
+  const path: ComponentType[] = [];
+  const visit = (current: ComponentType): void => {
+    const at = path.indexOf(current);
+    if (at >= 0) {
+      const cycle = [...path.slice(at), current].map((entry) => entry.prototype.constructor.name).join(" -> ");
+      throw new IgnifxError(
+        CoreErrorCode.requiresCycle,
+        `${type.prototype.constructor.name} has a static requires cycle: ${cycle}.`,
+        {
+          context: { component: type.prototype.constructor.name, cycle },
+          hint: "Remove one of the classes from the other's `static requires`; requires must form a tree.",
+        },
+      );
+    }
+    if (finished.has(current)) {
+      return;
+    }
+    const requires = readStatics(current).requires ?? EMPTY_TYPES;
+    path.push(current);
+    for (let index = 0; index < requires.length; index += 1) {
+      const required = requires[index];
+      if (required !== undefined) {
+        visit(required);
+      }
+    }
+    path.pop();
+    finished.add(current);
+  };
+  visit(type);
 }
 
 /** Shared empty lists so the common case allocates nothing. */
