@@ -142,11 +142,12 @@ function displayValue(field: FieldDefinition<unknown>, value: unknown): JsonValu
       return shown;
     }
     case "map": {
-      const shown: Record<string, JsonValue> = {};
-      for (const key of Object.keys(value).toSorted()) {
-        shown[key] = displayValue(spec.value, Reflect.get(value, key));
-      }
-      return shown;
+      // `fromEntries` defines own properties, so an entry named `__proto__` is shown, not lost.
+      return Object.fromEntries(
+        Object.keys(value)
+          .toSorted()
+          .map((key): [string, JsonValue] => [key, displayValue(spec.value, Reflect.get(value, key))]),
+      );
     }
     case "f32":
     case "f64":

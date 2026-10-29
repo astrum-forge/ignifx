@@ -332,6 +332,12 @@ describe("the inspector's field plumbing", () => {
     expect(encodeForDisplay(array(vec3()), [{ x: 1, y: 2.0000004, z: -0 }])).toBe("[[1,2,0]]");
   });
 
+  it("shows a map entry named __proto__ like any other", () => {
+    // A scene file's map keeps a `__proto__` key as an own entry, as `JSON.parse` does.
+    const value: unknown = JSON.parse('{ "__proto__": { "address": "models/crate.material.json" }, "a": null }');
+    expect(encodeForDisplay(map(asset(ProbeAsset)), value)).toBe('{"__proto__":"models/crate.material.json","a":null}');
+  });
+
   it("drops a hidden field and leaves a tooltip on the row", async () => {
     const h = await createOverlayHarness();
     const entity = h.app.world.createEntity("Subject");
