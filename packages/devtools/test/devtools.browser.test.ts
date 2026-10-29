@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { DEVTOOLS_CLASS_NAMES, DEVTOOLS_STYLE_ELEMENT_ID } from "../src/dom/styles.js";
 import { devtools } from "../src/extension.js";
 import { DEVTOOLS_UI_LAYER } from "../src/overlay/overlay.js";
-import type { App, Entity, Extension } from "@ignifx/core";
+import type { App, Entity, Extension, RenderPick } from "@ignifx/core";
 
 /**
  * The Chromium half of the suite (coding standards §10).
@@ -227,7 +227,13 @@ describe("the devtools overlay in Chromium", () => {
     // The pick reads the GPU back, which takes as many frames as the machine makes it take (four on
     // a quiet desktop; more on CI's SwiftShader), so the test waits for the pick itself rather than
     // for a frame count.
-    const picks = vi.spyOn(h.app.renderer, "pickAsync");
+    const picks: Promise<RenderPick | null>[] = [];
+    const pickAsync = h.app.renderer.pickAsync.bind(h.app.renderer);
+    vi.spyOn(h.app.renderer, "pickAsync").mockImplementation((x, y, options) => {
+      const pending = pickAsync(x, y, options);
+      picks.push(pending);
+      return pending;
+    });
     const rect = h.canvas.getBoundingClientRect();
     h.canvas.dispatchEvent(
       new MouseEvent("click", {
@@ -236,8 +242,8 @@ describe("the devtools overlay in Chromium", () => {
         clientY: rect.top + rect.height / 2,
       }),
     );
-    expect(picks).toHaveBeenCalledTimes(1);
-    const hit = await picks.mock.results[0]?.value;
+    expect(picks).toHaveLength(1);
+    const hit = await picks[0];
     expect(hit?.entity).toBe(cube);
 
     expect(h.app.devtools.selected).toBe(cube);
