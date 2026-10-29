@@ -73,12 +73,14 @@ async function loadRig(
   await running.advance(SETTLE_FRAMES);
   await modelHandle.promise;
   await animatorHandle.promise;
-  await running.advance(SETTLE_FRAMES);
+  // The model's rebuild runs between frames for as long as the machine takes: wait for it, not for
+  // a frame count, or the first capture can show the renderables from before it landed.
+  await running.settle();
   return { running, model, animator };
 }
 
 /**
- * Samples a pose and captures the frame that shows it.
+ * Samples a pose and captures the frame that shows it, once the frame has stopped changing.
  *
  * @param running - The harness.
  * @param pose - The call that samples.
@@ -87,7 +89,7 @@ async function loadRig(
 async function sampled(running: ThreeDBrowserApp, pose: () => boolean): Promise<Capture> {
   expect(pose()).toBe(true);
   await running.advance(2);
-  return running.capture();
+  return running.stableCapture();
 }
 
 describe("Animator.sample on a real device", () => {
