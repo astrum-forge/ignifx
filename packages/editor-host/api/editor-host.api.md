@@ -1008,6 +1008,7 @@ export interface SchemaDescription {
     readonly allowMultiple?: boolean;
     readonly builtIn?: boolean;
     readonly description?: string;
+    readonly extends?: readonly string[];
     readonly fields: Readonly<Record<string, SchemaFieldDescription>>;
     readonly format: string;
     readonly package?: string;

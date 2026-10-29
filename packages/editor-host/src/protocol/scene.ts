@@ -703,6 +703,16 @@ export interface SchemaDescription {
    */
   readonly requires?: readonly (string | null)[];
   /**
+   * The type ids of the registered components the class extends, nearest first: each ancestor class
+   * registered under its own `static typeId`. The class itself and its unregistered ancestors (an
+   * abstract base, `Component`, `Script`) are left out. The engine counts a component whose class
+   * extends a required one as present, so an editor treats a `requires` entry as present on an
+   * entity when one of its components has that type id or lists it here. Empty when the class
+   * extends no registered component; absent on file-format entries and from a host from before
+   * engine ask E44, which an editor treats as unknown, not as none.
+   */
+  readonly extends?: readonly string[];
+  /**
    * The JSON Schema of the component's `props` (the engine's `toJsonSchema(schema)`), which adds
    * each field's `minimum`, `maximum`, `enum` and nested shapes; absent for file-format entries.
    */
@@ -1571,7 +1581,7 @@ function isSchemaFieldDescription(value: unknown): value is SchemaFieldDescripti
  *
  * @param value - The value to test.
  * @returns True for `{ title, format, description?, fields, allowMultiple?, package?, builtIn?,
- * requires?, propsSchema? }`, ignoring members it does not declare.
+ * requires?, extends?, propsSchema? }`, ignoring members it does not declare.
  */
 function isSchemaDescription(value: unknown): value is SchemaDescription {
   return (
@@ -1585,6 +1595,7 @@ function isSchemaDescription(value: unknown): value is SchemaDescription {
     optionalField(value, "package", isString) &&
     optionalField(value, "builtIn", isBoolean) &&
     optionalField(value, "requires", (ids) => Array.isArray(ids) && ids.every((id) => isStringOrNull(id))) &&
+    optionalField(value, "extends", (ids) => isArrayOf(ids, isString)) &&
     optionalField(value, "propsSchema", isJsonObject)
   );
 }

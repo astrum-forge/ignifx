@@ -288,6 +288,18 @@ describe("components", () => {
     harness.dispose();
   });
 
+  it("counts a subclass of a required class as present, adding nothing", () => {
+    // The editor mirrors this rule from the host's schema `extends` (engine ask E44).
+    class ArmoredHealth extends Health {}
+    const harness = createTestWorld();
+    const entity = harness.world.createEntity("entity");
+    const armored = entity.addComponent(ArmoredHealth);
+    const needy = entity.addComponent(NeedsHealth);
+    expect(entity.getComponents(Health)).toEqual([armored]);
+    expect(needy.requireComponent(Health)).toBe(armored);
+    harness.dispose();
+  });
+
   it("throws IGX-0209 for a class that requires itself instead of overflowing the stack", () => {
     const harness = createTestWorld();
     const entity = harness.world.createEntity("entity");
