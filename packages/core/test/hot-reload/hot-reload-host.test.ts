@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "../../src/app/app.js";
 import { CoreErrorCode } from "../../src/errors/error-codes.js";
 import { isIgnifxError } from "../../src/errors/ignifx-error.js";
+import { f32 } from "../../src/schema/field-kinds.js";
 import { Script } from "../../src/script/script.js";
 import { createManualClock } from "../../src/time/clock.js";
 import { createTestApp } from "../support/app-harness.js";
@@ -145,6 +146,29 @@ describe("app.hotReload", () => {
     expect(Object.getPrototypeOf(mover)).toBe(MoverV1.prototype);
     harness.step(1 / 60);
     expect(mover.hits).toBe(2);
+  });
+
+  it("collects a replacement refused with IGX-0607 for an inherited field name and keeps the old class", () => {
+    const errors: ErrorReport[] = [];
+    harness.app.onError.connect((report) => {
+      errors.push(report);
+    });
+    const mover = harness.world.createEntity("Player").addComponent(MoverV1);
+    harness.step(1 / 60);
+    // A hand-written schema skips `defineSchema`, so the registry's own check is what refuses it.
+    class InheritedName extends Script {
+      static typeId = "test/Mover";
+      static schema = { ["toString"]: f32(0) };
+    }
+
+    const report = harness.app.hotReload.apply([{ types: [InheritedName, HookedV2] }]);
+
+    expect(report.errors).toHaveLength(1);
+    expect(errors).toHaveLength(1);
+    expect(isIgnifxError(report.errors[0]) ? report.errors[0].code : null).toBe(CoreErrorCode.schemaUnknownField);
+    expect(report.typeIds).toEqual(["test/Hooked"]);
+    expect(harness.world.registry.get("test/Mover")).toBe(MoverV1);
+    expect(Object.getPrototypeOf(mover)).toBe(MoverV1.prototype);
   });
 
   it("defaults reloadScenes to false and takes it from createApp", async () => {

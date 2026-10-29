@@ -55,13 +55,26 @@ const FIELD_NAME_PATTERN = /^[A-Za-z][A-Za-z0-9]*$/u;
  * Refusing the name once, where the schema is declared, keeps every one of those sites correct.
  * `prototype` is not inherited by plain objects, so it stays a legal name.
  *
+ * A literal `{ __proto__: f32(1) }` (not computed) never makes a key at all: it sets the object's
+ * prototype, so the field would vanish without a word. The fields object must therefore be a plain
+ * object (its prototype `Object.prototype`, or `null`).
+ *
  * @param fields - The field definitions being declared.
  * @param where - What declares them, for the message: `"schema"` or `"record"`.
- * @throws IgnifxError with code `IGX-0607` when a name is an `Object.prototype` member.
+ * @throws IgnifxError with code `IGX-0607` when a name is an `Object.prototype` member, or the
+ * fields object is not a plain object.
  *
  * @internal
  */
 export function assertNoInheritedFieldNames(fields: Schema, where: string): void {
+  const prototype: unknown = Object.getPrototypeOf(fields);
+  if (prototype !== Object.prototype && prototype !== null) {
+    throwSchemaError(
+      SchemaIssueCode.unknownField,
+      `${where} fields are not a plain object, so a field is hidden in its prototype; a literal ` +
+        `"__proto__: …" key sets the prototype instead of declaring a field. Rename the field.`,
+    );
+  }
   for (const name of Object.keys(fields)) {
     if (Object.hasOwn(Object.prototype, name)) {
       throwSchemaError(
@@ -113,7 +126,8 @@ function fieldsView<S extends Schema>(value: Record<string, unknown>): FieldsOf<
  * @returns The same object, with its precise type preserved.
  * @throws IgnifxError with code `IGX-0607` when a field name is not identifier-like, starts with
  * `_`, collides with a `Component`/`Script` member such as `enabled` or `update`, or names an
- * `Object.prototype` member such as `constructor` or `toString`.
+ * `Object.prototype` member such as `constructor` or `toString`, or when `fields` is not a plain
+ * object (a literal `__proto__: …` key sets its prototype rather than declaring a field).
  *
  * @example
  * ```ts

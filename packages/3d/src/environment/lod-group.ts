@@ -10,6 +10,7 @@ import {
   Signal,
 } from "@ignifx/core";
 import { mainCamera } from "../camera/main-camera.js";
+import { THREE_D_ERROR_MESSAGES, ThreeDErrorCode } from "../errors.js";
 import type { ComponentHooks, Schema, System, SystemContext } from "@ignifx/core";
 
 /**
@@ -29,6 +30,16 @@ import type { ComponentHooks, Schema, System, SystemContext } from "@ignifx/core
  * saved. Every level keeps its authored `enabled`, a level the group shows still draws only if it
  * is enabled, and a group that is removed or disabled shows every level again.
  *
+ * ## One group per renderer
+ *
+ * `displayHidden` is one flag, not a count, so a renderer has one owner: the `LodGroup` that lists
+ * it as a level. Nothing else in the engine writes it. If two groups list the same renderer, the
+ * first to claim it keeps it, and the other warns once with `IGX-1217` and leaves that renderer
+ * alone, so the two never undo each other's hides. When the owner lets go (it is removed, disabled,
+ * or drops the level), the other group claims the renderer on its next frame. A per-owner count
+ * would let both groups hide it, but no second writer exists, and two groups switching one renderer
+ * is a scene mistake in a game too, where both write its `enabled`.
+ *
  * ## Hysteresis
  *
  * A camera sitting exactly on a threshold would otherwise flip a renderer on and off every frame,
@@ -43,6 +54,18 @@ import type { ComponentHooks, Schema, System, SystemContext } from "@ignifx/core
  * @public
  */
 export const LOD_CULLED = -1;
+
+/** Which group owns each renderer it switches for display; created on first use, not at import. */
+let displayOwners: WeakMap<MeshRenderer, LodGroup> | null = null;
+
+/**
+ * The display-owner table, created on first use.
+ *
+ * @returns The table.
+ */
+function owners(): WeakMap<MeshRenderer, LodGroup> {
+  return (displayOwners ??= new WeakMap<MeshRenderer, LodGroup>());
+}
 
 /**
  * One level of detail.
@@ -109,8 +132,11 @@ export class LodGroup extends Component implements ComponentHooks {
 
   #level = LOD_CULLED;
 
-  /** The renderers this group hid for display in an edit-mode app, so it can show them again. */
-  readonly #hidden: MeshRenderer[] = [];
+  /** The renderers this group owns for display in an edit-mode app, so it can show them again. */
+  readonly #owned: MeshRenderer[] = [];
+
+  /** Level renderers another group owns, so this one can claim them once that group lets go. */
+  readonly #contested: MeshRenderer[] = [];
 
   /** Each level's renderer when the display was last applied, to notice an edited level list. */
   readonly #displayed: (MeshRenderer | null)[] = [];
@@ -198,40 +224,97 @@ export class LodGroup extends Component implements ComponentHooks {
    * @internal
    */
   releaseDisplay(): void {
-    const hidden = this.#hidden;
-    for (let index = 0; index < hidden.length; index += 1) {
-      const renderer = hidden[index];
-      if (renderer !== undefined && !renderer.isDestroyed) {
+    const owned = this.#owned;
+    const table = owners();
+    for (let index = 0; index < owned.length; index += 1) {
+      const renderer = owned[index];
+      // Another group may have claimed it since (this group's owner check treats a destroyed group
+      // as free); its hide is not this group's to clear.
+      const owner = renderer === undefined ? undefined : table.get(renderer);
+      if (renderer === undefined || (owner !== undefined && owner !== this)) {
+        continue;
+      }
+      table.delete(renderer);
+      if (!renderer.isDestroyed) {
         renderer.displayHidden = false;
       }
     }
-    hidden.length = 0;
+    owned.length = 0;
+    this.#contested.length = 0;
     this.#displayed.length = 0;
     this.#shown = null;
   }
 
   /**
    * Hides for display every level's renderer but the one shown, and shows again any it hid before
-   * that is no longer a level, so an edited level list leaves nothing hidden behind. It writes only
-   * when the shown renderer or the level list changed since the last call.
+   * that is no longer a level, so an edited level list leaves nothing hidden behind. A renderer
+   * another group owns is left alone (`IGX-1217`). It writes only when the shown renderer or the
+   * level list changed since the last call, or a renderer another group owned has been let go.
    *
    * @param shown - The chosen level's renderer, or `null` when the group is culled.
    */
   #display(shown: MeshRenderer | null): void {
-    if (shown === this.#shown && this.#displayed.length > 0 && this.#isDisplayed()) {
+    if (shown === this.#shown && this.#displayed.length > 0 && this.#isDisplayed() && this.#isStillContested()) {
       return;
     }
     this.releaseDisplay();
     this.#shown = shown;
+    const table = owners();
     const levels = this.levels;
     for (let index = 0; index < levels.length; index += 1) {
       const renderer = levels[index]?.renderer ?? null;
       this.#displayed.push(renderer);
-      if (renderer !== null && renderer !== shown && !renderer.isDestroyed) {
+      if (renderer === null || renderer.isDestroyed) {
+        continue;
+      }
+      const owner = table.get(renderer);
+      if (owner !== undefined && owner !== this && !owner.isDestroyed) {
+        this.#contested.push(renderer);
+        this.#warnShared(renderer, owner);
+        continue;
+      }
+      if (owner !== this) {
+        table.set(renderer, this);
+        this.#owned.push(renderer);
+      }
+      if (renderer !== shown) {
         renderer.displayHidden = true;
-        this.#hidden.push(renderer);
       }
     }
+  }
+
+  /**
+   * Whether every level renderer another group owned at the last display is still owned by one.
+   *
+   * @returns `false` once one of them has been let go, so this group can claim it.
+   */
+  #isStillContested(): boolean {
+    const contested = this.#contested;
+    const table = owners();
+    for (let index = 0; index < contested.length; index += 1) {
+      const renderer = contested[index];
+      const owner = renderer === undefined ? undefined : table.get(renderer);
+      if (owner === undefined || owner.isDestroyed) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Warns, once per pair, that a level renderer already belongs to another group.
+   *
+   * @param renderer - The shared renderer.
+   * @param owner - The group that owns it.
+   */
+  #warnShared(renderer: MeshRenderer, owner: LodGroup): void {
+    const code = ThreeDErrorCode.sharedLodLevel;
+    // Component uids, not entity uids: an entity may carry several MeshRenderers.
+    const message = (THREE_D_ERROR_MESSAGES[code] ?? "")
+      .replace("{renderer}", `The MeshRenderer on ${renderer.entity.name}`)
+      .replace("{owner}", owner.entity.name)
+      .replaceAll("{group}", this.entity.name);
+    this.app.log.warnOnce(`${code}:${this.uid}:${renderer.uid}`, `${code}: ${message}`);
   }
 
   /**

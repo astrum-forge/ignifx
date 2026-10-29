@@ -1,19 +1,62 @@
-import { Camera, MeshRenderer, Quat } from "@ignifx/core";
+import { Camera, MeshRenderer, Quat, serializeScene } from "@ignifx/core";
 import { describe, expect, it, vi } from "vitest";
 import { AnimatorAsset } from "../src/animator/animator-asset.js";
 import { Animator } from "../src/animator/animator.js";
 import { ANIMATOR_ASSET_TYPE } from "../src/animator/definition.js";
 import { Billboard } from "../src/environment/billboard.js";
 import { LOD_CULLED, LodGroup } from "../src/environment/lod-group.js";
+import { ThreeDErrorCode } from "../src/errors.js";
 import { NavMeshSurface } from "../src/navigation/nav-mesh-surface.js";
 import { heroAnimator } from "./support/animator-fixture.js";
 import { floorGeometry } from "./support/geometry.js";
 import { createThreeDApp } from "./support/harness.js";
+import type { ThreeDAppHarness } from "./support/harness.js";
 
 /**
  * `@ignifx/3d` in an edit-mode app (ADR-0028): animators and billboards stand still, level of
  * detail switches for display only, and navigation neither bakes nor steps.
  */
+
+/**
+ * Two groups at the origin, each showing its own near level and hiding `shared`, its far level.
+ *
+ * @param harness - The edit-mode app.
+ * @returns The two groups and the renderer both list.
+ */
+function twoGroups(harness: ThreeDAppHarness): {
+  readonly first: LodGroup;
+  readonly second: LodGroup;
+  readonly shared: MeshRenderer;
+} {
+  harness.world.createEntity("EditorCamera").addComponent(Camera, { priority: 1_000_000 });
+  const shared = harness.world.createEntity("Shared").addComponent(MeshRenderer);
+  const groupOf = (name: string): LodGroup => {
+    const entity = harness.world.createEntity(name);
+    return entity.addComponent(LodGroup, {
+      levels: [
+        { distance: 10, renderer: entity.addComponent(MeshRenderer) },
+        { distance: 30, renderer: shared },
+      ],
+      hysteresis: 0,
+    });
+  };
+  const first = groupOf("First");
+  const second = groupOf("Second");
+  return { first, second, shared };
+}
+
+/**
+ * The `IGX-1217` warnings logged so far.
+ *
+ * @param harness - The app.
+ * @returns Their messages.
+ */
+function sharedWarnings(harness: ThreeDAppHarness): string[] {
+  return harness.sink
+    .toArray()
+    .filter((record) => record.message.startsWith(ThreeDErrorCode.sharedLodLevel))
+    .map((record) => record.message);
+}
 
 describe("the 3D toolkit in an edit-mode app", () => {
   it("does not advance an Animator, even one that updates while paused", async () => {
@@ -148,5 +191,102 @@ describe("the 3D toolkit in an edit-mode app", () => {
 
     expect([group.level, near.displayHidden, mid.displayHidden, far.displayHidden]).toEqual([0, false, true, false]);
     harness.dispose();
+  });
+
+  describe("a renderer listed by two groups", () => {
+    it("belongs to the first group, which the others leave alone after one IGX-1217 warning each", async () => {
+      const harness = await createThreeDApp({ editMode: true });
+      const { first, shared } = twoGroups(harness);
+      // The second group shows the shared renderer as its level; the first, which owns it, hides it.
+      const third = harness.world.createEntity("Third");
+      third.addComponent(LodGroup, { levels: [{ distance: 10, renderer: shared }], hysteresis: 0 });
+      harness.step();
+      expect(first.level).toBe(0);
+      expect(shared.displayHidden).toBe(true);
+
+      const writes = vi.spyOn(shared, "displayHidden", "set");
+      harness.stepMany(3);
+      expect(writes).not.toHaveBeenCalled();
+      writes.mockRestore();
+      expect(shared.displayHidden).toBe(true);
+      expect(sharedWarnings(harness)).toEqual([
+        "IGX-1217: The MeshRenderer on Shared is a level of the LodGroups on First and Second; " +
+          "a renderer belongs to one LodGroup, so the one on Second leaves it alone.",
+        "IGX-1217: The MeshRenderer on Shared is a level of the LodGroups on First and Third; " +
+          "a renderer belongs to one LodGroup, so the one on Third leaves it alone.",
+      ]);
+      harness.dispose();
+    });
+
+    it("stays hidden when the group that does not own it is removed", async () => {
+      const harness = await createThreeDApp({ editMode: true });
+      const { second, shared } = twoGroups(harness);
+      harness.step();
+      expect(shared.displayHidden).toBe(true);
+
+      second.destroy();
+      harness.step();
+
+      expect(shared.displayHidden).toBe(true);
+      harness.dispose();
+    });
+
+    it("passes to the other group, still hidden, when the group that owns it is removed or disabled", async () => {
+      const harness = await createThreeDApp({ editMode: true });
+      const { first, second, shared } = twoGroups(harness);
+      harness.step();
+
+      first.enabled = false;
+      harness.step();
+      expect(shared.displayHidden).toBe(true);
+
+      // The second group owns it now: the first, enabled again, leaves it alone.
+      first.enabled = true;
+      harness.step();
+      second.destroy();
+      harness.step();
+      expect(shared.displayHidden).toBe(true);
+
+      first.destroy();
+      harness.step();
+      expect(shared.displayHidden).toBe(false);
+      harness.dispose();
+    });
+
+    it("stays hidden when the group that took it over from a destroyed owner runs before that owner lets go", async () => {
+      const harness = await createThreeDApp({ editMode: true });
+      const { first, second, shared } = twoGroups(harness);
+      first.enabled = false;
+      harness.step();
+      // The second group owns it now, and the first, which waits for it, comes earlier in the list.
+      first.enabled = true;
+      harness.step();
+      expect(shared.displayHidden).toBe(true);
+
+      // A PreRender system ordered before LOD destroys the owner after the destroy flush: the
+      // waiting group claims the renderer in that frame, and the owner lets go after it.
+      second.destroy();
+      first.evaluate(0);
+      second.releaseDisplay();
+      harness.step();
+
+      expect([first.level, shared.displayHidden]).toEqual([0, true]);
+      harness.dispose();
+    });
+
+    it("is never saved: the scene file keeps every authored enabled and no display flag", async () => {
+      const harness = await createThreeDApp({ editMode: true });
+      const { shared } = twoGroups(harness);
+      harness.step();
+      expect(shared.displayHidden).toBe(true);
+
+      const file = serializeScene([shared.entity], { engineVersion: null });
+
+      const record = file.entities[0]?.components?.find((component) => component.type === MeshRenderer.typeId);
+      expect(record).toBeDefined();
+      expect(record?.enabled).toBeUndefined();
+      expect(JSON.stringify(file)).not.toMatch(/displayHidden/u);
+      harness.dispose();
+    });
   });
 });
