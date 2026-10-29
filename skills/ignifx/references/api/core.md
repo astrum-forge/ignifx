@@ -8517,11 +8517,15 @@ renderer.displayHidden = true; // not drawn, and `renderer.enabled` is still `tr
 
 > **set** **displayHidden**(`value`): `void`
 
+Hides the mesh for display, or shows it again; `enabled` is not touched.
+
 ###### Parameters
 
 ###### value
 
 `boolean`
+
+`true` to hide it.
 
 ###### Returns
 

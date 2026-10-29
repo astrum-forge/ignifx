@@ -134,6 +134,11 @@ export class MeshRenderer extends Component implements ComponentHooks {
     return this.#displayHidden;
   }
 
+  /**
+   * Hides the mesh for display, or shows it again; `enabled` is not touched.
+   *
+   * @param value - `true` to hide it.
+   */
   set displayHidden(value: boolean) {
     this.#displayHidden = value;
   }
