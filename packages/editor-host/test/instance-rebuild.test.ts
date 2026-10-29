@@ -549,6 +549,53 @@ describe("references an instance's overrides hold, through a rebuild, headless",
   });
 });
 
+/**
+ * Opens the street with a lamp post whose own `Follow` and a `Follow` its list adds to a member
+ * share one uid: not the old form, which only an add to a one-root prefab's root ever was. Expects
+ * both built, the file reported, and both read back the same before and after a rebuild.
+ *
+ * @param target - The prefab entity the add's path names.
+ * @param prefab - The lamp post prefab.
+ * @param member - The name of the member the add gives its `Follow`.
+ */
+async function expectSharedUidLeftAlone(target: string, prefab: SceneFile, member: string): Promise<void> {
+  const own: SceneFileComponent = { uid: "SHARED", type: "game/Follow", props: { target: { $entity: "OMITS" } } };
+  const add: SceneFileOverride = {
+    path: `${target}/components`,
+    op: "add",
+    value: { uid: "SHARED", type: "game/Follow", props: { target: { $entity: "SIGN" } } },
+  };
+  const { running, warnings, opened } = await sceneView((hash) => {
+    const street = streetWith([add])(hash);
+    const entities = street.entities.map((record) =>
+      record.uid === "STREET-POST" ? { ...record, components: [own] } : record,
+    );
+    return { ...street, entities };
+  }, prefab);
+  const world = running.app.world;
+  expect((opened as { warnings: unknown }).warnings).toEqual([
+    {
+      code: "IGX-0608",
+      message:
+        `${STREET}: STREET-POST/SHARED: each of these uids names both an instance root's own component and ` +
+        "one an add override in its list gives a member; both are built.",
+    },
+  ]);
+  expect(world.getEntity("STREET-POST")?.getComponent(Follow)?.target).toBe(world.getEntity("OMITS"));
+  expect(followOf(running, member)?.target).toBe(world.getEntity("SIGN"));
+  const read = async (): Promise<unknown> => call("readBack", { entities: ["STREET-POST"] });
+  const before = await read();
+  expect(before).toMatchObject({ entities: [{ components: [own], instance: { overrides: [add] } }] });
+
+  await applyOne({ op: "setOverride", entity: "STREET-POST", override: SPARE_7 });
+  await applyOne({ op: "removeOverride", entity: "STREET-POST", path: SPARE_7.path });
+
+  expect(await read()).toEqual(before);
+  expect(world.getEntity("STREET-POST")?.getComponent(Follow)?.target).toBe(world.getEntity("OMITS"));
+  expect(followOf(running, member)?.target).toBe(world.getEntity("SIGN"));
+  expect(warnings).toEqual([]);
+}
+
 describe("a file in the old form readBack wrote for a root's added component, headless", () => {
   it("opens with the component once, warns once, and reads back the same before and after a rebuild", async () => {
     // Before #98 `readBack` wrote an `add` on the root of a one-root prefab twice: in the override
@@ -586,6 +633,68 @@ describe("a file in the old form readBack wrote for a root's added component, he
     expect(await read()).toEqual(before);
     expect(running.app.world.getEntity("STREET-POST")?.getComponents(Follow)).toHaveLength(1);
     expect(warnings).toEqual([]);
+    // The prefab the host loaded to find its root goes with the document.
+    await call("closeScene");
+    expect(running.app.assets.get(PREFAB)?.refCount ?? 0).toBe(0);
+  });
+
+  it("leaves alone an add on a member that reuses the uid of the root's own component", async () => {
+    await expectSharedUidLeftAlone("BULB", LAMP_POST, "Bulb");
+  });
+
+  it("does not take a prefab the file names with another asset type for the old form", async () => {
+    const { opened } = await sceneView((hash) => {
+      const street = streetWith([addFollow("OMITS")])(hash);
+      const entities = street.entities.map((record) =>
+        record.uid === "STREET-POST" && record.instance !== undefined
+          ? {
+              ...record,
+              components: [{ uid: "ADDED-FOLLOW", type: "game/Follow" }],
+              instance: { ...record.instance, scene: { $asset: PREFAB, type: "json" } },
+            }
+          : record,
+      );
+      return { ...street, entities };
+    });
+    expect((opened as { warnings: unknown }).warnings).toEqual([
+      {
+        code: "IGX-0608",
+        message:
+          `${STREET}: STREET-POST/ADDED-FOLLOW: each of these uids names both an instance root's own component ` +
+          "and one an add override in its list gives a member; both are built.",
+      },
+      {
+        code: "IGX-0301",
+        message: `The instanced scene ${PREFAB} is not among the dependencies of ${STREET}.`,
+      },
+    ]);
+  });
+
+  it("leaves a prefab that fails to load to the build to report", async () => {
+    await sceneView(level);
+    const street = streetWith([addFollow("OMITS")])(await computeSceneHash(LAMP_POST));
+    const missing = "prefabs/missing.prefab.json";
+    const entities = street.entities.map((record) =>
+      record.uid === "STREET-POST" && record.instance !== undefined
+        ? {
+            ...record,
+            components: [{ uid: "ADDED-FOLLOW", type: "game/Follow" }],
+            instance: { ...record.instance, scene: { $asset: missing } },
+          }
+        : record,
+    );
+    const answer = await peer?.request("openScene", { file: { ...street, entities }, address: STREET });
+    expect(answer).toMatchObject({ error: { data: { code: "IGX-0505" } } });
+  });
+
+  it("leaves alone an add on the root of a prefab with two roots, which the instance root is not", async () => {
+    const pole: SceneFileEntity = {
+      uid: "POLE",
+      name: "Pole",
+      parent: null,
+      transform: { position: [0, 0, 1], rotation: [0, 0, 0, 1], scale: [1, 1, 1] },
+    };
+    await expectSharedUidLeftAlone("POST", { ...LAMP_POST, entities: [...LAMP_POST.entities, pole] }, "Post");
   });
 });
 

@@ -5,7 +5,14 @@
  * the editor's objects never are (protocol 0.3, "Document uids only").
  */
 
-import { canonicalizeNumber, CoreErrorCode, decodeProps, parseOverridePath, serializeScene } from "@ignifx/core";
+import {
+  canonicalizeNumber,
+  CoreErrorCode,
+  decodeProps,
+  parseOverridePath,
+  SCENE_ASSET_TYPE,
+  serializeScene,
+} from "@ignifx/core";
 import { countEntities } from "../play-stats.js";
 import type { OpenSceneResult, ReadBackParams, ReadBackResult, SceneIssue } from "../protocol/index.js";
 import type {
@@ -16,6 +23,7 @@ import type {
   JsonObject,
   JsonValue,
   ReferenceDecoder,
+  SceneAsset,
   SceneFile,
   SceneFileComponent,
   SceneFileEntity,
@@ -304,16 +312,25 @@ export class DocumentMirror {
     await this.close();
     const where = address ?? UNSAVED_SCENE_ADDRESS;
     const warnings: SceneIssue[] = [];
-    const entities = withoutDoubleAdds(file.entities, where, warnings);
-    const scene = await this.#app.world.loadSceneFile(
-      { ...file, entities },
-      {
-        address: where,
-        onIssue: (issue) => {
-          warnings.push({ code: issue.code, message: issue.message });
+    const held = await this.#loadDoubledScenes(file.entities);
+    let scene: SceneInstance;
+    let entities: SceneFileEntity[];
+    try {
+      entities = withoutDoubleAdds(this.#app, file.entities, where, warnings);
+      scene = await this.#app.world.loadSceneFile(
+        { ...file, entities },
+        {
+          address: where,
+          onIssue: (issue) => {
+            warnings.push({ code: issue.code, message: issue.message });
+          },
         },
-      },
-    );
+      );
+    } finally {
+      for (const handle of held) {
+        handle.release();
+      }
+    }
     this.#scene = scene;
     this.#address = address;
     this.#name = file.name;
@@ -323,6 +340,31 @@ export class DocumentMirror {
     // That index was read before the first frame; the next lookup reads the world again.
     this.invalidate();
     return { entityCount: countEntities(scene), warnings };
+  }
+
+  /**
+   * Loads the scenes of the instance roots whose records may hold the old double form of an added
+   * component, so {@link withoutDoubleAdds} can tell where each scene's root is.
+   *
+   * @param records - The file's entity records.
+   * @returns The handles, each with one holder the caller releases.
+   */
+  async #loadDoubledScenes(records: readonly SceneFileEntity[]): Promise<AssetHandle[]> {
+    const handles: AssetHandle[] = [];
+    for (const record of records) {
+      const instance = record.instance;
+      const own = new Set((record.components ?? []).map((component) => component.uid));
+      const adds = (instance?.overrides ?? []).flatMap((override) => addedUids(override));
+      if (instance === undefined || !adds.some((uid) => own.has(uid))) {
+        continue;
+      }
+      handles.push(
+        this.#app.assets.load<SceneAsset>(instance.scene.$asset, { type: instance.scene.type ?? SCENE_ASSET_TYPE }),
+      );
+    }
+    // A load that fails is the build's to report, as it loads the scene again.
+    await Promise.allSettled(handles.map(async (handle) => handle.promise));
+    return handles;
   }
 
   /** Unloads the open document, if any, and releases the assets its ops loaded. */
@@ -571,7 +613,7 @@ export class DocumentMirror {
       ...(read.hash === undefined ? {} : { hash: read.hash }),
       ...(listed.length === 0 ? {} : { overrides: structuredClone(listed) }),
     };
-    return withOverrideList(record, instance);
+    return withOverrideList(this.#app, record, instance);
   }
 
   /**
@@ -620,33 +662,50 @@ export class DocumentMirror {
  * A file's entity records without the old double form of an added component: before `readBack`
  * wrote each `add` override once, it also wrote one that adds to the root of a one-root scene as
  * the root's own component, with the same uid, so a reopen built it twice. Each is kept once, as the
- * override list adds it, so `readBack` reads the same from the first frame.
+ * override list adds it, so `readBack` reads the same from the first frame. Only an `add` to the
+ * root's component list counts: one on another member that reuses a uid of the root's own
+ * components is not the old form, so both are built, with a warning of its own.
  *
+ * @param app - The scene view's app, whose cache holds the instanced scenes.
  * @param records - The file's entity records.
- * @param address - The document's address, for the warning.
- * @param warnings - Gets one `IGX-0608` warning when a record had the double form.
+ * @param address - The document's address, for the warnings.
+ * @param warnings - Gets one `IGX-0608` warning when a record had the double form, and one when a
+ * record's list adds to a member with a uid of the root's own components.
  * @returns The records, each collapsed one replaced.
  */
 function withoutDoubleAdds(
+  app: App,
   records: readonly SceneFileEntity[],
   address: string,
   warnings: SceneIssue[],
 ): SceneFileEntity[] {
   const doubled: string[] = [];
+  const reused: string[] = [];
   const collapsed = records.map((record) => {
     const instance = record.instance;
     if (instance === undefined || record.components === undefined) {
       return record;
     }
-    const single = withOverrideList(record, instance);
+    const single = withOverrideList(app, record, instance);
     const kept = new Set((single.components ?? []).map((component) => component.uid));
+    const adds = new Set((instance.overrides ?? []).flatMap((override) => addedUids(override)));
     for (const component of record.components) {
       if (!kept.has(component.uid)) {
         doubled.push(`${record.uid}/${component.uid}`);
+      } else if (adds.has(component.uid)) {
+        reused.push(`${record.uid}/${component.uid}`);
       }
     }
     return single;
   });
+  if (reused.length > 0) {
+    warnings.push({
+      code: CoreErrorCode.sceneFileInvalid,
+      message:
+        `${address}: ${reused.join(", ")}: each of these uids names both an instance root's own component and ` +
+        "one an add override in its list gives a member; both are built.",
+    });
+  }
   if (doubled.length > 0) {
     warnings.push({
       code: CoreErrorCode.sceneFileInvalid,
@@ -661,15 +720,19 @@ function withoutDoubleAdds(
 /**
  * An instance root's record with an instance entry whose override list replaces the serializer's.
  * The serializer writes a component that an `add` override gives the root of a one-root scene as
- * the root's own, so the record leaves out each component the list adds; a rebuild or a reopen
- * would otherwise add it twice.
+ * the root's own, so the record leaves out each component the list adds there; a rebuild or a
+ * reopen would otherwise add it twice.
  *
+ * @param app - The scene view's app, whose cache holds the instanced scene.
  * @param record - The record as the serializer wrote it.
  * @param instance - The instance entry, with the document's list.
  * @returns The record.
  */
-export function withOverrideList(record: SceneFileEntity, instance: SceneFileInstance): SceneFileEntity {
-  const adds = new Set((instance.overrides ?? []).flatMap((override) => addedUids(override)));
+export function withOverrideList(app: App, record: SceneFileEntity, instance: SceneFileInstance): SceneFileEntity {
+  const path = rootComponentsPath(app, instance);
+  const adds = new Set(
+    (instance.overrides ?? []).filter((override) => override.path === path).flatMap((override) => addedUids(override)),
+  );
   const own = record.components ?? [];
   const components = own.filter((component) => !adds.has(component.uid));
   if (components.length === own.length) {
@@ -677,6 +740,25 @@ export function withOverrideList(record: SceneFileEntity, instance: SceneFileIns
   }
   const { components: _written, ...rest } = record;
   return { ...rest, instance, ...(components.length === 0 ? {} : { components }) };
+}
+
+/**
+ * The override path of the component list of an instanced scene's root, when the scene has one
+ * root: the members an `add` there joins are the instance root's own.
+ *
+ * @param app - The scene view's app.
+ * @param instance - The instance entry.
+ * @returns `<root uid>/components`, or `null` for a scene with several roots or none, or one the
+ * cache does not hold loaded as a scene.
+ */
+function rootComponentsPath(app: App, instance: SceneFileInstance): string | null {
+  const handle = app.assets.get<SceneAsset>(instance.scene.$asset);
+  if (handle === null || handle.state !== "loaded" || handle.type !== SCENE_ASSET_TYPE) {
+    return null;
+  }
+  const roots = handle.value.file.entities.filter((entity) => entity.parent === null);
+  const root = roots.length === 1 ? roots[0] : undefined;
+  return root === undefined ? null : `${root.uid}/components`;
 }
 
 /**

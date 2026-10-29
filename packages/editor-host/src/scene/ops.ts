@@ -962,7 +962,7 @@ async function rebuildInstance(
       ...(hash === undefined || !keepHashes ? {} : { hash }),
       ...(listed.length === 0 ? {} : { overrides: listed }),
     };
-    return withOverrideList(record, instance);
+    return withOverrideList(context.app, record, instance);
   };
   const found = index.records.get(uid);
   const record = found === undefined ? undefined : withDocumentOverrides(found);
@@ -971,7 +971,7 @@ async function rebuildInstance(
     throw new OpFailure(ApplyOpFailureCode.notAnInstance, `${root.name} (${uid}) has no instance entry.`);
   }
   const overrides = edit(instance.overrides ?? []);
-  const top = withOverrideList(record, {
+  const top = withOverrideList(context.app, record, {
     scene: instance.scene,
     ...(instance.hash === undefined ? {} : { hash: instance.hash }),
     ...(overrides.length === 0 ? {} : { overrides }),
