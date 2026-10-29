@@ -663,8 +663,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -2347,8 +2347,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -3618,8 +3618,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -4266,8 +4266,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -4963,8 +4963,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -5582,8 +5582,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -6159,8 +6159,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -6903,8 +6903,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -7383,8 +7383,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -7983,8 +7983,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -8610,8 +8610,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -9218,8 +9218,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -9875,8 +9875,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -10460,8 +10460,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -10986,8 +10986,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -11523,8 +11523,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -12738,8 +12738,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -12893,7 +12893,7 @@ The cached class info.
 ###### Throws
 
 IgnifxError with code `IGX-0209` when the class's `static requires` graph contains a
-cycle.
+cycle, and `IGX-0607` when its `static schema` names a field after an `Object.prototype` member.
 
 ##### get()
 
@@ -13006,8 +13006,9 @@ What the registry worked out about the class.
 ###### Throws
 
 IgnifxError with code `IGX-0203` when the id is already registered by another class, or
-when the id is not `<namespace>/<Name>`, and `IGX-0209` when the class's `static requires`
-graph contains a cycle.
+when the id is not `<namespace>/<Name>`, `IGX-0209` when the class's `static requires`
+graph contains a cycle, and `IGX-0607` when its `static schema` names a field after an
+`Object.prototype` member.
 
 ##### registerAll()
 
@@ -13111,9 +13112,10 @@ Additive and hot-reload-only: nothing on the normal path replaces a registration
 
 ###### Throws
 
-IgnifxError with code `IGX-0204` when the replacement declares no `typeId`, and
-`IGX-0209` when its `static requires` graph contains a cycle; either way the registry is left
-unchanged.
+IgnifxError with code `IGX-0204` when the replacement declares no `typeId`,
+`IGX-0209` when its `static requires` graph contains a cycle, and `IGX-0607` when its
+`static schema` names a field after an `Object.prototype` member; in every case the registry is
+left unchanged.
 
 ###### Example
 
@@ -13658,8 +13660,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -14999,8 +15001,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -16769,8 +16771,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -17525,8 +17527,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -20002,8 +20004,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -20934,8 +20936,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -23336,8 +23338,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -24547,8 +24549,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -25266,8 +25268,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -28855,8 +28857,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -29498,8 +29500,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -30137,8 +30139,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -30874,8 +30876,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -31830,8 +31832,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -32331,8 +32333,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -33116,8 +33118,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -33629,8 +33631,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -34994,8 +34996,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -35703,8 +35705,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -37335,8 +37337,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -37878,8 +37880,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -38501,8 +38503,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -39047,8 +39049,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -39539,8 +39541,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -41400,8 +41402,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -42115,8 +42117,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -42673,8 +42675,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -43324,8 +43326,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -44972,8 +44974,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -45766,8 +45768,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -46512,8 +46514,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -47237,8 +47239,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -48202,8 +48204,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -49296,8 +49298,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -49809,8 +49811,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -50693,8 +50695,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -51382,8 +51384,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -52166,8 +52168,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -52969,8 +52971,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -53536,8 +53538,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -54544,8 +54546,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -61979,8 +61981,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -62566,8 +62568,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -63183,8 +63185,8 @@ An abstract class to extend.
 
 ###### Throws
 
-IgnifxError with code `IGX-0607` when a field name is not identifier-like or collides
-with a `Component`/`Script` member.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
 
 ###### Example
 
@@ -89273,7 +89275,9 @@ A value had the wrong JavaScript or JSON type for its schema field kind.
 
 > `readonly` **schemaUnknownField**: `"IGX-0607"`
 
-A schema declaration or a property bag named a field the schema does not declare.
+A property bag named a field the schema does not declare, or a schema declaration named a field
+it may not use: not identifier-like, a `Component`/`Script` member, or an `Object.prototype`
+member such as `constructor` or `__proto__`.
 
 ##### screenshotNeedsRenderLoop
 
@@ -92637,7 +92641,9 @@ A value had the wrong JavaScript or JSON type for the field kind.
 
 > `readonly` **unknownField**: `"IGX-0607"`
 
-A property was supplied that the schema does not declare.
+A property was supplied that the schema does not declare, or a schema declaration named a field
+it may not use: not identifier-like, a `Component`/`Script` member, or an `Object.prototype`
+member such as `constructor` or `__proto__`.
 
 ##### unresolvedReference
 
@@ -98003,8 +98009,9 @@ The same object, with its precise type preserved.
 
 #### Throws
 
-A `TypeError` when a field name is not identifier-like, starts with `_`, or collides with
-a `Component`/`Script` member such as `enabled` or `update`.
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, starts with
+`_`, collides with a `Component`/`Script` member such as `enabled` or `update`, or names an
+`Object.prototype` member such as `constructor` or `toString`.
 
 #### Example
 
@@ -103325,6 +103332,11 @@ Inspector and serializer metadata.
 [`FieldDefinition`](#fielddefinition)\<[`FieldsOf`](#fieldsof)\<`S`\>\>
 
 The field definition.
+
+#### Throws
+
+IgnifxError with code `IGX-0607` when a sub-field name is an `Object.prototype` member
+such as `__proto__`, `constructor`, or `toString`.
 
 #### Example
 

@@ -66,6 +66,19 @@ describe("defineSchema", () => {
   it("accepts an ordinary field name", () => {
     expect(() => defineSchema({ moveSpeed2: f32(1) })).not.toThrow();
   });
+
+  // A computed key is an own property, as a key from `JSON.parse` is; `{ __proto__: … }` is not.
+  it.each(["__proto__", "constructor", "toString", "valueOf", "hasOwnProperty", "isPrototypeOf"])(
+    "rejects %s, a name every object inherits, with IGX-0607",
+    (name) => {
+      expect(() => defineSchema({ [name]: f32(1) })).toThrow(/IGX-0607/u);
+      expect(() => defineSchema({ [name]: f32(1) })).toThrow(/names a member every object inherits/u);
+    },
+  );
+
+  it("accepts prototype, which plain objects do not inherit", () => {
+    expect(() => defineSchema({ prototype: f32(1) })).not.toThrow();
+  });
 });
 
 describe("createDefaults", () => {

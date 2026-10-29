@@ -1,6 +1,6 @@
 import { CoreErrorCode } from "../errors/error-codes.js";
 import { IgnifxError } from "../errors/ignifx-error.js";
-import { createDefaults } from "../schema/schema.js";
+import { assertNoInheritedFieldNames, createDefaults } from "../schema/schema.js";
 import { validateProps } from "../schema/validate.js";
 import type { SettingsInput } from "./settings-input.js";
 import type { AppSettings, LayersSettings, SortingLayersSettings, TimeSettings } from "../app/types.js";
@@ -132,9 +132,11 @@ export class SettingsStore implements AppSettings {
    * @param defaults - The values used for everything the project omits, as a bag of named props.
    * @param owner - The extension registering the section, named in diagnostics.
    * @throws IgnifxError with code `IGX-0408` in development when the project's values do not
-   * validate.
+   * validate, and with code `IGX-0607` when a field is named after an `Object.prototype` member.
    */
   register(name: string, schema: Schema, defaults: unknown, owner: string): void {
+    // `defineSchema` checks this too, but a schema passed as a plain object skips it.
+    assertNoInheritedFieldNames(schema, "settings");
     const base = isPropertyBag(defaults) ? defaults : createDefaults(schema);
     const value = this.#resolve(name, schema, base);
     this.#sections.set(name, { schema, owner, defaults: base, value: Object.freeze(value) });

@@ -208,6 +208,19 @@ describe("composite field kinds", () => {
     expectTypeOf(stats.createDefault()).toEqualTypeOf<{ hp: number; armor: number }>();
   });
 
+  // A computed key is an own property, as a key from `JSON.parse` is; `{ __proto__: … }` is not.
+  it.each(["__proto__", "constructor", "toString", "hasOwnProperty"])(
+    "refuses a record sub-field named %s, which every object inherits, with IGX-0607",
+    (name) => {
+      expect(() => record({ hp: i32(10), [name]: f32(0) })).toThrow(/IGX-0607/u);
+      expect(() => record({ [name]: f32(0) })).toThrow(/record field ".+" names a member every object inherits/u);
+    },
+  );
+
+  it("accepts a record sub-field named prototype, which plain objects do not inherit", () => {
+    expect(record({ prototype: f32(2) }).createDefault()).toEqual({ prototype: 2 });
+  });
+
   it("gives maps an empty, freshly allocated default", () => {
     const ammo = map(i32(0));
     expectTypeOf(ammo).toEqualTypeOf<FieldDefinition<Record<string, number>>>();

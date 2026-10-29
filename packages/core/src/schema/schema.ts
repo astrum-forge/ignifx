@@ -47,6 +47,32 @@ const RESERVED_FIELD_NAMES: readonly string[] = [
 const FIELD_NAME_PATTERN = /^[A-Za-z][A-Za-z0-9]*$/u;
 
 /**
+ * Refuses a field name that every plain object already has through `Object.prototype`:
+ * `constructor`, `toString`, `valueOf`, `hasOwnProperty`, `__proto__` and the rest. Encoders,
+ * decoders, and the inspector walk a schema and read each field as `values[name]`, so a value that
+ * omits such a field yields the inherited member instead of `undefined`; and they write it as
+ * `out[name] = …`, which for `__proto__` replaces the object's prototype instead of adding a key.
+ * Refusing the name once, where the schema is declared, keeps every one of those sites correct.
+ * `prototype` is not inherited by plain objects, so it stays a legal name.
+ *
+ * @param fields - The field definitions being declared.
+ * @param where - What declares them, for the message: `"schema"` or `"record"`.
+ * @throws IgnifxError with code `IGX-0607` when a name is an `Object.prototype` member.
+ *
+ * @internal
+ */
+export function assertNoInheritedFieldNames(fields: Schema, where: string): void {
+  for (const name of Object.keys(fields)) {
+    if (Object.hasOwn(Object.prototype, name)) {
+      throwSchemaError(
+        SchemaIssueCode.unknownField,
+        `${where} field "${name}" names a member every object inherits (Object.prototype.${name}); rename the field.`,
+      );
+    }
+  }
+}
+
+/**
  * Rewrites a JavaScript value into a mutable string-keyed view. Schema-shaped objects are always
  * plain records built by this module, so the assertion holds by construction; it exists because a
  * mapped type such as `FieldsOf<S>` cannot be indexed generically (coding standards §5.2 permits
@@ -85,8 +111,9 @@ function fieldsView<S extends Schema>(value: Record<string, unknown>): FieldsOf<
  *
  * @param fields - The field definitions, keyed by the property name they become.
  * @returns The same object, with its precise type preserved.
- * @throws A `TypeError` when a field name is not identifier-like, starts with `_`, or collides with
- * a `Component`/`Script` member such as `enabled` or `update`.
+ * @throws IgnifxError with code `IGX-0607` when a field name is not identifier-like, starts with
+ * `_`, collides with a `Component`/`Script` member such as `enabled` or `update`, or names an
+ * `Object.prototype` member such as `constructor` or `toString`.
  *
  * @example
  * ```ts
@@ -99,6 +126,7 @@ function fieldsView<S extends Schema>(value: Record<string, unknown>): FieldsOf<
  * @public
  */
 export function defineSchema<S extends Schema>(fields: S): S {
+  assertNoInheritedFieldNames(fields, "schema");
   for (const name of Object.keys(fields)) {
     if (!FIELD_NAME_PATTERN.test(name)) {
       throwSchemaError(

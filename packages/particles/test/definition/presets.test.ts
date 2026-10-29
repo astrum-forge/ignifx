@@ -87,7 +87,26 @@ describe("particleDefinition overrides", () => {
   it("names the preset in the failure, so an agent can find the file", () => {
     expect(() => particleDefinition("fire", { main: { capacity: 0 } })).toThrowError(/preset:fire/);
   });
+
+  it.each([
+    ['{ "__proto__": { "polluted": true } }', /__proto__ is not a field/u],
+    ['{ "main": { "__proto__": { "capacity": 0 } } }', /main\.__proto__ is not a field/u],
+  ])("keeps the __proto__ key of override %s as a field, which the definition check refuses", (json, message) => {
+    expect(() => fireWithParsedOverrides(json)).toThrowError(new RegExp(ParticlesErrorCode.invalidParticlesFile, "u"));
+    expect(() => fireWithParsedOverrides(json)).toThrowError(message);
+  });
 });
+
+/**
+ * Builds the fire preset with overrides parsed from JSON, where `__proto__` is an own data key.
+ *
+ * @param json - The overrides, as JSON text.
+ * @returns The definition.
+ */
+function fireWithParsedOverrides(json: string): unknown {
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- exercising the merge with parsed JSON.
+  return particleDefinition("fire", JSON.parse(json) as Parameters<typeof particleDefinition>[1]);
+}
 
 /** The union rules a name out at compile time; the guard is for JSON and JavaScript callers. */
 function readUnknownPreset(): unknown {
