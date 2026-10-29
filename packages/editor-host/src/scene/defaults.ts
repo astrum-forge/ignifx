@@ -143,14 +143,25 @@ export function applyDefaults(
 
 /**
  * The document's instance roots whose members (not the document's own components) include a
- * component of a changed type, in document order.
+ * component of a changed type, in document order. A component the index lists but the mirror has
+ * no record of is a member too: one an `add` override gives the root of a one-root prefab, which
+ * the serializer writes as the root's own. So every component under a root either takes its new
+ * defaults from {@link applyDefaults} or is rebuilt.
  *
  * @param app - The scene view's app.
- * @param index - The open document's index.
+ * @param mirror - The open document.
+ * @param index - Its index.
  * @param changed - The changed fields, by type id.
  * @returns The roots' uids.
  */
-export function instancesHolding(app: App, index: DocumentIndex, changed: ChangedDefaults): ReadonlySet<string> {
+export function instancesHolding(
+  app: App,
+  mirror: DocumentMirror,
+  index: DocumentIndex,
+  changed: ChangedDefaults,
+): ReadonlySet<string> {
+  const isMember = (component: Component): boolean =>
+    !index.components.has(component.uid) || mirror.propsSetBy(component.uid) === null;
   const roots = new Set<string>();
   for (const record of index.file.entities) {
     const root = index.entities.get(record.uid);
@@ -160,7 +171,7 @@ export function instancesHolding(app: App, index: DocumentIndex, changed: Change
     const pending: Entity[] = [root];
     for (let entity = pending.pop(); entity !== undefined; entity = pending.pop()) {
       const holds = entity.components.some(
-        (component) => !index.components.has(component.uid) && changed.has(typeIdOf(app, component) ?? ""),
+        (component) => isMember(component) && changed.has(typeIdOf(app, component) ?? ""),
       );
       if (holds) {
         roots.add(record.uid);

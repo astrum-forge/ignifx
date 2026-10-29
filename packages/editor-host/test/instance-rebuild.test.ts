@@ -10,9 +10,10 @@ import {
   Script,
   stringifySceneFile,
 } from "@ignifx/core";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { startEditorHost } from "../src/host.js";
 import { SceneNotification } from "../src/protocol/index.js";
+import * as heldReferences from "../src/scene/held-references.js";
 import { connect, EDITOR_ORIGIN } from "./support/editor.js";
 import { brightnessIn, Lamp, LAMP_POST, level, PREFAB } from "./support/lamps.js";
 import type { EditorHost } from "../src/host.js";
@@ -299,6 +300,106 @@ describe("an asset reload of a prefab, headless (E23)", () => {
   });
 });
 
+describe("a reload that changes how many roots the prefab has, headless", () => {
+  /** The lamp post prefab with a second root, so an instance root no longer stands for the post. */
+  const twoRoots: SceneFile = {
+    ...LAMP_POST,
+    entities: [
+      ...LAMP_POST.entities,
+      {
+        uid: "POLE",
+        name: "Pole",
+        parent: null,
+        transform: { position: [0, 0, 1], rotation: [0, 0, 0, 1], scale: [1, 1, 1] },
+      },
+    ],
+  };
+
+  /**
+   * The street with a second lamp post under the first; each post's list adds a `Follow` to the
+   * prefab's root.
+   *
+   * @param hash - The prefab's hash.
+   * @returns The scene file.
+   */
+  function nestedPosts(hash: string): SceneFile {
+    const street = streetWith([addFollow("OMITS")])(hash);
+    const inner: SceneFileEntity = {
+      uid: "INNER-POST",
+      name: "Inner Post",
+      parent: "STREET-POST",
+      transform: { position: [0, 0, 1], rotation: [0, 0, 0, 1], scale: [1, 1, 1] },
+      instance: { scene: { $asset: PREFAB }, hash, overrides: [addFollow("OMITS", "INNER-FOLLOW")] },
+    };
+    return { ...street, entities: [...street.entities, inner] };
+  }
+
+  /**
+   * The names of the entities at or under an instance root that hold a `Follow` with a uid.
+   *
+   * @param running - The host.
+   * @param root - The instance root's uid.
+   * @param uid - The component's uid.
+   * @returns The holders' names.
+   */
+  function holdersOf(running: EditorHost, root: string, uid: string): string[] {
+    const post = running.app.world.getEntity(root);
+    return [post, ...(post?.children ?? [])]
+      .filter((entity) => entity?.getComponents(Follow).some((component) => component.uid === uid) === true)
+      .map((entity) => entity?.name ?? "");
+  }
+
+  /**
+   * The records `readBack` writes for both lamp posts.
+   *
+   * @returns The records.
+   */
+  async function readPosts(): Promise<readonly unknown[]> {
+    const read = (await call("readBack", { entities: ["STREET-POST", "INNER-POST"] })) as {
+      entities: readonly unknown[];
+    };
+    return read.entities;
+  }
+
+  it("builds each root's add once when the prefab gains a second root", async () => {
+    const { running, warnings } = await sceneView(nestedPosts);
+    expect(holdersOf(running, "STREET-POST", "ADDED-FOLLOW")).toEqual(["Lamp Post"]);
+    expect(holdersOf(running, "INNER-POST", "INNER-FOLLOW")).toEqual(["Inner Post"]);
+
+    await editPrefab(running, twoRoots);
+
+    expect(holdersOf(running, "STREET-POST", "ADDED-FOLLOW")).toEqual(["Post"]);
+    expect(holdersOf(running, "INNER-POST", "INNER-FOLLOW")).toEqual(["Post"]);
+    const read = await readPosts();
+    expect(read).toHaveLength(2);
+    for (const record of read) {
+      expect(record).not.toHaveProperty("components");
+    }
+    expect(read).toMatchObject([
+      { instance: { overrides: [addFollow("OMITS")] } },
+      { instance: { overrides: [addFollow("OMITS", "INNER-FOLLOW")] } },
+    ]);
+    expect(warnings).toEqual([]);
+  });
+
+  it("builds each root's add once when the prefab loses its second root", async () => {
+    const { running, warnings } = await sceneView(nestedPosts, twoRoots);
+    expect(holdersOf(running, "STREET-POST", "ADDED-FOLLOW")).toEqual(["Post"]);
+    expect(holdersOf(running, "INNER-POST", "INNER-FOLLOW")).toEqual(["Post"]);
+
+    await editPrefab(running, LAMP_POST);
+
+    expect(holdersOf(running, "STREET-POST", "ADDED-FOLLOW")).toEqual(["Lamp Post"]);
+    expect(holdersOf(running, "INNER-POST", "INNER-FOLLOW")).toEqual(["Inner Post"]);
+    const read = await readPosts();
+    expect(read).toHaveLength(2);
+    for (const record of read) {
+      expect(record).not.toHaveProperty("components");
+    }
+    expect(warnings).toEqual([]);
+  });
+});
+
 describe("setOverride's index, headless", () => {
   it("is relative to the document's override list, not the serializer's", async () => {
     // The serializer would read this list as [SPARE_7] alone: the bulb's override equals the prefab.
@@ -549,6 +650,53 @@ describe("references an instance's overrides hold, through a rebuild, headless",
   });
 });
 
+/**
+ * Opens the street with a lamp post whose own `Follow` and a `Follow` its list adds to a member
+ * share one uid: not the old form, which only an add to a one-root prefab's root ever was. Expects
+ * both built, the file reported, and both read back the same before and after a rebuild.
+ *
+ * @param target - The prefab entity the add's path names.
+ * @param prefab - The lamp post prefab.
+ * @param member - The name of the member the add gives its `Follow`.
+ */
+async function expectSharedUidLeftAlone(target: string, prefab: SceneFile, member: string): Promise<void> {
+  const own: SceneFileComponent = { uid: "SHARED", type: "game/Follow", props: { target: { $entity: "OMITS" } } };
+  const add: SceneFileOverride = {
+    path: `${target}/components`,
+    op: "add",
+    value: { uid: "SHARED", type: "game/Follow", props: { target: { $entity: "SIGN" } } },
+  };
+  const { running, warnings, opened } = await sceneView((hash) => {
+    const street = streetWith([add])(hash);
+    const entities = street.entities.map((record) =>
+      record.uid === "STREET-POST" ? { ...record, components: [own] } : record,
+    );
+    return { ...street, entities };
+  }, prefab);
+  const world = running.app.world;
+  expect((opened as { warnings: unknown }).warnings).toEqual([
+    {
+      code: "IGX-0608",
+      message:
+        `${STREET}: STREET-POST/SHARED: each of these uids names both an instance root's own component and ` +
+        "one an add override in its list gives a member; both are built.",
+    },
+  ]);
+  expect(world.getEntity("STREET-POST")?.getComponent(Follow)?.target).toBe(world.getEntity("OMITS"));
+  expect(followOf(running, member)?.target).toBe(world.getEntity("SIGN"));
+  const read = async (): Promise<unknown> => call("readBack", { entities: ["STREET-POST"] });
+  const before = await read();
+  expect(before).toMatchObject({ entities: [{ components: [own], instance: { overrides: [add] } }] });
+
+  await applyOne({ op: "setOverride", entity: "STREET-POST", override: SPARE_7 });
+  await applyOne({ op: "removeOverride", entity: "STREET-POST", path: SPARE_7.path });
+
+  expect(await read()).toEqual(before);
+  expect(world.getEntity("STREET-POST")?.getComponent(Follow)?.target).toBe(world.getEntity("OMITS"));
+  expect(followOf(running, member)?.target).toBe(world.getEntity("SIGN"));
+  expect(warnings).toEqual([]);
+}
+
 describe("a file in the old form readBack wrote for a root's added component, headless", () => {
   it("opens with the component once, warns once, and reads back the same before and after a rebuild", async () => {
     // Before #98 `readBack` wrote an `add` on the root of a one-root prefab twice: in the override
@@ -586,6 +734,68 @@ describe("a file in the old form readBack wrote for a root's added component, he
     expect(await read()).toEqual(before);
     expect(running.app.world.getEntity("STREET-POST")?.getComponents(Follow)).toHaveLength(1);
     expect(warnings).toEqual([]);
+    // The prefab the host loaded to find its root goes with the document.
+    await call("closeScene");
+    expect(running.app.assets.get(PREFAB)?.refCount ?? 0).toBe(0);
+  });
+
+  it("leaves alone an add on a member that reuses the uid of the root's own component", async () => {
+    await expectSharedUidLeftAlone("BULB", LAMP_POST, "Bulb");
+  });
+
+  it("does not take a prefab the file names with another asset type for the old form", async () => {
+    const { opened } = await sceneView((hash) => {
+      const street = streetWith([addFollow("OMITS")])(hash);
+      const entities = street.entities.map((record) =>
+        record.uid === "STREET-POST" && record.instance !== undefined
+          ? {
+              ...record,
+              components: [{ uid: "ADDED-FOLLOW", type: "game/Follow" }],
+              instance: { ...record.instance, scene: { $asset: PREFAB, type: "json" } },
+            }
+          : record,
+      );
+      return { ...street, entities };
+    });
+    expect((opened as { warnings: unknown }).warnings).toEqual([
+      {
+        code: "IGX-0608",
+        message:
+          `${STREET}: STREET-POST/ADDED-FOLLOW: each of these uids names both an instance root's own component ` +
+          "and one an add override in its list gives a member; both are built.",
+      },
+      {
+        code: "IGX-0301",
+        message: `The instanced scene ${PREFAB} is not among the dependencies of ${STREET}.`,
+      },
+    ]);
+  });
+
+  it("leaves a prefab that fails to load to the build to report", async () => {
+    await sceneView(level);
+    const street = streetWith([addFollow("OMITS")])(await computeSceneHash(LAMP_POST));
+    const missing = "prefabs/missing.prefab.json";
+    const entities = street.entities.map((record) =>
+      record.uid === "STREET-POST" && record.instance !== undefined
+        ? {
+            ...record,
+            components: [{ uid: "ADDED-FOLLOW", type: "game/Follow" }],
+            instance: { ...record.instance, scene: { $asset: missing } },
+          }
+        : record,
+    );
+    const answer = await peer?.request("openScene", { file: { ...street, entities }, address: STREET });
+    expect(answer).toMatchObject({ error: { data: { code: "IGX-0505" } } });
+  });
+
+  it("leaves alone an add on the root of a prefab with two roots, which the instance root is not", async () => {
+    const pole: SceneFileEntity = {
+      uid: "POLE",
+      name: "Pole",
+      parent: null,
+      transform: { position: [0, 0, 1], rotation: [0, 0, 0, 1], scale: [1, 1, 1] },
+    };
+    await expectSharedUidLeftAlone("POST", { ...LAMP_POST, entities: [...LAMP_POST.entities, pole] }, "Post");
   });
 });
 
@@ -811,7 +1021,7 @@ describe("a held member that the rebuild itself destroys, headless", () => {
 
 /**
  * Counts the reads of a component's field that the walk for held references makes, by putting an
- * accessor in place of the field.
+ * accessor in place of the field and wrapping the walk in a spy that marks when it runs.
  *
  * @param component - The component.
  * @param field - The field's name.
@@ -828,7 +1038,7 @@ function walkReads(component: Component | undefined, field: string): () => numbe
     enumerable: true,
     get: () => {
       // The serializer and the destroy read the field too; only the walk's reads count.
-      if (new Error("read").stack?.includes("heldByMembers") === true) {
+      if (walking) {
         reads += 1;
       }
       return value;
@@ -838,6 +1048,26 @@ function walkReads(component: Component | undefined, field: string): () => numbe
     },
   });
   return () => reads;
+}
+
+/** Whether the walk for held references is running, while {@link spyOnWalk}'s spy is in place. */
+let walking = false;
+
+/**
+ * Wraps the walk for held references so {@link walkReads} counts only the reads it makes.
+ *
+ * @returns The spy; restore it when done.
+ */
+function spyOnWalk(): { mockRestore: () => void } {
+  const walk = heldReferences.heldByMembers;
+  return vi.spyOn(heldReferences, "heldByMembers").mockImplementation((...args) => {
+    walking = true;
+    try {
+      return walk(...args);
+    } finally {
+      walking = false;
+    }
+  });
 }
 
 describe("the walk for references held by other instances' members, headless", () => {
@@ -855,8 +1085,13 @@ describe("the walk for references held by other instances' members, headless", (
     }, bulbAims());
     const pointing = walkReads(bulbOf(running, "SECOND-POST", Follow), "target");
     const elsewhere = walkReads(bulbOf(running, "THIRD-POST", Follow), "target");
+    const spy = spyOnWalk();
 
-    await applyOne({ op: "setOverride", entity: "STREET-POST", override: SPARE_7 });
+    try {
+      await applyOne({ op: "setOverride", entity: "STREET-POST", override: SPARE_7 });
+    } finally {
+      spy.mockRestore();
+    }
 
     expect(pointing()).toBeGreaterThan(0);
     expect(elsewhere()).toBe(0);

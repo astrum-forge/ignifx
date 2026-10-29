@@ -100,6 +100,23 @@ function withPostOverrides(extra: readonly SceneFileOverride[]): (hash: string) 
   };
 }
 
+/** A type no member of the lamp post holds, for an instance that adds one to its root. */
+class Glow extends Component.define({ brightness: f32(1), radius: f32(2) }) {
+  static typeId = "game/Glow";
+}
+
+/** `Glow` after an edit that changes `brightness`'s default. */
+class GlowBrighter extends Component.define({ brightness: f32(4), radius: f32(2) }) {
+  static typeId = "game/Glow";
+}
+
+/** An override that adds a glow to the lamp post's root, leaving `brightness` out. */
+const ADD_ROOT_GLOW: SceneFileOverride = {
+  op: "add",
+  path: "POST/components",
+  value: { uid: "ADDED-GLOW", type: "game/Glow", props: { radius: 3 } },
+};
+
 /**
  * Starts a headless host, optionally with the street open.
  *
@@ -120,7 +137,7 @@ async function sceneView(open: ((hash: string) => SceneFile) | null): Promise<Ed
     messageTarget: target,
     heartbeatIntervalMs: 60_000,
     assets: { fetch },
-    scripts: [Lamp],
+    scripts: [Lamp, Glow],
   });
   peer = connect(target);
   await peer.hello();
@@ -238,6 +255,36 @@ describe("changed defaults after a script's hot reload, headless (E25)", () => {
     expect(brightness(running, "Bulb")).toBe(4);
     expect(brightness(running, "Spare")).toBe(8);
     expect(brightness(running, "Lamp Post")).toBe(4);
+  });
+
+  it("rebuilds an instance whose override adds a component to its root, so it follows the new default", async () => {
+    // The serializer writes a component an `add` gives the root of a one-root prefab as the root's
+    // own, so the document's index lists it; it is still a member the document holds no record of.
+    const running = await sceneView(withPostOverrides([ADD_ROOT_GLOW]));
+    const post = running.app.world.getEntity("STREET-POST");
+    expect(brightness(running, "ADDED-GLOW")).toBe(1);
+
+    await reload(running, [GlowBrighter]);
+
+    expect(running.app.world.getEntity("STREET-POST")).not.toBe(post);
+    expect(brightness(running, "ADDED-GLOW")).toBe(4);
+    expect(brightness(running, "Spare")).toBe(7);
+  });
+
+  it("follows the list's record of a root's added component in the old double form, not the dropped copy", async () => {
+    // The root's copy sets `brightness`, the list's leaves it out; the list's is the one built.
+    const running = await sceneView((hash) => {
+      const street = withPostOverrides([ADD_ROOT_GLOW])(hash);
+      const own = { uid: "ADDED-GLOW", type: "game/Glow", props: { brightness: 1, radius: 3 } };
+      const entities = street.entities.map((record) =>
+        record.uid === "STREET-POST" ? { ...record, components: [own] } : record,
+      );
+      return { ...street, entities };
+    });
+
+    await reload(running, [GlowBrighter]);
+
+    expect(brightness(running, "ADDED-GLOW")).toBe(4);
   });
 
   it("edits the document's override list, with an override equal to the prefab's value", async () => {

@@ -423,7 +423,7 @@ export class SceneHost {
     });
     mirror.invalidate();
     const rebuilt = mirror.index();
-    const roots = rebuilt === null ? [] : outermostRoots(rebuilt, instancesHolding(app, rebuilt, changed));
+    const roots = rebuilt === null ? [] : outermostRoots(rebuilt, instancesHolding(app, mirror, rebuilt, changed));
     if (roots.length > 0) {
       const typeIds = [...changed.keys()];
       const cause = `the new defaults of ${typeIds.join(", ")}`;
