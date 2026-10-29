@@ -5,7 +5,7 @@
  * the editor's objects never are (protocol 0.3, "Document uids only").
  */
 
-import { canonicalizeNumber, decodeProps, parseOverridePath, serializeScene } from "@ignifx/core";
+import { canonicalizeNumber, CoreErrorCode, decodeProps, parseOverridePath, serializeScene } from "@ignifx/core";
 import { countEntities } from "../play-stats.js";
 import type { OpenSceneResult, ReadBackParams, ReadBackResult, SceneIssue } from "../protocol/index.js";
 import type {
@@ -302,19 +302,24 @@ export class DocumentMirror {
    */
   async open(file: SceneFile, address: string | null): Promise<OpenSceneResult> {
     await this.close();
+    const where = address ?? UNSAVED_SCENE_ADDRESS;
     const warnings: SceneIssue[] = [];
-    const scene = await this.#app.world.loadSceneFile(file, {
-      address: address ?? UNSAVED_SCENE_ADDRESS,
-      onIssue: (issue) => {
-        warnings.push({ code: issue.code, message: issue.message });
+    const entities = withoutDoubleAdds(file.entities, where, warnings);
+    const scene = await this.#app.world.loadSceneFile(
+      { ...file, entities },
+      {
+        address: where,
+        onIssue: (issue) => {
+          warnings.push({ code: issue.code, message: issue.message });
+        },
       },
-    });
+    );
     this.#scene = scene;
     this.#address = address;
     this.#name = file.name;
     this.#settings = file.settings === undefined ? null : copyJson(file.settings);
-    this.recordComponents(file.entities.flatMap((record) => record.components ?? []));
-    this.recordInstances(file.entities);
+    this.recordComponents(entities.flatMap((record) => record.components ?? []));
+    this.recordInstances(entities);
     // That index was read before the first frame; the next lookup reads the world again.
     this.invalidate();
     return { entityCount: countEntities(scene), warnings };
@@ -609,6 +614,48 @@ export class DocumentMirror {
     }
     return { file, issues, entities, records, components, added };
   }
+}
+
+/**
+ * A file's entity records without the old double form of an added component: before `readBack`
+ * wrote each `add` override once, it also wrote one that adds to the root of a one-root scene as
+ * the root's own component, with the same uid, so a reopen built it twice. Each is kept once, as the
+ * override list adds it, so `readBack` reads the same from the first frame.
+ *
+ * @param records - The file's entity records.
+ * @param address - The document's address, for the warning.
+ * @param warnings - Gets one `IGX-0608` warning when a record had the double form.
+ * @returns The records, each collapsed one replaced.
+ */
+function withoutDoubleAdds(
+  records: readonly SceneFileEntity[],
+  address: string,
+  warnings: SceneIssue[],
+): SceneFileEntity[] {
+  const doubled: string[] = [];
+  const collapsed = records.map((record) => {
+    const instance = record.instance;
+    if (instance === undefined || record.components === undefined) {
+      return record;
+    }
+    const single = withOverrideList(record, instance);
+    const kept = new Set((single.components ?? []).map((component) => component.uid));
+    for (const component of record.components) {
+      if (!kept.has(component.uid)) {
+        doubled.push(`${record.uid}/${component.uid}`);
+      }
+    }
+    return single;
+  });
+  if (doubled.length > 0) {
+    warnings.push({
+      code: CoreErrorCode.sceneFileInvalid,
+      message:
+        `${address}: ${doubled.join(", ")}: an older editor wrote each of these components both as an ` +
+        "instance root's own and in its override list, with one uid; each is kept once, as the list adds it.",
+    });
+  }
+  return collapsed;
 }
 
 /**

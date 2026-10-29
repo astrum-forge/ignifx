@@ -7,6 +7,7 @@ import {
   map,
   optional,
   record as recordOf,
+  Script,
   stringifySceneFile,
 } from "@ignifx/core";
 import { afterEach, describe, expect, it } from "vitest";
@@ -17,7 +18,15 @@ import { brightnessIn, Lamp, LAMP_POST, level, PREFAB } from "./support/lamps.js
 import type { EditorHost } from "../src/host.js";
 import type { EditorPeer } from "./support/editor.js";
 import type { LogParams } from "../src/protocol/index.js";
-import type { ComponentType, Entity, FetchLike, SceneFile, SceneFileEntity, SceneFileOverride } from "@ignifx/core";
+import type {
+  ComponentType,
+  Entity,
+  FetchLike,
+  SceneFile,
+  SceneFileComponent,
+  SceneFileEntity,
+  SceneFileOverride,
+} from "@ignifx/core";
 
 /**
  * Rebuilding a prefab instance in a headless scene view, from the override list the document
@@ -163,12 +172,12 @@ function lampPost(bulb: number, spare: boolean): SceneFile {
  *
  * @param open - The street for a prefab hash.
  * @param prefab - The lamp post prefab on disk.
- * @returns The running host and the warnings, in order.
+ * @returns The running host, the `log` warnings in order, and `openScene`'s result.
  */
 async function sceneView(
   open: (hash: string) => SceneFile,
   prefab: SceneFile = LAMP_POST,
-): Promise<{ running: EditorHost; warnings: string[] }> {
+): Promise<{ running: EditorHost; warnings: string[]; opened: unknown }> {
   files.set(PREFAB, stringifySceneFile(prefab));
   const fetch: FetchLike = async (input: RequestInfo | URL): Promise<Response> => {
     const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
@@ -202,8 +211,8 @@ async function sceneView(
     running.app.step(1 / 60);
   }, 1);
   await editor.nextNotification(SceneNotification.schemasChanged);
-  await call("openScene", { file: open(await computeSceneHash(prefab)), address: STREET });
-  return { running, warnings };
+  const opened = await call("openScene", { file: open(await computeSceneHash(prefab)), address: STREET });
+  return { running, warnings, opened };
 }
 
 /**
@@ -540,6 +549,46 @@ describe("references an instance's overrides hold, through a rebuild, headless",
   });
 });
 
+describe("a file in the old form readBack wrote for a root's added component, headless", () => {
+  it("opens with the component once, warns once, and reads back the same before and after a rebuild", async () => {
+    // Before #98 `readBack` wrote an `add` on the root of a one-root prefab twice: in the override
+    // list and as the root's own component, with the same uid.
+    const own: SceneFileComponent = {
+      uid: "ADDED-FOLLOW",
+      type: "game/Follow",
+      props: { target: { $entity: "OMITS" } },
+    };
+    const { running, warnings, opened } = await sceneView((hash) => {
+      const street = streetWith([addFollow("OMITS")])(hash);
+      const entities = street.entities.map((record) =>
+        record.uid === "STREET-POST" ? { ...record, components: [own] } : record,
+      );
+      return { ...street, entities };
+    });
+    const post = running.app.world.getEntity("STREET-POST");
+    expect(post?.getComponents(Follow)).toHaveLength(1);
+    expect(followOf(running, "Lamp Post")?.target).toBe(running.app.world.getEntity("OMITS"));
+    expect((opened as { warnings: unknown }).warnings).toEqual([
+      {
+        code: "IGX-0608",
+        message:
+          `${STREET}: STREET-POST/ADDED-FOLLOW: an older editor wrote each of these components both as an ` +
+          "instance root's own and in its override list, with one uid; each is kept once, as the list adds it.",
+      },
+    ]);
+    const read = async (): Promise<unknown> => call("readBack", { entities: ["STREET-POST"] });
+    const before = await read();
+    expect((before as { entities: readonly unknown[] }).entities[0]).not.toHaveProperty("components");
+
+    await applyOne({ op: "setOverride", entity: "STREET-POST", override: SPARE_7 });
+    await applyOne({ op: "removeOverride", entity: "STREET-POST", path: SPARE_7.path });
+
+    expect(await read()).toEqual(before);
+    expect(running.app.world.getEntity("STREET-POST")?.getComponents(Follow)).toHaveLength(1);
+    expect(warnings).toEqual([]);
+  });
+});
+
 /**
  * The lamp post prefab with a `Follow`, a `Watch` and a `Crowd` on the bulb, which an instance's
  * overrides aim; only the `Crowd` points somewhere, at the spare of its own lamp post.
@@ -731,6 +780,88 @@ describe("another instance's member overrides that point into a rebuilt instance
     expect(world.getEntity("SECOND-SIGN")?.isDestroyed).toBe(false);
     expect(await overridesOf("STREET-POST")).toEqual([aimFollow("SECOND-SIGN")]);
     expect(await overridesOf("SECOND-POST")).toEqual([aimFollow("SIGN")]);
+    expect(warnings).toEqual([]);
+  });
+});
+
+describe("a held member that the rebuild itself destroys, headless", () => {
+  it("is not re-pointed, so nothing is reported for it", async () => {
+    const add = addFollow("OMITS");
+    const { running, warnings } = await sceneView(twoPosts([add], [aimWatch("ADDED-FOLLOW")]), bulbAims());
+    const held = bulbOf(running, "SECOND-POST", Watch);
+    expect(held?.target).toBe(followOf(running, "Lamp Post"));
+    // An edit-mode script on the rebuilt root that takes the held member down with it.
+    class Saboteur extends Script {
+      static typeId = "test/Saboteur";
+      static runInEditMode = true;
+      onDestroy(): void {
+        held?.destroy();
+      }
+    }
+    running.app.registerComponents([Saboteur]);
+    running.app.world.getEntity("STREET-POST")?.addComponent(Saboteur);
+
+    // Without the added component a live member's field would resolve nowhere and be reported.
+    await applyOne({ op: "removeOverride", entity: "STREET-POST", path: add.path, added: "ADDED-FOLLOW" });
+
+    expect(held?.isDestroyed).toBe(true);
+    expect(warnings).toEqual([]);
+  });
+});
+
+/**
+ * Counts the reads of a component's field that the walk for held references makes, by putting an
+ * accessor in place of the field.
+ *
+ * @param component - The component.
+ * @param field - The field's name.
+ * @returns The count so far.
+ */
+function walkReads(component: Component | undefined, field: string): () => number {
+  if (component === undefined) {
+    throw new Error(`No component to count the reads of ${field} on.`);
+  }
+  let reads = 0;
+  let value: unknown = Reflect.get(component, field);
+  Object.defineProperty(component, field, {
+    configurable: true,
+    enumerable: true,
+    get: () => {
+      // The serializer and the destroy read the field too; only the walk's reads count.
+      if (new Error("read").stack?.includes("heldByMembers") === true) {
+        reads += 1;
+      }
+      return value;
+    },
+    set: (next: unknown) => {
+      value = next;
+    },
+  });
+  return () => reads;
+}
+
+describe("the walk for references held by other instances' members, headless", () => {
+  it("reads only the instances whose override lists point into the rebuilt one", async () => {
+    const { running, warnings } = await sceneView((hash) => {
+      const street = twoPosts([], [aimFollow("SIGN")])(hash);
+      const third: SceneFileEntity = {
+        uid: "THIRD-POST",
+        name: "Third Post",
+        parent: null,
+        transform: { position: [16, 0, 0], rotation: [0, 0, 0, 1], scale: [1, 1, 1] },
+        instance: { scene: { $asset: PREFAB }, hash, overrides: [aimFollow("OMITS")] },
+      };
+      return { ...street, entities: [...street.entities, third] };
+    }, bulbAims());
+    const pointing = walkReads(bulbOf(running, "SECOND-POST", Follow), "target");
+    const elsewhere = walkReads(bulbOf(running, "THIRD-POST", Follow), "target");
+
+    await applyOne({ op: "setOverride", entity: "STREET-POST", override: SPARE_7 });
+
+    expect(pointing()).toBeGreaterThan(0);
+    expect(elsewhere()).toBe(0);
+    expect(bulbOf(running, "SECOND-POST", Follow)?.target).toBe(running.app.world.getEntity("SIGN"));
+    expect(bulbOf(running, "THIRD-POST", Follow)?.target).toBe(running.app.world.getEntity("OMITS"));
     expect(warnings).toEqual([]);
   });
 });
