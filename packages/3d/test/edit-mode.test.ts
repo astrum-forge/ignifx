@@ -120,4 +120,33 @@ describe("the 3D toolkit in an edit-mode app", () => {
     expect([near.displayHidden, far.displayHidden]).toEqual([false, false]);
     harness.dispose();
   });
+
+  it("shows a level dropped from the list again while the shown level stays the same", async () => {
+    const harness = await createThreeDApp({ editMode: true });
+    harness.world.createEntity("EditorCamera").addComponent(Camera, { priority: 1_000_000 });
+    const tree = harness.world.createEntity("Tree");
+    const near = tree.addComponent(MeshRenderer);
+    const mid = harness.world.createEntity("TreeMid", { parent: tree }).addComponent(MeshRenderer);
+    const far = harness.world.createEntity("TreeFar", { parent: tree }).addComponent(MeshRenderer);
+    const group = tree.addComponent(LodGroup, {
+      levels: [
+        { distance: 10, renderer: near },
+        { distance: 20, renderer: mid },
+        { distance: 30, renderer: far },
+      ],
+      hysteresis: 0,
+    });
+    harness.step();
+    expect([group.level, near.displayHidden, mid.displayHidden, far.displayHidden]).toEqual([0, false, true, true]);
+
+    // Only the list changes: the camera has not moved, so `near` is still the level shown.
+    group.levels = [
+      { distance: 10, renderer: near },
+      { distance: 20, renderer: mid },
+    ];
+    harness.step();
+
+    expect([group.level, near.displayHidden, mid.displayHidden, far.displayHidden]).toEqual([0, false, true, false]);
+    harness.dispose();
+  });
 });
