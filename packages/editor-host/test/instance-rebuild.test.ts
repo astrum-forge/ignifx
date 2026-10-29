@@ -12,8 +12,8 @@ import {
 } from "@ignifx/core";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { startEditorHost } from "../src/host.js";
-import * as heldReferences from "../src/scene/held-references.js";
 import { SceneNotification } from "../src/protocol/index.js";
+import * as heldReferences from "../src/scene/held-references.js";
 import { connect, EDITOR_ORIGIN } from "./support/editor.js";
 import { brightnessIn, Lamp, LAMP_POST, level, PREFAB } from "./support/lamps.js";
 import type { EditorHost } from "../src/host.js";
