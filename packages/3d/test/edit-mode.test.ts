@@ -210,10 +210,10 @@ describe("the 3D toolkit in an edit-mode app", () => {
       writes.mockRestore();
       expect(shared.displayHidden).toBe(true);
       expect(sharedWarnings(harness)).toEqual([
-        "IGX-1217: the MeshRenderer on Shared is a level of the LodGroups on First and Second. " +
-          "A renderer belongs to one LodGroup; Second's leaves it to First's.",
-        "IGX-1217: the MeshRenderer on Shared is a level of the LodGroups on First and Third. " +
-          "A renderer belongs to one LodGroup; Third's leaves it to First's.",
+        "IGX-1217: The MeshRenderer on Shared is a level of the LodGroups on First and Second; " +
+          "a renderer belongs to one LodGroup, so the one on Second leaves it alone.",
+        "IGX-1217: The MeshRenderer on Shared is a level of the LodGroups on First and Third; " +
+          "a renderer belongs to one LodGroup, so the one on Third leaves it alone.",
       ]);
       harness.dispose();
     });
@@ -250,6 +250,27 @@ describe("the 3D toolkit in an edit-mode app", () => {
       first.destroy();
       harness.step();
       expect(shared.displayHidden).toBe(false);
+      harness.dispose();
+    });
+
+    it("stays hidden when the group that took it over from a destroyed owner runs before that owner lets go", async () => {
+      const harness = await createThreeDApp({ editMode: true });
+      const { first, second, shared } = twoGroups(harness);
+      first.enabled = false;
+      harness.step();
+      // The second group owns it now, and the first, which waits for it, comes earlier in the list.
+      first.enabled = true;
+      harness.step();
+      expect(shared.displayHidden).toBe(true);
+
+      // A PreRender system ordered before LOD destroys the owner after the destroy flush: the
+      // waiting group claims the renderer in that frame, and the owner lets go after it.
+      second.destroy();
+      first.evaluate(0);
+      second.releaseDisplay();
+      harness.step();
+
+      expect([first.level, shared.displayHidden]).toEqual([0, true]);
       harness.dispose();
     });
 

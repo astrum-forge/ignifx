@@ -10,7 +10,7 @@ import {
   Signal,
 } from "@ignifx/core";
 import { mainCamera } from "../camera/main-camera.js";
-import { ThreeDErrorCode } from "../errors.js";
+import { THREE_D_ERROR_MESSAGES, ThreeDErrorCode } from "../errors.js";
 import type { ComponentHooks, Schema, System, SystemContext } from "@ignifx/core";
 
 /**
@@ -228,12 +228,13 @@ export class LodGroup extends Component implements ComponentHooks {
     const table = owners();
     for (let index = 0; index < owned.length; index += 1) {
       const renderer = owned[index];
-      if (renderer === undefined) {
+      // Another group may have claimed it since (this group's owner check treats a destroyed group
+      // as free); its hide is not this group's to clear.
+      const owner = renderer === undefined ? undefined : table.get(renderer);
+      if (renderer === undefined || (owner !== undefined && owner !== this)) {
         continue;
       }
-      if (table.get(renderer) === this) {
-        table.delete(renderer);
-      }
+      table.delete(renderer);
       if (!renderer.isDestroyed) {
         renderer.displayHidden = false;
       }
@@ -308,12 +309,12 @@ export class LodGroup extends Component implements ComponentHooks {
    */
   #warnShared(renderer: MeshRenderer, owner: LodGroup): void {
     const code = ThreeDErrorCode.sharedLodLevel;
-    this.app.log.warnOnce(
-      `${code}:${this.entity.uid}:${renderer.entity.uid}`,
-      `${code}: the MeshRenderer on ${renderer.entity.name} is a level of the LodGroups on ` +
-        `${owner.entity.name} and ${this.entity.name}. A renderer belongs to one LodGroup; ` +
-        `${this.entity.name}'s leaves it to ${owner.entity.name}'s.`,
-    );
+    // Component uids, not entity uids: an entity may carry several MeshRenderers.
+    const message = (THREE_D_ERROR_MESSAGES[code] ?? "")
+      .replace("{renderer}", `The MeshRenderer on ${renderer.entity.name}`)
+      .replace("{owner}", owner.entity.name)
+      .replaceAll("{group}", this.entity.name);
+    this.app.log.warnOnce(`${code}:${this.uid}:${renderer.uid}`, `${code}: ${message}`);
   }
 
   /**

@@ -90,7 +90,8 @@ export const THREE_D_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.f
   "IGX-1214": "{renderer} is not a MeshRenderer this LodGroup can switch.",
   "IGX-1215": "{entity} has no Model with animation clips for its Animator to pose.",
   "IGX-1216": "Animator.sample was given {value} for {argument}; it takes a finite number.",
-  "IGX-1217": "{renderer} is a level of two LodGroups; the first to claim it switches it, the other leaves it alone.",
+  "IGX-1217":
+    "{renderer} is a level of the LodGroups on {owner} and {group}; a renderer belongs to one LodGroup, so the one on {group} leaves it alone.",
 });
 
 /**
