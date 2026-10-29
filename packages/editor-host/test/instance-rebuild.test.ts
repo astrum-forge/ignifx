@@ -480,11 +480,10 @@ describe("build problems of an op's subtree, headless", () => {
       ops: [follower("TO-OMITS", "OMITS"), follower("TO-NOWHERE", "NOWHERE")],
     });
 
-    expect(answer).toEqual({
-      applied: 2,
-      failures: [],
-      warnings: [{ code: "IGX-0602", message: expect.stringMatching(/^TO-NOWHERE-FOLLOW\.target: /u) }],
-    });
+    expect(answer).toMatchObject({ applied: 2, failures: [] });
+    const issues = isApplyOpsResult(answer) ? (answer.warnings ?? []) : [];
+    expect(issues.map((issue) => issue.code)).toEqual(["IGX-0602"]);
+    expect(issues[0]?.message).toMatch(/^TO-NOWHERE-FOLLOW\.target: /u);
     expect(running.app.world.getEntity("TO-OMITS")?.getComponent(Follow)?.target).toBe(
       running.app.world.getEntity("OMITS"),
     );
