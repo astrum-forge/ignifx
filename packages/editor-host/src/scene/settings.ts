@@ -37,14 +37,16 @@ function jsonCopy(value: unknown): JsonValue | undefined {
  * @returns The copy.
  */
 function jsonObjectCopy(value: object): JsonObject {
-  const copy: Record<string, JsonValue> = {};
+  const entries: [string, JsonValue][] = [];
   for (const [key, member] of Object.entries(value)) {
     const converted = jsonCopy(member);
     if (converted !== undefined) {
-      copy[key] = converted;
+      entries.push([key, converted]);
     }
   }
-  return copy;
+  // `fromEntries` defines own properties, so a `__proto__` key from a settings file stays an entry;
+  // assigning it would hit the prototype setter and lose it.
+  return Object.fromEntries(entries);
 }
 
 /**
