@@ -72863,6 +72863,16 @@ that the scene's own entities keep the uids the file gave them
 
 The handle the scene was loaded through, recorded on `Entity.prefab` when `asInstance`.
 
+##### outsideReferences?
+
+> `readonly` `optional` **outsideReferences?**: `Pick`\<[`ReferenceDecoder`](#referencedecoder), `"entity"` \| `"component"`\>
+
+How an `entityRef` or `componentRef` to a uid the file does not declare resolves. A tool that
+builds part of a larger document, such as an editor rebuilding one prefab instance, resolves
+the rest of the document here, so the part decodes as the whole file would; this includes a
+reference an instance's overrides hold. The file's own uids come first, and `asset()` fields
+never use it. Omitted, such a reference is `null` with an `IGX-0602` issue.
+
 ##### parent?
 
 > `readonly` `optional` **parent?**: [`Entity`](#entity-19) \| `null`

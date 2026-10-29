@@ -350,9 +350,11 @@ object `openScene` sends, through `world.loadSceneFile`; `readBack` answers with
   `spriteatlas` or `shader`. A changed prefab rebuilds the document's instances of it, directly or
   through another prefab, with their uids, transforms, overrides and document children; `readBack`
   then writes the new prefab's hash. An override the new prefab no longer has, like any problem
-  building an op's subtree, is a `log` warning worded as a reopen's. The host sends `assetReloaded { address, type, entities }`
-  (the rebuilt instance roots) once the new value is in. A texture, a removed file and the open
-  document's own file are left alone and send nothing.
+  building an op's subtree, is a `log` warning worded as a reopen's. A rebuilt subtree resolves its
+  references, the ones its overrides hold included, against the whole document, as a reopen does.
+  The host sends `assetReloaded { address, type, entities }` (the rebuilt instance roots) once the
+  new value is in. A texture, a removed file and the open document's own file are left alone and
+  send nothing.
 - **Document uids only.** Members of an instanced prefab and the editor's own entities never appear
   in a selection, a pick or `readBack`; a pick on a prefab member resolves to its instance root.
 

@@ -36,8 +36,8 @@ function staleOverride(path: string): string {
   return `IGX-0604: ${STREET}: ${STREET}: the override path "${path}" names no entity of the instanced scene.`;
 }
 
-/** A component that points at another entity. */
-class Follow extends Component.define({ target: entityRef<Entity>() }) {
+/** A component that points at another entity, and at a second one. */
+class Follow extends Component.define({ target: entityRef<Entity>(), also: entityRef<Entity>() }) {
   static typeId = "game/Follow";
 }
 
@@ -378,7 +378,13 @@ const WATCHER: SceneFileEntity = {
   name: "Watcher",
   parent: null,
   transform: { position: [0, 0, 0], rotation: [0, 0, 0, 1], scale: [1, 1, 1] },
-  components: [{ uid: "WATCHER-WATCH", type: "game/Watch", props: { target: { $component: "ADDED-FOLLOW" } } }],
+  components: [
+    {
+      uid: "WATCHER-WATCH",
+      type: "game/Watch",
+      props: { target: { $component: "ADDED-FOLLOW" } },
+    },
+  ],
 };
 
 /**
@@ -463,9 +469,8 @@ describe("references an instance's overrides hold, through a rebuild, headless",
     const added = followOf(running, "Lamp Post");
     expect(added?.isDestroyed).toBe(false);
     expect(watch()?.target).toBe(added);
-    expect(warnings).toEqual([]);
-
     expect(running.app.world.getEntity("STREET-POST")?.getComponents(Follow)).toHaveLength(1);
+    expect(warnings).toEqual([]);
 
     // Without the component the reference resolves nowhere, which a reopen would report.
     await applyOne({ op: "removeOverride", entity: "STREET-POST", path: add.path, added: "ADDED-FOLLOW" });
@@ -475,7 +480,16 @@ describe("references an instance's overrides hold, through a rebuild, headless",
     ]);
   });
 
-  it("re-points another instance's added component that points into the rebuilt one", async () => {
+  it("re-points a component another instance adds to a member, which points into the rebuilt one", async () => {
+    const add: SceneFileOverride = {
+      path: "BULB/components",
+      op: "add",
+      value: {
+        uid: "SECOND-FOLLOW",
+        type: "game/Follow",
+        props: { target: { $entity: "SIGN" }, also: { $entity: "NOWHERE" } },
+      },
+    };
     const { running, warnings } = await sceneView((hash) => {
       const street = level(hash);
       const second: SceneFileEntity = {
@@ -483,18 +497,25 @@ describe("references an instance's overrides hold, through a rebuild, headless",
         name: "Second Post",
         parent: null,
         transform: { position: [8, 0, 0], rotation: [0, 0, 0, 1], scale: [1, 1, 1] },
-        instance: { scene: { $asset: PREFAB }, hash, overrides: [addFollow("SIGN", "SECOND-FOLLOW")] },
+        instance: { scene: { $asset: PREFAB }, hash, overrides: [add] },
       };
       return { ...street, entities: [...street.entities, second] };
     });
-    const follow = (): Follow | null | undefined => running.app.world.getEntity("SECOND-POST")?.getComponent(Follow);
+    const follow = (): Follow | null | undefined =>
+      running.app.world
+        .getEntity("SECOND-POST")
+        ?.children.find((member) => member.name === "Bulb")
+        ?.getComponent(Follow);
     expect(follow()?.target).toBe(running.app.world.getEntity("SIGN"));
+    const nowhere = 'IGX-0602: scenes/street.scene.json: SECOND-FOLLOW.also: no target in this file has uid "NOWHERE".';
+    expect(warnings).toEqual([nowhere]);
 
     await applyOne({ op: "setOverride", entity: "STREET-POST", override: BULB_AS_PREFAB });
 
     const sign = running.app.world.getEntity("SIGN");
     expect(sign?.isDestroyed).toBe(false);
     expect(follow()?.target).toBe(sign);
-    expect(warnings).toEqual([]);
+    // Only the field that points in is decoded again: `also` was reported when it was built.
+    expect(warnings).toEqual([nowhere]);
   });
 });
