@@ -553,11 +553,15 @@ describe("a file in the old form readBack wrote for a root's added component, he
   it("opens with the component once, warns once, and reads back the same before and after a rebuild", async () => {
     // Before #98 `readBack` wrote an `add` on the root of a one-root prefab twice: in the override
     // list and as the root's own component, with the same uid.
-    const add = addFollow("OMITS");
+    const own: SceneFileComponent = {
+      uid: "ADDED-FOLLOW",
+      type: "game/Follow",
+      props: { target: { $entity: "OMITS" } },
+    };
     const { running, warnings, opened } = await sceneView((hash) => {
-      const street = streetWith([add])(hash);
+      const street = streetWith([addFollow("OMITS")])(hash);
       const entities = street.entities.map((record) =>
-        record.uid === "STREET-POST" ? { ...record, components: [{ ...(add.value as SceneFileComponent) }] } : record,
+        record.uid === "STREET-POST" ? { ...record, components: [own] } : record,
       );
       return { ...street, entities };
     });
@@ -572,7 +576,7 @@ describe("a file in the old form readBack wrote for a root's added component, he
           "instance root's own and in its override list, with one uid; each is kept once, as the list adds it.",
       },
     ]);
-    const read = async (): Promise<unknown> => (await call("readBack", { entities: ["STREET-POST"] })) as unknown;
+    const read = async (): Promise<unknown> => call("readBack", { entities: ["STREET-POST"] });
     const before = await read();
     expect((before as { entities: readonly unknown[] }).entities[0]).not.toHaveProperty("components");
 
