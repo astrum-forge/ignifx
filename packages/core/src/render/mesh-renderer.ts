@@ -34,7 +34,8 @@ import type { Schema } from "../schema/types.js";
  * flag flips. That is `07-rendering.md` §2.3's rule, and the browser test asserts both halves: the
  * pixel returns to the clear colour, and the mesh is still in the scene.
  *
- * `displayHidden` hides the same way but is not a field: scene files do not save it, so a system
+ * `displayHidden` hides the same way, and makes the clone unpickable too, but is not a field: scene
+ * files do not save it, so a system
  * that chooses what is drawn without changing the document (a `LodGroup` in an edit-mode app,
  * ADR-0028) switches it instead of `enabled`.
  *
@@ -114,14 +115,17 @@ export class MeshRenderer extends Component implements ComponentHooks {
   }
 
   /**
-   * A display-only hide: while `true` the mesh is not drawn, whatever `enabled` says.
+   * A display-only hide: while `true` the mesh is neither drawn nor picked, whatever `enabled` and
+   * `pickable` say.
    *
    * @remarks
    * It is not a schema field, so scene files do not save it, a serializer never reads it, and
    * `enabled` keeps its authored value. That makes it the switch for a system that chooses what is
    * drawn without changing the document: `@ignifx/3d`'s `LodGroup` uses it in place of `enabled` in
-   * an edit-mode app (ADR-0028). It starts `false`, takes effect at the next render sync, and
-   * {@link MeshRenderer.isVisible} reports the outcome.
+   * an edit-mode app (ADR-0028). It starts `false` and takes effect at the next render sync;
+   * {@link MeshRenderer.isVisible} reports the outcome. Lite's pickers ignore visibility, so the
+   * clone is also made unpickable while hidden: `app.renderer.pickAsync` and `world.raycastRender`
+   * neither return it nor let it occlude, as with `pickable: false`.
    *
    * @returns `true` while the mesh is hidden for display.
    *
@@ -182,7 +186,7 @@ export class MeshRenderer extends Component implements ComponentHooks {
     }
     instance.applyMaterial(this.#material(renderer));
     instance.applyDisplacement(this.#displacement(), this.entity.transform);
-    instance.applyFlags(this.receiveShadows, this.renderOrder, this.pickable);
+    instance.applyFlags(this.receiveShadows, this.renderOrder, this.pickable && !this.#displayHidden);
     instance.applyVisible(this.isEnabledInHierarchy && !this.#displayHidden);
     return changed;
   }

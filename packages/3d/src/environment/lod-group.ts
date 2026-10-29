@@ -110,7 +110,13 @@ export class LodGroup extends Component implements ComponentHooks {
   #level = LOD_CULLED;
 
   /** The renderers this group hid for display in an edit-mode app, so it can show them again. */
-  readonly #hidden = new Set<MeshRenderer>();
+  readonly #hidden: MeshRenderer[] = [];
+
+  /** Each level's renderer when the display was last applied, to notice an edited level list. */
+  readonly #displayed: (MeshRenderer | null)[] = [];
+
+  /** The renderer shown when the display was last applied. */
+  #shown: MeshRenderer | null = null;
 
   readonly #onLevelChanged: Signal<number> = new Signal<number>();
 
@@ -192,33 +198,59 @@ export class LodGroup extends Component implements ComponentHooks {
    * @internal
    */
   releaseDisplay(): void {
-    if (this.#hidden.size === 0) {
-      return;
-    }
-    for (const renderer of this.#hidden) {
-      if (!renderer.isDestroyed) {
+    const hidden = this.#hidden;
+    for (let index = 0; index < hidden.length; index += 1) {
+      const renderer = hidden[index];
+      if (renderer !== undefined && !renderer.isDestroyed) {
         renderer.displayHidden = false;
       }
     }
-    this.#hidden.clear();
+    hidden.length = 0;
+    this.#displayed.length = 0;
+    this.#shown = null;
   }
 
   /**
    * Hides for display every level's renderer but the one shown, and shows again any it hid before
-   * that is no longer a level, so an edited level list leaves nothing hidden behind.
+   * that is no longer a level, so an edited level list leaves nothing hidden behind. It writes only
+   * when the shown renderer or the level list changed since the last call.
    *
    * @param shown - The chosen level's renderer, or `null` when the group is culled.
    */
   #display(shown: MeshRenderer | null): void {
+    if (shown === this.#shown && this.#displayed.length > 0 && this.#isDisplayed()) {
+      return;
+    }
     this.releaseDisplay();
+    this.#shown = shown;
     const levels = this.levels;
     for (let index = 0; index < levels.length; index += 1) {
       const renderer = levels[index]?.renderer ?? null;
+      this.#displayed.push(renderer);
       if (renderer !== null && renderer !== shown && !renderer.isDestroyed) {
         renderer.displayHidden = true;
-        this.#hidden.add(renderer);
+        this.#hidden.push(renderer);
       }
     }
+  }
+
+  /**
+   * Whether the level list still names the renderers the display was last applied to.
+   *
+   * @returns `true` when nothing in the list changed.
+   */
+  #isDisplayed(): boolean {
+    const levels = this.levels;
+    const displayed = this.#displayed;
+    if (levels.length !== displayed.length) {
+      return false;
+    }
+    for (let index = 0; index < levels.length; index += 1) {
+      if ((levels[index]?.renderer ?? null) !== displayed[index]) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /**

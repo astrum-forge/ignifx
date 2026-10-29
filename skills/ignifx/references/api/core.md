@@ -8491,15 +8491,18 @@ The app.
 
 > **get** **displayHidden**(): `boolean`
 
-A display-only hide: while `true` the mesh is not drawn, whatever `enabled` says.
+A display-only hide: while `true` the mesh is neither drawn nor picked, whatever `enabled` and
+`pickable` say.
 
 ###### Remarks
 
 It is not a schema field, so scene files do not save it, a serializer never reads it, and
 `enabled` keeps its authored value. That makes it the switch for a system that chooses what is
 drawn without changing the document: `@ignifx/3d`'s `LodGroup` uses it in place of `enabled` in
-an edit-mode app (ADR-0028). It starts `false`, takes effect at the next render sync, and
-[MeshRenderer.isVisible](#isvisible-1) reports the outcome.
+an edit-mode app (ADR-0028). It starts `false` and takes effect at the next render sync;
+[MeshRenderer.isVisible](#isvisible-1) reports the outcome. Lite's pickers ignore visibility, so the
+clone is also made unpickable while hidden: `app.renderer.pickAsync` and `world.raycastRender`
+neither return it nor let it occlude, as with `pickable: false`.
 
 ###### Example
 

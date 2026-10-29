@@ -1,5 +1,5 @@
 import { Camera, MeshRenderer, Quat } from "@ignifx/core";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { AnimatorAsset } from "../src/animator/animator-asset.js";
 import { Animator } from "../src/animator/animator.js";
 import { ANIMATOR_ASSET_TYPE } from "../src/animator/definition.js";
@@ -93,6 +93,12 @@ describe("the 3D toolkit in an edit-mode app", () => {
       [LOD_CULLED, true, true],
       [0, false, true],
     ]);
+
+    // While the level stays the same the group writes nothing.
+    const writes = vi.spyOn(far, "displayHidden", "set");
+    harness.stepMany(3);
+    expect(writes).not.toHaveBeenCalled();
+    writes.mockRestore();
 
     // A disabled group shows every level again, and a re-enabled one picks up where it was.
     group.enabled = false;
