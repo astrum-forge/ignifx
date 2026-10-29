@@ -73,21 +73,63 @@ export function assignProps(
   references: ReferenceDecoder,
   only?: ReadonlySet<string>,
 ): SceneIssue[] {
+  const decoded = decodeComponentProps(component, props, references, only);
+  for (const [name, value] of decoded.values) {
+    Reflect.set(component, name, value);
+  }
+  return decoded.issues;
+}
+
+/**
+ * The problems {@link assignProps} would return, without assigning anything.
+ *
+ * @param component - The component.
+ * @param props - The `props` object.
+ * @param references - How references resolve.
+ * @param only - The fields to decode, if not every one.
+ * @returns The decoding problems, as `{ code, message }`.
+ */
+export function propIssues(
+  component: Component,
+  props: JsonObject,
+  references: ReferenceDecoder,
+  only?: ReadonlySet<string>,
+): SceneIssue[] {
+  return decodeComponentProps(component, props, references, only).issues;
+}
+
+/**
+ * Decodes a component's props from JSON, every schema field the JSON leaves out taking its default.
+ *
+ * @param component - The component.
+ * @param props - The `props` object.
+ * @param references - How references resolve.
+ * @param only - The fields to keep, if not every one.
+ * @returns The kept fields' values, and their problems as `{ code, message }`.
+ */
+function decodeComponentProps(
+  component: Component,
+  props: JsonObject,
+  references: ReferenceDecoder,
+  only: ReadonlySet<string> | undefined,
+): { readonly values: ReadonlyMap<string, unknown>; readonly issues: SceneIssue[] } {
   const schema = component.world.registry.describe(component.constructor).schema;
   if (schema === null) {
-    return [];
+    return { values: new Map(), issues: [] };
   }
   const decoded = decodeProps(schema, props, references);
-  const values = new Map<string, unknown>(Object.entries(decoded.value));
+  const all = new Map<string, unknown>(Object.entries(decoded.value));
+  const values = new Map<string, unknown>();
   for (const name of Object.keys(schema)) {
     if (only === undefined || only.has(name)) {
-      Reflect.set(component, name, values.get(name));
+      values.set(name, all.get(name));
     }
   }
   // An issue's path starts with its field's name, then `.` or `[` for a deeper step.
-  return decoded.issues
+  const issues = decoded.issues
     .filter((issue) => only === undefined || only.has(issue.path.split(/[.[]/u, 1)[0] ?? ""))
     .map((issue) => ({ code: issue.code, message: `${component.uid}.${issue.path}: ${issue.message}` }));
+  return { values, issues };
 }
 
 /**
