@@ -120,7 +120,7 @@ expanded under the instance root instead.
   `IGX-0604`, or throws when `strictInstanceHashes` is passed to `loadScene`/`instantiate`.
 - The `path` grammar — every path starts with the uid of an entity **inside the instanced file**, so
   it survives the per-instance uid remap. `parseOverridePath(path)` parses one; a path outside the
-  grammar is `IGX-0609`.
+  grammar, or one with a `__proto__` property step, is `IGX-0609`.
 
 ```text
 <uid>                                         whole entity            ("remove" only)

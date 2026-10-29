@@ -23,3 +23,18 @@ export type JsonArray = readonly JsonValue[];
  * @public
  */
 export type JsonObject = { readonly [key: string]: JsonValue };
+
+/**
+ * Sets a key on an object being built from JSON as an own, enumerable data property — what
+ * `JSON.parse` does. A plain `target[key] = value` treats the key `__proto__` as the prototype
+ * setter, so a file carrying that key would change the copy's prototype instead of holding data.
+ *
+ * @param target - The object under construction.
+ * @param key - The key, taken from parsed JSON.
+ * @param value - The value.
+ *
+ * @internal
+ */
+export function setOwnJsonProperty<T>(target: Record<string, T>, key: string, value: T): void {
+  Object.defineProperty(target, key, { value, enumerable: true, writable: true, configurable: true });
+}

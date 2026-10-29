@@ -10,6 +10,7 @@ import {
   isPlainObject,
 } from "./internal.js";
 import { SchemaIssueCode, issue } from "./issues.js";
+import { setOwnJsonProperty } from "./json.js";
 import type { SchemaIssue } from "./issues.js";
 import type { JsonObject, JsonValue } from "./json.js";
 import type { FieldDefinition, FieldsOf, PartialFieldsOf, Schema } from "./types.js";
@@ -300,7 +301,8 @@ function encodeInto(
       }
       const encoded: Record<string, JsonValue> = {};
       for (const key of Object.keys(value).toSorted()) {
-        encoded[key] = encodeInto(spec.value, value[key], references, indexPath(path, key), issues);
+        // Defined, not assigned: a map key `__proto__` stays an entry, not a prototype change.
+        setOwnJsonProperty(encoded, key, encodeInto(spec.value, value[key], references, indexPath(path, key), issues));
       }
       return encoded;
     }
@@ -539,7 +541,12 @@ function decodeInto(
       }
       const decoded: Record<string, unknown> = {};
       for (const key of Object.keys(json).toSorted()) {
-        decoded[key] = decodeInto(spec.value, json[key] ?? null, references, indexPath(path, key), issues);
+        // Defined, not assigned: a map key `__proto__` from a file stays an entry of the map.
+        setOwnJsonProperty(
+          decoded,
+          key,
+          decodeInto(spec.value, json[key] ?? null, references, indexPath(path, key), issues),
+        );
       }
       return decoded;
     }

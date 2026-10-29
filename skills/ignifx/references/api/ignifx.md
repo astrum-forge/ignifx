@@ -101675,7 +101675,8 @@ The parsed path.
 
 #### Throws
 
-IgnifxError with code `IGX-0609` when the path does not match the grammar.
+IgnifxError with code `IGX-0609` when the path does not match the grammar, or when a
+property step is `__proto__`.
 
 #### Example
 

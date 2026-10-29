@@ -1,5 +1,6 @@
 import { CoreErrorCode } from "../errors/error-codes.js";
 import { IgnifxError } from "../errors/ignifx-error.js";
+import { setOwnJsonProperty } from "../schema/json.js";
 import { asJsonArray, asJsonObject } from "./json-view.js";
 import { applyOverrides } from "./overrides.js";
 import { findSceneDependency } from "./scene-asset.js";
@@ -449,7 +450,8 @@ function remapValue(value: JsonValue, keys: ReadonlyMap<string, string>): JsonVa
       rewritten[key] = keys.get(entry) ?? entry;
       continue;
     }
-    rewritten[key] = remapValue(entry, keys);
+    // Defined, not assigned: a `__proto__` key in a file stays inert data on the copy.
+    setOwnJsonProperty(rewritten, key, remapValue(entry, keys));
   }
   return rewritten;
 }
