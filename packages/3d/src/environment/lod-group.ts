@@ -22,9 +22,12 @@ import type { ComponentHooks, Schema, System, SystemContext } from "@ignifx/core
  *
  * ## Edit mode
  *
- * The switch writes `MeshRenderer.enabled`, which scene files save, so an edit-mode app skips the
- * system (ADR-0028): an editor's camera moving must not change the document. Every level keeps its
- * authored `enabled` there.
+ * The switch writes `MeshRenderer.enabled`, which scene files save, and an editor's camera moving
+ * must not change the document (ADR-0028). So in an edit-mode app the switch is display-only
+ * (spike S0.7 §5): the group picks its level from the main camera, which there is the editor's,
+ * exactly as in a game, but hides the other levels with `MeshRenderer.displayHidden`, which is not
+ * saved. Every level keeps its authored `enabled`, a level the group shows still draws only if it
+ * is enabled, and a group that is removed or disabled shows every level again.
  *
  * ## Hysteresis
  *
@@ -106,6 +109,9 @@ export class LodGroup extends Component implements ComponentHooks {
 
   #level = LOD_CULLED;
 
+  /** The renderers this group hid for display in an edit-mode app, so it can show them again. */
+  readonly #hidden = new Set<MeshRenderer>();
+
   readonly #onLevelChanged: Signal<number> = new Signal<number>();
 
   /** Applies the schema defaults, exactly as `Component.define` would. */
@@ -134,11 +140,13 @@ export class LodGroup extends Component implements ComponentHooks {
 
   /**
    * Turns every level off, so a removed group leaves nothing drawn. In an edit-mode app it leaves
-   * them as authored: the LOD system does not run there, and `enabled` is saved to the scene file.
+   * `enabled` as authored, because scene files save it, and shows again the levels it hid for
+   * display.
    */
   onDetach(): void {
     this.#level = LOD_CULLED;
     if (this.app.isEditMode) {
+      this.releaseDisplay();
       return;
     }
     for (const level of this.levels) {
@@ -150,7 +158,8 @@ export class LodGroup extends Component implements ComponentHooks {
   }
 
   /**
-   * Chooses the level for a distance and enables exactly that renderer.
+   * Chooses the level for a distance and enables exactly that renderer; in an edit-mode app it
+   * hides the others for display instead and leaves `enabled` alone.
    *
    * @param distance - How far the camera is from the group, in metres.
    *
@@ -163,10 +172,51 @@ export class LodGroup extends Component implements ComponentHooks {
       this.#onLevelChanged.emit(next);
     }
     const levels = this.levels;
+    if (this.app.isEditMode) {
+      this.#display(levels[next]?.renderer ?? null);
+      return;
+    }
     for (let index = 0; index < levels.length; index += 1) {
       const renderer = levels[index]?.renderer ?? null;
       if (renderer !== null && !renderer.isDestroyed) {
         renderer.enabled = index === next;
+      }
+    }
+  }
+
+  /**
+   * Shows again every renderer this group hid for display. The LOD system calls it for a group that
+   * is not enabled in the hierarchy; it does nothing outside an edit-mode app, where nothing is
+   * hidden that way.
+   *
+   * @internal
+   */
+  releaseDisplay(): void {
+    if (this.#hidden.size === 0) {
+      return;
+    }
+    for (const renderer of this.#hidden) {
+      if (!renderer.isDestroyed) {
+        renderer.displayHidden = false;
+      }
+    }
+    this.#hidden.clear();
+  }
+
+  /**
+   * Hides for display every level's renderer but the one shown, and shows again any it hid before
+   * that is no longer a level, so an edited level list leaves nothing hidden behind.
+   *
+   * @param shown - The chosen level's renderer, or `null` when the group is culled.
+   */
+  #display(shown: MeshRenderer | null): void {
+    this.releaseDisplay();
+    const levels = this.levels;
+    for (let index = 0; index < levels.length; index += 1) {
+      const renderer = levels[index]?.renderer ?? null;
+      if (renderer !== null && renderer !== shown && !renderer.isDestroyed) {
+        renderer.displayHidden = true;
+        this.#hidden.add(renderer);
       }
     }
   }
@@ -213,7 +263,8 @@ export class LodSystem implements System {
   readonly name = "ignifx/3d-lod";
 
   /**
-   * Measures each group's distance from the camera and switches it.
+   * Measures each group's distance from the camera and switches it. A group that is not enabled in
+   * the hierarchy is left as it is, less what it hid for display in an edit-mode app.
    *
    * @param ctx - The world, clock, phase, and delta.
    */
@@ -226,9 +277,14 @@ export class LodSystem implements System {
     const groups = ctx.world.components(LodGroup);
     for (let index = 0; index < groups.length; index += 1) {
       const group = groups[index];
-      if (group !== undefined && group.isEnabledInHierarchy) {
+      if (group === undefined) {
+        continue;
+      }
+      if (group.isEnabledInHierarchy) {
         const position = group.entity.transform.position;
         group.evaluate(Math.hypot(position.x - eye.x, position.y - eye.y, position.z - eye.z));
+      } else {
+        group.releaseDisplay();
       }
     }
   }

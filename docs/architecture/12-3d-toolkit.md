@@ -96,7 +96,7 @@ Runs skeletal/morph animation for `Model` instances on ignifx's clock.
 
 ## 6. Environment helpers
 
-`LodGroup` (distance-based `MeshRenderer` switching with hysteresis, evaluated in `PreRender` against the highest-priority enabled camera; Lite has no automatic LOD) and `Billboard` (faces that camera, with a `yAxis` mode that stays upright; Lite's own billboard sprite systems remain the answer for particles) **shipped in Phase 7**.
+`LodGroup` (distance-based `MeshRenderer` switching with hysteresis, evaluated in `PreRender` against the highest-priority enabled camera; Lite has no automatic LOD; in an edit-mode app it switches `MeshRenderer.displayHidden` instead of the saved `enabled`, ADR-0028) and `Billboard` (faces that camera, with a `yAxis` mode that stays upright; Lite's own billboard sprite systems remain the answer for particles) **shipped in Phase 7**.
 
 `DayNightCycle` (drives a directional light and environment rotation), `SimpleWater`, and `FogVolume` are Phase 7b/8 items, listed so the package boundary is clear. **Not implemented.**
 

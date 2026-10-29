@@ -76,6 +76,8 @@ describe("LodGroup", () => {
     expect(near.enabled).toBe(false);
     expect(far.enabled).toBe(false);
     expect(seen).toEqual([0, 1, LOD_CULLED]);
+    // A game switches `enabled` and never the edit-mode display-only hide.
+    expect([near.displayHidden, far.displayHidden]).toEqual([false, false]);
     expect(camera).toBeDefined();
     harness.dispose();
   });
