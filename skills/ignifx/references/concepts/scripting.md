@@ -98,8 +98,9 @@ schema is a file-format change, which before 1.0 simply invalidates old files (`
   from a game, `ctx.registerComponents([...])` from an extension. Two classes with the same `typeId`
   throw `IGX-0203`; serializing a class without one throws `IGX-0204`.
 - `static requires = [Health]` auto-adds and validates dependencies on attach (`IGX-0201`); a scene
-  file may list `Health` before or after the class that requires it. A class whose `requires` reaches
-  itself (a self-require, or A requiring B requiring A) is refused with `IGX-0209`.
+  file may list `Health` before or after the class that requires it. A class whose `requires` chain
+  loops (a self-require, A requiring B requiring A, or a class requiring one of those) is refused
+  with `IGX-0209`.
   `static allowMultiple = false` limits the entity to one (`IGX-0202`).
 
 ## 4. Value encoding

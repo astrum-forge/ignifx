@@ -13111,7 +13111,9 @@ Additive and hot-reload-only: nothing on the normal path replaces a registration
 
 ###### Throws
 
-IgnifxError with code `IGX-0204` when the replacement declares no `typeId`.
+IgnifxError with code `IGX-0204` when the replacement declares no `typeId`, and
+`IGX-0209` when its `static requires` graph contains a cycle; either way the registry is left
+unchanged.
 
 ###### Example
 
@@ -71896,7 +71898,9 @@ The replaced modules and the classes they export.
 
 [`HotReloadReport`](#hotreloadreport)
 
-What was reloaded.
+What was reloaded. A replacement the registry refuses — for example one whose
+`static requires` loops (`IGX-0209`) — is collected in `errors`, and the class it would have
+replaced stays registered.
 
 ###### Throws
 
@@ -71926,7 +71930,7 @@ The new instance.
 
 ###### Throws
 
-IgnifxError with code `IGX-0209` when the instance was not built from a scene asset.
+IgnifxError with code `IGX-1506` when the instance was not built from a scene asset.
 
 ***
 
@@ -89164,7 +89168,7 @@ A component declared through `requires` is missing from the entity.
 
 > `readonly` **requiresCycle**: `"IGX-0209"`
 
-A component class's `static requires` reaches the class itself, directly or through others.
+A component class's `static requires` chain loops, through the class itself or a class it requires.
 
 ##### sceneFileInvalid
 

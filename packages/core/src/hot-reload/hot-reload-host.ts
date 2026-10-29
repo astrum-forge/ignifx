@@ -148,7 +148,16 @@ export class HotReloadHostImpl implements HotReloadHost {
       if (plan === undefined) {
         continue;
       }
-      const info = world.registry.replace(plan.next).info;
+      let info: ComponentClassInfo;
+      try {
+        info = world.registry.replace(plan.next).info;
+      } catch (error) {
+        // A refused replacement (`IGX-0209`) leaves the previous class registered and its instances
+        // untouched; the remaining classes still reload.
+        errors.push(error);
+        this.#report(error);
+        continue;
+      }
       instances +=
         plan.policy === "patch"
           ? patchInstances(world, plan.previousInfo, info, plan.instances)

@@ -203,7 +203,9 @@ export class ComponentRegistry {
    *
    * @param type - The replacement class. It must declare the `typeId` it replaces.
    * @returns The freshly built info for the replacement, and the class it replaced.
-   * @throws IgnifxError with code `IGX-0204` when the replacement declares no `typeId`.
+   * @throws IgnifxError with code `IGX-0204` when the replacement declares no `typeId`, and
+   * `IGX-0209` when its `static requires` graph contains a cycle; either way the registry is left
+   * unchanged.
    *
    * @example
    * ```ts
@@ -216,6 +218,9 @@ export class ComponentRegistry {
     if (previous === type) {
       return { previous, info: this.describe(type) };
     }
+    // Checked before anything is unbound: a refused replacement must leave the previous class
+    // registered with its info and `classIndex`, because its live instances still use them.
+    assertNoRequiresCycle(type);
     const inherited = previous === null ? null : (this.#info.get(previous)?.classIndex ?? null);
     if (previous !== null) {
       this.#info.delete(previous);
@@ -242,6 +247,7 @@ export class ComponentRegistry {
     if (cached !== undefined) {
       return cached;
     }
+    assertNoRequiresCycle(type);
     const info = this.#build(type);
     this.#info.set(type, info);
     return info;
@@ -338,7 +344,6 @@ export class ComponentRegistry {
    */
   #build(type: ComponentType, inheritedClassIndex: number | null = null): ComponentClassInfo {
     const statics = readStatics(type);
-    assertNoRequiresCycle(type);
     const ancestors = collectAncestors(type);
     const schema = statics.schema ?? null;
     const isScript = ancestors.includes(Script);
@@ -351,7 +356,9 @@ export class ComponentRegistry {
       type,
       typeId: statics.typeId ?? null,
       schema,
-      requires: statics.requires ?? EMPTY_TYPES,
+      // A frozen copy: the cycle check saw the array as it is now, so a later in-place change to
+      // the class's static must not reach the list `addComponent` walks.
+      requires: statics.requires === undefined ? EMPTY_TYPES : Object.freeze([...statics.requires]),
       allowMultiple: statics.allowMultiple ?? true,
       ancestors,
       trackedFields: schema === null ? EMPTY_NAMES : collectTrackedFields(schema),
@@ -363,7 +370,8 @@ export class ComponentRegistry {
 }
 
 /**
- * Refuses a class whose `static requires` graph contains a cycle. `addComponent` adds each missing
+ * Refuses a class whose `static requires` graph contains a cycle — through the class itself or
+ * through any class it reaches. `addComponent` adds each missing
  * required class before the requiring one, so a cycle — a self-require, or A requiring B requiring
  * A — would otherwise recurse until the stack overflows on the first `addComponent`.
  *
@@ -382,7 +390,7 @@ function assertNoRequiresCycle(type: ComponentType): void {
         `${type.prototype.constructor.name} has a static requires cycle: ${cycle}.`,
         {
           context: { component: type.prototype.constructor.name, cycle },
-          hint: "Remove one of the classes from the other's `static requires`; requires must form a tree.",
+          hint: "Remove a class from one of the `static requires` lists so the chain never loops back; shared requirements are fine.",
         },
       );
     }

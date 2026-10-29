@@ -150,7 +150,7 @@ export const CoreErrorCode = {
   hotReloadSchemaChanged: "IGX-0207",
   /** `app.hotReload.apply()` was called from inside a lifecycle callback. */
   hotReloadInsideCallback: "IGX-0208",
-  /** A component class's `static requires` reaches the class itself, directly or through others. */
+  /** A component class's `static requires` chain loops, through the class itself or a class it requires. */
   requiresCycle: "IGX-0209",
   /** A scene was instantiated before it had finished loading. */
   sceneNotLoaded: "IGX-0301",

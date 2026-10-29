@@ -73,6 +73,37 @@ describe("registration", () => {
     expect(registry.size).toBe(0);
   });
 
+  it("leaves the registry untouched when a replace is refused with IGX-0209", () => {
+    const registry = new ComponentRegistry();
+    class Current extends Component {
+      static typeId = "test/Swapped";
+    }
+    class Looping extends Component {
+      static typeId = "test/Swapped";
+      static requires: readonly (typeof Component)[] = [];
+    }
+    Looping.requires = [Looping];
+    registry.register(Plain);
+    const before = registry.register(Current);
+    expect(() => registry.replace(Looping)).toThrow(/IGX-0209/u);
+    expect(registry.get("test/Swapped")).toBe(Current);
+    expect(registry.describe(Current)).toBe(before);
+    expect(registry.describe(Current).classIndex).toBe(1);
+    expect(registry.size).toBe(2);
+  });
+
+  it("caches a frozen copy of requires, so a later in-place change cannot form an unchecked cycle", () => {
+    const registry = new ComponentRegistry();
+    class Needed extends Component {}
+    class Needy extends Component {
+      static requires: (typeof Component)[] = [Needed];
+    }
+    const info = registry.describe(Needy);
+    Needy.requires.push(Needy);
+    expect(info.requires).toEqual([Needed]);
+    expect(Object.isFrozen(info.requires)).toBe(true);
+  });
+
   it("accepts a requires diamond, which shares a class but has no cycle", () => {
     const registry = new ComponentRegistry();
     class Base extends Component {}
