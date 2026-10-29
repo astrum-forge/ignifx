@@ -24,6 +24,9 @@ const DEFAULT_SIZE = 96;
 /** How many frames a change is given to reach the screen before a test reads it. */
 export const SETTLE_FRAMES = 6;
 
+/** The most frames {@link ThreeDBrowserApp.settle} and {@link ThreeDBrowserApp.stableCapture} wait. */
+const MAX_WAIT_FRAMES = 600;
+
 /** One pixel of a capture, as straight RGBA bytes. */
 export interface Rgba {
   /** The red channel, `0` to `255`. */
@@ -88,6 +91,24 @@ export interface ThreeDBrowserApp {
   advance(frames: number): Promise<void>;
   /** Captures a whole frame. */
   capture(): Promise<Capture>;
+  /**
+   * Waits until the renderer owes no renderable rebuild, then for {@link SETTLE_FRAMES} more frames.
+   *
+   * @remarks
+   * Adding a model queues a rebuild that runs between frames and takes as long as the machine makes
+   * it take; the first skinned model in a page needs a second one for its new layouts. A capture
+   * taken before it lands shows the old renderables, so a test waits for it rather than for a frame
+   * count.
+   */
+  settle(): Promise<void>;
+  /**
+   * Captures frames until two in a row are identical, and returns the last.
+   *
+   * @remarks
+   * Only for a still scene (an edit-mode or paused app), where a frame that still changes is one
+   * that has not caught up with the scene yet.
+   */
+  stableCapture(): Promise<Capture>;
   /** Disposes the app and removes the canvas. */
   dispose(): void;
 }
@@ -207,6 +228,42 @@ export async function createThreeDBrowserApp(options: ThreeDBrowserOptions = {})
     };
   };
 
+  // `isRebuildInFlight` is `@internal` to `@ignifx/core` (`RendererImpl`); core's own
+  // `change-during-rebuild.browser.test.ts` waits on the same flag. Read it by name so a rename
+  // fails here loudly instead of passing silently.
+  const isRebuildInFlight = (): boolean => {
+    const flag: unknown = Reflect.get(app.renderer, "isRebuildInFlight");
+    if (typeof flag !== "boolean") {
+      throw new TypeError("app.renderer.isRebuildInFlight is gone; update the 3D browser harness.");
+    }
+    return flag;
+  };
+
+  const settle = async (left = MAX_WAIT_FRAMES): Promise<void> => {
+    if (!isRebuildInFlight()) {
+      await advance(SETTLE_FRAMES);
+      if (!isRebuildInFlight()) {
+        return;
+      }
+    }
+    if (left <= 0) {
+      throw new Error(`The renderer was still rebuilding after ${String(MAX_WAIT_FRAMES)} frames.`);
+    }
+    await nextFrame();
+    return settle(left - 1);
+  };
+
+  const stableCapture = async (previous?: Capture, left = MAX_WAIT_FRAMES): Promise<Capture> => {
+    const frame = await capture();
+    if (previous !== undefined && differingBytes(previous, frame, 0) === 0) {
+      return frame;
+    }
+    if (left <= 0) {
+      throw new Error(`The frame was still changing after ${String(MAX_WAIT_FRAMES)} captures.`);
+    }
+    return stableCapture(frame, left - 1);
+  };
+
   return {
     app,
     world: app.world,
@@ -216,6 +273,8 @@ export async function createThreeDBrowserApp(options: ThreeDBrowserOptions = {})
     nextFrame,
     advance,
     capture,
+    settle: (): Promise<void> => settle(),
+    stableCapture: (): Promise<Capture> => stableCapture(),
     dispose: (): void => {
       app.dispose();
       canvas.remove();
