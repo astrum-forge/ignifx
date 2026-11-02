@@ -1,6 +1,6 @@
 # Plan · Global illumination feasibility ("can ignifx look like Unreal?")
 
-**Status:** Assessment for an owner decision (2026-10-29) · **Owner:** Astrum Forge Studios · **Precedence:** below constitution, standards, architecture docs, ADRs (`CONSTITUTION.md` §10.1) · **Commits to nothing** until the owner picks a path (§6)
+**Status:** Assessment (2026-10-29); §6 decided 2026-11-02 (§8) · **Owner:** Astrum Forge Studios · **Precedence:** below constitution, standards, architecture docs, ADRs (`CONSTITUTION.md` §10.1)
 
 The owner asked what it would take to add Lumen-style global illumination (GI) so that lighting and shading look as good as Unreal Engine 5, and whether it is possible at all. This document answers in four parts: what the renderer does today (§1), what Lumen is (§2), the options and what each costs (§3, §4), and a recommended path with the decisions the owner has to make (§5, §6).
 
@@ -211,3 +211,16 @@ Phase 1 spikes (2 agent-days, before any API is designed):
 - Whether Lite 1.34 fixed `gpuFrameTimeMs` on Metal.
 - The split radiance cascades paper was found only through secondary summaries; its date and claims are unconfirmed.
 - WebGPU feature availability on Safari 26 and Firefox was not tested here; the matrix itself has never run beyond Chromium (`engineering-plan.md` line 239).
+
+## 8. Decisions (2026-11-02)
+
+The coordinator took the §6 decisions on the recommended defaults, on the owner's authority:
+
+1. **Target devices.** Dynamic GI (option B and later) is a desktop quality tier. Phones and integrated GPUs get baked lighting and AO.
+2. **Order.** Phase 1 "Foundations" (§5) comes first. Its steps are in [`2026-11-gi-phase-1-execution-plan.md`](2026-11-gi-phase-1-execution-plan.md).
+3. **Upstream.** The coordinator files the Lite asks as GitHub issues on the Lite repository. The minimal repro text for each is in the execution plan (§4 there).
+4. **Editor scope.** The lightmap baker waits for editor 0.8 or later.
+5. **Static-world rule.** Accepted: dynamic GI covers static geometry. Moving objects receive light but do not bounce it.
+6. **GPU budget.** A GPU budget per quality tier is written as part of Phase 1 (step G1 of the execution plan).
+
+Spikes S1–S4 ran on 2026-11-02 and all four work; the results replace the S1, S2 and `gpuFrameTimeMs` lines of §7 (execution plan §2).
