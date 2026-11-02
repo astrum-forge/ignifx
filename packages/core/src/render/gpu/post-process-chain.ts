@@ -149,6 +149,15 @@ export class PostProcessChain {
   /** The sampled ping-pong links the custom effects read and write. */
   readonly #sampledLinks: EffectChainLink[] = [];
 
+  /** The `rgba16float` links the custom effects ahead of the HDR output pass ping-pong through. */
+  readonly #linearLinks: EffectChainLink[] = [];
+
+  /** What the HDR output pass reads while the chain is enabled; `null` when no effect runs ahead of it. */
+  #linearOutput: LiteTexture2D | null = null;
+
+  /** How many tasks run after the output pass, on display colour; only those take over the swapchain. */
+  #displayTaskCount = 0;
+
   /** The recorded custom effects, in chain order. */
   readonly #custom: RecordedCustomEffect[] = [];
 
@@ -207,7 +216,9 @@ export class PostProcessChain {
     const plainLinks: LiteRenderTarget[] = [];
     let source: LiteRenderTarget = presenter.sceneColor;
     let sourceTexture: LiteTexture2D | null = null;
-    for (let index = 0; index < ordered.length; index += 1) {
+    const first = effectTasks === null ? 0 : this.#recordLinearEffects(effectTasks, engine, scene, ordered);
+    const linearTaskCount = this.#tasks.length;
+    for (let index = first; index < ordered.length; index += 1) {
       const effect = ordered[index];
       if (effect === undefined) {
         continue;
@@ -241,6 +252,11 @@ export class PostProcessChain {
       this.#record(scene, this.#createEffect(engine, scene, effect, source, target));
       source = target;
       sourceTexture = link?.texture ?? null;
+    }
+    this.#displayTaskCount = this.#tasks.length - linearTaskCount;
+    if (this.#displayTaskCount === 0) {
+      // Every effect ran ahead of the HDR output pass, which still writes the swapchain itself.
+      return;
     }
     // The chain's last task now writes the swapchain, so the compositing blit would only be
     // overwritten. Turning it off is what keeps the extra full-screen pass off the frame budget.
@@ -325,7 +341,11 @@ export class PostProcessChain {
         setPostProcessTaskEnabled(task, enabled);
       }
     }
-    if (this.#tasks.length > 0) {
+    if (this.#linearOutput !== null) {
+      // Disabled linear tasks leave their links stale, so the output pass goes back to the scene.
+      this.#presenter.hdr?.setOutputSource(enabled ? this.#linearOutput : null);
+    }
+    if (this.#displayTaskCount > 0) {
       this.#presenter.setPresentEnabled(!enabled);
     }
   }
@@ -389,10 +409,19 @@ export class PostProcessChain {
     if (this.#tasks.length > 0) {
       this.#presenter.setPresentEnabled(true);
     }
+    if (this.#linearOutput !== null) {
+      this.#presenter.hdr?.setOutputSource(null);
+      this.#linearOutput = null;
+    }
     const effects = effectTaskSupport();
     for (const recorded of this.#custom) {
       effects?.disposeCustomEffect(recorded.effect);
     }
+    for (const link of this.#linearLinks) {
+      effects?.disposeEffectChainLink(link);
+    }
+    this.#linearLinks.length = 0;
+    this.#displayTaskCount = 0;
     for (const link of this.#sampledLinks) {
       // Lite refuses to free an eager target, which is what stopped `EffectRenderTask.dispose` from
       // destroying a link two tasks share, so the texture is freed here instead.
@@ -454,6 +483,77 @@ export class PostProcessChain {
       isRefused: false,
     });
     return effects.createCustomEffectTask(engine, scene, `ignifx:post-effect:${request.address}`, wrapper, target);
+  }
+
+  /**
+   * Under `rendering.hdr`, records the custom effects ordered before any built-in one ahead of the
+   * output pass, where they read and write linear `rgba16float` colour (GI plan step G3).
+   *
+   * @remarks
+   * The first reads the scene's HDR texture directly, which is already a sampled `Texture2D`, so no
+   * copy is needed; the last one's link becomes the output pass's input. Built-in effects and every
+   * effect after the first of them stay behind the output pass: Lite's bloom, SMAA and
+   * image-processing tasks expect display colour in the surface's format.
+   *
+   * @param effects - The effect adapter.
+   * @param engine - The engine.
+   * @param scene - The scene.
+   * @param ordered - The chain's effects, in order.
+   * @returns How many leading effects were recorded; `0` without HDR.
+   */
+  #recordLinearEffects(
+    effects: EffectTaskSupport,
+    engine: LiteEngine,
+    scene: LiteScene,
+    ordered: readonly PostProcessEffectRequest[],
+  ): number {
+    const hdr = this.#presenter.hdr;
+    if (hdr === null) {
+      return 0;
+    }
+    let sourceTexture: LiteTexture2D = hdr.sceneTexture;
+    let count = 0;
+    for (; count < ordered.length; count += 1) {
+      const effect = ordered[count];
+      if (effect?.name !== "custom") {
+        break;
+      }
+      const link = this.#nextLinearLink(effects, engine, sourceTexture);
+      const task = this.#recordCustom(effects, engine, scene, effect, sourceTexture, link.target);
+      hdr.insertLinearTask(task, this.#isFrameGraphBuilt);
+      this.#tasks.push(task);
+      sourceTexture = link.texture;
+    }
+    if (count > 0) {
+      this.#linearOutput = sourceTexture;
+      hdr.setOutputSource(sourceTexture);
+    }
+    return count;
+  }
+
+  /**
+   * Returns an `rgba16float` link other than the one an effect reads, creating it on first use.
+   *
+   * @param effects - The effect adapter.
+   * @param engine - The engine.
+   * @param source - The texture the next effect reads.
+   * @returns The link to write.
+   */
+  #nextLinearLink(effects: EffectTaskSupport, engine: LiteEngine, source: LiteTexture2D): EffectChainLink {
+    for (const link of this.#linearLinks) {
+      if (link.texture !== source) {
+        return link;
+      }
+    }
+    const created = effects.createEffectChainLink(
+      engine,
+      "rgba16float",
+      engine.canvas.width,
+      engine.canvas.height,
+      `ignifx:post-effect-linear-${String(this.#linearLinks.length)}`,
+    );
+    this.#linearLinks.push(created);
+    return created;
   }
 
   /**
