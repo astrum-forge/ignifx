@@ -457,6 +457,13 @@ export {
   type SceneLoadIssue,
 } from "./serialization/load.js";
 export { parseOverridePath, type EntityOverrideField, type OverridePath } from "./serialization/overrides.js";
+export {
+  applyOverridesToAsset,
+  revertOverrides,
+  type PrefabApplyResult,
+  type PrefabOverrideSelection,
+  type PrefabOverrideSkip,
+} from "./serialization/prefab-overrides.js";
 export { computeSceneHash, createSceneAsset, type SceneAsset, SceneAssetToken } from "./serialization/scene-asset.js";
 export {
   describeSceneFileFormat,

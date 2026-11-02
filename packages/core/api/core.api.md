@@ -91,6 +91,9 @@ export interface AppLiteHandles {
 export function applyInit<S extends Schema>(target: FieldsOf<S>, schema: S, init: PartialFieldsOf<S>): FieldsOf<S>;
 
 // @public
+export function applyOverridesToAsset(instance: SceneFileInstance, asset: SceneFile, selection?: PrefabOverrideSelection): Promise<PrefabApplyResult>;
+
+// @public
 export function approximately(a: number, b: number, epsilon?: number): boolean;
 
 // @public
@@ -2606,6 +2609,26 @@ export class PostProcessStack extends Component implements ComponentHooks {
 }
 
 // @public
+export interface PrefabApplyResult {
+    readonly applied: readonly SceneFileOverride[];
+    readonly asset: SceneFile;
+    readonly hash: string;
+    readonly instance: SceneFileInstance;
+    readonly skipped: readonly PrefabOverrideSkip[];
+}
+
+// @public
+export interface PrefabOverrideSelection {
+    readonly paths?: readonly string[];
+}
+
+// @public
+export interface PrefabOverrideSkip {
+    readonly override: SceneFileOverride;
+    readonly reason: string;
+}
+
+// @public
 export interface ProfileScope {
     readonly durationMs: number;
     end(): void;
@@ -2883,6 +2906,9 @@ export function resetFrameSample(sample: FrameSample): FrameSample;
 
 // @public
 export function resolveEase(ease: EasingName | EasingFunction | undefined): EasingFunction | null;
+
+// @public
+export function revertOverrides(instance: SceneFileInstance, selection?: PrefabOverrideSelection): SceneFileInstance;
 
 // @public
 export const SCENE_ASSET_TYPE = "scene";

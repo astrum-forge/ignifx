@@ -1,5 +1,24 @@
 # ignifx
 
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [afa8e20]
+  - @ignifx/core@0.13.0
+  - @ignifx/2d@0.13.0
+  - @ignifx/3d@0.13.0
+  - @ignifx/audio@0.13.0
+  - @ignifx/input@0.13.0
+  - @ignifx/particles@0.13.0
+  - @ignifx/particles-2d@0.13.0
+  - @ignifx/physics@0.13.0
+  - @ignifx/physics-2d@0.13.0
+  - @ignifx/terrain@0.13.0
+  - @ignifx/ui@0.13.0
+  - @ignifx/devtools@0.13.0
+  - @ignifx/electron@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

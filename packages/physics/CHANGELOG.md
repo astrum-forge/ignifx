@@ -1,5 +1,18 @@
 # @ignifx/physics
 
+## 0.13.0
+
+### Minor Changes
+
+- afa8e20: A component class can declare `static title` and `static description`, and `describeRegisteredSchemas` uses them when no curated entry is given.
+  Every engine component now declares its curated title or summary this way.
+  The editor host now sends every package's component titles and summaries, such as "Rigidbody mover", instead of class names.
+
+### Patch Changes
+
+- Updated dependencies [afa8e20]
+  - @ignifx/core@0.13.0
+
 ## 0.12.0
 
 ### Patch Changes

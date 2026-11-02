@@ -121,6 +121,15 @@ expanded under the instance root instead.
   with `IGX-0608`; keep one.
 - `hash` is the instanced asset's content hash at save time (`computeSceneHash`). A mismatch logs
   `IGX-0604`, or throws when `strictInstanceHashes` is passed to `loadScene`/`instantiate`.
+- Apply and revert work on the files, not on live entities. `await applyOverridesToAsset(instance,
+  prefabFile, { paths? })` writes the selected overrides into the prefab and returns `{ asset, hash,
+  instance, applied, skipped }`: the new prefab, its hash, and the entry without the applied
+  overrides. Other instances pick the change up, and their own override at the same path still wins;
+  record the new `hash` on them. On a single-root prefab the root's entity fields and transform are
+  the instance's placement and stay on the entry, and content of a nested prefab is never edited
+  (both land in `skipped`). `revertOverrides(instance, { paths? })` drops overrides so the instance
+  follows the prefab again. A path selects everything at or below it; an `add` sits at
+  `<uid>/components/<addedUid>`.
 - The `path` grammar — every path starts with the uid of an entity **inside the instanced file**, so
   it survives the per-instance uid remap. `parseOverridePath(path)` parses one; a path outside the
   grammar, or one with a `__proto__` property step, is `IGX-0609`.
