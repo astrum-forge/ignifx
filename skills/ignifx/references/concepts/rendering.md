@@ -218,10 +218,13 @@ an `Environment` or the main camera, §1), and `brdfLut` (defaults to `DEFAULT_B
 There is no `powerPreference`: Lite always asks for a high-performance adapter.
 
 `rendering.hdr` (default `false`) renders the scene into a floating-point target and tone maps it
-in one final pass with the `Environment`'s exposure, contrast and curve. A scene of PBR materials
-looks the same either way; turn it on for the HDR effects that build on it. For now fog, Standard
-materials, surface shaders, sprites, particles and the skybox are not carried in linear colour, so
-keep it off in scenes that rely on them: `settings: { rendering: { hdr: true } }`.
+in one final pass with the `Environment`'s exposure, contrast and curve: `settings: { rendering: {
+hdr: true } }`. Every colour writer is carried in linear colour (PBR, unlit, Standard, surface
+shaders, custom `.wgsl` materials such as particles, fog, the `.env` skybox) and sprites draw after
+the pass, so with the default image processing a scene looks the same either way; under a curve,
+Standard and custom-shader colour is tone mapped too. Custom post effects ordered before any
+built-in one run on linear colour ahead of the pass; bloom, SMAA and `imageProcessing` stay after
+it. Not covered: a six-face `loadSkybox` cube, which is encoded twice.
 
 ## 5. Material warm-up (ADR-0014)
 

@@ -2,12 +2,19 @@ import { AcesToneMapping, NeutralToneMapping, StandardToneMapping } from "@babyl
 import { describe, expect, it } from "vitest";
 import {
   createLinearOutputPlugin,
+  createStandardLinearPlugin,
+  createUnlitLinearPlugin,
   HDR_CURVE,
   hdrCurveOf,
   hdrOutputFragmentWgsl,
   LINEAR_OUTPUT_PLUGIN_NAME,
+  linearFogConfig,
+  linearSkyboxFragment,
+  STANDARD_LINEAR_PLUGIN_NAME,
+  UNLIT_LINEAR_PLUGIN_NAME,
   writeHdrOutputUniforms,
 } from "../../../src/lite/gpu/hdr-output.js";
+import { linearOutputFragment } from "../../../src/lite/gpu/shader-material.js";
 import { imageProcessedColor, linearClearColor } from "../../../src/render/image-processing-color.js";
 
 /**
@@ -25,8 +32,79 @@ describe("the linear-output plugin", () => {
     const code = plugin.getCustomCode?.("fragment") ?? {};
     // Injected twice by Lite, so it must be an assignment rather than a declaration.
     expect(code.CUSTOM_FRAGMENT_BEFORE_FINALCOLORCOMPOSITION).toBe("ignifxLinearColor = color;");
-    expect(code.CUSTOM_FRAGMENT_BEFORE_FRAGCOLOR).toBe("color = ignifxLinearColor;");
+    expect(code.CUSTOM_FRAGMENT_BEFORE_FRAGCOLOR).toMatch(/^color = ignifxLinearColor;/u);
     expect(code.CUSTOM_FRAGMENT_DEFINITIONS).toContain("var<private> ignifxLinearColor");
+  });
+
+  it("re-applies the PBR fog after the restore, with the fog colour already linear", () => {
+    const code = createLinearOutputPlugin().getCustomCode?.("fragment") ?? {};
+    // Its own copy of Lite's fog factor: `calcFogFactor` exists only in a fogged scene's shader.
+    expect(code.CUSTOM_FRAGMENT_DEFINITIONS).toContain("fn ignifxFogFactor(");
+    expect(code.CUSTOM_FRAGMENT_BEFORE_FRAGCOLOR).toContain("if(scene.vFogInfos.x>0.0)");
+    expect(code.CUSTOM_FRAGMENT_BEFORE_FRAGCOLOR).toContain("mix(scene.vFogColor.rgb,color,");
+    expect(code.CUSTOM_FRAGMENT_BEFORE_FRAGCOLOR).not.toContain("pow(scene.vFogColor");
+  });
+
+  it("decodes a Standard material's colour last, after any surface shader", () => {
+    const plugin = createStandardLinearPlugin();
+    expect(plugin.name).toBe(STANDARD_LINEAR_PLUGIN_NAME);
+    expect(plugin.priority).toBe(1000);
+    expect(plugin.getCustomCode?.("fragment")?.CUSTOM_FRAGMENT_BEFORE_FRAGCOLOR).toContain("vec3<f32>(2.2)");
+  });
+
+  it("recomputes an unlit PBR colour rather than trusting the save", () => {
+    const plugin = createUnlitLinearPlugin();
+    expect(plugin.name).toBe(UNLIT_LINEAR_PLUGIN_NAME);
+    const code = plugin.getCustomCode?.("fragment") ?? {};
+    expect(code.CUSTOM_FRAGMENT_BEFORE_FINALCOLORCOMPOSITION).toBeUndefined();
+    expect(code.CUSTOM_FRAGMENT_BEFORE_FRAGCOLOR).toMatch(/^color = baseColor\*material\.unlitColor;/u);
+  });
+});
+
+describe("the other colour writers", () => {
+  it("stores the fog colour decoded, in a fresh object", () => {
+    const fog = { mode: 3 as const, density: 0.1, start: 1, end: 5, color: [0.5, 1, 0] as [number, number, number] };
+    const linear = linearFogConfig(fog);
+    expect(linear).not.toBe(fog);
+    expect(linear.color[0]).toBeCloseTo(0.5 ** 2.2, 6);
+    expect(linear.color.slice(1)).toEqual([1, 0]);
+    expect([linear.mode, linear.density, linear.start, linear.end]).toEqual([3, 0.1, 1, 5]);
+  });
+
+  it("makes Lite's .env skybox return its cube map's colour before exposure and encode", () => {
+    const hdr =
+      "@fragment fn main(d:h)->@location(0) vec4<f32>{var e=normalize(d.positionUVW);var a=textureSampleLevel(b,c,e,0.0).rgb;a*=mesh.exposureLinear;a=pow(a,vec3<f32>(1.0/2.2));return vec4<f32>(a,1.0);}";
+    expect(linearSkyboxFragment(hdr)).toContain(
+      "var a=textureSampleLevel(b,c,e,0.0).rgb;return vec4<f32>(a,1.0);a*=mesh.exposureLinear;",
+    );
+    // A shader with nothing to patch is left alone.
+    const solid = "@fragment fn main()->@location(0) vec4<f32>{return vec4<f32>(1.0);}";
+    expect(linearSkyboxFragment(solid)).toBe(solid);
+  });
+
+  it("wraps a custom shader's mainFragment to decode its display colour", () => {
+    const source = [
+      "struct VertexOutput { @builtin(position) position: vec4<f32>, }",
+      "@fragment fn mainFragment(input: VertexOutput, @builtin(front_facing) front: bool) -> @location(0) vec4<f32> {",
+      "  return vec4<f32>(0.5);",
+      "}",
+    ].join("\n");
+    const wrapped = linearOutputFragment(source, false);
+    expect(wrapped).toContain("fn ignifxDisplayFragment(input: VertexOutput, front: bool)->vec4<f32>{");
+    expect(wrapped).toContain(
+      "@fragment fn mainFragment(input: VertexOutput, @builtin(front_facing) front: bool)->@location(0) vec4<f32>{",
+    );
+    expect(wrapped).toContain("let c=ignifxDisplayFragment(input,front);");
+    expect(wrapped).toContain("pow(max(c.rgb,vec3<f32>(0.0)),vec3<f32>(2.2))");
+    expect(wrapped.match(/@fragment/gu)).toHaveLength(1);
+    expect(linearOutputFragment(source, true)).toContain("c.rgb/c.a");
+  });
+
+  it("leaves a shader it cannot wrap unchanged", () => {
+    const structOut = "@fragment fn mainFragment(input: V) -> Out { var o: Out; return o; }";
+    expect(linearOutputFragment(structOut, false)).toBe(structOut);
+    const noFragment = "@vertex fn mainVertex() -> @builtin(position) vec4<f32> { return vec4<f32>(0.0); }";
+    expect(linearOutputFragment(noFragment, false)).toBe(noFragment);
   });
 });
 

@@ -165,6 +165,13 @@ test.describe("template scenes", () => {
     await expect(page).toHaveScreenshot("2d-topdown.png", { maxDiffPixelRatio: 0.02 });
   });
 
+  // `rendering.hdr` (GI plan step G3): sprites draw after the HDR output pass and the clear goes
+  // through it, so the picture must match the plain golden within the same tolerance.
+  test("2d-topdown, HDR", async ({ page }) => {
+    await openScene(page, `${TOPDOWN}/?static=1&hdr=1`);
+    await expect(page).toHaveScreenshot("2d-topdown.png", { maxDiffPixelRatio: 0.02 });
+  });
+
   // Three parallax bands behind a tilemap with slopes and one-way platforms, through a
   // pixel-perfect camera.
   test("2d-sidescroller", async ({ page }) => {

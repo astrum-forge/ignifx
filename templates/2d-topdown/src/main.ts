@@ -60,6 +60,8 @@ import type { LocaleAsset } from "@ignifx/ui";
  * - `?probe=1` installs `window.__ignifxGameplay`, the read-only test hook the gameplay half of
  *   `tests/visual/tests/templates.spec.ts` measures the character with. See `src/gameplay-probe.ts`.
  * - `?locale=<tag>` picks a locale from `assets/strings.i18n.json` before the menus are built.
+ * - `?hdr=1` turns on `rendering.hdr`, which should present the same picture; the visual suite
+ *   compares it with the plain golden.
  */
 
 declare global {
@@ -310,6 +312,21 @@ async function installFrontEnd(
   return run;
 }
 
+/**
+ * The project settings, with `rendering.hdr` switched on when the visual suite asks for `?hdr=1`.
+ *
+ * @param hdr - Whether to render through the HDR target and output pass.
+ * @returns The settings `createApp` takes.
+ */
+function projectSettings(hdr: boolean): Readonly<Record<string, unknown>> {
+  const config = import.meta.env.IGNIFX_CONFIG;
+  if (!hdr) {
+    return config;
+  }
+  const rendering: unknown = config["rendering"];
+  return { ...config, rendering: { ...(typeof rendering === "object" ? rendering : {}), hdr: true } };
+}
+
 async function main(): Promise<AppStatus> {
   const canvas = document.querySelector("#game");
   if (!(canvas instanceof HTMLCanvasElement)) {
@@ -325,7 +342,7 @@ async function main(): Promise<AppStatus> {
   try {
     app = await createApp({
       canvas,
-      settings: import.meta.env.IGNIFX_CONFIG,
+      settings: projectSettings(flags.get("hdr") === "1"),
       // The address-to-URL table `@ignifx/vite-plugin` built from `assets/`. Importing the virtual
       // module rather than fetching `assets.manifest.json` means the table is in the bundle, so
       // the first asset request needs no round trip.
