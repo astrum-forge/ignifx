@@ -64,6 +64,59 @@ export interface ExtensionHostOptions {
 }
 
 /**
+ * The app each live extension object is installed in.
+ *
+ * @remarks
+ * The one piece of state shared between apps, because the question "is this object already in
+ * another app?" has no answer inside a single app. An extension object may keep per-app state in
+ * its factory's closure (`physics()` does), so installing it twice would let the second app take
+ * over the first one's services. Created on first use (coding standards §4: nothing allocated at
+ * module scope), and keyed weakly, so a dropped extension is collected.
+ */
+let installedExtensions: WeakMap<Extension, object> | null = null;
+
+/**
+ * Records that an app installs extension objects, refusing any another live app already installed.
+ *
+ * @param list - The extensions.
+ * @param app - The installing app.
+ * @throws IgnifxError with code `IGX-0411` for an object another live app installed.
+ */
+function claimExtensions(list: readonly Extension[], app: object): void {
+  const installed = (installedExtensions ??= new WeakMap<Extension, object>());
+  for (const extension of list) {
+    const owner = installed.get(extension);
+    if (owner !== undefined && owner !== app) {
+      throw new IgnifxError(
+        CoreErrorCode.extensionInstalledTwice,
+        `The ${extension.name} extension object is already installed in another app that has not been disposed.`,
+        {
+          context: { extension: extension.name },
+          hint: "Call the extension's factory again for each app, for example physics() once per createApp.",
+        },
+      );
+    }
+  }
+  for (const extension of list) {
+    installed.set(extension, app);
+  }
+}
+
+/**
+ * Forgets an app's extension objects, so a new app may install them.
+ *
+ * @param list - The extensions.
+ * @param app - The app being disposed.
+ */
+function releaseExtensions(list: readonly Extension[], app: object): void {
+  for (const extension of list) {
+    if (installedExtensions?.get(extension) === app) {
+      installedExtensions.delete(extension);
+    }
+  }
+}
+
+/**
  * The extension host of one app.
  *
  * @internal
@@ -101,12 +154,31 @@ export class ExtensionHost implements ExtensionContextHost {
    *
    * @param list - The implicit core extension followed by the game's list.
    * @returns A promise that settles once every `register` hook has finished.
-   * @throws IgnifxError with code `IGX-0406` on a duplicate name, `IGX-0403` on a missing required
+   * @throws IgnifxError with code `IGX-0411` for an extension object another live app installed,
+   * `IGX-0406` on a duplicate name, `IGX-0403` on a missing required
    * extension, `IGX-0402` on a `requires` cycle, or `IGX-0404` on an `engine` mismatch in
    * development.
    */
   async register(list: readonly Extension[]): Promise<void> {
     const sorted = this.#sort(list);
+    const app = this.#options.app;
+    claimExtensions(sorted, app);
+    try {
+      await this.#registerSorted(sorted);
+    } catch (error) {
+      // An app whose construction failed is never disposed, so it must not keep the claim.
+      releaseExtensions(sorted, app);
+      throw error;
+    }
+  }
+
+  /**
+   * Validates and registers sorted extensions, in order.
+   *
+   * @param sorted - The extensions, dependencies first.
+   * @returns A promise that settles once every `register` hook has finished.
+   */
+  async #registerSorted(sorted: readonly Extension[]): Promise<void> {
     for (let index = 0; index < sorted.length; index += 1) {
       const extension = sorted[index];
       if (extension !== undefined) {
@@ -197,6 +269,7 @@ export class ExtensionHost implements ExtensionContextHost {
       }
     }
     this.#disposers.length = 0;
+    releaseExtensions(this.#sorted, this.#options.app);
   }
 
   /**

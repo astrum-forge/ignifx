@@ -166,6 +166,7 @@ export interface EditorHostOptions {
     readonly assets?: AssetsCreateOptions;
     readonly bootScene?: string | null;
     readonly canvas?: RenderSurface;
+    readonly createExtensions?: () => readonly Extension[];
     readonly editMode?: boolean;
     readonly editorOrigin: string;
     readonly engineVersion?: string;
@@ -227,6 +228,39 @@ export interface EntitySelection {
 // @public
 export interface FrameParams {
     readonly entities: readonly string[] | "all";
+}
+
+// @public
+export const GAME_VIEW_DEFAULT_SIZE: {
+    readonly width: 640;
+    readonly height: 360;
+};
+
+// @public
+export const GAME_VIEW_MAX_SIZE = 2048;
+
+// @public
+export interface GameViewFrameParams {
+    readonly format: ScreenshotFormat;
+    readonly quality?: number;
+}
+
+// @public
+export type GameViewFrameResponse = RpcSuccessResponse<GameViewFrameResult>;
+
+// @public
+export interface GameViewFrameResult {
+    readonly camera: string | null;
+    readonly dataUrl: string | null;
+    readonly height: number;
+    readonly width: number;
+}
+
+// @public
+export interface GameViewState {
+    readonly enabled: boolean;
+    readonly height: number;
+    readonly width: number;
 }
 
 // @public
@@ -303,6 +337,8 @@ export const HostCapability: {
     readonly hotReloadDefaults: "hotReloadDefaults";
     readonly queryRuntime: "queryRuntime";
     readonly sendInput: "sendInput";
+    readonly gameView: "gameView";
+    readonly thumbnails: "thumbnails";
 };
 
 // @public
@@ -406,6 +442,15 @@ export function isEntitySelection(value: unknown): value is EntitySelection;
 export function isFrameParams(value: unknown): value is FrameParams;
 
 // @public
+export function isGameViewFrameParams(value: unknown): value is GameViewFrameParams;
+
+// @public
+export function isGameViewFrameResult(value: unknown): value is GameViewFrameResult;
+
+// @public
+export function isGameViewState(value: unknown): value is GameViewState;
+
+// @public
 export function isHostErrorParams(value: unknown): value is HostErrorParams;
 
 // @public
@@ -464,6 +509,9 @@ export function isReadBackResult(value: unknown): value is ReadBackResult;
 
 // @public
 export function isReadyResult(value: unknown): value is ReadyResult;
+
+// @public
+export function isRenderThumbnailParams(value: unknown): value is RenderThumbnailParams;
 
 // @public
 export function isRpcMessage(value: unknown): value is RpcMessage;
@@ -526,6 +574,9 @@ export function isSendInputResult(value: unknown): value is SendInputResult;
 export function isSetAnimateMaterialsParams(value: unknown): value is SetAnimateMaterialsParams;
 
 // @public
+export function isSetGameViewParams(value: unknown): value is SetGameViewParams;
+
+// @public
 export function isSetGizmoParams(value: unknown): value is SetGizmoParams;
 
 // @public
@@ -533,6 +584,9 @@ export function isSettingsSet(value: unknown): value is SettingsSet;
 
 // @public
 export function isSetViewModeParams(value: unknown): value is SetViewModeParams;
+
+// @public
+export function isThumbnailResult(value: unknown): value is ThumbnailResult;
 
 // @public
 export function isTransformDraggedParams(value: unknown): value is TransformDraggedParams;
@@ -797,6 +851,27 @@ export interface RemoveOverrideOp {
     readonly overrideOp?: "replace" | "remove" | "add";
     readonly path: string;
 }
+
+// @public
+export interface RenderThumbnailParams {
+    readonly asset: string | SceneFileAssetRef;
+    readonly format: ScreenshotFormat;
+    readonly quality?: number;
+    readonly size?: number;
+}
+
+// @public
+export const RenderViewMethod: {
+    readonly setGameView: "setGameView";
+    readonly gameViewFrame: "gameViewFrame";
+    readonly renderThumbnail: "renderThumbnail";
+};
+
+// @public
+export type RenderViewMethod = (typeof RenderViewMethod)[keyof typeof RenderViewMethod];
+
+// @public
+export type RenderViewRequest = RpcRequestWithParams<typeof RenderViewMethod.setGameView, SetGameViewParams> | RpcRequestWithParams<typeof RenderViewMethod.gameViewFrame, GameViewFrameParams> | RpcRequestWithParams<typeof RenderViewMethod.renderThumbnail, RenderThumbnailParams>;
 
 // @public
 export interface ReorderOp {
@@ -1167,6 +1242,16 @@ export type SetEntityFieldOp = { readonly [F in EntityField]: {
     }; }[EntityField];
 
 // @public
+export interface SetGameViewParams {
+    readonly enabled: boolean;
+    readonly height?: number;
+    readonly width?: number;
+}
+
+// @public
+export type SetGameViewResponse = RpcSuccessResponse<GameViewState>;
+
+// @public
 export interface SetGizmoParams {
     readonly mode: GizmoMode;
     readonly snap: GizmoSnap | null;
@@ -1224,6 +1309,22 @@ export function startEditorPlayControls(app: App, options: EditorPlayControlsOpt
 // @public
 export interface StepParams {
     readonly deltaSeconds?: number;
+}
+
+// @public
+export const THUMBNAIL_DEFAULT_SIZE = 128;
+
+// @public
+export const THUMBNAIL_MAX_SIZE = 1024;
+
+// @public
+export type ThumbnailResponse = RpcSuccessResponse<ThumbnailResult>;
+
+// @public
+export interface ThumbnailResult {
+    readonly dataUrl: string;
+    readonly height: number;
+    readonly width: number;
 }
 
 // @public

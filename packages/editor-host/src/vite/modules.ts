@@ -182,6 +182,7 @@ export function editorEntryModuleSource(options: EditorEntryModuleOptions): stri
     `  settings: ${IGNIFX_CONFIG_DEFINE_KEY},`,
     "  assets: { manifest },",
     `  extensions: ${extensionsModule === null ? "[]" : "extensions()"},`,
+    ...(extensionsModule === null ? [] : ["  createExtensions: extensions,"]),
     "  scripts,",
     `  bootScene: ${JSON.stringify(options.bootScene)},`,
     ...reportingLines(options.engineVersion, options.heartbeatIntervalMs),

@@ -92,7 +92,7 @@ service; cross-extension work goes through services and signals.
 ## 3. Registration order and its errors
 
 1. `createApp` puts the implicit core extension (`coreExtension`, name `@ignifx/core`) first, then the list from `createApp({ extensions })`.
-2. The list is topologically sorted by `requires`, plus `optional` edges when the optional extension is present. A `requires` cycle throws `IGX-0402`, a missing required extension `IGX-0403`, and a duplicate `name` `IGX-0406`. An `optional` edge that would close a cycle is dropped with a development note; those two extensions then resolve each other lazily in `onStart` through `ctx.tryGet`.
+2. The list is topologically sorted by `requires`, plus `optional` edges when the optional extension is present. A `requires` cycle throws `IGX-0402`, a missing required extension `IGX-0403`, and a duplicate `name` `IGX-0406`. One extension object serves one live app: passing it to a second `createApp` before the first is disposed throws `IGX-0411`, so call `physics()` (or any factory) once per app. An `optional` edge that would close a cycle is dropped with a development note; those two extensions then resolve each other lazily in `onStart` through `ctx.tryGet`.
 3. `engine` ranges are checked against `VERSION`: a mismatch throws `IGX-0404` in development and warns in production.
 4. Settings are resolved and frozen, then `register` runs in sorted order.
 5. The Lite engine and world are created; `app.start()` runs the `onStart` hooks in the same order.

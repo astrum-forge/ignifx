@@ -19,6 +19,7 @@ import {
   applySurfaceScale,
   createPicker,
   loadOverlayOpener,
+  loadRenderTextureFactory,
   pickPixel,
   readTargetSizePx,
   readTaskTimings,
@@ -32,8 +33,16 @@ import {
   MATERIAL_ASSET_TYPE,
   standardMaterialDefinition,
 } from "./material-asset.js";
+import {
+  assertRenderTextureSize,
+  bindFrameCameras,
+  RenderTextureImpl,
+  renderTextureUnusableError,
+} from "./render-texture.js";
 import { toRenderingFeatures } from "./rendering-settings.js";
+import type { Camera } from "./camera.js";
 import type { MaterialAsset } from "./material-asset.js";
+import type { RenderTexture, RenderTextureOwner } from "./render-texture.js";
 import type { RenderingFeatureSettings, RenderingSettings } from "./rendering-settings.js";
 import type { App, ServiceNameKey } from "../app/types.js";
 import type { AssetHandle } from "../assets/types.js";
@@ -418,6 +427,49 @@ export interface Renderer {
    */
   captureScreenshot(): Promise<RenderCapture>;
   /**
+   * Creates an offscreen texture a camera can render into, beside the main view
+   * (`docs/architecture/07-rendering.md` §2.11).
+   *
+   * @remarks
+   * Fill it once with {@link Renderer.renderToTexture}, or every frame by setting a camera's
+   * `renderTarget`. Its GPU pass and target are created on the first render or read, so creating
+   * one costs nothing until then, and a headless app may create one (it can never fill it).
+   *
+   * @param width - The width, in pixels: a whole number from 1 to 4096.
+   * @param height - The height, in pixels: a whole number from 1 to 4096.
+   * @returns The texture. Dispose it when done; `app.dispose()` disposes any still open.
+   * @throws IgnifxError with code `IGX-0730` for a side out of range, and `IGX-0106` once the app is
+   * disposed.
+   *
+   * @beta
+   */
+  createRenderTexture(width: number, height: number): RenderTexture;
+  /**
+   * Renders the scene through a camera into a texture on the next frame, beside the main view
+   * (`docs/architecture/07-rendering.md` §2.11).
+   *
+   * @remarks
+   * The camera need not be the main one, and stays a candidate for it. Requests queued for the
+   * same texture render one camera per frame, oldest first. The camera's aspect is the texture's.
+   * Read the result with {@link RenderTexture.readPixels}.
+   *
+   * @param camera - A camera attached to an entity of this app's world.
+   * @param texture - A texture from this renderer's {@link Renderer.createRenderTexture}.
+   * @returns A promise that settles once the frame that rendered it has been submitted.
+   * @throws IgnifxError with code `IGX-0729` on a headless app or while no render loop runs,
+   * `IGX-0731` for a disposed or foreign texture, and `IGX-0732` for a detached camera.
+   *
+   * @example
+   * ```ts
+   * const texture = app.renderer.createRenderTexture(128, 128);
+   * await app.renderer.renderToTexture(previewCamera, texture);
+   * const { data } = await texture.readPixels();
+   * ```
+   *
+   * @beta
+   */
+  renderToTexture(camera: Camera, texture: RenderTexture): Promise<void>;
+  /**
    * The latest per-task GPU timing snapshot. Check `status` before reading `tasks`.
    *
    * @returns The snapshot.
@@ -551,6 +603,22 @@ export class RendererImpl implements Renderer {
 
   /** The open overlays, by their Lite scene. */
   readonly #overlays = new Map<object, RenderOverlay>();
+
+  /** The render textures this renderer created and has not disposed. */
+  readonly #renderTextures = new Set<RenderTextureImpl>();
+
+  /** What the render textures ask of this renderer. */
+  readonly #renderTextureOwner: RenderTextureOwner = {
+    createPass: async (width, height, member) => {
+      this.#assertRenderLoop(member);
+      const create = await loadRenderTextureFactory();
+      this.#assertRenderLoop(member);
+      return create(this.engine, this.scene, width, height);
+    },
+    release: (texture) => {
+      this.#renderTextures.delete(texture);
+    },
+  };
 
   #warmUp: MaterialWarmUp | null = null;
 
@@ -941,6 +1009,110 @@ export class RendererImpl implements Renderer {
       );
     }
     return captureFrame(this.engine);
+  }
+
+  /**
+   * Creates an offscreen texture a camera can render into.
+   *
+   * @param width - The width, in pixels.
+   * @param height - The height, in pixels.
+   * @returns The texture.
+   * @throws IgnifxError with code `IGX-0730` for a side out of range, `IGX-0106` once disposed.
+   */
+  createRenderTexture(width: number, height: number): RenderTexture {
+    if (this.#isDisposed) {
+      throw new IgnifxError(
+        CoreErrorCode.appDisposed,
+        "The app has been disposed; app.renderer.createRenderTexture() is no longer available.",
+        { context: { member: "app.renderer.createRenderTexture()" } },
+      );
+    }
+    assertRenderTextureSize(width, height);
+    const texture = new RenderTextureImpl(this.#renderTextureOwner, width, height);
+    this.#renderTextures.add(texture);
+    return texture;
+  }
+
+  /**
+   * Renders the scene through a camera into a texture on the next frame.
+   *
+   * @param camera - The camera.
+   * @param texture - The texture.
+   * @returns A promise that settles once the frame has been submitted.
+   * @throws IgnifxError with code `IGX-0729`, `IGX-0731` or `IGX-0732`; see the interface.
+   */
+  async renderToTexture(camera: Camera, texture: RenderTexture): Promise<void> {
+    const member = "app.renderer.renderToTexture()";
+    const owned = this.#ownedRenderTexture(texture, member);
+    const lite = camera.lite.camera;
+    if (lite === null) {
+      throw new IgnifxError(
+        CoreErrorCode.renderTextureCameraDetached,
+        "renderToTexture() needs a camera attached to an entity.",
+        {
+          context: { member },
+          hint: "Pass a Camera component that is on an entity, before the entity is destroyed.",
+        },
+      );
+    }
+    this.#assertRenderLoop(member);
+    await owned.pass(member);
+    await owned.request(lite);
+  }
+
+  /**
+   * Points every render texture's pass at this frame's camera. The `PreRender` sync calls it after
+   * the main camera is chosen.
+   *
+   * @param cameras - Every camera in the world, in creation order.
+   *
+   * @internal
+   */
+  syncRenderTextures(cameras: readonly Camera[]): void {
+    if (this.isHeadless || this.#renderTextures.size === 0) {
+      return;
+    }
+    bindFrameCameras(cameras, this.#renderTextures);
+    for (const texture of this.#renderTextures) {
+      texture.flush();
+    }
+  }
+
+  /**
+   * Narrows a texture to one this renderer made and has not disposed.
+   *
+   * @param texture - The texture.
+   * @param member - The API member asking.
+   * @returns The texture.
+   * @throws IgnifxError with code `IGX-0731` otherwise.
+   */
+  #ownedRenderTexture(texture: RenderTexture, member: string): RenderTextureImpl {
+    if (!(texture instanceof RenderTextureImpl) || !this.#renderTextures.has(texture)) {
+      throw renderTextureUnusableError(member);
+    }
+    return texture;
+  }
+
+  /**
+   * Refuses render-to-texture work that no frame would ever carry out.
+   *
+   * @param member - The API member asking.
+   * @throws IgnifxError with code `IGX-0729` on a headless or disposed app, or while no render loop
+   * runs.
+   */
+  #assertRenderLoop(member: string): void {
+    if (this.isHeadless || this.#isDisposed || !this.#isLoopRunning || !this.#isSceneRegistered) {
+      throw new IgnifxError(
+        CoreErrorCode.renderTextureNeedsRenderLoop,
+        `${member} needs a canvas-backed app whose render loop is running.`,
+        {
+          context: { member, headless: this.isHeadless },
+          hint: this.isHeadless
+            ? "A headless app draws nothing. Create the app with a canvas."
+            : "Call it after app.start() has resolved, and not after app.stop().",
+        },
+      );
+    }
   }
 
   /**
@@ -1458,6 +1630,10 @@ export class RendererImpl implements Renderer {
     // Each overlay removes itself from the map as it is disposed, which a `Map` iteration allows.
     for (const overlay of this.#overlays.values()) {
       overlay.dispose();
+    }
+    // Each texture removes itself from the set as it is disposed, which a `Set` iteration allows.
+    for (const texture of this.#renderTextures) {
+      texture.dispose();
     }
     const picker = this.#picker;
     this.#picker = null;

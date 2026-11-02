@@ -9,6 +9,7 @@ import {
 import { warmUpMaterials } from "../../lite/gpu/warm-up.js";
 import type { openOverlayScene } from "../../lite/gpu/overlay.js";
 import type { LiteGpuPicker } from "../../lite/gpu/picker.js";
+import type { createLiteRenderTexture } from "../../lite/gpu/render-texture.js";
 import type { MaterialWarmUp } from "../../lite/gpu/warm-up.js";
 import type { LitePickInfo, PickAccept, PickedIdentity } from "../../lite/picking.js";
 import type { LiteEngine, LiteScene } from "../../lite/scene.js";
@@ -161,4 +162,20 @@ export function readTaskTimings(engine: LiteEngine): RenderTaskTimings {
     }
   }
   return { status: snapshot.status, tasks };
+}
+
+/**
+ * Loads the render-to-texture module (`docs/architecture/07-rendering.md` §2.11).
+ *
+ * @remarks
+ * It is loaded on first use, so a game that never renders to a texture ships none of it
+ * (`CONSTITUTION.md` §2.5).
+ *
+ * @returns The function that creates a texture's render pass.
+ *
+ * @internal
+ */
+export async function loadRenderTextureFactory(): Promise<typeof createLiteRenderTexture> {
+  const module = await import("../../lite/gpu/render-texture.js");
+  return module.createLiteRenderTexture;
 }

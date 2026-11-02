@@ -18,6 +18,7 @@ import {
 import { createPickRay } from "../lite/picking.js";
 import { color, enumOf, f32, i32, optional, record } from "../schema/field-kinds.js";
 import { createDefaults, defineSchema } from "../schema/schema.js";
+import type { RenderTexture } from "./render-texture.js";
 import type { RendererImpl } from "./renderer.js";
 import type { ComponentHooks } from "../component/component.js";
 import type { LiteCamera, LiteOrthographicBounds, MutableRay } from "../lite/camera.js";
@@ -177,6 +178,27 @@ export class Camera extends Component implements ComponentHooks {
   declare clearColor: ColorLike | null;
 
   declare priority: number;
+
+  /**
+   * The texture this camera renders into every frame, instead of the canvas, or `null` for the
+   * canvas (`docs/architecture/07-rendering.md` §2.11).
+   *
+   * @remarks
+   * A camera with a render target is never the main camera, whatever its `priority`; it draws the
+   * same scene from its own view into the texture, at the texture's aspect, in every frame it is
+   * enabled. Runtime state: it is not serialized. Create the texture with
+   * `app.renderer.createRenderTexture`.
+   *
+   * @example
+   * ```ts
+   * const minimap = app.renderer.createRenderTexture(256, 256);
+   * overhead.renderTarget = minimap;
+   * const pixels = await minimap.readPixels();
+   * ```
+   *
+   * @beta
+   */
+  renderTarget: RenderTexture | null = null;
 
   /** Applies the schema defaults, exactly as `Component.define` would. */
   constructor() {
@@ -392,7 +414,13 @@ export class Camera extends Component implements ComponentHooks {
    * @internal
    */
   sync(renderer: RendererImpl): void {
-    renderer.readTargetSize(this.#targetSize);
+    const target = this.renderTarget;
+    if (target === null) {
+      renderer.readTargetSize(this.#targetSize);
+    } else {
+      this.#targetSize.width = target.width;
+      this.#targetSize.height = target.height;
+    }
     this.#apply();
   }
 

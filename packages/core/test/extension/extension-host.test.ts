@@ -411,3 +411,35 @@ describe("start, stop, and dispose order", () => {
     expect(order).toEqual(["a"]);
   });
 });
+
+describe("one extension object per live app (IGX-0411)", () => {
+  it("refuses an extension object a live app installed, and accepts it once that app is disposed", async () => {
+    const shared: Extension = { name: "shared-state", version: "1.0.0", register(): void {} };
+    const first = await createApp({ headless: true, logSink: createMemorySink(), extensions: [shared] });
+    await expect(
+      createApp({ headless: true, logSink: createMemorySink(), extensions: [shared] }),
+    ).rejects.toMatchObject({ code: "IGX-0411" });
+    first.dispose();
+    created = await createApp({ headless: true, logSink: createMemorySink(), extensions: [shared] });
+    expect(created.isHeadless).toBe(true);
+  });
+
+  it("releases the objects of an app whose construction failed", async () => {
+    let fail = true;
+    const flaky: Extension = {
+      name: "flaky",
+      version: "1.0.0",
+      register(): void {
+        if (fail) {
+          throw new Error("not yet");
+        }
+      },
+    };
+    await expect(createApp({ headless: true, logSink: createMemorySink(), extensions: [flaky] })).rejects.toThrow(
+      "not yet",
+    );
+    fail = false;
+    created = await createApp({ headless: true, logSink: createMemorySink(), extensions: [flaky] });
+    expect(created.isHeadless).toBe(true);
+  });
+});

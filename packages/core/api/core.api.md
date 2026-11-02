@@ -338,6 +338,8 @@ export class Camera extends Component implements ComponentHooks {
     priority: number;
     // (undocumented)
     projection: CameraProjection;
+    // @beta
+    renderTarget: RenderTexture | null;
     static schema: Schema;
     screenToRay(x: number, y: number, out?: Ray): Ray | null;
     screenToWorldPoint(x: number, y: number, distance: number, out: MutableVec3): MutableVec3 | null;
@@ -633,6 +635,7 @@ export const CoreErrorCode: {
     readonly invalidSettings: "IGX-0408";
     readonly physicsCallbackOutsideFixedStep: "IGX-0409";
     readonly simulationSceneAlreadySet: "IGX-0410";
+    readonly extensionInstalledTwice: "IGX-0411";
     readonly assetNotLoaded: "IGX-0501";
     readonly assetLoadAborted: "IGX-0502";
     readonly assetAppDisposed: "IGX-0503";
@@ -677,6 +680,10 @@ export const CoreErrorCode: {
     readonly surfaceSamplerBudgetExceeded: "IGX-0726";
     readonly instancingLodWithoutCulling: "IGX-0727";
     readonly overlayNeedsRenderScene: "IGX-0728";
+    readonly renderTextureNeedsRenderLoop: "IGX-0729";
+    readonly invalidRenderTextureSize: "IGX-0730";
+    readonly renderTextureUnusable: "IGX-0731";
+    readonly renderTextureCameraDetached: "IGX-0732";
     readonly cryptoUnavailable: "IGX-1420";
     readonly storageInvalidNamespace: "IGX-1421";
     readonly storageInvalidKey: "IGX-1422";
@@ -2767,6 +2774,9 @@ export const RENDER_DIAGNOSTICS_COUNTERS: readonly string[];
 export const RENDER_DIAGNOSTICS_GROUP = "render";
 
 // @public
+export const RENDER_TEXTURE_MAX_SIZE = 4096;
+
+// @public
 export interface RenderCapture {
     readonly data: Uint8ClampedArray;
     readonly height: number;
@@ -2779,6 +2789,8 @@ export interface Renderer {
     addCameraSource(probe: (world: World) => boolean): Disconnect;
     animateMaterialsInEditMode: boolean;
     captureScreenshot(): Promise<RenderCapture>;
+    // @beta
+    createRenderTexture(width: number, height: number): RenderTexture;
     readonly drawCalls: number;
     readonly features: Readonly<RenderingFeatureSettings>;
     readonly gpuFrameTimeMs: number;
@@ -2787,6 +2799,8 @@ export interface Renderer {
     pickAsync(x: number, y: number, options?: RenderPickOptions): Promise<RenderPick | null>;
     pixelRatio: number;
     profileTasks: boolean;
+    // @beta
+    renderToTexture(camera: Camera, texture: RenderTexture): Promise<void>;
     requireFeature(feature: RenderingFeature): void;
     resolutionScale: number;
     setSize(width: number, height: number): void;
@@ -2875,6 +2889,15 @@ export interface RenderTaskTiming {
 export interface RenderTaskTimings {
     readonly status: string;
     readonly tasks: readonly RenderTaskTiming[];
+}
+
+// @beta
+export interface RenderTexture {
+    dispose(): void;
+    readonly height: number;
+    readonly isDisposed: boolean;
+    readPixels(): Promise<RenderCapture>;
+    readonly width: number;
 }
 
 // @public
