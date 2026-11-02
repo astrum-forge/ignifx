@@ -227,7 +227,8 @@ export function linearOutputFragment(source: string, premultiplied: boolean): st
     ? "select(pow(max(c.rgb,vec3<f32>(0.0)),vec3<f32>(2.2)),pow(max(c.rgb/c.a,vec3<f32>(0.0)),vec3<f32>(2.2))*c.a,c.a>0.0)"
     : "pow(max(c.rgb,vec3<f32>(0.0)),vec3<f32>(2.2))";
   return [
-    `${source.slice(0, entry.index)}fn ${WRAPPED_FRAGMENT}(${parameters})${after}`,
+    // A plain function may not carry the entry point's `@location(0)` on its return type.
+    `${source.slice(0, entry.index)}fn ${WRAPPED_FRAGMENT}(${stripAttributes(parameters)})->vec4<f32>{${after.slice(result[0].length)}`,
     `@fragment fn mainFragment(${parameters})->@location(0) vec4<f32>{`,
     `let c=${WRAPPED_FRAGMENT}(${names.join(",")});`,
     `return vec4<f32>(${decode},c.a);`,
@@ -259,6 +260,17 @@ function matchingParen(text: string, open: number): number {
 }
 
 /**
+ * Removes WGSL attributes (`@builtin(position)`, `@location(0)`, `@interpolate(flat)`) from a
+ * parameter list, which a plain function's parameters may not carry.
+ *
+ * @param parameters - The parameter list.
+ * @returns The list without attributes.
+ */
+function stripAttributes(parameters: string): string {
+  return parameters.replaceAll(/@\w+\s*(\([^)]*\))?\s*/gu, "");
+}
+
+/**
  * The parameter names of a WGSL parameter list, attributes stripped.
  *
  * @param parameters - The text between an entry point's parentheses.
@@ -269,10 +281,7 @@ function parameterNames(parameters: string): string[] {
   let depth = 0;
   let start = 0;
   const take = (end: number): void => {
-    const piece = parameters
-      .slice(start, end)
-      .replaceAll(/@\w+\s*(\([^)]*\))?/gu, "")
-      .trim();
+    const piece = stripAttributes(parameters.slice(start, end)).trim();
     const colon = piece.indexOf(":");
     if (colon > 0) {
       names.push(piece.slice(0, colon).trim());

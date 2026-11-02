@@ -10,10 +10,12 @@ import {
   createSurfaceRenderTargetTexture,
   enableMaterialPlugins,
   getFrameGraph,
+  getPbrUnlit,
   isPbrMaterial,
   isStandardMaterial,
   NeutralToneMapping,
   onRenderTargetTextureResize,
+  reconcileMaterialPlugins,
   setEffectTexture,
   setEffectUniforms,
   setEnvironmentRotation,
@@ -101,6 +103,13 @@ export const LINEAR_OUTPUT_PLUGIN_NAME = "ignifx-hdr-linear-output";
 export const STANDARD_LINEAR_PLUGIN_NAME = "ignifx-hdr-linear-standard";
 
 /**
+ * The name the unlit PBR material's plugin carries.
+ *
+ * @internal
+ */
+export const UNLIT_LINEAR_PLUGIN_NAME = "ignifx-hdr-linear-unlit";
+
+/**
  * Where the skybox patch sits in Lite's skybox patch list: after rotation (0) and blur (1)
  * (`lib/scene/set-environment-rotation.js`, `lib/scene/set-environment-blur.js`).
  */
@@ -163,6 +172,32 @@ export function createLinearOutputPlugin(): MaterialPlugin {
   };
   return {
     name: LINEAR_OUTPUT_PLUGIN_NAME,
+    priority: 0,
+    getCustomCode: (stage) => (stage === "fragment" ? fragment : null),
+  };
+}
+
+/**
+ * Builds the plugin that keeps an unlit PBR material's colour linear.
+ *
+ * @remarks
+ * With no environment, Lite's unlit fragment assigns its colour at the `NI` slot
+ * (`lib/material/pbr/fragments/unlit-fragment.js`), after the linear-output plugin's save there, so
+ * the save would hold the lit colour. This plugin recomputes the unlit colour instead
+ * (`baseColor * material.unlitColor`, both in scope before the fragment is written), then applies
+ * the fog the restore would.
+ *
+ * @returns The plugin, shared by every unlit PBR material.
+ *
+ * @internal
+ */
+export function createUnlitLinearPlugin(): MaterialPlugin {
+  const fragment = {
+    CUSTOM_FRAGMENT_DEFINITIONS: FOG_FACTOR_WGSL,
+    CUSTOM_FRAGMENT_BEFORE_FRAGCOLOR: `color = baseColor*material.unlitColor;${FOG_RESTORE_WGSL}`,
+  };
+  return {
+    name: UNLIT_LINEAR_PLUGIN_NAME,
     priority: 0,
     getCustomCode: (stage) => (stage === "fragment" ? fragment : null),
   };
@@ -403,7 +438,11 @@ export function installHdrRenderPath(engine: EngineContext, scene: SceneContext)
   addTask(scene, toSwapchain);
   toChain.executionEnabled = false;
 
-  const plugins: LinearPlugins = { pbr: createLinearOutputPlugin(), standard: createStandardLinearPlugin() };
+  const plugins: LinearPlugins = {
+    pbr: createLinearOutputPlugin(),
+    unlit: createUnlitLinearPlugin(),
+    standard: createStandardLinearPlugin(),
+  };
   let linearFog: FogConfig | null = null;
   const handle: HdrOutputHandle = {
     sceneTexture: hdr.texture,
@@ -454,6 +493,8 @@ export function installHdrRenderPath(engine: EngineContext, scene: SceneContext)
 interface LinearPlugins {
   /** The save, restore and fog for PBR materials, PBR skyboxes included. */
   readonly pbr: MaterialPlugin;
+  /** The recompute and fog for unlit PBR materials. */
+  readonly unlit: MaterialPlugin;
   /** The decode for Standard materials. */
   readonly standard: MaterialPlugin;
 }
@@ -519,17 +560,32 @@ function attachLinearOutput(scene: SceneContext, shared: LinearPlugins, isSceneR
     }
     let plugin: MaterialPlugin;
     if (isPbrMaterial(material)) {
-      plugin = shared.pbr;
+      plugin = getPbrUnlit(material) === undefined ? shared.pbr : shared.unlit;
     } else if (isStandardMaterial(material)) {
       plugin = shared.standard;
     } else {
       continue;
     }
-    const plugins = material.plugins ?? [];
-    if (plugins.includes(plugin)) {
+    const current = material.plugins ?? [];
+    // A PBR material that became unlit, or stopped being so, swaps one plugin for the other.
+    let stale: MaterialPlugin | null = null;
+    if (plugin === shared.pbr) {
+      stale = shared.unlit;
+    } else if (plugin === shared.unlit) {
+      stale = shared.pbr;
+    }
+    const hasStale = stale !== null && current.includes(stale);
+    if (current.includes(plugin) && !hasStale) {
       continue;
     }
-    material.plugins = [...plugins, plugin];
+    const kept = hasStale ? current.filter((other) => other !== stale) : current;
+    material.plugins = kept.includes(plugin) ? kept : [...kept, plugin];
+    if (plugin === shared.standard) {
+      // The Standard bridge bakes a plugin signature per material, which only happens for meshes it
+      // saw at `enableMaterialPlugins` or at a material change; this bakes and rebuilds it now.
+      void reconcileMaterialPlugins(scene, material);
+      continue;
+    }
     if (isSceneRegistered) {
       rebuildMaterialPipelines(scene, material);
     }
