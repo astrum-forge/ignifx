@@ -143,7 +143,8 @@ export class PlayInput {
    * @param params - The received `params`.
    * @returns How many events were queued.
    * @throws InvalidParamsError for malformed parameters or a key the game's keyboard does not have;
-   * nothing is queued then.
+   * nothing is queued then. If `simulateEvent` itself throws partway, the events before it stay
+   * queued: the input service has no way to take them back.
    */
   send(params: unknown): SendInputResult {
     if (!isSendInputParams(params)) {

@@ -49,6 +49,8 @@ export {
   PlayNotification,
   PlayPhase,
   QUERY_RUNTIME_MAX_COMPONENTS,
+  QUERY_RUNTIME_MAX_JSON_LENGTH,
+  QUERY_RUNTIME_MAX_KEYS,
   SEND_INPUT_MAX_EVENTS,
   type PlayRequest,
   type PlayResponse,

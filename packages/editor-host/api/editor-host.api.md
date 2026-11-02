@@ -730,6 +730,12 @@ export function protocolVersionIsCompatible(a: ProtocolVersion, b: ProtocolVersi
 export const QUERY_RUNTIME_MAX_COMPONENTS = 64;
 
 // @public
+export const QUERY_RUNTIME_MAX_JSON_LENGTH = 262144;
+
+// @public
+export const QUERY_RUNTIME_MAX_KEYS = 256;
+
+// @public
 export interface QueryRuntimeParams {
     readonly components?: readonly string[];
     readonly entity: string;

@@ -1,4 +1,4 @@
-import { array, Component, createApp, createMemorySink, f32, Script, str } from "@ignifx/core";
+import { array, Component, createApp, createMemorySink, custom, f32, map, Script, str } from "@ignifx/core";
 import { input } from "@ignifx/input";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CLIPPED_MARKER } from "../src/app-reports.js";
@@ -13,13 +13,15 @@ import {
   isQueryRuntimeResult,
   isScreenshotResult,
   isSendInputResult,
+  QUERY_RUNTIME_MAX_JSON_LENGTH,
+  QUERY_RUNTIME_MAX_KEYS,
   PlayNotification,
   RpcErrorCode,
 } from "../src/protocol/index.js";
 import { connect, CountingTarget, EDITOR_ORIGIN } from "./support/editor.js";
 import type { EditorPlayControls } from "../src/play-controls.js";
 import type { EditorPeer } from "./support/editor.js";
-import type { App, JsonObject, LogSink, RenderCapture } from "@ignifx/core";
+import type { App, JsonObject, JsonValue, LogSink, RenderCapture } from "@ignifx/core";
 import type { Mock } from "vitest";
 
 /**
@@ -807,24 +809,87 @@ describe("queryRuntime in the play view (engine ask E48)", () => {
     expect((answer as { entity: { components: unknown[] } }).entity.components).toHaveLength(64);
   });
 
-  it("clips long strings and lists to the host's caps, so the editor keeps the answer", async () => {
+  it("clips names and long lists to the caps, so the editor keeps the answer", async () => {
     const { app, peer } = await playView();
     const entity = app.world.createEntity("x".repeat(HOST_TEXT_MAX_LENGTH + 10));
-    entity.addComponent(Notes, {
-      text: "y".repeat(HOST_TEXT_MAX_LENGTH + 10),
-      lines: Array.from({ length: HOST_LIST_MAX_LENGTH + 5 }, () => "z"),
-    });
+    entity.addComponent(Notes, { lines: Array.from({ length: HOST_LIST_MAX_LENGTH + 5 }, () => "z") });
     await peer.request("play");
 
     const answer = (await peer.request("queryRuntime", { entity: entity.uid }))["result"];
 
     expect(isQueryRuntimeResult(answer)).toBe(true);
     const { name, components } = (answer as { entity: { name: string; components: { props: JsonObject }[] } }).entity;
-    const props = components[0]?.props;
-    expect(name).toHaveLength(HOST_TEXT_MAX_LENGTH);
-    expect(name.endsWith(CLIPPED_MARKER)).toBe(true);
-    expect(props?.["text"]).toHaveLength(HOST_TEXT_MAX_LENGTH);
-    expect(props?.["lines"]).toHaveLength(HOST_LIST_MAX_LENGTH);
+    expect(name).toBe("x".repeat(QUERY_RUNTIME_MAX_KEYS));
+    expect(components[0]?.props["lines"]).toHaveLength(HOST_LIST_MAX_LENGTH);
+  });
+
+  it("cuts a huge map to 256 keys of at most 256 characters, counting the rest", async () => {
+    class Table extends Component.define({ rows: map(str()) }) {
+      static typeId = "test/Table";
+    }
+    const { app, peer } = await playView();
+    const entity = app.world.createEntity("Table");
+    const rows: Record<string, string> = {};
+    for (let index = 0; index < 50_000; index += 1) {
+      rows[`${String(index).padStart(5, "0")}${"k".repeat(300)}`] = "v";
+    }
+    entity.addComponent(Table, { rows });
+    await peer.request("play");
+
+    const response = await peer.request("queryRuntime", { entity: entity.uid });
+    const answer = response["result"];
+
+    expect(isQueryRuntimeResult(answer)).toBe(true);
+    expect(JSON.stringify(response).length).toBeLessThan(QUERY_RUNTIME_MAX_JSON_LENGTH + 100);
+    const props = (answer as { entity: { components: { props: { rows: Record<string, unknown> } }[] } }).entity
+      .components[0]?.props;
+    const keys = Object.keys(props?.rows ?? {});
+    expect(keys).toHaveLength(QUERY_RUNTIME_MAX_KEYS + 1);
+    expect(keys.every((key) => key.length <= QUERY_RUNTIME_MAX_KEYS)).toBe(true);
+    expect(props?.rows["$omitted"]).toBe(50_000 - QUERY_RUNTIME_MAX_KEYS);
+  });
+
+  it("keeps the whole answer within its budget, moving the components that do not fit to omittedComponents", async () => {
+    const { app, peer } = await playView();
+    const entity = app.world.createEntity("Notebook");
+    entity.addComponent(Mover);
+    // About 600 Ki of text: past the 256 Ki budget, so it and every component after it are left out.
+    entity.addComponent(Notes, { text: "y".repeat(600_000) });
+    entity.addComponent(
+      class extends Component.define({ index: f32(1) }) {
+        static typeId = "test/After";
+      },
+    );
+    await peer.request("play");
+
+    const response = await peer.request("queryRuntime", { entity: entity.uid });
+    const answer = response["result"];
+
+    expect(isQueryRuntimeResult(answer)).toBe(true);
+    expect(JSON.stringify(answer).length).toBeLessThanOrEqual(QUERY_RUNTIME_MAX_JSON_LENGTH);
+    expect(answer).toMatchObject({ entity: { components: [{ type: "test/Mover" }] }, omittedComponents: 2 });
+    expect((answer as { entity: { components: unknown[] } }).entity.components).toHaveLength(1);
+  });
+
+  it("answers null for what a custom codec writes that is not JSON, so the answer still posts", async () => {
+    class Odd extends Component.define({
+      value: custom<number>({
+        createDefault: () => 0,
+        serialize: (): JsonValue => ({ nan: Number.NaN, fn: (() => 1) as unknown as JsonValue }),
+        deserialize: () => 0,
+      }),
+    }) {
+      static typeId = "test/Odd";
+    }
+    const { app, peer } = await playView();
+    const entity = app.world.createEntity("Odd");
+    entity.addComponent(Odd);
+    await peer.request("play");
+
+    const answer = (await peer.request("queryRuntime", { entity: entity.uid }))["result"];
+
+    expect(isQueryRuntimeResult(answer)).toBe(true);
+    expect(answer).toMatchObject({ entity: { components: [{ props: { value: { nan: null, fn: null } } }] } });
   });
 
   it("refuses an unknown or destroyed entity with unknownEntity", async () => {

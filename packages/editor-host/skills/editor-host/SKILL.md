@@ -329,7 +329,9 @@ object `openScene` sends, through `world.loadSceneFile`; `readBack` answers with
   headless play view answers `methodNotFound`.
 - **The play view's `queryRuntime` reads one live entity.** `{ entity: uid, components?: typeId[] }`
   answers the entity as `serializeEntity` writes it (serialized props only, no expressions), with at
-  most 64 components (`omittedComponents` counts the rest) and long strings and lists clipped. An
+  most 64 components, objects cut to 256 keys (`"$omitted"` counts the rest), keys and names
+  clipped to 256 characters, and the whole answer within 262,144 characters of JSON: components past
+  the budget, in order, are counted in `omittedComponents`. An
   unknown uid answers `unknownEntity`; a stopped game `notPlaying`. A paused or stepped game
   answers, so pause, `step`, `queryRuntime` reads a game frame by frame. Spawned entities get new
   uids each run; a scene's own keep their file uids.
@@ -338,7 +340,8 @@ object `openScene` sends, through `world.loadSceneFile`; `readBack` answers with
   `{ type: "pointermove" | "pointerdown" | "pointerup", x, y, button? }` (`x`, `y` as 0–1 fractions of
   the canvas) go to `app.input.simulateEvent` and resolve on the game's next frame; nothing reaches
   the DOM, the editor's window or the OS. A bad event or unknown key answers `invalidParams` and
-  queues nothing; a stopped game `notPlaying`. A held key stays down until its `keyup`. Only a game
+  queues nothing; a stopped game `notPlaying`. A stepped game resolves the events only on its next
+  `step`, so step after sending. A held key stays down until its `keyup`. Only a game
   with `app.input` lists `sendInput`; others answer `methodNotFound`.
 - **The scene view keeps the project's `rendering.msaaSamples`.** The gizmos and the outline draw in
   core's render overlay (`app.renderer.openOverlay()`), which works at every MSAA setting.

@@ -52,7 +52,8 @@ export const PlayMethod = {
   /**
    * Reads one entity of the running game as the scene format writes it ({@link QueryRuntimeParams},
    * {@link QueryRuntimeResult}): its live transform, flags and component props, never anything a
-   * component does not serialize, and no expressions. Changes nothing. Needs
+   * component does not serialize, and no expressions. Each value is capped and the whole answer kept
+   * within {@link QUERY_RUNTIME_MAX_JSON_LENGTH}. Changes nothing. Needs
    * `HostCapability.queryRuntime`. Fails with `RpcErrorCode.notPlaying` while the game is stopped
    * (before it starts, after `stop`; a stepped game is paused and answers), and with
    * `RpcErrorCode.unknownEntity` when no entity of the game has the uid.
@@ -63,7 +64,8 @@ export const PlayMethod = {
    * had received them ({@link SendInputParams}, {@link SendInputResult}). Nothing reaches the
    * editor's window or the operating system. Needs `HostCapability.sendInput`, which a game lists
    * only when it has `app.input` (`@ignifx/input`). Fails with `RpcErrorCode.notPlaying` while the
-   * game is stopped; a paused or stepped game takes the events and resolves them on its next frame.
+   * game is stopped; a paused or stepped game takes the events and resolves them on its next frame,
+   * which for a stepped game is the next `step`.
    */
   sendInput: "sendInput",
 } as const;
@@ -97,6 +99,24 @@ export interface StepParams {
 export const QUERY_RUNTIME_MAX_COMPONENTS = 64;
 
 /**
+ * The longest a `queryRuntime` answer may be: its `result` as JSON text, in UTF-16 code units
+ * (`JSON.stringify(result).length`), 256 Ki. Components that would pass it are left out, in order,
+ * and counted in {@link QueryRuntimeResult.omittedComponents}.
+ *
+ * @public
+ */
+export const QUERY_RUNTIME_MAX_JSON_LENGTH = 262_144;
+
+/**
+ * In a `queryRuntime` answer, the most keys one object keeps and the longest a key may be; also the
+ * longest the entity's `name`, `layer`, each tag and each component `type` may be, and the most
+ * tags kept. An object cut short gets the key `"$omitted"` with how many keys it lost.
+ *
+ * @public
+ */
+export const QUERY_RUNTIME_MAX_KEYS = 256;
+
+/**
  * The parameters of the `queryRuntime` method.
  *
  * @public
@@ -120,11 +140,21 @@ export interface QueryRuntimeResult {
   /**
    * The entity as `serializeEntity` writes it from the live world, with at most
    * {@link QUERY_RUNTIME_MAX_COMPONENTS} components (only the filtered ones when `components` was
-   * given). Each string is clipped to `HOST_TEXT_MAX_LENGTH` and each list cut to
-   * `HOST_LIST_MAX_LENGTH`.
+   * given), in the entity's order, as many as fit in {@link QUERY_RUNTIME_MAX_JSON_LENGTH}.
+   *
+   * @remarks
+   * Each value is capped too: a prop string is clipped to `HOST_TEXT_MAX_LENGTH`, a list cut to
+   * `HOST_LIST_MAX_LENGTH` items, an object to {@link QUERY_RUNTIME_MAX_KEYS} keys (the rest
+   * counted in its `"$omitted"` key), and each key, the `name`, the `layer`, each component `type`
+   * and each of at most {@link QUERY_RUNTIME_MAX_KEYS} tags clipped to {@link QUERY_RUNTIME_MAX_KEYS}
+   * characters. A value that is not JSON (a non-finite number, a function a custom codec returned)
+   * becomes `null`, and so does anything nested deeper than 256 levels.
    */
   readonly entity: SceneFileEntity;
-  /** How many matching components did not fit under {@link QUERY_RUNTIME_MAX_COMPONENTS}. */
+  /**
+   * How many matching components were left out: past {@link QUERY_RUNTIME_MAX_COMPONENTS}, or past
+   * the first that did not fit in {@link QUERY_RUNTIME_MAX_JSON_LENGTH}.
+   */
   readonly omittedComponents: number;
   /** How many frames had started when it was read (`app.time.frameCount`). */
   readonly frameCount: number;
@@ -493,7 +523,8 @@ export function isQueryRuntimeParams(value: unknown): value is QueryRuntimeParam
  *
  * @param value - The received `result`.
  * @returns True for an entity record with at most {@link QUERY_RUNTIME_MAX_COMPONENTS} components,
- * a non-negative integer `omittedComponents` and `frameCount`, and a non-negative finite `time`.
+ * a non-negative integer `omittedComponents` and `frameCount`, and a non-negative finite `time`,
+ * no longer than {@link QUERY_RUNTIME_MAX_JSON_LENGTH} as JSON.
  *
  * @public
  */
@@ -516,7 +547,8 @@ export function isQueryRuntimeResult(value: unknown): value is QueryRuntimeResul
     frameCount >= 0 &&
     typeof time === "number" &&
     Number.isFinite(time) &&
-    time >= 0
+    time >= 0 &&
+    JSON.stringify(value).length <= QUERY_RUNTIME_MAX_JSON_LENGTH
   );
 }
 

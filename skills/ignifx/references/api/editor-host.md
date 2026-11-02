@@ -1577,8 +1577,16 @@ Play view → editor: the answer to `queryRuntime`.
 
 The entity as `serializeEntity` writes it from the live world, with at most
 [QUERY\_RUNTIME\_MAX\_COMPONENTS](#query_runtime_max_components) components (only the filtered ones when `components` was
-given). Each string is clipped to `HOST_TEXT_MAX_LENGTH` and each list cut to
-`HOST_LIST_MAX_LENGTH`.
+given), in the entity's order, as many as fit in [QUERY\_RUNTIME\_MAX\_JSON\_LENGTH](#query_runtime_max_json_length).
+
+###### Remarks
+
+Each value is capped too: a prop string is clipped to `HOST_TEXT_MAX_LENGTH`, a list cut to
+`HOST_LIST_MAX_LENGTH` items, an object to [QUERY\_RUNTIME\_MAX\_KEYS](#query_runtime_max_keys) keys (the rest
+counted in its `"$omitted"` key), and each key, the `name`, the `layer`, each component `type`
+and each of at most [QUERY\_RUNTIME\_MAX\_KEYS](#query_runtime_max_keys) tags clipped to [QUERY\_RUNTIME\_MAX\_KEYS](#query_runtime_max_keys)
+characters. A value that is not JSON (a non-finite number, a function a custom codec returned)
+becomes `null`, and so does anything nested deeper than 256 levels.
 
 ##### frameCount
 
@@ -1590,7 +1598,8 @@ How many frames had started when it was read (`app.time.frameCount`).
 
 > `readonly` **omittedComponents**: `number`
 
-How many matching components did not fit under [QUERY\_RUNTIME\_MAX\_COMPONENTS](#query_runtime_max_components).
+How many matching components were left out: past [QUERY\_RUNTIME\_MAX\_COMPONENTS](#query_runtime_max_components), or past
+the first that did not fit in [QUERY\_RUNTIME\_MAX\_JSON\_LENGTH](#query_runtime_max_json_length).
 
 ##### time
 
@@ -4024,7 +4033,8 @@ anything. Takes no parameters. The editor polls it; no notification carries it.
 
 Reads one entity of the running game as the scene format writes it ([QueryRuntimeParams](#queryruntimeparams),
 [QueryRuntimeResult](#queryruntimeresult)): its live transform, flags and component props, never anything a
-component does not serialize, and no expressions. Changes nothing. Needs
+component does not serialize, and no expressions. Each value is capped and the whole answer kept
+within [QUERY\_RUNTIME\_MAX\_JSON\_LENGTH](#query_runtime_max_json_length). Changes nothing. Needs
 `HostCapability.queryRuntime`. Fails with `RpcErrorCode.notPlaying` while the game is stopped
 (before it starts, after `stop`; a stepped game is paused and answers), and with
 `RpcErrorCode.unknownEntity` when no entity of the game has the uid.
@@ -4047,7 +4057,8 @@ Queues synthetic key and pointer events into the game's own input system, as if 
 had received them ([SendInputParams](#sendinputparams), [SendInputResult](#sendinputresult)). Nothing reaches the
 editor's window or the operating system. Needs `HostCapability.sendInput`, which a game lists
 only when it has `app.input` (`@ignifx/input`). Fails with `RpcErrorCode.notPlaying` while the
-game is stopped; a paused or stepped game takes the events and resolves them on its next frame.
+game is stopped; a paused or stepped game takes the events and resolves them on its next frame,
+which for a stepped game is the next `step`.
 
 ##### step
 
@@ -4162,6 +4173,26 @@ The protocol version this package describes. The editor sends it in `hello` and 
 
 The most components a `queryRuntime` answer holds, and the most type ids its `components` filter
 may name. Components past it are counted in [QueryRuntimeResult.omittedComponents](#omittedcomponents).
+
+***
+
+### QUERY\_RUNTIME\_MAX\_JSON\_LENGTH
+
+> `const` **QUERY\_RUNTIME\_MAX\_JSON\_LENGTH**: `262144` = `262_144`
+
+The longest a `queryRuntime` answer may be: its `result` as JSON text, in UTF-16 code units
+(`JSON.stringify(result).length`), 256 Ki. Components that would pass it are left out, in order,
+and counted in [QueryRuntimeResult.omittedComponents](#omittedcomponents).
+
+***
+
+### QUERY\_RUNTIME\_MAX\_KEYS
+
+> `const` **QUERY\_RUNTIME\_MAX\_KEYS**: `256` = `256`
+
+In a `queryRuntime` answer, the most keys one object keeps and the longest a key may be; also the
+longest the entity's `name`, `layer`, each tag and each component `type` may be, and the most
+tags kept. An object cut short gets the key `"$omitted"` with how many keys it lost.
 
 ***
 
@@ -5234,7 +5265,8 @@ The received `result`.
 `value is QueryRuntimeResult`
 
 True for an entity record with at most [QUERY\_RUNTIME\_MAX\_COMPONENTS](#query_runtime_max_components) components,
-a non-negative integer `omittedComponents` and `frameCount`, and a non-negative finite `time`.
+a non-negative integer `omittedComponents` and `frameCount`, and a non-negative finite `time`,
+no longer than [QUERY\_RUNTIME\_MAX\_JSON\_LENGTH](#query_runtime_max_json_length) as JSON.
 
 ***
 
