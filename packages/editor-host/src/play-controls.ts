@@ -184,6 +184,21 @@ function stepDelta(app: App, params: unknown): number {
   return delta;
 }
 
+/** How often a capture that waits for its frame checks that the game's loop still runs, in ms. */
+const CAPTURE_STOP_POLL_MS = 50;
+
+/**
+ * The refusal of a `screenshot` while the game's frame loop does not run.
+ *
+ * @returns The failure, with code `notPlaying`.
+ */
+function notPlaying(): RpcFailure {
+  return new RpcFailure(
+    RpcErrorCode.notPlaying,
+    "The game is not running, so there is no frame to capture. Press Play first; after Step or Stop the game renders no frames.",
+  );
+}
+
 /**
  * `screenshot`: the game's canvas as an image, as the scene view's `screenshot` answers. Changes
  * nothing about the game.
@@ -191,21 +206,34 @@ function stepDelta(app: App, params: unknown): number {
  * @param app - The game's app.
  * @param params - The received `params`.
  * @returns The data URL and its size.
- * @throws RpcFailure `notPlaying` while the frame loop does not run, `notReady` before the first
- * frame, and `invalidParams` for parameters the scene view would refuse.
+ * @throws RpcFailure `notPlaying` while the frame loop does not run or when it stops before the
+ * frame arrives, `notReady` before the first frame, and `invalidParams` for parameters the scene
+ * view would refuse.
  */
 async function playScreenshot(app: App, params: unknown): Promise<ScreenshotResult> {
   // Without a running loop no frame is presented, so a capture would only fail (`IGX-0707`).
   if (!app.isRunning) {
-    throw new RpcFailure(
-      RpcErrorCode.notPlaying,
-      "The game is not running, so there is no frame to capture. Press Play first; after Step or Stop the game renders no frames.",
-    );
+    throw notPlaying();
   }
   if (app.time.frameCount === 0) {
     throw new RpcFailure(RpcErrorCode.notReady, "The game has not rendered its first frame yet.");
   }
-  return takeScreenshot(app, checkScreenshotParams(params));
+  const checked = checkScreenshotParams(params);
+  // A capture waits for the next frame. If the game stops its loop first, that frame never comes,
+  // and the channel answers one request at a time, so every later request would wait behind it.
+  let poll: ReturnType<typeof setInterval> | undefined;
+  const stopped = new Promise<never>((_resolve, reject) => {
+    poll = setInterval(() => {
+      if (!app.isRunning) {
+        reject(notPlaying());
+      }
+    }, CAPTURE_STOP_POLL_MS);
+  });
+  try {
+    return await Promise.race([takeScreenshot(app, checked), stopped]);
+  } finally {
+    clearInterval(poll);
+  }
 }
 
 /**

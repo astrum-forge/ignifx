@@ -16,6 +16,7 @@ import { connect, CountingTarget, EDITOR_ORIGIN } from "./support/editor.js";
 import type { EditorPlayControls } from "../src/play-controls.js";
 import type { EditorPeer } from "./support/editor.js";
 import type { App, LogSink, RenderCapture } from "@ignifx/core";
+import type { Mock } from "vitest";
 
 /**
  * The play view's controls (`docs/architecture/17-editor-host.md` §5): the game keeps its app, and
@@ -605,7 +606,7 @@ describe("screenshot in the play view (engine ask E47)", () => {
    */
   async function canvasPlayView(): Promise<{
     app: App;
-    capture: ReturnType<typeof vi.fn>;
+    capture: Mock<() => Promise<RenderCapture>>;
     peer: EditorPeer;
   }> {
     vi.stubGlobal("OffscreenCanvas", FakeOffscreenCanvas);
@@ -678,6 +679,25 @@ describe("screenshot in the play view (engine ask E47)", () => {
     await peer.request("stop");
     expect(await screenshot()).toMatchObject({ code: RpcErrorCode.notPlaying });
     expect(capture).not.toHaveBeenCalled();
+  });
+
+  it("answers notPlaying when the game stops its loop while a capture waits, and serves later requests", async () => {
+    const { app, capture, peer } = await canvasPlayView();
+    await peer.hello();
+    await peer.request("step");
+    await peer.request("play");
+    // The frame the capture waits for never comes.
+    capture.mockImplementation(async () => new Promise<never>(() => undefined));
+
+    const pending = peer.request("screenshot", { format: "png" });
+    await new Promise((resolve) => {
+      setTimeout(resolve, 20);
+    });
+    app.stop();
+
+    expect((await pending)["error"]).toMatchObject({ code: RpcErrorCode.notPlaying });
+    expect(capture).toHaveBeenCalledTimes(1);
+    expect((await peer.request("playState"))["result"]).toMatchObject({ state: "stopped" });
   });
 
   it("refuses the parameters the scene view refuses", async () => {
