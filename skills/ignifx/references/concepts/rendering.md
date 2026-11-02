@@ -147,10 +147,18 @@ canvas. `texture.readPixels()` answers RGBA8. Headless, before `start()` or afte
 reject with `IGX-0729`. It draws the render scene only: no post effects, sprites or UI text.
 
 ```ts
-const minimap = app.renderer.createRenderTexture(256, 256);
-overhead.renderTarget = minimap; // `overhead` is a Camera; it never becomes the main camera
-const { data } = await minimap.readPixels();
-minimap.dispose();
+import type { App, Camera, RenderCapture } from "@ignifx/core";
+
+/** Renders an overhead camera into a 256x256 texture once and reads the pixels back. */
+export async function snapshotMinimap(app: App, overhead: Camera): Promise<RenderCapture> {
+  const minimap = app.renderer.createRenderTexture(256, 256);
+  try {
+    await app.renderer.renderToTexture(overhead, minimap); // or: overhead.renderTarget = minimap
+    return await minimap.readPixels();
+  } finally {
+    minimap.dispose();
+  }
+}
 ```
 
 ## 4. Settings and feature opt-ins

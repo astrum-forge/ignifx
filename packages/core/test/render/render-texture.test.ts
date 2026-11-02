@@ -61,7 +61,13 @@ describe("render textures on a headless app", () => {
     expect(texture.isDisposed).toBe(true);
     await expect(h.app.renderer.renderToTexture(camera, texture)).rejects.toMatchObject({ code: "IGX-0731" });
     await expect(texture.readPixels()).rejects.toMatchObject({ code: "IGX-0731" });
-    const foreign = { width: 8, height: 8, isDisposed: false, readPixels: texture.readPixels, dispose(): void {} };
+    const foreign = {
+      width: 8,
+      height: 8,
+      isDisposed: false,
+      readPixels: async () => texture.readPixels(),
+      dispose(): void {},
+    };
     await expect(h.app.renderer.renderToTexture(camera, foreign)).rejects.toMatchObject({ code: "IGX-0731" });
   });
 

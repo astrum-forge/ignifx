@@ -226,6 +226,30 @@ What the component does, in one line, for an inspector.
 
 > **projection**: `"perspective"` \| `"orthographic"`
 
+##### renderTarget
+
+> **renderTarget**: [`RenderTexture`](#rendertexture) \| `null` = `null`
+
+**`Beta`**
+
+The texture this camera renders into every frame, instead of the canvas, or `null` for the
+canvas (`docs/architecture/07-rendering.md` §2.11).
+
+###### Remarks
+
+A camera with a render target is never the main camera, whatever its `priority`; it draws the
+same scene from its own view into the texture, at the texture's aspect, in every frame it is
+enabled. Runtime state: it is not serialized. Create the texture with
+`app.renderer.createRenderTexture`.
+
+###### Example
+
+```ts
+const minimap = app.renderer.createRenderTexture(256, 256);
+overhead.renderTarget = minimap;
+const pixels = await minimap.readPixels();
+```
+
 ##### schema
 
 > `static` **schema**: [`Schema`](#schema-11)
@@ -4322,7 +4346,7 @@ Closes the connection. The next call opens a new one.
 
 ###### Implementation of
 
-[`StorageBackend`](#storagebackend).[`dispose`](#dispose-11)
+[`StorageBackend`](#storagebackend).[`dispose`](#dispose-12)
 
 ##### get()
 
@@ -7766,7 +7790,7 @@ Drops every namespace.
 
 ###### Implementation of
 
-[`StorageBackend`](#storagebackend).[`dispose`](#dispose-11)
+[`StorageBackend`](#storagebackend).[`dispose`](#dispose-12)
 
 ##### get()
 
@@ -12276,7 +12300,7 @@ Whether the GPU allocation has been given up.
 
 `boolean`
 
-`true` once [StorageBufferAsset.dispose](#dispose-12) has run.
+`true` once [StorageBufferAsset.dispose](#dispose-13) has run.
 
 ##### lite
 
@@ -12510,7 +12534,7 @@ The texture's height, in texels.
 
 `number`
 
-The height, or `0`; see [TextureAsset.width](#width-4).
+The height, or `0`; see [TextureAsset.width](#width-5).
 
 ##### isReleased
 
@@ -17638,7 +17662,7 @@ The app.
 
 > **get** **isDisposed**(): `boolean`
 
-`true` once [World.dispose](#dispose-14) has run.
+`true` once [World.dispose](#dispose-15) has run.
 
 ###### Returns
 
@@ -25875,6 +25899,46 @@ The frame, as tightly packed RGBA8 with the top row first.
 IgnifxError with code `IGX-0707` when no render loop is running, because the capture
 would never settle.
 
+##### createRenderTexture()
+
+> **createRenderTexture**(`width`, `height`): [`RenderTexture`](#rendertexture)
+
+**`Beta`**
+
+Creates an offscreen texture a camera can render into, beside the main view
+(`docs/architecture/07-rendering.md` §2.11).
+
+###### Parameters
+
+###### width
+
+`number`
+
+The width, in pixels: a whole number from 1 to 4096.
+
+###### height
+
+`number`
+
+The height, in pixels: a whole number from 1 to 4096.
+
+###### Returns
+
+[`RenderTexture`](#rendertexture)
+
+The texture. Dispose it when done; `app.dispose()` disposes any still open.
+
+###### Remarks
+
+Fill it once with [Renderer.renderToTexture](#rendertotexture), or every frame by setting a camera's
+`renderTarget`. Its GPU pass and target are created on the first render or read, so creating
+one costs nothing until then, and a headless app may create one (it can never fill it).
+
+###### Throws
+
+IgnifxError with code `IGX-0730` for a side out of range, and `IGX-0106` once the app is
+disposed.
+
 ##### openOverlay()
 
 > **openOverlay**(): `Promise`\<[`RenderOverlay`](#renderoverlay)\>
@@ -25957,6 +26021,54 @@ A hit on any mesh of a glTF `Model`, or of any renderable built from several Lit
 resolves through the nearest node an entity owns. Picks are serialised per app: Lite's picker
 owns one set of staging buffers and chains each call onto the previous one's promise. A
 headless app has no picker and always misses.
+
+##### renderToTexture()
+
+> **renderToTexture**(`camera`, `texture`): `Promise`\<`void`\>
+
+**`Beta`**
+
+Renders the scene through a camera into a texture on the next frame, beside the main view
+(`docs/architecture/07-rendering.md` §2.11).
+
+###### Parameters
+
+###### camera
+
+[`Camera`](#camera)
+
+A camera attached to an entity of this app's world.
+
+###### texture
+
+[`RenderTexture`](#rendertexture)
+
+A texture from this renderer's [Renderer.createRenderTexture](#createrendertexture).
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the frame that rendered it has been submitted.
+
+###### Remarks
+
+The camera need not be the main one, and stays a candidate for it. Requests queued for the
+same texture render one camera per frame, oldest first. The camera's aspect is the texture's.
+Read the result with [RenderTexture.readPixels](#readpixels).
+
+###### Throws
+
+IgnifxError with code `IGX-0729` on a headless app or while no render loop runs,
+`IGX-0731` for a disposed or foreign texture, and `IGX-0732` for a detached camera.
+
+###### Example
+
+```ts
+const texture = app.renderer.createRenderTexture(128, 128);
+await app.renderer.renderToTexture(previewCamera, texture);
+const { data } = await texture.readPixels();
+```
 
 ##### requireFeature()
 
@@ -26428,6 +26540,89 @@ first readback lands, `"error"` when it failed, `"ok"` otherwise.
 > `readonly` **tasks**: readonly [`RenderTaskTiming`](#rendertasktiming)[]
 
 The tasks, in frame execution order. Empty unless `status` is `"ok"`.
+
+***
+
+### RenderTexture
+
+**`Beta`**
+
+An offscreen colour target a camera renders into (`docs/architecture/07-rendering.md` §2.11).
+
+#### Remarks
+
+Create one with `app.renderer.createRenderTexture(width, height)`. Fill it once with
+`app.renderer.renderToTexture(camera, texture)`, or every frame by setting a camera's
+`renderTarget`. It holds a GPU pass of the render scene and its target from the first render
+on; `dispose()` frees both, and `app.dispose()` disposes every texture still open.
+
+#### Example
+
+```ts
+const texture = app.renderer.createRenderTexture(256, 256);
+await app.renderer.renderToTexture(minimapCamera, texture);
+const pixels = await texture.readPixels();
+texture.dispose();
+```
+
+#### Properties
+
+##### height
+
+> `readonly` **height**: `number`
+
+**`Beta`**
+
+The height, in pixels.
+
+##### isDisposed
+
+> `readonly` **isDisposed**: `boolean`
+
+**`Beta`**
+
+Whether `dispose()` has run.
+
+##### width
+
+> `readonly` **width**: `number`
+
+**`Beta`**
+
+The width, in pixels.
+
+#### Methods
+
+##### dispose()
+
+> **dispose**(): `void`
+
+**`Beta`**
+
+Frees the texture's GPU pass and target. Idempotent; a camera rendering into it stops.
+
+###### Returns
+
+`void`
+
+##### readPixels()
+
+> **readPixels**(): `Promise`\<[`RenderCapture`](#rendercapture)\>
+
+**`Beta`**
+
+Reads the texture as the last rendered frame left it.
+
+###### Returns
+
+`Promise`\<[`RenderCapture`](#rendercapture)\>
+
+Tightly packed RGBA8, top row first. All zeros before anything was rendered into it.
+
+###### Throws
+
+IgnifxError with code `IGX-0729` on a headless app or while no render loop runs, and
+`IGX-0731` once the texture is disposed.
 
 ***
 
@@ -31413,6 +31608,12 @@ An instance override declares a `path` the override grammar does not accept.
 
 Pixel data handed to a texture does not match its declared size.
 
+##### invalidRenderTextureSize
+
+> `readonly` **invalidRenderTextureSize**: `"IGX-0730"` = `"IGX-0730"`
+
+`app.renderer.createRenderTexture` was given a side that is not a whole number from 1 to 4096.
+
 ##### invalidRuntime
 
 > `readonly` **invalidRuntime**: `"IGX-0702"` = `"IGX-0702"`
@@ -31520,6 +31721,24 @@ A `PostProcessStack` was attached without the `postProcessing` rendering feature
 > `readonly` **renderingFeatureTooLate**: `"IGX-0704"` = `"IGX-0704"`
 
 A rendering feature opt-in was requested after the render scene had been registered.
+
+##### renderTextureCameraDetached
+
+> `readonly` **renderTextureCameraDetached**: `"IGX-0732"` = `"IGX-0732"`
+
+`app.renderer.renderToTexture` was given a camera that is not attached to an entity.
+
+##### renderTextureNeedsRenderLoop
+
+> `readonly` **renderTextureNeedsRenderLoop**: `"IGX-0729"` = `"IGX-0729"`
+
+A render texture was rendered into or read on a headless app, or before `app.start()` started the render loop.
+
+##### renderTextureUnusable
+
+> `readonly` **renderTextureUnusable**: `"IGX-0731"` = `"IGX-0731"`
+
+A render texture was used after `dispose()`, or with another app's renderer.
 
 ##### requiredComponentMissing
 
@@ -32813,6 +33032,14 @@ The counters the `render` diagnostics group publishes, in index order.
 > `const` **RENDER\_DIAGNOSTICS\_GROUP**: `"render"` = `"render"`
 
 The render diagnostics group name (`docs/architecture/15-devtools-and-diagnostics.md` §3).
+
+***
+
+### RENDER\_TEXTURE\_MAX\_SIZE
+
+> `const` **RENDER\_TEXTURE\_MAX\_SIZE**: `4096` = `4096`
+
+The largest side of a render texture, in pixels.
 
 ***
 

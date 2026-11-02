@@ -897,6 +897,85 @@ The entities to fit in the view, or `"all"` for the whole open scene.
 
 ***
 
+### GameViewFrameParams
+
+The parameters of `gameViewFrame`.
+
+#### Properties
+
+##### format
+
+> `readonly` **format**: [`ScreenshotFormat`](#screenshotformat-1)
+
+The image format.
+
+##### quality?
+
+> `readonly` `optional` **quality?**: `number`
+
+The JPEG quality, from 0 to 1; the host's default (0.9) when absent. Ignored for PNG.
+
+***
+
+### GameViewFrameResult
+
+The answer to `gameViewFrame`.
+
+#### Properties
+
+##### camera
+
+> `readonly` **camera**: `string` \| `null`
+
+The uid of the entity whose camera was rendered, or `null` with no image.
+
+##### dataUrl
+
+> `readonly` **dataUrl**: `string` \| `null`
+
+The image as a PNG or JPEG data URL, at the game view's size; `null` when the open scene has
+no enabled camera, so there is nothing to show.
+
+##### height
+
+> `readonly` **height**: `number`
+
+The image height in pixels.
+
+##### width
+
+> `readonly` **width**: `number`
+
+The image width in pixels.
+
+***
+
+### GameViewState
+
+The answer to `setGameView`: the view as the host now has it.
+
+#### Properties
+
+##### enabled
+
+> `readonly` **enabled**: `boolean`
+
+Whether the view renders.
+
+##### height
+
+> `readonly` **height**: `number`
+
+Its height in pixels.
+
+##### width
+
+> `readonly` **width**: `number`
+
+Its width in pixels.
+
+***
+
 ### GizmoSnap
 
 The gizmo's snapping increments. `0` turns snapping off for that mode.
@@ -1754,6 +1833,40 @@ The override's `op`; defaults to what the path implies.
 > `readonly` **path**: `string`
 
 The override's path.
+
+***
+
+### RenderThumbnailParams
+
+The parameters of `renderThumbnail`.
+
+#### Properties
+
+##### asset
+
+> `readonly` **asset**: `string` \| [`SceneFileAssetRef`](#scenefileassetref)
+
+The asset: its address, or a reference whose `type` is `"model"` or `"scene"` (a prefab). An
+address alone is typed by its extension: `.glb`/`.gltf` for a model, `.prefab.json` or
+`.scene.json` for a prefab.
+
+##### format
+
+> `readonly` **format**: [`ScreenshotFormat`](#screenshotformat-1)
+
+The image format.
+
+##### quality?
+
+> `readonly` `optional` **quality?**: `number`
+
+The JPEG quality, from 0 to 1; the host's default (0.9) when absent. Ignored for PNG.
+
+##### size?
+
+> `readonly` `optional` **size?**: `number`
+
+The square image's side in pixels, 1 to [THUMBNAIL\_MAX\_SIZE](#thumbnail_max_size); [THUMBNAIL\_DEFAULT\_SIZE](#thumbnail_default_size) when absent.
 
 ***
 
@@ -2833,6 +2946,32 @@ Whether the shader clock (`time` in shader materials and custom post effects) ru
 
 ***
 
+### SetGameViewParams
+
+The parameters of `setGameView`.
+
+#### Properties
+
+##### enabled
+
+> `readonly` **enabled**: `boolean`
+
+Whether the view renders. Off frees its texture.
+
+##### height?
+
+> `readonly` `optional` **height?**: `number`
+
+The height in pixels, 1 to [GAME\_VIEW\_MAX\_SIZE](#game_view_max_size); absent to keep the current one.
+
+##### width?
+
+> `readonly` `optional` **width?**: `number`
+
+The width in pixels, 1 to [GAME\_VIEW\_MAX\_SIZE](#game_view_max_size); absent to keep the current one.
+
+***
+
 ### SetGizmoParams
 
 The parameters of `setGizmo`.
@@ -3039,6 +3178,32 @@ any other value fails with `RpcErrorCode.invalidParams`.
 
 ***
 
+### ThumbnailResult
+
+The answer to `renderThumbnail`.
+
+#### Properties
+
+##### dataUrl
+
+> `readonly` **dataUrl**: `string`
+
+The image as a PNG or JPEG data URL.
+
+##### height
+
+> `readonly` **height**: `number`
+
+The image height in pixels.
+
+##### width
+
+> `readonly` **width**: `number`
+
+The image width in pixels.
+
+***
+
 ### TransformDraggedParams
 
 The parameters of `transformDragged`: the shape of a `setTransform` op plus the drag's mode.
@@ -3144,6 +3309,14 @@ The union of the codes in `EditorHostErrorCode`.
 > **EntityField** = keyof [`EntityFieldValues`](#entityfieldvalues)
 
 The name of an entity property [SetEntityFieldOp](#setentityfieldop) writes.
+
+***
+
+### GameViewFrameResponse
+
+> **GameViewFrameResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<[`GameViewFrameResult`](#gameviewframeresult)\>
+
+The success answer to `gameViewFrame`.
 
 ***
 
@@ -3394,6 +3567,22 @@ Host → editor: the successful answer to [HelloRequest](#hellorequest).
 
 ***
 
+### RenderViewMethod
+
+> **RenderViewMethod** = *typeof* [`RenderViewMethod`](#renderviewmethod)\[keyof *typeof* [`RenderViewMethod`](#renderviewmethod)\]
+
+The union of the names in `RenderViewMethod`.
+
+***
+
+### RenderViewRequest
+
+> **RenderViewRequest** = [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setGameView`](#setgameview), [`SetGameViewParams`](#setgameviewparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`gameViewFrame`](#gameviewframe), [`GameViewFrameParams`](#gameviewframeparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`renderThumbnail`](#renderthumbnail), [`RenderThumbnailParams`](#renderthumbnailparams)\>
+
+Editor → scene host: one of the `RenderViewMethod`s.
+
+***
+
 ### RpcErrorCode
 
 > **RpcErrorCode** = *typeof* [`RpcErrorCode`](#rpcerrorcode-1)\[keyof *typeof* [`RpcErrorCode`](#rpcerrorcode-1)\]
@@ -3536,6 +3725,22 @@ Play view → editor: the answer to `sendInput`.
 > **SetEntityFieldOp** = `{ readonly [F in EntityField]: { entity: string; field: F; op: "setEntityField"; value: EntityFieldValues[F] } }`\[[`EntityField`](#entityfield)\]
 
 Sets one entity property.
+
+***
+
+### SetGameViewResponse
+
+> **SetGameViewResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<[`GameViewState`](#gameviewstate)\>
+
+The success answer to `setGameView`.
+
+***
+
+### ThumbnailResponse
+
+> **ThumbnailResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<[`ThumbnailResult`](#thumbnailresult)\>
+
+The success answer to `renderThumbnail`.
 
 ***
 
@@ -3730,6 +3935,32 @@ The host was started where there is no `window` to receive the editor's port, an
 
 ***
 
+### GAME\_VIEW\_DEFAULT\_SIZE
+
+> `const` **GAME\_VIEW\_DEFAULT\_SIZE**: `object`
+
+The game view's size until `setGameView` gives one: 640 by 360.
+
+#### Type Declaration
+
+##### height
+
+> `readonly` **height**: `360` = `360`
+
+##### width
+
+> `readonly` **width**: `640` = `640`
+
+***
+
+### GAME\_VIEW\_MAX\_SIZE
+
+> `const` **GAME\_VIEW\_MAX\_SIZE**: `2048` = `2048`
+
+The largest width and height, in pixels, of the game view.
+
+***
+
 ### GizmoMode
 
 > `const` **GizmoMode**: `object`
@@ -3843,6 +4074,14 @@ The optional features a host lists in its `ready` result.
 
 #### Type Declaration
 
+##### gameView
+
+> `readonly` **gameView**: `"gameView"` = `"gameView"`
+
+The scene host answers `setGameView` and `gameViewFrame`: the open scene through its own main
+camera, rendered beside the editor camera (`RenderViewMethod`). From engine ask E8 (additive in
+0.3); without it, the host answers both with `RpcErrorCode.methodNotFound`.
+
 ##### gizmos
 
 > `readonly` **gizmos**: `"gizmos"` = `"gizmos"`
@@ -3913,6 +4152,14 @@ own input system (`app.input` from `@ignifx/input`), never into the editor's win
 when the game has `app.input`. From engine ask E49 (additive in 0.3); without it, the play view
 answers `sendInput` with `RpcErrorCode.methodNotFound`.
 
+##### thumbnails
+
+> `readonly` **thumbnails**: `"thumbnails"` = `"thumbnails"`
+
+The scene host answers `renderThumbnail`: a model or prefab asset rendered on its own
+(`RenderViewMethod`). From engine ask E8 (additive in 0.3); without it, the host answers it with
+`RpcErrorCode.methodNotFound`.
+
 ##### viewMode2d
 
 > `readonly` **viewMode2d**: `"viewMode2d"` = `"viewMode2d"`
@@ -3923,9 +4170,9 @@ The scene host accepts `setViewMode` with `"2d"`: a 2D editor camera and planar 
 
 The play controls send `"heartbeat"`, `"playControls"`, `"logRelay"` and `"queryRuntime"`, plus
 `"screenshot"` when the game has a canvas and `"sendInput"` when it has `app.input`. The scene
-host sends `"heartbeat"` and whichever of `"gizmos"`, `"screenshot"`, `"viewMode2d"` and
-`"pick2d"` it supports; every `SceneMethod` not tied to one of them is required of a 0.3 scene
-host.
+host sends `"heartbeat"` and whichever of `"gizmos"`, `"screenshot"`, `"viewMode2d"`,
+`"pick2d"`, `"gameView"` and `"thumbnails"` it supports; every `SceneMethod` not tied to one of
+them is required of a 0.3 scene host.
 
 ***
 
@@ -4213,6 +4460,42 @@ tags kept. Keys left out are counted in [QueryRuntimeResult.omittedEntries](#omi
 In a `queryRuntime` answer, the longest a prop string may be, `… [clipped]` included: 64 Ki, a
 quarter of [QUERY\_RUNTIME\_MAX\_JSON\_LENGTH](#query_runtime_max_json_length), so one long string does not cost its component
 its place.
+
+***
+
+### RenderViewMethod
+
+> `const` **RenderViewMethod**: `object`
+
+Editor → scene host: the render-view methods, answered after `ready` like every `SceneMethod`.
+
+#### Type Declaration
+
+##### gameViewFrame
+
+> `readonly` **gameViewFrame**: `"gameViewFrame"` = `"gameViewFrame"`
+
+Renders the open scene through its own main camera, the one the game would use, and answers
+the image: [GameViewFrameResult](#gameviewframeresult). Fails with `RpcErrorCode.noScene` while no scene is
+open and `RpcErrorCode.invalidRequest` while the game view is off.
+
+##### renderThumbnail
+
+> `readonly` **renderThumbnail**: `"renderThumbnail"` = `"renderThumbnail"`
+
+Renders one model or prefab asset on its own and answers the image: [ThumbnailResult](#thumbnailresult).
+
+##### setGameView
+
+> `readonly` **setGameView**: `"setGameView"` = `"setGameView"`
+
+Turns the Game panel's view on, off, or to a new size. Answers [GameViewState](#gameviewstate).
+
+#### Remarks
+
+A host lists `HostCapability.gameView` when it answers the first two and
+`HostCapability.thumbnails` when it answers the third; one that does not answers
+`RpcErrorCode.methodNotFound`. Additive in 0.3.
 
 ***
 
@@ -4639,6 +4922,22 @@ The most events one `sendInput` request may carry.
 
 ***
 
+### THUMBNAIL\_DEFAULT\_SIZE
+
+> `const` **THUMBNAIL\_DEFAULT\_SIZE**: `128` = `128`
+
+A thumbnail's side when the request gives none.
+
+***
+
+### THUMBNAIL\_MAX\_SIZE
+
+> `const` **THUMBNAIL\_MAX\_SIZE**: `1024` = `1024`
+
+The largest side, in pixels, of a thumbnail.
+
+***
+
 ### TRANSFORM\_DRAGGING\_INTERVAL\_MS
 
 > `const` **TRANSFORM\_DRAGGING\_INTERVAL\_MS**: `50` = `50`
@@ -4901,6 +5200,72 @@ The received `params`.
 `value is FrameParams`
 
 True for a list of uids or `"all"`.
+
+***
+
+### isGameViewFrameParams()
+
+> **isGameViewFrameParams**(`value`): `value is GameViewFrameParams`
+
+Checks the parameters of `gameViewFrame`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `params`.
+
+#### Returns
+
+`value is GameViewFrameParams`
+
+True for a known format and a quality from 0 to 1 when given.
+
+***
+
+### isGameViewFrameResult()
+
+> **isGameViewFrameResult**(`value`): `value is GameViewFrameResult`
+
+Checks the result of `gameViewFrame`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `result`.
+
+#### Returns
+
+`value is GameViewFrameResult`
+
+True for an image and a camera uid, or `null` for both, and sizes in range.
+
+***
+
+### isGameViewState()
+
+> **isGameViewState**(`value`): `value is GameViewState`
+
+Checks the result of `setGameView`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `result`.
+
+#### Returns
+
+`value is GameViewState`
+
+True for a boolean `enabled` and sizes in range.
 
 ***
 
@@ -5355,6 +5720,28 @@ The received `result`.
 True when it has a string `engineVersion`, a protocol version, an array of capability
 strings, and a known `hostKind`; the strings and the list within [HOST\_TEXT\_MAX\_LENGTH](#host_text_max_length)
 and [HOST\_LIST\_MAX\_LENGTH](#host_list_max_length).
+
+***
+
+### isRenderThumbnailParams()
+
+> **isRenderThumbnailParams**(`value`): `value is RenderThumbnailParams`
+
+Checks the parameters of `renderThumbnail`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `params`.
+
+#### Returns
+
+`value is RenderThumbnailParams`
+
+True for an address or asset reference, a size in range when given, and a known format.
 
 ***
 
@@ -5817,6 +6204,28 @@ True for a boolean `enabled`.
 
 ***
 
+### isSetGameViewParams()
+
+> **isSetGameViewParams**(`value`): `value is SetGameViewParams`
+
+Checks the parameters of `setGameView`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `params`.
+
+#### Returns
+
+`value is SetGameViewParams`
+
+True for a boolean `enabled` and sizes in range when given.
+
+***
+
 ### isSetGizmoParams()
 
 > **isSetGizmoParams**(`value`): `value is SetGizmoParams`
@@ -5881,6 +6290,28 @@ The received `params`.
 `value is SetViewModeParams`
 
 True for `{ mode: "3d" | "2d" }`.
+
+***
+
+### isThumbnailResult()
+
+> **isThumbnailResult**(`value`): `value is ThumbnailResult`
+
+Checks the result of `renderThumbnail`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `result`.
+
+#### Returns
+
+`value is ThumbnailResult`
+
+True for an image and sizes in range.
 
 ***
 
