@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it } from "vitest";
+import { Camera } from "../../src/render/camera.js";
+import { Light } from "../../src/render/light.js";
 import { createMaterialAsset, pbrMaterialDefinition } from "../../src/render/material-asset.js";
 import { MeshAsset } from "../../src/render/mesh-asset.js";
 import { MeshRenderer } from "../../src/render/mesh-renderer.js";
 import { PostProcessStack } from "../../src/render/post-process-stack.js";
-import { Light } from "../../src/render/light.js";
-import { Camera } from "../../src/render/camera.js";
 import { createBrowserApp, gpuDeviceErrors, pixelLuminance, SETTLE_FRAMES } from "./support/browser-harness.js";
 import type { BrowserApp } from "./support/browser-harness.js";
 

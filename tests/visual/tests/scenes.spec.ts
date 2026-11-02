@@ -89,3 +89,23 @@ test.describe("Phase 2 golden scenes", () => {
     await expect(page).toHaveScreenshot("gltf-viewer-post.png", { maxDiffPixelRatio: 0.05 });
   });
 });
+
+// `rendering.hdr` (GI plan step G2): a scene of PBR materials only has to present the image the
+// plain path presents, so these compare against the same goldens. The tolerance covers half-float
+// rounding of the linear colour before the output pass encodes it.
+test.describe("HDR output matches the plain goldens", () => {
+  test("hello cube, HDR", async ({ page }) => {
+    await openScene(page, `${HELLO_CUBE}/?static=1&hdr=1`);
+    await expect(page).toHaveScreenshot("hello-cube.png", { maxDiffPixelRatio: 0.02 });
+  });
+
+  test("PBR model with image based lighting, HDR", async ({ page }) => {
+    await openScene(page, `${GLTF_VIEWER}/?static=1&hdr=1`);
+    await expect(page).toHaveScreenshot("gltf-viewer.png", { maxDiffPixelRatio: 0.03 });
+  });
+
+  test("post-process stack after the HDR output pass", async ({ page }) => {
+    await openScene(page, `${GLTF_VIEWER}/?static=1&post=1&hdr=1`);
+    await expect(page).toHaveScreenshot("gltf-viewer-post.png", { maxDiffPixelRatio: 0.05 });
+  });
+});

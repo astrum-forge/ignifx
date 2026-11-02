@@ -79078,6 +79078,21 @@ The feature opt-ins, applied during `app.start()` before the scene is registered
 
 An explicit swapchain texture format; empty means Lite's own choice. Never an `*-srgb` one.
 
+##### hdr
+
+> `readonly` **hdr**: `boolean`
+
+Render the scene into a floating-point (`rgba16float`) target and tone map it in one final pass.
+
+###### Remarks
+
+Off by default, and nothing of it loads while it is off. On, PBR materials keep their linear
+colour, which may go above 1, and a final output pass applies the `Environment`'s exposure,
+contrast and tone-mapping curve and encodes the result for the screen. A scene that only uses
+PBR materials looks the same either way; later effects (HDR bloom, auto exposure) need it on.
+Fog, Standard materials, surface shaders, sprites, particles and the skybox are not yet carried
+in linear colour (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, step G3).
+
 ##### maxDevicePixelRatio
 
 > `readonly` **maxDevicePixelRatio**: `number`

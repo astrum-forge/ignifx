@@ -7,8 +7,8 @@ import {
   hdrOutputFragmentWgsl,
   LINEAR_OUTPUT_PLUGIN_NAME,
   writeHdrOutputUniforms,
-} from "../../src/lite/gpu/hdr-output.js";
-import { imageProcessedColor, linearClearColor } from "../../src/render/image-processing-color.js";
+} from "../../../src/lite/gpu/hdr-output.js";
+import { imageProcessedColor, linearClearColor } from "../../../src/render/image-processing-color.js";
 
 /**
  * The device-free half of `rendering.hdr` (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, step
