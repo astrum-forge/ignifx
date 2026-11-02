@@ -232,6 +232,17 @@ every object's size and properties for that.
 ignifx import tilemap assets/level.tilemap.json assets/scenes/main.scene.json --parent Level
 ```
 
+A map made in Tiled (`.tmj`) or LDtk (`.ldtk`) converts from the command line. A Tiled map becomes
+one `.tilemap.json` beside it, an LDtk project one `<level>.tilemap.json` per level. Each tileset
+gets an `.atlas.json` beside its image when it has none, with frames named `<tileset>_<index>`.
+Pass the game's pixels per unit so `cellSize` and the objects' metres match `twoD.pixelsPerUnit`.
+Flipped tiles fail the command (a cell has no flip) unless `--drop-flips` imports them unflipped.
+
+```sh
+ignifx import tilemap assets/maps/cave.tmj --pixels-per-unit 16
+ignifx import tilemap assets/maps/world.ldtk assets/levels --pixels-per-unit 16
+```
+
 ### Picking a sprite under the pointer
 
 ```ts run

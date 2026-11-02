@@ -1,0 +1,153 @@
+{
+  "format": "ignifx.tilemap",
+  "formatVersion": 1,
+  "tileWidth": 32,
+  "tileHeight": 32,
+  "cellSize": 0.32,
+  "width": 4,
+  "height": 3,
+  "tilesets": [
+    {
+      "name": "Cave",
+      "atlas": "cave.atlas.json",
+      "firstId": 1,
+      "tiles": [
+        {
+          "id": 0,
+          "frame": "Cave_0",
+          "collider": {
+            "kind": "box",
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 1
+          }
+        },
+        {
+          "id": 1,
+          "frame": "Cave_1"
+        },
+        {
+          "id": 2,
+          "frame": "Cave_2"
+        },
+        {
+          "id": 3,
+          "frame": "Cave_3"
+        }
+      ]
+    },
+    {
+      "name": "intgrid",
+      "atlas": "",
+      "firstId": 5,
+      "tiles": [
+        {
+          "id": 0,
+          "frame": "intgrid_1",
+          "collider": {
+            "kind": "box",
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 1
+          }
+        },
+        {
+          "id": 1,
+          "frame": "intgrid_2",
+          "collider": {
+            "kind": "box",
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 0.25,
+            "oneWay": true
+          }
+        }
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "name": "Walls.tiles",
+      "sortingLayer": "Default",
+      "orderInLayer": 0,
+      "opacity": 1,
+      "parallax": {
+        "x": 1,
+        "y": 1
+      },
+      "collision": false,
+      "width": 4,
+      "height": 3,
+      "tiles": {
+        "rle": [8, 0, 4, 1]
+      }
+    },
+    {
+      "name": "Walls",
+      "sortingLayer": "Default",
+      "orderInLayer": 1,
+      "opacity": 1,
+      "parallax": {
+        "x": 1,
+        "y": 1
+      },
+      "collision": true,
+      "width": 4,
+      "height": 3,
+      "tiles": {
+        "rle": [7, 0, 1, 6, 4, 5]
+      }
+    },
+    {
+      "name": "Decor",
+      "sortingLayer": "Default",
+      "orderInLayer": 2,
+      "opacity": 1,
+      "parallax": {
+        "x": 0.5,
+        "y": 1
+      },
+      "collision": false,
+      "width": 4,
+      "height": 3,
+      "tiles": {
+        "rle": [7, 0, 1, 4, 4, 0]
+      }
+    },
+    {
+      "name": "Shadows",
+      "sortingLayer": "Default",
+      "orderInLayer": 3,
+      "opacity": 0.5,
+      "parallax": {
+        "x": 1,
+        "y": 1
+      },
+      "collision": false,
+      "width": 4,
+      "height": 3,
+      "tiles": {
+        "rle": [4, 0, 1, 2, 7, 0]
+      }
+    }
+  ],
+  "objects": [
+    {
+      "name": "Hero",
+      "type": "Player",
+      "x": 0.32,
+      "y": 0,
+      "width": 0.32,
+      "height": 0.32,
+      "properties": {
+        "name": "Hero"
+      }
+    }
+  ],
+  "properties": {
+    "biome": "cave"
+  }
+}

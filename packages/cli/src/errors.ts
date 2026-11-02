@@ -19,6 +19,8 @@ export const CliErrorCode = {
   eightBitHeightmapSource: "IGX-1406",
   /** A file named on the command line is not the JSON document the command expects. */
   invalidDocument: "IGX-1407",
+  /** A Tiled or LDtk file uses a feature `ignifx import tilemap` cannot convert, such as flipped tiles. */
+  unsupportedTilemapSource: "IGX-1408",
 } as const;
 
 /**

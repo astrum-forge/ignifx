@@ -1,0 +1,121 @@
+{
+  "format": "ignifx.tilemap",
+  "formatVersion": 1,
+  "tileWidth": 32,
+  "tileHeight": 32,
+  "cellSize": 0.32,
+  "width": 4,
+  "height": 3,
+  "tilesets": [
+    {
+      "name": "terrain",
+      "atlas": "tilesets/terrain.atlas.json",
+      "firstId": 1,
+      "tiles": [
+        {
+          "id": 0,
+          "frame": "terrain_0",
+          "collider": {
+            "kind": "box",
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 1
+          }
+        },
+        {
+          "id": 1,
+          "frame": "terrain_1",
+          "collider": {
+            "kind": "box",
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 1,
+            "oneWay": true
+          },
+          "properties": {
+            "oneWay": true
+          }
+        },
+        {
+          "id": 2,
+          "frame": "terrain_2",
+          "animation": [
+            {
+              "frame": "terrain_2",
+              "durationMs": 200
+            },
+            {
+              "frame": "terrain_3",
+              "durationMs": 200
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "frame": "terrain_3"
+        }
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "name": "Back/Sky",
+      "sortingLayer": "Default",
+      "orderInLayer": 0,
+      "opacity": 0.5,
+      "parallax": {
+        "x": 0.5,
+        "y": 1
+      },
+      "collision": false,
+      "width": 4,
+      "height": 3,
+      "tiles": {
+        "rle": [4, 3, 8, 0]
+      }
+    },
+    {
+      "name": "Ground",
+      "sortingLayer": "Default",
+      "orderInLayer": 1,
+      "opacity": 1,
+      "parallax": {
+        "x": 1,
+        "y": 1
+      },
+      "collision": true,
+      "width": 4,
+      "height": 3,
+      "tiles": {
+        "rle": [6, 0, 1, 2, 1, 0, 4, 1]
+      }
+    }
+  ],
+  "objects": [
+    {
+      "name": "player-start",
+      "type": "spawn",
+      "x": 0.16,
+      "y": 0.32,
+      "width": 0.32,
+      "height": 0.32,
+      "properties": {
+        "facing": "right"
+      }
+    },
+    {
+      "name": "",
+      "type": "coin",
+      "x": 0.96,
+      "y": 0.32,
+      "width": 0.32,
+      "height": 0.32,
+      "properties": {}
+    }
+  ],
+  "properties": {
+    "music": "cave-theme"
+  }
+}

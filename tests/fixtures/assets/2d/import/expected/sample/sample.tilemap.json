@@ -1,0 +1,99 @@
+{
+  "format": "ignifx.tilemap",
+  "formatVersion": 1,
+  "tileWidth": 32,
+  "tileHeight": 32,
+  "cellSize": 0.32,
+  "width": 4,
+  "height": 4,
+  "tilesets": [
+    {
+      "name": "hero",
+      "atlas": "hero.atlas.json",
+      "firstId": 1,
+      "tiles": [
+        {
+          "id": 0,
+          "frame": "hero_0",
+          "collider": {
+            "kind": "box",
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 1
+          },
+          "properties": {
+            "solid": true
+          }
+        },
+        {
+          "id": 1,
+          "frame": "hero_1",
+          "collider": {
+            "kind": "box",
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 0.25,
+            "oneWay": true
+          },
+          "properties": {
+            "oneWay": true
+          }
+        },
+        {
+          "id": 2,
+          "frame": "hero_2",
+          "animation": [
+            {
+              "frame": "hero_2",
+              "durationMs": 250
+            },
+            {
+              "frame": "hero_3",
+              "durationMs": 250
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "frame": "hero_3"
+        }
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "name": "Ground",
+      "sortingLayer": "Default",
+      "orderInLayer": 0,
+      "opacity": 1,
+      "parallax": {
+        "x": 1,
+        "y": 1
+      },
+      "collision": true,
+      "width": 4,
+      "height": 4,
+      "tiles": {
+        "rle": [7, 0, 1, 3, 3, 1, 1, 0, 3, 1, 1, 2]
+      }
+    }
+  ],
+  "objects": [
+    {
+      "name": "player-start",
+      "type": "spawn",
+      "x": 0.96,
+      "y": 0.64,
+      "width": 0.32,
+      "height": 0.32,
+      "properties": {
+        "facing": "left"
+      }
+    }
+  ],
+  "properties": {
+    "biome": "cave"
+  }
+}

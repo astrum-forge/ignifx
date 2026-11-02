@@ -1,0 +1,27 @@
+{
+  "identifier": "Level_1",
+  "uid": 1,
+  "worldX": 160,
+  "worldY": 0,
+  "pxWid": 64,
+  "pxHei": 64,
+  "fieldInstances": [],
+  "layerInstances": [
+    {
+      "__identifier": "Walls",
+      "__type": "IntGrid",
+      "__cWid": 2,
+      "__cHei": 2,
+      "__gridSize": 32,
+      "__opacity": 1,
+      "__tilesetDefUid": 10,
+      "layerDefUid": 2,
+      "pxOffsetX": 0,
+      "pxOffsetY": 0,
+      "intGridCsv": [0, 0, 1, 1],
+      "autoLayerTiles": [],
+      "gridTiles": [],
+      "entityInstances": []
+    }
+  ]
+}

@@ -221,6 +221,77 @@ https://v8.dev/docs/stack-trace-api#customizing-stack-traces
 
 ## Interfaces
 
+### ConvertTilemapCommand
+
+A parsed `ignifx import tilemap` invocation for a Tiled or LDtk file.
+
+#### Properties
+
+##### dropFlips
+
+> `readonly` **dropFlips**: `boolean`
+
+Whether flipped or rotated tiles import unflipped instead of failing the command.
+
+##### kind
+
+> `readonly` **kind**: `"tiled"` \| `"ldtk"`
+
+Which editor wrote it.
+
+##### output
+
+> `readonly` **output**: `string` \| `null`
+
+Where to write: the `.tilemap.json` for a Tiled map, the folder for an LDtk project's levels.
+`null` writes beside the source.
+
+##### pixelsPerUnit
+
+> `readonly` **pixelsPerUnit**: `number`
+
+The pixels one world metre spans; sets `cellSize` and the objects' metres. Defaults to `100`.
+
+##### source
+
+> `readonly` **source**: `string`
+
+The `.tmj` or `.ldtk` file, exactly as the user typed it.
+
+***
+
+### ConvertTilemapResult
+
+What [runConvertTilemap](#runconverttilemap) wrote.
+
+#### Properties
+
+##### atlases
+
+> `readonly` **atlases**: readonly `string`[]
+
+The `.atlas.json` files written, absolute; a tileset image that already had one keeps it.
+
+##### source
+
+> `readonly` **source**: `string`
+
+The source file.
+
+##### tilemaps
+
+> `readonly` **tilemaps**: readonly `string`[]
+
+The `.tilemap.json` files written, absolute, one per Tiled map or LDtk level.
+
+##### warnings
+
+> `readonly` **warnings**: readonly `string`[]
+
+What the conversion skipped or lost, one line each.
+
+***
+
 ### CopyTemplateOptions
 
 Options for [copyTemplate](#copytemplate).
@@ -682,6 +753,20 @@ The requested template directory does not exist.
 
 A heightmap PNG is not one `ignifx import heightmap` can turn into `.r16`.
 
+##### unsupportedTilemapSource
+
+> `readonly` **unsupportedTilemapSource**: `"IGX-1408"` = `"IGX-1408"`
+
+A Tiled or LDtk file uses a feature `ignifx import tilemap` cannot convert, such as flipped tiles.
+
+***
+
+### CONVERT\_TILEMAP\_USAGE
+
+> `const` **CONVERT\_TILEMAP\_USAGE**: `string`
+
+The usage string printed with every argument error of the Tiled and LDtk form.
+
 ***
 
 ### DEFAULT\_DEPENDENCY\_RANGE
@@ -932,6 +1017,28 @@ indexed, which carries no meaningful height.
 
 ***
 
+### isTilemapSource()
+
+> **isTilemapSource**(`path`): `boolean`
+
+Whether a path names a file this form of the command converts: a Tiled `.tmj` or an LDtk `.ldtk`.
+
+#### Parameters
+
+##### path
+
+`string`
+
+The path.
+
+#### Returns
+
+`boolean`
+
+`true` for a `.tmj` or `.ldtk` file.
+
+***
+
 ### parseArgs()
 
 > **parseArgs**(`argv`): [`CreateCommand`](#createcommand)
@@ -969,6 +1076,40 @@ directory is missing, or extra positionals are given.
 ```ts
 const command = parseArgs(["my-game", "--template", "3d-first-person", "--desktop"]);
 // { targetDir: "my-game", template: "3d-first-person", overwrite: false, desktop: true }
+```
+
+***
+
+### parseConvertTilemapArgs()
+
+> **parseConvertTilemapArgs**(`argv`): [`ConvertTilemapCommand`](#converttilemapcommand)
+
+Parses the arguments of `ignifx import tilemap` for a Tiled or LDtk source.
+
+#### Parameters
+
+##### argv
+
+readonly `string`[]
+
+The arguments after `import tilemap`.
+
+#### Returns
+
+[`ConvertTilemapCommand`](#converttilemapcommand)
+
+The parsed command.
+
+#### Throws
+
+A [CliError](#clierror) with code `IGX-1403` when the command line is unparseable, names no
+`.tmj` or `.ldtk` file, names a Tiled output that does not end in `.tilemap.json`, or gives a
+pixels-per-unit that is not a positive number.
+
+#### Example
+
+```ts
+const command = parseConvertTilemapArgs(["maps/cave.tmj", "--pixels-per-unit", "16"]);
 ```
 
 ***
@@ -1097,6 +1238,62 @@ candidate when none does, so the failure names the published location rather tha
 
 ```ts
 const templatesRoot = await resolveTemplatesRoot(import.meta.dirname);
+```
+
+***
+
+### runConvertTilemap()
+
+> **runConvertTilemap**(`argv`, `io`): `Promise`\<[`ConvertTilemapResult`](#converttilemapresult)\>
+
+Converts a Tiled map, or every level of an LDtk project, into `.tilemap.json` documents.
+
+#### Parameters
+
+##### argv
+
+readonly `string`[]
+
+The arguments after `import tilemap`.
+
+##### io
+
+[`ImportIo`](#importio)
+
+The injected output sinks.
+
+#### Returns
+
+`Promise`\<[`ConvertTilemapResult`](#converttilemapresult)\>
+
+What was written.
+
+#### Remarks
+
+A Tiled map is written to `<out.tilemap.json>`, by default `<name>.tilemap.json` beside the
+`.tmj`. An LDtk project writes one `<level identifier>.tilemap.json` per level into
+`<out directory>`, by default the project's folder. Existing tilemaps are overwritten.
+
+Each tileset's `atlas` is `<image name>.atlas.json` beside its image, referenced relative to the
+tilemap. When that atlas does not exist the command writes one, cutting the image into frames
+named `<tileset name>_<index>` with `nearest` sampling; an existing atlas is kept, with a warning
+when it lacks frames the map uses. Objects land in the map's `objects` field, which
+`ignifx import tilemap <map.tilemap.json> <scene.scene.json>` moves into a scene (ADR-0030).
+
+Refused with `IGX-1408`: non-orthogonal or infinite Tiled maps, base64 or compressed layer data,
+XML (`.tsx`) or image-collection tilesets, LDtk layers on different grid sizes, and flipped tiles
+unless `--drop-flips` is passed. Output is deterministic: the same input writes the same bytes.
+
+#### Throws
+
+A [CliError](#clierror) with code `IGX-1403` for bad arguments, `IGX-1405` when a file cannot
+be read or written, `IGX-1407` when a file is not JSON, or `IGX-1408` for a feature the
+tilemap format cannot hold.
+
+#### Example
+
+```ts
+await runConvertTilemap(["assets/maps/cave.tmj", "--pixels-per-unit", "16"], io);
 ```
 
 ***

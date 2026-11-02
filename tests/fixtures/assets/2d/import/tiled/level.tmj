@@ -1,0 +1,92 @@
+{
+  "type": "map",
+  "version": "1.10",
+  "tiledversion": "1.11.0",
+  "orientation": "orthogonal",
+  "renderorder": "right-down",
+  "infinite": false,
+  "width": 4,
+  "height": 3,
+  "tilewidth": 32,
+  "tileheight": 32,
+  "nextlayerid": 6,
+  "nextobjectid": 3,
+  "properties": [{ "name": "music", "type": "string", "value": "cave-theme" }],
+  "tilesets": [{ "firstgid": 1, "source": "tilesets/terrain.tsj" }],
+  "layers": [
+    {
+      "id": 1,
+      "type": "group",
+      "name": "Back",
+      "opacity": 1,
+      "visible": true,
+      "layers": [
+        {
+          "id": 2,
+          "type": "tilelayer",
+          "name": "Sky",
+          "width": 4,
+          "height": 3,
+          "opacity": 0.5,
+          "visible": true,
+          "parallaxx": 0.5,
+          "parallaxy": 1,
+          "data": [3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0]
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "tilelayer",
+      "name": "Ground",
+      "width": 4,
+      "height": 3,
+      "opacity": 1,
+      "visible": true,
+      "properties": [{ "name": "collision", "type": "bool", "value": true }],
+      "data": [0, 0, 0, 0, 0, 0, 2, 0, 1, 1, 1, 1]
+    },
+    {
+      "id": 4,
+      "type": "imagelayer",
+      "name": "Reference",
+      "image": "sketch.png",
+      "opacity": 1,
+      "visible": false
+    },
+    {
+      "id": 5,
+      "type": "objectgroup",
+      "name": "Objects",
+      "draworder": "topdown",
+      "opacity": 1,
+      "visible": true,
+      "objects": [
+        {
+          "id": 1,
+          "name": "player-start",
+          "type": "spawn",
+          "x": 16,
+          "y": 32,
+          "width": 32,
+          "height": 32,
+          "rotation": 0,
+          "visible": true,
+          "properties": [{ "name": "facing", "type": "string", "value": "right" }]
+        },
+        {
+          "id": 2,
+          "name": "",
+          "class": "coin",
+          "gid": 4,
+          "x": 96,
+          "y": 64,
+          "width": 32,
+          "height": 32,
+          "rotation": 0,
+          "visible": true
+        }
+      ]
+    }
+  ]
+}
