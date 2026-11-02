@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { Camera } from "../../src/render/camera.js";
-import { RENDER_TEXTURE_MAX_SIZE, RenderTextureImpl } from "../../src/render/render-texture.js";
+import { bindFrameCameras, RENDER_TEXTURE_MAX_SIZE, RenderTextureImpl } from "../../src/render/render-texture.js";
 import { createRenderHarness } from "./support/render-harness.js";
 import type { RenderHarness } from "./support/render-harness.js";
 import type { LiteCamera } from "../../src/lite/camera.js";
 import type { LiteRenderTexture } from "../../src/lite/gpu/render-texture.js";
-import type { RenderTextureOwner } from "../../src/render/render-texture.js";
+import type { FrameCameraSource, RenderTextureOwner } from "../../src/render/render-texture.js";
 
 /**
  * `app.renderer.createRenderTexture` and `renderToTexture` (`docs/architecture/07-rendering.md`
@@ -53,6 +53,16 @@ describe("render textures on a headless app", () => {
     const texture = h.app.renderer.createRenderTexture(8, 8);
     await expect(h.app.renderer.renderToTexture(camera, texture)).rejects.toMatchObject({ code: "IGX-0729" });
     await expect(texture.readPixels()).rejects.toMatchObject({ code: "IGX-0729" });
+  });
+
+  it("refuses a detached camera with IGX-0732", async () => {
+    const h = await app();
+    const eye = h.world.createEntity("Eye");
+    const camera = eye.addComponent(Camera);
+    eye.removeComponent(camera);
+    h.frame();
+    const texture = h.app.renderer.createRenderTexture(8, 8);
+    await expect(h.app.renderer.renderToTexture(camera, texture)).rejects.toMatchObject({ code: "IGX-0732" });
   });
 
   it("refuses a disposed or foreign texture with IGX-0731", async () => {
@@ -200,5 +210,44 @@ describe("a render texture's frames", () => {
     expect(late.pass.disposed).toBe(true);
     expect(late.released).toEqual([late.texture]);
     expect(released).toEqual([texture]);
+  });
+});
+
+/**
+ * A camera as `bindFrameCameras` reads it.
+ *
+ * @param renderTarget - Its target.
+ * @param camera - Its Lite camera, or `null` when detached.
+ * @param isEnabledInHierarchy - Whether it is enabled.
+ * @returns The slice.
+ */
+function source(
+  renderTarget: RenderTextureImpl | null,
+  camera: LiteCamera | null,
+  isEnabledInHierarchy: boolean,
+): FrameCameraSource {
+  return { renderTarget, lite: { camera }, isEnabledInHierarchy };
+}
+
+describe("binding frame cameras", () => {
+  it("binds enabled, attached cameras aiming at a live texture, and nothing else", async () => {
+    const live = fakeTexture();
+    const stray = fakeTexture();
+    await live.texture.pass("test");
+    await stray.texture.pass("test");
+    bindFrameCameras(
+      [
+        source(null, EYE_A, true),
+        source(stray.texture, EYE_A, true),
+        source(live.texture, null, true),
+        source(live.texture, EYE_A, false),
+        source(live.texture, EYE_B, true),
+      ],
+      new Set([live.texture]),
+    );
+    live.texture.flush();
+    stray.texture.flush();
+    expect(live.pass.cameras).toEqual([EYE_B]);
+    expect(stray.pass.cameras).toEqual([null]);
   });
 });

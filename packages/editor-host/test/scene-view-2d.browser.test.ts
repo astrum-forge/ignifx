@@ -153,6 +153,7 @@ async function sceneView(): Promise<{ readonly view: EditorHost; readonly opened
     canvas,
     messageTarget: target,
     extensions: [twoD({ pixelsPerUnit: PPU })],
+    createExtensions: () => [twoD({ pixelsPerUnit: PPU })],
     settings: { rendering: { msaaSamples: 1 }, sortingLayers: { sortingLayers: ["Background", "Default"] } },
     assets: {
       manifest: createAssetManifest([

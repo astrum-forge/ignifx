@@ -102,6 +102,38 @@ export function assertRenderTextureSize(width: number, height: number): void {
 }
 
 /**
+ * What {@link bindFrameCameras} reads of a camera: a structural slice of `Camera`.
+ *
+ * @internal
+ */
+export interface FrameCameraSource {
+  /** The camera's render target, or `null` for the canvas. */
+  readonly renderTarget: RenderTexture | null;
+  /** The Lite camera, `null` while detached. */
+  readonly lite: { readonly camera: LiteCamera | null };
+  /** Whether the camera and its entity are enabled. */
+  readonly isEnabledInHierarchy: boolean;
+}
+
+/**
+ * Tells each live texture which enabled, attached camera renders into it this frame.
+ *
+ * @param cameras - Every camera in the world, in creation order; the last one per texture wins.
+ * @param live - The renderer's live textures; a camera aiming at any other is ignored.
+ *
+ * @internal
+ */
+export function bindFrameCameras(cameras: readonly FrameCameraSource[], live: ReadonlySet<RenderTextureImpl>): void {
+  for (const camera of cameras) {
+    const target = camera.renderTarget;
+    const lite = camera.lite.camera;
+    if (target instanceof RenderTextureImpl && live.has(target) && lite !== null && camera.isEnabledInHierarchy) {
+      target.setFrameCamera(lite);
+    }
+  }
+}
+
+/**
  * The renderer's render texture: the per-frame camera choice and the one-frame requests.
  *
  * @internal

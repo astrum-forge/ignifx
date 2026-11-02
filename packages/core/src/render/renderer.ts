@@ -33,7 +33,12 @@ import {
   MATERIAL_ASSET_TYPE,
   standardMaterialDefinition,
 } from "./material-asset.js";
-import { assertRenderTextureSize, RenderTextureImpl, renderTextureUnusableError } from "./render-texture.js";
+import {
+  assertRenderTextureSize,
+  bindFrameCameras,
+  RenderTextureImpl,
+  renderTextureUnusableError,
+} from "./render-texture.js";
 import { toRenderingFeatures } from "./rendering-settings.js";
 import type { Camera } from "./camera.js";
 import type { MaterialAsset } from "./material-asset.js";
@@ -1039,7 +1044,6 @@ export class RendererImpl implements Renderer {
   async renderToTexture(camera: Camera, texture: RenderTexture): Promise<void> {
     const member = "app.renderer.renderToTexture()";
     const owned = this.#ownedRenderTexture(texture, member);
-    this.#assertRenderLoop(member);
     const lite = camera.lite.camera;
     if (lite === null) {
       throw new IgnifxError(
@@ -1051,6 +1055,7 @@ export class RendererImpl implements Renderer {
         },
       );
     }
+    this.#assertRenderLoop(member);
     await owned.pass(member);
     await owned.request(lite);
   }
@@ -1067,20 +1072,7 @@ export class RendererImpl implements Renderer {
     if (this.isHeadless || this.#renderTextures.size === 0) {
       return;
     }
-    for (let index = 0; index < cameras.length; index += 1) {
-      const camera = cameras[index];
-      const target = camera?.renderTarget ?? null;
-      const lite = camera?.lite.camera ?? null;
-      if (
-        camera !== undefined &&
-        target instanceof RenderTextureImpl &&
-        this.#renderTextures.has(target) &&
-        lite !== null &&
-        camera.isEnabledInHierarchy
-      ) {
-        target.setFrameCamera(lite);
-      }
-    }
+    bindFrameCameras(cameras, this.#renderTextures);
     for (const texture of this.#renderTextures) {
       texture.flush();
     }
