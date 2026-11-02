@@ -92,6 +92,8 @@ Because the renderer receives no DOM focus or visibility events, `electron()` fo
 
 ### Device-loss recovery needs ESM shadows
 
+> **Amended 2026-11-02 (GI step G7):** Lite 1.34.0's `shadow-recovery.js` also rebuilds **CSM** generators (PCF still fails, error 721); `packages/core/test/render/csm-device-loss.browser.test.ts` pins it, and the 3D templates now ship CSM. The rest of this section is the 1.27.0 record.
+
 Babylon Lite 1.27.0 can only rebuild an **ESM** directional shadow generator after a device loss. `lib/shadow/shadow-recovery.js` opens with `if (generator._shadowType !== "esm") ThrowLiteError(463, generator._shadowType)`, and error 463 reads _"Device-lost Scene recovery does not support shadow generator type `${a0}`"_.
 
 Measured with `templates/3d-third-person` on Electron 44.2.0: with the level's shipped `technique = "pcf"`, a forced loss fired `onDeviceLost` and then `onDeviceRecoveryFailed`, and the frame loop stopped. With the sun switched to `"esm"`, the same forced loss recovered — `deviceLost: 1`, `deviceRecovered: 1`, `deviceRecoveryFailed: 0`, the coroutine counter climbing from 74 to 795 across twelve seconds, the crate's height unchanged to seven decimal places, `app.audio.state === "running"`, and 76 draw calls after recovery.

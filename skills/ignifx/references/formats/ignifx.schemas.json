@@ -1464,7 +1464,7 @@
         },
         "shadows": {
           "kind": "record",
-          "default": "{\"enabled\":false,\"technique\":\"pcf\",\"mapSize\":1024,\"bias\":0.00005,\"normalBias\":0,\"darkness\":0,\"cascades\":4,\"maxDistance\":0}",
+          "default": "{\"enabled\":false,\"technique\":\"pcf\",\"mapSize\":1024,\"bias\":0.00005,\"normalBias\":0,\"darkness\":0,\"cascades\":4,\"maxDistance\":0,\"stabilizeCascades\":false,\"cascadeLambda\":0.5,\"cascadeBlend\":0.1}",
           "description": "Shadow casting; point and hemispheric lights cannot cast (IGX-0703)."
         },
         "includeOnly": {

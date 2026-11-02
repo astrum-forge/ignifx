@@ -73530,6 +73530,20 @@ The `shadows` record a `Light` declares (`docs/architecture/07-rendering.md` §2
 
 Depth bias applied while sampling.
 
+##### cascadeBlend
+
+> **cascadeBlend**: `number`
+
+The fraction of each cascade that cross-fades into the next, CSM only, from `0` to `1`; `0`
+turns blending off and shows hard seams. Default `0.1`.
+
+##### cascadeLambda
+
+> **cascadeLambda**: `number`
+
+How the cascade splits are spaced, CSM only, from `0` (even) to `1` (logarithmic: more detail
+near the camera). Default `0.5`.
+
 ##### cascades
 
 > **cascades**: `number`
@@ -73565,6 +73579,13 @@ The distance beyond which nothing is shadowed, in metres; `0` takes Lite's defau
 > **normalBias**: `number`
 
 Offset along the surface normal, PCF only.
+
+##### stabilizeCascades
+
+> **stabilizeCascades**: `boolean`
+
+Whether cascades use a stable sphere fit, CSM only. `true` stops shadow edges shimmering as the
+camera moves, at the cost of some resolution. Default `false`.
 
 ##### technique
 

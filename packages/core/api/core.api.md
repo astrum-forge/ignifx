@@ -1783,12 +1783,15 @@ export const LIGHT_TYPES: readonly ["directional", "point", "spot", "hemispheric
 // @public
 export interface LightShadowSettings {
     bias: number;
+    cascadeBlend: number;
+    cascadeLambda: number;
     cascades: number;
     darkness: number;
     enabled: boolean;
     mapSize: number;
     maxDistance: number;
     normalBias: number;
+    stabilizeCascades: boolean;
     technique: ShadowTechniqueName;
 }
 

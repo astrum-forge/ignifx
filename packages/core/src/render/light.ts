@@ -85,6 +85,21 @@ export interface LightShadowSettings {
   cascades: number;
   /** The distance beyond which nothing is shadowed, in metres; `0` takes Lite's default. */
   maxDistance: number;
+  /**
+   * Whether cascades use a stable sphere fit, CSM only. `true` stops shadow edges shimmering as the
+   * camera moves, at the cost of some resolution. Default `false`.
+   */
+  stabilizeCascades: boolean;
+  /**
+   * How the cascade splits are spaced, CSM only, from `0` (even) to `1` (logarithmic: more detail
+   * near the camera). Default `0.5`.
+   */
+  cascadeLambda: number;
+  /**
+   * The fraction of each cascade that cross-fades into the next, CSM only, from `0` to `1`; `0`
+   * turns blending off and shows hard seams. Default `0.1`.
+   */
+  cascadeBlend: number;
 }
 
 /** How many elements a 4x4 matrix has. */
@@ -605,6 +620,19 @@ function lightSchema(): Schema {
         darkness: f32(0, { min: 0, max: 1, tooltip: "How dark a fully shadowed texel is." }),
         cascades: u32(4, { min: 1, max: 4, tooltip: "Cascade count, CSM only." }),
         maxDistance: f32(0, { min: 0, tooltip: "Shadow distance in metres; 0 takes Lite's default." }),
+        stabilizeCascades: bool(false, {
+          tooltip: "CSM only: a stable cascade fit, so shadow edges do not shimmer as the camera moves.",
+        }),
+        cascadeLambda: f32(0.5, {
+          min: 0,
+          max: 1,
+          tooltip: "CSM only: cascade split spacing, 0 even to 1 logarithmic (more detail near the camera).",
+        }),
+        cascadeBlend: f32(0.1, {
+          min: 0,
+          max: 1,
+          tooltip: "CSM only: the fraction of a cascade that fades into the next; 0 shows hard seams.",
+        }),
       },
       { tooltip: "Shadow casting; point and hemispheric lights cannot cast (IGX-0703)." },
     ),

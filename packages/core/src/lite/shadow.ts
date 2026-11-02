@@ -97,6 +97,12 @@ export interface ShadowSettings {
   readonly cascades?: number;
   /** The distance beyond which nothing is shadowed, CSM only, in metres. */
   readonly maxDistance?: number;
+  /** Whether cascades use a stable sphere fit that does not shimmer as the camera moves, CSM only. */
+  readonly stabilizeCascades?: boolean;
+  /** How cascade splits blend logarithmic (`1`) and uniform (`0`) spacing, CSM only. */
+  readonly cascadeLambda?: number;
+  /** The fraction of a cascade that cross-fades into the next one, CSM only; `0` turns blending off. */
+  readonly cascadeBlend?: number;
 }
 
 /**
@@ -582,8 +588,9 @@ export function toPcfConfig(settings: ShadowSettings): PcfDirectionalShadowGener
  * Maps the shared settings onto a cascaded shadow map's configuration.
  *
  * @remarks
- * `cascades` becomes `numCascades` and `maxDistance` becomes `shadowMaxZ`; Lite clamps the cascade
- * count to four (`index.d.ts` 3515).
+ * `cascades` becomes `numCascades`, `maxDistance` becomes `shadowMaxZ`, `cascadeLambda` becomes
+ * `lambda` and `cascadeBlend` becomes `cascadeBlendPercentage`; Lite clamps the cascade count to
+ * four (`index.d.ts` 4202–4227).
  *
  * @param settings - The declared settings.
  * @returns Lite's configuration.
@@ -597,6 +604,9 @@ export function toCsmConfig(settings: ShadowSettings): CsmDirectionalShadowGener
     darkness?: number;
     numCascades?: number;
     shadowMaxZ?: number;
+    stabilizeCascades?: boolean;
+    lambda?: number;
+    cascadeBlendPercentage?: number;
   } = {};
   if (settings.mapSize !== undefined) {
     config.mapSize = settings.mapSize;
@@ -612,6 +622,15 @@ export function toCsmConfig(settings: ShadowSettings): CsmDirectionalShadowGener
   }
   if (settings.maxDistance !== undefined) {
     config.shadowMaxZ = settings.maxDistance;
+  }
+  if (settings.stabilizeCascades !== undefined) {
+    config.stabilizeCascades = settings.stabilizeCascades;
+  }
+  if (settings.cascadeLambda !== undefined) {
+    config.lambda = settings.cascadeLambda;
+  }
+  if (settings.cascadeBlend !== undefined) {
+    config.cascadeBlendPercentage = settings.cascadeBlend;
   }
   return config;
 }
