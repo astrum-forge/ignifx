@@ -17,13 +17,11 @@ import {
   isOpenSceneParams,
   isPickParams,
   isReadBackParams,
-  isScreenshotParams,
   isSetAnimateMaterialsParams,
   isSetGizmoParams,
   isSetViewModeParams,
   PickUnit,
   RpcErrorCode,
-  SCREENSHOT_MAX_SIZE,
   SceneMethod,
   SceneNotification,
   ViewMode,
@@ -44,7 +42,7 @@ import { GizmoDragRelay } from "./gizmo-drag.js";
 import { applyOps, reloadInstance } from "./ops.js";
 import { sampleAnimation } from "./sample-animation.js";
 import { schemaSet } from "./schemas.js";
-import { encodeCapture } from "./screenshot.js";
+import { checkScreenshotParams, takeScreenshot } from "./screenshot.js";
 import { settingsSet } from "./settings.js";
 import {
   boundsOf2D,
@@ -57,7 +55,7 @@ import {
   twoDServiceOf,
   zoomForSize,
 } from "./view-2d.js";
-import { pickRayMembers, screenshotSize, toBackingPixels, viewSurfaceOf } from "./view-math.js";
+import { pickRayMembers, toBackingPixels, viewSurfaceOf } from "./view-math.js";
 import type { RequestHandler } from "../channel.js";
 import type { EditorAssetChange, PendingReload } from "./asset-reload.js";
 import type { ChangedDefaults } from "./defaults.js";
@@ -626,28 +624,10 @@ export class SceneHost {
   async #screenshot(params: unknown): Promise<ScreenshotResult> {
     const app = this.#requireApp();
     this.#requireMirror(SceneMethod.screenshot);
-    if (typeof params === "object" && params !== null) {
-      for (const side of ["width", "height"]) {
-        const value: unknown = Reflect.get(params, side);
-        if (
-          value !== undefined &&
-          (!Number.isSafeInteger(value) || Number(value) < 1 || Number(value) > SCREENSHOT_MAX_SIZE)
-        ) {
-          throw new InvalidParamsError(
-            `screenshot takes a width and height from 1 to ${String(SCREENSHOT_MAX_SIZE)} pixels.`,
-          );
-        }
-      }
-    }
-    if (!isScreenshotParams(params)) {
-      throw new InvalidParamsError('screenshot takes { width?, height?, format: "png" | "jpeg", quality? }.');
-    }
+    const checked = checkScreenshotParams(params);
     this.#view?.setVisible(false);
     try {
-      const capture = await app.renderer.captureScreenshot();
-      const size = screenshotSize(params, capture);
-      const dataUrl = await encodeCapture(capture, size, params.format, params.quality ?? 0.9);
-      return { dataUrl, width: size.width, height: size.height };
+      return await takeScreenshot(app, checked);
     } finally {
       this.#view?.setVisible(true);
     }

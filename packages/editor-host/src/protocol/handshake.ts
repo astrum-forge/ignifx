@@ -58,9 +58,10 @@ export type HostKind = (typeof HostKind)[keyof typeof HostKind];
  * The optional features a host lists in its `ready` result.
  *
  * @remarks
- * The play controls send `["heartbeat", "playControls"]`. The scene host sends `"heartbeat"` and
- * whichever of `"gizmos"`, `"screenshot"`, `"viewMode2d"` and `"pick2d"` it supports; every
- * `SceneMethod` not tied to one of them is required of a 0.3 scene host.
+ * The play controls send `["heartbeat", "playControls"]`, plus `"screenshot"` when the game has a
+ * canvas. The scene host sends `"heartbeat"` and whichever of `"gizmos"`, `"screenshot"`,
+ * `"viewMode2d"` and `"pick2d"` it supports; every `SceneMethod` not tied to one of them is required
+ * of a 0.3 scene host.
  *
  * @public
  */
@@ -74,7 +75,11 @@ export const HostCapability = {
    * `transformDragging` and `transformDragged`.
    */
   gizmos: "gizmos",
-  /** The scene host answers `screenshot`. */
+  /**
+   * The host answers `screenshot`: the scene host captures its view, the play controls the game's
+   * canvas. The play controls list it from engine ask E47 (additive in 0.3); without it, the play
+   * view answers `screenshot` with `RpcErrorCode.methodNotFound`.
+   */
   screenshot: "screenshot",
   /** The scene host accepts `setViewMode` with `"2d"`: a 2D editor camera and planar gizmos. */
   viewMode2d: "viewMode2d",

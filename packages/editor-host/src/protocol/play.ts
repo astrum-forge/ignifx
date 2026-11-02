@@ -6,17 +6,19 @@
  */
 import { isRecord } from "./rpc.js";
 import type { RpcNotification, RpcRequest, RpcSuccessResponse } from "./rpc.js";
+import type { RpcRequestWithParams, ScreenshotParams } from "./scene.js";
 
 /**
  * The methods the play view answers after `ready`. `play`, `pause`, `step` and `stop` answer with a
  * {@link PlayState}; `playState` answers with a {@link PlayStateReport}; `playStats` answers with
- * {@link PlayStats}.
+ * {@link PlayStats}; `screenshot` answers with a `ScreenshotResult`.
  *
  * @remarks
  * A host that answers them lists `HostCapability.playControls` in `ready`. Sent before `ready`, they
  * fail with `RpcErrorCode.notReady`; sent to a host without them, with `RpcErrorCode.methodNotFound`.
- * `playState` and `playStats` are additive 0.3 methods: a host from before one answers it with
- * `RpcErrorCode.methodNotFound`.
+ * `playState`, `playStats` and `screenshot` are additive 0.3 methods: a host from before one answers
+ * it with `RpcErrorCode.methodNotFound`. `screenshot` also needs `HostCapability.screenshot` in the
+ * play view's `ready`.
  *
  * @public
  */
@@ -36,6 +38,14 @@ export const PlayMethod = {
    * anything. Takes no parameters. The editor polls it; no notification carries it.
    */
   playStats: "playStats",
+  /**
+   * Captures the game's canvas as an image, with the scene view's `screenshot` parameters, caps and
+   * answer (`ScreenshotParams`, `ScreenshotResult`). Changes nothing: a paused game is captured
+   * paused. Needs `HostCapability.screenshot`. Fails with `RpcErrorCode.notPlaying` while the frame
+   * loop does not run (before the game starts it, after `stop` or `step`), and with
+   * `RpcErrorCode.notReady` before the game's first frame.
+   */
+  screenshot: "screenshot",
 } as const;
 
 /**
@@ -59,7 +69,7 @@ export interface StepParams {
 }
 
 /**
- * Editor → play view: one of the `PlayMethod`s. Only `step` takes parameters.
+ * Editor → play view: one of the `PlayMethod`s. Only `step` and `screenshot` take parameters.
  *
  * @public
  */
@@ -69,7 +79,8 @@ export type PlayRequest =
   | RpcRequest<typeof PlayMethod.step, StepParams>
   | RpcRequest<typeof PlayMethod.stop, never>
   | RpcRequest<typeof PlayMethod.playState, never>
-  | RpcRequest<typeof PlayMethod.playStats, never>;
+  | RpcRequest<typeof PlayMethod.playStats, never>
+  | RpcRequestWithParams<typeof PlayMethod.screenshot, ScreenshotParams>;
 
 /**
  * What the play view reports after every `PlayMethod`.

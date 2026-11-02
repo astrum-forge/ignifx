@@ -1770,6 +1770,46 @@
         "frameCount": 1
       }
     },
+    "readyPlay": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+        "engineVersion": "0.12.0",
+        "protocol": {
+          "major": 0,
+          "minor": 3
+        },
+        "capabilities": ["heartbeat", "playControls", "logRelay", "screenshot"],
+        "hostKind": "play"
+      }
+    },
+    "screenshotGame": {
+      "jsonrpc": "2.0",
+      "id": 31,
+      "method": "screenshot",
+      "params": {
+        "width": 1024,
+        "format": "jpeg",
+        "quality": 0.85
+      }
+    },
+    "screenshotGameResponse": {
+      "jsonrpc": "2.0",
+      "id": 31,
+      "result": {
+        "dataUrl": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAASABIAAD/4QBMRXhpZgAATU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAAD/7QA4UGhvdG9zaG9wIDMuMAA4QklNBAQAAAAAAAA4QklNBCUAAAAAABDUHYzZjwCyBOmACZjs+EJ+/8AAEQgAAQABAwEiAAIRAQMRAf/EAB8AAAEFAQEBAQEBAAAAAAAAAAABAgMEBQYHCAkKC//EALUQAAIBAwMCBAMFBQQEAAABfQECAwAEEQUSITFBBhNRYQcicRQygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJSYnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29/j5+v/EAB8BAAMBAQEBAQEBAQEAAAAAAAABAgMEBQYHCAkKC//EALURAAIBAgQEAwQHBQQEAAECdwABAgMRBAUhMQYSQVEHYXETIjKBCBRCkaGxwQkjM1LwFWJy0QoWJDThJfEXGBkaJicoKSo1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uLj5OXm5+jp6vLz9PX29/j5+v/bAEMABgYGBgYGCgYGCg4KCgoOEg4ODg4SFxISEhISFxwXFxcXFxccHBwcHBwcHCIiIiIiIicnJycnLCwsLCwsLCwsLP/bAEMBBwcHCwoLEwoKEy4fGh8uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLv/dAAQAAf/aAAwDAQACEQMRAD8A9kooor48+DP/2Q==",
+        "width": 1024,
+        "height": 576
+      }
+    },
+    "screenshotNotPlaying": {
+      "jsonrpc": "2.0",
+      "id": 31,
+      "error": {
+        "code": -32003,
+        "message": "The game is not running, so there is no frame to capture. Press Play first; after Step or Stop the game renders no frames."
+      }
+    },
     "sampleAnimation": {
       "jsonrpc": "2.0",
       "id": 29,

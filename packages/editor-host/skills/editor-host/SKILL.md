@@ -1,6 +1,6 @@
 ---
 name: editor-host
-description: Connects an ignifx project to the ignifx editor with @ignifx/editor-host: the Vite plugin that serves the editor's scene view from the project's own dev server, the virtual:ignifx/editor play controls a game's main.ts hands its app to (play, pause, step, stop, playState, playStateChanged, playStats), and the host half of the editor protocol 0.3 over a MessagePort (hello/ready, heartbeat, and the scene document methods openScene, applyOps, readBack, select, pick, frame, setGizmo, setViewMode, screenshot, getSchemas, describeSettings, setAnimateMaterials, getColliderOutlines, sampleAnimation), including the 2D view mode (an editor Camera2D and app.twoD.pickAt picking). Use when wiring a project or template for the editor, when the user mentions @ignifx/editor-host, editorHostPlugin, attachEditorPlayControls, virtual:ignifx/editor, startEditorHost or /__ignifx_editor__/, or when debugging why the editor cannot connect to a view or why the scene view disagrees with the editor's document.
+description: Connects an ignifx project to the ignifx editor with @ignifx/editor-host: the Vite plugin that serves the editor's scene view from the project's own dev server, the virtual:ignifx/editor play controls a game's main.ts hands its app to (play, pause, step, stop, playState, playStateChanged, playStats, screenshot), and the host half of the editor protocol 0.3 over a MessagePort (hello/ready, heartbeat, and the scene document methods openScene, applyOps, readBack, select, pick, frame, setGizmo, setViewMode, screenshot, getSchemas, describeSettings, setAnimateMaterials, getColliderOutlines, sampleAnimation), including the 2D view mode (an editor Camera2D and app.twoD.pickAt picking). Use when wiring a project or template for the editor, when the user mentions @ignifx/editor-host, editorHostPlugin, attachEditorPlayControls, virtual:ignifx/editor, startEditorHost or /__ignifx_editor__/, or when debugging why the editor cannot connect to a view or why the scene view disagrees with the editor's document.
 license: Apache-2.0
 metadata:
   ignifx-version: "0.12.0"
@@ -71,7 +71,7 @@ each view ◀── MessagePort ──▶ editor     JSON-RPC 2.0, protocol 0.3
                / setAnimateMaterials / getColliderOutlines / sampleAnimation
                ← sceneOpened, selectionChanged, transformDragging/Dragged, hotReloaded, assetReloaded,
                  hostError, log
-   play view:  play / pause / step / stop / playState / playStats
+   play view:  play / pause / step / stop / playState / playStats / screenshot (with a canvas)
                ← playStateChanged, log, hostError, hotReloaded (logRelay; kept from before hello)
 ```
 
@@ -321,6 +321,11 @@ object `openScene` sends, through `world.loadSceneFile`; `readBack` answers with
 - **Scene methods answer `notReady` until the app has started.** The host answers `hello` at once;
   its first `schemasChanged` is the cue that `openScene` and the rest are accepted. `applyOps`,
   `readBack` and `frame` answer `noScene` while no scene is open.
+- **The play view's `screenshot` needs a running game.** It takes the scene view's parameters and
+  answers the same `{ dataUrl, width, height }` from the game's canvas, paused or not. While the
+  frame loop does not run (before Play, after `stop` or `step`) it answers `notPlaying`, and before
+  the first frame `notReady`. Only a game with a canvas lists `screenshot` in `ready`; an older or
+  headless play view answers `methodNotFound`.
 - **The scene view keeps the project's `rendering.msaaSamples`.** The gizmos and the outline draw in
   core's render overlay (`app.renderer.openOverlay()`), which works at every MSAA setting.
 - **A headless host lists only `heartbeat`.** Without a canvas there are no gizmos, no `screenshot`,

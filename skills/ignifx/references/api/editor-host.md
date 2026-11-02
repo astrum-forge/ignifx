@@ -3173,9 +3173,9 @@ The union of the names in `PlayPhase`.
 
 ### PlayRequest
 
-> **PlayRequest** = [`RpcRequest`](#rpcrequest)\<*typeof* [`play`](#play-1), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`pause`](#pause), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`step`](#step), [`StepParams`](#stepparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`stop`](#stop), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`playState`](#playstate), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`playStats`](#playstats), `never`\>
+> **PlayRequest** = [`RpcRequest`](#rpcrequest)\<*typeof* [`play`](#play-1), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`pause`](#pause), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`step`](#step), [`StepParams`](#stepparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`stop`](#stop), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`playState`](#playstate), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`playStats`](#playstats), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`screenshot`](#screenshot-1), [`ScreenshotParams`](#screenshotparams)\>
 
-Editor → play view: one of the `PlayMethod`s. Only `step` takes parameters.
+Editor → play view: one of the `PlayMethod`s. Only `step` and `screenshot` take parameters.
 
 ***
 
@@ -3317,7 +3317,7 @@ The union of the names in `SceneOpKind`.
 
 ### SceneRequest
 
-> **SceneRequest** = [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`openScene`](#openscene), [`OpenSceneParams`](#opensceneparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`closeScene`](#closescene), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`applyOps`](#applyops), [`ApplyOpsParams`](#applyopsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`readBack`](#readback), [`ReadBackParams`](#readbackparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`select`](#select), [`EntitySelection`](#entityselection)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setGizmo`](#setgizmo), [`SetGizmoParams`](#setgizmoparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`frame`](#frame), [`FrameParams`](#frameparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`pick`](#pick), [`PickParams`](#pickparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`screenshot`](#screenshot-1), [`ScreenshotParams`](#screenshotparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`getSchemas`](#getschemas), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`describeSettings`](#describesettings), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setViewMode`](#setviewmode), [`SetViewModeParams`](#setviewmodeparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setAnimateMaterials`](#setanimatematerials), [`SetAnimateMaterialsParams`](#setanimatematerialsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`getColliderOutlines`](#getcollideroutlines), [`EntitySelection`](#entityselection)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`sampleAnimation`](#sampleanimation), [`SampleAnimationParams`](#sampleanimationparams)\>
+> **SceneRequest** = [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`openScene`](#openscene), [`OpenSceneParams`](#opensceneparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`closeScene`](#closescene), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`applyOps`](#applyops), [`ApplyOpsParams`](#applyopsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`readBack`](#readback), [`ReadBackParams`](#readbackparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`select`](#select), [`EntitySelection`](#entityselection)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setGizmo`](#setgizmo), [`SetGizmoParams`](#setgizmoparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`frame`](#frame), [`FrameParams`](#frameparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`pick`](#pick), [`PickParams`](#pickparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`screenshot`](#screenshot-2), [`ScreenshotParams`](#screenshotparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`getSchemas`](#getschemas), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`describeSettings`](#describesettings), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setViewMode`](#setviewmode), [`SetViewModeParams`](#setviewmodeparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setAnimateMaterials`](#setanimatematerials), [`SetAnimateMaterialsParams`](#setanimatematerialsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`getColliderOutlines`](#getcollideroutlines), [`EntitySelection`](#entityselection)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`sampleAnimation`](#sampleanimation), [`SampleAnimationParams`](#sampleanimationparams)\>
 
 Editor → scene host: one of the `SceneMethod`s. `closeScene`, `getSchemas` and `describeSettings`
 take no parameters.
@@ -3709,7 +3709,9 @@ The host answers the methods in `PlayMethod`.
 
 > `readonly` **screenshot**: `"screenshot"` = `"screenshot"`
 
-The scene host answers `screenshot`.
+The host answers `screenshot`: the scene host captures its view, the play controls the game's
+canvas. The play controls list it from engine ask E47 (additive in 0.3); without it, the play
+view answers `screenshot` with `RpcErrorCode.methodNotFound`.
 
 ##### viewMode2d
 
@@ -3719,9 +3721,10 @@ The scene host accepts `setViewMode` with `"2d"`: a 2D editor camera and planar 
 
 #### Remarks
 
-The play controls send `["heartbeat", "playControls"]`. The scene host sends `"heartbeat"` and
-whichever of `"gizmos"`, `"screenshot"`, `"viewMode2d"` and `"pick2d"` it supports; every
-`SceneMethod` not tied to one of them is required of a 0.3 scene host.
+The play controls send `["heartbeat", "playControls"]`, plus `"screenshot"` when the game has a
+canvas. The scene host sends `"heartbeat"` and whichever of `"gizmos"`, `"screenshot"`,
+`"viewMode2d"` and `"pick2d"` it supports; every `SceneMethod` not tied to one of them is required
+of a 0.3 scene host.
 
 ***
 
@@ -3803,7 +3806,7 @@ CSS pixels from the view's top-left corner: a DOM event's `offsetX` and `offsetY
 
 The methods the play view answers after `ready`. `play`, `pause`, `step` and `stop` answer with a
 [PlayState](#playstate-1); `playState` answers with a [PlayStateReport](#playstatereport); `playStats` answers with
-[PlayStats](#playstats-1).
+[PlayStats](#playstats-1); `screenshot` answers with a `ScreenshotResult`.
 
 #### Type Declaration
 
@@ -3832,6 +3835,16 @@ Reads the game's state without changing it. Takes no parameters.
 Reads the game's frame rate, frame time, entity count and frame count without changing
 anything. Takes no parameters. The editor polls it; no notification carries it.
 
+##### screenshot
+
+> `readonly` **screenshot**: `"screenshot"` = `"screenshot"`
+
+Captures the game's canvas as an image, with the scene view's `screenshot` parameters, caps and
+answer (`ScreenshotParams`, `ScreenshotResult`). Changes nothing: a paused game is captured
+paused. Needs `HostCapability.screenshot`. Fails with `RpcErrorCode.notPlaying` while the frame
+loop does not run (before the game starts it, after `stop` or `step`), and with
+`RpcErrorCode.notReady` before the game's first frame.
+
 ##### step
 
 > `readonly` **step**: `"step"` = `"step"`
@@ -3848,8 +3861,9 @@ Stops the frame loop with `app.stop()`. The editor reloads the view to reset the
 
 A host that answers them lists `HostCapability.playControls` in `ready`. Sent before `ready`, they
 fail with `RpcErrorCode.notReady`; sent to a host without them, with `RpcErrorCode.methodNotFound`.
-`playState` and `playStats` are additive 0.3 methods: a host from before one answers it with
-`RpcErrorCode.methodNotFound`.
+`playState`, `playStats` and `screenshot` are additive 0.3 methods: a host from before one answers
+it with `RpcErrorCode.methodNotFound`. `screenshot` also needs `HostCapability.screenshot` in the
+play view's `ready`.
 
 ***
 
@@ -3982,6 +3996,14 @@ No handler exists for the method.
 > `readonly` **noScene**: `-32002` = `-32_002`
 
 A scene method that needs an open scene was called while none is open (`SceneMethod`).
+
+##### notPlaying
+
+> `readonly` **notPlaying**: `-32003` = `-32_003`
+
+A play method that needs the game's frame loop was called while it does not run: before the
+game starts it, after `stop`, or after `step` (`PlayMethod.screenshot`). Additive in 0.3: only
+a host that answers `screenshot` in the play view sends it.
 
 ##### notReady
 
@@ -5664,7 +5686,7 @@ const host = await startEditorHost({ editorOrigin: "ignifx-editor://app", canvas
 **`Beta`**
 
 Lets the editor drive a running game: answers the handshake with `hostKind: "play"`, then `play`,
-`pause`, `step`, `stop`, `playState` and `playStats`, and sends `playStateChanged` when the game's phase
+`pause`, `step`, `stop`, `playState`, `playStats` and (with a canvas) `screenshot`, and sends `playStateChanged` when the game's phase
 changes, and `log`, `hostError` and `hotReloaded` for the game's log lines, `app.onError` reports
 and hot reloads (the newest 256 from before the handshake right after it).
 

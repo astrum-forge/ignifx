@@ -48,6 +48,12 @@ export const RpcErrorCode = {
   notReady: -32_001,
   /** A scene method that needs an open scene was called while none is open (`SceneMethod`). */
   noScene: -32_002,
+  /**
+   * A play method that needs the game's frame loop was called while it does not run: before the
+   * game starts it, after `stop`, or after `step` (`PlayMethod.screenshot`). Additive in 0.3: only
+   * a host that answers `screenshot` in the play view sends it.
+   */
+  notPlaying: -32_003,
 } as const;
 
 /**

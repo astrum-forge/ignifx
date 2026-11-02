@@ -10,7 +10,7 @@ import {
   toJsonSchema,
   transformSchema,
 } from "@ignifx/core";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { resolveEngineVersion } from "../src/host.js";
 import { startEditorPlayControls } from "../src/play-controls.js";
 import {
@@ -61,7 +61,7 @@ import { ENGINE_VERSION } from "./support/engine-version.js";
 import { CRATE_PREFAB, Exploder, Health, startLiveHost, Wire } from "./support/scene-project.js";
 import type { Received } from "./support/editor.js";
 import type { LiveHost } from "./support/scene-project.js";
-import type { App, JsonObject, SceneFile, SceneFileEntity } from "@ignifx/core";
+import type { App, JsonObject, RenderCapture, SceneFile, SceneFileEntity } from "@ignifx/core";
 
 /**
  * Wire compatibility with the editor, protocol 0.3. `fixtures/host-0.3-wire.json` is copied
@@ -170,6 +170,7 @@ const PARAMS_GUARDS: Readonly<Record<string, (value: unknown) => boolean>> = {
   pickBacking: isPickParams,
   screenshot: isScreenshotParams,
   screenshotJpeg: isScreenshotParams,
+  screenshotGame: isScreenshotParams,
   setViewMode: isSetViewModeParams,
   setAnimateMaterials: isSetAnimateMaterialsParams,
   getColliderOutlines: isEntitySelection,
@@ -207,6 +208,7 @@ const RESULT_GUARDS: Readonly<Record<string, (value: unknown) => boolean>> = {
   pickMissRay2d: isPickResult,
   pickHit2d: isPickResult,
   screenshotResponse: isScreenshotResult,
+  screenshotGameResponse: isScreenshotResult,
   getSchemasResponse: isSchemaSet,
   describeSettingsResponse: isSettingsSet,
   getColliderOutlinesResponse: isColliderOutlineSet,
@@ -250,7 +252,8 @@ describe("the editor's 0.3 wire fixture, through the host's guards", () => {
       expect(message).toBeDefined();
     }
     const capabilities: readonly unknown[] = Object.values(HostCapability);
-    for (const capability of [member(wire("readyScene"), "result")["capabilities"]].flat()) {
+    const listed = ["readyScene", "readyPlay"].flatMap((name) => [member(wire(name), "result")["capabilities"]].flat());
+    for (const capability of listed) {
       expect(capabilities).toContain(capability);
     }
     expect(isInvalidSceneFileData(member(wire("openSceneInvalid"), "error")["data"])).toBe(true);
@@ -882,6 +885,55 @@ describe("the editor's 0.3 wire fixture, through live play controls", () => {
       peer.close();
       controls.dispose();
       app.dispose();
+    }
+  });
+});
+
+describe("the editor's 0.3 wire fixture, through a canvas-backed play view (E47)", () => {
+  it("lists screenshot, refuses it while the game is not running, and answers an image while it is", async () => {
+    const app = await createApp({ headless: true });
+    // A headless app has no GPU; a stubbed capture and canvas stand in for the game's.
+    Object.defineProperty(app, "isHeadless", { value: false });
+    const frame: RenderCapture = { width: 1920, height: 1080, data: new Uint8ClampedArray(4) };
+    Object.defineProperty(app.renderer, "captureScreenshot", { value: async () => Promise.resolve(frame) });
+    const canvas = {
+      getContext: (): object => ({ putImageData: (): void => undefined, drawImage: (): void => undefined }),
+      convertToBlob: async ({ type }: { readonly type: string }): Promise<Blob> =>
+        Promise.resolve(new Blob([new Uint8Array([1])], { type })),
+    };
+    vi.stubGlobal("OffscreenCanvas", function OffscreenCanvas() {
+      return canvas;
+    });
+    vi.stubGlobal("ImageData", function ImageData() {
+      return {};
+    });
+    const target = new EventTarget();
+    const controls = startEditorPlayControls(app, { editorOrigin: EDITOR_ORIGIN, messageTarget: target });
+    const peer = new Wire(connect(target));
+    try {
+      const ready = wire("readyPlay");
+      const engineVersion = resolveEngineVersion(ENGINE_VERSION);
+      expectWire(await peer.request(wire("hello")), {
+        ...ready,
+        result: { ...member(ready, "result"), engineVersion },
+      });
+
+      expectWire(await peer.request(wire("screenshotGame")), wire("screenshotNotPlaying"));
+
+      await peer.request({ jsonrpc: "2.0", id: 2, method: PlayMethod.step });
+      await peer.request({ jsonrpc: "2.0", id: 3, method: PlayMethod.play });
+      const answer = await peer.request(wire("screenshotGame"));
+      const expected = member(wire("screenshotGameResponse"), "result");
+      // The stand-in canvas encodes one byte, so only the image's bytes differ from the fixture's.
+      expectWire(answer, {
+        ...wire("screenshotGameResponse"),
+        result: { ...expected, dataUrl: "data:image/jpeg;base64,AQ==" },
+      });
+    } finally {
+      peer.close();
+      controls.dispose();
+      app.dispose();
+      vi.unstubAllGlobals();
     }
   });
 });

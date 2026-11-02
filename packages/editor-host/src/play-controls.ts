@@ -11,6 +11,7 @@ import {
   openChannel,
   Reply,
   resolveMessageTarget,
+  RpcFailure,
 } from "./channel.js";
 import { resolveEngineVersion } from "./host.js";
 import { PlayStatsReader } from "./play-stats.js";
@@ -21,9 +22,11 @@ import {
   PlayNotification,
   PlayPhase,
   PROTOCOL_VERSION,
+  RpcErrorCode,
 } from "./protocol/index.js";
+import { checkScreenshotParams, takeScreenshot } from "./scene/screenshot.js";
 import type { EditorMessageTarget, RequestHandler } from "./channel.js";
-import type { PlayState, PlayStateReport, PlayStats } from "./protocol/index.js";
+import type { PlayState, PlayStateReport, PlayStats, ScreenshotResult } from "./protocol/index.js";
 import type { App } from "@ignifx/core";
 
 /**
@@ -182,6 +185,30 @@ function stepDelta(app: App, params: unknown): number {
 }
 
 /**
+ * `screenshot`: the game's canvas as an image, as the scene view's `screenshot` answers. Changes
+ * nothing about the game.
+ *
+ * @param app - The game's app.
+ * @param params - The received `params`.
+ * @returns The data URL and its size.
+ * @throws RpcFailure `notPlaying` while the frame loop does not run, `notReady` before the first
+ * frame, and `invalidParams` for parameters the scene view would refuse.
+ */
+async function playScreenshot(app: App, params: unknown): Promise<ScreenshotResult> {
+  // Without a running loop no frame is presented, so a capture would only fail (`IGX-0707`).
+  if (!app.isRunning) {
+    throw new RpcFailure(
+      RpcErrorCode.notPlaying,
+      "The game is not running, so there is no frame to capture. Press Play first; after Step or Stop the game renders no frames.",
+    );
+  }
+  if (app.time.frameCount === 0) {
+    throw new RpcFailure(RpcErrorCode.notReady, "The game has not rendered its first frame yet.");
+  }
+  return takeScreenshot(app, checkScreenshotParams(params));
+}
+
+/**
  * Builds the play methods for one app.
  *
  * @param app - The game's app.
@@ -192,7 +219,7 @@ function playMethods(app: App, tracker: PhaseTracker): ReadonlyMap<string, Reque
   // Every control answers first, then reports the change it made, in that order on the port.
   const answer = (): Reply => new Reply(playState(app), tracker.report);
   const stats = new PlayStatsReader(app);
-  return new Map<string, RequestHandler>([
+  const methods = new Map<string, RequestHandler>([
     [
       PlayMethod.play,
       async (): Promise<Reply> => {
@@ -233,6 +260,11 @@ function playMethods(app: App, tracker: PhaseTracker): ReadonlyMap<string, Reque
     [PlayMethod.playState, (): PlayStateReport => tracker.read()],
     [PlayMethod.playStats, (): PlayStats => stats.read()],
   ]);
+  // As in the scene view, only a canvas-backed app has the method and lists the capability.
+  if (!app.isHeadless) {
+    methods.set(PlayMethod.screenshot, async (params): Promise<ScreenshotResult> => playScreenshot(app, params));
+  }
+  return methods;
 }
 
 /** Reads the game's phase and sends `playStateChanged` when it differs from the last one sent. */
@@ -307,7 +339,12 @@ function openPlayControls(
     ready: {
       engineVersion: resolveEngineVersion(options.engineVersion),
       protocol: PROTOCOL_VERSION,
-      capabilities: [HostCapability.heartbeat, HostCapability.playControls, HostCapability.logRelay],
+      capabilities: [
+        HostCapability.heartbeat,
+        HostCapability.playControls,
+        HostCapability.logRelay,
+        ...(app.isHeadless ? [] : [HostCapability.screenshot]),
+      ],
       hostKind: HostKind.play,
     },
     methods: playMethods(app, tracker),
@@ -337,7 +374,7 @@ function openPlayControls(
 
 /**
  * Lets the editor drive a running game: answers the handshake with `hostKind: "play"`, then `play`,
- * `pause`, `step`, `stop`, `playState` and `playStats`, and sends `playStateChanged` when the game's phase
+ * `pause`, `step`, `stop`, `playState`, `playStats` and (with a canvas) `screenshot`, and sends `playStateChanged` when the game's phase
  * changes, and `log`, `hostError` and `hotReloaded` for the game's log lines, `app.onError` reports
  * and hot reloads (the newest 256 from before the handshake right after it).
  *

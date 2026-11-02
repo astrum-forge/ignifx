@@ -33,6 +33,7 @@ describe("the protocol mirror", () => {
       incompatibleProtocol: -32_000,
       notReady: -32_001,
       noScene: -32_002,
+      notPlaying: -32_003,
     });
     expect(page.HandshakeMethod).toEqual({ hello: "hello", ping: "ping" });
     expect(page.HostKind).toEqual({ scene: "scene", play: "play" });
@@ -78,6 +79,7 @@ describe("@ignifx/editor-host entries", () => {
       stop: "stop",
       playState: "playState",
       playStats: "playStats",
+      screenshot: "screenshot",
     });
     expect(page.PlayNotification).toEqual({
       playStateChanged: "playStateChanged",

@@ -626,6 +626,7 @@ export const PlayMethod: {
     readonly stop: "stop";
     readonly playState: "playState";
     readonly playStats: "playStats";
+    readonly screenshot: "screenshot";
 };
 
 // @public
@@ -653,7 +654,7 @@ export const PlayPhase: {
 export type PlayPhase = (typeof PlayPhase)[keyof typeof PlayPhase];
 
 // @public
-export type PlayRequest = RpcRequest<typeof PlayMethod.play, never> | RpcRequest<typeof PlayMethod.pause, never> | RpcRequest<typeof PlayMethod.step, StepParams> | RpcRequest<typeof PlayMethod.stop, never> | RpcRequest<typeof PlayMethod.playState, never> | RpcRequest<typeof PlayMethod.playStats, never>;
+export type PlayRequest = RpcRequest<typeof PlayMethod.play, never> | RpcRequest<typeof PlayMethod.pause, never> | RpcRequest<typeof PlayMethod.step, StepParams> | RpcRequest<typeof PlayMethod.stop, never> | RpcRequest<typeof PlayMethod.playState, never> | RpcRequest<typeof PlayMethod.playStats, never> | RpcRequestWithParams<typeof PlayMethod.screenshot, ScreenshotParams>;
 
 // @public
 export type PlayResponse = RpcSuccessResponse<PlayState>;
@@ -780,6 +781,7 @@ export const RpcErrorCode: {
     readonly incompatibleProtocol: -32_000;
     readonly notReady: -32_001;
     readonly noScene: -32_002;
+    readonly notPlaying: -32_003;
 };
 
 // @public
