@@ -325,7 +325,7 @@ A directional, point, spot, or hemispheric light, with optional shadow casting.
 | `spotAngle` | `f32` | `45` | A spot light's full cone angle, in degrees. |
 | `spotExponent` | `f32` | `2` | A spot light's falloff exponent; higher is sharper. |
 | `groundColor` | `color` | `[0,0,0,1]` | A hemispheric light's sRGB colour from below. |
-| `shadows` | `record` | `{"enabled":false,"technique":"pcf","mapSize":1024,"bias":0.00005,"normalBias":0,"darkness":0,"cascades":4,"maxDistance":0}` | Shadow casting; point and hemispheric lights cannot cast (IGX-0703). |
+| `shadows` | `record` | `{"enabled":false,"technique":"pcf","mapSize":1024,"bias":0.00005,"normalBias":0,"darkness":0,"cascades":4,"maxDistance":0,"stabilizeCascades":false,"cascadeLambda":0.5,"cascadeBlend":0.1}` | Shadow casting; point and hemispheric lights cannot cast (IGX-0703). |
 | `includeOnly` | `array` | `[]` | Light only these entities' renderers. |
 | `exclude` | `array` | `[]` | Never light these entities' renderers. |
 

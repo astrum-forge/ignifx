@@ -92,6 +92,9 @@ function toShadowSettings(declared: LightShadowSettings): ShadowSettings {
     darkness?: number;
     cascades?: number;
     maxDistance?: number;
+    stabilizeCascades?: boolean;
+    cascadeLambda?: number;
+    cascadeBlend?: number;
   } = {
     technique: declared.technique,
     mapSize: declared.mapSize,
@@ -99,6 +102,9 @@ function toShadowSettings(declared: LightShadowSettings): ShadowSettings {
     normalBias: declared.normalBias,
     darkness: declared.darkness,
     cascades: declared.cascades,
+    stabilizeCascades: declared.stabilizeCascades,
+    cascadeLambda: declared.cascadeLambda,
+    cascadeBlend: declared.cascadeBlend,
   };
   if (declared.maxDistance > 0) {
     settings.maxDistance = declared.maxDistance;

@@ -339,6 +339,14 @@ describe("following the entity", () => {
 });
 
 describe("shadows", () => {
+  it("defaults the cascade knobs to Lite's own CSM defaults", async () => {
+    const h = await app(false);
+    const light = h.world.createEntity("Sun").addComponent(Light);
+    expect(light.shadows.stabilizeCascades).toBe(false);
+    expect(light.shadows.cascadeLambda).toBe(0.5);
+    expect(light.shadows.cascadeBlend).toBeCloseTo(0.1, 6);
+  });
+
   it("reports IGX-0703 for a light kind Lite cannot shadow", async () => {
     const { assertShadowsSupported } = await import("../../src/lite/shadow.js");
     let code: string | null = null;
