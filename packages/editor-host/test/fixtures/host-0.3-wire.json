@@ -1779,7 +1779,7 @@
           "major": 0,
           "minor": 3
         },
-        "capabilities": ["heartbeat", "playControls", "logRelay", "queryRuntime", "screenshot"],
+        "capabilities": ["heartbeat", "playControls", "logRelay", "queryRuntime", "screenshot", "sendInput"],
         "hostKind": "play"
       }
     },
@@ -1863,6 +1863,45 @@
       "error": {
         "code": -32004,
         "message": "No entity of the running game has that uid. Entities a script or a prefab spawns get new uids on every run."
+      }
+    },
+    "sendInput": {
+      "jsonrpc": "2.0",
+      "id": 33,
+      "method": "sendInput",
+      "params": {
+        "events": [
+          {
+            "type": "pointermove",
+            "x": 0.5,
+            "y": 0.25
+          },
+          {
+            "type": "pointerdown",
+            "x": 0.5,
+            "y": 0.25,
+            "button": 0
+          },
+          {
+            "type": "keydown",
+            "control": "w"
+          }
+        ]
+      }
+    },
+    "sendInputResponse": {
+      "jsonrpc": "2.0",
+      "id": 33,
+      "result": {
+        "queued": 3
+      }
+    },
+    "sendInputNotPlaying": {
+      "jsonrpc": "2.0",
+      "id": 33,
+      "error": {
+        "code": -32003,
+        "message": "The game is stopped, so there is no running game to send input to. Press Play first; a paused or stepped game answers."
       }
     },
     "sampleAnimation": {

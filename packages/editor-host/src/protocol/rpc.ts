@@ -51,8 +51,8 @@ export const RpcErrorCode = {
   /**
    * A play method that needs a running game was called while it does not run. `PlayMethod.screenshot`
    * needs the frame loop: it fails before the game starts it, after `stop`, and after `step`.
-   * `PlayMethod.queryRuntime` needs a game that plays or is paused (a stepped game is paused): it
-   * fails before the game starts and after `stop`. Additive in 0.3:
+   * `PlayMethod.queryRuntime` and `PlayMethod.sendInput` need a game that plays or is paused (a
+   * stepped game is paused): they fail before the game starts and after `stop`. Additive in 0.3:
    * only a host that answers one of those methods in the play view sends it.
    */
   notPlaying: -32_003,

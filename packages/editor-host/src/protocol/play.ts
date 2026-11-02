@@ -14,15 +14,14 @@ import type { RpcRequestWithParams, ScreenshotParams } from "./scene.js";
  * The methods the play view answers after `ready`. `play`, `pause`, `step` and `stop` answer with a
  * {@link PlayState}; `playState` answers with a {@link PlayStateReport}; `playStats` answers with
  * {@link PlayStats}; `screenshot` answers with a `ScreenshotResult`; `queryRuntime` answers with a
- * {@link QueryRuntimeResult}.
+ * {@link QueryRuntimeResult}; `sendInput` answers with a {@link SendInputResult}.
  *
  * @remarks
  * A host that answers them lists `HostCapability.playControls` in `ready`. Sent before `ready`, they
  * fail with `RpcErrorCode.notReady`; sent to a host without them, with `RpcErrorCode.methodNotFound`.
- * `playState`, `playStats`, `screenshot` and `queryRuntime` are additive 0.3 methods: a host from
- * before one answers it with `RpcErrorCode.methodNotFound`. `screenshot` also needs
- * `HostCapability.screenshot` in the play view's `ready`, and `queryRuntime`
- * `HostCapability.queryRuntime`.
+ * `playState`, `playStats`, `screenshot`, `queryRuntime` and `sendInput` are additive 0.3 methods:
+ * a host from before one answers it with `RpcErrorCode.methodNotFound`. `screenshot`, `queryRuntime`
+ * and `sendInput` also need the `HostCapability` of the same name in the play view's `ready`.
  *
  * @public
  */
@@ -59,6 +58,14 @@ export const PlayMethod = {
    * `RpcErrorCode.unknownEntity` when no entity of the game has the uid.
    */
   queryRuntime: "queryRuntime",
+  /**
+   * Queues synthetic key and pointer events into the game's own input system, as if the game's page
+   * had received them ({@link SendInputParams}, {@link SendInputResult}). Nothing reaches the
+   * editor's window or the operating system. Needs `HostCapability.sendInput`, which a game lists
+   * only when it has `app.input` (`@ignifx/input`). Fails with `RpcErrorCode.notPlaying` while the
+   * game is stopped; a paused or stepped game takes the events and resolves them on its next frame.
+   */
+  sendInput: "sendInput",
 } as const;
 
 /**
@@ -133,8 +140,82 @@ export interface QueryRuntimeResult {
 export type QueryRuntimeResponse = RpcSuccessResponse<QueryRuntimeResult>;
 
 /**
- * Editor → play view: one of the `PlayMethod`s. Only `step`, `screenshot` and `queryRuntime` take
- * parameters.
+ * The most events one `sendInput` request may carry.
+ *
+ * @public
+ */
+export const SEND_INPUT_MAX_EVENTS = 64;
+
+/**
+ * A key press or release in a `sendInput` request.
+ *
+ * @public
+ */
+export interface SendInputKeyEvent {
+  /** `"keydown"` presses the key and holds it until a `"keyup"`; `"keyup"` releases it. */
+  readonly type: "keydown" | "keyup";
+  /**
+   * The `<Keyboard>` control name: the physical key's `KeyboardEvent.code` in camelCase without its
+   * `Key` or `Digit` prefix, such as `w`, `1`, `space`, `arrowUp` or `shiftLeft`. Letters and digits
+   * only, at most 64 of them; a name the game's keyboard does not have fails with
+   * `RpcErrorCode.invalidParams`.
+   */
+  readonly control: string;
+}
+
+/**
+ * A pointer move, press or release in a `sendInput` request.
+ *
+ * @public
+ */
+export interface SendInputPointerEvent {
+  /** Which pointer event it is. */
+  readonly type: "pointermove" | "pointerdown" | "pointerup";
+  /** The pointer's x as a fraction of the game's canvas width, from `0` (left) to `1` (right). */
+  readonly x: number;
+  /** The pointer's y as a fraction of the game's canvas height, from `0` (top) to `1` (bottom). */
+  readonly y: number;
+  /** The `PointerEvent.button`, an integer from `0` (main) to `4`. Defaults to `0`. */
+  readonly button?: number;
+}
+
+/**
+ * One event of a `sendInput` request.
+ *
+ * @public
+ */
+export type SendInputEvent = SendInputKeyEvent | SendInputPointerEvent;
+
+/**
+ * The parameters of the `sendInput` method.
+ *
+ * @public
+ */
+export interface SendInputParams {
+  /** The events, in order: from 1 to {@link SEND_INPUT_MAX_EVENTS} of them. */
+  readonly events: readonly SendInputEvent[];
+}
+
+/**
+ * Play view → editor: what `sendInput` queued.
+ *
+ * @public
+ */
+export interface SendInputResult {
+  /** How many events were queued: all of the request's. */
+  readonly queued: number;
+}
+
+/**
+ * Play view → editor: the answer to `sendInput`.
+ *
+ * @public
+ */
+export type SendInputResponse = RpcSuccessResponse<SendInputResult>;
+
+/**
+ * Editor → play view: one of the `PlayMethod`s. Only `step`, `screenshot`, `queryRuntime` and
+ * `sendInput` take parameters.
  *
  * @public
  */
@@ -146,7 +227,8 @@ export type PlayRequest =
   | RpcRequest<typeof PlayMethod.playState, never>
   | RpcRequest<typeof PlayMethod.playStats, never>
   | RpcRequestWithParams<typeof PlayMethod.screenshot, ScreenshotParams>
-  | RpcRequestWithParams<typeof PlayMethod.queryRuntime, QueryRuntimeParams>;
+  | RpcRequestWithParams<typeof PlayMethod.queryRuntime, QueryRuntimeParams>
+  | RpcRequestWithParams<typeof PlayMethod.sendInput, SendInputParams>;
 
 /**
  * What the play view reports after every `PlayMethod`.
@@ -436,4 +518,83 @@ export function isQueryRuntimeResult(value: unknown): value is QueryRuntimeResul
     Number.isFinite(time) &&
     time >= 0
   );
+}
+
+/** A `<Keyboard>` control name as `sendInput` accepts it. */
+const KEY_CONTROL_PATTERN = /^[A-Za-z0-9]{1,64}$/u;
+
+/**
+ * Tells whether a value is a fraction from 0 to 1.
+ *
+ * @param value - The value to test.
+ * @returns True for a finite number from 0 to 1.
+ */
+function isFraction(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 1;
+}
+
+/**
+ * Checks one event of a `sendInput` request.
+ *
+ * @param value - The value to test.
+ * @returns True for a key event with a well-formed `control`, or a pointer event with `x` and `y`
+ * from 0 to 1 and, when present, an integer `button` from 0 to 4.
+ *
+ * @public
+ */
+export function isSendInputEvent(value: unknown): value is SendInputEvent {
+  if (!isRecord(value)) {
+    return false;
+  }
+  const type = value["type"];
+  if (type === "keydown" || type === "keyup") {
+    const control = value["control"];
+    return typeof control === "string" && KEY_CONTROL_PATTERN.test(control);
+  }
+  if (type !== "pointermove" && type !== "pointerdown" && type !== "pointerup") {
+    return false;
+  }
+  const button = value["button"];
+  return (
+    isFraction(value["x"]) &&
+    isFraction(value["y"]) &&
+    (button === undefined || (typeof button === "number" && Number.isInteger(button) && button >= 0 && button <= 4))
+  );
+}
+
+/**
+ * Checks the `params` of `sendInput`.
+ *
+ * @param value - The received `params`.
+ * @returns True for an `events` list of 1 to {@link SEND_INPUT_MAX_EVENTS} well-formed events.
+ *
+ * @public
+ */
+export function isSendInputParams(value: unknown): value is SendInputParams {
+  if (!isRecord(value)) {
+    return false;
+  }
+  const events = value["events"];
+  return (
+    Array.isArray(events) &&
+    events.length > 0 &&
+    events.length <= SEND_INPUT_MAX_EVENTS &&
+    events.every((event: unknown) => isSendInputEvent(event))
+  );
+}
+
+/**
+ * Checks the `result` of `sendInput`.
+ *
+ * @param value - The received `result`.
+ * @returns True for an integer `queued` from 0 to {@link SEND_INPUT_MAX_EVENTS}.
+ *
+ * @public
+ */
+export function isSendInputResult(value: unknown): value is SendInputResult {
+  if (!isRecord(value)) {
+    return false;
+  }
+  const queued = value["queued"];
+  return typeof queued === "number" && Number.isSafeInteger(queued) && queued >= 0 && queued <= SEND_INPUT_MAX_EVENTS;
 }

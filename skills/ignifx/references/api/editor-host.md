@@ -2717,6 +2717,89 @@ The image width in pixels.
 
 ***
 
+### SendInputKeyEvent
+
+A key press or release in a `sendInput` request.
+
+#### Properties
+
+##### control
+
+> `readonly` **control**: `string`
+
+The `<Keyboard>` control name: the physical key's `KeyboardEvent.code` in camelCase without its
+`Key` or `Digit` prefix, such as `w`, `1`, `space`, `arrowUp` or `shiftLeft`. Letters and digits
+only, at most 64 of them; a name the game's keyboard does not have fails with
+`RpcErrorCode.invalidParams`.
+
+##### type
+
+> `readonly` **type**: `"keydown"` \| `"keyup"`
+
+`"keydown"` presses the key and holds it until a `"keyup"`; `"keyup"` releases it.
+
+***
+
+### SendInputParams
+
+The parameters of the `sendInput` method.
+
+#### Properties
+
+##### events
+
+> `readonly` **events**: readonly [`SendInputEvent`](#sendinputevent)[]
+
+The events, in order: from 1 to [SEND\_INPUT\_MAX\_EVENTS](#send_input_max_events) of them.
+
+***
+
+### SendInputPointerEvent
+
+A pointer move, press or release in a `sendInput` request.
+
+#### Properties
+
+##### button?
+
+> `readonly` `optional` **button?**: `number`
+
+The `PointerEvent.button`, an integer from `0` (main) to `4`. Defaults to `0`.
+
+##### type
+
+> `readonly` **type**: `"pointermove"` \| `"pointerdown"` \| `"pointerup"`
+
+Which pointer event it is.
+
+##### x
+
+> `readonly` **x**: `number`
+
+The pointer's x as a fraction of the game's canvas width, from `0` (left) to `1` (right).
+
+##### y
+
+> `readonly` **y**: `number`
+
+The pointer's y as a fraction of the game's canvas height, from `0` (top) to `1` (bottom).
+
+***
+
+### SendInputResult
+
+Play view → editor: what `sendInput` queued.
+
+#### Properties
+
+##### queued
+
+> `readonly` **queued**: `number`
+
+How many events were queued: all of the request's.
+
+***
+
 ### SetAnimateMaterialsParams
 
 The parameters of `setAnimateMaterials`.
@@ -3229,10 +3312,10 @@ The union of the names in `PlayPhase`.
 
 ### PlayRequest
 
-> **PlayRequest** = [`RpcRequest`](#rpcrequest)\<*typeof* [`play`](#play-1), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`pause`](#pause), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`step`](#step), [`StepParams`](#stepparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`stop`](#stop), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`playState`](#playstate), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`playStats`](#playstats), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`screenshot`](#screenshot-1), [`ScreenshotParams`](#screenshotparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`queryRuntime`](#queryruntime-1), [`QueryRuntimeParams`](#queryruntimeparams)\>
+> **PlayRequest** = [`RpcRequest`](#rpcrequest)\<*typeof* [`play`](#play-1), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`pause`](#pause), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`step`](#step), [`StepParams`](#stepparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`stop`](#stop), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`playState`](#playstate), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`playStats`](#playstats), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`screenshot`](#screenshot-1), [`ScreenshotParams`](#screenshotparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`queryRuntime`](#queryruntime-1), [`QueryRuntimeParams`](#queryruntimeparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`sendInput`](#sendinput-1), [`SendInputParams`](#sendinputparams)\>
 
-Editor → play view: one of the `PlayMethod`s. Only `step`, `screenshot` and `queryRuntime` take
-parameters.
+Editor → play view: one of the `PlayMethod`s. Only `step`, `screenshot`, `queryRuntime` and
+`sendInput` take parameters.
 
 ***
 
@@ -3410,6 +3493,22 @@ The success answer to `screenshot`.
 > **SelectResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<[`EntitySelection`](#entityselection)\>
 
 The success answer to `select`.
+
+***
+
+### SendInputEvent
+
+> **SendInputEvent** = [`SendInputKeyEvent`](#sendinputkeyevent) \| [`SendInputPointerEvent`](#sendinputpointerevent)
+
+One event of a `sendInput` request.
+
+***
+
+### SendInputResponse
+
+> **SendInputResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<[`SendInputResult`](#sendinputresult)\>
+
+Play view → editor: the answer to `sendInput`.
 
 ***
 
@@ -3786,6 +3885,15 @@ The host answers `screenshot`: the scene host captures its view, the play contro
 canvas. The play controls list it from engine ask E47 (additive in 0.3); without it, the play
 view answers `screenshot` with `RpcErrorCode.methodNotFound`.
 
+##### sendInput
+
+> `readonly` **sendInput**: `"sendInput"` = `"sendInput"`
+
+The play controls answer `sendInput`: synthetic key and pointer events queued into the game's
+own input system (`app.input` from `@ignifx/input`), never into the editor's window. Listed only
+when the game has `app.input`. From engine ask E49 (additive in 0.3); without it, the play view
+answers `sendInput` with `RpcErrorCode.methodNotFound`.
+
 ##### viewMode2d
 
 > `readonly` **viewMode2d**: `"viewMode2d"` = `"viewMode2d"`
@@ -3795,7 +3903,7 @@ The scene host accepts `setViewMode` with `"2d"`: a 2D editor camera and planar 
 #### Remarks
 
 The play controls send `"heartbeat"`, `"playControls"`, `"logRelay"` and `"queryRuntime"`, plus
-`"screenshot"` when the game has a canvas. The scene
+`"screenshot"` when the game has a canvas and `"sendInput"` when it has `app.input`. The scene
 host sends `"heartbeat"` and whichever of `"gizmos"`, `"screenshot"`, `"viewMode2d"` and
 `"pick2d"` it supports; every `SceneMethod` not tied to one of them is required of a 0.3 scene
 host.
@@ -3881,7 +3989,7 @@ CSS pixels from the view's top-left corner: a DOM event's `offsetX` and `offsetY
 The methods the play view answers after `ready`. `play`, `pause`, `step` and `stop` answer with a
 [PlayState](#playstate-1); `playState` answers with a [PlayStateReport](#playstatereport); `playStats` answers with
 [PlayStats](#playstats-1); `screenshot` answers with a `ScreenshotResult`; `queryRuntime` answers with a
-[QueryRuntimeResult](#queryruntimeresult).
+[QueryRuntimeResult](#queryruntimeresult); `sendInput` answers with a [SendInputResult](#sendinputresult).
 
 #### Type Declaration
 
@@ -3931,6 +4039,16 @@ paused. Needs `HostCapability.screenshot`. Fails with `RpcErrorCode.notPlaying` 
 loop does not run (before the game starts it, after `stop` or `step`), and with
 `RpcErrorCode.notReady` before the game's first frame.
 
+##### sendInput
+
+> `readonly` **sendInput**: `"sendInput"` = `"sendInput"`
+
+Queues synthetic key and pointer events into the game's own input system, as if the game's page
+had received them ([SendInputParams](#sendinputparams), [SendInputResult](#sendinputresult)). Nothing reaches the
+editor's window or the operating system. Needs `HostCapability.sendInput`, which a game lists
+only when it has `app.input` (`@ignifx/input`). Fails with `RpcErrorCode.notPlaying` while the
+game is stopped; a paused or stepped game takes the events and resolves them on its next frame.
+
 ##### step
 
 > `readonly` **step**: `"step"` = `"step"`
@@ -3947,10 +4065,9 @@ Stops the frame loop with `app.stop()`. The editor reloads the view to reset the
 
 A host that answers them lists `HostCapability.playControls` in `ready`. Sent before `ready`, they
 fail with `RpcErrorCode.notReady`; sent to a host without them, with `RpcErrorCode.methodNotFound`.
-`playState`, `playStats`, `screenshot` and `queryRuntime` are additive 0.3 methods: a host from
-before one answers it with `RpcErrorCode.methodNotFound`. `screenshot` also needs
-`HostCapability.screenshot` in the play view's `ready`, and `queryRuntime`
-`HostCapability.queryRuntime`.
+`playState`, `playStats`, `screenshot`, `queryRuntime` and `sendInput` are additive 0.3 methods:
+a host from before one answers it with `RpcErrorCode.methodNotFound`. `screenshot`, `queryRuntime`
+and `sendInput` also need the `HostCapability` of the same name in the play view's `ready`.
 
 ***
 
@@ -4099,8 +4216,8 @@ A scene method that needs an open scene was called while none is open (`SceneMet
 
 A play method that needs a running game was called while it does not run. `PlayMethod.screenshot`
 needs the frame loop: it fails before the game starts it, after `stop`, and after `step`.
-`PlayMethod.queryRuntime` needs a game that plays or is paused (a stepped game is paused): it
-fails before the game starts and after `stop`. Additive in 0.3:
+`PlayMethod.queryRuntime` and `PlayMethod.sendInput` need a game that plays or is paused (a
+stepped game is paused): they fail before the game starts and after `stop`. Additive in 0.3:
 only a host that answers one of those methods in the play view sends it.
 
 ##### notReady
@@ -4460,6 +4577,14 @@ Lossy, `image/jpeg`.
 > `readonly` **png**: `"png"` = `"png"`
 
 Lossless, `image/png`.
+
+***
+
+### SEND\_INPUT\_MAX\_EVENTS
+
+> `const` **SEND\_INPUT\_MAX\_EVENTS**: `64` = `64`
+
+The most events one `sendInput` request may carry.
 
 ***
 
@@ -5551,6 +5676,73 @@ True for a PNG or JPEG data URL and sizes in range.
 
 ***
 
+### isSendInputEvent()
+
+> **isSendInputEvent**(`value`): `value is SendInputEvent`
+
+Checks one event of a `sendInput` request.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The value to test.
+
+#### Returns
+
+`value is SendInputEvent`
+
+True for a key event with a well-formed `control`, or a pointer event with `x` and `y`
+from 0 to 1 and, when present, an integer `button` from 0 to 4.
+
+***
+
+### isSendInputParams()
+
+> **isSendInputParams**(`value`): `value is SendInputParams`
+
+Checks the `params` of `sendInput`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `params`.
+
+#### Returns
+
+`value is SendInputParams`
+
+True for an `events` list of 1 to [SEND\_INPUT\_MAX\_EVENTS](#send_input_max_events) well-formed events.
+
+***
+
+### isSendInputResult()
+
+> **isSendInputResult**(`value`): `value is SendInputResult`
+
+Checks the `result` of `sendInput`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `result`.
+
+#### Returns
+
+`value is SendInputResult`
+
+True for an integer `queued` from 0 to [SEND\_INPUT\_MAX\_EVENTS](#send_input_max_events).
+
+***
+
 ### isSetAnimateMaterialsParams()
 
 > **isSetAnimateMaterialsParams**(`value`): `value is SetAnimateMaterialsParams`
@@ -5837,7 +6029,7 @@ const host = await startEditorHost({ editorOrigin: "ignifx-editor://app", canvas
 **`Beta`**
 
 Lets the editor drive a running game: answers the handshake with `hostKind: "play"`, then `play`,
-`pause`, `step`, `stop`, `playState`, `playStats`, `queryRuntime` and (with a canvas) `screenshot`, and sends `playStateChanged` when the game's phase
+`pause`, `step`, `stop`, `playState`, `playStats`, `queryRuntime`, (with a canvas) `screenshot` and (with `app.input`) `sendInput`, and sends `playStateChanged` when the game's phase
 changes, and `log`, `hostError` and `hotReloaded` for the game's log lines, `app.onError` reports
 and hot reloads (the newest 256 from before the handshake right after it).
 

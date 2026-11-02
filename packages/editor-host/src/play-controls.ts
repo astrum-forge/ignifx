@@ -14,6 +14,7 @@ import {
   RpcFailure,
 } from "./channel.js";
 import { resolveEngineVersion } from "./host.js";
+import { inputServiceOf, PlayInput } from "./play-input.js";
 import { queryRuntime } from "./play-query.js";
 import { PlayStatsReader } from "./play-stats.js";
 import {
@@ -27,7 +28,14 @@ import {
 } from "./protocol/index.js";
 import { checkScreenshotParams, takeScreenshot } from "./scene/screenshot.js";
 import type { EditorMessageTarget, RequestHandler } from "./channel.js";
-import type { PlayState, PlayStateReport, PlayStats, QueryRuntimeResult, ScreenshotResult } from "./protocol/index.js";
+import type {
+  PlayState,
+  PlayStateReport,
+  PlayStats,
+  QueryRuntimeResult,
+  ScreenshotResult,
+  SendInputResult,
+} from "./protocol/index.js";
 import type { App } from "@ignifx/core";
 
 /**
@@ -316,6 +324,15 @@ function playMethods(app: App, tracker: PhaseTracker): ReadonlyMap<string, Reque
   if (!app.isHeadless) {
     methods.set(PlayMethod.screenshot, async (params): Promise<ScreenshotResult> => playScreenshot(app, params));
   }
+  // Only a game with `app.input` can take input; the capability list asks the same question.
+  const input = inputServiceOf(app);
+  if (input !== null) {
+    const queue = new PlayInput(app, input);
+    methods.set(PlayMethod.sendInput, (params): SendInputResult => {
+      requireStarted(tracker, "send input to");
+      return queue.send(params);
+    });
+  }
   return methods;
 }
 
@@ -397,6 +414,7 @@ function openPlayControls(
         HostCapability.logRelay,
         HostCapability.queryRuntime,
         ...(app.isHeadless ? [] : [HostCapability.screenshot]),
+        ...(inputServiceOf(app) === null ? [] : [HostCapability.sendInput]),
       ],
       hostKind: HostKind.play,
     },
@@ -427,7 +445,7 @@ function openPlayControls(
 
 /**
  * Lets the editor drive a running game: answers the handshake with `hostKind: "play"`, then `play`,
- * `pause`, `step`, `stop`, `playState`, `playStats`, `queryRuntime` and (with a canvas) `screenshot`, and sends `playStateChanged` when the game's phase
+ * `pause`, `step`, `stop`, `playState`, `playStats`, `queryRuntime`, (with a canvas) `screenshot` and (with `app.input`) `sendInput`, and sends `playStateChanged` when the game's phase
  * changes, and `log`, `hostError` and `hotReloaded` for the game's log lines, `app.onError` reports
  * and hot reloads (the newest 256 from before the handshake right after it).
  *

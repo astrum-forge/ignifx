@@ -10,6 +10,7 @@ import {
   toJsonSchema,
   transformSchema,
 } from "@ignifx/core";
+import { input } from "@ignifx/input";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { resolveEngineVersion } from "../src/host.js";
 import { startEditorPlayControls } from "../src/play-controls.js";
@@ -45,6 +46,8 @@ import {
   isSchemaSet,
   isScreenshotParams,
   isScreenshotResult,
+  isSendInputParams,
+  isSendInputResult,
   isSetAnimateMaterialsParams,
   isSetGizmoParams,
   isSettingsSet,
@@ -174,6 +177,7 @@ const PARAMS_GUARDS: Readonly<Record<string, (value: unknown) => boolean>> = {
   screenshotJpeg: isScreenshotParams,
   screenshotGame: isScreenshotParams,
   queryRuntime: isQueryRuntimeParams,
+  sendInput: isSendInputParams,
   setViewMode: isSetViewModeParams,
   setAnimateMaterials: isSetAnimateMaterialsParams,
   getColliderOutlines: isEntitySelection,
@@ -213,6 +217,7 @@ const RESULT_GUARDS: Readonly<Record<string, (value: unknown) => boolean>> = {
   screenshotResponse: isScreenshotResult,
   screenshotGameResponse: isScreenshotResult,
   queryRuntimeResponse: isQueryRuntimeResult,
+  sendInputResponse: isSendInputResult,
   getSchemasResponse: isSchemaSet,
   describeSettingsResponse: isSettingsSet,
   getColliderOutlinesResponse: isColliderOutlineSet,
@@ -895,7 +900,8 @@ describe("the editor's 0.3 wire fixture, through live play controls", () => {
 
 describe("the editor's 0.3 wire fixture, through a canvas-backed play view (E47)", () => {
   it("lists screenshot, refuses it while the game is not running, and answers an image while it is", async () => {
-    const app = await createApp({ headless: true });
+    // The fixture's game also has `@ignifx/input`, as every template does, so it lists `sendInput`.
+    const app = await createApp({ headless: true, extensions: [input({ gamepadReader: null })] });
     // A headless app has no GPU; a stubbed capture and canvas stand in for the game's.
     Object.defineProperty(app, "isHeadless", { value: false });
     const frame: RenderCapture = { width: 1920, height: 1080, data: new Uint8ClampedArray(4) };
@@ -977,6 +983,31 @@ describe("the editor's 0.3 wire fixture, through queryRuntime in the play view (
 
       const unknown = { ...wire("queryRuntime"), params: { entity: "01M4ZEB9E0GG0Q6R22YXV3AVKZ" } };
       expectWire(await peer.request(unknown), wire("queryRuntimeUnknownEntity"));
+    } finally {
+      peer.close();
+      controls.dispose();
+      app.dispose();
+    }
+  });
+});
+
+describe("the editor's 0.3 wire fixture, through sendInput in the play view (E49)", () => {
+  it("refuses a stopped game, then queues the events into the game's own input", async () => {
+    const app = await createApp({ headless: true, extensions: [input({ gamepadReader: null })] });
+    const target = new EventTarget();
+    const controls = startEditorPlayControls(app, { editorOrigin: EDITOR_ORIGIN, messageTarget: target });
+    const peer = new Wire(connect(target));
+    try {
+      await peer.request(wire("hello"));
+
+      expectWire(await peer.request(wire("sendInput")), wire("sendInputNotPlaying"));
+
+      await peer.request({ jsonrpc: "2.0", id: 23, method: PlayMethod.step });
+      expectWire(await peer.request(wire("sendInput")), wire("sendInputResponse"));
+      await peer.request({ jsonrpc: "2.0", id: 24, method: PlayMethod.step });
+      const key = app.input.resolveControl("<Keyboard>/w");
+      const button = app.input.resolveControl("<Mouse>/leftButton");
+      expect([key.device.valueAt(key.control.offset), button.device.valueAt(button.control.offset)]).toEqual([1, 1]);
     } finally {
       peer.close();
       controls.dispose();

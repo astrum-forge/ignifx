@@ -1,4 +1,5 @@
 import { array, Component, createApp, createMemorySink, f32, Script, str } from "@ignifx/core";
+import { input } from "@ignifx/input";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CLIPPED_MARKER } from "../src/app-reports.js";
 import { listenForEditorPlayControls, startEditorPlayControls } from "../src/play-controls.js";
@@ -11,6 +12,7 @@ import {
   isLogParams,
   isQueryRuntimeResult,
   isScreenshotResult,
+  isSendInputResult,
   PlayNotification,
   RpcErrorCode,
 } from "../src/protocol/index.js";
@@ -879,6 +881,176 @@ describe("queryRuntime in the play view (engine ask E48)", () => {
 
     expect((await peer.request("queryRuntime", { entity: "a" }))["error"]).toMatchObject({
       code: RpcErrorCode.notReady,
+    });
+  });
+});
+
+/**
+ * Reads a control of the game's input.
+ *
+ * @param app - The game's app.
+ * @param path - The binding path.
+ * @returns The control's value, both components for a vector.
+ */
+function read(app: App, path: string): readonly number[] {
+  const { device, control } = app.input.resolveControl(path);
+  return control.kind === "vector2"
+    ? [device.valueAt(control.offset), device.valueAt(control.offset + 1)]
+    : [device.valueAt(control.offset)];
+}
+
+describe("sendInput in the play view (engine ask E49)", () => {
+  /**
+   * Builds a game with `@ignifx/input` and play controls, handshaken.
+   *
+   * @returns The app and the editor's end.
+   */
+  async function inputPlayView(): Promise<{ app: App; peer: EditorPeer }> {
+    const app = await createApp({ headless: true, extensions: [input({ gamepadReader: null })] });
+    const target = new EventTarget();
+    const controls = startEditorPlayControls(app, { editorOrigin: EDITOR_ORIGIN, messageTarget: target });
+    const peer = connect(target);
+    cleanups.push(() => {
+      peer.close();
+      controls.dispose();
+      app.dispose();
+    });
+    return { app, peer };
+  }
+
+  it("lists sendInput when the game has app.input, and presses and releases a key on the next frame", async () => {
+    const { app, peer } = await inputPlayView();
+
+    expect((await peer.hello())["result"]).toMatchObject({
+      capabilities: ["heartbeat", "playControls", "logRelay", "queryRuntime", "sendInput"],
+    });
+    await peer.request("step");
+    const sent = (await peer.request("sendInput", { events: [{ type: "keydown", control: "w" }] }))["result"];
+
+    expect(isSendInputResult(sent)).toBe(true);
+    expect(sent).toEqual({ queued: 1 });
+    expect(read(app, "<Keyboard>/w")).toEqual([0]);
+    await peer.request("step");
+    expect(read(app, "<Keyboard>/w")).toEqual([1]);
+    await peer.request("sendInput", { events: [{ type: "keyup", control: "w" }] });
+    await peer.request("step");
+    expect(read(app, "<Keyboard>/w")).toEqual([0]);
+  });
+
+  it("moves and presses the pointer at a fraction of the canvas, in backing pixels", async () => {
+    const { app, peer } = await inputPlayView();
+    await peer.hello();
+    // A headless game has no canvas; a stand-in one is 800 × 400 backing pixels, shown at 400 × 200.
+    Object.defineProperty(app.renderer, "surface", { value: { width: 800, height: 400, clientWidth: 400 } });
+    await peer.request("step");
+
+    await peer.request("sendInput", {
+      events: [
+        { type: "pointermove", x: 0.25, y: 0.5 },
+        { type: "pointerdown", x: 0.5, y: 0.5, button: 0 },
+      ],
+    });
+    await peer.request("step");
+
+    expect(read(app, "<Pointer>/position")).toEqual([400, 200]);
+    expect(read(app, "<Mouse>/leftButton")).toEqual([1]);
+    await peer.request("sendInput", { events: [{ type: "pointerup", x: 0.5, y: 0.5 }] });
+    await peer.request("step");
+    expect(read(app, "<Mouse>/leftButton")).toEqual([0]);
+  });
+
+  it("hands app.input the events in order, with positions in backing pixels and motion in CSS pixels", async () => {
+    const app = await createApp({ headless: true });
+    const simulateEvent = vi.fn();
+    // A stand-in for `@ignifx/input`'s service: the host finds it by name and calls it by shape.
+    Object.defineProperty(app, "input", { value: { simulateEvent } });
+    Object.defineProperty(app.renderer, "surface", { value: { width: 1000, height: 500, clientWidth: 500 } });
+    const target = new EventTarget();
+    const controls = startEditorPlayControls(app, { editorOrigin: EDITOR_ORIGIN, messageTarget: target });
+    const peer = connect(target);
+    cleanups.push(() => {
+      peer.close();
+      controls.dispose();
+      app.dispose();
+    });
+    expect((await peer.hello())["result"]).toMatchObject({
+      capabilities: ["heartbeat", "playControls", "logRelay", "queryRuntime", "sendInput"],
+    });
+    await peer.request("play");
+
+    expect(
+      (
+        await peer.request("sendInput", {
+          events: [
+            { type: "pointermove", x: 0.1, y: 0.2 },
+            { type: "pointermove", x: 0.3, y: 0.2 },
+            { type: "pointerdown", x: 0.3, y: 0.2, button: 2 },
+            { type: "keydown", control: "space" },
+          ],
+        })
+      )["result"],
+    ).toEqual({ queued: 4 });
+    expect(simulateEvent.mock.calls.map(([event]: unknown[]) => event)).toEqual([
+      { type: "pointermove", x: 100, y: 100, deltaX: 0, deltaY: 0, button: 0 },
+      { type: "pointermove", x: 300, y: 100, deltaX: 100, deltaY: 0, button: 0 },
+      { type: "pointerdown", x: 300, y: 100, deltaX: 0, deltaY: 0, button: 2 },
+      { type: "keydown", code: "space" },
+    ]);
+  });
+
+  it("refuses with notPlaying while the game is stopped, and takes input while paused or stepped", async () => {
+    const { peer } = await inputPlayView();
+    await peer.hello();
+    const send = async (): Promise<Record<string, unknown>> =>
+      peer.request("sendInput", { events: [{ type: "keydown", control: "space" }] });
+
+    expect((await send())["error"]).toMatchObject({ code: RpcErrorCode.notPlaying });
+    await peer.request("step");
+    expect((await send())["result"]).toEqual({ queued: 1 });
+    await peer.request("play");
+    await peer.request("pause");
+    expect((await send())["result"]).toEqual({ queued: 1 });
+    await peer.request("stop");
+    expect((await send())["error"]).toMatchObject({ code: RpcErrorCode.notPlaying });
+  });
+
+  it("refuses malformed events, more than 64, and a key the keyboard does not have, queuing none", async () => {
+    const { app, peer } = await inputPlayView();
+    await peer.hello();
+    await peer.request("step");
+    const tooMany = Array.from({ length: 65 }, () => ({ type: "keydown", control: "w" }));
+
+    for (const events of [
+      [],
+      tooMany,
+      [{ type: "keydown" }],
+      [{ type: "keydown", control: "<Mouse>/leftButton" }],
+      [{ type: "pointermove", x: 1.5, y: 0 }],
+      [{ type: "pointerdown", x: 0, y: 0, button: 7 }],
+      [{ type: "wheel", x: 0, y: 0 }],
+      [{ type: "textinput", control: "a" }],
+    ]) {
+      // oxlint-disable-next-line no-await-in-loop -- one request at a time, as the channel answers.
+      expect((await peer.request("sendInput", { events }))["error"], JSON.stringify(events[0])).toMatchObject({
+        code: RpcErrorCode.invalidParams,
+      });
+    }
+    const unknownKey = await peer.request("sendInput", {
+      events: [
+        { type: "keydown", control: "w" },
+        { type: "keydown", control: "KeyW" },
+      ],
+    });
+    expect(unknownKey["error"]).toMatchObject({ code: RpcErrorCode.invalidParams });
+    await peer.request("step");
+    expect(read(app, "<Keyboard>/w")).toEqual([0]);
+  });
+
+  it("has no sendInput in a game without app.input", async () => {
+    const { peer } = await playView();
+
+    expect((await peer.request("sendInput", { events: [{ type: "keydown", control: "w" }] }))["error"]).toMatchObject({
+      code: RpcErrorCode.methodNotFound,
     });
   });
 });

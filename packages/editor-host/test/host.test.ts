@@ -143,7 +143,7 @@ describe("startEditorHost", () => {
     const peer = editor(target);
     await peer.hello();
 
-    for (const method of ["reloadScripts", "setGizmo", "screenshot", "play", "queryRuntime"]) {
+    for (const method of ["reloadScripts", "setGizmo", "screenshot", "play", "queryRuntime", "sendInput"]) {
       // One request at a time, as the editor sends them.
       // oxlint-disable-next-line no-await-in-loop -- see above.
       const response = await peer.request(method, {});

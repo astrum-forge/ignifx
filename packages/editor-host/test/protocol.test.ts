@@ -48,8 +48,10 @@ describe("the protocol mirror", () => {
       logRelay: "logRelay",
       hotReloadDefaults: "hotReloadDefaults",
       queryRuntime: "queryRuntime",
+      sendInput: "sendInput",
     });
     expect(page.QUERY_RUNTIME_MAX_COMPONENTS).toBe(64);
+    expect(page.SEND_INPUT_MAX_EVENTS).toBe(64);
   });
 
   it("recognises well-formed envelopes only", () => {
@@ -94,6 +96,7 @@ describe("@ignifx/editor-host entries", () => {
       playStats: "playStats",
       screenshot: "screenshot",
       queryRuntime: "queryRuntime",
+      sendInput: "sendInput",
     });
     expect(page.PlayNotification).toEqual({
       playStateChanged: "playStateChanged",

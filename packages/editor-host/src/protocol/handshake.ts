@@ -59,7 +59,7 @@ export type HostKind = (typeof HostKind)[keyof typeof HostKind];
  *
  * @remarks
  * The play controls send `"heartbeat"`, `"playControls"`, `"logRelay"` and `"queryRuntime"`, plus
- * `"screenshot"` when the game has a canvas. The scene
+ * `"screenshot"` when the game has a canvas and `"sendInput"` when it has `app.input`. The scene
  * host sends `"heartbeat"` and whichever of `"gizmos"`, `"screenshot"`, `"viewMode2d"` and
  * `"pick2d"` it supports; every `SceneMethod` not tied to one of them is required of a 0.3 scene
  * host.
@@ -110,6 +110,13 @@ export const HostCapability = {
    * `RpcErrorCode.methodNotFound`.
    */
   queryRuntime: "queryRuntime",
+  /**
+   * The play controls answer `sendInput`: synthetic key and pointer events queued into the game's
+   * own input system (`app.input` from `@ignifx/input`), never into the editor's window. Listed only
+   * when the game has `app.input`. From engine ask E49 (additive in 0.3); without it, the play view
+   * answers `sendInput` with `RpcErrorCode.methodNotFound`.
+   */
+  sendInput: "sendInput",
 } as const;
 
 /**
