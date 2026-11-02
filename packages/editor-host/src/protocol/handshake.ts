@@ -60,8 +60,8 @@ export type HostKind = (typeof HostKind)[keyof typeof HostKind];
  * @remarks
  * The play controls send `"heartbeat"`, `"playControls"`, `"logRelay"` and `"queryRuntime"`, plus
  * `"screenshot"` when the game has a canvas and `"sendInput"` when it has `app.input`. The scene
- * host sends `"heartbeat"` and whichever of `"gizmos"`, `"screenshot"`, `"viewMode2d"` and
- * `"pick2d"` it supports; every `SceneMethod` not tied to one of them is required of a 0.3 scene
+ * host sends `"heartbeat"` and whichever of `"gizmos"`, `"screenshot"`, `"viewMode2d"`, `"pick2d"`
+ * and `"grid"` it supports; every `SceneMethod` not tied to one of them is required of a 0.3 scene
  * host.
  *
  * @public
@@ -117,6 +117,13 @@ export const HostCapability = {
    * answers `sendInput` with `RpcErrorCode.methodNotFound`.
    */
   sendInput: "sendInput",
+  /**
+   * The scene host draws a grid in the view and answers `setGrid`: a ground grid at `y = 0` in 3D
+   * view mode and a unit grid (a pixel grid when zoomed in) over the 2D view. From engine ask E31
+   * (additive in 0.3); without it, the scene host answers `setGrid` with
+   * `RpcErrorCode.methodNotFound`.
+   */
+  grid: "grid",
 } as const;
 
 /**

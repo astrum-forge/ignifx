@@ -281,6 +281,7 @@ async function sceneView(scene: SceneFile = SCENE, framed = "BOX"): Promise<Edit
     HostCapability.pick2d,
     HostCapability.logRelay,
     HostCapability.hotReloadDefaults,
+    HostCapability.grid,
   ]);
   host = await starting;
   announced = (await peer.nextNotification(SceneNotification.schemasChanged))["params"];
@@ -319,6 +320,31 @@ describe("the scene view on a WebGPU canvas", () => {
     await frames(4);
     const cleared = await view.app.renderer.captureScreenshot();
     expect(changedPixels(unselected.data, cleared.data)).toBeLessThan(20);
+  }, 60_000);
+
+  it("draws the ground grid from the editor scene only, unpickable, and hides it on setGrid visible false", async () => {
+    const view = await sceneView();
+    const grids = (): { visible?: boolean; pickable?: boolean }[] =>
+      view.app.lite.scene.meshes.filter((mesh) => mesh.name === "ignifx-editor-grid");
+    expect(grids()).toHaveLength(1);
+    expect(grids()[0]).toMatchObject({ visible: true, pickable: false });
+    // The grid's entity lives in the host's `editor` scene, never in the document.
+    expect(view.editorScene.roots.map((entity) => entity.name)).toContain("Scene Grid");
+    const document = await call("readBack", {});
+    expect(JSON.stringify(document)).not.toContain("Scene Grid");
+    const shown = await view.app.renderer.captureScreenshot();
+
+    await call("setGrid", { visible: false });
+    await frames(4);
+    expect(grids()[0]?.visible).toBe(false);
+    const hidden = await view.app.renderer.captureScreenshot();
+    expect(changedPixels(shown.data, hidden.data)).toBeGreaterThan(100);
+
+    await call("setGrid", { size: 0.25 });
+    await frames(4);
+    expect(grids()[0]?.visible).toBe(true);
+    const refused: Received | undefined = await peer?.request("setGrid", { size: 0 });
+    expect(refused).toHaveProperty("error.code", -32_602);
   }, 60_000);
 
   it("picks the box in CSS and backing pixels at device pixel ratio 2, and misses beside it", async () => {

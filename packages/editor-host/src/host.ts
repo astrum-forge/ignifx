@@ -172,6 +172,7 @@ export async function startEditorHost(options: EditorHostOptions): Promise<Edito
         HostCapability.pick2d,
         HostCapability.logRelay,
         HostCapability.hotReloadDefaults,
+        HostCapability.grid,
       ]
     : [HostCapability.heartbeat, HostCapability.logRelay, HostCapability.hotReloadDefaults];
   let channel: Channel | null = null;

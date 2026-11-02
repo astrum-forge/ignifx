@@ -263,6 +263,12 @@ export const GizmoSpace: {
 export type GizmoSpace = (typeof GizmoSpace)[keyof typeof GizmoSpace];
 
 // @public
+export const GRID_MAX_SIZE = 1e3;
+
+// @public
+export const GRID_MIN_SIZE = .001;
+
+// @public
 export const HandshakeMethod: {
     readonly hello: "hello";
     readonly ping: "ping";
@@ -303,6 +309,7 @@ export const HostCapability: {
     readonly hotReloadDefaults: "hotReloadDefaults";
     readonly queryRuntime: "queryRuntime";
     readonly sendInput: "sendInput";
+    readonly grid: "grid";
 };
 
 // @public
@@ -527,6 +534,9 @@ export function isSetAnimateMaterialsParams(value: unknown): value is SetAnimate
 
 // @public
 export function isSetGizmoParams(value: unknown): value is SetGizmoParams;
+
+// @public
+export function isSetGridParams(value: unknown): value is SetGridParams;
 
 // @public
 export function isSettingsSet(value: unknown): value is SettingsSet;
@@ -999,6 +1009,7 @@ export const SceneMethod: {
     readonly setAnimateMaterials: "setAnimateMaterials";
     readonly getColliderOutlines: "getColliderOutlines";
     readonly sampleAnimation: "sampleAnimation";
+    readonly setGrid: "setGrid";
 };
 
 // @public
@@ -1053,7 +1064,7 @@ export const SceneOpKind: {
 export type SceneOpKind = (typeof SceneOpKind)[keyof typeof SceneOpKind];
 
 // @public
-export type SceneRequest = RpcRequestWithParams<typeof SceneMethod.openScene, OpenSceneParams> | RpcRequest<typeof SceneMethod.closeScene, never> | RpcRequestWithParams<typeof SceneMethod.applyOps, ApplyOpsParams> | RpcRequestWithParams<typeof SceneMethod.readBack, ReadBackParams> | RpcRequestWithParams<typeof SceneMethod.select, EntitySelection> | RpcRequestWithParams<typeof SceneMethod.setGizmo, SetGizmoParams> | RpcRequestWithParams<typeof SceneMethod.frame, FrameParams> | RpcRequestWithParams<typeof SceneMethod.pick, PickParams> | RpcRequestWithParams<typeof SceneMethod.screenshot, ScreenshotParams> | RpcRequest<typeof SceneMethod.getSchemas, never> | RpcRequest<typeof SceneMethod.describeSettings, never> | RpcRequestWithParams<typeof SceneMethod.setViewMode, SetViewModeParams> | RpcRequestWithParams<typeof SceneMethod.setAnimateMaterials, SetAnimateMaterialsParams> | RpcRequestWithParams<typeof SceneMethod.getColliderOutlines, EntitySelection> | RpcRequestWithParams<typeof SceneMethod.sampleAnimation, SampleAnimationParams>;
+export type SceneRequest = RpcRequestWithParams<typeof SceneMethod.openScene, OpenSceneParams> | RpcRequest<typeof SceneMethod.closeScene, never> | RpcRequestWithParams<typeof SceneMethod.applyOps, ApplyOpsParams> | RpcRequestWithParams<typeof SceneMethod.readBack, ReadBackParams> | RpcRequestWithParams<typeof SceneMethod.select, EntitySelection> | RpcRequestWithParams<typeof SceneMethod.setGizmo, SetGizmoParams> | RpcRequestWithParams<typeof SceneMethod.frame, FrameParams> | RpcRequestWithParams<typeof SceneMethod.pick, PickParams> | RpcRequestWithParams<typeof SceneMethod.screenshot, ScreenshotParams> | RpcRequest<typeof SceneMethod.getSchemas, never> | RpcRequest<typeof SceneMethod.describeSettings, never> | RpcRequestWithParams<typeof SceneMethod.setViewMode, SetViewModeParams> | RpcRequestWithParams<typeof SceneMethod.setAnimateMaterials, SetAnimateMaterialsParams> | RpcRequestWithParams<typeof SceneMethod.getColliderOutlines, EntitySelection> | RpcRequestWithParams<typeof SceneMethod.sampleAnimation, SampleAnimationParams> | RpcRequestWithParams<typeof SceneMethod.setGrid, SetGridParams>;
 
 // @public
 export interface SchemaDescription {
@@ -1171,6 +1182,12 @@ export interface SetGizmoParams {
     readonly mode: GizmoMode;
     readonly snap: GizmoSnap | null;
     readonly space: GizmoSpace;
+}
+
+// @public
+export interface SetGridParams {
+    readonly size?: number;
+    readonly visible?: boolean;
 }
 
 // @public

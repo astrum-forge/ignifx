@@ -2859,6 +2859,28 @@ Which axes it follows.
 
 ***
 
+### SetGridParams
+
+The parameters of `setGrid`. Each call sets the whole grid: a field left out takes its default.
+
+#### Properties
+
+##### size?
+
+> `readonly` `optional` **size?**: `number`
+
+The spacing of the minor lines, in metres, from [GRID\_MIN\_SIZE](#grid_min_size) to [GRID\_MAX\_SIZE](#grid_max_size).
+Defaults to `1`. Every tenth line is a major line; when the lines get too dense to see, the
+host draws every tenth one instead.
+
+##### visible?
+
+> `readonly` `optional` **visible?**: `boolean`
+
+Whether the grid draws. Defaults to `true`, which is also how the host starts.
+
+***
+
 ### SetOverrideOp
 
 Sets an override on an instance root's entry, replacing the override with the same identity or
@@ -3269,7 +3291,7 @@ A log line's severity: the engine's `LogLevel`.
 > **NullResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<`null`\>
 
 The success answer of the `SceneMethod`s that return nothing: `closeScene`, `setGizmo`, `frame`,
-`setViewMode` and `setAnimateMaterials`.
+`setViewMode`, `setAnimateMaterials` and `setGrid`.
 
 ***
 
@@ -3484,7 +3506,7 @@ The union of the names in `SceneOpKind`.
 
 ### SceneRequest
 
-> **SceneRequest** = [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`openScene`](#openscene), [`OpenSceneParams`](#opensceneparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`closeScene`](#closescene), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`applyOps`](#applyops), [`ApplyOpsParams`](#applyopsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`readBack`](#readback), [`ReadBackParams`](#readbackparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`select`](#select), [`EntitySelection`](#entityselection)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setGizmo`](#setgizmo), [`SetGizmoParams`](#setgizmoparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`frame`](#frame), [`FrameParams`](#frameparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`pick`](#pick), [`PickParams`](#pickparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`screenshot`](#screenshot-2), [`ScreenshotParams`](#screenshotparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`getSchemas`](#getschemas), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`describeSettings`](#describesettings), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setViewMode`](#setviewmode), [`SetViewModeParams`](#setviewmodeparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setAnimateMaterials`](#setanimatematerials), [`SetAnimateMaterialsParams`](#setanimatematerialsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`getColliderOutlines`](#getcollideroutlines), [`EntitySelection`](#entityselection)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`sampleAnimation`](#sampleanimation), [`SampleAnimationParams`](#sampleanimationparams)\>
+> **SceneRequest** = [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`openScene`](#openscene), [`OpenSceneParams`](#opensceneparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`closeScene`](#closescene), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`applyOps`](#applyops), [`ApplyOpsParams`](#applyopsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`readBack`](#readback), [`ReadBackParams`](#readbackparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`select`](#select), [`EntitySelection`](#entityselection)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setGizmo`](#setgizmo), [`SetGizmoParams`](#setgizmoparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`frame`](#frame), [`FrameParams`](#frameparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`pick`](#pick), [`PickParams`](#pickparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`screenshot`](#screenshot-2), [`ScreenshotParams`](#screenshotparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`getSchemas`](#getschemas), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`describeSettings`](#describesettings), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setViewMode`](#setviewmode), [`SetViewModeParams`](#setviewmodeparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setAnimateMaterials`](#setanimatematerials), [`SetAnimateMaterialsParams`](#setanimatematerialsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`getColliderOutlines`](#getcollideroutlines), [`EntitySelection`](#entityselection)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`sampleAnimation`](#sampleanimation), [`SampleAnimationParams`](#sampleanimationparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setGrid`](#setgrid), [`SetGridParams`](#setgridparams)\>
 
 Editor → scene host: one of the `SceneMethod`s. `closeScene`, `getSchemas` and `describeSettings`
 take no parameters.
@@ -3786,6 +3808,22 @@ The world's axes.
 
 ***
 
+### GRID\_MAX\_SIZE
+
+> `const` **GRID\_MAX\_SIZE**: `1000` = `1000`
+
+The largest grid spacing `setGrid` accepts, in metres.
+
+***
+
+### GRID\_MIN\_SIZE
+
+> `const` **GRID\_MIN\_SIZE**: `0.001` = `0.001`
+
+The smallest grid spacing `setGrid` accepts, in metres.
+
+***
+
 ### HandshakeMethod
 
 > `const` **HandshakeMethod**: `object`
@@ -3849,6 +3887,15 @@ The optional features a host lists in its `ready` result.
 
 The scene host draws gizmos on the primary selection, answers `setGizmo`, and sends
 `transformDragging` and `transformDragged`.
+
+##### grid
+
+> `readonly` **grid**: `"grid"` = `"grid"`
+
+The scene host draws a grid in the view and answers `setGrid`: a ground grid at `y = 0` in 3D
+view mode and a unit grid (a pixel grid when zoomed in) over the 2D view. From engine ask E31
+(additive in 0.3); without it, the scene host answers `setGrid` with
+`RpcErrorCode.methodNotFound`.
 
 ##### heartbeat
 
@@ -3923,8 +3970,8 @@ The scene host accepts `setViewMode` with `"2d"`: a 2D editor camera and planar 
 
 The play controls send `"heartbeat"`, `"playControls"`, `"logRelay"` and `"queryRuntime"`, plus
 `"screenshot"` when the game has a canvas and `"sendInput"` when it has `app.input`. The scene
-host sends `"heartbeat"` and whichever of `"gizmos"`, `"screenshot"`, `"viewMode2d"` and
-`"pick2d"` it supports; every `SceneMethod` not tied to one of them is required of a 0.3 scene
+host sends `"heartbeat"` and whichever of `"gizmos"`, `"screenshot"`, `"viewMode2d"`, `"pick2d"`
+and `"grid"` it supports; every `SceneMethod` not tied to one of them is required of a 0.3 scene
 host.
 
 ***
@@ -4414,6 +4461,13 @@ answers `RpcErrorCode.methodNotFound`. Additive in 0.3.
 > `readonly` **setGizmo**: `"setGizmo"` = `"setGizmo"`
 
 Sets the gizmo's mode, space and snapping. Needs `HostCapability.gizmos`. Answers `null`.
+
+##### setGrid
+
+> `readonly` **setGrid**: `"setGrid"` = `"setGrid"`
+
+Shows or hides the view's grid and sets its spacing (engine ask E31). Needs
+`HostCapability.grid`. Answers `null`. Additive in 0.3.
 
 ##### setViewMode
 
@@ -5836,6 +5890,29 @@ The received `params`.
 `value is SetGizmoParams`
 
 True for a known mode and space and a snap of three non-negative numbers, or `null`.
+
+***
+
+### isSetGridParams()
+
+> **isSetGridParams**(`value`): `value is SetGridParams`
+
+Checks the parameters of `setGrid`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `params`.
+
+#### Returns
+
+`value is SetGridParams`
+
+True for an object whose `visible`, if present, is a boolean and whose `size`, if
+present, is a number from [GRID\_MIN\_SIZE](#grid_min_size) to [GRID\_MAX\_SIZE](#grid_max_size).
 
 ***
 
