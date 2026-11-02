@@ -138,6 +138,15 @@ Attached to the main camera entity. Ordered list of effects; each maps to a Lite
 - A `PostProcessStack` attached without the feature logs `IGX-0710` once and is inert. The feature costs one full-screen blit per frame while no chain is recorded, which is why it is off by default.
 - **Tuning is live; shape is rebuilt (2026-09-08).** A write to `bloom.weight`/`kernel`/`threshold`/`exposure` or to any SMAA field on a running stack is re-uploaded to the recorded Lite task on the next `PreRender` (`updateUniforms()`), and only when a value changed. A change to the chain's _shape_ — which effects are enabled, their `order`, or bloom's `scale`, which sizes the blur targets at creation — disposes the chain and records a new one; the old tasks stay in the frame graph disabled, because Lite has no removal. Until this date the records were read once, when the chain was first built, and a slider bound to `bloom.threshold` did nothing.
 
+**HDR output (`rendering.hdr`, GI plan step G2, 2026-11-02).** Off by default; on, the render path is built by `src/lite/gpu/hdr-output.ts`, a chunk `createRenderEngine` imports only then. The scene draws into an `rgba16float` target (with MSAA, a multisampled `rgba16float` target that resolves into it; verified on SwiftShader with 4x, no validation error). Lite's PBR shader tone maps, encodes and clamps every fragment, so a material plugin (`ignifx-hdr-linear-output`, spike S1) saves the colour before that block and restores it before the fragment is written; the renderer gives it to every PBR material in the scene each frame, rebuilding a material it patches after registration. One output pass then applies `scene.imageProcessing` (exposure, contrast and the standard, ACES or neutral curve, whatever the `Environment` or `loadEnvironment` set) with the same `pow(1/2.2)` encode, clamp and contrast, so a PBR-only scene presents the same image as without HDR. The clear colour is stored decoded (`pow(c, 2.2)`) and goes through the same pass. The pass writes the swapchain, or `sceneColor` when a `PostProcessStack` chain is recorded, so built-in and custom effects still see encoded colour:
+
+```text
+[shadow] → scene ──→ hdr (rgba16float) ──→ output ──→ swapchain
+                                             └──→ sceneColor ─ chain → swapchain
+```
+
+Not yet linear (G3): fog (dropped by the restore), Standard materials, surface shaders, sprites, particles and the skybox, which still write encoded colour that the output pass encodes again. Unverified: device-loss recovery of the `rgba16float` target, and the clear colour with `rendering.srgb`.
+
 ### 2.8 Custom shaders
 
 Design and rationale: `docs/plan/2026-09-terrain-particles-shaders.md` §3 and ADR-0024. Three authoring forms, all `.wgsl` files whose `// @ignifx` pragma comments are the declaration; nothing is kept in sync with a JSON manifest, and the declaration doubles as the inspector schema.

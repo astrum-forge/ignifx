@@ -46,6 +46,7 @@ describe("the section's defaults", () => {
     expect(defaults.maxDevicePixelRatio).toBe(0);
     expect(defaults.requiredLimits).toEqual({});
     expect(defaults.brdfLut).toBe(DEFAULT_BRDF_LUT_ADDRESS);
+    expect(defaults.hdr).toBe(false);
   });
 
   it("hands out a fresh mutable object each time", () => {
@@ -93,6 +94,20 @@ describe("reading the section from a project", () => {
     expect(harness.renderer.features.skeletons).toBe(false);
     expect(harness.renderer.features.deviceLostRecovery).toBe(false);
     expect(harness.renderer.features.postProcessing).toBe(false);
+  });
+
+  it("declares hdr, off by default, with a tooltip, and reads a project's value", async () => {
+    const declared = renderingSettingsSchema()["hdr"];
+    expect(declared?.kind).toBe("bool");
+    expect(declared?.createDefault()).toBe(false);
+    expect(declared?.options.tooltip).toMatch(/HDR/u);
+    expect(validateProps(renderingSettingsSchema(), { ...defaultRenderingSettings(), hdr: "yes" })).not.toEqual([]);
+
+    harness = await createRenderHarness({ settings: { rendering: { hdr: true } } });
+    const section = harness.app.settings.section<RenderingSettings>(RENDERING_SETTINGS_SECTION);
+    expect(section.hdr).toBe(true);
+    // A headless app has no device, so it builds no render path at all.
+    expect(harness.renderer.presenter).toBeNull();
   });
 
   it("declares postProcessing, off by default, and validates it as a boolean", async () => {

@@ -18,11 +18,12 @@ import type { App, Entity, ScriptCallbacks } from "@ignifx/core";
  * The smallest complete ignifx app: a camera, a shadow-casting directional light, a ground plane,
  * and a spinning PBR cube.
  *
- * Two query flags exist for the visual golden suite (`tests/visual/`) and are worth knowing about
+ * Three query flags exist for the visual golden suite (`tests/visual/`) and are worth knowing about
  * anyway:
  *
  * - `?ortho=1` switches the camera to an orthographic projection.
  * - `?static=1` stops time and pins the cube at a fixed angle, so the frame is reproducible.
+ * - `?hdr=1` turns on `rendering.hdr`, which should present the same image.
  *
  * `window.__ignifxReady` resolves to `"ready"` once the scene has presented a settled frame, or to
  * `"unsupported"` when the browser has no WebGPU. It is assigned before the first `await` so a test
@@ -174,6 +175,21 @@ function buildScene(app: App, orthographic: boolean): Entity {
   return cube;
 }
 
+/**
+ * The project settings, with `rendering.hdr` switched on when the visual suite asks for `?hdr=1`.
+ *
+ * @param hdr - Whether to render through the HDR target and output pass.
+ * @returns The settings `createApp` takes.
+ */
+function projectSettings(hdr: boolean): Readonly<Record<string, unknown>> {
+  const config = import.meta.env.IGNIFX_CONFIG;
+  if (!hdr) {
+    return config;
+  }
+  const rendering: unknown = config["rendering"];
+  return { ...config, rendering: { ...(typeof rendering === "object" ? rendering : {}), hdr: true } };
+}
+
 async function main(): Promise<AppStatus> {
   const canvas = document.querySelector("#game");
   if (!(canvas instanceof HTMLCanvasElement)) {
@@ -183,7 +199,7 @@ async function main(): Promise<AppStatus> {
   const flags = new URLSearchParams(window.location.search);
   let app: App;
   try {
-    app = await createApp({ canvas, settings: import.meta.env.IGNIFX_CONFIG });
+    app = await createApp({ canvas, settings: projectSettings(flags.get("hdr") === "1") });
   } catch (error) {
     // IGX-0701 is the one failure a shipped game must handle itself: the browser has no WebGPU and
     // ignifx has no fallback renderer by decision (ADR-0001).

@@ -20,7 +20,8 @@ import type { App, EnvironmentAsset, ModelAsset } from "@ignifx/core";
 
 /**
  * Load a glTF model with environment lighting and a DOM orbit camera.
- * `?post=1` enables post-processing; `?static=1` freezes time for visual captures.
+ * `?post=1` enables post-processing; `?static=1` freezes time for visual captures; `?hdr=1` turns on
+ * `rendering.hdr`.
  * `window.__ignifxReady` resolves after a settled frame, or reports `unsupported` without WebGPU.
  */
 
@@ -149,6 +150,21 @@ async function buildScene(app: App, canvas: HTMLCanvasElement, postProcess: bool
   app.world.createEntity("Model").addComponent(Model, { model, castShadows: true, receiveShadows: false });
 }
 
+/**
+ * The project settings, with `rendering.hdr` switched on when the visual suite asks for `?hdr=1`.
+ *
+ * @param hdr - Whether to render through the HDR target and output pass.
+ * @returns The settings `createApp` takes.
+ */
+function projectSettings(hdr: boolean): Readonly<Record<string, unknown>> {
+  const config = import.meta.env.IGNIFX_CONFIG;
+  if (!hdr) {
+    return config;
+  }
+  const rendering: unknown = config["rendering"];
+  return { ...config, rendering: { ...(typeof rendering === "object" ? rendering : {}), hdr: true } };
+}
+
 async function main(): Promise<AppStatus> {
   const canvas = document.querySelector("#game");
   if (!(canvas instanceof HTMLCanvasElement)) {
@@ -160,7 +176,7 @@ async function main(): Promise<AppStatus> {
 
   let app: App;
   try {
-    app = await createApp({ canvas, settings: import.meta.env.IGNIFX_CONFIG, assets: { manifest } });
+    app = await createApp({ canvas, settings: projectSettings(flags.get("hdr") === "1"), assets: { manifest } });
   } catch (error) {
     // IGX-0701 is the one failure a shipped game must handle itself: the browser has no WebGPU and
     // ignifx has no fallback renderer by decision (ADR-0001).

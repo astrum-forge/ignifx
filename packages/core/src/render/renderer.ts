@@ -25,7 +25,7 @@ import {
   startGpuTiming,
   warmUpMaterialAssets,
 } from "./gpu/renderer-gpu.js";
-import { imageProcessedColor, sameImageProcessing } from "./image-processing-color.js";
+import { imageProcessedColor, linearClearColor, sameImageProcessing } from "./image-processing-color.js";
 import {
   buildMaterialAsset,
   createDefaultMaterialAsset,
@@ -1260,6 +1260,7 @@ export class RendererImpl implements Renderer {
 
   /**
    * Re-applies the clear colour when the scene's image processing changed since it was written.
+   * With `rendering.hdr` on it runs the HDR output pass's per-frame update instead.
    *
    * @remarks
    * The `PreRender` system calls it every frame, after the `Environment` has written its image
@@ -1269,6 +1270,12 @@ export class RendererImpl implements Renderer {
    * @internal
    */
   refreshClearColor(): void {
+    const hdr = this.#presenter?.hdr ?? null;
+    if (hdr !== null) {
+      // The output pass applies image processing to the clear as well, so it never goes stale.
+      hdr.update(this.#isSceneRegistered);
+      return;
+    }
     const current = readSceneImageProcessing(this.scene, this.#processingScratch);
     if (!sameImageProcessing(current, this.#clearProcessing)) {
       this.#writeClearColor(current);
@@ -1286,6 +1293,13 @@ export class RendererImpl implements Renderer {
     applied.contrast = processing.contrast;
     applied.curve = processing.curve;
     const authored = this.#authoredClear;
+    if ((this.#presenter?.hdr ?? null) !== null) {
+      // `rendering.hdr`: the clear lands in the linear target and goes through the output pass like
+      // any fragment, so it is stored decoded, as a fully fogged fragment of its colour would be.
+      const out = linearClearColor(authored.r, authored.g, authored.b, authored.a, this.#processedClear);
+      setSceneClearColor(this.scene, out.r, out.g, out.b, out.a);
+      return;
+    }
     const out = imageProcessedColor(authored.r, authored.g, authored.b, authored.a, processing, this.#processedClear);
     setSceneClearColor(this.scene, out.r, out.g, out.b, out.a);
   }

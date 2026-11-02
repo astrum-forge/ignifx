@@ -2821,6 +2821,7 @@ export interface RenderingSettings {
     readonly clearColor: ColorLike;
     readonly features: RenderingFeatureSettings;
     readonly format: string;
+    readonly hdr: boolean;
     readonly maxDevicePixelRatio: number;
     readonly msaaSamples: number;
     readonly requiredLimits: Readonly<Record<string, number>>;
