@@ -58,10 +58,11 @@ export type HostKind = (typeof HostKind)[keyof typeof HostKind];
  * The optional features a host lists in its `ready` result.
  *
  * @remarks
- * The play controls send `["heartbeat", "playControls"]`, plus `"screenshot"` when the game has a
- * canvas. The scene host sends `"heartbeat"` and whichever of `"gizmos"`, `"screenshot"`,
- * `"viewMode2d"` and `"pick2d"` it supports; every `SceneMethod` not tied to one of them is required
- * of a 0.3 scene host.
+ * The play controls send `"heartbeat"`, `"playControls"`, `"logRelay"` and `"queryRuntime"`, plus
+ * `"screenshot"` when the game has a canvas. The scene
+ * host sends `"heartbeat"` and whichever of `"gizmos"`, `"screenshot"`, `"viewMode2d"` and
+ * `"pick2d"` it supports; every `SceneMethod` not tied to one of them is required of a 0.3 scene
+ * host.
  *
  * @public
  */
@@ -103,6 +104,12 @@ export const HostCapability = {
    * defaults. Additive in 0.3.
    */
   hotReloadDefaults: "hotReloadDefaults",
+  /**
+   * The play controls answer `queryRuntime`: an entity's live state in the scene format. From engine
+   * ask E48 (additive in 0.3); without it, the play view answers `queryRuntime` with
+   * `RpcErrorCode.methodNotFound`.
+   */
+  queryRuntime: "queryRuntime",
 } as const;
 
 /**

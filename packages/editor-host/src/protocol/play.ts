@@ -5,20 +5,24 @@
  * handshake, through `attachEditorPlayControls(app)` from `virtual:ignifx/editor`. Plan §3.6.
  */
 import { isRecord } from "./rpc.js";
+import { isSceneFileEntity, isUidString } from "./scene-file.js";
 import type { RpcNotification, RpcRequest, RpcSuccessResponse } from "./rpc.js";
+import type { SceneFileEntity } from "./scene-file.js";
 import type { RpcRequestWithParams, ScreenshotParams } from "./scene.js";
 
 /**
  * The methods the play view answers after `ready`. `play`, `pause`, `step` and `stop` answer with a
  * {@link PlayState}; `playState` answers with a {@link PlayStateReport}; `playStats` answers with
- * {@link PlayStats}; `screenshot` answers with a `ScreenshotResult`.
+ * {@link PlayStats}; `screenshot` answers with a `ScreenshotResult`; `queryRuntime` answers with a
+ * {@link QueryRuntimeResult}.
  *
  * @remarks
  * A host that answers them lists `HostCapability.playControls` in `ready`. Sent before `ready`, they
  * fail with `RpcErrorCode.notReady`; sent to a host without them, with `RpcErrorCode.methodNotFound`.
- * `playState`, `playStats` and `screenshot` are additive 0.3 methods: a host from before one answers
- * it with `RpcErrorCode.methodNotFound`. `screenshot` also needs `HostCapability.screenshot` in the
- * play view's `ready`.
+ * `playState`, `playStats`, `screenshot` and `queryRuntime` are additive 0.3 methods: a host from
+ * before one answers it with `RpcErrorCode.methodNotFound`. `screenshot` also needs
+ * `HostCapability.screenshot` in the play view's `ready`, and `queryRuntime`
+ * `HostCapability.queryRuntime`.
  *
  * @public
  */
@@ -46,6 +50,15 @@ export const PlayMethod = {
    * `RpcErrorCode.notReady` before the game's first frame.
    */
   screenshot: "screenshot",
+  /**
+   * Reads one entity of the running game as the scene format writes it ({@link QueryRuntimeParams},
+   * {@link QueryRuntimeResult}): its live transform, flags and component props, never anything a
+   * component does not serialize, and no expressions. Changes nothing. Needs
+   * `HostCapability.queryRuntime`. Fails with `RpcErrorCode.notPlaying` while the game is stopped
+   * (before it starts, after `stop`; a stepped game is paused and answers), and with
+   * `RpcErrorCode.unknownEntity` when no entity of the game has the uid.
+   */
+  queryRuntime: "queryRuntime",
 } as const;
 
 /**
@@ -69,7 +82,59 @@ export interface StepParams {
 }
 
 /**
- * Editor → play view: one of the `PlayMethod`s. Only `step` and `screenshot` take parameters.
+ * The most components a `queryRuntime` answer holds, and the most type ids its `components` filter
+ * may name. Components past it are counted in {@link QueryRuntimeResult.omittedComponents}.
+ *
+ * @public
+ */
+export const QUERY_RUNTIME_MAX_COMPONENTS = 64;
+
+/**
+ * The parameters of the `queryRuntime` method.
+ *
+ * @public
+ */
+export interface QueryRuntimeParams {
+  /** The entity's uid. A scene's own entities keep their file uids at run time. */
+  readonly entity: string;
+  /**
+   * Only the components of these type ids, at most {@link QUERY_RUNTIME_MAX_COMPONENTS}; absent for
+   * all of them. A type id the entity does not carry matches nothing.
+   */
+  readonly components?: readonly string[];
+}
+
+/**
+ * Play view → editor: the answer to `queryRuntime`.
+ *
+ * @public
+ */
+export interface QueryRuntimeResult {
+  /**
+   * The entity as `serializeEntity` writes it from the live world, with at most
+   * {@link QUERY_RUNTIME_MAX_COMPONENTS} components (only the filtered ones when `components` was
+   * given). Each string is clipped to `HOST_TEXT_MAX_LENGTH` and each list cut to
+   * `HOST_LIST_MAX_LENGTH`.
+   */
+  readonly entity: SceneFileEntity;
+  /** How many matching components did not fit under {@link QUERY_RUNTIME_MAX_COMPONENTS}. */
+  readonly omittedComponents: number;
+  /** How many frames had started when it was read (`app.time.frameCount`). */
+  readonly frameCount: number;
+  /** Scaled seconds of game time when it was read (`app.time.time`). */
+  readonly time: number;
+}
+
+/**
+ * Play view → editor: the answer to `queryRuntime`.
+ *
+ * @public
+ */
+export type QueryRuntimeResponse = RpcSuccessResponse<QueryRuntimeResult>;
+
+/**
+ * Editor → play view: one of the `PlayMethod`s. Only `step`, `screenshot` and `queryRuntime` take
+ * parameters.
  *
  * @public
  */
@@ -80,7 +145,8 @@ export type PlayRequest =
   | RpcRequest<typeof PlayMethod.stop, never>
   | RpcRequest<typeof PlayMethod.playState, never>
   | RpcRequest<typeof PlayMethod.playStats, never>
-  | RpcRequestWithParams<typeof PlayMethod.screenshot, ScreenshotParams>;
+  | RpcRequestWithParams<typeof PlayMethod.screenshot, ScreenshotParams>
+  | RpcRequestWithParams<typeof PlayMethod.queryRuntime, QueryRuntimeParams>;
 
 /**
  * What the play view reports after every `PlayMethod`.
@@ -315,5 +381,59 @@ export function isPlayStats(value: unknown): value is PlayStats {
     typeof frameCount === "number" &&
     Number.isSafeInteger(frameCount) &&
     frameCount >= 0
+  );
+}
+
+/**
+ * Checks the `params` of `queryRuntime`.
+ *
+ * @param value - The received `params`.
+ * @returns True for a non-empty `entity` uid and, when present, a `components` list of at most
+ * {@link QUERY_RUNTIME_MAX_COMPONENTS} non-empty strings.
+ *
+ * @public
+ */
+export function isQueryRuntimeParams(value: unknown): value is QueryRuntimeParams {
+  if (!isRecord(value) || !isUidString(value["entity"])) {
+    return false;
+  }
+  const components = value["components"];
+  return (
+    components === undefined ||
+    (Array.isArray(components) &&
+      components.length <= QUERY_RUNTIME_MAX_COMPONENTS &&
+      components.every((typeId: unknown) => typeof typeId === "string" && typeId.length > 0))
+  );
+}
+
+/**
+ * Checks the `result` of `queryRuntime`.
+ *
+ * @param value - The received `result`.
+ * @returns True for an entity record with at most {@link QUERY_RUNTIME_MAX_COMPONENTS} components,
+ * a non-negative integer `omittedComponents` and `frameCount`, and a non-negative finite `time`.
+ *
+ * @public
+ */
+export function isQueryRuntimeResult(value: unknown): value is QueryRuntimeResult {
+  if (!isRecord(value)) {
+    return false;
+  }
+  const entity = value["entity"];
+  const omitted = value["omittedComponents"];
+  const frameCount = value["frameCount"];
+  const time = value["time"];
+  return (
+    isSceneFileEntity(entity) &&
+    (entity.components ?? []).length <= QUERY_RUNTIME_MAX_COMPONENTS &&
+    typeof omitted === "number" &&
+    Number.isSafeInteger(omitted) &&
+    omitted >= 0 &&
+    typeof frameCount === "number" &&
+    Number.isSafeInteger(frameCount) &&
+    frameCount >= 0 &&
+    typeof time === "number" &&
+    Number.isFinite(time) &&
+    time >= 0
   );
 }

@@ -1544,6 +1544,62 @@ Incremented for additions. From 1.0 peers may differ in it; before 1.0 they must
 
 ***
 
+### QueryRuntimeParams
+
+The parameters of the `queryRuntime` method.
+
+#### Properties
+
+##### components?
+
+> `readonly` `optional` **components?**: readonly `string`[]
+
+Only the components of these type ids, at most [QUERY\_RUNTIME\_MAX\_COMPONENTS](#query_runtime_max_components); absent for
+all of them. A type id the entity does not carry matches nothing.
+
+##### entity
+
+> `readonly` **entity**: `string`
+
+The entity's uid. A scene's own entities keep their file uids at run time.
+
+***
+
+### QueryRuntimeResult
+
+Play view → editor: the answer to `queryRuntime`.
+
+#### Properties
+
+##### entity
+
+> `readonly` **entity**: [`SceneFileEntity`](#scenefileentity)
+
+The entity as `serializeEntity` writes it from the live world, with at most
+[QUERY\_RUNTIME\_MAX\_COMPONENTS](#query_runtime_max_components) components (only the filtered ones when `components` was
+given). Each string is clipped to `HOST_TEXT_MAX_LENGTH` and each list cut to
+`HOST_LIST_MAX_LENGTH`.
+
+##### frameCount
+
+> `readonly` **frameCount**: `number`
+
+How many frames had started when it was read (`app.time.frameCount`).
+
+##### omittedComponents
+
+> `readonly` **omittedComponents**: `number`
+
+How many matching components did not fit under [QUERY\_RUNTIME\_MAX\_COMPONENTS](#query_runtime_max_components).
+
+##### time
+
+> `readonly` **time**: `number`
+
+Scaled seconds of game time when it was read (`app.time.time`).
+
+***
+
 ### ReadBackParams
 
 The parameters of `readBack`.
@@ -3173,9 +3229,10 @@ The union of the names in `PlayPhase`.
 
 ### PlayRequest
 
-> **PlayRequest** = [`RpcRequest`](#rpcrequest)\<*typeof* [`play`](#play-1), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`pause`](#pause), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`step`](#step), [`StepParams`](#stepparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`stop`](#stop), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`playState`](#playstate), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`playStats`](#playstats), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`screenshot`](#screenshot-1), [`ScreenshotParams`](#screenshotparams)\>
+> **PlayRequest** = [`RpcRequest`](#rpcrequest)\<*typeof* [`play`](#play-1), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`pause`](#pause), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`step`](#step), [`StepParams`](#stepparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`stop`](#stop), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`playState`](#playstate), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`playStats`](#playstats), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`screenshot`](#screenshot-1), [`ScreenshotParams`](#screenshotparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`queryRuntime`](#queryruntime-1), [`QueryRuntimeParams`](#queryruntimeparams)\>
 
-Editor → play view: one of the `PlayMethod`s. Only `step` and `screenshot` take parameters.
+Editor → play view: one of the `PlayMethod`s. Only `step`, `screenshot` and `queryRuntime` take
+parameters.
 
 ***
 
@@ -3208,6 +3265,14 @@ Play view → editor: the answer to `playStats`.
 > **PongResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<`"pong"`\>
 
 The answer to [PingRequest](#pingrequest).
+
+***
+
+### QueryRuntimeResponse
+
+> **QueryRuntimeResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<[`QueryRuntimeResult`](#queryruntimeresult)\>
+
+Play view → editor: the answer to `queryRuntime`.
 
 ***
 
@@ -3705,6 +3770,14 @@ The scene host picks sprites in 2D view mode (`app.twoD.pickAt` from `@ignifx/2d
 
 The host answers the methods in `PlayMethod`.
 
+##### queryRuntime
+
+> `readonly` **queryRuntime**: `"queryRuntime"` = `"queryRuntime"`
+
+The play controls answer `queryRuntime`: an entity's live state in the scene format. From engine
+ask E48 (additive in 0.3); without it, the play view answers `queryRuntime` with
+`RpcErrorCode.methodNotFound`.
+
 ##### screenshot
 
 > `readonly` **screenshot**: `"screenshot"` = `"screenshot"`
@@ -3721,10 +3794,11 @@ The scene host accepts `setViewMode` with `"2d"`: a 2D editor camera and planar 
 
 #### Remarks
 
-The play controls send `["heartbeat", "playControls"]`, plus `"screenshot"` when the game has a
-canvas. The scene host sends `"heartbeat"` and whichever of `"gizmos"`, `"screenshot"`,
-`"viewMode2d"` and `"pick2d"` it supports; every `SceneMethod` not tied to one of them is required
-of a 0.3 scene host.
+The play controls send `"heartbeat"`, `"playControls"`, `"logRelay"` and `"queryRuntime"`, plus
+`"screenshot"` when the game has a canvas. The scene
+host sends `"heartbeat"` and whichever of `"gizmos"`, `"screenshot"`, `"viewMode2d"` and
+`"pick2d"` it supports; every `SceneMethod` not tied to one of them is required of a 0.3 scene
+host.
 
 ***
 
@@ -3806,7 +3880,8 @@ CSS pixels from the view's top-left corner: a DOM event's `offsetX` and `offsetY
 
 The methods the play view answers after `ready`. `play`, `pause`, `step` and `stop` answer with a
 [PlayState](#playstate-1); `playState` answers with a [PlayStateReport](#playstatereport); `playStats` answers with
-[PlayStats](#playstats-1); `screenshot` answers with a `ScreenshotResult`.
+[PlayStats](#playstats-1); `screenshot` answers with a `ScreenshotResult`; `queryRuntime` answers with a
+[QueryRuntimeResult](#queryruntimeresult).
 
 #### Type Declaration
 
@@ -3835,6 +3910,17 @@ Reads the game's state without changing it. Takes no parameters.
 Reads the game's frame rate, frame time, entity count and frame count without changing
 anything. Takes no parameters. The editor polls it; no notification carries it.
 
+##### queryRuntime
+
+> `readonly` **queryRuntime**: `"queryRuntime"` = `"queryRuntime"`
+
+Reads one entity of the running game as the scene format writes it ([QueryRuntimeParams](#queryruntimeparams),
+[QueryRuntimeResult](#queryruntimeresult)): its live transform, flags and component props, never anything a
+component does not serialize, and no expressions. Changes nothing. Needs
+`HostCapability.queryRuntime`. Fails with `RpcErrorCode.notPlaying` while the game is stopped
+(before it starts, after `stop`; a stepped game is paused and answers), and with
+`RpcErrorCode.unknownEntity` when no entity of the game has the uid.
+
 ##### screenshot
 
 > `readonly` **screenshot**: `"screenshot"` = `"screenshot"`
@@ -3861,9 +3947,10 @@ Stops the frame loop with `app.stop()`. The editor reloads the view to reset the
 
 A host that answers them lists `HostCapability.playControls` in `ready`. Sent before `ready`, they
 fail with `RpcErrorCode.notReady`; sent to a host without them, with `RpcErrorCode.methodNotFound`.
-`playState`, `playStats` and `screenshot` are additive 0.3 methods: a host from before one answers
-it with `RpcErrorCode.methodNotFound`. `screenshot` also needs `HostCapability.screenshot` in the
-play view's `ready`.
+`playState`, `playStats`, `screenshot` and `queryRuntime` are additive 0.3 methods: a host from
+before one answers it with `RpcErrorCode.methodNotFound`. `screenshot` also needs
+`HostCapability.screenshot` in the play view's `ready`, and `queryRuntime`
+`HostCapability.queryRuntime`.
 
 ***
 
@@ -3952,6 +4039,15 @@ The protocol version this package describes. The editor sends it in `hello` and 
 
 ***
 
+### QUERY\_RUNTIME\_MAX\_COMPONENTS
+
+> `const` **QUERY\_RUNTIME\_MAX\_COMPONENTS**: `64` = `64`
+
+The most components a `queryRuntime` answer holds, and the most type ids its `components` filter
+may name. Components past it are counted in [QueryRuntimeResult.omittedComponents](#omittedcomponents).
+
+***
+
 ### RpcErrorCode
 
 > `const` **RpcErrorCode**: `object`
@@ -4001,9 +4097,11 @@ A scene method that needs an open scene was called while none is open (`SceneMet
 
 > `readonly` **notPlaying**: `-32003` = `-32_003`
 
-A play method that needs the game's frame loop was called while it does not run: before the
-game starts it, after `stop`, or after `step` (`PlayMethod.screenshot`). Additive in 0.3: only
-a host that answers `screenshot` in the play view sends it.
+A play method that needs a running game was called while it does not run. `PlayMethod.screenshot`
+needs the frame loop: it fails before the game starts it, after `stop`, and after `step`.
+`PlayMethod.queryRuntime` needs a game that plays or is paused (a stepped game is paused): it
+fails before the game starts and after `stop`. Additive in 0.3:
+only a host that answers one of those methods in the play view sends it.
 
 ##### notReady
 
@@ -4017,6 +4115,13 @@ its app has not started.
 > `readonly` **parseError**: `-32700` = `-32_700`
 
 The message was not valid JSON.
+
+##### unknownEntity
+
+> `readonly` **unknownEntity**: `-32004` = `-32_004`
+
+A play method named an entity uid the game's world does not hold (`PlayMethod.queryRuntime`).
+Additive in 0.3: only a host that answers `queryRuntime` sends it.
 
 #### Remarks
 
@@ -4962,6 +5067,52 @@ True for `{ major, minor }` with non-negative safe integers.
 
 ***
 
+### isQueryRuntimeParams()
+
+> **isQueryRuntimeParams**(`value`): `value is QueryRuntimeParams`
+
+Checks the `params` of `queryRuntime`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `params`.
+
+#### Returns
+
+`value is QueryRuntimeParams`
+
+True for a non-empty `entity` uid and, when present, a `components` list of at most
+[QUERY\_RUNTIME\_MAX\_COMPONENTS](#query_runtime_max_components) non-empty strings.
+
+***
+
+### isQueryRuntimeResult()
+
+> **isQueryRuntimeResult**(`value`): `value is QueryRuntimeResult`
+
+Checks the `result` of `queryRuntime`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `result`.
+
+#### Returns
+
+`value is QueryRuntimeResult`
+
+True for an entity record with at most [QUERY\_RUNTIME\_MAX\_COMPONENTS](#query_runtime_max_components) components,
+a non-negative integer `omittedComponents` and `frameCount`, and a non-negative finite `time`.
+
+***
+
 ### isReadBackParams()
 
 > **isReadBackParams**(`value`): `value is ReadBackParams`
@@ -5686,7 +5837,7 @@ const host = await startEditorHost({ editorOrigin: "ignifx-editor://app", canvas
 **`Beta`**
 
 Lets the editor drive a running game: answers the handshake with `hostKind: "play"`, then `play`,
-`pause`, `step`, `stop`, `playState`, `playStats` and (with a canvas) `screenshot`, and sends `playStateChanged` when the game's phase
+`pause`, `step`, `stop`, `playState`, `playStats`, `queryRuntime` and (with a canvas) `screenshot`, and sends `playStateChanged` when the game's phase
 changes, and `log`, `hostError` and `hotReloaded` for the game's log lines, `app.onError` reports
 and hot reloads (the newest 256 from before the handshake right after it).
 

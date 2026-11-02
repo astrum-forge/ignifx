@@ -49,11 +49,18 @@ export const RpcErrorCode = {
   /** A scene method that needs an open scene was called while none is open (`SceneMethod`). */
   noScene: -32_002,
   /**
-   * A play method that needs the game's frame loop was called while it does not run: before the
-   * game starts it, after `stop`, or after `step` (`PlayMethod.screenshot`). Additive in 0.3: only
-   * a host that answers `screenshot` in the play view sends it.
+   * A play method that needs a running game was called while it does not run. `PlayMethod.screenshot`
+   * needs the frame loop: it fails before the game starts it, after `stop`, and after `step`.
+   * `PlayMethod.queryRuntime` needs a game that plays or is paused (a stepped game is paused): it
+   * fails before the game starts and after `stop`. Additive in 0.3:
+   * only a host that answers one of those methods in the play view sends it.
    */
   notPlaying: -32_003,
+  /**
+   * A play method named an entity uid the game's world does not hold (`PlayMethod.queryRuntime`).
+   * Additive in 0.3: only a host that answers `queryRuntime` sends it.
+   */
+  unknownEntity: -32_004,
 } as const;
 
 /**

@@ -40,9 +40,12 @@ export {
   isPlayState,
   isPlayStateReport,
   isPlayStats,
+  isQueryRuntimeParams,
+  isQueryRuntimeResult,
   PlayMethod,
   PlayNotification,
   PlayPhase,
+  QUERY_RUNTIME_MAX_COMPONENTS,
   type PlayRequest,
   type PlayResponse,
   type PlayState,
@@ -51,6 +54,9 @@ export {
   type PlayStateResponse,
   type PlayStats,
   type PlayStatsResponse,
+  type QueryRuntimeParams,
+  type QueryRuntimeResponse,
+  type QueryRuntimeResult,
   type StepParams,
 } from "./play.js";
 export {

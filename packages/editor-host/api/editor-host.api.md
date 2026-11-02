@@ -301,6 +301,7 @@ export const HostCapability: {
     readonly pick2d: "pick2d";
     readonly logRelay: "logRelay";
     readonly hotReloadDefaults: "hotReloadDefaults";
+    readonly queryRuntime: "queryRuntime";
 };
 
 // @public
@@ -447,6 +448,12 @@ export function isPlayStats(value: unknown): value is PlayStats;
 
 // @public
 export function isProtocolVersion(value: unknown): value is ProtocolVersion;
+
+// @public
+export function isQueryRuntimeParams(value: unknown): value is QueryRuntimeParams;
+
+// @public
+export function isQueryRuntimeResult(value: unknown): value is QueryRuntimeResult;
 
 // @public
 export function isReadBackParams(value: unknown): value is ReadBackParams;
@@ -627,6 +634,7 @@ export const PlayMethod: {
     readonly playState: "playState";
     readonly playStats: "playStats";
     readonly screenshot: "screenshot";
+    readonly queryRuntime: "queryRuntime";
 };
 
 // @public
@@ -654,7 +662,7 @@ export const PlayPhase: {
 export type PlayPhase = (typeof PlayPhase)[keyof typeof PlayPhase];
 
 // @public
-export type PlayRequest = RpcRequest<typeof PlayMethod.play, never> | RpcRequest<typeof PlayMethod.pause, never> | RpcRequest<typeof PlayMethod.step, StepParams> | RpcRequest<typeof PlayMethod.stop, never> | RpcRequest<typeof PlayMethod.playState, never> | RpcRequest<typeof PlayMethod.playStats, never> | RpcRequestWithParams<typeof PlayMethod.screenshot, ScreenshotParams>;
+export type PlayRequest = RpcRequest<typeof PlayMethod.play, never> | RpcRequest<typeof PlayMethod.pause, never> | RpcRequest<typeof PlayMethod.step, StepParams> | RpcRequest<typeof PlayMethod.stop, never> | RpcRequest<typeof PlayMethod.playState, never> | RpcRequest<typeof PlayMethod.playStats, never> | RpcRequestWithParams<typeof PlayMethod.screenshot, ScreenshotParams> | RpcRequestWithParams<typeof PlayMethod.queryRuntime, QueryRuntimeParams>;
 
 // @public
 export type PlayResponse = RpcSuccessResponse<PlayState>;
@@ -706,6 +714,26 @@ export interface ProtocolVersion {
 
 // @public
 export function protocolVersionIsCompatible(a: ProtocolVersion, b: ProtocolVersion): boolean;
+
+// @public
+export const QUERY_RUNTIME_MAX_COMPONENTS = 64;
+
+// @public
+export interface QueryRuntimeParams {
+    readonly components?: readonly string[];
+    readonly entity: string;
+}
+
+// @public
+export type QueryRuntimeResponse = RpcSuccessResponse<QueryRuntimeResult>;
+
+// @public
+export interface QueryRuntimeResult {
+    readonly entity: SceneFileEntity;
+    readonly frameCount: number;
+    readonly omittedComponents: number;
+    readonly time: number;
+}
 
 // @public
 export interface ReadBackParams {
@@ -782,6 +810,7 @@ export const RpcErrorCode: {
     readonly notReady: -32_001;
     readonly noScene: -32_002;
     readonly notPlaying: -32_003;
+    readonly unknownEntity: -32_004;
 };
 
 // @public

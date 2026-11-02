@@ -134,7 +134,7 @@ describe("virtual:ignifx/editor in a page", () => {
     const ready = await peer.hello();
     expect(ready["result"]).toMatchObject({
       hostKind: "play",
-      capabilities: ["heartbeat", "playControls", "logRelay"],
+      capabilities: ["heartbeat", "playControls", "logRelay", "queryRuntime"],
     });
     expect((await peer.request(PlayMethod.playState))["result"]).toEqual({ state: "stopped", frameCount: 0, time: 0 });
 
