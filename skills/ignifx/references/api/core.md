@@ -25280,6 +25280,84 @@ What WebGPU offers, or `null` in a headless app and on a host with no WebGPU.
 
 ***
 
+### PrefabApplyResult
+
+What [applyOverridesToAsset](#applyoverridestoasset) returns.
+
+#### Properties
+
+##### applied
+
+> `readonly` **applied**: readonly [`SceneFileOverride`](#scenefileoverride)[]
+
+The overrides written into the prefab, in instance order.
+
+##### asset
+
+> `readonly` **asset**: [`SceneFile`](#scenefile)
+
+The new prefab file, with the applied overrides written into it.
+
+##### hash
+
+> `readonly` **hash**: `string`
+
+The content hash of [PrefabApplyResult.asset](#asset-5), as [computeSceneHash](#computescenehash) writes it.
+
+##### instance
+
+> `readonly` **instance**: [`SceneFileInstance`](#scenefileinstance)
+
+The instance entry without the applied overrides, recording [PrefabApplyResult.hash](#hash-1). It
+expands to the same values it did before the apply; a component an applied `add` brought now
+comes from the prefab, so like every prefab component it gets a fresh uid per instance.
+
+##### skipped
+
+> `readonly` **skipped**: readonly [`PrefabOverrideSkip`](#prefaboverrideskip)[]
+
+The selected overrides that stay on the instance, in instance order.
+
+***
+
+### PrefabOverrideSelection
+
+Which overrides of an instance [applyOverridesToAsset](#applyoverridestoasset) and [revertOverrides](#revertoverrides) act on.
+
+#### Properties
+
+##### paths?
+
+> `readonly` `optional` **paths?**: readonly `string`[]
+
+Override paths to act on. A path selects every override at that path or below it, so
+`"<entityUid>"` selects everything on that entity and `"<entityUid>/components/<componentUid>"`
+selects a component's removal, its `enabled` flag, and its props. An `add` to
+`<entityUid>/components` sits at `<entityUid>/components/<addedUid>`. Omitted, every override
+is selected.
+
+***
+
+### PrefabOverrideSkip
+
+An override [applyOverridesToAsset](#applyoverridestoasset) left on the instance, and why.
+
+#### Properties
+
+##### override
+
+> `readonly` **override**: [`SceneFileOverride`](#scenefileoverride)
+
+The override, as the instance entry holds it.
+
+##### reason
+
+> `readonly` **reason**: `string`
+
+Why it could not be written into the prefab file.
+
+***
+
 ### ProfileScope
 
 A timing scope opened by [Diagnostics.profile](#profile). Ending it twice is a no-op.
@@ -33367,6 +33445,72 @@ const fields = applyInit(createDefaults(moverSchema), moverSchema, { speed: 12 }
 
 ***
 
+### applyOverridesToAsset()
+
+> **applyOverridesToAsset**(`instance`, `asset`, `selection?`): `Promise`\<[`PrefabApplyResult`](#prefabapplyresult)\>
+
+Writes an instance's overrides into the prefab file it instances, so every instance of the prefab
+gets them — Unity's "Apply to prefab" (ADR-0005).
+
+#### Parameters
+
+##### instance
+
+[`SceneFileInstance`](#scenefileinstance)
+
+The instance entry whose overrides to apply; its `scene` should name `asset`.
+
+##### asset
+
+[`SceneFile`](#scenefile)
+
+The prefab file the entry instances.
+
+##### selection?
+
+[`PrefabOverrideSelection`](#prefaboverrideselection)
+
+Which overrides to apply; all of them by default.
+
+#### Returns
+
+`Promise`\<[`PrefabApplyResult`](#prefabapplyresult)\>
+
+The new prefab file and its hash, the instance entry without the applied overrides, and
+what was applied or skipped.
+
+#### Remarks
+
+A pure function over the two files: nothing is loaded, and the same input always gives
+byte-identical output through [stringifySceneFile](#stringifyscenefile). The rules:
+
+- Property, `enabled`, transform, and entity-field overrides change the prefab's record. An `add`
+  appends the component, keeping its uid; a `remove` deletes the component.
+- On a prefab with exactly one root, the instance root's own `name`, `transform`, and other entity
+  fields are its placement, not prefab content, so overrides of the root's entity fields and
+  transform are skipped.
+- Overrides reach only the prefab's own entities. Content of a scene the prefab itself instances
+  is not addressable by an override path, so a nested prefab is never edited: an override that
+  names something the prefab file does not hold is skipped.
+- A skipped override stays on the returned instance. The instance's own `components` are not
+  overrides and are not touched.
+- Other instances of the prefab keep their overrides, which still win over the new prefab values
+  at the same path. Record [PrefabApplyResult.hash](#hash-1) on them, or loading them logs `IGX-0604`.
+- References inside added components (`$entity`, `$component`) are copied unchanged.
+
+#### Throws
+
+IgnifxError with code `IGX-0609` when a selected override path is outside the grammar.
+
+#### Example
+
+```ts
+const result = await applyOverridesToAsset(spawn.instance, prefabFile);
+await app.storage.write("prefabs/enemy.prefab.json", stringifySceneFile(result.asset));
+```
+
+***
+
 ### approximately()
 
 > **approximately**(`a`, `b`, `epsilon?`): `boolean`
@@ -36763,6 +36907,46 @@ The curve, or `null` when the name is not one the table declares.
 
 ```ts
 const curve = resolveEase("cubicOut");
+```
+
+***
+
+### revertOverrides()
+
+> **revertOverrides**(`instance`, `selection?`): [`SceneFileInstance`](#scenefileinstance)
+
+Drops an instance's overrides so it follows its prefab again — Unity's "Revert".
+
+#### Parameters
+
+##### instance
+
+[`SceneFileInstance`](#scenefileinstance)
+
+The instance entry.
+
+##### selection?
+
+[`PrefabOverrideSelection`](#prefaboverrideselection)
+
+Which overrides to drop; all of them by default.
+
+#### Returns
+
+[`SceneFileInstance`](#scenefileinstance)
+
+The entry without the selected overrides, or `instance` itself when none was selected.
+
+#### Remarks
+
+A pure function: the entry's `scene` and `hash` are kept, and `overrides` is omitted when none
+remain. Reverting an `add` also reverts the overrides below the added component when the
+selection path covers them (`<entityUid>/components/<addedUid>` does).
+
+#### Example
+
+```ts
+const reverted = revertOverrides(spawn.instance, { paths: [`${rootUid}/components/${aiUid}`] });
 ```
 
 ***
