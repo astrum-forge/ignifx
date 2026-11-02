@@ -14,6 +14,8 @@ import {
   RpcFailure,
 } from "./channel.js";
 import { resolveEngineVersion } from "./host.js";
+import { inputServiceOf, PlayInput } from "./play-input.js";
+import { queryRuntime } from "./play-query.js";
 import { PlayStatsReader } from "./play-stats.js";
 import {
   HostCapability,
@@ -26,7 +28,14 @@ import {
 } from "./protocol/index.js";
 import { checkScreenshotParams, takeScreenshot } from "./scene/screenshot.js";
 import type { EditorMessageTarget, RequestHandler } from "./channel.js";
-import type { PlayState, PlayStateReport, PlayStats, ScreenshotResult } from "./protocol/index.js";
+import type {
+  PlayState,
+  PlayStateReport,
+  PlayStats,
+  QueryRuntimeResult,
+  ScreenshotResult,
+  SendInputResult,
+} from "./protocol/index.js";
 import type { App } from "@ignifx/core";
 
 /**
@@ -200,6 +209,22 @@ function notPlaying(): RpcFailure {
 }
 
 /**
+ * Refuses a method that needs a game that plays or is paused, while the game is stopped.
+ *
+ * @param tracker - Reads the game's phase.
+ * @param what - What the method would have done, for the message.
+ * @throws RpcFailure `notPlaying` while the game is stopped: before it starts, or after `stop`.
+ */
+function requireStarted(tracker: PhaseTracker, what: string): void {
+  if (tracker.read().state === PlayPhase.stopped) {
+    throw new RpcFailure(
+      RpcErrorCode.notPlaying,
+      `The game is stopped, so there is no running game to ${what}. Press Play first; a paused or stepped game answers.`,
+    );
+  }
+}
+
+/**
  * `screenshot`: the game's canvas as an image, as the scene view's `screenshot` answers. Changes
  * nothing about the game.
  *
@@ -287,10 +312,26 @@ function playMethods(app: App, tracker: PhaseTracker): ReadonlyMap<string, Reque
     ],
     [PlayMethod.playState, (): PlayStateReport => tracker.read()],
     [PlayMethod.playStats, (): PlayStats => stats.read()],
+    [
+      PlayMethod.queryRuntime,
+      (params): QueryRuntimeResult => {
+        requireStarted(tracker, "read");
+        return queryRuntime(app, params);
+      },
+    ],
   ]);
   // As in the scene view, only a canvas-backed app has the method and lists the capability.
   if (!app.isHeadless) {
     methods.set(PlayMethod.screenshot, async (params): Promise<ScreenshotResult> => playScreenshot(app, params));
+  }
+  // Only a game with `app.input` can take input; the capability list asks the same question.
+  const input = inputServiceOf(app);
+  if (input !== null) {
+    const queue = new PlayInput(app, input);
+    methods.set(PlayMethod.sendInput, (params): SendInputResult => {
+      requireStarted(tracker, "send input to");
+      return queue.send(params);
+    });
   }
   return methods;
 }
@@ -371,7 +412,9 @@ function openPlayControls(
         HostCapability.heartbeat,
         HostCapability.playControls,
         HostCapability.logRelay,
+        HostCapability.queryRuntime,
         ...(app.isHeadless ? [] : [HostCapability.screenshot]),
+        ...(inputServiceOf(app) === null ? [] : [HostCapability.sendInput]),
       ],
       hostKind: HostKind.play,
     },
@@ -402,7 +445,7 @@ function openPlayControls(
 
 /**
  * Lets the editor drive a running game: answers the handshake with `hostKind: "play"`, then `play`,
- * `pause`, `step`, `stop`, `playState`, `playStats` and (with a canvas) `screenshot`, and sends `playStateChanged` when the game's phase
+ * `pause`, `step`, `stop`, `playState`, `playStats`, `queryRuntime`, (with a canvas) `screenshot` and (with `app.input`) `sendInput`, and sends `playStateChanged` when the game's phase
  * changes, and `log`, `hostError` and `hotReloaded` for the game's log lines, `app.onError` reports
  * and hot reloads (the newest 256 from before the handshake right after it).
  *

@@ -1,21 +1,28 @@
-import { createApp, createMemorySink, Script } from "@ignifx/core";
+import { array, Component, createApp, createMemorySink, custom, f32, map, Script, str } from "@ignifx/core";
+import { input } from "@ignifx/input";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CLIPPED_MARKER } from "../src/app-reports.js";
 import { listenForEditorPlayControls, startEditorPlayControls } from "../src/play-controls.js";
 import {
+  HOST_LIST_MAX_LENGTH,
   HOST_TEXT_MAX_LENGTH,
   isAppErrorData,
   isHostErrorParams,
   isHotReloadedParams,
   isLogParams,
+  isQueryRuntimeResult,
   isScreenshotResult,
+  isSendInputResult,
+  QUERY_RUNTIME_MAX_JSON_LENGTH,
+  QUERY_RUNTIME_MAX_KEYS,
+  QUERY_RUNTIME_MAX_STRING_LENGTH,
   PlayNotification,
   RpcErrorCode,
 } from "../src/protocol/index.js";
 import { connect, CountingTarget, EDITOR_ORIGIN } from "./support/editor.js";
 import type { EditorPlayControls } from "../src/play-controls.js";
 import type { EditorPeer } from "./support/editor.js";
-import type { App, LogSink, RenderCapture } from "@ignifx/core";
+import type { App, JsonObject, JsonValue, LogSink, RenderCapture } from "@ignifx/core";
 import type { Mock } from "vitest";
 
 /**
@@ -86,7 +93,7 @@ describe("startEditorPlayControls", () => {
 
     expect((await peer.hello())["result"]).toMatchObject({
       hostKind: "play",
-      capabilities: ["heartbeat", "playControls", "logRelay"],
+      capabilities: ["heartbeat", "playControls", "logRelay", "queryRuntime"],
     });
   });
 
@@ -634,7 +641,7 @@ describe("screenshot in the play view (engine ask E47)", () => {
 
     expect((await peer.hello())["result"]).toMatchObject({
       hostKind: "play",
-      capabilities: ["heartbeat", "playControls", "logRelay", "screenshot"],
+      capabilities: ["heartbeat", "playControls", "logRelay", "queryRuntime", "screenshot"],
     });
     // One stepped frame, then the loop runs: the game has rendered and is playing.
     await peer.request("step");
@@ -719,6 +726,448 @@ describe("screenshot in the play view (engine ask E47)", () => {
     const { peer } = await playView();
 
     expect((await peer.request("screenshot", { format: "png" }))["error"]).toMatchObject({
+      code: RpcErrorCode.methodNotFound,
+    });
+  });
+});
+
+describe("queryRuntime in the play view (engine ask E48)", () => {
+  /** A component whose props the answer carries. */
+  class Mover extends Script.define({ speed: f32(2) }) {
+    static typeId = "test/Mover";
+    update(dt: number): void {
+      this.transform.translate({ x: this.speed * dt, y: 0, z: 0 });
+    }
+  }
+
+  /** A component with a long string and a long list, for the caps. */
+  class Notes extends Component.define({ text: str(""), lines: array(str()) }) {
+    static typeId = "test/Notes";
+  }
+
+  it("answers an entity's live state in the scene format, and changes nothing", async () => {
+    const { app, peer } = await playView();
+    const player = app.world.createEntity("Player");
+    player.addComponent(Mover, { speed: 4 });
+    player.tags.add("hero");
+    await peer.request("step", { deltaSeconds: 0.05 });
+    const before = { paused: app.time.paused, frameCount: app.time.frameCount, x: player.transform.position.x };
+
+    const answer = (await peer.request("queryRuntime", { entity: player.uid }))["result"];
+
+    expect(isQueryRuntimeResult(answer)).toBe(true);
+    expect(answer).toEqual({
+      entity: {
+        uid: player.uid,
+        name: "Player",
+        parent: null,
+        tags: ["hero"],
+        transform: { position: [0.2, 0, 0], rotation: [0, 0, 0, 1], scale: [1, 1, 1] },
+        components: [{ uid: player.components[1]?.uid, type: "test/Mover", props: { speed: 4 } }],
+      },
+      omittedComponents: 0,
+      omittedEntries: 0,
+      frameCount: 1,
+      time: 0.05,
+    });
+    expect({ paused: app.time.paused, frameCount: app.time.frameCount, x: player.transform.position.x }).toEqual(
+      before,
+    );
+  });
+
+  it("keeps only the components the filter names", async () => {
+    const { app, peer } = await playView();
+    const player = app.world.createEntity("Player");
+    player.addComponent(Mover);
+    player.addComponent(Notes, { text: "hi" });
+    await peer.request("play");
+
+    const only = async (components: readonly string[]): Promise<unknown> =>
+      (await peer.request("queryRuntime", { entity: player.uid, components }))["result"];
+
+    expect(await only(["test/Notes"])).toMatchObject({
+      entity: { components: [{ type: "test/Notes", props: { text: "hi", lines: [] } }] },
+      omittedComponents: 0,
+    });
+    expect(await only(["test/Unknown"])).not.toHaveProperty("entity.components");
+  });
+
+  it("answers at most 64 components and counts the rest", async () => {
+    const { app, peer } = await playView();
+    const crowd = app.world.createEntity("Crowd");
+    for (let index = 0; index < 70; index += 1) {
+      crowd.addComponent(
+        class extends Component.define({ index: f32(index) }) {
+          static typeId = `test/Part${String(index)}`;
+        },
+      );
+    }
+    await peer.request("play");
+
+    const answer = (await peer.request("queryRuntime", { entity: crowd.uid }))["result"];
+
+    expect(isQueryRuntimeResult(answer)).toBe(true);
+    expect(answer).toMatchObject({ omittedComponents: 6 });
+    expect((answer as { entity: { components: unknown[] } }).entity.components).toHaveLength(64);
+  });
+
+  it("clips names and long lists to the caps, so the editor keeps the answer", async () => {
+    const { app, peer } = await playView();
+    const entity = app.world.createEntity("x".repeat(HOST_TEXT_MAX_LENGTH + 10));
+    entity.addComponent(Notes, { lines: Array.from({ length: HOST_LIST_MAX_LENGTH + 5 }, () => "z") });
+    await peer.request("play");
+
+    const answer = (await peer.request("queryRuntime", { entity: entity.uid }))["result"];
+
+    expect(isQueryRuntimeResult(answer)).toBe(true);
+    const { name, components } = (answer as { entity: { name: string; components: { props: JsonObject }[] } }).entity;
+    expect(name).toBe("x".repeat(QUERY_RUNTIME_MAX_KEYS));
+    expect(components[0]?.props["lines"]).toHaveLength(HOST_LIST_MAX_LENGTH);
+    expect(answer).toMatchObject({ omittedEntries: 5 });
+  });
+
+  it("cuts a huge map to 256 keys of at most 256 characters, counting the rest", async () => {
+    class Table extends Component.define({ rows: map(str()) }) {
+      static typeId = "test/Table";
+    }
+    const { app, peer } = await playView();
+    const entity = app.world.createEntity("Table");
+    const rows: Record<string, string> = {};
+    for (let index = 0; index < 50_000; index += 1) {
+      rows[`${String(index).padStart(5, "0")}${"k".repeat(300)}`] = "v";
+    }
+    entity.addComponent(Table, { rows });
+    await peer.request("play");
+
+    const response = await peer.request("queryRuntime", { entity: entity.uid });
+    const answer = response["result"];
+
+    expect(isQueryRuntimeResult(answer)).toBe(true);
+    expect(JSON.stringify(response).length).toBeLessThan(QUERY_RUNTIME_MAX_JSON_LENGTH + 100);
+    const props = (answer as { entity: { components: { props: { rows: Record<string, unknown> } }[] } }).entity
+      .components[0]?.props;
+    const keys = Object.keys(props?.rows ?? {});
+    expect(keys).toHaveLength(QUERY_RUNTIME_MAX_KEYS);
+    expect(keys.every((key) => key.length <= QUERY_RUNTIME_MAX_KEYS)).toBe(true);
+    expect(answer).toMatchObject({ omittedEntries: 50_000 - QUERY_RUNTIME_MAX_KEYS });
+  });
+
+  it("keeps a __proto__ map key and a $omitted one as entries, and the first of two keys that clip alike", async () => {
+    class Table extends Component.define({ rows: map(str()) }) {
+      static typeId = "test/Table";
+    }
+    const { app, peer } = await playView();
+    const entity = app.world.createEntity("Table");
+    const rows: Record<string, string> = {};
+    for (const [key, value] of [
+      ["__proto__", "proto"],
+      ["$omitted", "dollar"],
+      [`${"a".repeat(QUERY_RUNTIME_MAX_KEYS)}1`, "first"],
+      [`${"a".repeat(QUERY_RUNTIME_MAX_KEYS)}2`, "second"],
+    ]) {
+      Object.defineProperty(rows, key ?? "", { value, enumerable: true, writable: true, configurable: true });
+    }
+    entity.addComponent(Table, { rows });
+    await peer.request("play");
+
+    const response = await peer.request("queryRuntime", { entity: entity.uid });
+    const answer = response["result"];
+
+    expect(isQueryRuntimeResult(answer)).toBe(true);
+    const props = (answer as { entity: { components: { props: { rows: object } }[] } }).entity.components[0]?.props;
+    const entries = Object.entries(props?.rows ?? {});
+    // Sorted as core's encoder writes a map: `$omitted`, `__proto__`, then the two long keys.
+    expect(entries).toEqual([
+      ["$omitted", "dollar"],
+      ["__proto__", "proto"],
+      ["a".repeat(QUERY_RUNTIME_MAX_KEYS), "first"],
+    ]);
+    expect(answer).toMatchObject({ omittedEntries: 1 });
+    expect(JSON.stringify(response)).toContain('"__proto__":"proto"');
+  });
+
+  it("clips a long string to 64 Ki, so its component still fits", async () => {
+    const { app, peer } = await playView();
+    const entity = app.world.createEntity("Notebook");
+    entity.addComponent(Notes, { text: "y".repeat(600_000) });
+    await peer.request("play");
+
+    const answer = (await peer.request("queryRuntime", { entity: entity.uid }))["result"];
+
+    expect(isQueryRuntimeResult(answer)).toBe(true);
+    const text = (answer as { entity: { components: { props: { text: string } }[] } }).entity.components[0]?.props.text;
+    expect(text).toHaveLength(QUERY_RUNTIME_MAX_STRING_LENGTH);
+    expect(text?.endsWith(CLIPPED_MARKER)).toBe(true);
+    expect(answer).toMatchObject({ omittedComponents: 0 });
+  });
+
+  it("keeps the whole answer within its budget, moving the components that do not fit to omittedComponents", async () => {
+    const { app, peer } = await playView();
+    const entity = app.world.createEntity("Notebook");
+    entity.addComponent(Mover);
+    // Five strings of 60 Ki: past the 256 Ki budget together, so it and every component after it are
+    // left out.
+    entity.addComponent(Notes, { lines: Array.from({ length: 5 }, () => "y".repeat(60_000)) });
+    entity.addComponent(
+      class extends Component.define({ index: f32(1) }) {
+        static typeId = "test/After";
+      },
+    );
+    await peer.request("play");
+
+    const response = await peer.request("queryRuntime", { entity: entity.uid });
+    const answer = response["result"];
+
+    expect(isQueryRuntimeResult(answer)).toBe(true);
+    expect(JSON.stringify(answer).length).toBeLessThanOrEqual(QUERY_RUNTIME_MAX_JSON_LENGTH);
+    expect(answer).toMatchObject({ entity: { components: [{ type: "test/Mover" }] }, omittedComponents: 2 });
+    expect((answer as { entity: { components: unknown[] } }).entity.components).toHaveLength(1);
+  });
+
+  it("answers null for what a custom codec writes that is not JSON, so the answer still posts", async () => {
+    class Odd extends Component.define({
+      value: custom<number>({
+        createDefault: () => 0,
+        serialize: (): JsonValue => ({ nan: Number.NaN, fn: (() => 1) as unknown as JsonValue }),
+        deserialize: () => 0,
+      }),
+    }) {
+      static typeId = "test/Odd";
+    }
+    const { app, peer } = await playView();
+    const entity = app.world.createEntity("Odd");
+    entity.addComponent(Odd);
+    await peer.request("play");
+
+    const answer = (await peer.request("queryRuntime", { entity: entity.uid }))["result"];
+
+    expect(isQueryRuntimeResult(answer)).toBe(true);
+    expect(answer).toMatchObject({ entity: { components: [{ props: { value: { nan: null, fn: null } } }] } });
+  });
+
+  it("refuses an unknown or destroyed entity with unknownEntity", async () => {
+    const { app, peer } = await playView();
+    const doomed = app.world.createEntity("Doomed");
+    await peer.request("play");
+
+    expect((await peer.request("queryRuntime", { entity: "01NOSUCHENTITY" }))["error"]).toMatchObject({
+      code: RpcErrorCode.unknownEntity,
+    });
+    doomed.destroy();
+    await peer.request("step");
+    expect((await peer.request("queryRuntime", { entity: doomed.uid }))["error"]).toMatchObject({
+      code: RpcErrorCode.unknownEntity,
+    });
+  });
+
+  it("refuses with notPlaying while the game is stopped, and answers a paused or stepped game", async () => {
+    const { app, peer } = await playView();
+    const uid = app.world.createEntity("Probe").uid;
+    const query = async (): Promise<Record<string, unknown>> => peer.request("queryRuntime", { entity: uid });
+
+    expect((await query())["error"]).toMatchObject({ code: RpcErrorCode.notPlaying });
+    await peer.request("step");
+    expect((await query())["result"]).toMatchObject({ entity: { uid } });
+    await peer.request("play");
+    await peer.request("pause");
+    expect((await query())["result"]).toMatchObject({ entity: { uid } });
+    await peer.request("stop");
+    expect((await query())["error"]).toMatchObject({ code: RpcErrorCode.notPlaying });
+  });
+
+  it("refuses malformed parameters", async () => {
+    const { peer } = await playView();
+    await peer.request("play");
+    const tooMany = Array.from({ length: 65 }, (_, index) => `test/T${String(index)}`);
+
+    for (const params of [
+      {},
+      { entity: "" },
+      { entity: 7 },
+      { entity: "a", components: tooMany },
+      { entity: "a", components: [3] },
+    ]) {
+      // oxlint-disable-next-line no-await-in-loop -- one request at a time, as the channel answers.
+      expect((await peer.request("queryRuntime", params))["error"]).toMatchObject({
+        code: RpcErrorCode.invalidParams,
+      });
+    }
+  });
+
+  it("refuses before the handshake", async () => {
+    const { peer } = await playView(false);
+
+    expect((await peer.request("queryRuntime", { entity: "a" }))["error"]).toMatchObject({
+      code: RpcErrorCode.notReady,
+    });
+  });
+});
+
+/**
+ * Reads a control of the game's input.
+ *
+ * @param app - The game's app.
+ * @param path - The binding path.
+ * @returns The control's value, both components for a vector.
+ */
+function read(app: App, path: string): readonly number[] {
+  const { device, control } = app.input.resolveControl(path);
+  return control.kind === "vector2"
+    ? [device.valueAt(control.offset), device.valueAt(control.offset + 1)]
+    : [device.valueAt(control.offset)];
+}
+
+describe("sendInput in the play view (engine ask E49)", () => {
+  /**
+   * Builds a game with `@ignifx/input` and play controls, handshaken.
+   *
+   * @returns The app and the editor's end.
+   */
+  async function inputPlayView(): Promise<{ app: App; peer: EditorPeer }> {
+    const app = await createApp({ headless: true, extensions: [input({ gamepadReader: null })] });
+    const target = new EventTarget();
+    const controls = startEditorPlayControls(app, { editorOrigin: EDITOR_ORIGIN, messageTarget: target });
+    const peer = connect(target);
+    cleanups.push(() => {
+      peer.close();
+      controls.dispose();
+      app.dispose();
+    });
+    return { app, peer };
+  }
+
+  it("lists sendInput when the game has app.input, and presses and releases a key on the next frame", async () => {
+    const { app, peer } = await inputPlayView();
+
+    expect((await peer.hello())["result"]).toMatchObject({
+      capabilities: ["heartbeat", "playControls", "logRelay", "queryRuntime", "sendInput"],
+    });
+    await peer.request("step");
+    const sent = (await peer.request("sendInput", { events: [{ type: "keydown", control: "w" }] }))["result"];
+
+    expect(isSendInputResult(sent)).toBe(true);
+    expect(sent).toEqual({ queued: 1 });
+    expect(read(app, "<Keyboard>/w")).toEqual([0]);
+    await peer.request("step");
+    expect(read(app, "<Keyboard>/w")).toEqual([1]);
+    await peer.request("sendInput", { events: [{ type: "keyup", control: "w" }] });
+    await peer.request("step");
+    expect(read(app, "<Keyboard>/w")).toEqual([0]);
+  });
+
+  it("moves and presses the pointer at a fraction of the canvas, in backing pixels", async () => {
+    const { app, peer } = await inputPlayView();
+    await peer.hello();
+    // A headless game has no canvas; a stand-in one is 800 × 400 backing pixels, shown at 400 × 200.
+    Object.defineProperty(app.renderer, "surface", { value: { width: 800, height: 400, clientWidth: 400 } });
+    await peer.request("step");
+
+    await peer.request("sendInput", {
+      events: [
+        { type: "pointermove", x: 0.25, y: 0.5 },
+        { type: "pointerdown", x: 0.5, y: 0.5, button: 0 },
+      ],
+    });
+    await peer.request("step");
+
+    expect(read(app, "<Pointer>/position")).toEqual([400, 200]);
+    expect(read(app, "<Mouse>/leftButton")).toEqual([1]);
+    await peer.request("sendInput", { events: [{ type: "pointerup", x: 0.5, y: 0.5 }] });
+    await peer.request("step");
+    expect(read(app, "<Mouse>/leftButton")).toEqual([0]);
+  });
+
+  it("hands app.input the events in order, with positions in backing pixels and motion in CSS pixels", async () => {
+    const app = await createApp({ headless: true });
+    const simulateEvent = vi.fn();
+    // A stand-in for `@ignifx/input`'s service: the host finds it by name and calls it by shape.
+    Object.defineProperty(app, "input", { value: { simulateEvent } });
+    Object.defineProperty(app.renderer, "surface", { value: { width: 1000, height: 500, clientWidth: 500 } });
+    const target = new EventTarget();
+    const controls = startEditorPlayControls(app, { editorOrigin: EDITOR_ORIGIN, messageTarget: target });
+    const peer = connect(target);
+    cleanups.push(() => {
+      peer.close();
+      controls.dispose();
+      app.dispose();
+    });
+    expect((await peer.hello())["result"]).toMatchObject({
+      capabilities: ["heartbeat", "playControls", "logRelay", "queryRuntime", "sendInput"],
+    });
+    await peer.request("play");
+
+    expect(
+      (
+        await peer.request("sendInput", {
+          events: [
+            { type: "pointermove", x: 0.1, y: 0.2 },
+            { type: "pointermove", x: 0.3, y: 0.2 },
+            { type: "pointerdown", x: 0.3, y: 0.2, button: 2 },
+            { type: "keydown", control: "space" },
+          ],
+        })
+      )["result"],
+    ).toEqual({ queued: 4 });
+    expect(simulateEvent.mock.calls.map(([event]: unknown[]) => event)).toEqual([
+      { type: "pointermove", x: 100, y: 100, deltaX: 0, deltaY: 0, button: 0 },
+      { type: "pointermove", x: 300, y: 100, deltaX: 100, deltaY: 0, button: 0 },
+      { type: "pointerdown", x: 300, y: 100, deltaX: 0, deltaY: 0, button: 2 },
+      { type: "keydown", code: "space" },
+    ]);
+  });
+
+  it("refuses with notPlaying while the game is stopped, and takes input while paused or stepped", async () => {
+    const { peer } = await inputPlayView();
+    await peer.hello();
+    const send = async (): Promise<Record<string, unknown>> =>
+      peer.request("sendInput", { events: [{ type: "keydown", control: "space" }] });
+
+    expect((await send())["error"]).toMatchObject({ code: RpcErrorCode.notPlaying });
+    await peer.request("step");
+    expect((await send())["result"]).toEqual({ queued: 1 });
+    await peer.request("play");
+    await peer.request("pause");
+    expect((await send())["result"]).toEqual({ queued: 1 });
+    await peer.request("stop");
+    expect((await send())["error"]).toMatchObject({ code: RpcErrorCode.notPlaying });
+  });
+
+  it("refuses malformed events, more than 64, and a key the keyboard does not have, queuing none", async () => {
+    const { app, peer } = await inputPlayView();
+    await peer.hello();
+    await peer.request("step");
+    const tooMany = Array.from({ length: 65 }, () => ({ type: "keydown", control: "w" }));
+
+    for (const events of [
+      [],
+      tooMany,
+      [{ type: "keydown" }],
+      [{ type: "keydown", control: "<Mouse>/leftButton" }],
+      [{ type: "pointermove", x: 1.5, y: 0 }],
+      [{ type: "pointerdown", x: 0, y: 0, button: 7 }],
+      [{ type: "wheel", x: 0, y: 0 }],
+      [{ type: "textinput", control: "a" }],
+    ]) {
+      // oxlint-disable-next-line no-await-in-loop -- one request at a time, as the channel answers.
+      expect((await peer.request("sendInput", { events }))["error"], JSON.stringify(events[0])).toMatchObject({
+        code: RpcErrorCode.invalidParams,
+      });
+    }
+    const unknownKey = await peer.request("sendInput", {
+      events: [
+        { type: "keydown", control: "w" },
+        { type: "keydown", control: "KeyW" },
+      ],
+    });
+    expect(unknownKey["error"]).toMatchObject({ code: RpcErrorCode.invalidParams });
+    await peer.request("step");
+    expect(read(app, "<Keyboard>/w")).toEqual([0]);
+  });
+
+  it("has no sendInput in a game without app.input", async () => {
+    const { peer } = await playView();
+
+    expect((await peer.request("sendInput", { events: [{ type: "keydown", control: "w" }] }))["error"]).toMatchObject({
       code: RpcErrorCode.methodNotFound,
     });
   });

@@ -34,9 +34,24 @@ describe("the protocol mirror", () => {
       notReady: -32_001,
       noScene: -32_002,
       notPlaying: -32_003,
+      unknownEntity: -32_004,
     });
     expect(page.HandshakeMethod).toEqual({ hello: "hello", ping: "ping" });
     expect(page.HostKind).toEqual({ scene: "scene", play: "play" });
+    expect(page.HostCapability).toEqual({
+      heartbeat: "heartbeat",
+      playControls: "playControls",
+      gizmos: "gizmos",
+      screenshot: "screenshot",
+      viewMode2d: "viewMode2d",
+      pick2d: "pick2d",
+      logRelay: "logRelay",
+      hotReloadDefaults: "hotReloadDefaults",
+      queryRuntime: "queryRuntime",
+      sendInput: "sendInput",
+    });
+    expect(page.QUERY_RUNTIME_MAX_COMPONENTS).toBe(64);
+    expect(page.SEND_INPUT_MAX_EVENTS).toBe(64);
   });
 
   it("recognises well-formed envelopes only", () => {
@@ -80,6 +95,8 @@ describe("@ignifx/editor-host entries", () => {
       playState: "playState",
       playStats: "playStats",
       screenshot: "screenshot",
+      queryRuntime: "queryRuntime",
+      sendInput: "sendInput",
     });
     expect(page.PlayNotification).toEqual({
       playStateChanged: "playStateChanged",

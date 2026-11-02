@@ -1544,6 +1544,81 @@ Incremented for additions. From 1.0 peers may differ in it; before 1.0 they must
 
 ***
 
+### QueryRuntimeParams
+
+The parameters of the `queryRuntime` method.
+
+#### Properties
+
+##### components?
+
+> `readonly` `optional` **components?**: readonly `string`[]
+
+Only the components of these type ids, at most [QUERY\_RUNTIME\_MAX\_COMPONENTS](#query_runtime_max_components); absent for
+all of them. A type id the entity does not carry matches nothing.
+
+##### entity
+
+> `readonly` **entity**: `string`
+
+The entity's uid. A scene's own entities keep their file uids at run time.
+
+***
+
+### QueryRuntimeResult
+
+Play view → editor: the answer to `queryRuntime`.
+
+#### Properties
+
+##### entity
+
+> `readonly` **entity**: [`SceneFileEntity`](#scenefileentity)
+
+The entity as `serializeEntity` writes it from the live world, with at most
+[QUERY\_RUNTIME\_MAX\_COMPONENTS](#query_runtime_max_components) components (only the filtered ones when `components` was
+given), in the entity's order, as many as fit in [QUERY\_RUNTIME\_MAX\_JSON\_LENGTH](#query_runtime_max_json_length).
+
+###### Remarks
+
+Each value is capped too: a prop string is clipped to [QUERY\_RUNTIME\_MAX\_STRING\_LENGTH](#query_runtime_max_string_length)
+(ending `… [clipped]`), a list cut to `HOST_LIST_MAX_LENGTH` items, an object to its first
+[QUERY\_RUNTIME\_MAX\_KEYS](#query_runtime_max_keys) keys, and each key, the `name`, the `layer`, each component
+`type` and each of at most [QUERY\_RUNTIME\_MAX\_KEYS](#query_runtime_max_keys) tags clipped to
+[QUERY\_RUNTIME\_MAX\_KEYS](#query_runtime_max_keys) characters. When two keys clip to the same one, the first keeps
+it. No marker is written into a value (a map's keys can be any string, so none would be safe):
+what was left out is counted in [QueryRuntimeResult.omittedEntries](#omittedentries). A value that is not JSON (a non-finite number, a function a custom codec returned)
+becomes `null`, and so does anything nested deeper than 256 levels.
+
+##### frameCount
+
+> `readonly` **frameCount**: `number`
+
+How many frames had started when it was read (`app.time.frameCount`).
+
+##### omittedComponents
+
+> `readonly` **omittedComponents**: `number`
+
+How many matching components were left out: past [QUERY\_RUNTIME\_MAX\_COMPONENTS](#query_runtime_max_components), or past
+the first that did not fit in [QUERY\_RUNTIME\_MAX\_JSON\_LENGTH](#query_runtime_max_json_length).
+
+##### omittedEntries
+
+> `readonly` **omittedEntries**: `number`
+
+How many object keys, list items and tags the caps left out of the answered entity: past
+[QUERY\_RUNTIME\_MAX\_KEYS](#query_runtime_max_keys) keys or tags, past `HOST_LIST_MAX_LENGTH` items, or a key that
+clipped to one already kept. `0` when every kept component is whole.
+
+##### time
+
+> `readonly` **time**: `number`
+
+Scaled seconds of game time when it was read (`app.time.time`).
+
+***
+
 ### ReadBackParams
 
 The parameters of `readBack`.
@@ -2661,6 +2736,89 @@ The image width in pixels.
 
 ***
 
+### SendInputKeyEvent
+
+A key press or release in a `sendInput` request.
+
+#### Properties
+
+##### control
+
+> `readonly` **control**: `string`
+
+The `<Keyboard>` control name: the physical key's `KeyboardEvent.code` in camelCase without its
+`Key` or `Digit` prefix, such as `w`, `1`, `space`, `arrowUp` or `shiftLeft`. Letters and digits
+only, at most 64 of them; a name the game's keyboard does not have fails with
+`RpcErrorCode.invalidParams`.
+
+##### type
+
+> `readonly` **type**: `"keydown"` \| `"keyup"`
+
+`"keydown"` presses the key and holds it until a `"keyup"`; `"keyup"` releases it.
+
+***
+
+### SendInputParams
+
+The parameters of the `sendInput` method.
+
+#### Properties
+
+##### events
+
+> `readonly` **events**: readonly [`SendInputEvent`](#sendinputevent)[]
+
+The events, in order: from 1 to [SEND\_INPUT\_MAX\_EVENTS](#send_input_max_events) of them.
+
+***
+
+### SendInputPointerEvent
+
+A pointer move, press or release in a `sendInput` request.
+
+#### Properties
+
+##### button?
+
+> `readonly` `optional` **button?**: `number`
+
+The `PointerEvent.button`, an integer from `0` (main) to `4`. Defaults to `0`.
+
+##### type
+
+> `readonly` **type**: `"pointermove"` \| `"pointerdown"` \| `"pointerup"`
+
+Which pointer event it is.
+
+##### x
+
+> `readonly` **x**: `number`
+
+The pointer's x as a fraction of the game's canvas width, from `0` (left) to `1` (right).
+
+##### y
+
+> `readonly` **y**: `number`
+
+The pointer's y as a fraction of the game's canvas height, from `0` (top) to `1` (bottom).
+
+***
+
+### SendInputResult
+
+Play view → editor: what `sendInput` queued.
+
+#### Properties
+
+##### queued
+
+> `readonly` **queued**: `number`
+
+How many events were queued: all of the request's.
+
+***
+
 ### SetAnimateMaterialsParams
 
 The parameters of `setAnimateMaterials`.
@@ -3173,9 +3331,10 @@ The union of the names in `PlayPhase`.
 
 ### PlayRequest
 
-> **PlayRequest** = [`RpcRequest`](#rpcrequest)\<*typeof* [`play`](#play-1), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`pause`](#pause), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`step`](#step), [`StepParams`](#stepparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`stop`](#stop), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`playState`](#playstate), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`playStats`](#playstats), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`screenshot`](#screenshot-1), [`ScreenshotParams`](#screenshotparams)\>
+> **PlayRequest** = [`RpcRequest`](#rpcrequest)\<*typeof* [`play`](#play-1), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`pause`](#pause), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`step`](#step), [`StepParams`](#stepparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`stop`](#stop), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`playState`](#playstate), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`playStats`](#playstats), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`screenshot`](#screenshot-1), [`ScreenshotParams`](#screenshotparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`queryRuntime`](#queryruntime-1), [`QueryRuntimeParams`](#queryruntimeparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`sendInput`](#sendinput-1), [`SendInputParams`](#sendinputparams)\>
 
-Editor → play view: one of the `PlayMethod`s. Only `step` and `screenshot` take parameters.
+Editor → play view: one of the `PlayMethod`s. Only `step`, `screenshot`, `queryRuntime` and
+`sendInput` take parameters.
 
 ***
 
@@ -3208,6 +3367,14 @@ Play view → editor: the answer to `playStats`.
 > **PongResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<`"pong"`\>
 
 The answer to [PingRequest](#pingrequest).
+
+***
+
+### QueryRuntimeResponse
+
+> **QueryRuntimeResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<[`QueryRuntimeResult`](#queryruntimeresult)\>
+
+Play view → editor: the answer to `queryRuntime`.
 
 ***
 
@@ -3345,6 +3512,22 @@ The success answer to `screenshot`.
 > **SelectResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<[`EntitySelection`](#entityselection)\>
 
 The success answer to `select`.
+
+***
+
+### SendInputEvent
+
+> **SendInputEvent** = [`SendInputKeyEvent`](#sendinputkeyevent) \| [`SendInputPointerEvent`](#sendinputpointerevent)
+
+One event of a `sendInput` request.
+
+***
+
+### SendInputResponse
+
+> **SendInputResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<[`SendInputResult`](#sendinputresult)\>
+
+Play view → editor: the answer to `sendInput`.
 
 ***
 
@@ -3705,6 +3888,14 @@ The scene host picks sprites in 2D view mode (`app.twoD.pickAt` from `@ignifx/2d
 
 The host answers the methods in `PlayMethod`.
 
+##### queryRuntime
+
+> `readonly` **queryRuntime**: `"queryRuntime"` = `"queryRuntime"`
+
+The play controls answer `queryRuntime`: an entity's live state in the scene format. From engine
+ask E48 (additive in 0.3); without it, the play view answers `queryRuntime` with
+`RpcErrorCode.methodNotFound`.
+
 ##### screenshot
 
 > `readonly` **screenshot**: `"screenshot"` = `"screenshot"`
@@ -3712,6 +3903,15 @@ The host answers the methods in `PlayMethod`.
 The host answers `screenshot`: the scene host captures its view, the play controls the game's
 canvas. The play controls list it from engine ask E47 (additive in 0.3); without it, the play
 view answers `screenshot` with `RpcErrorCode.methodNotFound`.
+
+##### sendInput
+
+> `readonly` **sendInput**: `"sendInput"` = `"sendInput"`
+
+The play controls answer `sendInput`: synthetic key and pointer events queued into the game's
+own input system (`app.input` from `@ignifx/input`), never into the editor's window. Listed only
+when the game has `app.input`. From engine ask E49 (additive in 0.3); without it, the play view
+answers `sendInput` with `RpcErrorCode.methodNotFound`.
 
 ##### viewMode2d
 
@@ -3721,10 +3921,11 @@ The scene host accepts `setViewMode` with `"2d"`: a 2D editor camera and planar 
 
 #### Remarks
 
-The play controls send `["heartbeat", "playControls"]`, plus `"screenshot"` when the game has a
-canvas. The scene host sends `"heartbeat"` and whichever of `"gizmos"`, `"screenshot"`,
-`"viewMode2d"` and `"pick2d"` it supports; every `SceneMethod` not tied to one of them is required
-of a 0.3 scene host.
+The play controls send `"heartbeat"`, `"playControls"`, `"logRelay"` and `"queryRuntime"`, plus
+`"screenshot"` when the game has a canvas and `"sendInput"` when it has `app.input`. The scene
+host sends `"heartbeat"` and whichever of `"gizmos"`, `"screenshot"`, `"viewMode2d"` and
+`"pick2d"` it supports; every `SceneMethod` not tied to one of them is required of a 0.3 scene
+host.
 
 ***
 
@@ -3806,7 +4007,8 @@ CSS pixels from the view's top-left corner: a DOM event's `offsetX` and `offsetY
 
 The methods the play view answers after `ready`. `play`, `pause`, `step` and `stop` answer with a
 [PlayState](#playstate-1); `playState` answers with a [PlayStateReport](#playstatereport); `playStats` answers with
-[PlayStats](#playstats-1); `screenshot` answers with a `ScreenshotResult`.
+[PlayStats](#playstats-1); `screenshot` answers with a `ScreenshotResult`; `queryRuntime` answers with a
+[QueryRuntimeResult](#queryruntimeresult); `sendInput` answers with a [SendInputResult](#sendinputresult).
 
 #### Type Declaration
 
@@ -3835,6 +4037,18 @@ Reads the game's state without changing it. Takes no parameters.
 Reads the game's frame rate, frame time, entity count and frame count without changing
 anything. Takes no parameters. The editor polls it; no notification carries it.
 
+##### queryRuntime
+
+> `readonly` **queryRuntime**: `"queryRuntime"` = `"queryRuntime"`
+
+Reads one entity of the running game as the scene format writes it ([QueryRuntimeParams](#queryruntimeparams),
+[QueryRuntimeResult](#queryruntimeresult)): its live transform, flags and component props, never anything a
+component does not serialize, and no expressions. Each value is capped and the whole answer kept
+within [QUERY\_RUNTIME\_MAX\_JSON\_LENGTH](#query_runtime_max_json_length). Changes nothing. Needs
+`HostCapability.queryRuntime`. Fails with `RpcErrorCode.notPlaying` while the game is stopped
+(before it starts, after `stop`; a stepped game is paused and answers), and with
+`RpcErrorCode.unknownEntity` when no entity of the game has the uid.
+
 ##### screenshot
 
 > `readonly` **screenshot**: `"screenshot"` = `"screenshot"`
@@ -3844,6 +4058,17 @@ answer (`ScreenshotParams`, `ScreenshotResult`). Changes nothing: a paused game 
 paused. Needs `HostCapability.screenshot`. Fails with `RpcErrorCode.notPlaying` while the frame
 loop does not run (before the game starts it, after `stop` or `step`), and with
 `RpcErrorCode.notReady` before the game's first frame.
+
+##### sendInput
+
+> `readonly` **sendInput**: `"sendInput"` = `"sendInput"`
+
+Queues synthetic key and pointer events into the game's own input system, as if the game's page
+had received them ([SendInputParams](#sendinputparams), [SendInputResult](#sendinputresult)). Nothing reaches the
+editor's window or the operating system. Needs `HostCapability.sendInput`, which a game lists
+only when it has `app.input` (`@ignifx/input`). Fails with `RpcErrorCode.notPlaying` while the
+game is stopped; a paused or stepped game takes the events and resolves them on its next frame,
+which for a stepped game is the next `step`.
 
 ##### step
 
@@ -3861,9 +4086,9 @@ Stops the frame loop with `app.stop()`. The editor reloads the view to reset the
 
 A host that answers them lists `HostCapability.playControls` in `ready`. Sent before `ready`, they
 fail with `RpcErrorCode.notReady`; sent to a host without them, with `RpcErrorCode.methodNotFound`.
-`playState`, `playStats` and `screenshot` are additive 0.3 methods: a host from before one answers
-it with `RpcErrorCode.methodNotFound`. `screenshot` also needs `HostCapability.screenshot` in the
-play view's `ready`.
+`playState`, `playStats`, `screenshot`, `queryRuntime` and `sendInput` are additive 0.3 methods:
+a host from before one answers it with `RpcErrorCode.methodNotFound`. `screenshot`, `queryRuntime`
+and `sendInput` also need the `HostCapability` of the same name in the play view's `ready`.
 
 ***
 
@@ -3952,6 +4177,45 @@ The protocol version this package describes. The editor sends it in `hello` and 
 
 ***
 
+### QUERY\_RUNTIME\_MAX\_COMPONENTS
+
+> `const` **QUERY\_RUNTIME\_MAX\_COMPONENTS**: `64` = `64`
+
+The most components a `queryRuntime` answer holds, and the most type ids its `components` filter
+may name. Components past it are counted in [QueryRuntimeResult.omittedComponents](#omittedcomponents).
+
+***
+
+### QUERY\_RUNTIME\_MAX\_JSON\_LENGTH
+
+> `const` **QUERY\_RUNTIME\_MAX\_JSON\_LENGTH**: `262144` = `262_144`
+
+The longest a `queryRuntime` answer may be: its `result` as JSON text, in UTF-16 code units
+(`JSON.stringify(result).length`), 256 Ki. Components that would pass it are left out, in order,
+and counted in [QueryRuntimeResult.omittedComponents](#omittedcomponents).
+
+***
+
+### QUERY\_RUNTIME\_MAX\_KEYS
+
+> `const` **QUERY\_RUNTIME\_MAX\_KEYS**: `256` = `256`
+
+In a `queryRuntime` answer, the most keys one object keeps and the longest a key may be; also the
+longest the entity's `name`, `layer`, each tag and each component `type` may be, and the most
+tags kept. Keys left out are counted in [QueryRuntimeResult.omittedEntries](#omittedentries).
+
+***
+
+### QUERY\_RUNTIME\_MAX\_STRING\_LENGTH
+
+> `const` **QUERY\_RUNTIME\_MAX\_STRING\_LENGTH**: `65536` = `65_536`
+
+In a `queryRuntime` answer, the longest a prop string may be, `… [clipped]` included: 64 Ki, a
+quarter of [QUERY\_RUNTIME\_MAX\_JSON\_LENGTH](#query_runtime_max_json_length), so one long string does not cost its component
+its place.
+
+***
+
 ### RpcErrorCode
 
 > `const` **RpcErrorCode**: `object`
@@ -4001,9 +4265,11 @@ A scene method that needs an open scene was called while none is open (`SceneMet
 
 > `readonly` **notPlaying**: `-32003` = `-32_003`
 
-A play method that needs the game's frame loop was called while it does not run: before the
-game starts it, after `stop`, or after `step` (`PlayMethod.screenshot`). Additive in 0.3: only
-a host that answers `screenshot` in the play view sends it.
+A play method that needs a running game was called while it does not run. `PlayMethod.screenshot`
+needs the frame loop: it fails before the game starts it, after `stop`, and after `step`.
+`PlayMethod.queryRuntime` and `PlayMethod.sendInput` need a game that plays or is paused (a
+stepped game is paused): they fail before the game starts and after `stop`. Additive in 0.3:
+only a host that answers one of those methods in the play view sends it.
 
 ##### notReady
 
@@ -4017,6 +4283,13 @@ its app has not started.
 > `readonly` **parseError**: `-32700` = `-32_700`
 
 The message was not valid JSON.
+
+##### unknownEntity
+
+> `readonly` **unknownEntity**: `-32004` = `-32_004`
+
+A play method named an entity uid the game's world does not hold (`PlayMethod.queryRuntime`).
+Additive in 0.3: only a host that answers `queryRuntime` sends it.
 
 #### Remarks
 
@@ -4355,6 +4628,14 @@ Lossy, `image/jpeg`.
 > `readonly` **png**: `"png"` = `"png"`
 
 Lossless, `image/png`.
+
+***
+
+### SEND\_INPUT\_MAX\_EVENTS
+
+> `const` **SEND\_INPUT\_MAX\_EVENTS**: `64` = `64`
+
+The most events one `sendInput` request may carry.
 
 ***
 
@@ -4962,6 +5243,53 @@ True for `{ major, minor }` with non-negative safe integers.
 
 ***
 
+### isQueryRuntimeParams()
+
+> **isQueryRuntimeParams**(`value`): `value is QueryRuntimeParams`
+
+Checks the `params` of `queryRuntime`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `params`.
+
+#### Returns
+
+`value is QueryRuntimeParams`
+
+True for a non-empty `entity` uid and, when present, a `components` list of at most
+[QUERY\_RUNTIME\_MAX\_COMPONENTS](#query_runtime_max_components) non-empty strings.
+
+***
+
+### isQueryRuntimeResult()
+
+> **isQueryRuntimeResult**(`value`): `value is QueryRuntimeResult`
+
+Checks the `result` of `queryRuntime`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `result`.
+
+#### Returns
+
+`value is QueryRuntimeResult`
+
+True for an entity record with at most [QUERY\_RUNTIME\_MAX\_COMPONENTS](#query_runtime_max_components) components,
+non-negative integer `omittedComponents`, `omittedEntries` and `frameCount`, and a non-negative
+finite `time`, no longer than [QUERY\_RUNTIME\_MAX\_JSON\_LENGTH](#query_runtime_max_json_length) as JSON.
+
+***
+
 ### isReadBackParams()
 
 > **isReadBackParams**(`value`): `value is ReadBackParams`
@@ -5400,6 +5728,73 @@ True for a PNG or JPEG data URL and sizes in range.
 
 ***
 
+### isSendInputEvent()
+
+> **isSendInputEvent**(`value`): `value is SendInputEvent`
+
+Checks one event of a `sendInput` request.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The value to test.
+
+#### Returns
+
+`value is SendInputEvent`
+
+True for a key event with a well-formed `control`, or a pointer event with `x` and `y`
+from 0 to 1 and, when present, an integer `button` from 0 to 4.
+
+***
+
+### isSendInputParams()
+
+> **isSendInputParams**(`value`): `value is SendInputParams`
+
+Checks the `params` of `sendInput`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `params`.
+
+#### Returns
+
+`value is SendInputParams`
+
+True for an `events` list of 1 to [SEND\_INPUT\_MAX\_EVENTS](#send_input_max_events) well-formed events.
+
+***
+
+### isSendInputResult()
+
+> **isSendInputResult**(`value`): `value is SendInputResult`
+
+Checks the `result` of `sendInput`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `result`.
+
+#### Returns
+
+`value is SendInputResult`
+
+True for an integer `queued` from 0 to [SEND\_INPUT\_MAX\_EVENTS](#send_input_max_events).
+
+***
+
 ### isSetAnimateMaterialsParams()
 
 > **isSetAnimateMaterialsParams**(`value`): `value is SetAnimateMaterialsParams`
@@ -5686,7 +6081,7 @@ const host = await startEditorHost({ editorOrigin: "ignifx-editor://app", canvas
 **`Beta`**
 
 Lets the editor drive a running game: answers the handshake with `hostKind: "play"`, then `play`,
-`pause`, `step`, `stop`, `playState`, `playStats` and (with a canvas) `screenshot`, and sends `playStateChanged` when the game's phase
+`pause`, `step`, `stop`, `playState`, `playStats`, `queryRuntime`, (with a canvas) `screenshot` and (with `app.input`) `sendInput`, and sends `playStateChanged` when the game's phase
 changes, and `log`, `hostError` and `hotReloaded` for the game's log lines, `app.onError` reports
 and hot reloads (the newest 256 from before the handshake right after it).
 
