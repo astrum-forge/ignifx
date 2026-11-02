@@ -15,6 +15,7 @@ import {
   isSendInputResult,
   QUERY_RUNTIME_MAX_JSON_LENGTH,
   QUERY_RUNTIME_MAX_KEYS,
+  QUERY_RUNTIME_MAX_STRING_LENGTH,
   PlayNotification,
   RpcErrorCode,
 } from "../src/protocol/index.js";
@@ -765,6 +766,7 @@ describe("queryRuntime in the play view (engine ask E48)", () => {
         components: [{ uid: player.components[1]?.uid, type: "test/Mover", props: { speed: 4 } }],
       },
       omittedComponents: 0,
+      omittedEntries: 0,
       frameCount: 1,
       time: 0.05,
     });
@@ -821,6 +823,7 @@ describe("queryRuntime in the play view (engine ask E48)", () => {
     const { name, components } = (answer as { entity: { name: string; components: { props: JsonObject }[] } }).entity;
     expect(name).toBe("x".repeat(QUERY_RUNTIME_MAX_KEYS));
     expect(components[0]?.props["lines"]).toHaveLength(HOST_LIST_MAX_LENGTH);
+    expect(answer).toMatchObject({ omittedEntries: 5 });
   });
 
   it("cuts a huge map to 256 keys of at most 256 characters, counting the rest", async () => {
@@ -844,17 +847,67 @@ describe("queryRuntime in the play view (engine ask E48)", () => {
     const props = (answer as { entity: { components: { props: { rows: Record<string, unknown> } }[] } }).entity
       .components[0]?.props;
     const keys = Object.keys(props?.rows ?? {});
-    expect(keys).toHaveLength(QUERY_RUNTIME_MAX_KEYS + 1);
+    expect(keys).toHaveLength(QUERY_RUNTIME_MAX_KEYS);
     expect(keys.every((key) => key.length <= QUERY_RUNTIME_MAX_KEYS)).toBe(true);
-    expect(props?.rows["$omitted"]).toBe(50_000 - QUERY_RUNTIME_MAX_KEYS);
+    expect(answer).toMatchObject({ omittedEntries: 50_000 - QUERY_RUNTIME_MAX_KEYS });
+  });
+
+  it("keeps a __proto__ map key and a $omitted one as entries, and the first of two keys that clip alike", async () => {
+    class Table extends Component.define({ rows: map(str()) }) {
+      static typeId = "test/Table";
+    }
+    const { app, peer } = await playView();
+    const entity = app.world.createEntity("Table");
+    const rows: Record<string, string> = {};
+    for (const [key, value] of [
+      ["__proto__", "proto"],
+      ["$omitted", "dollar"],
+      [`${"a".repeat(QUERY_RUNTIME_MAX_KEYS)}1`, "first"],
+      [`${"a".repeat(QUERY_RUNTIME_MAX_KEYS)}2`, "second"],
+    ]) {
+      Object.defineProperty(rows, key ?? "", { value, enumerable: true, writable: true, configurable: true });
+    }
+    entity.addComponent(Table, { rows });
+    await peer.request("play");
+
+    const response = await peer.request("queryRuntime", { entity: entity.uid });
+    const answer = response["result"];
+
+    expect(isQueryRuntimeResult(answer)).toBe(true);
+    const props = (answer as { entity: { components: { props: { rows: object } }[] } }).entity.components[0]?.props;
+    const entries = Object.entries(props?.rows ?? {});
+    // Sorted as core's encoder writes a map: `$omitted`, `__proto__`, then the two long keys.
+    expect(entries).toEqual([
+      ["$omitted", "dollar"],
+      ["__proto__", "proto"],
+      ["a".repeat(QUERY_RUNTIME_MAX_KEYS), "first"],
+    ]);
+    expect(answer).toMatchObject({ omittedEntries: 1 });
+    expect(JSON.stringify(response)).toContain('"__proto__":"proto"');
+  });
+
+  it("clips a long string to 64 Ki, so its component still fits", async () => {
+    const { app, peer } = await playView();
+    const entity = app.world.createEntity("Notebook");
+    entity.addComponent(Notes, { text: "y".repeat(600_000) });
+    await peer.request("play");
+
+    const answer = (await peer.request("queryRuntime", { entity: entity.uid }))["result"];
+
+    expect(isQueryRuntimeResult(answer)).toBe(true);
+    const text = (answer as { entity: { components: { props: { text: string } }[] } }).entity.components[0]?.props.text;
+    expect(text).toHaveLength(QUERY_RUNTIME_MAX_STRING_LENGTH);
+    expect(text?.endsWith(CLIPPED_MARKER)).toBe(true);
+    expect(answer).toMatchObject({ omittedComponents: 0 });
   });
 
   it("keeps the whole answer within its budget, moving the components that do not fit to omittedComponents", async () => {
     const { app, peer } = await playView();
     const entity = app.world.createEntity("Notebook");
     entity.addComponent(Mover);
-    // About 600 Ki of text: past the 256 Ki budget, so it and every component after it are left out.
-    entity.addComponent(Notes, { text: "y".repeat(600_000) });
+    // Five strings of 60 Ki: past the 256 Ki budget together, so it and every component after it are
+    // left out.
+    entity.addComponent(Notes, { lines: Array.from({ length: 5 }, () => "y".repeat(60_000)) });
     entity.addComponent(
       class extends Component.define({ index: f32(1) }) {
         static typeId = "test/After";

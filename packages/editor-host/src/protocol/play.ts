@@ -110,11 +110,20 @@ export const QUERY_RUNTIME_MAX_JSON_LENGTH = 262_144;
 /**
  * In a `queryRuntime` answer, the most keys one object keeps and the longest a key may be; also the
  * longest the entity's `name`, `layer`, each tag and each component `type` may be, and the most
- * tags kept. An object cut short gets the key `"$omitted"` with how many keys it lost.
+ * tags kept. Keys left out are counted in {@link QueryRuntimeResult.omittedEntries}.
  *
  * @public
  */
 export const QUERY_RUNTIME_MAX_KEYS = 256;
+
+/**
+ * In a `queryRuntime` answer, the longest a prop string may be, `… [clipped]` included: 64 Ki, a
+ * quarter of {@link QUERY_RUNTIME_MAX_JSON_LENGTH}, so one long string does not cost its component
+ * its place.
+ *
+ * @public
+ */
+export const QUERY_RUNTIME_MAX_STRING_LENGTH = 65_536;
 
 /**
  * The parameters of the `queryRuntime` method.
@@ -143,11 +152,13 @@ export interface QueryRuntimeResult {
    * given), in the entity's order, as many as fit in {@link QUERY_RUNTIME_MAX_JSON_LENGTH}.
    *
    * @remarks
-   * Each value is capped too: a prop string is clipped to `HOST_TEXT_MAX_LENGTH`, a list cut to
-   * `HOST_LIST_MAX_LENGTH` items, an object to {@link QUERY_RUNTIME_MAX_KEYS} keys (the rest
-   * counted in its `"$omitted"` key), and each key, the `name`, the `layer`, each component `type`
-   * and each of at most {@link QUERY_RUNTIME_MAX_KEYS} tags clipped to {@link QUERY_RUNTIME_MAX_KEYS}
-   * characters. A value that is not JSON (a non-finite number, a function a custom codec returned)
+   * Each value is capped too: a prop string is clipped to {@link QUERY_RUNTIME_MAX_STRING_LENGTH}
+   * (ending `… [clipped]`), a list cut to `HOST_LIST_MAX_LENGTH` items, an object to its first
+   * {@link QUERY_RUNTIME_MAX_KEYS} keys, and each key, the `name`, the `layer`, each component
+   * `type` and each of at most {@link QUERY_RUNTIME_MAX_KEYS} tags clipped to
+   * {@link QUERY_RUNTIME_MAX_KEYS} characters. When two keys clip to the same one, the first keeps
+   * it. No marker is written into a value (a map's keys can be any string, so none would be safe):
+   * what was left out is counted in {@link QueryRuntimeResult.omittedEntries}. A value that is not JSON (a non-finite number, a function a custom codec returned)
    * becomes `null`, and so does anything nested deeper than 256 levels.
    */
   readonly entity: SceneFileEntity;
@@ -156,6 +167,12 @@ export interface QueryRuntimeResult {
    * the first that did not fit in {@link QUERY_RUNTIME_MAX_JSON_LENGTH}.
    */
   readonly omittedComponents: number;
+  /**
+   * How many object keys, list items and tags the caps left out of the answered entity: past
+   * {@link QUERY_RUNTIME_MAX_KEYS} keys or tags, past `HOST_LIST_MAX_LENGTH` items, or a key that
+   * clipped to one already kept. `0` when every kept component is whole.
+   */
+  readonly omittedEntries: number;
   /** How many frames had started when it was read (`app.time.frameCount`). */
   readonly frameCount: number;
   /** Scaled seconds of game time when it was read (`app.time.time`). */
@@ -523,8 +540,8 @@ export function isQueryRuntimeParams(value: unknown): value is QueryRuntimeParam
  *
  * @param value - The received `result`.
  * @returns True for an entity record with at most {@link QUERY_RUNTIME_MAX_COMPONENTS} components,
- * a non-negative integer `omittedComponents` and `frameCount`, and a non-negative finite `time`,
- * no longer than {@link QUERY_RUNTIME_MAX_JSON_LENGTH} as JSON.
+ * non-negative integer `omittedComponents`, `omittedEntries` and `frameCount`, and a non-negative
+ * finite `time`, no longer than {@link QUERY_RUNTIME_MAX_JSON_LENGTH} as JSON.
  *
  * @public
  */
@@ -534,6 +551,7 @@ export function isQueryRuntimeResult(value: unknown): value is QueryRuntimeResul
   }
   const entity = value["entity"];
   const omitted = value["omittedComponents"];
+  const omittedEntries = value["omittedEntries"];
   const frameCount = value["frameCount"];
   const time = value["time"];
   return (
@@ -542,6 +560,9 @@ export function isQueryRuntimeResult(value: unknown): value is QueryRuntimeResul
     typeof omitted === "number" &&
     Number.isSafeInteger(omitted) &&
     omitted >= 0 &&
+    typeof omittedEntries === "number" &&
+    Number.isSafeInteger(omittedEntries) &&
+    omittedEntries >= 0 &&
     typeof frameCount === "number" &&
     Number.isSafeInteger(frameCount) &&
     frameCount >= 0 &&

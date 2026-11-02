@@ -1581,11 +1581,13 @@ given), in the entity's order, as many as fit in [QUERY\_RUNTIME\_MAX\_JSON\_LEN
 
 ###### Remarks
 
-Each value is capped too: a prop string is clipped to `HOST_TEXT_MAX_LENGTH`, a list cut to
-`HOST_LIST_MAX_LENGTH` items, an object to [QUERY\_RUNTIME\_MAX\_KEYS](#query_runtime_max_keys) keys (the rest
-counted in its `"$omitted"` key), and each key, the `name`, the `layer`, each component `type`
-and each of at most [QUERY\_RUNTIME\_MAX\_KEYS](#query_runtime_max_keys) tags clipped to [QUERY\_RUNTIME\_MAX\_KEYS](#query_runtime_max_keys)
-characters. A value that is not JSON (a non-finite number, a function a custom codec returned)
+Each value is capped too: a prop string is clipped to [QUERY\_RUNTIME\_MAX\_STRING\_LENGTH](#query_runtime_max_string_length)
+(ending `… [clipped]`), a list cut to `HOST_LIST_MAX_LENGTH` items, an object to its first
+[QUERY\_RUNTIME\_MAX\_KEYS](#query_runtime_max_keys) keys, and each key, the `name`, the `layer`, each component
+`type` and each of at most [QUERY\_RUNTIME\_MAX\_KEYS](#query_runtime_max_keys) tags clipped to
+[QUERY\_RUNTIME\_MAX\_KEYS](#query_runtime_max_keys) characters. When two keys clip to the same one, the first keeps
+it. No marker is written into a value (a map's keys can be any string, so none would be safe):
+what was left out is counted in [QueryRuntimeResult.omittedEntries](#omittedentries). A value that is not JSON (a non-finite number, a function a custom codec returned)
 becomes `null`, and so does anything nested deeper than 256 levels.
 
 ##### frameCount
@@ -1600,6 +1602,14 @@ How many frames had started when it was read (`app.time.frameCount`).
 
 How many matching components were left out: past [QUERY\_RUNTIME\_MAX\_COMPONENTS](#query_runtime_max_components), or past
 the first that did not fit in [QUERY\_RUNTIME\_MAX\_JSON\_LENGTH](#query_runtime_max_json_length).
+
+##### omittedEntries
+
+> `readonly` **omittedEntries**: `number`
+
+How many object keys, list items and tags the caps left out of the answered entity: past
+[QUERY\_RUNTIME\_MAX\_KEYS](#query_runtime_max_keys) keys or tags, past `HOST_LIST_MAX_LENGTH` items, or a key that
+clipped to one already kept. `0` when every kept component is whole.
 
 ##### time
 
@@ -4192,7 +4202,17 @@ and counted in [QueryRuntimeResult.omittedComponents](#omittedcomponents).
 
 In a `queryRuntime` answer, the most keys one object keeps and the longest a key may be; also the
 longest the entity's `name`, `layer`, each tag and each component `type` may be, and the most
-tags kept. An object cut short gets the key `"$omitted"` with how many keys it lost.
+tags kept. Keys left out are counted in [QueryRuntimeResult.omittedEntries](#omittedentries).
+
+***
+
+### QUERY\_RUNTIME\_MAX\_STRING\_LENGTH
+
+> `const` **QUERY\_RUNTIME\_MAX\_STRING\_LENGTH**: `65536` = `65_536`
+
+In a `queryRuntime` answer, the longest a prop string may be, `… [clipped]` included: 64 Ki, a
+quarter of [QUERY\_RUNTIME\_MAX\_JSON\_LENGTH](#query_runtime_max_json_length), so one long string does not cost its component
+its place.
 
 ***
 
@@ -5265,8 +5285,8 @@ The received `result`.
 `value is QueryRuntimeResult`
 
 True for an entity record with at most [QUERY\_RUNTIME\_MAX\_COMPONENTS](#query_runtime_max_components) components,
-a non-negative integer `omittedComponents` and `frameCount`, and a non-negative finite `time`,
-no longer than [QUERY\_RUNTIME\_MAX\_JSON\_LENGTH](#query_runtime_max_json_length) as JSON.
+non-negative integer `omittedComponents`, `omittedEntries` and `frameCount`, and a non-negative
+finite `time`, no longer than [QUERY\_RUNTIME\_MAX\_JSON\_LENGTH](#query_runtime_max_json_length) as JSON.
 
 ***
 

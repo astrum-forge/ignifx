@@ -329,9 +329,10 @@ object `openScene` sends, through `world.loadSceneFile`; `readBack` answers with
   headless play view answers `methodNotFound`.
 - **The play view's `queryRuntime` reads one live entity.** `{ entity: uid, components?: typeId[] }`
   answers the entity as `serializeEntity` writes it (serialized props only, no expressions), with at
-  most 64 components, objects cut to 256 keys (`"$omitted"` counts the rest), keys and names
-  clipped to 256 characters, and the whole answer within 262,144 characters of JSON: components past
-  the budget, in order, are counted in `omittedComponents`. An
+  most 64 components, prop strings clipped to 64 Ki, objects cut to 256 keys, keys and names
+  clipped to 256 characters (`omittedEntries` counts the keys, items and tags left out), and the
+  whole answer within 262,144 characters of JSON: components past the budget, in order, are counted
+  in `omittedComponents`. An
   unknown uid answers `unknownEntity`; a stopped game `notPlaying`. A paused or stepped game
   answers, so pause, `step`, `queryRuntime` reads a game frame by frame. Spawned entities get new
   uids each run; a scene's own keep their file uids.

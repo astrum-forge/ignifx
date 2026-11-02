@@ -736,6 +736,9 @@ export const QUERY_RUNTIME_MAX_JSON_LENGTH = 262144;
 export const QUERY_RUNTIME_MAX_KEYS = 256;
 
 // @public
+export const QUERY_RUNTIME_MAX_STRING_LENGTH = 65536;
+
+// @public
 export interface QueryRuntimeParams {
     readonly components?: readonly string[];
     readonly entity: string;
@@ -749,6 +752,7 @@ export interface QueryRuntimeResult {
     readonly entity: SceneFileEntity;
     readonly frameCount: number;
     readonly omittedComponents: number;
+    readonly omittedEntries: number;
     readonly time: number;
 }
 
