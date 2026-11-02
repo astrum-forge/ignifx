@@ -50,3 +50,23 @@ describe("the recorded template frame budgets", () => {
     expect(baselines.frameTime.swiftShaderFactorNote.length).toBeGreaterThan(120);
   });
 });
+
+/** Coding standards §7: the `medium` tier's whole-frame GPU budget on its reference device, the M1. */
+const MEDIUM_TIER_GPU_FRAME_MS = 12;
+
+describe("the recorded template GPU budgets", () => {
+  const GPU_TEMPLATES = ["3d-third-person", "3d-first-person"] as const;
+
+  it.each(GPU_TEMPLATES)("keeps %s's GPU ceiling inside the §7 medium-tier frame", (name) => {
+    const row = baselines.gpuTime.templates[name];
+    expect(row.standardsBudgetMs).toBe(MEDIUM_TIER_GPU_FRAME_MS);
+    expect(row.budgetMs).toBeLessThanOrEqual(MEDIUM_TIER_GPU_FRAME_MS);
+    expect(row.medianMs).toBeGreaterThan(0);
+    expect(
+      row.medianMs,
+      `${name}: the recorded GPU median is ${String(row.medianMs)} ms and the ceiling is ` +
+        `${String(row.budgetMs)} ms. Re-run \`pnpm test:gpu-budget\` and re-record.`,
+    ).toBeLessThanOrEqual(row.budgetMs);
+    expect(row.recordedOn).toMatch(/^\d{4}-\d{2}-\d{2}$/u);
+  });
+});

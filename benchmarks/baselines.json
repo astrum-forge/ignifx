@@ -197,5 +197,28 @@
       "registeredSystemsWhileClosed": 0,
       "subscriptionsWhileClosed": 0
     }
+  },
+  "gpuTime": {
+    "recordedOn": "2026-11-02",
+    "machine": "Apple M1 (adapter apple / metal-3), macOS 26.6 arm64, Chromium (Playwright) on the host GPU, 1920x1080 at device pixel ratio 1, 300 frames after a 120-frame warm-up, @babylonjs/lite 1.34.0",
+    "note": "Whole-frame GPU milliseconds (renderer.gpuFrameTimeMs) per 3D template under ?bench=1, measured by tests/visual/tests/gpu-time.spec.ts (`pnpm test:gpu-budget`, local only: GitHub runners have no GPU). `standardsBudgetMs` is the coding-standards §7 whole-frame GPU budget for the `medium` tier, whose reference device is the M1; `benchmarks/template-frame-time.test.ts` keeps every ceiling inside it. Per-task numbers are missing because renderer.profileTasks does not enable Lite's per-task timing yet (taskTimings() reads \"disabled\"); the spec prints them once it does.",
+    "templates": {
+      "3d-third-person": {
+        "medianMs": 0.61,
+        "worstMs": 0.99,
+        "budgetMs": 2,
+        "standardsBudgetMs": 12,
+        "recordedOn": "2026-11-02",
+        "note": "Three runs measured medians of 0.585, 0.606 and 0.555 ms and worst frames of 0.96, 0.99 and 0.67 ms; the row records the highest of each. The ceiling is 2 ms, about 3x the median. No Phase 1 effect is on yet, so this is the baseline later GI steps add to."
+      },
+      "3d-first-person": {
+        "medianMs": 0.61,
+        "worstMs": 1.78,
+        "budgetMs": 2,
+        "standardsBudgetMs": 12,
+        "recordedOn": "2026-11-02",
+        "note": "Three runs measured medians of 0.576, 0.584 and 0.607 ms and worst frames of 0.79, 1.78 and 0.67 ms; the row records the highest of each. Same ceiling and reasoning as the third-person template."
+      }
+    }
   }
 }

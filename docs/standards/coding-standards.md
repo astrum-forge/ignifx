@@ -150,6 +150,16 @@ Run `pnpm lint` after committing. Inline rule overrides need a short reason; the
 - Store bulk data such as sprites, particles, and interpolation poses in separate typed arrays per field.
 - Expose subsystem counters through `app.diagnostics`.
 - Meet template budgets: 60 fps on the reference machine, with engine CPU time at most 2 ms in 2D and 4 ms in 3D. Per-scene and bundle limits live in `benchmarks/baselines.json`.
+- Meet the GPU budget per quality tier. At 1080p, all GI Phase 1 passes together (including the shared geometry pass) and the whole frame must fit:
+
+  | Tier     | Devices                                           | Phase 1 passes                                                                                                | Whole frame |
+  | -------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ----------- |
+  | `low`    | phones, integrated GPUs on battery                | ≤ 1.5 ms on the reference M1: GTAO at half resolution, LDR or HDR bloom, AgX; no TAA, SSGI or contact shadows | ≤ 12 ms     |
+  | `medium` | integrated GPUs (reference: Apple M1)             | ≤ 4 ms on the M1: adds HDR, TAA, contact shadows                                                              | ≤ 12 ms     |
+  | `high`   | mid-range desktop GPUs (RTX 3060 / RX 6600 class) | ≤ 3 ms: adds SSGI and full-resolution GTAO                                                                    | ≤ 10 ms     |
+
+  `pnpm test:gpu-budget` measures each 3D template's GPU time on the host GPU (`renderer.gpuFrameTimeMs`, per task through `renderer.taskTimings()`) against the `gpuTime` ceilings in `benchmarks/baselines.json`. It needs a real GPU, so it runs locally, never in CI. A PR that adds or changes a rendering pass pastes its result. The `high` row has not been measured on its device class yet.
+
 - Allocation tests run 600 headless steps with `--expose-gc` and check bounded heap growth. Browser memory checks use `performance.measureUserAgentSpecificMemory()` where available.
 - Measure before optimising. Include a before/after benchmark result when changing hot code. Do not raise budgets to conceal a regression.
 
@@ -261,7 +271,7 @@ Quarantine flaky tests with `test.skip` and an issue link, then fix or delete th
 
 [`ci.yml`](../../.github/workflows/ci.yml) defines the jobs: frozen install, build, formatting, lint, types, unit/browser tests, timing and bundle budgets, package checks, API reports, docs, licenses, and dependency layers.
 Every job restores Turborepo's cache from earlier runs, so a build only redoes what changed. Desktop packaging runs on a pull request only when it touches Electron, the CLI, or the packaged template. Nothing runs on a schedule.
-Visual goldens (`pnpm test:visual`) and frame budgets (`pnpm test:frame-budget`) are not in CI. They take minutes, so run them locally only when a change can affect rendering or frame time, and paste the result into the pull request. Frame budgets are measured on macOS arm64, the recorded machine class (ADR-0009).
+Visual goldens (`pnpm test:visual`), frame budgets (`pnpm test:frame-budget`) and GPU budgets (`pnpm test:gpu-budget`) are not in CI. They take minutes, so run them locally only when a change can affect rendering or frame time, and paste the result into the pull request. Frame budgets are measured on macOS arm64, the recorded machine class (ADR-0009); GPU budgets need the host GPU, which CI runners do not have (§7).
 
 [`release.yml`](../../.github/workflows/release.yml) creates the **Version Packages** PR.
 Its `pnpm version-packages` step updates package versions, skill versions, and schemas.
