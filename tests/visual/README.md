@@ -20,7 +20,7 @@ pnpm --filter ignifx-visual-tests run test:visual:update      # regenerate the g
 | `frame-budget` | `frame-time.spec.ts`                  | `pnpm test:frame-budget` |
 | `gpu-budget`   | `gpu-time.spec.ts`                    | `pnpm test:gpu-budget`   |
 
-None runs in CI (owner decision, 2026-10-03). Both take minutes; run them locally, and only when a
+None runs in CI (owner decision, 2026-10-03). Each takes minutes; run them locally, and only when a
 change can affect rendering or frame time (coding standards §12). `--grep <name>` runs one scene.
 
 A golden is an image comparison, and SwiftShader makes it reproducible on any machine. A frame
