@@ -233,7 +233,8 @@ function outputPath(command: ConvertTilemapCommand, source: string, map: Convert
     return command.output === null ? join(dirname(source), `${map.name}${TILEMAP_SUFFIX}`) : resolve(command.output);
   }
   const folder = command.output === null ? dirname(source) : resolve(command.output);
-  return join(folder, `${map.name}${TILEMAP_SUFFIX}`);
+  // A level identifier comes from the file; keep it a plain file name so it cannot leave `folder`.
+  return join(folder, `${map.name.replaceAll(/[^\w-]/gu, "_")}${TILEMAP_SUFFIX}`);
 }
 
 /**

@@ -284,6 +284,15 @@ describe("runConvertTilemap on an LDtk project", () => {
     expect(document.tilesets[0]?.atlas).toBe("../ldtk/cave.atlas.json");
   });
 
+  it("keeps a level whose identifier is a path inside the output folder", async () => {
+    const source = await writeJson("escape.ldtk", {
+      defs: { tilesets: [], layers: [] },
+      levels: [{ identifier: "../escaped", pxWid: 16, pxHei: 16, layerInstances: [] }],
+    });
+    const result = await runConvertTilemap([source, join(workspace, "out")], recordingIo());
+    expect(result.tilemaps).toEqual([join(workspace, "out", "___escaped.tilemap.json")]);
+  });
+
   it("refuses flipped tiles with IGX-1408 unless --drop-flips is passed", async () => {
     const project = JSON.parse(await text(join(workspace, "ldtk", "world.ldtk"))) as {
       levels: { layerInstances: { gridTiles: { f: number }[] }[] | null }[];
