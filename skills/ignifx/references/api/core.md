@@ -33492,6 +33492,8 @@ byte-identical output through [stringifySceneFile](#stringifyscenefile). The rul
 - Overrides reach only the prefab's own entities. Content of a scene the prefab itself instances
   is not addressable by an override path, so a nested prefab is never edited: an override that
   names something the prefab file does not hold is skipped.
+- An override is skipped when an earlier override that stays on the instance overlaps its path, so
+  the instance keeps the value it had.
 - A skipped override stays on the returned instance. The instance's own `components` are not
   overrides and are not touched.
 - Other instances of the prefab keep their overrides, which still win over the new prefab values

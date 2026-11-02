@@ -179,6 +179,27 @@ describe("applyOverridesToAsset", () => {
     expect(result.asset.entities[0]?.components?.map((component) => component.uid)).toEqual(["AI", "DEBUG"]);
   });
 
+  it("skips an override an earlier one that stays on the instance overlaps", async () => {
+    const prefab = buildFile({
+      entities: [
+        entityRecord({
+          uid: "R",
+          components: [{ uid: "AI", type: "test/Everything", props: { offset: [0, 0, 0] } }],
+        }),
+      ],
+    });
+    const overrides: SceneFileOverride[] = [
+      { path: "R/components/AI/props/offset", value: [1, 1, 1] },
+      { path: "R/components/AI/props/offset/0", value: 5 },
+    ];
+    const instance: SceneFileInstance = { scene: { $asset: PREFAB }, overrides };
+    const result = await applyOverridesToAsset(instance, prefab, { paths: ["R/components/AI/props/offset/0"] });
+    expect(result.applied).toEqual([]);
+    expect(result.skipped.map((skip) => skip.override)).toEqual([overrides[1]]);
+    const offset = (await spawn(result.asset, result.instance)).getComponent(Everything)?.offset;
+    expect([offset?.x, offset?.y, offset?.z]).toEqual([5, 1, 1]);
+  });
+
   it("returns the prefab unchanged when nothing applies", async () => {
     const prefab = enemyFile();
     const result = await applyOverridesToAsset({ scene: { $asset: PREFAB } }, prefab);

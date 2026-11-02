@@ -77,6 +77,8 @@ export interface PrefabApplyResult {
  * - Overrides reach only the prefab's own entities. Content of a scene the prefab itself instances
  *   is not addressable by an override path, so a nested prefab is never edited: an override that
  *   names something the prefab file does not hold is skipped.
+ * - An override is skipped when an earlier override that stays on the instance overlaps its path, so
+ *   the instance keeps the value it had.
  * - A skipped override stays on the returned instance. The instance's own `components` are not
  *   overrides and are not touched.
  * - Other instances of the prefab keep their overrides, which still win over the new prefab values
@@ -127,7 +129,7 @@ export async function applyOverridesToAsset(
       continue;
     }
     const parsed = parseOverridePath(override.path);
-    let reason = precheck(override, parsed, singleRootUid, uids);
+    let reason = precheck(override, parsed, singleRootUid, uids) ?? shadowedBy(override, remaining);
     if (reason === null) {
       applyOverrides([override], lookup, (message) => {
         reason ??= message;
@@ -267,6 +269,39 @@ function precheck(
     return `"${override.path}" adds component ${added}, a uid the prefab file already uses.`;
   }
   return null;
+}
+
+/**
+ * Why an override must stay on the instance: an earlier override that stays there overlaps it, and
+ * once baked into the prefab the applied one would run first and lose to it.
+ *
+ * @param override - The selected override.
+ * @param remaining - The earlier overrides that stay on the instance.
+ * @returns Why the override cannot be applied, or `null`.
+ */
+function shadowedBy(override: SceneFileOverride, remaining: readonly SceneFileOverride[]): string | null {
+  const key = overlapKey(override);
+  const earlier = remaining.find((candidate) => {
+    const other = overlapKey(candidate);
+    return (
+      addedComponentUid(candidate) === null &&
+      (key === other || key.startsWith(`${other}/`) || other.startsWith(`${key}/`))
+    );
+  });
+  return earlier === undefined
+    ? null
+    : `"${override.path}" follows "${earlier.path}", which stays on the instance and overlaps it.`;
+}
+
+/**
+ * The part of an override's path that decides overlap: cut at the prop field, so array index shifts
+ * inside one field count.
+ *
+ * @param override - The override.
+ * @returns The key.
+ */
+function overlapKey(override: SceneFileOverride): string {
+  return override.path.split("/").slice(0, 5).join("/");
 }
 
 /**
