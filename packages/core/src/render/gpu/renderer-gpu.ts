@@ -8,8 +8,8 @@ import {
 } from "../../lite/gpu/render-diagnostics-gpu.js";
 import { warmUpMaterials } from "../../lite/gpu/warm-up.js";
 import type { openOverlayScene } from "../../lite/gpu/overlay.js";
-import type { createLiteRenderTexture } from "../../lite/gpu/render-texture.js";
 import type { LiteGpuPicker } from "../../lite/gpu/picker.js";
+import type { createLiteRenderTexture } from "../../lite/gpu/render-texture.js";
 import type { MaterialWarmUp } from "../../lite/gpu/warm-up.js";
 import type { LitePickInfo, PickAccept, PickedIdentity } from "../../lite/picking.js";
 import type { LiteEngine, LiteScene } from "../../lite/scene.js";

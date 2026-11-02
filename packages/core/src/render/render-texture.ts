@@ -1,8 +1,8 @@
 import { CoreErrorCode } from "../errors/error-codes.js";
 import { IgnifxError } from "../errors/ignifx-error.js";
-import type { LiteRenderTexture } from "../lite/gpu/render-texture.js";
-import type { LiteCamera } from "../lite/camera.js";
 import type { RenderCapture } from "./renderer.js";
+import type { LiteCamera } from "../lite/camera.js";
+import type { LiteRenderTexture } from "../lite/gpu/render-texture.js";
 
 /**
  * The largest side of a render texture, in pixels.

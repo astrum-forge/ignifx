@@ -1,8 +1,11 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { Camera } from "../../src/render/camera.js";
-import { RENDER_TEXTURE_MAX_SIZE } from "../../src/render/render-texture.js";
+import { RENDER_TEXTURE_MAX_SIZE, RenderTextureImpl } from "../../src/render/render-texture.js";
 import { createRenderHarness } from "./support/render-harness.js";
 import type { RenderHarness } from "./support/render-harness.js";
+import type { LiteCamera } from "../../src/lite/camera.js";
+import type { LiteRenderTexture } from "../../src/lite/gpu/render-texture.js";
+import type { RenderTextureOwner } from "../../src/render/render-texture.js";
 
 /**
  * `app.renderer.createRenderTexture` and `renderToTexture` (`docs/architecture/07-rendering.md`
@@ -91,5 +94,111 @@ describe("render textures on a headless app", () => {
     h.app.dispose();
     expect(texture.isDisposed).toBe(true);
     expect(() => h.app.renderer.createRenderTexture(8, 8)).toThrow(expect.objectContaining({ code: "IGX-0106" }));
+  });
+});
+
+/** A fake GPU pass that records what the texture asked of it. */
+interface FakePass extends LiteRenderTexture {
+  /** Every camera the pass was pointed at, `null` for off. */
+  readonly cameras: (object | null)[];
+  /** Whether `dispose` ran. */
+  disposed: boolean;
+}
+
+/**
+ * A texture over a fake owner, for the per-frame logic without a device.
+ *
+ * @param fail - Whether creating the pass fails.
+ * @returns The texture, its pass, and what the owner saw.
+ */
+function fakeTexture(fail = false): { texture: RenderTextureImpl; pass: FakePass; released: RenderTextureImpl[] } {
+  const pass: FakePass = {
+    cameras: [],
+    disposed: false,
+    setCamera(camera): void {
+      pass.cameras.push(camera);
+    },
+    read: async () => new Uint8ClampedArray(4 * 2 * 3),
+    dispose(): void {
+      pass.disposed = true;
+    },
+  };
+  const released: RenderTextureImpl[] = [];
+  const owner: RenderTextureOwner = {
+    createPass: async () => (fail ? Promise.reject(new Error("no device")) : pass),
+    release: (texture) => {
+      released.push(texture);
+    },
+  };
+  return { texture: new RenderTextureImpl(owner, 2, 3), pass, released };
+}
+
+/** Two stand-in Lite cameras; the texture only compares them by identity. */
+// oxlint-disable-next-line typescript/no-unsafe-type-assertion -- identity is all the texture reads
+const EYE_A = {} as LiteCamera;
+// oxlint-disable-next-line typescript/no-unsafe-type-assertion
+const EYE_B = {} as LiteCamera;
+
+describe("a render texture's frames", () => {
+  it("renders the oldest request's camera, settles its requests after the frame, then the frame camera", async () => {
+    const { texture, pass } = fakeTexture();
+    await texture.pass("test");
+    const first = texture.request(EYE_A);
+    const again = texture.request(EYE_A);
+    const second = texture.request(EYE_B);
+    let settled = 0;
+    for (const request of [first, again]) {
+      void request.then(() => {
+        settled += 1;
+      });
+    }
+    texture.setFrameCamera(EYE_B);
+    texture.flush();
+    expect(pass.cameras).toEqual([EYE_A]);
+    expect(settled).toBe(0);
+    await Promise.all([first, again]);
+    expect(settled).toBe(2);
+    texture.flush();
+    await second;
+    texture.setFrameCamera(EYE_A);
+    texture.flush();
+    texture.flush();
+    expect(pass.cameras).toEqual([EYE_A, EYE_B, EYE_A, null]);
+  });
+
+  it("starts its pass from the first frame camera, and reads through it", async () => {
+    const { texture, pass } = fakeTexture();
+    texture.setFrameCamera(EYE_A);
+    texture.flush();
+    expect(pass.cameras).toEqual([]);
+    await texture.pass("test");
+    texture.setFrameCamera(EYE_A);
+    texture.flush();
+    expect(pass.cameras).toEqual([EYE_A]);
+    expect(await texture.readPixels()).toMatchObject({ width: 2, height: 3 });
+  });
+
+  it("retries a pass that failed to start", async () => {
+    const { texture } = fakeTexture(true);
+    texture.setFrameCamera(EYE_A);
+    await expect(texture.pass("test")).rejects.toThrow("no device");
+    await expect(texture.readPixels()).rejects.toThrow("no device");
+  });
+
+  it("disposes its pass, settles waiting requests, and tells its owner once", async () => {
+    const { texture, pass, released } = fakeTexture();
+    const starting = texture.pass("test");
+    texture.dispose();
+    await expect(starting).rejects.toMatchObject({ code: "IGX-0731" });
+    expect(pass.disposed).toBe(true);
+    const late = fakeTexture();
+    await late.texture.pass("test");
+    const waiting = late.texture.request(EYE_A);
+    late.texture.dispose();
+    late.texture.dispose();
+    await waiting;
+    expect(late.pass.disposed).toBe(true);
+    expect(late.released).toEqual([late.texture]);
+    expect(released).toEqual([texture]);
   });
 });

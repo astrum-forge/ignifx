@@ -10,8 +10,8 @@ import { isRecord } from "./rpc.js";
 import { isFiniteNumber, isSceneFileAssetRef, isString, isUidString, optionalField } from "./scene-file.js";
 import { ScreenshotFormat } from "./scene.js";
 import type { RpcSuccessResponse } from "./rpc.js";
-import type { RpcRequestWithParams } from "./scene.js";
 import type { SceneFileAssetRef } from "./scene-file.js";
+import type { RpcRequestWithParams } from "./scene.js";
 
 /**
  * Editor → scene host: the render-view methods, answered after `ready` like every `SceneMethod`.

@@ -4,8 +4,8 @@ import { createMaterialAsset, pbrMaterialDefinition } from "../../src/render/mat
 import { MeshAsset } from "../../src/render/mesh-asset.js";
 import { MeshRenderer } from "../../src/render/mesh-renderer.js";
 import { addCameraAndLight, createBrowserApp, gpuDeviceErrors, SETTLE_FRAMES } from "./support/browser-harness.js";
-import type { RenderCapture } from "../../src/render/renderer.js";
 import type { BrowserApp } from "./support/browser-harness.js";
+import type { RenderCapture } from "../../src/render/renderer.js";
 
 /**
  * Render-to-texture on a real device (`docs/architecture/07-rendering.md` §2.11).
