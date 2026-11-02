@@ -56,6 +56,9 @@ export class Camera2D extends Component {
   /** The registration id the serializer writes into scene files. */
   static typeId = "ignifx/Camera2D";
 
+  /** What the component does, in one line, for an inspector. */
+  static description = "The 2D camera: orthographic size in metres, pixel-perfect snapping, bounds, and follow fields.";
+
   /** One camera per entity. */
   static allowMultiple = false;
 

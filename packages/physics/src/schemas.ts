@@ -39,28 +39,28 @@ import type { SchemaDescription } from "@ignifx/core";
 export function describeSchemas(): Readonly<Record<string, SchemaDescription>> {
   return {
     "ignifx/Rigidbody": describeSchema("ignifx/Rigidbody", Rigidbody.schema, {
-      description: "Makes an entity's colliders a dynamic, kinematic, or static Havok body.",
+      description: Rigidbody.description,
     }),
     "ignifx/BoxCollider": describeSchema("ignifx/BoxCollider", BoxCollider.schema, {
-      description: "A box collision shape, sized in local units and scaled by the entity.",
+      description: BoxCollider.description,
     }),
     "ignifx/SphereCollider": describeSchema("ignifx/SphereCollider", SphereCollider.schema, {
-      description: "A sphere collision shape; the largest scale axis wins.",
+      description: SphereCollider.description,
     }),
     "ignifx/CapsuleCollider": describeSchema("ignifx/CapsuleCollider", CapsuleCollider.schema, {
-      description: "A capsule collision shape standing along X, Y, or Z.",
+      description: CapsuleCollider.description,
     }),
     "ignifx/CylinderCollider": describeSchema("ignifx/CylinderCollider", CylinderCollider.schema, {
-      description: "A cylinder collision shape standing along Y.",
+      description: CylinderCollider.description,
     }),
     "ignifx/MeshCollider": describeSchema("ignifx/MeshCollider", MeshCollider.schema, {
-      description: "A triangle-mesh or convex-hull shape built from real geometry; needs a GPU app.",
+      description: MeshCollider.description,
     }),
     "ignifx/HeightfieldCollider": describeSchema("ignifx/HeightfieldCollider", HeightfieldCollider.schema, {
-      description: "A terrain collision shape built from a regular grid of height samples.",
+      description: HeightfieldCollider.description,
     }),
     "ignifx/CharacterController": describeSchema("ignifx/CharacterController", CharacterController.schema, {
-      description: "A kinematic capsule with collide-and-slide, support detection, and body pushing.",
+      description: CharacterController.description,
     }),
     "ignifx/physicsmaterial-file": describePhysicsMaterialFileFormat(),
   };

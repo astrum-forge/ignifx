@@ -772,6 +772,12 @@ Whether shadow maps darken the terrain. Chunks never **cast**; see the skill's g
 
 The declarative fields (ADR-0004).
 
+##### title
+
+> `static` **title**: `string` = `"Terrain"`
+
+The name an inspector shows for the component.
+
 ##### typeId
 
 > `static` **typeId**: `string` = `"ignifx/Terrain"`
@@ -2061,6 +2067,12 @@ The placement seed.
 > **slope**: `Vec2Like`
 
 The slope band, in degrees from horizontal.
+
+##### title
+
+> `static` **title**: `string` = `"Terrain scatter"`
+
+The name an inspector shows for the component.
 
 ##### typeId
 

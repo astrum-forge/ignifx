@@ -688,6 +688,7 @@ export class ParticleSystem extends Component implements ComponentHooks {
     // @internal
     tick(dt: number): void;
     get time(): number;
+    static title: string;
     static typeId: string;
     // @internal
     get uploadedBytes(): number;

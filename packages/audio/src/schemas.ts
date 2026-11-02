@@ -36,14 +36,13 @@ import type { SchemaDescription } from "@ignifx/core";
 export function describeSchemas(): Readonly<Record<string, SchemaDescription>> {
   return {
     "ignifx/AudioSource": describeSchema("ignifx/AudioSource", AudioSource.schema, {
-      description:
-        "A sound attached to an entity: which clip, which bus, how loud, how many at once, and how it behaves in 3D.",
+      description: AudioSource.description,
     }),
     "ignifx/AudioListener": describeSchema("ignifx/AudioListener", AudioListener.schema, {
-      description: "The ears spatial audio is heard from; usually on the main camera entity.",
+      description: AudioListener.description,
     }),
     "ignifx/MusicPlayer": describeSchema("ignifx/MusicPlayer", MusicPlayer.schema, {
-      description: "A playlist of music tracks with crossfading, routed to the Music bus.",
+      description: MusicPlayer.description,
     }),
     "ignifx/audiobuses-file": describeAudioBusesFormat(),
   };

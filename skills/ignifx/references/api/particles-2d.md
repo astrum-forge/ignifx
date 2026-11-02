@@ -202,6 +202,12 @@ the atlas does not have, both draw frame 0.
 
 The `.particles.json`, as a loaded handle.
 
+##### description
+
+> `static` **description**: `string` = `"Draws a .particles.json effect as sprites on a sorting layer."`
+
+What the component does, in one line, for an inspector.
+
 ##### onStopped
 
 > `readonly` **onStopped**: `Signal`\<[`ParticleSystem2D`](#particlesystem2d)\>

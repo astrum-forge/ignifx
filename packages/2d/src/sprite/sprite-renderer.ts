@@ -80,6 +80,9 @@ export class SpriteRenderer extends Component implements ComponentHooks {
   /** The registration id the serializer writes into scene files. */
   static typeId = "ignifx/SpriteRenderer";
 
+  /** What the component does, in one line, for an inspector. */
+  static description = "One sprite drawn from one frame of one atlas, on one sorting layer.";
+
   /** Several sprites may share an entity — a character and its shadow, for instance. */
   static allowMultiple = true;
 

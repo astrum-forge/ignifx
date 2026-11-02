@@ -910,6 +910,12 @@ The declarative fields (ADR-0004).
 
 The emission seed; `0` uses the definition's, and a definition seed of `0` picks at random.
 
+##### title
+
+> `static` **title**: `string` = `"Particle system"`
+
+The name an inspector shows for the component.
+
 ##### typeId
 
 > `static` **typeId**: `string` = `"ignifx/ParticleSystem"`

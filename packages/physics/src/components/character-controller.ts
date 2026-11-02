@@ -46,6 +46,9 @@ export class CharacterController extends Component implements ComponentHooks {
   /** The namespaced registration id. */
   static typeId = "ignifx/CharacterController";
 
+  /** What the component does, in one line, for an inspector. */
+  static description = "A kinematic capsule with collide-and-slide, support detection, and body pushing.";
+
   /** One controller per entity. */
   static allowMultiple = false;
 

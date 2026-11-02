@@ -31,6 +31,9 @@ export class ParallaxLayer extends Component {
   /** The registration id the serializer writes into scene files. */
   static typeId = "ignifx/ParallaxLayer";
 
+  /** What the component does, in one line, for an inspector. */
+  static description = "Scrolls one sorting layer at a fraction of the camera's speed.";
+
   /** One parallax setting per entity; several entities may each drive a different sorting layer. */
   static allowMultiple = false;
 

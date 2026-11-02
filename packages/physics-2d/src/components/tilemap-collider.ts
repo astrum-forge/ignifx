@@ -38,6 +38,9 @@ export class TilemapCollider2D extends Collider2D {
   /** The namespaced registration id. */
   static typeId = "ignifx/TilemapCollider2D";
 
+  /** What the component does, in one line, for an inspector. */
+  static description = "The merged collision surface of a Tilemap, rebuilt when its tiles change.";
+
   /** The serialized field declarations; the geometry itself comes from the tilemap asset. */
   static schema: Schema = tilemapSchema();
 

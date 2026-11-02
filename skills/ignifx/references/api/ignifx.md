@@ -260,6 +260,12 @@ The declarative fields (ADR-0004).
 
 A multiplier on every state's own rate.
 
+##### title
+
+> `static` **title**: `string`
+
+The name an inspector shows for the component.
+
 ##### typeId
 
 > `static` **typeId**: `string`
@@ -2073,6 +2079,12 @@ Creates a component. The engine constructs components; game code never calls `ne
 
 One pair of ears per entity.
 
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
+
 ##### schema
 
 > `static` **schema**: [`Schema`](#schema-44)
@@ -3223,6 +3235,12 @@ The sound to play.
 
 The source's directionality, in degrees.
 
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
+
 ##### distanceModel
 
 > **distanceModel**: `"linear"` \| `"inverse"` \| `"exponential"`
@@ -4012,6 +4030,12 @@ Whether the billboard is free or locked upright.
 
 The declarative fields (ADR-0004).
 
+##### title
+
+> `static` **title**: `string`
+
+The name an inspector shows for the component.
+
 ##### typeId
 
 > `static` **typeId**: `string`
@@ -4629,6 +4653,12 @@ The shape's offset from the entity origin, in local units.
 
 [`Collider`](#abstract-collider).[`center`](#center-3)
 
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
+
 ##### inlineMaterial
 
 > **inlineMaterial**: [`PhysicsMaterialValues`](#physicsmaterialvalues) \| `null`
@@ -5236,6 +5266,12 @@ Several colliders on one entity make one compound body.
 
 [`Collider2D`](#abstract-collider2d).[`allowMultiple`](#allowmultiple-14)
 
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
+
 ##### frictionCombine
 
 > **frictionCombine**: `"average"` \| `"min"` \| `"multiply"` \| `"max"`
@@ -5835,6 +5871,12 @@ At most one camera per entity: two views from one transform would be the same vi
 ##### clearColor
 
 > **clearColor**: [`ColorLike`](#colorlike) \| `null`
+
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
 
 ##### far
 
@@ -6558,6 +6600,12 @@ The lower bound of the camera's travel, in metres, or `null` for no bound.
 > **deadZone**: [`Vec2Like`](#vec2like)
 
 The half-size of the rectangle the target may move inside before the camera reacts, in metres.
+
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
 
 ##### follow
 
@@ -7641,6 +7689,12 @@ The shape's offset from the entity origin, in local units.
 
 [`Collider`](#abstract-collider).[`center`](#center-3)
 
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
+
 ##### direction
 
 > **direction**: `"x"` \| `"y"` \| `"z"`
@@ -8256,6 +8310,12 @@ Several colliders on one entity make one compound body.
 
 [`Collider2D`](#abstract-collider2d).[`allowMultiple`](#allowmultiple-14)
 
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
+
 ##### direction
 
 > **direction**: `"x"` \| `"y"`
@@ -8863,6 +8923,12 @@ One controller per entity.
 ##### center
 
 > **center**: [`Vec3Like`](#vec3like)
+
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
 
 ##### height
 
@@ -9510,6 +9576,12 @@ Applies the schema defaults.
 
 One controller per entity.
 
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
+
 ##### height
 
 > **height**: `number`
@@ -10113,6 +10185,12 @@ Several colliders on one entity make one compound body.
 ###### Inherited from
 
 [`Collider2D`](#abstract-collider2d).[`allowMultiple`](#allowmultiple-14)
+
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
 
 ##### frictionCombine
 
@@ -13322,6 +13400,12 @@ The shape's offset from the entity origin, in local units.
 
 [`Collider`](#abstract-collider).[`center`](#center-3)
 
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
+
 ##### height
 
 > **height**: `number`
@@ -14654,6 +14738,12 @@ Several colliders on one entity make one compound body.
 ###### Inherited from
 
 [`Collider2D`](#abstract-collider2d).[`allowMultiple`](#allowmultiple-14)
+
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
 
 ##### frictionCombine
 
@@ -16470,6 +16560,12 @@ reflection.
 
 > **clearColor**: [`ColorLike`](#colorlike) \| `null`
 
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
+
 ##### environment
 
 > **environment**: [`AssetHandle`](#assethandle)\<[`EnvironmentAsset`](#environmentasset)\> \| `null`
@@ -17160,6 +17256,12 @@ The controller height while standing.
 > **stickLookSpeed**: `number`
 
 Degrees of rotation per second at full deflection, for a gamepad or on-screen stick.
+
+##### title
+
+> `static` **title**: `string`
+
+The name an inspector shows for the component.
 
 ##### typeId
 
@@ -19658,6 +19760,12 @@ The shape's offset from the entity origin, in local units.
 
 [`Collider`](#abstract-collider).[`center`](#center-3)
 
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
+
 ##### heights
 
 > **heights**: `number`[]
@@ -20543,6 +20651,12 @@ The colour every glyph starts with.
 ###### Inherited from
 
 [`TextComponent`](#abstract-textcomponent).[`color`](#color-19)
+
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
 
 ##### font
 
@@ -23003,6 +23117,12 @@ Several instanced renderers on one entity draw several clouds from one transform
 
 > **castShadows**: `boolean`
 
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
+
 ##### gpuCulling
 
 > **gpuCulling**: `boolean`
@@ -24215,6 +24335,12 @@ At most one light per entity: two lights from one transform want two entities.
 
 > **color**: [`ColorLike`](#colorlike)
 
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
+
 ##### exclude
 
 > **exclude**: ([`Entity`](#entity-19) \| `null`)[]
@@ -24985,6 +25111,12 @@ The levels, nearest first.
 > `static` **schema**: [`Schema`](#schema-44)
 
 The declarative fields (ADR-0004).
+
+##### title
+
+> `static` **title**: `string`
+
+The name an inspector shows for the component.
 
 ##### typeId
 
@@ -28513,6 +28645,12 @@ The shape's offset from the entity origin, in local units.
 
 > **convex**: `boolean`
 
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
+
 ##### includeChildren
 
 > **includeChildren**: `boolean`
@@ -29136,6 +29274,12 @@ Several renderers on one entity draw several meshes from one transform, which is
 
 > **castShadows**: `boolean`
 
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
+
 ##### materials
 
 > **materials**: ([`AssetHandle`](#assethandle)\<[`MaterialAsset`](#materialasset)\> \| `null`)[]
@@ -29752,6 +29896,12 @@ One model per entity: a second instance under the same transform wants its own e
 ##### castShadows
 
 > **castShadows**: `boolean`
+
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
 
 ##### materialOverrides
 
@@ -30490,6 +30640,12 @@ Which mixer bus the music routes into.
 > **crossfadeSeconds**: `number`
 
 How long a crossfade takes, in seconds.
+
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
 
 ##### loopPlaylist
 
@@ -31467,6 +31623,12 @@ How close counts as arrived, in metres.
 
 The entity carrying the surface to join; the first baked surface when unset.
 
+##### title
+
+> `static` **title**: `string`
+
+The name an inspector shows for the component.
+
 ##### typeId
 
 > `static` **typeId**: `string`
@@ -32070,6 +32232,12 @@ The box's full size, in metres.
 
 The entity carrying the surface to cut; the first baked surface when unset.
 
+##### title
+
+> `static` **title**: `string`
+
+The name an inspector shows for the component.
+
 ##### typeId
 
 > `static` **typeId**: `string`
@@ -32636,6 +32804,12 @@ The declarative fields (ADR-0004).
 > **tileSize**: `number`
 
 Tile size in voxels.
+
+##### title
+
+> `static` **title**: `string`
+
+The name an inspector shows for the component.
 
 ##### typeId
 
@@ -33339,6 +33513,12 @@ Builds a parallax layer with the schema's defaults.
 > `static` **allowMultiple**: `boolean`
 
 One parallax setting per entity; several entities may each drive a different sorting layer.
+
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
 
 ##### factor
 
@@ -34616,6 +34796,12 @@ The declarative fields (ADR-0004).
 
 The emission seed; `0` uses the definition's, and a definition seed of `0` picks at random.
 
+##### title
+
+> `static` **title**: `string`
+
+The name an inspector shows for the component.
+
 ##### typeId
 
 > `static` **typeId**: `string`
@@ -35327,6 +35513,12 @@ the atlas does not have, both draw frame 0.
 > **definition**: [`AssetHandle`](#assethandle)\<[`ParticleAsset`](#particleasset)\> \| `null`
 
 The `.particles.json`, as a loaded handle.
+
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
 
 ##### onStopped
 
@@ -37046,6 +37238,12 @@ The kinematic `Rigidbody` this drives.
 
 The declarative fields (ADR-0004).
 
+##### title
+
+> `static` **title**: `string`
+
+The name an inspector shows for the component.
+
 ##### typeId
 
 > `static` **typeId**: `string`
@@ -37598,6 +37796,12 @@ The `ignifx.inputactions` document this player's private maps are built from.
 > `static` **allowMultiple**: `boolean`
 
 One player owns one entity.
+
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
 
 ##### deviceSlot
 
@@ -38161,6 +38365,12 @@ Several colliders on one entity make one compound body.
 ###### Inherited from
 
 [`Collider2D`](#abstract-collider2d).[`allowMultiple`](#allowmultiple-14)
+
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
 
 ##### frictionCombine
 
@@ -38771,6 +38981,12 @@ One chain per camera entity; a second would fight the first for the swapchain.
 
 > **custom**: [`CustomEffectSettings`](#customeffectsettings)[]
 
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
+
 ##### imageProcessing
 
 > **imageProcessing**: [`ImageProcessingEffectSettings`](#imageprocessingeffectsettings)
@@ -39269,6 +39485,12 @@ The declarative fields (ADR-0004).
 > **speed**: `number`
 
 How fast the projectile leaves the muzzle.
+
+##### title
+
+> `static` **title**: `string`
+
+The name an inspector shows for the component.
 
 ##### typeId
 
@@ -40973,6 +41195,12 @@ One body per entity.
 
 > **collisionEvents**: `"auto"` \| `"on"` \| `"off"`
 
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
+
 ##### freezeRotation
 
 > **freezeRotation**: [`FreezeRotation`](#freezerotation)
@@ -41675,6 +41903,12 @@ One body per entity.
 ##### collisionEvents
 
 > **collisionEvents**: `"auto"` \| `"on"` \| `"off"`
+
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
 
 ##### freezeRotation
 
@@ -42411,6 +42645,12 @@ The `Rigidbody` this pushes.
 > `static` **schema**: [`Schema`](#schema-44)
 
 The declarative fields (ADR-0004).
+
+##### title
+
+> `static` **title**: `string`
+
+The name an inspector shows for the component.
 
 ##### torqueSteering
 
@@ -44645,6 +44885,12 @@ The shape's offset from the entity origin, in local units.
 
 [`Collider`](#abstract-collider).[`center`](#center-3)
 
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
+
 ##### inlineMaterial
 
 > **inlineMaterial**: [`PhysicsMaterialValues`](#physicsmaterialvalues) \| `null`
@@ -45396,6 +45642,12 @@ The document holding the clips.
 > **defaultClip**: `string`
 
 Which clip to start on; empty plays the document's first.
+
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
 
 ##### playOnAwake
 
@@ -46213,6 +46465,12 @@ Builds an effect with the schema's defaults.
 
 One effect per entity; several entities may each drive a different sorting layer.
 
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
+
 ##### kind
 
 > **kind**: `"custom"` \| `"tint"`
@@ -46794,6 +47052,12 @@ How the sprite's colour combines with what is behind it.
 > **color**: [`ColorLike`](#colorlike)
 
 The tint multiplied into every texel.
+
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
 
 ##### flipX
 
@@ -47733,6 +47997,12 @@ Whether shadow maps darken the terrain. Chunks never **cast**; see the skill's g
 > `static` **schema**: [`Schema`](#schema-44)
 
 The declarative fields (ADR-0004).
+
+##### title
+
+> `static` **title**: `string`
+
+The name an inspector shows for the component.
 
 ##### typeId
 
@@ -49034,6 +49304,12 @@ The placement seed.
 > **slope**: [`Vec2Like`](#vec2like)
 
 The slope band, in degrees from horizontal.
+
+##### title
+
+> `static` **title**: `string`
+
+The name an inspector shows for the component.
 
 ##### typeId
 
@@ -50373,6 +50649,12 @@ Degrees of orbit per second at full deflection, for a gamepad or on-screen stick
 
 The entity the camera orbits.
 
+##### title
+
+> `static` **title**: `string`
+
+The name an inspector shows for the component.
+
 ##### typeId
 
 > `static` **typeId**: `string`
@@ -51044,6 +51326,12 @@ Ground speed while sprinting, in metres per second.
 > **stepHeight**: `number`
 
 The tallest step the probe lifts over; `0` disables the probe.
+
+##### title
+
+> `static` **title**: `string`
+
+The name an inspector shows for the component.
 
 ##### turnSpeed
 
@@ -51731,6 +52019,12 @@ The metres one cell spans, overriding the document's own; `0` uses the document'
 > **chunkSize**: `number`
 
 How many cells one chunk spans on each axis.
+
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
 
 ##### map
 
@@ -52594,6 +52888,12 @@ Several colliders on one entity make one compound body.
 
 [`Collider2D`](#abstract-collider2d).[`allowMultiple`](#allowmultiple-14)
 
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
+
 ##### frictionCombine
 
 > **frictionCombine**: `"average"` \| `"min"` \| `"multiply"` \| `"max"`
@@ -53234,6 +53534,12 @@ The atlas the tile frames come from.
 > **cullChunks**: `boolean`
 
 Whether chunks outside the camera's visible bounds are dropped.
+
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
 
 ##### schema
 
@@ -53888,6 +54194,12 @@ Creates an unbound transform. The entity constructor binds it to a Lite node imm
 > `static` **allowMultiple**: `boolean`
 
 An entity has exactly one transform.
+
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
 
 ##### typeId
 
@@ -61669,6 +61981,12 @@ One anchored element per entity.
 
 Whether the element is kept inside the overlay's bounds instead of being hidden off-screen.
 
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
+
 ##### element
 
 > **element**: `HTMLElement` \| `null`
@@ -62181,6 +62499,12 @@ The colour every glyph starts with.
 ###### Inherited from
 
 [`TextComponent`](#abstract-textcomponent).[`color`](#color-19)
+
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
 
 ##### font
 
@@ -62780,6 +63104,12 @@ The colour every glyph starts with.
 ###### Inherited from
 
 [`TextComponent`](#abstract-textcomponent).[`color`](#color-19)
+
+##### description
+
+> `static` **description**: `string`
+
+What the component does, in one line, for an inspector.
 
 ##### font
 
@@ -67470,6 +67800,12 @@ are inheritance-aware without touching a prototype chain per frame.
 
 A dense index assigned in registration order, for array-indexed per-class bookkeeping.
 
+##### description
+
+> `readonly` **description**: `string` \| `null`
+
+The class's own `static description`, or `null` when it declares none (an inherited one is ignored).
+
 ##### isScript
 
 > `readonly` **isScript**: `boolean`
@@ -67493,6 +67829,12 @@ The declared serialized fields, or `null` when the class was not built with `def
 > `readonly` **script**: [`ScriptClassInfo`](#scriptclassinfo) \| `null`
 
 Callback and ordering data, or `null` for a plain component.
+
+##### title
+
+> `readonly` **title**: `string` \| `null`
+
+The class's own `static title`, or `null` when it declares none (an inherited one is ignored).
 
 ##### trackedFields
 
@@ -67645,6 +67987,13 @@ class Mover extends Script.define({ speed: f32(5) }) {
 
 `false` when at most one instance may be attached to an entity; defaults to `true`.
 
+##### description?
+
+> `readonly` `optional` **description?**: `string`
+
+A one-line summary of what the component does, shown by an inspector. Read only from the class
+that declares it, never inherited.
+
 ##### requires?
 
 > `readonly` `optional` **requires?**: readonly [`ComponentType`](#componenttype-1)\<[`Component`](#abstract-component)\>[]
@@ -67656,6 +68005,14 @@ Component types auto-added to, and validated on, any entity this one is attached
 > `readonly` `optional` **schema?**: `Readonly`\<`Record`\<`string`, [`FieldDefinition`](#fielddefinition)\<`unknown`\>\>\>
 
 The serialized field declarations, set by `Component.define` / `Script.define`.
+
+##### title?
+
+> `readonly` `optional` **title?**: `string`
+
+The name an inspector shows for the component, for example `"Rigidbody mover"`. Read only from
+the class that declares it, never inherited; without one, tools title the component from its
+type id.
 
 ##### typeId?
 
@@ -67709,6 +68066,17 @@ The component instance type the token stands for.
 
 [`ComponentStatics`](#componentstatics).[`allowMultiple`](#allowmultiple-16)
 
+##### description?
+
+> `readonly` `optional` **description?**: `string`
+
+A one-line summary of what the component does, shown by an inspector. Read only from the class
+that declares it, never inherited.
+
+###### Inherited from
+
+[`ComponentStatics`](#componentstatics).[`description`](#description-12)
+
 ##### prototype
 
 > `readonly` **prototype**: `T`
@@ -67734,6 +68102,18 @@ The serialized field declarations, set by `Component.define` / `Script.define`.
 ###### Inherited from
 
 [`ComponentStatics`](#componentstatics).[`schema`](#schema-14)
+
+##### title?
+
+> `readonly` `optional` **title?**: `string`
+
+The name an inspector shows for the component, for example `"Rigidbody mover"`. Read only from
+the class that declares it, never inherited; without one, tools title the component from its
+type id.
+
+###### Inherited from
+
+[`ComponentStatics`](#componentstatics).[`title`](#title-3)
 
 ##### typeId?
 
@@ -67827,6 +68207,17 @@ schema defaults, then from the file or the `init` object.
 
 [`ComponentType`](#componenttype-1).[`allowMultiple`](#allowmultiple-17)
 
+##### description?
+
+> `readonly` `optional` **description?**: `string`
+
+A one-line summary of what the component does, shown by an inspector. Read only from the class
+that declares it, never inherited.
+
+###### Inherited from
+
+[`ComponentType`](#componenttype-1).[`description`](#description-13)
+
 ##### prototype
 
 > `readonly` **prototype**: `T`
@@ -67856,6 +68247,18 @@ The serialized field declarations, set by `Component.define` / `Script.define`.
 ###### Inherited from
 
 [`ComponentType`](#componenttype-1).[`schema`](#schema-15)
+
+##### title?
+
+> `readonly` `optional` **title?**: `string`
+
+The name an inspector shows for the component, for example `"Rigidbody mover"`. Read only from
+the class that declares it, never inherited; without one, tools title the component from its
+type id.
+
+###### Inherited from
+
+[`ComponentType`](#componenttype-1).[`title`](#title-4)
 
 ##### typeId?
 
@@ -80040,6 +80443,17 @@ for the reason given on [ComponentStatics](#componentstatics).
 
 [`ComponentStatics`](#componentstatics).[`allowMultiple`](#allowmultiple-16)
 
+##### description?
+
+> `readonly` `optional` **description?**: `string`
+
+A one-line summary of what the component does, shown by an inspector. Read only from the class
+that declares it, never inherited.
+
+###### Inherited from
+
+[`ComponentStatics`](#componentstatics).[`description`](#description-12)
+
 ##### executionOrder?
 
 > `readonly` `optional` **executionOrder?**: `number`
@@ -80085,6 +80499,18 @@ The serialized field declarations, set by `Component.define` / `Script.define`.
 ###### Inherited from
 
 [`ComponentStatics`](#componentstatics).[`schema`](#schema-14)
+
+##### title?
+
+> `readonly` `optional` **title?**: `string`
+
+The name an inspector shows for the component, for example `"Rigidbody mover"`. Read only from
+the class that declares it, never inherited; without one, tools title the component from its
+type id.
+
+###### Inherited from
+
+[`ComponentStatics`](#componentstatics).[`title`](#title-3)
 
 ##### typeId?
 
@@ -98413,7 +98839,8 @@ The registry to walk, usually `app.world.registry`.
 `Readonly`\<`Record`\<`string`, [`SchemaDescriptionMeta`](#schemadescriptionmeta)\>\>
 
 Titles, formats and summaries by type id, for example a package's own
-`describeSchemas()`; a component without an entry is titled from its type id.
+`describeSchemas()`; an entry wins over the class's own `static title` and `static description`, and a component
+with neither is titled from its type id.
 
 #### Returns
 
@@ -98431,6 +98858,10 @@ id's namespace: everything before the last `/` (`third-person` for `third-person
 `ignifx/Transform` declares no schema on its class; it is described with [transformSchema](#transformschema)
 and marked `builtIn`, because every entity carries exactly one and a scene file stores it as the
 entity's `transform` block rather than in its `components`.
+
+A component's `title` and `description` come from `curated` when it has an entry, else from the
+class's own `static title` and `static description`, which is how an extension's components
+reach an inspector with their curated names without the inspector importing the extension.
 
 #### Example
 

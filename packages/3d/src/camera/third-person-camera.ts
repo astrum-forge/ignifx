@@ -99,6 +99,9 @@ export class ThirdPersonCamera extends Script {
   /** The registration id the serializer writes into scene files. */
   static typeId = "ignifx/ThirdPersonCamera";
 
+  /** The name an inspector shows for the component. */
+  static title = "Third person camera";
+
   /** One rig per entity. */
   static allowMultiple = false;
 

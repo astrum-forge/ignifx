@@ -2066,6 +2066,12 @@ The `ignifx.inputactions` document this player's private maps are built from.
 
 One player owns one entity.
 
+##### description
+
+> `static` **description**: `string` = `"Binds an entity to an input actions document and one device slot, for local multiplayer."`
+
+What the component does, in one line, for an inspector.
+
 ##### deviceSlot
 
 > **deviceSlot**: `number`

@@ -28,7 +28,7 @@ import type { SchemaDescription } from "@ignifx/core";
 export function describeInputSchemas(): Readonly<Record<string, SchemaDescription>> {
   return {
     "ignifx/PlayerInput": describeSchema("ignifx/PlayerInput", PlayerInput.schema, {
-      description: "Binds an entity to an input actions document and one device slot, for local multiplayer.",
+      description: PlayerInput.description,
     }),
     "ignifx/inputactions-file": describeInputActionsFormat(),
   };

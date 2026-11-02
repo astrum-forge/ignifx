@@ -218,6 +218,7 @@ export interface AudioErrorOptions {
 // @public
 class AudioListener_2 extends Script implements ScriptCallbacks {
     static allowMultiple: boolean;
+    static description: string;
     onDisable(): void;
     onEnable(): void;
     static schema: Schema;
@@ -313,6 +314,7 @@ export class AudioSource extends Script implements ScriptCallbacks {
     bus: string;
     clip: AssetHandle<AudioClip> | null;
     cone: AudioConeSettings;
+    static description: string;
     distanceModel: AudioDistanceModel;
     get instance(): SoundInstance | null;
     get instanceCount(): number;
@@ -527,6 +529,7 @@ export class MusicPlayer extends Script implements ScriptCallbacks {
     crossfadeSeconds: number;
     crossfadeTo(clip: AudioClip, seconds?: number): SoundInstance;
     get current(): SoundInstance | null;
+    static description: string;
     get index(): number;
     get isPlaying(): boolean;
     loopPlaylist: boolean;

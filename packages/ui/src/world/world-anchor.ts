@@ -30,6 +30,9 @@ export class WorldAnchor extends Component implements ComponentHooks {
   /** The registration id the serializer writes into scene files. */
   static typeId = "ignifx/WorldAnchor";
 
+  /** What the component does, in one line, for an inspector. */
+  static description = "Keeps a DOM element at an entity's screen position, with clamping and distance scaling.";
+
   /** One anchored element per entity. */
   static allowMultiple = false;
 

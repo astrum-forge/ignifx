@@ -42,6 +42,7 @@ export class BoxCollider2D extends Collider2D {
     //
     // @internal
     collectShapes(scale: Vec2Like, out: CollectedShape2D[]): void;
+    static description: string;
     static schema: Schema;
     // (undocumented)
     size: Vec2Like;
@@ -56,6 +57,7 @@ export class CapsuleCollider2D extends Collider2D {
     constructor();
     // @internal
     collectShapes(scale: Vec2Like, out: CollectedShape2D[]): void;
+    static description: string;
     // (undocumented)
     direction: CapsuleDirection2D;
     // (undocumented)
@@ -86,6 +88,7 @@ export class CharacterController2D extends Component implements ComponentHooks {
     static allowMultiple: boolean;
     // @internal
     applyStepResult(movement: Vec2Like, grounded: boolean, normal: Vec2Like | null, deltaSeconds: number): void;
+    static description: string;
     get groundNormal(): Vec2;
     // (undocumented)
     height: number;
@@ -134,6 +137,7 @@ export class CircleCollider2D extends Collider2D {
     constructor();
     // @internal
     collectShapes(scale: Vec2Like, out: CollectedShape2D[]): void;
+    static description: string;
     // (undocumented)
     radius: number;
     static schema: Schema;
@@ -214,6 +218,7 @@ export class EdgeCollider2D extends Collider2D {
     constructor();
     // @internal
     collectShapes(scale: Vec2Like, out: CollectedShape2D[]): void;
+    static description: string;
     // (undocumented)
     points: Vec2Like[];
     static schema: Schema;
@@ -343,6 +348,7 @@ export class PolygonCollider2D extends Collider2D {
     constructor();
     // @internal
     collectShapes(scale: Vec2Like, out: CollectedShape2D[]): void;
+    static description: string;
     // (undocumented)
     points: Vec2Like[];
     static schema: Schema;
@@ -380,6 +386,7 @@ export class Rigidbody2D extends Component implements ComponentHooks {
     // (undocumented)
     collisionEvents: CollisionEventMode2D;
     get computedMass(): number;
+    static description: string;
     // (undocumented)
     freezeRotation: boolean;
     // (undocumented)
@@ -426,6 +433,7 @@ export class TilemapCollider2D extends Collider2D {
     collectShapes(scale: Vec2Like, out: CollectedShape2D[]): void;
     get collisionData(): TilemapCollisionData | null;
     set collisionData(value: TilemapCollisionData | null);
+    static description: string;
     // @internal
     needsRebuild(): boolean;
     static schema: Schema;

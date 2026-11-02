@@ -57,6 +57,9 @@ export class BoxCollider extends Collider {
   /** The namespaced registration id. */
   static typeId = "ignifx/BoxCollider";
 
+  /** What the component does, in one line, for an inspector. */
+  static description = "A box collision shape, sized in local units and scaled by the entity.";
+
   /** The serialized field declarations (ADR-0004). */
   static schema: Schema = boxSchema();
 
@@ -117,6 +120,9 @@ export class BoxCollider extends Collider {
 export class SphereCollider extends Collider {
   /** The namespaced registration id. */
   static typeId = "ignifx/SphereCollider";
+
+  /** What the component does, in one line, for an inspector. */
+  static description = "A sphere collision shape; the largest scale axis wins.";
 
   /** The serialized field declarations. */
   static schema: Schema = sphereSchema();
@@ -179,6 +185,9 @@ export class SphereCollider extends Collider {
 export class CapsuleCollider extends Collider {
   /** The namespaced registration id. */
   static typeId = "ignifx/CapsuleCollider";
+
+  /** What the component does, in one line, for an inspector. */
+  static description = "A capsule collision shape standing along X, Y, or Z.";
 
   /** The serialized field declarations. */
   static schema: Schema = capsuleSchema();
@@ -253,6 +262,9 @@ export class CylinderCollider extends Collider {
   /** The namespaced registration id. */
   static typeId = "ignifx/CylinderCollider";
 
+  /** What the component does, in one line, for an inspector. */
+  static description = "A cylinder collision shape standing along Y.";
+
   /** The serialized field declarations. */
   static schema: Schema = cylinderSchema();
 
@@ -324,6 +336,9 @@ export class CylinderCollider extends Collider {
 export class MeshCollider extends Collider {
   /** The namespaced registration id. */
   static typeId = "ignifx/MeshCollider";
+
+  /** What the component does, in one line, for an inspector. */
+  static description = "A triangle-mesh or convex-hull shape built from real geometry; needs a GPU app.";
 
   /** The serialized field declarations. */
   static schema: Schema = meshSchema();
@@ -413,6 +428,9 @@ export class MeshCollider extends Collider {
 export class HeightfieldCollider extends Collider {
   /** The namespaced registration id. */
   static typeId = "ignifx/HeightfieldCollider";
+
+  /** What the component does, in one line, for an inspector. */
+  static description = "A terrain collision shape built from a regular grid of height samples.";
 
   /** The serialized field declarations. */
   static schema: Schema = heightfieldSchema();

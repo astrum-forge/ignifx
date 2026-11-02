@@ -45,6 +45,9 @@ export class TilemapRenderer extends Component implements ComponentHooks {
   /** The registration id the serializer writes into scene files. */
   static typeId = "ignifx/TilemapRenderer";
 
+  /** What the component does, in one line, for an inspector. */
+  static description = "Draws a Tilemap's cells as sprites, materialising only the chunks the camera sees.";
+
   /** One renderer per entity. */
   static allowMultiple = false;
 

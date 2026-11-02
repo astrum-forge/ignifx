@@ -35,7 +35,7 @@ export function describeParticlesFormat(): SchemaDescription {
 export function describeSchemas(): Readonly<Record<string, SchemaDescription>> {
   return Object.freeze({
     "ignifx/ParticleSystem": describeSchema("ignifx/ParticleSystem", ParticleSystem.schema, {
-      title: "Particle system",
+      title: ParticleSystem.title,
     }),
     "ignifx/particles-settings": describeSchema("ignifx/particles-settings", particlesSettingsSchema(), {
       title: "Particles settings",

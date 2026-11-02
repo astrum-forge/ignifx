@@ -18,8 +18,11 @@ const COMPONENTS_FORMAT = "components";
  * @remarks
  * Each field carries its inspector options (`step`, `hidden`, `readonly`, `group`, an asset's
  * `assetType`, a `componentRef`'s `componentType`), and each component its `allowMultiple` and the
- * `package` that registered it, all optional members of protocol 0.3. A component core describes
- * keeps core's title and summary; any other is titled from its type id. The host's own classes are left out: they are not the
+ * `package` that registered it, all optional members of protocol 0.3. Each component's title and
+ * summary are its class's own `static title` and `static description`, which every package
+ * declares on its components, so an extension's curated names arrive without the host importing
+ * the extension; core's `describeSchemas()` still overrides core's entries, and a component with
+ * neither is titled from its type id. The host's own classes are left out: they are not the
  * document's. `ignifx/Transform` is described with core's `transformSchema()` and carries
  * `builtIn`: its fields are each entity's `transform` block, edited with `setTransform`, and it is
  * never added or removed. Each component also carries `extends` (engine ask E44): the registered

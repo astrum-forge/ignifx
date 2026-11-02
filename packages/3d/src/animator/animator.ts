@@ -46,6 +46,9 @@ export class Animator extends Component implements ComponentHooks {
   /** The registration id the serializer writes into scene files. */
   static typeId = "ignifx/Animator";
 
+  /** The name an inspector shows for the component. */
+  static title = "Animator";
+
   /** One animator per entity: a second state machine on one model would fight over the clips. */
   static allowMultiple = false;
 

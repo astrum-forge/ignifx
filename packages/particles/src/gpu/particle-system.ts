@@ -62,6 +62,9 @@ export class ParticleSystem extends Component implements ComponentHooks {
   /** The registration id the serializer writes into scene files. */
   static typeId = "ignifx/ParticleSystem";
 
+  /** The name an inspector shows for the component. */
+  static title = "Particle system";
+
   /** Several effects may share one entity; each owns its own renderer. */
   static allowMultiple = true;
 

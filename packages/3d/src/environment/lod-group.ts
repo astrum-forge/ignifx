@@ -118,6 +118,9 @@ export class LodGroup extends Component implements ComponentHooks {
   /** The registration id the serializer writes into scene files. */
   static typeId = "ignifx/LodGroup";
 
+  /** The name an inspector shows for the component. */
+  static title = "LOD group";
+
   /** One group per entity. */
   static allowMultiple = false;
 

@@ -38,9 +38,9 @@ export function describeTerrainFormat(): SchemaDescription {
  */
 export function describeSchemas(): Readonly<Record<string, SchemaDescription>> {
   return Object.freeze({
-    "ignifx/Terrain": describeSchema("ignifx/Terrain", Terrain.schema, { title: "Terrain" }),
+    "ignifx/Terrain": describeSchema("ignifx/Terrain", Terrain.schema, { title: Terrain.title }),
     "ignifx/TerrainScatter": describeSchema("ignifx/TerrainScatter", TerrainScatter.schema, {
-      title: "Terrain scatter",
+      title: TerrainScatter.title,
     }),
     "ignifx/terrain-file": describeTerrainFormat(),
   });

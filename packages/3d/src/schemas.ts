@@ -48,29 +48,31 @@ export function describeAnimatorFormat(): SchemaDescription {
  */
 export function describeSchemas(): Readonly<Record<string, SchemaDescription>> {
   return Object.freeze({
-    "ignifx/Animator": describeSchema("ignifx/Animator", Animator.schema, { title: "Animator" }),
-    "ignifx/Billboard": describeSchema("ignifx/Billboard", Billboard.schema, { title: "Billboard" }),
+    "ignifx/Animator": describeSchema("ignifx/Animator", Animator.schema, { title: Animator.title }),
+    "ignifx/Billboard": describeSchema("ignifx/Billboard", Billboard.schema, { title: Billboard.title }),
     "ignifx/FirstPersonController": describeSchema("ignifx/FirstPersonController", FirstPersonController.schema, {
-      title: "First person controller",
+      title: FirstPersonController.title,
     }),
-    "ignifx/LodGroup": describeSchema("ignifx/LodGroup", LodGroup.schema, { title: "LOD group" }),
-    "ignifx/NavMeshAgent": describeSchema("ignifx/NavMeshAgent", NavMeshAgent.schema, { title: "Nav mesh agent" }),
+    "ignifx/LodGroup": describeSchema("ignifx/LodGroup", LodGroup.schema, { title: LodGroup.title }),
+    "ignifx/NavMeshAgent": describeSchema("ignifx/NavMeshAgent", NavMeshAgent.schema, { title: NavMeshAgent.title }),
     "ignifx/NavMeshObstacle": describeSchema("ignifx/NavMeshObstacle", NavMeshObstacle.schema, {
-      title: "Nav mesh obstacle",
+      title: NavMeshObstacle.title,
     }),
     "ignifx/NavMeshSurface": describeSchema("ignifx/NavMeshSurface", NavMeshSurface.schema, {
-      title: "Nav mesh surface",
+      title: NavMeshSurface.title,
     }),
-    "ignifx/PlatformMover": describeSchema("ignifx/PlatformMover", PlatformMover.schema, { title: "Platform mover" }),
-    "ignifx/Projectile": describeSchema("ignifx/Projectile", Projectile.schema, { title: "Projectile" }),
+    "ignifx/PlatformMover": describeSchema("ignifx/PlatformMover", PlatformMover.schema, {
+      title: PlatformMover.title,
+    }),
+    "ignifx/Projectile": describeSchema("ignifx/Projectile", Projectile.schema, { title: Projectile.title }),
     "ignifx/RigidbodyMover": describeSchema("ignifx/RigidbodyMover", RigidbodyMover.schema, {
-      title: "Rigidbody mover",
+      title: RigidbodyMover.title,
     }),
     "ignifx/ThirdPersonCamera": describeSchema("ignifx/ThirdPersonCamera", ThirdPersonCamera.schema, {
-      title: "Third person camera",
+      title: ThirdPersonCamera.title,
     }),
     "ignifx/ThirdPersonController": describeSchema("ignifx/ThirdPersonController", ThirdPersonController.schema, {
-      title: "Third person controller",
+      title: ThirdPersonController.title,
     }),
     "ignifx/threeD-settings": describeSchema("ignifx/threeD-settings", threeDSettingsSchema(), {
       title: "3D settings",

@@ -61,6 +61,12 @@ The shape's offset from the entity origin, in local units.
 
 [`Collider`](#abstract-collider).[`center`](#center-3)
 
+##### description
+
+> `static` **description**: `string` = `"A box collision shape, sized in local units and scaled by the entity."`
+
+What the component does, in one line, for an inspector.
+
 ##### inlineMaterial
 
 > **inlineMaterial**: [`PhysicsMaterialValues`](#physicsmaterialvalues) \| `null`
@@ -664,6 +670,12 @@ The shape's offset from the entity origin, in local units.
 ###### Inherited from
 
 [`Collider`](#abstract-collider).[`center`](#center-3)
+
+##### description
+
+> `static` **description**: `string` = `"A capsule collision shape standing along X, Y, or Z."`
+
+What the component does, in one line, for an inspector.
 
 ##### direction
 
@@ -1277,6 +1289,12 @@ One controller per entity.
 ##### center
 
 > **center**: `Vec3Like`
+
+##### description
+
+> `static` **description**: `string` = `"A kinematic capsule with collide-and-slide, support detection, and body pushing."`
+
+What the component does, in one line, for an inspector.
 
 ##### height
 
@@ -2418,6 +2436,12 @@ The shape's offset from the entity origin, in local units.
 
 [`Collider`](#abstract-collider).[`center`](#center-3)
 
+##### description
+
+> `static` **description**: `string` = `"A cylinder collision shape standing along Y."`
+
+What the component does, in one line, for an inspector.
+
 ##### height
 
 > **height**: `number`
@@ -3027,6 +3051,12 @@ The shape's offset from the entity origin, in local units.
 ###### Inherited from
 
 [`Collider`](#abstract-collider).[`center`](#center-3)
+
+##### description
+
+> `static` **description**: `string` = `"A terrain collision shape built from a regular grid of height samples."`
+
+What the component does, in one line, for an inspector.
 
 ##### heights
 
@@ -3650,6 +3680,12 @@ The shape's offset from the entity origin, in local units.
 ##### convex
 
 > **convex**: `boolean`
+
+##### description
+
+> `static` **description**: `string` = `"A triangle-mesh or convex-hull shape built from real geometry; needs a GPU app."`
+
+What the component does, in one line, for an inspector.
 
 ##### includeChildren
 
@@ -4769,6 +4805,12 @@ One body per entity.
 
 > **collisionEvents**: `"auto"` \| `"on"` \| `"off"`
 
+##### description
+
+> `static` **description**: `string` = `"Makes an entity's colliders a dynamic, kinematic, or static Havok body."`
+
+What the component does, in one line, for an inspector.
+
 ##### freezeRotation
 
 > **freezeRotation**: [`FreezeRotation`](#freezerotation)
@@ -5450,6 +5492,12 @@ The shape's offset from the entity origin, in local units.
 ###### Inherited from
 
 [`Collider`](#abstract-collider).[`center`](#center-3)
+
+##### description
+
+> `static` **description**: `string` = `"A sphere collision shape; the largest scale axis wins."`
+
+What the component does, in one line, for an inspector.
 
 ##### inlineMaterial
 

@@ -27,7 +27,7 @@ import type { SchemaDescription } from "@ignifx/core";
 export function describeSchemas(): Readonly<Record<string, SchemaDescription>> {
   return {
     "ignifx/ParticleSystem2D": describeSchema("ignifx/ParticleSystem2D", ParticleSystem2D.schema, {
-      description: "Draws a .particles.json effect as sprites on a sorting layer.",
+      description: ParticleSystem2D.description,
     }),
   };
 }

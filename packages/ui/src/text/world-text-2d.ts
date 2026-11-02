@@ -35,6 +35,9 @@ export class WorldText2D extends TextComponent implements ComponentHooks {
   /** The registration id the serializer writes into scene files. */
   static typeId = "ignifx/WorldText2D";
 
+  /** What the component does, in one line, for an inspector. */
+  static description = "Pixel-space text placed at an entity's projected position: damage numbers and name tags.";
+
   /** One floating label per entity. */
   static allowMultiple = false;
 

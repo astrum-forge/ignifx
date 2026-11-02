@@ -37,16 +37,16 @@ import type { SchemaDescription } from "@ignifx/core";
 export function describeSchemas(): Readonly<Record<string, SchemaDescription>> {
   return {
     "ignifx/WorldAnchor": describeSchema("ignifx/WorldAnchor", WorldAnchor.schema, {
-      description: "Keeps a DOM element at an entity's screen position, with clamping and distance scaling.",
+      description: WorldAnchor.description,
     }),
     "ignifx/HudText": describeSchema("ignifx/HudText", HudText.schema, {
-      description: "Pixel-space text drawn by Babylon Lite, anchored to a corner of the render target.",
+      description: HudText.description,
     }),
     "ignifx/WorldText": describeSchema("ignifx/WorldText", WorldText.schema, {
-      description: "3D text in the render scene: signs and banners, optionally billboarded.",
+      description: WorldText.description,
     }),
     "ignifx/WorldText2D": describeSchema("ignifx/WorldText2D", WorldText2D.schema, {
-      description: "Pixel-space text placed at an entity's projected position: damage numbers and name tags.",
+      description: WorldText2D.description,
     }),
     "ignifx/i18n-file": describeLocaleFileFormat(),
   };
