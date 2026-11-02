@@ -126,6 +126,18 @@ export interface RenderingSettings {
   readonly clearColor: ColorLike;
   /** The address of the RGBD BRDF lookup table `loadEnvironment` requires. */
   readonly brdfLut: string;
+  /**
+   * Render the scene into a floating-point (`rgba16float`) target and tone map it in one final pass.
+   *
+   * @remarks
+   * Off by default, and nothing of it loads while it is off. On, PBR materials keep their linear
+   * colour, which may go above 1, and a final output pass applies the `Environment`'s exposure,
+   * contrast and tone-mapping curve and encodes the result for the screen. A scene that only uses
+   * PBR materials looks the same either way; later effects (HDR bloom, auto exposure) need it on.
+   * Fog, Standard materials, surface shaders, sprites, particles and the skybox are not yet carried
+   * in linear colour (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, step G3).
+   */
+  readonly hdr: boolean;
 }
 
 /**
@@ -180,6 +192,7 @@ export function defaultRenderingSettings(): RenderingSettings {
     requiredLimits: {},
     clearColor: { r: 0, g: 0, b: 0, a: 1 },
     brdfLut: DEFAULT_BRDF_LUT_ADDRESS,
+    hdr: false,
   };
 }
 
@@ -216,6 +229,9 @@ export function renderingSettingsSchema(): Schema {
       tooltip: "The colour the scene is cleared to, in sRGB. A Camera or Environment overrides it.",
     }),
     brdfLut: str(DEFAULT_BRDF_LUT_ADDRESS, { tooltip: "Address of the RGBD BRDF lookup table." }),
+    hdr: bool(false, {
+      tooltip: "Render in HDR (rgba16float) and tone map in one final pass. PBR materials only for now.",
+    }),
   });
 }
 

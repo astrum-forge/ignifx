@@ -27,8 +27,9 @@ export interface EngineHandles {
   /** `true` when the engine is the null engine and there is nothing to present to. */
   readonly isHeadless: boolean;
   /**
-   * The offscreen render path, when the project declared `rendering.features.postProcessing`;
-   * `null` when the scene renders straight into the swapchain the way Lite does by default.
+   * The offscreen render path, when the project declared `rendering.features.postProcessing` or
+   * `rendering.hdr`; `null` when the scene renders straight into the swapchain the way Lite does by
+   * default.
    */
   readonly presenter: ScenePresenter | null;
 }
@@ -83,6 +84,8 @@ export function createHeadlessEngine(): EngineHandles {
  * @param options - Device and surface options; see `createWebGpuEngine`.
  * @param features - Which render path to build.
  * @param features.postProcessing - `true` to render into an offscreen target and composite it.
+ * @param features.hdr - `true` to render into an `rgba16float` target and tone map it in a final
+ * pass (`./gpu/hdr-output.ts`, its own chunk, loaded only then). Implies the offscreen path.
  * @returns The engine, the scene, and the presenter when there is one.
  * @throws IgnifxError with code `IGX-0701` when WebGPU is unavailable.
  *
@@ -91,18 +94,20 @@ export function createHeadlessEngine(): EngineHandles {
 export async function createRenderEngine(
   canvas: RenderSurface,
   options?: EngineOptions,
-  features?: { readonly postProcessing?: boolean },
+  features?: { readonly postProcessing?: boolean; readonly hdr?: boolean },
 ): Promise<EngineHandles> {
   assertWebGpuAvailable();
   const engine = await createWebGpuEngine(canvas, options);
-  const offscreen = features?.postProcessing === true;
+  const hdr = features?.hdr === true;
+  const offscreen = hdr || features?.postProcessing === true;
   const scene = createRenderScene(engine, { offscreen });
-  return {
-    engine,
-    scene,
-    isHeadless: false,
-    presenter: offscreen ? installOffscreenRenderPath(engine, scene) : null,
-  };
+  let presenter: ScenePresenter | null = null;
+  if (hdr) {
+    presenter = (await import("./gpu/hdr-output.js")).installHdrRenderPath(engine, scene);
+  } else if (offscreen) {
+    presenter = installOffscreenRenderPath(engine, scene);
+  }
+  return { engine, scene, isHeadless: false, presenter };
 }
 
 /**
