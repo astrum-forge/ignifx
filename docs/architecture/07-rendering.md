@@ -194,6 +194,29 @@ Design and rationale: `docs/plan/2026-09-terrain-particles-shaders.md` §3 and A
 - **Lite gaps.** Lite has no task removal and no texture readback. `dispose()` splices the task out of the frame graph's `_tasks` before disposing it (a disposed render task throws from `record()` on the next rebuild), and `readPixels` copies the target's `_colorTexture` through `engine._device` into a mapped buffer. Both are read from Lite 1.34.0 and pinned by `test/render/render-texture.browser.test.ts` at MSAA 1 and 4.
 - **Cost.** The module is loaded on the first render or read, so a game that never uses one ships none of it (§2.5). A texture costs nothing until then; after that, its target, and one render pass in each frame it is filled.
 
+### 2.12 Scene inputs
+
+Screen-space effects (TAA, GTAO, contact shadows, SSGI; GI plan steps G5–G11) read the scene's depth, normals and motion from one shared geometry pass, `src/lite/gpu/scene-inputs.ts` (GI plan step G4, 2026-11-02). It is internal: an effect calls `rendererInternals(app.renderer).acquireSceneInputs()`, gets a lease, and calls its `release()` when it is disposed. The first acquire loads the chunk and adds the pass; the last release removes and disposes it. An app whose effects never ask loads none of it and its frame graph has none of these tasks (`CONSTITUTION.md` §2.5). Under the null engine `acquireSceneInputs()` returns `null`.
+
+```text
+[shadow] → geometry ─→ normals copy ─→ velocity copy ─→ depth pyramid → scene → … → effects
+```
+
+| Input          | Format         | What it holds                                                                                                        |
+| -------------- | -------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `depth`        | `depth32float` | Reverse-Z depth (1 near, 0 far), sampled facade; bind with `sampleType: "depth"`                                     |
+| `normals`      | `rgba16float`  | World normals stored as `n * 0.5 + 0.5`; 0 where nothing was drawn                                                   |
+| `velocity`     | `rgba16float`  | `0.5 * (previousNdc - currentNdc)`: UV units, Y up, from now to last frame; 0 where nothing was drawn                |
+| `depthPyramid` | `r32float`     | Full mip chain; each level is the `max` (nearest surface in reverse-Z) of its four children; read with `textureLoad` |
+
+- **One pass, shared.** Leases are counted; two effects get the same textures and one geometry pass. The tasks sit at the start of the frame graph (after `shadow`), so any task appended later reads this frame's values; `lease.lastTask` is the last of them.
+- **Bridges (spike S2).** Lite's main pass uses `depth24plus-stencil8`, which compute cannot bind, so the geometry pass draws its own `depth32float` depth. Geometry attachments are task-owned `RenderTarget`s with no `Texture2D`, so normals and velocity are copied into targets that have one (upstream ask 3).
+- **The pyramid** is Lite's `createDepthPyramid` (render passes, one per level, not compute), wrapped so it can be rebuilt.
+- **Resize and device loss.** Every target is sized by the surface and reallocated by `frameGraph.build()`. The depth target's resize callback, which also fires when a recovered device reallocates it, rebuilds the pyramid and calls each lease's `onChange` callbacks so effects can rebind; `depthPyramid` is a new object afterwards. A resize is covered by a browser test; device loss is not.
+- **Removal.** Lite 1.34 has no public way to remove a task, and a disposed task left in the graph is recorded again on the next rebuild against freed targets, so the last release splices the tasks out of the graph's private `_tasks` list (`lib/frame-graph/frame-graph-actions.js`) before disposing them.
+- **Limit: object motion on PBR.** Lite's PBR geometry view reprojects the current world position through the previous view-projection (`lib/material/pbr/pbr-geometry-output-shader.js` line 41), so a PBR mesh moving under a still camera writes 0. Standard materials track each mesh's previous world matrix. Per-object PBR velocity is left for G6, or an upstream fix.
+- **Cost.** One geometry draw of every mesh, two full-screen copies and the pyramid's passes per frame while any lease is held.
+
 ## 3. Picking
 
 - `app.renderer.pickAsync(x, y, options)` → GPU pick (`createGpuPicker` + `pickAsync`), resolves to `{ entity, component, point, normal, distance, meshName, thinInstanceIndex }` using node metadata. Calls are serialized per picker (Lite constraint).
