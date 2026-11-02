@@ -1,5 +1,22 @@
 # @ignifx/editor-host
 
+## 0.13.0
+
+### Minor Changes
+
+- df35b3d: The editor can now read an entity of a running game: the play view answers `queryRuntime { entity, components? }` with the entity as the scene format writes it from the live world (at most 64 components, each value capped and the whole answer kept within 256 Ki characters of JSON; components that do not fit are counted in `omittedComponents`, and keys, list items and tags the caps cut in `omittedEntries`), and lists `queryRuntime` in its capabilities. It refuses an unknown uid with the new `RpcErrorCode.unknownEntity`, and a stopped game with `notPlaying`; a paused or stepped game answers.
+- 4f11e9e: The editor can now take a screenshot of a running game: the play view answers `screenshot` with the same request and answer as the scene view, and lists `screenshot` in its capabilities. It refuses with the new `RpcErrorCode.notPlaying` while the game is not running, and with `notReady` before its first frame.
+- 54bdbb1: The editor can now send input to a running game: the play view answers `sendInput { events }` (up to 64 key presses and releases by `<Keyboard>` control name, and pointer moves, presses and releases at fractions of the canvas) by queuing them into the game's own `app.input`, which resolves them on its next frame. Nothing reaches the page's DOM, the editor's window or the operating system. A game with `app.input` lists `sendInput` in its capabilities; a stopped game refuses with `notPlaying`.
+
+### Patch Changes
+
+- afa8e20: A component class can declare `static title` and `static description`, and `describeRegisteredSchemas` uses them when no curated entry is given.
+  Every engine component now declares its curated title or summary this way.
+  The editor host now sends every package's component titles and summaries, such as "Rigidbody mover", instead of class names.
+- Updated dependencies [afa8e20]
+  - @ignifx/core@0.13.0
+  - @ignifx/vite-plugin@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes
