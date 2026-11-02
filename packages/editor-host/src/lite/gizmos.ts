@@ -312,6 +312,17 @@ export function createEditorView(
 }
 
 /**
+ * The world bounds of every visible mesh an entity draws, without a view: for a thumbnail stage.
+ *
+ * @param handles - The app's Lite engine and render scene (`app.lite`).
+ * @param entity - The entity.
+ * @returns The box, or `null` when nothing under the entity is drawn yet.
+ */
+export function entityWorldBounds(handles: AppLiteHandles, entity: Entity): WorldBounds | null {
+  return computeWorldBounds(entity.transform.lite, handles.scene);
+}
+
+/**
  * A node's parent. Lite types it as a bare world-matrix provider, so it is followed by identity only.
  *
  * @param node - The node.

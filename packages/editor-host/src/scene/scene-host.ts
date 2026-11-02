@@ -22,6 +22,7 @@ import {
   isSetGridParams,
   isSetViewModeParams,
   PickUnit,
+  RenderViewMethod,
   RpcErrorCode,
   SceneMethod,
   SceneNotification,
@@ -40,6 +41,7 @@ import { DocumentMirror } from "./document.js";
 import { EditorCamera2D, EYE_DISTANCE_2D } from "./editor-camera-2d.js";
 import { EDITOR_CAMERA_FOV, EditorCamera } from "./editor-camera.js";
 import { EditorGrid } from "./editor-grid.js";
+import { GameView } from "./game-view.js";
 import { GizmoDragRelay } from "./gizmo-drag.js";
 import { DEFAULT_GRID_SIZE, groundGridPlacement, screenGridPlacement } from "./grid.js";
 import { applyOps, reloadInstance } from "./ops.js";
@@ -47,6 +49,7 @@ import { sampleAnimation } from "./sample-animation.js";
 import { schemaSet } from "./schemas.js";
 import { checkScreenshotParams, takeScreenshot } from "./screenshot.js";
 import { settingsSet } from "./settings.js";
+import { ThumbnailRenderer } from "./thumbnails.js";
 import {
   boundsOf2D,
   CAMERA_2D_TYPE,
@@ -96,6 +99,11 @@ export interface SceneHostOptions {
    * @param params - Its parameters.
    */
   readonly notify: (method: string, params: unknown) => void;
+  /**
+   * Creates the unstarted app thumbnails are rendered in, from the project's options; needed for
+   * `HostCapability.thumbnails`.
+   */
+  readonly createThumbnailApp?: () => Promise<App>;
 }
 
 /** A point of the view, in backing-store pixels. */
@@ -174,6 +182,10 @@ export class SceneHost {
 
   readonly #drag: GizmoDragRelay;
 
+  readonly #gameView = new GameView();
+
+  readonly #thumbnails: ThumbnailRenderer | null;
+
   #started = false;
 
   /** The field defaults seen at start and after each hot reload, from {@link SceneHost.start} on. */
@@ -217,6 +229,29 @@ export class SceneHost {
     }
     if (has(HostCapability.screenshot)) {
       methods.set(SceneMethod.screenshot, async (params) => this.#screenshot(params));
+    }
+    if (has(HostCapability.gameView)) {
+      methods.set(RenderViewMethod.setGameView, (params) => {
+        this.#requireMirror(RenderViewMethod.setGameView);
+        return this.#gameView.set(this.#requireApp(), params);
+      });
+      methods.set(RenderViewMethod.gameViewFrame, async (params) => {
+        const mirror = this.#requireMirror(RenderViewMethod.gameViewFrame);
+        this.#requireOpen(RenderViewMethod.gameViewFrame);
+        return this.#gameView.frame(this.#requireApp(), mirror, params);
+      });
+    }
+    const createThumbnailApp = options.createThumbnailApp;
+    this.#thumbnails =
+      has(HostCapability.thumbnails) && createThumbnailApp !== undefined
+        ? new ThumbnailRenderer(createThumbnailApp)
+        : null;
+    const thumbnails = this.#thumbnails;
+    if (thumbnails !== null) {
+      methods.set(RenderViewMethod.renderThumbnail, async (params) => {
+        this.#requireMirror(RenderViewMethod.renderThumbnail);
+        return thumbnails.render(params);
+      });
     }
     if (has(HostCapability.grid)) {
       methods.set(SceneMethod.setGrid, (params) => this.#setGrid(params));
@@ -475,6 +510,8 @@ export class SceneHost {
     }
     this.#view?.dispose();
     this.#view = null;
+    this.#gameView.dispose();
+    this.#thumbnails?.dispose();
   }
 
   // -------------------------------------------------------------------------------------------

@@ -1,0 +1,37 @@
+{
+  "format": "ignifx.spriteatlas",
+  "formatVersion": 1,
+  "image": "cave.png",
+  "sampling": "nearest",
+  "premultipliedAlpha": false,
+  "frames": [
+    {
+      "name": "Cave_0",
+      "x": 0,
+      "y": 0,
+      "w": 32,
+      "h": 32
+    },
+    {
+      "name": "Cave_1",
+      "x": 32,
+      "y": 0,
+      "w": 32,
+      "h": 32
+    },
+    {
+      "name": "Cave_2",
+      "x": 0,
+      "y": 32,
+      "w": 32,
+      "h": 32
+    },
+    {
+      "name": "Cave_3",
+      "x": 32,
+      "y": 32,
+      "w": 32,
+      "h": 32
+    }
+  ]
+}

@@ -1969,6 +1969,102 @@
           "code": "IGX-1202"
         }
       }
+    },
+    "setGameView": {
+      "jsonrpc": "2.0",
+      "id": 40,
+      "method": "setGameView",
+      "params": {
+        "enabled": true,
+        "width": 640,
+        "height": 360
+      }
+    },
+    "setGameViewResponse": {
+      "jsonrpc": "2.0",
+      "id": 40,
+      "result": {
+        "enabled": true,
+        "width": 640,
+        "height": 360
+      }
+    },
+    "setGameViewOff": {
+      "jsonrpc": "2.0",
+      "id": 41,
+      "method": "setGameView",
+      "params": {
+        "enabled": false
+      }
+    },
+    "gameViewFrame": {
+      "jsonrpc": "2.0",
+      "id": 42,
+      "method": "gameViewFrame",
+      "params": {
+        "format": "jpeg",
+        "quality": 0.8
+      }
+    },
+    "gameViewFrameResponse": {
+      "jsonrpc": "2.0",
+      "id": 42,
+      "result": {
+        "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+        "width": 640,
+        "height": 360,
+        "camera": "01M4ZEB9E0GG0Q6R22YXV3AVK8"
+      }
+    },
+    "gameViewFrameNoCamera": {
+      "jsonrpc": "2.0",
+      "id": 42,
+      "result": {
+        "dataUrl": null,
+        "width": 640,
+        "height": 360,
+        "camera": null
+      }
+    },
+    "gameViewFrameOff": {
+      "jsonrpc": "2.0",
+      "id": 42,
+      "error": {
+        "code": -32600,
+        "message": "The game view is off; send \"setGameView\" with enabled: true first."
+      }
+    },
+    "renderThumbnail": {
+      "jsonrpc": "2.0",
+      "id": 43,
+      "method": "renderThumbnail",
+      "params": {
+        "asset": {
+          "$asset": "models/crate.glb",
+          "type": "model"
+        },
+        "size": 128,
+        "format": "png"
+      }
+    },
+    "renderThumbnailPrefab": {
+      "jsonrpc": "2.0",
+      "id": 44,
+      "method": "renderThumbnail",
+      "params": {
+        "asset": "prefabs/door.prefab.json",
+        "format": "jpeg",
+        "quality": 0.85
+      }
+    },
+    "renderThumbnailResponse": {
+      "jsonrpc": "2.0",
+      "id": 43,
+      "result": {
+        "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+        "width": 128,
+        "height": 128
+      }
     }
   }
 }

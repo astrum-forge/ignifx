@@ -40,8 +40,14 @@ import {
   isReadBackParams,
   isReadBackResult,
   isRpcMessage,
+  isGameViewFrameParams,
+  isGameViewFrameResult,
+  isGameViewState,
+  isRenderThumbnailParams,
   isSampleAnimationParams,
   isSampleAnimationResult,
+  isSetGameViewParams,
+  isThumbnailResult,
   isSceneOpenedParams,
   isSchemaSet,
   isScreenshotParams,
@@ -57,6 +63,7 @@ import {
   isTransformDraggingParams,
   PlayMethod,
   PlayNotification,
+  RenderViewMethod,
   PROTOCOL_VERSION,
   RpcErrorCode,
   SceneMethod,
@@ -202,6 +209,11 @@ const PARAMS_GUARDS: Readonly<Record<string, (value: unknown) => boolean>> = {
   playStateChangedStopped: isPlayStateReport,
   sampleAnimation: isSampleAnimationParams,
   sampleAnimationBlend: isSampleAnimationParams,
+  setGameView: isSetGameViewParams,
+  setGameViewOff: isSetGameViewParams,
+  gameViewFrame: isGameViewFrameParams,
+  renderThumbnail: isRenderThumbnailParams,
+  renderThumbnailPrefab: isRenderThumbnailParams,
 };
 
 /** Each result guard, by the fixture messages it checks. */
@@ -228,6 +240,10 @@ const RESULT_GUARDS: Readonly<Record<string, (value: unknown) => boolean>> = {
   playStatsStoppedResponse: isPlayStats,
   sampleAnimationResponse: isSampleAnimationResult,
   sampleAnimationLoadingResponse: isSampleAnimationResult,
+  setGameViewResponse: isGameViewState,
+  gameViewFrameResponse: isGameViewFrameResult,
+  gameViewFrameNoCamera: isGameViewFrameResult,
+  renderThumbnailResponse: isThumbnailResult,
 };
 
 describe("the editor's 0.3 wire fixture, through the host's guards", () => {
@@ -249,6 +265,7 @@ describe("the editor's 0.3 wire fixture, through the host's guards", () => {
       ...Object.values(SceneNotification),
       ...Object.values(PlayMethod),
       ...Object.values(PlayNotification),
+      ...Object.values(RenderViewMethod),
       "hello",
     ];
     const codes: readonly unknown[] = Object.values(RpcErrorCode);
@@ -622,8 +639,18 @@ describe("the editor's 0.3 wire fixture, through a live headless host", () => {
       id: wire("setViewMode")["id"],
     });
 
-    // A headless host lists none of `gizmos`, `screenshot` and `grid`, so it does not have their methods.
-    for (const name of ["setGizmo", "setGizmoNoSnap", "screenshot", "screenshotJpeg", "setGrid"]) {
+    // A headless host lists none of `gizmos`, `screenshot`, `gameView`, `thumbnails` and `grid`, so
+    // it does not have their methods.
+    for (const name of [
+      "setGizmo",
+      "setGizmoNoSnap",
+      "screenshot",
+      "screenshotJpeg",
+      "setGameView",
+      "gameViewFrame",
+      "renderThumbnail",
+      "setGrid",
+    ]) {
       // oxlint-disable-next-line no-await-in-loop -- one request at a time
       expect(member(await peer.request(wire(name)), "error")["code"], name).toBe(RpcErrorCode.methodNotFound);
     }

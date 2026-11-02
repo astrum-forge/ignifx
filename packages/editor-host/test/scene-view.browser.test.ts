@@ -281,6 +281,8 @@ async function sceneView(scene: SceneFile = SCENE, framed = "BOX"): Promise<Edit
     HostCapability.pick2d,
     HostCapability.logRelay,
     HostCapability.hotReloadDefaults,
+    HostCapability.gameView,
+    HostCapability.thumbnails,
     HostCapability.grid,
   ]);
   host = await starting;

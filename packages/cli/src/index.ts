@@ -31,6 +31,14 @@ export {
   type CopyTemplateOptions,
   type CopyTemplateResult,
 } from "./copy-template.js";
+export {
+  CONVERT_TILEMAP_USAGE,
+  isTilemapSource,
+  parseConvertTilemapArgs,
+  runConvertTilemap,
+  type ConvertTilemapCommand,
+  type ConvertTilemapResult,
+} from "./convert-tilemap.js";
 export { CliError, CliErrorCode } from "./errors.js";
 export {
   encodeHeightmapR16,

@@ -5902,6 +5902,30 @@ What the component does, in one line, for an inspector.
 
 > **projection**: `"perspective"` \| `"orthographic"`
 
+##### renderTarget
+
+> **renderTarget**: `RenderTexture` \| `null`
+
+**`Beta`**
+
+The texture this camera renders into every frame, instead of the canvas, or `null` for the
+canvas (`docs/architecture/07-rendering.md` §2.11).
+
+###### Remarks
+
+A camera with a render target is never the main camera, whatever its `priority`; it draws the
+same scene from its own view into the texture, at the texture's aspect, in every frame it is
+enabled. Runtime state: it is not serialized. Create the texture with
+`app.renderer.createRenderTexture`.
+
+###### Example
+
+```ts
+const minimap = app.renderer.createRenderTexture(256, 256);
+overhead.renderTarget = minimap;
+const pixels = await minimap.readPixels();
+```
+
 ##### schema
 
 > `static` **schema**: [`Schema`](#schema-44)
@@ -78802,6 +78826,46 @@ The frame, as tightly packed RGBA8 with the top row first.
 IgnifxError with code `IGX-0707` when no render loop is running, because the capture
 would never settle.
 
+##### createRenderTexture()
+
+> **createRenderTexture**(`width`, `height`): `RenderTexture`
+
+**`Beta`**
+
+Creates an offscreen texture a camera can render into, beside the main view
+(`docs/architecture/07-rendering.md` §2.11).
+
+###### Parameters
+
+###### width
+
+`number`
+
+The width, in pixels: a whole number from 1 to 4096.
+
+###### height
+
+`number`
+
+The height, in pixels: a whole number from 1 to 4096.
+
+###### Returns
+
+`RenderTexture`
+
+The texture. Dispose it when done; `app.dispose()` disposes any still open.
+
+###### Remarks
+
+Fill it once with [Renderer.renderToTexture](#rendertotexture), or every frame by setting a camera's
+`renderTarget`. Its GPU pass and target are created on the first render or read, so creating
+one costs nothing until then, and a headless app may create one (it can never fill it).
+
+###### Throws
+
+IgnifxError with code `IGX-0730` for a side out of range, and `IGX-0106` once the app is
+disposed.
+
 ##### openOverlay()
 
 > **openOverlay**(): `Promise`\<`RenderOverlay`\>
@@ -78884,6 +78948,54 @@ A hit on any mesh of a glTF `Model`, or of any renderable built from several Lit
 resolves through the nearest node an entity owns. Picks are serialised per app: Lite's picker
 owns one set of staging buffers and chains each call onto the previous one's promise. A
 headless app has no picker and always misses.
+
+##### renderToTexture()
+
+> **renderToTexture**(`camera`, `texture`): `Promise`\<`void`\>
+
+**`Beta`**
+
+Renders the scene through a camera into a texture on the next frame, beside the main view
+(`docs/architecture/07-rendering.md` §2.11).
+
+###### Parameters
+
+###### camera
+
+[`Camera`](#camera)
+
+A camera attached to an entity of this app's world.
+
+###### texture
+
+`RenderTexture`
+
+A texture from this renderer's [Renderer.createRenderTexture](#createrendertexture).
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the frame that rendered it has been submitted.
+
+###### Remarks
+
+The camera need not be the main one, and stays a candidate for it. Requests queued for the
+same texture render one camera per frame, oldest first. The camera's aspect is the texture's.
+Read the result with RenderTexture.readPixels.
+
+###### Throws
+
+IgnifxError with code `IGX-0729` on a headless app or while no render loop runs,
+`IGX-0731` for a disposed or foreign texture, and `IGX-0732` for a detached camera.
+
+###### Example
+
+```ts
+const texture = app.renderer.createRenderTexture(128, 128);
+await app.renderer.renderToTexture(previewCamera, texture);
+const { data } = await texture.readPixels();
+```
 
 ##### requireFeature()
 
@@ -89504,6 +89616,12 @@ An operation that only accepts a scene root was given an entity that has a paren
 
 An extension's `engine` range does not match the running core version.
 
+##### extensionInstalledTwice
+
+> `readonly` **extensionInstalledTwice**: `"IGX-0411"`
+
+One `Extension` object was handed to a second app while the first still runs it.
+
 ##### extensionMissing
 
 > `readonly` **extensionMissing**: `"IGX-0403"`
@@ -89581,6 +89699,12 @@ An instance override declares a `path` the override grammar does not accept.
 > `readonly` **invalidPixelData**: `"IGX-0722"`
 
 Pixel data handed to a texture does not match its declared size.
+
+##### invalidRenderTextureSize
+
+> `readonly` **invalidRenderTextureSize**: `"IGX-0730"`
+
+`app.renderer.createRenderTexture` was given a side that is not a whole number from 1 to 4096.
 
 ##### invalidRuntime
 
@@ -89689,6 +89813,24 @@ A `PostProcessStack` was attached without the `postProcessing` rendering feature
 > `readonly` **renderingFeatureTooLate**: `"IGX-0704"`
 
 A rendering feature opt-in was requested after the render scene had been registered.
+
+##### renderTextureCameraDetached
+
+> `readonly` **renderTextureCameraDetached**: `"IGX-0732"`
+
+`app.renderer.renderToTexture` was given a camera that is not attached to an entity.
+
+##### renderTextureNeedsRenderLoop
+
+> `readonly` **renderTextureNeedsRenderLoop**: `"IGX-0729"`
+
+A render texture was rendered into or read on a headless app, or before `app.start()` started the render loop.
+
+##### renderTextureUnusable
+
+> `readonly` **renderTextureUnusable**: `"IGX-0731"`
+
+A render texture was used after `dispose()`, or with another app's renderer.
 
 ##### requiredComponentMissing
 

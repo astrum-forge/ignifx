@@ -47,6 +47,13 @@ export interface EditorHostOptions {
   readonly editMode?: boolean;
   /** The project's extensions, in the order its `main.ts` registers them. */
   readonly extensions?: readonly Extension[];
+  /**
+   * Builds a fresh list of the project's extensions, for the second app thumbnails render in. An
+   * extension object belongs to one app (`IGX-0411`), so the host cannot reuse `extensions`. The
+   * generated scene view passes the project's own `extensions` function from `src/extensions.ts`.
+   * Without it, a host given `extensions` does not list `HostCapability.thumbnails`.
+   */
+  readonly createExtensions?: () => readonly Extension[];
   /** The project's component classes, registered with `app.registerComponents`. */
   readonly scripts?: readonly ConcreteComponentType[];
   /** Project settings, as `ignifx.config.ts` supplies them (`import.meta.env.IGNIFX_CONFIG`). */
@@ -172,6 +179,8 @@ export async function startEditorHost(options: EditorHostOptions): Promise<Edito
         HostCapability.pick2d,
         HostCapability.logRelay,
         HostCapability.hotReloadDefaults,
+        HostCapability.gameView,
+        ...(canRenderThumbnails(options) ? [HostCapability.thumbnails] : []),
         HostCapability.grid,
       ]
     : [HostCapability.heartbeat, HostCapability.logRelay, HostCapability.hotReloadDefaults];
@@ -181,6 +190,7 @@ export async function startEditorHost(options: EditorHostOptions): Promise<Edito
     notify: (method, params) => {
       channel?.notify(method, params);
     },
+    createThumbnailApp: async () => createThumbnailApp(options),
   });
   // The channel opens before the first `await`, so a port posted while the app is created is kept.
   const opened = openChannel({
@@ -248,6 +258,39 @@ export async function startEditorHost(options: EditorHostOptions): Promise<Edito
  */
 function hasGpuView(options: EditorHostOptions): boolean {
   return options.canvas !== undefined && options.headless !== true;
+}
+
+/**
+ * Tells whether the host can build the thumbnail stage app: it has `OffscreenCanvas`, and either
+ * a way to build fresh extensions or no extensions to rebuild.
+ *
+ * @param options - The host options.
+ * @returns True when `renderThumbnail` can be answered.
+ */
+function canRenderThumbnails(options: EditorHostOptions): boolean {
+  return (
+    typeof OffscreenCanvas !== "undefined" &&
+    (options.createExtensions !== undefined || (options.extensions ?? []).length === 0)
+  );
+}
+
+/**
+ * Creates the app thumbnails are rendered in: fresh instances of the project's extensions, its
+ * settings, assets and scripts, on a 1x1 offscreen canvas of its own (the thumbnails draw into
+ * render textures).
+ *
+ * @param options - The host options.
+ * @returns The app, not started.
+ */
+async function createThumbnailApp(options: EditorHostOptions): Promise<App> {
+  const app = await createApp({
+    ...appOptions(options),
+    extensions: options.createExtensions?.() ?? [],
+    canvas: new OffscreenCanvas(1, 1),
+    headless: false,
+  });
+  app.registerComponents(options.scripts ?? []);
+  return app;
 }
 
 /**

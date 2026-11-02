@@ -183,6 +183,8 @@ describe("the scene view's page", () => {
       expect(source).toContain('import { manifest } from "virtual:ignifx/manifest";');
       expect(source).toContain('import { extensions } from "/src/extensions.ts";');
       expect(source).toContain("extensions: extensions(),");
+      // The thumbnail stage app gets its own extension objects (IGX-0411).
+      expect(source).toContain("createExtensions: extensions,");
       expect(source).toContain('bootScene: "scenes/boot.scene.json",');
       expect(source).toContain('engineVersion: "1.2.3",');
       expect(source).toContain(`editorOrigin: "${EDITOR_ORIGIN}",`);

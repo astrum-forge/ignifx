@@ -49,7 +49,14 @@ describe("the protocol mirror", () => {
       hotReloadDefaults: "hotReloadDefaults",
       queryRuntime: "queryRuntime",
       sendInput: "sendInput",
+      gameView: "gameView",
+      thumbnails: "thumbnails",
       grid: "grid",
+    });
+    expect(page.RenderViewMethod).toEqual({
+      setGameView: "setGameView",
+      gameViewFrame: "gameViewFrame",
+      renderThumbnail: "renderThumbnail",
     });
     expect(page.QUERY_RUNTIME_MAX_COMPONENTS).toBe(64);
     expect(page.SEND_INPUT_MAX_EVENTS).toBe(64);

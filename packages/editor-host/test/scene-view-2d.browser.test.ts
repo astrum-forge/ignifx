@@ -153,6 +153,7 @@ async function sceneView(): Promise<{ readonly view: EditorHost; readonly opened
     canvas,
     messageTarget: target,
     extensions: [twoD({ pixelsPerUnit: PPU })],
+    createExtensions: () => [twoD({ pixelsPerUnit: PPU })],
     settings: { rendering: { msaaSamples: 1 }, sortingLayers: { sortingLayers: ["Background", "Default"] } },
     assets: {
       manifest: createAssetManifest([
@@ -172,6 +173,8 @@ async function sceneView(): Promise<{ readonly view: EditorHost; readonly opened
     HostCapability.pick2d,
     HostCapability.logRelay,
     HostCapability.hotReloadDefaults,
+    HostCapability.gameView,
+    HostCapability.thumbnails,
     HostCapability.grid,
   ]);
   host = await starting;

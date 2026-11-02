@@ -44,6 +44,13 @@ these tests.
   level through a `Tiles` layer, an `IntGrid` collision layer, and an `Entities` layer. No file
   produced by the LDtk editor was used, and no LDtk sample project was copied.
 
+- `import/tiled/` (a Tiled map with an external `.tsj` tileset, a group layer, an image layer and
+  objects) and `import/ldtk/` (an LDtk project with `Tiles`, `AutoLayer`, auto-tiled `IntGrid` and
+  `Entities` layers, and one external `.ldtkl` level) were written the same way, by hand, for the
+  `ignifx import tilemap` tests. `import/expected/` is what that command writes from them and from
+  `sample.tmj` and `sample.ldtk`; regenerate it with the command when the output changes on purpose.
+  The tests serve `hero.png` as each tileset image.
+
 Both editor formats are documentation, not code: reading a published format specification and
 writing a conforming document by hand creates no derivative work of either editor.
 

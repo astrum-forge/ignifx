@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
 import { parseArgs as parseNodeArgs } from "node:util";
 import { CliError, CliErrorCode } from "./errors.js";
+import { canonical, compactJson, isRecord } from "./json-text.js";
 import type { ImportIo } from "./import-heightmap.js";
 
 /**
@@ -38,9 +39,6 @@ const ULID_RANDOM_LENGTH = 16;
 
 /** The base of the ULID encoding. */
 const ULID_BASE = 32;
-
-/** The precision scene files store numbers at, matching `canonicalizeNumber` in `@ignifx/core`. */
-const CANONICAL_SCALE = 1e6;
 
 /** Indentation of the files this command writes. */
 const INDENT = "  ";
@@ -243,16 +241,6 @@ async function writeText(path: string, text: string): Promise<void> {
 }
 
 /**
- * Whether a value is a JSON object rather than an array, a primitive or `null`.
- *
- * @param value - The value.
- * @returns `true` for an object.
- */
-function isRecord(value: unknown): value is JsonRecord {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-/**
  * Parses a document and checks its `format` header.
  *
  * @param text - The file's text.
@@ -439,17 +427,6 @@ function generateUid(): string {
 }
 
 /**
- * Rounds a number the way scene files store it.
- *
- * @param value - The number.
- * @returns It rounded to six decimals, with `-0` as `0`.
- */
-function canonical(value: number): number {
-  const rounded = Math.round(value * CANONICAL_SCALE) / CANONICAL_SCALE;
-  return rounded === 0 ? 0 : rounded;
-}
-
-/**
  * Describes the entity one object becomes.
  *
  * @param uid - The entity's uid.
@@ -495,37 +472,8 @@ function entityRecord(entry: ImportedTileObject, parent: string | null): JsonRec
  */
 function stringify(value: JsonRecord, original: string): string {
   const isScene = value["format"] === SCENE_FORMAT;
-  const text = isScene ? JSON.stringify(value, null, INDENT.length) : compact(value, "");
+  const text = isScene ? JSON.stringify(value, null, INDENT.length) : compactJson(value);
   return original.endsWith("\n") ? `${text}\n` : text;
-}
-
-/**
- * Formats a value with lists of plain values on one line.
- *
- * @param value - The value.
- * @param indent - The current indentation.
- * @returns The text.
- */
-function compact(value: unknown, indent: string): string {
-  if (Array.isArray(value)) {
-    if (value.length === 0) {
-      return "[]";
-    }
-    if (value.every((item: unknown) => item === null || typeof item !== "object")) {
-      return `[${value.map((item: unknown) => JSON.stringify(item)).join(", ")}]`;
-    }
-    const inner = indent + INDENT;
-    return `[\n${value.map((item: unknown) => inner + compact(item, inner)).join(",\n")}\n${indent}]`;
-  }
-  if (isRecord(value)) {
-    const keys = Object.keys(value).filter((key) => value[key] !== undefined);
-    if (keys.length === 0) {
-      return "{}";
-    }
-    const inner = indent + INDENT;
-    return `{\n${keys.map((key) => `${inner}${JSON.stringify(key)}: ${compact(value[key], inner)}`).join(",\n")}\n${indent}}`;
-  }
-  return JSON.stringify(value);
 }
 
 /**

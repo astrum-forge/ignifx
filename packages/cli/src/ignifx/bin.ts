@@ -3,6 +3,7 @@
 // in this package allowed to touch `process`. Everything below it takes its I/O by injection. The
 // file is named `bin.ts` because that is what exempts an entry point from the module-side-effects
 // rule (`tools/eslint-plugin-ignifx/src/rules/no-module-side-effects.ts`).
+import { isTilemapSource, runConvertTilemap } from "../convert-tilemap.js";
 import { CliError, CliErrorCode } from "../errors.js";
 import { runImportHeightmap } from "../import-heightmap.js";
 import { runImportTilemap } from "../import-tilemap.js";
@@ -11,6 +12,8 @@ import type { ImportIo } from "../import-heightmap.js";
 /** What `ignifx` prints when it is given a command it does not have. */
 const USAGE = [
   "Usage: ignifx import heightmap <in.png> <out.r16>",
+  "       ignifx import tilemap <map.tmj> [<out.tilemap.json>] [--pixels-per-unit <n>] [--drop-flips]",
+  "       ignifx import tilemap <project.ldtk> [<out directory>] [--pixels-per-unit <n>] [--drop-flips]",
   "       ignifx import tilemap <map.tilemap.json> <scene.scene.json> [--parent <entity name>]",
   "",
   "Scaffolding lives in `npx @ignifx/cli`.",
@@ -32,6 +35,8 @@ const argv = process.argv.slice(2);
 try {
   if (argv[0] === "import" && argv[1] === "heightmap") {
     await runImportHeightmap(argv.slice(2), io);
+  } else if (argv[0] === "import" && argv[1] === "tilemap" && argv.slice(2).some(isTilemapSource)) {
+    await runConvertTilemap(argv.slice(2), io);
   } else if (argv[0] === "import" && argv[1] === "tilemap") {
     await runImportTilemap(argv.slice(2), io);
   } else {
