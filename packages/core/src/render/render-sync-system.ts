@@ -199,6 +199,7 @@ export class RenderSyncSystem implements System {
 
     castersChanged = this.#hasEsmMaterialChanged(lights) || castersChanged;
     this.#selectCamera(world, cameras);
+    renderer.syncRenderTextures(cameras);
     // An environment that installed a different cube map owes the frame a renderable rebuild: a PBR
     // bind group holds the cube map's texture view, so nothing re-binds without one.
     topologyChanged = this.#applyEnvironment(world) || topologyChanged;
@@ -241,6 +242,9 @@ export class RenderSyncSystem implements System {
         continue;
       }
       camera.sync(renderer);
+      if (camera.renderTarget !== null) {
+        continue;
+      }
       if (best === null || camera.priority > best.priority) {
         best = camera;
       }

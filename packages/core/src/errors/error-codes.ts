@@ -282,6 +282,14 @@ export const CoreErrorCode = {
   instancingLodWithoutCulling: "IGX-0727",
   /** `app.renderer.openOverlay()` was called on a headless app, or before `app.start()` registered the render scene. */
   overlayNeedsRenderScene: "IGX-0728",
+  /** A render texture was rendered into or read on a headless app, or before `app.start()` started the render loop. */
+  renderTextureNeedsRenderLoop: "IGX-0729",
+  /** `app.renderer.createRenderTexture` was given a side that is not a whole number from 1 to 4096. */
+  invalidRenderTextureSize: "IGX-0730",
+  /** A render texture was used after `dispose()`, or with another app's renderer. */
+  renderTextureUnusable: "IGX-0731",
+  /** `app.renderer.renderToTexture` was given a camera that is not attached to an entity. */
+  renderTextureCameraDetached: "IGX-0732",
   /** The host exposes no Web Crypto implementation. */
   cryptoUnavailable: "IGX-1420",
   /** A storage namespace name is not a legal namespace segment. */
@@ -413,6 +421,10 @@ export const CORE_ERROR_MESSAGES: Readonly<Record<CoreErrorCode, string>> = {
   "IGX-0727":
     "{entity} declares an InstancedMeshRenderer lod with gpuCulling off; the LOD mesh never draws. Turn gpuCulling on.",
   "IGX-0728": "openOverlay() needs a canvas-backed app whose render scene is registered.",
+  "IGX-0729": "{member} needs a canvas-backed app whose render loop is running.",
+  "IGX-0730": "A render texture of {width}x{height}: each side must be a whole number from 1 to {max}.",
+  "IGX-0731": "{member}: the render texture is disposed or belongs to another app.",
+  "IGX-0732": "renderToTexture() needs a camera attached to an entity.",
   "IGX-1420": "This host does not expose Web Crypto.",
   "IGX-1421": "{namespace} is not a valid storage namespace.",
   "IGX-1422": "That storage key is empty, too long, or contains a control character.",
