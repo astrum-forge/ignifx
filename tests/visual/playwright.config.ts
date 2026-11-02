@@ -51,6 +51,12 @@ import type { PlaywrightTestConfig } from "playwright/test";
  * ceiling there measures the runner, which is the same mistake the spec's own header rejects for
  * frames per second. It is `pnpm test:frame-budget`, run locally on macOS arm64, and it is what a
  * re-record runs (`README.md`).
+ *
+ * `gpu-budget` is `gpu-time.spec.ts` alone, and the one project that does **not** pin SwiftShader:
+ * it measures each 3D template's GPU milliseconds per frame on the host GPU (Apple M1 through Metal
+ * on the reference machine, GI Phase 1 spike S4), which a software rasteriser cannot stand in for.
+ * GitHub's runners have no GPU, so it never runs in CI: `pnpm test:gpu-budget`, locally (coding
+ * standards §7 and §12).
  */
 
 /** One `webServer` entry. Playwright does not export `TestConfigWebServer` by name. */
@@ -137,11 +143,17 @@ const config: PlaywrightTestConfig = defineConfig({
   expect: { timeout: 30_000 },
   // No `{platform}` — see the module comment.
   snapshotPathTemplate: "{testDir}/__screenshots__/{arg}{ext}",
-  // Two projects, run separately and on different machines — see the module comment. Neither adds
-  // a `use` of its own: the per-suite viewports are `test.use` calls inside the two spec files.
+  // Three projects, run separately and on different machines — see the module comment. Only
+  // `gpu-budget` adds a `use` of its own; the per-suite viewports are `test.use` calls in the specs.
   projects: [
-    { name: "goldens", testIgnore: /frame-time\.spec\.ts$/u },
+    { name: "goldens", testIgnore: /(?:frame|gpu)-time\.spec\.ts$/u },
     { name: "frame-budget", testMatch: /frame-time\.spec\.ts$/u },
+    {
+      name: "gpu-budget",
+      testMatch: /gpu-time\.spec\.ts$/u,
+      // The host adapter: the SwiftShader flag is the one thing left out.
+      use: { launchOptions: { args: ["--enable-unsafe-webgpu"] } },
+    },
   ],
   use: {
     ...devices["Desktop Chrome"],

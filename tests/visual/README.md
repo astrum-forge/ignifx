@@ -6,19 +6,21 @@ committed goldens with a per-scene tolerance (coding standards §10).
 ```sh
 pnpm test:visual                                              # from the repository root
 pnpm test:frame-budget                                        # the template frame budgets
+pnpm test:gpu-budget                                          # the 3D templates' GPU time, host GPU
 pnpm --filter ignifx-visual-tests run test:visual:update      # regenerate the goldens
 ```
 
-## Two projects, because they need different machines
+## Three projects, because they need different machines
 
-`playwright.config.ts` splits this directory in two, and the two are run separately.
+`playwright.config.ts` splits this directory in three, and they are run separately.
 
 | Project        | Files                                 | Command                  |
 | -------------- | ------------------------------------- | ------------------------ |
 | `goldens`      | `scenes.spec.ts`, `templates.spec.ts` | `pnpm test:visual`       |
 | `frame-budget` | `frame-time.spec.ts`                  | `pnpm test:frame-budget` |
+| `gpu-budget`   | `gpu-time.spec.ts`                    | `pnpm test:gpu-budget`   |
 
-Neither runs in CI (owner decision, 2026-10-03). Both take minutes; run them locally, and only when a
+None runs in CI (owner decision, 2026-10-03). Both take minutes; run them locally, and only when a
 change can affect rendering or frame time (coding standards §12). `--grep <name>` runs one scene.
 
 A golden is an image comparison, and SwiftShader makes it reproducible on any machine. A frame
@@ -35,6 +37,11 @@ per template, and write them into the `frameTime.templates` rows in `baselines.j
 machine and the date.
 `benchmarks/template-frame-time.test.ts` then holds those rows to the coding-standards §7 budget, in
 `pnpm test` and the CI `test-unit` job.
+
+`gpu-budget` is the one project without the SwiftShader flag: it measures the 3D templates' GPU
+milliseconds per frame at 1920x1080 on the host GPU (an Apple M1 for the recorded rows) and fails if
+the adapter is SwiftShader. GitHub's runners have no GPU, so it is local only. To re-record, copy
+the `median` and `worst` it prints into the `gpuTime.templates` rows in `baselines.json`.
 
 `playwright.config.ts` builds and previews **six** things before the first test, so a golden is
 always taken of a production build:
@@ -167,5 +174,6 @@ beats Lite's default (`docs/architecture/07-rendering.md` §2.1).
 | `tests/scenes.spec.ts`         | The two workspace examples and their tolerances                           |
 | `tests/templates.spec.ts`      | The four templates and their front ends                                   |
 | `tests/frame-time.spec.ts`     | The `frame-budget` project: the templates                                 |
+| `tests/gpu-time.spec.ts`       | The `gpu-budget` project: the 3D templates on the host GPU                |
 | `tests/desktop.spec.ts`        | The Electron suite (`pnpm --filter ignifx-visual-tests run test:desktop`) |
 | `tests/__screenshots__/*.png`  | The goldens for `scenes.spec.ts` and `templates.spec.ts`                  |
