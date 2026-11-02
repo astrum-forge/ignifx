@@ -77,6 +77,9 @@ export class ThirdPersonController extends Script {
   /** The registration id the serializer writes into scene files. */
   static typeId = "ignifx/ThirdPersonController";
 
+  /** The name an inspector shows for the component. */
+  static title = "Third person controller";
+
   /** One controller per entity. */
   static allowMultiple = false;
 

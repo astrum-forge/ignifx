@@ -41,6 +41,9 @@ export class AudioListener extends Script implements ScriptCallbacks {
   /** The registration id the serializer and the inspector know this class by. */
   static typeId = "ignifx/AudioListener";
 
+  /** What the component does, in one line, for an inspector. */
+  static description = "The ears spatial audio is heard from; usually on the main camera entity.";
+
   /** One pair of ears per entity. */
   static allowMultiple = false;
 

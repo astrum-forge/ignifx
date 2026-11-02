@@ -74,6 +74,9 @@ export class Tilemap extends Component implements ComponentHooks {
   /** The registration id the serializer writes into scene files. */
   static typeId = "ignifx/Tilemap";
 
+  /** What the component does, in one line, for an inspector. */
+  static description = "A grid of tile ids with cell arithmetic and merged collision geometry.";
+
   /** One tilemap per entity. */
   static allowMultiple = false;
 

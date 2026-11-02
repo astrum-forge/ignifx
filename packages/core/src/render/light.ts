@@ -123,6 +123,9 @@ export class Light extends Component implements ComponentHooks {
   /** The namespaced registration id. */
   static typeId = "ignifx/Light";
 
+  /** What the component does, in one line, for an inspector. */
+  static description = "A directional, point, spot, or hemispheric light, with optional shadow casting.";
+
   /** At most one light per entity: two lights from one transform want two entities. */
   static allowMultiple = false;
 

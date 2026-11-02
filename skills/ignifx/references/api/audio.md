@@ -211,6 +211,12 @@ Creates a component. The engine constructs components; game code never calls `ne
 
 One pair of ears per entity.
 
+##### description
+
+> `static` **description**: `string` = `"The ears spatial audio is heard from; usually on the main camera entity."`
+
+What the component does, in one line, for an inspector.
+
 ##### schema
 
 > `static` **schema**: `Schema`
@@ -1349,6 +1355,12 @@ The sound to play.
 > **cone**: [`AudioConeSettings`](#audioconesettings)
 
 The source's directionality, in degrees.
+
+##### description
+
+> `static` **description**: `string` = `"A sound attached to an entity: which clip, which bus, how loud, how many at once, and how it behaves in 3D."`
+
+What the component does, in one line, for an inspector.
 
 ##### distanceModel
 
@@ -3040,6 +3052,12 @@ Which mixer bus the music routes into.
 > **crossfadeSeconds**: `number`
 
 How long a crossfade takes, in seconds.
+
+##### description
+
+> `static` **description**: `string` = `"A playlist of music tracks with crossfading, routed to the Music bus."`
+
+What the component does, in one line, for an inspector.
 
 ##### loopPlaylist
 

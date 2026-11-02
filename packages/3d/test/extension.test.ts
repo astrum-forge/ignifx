@@ -1,4 +1,4 @@
-import { CoreErrorCode, Phase, createApp } from "@ignifx/core";
+import { CoreErrorCode, Phase, createApp, describeRegisteredSchemas } from "@ignifx/core";
 import { input } from "@ignifx/input";
 import { describe, expect, it } from "vitest";
 import { THREE_D_ANIMATION_ORDER } from "../src/animator/animation-system.js";
@@ -68,6 +68,20 @@ describe("threeD()", () => {
     const animator = entity.addComponent(Animator);
     expect(animator.isReady).toBe(false);
     expect(Animator.typeId).toBe("ignifx/Animator");
+    harness.dispose();
+  });
+
+  it("registers its components with their curated titles, so a tool needs no describeSchemas()", async () => {
+    const harness = await createThreeDApp();
+    const registered = describeRegisteredSchemas(harness.app.world.registry);
+    expect(registered["ignifx/RigidbodyMover"]).toMatchObject({ title: "Rigidbody mover", package: "@ignifx/3d" });
+    const curated = describeSchemas();
+    const own = Object.entries(registered).filter(([, description]) => description.package === "@ignifx/3d");
+    expect(own).toHaveLength(12);
+    for (const [id, description] of own) {
+      expect(description.title, id).toBe(curated[id]?.title);
+      expect(description.description, id).toBe(curated[id]?.description);
+    }
     harness.dispose();
   });
 

@@ -123,6 +123,7 @@ export class ParticleSystem2D extends Component implements ComponentHooks {
     // @internal
     get core(): ParticleEmitterCore | null;
     definition: AssetHandle<ParticleAsset> | null;
+    static description: string;
     emit(count: number): void;
     // @internal
     get emittedThisFrame(): number;

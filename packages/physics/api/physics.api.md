@@ -46,6 +46,7 @@ export class BoxCollider extends Collider {
     // Warning: (ae-forgotten-export) The symbol "LitePhysicsWorld" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "LitePhysicsShape" needs to be exported by the entry point index.d.ts
     createShape(world: LitePhysicsWorld, scale: Vec3Like): LitePhysicsShape;
+    static description: string;
     halfExtentsToRef(scale: Vec3Like, out: MutableVec3): void;
     // @internal
     override outlineToRef(scale: Vec3Like, out: number[]): void;
@@ -62,6 +63,7 @@ export const CAPSULE_DIRECTIONS: readonly ["x", "y", "z"];
 export class CapsuleCollider extends Collider {
     constructor();
     createShape(world: LitePhysicsWorld, scale: Vec3Like): LitePhysicsShape;
+    static description: string;
     // (undocumented)
     direction: CapsuleDirection;
     halfExtentsToRef(scale: Vec3Like, out: MutableVec3): void;
@@ -93,6 +95,7 @@ export class CharacterController extends Component implements ComponentHooks {
     applyStepResult(state: SupportStateName, normal: Vec3Like): void;
     // (undocumented)
     center: Vec3Like;
+    static description: string;
     get groundNormal(): Vec3;
     // (undocumented)
     height: number;
@@ -187,6 +190,7 @@ export function createPhysicsMaterialLoader(): AssetLoader<PhysicsMaterial>;
 export class CylinderCollider extends Collider {
     constructor();
     createShape(world: LitePhysicsWorld, scale: Vec3Like): LitePhysicsShape;
+    static description: string;
     halfExtentsToRef(scale: Vec3Like, out: MutableVec3): void;
     // (undocumented)
     height: number;
@@ -221,6 +225,7 @@ export const HAVOK_WASM_AUTO = "auto";
 export class HeightfieldCollider extends Collider {
     constructor();
     createShape(world: LitePhysicsWorld, scale: Vec3Like): LitePhysicsShape;
+    static description: string;
     halfExtentsToRef(scale: Vec3Like, out: MutableVec3): void;
     // (undocumented)
     heights: number[];
@@ -254,6 +259,7 @@ export class MeshCollider extends Collider {
     // (undocumented)
     convex: boolean;
     createShape(world: LitePhysicsWorld, _scale: Vec3Like, node: LiteSceneNode): LitePhysicsShape;
+    static description: string;
     halfExtentsToRef(_scale: Vec3Like, out: MutableVec3): void;
     // (undocumented)
     includeChildren: boolean;
@@ -428,6 +434,7 @@ export class Rigidbody extends Component implements ComponentHooks {
     bodyType: BodyType;
     // (undocumented)
     collisionEvents: CollisionEventMode;
+    static description: string;
     // (undocumented)
     freezeRotation: FreezeRotation;
     // (undocumented)
@@ -476,6 +483,7 @@ export interface ShapeCastOptions extends QueryOptions {
 export class SphereCollider extends Collider {
     constructor();
     createShape(world: LitePhysicsWorld, scale: Vec3Like): LitePhysicsShape;
+    static description: string;
     halfExtentsToRef(scale: Vec3Like, out: MutableVec3): void;
     // @internal
     override outlineToRef(scale: Vec3Like, out: number[]): void;

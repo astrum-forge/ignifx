@@ -70,6 +70,9 @@ export class WorldText extends TextComponent implements ComponentHooks {
   /** The registration id the serializer writes into scene files. */
   static typeId = "ignifx/WorldText";
 
+  /** What the component does, in one line, for an inspector. */
+  static description = "3D text in the render scene: signs and banners, optionally billboarded.";
+
   /** One sign per entity. */
   static allowMultiple = false;
 

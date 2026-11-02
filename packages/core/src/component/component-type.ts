@@ -38,6 +38,17 @@ export interface ComponentStatics {
   readonly requires?: readonly ComponentType[];
   /** `false` when at most one instance may be attached to an entity; defaults to `true`. */
   readonly allowMultiple?: boolean;
+  /**
+   * The name an inspector shows for the component, for example `"Rigidbody mover"`. Read only from
+   * the class that declares it, never inherited; without one, tools title the component from its
+   * type id.
+   */
+  readonly title?: string;
+  /**
+   * A one-line summary of what the component does, shown by an inspector. Read only from the class
+   * that declares it, never inherited.
+   */
+  readonly description?: string;
 }
 
 /**

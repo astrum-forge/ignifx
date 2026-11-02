@@ -121,25 +121,25 @@ export function tilemapJsonSchema(): JsonSchemaObject {
 export function describeTwoDSchemas(): Readonly<Record<string, SchemaDescription>> {
   return {
     "ignifx/Camera2D": describeSchema("ignifx/Camera2D", Camera2D.schema, {
-      description: "The 2D camera: orthographic size in metres, pixel-perfect snapping, bounds, and follow fields.",
+      description: Camera2D.description,
     }),
     "ignifx/SpriteRenderer": describeSchema("ignifx/SpriteRenderer", SpriteRenderer.schema, {
-      description: "One sprite drawn from one frame of one atlas, on one sorting layer.",
+      description: SpriteRenderer.description,
     }),
     "ignifx/SpriteAnimator": describeSchema("ignifx/SpriteAnimator", SpriteAnimator.schema, {
-      description: "Plays a clip of atlas frames on ignifx's clock, respecting timeScale and pause.",
+      description: SpriteAnimator.description,
     }),
     "ignifx/Tilemap": describeSchema("ignifx/Tilemap", Tilemap.schema, {
-      description: "A grid of tile ids with cell arithmetic and merged collision geometry.",
+      description: Tilemap.description,
     }),
     "ignifx/TilemapRenderer": describeSchema("ignifx/TilemapRenderer", TilemapRenderer.schema, {
-      description: "Draws a Tilemap's cells as sprites, materialising only the chunks the camera sees.",
+      description: TilemapRenderer.description,
     }),
     "ignifx/ParallaxLayer": describeSchema("ignifx/ParallaxLayer", ParallaxLayer.schema, {
-      description: "Scrolls one sorting layer at a fraction of the camera's speed.",
+      description: ParallaxLayer.description,
     }),
     "ignifx/SpriteLayerEffect": describeSchema("ignifx/SpriteLayerEffect", SpriteLayerEffect.schema, {
-      description: "A per-layer WGSL fragment effect with an fx.params vec4.",
+      description: SpriteLayerEffect.description,
     }),
     "ignifx/spriteatlas-file": describeSpriteAtlasFormat(),
     "ignifx/spriteanimation-file": describeSpriteAnimationFormat(),

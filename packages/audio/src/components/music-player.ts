@@ -66,6 +66,9 @@ export class MusicPlayer extends Script implements ScriptCallbacks {
   /** The registration id the serializer and the inspector know this class by. */
   static typeId = "ignifx/MusicPlayer";
 
+  /** What the component does, in one line, for an inspector. */
+  static description = "A playlist of music tracks with crossfading, routed to the Music bus.";
+
   /** One music player per entity. */
   static allowMultiple = false;
 

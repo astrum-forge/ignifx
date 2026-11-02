@@ -4,7 +4,7 @@ import { isSchemaSet, PROTOCOL_VERSION, SceneNotification } from "../src/protoco
 import { ArmoredHealth, Health, Regen, startLiveHost } from "./support/scene-project.js";
 import type { Received } from "./support/editor.js";
 import type { LiveHost, Wire } from "./support/scene-project.js";
-import type { App, AssetTypeToken, ConcreteComponentType } from "@ignifx/core";
+import type { App, AssetTypeToken, ConcreteComponentType, Extension } from "@ignifx/core";
 
 /**
  * Engine ask E12b: the host describes the live registry with core's `describeRegisteredSchemas`,
@@ -49,6 +49,24 @@ class Beacon extends Script.define({ label: str("Beacon", { group: "Display" }) 
   static typeId = "game/Beacon";
 }
 
+/** A component an extension package declares, with the curated name and summary it gives it. */
+class SupplyCrate extends Script.define({ contents: str("ammo") }) {
+  static typeId = "acme/SupplyCrate";
+
+  static title = "Supply crate";
+
+  static description = "A crate the player opens for ammunition.";
+}
+
+/** A package that is not `@ignifx/core`, which the host never imports: the project hands it over. */
+const ACME_PROPS: Extension = {
+  name: "@acme/props",
+  version: "1.0.0",
+  register: (ctx) => {
+    ctx.registerComponents([SupplyCrate]);
+  },
+};
+
 /** A class between `game/ArmoredHealth` and `game/TitanHealth` that is never registered. */
 class PlatedHealth extends ArmoredHealth {}
 
@@ -84,12 +102,14 @@ describe("the host's schema descriptions", () => {
    * Starts a host whose project registers {@link Turret}, and takes its first `schemasChanged`.
    *
    * @param scripts - The classes the project registers besides the fixture's own.
+   * @param extensions - The project's extensions.
    * @returns The app, the editor's end, and the schemas the host announced at start.
    */
   async function started(
     scripts: readonly ConcreteComponentType[] = [Turret],
+    extensions: readonly Extension[] = [],
   ): Promise<{ readonly app: App; readonly peer: Wire; readonly schemas: Received }> {
-    live = startLiveHost(scripts);
+    live = startLiveHost(scripts, extensions);
     const peer = live.wire;
     await peer.request({
       jsonrpc: "2.0",
@@ -162,6 +182,25 @@ describe("the host's schema descriptions", () => {
     const { schemas } = await started();
     expect(member(schemas, "ignifx/Camera")).toMatchObject({ package: "@ignifx/core", allowMultiple: false });
     expect(member(schemas, "ignifx/Transform")).toMatchObject({ package: "@ignifx/core", builtIn: true });
+  });
+
+  it("sends another package's components with the curated title and summary it registered", async () => {
+    // The live editor showed `SupplyCrate` here while its fixture, built from every package's
+    // `describeSchemas()`, showed "Supply crate": the host passed only core's curated record.
+    const { app, schemas } = await started([], [ACME_PROPS]);
+    const crate = member(schemas, "acme/SupplyCrate");
+    expect(crate).toMatchObject({
+      title: "Supply crate",
+      description: "A crate the player opens for ammunition.",
+      package: "@acme/props",
+      fields: { contents: { kind: "str", default: "ammo" } },
+    });
+    const { propsSchema: _props, extends: _extends, ...description } = crate;
+    expect(description).toEqual(describeRegisteredSchemas(app.world.registry)["acme/SupplyCrate"]);
+    // Core's components keep their summaries too.
+    expect(member(schemas, "ignifx/Camera")["description"]).toBe(
+      "The camera an entity renders the world through; the entity's transform is the view.",
+    );
   });
 
   it("announces a hot reload that adds a field, and one that adds a script, with schemasChanged", async () => {

@@ -50,6 +50,9 @@ export class PlayerInput extends Component implements ComponentHooks {
   /** The namespaced registration id. */
   static typeId = "ignifx/PlayerInput";
 
+  /** What the component does, in one line, for an inspector. */
+  static description = "Binds an entity to an input actions document and one device slot, for local multiplayer.";
+
   /** One player owns one entity. */
   static allowMultiple = false;
 

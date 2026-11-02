@@ -80,6 +80,9 @@ export class Rigidbody2D extends Component implements ComponentHooks {
   /** The namespaced registration id. */
   static typeId = "ignifx/Rigidbody2D";
 
+  /** What the component does, in one line, for an inspector. */
+  static description = "Makes an entity's 2D colliders a dynamic, kinematic, or static Rapier body.";
+
   /** One body per entity. */
   static allowMultiple = false;
 

@@ -62,6 +62,9 @@ export class NavMeshObstacle extends Component implements ComponentHooks {
   /** The registration id the serializer writes into scene files. */
   static typeId = "ignifx/NavMeshObstacle";
 
+  /** The name an inspector shows for the component. */
+  static title = "Nav mesh obstacle";
+
   /** One obstacle per entity. */
   static allowMultiple = false;
 

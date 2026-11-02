@@ -113,6 +113,9 @@ export class NavMeshSurface extends Component implements ComponentHooks {
   /** The registration id the serializer writes into scene files. */
   static typeId = "ignifx/NavMeshSurface";
 
+  /** The name an inspector shows for the component. */
+  static title = "Nav mesh surface";
+
   /** One surface per entity; a second navmesh wants its own. */
   static allowMultiple = false;
 

@@ -700,6 +700,7 @@ export class PlayerInput extends Component implements ComponentHooks {
     constructor();
     actions: AssetHandle<InputActionsAsset> | null;
     static allowMultiple: boolean;
+    static description: string;
     deviceSlot: number;
     get input(): InputActionsView | null;
     onAttach(): void;

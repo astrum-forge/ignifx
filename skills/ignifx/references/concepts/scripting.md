@@ -4,11 +4,11 @@ How game code is written: `Component` for data a system owns, `Script` for data 
 
 ## 1. `Component` versus `Script`
 
-|               | `Component`                                                       | `Script`                                                |
-| ------------- | ----------------------------------------------------------------- | ------------------------------------------------------- |
-| Callbacks     | `onAttach?()` / `onDetach?()` from the `ComponentHooks` interface | the `ScriptCallbacks` interface (see `lifecycle.md` §2) |
-| Driven by     | a system an extension registered                                  | the kernel's scheduler                                  |
-| Extra statics | `typeId`, `schema`, `requires`, `allowMultiple`                   | those plus `executionOrder`, `updateWhenPaused`         |
+|               | `Component`                                                             | `Script`                                                |
+| ------------- | ----------------------------------------------------------------------- | ------------------------------------------------------- |
+| Callbacks     | `onAttach?()` / `onDetach?()` from the `ComponentHooks` interface       | the `ScriptCallbacks` interface (see `lifecycle.md` §2) |
+| Driven by     | a system an extension registered                                        | the kernel's scheduler                                  |
+| Extra statics | `typeId`, `schema`, `requires`, `allowMultiple`, `title`, `description` | those plus `executionOrder`, `updateWhenPaused`         |
 
 Both reach everything the same way from inside a method — `this.entity`, `this.transform`,
 `this.world`, `this.app`, `this.uid`, `this.handle`, `this.enabled`, `this.isEnabledInHierarchy`,
@@ -63,7 +63,10 @@ Tools read a schema as data. `describeSchema(typeId, schema)` describes each fie
 `assetType`, `componentType`, and a nested `item`, `fields`, `value` or `inner`).
 `describeRegisteredSchemas(app.world.registry)` does that for every registered component and adds
 `allowMultiple`, `package` (the registering extension's `name`, or the type id's namespace for a
-class the game registered itself) and, when the class has any, `requires` as type ids. The transform is described too: `transformSchema()` gives an
+class the game registered itself) and, when the class has any, `requires` as type ids. A class's own
+`static title` (`"Rigidbody mover"`) and `static description` (one line) become the entry's `title`
+and `description`, which an inspector such as the ignifx editor shows; they are not inherited, and
+without a title the entry is titled from the type id. The transform is described too: `transformSchema()` gives an
 entity's `transform` block as `position` (`vec3`), `rotation` (`quat`, whose `step` is in Euler
 degrees) and `scale` (`vec3`), and `ignifx/Transform` is the one entry marked `builtIn`, which an
 inspector never adds or removes. `toJsonSchema(schema)` writes the options as `x-ignifx-*` keywords:

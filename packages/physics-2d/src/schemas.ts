@@ -37,28 +37,28 @@ import type { SchemaDescription } from "@ignifx/core";
 export function describeSchemas(): Readonly<Record<string, SchemaDescription>> {
   return {
     "ignifx/Rigidbody2D": describeSchema("ignifx/Rigidbody2D", Rigidbody2D.schema, {
-      description: "Makes an entity's 2D colliders a dynamic, kinematic, or static Rapier body.",
+      description: Rigidbody2D.description,
     }),
     "ignifx/BoxCollider2D": describeSchema("ignifx/BoxCollider2D", BoxCollider2D.schema, {
-      description: "An axis-aligned box, sized in local metres and scaled by the entity.",
+      description: BoxCollider2D.description,
     }),
     "ignifx/CircleCollider2D": describeSchema("ignifx/CircleCollider2D", CircleCollider2D.schema, {
-      description: "A circle; the larger scale axis wins.",
+      description: CircleCollider2D.description,
     }),
     "ignifx/CapsuleCollider2D": describeSchema("ignifx/CapsuleCollider2D", CapsuleCollider2D.schema, {
-      description: "A capsule standing along X or Y.",
+      description: CapsuleCollider2D.description,
     }),
     "ignifx/PolygonCollider2D": describeSchema("ignifx/PolygonCollider2D", PolygonCollider2D.schema, {
-      description: "The convex hull of a point list, in local metres.",
+      description: PolygonCollider2D.description,
     }),
     "ignifx/EdgeCollider2D": describeSchema("ignifx/EdgeCollider2D", EdgeCollider2D.schema, {
-      description: "An open chain of line segments — a platformer's ground contour.",
+      description: EdgeCollider2D.description,
     }),
     "ignifx/TilemapCollider2D": describeSchema("ignifx/TilemapCollider2D", TilemapCollider2D.schema, {
-      description: "The merged collision surface of a Tilemap, rebuilt when its tiles change.",
+      description: TilemapCollider2D.description,
     }),
     "ignifx/CharacterController2D": describeSchema("ignifx/CharacterController2D", CharacterController2D.schema, {
-      description: "A kinematic character with collide-and-slide, slopes, autostep, and snap-to-ground.",
+      description: CharacterController2D.description,
     }),
   };
 }

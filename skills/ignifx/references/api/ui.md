@@ -269,6 +269,12 @@ The colour every glyph starts with.
 
 [`TextComponent`](#abstract-textcomponent).[`color`](#color-1)
 
+##### description
+
+> `static` **description**: `string` = `"Pixel-space text drawn by Babylon Lite, anchored to a corner of the render target."`
+
+What the component does, in one line, for an inspector.
+
 ##### font
 
 > **font**: `AssetHandle`\<`FontAsset`\> \| `null`
@@ -3217,6 +3223,12 @@ One anchored element per entity.
 
 Whether the element is kept inside the overlay's bounds instead of being hidden off-screen.
 
+##### description
+
+> `static` **description**: `string` = `"Keeps a DOM element at an entity's screen position, with clamping and distance scaling."`
+
+What the component does, in one line, for an inspector.
+
 ##### element
 
 > **element**: `HTMLElement` \| `null` = `null`
@@ -3718,6 +3730,12 @@ The colour every glyph starts with.
 ###### Inherited from
 
 [`TextComponent`](#abstract-textcomponent).[`color`](#color-1)
+
+##### description
+
+> `static` **description**: `string` = `"3D text in the render scene: signs and banners, optionally billboarded."`
+
+What the component does, in one line, for an inspector.
 
 ##### font
 
@@ -4306,6 +4324,12 @@ The colour every glyph starts with.
 ###### Inherited from
 
 [`TextComponent`](#abstract-textcomponent).[`color`](#color-1)
+
+##### description
+
+> `static` **description**: `string` = `"Pixel-space text placed at an entity's projected position: damage numbers and name tags."`
+
+What the component does, in one line, for an inspector.
 
 ##### font
 

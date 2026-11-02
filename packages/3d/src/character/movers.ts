@@ -50,6 +50,9 @@ export class RigidbodyMover extends Script {
   /** The registration id the serializer writes into scene files. */
   static typeId = "ignifx/RigidbodyMover";
 
+  /** The name an inspector shows for the component. */
+  static title = "Rigidbody mover";
+
   /** One mover per entity. */
   static allowMultiple = false;
 
@@ -180,6 +183,9 @@ function platformMoverSchema(): Schema {
 export class PlatformMover extends Script {
   /** The registration id the serializer writes into scene files. */
   static typeId = "ignifx/PlatformMover";
+
+  /** The name an inspector shows for the component. */
+  static title = "Platform mover";
 
   /** One mover per entity. */
   static allowMultiple = false;
@@ -355,6 +361,9 @@ function projectileSchema(): Schema {
 export class Projectile extends Script {
   /** The registration id the serializer writes into scene files. */
   static typeId = "ignifx/Projectile";
+
+  /** The name an inspector shows for the component. */
+  static title = "Projectile";
 
   /** One projectile per entity. */
   static allowMultiple = false;

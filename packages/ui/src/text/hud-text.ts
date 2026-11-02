@@ -40,6 +40,9 @@ export class HudText extends TextComponent implements ComponentHooks {
   /** The registration id the serializer writes into scene files. */
   static typeId = "ignifx/HudText";
 
+  /** What the component does, in one line, for an inspector. */
+  static description = "Pixel-space text drawn by Babylon Lite, anchored to a corner of the render target.";
+
   /** One HUD label per entity; a second belongs on a second entity. */
   static allowMultiple = false;
 

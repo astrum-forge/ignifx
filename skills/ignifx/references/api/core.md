@@ -196,6 +196,12 @@ At most one camera per entity: two views from one transform would be the same vi
 
 > **clearColor**: [`ColorLike`](#colorlike) \| `null`
 
+##### description
+
+> `static` **description**: `string` = `"The camera an entity renders the world through; the entity's transform is the view."`
+
+What the component does, in one line, for an inspector.
+
 ##### far
 
 > **far**: `number`
@@ -3545,6 +3551,12 @@ reflection.
 
 > **clearColor**: [`ColorLike`](#colorlike) \| `null`
 
+##### description
+
+> `static` **description**: `string` = `"The world's image-based lighting, skybox, fog, image processing, and clear colour."`
+
+What the component does, in one line, for an inspector.
+
 ##### environment
 
 > **environment**: [`AssetHandle`](#assethandle)\<[`EnvironmentAsset`](#environmentasset)\> \| `null`
@@ -4466,6 +4478,12 @@ Several instanced renderers on one entity draw several clouds from one transform
 ##### castShadows
 
 > **castShadows**: `boolean`
+
+##### description
+
+> `static` **description**: `string` = `"Draws one mesh many times from a caller-owned matrix slab, in a single draw call, with optional GPU culling and a coarser mesh for far instances."`
+
+What the component does, in one line, for an inspector.
 
 ##### gpuCulling
 
@@ -5549,6 +5567,12 @@ At most one light per entity: two lights from one transform want two entities.
 ##### color
 
 > **color**: [`ColorLike`](#colorlike)
+
+##### description
+
+> `static` **description**: `string` = `"A directional, point, spot, or hemispheric light, with optional shadow casting."`
+
+What the component does, in one line, for an inspector.
 
 ##### exclude
 
@@ -8435,6 +8459,12 @@ Several renderers on one entity draw several meshes from one transform, which is
 
 > **castShadows**: `boolean`
 
+##### description
+
+> `static` **description**: `string` = `"Draws one clone of a mesh asset with a material."`
+
+What the component does, in one line, for an inspector.
+
 ##### materials
 
 > **materials**: ([`AssetHandle`](#assethandle)\<[`MaterialAsset`](#materialasset)\> \| `null`)[]
@@ -8985,6 +9015,12 @@ One model per entity: a second instance under the same transform wants its own e
 ##### castShadows
 
 > **castShadows**: `boolean`
+
+##### description
+
+> `static` **description**: `string` = `"One instance of a loaded glTF, cloned under the entity's node."`
+
+What the component does, in one line, for an inspector.
 
 ##### materialOverrides
 
@@ -9720,6 +9756,12 @@ One chain per camera entity; a second would fight the first for the swapchain.
 ##### custom
 
 > **custom**: [`CustomEffectSettings`](#customeffectsettings)[]
+
+##### description
+
+> `static` **description**: `string` = `"Bloom, SMAA, image processing, and custom .post.wgsl effects, inserted into the scene's frame graph."`
+
+What the component does, in one line, for an inspector.
 
 ##### imageProcessing
 
@@ -12751,6 +12793,12 @@ Creates an unbound transform. The entity constructor binds it to a Lite node imm
 > `static` **allowMultiple**: `boolean` = `false`
 
 An entity has exactly one transform.
+
+##### description
+
+> `static` **description**: `string` = `"The entity's local position, rotation, and scale; every entity has exactly one, stored as its transform block."`
+
+What the component does, in one line, for an inspector.
 
 ##### typeId
 
@@ -20121,6 +20169,12 @@ are inheritance-aware without touching a prototype chain per frame.
 
 A dense index assigned in registration order, for array-indexed per-class bookkeeping.
 
+##### description
+
+> `readonly` **description**: `string` \| `null`
+
+The class's own `static description`, or `null` when it declares none (an inherited one is ignored).
+
 ##### isScript
 
 > `readonly` **isScript**: `boolean`
@@ -20144,6 +20198,12 @@ The declared serialized fields, or `null` when the class was not built with `def
 > `readonly` **script**: [`ScriptClassInfo`](#scriptclassinfo) \| `null`
 
 Callback and ordering data, or `null` for a plain component.
+
+##### title
+
+> `readonly` **title**: `string` \| `null`
+
+The class's own `static title`, or `null` when it declares none (an inherited one is ignored).
 
 ##### trackedFields
 
@@ -20296,6 +20356,13 @@ class Mover extends Script.define({ speed: f32(5) }) {
 
 `false` when at most one instance may be attached to an entity; defaults to `true`.
 
+##### description?
+
+> `readonly` `optional` **description?**: `string`
+
+A one-line summary of what the component does, shown by an inspector. Read only from the class
+that declares it, never inherited.
+
 ##### requires?
 
 > `readonly` `optional` **requires?**: readonly [`ComponentType`](#componenttype-1)\<[`Component`](#abstract-component)\>[]
@@ -20307,6 +20374,14 @@ Component types auto-added to, and validated on, any entity this one is attached
 > `readonly` `optional` **schema?**: `Readonly`\<`Record`\<`string`, [`FieldDefinition`](#fielddefinition)\<`unknown`\>\>\>
 
 The serialized field declarations, set by `Component.define` / `Script.define`.
+
+##### title?
+
+> `readonly` `optional` **title?**: `string`
+
+The name an inspector shows for the component, for example `"Rigidbody mover"`. Read only from
+the class that declares it, never inherited; without one, tools title the component from its
+type id.
 
 ##### typeId?
 
@@ -20360,6 +20435,17 @@ The component instance type the token stands for.
 
 [`ComponentStatics`](#componentstatics).[`allowMultiple`](#allowmultiple-2)
 
+##### description?
+
+> `readonly` `optional` **description?**: `string`
+
+A one-line summary of what the component does, shown by an inspector. Read only from the class
+that declares it, never inherited.
+
+###### Inherited from
+
+[`ComponentStatics`](#componentstatics).[`description`](#description-2)
+
 ##### prototype
 
 > `readonly` **prototype**: `T`
@@ -20385,6 +20471,18 @@ The serialized field declarations, set by `Component.define` / `Script.define`.
 ###### Inherited from
 
 [`ComponentStatics`](#componentstatics).[`schema`](#schema-2)
+
+##### title?
+
+> `readonly` `optional` **title?**: `string`
+
+The name an inspector shows for the component, for example `"Rigidbody mover"`. Read only from
+the class that declares it, never inherited; without one, tools title the component from its
+type id.
+
+###### Inherited from
+
+[`ComponentStatics`](#componentstatics).[`title`](#title-1)
 
 ##### typeId?
 
@@ -20478,6 +20576,17 @@ schema defaults, then from the file or the `init` object.
 
 [`ComponentType`](#componenttype-1).[`allowMultiple`](#allowmultiple-3)
 
+##### description?
+
+> `readonly` `optional` **description?**: `string`
+
+A one-line summary of what the component does, shown by an inspector. Read only from the class
+that declares it, never inherited.
+
+###### Inherited from
+
+[`ComponentType`](#componenttype-1).[`description`](#description-3)
+
 ##### prototype
 
 > `readonly` **prototype**: `T`
@@ -20507,6 +20616,18 @@ The serialized field declarations, set by `Component.define` / `Script.define`.
 ###### Inherited from
 
 [`ComponentType`](#componenttype-1).[`schema`](#schema-3)
+
+##### title?
+
+> `readonly` `optional` **title?**: `string`
+
+The name an inspector shows for the component, for example `"Rigidbody mover"`. Read only from
+the class that declares it, never inherited; without one, tools title the component from its
+type id.
+
+###### Inherited from
+
+[`ComponentType`](#componenttype-1).[`title`](#title-2)
 
 ##### typeId?
 
@@ -27216,6 +27337,17 @@ for the reason given on [ComponentStatics](#componentstatics).
 
 [`ComponentStatics`](#componentstatics).[`allowMultiple`](#allowmultiple-2)
 
+##### description?
+
+> `readonly` `optional` **description?**: `string`
+
+A one-line summary of what the component does, shown by an inspector. Read only from the class
+that declares it, never inherited.
+
+###### Inherited from
+
+[`ComponentStatics`](#componentstatics).[`description`](#description-2)
+
 ##### executionOrder?
 
 > `readonly` `optional` **executionOrder?**: `number`
@@ -27261,6 +27393,18 @@ The serialized field declarations, set by `Component.define` / `Script.define`.
 ###### Inherited from
 
 [`ComponentStatics`](#componentstatics).[`schema`](#schema-2)
+
+##### title?
+
+> `readonly` `optional` **title?**: `string`
+
+The name an inspector shows for the component, for example `"Rigidbody mover"`. Read only from
+the class that declares it, never inherited; without one, tools title the component from its
+type id.
+
+###### Inherited from
+
+[`ComponentStatics`](#componentstatics).[`title`](#title-1)
 
 ##### typeId?
 
@@ -35121,7 +35265,8 @@ The registry to walk, usually `app.world.registry`.
 `Readonly`\<`Record`\<`string`, [`SchemaDescriptionMeta`](#schemadescriptionmeta)\>\>
 
 Titles, formats and summaries by type id, for example a package's own
-`describeSchemas()`; a component without an entry is titled from its type id.
+`describeSchemas()`; an entry wins over the class's own `static title` and `static description`, and a component
+with neither is titled from its type id.
 
 #### Returns
 
@@ -35139,6 +35284,10 @@ id's namespace: everything before the last `/` (`third-person` for `third-person
 `ignifx/Transform` declares no schema on its class; it is described with [transformSchema](#transformschema)
 and marked `builtIn`, because every entity carries exactly one and a scene file stores it as the
 entity's `transform` block rather than in its `components`.
+
+A component's `title` and `description` come from `curated` when it has an entry, else from the
+class's own `static title` and `static description`, which is how an extension's components
+reach an inspector with their curated names without the inspector importing the extension.
 
 #### Example
 

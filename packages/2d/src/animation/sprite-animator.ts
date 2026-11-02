@@ -43,6 +43,9 @@ export class SpriteAnimator extends Component implements ComponentHooks {
   /** The registration id the serializer writes into scene files. */
   static typeId = "ignifx/SpriteAnimator";
 
+  /** What the component does, in one line, for an inspector. */
+  static description = "Plays a clip of atlas frames on ignifx's clock, respecting timeScale and pause.";
+
   /** One animator per entity. */
   static allowMultiple = false;
 

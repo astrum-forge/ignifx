@@ -56,6 +56,9 @@ export class Billboard extends Component {
   /** The registration id the serializer writes into scene files. */
   static typeId = "ignifx/Billboard";
 
+  /** The name an inspector shows for the component. */
+  static title = "Billboard";
+
   /** One billboard per entity. */
   static allowMultiple = false;
 

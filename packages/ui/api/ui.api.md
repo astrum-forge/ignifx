@@ -160,6 +160,7 @@ export class HudText extends TextComponent implements ComponentHooks {
     constructor();
     static allowMultiple: boolean;
     anchor: HudAnchor;
+    static description: string;
     get lite(): {
         readonly layer: LiteTextLayer | null;
     };
@@ -807,6 +808,7 @@ export class WorldAnchor extends Component implements ComponentHooks {
     constructor();
     static allowMultiple: boolean;
     clampToScreen: boolean;
+    static description: string;
     element: HTMLElement | null;
     hideWhenBehindCamera: boolean;
     maxScale: number;
@@ -828,6 +830,7 @@ export class WorldText extends TextComponent implements ComponentHooks {
     static allowMultiple: boolean;
     alwaysOnTop: boolean;
     billboard: boolean;
+    static description: string;
     get lite(): {
         readonly renderable: LiteTextRenderable | null;
     };
@@ -846,6 +849,7 @@ export class WorldText extends TextComponent implements ComponentHooks {
 export class WorldText2D extends TextComponent implements ComponentHooks {
     constructor();
     static allowMultiple: boolean;
+    static description: string;
     hideWhenBehindCamera: boolean;
     get lite(): {
         readonly layer: LiteTextLayer | null;

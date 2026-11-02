@@ -106,6 +106,10 @@ export class AudioSource extends Script implements ScriptCallbacks {
   /** The registration id the serializer and the inspector know this class by. */
   static typeId = "ignifx/AudioSource";
 
+  /** What the component does, in one line, for an inspector. */
+  static description =
+    "A sound attached to an entity: which clip, which bus, how loud, how many at once, and how it behaves in 3D.";
+
   /** The serialized field declarations (ADR-0004). */
   static schema: Schema = audioSourceSchema();
 

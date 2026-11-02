@@ -115,6 +115,9 @@ export class FirstPersonController extends Script {
   /** The registration id the serializer writes into scene files. */
   static typeId = "ignifx/FirstPersonController";
 
+  /** The name an inspector shows for the component. */
+  static title = "First person controller";
+
   /** One controller per entity. */
   static allowMultiple = false;
 

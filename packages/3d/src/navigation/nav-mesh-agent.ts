@@ -66,6 +66,9 @@ export class NavMeshAgent extends Component implements ComponentHooks {
   /** The registration id the serializer writes into scene files. */
   static typeId = "ignifx/NavMeshAgent";
 
+  /** The name an inspector shows for the component. */
+  static title = "Nav mesh agent";
+
   /** One agent per entity. */
   static allowMultiple = false;
 

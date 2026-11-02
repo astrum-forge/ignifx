@@ -51,6 +51,12 @@ Several colliders on one entity make one compound body.
 
 [`Collider2D`](#abstract-collider2d).[`allowMultiple`](#allowmultiple-4)
 
+##### description
+
+> `static` **description**: `string` = `"An axis-aligned box, sized in local metres and scaled by the entity."`
+
+What the component does, in one line, for an inspector.
+
 ##### frictionCombine
 
 > **frictionCombine**: `"min"` \| `"max"` \| `"average"` \| `"multiply"`
@@ -630,6 +636,12 @@ Several colliders on one entity make one compound body.
 ###### Inherited from
 
 [`Collider2D`](#abstract-collider2d).[`allowMultiple`](#allowmultiple-4)
+
+##### description
+
+> `static` **description**: `string` = `"A capsule standing along X or Y."`
+
+What the component does, in one line, for an inspector.
 
 ##### direction
 
@@ -1224,6 +1236,12 @@ Applies the schema defaults.
 
 One controller per entity.
 
+##### description
+
+> `static` **description**: `string` = `"A kinematic character with collide-and-slide, slopes, autostep, and snap-to-ground."`
+
+What the component does, in one line, for an inspector.
+
 ##### height
 
 > **height**: `number`
@@ -1816,6 +1834,12 @@ Several colliders on one entity make one compound body.
 ###### Inherited from
 
 [`Collider2D`](#abstract-collider2d).[`allowMultiple`](#allowmultiple-4)
+
+##### description
+
+> `static` **description**: `string` = `"A circle; the larger scale axis wins."`
+
+What the component does, in one line, for an inspector.
 
 ##### frictionCombine
 
@@ -2916,6 +2940,12 @@ Several colliders on one entity make one compound body.
 
 [`Collider2D`](#abstract-collider2d).[`allowMultiple`](#allowmultiple-4)
 
+##### description
+
+> `static` **description**: `string` = `"An open chain of line segments — a platformer's ground contour."`
+
+What the component does, in one line, for an inspector.
+
 ##### frictionCombine
 
 > **frictionCombine**: `"min"` \| `"max"` \| `"average"` \| `"multiply"`
@@ -3919,6 +3949,12 @@ Several colliders on one entity make one compound body.
 
 [`Collider2D`](#abstract-collider2d).[`allowMultiple`](#allowmultiple-4)
 
+##### description
+
+> `static` **description**: `string` = `"The convex hull of a point list, in local metres."`
+
+What the component does, in one line, for an inspector.
+
 ##### frictionCombine
 
 > **frictionCombine**: `"min"` \| `"max"` \| `"average"` \| `"multiply"`
@@ -4512,6 +4548,12 @@ One body per entity.
 ##### collisionEvents
 
 > **collisionEvents**: `"auto"` \| `"on"` \| `"off"`
+
+##### description
+
+> `static` **description**: `string` = `"Makes an entity's 2D colliders a dynamic, kinematic, or static Rapier body."`
+
+What the component does, in one line, for an inspector.
 
 ##### freezeRotation
 
@@ -5211,6 +5253,12 @@ Several colliders on one entity make one compound body.
 ###### Inherited from
 
 [`Collider2D`](#abstract-collider2d).[`allowMultiple`](#allowmultiple-4)
+
+##### description
+
+> `static` **description**: `string` = `"The merged collision surface of a Tilemap, rebuilt when its tiles change."`
+
+What the component does, in one line, for an inspector.
 
 ##### frictionCombine
 

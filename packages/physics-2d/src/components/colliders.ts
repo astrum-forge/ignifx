@@ -42,6 +42,9 @@ export class BoxCollider2D extends Collider2D {
   /** The namespaced registration id. */
   static typeId = "ignifx/BoxCollider2D";
 
+  /** What the component does, in one line, for an inspector. */
+  static description = "An axis-aligned box, sized in local metres and scaled by the entity.";
+
   /** The serialized field declarations (ADR-0004). */
   static schema: Schema = boxSchema();
 
@@ -84,6 +87,9 @@ export class BoxCollider2D extends Collider2D {
 export class CircleCollider2D extends Collider2D {
   /** The namespaced registration id. */
   static typeId = "ignifx/CircleCollider2D";
+
+  /** What the component does, in one line, for an inspector. */
+  static description = "A circle; the larger scale axis wins.";
 
   /** The serialized field declarations. */
   static schema: Schema = circleSchema();
@@ -128,6 +134,9 @@ export class CircleCollider2D extends Collider2D {
 export class CapsuleCollider2D extends Collider2D {
   /** The namespaced registration id. */
   static typeId = "ignifx/CapsuleCollider2D";
+
+  /** What the component does, in one line, for an inspector. */
+  static description = "A capsule standing along X or Y.";
 
   /** The serialized field declarations. */
   static schema: Schema = capsuleSchema();
@@ -183,6 +192,9 @@ export class PolygonCollider2D extends Collider2D {
   /** The namespaced registration id. */
   static typeId = "ignifx/PolygonCollider2D";
 
+  /** What the component does, in one line, for an inspector. */
+  static description = "The convex hull of a point list, in local metres.";
+
   /** The serialized field declarations. */
   static schema: Schema = pointsSchema();
 
@@ -224,6 +236,9 @@ export class PolygonCollider2D extends Collider2D {
 export class EdgeCollider2D extends Collider2D {
   /** The namespaced registration id. */
   static typeId = "ignifx/EdgeCollider2D";
+
+  /** What the component does, in one line, for an inspector. */
+  static description = "An open chain of line segments — a platformer's ground contour.";
 
   /** The serialized field declarations. */
   static schema: Schema = pointsSchema();

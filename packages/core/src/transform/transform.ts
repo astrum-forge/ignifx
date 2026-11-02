@@ -41,6 +41,10 @@ export class Transform extends Component {
   /** The registration id of the one component every entity carries. */
   static typeId = "ignifx/Transform";
 
+  /** What the component does, in one line, for an inspector. */
+  static description =
+    "The entity's local position, rotation, and scale; every entity has exactly one, stored as its transform block.";
+
   /** An entity has exactly one transform. */
   static allowMultiple = false;
 

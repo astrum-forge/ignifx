@@ -319,6 +319,7 @@ export class Terrain extends Component implements ComponentHooks {
     slopeAt(x: number, z: number): number;
     // @internal
     syncAsset(): void;
+    static title: string;
     static typeId: string;
     get visibleChunks(): number;
     worldToSample(x: number, z: number, out: Float32Array): Float32Array;
@@ -572,6 +573,7 @@ export class TerrainScatter extends Component implements ComponentHooks {
     slope: Vec2Like;
     // @internal
     syncPlacement(): void;
+    static title: string;
     static typeId: string;
 }
 

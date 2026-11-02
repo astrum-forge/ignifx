@@ -109,6 +109,9 @@ export class Rigidbody extends Component implements ComponentHooks {
   /** The namespaced registration id. */
   static typeId = "ignifx/Rigidbody";
 
+  /** What the component does, in one line, for an inspector. */
+  static description = "Makes an entity's colliders a dynamic, kinematic, or static Havok body.";
+
   /** One body per entity. */
   static allowMultiple = false;
 

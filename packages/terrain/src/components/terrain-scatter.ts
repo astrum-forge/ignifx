@@ -90,6 +90,9 @@ export class TerrainScatter extends Component implements ComponentHooks {
   /** The registration id the serializer writes into scene files. */
   static typeId = "ignifx/TerrainScatter";
 
+  /** The name an inspector shows for the component. */
+  static title = "Terrain scatter";
+
   /** One scatter per entity; a second kind of foliage goes on a child. */
   static allowMultiple = false;
 

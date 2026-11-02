@@ -55,6 +55,10 @@ export interface ComponentClassInfo {
   readonly requires: readonly ComponentType[];
   /** `false` when at most one instance may live on an entity. */
   readonly allowMultiple: boolean;
+  /** The class's own `static title`, or `null` when it declares none (an inherited one is ignored). */
+  readonly title: string | null;
+  /** The class's own `static description`, or `null` when it declares none (an inherited one is ignored). */
+  readonly description: string | null;
   /**
    * The class and every component class it derives from, nearest first, ending at `Component`.
    * `world.components(Type)` and `getComponent(Type)` match against this list, which is why they
@@ -365,6 +369,8 @@ export class ComponentRegistry {
       // the class's static must not reach the list `addComponent` walks.
       requires: statics.requires === undefined ? EMPTY_TYPES : Object.freeze([...statics.requires]),
       allowMultiple: statics.allowMultiple ?? true,
+      title: ownString(type, "title"),
+      description: ownString(type, "description"),
       ancestors,
       trackedFields: schema === null ? EMPTY_NAMES : collectTrackedFields(schema),
       isScript,
@@ -512,6 +518,22 @@ function buildScriptInfo(type: ComponentType): ScriptClassInfo {
  */
 function readStatics(type: ComponentType): ScriptStatics {
   return type;
+}
+
+/**
+ * Reads a string static the class declares itself. A subclass inherits its parent's statics in
+ * JavaScript, and a parent's title would misname the subclass in an inspector.
+ *
+ * @param type - The component class.
+ * @param name - The static's name.
+ * @returns The class's own value, or `null` when it declares none or it is not a string.
+ */
+function ownString(type: ComponentType, name: "title" | "description"): string | null {
+  if (!Object.hasOwn(type, name)) {
+    return null;
+  }
+  const value = readStatics(type)[name];
+  return typeof value === "string" ? value : null;
 }
 
 /**

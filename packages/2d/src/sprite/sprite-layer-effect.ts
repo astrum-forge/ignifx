@@ -52,6 +52,9 @@ export class SpriteLayerEffect extends Component {
   /** The registration id the serializer writes into scene files. */
   static typeId = "ignifx/SpriteLayerEffect";
 
+  /** What the component does, in one line, for an inspector. */
+  static description = "A per-layer WGSL fragment effect with an fx.params vec4.";
+
   /** One effect per entity; several entities may each drive a different sorting layer. */
   static allowMultiple = false;
 

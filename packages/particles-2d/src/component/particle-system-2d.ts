@@ -78,6 +78,9 @@ export class ParticleSystem2D extends Component implements ComponentHooks {
   /** The registration id the serializer writes into scene files. */
   static typeId = "ignifx/ParticleSystem2D";
 
+  /** What the component does, in one line, for an inspector. */
+  static description = "Draws a .particles.json effect as sprites on a sorting layer.";
+
   /** Several effects may share one entity; each owns its own batch. */
   static allowMultiple = true;
 
