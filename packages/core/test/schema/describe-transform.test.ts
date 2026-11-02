@@ -129,10 +129,12 @@ describe("describeRegisteredSchemas: ignifx/Transform", () => {
     expect(describeRegisteredSchemas(registry, describeSchemas())["ignifx/Transform"]).toEqual(
       describeSchemas()["ignifx/Transform"],
     );
-    // Without the curated record the fields, allowMultiple, package and builtIn still come through.
+    // Without the curated record the summary (the class's own `static description`), fields,
+    // allowMultiple, package and builtIn still come through.
     expect(describeRegisteredSchemas(registry)["ignifx/Transform"]).toEqual({
       title: "Transform",
       format: "components",
+      description: describeSchemas()["ignifx/Transform"]?.description,
       fields: TRANSFORM_FIELDS,
       allowMultiple: false,
       package: "@ignifx/core",

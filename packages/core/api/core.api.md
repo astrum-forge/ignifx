@@ -315,6 +315,7 @@ export class Camera extends Component implements ComponentHooks {
     static allowMultiple: boolean;
     // (undocumented)
     clearColor: ColorLike | null;
+    static description: string;
     // (undocumented)
     far: number;
     // (undocumented)
@@ -471,10 +472,12 @@ export interface ComponentClassInfo {
     readonly allowMultiple: boolean;
     readonly ancestors: readonly ComponentType[];
     readonly classIndex: number;
+    readonly description: string | null;
     readonly isScript: boolean;
     readonly requires: readonly ComponentType[];
     readonly schema: Schema | null;
     readonly script: ScriptClassInfo | null;
+    readonly title: string | null;
     readonly trackedFields: readonly string[];
     readonly type: ComponentType;
     readonly typeId: string | null;
@@ -537,8 +540,10 @@ export interface ComponentReplacement {
 // @public
 export interface ComponentStatics {
     readonly allowMultiple?: boolean;
+    readonly description?: string;
     readonly requires?: readonly ComponentType[];
     readonly schema?: Schema;
+    readonly title?: string;
     readonly typeId?: string;
 }
 
@@ -1138,6 +1143,7 @@ export class Environment extends Component implements ComponentHooks {
     blur: number;
     // (undocumented)
     clearColor: ColorLike | null;
+    static description: string;
     // (undocumented)
     environment: AssetHandle<EnvironmentAsset> | null;
     // (undocumented)
@@ -1569,6 +1575,7 @@ export class InstancedMeshRenderer extends Component implements ComponentHooks {
     // @internal
     consumeCasterChange(): boolean;
     get count(): number;
+    static description: string;
     gpuCulling: boolean;
     get isVisible(): boolean;
     get lite(): InstancedMeshRendererLiteHandles;
@@ -1733,6 +1740,7 @@ export class Light extends Component implements ComponentHooks {
     static allowMultiple: boolean;
     // (undocumented)
     color: ColorLike;
+    static description: string;
     // (undocumented)
     exclude: (Entity | null)[];
     // (undocumented)
@@ -2260,6 +2268,7 @@ export class MeshRenderer extends Component implements ComponentHooks {
     collectCasters(out: LiteMesh[]): void;
     // @internal
     consumeCasterChange(): boolean;
+    static description: string;
     get displayHidden(): boolean;
     set displayHidden(value: boolean);
     get isVisible(): boolean;
@@ -2299,6 +2308,7 @@ export class Model extends Component implements ComponentHooks {
     collectCasters(out: LiteMesh[]): void;
     // @internal
     consumeCasterChange(): boolean;
+    static description: string;
     get lite(): {
         readonly root: LiteSceneNode | null;
     };
@@ -2573,6 +2583,7 @@ export class PostProcessStack extends Component implements ComponentHooks {
     bloom: BloomEffectSettings;
     // (undocumented)
     custom: CustomEffectSettings[];
+    static description: string;
     // (undocumented)
     imageProcessing: ImageProcessingEffectSettings;
     onAttach(): void;
@@ -3670,6 +3681,7 @@ export interface TorusMeshOptions {
 export class Transform extends Component {
     constructor();
     static allowMultiple: boolean;
+    static description: string;
     override destroy(): void;
     override get enabled(): boolean;
     override set enabled(value: boolean);

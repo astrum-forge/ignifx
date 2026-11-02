@@ -344,6 +344,38 @@ describe("describeRegisteredSchemas", () => {
     expect(described["acme/Beacon"]).not.toHaveProperty("requires");
   });
 
+  it("titles and summarises a component from its class's own statics, under the curated record", () => {
+    class Lamp extends Component.define({ lit: bool(true) }) {
+      static typeId = "acme/Lamp";
+      static title = "Street lamp";
+      static description = "Lights the pavement at night.";
+    }
+    // Inherits both statics but declares neither, so a tool must not show the parent's name.
+    class Lantern extends Lamp {
+      static override typeId = "acme/Lantern";
+    }
+    const registry = new ComponentRegistry();
+    registry.registerAll([Lamp, Lantern], "@acme/lights");
+    expect(registry.describe(Lamp)).toMatchObject({
+      title: "Street lamp",
+      description: "Lights the pavement at night.",
+    });
+    expect(registry.describe(Lantern)).toMatchObject({ title: null, description: null });
+
+    const described = describeRegisteredSchemas(registry);
+    expect(described["acme/Lamp"]).toMatchObject({
+      title: "Street lamp",
+      description: "Lights the pavement at night.",
+      package: "@acme/lights",
+    });
+    expect(described["acme/Lantern"]?.title).toBe("Lantern");
+    expect(described["acme/Lantern"]).not.toHaveProperty("description");
+
+    // A curated entry still wins, field by field.
+    const curated = describeRegisteredSchemas(registry, { "acme/Lamp": { title: "Lamp post" } });
+    expect(curated["acme/Lamp"]).toMatchObject({ title: "Lamp post", description: "Lights the pavement at night." });
+  });
+
   it("works on a bare registry", () => {
     const registry = new ComponentRegistry();
     registry.register(Note);

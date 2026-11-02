@@ -217,6 +217,9 @@ export class Environment extends Component implements ComponentHooks {
   /** The namespaced registration id. */
   static typeId = "ignifx/Environment";
 
+  /** What the component does, in one line, for an inspector. */
+  static description = "The world's image-based lighting, skybox, fog, image processing, and clear colour.";
+
   /** One per entity, and effectively one per world: the fields are all scene state. */
   static allowMultiple = false;
 

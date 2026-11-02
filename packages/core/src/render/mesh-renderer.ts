@@ -72,6 +72,9 @@ export class MeshRenderer extends Component implements ComponentHooks {
   /** The namespaced registration id. */
   static typeId = "ignifx/MeshRenderer";
 
+  /** What the component does, in one line, for an inspector. */
+  static description = "Draws one clone of a mesh asset with a material.";
+
   /** Several renderers on one entity draw several meshes from one transform, which is useful. */
   static allowMultiple = true;
 

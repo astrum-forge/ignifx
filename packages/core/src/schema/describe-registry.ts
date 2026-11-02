@@ -36,9 +36,14 @@ function componentPackage(registry: ComponentRegistry, typeId: string): string {
  * and marked `builtIn`, because every entity carries exactly one and a scene file stores it as the
  * entity's `transform` block rather than in its `components`.
  *
+ * A component's `title` and `description` come from `curated` when it has an entry, else from the
+ * class's own `static title` and `static description`, which is how an extension's components
+ * reach an inspector with their curated names without the inspector importing the extension.
+ *
  * @param registry - The registry to walk, usually `app.world.registry`.
  * @param curated - Titles, formats and summaries by type id, for example a package's own
- * `describeSchemas()`; a component without an entry is titled from its type id.
+ * `describeSchemas()`; an entry wins over the class's own `static title` and `static description`, and a component
+ * with neither is titled from its type id.
  * @returns The descriptions, keyed by type id, in registration order.
  *
  * @example
@@ -60,10 +65,12 @@ export function describeRegisteredSchemas(
     const info = registry.describe(type);
     const meta = curated?.[typeId];
     const builtIn = type === Transform;
+    const title = meta?.title ?? info.title;
+    const description = meta?.description ?? info.description;
     described[typeId] = describeSchema(typeId, builtIn ? transformSchema() : (info.schema ?? {}), {
-      ...(meta?.title === undefined ? {} : { title: meta.title }),
+      ...(title === null ? {} : { title }),
       ...(meta?.format === undefined ? {} : { format: meta.format }),
-      ...(meta?.description === undefined ? {} : { description: meta.description }),
+      ...(description === null ? {} : { description }),
       allowMultiple: info.allowMultiple,
       package: componentPackage(registry, typeId),
       ...(builtIn ? { builtIn } : {}),

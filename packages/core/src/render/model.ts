@@ -107,6 +107,9 @@ export class Model extends Component implements ComponentHooks {
   /** The namespaced registration id. */
   static typeId = "ignifx/Model";
 
+  /** What the component does, in one line, for an inspector. */
+  static description = "One instance of a loaded glTF, cloned under the entity's node.";
+
   /** One model per entity: a second instance under the same transform wants its own entity. */
   static allowMultiple = false;
 

@@ -2,6 +2,7 @@ import { MATERIAL_ALPHA_MODES } from "../lite/material.js";
 import { describeSchema } from "../schema/describe.js";
 import { describeSceneFileFormat } from "../serialization/scene-file.js";
 import { transformSchema } from "../transform/transform-schema.js";
+import { Transform } from "../transform/transform.js";
 import { Camera } from "./camera.js";
 import { ENVIRONMENT_FILE_FORMAT, ENVIRONMENT_FORMAT_VERSION } from "./environment-asset.js";
 import { Environment } from "./environment.js";
@@ -61,34 +62,31 @@ import type { SchemaDescription } from "../schema/describe.js";
 export function describeSchemas(): Readonly<Record<string, SchemaDescription>> {
   return {
     "ignifx/Transform": describeSchema("ignifx/Transform", transformSchema(), {
-      description:
-        "The entity's local position, rotation, and scale; every entity has exactly one, stored as its transform block.",
+      description: Transform.description,
       allowMultiple: false,
       package: "@ignifx/core",
       builtIn: true,
     }),
     "ignifx/Camera": describeSchema("ignifx/Camera", Camera.schema, {
-      description: "The camera an entity renders the world through; the entity's transform is the view.",
+      description: Camera.description,
     }),
     "ignifx/Light": describeSchema("ignifx/Light", Light.schema, {
-      description: "A directional, point, spot, or hemispheric light, with optional shadow casting.",
+      description: Light.description,
     }),
     "ignifx/MeshRenderer": describeSchema("ignifx/MeshRenderer", MeshRenderer.schema, {
-      description: "Draws one clone of a mesh asset with a material.",
+      description: MeshRenderer.description,
     }),
     "ignifx/InstancedMeshRenderer": describeSchema("ignifx/InstancedMeshRenderer", InstancedMeshRenderer.schema, {
-      description:
-        "Draws one mesh many times from a caller-owned matrix slab, in a single draw call, with optional GPU culling and a coarser mesh for far instances.",
+      description: InstancedMeshRenderer.description,
     }),
     "ignifx/Model": describeSchema("ignifx/Model", Model.schema, {
-      description: "One instance of a loaded glTF, cloned under the entity's node.",
+      description: Model.description,
     }),
     "ignifx/Environment": describeSchema("ignifx/Environment", Environment.schema, {
-      description: "The world's image-based lighting, skybox, fog, image processing, and clear colour.",
+      description: Environment.description,
     }),
     "ignifx/PostProcessStack": describeSchema("ignifx/PostProcessStack", PostProcessStack.schema, {
-      description:
-        "Bloom, SMAA, image processing, and custom .post.wgsl effects, inserted into the scene's frame graph.",
+      description: PostProcessStack.description,
     }),
     "ignifx/scene-file": describeSceneFileFormat(),
     "ignifx/material-file": describeMaterialFileFormat(),

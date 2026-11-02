@@ -137,6 +137,10 @@ export class InstancedMeshRenderer extends Component implements ComponentHooks {
   /** The namespaced registration id. */
   static typeId = "ignifx/InstancedMeshRenderer";
 
+  /** What the component does, in one line, for an inspector. */
+  static description =
+    "Draws one mesh many times from a caller-owned matrix slab, in a single draw call, with optional GPU culling and a coarser mesh for far instances.";
+
   /** Several instanced renderers on one entity draw several clouds from one transform. */
   static allowMultiple = true;
 

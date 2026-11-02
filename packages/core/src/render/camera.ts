@@ -153,6 +153,9 @@ export class Camera extends Component implements ComponentHooks {
   /** The namespaced registration id. */
   static typeId = "ignifx/Camera";
 
+  /** What the component does, in one line, for an inspector. */
+  static description = "The camera an entity renders the world through; the entity's transform is the view.";
+
   /** At most one camera per entity: two views from one transform would be the same view. */
   static allowMultiple = false;
 

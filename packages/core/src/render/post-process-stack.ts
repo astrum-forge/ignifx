@@ -167,6 +167,10 @@ export class PostProcessStack extends Component implements ComponentHooks {
   /** The namespaced registration id. */
   static typeId = "ignifx/PostProcessStack";
 
+  /** What the component does, in one line, for an inspector. */
+  static description =
+    "Bloom, SMAA, image processing, and custom .post.wgsl effects, inserted into the scene's frame graph.";
+
   /** One chain per camera entity; a second would fight the first for the swapchain. */
   static allowMultiple = false;
 
