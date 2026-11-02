@@ -140,6 +140,19 @@ node, so an entity that moved is already where it should be.
 | `openOverlay()` (`@beta`)       | A Lite scene drawn over the frame, for editor gizmos; `IGX-0728` headless or before `start()` |
 | `animateMaterialsInEditMode`    | Edit mode only: `false` holds the shader clock of materials and post effects; default `true`  |
 
+**A second camera into a texture** (`@beta`): `createRenderTexture(width, height)` (sides 1 to 4096,
+else `IGX-0730`) makes an offscreen target; `renderToTexture(camera, texture)` fills it once on the
+next frame, and `camera.renderTarget = texture` fills it every frame and keeps that camera off the
+canvas. `texture.readPixels()` answers RGBA8. Headless, before `start()` or after `stop()` both
+reject with `IGX-0729`. It draws the render scene only: no post effects, sprites or UI text.
+
+```ts
+const minimap = app.renderer.createRenderTexture(256, 256);
+overhead.renderTarget = minimap; // `overhead` is a Camera; it never becomes the main camera
+const { data } = await minimap.readPixels();
+minimap.dispose();
+```
+
 ## 4. Settings and feature opt-ins
 
 The `rendering` settings section is read once, at `createApp`:

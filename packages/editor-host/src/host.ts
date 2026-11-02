@@ -172,6 +172,8 @@ export async function startEditorHost(options: EditorHostOptions): Promise<Edito
         HostCapability.pick2d,
         HostCapability.logRelay,
         HostCapability.hotReloadDefaults,
+        HostCapability.gameView,
+        ...(typeof OffscreenCanvas === "undefined" ? [] : [HostCapability.thumbnails]),
       ]
     : [HostCapability.heartbeat, HostCapability.logRelay, HostCapability.hotReloadDefaults];
   let channel: Channel | null = null;
@@ -180,6 +182,7 @@ export async function startEditorHost(options: EditorHostOptions): Promise<Edito
     notify: (method, params) => {
       channel?.notify(method, params);
     },
+    createThumbnailApp: async () => createThumbnailApp(options),
   });
   // The channel opens before the first `await`, so a port posted while the app is created is kept.
   const opened = openChannel({
@@ -247,6 +250,19 @@ export async function startEditorHost(options: EditorHostOptions): Promise<Edito
  */
 function hasGpuView(options: EditorHostOptions): boolean {
   return options.canvas !== undefined && options.headless !== true;
+}
+
+/**
+ * Creates the app thumbnails are rendered in: the project's extensions, settings, assets and
+ * scripts, on a 1x1 offscreen canvas of its own (the thumbnails draw into render textures).
+ *
+ * @param options - The host options.
+ * @returns The app, not started.
+ */
+async function createThumbnailApp(options: EditorHostOptions): Promise<App> {
+  const app = await createApp({ ...appOptions(options), canvas: new OffscreenCanvas(1, 1), headless: false });
+  app.registerComponents(options.scripts ?? []);
+  return app;
 }
 
 /**

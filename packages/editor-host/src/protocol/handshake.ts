@@ -60,9 +60,9 @@ export type HostKind = (typeof HostKind)[keyof typeof HostKind];
  * @remarks
  * The play controls send `"heartbeat"`, `"playControls"`, `"logRelay"` and `"queryRuntime"`, plus
  * `"screenshot"` when the game has a canvas and `"sendInput"` when it has `app.input`. The scene
- * host sends `"heartbeat"` and whichever of `"gizmos"`, `"screenshot"`, `"viewMode2d"` and
- * `"pick2d"` it supports; every `SceneMethod` not tied to one of them is required of a 0.3 scene
- * host.
+ * host sends `"heartbeat"` and whichever of `"gizmos"`, `"screenshot"`, `"viewMode2d"`,
+ * `"pick2d"`, `"gameView"` and `"thumbnails"` it supports; every `SceneMethod` not tied to one of
+ * them is required of a 0.3 scene host.
  *
  * @public
  */
@@ -117,6 +117,18 @@ export const HostCapability = {
    * answers `sendInput` with `RpcErrorCode.methodNotFound`.
    */
   sendInput: "sendInput",
+  /**
+   * The scene host answers `setGameView` and `gameViewFrame`: the open scene through its own main
+   * camera, rendered beside the editor camera (`RenderViewMethod`). From engine ask E8 (additive in
+   * 0.3); without it, the host answers both with `RpcErrorCode.methodNotFound`.
+   */
+  gameView: "gameView",
+  /**
+   * The scene host answers `renderThumbnail`: a model or prefab asset rendered on its own
+   * (`RenderViewMethod`). From engine ask E8 (additive in 0.3); without it, the host answers it with
+   * `RpcErrorCode.methodNotFound`.
+   */
+  thumbnails: "thumbnails",
 } as const;
 
 /**
