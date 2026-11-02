@@ -66,3 +66,17 @@ not for installing.
 The package is also a library. `copyTemplate`, `parseArgs`, `resolveTemplateDir`, and `runCreate` are
 exported from `@ignifx/cli` so the scaffolding step can be driven from a script or a test; the public
 surface is recorded in `api/cli.api.md`.
+
+## The `ignifx` executable
+
+The package also installs `ignifx`, whose commands convert editor files into engine formats:
+
+```
+ignifx import heightmap <in.png> <out.r16>
+ignifx import tilemap <map.tmj> [<out.tilemap.json>] [--pixels-per-unit <n>] [--drop-flips]
+ignifx import tilemap <project.ldtk> [<out directory>] [--pixels-per-unit <n>] [--drop-flips]
+ignifx import tilemap <map.tilemap.json> <scene.scene.json> [--parent <entity name>]
+```
+
+The Tiled and LDtk form writes one `.tilemap.json` per map or level and an `.atlas.json` beside
+each tileset image that has none; the last form moves a tilemap's objects into a scene (ADR-0030).

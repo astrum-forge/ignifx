@@ -21,10 +21,31 @@ export const CliErrorCode: {
     readonly fileNotAccessible: "IGX-1405";
     readonly eightBitHeightmapSource: "IGX-1406";
     readonly invalidDocument: "IGX-1407";
+    readonly unsupportedTilemapSource: "IGX-1408";
 };
 
 // @public
 export type CliErrorCode = (typeof CliErrorCode)[keyof typeof CliErrorCode];
+
+// @public
+export const CONVERT_TILEMAP_USAGE: string;
+
+// @public
+export interface ConvertTilemapCommand {
+    readonly dropFlips: boolean;
+    readonly kind: "tiled" | "ldtk";
+    readonly output: string | null;
+    readonly pixelsPerUnit: number;
+    readonly source: string;
+}
+
+// @public
+export interface ConvertTilemapResult {
+    readonly atlases: readonly string[];
+    readonly source: string;
+    readonly tilemaps: readonly string[];
+    readonly warnings: readonly string[];
+}
 
 // @public
 export function copyTemplate(options: CopyTemplateOptions): Promise<CopyTemplateResult>;
@@ -140,7 +161,13 @@ export interface ImportTilemapResult {
 }
 
 // @public
+export function isTilemapSource(path: string): boolean;
+
+// @public
 export function parseArgs(argv: readonly string[]): CreateCommand;
+
+// @public
+export function parseConvertTilemapArgs(argv: readonly string[]): ConvertTilemapCommand;
 
 // @public
 export function parseImportHeightmapArgs(argv: readonly string[]): ImportHeightmapCommand;
@@ -153,6 +180,9 @@ export function resolveTemplateDir(name: string, templatesRoot: string): Promise
 
 // @public
 export function resolveTemplatesRoot(binDirectory: string): Promise<string>;
+
+// @public
+export function runConvertTilemap(argv: readonly string[], io: ImportIo): Promise<ConvertTilemapResult>;
 
 // @public
 export function runCreate(argv: readonly string[], io: CreateIo): Promise<CopyTemplateResult>;
