@@ -166,6 +166,7 @@ export interface EditorHostOptions {
     readonly assets?: AssetsCreateOptions;
     readonly bootScene?: string | null;
     readonly canvas?: RenderSurface;
+    readonly createExtensions?: () => readonly Extension[];
     readonly editMode?: boolean;
     readonly editorOrigin: string;
     readonly engineVersion?: string;

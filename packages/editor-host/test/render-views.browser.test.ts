@@ -1,8 +1,9 @@
+import { physics } from "@ignifx/physics";
 import { afterEach, describe, expect, it } from "vitest";
 import { startEditorHost } from "../src/host.js";
-import { RenderViewMethod, RpcErrorCode, SceneNotification } from "../src/protocol/index.js";
+import { HostCapability, RenderViewMethod, RpcErrorCode, SceneNotification } from "../src/protocol/index.js";
 import { connect, EDITOR_ORIGIN } from "./support/editor.js";
-import type { EditorHost } from "../src/host.js";
+import type { EditorHost, EditorHostOptions } from "../src/host.js";
 import type { EditorPeer, Received } from "./support/editor.js";
 import type { FetchLike, SceneFile } from "@ignifx/core";
 
@@ -97,13 +98,23 @@ afterEach(() => {
   canvas = null;
 });
 
+/** Where Vitest's browser project serves `@babylonjs/havok`'s binary from. */
+const HAVOK_URL = "/packages/physics/node_modules/@babylonjs/havok/lib/esm/HavokPhysics.wasm";
+
+/** The capabilities `ready` listed, from the last {@link sceneView}. */
+let capabilities: unknown = null;
+
 /**
  * Starts a scene view on a canvas and opens a scene, with the editor camera looking away from it.
  *
  * @param scene - The document.
+ * @param extra - More host options, such as the project's extensions.
  * @returns The host.
  */
-async function sceneView(scene: SceneFile): Promise<EditorHost> {
+async function sceneView(
+  scene: SceneFile,
+  extra: Pick<EditorHostOptions, "extensions" | "createExtensions"> = {},
+): Promise<EditorHost> {
   canvas = document.createElement("canvas");
   canvas.width = 96;
   canvas.height = 64;
@@ -118,9 +129,10 @@ async function sceneView(scene: SceneFile): Promise<EditorHost> {
     settings: { rendering: { clearColor: { r: 0.2, g: 0.2, b: 0.2, a: 1 } } },
     assets: { fetch: fetchFiles },
     heartbeatIntervalMs: 60_000,
+    ...extra,
   });
   peer = connect(target);
-  await peer.hello();
+  capabilities = Reflect.get(Object((await peer.hello())["result"]), "capabilities");
   host = await starting;
   await peer.nextNotification(SceneNotification.schemasChanged);
   await call("openScene", { file: scene, address: `scenes/${scene.name}.scene.json` });
@@ -248,4 +260,37 @@ describe("the render views on a WebGPU canvas", () => {
     expect(unknown).toHaveProperty("error.code", RpcErrorCode.invalidParams);
     // The stage is a second app on its own device, created and started by the first request.
   }, 60_000);
+
+  it("builds the thumbnail stage from fresh extensions, leaving the scene view's physics world alone", async () => {
+    const wasmBinary = await (await fetch(HAVOK_URL)).arrayBuffer();
+    const view = await sceneView(SCENE, {
+      extensions: [physics({ wasmBinary })],
+      createExtensions: () => [physics({ wasmBinary })],
+    });
+    expect(capabilities).toContain(HostCapability.thumbnails);
+    const world = view.app.physics.lite.world;
+    const thumbnail = await call(RenderViewMethod.renderThumbnail, {
+      asset: "prefabs/red-box.prefab.json",
+      size: 16,
+      format: "png",
+    });
+    expect(thumbnail).toMatchObject({ width: 16, height: 16 });
+    expect(view.app.physics.lite.world).toBe(world);
+    await call("applyOps", {
+      ops: [
+        { op: "setTransform", entity: "BOX", after: { position: [0, 1, 0], rotation: [0, 0, 0, 1], scale: [1, 1, 1] } },
+      ],
+      commandName: "Move",
+      commandId: "move-1",
+    });
+    expect(view.app.physics.lite.world).toBe(world);
+  }, 60_000);
+
+  it("does not list thumbnails when it cannot build fresh extensions for the stage", async () => {
+    const wasmBinary = await (await fetch(HAVOK_URL)).arrayBuffer();
+    await sceneView(SCENE, { extensions: [physics({ wasmBinary })] });
+    expect(capabilities).not.toContain(HostCapability.thumbnails);
+    const refused = await peer?.request(RenderViewMethod.renderThumbnail, { asset: "a.glb", format: "png" });
+    expect(refused).toHaveProperty("error.code", RpcErrorCode.methodNotFound);
+  });
 });

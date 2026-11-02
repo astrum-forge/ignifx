@@ -89580,6 +89580,12 @@ An operation that only accepts a scene root was given an entity that has a paren
 
 An extension's `engine` range does not match the running core version.
 
+##### extensionInstalledTwice
+
+> `readonly` **extensionInstalledTwice**: `"IGX-0411"`
+
+One `Extension` object was handed to a second app while the first still runs it.
+
 ##### extensionMissing
 
 > `readonly` **extensionMissing**: `"IGX-0403"`

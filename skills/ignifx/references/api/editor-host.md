@@ -524,6 +524,21 @@ A scene address to load before the app starts, through the normal loader. Defaul
 
 The canvas to render into. Without one the app is headless.
 
+##### createExtensions?
+
+> `readonly` `optional` **createExtensions?**: () => readonly `Extension`[]
+
+**`Beta`**
+
+Builds a fresh list of the project's extensions, for the second app thumbnails render in. An
+extension object belongs to one app (`IGX-0411`), so the host cannot reuse `extensions`. The
+generated scene view passes the project's own `extensions` function from `src/extensions.ts`.
+Without it, a host given `extensions` does not list `HostCapability.thumbnails`.
+
+###### Returns
+
+readonly `Extension`[]
+
 ##### editMode?
 
 > `readonly` `optional` **editMode?**: `boolean`

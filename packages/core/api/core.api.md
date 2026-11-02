@@ -635,6 +635,7 @@ export const CoreErrorCode: {
     readonly invalidSettings: "IGX-0408";
     readonly physicsCallbackOutsideFixedStep: "IGX-0409";
     readonly simulationSceneAlreadySet: "IGX-0410";
+    readonly extensionInstalledTwice: "IGX-0411";
     readonly assetNotLoaded: "IGX-0501";
     readonly assetLoadAborted: "IGX-0502";
     readonly assetAppDisposed: "IGX-0503";
