@@ -18599,7 +18599,8 @@ Clears `time.paused`.
 
 > **start**(): `Promise`\<`void`\>
 
-Runs extension `onStart` hooks and starts the frame loop.
+Runs extension `onStart` hooks and starts the frame loop. A no-op while running; after `stop()`
+it restarts the loop without running `onStart` again.
 
 ###### Returns
 
@@ -22038,7 +22039,8 @@ The app being disposed.
 
 > `optional` **onStart**(`app`): `void` \| `Promise`\<`void`\>
 
-Runs after every extension registered and the Lite engine exists, before the first frame.
+Runs after every extension registered and the Lite engine exists, before the first frame. It
+runs once: a start after `app.stop()` does not run it again.
 
 ###### Parameters
 
