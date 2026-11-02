@@ -414,7 +414,7 @@ describe("start, stop, and dispose order", () => {
 
 describe("one extension object per live app (IGX-0411)", () => {
   it("refuses an extension object a live app installed, and accepts it once that app is disposed", async () => {
-    const shared: Extension = { name: "shared-state", register(): void {} };
+    const shared: Extension = { name: "shared-state", version: "1.0.0", register(): void {} };
     const first = await createApp({ headless: true, logSink: createMemorySink(), extensions: [shared] });
     await expect(
       createApp({ headless: true, logSink: createMemorySink(), extensions: [shared] }),
@@ -428,6 +428,7 @@ describe("one extension object per live app (IGX-0411)", () => {
     let fail = true;
     const flaky: Extension = {
       name: "flaky",
+      version: "1.0.0",
       register(): void {
         if (fail) {
           throw new Error("not yet");
