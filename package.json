@@ -21,6 +21,7 @@
     "test:browser": "vitest run --project browser",
     "test:visual": "pnpm --filter ignifx-visual-tests run test:visual",
     "test:frame-budget": "pnpm --filter ignifx-visual-tests run test:frame-budget",
+    "test:gpu-budget": "pnpm --filter ignifx-visual-tests run test:gpu-budget",
     "bench": "vitest bench --run --reporter=verbose benchmarks",
     "bundle-size": "vitest run --project perf benchmarks/bundle-size.test.ts",
     "assets:2d": "node tests/fixtures/assets/2d-templates/make-template-art.mjs",

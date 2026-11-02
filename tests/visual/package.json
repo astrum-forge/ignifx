@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test:visual": "playwright test --project goldens",
     "test:frame-budget": "playwright test --project frame-budget",
+    "test:gpu-budget": "playwright test --project gpu-budget",
     "test:visual:update": "playwright test --project goldens --update-snapshots",
     "test:desktop": "playwright test --config playwright.desktop.config.ts"
   },

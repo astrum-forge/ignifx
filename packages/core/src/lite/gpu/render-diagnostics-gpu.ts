@@ -15,13 +15,13 @@ import type { EngineContext, RenderTaskGpuTimings, SurfaceContext } from "@babyl
  *
  * Everything here is `@internal`.
  *
- * ## Why these need a device (verified against `@babylonjs/lite@1.27.0`)
+ * ## Why these need a device (verified against `@babylonjs/lite@1.34.0`)
  *
- * - `isGpuTimingSupported` and `getRenderTaskGpuTimings` both start with
- *   `engine._device.features.has("timestamp-query")` (`lib/engine/engine.js`,
- *   `lib/engine/gpu-task-timing.js`). SwiftShader does not expose that feature, so on the CI
- *   software adapter the snapshot's `status` is `"unsupported"` — which is why coding standards §10
- *   says GPU-timing assertions are skipped there.
+ * - `isGpuTimingSupported` and `getRenderTaskGpuTimings` both check
+ *   `engine._device.features.has("timestamp-query")` (`lib/engine/gpu-task-timing.js`). Chromium's
+ *   SwiftShader now offers that feature too (GI spike S4, 2026-11-02), but its timings measure a
+ *   software rasteriser, so coding standards §10 still skips GPU-timing assertions there; real
+ *   numbers come from the host-GPU `gpu-budget` project (§7).
  * - `setSurfaceSize` writes `canvas.width`/`canvas.height` (`lib/engine/surface.js`), and a null
  *   engine has no canvas at all.
  * - `resizeEngine` walks the engine's surfaces and re-reads each canvas's client size; for an

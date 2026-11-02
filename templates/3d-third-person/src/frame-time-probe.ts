@@ -1,5 +1,6 @@
-// oxlint-disable no-underscore-dangle -- `window.__ignifxFrameTime` is a test hook, and the double
-// underscore is what says it is not part of the game's API. The frame-time suite reads it by name.
+// oxlint-disable no-underscore-dangle -- `window.__ignifxFrameTime` and `window.__ignifxGpuTime` are
+// test hooks, and the double underscore says they are not part of the game's API. The frame-time
+// and GPU-budget suites read them by name.
 import { createFrameSample } from "@ignifx/core";
 import type { App } from "@ignifx/core";
 
@@ -27,7 +28,22 @@ declare global {
      * Installed only under `?bench=1`.
      */
     __ignifxFrameTime?: (frames: number) => Promise<readonly number[]>;
+    /**
+     * Turns on per-task GPU timing, runs `frames` presented frames and answers with the GPU
+     * milliseconds of each. Installed only under `?bench=1`.
+     */
+    __ignifxGpuTime?: (frames: number) => Promise<GpuTimeSamples>;
   }
+}
+
+/** What `window.__ignifxGpuTime` answers with. */
+export interface GpuTimeSamples {
+  /** `renderer.taskTimings().status` after the last measured frame. */
+  readonly status: string;
+  /** `renderer.gpuFrameTimeMs` after each frame. */
+  readonly frameMs: readonly number[];
+  /** Each frame-graph task's GPU milliseconds, one entry per frame that had a snapshot. */
+  readonly taskMs: Readonly<Record<string, readonly number[]>>;
 }
 
 /**
@@ -52,6 +68,41 @@ export function installFrameTimeProbe(app: App): void {
         out.push(total);
         if (out.length >= frames) {
           resolve(out);
+          return;
+        }
+        requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    });
+}
+
+/**
+ * Installs `window.__ignifxGpuTime`, the GPU half of the `?bench=1` hook.
+ *
+ * @remarks
+ * Only meaningful on a host GPU: the `gpu-budget` Playwright project runs it there, and SwiftShader
+ * timestamps measure the software rasteriser. The probe turns `renderer.profileTasks` on, which
+ * costs timestamp queries, so it is never on outside a measurement.
+ *
+ * @param app - The running app, whose `renderer` the probe reads.
+ */
+export function installGpuTimeProbe(app: App): void {
+  window.__ignifxGpuTime = (frames: number): Promise<GpuTimeSamples> =>
+    new Promise<GpuTimeSamples>((resolve) => {
+      app.renderer.profileTasks = true;
+      const frameMs: number[] = [];
+      const taskMs: Record<string, number[]> = {};
+      let status = "pending";
+      const step = (): void => {
+        frameMs.push(app.renderer.gpuFrameTimeMs);
+        const timings = app.renderer.taskTimings();
+        status = timings.status;
+        for (const task of timings.tasks) {
+          (taskMs[task.name] ??= []).push(task.durationMs);
+        }
+        if (frameMs.length >= frames) {
+          app.renderer.profileTasks = false;
+          resolve({ status, frameMs, taskMs });
           return;
         }
         requestAnimationFrame(step);

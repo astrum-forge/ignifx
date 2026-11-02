@@ -13,7 +13,7 @@ import { manifest } from "virtual:ignifx/manifest";
 import { acceptHotReload, scripts } from "virtual:ignifx/scripts";
 import { installDesktopProbe } from "./desktop-probe.js";
 import { extensions } from "./extensions.js";
-import { installFrameTimeProbe } from "./frame-time-probe.js";
+import { installFrameTimeProbe, installGpuTimeProbe } from "./frame-time-probe.js";
 import { createGameUi, hasTouch } from "./game-ui.js";
 import { installGameplayProbe } from "./gameplay-probe.js";
 import { createGameMenus } from "./menus/game-menus.js";
@@ -510,6 +510,7 @@ async function main(): Promise<AppStatus> {
 
   if (isBench) {
     installFrameTimeProbe(app);
+    installGpuTimeProbe(app);
   }
 
   await app.start();

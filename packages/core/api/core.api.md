@@ -1790,12 +1790,15 @@ export const LIGHT_TYPES: readonly ["directional", "point", "spot", "hemispheric
 // @public
 export interface LightShadowSettings {
     bias: number;
+    cascadeBlend: number;
+    cascadeLambda: number;
     cascades: number;
     darkness: number;
     enabled: boolean;
     mapSize: number;
     maxDistance: number;
     normalBias: number;
+    stabilizeCascades: boolean;
     technique: ShadowTechniqueName;
 }
 
@@ -2832,6 +2835,7 @@ export interface RenderingSettings {
     readonly clearColor: ColorLike;
     readonly features: RenderingFeatureSettings;
     readonly format: string;
+    readonly hdr: boolean;
     readonly maxDevicePixelRatio: number;
     readonly msaaSamples: number;
     readonly requiredLimits: Readonly<Record<string, number>>;

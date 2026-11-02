@@ -23,10 +23,10 @@ import type { App, Coroutine, Entity } from "@ignifx/core";
  *
  * ## Why the probe sets the sun's shadow technique
  *
- * Babylon Lite 1.27.0 can only rebuild an **ESM** directional shadow generator after a device loss
- * (`lib/shadow/shadow-recovery.js` throws Lite error 463 for every other technique). The level ships
- * ESM since Phase 9 for exactly that reason; the probe still sets it explicitly so this test does not
- * silently depend on the level's choice. `docs/adr/0018-electron-tooling.md` records the limitation.
+ * Babylon Lite 1.34.0 rebuilds only **ESM** and **CSM** directional shadow generators after a device
+ * loss (`lib/shadow/shadow-recovery.js` throws Lite error 721 for PCF). The level ships CSM; the
+ * probe still sets it explicitly so this test does not silently depend on the level's choice.
+ * `docs/adr/0018-electron-tooling.md` records the limitation.
  */
 
 /** What one probe reading contains. */
@@ -125,10 +125,10 @@ export class ProbeTicker extends Script {
  * @param crates - The level's crates; the first one's height is the physics reading.
  */
 export function installDesktopProbe(app: App, crates: readonly Entity[]): void {
-  // See the module comment: Lite 1.27.0 recovers ESM generators and nothing else.
+  // See the module comment: Lite 1.34.0 recovers ESM and CSM generators, not PCF.
   const sun = app.world.findByName("Sun")?.getComponent(Light) ?? null;
   if (sun !== null) {
-    sun.shadows.technique = "esm";
+    sun.shadows.technique = "csm";
   }
 
   let deviceLost = 0;

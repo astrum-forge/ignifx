@@ -633,6 +633,7 @@ class AppImpl implements App {
             // §1.1: the render path is a frame-graph decision, so it is made when the scene is
             // created rather than in `start()` with the opt-ins that only change what is compiled.
             postProcessing: renderer.renderingFeatures.postProcessing,
+            hdr: rendering.hdr,
           });
     if (canvas !== null) {
       // §1: the report describes the host's adapter, not Lite's device — see `../platform/platform.ts`.

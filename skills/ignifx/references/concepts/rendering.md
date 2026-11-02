@@ -212,10 +212,16 @@ freed — set `stack.enabled = false` to bypass the whole chain, and the plain s
 
 The rest of the section: `msaaSamples` (1 or 4, default 4), `alphaMode` (`"opaque"` or
 `"premultiplied"`), `srgb`, `format`, `maxDevicePixelRatio`, `useHighPrecisionMatrix`,
-`useFloatingOrigin`, `requiredLimits`, `clearColor` (a color **object**, `{ r, g, b, a }` in sRGB — a
+`useFloatingOrigin`, `requiredLimits`, `hdr`, `clearColor` (a color **object**, `{ r, g, b, a }` in sRGB — a
 hex string is only ever a schema _default_ — applied to the scene as it is created, and overridden by
 an `Environment` or the main camera, §1), and `brdfLut` (defaults to `DEFAULT_BRDF_LUT_ADDRESS`).
 There is no `powerPreference`: Lite always asks for a high-performance adapter.
+
+`rendering.hdr` (default `false`) renders the scene into a floating-point target and tone maps it
+in one final pass with the `Environment`'s exposure, contrast and curve. A scene of PBR materials
+looks the same either way; turn it on for the HDR effects that build on it. For now fog, Standard
+materials, surface shaders, sprites, particles and the skybox are not carried in linear colour, so
+keep it off in scenes that rely on them: `settings: { rendering: { hdr: true } }`.
 
 ## 5. Material warm-up (ADR-0014)
 

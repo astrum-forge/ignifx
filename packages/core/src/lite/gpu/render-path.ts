@@ -1,5 +1,5 @@
 import { addTask, createCopyToTextureTask, createRenderTarget, createRenderTask } from "@babylonjs/lite";
-import type { EngineContext, RenderTarget, SceneContext, Task } from "@babylonjs/lite";
+import type { EngineContext, RenderTarget, SceneContext, Task, Texture2D } from "@babylonjs/lite";
 
 /**
  * The offscreen render path (`docs/architecture/07-rendering.md` §2.7): the frame graph a scene gets
@@ -57,8 +57,30 @@ import type { EngineContext, RenderTarget, SceneContext, Task } from "@babylonjs
  * reason.
  */
 
-/** The depth/stencil format Lite's own default render task uses (`lib/scene/scene-core.js` 76-77). */
-const DEPTH_STENCIL_FORMAT: GPUTextureFormat = "depth24plus-stencil8";
+/**
+ * The depth/stencil format Lite's own default render task uses (`lib/scene/scene-core.js` 76-77).
+ *
+ * @internal
+ */
+export const DEPTH_STENCIL_FORMAT: GPUTextureFormat = "depth24plus-stencil8";
+
+/**
+ * The HDR half of a presenter, when `rendering.hdr` built one (`./hdr-output.ts`).
+ *
+ * @internal
+ */
+export interface HdrOutputHandle {
+  /** The scene's linear `rgba16float` colour, as a sampled texture. Values may exceed 1. */
+  readonly sceneTexture: Texture2D;
+  /**
+   * The per-frame work: uploads the scene's exposure, contrast and curve when they changed, and
+   * gives every new PBR material the linear-output plugin.
+   *
+   * @param isSceneRegistered - Whether Lite has built the scene, so a patched material needs a
+   * rebuild.
+   */
+  update(isSceneRegistered: boolean): void;
+}
 
 /**
  * A scene's offscreen render path: the colour a `PostProcessStack` reads, and the compositing blit
@@ -82,6 +104,8 @@ export interface ScenePresenter {
   setPresentEnabled(enabled: boolean): void;
   /** Whether the compositing blit currently runs. */
   readonly isPresentEnabled: boolean;
+  /** The HDR output pass, when `rendering.hdr` is on; `null` for the plain offscreen path. */
+  readonly hdr: HdrOutputHandle | null;
 }
 
 /**
@@ -161,5 +185,6 @@ export function installOffscreenRenderPath(engine: EngineContext, scene: SceneCo
     get isPresentEnabled(): boolean {
       return isPresentEnabled;
     },
+    hdr: null,
   };
 }

@@ -46,6 +46,7 @@ The build is needed because workspace imports resolve to `dist/`. `pnpm check --
 | `pnpm test:browser`                 | Run Chromium WebGPU tests                            |
 | `pnpm test:visual`                  | Compare visual goldens (only when needed; not in CI) |
 | `pnpm test:frame-budget`            | Check frame budgets (only when needed; not in CI)    |
+| `pnpm test:gpu-budget`              | Check GPU budgets on the host GPU (local only)       |
 | `pnpm typecheck`                    | Check TypeScript projects                            |
 | `pnpm lint`                         | Run Oxlint (errors) and ESLint (cached)              |
 | `pnpm lint:warnings`                | Also list Oxlint's pedantic warnings                 |

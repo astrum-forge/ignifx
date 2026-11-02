@@ -65,6 +65,9 @@ describe("settings to Lite configuration", () => {
     darkness: 0.3,
     cascades: 3,
     maxDistance: 120,
+    stabilizeCascades: true,
+    cascadeLambda: 0.8,
+    cascadeBlend: 0,
   };
 
   it("declares exactly three techniques", () => {
@@ -86,13 +89,16 @@ describe("settings to Lite configuration", () => {
     expect(toPcfConfig(full)).toEqual({ mapSize: 2048, bias: 0.001, normalBias: 0.02, darkness: 0.3 });
   });
 
-  it("renames cascades and the maximum distance for the cascaded map", () => {
+  it("renames cascades, the maximum distance and the cascade knobs for the cascaded map", () => {
     expect(toCsmConfig(full)).toEqual({
       mapSize: 2048,
       bias: 0.001,
       darkness: 0.3,
       numCascades: 3,
       shadowMaxZ: 120,
+      stabilizeCascades: true,
+      lambda: 0.8,
+      cascadeBlendPercentage: 0,
     });
   });
 

@@ -23477,6 +23477,20 @@ The `shadows` record a `Light` declares (`docs/architecture/07-rendering.md` §2
 
 Depth bias applied while sampling.
 
+##### cascadeBlend
+
+> **cascadeBlend**: `number`
+
+The fraction of each cascade that cross-fades into the next, CSM only, from `0` to `1`; `0`
+turns blending off and shows hard seams. Default `0.1`.
+
+##### cascadeLambda
+
+> **cascadeLambda**: `number`
+
+How the cascade splits are spaced, CSM only, from `0` (even) to `1` (logarithmic: more detail
+near the camera). Default `0.5`.
+
 ##### cascades
 
 > **cascades**: `number`
@@ -23512,6 +23526,13 @@ The distance beyond which nothing is shadowed, in metres; `0` takes Lite's defau
 > **normalBias**: `number`
 
 Offset along the surface normal, PCF only.
+
+##### stabilizeCascades
+
+> **stabilizeCascades**: `boolean`
+
+Whether cascades use a stable sphere fit, CSM only. `true` stops shadow edges shimmering as the
+camera moves, at the cost of some resolution. Default `false`.
 
 ##### technique
 
@@ -26283,6 +26304,21 @@ The feature opt-ins, applied during `app.start()` before the scene is registered
 > `readonly` **format**: `string`
 
 An explicit swapchain texture format; empty means Lite's own choice. Never an `*-srgb` one.
+
+##### hdr
+
+> `readonly` **hdr**: `boolean`
+
+Render the scene into a floating-point (`rgba16float`) target and tone map it in one final pass.
+
+###### Remarks
+
+Off by default, and nothing of it loads while it is off. On, PBR materials keep their linear
+colour, which may go above 1, and a final output pass applies the `Environment`'s exposure,
+contrast and tone-mapping curve and encodes the result for the screen. A scene that only uses
+PBR materials looks the same either way; later effects (HDR bloom, auto exposure) need it on.
+Fog, Standard materials, surface shaders, sprites, particles and the skybox are not yet carried
+in linear colour (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, step G3).
 
 ##### maxDevicePixelRatio
 

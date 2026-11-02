@@ -96,6 +96,27 @@ export function imageProcessedColor(
 }
 
 /**
+ * Decodes an sRGB colour the way Lite's PBR fog block decodes its fog colour, for a clear colour
+ * that is image processed later on the GPU (`rendering.hdr`).
+ *
+ * @param r - The sRGB red component, 0 to 1.
+ * @param g - The sRGB green component, 0 to 1.
+ * @param b - The sRGB blue component, 0 to 1.
+ * @param a - The alpha, passed through.
+ * @param out - Receives the linear colour.
+ * @returns `out`.
+ *
+ * @internal
+ */
+export function linearClearColor(r: number, g: number, b: number, a: number, out: MutableRgba): MutableRgba {
+  out.r = decode(r);
+  out.g = decode(g);
+  out.b = decode(b);
+  out.a = a;
+  return out;
+}
+
+/**
  * Lite's fog-colour decode.
  *
  * @param value - The encoded channel.
