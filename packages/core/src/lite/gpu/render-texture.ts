@@ -186,8 +186,12 @@ function removeTask(scene: SceneContext, task: Task): void {
   const graph = getFrameGraph(scene) as ReturnType<typeof getFrameGraph> & FrameGraphInternals;
   // oxlint-disable-next-line no-underscore-dangle
   const tasks = graph._tasks;
-  const index = tasks?.indexOf(task) ?? -1;
-  if (tasks !== undefined && index >= 0) {
+  if (!Array.isArray(tasks)) {
+    // A Lite upgrade renamed the field: fail here, not on the next rebuild (07-rendering §2.11).
+    throw new TypeError("Lite's FrameGraph has no _tasks array; render-texture.ts needs updating for this Lite.");
+  }
+  const index = tasks.indexOf(task);
+  if (index >= 0) {
     tasks.splice(index, 1);
   }
 }
