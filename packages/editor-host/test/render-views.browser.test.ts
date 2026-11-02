@@ -246,5 +246,6 @@ describe("the render views on a WebGPU canvas", () => {
     ).toBeGreaterThan(30);
     const unknown = await peer?.request(RenderViewMethod.renderThumbnail, { asset: "sounds/boom.ogg", format: "png" });
     expect(unknown).toHaveProperty("error.code", RpcErrorCode.invalidParams);
-  });
+    // The stage is a second app on its own device, created and started by the first request.
+  }, 60_000);
 });
