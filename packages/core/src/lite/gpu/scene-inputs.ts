@@ -109,8 +109,6 @@ export interface SceneInputs {
   readonly depthPyramid: Texture2D;
   /** How many mip levels {@link SceneInputs.depthPyramid} has. */
   readonly depthPyramidMipCount: number;
-  /** The last of the inputs' tasks; a consumer task added after it sees this frame's inputs. */
-  readonly lastTask: Task;
   /** `true` once {@link SceneInputs.release} ran. */
   readonly isReleased: boolean;
   /**
@@ -150,7 +148,6 @@ interface SharedInputs {
   readonly normals: RenderTargetTextureResult;
   readonly velocity: RenderTargetTextureResult;
   readonly tasks: readonly Task[];
-  readonly lastTask: Task;
   readonly pyramid: { current: DepthPyramid };
   readonly listeners: Set<() => void>;
   readonly stopResizeWatch: () => void;
@@ -198,7 +195,6 @@ export function createSceneInputsHost(engine: EngineContext, scene: SceneContext
         get depthPyramidMipCount(): number {
           return inputs.pyramid.current.mipCount;
         },
-        lastTask: inputs.lastTask,
         get isReleased(): boolean {
           return isReleased;
         },
@@ -341,7 +337,7 @@ function buildSharedInputs(engine: EngineContext, scene: SceneContext, isFrameGr
       listener();
     }
   });
-  return { depth, normals, velocity, tasks, lastTask: buildPyramid, pyramid, listeners, stopResizeWatch };
+  return { depth, normals, velocity, tasks, pyramid, listeners, stopResizeWatch };
 }
 
 /**

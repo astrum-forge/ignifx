@@ -209,7 +209,7 @@ Screen-space effects (TAA, GTAO, contact shadows, SSGI; GI plan steps G5–G11) 
 | `velocity`     | `rgba16float`  | `0.5 * (previousNdc - currentNdc)`: UV units, Y up, from now to last frame; 0 where nothing was drawn                |
 | `depthPyramid` | `r32float`     | Full mip chain; each level is the `max` (nearest surface in reverse-Z) of its four children; read with `textureLoad` |
 
-- **One pass, shared.** Leases are counted; two effects get the same textures and one geometry pass. The tasks sit at the start of the frame graph (after `shadow`), so any task appended later reads this frame's values; `lease.lastTask` is the last of them.
+- **One pass, shared.** Leases are counted; two effects get the same textures and one geometry pass. The tasks sit at the start of the frame graph (after `shadow`), so any task appended later reads this frame's values (`SCENE_INPUT_TASK_NAMES` names them).
 - **Bridges (spike S2).** Lite's main pass uses `depth24plus-stencil8`, which compute cannot bind, so the geometry pass draws its own `depth32float` depth. Geometry attachments are task-owned `RenderTarget`s with no `Texture2D`, so normals and velocity are copied into targets that have one (upstream ask 3).
 - **The pyramid** is Lite's `createDepthPyramid` (render passes, one per level, not compute), wrapped so it can be rebuilt.
 - **Resize and device loss.** Every target is sized by the surface and reallocated by `frameGraph.build()`. The depth target's resize callback, which also fires when a recovered device reallocates it, rebuilds the pyramid and calls each lease's `onChange` callbacks so effects can rebind; `depthPyramid` is a new object afterwards. A resize is covered by a browser test; device loss is not.
