@@ -3,7 +3,7 @@ name: ignifx
 description: Builds 2D and 3D web games with the ignifx TypeScript game engine (WebGPU-only, Babylon Lite based, browser and Electron). Use when creating or editing ignifx apps, entities, scripts, scenes, prefabs, assets, input actions, physics, audio, sprites, or tilemaps, or when the user mentions ignifx, @ignifx packages, createApp, Script lifecycle, or ignifx scene JSON.
 license: Apache-2.0
 metadata:
-  ignifx-version: "0.13.0"
+  ignifx-version: "0.14.0"
   babylon-lite-version: "1.34.0"
 ---
 
@@ -286,7 +286,7 @@ name a code-built primitive — see [`references/formats/scene.md`](references/f
 `requireFeature(name)`, `warmUp(materials)`, `pickAsync(x, y, options?)`, `captureScreenshot()`,
 `drawCalls`, `gpuFrameTimeMs`, `profileTasks`, `taskTimings()`, `openOverlay()` (`@beta`: an editor's gizmo layer), `animateMaterialsInEditMode` (an edit-mode app's shader clock; `true` by default).
 
-The `rendering` section is read once, at `createApp`: `features` (`shadows`, `postProcessing`, `skeletons`, `boneControl`, `stencil`, `lightmaps`, `materialPlugins`, `asyncPipelines`, `deviceLostRecovery` — all `false` by default and refused after start with `IGX-0704`), `msaaSamples` (1 or 4, default 4), `alphaMode`, `srgb`, `format`, `maxDevicePixelRatio`, `useHighPrecisionMatrix`, `useFloatingOrigin`, `requiredLimits`, `hdr` (off by default; an `rgba16float` scene and one tone-mapping pass, PBR materials only for now), `clearColor` (a colour object; a non-null `Camera.clearColor` beats a non-null `Environment.clearColor`, which beats this), and `brdfLut` (`DEFAULT_BRDF_LUT_ADDRESS`). There is no `powerPreference`. The `assets` section takes `root`, `preload`, `concurrency`, `gcDelay`, `retries`.
+The `rendering` section is read once, at `createApp`: `features` (`shadows`, `postProcessing`, `skeletons`, `boneControl`, `stencil`, `lightmaps`, `materialPlugins`, `asyncPipelines`, `deviceLostRecovery` — all `false` by default and refused after start with `IGX-0704`), `msaaSamples` (1 or 4, default 4), `alphaMode`, `srgb`, `format`, `maxDevicePixelRatio`, `useHighPrecisionMatrix`, `useFloatingOrigin`, `requiredLimits`, `hdr` (off by default; an `rgba16float` scene and one tone-mapping pass for every colour writer; custom post effects ordered first see linear colour), `clearColor` (a colour object; a non-null `Camera.clearColor` beats a non-null `Environment.clearColor`, which beats this), and `brdfLut` (`DEFAULT_BRDF_LUT_ADDRESS`). There is no `powerPreference`. The `assets` section takes `root`, `preload`, `concurrency`, `gcDelay`, `retries`.
 
 ### `Script` callbacks and their timing
 

@@ -1,31 +1,40 @@
 import {
   AcesToneMapping,
   addTask,
+  addTaskBefore,
+  buildFrameGraphTask,
   createEffectRenderTask,
   createEffectWrapper,
   createRenderTarget,
   createRenderTask,
   createSurfaceRenderTargetTexture,
   enableMaterialPlugins,
+  getFrameGraph,
+  getPbrUnlit,
   isPbrMaterial,
-  isPbrSkybox,
+  isStandardMaterial,
   NeutralToneMapping,
   onRenderTargetTextureResize,
+  reconcileMaterialPlugins,
   setEffectTexture,
   setEffectUniforms,
+  setEnvironmentRotation,
+  setFog,
   StandardToneMapping,
 } from "@babylonjs/lite";
 import { rebuildMaterialPipelines } from "../material.js";
-import { DEPTH_STENCIL_FORMAT } from "./render-path.js";
+import { DEPTH_STENCIL_FORMAT, markHdrScene } from "./render-path.js";
 import type { HdrOutputHandle, ScenePresenter } from "./render-path.js";
 import type {
   EffectWrapper,
   EngineContext,
+  FogConfig,
   ImageProcessingConfig,
   MaterialPlugin,
   RenderTarget,
   SceneContext,
   Task,
+  Texture2D,
 } from "@babylonjs/lite";
 
 /**
@@ -34,8 +43,8 @@ import type {
  * only when the setting is on, so a project without HDR loads none of it (`CONSTITUTION.md` §2.5).
  *
  * ```text
- * [shadow] → scene ──→ hdr (rgba16float) ──→ output ──→ swapchain
- *                                              └──→ sceneColor ─ (a PostProcessStack's chain)
+ * [shadow] → scene ──→ hdr (rgba16float) ─ [custom effects, linear] ─→ output ──→ swapchain
+ *                                                                        └──→ sceneColor ─ (built-in effects)
  * ```
  *
  * - **Linear colour.** Lite's PBR shader ends every fragment with fog, exposure, the curve, a
@@ -50,8 +59,26 @@ import type {
  *   `PostProcessStack` chain reads. {@link ScenePresenter.setPresentEnabled} switches between them,
  *   so the frame runs exactly one.
  *
- * Not yet covered (step G3): fog is dropped with the restore; Standard materials, surface shaders,
- * sprites, particles and the skybox still write encoded colour, which the output pass encodes again.
+ * - **Every other colour writer (step G3).** The restore re-applies the PBR fog, so a fogged scene
+ *   keeps its fog. A Standard material (and a surface shader on one) gets
+ *   {@link createStandardLinearPlugin}, which decodes its display colour; a surface shader on a PBR
+ *   host is caught by the PBR plugin, because its composite runs before the save. Lite's environment
+ *   skyboxes (`.env`, `.dds`) are patched to return the cube map's linear colour
+ *   ({@link linearSkyboxFragment}). Custom `.wgsl` materials (particles, foliage) are wrapped by
+ *   `./shader-material.ts`, which asks {@link markHdrScene}'s record. Sprites need nothing: a
+ *   `SpriteRenderer` draws its own pass onto the swapchain after the scene, so it never passes
+ *   through the output pass. Under HDR, Standard and custom-shader colour now gets the scene's
+ *   exposure, curve and contrast like everything else; with Lite's defaults (exposure 1, contrast 1,
+ *   no curve) that is the identity and the image matches the plain path.
+ * - **Fog colour.** The scene's fog colour is stored decoded here, so the Standard fog block blends
+ *   in linear space and the PBR restore can use it as is.
+ * - **Custom effects first.** A `PostProcessStack`'s custom effects ordered before any built-in one
+ *   are inserted before the output pass ({@link HdrOutputHandle.insertLinearTask}) and the output
+ *   pass reads the last one's result ({@link HdrOutputHandle.setOutputSource}). Bloom, SMAA and
+ *   Lite's image-processing task stay after it: they expect display colour and 8-bit targets.
+ *
+ * Not covered: Lite's six-face `loadSkybox` cube and its solid-colour and ground backgrounds, which
+ * have fixed shaders with no patch point; they still encode twice under HDR.
  */
 
 /**
@@ -67,6 +94,45 @@ export const HDR_SCENE_FORMAT: GPUTextureFormat = "rgba16float";
  * @internal
  */
 export const LINEAR_OUTPUT_PLUGIN_NAME = "ignifx-hdr-linear-output";
+
+/**
+ * The name the Standard material's decode plugin carries.
+ *
+ * @internal
+ */
+export const STANDARD_LINEAR_PLUGIN_NAME = "ignifx-hdr-linear-standard";
+
+/**
+ * The name the unlit PBR material's plugin carries.
+ *
+ * @internal
+ */
+export const UNLIT_LINEAR_PLUGIN_NAME = "ignifx-hdr-linear-unlit";
+
+/**
+ * Where the skybox patch sits in Lite's skybox patch list: after rotation (0) and blur (1)
+ * (`lib/scene/set-environment-rotation.js`, `lib/scene/set-environment-blur.js`).
+ */
+const SKYBOX_PATCH_ORDER = 8;
+
+/**
+ * Lite's fog factor (`lib/shader/wgsl-fog.js`) under an ignifx name: the PBR shader declares
+ * `calcFogFactor` only when the scene has fog, and the plugin code must compile either way.
+ */
+const FOG_FACTOR_WGSL =
+  "fn ignifxFogFactor(d:vec3<f32>)->f32{var k:f32=1.0;let mode=scene.vFogInfos.x;let dist=length(d);" +
+  "if(mode==3.0){k=(scene.vFogInfos.z-dist)/(scene.vFogInfos.z-scene.vFogInfos.y);}" +
+  "else if(mode==1.0){k=1.0/pow(2.71828,dist*scene.vFogInfos.w);}" +
+  "else if(mode==2.0){k=1.0/pow(2.71828,dist*dist*scene.vFogInfos.w*scene.vFogInfos.w);}" +
+  "return clamp(k,0.0,1.0);}";
+
+/**
+ * The PBR fog block (`lib/material/pbr/pbr-fog-wgsl.js`) on the restored colour, except that the
+ * fog colour is already linear: the HDR path stores it decoded.
+ */
+const FOG_RESTORE_WGSL =
+  "if(scene.vFogInfos.x>0.0){color=mix(scene.vFogColor.rgb,color," +
+  "pow(ignifxFogFactor((scene.view*vec4<f32>(input.worldPos,1.0)).xyz),2.2));}";
 
 /**
  * The frame-graph task names, in the order they run after `"scene"`.
@@ -100,14 +166,107 @@ const UNIFORM_FLOATS = 4;
  */
 export function createLinearOutputPlugin(): MaterialPlugin {
   const fragment = {
-    CUSTOM_FRAGMENT_DEFINITIONS: "var<private> ignifxLinearColor: vec3<f32>;",
+    CUSTOM_FRAGMENT_DEFINITIONS: `var<private> ignifxLinearColor: vec3<f32>;${FOG_FACTOR_WGSL}`,
     CUSTOM_FRAGMENT_BEFORE_FINALCOLORCOMPOSITION: "ignifxLinearColor = color;",
-    CUSTOM_FRAGMENT_BEFORE_FRAGCOLOR: "color = ignifxLinearColor;",
+    CUSTOM_FRAGMENT_BEFORE_FRAGCOLOR: `color = ignifxLinearColor;${FOG_RESTORE_WGSL}`,
   };
   return {
     name: LINEAR_OUTPUT_PLUGIN_NAME,
     priority: 0,
     getCustomCode: (stage) => (stage === "fragment" ? fragment : null),
+  };
+}
+
+/**
+ * Builds the plugin that keeps an unlit PBR material's colour linear.
+ *
+ * @remarks
+ * With no environment, Lite's unlit fragment assigns its colour at the `NI` slot
+ * (`lib/material/pbr/fragments/unlit-fragment.js`), after the linear-output plugin's save there, so
+ * the save would hold the lit colour. This plugin recomputes the unlit colour instead
+ * (`baseColor * material.unlitColor`, both in scope before the fragment is written), then applies
+ * the fog the restore would.
+ *
+ * @returns The plugin, shared by every unlit PBR material.
+ *
+ * @internal
+ */
+export function createUnlitLinearPlugin(): MaterialPlugin {
+  const fragment = {
+    CUSTOM_FRAGMENT_DEFINITIONS: FOG_FACTOR_WGSL,
+    CUSTOM_FRAGMENT_BEFORE_FRAGCOLOR: `color = baseColor*material.unlitColor;${FOG_RESTORE_WGSL}`,
+  };
+  return {
+    name: UNLIT_LINEAR_PLUGIN_NAME,
+    priority: 0,
+    getCustomCode: (stage) => (stage === "fragment" ? fragment : null),
+  };
+}
+
+/**
+ * Builds the plugin that turns a Standard material's colour linear.
+ *
+ * @remarks
+ * Lite's Standard shader does no image processing and no encode: what it writes is the colour that
+ * is displayed. The plugin decodes it with the exact inverse of the output pass's encode
+ * (`pow(c, 2.2)`), so the output pass gives it back. It runs at the `BC` slot, before Lite's Standard fog
+ * block (the `BA` slot), which then mixes in the decoded fog colour. Priority 1000 puts it after any
+ * surface shader's own `CUSTOM_FRAGMENT_BEFORE_FRAGCOLOR` code.
+ *
+ * @returns The plugin, shared by every Standard material.
+ *
+ * @internal
+ */
+export function createStandardLinearPlugin(): MaterialPlugin {
+  const fragment = {
+    CUSTOM_FRAGMENT_BEFORE_FRAGCOLOR: "color=vec4<f32>(pow(max(color.rgb,vec3<f32>(0.0)),vec3<f32>(2.2)),color.a);",
+  };
+  return {
+    name: STANDARD_LINEAR_PLUGIN_NAME,
+    priority: 1000,
+    getCustomCode: (stage) => (stage === "fragment" ? fragment : null),
+  };
+}
+
+/**
+ * Makes one of Lite's environment skybox shaders return the cube map's linear colour.
+ *
+ * @remarks
+ * The `.env` (`"hdr"`) and `.dds` skyboxes multiply by `mesh.exposureLinear`, then encode, clamp
+ * and apply contrast themselves (`lib/material/pbr/background-hdr-skybox.js`,
+ * `lib/_chunks/background-dds-skybox-*.js`), and Lite gives them no material plugin point. The patch
+ * returns the colour just before that multiply, so the output pass applies exposure, the curve and
+ * the encode once. Code after the inserted `return` is unreachable, which WGSL accepts. A shader the
+ * pattern does not match is returned unchanged.
+ *
+ * @param fragment - The skybox fragment WGSL, after Lite's own rotation and blur patches.
+ * @returns The patched WGSL.
+ *
+ * @internal
+ */
+export function linearSkyboxFragment(fragment: string): string {
+  const match = /\b([A-Za-z_]\w*)\*=mesh\.exposureLinear;/u.exec(fragment);
+  if (match === null) {
+    return fragment;
+  }
+  return `${fragment.slice(0, match.index)}return vec4<f32>(${match[1] ?? ""},1.0);${fragment.slice(match.index)}`;
+}
+
+/**
+ * A fog configuration with its colour decoded the way Lite's PBR fog block decodes it.
+ *
+ * @param fog - The configuration the `Environment` installed, colour in sRGB.
+ * @returns A fresh configuration, colour linear.
+ *
+ * @internal
+ */
+export function linearFogConfig(fog: FogConfig): FogConfig {
+  return {
+    mode: fog.mode,
+    density: fog.density,
+    start: fog.start,
+    end: fog.end,
+    color: [fog.color[0] ** 2.2, fog.color[1] ** 2.2, fog.color[2] ** 2.2],
   };
 }
 
@@ -211,6 +370,8 @@ export function writeHdrOutputUniforms(processing: ImageProcessingConfig, out: F
  */
 export function installHdrRenderPath(engine: EngineContext, scene: SceneContext): ScenePresenter {
   enableMaterialPlugins(scene);
+  markHdrScene(scene);
+  installLinearSkybox(scene);
   const hdr = createSurfaceRenderTargetTexture(engine, {
     lbl: "ignifx:scene-hdr",
     format: HDR_SCENE_FORMAT,
@@ -250,10 +411,12 @@ export function installHdrRenderPath(engine: EngineContext, scene: SceneContext)
     ],
   });
   setEffectTexture(effect, 1, hdr.texture);
+  // What the output pass reads: the scene, or the last linear effect a PostProcessStack put first.
+  let outputSource: Texture2D | null = null;
   // A resize swaps the texture behind the facade; the wrapper's cached bind group still holds the
   // old view until a texture write marks it dirty.
   onRenderTargetTextureResize(hdr, () => {
-    setEffectTexture(effect, 1, hdr.texture);
+    setEffectTexture(effect, 1, outputSource ?? hdr.texture);
   });
   const uniforms = new Float32Array(UNIFORM_FLOATS);
   uniforms[0] = Number.NaN;
@@ -275,14 +438,39 @@ export function installHdrRenderPath(engine: EngineContext, scene: SceneContext)
   addTask(scene, toSwapchain);
   toChain.executionEnabled = false;
 
-  const plugin = createLinearOutputPlugin();
+  const plugins: LinearPlugins = {
+    pbr: createLinearOutputPlugin(),
+    unlit: createUnlitLinearPlugin(),
+    standard: createStandardLinearPlugin(),
+  };
+  let linearFog: FogConfig | null = null;
   const handle: HdrOutputHandle = {
     sceneTexture: hdr.texture,
     update(isSceneRegistered: boolean): void {
       if (writeHdrOutputUniforms(scene.imageProcessing, uniforms)) {
         setEffectUniforms(effect, uniforms);
       }
-      attachLinearOutput(scene, plugin, isSceneRegistered);
+      // The `Environment` installs a fresh sRGB config on every change; it is swapped for a decoded
+      // copy once, before the frame reads it (`setFog` re-registers nothing it already has).
+      const fog = scene.fog;
+      if (fog !== null && fog !== linearFog) {
+        linearFog = linearFogConfig(fog);
+        setFog(scene, linearFog);
+      }
+      attachLinearOutput(scene, plugins, isSceneRegistered);
+    },
+    insertLinearTask(task: Task, isFrameGraphBuilt: boolean): void {
+      addTaskBefore(scene, task, toChain);
+      if (isFrameGraphBuilt) {
+        buildFrameGraphTask(getFrameGraph(scene), task);
+      }
+    },
+    setOutputSource(texture: Texture2D | null): void {
+      if (texture === outputSource) {
+        return;
+      }
+      outputSource = texture;
+      setEffectTexture(effect, 1, texture ?? hdr.texture);
     },
   };
   let isPresentEnabled = true;
@@ -301,31 +489,103 @@ export function installHdrRenderPath(engine: EngineContext, scene: SceneContext)
   };
 }
 
+/** The two shared plugins the per-frame walk hands out. */
+interface LinearPlugins {
+  /** The save, restore and fog for PBR materials, PBR skyboxes included. */
+  readonly pbr: MaterialPlugin;
+  /** The recompute and fog for unlit PBR materials. */
+  readonly unlit: MaterialPlugin;
+  /** The decode for Standard materials. */
+  readonly standard: MaterialPlugin;
+}
+
 /**
- * Gives every PBR material in the scene the linear-output plugin, once.
+ * Makes Lite's environment skyboxes write linear colour (see {@link linearSkyboxFragment}).
  *
  * @remarks
- * A walk rather than a hook at material creation, because PBR materials come from several places
+ * Lite composes a skybox's fragment through `scene._environmentSkyboxShaderComposer`, which runs the
+ * loaders in `scene._environmentSkyboxShaderPatchLoaders` in order
+ * (`lib/material/pbr/environment-skybox-shader-composer.js`). Neither field is declared in
+ * `index.d.ts`, and the composer is created only by Lite's own registration, which also prepends
+ * the scene uniforms the `.env` skybox needs. `setEnvironmentRotation(scene, 0)` is that
+ * registration with no visible effect (rotation 0 is what the scene has); the `Environment`
+ * overwrites it with its own rotation later. The patch is installed before any environment loads,
+ * and pinned by `test/render/hdr-coverage.browser.test.ts`.
+ *
+ * @param scene - The HDR scene.
+ */
+function installLinearSkybox(scene: SceneContext): void {
+  setEnvironmentRotation(scene, 0);
+  // Boundary assertion (coding standards §5.2): the loader list is a plain array Lite keeps on the
+  // scene object it created; see the remarks for the `lib/` file that reads it.
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+  const slots = scene as SceneContext & SkyboxPatchSlots;
+  // oxlint-disable-next-line no-underscore-dangle
+  const loaders = (slots._environmentSkyboxShaderPatchLoaders ??= []);
+  loaders[SKYBOX_PATCH_ORDER] = () => Promise.resolve({ _apply: linearSkyboxFragment });
+}
+
+/** The undeclared Lite scene field the skybox patch writes (adapter-internal mirror, standards §5.1). */
+interface SkyboxPatchSlots {
+  /** Lite's skybox shader patches, by order; each resolves to an object whose `_apply` edits the WGSL. */
+  _environmentSkyboxShaderPatchLoaders?: (SkyboxPatchLoader | undefined)[];
+}
+
+/** One entry of Lite's skybox patch list. */
+type SkyboxPatchLoader = () => Promise<{ readonly _apply: (fragment: string, kind: string) => string }>;
+
+/**
+ * Gives every PBR and Standard material in the scene its linear-output plugin, once.
+ *
+ * @remarks
+ * A walk rather than a hook at material creation, because materials come from several places
  * (material assets, glTF models, `.lite` code) and a surface shader replaces a material's whole
- * plugin list; a material that lost the plugin gets it back on the next frame. The skybox is left
- * alone: it is not lit and G3 handles it.
+ * plugin list; a material that lost the plugin gets it back on the next frame. A PBR skybox
+ * (`setPbrSkybox`) is a PBR material and gets the PBR plugin. Lite's mesh factories leave
+ * `material` `null` until one is assigned.
  *
  * @param scene - The scene to walk.
- * @param plugin - The shared plugin.
+ * @param shared - The shared plugins.
  * @param isSceneRegistered - Whether a patched material's pipelines must be rebuilt.
  */
-function attachLinearOutput(scene: SceneContext, plugin: MaterialPlugin, isSceneRegistered: boolean): void {
+function attachLinearOutput(scene: SceneContext, shared: LinearPlugins, isSceneRegistered: boolean): void {
   const meshes = scene.meshes;
   for (let index = 0; index < meshes.length; index += 1) {
     const material = meshes[index]?.material;
-    if (material === undefined || !isPbrMaterial(material) || isPbrSkybox(material)) {
+    // Declared non-null, but Lite's mesh factories create meshes with `material: null`
+    // (`lib/mesh/mesh-factories.js`), and `isPbrMaterial(null)` throws.
+    // oxlint-disable-next-line typescript/no-unnecessary-condition
+    if (material === undefined || material === null) {
       continue;
     }
-    const plugins = material.plugins ?? [];
-    if (plugins.includes(plugin)) {
+    let plugin: MaterialPlugin;
+    if (isPbrMaterial(material)) {
+      plugin = getPbrUnlit(material) === undefined ? shared.pbr : shared.unlit;
+    } else if (isStandardMaterial(material)) {
+      plugin = shared.standard;
+    } else {
       continue;
     }
-    material.plugins = [...plugins, plugin];
+    const current = material.plugins ?? [];
+    // A PBR material that became unlit, or stopped being so, swaps one plugin for the other.
+    let stale: MaterialPlugin | null = null;
+    if (plugin === shared.pbr) {
+      stale = shared.unlit;
+    } else if (plugin === shared.unlit) {
+      stale = shared.pbr;
+    }
+    const hasStale = stale !== null && current.includes(stale);
+    if (current.includes(plugin) && !hasStale) {
+      continue;
+    }
+    const kept = hasStale ? current.filter((other) => other !== stale) : current;
+    material.plugins = kept.includes(plugin) ? kept : [...kept, plugin];
+    if (plugin === shared.standard) {
+      // The Standard bridge bakes a plugin signature per material, which only happens for meshes it
+      // saw at `enableMaterialPlugins` or at a material change; this bakes and rebuilds it now.
+      void reconcileMaterialPlugins(scene, material);
+      continue;
+    }
     if (isSceneRegistered) {
       rebuildMaterialPipelines(scene, material);
     }

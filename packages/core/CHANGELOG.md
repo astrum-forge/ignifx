@@ -1,5 +1,21 @@
 # @ignifx/core
 
+## 0.14.0
+
+### Minor Changes
+
+- 5e3458c: Add `rendering.hdr`: the scene renders into a floating-point target and one final pass applies the `Environment`'s exposure, contrast and tone mapping. A scene of PBR materials looks the same; fog, Standard materials, sprites, particles and the skybox are not yet supported in HDR.
+- ef78f28: `Light.shadows` gains three cascaded-shadow knobs: `stabilizeCascades` (stops shadow edges shimmering as the camera moves), `cascadeLambda` (split spacing, default `0.5`) and `cascadeBlend` (cross-fade between cascades, default `0.1`). They apply to `technique: "csm"` only.
+  The 3D templates' sun now uses cascaded shadows (`csm`, stabilized) instead of ESM, which still survive a lost GPU device.
+- 879f7c2: Add `applyOverridesToAsset` and `revertOverrides`, which apply an instance's overrides to its prefab file or drop them, as pure functions over scene files.
+- 9d9bc4e: A second camera can render into a texture beside the main view: `app.renderer.createRenderTexture(width, height)`, `app.renderer.renderToTexture(camera, texture)` for one frame, `Camera.renderTarget` for every frame, and `texture.readPixels()` to read the result (all `@beta`). A camera with a `renderTarget` is never the main camera.
+  
+  An extension object now belongs to one live app: passing the same object to a second `createApp` before the first app is disposed throws `IGX-0411`. Call the extension's factory once per app.
+
+### Patch Changes
+
+- 6eaf002: `app.start()` after `app.stop()` now restarts the frame loop without running the extensions' `onStart` hooks again. Before, the second start re-ran them, and physics failed with `IGX-1503` ("diagnostics group physics is already registered"), so pressing Play after Step in the editor's play view never resumed the game.
+
 ## 0.13.0
 
 ### Minor Changes

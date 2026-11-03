@@ -350,4 +350,33 @@ describe("the browser wiring, driven headlessly", () => {
     await app.start();
     expect(starts).toBe(1);
   });
+
+  it("restarts after stop without running onStart again", async () => {
+    // An extension's onStart registers what it owns once, as physics registers its diagnostics
+    // group; running it again on the second start threw IGX-1503 (the editor's Play after Step).
+    const app = await createApp({
+      headless: true,
+      clock: createManualClock(),
+      logSink: createMemorySink(),
+      extensions: [
+        defineExtension(() => ({
+          name: "game/counters",
+          version: "1.0.0",
+          register: () => undefined,
+          onStart(started: App): void {
+            started.diagnostics.registerGroup("game", ["hits"]);
+          },
+        }))(),
+      ],
+    });
+    created = app;
+    await app.start();
+    app.stop();
+    app.step(FRAME);
+    await app.start();
+    expect(app.isRunning).toBe(true);
+    app.step(FRAME);
+    expect(app.time.frameCount).toBe(2);
+    expect(app.diagnostics.group("game")).not.toBeNull();
+  });
 });

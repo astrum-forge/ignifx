@@ -18623,7 +18623,8 @@ Clears `time.paused`.
 
 > **start**(): `Promise`\<`void`\>
 
-Runs extension `onStart` hooks and starts the frame loop.
+Runs extension `onStart` hooks and starts the frame loop. A no-op while running; after `stop()`
+it restarts the loop without running `onStart` again.
 
 ###### Returns
 
@@ -22062,7 +22063,8 @@ The app being disposed.
 
 > `optional` **onStart**(`app`): `void` \| `Promise`\<`void`\>
 
-Runs after every extension registered and the Lite engine exists, before the first frame.
+Runs after every extension registered and the Lite engine exists, before the first frame. It
+runs once: a start after `app.stop()` does not run it again.
 
 ###### Parameters
 
@@ -26315,10 +26317,14 @@ Render the scene into a floating-point (`rgba16float`) target and tone map it in
 
 Off by default, and nothing of it loads while it is off. On, PBR materials keep their linear
 colour, which may go above 1, and a final output pass applies the `Environment`'s exposure,
-contrast and tone-mapping curve and encodes the result for the screen. A scene that only uses
-PBR materials looks the same either way; later effects (HDR bloom, auto exposure) need it on.
-Fog, Standard materials, surface shaders, sprites, particles and the skybox are not yet carried
-in linear colour (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, step G3).
+contrast and tone-mapping curve and encodes the result for the screen. Fog, Standard and unlit
+materials, surface shaders, custom `.wgsl` materials (particles, foliage) and the `.env`/`.dds`
+skybox are carried in linear colour too, and sprites draw after the output pass, so with the
+default image processing a scene looks the same either way; under a tone-mapping curve, Standard
+and custom-shader colour now goes through it as well. A `PostProcessStack`'s custom effects
+ordered before any built-in one see linear colour. Lite's six-face `loadSkybox` cube is not
+covered (`docs/architecture/07-rendering.md` §2.7). Later effects (HDR bloom, auto exposure)
+need it on.
 
 ##### maxDevicePixelRatio
 

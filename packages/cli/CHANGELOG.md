@@ -1,5 +1,13 @@
 # @ignifx/cli
 
+## 0.14.0
+
+### Minor Changes
+
+- 9906039: Add `ignifx import tilemap <map.tmj | project.ldtk>`, which converts a Tiled map or every level of an LDtk project into `.tilemap.json` files and writes an `.atlas.json` beside each tileset image that has none. Flipped tiles are refused unless you pass `--drop-flips`; `--pixels-per-unit` sets the cell size.
+- ef78f28: `Light.shadows` gains three cascaded-shadow knobs: `stabilizeCascades` (stops shadow edges shimmering as the camera moves), `cascadeLambda` (split spacing, default `0.5`) and `cascadeBlend` (cross-fade between cascades, default `0.1`). They apply to `technique: "csm"` only.
+  The 3D templates' sun now uses cascaded shadows (`csm`, stabilized) instead of ESM, which still survive a lost GPU device.
+
 ## 0.13.0
 
 No changes in this release.

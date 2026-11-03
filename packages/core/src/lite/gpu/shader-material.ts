@@ -115,6 +115,11 @@ export interface ShaderMaterialBuildOptions {
   readonly name: string;
   /** The WGSL source, handed to Lite as both the vertex and the fragment source. */
   readonly source: string;
+  /**
+   * Whether the scene renders through `rendering.hdr`, where the fragment's display colour is
+   * decoded to linear before it is written (see {@link linearOutputFragment}). Absent means `false`.
+   */
+  readonly linearOutput?: boolean;
   /** The vertex attributes the vertex stage reads; `position` is mandatory. */
   readonly attributes: readonly ShaderAttributeName[];
   /** The system and custom uniforms, in binding-declaration order. */
@@ -157,10 +162,12 @@ export interface ShaderMaterialBuildOptions {
  * @internal
  */
 export function createShaderMaterialFromOptions(options: ShaderMaterialBuildOptions): ShaderMaterial {
+  const premultiplied = options.blend?.color.srcFactor === "one";
   return createShaderMaterial({
     name: options.name,
     vertexSource: options.source,
-    fragmentSource: options.source,
+    fragmentSource:
+      options.linearOutput === true ? linearOutputFragment(options.source, premultiplied) : options.source,
     attributes: options.attributes,
     uniforms: options.uniforms,
     samplers: options.samplers,
@@ -175,6 +182,124 @@ export function createShaderMaterialFromOptions(options: ShaderMaterialBuildOpti
     depthWrite: options.depthWrite,
     ...(options.depthCompare === null ? {} : { depthCompare: options.depthCompare }),
   });
+}
+
+/** The name a wrapped `mainFragment` is renamed to. */
+const WRAPPED_FRAGMENT = "ignifxDisplayFragment";
+
+/**
+ * Wraps a custom shader's `mainFragment` so that, under `rendering.hdr`, it writes linear colour
+ * (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, step G3).
+ *
+ * @remarks
+ * A custom shader writes the colour that is displayed: with HDR off it lands on the swapchain as
+ * is. With HDR on it lands in the linear scene target and the output pass encodes it, so the
+ * wrapper decodes it first with the exact inverse of that encode (`pow(c, 2.2)`). The user's entry
+ * point loses its `@fragment` and is renamed; a new `mainFragment` with the same parameters calls
+ * it. A premultiplied colour is divided by alpha before the decode and multiplied after it, so the
+ * blend still sees premultiplied colour. Only a single `@location(0) vec4<f32>` return can be
+ * wrapped; anything else (a struct of outputs) is returned unchanged.
+ *
+ * @param source - The `.wgsl` file.
+ * @param premultiplied - Whether the material blends premultiplied colour.
+ * @returns The fragment source.
+ *
+ * @internal
+ */
+export function linearOutputFragment(source: string, premultiplied: boolean): string {
+  const entry = /@fragment\s+fn\s+mainFragment\s*\(/u.exec(source);
+  if (entry === null) {
+    return source;
+  }
+  const open = entry.index + entry[0].length - 1;
+  const close = matchingParen(source, open);
+  if (close < 0) {
+    return source;
+  }
+  const after = source.slice(close + 1);
+  const result = /^\s*->\s*@location\(\s*0\s*\)\s*vec4\s*<\s*f32\s*>\s*\{/u.exec(after);
+  if (result === null) {
+    return source;
+  }
+  const parameters = source.slice(open + 1, close);
+  const names = parameterNames(parameters);
+  const decode = premultiplied
+    ? "select(pow(max(c.rgb,vec3<f32>(0.0)),vec3<f32>(2.2)),pow(max(c.rgb/c.a,vec3<f32>(0.0)),vec3<f32>(2.2))*c.a,c.a>0.0)"
+    : "pow(max(c.rgb,vec3<f32>(0.0)),vec3<f32>(2.2))";
+  return [
+    // A plain function may not carry the entry point's `@location(0)` on its return type.
+    `${source.slice(0, entry.index)}fn ${WRAPPED_FRAGMENT}(${stripAttributes(parameters)})->vec4<f32>{${after.slice(result[0].length)}`,
+    `@fragment fn mainFragment(${parameters})->@location(0) vec4<f32>{`,
+    `let c=${WRAPPED_FRAGMENT}(${names.join(",")});`,
+    `return vec4<f32>(${decode},c.a);`,
+    "}",
+  ].join("\n");
+}
+
+/**
+ * Finds the parenthesis that closes the one at `open`.
+ *
+ * @param text - The source.
+ * @param open - The index of a `(`.
+ * @returns The index of its `)`, or `-1`.
+ */
+function matchingParen(text: string, open: number): number {
+  let depth = 0;
+  for (let index = open; index < text.length; index += 1) {
+    const char = text[index];
+    if (char === "(") {
+      depth += 1;
+    } else if (char === ")") {
+      depth -= 1;
+      if (depth === 0) {
+        return index;
+      }
+    }
+  }
+  return -1;
+}
+
+/**
+ * Removes WGSL attributes (`@builtin(position)`, `@location(0)`, `@interpolate(flat)`) from a
+ * parameter list, which a plain function's parameters may not carry.
+ *
+ * @param parameters - The parameter list.
+ * @returns The list without attributes.
+ */
+function stripAttributes(parameters: string): string {
+  return parameters.replaceAll(/@\w+\s*(\([^)]*\))?\s*/gu, "");
+}
+
+/**
+ * The parameter names of a WGSL parameter list, attributes stripped.
+ *
+ * @param parameters - The text between an entry point's parentheses.
+ * @returns The names, in order.
+ */
+function parameterNames(parameters: string): string[] {
+  const names: string[] = [];
+  let depth = 0;
+  let start = 0;
+  const take = (end: number): void => {
+    const piece = stripAttributes(parameters.slice(start, end)).trim();
+    const colon = piece.indexOf(":");
+    if (colon > 0) {
+      names.push(piece.slice(0, colon).trim());
+    }
+  };
+  for (let index = 0; index < parameters.length; index += 1) {
+    const char = parameters[index];
+    if (char === "(" || char === "<") {
+      depth += 1;
+    } else if (char === ")" || char === ">") {
+      depth -= 1;
+    } else if (char === "," && depth === 0) {
+      take(index);
+      start = index + 1;
+    }
+  }
+  take(parameters.length);
+  return names;
 }
 
 /**

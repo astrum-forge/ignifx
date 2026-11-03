@@ -139,14 +139,24 @@ Attached to the main camera entity. Ordered list of effects; each maps to a Lite
 - A `PostProcessStack` attached without the feature logs `IGX-0710` once and is inert. The feature costs one full-screen blit per frame while no chain is recorded, which is why it is off by default.
 - **Tuning is live; shape is rebuilt (2026-09-08).** A write to `bloom.weight`/`kernel`/`threshold`/`exposure` or to any SMAA field on a running stack is re-uploaded to the recorded Lite task on the next `PreRender` (`updateUniforms()`), and only when a value changed. A change to the chain's _shape_ — which effects are enabled, their `order`, or bloom's `scale`, which sizes the blur targets at creation — disposes the chain and records a new one; the old tasks stay in the frame graph disabled, because Lite has no removal. Until this date the records were read once, when the chain was first built, and a slider bound to `bloom.threshold` did nothing.
 
-**HDR output (`rendering.hdr`, GI plan step G2, 2026-11-02).** Off by default; on, the render path is built by `src/lite/gpu/hdr-output.ts`, a chunk `createRenderEngine` imports only then. The scene draws into an `rgba16float` target (with MSAA, a multisampled `rgba16float` target that resolves into it; verified on SwiftShader with 4x, no validation error). Lite's PBR shader tone maps, encodes and clamps every fragment, so a material plugin (`ignifx-hdr-linear-output`, spike S1) saves the colour before that block and restores it before the fragment is written; the renderer gives it to every PBR material in the scene each frame, rebuilding a material it patches after registration. One output pass then applies `scene.imageProcessing` (exposure, contrast and the standard, ACES or neutral curve, whatever the `Environment` or `loadEnvironment` set) with the same `pow(1/2.2)` encode, clamp and contrast, so a PBR-only scene presents the same image as without HDR. The clear colour is stored decoded (`pow(c, 2.2)`) and goes through the same pass. The pass writes the swapchain, or `sceneColor` when a `PostProcessStack` chain is recorded, so built-in and custom effects still see encoded colour:
+**HDR output (`rendering.hdr`, GI plan step G2, 2026-11-02).** Off by default; on, the render path is built by `src/lite/gpu/hdr-output.ts`, a chunk `createRenderEngine` imports only then. The scene draws into an `rgba16float` target (with MSAA, a multisampled `rgba16float` target that resolves into it; verified on SwiftShader with 4x, no validation error). Lite's PBR shader tone maps, encodes and clamps every fragment, so a material plugin (`ignifx-hdr-linear-output`, spike S1) saves the colour before that block and restores it before the fragment is written; the renderer gives it to every PBR material in the scene each frame, rebuilding a material it patches after registration. One output pass then applies `scene.imageProcessing` (exposure, contrast and the standard, ACES or neutral curve, whatever the `Environment` or `loadEnvironment` set) with the same `pow(1/2.2)` encode, clamp and contrast, so a PBR-only scene presents the same image as without HDR. The clear colour is stored decoded (`pow(c, 2.2)`) and goes through the same pass. The pass writes the swapchain, or `sceneColor` when built-in effects follow it.
+
+**HDR coverage (GI plan step G3, 2026-11-02).** Every other colour writer writes linear colour too, so nothing is encoded twice:
+
+- **Fog.** The restore re-applies Lite's PBR fog block (its own copy of `calcFogFactor`, which Lite declares only in fogged shaders). The fog colour is stored decoded (`pow(c, 2.2)`) while HDR is on: the HDR path swaps the `Environment`'s fog config for a decoded copy before each frame that changed it, so the restore and the Standard fog block both mix linear colour.
+- **Unlit PBR.** Without an environment Lite assigns the unlit colour at `NI`, after the save, so unlit materials get their own plugin that recomputes `baseColor * unlitColor` before the fragment is written.
+- **Standard materials** do no image processing and no encode; a plugin at `BC` (priority 1000, after any other plugin) decodes their colour with `pow(c, 2.2)`, the exact inverse of the output pass's encode, and bakes through `reconcileMaterialPlugins`. Surface shaders only run on PBR hosts (a Standard host is refused), and their composite runs before the save, so the PBR plugin covers them.
+- **Custom `.wgsl` materials** (particles, foliage) write display colour. Under HDR, `src/lite/gpu/shader-material.ts` renames the file's `@fragment fn mainFragment` and adds a `mainFragment` with the same parameters that decodes its result (premultiplied colour is un-premultiplied around the decode). A fragment that returns a struct is left alone.
+- **Skybox.** A PBR skybox (`setPbrSkybox`) is a PBR material and gets the PBR plugin. Lite's `.env` and `.dds` background skyboxes have fixed shaders; ignifx adds a patch to Lite's skybox patch list (`scene._environmentSkyboxShaderPatchLoaders`, created by `setEnvironmentRotation(scene, 0)` at install) that returns the cube map's colour before its own exposure, encode and contrast. Lite's six-face `loadSkybox` cube and its solid and ground backgrounds have no patch point and are still encoded twice.
+- **Sprites** (`@ignifx/2d`, `particles-2d`) need nothing: a `SpriteRenderer` is a separate rendering context that draws on the swapchain after the scene's frame graph, so it never passes through the output pass (`packages/2d/test/hdr.browser.test.ts`).
+- **Custom post effects first.** The leading run of custom effects in a `PostProcessStack` (those ordered before any built-in one) is inserted between the scene pass and the output pass with `addTaskBefore`, ping-ponging through `rgba16float` links; the first reads the HDR texture directly, and the output pass is rebound (`setEffectTexture`) to the last one's result. Bloom, SMAA and Lite's `imageProcessing` task stay after the output pass, because they expect display colour in the surface's 8-bit format (G12 adds an HDR bloom ahead of it). A chain of custom effects only leaves the output pass writing the swapchain.
 
 ```text
-[shadow] → scene ──→ hdr (rgba16float) ──→ output ──→ swapchain
-                                             └──→ sceneColor ─ chain → swapchain
+[shadow] → scene ──→ hdr (rgba16float) ─ [custom effects] ─→ output ──→ swapchain
+                                                              └──→ sceneColor ─ built-in chain → swapchain
 ```
 
-Not yet linear (G3): fog (dropped by the restore), Standard materials, surface shaders, sprites, particles and the skybox, which still write encoded colour that the output pass encodes again. Unverified: device-loss recovery of the `rgba16float` target, and the clear colour with `rendering.srgb`.
+What changes under a tone-mapping curve: Standard and custom-shader colour, which Lite never image-processed, now goes through the scene's exposure, curve and contrast like PBR colour; the `.env` skybox, which Lite exposed and encoded without a curve, gets the curve too. With Lite's defaults (exposure 1, contrast 1, no curve) the output pass only re-encodes, and every writer presents the bytes the plain path presents (`packages/core/test/render/hdr-coverage.browser.test.ts`). Unverified: device-loss recovery of the `rgba16float` target, and the clear colour with `rendering.srgb`.
 
 ### 2.8 Custom shaders
 
@@ -195,6 +205,29 @@ Design and rationale: `docs/plan/2026-09-terrain-particles-shaders.md` §3 and A
 - **Cost.** The module is loaded on the first render or read, so a game that never uses one ships none of it (§2.5). A texture costs nothing until then; after that, its target, and one render pass in each frame it is filled.
 
 **Editor-only meshes.** A render-scene mesh whose Lite `metadata[EDITOR_ONLY_METADATA_KEY]` is `true` (an editor's grid) draws in the main view but never in a render texture: the pass hides such meshes around its own `execute` and shows them again, after the main pass has drawn, so the main view never flickers.
+
+### 2.12 Scene inputs
+
+Screen-space effects (TAA, GTAO, contact shadows, SSGI; GI plan steps G5–G11) read the scene's depth, normals and motion from one shared geometry pass, `src/lite/gpu/scene-inputs.ts` (GI plan step G4, 2026-11-02). It is internal: an effect calls `rendererInternals(app.renderer).acquireSceneInputs()`, gets a lease, and calls its `release()` when it is disposed. The first acquire loads the chunk and adds the pass; the last release removes and disposes it. An app whose effects never ask loads none of it and its frame graph has none of these tasks (`CONSTITUTION.md` §2.5). Under the null engine `acquireSceneInputs()` returns `null`.
+
+```text
+[shadow] → geometry ─→ normals copy ─→ velocity copy ─→ depth pyramid → scene → … → effects
+```
+
+| Input          | Format         | What it holds                                                                                                        |
+| -------------- | -------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `depth`        | `depth32float` | Reverse-Z depth (1 near, 0 far), sampled facade; bind with `sampleType: "depth"`                                     |
+| `normals`      | `rgba16float`  | World normals stored as `n * 0.5 + 0.5`; 0 where nothing was drawn                                                   |
+| `velocity`     | `rgba16float`  | `0.5 * (previousNdc - currentNdc)`: UV units, Y up, from now to last frame; 0 where nothing was drawn                |
+| `depthPyramid` | `r32float`     | Full mip chain; each level is the `max` (nearest surface in reverse-Z) of its four children; read with `textureLoad` |
+
+- **One pass, shared.** Leases are counted; two effects get the same textures and one geometry pass. The tasks sit at the start of the frame graph (after `shadow`), so any task appended later reads this frame's values (`SCENE_INPUT_TASK_NAMES` names them).
+- **Bridges (spike S2).** Lite's main pass uses `depth24plus-stencil8`, which compute cannot bind, so the geometry pass draws its own `depth32float` depth. Geometry attachments are task-owned `RenderTarget`s with no `Texture2D`, so normals and velocity are copied into targets that have one (upstream ask 3).
+- **The pyramid** is Lite's `createDepthPyramid` (render passes, one per level, not compute), wrapped so it can be rebuilt.
+- **Resize and device loss.** Every target is sized by the surface and reallocated by `frameGraph.build()`. The depth target's resize callback, which also fires when a recovered device reallocates it, rebuilds the pyramid and calls each lease's `onChange` callbacks so effects can rebind; `depthPyramid` is a new object afterwards. A resize is covered by a browser test; device loss is not.
+- **Removal.** Lite 1.34 has no public way to remove a task, and a disposed task left in the graph is recorded again on the next rebuild against freed targets, so the last release splices the tasks out of the graph's private `_tasks` list (`lib/frame-graph/frame-graph-actions.js`) before disposing them.
+- **Limit: object motion on PBR.** Lite's PBR geometry view reprojects the current world position through the previous view-projection (`lib/material/pbr/pbr-geometry-output-shader.js` line 41), so a PBR mesh moving under a still camera writes 0. Standard materials track each mesh's previous world matrix. Per-object PBR velocity is left for G6, or an upstream fix.
+- **Cost.** One geometry draw of every mesh, two full-screen copies and the pyramid's passes per frame while any lease is held.
 
 ## 3. Picking
 

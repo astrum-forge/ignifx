@@ -57,7 +57,7 @@ export const weather: (options?: void) => Extension = defineExtension<void>(() =
 | `engine`                       | no       | Semver range of `@ignifx/core` it supports; checked at registration             |
 | `requires` / `optional`        | no       | Extension names that must / may register before it                              |
 | `register(ctx)`                | yes      | Declare everything here; may be `async`, but keep it cheap and side-effect free |
-| `onStart(app)`                 | no       | After every `register`, during `app.start()`; may be `async`                    |
+| `onStart(app)`                 | no       | After every `register`, during the first `app.start()`; may be `async`          |
 | `onStop(app)` / `dispose(app)` | no       | Run in reverse registration order                                               |
 
 `defineExtension(factory)` wraps a factory so a game writes `weather()` in the `extensions` array.
@@ -95,7 +95,7 @@ service; cross-extension work goes through services and signals.
 2. The list is topologically sorted by `requires`, plus `optional` edges when the optional extension is present. A `requires` cycle throws `IGX-0402`, a missing required extension `IGX-0403`, and a duplicate `name` `IGX-0406`. One extension object serves one live app: passing it to a second `createApp` before the first is disposed throws `IGX-0411`, so call `physics()` (or any factory) once per app. An `optional` edge that would close a cycle is dropped with a development note; those two extensions then resolve each other lazily in `onStart` through `ctx.tryGet`.
 3. `engine` ranges are checked against `VERSION`: a mismatch throws `IGX-0404` in development and warns in production.
 4. Settings are resolved and frozen, then `register` runs in sorted order.
-5. The Lite engine and world are created; `app.start()` runs the `onStart` hooks in the same order.
+5. The Lite engine and world are created; the first `app.start()` runs the `onStart` hooks in the same order. A start after `app.stop()` restarts the loop and does not run them again.
 6. `onStop` and `dispose` run in reverse order.
 
 ## 4. Settings sections

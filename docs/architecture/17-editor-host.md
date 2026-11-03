@@ -55,12 +55,12 @@ The game's `main.ts` calls `attachEditorPlayControls(app)` from `virtual:ignifx/
 
 | Method  | Effect                                                                                                                   |
 | ------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `play`  | Clears `app.time.paused` and calls `app.start()` (a no-op when running)                                                  |
+| `play`  | Clears `app.time.paused` and calls `app.start()` (a no-op when running; after `step` it restarts the loop)               |
 | `pause` | Sets `app.time.paused`; `updateWhenPaused` scripts and systems keep running                                              |
 | `step`  | `app.stop()`, then one `app.step(deltaSeconds)` unpaused, then paused again; `deltaSeconds` defaults to `fixedDeltaTime` |
 | `stop`  | `app.stop()`. The editor resets the game by reloading the view                                                           |
 
-`app.step()` refuses to run beside the render loop, which is why `step` stops the loop first; `play` restarts it.
+`app.step()` refuses to run beside the render loop, which is why `step` stops the loop first; `play` restarts it, and `app.start()` runs the extensions' `onStart` only once, so the game resumes where it was.
 
 Four more methods read the game without changing it:
 

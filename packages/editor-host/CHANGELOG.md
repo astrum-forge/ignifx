@@ -1,5 +1,22 @@
 # @ignifx/editor-host
 
+## 0.14.0
+
+### Minor Changes
+
+- 9d9bc4e: The scene view can show the Game panel and asset thumbnails: with a canvas it lists the `gameView` and `thumbnails` capabilities and answers `setGameView`, `gameViewFrame` (the open scene through its own camera, as an image) and `renderThumbnail` (a model or prefab rendered on its own). Material and atlas thumbnails are not rendered yet. Thumbnails render in a second app built from fresh extensions: the generated scene view passes the project's `extensions` function as the new `createExtensions` option, and a host given `extensions` without it does not list `thumbnails`.
+
+### Patch Changes
+
+- 6eaf002: `app.start()` after `app.stop()` now restarts the frame loop without running the extensions' `onStart` hooks again. Before, the second start re-ran them, and physics failed with `IGX-1503` ("diagnostics group physics is already registered"), so pressing Play after Step in the editor's play view never resumed the game.
+- Updated dependencies [5e3458c]
+- Updated dependencies [ef78f28]
+- Updated dependencies [6eaf002]
+- Updated dependencies [879f7c2]
+- Updated dependencies [9d9bc4e]
+  - @ignifx/core@0.14.0
+  - @ignifx/vite-plugin@0.14.0
+
 ## 0.13.0
 
 ### Minor Changes
