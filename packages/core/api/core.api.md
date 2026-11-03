@@ -275,6 +275,16 @@ export interface AssetTypeToken<A> {
 }
 
 // @public
+export interface AutoExposureSettings {
+    readonly compensation: number;
+    readonly enabled: boolean;
+    readonly maxEv: number;
+    readonly minEv: number;
+    readonly speedDown: number;
+    readonly speedUp: number;
+}
+
+// @public
 export interface BatchHandle {
     cancel(): void;
     readonly handles: readonly AssetHandle[];
@@ -938,6 +948,9 @@ export const DEFAULT_MEMORY_SINK_LIMIT = 200;
 
 // @public
 export const DEFAULT_STORAGE_NAMESPACE = "default";
+
+// @public
+export function defaultAutoExposureSettings(): AutoExposureSettings;
 
 // @public
 export function defaultRenderingSettings(): RenderingSettings;
@@ -2835,6 +2848,7 @@ export interface RenderingFeatureSettings {
 // @public
 export interface RenderingSettings {
     readonly alphaMode: CanvasAlphaMode;
+    readonly autoExposure: AutoExposureSettings;
     readonly brdfLut: string;
     readonly clearColor: ColorLike;
     readonly features: RenderingFeatureSettings;

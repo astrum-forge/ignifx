@@ -422,8 +422,10 @@ export { EDITOR_ONLY_METADATA_KEY, RENDER_TEXTURE_MAX_SIZE, type RenderTexture }
 export {
   CANVAS_ALPHA_MODES,
   DEFAULT_BRDF_LUT_ADDRESS,
+  defaultAutoExposureSettings,
   defaultRenderingSettings,
   RENDERING_SETTINGS_SECTION,
+  type AutoExposureSettings,
   type CanvasAlphaMode,
   type RenderingFeatureSettings,
   type RenderingSettings,

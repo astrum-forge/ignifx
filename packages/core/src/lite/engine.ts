@@ -4,6 +4,7 @@ import { isWebGpuAvailable } from "../platform/webgpu.js";
 import { installOffscreenRenderPath } from "./gpu/render-path.js";
 import { createWebGpuEngine, disposeWebGpuEngine } from "./render.js";
 import { createHeadlessScene, createRenderScene, disposeSceneOnly } from "./scene.js";
+import type { AutoExposureOptions } from "./gpu/auto-exposure.js";
 import type { ScenePresenter } from "./gpu/render-path.js";
 import type { LiteEngine, LiteScene } from "./scene.js";
 import type { RenderSurface } from "../platform/webgpu.js";
@@ -86,6 +87,8 @@ export function createHeadlessEngine(): EngineHandles {
  * @param features.postProcessing - `true` to render into an offscreen target and composite it.
  * @param features.hdr - `true` to render into an `rgba16float` target and tone map it in a final
  * pass (`./gpu/hdr-output.ts`, its own chunk, loaded only then). Implies the offscreen path.
+ * @param features.autoExposure - With `hdr`, the auto exposure knobs (`./gpu/auto-exposure.ts`, its
+ * own chunk, loaded only then); `null` or absent leaves it off.
  * @returns The engine, the scene, and the presenter when there is one.
  * @throws IgnifxError with code `IGX-0701` when WebGPU is unavailable.
  *
@@ -94,7 +97,11 @@ export function createHeadlessEngine(): EngineHandles {
 export async function createRenderEngine(
   canvas: RenderSurface,
   options?: EngineOptions,
-  features?: { readonly postProcessing?: boolean; readonly hdr?: boolean },
+  features?: {
+    readonly postProcessing?: boolean;
+    readonly hdr?: boolean;
+    readonly autoExposure?: AutoExposureOptions | null;
+  },
 ): Promise<EngineHandles> {
   assertWebGpuAvailable();
   const engine = await createWebGpuEngine(canvas, options);
@@ -103,7 +110,15 @@ export async function createRenderEngine(
   const scene = createRenderScene(engine, { offscreen });
   let presenter: ScenePresenter | null = null;
   if (hdr) {
-    presenter = (await import("./gpu/hdr-output.js")).installHdrRenderPath(engine, scene);
+    const knobs = features.autoExposure ?? null;
+    const exposure = knobs === null ? null : await import("./gpu/auto-exposure.js");
+    presenter = (await import("./gpu/hdr-output.js")).installHdrRenderPath(
+      engine,
+      scene,
+      exposure === null || knobs === null
+        ? undefined
+        : (hdrTexture) => exposure.installAutoExposure(engine, scene, hdrTexture, knobs),
+    );
   } else if (offscreen) {
     presenter = installOffscreenRenderPath(engine, scene);
   }
