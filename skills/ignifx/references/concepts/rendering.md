@@ -237,6 +237,16 @@ second towards brighter and darker scenes (2 and 1), and `compensation` adds sto
 before the `Environment`'s own exposure. Read once at start:
 `settings: { rendering: { hdr: true, autoExposure: { enabled: true, compensation: 0.5 } } }`.
 
+`rendering.taa` (needs `hdr`; off by default) is temporal anti-aliasing: `settings: { rendering: {
+hdr: true, taa: { enabled: true } } }`. Each frame is jittered by a sub-pixel Halton offset and
+blended into a history reprojected through depth and motion, clipped to the current neighbourhood.
+Fields: `blend` (weight of the current frame, default 0.1), `sharpness` (0–1, default 0), `clamp`
+(default `true`) and `cutDistance` (a camera jump in world units that drops the history, default
+10; a turn over 60° in one frame does too). Call `app.renderer.resetTemporalHistory()` on a cut the
+engine cannot see, such as a switch to another camera nearby. Picking and `Camera.worldToScreen`
+use the unjittered camera. A PBR mesh moving under a still camera has no motion vectors yet, so it
+relies on the clip and may soften while it moves.
+
 ## 5. Material warm-up (ADR-0014)
 
 A mesh whose material family did not exist when the scene was registered takes Babylon Lite's

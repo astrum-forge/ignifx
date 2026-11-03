@@ -429,6 +429,7 @@ export {
   type CanvasAlphaMode,
   type RenderingFeatureSettings,
   type RenderingSettings,
+  type TaaSettings,
 } from "./render/rendering-settings.js";
 export {
   describeEnvironmentFileFormat,
