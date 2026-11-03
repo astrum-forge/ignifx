@@ -19,6 +19,7 @@ import { PbrMaterialProps } from '@babylonjs/lite';
 import { PickingInfo } from '@babylonjs/lite';
 import { PointLight } from '@babylonjs/lite';
 import { RenderTarget } from '@babylonjs/lite';
+import { RenderTargetTextureResult } from '@babylonjs/lite';
 import { SceneContext } from '@babylonjs/lite';
 import { SceneNode } from '@babylonjs/lite';
 import { ShaderAttributeName as ShaderAttributeName_2 } from '@babylonjs/lite';
@@ -315,8 +316,11 @@ export const binaryAssetLoader: AssetLoader<ArrayBuffer>;
 export interface BloomEffectSettings {
     enabled: boolean;
     exposure: number;
+    hdrThreshold: number;
+    intensity: number;
     kernel: number;
     order: number;
+    radius: number;
     scale: number;
     threshold: number;
     weight: number;
@@ -2640,6 +2644,10 @@ export class PostProcessStack extends Component implements ComponentHooks {
     // (undocumented)
     custom: CustomEffectSettings[];
     static description: string;
+    // Warning: (ae-forgotten-export) The symbol "HdrBloom" needs to be exported by the entry point index.d.ts
+    //
+    // @internal
+    get hdrBloom(): HdrBloom | null;
     // (undocumented)
     imageProcessing: ImageProcessingEffectSettings;
     onAttach(): void;

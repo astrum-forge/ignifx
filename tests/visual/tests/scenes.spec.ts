@@ -109,3 +109,12 @@ test.describe("HDR output matches the plain goldens", () => {
     await expect(page).toHaveScreenshot("gltf-viewer-post.png", { maxDiffPixelRatio: 0.05 });
   });
 });
+
+// HDR bloom (GI plan step G12): an emissive sphere glows through the downsample/upsample chain on
+// the linear scene colour, before the output pass tone maps it.
+test.describe("HDR bloom", () => {
+  test("hello cube, HDR bloom", async ({ page }) => {
+    await openScene(page, `${HELLO_CUBE}/?static=1&hdr=1&bloom=1`);
+    await expect(page).toHaveScreenshot("hello-cube-hdr-bloom.png", { maxDiffPixelRatio: 0.05 });
+  });
+});

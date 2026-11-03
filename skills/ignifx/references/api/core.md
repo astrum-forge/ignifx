@@ -335,7 +335,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-2)
+[`Component`](#abstract-component).[`enabled`](#enabled-4)
 
 ##### entity
 
@@ -3666,7 +3666,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-2)
+[`Component`](#abstract-component).[`enabled`](#enabled-4)
 
 ##### entity
 
@@ -4619,7 +4619,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-2)
+[`Component`](#abstract-component).[`enabled`](#enabled-4)
 
 ##### entity
 
@@ -5699,7 +5699,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-2)
+[`Component`](#abstract-component).[`enabled`](#enabled-4)
 
 ##### entity
 
@@ -8628,7 +8628,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-2)
+[`Component`](#abstract-component).[`enabled`](#enabled-4)
 
 ##### entity
 
@@ -9148,7 +9148,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-2)
+[`Component`](#abstract-component).[`enabled`](#enabled-4)
 
 ##### entity
 
@@ -9777,6 +9777,10 @@ One chain per camera entity; a second would fight the first for the swapchain.
 
 > **bloom**: [`BloomEffectSettings`](#bloomeffectsettings)
 
+##### contactShadows
+
+> **contactShadows**: [`ContactShadowsEffectSettings`](#contactshadowseffectsettings)
+
 ##### custom
 
 > **custom**: [`CustomEffectSettings`](#customeffectsettings)[]
@@ -9800,6 +9804,14 @@ The serialized field declarations (ADR-0004).
 ##### smaa
 
 > **smaa**: [`SmaaEffectSettings`](#smaaeffectsettings)
+
+##### ssgi
+
+> **ssgi**: [`SsgiEffectSettings`](#ssgieffectsettings)
+
+**`Beta`**
+
+Screen-space global illumination; see [SsgiEffectSettings](#ssgieffectsettings).
 
 ##### typeId
 
@@ -9860,7 +9872,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-2)
+[`Component`](#abstract-component).[`enabled`](#enabled-4)
 
 ##### entity
 
@@ -11602,7 +11614,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`PostProcessStack`](#postprocessstack).[`enabled`](#enabled-13)
+[`PostProcessStack`](#postprocessstack).[`enabled`](#enabled-16)
 
 ##### entity
 
@@ -12893,7 +12905,7 @@ happens inside a callback.
 
 ###### Overrides
 
-[`PostProcessStack`](#postprocessstack).[`enabled`](#enabled-13)
+[`PostProcessStack`](#postprocessstack).[`enabled`](#enabled-16)
 
 ##### entity
 
@@ -18410,6 +18422,53 @@ decoding never starts a load.
 
 ***
 
+### AmbientOcclusionSettings
+
+Screen-space ambient occlusion (GTAO) on indirect light: `rendering.ambientOcclusion`
+(`docs/architecture/07-rendering.md` §2.14).
+
+#### Remarks
+
+Off by default, and nothing of it loads while it is off. On, a compute pass estimates how much of
+each pixel's hemisphere the depth buffer hides, a depth-aware blur smooths it, and every lit PBR
+material multiplies its ambient occlusion by the result. It darkens environment (IBL) light only:
+direct lights, emissive colour, Standard materials and custom shaders are unchanged, so a scene
+with no `Environment` cube map shows no difference. Works with and without `rendering.hdr`.
+
+#### Properties
+
+##### enabled
+
+> `readonly` **enabled**: `boolean`
+
+Turns the effect on. Read once, when the app starts.
+
+##### falloff
+
+> `readonly` **falloff**: `number`
+
+The fraction of `radius`, from its far end, over which occluders fade out. 0 cuts off hard.
+
+##### intensity
+
+> `readonly` **intensity**: `number`
+
+An exponent on the visibility: 1 is physically based, larger is darker.
+
+##### quality
+
+> `readonly` **quality**: `"half"` \| `"full"`
+
+`"half"` (default) or `"full"` resolution, which also sets the slice and step counts.
+
+##### radius
+
+> `readonly` **radius**: `number`
+
+How far an occluder may be from the surface it darkens, in world units (metres).
+
+***
+
 ### App
 
 The root object of a game and the surface a script sees through `this.app`
@@ -19887,6 +19946,57 @@ see `SceneAssetToken`. Nothing reads it at runtime.
 
 ***
 
+### AutoExposureSettings
+
+Auto exposure under `rendering.hdr` (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, step G14):
+a compute pass meters the HDR scene and eases the exposure towards middle grey.
+
+#### Remarks
+
+EV here is `log2` of the scene's metered luminance (the average of a `log2` luminance histogram,
+the darkest 10% and brightest 10% dropped). The exposure maps that average to 0.18 and multiplies
+the scene before the `Environment`'s own exposure and curve, so the two compose.
+
+#### Properties
+
+##### compensation
+
+> `readonly` **compensation**: `number`
+
+Stops added to the computed exposure; positive is brighter.
+
+##### enabled
+
+> `readonly` **enabled**: `boolean`
+
+Meter the scene and adapt the exposure. Off by default; needs `rendering.hdr`.
+
+##### maxEv
+
+> `readonly` **maxEv**: `number`
+
+The brightest metered EV the exposure follows: a brighter scene is not darkened further.
+
+##### minEv
+
+> `readonly` **minEv**: `number`
+
+The darkest metered EV the exposure follows: a darker scene is not brightened further.
+
+##### speedDown
+
+> `readonly` **speedDown**: `number`
+
+Adaptation rate, per second, when the scene gets darker.
+
+##### speedUp
+
+> `readonly` **speedUp**: `number`
+
+Adaptation rate, per second, when the scene gets brighter.
+
+***
+
 ### BatchHandle
 
 A group of loads requested together
@@ -19940,6 +20050,14 @@ Releases every handle the batch retains. Calling it twice is a no-op.
 
 The `bloom` record a `PostProcessStack` declares (`docs/architecture/07-rendering.md` §2.7).
 
+#### Remarks
+
+Two bloom passes share the record. Without `rendering.hdr` it is Lite's LDR bloom, recorded in the
+chain after tone mapping, and `order`, `weight`, `kernel`, `threshold`, `exposure` and `scale`
+apply. With `rendering.hdr` the HDR bloom **replaces** it: a downsample/upsample chain on the
+linear scene colour, always before the output pass whatever `order` says, tuned by `intensity`,
+`radius` and `hdrThreshold` (GI plan step G12).
+
 #### Properties
 
 ##### enabled
@@ -19952,37 +20070,55 @@ Whether the glow pass runs.
 
 > **exposure**: `number`
 
-An exposure applied while extracting highlights.
+An exposure applied while extracting highlights. LDR bloom only.
+
+##### hdrThreshold
+
+> **hdrThreshold**: `number`
+
+HDR bloom: the linear luminance below which nothing glows; `0`, the default, lets every pixel glow by its energy.
+
+##### intensity
+
+> **intensity**: `number`
+
+HDR bloom: how much glow is mixed into the frame, 0–1.
 
 ##### kernel
 
 > **kernel**: `number`
 
-The blur kernel width, in pixels.
+The blur kernel width, in pixels. LDR bloom only.
 
 ##### order
 
 > **order**: `number`
 
-Position in the chain; lower runs first.
+Position in the chain; lower runs first. LDR bloom only.
+
+##### radius
+
+> **radius**: `number`
+
+HDR bloom: how far the glow spreads, 0 (tight) to 1 (wide).
 
 ##### scale
 
 > **scale**: `number`
 
-The fraction of full resolution the blur runs at.
+The fraction of full resolution the blur runs at. LDR bloom only.
 
 ##### threshold
 
 > **threshold**: `number`
 
-The luminance above which a pixel glows.
+The luminance above which a pixel glows. LDR bloom only; HDR bloom reads `hdrThreshold`.
 
 ##### weight
 
 > **weight**: `number`
 
-How strongly the glow is mixed back in.
+How strongly the glow is mixed back in. LDR bloom only.
 
 ***
 
@@ -20787,6 +20923,46 @@ Options for [createConsoleSink](#createconsolesink).
 > `readonly` `optional` **target?**: [`ConsoleLike`](#consolelike)
 
 The console to write to. Defaults to the host `console`.
+
+***
+
+### ContactShadowsEffectSettings
+
+The `contactShadows` record a `PostProcessStack` declares (GI plan step G10,
+`docs/architecture/07-rendering.md` §2.7): Lite's screen-space contact shadows towards the main
+directional light, fed from the shared scene-input depth.
+
+#### Properties
+
+##### enabled
+
+> **enabled**: `boolean`
+
+Whether the pass runs.
+
+##### intensity
+
+> **intensity**: `number`
+
+How dark a contact gets, 0 to 4.
+
+##### length
+
+> **length**: `number`
+
+How far each ray marches towards the light, in world units.
+
+##### samples
+
+> **samples**: `number`
+
+March steps per pixel, 1 to 64.
+
+##### thickness
+
+> **thickness**: `number`
+
+How thick a surface is assumed to be behind its depth, in world units.
 
 ***
 
@@ -26117,6 +26293,28 @@ The feature the caller needs.
 IgnifxError with code `IGX-0704` when the render scene has already been registered, at
 which point Lite has compiled what it is going to compile.
 
+##### resetTemporalHistory()
+
+> **resetTemporalHistory**(): `void`
+
+Drops the temporal anti-aliasing history, so the next frame starts fresh.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+Call it on a camera cut the automatic detection misses (`rendering.taa.cutDistance`): a switch
+to another camera nearby, or a scene change under a still camera. Does nothing while
+`rendering.taa` is off.
+
+###### Example
+
+```ts
+app.renderer.resetTemporalHistory();
+```
+
 ##### setSize()
 
 > **setSize**(`width`, `height`): `void`
@@ -26273,6 +26471,19 @@ const app = await createApp({
 
 How the canvas composites with the page. `"premultiplied"` lets HTML show through.
 
+##### ambientOcclusion
+
+> `readonly` **ambientOcclusion**: [`AmbientOcclusionSettings`](#ambientocclusionsettings)
+
+Screen-space ambient occlusion on indirect light (GTAO). Off by default.
+
+##### autoExposure
+
+> `readonly` **autoExposure**: [`AutoExposureSettings`](#autoexposuresettings)
+
+Auto exposure, read once at `app.start()`. Ignored unless [RenderingSettings.hdr](#hdr) is on;
+off, nothing of it loads.
+
 ##### brdfLut
 
 > `readonly` **brdfLut**: `string`
@@ -26349,6 +26560,12 @@ Extra WebGPU device limits to request, such as a larger `maxColorAttachmentBytes
 > `readonly` **srgb**: `boolean`
 
 Render through an sRGB swapchain view so alpha blending is gamma-correct.
+
+##### taa
+
+> `readonly` **taa**: [`TaaSettings`](#taasettings)
+
+Temporal anti-aliasing; needs [RenderingSettings.hdr](#hdr). Off by default.
 
 ##### useFloatingOrigin
 
@@ -28495,6 +28712,68 @@ Ring count; higher is smoother. Lite defaults to 32.
 
 ***
 
+### SsgiEffectSettings
+
+**`Beta`**
+
+The `ssgi` record a `PostProcessStack` declares (GI plan step G11,
+`docs/architecture/07-rendering.md` §2.7): Lite's `@beta` screen-space global illumination, one
+bounce of the lit scene colour. Desktop tier.
+
+#### Properties
+
+##### enabled
+
+> **enabled**: `boolean`
+
+**`Beta`**
+
+Whether the pass runs.
+
+##### environmentDiffuse
+
+> **environmentDiffuse**: `number`
+
+**`Beta`**
+
+How much of the environment's diffuse light remains while SSGI runs, 0 to 1, so the bounce is
+not counted twice. Needs `rendering.hdr` or the `materialPlugins` feature; without either the
+environment is left as it is.
+
+##### halfResolution
+
+> **halfResolution**: `boolean`
+
+**`Beta`**
+
+Whether rays are traced at half resolution. A change rebuilds the pass.
+
+##### intensity
+
+> **intensity**: `number`
+
+**`Beta`**
+
+How strongly the bounce is added, 0 to 4.
+
+##### radius
+
+> **radius**: `number`
+
+**`Beta`**
+
+How far each ray marches, in world units.
+
+##### samples
+
+> **samples**: `number`
+
+**`Beta`**
+
+March steps per ray, 1 to 64.
+
+***
+
 ### StandardMaterialDefinition
 
 The properties a `"standard"` material declares — the cheap non-PBR path
@@ -29468,6 +29747,57 @@ The world the system operates on.
 
 ***
 
+### TaaSettings
+
+Temporal anti-aliasing, the `rendering.taa` record (`docs/architecture/07-rendering.md` §2.13).
+
+#### Remarks
+
+Needs `rendering.hdr`: TAA runs on the linear scene colour between the scene pass and the HDR
+output pass. With `hdr` off it stays off and the app logs a warning. Nothing of it loads while
+`enabled` is `false`.
+
+#### Example
+
+```ts
+const app = await createApp({ canvas, settings: { rendering: { hdr: true, taa: { enabled: true } } } });
+```
+
+#### Properties
+
+##### blend
+
+> `readonly` **blend**: `number`
+
+Weight of the current frame, 0.01–1. Lower is smoother but slower to follow change. Default 0.1.
+
+##### clamp
+
+> `readonly` **clamp**: `boolean`
+
+Clip history to the current pixel's neighbourhood, which prevents ghosting. Default `true`.
+
+##### cutDistance
+
+> `readonly` **cutDistance**: `number`
+
+How far, in world units, the camera may move in one frame before the history is dropped as a
+camera cut. A turn of more than 60° in one frame is a cut too. Default 10.
+
+##### enabled
+
+> `readonly` **enabled**: `boolean`
+
+Turn TAA on. Off by default.
+
+##### sharpness
+
+> `readonly` **sharpness**: `number`
+
+Output sharpening, 0–1, to offset the softening TAA brings. Default 0.
+
+***
+
 ### TextureAssetLiteHandles
 
 The Babylon Lite objects a [TextureAsset](#textureasset) owns. Unstable escape hatch
@@ -30065,6 +30395,14 @@ The scene a physics extension steps its simulation in (`docs/architecture/09-phy
 or `null` when no extension has set one.
 
 ## Type Aliases
+
+### AmbientOcclusionQuality
+
+> **AmbientOcclusionQuality** = *typeof* [`AMBIENT_OCCLUSION_QUALITIES`](#ambient_occlusion_qualities)\[`number`\]
+
+The union of the ambient-occlusion qualities.
+
+***
 
 ### AssetState
 
@@ -31370,6 +31708,15 @@ assignable to `{ x, y, z }`.
 The union of [TWEEN\_VALUE\_KINDS](#tween_value_kinds).
 
 ## Variables
+
+### AMBIENT\_OCCLUSION\_QUALITIES
+
+> `const` **AMBIENT\_OCCLUSION\_QUALITIES**: readonly \[`"half"`, `"full"`\]
+
+The ambient-occlusion qualities, in the order the inspector lists them: `"half"` computes GTAO at
+half resolution with 2 slices of 4 steps a side, `"full"` at full resolution with 3 slices of 6.
+
+***
 
 ### ASSET\_DIAGNOSTICS\_COUNTERS
 
@@ -35401,6 +35748,21 @@ The decoded value and every problem found.
 ```ts
 decodeValue(vec3(), [1, 2, 3], references); // { value: { x: 1, y: 2, z: 3 }, issues: [] }
 ```
+
+***
+
+### defaultAutoExposureSettings()
+
+> **defaultAutoExposureSettings**(): [`AutoExposureSettings`](#autoexposuresettings)
+
+The auto exposure a project that names none gets: off, metering EV −6 to 6, adapting at 2 per
+second towards brighter scenes and 1 towards darker ones, with no compensation.
+
+#### Returns
+
+[`AutoExposureSettings`](#autoexposuresettings)
+
+A fresh record.
 
 ***
 

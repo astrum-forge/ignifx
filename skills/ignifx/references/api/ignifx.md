@@ -2151,7 +2151,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-60)
+[`Script`](#abstract-script).[`enabled`](#enabled-61)
 
 ##### entity
 
@@ -3372,7 +3372,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-60)
+[`Script`](#abstract-script).[`enabled`](#enabled-61)
 
 ##### entity
 
@@ -7252,7 +7252,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-60)
+[`Script`](#abstract-script).[`enabled`](#enabled-61)
 
 ##### entity
 
@@ -17352,7 +17352,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-60)
+[`Script`](#abstract-script).[`enabled`](#enabled-61)
 
 ##### entity
 
@@ -20829,7 +20829,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`enabled`](#enabled-71)
+[`TextComponent`](#abstract-textcomponent).[`enabled`](#enabled-73)
 
 ##### entity
 
@@ -30780,7 +30780,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-60)
+[`Script`](#abstract-script).[`enabled`](#enabled-61)
 
 ##### entity
 
@@ -37347,7 +37347,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-60)
+[`Script`](#abstract-script).[`enabled`](#enabled-61)
 
 ##### entity
 
@@ -39001,6 +39001,10 @@ One chain per camera entity; a second would fight the first for the swapchain.
 
 > **bloom**: [`BloomEffectSettings`](#bloomeffectsettings)
 
+##### contactShadows
+
+> **contactShadows**: [`ContactShadowsEffectSettings`](#contactshadowseffectsettings)
+
 ##### custom
 
 > **custom**: [`CustomEffectSettings`](#customeffectsettings)[]
@@ -39024,6 +39028,14 @@ The serialized field declarations (ADR-0004).
 ##### smaa
 
 > **smaa**: [`SmaaEffectSettings`](#smaaeffectsettings)
+
+##### ssgi
+
+> **ssgi**: [`SsgiEffectSettings`](#ssgieffectsettings)
+
+**`Beta`**
+
+Screen-space global illumination; see [SsgiEffectSettings](#ssgieffectsettings).
 
 ##### typeId
 
@@ -39589,7 +39601,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-60)
+[`Script`](#abstract-script).[`enabled`](#enabled-61)
 
 ##### entity
 
@@ -42741,7 +42753,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-60)
+[`Script`](#abstract-script).[`enabled`](#enabled-61)
 
 ##### entity
 
@@ -50753,7 +50765,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-60)
+[`Script`](#abstract-script).[`enabled`](#enabled-61)
 
 ##### entity
 
@@ -51428,7 +51440,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-60)
+[`Script`](#abstract-script).[`enabled`](#enabled-61)
 
 ##### entity
 
@@ -62677,7 +62689,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`enabled`](#enabled-71)
+[`TextComponent`](#abstract-textcomponent).[`enabled`](#enabled-73)
 
 ##### entity
 
@@ -63300,7 +63312,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`enabled`](#enabled-71)
+[`TextComponent`](#abstract-textcomponent).[`enabled`](#enabled-73)
 
 ##### entity
 
@@ -67263,6 +67275,14 @@ The resolved control.
 
 The `bloom` record a `PostProcessStack` declares (`docs/architecture/07-rendering.md` §2.7).
 
+#### Remarks
+
+Two bloom passes share the record. Without `rendering.hdr` it is Lite's LDR bloom, recorded in the
+chain after tone mapping, and `order`, `weight`, `kernel`, `threshold`, `exposure` and `scale`
+apply. With `rendering.hdr` the HDR bloom **replaces** it: a downsample/upsample chain on the
+linear scene colour, always before the output pass whatever `order` says, tuned by `intensity`,
+`radius` and `hdrThreshold` (GI plan step G12).
+
 #### Properties
 
 ##### enabled
@@ -67275,37 +67295,55 @@ Whether the glow pass runs.
 
 > **exposure**: `number`
 
-An exposure applied while extracting highlights.
+An exposure applied while extracting highlights. LDR bloom only.
+
+##### hdrThreshold
+
+> **hdrThreshold**: `number`
+
+HDR bloom: the linear luminance below which nothing glows; `0`, the default, lets every pixel glow by its energy.
+
+##### intensity
+
+> **intensity**: `number`
+
+HDR bloom: how much glow is mixed into the frame, 0–1.
 
 ##### kernel
 
 > **kernel**: `number`
 
-The blur kernel width, in pixels.
+The blur kernel width, in pixels. LDR bloom only.
 
 ##### order
 
 > **order**: `number`
 
-Position in the chain; lower runs first.
+Position in the chain; lower runs first. LDR bloom only.
+
+##### radius
+
+> **radius**: `number`
+
+HDR bloom: how far the glow spreads, 0 (tight) to 1 (wide).
 
 ##### scale
 
 > **scale**: `number`
 
-The fraction of full resolution the blur runs at.
+The fraction of full resolution the blur runs at. LDR bloom only.
 
 ##### threshold
 
 > **threshold**: `number`
 
-The luminance above which a pixel glows.
+The luminance above which a pixel glows. LDR bloom only; HDR bloom reads `hdrThreshold`.
 
 ##### weight
 
 > **weight**: `number`
 
-How strongly the glow is mixed back in.
+How strongly the glow is mixed back in. LDR bloom only.
 
 ***
 
@@ -68470,6 +68508,46 @@ The world-space contact normal, pointing away from the other collider.
 > `readonly` **point**: [`Vec2Like`](#vec2like)
 
 The world-space contact point, in metres.
+
+***
+
+### ContactShadowsEffectSettings
+
+The `contactShadows` record a `PostProcessStack` declares (GI plan step G10,
+`docs/architecture/07-rendering.md` §2.7): Lite's screen-space contact shadows towards the main
+directional light, fed from the shared scene-input depth.
+
+#### Properties
+
+##### enabled
+
+> **enabled**: `boolean`
+
+Whether the pass runs.
+
+##### intensity
+
+> **intensity**: `number`
+
+How dark a contact gets, 0 to 4.
+
+##### length
+
+> **length**: `number`
+
+How far each ray marches towards the light, in world units.
+
+##### samples
+
+> **samples**: `number`
+
+March steps per pixel, 1 to 64.
+
+##### thickness
+
+> **thickness**: `number`
+
+How thick a surface is assumed to be behind its depth, in world units.
 
 ***
 
@@ -74727,7 +74805,7 @@ Whether the row can be selected. A row that answers `false` is drawn dimmed and 
 
 ###### Inherited from
 
-[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-37)
+[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-38)
 
 ##### id
 
@@ -74791,7 +74869,7 @@ Whether the row can be selected. A row that answers `false` is drawn dimmed and 
 
 ###### Inherited from
 
-[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-37)
+[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-38)
 
 ##### id
 
@@ -74887,7 +74965,7 @@ Whether the row can be selected. A row that answers `false` is drawn dimmed and 
 
 ###### Inherited from
 
-[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-37)
+[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-38)
 
 ##### format?
 
@@ -75178,7 +75256,7 @@ Whether the row can be selected. A row that answers `false` is drawn dimmed and 
 
 ###### Inherited from
 
-[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-37)
+[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-38)
 
 ##### format?
 
@@ -75355,7 +75433,7 @@ Whether the row can be selected. A row that answers `false` is drawn dimmed and 
 
 ###### Inherited from
 
-[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-37)
+[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-38)
 
 ##### format?
 
@@ -77183,13 +77261,13 @@ Which shape. Defaults to `"cone"`.
 
 > `readonly` `optional` **length?**: `number`
 
-See [ParticleShape.length](#length-3). Defaults to `1`.
+See [ParticleShape.length](#length-4). Defaults to `1`.
 
 ##### radius?
 
 > `readonly` `optional` **radius?**: `number`
 
-See [ParticleShape.radius](#radius-9). Defaults to `0.2`.
+See [ParticleShape.radius](#radius-10). Defaults to `0.2`.
 
 ##### randomDirection?
 
@@ -77213,7 +77291,7 @@ See [ParticleShape.spherizeDirection](#spherizedirection). Defaults to `0`.
 
 > `readonly` `optional` **thickness?**: `number`
 
-See [ParticleShape.thickness](#thickness). Defaults to `1`.
+See [ParticleShape.thickness](#thickness-1). Defaults to `1`.
 
 ##### vertices?
 
@@ -79023,6 +79101,28 @@ The feature the caller needs.
 IgnifxError with code `IGX-0704` when the render scene has already been registered, at
 which point Lite has compiled what it is going to compile.
 
+##### resetTemporalHistory()
+
+> **resetTemporalHistory**(): `void`
+
+Drops the temporal anti-aliasing history, so the next frame starts fresh.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+Call it on a camera cut the automatic detection misses (`rendering.taa.cutDistance`): a switch
+to another camera nearby, or a scene change under a still camera. Does nothing while
+`rendering.taa` is off.
+
+###### Example
+
+```ts
+app.renderer.resetTemporalHistory();
+```
+
 ##### setSize()
 
 > **setSize**(`width`, `height`): `void`
@@ -79179,6 +79279,19 @@ const app = await createApp({
 
 How the canvas composites with the page. `"premultiplied"` lets HTML show through.
 
+##### ambientOcclusion
+
+> `readonly` **ambientOcclusion**: `AmbientOcclusionSettings`
+
+Screen-space ambient occlusion on indirect light (GTAO). Off by default.
+
+##### autoExposure
+
+> `readonly` **autoExposure**: `AutoExposureSettings`
+
+Auto exposure, read once at `app.start()`. Ignored unless [RenderingSettings.hdr](#hdr) is on;
+off, nothing of it loads.
+
 ##### brdfLut
 
 > `readonly` **brdfLut**: `string`
@@ -79255,6 +79368,12 @@ Extra WebGPU device limits to request, such as a larger `maxColorAttachmentBytes
 > `readonly` **srgb**: `boolean`
 
 Render through an sRGB swapchain view so alpha blending is gamma-correct.
+
+##### taa
+
+> `readonly` **taa**: `TaaSettings`
+
+Temporal anti-aliasing; needs [RenderingSettings.hdr](#hdr). Off by default.
 
 ##### useFloatingOrigin
 
@@ -82231,6 +82350,68 @@ Whether the layer keeps the identity view instead of following the `Camera2D`.
 > `readonly` **sortingLayer**: `string`
 
 The sorting layer's name.
+
+***
+
+### SsgiEffectSettings
+
+**`Beta`**
+
+The `ssgi` record a `PostProcessStack` declares (GI plan step G11,
+`docs/architecture/07-rendering.md` §2.7): Lite's `@beta` screen-space global illumination, one
+bounce of the lit scene colour. Desktop tier.
+
+#### Properties
+
+##### enabled
+
+> **enabled**: `boolean`
+
+**`Beta`**
+
+Whether the pass runs.
+
+##### environmentDiffuse
+
+> **environmentDiffuse**: `number`
+
+**`Beta`**
+
+How much of the environment's diffuse light remains while SSGI runs, 0 to 1, so the bounce is
+not counted twice. Needs `rendering.hdr` or the `materialPlugins` feature; without either the
+environment is left as it is.
+
+##### halfResolution
+
+> **halfResolution**: `boolean`
+
+**`Beta`**
+
+Whether rays are traced at half resolution. A change rebuilds the pass.
+
+##### intensity
+
+> **intensity**: `number`
+
+**`Beta`**
+
+How strongly the bounce is added, 0 to 4.
+
+##### radius
+
+> **radius**: `number`
+
+**`Beta`**
+
+How far each ray marches, in world units.
+
+##### samples
+
+> **samples**: `number`
+
+**`Beta`**
+
+March steps per ray, 1 to 64.
 
 ***
 
@@ -102941,13 +103122,13 @@ Which shape. Defaults to `"cone"`.
 
 `number`
 
-See [ParticleShape.length](#length-3). Defaults to `1`.
+See [ParticleShape.length](#length-4). Defaults to `1`.
 
 ###### shape.radius?
 
 `number`
 
-See [ParticleShape.radius](#radius-9). Defaults to `0.2`.
+See [ParticleShape.radius](#radius-10). Defaults to `0.2`.
 
 ###### shape.randomDirection?
 
@@ -102989,7 +103170,7 @@ See [ParticleShape.spherizeDirection](#spherizedirection). Defaults to `0`.
 
 `number`
 
-See [ParticleShape.thickness](#thickness). Defaults to `1`.
+See [ParticleShape.thickness](#thickness-1). Defaults to `1`.
 
 ###### shape.vertices?
 

@@ -4,6 +4,7 @@ import { isIgnifxError } from "../errors/ignifx-error.js";
 import { array, asset, bool, custom, f32, i32, map, record, u32 } from "../schema/field-kinds.js";
 import { createDefaults, defineSchema } from "../schema/schema.js";
 import { applyPostProcessSettings, recordPostProcessChain } from "./gpu/post-process-chain.js";
+import { hdrBloomSupport, loadHdrBloomSupport } from "./hdr-bloom-support.js";
 import { postEffectCompiler } from "./post-effect-support.js";
 import { postEffectValuesCodec } from "./post-effect.js";
 import { rendererInternals } from "./renderer.js";
@@ -17,6 +18,7 @@ import type { RendererImpl } from "./renderer.js";
 import type { ShaderTextureDeclaration } from "./shader-declaration.js";
 import type { App } from "../app/types.js";
 import type { ComponentHooks } from "../component/component.js";
+import type { HdrBloom } from "../lite/gpu/bloom-hdr.js";
 import type { LiteTexture2D } from "../lite/gpu/texture.js";
 import type { Schema } from "../schema/types.js";
 
@@ -92,23 +94,36 @@ import type { Schema } from "../schema/types.js";
 /**
  * The `bloom` record a `PostProcessStack` declares (`docs/architecture/07-rendering.md` §2.7).
  *
+ * @remarks
+ * Two bloom passes share the record. Without `rendering.hdr` it is Lite's LDR bloom, recorded in the
+ * chain after tone mapping, and `order`, `weight`, `kernel`, `threshold`, `exposure` and `scale`
+ * apply. With `rendering.hdr` the HDR bloom **replaces** it: a downsample/upsample chain on the
+ * linear scene colour, always before the output pass whatever `order` says, tuned by `intensity`,
+ * `radius` and `hdrThreshold` (GI plan step G12).
+ *
  * @public
  */
 export interface BloomEffectSettings {
   /** Whether the glow pass runs. */
   enabled: boolean;
-  /** Position in the chain; lower runs first. */
+  /** Position in the chain; lower runs first. LDR bloom only. */
   order: number;
-  /** How strongly the glow is mixed back in. */
+  /** How strongly the glow is mixed back in. LDR bloom only. */
   weight: number;
-  /** The blur kernel width, in pixels. */
+  /** The blur kernel width, in pixels. LDR bloom only. */
   kernel: number;
-  /** The luminance above which a pixel glows. */
+  /** The luminance above which a pixel glows. LDR bloom only; HDR bloom reads `hdrThreshold`. */
   threshold: number;
-  /** An exposure applied while extracting highlights. */
+  /** An exposure applied while extracting highlights. LDR bloom only. */
   exposure: number;
-  /** The fraction of full resolution the blur runs at. */
+  /** The fraction of full resolution the blur runs at. LDR bloom only. */
   scale: number;
+  /** HDR bloom: how much glow is mixed into the frame, 0–1. */
+  intensity: number;
+  /** HDR bloom: how far the glow spreads, 0 (tight) to 1 (wide). */
+  radius: number;
+  /** HDR bloom: the linear luminance below which nothing glows; `0`, the default, lets every pixel glow by its energy. */
+  hdrThreshold: number;
 }
 
 /**
@@ -256,6 +271,12 @@ export class PostProcessStack extends Component implements ComponentHooks {
 
   #hasWarnedAboutFeature = false;
 
+  /** The HDR bloom chain, once a stack under `rendering.hdr` asked for bloom. */
+  #hdrBloom: HdrBloom | null = null;
+
+  /** Whether loading the HDR bloom chunk failed, so it is reported once. */
+  #hdrBloomFailed = false;
+
   /** The shader addresses whose compilation already failed, so the report is made once each. */
   readonly #failedShaders = new Set<string>();
 
@@ -286,7 +307,19 @@ export class PostProcessStack extends Component implements ComponentHooks {
    * `postProcessing` rendering feature is off.
    */
   get taskCount(): number {
-    return this.#chain?.taskCount ?? 0;
+    return (this.#chain?.taskCount ?? 0) + (this.#hdrBloom?.taskCount ?? 0);
+  }
+
+  /**
+   * The HDR bloom chain, once it is recorded.
+   *
+   * @returns The chain, or `null` without `rendering.hdr`, before bloom was enabled, or while its
+   * chunk loads.
+   *
+   * @internal
+   */
+  get hdrBloom(): HdrBloom | null {
+    return this.#hdrBloom;
   }
 
   /** Nothing to do at attach: the chain is built on the first sync that wants an effect. */
@@ -302,6 +335,9 @@ export class PostProcessStack extends Component implements ComponentHooks {
     this.#chain = null;
     this.#built = "";
     chain?.dispose();
+    const bloom = this.#hdrBloom;
+    this.#hdrBloom = null;
+    bloom?.dispose();
   }
 
   /**
@@ -325,6 +361,7 @@ export class PostProcessStack extends Component implements ComponentHooks {
    * @internal
    */
   sync(renderer: RendererImpl): void {
+    this.#syncHdrBloom(renderer);
     this.#screenSpace.sync(renderer, this.contactShadows, this.ssgi, this.isEnabledInHierarchy);
     const wanted = this.#chainKey(renderer);
     if (wanted !== this.#built) {
@@ -344,6 +381,54 @@ export class PostProcessStack extends Component implements ComponentHooks {
       surface?.width ?? 0,
       surface?.height ?? 0,
       renderer.isSceneRegistered,
+    );
+  }
+
+  /**
+   * Keeps the HDR bloom chain in step with the `bloom` record under `rendering.hdr`.
+   *
+   * @remarks
+   * The chain is built once, the first frame bloom is wanted after its chunk has loaded, and is
+   * then only switched on or off: Lite cannot remove its tasks, and nothing in the record changes
+   * its shape. Until the chunk is in, the frame presents without bloom.
+   *
+   * @param renderer - The rendering service, for the presenter and the scene.
+   */
+  #syncHdrBloom(renderer: RendererImpl): void {
+    const hdr = renderer.presenter?.hdr ?? null;
+    const isWanted = hdr !== null && this.bloom.enabled && this.isEnabledInHierarchy;
+    if (this.#hdrBloom === null) {
+      if (!isWanted || this.#hdrBloomFailed) {
+        return;
+      }
+      const support = hdrBloomSupport();
+      if (support === null) {
+        loadHdrBloomSupport().catch((failure: unknown) => {
+          this.#reportHdrBloomFailure(renderer, failure);
+        });
+        return;
+      }
+      this.#hdrBloom = support.installHdrBloom(renderer.engine, renderer.scene, hdr, renderer.isSceneRegistered);
+    }
+    const bloom = this.bloom;
+    this.#hdrBloom.setEnabled(isWanted);
+    this.#hdrBloom.apply({ intensity: bloom.intensity, radius: bloom.radius, threshold: bloom.hdrThreshold });
+  }
+
+  /**
+   * Reports, once, that the HDR bloom chunk did not load.
+   *
+   * @param renderer - The rendering service, for the log.
+   * @param failure - What the import threw.
+   */
+  #reportHdrBloomFailure(renderer: RendererImpl, failure: unknown): void {
+    if (this.#hdrBloomFailed) {
+      return;
+    }
+    this.#hdrBloomFailed = true;
+    renderer.app.log.error(
+      `HDR bloom could not be loaded, so {entity} renders without it. ${String(failure)}`,
+      this.entity.name,
     );
   }
 
@@ -426,9 +511,11 @@ export class PostProcessStack extends Component implements ComponentHooks {
    */
   #requests(renderer: RendererImpl): readonly PostProcessEffectRequest[] {
     const sourceIsSrgb = renderer.settings.srgb;
+    const isHdr = renderer.settings.hdr;
     const requests: PostProcessEffectRequest[] = [];
     for (const entry of this.#entries()) {
-      if (!entry.enabled) {
+      // Under `rendering.hdr` the HDR bloom replaces the LDR one (`#syncHdrBloom`).
+      if (!entry.enabled || (isHdr && entry.name === "bloom")) {
         continue;
       }
       const settings = entry.settings;
@@ -519,11 +606,12 @@ export class PostProcessStack extends Component implements ComponentHooks {
   #chainKey(renderer: RendererImpl): string {
     // `sync` builds this every frame, so it fills one reused array rather than allocating three.
     const entries = this.#fillEntries(this.#entryScratch);
+    const isHdr = renderer.settings.hdr;
     let key = "";
     let hasCustom = false;
     for (let index = 0; index < entries.length; index += 1) {
       const entry = entries[index];
-      if (entry === undefined || !entry.enabled) {
+      if (entry === undefined || !entry.enabled || (isHdr && entry.name === "bloom")) {
         continue;
       }
       const settings = entry.settings;
@@ -542,7 +630,7 @@ export class PostProcessStack extends Component implements ComponentHooks {
       const part = `custom:${settings.shader?.address ?? ""}:${textures}`;
       key = key === "" ? part : `${key},${part}`;
     }
-    if (this.bloom.enabled) {
+    if (this.bloom.enabled && !isHdr) {
       key = `${key}|scale=${String(this.bloom.scale)}`;
     }
     if (hasCustom) {
@@ -648,8 +736,26 @@ function postProcessSchema(): Schema {
         threshold: f32(0.9, { min: 0, tooltip: "The luminance above which a pixel glows." }),
         exposure: f32(1, { min: 0, tooltip: "Exposure applied while extracting highlights." }),
         scale: f32(0.5, { min: 0.05, max: 1, tooltip: "Fraction of full resolution the blur runs at." }),
+        intensity: f32(0.1, {
+          min: 0,
+          max: 1,
+          tooltip: "HDR bloom only: how much glow is mixed into the frame.",
+        }),
+        radius: f32(0.7, {
+          min: 0,
+          max: 1,
+          tooltip: "HDR bloom only: how far the glow spreads, from tight (0) to wide (1).",
+        }),
+        hdrThreshold: f32(0, {
+          min: 0,
+          tooltip: "HDR bloom only: linear luminance below which nothing glows; 0 lets every pixel glow by its energy.",
+        }),
       },
-      { tooltip: "Bloom." },
+      {
+        tooltip:
+          "Bloom. With rendering.hdr on, HDR bloom on the linear scene colour replaces the LDR pass and " +
+          "reads intensity, radius and hdrThreshold; without it, the other fields apply.",
+      },
     ),
     smaa: record(
       {

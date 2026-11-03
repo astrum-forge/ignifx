@@ -525,7 +525,7 @@ Bloom, SMAA, image processing, and custom .post.wgsl effects, inserted into the 
 
 | Field | Kind | Default | Description |
 |---|---|---|---|
-| `bloom` | `record` | `{"enabled":false,"order":0,"weight":0.15,"kernel":64,"threshold":0.9,"exposure":1,"scale":0.5}` | Bloom. |
+| `bloom` | `record` | `{"enabled":false,"order":0,"weight":0.15,"kernel":64,"threshold":0.9,"exposure":1,"scale":0.5,"intensity":0.1,"radius":0.7,"hdrThreshold":0}` | Bloom. With rendering.hdr on, HDR bloom on the linear scene colour replaces the LDR pass and reads intensity, radius and hdrThreshold; without it, the other fields apply. |
 | `smaa` | `record` | `{"enabled":false,"order":1,"threshold":0.05,"maxSearchSteps":16,"diagonalDetection":false,"cornerDetection":false}` | SMAA anti-aliasing. Needs a single-sample source. |
 | `imageProcessing` | `record` | `{"enabled":false,"order":2}` | Exposure, contrast, and tone mapping as a pass — the alternative to Environment. |
 | `custom` | `array` | `[]` | Custom full-screen WGSL effects, ordered among the built-ins by order. |

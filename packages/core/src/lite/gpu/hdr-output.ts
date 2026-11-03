@@ -482,6 +482,7 @@ export function installHdrRenderPath(
     exposureTexture: autoExposure?.exposureTexture ?? null,
     sceneTarget: hdr.rt,
     sceneTask,
+    sceneTargetTexture: hdr,
     update(isSceneRegistered: boolean): void {
       autoExposure?.update();
       if (writeHdrOutputUniforms(scene.imageProcessing, uniforms)) {

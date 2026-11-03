@@ -277,6 +277,13 @@ engine cannot see, such as a switch to another camera nearby. Picking and `Camer
 use the unjittered camera. A PBR mesh moving under a still camera has no motion vectors yet, so it
 relies on the clip and may soften while it moves.
 
+With `hdr` on, `PostProcessStack.bloom` becomes **HDR bloom**, which replaces the LDR bloom: a
+downsample/upsample glow on the linear colour, before tone mapping, tuned by `bloom.intensity`
+(0–1, default 0.1), `bloom.radius` (0 tight to 1 wide, default 0.7) and `bloom.hdrThreshold`
+(default 0: every pixel glows by its energy, so bright emissives and highlights bloom without a
+cut-off). `order`, `weight`, `kernel`, `threshold`, `exposure` and `scale` are the LDR bloom's
+fields and do nothing under HDR; the three HDR fields do nothing without it.
+
 ## 5. Material warm-up (ADR-0014)
 
 A mesh whose material family did not exist when the scene was registered takes Babylon Lite's
