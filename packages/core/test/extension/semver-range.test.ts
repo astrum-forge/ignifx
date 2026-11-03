@@ -45,4 +45,10 @@ describe("satisfiesRange", () => {
     expect(satisfiesRange("0.0.0", ">=1.0.0-rc.1")).toBe(false);
     expect(satisfiesRange("not-a-version", ">=0.0.0")).toBe(false);
   });
+
+  it("skips the empty parts a stray `||` or double space leaves", () => {
+    expect(satisfiesRange("2.0.0", "^1.0.0 || ")).toBe(false);
+    expect(satisfiesRange("1.2.0", "|| ^1.0.0")).toBe(true);
+    expect(satisfiesRange("0.5.0", ">=0.4.0  <1.0.0")).toBe(true);
+  });
 });

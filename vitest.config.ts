@@ -62,6 +62,7 @@ const ISOLATED = [
   "packages/core/test/lite/render/profile-tasks-timing.test.ts",
   "packages/core/test/assets/texture-loader-routing.test.ts",
   "packages/core/test/render/screen-space-effects.test.ts",
+  "packages/core/test/render/hdr-bloom-stack.test.ts",
   // Everything that imports `test/support/electron-mock.ts`.
   "packages/electron/test/**/*.test.ts",
 ];

@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PostProcessStack } from "../../src/render/post-process-stack.js";
 import { ScreenSpaceEffects } from "../../src/render/screen-space-effects.js";
+import { createRenderHarness } from "./support/render-harness.js";
+import type { RenderHarness } from "./support/render-harness.js";
 import type { RendererImpl } from "../../src/render/renderer.js";
 
 /**
@@ -43,7 +45,11 @@ vi.mock("../../src/lite/gpu/scene-color-passes.js", () => ({
   },
 }));
 
+let harness: RenderHarness | null = null;
+
 afterEach(() => {
+  harness?.dispose();
+  harness = null;
   gpu.contact.length = 0;
   gpu.ssgi.length = 0;
   gpu.installed.length = 0;
@@ -257,5 +263,19 @@ describe("ScreenSpaceEffects", () => {
     await settle();
     expect(effects.isBuilt).toBe(false);
     expect(fake.errors).toEqual(["PostProcessStack could not build contact shadows or SSGI: install failed"]);
+  });
+});
+
+describe("a stack that asks for contact shadows or SSGI", () => {
+  it("warns once when the postProcessing opt-in is off, counting both as effects", async () => {
+    harness = await createRenderHarness();
+    const stack = harness.world.createEntity("Eye").addComponent(PostProcessStack);
+    stack.contactShadows.enabled = true;
+    stack.ssgi.enabled = true;
+    harness.frame();
+    harness.frame();
+    const warnings = harness.log.toArray().filter((record) => record.message.includes("post-processing"));
+    expect(warnings).toHaveLength(1);
+    expect(stack.taskCount).toBe(0);
   });
 });
