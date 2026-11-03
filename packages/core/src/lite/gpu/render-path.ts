@@ -80,6 +80,48 @@ export interface HdrOutputHandle {
    * rebuild.
    */
   update(isSceneRegistered: boolean): void;
+  /**
+   * Puts a task between the scene pass and the output pass, where it reads and writes linear
+   * colour: a `PostProcessStack`'s custom effects ordered before any built-in one (GI plan G3).
+   *
+   * @param task - The task; it must write an `rgba16float` target.
+   * @param isFrameGraphBuilt - Whether the scene is registered, so the task has to be recorded now.
+   */
+  insertLinearTask(task: Task, isFrameGraphBuilt: boolean): void;
+  /**
+   * Points the output pass at another linear texture, or back at the scene's.
+   *
+   * @param texture - The last linear effect's output, or `null` for {@link HdrOutputHandle.sceneTexture}.
+   */
+  setOutputSource(texture: Texture2D | null): void;
+}
+
+/** The scenes `rendering.hdr` built, created on first use so the module has no import-time work. */
+let hdrScenes: WeakSet<SceneContext> | null = null;
+
+/**
+ * Records that a scene renders through the HDR path, so code outside the HDR chunk (a custom
+ * shader's build) can ask without importing it.
+ *
+ * @param scene - The scene `./hdr-output.ts` built a render path for.
+ *
+ * @internal
+ */
+export function markHdrScene(scene: SceneContext): void {
+  hdrScenes ??= new WeakSet();
+  hdrScenes.add(scene);
+}
+
+/**
+ * Whether a scene renders through the HDR path, where every colour writer must write linear colour.
+ *
+ * @param scene - The scene.
+ * @returns `true` once `./hdr-output.ts` has built the scene's render path.
+ *
+ * @internal
+ */
+export function isHdrScene(scene: SceneContext): boolean {
+  return hdrScenes?.has(scene) === true;
 }
 
 /**

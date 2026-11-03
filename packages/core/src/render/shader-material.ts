@@ -1,5 +1,6 @@
 import { CoreErrorCode } from "../errors/error-codes.js";
 import { IgnifxError } from "../errors/ignifx-error.js";
+import { isHdrScene } from "../lite/gpu/render-path.js";
 import { Color } from "../math/color.js";
 import { setOwnJsonProperty } from "../schema/json.js";
 import { IGNIFX_UNIFORM_TYPES, IGNIFX_UNIFORM_NAMES, LITE_SYSTEM_UNIFORM_NAMES } from "./shader-declaration.js";
@@ -752,7 +753,13 @@ export class ShaderMaterialState {
           kept !== undefined && kept.length === ELEMENT_COUNTS[uniform.type] ? kept : uniformStore(uniform),
         );
       }
-      this.#material = buildLiteShaderMaterial(this.definition.name, shader, values, this.#resolveDefines(shader));
+      this.#material = buildLiteShaderMaterial(
+        this.#app,
+        this.definition.name,
+        shader,
+        values,
+        this.#resolveDefines(shader),
+      );
       this.#values.clear();
       for (const [name, store] of values) {
         this.#values.set(name, store);
@@ -1093,7 +1100,7 @@ export function buildShaderMaterialState(
       );
     }
   }
-  const material = buildLiteShaderMaterial(definition.name, shader, new Map(), defines);
+  const material = buildLiteShaderMaterial(app, definition.name, shader, new Map(), defines);
   const state = new ShaderMaterialState(app, shader, definition, material, requireShaderMaterialAdapter(shader));
   state.initialise(textures);
   return state;
@@ -1102,6 +1109,11 @@ export function buildShaderMaterialState(
 /**
  * Builds the Babylon Lite material a declaration describes, through the dynamically loaded adapter.
  *
+ * @remarks
+ * Under `rendering.hdr` the fragment is wrapped to write linear colour (GI plan step G3), so the
+ * output pass does not encode it a second time.
+ *
+ * @param app - The app, whose scene says whether it renders through `rendering.hdr`.
  * @param name - The material's name.
  * @param shader - The shader.
  * @param values - Current custom uniform values to seed the declaration's defaults with.
@@ -1110,13 +1122,16 @@ export function buildShaderMaterialState(
  * @throws IgnifxError with code `IGX-0715` when the adapter has not been loaded yet.
  */
 function buildLiteShaderMaterial(
+  app: App,
   name: string,
   shader: ShaderAsset,
   values: ReadonlyMap<string, Float32Array>,
   defines: Readonly<Record<string, boolean | number>>,
 ): LiteShaderMaterial {
+  const options = toShaderMaterialOptions(name, shader.source, shader.declaration, values, defines);
+  const linearOutput = !app.isHeadless && isHdrScene(app.lite.scene);
   return requireShaderMaterialAdapter(shader).createShaderMaterialFromOptions(
-    toShaderMaterialOptions(name, shader.source, shader.declaration, values, defines),
+    linearOutput ? { ...options, linearOutput } : options,
   );
 }
 
