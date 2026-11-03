@@ -331,6 +331,18 @@ describe("PostProcessStack.custom", () => {
     expect(stack.plannedChain()).toStrictEqual(["custom"]);
   });
 
+  it("keys a custom effect after a built-in, with every bound texture", async () => {
+    harness = await createSurfaceHarness();
+    const shader = await harness.loadShader("shaders/scanline.post.wgsl", SCANLINE_POST_WGSL);
+    const stack = harness.world.createEntity("Eye").addComponent(PostProcessStack);
+    stack.smaa.enabled = true;
+    stack.custom.push(customEffect({ shader, order: 50, textures: { lut: null, noise: null } }));
+    harness.frame();
+    harness.frame();
+    expect(stack.plannedChain()).toStrictEqual(["smaa", "custom"]);
+    expect(stack.taskCount).toBe(0);
+  });
+
   it("resolves a declared sampler, falling back to null under a headless app", async () => {
     harness = await createSurfaceHarness();
     const source = `// @ignifx post
