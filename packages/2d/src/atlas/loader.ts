@@ -56,8 +56,9 @@ function toRects(definition: SpriteAtlasDefinition): readonly FrameRect[] {
       h: frame.h,
       pivotX: readVec2(frame.pivot, CENTRE_PIVOT).x,
       pivotY: readVec2(frame.pivot, CENTRE_PIVOT).y,
-      sourceW: readVec2(frame.sourceSize, { x: frame.w, y: frame.h }).x,
-      sourceH: readVec2(frame.sourceSize, { x: frame.w, y: frame.h }).y,
+      // A frame placed as trimmed draws at its trimmed size; the sync offsets it inside its source.
+      sourceW: frame.sourceOffset === undefined ? readVec2(frame.sourceSize, { x: frame.w, y: frame.h }).x : frame.w,
+      sourceH: frame.sourceOffset === undefined ? readVec2(frame.sourceSize, { x: frame.w, y: frame.h }).y : frame.h,
     });
   }
   return rects;

@@ -309,9 +309,11 @@ export function clearRect(map: Tilemap, layer: number, x0: number, y0: number, x
 Generated reference: `skills/ignifx/references/formats/`.
 
 - **`.atlas.json`** (`ignifx.spriteatlas`) — `image` (an address relative to the document, resolved through the manifest; `/x.png` and URLs verbatim), `sampling`,
-  `premultipliedAlpha`, and `frames: [{ name, x, y, w, h, pivot?, sourceSize? }]` in **image pixels
+  `premultipliedAlpha`, and `frames: [{ name, x, y, w, h, pivot?, sourceSize?, sourceOffset? }]` in **image pixels
   with a top-left origin**. A pivot is `[x, y]` or `{ x, y }` in `[0, 1]` of the frame; `[0, 0]` is
-  top-left. A `SpriteRenderer` picks a frame by name with `frameName`. A
+  top-left. A trimmed frame sets `sourceSize` (the untrimmed size) and `sourceOffset` (where the
+  trimmed rectangle's top-left sits in it, TexturePacker's `spriteSourceSize.x/y`): it then draws at
+  `w`/`h`, exactly where the untrimmed frame would, and its pivot is in `[0, 1]` of `sourceSize`. A `SpriteRenderer` picks a frame by name with `frameName`. A
   `"2d/hero.atlas.json#frame:idle_0"` address loads a `SpriteAsset` for code; it is not a sprite.
 - **`.spriteanim.json`** (`ignifx.spriteanimation`) — `atlas` plus
   `clips: [{ name, frames | from/to, fps, loop, events }]`. An event's `frame` is the index **within
