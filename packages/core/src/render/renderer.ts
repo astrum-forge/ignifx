@@ -41,7 +41,7 @@ import {
   RenderTextureImpl,
   renderTextureUnusableError,
 } from "./render-texture.js";
-import { toRenderingFeatures } from "./rendering-settings.js";
+import { resolveTaaSettings, toRenderingFeatures } from "./rendering-settings.js";
 import type { Camera } from "./camera.js";
 import type { MaterialAsset } from "./material-asset.js";
 import type { RenderTexture, RenderTextureOwner } from "./render-texture.js";
@@ -55,6 +55,7 @@ import type { ImageProcessingState } from "../lite/gpu/environment.js";
 import type { LiteGpuPicker } from "../lite/gpu/picker.js";
 import type { ScenePresenter } from "../lite/gpu/render-path.js";
 import type { SceneInputs, SceneInputsHost } from "../lite/gpu/scene-inputs.js";
+import type { TaaHandle } from "../lite/gpu/taa.js";
 import type { MaterialWarmUp } from "../lite/gpu/warm-up.js";
 import type { NodeTag } from "../lite/node.js";
 import type { LitePickInfo, PickAccept, PickedIdentity } from "../lite/picking.js";
@@ -479,6 +480,20 @@ export interface Renderer {
    */
   taskTimings(): RenderTaskTimings;
   /**
+   * Drops the temporal anti-aliasing history, so the next frame starts fresh.
+   *
+   * @remarks
+   * Call it on a camera cut the automatic detection misses (`rendering.taa.cutDistance`): a switch
+   * to another camera nearby, or a scene change under a still camera. Does nothing while
+   * `rendering.taa` is off.
+   *
+   * @example
+   * ```ts
+   * app.renderer.resetTemporalHistory();
+   * ```
+   */
+  resetTemporalHistory(): void;
+  /**
    * Declares that a rendering feature must be on — what an extension calls from `register`
    * (`docs/architecture/07-rendering.md` §1.1).
    *
@@ -640,6 +655,9 @@ export class RendererImpl implements Renderer {
   /** The same owner once loaded, so `dispose()` can free it synchronously. */
   #sceneInputsHost: SceneInputsHost | null = null;
 
+  /** The TAA passes (`../lite/gpu/taa.ts`), when `rendering.taa` installed them. */
+  #taa: TaaHandle | null = null;
+
   #defaultMaterial: AssetHandle<MaterialAsset> | null = null;
 
   #resolutionScale = 1;
@@ -791,6 +809,58 @@ export class RendererImpl implements Renderer {
       return host;
     });
     return (await this.#sceneInputs).acquire(this.#isSceneRegistered);
+  }
+
+  /**
+   * Installs temporal anti-aliasing when `rendering.taa.enabled` is on (GI plan steps G5–G6).
+   *
+   * @remarks
+   * Loads the `taa` chunk and leases the scene inputs only then. TAA needs the HDR render path;
+   * without `rendering.hdr` it logs a warning and stays off. `app.initialize()` calls it once, after
+   * the engine exists and before the scene is registered.
+   *
+   * @returns A promise that settles once the passes are in the frame graph, or at once when off.
+   *
+   * @internal
+   */
+  async installTemporalAntiAliasing(): Promise<void> {
+    const options = resolveTaaSettings(this.settings);
+    if (!options.enabled || this.isHeadless || this.#taa !== null) {
+      return;
+    }
+    const hdr = this.#presenter?.hdr ?? null;
+    if (hdr === null) {
+      this.#app.log.warn("rendering.taa needs rendering.hdr; temporal anti-aliasing stays off.");
+      return;
+    }
+    const module = await import("../lite/gpu/taa.js");
+    const inputs = await this.acquireSceneInputs();
+    if (inputs === null) {
+      return;
+    }
+    this.#taa = module.installTemporalAntiAliasing(
+      this.engine,
+      this.scene,
+      hdr,
+      inputs,
+      options,
+      this.#isSceneRegistered,
+    );
+  }
+
+  /**
+   * The TAA passes, when installed.
+   *
+   * @returns The handle, or `null`.
+   *
+   * @internal
+   */
+  get taa(): TaaHandle | null {
+    return this.#taa;
+  }
+
+  resetTemporalHistory(): void {
+    this.#taa?.reset();
   }
 
   /**
@@ -1684,6 +1754,7 @@ export class RendererImpl implements Renderer {
     this.#afterRebuild.length = 0;
     this.#sceneInputsHost?.dispose();
     this.#sceneInputsHost = null;
+    this.#taa = null;
     // Each overlay removes itself from the map as it is disposed, which a `Map` iteration allows.
     for (const overlay of this.#overlays.values()) {
       overlay.dispose();

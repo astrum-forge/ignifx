@@ -660,6 +660,8 @@ class AppImpl implements App {
     this.assets.attachEngine(this.#handles.engine);
     renderer.attachHandles(this.#handles.engine, this.#handles.scene, this.#handles.presenter);
     this.#enableDeviceLossRecovery(rendering);
+    // GI plan G5–G6: loads the TAA chunk only when `rendering.taa.enabled` is on.
+    await renderer.installTemporalAntiAliasing();
     const time = this.#settings.time;
     this.time.applySettings(time.fixedDeltaTime, time.maximumDeltaTime, time.timeScale);
     const world = createWorld({
