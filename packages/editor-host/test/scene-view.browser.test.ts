@@ -284,6 +284,7 @@ async function sceneView(scene: SceneFile = SCENE, framed = "BOX"): Promise<Edit
     HostCapability.gameView,
     HostCapability.thumbnails,
     HostCapability.grid,
+    HostCapability.spriteAnimation,
   ]);
   host = await starting;
   announced = (await peer.nextNotification(SceneNotification.schemasChanged))["params"];

@@ -182,8 +182,14 @@ export async function startEditorHost(options: EditorHostOptions): Promise<Edito
         HostCapability.gameView,
         ...(canRenderThumbnails(options) ? [HostCapability.thumbnails] : []),
         HostCapability.grid,
+        HostCapability.spriteAnimation,
       ]
-    : [HostCapability.heartbeat, HostCapability.logRelay, HostCapability.hotReloadDefaults];
+    : [
+        HostCapability.heartbeat,
+        HostCapability.logRelay,
+        HostCapability.hotReloadDefaults,
+        HostCapability.spriteAnimation,
+      ];
   let channel: Channel | null = null;
   const scene = new SceneHost({
     capabilities,

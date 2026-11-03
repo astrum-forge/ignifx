@@ -14,6 +14,7 @@ import "./augmentation.js";
 
 // animation — the `.spriteanim.json` document, its loader, and the component that plays it.
 export { TWO_D_ANIMATION_ORDER, TwoDAnimationSystem } from "./animation/animation-system.js";
+export { spriteClipFrameAtTime, type SpriteClipTiming } from "./animation/clip-time.js";
 export {
   DEFAULT_CLIP_FPS,
   defineSpriteAnimation,

@@ -61,7 +61,7 @@ export type HostKind = (typeof HostKind)[keyof typeof HostKind];
  * The play controls send `"heartbeat"`, `"playControls"`, `"logRelay"` and `"queryRuntime"`, plus
  * `"screenshot"` when the game has a canvas and `"sendInput"` when it has `app.input`. The scene
  * host sends `"heartbeat"` and whichever of `"gizmos"`, `"screenshot"`, `"viewMode2d"`,
- * `"pick2d"`, `"gameView"`, `"thumbnails"` and `"grid"` it supports; every `SceneMethod` not tied
+ * `"pick2d"`, `"gameView"`, `"thumbnails"`, `"grid"` and `"spriteAnimation"` it supports; every `SceneMethod` not tied
  * to one of them is required of a 0.3 scene host.
  *
  * @public
@@ -136,6 +136,13 @@ export const HostCapability = {
    * `RpcErrorCode.methodNotFound`.
    */
   grid: "grid",
+  /**
+   * The scene host answers `sampleSpriteAnimation`: one frame of a clip on an entity's
+   * `SpriteAnimator` (`@ignifx/2d`), for the editor's sprite animation panel. From engine ask E51
+   * (additive in 0.3); without it, the scene host answers `sampleSpriteAnimation` with
+   * `RpcErrorCode.methodNotFound`.
+   */
+  spriteAnimation: "spriteAnimation",
 } as const;
 
 /**

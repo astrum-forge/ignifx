@@ -46,6 +46,7 @@ import { GizmoDragRelay } from "./gizmo-drag.js";
 import { DEFAULT_GRID_SIZE, groundGridPlacement, screenGridPlacement } from "./grid.js";
 import { applyOps, reloadInstance } from "./ops.js";
 import { sampleAnimation } from "./sample-animation.js";
+import { sampleSpriteAnimation } from "./sample-sprite-animation.js";
 import { schemaSet } from "./schemas.js";
 import { checkScreenshotParams, takeScreenshot } from "./screenshot.js";
 import { settingsSet } from "./settings.js";
@@ -224,6 +225,9 @@ export class SceneHost {
       [SceneMethod.getColliderOutlines, (params) => this.#getColliderOutlines(params)],
       [SceneMethod.sampleAnimation, (params) => this.#sampleAnimation(params)],
     ]);
+    if (has(HostCapability.spriteAnimation)) {
+      methods.set(SceneMethod.sampleSpriteAnimation, (params) => this.#sampleSpriteAnimation(params));
+    }
     if (has(HostCapability.gizmos)) {
       methods.set(SceneMethod.setGizmo, (params) => this.#setGizmo(params));
     }
@@ -803,6 +807,18 @@ export class SceneHost {
     const mirror = this.#requireMirror(SceneMethod.sampleAnimation);
     this.#requireOpen(SceneMethod.sampleAnimation);
     return sampleAnimation(this.#requireApp(), mirror, params);
+  }
+
+  /**
+   * `sampleSpriteAnimation`: shows one frame of a clip on an entity's `SpriteAnimator`.
+   *
+   * @param params - `{ entity, clip, frame }` or `{ entity, clip, time }`.
+   * @returns `{ posed }`.
+   */
+  #sampleSpriteAnimation(params: unknown): unknown {
+    const mirror = this.#requireMirror(SceneMethod.sampleSpriteAnimation);
+    this.#requireOpen(SceneMethod.sampleSpriteAnimation);
+    return sampleSpriteAnimation(this.#requireApp(), mirror, params);
   }
 
   /**

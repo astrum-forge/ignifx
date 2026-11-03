@@ -46285,6 +46285,44 @@ IgnifxError with code `IGX-1108` when the document declares no such clip.
 animator.sample("run", 2);
 ```
 
+##### sampleTime()
+
+> **sampleTime**(`name`, `seconds`): `boolean`
+
+Shows the frame of a clip that plays `seconds` into it, without playing it: [SpriteAnimator.sample](#sample-3) at the frame `spriteClipFrameAtTime` picks, at this animator's `speed`.
+A looping clip wraps and a one-shot clip holds its first or last frame.
+
+###### Parameters
+
+###### name
+
+`string`
+
+The clip's name.
+
+###### seconds
+
+`number`
+
+How far into the clip, in seconds.
+
+###### Returns
+
+`boolean`
+
+`true` when the frame was written; `false` while the document or the atlas is still
+loading, or when the clip has no frames.
+
+###### Throws
+
+IgnifxError with code `IGX-1108` when the document declares no such clip.
+
+###### Example
+
+```ts
+animator.sampleTime("run", 0.25);
+```
+
 ##### stop()
 
 > **stop**(): `void`

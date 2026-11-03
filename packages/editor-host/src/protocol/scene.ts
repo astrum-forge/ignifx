@@ -94,6 +94,12 @@ export const SceneMethod = {
    */
   sampleAnimation: "sampleAnimation",
   /**
+   * Shows one frame of a clip on an entity's `SpriteAnimator` without playing it (engine ask E51).
+   * Needs `HostCapability.spriteAnimation`. Answers {@link SampleSpriteAnimationResult}. A host from
+   * before it answers `RpcErrorCode.methodNotFound`. Additive in 0.3.
+   */
+  sampleSpriteAnimation: "sampleSpriteAnimation",
+  /**
    * Shows or hides the view's grid and sets its spacing (engine ask E31). Needs
    * `HostCapability.grid`. Answers `null`. Additive in 0.3.
    */
@@ -910,6 +916,46 @@ export interface SampleAnimationResult {
 }
 
 /**
+ * The parameters of `sampleSpriteAnimation`.
+ *
+ * @remarks
+ * The host calls `@ignifx/2d`'s `SpriteAnimator.sample(clip, frame)` or
+ * `SpriteAnimator.sampleTime(clip, time)` on the entity's `SpriteAnimator`, which writes the frame
+ * onto the entity's `SpriteRenderer` and stops playback there. Exactly one of `frame` and `time` is
+ * given. A frame outside the clip is clamped to it; a time past the clip's end wraps a looping clip
+ * and holds a one-shot clip on its last frame, at the animator's `speed`. In an edit-mode scene view
+ * the frame stays until the next sample or document change. The clip name is at most
+ * {@link SAMPLE_ANIMATION_MAX_NAME_LENGTH} long. An entity the open scene lacks, or one without a
+ * `SpriteAnimator`, is refused with `RpcErrorCode.invalidParams`, and so is a clip the document does
+ * not declare, with the engine's code (`IGX-1108`) as `data.code`.
+ *
+ * @public
+ */
+export interface SampleSpriteAnimationParams {
+  /** The uid of the document entity whose `SpriteAnimator` is posed. */
+  readonly entity: string;
+  /** The clip's name in the `.spriteanim.json` document. */
+  readonly clip: string;
+  /** The frame within the clip, counting from `0`. Give this or `time`. */
+  readonly frame?: number;
+  /** How far into the clip, in seconds. Give this or `frame`. */
+  readonly time?: number;
+}
+
+/**
+ * The answer to `sampleSpriteAnimation`.
+ *
+ * @public
+ */
+export interface SampleSpriteAnimationResult {
+  /**
+   * Whether the frame was written. `false` while the animation document or the sprite's atlas is
+   * still loading, or when the clip has no frames; the editor may send the request again later.
+   */
+  readonly posed: boolean;
+}
+
+/**
  * The parameters of `sceneOpened`.
  *
  * @public
@@ -1155,6 +1201,7 @@ export type SceneRequest =
   | RpcRequestWithParams<typeof SceneMethod.setAnimateMaterials, SetAnimateMaterialsParams>
   | RpcRequestWithParams<typeof SceneMethod.getColliderOutlines, EntitySelection>
   | RpcRequestWithParams<typeof SceneMethod.sampleAnimation, SampleAnimationParams>
+  | RpcRequestWithParams<typeof SceneMethod.sampleSpriteAnimation, SampleSpriteAnimationParams>
   | RpcRequestWithParams<typeof SceneMethod.setGrid, SetGridParams>;
 
 /**
@@ -1234,6 +1281,13 @@ export type ColliderOutlinesResponse = RpcSuccessResponse<ColliderOutlineSet>;
  * @public
  */
 export type SampleAnimationResponse = RpcSuccessResponse<SampleAnimationResult>;
+
+/**
+ * The success answer to `sampleSpriteAnimation`.
+ *
+ * @public
+ */
+export type SampleSpriteAnimationResponse = RpcSuccessResponse<SampleSpriteAnimationResult>;
 
 /**
  * Scene host → editor: one of the `SceneNotification`s.
@@ -1811,6 +1865,41 @@ function isSampleParameters(value: unknown): boolean {
  * @public
  */
 export function isSampleAnimationResult(value: unknown): value is SampleAnimationResult {
+  return isRecord(value) && isBoolean(value["posed"]);
+}
+
+/**
+ * Checks the parameters of `sampleSpriteAnimation`.
+ *
+ * @param value - The received `params`.
+ * @returns True for a uid, a clip name within {@link SAMPLE_ANIMATION_MAX_NAME_LENGTH}, and exactly
+ * one of a finite `frame` and a finite `time`.
+ *
+ * @public
+ */
+export function isSampleSpriteAnimationParams(value: unknown): value is SampleSpriteAnimationParams {
+  if (
+    !isRecord(value) ||
+    !isUidString(value["entity"]) ||
+    !isBoundedName(value["entity"]) ||
+    !isBoundedName(value["clip"])
+  ) {
+    return false;
+  }
+  const frame = value["frame"];
+  const time = value["time"];
+  return frame === undefined ? isFiniteNumber(time) : isFiniteNumber(frame) && time === undefined;
+}
+
+/**
+ * Checks the result of `sampleSpriteAnimation`.
+ *
+ * @param value - The received `result`.
+ * @returns True for `{ posed: boolean }`.
+ *
+ * @public
+ */
+export function isSampleSpriteAnimationResult(value: unknown): value is SampleSpriteAnimationResult {
   return isRecord(value) && isBoolean(value["posed"]);
 }
 

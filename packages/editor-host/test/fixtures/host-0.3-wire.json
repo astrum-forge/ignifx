@@ -22,7 +22,7 @@
           "major": 0,
           "minor": 3
         },
-        "capabilities": ["heartbeat", "gizmos", "screenshot", "viewMode2d", "pick2d", "grid"],
+        "capabilities": ["heartbeat", "gizmos", "screenshot", "viewMode2d", "pick2d", "grid", "spriteAnimation"],
         "hostKind": "scene"
       }
     },
@@ -1968,6 +1968,33 @@
         "data": {
           "code": "IGX-1202"
         }
+      }
+    },
+    "sampleSpriteAnimation": {
+      "jsonrpc": "2.0",
+      "id": 31,
+      "method": "sampleSpriteAnimation",
+      "params": {
+        "entity": "01M4ZEB9E0GG0Q6R22YXV3AVK8",
+        "clip": "run",
+        "frame": 2
+      }
+    },
+    "sampleSpriteAnimationTime": {
+      "jsonrpc": "2.0",
+      "id": 32,
+      "method": "sampleSpriteAnimation",
+      "params": {
+        "entity": "01M4ZEB9E0GG0Q6R22YXV3AVK8",
+        "clip": "run",
+        "time": 0.25
+      }
+    },
+    "sampleSpriteAnimationResponse": {
+      "jsonrpc": "2.0",
+      "id": 31,
+      "result": {
+        "posed": true
       }
     },
     "setGameView": {

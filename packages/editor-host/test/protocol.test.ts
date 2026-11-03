@@ -52,6 +52,7 @@ describe("the protocol mirror", () => {
       gameView: "gameView",
       thumbnails: "thumbnails",
       grid: "grid",
+      spriteAnimation: "spriteAnimation",
     });
     expect(page.RenderViewMethod).toEqual({
       setGameView: "setGameView",

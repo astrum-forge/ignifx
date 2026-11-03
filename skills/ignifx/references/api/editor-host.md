@@ -2307,6 +2307,65 @@ still loading, and always in a headless host; the editor may send the request ag
 
 ***
 
+### SampleSpriteAnimationParams
+
+The parameters of `sampleSpriteAnimation`.
+
+#### Remarks
+
+The host calls `@ignifx/2d`'s `SpriteAnimator.sample(clip, frame)` or
+`SpriteAnimator.sampleTime(clip, time)` on the entity's `SpriteAnimator`, which writes the frame
+onto the entity's `SpriteRenderer` and stops playback there. Exactly one of `frame` and `time` is
+given. A frame outside the clip is clamped to it; a time past the clip's end wraps a looping clip
+and holds a one-shot clip on its last frame, at the animator's `speed`. In an edit-mode scene view
+the frame stays until the next sample or document change. The clip name is at most
+[SAMPLE\_ANIMATION\_MAX\_NAME\_LENGTH](#sample_animation_max_name_length) long. An entity the open scene lacks, or one without a
+`SpriteAnimator`, is refused with `RpcErrorCode.invalidParams`, and so is a clip the document does
+not declare, with the engine's code (`IGX-1108`) as `data.code`.
+
+#### Properties
+
+##### clip
+
+> `readonly` **clip**: `string`
+
+The clip's name in the `.spriteanim.json` document.
+
+##### entity
+
+> `readonly` **entity**: `string`
+
+The uid of the document entity whose `SpriteAnimator` is posed.
+
+##### frame?
+
+> `readonly` `optional` **frame?**: `number`
+
+The frame within the clip, counting from `0`. Give this or `time`.
+
+##### time?
+
+> `readonly` `optional` **time?**: `number`
+
+How far into the clip, in seconds. Give this or `frame`.
+
+***
+
+### SampleSpriteAnimationResult
+
+The answer to `sampleSpriteAnimation`.
+
+#### Properties
+
+##### posed
+
+> `readonly` **posed**: `boolean`
+
+Whether the frame was written. `false` while the animation document or the sprite's atlas is
+still loading, or when the clip has no frames; the editor may send the request again later.
+
+***
+
 ### SceneFile
 
 A whole scene or prefab file. The engine's `SceneFile`.
@@ -3668,6 +3727,14 @@ The success answer to `sampleAnimation`.
 
 ***
 
+### SampleSpriteAnimationResponse
+
+> **SampleSpriteAnimationResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<[`SampleSpriteAnimationResult`](#samplespriteanimationresult)\>
+
+The success answer to `sampleSpriteAnimation`.
+
+***
+
 ### SceneHostNotification
 
 > **SceneHostNotification** = [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`sceneOpened`](#sceneopened), [`SceneOpenedParams`](#sceneopenedparams)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`schemasChanged`](#schemaschanged), [`SchemaSet`](#schemaset)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`hotReloaded`](#hotreloaded-1), [`HotReloadedParams`](#hotreloadedparams)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`selectionChanged`](#selectionchanged), [`EntitySelection`](#entityselection)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`transformDragging`](#transformdragging), [`TransformDraggingParams`](#transformdraggingparams)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`transformDragged`](#transformdragged), [`TransformDraggedParams`](#transformdraggedparams)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`hostError`](#hosterror-1), [`HostErrorParams`](#hosterrorparams)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`log`](#log-1), [`LogParams`](#logparams)\> \| [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`assetReloaded`](#assetreloaded), [`AssetReloadedParams`](#assetreloadedparams)\>
@@ -3710,7 +3777,7 @@ The union of the names in `SceneOpKind`.
 
 ### SceneRequest
 
-> **SceneRequest** = [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`openScene`](#openscene), [`OpenSceneParams`](#opensceneparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`closeScene`](#closescene), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`applyOps`](#applyops), [`ApplyOpsParams`](#applyopsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`readBack`](#readback), [`ReadBackParams`](#readbackparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`select`](#select), [`EntitySelection`](#entityselection)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setGizmo`](#setgizmo), [`SetGizmoParams`](#setgizmoparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`frame`](#frame), [`FrameParams`](#frameparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`pick`](#pick), [`PickParams`](#pickparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`screenshot`](#screenshot-2), [`ScreenshotParams`](#screenshotparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`getSchemas`](#getschemas), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`describeSettings`](#describesettings), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setViewMode`](#setviewmode), [`SetViewModeParams`](#setviewmodeparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setAnimateMaterials`](#setanimatematerials), [`SetAnimateMaterialsParams`](#setanimatematerialsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`getColliderOutlines`](#getcollideroutlines), [`EntitySelection`](#entityselection)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`sampleAnimation`](#sampleanimation), [`SampleAnimationParams`](#sampleanimationparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setGrid`](#setgrid), [`SetGridParams`](#setgridparams)\>
+> **SceneRequest** = [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`openScene`](#openscene), [`OpenSceneParams`](#opensceneparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`closeScene`](#closescene), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`applyOps`](#applyops), [`ApplyOpsParams`](#applyopsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`readBack`](#readback), [`ReadBackParams`](#readbackparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`select`](#select), [`EntitySelection`](#entityselection)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setGizmo`](#setgizmo), [`SetGizmoParams`](#setgizmoparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`frame`](#frame-1), [`FrameParams`](#frameparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`pick`](#pick), [`PickParams`](#pickparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`screenshot`](#screenshot-2), [`ScreenshotParams`](#screenshotparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`getSchemas`](#getschemas), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`describeSettings`](#describesettings), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setViewMode`](#setviewmode), [`SetViewModeParams`](#setviewmodeparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setAnimateMaterials`](#setanimatematerials), [`SetAnimateMaterialsParams`](#setanimatematerialsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`getColliderOutlines`](#getcollideroutlines), [`EntitySelection`](#entityselection)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`sampleAnimation`](#sampleanimation), [`SampleAnimationParams`](#sampleanimationparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`sampleSpriteAnimation`](#samplespriteanimation), [`SampleSpriteAnimationParams`](#samplespriteanimationparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setGrid`](#setgrid), [`SetGridParams`](#setgridparams)\>
 
 Editor → scene host: one of the `SceneMethod`s. `closeScene`, `getSchemas` and `describeSettings`
 take no parameters.
@@ -4214,6 +4281,15 @@ own input system (`app.input` from `@ignifx/input`), never into the editor's win
 when the game has `app.input`. From engine ask E49 (additive in 0.3); without it, the play view
 answers `sendInput` with `RpcErrorCode.methodNotFound`.
 
+##### spriteAnimation
+
+> `readonly` **spriteAnimation**: `"spriteAnimation"` = `"spriteAnimation"`
+
+The scene host answers `sampleSpriteAnimation`: one frame of a clip on an entity's
+`SpriteAnimator` (`@ignifx/2d`), for the editor's sprite animation panel. From engine ask E51
+(additive in 0.3); without it, the scene host answers `sampleSpriteAnimation` with
+`RpcErrorCode.methodNotFound`.
+
 ##### thumbnails
 
 > `readonly` **thumbnails**: `"thumbnails"` = `"thumbnails"`
@@ -4233,7 +4309,7 @@ The scene host accepts `setViewMode` with `"2d"`: a 2D editor camera and planar 
 The play controls send `"heartbeat"`, `"playControls"`, `"logRelay"` and `"queryRuntime"`, plus
 `"screenshot"` when the game has a canvas and `"sendInput"` when it has `app.input`. The scene
 host sends `"heartbeat"` and whichever of `"gizmos"`, `"screenshot"`, `"viewMode2d"`,
-`"pick2d"`, `"gameView"`, `"thumbnails"` and `"grid"` it supports; every `SceneMethod` not tied
+`"pick2d"`, `"gameView"`, `"thumbnails"`, `"grid"` and `"spriteAnimation"` it supports; every `SceneMethod` not tied
 to one of them is required of a 0.3 scene host.
 
 ***
@@ -4733,6 +4809,14 @@ Serializes entities of the open scene as the live world has them. Answers [ReadB
 Poses an entity's `Animator` at one point of one state without playing it (engine ADR-0028,
 amendment 2026-10-20). Answers [SampleAnimationResult](#sampleanimationresult). A host from before it answers
 `RpcErrorCode.methodNotFound`. Additive in 0.3.
+
+##### sampleSpriteAnimation
+
+> `readonly` **sampleSpriteAnimation**: `"sampleSpriteAnimation"` = `"sampleSpriteAnimation"`
+
+Shows one frame of a clip on an entity's `SpriteAnimator` without playing it (engine ask E51).
+Needs `HostCapability.spriteAnimation`. Answers [SampleSpriteAnimationResult](#samplespriteanimationresult). A host from
+before it answers `RpcErrorCode.methodNotFound`. Additive in 0.3.
 
 ##### screenshot
 
@@ -5878,6 +5962,51 @@ The received `result`.
 #### Returns
 
 `value is SampleAnimationResult`
+
+True for `{ posed: boolean }`.
+
+***
+
+### isSampleSpriteAnimationParams()
+
+> **isSampleSpriteAnimationParams**(`value`): `value is SampleSpriteAnimationParams`
+
+Checks the parameters of `sampleSpriteAnimation`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `params`.
+
+#### Returns
+
+`value is SampleSpriteAnimationParams`
+
+True for a uid, a clip name within [SAMPLE\_ANIMATION\_MAX\_NAME\_LENGTH](#sample_animation_max_name_length), and exactly
+one of a finite `frame` and a finite `time`.
+
+***
+
+### isSampleSpriteAnimationResult()
+
+> **isSampleSpriteAnimationResult**(`value`): `value is SampleSpriteAnimationResult`
+
+Checks the result of `sampleSpriteAnimation`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `result`.
+
+#### Returns
+
+`value is SampleSpriteAnimationResult`
 
 True for `{ posed: boolean }`.
 
