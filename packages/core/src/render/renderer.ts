@@ -52,6 +52,7 @@ import type { Entity } from "../entity/entity.js";
 import type { ImageProcessingState } from "../lite/gpu/environment.js";
 import type { LiteGpuPicker } from "../lite/gpu/picker.js";
 import type { ScenePresenter } from "../lite/gpu/render-path.js";
+import type { SceneInputs, SceneInputsHost } from "../lite/gpu/scene-inputs.js";
 import type { MaterialWarmUp } from "../lite/gpu/warm-up.js";
 import type { NodeTag } from "../lite/node.js";
 import type { LitePickInfo, PickAccept, PickedIdentity } from "../lite/picking.js";
@@ -631,6 +632,12 @@ export class RendererImpl implements Renderer {
 
   #presenter: ScenePresenter | null = null;
 
+  /** The shared scene inputs' owner (`../lite/gpu/scene-inputs.ts`), loaded by the first acquire. */
+  #sceneInputs: Promise<SceneInputsHost> | null = null;
+
+  /** The same owner once loaded, so `dispose()` can free it synchronously. */
+  #sceneInputsHost: SceneInputsHost | null = null;
+
   #defaultMaterial: AssetHandle<MaterialAsset> | null = null;
 
   #resolutionScale = 1;
@@ -753,6 +760,46 @@ export class RendererImpl implements Renderer {
    */
   get presenter(): ScenePresenter | null {
     return this.#presenter;
+  }
+
+  /**
+   * Leases the shared scene inputs — depth, normals, velocity and a depth pyramid from one geometry
+   * pass (`docs/architecture/07-rendering.md` §2.12) — for a screen-space effect.
+   *
+   * @remarks
+   * The first call loads the `scene-inputs` chunk and adds the pass to the frame graph; the last
+   * `release()` removes it. Nothing is loaded or added until an effect calls this.
+   *
+   * @returns The lease, or `null` under the null engine or once the renderer is disposed.
+   *
+   * @internal
+   */
+  async acquireSceneInputs(): Promise<SceneInputs | null> {
+    if (this.isHeadless || this.#isDisposed) {
+      return null;
+    }
+    const { engine, scene } = this;
+    this.#sceneInputs ??= import("../lite/gpu/scene-inputs.js").then((module) => {
+      const host = module.createSceneInputsHost(engine, scene);
+      this.#sceneInputsHost = host;
+      if (this.#isDisposed) {
+        // The renderer went away while the chunk loaded; a disposed host hands out nothing.
+        host.dispose();
+      }
+      return host;
+    });
+    return (await this.#sceneInputs).acquire(this.#isSceneRegistered);
+  }
+
+  /**
+   * How many scene-input leases are live; `0` before the first acquire.
+   *
+   * @returns The count.
+   *
+   * @internal
+   */
+  get sceneInputsUserCount(): number {
+    return this.#sceneInputsHost?.userCount ?? 0;
   }
 
   /**
@@ -1619,14 +1666,16 @@ export class RendererImpl implements Renderer {
   }
 
   /**
-   * Releases the open overlays, the picker and the warm-up probes. The core extension registers it
-   * as a disposer.
+   * Releases the open overlays, the picker, the warm-up probes and the scene inputs. The core
+   * extension registers it as a disposer.
    *
    * @internal
    */
   dispose(): void {
     this.#isDisposed = true;
     this.#afterRebuild.length = 0;
+    this.#sceneInputsHost?.dispose();
+    this.#sceneInputsHost = null;
     // Each overlay removes itself from the map as it is disposed, which a `Map` iteration allows.
     for (const overlay of this.#overlays.values()) {
       overlay.dispose();
