@@ -3,6 +3,7 @@ import {
   isGpuTimingSupported,
   resizeEngine,
   setGpuTimingEnabled,
+  setRenderTaskGpuTimingEnabled,
   setSurfaceSize,
   waitForGpuIdle,
 } from "@babylonjs/lite";
@@ -157,12 +158,30 @@ export function enableGpuTiming(engine: EngineContext): void {
 }
 
 /**
+ * Turns per-task GPU timing on or off, so `readRenderTaskGpuTimings` reports each frame-graph task.
+ *
+ * @remarks
+ * Lite keeps this separate from whole-frame timing (`enableGpuTiming`), and loads its profiler with
+ * a dynamic import on the first enable, so the snapshot reads `"pending"` until a later frame's
+ * readback lands. Without `timestamp-query` it reads `"unsupported"`.
+ *
+ * @param engine - The engine to measure.
+ * @param enabled - Whether to time each task.
+ * @returns A promise that settles once the profiler is installed (or removed).
+ *
+ * @internal
+ */
+export async function setRenderTaskGpuTiming(engine: EngineContext, enabled: boolean): Promise<void> {
+  await setRenderTaskGpuTimingEnabled(engine, enabled);
+}
+
+/**
  * Reads the latest per-task GPU timing snapshot.
  *
  * @remarks
  * Check `status` first: `"unsupported"` on a device without timestamp queries, `"disabled"` until
  * per-task timing is switched on, `"pending"` until the first readback lands, `"error"` when the
- * readback failed. `tasks` is in frame execution order and its names are the frame graph's own —
+ * readback failed, `"available"` otherwise. `tasks` is in frame execution order and its names are the frame graph's own —
  * `"shadow"`, `"scene"`, and whatever a post-process task was named.
  *
  * @param engine - The engine to read.

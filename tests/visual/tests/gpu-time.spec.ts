@@ -25,11 +25,8 @@ import type { Page } from "playwright/test";
  * `"scene"`, post-process tasks). Timestamp readbacks land a frame or two late, so the first frames
  * read `0` and are dropped with the warm-up.
  *
- * The ceiling is on the whole frame (`gpuFrameTimeMs`). Per-task numbers are printed, not asserted:
- * on `@babylonjs/lite@1.34.0` `renderer.profileTasks` turns on whole-frame timing only and never
- * calls Lite's `setRenderTaskGpuTimingEnabled`, so `taskTimings()` reads `"disabled"` (found by
- * GI step G1, 2026-11-02; fixing it is runtime work for a later step). The line prints the status,
- * so the day it works the per-task medians appear without a change here.
+ * The ceiling is on the whole frame (`gpuFrameTimeMs`). Per-task medians are printed, not asserted,
+ * with the snapshot's status (`"available"` once Lite's per-task readbacks land).
  */
 
 /** Where the recorded budgets live. */

@@ -24,6 +24,7 @@ import {
   readTargetSizePx,
   readTaskTimings,
   startGpuTiming,
+  stopTaskTiming,
   warmUpMaterialAssets,
 } from "./gpu/renderer-gpu.js";
 import { imageProcessedColor, linearClearColor, sameImageProcessing } from "./image-processing-color.js";
@@ -266,12 +267,12 @@ export interface RenderTaskTiming {
  */
 export interface RenderTaskTimings {
   /**
-   * Whether the numbers mean anything: `"unsupported"` on a device with no timestamp queries — the
-   * CI software adapter is one — `"disabled"` until `profileTasks` is on, `"pending"` until the
-   * first readback lands, `"error"` when it failed, `"ok"` otherwise.
+   * Whether the numbers mean anything: `"unsupported"` on a device with no timestamp queries,
+   * `"disabled"` until `profileTasks` is on, `"pending"` until the first readback lands, `"error"`
+   * when it failed, `"available"` otherwise.
    */
   readonly status: string;
-  /** The tasks, in frame execution order. Empty unless `status` is `"ok"`. */
+  /** The tasks, in frame execution order. Empty unless `status` is `"available"`. */
   readonly tasks: readonly RenderTaskTiming[];
 }
 
@@ -825,10 +826,16 @@ export class RendererImpl implements Renderer {
     if (this.isHeadless) {
       return;
     }
+    // Lite loads the per-task profiler asynchronously; a failure leaves `taskTimings()` pending
+    // and is logged, while whole-frame timing works either way.
+    const reportFailure = (error: unknown): void => {
+      this.#app.log.warn(`renderer.profileTasks could not switch per-task GPU timing: ${String(error)}`);
+    };
     if (value) {
-      startGpuTiming(this.engine);
+      startGpuTiming(this.engine).catch(reportFailure);
     } else {
       disableGpuTiming(this.engine);
+      stopTaskTiming(this.engine).catch(reportFailure);
     }
   }
 
