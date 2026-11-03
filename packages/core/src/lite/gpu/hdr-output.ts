@@ -23,6 +23,7 @@ import {
   StandardToneMapping,
 } from "@babylonjs/lite";
 import { rebuildMaterialPipelines } from "../material.js";
+import { AGX_CALL_WGSL, AGX_HELPERS_WGSL, AGX_TONE_MAPPING_ID } from "./agx-tone-mapping.js";
 import { DEPTH_STENCIL_FORMAT, markHdrScene } from "./render-path.js";
 import type { HdrOutputHandle, ScenePresenter } from "./render-path.js";
 import type {
@@ -146,7 +147,7 @@ export const HDR_OUTPUT_TASK_NAMES = { toChain: "ignifx:hdr-output-chain", toSwa
  *
  * @internal
  */
-export const HDR_CURVE = { none: 0, standard: 1, aces: 2, neutral: 3 } as const;
+export const HDR_CURVE = { none: 0, standard: 1, aces: 2, neutral: 3, agx: 4 } as const;
 
 /** The output pass's uniform block: exposure, contrast, curve, padding. */
 const UNIFORM_FLOATS = 4;
@@ -274,7 +275,8 @@ export function linearFogConfig(fog: FogConfig): FogConfig {
  * Builds the output pass's fragment shader.
  *
  * @remarks
- * The curves are Lite's own WGSL (`ToneMapping.helpersWGSL`/`callWGSL`), which read the exposure
+ * The curves are Lite's own WGSL (`ToneMapping.helpersWGSL`/`callWGSL`) and ignifx's AgX in the
+ * same form (`./agx-tone-mapping.ts`, so both paths run one function), which read the exposure
  * from `scene.vImageInfos.x`; naming the uniform block `scene` lets them drop in unchanged. One
  * shader holds all of them and branches on a uniform, so a curve change uploads 16 bytes instead
  * of compiling a pipeline. The encode, clamp and contrast copy the PBR template's tail.
@@ -287,6 +289,7 @@ export function hdrOutputFragmentWgsl(): string {
   return [
     AcesToneMapping.helpersWGSL,
     NeutralToneMapping.helpersWGSL,
+    AGX_HELPERS_WGSL,
     "struct HdrOutputUniforms{vImageInfos:vec4<f32>};",
     "@group(0)@binding(0)var<uniform>scene:HdrOutputUniforms;",
     "@group(0)@binding(1)var hdrColor:texture_2d<f32>;",
@@ -297,6 +300,7 @@ export function hdrOutputFragmentWgsl(): string {
     `if(curve==${String(HDR_CURVE.standard)}){${StandardToneMapping.callWGSL}}`,
     `else if(curve==${String(HDR_CURVE.aces)}){${AcesToneMapping.callWGSL}}`,
     `else if(curve==${String(HDR_CURVE.neutral)}){${NeutralToneMapping.callWGSL}}`,
+    `else if(curve==${String(HDR_CURVE.agx)}){${AGX_CALL_WGSL}}`,
     "else{color*=scene.vImageInfos.x;}",
     "color=pow(color,vec3<f32>(1.0/2.2));",
     "color=clamp(color,vec3<f32>(0.0),vec3<f32>(1.0));",
@@ -328,6 +332,9 @@ export function hdrCurveOf(processing: Pick<ImageProcessingConfig, "toneMappingE
   const id = processing.toneMapping?.id;
   if (id === AcesToneMapping.id) {
     return HDR_CURVE.aces;
+  }
+  if (id === AGX_TONE_MAPPING_ID) {
+    return HDR_CURVE.agx;
   }
   return id === NeutralToneMapping.id ? HDR_CURVE.neutral : HDR_CURVE.standard;
 }

@@ -3722,7 +3722,7 @@ export interface TimeSettings {
 export function toJsonSchema(schema: Schema): JsonSchemaObject;
 
 // @public
-export const TONE_MAPPING_NAMES: readonly ["none", "standard", "aces", "neutral"];
+export const TONE_MAPPING_NAMES: readonly ["none", "standard", "aces", "neutral", "agx"];
 
 // @public
 export type ToneMappingCurve = (typeof TONE_MAPPING_NAMES)[number];

@@ -68,7 +68,9 @@ what they mean.
   does. With no image processing it presents as authored — a channel lands on screen at
   `value * 255`, so `{ r: 0.5, g: 0.5, b: 0.5 }` reads back as bytes `128, 128, 128` and `#14181F`
   matches the same page colour. Under a tone-mapping curve, exposure or contrast it presents
-  processed: under ACES that grey reads back as `104, 104, 104`. Set the fog colour to the clear
+  processed: under ACES that grey reads back as `104, 104, 104`. The curves are `"standard"`,
+  `"aces"`, `"neutral"` (Khronos PBR Neutral) and `"agx"` (AgX base look, Blender-style: bright,
+  saturated lights desaturate towards white instead of clipping to a hue); `"none"` is the default. Set the fog colour to the clear
   colour and the fogged floor fades into the background with no band, whatever the curve. An sRGB
   surface (`rendering.srgb`) and bloom do not change it. A `PostProcessStack` with its
   `imageProcessing` effect on grades the whole frame again, clear included. In `@ignifx/2d`'s `"sprite"` mode the sprite pass owns the frame, so only the

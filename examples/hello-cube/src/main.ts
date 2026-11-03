@@ -4,6 +4,7 @@ import {
   Camera,
   createApp,
   createMaterialAsset,
+  Environment,
   f32,
   isIgnifxError,
   Light,
@@ -11,8 +12,9 @@ import {
   MeshRenderer,
   pbrMaterialDefinition,
   Script,
+  TONE_MAPPING_NAMES,
 } from "@ignifx/core";
-import type { App, Entity, ScriptCallbacks } from "@ignifx/core";
+import type { App, Entity, ScriptCallbacks, ToneMappingCurve } from "@ignifx/core";
 
 /**
  * The smallest complete ignifx app: a camera, a shadow-casting directional light, a ground plane,
@@ -24,6 +26,7 @@ import type { App, Entity, ScriptCallbacks } from "@ignifx/core";
  * - `?ortho=1` switches the camera to an orthographic projection.
  * - `?static=1` stops time and pins the cube at a fixed angle, so the frame is reproducible.
  * - `?hdr=1` turns on `rendering.hdr`, which should present the same image.
+ * - `?tonemap=<curve>` adds an `Environment` with that tone-mapping curve (`agx`, `aces`, …).
  *
  * `window.__ignifxReady` resolves to `"ready"` once the scene has presented a settled frame, or to
  * `"unsupported"` when the browser has no WebGPU. It is assigned before the first `await` so a test
@@ -190,6 +193,17 @@ function projectSettings(hdr: boolean): Readonly<Record<string, unknown>> {
   return { ...config, rendering: { ...(typeof rendering === "object" ? rendering : {}), hdr: true } };
 }
 
+/**
+ * Reads the `?tonemap=` flag.
+ *
+ * @param value - The flag's value, if any.
+ * @returns The curve it names, or `null` for none or an unknown name.
+ */
+function toneMappingFlag(value: string | null): ToneMappingCurve | null {
+  const curve = TONE_MAPPING_NAMES.find((name) => name === value);
+  return curve ?? null;
+}
+
 async function main(): Promise<AppStatus> {
   const canvas = document.querySelector("#game");
   if (!(canvas instanceof HTMLCanvasElement)) {
@@ -211,6 +225,12 @@ async function main(): Promise<AppStatus> {
   }
 
   const cube = buildScene(app, flags.get("ortho") === "1");
+  const curve = toneMappingFlag(flags.get("tonemap"));
+  if (curve !== null) {
+    app.world.createEntity("Environment").addComponent(Environment, {
+      imageProcessing: { exposure: 1, contrast: 1, toneMapping: curve },
+    });
+  }
   if (flags.get("static") === "1") {
     cube.transform.localEulerAngles = { x: 0, y: FROZEN_ANGLE_DEGREES, z: 0 };
     app.time.timeScale = 0;
