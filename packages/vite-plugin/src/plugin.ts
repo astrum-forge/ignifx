@@ -145,6 +145,19 @@ function describeError(error: unknown): string {
 }
 
 /**
+ * Tells whether a path exists on disk.
+ *
+ * @param path - The path to check.
+ * @returns `true` when `stat` succeeds.
+ */
+function fileExists(path: string): Promise<boolean> {
+  return stat(path).then(
+    () => true,
+    () => false,
+  );
+}
+
+/**
  * Marks the generated manifest module stale so that importers pick the new one up.
  *
  * @param server - The dev server.
@@ -219,7 +232,10 @@ interface ResolvedProjectSettings {
  * - In development the manifest is also served from `/<manifestFileName>`, the asset root is
  *   watched, and every change is announced on the `ignifx:asset-changed` HMR channel; editing the
  *   project config or settings file restarts the dev server, which injects the new values and
- *   reloads the page.
+ *   reloads the page. The development manifest's `root` is the asset root's served URL (`/assets`
+ *   with the default `base`), so an address added after the page loaded resolves the same on every
+ *   page, and a request under that URL for a file that does not exist is answered 404 instead of
+ *   with Vite's HTML fallback.
  * - `vite dev` and `vite preview` answer 404 to any request whose decoded path has a `.ignifx`
  *   segment, in any case or encoding, or whose file lies in `.ignifx/` once symbolic links are
  *   followed, ahead of every middleware that serves a file. `load` refuses (`IGX-0556`) a module
@@ -358,6 +374,24 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
   }
 
   /**
+   * The development URL the asset root is served from, without a trailing separator — the
+   * manifest's `root` under `vite dev`.
+   *
+   * @remarks
+   * `resolveUrl` joins an address the manifest does not list onto `root`. A page-relative `assets`
+   * there resolved under the page's own path, so the editor's scene view at `/__ignifx_editor__/`
+   * fetched a prefab created after it loaded from `/__ignifx_editor__/assets/…`, which Vite answers
+   * with its HTML fallback (`IGX-0505`). The root a listed address's URL is built from is right for
+   * every page on the server. A build keeps the configured `assetRoot`.
+   *
+   * @returns The URL prefix, for example `"/assets"` or `"/game/assets"`.
+   */
+  function developmentRoot(): string {
+    const prefix = developmentUrl("");
+    return prefix.length > 1 && prefix.endsWith("/") ? prefix.slice(0, -1) : prefix;
+  }
+
+  /**
    * The production URL of an asset, which carries its content hash.
    *
    * @param asset - The scanned asset.
@@ -405,7 +439,8 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
    * public asset claim the same manifest address, which would make `resolveUrl` answer arbitrarily.
    */
   function currentManifest(): AssetManifest {
-    const scannedManifest = buildManifest(assets, settings.assetRoot, (asset) =>
+    const manifestRoot = command === "build" ? settings.assetRoot : developmentRoot();
+    const scannedManifest = buildManifest(assets, manifestRoot, (asset) =>
       command === "build" ? productionUrl(asset) : developmentUrl(asset.address),
     );
     if (extensionAssets.length === 0) {
@@ -739,7 +774,45 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
   }
 
   /**
-   * Serves the development manifest and the extension public assets.
+   * Tells whether a request under the asset root's URL names a file that exists nowhere Vite would
+   * serve it from.
+   *
+   * @remarks
+   * Vite answers a missing path with its HTML fallback, so an asset whose file is gone reached the
+   * loader as `200 text/html` and failed as a JSON or glTF parse error. A path outside the asset
+   * root, a malformed escape, or an asset root that is the Vite root itself is left to Vite.
+   *
+   * @param path - The request path, query removed.
+   * @param publicDir - Vite's `publicDir`, served at `base`, or `""` when there is none.
+   * @returns `true` when the request should be answered 404.
+   */
+  async function isMissingAsset(path: string, publicDir: string): Promise<boolean> {
+    const prefix = developmentUrl("");
+    if (prefix === normalizedBase() || !path.startsWith(prefix)) {
+      return false;
+    }
+    let address: string;
+    let served: string;
+    try {
+      address = decodeURIComponent(path.slice(prefix.length));
+      served = decodeURIComponent(path.slice(normalizedBase().length));
+    } catch {
+      return false;
+    }
+    const file = resolve(assetRootPath(), address);
+    const inside = relative(assetRootPath(), file);
+    if (inside === "" || inside.startsWith("..") || isAbsolute(inside)) {
+      return false;
+    }
+    if (await fileExists(file)) {
+      return false;
+    }
+    return publicDir === "" || !(await fileExists(resolve(publicDir, served)));
+  }
+
+  /**
+   * Serves the development manifest and the extension public assets, and answers 404 for a missing
+   * file under the asset root rather than letting Vite's HTML fallback answer it.
    *
    * @param server - The dev server.
    */
@@ -762,7 +835,24 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
           return;
         }
       }
-      next();
+      if (request.method !== "GET" && request.method !== "HEAD") {
+        next();
+        return;
+      }
+      isMissingAsset(url, server.config.publicDir).then(
+        (missing) => {
+          if (!missing) {
+            next();
+            return;
+          }
+          response.statusCode = 404;
+          response.setHeader("Content-Type", "text/plain; charset=utf-8");
+          response.end(`No file in the ignifx asset root answers ${url}.\n`);
+        },
+        (error: unknown) => {
+          next(error);
+        },
+      );
     });
   }
 

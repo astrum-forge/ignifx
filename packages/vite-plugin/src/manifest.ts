@@ -67,7 +67,10 @@ export interface AssetManifest {
   readonly format: typeof ASSET_MANIFEST_FORMAT;
   /** Always {@link ASSET_MANIFEST_VERSION} before 1.0. */
   readonly formatVersion: typeof ASSET_MANIFEST_VERSION;
-  /** The asset root the addresses are relative to, as configured, `/`-separated. */
+  /**
+   * Where an address the manifest does not list is fetched from: the asset root's served URL in
+   * development (`/assets`), the configured asset root in a build.
+   */
   readonly root: string;
   /** Every asset, sorted by address so two builds of the same tree produce the same bytes. */
   readonly entries: readonly AssetManifestEntry[];
@@ -353,7 +356,8 @@ function loaderMeta(meta: JsonObject | null): JsonObject | null {
  * {@link EDITOR_SIDECAR_KEYS}.
  *
  * @param assets - The assets to list, already sorted by address.
- * @param root - The asset root as configured, recorded in the manifest for diagnostics.
+ * @param root - The manifest's `root`: where the runtime fetches an address the manifest does not
+ *   list.
  * @param urlFor - Maps an asset to the URL the runtime fetches it from.
  * @returns The manifest, ready to be serialized.
  *
