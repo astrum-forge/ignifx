@@ -3,9 +3,8 @@ import { afterEach, describe, expect, it } from "vitest";
 import { Camera2D } from "../src/camera/camera-2d.js";
 import { SpriteRenderer } from "../src/sprite/sprite-renderer.js";
 import { createTwoDBrowserApp, fixtureAssets, SETTLE_FRAMES } from "./support/browser-harness.js";
-import type { TwoDBrowserApp } from "./support/browser-harness.js";
+import type { TwoDBrowserApp, Rgba } from "./support/browser-harness.js";
 import type { SpriteAtlasAsset } from "../src/atlas/sprite-atlas-asset.js";
-import type { Rgba } from "./support/browser-harness.js";
 
 /**
  * Sprites under `rendering.hdr` (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, step G3).

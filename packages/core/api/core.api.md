@@ -30,6 +30,7 @@ import { Skeleton } from '@babylonjs/lite';
 import { SpotLight } from '@babylonjs/lite';
 import { StandardMaterialProps } from '@babylonjs/lite';
 import { StorageBuffer } from '@babylonjs/lite';
+import { Task } from '@babylonjs/lite';
 import { Texture2D } from '@babylonjs/lite';
 
 // @public

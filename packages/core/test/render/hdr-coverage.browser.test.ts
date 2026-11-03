@@ -9,8 +9,8 @@ import {
 } from "../../src/render/material-asset.js";
 import { MeshAsset } from "../../src/render/mesh-asset.js";
 import { MeshRenderer } from "../../src/render/mesh-renderer.js";
-import { customEffect } from "../../src/render/post-effect.js";
 import { loadPostEffectSupport } from "../../src/render/post-effect-support.js";
+import { customEffect } from "../../src/render/post-effect.js";
 import { PostProcessStack } from "../../src/render/post-process-stack.js";
 import { SHADER_ASSET_TYPE, ShaderAsset } from "../../src/render/shader-asset.js";
 import { shaderMaterialDefinition } from "../../src/render/shader-material-definition.js";
@@ -18,8 +18,8 @@ import { parseShaderDeclaration } from "../../src/render/shader-pragma.js";
 import { loadShaderSupport } from "../../src/render/shader-support.js";
 import { createBrowserApp, fixtureUrl, gpuDeviceErrors, SETTLE_FRAMES } from "./support/browser-harness.js";
 import type { BrowserApp } from "./support/browser-harness.js";
-import type { EnvironmentAsset } from "../../src/render/environment-asset.js";
 import type { PixelRgba } from "../../src/lite/screenshot.js";
+import type { EnvironmentAsset } from "../../src/render/environment-asset.js";
 
 /**
  * `rendering.hdr` for every colour writer besides plain PBR
@@ -140,12 +140,10 @@ async function render(options: SceneOptions): Promise<BrowserApp> {
   }
 
   if (options.subject !== "sky") {
-    running.world
-      .createEntity("Subject")
-      .addComponent(MeshRenderer, {
-        mesh: MeshAsset.box(running.app, { size: 3 }),
-        materials: [subject(running, options.subject)],
-      });
+    running.world.createEntity("Subject").addComponent(MeshRenderer, {
+      mesh: MeshAsset.box(running.app, { size: 3 }),
+      materials: [subject(running, options.subject)],
+    });
   }
   if (options.post !== undefined) {
     const address = "shaders/test.post.wgsl";
