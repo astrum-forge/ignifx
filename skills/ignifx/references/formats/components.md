@@ -529,6 +529,8 @@ Bloom, SMAA, image processing, and custom .post.wgsl effects, inserted into the 
 | `smaa` | `record` | `{"enabled":false,"order":1,"threshold":0.05,"maxSearchSteps":16,"diagonalDetection":false,"cornerDetection":false}` | SMAA anti-aliasing. Needs a single-sample source. |
 | `imageProcessing` | `record` | `{"enabled":false,"order":2}` | Exposure, contrast, and tone mapping as a pass — the alternative to Environment. |
 | `custom` | `array` | `[]` | Custom full-screen WGSL effects, ordered among the built-ins by order. |
+| `contactShadows` | `record` | `{"enabled":false,"intensity":0.6,"length":0.3,"thickness":0.35,"samples":8}` | Short shadows where objects meet, towards the main directional light. Runs on the scene colour before the chain; needs rendering.features.postProcessing. |
+| `ssgi` | `record` | `{"enabled":false,"intensity":1,"radius":2,"samples":8,"halfResolution":true,"environmentDiffuse":0.5}` | One bounce of the lit scene colour (beta, desktop tier). Runs on the scene colour before the chain; needs rendering.features.postProcessing. |
 
 ## Projectile (`ignifx/Projectile`)
 

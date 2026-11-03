@@ -44,6 +44,21 @@ export interface AddComponentFromRecordOptions {
 }
 
 // @public
+export const AMBIENT_OCCLUSION_QUALITIES: readonly ["half", "full"];
+
+// @public
+export type AmbientOcclusionQuality = (typeof AMBIENT_OCCLUSION_QUALITIES)[number];
+
+// @public
+export interface AmbientOcclusionSettings {
+    readonly enabled: boolean;
+    readonly falloff: number;
+    readonly intensity: number;
+    readonly quality: AmbientOcclusionQuality;
+    readonly radius: number;
+}
+
+// @public
 export interface App {
     readonly assets: Assets;
     readonly coroutines: CoroutineHost;
@@ -604,6 +619,15 @@ export interface ConsoleLike {
 // @public
 export interface ConsoleSinkOptions {
     readonly target?: ConsoleLike;
+}
+
+// @public
+export interface ContactShadowsEffectSettings {
+    enabled: boolean;
+    intensity: number;
+    length: number;
+    samples: number;
+    thickness: number;
 }
 
 // @public
@@ -2616,6 +2640,8 @@ export class PostProcessStack extends Component implements ComponentHooks {
     // (undocumented)
     bloom: BloomEffectSettings;
     // (undocumented)
+    contactShadows: ContactShadowsEffectSettings;
+    // (undocumented)
     custom: CustomEffectSettings[];
     static description: string;
     // Warning: (ae-forgotten-export) The symbol "HdrBloom" needs to be exported by the entry point index.d.ts
@@ -2631,6 +2657,8 @@ export class PostProcessStack extends Component implements ComponentHooks {
     static schema: Schema;
     // (undocumented)
     smaa: SmaaEffectSettings;
+    // @beta
+    ssgi: SsgiEffectSettings;
     // @internal
     sync(renderer: RendererImpl): void;
     get taskCount(): number;
@@ -2827,6 +2855,7 @@ export interface Renderer {
     // @beta
     renderToTexture(camera: Camera, texture: RenderTexture): Promise<void>;
     requireFeature(feature: RenderingFeature): void;
+    resetTemporalHistory(): void;
     resolutionScale: number;
     setSize(width: number, height: number): void;
     readonly surface: RenderSurface | null;
@@ -2856,6 +2885,7 @@ export interface RenderingFeatureSettings {
 // @public
 export interface RenderingSettings {
     readonly alphaMode: CanvasAlphaMode;
+    readonly ambientOcclusion: AmbientOcclusionSettings;
     readonly autoExposure: AutoExposureSettings;
     readonly brdfLut: string;
     readonly clearColor: ColorLike;
@@ -2866,6 +2896,7 @@ export interface RenderingSettings {
     readonly msaaSamples: number;
     readonly requiredLimits: Readonly<Record<string, number>>;
     readonly srgb: boolean;
+    readonly taa: TaaSettings;
     readonly useFloatingOrigin: boolean;
     readonly useHighPrecisionMatrix: boolean;
 }
@@ -3474,6 +3505,16 @@ export interface SphereMeshOptions {
     readonly segments?: number;
 }
 
+// @beta
+export interface SsgiEffectSettings {
+    enabled: boolean;
+    environmentDiffuse: number;
+    halfResolution: boolean;
+    intensity: number;
+    radius: number;
+    samples: number;
+}
+
 // @public
 export const STANDARD_TEXTURE_SLOTS: readonly string[];
 
@@ -3652,6 +3693,15 @@ export interface SystemContext {
 
 // @public
 export type SystemEditMode = "run" | "hold" | "skip";
+
+// @public
+export interface TaaSettings {
+    readonly blend: number;
+    readonly clamp: boolean;
+    readonly cutDistance: number;
+    readonly enabled: boolean;
+    readonly sharpness: number;
+}
 
 // @public
 export class TagSet {

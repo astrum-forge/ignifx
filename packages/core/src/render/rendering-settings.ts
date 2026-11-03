@@ -48,6 +48,47 @@ export const CANVAS_ALPHA_MODES = ["opaque", "premultiplied"] as const;
 export type CanvasAlphaMode = (typeof CANVAS_ALPHA_MODES)[number];
 
 /**
+ * The ambient-occlusion qualities, in the order the inspector lists them: `"half"` computes GTAO at
+ * half resolution with 2 slices of 4 steps a side, `"full"` at full resolution with 3 slices of 6.
+ *
+ * @public
+ */
+export const AMBIENT_OCCLUSION_QUALITIES = ["half", "full"] as const;
+
+/**
+ * The union of the ambient-occlusion qualities.
+ *
+ * @public
+ */
+export type AmbientOcclusionQuality = (typeof AMBIENT_OCCLUSION_QUALITIES)[number];
+
+/**
+ * Screen-space ambient occlusion (GTAO) on indirect light: `rendering.ambientOcclusion`
+ * (`docs/architecture/07-rendering.md` §2.14).
+ *
+ * @remarks
+ * Off by default, and nothing of it loads while it is off. On, a compute pass estimates how much of
+ * each pixel's hemisphere the depth buffer hides, a depth-aware blur smooths it, and every lit PBR
+ * material multiplies its ambient occlusion by the result. It darkens environment (IBL) light only:
+ * direct lights, emissive colour, Standard materials and custom shaders are unchanged, so a scene
+ * with no `Environment` cube map shows no difference. Works with and without `rendering.hdr`.
+ *
+ * @public
+ */
+export interface AmbientOcclusionSettings {
+  /** Turns the effect on. Read once, when the app starts. */
+  readonly enabled: boolean;
+  /** `"half"` (default) or `"full"` resolution, which also sets the slice and step counts. */
+  readonly quality: AmbientOcclusionQuality;
+  /** How far an occluder may be from the surface it darkens, in world units (metres). */
+  readonly radius: number;
+  /** An exponent on the visibility: 1 is physically based, larger is darker. */
+  readonly intensity: number;
+  /** The fraction of `radius`, from its far end, over which occluders fade out. 0 cuts off hard. */
+  readonly falloff: number;
+}
+
+/**
  * The rendering features a project switches on (`docs/architecture/07-rendering.md` §1.1). Every one
  * of them changes what Lite compiles at `registerScene`, so they are declared up front and a late
  * toggle is `IGX-0704`.
@@ -102,6 +143,37 @@ export interface AutoExposureSettings {
   readonly speedDown: number;
   /** Stops added to the computed exposure; positive is brighter. */
   readonly compensation: number;
+}
+
+/**
+ * Temporal anti-aliasing, the `rendering.taa` record (`docs/architecture/07-rendering.md` §2.13).
+ *
+ * @remarks
+ * Needs `rendering.hdr`: TAA runs on the linear scene colour between the scene pass and the HDR
+ * output pass. With `hdr` off it stays off and the app logs a warning. Nothing of it loads while
+ * `enabled` is `false`.
+ *
+ * @example
+ * ```ts
+ * const app = await createApp({ canvas, settings: { rendering: { hdr: true, taa: { enabled: true } } } });
+ * ```
+ *
+ * @public
+ */
+export interface TaaSettings {
+  /** Turn TAA on. Off by default. */
+  readonly enabled: boolean;
+  /** Weight of the current frame, 0.01–1. Lower is smoother but slower to follow change. Default 0.1. */
+  readonly blend: number;
+  /** Output sharpening, 0–1, to offset the softening TAA brings. Default 0. */
+  readonly sharpness: number;
+  /** Clip history to the current pixel's neighbourhood, which prevents ghosting. Default `true`. */
+  readonly clamp: boolean;
+  /**
+   * How far, in world units, the camera may move in one frame before the history is dropped as a
+   * camera cut. A turn of more than 60° in one frame is a cut too. Default 10.
+   */
+  readonly cutDistance: number;
 }
 
 /**
@@ -173,6 +245,10 @@ export interface RenderingSettings {
    * off, nothing of it loads.
    */
   readonly autoExposure: AutoExposureSettings;
+  /** Screen-space ambient occlusion on indirect light (GTAO). Off by default. */
+  readonly ambientOcclusion: AmbientOcclusionSettings;
+  /** Temporal anti-aliasing; needs {@link RenderingSettings.hdr}. Off by default. */
+  readonly taa: TaaSettings;
 }
 
 /**
@@ -205,6 +281,24 @@ const SINGLE_SAMPLE = 1;
  */
 export function defaultAutoExposureSettings(): AutoExposureSettings {
   return { enabled: false, minEv: -6, maxEv: 6, speedUp: 2, speedDown: 1, compensation: 0 };
+}
+
+/** The ambient-occlusion section a project that names none gets. */
+const DEFAULT_AMBIENT_OCCLUSION: AmbientOcclusionSettings = {
+  enabled: false,
+  quality: "half",
+  radius: 0.5,
+  intensity: 1,
+  falloff: 0.6,
+};
+
+/**
+ * The TAA record a project that names none gets: off.
+ *
+ * @returns A fresh record.
+ */
+function defaultTaaSettings(): TaaSettings {
+  return { enabled: false, blend: 0.1, sharpness: 0, clamp: true, cutDistance: 10 };
 }
 
 /** The clear colour a project that names none gets: opaque black. */
@@ -241,6 +335,8 @@ export function defaultRenderingSettings(): RenderingSettings {
     brdfLut: DEFAULT_BRDF_LUT_ADDRESS,
     hdr: false,
     autoExposure: defaultAutoExposureSettings(),
+    ambientOcclusion: { ...DEFAULT_AMBIENT_OCCLUSION },
+    taa: defaultTaaSettings(),
   };
 }
 
@@ -289,7 +385,75 @@ export function renderingSettingsSchema(): Schema {
       speedDown: f64(1, { min: 0, tooltip: "Adaptation rate per second when the scene gets darker." }),
       compensation: f64(0, { tooltip: "Stops added to the computed exposure; positive is brighter." }),
     }),
+    ambientOcclusion: record({
+      enabled: bool(false, { tooltip: "Screen-space ambient occlusion (GTAO) on environment light." }),
+      quality: enumOf(AMBIENT_OCCLUSION_QUALITIES, DEFAULT_AMBIENT_OCCLUSION.quality, {
+        tooltip: "half: half resolution, 2 slices × 4 steps. full: full resolution, 3 slices × 6 steps.",
+      }),
+      radius: f64(DEFAULT_AMBIENT_OCCLUSION.radius, {
+        min: 0.01,
+        tooltip: "How far an occluder may be from the surface it darkens, in metres.",
+      }),
+      intensity: f64(DEFAULT_AMBIENT_OCCLUSION.intensity, {
+        min: 0,
+        max: 8,
+        tooltip: "Exponent on the visibility: 1 is physically based, larger is darker.",
+      }),
+      falloff: f64(DEFAULT_AMBIENT_OCCLUSION.falloff, {
+        min: 0,
+        max: 1,
+        tooltip: "Fraction of the radius over which occluders fade out.",
+      }),
+    }),
+    taa: record(
+      {
+        enabled: bool(false, { tooltip: "Temporal anti-aliasing. Needs rendering.hdr." }),
+        blend: f64(0.1, { min: 0.01, max: 1, tooltip: "Weight of the current frame; lower is smoother." }),
+        sharpness: f64(0, { min: 0, max: 1, tooltip: "Output sharpening, 0 to 1." }),
+        clamp: bool(true, { tooltip: "Clip history to the current neighbourhood, against ghosting." }),
+        cutDistance: f64(10, { min: 0, tooltip: "Camera jump per frame, in world units, that resets history." }),
+      },
+      { tooltip: "Temporal anti-aliasing (jittered frames accumulated over time). Needs rendering.hdr." },
+    ),
   });
+}
+
+/**
+ * Reads the declared `ambientOcclusion` record with every field filled in and in range.
+ *
+ * @remarks
+ * The settings store merges a section shallowly, so `ambientOcclusion: { enabled: true }` arrives
+ * without the other fields (see {@link toRenderingFeatures}); each missing or out-of-range value
+ * reads as its default or its nearest bound.
+ *
+ * @param declared - The record as resolved, possibly partial; `undefined` when absent.
+ * @returns A complete record.
+ *
+ * @internal
+ */
+export function resolveAmbientOcclusion(
+  declared: Partial<AmbientOcclusionSettings> | undefined,
+): AmbientOcclusionSettings {
+  const value = declared ?? {};
+  const defaults = DEFAULT_AMBIENT_OCCLUSION;
+  return {
+    enabled: value.enabled === true,
+    quality: value.quality === "full" ? "full" : "half",
+    radius: Math.max(0.01, finite(value.radius, defaults.radius)),
+    intensity: Math.min(8, Math.max(0, finite(value.intensity, defaults.intensity))),
+    falloff: Math.min(1, Math.max(0, finite(value.falloff, defaults.falloff))),
+  };
+}
+
+/**
+ * A finite number, or a fallback.
+ *
+ * @param input - The declared value.
+ * @param fallback - What a missing or non-finite value reads as.
+ * @returns The number.
+ */
+function finite(input: number | undefined, fallback: number): number {
+  return typeof input === "number" && Number.isFinite(input) ? input : fallback;
 }
 
 /**
@@ -317,10 +481,51 @@ export function toRenderingFeatures(settings: RenderingSettings): RenderingFeatu
       features[name] = declared[name] === true;
     }
   }
+  // GTAO reaches PBR materials through a material plugin, which needs Lite's plugin bridges.
+  if (resolveAmbientOcclusion(settings.ambientOcclusion).enabled) {
+    features["materialPlugins"] = true;
+  }
   // The loop wrote exactly the keys of
   // `RENDERING_FEATURE_NAMES`, which is what `RenderingFeatures` is a mapped type over.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return features as RenderingFeatures;
+}
+
+/**
+ * Reads the declared `taa` record with every field filled in.
+ *
+ * @remarks
+ * The settings store merges a section shallowly (see {@link toRenderingFeatures}), so
+ * `taa: { enabled: true }` arrives without the other fields; each missing or mistyped one reads as
+ * its default.
+ *
+ * @param settings - The resolved section.
+ * @returns A complete record.
+ *
+ * @internal
+ */
+export function resolveTaaSettings(settings: RenderingSettings): TaaSettings {
+  // A project that declares no `taa` (or a section built before it existed) has none at all.
+  const declared: Partial<TaaSettings> = (settings as Partial<RenderingSettings>).taa ?? {};
+  const defaults = defaultTaaSettings();
+  return {
+    enabled: declared.enabled === true,
+    blend: finiteOr(declared.blend, defaults.blend),
+    sharpness: finiteOr(declared.sharpness, defaults.sharpness),
+    clamp: declared.clamp !== false,
+    cutDistance: finiteOr(declared.cutDistance, defaults.cutDistance),
+  };
+}
+
+/**
+ * A declared number, or the fallback when it is missing or not finite.
+ *
+ * @param value - The declared value.
+ * @param fallback - The default.
+ * @returns The number to use.
+ */
+function finiteOr(value: number | undefined, fallback: number): number {
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
 }
 
 /**

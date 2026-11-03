@@ -1,0 +1,128 @@
+import {
+  addTaskAfter,
+  buildFrameGraphTask,
+  createCopyToTextureTask,
+  createRenderTarget,
+  disposeRenderTarget,
+  getFrameGraph,
+} from "@babylonjs/lite";
+import { frameGraphTasks } from "./scene-inputs.js";
+import type { ScenePresenter } from "./render-path.js";
+import type { EngineContext, RenderTarget, SceneContext, Task } from "@babylonjs/lite";
+
+/**
+ * Scene-colour passes (`docs/architecture/07-rendering.md` §2.7, GI plan steps G10 and G11): Lite
+ * screen-space effects that read the lit scene colour and the shared scene-input depth, and whose
+ * result replaces the scene colour before anything else reads it. Its own chunk, loaded with the
+ * first such effect (`CONSTITUTION.md` §2.5).
+ *
+ * ```text
+ * scene ─→ S ─ pass 1 ─→ scratch ─ pass 2 ─→ S ─ … [─ copy ─→ S] ─→ present / output pass / chain
+ * ```
+ *
+ * `S` is the presenter's {@link ScenePresenter.scenePass} target: `sceneColor` on the plain path,
+ * the linear `rgba16float` target under `rendering.hdr`, so the passes see linear colour ahead of
+ * the output pass there. Lite's composite cannot write its own source, so the passes ping-pong
+ * between `S` and one scratch target of the same format, and a copy brings an odd count back into
+ * `S`. Every task sits right after the scene task, ahead of the present blit, the HDR output pass
+ * and a `PostProcessStack` chain alike, which therefore need no change.
+ */
+
+/**
+ * One scene-colour effect, as the installer sees it.
+ *
+ * @internal
+ */
+export interface SceneColorPass {
+  /**
+   * Creates the effect's task.
+   *
+   * @param source - The colour it reads.
+   * @param target - The colour it writes; never `source`.
+   * @returns The task.
+   */
+  create(source: RenderTarget, target: RenderTarget): Task;
+}
+
+/**
+ * The installed passes.
+ *
+ * @internal
+ */
+export interface InstalledSceneColorPasses {
+  /** How many tasks were added, copy included. */
+  readonly taskCount: number;
+  /** Removes and disposes every task and the scratch target. Idempotent. */
+  dispose(): void;
+}
+
+/**
+ * Inserts the passes after the scene task, in order.
+ *
+ * @param engine - The engine; also the surface the scratch target is sized by.
+ * @param scene - The scene.
+ * @param presenter - The offscreen render path.
+ * @param passes - The effects, first to last.
+ * @param isFrameGraphBuilt - Whether the scene is registered, so each task is recorded now.
+ * @returns The handle that takes them out again.
+ *
+ * @internal
+ */
+export function installSceneColorPasses(
+  engine: EngineContext,
+  scene: SceneContext,
+  presenter: ScenePresenter,
+  passes: readonly SceneColorPass[],
+  isFrameGraphBuilt: boolean,
+): InstalledSceneColorPasses {
+  const { task: sceneTask, target: sceneTarget, format } = presenter.scenePass;
+  const scratch = createRenderTarget({ lbl: "ignifx:scene-color-scratch", format, samples: 1, size: engine });
+  const tasks: Task[] = [];
+  let source = sceneTarget;
+  for (const pass of passes) {
+    const target = source === sceneTarget ? scratch : sceneTarget;
+    tasks.push(pass.create(source, target));
+    source = target;
+  }
+  if (source !== sceneTarget) {
+    tasks.push(
+      createCopyToTextureTask(
+        { name: "ignifx:scene-color-copy", sourceTexture: scratch, targetTexture: sceneTarget },
+        engine,
+        scene,
+      ),
+    );
+  }
+  let after = sceneTask;
+  for (const task of tasks) {
+    addTaskAfter(scene, task, after);
+    after = task;
+  }
+  if (isFrameGraphBuilt) {
+    const graph = getFrameGraph(scene);
+    for (const task of tasks) {
+      buildFrameGraphTask(graph, task);
+    }
+  }
+  let isDisposed = false;
+  return {
+    taskCount: tasks.length,
+    dispose(): void {
+      if (isDisposed) {
+        return;
+      }
+      isDisposed = true;
+      const list = frameGraphTasks(scene);
+      for (const task of tasks) {
+        // Disable first: a disposed task that still executes is a use-after-free.
+        task.executionEnabled = false;
+        const index = list?.indexOf(task) ?? -1;
+        if (list !== null && index >= 0) {
+          list.splice(index, 1);
+        }
+        task.dispose();
+      }
+      disposeRenderTarget(scratch);
+    },
+  };
+}

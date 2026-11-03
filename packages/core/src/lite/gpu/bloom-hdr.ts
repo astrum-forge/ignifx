@@ -1,12 +1,9 @@
 import {
-  addTaskBefore,
-  buildFrameGraphTask,
   createEffectRenderTask,
   createEffectWrapper,
   createSurfaceRenderTargetTexture,
   disposeEffectWrapper,
   disposeRenderTargetTexture,
-  getFrameGraph,
   onRenderTargetTextureResize,
   setEffectTexture,
   setEffectUniforms,
@@ -313,20 +310,18 @@ export function installHdrBloom(
     passes.push({ effect, task, source });
   };
   for (let level = 0; level < HDR_BLOOM_MIP_COUNT; level += 1) {
-    const source = level === 0 ? (): Texture2D => hdr.sceneTarget.texture : (): Texture2D => mipAt(level - 1).texture;
+    const source =
+      level === 0 ? (): Texture2D => hdr.sceneTargetTexture.texture : (): Texture2D => mipAt(level - 1).texture;
     addPass(`ignifx:bloom-down-${String(level)}`, downsample, source, mipAt(level).rt);
   }
   for (let level = HDR_BLOOM_MIP_COUNT - 2; level >= 0; level -= 1) {
     addPass(`ignifx:bloom-up-${String(level)}`, upsample, () => mipAt(level + 1).texture, mipAt(level).rt);
   }
-  addPass("ignifx:bloom-composite", upsample, () => mipAt(0).texture, hdr.sceneTarget.rt);
+  addPass("ignifx:bloom-composite", upsample, () => mipAt(0).texture, hdr.sceneTargetTexture.rt);
 
-  const graph = getFrameGraph(scene);
+  // After every linear task already in place (TAA among them), right before the output pass.
   for (const pass of passes) {
-    addTaskBefore(scene, pass.task, hdr.outputTask);
-    if (isFrameGraphBuilt) {
-      buildFrameGraphTask(graph, pass.task);
-    }
+    hdr.insertLinearTask(pass.task, isFrameGraphBuilt);
   }
 
   // A resize swaps the textures behind the facades; a wrapper's cached bind group keeps the old
@@ -336,7 +331,7 @@ export function installHdrBloom(
       setEffectTexture(pass.effect, 1, pass.source());
     }
   };
-  const unsubscribe = [hdr.sceneTarget, ...mips].map((target) => onRenderTargetTextureResize(target, rebind));
+  const unsubscribe = [hdr.sceneTargetTexture, ...mips].map((target) => onRenderTargetTextureResize(target, rebind));
 
   const uniforms = new Float32Array(passes.length * UNIFORM_FLOATS);
   const scratch = new Float32Array(UNIFORM_FLOATS);

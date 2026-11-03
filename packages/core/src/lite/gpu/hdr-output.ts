@@ -418,7 +418,8 @@ export function installHdrRenderPath(
       size: engine,
     });
   }
-  addTask(scene, createRenderTask(config, engine, scene));
+  const sceneTask: Task = createRenderTask(config, engine, scene);
+  addTask(scene, sceneTask);
   const autoExposure = installAutoExposure?.(hdr.texture) ?? null;
 
   const effect: EffectWrapper = createEffectWrapper(engine, {
@@ -479,8 +480,9 @@ export function installHdrRenderPath(
   const handle: HdrOutputHandle = {
     sceneTexture: hdr.texture,
     exposureTexture: autoExposure?.exposureTexture ?? null,
-    sceneTarget: hdr,
-    outputTask: toChain,
+    sceneTarget: hdr.rt,
+    sceneTask,
+    sceneTargetTexture: hdr,
     update(isSceneRegistered: boolean): void {
       autoExposure?.update();
       if (writeHdrOutputUniforms(scene.imageProcessing, uniforms)) {
@@ -522,6 +524,7 @@ export function installHdrRenderPath(
       return isPresentEnabled;
     },
     hdr: handle,
+    scenePass: { task: sceneTask, target: hdr.rt, format: HDR_SCENE_FORMAT },
   };
 }
 

@@ -79,21 +79,20 @@ export const DEPTH_STENCIL_FORMAT: GPUTextureFormat = "depth24plus-stencil8";
 export interface HdrOutputHandle {
   /** The scene's linear `rgba16float` colour, as a sampled texture. Values may exceed 1. */
   readonly sceneTexture: Texture2D;
+  /** The render target behind {@link HdrOutputHandle.sceneTexture}, for a pass that writes it back (TAA). */
+  readonly sceneTarget: RenderTarget;
+  /** The `"scene"` render task, whose scene uniforms the TAA jitter offsets. */
+  readonly sceneTask: Task;
   /**
    * The auto exposure result, a 1×1 `r32float` texture holding `log2` of the multiplier the output
    * pass applies (`./auto-exposure.ts`); `null` when `rendering.autoExposure` is off.
    */
   readonly exposureTexture: Texture2D | null;
   /**
-   * The same target as a render target and its resize hook: what a linear effect (HDR bloom, step
-   * G12) writes back into and rebinds on resize.
+   * The same target with its sampled facade and resize hook: what HDR bloom (step G12) samples,
+   * writes back into, and rebinds on resize.
    */
-  readonly sceneTarget: RenderTargetTextureResult;
-  /**
-   * The first of the output pass's tasks. A linear effect inserts its tasks before it with
-   * `addTaskBefore`, so it runs on the HDR colour before tone mapping.
-   */
-  readonly outputTask: Task;
+  readonly sceneTargetTexture: RenderTargetTextureResult;
   /**
    * The per-frame work: uploads the scene's exposure, contrast and curve when they changed, and
    * gives every new PBR material the linear-output plugin.
@@ -170,6 +169,27 @@ export interface ScenePresenter {
   readonly isPresentEnabled: boolean;
   /** The HDR output pass, when `rendering.hdr` is on; `null` for the plain offscreen path. */
   readonly hdr: HdrOutputHandle | null;
+  /**
+   * The scene's render task and the single-sample colour target it ends in: {@link
+   * ScenePresenter.sceneColor} on the plain path, the `rgba16float` target under `rendering.hdr`.
+   * Scene-colour effects (contact shadows, SSGI) insert their tasks right after `task` and write their
+   * result back into `target`, so everything downstream reads it.
+   */
+  readonly scenePass: ScenePass;
+}
+
+/**
+ * The scene's render task and its resolved colour target.
+ *
+ * @internal
+ */
+export interface ScenePass {
+  /** The task named `"scene"`. */
+  readonly task: Task;
+  /** The single-sample colour target the scene ends in; it carries `TEXTURE_BINDING` and `COPY_DST`. */
+  readonly target: RenderTarget;
+  /** That target's colour format. */
+  readonly format: GPUTextureFormat;
 }
 
 /**
@@ -229,7 +249,8 @@ export function installOffscreenRenderPath(engine: EngineContext, scene: SceneCo
       size: engine,
     });
   }
-  addTask(scene, createRenderTask(config, engine, scene));
+  const sceneTask: Task = createRenderTask(config, engine, scene);
+  addTask(scene, sceneTask);
 
   const present: Task = createCopyToTextureTask(
     { name: "ignifx:present", sourceTexture: sceneColor, targetTexture: engine.scRT },
@@ -250,5 +271,6 @@ export function installOffscreenRenderPath(engine: EngineContext, scene: SceneCo
       return isPresentEnabled;
     },
     hdr: null,
+    scenePass: { task: sceneTask, target: sceneColor, format: engine.format },
   };
 }

@@ -205,6 +205,7 @@ export class RenderSyncSystem implements System {
     topologyChanged = this.#applyEnvironment(world) || topologyChanged;
     // After the environment, whose image processing the clear colour has to follow.
     renderer.refreshClearColor();
+    renderer.updateAmbientOcclusion();
     this.#applyStacks(world);
     this.#areCastersDirty = this.#areCastersDirty || castersChanged;
     // Lite built a material family on its own (a runtime build of its first mesh) and pushed a
