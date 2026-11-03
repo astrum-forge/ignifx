@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
+import { Camera } from "../../src/render/camera.js";
+import { PostProcessStack } from "../../src/render/post-process-stack.js";
 import {
   applyRenderingQuality,
   defaultRenderingSettings,
@@ -45,6 +47,8 @@ describe("rendering.quality", () => {
     expect(applyRenderingQuality(settings, undefined)).toBe(settings);
     expect(renderingQualityPreset("custom")).toBeNull();
     expect(renderingQualityPreset("ultra")).toBeNull();
+    // A declared value that is not a record reads as "nothing written".
+    expect(applyRenderingQuality({ ...settings, quality: "low" }, ["hdr"]).ambientOcclusion.enabled).toBe(true);
   });
 
   it("switches HDR, TAA and GTAO per tier", () => {
@@ -83,5 +87,22 @@ describe("rendering.quality", () => {
     expect(harness.renderer.qualityPreset).toMatchObject({ ssgi: false });
     // GTAO reaches PBR materials through a material plugin.
     expect(harness.renderer.features.materialPlugins).toBe(true);
+  });
+
+  it("caps a stack's contact shadows and SSGI headlessly without building them", async () => {
+    for (const quality of ["custom", "low", "medium", "high"] as const) {
+      // oxlint-disable-next-line eslint/no-await-in-loop -- one app at a time, disposed before the next.
+      const current = await createRenderHarness({ settings: { rendering: { quality } } });
+      harness = current;
+      const eye = current.world.createEntity("Eye");
+      eye.addComponent(Camera);
+      const stack = eye.addComponent(PostProcessStack);
+      stack.contactShadows.enabled = true;
+      stack.ssgi.enabled = true;
+      current.frame();
+      expect(current.errors).toEqual([]);
+      current.dispose();
+      harness = null;
+    }
   });
 });
