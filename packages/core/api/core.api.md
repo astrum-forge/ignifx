@@ -2834,6 +2834,7 @@ export interface Renderer {
     // @beta
     renderToTexture(camera: Camera, texture: RenderTexture): Promise<void>;
     requireFeature(feature: RenderingFeature): void;
+    resetTemporalHistory(): void;
     resolutionScale: number;
     setSize(width: number, height: number): void;
     readonly surface: RenderSurface | null;
@@ -2874,6 +2875,7 @@ export interface RenderingSettings {
     readonly msaaSamples: number;
     readonly requiredLimits: Readonly<Record<string, number>>;
     readonly srgb: boolean;
+    readonly taa: TaaSettings;
     readonly useFloatingOrigin: boolean;
     readonly useHighPrecisionMatrix: boolean;
 }
@@ -3660,6 +3662,15 @@ export interface SystemContext {
 
 // @public
 export type SystemEditMode = "run" | "hold" | "skip";
+
+// @public
+export interface TaaSettings {
+    readonly blend: number;
+    readonly clamp: boolean;
+    readonly cutDistance: number;
+    readonly enabled: boolean;
+    readonly sharpness: number;
+}
 
 // @public
 export class TagSet {

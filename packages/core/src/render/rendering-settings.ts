@@ -64,7 +64,7 @@ export type AmbientOcclusionQuality = (typeof AMBIENT_OCCLUSION_QUALITIES)[numbe
 
 /**
  * Screen-space ambient occlusion (GTAO) on indirect light: `rendering.ambientOcclusion`
- * (`docs/architecture/07-rendering.md` §2.13).
+ * (`docs/architecture/07-rendering.md` §2.14).
  *
  * @remarks
  * Off by default, and nothing of it loads while it is off. On, a compute pass estimates how much of
@@ -146,6 +146,37 @@ export interface AutoExposureSettings {
 }
 
 /**
+ * Temporal anti-aliasing, the `rendering.taa` record (`docs/architecture/07-rendering.md` §2.13).
+ *
+ * @remarks
+ * Needs `rendering.hdr`: TAA runs on the linear scene colour between the scene pass and the HDR
+ * output pass. With `hdr` off it stays off and the app logs a warning. Nothing of it loads while
+ * `enabled` is `false`.
+ *
+ * @example
+ * ```ts
+ * const app = await createApp({ canvas, settings: { rendering: { hdr: true, taa: { enabled: true } } } });
+ * ```
+ *
+ * @public
+ */
+export interface TaaSettings {
+  /** Turn TAA on. Off by default. */
+  readonly enabled: boolean;
+  /** Weight of the current frame, 0.01–1. Lower is smoother but slower to follow change. Default 0.1. */
+  readonly blend: number;
+  /** Output sharpening, 0–1, to offset the softening TAA brings. Default 0. */
+  readonly sharpness: number;
+  /** Clip history to the current pixel's neighbourhood, which prevents ghosting. Default `true`. */
+  readonly clamp: boolean;
+  /**
+   * How far, in world units, the camera may move in one frame before the history is dropped as a
+   * camera cut. A turn of more than 60° in one frame is a cut too. Default 10.
+   */
+  readonly cutDistance: number;
+}
+
+/**
  * The resolved `rendering` settings section
  * (`docs/architecture/04-extensions.md` §5, `07-rendering.md` §1).
  *
@@ -216,6 +247,8 @@ export interface RenderingSettings {
   readonly autoExposure: AutoExposureSettings;
   /** Screen-space ambient occlusion on indirect light (GTAO). Off by default. */
   readonly ambientOcclusion: AmbientOcclusionSettings;
+  /** Temporal anti-aliasing; needs {@link RenderingSettings.hdr}. Off by default. */
+  readonly taa: TaaSettings;
 }
 
 /**
@@ -259,6 +292,15 @@ const DEFAULT_AMBIENT_OCCLUSION: AmbientOcclusionSettings = {
   falloff: 0.6,
 };
 
+/**
+ * The TAA record a project that names none gets: off.
+ *
+ * @returns A fresh record.
+ */
+function defaultTaaSettings(): TaaSettings {
+  return { enabled: false, blend: 0.1, sharpness: 0, clamp: true, cutDistance: 10 };
+}
+
 /** The clear colour a project that names none gets: opaque black. */
 const DEFAULT_CLEAR_COLOR = "#000000";
 
@@ -294,6 +336,7 @@ export function defaultRenderingSettings(): RenderingSettings {
     hdr: false,
     autoExposure: defaultAutoExposureSettings(),
     ambientOcclusion: { ...DEFAULT_AMBIENT_OCCLUSION },
+    taa: defaultTaaSettings(),
   };
 }
 
@@ -362,6 +405,16 @@ export function renderingSettingsSchema(): Schema {
         tooltip: "Fraction of the radius over which occluders fade out.",
       }),
     }),
+    taa: record(
+      {
+        enabled: bool(false, { tooltip: "Temporal anti-aliasing. Needs rendering.hdr." }),
+        blend: f64(0.1, { min: 0.01, max: 1, tooltip: "Weight of the current frame; lower is smoother." }),
+        sharpness: f64(0, { min: 0, max: 1, tooltip: "Output sharpening, 0 to 1." }),
+        clamp: bool(true, { tooltip: "Clip history to the current neighbourhood, against ghosting." }),
+        cutDistance: f64(10, { min: 0, tooltip: "Camera jump per frame, in world units, that resets history." }),
+      },
+      { tooltip: "Temporal anti-aliasing (jittered frames accumulated over time). Needs rendering.hdr." },
+    ),
   });
 }
 
@@ -436,6 +489,43 @@ export function toRenderingFeatures(settings: RenderingSettings): RenderingFeatu
   // `RENDERING_FEATURE_NAMES`, which is what `RenderingFeatures` is a mapped type over.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return features as RenderingFeatures;
+}
+
+/**
+ * Reads the declared `taa` record with every field filled in.
+ *
+ * @remarks
+ * The settings store merges a section shallowly (see {@link toRenderingFeatures}), so
+ * `taa: { enabled: true }` arrives without the other fields; each missing or mistyped one reads as
+ * its default.
+ *
+ * @param settings - The resolved section.
+ * @returns A complete record.
+ *
+ * @internal
+ */
+export function resolveTaaSettings(settings: RenderingSettings): TaaSettings {
+  // A project that declares no `taa` (or a section built before it existed) has none at all.
+  const declared: Partial<TaaSettings> = (settings as Partial<RenderingSettings>).taa ?? {};
+  const defaults = defaultTaaSettings();
+  return {
+    enabled: declared.enabled === true,
+    blend: finiteOr(declared.blend, defaults.blend),
+    sharpness: finiteOr(declared.sharpness, defaults.sharpness),
+    clamp: declared.clamp !== false,
+    cutDistance: finiteOr(declared.cutDistance, defaults.cutDistance),
+  };
+}
+
+/**
+ * A declared number, or the fallback when it is missing or not finite.
+ *
+ * @param value - The declared value.
+ * @param fallback - The default.
+ * @returns The number to use.
+ */
+function finiteOr(value: number | undefined, fallback: number): number {
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
 }
 
 /**

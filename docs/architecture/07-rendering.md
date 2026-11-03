@@ -232,7 +232,24 @@ Screen-space effects (TAA, GTAO, contact shadows, SSGI; GI plan steps G5–G11) 
 - **Limit: object motion on PBR.** Lite's PBR geometry view reprojects the current world position through the previous view-projection (`lib/material/pbr/pbr-geometry-output-shader.js` line 41), so a PBR mesh moving under a still camera writes 0. Standard materials track each mesh's previous world matrix. Per-object PBR velocity is left for G6, or an upstream fix.
 - **Cost.** One geometry draw of every mesh, two full-screen copies and the pyramid's passes per frame while any lease is held.
 
-### 2.13 Ambient occlusion
+### 2.13 Temporal anti-aliasing
+
+`rendering.taa` (GI plan steps G5–G6, 2026-11-03) is temporal anti-aliasing in its own chunk, `src/lite/gpu/taa.ts`, which `app.initialize()` loads only when `rendering.taa.enabled` is on (`CONSTITUTION.md` §2.5). It needs `rendering.hdr`: with HDR off the app logs a warning and TAA stays off. It leases the scene inputs (§2.12) and splices five tasks between the scene pass and the HDR output pass, ahead of any linear custom effect:
+
+```text
+scene (jittered) → taa-jitter → taa-resolve → resolved ─(copy)→ history
+                                             resolved ─ taa-output (sharpen) → HDR scene target → [linear effects] → output pass
+                                             depth ─ taa-depth → previous depth (r32float)
+```
+
+- **Jitter.** A Halton (2,3) offset, eight points, is added to the scene task's view-projection by writing the first 64 bytes of its scene uniform buffer after the task wrote its own (Lite's private `_sceneUBO` and `_suData`, the trick Lite's own `createTaaPostProcessTask` uses). Only the GPU copy is jittered: Lite's camera caches, picking, `Camera.worldToScreen` and the scene-inputs geometry pass see the clean matrices. The HDR handle exposes `sceneTask` and `sceneTarget` for this.
+- **Reprojection.** Where the geometry pass drew, the scene-inputs velocity at the nearest depth of the 3×3 neighbourhood; elsewhere (sky) the pixel goes through the inverse view-projection and the previous one. History is read with a 4×4 Catmull-Rom filter.
+- **Clamping and rejection.** History is clipped to the YCoCg variance box (γ 1.25) of the current neighbourhood, on colour compressed by `c / (1 + max(c))`. It is dropped off screen and where the depth stored last frame disagrees by more than 5 % with where the surface would have been (disocclusion).
+- **Reset.** On the first frame, a resize or recovered device (the targets' resize callbacks and the lease's `onChange`), a camera cut (a jump over `cutDistance` or a turn over 60° in one frame, read from the clean view matrix) and `renderer.resetTemporalHistory()`.
+- **Limits.** Object motion on PBR materials has no velocity (§2.12), so a moving PBR mesh relies on the clip. Floating origin is not handled (the clean matrices are eye-relative). A `PostProcessStack`'s display-colour effects (SMAA, bloom) still run after the output pass; SMAA and TAA together are allowed but redundant.
+- **Cost.** The scene-inputs pass, plus four full-screen passes (resolve, one copy, output, depth) at the surface size.
+
+### 2.14 Ambient occlusion
 
 `rendering.ambientOcclusion` (GI plan steps G8 and G9, 2026-11-03) is ground-truth ambient occlusion on indirect light, `src/lite/gpu/gtao.ts`, its own chunk. Off by default; on, the renderer loads the chunk in `attachHandles`, leases the scene inputs (§2.12), and `app.start()` waits for both before `registerScene`, so the tasks are recorded with the rest. It is read once: a later edit takes a restart. Fields: `enabled`, `quality` (`"half"`: half resolution, 2 slices × 4 steps a side; `"full"`: full resolution, 3 × 6), `radius` (metres, 0.5), `intensity` (exponent on visibility, 1), `falloff` (fraction of the radius over which occluders fade, 0.6). The plan named a `PostProcessStack.ambientOcclusion` record; it became a project setting because the plugin applies to every material and the pass is per scene, not per camera.
 
@@ -245,7 +262,8 @@ Screen-space effects (TAA, GTAO, contact shadows, SSGI; GI plan steps G5–G11) 
 - **Indirect light only (spike S3).** A material plugin at `CUSTOM_FRAGMENT_BEFORE_LIGHTS` multiplies Lite's PBR `occlusion` by the AO texture at the fragment's pixel (four loads blended at half resolution). `occlusion` scales environment irradiance and specular occlusion only, so direct lights and emissive are untouched, and a scene with no environment cube map shows nothing. Every lit PBR variant declares it: the template's default, or the reflectance extension's `AT` code (`lib/material/pbr/fragments/reflectance-fragment.js` line 146). Unlit PBR, Standard materials and custom shaders are skipped. The plugin is attached by a per-frame walk, like the HDR plugins, and forces `features.materialPlugins` on.
 - **HDR.** Independent: the plugin changes the lighting input, not the output, so it works with and without `rendering.hdr` (browser test `test/render/ambient-occlusion.browser.test.ts`).
 - **Resize and device loss.** The scene inputs' `onChange` disables the pass, rebuilds textures, shaders and bindings, swaps them in and rebuilds the patched materials, whose bind groups hold the AO view; the old set is disposed eight frames later. Device loss is not tested.
-- **Not yet.** Temporal accumulation through TAA's history (G5); a render-to-texture camera (§2.11) samples the main view's AO, which is wrong for its own view; bilateral upsampling at half resolution.
+- **TAA.** With `rendering.taa` on, TAA's resolve filters the final colour, AO included, which smooths the per-pixel jitter; a separate AO history (the G9 option) is not wired, and the GTAO reads the unjittered camera.
+- **Not yet.** A dedicated AO history; a render-to-texture camera (§2.11) samples the main view's AO, which is wrong for its own view; bilateral upsampling at half resolution.
 - **Cost.** The scene inputs' geometry pass, plus 2 × 4 × 2 depth taps a pixel at quarter area (`"half"`) or 3 × 6 × 2 at full area, and a 25-tap blur. Not yet measured on the GPU-budget project.
 
 ## 3. Picking

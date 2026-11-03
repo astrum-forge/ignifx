@@ -45,7 +45,7 @@ import type {
 
 /**
  * Ground-truth ambient occlusion (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, steps G8 and G9;
- * `docs/architecture/07-rendering.md` §2.13). Its own chunk: the renderer imports it only when
+ * `docs/architecture/07-rendering.md` §2.14). Its own chunk: the renderer imports it only when
  * `rendering.ambientOcclusion.enabled` is on, so a project without it loads none of it and its frame
  * graph has none of these tasks (`CONSTITUTION.md` §2.5).
  *
@@ -74,8 +74,8 @@ import type {
  *   textures and bindings, swaps them in, and rebuilds the patched materials, whose bind groups hold
  *   the AO texture's view. The old textures are disposed a few frames later, once no in-flight bind
  *   group can still name them.
- * - **TAA.** Temporal accumulation through the TAA history (G5) is not wired yet: when G5 lands, the
- *   denoised texture is the one to accumulate before the plugin reads it ({@link AmbientOcclusion.texture}).
+ * - **TAA.** `rendering.taa` (G5) filters the final colour, AO included; a dedicated AO history is
+ *   not wired. It would accumulate {@link AmbientOcclusion.texture} before the plugin reads it.
  */
 
 /**

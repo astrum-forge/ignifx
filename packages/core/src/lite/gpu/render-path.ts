@@ -72,6 +72,10 @@ export const DEPTH_STENCIL_FORMAT: GPUTextureFormat = "depth24plus-stencil8";
 export interface HdrOutputHandle {
   /** The scene's linear `rgba16float` colour, as a sampled texture. Values may exceed 1. */
   readonly sceneTexture: Texture2D;
+  /** The render target behind {@link HdrOutputHandle.sceneTexture}, for a pass that writes it back (TAA). */
+  readonly sceneTarget: RenderTarget;
+  /** The `"scene"` render task, whose scene uniforms the TAA jitter offsets. */
+  readonly sceneTask: Task;
   /**
    * The auto exposure result, a 1×1 `r32float` texture holding `log2` of the multiplier the output
    * pass applies (`./auto-exposure.ts`); `null` when `rendering.autoExposure` is off.
