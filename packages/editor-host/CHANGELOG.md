@@ -1,5 +1,20 @@
 # @ignifx/editor-host
 
+## 0.16.0
+
+### Minor Changes
+
+- a3a4bc9: Add two scene-view methods for the editor's 2D tools. `setTilemapCells { asset, layer, cells }` writes a tilemap editor's cells into the open scene's live tilemaps, so painting shows without saving (capability `tilemapCells`). `setEditorLines { id, lines, color? }` and `clearEditorLines { id? }` draw the editor's own line segments, such as collider outlines and handles, over the view in 3D and 2D, never in the game view (capability `editorLines`).
+- fcb35e0: Scrub a sprite clip by time. `SpriteAnimator.sampleTime(clip, seconds)` shows the frame that plays that far into a clip without playing it, and `spriteClipFrameAtTime` is the same time-to-frame rule as a pure function. The editor host answers the new `sampleSpriteAnimation { entity, clip, frame | time }` method, listed as the `spriteAnimation` capability, so the editor's sprite animation panel can preview a clip in the scene view.
+
+### Patch Changes
+
+- Updated dependencies [fc79bcb]
+- Updated dependencies [4709009]
+- Updated dependencies [38a5a7e]
+  - @ignifx/core@0.16.0
+  - @ignifx/vite-plugin@0.16.0
+
 ## 0.15.0
 
 ### Minor Changes
