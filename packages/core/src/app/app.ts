@@ -288,6 +288,9 @@ class AppImpl implements App {
 
   #isRunning = false;
 
+  /** Whether `onStart` has run: it runs once per app, so a start after `stop()` only restarts the loop. */
+  #hasStarted = false;
+
   #isDisposed = false;
 
   /**
@@ -495,17 +498,23 @@ class AppImpl implements App {
    * Runs extension `onStart` hooks and starts the frame loop
    * (`docs/architecture/01-lifecycle-and-time.md` §1).
    *
+   * @remarks
+   * A no-op while the app runs. After `stop()` it restarts the loop where it stopped: `onStart`
+   * hooks run only on the first start, and the render scene stays registered.
+   *
    * @returns A promise that settles once the first frame has been submitted. In headless mode there
    * is no loop to start, so it settles once the hooks have run.
    * @throws IgnifxError with code `IGX-0106` when the app has been disposed.
    */
-
   async start(): Promise<void> {
     this.#assertUsable("app.start()");
     if (this.#isRunning) {
       return;
     }
-    await this.#host.start();
+    if (!this.#hasStarted) {
+      await this.#host.start();
+      this.#hasStarted = true;
+    }
     this.#isRunning = true;
     this.#applicationListeners(true);
     const handles = this.#handles;
@@ -520,7 +529,9 @@ class AppImpl implements App {
         context: { member: "app.start()" },
       });
     }
-    await this.#registerRenderScene(handles);
+    if (!rendererInternals(this.renderer).isSceneRegistered) {
+      await this.#registerRenderScene(handles);
+    }
     this.#frameCallback = registerFrameCallback(handles.scene, this.#onLiteFrame);
     this.#isLoopRunning = true;
     rendererInternals(this.renderer).setLoopRunning(true);

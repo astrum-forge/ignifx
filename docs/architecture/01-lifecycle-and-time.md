@@ -18,7 +18,7 @@ Rules:
 
 - ignifx registers **exactly one** Lite before-render callback on the render scene per world. All ignifx work happens inside it, in the order of §3. Extensions never call `onBeforeRender` themselves. (The physics simulation scene carries Lite's own Havok step callback, which ignifx _drives_ through `stepScene` and never registers; see `09-physics.md` §1.)
 - Because Lite runs callbacks registered _later_ first, the world registers its callback after every extension has finished `register()` and before `startEngine`; the adapter asserts this in development builds.
-- `app.start()` applies rendering feature opt-ins, runs extension `onStart` hooks, then awaits `registerScene(renderScene)` (or `registerSceneWithShadowSupport`) and `startEngine(engine)`; `app.stop()` calls `stopEngine`. `app.dispose()` follows the order in `07-rendering.md` §7 (physics before scene, audio independently).
+- `app.start()` applies rendering feature opt-ins, runs extension `onStart` hooks, then awaits `registerScene(renderScene)` (or `registerSceneWithShadowSupport`) and `startEngine(engine)`; `app.stop()` calls `stopEngine`. A `start()` while running is a no-op; a `start()` after `stop()` restarts the loop without running `onStart` or registering the scene again. `app.dispose()` follows the order in `07-rendering.md` §7 (physics before scene, audio independently).
 
 ## 2. The `Time` service (`app.time`)
 
