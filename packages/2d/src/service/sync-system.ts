@@ -1,7 +1,13 @@
 import { Vec2 } from "@ignifx/core";
 import { Camera2D } from "../camera/camera-2d.js";
 import { centreView, createSpriteScratch, updateSprite, writeScratch, writeView } from "../lite/sprite-layer.js";
-import { pivotedPositionToRef, spriteRotationToLite, viewRotationToLite, worldToPixelsToRef } from "../math/coords.js";
+import {
+  pivotedPositionToRef,
+  spriteRotationToLite,
+  trimmedPivotToRef,
+  viewRotationToLite,
+  worldToPixelsToRef,
+} from "../math/coords.js";
 import { SpriteRenderer } from "../sprite/sprite-renderer.js";
 import { TilemapRenderer } from "../tilemap/tilemap-renderer.js";
 import { Tilemap } from "../tilemap/tilemap.js";
@@ -42,6 +48,9 @@ export class TwoDSyncSystem implements System {
   readonly #pixels: MutableVec2 = new Vec2();
 
   readonly #position: MutableVec2 = new Vec2();
+
+  /** The drawn pivot of a trimmed frame, reused every sprite. */
+  readonly #trimmedPivot: MutableVec2 = new Vec2();
 
   readonly #boundsMin: MutableVec2 = new Vec2();
 
@@ -243,7 +252,22 @@ export class TwoDSyncSystem implements System {
     const widthPx = frameWidth * scaleX;
     const heightPx = frameHeight * scaleY;
     const anchor = worldToPixelsToRef(worldX, worldY, pixelsPerUnit, this.#pixels);
-    const pivot = sprite.pivotOverride ?? info?.pivot ?? CENTRE_PIVOT;
+    const declaredPivot = sprite.pivotOverride ?? info?.pivot ?? CENTRE_PIVOT;
+    // A trimmed frame draws only its trimmed pixels; its pivot is moved onto them so they land where
+    // the untrimmed frame would have drawn them.
+    const trim = info?.trim ?? null;
+    const pivot =
+      trim === null
+        ? declaredPivot
+        : trimmedPivotToRef(
+            declaredPivot,
+            trim,
+            frameWidth,
+            frameHeight,
+            sprite.flipX,
+            sprite.flipY,
+            this.#trimmedPivot,
+          );
     const placed = pivotedPositionToRef(anchor.x, anchor.y, pivot, widthPx, heightPx, rotation, this.#position);
     const tint = sprite.color;
     writeScratch(

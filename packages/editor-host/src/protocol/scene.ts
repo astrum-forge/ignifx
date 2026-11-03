@@ -98,6 +98,23 @@ export const SceneMethod = {
    * `HostCapability.grid`. Answers `null`. Additive in 0.3.
    */
   setGrid: "setGrid",
+  /**
+   * Writes cells of a tilemap asset into every live `Tilemap` of the open scene that shows it, so
+   * painting is seen at once, without a save or a reopen. The file on disk is not touched. Needs
+   * `HostCapability.tilemapCells`. Answers {@link SetTilemapCellsResult}. Additive in 0.3.
+   */
+  setTilemapCells: "setTilemapCells",
+  /**
+   * Draws a set of world-space line segments over the view, such as collider outlines or handles,
+   * replacing the set of the same id. Needs `HostCapability.editorLines`. Answers `null`. Additive
+   * in 0.3.
+   */
+  setEditorLines: "setEditorLines",
+  /**
+   * Removes one set of lines `setEditorLines` drew, or every set. Needs `HostCapability.editorLines`.
+   * Answers `null`. Additive in 0.3.
+   */
+  clearEditorLines: "clearEditorLines",
 } as const;
 
 /**
@@ -828,6 +845,100 @@ export interface SetGridParams {
 }
 
 /**
+ * The most numbers the `cells` of one `setTilemapCells` request may hold: a million cells. A request
+ * with more fails with `invalidParams`.
+ *
+ * @public
+ */
+export const TILEMAP_CELLS_MAX_NUMBERS = 2_000_000;
+
+/**
+ * The parameters of `setTilemapCells`.
+ *
+ * @public
+ */
+export interface SetTilemapCellsParams {
+  /**
+   * The tilemap document's asset address, as a `Tilemap`'s `map` reference names it
+   * (`"levels/level-1.tilemap.json"`). Every `Tilemap` of the open scene loaded from it is written.
+   */
+  readonly asset: string;
+  /** The layer: its name in the document, or its index (`0` at the back). */
+  readonly layer: string | number;
+  /**
+   * Flat `[index, tile, index, tile, …]` pairs, in the file's order: `index` is row-major with the
+   * **top** row first, as the document's `tiles` array, and `tile` a global tile id, `0` to clear.
+   * Applied in order, so a cell named twice ends with the later tile. At most
+   * {@link TILEMAP_CELLS_MAX_NUMBERS} numbers.
+   */
+  readonly cells: readonly number[];
+}
+
+/**
+ * The answer to `setTilemapCells`.
+ *
+ * @public
+ */
+export interface SetTilemapCellsResult {
+  /**
+   * How many live `Tilemap`s were written: those of the open scene whose `map` is the asset and has
+   * loaded. `0` when none shows it yet, which is not an error.
+   */
+  readonly tilemaps: number;
+  /** How many cell writes changed a tile, summed over those tilemaps. */
+  readonly changed: number;
+}
+
+/**
+ * The most numbers the `lines` of one `setEditorLines` request may hold: 100 000 segments.
+ *
+ * @public
+ */
+export const EDITOR_LINES_MAX_NUMBERS = 600_000;
+
+/**
+ * The most line sets the view draws at once; a `setEditorLines` for a new id past it fails with
+ * `invalidParams`.
+ *
+ * @public
+ */
+export const EDITOR_LINES_MAX_SETS = 64;
+
+/**
+ * The longest line set id, in UTF-16 code units.
+ *
+ * @public
+ */
+export const EDITOR_LINES_MAX_ID_LENGTH = 256;
+
+/**
+ * The parameters of `setEditorLines`.
+ *
+ * @public
+ */
+export interface SetEditorLinesParams {
+  /** The set's id, chosen by the editor (`"collider-outlines"`); a later call with it replaces the set. */
+  readonly id: string;
+  /**
+   * World-space segments in metres: every six numbers are one segment, the `x, y, z` of its two
+   * ends, as `getColliderOutlines` answers them. Empty draws nothing but keeps the id.
+   */
+  readonly lines: readonly number[];
+  /** The colour, `[r, g, b]` or `[r, g, b, a]` from 0 to 1. Defaults to a light green. */
+  readonly color?: readonly number[];
+}
+
+/**
+ * The parameters of `clearEditorLines`.
+ *
+ * @public
+ */
+export interface ClearEditorLinesParams {
+  /** The set to remove; left out, every set is removed. An unknown id is not an error. */
+  readonly id?: string;
+}
+
+/**
  * One collider's outline in the answer to `getColliderOutlines`.
  *
  * @public
@@ -1155,11 +1266,14 @@ export type SceneRequest =
   | RpcRequestWithParams<typeof SceneMethod.setAnimateMaterials, SetAnimateMaterialsParams>
   | RpcRequestWithParams<typeof SceneMethod.getColliderOutlines, EntitySelection>
   | RpcRequestWithParams<typeof SceneMethod.sampleAnimation, SampleAnimationParams>
-  | RpcRequestWithParams<typeof SceneMethod.setGrid, SetGridParams>;
+  | RpcRequestWithParams<typeof SceneMethod.setGrid, SetGridParams>
+  | RpcRequestWithParams<typeof SceneMethod.setTilemapCells, SetTilemapCellsParams>
+  | RpcRequestWithParams<typeof SceneMethod.setEditorLines, SetEditorLinesParams>
+  | RpcRequestWithParams<typeof SceneMethod.clearEditorLines, ClearEditorLinesParams>;
 
 /**
  * The success answer of the `SceneMethod`s that return nothing: `closeScene`, `setGizmo`, `frame`,
- * `setViewMode`, `setAnimateMaterials` and `setGrid`.
+ * `setViewMode`, `setAnimateMaterials`, `setGrid`, `setEditorLines` and `clearEditorLines`.
  *
  * @public
  */
@@ -1234,6 +1348,13 @@ export type ColliderOutlinesResponse = RpcSuccessResponse<ColliderOutlineSet>;
  * @public
  */
 export type SampleAnimationResponse = RpcSuccessResponse<SampleAnimationResult>;
+
+/**
+ * The success answer to `setTilemapCells`.
+ *
+ * @public
+ */
+export type SetTilemapCellsResponse = RpcSuccessResponse<SetTilemapCellsResult>;
 
 /**
  * Scene host → editor: one of the `SceneNotification`s.
@@ -1713,6 +1834,90 @@ export function isSetGridParams(value: unknown): value is SetGridParams {
     optionalField(value, "visible", isBoolean) &&
     (size === undefined || (isFiniteNumber(size) && size >= GRID_MIN_SIZE && size <= GRID_MAX_SIZE))
   );
+}
+
+/**
+ * Checks the parameters of `setTilemapCells`.
+ *
+ * @param value - The received `params`.
+ * @returns True for a non-empty `asset`, a layer name or index, and an even-length list of at most
+ * {@link TILEMAP_CELLS_MAX_NUMBERS} non-negative integers.
+ *
+ * @public
+ */
+export function isSetTilemapCellsParams(value: unknown): value is SetTilemapCellsParams {
+  if (!isRecord(value)) {
+    return false;
+  }
+  const { asset, layer, cells } = value;
+  return (
+    isUidString(asset) &&
+    (isString(layer) || isCount(layer)) &&
+    Array.isArray(cells) &&
+    cells.length % 2 === 0 &&
+    cells.length <= TILEMAP_CELLS_MAX_NUMBERS &&
+    cells.every((item: unknown) => isCount(item))
+  );
+}
+
+/**
+ * Checks the result of `setTilemapCells`.
+ *
+ * @param value - The received `result`.
+ * @returns True for two counts.
+ *
+ * @public
+ */
+export function isSetTilemapCellsResult(value: unknown): value is SetTilemapCellsResult {
+  return isRecord(value) && isCount(value["tilemaps"]) && isCount(value["changed"]);
+}
+
+/**
+ * Tells whether a value is a line set id.
+ *
+ * @param value - The value to test.
+ * @returns True for a non-empty string of at most {@link EDITOR_LINES_MAX_ID_LENGTH} code units.
+ */
+function isLineSetId(value: unknown): value is string {
+  return isUidString(value) && value.length <= EDITOR_LINES_MAX_ID_LENGTH;
+}
+
+/**
+ * Checks the parameters of `setEditorLines`.
+ *
+ * @param value - The received `params`.
+ * @returns True for an id, a list of finite numbers whose length is a multiple of six and at most
+ * {@link EDITOR_LINES_MAX_NUMBERS}, and an optional colour of three or four numbers from 0 to 1.
+ *
+ * @public
+ */
+export function isSetEditorLinesParams(value: unknown): value is SetEditorLinesParams {
+  if (!isRecord(value)) {
+    return false;
+  }
+  const { lines, color } = value;
+  return (
+    isLineSetId(value["id"]) &&
+    isArrayOf(lines, isFiniteNumber) &&
+    lines.length % 6 === 0 &&
+    lines.length <= EDITOR_LINES_MAX_NUMBERS &&
+    (color === undefined ||
+      ((isNumberTuple(color, 3) || isNumberTuple(color, 4)) &&
+        isArrayOf(color, isFiniteNumber) &&
+        color.every((channel) => channel >= 0 && channel <= 1)))
+  );
+}
+
+/**
+ * Checks the parameters of `clearEditorLines`.
+ *
+ * @param value - The received `params`.
+ * @returns True for an object whose `id`, if present, is a line set id.
+ *
+ * @public
+ */
+export function isClearEditorLinesParams(value: unknown): value is ClearEditorLinesParams {
+  return isRecord(value) && optionalField(value, "id", isLineSetId);
 }
 
 /**

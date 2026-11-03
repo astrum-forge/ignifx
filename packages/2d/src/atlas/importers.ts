@@ -491,16 +491,13 @@ export interface TexturePackerImportOptions {
  *
  * A frame's `pivot` is used as-is when the document declares one: TexturePacker already writes
  * pivots normalised into `[0, 1]` against a top-left origin, which is exactly ignifx's convention.
- * Frames without one get the centre. A frame marked `trimmed` carries its `sourceSize` through so
- * the loader can lay the trimmed rectangle back inside its original bounds.
+ * Frames without one get the centre. A frame marked `trimmed` carries its `sourceSize` and, from
+ * `spriteSourceSize.x`/`.y`, its `sourceOffset` through, so the trimmed pixels draw where the
+ * untrimmed frame would have put them.
  *
  * @remarks
  * Rotated frames are rejected rather than silently drawn wrong — the sprite pipeline has no
  * per-frame rotation flag.
- *
- * `spriteSourceSize`'s **offset** (`x`/`y`) has no home in `SpriteFrameDefinition`, which records
- * only the untrimmed size, so a trimmed frame whose art is not centred in its source bounds may sit
- * slightly off. Pack with trimming disabled, or with `spriteSourceSize` centred, when that matters.
  *
  * @param json - The parsed TexturePacker document.
  * @param options - The image override, name handling, and sampling.
@@ -547,7 +544,9 @@ export function importTexturePackerAtlas(json: unknown, options?: TexturePackerI
       failImport(importer, `frame ${item.key} has no {x, y, w, h} frame rectangle`);
     }
     const pivot = readVec2(item.entry, "pivot") ?? CENTRE_PIVOT;
-    const sourceSize = item.entry["trimmed"] === true ? readSize(item.entry, "sourceSize") : null;
+    const trimmed = item.entry["trimmed"] === true;
+    const sourceSize = trimmed ? readSize(item.entry, "sourceSize") : null;
+    const sourceOffset = sourceSize === null ? null : readVec2(item.entry, "spriteSourceSize");
     frames.push({
       name: keepExtensions ? item.key : stripFileExtension(item.key),
       x: rect.x,
@@ -556,6 +555,7 @@ export function importTexturePackerAtlas(json: unknown, options?: TexturePackerI
       h: rect.h,
       pivot: { x: pivot.x, y: pivot.y },
       ...(sourceSize === null ? {} : { sourceSize }),
+      ...(sourceOffset === null ? {} : { sourceOffset }),
     });
   }
   return defineSpriteAtlas(
@@ -616,8 +616,8 @@ export interface AsepriteImportOptions {
  * is put through {@link asepriteFrameName}; `importAsepriteAnimations` uses the same normaliser,
  * which is what makes the imported clips and the imported atlas agree on names.
  *
- * A trimmed frame keeps its `sourceSize` so the loader can place the trimmed rectangle back inside
- * its original bounds.
+ * A trimmed frame keeps its `sourceSize` and its `sourceOffset` (from `spriteSourceSize.x`/`.y`), so
+ * the trimmed pixels draw where the untrimmed frame would have put them.
  *
  * @remarks
  * Pivots are **best-effort**. Aseprite has no per-frame pivot; it has slices, which carry an
@@ -667,6 +667,7 @@ export function importAsepriteAtlas(json: unknown, options?: AsepriteImportOptio
     }
     const declaredSource = readSize(item.entry, "sourceSize");
     const trimmed = item.entry["trimmed"] === true;
+    const declaredOffset = declaredSource === null ? null : readVec2(item.entry, "spriteSourceSize");
     const sourceWidth = declaredSource === null ? rect.w : declaredSource.x;
     const sourceHeight = declaredSource === null ? rect.h : declaredSource.y;
     const pivot = slicePivotFor(slicePivots, index, sourceWidth, sourceHeight) ?? CENTRE_PIVOT;
@@ -678,6 +679,7 @@ export function importAsepriteAtlas(json: unknown, options?: AsepriteImportOptio
       h: rect.h,
       pivot: { x: pivot.x, y: pivot.y },
       ...(trimmed && declaredSource !== null ? { sourceSize: declaredSource } : {}),
+      ...(trimmed && declaredOffset !== null ? { sourceOffset: declaredOffset } : {}),
     });
   }
   return defineSpriteAtlas(

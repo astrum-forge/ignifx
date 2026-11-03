@@ -103,8 +103,18 @@ export interface SpriteFrameDefinition {
    * bottom-right. Defaults to the centre. Written either as `[x, y]` or as `{ x, y }`.
    */
   readonly pivot?: Vec2Json;
-  /** The untrimmed source size, when the packer trimmed transparent margins. Defaults to `w`/`h`. */
+  /**
+   * The untrimmed source size, when the packer trimmed transparent margins. Defaults to `w`/`h`.
+   * With `sourceOffset`, the pivot is in `[0, 1]` of this size and the frame draws at `w`/`h`;
+   * without it, the frame draws stretched to this size, as before `sourceOffset` existed.
+   */
   readonly sourceSize?: Vec2Json;
+  /**
+   * Where the trimmed rectangle's top-left corner sits inside the untrimmed source, in pixels from
+   * the source's top-left: TexturePacker's and Aseprite's `spriteSourceSize.x`/`.y`. Needs
+   * `sourceSize`. Absent means the frame is not placed as trimmed.
+   */
+  readonly sourceOffset?: Vec2Json;
 }
 
 /**
@@ -209,6 +219,9 @@ export function defineSpriteAtlas(input: SpriteAtlasInput, address = "<inline>")
     if (!(frame.x >= 0) || !(frame.y >= 0)) {
       fail(`frame ${frame.name} starts outside the image`);
     }
+    if (frame.sourceOffset !== undefined) {
+      checkSourceOffset(frame, fail);
+    }
   }
   const frames: SpriteFrameDefinition[] = [];
   for (let index = 0; index < input.frames.length; index += 1) {
@@ -223,6 +236,7 @@ export function defineSpriteAtlas(input: SpriteAtlasInput, address = "<inline>")
       ...frame,
       pivot: readVec2(frame.pivot, CENTRE_PIVOT),
       ...(frame.sourceSize === undefined ? {} : { sourceSize: readVec2(frame.sourceSize, { x: frame.w, y: frame.h }) }),
+      ...(frame.sourceOffset === undefined ? {} : { sourceOffset: readVec2(frame.sourceOffset, UNREADABLE) }),
     });
   }
   return {
@@ -239,6 +253,27 @@ export function defineSpriteAtlas(input: SpriteAtlasInput, address = "<inline>")
  * The pivot a frame that declares none uses.
  */
 const CENTRE_PIVOT: Vec2Like = Object.freeze({ x: 0.5, y: 0.5 });
+
+/** What a malformed 2D value reads as, so the range check below refuses it. */
+const UNREADABLE: Vec2Like = Object.freeze({ x: Number.NaN, y: Number.NaN });
+
+/**
+ * Checks that a frame's `sourceOffset` places its trimmed rectangle inside its `sourceSize`.
+ *
+ * @param frame - A frame that declares `sourceOffset`.
+ * @param fail - Throws the document's `IGX-1103`.
+ */
+function checkSourceOffset(frame: SpriteFrameDefinition, fail: (reason: string) => never): void {
+  if (frame.sourceSize === undefined) {
+    fail(`frame ${frame.name} has a sourceOffset but no sourceSize`);
+    return;
+  }
+  const offset = readVec2(frame.sourceOffset, UNREADABLE);
+  const source = readVec2(frame.sourceSize, UNREADABLE);
+  if (!(offset.x >= 0) || !(offset.y >= 0) || !(offset.x + frame.w <= source.x) || !(offset.y + frame.h <= source.y)) {
+    fail(`frame ${frame.name}'s sourceOffset does not place its rectangle inside its sourceSize`);
+  }
+}
 
 /**
  * Splits a sprite address into its atlas address and its frame name.

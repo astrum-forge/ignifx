@@ -68,7 +68,8 @@ each view ◀── MessagePort ──▶ editor     JSON-RPC 2.0, protocol 0.3
    connect (window message, origin-checked) → hello → ready → ping/pong, heartbeat
    scene view: schemasChanged → openScene → applyOps… / readBack / select / pick / frame / setGizmo / screenshot
                / setViewMode / getSchemas / describeSettings (on request only)
-               / setAnimateMaterials / getColliderOutlines / sampleAnimation / setGrid (with a canvas)
+               / setAnimateMaterials / getColliderOutlines / sampleAnimation / setGrid / setTilemapCells
+               / setEditorLines / clearEditorLines (with a canvas)
                ← sceneOpened, selectionChanged, transformDragging/Dragged, hotReloaded, assetReloaded,
                  hostError, log
    play view:  play / pause / step / stop / playState / playStats / screenshot (with a canvas)
@@ -387,6 +388,17 @@ object `openScene` sends, through `world.loadSceneFile`; `readBack` answers with
   its default (`visible: true`, `size: 1` metre, 0.001 to 1000). The grid starts visible at every
   load, so re-send the editor's state after `ready`. It is never picked or saved, and never in the
   play view; `screenshot` includes it while it is visible.
+- **Live tilemap painting.** With a canvas the scene host lists `tilemapCells` and answers
+  `setTilemapCells { asset, layer, cells }`: `cells` are flat `[index, tile, …]` pairs in the
+  `.tilemap.json` file's order (row-major, top row first), `layer` a layer name or index. Every
+  loaded `Tilemap` of the open scene whose `map` is `asset` is written with `Tilemap.setCells`, so
+  the view shows the paint at once; the answer is `{ tilemaps, changed }`. The file is not
+  written: save it, or a reopen shows the file's cells again.
+- **Editor lines.** With a canvas the scene host lists `editorLines` and draws the editor's own
+  line sets over the view in 3D and 2D: `setEditorLines { id, lines, color? }` (six numbers a
+  segment, world metres, as `getColliderOutlines` answers; `color` `[r, g, b, a?]`) replaces the
+  set `id`, `clearEditorLines { id? }` removes one or all. At most 64 sets of 100 000 segments;
+  never picked, saved or drawn in the game view; re-send them after `ready`.
 - **A changed asset reloads in place, not the view.** The scene view's page hands every
   `ignifx:asset-changed` event to `host.assetChanged`, which calls `app.assets.reload(address)` for an
   asset the app has loaded, of type `scene` (a scene or prefab), `model`, `mesh`, `material`,
