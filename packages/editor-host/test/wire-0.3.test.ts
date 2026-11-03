@@ -46,6 +46,8 @@ import {
   isRenderThumbnailParams,
   isSampleAnimationParams,
   isSampleAnimationResult,
+  isSampleSpriteAnimationParams,
+  isSampleSpriteAnimationResult,
   isSetGameViewParams,
   isThumbnailResult,
   isSceneOpenedParams,
@@ -216,6 +218,8 @@ const PARAMS_GUARDS: Readonly<Record<string, (value: unknown) => boolean>> = {
   playStateChangedStopped: isPlayStateReport,
   sampleAnimation: isSampleAnimationParams,
   sampleAnimationBlend: isSampleAnimationParams,
+  sampleSpriteAnimation: isSampleSpriteAnimationParams,
+  sampleSpriteAnimationTime: isSampleSpriteAnimationParams,
   setGameView: isSetGameViewParams,
   setGameViewOff: isSetGameViewParams,
   gameViewFrame: isGameViewFrameParams,
@@ -248,6 +252,7 @@ const RESULT_GUARDS: Readonly<Record<string, (value: unknown) => boolean>> = {
   playStatsStoppedResponse: isPlayStats,
   sampleAnimationResponse: isSampleAnimationResult,
   sampleAnimationLoadingResponse: isSampleAnimationResult,
+  sampleSpriteAnimationResponse: isSampleSpriteAnimationResult,
   setGameViewResponse: isGameViewState,
   gameViewFrameResponse: isGameViewFrameResult,
   gameViewFrameNoCamera: isGameViewFrameResult,
@@ -491,7 +496,12 @@ describe("the editor's 0.3 wire fixture, through a live headless host", () => {
     // gizmos, captures nothing, has no 2D view. The fixture records the engine version the editor's
     // copy was made at; the host reports the one it runs, so that field is the live one on both sides.
     const ready = wire("readyScene");
-    const capabilities = [HostCapability.heartbeat, HostCapability.logRelay, HostCapability.hotReloadDefaults];
+    const capabilities = [
+      HostCapability.heartbeat,
+      HostCapability.logRelay,
+      HostCapability.hotReloadDefaults,
+      HostCapability.spriteAnimation,
+    ];
     const engineVersion = resolveEngineVersion(ENGINE_VERSION);
     expectWire(await peer.request(wire("hello")), {
       ...ready,

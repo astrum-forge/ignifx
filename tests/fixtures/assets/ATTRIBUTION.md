@@ -19,6 +19,14 @@ The Khronos glTF sample cube: one mesh, one metallic-roughness material. Used as
 - **Source:** <https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/Box>
 - **SHA-256:** `ed52f7192b8311d700ac0ce80644e3852cd01537e4d62241b9acba023da3d54e`
 
+## `Box-draco.glb` — 1 084 bytes and `Box-meshopt.glb` — 1 940 bytes
+
+`Box.glb` compressed with `KHR_draco_mesh_compression` and with `EXT_meshopt_compression` (plus
+`KHR_mesh_quantization`), so a test can load each through the decoders `@ignifx/core` hosts (engine
+ask E9). Same licence and copyright as `Box.glb`; the commands are under [Provenance](#provenance).
+
+- **SHA-256:** `df9a448a091e070bd8a9231b71243a9bc0f2559b0e9fe34a4376999db4d5d6d1` (Draco), `b0a6b16254ed0743cb3b3dcb35a6dcf737bc16707f133dabcf5bb7dcc2078bd6` (meshopt)
+
 ## `studio.env` — 205 260 bytes
 
 A prefiltered studio environment (specular cube map plus spherical harmonics) in Babylon's `.env`
@@ -100,6 +108,9 @@ requirement would then travel to every game made from that template.
 curl -L -o Box.glb \
   https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/Box/glTF-Binary/Box.glb
 curl -L -o studio.env https://assets.babylonjs.com/environments/studio.env
+# 2026-11-03, engine ask E9: the compressed boxes, with the WASM-only glTF-Transform CLI.
+pnpm dlx @gltf-transform/cli@4.5.1 draco Box.glb Box-draco.glb
+pnpm dlx @gltf-transform/cli@4.5.1 meshopt Box.glb Box-meshopt.glb
 # brdf-lut.png is the base64 payload of `_environmentBRDFBase64Texture`, decoded:
 curl -L https://raw.githubusercontent.com/BabylonJS/Babylon.js/master/packages/dev/core/src/Misc/brdfTextureTools.ts \
   | sed -n 's/.*"data:image\/png;base64,\([A-Za-z0-9+/=]*\)".*/\1/p' \

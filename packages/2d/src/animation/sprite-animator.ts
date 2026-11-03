@@ -1,6 +1,7 @@
 import { asset, bool, Component, createDefaults, defineSchema, f32, Signal, str } from "@ignifx/core";
 import { twoDError, TwoDErrorCode } from "../errors.js";
 import { SpriteRenderer } from "../sprite/sprite-renderer.js";
+import { spriteClipFrameAtTime } from "./clip-time.js";
 import { SpriteAnimationAsset } from "./sprite-animation-asset.js";
 import type { SpriteClip } from "./sprite-animation-asset.js";
 import type { SpriteAtlasAsset } from "../atlas/sprite-atlas-asset.js";
@@ -278,6 +279,33 @@ export class SpriteAnimator extends Component implements ComponentHooks {
     this.#hasAutoPlayed = true;
     this.#writeFrame();
     return true;
+  }
+
+  /**
+   * Shows the frame of a clip that plays `seconds` into it, without playing it: {@link
+   * SpriteAnimator.sample} at the frame `spriteClipFrameAtTime` picks, at this animator's `speed`.
+   * A looping clip wraps and a one-shot clip holds its first or last frame.
+   *
+   * @param name - The clip's name.
+   * @param seconds - How far into the clip, in seconds.
+   * @returns `true` when the frame was written; `false` while the document or the atlas is still
+   * loading, or when the clip has no frames.
+   * @throws IgnifxError with code `IGX-1108` when the document declares no such clip.
+   *
+   * @example
+   * ```ts
+   * animator.sampleTime("run", 0.25);
+   * ```
+   */
+  sampleTime(name: string, seconds: number): boolean {
+    const clips = this.asset;
+    const atlas = this.#atlas();
+    if (clips === null || atlas === null) {
+      return false;
+    }
+    const clip = clips.requireClip(name, atlas);
+    const timing = { frameCount: clip.frames.length, fps: clip.fps, loop: clip.loop };
+    return this.sample(name, spriteClipFrameAtTime(timing, seconds, this.speed));
   }
 
   /**

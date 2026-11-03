@@ -117,11 +117,11 @@ function member(message: Received, key: string): Received {
 function asReady(name: "readyScene" | "readyPlay"): Received {
   const ready = asCurrent(wire(name));
   const result = member(ready, "result");
-  // `logRelay`, the scene host's `hotReloadDefaults` and the play view's `queryRuntime` are additive
-  // in 0.3, so a current host lists them after the fixture's capabilities.
+  // `logRelay`, the scene host's `hotReloadDefaults` and `spriteAnimation`, and the play view's
+  // `queryRuntime` are additive in 0.3, so a current host lists them after the fixture's capabilities.
   const additive =
     name === "readyScene"
-      ? [HostCapability.logRelay, HostCapability.hotReloadDefaults]
+      ? [HostCapability.logRelay, HostCapability.hotReloadDefaults, HostCapability.spriteAnimation]
       : [HostCapability.logRelay, HostCapability.queryRuntime];
   const capabilities = [result["capabilities"], ...additive].flat();
   return { ...ready, result: { ...result, engineVersion: REPORTED_ENGINE_VERSION, capabilities } };

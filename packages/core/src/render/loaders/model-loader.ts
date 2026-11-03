@@ -23,9 +23,11 @@ import type { ModelAsset } from "../model-asset.js";
  * ## Decoders
  *
  * A glTF may need one of Lite's run-time decoders: `KHR_texture_basisu` images go through the KTX2
- * decoder and `EXT_meshopt_compression` buffers through the meshopt decoder. Both load from
- * `cdn.babylonjs.com` unless told otherwise, so the loader calls `configureDecoders` first, which
- * points Lite at the copies `@ignifx/vite-plugin` serves (`../decoder-urls.ts`).
+ * decoder, `EXT_meshopt_compression` buffers through the meshopt decoder and
+ * `KHR_draco_mesh_compression` primitives through the Draco decoder. Lite loads them from
+ * `cdn.babylonjs.com` (Draco: from `/`) unless told otherwise, so the loader calls
+ * `configureDecoders` first, which points Lite at the copies `@ignifx/vite-plugin` serves
+ * (`../decoder-urls.ts`). Lite fetches a decoder only when a file uses its extension.
  *
  * ## Headless
  *

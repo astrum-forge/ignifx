@@ -6,7 +6,9 @@
  * Lite 1.34 injects the KTX2 decoder (`babylon.ktx2Decoder.js`), which then fetches its Basis and
  * UASTC transcoders and a Zstandard decoder, and the meshopt decoder (`meshopt_decoder.js`), from
  * the Babylon CDN unless told otherwise (`lib/texture/ktx2-loader.js`,
- * `lib/loader-gltf/meshopt-decode.js`). A packaged game's `script-src 'self'` blocks the CDN. The
+ * `lib/loader-gltf/meshopt-decode.js`). It injects the Draco decoder (`draco_decoder.js`, which
+ * fetches `draco_decoder_gltf.wasm`) from the page's own root, `/`, unless told otherwise
+ * (`lib/loader-gltf/draco-decode.js`). A packaged game's `script-src 'self'` blocks the CDN. The
  * files therefore ship inside `@ignifx/core`, which lists them in `ignifx.assets.public`, and
  * `@ignifx/vite-plugin` copies them into the build like any extension's public files.
  *
@@ -46,8 +48,12 @@ interface Source {
   readonly repository: string;
   /** The copyright line for the notices file. */
   readonly copyright: string;
-  /** The licence file inside the package. */
-  readonly licenseFrom: string;
+  /**
+   * The licence file inside the package, or `null` when the package ships none. `null` copies the
+   * repository's own `LICENSE`, which is the same Apache-2.0 text, and is refused for any other
+   * licence.
+   */
+  readonly licenseFrom: string | null;
   /** The `NOTICE` file inside the package, or `null`. */
   readonly noticeFrom: string | null;
   /** `[served name, path inside the package]` pairs. */
@@ -100,6 +106,22 @@ const SOURCES: readonly Source[] = [
     licenseFrom: "LICENSE.md",
     noticeFrom: null,
     files: [["meshopt_decoder.js", "meshopt_decoder.cjs"]],
+  },
+  {
+    // The glTF build of Google's Draco decoder, the one `KHR_draco_mesh_compression` targets. The
+    // `_nodejs` glue is Emscripten's universal wrapper (byte-identical to the browser wrapper other
+    // engines ship) and declares the `DracoDecoderModule` global Lite's loader reads; it asks for
+    // `draco_decoder_gltf.wasm`, so the WASM keeps its name. The package ships no licence file.
+    name: "draco3dgltf",
+    version: "1.5.7",
+    repository: "https://github.com/google/draco",
+    copyright: "Copyright 2017 The Draco Authors",
+    licenseFrom: null,
+    noticeFrom: null,
+    files: [
+      ["draco_decoder.js", "draco_decoder_gltf_nodejs.js"],
+      ["draco_decoder_gltf.wasm", "draco_decoder_gltf.wasm"],
+    ],
   },
 ];
 
@@ -242,7 +264,15 @@ function vendor(source: Source, workDirectory: string, target: string): Vendored
   const { directory, integrity } = unpack(source, workDirectory);
   const stem = stemOf(source.name);
   const licenseFile = `${stem}.LICENSE.md`;
-  copyFileSync(path.join(directory, source.licenseFrom), path.join(target, licenseFile));
+  const license = licenseOf(directory);
+  if (source.licenseFrom === null && license !== "Apache-2.0") {
+    throw new Error(`${source.name} ships no licence file and is ${license}, not Apache-2.0`);
+  }
+  const licenseSource =
+    source.licenseFrom === null
+      ? path.join(repositoryRoot(import.meta.url), "LICENSE")
+      : path.join(directory, source.licenseFrom);
+  copyFileSync(licenseSource, path.join(target, licenseFile));
   let noticeFile: string | null = null;
   if (source.noticeFrom !== null) {
     noticeFile = `${stem}.NOTICE.md`;
@@ -265,7 +295,7 @@ function vendor(source: Source, workDirectory: string, target: string): Vendored
     name: source.name,
     version: source.version,
     integrity,
-    license: licenseOf(directory),
+    license,
     repository: source.repository,
     copyright: source.copyright,
     licenseFile,

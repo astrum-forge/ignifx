@@ -362,6 +362,7 @@ export const HostCapability: {
     readonly grid: "grid";
     readonly tilemapCells: "tilemapCells";
     readonly editorLines: "editorLines";
+    readonly spriteAnimation: "spriteAnimation";
 };
 
 // @public
@@ -547,6 +548,12 @@ export function isSampleAnimationParams(value: unknown): value is SampleAnimatio
 
 // @public
 export function isSampleAnimationResult(value: unknown): value is SampleAnimationResult;
+
+// @public
+export function isSampleSpriteAnimationParams(value: unknown): value is SampleSpriteAnimationParams;
+
+// @public
+export function isSampleSpriteAnimationResult(value: unknown): value is SampleSpriteAnimationResult;
 
 // @public
 export function isSceneFile(value: unknown): value is SceneFile;
@@ -1021,6 +1028,22 @@ export interface SampleAnimationResult {
 }
 
 // @public
+export interface SampleSpriteAnimationParams {
+    readonly clip: string;
+    readonly entity: string;
+    readonly frame?: number;
+    readonly time?: number;
+}
+
+// @public
+export type SampleSpriteAnimationResponse = RpcSuccessResponse<SampleSpriteAnimationResult>;
+
+// @public
+export interface SampleSpriteAnimationResult {
+    readonly posed: boolean;
+}
+
+// @public
 export interface SceneFile {
     readonly engineVersion?: string;
     readonly entities: readonly SceneFileEntity[];
@@ -1112,6 +1135,7 @@ export const SceneMethod: {
     readonly setAnimateMaterials: "setAnimateMaterials";
     readonly getColliderOutlines: "getColliderOutlines";
     readonly sampleAnimation: "sampleAnimation";
+    readonly sampleSpriteAnimation: "sampleSpriteAnimation";
     readonly setGrid: "setGrid";
     readonly setTilemapCells: "setTilemapCells";
     readonly setEditorLines: "setEditorLines";
@@ -1170,7 +1194,7 @@ export const SceneOpKind: {
 export type SceneOpKind = (typeof SceneOpKind)[keyof typeof SceneOpKind];
 
 // @public
-export type SceneRequest = RpcRequestWithParams<typeof SceneMethod.openScene, OpenSceneParams> | RpcRequest<typeof SceneMethod.closeScene, never> | RpcRequestWithParams<typeof SceneMethod.applyOps, ApplyOpsParams> | RpcRequestWithParams<typeof SceneMethod.readBack, ReadBackParams> | RpcRequestWithParams<typeof SceneMethod.select, EntitySelection> | RpcRequestWithParams<typeof SceneMethod.setGizmo, SetGizmoParams> | RpcRequestWithParams<typeof SceneMethod.frame, FrameParams> | RpcRequestWithParams<typeof SceneMethod.pick, PickParams> | RpcRequestWithParams<typeof SceneMethod.screenshot, ScreenshotParams> | RpcRequest<typeof SceneMethod.getSchemas, never> | RpcRequest<typeof SceneMethod.describeSettings, never> | RpcRequestWithParams<typeof SceneMethod.setViewMode, SetViewModeParams> | RpcRequestWithParams<typeof SceneMethod.setAnimateMaterials, SetAnimateMaterialsParams> | RpcRequestWithParams<typeof SceneMethod.getColliderOutlines, EntitySelection> | RpcRequestWithParams<typeof SceneMethod.sampleAnimation, SampleAnimationParams> | RpcRequestWithParams<typeof SceneMethod.setGrid, SetGridParams> | RpcRequestWithParams<typeof SceneMethod.setTilemapCells, SetTilemapCellsParams> | RpcRequestWithParams<typeof SceneMethod.setEditorLines, SetEditorLinesParams> | RpcRequestWithParams<typeof SceneMethod.clearEditorLines, ClearEditorLinesParams>;
+export type SceneRequest = RpcRequestWithParams<typeof SceneMethod.openScene, OpenSceneParams> | RpcRequest<typeof SceneMethod.closeScene, never> | RpcRequestWithParams<typeof SceneMethod.applyOps, ApplyOpsParams> | RpcRequestWithParams<typeof SceneMethod.readBack, ReadBackParams> | RpcRequestWithParams<typeof SceneMethod.select, EntitySelection> | RpcRequestWithParams<typeof SceneMethod.setGizmo, SetGizmoParams> | RpcRequestWithParams<typeof SceneMethod.frame, FrameParams> | RpcRequestWithParams<typeof SceneMethod.pick, PickParams> | RpcRequestWithParams<typeof SceneMethod.screenshot, ScreenshotParams> | RpcRequest<typeof SceneMethod.getSchemas, never> | RpcRequest<typeof SceneMethod.describeSettings, never> | RpcRequestWithParams<typeof SceneMethod.setViewMode, SetViewModeParams> | RpcRequestWithParams<typeof SceneMethod.setAnimateMaterials, SetAnimateMaterialsParams> | RpcRequestWithParams<typeof SceneMethod.getColliderOutlines, EntitySelection> | RpcRequestWithParams<typeof SceneMethod.sampleAnimation, SampleAnimationParams> | RpcRequestWithParams<typeof SceneMethod.sampleSpriteAnimation, SampleSpriteAnimationParams> | RpcRequestWithParams<typeof SceneMethod.setGrid, SetGridParams> | RpcRequestWithParams<typeof SceneMethod.setTilemapCells, SetTilemapCellsParams> | RpcRequestWithParams<typeof SceneMethod.setEditorLines, SetEditorLinesParams> | RpcRequestWithParams<typeof SceneMethod.clearEditorLines, ClearEditorLinesParams>;
 
 // @public
 export interface SchemaDescription {
