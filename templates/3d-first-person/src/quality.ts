@@ -1,5 +1,11 @@
-import { RENDERING_QUALITIES } from "@ignifx/core";
-import type { RenderingQuality } from "@ignifx/core";
+import { Environment, RENDERING_QUALITIES } from "@ignifx/core";
+import type { App, RenderingQuality } from "@ignifx/core";
+
+/**
+ * The tier the desktop build runs at. `"high"` turns on HDR, TAA and full-resolution GTAO; the
+ * post-process stack's bloom becomes HDR bloom under HDR, and {@link addTierLook} adds AgX.
+ */
+export const DESKTOP_QUALITY: RenderingQuality = "high";
 
 /**
  * Reads a `rendering.quality` tier from the `?quality=` query flag.
@@ -9,6 +15,35 @@ import type { RenderingQuality } from "@ignifx/core";
  */
 export function qualityFlag(flag: string | null): RenderingQuality | null {
   return RENDERING_QUALITIES.find((tier: RenderingQuality) => tier === flag) ?? null;
+}
+
+/**
+ * The tier this run uses: the `?quality=` flag when it names one, {@link DESKTOP_QUALITY} in the
+ * Electron build (whose preload hands the page `window.ignifxHost`), and otherwise none, which keeps
+ * `ignifx.config.ts` as written. The browser build stays at the config's own effects so it runs on
+ * phones and integrated GPUs; a desktop is the device the `high` budget is written for.
+ *
+ * @param flag - The `?quality=` flag's value, or `null`.
+ * @returns The tier, or `null` to keep the config's.
+ */
+export function chooseQuality(flag: string | null): RenderingQuality | null {
+  return qualityFlag(flag) ?? ("ignifxHost" in window ? DESKTOP_QUALITY : null);
+}
+
+/**
+ * Adds the look that goes with a named tier: an `Environment` that tone maps with AgX, which keeps
+ * bright HDR colour from clipping to flat white. Nothing for `null` or `"custom"`.
+ *
+ * @param app - The app, before `app.start()`.
+ * @param quality - The tier this run uses.
+ */
+export function addTierLook(app: App, quality: RenderingQuality | null): void {
+  if (quality === null || quality === "custom") {
+    return;
+  }
+  app.world.createEntity("Environment").addComponent(Environment, {
+    imageProcessing: { exposure: 1, contrast: 1, toneMapping: "agx" },
+  });
 }
 
 /**

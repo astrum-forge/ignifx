@@ -19,7 +19,7 @@ import { installGameplayProbe } from "./gameplay-probe.js";
 import { createGameMenus } from "./menus/game-menus.js";
 import { applySettings, loadInputOverrides, loadSettings } from "./menus/settings-store.js";
 import { bakeNavigation } from "./navigation.js";
-import { qualityFlag, withQuality } from "./quality.js";
+import { addTierLook, chooseQuality, withQuality } from "./quality.js";
 import { createRun } from "./run.js";
 import { scriptType } from "./script-types.js";
 import type { GameMenus } from "./menus/game-menus.js";
@@ -64,7 +64,8 @@ import type { LocaleAsset } from "@ignifx/ui";
  * - `?locale=fr` switches `app.i18n` before the menus are built, which is the whole demonstration
  *   that the UI strings live in `assets/strings.i18n.json` and not in this file.
  * - `?quality=low|medium|high|custom` runs at that `rendering.quality` tier instead of the
- *   config's; the GPU-budget suite measures each tier through it.
+ *   config's; the GPU-budget suite measures each tier through it. The desktop build runs at
+ *   `high` (HDR, TAA, GTAO, HDR bloom, AgX) without the flag; see `src/quality.ts`.
  */
 
 declare global {
@@ -376,6 +377,7 @@ async function main(): Promise<AppStatus> {
   }
 
   const flags = new URLSearchParams(window.location.search);
+  const quality = chooseQuality(flags.get("quality"));
   const isStatic = flags.get("static") === "1";
   const isBench = flags.get("bench") === "1";
   const showOverlay = (!isStatic || flags.get("hud") === "1") && !isBench;
@@ -384,7 +386,7 @@ async function main(): Promise<AppStatus> {
   try {
     app = await createApp({
       canvas,
-      settings: withQuality(import.meta.env.IGNIFX_CONFIG, qualityFlag(flags.get("quality"))),
+      settings: withQuality(import.meta.env.IGNIFX_CONFIG, quality),
       // The address-to-URL table `@ignifx/vite-plugin` built from `assets/`. Importing the virtual
       // module rather than fetching `assets.manifest.json` means the table is in the bundle, so
       // the first asset request needs no round trip.
@@ -469,6 +471,7 @@ async function main(): Promise<AppStatus> {
   // Then the level itself: the loader fetches every mesh, model, material and animator the file
   // names before it builds an entity.
   await app.world.loadScene(MAIN_SCENE);
+  addTierLook(app, quality);
   const level = findLevel(app);
   let enableEffects: (() => void) | null = null;
 

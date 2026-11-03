@@ -164,3 +164,6 @@ and it defaults to the packaged editor's `ignifx-editor://app`. `pnpm build` con
 - `?probe=1` — installs `window.__ignifxGameplay` (`src/gameplay-probe.ts`), the view and character
   readings `tests/visual/tests/templates.spec.ts` asserts on. It does not exist without the flag.
 - `?locale=<tag>` — picks a locale from `assets/strings.i18n.json` before the menus are built.
+- `?quality=<tier>` — runs at that `rendering.quality` tier (`low`, `medium`, `high`, `custom`). The
+  desktop build runs at `high` without it: HDR, TAA, full-resolution GTAO, HDR bloom and AgX tone
+  mapping (`src/quality.ts`). The browser build keeps `ignifx.config.ts` as written.

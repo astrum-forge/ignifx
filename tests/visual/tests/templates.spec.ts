@@ -186,11 +186,23 @@ test.describe("template scenes", () => {
     await expect(page).toHaveScreenshot("3d-third-person.png", { maxDiffPixelRatio: 0.05 });
   });
 
+  // The desktop build's tier (GI plan step G16): `rendering.quality: "high"` (HDR, TAA, GTAO) and
+  // an AgX `Environment`. `?static=1` leaves the post-process stack out, so there is no bloom here.
+  test("3d-third-person, high tier", async ({ page }) => {
+    await openScene(page, `${THIRD_PERSON}/?static=1&quality=high`);
+    await expect(page).toHaveScreenshot("3d-third-person-high.png", { maxDiffPixelRatio: 0.05 });
+  });
+
   // The same room from inside the character's head, with the view model and the prop welded to the
   // rig's `hand` node in the corner of the frame and three pedestals ahead.
   test("3d-first-person", async ({ page }) => {
     await openScene(page, `${FIRST_PERSON}/?static=1`);
     await expect(page).toHaveScreenshot("3d-first-person.png", { maxDiffPixelRatio: 0.05 });
+  });
+
+  test("3d-first-person, high tier", async ({ page }) => {
+    await openScene(page, `${FIRST_PERSON}/?static=1&quality=high`);
+    await expect(page).toHaveScreenshot("3d-first-person-high.png", { maxDiffPixelRatio: 0.05 });
   });
 });
 
