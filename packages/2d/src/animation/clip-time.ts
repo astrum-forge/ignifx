@@ -47,7 +47,8 @@ export function spriteClipFrameAtTime(clip: SpriteClipTiming, seconds: number, s
   }
   const raw = Math.floor(seconds * rate);
   if (clip.loop) {
-    return ((raw % count) + count) % count;
+    // A finite time whose product with the rate overflows has no phase; show the first frame.
+    return Number.isFinite(raw) ? ((raw % count) + count) % count : 0;
   }
   return Math.min(Math.max(raw, 0), count - 1);
 }

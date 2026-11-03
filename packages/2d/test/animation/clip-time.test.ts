@@ -27,5 +27,7 @@ describe("spriteClipFrameAtTime", () => {
     expect(spriteClipFrameAtTime({ frameCount: 0, fps: 10, loop: true }, 1)).toBe(0);
     expect(spriteClipFrameAtTime(looping, 1, 0)).toBe(0);
     expect(spriteClipFrameAtTime(looping, Number.NaN)).toBe(0);
+    expect(spriteClipFrameAtTime(looping, Number.MAX_VALUE)).toBe(0);
+    expect(spriteClipFrameAtTime(once, Number.MAX_VALUE)).toBe(3);
   });
 });
