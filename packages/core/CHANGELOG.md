@@ -1,5 +1,12 @@
 # @ignifx/core
 
+## 0.16.0
+
+### Minor Changes
+
+- fc79bcb: Add `rendering.quality`, a quality tier: `"low"`, `"medium"`, `"high"` or `"custom"` (the default, which changes nothing). A named tier turns `hdr`, TAA and GTAO on or off and picks the GTAO resolution to fit the GPU budget, and caps a `PostProcessStack`'s contact shadows (from `"medium"`) and SSGI (`"high"` only). A field you set yourself still wins: `{ quality: "high", taa: { enabled: false } }` is `"high"` without TAA. New exports: `RENDERING_QUALITIES` and `RenderingQuality`.
+- 4709009: Load Draco-compressed glTF models offline: `@ignifx/core` now ships Google's Draco decoder, and `@ignifx/vite-plugin` serves it from the game's own origin like the KTX2 and meshopt decoders, fetched only when a model uses `KHR_draco_mesh_compression`.
+
 ## 0.15.0
 
 ### Minor Changes
