@@ -43,6 +43,21 @@ export interface AddComponentFromRecordOptions {
 }
 
 // @public
+export const AMBIENT_OCCLUSION_QUALITIES: readonly ["half", "full"];
+
+// @public
+export type AmbientOcclusionQuality = (typeof AMBIENT_OCCLUSION_QUALITIES)[number];
+
+// @public
+export interface AmbientOcclusionSettings {
+    readonly enabled: boolean;
+    readonly falloff: number;
+    readonly intensity: number;
+    readonly quality: AmbientOcclusionQuality;
+    readonly radius: number;
+}
+
+// @public
 export interface App {
     readonly assets: Assets;
     readonly coroutines: CoroutineHost;
@@ -2848,6 +2863,7 @@ export interface RenderingFeatureSettings {
 // @public
 export interface RenderingSettings {
     readonly alphaMode: CanvasAlphaMode;
+    readonly ambientOcclusion: AmbientOcclusionSettings;
     readonly autoExposure: AutoExposureSettings;
     readonly brdfLut: string;
     readonly clearColor: ColorLike;

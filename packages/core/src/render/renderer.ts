@@ -41,7 +41,7 @@ import {
   RenderTextureImpl,
   renderTextureUnusableError,
 } from "./render-texture.js";
-import { toRenderingFeatures } from "./rendering-settings.js";
+import { resolveAmbientOcclusion, toRenderingFeatures } from "./rendering-settings.js";
 import type { Camera } from "./camera.js";
 import type { MaterialAsset } from "./material-asset.js";
 import type { RenderTexture, RenderTextureOwner } from "./render-texture.js";
@@ -52,6 +52,7 @@ import type { Component } from "../component/component.js";
 import type { DiagnosticsGroup } from "../diagnostics/diagnostics-group.js";
 import type { Entity } from "../entity/entity.js";
 import type { ImageProcessingState } from "../lite/gpu/environment.js";
+import type { AmbientOcclusion } from "../lite/gpu/gtao.js";
 import type { LiteGpuPicker } from "../lite/gpu/picker.js";
 import type { ScenePresenter } from "../lite/gpu/render-path.js";
 import type { SceneInputs, SceneInputsHost } from "../lite/gpu/scene-inputs.js";
@@ -639,6 +640,9 @@ export class RendererImpl implements Renderer {
 
   /** The same owner once loaded, so `dispose()` can free it synchronously. */
   #sceneInputsHost: SceneInputsHost | null = null;
+
+  /** The GTAO pass (`../lite/gpu/gtao.ts`), when `rendering.ambientOcclusion` is on. */
+  #ambientOcclusion: AmbientOcclusion | null = null;
 
   #defaultMaterial: AssetHandle<MaterialAsset> | null = null;
 
@@ -1445,6 +1449,70 @@ export class RendererImpl implements Renderer {
     // the *floor* of the precedence order in {@link RendererImpl.applyClearColor}, so anything a
     // component writes later simply lands on top of it. Doing it per frame would fight the camera.
     this.applyClearColor(this.settings.clearColor);
+    if (!this.isHeadless && resolveAmbientOcclusion(this.settings.ambientOcclusion).enabled) {
+      // Before `registerScene`: `app.start()` waits for it, so its tasks are recorded with the rest.
+      this.requireGpuAdapter(this.#installAmbientOcclusion());
+    }
+  }
+
+  /**
+   * Loads the GTAO chunk and builds the pass on a scene-inputs lease (`rendering.ambientOcclusion`).
+   *
+   * @returns A promise that settles once the pass is in the frame graph.
+   */
+  async #installAmbientOcclusion(): Promise<void> {
+    const settings = resolveAmbientOcclusion(this.settings.ambientOcclusion);
+    const [module, inputs] = await Promise.all([import("../lite/gpu/gtao.js"), this.acquireSceneInputs()]);
+    if (inputs === null) {
+      return;
+    }
+    if (this.#isDisposed) {
+      inputs.release();
+      return;
+    }
+    const pass = await module.createAmbientOcclusion(
+      this.engine,
+      this.scene,
+      inputs,
+      {
+        quality: settings.quality,
+        radius: settings.radius,
+        intensity: settings.intensity,
+        falloff: settings.falloff,
+        onError: (error: unknown): void => {
+          this.#app.onError.emit({ error, source: "asset", phase: null, entity: null, component: null });
+        },
+      },
+      this.#isSceneRegistered,
+    );
+    // `dispose()` may have run while the pass was built; the narrowing above predates the await.
+    // oxlint-disable-next-line typescript/no-unnecessary-condition
+    if (this.#isDisposed) {
+      pass.dispose();
+      return;
+    }
+    this.#ambientOcclusion = pass;
+  }
+
+  /**
+   * The GTAO pass's per-frame work: gives new PBR materials the AO plugin. The `PreRender` system
+   * calls it every frame; it does nothing while `rendering.ambientOcclusion` is off.
+   *
+   * @internal
+   */
+  updateAmbientOcclusion(): void {
+    this.#ambientOcclusion?.update(this.#isSceneRegistered);
+  }
+
+  /**
+   * Whether the GTAO pass is built and running.
+   *
+   * @returns `true` once `rendering.ambientOcclusion` has installed it.
+   *
+   * @internal
+   */
+  get isAmbientOcclusionActive(): boolean {
+    return this.#ambientOcclusion !== null;
   }
 
   /**
@@ -1682,6 +1750,8 @@ export class RendererImpl implements Renderer {
   dispose(): void {
     this.#isDisposed = true;
     this.#afterRebuild.length = 0;
+    this.#ambientOcclusion?.dispose();
+    this.#ambientOcclusion = null;
     this.#sceneInputsHost?.dispose();
     this.#sceneInputsHost = null;
     // Each overlay removes itself from the map as it is disposed, which a `Map` iteration allows.
