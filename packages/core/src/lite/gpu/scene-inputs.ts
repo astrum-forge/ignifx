@@ -91,6 +91,11 @@ export const SCENE_INPUT_FORMATS: {
 export interface SceneInputs {
   /** Scene depth, `depth32float`, reverse-Z (1 near, 0 far). Bind with `sampleType: "depth"`. */
   readonly depth: Texture2D;
+  /**
+   * The same depth as the single-sample `RenderTarget` it lives in, for Lite tasks that take a
+   * `depthTexture` target (contact shadows, SSGI).
+   */
+  readonly depthTarget: RenderTarget;
   /** World-space normals, `rgba16float`, stored as `n * 0.5 + 0.5`; 0 where nothing was drawn. */
   readonly normals: Texture2D;
   /**
@@ -187,6 +192,7 @@ export function createSceneInputsHost(engine: EngineContext, scene: SceneContext
       const own = new Set<() => void>();
       const lease: SceneInputs = {
         depth: requireDepthFacade(inputs.depth),
+        depthTarget: inputs.depth.rt,
         normals: inputs.normals.texture,
         velocity: inputs.velocity.texture,
         get depthPyramid(): Texture2D {

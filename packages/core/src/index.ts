@@ -400,8 +400,10 @@ export { Model } from "./render/model.js";
 export {
   PostProcessStack,
   type BloomEffectSettings,
+  type ContactShadowsEffectSettings,
   type ImageProcessingEffectSettings,
   type SmaaEffectSettings,
+  type SsgiEffectSettings,
 } from "./render/post-process-stack.js";
 export {
   forceRendererDeviceLossForTesting,

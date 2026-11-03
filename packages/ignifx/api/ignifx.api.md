@@ -232,6 +232,7 @@ import { ConsoleLike } from '@ignifx/core';
 import { ConsoleSinkOptions } from '@ignifx/core';
 import { ContactPoint } from '@ignifx/physics';
 import { ContactPoint2D } from '@ignifx/physics-2d';
+import { ContactShadowsEffectSettings } from '@ignifx/core';
 import { ControlDescriptor } from '@ignifx/input';
 import { ControlKind } from '@ignifx/input';
 import { controlMapCount } from '@ignifx/terrain';
@@ -1270,6 +1271,7 @@ import { SpriteRenderer } from '@ignifx/2d';
 import { spriteRotationFromLite } from '@ignifx/2d';
 import { spriteRotationToLite } from '@ignifx/2d';
 import { srgbToLinear } from '@ignifx/particles';
+import { SsgiEffectSettings } from '@ignifx/core';
 import { STANDARD_TEXTURE_SLOTS } from '@ignifx/core';
 import { StandardMaterialDefinition } from '@ignifx/core';
 import { standardMaterialDefinition } from '@ignifx/core';
@@ -1991,6 +1993,8 @@ export { ConsoleSinkOptions }
 export { ContactPoint }
 
 export { ContactPoint2D }
+
+export { ContactShadowsEffectSettings }
 
 export { ControlDescriptor }
 
@@ -4067,6 +4071,8 @@ export { spriteRotationFromLite }
 export { spriteRotationToLite }
 
 export { srgbToLinear }
+
+export { SsgiEffectSettings }
 
 export { STANDARD_TEXTURE_SLOTS }
 

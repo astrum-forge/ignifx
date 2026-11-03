@@ -7,6 +7,7 @@ import { applyPostProcessSettings, recordPostProcessChain } from "./gpu/post-pro
 import { postEffectCompiler } from "./post-effect-support.js";
 import { postEffectValuesCodec } from "./post-effect.js";
 import { rendererInternals } from "./renderer.js";
+import { ScreenSpaceEffects } from "./screen-space-effects.js";
 import { ShaderAsset } from "./shader-asset.js";
 import { shaderSupport } from "./shader-support.js";
 import { TextureAsset } from "./texture-asset.js";
@@ -144,6 +145,52 @@ export interface ImageProcessingEffectSettings {
 }
 
 /**
+ * The `contactShadows` record a `PostProcessStack` declares (GI plan step G10,
+ * `docs/architecture/07-rendering.md` §2.7): Lite's screen-space contact shadows towards the main
+ * directional light, fed from the shared scene-input depth.
+ *
+ * @public
+ */
+export interface ContactShadowsEffectSettings {
+  /** Whether the pass runs. */
+  enabled: boolean;
+  /** How dark a contact gets, 0 to 4. */
+  intensity: number;
+  /** How far each ray marches towards the light, in world units. */
+  length: number;
+  /** How thick a surface is assumed to be behind its depth, in world units. */
+  thickness: number;
+  /** March steps per pixel, 1 to 64. */
+  samples: number;
+}
+
+/**
+ * The `ssgi` record a `PostProcessStack` declares (GI plan step G11,
+ * `docs/architecture/07-rendering.md` §2.7): Lite's `@beta` screen-space global illumination, one
+ * bounce of the lit scene colour. Desktop tier.
+ *
+ * @beta
+ */
+export interface SsgiEffectSettings {
+  /** Whether the pass runs. */
+  enabled: boolean;
+  /** How strongly the bounce is added, 0 to 4. */
+  intensity: number;
+  /** How far each ray marches, in world units. */
+  radius: number;
+  /** March steps per ray, 1 to 64. */
+  samples: number;
+  /** Whether rays are traced at half resolution. A change rebuilds the pass. */
+  halfResolution: boolean;
+  /**
+   * How much of the environment's diffuse light remains while SSGI runs, 0 to 1, so the bounce is
+   * not counted twice. Needs `rendering.hdr` or the `materialPlugins` feature; without either the
+   * environment is left as it is.
+   */
+  environmentDiffuse: number;
+}
+
+/**
  * One instance of a post-process chain, attached to the main camera's entity
  * (`docs/architecture/07-rendering.md` §2.7).
  *
@@ -184,6 +231,18 @@ export class PostProcessStack extends Component implements ComponentHooks {
   declare imageProcessing: ImageProcessingEffectSettings;
 
   declare custom: CustomEffectSettings[];
+
+  declare contactShadows: ContactShadowsEffectSettings;
+
+  /**
+   * Screen-space global illumination; see {@link SsgiEffectSettings}.
+   *
+   * @beta
+   */
+  declare ssgi: SsgiEffectSettings;
+
+  /** The contact-shadow and SSGI passes, which run on the scene colour before the chain. */
+  readonly #screenSpace = new ScreenSpaceEffects();
 
   /** Applies the schema defaults, exactly as `Component.define` would. */
   constructor() {
@@ -238,6 +297,7 @@ export class PostProcessStack extends Component implements ComponentHooks {
 
   /** Disables and disposes every task the stack recorded. */
   onDetach(): void {
+    this.#screenSpace.dispose(this.#screenSpace.isBuilt && rendererOfStack(this).isSceneRegistered);
     const chain = this.#chain;
     this.#chain = null;
     this.#built = "";
@@ -265,13 +325,14 @@ export class PostProcessStack extends Component implements ComponentHooks {
    * @internal
    */
   sync(renderer: RendererImpl): void {
+    this.#screenSpace.sync(renderer, this.contactShadows, this.ssgi, this.isEnabledInHierarchy);
     const wanted = this.#chainKey(renderer);
     if (wanted !== this.#built) {
       this.#rebuild(renderer, wanted);
       return;
     }
     if (!this.#hasWarnedAboutFeature && !renderer.features.postProcessing) {
-      this.#warnAboutFeature(renderer, this.plannedChain().length);
+      this.#warnAboutFeature(renderer, this.plannedChain().length + this.#screenSpaceCount());
     }
     const surface = renderer.surface;
     applyPostProcessSettings(
@@ -314,7 +375,16 @@ export class PostProcessStack extends Component implements ComponentHooks {
       this.isEnabledInHierarchy,
       this.#reportRefusedValues,
     );
-    this.#warnAboutFeature(renderer, requests.length);
+    this.#warnAboutFeature(renderer, requests.length + this.#screenSpaceCount());
+  }
+
+  /**
+   * How many of the scene-colour passes the fields ask for.
+   *
+   * @returns 0, 1 or 2.
+   */
+  #screenSpaceCount(): number {
+    return (this.contactShadows.enabled ? 1 : 0) + (this.ssgi.enabled ? 1 : 0);
   }
 
   /**
@@ -611,6 +681,38 @@ function postProcessSchema(): Schema {
       }),
       [],
       { tooltip: "Custom full-screen WGSL effects, ordered among the built-ins by order." },
+    ),
+    contactShadows: record(
+      {
+        enabled: bool(false, { tooltip: "Whether screen-space contact shadows run." }),
+        intensity: f32(0.6, { min: 0, max: 4, tooltip: "How dark a contact gets." }),
+        length: f32(0.3, { min: 0.001, tooltip: "How far each ray marches towards the light, in world units." }),
+        thickness: f32(0.35, { min: 0.001, tooltip: "Assumed thickness behind each depth sample, in world units." }),
+        samples: u32(8, { min: 1, max: 64, tooltip: "March steps per pixel." }),
+      },
+      {
+        tooltip:
+          "Short shadows where objects meet, towards the main directional light. Runs on the scene colour before the chain; needs rendering.features.postProcessing.",
+      },
+    ),
+    ssgi: record(
+      {
+        enabled: bool(false, { tooltip: "Whether screen-space global illumination runs (beta, desktop tier)." }),
+        intensity: f32(1, { min: 0, max: 4, tooltip: "How strongly the bounced light is added." }),
+        radius: f32(2, { min: 0.001, tooltip: "How far each ray marches, in world units." }),
+        samples: u32(8, { min: 1, max: 64, tooltip: "March steps per ray." }),
+        halfResolution: bool(true, { tooltip: "Trace at half resolution. A change rebuilds the pass." }),
+        environmentDiffuse: f32(0.5, {
+          min: 0,
+          max: 1,
+          tooltip:
+            "How much of the environment's diffuse light remains while SSGI runs, so the bounce is not counted twice. Needs rendering.hdr or the materialPlugins feature.",
+        }),
+      },
+      {
+        tooltip:
+          "One bounce of the lit scene colour (beta, desktop tier). Runs on the scene colour before the chain; needs rendering.features.postProcessing.",
+      },
     ),
   });
 }

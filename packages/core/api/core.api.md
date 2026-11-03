@@ -603,6 +603,15 @@ export interface ConsoleSinkOptions {
 }
 
 // @public
+export interface ContactShadowsEffectSettings {
+    enabled: boolean;
+    intensity: number;
+    length: number;
+    samples: number;
+    thickness: number;
+}
+
+// @public
 export const CORE_ERROR_MESSAGES: Readonly<Record<CoreErrorCode, string>>;
 
 // @public
@@ -2612,6 +2621,8 @@ export class PostProcessStack extends Component implements ComponentHooks {
     // (undocumented)
     bloom: BloomEffectSettings;
     // (undocumented)
+    contactShadows: ContactShadowsEffectSettings;
+    // (undocumented)
     custom: CustomEffectSettings[];
     static description: string;
     // (undocumented)
@@ -2623,6 +2634,8 @@ export class PostProcessStack extends Component implements ComponentHooks {
     static schema: Schema;
     // (undocumented)
     smaa: SmaaEffectSettings;
+    // @beta
+    ssgi: SsgiEffectSettings;
     // @internal
     sync(renderer: RendererImpl): void;
     get taskCount(): number;
@@ -3466,6 +3479,16 @@ export interface SortingLayersSettings {
 export interface SphereMeshOptions {
     readonly diameter?: number;
     readonly segments?: number;
+}
+
+// @beta
+export interface SsgiEffectSettings {
+    enabled: boolean;
+    environmentDiffuse: number;
+    halfResolution: boolean;
+    intensity: number;
+    radius: number;
+    samples: number;
 }
 
 // @public

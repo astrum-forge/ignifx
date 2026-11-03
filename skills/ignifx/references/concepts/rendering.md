@@ -15,15 +15,15 @@ Entity ──▶ Camera | Light | MeshRenderer | InstancedMeshRenderer | Model |
 Exact fields and defaults are in [`../formats/components.md`](../formats/components.md); this is
 what they mean.
 
-| Component               | What it adds                                                      | Notes                                                                                                                                                                 |
-| ----------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Camera`                | A view. The **entity's transform is the view**; no follow logic   | `projection`, `fov` (degrees), `orthographicSize`, `near`/`far`, `viewport`, `clearColor`, `priority`                                                                 |
-| `Light`                 | `"directional" \| "point" \| "spot" \| "hemispheric"`             | `shadows` is a sub-record; only directional and spot lights can cast (`IGX-0703`)                                                                                     |
-| `MeshRenderer`          | One clone of a `MeshAsset`, drawn with a `MaterialAsset`          | `allowMultiple`; several renderers per entity are fine                                                                                                                |
-| `InstancedMeshRenderer` | One mesh drawn many times from a caller-owned matrix slab         | `setMatrices(slab, count)`, `setColors`, `setCount`, `markDirty(range)`; `capacity`, `gpuCulling` and `lod` are fixed before `app.start()` (`IGX-0717`)               |
-| `Model`                 | One instance of a loaded glTF, cloned under the entity's node     | `nodes`, `attachToNode(name, entity)`, `materialOverrides`; `animations`/`skeletons` are `@beta`                                                                      |
-| `Environment`           | Image-based lighting, skybox, fog, image processing, clear colour | **One per world**; a second enabled one logs `IGX-0705` and the most recent wins. Assign a different **loaded** handle to `environment` to switch lighting at runtime |
-| `PostProcessStack`      | `bloom`, `smaa`, `imageProcessing`, as one frame-graph chain      | Needs `features.postProcessing`, or it logs `IGX-0710` and does nothing (§3)                                                                                          |
+| Component               | What it adds                                                                                     | Notes                                                                                                                                                                 |
+| ----------------------- | ------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Camera`                | A view. The **entity's transform is the view**; no follow logic                                  | `projection`, `fov` (degrees), `orthographicSize`, `near`/`far`, `viewport`, `clearColor`, `priority`                                                                 |
+| `Light`                 | `"directional" \| "point" \| "spot" \| "hemispheric"`                                            | `shadows` is a sub-record; only directional and spot lights can cast (`IGX-0703`)                                                                                     |
+| `MeshRenderer`          | One clone of a `MeshAsset`, drawn with a `MaterialAsset`                                         | `allowMultiple`; several renderers per entity are fine                                                                                                                |
+| `InstancedMeshRenderer` | One mesh drawn many times from a caller-owned matrix slab                                        | `setMatrices(slab, count)`, `setColors`, `setCount`, `markDirty(range)`; `capacity`, `gpuCulling` and `lod` are fixed before `app.start()` (`IGX-0717`)               |
+| `Model`                 | One instance of a loaded glTF, cloned under the entity's node                                    | `nodes`, `attachToNode(name, entity)`, `materialOverrides`; `animations`/`skeletons` are `@beta`                                                                      |
+| `Environment`           | Image-based lighting, skybox, fog, image processing, clear colour                                | **One per world**; a second enabled one logs `IGX-0705` and the most recent wins. Assign a different **loaded** handle to `environment` to switch lighting at runtime |
+| `PostProcessStack`      | `bloom`, `smaa`, `imageProcessing`, as one frame-graph chain; `contactShadows`, `ssgi` before it | Needs `features.postProcessing`, or it logs `IGX-0710` and does nothing (§3)                                                                                          |
 
 - `Camera` also answers geometry questions: `screenToRay(x, y)`, `worldToScreen(point, out)`,
   `screenToWorldPoint(x, y, distance, out)`, `viewportToWorldPoint(u, v, distance, out)`,
@@ -213,6 +213,28 @@ Two things follow for a stack you do enable. `imageProcessing` is always applied
 `order` you give it, because Lite's grading pass writes the canvas and hands nothing on. And nothing
 can be removed from a frame graph, so an effect that has been recorded is switched off rather than
 freed — set `stack.enabled = false` to bypass the whole chain, and the plain scene comes back.
+
+Two screen-space records run on the scene colour **before** the chain, and both are off by
+default: `contactShadows` (`enabled`, `intensity`, `length`, `thickness`, `samples`) darkens
+short contacts towards the main directional light (the first that casts shadows), and `ssgi`
+(`@beta`, desktop tier: `enabled`, `intensity`, `radius`, `samples`, `halfResolution`,
+`environmentDiffuse`) adds one bounce of the lit scene. `environmentDiffuse` (default 0.5) is how
+much of the environment's diffuse light stays while SSGI runs, so the bounce is not counted twice;
+it needs `rendering.hdr` or the `materialPlugins` feature. Both read depth from one shared geometry
+pass and load their code only when enabled; under `rendering.hdr` they work on linear colour.
+
+```ts
+import { PostProcessStack } from "@ignifx/core";
+import type { Entity } from "@ignifx/core";
+
+/** Adds contact shadows and SSGI to the main camera's entity. */
+export function addScreenSpaceLighting(camera: Entity): PostProcessStack {
+  return camera.addComponent(PostProcessStack, {
+    contactShadows: { enabled: true, length: 0.5 },
+    ssgi: { enabled: true, intensity: 1 },
+  });
+}
+```
 
 The rest of the section: `msaaSamples` (1 or 4, default 4), `alphaMode` (`"opaque"` or
 `"premultiplied"`), `srgb`, `format`, `maxDevicePixelRatio`, `useHighPrecisionMatrix`,

@@ -157,6 +157,27 @@ export interface ScenePresenter {
   readonly isPresentEnabled: boolean;
   /** The HDR output pass, when `rendering.hdr` is on; `null` for the plain offscreen path. */
   readonly hdr: HdrOutputHandle | null;
+  /**
+   * The scene's render task and the single-sample colour target it ends in: {@link
+   * ScenePresenter.sceneColor} on the plain path, the `rgba16float` target under `rendering.hdr`.
+   * Scene-colour effects (contact shadows, SSGI) insert their tasks right after `task` and write their
+   * result back into `target`, so everything downstream reads it.
+   */
+  readonly scenePass: ScenePass;
+}
+
+/**
+ * The scene's render task and its resolved colour target.
+ *
+ * @internal
+ */
+export interface ScenePass {
+  /** The task named `"scene"`. */
+  readonly task: Task;
+  /** The single-sample colour target the scene ends in; it carries `TEXTURE_BINDING` and `COPY_DST`. */
+  readonly target: RenderTarget;
+  /** That target's colour format. */
+  readonly format: GPUTextureFormat;
 }
 
 /**
@@ -216,7 +237,8 @@ export function installOffscreenRenderPath(engine: EngineContext, scene: SceneCo
       size: engine,
     });
   }
-  addTask(scene, createRenderTask(config, engine, scene));
+  const sceneTask: Task = createRenderTask(config, engine, scene);
+  addTask(scene, sceneTask);
 
   const present: Task = createCopyToTextureTask(
     { name: "ignifx:present", sourceTexture: sceneColor, targetTexture: engine.scRT },
@@ -237,5 +259,6 @@ export function installOffscreenRenderPath(engine: EngineContext, scene: SceneCo
       return isPresentEnabled;
     },
     hdr: null,
+    scenePass: { task: sceneTask, target: sceneColor, format: engine.format },
   };
 }
