@@ -79,16 +79,22 @@ export class ScreenSpaceEffects {
     ssgi: SsgiEffectSettings,
     isEnabled: boolean,
   ): void {
-    const key = buildKey(renderer, contact, ssgi, isEnabled);
+    // A `rendering.quality` tier below the effect's own switches it off (`./rendering-settings.ts`).
+    const tier = renderer.qualityPreset;
+    const runsContact = contact.enabled && (tier === null || tier.contactShadows);
+    const runsSsgi = ssgi.enabled && (tier === null || tier.ssgi);
+    const key = buildKey(renderer, runsContact, runsSsgi, ssgi.halfResolution, isEnabled);
     if (key !== this.#key) {
       this.#key = key;
       this.#teardown(renderer.isSceneRegistered);
       if (key !== "") {
-        this.#build(renderer, contact, ssgi, this.#generation).catch((failure: unknown) => {
-          renderer.app.log.error(
-            `PostProcessStack could not build contact shadows or SSGI: ${failure instanceof Error ? failure.message : String(failure)}`,
-          );
-        });
+        this.#build(renderer, runsContact ? contact : null, runsSsgi ? ssgi : null, this.#generation).catch(
+          (failure: unknown) => {
+            renderer.app.log.error(
+              `PostProcessStack could not build contact shadows or SSGI: ${failure instanceof Error ? failure.message : String(failure)}`,
+            );
+          },
+        );
       }
       return;
     }
@@ -131,21 +137,21 @@ export class ScreenSpaceEffects {
    * Loads the chunks, leases the scene inputs, and installs the passes.
    *
    * @param renderer - The rendering service.
-   * @param contact - The `contactShadows` record.
-   * @param ssgi - The `ssgi` record.
+   * @param contact - The `contactShadows` record, or `null` when it does not run.
+   * @param ssgi - The `ssgi` record, or `null` when it does not run.
    * @param generation - The generation this build belongs to.
    */
   async #build(
     renderer: RendererImpl,
-    contact: ContactShadowsEffectSettings,
-    ssgi: SsgiEffectSettings,
+    contact: ContactShadowsEffectSettings | null,
+    ssgi: SsgiEffectSettings | null,
     generation: number,
   ): Promise<void> {
     const [inputs, wiring, contactModule, ssgiModule] = await Promise.all([
       renderer.acquireSceneInputs(),
       import("../lite/gpu/scene-color-passes.js"),
-      contact.enabled ? import("../lite/gpu/contact-shadows.js") : null,
-      ssgi.enabled ? import("../lite/gpu/ssgi.js") : null,
+      contact === null ? null : import("../lite/gpu/contact-shadows.js"),
+      ssgi === null ? null : import("../lite/gpu/ssgi.js"),
     ]);
     const presenter = renderer.presenter;
     const camera = renderer.isHeadless ? null : renderer.scene.camera;
@@ -156,23 +162,31 @@ export class ScreenSpaceEffects {
     const { engine, scene } = renderer;
     const passes: SceneColorPass[] = [];
     const contactPass =
-      contactModule?.createContactShadowsPass(engine, scene, inputs.depthTarget, camera, contact) ?? null;
+      contact === null
+        ? null
+        : (contactModule?.createContactShadowsPass(engine, scene, inputs.depthTarget, camera, contact) ?? null);
     if (contactPass !== null) {
       passes.push(contactPass);
     }
     const ssgiPass =
-      ssgiModule?.createSsgiPass(engine, scene, inputs.depthTarget, camera, {
-        tuning: ssgi,
-        halfResolution: ssgi.halfResolution,
-        usePlugin: renderer.settings.hdr || renderer.features.materialPlugins,
-      }) ?? null;
+      ssgi === null
+        ? null
+        : (ssgiModule?.createSsgiPass(engine, scene, inputs.depthTarget, camera, {
+            tuning: ssgi,
+            halfResolution: ssgi.halfResolution,
+            usePlugin: renderer.settings.hdr || renderer.features.materialPlugins,
+          }) ?? null);
     if (ssgiPass !== null) {
       passes.push(ssgiPass);
     }
     const installed = wiring.installSceneColorPasses(engine, scene, presenter, passes, renderer.isSceneRegistered);
     this.#built = { inputs, installed, contact: contactPass, ssgi: ssgiPass };
-    contactPass?.update(contact);
-    ssgiPass?.update(ssgi, renderer.isSceneRegistered);
+    if (contact !== null) {
+      contactPass?.update(contact);
+    }
+    if (ssgi !== null) {
+      ssgiPass?.update(ssgi, renderer.isSceneRegistered);
+    }
   }
 }
 
@@ -180,18 +194,20 @@ export class ScreenSpaceEffects {
  * The build's identity: which passes run, SSGI's resolution, and the camera; `""` for none.
  *
  * @param renderer - The rendering service.
- * @param contact - The `contactShadows` record.
- * @param ssgi - The `ssgi` record.
+ * @param runsContact - Whether contact shadows run.
+ * @param runsSsgi - Whether SSGI runs.
+ * @param ssgiHalf - SSGI's `halfResolution`.
  * @param isEnabled - Whether the stack is enabled in the hierarchy.
  * @returns The key.
  */
 function buildKey(
   renderer: RendererImpl,
-  contact: ContactShadowsEffectSettings,
-  ssgi: SsgiEffectSettings,
+  runsContact: boolean,
+  runsSsgi: boolean,
+  ssgiHalf: boolean,
   isEnabled: boolean,
 ): string {
-  if (!isEnabled || (!contact.enabled && !ssgi.enabled) || renderer.isHeadless || renderer.presenter === null) {
+  if (!isEnabled || (!runsContact && !runsSsgi) || renderer.isHeadless || renderer.presenter === null) {
     return "";
   }
   const camera = renderer.scene.camera;
@@ -205,6 +221,6 @@ function buildKey(
     nextCameraId += 1;
     cameraIds.set(camera, id);
   }
-  const gi = ssgi.enabled ? `ssgi:${ssgi.halfResolution ? "half" : "full"}` : "";
-  return `${contact.enabled ? "contact" : ""}|${gi}|camera:${String(id)}`;
+  const gi = runsSsgi ? `ssgi:${ssgiHalf ? "half" : "full"}` : "";
+  return `${runsContact ? "contact" : ""}|${gi}|camera:${String(id)}`;
 }

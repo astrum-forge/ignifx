@@ -19,6 +19,7 @@ import { installGameplayProbe } from "./gameplay-probe.js";
 import { createGameMenus } from "./menus/game-menus.js";
 import { applySettings, loadInputOverrides, loadSettings } from "./menus/settings-store.js";
 import { bakeNavigation } from "./navigation.js";
+import { qualityFlag, withQuality } from "./quality.js";
 import { createRun } from "./run.js";
 import { scriptType } from "./script-types.js";
 import type { GameMenus } from "./menus/game-menus.js";
@@ -62,6 +63,8 @@ import type { LocaleAsset } from "@ignifx/ui";
  *   authored. It is what the visual golden suite in `tests/visual/` opens.
  * - `?locale=fr` switches `app.i18n` before the menus are built, which is the whole demonstration
  *   that the UI strings live in `assets/strings.i18n.json` and not in this file.
+ * - `?quality=low|medium|high|custom` runs at that `rendering.quality` tier instead of the
+ *   config's; the GPU-budget suite measures each tier through it.
  */
 
 declare global {
@@ -381,7 +384,7 @@ async function main(): Promise<AppStatus> {
   try {
     app = await createApp({
       canvas,
-      settings: import.meta.env.IGNIFX_CONFIG,
+      settings: withQuality(import.meta.env.IGNIFX_CONFIG, qualityFlag(flags.get("quality"))),
       // The address-to-URL table `@ignifx/vite-plugin` built from `assets/`. Importing the virtual
       // module rather than fetching `assets.manifest.json` means the table is in the bundle, so
       // the first asset request needs no round trip.

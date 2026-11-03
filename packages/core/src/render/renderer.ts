@@ -41,11 +41,16 @@ import {
   RenderTextureImpl,
   renderTextureUnusableError,
 } from "./render-texture.js";
-import { resolveAmbientOcclusion, resolveTaaSettings, toRenderingFeatures } from "./rendering-settings.js";
+import {
+  renderingQualityPreset,
+  resolveAmbientOcclusion,
+  resolveTaaSettings,
+  toRenderingFeatures,
+} from "./rendering-settings.js";
 import type { Camera } from "./camera.js";
 import type { MaterialAsset } from "./material-asset.js";
 import type { RenderTexture, RenderTextureOwner } from "./render-texture.js";
-import type { RenderingFeatureSettings, RenderingSettings } from "./rendering-settings.js";
+import type { RenderingFeatureSettings, RenderingQualityPreset, RenderingSettings } from "./rendering-settings.js";
 import type { App, ServiceNameKey } from "../app/types.js";
 import type { AssetHandle } from "../assets/types.js";
 import type { Component } from "../component/component.js";
@@ -555,8 +560,11 @@ export interface Renderer {
  * @internal
  */
 export class RendererImpl implements Renderer {
-  /** The resolved `rendering` settings section. */
+  /** The resolved `rendering` settings section, with its `quality` tier applied. */
   readonly settings: RenderingSettings;
+
+  /** The `rendering.quality` tier's preset, which caps a stack's effects; `null` for `"custom"`. */
+  readonly qualityPreset: RenderingQualityPreset | null;
 
   /** `true` once a topology change needs one `rebuildSceneRenderables` this frame. */
   needsRenderableRebuild = false;
@@ -702,6 +710,7 @@ export class RendererImpl implements Renderer {
   constructor(app: App, settings: RenderingSettings) {
     this.#app = app;
     this.settings = settings;
+    this.qualityPreset = renderingQualityPreset(settings.quality);
     this.#features = toRenderingFeatures(settings);
     this.#pixelRatio = settings.maxDevicePixelRatio;
     const counters = app.diagnostics.registerGroup(RENDER_DIAGNOSTICS_GROUP, RENDER_DIAGNOSTICS_COUNTERS);

@@ -286,6 +286,16 @@ scene (jittered) → taa-jitter → taa-resolve → resolved ─(copy)→ histor
 - **Not yet.** A dedicated AO history; a render-to-texture camera (§2.11) samples the main view's AO, which is wrong for its own view; bilateral upsampling at half resolution.
 - **Cost.** The scene inputs' geometry pass, plus 2 × 4 × 2 depth taps a pixel at quarter area (`"half"`) or 3 × 6 × 2 at full area, and a 25-tap blur. Not yet measured on the GPU-budget project.
 
+### 2.15 Quality tiers
+
+`rendering.quality` (GI plan step G15, 2026-11-03) is `"custom"` (default), `"low"`, `"medium"` or `"high"`, one per row of the GPU budget in coding standards §7. `registerRendering` applies the tier before the renderer is built (`applyRenderingQuality` in `src/render/rendering-settings.ts`), so `renderer.settings` is what runs and `app.settings.section("rendering")` stays what the project wrote. A named tier sets `hdr`, `taa.enabled`, `ambientOcclusion.enabled` and `ambientOcclusion.quality`; a field the project wrote itself is kept, which is why the store exposes the project's raw value (`SettingsStore.declared`): the resolved section cannot tell a written `false` from a default one. The tier also caps a `PostProcessStack`'s screen-space effects (`src/render/screen-space-effects.ts`): contact shadows from `"medium"`, SSGI at `"high"`. Bloom, tone mapping and auto exposure are left as authored; the budget allows bloom and AgX at every tier.
+
+| Tier     | `hdr` | TAA | GTAO | contact shadows | SSGI    |
+| -------- | ----- | --- | ---- | --------------- | ------- |
+| `low`    | off   | off | half | off             | off     |
+| `medium` | on    | on  | half | allowed         | off     |
+| `high`   | on    | on  | full | allowed         | allowed |
+
 ## 3. Picking
 
 - `app.renderer.pickAsync(x, y, options)` → GPU pick (`createGpuPicker` + `pickAsync`), resolves to `{ entity, component, point, normal, distance, meshName, thinInstanceIndex }` using node metadata. Calls are serialized per picker (Lite constraint).

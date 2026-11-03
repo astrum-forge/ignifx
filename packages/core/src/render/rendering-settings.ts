@@ -63,6 +63,94 @@ export const AMBIENT_OCCLUSION_QUALITIES = ["half", "full"] as const;
 export type AmbientOcclusionQuality = (typeof AMBIENT_OCCLUSION_QUALITIES)[number];
 
 /**
+ * The rendering quality tiers, in the order the inspector lists them
+ * (`docs/standards/coding-standards.md` §7 gives each tier's GPU budget).
+ *
+ * @remarks
+ * - `"custom"` (default): every effect is exactly as the section and the `PostProcessStack`s say.
+ * - `"low"`: GTAO at half resolution; no HDR, TAA, contact shadows or SSGI.
+ * - `"medium"`: adds HDR and TAA, and lets a stack run contact shadows.
+ * - `"high"`: GTAO at full resolution, and lets a stack run SSGI.
+ *
+ * @public
+ */
+export const RENDERING_QUALITIES = ["custom", "low", "medium", "high"] as const;
+
+/**
+ * The union of the rendering quality tiers.
+ *
+ * @public
+ */
+export type RenderingQuality = (typeof RENDERING_QUALITIES)[number];
+
+/**
+ * What one quality tier switches.
+ *
+ * @internal
+ */
+export interface RenderingQualityPreset {
+  /** `rendering.hdr`. */
+  readonly hdr: boolean;
+  /** `rendering.taa.enabled`. */
+  readonly taa: boolean;
+  /** `rendering.ambientOcclusion.enabled`. */
+  readonly ambientOcclusion: boolean;
+  /** `rendering.ambientOcclusion.quality`: the GTAO resolution. */
+  readonly ambientOcclusionQuality: AmbientOcclusionQuality;
+  /** Whether a `PostProcessStack`'s `contactShadows` record may run. */
+  readonly contactShadows: boolean;
+  /** Whether a `PostProcessStack`'s `ssgi` record may run. */
+  readonly ssgi: boolean;
+}
+
+/** The presets of the three named tiers; `"custom"` has none. Bloom and tone mapping stay as authored. */
+const QUALITY_PRESETS: Readonly<Record<Exclude<RenderingQuality, "custom">, RenderingQualityPreset>> = {
+  low: {
+    hdr: false,
+    taa: false,
+    ambientOcclusion: true,
+    ambientOcclusionQuality: "half",
+    contactShadows: false,
+    ssgi: false,
+  },
+  medium: {
+    hdr: true,
+    taa: true,
+    ambientOcclusion: true,
+    ambientOcclusionQuality: "half",
+    contactShadows: true,
+    ssgi: false,
+  },
+  high: {
+    hdr: true,
+    taa: true,
+    ambientOcclusion: true,
+    ambientOcclusionQuality: "full",
+    contactShadows: true,
+    ssgi: true,
+  },
+};
+
+/**
+ * The preset of a quality tier.
+ *
+ * @param quality - The tier; anything that is not a named tier reads as `"custom"`.
+ * @returns The preset, or `null` for `"custom"`.
+ *
+ * @internal
+ */
+export function renderingQualityPreset(quality: unknown): RenderingQualityPreset | null {
+  switch (quality) {
+    case "low":
+    case "medium":
+    case "high":
+      return QUALITY_PRESETS[quality];
+    default:
+      return null;
+  }
+}
+
+/**
  * Screen-space ambient occlusion (GTAO) on indirect light: `rendering.ambientOcclusion`
  * (`docs/architecture/07-rendering.md` §2.14).
  *
@@ -249,6 +337,17 @@ export interface RenderingSettings {
   readonly ambientOcclusion: AmbientOcclusionSettings;
   /** Temporal anti-aliasing; needs {@link RenderingSettings.hdr}. Off by default. */
   readonly taa: TaaSettings;
+  /**
+   * The quality tier, read once at `app.start()`. `"custom"` (default) changes nothing.
+   *
+   * @remarks
+   * A named tier sets `hdr`, `taa.enabled`, `ambientOcclusion.enabled` and
+   * `ambientOcclusion.quality`, and caps which screen-space effects a `PostProcessStack` may run
+   * (contact shadows from `"medium"`, SSGI at `"high"`). A field the project writes itself wins over
+   * its tier, so `{ quality: "high", taa: { enabled: false } }` is `"high"` without TAA. Bloom, tone
+   * mapping and auto exposure stay as authored. See {@link RENDERING_QUALITIES}.
+   */
+  readonly quality: RenderingQuality;
 }
 
 /**
@@ -337,6 +436,7 @@ export function defaultRenderingSettings(): RenderingSettings {
     autoExposure: defaultAutoExposureSettings(),
     ambientOcclusion: { ...DEFAULT_AMBIENT_OCCLUSION },
     taa: defaultTaaSettings(),
+    quality: "custom",
   };
 }
 
@@ -415,6 +515,10 @@ export function renderingSettingsSchema(): Schema {
       },
       { tooltip: "Temporal anti-aliasing (jittered frames accumulated over time). Needs rendering.hdr." },
     ),
+    quality: enumOf(RENDERING_QUALITIES, "custom", {
+      tooltip:
+        "Quality tier. low: half-res GTAO. medium: adds HDR, TAA, contact shadows. high: full-res GTAO, SSGI. custom: as set. Fields you set win.",
+    }),
   });
 }
 
@@ -617,4 +721,56 @@ export function toAutoExposureOptions(settings: RenderingSettings): Omit<AutoExp
     speedDown: declared.speedDown ?? defaults.speedDown,
     compensation: declared.compensation ?? defaults.compensation,
   };
+}
+
+/**
+ * The section with its quality tier applied: what the renderer runs with.
+ *
+ * @remarks
+ * `"custom"` returns the section unchanged. A named tier fills `hdr`, `taa.enabled`,
+ * `ambientOcclusion.enabled` and `ambientOcclusion.quality` from its preset, except where the project
+ * wrote the field itself. The resolved section cannot say which fields those are (the store fills
+ * in defaults), so the caller passes what the project declared.
+ *
+ * @param settings - The resolved section.
+ * @param declared - The project's own `rendering` value, before defaults; `undefined` when absent.
+ * @returns The effective section; the input when the tier is `"custom"`.
+ *
+ * @internal
+ */
+export function applyRenderingQuality(settings: RenderingSettings, declared: unknown): RenderingSettings {
+  const preset = renderingQualityPreset((settings as Partial<RenderingSettings>).quality);
+  if (preset === null) {
+    return settings;
+  }
+  const section = fieldsOf(declared);
+  const taa = fieldsOf(section["taa"]);
+  const occlusion = fieldsOf(section["ambientOcclusion"]);
+  const resolvedOcclusion = resolveAmbientOcclusion(settings.ambientOcclusion);
+  return {
+    ...settings,
+    hdr: typeof section["hdr"] === "boolean" ? settings.hdr : preset.hdr,
+    taa: {
+      ...resolveTaaSettings(settings),
+      enabled: typeof taa["enabled"] === "boolean" ? taa["enabled"] : preset.taa,
+    },
+    ambientOcclusion: {
+      ...resolvedOcclusion,
+      enabled: typeof occlusion["enabled"] === "boolean" ? occlusion["enabled"] : preset.ambientOcclusion,
+      quality: typeof occlusion["quality"] === "string" ? resolvedOcclusion.quality : preset.ambientOcclusionQuality,
+    },
+  };
+}
+
+/**
+ * The own fields of a declared record.
+ *
+ * @param value - What the project wrote.
+ * @returns Its fields, or an empty record when it is not an object.
+ */
+function fieldsOf(value: unknown): Readonly<Record<string, unknown>> {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return {};
+  }
+  return Object.fromEntries(Object.entries(value));
 }

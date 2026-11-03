@@ -24,6 +24,7 @@ import { PostProcessStack } from "../render/post-process-stack.js";
 import { RENDER_SYNC_ORDER, RenderSyncSystem } from "../render/render-sync-system.js";
 import { RendererImpl, RendererService } from "../render/renderer.js";
 import {
+  applyRenderingQuality,
   defaultRenderingSettings,
   RENDERING_SETTINGS_SECTION,
   renderingSettingsSchema,
@@ -33,6 +34,7 @@ import { STORAGE_BUFFER_ASSET_TYPE, StorageBufferAsset } from "../render/storage
 import { array, f64, str, u32 } from "../schema/field-kinds.js";
 import { defineSchema } from "../schema/schema.js";
 import { createSceneLoader } from "../serialization/scene-loader.js";
+import { SettingsStore } from "../settings/settings-store.js";
 import { Transform } from "../transform/transform.js";
 import { TWEEN_SYSTEM_ORDER, TweenSystem } from "../tween/tween-system.js";
 import { tweensInternals } from "../tween/tweens.js";
@@ -145,7 +147,8 @@ function registerCore(ctx: ExtensionContext): void {
  * @remarks
  * The order matters in one place: the section is registered *first*, because `ctx.registerSettings`
  * resolves it immediately and {@link RendererImpl} is constructed from the resolved value inside
- * this same `register` call. Everything after that only needs the service to exist.
+ * this same `register` call. Everything after that only needs the service to exist. The renderer
+ * gets the section with its `quality` tier applied, so `renderer.settings` is what actually runs.
  *
  * @param ctx - The registration surface.
  */
@@ -155,7 +158,12 @@ function registerRendering(ctx: ExtensionContext): void {
     renderingSettingsSchema(),
     defaultRenderingSettings(),
   );
-  const renderer = new RendererImpl(ctx.app, ctx.settings<RenderingSettings>(RENDERING_SETTINGS_SECTION));
+  // `rendering.quality` overrides only the fields the project did not write, so it needs the
+  // project's own value as well as the resolved one.
+  const store = ctx.app.settings;
+  const declared = store instanceof SettingsStore ? store.declared(RENDERING_SETTINGS_SECTION) : undefined;
+  const settings = applyRenderingQuality(ctx.settings<RenderingSettings>(RENDERING_SETTINGS_SECTION), declared);
+  const renderer = new RendererImpl(ctx.app, settings);
   ctx.registerService(RendererService, renderer);
   ctx.registerComponents([Camera, Light, MeshRenderer, InstancedMeshRenderer, Model, Environment, PostProcessStack]);
   ctx.registerAssetLoader(createTextureLoader());
