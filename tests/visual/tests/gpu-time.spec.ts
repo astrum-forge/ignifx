@@ -27,6 +27,9 @@ import type { Page } from "playwright/test";
  *
  * The ceiling is on the whole frame (`gpuFrameTimeMs`). Per-task medians are printed, not asserted,
  * with the snapshot's status (`"available"` once Lite's per-task readbacks land).
+ *
+ * `IGNIFX_GPU_QUALITY=low|medium|high pnpm test:gpu-budget` opens each template at that
+ * `rendering.quality` tier (`?quality=`) and checks it against `gpuTime.tiers.<tier>`.
  */
 
 /** Where the recorded budgets live. */
@@ -45,7 +48,14 @@ const TEMPLATES = [
 ] as const;
 
 /**
- * Reads one recorded GPU ceiling out of `baselines.json`.
+ * The `rendering.quality` tier to measure, from `IGNIFX_GPU_QUALITY` (`low`, `medium`, `high`);
+ * empty measures each template as its config sets it.
+ */
+const QUALITY = process.env["IGNIFX_GPU_QUALITY"] ?? "";
+
+/**
+ * Reads one recorded GPU ceiling out of `baselines.json`: `gpuTime.templates.<name>`, or
+ * `gpuTime.tiers.<tier>.templates.<name>` when {@link QUALITY} names a tier.
  *
  * @param name - The row's key: a template's directory name.
  * @returns The ceiling in milliseconds, or `null` when the file has no such row.
@@ -55,7 +65,12 @@ function ceilingFor(name: string): number | null {
   if (typeof parsed !== "object" || parsed === null || !("gpuTime" in parsed)) {
     return null;
   }
-  const gpuTime: unknown = parsed.gpuTime;
+  let gpuTime: unknown = parsed.gpuTime;
+  if (QUALITY !== "") {
+    const tiers: unknown = typeof gpuTime === "object" && gpuTime !== null && "tiers" in gpuTime ? gpuTime.tiers : null;
+    gpuTime =
+      typeof tiers === "object" && tiers !== null ? Object.getOwnPropertyDescriptor(tiers, QUALITY)?.value : null;
+  }
   if (typeof gpuTime !== "object" || gpuTime === null || !("templates" in gpuTime)) {
     return null;
   }
@@ -173,7 +188,8 @@ test.describe("template GPU budgets", () => {
 
   for (const [name, port] of TEMPLATES) {
     test(`${name}: median GPU time per frame is inside the recorded ceiling`, async ({ page }) => {
-      const run = await measure(page, `http://127.0.0.1:${String(port)}/?bench=1`);
+      const tier = QUALITY === "" ? "" : `&quality=${QUALITY}`;
+      const run = await measure(page, `http://127.0.0.1:${String(port)}/?bench=1${tier}`);
       expect(run.frameMs).toHaveLength(MEASURED_FRAMES);
       expect(
         run.frameMs.some((value: number) => value > 0),
@@ -188,11 +204,11 @@ test.describe("template GPU budgets", () => {
       const recorded = ceilingFor(name);
       // Printed so a re-record is a copy of these numbers rather than a second run.
       process.stdout.write(
-        `${name.padEnd(16)} [${run.adapter}, ${run.size}] median ${middle.toFixed(3)} ms  worst ` +
+        `${name.padEnd(16)} ${QUALITY === "" ? "" : `(${QUALITY}) `}[${run.adapter}, ${run.size}] median ${middle.toFixed(3)} ms  worst ` +
           `${worst.toFixed(3)} ms  ceiling ${recorded === null ? "none" : recorded.toFixed(3)} ms  ` +
           `tasks (${run.status}): ${tasks}\n`,
       );
-      expect(recorded, `baselines.json has no gpuTime.templates.${name}.budgetMs`).not.toBeNull();
+      expect(recorded, `baselines.json has no gpuTime ${QUALITY} row for ${name}`).not.toBeNull();
       expect(
         middle,
         `${name}: median GPU time ${middle.toFixed(3)} ms; the ceiling in baselines.json is ` +
