@@ -1,5 +1,21 @@
 # @ignifx/audio
 
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [14dd9cd]
+- Updated dependencies [c75a3d7]
+- Updated dependencies [105a427]
+- Updated dependencies [1dc7131]
+- Updated dependencies [a3d3a02]
+- Updated dependencies [a4b0c20]
+- Updated dependencies [ab1cd2b]
+- Updated dependencies [39ae9d1]
+- Updated dependencies [3db9f43]
+- Updated dependencies [87a551e]
+  - @ignifx/core@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

@@ -1,5 +1,37 @@
 # ignifx
 
+## 0.15.0
+
+### Minor Changes
+
+- c75a3d7: `PostProcessStack` gains `contactShadows` (screen-space contact shadows towards the main directional light) and `ssgi` (beta, one bounce of screen-space global illumination), both off by default and loaded only when enabled. They need `rendering.features.postProcessing`, and SSGI's `environmentDiffuse` needs `rendering.hdr` or the `materialPlugins` feature.
+
+### Patch Changes
+
+- Updated dependencies [14dd9cd]
+- Updated dependencies [c75a3d7]
+- Updated dependencies [105a427]
+- Updated dependencies [1dc7131]
+- Updated dependencies [a3d3a02]
+- Updated dependencies [a4b0c20]
+- Updated dependencies [ab1cd2b]
+- Updated dependencies [39ae9d1]
+- Updated dependencies [3db9f43]
+- Updated dependencies [87a551e]
+  - @ignifx/core@0.15.0
+  - @ignifx/2d@0.15.0
+  - @ignifx/3d@0.15.0
+  - @ignifx/audio@0.15.0
+  - @ignifx/devtools@0.15.0
+  - @ignifx/electron@0.15.0
+  - @ignifx/input@0.15.0
+  - @ignifx/particles@0.15.0
+  - @ignifx/particles-2d@0.15.0
+  - @ignifx/physics@0.15.0
+  - @ignifx/physics-2d@0.15.0
+  - @ignifx/terrain@0.15.0
+  - @ignifx/ui@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes
