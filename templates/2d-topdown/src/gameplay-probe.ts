@@ -58,7 +58,18 @@ declare global {
 }
 
 /**
- * Installs the probe on `window.__ignifxGameplay`.
+ * Installs the probe on `window.__ignifxGameplay`, and makes one presented frame carry at most one
+ * fixed step.
+ *
+ * @remarks
+ * The spec counts its holds and its polls in presented frames. With the engine's default
+ * `maximumDeltaTime` of 0.1 s a slow frame runs up to six fixed steps, so on a loaded machine five
+ * frames walked the character six times further than on an idle one, and a walk that stops "once
+ * the reading passes x" overshot by metres. Clamping the frame delta to `fixedDeltaTime` makes a
+ * frame worth one fixed step however long the machine took over it — a slow machine simulates
+ * slower in wall-clock time rather than in bigger strides — so the same number of frames walks the
+ * same distance under any load. The movement itself is unchanged: it was always in `fixedUpdate`.
+ * A shipped game never runs this: it is installed only under `?probe=1`.
  *
  * @param app - The running app.
  * @param player - The character entity.
@@ -73,6 +84,7 @@ export function installGameplayProbe(
   shrines: readonly Shrine[],
   run: Run,
 ): void {
+  app.time.maximumDeltaTime = app.time.fixedDeltaTime;
   window.__ignifxGameplay = {
     snapshot(): GameplaySnapshot {
       const here = player.transform.position2D;
