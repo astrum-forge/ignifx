@@ -32,6 +32,10 @@ export function spriteAtlasFileSchema(): Schema {
         h: f32(0, { min: 0, tooltip: "The height, in image pixels." }),
         pivot: vec2({ x: 0.5, y: 0.5 }, { tooltip: "Pivot in [0,1] of the frame; [0,0] is top-left." }),
         sourceSize: vec2({ x: 0, y: 0 }, { tooltip: "The untrimmed size, when the packer trimmed the frame." }),
+        sourceOffset: vec2(
+          { x: 0, y: 0 },
+          { tooltip: "The trimmed rectangle's top-left inside the untrimmed source, in pixels; needs sourceSize." },
+        ),
       }),
       [],
       {
@@ -39,7 +43,10 @@ export function spriteAtlasFileSchema(): Schema {
           "The frames, in the order they are indexed. Each is a record of " +
           "name (str, what SpriteRenderer.frameName names), x/y (f32, the top-left corner in image pixels), " +
           "w/h (f32, the size in image pixels), pivot (vec2 in [0,1] of the frame; [0,0] is top-left) " +
-          "and sourceSize (vec2, the untrimmed size when the packer trimmed the frame).",
+          "sourceSize (vec2, the untrimmed size when the packer trimmed the frame) " +
+          "and sourceOffset (vec2, the trimmed rectangle's top-left inside that source, in pixels, " +
+          "as spriteSourceSize.x/y; with it the frame draws at w/h, offset to where the untrimmed frame " +
+          "would be, and its pivot is in [0,1] of sourceSize).",
       },
     ),
   });

@@ -56,6 +56,10 @@ import {
   isSendInputResult,
   isSetAnimateMaterialsParams,
   isSetGridParams,
+  isSetTilemapCellsParams,
+  isSetTilemapCellsResult,
+  isSetEditorLinesParams,
+  isClearEditorLinesParams,
   isSetGizmoParams,
   isSettingsSet,
   isSetViewModeParams,
@@ -189,6 +193,9 @@ const PARAMS_GUARDS: Readonly<Record<string, (value: unknown) => boolean>> = {
   setViewMode: isSetViewModeParams,
   setAnimateMaterials: isSetAnimateMaterialsParams,
   setGrid: isSetGridParams,
+  setTilemapCells: isSetTilemapCellsParams,
+  setEditorLines: isSetEditorLinesParams,
+  clearEditorLines: isClearEditorLinesParams,
   getColliderOutlines: isEntitySelection,
   sceneOpened: isSceneOpenedParams,
   sceneOpened2d: isSceneOpenedParams,
@@ -235,6 +242,7 @@ const RESULT_GUARDS: Readonly<Record<string, (value: unknown) => boolean>> = {
   getSchemasResponse: isSchemaSet,
   describeSettingsResponse: isSettingsSet,
   getColliderOutlinesResponse: isColliderOutlineSet,
+  setTilemapCellsResponse: isSetTilemapCellsResult,
   playStateResponse: isPlayStateReport,
   playStatsResponse: isPlayStats,
   playStatsStoppedResponse: isPlayStats,
@@ -639,8 +647,8 @@ describe("the editor's 0.3 wire fixture, through a live headless host", () => {
       id: wire("setViewMode")["id"],
     });
 
-    // A headless host lists none of `gizmos`, `screenshot`, `gameView`, `thumbnails` and `grid`, so
-    // it does not have their methods.
+    // A headless host lists none of `gizmos`, `screenshot`, `gameView`, `thumbnails`, `grid`,
+    // `tilemapCells` and `editorLines`, so it does not have their methods.
     for (const name of [
       "setGizmo",
       "setGizmoNoSnap",
@@ -650,6 +658,9 @@ describe("the editor's 0.3 wire fixture, through a live headless host", () => {
       "gameViewFrame",
       "renderThumbnail",
       "setGrid",
+      "setTilemapCells",
+      "setEditorLines",
+      "clearEditorLines",
     ]) {
       // oxlint-disable-next-line no-await-in-loop -- one request at a time
       expect(member(await peer.request(wire(name)), "error")["code"], name).toBe(RpcErrorCode.methodNotFound);

@@ -21,6 +21,22 @@ export interface SpriteAtlasAssetLiteHandles {
 }
 
 /**
+ * Where a trimmed frame sits inside the image it was cut from, before the packer trimmed it.
+ *
+ * @public
+ */
+export interface SpriteFrameTrim {
+  /** The trimmed rectangle's left edge inside the untrimmed source, in pixels. */
+  readonly offsetXPx: number;
+  /** The trimmed rectangle's top edge inside the untrimmed source, in pixels. */
+  readonly offsetYPx: number;
+  /** The untrimmed source width, in pixels. */
+  readonly sourceWidthPx: number;
+  /** The untrimmed source height, in pixels. */
+  readonly sourceHeightPx: number;
+}
+
+/**
  * One frame of a loaded atlas, as game code sees it.
  *
  * @public
@@ -30,12 +46,17 @@ export interface SpriteFrameInfo {
   readonly name: string;
   /** Its index in the atlas, which is what Lite addresses frames by. */
   readonly index: number;
-  /** Its drawn width, in image pixels. */
+  /** Its drawn width, in image pixels: the trimmed width when `trim` is set. */
   readonly widthPx: number;
-  /** Its drawn height, in image pixels. */
+  /** Its drawn height, in image pixels: the trimmed height when `trim` is set. */
   readonly heightPx: number;
-  /** Its pivot in `[0, 1]` of the frame, `[0, 0]` top-left. */
+  /** Its pivot in `[0, 1]` of the frame, `[0, 0]` top-left; of the untrimmed source when `trim` is set. */
   readonly pivot: Vec2Like;
+  /**
+   * Where the trimmed frame sits in its untrimmed source, from the document's `sourceOffset` and
+   * `sourceSize`; `null` for a frame the document does not place as trimmed.
+   */
+  readonly trim: SpriteFrameTrim | null;
 }
 
 /**
@@ -178,7 +199,12 @@ export class SpriteAtlasAsset {
     // `defineSpriteAtlas` normalised both fields, so they are always `{ x, y }` here.
     const pivot = readVec2(declared.pivot, DEFAULT_PIVOT);
     const source = readVec2(declared.sourceSize, { x: declared.w, y: declared.h });
-    return { name: declared.name, index, widthPx: source.x, heightPx: source.y, pivot };
+    if (declared.sourceOffset === undefined) {
+      return { name: declared.name, index, widthPx: source.x, heightPx: source.y, pivot, trim: null };
+    }
+    const offset = readVec2(declared.sourceOffset, { x: 0, y: 0 });
+    const trim = { offsetXPx: offset.x, offsetYPx: offset.y, sourceWidthPx: source.x, sourceHeightPx: source.y };
+    return { name: declared.name, index, widthPx: declared.w, heightPx: declared.h, pivot, trim };
   }
 
   /**

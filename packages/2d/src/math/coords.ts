@@ -235,3 +235,57 @@ export function pivotedPositionToRef<TOut extends MutableVec2>(
   out.y = anchorYPx + offsetX * sin + offsetY * cos;
   return out;
 }
+
+/**
+ * Turns a trimmed frame's pivot, given in `[0, 1]` of its untrimmed source, into the pivot of the
+ * trimmed rectangle that is actually drawn, so {@link pivotedPositionToRef} places the trimmed
+ * pixels exactly where the untrimmed frame would have put them.
+ *
+ * @remarks
+ * A flip mirrors the pixels inside the drawn quad, so it mirrors where the trimmed rectangle sits
+ * in its source too: a flipped trimmed frame then matches the flipped untrimmed one. The result may
+ * fall outside `[0, 1]`, which the placement handles.
+ *
+ * @param pivot - The pivot in `[0, 1]` of the untrimmed source.
+ * @param trim - Where the trimmed rectangle sits in its source.
+ * @param widthPx - The trimmed width, in image pixels.
+ * @param heightPx - The trimmed height, in image pixels.
+ * @param flipX - Whether the sprite is mirrored horizontally.
+ * @param flipY - Whether the sprite is mirrored vertically.
+ * @param out - The vector to write.
+ * @returns `out`: the pivot in `[0, 1]` of the trimmed rectangle.
+ *
+ * @internal
+ */
+export function trimmedPivotToRef<TOut extends MutableVec2>(
+  pivot: Vec2Like,
+  trim: TrimPlacement,
+  widthPx: number,
+  heightPx: number,
+  flipX: boolean,
+  flipY: boolean,
+  out: TOut,
+): TOut {
+  const offsetX = flipX ? trim.sourceWidthPx - trim.offsetXPx - widthPx : trim.offsetXPx;
+  const offsetY = flipY ? trim.sourceHeightPx - trim.offsetYPx - heightPx : trim.offsetYPx;
+  out.x = widthPx > 0 ? (pivot.x * trim.sourceWidthPx - offsetX) / widthPx : 0.5;
+  out.y = heightPx > 0 ? (pivot.y * trim.sourceHeightPx - offsetY) / heightPx : 0.5;
+  return out;
+}
+
+/**
+ * Where a trimmed rectangle sits in its untrimmed source, in pixels: the shape of
+ * `SpriteFrameTrim`, restated here so the math module does not import the atlas module.
+ *
+ * @internal
+ */
+export interface TrimPlacement {
+  /** The trimmed rectangle's left edge inside the source. */
+  readonly offsetXPx: number;
+  /** The trimmed rectangle's top edge inside the source. */
+  readonly offsetYPx: number;
+  /** The source width. */
+  readonly sourceWidthPx: number;
+  /** The source height. */
+  readonly sourceHeightPx: number;
+}
