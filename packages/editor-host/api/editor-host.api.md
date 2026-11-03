@@ -83,6 +83,11 @@ export interface AssetReloadedParams {
 }
 
 // @public
+export interface ClearEditorLinesParams {
+    readonly id?: string;
+}
+
+// @public
 export const COLLIDER_OUTLINES_MAX_ENTITIES = 256;
 
 // @public
@@ -127,6 +132,15 @@ export interface DestroyEntityOp {
 
 // @public
 export const EDITOR_CONNECT_MESSAGE_TYPE = "ignifx-editor/connect";
+
+// @public
+export const EDITOR_LINES_MAX_ID_LENGTH = 256;
+
+// @public
+export const EDITOR_LINES_MAX_NUMBERS = 6e5;
+
+// @public
+export const EDITOR_LINES_MAX_SETS = 64;
 
 // @beta
 export interface EditorAssetChange {
@@ -346,6 +360,8 @@ export const HostCapability: {
     readonly gameView: "gameView";
     readonly thumbnails: "thumbnails";
     readonly grid: "grid";
+    readonly tilemapCells: "tilemapCells";
+    readonly editorLines: "editorLines";
 };
 
 // @public
@@ -429,6 +445,9 @@ export function isApplyOpsResult(value: unknown): value is ApplyOpsResult;
 
 // @public
 export function isAssetReloadedParams(value: unknown): value is AssetReloadedParams;
+
+// @public
+export function isClearEditorLinesParams(value: unknown): value is ClearEditorLinesParams;
 
 // @public
 export function isColliderOutlineRecord(value: unknown): value is ColliderOutlineRecord;
@@ -581,6 +600,9 @@ export function isSendInputResult(value: unknown): value is SendInputResult;
 export function isSetAnimateMaterialsParams(value: unknown): value is SetAnimateMaterialsParams;
 
 // @public
+export function isSetEditorLinesParams(value: unknown): value is SetEditorLinesParams;
+
+// @public
 export function isSetGameViewParams(value: unknown): value is SetGameViewParams;
 
 // @public
@@ -588,6 +610,12 @@ export function isSetGizmoParams(value: unknown): value is SetGizmoParams;
 
 // @public
 export function isSetGridParams(value: unknown): value is SetGridParams;
+
+// @public
+export function isSetTilemapCellsParams(value: unknown): value is SetTilemapCellsParams;
+
+// @public
+export function isSetTilemapCellsResult(value: unknown): value is SetTilemapCellsResult;
 
 // @public
 export function isSettingsSet(value: unknown): value is SettingsSet;
@@ -1085,6 +1113,9 @@ export const SceneMethod: {
     readonly getColliderOutlines: "getColliderOutlines";
     readonly sampleAnimation: "sampleAnimation";
     readonly setGrid: "setGrid";
+    readonly setTilemapCells: "setTilemapCells";
+    readonly setEditorLines: "setEditorLines";
+    readonly clearEditorLines: "clearEditorLines";
 };
 
 // @public
@@ -1139,7 +1170,7 @@ export const SceneOpKind: {
 export type SceneOpKind = (typeof SceneOpKind)[keyof typeof SceneOpKind];
 
 // @public
-export type SceneRequest = RpcRequestWithParams<typeof SceneMethod.openScene, OpenSceneParams> | RpcRequest<typeof SceneMethod.closeScene, never> | RpcRequestWithParams<typeof SceneMethod.applyOps, ApplyOpsParams> | RpcRequestWithParams<typeof SceneMethod.readBack, ReadBackParams> | RpcRequestWithParams<typeof SceneMethod.select, EntitySelection> | RpcRequestWithParams<typeof SceneMethod.setGizmo, SetGizmoParams> | RpcRequestWithParams<typeof SceneMethod.frame, FrameParams> | RpcRequestWithParams<typeof SceneMethod.pick, PickParams> | RpcRequestWithParams<typeof SceneMethod.screenshot, ScreenshotParams> | RpcRequest<typeof SceneMethod.getSchemas, never> | RpcRequest<typeof SceneMethod.describeSettings, never> | RpcRequestWithParams<typeof SceneMethod.setViewMode, SetViewModeParams> | RpcRequestWithParams<typeof SceneMethod.setAnimateMaterials, SetAnimateMaterialsParams> | RpcRequestWithParams<typeof SceneMethod.getColliderOutlines, EntitySelection> | RpcRequestWithParams<typeof SceneMethod.sampleAnimation, SampleAnimationParams> | RpcRequestWithParams<typeof SceneMethod.setGrid, SetGridParams>;
+export type SceneRequest = RpcRequestWithParams<typeof SceneMethod.openScene, OpenSceneParams> | RpcRequest<typeof SceneMethod.closeScene, never> | RpcRequestWithParams<typeof SceneMethod.applyOps, ApplyOpsParams> | RpcRequestWithParams<typeof SceneMethod.readBack, ReadBackParams> | RpcRequestWithParams<typeof SceneMethod.select, EntitySelection> | RpcRequestWithParams<typeof SceneMethod.setGizmo, SetGizmoParams> | RpcRequestWithParams<typeof SceneMethod.frame, FrameParams> | RpcRequestWithParams<typeof SceneMethod.pick, PickParams> | RpcRequestWithParams<typeof SceneMethod.screenshot, ScreenshotParams> | RpcRequest<typeof SceneMethod.getSchemas, never> | RpcRequest<typeof SceneMethod.describeSettings, never> | RpcRequestWithParams<typeof SceneMethod.setViewMode, SetViewModeParams> | RpcRequestWithParams<typeof SceneMethod.setAnimateMaterials, SetAnimateMaterialsParams> | RpcRequestWithParams<typeof SceneMethod.getColliderOutlines, EntitySelection> | RpcRequestWithParams<typeof SceneMethod.sampleAnimation, SampleAnimationParams> | RpcRequestWithParams<typeof SceneMethod.setGrid, SetGridParams> | RpcRequestWithParams<typeof SceneMethod.setTilemapCells, SetTilemapCellsParams> | RpcRequestWithParams<typeof SceneMethod.setEditorLines, SetEditorLinesParams> | RpcRequestWithParams<typeof SceneMethod.clearEditorLines, ClearEditorLinesParams>;
 
 // @public
 export interface SchemaDescription {
@@ -1245,6 +1276,13 @@ export interface SetAnimateMaterialsParams {
 }
 
 // @public
+export interface SetEditorLinesParams {
+    readonly color?: readonly number[];
+    readonly id: string;
+    readonly lines: readonly number[];
+}
+
+// @public
 export type SetEntityFieldOp = { readonly [F in EntityField]: {
         readonly op: "setEntityField";
         readonly entity: string;
@@ -1299,6 +1337,22 @@ export interface SetSceneSettingOp {
 }
 
 // @public
+export interface SetTilemapCellsParams {
+    readonly asset: string;
+    readonly cells: readonly number[];
+    readonly layer: string | number;
+}
+
+// @public
+export type SetTilemapCellsResponse = RpcSuccessResponse<SetTilemapCellsResult>;
+
+// @public
+export interface SetTilemapCellsResult {
+    readonly changed: number;
+    readonly tilemaps: number;
+}
+
+// @public
 export interface SettingsSet {
     readonly sections: Readonly<Record<string, SchemaDescription>>;
     readonly values: Readonly<Record<string, JsonObject>>;
@@ -1343,6 +1397,9 @@ export interface ThumbnailResult {
     readonly height: number;
     readonly width: number;
 }
+
+// @public
+export const TILEMAP_CELLS_MAX_NUMBERS = 2e6;
 
 // @public
 export const TRANSFORM_DRAGGING_INTERVAL_MS = 50;
