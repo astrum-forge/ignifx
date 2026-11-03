@@ -581,9 +581,12 @@ async function downJump(page: Page): Promise<{ readonly highest: number; readonl
  * ## Why the holds are counted in frames
  *
  * The same reason `KEY_HOLD_FRAMES` gives: a frame is the unit the input queue is drained on and
- * the fixed loop is stepped from, and its wall-clock length is a property of the machine. Every
- * budget here is therefore an upper bound that holds on a slow software rasteriser as well as on a
- * real GPU — a slower frame carries *more* simulated time, never less.
+ * the fixed loop is stepped from, and its wall-clock length is a property of the machine. `?probe=1`
+ * also clamps the frame delta to `fixedDeltaTime` (`src/gameplay-probe.ts` in each template), so a
+ * presented frame carries at most one fixed step however long it took: a frame count is a step
+ * count, and a walk polled every `PROBE_POLL_FRAMES` frames stops within the same few centimetres
+ * on a loaded machine as on an idle one. Without the clamp a slow frame ran up to six steps, and
+ * the top-down walk overshot its turn by metres under load (EN5, 2026-11-03).
  *
  * The numbers the assertions are built on were measured on 2026-09-08, headlessly against the real
  * `level.tilemap.json` and again in Chromium on SwiftShader.
@@ -746,10 +749,9 @@ test.describe("2d template gameplay", () => {
     // the character is standing on the pad's column, then north onto the pad itself.
     //
     // The eastward leg stops at the pad's *left* edge rather than at its middle. A reading is taken
-    // every `PROBE_POLL_FRAMES` frames and a frame on a loaded machine carries more simulated time
-    // than one on an idle machine, so where the walk stops is only bounded from below — aiming at
-    // 25.4 put it past the far edge of a one-metre pad on a busy run, and the character then walked
-    // north beside the shrine instead of over it.
+    // every `PROBE_POLL_FRAMES` frames, so the walk stops up to that many fixed steps past the line;
+    // the probe's one-step-per-frame clamp keeps that the same under load, and stopping at the left
+    // edge leaves the rest of the one-metre pad for it.
     const south = await holdUntil(page, ["s"], (reading) => reading.position.y <= 9.4);
     expect(south.reading.position.y, "the character should be south of the barrel's row").toBeLessThan(9.5);
     const east = await holdUntil(page, ["d"], (reading) => reading.position.x >= SHRINE_PAD_LEFT);
