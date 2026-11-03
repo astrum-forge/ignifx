@@ -1,5 +1,16 @@
 # @ignifx/terrain
 
+## 0.14.0
+
+### Patch Changes
+
+- Updated dependencies [5e3458c]
+- Updated dependencies [ef78f28]
+- Updated dependencies [6eaf002]
+- Updated dependencies [879f7c2]
+- Updated dependencies [9d9bc4e]
+  - @ignifx/core@0.14.0
+
 ## 0.13.0
 
 ### Minor Changes
