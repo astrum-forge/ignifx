@@ -26549,6 +26549,20 @@ Clamp on the device pixel ratio the swapchain is sized at. `0` means "do not cla
 
 MSAA sample count for the main pass. WebGPU allows 1 or 4; anything else is read as 4.
 
+##### quality
+
+> `readonly` **quality**: `"custom"` \| `"low"` \| `"high"` \| `"medium"`
+
+The quality tier, read once at `app.start()`. `"custom"` (default) changes nothing.
+
+###### Remarks
+
+A named tier sets `hdr`, `taa.enabled`, `ambientOcclusion.enabled` and
+`ambientOcclusion.quality`, and caps which screen-space effects a `PostProcessStack` may run
+(contact shadows from `"medium"`, SSGI at `"high"`). A field the project writes itself wins over
+its tier, so `{ quality: "high", taa: { enabled: false } }` is `"high"` without TAA. Bloom, tone
+mapping and auto exposure stay as authored. See [RENDERING\_QUALITIES](#rendering_qualities).
+
 ##### requiredLimits
 
 > `readonly` **requiredLimits**: `Readonly`\<`Record`\<`string`, `number`\>\>
@@ -31285,6 +31299,14 @@ A rendering feature a project or an extension asks for
 
 ***
 
+### RenderingQuality
+
+> **RenderingQuality** = *typeof* [`RENDERING_QUALITIES`](#rendering_qualities)\[`number`\]
+
+The union of the rendering quality tiers.
+
+***
+
 ### RenderPickIgnore
 
 > **RenderPickIgnore** = [`Entity`](#entity-2) \| [`Component`](#abstract-component) \| [`RenderPick`](#renderpick)
@@ -33452,6 +33474,22 @@ The render diagnostics group name (`docs/architecture/15-devtools-and-diagnostic
 > `const` **RENDER\_TEXTURE\_MAX\_SIZE**: `4096` = `4096`
 
 The largest side of a render texture, in pixels.
+
+***
+
+### RENDERING\_QUALITIES
+
+> `const` **RENDERING\_QUALITIES**: readonly \[`"custom"`, `"low"`, `"medium"`, `"high"`\]
+
+The rendering quality tiers, in the order the inspector lists them
+(`docs/standards/coding-standards.md` §7 gives each tier's GPU budget).
+
+#### Remarks
+
+- `"custom"` (default): every effect is exactly as the section and the `PostProcessStack`s say.
+- `"low"`: GTAO at half resolution; no HDR, TAA, contact shadows or SSGI.
+- `"medium"`: adds HDR and TAA, and lets a stack run contact shadows.
+- `"high"`: GTAO at full resolution, and lets a stack run SSGI.
 
 ***
 

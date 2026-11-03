@@ -79357,6 +79357,20 @@ Clamp on the device pixel ratio the swapchain is sized at. `0` means "do not cla
 
 MSAA sample count for the main pass. WebGPU allows 1 or 4; anything else is read as 4.
 
+##### quality
+
+> `readonly` **quality**: `"custom"` \| `"low"` \| `"medium"` \| `"high"`
+
+The quality tier, read once at `app.start()`. `"custom"` (default) changes nothing.
+
+###### Remarks
+
+A named tier sets `hdr`, `taa.enabled`, `ambientOcclusion.enabled` and
+`ambientOcclusion.quality`, and caps which screen-space effects a `PostProcessStack` may run
+(contact shadows from `"medium"`, SSGI at `"high"`). A field the project writes itself wins over
+its tier, so `{ quality: "high", taa: { enabled: false } }` is `"high"` without TAA. Bloom, tone
+mapping and auto exposure stay as authored. See RENDERING\_QUALITIES.
+
 ##### requiredLimits
 
 > `readonly` **requiredLimits**: `Readonly`\<`Record`\<`string`, `number`\>\>

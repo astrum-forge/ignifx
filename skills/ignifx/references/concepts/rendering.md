@@ -277,6 +277,15 @@ engine cannot see, such as a switch to another camera nearby. Picking and `Camer
 use the unjittered camera. A PBR mesh moving under a still camera has no motion vectors yet, so it
 relies on the clip and may soften while it moves.
 
+`rendering.quality` picks a tier that fits the GPU budget (coding standards §7): `"custom"` (the
+default) leaves everything as written; `"low"` turns on GTAO at half resolution only; `"medium"`
+adds `hdr` and `taa` and lets a `PostProcessStack` run contact shadows; `"high"` makes GTAO full
+resolution and lets a stack run SSGI. A tier fills `hdr`, `taa.enabled`, `ambientOcclusion.enabled`
+and `ambientOcclusion.quality`, but a field you write yourself wins: `settings: { rendering: {
+quality: "high", taa: { enabled: false } } }` is `"high"` without TAA. A stack's `contactShadows`
+or `ssgi` above the tier is skipped; bloom, tone mapping and auto exposure stay as authored. Read
+once at start; `app.renderer` runs the section with the tier applied.
+
 With `hdr` on, `PostProcessStack.bloom` becomes **HDR bloom**, which replaces the LDR bloom: a
 downsample/upsample glow on the linear colour, before tone mapping, tuned by `bloom.intensity`
 (0–1, default 0.1), `bloom.radius` (0 tight to 1 wide, default 0.7) and `bloom.hdrThreshold`
