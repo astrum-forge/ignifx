@@ -261,6 +261,23 @@ scene (jittered) → taa-jitter → taa-resolve → resolved ─(copy)→ histor
 - **Limits.** Object motion on PBR materials has no velocity (§2.12), so a moving PBR mesh relies on the clip. Floating origin is not handled (the clean matrices are eye-relative). A `PostProcessStack`'s display-colour effects (SMAA, bloom) still run after the output pass; SMAA and TAA together are allowed but redundant.
 - **Cost.** The scene-inputs pass, plus four full-screen passes (resolve, one copy, output, depth) at the surface size.
 
+### 2.14 Ambient occlusion
+
+`rendering.ambientOcclusion` (GI plan steps G8 and G9, 2026-11-03) is ground-truth ambient occlusion on indirect light, `src/lite/gpu/gtao.ts`, its own chunk. Off by default; on, the renderer loads the chunk in `attachHandles`, leases the scene inputs (§2.12), and `app.start()` waits for both before `registerScene`, so the tasks are recorded with the rest. It is read once: a later edit takes a restart. Fields: `enabled`, `quality` (`"half"`: half resolution, 2 slices × 4 steps a side; `"full"`: full resolution, 3 × 6), `radius` (metres, 0.5), `intensity` (exponent on visibility, 1), `falloff` (fraction of the radius over which occluders fade, 0.6). The plan named a `PostProcessStack.ambientOcclusion` record; it became a project setting because the plugin applies to every material and the pass is per scene, not per camera.
+
+```text
+… depth pyramid → gtao-params → gtao (compute: horizons, then a 5×5 depth-aware blur) → scene → …
+                                                   └─ AO texture (rgba8unorm) → lit PBR `occlusion`
+```
+
+- **The pass.** One compute task with two dispatches. GTAO (after XeGTAO) reconstructs view-space positions from the depth pyramid (level 1 at half resolution, coarser levels for far taps) and rotates the world normals into view space; slice angle and step offset are jittered per pixel. The blur weights taps by view-depth similarity. A tiny task before it writes the camera matrices from inside the frame graph, after Lite's world-matrix update, so the AO does not lag a moving camera.
+- **Indirect light only (spike S3).** A material plugin at `CUSTOM_FRAGMENT_BEFORE_LIGHTS` multiplies Lite's PBR `occlusion` by the AO texture at the fragment's pixel (four loads blended at half resolution). `occlusion` scales environment irradiance and specular occlusion only, so direct lights and emissive are untouched, and a scene with no environment cube map shows nothing. Every lit PBR variant declares it: the template's default, or the reflectance extension's `AT` code (`lib/material/pbr/fragments/reflectance-fragment.js` line 146). Unlit PBR, Standard materials and custom shaders are skipped. The plugin is attached by a per-frame walk, like the HDR plugins, and forces `features.materialPlugins` on.
+- **HDR.** Independent: the plugin changes the lighting input, not the output, so it works with and without `rendering.hdr` (browser test `test/render/ambient-occlusion.browser.test.ts`).
+- **Resize and device loss.** The scene inputs' `onChange` disables the pass, rebuilds textures, shaders and bindings, swaps them in and rebuilds the patched materials, whose bind groups hold the AO view; the old set is disposed eight frames later. Device loss is not tested.
+- **TAA.** With `rendering.taa` on, TAA's resolve filters the final colour, AO included, which smooths the per-pixel jitter; a separate AO history (the G9 option) is not wired, and the GTAO reads the unjittered camera.
+- **Not yet.** A dedicated AO history; a render-to-texture camera (§2.11) samples the main view's AO, which is wrong for its own view; bilateral upsampling at half resolution.
+- **Cost.** The scene inputs' geometry pass, plus 2 × 4 × 2 depth taps a pixel at quarter area (`"half"`) or 3 × 6 × 2 at full area, and a 25-tap blur. Not yet measured on the GPU-budget project.
+
 ## 3. Picking
 
 - `app.renderer.pickAsync(x, y, options)` → GPU pick (`createGpuPicker` + `pickAsync`), resolves to `{ entity, component, point, normal, distance, meshName, thinInstanceIndex }` using node metadata. Calls are serialized per picker (Lite constraint).
