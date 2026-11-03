@@ -1,5 +1,23 @@
 # @ignifx/core
 
+## 0.15.0
+
+### Minor Changes
+
+- 14dd9cd: Add auto exposure for HDR projects: `rendering.autoExposure` meters the scene on the GPU and eases the exposure between `minEv` and `maxEv`, at `speedUp` and `speedDown`, plus `compensation`. Off by default; it needs `rendering.hdr`.
+- c75a3d7: `PostProcessStack` gains `contactShadows` (screen-space contact shadows towards the main directional light) and `ssgi` (beta, one bounce of screen-space global illumination), both off by default and loaded only when enabled. They need `rendering.features.postProcessing`, and SSGI's `environmentDiffuse` needs `rendering.hdr` or the `materialPlugins` feature.
+- 105a427: Add HDR bloom: with `rendering.hdr` on, `PostProcessStack.bloom` runs a downsample/upsample glow on the linear scene colour before tone mapping, tuned by the new `intensity`, `radius` and `hdrThreshold` fields. It replaces the LDR bloom under HDR; projects without HDR keep the LDR bloom unchanged.
+- 1dc7131: Add `"agx"` to the tone-mapping curves: `Environment.imageProcessing.toneMapping = "agx"` applies the AgX base look (Benjamin Wendt's minimal AgX, a fit of Blender's "AgX Base"), on the plain path and through the `rendering.hdr` output pass alike. The curve's shader loads only when a scene names it.
+- a3d3a02: `rendering.hdr` now covers every colour writer: fog, Standard and unlit materials, custom `.wgsl` materials such as particles, and the `.env` skybox write linear colour, and sprites are unaffected, so a scene with default image processing looks the same with HDR on. Custom post effects ordered before any built-in one now run on linear colour ahead of the output pass. Lite's six-face `loadSkybox` cube is not yet supported.
+- a4b0c20: Add temporal anti-aliasing: `rendering.taa: { enabled: true }` (with `rendering.hdr` on) jitters each frame and blends it into a reprojected, neighbourhood-clipped history, with `blend`, `sharpness`, `clamp` and `cutDistance` settings. `app.renderer.resetTemporalHistory()` drops the history after a camera cut the engine cannot detect.
+- ab1cd2b: New `rendering.ambientOcclusion` setting (off by default): screen-space ambient occlusion (GTAO) computed from a shared depth and normal pass, at half or full resolution, with `radius`, `intensity` and `falloff`. It darkens the environment light of lit PBR materials in corners and creases, leaves direct lights unchanged, and works with or without `rendering.hdr`. A project that leaves it off loads none of it.
+- 3db9f43: Add `EDITOR_ONLY_METADATA_KEY`: a render-scene mesh whose Lite `metadata` sets it to `true` draws in the main view but never in a render texture, so an editor's helpers stay out of its game view and thumbnails.
+
+### Patch Changes
+
+- 39ae9d1: `renderer.profileTasks` now turns on per-task GPU timing as well as whole-frame timing, so `renderer.taskTimings()` reports each render task (status `"available"` once the first readback lands) instead of `"disabled"`. The `RenderTaskTimings.status` docs now name `"available"`, the value Babylon Lite reports, instead of `"ok"`.
+- 87a551e: Changing a `Light`'s shadow settings (`technique`, `mapSize`, `bias`, `darkness`, `cascades`, `stabilizeCascades`, `cascadeLambda`, `cascadeBlend` and the rest of `shadows`) while it already casts now rebuilds its shadow generator on the next frame. Before, only `shadows.enabled` was compared, so an edit showed only after shadows were turned off and on again.
+
 ## 0.14.0
 
 ### Minor Changes
