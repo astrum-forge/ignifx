@@ -26569,15 +26569,15 @@ A per-task GPU timing snapshot (`docs/architecture/07-rendering.md` §5).
 
 > `readonly` **status**: `string`
 
-Whether the numbers mean anything: `"unsupported"` on a device with no timestamp queries — the
-CI software adapter is one — `"disabled"` until `profileTasks` is on, `"pending"` until the
-first readback lands, `"error"` when it failed, `"ok"` otherwise.
+Whether the numbers mean anything: `"unsupported"` on a device with no timestamp queries,
+`"disabled"` until `profileTasks` is on, `"pending"` until the first readback lands, `"error"`
+when it failed, `"available"` otherwise.
 
 ##### tasks
 
 > `readonly` **tasks**: readonly [`RenderTaskTiming`](#rendertasktiming)[]
 
-The tasks, in frame execution order. Empty unless `status` is `"ok"`.
+The tasks, in frame execution order. Empty unless `status` is `"available"`.
 
 ***
 

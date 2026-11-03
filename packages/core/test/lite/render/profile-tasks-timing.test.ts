@@ -1,7 +1,7 @@
 import { setGpuTimingEnabled, setRenderTaskGpuTimingEnabled } from "@babylonjs/lite";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { startGpuTiming, stopTaskTiming } from "../../src/render/gpu/renderer-gpu.js";
-import type { LiteEngine } from "../../src/lite/scene.js";
+import { startGpuTiming, stopTaskTiming } from "../../../src/render/gpu/renderer-gpu.js";
+import type { LiteEngine } from "../../../src/lite/scene.js";
 
 /**
  * `renderer.profileTasks` switches both of Lite's GPU timers. Lite keeps per-task timing
