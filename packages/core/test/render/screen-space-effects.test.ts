@@ -1,9 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PostProcessStack } from "../../src/render/post-process-stack.js";
+import { renderingQualityPreset } from "../../src/render/rendering-settings.js";
 import { ScreenSpaceEffects } from "../../src/render/screen-space-effects.js";
 import { createRenderHarness } from "./support/render-harness.js";
 import type { RenderHarness } from "./support/render-harness.js";
 import type { RendererImpl } from "../../src/render/renderer.js";
+import type { RenderingQualityPreset } from "../../src/render/rendering-settings.js";
 
 /**
  * When `ScreenSpaceEffects` builds, rebuilds and tears down contact shadows and SSGI (GI plan G10,
@@ -65,6 +67,7 @@ interface FakeRenderer {
   isSceneRegistered: boolean;
   settings: { hdr: boolean };
   features: { materialPlugins: boolean };
+  qualityPreset: RenderingQualityPreset | null;
   errors: string[];
   releases: number;
   inputsAvailable: boolean;
@@ -86,6 +89,7 @@ function fakeRenderer(): FakeRenderer {
     isSceneRegistered: true,
     settings: { hdr: false },
     features: { materialPlugins: false },
+    qualityPreset: null,
     errors: [],
     releases: 0,
     inputsAvailable: true,
@@ -159,6 +163,31 @@ describe("ScreenSpaceEffects", () => {
     expect(effects.isBuilt).toBe(false);
     expect(effects.taskCount).toBe(0);
     expect(gpu.installed).toHaveLength(0);
+  });
+
+  it("runs only the effects the rendering.quality tier allows", async () => {
+    const effects = new ScreenSpaceEffects();
+    const fake = fakeRenderer();
+    const { contactShadows, ssgi } = records();
+    contactShadows.enabled = true;
+    ssgi.enabled = true;
+    fake.qualityPreset = renderingQualityPreset("low");
+    effects.sync(asRenderer(fake), contactShadows, ssgi, true);
+    await settle();
+    expect(effects.isBuilt).toBe(false);
+    fake.qualityPreset = renderingQualityPreset("medium");
+    effects.sync(asRenderer(fake), contactShadows, ssgi, true);
+    await settle();
+    expect(effects.taskCount).toBe(1);
+    expect(gpu.contact).toHaveLength(1);
+    expect(gpu.ssgi).toHaveLength(0);
+    effects.sync(asRenderer(fake), contactShadows, ssgi, true);
+    expect(gpu.contact[0]?.update).toHaveBeenLastCalledWith(contactShadows);
+    fake.qualityPreset = renderingQualityPreset("high");
+    effects.sync(asRenderer(fake), contactShadows, ssgi, true);
+    await settle();
+    expect(effects.taskCount).toBe(2);
+    effects.dispose(true);
   });
 
   it("builds contact shadows alone, then pushes live tuning without rebuilding", async () => {
