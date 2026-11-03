@@ -12,6 +12,19 @@ import type { LiteRenderTexture } from "../lite/gpu/render-texture.js";
 export const RENDER_TEXTURE_MAX_SIZE = 4096;
 
 /**
+ * The Babylon Lite `metadata` key that keeps a render-scene mesh out of every render texture.
+ *
+ * @remarks
+ * A mesh whose `metadata[EDITOR_ONLY_METADATA_KEY]` is `true` draws in the main view but never in
+ * a {@link RenderTexture}: an editor's grid or helper that must not show in its game view or
+ * thumbnails. Set it on a mesh reached through a `.lite` escape hatch, such as
+ * `RenderOverlay.lite.mainScene` (no stability guarantee, `CONSTITUTION.md` §3.4).
+ *
+ * @beta
+ */
+export const EDITOR_ONLY_METADATA_KEY = "ignifxEditorOnly";
+
+/**
  * An offscreen colour target a camera renders into (`docs/architecture/07-rendering.md` §2.11).
  *
  * @remarks

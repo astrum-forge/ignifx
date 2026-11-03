@@ -418,7 +418,7 @@ export {
   type RenderTaskTiming,
   type RenderTaskTimings,
 } from "./render/renderer.js";
-export { RENDER_TEXTURE_MAX_SIZE, type RenderTexture } from "./render/render-texture.js";
+export { EDITOR_ONLY_METADATA_KEY, RENDER_TEXTURE_MAX_SIZE, type RenderTexture } from "./render/render-texture.js";
 export {
   CANVAS_ALPHA_MODES,
   DEFAULT_BRDF_LUT_ADDRESS,

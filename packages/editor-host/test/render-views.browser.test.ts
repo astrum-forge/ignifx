@@ -184,6 +184,40 @@ async function pixelOf(dataUrl: string, x: number, y: number): Promise<readonly 
 }
 
 /**
+ * Decodes a data URL into its RGBA bytes.
+ *
+ * @param dataUrl - A PNG data URL.
+ * @returns The bytes, top row first.
+ */
+async function pixelsOf(dataUrl: string): Promise<Uint8ClampedArray> {
+  const bitmap = await createImageBitmap(await (await fetch(dataUrl)).blob());
+  const surface = new OffscreenCanvas(bitmap.width, bitmap.height);
+  const context = surface.getContext("2d");
+  if (context === null) {
+    throw new Error("no 2D context");
+  }
+  context.drawImage(bitmap, 0, 0);
+  return context.getImageData(0, 0, bitmap.width, bitmap.height).data;
+}
+
+/**
+ * Counts the pixels that differ between two images of one size.
+ *
+ * @param left - One image's bytes.
+ * @param right - The other's.
+ * @returns How many pixels differ at all.
+ */
+function differingPixels(left: Uint8ClampedArray, right: Uint8ClampedArray): number {
+  let count = 0;
+  for (let index = 0; index < left.length; index += 4) {
+    if (left[index] !== right[index] || left[index + 1] !== right[index + 1] || left[index + 2] !== right[index + 2]) {
+      count += 1;
+    }
+  }
+  return count;
+}
+
+/**
  * The `dataUrl` of an answer.
  *
  * @param result - The answer.
@@ -214,6 +248,16 @@ describe("the render views on a WebGPU canvas", () => {
     const [r, g, b] = await pixelOf(dataUrlOf(frame), 32, 24);
     expect(r, `game view centre ${String([r, g, b])}`).toBeGreaterThan(200);
     expect(g).toBeLessThan(60);
+    // The scene view's grid never draws into the game view (core's EDITOR_ONLY_METADATA_KEY): from
+    // a camera above the ground, the frame is the same with the grid shown and hidden.
+    const raised = SCENE.entities.map((entity) =>
+      entity.uid === "EYE" ? { ...entity, transform: { ...entity.transform, position: [0, 1, -4] } } : entity,
+    );
+    await call("openScene", { file: { ...SCENE, entities: raised }, address: "scenes/raised.scene.json" });
+    const withGrid = await pixelsOf(dataUrlOf(await call(RenderViewMethod.gameViewFrame, { format: "png" })));
+    await call("setGrid", { visible: false });
+    const withoutGrid = await pixelsOf(dataUrlOf(await call(RenderViewMethod.gameViewFrame, { format: "png" })));
+    expect(differingPixels(withGrid, withoutGrid)).toBe(0);
     expect(await call(RenderViewMethod.setGameView, { enabled: false })).toEqual({
       enabled: false,
       width: 64,

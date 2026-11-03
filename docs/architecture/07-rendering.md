@@ -194,6 +194,8 @@ Design and rationale: `docs/plan/2026-09-terrain-particles-shaders.md` §3 and A
 - **Lite gaps.** Lite has no task removal and no texture readback. `dispose()` splices the task out of the frame graph's `_tasks` before disposing it (a disposed render task throws from `record()` on the next rebuild), and `readPixels` copies the target's `_colorTexture` through `engine._device` into a mapped buffer. Both are read from Lite 1.34.0 and pinned by `test/render/render-texture.browser.test.ts` at MSAA 1 and 4.
 - **Cost.** The module is loaded on the first render or read, so a game that never uses one ships none of it (§2.5). A texture costs nothing until then; after that, its target, and one render pass in each frame it is filled.
 
+**Editor-only meshes.** A render-scene mesh whose Lite `metadata[EDITOR_ONLY_METADATA_KEY]` is `true` (an editor's grid) draws in the main view but never in a render texture: the pass hides such meshes around its own `execute` and shows them again, after the main pass has drawn, so the main view never flickers.
+
 ## 3. Picking
 
 - `app.renderer.pickAsync(x, y, options)` → GPU pick (`createGpuPicker` + `pickAsync`), resolves to `{ entity, component, point, normal, distance, meshName, thinInstanceIndex }` using node metadata. Calls are serialized per picker (Lite constraint).

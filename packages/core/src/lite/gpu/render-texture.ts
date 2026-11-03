@@ -1,5 +1,5 @@
 import { addTask, buildFrameGraphTask, createRenderTarget, createRenderTask, getFrameGraph } from "@babylonjs/lite";
-import type { Camera, EngineContext, RenderTarget, RenderTaskConfig, SceneContext, Task } from "@babylonjs/lite";
+import type { Camera, EngineContext, Mesh, RenderTarget, RenderTaskConfig, SceneContext, Task } from "@babylonjs/lite";
 
 /**
  * Render-to-texture (`docs/architecture/07-rendering.md` §2.11): a second pass of the render scene,
@@ -24,6 +24,16 @@ import type { Camera, EngineContext, RenderTarget, RenderTaskConfig, SceneContex
  * `render-task-base.js` 236, 279) from the config object the task keeps by reference (line 77), so
  * re-pointing the pass is one assignment. A `null` camera would fall back to the scene's main
  * camera, so the pass is switched off with `Task.executionEnabled` instead.
+ *
+ * ## Editor-only meshes
+ *
+ * A render task draws every visible mesh of its scene; `RenderTaskConfig` has no mesh filter. So
+ * the task's `execute` (the frame graph calls it, `lib/frame-graph/frame-graph.js` 16) is wrapped:
+ * it hides each visible mesh whose `metadata[excludeKey]` is `true`, runs, and shows them again.
+ * The main pass has already drawn the frame by then (the task is appended after it), so the main
+ * view never sees them hidden and does not flicker. `drawList` reads `visible` as it encodes
+ * (`render-task-base.js` 354), and this task's opaque bundle is only ever encoded inside the
+ * wrapper, so it never holds them either.
  *
  * ## Gaps in Lite's public surface
  *
@@ -97,6 +107,7 @@ export interface LiteRenderTexture {
  * @param scene - The registered render scene.
  * @param width - The width in pixels.
  * @param height - The height in pixels.
+ * @param excludeKey - The `metadata` key that, set to `true` on a mesh, keeps it out of the pass.
  * @returns The pass.
  *
  * @internal
@@ -106,6 +117,7 @@ export function createLiteRenderTexture(
   scene: SceneContext,
   width: number,
   height: number,
+  excludeKey: string,
 ): LiteRenderTexture {
   const target: RenderTarget = createRenderTarget({
     lbl: "ignifx:render-texture",
@@ -117,6 +129,27 @@ export function createLiteRenderTexture(
   const config: RenderTaskConfig = { name: "ignifx:render-texture", rt: target, cam: null };
   const task = createRenderTask(config, engine, scene);
   task.executionEnabled = false;
+  const execute = task.execute?.bind(task);
+  if (execute === undefined) {
+    throw new TypeError("Lite's render task has no execute(); render-texture.ts needs updating for this Lite.");
+  }
+  const hidden: Mesh[] = [];
+  task.execute = (): number => {
+    for (const mesh of scene.meshes) {
+      if (mesh.visible !== false && mesh.metadata?.[excludeKey] === true) {
+        mesh.visible = false;
+        hidden.push(mesh);
+      }
+    }
+    try {
+      return execute();
+    } finally {
+      for (const mesh of hidden) {
+        mesh.visible = true;
+      }
+      hidden.length = 0;
+    }
+  };
   addTask(scene, task);
   buildFrameGraphTask(getFrameGraph(scene), task);
   let isDisposed = false;

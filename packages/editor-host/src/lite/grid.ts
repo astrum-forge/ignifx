@@ -18,6 +18,7 @@ import {
   removeFromScene,
   setShaderUniform,
 } from "@babylonjs/lite";
+import { EDITOR_ONLY_METADATA_KEY } from "@ignifx/core";
 import type { GridPlacement } from "../scene/grid.js";
 import type { Mesh, SceneContext, ShaderMaterial } from "@babylonjs/lite";
 import type { AppLiteHandles, RenderOverlay } from "@ignifx/core";
@@ -74,7 +75,8 @@ interface GridPlane {
  * Lite's grid material works in object space, so each plane is a unit square scaled to the
  * placement's extent, with `gridRatio = step / extent` and `gridOffset = centre / extent`: the lines
  * stay on world multiples of the step wherever the square moves. Neither mesh is pickable, casts
- * shadows or belongs to an entity, so no pick, selection or `readBack` reaches it.
+ * shadows or belongs to an entity, so no pick, selection or `readBack` reaches it, and both carry
+ * core's `EDITOR_ONLY_METADATA_KEY`, so no render texture (the game view) draws them.
  *
  * @param handles - The app's Lite engine and render scene (`app.lite`).
  * @param overlay - The view's open render overlay; the grid does not own it.
@@ -179,6 +181,8 @@ function makePlane(
   mesh.pickable = false;
   mesh.receiveShadows = false;
   mesh.visible = false;
+  // Drawn in the scene view only, never in a render texture such as the Game panel's view.
+  mesh.metadata = { ...mesh.metadata, [EDITOR_ONLY_METADATA_KEY]: true };
   addToScene(scene, mesh);
   return { mesh, material, scene, opacity };
 }

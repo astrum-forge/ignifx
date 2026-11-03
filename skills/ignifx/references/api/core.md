@@ -32178,6 +32178,23 @@ const halfway = EASINGS.cubicInOut(0.5); // 0.5
 
 ***
 
+### EDITOR\_ONLY\_METADATA\_KEY
+
+> `const` **EDITOR\_ONLY\_METADATA\_KEY**: `"ignifxEditorOnly"` = `"ignifxEditorOnly"`
+
+**`Beta`**
+
+The Babylon Lite `metadata` key that keeps a render-scene mesh out of every render texture.
+
+#### Remarks
+
+A mesh whose `metadata[EDITOR_ONLY_METADATA_KEY]` is `true` draws in the main view but never in
+a [RenderTexture](#rendertexture): an editor's grid or helper that must not show in its game view or
+thumbnails. Set it on a mesh reached through a `.lite` escape hatch, such as
+`RenderOverlay.lite.mainScene` (no stability guarantee, `CONSTITUTION.md` §3.4).
+
+***
+
 ### EMPTY\_ASSET\_MANIFEST
 
 > `const` **EMPTY\_ASSET\_MANIFEST**: [`AssetManifest`](#assetmanifest)
