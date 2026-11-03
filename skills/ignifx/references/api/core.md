@@ -335,7 +335,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-2)
+[`Component`](#abstract-component).[`enabled`](#enabled-3)
 
 ##### entity
 
@@ -3666,7 +3666,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-2)
+[`Component`](#abstract-component).[`enabled`](#enabled-3)
 
 ##### entity
 
@@ -4619,7 +4619,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-2)
+[`Component`](#abstract-component).[`enabled`](#enabled-3)
 
 ##### entity
 
@@ -5699,7 +5699,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-2)
+[`Component`](#abstract-component).[`enabled`](#enabled-3)
 
 ##### entity
 
@@ -8628,7 +8628,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-2)
+[`Component`](#abstract-component).[`enabled`](#enabled-3)
 
 ##### entity
 
@@ -9148,7 +9148,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-2)
+[`Component`](#abstract-component).[`enabled`](#enabled-3)
 
 ##### entity
 
@@ -9860,7 +9860,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-2)
+[`Component`](#abstract-component).[`enabled`](#enabled-3)
 
 ##### entity
 
@@ -11602,7 +11602,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`PostProcessStack`](#postprocessstack).[`enabled`](#enabled-13)
+[`PostProcessStack`](#postprocessstack).[`enabled`](#enabled-14)
 
 ##### entity
 
@@ -12893,7 +12893,7 @@ happens inside a callback.
 
 ###### Overrides
 
-[`PostProcessStack`](#postprocessstack).[`enabled`](#enabled-13)
+[`PostProcessStack`](#postprocessstack).[`enabled`](#enabled-14)
 
 ##### entity
 
@@ -19887,6 +19887,57 @@ see `SceneAssetToken`. Nothing reads it at runtime.
 
 ***
 
+### AutoExposureSettings
+
+Auto exposure under `rendering.hdr` (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, step G14):
+a compute pass meters the HDR scene and eases the exposure towards middle grey.
+
+#### Remarks
+
+EV here is `log2` of the scene's metered luminance (the average of a `log2` luminance histogram,
+the darkest 10% and brightest 10% dropped). The exposure maps that average to 0.18 and multiplies
+the scene before the `Environment`'s own exposure and curve, so the two compose.
+
+#### Properties
+
+##### compensation
+
+> `readonly` **compensation**: `number`
+
+Stops added to the computed exposure; positive is brighter.
+
+##### enabled
+
+> `readonly` **enabled**: `boolean`
+
+Meter the scene and adapt the exposure. Off by default; needs `rendering.hdr`.
+
+##### maxEv
+
+> `readonly` **maxEv**: `number`
+
+The brightest metered EV the exposure follows: a brighter scene is not darkened further.
+
+##### minEv
+
+> `readonly` **minEv**: `number`
+
+The darkest metered EV the exposure follows: a darker scene is not brightened further.
+
+##### speedDown
+
+> `readonly` **speedDown**: `number`
+
+Adaptation rate, per second, when the scene gets darker.
+
+##### speedUp
+
+> `readonly` **speedUp**: `number`
+
+Adaptation rate, per second, when the scene gets brighter.
+
+***
+
 ### BatchHandle
 
 A group of loads requested together
@@ -19940,6 +19991,14 @@ Releases every handle the batch retains. Calling it twice is a no-op.
 
 The `bloom` record a `PostProcessStack` declares (`docs/architecture/07-rendering.md` §2.7).
 
+#### Remarks
+
+Two bloom passes share the record. Without `rendering.hdr` it is Lite's LDR bloom, recorded in the
+chain after tone mapping, and `order`, `weight`, `kernel`, `threshold`, `exposure` and `scale`
+apply. With `rendering.hdr` the HDR bloom **replaces** it: a downsample/upsample chain on the
+linear scene colour, always before the output pass whatever `order` says, tuned by `intensity`,
+`radius` and `hdrThreshold` (GI plan step G12).
+
 #### Properties
 
 ##### enabled
@@ -19952,37 +20011,55 @@ Whether the glow pass runs.
 
 > **exposure**: `number`
 
-An exposure applied while extracting highlights.
+An exposure applied while extracting highlights. LDR bloom only.
+
+##### hdrThreshold
+
+> **hdrThreshold**: `number`
+
+HDR bloom: the linear luminance below which nothing glows; `0`, the default, lets every pixel glow by its energy.
+
+##### intensity
+
+> **intensity**: `number`
+
+HDR bloom: how much glow is mixed into the frame, 0–1.
 
 ##### kernel
 
 > **kernel**: `number`
 
-The blur kernel width, in pixels.
+The blur kernel width, in pixels. LDR bloom only.
 
 ##### order
 
 > **order**: `number`
 
-Position in the chain; lower runs first.
+Position in the chain; lower runs first. LDR bloom only.
+
+##### radius
+
+> **radius**: `number`
+
+HDR bloom: how far the glow spreads, 0 (tight) to 1 (wide).
 
 ##### scale
 
 > **scale**: `number`
 
-The fraction of full resolution the blur runs at.
+The fraction of full resolution the blur runs at. LDR bloom only.
 
 ##### threshold
 
 > **threshold**: `number`
 
-The luminance above which a pixel glows.
+The luminance above which a pixel glows. LDR bloom only; HDR bloom reads `hdrThreshold`.
 
 ##### weight
 
 > **weight**: `number`
 
-How strongly the glow is mixed back in.
+How strongly the glow is mixed back in. LDR bloom only.
 
 ***
 
@@ -26272,6 +26349,13 @@ const app = await createApp({
 > `readonly` **alphaMode**: `"opaque"` \| `"premultiplied"`
 
 How the canvas composites with the page. `"premultiplied"` lets HTML show through.
+
+##### autoExposure
+
+> `readonly` **autoExposure**: [`AutoExposureSettings`](#autoexposuresettings)
+
+Auto exposure, read once at `app.start()`. Ignored unless [RenderingSettings.hdr](#hdr) is on;
+off, nothing of it loads.
 
 ##### brdfLut
 
@@ -35401,6 +35485,21 @@ The decoded value and every problem found.
 ```ts
 decodeValue(vec3(), [1, 2, 3], references); // { value: { x: 1, y: 2, z: 3 }, issues: [] }
 ```
+
+***
+
+### defaultAutoExposureSettings()
+
+> **defaultAutoExposureSettings**(): [`AutoExposureSettings`](#autoexposuresettings)
+
+The auto exposure a project that names none gets: off, metering EV −6 to 6, adapting at 2 per
+second towards brighter scenes and 1 towards darker ones, with no compensation.
+
+#### Returns
+
+[`AutoExposureSettings`](#autoexposuresettings)
+
+A fresh record.
 
 ***
 

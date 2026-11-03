@@ -67263,6 +67263,14 @@ The resolved control.
 
 The `bloom` record a `PostProcessStack` declares (`docs/architecture/07-rendering.md` §2.7).
 
+#### Remarks
+
+Two bloom passes share the record. Without `rendering.hdr` it is Lite's LDR bloom, recorded in the
+chain after tone mapping, and `order`, `weight`, `kernel`, `threshold`, `exposure` and `scale`
+apply. With `rendering.hdr` the HDR bloom **replaces** it: a downsample/upsample chain on the
+linear scene colour, always before the output pass whatever `order` says, tuned by `intensity`,
+`radius` and `hdrThreshold` (GI plan step G12).
+
 #### Properties
 
 ##### enabled
@@ -67275,37 +67283,55 @@ Whether the glow pass runs.
 
 > **exposure**: `number`
 
-An exposure applied while extracting highlights.
+An exposure applied while extracting highlights. LDR bloom only.
+
+##### hdrThreshold
+
+> **hdrThreshold**: `number`
+
+HDR bloom: the linear luminance below which nothing glows; `0`, the default, lets every pixel glow by its energy.
+
+##### intensity
+
+> **intensity**: `number`
+
+HDR bloom: how much glow is mixed into the frame, 0–1.
 
 ##### kernel
 
 > **kernel**: `number`
 
-The blur kernel width, in pixels.
+The blur kernel width, in pixels. LDR bloom only.
 
 ##### order
 
 > **order**: `number`
 
-Position in the chain; lower runs first.
+Position in the chain; lower runs first. LDR bloom only.
+
+##### radius
+
+> **radius**: `number`
+
+HDR bloom: how far the glow spreads, 0 (tight) to 1 (wide).
 
 ##### scale
 
 > **scale**: `number`
 
-The fraction of full resolution the blur runs at.
+The fraction of full resolution the blur runs at. LDR bloom only.
 
 ##### threshold
 
 > **threshold**: `number`
 
-The luminance above which a pixel glows.
+The luminance above which a pixel glows. LDR bloom only; HDR bloom reads `hdrThreshold`.
 
 ##### weight
 
 > **weight**: `number`
 
-How strongly the glow is mixed back in.
+How strongly the glow is mixed back in. LDR bloom only.
 
 ***
 
@@ -77189,7 +77215,7 @@ See [ParticleShape.length](#length-3). Defaults to `1`.
 
 > `readonly` `optional` **radius?**: `number`
 
-See [ParticleShape.radius](#radius-9). Defaults to `0.2`.
+See [ParticleShape.radius](#radius-10). Defaults to `0.2`.
 
 ##### randomDirection?
 
@@ -79178,6 +79204,13 @@ const app = await createApp({
 > `readonly` **alphaMode**: `"opaque"` \| `"premultiplied"`
 
 How the canvas composites with the page. `"premultiplied"` lets HTML show through.
+
+##### autoExposure
+
+> `readonly` **autoExposure**: `AutoExposureSettings`
+
+Auto exposure, read once at `app.start()`. Ignored unless [RenderingSettings.hdr](#hdr) is on;
+off, nothing of it loads.
 
 ##### brdfLut
 
@@ -102947,7 +102980,7 @@ See [ParticleShape.length](#length-3). Defaults to `1`.
 
 `number`
 
-See [ParticleShape.radius](#radius-9). Defaults to `0.2`.
+See [ParticleShape.radius](#radius-10). Defaults to `0.2`.
 
 ###### shape.randomDirection?
 
