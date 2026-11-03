@@ -73,6 +73,11 @@ export interface HdrOutputHandle {
   /** The scene's linear `rgba16float` colour, as a sampled texture. Values may exceed 1. */
   readonly sceneTexture: Texture2D;
   /**
+   * The auto exposure result, a 1×1 `r32float` texture holding `log2` of the multiplier the output
+   * pass applies (`./auto-exposure.ts`); `null` when `rendering.autoExposure` is off.
+   */
+  readonly exposureTexture: Texture2D | null;
+  /**
    * The per-frame work: uploads the scene's exposure, contrast and curve when they changed, and
    * gives every new PBR material the linear-output plugin.
    *

@@ -228,6 +228,13 @@ Standard and custom-shader colour is tone mapped too. Custom post effects ordere
 built-in one run on linear colour ahead of the pass; bloom, SMAA and `imageProcessing` stay after
 it. Not covered: a six-face `loadSkybox` cube, which is encoded twice.
 
+`rendering.autoExposure` (off by default, needs `hdr`) meters the scene each frame on the GPU and
+eases the exposure so its average lands on middle grey: `minEv`/`maxEv` bound the metered
+`log2` luminance it follows (default −6 to 6), `speedUp`/`speedDown` are the adaptation rates per
+second towards brighter and darker scenes (2 and 1), and `compensation` adds stops. It multiplies
+before the `Environment`'s own exposure. Read once at start:
+`settings: { rendering: { hdr: true, autoExposure: { enabled: true, compensation: 0.5 } } }`.
+
 ## 5. Material warm-up (ADR-0014)
 
 A mesh whose material family did not exist when the scene was registered takes Babylon Lite's

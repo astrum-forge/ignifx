@@ -24,6 +24,7 @@ import {
 } from "@babylonjs/lite";
 import { rebuildMaterialPipelines } from "../material.js";
 import { DEPTH_STENCIL_FORMAT, markHdrScene } from "./render-path.js";
+import type { AutoExposurePass } from "./auto-exposure.js";
 import type { HdrOutputHandle, ScenePresenter } from "./render-path.js";
 import type {
   EffectWrapper,
@@ -279,20 +280,24 @@ export function linearFogConfig(fog: FogConfig): FogConfig {
  * shader holds all of them and branches on a uniform, so a curve change uploads 16 bytes instead
  * of compiling a pipeline. The encode, clamp and contrast copy the PBR template's tail.
  *
+ * @param autoExposure - Whether binding 2 holds the auto exposure texel (`./auto-exposure.ts`),
+ * `log2` of a multiplier applied before the curve.
  * @returns The WGSL, with Lite's `effectFragment` entry point.
  *
  * @internal
  */
-export function hdrOutputFragmentWgsl(): string {
+export function hdrOutputFragmentWgsl(autoExposure = false): string {
   return [
     AcesToneMapping.helpersWGSL,
     NeutralToneMapping.helpersWGSL,
     "struct HdrOutputUniforms{vImageInfos:vec4<f32>};",
     "@group(0)@binding(0)var<uniform>scene:HdrOutputUniforms;",
     "@group(0)@binding(1)var hdrColor:texture_2d<f32>;",
+    autoExposure ? "@group(0)@binding(2)var autoExposure:texture_2d<f32>;" : "",
     "@fragment fn effectFragment(fragment:EffectVertexOutput)->@location(0)vec4<f32>{",
     "let texel=textureLoad(hdrColor,vec2<i32>(fragment.position.xy),0);",
     "var color=max(texel.rgb,vec3<f32>(0.0));",
+    autoExposure ? "color*=exp2(textureLoad(autoExposure,vec2<i32>(0,0),0).r);" : "",
     "let curve=i32(scene.vImageInfos.z+0.5);",
     `if(curve==${String(HDR_CURVE.standard)}){${StandardToneMapping.callWGSL}}`,
     `else if(curve==${String(HDR_CURVE.aces)}){${AcesToneMapping.callWGSL}}`,
@@ -364,11 +369,17 @@ export function writeHdrOutputUniforms(processing: ImageProcessingConfig, out: F
  *
  * @param engine - The engine, which is also the primary surface.
  * @param scene - The scene created with no default render task.
+ * @param installAutoExposure - Builds the auto exposure passes over the HDR texture, between the
+ * scene task and the output tasks (`./auto-exposure.ts`); omitted when auto exposure is off.
  * @returns The presenter, with its {@link ScenePresenter.hdr} handle set.
  *
  * @internal
  */
-export function installHdrRenderPath(engine: EngineContext, scene: SceneContext): ScenePresenter {
+export function installHdrRenderPath(
+  engine: EngineContext,
+  scene: SceneContext,
+  installAutoExposure?: (hdrTexture: Texture2D) => AutoExposurePass,
+): ScenePresenter {
   enableMaterialPlugins(scene);
   markHdrScene(scene);
   installLinearSkybox(scene);
@@ -401,16 +412,30 @@ export function installHdrRenderPath(engine: EngineContext, scene: SceneContext)
     });
   }
   addTask(scene, createRenderTask(config, engine, scene));
+  const autoExposure = installAutoExposure?.(hdr.texture) ?? null;
 
   const effect: EffectWrapper = createEffectWrapper(engine, {
     name: "ignifx:hdr-output",
-    fragmentWGSL: hdrOutputFragmentWgsl(),
+    fragmentWGSL: hdrOutputFragmentWgsl(autoExposure !== null),
     bindings: [
       { name: "hdrOutput", binding: 0, kind: "uniform", uniformByteLength: UNIFORM_FLOATS * 4 },
       { name: "hdrColor", binding: 1, kind: "texture" },
+      ...(autoExposure === null
+        ? []
+        : [
+            {
+              name: "autoExposure",
+              binding: 2,
+              kind: "texture" as const,
+              textureSampleType: "unfilterable-float" as const,
+            },
+          ]),
     ],
   });
   setEffectTexture(effect, 1, hdr.texture);
+  if (autoExposure !== null) {
+    setEffectTexture(effect, 2, autoExposure.exposureTexture);
+  }
   // What the output pass reads: the scene, or the last linear effect a PostProcessStack put first.
   let outputSource: Texture2D | null = null;
   // A resize swaps the texture behind the facade; the wrapper's cached bind group still holds the
@@ -446,7 +471,9 @@ export function installHdrRenderPath(engine: EngineContext, scene: SceneContext)
   let linearFog: FogConfig | null = null;
   const handle: HdrOutputHandle = {
     sceneTexture: hdr.texture,
+    exposureTexture: autoExposure?.exposureTexture ?? null,
     update(isSceneRegistered: boolean): void {
+      autoExposure?.update();
       if (writeHdrOutputUniforms(scene.imageProcessing, uniforms)) {
         setEffectUniforms(effect, uniforms);
       }
