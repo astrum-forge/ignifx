@@ -82245,11 +82245,21 @@ The frame's name, unique within the document; what `#frame:` addresses.
 The pivot in `[0, 1]` of the frame — `[0, 0]` top-left, `[0.5, 0.5]` centre, `[1, 1]`
 bottom-right. Defaults to the centre. Written either as `[x, y]` or as `{ x, y }`.
 
+##### sourceOffset?
+
+> `readonly` `optional` **sourceOffset?**: [`Vec2Json`](#vec2json)
+
+Where the trimmed rectangle's top-left corner sits inside the untrimmed source, in pixels from
+the source's top-left: TexturePacker's and Aseprite's `spriteSourceSize.x`/`.y`. Needs
+`sourceSize`. Absent means the frame is not placed as trimmed.
+
 ##### sourceSize?
 
 > `readonly` `optional` **sourceSize?**: [`Vec2Json`](#vec2json)
 
 The untrimmed source size, when the packer trimmed transparent margins. Defaults to `w`/`h`.
+With `sourceOffset`, the pivot is in `[0, 1]` of this size and the frame draws at `w`/`h`;
+without it, the frame draws stretched to this size, as before `sourceOffset` existed.
 
 ##### w
 
@@ -82281,7 +82291,7 @@ One frame of a loaded atlas, as game code sees it.
 
 > `readonly` **heightPx**: `number`
 
-Its drawn height, in image pixels.
+Its drawn height, in image pixels: the trimmed height when `trim` is set.
 
 ##### index
 
@@ -82299,13 +82309,20 @@ The frame's name.
 
 > `readonly` **pivot**: [`Vec2Like`](#vec2like)
 
-Its pivot in `[0, 1]` of the frame, `[0, 0]` top-left.
+Its pivot in `[0, 1]` of the frame, `[0, 0]` top-left; of the untrimmed source when `trim` is set.
+
+##### trim
+
+> `readonly` **trim**: `SpriteFrameTrim` \| `null`
+
+Where the trimmed frame sits in its untrimmed source, from the document's `sourceOffset` and
+`sourceSize`; `null` for a frame the document does not place as trimmed.
 
 ##### widthPx
 
 > `readonly` **widthPx**: `number`
 
-Its drawn width, in image pixels.
+Its drawn width, in image pixels: the trimmed width when `trim` is set.
 
 ***
 
@@ -100950,8 +100967,8 @@ frame keys it produces are file-ish (`hero 0.aseprite`, `hero (idle) 0.aseprite`
 is put through [asepriteFrameName](#asepriteframename); `importAsepriteAnimations` uses the same normaliser,
 which is what makes the imported clips and the imported atlas agree on names.
 
-A trimmed frame keeps its `sourceSize` so the loader can place the trimmed rectangle back inside
-its original bounds.
+A trimmed frame keeps its `sourceSize` and its `sourceOffset` (from `spriteSourceSize.x`/`.y`), so
+the trimmed pixels draw where the untrimmed frame would have put them.
 
 #### Parameters
 
@@ -101076,8 +101093,9 @@ extension (`hero_0.png` becomes `hero_0`) unless `keepExtensions` is set.
 
 A frame's `pivot` is used as-is when the document declares one: TexturePacker already writes
 pivots normalised into `[0, 1]` against a top-left origin, which is exactly ignifx's convention.
-Frames without one get the centre. A frame marked `trimmed` carries its `sourceSize` through so
-the loader can lay the trimmed rectangle back inside its original bounds.
+Frames without one get the centre. A frame marked `trimmed` carries its `sourceSize` and, from
+`spriteSourceSize.x`/`.y`, its `sourceOffset` through, so the trimmed pixels draw where the
+untrimmed frame would have put them.
 
 #### Parameters
 
@@ -101103,10 +101121,6 @@ The complete atlas document.
 
 Rotated frames are rejected rather than silently drawn wrong — the sprite pipeline has no
 per-frame rotation flag.
-
-`spriteSourceSize`'s **offset** (`x`/`y`) has no home in `SpriteFrameDefinition`, which records
-only the untrimmed size, so a trimmed frame whose art is not centred in its source bounds may sit
-slightly off. Pack with trimming disabled, or with `spriteSourceSize` centred, when that matters.
 
 #### Throws
 

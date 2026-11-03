@@ -11,15 +11,19 @@ import {
   GizmoMode,
   GizmoSpace,
   HostCapability,
+  EDITOR_LINES_MAX_SETS,
   isApplyOpsParams,
+  isClearEditorLinesParams,
   isEntitySelection,
   isFrameParams,
   isOpenSceneParams,
   isPickParams,
   isReadBackParams,
   isSetAnimateMaterialsParams,
+  isSetEditorLinesParams,
   isSetGizmoParams,
   isSetGridParams,
+  isSetTilemapCellsParams,
   isSetViewModeParams,
   PickUnit,
   RenderViewMethod,
@@ -51,6 +55,7 @@ import { schemaSet } from "./schemas.js";
 import { checkScreenshotParams, takeScreenshot } from "./screenshot.js";
 import { settingsSet } from "./settings.js";
 import { ThumbnailRenderer } from "./thumbnails.js";
+import { setTilemapCells } from "./tilemap-cells.js";
 import {
   boundsOf2D,
   CAMERA_2D_TYPE,
@@ -69,6 +74,7 @@ import type { ChangedDefaults } from "./defaults.js";
 import type { ViewClick } from "./editor-camera.js";
 import type { GridPlacement } from "./grid.js";
 import type { PickRayMembers } from "./view-math.js";
+import type { EditorLinesView, LineColor } from "../lite/editor-lines.js";
 import type { EditorView, ViewDrag, WorldBounds } from "../lite/gizmos.js";
 import type {
   AssetReloadedParams,
@@ -79,12 +85,16 @@ import type {
   PickResult,
   SchemaSet,
   ScreenshotResult,
+  SetTilemapCellsResult,
   SettingsSet,
 } from "../protocol/index.js";
 import type { App, Entity, HotReloadReport, RenderSurface, SceneInstance } from "@ignifx/core";
 
 /** The name of the host's persistent scene instance for its own objects. */
 export const EDITOR_SCENE_NAME = "editor";
+
+/** The colour of an editor line set that names none: a light green, as collider gizmos usually are. */
+const DEFAULT_LINE_COLOR: LineColor = { r: 0.55, g: 1, b: 0.55, a: 1 };
 
 /** The editor camera's priority: above any camera a document can hold. */
 const EDITOR_CAMERA_PRIORITY = 1_000_000;
@@ -181,6 +191,12 @@ export class SceneHost {
 
   #gridSettings: GridSettings = { visible: true, size: DEFAULT_GRID_SIZE };
 
+  /** The editor's line sets, as `setEditorLines` last set them, by id; drawn once `#lines` exists. */
+  readonly #lineSets = new Map<string, { readonly lines: readonly number[]; readonly color: LineColor }>();
+
+  /** The line sets' meshes, once a canvas has an overlay (never headless). */
+  #lines: EditorLinesView | null = null;
+
   readonly #drag: GizmoDragRelay;
 
   readonly #gameView = new GameView();
@@ -259,6 +275,13 @@ export class SceneHost {
     }
     if (has(HostCapability.grid)) {
       methods.set(SceneMethod.setGrid, (params) => this.#setGrid(params));
+    }
+    if (has(HostCapability.tilemapCells)) {
+      methods.set(SceneMethod.setTilemapCells, (params) => this.#setTilemapCells(params));
+    }
+    if (has(HostCapability.editorLines)) {
+      methods.set(SceneMethod.setEditorLines, (params) => this.#setEditorLines(params));
+      methods.set(SceneMethod.clearEditorLines, (params) => this.#clearEditorLines(params));
     }
     // The channel answers one request at a time; an asset reload's rebuild queues with them.
     this.methods = new Map(
@@ -352,6 +375,15 @@ export class SceneHost {
         // Loaded on demand: the grid's shader code stays out of the host's first chunk.
         const { createEditorGrid } = await import("../lite/grid.js");
         this.#grid.view = createEditorGrid(app.lite, overlay);
+      }
+      if (this.methods.has(SceneMethod.setEditorLines)) {
+        // Loaded on demand, as the grid is.
+        const { createEditorLines } = await import("../lite/editor-lines.js");
+        const lines = createEditorLines(app.lite, overlay);
+        for (const [id, set] of this.#lineSets) {
+          lines.set(id, set.lines, set.color);
+        }
+        this.#lines = lines;
       }
       const onClick = (click: ViewClick): void => {
         this.#onClick(click).catch((error: unknown) => {
@@ -512,6 +544,8 @@ export class SceneHost {
       this.#grid.view?.dispose();
       this.#grid.view = null;
     }
+    this.#lines?.dispose();
+    this.#lines = null;
     this.#view?.dispose();
     this.#view = null;
     this.#gameView.dispose();
@@ -759,6 +793,71 @@ export class SceneHost {
       throw new InvalidParamsError("setGrid takes { visible?: boolean, size?: number from 0.001 to 1000 }.");
     }
     this.#gridSettings = { visible: params.visible ?? true, size: params.size ?? DEFAULT_GRID_SIZE };
+    return null;
+  }
+
+  /**
+   * `setTilemapCells`: writes a tilemap editor's cells into the open scene's live tilemaps that
+   * show the asset. The file on disk is the editor's to save.
+   *
+   * @param params - `{ asset, layer, cells }`.
+   * @returns How many tilemaps were written and how many cells changed.
+   */
+  #setTilemapCells(params: unknown): SetTilemapCellsResult {
+    const mirror = this.#requireMirror(SceneMethod.setTilemapCells);
+    if (!isSetTilemapCellsParams(params)) {
+      throw new InvalidParamsError(
+        "setTilemapCells takes { asset: string, layer: string | number, cells: [index, tile, …] } of non-negative integers.",
+      );
+    }
+    this.#requireOpen(SceneMethod.setTilemapCells);
+    return setTilemapCells(this.#requireApp(), mirror.scene?.roots ?? [], params);
+  }
+
+  /**
+   * `setEditorLines`: draws a set of the editor's world-space lines over the view, replacing the
+   * set of the same id. Kept across scene opens; a page load starts with none.
+   *
+   * @param params - `{ id, lines, color? }`.
+   * @returns `null`.
+   */
+  #setEditorLines(params: unknown): null {
+    this.#requireMirror(SceneMethod.setEditorLines);
+    if (!isSetEditorLinesParams(params)) {
+      throw new InvalidParamsError(
+        "setEditorLines takes { id: string, lines: number[] (six per segment), color?: [r, g, b, a?] from 0 to 1 }.",
+      );
+    }
+    if (!this.#lineSets.has(params.id) && this.#lineSets.size >= EDITOR_LINES_MAX_SETS) {
+      throw new InvalidParamsError(
+        `The view draws at most ${String(EDITOR_LINES_MAX_SETS)} line sets; clear one first.`,
+      );
+    }
+    const [r = 0, g = 0, b = 0, a = 1] = params.color ?? [];
+    const color = params.color === undefined ? DEFAULT_LINE_COLOR : { r, g, b, a };
+    this.#lineSets.set(params.id, { lines: params.lines, color });
+    this.#lines?.set(params.id, params.lines, color);
+    return null;
+  }
+
+  /**
+   * `clearEditorLines`: removes one line set, or every set.
+   *
+   * @param params - `{ id? }`.
+   * @returns `null`.
+   */
+  #clearEditorLines(params: unknown): null {
+    this.#requireMirror(SceneMethod.clearEditorLines);
+    if (!isClearEditorLinesParams(params)) {
+      throw new InvalidParamsError("clearEditorLines takes { id?: string }.");
+    }
+    const id = params.id ?? null;
+    if (id === null) {
+      this.#lineSets.clear();
+    } else {
+      this.#lineSets.delete(id);
+    }
+    this.#lines?.clear(id);
     return null;
   }
 

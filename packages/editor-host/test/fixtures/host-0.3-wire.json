@@ -22,7 +22,17 @@
           "major": 0,
           "minor": 3
         },
-        "capabilities": ["heartbeat", "gizmos", "screenshot", "viewMode2d", "pick2d", "grid", "spriteAnimation"],
+        "capabilities": [
+          "heartbeat",
+          "gizmos",
+          "screenshot",
+          "viewMode2d",
+          "pick2d",
+          "grid",
+          "tilemapCells",
+          "editorLines",
+          "spriteAnimation"
+        ],
         "hostKind": "scene"
       }
     },
@@ -1397,6 +1407,42 @@
       "params": {
         "visible": true,
         "size": 0.5
+      }
+    },
+    "setTilemapCells": {
+      "jsonrpc": "2.0",
+      "id": 35,
+      "method": "setTilemapCells",
+      "params": {
+        "asset": "levels/level-1.tilemap.json",
+        "layer": "Ground",
+        "cells": [0, 3, 1, 3, 42, 0]
+      }
+    },
+    "setTilemapCellsResponse": {
+      "jsonrpc": "2.0",
+      "id": 35,
+      "result": {
+        "tilemaps": 1,
+        "changed": 3
+      }
+    },
+    "setEditorLines": {
+      "jsonrpc": "2.0",
+      "id": 36,
+      "method": "setEditorLines",
+      "params": {
+        "id": "collider-outlines",
+        "lines": [0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0],
+        "color": [0.55, 1, 0.55, 1]
+      }
+    },
+    "clearEditorLines": {
+      "jsonrpc": "2.0",
+      "id": 37,
+      "method": "clearEditorLines",
+      "params": {
+        "id": "collider-outlines"
       }
     },
     "closeScene": {

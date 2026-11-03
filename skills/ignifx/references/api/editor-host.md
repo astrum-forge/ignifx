@@ -227,6 +227,20 @@ Its asset type, as the manifest records it: `"scene"` for a scene or a prefab.
 
 ***
 
+### ClearEditorLinesParams
+
+The parameters of `clearEditorLines`.
+
+#### Properties
+
+##### id?
+
+> `readonly` `optional` **id?**: `string`
+
+The set to remove; left out, every set is removed. An unknown id is not an error.
+
+***
+
 ### ColliderOutlineRecord
 
 One collider's outline in the answer to `getColliderOutlines`.
@@ -1055,7 +1069,7 @@ Matches the response to this request.
 
 ###### Inherited from
 
-[`RpcRequest`](#rpcrequest).[`id`](#id-2)
+[`RpcRequest`](#rpcrequest).[`id`](#id-3)
 
 ##### jsonrpc
 
@@ -2179,7 +2193,7 @@ Matches the response to this request.
 
 ###### Inherited from
 
-[`RpcRequest`](#rpcrequest).[`id`](#id-2)
+[`RpcRequest`](#rpcrequest).[`id`](#id-3)
 
 ##### jsonrpc
 
@@ -3020,6 +3034,33 @@ Whether the shader clock (`time` in shader materials and custom post effects) ru
 
 ***
 
+### SetEditorLinesParams
+
+The parameters of `setEditorLines`.
+
+#### Properties
+
+##### color?
+
+> `readonly` `optional` **color?**: readonly `number`[]
+
+The colour, `[r, g, b]` or `[r, g, b, a]` from 0 to 1. Defaults to a light green.
+
+##### id
+
+> `readonly` **id**: `string`
+
+The set's id, chosen by the editor (`"collider-outlines"`); a later call with it replaces the set.
+
+##### lines
+
+> `readonly` **lines**: readonly `number`[]
+
+World-space segments in metres: every six numbers are one segment, the `x, y, z` of its two
+ends, as `getColliderOutlines` answers them. Empty draws nothing but keeps the id.
+
+***
+
 ### SetGameViewParams
 
 The parameters of `setGameView`.
@@ -3183,6 +3224,57 @@ The path into `settings`; `path[0]` is the setting's key.
 > `readonly` `optional` **value?**: [`JsonValue`](#jsonvalue)
 
 The new value; absent removes the key.
+
+***
+
+### SetTilemapCellsParams
+
+The parameters of `setTilemapCells`.
+
+#### Properties
+
+##### asset
+
+> `readonly` **asset**: `string`
+
+The tilemap document's asset address, as a `Tilemap`'s `map` reference names it
+(`"levels/level-1.tilemap.json"`). Every `Tilemap` of the open scene loaded from it is written.
+
+##### cells
+
+> `readonly` **cells**: readonly `number`[]
+
+Flat `[index, tile, index, tile, …]` pairs, in the file's order: `index` is row-major with the
+**top** row first, as the document's `tiles` array, and `tile` a global tile id, `0` to clear.
+Applied in order, so a cell named twice ends with the later tile. At most
+[TILEMAP\_CELLS\_MAX\_NUMBERS](#tilemap_cells_max_numbers) numbers.
+
+##### layer
+
+> `readonly` **layer**: `string` \| `number`
+
+The layer: its name in the document, or its index (`0` at the back).
+
+***
+
+### SetTilemapCellsResult
+
+The answer to `setTilemapCells`.
+
+#### Properties
+
+##### changed
+
+> `readonly` **changed**: `number`
+
+How many cell writes changed a tile, summed over those tilemaps.
+
+##### tilemaps
+
+> `readonly` **tilemaps**: `number`
+
+How many live `Tilemap`s were written: those of the open scene whose `map` is the asset and has
+loaded. `0` when none shows it yet, which is not an error.
 
 ***
 
@@ -3538,7 +3630,7 @@ A log line's severity: the engine's `LogLevel`.
 > **NullResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<`null`\>
 
 The success answer of the `SceneMethod`s that return nothing: `closeScene`, `setGizmo`, `frame`,
-`setViewMode`, `setAnimateMaterials` and `setGrid`.
+`setViewMode`, `setAnimateMaterials`, `setGrid`, `setEditorLines` and `clearEditorLines`.
 
 ***
 
@@ -3777,7 +3869,7 @@ The union of the names in `SceneOpKind`.
 
 ### SceneRequest
 
-> **SceneRequest** = [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`openScene`](#openscene), [`OpenSceneParams`](#opensceneparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`closeScene`](#closescene), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`applyOps`](#applyops), [`ApplyOpsParams`](#applyopsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`readBack`](#readback), [`ReadBackParams`](#readbackparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`select`](#select), [`EntitySelection`](#entityselection)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setGizmo`](#setgizmo), [`SetGizmoParams`](#setgizmoparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`frame`](#frame-1), [`FrameParams`](#frameparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`pick`](#pick), [`PickParams`](#pickparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`screenshot`](#screenshot-2), [`ScreenshotParams`](#screenshotparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`getSchemas`](#getschemas), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`describeSettings`](#describesettings), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setViewMode`](#setviewmode), [`SetViewModeParams`](#setviewmodeparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setAnimateMaterials`](#setanimatematerials), [`SetAnimateMaterialsParams`](#setanimatematerialsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`getColliderOutlines`](#getcollideroutlines), [`EntitySelection`](#entityselection)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`sampleAnimation`](#sampleanimation), [`SampleAnimationParams`](#sampleanimationparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`sampleSpriteAnimation`](#samplespriteanimation), [`SampleSpriteAnimationParams`](#samplespriteanimationparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setGrid`](#setgrid), [`SetGridParams`](#setgridparams)\>
+> **SceneRequest** = [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`openScene`](#openscene), [`OpenSceneParams`](#opensceneparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`closeScene`](#closescene), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`applyOps`](#applyops), [`ApplyOpsParams`](#applyopsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`readBack`](#readback), [`ReadBackParams`](#readbackparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`select`](#select), [`EntitySelection`](#entityselection)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setGizmo`](#setgizmo), [`SetGizmoParams`](#setgizmoparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`frame`](#frame-1), [`FrameParams`](#frameparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`pick`](#pick), [`PickParams`](#pickparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`screenshot`](#screenshot-2), [`ScreenshotParams`](#screenshotparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`getSchemas`](#getschemas), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`describeSettings`](#describesettings), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setViewMode`](#setviewmode), [`SetViewModeParams`](#setviewmodeparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setAnimateMaterials`](#setanimatematerials), [`SetAnimateMaterialsParams`](#setanimatematerialsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`getColliderOutlines`](#getcollideroutlines), [`EntitySelection`](#entityselection)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`sampleAnimation`](#sampleanimation), [`SampleAnimationParams`](#sampleanimationparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`sampleSpriteAnimation`](#samplespriteanimation), [`SampleSpriteAnimationParams`](#samplespriteanimationparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setGrid`](#setgrid), [`SetGridParams`](#setgridparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setTilemapCells`](#settilemapcells), [`SetTilemapCellsParams`](#settilemapcellsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setEditorLines`](#seteditorlines), [`SetEditorLinesParams`](#seteditorlinesparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`clearEditorLines`](#cleareditorlines), [`ClearEditorLinesParams`](#cleareditorlinesparams)\>
 
 Editor → scene host: one of the `SceneMethod`s. `closeScene`, `getSchemas` and `describeSettings`
 take no parameters.
@@ -3837,6 +3929,14 @@ Sets one entity property.
 > **SetGameViewResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<[`GameViewState`](#gameviewstate)\>
 
 The success answer to `setGameView`.
+
+***
+
+### SetTilemapCellsResponse
+
+> **SetTilemapCellsResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<[`SetTilemapCellsResult`](#settilemapcellsresult)\>
+
+The success answer to `setTilemapCells`.
 
 ***
 
@@ -4006,6 +4106,31 @@ origin, the data is this shape, and exactly one port is attached.
 const channel = new MessageChannel();
 frame.contentWindow?.postMessage({ type: EDITOR_CONNECT_MESSAGE_TYPE }, "http://127.0.0.1:5173", [channel.port2]);
 ```
+
+***
+
+### EDITOR\_LINES\_MAX\_ID\_LENGTH
+
+> `const` **EDITOR\_LINES\_MAX\_ID\_LENGTH**: `256` = `256`
+
+The longest line set id, in UTF-16 code units.
+
+***
+
+### EDITOR\_LINES\_MAX\_NUMBERS
+
+> `const` **EDITOR\_LINES\_MAX\_NUMBERS**: `600000` = `600_000`
+
+The most numbers the `lines` of one `setEditorLines` request may hold: 100 000 segments.
+
+***
+
+### EDITOR\_LINES\_MAX\_SETS
+
+> `const` **EDITOR\_LINES\_MAX\_SETS**: `64` = `64`
+
+The most line sets the view draws at once; a `setEditorLines` for a new id past it fails with
+`invalidParams`.
 
 ***
 
@@ -4194,6 +4319,15 @@ The optional features a host lists in its `ready` result.
 
 #### Type Declaration
 
+##### editorLines
+
+> `readonly` **editorLines**: `"editorLines"` = `"editorLines"`
+
+The scene host answers `setEditorLines` and `clearEditorLines`: it draws the editor's own line
+segments (collider outlines, handles) over the view in both view modes, never in a game view or
+the play view. Additive in 0.3; without it, the scene host answers both with
+`RpcErrorCode.methodNotFound`.
+
 ##### gameView
 
 > `readonly` **gameView**: `"gameView"` = `"gameView"`
@@ -4298,6 +4432,14 @@ The scene host answers `renderThumbnail`: a model or prefab asset rendered on it
 (`RenderViewMethod`). From engine ask E8 (additive in 0.3); without it, the host answers it with
 `RpcErrorCode.methodNotFound`.
 
+##### tilemapCells
+
+> `readonly` **tilemapCells**: `"tilemapCells"` = `"tilemapCells"`
+
+The scene host answers `setTilemapCells`: it writes cells into the open scene's live tilemaps,
+so a tilemap editor's painting shows without a save. Additive in 0.3; without it, the scene
+host answers `setTilemapCells` with `RpcErrorCode.methodNotFound`.
+
 ##### viewMode2d
 
 > `readonly` **viewMode2d**: `"viewMode2d"` = `"viewMode2d"`
@@ -4309,8 +4451,9 @@ The scene host accepts `setViewMode` with `"2d"`: a 2D editor camera and planar 
 The play controls send `"heartbeat"`, `"playControls"`, `"logRelay"` and `"queryRuntime"`, plus
 `"screenshot"` when the game has a canvas and `"sendInput"` when it has `app.input`. The scene
 host sends `"heartbeat"` and whichever of `"gizmos"`, `"screenshot"`, `"viewMode2d"`,
-`"pick2d"`, `"gameView"`, `"thumbnails"`, `"grid"` and `"spriteAnimation"` it supports; every `SceneMethod` not tied
-to one of them is required of a 0.3 scene host.
+`"pick2d"`, `"gameView"`, `"thumbnails"`, `"grid"`, `"tilemapCells"`, `"editorLines"` and
+`"spriteAnimation"` it supports; every `SceneMethod` not tied to one of them is required of a
+0.3 scene host.
 
 ***
 
@@ -4751,6 +4894,13 @@ Editor → scene host: the methods of protocol 0.3, answered after `ready`.
 
 Applies one command's ops to the open scene, in order. Answers [ApplyOpsResult](#applyopsresult).
 
+##### clearEditorLines
+
+> `readonly` **clearEditorLines**: `"clearEditorLines"` = `"clearEditorLines"`
+
+Removes one set of lines `setEditorLines` drew, or every set. Needs `HostCapability.editorLines`.
+Answers `null`. Additive in 0.3.
+
 ##### closeScene
 
 > `readonly` **closeScene**: `"closeScene"` = `"closeScene"`
@@ -4838,6 +4988,14 @@ Turns the editor's "animate materials" toggle on or off: whether the shader cloc
 scene view. Answers `null`. The host starts with it on, after every load. A host from before it
 answers `RpcErrorCode.methodNotFound`. Additive in 0.3.
 
+##### setEditorLines
+
+> `readonly` **setEditorLines**: `"setEditorLines"` = `"setEditorLines"`
+
+Draws a set of world-space line segments over the view, such as collider outlines or handles,
+replacing the set of the same id. Needs `HostCapability.editorLines`. Answers `null`. Additive
+in 0.3.
+
 ##### setGizmo
 
 > `readonly` **setGizmo**: `"setGizmo"` = `"setGizmo"`
@@ -4850,6 +5008,14 @@ Sets the gizmo's mode, space and snapping. Needs `HostCapability.gizmos`. Answer
 
 Shows or hides the view's grid and sets its spacing (engine ask E31). Needs
 `HostCapability.grid`. Answers `null`. Additive in 0.3.
+
+##### setTilemapCells
+
+> `readonly` **setTilemapCells**: `"setTilemapCells"` = `"setTilemapCells"`
+
+Writes cells of a tilemap asset into every live `Tilemap` of the open scene that shows it, so
+painting is seen at once, without a save or a reopen. The file on disk is not touched. Needs
+`HostCapability.tilemapCells`. Answers [SetTilemapCellsResult](#settilemapcellsresult). Additive in 0.3.
 
 ##### setViewMode
 
@@ -5091,6 +5257,15 @@ The largest side, in pixels, of a thumbnail.
 
 ***
 
+### TILEMAP\_CELLS\_MAX\_NUMBERS
+
+> `const` **TILEMAP\_CELLS\_MAX\_NUMBERS**: `2000000` = `2_000_000`
+
+The most numbers the `cells` of one `setTilemapCells` request may hold: a million cells. A request
+with more fails with `invalidParams`.
+
+***
+
 ### TRANSFORM\_DRAGGING\_INTERVAL\_MS
 
 > `const` **TRANSFORM\_DRAGGING\_INTERVAL\_MS**: `50` = `50`
@@ -5210,6 +5385,28 @@ The received `params`.
 `value is AssetReloadedParams`
 
 True for `{ address, type, entities }` with a non-empty address and type.
+
+***
+
+### isClearEditorLinesParams()
+
+> **isClearEditorLinesParams**(`value`): `value is ClearEditorLinesParams`
+
+Checks the parameters of `clearEditorLines`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `params`.
+
+#### Returns
+
+`value is ClearEditorLinesParams`
+
+True for an object whose `id`, if present, is a line set id.
 
 ***
 
@@ -6402,6 +6599,29 @@ True for a boolean `enabled`.
 
 ***
 
+### isSetEditorLinesParams()
+
+> **isSetEditorLinesParams**(`value`): `value is SetEditorLinesParams`
+
+Checks the parameters of `setEditorLines`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `params`.
+
+#### Returns
+
+`value is SetEditorLinesParams`
+
+True for an id, a list of finite numbers whose length is a multiple of six and at most
+[EDITOR\_LINES\_MAX\_NUMBERS](#editor_lines_max_numbers), and an optional colour of three or four numbers from 0 to 1.
+
+***
+
 ### isSetGameViewParams()
 
 > **isSetGameViewParams**(`value`): `value is SetGameViewParams`
@@ -6466,6 +6686,51 @@ The received `params`.
 
 True for an object whose `visible`, if present, is a boolean and whose `size`, if
 present, is a number from [GRID\_MIN\_SIZE](#grid_min_size) to [GRID\_MAX\_SIZE](#grid_max_size).
+
+***
+
+### isSetTilemapCellsParams()
+
+> **isSetTilemapCellsParams**(`value`): `value is SetTilemapCellsParams`
+
+Checks the parameters of `setTilemapCells`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `params`.
+
+#### Returns
+
+`value is SetTilemapCellsParams`
+
+True for a non-empty `asset`, a layer name or index, and an even-length list of at most
+[TILEMAP\_CELLS\_MAX\_NUMBERS](#tilemap_cells_max_numbers) non-negative integers.
+
+***
+
+### isSetTilemapCellsResult()
+
+> **isSetTilemapCellsResult**(`value`): `value is SetTilemapCellsResult`
+
+Checks the result of `setTilemapCells`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `result`.
+
+#### Returns
+
+`value is SetTilemapCellsResult`
+
+True for two counts.
 
 ***
 

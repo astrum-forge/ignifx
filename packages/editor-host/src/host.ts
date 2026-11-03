@@ -182,6 +182,8 @@ export async function startEditorHost(options: EditorHostOptions): Promise<Edito
         HostCapability.gameView,
         ...(canRenderThumbnails(options) ? [HostCapability.thumbnails] : []),
         HostCapability.grid,
+        HostCapability.tilemapCells,
+        HostCapability.editorLines,
         HostCapability.spriteAnimation,
       ]
     : [

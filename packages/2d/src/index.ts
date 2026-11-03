@@ -66,6 +66,7 @@ export {
   type SpriteAsset,
   type SpriteAtlasAssetLiteHandles,
   type SpriteFrameInfo,
+  type SpriteFrameTrim,
 } from "./atlas/sprite-atlas-asset.js";
 
 // camera — the 2D camera and the reference follow script.
