@@ -7,6 +7,9 @@ import {
   RENDERING_QUALITIES,
   renderingQualityPreset,
   renderingSettingsSchema,
+  resolveAmbientOcclusion,
+  resolveTaaSettings,
+  toAutoExposureOptions,
 } from "../../src/render/rendering-settings.js";
 import { createRenderHarness } from "./support/render-harness.js";
 import type { RenderHarness } from "./support/render-harness.js";
@@ -77,6 +80,7 @@ describe("rendering.quality", () => {
     expect(high.hdr).toBe(false);
     expect(high.taa).toMatchObject({ enabled: false, blend: 0.2, clamp: true });
     expect(high.ambientOcclusion).toMatchObject({ enabled: true, quality: "half", radius: 0.5 });
+    expect(effective({ quality: "low", ambientOcclusion: { enabled: false } }).ambientOcclusion.enabled).toBe(false);
     // Tuning alone is not a switch: the tier still turns TAA on.
     expect(effective({ quality: "medium", taa: { blend: 0.3 } }).taa).toMatchObject({ enabled: true, blend: 0.3 });
   });
@@ -104,5 +108,21 @@ describe("rendering.quality", () => {
       current.dispose();
       harness = null;
     }
+  });
+
+  it("fills the records a tier reads from when the project left them out", () => {
+    expect(resolveAmbientOcclusion(undefined)).toMatchObject({ enabled: false, quality: "half" });
+    const { taa: _omitted, ...withoutTaa } = defaultRenderingSettings();
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- a section built before `taa` existed.
+    expect(resolveTaaSettings(withoutTaa as RenderingSettings).enabled).toBe(false);
+    const partial = { ...defaultRenderingSettings(), hdr: true, autoExposure: { enabled: true } };
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- the store's shallow merge leaves the rest out.
+    expect(toAutoExposureOptions(partial as unknown as RenderingSettings)).toEqual({
+      minEv: -6,
+      maxEv: 6,
+      speedUp: 2,
+      speedDown: 1,
+      compensation: 0,
+    });
   });
 });
