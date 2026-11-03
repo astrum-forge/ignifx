@@ -37,6 +37,7 @@ import {
 import {
   assertRenderTextureSize,
   bindFrameCameras,
+  EDITOR_ONLY_METADATA_KEY,
   RenderTextureImpl,
   renderTextureUnusableError,
 } from "./render-texture.js";
@@ -615,7 +616,7 @@ export class RendererImpl implements Renderer {
       this.#assertRenderLoop(member);
       const create = await loadRenderTextureFactory();
       this.#assertRenderLoop(member);
-      return create(this.engine, this.scene, width, height);
+      return create(this.engine, this.scene, width, height, EDITOR_ONLY_METADATA_KEY);
     },
     release: (texture) => {
       this.#renderTextures.delete(texture);

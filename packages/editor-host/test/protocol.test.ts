@@ -51,6 +51,7 @@ describe("the protocol mirror", () => {
       sendInput: "sendInput",
       gameView: "gameView",
       thumbnails: "thumbnails",
+      grid: "grid",
     });
     expect(page.RenderViewMethod).toEqual({
       setGameView: "setGameView",
@@ -59,6 +60,30 @@ describe("the protocol mirror", () => {
     });
     expect(page.QUERY_RUNTIME_MAX_COMPONENTS).toBe(64);
     expect(page.SEND_INPUT_MAX_EVENTS).toBe(64);
+  });
+
+  it("checks setGrid's optional visible and size, and the size's range", () => {
+    expect(page.SceneMethod.setGrid).toBe("setGrid");
+    expect(page.GRID_MIN_SIZE).toBe(0.001);
+    expect(page.GRID_MAX_SIZE).toBe(1000);
+    const valid: unknown[] = [{}, { visible: false }, { size: 0.5 }, { visible: true, size: 1000 }, { size: 0.001 }];
+    const invalid: unknown[] = [
+      null,
+      [],
+      { visible: "yes" },
+      { size: 0 },
+      { size: -1 },
+      { size: 1000.5 },
+      { size: Number.NaN },
+      { size: Number.POSITIVE_INFINITY },
+      { size: "1" },
+    ];
+    for (const params of valid) {
+      expect(page.isSetGridParams(params), JSON.stringify(params)).toBe(true);
+    }
+    for (const params of invalid) {
+      expect(page.isSetGridParams(params), JSON.stringify(params)).toBe(false);
+    }
   });
 
   it("recognises well-formed envelopes only", () => {

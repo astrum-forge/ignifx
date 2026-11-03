@@ -205,6 +205,8 @@ Design and rationale: `docs/plan/2026-09-terrain-particles-shaders.md` §3 and A
 - **Lite gaps.** Lite has no task removal and no texture readback. `dispose()` splices the task out of the frame graph's `_tasks` before disposing it (a disposed render task throws from `record()` on the next rebuild), and `readPixels` copies the target's `_colorTexture` through `engine._device` into a mapped buffer. Both are read from Lite 1.34.0 and pinned by `test/render/render-texture.browser.test.ts` at MSAA 1 and 4.
 - **Cost.** The module is loaded on the first render or read, so a game that never uses one ships none of it (§2.5). A texture costs nothing until then; after that, its target, and one render pass in each frame it is filled.
 
+**Editor-only meshes.** A render-scene mesh whose Lite `metadata[EDITOR_ONLY_METADATA_KEY]` is `true` (an editor's grid) draws in the main view but never in a render texture: the pass hides such meshes around its own `execute` and shows them again, after the main pass has drawn, so the main view never flickers.
+
 ### 2.12 Scene inputs
 
 Screen-space effects (TAA, GTAO, contact shadows, SSGI; GI plan steps G5–G11) read the scene's depth, normals and motion from one shared geometry pass, `src/lite/gpu/scene-inputs.ts` (GI plan step G4, 2026-11-02). It is internal: an effect calls `rendererInternals(app.renderer).acquireSceneInputs()`, gets a lease, and calls its `release()` when it is disposed. The first acquire loads the chunk and adds the pass; the last release removes and disposes it. An app whose effects never ask loads none of it and its frame graph has none of these tasks (`CONSTITUTION.md` §2.5). Under the null engine `acquireSceneInputs()` returns `null`.

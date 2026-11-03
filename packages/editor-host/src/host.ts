@@ -181,6 +181,7 @@ export async function startEditorHost(options: EditorHostOptions): Promise<Edito
         HostCapability.hotReloadDefaults,
         HostCapability.gameView,
         ...(canRenderThumbnails(options) ? [HostCapability.thumbnails] : []),
+        HostCapability.grid,
       ]
     : [HostCapability.heartbeat, HostCapability.logRelay, HostCapability.hotReloadDefaults];
   let channel: Channel | null = null;

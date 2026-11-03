@@ -19,6 +19,7 @@ import {
   isReadBackParams,
   isSetAnimateMaterialsParams,
   isSetGizmoParams,
+  isSetGridParams,
   isSetViewModeParams,
   PickUnit,
   RenderViewMethod,
@@ -39,8 +40,10 @@ import { applyDefaults, DefaultsTracker, instancesHolding } from "./defaults.js"
 import { DocumentMirror } from "./document.js";
 import { EditorCamera2D, EYE_DISTANCE_2D } from "./editor-camera-2d.js";
 import { EDITOR_CAMERA_FOV, EditorCamera } from "./editor-camera.js";
+import { EditorGrid } from "./editor-grid.js";
 import { GameView } from "./game-view.js";
 import { GizmoDragRelay } from "./gizmo-drag.js";
+import { DEFAULT_GRID_SIZE, groundGridPlacement, screenGridPlacement } from "./grid.js";
 import { applyOps, reloadInstance } from "./ops.js";
 import { sampleAnimation } from "./sample-animation.js";
 import { schemaSet } from "./schemas.js";
@@ -63,6 +66,7 @@ import type { RequestHandler } from "../channel.js";
 import type { EditorAssetChange, PendingReload } from "./asset-reload.js";
 import type { ChangedDefaults } from "./defaults.js";
 import type { ViewClick } from "./editor-camera.js";
+import type { GridPlacement } from "./grid.js";
 import type { PickRayMembers } from "./view-math.js";
 import type { EditorView, ViewDrag, WorldBounds } from "../lite/gizmos.js";
 import type {
@@ -108,6 +112,14 @@ interface BackingPoint {
   readonly x: number;
   /** From the top edge. */
   readonly y: number;
+}
+
+/** The grid's settings, as `setGrid` last set them. */
+interface GridSettings {
+  /** Whether it draws. */
+  readonly visible: boolean;
+  /** The minor lines' spacing, in metres. */
+  readonly size: number;
 }
 
 /** The gizmo's settings, as `setGizmo` last set them. */
@@ -162,6 +174,11 @@ export class SceneHost {
   #selection: readonly string[] = [];
 
   #gizmo: GizmoSettings = { mode: GizmoMode.translate, space: GizmoSpace.world, snap: null };
+
+  /** The script that moves the grid, on the `editor` scene's `Scene Grid` entity. */
+  #grid: EditorGrid | null = null;
+
+  #gridSettings: GridSettings = { visible: true, size: DEFAULT_GRID_SIZE };
 
   readonly #drag: GizmoDragRelay;
 
@@ -236,6 +253,9 @@ export class SceneHost {
         return thumbnails.render(params);
       });
     }
+    if (has(HostCapability.grid)) {
+      methods.set(SceneMethod.setGrid, (params) => this.#setGrid(params));
+    }
     // The channel answers one request at a time; an asset reload's rebuild queues with them.
     this.methods = new Map(
       [...methods].map(([name, handler]) => [name, async (params: unknown) => this.#serial(() => handler(params))]),
@@ -252,7 +272,7 @@ export class SceneHost {
   }
 
   /**
-   * Prepares the app before it starts: the persistent `editor` scene with the editor camera, and
+   * Prepares the app before it starts: the persistent `editor` scene with the editor camera and grid, and
    * the log, error and hot-reload relays.
    *
    * @param app - The scene view's app, created and not yet started.
@@ -262,7 +282,7 @@ export class SceneHost {
     this.#mirror = new DocumentMirror(app);
     const scene = app.world.createScene(EDITOR_SCENE_NAME, { persistent: true });
     this.#editorScene = scene;
-    app.registerComponents([EditorCamera, EditorCamera2D]);
+    app.registerComponents([EditorCamera, EditorCamera2D, EditorGrid]);
     const eye = app.world.createEntity("Editor Camera", { scene });
     this.#eye = eye.addComponent(Camera, {
       fov: EDITOR_CAMERA_FOV,
@@ -286,6 +306,11 @@ export class SceneHost {
     twoD.attach(this.#eye, isCamera2DLike(camera2D) ? camera2D : null);
     twoD.pixelsPerUnit = (): number => twoDServiceOf(app)?.pixelsPerUnit ?? DEFAULT_PIXELS_PER_UNIT;
     this.#camera2D = twoD;
+    if (this.methods.has(SceneMethod.setGrid)) {
+      const grid = app.world.createEntity("Scene Grid", { scene }).addComponent(EditorGrid);
+      grid.placement = (): GridPlacement | null => this.#gridPlacement();
+      this.#grid = grid;
+    }
     this.#cleanups.push(
       relayAppReports(app, {
         log: (params): void => {
@@ -312,12 +337,18 @@ export class SceneHost {
     const app = this.#requireApp();
     this.#canvas = canvas;
     if (canvas !== null && !app.isHeadless && this.methods.has(SceneMethod.setGizmo) && isDomCanvas(canvas)) {
-      const view = createEditorView(app.lite, await app.renderer.openOverlay(), canvas);
+      const overlay = await app.renderer.openOverlay();
+      const view = createEditorView(app.lite, overlay, canvas);
       view.onDrag((phase, drag) => {
         this.#onDrag(phase, drag);
       });
       this.#view = view;
       this.#applyGizmo();
+      if (this.methods.has(SceneMethod.setGrid) && this.#grid !== null) {
+        // Loaded on demand: the grid's shader code stays out of the host's first chunk.
+        const { createEditorGrid } = await import("../lite/grid.js");
+        this.#grid.view = createEditorGrid(app.lite, overlay);
+      }
       const onClick = (click: ViewClick): void => {
         this.#onClick(click).catch((error: unknown) => {
           const params: HostErrorParams = {
@@ -472,6 +503,10 @@ export class SceneHost {
     }
     for (const cleanup of this.#cleanups.splice(0)) {
       cleanup();
+    }
+    if (this.#grid !== null) {
+      this.#grid.view?.dispose();
+      this.#grid.view = null;
     }
     this.#view?.dispose();
     this.#view = null;
@@ -705,6 +740,40 @@ export class SceneHost {
     }
     this.#requireApp().renderer.animateMaterialsInEditMode = params.enabled;
     return null;
+  }
+
+  /**
+   * `setGrid`: shows or hides the view's grid and sets its spacing. A field left out takes its
+   * default.
+   *
+   * @param params - `{ visible?, size? }`.
+   * @returns `null`.
+   */
+  #setGrid(params: unknown): null {
+    this.#requireMirror(SceneMethod.setGrid);
+    if (!isSetGridParams(params)) {
+      throw new InvalidParamsError("setGrid takes { visible?: boolean, size?: number from 0.001 to 1000 }.");
+    }
+    this.#gridSettings = { visible: params.visible ?? true, size: params.size ?? DEFAULT_GRID_SIZE };
+    return null;
+  }
+
+  /**
+   * Where the grid draws this frame: on the ground under the 3D editor camera, or over the 2D view.
+   *
+   * @returns The placement, or `null` while the grid is hidden.
+   */
+  #gridPlacement(): GridPlacement | null {
+    const { visible, size } = this.#gridSettings;
+    if (!visible) {
+      return null;
+    }
+    const camera2D = this.#camera2D;
+    if (this.#viewMode === ViewMode.twoD && camera2D !== null) {
+      return screenGridPlacement(camera2D.view(), size);
+    }
+    const eye = this.#eye;
+    return eye === null ? null : groundGridPlacement(eye.transform.position, size, eye.far);
   }
 
   /**
@@ -1061,7 +1130,7 @@ export class SceneHost {
    * @returns The set.
    */
   #schemas(): SchemaSet {
-    return schemaSet(this.#requireApp(), new Set([EditorCamera.typeId, EditorCamera2D.typeId]));
+    return schemaSet(this.#requireApp(), new Set([EditorCamera.typeId, EditorCamera2D.typeId, EditorGrid.typeId]));
   }
 
   /**

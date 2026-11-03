@@ -22,7 +22,7 @@
           "major": 0,
           "minor": 3
         },
-        "capabilities": ["heartbeat", "gizmos", "screenshot", "viewMode2d", "pick2d"],
+        "capabilities": ["heartbeat", "gizmos", "screenshot", "viewMode2d", "pick2d", "grid"],
         "hostKind": "scene"
       }
     },
@@ -1388,6 +1388,15 @@
           }
         ],
         "truncated": false
+      }
+    },
+    "setGrid": {
+      "jsonrpc": "2.0",
+      "id": 34,
+      "method": "setGrid",
+      "params": {
+        "visible": true,
+        "size": 0.5
       }
     },
     "closeScene": {

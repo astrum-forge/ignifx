@@ -55,6 +55,7 @@ import {
   isSendInputParams,
   isSendInputResult,
   isSetAnimateMaterialsParams,
+  isSetGridParams,
   isSetGizmoParams,
   isSettingsSet,
   isSetViewModeParams,
@@ -187,6 +188,7 @@ const PARAMS_GUARDS: Readonly<Record<string, (value: unknown) => boolean>> = {
   sendInput: isSendInputParams,
   setViewMode: isSetViewModeParams,
   setAnimateMaterials: isSetAnimateMaterialsParams,
+  setGrid: isSetGridParams,
   getColliderOutlines: isEntitySelection,
   sceneOpened: isSceneOpenedParams,
   sceneOpened2d: isSceneOpenedParams,
@@ -637,8 +639,8 @@ describe("the editor's 0.3 wire fixture, through a live headless host", () => {
       id: wire("setViewMode")["id"],
     });
 
-    // A headless host lists none of `gizmos`, `screenshot`, `gameView` and `thumbnails`, so it does
-    // not have their methods.
+    // A headless host lists none of `gizmos`, `screenshot`, `gameView`, `thumbnails` and `grid`, so
+    // it does not have their methods.
     for (const name of [
       "setGizmo",
       "setGizmoNoSnap",
@@ -647,6 +649,7 @@ describe("the editor's 0.3 wire fixture, through a live headless host", () => {
       "setGameView",
       "gameViewFrame",
       "renderThumbnail",
+      "setGrid",
     ]) {
       // oxlint-disable-next-line no-await-in-loop -- one request at a time
       expect(member(await peer.request(wire(name)), "error")["code"], name).toBe(RpcErrorCode.methodNotFound);

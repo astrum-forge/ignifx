@@ -59,7 +59,7 @@ editor window (ignifx-editor://app)
 ├── <iframe> scene view   http://127.0.0.1:<port>/__ignifx_editor__/
 │     generated module → startEditorHost({ extensions(), scripts, settings, manifest })
 │     owns its app, in edit mode; hostKind "scene"
-│     world: the open document's scene  +  a persistent "editor" scene (camera, never saved)
+│     world: the open document's scene  +  a persistent "editor" scene (camera, grid, never saved)
 └── <iframe> play view    http://localhost:<port>/  (the game's own index.html)
       main.ts → attachEditorPlayControls(app)   (virtual:ignifx/editor; a no-op in builds)
       the game owns its app; hostKind "play"
@@ -68,7 +68,7 @@ each view ◀── MessagePort ──▶ editor     JSON-RPC 2.0, protocol 0.3
    connect (window message, origin-checked) → hello → ready → ping/pong, heartbeat
    scene view: schemasChanged → openScene → applyOps… / readBack / select / pick / frame / setGizmo / screenshot
                / setViewMode / getSchemas / describeSettings (on request only)
-               / setAnimateMaterials / getColliderOutlines / sampleAnimation
+               / setAnimateMaterials / getColliderOutlines / sampleAnimation / setGrid (with a canvas)
                ← sceneOpened, selectionChanged, transformDragging/Dragged, hotReloaded, assetReloaded,
                  hostError, log
    play view:  play / pause / step / stop / playState / playStats / screenshot (with a canvas)
@@ -380,6 +380,13 @@ object `openScene` sends, through `world.loadSceneFile`; `readBack` answers with
   segment), read from `app.physics` / `app.physics2d` by shape, plus `truncated` when the request
   passed 256 entities or the lines 600 000 numbers. Edit mode keeps physics bodies on the
   transforms the editor moves without stepping, so the outlines and physics queries follow.
+- **The grid.** With a canvas the scene host lists the `grid` capability and draws a grid: a
+  ground grid at `y = 0` in 3D view mode (depth-tested, centred under the eye, coarser the higher
+  the eye, faded out before its edge) and a faint grid over the 2D view (one line per layer pixel
+  from zoom 8). `setGrid { visible?, size? }` sets the whole grid each call; a field left out takes
+  its default (`visible: true`, `size: 1` metre, 0.001 to 1000). The grid starts visible at every
+  load, so re-send the editor's state after `ready`. It is never picked or saved, and never in the
+  play view; `screenshot` includes it while it is visible.
 - **A changed asset reloads in place, not the view.** The scene view's page hands every
   `ignifx:asset-changed` event to `host.assetChanged`, which calls `app.assets.reload(address)` for an
   asset the app has loaded, of type `scene` (a scene or prefab), `model`, `mesh`, `material`,

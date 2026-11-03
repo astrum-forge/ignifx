@@ -1046,6 +1046,9 @@ export type EasingName = (typeof EASING_NAMES)[number];
 // @public
 export const EASINGS: Readonly<Record<string, EasingFunction>>;
 
+// @beta
+export const EDITOR_ONLY_METADATA_KEY = "ignifxEditorOnly";
+
 // @public
 export const EMPTY_ASSET_MANIFEST: AssetManifest;
 

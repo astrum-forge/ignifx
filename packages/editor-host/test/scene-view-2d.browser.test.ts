@@ -175,6 +175,7 @@ async function sceneView(): Promise<{ readonly view: EditorHost; readonly opened
     HostCapability.hotReloadDefaults,
     HostCapability.gameView,
     HostCapability.thumbnails,
+    HostCapability.grid,
   ]);
   host = await starting;
   await peer.nextNotification(SceneNotification.schemasChanged);
@@ -290,6 +291,8 @@ describe("the scene view's 2D mode", () => {
     expect(before.main).toBe(before.level);
     const shownByLevel = await view.app.renderer.captureScreenshot();
 
+    // The 2D grid draws over the editor's view only; hidden, the two views must match.
+    await call("setGrid", { visible: false });
     expect(await call("setViewMode", { mode: "2d" })).toBeNull();
     await frames(4);
     const inTwoD = cameras(view);
@@ -306,6 +309,20 @@ describe("the scene view's 2D mode", () => {
     expect(await call("setViewMode", { mode: "3d" })).toBeNull();
     await frames(2);
     expect(cameras(view).main).toBe(inTwoD.level);
+  }, 60_000);
+
+  it("draws the 2D grid over the view, swaps the ground grid out, and hides it on setGrid visible false", async () => {
+    const { view } = await sceneView();
+    await call("setViewMode", { mode: "2d" });
+    await call("frame", { entities: "all" });
+    await frames(4);
+    const ground = view.app.lite.scene.meshes.find((mesh) => mesh.name === "ignifx-editor-grid");
+    expect(ground?.visible).toBe(false);
+    const shown = await view.app.renderer.captureScreenshot();
+    await call("setGrid", { visible: false });
+    await frames(4);
+    const hidden = await view.app.renderer.captureScreenshot();
+    expect(changedPixels(shown.data, hidden.data)).toBeGreaterThan(100);
   }, 60_000);
 
   it("frames the whole level and one sprite by their bounds", async () => {

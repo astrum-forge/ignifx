@@ -93,6 +93,11 @@ export const SceneMethod = {
    * `RpcErrorCode.methodNotFound`. Additive in 0.3.
    */
   sampleAnimation: "sampleAnimation",
+  /**
+   * Shows or hides the view's grid and sets its spacing (engine ask E31). Needs
+   * `HostCapability.grid`. Answers `null`. Additive in 0.3.
+   */
+  setGrid: "setGrid",
 } as const;
 
 /**
@@ -793,6 +798,36 @@ export interface SetAnimateMaterialsParams {
 }
 
 /**
+ * The smallest grid spacing `setGrid` accepts, in metres.
+ *
+ * @public
+ */
+export const GRID_MIN_SIZE = 0.001;
+
+/**
+ * The largest grid spacing `setGrid` accepts, in metres.
+ *
+ * @public
+ */
+export const GRID_MAX_SIZE = 1000;
+
+/**
+ * The parameters of `setGrid`. Each call sets the whole grid: a field left out takes its default.
+ *
+ * @public
+ */
+export interface SetGridParams {
+  /** Whether the grid draws. Defaults to `true`, which is also how the host starts. */
+  readonly visible?: boolean;
+  /**
+   * The spacing of the minor lines, in metres, from {@link GRID_MIN_SIZE} to {@link GRID_MAX_SIZE}.
+   * Defaults to `1`. Every tenth line is a major line; when the lines get too dense to see, the
+   * host draws every tenth one instead.
+   */
+  readonly size?: number;
+}
+
+/**
  * One collider's outline in the answer to `getColliderOutlines`.
  *
  * @public
@@ -1119,11 +1154,12 @@ export type SceneRequest =
   | RpcRequestWithParams<typeof SceneMethod.setViewMode, SetViewModeParams>
   | RpcRequestWithParams<typeof SceneMethod.setAnimateMaterials, SetAnimateMaterialsParams>
   | RpcRequestWithParams<typeof SceneMethod.getColliderOutlines, EntitySelection>
-  | RpcRequestWithParams<typeof SceneMethod.sampleAnimation, SampleAnimationParams>;
+  | RpcRequestWithParams<typeof SceneMethod.sampleAnimation, SampleAnimationParams>
+  | RpcRequestWithParams<typeof SceneMethod.setGrid, SetGridParams>;
 
 /**
  * The success answer of the `SceneMethod`s that return nothing: `closeScene`, `setGizmo`, `frame`,
- * `setViewMode` and `setAnimateMaterials`.
+ * `setViewMode`, `setAnimateMaterials` and `setGrid`.
  *
  * @public
  */
@@ -1657,6 +1693,26 @@ export function isSetViewModeParams(value: unknown): value is SetViewModeParams 
  */
 export function isSetAnimateMaterialsParams(value: unknown): value is SetAnimateMaterialsParams {
   return isRecord(value) && isBoolean(value["enabled"]);
+}
+
+/**
+ * Checks the parameters of `setGrid`.
+ *
+ * @param value - The received `params`.
+ * @returns True for an object whose `visible`, if present, is a boolean and whose `size`, if
+ * present, is a number from {@link GRID_MIN_SIZE} to {@link GRID_MAX_SIZE}.
+ *
+ * @public
+ */
+export function isSetGridParams(value: unknown): value is SetGridParams {
+  if (!isRecord(value)) {
+    return false;
+  }
+  const size = value["size"];
+  return (
+    optionalField(value, "visible", isBoolean) &&
+    (size === undefined || (isFiniteNumber(size) && size >= GRID_MIN_SIZE && size <= GRID_MAX_SIZE))
+  );
 }
 
 /**
