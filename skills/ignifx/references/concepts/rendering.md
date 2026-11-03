@@ -284,7 +284,8 @@ resolution and lets a stack run SSGI. A tier fills `hdr`, `taa.enabled`, `ambien
 and `ambientOcclusion.quality`, but a field you write yourself wins: `settings: { rendering: {
 quality: "high", taa: { enabled: false } } }` is `"high"` without TAA. A stack's `contactShadows`
 or `ssgi` above the tier is skipped; bloom, tone mapping and auto exposure stay as authored. Read
-once at start; `app.renderer` runs the section with the tier applied.
+once at start; `app.renderer` runs the section with the tier applied. The 3D templates' desktop builds run
+at `"high"` with an AgX `Environment` (`src/quality.ts`); their browser builds keep the config.
 
 With `hdr` on, `PostProcessStack.bloom` becomes **HDR bloom**, which replaces the LDR bloom: a
 downsample/upsample glow on the linear colour, before tone mapping, tuned by `bloom.intensity`
