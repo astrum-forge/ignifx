@@ -538,28 +538,40 @@ export class Light extends Component implements ComponentHooks {
   }
 }
 
+/** Every field of {@link LightShadowSettings}; Lite reads all of them when it builds a generator. */
+const SHADOW_SETTING_KEYS = [
+  "enabled",
+  "technique",
+  "mapSize",
+  "bias",
+  "normalBias",
+  "darkness",
+  "cascades",
+  "maxDistance",
+  "stabilizeCascades",
+  "cascadeLambda",
+  "cascadeBlend",
+] as const satisfies readonly (keyof LightShadowSettings)[];
+
 /**
  * Whether a generator built from `applied` still matches the declared `shadows` record.
  *
  * @param applied - The record the generator was built from, or `null` when there is none.
  * @param declared - The component's record now.
  * @returns `true` when every field is the same.
+ *
+ * @internal
  */
-function sameShadowSettings(applied: LightShadowSettings | null, declared: LightShadowSettings): boolean {
-  return (
-    applied !== null &&
-    applied.enabled === declared.enabled &&
-    applied.technique === declared.technique &&
-    applied.mapSize === declared.mapSize &&
-    applied.bias === declared.bias &&
-    applied.normalBias === declared.normalBias &&
-    applied.darkness === declared.darkness &&
-    applied.cascades === declared.cascades &&
-    applied.maxDistance === declared.maxDistance &&
-    applied.stabilizeCascades === declared.stabilizeCascades &&
-    applied.cascadeLambda === declared.cascadeLambda &&
-    applied.cascadeBlend === declared.cascadeBlend
-  );
+export function sameShadowSettings(applied: LightShadowSettings | null, declared: LightShadowSettings): boolean {
+  if (applied === null) {
+    return false;
+  }
+  for (const key of SHADOW_SETTING_KEYS) {
+    if (applied[key] !== declared[key]) {
+      return false;
+    }
+  }
+  return true;
 }
 
 /**
