@@ -23244,7 +23244,7 @@ Exposure multiplier.
 
 ##### toneMapping
 
-> **toneMapping**: `"none"` \| `"standard"` \| `"aces"` \| `"neutral"`
+> **toneMapping**: `"none"` \| `"standard"` \| `"aces"` \| `"neutral"` \| `"agx"`
 
 The tone-mapping curve.
 
@@ -33482,9 +33482,10 @@ The first digit of the range reserved for extensions published outside the `@ign
 
 ### TONE\_MAPPING\_NAMES
 
-> `const` **TONE\_MAPPING\_NAMES**: readonly \[`"none"`, `"standard"`, `"aces"`, `"neutral"`\]
+> `const` **TONE\_MAPPING\_NAMES**: readonly \[`"none"`, `"standard"`, `"aces"`, `"neutral"`, `"agx"`\]
 
-The tone-mapping curves `docs/architecture/07-rendering.md` §2.5 exposes.
+The tone-mapping curves `docs/architecture/07-rendering.md` §2.5 exposes. `"agx"` is ignifx's
+own Lite curve (`./agx-tone-mapping.ts`); the others are Lite's built-ins.
 
 ***
 

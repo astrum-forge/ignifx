@@ -165,6 +165,10 @@ function applyCurve(curve: ToneMappingName, color: MutableRgba): void {
       neutral(color);
       return;
     }
+    case "agx": {
+      agx(color);
+      return;
+    }
     default: {
       assertNever(curve, "tone mapping");
     }
@@ -235,6 +239,52 @@ function neutral(color: MutableRgba): void {
   color.r = color.r * scale + (newPeak - color.r * scale) * blend;
   color.g = color.g * scale + (newPeak - color.g * scale) * blend;
   color.b = color.b * scale + (newPeak - color.b * scale) * blend;
+}
+
+/** The lowest exposure AgX encodes, in EV around 0.18 grey. */
+const AGX_MIN_EV = -12.47393;
+
+/** The highest exposure AgX encodes, in EV around 0.18 grey. */
+const AGX_MAX_EV = 4.026069;
+
+/**
+ * ignifx's AgX (`src/lite/gpu/agx-tone-mapping.ts`, Benjamin Wendt's minimal AgX base): inset,
+ * log2 encode, the polynomial sigmoid, outset, then back to linear with `pow(c, 2.2)`.
+ *
+ * @param color - The exposed colour; overwritten.
+ */
+function agx(color: MutableRgba): void {
+  // The WGSL matrices are built from columns, so each row here reads across them.
+  const r = agxEncode(0.842479062253094 * color.r + 0.0784335999999992 * color.g + 0.0792237451477643 * color.b);
+  const g = agxEncode(0.0423282422610123 * color.r + 0.878468636469772 * color.g + 0.0791661274605434 * color.b);
+  const b = agxEncode(0.0423756549057051 * color.r + 0.0784336 * color.g + 0.879142973793104 * color.b);
+  color.r = agxDecode(1.19687900512017 * r - 0.0980208811401368 * g - 0.0990297440797205 * b);
+  color.g = agxDecode(-0.0528968517574562 * r + 1.15190312990417 * g - 0.0989611768448433 * b);
+  color.b = agxDecode(-0.0529716355144438 * r - 0.0980434501171241 * g + 1.15107367264116 * b);
+}
+
+/**
+ * One inset channel through AgX's log2 encode and its default-contrast sigmoid.
+ *
+ * @param value - The inset channel.
+ * @returns The display-encoded channel.
+ */
+function agxEncode(value: number): number {
+  const ev = Math.min(Math.max(Math.log2(Math.max(value, 1e-10)), AGX_MIN_EV), AGX_MAX_EV);
+  const x = (ev - AGX_MIN_EV) / (AGX_MAX_EV - AGX_MIN_EV);
+  const x2 = x * x;
+  const x4 = x2 * x2;
+  return 15.5 * x4 * x2 - 40.14 * x4 * x + 31.96 * x4 - 6.868 * x2 * x + 0.4298 * x2 + 0.1191 * x - 0.00232;
+}
+
+/**
+ * One outset channel back to linear, as the WGSL does before Lite's encode.
+ *
+ * @param value - The outset channel.
+ * @returns The linear channel.
+ */
+function agxDecode(value: number): number {
+  return Math.max(value, 0) ** GAMMA;
 }
 
 /**

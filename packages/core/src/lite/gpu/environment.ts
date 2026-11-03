@@ -130,11 +130,18 @@ export const FOG_MODES = {
 export type FogMode = keyof typeof FOG_MODES;
 
 /**
- * The tone-mapping curves `docs/architecture/07-rendering.md` §2.5 exposes.
+ * The tone-mapping curves `docs/architecture/07-rendering.md` §2.5 exposes. `"agx"` is ignifx's
+ * own Lite curve (`./agx-tone-mapping.ts`); the others are Lite's built-ins.
  *
  * @public
  */
-export const TONE_MAPPING_NAMES = ["none", "standard", "aces", "neutral"] as const;
+export const TONE_MAPPING_NAMES = ["none", "standard", "aces", "neutral", "agx"] as const;
+
+/**
+ * The `id` of the AgX curve, repeated from `./agx-tone-mapping.ts` so recognising it does not load
+ * that chunk.
+ */
+const AGX_TONE_MAPPING_ID = "ignifx-agx";
 
 /**
  * The union of the tone-mapping curve names.
@@ -443,6 +450,12 @@ export function setSceneImageProcessingOptions(
   if (toneMapping === "none") {
     return setSceneImageProcessing(scene, { exposure, contrast, toneMappingEnabled: false });
   }
+  if (toneMapping === "agx") {
+    // Its own chunk: a project that never names AgX loads none of its WGSL (CONSTITUTION.md §2.5).
+    return import("./agx-tone-mapping.js").then(({ AgxToneMapping }) =>
+      setSceneImageProcessing(scene, { exposure, contrast, toneMappingEnabled: true, toneMapping: AgxToneMapping }),
+    );
+  }
   return setSceneImageProcessing(scene, {
     exposure,
     contrast,
@@ -487,6 +500,8 @@ function curveName(curve: ToneMapping): ToneMappingName {
       return "aces";
     case NeutralToneMapping.id:
       return "neutral";
+    case AGX_TONE_MAPPING_ID:
+      return "agx";
     default:
       return "none";
   }
@@ -495,10 +510,10 @@ function curveName(curve: ToneMapping): ToneMappingName {
 /**
  * Maps an ignifx tone-mapping name onto the Lite curve object.
  *
- * @param name - The curve name; `"none"` is handled by the caller.
+ * @param name - The curve name; `"none"` and the lazily loaded `"agx"` are handled by the caller.
  * @returns The Lite curve.
  */
-function toneMappingCurve(name: Exclude<ToneMappingName, "none">): ToneMapping {
+function toneMappingCurve(name: Exclude<ToneMappingName, "none" | "agx">): ToneMapping {
   switch (name) {
     case "standard":
       return StandardToneMapping;
