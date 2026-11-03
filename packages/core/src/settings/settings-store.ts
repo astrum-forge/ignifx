@@ -143,6 +143,20 @@ export class SettingsStore implements AppSettings {
   }
 
   /**
+   * What the project itself wrote for a section, before the defaults were merged in.
+   *
+   * @remarks
+   * The resolved section cannot tell a field the project wrote from one it left at its default;
+   * `rendering.quality` needs that, because a field the project wrote wins over its tier.
+   *
+   * @param name - The section name.
+   * @returns The project's raw value, or `undefined` when it declared none.
+   */
+  declared(name: string): unknown {
+    return this.#input[name];
+  }
+
+  /**
    * Every registered section, in registration order, for `describeSettings`.
    *
    * @returns The sections, keyed by name.

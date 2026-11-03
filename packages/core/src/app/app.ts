@@ -24,12 +24,7 @@ import { createLogger } from "../log/logger.js";
 import { detectPlatform } from "../platform/platform.js";
 import { probeWebGpuInfo } from "../platform/web/adapter-probe.js";
 import { RendererService, rendererInternals } from "../render/renderer.js";
-import {
-  toAutoExposureOptions,
-  toRendererOptions,
-  toSurfaceFormat,
-  RENDERING_SETTINGS_SECTION,
-} from "../render/rendering-settings.js";
+import { toAutoExposureOptions, toRendererOptions, toSurfaceFormat } from "../render/rendering-settings.js";
 import { EndOfFrameQueue } from "../scheduler/deferred-queue.js";
 import { Scheduler } from "../scheduler/scheduler.js";
 import { SettingsStore } from "../settings/settings-store.js";
@@ -632,7 +627,9 @@ class AppImpl implements App {
     await this.#host.register(list);
     this.#settings.freeze();
     this.assets.applySettings(this.#settings.section<AssetsSettings>("assets"));
-    const rendering = this.#settings.section<RenderingSettings>(RENDERING_SETTINGS_SECTION);
+    const renderer = rendererInternals(this.renderer);
+    // The renderer holds the section with `rendering.quality` applied (`registerRendering`).
+    const rendering = renderer.settings;
     if (this.#mode === "development") {
       // §5: development builds decode Lite's numeric error codes to prose. It is process-global and
       // idempotent, and it needs no device, so it runs before the engine exists. The await is a
@@ -641,7 +638,6 @@ class AppImpl implements App {
       await enableLiteErrorDecoding();
     }
     const canvas = this.#canvas;
-    const renderer = rendererInternals(this.renderer);
     this.#handles =
       canvas === null
         ? createHeadlessEngine()

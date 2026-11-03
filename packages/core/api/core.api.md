@@ -2864,6 +2864,9 @@ export interface Renderer {
 }
 
 // @public
+export const RENDERING_QUALITIES: readonly ["custom", "low", "medium", "high"];
+
+// @public
 export const RENDERING_SETTINGS_SECTION = "rendering";
 
 // @public
@@ -2883,6 +2886,9 @@ export interface RenderingFeatureSettings {
 }
 
 // @public
+export type RenderingQuality = (typeof RENDERING_QUALITIES)[number];
+
+// @public
 export interface RenderingSettings {
     readonly alphaMode: CanvasAlphaMode;
     readonly ambientOcclusion: AmbientOcclusionSettings;
@@ -2894,6 +2900,7 @@ export interface RenderingSettings {
     readonly hdr: boolean;
     readonly maxDevicePixelRatio: number;
     readonly msaaSamples: number;
+    readonly quality: RenderingQuality;
     readonly requiredLimits: Readonly<Record<string, number>>;
     readonly srgb: boolean;
     readonly taa: TaaSettings;
