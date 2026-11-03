@@ -3,6 +3,8 @@ import { createAssetManifest } from "../../src/assets/manifest.js";
 import {
   configureDecoders,
   decoderUrlsFromManifest,
+  DRACO_DECODER_FILE,
+  DRACO_WASM_FILE,
   KTX2_DECODER_FILE,
   KTX2_TRANSCODER_FILES,
   MESHOPT_DECODER_FILE,
@@ -43,13 +45,20 @@ describe("textureContainerOf", () => {
 
 describe("decoderUrlsFromManifest", () => {
   it("points Lite at every decoder file the Vite plugin listed", () => {
-    const files = [KTX2_DECODER_FILE, MESHOPT_DECODER_FILE, ...KTX2_TRANSCODER_FILES.map(([, , file]) => file)];
+    const files = [
+      KTX2_DECODER_FILE,
+      MESHOPT_DECODER_FILE,
+      DRACO_DECODER_FILE,
+      DRACO_WASM_FILE,
+      ...KTX2_TRANSCODER_FILES.map(([, , file]) => file),
+    ];
     const manifest = createAssetManifest(
       files.map((file) => ({ address: file, url: `/game/assets/${file}`, type: "binary" })),
     );
     const urls = decoderUrlsFromManifest(manifest);
     expect(urls.ktx2Decoder).toBe("/game/assets/babylon.ktx2Decoder.js");
     expect(urls.meshoptBaseUrl).toBe("/game/assets/");
+    expect(urls.dracoBaseUrl).toBe("/game/assets/");
     expect(urls.ktx2Transcoders).toEqual({
       MSCTranscoder: {
         JSModuleURL: "/game/assets/msc_basis_transcoder.js",
@@ -71,6 +80,7 @@ describe("decoderUrlsFromManifest", () => {
       ktx2Decoder: null,
       ktx2Transcoders: {},
       meshoptBaseUrl: null,
+      dracoBaseUrl: null,
     });
   });
 
@@ -83,6 +93,15 @@ describe("decoderUrlsFromManifest", () => {
     const renamed = createAssetManifest([{ address: MESHOPT_DECODER_FILE, url: "/assets/meshopt.abc123.js" }]);
     expect(decoderUrlsFromManifest(renamed).meshoptBaseUrl).toBeNull();
   });
+
+  it("uses the Draco script only when its WebAssembly sits in the same directory", () => {
+    const script = { address: DRACO_DECODER_FILE, url: `/assets/${DRACO_DECODER_FILE}` };
+    expect(decoderUrlsFromManifest(createAssetManifest([script])).dracoBaseUrl).toBeNull();
+    const elsewhere = createAssetManifest([script, { address: DRACO_WASM_FILE, url: `/wasm/${DRACO_WASM_FILE}` }]);
+    expect(decoderUrlsFromManifest(elsewhere).dracoBaseUrl).toBeNull();
+    const together = createAssetManifest([script, { address: DRACO_WASM_FILE, url: `/assets/${DRACO_WASM_FILE}` }]);
+    expect(decoderUrlsFromManifest(together).dracoBaseUrl).toBe("/assets/");
+  });
 });
 
 describe("configureDecoders and a headless .ktx2 load", () => {
@@ -91,6 +110,8 @@ describe("configureDecoders and a headless .ktx2 load", () => {
       manifest: createAssetManifest([
         { address: KTX2_DECODER_FILE, url: `/assets/${KTX2_DECODER_FILE}`, type: "binary" },
         { address: MESHOPT_DECODER_FILE, url: `/assets/${MESHOPT_DECODER_FILE}`, type: "binary" },
+        { address: DRACO_DECODER_FILE, url: `/assets/${DRACO_DECODER_FILE}`, type: "binary" },
+        { address: DRACO_WASM_FILE, url: `/assets/${DRACO_WASM_FILE}`, type: "binary" },
         { address: "textures/rock.ktx2", url: "/assets/textures/rock.ktx2", type: "texture" },
       ]),
     });

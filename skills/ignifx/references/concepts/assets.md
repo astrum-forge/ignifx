@@ -173,6 +173,10 @@ silicon and mobile, RGBA8 without compression support — so it stays compressed
 - `.basis` loads too, but its transcoder always comes from `cdn.babylonjs.com` (Lite 1.34 has no
   setter), so it fails under a strict CSP. Prefer `.ktx2`.
 
+Compressed models load the same way: a `.glb` with `KHR_draco_mesh_compression` or
+`EXT_meshopt_compression` is a `model` like any other, and its Draco or meshopt decoder is served
+from those same files, fetched only when a model uses it, so a game that loads none pays nothing.
+
 ### Mesh files
 
 A `.mesh.json` names one primitive and the options its `MeshAsset` factory takes, so a scene file

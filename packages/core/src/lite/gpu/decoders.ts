@@ -2,6 +2,7 @@ import {
   getOrCreateSampler,
   loadBasisTexture2D,
   loadKtx2Texture2D,
+  setDracoBaseUrl,
   setKtx2DecoderUrl,
   setMeshoptBaseUrl,
 } from "@babylonjs/lite";
@@ -11,7 +12,7 @@ import type { EngineContext, Texture2D, Texture2DOptions } from "@babylonjs/lite
  * The compressed-texture and decoder half of the Babylon Lite adapter
  * (`docs/architecture/07-rendering.md` §7). Imported only dynamically, from `./texture.ts` and
  * `../../render/decoder-urls.ts`, so a game that loads no KTX2 texture and no glTF carries none of
- * Lite's KTX2, Basis or meshopt glue.
+ * Lite's KTX2, Basis, meshopt or Draco glue.
  *
  * Everything here is `@internal`.
  *
@@ -26,6 +27,11 @@ import type { EngineContext, Texture2D, Texture2DOptions } from "@babylonjs/lite
  * say otherwise (`lib/texture/ktx2-loader.js`, `lib/loader-gltf/meshopt-decode.js`). Both setters
  * write process-wide state, and the KTX2 decoder is loaded once: a URL set after the first KTX2
  * load is ignored until a failed load clears Lite's cached promise.
+ *
+ * glTF `KHR_draco_mesh_compression` injects `draco_decoder.js`, which defines the
+ * `DracoDecoderModule` global and fetches `draco_decoder_gltf.wasm` through `locateFile`. Both come
+ * from the page's root, `/`, unless `setDracoBaseUrl` (12375) says otherwise
+ * (`lib/loader-gltf/draco-decode.js`); the module is cached the same way.
  *
  * `loadBasisTexture2D` (7771) has no such setter. It always fetches `basis_transcoder.js` and its
  * WASM from `https://cdn.babylonjs.com/basisTranscoder/1/` (`lib/texture/basis-loader.js`), so a
@@ -63,6 +69,11 @@ export interface LiteDecoderUrls {
   readonly ktx2Transcoders: Readonly<Record<string, Readonly<Record<string, string>>>>;
   /** The directory `meshopt_decoder.js` is served from, or `null` for Lite's CDN default. */
   readonly meshoptBaseUrl: string | null;
+  /**
+   * The directory `draco_decoder.js` and `draco_decoder_gltf.wasm` are served from, or `null` for
+   * Lite's default, the page's root.
+   */
+  readonly dracoBaseUrl: string | null;
 }
 
 /**
@@ -83,6 +94,9 @@ export function applyLiteDecoderUrls(urls: LiteDecoderUrls): void {
   }
   if (urls.meshoptBaseUrl !== null) {
     setMeshoptBaseUrl(urls.meshoptBaseUrl);
+  }
+  if (urls.dracoBaseUrl !== null) {
+    setDracoBaseUrl(urls.dracoBaseUrl);
   }
 }
 
