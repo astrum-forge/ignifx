@@ -107,6 +107,11 @@ describe("virtual modules", () => {
       "/assets/levels/level1.scene.json",
       "/assets/sprites/hero.png",
     ]);
+    // An address added after the page loaded is unlisted and joined onto `root`; it must resolve to
+    // the served asset root on every page, the editor's scene view at /__ignifx_editor__/ included.
+    expect(manifest.root).toBe("/assets");
+    const page = "http://localhost:5173/__ignifx_editor__/";
+    expect(new URL(`${manifest.root}/Crate 0.prefab.json`, page).pathname).toBe("/assets/Crate%200.prefab.json");
   });
 
   it("lists an extension public asset in the manifest the bundle carries", async () => {

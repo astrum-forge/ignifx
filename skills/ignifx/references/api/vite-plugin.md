@@ -285,7 +285,8 @@ Always [ASSET\_MANIFEST\_VERSION](#asset_manifest_version) before 1.0.
 
 > `readonly` **root**: `string`
 
-The asset root the addresses are relative to, as configured, `/`-separated.
+Where an address the manifest does not list is fetched from: the asset root's served URL in
+development (`/assets`), the configured asset root in a build.
 
 ***
 
@@ -1598,7 +1599,8 @@ The assets to list, already sorted by address.
 
 `string`
 
-The asset root as configured, recorded in the manifest for diagnostics.
+The manifest's `root`: where the runtime fetches an address the manifest does not
+  list.
 
 ##### urlFor
 
@@ -1873,7 +1875,10 @@ What it does, in the order the hooks run:
 - In development the manifest is also served from `/<manifestFileName>`, the asset root is
   watched, and every change is announced on the `ignifx:asset-changed` HMR channel; editing the
   project config or settings file restarts the dev server, which injects the new values and
-  reloads the page.
+  reloads the page. The development manifest's `root` is the asset root's served URL (`/assets`
+  with the default `base`), so an address added after the page loaded resolves the same on every
+  page, and a request under that URL for a file that does not exist is answered 404 instead of
+  with Vite's HTML fallback.
 - `vite dev` and `vite preview` answer 404 to any request whose decoded path has a `.ignifx`
   segment, in any case or encoding, or whose file lies in `.ignifx/` once symbolic links are
   followed, ahead of every middleware that serves a file. `load` refuses (`IGX-0556`) a module
