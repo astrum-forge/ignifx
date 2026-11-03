@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { isIgnifxError } from "../../src/errors/ignifx-error.js";
 import { Color } from "../../src/math/color.js";
-import { Light } from "../../src/render/light.js";
+import { Light, sameShadowSettings } from "../../src/render/light.js";
 import { MeshRenderer } from "../../src/render/mesh-renderer.js";
 import { createRenderHarness, warningsOf } from "./support/render-harness.js";
 import type { RenderHarness } from "./support/render-harness.js";
@@ -378,5 +378,14 @@ describe("shadows", () => {
     h.frame();
     expect(light.isCastingShadows).toBe(false);
     expect(light.lite.shadowGenerator).toBeNull();
+  });
+});
+
+describe("sameShadowSettings", () => {
+  it("says a casting light's generator is stale when any shadow field changed", () => {
+    const declared = new Light().shadows;
+    expect(sameShadowSettings(null, declared)).toBe(false);
+    expect(sameShadowSettings({ ...declared }, declared)).toBe(true);
+    expect(sameShadowSettings({ ...declared, cascadeLambda: declared.cascadeLambda + 0.1 }, declared)).toBe(false);
   });
 });
