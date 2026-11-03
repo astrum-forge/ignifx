@@ -422,8 +422,10 @@ export { RENDER_TEXTURE_MAX_SIZE, type RenderTexture } from "./render/render-tex
 export {
   CANVAS_ALPHA_MODES,
   DEFAULT_BRDF_LUT_ADDRESS,
+  defaultAutoExposureSettings,
   defaultRenderingSettings,
   RENDERING_SETTINGS_SECTION,
+  type AutoExposureSettings,
   type CanvasAlphaMode,
   type RenderingFeatureSettings,
   type RenderingSettings,

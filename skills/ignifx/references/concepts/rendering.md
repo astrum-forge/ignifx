@@ -223,6 +223,13 @@ looks the same either way; turn it on for the HDR effects that build on it. For 
 materials, surface shaders, sprites, particles and the skybox are not carried in linear colour, so
 keep it off in scenes that rely on them: `settings: { rendering: { hdr: true } }`.
 
+`rendering.autoExposure` (off by default, needs `hdr`) meters the scene each frame on the GPU and
+eases the exposure so its average lands on middle grey: `minEv`/`maxEv` bound the metered
+`log2` luminance it follows (default −6 to 6), `speedUp`/`speedDown` are the adaptation rates per
+second towards brighter and darker scenes (2 and 1), and `compensation` adds stops. It multiplies
+before the `Environment`'s own exposure. Read once at start:
+`settings: { rendering: { hdr: true, autoExposure: { enabled: true, compensation: 0.5 } } }`.
+
 ## 5. Material warm-up (ADR-0014)
 
 A mesh whose material family did not exist when the scene was registered takes Babylon Lite's

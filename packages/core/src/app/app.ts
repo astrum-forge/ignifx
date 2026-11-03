@@ -24,7 +24,12 @@ import { createLogger } from "../log/logger.js";
 import { detectPlatform } from "../platform/platform.js";
 import { probeWebGpuInfo } from "../platform/web/adapter-probe.js";
 import { RendererService, rendererInternals } from "../render/renderer.js";
-import { toRendererOptions, toSurfaceFormat, RENDERING_SETTINGS_SECTION } from "../render/rendering-settings.js";
+import {
+  toAutoExposureOptions,
+  toRendererOptions,
+  toSurfaceFormat,
+  RENDERING_SETTINGS_SECTION,
+} from "../render/rendering-settings.js";
 import { EndOfFrameQueue } from "../scheduler/deferred-queue.js";
 import { Scheduler } from "../scheduler/scheduler.js";
 import { SettingsStore } from "../settings/settings-store.js";
@@ -645,6 +650,7 @@ class AppImpl implements App {
             // created rather than in `start()` with the opt-ins that only change what is compiled.
             postProcessing: renderer.renderingFeatures.postProcessing,
             hdr: rendering.hdr,
+            autoExposure: toAutoExposureOptions(rendering),
           });
     if (canvas !== null) {
       // §1: the report describes the host's adapter, not Lite's device — see `../platform/platform.ts`.

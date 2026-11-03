@@ -79,6 +79,32 @@ export interface RenderingFeatureSettings {
 }
 
 /**
+ * Auto exposure under `rendering.hdr` (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, step G14):
+ * a compute pass meters the HDR scene and eases the exposure towards middle grey.
+ *
+ * @remarks
+ * EV here is `log2` of the scene's metered luminance (the average of a `log2` luminance histogram,
+ * the darkest 10% and brightest 10% dropped). The exposure maps that average to 0.18 and multiplies
+ * the scene before the `Environment`'s own exposure and curve, so the two compose.
+ *
+ * @public
+ */
+export interface AutoExposureSettings {
+  /** Meter the scene and adapt the exposure. Off by default; needs `rendering.hdr`. */
+  readonly enabled: boolean;
+  /** The darkest metered EV the exposure follows: a darker scene is not brightened further. */
+  readonly minEv: number;
+  /** The brightest metered EV the exposure follows: a brighter scene is not darkened further. */
+  readonly maxEv: number;
+  /** Adaptation rate, per second, when the scene gets brighter. */
+  readonly speedUp: number;
+  /** Adaptation rate, per second, when the scene gets darker. */
+  readonly speedDown: number;
+  /** Stops added to the computed exposure; positive is brighter. */
+  readonly compensation: number;
+}
+
+/**
  * The resolved `rendering` settings section
  * (`docs/architecture/04-extensions.md` §5, `07-rendering.md` §1).
  *
@@ -138,6 +164,11 @@ export interface RenderingSettings {
    * in linear colour (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, step G3).
    */
   readonly hdr: boolean;
+  /**
+   * Auto exposure, read once at `app.start()`. Ignored unless {@link RenderingSettings.hdr} is on;
+   * off, nothing of it loads.
+   */
+  readonly autoExposure: AutoExposureSettings;
 }
 
 /**
@@ -159,6 +190,18 @@ const DEFAULT_MSAA_SAMPLES = 4;
 
 /** The only other sample count WebGPU allows for a multisampled attachment. */
 const SINGLE_SAMPLE = 1;
+
+/**
+ * The auto exposure a project that names none gets: off, metering EV −6 to 6, adapting at 2 per
+ * second towards brighter scenes and 1 towards darker ones, with no compensation.
+ *
+ * @returns A fresh record.
+ *
+ * @public
+ */
+export function defaultAutoExposureSettings(): AutoExposureSettings {
+  return { enabled: false, minEv: -6, maxEv: 6, speedUp: 2, speedDown: 1, compensation: 0 };
+}
 
 /** The clear colour a project that names none gets: opaque black. */
 const DEFAULT_CLEAR_COLOR = "#000000";
@@ -193,6 +236,7 @@ export function defaultRenderingSettings(): RenderingSettings {
     clearColor: { r: 0, g: 0, b: 0, a: 1 },
     brdfLut: DEFAULT_BRDF_LUT_ADDRESS,
     hdr: false,
+    autoExposure: defaultAutoExposureSettings(),
   };
 }
 
@@ -231,6 +275,14 @@ export function renderingSettingsSchema(): Schema {
     brdfLut: str(DEFAULT_BRDF_LUT_ADDRESS, { tooltip: "Address of the RGBD BRDF lookup table." }),
     hdr: bool(false, {
       tooltip: "Render in HDR (rgba16float) and tone map in one final pass. PBR materials only for now.",
+    }),
+    autoExposure: record({
+      enabled: bool(false, { tooltip: "Meter the HDR scene and adapt the exposure. Needs hdr." }),
+      minEv: f64(-6, { tooltip: "Darkest metered EV (log2 luminance) the exposure follows." }),
+      maxEv: f64(6, { tooltip: "Brightest metered EV (log2 luminance) the exposure follows." }),
+      speedUp: f64(2, { min: 0, tooltip: "Adaptation rate per second when the scene gets brighter." }),
+      speedDown: f64(1, { min: 0, tooltip: "Adaptation rate per second when the scene gets darker." }),
+      compensation: f64(0, { tooltip: "Stops added to the computed exposure; positive is brighter." }),
     }),
   });
 }
@@ -327,4 +379,32 @@ export function toRendererOptions(settings: RenderingSettings, resolutionScale: 
  */
 export function toSurfaceFormat(settings: RenderingSettings): string | null {
   return settings.format === "" ? null : settings.format;
+}
+
+/**
+ * The auto exposure knobs the HDR path is built with, or `null` when it stays off.
+ *
+ * @remarks
+ * The settings store merges a section shallowly (see {@link toRenderingFeatures}), so a project that
+ * writes `autoExposure: { enabled: true }` leaves the other fields `undefined`; each one falls back to
+ * its default here.
+ *
+ * @param settings - The resolved section.
+ * @returns The knobs, or `null` when `hdr` or `autoExposure.enabled` is off.
+ *
+ * @internal
+ */
+export function toAutoExposureOptions(settings: RenderingSettings): Omit<AutoExposureSettings, "enabled"> | null {
+  const declared: Partial<AutoExposureSettings> = settings.autoExposure;
+  if (!settings.hdr || declared.enabled !== true) {
+    return null;
+  }
+  const defaults = defaultAutoExposureSettings();
+  return {
+    minEv: declared.minEv ?? defaults.minEv,
+    maxEv: declared.maxEv ?? defaults.maxEv,
+    speedUp: declared.speedUp ?? defaults.speedUp,
+    speedDown: declared.speedDown ?? defaults.speedDown,
+    compensation: declared.compensation ?? defaults.compensation,
+  };
 }
