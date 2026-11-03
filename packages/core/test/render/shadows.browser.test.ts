@@ -235,6 +235,51 @@ describe("caster lists", () => {
     });
   }
 
+  it("rebuilds the generator when a shadow knob changes on a light that already casts", async () => {
+    // Lite reads technique, map size and the cascade knobs only when it builds a generator, so an
+    // Inspector edit on a casting light used to show only after toggling shadows off and on.
+    const device = gpuDeviceErrors();
+    const scene = await buildShadowScene(true, "pcf");
+    const edits: readonly ((shadows: Light["shadows"]) => void)[] = [
+      (shadows): void => {
+        shadows.technique = "csm";
+      },
+      (shadows): void => {
+        shadows.mapSize = 1024;
+      },
+      (shadows): void => {
+        shadows.stabilizeCascades = true;
+      },
+      (shadows): void => {
+        shadows.cascadeLambda = 0.9;
+      },
+      (shadows): void => {
+        shadows.cascadeBlend = 0.3;
+      },
+    ];
+    for (const edit of edits) {
+      const before = scene.light.lite.shadowGenerator;
+      expect(before).not.toBeNull();
+      edit(scene.light.shadows);
+      // oxlint-disable-next-line no-await-in-loop -- each edit has to land before the next one
+      await scene.running.advance(SETTLE_FRAMES * 2);
+      expect(scene.light.isCastingShadows).toBe(true);
+      expect(scene.light.lite.shadowGenerator).not.toBe(before);
+    }
+    // A frame with nothing changed keeps the generator.
+    const settled = scene.light.lite.shadowGenerator;
+    await scene.running.advance(SETTLE_FRAMES);
+    expect(scene.light.lite.shadowGenerator).toBe(settled);
+    // Still casting the box's shadow onto the ground with the new generator.
+    const shadowed = await meanLuminance(scene.running);
+    scene.light.shadows.enabled = false;
+    await scene.running.advance(SETTLE_FRAMES * 2);
+    expect(shadowed).toBeLessThan(await meanLuminance(scene.running));
+    device.stop();
+    expect(device.errors).toEqual([]);
+    expect(scene.running.errors).toEqual([]);
+  });
+
   it("releases the generator when the light stops casting", async () => {
     const scene = await buildShadowScene(true);
     scene.light.shadows.enabled = false;

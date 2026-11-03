@@ -25,7 +25,9 @@ import type { App, Coroutine, Entity } from "@ignifx/core";
  *
  * Babylon Lite 1.34.0 rebuilds only **ESM** and **CSM** directional shadow generators after a device
  * loss (`lib/shadow/shadow-recovery.js` throws Lite error 721 for PCF). The level ships CSM; the
- * probe still sets it explicitly so this test does not silently depend on the level's choice.
+ * probe still sets it explicitly so this test does not silently depend on the level's choice. The
+ * sun already casts by then, and a changed technique rebuilds its generator on the next frame, so a
+ * level that shipped PCF would be switched before the device loss is forced.
  * `docs/adr/0018-electron-tooling.md` records the limitation.
  */
 
