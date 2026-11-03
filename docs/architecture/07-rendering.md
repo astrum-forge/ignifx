@@ -244,7 +244,7 @@ Screen-space effects (TAA, GTAO, contact shadows, SSGI; GI plan steps G5–G11) 
 
 ## 5. Diagnostics and tools
 
-- `app.diagnostics.render`: `drawCalls` (`engine.drawCallCount`), `gpuFrameTimeMs` (with `setGpuTimingEnabled`), per-task GPU timings (`getRenderTaskGpuTimings`) when `renderer.profileTasks` is on.
+- `app.diagnostics.render`: `drawCalls` (`engine.drawCallCount`), `gpuFrameTimeMs` (with `setGpuTimingEnabled`), per-task GPU timings (`getRenderTaskGpuTimings`) when `renderer.profileTasks` is on, which switches both `setGpuTimingEnabled` and `setRenderTaskGpuTimingEnabled`.
 - `app.renderer.captureScreenshot()` → `captureScreenshot(engine)`; it settles only while the render loop is running (a frame must be presented), so headless apps get `IGX-0707`.
 - Every build reaches Lite's error decoder through a dynamic import (`packages/core/src/lite/error-decoding.ts`), awaited during renderer initialisation: the decoder and Lite's 44 KB message table are one reachability set, and because `createApp({ mode })` defaults to `"development"` in every build, a static import would put the table in every production entry chunk (it did, until 2026-09-07; splitting it saved 10.8 KB gzipped in `hello-cube`). There is no separate `decodeError` path.
 

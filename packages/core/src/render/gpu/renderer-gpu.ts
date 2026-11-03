@@ -4,6 +4,7 @@ import {
   readRenderTaskGpuTimings,
   readSurfaceSizePx,
   resizeToCanvas,
+  setRenderTaskGpuTiming,
   setSurfaceMaxDevicePixelRatio,
 } from "../../lite/gpu/render-diagnostics-gpu.js";
 import { warmUpMaterials } from "../../lite/gpu/warm-up.js";
@@ -133,14 +134,30 @@ export function readTargetSizePx(engine: LiteEngine, out: { width: number; heigh
 }
 
 /**
- * Turns whole-frame GPU timing on.
+ * Turns whole-frame and per-task GPU timing on.
  *
  * @param engine - The engine to measure.
+ * @returns A promise that settles once per-task timing is installed; until then `readTaskTimings`
+ * reads `"pending"`.
  *
  * @internal
  */
-export function startGpuTiming(engine: LiteEngine): void {
+export async function startGpuTiming(engine: LiteEngine): Promise<void> {
   enableGpuTiming(engine);
+  await setRenderTaskGpuTiming(engine, true);
+}
+
+/**
+ * Turns per-task GPU timing off. Whole-frame timing is turned off by `disableGpuTiming`, which
+ * needs no device.
+ *
+ * @param engine - The engine to stop measuring.
+ * @returns A promise that settles once the profiler is removed.
+ *
+ * @internal
+ */
+export async function stopTaskTiming(engine: LiteEngine): Promise<void> {
+  await setRenderTaskGpuTiming(engine, false);
 }
 
 /**
