@@ -224,10 +224,16 @@ it needs `rendering.hdr` or the `materialPlugins` feature. Both read depth from 
 pass and load their code only when enabled; under `rendering.hdr` they work on linear colour.
 
 ```ts
-camera.addComponent(PostProcessStack, {
-  contactShadows: { enabled: true, length: 0.5 },
-  ssgi: { enabled: true, intensity: 1 },
-});
+import { PostProcessStack } from "@ignifx/core";
+import type { Entity } from "@ignifx/core";
+
+/** Adds contact shadows and SSGI to the main camera's entity. */
+export function addScreenSpaceLighting(camera: Entity): PostProcessStack {
+  return camera.addComponent(PostProcessStack, {
+    contactShadows: { enabled: true, length: 0.5 },
+    ssgi: { enabled: true, intensity: 1 },
+  });
+}
 ```
 
 The rest of the section: `msaaSamples` (1 or 4, default 4), `alphaMode` (`"opaque"` or
