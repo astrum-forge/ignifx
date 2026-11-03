@@ -195,6 +195,9 @@ export class Light extends Component implements ComponentHooks {
 
   #appliedShadows = false;
 
+  /** A copy of the `shadows` record the current generator was built from, or `null` without one. */
+  #appliedShadowSettings: LightShadowSettings | null = null;
+
   #appliedIncludeSize = -1;
 
   #appliedExcludeSize = -1;
@@ -399,16 +402,21 @@ export class Light extends Component implements ComponentHooks {
   }
 
   /**
-   * Attaches or detaches the shadow generator the `shadows` record asks for.
+   * Attaches, rebuilds or detaches the shadow generator the `shadows` record asks for.
+   *
+   * @remarks
+   * Lite reads every field (technique, map size, the cascade knobs) only when it builds a
+   * generator, so a change to any of them on a light that already casts builds a new one.
    *
    * @param renderer - The rendering service, for the engine and the feature flags.
-   * @returns `true` when a generator was attached or detached.
+   * @returns `true` when a generator was attached, rebuilt or detached.
    */
   #applyShadows(renderer: RendererImpl): boolean {
     const light = this.#light;
     const wanted =
       this.shadows.enabled && this.isEnabledInHierarchy && renderer.features.shadows && !renderer.isHeadless;
-    if (light === null || wanted === this.#appliedShadows) {
+    const isStale = wanted && !sameShadowSettings(this.#appliedShadowSettings, this.shadows);
+    if (light === null || (wanted === this.#appliedShadows && !isStale)) {
       this.#warnAboutShadows(renderer);
       return false;
     }
@@ -420,10 +428,12 @@ export class Light extends Component implements ComponentHooks {
       return false;
     }
     this.#appliedShadows = wanted;
+    this.#releaseGenerator(renderer);
     if (!wanted) {
-      this.#releaseGenerator(renderer);
       return true;
     }
+    // Recorded before the attempt, so a light Lite cannot shadow throws once, not every frame.
+    this.#appliedShadowSettings = { ...this.shadows };
     this.#generator = attachShadows(renderer.engine, light, this.shadows);
     renderer.needsShadowLayoutReset = true;
     return true;
@@ -489,6 +499,7 @@ export class Light extends Component implements ComponentHooks {
     const generator = this.#generator;
     const light = this.#light;
     this.#generator = null;
+    this.#appliedShadowSettings = null;
     if (generator !== null) {
       detachShadows(renderer.scene, light, generator);
       renderer.needsShadowLayoutReset = true;
@@ -507,6 +518,7 @@ export class Light extends Component implements ComponentHooks {
     this.#light = null;
     this.#appliedType = null;
     this.#appliedShadows = false;
+    this.#appliedShadowSettings = null;
     const remove = (): void => {
       if (generator !== null) {
         detachShadows(renderer.scene, light, generator);
@@ -524,6 +536,30 @@ export class Light extends Component implements ComponentHooks {
       renderer.afterRebuild(remove);
     }
   }
+}
+
+/**
+ * Whether a generator built from `applied` still matches the declared `shadows` record.
+ *
+ * @param applied - The record the generator was built from, or `null` when there is none.
+ * @param declared - The component's record now.
+ * @returns `true` when every field is the same.
+ */
+function sameShadowSettings(applied: LightShadowSettings | null, declared: LightShadowSettings): boolean {
+  return (
+    applied !== null &&
+    applied.enabled === declared.enabled &&
+    applied.technique === declared.technique &&
+    applied.mapSize === declared.mapSize &&
+    applied.bias === declared.bias &&
+    applied.normalBias === declared.normalBias &&
+    applied.darkness === declared.darkness &&
+    applied.cascades === declared.cascades &&
+    applied.maxDistance === declared.maxDistance &&
+    applied.stabilizeCascades === declared.stabilizeCascades &&
+    applied.cascadeLambda === declared.cascadeLambda &&
+    applied.cascadeBlend === declared.cascadeBlend
+  );
 }
 
 /**

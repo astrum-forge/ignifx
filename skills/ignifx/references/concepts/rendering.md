@@ -40,6 +40,8 @@ what they mean.
   it takes the receive flag. A hidden renderer or model casts nothing. A caster that appears at
   runtime joins the shadow maps a frame or two later than it appears on screen, because the caster
   lists are only rebuilt once the renderable rebuild it triggered has settled.
+- Changing any `shadows` field on a light that already casts rebuilds its shadow generator on the
+  next frame (one renderable rebuild), so an edit shows without toggling `shadows.enabled`.
 - A light with shadows on and no caster renders the scene unshadowed. Switching a surface shader with
   a `displace` hook on or off moves its shadow under every technique, ESM included.
 - A skinned model's shadow follows its pose under every technique, whether an `Animator`, a clip or
