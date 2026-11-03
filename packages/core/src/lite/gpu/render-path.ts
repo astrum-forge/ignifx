@@ -1,5 +1,12 @@
 import { addTask, createCopyToTextureTask, createRenderTarget, createRenderTask } from "@babylonjs/lite";
-import type { EngineContext, RenderTarget, SceneContext, Task, Texture2D } from "@babylonjs/lite";
+import type {
+  EngineContext,
+  RenderTarget,
+  RenderTargetTextureResult,
+  SceneContext,
+  Task,
+  Texture2D,
+} from "@babylonjs/lite";
 
 /**
  * The offscreen render path (`docs/architecture/07-rendering.md` §2.7): the frame graph a scene gets
@@ -77,6 +84,16 @@ export interface HdrOutputHandle {
    * pass applies (`./auto-exposure.ts`); `null` when `rendering.autoExposure` is off.
    */
   readonly exposureTexture: Texture2D | null;
+  /**
+   * The same target as a render target and its resize hook: what a linear effect (HDR bloom, step
+   * G12) writes back into and rebinds on resize.
+   */
+  readonly sceneTarget: RenderTargetTextureResult;
+  /**
+   * The first of the output pass's tasks. A linear effect inserts its tasks before it with
+   * `addTaskBefore`, so it runs on the HDR colour before tone mapping.
+   */
+  readonly outputTask: Task;
   /**
    * The per-frame work: uploads the scene's exposure, contrast and curve when they changed, and
    * gives every new PBR material the linear-output plugin.

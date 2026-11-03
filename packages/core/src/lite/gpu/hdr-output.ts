@@ -479,6 +479,8 @@ export function installHdrRenderPath(
   const handle: HdrOutputHandle = {
     sceneTexture: hdr.texture,
     exposureTexture: autoExposure?.exposureTexture ?? null,
+    sceneTarget: hdr,
+    outputTask: toChain,
     update(isSceneRegistered: boolean): void {
       autoExposure?.update();
       if (writeHdrOutputUniforms(scene.imageProcessing, uniforms)) {

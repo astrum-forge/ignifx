@@ -11,6 +11,7 @@ import {
   MeshAsset,
   MeshRenderer,
   pbrMaterialDefinition,
+  PostProcessStack,
   Script,
   TONE_MAPPING_NAMES,
 } from "@ignifx/core";
@@ -27,6 +28,7 @@ import type { App, Entity, ScriptCallbacks, ToneMappingCurve } from "@ignifx/cor
  * - `?static=1` stops time and pins the cube at a fixed angle, so the frame is reproducible.
  * - `?hdr=1` turns on `rendering.hdr`, which should present the same image.
  * - `?tonemap=<curve>` adds an `Environment` with that tone-mapping curve (`agx`, `aces`, …).
+ * - `?bloom=1` (with `?hdr=1`) adds a bright emissive sphere and HDR bloom on the camera.
  *
  * `window.__ignifxReady` resolves to `"ready"` once the scene has presented a settled frame, or to
  * `"unsupported"` when the browser has no WebGPU. It is assigned before the first `await` so a test
@@ -108,9 +110,10 @@ function showUnsupported(): void {
  *
  * @param app - The running app.
  * @param orthographic - Whether the camera uses an orthographic projection.
+ * @param bloom - Whether to add a bright emissive sphere and HDR bloom on the camera.
  * @returns The cube's entity, so the caller can freeze its angle.
  */
-function buildScene(app: App, orthographic: boolean): Entity {
+function buildScene(app: App, orthographic: boolean, bloom: boolean): Entity {
   app.registerComponents([Spinner]);
 
   const eye = app.world.createEntity("Main Camera");
@@ -123,6 +126,28 @@ function buildScene(app: App, orthographic: boolean): Entity {
     projection: orthographic ? "orthographic" : "perspective",
     orthographicSize: 2.2,
   });
+  if (bloom) {
+    eye.addComponent(PostProcessStack).bloom.enabled = true;
+    const glow = createMaterialAsset(
+      app,
+      pbrMaterialDefinition({
+        name: "glow",
+        baseColor: { r: 1, g: 1, b: 1, a: 1 },
+        metallic: 0,
+        roughness: 0.3,
+        emissive: { r: 1, g: 0.85, b: 0.6, a: 1 },
+      }),
+      [],
+    );
+    const lamp = app.world.createEntity("Lamp");
+    lamp.transform.localPosition.set(1.6, 1.4, 0.6);
+    lamp.addComponent(MeshRenderer, {
+      mesh: MeshAsset.sphere(app, { diameter: 0.5 }),
+      materials: [glow],
+      castShadows: false,
+      receiveShadows: false,
+    });
+  }
 
   const sun = app.world.createEntity("Sun");
   sun.transform.localPosition.set(-3.2, 6, -3.5);
@@ -182,15 +207,28 @@ function buildScene(app: App, orthographic: boolean): Entity {
  * The project settings, with `rendering.hdr` switched on when the visual suite asks for `?hdr=1`.
  *
  * @param hdr - Whether to render through the HDR target and output pass.
+ * @param bloom - Whether a `PostProcessStack` will ask for bloom, which wants `features.postProcessing`.
  * @returns The settings `createApp` takes.
  */
-function projectSettings(hdr: boolean): Readonly<Record<string, unknown>> {
+function projectSettings(hdr: boolean, bloom: boolean): Readonly<Record<string, unknown>> {
   const config = import.meta.env.IGNIFX_CONFIG;
   if (!hdr) {
     return config;
   }
   const rendering: unknown = config["rendering"];
-  return { ...config, rendering: { ...(typeof rendering === "object" ? rendering : {}), hdr: true } };
+  const base = typeof rendering === "object" && rendering !== null ? rendering : {};
+  if (!bloom) {
+    return { ...config, rendering: { ...base, hdr: true } };
+  }
+  const features: unknown = Reflect.get(base, "features");
+  return {
+    ...config,
+    rendering: {
+      ...base,
+      hdr: true,
+      features: { ...(typeof features === "object" ? features : {}), postProcessing: true },
+    },
+  };
 }
 
 /**
@@ -213,7 +251,7 @@ async function main(): Promise<AppStatus> {
   const flags = new URLSearchParams(window.location.search);
   let app: App;
   try {
-    app = await createApp({ canvas, settings: projectSettings(flags.get("hdr") === "1") });
+    app = await createApp({ canvas, settings: projectSettings(flags.get("hdr") === "1", flags.get("bloom") === "1") });
   } catch (error) {
     // IGX-0701 is the one failure a shipped game must handle itself: the browser has no WebGPU and
     // ignifx has no fallback renderer by decision (ADR-0001).
@@ -224,7 +262,7 @@ async function main(): Promise<AppStatus> {
     throw error;
   }
 
-  const cube = buildScene(app, flags.get("ortho") === "1");
+  const cube = buildScene(app, flags.get("ortho") === "1", flags.get("bloom") === "1");
   const curve = toneMappingFlag(flags.get("tonemap"));
   if (curve !== null) {
     app.world.createEntity("Environment").addComponent(Environment, {

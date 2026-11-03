@@ -2446,8 +2446,8 @@
       "fields": {
         "bloom": {
           "kind": "record",
-          "default": "{\"enabled\":false,\"order\":0,\"weight\":0.15,\"kernel\":64,\"threshold\":0.9,\"exposure\":1,\"scale\":0.5}",
-          "description": "Bloom."
+          "default": "{\"enabled\":false,\"order\":0,\"weight\":0.15,\"kernel\":64,\"threshold\":0.9,\"exposure\":1,\"scale\":0.5,\"intensity\":0.1,\"radius\":0.7,\"hdrThreshold\":0}",
+          "description": "Bloom. With rendering.hdr on, HDR bloom on the linear scene colour replaces the LDR pass and reads intensity, radius and hdrThreshold; without it, the other fields apply."
         },
         "smaa": {
           "kind": "record",
