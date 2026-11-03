@@ -130,7 +130,7 @@ Full signatures: `skills/ignifx/references/api/2d.md`.
 | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Camera2D` (`ignifx/Camera2D`)                   | `orthographicSize`, `pixelPerfect`, `referenceResolution`, `boundsMin`/`boundsMax`, `follow`, `deadZone`, `priority`                                  |
 | `SpriteRenderer` (`ignifx/SpriteRenderer`)       | `sprite`, `frameName`, `color`, `flipX`/`flipY`, `sortingLayer`, `orderInLayer`, `blend`, `pivotOverride`, `screenSpace`, `pickable`; runtime `frame` |
-| `SpriteAnimator` (`ignifx/SpriteAnimator`)       | `animations`, `defaultClip`, `playOnAwake`, `speed`; `play`/`stop`/`pause`/`resume`/`sample`, `onClipEnded`, `onEvent`                                |
+| `SpriteAnimator` (`ignifx/SpriteAnimator`)       | `animations`, `defaultClip`, `playOnAwake`, `speed`; `play`/`stop`/`pause`/`resume`/`sample`/`sampleTime`, `onClipEnded`, `onEvent`                   |
 | `Tilemap` (`ignifx/Tilemap`)                     | `map`, `chunkSize`; `getTile`/`setTile`/`setCells`, `worldToCell`/`cellToWorld`, `collisionData`, `onTileChanged`                                     |
 | `TilemapRenderer` (`ignifx/TilemapRenderer`)     | `atlas`, `sortingLayer`, `cullChunks`                                                                                                                 |
 | `ParallaxLayer` (`ignifx/ParallaxLayer`)         | `sortingLayer`, `factor`, `repeatX`/`repeatY`, `repeatWidth`/`repeatHeight`                                                                           |
@@ -376,6 +376,8 @@ Generated reference: `skills/ignifx/references/formats/`.
 - **In an edit-mode app (`createApp({ editMode: true })`) clips and animated tiles do not play.**
   The renderer keeps its authored `frameName`. To preview one, call `animator.sample("run", 2)`: it writes
   that frame, stops there, and fires no event; `resume()` plays on from it. It works in a game too.
+  `animator.sampleTime("run", 0.25)` does the same for the frame that plays 0.25 s in (a looping clip
+  wraps, a one-shot clip holds its last frame); `spriteClipFrameAtTime` is that mapping on its own.
 
 ## Deprecated (current window)
 

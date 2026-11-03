@@ -87,21 +87,19 @@ class StandInAnimator extends Component.define({}) {
 const PLAYER = "01M4ZEB9E0GG0Q6R22YXV3AVK8";
 
 /**
- * The fixture's `openScene`, with the stand-in added to the player.
+ * The fixture's `openScene`, with a stand-in added to the player.
  *
+ * @param typeId - The stand-in's type id; the `Animator` one by default.
  * @returns The request.
  */
-function openSceneWithAnimator(): Received {
+function openSceneWithAnimator(typeId: string = StandInAnimator.typeId): Received {
   const request = wire("openScene");
   const params = request["params"] as { readonly address: string; readonly file: SceneFile };
   const entities = params.file.entities.map((entity) =>
     entity.uid === PLAYER
       ? {
           ...entity,
-          components: [
-            ...(entity.components ?? []),
-            { uid: "01M4ZEB9E0GG0Q6R22YXV3AVZZ", type: StandInAnimator.typeId, props: {} },
-          ],
+          components: [...(entity.components ?? []), { uid: "01M4ZEB9E0GG0Q6R22YXV3AVZZ", type: typeId, props: {} }],
         }
       : entity,
   );
@@ -219,5 +217,71 @@ describe("sampleAnimation through a live headless host", () => {
       hint: "Check the state names in the .animator.json document.",
     });
     expectWire(await peer.request(request), wire("sampleAnimationUnknownState"));
+  });
+});
+
+/** The calls a {@link StandInSpriteAnimator} received, as `[method, clip, frame or time]`. */
+const spriteCalls: (readonly [string, string, number])[] = [];
+
+/** A component registered under `@ignifx/2d`'s `SpriteAnimator` type id, recording the host's calls. */
+class StandInSpriteAnimator extends Component.define({}) {
+  static typeId = "ignifx/SpriteAnimator";
+
+  /**
+   * Records a sample by frame.
+   *
+   * @param clip - The clip.
+   * @param frame - The frame within it.
+   * @returns Always `true`.
+   */
+  sample(clip: string, frame: number): boolean {
+    spriteCalls.push(["sample", clip, frame]);
+    return true;
+  }
+
+  /**
+   * Records a sample by time.
+   *
+   * @param clip - The clip.
+   * @param time - The time, in seconds.
+   * @returns Always `false`, as while the atlas loads.
+   */
+  sampleTime(clip: string, time: number): boolean {
+    spriteCalls.push(["sampleTime", clip, time]);
+    return false;
+  }
+}
+
+describe("sampleSpriteAnimation through a live headless host (engine ask E51)", () => {
+  let live: LiveHost | null = null;
+
+  afterEach(async () => {
+    await live?.dispose();
+    live = null;
+    spriteCalls.length = 0;
+  });
+
+  it("calls SpriteAnimator.sample for a frame and sampleTime for a time, and refuses the rest", async () => {
+    live = startLiveHost([StandInSpriteAnimator]);
+    const peer = live.wire;
+    await peer.request(wire("hello"));
+    live.release();
+    await live.host;
+    await peer.notification(SceneNotification.schemasChanged);
+
+    await peer.request(wire("openScene"));
+    const missing = await peer.request(wire("sampleSpriteAnimation"));
+    expect(missing["error"]).toMatchObject({ code: RpcErrorCode.invalidParams });
+
+    await peer.request(openSceneWithAnimator(StandInSpriteAnimator.typeId));
+    expectWire(await peer.request(wire("sampleSpriteAnimation")), wire("sampleSpriteAnimationResponse"));
+    expect((await peer.request(wire("sampleSpriteAnimationTime")))["result"]).toEqual({ posed: false });
+    const both = { entity: PLAYER, clip: "run", frame: 1, time: 1 };
+    const refused = await peer.request({ ...wire("sampleSpriteAnimation"), params: both });
+    expect(refused["error"]).toMatchObject({ code: RpcErrorCode.invalidParams });
+    expect(spriteCalls).toEqual([
+      ["sample", "run", 2],
+      ["sampleTime", "run", 0.25],
+    ]);
   });
 });
