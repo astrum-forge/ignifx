@@ -66,7 +66,9 @@
         "decoders/uastc_rgba8_srgb_v2.wasm",
         "decoders/uastc_rgba8_unorm_v2.wasm",
         "decoders/zstddec.wasm",
-        "decoders/meshopt_decoder.js"
+        "decoders/meshopt_decoder.js",
+        "decoders/draco_decoder.js",
+        "decoders/draco_decoder_gltf.wasm"
       ]
     }
   }

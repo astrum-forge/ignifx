@@ -199,7 +199,12 @@ describe("configureDecoders", () => {
       { address: MESHOPT_DECODER_FILE, url: `/m/${MESHOPT_DECODER_FILE}`, type: "binary" },
     ]);
     await configureDecoders(fakeLoad("x", "x", manifest).ctx.app);
-    expect(applyUrls).toHaveBeenCalledWith({ ktx2Decoder: null, ktx2Transcoders: {}, meshoptBaseUrl: "/m/" });
+    expect(applyUrls).toHaveBeenCalledWith({
+      ktx2Decoder: null,
+      ktx2Transcoders: {},
+      meshoptBaseUrl: "/m/",
+      dracoBaseUrl: null,
+    });
   });
 
   it("tries again on the next load when pointing Lite at the decoders threw", async () => {

@@ -91,6 +91,28 @@
           "sha256": "fabafaaa29cbb1cfa367f20e896d7f6e95b86e575e2ea86ddb6f8cca1a87152d"
         }
       ]
+    },
+    {
+      "name": "draco3dgltf",
+      "version": "1.5.7",
+      "integrity": "sha512-LeqcpmoHIyYUi0z70/H3tMkGj8QhqVxq6FJGPjlzR24BNkQ6jyMheMvFKJBI0dzGZrEOUyQEmZ8axM1xRrbRiw==",
+      "license": "Apache-2.0",
+      "repository": "https://github.com/google/draco",
+      "copyright": "Copyright 2017 The Draco Authors",
+      "licenseFile": "draco3dgltf.LICENSE.md",
+      "noticeFile": null,
+      "files": [
+        {
+          "file": "draco_decoder.js",
+          "from": "draco_decoder_gltf_nodejs.js",
+          "sha256": "8bb2952d2ba7d67e1414f8df819410cb0434a666be53f671fff75f68843d76f6"
+        },
+        {
+          "file": "draco_decoder_gltf.wasm",
+          "from": "draco_decoder_gltf.wasm",
+          "sha256": "712db3449ae2041d6e8a224c395bda6cedb49e51322fae38b7db9beb8b381889"
+        }
+      ]
     }
   ]
 }

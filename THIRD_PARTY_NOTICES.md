@@ -9,7 +9,7 @@ in, with the licence each one is distributed under (`CONSTITUTION.md` §11.2).
 Sample art, audio and models shipped with a template are **not** listed here: each template
 records its own in `templates/<name>/ATTRIBUTION.md` (§11.3).
 
-15 packages.
+16 packages.
 
 ## @babylonjs/havok
 
@@ -550,6 +550,14 @@ flag will run closure compiler from third_party/).
 - License: Apache-2.0
 - Copyright 2024 The Babylon.js team
 - Repository: <https://github.com/BabylonJS/Babylon.js>
+- Required by: @ignifx/core (vendored in packages/core/decoders)
+
+## draco3dgltf
+
+- Version: 1.5.7
+- License: Apache-2.0
+- Copyright 2017 The Draco Authors
+- Repository: <https://github.com/google/draco>
 - Required by: @ignifx/core (vendored in packages/core/decoders)
 
 ## electron
