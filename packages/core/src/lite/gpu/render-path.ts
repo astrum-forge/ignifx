@@ -190,6 +190,14 @@ export interface ScenePass {
   readonly target: RenderTarget;
   /** That target's colour format. */
   readonly format: GPUTextureFormat;
+  /**
+   * Whether a post-process task may write {@link ScenePass.target} directly. `false` on the plain
+   * path: its target is allocated lazily, and a post-process task that writes it reallocates it in
+   * `record()` (Lite's `buildRenderTarget`, `lib/engine/render-target.js`), destroying the texture
+   * the scene task and every pass recorded before it hold, so the frame is rejected and presents
+   * black. The HDR target is eager and survives that.
+   */
+  readonly isTargetWritable: boolean;
 }
 
 /**
@@ -271,6 +279,6 @@ export function installOffscreenRenderPath(engine: EngineContext, scene: SceneCo
       return isPresentEnabled;
     },
     hdr: null,
-    scenePass: { task: sceneTask, target: sceneColor, format: engine.format },
+    scenePass: { task: sceneTask, target: sceneColor, format: engine.format, isTargetWritable: false },
   };
 }

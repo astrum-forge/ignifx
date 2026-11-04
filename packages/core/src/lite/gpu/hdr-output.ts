@@ -524,7 +524,7 @@ export function installHdrRenderPath(
       return isPresentEnabled;
     },
     hdr: handle,
-    scenePass: { task: sceneTask, target: hdr.rt, format: HDR_SCENE_FORMAT },
+    scenePass: { task: sceneTask, target: hdr.rt, format: HDR_SCENE_FORMAT, isTargetWritable: true },
   };
 }
 
