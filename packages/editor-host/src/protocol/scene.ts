@@ -40,7 +40,9 @@ import type { SceneOp } from "./scene-ops.js";
  *
  * The host handles these requests one at a time, in the order they arrive: a request starts only
  * after the previous one has been answered, so `applyOps` sent right after `openScene` sees the new
- * scene. Until the host's app has started, every one of them fails with `RpcErrorCode.notReady`;
+ * scene. `renderThumbnail` is the exception: it renders on a stage of its own, never reads the
+ * document, and runs beside the queue, so it holds up no other request and its answer may come
+ * before those of requests sent earlier. Until the host's app has started, every one of them fails with `RpcErrorCode.notReady`;
  * the host's first `schemasChanged` is the editor's cue that they are accepted. A method that needs
  * an open scene fails with `RpcErrorCode.noScene` while none is open. A method whose capability the
  * host does not list in `ready` fails with `RpcErrorCode.methodNotFound`.
@@ -835,6 +837,14 @@ export const GRID_MIN_SIZE = 0.001;
 export const GRID_MAX_SIZE = 1000;
 
 /**
+ * The farthest from `y = 0` the 3D grid's plane may be put with `setGrid`'s `height`, in metres,
+ * either way.
+ *
+ * @public
+ */
+export const GRID_MAX_HEIGHT = 100_000;
+
+/**
  * The parameters of `setGrid`. Each call sets the whole grid: a field left out takes its default.
  *
  * @public
@@ -848,6 +858,19 @@ export interface SetGridParams {
    * host draws every tenth one instead.
    */
   readonly size?: number;
+  /**
+   * Whether the 3D grid draws over the scene instead of being hidden by the meshes in front of it,
+   * so a floor at the grid's height does not cover it. Defaults to `false`: the grid is
+   * depth-tested like a mesh. The 2D grid always draws over the sprites. Needs the host capability
+   * `gridOverlay`; an older host ignores it.
+   */
+  readonly overlay?: boolean;
+  /**
+   * The world `y` of the 3D grid's plane, in metres, from `-`{@link GRID_MAX_HEIGHT} to
+   * {@link GRID_MAX_HEIGHT}. Defaults to `0`. The 2D grid ignores it. Needs the host capability
+   * `gridOverlay`; an older host ignores it.
+   */
+  readonly height?: number;
 }
 
 /**
@@ -1878,8 +1901,9 @@ export function isSetAnimateMaterialsParams(value: unknown): value is SetAnimate
  * Checks the parameters of `setGrid`.
  *
  * @param value - The received `params`.
- * @returns True for an object whose `visible`, if present, is a boolean and whose `size`, if
- * present, is a number from {@link GRID_MIN_SIZE} to {@link GRID_MAX_SIZE}.
+ * @returns True for an object whose `visible` and `overlay`, if present, are booleans, whose `size`,
+ * if present, is a number from {@link GRID_MIN_SIZE} to {@link GRID_MAX_SIZE}, and whose `height`,
+ * if present, is a number within {@link GRID_MAX_HEIGHT} of zero.
  *
  * @public
  */
@@ -1888,9 +1912,12 @@ export function isSetGridParams(value: unknown): value is SetGridParams {
     return false;
   }
   const size = value["size"];
+  const height = value["height"];
   return (
     optionalField(value, "visible", isBoolean) &&
-    (size === undefined || (isFiniteNumber(size) && size >= GRID_MIN_SIZE && size <= GRID_MAX_SIZE))
+    optionalField(value, "overlay", isBoolean) &&
+    (size === undefined || (isFiniteNumber(size) && size >= GRID_MIN_SIZE && size <= GRID_MAX_SIZE)) &&
+    (height === undefined || (isFiniteNumber(height) && Math.abs(height) <= GRID_MAX_HEIGHT))
   );
 }
 

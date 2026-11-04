@@ -179,6 +179,7 @@ async function sceneView(): Promise<{ readonly view: EditorHost; readonly opened
     HostCapability.gameView2d,
     HostCapability.thumbnails,
     HostCapability.grid,
+    HostCapability.gridOverlay,
     HostCapability.tilemapCells,
     HostCapability.editorLines,
     HostCapability.spriteAnimation,

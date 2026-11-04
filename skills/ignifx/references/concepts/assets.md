@@ -170,8 +170,10 @@ silicon and mobile, RGBA8 without compression support — so it stays compressed
   `@ignifx/core` directly (the scaffolded templates do). Without the plugin, copy
   `node_modules/@ignifx/core/decoders/*` beside the assets and list each file in the manifest at
   its bare name.
-- `.basis` loads too, but its transcoder always comes from `cdn.babylonjs.com` (Lite 1.34 has no
-  setter), so it fails under a strict CSP. Prefer `.ktx2`.
+- `.basis` is not supported in a project that serves its own decoders (the Vite plugin's): Lite
+  1.34 loads its transcoder only from `cdn.babylonjs.com`, with no setter, so the load fails with
+  `IGX-0509` before anything is fetched. Without the plugin Lite still tries the CDN, and a strict
+  CSP's refusal becomes the same `IGX-0509`. Convert `.basis` files to `.ktx2`.
 
 Compressed models load the same way: a `.glb` with `KHR_draco_mesh_compression` or
 `EXT_meshopt_compression` is a `model` like any other, and its Draco or meshopt decoder is served

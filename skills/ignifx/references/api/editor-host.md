@@ -3133,6 +3133,23 @@ The parameters of `setGrid`. Each call sets the whole grid: a field left out tak
 
 #### Properties
 
+##### height?
+
+> `readonly` `optional` **height?**: `number`
+
+The world `y` of the 3D grid's plane, in metres, from `-`[GRID\_MAX\_HEIGHT](#grid_max_height) to
+[GRID\_MAX\_HEIGHT](#grid_max_height). Defaults to `0`. The 2D grid ignores it. Needs the host capability
+`gridOverlay`; an older host ignores it.
+
+##### overlay?
+
+> `readonly` `optional` **overlay?**: `boolean`
+
+Whether the 3D grid draws over the scene instead of being hidden by the meshes in front of it,
+so a floor at the grid's height does not cover it. Defaults to `false`: the grid is
+depth-tested like a mesh. The 2D grid always draws over the sprites. Needs the host capability
+`gridOverlay`; an older host ignores it.
+
 ##### size?
 
 > `readonly` `optional` **size?**: `number`
@@ -4261,6 +4278,15 @@ The world's axes.
 
 ***
 
+### GRID\_MAX\_HEIGHT
+
+> `const` **GRID\_MAX\_HEIGHT**: `100000` = `100_000`
+
+The farthest from `y = 0` the 3D grid's plane may be put with `setGrid`'s `height`, in metres,
+either way.
+
+***
+
 ### GRID\_MAX\_SIZE
 
 > `const` **GRID\_MAX\_SIZE**: `1000` = `1000`
@@ -4390,6 +4416,15 @@ The scene host draws a grid in the view and answers `setGrid`: a ground grid at 
 view mode and a unit grid (a pixel grid when zoomed in) over the 2D view. From engine ask E31
 (additive in 0.3); without it, the scene host answers `setGrid` with
 `RpcErrorCode.methodNotFound`.
+
+##### gridOverlay
+
+> `readonly` **gridOverlay**: `"gridOverlay"` = `"gridOverlay"`
+
+The scene host's `setGrid` takes `overlay` (the 3D grid draws over the scene, so a floor mesh
+does not hide it) and `height` (the world `y` of the 3D grid's plane). From the editor's ask of
+2026-11-04 (additive in 0.3); without it, the host ignores both fields and draws the grid
+depth-tested at `y = 0`.
 
 ##### heartbeat
 
@@ -4808,6 +4843,8 @@ request; one with `HostCapability.gameView2d` renders a `Camera2D` document came
 > `readonly` **renderThumbnail**: `"renderThumbnail"` = `"renderThumbnail"`
 
 Renders one model or prefab asset on its own and answers the image: [ThumbnailResult](#thumbnailresult).
+It runs beside the one-at-a-time queue of the other methods, so a thumbnail never holds them
+up; thumbnails are answered in the order they were asked for.
 
 ##### setGameView
 
@@ -5074,7 +5111,9 @@ Switches the view between the 3D and the 2D editor camera. Answers `null`.
 
 The host handles these requests one at a time, in the order they arrive: a request starts only
 after the previous one has been answered, so `applyOps` sent right after `openScene` sees the new
-scene. Until the host's app has started, every one of them fails with `RpcErrorCode.notReady`;
+scene. `renderThumbnail` is the exception: it renders on a stage of its own, never reads the
+document, and runs beside the queue, so it holds up no other request and its answer may come
+before those of requests sent earlier. Until the host's app has started, every one of them fails with `RpcErrorCode.notReady`;
 the host's first `schemasChanged` is the editor's cue that they are accepted. A method that needs
 an open scene fails with `RpcErrorCode.noScene` while none is open. A method whose capability the
 host does not list in `ready` fails with `RpcErrorCode.methodNotFound`.
@@ -6729,8 +6768,9 @@ The received `params`.
 
 `value is SetGridParams`
 
-True for an object whose `visible`, if present, is a boolean and whose `size`, if
-present, is a number from [GRID\_MIN\_SIZE](#grid_min_size) to [GRID\_MAX\_SIZE](#grid_max_size).
+True for an object whose `visible` and `overlay`, if present, are booleans, whose `size`,
+if present, is a number from [GRID\_MIN\_SIZE](#grid_min_size) to [GRID\_MAX\_SIZE](#grid_max_size), and whose `height`,
+if present, is a number within [GRID\_MAX\_HEIGHT](#grid_max_height) of zero.
 
 ***
 

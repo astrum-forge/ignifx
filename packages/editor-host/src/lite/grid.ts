@@ -29,11 +29,17 @@ export const GRID_MESH_NAME = "ignifx-editor-grid";
 /** The name of the 2D grid's mesh in the render overlay. */
 export const SCREEN_GRID_MESH_NAME = "ignifx-editor-grid-2d";
 
+/** The name of the 3D grid's mesh in the render overlay, drawn when `setGrid` asks for `overlay`. */
+export const OVERLAY_GRID_MESH_NAME = "ignifx-editor-grid-overlay";
+
 /** How visible the minor lines are next to the major ones, `0..1`. */
 const MINOR_VISIBILITY = 0.4;
 
 /** The 3D grid's line opacity; below 1, Lite's grid material leaves the space between lines clear. */
 const GROUND_OPACITY = 0.8;
+
+/** The 3D grid's line opacity over the scene: it hides nothing, so it stays fainter than the depth-tested one. */
+const OVERLAY_GROUND_OPACITY = 0.5;
 
 /** The 2D grid's line opacity: it draws over the sprites, so it stays faint. */
 const SCREEN_OPACITY = 0.35;
@@ -69,7 +75,8 @@ interface GridPlane {
 
 /**
  * Builds the grid of one scene view: a ground plane in the render scene, depth-tested against the
- * document's meshes, and a screen plane in the render overlay, over the 2D view's sprites.
+ * document's meshes, the same plane in the render overlay, drawn over them (`setGrid`'s
+ * `overlay`), and a screen plane in the render overlay, over the 2D view's sprites.
  *
  * @remarks
  * Lite's grid material works in object space, so each plane is a unit square scaled to the
@@ -102,6 +109,20 @@ export function createEditorGrid(handles: AppLiteHandles, overlay: RenderOverlay
     handles.scene,
     GROUND_OPACITY,
   );
+  const overlayGround = makePlane(
+    createGround(engine, { width: 1, height: 1, subdivisions: 1 }),
+    OVERLAY_GRID_MESH_NAME,
+    createGridMaterial({
+      name: OVERLAY_GRID_MESH_NAME,
+      lineColor: [0.6, 0.6, 0.6],
+      minorUnitVisibility: MINOR_VISIBILITY,
+      opacity: OVERLAY_GROUND_OPACITY,
+      opacityTexture: fade,
+      backFaceCulling: false,
+    }),
+    overlay.lite.scene,
+    OVERLAY_GROUND_OPACITY,
+  );
   const screen = makePlane(
     createPlane(engine, { size: 1 }),
     SCREEN_GRID_MESH_NAME,
@@ -122,15 +143,17 @@ export function createEditorGrid(handles: AppLiteHandles, overlay: RenderOverlay
       if (isDisposed) {
         return;
       }
-      ground.mesh.visible = placement?.plane === "ground";
+      const isGround = placement?.plane === "ground";
+      ground.mesh.visible = isGround && !placement.overlay;
+      overlayGround.mesh.visible = isGround && placement.overlay;
       screen.mesh.visible = placement?.plane === "screen";
       if (placement === null) {
         return;
       }
       const { centerX, centerY, extent } = placement;
-      const target = placement.plane === "ground" ? ground : screen;
+      const target = placement.plane === "screen" ? screen : placement.overlay ? overlayGround : ground;
       if (placement.plane === "ground") {
-        target.mesh.position.set(centerX, 0, centerY);
+        target.mesh.position.set(centerX, placement.height, centerY);
         target.mesh.scaling.set(extent, 1, extent);
         setShaderUniform(target.material, "gridOffset", [centerX / extent, 0, centerY / extent]);
       } else {
@@ -150,7 +173,7 @@ export function createEditorGrid(handles: AppLiteHandles, overlay: RenderOverlay
         return;
       }
       isDisposed = true;
-      for (const plane of [ground, screen]) {
+      for (const plane of [ground, overlayGround, screen]) {
         removeFromScene(plane.scene, plane.mesh);
         disposeMeshGpu(plane.mesh);
       }

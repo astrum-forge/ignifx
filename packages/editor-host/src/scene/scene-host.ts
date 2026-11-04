@@ -131,6 +131,10 @@ interface GridSettings {
   readonly visible: boolean;
   /** The minor lines' spacing, in metres. */
   readonly size: number;
+  /** Whether the 3D grid draws over the scene. */
+  readonly overlay: boolean;
+  /** The 3D grid plane's world y, in metres. */
+  readonly height: number;
 }
 
 /** The gizmo's settings, as `setGizmo` last set them. */
@@ -154,6 +158,12 @@ interface GizmoSettings {
 export class SceneHost {
   /** The scene methods, by name, for the channel. */
   readonly methods: ReadonlyMap<string, RequestHandler>;
+
+  /**
+   * The methods the channel runs beside its queue: `renderThumbnail`, which renders on a stage app
+   * of its own, never reads the document, and can take a couple of seconds.
+   */
+  readonly unqueued: ReadonlySet<string> = new Set<string>([RenderViewMethod.renderThumbnail]);
 
   readonly #notify: (method: string, params: unknown) => void;
 
@@ -189,7 +199,7 @@ export class SceneHost {
   /** The script that moves the grid, on the `editor` scene's `Scene Grid` entity. */
   #grid: EditorGrid | null = null;
 
-  #gridSettings: GridSettings = { visible: true, size: DEFAULT_GRID_SIZE };
+  #gridSettings: GridSettings = { visible: true, size: DEFAULT_GRID_SIZE, overlay: false, height: 0 };
 
   /** The editor's line sets, as `setEditorLines` last set them, by id; drawn once `#lines` exists. */
   readonly #lineSets = new Map<string, { readonly lines: readonly number[]; readonly color: LineColor }>();
@@ -283,9 +293,13 @@ export class SceneHost {
       methods.set(SceneMethod.setEditorLines, (params) => this.#setEditorLines(params));
       methods.set(SceneMethod.clearEditorLines, (params) => this.#clearEditorLines(params));
     }
-    // The channel answers one request at a time; an asset reload's rebuild queues with them.
+    // The channel answers one request at a time; an asset reload's rebuild queues with them. An
+    // unqueued method runs at once: the thumbnail renderer keeps its own queue.
     this.methods = new Map(
-      [...methods].map(([name, handler]) => [name, async (params: unknown) => this.#serial(() => handler(params))]),
+      [...methods].map(([name, handler]) => [
+        name,
+        this.unqueued.has(name) ? handler : async (params: unknown) => this.#serial(() => handler(params)),
+      ]),
     );
   }
 
@@ -781,18 +795,25 @@ export class SceneHost {
   }
 
   /**
-   * `setGrid`: shows or hides the view's grid and sets its spacing. A field left out takes its
-   * default.
+   * `setGrid`: shows or hides the view's grid and sets its spacing, and the 3D grid's height and
+   * whether it draws over the scene. A field left out takes its default.
    *
-   * @param params - `{ visible?, size? }`.
+   * @param params - `{ visible?, size?, overlay?, height? }`.
    * @returns `null`.
    */
   #setGrid(params: unknown): null {
     this.#requireMirror(SceneMethod.setGrid);
     if (!isSetGridParams(params)) {
-      throw new InvalidParamsError("setGrid takes { visible?: boolean, size?: number from 0.001 to 1000 }.");
+      throw new InvalidParamsError(
+        "setGrid takes { visible?: boolean, size?: number from 0.001 to 1000, overlay?: boolean, height?: number from -100000 to 100000 }.",
+      );
     }
-    this.#gridSettings = { visible: params.visible ?? true, size: params.size ?? DEFAULT_GRID_SIZE };
+    this.#gridSettings = {
+      visible: params.visible ?? true,
+      size: params.size ?? DEFAULT_GRID_SIZE,
+      overlay: params.overlay ?? false,
+      height: params.height ?? 0,
+    };
     return null;
   }
 
@@ -867,7 +888,7 @@ export class SceneHost {
    * @returns The placement, or `null` while the grid is hidden.
    */
   #gridPlacement(): GridPlacement | null {
-    const { visible, size } = this.#gridSettings;
+    const { visible, size, overlay, height } = this.#gridSettings;
     if (!visible) {
       return null;
     }
@@ -876,7 +897,7 @@ export class SceneHost {
       return screenGridPlacement(camera2D.view(), size);
     }
     const eye = this.#eye;
-    return eye === null ? null : groundGridPlacement(eye.transform.position, size, eye.far);
+    return eye === null ? null : groundGridPlacement(eye.transform.position, size, eye.far, height, overlay);
   }
 
   /**

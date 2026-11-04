@@ -185,6 +185,7 @@ export async function startEditorHost(options: EditorHostOptions): Promise<Edito
         HostCapability.gameView2d,
         ...(canRenderThumbnails(options) ? [HostCapability.thumbnails] : []),
         HostCapability.grid,
+        HostCapability.gridOverlay,
         HostCapability.tilemapCells,
         HostCapability.editorLines,
         HostCapability.spriteAnimation,
@@ -214,6 +215,7 @@ export async function startEditorHost(options: EditorHostOptions): Promise<Edito
       hostKind: options.hostKind ?? HostKind.scene,
     },
     methods: scene.methods,
+    unqueued: scene.unqueued,
     heartbeatIntervalMs,
     onReady: () => {
       scene.sendSchemas();
