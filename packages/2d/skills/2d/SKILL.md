@@ -3,7 +3,7 @@ name: 2d
 description: Builds 2D games in ignifx with @ignifx/2d: Camera2D, SpriteRenderer, SpriteAnimator, texture atlases, Tilemap rendering and import, sorting layers and Y-sort, pixel-perfect cameras, parallax layers, sprite batches, and 2D picking. Use when adding or editing sprites, sprite animation, tilemaps, atlases, sorting layers, sprite batches, or a 2D camera in an ignifx project, or when the user mentions @ignifx/2d, Camera2D, SpriteRenderer, SpriteBatch, or Tilemap.
 license: Apache-2.0
 metadata:
-  ignifx-version: "0.16.0"
+  ignifx-version: "0.17.0"
 ---
 
 # @ignifx/2d
@@ -21,7 +21,7 @@ parse, `SpriteAnimator` advances on the stepped clock. Only the pixels need a GP
 
 ## Environment
 
-- Engine: ignifx `0.16.0`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
+- Engine: ignifx `0.17.0`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
 - WebGPU only, browser and Electron. Babylon Lite `1.34.0` is a peer dependency.
 - Register it like any extension; nothing happens at import time.
 
@@ -336,8 +336,11 @@ Generated reference: `skills/ignifx/references/formats/`.
   for pixel art.
 - **Cell `(0, 0)` is the bottom-left of a tilemap**, because the world is +Y up — but the file stores
   its rows **top first**, like every editor. `Tilemap` flips on load; `getTile` speaks cells.
-- **`orderInLayer` only reorders inside a Y-sorted layer.** Without `ySort` for that sorting layer,
-  Lite draws by insertion order. Turn Y-sort on, or use separate sorting layers.
+- **A `SpriteRenderer`'s `orderInLayer` only reorders inside a Y-sorted layer.** Without `ySort`
+  for that sorting layer, Lite draws by insertion order. Turn Y-sort on, or use separate sorting
+  layers. A tilemap layer's `orderInLayer` always applies. Without Y-sort, tiles draw by
+  `orderInLayer`, then by the layer's place in the file, and behind the sorting layer's sprites
+  when the orders tie. With Y-sort, it is the tiles' Y-sort bias, as for a sprite.
 - **A frame's pivot moves the sprite, not the layer.** Lite has one pivot per layer, so ignifx
   offsets each sprite instead. A `[0.5, 1]` pivot puts the entity's origin at the sprite's feet.
 - **`pixelPerfect` ignores `orthographicSize`** and scales `referenceResolution` by a whole number

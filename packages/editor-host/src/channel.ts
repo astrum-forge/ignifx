@@ -117,6 +117,12 @@ export interface ChannelOptions {
   readonly ready: ReadyResult;
   /** Methods answered after the handshake, by name. */
   readonly methods: ReadonlyMap<string, RequestHandler>;
+  /**
+   * Methods that run beside the one-at-a-time queue, as `ping` does: each starts as soon as it
+   * arrives and is answered when it is done, so a slow one holds up nothing. Only for methods whose
+   * answer does not depend on what the requests before it did.
+   */
+  readonly unqueued?: ReadonlySet<string>;
   /** Milliseconds between heartbeats. */
   readonly heartbeatIntervalMs: number;
   /** Called each time a port's `hello` has been answered with `ready`, after the answer is sent. */
@@ -289,6 +295,7 @@ export function connectPortOf(event: Event, editorOrigin: string): MessagePort |
  */
 export function openChannel(options: ChannelOptions): Channel {
   const { target, editorOrigin, ready, methods, heartbeatIntervalMs, onReady } = options;
+  const unqueued = options.unqueued ?? new Set<string>();
   let port: MessagePort | null = null;
   let portListener: ((event: MessageEvent) => void) | null = null;
   let isReady = false;
@@ -402,8 +409,9 @@ export function openChannel(options: ChannelOptions): Channel {
         }
       }
     };
-    // `ping` jumps the queue, so a long `openScene` does not look like a hung view.
-    if (method === HandshakeMethod.ping) {
+    // `ping` jumps the queue, so a long `openScene` does not look like a hung view; an unqueued
+    // method (a thumbnail) does too, so its settle frames do not hold up every other request.
+    if (method === HandshakeMethod.ping || unqueued.has(method)) {
       await reply();
       return;
     }

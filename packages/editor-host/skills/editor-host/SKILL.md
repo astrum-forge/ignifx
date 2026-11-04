@@ -3,7 +3,7 @@ name: editor-host
 description: Connects an ignifx project to the ignifx editor with @ignifx/editor-host: the Vite plugin that serves the editor's scene view from the project's own dev server, the virtual:ignifx/editor play controls a game's main.ts hands its app to (play, pause, step, stop, playState, playStateChanged, playStats, screenshot, queryRuntime, sendInput), and the host half of the editor protocol 0.3 over a MessagePort (hello/ready, heartbeat, and the scene document methods openScene, applyOps, readBack, select, pick, frame, setGizmo, setViewMode, screenshot, getSchemas, describeSettings, setAnimateMaterials, getColliderOutlines, sampleAnimation, sampleSpriteAnimation), including the 2D view mode. Use when wiring a project or template for the editor, when the user mentions @ignifx/editor-host, editorHostPlugin, attachEditorPlayControls, virtual:ignifx/editor, startEditorHost or /__ignifx_editor__/, or when debugging why the editor cannot connect to a view or why the scene view disagrees with the editor's document.
 license: Apache-2.0
 metadata:
-  ignifx-version: "0.16.0"
+  ignifx-version: "0.17.0"
 ---
 
 # @ignifx/editor-host
@@ -25,7 +25,7 @@ editor's, even though its name starts with `editor-`.
 
 ## Environment
 
-- Engine: ignifx `0.16.0`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
+- Engine: ignifx `0.17.0`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
 - Peers: `@ignifx/core` and `@babylonjs/lite` (the scene view's gizmos); for the `./vite` entry,
   `@ignifx/vite-plugin` and `vite`.
 - A development dependency of the project, at the same version as its `@ignifx/core`.
@@ -393,10 +393,13 @@ object `openScene` sends, through `world.loadSceneFile`; `readBack` answers with
 - **The grid.** With a canvas the scene host lists the `grid` capability and draws a grid: a
   ground grid at `y = 0` in 3D view mode (depth-tested, centred under the eye, coarser the higher
   the eye, faded out before its edge) and a faint grid over the 2D view (one line per layer pixel
-  from zoom 8). `setGrid { visible?, size? }` sets the whole grid each call; a field left out takes
+  from zoom 8). `setGrid { visible?, size?, overlay?, height? }` sets the whole grid each call; a field left out takes
   its default (`visible: true`, `size: 1` metre, 0.001 to 1000). The grid starts visible at every
   load, so re-send the editor's state after `ready`. It is never picked or saved, and never in the
-  play view; `screenshot` includes it while it is visible.
+  play view; `screenshot` includes it while it is visible. With the `gridOverlay` capability,
+  `setGrid` also takes `overlay` (default `false`: the 3D grid draws over the scene, fainter, so a
+  floor mesh does not hide it) and `height` (default `0`: the 3D grid plane's world y, -100 000 to
+  100 000 metres); an older host ignores both.
 - **Live tilemap painting.** With a canvas the scene host lists `tilemapCells` and answers
   `setTilemapCells { asset, layer, cells }`: `cells` are flat `[index, tile, …]` pairs in the
   `.tilemap.json` file's order (row-major, top row first), `layer` a layer name or index. Every

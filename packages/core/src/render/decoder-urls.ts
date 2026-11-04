@@ -227,6 +227,53 @@ export function assertDecoderIncluded(app: App, address: string, group: DecoderG
 }
 
 /**
+ * Throws `IGX-0509` for a `.basis` texture in a project that serves its own decoders, before
+ * anything is fetched.
+ *
+ * @remarks
+ * Lite 1.34's `loadBasisTexture2D` fetches `basis_transcoder.js` and its WebAssembly from
+ * `cdn.babylonjs.com` and has no setter for the location (`lib/texture/basis-loader.js`), so the
+ * transcoder cannot be served locally like the KTX2 decoder. A manifest that lists the KTX2 decoder
+ * comes from `@ignifx/vite-plugin`, whose builds load no code from a network host and whose
+ * packaged games refuse other origins (`script-src 'self'`); there a `.basis` file fails here, with
+ * a message that says to convert it to `.ktx2`. Elsewhere Lite still tries its CDN, and the texture
+ * loader turns a refused script into the same error.
+ *
+ * @param app - The app whose manifest to read.
+ * @param address - The texture being loaded, for the message.
+ * @throws An {@link IgnifxError} with code `IGX-0509` when the manifest lists the KTX2 decoder.
+ *
+ * @internal
+ */
+export function assertBasisLoadable(app: App, address: string): void {
+  if (app.assets.manifest.entries.some((entry) => entry.address === KTX2_DECODER_FILE)) {
+    throw basisTranscoderRemote(address);
+  }
+}
+
+/**
+ * Builds the `IGX-0509` error.
+ *
+ * @param address - The `.basis` texture being loaded.
+ * @param cause - What Lite's load failed with, when it got that far.
+ * @returns The error to throw.
+ *
+ * @internal
+ */
+export function basisTranscoderRemote(address: string, cause?: unknown): IgnifxError {
+  return new IgnifxError(
+    CoreErrorCode.basisTranscoderRemote,
+    `${address} is a .basis texture, whose transcoder Babylon Lite loads only from cdn.babylonjs.com, which ` +
+      "ignifx does not load code from: convert it to .ktx2.",
+    {
+      context: { asset: address },
+      hint: "Re-encode the texture as .ktx2 (for example `basisu -ktx2 texture.png`). It holds the same Basis payload, and its decoder ships with @ignifx/core.",
+      ...(cause === undefined ? {} : { cause }),
+    },
+  );
+}
+
+/**
  * Throws `IGX-0508` when a glTF file uses an extension whose decoder the build left out. The check
  * reads the file's `extensionsUsed` only when the manifest marks some decoder as left out.
  *

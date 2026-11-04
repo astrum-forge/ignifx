@@ -33194,6 +33194,13 @@ No registered loader claims the address's type or extension.
 
 An asset's value was read before the asset finished loading.
 
+##### basisTranscoderRemote
+
+> `readonly` **basisTranscoderRemote**: `"IGX-0509"` = `"IGX-0509"`
+
+A `.basis` texture was loaded where its transcoder cannot come from: Babylon Lite fetches it
+from `cdn.babylonjs.com` only, which ignifx does not load code from. Use `.ktx2`.
+
 ##### componentNotAttached
 
 > `readonly` **componentNotAttached**: `"IGX-0206"` = `"IGX-0206"`

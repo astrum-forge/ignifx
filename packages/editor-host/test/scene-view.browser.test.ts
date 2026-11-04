@@ -287,6 +287,7 @@ async function sceneView(scene: SceneFile = SCENE, framed = "BOX"): Promise<Edit
     HostCapability.gameView2d,
     HostCapability.thumbnails,
     HostCapability.grid,
+    HostCapability.gridOverlay,
     HostCapability.tilemapCells,
     HostCapability.editorLines,
     HostCapability.spriteAnimation,

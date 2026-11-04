@@ -55,6 +55,7 @@ describe("the protocol mirror", () => {
       gameView2d: "gameView2d",
       thumbnails: "thumbnails",
       grid: "grid",
+      gridOverlay: "gridOverlay",
       tilemapCells: "tilemapCells",
       editorLines: "editorLines",
       spriteAnimation: "spriteAnimation",
@@ -68,15 +69,31 @@ describe("the protocol mirror", () => {
     expect(page.SEND_INPUT_MAX_EVENTS).toBe(64);
   });
 
-  it("checks setGrid's optional visible and size, and the size's range", () => {
+  it("checks setGrid's optional fields and the ranges of size and height", () => {
     expect(page.SceneMethod.setGrid).toBe("setGrid");
     expect(page.GRID_MIN_SIZE).toBe(0.001);
     expect(page.GRID_MAX_SIZE).toBe(1000);
-    const valid: unknown[] = [{}, { visible: false }, { size: 0.5 }, { visible: true, size: 1000 }, { size: 0.001 }];
+    expect(page.GRID_MAX_HEIGHT).toBe(100_000);
+    const valid: unknown[] = [
+      {},
+      { visible: false },
+      { size: 0.5 },
+      { visible: true, size: 1000 },
+      { size: 0.001 },
+      { overlay: true },
+      { overlay: false, height: -2.5 },
+      { height: 100_000 },
+      { height: -100_000 },
+    ];
     const invalid: unknown[] = [
       null,
       [],
       { visible: "yes" },
+      { overlay: 1 },
+      { height: "0" },
+      { height: 100_001 },
+      { height: Number.NaN },
+      { height: Number.NEGATIVE_INFINITY },
       { size: 0 },
       { size: -1 },
       { size: 1000.5 },

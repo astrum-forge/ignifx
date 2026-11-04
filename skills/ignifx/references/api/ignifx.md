@@ -53556,6 +53556,13 @@ The asset's values, the inline values, or the fallback.
 
 A tilemap renderer.
 
+#### Remarks
+
+Each tilemap layer draws by its `orderInLayer`, then by its place in the document, however often
+its chunks are rebuilt. On a sorting layer without Y-sort, tiles draw behind that sorting layer's
+sprites when the orders tie. On a Y-sorted sorting layer, tiles sort with sprites by world Y and
+`orderInLayer` is their Y-sort bias, as for a `SpriteRenderer`.
+
 #### Example
 
 ```ts
@@ -89829,6 +89836,13 @@ No registered loader claims the address's type or extension.
 > `readonly` **assetNotLoaded**: `"IGX-0501"`
 
 An asset's value was read before the asset finished loading.
+
+##### basisTranscoderRemote
+
+> `readonly` **basisTranscoderRemote**: `"IGX-0509"`
+
+A `.basis` texture was loaded where its transcoder cannot come from: Babylon Lite fetches it
+from `cdn.babylonjs.com` only, which ignifx does not load code from. Use `.ktx2`.
 
 ##### componentNotAttached
 

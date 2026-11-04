@@ -9,7 +9,7 @@ import {
   isThumbnailResult,
   THUMBNAIL_MAX_SIZE,
 } from "../src/protocol/index.js";
-import { thumbnailScene, thumbnailSubject } from "../src/scene/thumbnails.js";
+import { boundsSettler, thumbnailScene, thumbnailSubject } from "../src/scene/thumbnails.js";
 import { centredLayerView } from "../src/scene/view-2d.js";
 
 /**
@@ -101,5 +101,26 @@ describe("thumbnail subjects", () => {
     expect(thumbnailScene("door.prefab.json", "prefab").entities[0]?.instance).toEqual({
       scene: { $asset: "door.prefab.json" },
     });
+  });
+});
+
+describe("when a thumbnail's subject has settled", () => {
+  const box = { min: { x: 0, y: 0, z: 0 }, max: { x: 1, y: 2, z: 3 } };
+
+  it("waits for the bounds to hold still for two frames", () => {
+    const settled = boundsSettler();
+    expect(settled(null, false)).toBe(false);
+    expect(settled(box, false)).toBe(false);
+    expect(settled({ ...box }, false)).toBe(false);
+    expect(settled({ ...box }, false)).toBe(true);
+  });
+
+  it("gives up on an empty subject after a few frames, but not while an asset is loading", () => {
+    const settled = boundsSettler();
+    for (let frame = 0; frame < 10; frame += 1) {
+      expect(settled(null, true)).toBe(false);
+    }
+    expect([settled(null, false), settled(null, false), settled(null, false)]).toEqual([false, false, false]);
+    expect(settled(null, false)).toBe(true);
   });
 });

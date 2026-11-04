@@ -313,6 +313,9 @@ export const GizmoSpace: {
 export type GizmoSpace = (typeof GizmoSpace)[keyof typeof GizmoSpace];
 
 // @public
+export const GRID_MAX_HEIGHT = 1e5;
+
+// @public
 export const GRID_MAX_SIZE = 1e3;
 
 // @public
@@ -365,6 +368,7 @@ export const HostCapability: {
     readonly gameView2d: "gameView2d";
     readonly thumbnails: "thumbnails";
     readonly grid: "grid";
+    readonly gridOverlay: "gridOverlay";
     readonly tilemapCells: "tilemapCells";
     readonly editorLines: "editorLines";
     readonly spriteAnimation: "spriteAnimation";
@@ -1338,6 +1342,8 @@ export interface SetGizmoParams {
 
 // @public
 export interface SetGridParams {
+    readonly height?: number;
+    readonly overlay?: boolean;
     readonly size?: number;
     readonly visible?: boolean;
 }

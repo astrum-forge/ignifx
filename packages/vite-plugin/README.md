@@ -355,7 +355,8 @@ never pointed at `cdn.babylonjs.com` or the page root for a left-out decoder:
 ignifx({ decoders: { draco: false } }); // no Draco-compressed models in this game
 ```
 
-A `.basis` texture is the exception: Lite 1.34 always fetches its transcoder from the CDN. Use
+A `.basis` texture is the exception: Lite 1.34 always fetches its transcoder from the CDN, so in a
+project that uses this plugin a `.basis` load fails with `IGX-0509` before anything is fetched. Use
 `.ktx2`.
 
 ## Error codes

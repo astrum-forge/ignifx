@@ -349,6 +349,22 @@ export function spriteIndexOf(handle: Sprite2DHandle): number {
 }
 
 /**
+ * Moves a layer to another draw order.
+ *
+ * @remarks
+ * Lite re-sorts its layers by `order` every frame (`lib/sprite/sprite-renderer.js`,
+ * `spriteRendererUpdate`), so a new value takes effect on the next frame.
+ *
+ * @param layer - The layer.
+ * @param order - The new draw order; lower draws first.
+ *
+ * @internal
+ */
+export function setLayerOrder(layer: Sprite2DLayer, order: number): void {
+  layer.order = order;
+}
+
+/**
  * Removes every sprite from a layer, keeping the layer itself.
  *
  * @param layer - The layer to empty.

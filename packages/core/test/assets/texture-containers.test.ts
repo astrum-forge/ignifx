@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createAssetManifest } from "../../src/assets/manifest.js";
 import { isIgnifxError } from "../../src/errors/ignifx-error.js";
 import {
+  basisTranscoderRemote,
   configureDecoders,
   decoderUrlsFromManifest,
   DRACO_DECODER_FILE,
@@ -266,5 +267,42 @@ describe("a decoder the vite plugin left out", () => {
       { address: "c.js", url: "/assets/c.js" },
     ]);
     expect([...leftOutDecoders(manifest)]).toEqual(["meshopt"]);
+  });
+});
+
+describe("a .basis texture", () => {
+  it("fails with IGX-0509 before anything is fetched when the project serves its own decoders", async () => {
+    const manifest = createAssetManifest([
+      { address: KTX2_DECODER_FILE, url: `/assets/${KTX2_DECODER_FILE}`, type: "binary" },
+      { address: "rock.basis", url: "/assets/rock.basis" },
+    ]);
+    const harness = await createAssetHarness({ manifest });
+    try {
+      const failure = await harness.settleUntil(failureOf(harness, "rock.basis"), "rock.basis");
+      expect(codeOf(failure)).toBe("IGX-0509");
+      expect(messageOf(failure)).toContain("convert it to .ktx2");
+      expect(harness.net.requests).toEqual([]);
+    } finally {
+      harness.dispose();
+    }
+  });
+
+  it("still loads where the manifest lists no decoder, as before", async () => {
+    const harness = await createAssetHarness({
+      manifest: createAssetManifest([{ address: "rock.basis", url: "/assets/rock.basis" }]),
+    });
+    try {
+      expect(await harness.settleUntil(failureOf(harness, "rock.basis"), "rock.basis")).toBeNull();
+    } finally {
+      harness.dispose();
+    }
+  });
+
+  it("names the asset and keeps Lite's failure as the cause", () => {
+    const cause = new Error("Basis: failed to load https://cdn.babylonjs.com/basisTranscoder/1/basis_transcoder.js");
+    const error = basisTranscoderRemote("textures/rock.basis", cause);
+    expect(error.code).toBe("IGX-0509");
+    expect(error.message).toContain("textures/rock.basis");
+    expect(error.cause).toBe(cause);
   });
 });
