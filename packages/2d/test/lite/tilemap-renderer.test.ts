@@ -1,9 +1,10 @@
 import { Phase, Vec2 } from "@ignifx/core";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { defineSpriteAtlas } from "../../src/atlas/definition.js";
 import { SpriteAtlasAsset } from "../../src/atlas/sprite-atlas-asset.js";
 import { Camera2D } from "../../src/camera/camera-2d.js";
 import { buildAtlas } from "../../src/lite/atlas.js";
+import { spriteIndexOf } from "../../src/lite/sprite-layer.js";
 import { TwoDRuntime } from "../../src/service/runtime.js";
 import { TwoDSyncSystem } from "../../src/service/sync-system.js";
 import { defaultTwoDSettings } from "../../src/settings.js";
@@ -16,7 +17,7 @@ import { TilemapRenderer } from "../../src/tilemap/tilemap-renderer.js";
 import { Tilemap } from "../../src/tilemap/tilemap.js";
 import { createTwoDApp, readFixtureJson } from "../support/app.js";
 import type { FrameRect } from "../../src/lite/atlas.js";
-import type { LiteSpriteRenderer } from "../../src/lite/types.js";
+import type { LiteSprite2DHandle, LiteSpriteRenderer } from "../../src/lite/types.js";
 import type { TwoDAppHarness } from "../support/app.js";
 import type { Texture2D } from "@babylonjs/lite";
 
@@ -261,6 +262,126 @@ describe("chunk building", () => {
     const rig = await createRig({ chunkSize: 1, cull: false });
     rig.tick();
     expect(rig.renderer.chunkCount).toBe(16);
+  });
+});
+
+/** Two tilemap layers over a 4 by 2 map, two cells to a chunk: chunk 0 is on the left. */
+interface LayeredRig {
+  readonly map: Tilemap;
+  readonly runtime: TwoDRuntime;
+  readonly tick: () => void;
+  /** Every tile placed so far, with the tilemap layer it belongs to. */
+  readonly placed: readonly {
+    readonly layerIndex: number;
+    readonly key: string;
+    readonly handle: LiteSprite2DHandle;
+  }[];
+}
+
+/** Builds a map whose layer 0 is grass everywhere and layer 1 a wall over every cell. */
+async function createLayeredRig(orders: readonly [number, number]): Promise<LayeredRig> {
+  const created = await createTwoDApp();
+  harness = created;
+  const runtime = new TwoDRuntime({
+    app: created.app,
+    settings: defaultTwoDSettings(),
+    sortingLayers: ["Default"],
+    createRenderer: (): LiteSpriteRenderer => stubRenderer(),
+    attachLayer: (): void => {},
+    detachLayer: (): void => {},
+    destroyRenderer: (): void => {},
+  });
+  const placed: { layerIndex: number; key: string; handle: LiteSprite2DHandle }[] = [];
+  const placeTile = runtime.layers.placeTile.bind(runtime.layers);
+  vi.spyOn(runtime.layers, "placeTile").mockImplementation((sortingLayer, atlas, orderInLayer, layerIndex, scratch) => {
+    const result = placeTile(sortingLayer, atlas, orderInLayer, layerIndex, scratch);
+    placed.push({ layerIndex, key: result.key, handle: result.handle });
+    return result;
+  });
+  const system = new TwoDSyncSystem(runtime);
+  const definition = defineTilemap({
+    tileWidth: 32,
+    width: 4,
+    height: 2,
+    tilesets: [
+      {
+        name: "hero",
+        atlas: "2d/hero.atlas.json",
+        firstId: 1,
+        tiles: [
+          { id: 0, frame: "hero_0" },
+          { id: 1, frame: "hero_1" },
+        ],
+      },
+    ],
+    layers: [
+      { name: "Ground", orderInLayer: orders[0], tiles: Array.from({ length: 8 }, () => 1) },
+      { name: "Solid", orderInLayer: orders[1], tiles: Array.from({ length: 8 }, () => 2) },
+    ],
+  });
+  const entity = created.app.world.createEntity("level");
+  const map = entity.addComponent(Tilemap);
+  map.map = { state: "loaded", value: new TilemapAsset("2d/layered.tilemap.json", definition) } as never;
+  map.chunkSize = 2;
+  const renderer = entity.addComponent(TilemapRenderer);
+  renderer.atlas = { state: "loaded", value: tileAtlas() } as never;
+  renderer.cullChunks = false;
+  const tick = (): void => {
+    system.update({
+      world: created.app.world,
+      time: created.app.time,
+      phase: Phase.PreRender,
+      dt: 1 / 60,
+      isClockHeld: false,
+    });
+  };
+  return { map, runtime, tick, placed };
+}
+
+/**
+ * Where each live tile of one tilemap layer falls in the frame's draw sequence: the Lite layers in
+ * draw order, then each layer's sprites in index order (none of these layers is Y-sorted).
+ */
+function drawPositions(rig: LayeredRig, layerIndex: number): number[] {
+  const entries = rig.runtime.layers.describe();
+  const out: number[] = [];
+  for (const tile of rig.placed) {
+    const index = spriteIndexOf(tile.handle);
+    if (tile.layerIndex !== layerIndex || index < 0) {
+      continue;
+    }
+    const layerPosition = entries.findIndex((entry) => entry.key === tile.key);
+    out.push(layerPosition * 1_000_000 + index);
+  }
+  return out;
+}
+
+describe("tilemap layer draw order", () => {
+  const cases = [
+    { label: "by orderInLayer", orders: [0, 1] as const },
+    { label: "by document order when orderInLayer ties", orders: [0, 0] as const },
+  ];
+  for (const { label, orders } of cases) {
+    it(`keeps every wall in front of the grass after a chunk rebuild, ${label}`, async () => {
+      const rig = await createLayeredRig(orders);
+      rig.tick();
+      // Rewrite a cell of the left chunk: it is dropped and rebuilt, the right chunk is not.
+      rig.map.setCells([{ layer: 0, x: 0, y: 0, tileId: 2 }]);
+      rig.tick();
+      rig.map.setCells([{ layer: 0, x: 0, y: 0, tileId: 1 }]);
+      rig.tick();
+      const ground = drawPositions(rig, 0);
+      const solid = drawPositions(rig, 1);
+      expect(ground).toHaveLength(8);
+      expect(solid).toHaveLength(8);
+      expect(Math.min(...solid)).toBeGreaterThan(Math.max(...ground));
+    });
+  }
+
+  it("draws a layer with a lower orderInLayer behind, whatever its place in the document", async () => {
+    const rig = await createLayeredRig([2, -1]);
+    rig.tick();
+    expect(Math.max(...drawPositions(rig, 1))).toBeLessThan(Math.min(...drawPositions(rig, 0)));
   });
 });
 

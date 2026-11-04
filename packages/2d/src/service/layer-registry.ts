@@ -3,6 +3,7 @@ import {
   clearLayer,
   createLayer,
   removeSprite,
+  setLayerOrder,
   setShaderParams,
   setYSort,
   setYSortOrder,
@@ -18,6 +19,8 @@ import type { SpriteRenderer } from "../sprite/sprite-renderer.js";
  * Pool sprite layers by sorting layer, atlas, blend mode, and screen-space mode.
  * A changed key needs a new handle because a layer's atlas and blend mode cannot change.
  * The picking map mirrors Lite's swap removal so each index still identifies the right component.
+ * Tilemap layers get Lite layers of their own on a sorting layer that is not Y-sorted, because a
+ * swap removal would otherwise move one tilemap layer's tiles in front of another's.
  */
 
 /** How many sprites a new layer pre-allocates room for. */
@@ -54,6 +57,20 @@ interface LayerRecord {
   ySort: boolean;
   /** Component per dense sprite index; kept in step with Lite's swap-remove. */
   readonly components: (SpriteRenderer | null)[];
+  /** Where the layer sits among its sorting layer's other layers. */
+  readonly rank: SubLayerRank;
+}
+
+/**
+ * Where one Lite layer sits inside its sorting layer's slice; compared field by field.
+ */
+interface SubLayerRank {
+  /** The tilemap layer's `orderInLayer`; sprite layers sit at `0`. */
+  readonly orderInLayer: number;
+  /** `0` for a tilemap layer and `1` for sprites, so tiles draw behind sprites at the same order. */
+  readonly group: number;
+  /** The tilemap layer's index in its document, or the sprite layer's creation sequence. */
+  readonly tie: number;
 }
 
 /**
@@ -86,6 +103,9 @@ export class SpriteLayerRegistry {
 
   /** Records in draw order, rebuilt whenever a layer is created. */
   #ordered: LayerRecord[] = [];
+
+  /** How many sprite layers have been created, so each gets the next creation sequence. */
+  #created = 0;
 
   readonly #sortingLayers: SortingLayerTable;
 
@@ -301,6 +321,55 @@ export class SpriteLayerRegistry {
   }
 
   /**
+   * Adds one tile of a tilemap layer, which no `SpriteRenderer` owns.
+   *
+   * @remarks
+   * A tilemap rebuilds a chunk by removing its sprites, and Lite removes by swapping the last sprite
+   * into the freed slot. In a layer shared by several tilemap layers that moves one layer's tiles in
+   * front of another's. So on a sorting layer that is not Y-sorted, each pair of `orderInLayer` and
+   * layer index gets a Lite layer of its own. Those layers draw by `orderInLayer`, then by the
+   * layer's index in its document, and behind the sorting layer's sprites when `orderInLayer` ties.
+   *
+   * On a Y-sorted sorting layer the tile shares the sprites' layer, so it sorts with characters by
+   * world Y, and `orderInLayer` becomes its Y-sort bias, as for a `SpriteRenderer`. Lite's Y-sort
+   * breaks ties by insertion, which a removal does not reorder.
+   *
+   * Like {@link SpriteLayerRegistry.placeRaw}, the tile takes no slot in the pick map.
+   *
+   * @param sortingLayer - The sorting layer's name.
+   * @param atlas - The atlas the tile draws from.
+   * @param orderInLayer - The tilemap layer's `orderInLayer`.
+   * @param layerIndex - The tilemap layer's index in its document.
+   * @param scratch - The reusable props record, already written.
+   * @returns The key and the handle, for {@link SpriteLayerRegistry.removeRaw}.
+   *
+   * @internal
+   */
+  // oxlint-disable-next-line max-params -- once per tile; an options object would allocate per tile.
+  placeTile(
+    sortingLayer: string,
+    atlas: SpriteAtlasAsset,
+    orderInLayer: number,
+    layerIndex: number,
+    scratch: SpriteScratch,
+  ): { readonly key: string; readonly handle: LiteSprite2DHandle } {
+    const shared = spriteLayerKey(sortingLayer, atlas.address, "alpha", false);
+    const ySort = this.#ySort[sortingLayer] === true;
+    const key = ySort ? shared : `${shared}|tile:${String(orderInLayer)}:${String(layerIndex)}`;
+    const rank: SubLayerRank | null = ySort ? null : { orderInLayer, group: 0, tie: layerIndex };
+    const record = this.#ensure(key, sortingLayer, "alpha", false, atlas, INITIAL_LAYER_CAPACITY, rank);
+    const handle = addSprite(record.layer, scratch);
+    const index = spriteIndexOf(handle);
+    if (index >= 0) {
+      record.components[index] = null;
+    }
+    if (record.ySort) {
+      setYSortOrder(handle, orderInLayer);
+    }
+    return { key, handle };
+  }
+
+  /**
    * Claims `capacity` sprite slots in one layer at once — what `app.twoD.createSpriteBatch` is
    * built on.
    *
@@ -435,6 +504,7 @@ export class SpriteLayerRegistry {
    * @param screenSpace - Whether the layer ignores the camera.
    * @param atlas - The atlas to bind the layer to.
    * @param capacity - How many sprites a layer this call creates pre-allocates room for.
+   * @param rank - Where a tilemap layer sits in its sorting layer, or `null` for a sprite layer.
    * @returns The record.
    */
   // oxlint-disable-next-line max-params -- private; four of them are the parts of the layer key.
@@ -445,6 +515,7 @@ export class SpriteLayerRegistry {
     screenSpace: boolean,
     atlas: SpriteAtlasAsset,
     capacity: number,
+    rank: SubLayerRank | null = null,
   ): LayerRecord {
     const existing = this.#records.get(key);
     if (existing !== undefined) {
@@ -455,12 +526,9 @@ export class SpriteLayerRegistry {
       throw new Error("a sprite layer needs an uploaded atlas; this app is headless");
     }
     const base = this.#sortingLayers.orderOf(sortingLayer);
-    // Sub-layers of one sorting layer are ordered by creation, which is stable across a run and
-    // never crosses into the next sorting layer's slice.
-    const order = base + this.#countIn(sortingLayer);
     const layer = createLayer(liteAtlas, {
       blend,
-      order,
+      order: base,
       capacity,
       customShader: this.#shaderFor(sortingLayer),
     });
@@ -475,8 +543,11 @@ export class SpriteLayerRegistry {
       screenSpace,
       ySort,
       components: [],
+      rank: rank ?? { orderInLayer: 0, group: 1, tie: this.#created },
     };
+    this.#created += 1;
     this.#records.set(key, record);
+    this.#renumber(sortingLayer, base);
     this.#ordered.push(record);
     this.#ordered.sort(byOrder);
     this.#onLayerCreated(layer);
@@ -484,20 +555,45 @@ export class SpriteLayerRegistry {
   }
 
   /**
-   * How many layers a sorting layer already has, so the next one gets the next sub-order.
+   * Gives a sorting layer's Lite layers consecutive orders from `base`, in rank order.
+   *
+   * @remarks
+   * Sprite layers rank by creation, which is stable across a run. The orders never leave the
+   * sorting layer's slice, which `SORTING_LAYER_ORDER_STEP` sizes.
    *
    * @param sortingLayer - The sorting layer's name.
-   * @returns The count.
+   * @param base - The sorting layer's base order.
    */
-  #countIn(sortingLayer: string): number {
-    let count = 0;
+  #renumber(sortingLayer: string, base: number): void {
+    const members: LayerRecord[] = [];
     for (const record of this.#records.values()) {
       if (record.sortingLayer === sortingLayer) {
-        count += 1;
+        members.push(record);
       }
     }
-    return count;
+    members.sort(byRank);
+    for (let index = 0; index < members.length; index += 1) {
+      const member = members[index];
+      if (member !== undefined) {
+        setLayerOrder(member.layer, base + index);
+      }
+    }
   }
+}
+
+/**
+ * Orders two layer records of one sorting layer by their rank.
+ *
+ * @param left - One record.
+ * @param right - The other.
+ * @returns The comparison.
+ */
+function byRank(left: LayerRecord, right: LayerRecord): number {
+  return (
+    left.rank.orderInLayer - right.rank.orderInLayer ||
+    left.rank.group - right.rank.group ||
+    left.rank.tie - right.rank.tie
+  );
 }
 
 /**

@@ -336,8 +336,11 @@ Generated reference: `skills/ignifx/references/formats/`.
   for pixel art.
 - **Cell `(0, 0)` is the bottom-left of a tilemap**, because the world is +Y up — but the file stores
   its rows **top first**, like every editor. `Tilemap` flips on load; `getTile` speaks cells.
-- **`orderInLayer` only reorders inside a Y-sorted layer.** Without `ySort` for that sorting layer,
-  Lite draws by insertion order. Turn Y-sort on, or use separate sorting layers.
+- **A `SpriteRenderer`'s `orderInLayer` only reorders inside a Y-sorted layer.** Without `ySort`
+  for that sorting layer, Lite draws by insertion order. Turn Y-sort on, or use separate sorting
+  layers. A tilemap layer's `orderInLayer` always applies. Without Y-sort, tiles draw by
+  `orderInLayer`, then by the layer's place in the file, and behind the sorting layer's sprites
+  when the orders tie. With Y-sort, it is the tiles' Y-sort bias, as for a sprite.
 - **A frame's pivot moves the sprite, not the layer.** Lite has one pivot per layer, so ignifx
   offsets each sprite instead. A `[0.5, 1]` pivot puts the entity's origin at the sprite's feet.
 - **`pixelPerfect` ignores `orthographicSize`** and scales `referenceResolution` by a whole number
