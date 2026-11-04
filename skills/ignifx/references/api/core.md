@@ -26265,7 +26265,8 @@ How long to wait for an animation frame; absent to wait for one forever.
 
 `Promise`\<`void`\>
 
-A promise that settles once the next frame has been submitted.
+A promise that settles once the next frame has been submitted, or once the render
+loop stops (`app.stop()`, `app.dispose()`) before one is.
 
 ###### Remarks
 

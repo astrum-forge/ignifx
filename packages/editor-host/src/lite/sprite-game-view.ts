@@ -8,9 +8,12 @@
  *   surface's canvas (`spriteRendererUpdate` reads `getRenderTargetSize(rr._surface)`), so a target
  *   redirected with `setSpriteRendererTarget` must be the main canvas's size. A surface of its own
  *   (`createSurface` on an `OffscreenCanvas`) has the view's size.
- * - **Drawn only on request.** The renderer stays unregistered, so the animation-frame loop never
- *   draws it; a request registers it, renders that one surface (`renderFrame(engine, 0, [surface])`,
- *   which runs no scene and so no ignifx frame), and unregisters it again.
+ * - **Built per request.** Each request creates the surface and the renderer, renders that one
+ *   surface (`renderFrame(engine, 0, [surface])`, which runs no scene and so no ignifx frame), reads
+ *   it back, and disposes both. A live surface stays in `engine.surfaces`, where every main frame
+ *   would acquire its texture, and a live renderer keeps its layers' GPU buffers; neither outlives
+ *   the request. Pipelines are not rebuilt: Lite's sprite pipeline cache is shared by every renderer
+ *   on the device (`acquireSharedSpriteRendererPipelineCache`, `lib/sprite/sprite-renderer.js`).
  * - **The views are swapped, not copied.** A layer has one `view`, which the main sprite pass reads
  *   too. The render is synchronous, so writing the camera's views, rendering and writing the old
  *   ones back happens inside one task and the main pass never sees them.
@@ -22,18 +25,14 @@
  */
 
 import {
-  addSpriteRendererLayer,
   createSpriteRenderer,
   createSurface,
   disposeSpriteRenderer,
   disposeSurface,
   registerSpriteRenderer,
-  removeSpriteRendererLayer,
   renderFrame,
-  setSurfaceSize,
-  unregisterSpriteRenderer,
 } from "@babylonjs/lite";
-import type { EngineContext, Sprite2DLayer, Sprite2DView, SpriteRenderer, SurfaceContext } from "@babylonjs/lite";
+import type { EngineContext, Sprite2DLayer, Sprite2DView } from "@babylonjs/lite";
 
 /** One layer to draw and the view to draw it through. */
 export interface SpriteLayerDraw {
@@ -61,29 +60,6 @@ export interface SpriteClearColor {
   readonly a: number;
 }
 
-/** The second sprite pass of one scene view. */
-export interface SpriteGameView {
-  /**
-   * Draws the layers through their views into an image of a size.
-   *
-   * @param draws - The layers, in draw order, and their views.
-   * @param width - The image width in pixels.
-   * @param height - The image height in pixels.
-   * @param type - `"image/png"` or `"image/jpeg"`.
-   * @param quality - The JPEG quality, from 0 to 1.
-   * @returns The encoded image.
-   */
-  render(
-    draws: readonly SpriteLayerDraw[],
-    width: number,
-    height: number,
-    type: string,
-    quality: number,
-  ): Promise<Blob>;
-  /** Frees the renderer and its surface. Idempotent. */
-  dispose(): void;
-}
-
 /**
  * Tells whether a value is a Lite sprite layer: an object with a `view` holding a `positionPx`.
  *
@@ -106,74 +82,62 @@ function srgbToLinear(channel: number): number {
 }
 
 /**
- * Builds the 2D game view's sprite pass on an engine. Its surface is created on the first render.
+ * Draws sprite layers through their views into an image of a size, on a surface and a renderer
+ * that exist only for this call.
  *
  * @param engine - The app's Lite engine (`app.lite.engine`).
- * @param clear - The colour the image is cleared to, as the project's `rendering.clearColor`.
- * @returns The pass.
+ * @param draws - The layers, in draw order, and their views.
+ * @param size - The image size and the colour it is cleared to.
+ * @param size.width - The image width in pixels.
+ * @param size.height - The image height in pixels.
+ * @param size.clear - The clear colour, as the project's `rendering.clearColor` reads now.
+ * @param type - `"image/png"` or `"image/jpeg"`.
+ * @param quality - The JPEG quality, from 0 to 1.
+ * @returns The encoded image.
  */
-export function createSpriteGameView(engine: EngineContext, clear: SpriteClearColor): SpriteGameView {
-  let canvas: OffscreenCanvas | null = null;
-  let surface: SurfaceContext | null = null;
-  let renderer: SpriteRenderer | null = null;
-  const saved: Sprite2DView[] = [];
-
-  const ensure = (
-    width: number,
-    height: number,
-  ): { canvas: OffscreenCanvas; surface: SurfaceContext; renderer: SpriteRenderer } => {
-    if (canvas === null || surface === null || renderer === null) {
-      canvas = new OffscreenCanvas(width, height);
-      const srgb = engine.format.endsWith("-srgb");
-      surface = createSurface(engine, canvas, { msaaSamples: 1, srgb });
-      const decode = (channel: number): number => (srgb ? srgbToLinear(channel) : channel);
-      renderer = createSpriteRenderer(surface, {
-        layers: [],
-        clear: true,
-        clearValue: { r: decode(clear.r), g: decode(clear.g), b: decode(clear.b), a: clear.a },
-      });
+export async function renderSpriteGameView(
+  engine: EngineContext,
+  draws: readonly SpriteLayerDraw[],
+  size: { readonly width: number; readonly height: number; readonly clear: SpriteClearColor },
+  type: string,
+  quality: number,
+): Promise<Blob> {
+  const { width, height, clear } = size;
+  const layers: Sprite2DLayer[] = [];
+  const views: SpriteLayerDraw[] = [];
+  for (const draw of draws) {
+    if (isSpriteLayer(draw.layer)) {
+      layers.push(draw.layer);
+      views.push(draw);
     }
-    setSurfaceSize(surface, width, height);
-    return { canvas, surface, renderer };
-  };
-
-  return {
-    async render(draws, width, height, type, quality): Promise<Blob> {
-      const pass = ensure(width, height);
-      const wanted = new Set<object>();
-      for (const draw of draws) {
-        if (isSpriteLayer(draw.layer)) {
-          wanted.add(draw.layer);
-          addSpriteRendererLayer(pass.renderer, draw.layer);
-        }
-      }
-      // Collected first: removing a layer changes the list being walked.
-      const stale = pass.renderer.layers.filter((layer) => !wanted.has(layer));
-      for (const layer of stale) {
-        removeSpriteRendererLayer(pass.renderer, layer);
-      }
-      const layers: Sprite2DLayer[] = [];
-      saved.length = 0;
-      for (const draw of draws) {
-        if (isSpriteLayer(draw.layer)) {
-          const view = draw.layer.view;
-          layers.push(draw.layer);
-          saved.push({
-            positionPx: [view.positionPx[0], view.positionPx[1]],
-            zoom: view.zoom,
-            rotation: view.rotation,
-          });
+  }
+  const canvas = new OffscreenCanvas(width, height);
+  const srgb = engine.format.endsWith("-srgb");
+  const surface = createSurface(engine, canvas, { msaaSamples: 1, srgb });
+  const decode = (channel: number): number => (srgb ? srgbToLinear(channel) : channel);
+  try {
+    const renderer = createSpriteRenderer(surface, {
+      layers,
+      clear: true,
+      clearValue: { r: decode(clear.r), g: decode(clear.g), b: decode(clear.b), a: clear.a },
+    });
+    try {
+      const saved: Sprite2DView[] = [];
+      for (const [index, layer] of layers.entries()) {
+        const draw = views[index];
+        const view = layer.view;
+        saved.push({ positionPx: [view.positionPx[0], view.positionPx[1]], zoom: view.zoom, rotation: view.rotation });
+        if (draw !== undefined) {
           view.positionPx[0] = draw.x;
           view.positionPx[1] = draw.y;
           view.zoom = draw.zoom === 0 ? 1 : draw.zoom;
           view.rotation = draw.rotation;
         }
       }
-      registerSpriteRenderer(pass.renderer);
+      registerSpriteRenderer(renderer);
       try {
-        renderFrame(engine, 0, [pass.surface]);
+        renderFrame(engine, 0, [surface]);
       } finally {
-        unregisterSpriteRenderer(pass.renderer);
         for (const [index, layer] of layers.entries()) {
           const old = saved[index];
           if (old !== undefined) {
@@ -184,19 +148,13 @@ export function createSpriteGameView(engine: EngineContext, clear: SpriteClearCo
           }
         }
       }
-      // The copy is taken now, after the submit above, before any later frame.
-      return pass.canvas.convertToBlob(type === "image/png" ? { type } : { type, quality });
-    },
-    dispose(): void {
-      if (renderer !== null) {
-        disposeSpriteRenderer(renderer);
-      }
-      if (surface !== null) {
-        disposeSurface(surface);
-      }
-      renderer = null;
-      surface = null;
-      canvas = null;
-    },
-  };
+      // Awaited before the surface goes: the copy reads the work submitted above.
+      return await canvas.convertToBlob(type === "image/png" ? { type } : { type, quality });
+    } finally {
+      // Also unregisters it from the surface.
+      disposeSpriteRenderer(renderer);
+    }
+  } finally {
+    disposeSurface(surface);
+  }
 }

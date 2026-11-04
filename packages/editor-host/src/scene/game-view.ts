@@ -18,7 +18,7 @@ import {
   twoDServiceOf,
 } from "./view-2d.js";
 import type { DocumentMirror } from "./document.js";
-import type { SpriteGameView, SpriteLayerDraw } from "../lite/sprite-game-view.js";
+import type { SpriteLayerDraw } from "../lite/sprite-game-view.js";
 import type { GameViewFrameResult, GameViewState } from "../protocol/index.js";
 import type { App, RenderingSettings, RenderTexture } from "@ignifx/core";
 
@@ -62,9 +62,6 @@ export class GameView {
   #height: number = GAME_VIEW_DEFAULT_SIZE.height;
 
   #texture: RenderTexture | null = null;
-
-  /** The 2D sprite pass, once a `Camera2D` scene's view has rendered. */
-  #sprites: SpriteGameView | null = null;
 
   /**
    * `setGameView`: turns the view on or off, or resizes it. Off frees the texture.
@@ -144,33 +141,18 @@ export class GameView {
       const view = screenSpace ? IDENTITY_LAYER_VIEW : world;
       return { layer, x: view.x, y: view.y, zoom: view.zoom, rotation: view.rotation };
     });
-    const sprites = await this.#spritePass(app);
+    const { renderSpriteGameView } = await import("../lite/sprite-game-view.js");
+    // Read per render, so a changed `rendering.clearColor` shows on the next frame.
+    const { clearColor } = app.settings.section<RenderingSettings>(RENDERING_SETTINGS_SECTION);
     const type = params.format === "png" ? "image/png" : "image/jpeg";
-    const blob = await sprites.render(draws, size.width, size.height, type, quality);
+    const blob = await renderSpriteGameView(app.lite.engine, draws, { ...size, clear: clearColor }, type, quality);
     return { dataUrl: await encodeBlob(blob, type), ...size, camera: uid };
   }
 
-  /**
-   * The 2D sprite pass, loaded and built on first use.
-   *
-   * @param app - The scene view's app.
-   * @returns The pass.
-   */
-  async #spritePass(app: App): Promise<SpriteGameView> {
-    if (this.#sprites === null) {
-      const { createSpriteGameView } = await import("../lite/sprite-game-view.js");
-      const { clearColor } = app.settings.section<RenderingSettings>(RENDERING_SETTINGS_SECTION);
-      this.#sprites ??= createSpriteGameView(app.lite.engine, clearColor);
-    }
-    return this.#sprites;
-  }
-
-  /** Frees the texture and the 2D sprite pass. */
+  /** Frees the texture. */
   dispose(): void {
     this.#texture?.dispose();
     this.#texture = null;
-    this.#sprites?.dispose();
-    this.#sprites = null;
     this.#enabled = false;
   }
 }
