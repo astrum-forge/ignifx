@@ -61,7 +61,7 @@ async function sphere(withVolume: boolean, hdr: boolean): Promise<PixelRgba> {
     ],
   });
   if (withVolume) {
-    const red = [0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    const red = [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     const probes = createLightProbeAsset(app, {
       origin: { x: -2, y: -2, z: -2 },
       cellSize: { x: 4, y: 4, z: 4 },
@@ -86,9 +86,10 @@ describe("LightProbeVolume", () => {
     async (hdr) => {
       const plain = await sphere(false, hdr);
       const lit = await sphere(true, hdr);
-      // Under the studio environment the ball is near grey; inside red probes it turns red.
+      // Under the studio environment the ball is near grey; inside red probes it turns red. Green
+      // keeps only the environment's specular, which the LDR gamma encode lifts, so compare gaps.
       expect(Math.abs(plain.r - plain.g)).toBeLessThan(40);
-      expect(lit.r).toBeGreaterThan(lit.g * 2 + 10);
+      expect(lit.r - lit.g).toBeGreaterThan(60);
       expect(lit.g).toBeLessThan(plain.g);
     },
     120_000,
