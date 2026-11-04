@@ -33,6 +33,12 @@ interface ChunkRecord {
 /**
  * A tilemap renderer.
  *
+ * @remarks
+ * Each tilemap layer draws by its `orderInLayer`, then by its place in the document, however often
+ * its chunks are rebuilt. On a sorting layer without Y-sort, tiles draw behind that sorting layer's
+ * sprites when the orders tie. On a Y-sorted sorting layer, tiles sort with sprites by world Y and
+ * `orderInLayer` is their Y-sort bias, as for a `SpriteRenderer`.
+ *
  * @example
  * ```ts
  * const level = app.world.createEntity({ name: "level" });
