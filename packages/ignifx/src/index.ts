@@ -520,6 +520,60 @@ export type {
 } from "@ignifx/core";
 export { MATERIAL_ALPHA_MODES } from "@ignifx/core";
 
+// Added to keep the umbrella a complete re-export of @ignifx/core: rendering quality, GI probes,
+// prefab overrides and scene dependencies.
+export {
+  addComponentFromRecord,
+  type AddComponentFromRecordOptions,
+  AMBIENT_OCCLUSION_QUALITIES,
+  type AmbientOcclusionQuality,
+  type AmbientOcclusionSettings,
+  applyOverridesToAsset,
+  type AutoExposureSettings,
+  type ComponentBuildResult,
+  createLightProbeAsset,
+  createLightProbeLoader,
+  type CreateSceneOptions,
+  defaultAutoExposureSettings,
+  describeLightProbeFileFormat,
+  EDITOR_ONLY_METADATA_KEY,
+  type EnvironmentSkyboxSettings,
+  type FrameWaitOptions,
+  instanceComponentAt,
+  instanceEntityAt,
+  LIGHT_PROBE_ASSET_TYPE,
+  LIGHT_PROBE_FILE_EXTENSIONS,
+  LIGHT_PROBE_FILE_FORMAT,
+  LIGHT_PROBE_FORMAT_VERSION,
+  LightProbeAsset,
+  type LightProbeData,
+  LightProbeVolume,
+  loadSceneDependencies,
+  type LoadSceneDependenciesOptions,
+  type LoadSceneFileOptions,
+  type PrefabApplyOptions,
+  type PrefabApplyResult,
+  type PrefabComponentSkip,
+  type PrefabOverrideSelection,
+  type PrefabOverrideSkip,
+  REFLECTION_PROBE_REFRESH_MODES,
+  ReflectionProbe,
+  type ReflectionProbeRefreshMode,
+  RENDER_TEXTURE_MAX_SIZE,
+  RENDERING_QUALITIES,
+  type RenderingQuality,
+  type RenderOverlay,
+  type RenderOverlayLiteHandles,
+  type RenderPickIgnore,
+  type RenderTexture,
+  revertOverrides,
+  sampleLightProbes,
+  type ShaderDefineDeclaration,
+  type SystemEditMode,
+  type TaaSettings,
+  writeLightProbeFile,
+} from "@ignifx/core";
+
 // Custom shaders, surface shaders, custom post effects and instancing
 // (`docs/plan/2026-09-terrain-particles-shaders.md` §3.1-§3.5).
 export {
@@ -856,6 +910,7 @@ export {
   type TriggerEvent,
   type VelocityLimitSettings,
 } from "@ignifx/physics";
+export type { ColliderOutline, ShapeCastOptions } from "@ignifx/physics";
 
 // @ignifx/physics-2d — Rapier 2D rigid bodies, colliders, triggers, CharacterController2D, 2D queries.
 // `describeSchemas` is deliberately absent: that name belongs to @ignifx/core here.
@@ -913,6 +968,7 @@ export {
   type ShapeCastHit2D,
   type TriggerEvent2D,
 } from "@ignifx/physics-2d";
+export type { ColliderOutline2D } from "@ignifx/physics-2d";
 
 // @ignifx/2d — Camera2D, sprites, sprite animation, atlases, tilemaps, sorting layers, parallax, 2D picking.
 // `VERSION` and `describeSchemas` are deliberately absent: those names belong to @ignifx/core here.
@@ -1080,6 +1136,14 @@ export {
   type TwoDSettings,
   type Vec2Json,
   type WorldBox,
+} from "@ignifx/2d";
+export {
+  type SpriteBatch,
+  type SpriteBatchLiteHandles,
+  type SpriteBatchOptions,
+  spriteClipFrameAtTime,
+  type SpriteClipTiming,
+  type SpriteFrameTrim,
 } from "@ignifx/2d";
 
 // @ignifx/ui — DOM overlay host, layers, scaling, focus routing, WorldAnchor, Lite text, widgets, i18n.
