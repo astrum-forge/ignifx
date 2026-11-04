@@ -36867,6 +36867,84 @@ The field definition.
 
 ***
 
+### instanceComponentAt()
+
+> **instanceComponentAt**(`root`, `path`): [`Component`](#abstract-component) \| `null`
+
+Finds the live component an instance path names inside an instance, as the loader resolves
+`{ "$component": "<instanceRootUid>/<uidInThePrefab>" }`.
+
+#### Parameters
+
+##### root
+
+[`Entity`](#entity-2)
+
+The entity carrying the `instance` entry: the path's first segment.
+
+##### path
+
+`string`
+
+The rest of the path, without the root's uid: `"<componentUidInThePrefab>"`, with
+one segment before it per nested prefab.
+
+#### Returns
+
+[`Component`](#abstract-component) \| `null`
+
+The component, or `null` when the path names nothing in this instance.
+
+#### Example
+
+```ts
+const ai = instanceComponentAt(enemy, "01J9Z…AI");
+```
+
+***
+
+### instanceEntityAt()
+
+> **instanceEntityAt**(`root`, `path`): [`Entity`](#entity-2) \| `null`
+
+Finds the live entity an instance path names inside an instance, as the loader resolves
+`{ "$entity": "<instanceRootUid>/<uidInThePrefab>" }` while it builds a scene.
+
+#### Parameters
+
+##### root
+
+[`Entity`](#entity-2)
+
+The entity carrying the `instance` entry: the path's first segment.
+
+##### path
+
+`string`
+
+The rest of the path, without the root's uid: `"<uidInThePrefab>"` or
+`"<nestedInstanceUidInThePrefab>/<uidInTheNestedPrefab>"`.
+
+#### Returns
+
+[`Entity`](#entity-2) \| `null`
+
+The entity, or `null` when the path names nothing in this instance.
+
+#### Remarks
+
+For tools that hold such a reference after the scene was built, such as an editor that rebuilt
+one instance and points the rest of the document at it again. The path is read from `root` down:
+the uid the prefab file gives the target, with one segment before it per nested prefab.
+
+#### Example
+
+```ts
+const weapon = instanceEntityAt(enemy, "01J9Z…WEAPON");
+```
+
+***
+
 ### instantiateScene()
 
 > **instantiateScene**(`world`, `asset`, `options?`): [`SceneBuildResult`](#scenebuildresult)
