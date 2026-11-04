@@ -15,6 +15,7 @@ import { assertRenderingFeatureAvailable } from "../lite/render-features.js";
 import { sceneLightCount } from "../lite/scene.js";
 import { createMaterialCacheResets } from "../lite/shadow.js";
 import { clamp } from "../math/math-utils.js";
+import { ReflectionProbeHost } from "./gpu/reflection-probe-host.js";
 import {
   applySurfaceScale,
   createPicker,
@@ -49,6 +50,7 @@ import {
 } from "./rendering-settings.js";
 import type { Camera } from "./camera.js";
 import type { MaterialAsset } from "./material-asset.js";
+import type { ReflectionProbe } from "./reflection-probe.js";
 import type { RenderTexture, RenderTextureOwner } from "./render-texture.js";
 import type { RenderingFeatureSettings, RenderingQualityPreset, RenderingSettings } from "./rendering-settings.js";
 import type { App, ServiceNameKey } from "../app/types.js";
@@ -72,8 +74,6 @@ import type { ColorLike } from "../math/types.js";
 import type { RenderSurface } from "../platform/webgpu.js";
 import type { Disconnect } from "../signal/signal.js";
 import type { World } from "../world/world.js";
-import type { ReflectionProbeRuntime } from "./gpu/reflection-probes.js";
-import type { ReflectionProbe } from "./reflection-probe.js";
 
 /**
  * `app.renderer` (`docs/architecture/07-rendering.md` §1, §3, §5, ADR-0014): the service that owns
@@ -669,11 +669,8 @@ export class RendererImpl implements Renderer {
   /** The GTAO pass (`../lite/gpu/gtao.ts`), when `rendering.ambientOcclusion` is on. */
   #ambientOcclusion: AmbientOcclusion | null = null;
 
-  /** The reflection-probe chunk's runtime, once a world had a probe (GI B1). */
-  #reflectionProbes: ReflectionProbeRuntime | null = null;
-
-  /** Whether the reflection-probe chunk is loading. */
-  #isLoadingReflectionProbes = false;
+  /** The reflection probes' host, created on the first frame of a canvas-backed app (GI B1). */
+  #reflectionProbes: ReflectionProbeHost | null = null;
 
   /** The TAA passes (`../lite/gpu/taa.ts`), when `rendering.taa` installed them. */
   #taa: TaaHandle | null = null;
@@ -1603,30 +1600,25 @@ export class RendererImpl implements Renderer {
    * @internal
    */
   updateReflectionProbes(world: World, probes: readonly ReflectionProbe[]): void {
-    const runtime = this.#reflectionProbes;
-    if (runtime !== null) {
-      runtime.update(world, probes, (this.#presenter?.hdr ?? null) !== null);
+    if (!this.isHeadless) {
+      this.#updateReflectionProbes(world, probes);
+    }
+  }
+
+  /**
+   * {@link RendererImpl.updateReflectionProbes} on a canvas-backed app.
+   *
+   * @param world - The world being reconciled.
+   * @param probes - Every `ReflectionProbe` in it.
+   */
+  #updateReflectionProbes(world: World, probes: readonly ReflectionProbe[]): void {
+    if (this.#isDisposed || !this.#isSceneRegistered) {
       return;
     }
-    if (probes.length === 0 || this.isHeadless || this.#isDisposed || !this.#isSceneRegistered) {
-      return;
-    }
-    if (this.#isLoadingReflectionProbes) {
-      return;
-    }
-    this.#isLoadingReflectionProbes = true;
-    void import("./gpu/reflection-probes.js")
-      .then(async (module) => module.createReflectionProbeRuntime(this.engine, this.scene))
-      .then((created) => {
-        if (this.#isDisposed) {
-          created.dispose();
-          return;
-        }
-        this.#reflectionProbes = created;
-      })
-      .catch((error: unknown) => {
-        this.#app.onError.emit({ error, source: "system", phase: null, entity: null, component: null });
-      });
+    this.#reflectionProbes ??= new ReflectionProbeHost(this.engine, this.scene, (error: unknown): void => {
+      this.#app.onError.emit({ error, source: "system", phase: null, entity: null, component: null });
+    });
+    this.#reflectionProbes.update(world, probes, (this.#presenter?.hdr ?? null) !== null);
   }
 
   /**
@@ -1637,7 +1629,7 @@ export class RendererImpl implements Renderer {
    * @internal
    */
   get isReflectionProbeRuntimeActive(): boolean {
-    return this.#reflectionProbes !== null;
+    return this.#reflectionProbes !== null && this.#reflectionProbes.isActive;
   }
 
   /**
