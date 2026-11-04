@@ -10,10 +10,10 @@ import type { ResolvedDecoderOptions } from "./options.js";
 const DECODER_PACKAGE = "@ignifx/core";
 
 /** Each decoder group's file names, as core's `decoders/` holds them. */
-const DECODER_FILES: Readonly<Record<keyof ResolvedDecoderOptions, ReadonlySet<string>>> = {
-  draco: new Set(["draco_decoder.js", "draco_decoder_gltf.wasm"]),
-  meshopt: new Set(["meshopt_decoder.js"]),
-  ktx2: new Set([
+const DECODER_FILES: Readonly<Record<keyof ResolvedDecoderOptions, readonly string[]>> = {
+  draco: ["draco_decoder.js", "draco_decoder_gltf.wasm"],
+  meshopt: ["meshopt_decoder.js"],
+  ktx2: [
     "babylon.ktx2Decoder.js",
     "msc_basis_transcoder.js",
     "msc_basis_transcoder.wasm",
@@ -24,7 +24,7 @@ const DECODER_FILES: Readonly<Record<keyof ResolvedDecoderOptions, ReadonlySet<s
     "uastc_rgba8_srgb_v2.wasm",
     "uastc_rgba8_unorm_v2.wasm",
     "zstddec.wasm",
-  ]),
+  ],
 };
 
 /**
@@ -40,8 +40,8 @@ export function isLeftOutDecoder(file: ExtensionPublicAsset, decoders: ResolvedD
     return false;
   }
   return (
-    (!decoders.draco && DECODER_FILES.draco.has(file.fileName)) ||
-    (!decoders.meshopt && DECODER_FILES.meshopt.has(file.fileName)) ||
-    (!decoders.ktx2 && DECODER_FILES.ktx2.has(file.fileName))
+    (!decoders.draco && DECODER_FILES.draco.includes(file.fileName)) ||
+    (!decoders.meshopt && DECODER_FILES.meshopt.includes(file.fileName)) ||
+    (!decoders.ktx2 && DECODER_FILES.ktx2.includes(file.fileName))
   );
 }
