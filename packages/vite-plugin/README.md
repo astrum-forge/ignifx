@@ -344,8 +344,12 @@ that kind of file:
 | `meshopt` | `meshopt_decoder.js`                                           | 29 KB  | glTF with `EXT_meshopt_compression`    |
 | `ktx2`    | `babylon.ktx2Decoder.js`, `msc_basis_transcoder.*`, ten in all | 710 KB | `.ktx2` textures                       |
 
-Each defaults to `true`. With one turned off its files get no manifest entry, so a file that needs
-that decoder fails to load:
+Each defaults to `true`. A group turned off is not served or copied, but its files stay in the
+manifest, marked as left out, at a local URL that serves nothing. Loading a file that needs it then
+fails before anything is fetched, with `IGX-0508` ("… needs the Draco decoder, which the build
+left out: set `decoders.draco: true` in `ignifx()`"): a `.ktx2` texture needs `ktx2`, and a glTF
+needs whichever groups its `extensionsUsed` names (`KHR_texture_basisu` needs `ktx2`). Lite is
+never pointed at `cdn.babylonjs.com` or the page root for a left-out decoder:
 
 ```ts
 ignifx({ decoders: { draco: false } }); // no Draco-compressed models in this game

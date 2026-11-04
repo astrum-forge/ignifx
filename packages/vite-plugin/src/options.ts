@@ -35,8 +35,8 @@ export const DEFAULT_MANIFEST_FILE_NAME = "assets.manifest.json";
 /**
  * Which of Babylon Lite's run-time decoders, shipped by `@ignifx/core`, the plugin serves in
  * development and copies into the build. Each defaults to `true`. Turn one off when the game never
- * loads that kind of file, to keep its bytes out of `dist/`; a file that needs a decoder left out
- * then fails to load.
+ * loads that kind of file, to keep its bytes out of `dist/`. Loading a file that needs a decoder
+ * left out fails with `IGX-0508` before anything is fetched; Lite is never sent to its CDN for it.
  *
  * @public
  */

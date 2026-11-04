@@ -10,7 +10,7 @@ import { createReadStream } from "node:fs";
 import { readFile, stat } from "node:fs/promises";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { assetTypeForAddress, hashedAddress, isSidecarFileName, META_SUFFIX } from "./asset-types.js";
-import { isLeftOutDecoder } from "./decoders.js";
+import { LEFT_OUT_DECODER_META_KEY, leftOutDecoderGroup } from "./decoders.js";
 import { VitePluginError, VitePluginErrorCode } from "./errors.js";
 import { collectExtensionPublicAssets } from "./extension-assets.js";
 import {
@@ -291,6 +291,8 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
   let assets: readonly ScannedAsset[] = [];
   let problems: readonly ValidationProblem[] = [];
   let extensionAssets: readonly DescribedExtensionAsset[] = [];
+  /** Core's decoder files the `decoders` option left out, each with the option key that did it. */
+  let leftOutDecoders: readonly { readonly fileName: string; readonly group: string }[] = [];
   let scanned = false;
   let pendingWork: Promise<void> = Promise.resolve();
   /**
@@ -309,9 +311,12 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
    * @returns Nothing; the result lands in `extensionAssets`.
    */
   async function refreshExtensionAssets(): Promise<void> {
-    const files = (await collectExtensionPublicAssets(root)).filter(
-      (file) => !isLeftOutDecoder(file, settings.decoders),
-    );
+    const discovered = await collectExtensionPublicAssets(root);
+    leftOutDecoders = discovered.flatMap((file) => {
+      const group = leftOutDecoderGroup(file, settings.decoders);
+      return group === null ? [] : [{ fileName: file.fileName, group }];
+    });
+    const files = discovered.filter((file) => leftOutDecoderGroup(file, settings.decoders) === null);
     extensionAssets = await Promise.all(
       files.map(async (file): Promise<DescribedExtensionAsset> => {
         const info = await stat(file.filePath);
@@ -434,6 +439,28 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
   }
 
   /**
+   * The manifest entry that marks a decoder file the `decoders` option left out. It keeps the local
+   * URL the file would have had, which serves nothing, so an older core that cannot read the mark
+   * still points Lite at this origin rather than at `cdn.babylonjs.com`.
+   *
+   * @param fileName - The decoder's file name.
+   * @param group - The `decoders` key that left it out.
+   * @returns The entry, sized and hashed as an empty file.
+   */
+  function leftOutDecoderEntry(fileName: string, group: string): AssetManifestEntry {
+    return {
+      address: fileName,
+      url: `${normalizedBase()}${settings.publicPath}${fileName}`,
+      // Nothing is shipped: the size and hash of an empty file.
+      bytes: 0,
+      hash: createHash("sha256").digest("hex").slice(0, settings.hashLength),
+      type: assetTypeForAddress(fileName),
+      groups: [],
+      meta: { [LEFT_OUT_DECODER_META_KEY]: group },
+    };
+  }
+
+  /**
    * The manifest for the assets scanned so far plus every extension public asset, with URLs for the
    * current command.
    *
@@ -446,7 +473,7 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
     const scannedManifest = buildManifest(assets, manifestRoot, (asset) =>
       command === "build" ? productionUrl(asset) : developmentUrl(asset.address),
     );
-    if (extensionAssets.length === 0) {
+    if (extensionAssets.length === 0 && leftOutDecoders.length === 0) {
       return scannedManifest;
     }
     const addresses = new Set(scannedManifest.entries.map((entry) => entry.address));
@@ -465,6 +492,9 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
     const entries = [
       ...scannedManifest.entries,
       ...extensionAssets.map((described) => extensionEntry(described)),
+      ...leftOutDecoders
+        .filter(({ fileName }) => !addresses.has(fileName))
+        .map(({ fileName, group }) => leftOutDecoderEntry(fileName, group)),
     ].toSorted((left, right) => (left.address < right.address ? -1 : left.address > right.address ? 1 : 0));
     return { ...scannedManifest, entries };
   }
