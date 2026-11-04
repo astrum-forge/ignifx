@@ -1,17 +1,22 @@
 import { describe, expect, it } from "vitest";
 import { createAssetManifest } from "../../src/assets/manifest.js";
+import { isIgnifxError } from "../../src/errors/ignifx-error.js";
 import {
   configureDecoders,
   decoderUrlsFromManifest,
   DRACO_DECODER_FILE,
   DRACO_WASM_FILE,
+  gltfExtensionsUsed,
   KTX2_DECODER_FILE,
   KTX2_TRANSCODER_FILES,
+  LEFT_OUT_DECODER_META_KEY,
+  leftOutDecoders,
   MESHOPT_DECODER_FILE,
 } from "../../src/render/decoder-urls.js";
 import { textureContainerOf } from "../../src/render/loaders/texture-loader.js";
 import { TextureAsset } from "../../src/render/texture-asset.js";
 import { createAssetHarness } from "./support/harness.js";
+import type { AssetHarness } from "./support/harness.js";
 
 /**
  * How the texture loader picks Lite's loader for a file, and where it points Lite's decoders
@@ -130,5 +135,136 @@ describe("configureDecoders and a headless .ktx2 load", () => {
     } finally {
       harness.dispose();
     }
+  });
+});
+
+/**
+ * Loads an asset and answers with what its load rejected with.
+ *
+ * @param harness - The running harness.
+ * @param address - The asset.
+ * @returns The rejection, or `null` when the load succeeded.
+ */
+async function failureOf(harness: AssetHarness, address: string): Promise<unknown> {
+  return harness.app.assets.loadAsync(address).then(
+    () => null,
+    (error: unknown) => error,
+  );
+}
+
+/**
+ * The IGX code of a failure or of the error it wraps.
+ *
+ * @param failure - What a load rejected with.
+ * @returns The code, or `null`.
+ */
+function codeOf(failure: unknown): string | null {
+  if (!isIgnifxError(failure)) {
+    return null;
+  }
+  return isIgnifxError(failure.cause) ? failure.cause.code : failure.code;
+}
+
+/**
+ * The message of a failure's IGX cause, or of the failure itself.
+ *
+ * @param failure - What a load rejected with.
+ * @returns The message.
+ */
+function messageOf(failure: unknown): string {
+  if (!isIgnifxError(failure)) {
+    return String(failure);
+  }
+  return isIgnifxError(failure.cause) ? failure.cause.message : failure.message;
+}
+
+/**
+ * A manifest whose decoder entries carry the plugin's left-out mark, plus the asset to load.
+ *
+ * @param group - The `decoders` key that was turned off.
+ * @param files - That group's decoder files.
+ * @param asset - The asset to load.
+ * @returns The manifest.
+ */
+function manifestWithout(
+  group: string,
+  files: readonly string[],
+  asset: string,
+): ReturnType<typeof createAssetManifest> {
+  return createAssetManifest([
+    ...files.map((file) => ({ address: file, url: `/assets/${file}`, meta: { [LEFT_OUT_DECODER_META_KEY]: group } })),
+    { address: asset, url: `/assets/${asset}` },
+  ]);
+}
+
+describe("a decoder the vite plugin left out", () => {
+  it("fails a .ktx2 load with IGX-0508 before anything is fetched", async () => {
+    const harness = await createAssetHarness({ manifest: manifestWithout("ktx2", [KTX2_DECODER_FILE], "rock.ktx2") });
+    try {
+      const failure = await harness.settleUntil(failureOf(harness, "rock.ktx2"), "rock.ktx2");
+      expect(codeOf(failure)).toBe("IGX-0508");
+      expect(messageOf(failure)).toContain("decoders.ktx2: true");
+      expect(harness.net.requests).toEqual([]);
+    } finally {
+      harness.dispose();
+    }
+  });
+
+  it("fails a glTF that uses Draco with IGX-0508, and loads one that does not", async () => {
+    const manifest = createAssetManifest([
+      ...[DRACO_DECODER_FILE, DRACO_WASM_FILE].map((file) => ({
+        address: file,
+        url: `/assets/${file}`,
+        meta: { [LEFT_OUT_DECODER_META_KEY]: "draco" },
+      })),
+      { address: "draco.gltf", url: "/assets/draco.gltf" },
+      { address: "plain.gltf", url: "/assets/plain.gltf" },
+    ]);
+    const harness = await createAssetHarness({ manifest });
+    try {
+      harness.net.canned.set(
+        "/assets/draco.gltf",
+        JSON.stringify({ asset: { version: "2.0" }, extensionsUsed: ["KHR_draco_mesh_compression"] }),
+      );
+      harness.net.canned.set("/assets/plain.gltf", JSON.stringify({ asset: { version: "2.0" } }));
+      expect(codeOf(await harness.settleUntil(failureOf(harness, "draco.gltf"), "draco.gltf"))).toBe("IGX-0508");
+      expect(await harness.settleUntil(failureOf(harness, "plain.gltf"), "plain.gltf")).toBeNull();
+    } finally {
+      harness.dispose();
+    }
+  });
+
+  it("reads extensionsUsed from a .glb and a .gltf", () => {
+    const json = new TextEncoder().encode(
+      JSON.stringify({ extensionsUsed: ["EXT_meshopt_compression"], extensionsRequired: ["KHR_texture_basisu"] }),
+    );
+    const glb = new ArrayBuffer(20 + json.byteLength);
+    const view = new DataView(glb);
+    view.setUint32(0, 0x46_54_6c_67, true);
+    view.setUint32(4, 2, true);
+    view.setUint32(8, glb.byteLength, true);
+    view.setUint32(12, json.byteLength, true);
+    view.setUint32(16, 0x4e_4f_53_4a, true);
+    new Uint8Array(glb, 20).set(json);
+    expect(gltfExtensionsUsed(glb)).toEqual(["EXT_meshopt_compression", "KHR_texture_basisu"]);
+    expect(gltfExtensionsUsed(json.slice().buffer)).toEqual(["EXT_meshopt_compression", "KHR_texture_basisu"]);
+    expect(gltfExtensionsUsed(new TextEncoder().encode("not json").buffer)).toEqual([]);
+    expect(gltfExtensionsUsed(new TextEncoder().encode("3").buffer)).toEqual([]);
+    expect(gltfExtensionsUsed(new TextEncoder().encode('{"extensionsUsed":[1,"KHR_x"]}').buffer)).toEqual(["KHR_x"]);
+    // A .glb whose first chunk is not JSON, and one whose chunk runs past the end.
+    const binaryChunk = glb.slice(0);
+    new DataView(binaryChunk).setUint32(16, 0x00_4e_49_42, true);
+    expect(gltfExtensionsUsed(binaryChunk)).toEqual([]);
+    const truncated = glb.slice(0, glb.byteLength - 1);
+    expect(gltfExtensionsUsed(truncated)).toEqual([]);
+  });
+
+  it("reads only the three option keys as left-out marks", () => {
+    const manifest = createAssetManifest([
+      { address: "a.js", url: "/assets/a.js", meta: { [LEFT_OUT_DECODER_META_KEY]: "basis" } },
+      { address: "b.js", url: "/assets/b.js", meta: { [LEFT_OUT_DECODER_META_KEY]: "meshopt" } },
+      { address: "c.js", url: "/assets/c.js" },
+    ]);
+    expect([...leftOutDecoders(manifest)]).toEqual(["meshopt"]);
   });
 });

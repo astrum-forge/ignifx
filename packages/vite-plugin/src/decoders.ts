@@ -28,20 +28,31 @@ const DECODER_FILES: Readonly<Record<keyof ResolvedDecoderOptions, readonly stri
 };
 
 /**
- * Whether an extension public asset is one of core's decoder files that the `decoders` option
- * turned off.
+ * The manifest `meta` key that marks an entry as a decoder the `decoders` option left out. Its value
+ * is the option's key (`"draco"`, `"meshopt"` or `"ktx2"`). `@ignifx/core`'s loaders read it
+ * (`render/decoder-urls.ts`) and fail with `IGX-0508` before a load that needs the decoder, rather
+ * than let Lite fetch it from `cdn.babylonjs.com` or the page root.
+ */
+export const LEFT_OUT_DECODER_META_KEY = "leftOutDecoder";
+
+/**
+ * Which `decoders` group left an extension public asset out, if any.
  *
  * @param file - The discovered file.
  * @param decoders - The resolved `decoders` option.
- * @returns `true` when the file must be neither served nor copied.
+ * @returns The option key that turned the file off, or `null` when it is served and copied.
  */
-export function isLeftOutDecoder(file: ExtensionPublicAsset, decoders: ResolvedDecoderOptions): boolean {
+export function leftOutDecoderGroup(
+  file: ExtensionPublicAsset,
+  decoders: ResolvedDecoderOptions,
+): keyof ResolvedDecoderOptions | null {
   if (file.packageName !== DECODER_PACKAGE) {
-    return false;
+    return null;
   }
-  return (
-    (!decoders.draco && DECODER_FILES.draco.includes(file.fileName)) ||
-    (!decoders.meshopt && DECODER_FILES.meshopt.includes(file.fileName)) ||
-    (!decoders.ktx2 && DECODER_FILES.ktx2.includes(file.fileName))
-  );
+  for (const group of ["draco", "meshopt", "ktx2"] as const) {
+    if (!decoders[group] && DECODER_FILES[group].includes(file.fileName)) {
+      return group;
+    }
+  }
+  return null;
 }

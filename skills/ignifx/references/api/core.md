@@ -32563,6 +32563,12 @@ A coroutine was started in an edit-mode app by a script whose class does not run
 
 The host exposes no Web Crypto implementation.
 
+##### decoderLeftOut
+
+> `readonly` **decoderLeftOut**: `"IGX-0508"` = `"IGX-0508"`
+
+An asset needs a Lite decoder that `@ignifx/vite-plugin`'s `decoders` option left out of the build.
+
 ##### deferredSignalWithoutScheduler
 
 > `readonly` **deferredSignalWithoutScheduler**: `"IGX-0103"` = `"IGX-0103"`
