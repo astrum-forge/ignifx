@@ -32,6 +32,52 @@ export const DEFAULT_PUBLIC_PATH = "assets/";
  */
 export const DEFAULT_MANIFEST_FILE_NAME = "assets.manifest.json";
 
+/**
+ * Which of Babylon Lite's run-time decoders, shipped by `@ignifx/core`, the plugin serves in
+ * development and copies into the build. Each defaults to `true`. Turn one off when the game never
+ * loads that kind of file, to keep its bytes out of `dist/`; a file that needs a decoder left out
+ * then fails to load.
+ *
+ * @public
+ */
+export interface DecoderOptions {
+  /**
+   * The Draco decoder (`draco_decoder.js` and `draco_decoder_gltf.wasm`, 251 KB), for glTF models
+   * with `KHR_draco_mesh_compression`.
+   *
+   * @defaultValue `true`
+   */
+  readonly draco?: boolean;
+  /**
+   * The meshopt decoder (`meshopt_decoder.js`, 29 KB), for glTF models with
+   * `EXT_meshopt_compression`.
+   *
+   * @defaultValue `true`
+   */
+  readonly meshopt?: boolean;
+  /**
+   * The KTX2 decoder and its transcoders (`babylon.ktx2Decoder.js`, `msc_basis_transcoder.*`,
+   * `uastc_*.wasm`, `zstddec.wasm`, 710 KB), for `.ktx2` textures.
+   *
+   * @defaultValue `true`
+   */
+  readonly ktx2?: boolean;
+}
+
+/**
+ * {@link DecoderOptions} with every default applied.
+ *
+ * @public
+ */
+export interface ResolvedDecoderOptions {
+  /** Whether the Draco decoder is copied. */
+  readonly draco: boolean;
+  /** Whether the meshopt decoder is copied. */
+  readonly meshopt: boolean;
+  /** Whether the KTX2 decoder and its transcoders are copied. */
+  readonly ktx2: boolean;
+}
+
 /** The narrowest and widest useful truncated-hash lengths. */
 const HASH_LENGTH_RANGE = { minimum: 4, maximum: 64 } as const;
 
@@ -106,6 +152,14 @@ export interface IgnifxPluginOptions {
    * @defaultValue {@link DEFAULT_SCRIPTS_PATTERN}
    */
   readonly scripts?: string;
+  /**
+   * Which of Lite's run-time decoders to serve and copy into the build. Leave out the ones the game
+   * never uses to save their bytes: `{ draco: false }` drops 251 KB from a game without
+   * Draco-compressed models.
+   *
+   * @defaultValue every decoder: `{ draco: true, meshopt: true, ktx2: true }`
+   */
+  readonly decoders?: DecoderOptions;
 }
 
 /**
@@ -132,6 +186,8 @@ export interface ResolvedIgnifxPluginOptions {
   readonly hashLength: number;
   /** The scripts glob, rewritten to be root-absolute. */
   readonly scriptsPattern: string;
+  /** Which of Lite's run-time decoders are served and copied. */
+  readonly decoders: ResolvedDecoderOptions;
 }
 
 /**
@@ -209,5 +265,10 @@ export function resolvePluginOptions(options: IgnifxPluginOptions): ResolvedIgni
     schemas: options.schemas ?? null,
     hashLength,
     scriptsPattern: normalizeScriptsPattern(options.scripts ?? DEFAULT_SCRIPTS_PATTERN),
+    decoders: {
+      draco: options.decoders?.draco ?? true,
+      meshopt: options.decoders?.meshopt ?? true,
+      ktx2: options.decoders?.ktx2 ?? true,
+    },
   };
 }

@@ -10,6 +10,7 @@ import {
   THUMBNAIL_MAX_SIZE,
 } from "../src/protocol/index.js";
 import { thumbnailScene, thumbnailSubject } from "../src/scene/thumbnails.js";
+import { centredLayerView } from "../src/scene/view-2d.js";
 
 /**
  * The render-view protocol's guards (engine ask E8) and the thumbnail subject's typing, without a
@@ -36,6 +37,11 @@ describe("the render-view guards", () => {
     expect(isGameViewFrameParams({ format: "jpeg", quality: 1 })).toBe(true);
     expect(isGameViewFrameParams({ format: "webp" })).toBe(false);
     expect(isGameViewFrameParams({ format: "jpeg", quality: 1.5 })).toBe(false);
+    expect(isGameViewFrameParams({ format: "png", width: 1, height: GAME_VIEW_MAX_SIZE })).toBe(true);
+    expect(isGameViewFrameParams({ format: "png", width: 320 })).toBe(true);
+    expect(isGameViewFrameParams({ format: "png", width: 0 })).toBe(false);
+    expect(isGameViewFrameParams({ format: "png", height: GAME_VIEW_MAX_SIZE + 1 })).toBe(false);
+    expect(isGameViewFrameParams({ format: "png", width: 2.5 })).toBe(false);
     expect(isGameViewFrameResult({ dataUrl: PNG, width: 4, height: 4, camera: "EYE" })).toBe(true);
     expect(isGameViewFrameResult({ dataUrl: null, width: 4, height: 4, camera: null })).toBe(true);
     expect(isGameViewFrameResult({ dataUrl: null, width: 4, height: 4, camera: "EYE" })).toBe(false);
@@ -54,6 +60,22 @@ describe("the render-view guards", () => {
     expect(isRenderThumbnailParams({ asset: "a.glb" })).toBe(false);
     expect(isThumbnailResult({ dataUrl: PNG, width: 128, height: 128 })).toBe(true);
     expect(isThumbnailResult({ dataUrl: PNG, width: 0, height: 128 })).toBe(false);
+  });
+});
+
+describe("the 2D game view's layer view", () => {
+  it("puts the camera's centre at the image's centre, in layer pixels with +Y down", () => {
+    const shot = { centreX: 2, centreY: 1, zoom: 2, rotation: 0 };
+    // 100 px per metre: the centre is layer pixel (200, -100); 320x180 at zoom 2 spans 160x90.
+    expect(centredLayerView(shot, 320, 180, 100)).toEqual({ x: 120, y: -145, zoom: 2, rotation: 0 });
+  });
+
+  it("turns the corner offset with the view, and treats zoom 0 as 1", () => {
+    const view = centredLayerView({ centreX: 0, centreY: 0, zoom: 0, rotation: Math.PI / 2 }, 100, 50, 10);
+    expect(view.zoom).toBe(1);
+    expect(view.rotation).toBe(Math.PI / 2);
+    expect(view.x).toBeCloseTo(-25);
+    expect(view.y).toBeCloseTo(50);
   });
 });
 

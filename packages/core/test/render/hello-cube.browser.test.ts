@@ -4,7 +4,13 @@ import { Light } from "../../src/render/light.js";
 import { createMaterialAsset, pbrMaterialDefinition } from "../../src/render/material-asset.js";
 import { MeshAsset } from "../../src/render/mesh-asset.js";
 import { MeshRenderer } from "../../src/render/mesh-renderer.js";
-import { addCameraAndLight, createBrowserApp, pixelLuminance, SETTLE_FRAMES } from "./support/browser-harness.js";
+import {
+  addCameraAndLight,
+  createBrowserApp,
+  pixelLuminance,
+  SETTLE_FRAMES,
+  settleRebuilds,
+} from "./support/browser-harness.js";
 import type { BrowserApp } from "./support/browser-harness.js";
 
 /**
@@ -46,9 +52,10 @@ async function buildCubeScene(options: { readonly distance?: number } = {}): Pro
     pbrMaterialDefinition({ name: "white", baseColor: { r: 1, g: 1, b: 1, a: 1 }, metallic: 0, roughness: 1 }),
     [],
   );
+  const before = running.renderer.renderableRebuilds;
   const cube = running.world.createEntity("Cube");
   const renderer = cube.addComponent(MeshRenderer, { mesh, materials: [material] });
-  await running.advance(SETTLE_FRAMES);
+  await settleRebuilds(running, before);
   return { harness: running, camera, renderer };
 }
 

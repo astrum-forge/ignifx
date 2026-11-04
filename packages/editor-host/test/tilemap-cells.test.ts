@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { isSetTilemapCellsParams } from "../src/protocol/index.js";
 import { planTileWrites } from "../src/scene/tilemap-cells.js";
 
 const LAYERS = [
@@ -20,5 +21,14 @@ describe("planTileWrites", () => {
     expect(planTileWrites(LAYERS, "Sky", [0, 1])).toMatch(/no layer "Sky"/u);
     expect(planTileWrites(LAYERS, 2, [0, 1])).toMatch(/no layer 2/u);
     expect(planTileWrites(LAYERS, "Ground", [12, 1])).toMatch(/Cell 12 is outside layer "Ground" \(4×3\)/u);
+  });
+});
+
+describe("isSetTilemapCellsParams", () => {
+  it("caps the asset address and a layer name at 256 code units", () => {
+    const name = "a".repeat(256);
+    expect(isSetTilemapCellsParams({ asset: name, layer: name, cells: [0, 1] })).toBe(true);
+    expect(isSetTilemapCellsParams({ asset: `${name}a`, layer: "Ground", cells: [0, 1] })).toBe(false);
+    expect(isSetTilemapCellsParams({ asset: "map.tilemap.json", layer: `${name}a`, cells: [0, 1] })).toBe(false);
   });
 });

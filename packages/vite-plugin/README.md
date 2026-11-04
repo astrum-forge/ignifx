@@ -72,6 +72,7 @@ ignifx({
   schemas: undefined, // { scene?, formats?, settings? } — supplied by the game from @ignifx/core
   hashLength: 8, // hex characters kept from each asset's sha256
   scripts: "src/scripts/**/*.ts", // glob behind virtual:ignifx/scripts
+  decoders: { draco: true, meshopt: true, ktx2: true }, // Lite decoders served and copied
 });
 ```
 
@@ -324,17 +325,34 @@ project that registers `physics()` through the umbrella must also list `@ignifx/
 
 `@ignifx/core` publishes Babylon Lite's run-time decoders this way: the KTX2 decoder
 (`babylon.ktx2Decoder.js`), its transcoders (`msc_basis_transcoder.js` and `.wasm`, six
-`uastc_*.wasm`, `zstddec.wasm`) and the meshopt decoder (`meshopt_decoder.js`), 740 KB in all. Lite
-fetches them from `cdn.babylonjs.com` unless told otherwise, and a packaged game's `script-src 'self'`
-refuses that origin. With core installed directly in the project, the plugin serves the eleven files
-from `/assets/<name>` in `vite dev`, copies them unhashed into `<outDir>/assets/`, and lists each in
-the manifest; core's texture and model loaders read those entries and point Lite at them before the
+`uastc_*.wasm`, `zstddec.wasm`), the meshopt decoder (`meshopt_decoder.js`) and the Draco decoder
+(`draco_decoder.js` and `draco_decoder_gltf.wasm`), about 1 MB in all. Lite fetches the first three
+from `cdn.babylonjs.com` unless told otherwise, and a packaged game's `script-src 'self'` refuses
+that origin. With core installed directly in the project, the plugin serves the thirteen files from
+`/assets/<name>` in `vite dev`, copies them unhashed into `<outDir>/assets/`, and lists each in the
+manifest; core's texture and model loaders read those entries and point Lite at them before the
 first `.ktx2` texture or glTF load. Every decoder request then stays on the game's origin, which
 `script-src 'self' 'wasm-unsafe-eval'` and `connect-src 'self'` (`@ignifx/electron`'s `cspFor()`)
-allow; core's copy of the Basis transcoder is patched to compile nothing from strings, so the policy needs no `'unsafe-eval'`. The files are fetched only when a game loads a `.ktx2` or a meshopt-compressed glTF.
+allow; core's copy of the Basis transcoder is patched to compile nothing from strings, so the policy needs no `'unsafe-eval'`. The files are fetched only when a game loads a `.ktx2` or a compressed glTF.
+
+The `decoders` option leaves a group out of `vite dev` and the build, for a game that never loads
+that kind of file:
+
+| Key       | Files                                                          | Size   | Needed for                             |
+| --------- | -------------------------------------------------------------- | ------ | -------------------------------------- |
+| `draco`   | `draco_decoder.js`, `draco_decoder_gltf.wasm`                  | 251 KB | glTF with `KHR_draco_mesh_compression` |
+| `meshopt` | `meshopt_decoder.js`                                           | 29 KB  | glTF with `EXT_meshopt_compression`    |
+| `ktx2`    | `babylon.ktx2Decoder.js`, `msc_basis_transcoder.*`, ten in all | 710 KB | `.ktx2` textures                       |
+
+Each defaults to `true`. With one turned off its files get no manifest entry, so a file that needs
+that decoder fails to load:
+
+```ts
+ignifx({ decoders: { draco: false } }); // no Draco-compressed models in this game
+```
 
 A `.basis` texture is the exception: Lite 1.34 always fetches its transcoder from the CDN. Use
-`.ktx2`. Draco-compressed glTF is not covered yet (engine ask E9).
+`.ktx2`.
 
 ## Error codes
 

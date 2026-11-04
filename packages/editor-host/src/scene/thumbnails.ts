@@ -11,6 +11,7 @@ import { Camera, Light } from "@ignifx/core";
 import { InvalidParamsError } from "../channel.js";
 import { entityWorldBounds } from "../lite/gizmos.js";
 import { isRenderThumbnailParams, THUMBNAIL_DEFAULT_SIZE } from "../protocol/index.js";
+import { GAME_VIEW_FRAME_WAIT_MS } from "./game-view.js";
 import { encodeCapture } from "./screenshot.js";
 import type { WorldBounds } from "../lite/gizmos.js";
 import type { RenderThumbnailParams, ThumbnailResult } from "../protocol/index.js";
@@ -152,7 +153,7 @@ export class ThumbnailRenderer {
       await nextFrame();
       const size = params.size ?? THUMBNAIL_DEFAULT_SIZE;
       const texture = this.#textureOf(app, size * SUPERSAMPLE);
-      await app.renderer.renderToTexture(camera, texture);
+      await app.renderer.renderToTexture(camera, texture, { maxWaitMs: GAME_VIEW_FRAME_WAIT_MS });
       const capture = await texture.readPixels();
       const dataUrl = await encodeCapture(
         capture,

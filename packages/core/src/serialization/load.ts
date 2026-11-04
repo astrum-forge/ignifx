@@ -5,9 +5,10 @@ import { IgnifxError } from "../errors/ignifx-error.js";
 import { DEFAULT_LAYER } from "../layers/layer-table.js";
 import { decodeProps } from "../schema/encode.js";
 import { expandScene, singleRoot } from "./expand.js";
+import { instancePathResolver } from "./instance-paths.js";
 import { findSceneDependency } from "./scene-asset.js";
 import { UidRemap, remapDecoder } from "./uid-remap.js";
-import type { ExpandedEntity, ExpandedInstance } from "./expand.js";
+import type { ExpandedEntity, ExpandedInstance, ExpandedScene } from "./expand.js";
 import type { MutableSceneEntity } from "./overrides.js";
 import type { SceneAsset } from "./scene-asset.js";
 import type { SceneFileComponent } from "./scene-file.js";
@@ -146,9 +147,40 @@ export function instantiateScene(world: World, asset: SceneAsset, options?: Inst
   createEntities(context, expanded.entities, parent);
   attachComponents(context);
   linkInstances(context, options?.assetHandle ?? null, options?.rootEntity ?? null);
-  decodeAllProps(context, sceneAssetResolver(world, asset), options?.outsideReferences);
+  decodeAllProps(
+    context,
+    sceneAssetResolver(world, asset),
+    withInstancePaths(context.remap, expanded, options?.outsideReferences),
+  );
   activate(context);
   return { roots: context.roots, remap: context.remap, issues };
+}
+
+/**
+ * Puts instance paths (`"<instanceRootUid>/<uidInThePrefab>"`) in front of the caller's outside
+ * resolver, so a scene's reference into one of its prefab instances finds that copy's object.
+ *
+ * @param remap - The build's uid table.
+ * @param expanded - The expansion, whose instances the paths walk.
+ * @param outside - The caller's resolver for uids the build made nothing with, if any.
+ * @returns The resolver for every uid the remap does not hold.
+ */
+function withInstancePaths(
+  remap: UidRemap,
+  expanded: ExpandedScene,
+  outside: Pick<ReferenceDecoder, "entity" | "component"> | undefined,
+): Pick<ReferenceDecoder, "entity" | "component"> {
+  const paths = instancePathResolver(expanded);
+  return {
+    entity: (uid: string): unknown => {
+      const found = paths.entity(uid);
+      return found === null ? (outside?.entity(uid) ?? null) : remap.entity(found);
+    },
+    component: (uid: string): unknown => {
+      const found = paths.component(uid);
+      return found === null ? (outside?.component(uid) ?? null) : remap.component(found);
+    },
+  };
 }
 
 /** Everything the build passes share. */

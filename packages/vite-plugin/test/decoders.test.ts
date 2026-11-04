@@ -1,8 +1,9 @@
-import { mkdir, readFile, symlink } from "node:fs/promises";
+import { mkdir, readdir, readFile, symlink } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build, createServer } from "vite";
 import { afterAll, describe, expect, it } from "vitest";
+import { isLeftOutDecoder } from "../src/decoders.js";
 import { ignifx } from "../src/plugin.js";
 import { createFixtureTree, disposeFixtures } from "./support/fixtures.js";
 import type { AssetManifest } from "../src/manifest.js";
@@ -87,6 +88,33 @@ describe("Lite's decoders in a vite build", () => {
     const rock = manifest.entries.find((entry) => entry.address === "textures/rock.ktx2");
     expect(rock?.type).toBe("texture");
     expect(rock?.url).toMatch(/^\/assets\/textures\/rock\.[0-9a-f]{8}\.ktx2$/u);
+  });
+
+  it("leaves out the decoders the decoders option turns off", async () => {
+    const files = await coreDecoderFiles();
+    const allOff = { draco: false, meshopt: false, ktx2: false };
+    // Every file core declares belongs to a group, so turning all three off leaves nothing behind.
+    for (const fileName of files) {
+      expect(isLeftOutDecoder({ packageName: "@ignifx/core", fileName, filePath: "" }, allOff), fileName).toBe(true);
+    }
+
+    const root = await projectWithCore();
+    await build({
+      root,
+      configFile: false,
+      logLevel: "silent",
+      plugins: [ignifx({ decoders: { draco: false } })],
+      build: { outDir: "dist", emptyOutDir: true },
+    });
+    const outDir = join(root, "dist");
+    const manifest = JSON.parse(await readFile(join(outDir, "assets.manifest.json"), "utf8")) as AssetManifest;
+    const built = await readdir(join(outDir, "assets"));
+    for (const file of ["draco_decoder.js", "draco_decoder_gltf.wasm"]) {
+      expect(built, file).not.toContain(file);
+      expect(manifest.entries.some((entry) => entry.address === file)).toBe(false);
+    }
+    expect(built).toContain("meshopt_decoder.js");
+    expect(manifest.entries.some((entry) => entry.address === "babylon.ktx2Decoder.js")).toBe(true);
   });
 
   it("serves the decoders from the dev server with script and WASM content types", async () => {

@@ -107,6 +107,13 @@ export function buildManifest(assets: readonly ScannedAsset[], root: string, url
 export function collectExtensionPublicAssets(root: string): Promise<readonly ExtensionPublicAsset[]>;
 
 // @public
+export interface DecoderOptions {
+    readonly draco?: boolean;
+    readonly ktx2?: boolean;
+    readonly meshopt?: boolean;
+}
+
+// @public
 export const DEFAULT_ASSET_ROOT = "assets";
 
 // @public
@@ -182,6 +189,7 @@ export interface IgnifxPluginApi {
 export interface IgnifxPluginOptions {
     readonly assetRoot?: string;
     readonly config?: string | false;
+    readonly decoders?: DecoderOptions;
     readonly hashLength?: number;
     readonly manifestFileName?: string;
     readonly publicPath?: string;
@@ -267,6 +275,13 @@ export const RESOLVED_MANIFEST_MODULE_ID: string;
 export const RESOLVED_SCRIPTS_MODULE_ID: string;
 
 // @public
+export interface ResolvedDecoderOptions {
+    readonly draco: boolean;
+    readonly ktx2: boolean;
+    readonly meshopt: boolean;
+}
+
+// @public
 export interface ResolvedIgnifxConfig {
     readonly config: JsonObject;
     readonly dependencies: readonly string[];
@@ -277,6 +292,7 @@ export interface ResolvedIgnifxConfig {
 export interface ResolvedIgnifxPluginOptions {
     readonly assetRoot: string;
     readonly configFile: string | null | false;
+    readonly decoders: ResolvedDecoderOptions;
     readonly hashLength: number;
     readonly manifestFileName: string;
     readonly publicPath: string;

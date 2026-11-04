@@ -23577,6 +23577,31 @@ and whether `destroyImmediate` is legal.
 
 ***
 
+### FrameWaitOptions
+
+**`Beta`**
+
+How long a frame request waits for an animation frame before the renderer renders one itself.
+
+#### Remarks
+
+A page that gets no animation frames (a hidden tab, or a `visibility: hidden` iframe such as an
+editor's) would otherwise never serve the request.
+
+#### Properties
+
+##### maxWaitMs?
+
+> `readonly` `optional` **maxWaitMs?**: `number`
+
+**`Beta`**
+
+The longest wait, in milliseconds, for an animation frame; after it, and again every
+`maxWaitMs` until the request is served, the renderer renders a frame itself with a delta of
+zero. A finite number of 0 or more.
+
+***
+
 ### GpuAdapterInfo
 
 Who made the GPU, as WebGPU reports it.
@@ -26022,6 +26047,44 @@ What WebGPU offers, or `null` in a headless app and on a host with no WebGPU.
 
 ***
 
+### PrefabApplyOptions
+
+What [applyOverridesToAsset](#applyoverridestoasset) acts on: the selected overrides and, optionally, the components
+the instance root carries itself.
+
+#### Extends
+
+- [`PrefabOverrideSelection`](#prefaboverrideselection)
+
+#### Properties
+
+##### paths?
+
+> `readonly` `optional` **paths?**: readonly `string`[]
+
+Override paths to act on. A path selects every override at that path or below it, so
+`"<entityUid>"` selects everything on that entity and `"<entityUid>/components/<componentUid>"`
+selects a component's removal, its `enabled` flag, and its props. An `add` to
+`<entityUid>/components` sits at `<entityUid>/components/<addedUid>`. Omitted, every override
+is selected.
+
+###### Inherited from
+
+[`PrefabOverrideSelection`](#prefaboverrideselection).[`paths`](#paths-1)
+
+##### rootComponents?
+
+> `readonly` `optional` **rootComponents?**: readonly [`SceneFileComponent`](#scenefilecomponent)[]
+
+The components the instance root carries itself: the `components` of the scene-file entity that
+holds the `instance` entry. They are not overrides (the serializer writes a component added on
+a single-root instance's root there), so they can only be applied when passed here. Each one
+that `paths` selects, at `<prefabRootUid>/components/<componentUid>`, is appended to the
+prefab's root after its own components, which is the order the instance already has them in.
+Omitted, none is applied.
+
+***
+
 ### PrefabApplyResult
 
 What [applyOverridesToAsset](#applyoverridestoasset) returns.
@@ -26033,6 +26096,13 @@ What [applyOverridesToAsset](#applyoverridestoasset) returns.
 > `readonly` **applied**: readonly [`SceneFileOverride`](#scenefileoverride)[]
 
 The overrides written into the prefab, in instance order.
+
+##### appliedComponents
+
+> `readonly` **appliedComponents**: readonly [`SceneFileComponent`](#scenefilecomponent)[]
+
+The [PrefabApplyOptions.rootComponents](#rootcomponents) written into the prefab's root. Remove them from
+the instance root: the prefab brings them now.
 
 ##### asset
 
@@ -26054,17 +26124,54 @@ The instance entry without the applied overrides, recording [PrefabApplyResult.h
 expands to the same values it did before the apply; a component an applied `add` brought now
 comes from the prefab, so like every prefab component it gets a fresh uid per instance.
 
+##### rootComponents
+
+> `readonly` **rootComponents**: readonly [`SceneFileComponent`](#scenefilecomponent)[]
+
+The [PrefabApplyOptions.rootComponents](#rootcomponents) that stay on the instance root, in their order:
+the unselected ones and the skipped ones.
+
 ##### skipped
 
 > `readonly` **skipped**: readonly [`PrefabOverrideSkip`](#prefaboverrideskip)[]
 
 The selected overrides that stay on the instance, in instance order.
 
+##### skippedComponents
+
+> `readonly` **skippedComponents**: readonly [`PrefabComponentSkip`](#prefabcomponentskip)[]
+
+The selected [PrefabApplyOptions.rootComponents](#rootcomponents) that stay on the instance root, and why.
+
+***
+
+### PrefabComponentSkip
+
+A component of the instance root that [applyOverridesToAsset](#applyoverridestoasset) left on the instance, and why.
+
+#### Properties
+
+##### component
+
+> `readonly` **component**: [`SceneFileComponent`](#scenefilecomponent)
+
+The component, as the instance root holds it.
+
+##### reason
+
+> `readonly` **reason**: `string`
+
+Why it could not be written into the prefab file.
+
 ***
 
 ### PrefabOverrideSelection
 
 Which overrides of an instance [applyOverridesToAsset](#applyoverridestoasset) and [revertOverrides](#revertoverrides) act on.
+
+#### Extended by
+
+- [`PrefabApplyOptions`](#prefabapplyoptions)
 
 #### Properties
 
@@ -26657,6 +26764,39 @@ one costs nothing until then, and a headless app may create one (it can never fi
 IgnifxError with code `IGX-0730` for a side out of range, and `IGX-0106` once the app is
 disposed.
 
+##### nextFrame()
+
+> **nextFrame**(`options?`): `Promise`\<`void`\>
+
+**`Beta`**
+
+Waits for the next frame to be submitted (`docs/architecture/07-rendering.md` §2.11).
+
+###### Parameters
+
+###### options?
+
+[`FrameWaitOptions`](#framewaitoptions)
+
+How long to wait for an animation frame; absent to wait for one forever.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the next frame has been submitted, or once the render
+loop stops (`app.stop()`, `app.dispose()`) before one is.
+
+###### Remarks
+
+With `options.maxWaitMs`, the renderer renders that frame itself when no animation frame comes
+in time, as [Renderer.renderToTexture](#rendertotexture) does. A frame it renders itself has a delta of zero:
+systems and scripts run, but game time does not advance.
+
+###### Throws
+
+IgnifxError with code `IGX-0729` on a headless app or while no render loop runs.
+
 ##### openOverlay()
 
 > **openOverlay**(): `Promise`\<[`RenderOverlay`](#renderoverlay)\>
@@ -26742,7 +26882,7 @@ headless app has no picker and always misses.
 
 ##### renderToTexture()
 
-> **renderToTexture**(`camera`, `texture`): `Promise`\<`void`\>
+> **renderToTexture**(`camera`, `texture`, `options?`): `Promise`\<`void`\>
 
 **`Beta`**
 
@@ -26763,6 +26903,12 @@ A camera attached to an entity of this app's world.
 
 A texture from this renderer's [Renderer.createRenderTexture](#createrendertexture).
 
+###### options?
+
+[`FrameWaitOptions`](#framewaitoptions)
+
+How long to wait for an animation frame; absent to wait for one forever.
+
 ###### Returns
 
 `Promise`\<`void`\>
@@ -26775,6 +26921,9 @@ The camera need not be the main one, and stays a candidate for it. Requests queu
 same texture render one camera per frame, oldest first. The camera's aspect is the texture's.
 Read the result with [RenderTexture.readPixels](#readpixels).
 
+A page that gets no animation frames (a hidden tab, or a `visibility: hidden` iframe) never
+runs that frame; pass `options.maxWaitMs` and the renderer renders it itself when none comes.
+
 ###### Throws
 
 IgnifxError with code `IGX-0729` on a headless app or while no render loop runs,
@@ -26784,7 +26933,7 @@ IgnifxError with code `IGX-0729` on a headless app or while no render loop runs,
 
 ```ts
 const texture = app.renderer.createRenderTexture(128, 128);
-await app.renderer.renderToTexture(previewCamera, texture);
+await app.renderer.renderToTexture(previewCamera, texture, { maxWaitMs: 20 });
 const { data } = await texture.readPixels();
 ```
 
@@ -32534,6 +32683,12 @@ An `InstancedMeshRenderer` setting Lite fixes at scene registration was changed 
 
 An asset file does not carry the format header its loader requires.
 
+##### invalidFrameWait
+
+> `readonly` **invalidFrameWait**: `"IGX-0733"` = `"IGX-0733"`
+
+`maxWaitMs` given to `app.renderer.renderToTexture` or `app.renderer.nextFrame` is not a finite number of 0 or more.
+
 ##### invalidGeometryUpdate
 
 > `readonly` **invalidGeometryUpdate**: `"IGX-0725"` = `"IGX-0725"`
@@ -34687,9 +34842,10 @@ The prefab file the entry instances.
 
 ##### selection?
 
-[`PrefabOverrideSelection`](#prefaboverrideselection)
+[`PrefabApplyOptions`](#prefabapplyoptions)
 
-Which overrides to apply; all of them by default.
+Which overrides to apply, all of them by default, and the instance root's own
+components to apply with them.
 
 #### Returns
 
@@ -34713,11 +34869,18 @@ byte-identical output through [stringifySceneFile](#stringifyscenefile). The rul
   names something the prefab file does not hold is skipped.
 - An override is skipped when an earlier override that stays on the instance overlaps its path, so
   the instance keeps the value it had.
-- A skipped override stays on the returned instance. The instance's own `components` are not
-  overrides and are not touched.
+- A skipped override stays on the returned instance.
+- The instance root's own components are not overrides. Pass them as
+  [PrefabApplyOptions.rootComponents](#rootcomponents) to apply them too: on a prefab with exactly one root
+  each selected one is appended to that root, keeping its uid, and reported in
+  [PrefabApplyResult.appliedComponents](#appliedcomponents); one whose uid the prefab already uses, or any when
+  the prefab has several roots, is skipped.
 - Other instances of the prefab keep their overrides, which still win over the new prefab values
   at the same path. Record [PrefabApplyResult.hash](#hash-1) on them, or loading them logs `IGX-0604`.
 - References inside added components (`$entity`, `$component`) are copied unchanged.
+- A component an apply moved into the prefab gets a fresh uid per instance from then on, like every
+  prefab component; a scene reference to it uses the instance form
+  `{ "$component": "<instanceRootUid>/<componentUid>" }`.
 
 #### Throws
 
@@ -34726,7 +34889,7 @@ IgnifxError with code `IGX-0609` when a selected override path is outside the gr
 #### Example
 
 ```ts
-const result = await applyOverridesToAsset(spawn.instance, prefabFile);
+const result = await applyOverridesToAsset(spawn.instance, prefabFile, { rootComponents: spawn.components });
 await app.storage.write("prefabs/enemy.prefab.json", stringifySceneFile(result.asset));
 ```
 

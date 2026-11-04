@@ -108,7 +108,7 @@ export interface AppLiteHandles {
 export function applyInit<S extends Schema>(target: FieldsOf<S>, schema: S, init: PartialFieldsOf<S>): FieldsOf<S>;
 
 // @public
-export function applyOverridesToAsset(instance: SceneFileInstance, asset: SceneFile, selection?: PrefabOverrideSelection): Promise<PrefabApplyResult>;
+export function applyOverridesToAsset(instance: SceneFileInstance, asset: SceneFile, selection?: PrefabApplyOptions): Promise<PrefabApplyResult>;
 
 // @public
 export function approximately(a: number, b: number, epsilon?: number): boolean;
@@ -723,6 +723,7 @@ export const CoreErrorCode: {
     readonly invalidRenderTextureSize: "IGX-0730";
     readonly renderTextureUnusable: "IGX-0731";
     readonly renderTextureCameraDetached: "IGX-0732";
+    readonly invalidFrameWait: "IGX-0733";
     readonly cryptoUnavailable: "IGX-1420";
     readonly storageInvalidNamespace: "IGX-1421";
     readonly storageInvalidKey: "IGX-1422";
@@ -1502,6 +1503,11 @@ export interface FrameSample {
 export interface FrameState {
     readonly isInsideCallback: boolean;
     readonly isInsideFixedStep: boolean;
+}
+
+// @beta
+export interface FrameWaitOptions {
+    readonly maxWaitMs?: number;
 }
 
 // @public
@@ -2666,12 +2672,26 @@ export class PostProcessStack extends Component implements ComponentHooks {
 }
 
 // @public
+export interface PrefabApplyOptions extends PrefabOverrideSelection {
+    readonly rootComponents?: readonly SceneFileComponent[];
+}
+
+// @public
 export interface PrefabApplyResult {
     readonly applied: readonly SceneFileOverride[];
+    readonly appliedComponents: readonly SceneFileComponent[];
     readonly asset: SceneFile;
     readonly hash: string;
     readonly instance: SceneFileInstance;
+    readonly rootComponents: readonly SceneFileComponent[];
     readonly skipped: readonly PrefabOverrideSkip[];
+    readonly skippedComponents: readonly PrefabComponentSkip[];
+}
+
+// @public
+export interface PrefabComponentSkip {
+    readonly component: SceneFileComponent;
+    readonly reason: string;
 }
 
 // @public
@@ -2872,12 +2892,14 @@ export interface Renderer {
     readonly features: Readonly<RenderingFeatureSettings>;
     readonly gpuFrameTimeMs: number;
     // @beta
+    nextFrame(options?: FrameWaitOptions): Promise<void>;
+    // @beta
     openOverlay(): Promise<RenderOverlay>;
     pickAsync(x: number, y: number, options?: RenderPickOptions): Promise<RenderPick | null>;
     pixelRatio: number;
     profileTasks: boolean;
     // @beta
-    renderToTexture(camera: Camera, texture: RenderTexture): Promise<void>;
+    renderToTexture(camera: Camera, texture: RenderTexture, options?: FrameWaitOptions): Promise<void>;
     requireFeature(feature: RenderingFeature): void;
     resetTemporalHistory(): void;
     resolutionScale: number;

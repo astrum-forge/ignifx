@@ -61,9 +61,9 @@ export type HostKind = (typeof HostKind)[keyof typeof HostKind];
  * The play controls send `"heartbeat"`, `"playControls"`, `"logRelay"` and `"queryRuntime"`, plus
  * `"screenshot"` when the game has a canvas and `"sendInput"` when it has `app.input`. The scene
  * host sends `"heartbeat"` and whichever of `"gizmos"`, `"screenshot"`, `"viewMode2d"`,
- * `"pick2d"`, `"gameView"`, `"thumbnails"`, `"grid"`, `"tilemapCells"`, `"editorLines"` and
- * `"spriteAnimation"` it supports; every `SceneMethod` not tied to one of them is required of a
- * 0.3 scene host.
+ * `"pick2d"`, `"gameView"`, `"gameViewOnDemand"`, `"gameViewSize"`, `"gameView2d"`, `"thumbnails"`,
+ * `"grid"`, `"tilemapCells"`, `"editorLines"` and `"spriteAnimation"` it supports; every
+ * `SceneMethod` not tied to one of them is required of a 0.3 scene host.
  *
  * @public
  */
@@ -124,6 +124,24 @@ export const HostCapability = {
    * 0.3); without it, the host answers both with `RpcErrorCode.methodNotFound`.
    */
   gameView: "gameView",
+  /**
+   * The scene host's `gameViewFrame` renders on demand: it does not wait for an animation frame,
+   * which a hidden host (a `visibility: hidden` iframe, a background tab) never gets, so it answers
+   * at full rate while hidden. Additive in 0.3; without it, a hidden host answers slowly or not
+   * at all.
+   */
+  gameViewOnDemand: "gameViewOnDemand",
+  /**
+   * The scene host's `gameViewFrame` takes `width` and `height`, resizing the view first. Additive
+   * in 0.3; without it, send `setGameView` to resize.
+   */
+  gameViewSize: "gameViewSize",
+  /**
+   * The scene host's `gameViewFrame` renders a document whose main camera is a `Camera2D`
+   * (`@ignifx/2d`): its sprites through that camera, at the view's size. Additive in 0.3; without
+   * it, such a document answers `dataUrl: null`.
+   */
+  gameView2d: "gameView2d",
   /**
    * The scene host answers `renderThumbnail`: a model or prefab asset rendered on its own
    * (`RenderViewMethod`). From engine ask E8 (additive in 0.3); without it, the host answers it with

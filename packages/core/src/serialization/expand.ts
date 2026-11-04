@@ -1,6 +1,7 @@
 import { CoreErrorCode } from "../errors/error-codes.js";
 import { IgnifxError } from "../errors/ignifx-error.js";
 import { setOwnJsonProperty } from "../schema/json.js";
+import { remapInstancePath } from "./instance-paths.js";
 import { asJsonArray, asJsonObject } from "./json-view.js";
 import { applyOverrides } from "./overrides.js";
 import { findSceneDependency } from "./scene-asset.js";
@@ -447,7 +448,7 @@ function remapValue(value: JsonValue, keys: ReadonlyMap<string, string>): JsonVa
   for (const key of Object.keys(object)) {
     const entry = object[key] ?? null;
     if ((key === "$entity" || key === "$component") && typeof entry === "string") {
-      rewritten[key] = keys.get(entry) ?? entry;
+      rewritten[key] = keys.get(entry) ?? remapInstancePath(entry, keys) ?? entry;
       continue;
     }
     // Defined, not assigned: a `__proto__` key in a file stays inert data on the copy.

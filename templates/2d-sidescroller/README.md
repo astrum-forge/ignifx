@@ -146,7 +146,8 @@ and it defaults to the packaged editor's `ignifx-editor://app`. `pnpm build` con
 - `?hud=1` — keeps the overlay visible in a static scene; the gallery capture uses it.
 - `?bench=1` — skips the title screen and installs `window.__ignifxFrameTime` for
   `tests/visual/tests/frame-time.spec.ts`.
-- `?probe=1` — installs `window.__ignifxGameplay`, a read-only reading of the character and the run
-  that `tests/visual/tests/templates.spec.ts` measures instead of photographing. See
+- `?probe=1` — installs `window.__ignifxGameplay`, a reading of the character and the run
+  that `tests/visual/tests/templates.spec.ts` measures instead of photographing, and caps the
+  frame delta at one fixed step so the same frames walk the same distance under load. See
   `src/gameplay-probe.ts`.
 - `?locale=<tag>` — picks a locale from `assets/strings.i18n.json` before the menus are built.

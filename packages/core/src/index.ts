@@ -413,6 +413,7 @@ export {
 export {
   forceRendererDeviceLossForTesting,
   RENDER_DIAGNOSTICS_COUNTERS,
+  type FrameWaitOptions,
   RENDER_DIAGNOSTICS_GROUP,
   type RenderCapture,
   type Renderer,
@@ -475,7 +476,9 @@ export { parseOverridePath, type EntityOverrideField, type OverridePath } from "
 export {
   applyOverridesToAsset,
   revertOverrides,
+  type PrefabApplyOptions,
   type PrefabApplyResult,
+  type PrefabComponentSkip,
   type PrefabOverrideSelection,
   type PrefabOverrideSkip,
 } from "./serialization/prefab-overrides.js";

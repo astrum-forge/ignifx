@@ -77,6 +77,41 @@ export interface BrowserApp {
 /** How many frames a change is given to reach the screen before a test reads it. */
 export const SETTLE_FRAMES = 6;
 
+/** The most frames {@link settleRebuilds} waits for a rebuild before it gives up. */
+const MAX_REBUILD_FRAMES = 600;
+
+/**
+ * Waits until the render sync system has run a renderable rebuild after `before` and owes no more,
+ * then {@link SETTLE_FRAMES} more frames so the rebuilt scene reaches the screen.
+ *
+ * @remarks
+ * A mesh added after `app.start()` is drawn only once that rebuild has finished. It runs alongside
+ * the frames and takes as long as the machine makes it take, so a fixed frame count reads the clear
+ * colour on a loaded runner (`hello-cube.browser.test.ts`, CI run 41671510758).
+ *
+ * @param harness - The running app.
+ * @param before - `renderer.renderableRebuilds` before the change.
+ * @param left - How many more frames to wait.
+ * @returns A promise that settles once the rebuilt scene has been presented.
+ * @throws Error when the rebuild has not finished after {@link MAX_REBUILD_FRAMES} frames.
+ */
+export async function settleRebuilds(harness: BrowserApp, before: number, left = MAX_REBUILD_FRAMES): Promise<void> {
+  const renderer = harness.renderer;
+  const isSettled =
+    renderer.renderableRebuilds > before &&
+    !renderer.needsRenderableRebuild &&
+    !renderer.isRebuildInFlight &&
+    !renderer.materialCacheResets.unconfirmed;
+  if (isSettled) {
+    return harness.advance(SETTLE_FRAMES);
+  }
+  if (left <= 0) {
+    throw new Error(`The renderable rebuild had not finished after ${String(MAX_REBUILD_FRAMES)} frames.`);
+  }
+  await harness.nextFrame();
+  return settleRebuilds(harness, before, left - 1);
+}
+
 /**
  * Waits for one animation frame.
  *

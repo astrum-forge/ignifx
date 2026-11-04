@@ -57,8 +57,9 @@ import type { LocaleAsset } from "@ignifx/ui";
  * - `?hud=1` keeps the DOM overlay visible in a `?static=1` scene, which is what the gallery
  *   capture script uses; a golden leaves it off so the image never depends on how the runner draws
  *   a system font.
- * - `?probe=1` installs `window.__ignifxGameplay`, the read-only test hook the gameplay half of
- *   `tests/visual/tests/templates.spec.ts` measures the character with. See `src/gameplay-probe.ts`.
+ * - `?probe=1` installs `window.__ignifxGameplay`, the test hook the gameplay half of
+ *   `tests/visual/tests/templates.spec.ts` measures the character with, and caps the frame delta at
+ *   one fixed step so a frame walks as far on a loaded machine. See `src/gameplay-probe.ts`.
  * - `?locale=<tag>` picks a locale from `assets/strings.i18n.json` before the menus are built.
  * - `?hdr=1` turns on `rendering.hdr`, which should present the same picture; the visual suite
  *   compares it with the plain golden.
@@ -428,8 +429,9 @@ async function main(): Promise<AppStatus> {
     app.time.timeScale = 0;
   } else {
     const run = await installFrontEnd(app, sounds, world, gameUi.hud, isBench);
-    // A read-only test hook, and only under `?probe=1`: the gameplay half of the template spec
-    // measures the character in metres rather than in pixels. See `src/gameplay-probe.ts`.
+    // A test hook, and only under `?probe=1`: the gameplay half of the template spec measures the
+    // character in metres rather than in pixels. It also caps the frame delta at one fixed step, so
+    // the same number of frames walks the same distance under load. See `src/gameplay-probe.ts`.
     if (flags.get("probe") === "1") {
       installGameplayProbe(app, world.player, world.camera, world.shrines, run);
     }

@@ -293,3 +293,35 @@ describe("revertOverrides", () => {
     expect(revertOverrides(instance, { paths: ["R/components/A"] })).toBe(instance);
   });
 });
+
+describe("applyOverridesToAsset with the instance root's own components", () => {
+  const own = { uid: "OWN", type: "test/Tagger", props: { note: "own" } };
+  const other = { uid: "OTHER", type: "test/Tagger", props: { note: "other" } };
+  const clash = { uid: "AI", type: "test/Tagger" };
+
+  it("appends the selected ones to the prefab root and reports what stays", async () => {
+    const instance: SceneFileInstance = { scene: { $asset: PREFAB } };
+    const result = await applyOverridesToAsset(instance, enemyFile(), {
+      paths: ["R/components/OWN", "R/components/AI"],
+      rootComponents: [own, other, clash],
+    });
+
+    expect(result.asset.entities[0]?.components?.map((component) => component.uid)).toEqual(["AI", "DEBUG", "OWN"]);
+    expect(result.applied).toEqual([]);
+    expect(result.appliedComponents).toEqual([own]);
+    expect(result.rootComponents).toEqual([other, clash]);
+    expect(result.skippedComponents.map((skip) => skip.component)).toEqual([clash]);
+    expect(result.skippedComponents[0]?.reason).toContain("already uses");
+    expect(result.hash).toBe(await computeSceneHash(result.asset));
+  });
+
+  it("skips them all on a prefab with several roots", async () => {
+    const file = buildFile({ entities: [entityRecord({ uid: "A" }), entityRecord({ uid: "B" })] });
+    const result = await applyOverridesToAsset({ scene: { $asset: PREFAB } }, file, { rootComponents: [own] });
+
+    expect(result.asset).toBe(file);
+    expect(result.appliedComponents).toEqual([]);
+    expect(result.rootComponents).toEqual([own]);
+    expect(result.skippedComponents[0]?.reason).toContain("no single root");
+  });
+});

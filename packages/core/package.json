@@ -21,6 +21,10 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./prefab": {
+      "types": "./dist/prefab.d.ts",
+      "import": "./dist/prefab.js"
+    },
     "./package.json": "./package.json"
   },
   "publishConfig": {
@@ -31,9 +35,9 @@
     "build": "tsdown",
     "typecheck": "tsc --build tsconfig.json tsconfig.test.json",
     "test": "vitest run --project node --project node-isolated --root ../.. packages/core",
-    "api-report": "api-extractor run --verbose",
-    "docs:api": "typedoc",
-    "api-report:update": "api-extractor run --local --verbose",
+    "api-report": "api-extractor run --verbose && api-extractor run --verbose -c api-extractor.prefab.json",
+    "docs:api": "typedoc && typedoc --options typedoc.prefab.json",
+    "api-report:update": "api-extractor run --local --verbose && api-extractor run --local --verbose -c api-extractor.prefab.json",
     "pack-check": "publint && attw --pack . --profile esm-only",
     "prepublishOnly": "node ../../scripts/require-pnpm-publish.ts"
   },

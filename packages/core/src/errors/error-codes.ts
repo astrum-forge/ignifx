@@ -292,6 +292,8 @@ export const CoreErrorCode = {
   renderTextureUnusable: "IGX-0731",
   /** `app.renderer.renderToTexture` was given a camera that is not attached to an entity. */
   renderTextureCameraDetached: "IGX-0732",
+  /** `maxWaitMs` given to `app.renderer.renderToTexture` or `app.renderer.nextFrame` is not a finite number of 0 or more. */
+  invalidFrameWait: "IGX-0733",
   /** The host exposes no Web Crypto implementation. */
   cryptoUnavailable: "IGX-1420",
   /** A storage namespace name is not a legal namespace segment. */
@@ -428,6 +430,7 @@ export const CORE_ERROR_MESSAGES: Readonly<Record<CoreErrorCode, string>> = {
   "IGX-0730": "A render texture of {width}x{height}: each side must be a whole number from 1 to {max}.",
   "IGX-0731": "{member}: the render texture is disposed or belongs to another app.",
   "IGX-0732": "renderToTexture() needs a camera attached to an entity.",
+  "IGX-0733": "{member}: maxWaitMs must be a finite number of milliseconds, 0 or more.",
   "IGX-1420": "This host does not expose Web Crypto.",
   "IGX-1421": "{namespace} is not a valid storage namespace.",
   "IGX-1422": "That storage key is empty, too long, or contains a control character.",
