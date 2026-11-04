@@ -9,6 +9,7 @@ import { Light } from "./light.js";
 import { MeshRenderer } from "./mesh-renderer.js";
 import { Model } from "./model.js";
 import { PostProcessStack } from "./post-process-stack.js";
+import { ReflectionProbe } from "./reflection-probe.js";
 import type { RendererImpl } from "./renderer.js";
 import type { System, SystemContext } from "../app/types.js";
 import type { LiteMesh } from "../lite/gpu/mesh.js";
@@ -206,6 +207,7 @@ export class RenderSyncSystem implements System {
     // After the environment, whose image processing the clear colour has to follow.
     renderer.refreshClearColor();
     renderer.updateAmbientOcclusion();
+    renderer.updateReflectionProbes(world, world.components(ReflectionProbe));
     this.#applyStacks(world);
     this.#areCastersDirty = this.#areCastersDirty || castersChanged;
     // Lite built a material family on its own (a runtime build of its first mesh) and pushed a

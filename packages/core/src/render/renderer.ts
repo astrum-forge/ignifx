@@ -72,6 +72,8 @@ import type { ColorLike } from "../math/types.js";
 import type { RenderSurface } from "../platform/webgpu.js";
 import type { Disconnect } from "../signal/signal.js";
 import type { World } from "../world/world.js";
+import type { ReflectionProbeRuntime } from "./gpu/reflection-probes.js";
+import type { ReflectionProbe } from "./reflection-probe.js";
 
 /**
  * `app.renderer` (`docs/architecture/07-rendering.md` §1, §3, §5, ADR-0014): the service that owns
@@ -666,6 +668,12 @@ export class RendererImpl implements Renderer {
 
   /** The GTAO pass (`../lite/gpu/gtao.ts`), when `rendering.ambientOcclusion` is on. */
   #ambientOcclusion: AmbientOcclusion | null = null;
+
+  /** The reflection-probe chunk's runtime, once a world had a probe (GI B1). */
+  #reflectionProbes: ReflectionProbeRuntime | null = null;
+
+  /** Whether the reflection-probe chunk is loading. */
+  #isLoadingReflectionProbes = false;
 
   /** The TAA passes (`../lite/gpu/taa.ts`), when `rendering.taa` installed them. */
   #taa: TaaHandle | null = null;
@@ -1584,6 +1592,55 @@ export class RendererImpl implements Renderer {
   }
 
   /**
+   * The reflection probes' per-frame work (`ReflectionProbe`, GI B1): loads their chunk the first
+   * time a world has one, then captures what is due and points each lit PBR material at its probe.
+   * The `PreRender` system calls it every frame; it does nothing until a probe exists, and nothing
+   * on a headless app.
+   *
+   * @param world - The world being reconciled.
+   * @param probes - Every `ReflectionProbe` in it.
+   *
+   * @internal
+   */
+  updateReflectionProbes(world: World, probes: readonly ReflectionProbe[]): void {
+    const runtime = this.#reflectionProbes;
+    if (runtime !== null) {
+      runtime.update(world, probes, (this.#presenter?.hdr ?? null) !== null);
+      return;
+    }
+    if (probes.length === 0 || this.isHeadless || this.#isDisposed || !this.#isSceneRegistered) {
+      return;
+    }
+    if (this.#isLoadingReflectionProbes) {
+      return;
+    }
+    this.#isLoadingReflectionProbes = true;
+    void import("./gpu/reflection-probes.js")
+      .then(async (module) => module.createReflectionProbeRuntime(this.engine, this.scene))
+      .then((created) => {
+        if (this.#isDisposed) {
+          created.dispose();
+          return;
+        }
+        this.#reflectionProbes = created;
+      })
+      .catch((error: unknown) => {
+        this.#app.onError.emit({ error, source: "system", phase: null, entity: null, component: null });
+      });
+  }
+
+  /**
+   * Whether the reflection-probe chunk is loaded and running.
+   *
+   * @returns `true` once a world's `ReflectionProbe` has loaded it.
+   *
+   * @internal
+   */
+  get isReflectionProbeRuntimeActive(): boolean {
+    return this.#reflectionProbes !== null;
+  }
+
+  /**
    * Whether the GTAO pass is built and running.
    *
    * @returns `true` once `rendering.ambientOcclusion` has installed it.
@@ -1831,6 +1888,8 @@ export class RendererImpl implements Renderer {
     this.#afterRebuild.length = 0;
     this.#ambientOcclusion?.dispose();
     this.#ambientOcclusion = null;
+    this.#reflectionProbes?.dispose();
+    this.#reflectionProbes = null;
     this.#sceneInputsHost?.dispose();
     this.#sceneInputsHost = null;
     this.#taa = null;

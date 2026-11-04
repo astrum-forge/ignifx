@@ -2803,6 +2803,30 @@ export interface ReferenceEncoder {
 }
 
 // @public
+export const REFLECTION_PROBE_REFRESH_MODES: readonly ["once", "onDemand", "everyFrame"];
+
+// @beta
+export class ReflectionProbe extends Component {
+    constructor();
+    static allowMultiple: boolean;
+    boxProjection: Vec3Like | null;
+    // @internal
+    consumeRefreshRequest(): boolean;
+    cullingMask: readonly string[];
+    static description: string;
+    far: number;
+    near: number;
+    refresh(): void;
+    refreshMode: ReflectionProbeRefreshMode;
+    static schema: Schema;
+    size: number;
+    static typeId: string;
+}
+
+// @public
+export type ReflectionProbeRefreshMode = (typeof REFLECTION_PROBE_REFRESH_MODES)[number];
+
+// @public
 export interface RegisterAssetOptions {
     readonly address?: string;
     readonly type: string;

@@ -2511,6 +2511,53 @@
         }
       }
     },
+    "ignifx/ReflectionProbe": {
+      "title": "ReflectionProbe",
+      "format": "components",
+      "description": "Captures the scene around it into a cube map that nearby PBR materials reflect.",
+      "package": "packages/core",
+      "fields": {
+        "size": {
+          "kind": "u32",
+          "default": "128",
+          "description": "Cube face size in pixels, rounded down to a power of two. Larger is sharper and slower to capture.",
+          "min": 16,
+          "max": 1024
+        },
+        "refreshMode": {
+          "kind": "enum",
+          "default": "\"once\"",
+          "description": "once: capture when ready and on refresh(); onDemand: only on refresh(); everyFrame: every frame (costly).",
+          "values": [
+            "once",
+            "onDemand",
+            "everyFrame"
+          ]
+        },
+        "boxProjection": {
+          "kind": "optional",
+          "default": "null",
+          "description": "Full size in metres of the box, centred on the probe, that reflections are projected onto; null for none."
+        },
+        "cullingMask": {
+          "kind": "layerMask",
+          "default": "[]",
+          "description": "The layers the probe captures; empty captures every layer."
+        },
+        "near": {
+          "kind": "f32",
+          "default": "0.1",
+          "description": "Near clip distance of the capture, in metres.",
+          "min": 0.001
+        },
+        "far": {
+          "kind": "f32",
+          "default": "1000",
+          "description": "Far clip distance of the capture, in metres.",
+          "min": 0.01
+        }
+      }
+    },
     "ignifx/Rigidbody": {
       "title": "Rigidbody",
       "format": "components",

@@ -406,6 +406,11 @@ export {
   type SsgiEffectSettings,
 } from "./render/post-process-stack.js";
 export {
+  REFLECTION_PROBE_REFRESH_MODES,
+  ReflectionProbe,
+  type ReflectionProbeRefreshMode,
+} from "./render/reflection-probe.js";
+export {
   forceRendererDeviceLossForTesting,
   RENDER_DIAGNOSTICS_COUNTERS,
   RENDER_DIAGNOSTICS_GROUP,

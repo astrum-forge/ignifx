@@ -14,6 +14,7 @@ import { MESH_FILE_FORMAT, MESH_FORMAT_VERSION, MESH_PRIMITIVE_OPTIONS } from ".
 import { MeshRenderer } from "./mesh-renderer.js";
 import { Model } from "./model.js";
 import { PostProcessStack } from "./post-process-stack.js";
+import { ReflectionProbe } from "./reflection-probe.js";
 import type { SchemaDescription } from "../schema/describe.js";
 
 /**
@@ -87,6 +88,9 @@ export function describeSchemas(): Readonly<Record<string, SchemaDescription>> {
     }),
     "ignifx/PostProcessStack": describeSchema("ignifx/PostProcessStack", PostProcessStack.schema, {
       description: PostProcessStack.description,
+    }),
+    "ignifx/ReflectionProbe": describeSchema("ignifx/ReflectionProbe", ReflectionProbe.schema, {
+      description: ReflectionProbe.description,
     }),
     "ignifx/scene-file": describeSceneFileFormat(),
     "ignifx/material-file": describeMaterialFileFormat(),
