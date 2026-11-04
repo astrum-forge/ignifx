@@ -58,8 +58,8 @@ Order: B1 and B3 are independent; B2 starts with spike P1; B4 needs B2's asset; 
 
 ## 6. Not verified
 
-- Cube-face orientation against Lite's cube sampling (`rotateY(R, scene.envRotationY)`, left-handed): B1's browser test checks what each face captured, not a mirror's reflection direction.
-- `enablePbrLocalCubemap` after `registerScene`: Lite says to call it before; B1 calls it when the first probe appears and rebuilds the affected materials.
+- Cube-face orientation against Lite's cube sampling (`rotateY(R, scene.envRotationY)`, left-handed): B1's browser test (#151, green in CI) shows a mirror reflecting the walls behind the camera on the correct left/right sides, with HDR off and on. The ±Y faces and a rotated environment are not checked.
+- `enablePbrLocalCubemap` after `registerScene`: Lite says to call it before. B1 calls it when the first probe appears and rebuilds the affected materials, and that worked in the same browser test; device loss on that path was not tried.
 - Box-filtered mips under rough materials: blurrier and blockier than a prefiltered `.env`. With `rendering.hdr` off the captured colour is tone-mapped and gamma-encoded, and B1 only undoes the gamma.
 - No Phase 2 cost has been measured; every budget above is an estimate, and `everyFrame` capture is 6 extra scene passes.
 - Whether `world.raycastRender` hits anything in a headless Node app (cloned meshes need a device); B4 is specified for an app with one.
