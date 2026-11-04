@@ -145,7 +145,9 @@ expanded under the instance root instead.
   next is the uid the prefab file gives the target; add a segment per nested prefab
   (`"<instanceRootUid>/<nestedInstanceUidInThePrefab>/<uidInTheNestedPrefab>"`). The loader
   resolves it to that copy's object, and `serializeScene` writes references into an instance this
-  way. A path that names nothing is `null` with `IGX-0602`.
+  way. A path that names nothing is `null` with `IGX-0602`. A tool holding such a path after the
+  build finds the live object with `instanceEntityAt(root, "<uidInThePrefab>")` or
+  `instanceComponentAt(root, …)`, where `root` is the instance root and the path omits its uid.
 - The `path` grammar — every path starts with the uid of an entity **inside the instanced file**, so
   it survives the per-instance uid remap. `parseOverridePath(path)` parses one; a path outside the
   grammar, or one with a `__proto__` property step, is `IGX-0609`.

@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
+import { instanceComponentAt, instanceEntityAt } from "../../src/serialization/instance-lookup.js";
 import { instantiateScene } from "../../src/serialization/load.js";
 import { applyOverridesToAsset } from "../../src/serialization/prefab-overrides.js";
 import { createSceneAsset } from "../../src/serialization/scene-asset.js";
@@ -139,5 +140,59 @@ describe("instance paths", () => {
     });
     expect(result.rootComponents).toEqual([own]);
     expect(result.skippedComponents).toEqual([]);
+  });
+
+  it("find the live object a path names below an instance root, after the build", async () => {
+    const { built } = await level(await squad(await enemy()), { target: { $entity: "L/N/C" } });
+    const root = built.remap.entity("L");
+    if (root === null) {
+      throw new Error("nothing was built");
+    }
+    const nested = root.children[0];
+    const weapon = nested?.children[0];
+    expect(instanceEntityAt(root, "Q")).toBe(root);
+    expect(instanceEntityAt(root, "N")).toBe(nested);
+    expect(instanceEntityAt(root, "N/C")).toBe(weapon);
+    expect(instanceEntityAt(root, "N/R")).toBe(nested);
+    expect(instanceEntityAt(root, "C")).toBeNull();
+    expect(instanceComponentAt(root, "QAI")).toBe(root.getComponent(Everything));
+    expect(instanceComponentAt(root, "N/T")).toBe(weapon?.getComponent(Tagger));
+    expect(instanceComponentAt(root, "N/AI")).toBe(nested?.getComponent(Everything));
+    expect(instanceComponentAt(root, "N/NOPE")).toBeNull();
+    expect(instanceComponentAt(root, "X/T")).toBeNull();
+  });
+
+  it("name nothing through an entity that roots no instance, or a uid the prefab does not hold", async () => {
+    const { built } = await level(await enemy(), { target: { $entity: "S/C" } });
+    expect(built.issues.map((issue) => issue.code)).toEqual(["IGX-0602"]);
+    const plain = built.remap.entity("S");
+    expect(plain === null ? undefined : instanceComponentAt(plain, "T")).toBeNull();
+
+    const harness = createSerializationWorld();
+    worlds.push(harness);
+    const loose = await createSceneAsset(
+      "prefabs/loose.prefab.json",
+      buildFile({
+        entities: [
+          entityRecord({
+            uid: "A",
+            components: [
+              { uid: "A1", type: "test/Everything", props: { target: { $entity: "GONE" } } },
+              { uid: "A2", type: "test/Everything", props: { target: { $entity: "ZZ/C" } } },
+            ],
+          }),
+        ],
+      }),
+    );
+    const inside = instantiateScene(harness.world, loose, { asInstance: true });
+    expect(inside.issues.map((issue) => issue.code)).toEqual(["IGX-0602", "IGX-0602"]);
+  });
+
+  it("skip a member that is being destroyed", async () => {
+    const { built } = await level(await enemy(), {});
+    const root = built.remap.entity("L");
+    const weapon = root?.children[0];
+    weapon?.destroy();
+    expect(root === null ? undefined : instanceEntityAt(root, "C")).toBeNull();
   });
 });

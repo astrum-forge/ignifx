@@ -1618,6 +1618,9 @@ export class IndexedDbStorageBackend implements StorageBackend {
 }
 
 // @public
+export function instanceComponentAt(root: Entity, path: string): Component | null;
+
+// @public
 export interface InstancedMeshLod {
     band: number;
     distance: number;
@@ -1672,6 +1675,9 @@ export interface InstancedMeshRendererLiteHandles {
     readonly lodMesh: LiteMesh | null;
     readonly mesh: LiteMesh | null;
 }
+
+// @public
+export function instanceEntityAt(root: Entity, path: string): Entity | null;
 
 // @public
 export interface InstanceRange {

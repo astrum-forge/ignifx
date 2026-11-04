@@ -9,11 +9,14 @@ import {
   canonicalizeNumber,
   CoreErrorCode,
   decodeProps,
+  instanceComponentAt,
+  instanceEntityAt,
   parseOverridePath,
   SCENE_ASSET_TYPE,
   serializeScene,
 } from "@ignifx/core";
 import { countEntities } from "../play-stats.js";
+import { pathHead } from "./json.js";
 import type { OpenSceneResult, ReadBackParams, ReadBackResult, SceneIssue } from "../protocol/index.js";
 import type {
   App,
@@ -607,10 +610,24 @@ export class DocumentMirror {
   decoder(built?: UidRemap): ReferenceDecoder {
     const index = this.index();
     const assets = this.#app.assets;
+    // An instance path (`"<instanceRootUid>/<uidInThePrefab>"`) names a member of a document
+    // entity's instance, which a rebuild gives new runtime uids.
+    const rootOf = (uid: string): { readonly root: Entity; readonly rest: string } | null => {
+      const head = pathHead(uid);
+      const root = head === "" ? null : (index?.entities.get(head) ?? built?.entity(head) ?? null);
+      return root === null ? null : { root, rest: uid.slice(head.length + 1) };
+    };
     return {
-      entity: (uid: string): Entity | null => index?.entities.get(uid) ?? built?.entity(uid) ?? null,
-      component: (uid: string): Component | null =>
-        index?.components.get(uid) ?? built?.component(uid) ?? index?.added.get(uid) ?? null,
+      entity: (uid: string): Entity | null => {
+        const known = index?.entities.get(uid) ?? built?.entity(uid) ?? null;
+        const path = known === null ? rootOf(uid) : null;
+        return path === null ? known : instanceEntityAt(path.root, path.rest);
+      },
+      component: (uid: string): Component | null => {
+        const known = index?.components.get(uid) ?? built?.component(uid) ?? index?.added.get(uid) ?? null;
+        const path = known === null ? rootOf(uid) : null;
+        return path === null ? known : instanceComponentAt(path.root, path.rest);
+      },
       asset: (address: string, type: string | null): AssetHandle | null => {
         const handle = assets.get(address);
         return handle !== null && handle.state === "loaded" && (type === null || handle.type === type) ? handle : null;

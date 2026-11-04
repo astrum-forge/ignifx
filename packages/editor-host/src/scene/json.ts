@@ -48,7 +48,8 @@ export function asJsonArray(value: JsonValue | undefined): readonly JsonValue[] 
  * @param value - The JSON.
  * @param entities - The entity uids.
  * @param components - The component uids.
- * @returns True when a `$entity` or `$component` names one of them.
+ * @returns True when a `$entity` or `$component` names one of them, or is an instance path that
+ * starts at one of the entities.
  */
 export function pointsInto(
   value: JsonValue | undefined,
@@ -66,8 +67,20 @@ export function pointsInto(
   const entity = object["$entity"];
   const component = object["$component"];
   return (
-    (typeof entity === "string" && entities.has(entity)) ||
-    (typeof component === "string" && components.has(component)) ||
+    (typeof entity === "string" && (entities.has(entity) || entities.has(pathHead(entity)))) ||
+    (typeof component === "string" && (components.has(component) || entities.has(pathHead(component)))) ||
     Object.values(object).some((item) => pointsInto(item, entities, components))
   );
+}
+
+/**
+ * The first segment of an instance path (`"<instanceRootUid>/<uidInThePrefab>"`), the document
+ * entity the path starts at; a plain uid has none.
+ *
+ * @param uid - A reference's uid or instance path.
+ * @returns The instance root's uid, or `""` for a plain uid.
+ */
+export function pathHead(uid: string): string {
+  const at = uid.indexOf("/");
+  return at <= 0 ? "" : uid.slice(0, at);
 }
