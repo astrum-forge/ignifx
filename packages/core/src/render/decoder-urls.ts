@@ -186,7 +186,6 @@ const DECODER_NAMES: Readonly<Record<DecoderGroup, string>> = {
 const GLTF_DECODER_EXTENSIONS: readonly (readonly [string, DecoderGroup])[] = [
   ["KHR_draco_mesh_compression", "draco"],
   ["EXT_meshopt_compression", "meshopt"],
-  ["KHR_meshopt_compression", "meshopt"],
   ["KHR_texture_basisu", "ktx2"],
 ];
 
