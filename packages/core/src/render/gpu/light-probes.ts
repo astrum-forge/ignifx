@@ -1,5 +1,10 @@
 import { readSceneEnvironment } from "../../lite/gpu/environment.js";
-import { createLightProbePlugin, createLightProbeTexture, swapLightProbePlugin } from "../../lite/gpu/light-probes.js";
+import {
+  createLightProbePlugin,
+  createLightProbeTexture,
+  enableLightProbePlugins,
+  swapLightProbePlugin,
+} from "../../lite/gpu/light-probes.js";
 import { packLightProbeTexels } from "../light-probe-asset.js";
 import type { LiteMaterialPlugin } from "../../lite/gpu/material-plugin.js";
 import type { LiteEngine, LiteScene } from "../../lite/scene.js";
@@ -51,6 +56,7 @@ export interface LightProbeRuntime {
  * @internal
  */
 export function createLightProbeRuntime(engine: LiteEngine, scene: LiteScene): LightProbeRuntime {
+  enableLightProbePlugins(scene);
   let applied: Applied | null = null;
   const retiring: { destroy: () => void; frames: number }[] = [];
 

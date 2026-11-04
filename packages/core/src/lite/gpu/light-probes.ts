@@ -1,4 +1,4 @@
-import { createRenderTexture2D, getPbrUnlit, isPbrMaterial, isPbrSkybox } from "@babylonjs/lite";
+import { createRenderTexture2D, enableMaterialPlugins, getPbrUnlit, isPbrMaterial, isPbrSkybox } from "@babylonjs/lite";
 import { rebuildMaterialPipelines } from "../material.js";
 import { deviceOf } from "./render-texture.js";
 import type { EngineContext, MaterialPlugin, SceneContext, Texture2D } from "@babylonjs/lite";
@@ -92,6 +92,23 @@ export function lightProbePluginWgsl(shape: LightProbeGridShape): { definitions:
     "+scene.vSphericalL22.rgb*(igxN.x*igxN.x-igxN.y*igxN.y))*material.environmentIntensity;" +
     `color+=(igxLpSample(input.worldPos,N)*${f(shape.intensity)}-igxEnv)*surfaceAlbedo*occlusion;}`;
   return { definitions, composition };
+}
+
+/**
+ * Installs Lite's material-plugin bridges, which the plugin needs, unless the project already did.
+ *
+ * @remarks
+ * Idempotent (`lib/material/plugin/enable-material-plugins.js` replaces its one scene hook). The
+ * HDR path calls it before `registerScene` (`./hdr-output.ts`); here it runs after, which works for
+ * PBR because the bridge assigns a material's plugin identity during the rebuild that attaching
+ * the plugin queues. `light-probe.browser.test.ts` covers that case with HDR off.
+ *
+ * @param scene - The registered scene.
+ *
+ * @internal
+ */
+export function enableLightProbePlugins(scene: SceneContext): void {
+  enableMaterialPlugins(scene);
 }
 
 /**
