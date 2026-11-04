@@ -43,6 +43,14 @@ milliseconds per frame at 1920x1080 on the host GPU (an Apple M1 for the recorde
 the adapter is SwiftShader. GitHub's runners have no GPU, so it is local only. To re-record, copy
 the `median` and `worst` it prints into the `gpuTime.templates` rows in `baselines.json`.
 
+Each `rendering.quality` tier has its own rows under `gpuTime.tiers.<tier>.templates`, checked by
+`IGNIFX_GPU_QUALITY=<tier> pnpm test:gpu-budget` (`low`, `medium`, `high`). To re-record them, run
+the three tiers one after another while nothing else uses the GPU (`pgrep -fl 'playwright|vitest'`
+shows no other Playwright or browser Vitest run, and no other preview holds ports 4173–4178, which
+the config would reuse), copy each run's `median` and `worst`, and set the ceiling to about three
+times the median, inside the tier's §7 whole-frame budget. `benchmarks/template-frame-time.test.ts`
+checks every tier row against that budget.
+
 `playwright.config.ts` builds and previews **six** things before the first test, so a golden is
 always taken of a production build:
 
