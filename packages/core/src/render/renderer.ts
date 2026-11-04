@@ -534,7 +534,8 @@ export interface Renderer {
    * systems and scripts run, but game time does not advance.
    *
    * @param options - How long to wait for an animation frame; absent to wait for one forever.
-   * @returns A promise that settles once the next frame has been submitted.
+   * @returns A promise that settles once the next frame has been submitted, or once the render
+   * loop stops (`app.stop()`, `app.dispose()`) before one is.
    * @throws IgnifxError with code `IGX-0729` on a headless app or while no render loop runs.
    *
    * @beta
@@ -1893,6 +1894,16 @@ export class RendererImpl implements Renderer {
    */
   setLoopRunning(isRunning: boolean): void {
     this.#isLoopRunning = isRunning;
+    if (!isRunning) {
+      this.#settleFrameWaiters();
+    }
+  }
+
+  /** Settles every `nextFrame` call still waiting: no frame will come once the loop stops. */
+  #settleFrameWaiters(): void {
+    for (const resolve of this.#frameWaiters.splice(0)) {
+      resolve();
+    }
   }
 
   /**
@@ -1971,9 +1982,7 @@ export class RendererImpl implements Renderer {
       texture.dispose();
     }
     // No frame will come now; settling beats leaving `nextFrame` callers waiting forever.
-    for (const resolve of this.#frameWaiters.splice(0)) {
-      resolve();
-    }
+    this.#settleFrameWaiters();
     const picker = this.#picker;
     this.#picker = null;
     if (picker !== null) {
