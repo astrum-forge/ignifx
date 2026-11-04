@@ -341,6 +341,50 @@ Where the asset is fetched from: root-relative in development, content-hashed in
 
 ***
 
+### DecoderOptions
+
+Which of Babylon Lite's run-time decoders, shipped by `@ignifx/core`, the plugin serves in
+development and copies into the build. Each defaults to `true`. Turn one off when the game never
+loads that kind of file, to keep its bytes out of `dist/`; a file that needs a decoder left out
+then fails to load.
+
+#### Properties
+
+##### draco?
+
+> `readonly` `optional` **draco?**: `boolean`
+
+The Draco decoder (`draco_decoder.js` and `draco_decoder_gltf.wasm`, 251 KB), for glTF models
+with `KHR_draco_mesh_compression`.
+
+###### Default Value
+
+`true`
+
+##### ktx2?
+
+> `readonly` `optional` **ktx2?**: `boolean`
+
+The KTX2 decoder and its transcoders (`babylon.ktx2Decoder.js`, `msc_basis_transcoder.*`,
+`uastc_*.wasm`, `zstddec.wasm`, 710 KB), for `.ktx2` textures.
+
+###### Default Value
+
+`true`
+
+##### meshopt?
+
+> `readonly` `optional` **meshopt?**: `boolean`
+
+The meshopt decoder (`meshopt_decoder.js`, 29 KB), for glTF models with
+`EXT_meshopt_compression`.
+
+###### Default Value
+
+`true`
+
+***
+
 ### ExtensionPublicAsset
 
 One file an extension asked to have served as a static asset.
@@ -440,6 +484,18 @@ no config file; `settingsFile` is still read.
 ###### Default Value
 
 auto-detected at the Vite root: `ignifx.config.ts`, `.mts`, `.js`, then `.mjs`.
+
+##### decoders?
+
+> `readonly` `optional` **decoders?**: [`DecoderOptions`](#decoderoptions)
+
+Which of Lite's run-time decoders to serve and copy into the build. Leave out the ones the game
+never uses to save their bytes: `{ draco: false }` drops 251 KB from a game without
+Draco-compressed models.
+
+###### Default Value
+
+every decoder: `{ draco: true, meshopt: true, ktx2: true }`
 
 ##### hashLength?
 
@@ -583,6 +639,32 @@ identically, as when the config file spreads the JSON, is not listed.
 
 ***
 
+### ResolvedDecoderOptions
+
+[DecoderOptions](#decoderoptions) with every default applied.
+
+#### Properties
+
+##### draco
+
+> `readonly` **draco**: `boolean`
+
+Whether the Draco decoder is copied.
+
+##### ktx2
+
+> `readonly` **ktx2**: `boolean`
+
+Whether the KTX2 decoder and its transcoders are copied.
+
+##### meshopt
+
+> `readonly` **meshopt**: `boolean`
+
+Whether the meshopt decoder is copied.
+
+***
+
 ### ResolvedIgnifxConfig
 
 The outcome of resolving the project config.
@@ -626,6 +708,12 @@ The asset root exactly as configured; the plugin resolves it against the Vite ro
 > `readonly` **configFile**: `string` \| `false` \| `null`
 
 The configured config path, `null` to auto-detect, or `false` to load none.
+
+##### decoders
+
+> `readonly` **decoders**: [`ResolvedDecoderOptions`](#resolveddecoderoptions)
+
+Which of Lite's run-time decoders are served and copied.
 
 ##### hashLength
 

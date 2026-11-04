@@ -10,6 +10,7 @@ import { createReadStream } from "node:fs";
 import { readFile, stat } from "node:fs/promises";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { assetTypeForAddress, hashedAddress, isSidecarFileName, META_SUFFIX } from "./asset-types.js";
+import { isLeftOutDecoder } from "./decoders.js";
 import { VitePluginError, VitePluginErrorCode } from "./errors.js";
 import { collectExtensionPublicAssets } from "./extension-assets.js";
 import {
@@ -308,7 +309,9 @@ export function ignifx(options: IgnifxPluginOptions = {}): Plugin<IgnifxPluginAp
    * @returns Nothing; the result lands in `extensionAssets`.
    */
   async function refreshExtensionAssets(): Promise<void> {
-    const files = await collectExtensionPublicAssets(root);
+    const files = (await collectExtensionPublicAssets(root)).filter(
+      (file) => !isLeftOutDecoder(file, settings.decoders),
+    );
     extensionAssets = await Promise.all(
       files.map(async (file): Promise<DescribedExtensionAsset> => {
         const info = await stat(file.filePath);
