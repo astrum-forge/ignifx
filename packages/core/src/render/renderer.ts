@@ -16,6 +16,7 @@ import { assertRenderingFeatureAvailable } from "../lite/render-features.js";
 import { sceneLightCount } from "../lite/scene.js";
 import { createMaterialCacheResets } from "../lite/shadow.js";
 import { clamp } from "../math/math-utils.js";
+import { ReflectionProbeHost } from "./gpu/reflection-probe-host.js";
 import {
   applySurfaceScale,
   createPicker,
@@ -50,6 +51,7 @@ import {
 } from "./rendering-settings.js";
 import type { Camera } from "./camera.js";
 import type { MaterialAsset } from "./material-asset.js";
+import type { ReflectionProbe } from "./reflection-probe.js";
 import type { RenderTexture, RenderTextureOwner } from "./render-texture.js";
 import type { RenderingFeatureSettings, RenderingQualityPreset, RenderingSettings } from "./rendering-settings.js";
 import type { App, ServiceNameKey } from "../app/types.js";
@@ -728,6 +730,9 @@ export class RendererImpl implements Renderer {
 
   /** The GTAO pass (`../lite/gpu/gtao.ts`), when `rendering.ambientOcclusion` is on. */
   #ambientOcclusion: AmbientOcclusion | null = null;
+
+  /** The reflection probes' host, created on the first frame of a canvas-backed app (GI B1). */
+  #reflectionProbes: ReflectionProbeHost | null = null;
 
   /** The TAA passes (`../lite/gpu/taa.ts`), when `rendering.taa` installed them. */
   #taa: TaaHandle | null = null;
@@ -1713,6 +1718,50 @@ export class RendererImpl implements Renderer {
   }
 
   /**
+   * The reflection probes' per-frame work (`ReflectionProbe`, GI B1): loads their chunk the first
+   * time a world has one, then captures what is due and points each lit PBR material at its probe.
+   * The `PreRender` system calls it every frame; it does nothing until a probe exists, and nothing
+   * on a headless app.
+   *
+   * @param world - The world being reconciled.
+   * @param probes - Every `ReflectionProbe` in it.
+   *
+   * @internal
+   */
+  updateReflectionProbes(world: World, probes: readonly ReflectionProbe[]): void {
+    if (!this.isHeadless) {
+      this.#updateReflectionProbes(world, probes);
+    }
+  }
+
+  /**
+   * {@link RendererImpl.updateReflectionProbes} on a canvas-backed app.
+   *
+   * @param world - The world being reconciled.
+   * @param probes - Every `ReflectionProbe` in it.
+   */
+  #updateReflectionProbes(world: World, probes: readonly ReflectionProbe[]): void {
+    if (this.#isDisposed || !this.#isSceneRegistered) {
+      return;
+    }
+    this.#reflectionProbes ??= new ReflectionProbeHost(this.engine, this.scene, (error: unknown): void => {
+      this.#app.onError.emit({ error, source: "system", phase: null, entity: null, component: null });
+    });
+    this.#reflectionProbes.update(world, probes, (this.#presenter?.hdr ?? null) !== null);
+  }
+
+  /**
+   * The reflection probes' host, for tests and diagnostics.
+   *
+   * @returns The host, or `null` on a headless app and before the first frame.
+   *
+   * @internal
+   */
+  get reflectionProbeHost(): ReflectionProbeHost | null {
+    return this.#reflectionProbes;
+  }
+
+  /**
    * Whether the GTAO pass is built and running.
    *
    * @returns `true` once `rendering.ambientOcclusion` has installed it.
@@ -1970,6 +2019,8 @@ export class RendererImpl implements Renderer {
     this.#afterRebuild.length = 0;
     this.#ambientOcclusion?.dispose();
     this.#ambientOcclusion = null;
+    this.#reflectionProbes?.dispose();
+    this.#reflectionProbes = null;
     this.#sceneInputsHost?.dispose();
     this.#sceneInputsHost = null;
     this.#taa = null;

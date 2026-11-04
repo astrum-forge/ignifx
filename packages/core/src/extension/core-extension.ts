@@ -21,6 +21,7 @@ import { createTextureLoader } from "../render/loaders/texture-loader.js";
 import { MeshRenderer } from "../render/mesh-renderer.js";
 import { Model } from "../render/model.js";
 import { PostProcessStack } from "../render/post-process-stack.js";
+import { ReflectionProbe } from "../render/reflection-probe.js";
 import { RENDER_SYNC_ORDER, RenderSyncSystem } from "../render/render-sync-system.js";
 import { RendererImpl, RendererService } from "../render/renderer.js";
 import {
@@ -165,7 +166,16 @@ function registerRendering(ctx: ExtensionContext): void {
   const settings = applyRenderingQuality(ctx.settings<RenderingSettings>(RENDERING_SETTINGS_SECTION), declared);
   const renderer = new RendererImpl(ctx.app, settings);
   ctx.registerService(RendererService, renderer);
-  ctx.registerComponents([Camera, Light, MeshRenderer, InstancedMeshRenderer, Model, Environment, PostProcessStack]);
+  ctx.registerComponents([
+    Camera,
+    Light,
+    MeshRenderer,
+    InstancedMeshRenderer,
+    Model,
+    Environment,
+    PostProcessStack,
+    ReflectionProbe,
+  ]);
   ctx.registerAssetLoader(createTextureLoader());
   ctx.registerAssetLoader(createModelLoader());
   ctx.registerAssetLoader(createMaterialLoader());

@@ -24,6 +24,7 @@ what they mean.
 | `Model`                 | One instance of a loaded glTF, cloned under the entity's node                                    | `nodes`, `attachToNode(name, entity)`, `materialOverrides`; `animations`/`skeletons` are `@beta`                                                                      |
 | `Environment`           | Image-based lighting, skybox, fog, image processing, clear colour                                | **One per world**; a second enabled one logs `IGX-0705` and the most recent wins. Assign a different **loaded** handle to `environment` to switch lighting at runtime |
 | `PostProcessStack`      | `bloom`, `smaa`, `imageProcessing`, as one frame-graph chain; `contactShadows`, `ssgi` before it | Needs `features.postProcessing`, or it logs `IGX-0710` and does nothing (§3)                                                                                          |
+| `ReflectionProbe`       | A cube map of the scene around the entity that nearby shiny PBR materials reflect (`@beta`)      | `size`, `refreshMode` (`once`/`onDemand`/`everyFrame`), `boxProjection`, `cullingMask`, `refresh()`; needs a loaded `Environment` and a canvas                        |
 
 - `Camera` also answers geometry questions: `screenToRay(x, y)`, `worldToScreen(point, out)`,
   `screenToWorldPoint(x, y, distance, out)`, `viewportToWorldPoint(u, v, distance, out)`,
@@ -112,6 +113,27 @@ what they mean.
 - `light.enabled = false`, or an inactive entity, turns a `Light` off: it lights nothing and casts
   no shadow until it is enabled again. It stays in the scene at intensity `0`, so toggling it costs
   no material rebuild (dropping its shadow generator still does, as `shadows.enabled = false` does).
+
+- A `ReflectionProbe` captures six views from its entity's position into a cube map, then every
+  lit PBR material reflects the nearest probe instead of the `Environment`: a probe whose
+  `boxProjection` box (full size in metres, centred on the probe) holds the mesh wins, then the
+  closest. `boxProjection` also makes reflections line up with the room's walls (parallax); `null`
+  makes them look infinitely far away. A material shared by several meshes follows the first. Use
+  `refreshMode: "once"` (default) and call `probe.refresh()` after the static scene changes;
+  `"everyFrame"` costs six extra scene passes a frame: use it for one probe, on desktop at the
+  `high` quality tier only. Diffuse light still comes from the
+  `Environment`, rough materials look blurrier than with an `.env`, and the probe's GPU code loads
+  only once a world has one. Headless, a probe captures nothing.
+
+  ```ts
+  import type { World } from "@ignifx/core";
+  import { ReflectionProbe } from "@ignifx/core";
+
+  export function addRoomProbe(world: World): ReflectionProbe {
+    const entity = world.createEntity("Room probe", { position: { x: 0, y: 1.5, z: 0 } });
+    return entity.addComponent(ReflectionProbe, { size: 128, boxProjection: { x: 8, y: 3, z: 8 } });
+  }
+  ```
 
 ## 2. The `PreRender` sync
 

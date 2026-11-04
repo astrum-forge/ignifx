@@ -34,6 +34,7 @@ describe("describeSchemas", () => {
       "ignifx/MeshRenderer",
       "ignifx/Model",
       "ignifx/PostProcessStack",
+      "ignifx/ReflectionProbe",
       "ignifx/Transform",
       "ignifx/environment-file",
       "ignifx/material-file",

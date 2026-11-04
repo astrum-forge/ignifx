@@ -186,8 +186,10 @@ export function createLiteRenderTexture(
  *
  * @param target - The target.
  * @returns The texture, or `null` before the owning task has recorded.
+ *
+ * @internal
  */
-function colorTextureOf(target: RenderTarget): GPUTexture | null {
+export function colorTextureOf(target: RenderTarget): GPUTexture | null {
   // Boundary assertion (coding standards §5.2): the field Lite 1.34 keeps, documented above.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   const internals = target as RenderTarget & TargetInternals;
@@ -200,8 +202,10 @@ function colorTextureOf(target: RenderTarget): GPUTexture | null {
  *
  * @param engine - The engine.
  * @returns The device, or `null` for an engine without one.
+ *
+ * @internal
  */
-function deviceOf(engine: EngineContext): GPUDevice | null {
+export function deviceOf(engine: EngineContext): GPUDevice | null {
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   const internals = engine as EngineContext & EngineInternals;
   // oxlint-disable-next-line no-underscore-dangle
@@ -213,8 +217,10 @@ function deviceOf(engine: EngineContext): GPUDevice | null {
  *
  * @param scene - The scene.
  * @param task - The task.
+ *
+ * @internal
  */
-function removeTask(scene: SceneContext, task: Task): void {
+export function removeTask(scene: SceneContext, task: Task): void {
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   const graph = getFrameGraph(scene) as ReturnType<typeof getFrameGraph> & FrameGraphInternals;
   // oxlint-disable-next-line no-underscore-dangle
