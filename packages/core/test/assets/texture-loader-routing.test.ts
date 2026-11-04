@@ -156,11 +156,37 @@ describe("the texture loader on a GPU-backed app", () => {
     expect(progress).toEqual([0, 1]);
   });
 
-  it("points Lite at the decoders before a .basis load too", async () => {
+  it("refuses a .basis with IGX-0509 when the manifest serves the KTX2 decoder", async () => {
     const { ctx } = fakeLoad("textures/rock.basis", "/b/rock.basis", decoderManifest("/b/"));
+    await expect(createTextureLoader().load(ctx)).rejects.toMatchObject({ code: "IGX-0509" });
+    expect(basisLoad).not.toHaveBeenCalled();
+  });
+
+  it("points Lite at the other decoders before a .basis load", async () => {
+    const manifest = createAssetManifest([
+      { address: MESHOPT_DECODER_FILE, url: `/bm/${MESHOPT_DECODER_FILE}`, type: "binary" },
+    ]);
+    const { ctx } = fakeLoad("textures/rock.basis", "/bm/rock.basis", manifest);
     await createTextureLoader().load(ctx);
     expect(events).toEqual(["decoders", "basis"]);
-    expect(basisLoad).toHaveBeenCalledWith(ENGINE, "/b/rock.basis", expect.any(Object));
+    expect(basisLoad).toHaveBeenCalledWith(ENGINE, "/bm/rock.basis", expect.any(Object));
+  });
+
+  it("turns Lite's refused CDN transcoder into IGX-0509 and passes other failures through", async () => {
+    const manifest = createAssetManifest([{ address: "rock.basis", url: "/bc/rock.basis" }]);
+    const refused = new Error("Basis: failed to load https://cdn.babylonjs.com/basisTranscoder/1/basis_transcoder.js");
+    basisLoad.mockImplementationOnce(() => Promise.reject(refused));
+    await expect(
+      createTextureLoader().load(fakeLoad("rock.basis", "/bc/rock.basis", manifest).ctx),
+    ).rejects.toMatchObject({
+      code: "IGX-0509",
+      cause: refused,
+    });
+    const other = new Error("transcode failed");
+    basisLoad.mockImplementationOnce(() => Promise.reject(other));
+    await expect(createTextureLoader().load(fakeLoad("rock.basis", "/bc/rock.basis", manifest).ctx)).rejects.toBe(
+      other,
+    );
   });
 
   it("takes the container from the URL when the address has none", async () => {
