@@ -1,5 +1,5 @@
 import { createRenderTexture2D, enableMaterialPlugins, getPbrUnlit, isPbrMaterial, isPbrSkybox } from "@babylonjs/lite";
-import { rebuildMaterialPipelines } from "../material.js";
+import { markMaterialDirty, rebuildMaterialPipelines } from "../material.js";
 import { deviceOf } from "./render-texture.js";
 import type { EngineContext, MaterialPlugin, SceneContext, Texture2D } from "@babylonjs/lite";
 
@@ -19,7 +19,8 @@ import type { EngineContext, MaterialPlugin, SceneContext, Texture2D } from "@ba
  *   after it; `lib/material/plugin/plugin-bridge-shared.js` line 13), so a private counter applies it
  *   on the second pass only. Its priority runs it before the HDR linear-output plugin saves `color`.
  * - **Grid constants** are written into the WGSL, so a different grid is a different plugin and a
- *   material rebuild: grids change rarely.
+ *   material rebuild: grids change rarely. `intensity` is a uniform on the host material's block,
+ *   so changing it rebuilds nothing.
  */
 
 /**
@@ -41,9 +42,21 @@ export interface LightProbeGridShape {
   readonly cellSize: readonly [number, number, number];
   /** Probe counts per axis. */
   readonly counts: readonly [number, number, number];
-  /** The multiplier on the probes' light. */
-  readonly intensity: number;
 }
+
+/**
+ * The plugin's live settings: read on every material uniform write, so changing them needs only
+ * {@link refreshLightProbeUniforms}, not a pipeline rebuild.
+ *
+ * @internal
+ */
+export interface LightProbeUniforms {
+  /** The multiplier on the probes' light. */
+  intensity: number;
+}
+
+/** The uniform field the plugin adds to each host material's block. */
+const INTENSITY_FIELD = "ignifxLpIntensity";
 
 /**
  * A WGSL float literal.
@@ -80,7 +93,8 @@ export function lightProbePluginWgsl(shape: LightProbeGridShape): { definitions:
     "var r=vec3<f32>(0.0);" +
     "for(var i=0;i<8;i++){let s=vec3<i32>(i&1,(i>>1u)&1,(i>>2u)&1)==vec3<i32>(1);" +
     "let w=select(1.0-t,t,s);r+=igxLpAt(vec3<i32>(select(lo,hi,s)),n)*(w.x*w.y*w.z);}" +
-    "return r;}";
+    // Trilinear blending of ringing harmonics can dip below zero; light never does.
+    "return max(r,vec3<f32>(0.0));}";
   const composition =
     "igxLpPass=igxLpPass+1;" +
     "if(igxLpPass==2){" +
@@ -90,7 +104,7 @@ export function lightProbePluginWgsl(shape: LightProbeGridShape): { definitions:
     "+scene.vSphericalL11.rgb*igxN.x+scene.vSphericalL2_2.rgb*(igxN.y*igxN.x)+scene.vSphericalL2_1.rgb*(igxN.y*igxN.z)" +
     "+scene.vSphericalL20.rgb*(3.0*igxN.z*igxN.z-1.0)+scene.vSphericalL21.rgb*(igxN.z*igxN.x)" +
     "+scene.vSphericalL22.rgb*(igxN.x*igxN.x-igxN.y*igxN.y))*material.environmentIntensity;" +
-    `color+=(igxLpSample(input.worldPos,N)*${f(shape.intensity)}-igxEnv)*surfaceAlbedo*occlusion;}`;
+    `color+=(igxLpSample(input.worldPos,N)*material.${INTENSITY_FIELD}-igxEnv)*surfaceAlbedo*occlusion;}`;
   return { definitions, composition };
 }
 
@@ -146,11 +160,16 @@ export function createLightProbeTexture(
  *
  * @param shape - The grid.
  * @param texture - The packed texture.
+ * @param uniforms - The live settings; the plugin reads them on every uniform write.
  * @returns The plugin, shared by every lit PBR material.
  *
  * @internal
  */
-export function createLightProbePlugin(shape: LightProbeGridShape, texture: Texture2D): MaterialPlugin {
+export function createLightProbePlugin(
+  shape: LightProbeGridShape,
+  texture: Texture2D,
+  uniforms: LightProbeUniforms,
+): MaterialPlugin {
   const wgsl = lightProbePluginWgsl(shape);
   const fragment = {
     CUSTOM_FRAGMENT_DEFINITIONS: wgsl.definitions,
@@ -161,11 +180,43 @@ export function createLightProbePlugin(shape: LightProbeGridShape, texture: Text
     // Before the HDR linear-output plugin (priority 0) saves `color` at the same point.
     priority: -100,
     getSamplers: () => [{ texture: "ignifxLp", sampler: "ignifxLpSampler" }],
+    getUniforms: () => ({ ubo: [{ name: INTENSITY_FIELD, type: "f32" }] }),
+    writeUbo: (data, offsets) => {
+      // Lite hands over byte offsets.
+      const byteOffset = offsets.get(INTENSITY_FIELD);
+      if (byteOffset !== undefined) {
+        data[byteOffset / 4] = uniforms.intensity;
+      }
+    },
     bindTextures: (out) => {
       out.push({ texture });
     },
     getCustomCode: (stage) => (stage === "fragment" ? fragment : null),
   };
+}
+
+/**
+ * Re-uploads the plugin's uniforms on every material that carries it, after
+ * {@link LightProbeUniforms} changed.
+ *
+ * @param scene - The scene.
+ * @param plugin - The plugin.
+ *
+ * @internal
+ */
+export function refreshLightProbeUniforms(scene: SceneContext, plugin: MaterialPlugin): void {
+  const meshes = scene.meshes;
+  for (let index = 0; index < meshes.length; index += 1) {
+    const material = meshes[index]?.material;
+    // Declared non-null, but Lite's mesh factories create meshes with `material: null`.
+    // oxlint-disable-next-line typescript/no-unnecessary-condition
+    if (material === undefined || material === null || !isPbrMaterial(material)) {
+      continue;
+    }
+    if (material.plugins?.includes(plugin) === true) {
+      markMaterialDirty(material);
+    }
+  }
 }
 
 /**

@@ -90006,6 +90006,12 @@ An asset file does not carry the format header its loader requires.
 
 A `MeshAsset` vertex update named a range the geometry cannot hold.
 
+##### invalidLightProbeBake
+
+> `readonly` **invalidLightProbeBake**: `"IGX-0734"`
+
+`bakeLightProbes` was given a grid, ray count or distance it cannot bake.
+
 ##### invalidMeshFile
 
 > `readonly` **invalidMeshFile**: `"IGX-0507"`

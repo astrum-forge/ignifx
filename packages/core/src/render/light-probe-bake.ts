@@ -1,7 +1,10 @@
+import { CoreErrorCode } from "../errors/error-codes.js";
+import { IgnifxError } from "../errors/ignifx-error.js";
 import { Color } from "../math/color.js";
+import { readLightProbeGrid } from "./light-probe-asset.js";
 import { Light } from "./light.js";
 import { MeshRenderer } from "./mesh-renderer.js";
-import type { LightProbeData } from "./light-probe-asset.js";
+import type { LightProbeData, LightProbeGrid } from "./light-probe-asset.js";
 import type { ColorLike, Vec3Like } from "../math/types.js";
 import type { World } from "../world/world.js";
 
@@ -31,6 +34,17 @@ const SURFACE_OFFSET = 1e-3;
 /** The golden angle, `π·(3 − √5)` radians, for the Fibonacci sphere. */
 const GOLDEN_ANGLE = 2.399963229728653;
 
+/** The most rays one probe may trace. */
+const MAX_RAYS = 4096;
+
+/** The checked options a bake runs with. */
+interface BakeSettings {
+  readonly grid: LightProbeGrid;
+  readonly rays: number;
+  readonly maxDistance: number;
+  readonly sky: readonly number[];
+}
+
 /**
  * What {@link bakeLightProbes} bakes.
  *
@@ -43,12 +57,21 @@ export interface LightProbeBakeOptions {
   readonly cellSize: Vec3Like;
   /** How many probes along X, Y and Z. */
   readonly counts: { readonly x: number; readonly y: number; readonly z: number };
-  /** Rays per probe. Defaults to `128`; more is smoother and slower. */
+  /** Rays per probe, a whole number from 1 to 4096. Defaults to `128`; more is smoother and slower. */
   readonly rays?: number;
-  /** How far a ray looks for a surface, in metres. Defaults to `100`. */
+  /** How far a ray looks for a surface, in metres; finite and positive. Defaults to `100`. */
   readonly maxDistance?: number;
   /** The linear radiance of rays that hit nothing, before hemispheric lights. Defaults to black. */
   readonly sky?: ColorLike;
+  /** Stops the bake between probes; the promise then rejects with the signal's reason. */
+  readonly signal?: AbortSignal;
+  /**
+   * Called after each probe.
+   *
+   * @param done - Probes baked so far.
+   * @param total - Probes in the grid.
+   */
+  readonly onProgress?: (done: number, total: number) => void;
 }
 
 /**
@@ -108,13 +131,20 @@ type BakeLight =
  * cast and bounce light (see {@link LightProbeBakeResult.skipped}). Cost grows with probes × rays ×
  * triangles; it is meant for small scenes and tools, not for every frame.
  *
- * @param world - The world to bake.
- * @param options - The grid and the quality.
+ * The bake is asynchronous: it yields to the host after each probe, reports progress through
+ * `onProgress`, and stops at the next probe once `signal` aborts.
+ *
+ * @param world - The world to bake. Its meshes and lights are read once, when the bake starts.
+ * @param options - The grid, the quality, and the cancellation and progress hooks.
  * @returns The grid and what was traced.
+ * @throws IgnifxError with code `IGX-0734`, before tracing anything, for a grid the `.probes.json`
+ * format cannot hold (whole counts, `counts.x` ≤ 1024, `counts.y × counts.z` ≤ 4096, finite
+ * `origin` and positive `cellSize`), `rays` outside 1–4096, or a `maxDistance` that is not finite
+ * and positive. The promise rejects with `signal.reason` when the bake is aborted.
  *
  * @example
  * ```ts
- * const baked = bakeLightProbes(world, {
+ * const baked = await bakeLightProbes(world, {
  *   origin: { x: -4, y: 0.5, z: -4 },
  *   cellSize: { x: 2, y: 2, z: 2 },
  *   counts: { x: 5, y: 2, z: 5 },
@@ -124,61 +154,132 @@ type BakeLight =
  *
  * @beta
  */
-export function bakeLightProbes(world: World, options: LightProbeBakeOptions): LightProbeBakeResult {
+export async function bakeLightProbes(world: World, options: LightProbeBakeOptions): Promise<LightProbeBakeResult> {
+  const settings = readBakeOptions(options);
+  options.signal?.throwIfAborted();
   const { scene, skipped } = collectTriangles(world);
   const lights = collectLights(world);
-  const rays = Math.max(1, Math.floor(options.rays ?? 128));
-  const maxDistance = options.maxDistance ?? 100;
-  const sky = linearRgb(options.sky ?? { r: 0, g: 0, b: 0, a: 1 }, false);
-  const { x: nx, y: ny, z: nz } = options.counts;
+  const { origin, cellSize, counts } = settings.grid;
+  const total = counts.x * counts.y * counts.z;
   const coefficients: number[] = [];
-  const hit: Hit = { distance: 0, nx: 0, ny: 0, nz: 0, triangle: -1 };
-  const radiance = [0, 0, 0];
-  for (let k = 0; k < nz; k += 1) {
-    for (let j = 0; j < ny; j += 1) {
-      for (let i = 0; i < nx; i += 1) {
-        const px = options.origin.x + i * options.cellSize.x;
-        const py = options.origin.y + j * options.cellSize.y;
-        const pz = options.origin.z + k * options.cellSize.z;
-        const sh: number[] = Array.from({ length: 12 }, () => 0);
-        for (let ray = 0; ray < rays; ray += 1) {
-          const [dx, dy, dz] = fibonacciDirection(ray, rays);
-          if (trace(scene, px, py, pz, dx, dy, dz, maxDistance, hit)) {
-            shadeHit(
-              scene,
-              lights,
-              hit,
-              px + dx * hit.distance,
-              py + dy * hit.distance,
-              pz + dz * hit.distance,
-              radiance,
-            );
-          } else {
-            missRadiance(lights, sky, dx, dy, dz, radiance);
-          }
-          for (let channel = 0; channel < 3; channel += 1) {
-            const value = read(radiance, channel);
-            sh[channel] = read(sh, channel) + value / rays;
-            sh[3 + channel] = read(sh, 3 + channel) + (BAND1_PER_SAMPLE * value * dy) / rays;
-            sh[6 + channel] = read(sh, 6 + channel) + (BAND1_PER_SAMPLE * value * dz) / rays;
-            sh[9 + channel] = read(sh, 9 + channel) + (BAND1_PER_SAMPLE * value * dx) / rays;
-          }
-        }
-        addDirectLobes(scene, lights, px, py, pz, sh);
-        coefficients.push(...sh);
-      }
-    }
+  for (let probe = 0; probe < total; probe += 1) {
+    const i = probe % counts.x;
+    const j = Math.floor(probe / counts.x) % counts.y;
+    const k = Math.floor(probe / (counts.x * counts.y));
+    coefficients.push(
+      ...bakeProbe(
+        scene,
+        lights,
+        origin.x + i * cellSize.x,
+        origin.y + j * cellSize.y,
+        origin.z + k * cellSize.z,
+        settings,
+      ),
+    );
+    options.onProgress?.(probe + 1, total);
+    // One probe at a time, so a caller's thread keeps drawing and an abort lands between probes.
+    // oxlint-disable-next-line eslint/no-await-in-loop -- see the comment above
+    await yieldToHost();
+    options.signal?.throwIfAborted();
   }
   return {
     data: {
-      origin: { x: options.origin.x, y: options.origin.y, z: options.origin.z },
-      cellSize: { x: options.cellSize.x, y: options.cellSize.y, z: options.cellSize.z },
-      counts: { x: nx, y: ny, z: nz },
+      origin,
+      cellSize,
+      counts,
       coefficients,
     },
     triangles: scene.count,
     skipped,
   };
+}
+
+/**
+ * Checks a bake's options before any work.
+ *
+ * @param options - The options.
+ * @returns The checked settings.
+ * @throws IgnifxError with code `IGX-0734` naming the first problem.
+ */
+function readBakeOptions(options: LightProbeBakeOptions): BakeSettings {
+  const grid = readLightProbeGrid({ origin: options.origin, cellSize: options.cellSize, counts: options.counts });
+  if (typeof grid === "string") {
+    throw fail(grid);
+  }
+  const rays = options.rays ?? 128;
+  if (!Number.isSafeInteger(rays) || rays < 1 || rays > MAX_RAYS) {
+    throw fail(`rays must be a whole number from 1 to ${String(MAX_RAYS)}`);
+  }
+  const maxDistance = options.maxDistance ?? 100;
+  if (!Number.isFinite(maxDistance) || maxDistance <= 0) {
+    throw fail("maxDistance must be a finite number above 0");
+  }
+  return { grid, rays, maxDistance, sky: linearRgb(options.sky ?? { r: 0, g: 0, b: 0, a: 1 }, false) };
+}
+
+/**
+ * The error for a bake option.
+ *
+ * @param problem - What is wrong.
+ * @returns The error.
+ */
+function fail(problem: string): IgnifxError {
+  return new IgnifxError(CoreErrorCode.invalidLightProbeBake, `bakeLightProbes(): ${problem}.`, {
+    context: { problem },
+  });
+}
+
+/**
+ * Lets the host run before the next probe.
+ *
+ * @returns A promise that settles on a later task.
+ */
+function yieldToHost(): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, 0);
+  });
+}
+
+/**
+ * Bakes one probe.
+ *
+ * @param scene - The triangles.
+ * @param lights - The lights.
+ * @param px - The probe's world X.
+ * @param py - The probe's world Y.
+ * @param pz - The probe's world Z.
+ * @param settings - The checked options.
+ * @returns Its 12 coefficients.
+ */
+function bakeProbe(
+  scene: TraceScene,
+  lights: readonly BakeLight[],
+  px: number,
+  py: number,
+  pz: number,
+  settings: BakeSettings,
+): number[] {
+  const { rays, maxDistance, sky } = settings;
+  const hit: Hit = { distance: 0, nx: 0, ny: 0, nz: 0, triangle: -1 };
+  const radiance = [0, 0, 0];
+  const sh: number[] = Array.from({ length: 12 }, () => 0);
+  for (let ray = 0; ray < rays; ray += 1) {
+    const [dx, dy, dz] = fibonacciDirection(ray, rays);
+    if (trace(scene, px, py, pz, dx, dy, dz, maxDistance, hit)) {
+      shadeHit(scene, lights, hit, px + dx * hit.distance, py + dy * hit.distance, pz + dz * hit.distance, radiance);
+    } else {
+      missRadiance(lights, sky, dx, dy, dz, radiance);
+    }
+    for (let channel = 0; channel < 3; channel += 1) {
+      const value = read(radiance, channel);
+      sh[channel] = read(sh, channel) + value / rays;
+      sh[3 + channel] = read(sh, 3 + channel) + (BAND1_PER_SAMPLE * value * dy) / rays;
+      sh[6 + channel] = read(sh, 6 + channel) + (BAND1_PER_SAMPLE * value * dz) / rays;
+      sh[9 + channel] = read(sh, 9 + channel) + (BAND1_PER_SAMPLE * value * dx) / rays;
+    }
+  }
+  addDirectLobes(scene, lights, px, py, pz, sh);
+  return sh;
 }
 
 /**

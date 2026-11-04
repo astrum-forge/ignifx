@@ -12,7 +12,9 @@ import type { Schema } from "../schema/types.js";
  * @remarks
  * Every lit PBR material samples the grid per pixel, blending the eight probes around it, so moving
  * objects and shared materials need nothing extra. Outside the grid the nearest edge probes apply.
- * Reflections still come from the `Environment` or a `ReflectionProbe`. The volume needs a loaded
+ * Reflections still come from the `Environment` or a `ReflectionProbe`. With a `PostProcessStack`'s
+ * `ssgi` on, the diffuse term is `P − (1 − environmentDiffuse)·E` (probes `P`, environment `E`),
+ * because SSGI's discount applies to the environment and the probes replace it after. The volume needs a loaded
  * `Environment` and a canvas; its GPU code loads only once a world has one, and headless it does
  * nothing. When several volumes are enabled, the most recently created one wins.
  *

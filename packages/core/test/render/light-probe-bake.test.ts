@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
+import { isIgnifxError } from "../../src/errors/ignifx-error.js";
 import { bakeLightProbes } from "../../src/render/light-probe-bake.js";
 import { Light } from "../../src/render/light.js";
 import {
@@ -67,7 +68,7 @@ function addSun(h: RenderHarness): void {
 describe("bakeLightProbes", () => {
   it("bakes a uniform sky to its radiance, with no direction", async () => {
     harness = await createRenderHarness();
-    const { data, triangles, skipped } = bakeLightProbes(harness.world, {
+    const { data, triangles, skipped } = await bakeLightProbes(harness.world, {
       ...ONE_PROBE,
       sky: { r: 1, g: 0.5, b: 0, a: 1 },
     });
@@ -84,7 +85,7 @@ describe("bakeLightProbes", () => {
     harness = await createRenderHarness();
     addSun(harness);
     harness.frame();
-    const { data } = bakeLightProbes(harness.world, ONE_PROBE);
+    const { data } = await bakeLightProbes(harness.world, ONE_PROBE);
     expect(data.coefficients[0]).toBeCloseTo(0.25, 3);
     expect(data.coefficients[3]).toBeCloseTo(0.5, 3);
   });
@@ -94,7 +95,7 @@ describe("bakeLightProbes", () => {
     addSun(harness);
     addQuad(harness, 1, 1);
     harness.frame();
-    const shaded = bakeLightProbes(harness.world, { ...ONE_PROBE, rays: 64 });
+    const shaded = await bakeLightProbes(harness.world, { ...ONE_PROBE, rays: 64 });
     expect(shaded.triangles).toBe(2);
     expect(shaded.data.coefficients[0]).toBeCloseTo(0, 6);
     harness.dispose();
@@ -104,7 +105,7 @@ describe("bakeLightProbes", () => {
     addQuad(harness, -1, 1000);
     harness.world.createEntity("Box").addComponent(MeshRenderer, { mesh: MeshAsset.box(harness.app) });
     harness.frame();
-    const lit = bakeLightProbes(harness.world, { ...ONE_PROBE, rays: 256, maxDistance: 1e6 });
+    const lit = await bakeLightProbes(harness.world, { ...ONE_PROBE, rays: 256, maxDistance: 1e6 });
     expect(lit.skipped).toBe(1);
     // The lobe from above (c0 0.25, up 0.5) plus a white floor of radiance 1 below (c0 0.5, up -0.5).
     expect(lit.data.coefficients[0]).toBeCloseTo(0.75, 1);
@@ -115,7 +116,7 @@ describe("bakeLightProbes", () => {
     harness = await createRenderHarness();
     harness.world.createEntity("Sky").addComponent(Light, { type: "hemispheric", intensity: 1 });
     harness.frame();
-    const hemi = bakeLightProbes(harness.world, { ...ONE_PROBE, rays: 256 });
+    const hemi = await bakeLightProbes(harness.world, { ...ONE_PROBE, rays: 256 });
     // White above, black below: half the sphere at radiance 1.
     expect(hemi.data.coefficients[0]).toBeCloseTo(0.5, 2);
     expect(hemi.data.coefficients[3]).toBeCloseTo(0.5, 1);
@@ -149,11 +150,61 @@ describe("bakeLightProbes", () => {
     hidden.addComponent(MeshRenderer, { mesh: floor });
     hidden.active = false;
     h.frame();
-    const mixed = bakeLightProbes(h.world, { ...ONE_PROBE, rays: 64 });
+    const mixed = await bakeLightProbes(h.world, { ...ONE_PROBE, rays: 64 });
     expect(mixed.triangles).toBe(4);
     // The lamp 2 m above: intensity 4 / 2² = 1 as a lobe (c0 0.25, up 0.5), plus sky and bounce.
     expect(mixed.data.coefficients[0]).toBeGreaterThan(0.25);
     expect(mixed.data.coefficients[3]).toBeGreaterThan(0.25);
     expect(mixed.data.coefficients.every((value) => Number.isFinite(value))).toBe(true);
+  });
+
+  it.each([
+    ["fractional counts", { counts: { x: 1.5, y: 1, z: 1 } }],
+    ["too many probes along X", { counts: { x: 2000, y: 1, z: 1 } }],
+    ["a NaN origin", { origin: { x: Number.NaN, y: 0, z: 0 } }],
+    ["a tiny cell", { cellSize: { x: 1e-40, y: 1, z: 1 } }],
+    ["too many rays", { rays: 5000 }],
+    ["fractional rays", { rays: 1.5 }],
+    ["an infinite distance", { maxDistance: Number.POSITIVE_INFINITY }],
+  ])("refuses %s with IGX-0734 before tracing", async (_name, patch) => {
+    harness = await createRenderHarness();
+    const failure: unknown = await bakeLightProbes(harness.world, { ...ONE_PROBE, ...patch }).catch(
+      (error: unknown) => error,
+    );
+    expect(isIgnifxError(failure) ? failure.code : null).toBe("IGX-0734");
+  });
+
+  it("reports progress per probe and stops when aborted", async () => {
+    harness = await createRenderHarness();
+    const grid = { ...ONE_PROBE, counts: { x: 2, y: 2, z: 1 }, rays: 8 };
+    const seen: [number, number][] = [];
+    const baked = await bakeLightProbes(harness.world, {
+      ...grid,
+      onProgress: (done, total) => {
+        seen.push([done, total]);
+      },
+    });
+    expect(baked.data.coefficients).toHaveLength(48);
+    expect(seen).toEqual([
+      [1, 4],
+      [2, 4],
+      [3, 4],
+      [4, 4],
+    ]);
+
+    const controller = new AbortController();
+    const stopped = bakeLightProbes(harness.world, {
+      ...grid,
+      signal: controller.signal,
+      onProgress: (done) => {
+        if (done === 2) {
+          controller.abort(new Error("stop"));
+        }
+      },
+    });
+    await expect(stopped).rejects.toThrow("stop");
+    const early = new AbortController();
+    early.abort(new Error("never started"));
+    await expect(bakeLightProbes(harness.world, { ...grid, signal: early.signal })).rejects.toThrow("never started");
   });
 });

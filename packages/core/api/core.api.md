@@ -301,7 +301,7 @@ export interface AutoExposureSettings {
 }
 
 // @beta
-export function bakeLightProbes(world: World, options: LightProbeBakeOptions): LightProbeBakeResult;
+export function bakeLightProbes(world: World, options: LightProbeBakeOptions): Promise<LightProbeBakeResult>;
 
 // @public
 export interface BatchHandle {
@@ -729,6 +729,7 @@ export const CoreErrorCode: {
     readonly renderTextureUnusable: "IGX-0731";
     readonly renderTextureCameraDetached: "IGX-0732";
     readonly invalidFrameWait: "IGX-0733";
+    readonly invalidLightProbeBake: "IGX-0734";
     readonly cryptoUnavailable: "IGX-1420";
     readonly storageInvalidNamespace: "IGX-1421";
     readonly storageInvalidKey: "IGX-1422";
@@ -1887,8 +1888,10 @@ export interface LightProbeBakeOptions {
         readonly z: number;
     };
     readonly maxDistance?: number;
+    readonly onProgress?: (done: number, total: number) => void;
     readonly origin: Vec3Like;
     readonly rays?: number;
+    readonly signal?: AbortSignal;
     readonly sky?: ColorLike;
 }
 
