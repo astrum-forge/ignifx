@@ -5,6 +5,7 @@ import { forgetMaterialBindingLayouts, readMaterialEpoch, rebuildRenderables } f
 import { Camera } from "./camera.js";
 import { Environment } from "./environment.js";
 import { InstancedMeshRenderer } from "./instanced-mesh-renderer.js";
+import { LightProbeVolume } from "./light-probe-volume.js";
 import { Light } from "./light.js";
 import { MeshRenderer } from "./mesh-renderer.js";
 import { Model } from "./model.js";
@@ -207,7 +208,7 @@ export class RenderSyncSystem implements System {
     // After the environment, whose image processing the clear colour has to follow.
     renderer.refreshClearColor();
     renderer.updateAmbientOcclusion();
-    renderer.updateReflectionProbes(world, world.components(ReflectionProbe));
+    renderer.updateBakedLighting(world, world.components(ReflectionProbe), world.components(LightProbeVolume));
     this.#applyStacks(world);
     this.#areCastersDirty = this.#areCastersDirty || castersChanged;
     // Lite built a material family on its own (a runtime build of its first mesh) and pushed a

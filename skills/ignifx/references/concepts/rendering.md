@@ -15,16 +15,17 @@ Entity ──▶ Camera | Light | MeshRenderer | InstancedMeshRenderer | Model |
 Exact fields and defaults are in [`../formats/components.md`](../formats/components.md); this is
 what they mean.
 
-| Component               | What it adds                                                                                     | Notes                                                                                                                                                                 |
-| ----------------------- | ------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Camera`                | A view. The **entity's transform is the view**; no follow logic                                  | `projection`, `fov` (degrees), `orthographicSize`, `near`/`far`, `viewport`, `clearColor`, `priority`                                                                 |
-| `Light`                 | `"directional" \| "point" \| "spot" \| "hemispheric"`                                            | `shadows` is a sub-record; only directional and spot lights can cast (`IGX-0703`)                                                                                     |
-| `MeshRenderer`          | One clone of a `MeshAsset`, drawn with a `MaterialAsset`                                         | `allowMultiple`; several renderers per entity are fine                                                                                                                |
-| `InstancedMeshRenderer` | One mesh drawn many times from a caller-owned matrix slab                                        | `setMatrices(slab, count)`, `setColors`, `setCount`, `markDirty(range)`; `capacity`, `gpuCulling` and `lod` are fixed before `app.start()` (`IGX-0717`)               |
-| `Model`                 | One instance of a loaded glTF, cloned under the entity's node                                    | `nodes`, `attachToNode(name, entity)`, `materialOverrides`; `animations`/`skeletons` are `@beta`                                                                      |
-| `Environment`           | Image-based lighting, skybox, fog, image processing, clear colour                                | **One per world**; a second enabled one logs `IGX-0705` and the most recent wins. Assign a different **loaded** handle to `environment` to switch lighting at runtime |
-| `PostProcessStack`      | `bloom`, `smaa`, `imageProcessing`, as one frame-graph chain; `contactShadows`, `ssgi` before it | Needs `features.postProcessing`, or it logs `IGX-0710` and does nothing (§3)                                                                                          |
-| `ReflectionProbe`       | A cube map of the scene around the entity that nearby shiny PBR materials reflect (`@beta`)      | `size`, `refreshMode` (`once`/`onDemand`/`everyFrame`), `boxProjection`, `cullingMask`, `refresh()`; needs a loaded `Environment` and a canvas                        |
+| Component               | What it adds                                                                                               | Notes                                                                                                                                                                 |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Camera`                | A view. The **entity's transform is the view**; no follow logic                                            | `projection`, `fov` (degrees), `orthographicSize`, `near`/`far`, `viewport`, `clearColor`, `priority`                                                                 |
+| `Light`                 | `"directional" \| "point" \| "spot" \| "hemispheric"`                                                      | `shadows` is a sub-record; only directional and spot lights can cast (`IGX-0703`)                                                                                     |
+| `MeshRenderer`          | One clone of a `MeshAsset`, drawn with a `MaterialAsset`                                                   | `allowMultiple`; several renderers per entity are fine                                                                                                                |
+| `InstancedMeshRenderer` | One mesh drawn many times from a caller-owned matrix slab                                                  | `setMatrices(slab, count)`, `setColors`, `setCount`, `markDirty(range)`; `capacity`, `gpuCulling` and `lod` are fixed before `app.start()` (`IGX-0717`)               |
+| `Model`                 | One instance of a loaded glTF, cloned under the entity's node                                              | `nodes`, `attachToNode(name, entity)`, `materialOverrides`; `animations`/`skeletons` are `@beta`                                                                      |
+| `Environment`           | Image-based lighting, skybox, fog, image processing, clear colour                                          | **One per world**; a second enabled one logs `IGX-0705` and the most recent wins. Assign a different **loaded** handle to `environment` to switch lighting at runtime |
+| `PostProcessStack`      | `bloom`, `smaa`, `imageProcessing`, as one frame-graph chain; `contactShadows`, `ssgi` before it           | Needs `features.postProcessing`, or it logs `IGX-0710` and does nothing (§3)                                                                                          |
+| `ReflectionProbe`       | A cube map of the scene around the entity that nearby shiny PBR materials reflect (`@beta`)                | `size`, `refreshMode` (`once`/`onDemand`/`everyFrame`), `boxProjection`, `cullingMask`, `refresh()`; needs a loaded `Environment` and a canvas                        |
+| `LightProbeVolume`      | Lights PBR materials with a baked `.probes.json` grid instead of the environment's diffuse light (`@beta`) | `probes` (a `LightProbeAsset`), `intensity`; needs a loaded `Environment` and a canvas; the most recent enabled volume wins                                           |
 
 - `Camera` also answers geometry questions: `screenToRay(x, y)`, `worldToScreen(point, out)`,
   `screenToWorldPoint(x, y, distance, out)`, `viewportToWorldPoint(u, v, distance, out)`,
@@ -132,6 +133,33 @@ what they mean.
   export function addRoomProbe(world: World): ReflectionProbe {
     const entity = world.createEntity("Room probe", { position: { x: 0, y: 1.5, z: 0 } });
     return entity.addComponent(ReflectionProbe, { size: 128, boxProjection: { x: 8, y: 3, z: 8 } });
+  }
+  ```
+
+- A `LightProbeVolume` replaces the `Environment`'s diffuse light with a baked grid of light probes:
+  every lit PBR material blends the eight probes around each pixel, so moving objects are lit by the
+  room they are in. Reflections still come from the `Environment` or a `ReflectionProbe`. A grid is a
+  `.probes.json` (`format: "ignifx-probes"`): `origin`, `cellSize`, `counts`, and 12 linear-RGB
+  floats per probe, `c0, c1, c2, c3`, so a white surface with normal `n` receives
+  `c0 + c1·n.y + c2·n.z + c3·n.x` (X fastest, then Y, then Z). Load it with
+  `app.assets.loadAsync<LightProbeAsset>(address)`, or publish one built in code with
+  `createLightProbeAsset(app, data)`; `sampleLightProbes(data, x, y, z, normal)` reads it on the CPU
+  the way the shader does. Its GPU code loads only once a world has a volume; headless it does
+  nothing.
+
+  ```ts
+  import type { App, World } from "@ignifx/core";
+  import { createLightProbeAsset, LightProbeVolume } from "@ignifx/core";
+
+  export function addWarmRoom(app: App, world: World): LightProbeVolume {
+    const warm = [1, 0.8, 0.6, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    const probes = createLightProbeAsset(app, {
+      origin: { x: -4, y: 0, z: -4 },
+      cellSize: { x: 8, y: 3, z: 8 },
+      counts: { x: 2, y: 2, z: 2 },
+      coefficients: Array.from({ length: 8 }, () => warm).flat(),
+    });
+    return world.createEntity("Room probes").addComponent(LightProbeVolume, { probes });
   }
   ```
 

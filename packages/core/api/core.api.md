@@ -831,6 +831,12 @@ export function createFrameSample(): FrameSample;
 // @public
 export function createLayerTable(names?: readonly string[]): LayerTable;
 
+// @beta
+export function createLightProbeAsset(app: App, data: LightProbeData): AssetHandle<LightProbeAsset>;
+
+// @beta
+export function createLightProbeLoader(): AssetLoader<LightProbeAsset>;
+
 // @public
 export function createLogger(options: LoggerOptions): Logger;
 
@@ -1011,6 +1017,9 @@ export function deltaAngleDegrees(fromDegrees: number, toDegrees: number): numbe
 
 // @public
 export function describeEnvironmentFileFormat(): SchemaDescription;
+
+// @beta
+export function describeLightProbeFileFormat(): SchemaDescription;
 
 // @public
 export function describeMaterialFileFormat(): SchemaDescription;
@@ -1844,7 +1853,52 @@ export class Light extends Component implements ComponentHooks {
 }
 
 // @public
+export const LIGHT_PROBE_ASSET_TYPE = "lightprobes";
+
+// @public
+export const LIGHT_PROBE_FILE_EXTENSIONS: readonly string[];
+
+// @public
+export const LIGHT_PROBE_FILE_FORMAT = "ignifx-probes";
+
+// @public
+export const LIGHT_PROBE_FORMAT_VERSION = 1;
+
+// @public
 export const LIGHT_TYPES: readonly ["directional", "point", "spot", "hemispheric"];
+
+// @beta
+export class LightProbeAsset {
+    // @internal
+    constructor(data: LightProbeData);
+    static assetType: string;
+    readonly data: LightProbeData;
+}
+
+// @public
+export interface LightProbeData {
+    readonly cellSize: Vec3Like;
+    readonly coefficients: readonly number[];
+    readonly counts: {
+        readonly x: number;
+        readonly y: number;
+        readonly z: number;
+    };
+    readonly origin: Vec3Like;
+}
+
+// @beta
+export class LightProbeVolume extends Component {
+    constructor();
+    static allowMultiple: boolean;
+    static description: string;
+    intensity: number;
+    // @internal
+    loadedProbes(): LightProbeAsset | null;
+    probes: AssetHandle<LightProbeAsset> | null;
+    static schema: Schema;
+    static typeId: string;
+}
 
 // @public
 export interface LightShadowSettings {
@@ -3032,6 +3086,9 @@ export function resolveEase(ease: EasingName | EasingFunction | undefined): Easi
 
 // @public
 export function revertOverrides(instance: SceneFileInstance, selection?: PrefabOverrideSelection): SceneFileInstance;
+
+// @beta
+export function sampleLightProbes(data: LightProbeData, x: number, y: number, z: number, normal: Vec3Like): [number, number, number];
 
 // @public
 export const SCENE_ASSET_TYPE = "scene";
@@ -4358,6 +4415,9 @@ export interface WorldLiteHandles {
 
 // @public
 export function wrapAngleDegrees(degrees: number): number;
+
+// @beta
+export function writeLightProbeFile(data: LightProbeData): Record<string, unknown>;
 
 // (No @packageDocumentation comment for this package)
 

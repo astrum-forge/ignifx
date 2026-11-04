@@ -329,6 +329,15 @@ A directional, point, spot, or hemispheric light, with optional shadow casting.
 | `includeOnly` | `array` | `[]` | Light only these entities' renderers. |
 | `exclude` | `array` | `[]` | Never light these entities' renderers. |
 
+## LightProbeVolume (`ignifx/LightProbeVolume`)
+
+Lights PBR materials with a baked light-probe grid instead of the environment's diffuse light.
+
+| Field | Kind | Default | Description |
+|---|---|---|---|
+| `probes` | `asset` | `null` | The baked .probes.json grid. |
+| `intensity` | `f32` | `1` | A multiplier on the probes' light. |
+
 ## LOD group (`ignifx/LodGroup`)
 
 | Field | Kind | Default | Description |

@@ -10,9 +10,11 @@ import { IgnifxError } from "../errors/ignifx-error.js";
 import { Camera } from "../render/camera.js";
 import { Environment } from "../render/environment.js";
 import { InstancedMeshRenderer } from "../render/instanced-mesh-renderer.js";
+import { LightProbeVolume } from "../render/light-probe-volume.js";
 import { Light } from "../render/light.js";
 import { createEnvironmentLoader } from "../render/loaders/environment-loader.js";
 import { createFontLoader } from "../render/loaders/font-loader.js";
+import { createLightProbeLoader } from "../render/loaders/light-probe-loader.js";
 import { createMaterialLoader } from "../render/loaders/material-loader.js";
 import { createMeshLoader } from "../render/loaders/mesh-loader.js";
 import { createModelLoader } from "../render/loaders/model-loader.js";
@@ -175,6 +177,7 @@ function registerRendering(ctx: ExtensionContext): void {
     Environment,
     PostProcessStack,
     ReflectionProbe,
+    LightProbeVolume,
   ]);
   ctx.registerAssetLoader(createTextureLoader());
   ctx.registerAssetLoader(createModelLoader());
@@ -182,6 +185,7 @@ function registerRendering(ctx: ExtensionContext): void {
   ctx.registerAssetLoader(createEnvironmentLoader());
   ctx.registerAssetLoader(createFontLoader());
   ctx.registerAssetLoader(createShaderLoader());
+  ctx.registerAssetLoader(createLightProbeLoader());
   // `createStorageBufferAsset(...)` publishes through `Assets.register`, which needs the type to
   // exist so a `memory:storagebuffer/<n>` handle can be collected — and its `unload` is what frees
   // the GPU allocation.

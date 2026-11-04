@@ -1479,6 +1479,64 @@
         }
       }
     },
+    "ignifx/light-probe-file": {
+      "title": "Light probe file",
+      "format": "ignifx-probes",
+      "description": "A regular grid of baked light probes: first-order spherical harmonics of the diffuse light at each probe.",
+      "package": "packages/core",
+      "fields": {
+        "format": {
+          "kind": "str",
+          "default": "\"ignifx-probes\"",
+          "description": "Always \"ignifx-probes\"."
+        },
+        "formatVersion": {
+          "kind": "u32",
+          "default": "1",
+          "description": "The file format version; 1 before ignifx 1.0."
+        },
+        "origin": {
+          "kind": "vec3",
+          "default": "{\"x\":0,\"y\":0,\"z\":0}",
+          "description": "World position of probe (0, 0, 0)."
+        },
+        "cellSize": {
+          "kind": "vec3",
+          "default": "{\"x\":1,\"y\":1,\"z\":1}",
+          "description": "Distance between neighbouring probes per axis, in metres; positive."
+        },
+        "counts": {
+          "kind": "vec3",
+          "default": "{\"x\":1,\"y\":1,\"z\":1}",
+          "description": "Probes per axis, whole numbers from 1; counts.x at most 1024, counts.y × counts.z at most 4096."
+        },
+        "coefficients": {
+          "kind": "array",
+          "default": "[]",
+          "description": "12 linear-RGB floats per probe (c0, c1, c2, c3; diffuse light for normal n is c0 + c1·n.y + c2·n.z + c3·n.x), X fastest, then Y, then Z."
+        }
+      }
+    },
+    "ignifx/LightProbeVolume": {
+      "title": "LightProbeVolume",
+      "format": "components",
+      "description": "Lights PBR materials with a baked light-probe grid instead of the environment's diffuse light.",
+      "package": "packages/core",
+      "fields": {
+        "probes": {
+          "kind": "asset",
+          "default": "null",
+          "description": "The baked .probes.json grid.",
+          "assetType": "lightprobes"
+        },
+        "intensity": {
+          "kind": "f32",
+          "default": "1",
+          "description": "A multiplier on the probes' light.",
+          "min": 0
+        }
+      }
+    },
     "ignifx/LodGroup": {
       "title": "LOD group",
       "format": "components",

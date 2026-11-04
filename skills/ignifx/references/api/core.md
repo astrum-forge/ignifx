@@ -252,7 +252,7 @@ const pixels = await minimap.readPixels();
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-12)
+> `static` **schema**: [`Schema`](#schema-13)
 
 The serialized field declarations (ADR-0004).
 
@@ -464,13 +464,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-12)
+> **get** **transform**(): [`Transform`](#transform-13)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-12)
+[`Transform`](#transform-13)
 
 The entity's transform.
 
@@ -500,13 +500,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-14)
+> **get** **world**(): [`World`](#world-15)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-14)
+[`World`](#world-15)
 
 The world.
 
@@ -1644,8 +1644,9 @@ class Health extends Component.define({ maximum: f32(100) }) {
 - [`Model`](#model)
 - [`PostProcessStack`](#postprocessstack)
 - [`ReflectionProbe`](#reflectionprobe)
+- [`LightProbeVolume`](#lightprobevolume)
 - [`Script`](#abstract-script)
-- [`Transform`](#transform-12)
+- [`Transform`](#transform-13)
 
 #### Implements
 
@@ -1756,7 +1757,7 @@ Whether the owner has already been destroyed.
 
 ###### Implementation of
 
-[`SignalOwner`](#signalowner).[`isDestroyed`](#isdestroyed-11)
+[`SignalOwner`](#signalowner).[`isDestroyed`](#isdestroyed-12)
 
 ##### isEnabledInHierarchy
 
@@ -1800,19 +1801,19 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Implementation of
 
-[`SignalOwner`](#signalowner).[`onDestroyed`](#ondestroyed-11)
+[`SignalOwner`](#signalowner).[`onDestroyed`](#ondestroyed-12)
 
 ##### transform
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-12)
+> **get** **transform**(): [`Transform`](#transform-13)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-12)
+[`Transform`](#transform-13)
 
 The entity's transform.
 
@@ -1834,13 +1835,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-14)
+> **get** **world**(): [`World`](#world-15)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-14)
+[`World`](#world-15)
 
 The world.
 
@@ -3001,13 +3002,13 @@ The tag set.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-12)
+> **get** **transform**(): [`Transform`](#transform-13)
 
 The entity's transform. Every entity has one; it can be neither removed nor disabled.
 
 ###### Returns
 
-[`Transform`](#transform-12)
+[`Transform`](#transform-13)
 
 The transform.
 
@@ -3029,13 +3030,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-14)
+> **get** **world**(): [`World`](#world-15)
 
 The world that owns the entity.
 
 ###### Returns
 
-[`World`](#world-14)
+[`World`](#world-15)
 
 The world.
 
@@ -3600,7 +3601,7 @@ What the component does, in one line, for an inspector.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-12)
+> `static` **schema**: [`Schema`](#schema-13)
 
 The serialized field declarations (ADR-0004).
 
@@ -3798,13 +3799,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-12)
+> **get** **transform**(): [`Transform`](#transform-13)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-12)
+[`Transform`](#transform-13)
 
 The entity's transform.
 
@@ -3834,13 +3835,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-14)
+> **get** **world**(): [`World`](#world-15)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-14)
+[`World`](#world-15)
 
 The world.
 
@@ -4543,7 +4544,7 @@ The `lod` partner needs it: with culling off the partner draws nothing (`IGX-072
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-12)
+> `static` **schema**: [`Schema`](#schema-13)
 
 The serialized field declarations (ADR-0004).
 
@@ -4760,13 +4761,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-12)
+> **get** **transform**(): [`Transform`](#transform-13)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-12)
+[`Transform`](#transform-13)
 
 The entity's transform.
 
@@ -4796,13 +4797,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-14)
+> **get** **world**(): [`World`](#world-15)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-14)
+[`World`](#world-15)
 
 The world.
 
@@ -5621,7 +5622,7 @@ What the component does, in one line, for an inspector.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-12)
+> `static` **schema**: [`Schema`](#schema-13)
 
 The serialized field declarations (ADR-0004).
 
@@ -5848,13 +5849,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-12)
+> **get** **transform**(): [`Transform`](#transform-13)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-12)
+[`Transform`](#transform-13)
 
 The entity's transform.
 
@@ -5884,13 +5885,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-14)
+> **get** **world**(): [`World`](#world-15)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-14)
+[`World`](#world-15)
 
 The world.
 
@@ -6030,6 +6031,505 @@ Removes the light from the scene and releases its shadow generator.
 ##### requireComponent()
 
 > **requireComponent**\<`T`\>(`type`): `T`
+
+Finds another component on the same entity, requiring it to be there — the supported way to
+link components (`docs/architecture/03-scripting-and-components.md` §8).
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class.
+
+###### Returns
+
+`T`
+
+The first match in attach order.
+
+###### Throws
+
+IgnifxError with code `IGX-0201` when the entity has no such component.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-1)
+
+***
+
+### LightProbeAsset
+
+**`Beta`**
+
+A loaded light-probe grid.
+
+#### Example
+
+```ts
+const probes = await app.assets.loadAsync<LightProbeAsset>("lighting/hall.probes.json");
+world.createEntity("Probes").addComponent(LightProbeVolume, { probes });
+```
+
+#### Properties
+
+##### assetType
+
+> `static` **assetType**: `string` = `LIGHT_PROBE_ASSET_TYPE`
+
+**`Beta`**
+
+The type name the asset service registers light-probe grids under.
+
+##### data
+
+> `readonly` **data**: [`LightProbeData`](#lightprobedata)
+
+**`Beta`**
+
+The grid.
+
+***
+
+### LightProbeVolume
+
+**`Beta`**
+
+Lights PBR materials with a baked light-probe grid instead of the scene environment's diffuse
+light (`docs/plan/2026-11-gi-phase-2-execution-plan.md`, step B2).
+
+#### Remarks
+
+Every lit PBR material samples the grid per pixel, blending the eight probes around it, so moving
+objects and shared materials need nothing extra. Outside the grid the nearest edge probes apply.
+Reflections still come from the `Environment` or a `ReflectionProbe`. The volume needs a loaded
+`Environment` and a canvas; its GPU code loads only once a world has one, and headless it does
+nothing. When several volumes are enabled, the most recently created one wins.
+
+#### Example
+
+```ts
+const probes = await app.assets.loadAsync<LightProbeAsset>("lighting/hall.probes.json");
+world.createEntity("Probes").addComponent(LightProbeVolume, { probes });
+```
+
+#### Extends
+
+- [`Component`](#abstract-component)
+
+#### Constructors
+
+##### Constructor
+
+> **new LightProbeVolume**(): [`LightProbeVolume`](#lightprobevolume)
+
+**`Beta`**
+
+Applies the schema defaults, exactly as `Component.define` would.
+
+###### Returns
+
+[`LightProbeVolume`](#lightprobevolume)
+
+###### Overrides
+
+[`Component`](#abstract-component).[`constructor`](#constructor-3)
+
+#### Properties
+
+##### allowMultiple
+
+> `static` **allowMultiple**: `boolean` = `false`
+
+**`Beta`**
+
+One volume per entity.
+
+##### description
+
+> `static` **description**: `string` = `"Lights PBR materials with a baked light-probe grid instead of the environment's diffuse light."`
+
+**`Beta`**
+
+What the component does, in one line, for an inspector.
+
+##### intensity
+
+> **intensity**: `number`
+
+**`Beta`**
+
+A multiplier on the probes' light. Defaults to `1`.
+
+##### probes
+
+> **probes**: [`AssetHandle`](#assethandle)\<[`LightProbeAsset`](#lightprobeasset)\> \| `null`
+
+**`Beta`**
+
+The `.probes.json` grid, or `null` (default) for none.
+
+##### schema
+
+> `static` **schema**: [`Schema`](#schema-13)
+
+**`Beta`**
+
+The serialized field declarations (ADR-0004).
+
+##### typeId
+
+> `static` **typeId**: `string` = `"ignifx/LightProbeVolume"`
+
+**`Beta`**
+
+The namespaced registration id.
+
+#### Accessors
+
+##### app
+
+###### Get Signature
+
+> **get** **app**(): [`App`](#app)
+
+**`Beta`**
+
+The app that owns the world.
+
+###### Returns
+
+[`App`](#app)
+
+The app.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`app`](#app-2)
+
+##### enabled
+
+###### Get Signature
+
+> **get** **enabled**(): `boolean`
+
+**`Beta`**
+
+The component's own enabled flag; `true` by default. Setting it runs the enable or disable
+transition (`docs/architecture/01-lifecycle-and-time.md` §6): `onDisable` runs immediately,
+`awake`/`onEnable` run in the next lifecycle flush — or immediately and nested when the change
+happens inside a callback.
+
+###### Returns
+
+`boolean`
+
+`true` when the component's own flag is set.
+
+###### Set Signature
+
+> **set** **enabled**(`value`): `void`
+
+**`Beta`**
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`enabled`](#enabled-4)
+
+##### entity
+
+###### Get Signature
+
+> **get** **entity**(): [`Entity`](#entity-2)
+
+**`Beta`**
+
+The entity this component is attached to.
+
+###### Returns
+
+[`Entity`](#entity-2)
+
+The owning entity.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`entity`](#entity-1)
+
+##### handle
+
+###### Get Signature
+
+> **get** **handle**(): [`ComponentHandle`](#componenthandle-1)
+
+**`Beta`**
+
+The dense runtime handle; invalid after destruction.
+
+###### Returns
+
+[`ComponentHandle`](#componenthandle-1)
+
+The handle.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`handle`](#handle-1)
+
+##### isDestroyed
+
+###### Get Signature
+
+> **get** **isDestroyed**(): `boolean`
+
+**`Beta`**
+
+`true` from the moment `destroy()` is called, long before the destroy flush runs.
+
+###### Returns
+
+`boolean`
+
+`true` once the component has been queued for destruction.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-1)
+
+##### isEnabledInHierarchy
+
+###### Get Signature
+
+> **get** **isEnabledInHierarchy**(): `boolean`
+
+**`Beta`**
+
+`true` when the component's own flag is set **and** its entity is active in the hierarchy.
+
+###### Returns
+
+`boolean`
+
+`true` when the component is effectively enabled.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-1)
+
+##### onDestroyed
+
+###### Get Signature
+
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+
+**`Beta`**
+
+Emitted once when the component is destroyed, in the destroy flush. Connecting with
+`{ owner: this }` elsewhere uses it to detach handlers automatically
+(`docs/architecture/02-scene-graph.md` §8).
+
+###### Returns
+
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+
+The signal. It is created on first access, so a component nobody listens to allocates
+nothing.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-1)
+
+##### transform
+
+###### Get Signature
+
+> **get** **transform**(): [`Transform`](#transform-13)
+
+**`Beta`**
+
+The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
+
+###### Returns
+
+[`Transform`](#transform-13)
+
+The entity's transform.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`transform`](#transform-1)
+
+##### uid
+
+###### Get Signature
+
+> **get** **uid**(): `string`
+
+**`Beta`**
+
+The stable ULID; the key files use to reference this component.
+
+###### Returns
+
+`string`
+
+The identifier.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`uid`](#uid-1)
+
+##### world
+
+###### Get Signature
+
+> **get** **world**(): [`World`](#world-15)
+
+**`Beta`**
+
+The world the entity belongs to.
+
+###### Returns
+
+[`World`](#world-15)
+
+The world.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`world`](#world-2)
+
+#### Methods
+
+##### define()
+
+> `static` **define**\<`S`\>(`schema`): [`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+**`Beta`**
+
+Declares a component's serialized fields and returns the base class to extend (ADR-0004,
+`docs/architecture/03-scripting-and-components.md` §3). The returned class exposes every field
+as a typed instance property, applies the defaults in its constructor, and carries the schema
+for the serializer, the inspector, and the docs harness.
+
+###### Type Parameters
+
+###### S
+
+`S` *extends* `Readonly`\<`Record`\<`string`, [`FieldDefinition`](#fielddefinition)\<`unknown`\>\>\>
+
+The schema being declared.
+
+###### Parameters
+
+###### schema
+
+`S`
+
+The field definitions, keyed by the property name they become.
+
+###### Returns
+
+[`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+An abstract class to extend.
+
+###### Throws
+
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
+
+###### Example
+
+```ts
+class Spinner extends Component.define({
+  degreesPerSecond: f32(90, { min: -360, max: 360 }),
+  axis: vec3({ x: 0, y: 1, z: 0 }),
+}) {
+  static typeId = "mygame/Spinner";
+}
+```
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`define`](#define-1)
+
+##### destroy()
+
+> **destroy**(): `void`
+
+**`Beta`**
+
+Queues this component for destruction. It stays usable until the destroy flush of the current
+frame, but reports `isDestroyed === true` immediately
+(`docs/architecture/01-lifecycle-and-time.md` §6). Calling it twice is a no-op.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`destroy`](#destroy-1)
+
+##### getComponent()
+
+> **getComponent**\<`T`\>(`type`): `T` \| `null`
+
+**`Beta`**
+
+Finds another component on the same entity — sugar for `this.entity.getComponent`.
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class; matching is by class identity **and** inheritance.
+
+###### Returns
+
+`T` \| `null`
+
+The first match in attach order, or `null`.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-1)
+
+##### requireComponent()
+
+> **requireComponent**\<`T`\>(`type`): `T`
+
+**`Beta`**
 
 Finds another component on the same entity, requiring it to be there — the supported way to
 link components (`docs/architecture/03-scripting-and-components.md` §8).
@@ -8512,7 +9012,7 @@ What the component does, in one line, for an inspector.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-12)
+> `static` **schema**: [`Schema`](#schema-13)
 
 The serialized field declarations (ADR-0004).
 
@@ -8774,13 +9274,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-12)
+> **get** **transform**(): [`Transform`](#transform-13)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-12)
+[`Transform`](#transform-13)
 
 The entity's transform.
 
@@ -8810,13 +9310,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-14)
+> **get** **world**(): [`World`](#world-15)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-14)
+[`World`](#world-15)
 
 The world.
 
@@ -9065,7 +9565,7 @@ What the component does, in one line, for an inspector.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-12)
+> `static` **schema**: [`Schema`](#schema-13)
 
 The serialized field declarations (ADR-0004).
 
@@ -9314,13 +9814,13 @@ The skeletons.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-12)
+> **get** **transform**(): [`Transform`](#transform-13)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-12)
+[`Transform`](#transform-13)
 
 The entity's transform.
 
@@ -9350,13 +9850,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-14)
+> **get** **world**(): [`World`](#world-15)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-14)
+[`World`](#world-15)
 
 The world.
 
@@ -9798,7 +10298,7 @@ What the component does, in one line, for an inspector.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-12)
+> `static` **schema**: [`Schema`](#schema-13)
 
 The serialized field declarations (ADR-0004).
 
@@ -9998,13 +10498,13 @@ The task count; `0` before the chain is built, under a headless app, and when th
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-12)
+> **get** **transform**(): [`Transform`](#transform-13)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-12)
+[`Transform`](#transform-13)
 
 The entity's transform.
 
@@ -10034,13 +10534,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-14)
+> **get** **world**(): [`World`](#world-15)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-14)
+[`World`](#world-15)
 
 The world.
 
@@ -11478,7 +11978,7 @@ When the probe captures again. Defaults to `"once"`.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-12)
+> `static` **schema**: [`Schema`](#schema-13)
 
 **`Beta`**
 
@@ -11668,7 +12168,7 @@ nothing.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-12)
+> **get** **transform**(): [`Transform`](#transform-13)
 
 **`Beta`**
 
@@ -11676,7 +12176,7 @@ The entity's transform — sugar for `this.entity.transform`, the most-used look
 
 ###### Returns
 
-[`Transform`](#transform-12)
+[`Transform`](#transform-13)
 
 The entity's transform.
 
@@ -11708,7 +12208,7 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-14)
+> **get** **world**(): [`World`](#world-15)
 
 **`Beta`**
 
@@ -11716,7 +12216,7 @@ The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-14)
+[`World`](#world-15)
 
 The world.
 
@@ -12133,7 +12633,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`ReflectionProbe`](#reflectionprobe).[`enabled`](#enabled-17)
+[`LightProbeVolume`](#lightprobevolume).[`enabled`](#enabled-13)
 
 ##### entity
 
@@ -12243,13 +12743,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-12)
+> **get** **transform**(): [`Transform`](#transform-13)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-12)
+[`Transform`](#transform-13)
 
 The entity's transform.
 
@@ -12279,13 +12779,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-14)
+> **get** **world**(): [`World`](#world-15)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-14)
+[`World`](#world-15)
 
 The world.
 
@@ -13329,13 +13829,13 @@ class Follow extends Script implements ScriptCallbacks {
 
 ##### Constructor
 
-> **new Transform**(): [`Transform`](#transform-12)
+> **new Transform**(): [`Transform`](#transform-13)
 
 Creates an unbound transform. The entity constructor binds it to a Lite node immediately.
 
 ###### Returns
 
-[`Transform`](#transform-12)
+[`Transform`](#transform-13)
 
 ###### Overrides
 
@@ -13424,7 +13924,7 @@ happens inside a callback.
 
 ###### Overrides
 
-[`ReflectionProbe`](#reflectionprobe).[`enabled`](#enabled-17)
+[`LightProbeVolume`](#lightprobevolume).[`enabled`](#enabled-13)
 
 ##### entity
 
@@ -13881,13 +14381,13 @@ The angle in degrees.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-12)
+> **get** **transform**(): [`Transform`](#transform-13)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-12)
+[`Transform`](#transform-13)
 
 The entity's transform.
 
@@ -13931,13 +14431,13 @@ A freshly allocated vector. Use `Transform.upToRef` in hot code.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-14)
+> **get** **world**(): [`World`](#world-15)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-14)
+[`World`](#world-15)
 
 The world.
 
@@ -18355,13 +18855,13 @@ The live scene list.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-14)
+> **get** **world**(): [`World`](#world-15)
 
 The world itself; `WorldHost` names it so entities can reach it.
 
 ###### Returns
 
-[`World`](#world-14)
+[`World`](#world-15)
 
 This world.
 
@@ -19138,7 +19638,7 @@ The `@ignifx/core` version this app was built from.
 
 ##### world
 
-> `readonly` **world**: [`World`](#world-14)
+> `readonly` **world**: [`World`](#world-15)
 
 The running simulation.
 
@@ -23131,7 +23631,7 @@ The section name as it appears in `ignifx.config.ts`.
 
 ###### schema
 
-[`Schema`](#schema-12)
+[`Schema`](#schema-13)
 
 The schema the section is validated against.
 
@@ -24184,6 +24684,56 @@ The `layers` project settings section (`docs/architecture/04-extensions.md` §5,
 > `readonly` **layers**: readonly `string`[]
 
 The project's layer names in declaration order.
+
+***
+
+### LightProbeData
+
+A grid of light probes, as a `.probes.json` stores it.
+
+#### Remarks
+
+Probe `(i, j, k)` sits at `origin + (i, j, k) · cellSize`. `coefficients` holds 12 floats per probe,
+probes ordered X fastest, then Y, then Z (`index = i + countX·(j + countY·k)`); each probe's floats
+are `c0.rgb, c1.rgb, c2.rgb, c3.rgb` in linear RGB (see the module remarks).
+
+#### Properties
+
+##### cellSize
+
+> `readonly` **cellSize**: [`Vec3Like`](#vec3like)
+
+The distance between neighbouring probes along each axis, in metres.
+
+##### coefficients
+
+> `readonly` **coefficients**: readonly `number`[]
+
+12 floats per probe, `countX · countY · countZ · 12` in all.
+
+##### counts
+
+> `readonly` **counts**: `object`
+
+How many probes along X, Y and Z; each at least 1.
+
+###### x
+
+> `readonly` **x**: `number`
+
+###### y
+
+> `readonly` **y**: `number`
+
+###### z
+
+> `readonly` **z**: `number`
+
+##### origin
+
+> `readonly` **origin**: [`Vec3Like`](#vec3like)
+
+The world position of probe `(0, 0, 0)`.
 
 ***
 
@@ -26378,7 +26928,7 @@ Kind-specific data for `record`.
 
 ##### fields
 
-> `readonly` **fields**: [`Schema`](#schema-12)
+> `readonly` **fields**: [`Schema`](#schema-13)
 
 The sub-fields, in declaration order.
 
@@ -30340,7 +30890,7 @@ Called once when the world the system belongs to has been created.
 
 ###### world
 
-[`World`](#world-14)
+[`World`](#world-15)
 
 The new world.
 
@@ -30358,7 +30908,7 @@ Called once when the world the system belongs to is being disposed.
 
 ###### world
 
-[`World`](#world-14)
+[`World`](#world-15)
 
 The world going away.
 
@@ -30423,7 +30973,7 @@ The app clock.
 
 ##### world
 
-> `readonly` **world**: [`World`](#world-14)
+> `readonly` **world**: [`World`](#world-15)
 
 The world the system operates on.
 
@@ -31138,7 +31688,7 @@ able to write a plain `static typeId` without the `override` keyword.
 
 ##### S
 
-`S` *extends* [`Schema`](#schema-12)
+`S` *extends* [`Schema`](#schema-13)
 
 The schema the class was defined from.
 
@@ -31407,7 +31957,7 @@ what gives `this.speed` its `number` type inside a component declared with
 
 ##### S
 
-`S` *extends* [`Schema`](#schema-12)
+`S` *extends* [`Schema`](#schema-13)
 
 The schema to project.
 
@@ -31904,7 +32454,7 @@ mean "take the schema default" here, so both are accepted (`applyInit`, `encodeP
 
 ##### S
 
-`S` *extends* [`Schema`](#schema-12)
+`S` *extends* [`Schema`](#schema-13)
 
 The schema to project.
 
@@ -32038,7 +32588,7 @@ The union of script callback ordinals.
 
 > **ScriptDefinition**\<`S`\> = () => [`Script`](#abstract-script) & [`FieldsOf`](#fieldsof)\<`S`\> & `object`
 
-The abstract base class [Script.define](#define-9) returns: a `Script` that also carries every field
+The abstract base class [Script.define](#define-10) returns: a `Script` that also carries every field
 the schema declares, typed.
 
 #### Type Declaration
@@ -32061,7 +32611,7 @@ to write a plain `static typeId` or `static executionOrder` without the `overrid
 
 ##### S
 
-`S` *extends* [`Schema`](#schema-12)
+`S` *extends* [`Schema`](#schema-13)
 
 The schema the class was defined from.
 
@@ -33669,6 +34219,38 @@ this one without any ordering rule.
 ```ts
 const config = app.assets.load<{ readonly hp: number }>("data/player.json");
 ```
+
+***
+
+### LIGHT\_PROBE\_ASSET\_TYPE
+
+> `const` **LIGHT\_PROBE\_ASSET\_TYPE**: `"lightprobes"` = `"lightprobes"`
+
+The asset type light-probe grids are registered under.
+
+***
+
+### LIGHT\_PROBE\_FILE\_EXTENSIONS
+
+> `const` **LIGHT\_PROBE\_FILE\_EXTENSIONS**: readonly `string`[]
+
+The address extensions that select the light-probe loader.
+
+***
+
+### LIGHT\_PROBE\_FILE\_FORMAT
+
+> `const` **LIGHT\_PROBE\_FILE\_FORMAT**: `"ignifx-probes"` = `"ignifx-probes"`
+
+The `format` header every `.probes.json` carries.
+
+***
+
+### LIGHT\_PROBE\_FORMAT\_VERSION
+
+> `const` **LIGHT\_PROBE\_FORMAT\_VERSION**: `1` = `1`
+
+The `formatVersion` this engine reads and writes.
 
 ***
 
@@ -35774,6 +36356,57 @@ const layers = createLayerTable(["Default", "Ground", "Player", "Enemy"]);
 
 ***
 
+### createLightProbeAsset()
+
+> **createLightProbeAsset**(`app`, `data`): [`AssetHandle`](#assethandle)\<[`LightProbeAsset`](#lightprobeasset)\>
+
+**`Beta`**
+
+Publishes a grid built in code, such as the result of a bake, as an asset.
+
+#### Parameters
+
+##### app
+
+[`App`](#app)
+
+The app.
+
+##### data
+
+[`LightProbeData`](#lightprobedata)
+
+The grid.
+
+#### Returns
+
+[`AssetHandle`](#assethandle)\<[`LightProbeAsset`](#lightprobeasset)\>
+
+A handle a `LightProbeVolume` can take.
+
+#### Throws
+
+IgnifxError with code `IGX-0709` when the grid is malformed.
+
+***
+
+### createLightProbeLoader()
+
+> **createLightProbeLoader**(): [`AssetLoader`](#assetloader)\<[`LightProbeAsset`](#lightprobeasset)\>
+
+**`Beta`**
+
+Builds the loader for `.probes.json` light-probe grids (GI Phase 2, step B2). It needs no device,
+so a grid loads in Node too.
+
+#### Returns
+
+[`AssetLoader`](#assetloader)\<[`LightProbeAsset`](#lightprobeasset)\>
+
+The loader to register with `ctx.registerAssetLoader`.
+
+***
+
 ### createLogger()
 
 > **createLogger**(`options`): [`Logger`](#logger)
@@ -36770,6 +37403,22 @@ The description of the top-level file fields.
 
 ***
 
+### describeLightProbeFileFormat()
+
+> **describeLightProbeFileFormat**(): [`SchemaDescription`](#schemadescription)
+
+**`Beta`**
+
+Describes the `.probes.json` light-probe grid format (GI Phase 2, step B2).
+
+#### Returns
+
+[`SchemaDescription`](#schemadescription)
+
+The description of the top-level file fields.
+
+***
+
 ### describeMaterialFileFormat()
 
 > **describeMaterialFileFormat**(): [`SchemaDescription`](#schemadescription)
@@ -36895,7 +37544,7 @@ The component's namespaced registration id, for example `mygame/Mover`.
 
 ##### schema
 
-[`Schema`](#schema-12)
+[`Schema`](#schema-13)
 
 The component's declared fields.
 
@@ -37513,7 +38162,7 @@ every asset the file references is already loaded, which is what a `SceneAsset` 
 
 ##### world
 
-[`World`](#world-14)
+[`World`](#world-15)
 
 The world to build into.
 
@@ -38442,6 +39091,55 @@ const reverted = revertOverrides(spawn.instance, { paths: [`${rootUid}/component
 
 ***
 
+### sampleLightProbes()
+
+> **sampleLightProbes**(`data`, `x`, `y`, `z`, `normal`): \[`number`, `number`, `number`\]
+
+**`Beta`**
+
+The diffuse light a white surface receives at a point, read from the grid on the CPU the same way
+the shader reads it: trilinear between the eight surrounding probes, clamped at the grid's edges.
+
+#### Parameters
+
+##### data
+
+[`LightProbeData`](#lightprobedata)
+
+The grid.
+
+##### x
+
+`number`
+
+World X.
+
+##### y
+
+`number`
+
+World Y.
+
+##### z
+
+`number`
+
+World Z.
+
+##### normal
+
+[`Vec3Like`](#vec3like)
+
+The surface normal, unit length.
+
+#### Returns
+
+\[`number`, `number`, `number`\]
+
+Linear RGB.
+
+***
+
 ### sceneFileJsonSchema()
 
 > **sceneFileJsonSchema**(`registry`): [`JsonObject`](#jsonobject)
@@ -38843,7 +39541,7 @@ editor autocompletion (`docs/architecture/06-serialization-and-scene-format.md` 
 
 ##### schema
 
-[`Schema`](#schema-12)
+[`Schema`](#schema-13)
 
 The schema to convert.
 
@@ -38857,7 +39555,7 @@ The object fragment describing every declared prop.
 
 ### transformSchema()
 
-> **transformSchema**(): [`Schema`](#schema-12)
+> **transformSchema**(): [`Schema`](#schema-13)
 
 The entity transform as a schema: the fields of a scene file's `transform` block, so an
 inspector and its ops can treat the transform like any component
@@ -38865,7 +39563,7 @@ inspector and its ops can treat the transform like any component
 
 #### Returns
 
-[`Schema`](#schema-12)
+[`Schema`](#schema-13)
 
 A new schema: `position` (`vec3`, origin, step 0.01), `rotation` (`quat`, identity,
 step 0.5 degrees), `scale` (`vec3`, one, step 0.01).
@@ -38932,7 +39630,7 @@ as `IGX-0607`; names the caller omits are legal, because omitted props take sche
 
 ##### schema
 
-[`Schema`](#schema-12)
+[`Schema`](#schema-13)
 
 The schema to check against.
 
@@ -39302,3 +40000,27 @@ The equivalent angle in `[-180, 180)`; exactly `180` wraps to `-180`.
 wrapAngleDegrees(370); // 10
 wrapAngleDegrees(-190); // 170
 ```
+
+***
+
+### writeLightProbeFile()
+
+> **writeLightProbeFile**(`data`): `Record`\<`string`, `unknown`\>
+
+**`Beta`**
+
+Turns a grid into the JSON a `.probes.json` file holds.
+
+#### Parameters
+
+##### data
+
+[`LightProbeData`](#lightprobedata)
+
+The grid.
+
+#### Returns
+
+`Record`\<`string`, `unknown`\>
+
+The file contents, with the format header.
