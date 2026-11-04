@@ -52,7 +52,7 @@ describe("ReflectionProbe", () => {
     harness.world.createEntity("Probe").addComponent(ReflectionProbe, { refreshMode: "everyFrame" });
     await harness.settle();
     await harness.settle();
-    expect(harness.renderer.isReflectionProbeRuntimeActive).toBe(false);
+    expect(harness.renderer.reflectionProbeHost).toBeNull();
     expect(harness.errors).toEqual([]);
   });
 });
@@ -81,5 +81,12 @@ describe("selectReflectionProbe", () => {
   it("prefers a box that holds the point over a closer probe, and the smaller of two boxes", () => {
     expect(selectReflectionProbe(4, 0, 0, [probeAt(10, 20), probeAt(4.5)])).toBe(0);
     expect(selectReflectionProbe(4, 0, 0, [probeAt(10, 20), probeAt(0, 10)])).toBe(1);
+    expect(selectReflectionProbe(4, 0, 0, [probeAt(0, 10), probeAt(10, 20)])).toBe(0);
+  });
+
+  it("skips holes in the list", () => {
+    const sparse: ReflectionProbeCandidate[] = [];
+    sparse[1] = probeAt(1);
+    expect(selectReflectionProbe(0, 0, 0, sparse)).toBe(1);
   });
 });

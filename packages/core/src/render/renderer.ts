@@ -1622,14 +1622,14 @@ export class RendererImpl implements Renderer {
   }
 
   /**
-   * Whether the reflection-probe chunk is loaded and running.
+   * The reflection probes' host, for tests and diagnostics.
    *
-   * @returns `true` once a world's `ReflectionProbe` has loaded it.
+   * @returns The host, or `null` on a headless app and before the first frame.
    *
    * @internal
    */
-  get isReflectionProbeRuntimeActive(): boolean {
-    return this.#reflectionProbes !== null && this.#reflectionProbes.isActive;
+  get reflectionProbeHost(): ReflectionProbeHost | null {
+    return this.#reflectionProbes;
   }
 
   /**

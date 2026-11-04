@@ -77,7 +77,7 @@ describe("ReflectionProbe", () => {
       await running.start();
       await running.advance(SETTLE_FRAMES * 3);
       expect(running.errors).toEqual([]);
-      expect(running.renderer.isReflectionProbeRuntimeActive).toBe(true);
+      expect(running.renderer.reflectionProbeHost?.isActive).toBe(true);
       const left = await running.pixelAt(LEFT.x, LEFT.y);
       const right = await running.pixelAt(RIGHT.x, RIGHT.y);
       expect(left.r).toBeGreaterThan(left.b * 1.5 + 4);
