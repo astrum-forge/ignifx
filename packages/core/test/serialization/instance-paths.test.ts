@@ -161,4 +161,38 @@ describe("instance paths", () => {
     expect(instanceComponentAt(root, "N/NOPE")).toBeNull();
     expect(instanceComponentAt(root, "X/T")).toBeNull();
   });
+
+  it("name nothing through an entity that roots no instance, or a uid the prefab does not hold", async () => {
+    const { built } = await level(await enemy(), { target: { $entity: "S/C" } });
+    expect(built.issues.map((issue) => issue.code)).toEqual(["IGX-0602"]);
+    const plain = built.remap.entity("S");
+    expect(plain === null ? undefined : instanceComponentAt(plain, "T")).toBeNull();
+
+    const harness = createSerializationWorld();
+    worlds.push(harness);
+    const loose = await createSceneAsset(
+      "prefabs/loose.prefab.json",
+      buildFile({
+        entities: [
+          entityRecord({
+            uid: "A",
+            components: [
+              { uid: "A1", type: "test/Everything", props: { target: { $entity: "GONE" } } },
+              { uid: "A2", type: "test/Everything", props: { target: { $entity: "ZZ/C" } } },
+            ],
+          }),
+        ],
+      }),
+    );
+    const inside = instantiateScene(harness.world, loose, { asInstance: true });
+    expect(inside.issues.map((issue) => issue.code)).toEqual(["IGX-0602", "IGX-0602"]);
+  });
+
+  it("skip a member that is being destroyed", async () => {
+    const { built } = await level(await enemy(), {});
+    const root = built.remap.entity("L");
+    const weapon = root?.children[0];
+    weapon?.destroy();
+    expect(root === null ? undefined : instanceEntityAt(root, "C")).toBeNull();
+  });
 });
