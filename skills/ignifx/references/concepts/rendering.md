@@ -120,7 +120,8 @@ what they mean.
   closest. `boxProjection` also makes reflections line up with the room's walls (parallax); `null`
   makes them look infinitely far away. A material shared by several meshes follows the first. Use
   `refreshMode: "once"` (default) and call `probe.refresh()` after the static scene changes;
-  `"everyFrame"` costs six extra scene passes a frame. Diffuse light still comes from the
+  `"everyFrame"` costs six extra scene passes a frame: use it for one probe, on desktop at the
+  `high` quality tier only. Diffuse light still comes from the
   `Environment`, rough materials look blurrier than with an `.env`, and the probe's GPU code loads
   only once a world has one. Headless, a probe captures nothing.
 

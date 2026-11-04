@@ -31968,7 +31968,8 @@ When a reflection probe renders its cube map again.
 
 - `"once"` (default): when the probe is first ready, and again on [ReflectionProbe.refresh](#refresh).
 - `"onDemand"`: only on [ReflectionProbe.refresh](#refresh); until then the probe reflects nothing.
-- `"everyFrame"`: every frame, six extra scene passes each frame. Use it for one probe at most.
+- `"everyFrame"`: every frame, six extra scene passes each frame. Use it for one probe at most, and
+  only on desktop at the `high` quality tier (nothing caps it yet).
 
 ***
 

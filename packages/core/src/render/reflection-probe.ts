@@ -26,7 +26,8 @@ export const REFLECTION_PROBE_REFRESH_MODES = ["once", "onDemand", "everyFrame"]
  * @remarks
  * - `"once"` (default): when the probe is first ready, and again on {@link ReflectionProbe.refresh}.
  * - `"onDemand"`: only on {@link ReflectionProbe.refresh}; until then the probe reflects nothing.
- * - `"everyFrame"`: every frame, six extra scene passes each frame. Use it for one probe at most.
+ * - `"everyFrame"`: every frame, six extra scene passes each frame. Use it for one probe at most, and
+ *   only on desktop at the `high` quality tier (nothing caps it yet).
  *
  * @public
  */
@@ -220,7 +221,7 @@ function reflectionProbeSchema(): Schema {
     }),
     refreshMode: enumOf(REFLECTION_PROBE_REFRESH_MODES, "once", {
       tooltip:
-        "once: capture when ready and on refresh(); onDemand: only on refresh(); everyFrame: every frame (costly).",
+        "once: capture when ready and on refresh(); onDemand: only on refresh(); everyFrame: every frame (costly; one probe, desktop high tier only).",
     }),
     boxProjection: optional(vec3({ x: 10, y: 10, z: 10 }), {
       tooltip:

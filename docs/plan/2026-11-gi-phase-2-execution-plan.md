@@ -26,7 +26,7 @@ In: reflection probes, light-probe volumes, lightmaps, a CPU light-probe bake in
 - ✗ **Cube capture, prefiltering and SH projection.** No public function renders a cube from a point or turns a rendered cube into `EnvironmentTextures`; the loaders take files only (`loadEnvironment` 7802, `loadDdsEnvironment` 7779, `loadHdrEnvironment` 7870). B1 renders six faces and builds the mip chain itself, box-filtered rather than GGX-prefiltered.
 - ✗ **Light probes / SH irradiance volumes.** Nothing exists. The IBL fragment declares `environmentIrradiance` with `let` (`lib/material/pbr/fragments/ibl-fragment.js`), so a plugin cannot replace it; it can only add a correction to `color` before final composition (spike P1).
 - ✗ **Lightmap UV transform.** The lightmap fragment samples `input.uv2` raw (`lib/material/pbr/fragments/lightmap-fragment.js` line 24), ignoring `Texture2D.uScale`/`uOffset` (14956) and `cloneTexture2D` (1906), so per-renderer atlas scale and offset need spike P2.
-- ✗ **Mesh filters per pass.** `RenderTaskConfig` has no layer or mesh filter; a culling mask hides meshes around the task's `execute`, as `render-texture.ts` does for editor-only meshes.
+- **Mesh filters per pass (partly).** `RenderTaskConfig` has no layer field, but `autoMirror: false` (11695) with `addMeshToTask`/`removeMeshFromTask` (126, 11363) and `enableRenderTaskMeshRefresh` (5357) gives a task an explicit render list. B1 hides rejected meshes around the task's `execute` instead, as `render-texture.ts` does for editor-only meshes; an explicit list is the option if that costs too much.
 - ✗ **3D textures in plugins.** Plugins bind 2D textures only, so probe volumes are packed into a 2D array.
 
 ## 3. Rules for every step

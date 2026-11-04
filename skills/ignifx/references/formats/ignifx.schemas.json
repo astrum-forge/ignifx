@@ -2527,7 +2527,7 @@
         "refreshMode": {
           "kind": "enum",
           "default": "\"once\"",
-          "description": "once: capture when ready and on refresh(); onDemand: only on refresh(); everyFrame: every frame (costly).",
+          "description": "once: capture when ready and on refresh(); onDemand: only on refresh(); everyFrame: every frame (costly; one probe, desktop high tier only).",
           "values": [
             "once",
             "onDemand",
