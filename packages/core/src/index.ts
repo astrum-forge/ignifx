@@ -467,6 +467,7 @@ export {
   type SceneBuildResult,
   type SceneLoadIssue,
 } from "./serialization/load.js";
+export { instanceComponentAt, instanceEntityAt } from "./serialization/instance-lookup.js";
 export { parseOverridePath, type EntityOverrideField, type OverridePath } from "./serialization/overrides.js";
 export {
   applyOverridesToAsset,

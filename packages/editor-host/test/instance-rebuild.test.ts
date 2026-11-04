@@ -1194,3 +1194,40 @@ describe("a reference field that points into a rebuilt instance among others, he
     expect(warnings).toEqual([line]);
   });
 });
+
+describe("a reference by instance path into a rebuilt instance, headless", () => {
+  it("re-points it to the rebuilt member and reads it back as the same path", async () => {
+    const pointer: SceneFileEntity = {
+      uid: "POINTER",
+      name: "Pointer",
+      parent: null,
+      transform: { position: [0, 0, 0], rotation: [0, 0, 0, 1], scale: [1, 1, 1] },
+      components: [
+        { uid: "POINTER-FOLLOW", type: "game/Follow", props: { target: { $entity: "STREET-POST/BULB" } } },
+        { uid: "POINTER-WATCH", type: "game/Watch", props: { target: { $component: "STREET-POST/BULB-FOLLOW" } } },
+      ],
+    };
+    const { running, warnings } = await sceneView((hash) => {
+      const street = level(hash);
+      return { ...street, entities: [...street.entities, pointer] };
+    }, bulbFollows());
+    const aimed = (): { follow: unknown; watch: unknown } => {
+      const entity = running.app.world.getEntity("POINTER");
+      return { follow: entity?.getComponent(Follow)?.target, watch: entity?.getComponent(Watch)?.target };
+    };
+    const bulb = (): Entity | undefined => followOf(running, "Bulb")?.entity;
+    expect(aimed()).toEqual({ follow: bulb(), watch: followOf(running, "Bulb") });
+
+    await applyOne({ op: "setOverride", entity: "STREET-POST", override: SPARE_7 });
+
+    expect(bulb()?.isDestroyed).toBe(false);
+    expect(aimed().follow).toBe(bulb());
+    expect(aimed().watch).toBe(followOf(running, "Bulb"));
+    const read = (await call("readBack", { entities: ["POINTER"] })) as { entities: readonly SceneFileEntity[] };
+    expect(read.entities[0]?.components?.map((component) => component.props?.["target"])).toEqual([
+      { $entity: "STREET-POST/BULB" },
+      { $component: "STREET-POST/BULB-FOLLOW" },
+    ]);
+    expect(warnings).toEqual([]);
+  });
+});
