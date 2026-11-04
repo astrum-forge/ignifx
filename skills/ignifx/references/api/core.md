@@ -24687,6 +24687,110 @@ The project's layer names in declaration order.
 
 ***
 
+### LightProbeBakeOptions
+
+**`Beta`**
+
+What [bakeLightProbes](#bakelightprobes) bakes.
+
+#### Properties
+
+##### cellSize
+
+> `readonly` **cellSize**: [`Vec3Like`](#vec3like)
+
+**`Beta`**
+
+The distance between neighbouring probes along each axis, in metres.
+
+##### counts
+
+> `readonly` **counts**: `object`
+
+**`Beta`**
+
+How many probes along X, Y and Z.
+
+###### x
+
+> `readonly` **x**: `number`
+
+###### y
+
+> `readonly` **y**: `number`
+
+###### z
+
+> `readonly` **z**: `number`
+
+##### maxDistance?
+
+> `readonly` `optional` **maxDistance?**: `number`
+
+**`Beta`**
+
+How far a ray looks for a surface, in metres. Defaults to `100`.
+
+##### origin
+
+> `readonly` **origin**: [`Vec3Like`](#vec3like)
+
+**`Beta`**
+
+The world position of probe `(0, 0, 0)`.
+
+##### rays?
+
+> `readonly` `optional` **rays?**: `number`
+
+**`Beta`**
+
+Rays per probe. Defaults to `128`; more is smoother and slower.
+
+##### sky?
+
+> `readonly` `optional` **sky?**: [`ColorLike`](#colorlike)
+
+**`Beta`**
+
+The linear radiance of rays that hit nothing, before hemispheric lights. Defaults to black.
+
+***
+
+### LightProbeBakeResult
+
+**`Beta`**
+
+The result of a bake.
+
+#### Properties
+
+##### data
+
+> `readonly` **data**: [`LightProbeData`](#lightprobedata)
+
+**`Beta`**
+
+The grid, ready for `createLightProbeAsset` or `writeLightProbeFile`.
+
+##### skipped
+
+> `readonly` **skipped**: `number`
+
+**`Beta`**
+
+How many enabled mesh renderers were skipped because their triangles are not on the CPU.
+
+##### triangles
+
+> `readonly` **triangles**: `number`
+
+**`Beta`**
+
+How many triangles the rays were traced against.
+
+***
+
 ### LightProbeData
 
 A grid of light probes, as a `.probes.json` stores it.
@@ -35746,6 +35850,53 @@ A frozen reference, safe to hold as a module constant.
 const hero = assetRef<ModelAsset>("models/hero.glb");
 const run = assetRef<AnimationClip>("models/hero.glb#animation:Run");
 const handle = app.assets.load(hero);
+```
+
+***
+
+### bakeLightProbes()
+
+> **bakeLightProbes**(`world`, `options`): [`LightProbeBakeResult`](#lightprobebakeresult)
+
+**`Beta`**
+
+Bakes a light-probe grid from a world's mesh renderers and lights, on the CPU.
+
+#### Parameters
+
+##### world
+
+[`World`](#world-15)
+
+The world to bake.
+
+##### options
+
+[`LightProbeBakeOptions`](#lightprobebakeoptions)
+
+The grid and the quality.
+
+#### Returns
+
+[`LightProbeBakeResult`](#lightprobebakeresult)
+
+The grid and what was traced.
+
+#### Remarks
+
+One bounce, first-order harmonics, deterministic. Only meshes built with `MeshAsset.fromData`
+cast and bounce light (see [LightProbeBakeResult.skipped](#skipped)). Cost grows with probes × rays ×
+triangles; it is meant for small scenes and tools, not for every frame.
+
+#### Example
+
+```ts
+const baked = bakeLightProbes(world, {
+  origin: { x: -4, y: 0.5, z: -4 },
+  cellSize: { x: 2, y: 2, z: 2 },
+  counts: { x: 5, y: 2, z: 5 },
+});
+world.createEntity("Probes").addComponent(LightProbeVolume, { probes: createLightProbeAsset(app, baked.data) });
 ```
 
 ***

@@ -163,6 +163,30 @@ what they mean.
   }
   ```
 
+- `bakeLightProbes(world, { origin, cellSize, counts, rays?, maxDistance?, sky? })` bakes a grid on
+  the CPU, headless included: one bounce, from the world's lights and the triangles of every
+  enabled `MeshRenderer` whose mesh was built with `MeshAsset.fromData`. Primitives and glTF models
+  keep their triangles on the GPU and are skipped (`result.skipped` counts them). `sky` is the
+  linear radiance of rays that hit nothing; hemispheric lights add to it. Save `result.data` with
+  `writeLightProbeFile` or use it at once with `createLightProbeAsset`. It costs probes × rays ×
+  triangles, so bake small scenes, in a tool or at load, never per frame.
+
+  ```ts
+  import type { App, World } from "@ignifx/core";
+  import { bakeLightProbes, createLightProbeAsset, LightProbeVolume } from "@ignifx/core";
+
+  export function bakeRoom(app: App, world: World): LightProbeVolume {
+    const baked = bakeLightProbes(world, {
+      origin: { x: -4, y: 0.5, z: -4 },
+      cellSize: { x: 4, y: 2, z: 4 },
+      counts: { x: 3, y: 2, z: 3 },
+      rays: 64,
+    });
+    const probes = createLightProbeAsset(app, baked.data);
+    return world.createEntity("Baked probes").addComponent(LightProbeVolume, { probes });
+  }
+  ```
+
 ## 2. The `PreRender` sync
 
 One system, `ignifx/render-sync`, runs late in `Phase.PreRender` (order 900) and:
