@@ -470,7 +470,9 @@ export { parseOverridePath, type EntityOverrideField, type OverridePath } from "
 export {
   applyOverridesToAsset,
   revertOverrides,
+  type PrefabApplyOptions,
   type PrefabApplyResult,
+  type PrefabComponentSkip,
   type PrefabOverrideSelection,
   type PrefabOverrideSkip,
 } from "./serialization/prefab-overrides.js";

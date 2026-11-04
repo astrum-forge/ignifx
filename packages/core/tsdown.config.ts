@@ -6,7 +6,7 @@ import manifest from "./package.json" with { type: "json" };
  * needs neither the TypeScript programmatic API nor the TS 6 shim (ADR-0007).
  */
 export default defineConfig({
-  entry: ["src/index.ts"],
+  entry: ["src/index.ts", "src/prefab.ts"],
   format: ["esm"],
   platform: "neutral",
   target: "es2023",

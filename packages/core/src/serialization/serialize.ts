@@ -2,6 +2,7 @@ import { VERSION } from "../app/version.js";
 import { entityInternals } from "../entity/internals.js";
 import { CoreErrorCode } from "../errors/error-codes.js";
 import { canonicalizeNumber, encodeProps, encodeValue } from "../schema/encode.js";
+import { setOwnJsonProperty } from "../schema/json.js";
 import { asJsonArray, asJsonObject } from "./json-view.js";
 import { SCENE_FILE_FORMAT, SCENE_FORMAT_VERSION } from "./scene-file.js";
 import { membershipEncoder } from "./uid-remap.js";
@@ -96,7 +97,7 @@ export function serializeScene(source: SceneInstance | readonly Entity[], option
   };
   const flatten = options?.flatten === true;
   const plan = planEntities(roots, flatten, report);
-  const references = membershipEncoder(plan.entities, plan.components);
+  const references = instancePathEncoder(membershipEncoder(plan.entities, plan.components), plan);
   const entities: SceneFileEntity[] = [];
   for (let index = 0; index < plan.order.length; index += 1) {
     const planned = plan.order[index];
@@ -211,6 +212,16 @@ interface EntityPlan {
   readonly entities: ReadonlySet<Entity>;
   /** The membership set component references are resolved against. */
   readonly components: ReadonlySet<Component>;
+  /**
+   * Entities inside a written instance to the instance path that names them from this file
+   * (`"<instanceRootUid>/<uidInThePrefab>"`).
+   */
+  readonly entityPaths: ReadonlyMap<unknown, string>;
+  /**
+   * Components an instance put on an entity to the instance path that names them from this file,
+   * including those merged into a written instance root.
+   */
+  readonly componentPaths: ReadonlyMap<unknown, string>;
 }
 
 /**
@@ -230,6 +241,7 @@ function planEntities(
   const order: PlannedEntity[] = [];
   const entities = new Set<Entity>();
   const components = new Set<Component>();
+  const paths: InstancePaths = { entities: new Map<unknown, string>(), components: new Map<unknown, string>() };
   const visit = (entity: Entity, parentUid: string | null): void => {
     if (entity.isDestroyed) {
       return;
@@ -238,6 +250,9 @@ function planEntities(
     const asInstance = !flatten && origin !== null && origin.instanced !== null;
     order.push({ entity, parentUid, origin: asInstance ? origin : null });
     entities.add(entity);
+    if (asInstance) {
+      addComponentPaths(entity, entity.uid, origin.instanced?.root?.componentSourceUids, paths);
+    }
     const own = entity.components;
     for (let index = 0; index < own.length; index += 1) {
       const component = own[index];
@@ -252,6 +267,7 @@ function planEntities(
         continue;
       }
       if (asInstance && belongsToInstance(child, entity)) {
+        collectInstancePaths(child, entity, paths);
         continue;
       }
       if (asInstance) {
@@ -269,7 +285,87 @@ function planEntities(
       visit(root, null);
     }
   }
-  return { order, entities, components };
+  return { order, entities, components, entityPaths: paths.entities, componentPaths: paths.components };
+}
+
+/** The instance paths {@link planEntities} collects. */
+interface InstancePaths {
+  /** Entity to its instance path. */
+  readonly entities: Map<unknown, string>;
+  /** Component to its instance path. */
+  readonly components: Map<unknown, string>;
+}
+
+/**
+ * Records the instance paths of an instance member and of everything below it.
+ *
+ * @param entity - The member.
+ * @param written - The instance root the file writes, which the paths start from.
+ * @param paths - Filled with the paths.
+ */
+function collectInstancePaths(entity: Entity, written: Entity, paths: InstancePaths): void {
+  if (entity.isDestroyed) {
+    return;
+  }
+  const origin = entityInternals(entity).origin;
+  const inside = origin?.instanceRoot ?? null;
+  // Tree order puts the instance root an entity sits inside before the entity itself.
+  const prefix = inside === written ? written.uid : inside === null ? undefined : paths.entities.get(inside);
+  if (origin !== null && prefix !== undefined) {
+    const path = `${prefix}/${origin.sourceUid}`;
+    paths.entities.set(entity, path);
+    addComponentPaths(entity, prefix, origin.componentSourceUids, paths);
+    addComponentPaths(entity, path, origin.instanced?.root?.componentSourceUids, paths);
+  }
+  const children = entity.children;
+  for (let index = 0; index < children.length; index += 1) {
+    const child = children[index];
+    if (child !== undefined) {
+      collectInstancePaths(child, written, paths);
+    }
+  }
+}
+
+/**
+ * Records the instance paths of the components an instance put on an entity.
+ *
+ * @param entity - The entity.
+ * @param prefix - The path of the instance root the components' uids are local to.
+ * @param sourceUids - Runtime component uid to the uid that instance's file gives it.
+ * @param paths - Filled with the paths; a component already recorded keeps its path.
+ */
+function addComponentPaths(
+  entity: Entity,
+  prefix: string,
+  sourceUids: ReadonlyMap<string, string> | undefined,
+  paths: InstancePaths,
+): void {
+  if (sourceUids === undefined) {
+    return;
+  }
+  const components = entity.components;
+  for (let index = 0; index < components.length; index += 1) {
+    const component = components[index];
+    const source = component === undefined ? undefined : sourceUids.get(component.uid);
+    if (component !== undefined && source !== undefined && !paths.components.has(component)) {
+      paths.components.set(component, `${prefix}/${source}`);
+    }
+  }
+}
+
+/**
+ * Wraps the membership encoder so a reference into a written instance is written as an instance
+ * path (`"<instanceRootUid>/<uidInThePrefab>"`), which the loader resolves to the same copy.
+ *
+ * @param members - The membership encoder.
+ * @param plan - The plan holding the paths.
+ * @returns The encoder.
+ */
+function instancePathEncoder(members: ReferenceEncoder, plan: EntityPlan): ReferenceEncoder {
+  return {
+    entityUid: (value: unknown): string | null => plan.entityPaths.get(value) ?? members.entityUid(value),
+    componentUid: (value: unknown): string | null => plan.componentPaths.get(value) ?? members.componentUid(value),
+  };
 }
 
 /**
@@ -461,6 +557,7 @@ function computeOverrides(
   }
   collectDirectMembers(root, root, current);
   const overrides: SceneFileOverride[] = [];
+  const localize = (value: JsonValue): JsonValue => localizeReferences(value, root.uid, single?.sourceUid ?? null);
   const source = link.scene.file.entities;
   for (let index = 0; index < source.length; index += 1) {
     const record = source[index];
@@ -472,11 +569,16 @@ function computeOverrides(
       continue;
     }
     if (entity === root && single !== null) {
-      const diff: ComponentDiff = { sourceUids: single.componentSourceUids, from: single.components, inside: true };
+      const diff: ComponentDiff = {
+        sourceUids: single.componentSourceUids,
+        from: single.components,
+        inside: true,
+        localize,
+      };
       diffComponents(entity, record, diff, overrides, references, report);
       continue;
     }
-    diffEntity(entity, record, overrides, references, report);
+    diffEntity(entity, record, overrides, references, report, localize);
   }
   return overrides;
 }
@@ -505,6 +607,42 @@ function collectDirectMembers(entity: Entity, root: Entity, out: Map<string, Ent
 }
 
 /**
+ * Rewrites the references in a prop written from the instancing file into the uids the instanced
+ * file itself uses: the instance root becomes the instanced root's uid, and an instance path that
+ * starts at the instance root loses that first segment.
+ *
+ * @param value - The prop's JSON.
+ * @param rootUid - The instance root's uid.
+ * @param rootSourceUid - The uid of the instanced scene's single root, or `null` for a container.
+ * @returns The rewritten JSON; `value` itself when it holds no reference.
+ */
+function localizeReferences(value: JsonValue, rootUid: string, rootSourceUid: string | null): JsonValue {
+  const items = asJsonArray(value);
+  if (items !== null) {
+    return items.map((item) => localizeReferences(item, rootUid, rootSourceUid));
+  }
+  const object = asJsonObject(value);
+  if (object === null) {
+    return value;
+  }
+  const rewritten: Record<string, JsonValue> = {};
+  for (const key of Object.keys(object)) {
+    const entry = object[key] ?? null;
+    if ((key === "$entity" || key === "$component") && typeof entry === "string") {
+      const prefix = `${rootUid}/`;
+      rewritten[key] = entry.startsWith(prefix)
+        ? entry.slice(prefix.length)
+        : entry === rootUid && rootSourceUid !== null
+          ? rootSourceUid
+          : entry;
+      continue;
+    }
+    setOwnJsonProperty(rewritten, key, localizeReferences(entry, rootUid, rootSourceUid));
+  }
+  return rewritten;
+}
+
+/**
  * Diffs one instanced entity against its file record.
  *
  * @param entity - The runtime entity.
@@ -512,6 +650,7 @@ function collectDirectMembers(entity: Entity, root: Entity, out: Map<string, Ent
  * @param overrides - Where patches are appended.
  * @param references - How references resolve.
  * @param report - Receives problems.
+ * @param localize - Rewrites references written from this file into the instanced file's uids.
  */
 function diffEntity(
   entity: Entity,
@@ -519,6 +658,7 @@ function diffEntity(
   overrides: SceneFileOverride[],
   references: ReferenceEncoder,
   report: (code: string, message: string) => void,
+  localize: (value: JsonValue) => JsonValue,
 ): void {
   const uid = record.uid;
   if (entity.name !== record.name) {
@@ -547,6 +687,7 @@ function diffEntity(
     sourceUids: origin?.componentSourceUids ?? new Map<string, string>(),
     from: nested,
     inside: false,
+    localize,
   };
   diffComponents(entity, record, diff, overrides, references, report);
 }
@@ -559,6 +700,11 @@ interface ComponentDiff {
   readonly from: ReadonlySet<string>;
   /** `true` diffs only the components in `from`; `false` diffs only the others. */
   readonly inside: boolean;
+  /**
+   * Rewrites references written from the instancing file into the instanced file's own uids, so a
+   * prop that points inside the instance compares equal to the record that points there too.
+   */
+  readonly localize: (value: JsonValue) => JsonValue;
 }
 
 /**
@@ -636,7 +782,7 @@ function diffComponents(
       continue;
     }
     const schema = component.world.registry.describe(component.constructor).schema;
-    diffProps(uid, sourceUid, before, written, schema, overrides);
+    diffProps(uid, sourceUid, before, written, schema, overrides, diff.localize);
   }
   for (let index = 0; index < declared.length; index += 1) {
     const before = declared[index];
@@ -655,6 +801,7 @@ function diffComponents(
  * @param after - What the component is now.
  * @param schema - The component's declared fields, so an omitted prop compares against its default.
  * @param overrides - Where patches are appended.
+ * @param localize - Rewrites `after`'s references into the instanced file's uids for the comparison.
  */
 function diffProps(
   entityUid: string,
@@ -663,6 +810,7 @@ function diffProps(
   after: SceneFileComponent,
   schema: Schema | null,
   overrides: SceneFileOverride[],
+  localize: (value: JsonValue) => JsonValue,
 ): void {
   if ((before.enabled ?? true) !== (after.enabled ?? true)) {
     overrides.push({ path: `${entityUid}/components/${componentUid}/enabled`, value: after.enabled ?? true });
@@ -678,7 +826,7 @@ function diffProps(
     const field = schema?.[name];
     const previous =
       beforeProps[name] ?? (field === undefined ? null : encodeValue(field, field.createDefault(), references));
-    if (!sameJson(previous, next)) {
+    if (!sameJson(previous, localize(next))) {
       overrides.push({ path: `${entityUid}/components/${componentUid}/props/${name}`, value: next });
     }
   }

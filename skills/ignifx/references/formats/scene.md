@@ -130,6 +130,22 @@ expanded under the instance root instead.
   (both land in `skipped`). `revertOverrides(instance, { paths? })` drops overrides so the instance
   follows the prefab again. A path selects everything at or below it; an `add` sits at
   `<uid>/components/<addedUid>`.
+- Components added on a single-root instance's root are written in the entity's own `components`,
+  not as overrides. Pass them as `rootComponents` to apply them too: `applyOverridesToAsset(instance,
+  prefabFile, { rootComponents: entity.components })` appends the selected ones to the prefab's root
+  (selected at `<rootUid>/components/<uid>`) and returns `appliedComponents` (remove them from the
+  entity), `rootComponents` (the ones it keeps) and `skippedComponents`.
+- Tools that only edit files import these from `@ignifx/core/prefab`, which loads no renderer and no
+  Babylon Lite: `applyOverridesToAsset`, `revertOverrides`, `parseOverridePath`,
+  `computeSceneHash`, `stringifySceneFile` and the scene-file types.
+- **References into an instance.** Every copy of a prefab gets fresh uids, so a plain
+  `{ "$entity": "<uid>" }` cannot point inside one. Use an instance path instead:
+  `{ "$entity": "<instanceRootUid>/<uidInThePrefab>" }`, or `{ "$component": "…" }` the same way.
+  The first segment is the uid of the entity that carries the `instance` block in this file, the
+  next is the uid the prefab file gives the target; add a segment per nested prefab
+  (`"<instanceRootUid>/<nestedInstanceUidInThePrefab>/<uidInTheNestedPrefab>"`). The loader
+  resolves it to that copy's object, and `serializeScene` writes references into an instance this
+  way. A path that names nothing is `null` with `IGX-0602`.
 - The `path` grammar — every path starts with the uid of an entity **inside the instanced file**, so
   it survives the per-instance uid remap. `parseOverridePath(path)` parses one; a path outside the
   grammar, or one with a `__proto__` property step, is `IGX-0609`.
