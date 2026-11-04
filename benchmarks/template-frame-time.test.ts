@@ -70,3 +70,21 @@ describe("the recorded template GPU budgets", () => {
     expect(row.recordedOn).toMatch(/^\d{4}-\d{2}-\d{2}$/u);
   });
 });
+
+/** Coding standards §7: each quality tier's whole-frame GPU budget. */
+const TIER_GPU_FRAME_MS = { low: 12, medium: 12, high: 10 } as const;
+
+describe("the recorded per-tier GPU budgets", () => {
+  const TIERS = ["low", "medium", "high"] as const;
+  const GPU_TEMPLATES = ["3d-third-person", "3d-first-person"] as const;
+  const CASES = TIERS.flatMap((tier) => GPU_TEMPLATES.map((name) => [tier, name] as const));
+
+  it.each(CASES)("keeps the %s tier's %s ceiling inside the tier's §7 frame", (tier, name) => {
+    const row = baselines.gpuTime.tiers[tier].templates[name];
+    expect(row.standardsBudgetMs).toBe(TIER_GPU_FRAME_MS[tier]);
+    expect(row.budgetMs).toBeLessThanOrEqual(TIER_GPU_FRAME_MS[tier]);
+    expect(row.medianMs).toBeGreaterThan(0);
+    expect(row.medianMs).toBeLessThanOrEqual(row.budgetMs);
+    expect(row.recordedOn).toMatch(/^\d{4}-\d{2}-\d{2}$/u);
+  });
+});

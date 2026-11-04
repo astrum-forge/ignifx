@@ -175,7 +175,10 @@ silicon and mobile, RGBA8 without compression support — so it stays compressed
 
 Compressed models load the same way: a `.glb` with `KHR_draco_mesh_compression` or
 `EXT_meshopt_compression` is a `model` like any other, and its Draco or meshopt decoder is served
-from those same files, fetched only when a model uses it, so a game that loads none pays nothing.
+from those same files, fetched only when a model uses it, so a game that loads none pays nothing
+at run time. The plugin still copies every decoder into `dist/`; a game that never loads one kind
+of file can leave its decoder out with `ignifx({ decoders: { draco: false } })` (also `meshopt`
+and `ktx2`, each `true` by default). A file that needs a decoder left out then fails to load.
 
 ### Mesh files
 

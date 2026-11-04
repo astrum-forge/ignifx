@@ -19,6 +19,12 @@ describe("resolvePluginOptions", () => {
       schemas: null,
       hashLength: 8,
       scriptsPattern: "/src/scripts/**/*.ts",
+      decoders: { draco: true, meshopt: true, ktx2: true },
+    });
+    expect(resolvePluginOptions({ decoders: { draco: false } }).decoders).toEqual({
+      draco: false,
+      meshopt: true,
+      ktx2: true,
     });
   });
 

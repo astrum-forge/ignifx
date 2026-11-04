@@ -79,7 +79,9 @@ export {
   DEFAULT_MANIFEST_FILE_NAME,
   DEFAULT_PUBLIC_PATH,
   resolvePluginOptions,
+  type DecoderOptions,
   type IgnifxPluginOptions,
+  type ResolvedDecoderOptions,
   type ResolvedIgnifxPluginOptions,
 } from "./options.js";
 export { ignifx, PLUGIN_NAME, type IgnifxPluginApi } from "./plugin.js";

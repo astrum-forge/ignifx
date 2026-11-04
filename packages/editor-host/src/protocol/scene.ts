@@ -858,6 +858,9 @@ export interface SetGridParams {
  */
 export const TILEMAP_CELLS_MAX_NUMBERS = 2_000_000;
 
+/** The longest `asset` address and string `layer` of `setTilemapCells`, in UTF-16 code units. */
+const TILEMAP_CELLS_MAX_NAME_LENGTH = 256;
+
 /**
  * The parameters of `setTilemapCells`.
  *
@@ -867,9 +870,10 @@ export interface SetTilemapCellsParams {
   /**
    * The tilemap document's asset address, as a `Tilemap`'s `map` reference names it
    * (`"levels/level-1.tilemap.json"`). Every `Tilemap` of the open scene loaded from it is written.
+   * At most 256 code units.
    */
   readonly asset: string;
-  /** The layer: its name in the document, or its index (`0` at the back). */
+  /** The layer: its name in the document (at most 256 code units), or its index (`0` at the back). */
   readonly layer: string | number;
   /**
    * Flat `[index, tile, index, tile, …]` pairs, in the file's order: `index` is row-major with the
@@ -1894,8 +1898,8 @@ export function isSetGridParams(value: unknown): value is SetGridParams {
  * Checks the parameters of `setTilemapCells`.
  *
  * @param value - The received `params`.
- * @returns True for a non-empty `asset`, a layer name or index, and an even-length list of at most
- * {@link TILEMAP_CELLS_MAX_NUMBERS} non-negative integers.
+ * @returns True for a non-empty `asset` and a layer name or index, each name at most 256 code
+ * units, and an even-length list of at most {@link TILEMAP_CELLS_MAX_NUMBERS} non-negative integers.
  *
  * @public
  */
@@ -1906,7 +1910,8 @@ export function isSetTilemapCellsParams(value: unknown): value is SetTilemapCell
   const { asset, layer, cells } = value;
   return (
     isUidString(asset) &&
-    (isString(layer) || isCount(layer)) &&
+    asset.length <= TILEMAP_CELLS_MAX_NAME_LENGTH &&
+    ((isString(layer) && layer.length <= TILEMAP_CELLS_MAX_NAME_LENGTH) || isCount(layer)) &&
     Array.isArray(cells) &&
     cells.length % 2 === 0 &&
     cells.length <= TILEMAP_CELLS_MAX_NUMBERS &&
