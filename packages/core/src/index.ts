@@ -408,6 +408,7 @@ export {
 export {
   forceRendererDeviceLossForTesting,
   RENDER_DIAGNOSTICS_COUNTERS,
+  type FrameWaitOptions,
   RENDER_DIAGNOSTICS_GROUP,
   type RenderCapture,
   type Renderer,

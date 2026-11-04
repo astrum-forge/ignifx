@@ -470,3 +470,140 @@ export function sceneViewMode(app: App, scene: SceneInstance | null): ViewMode {
   const has3D = app.world.components(Camera).some(inScene);
   return has2D && !has3D ? ViewMode.twoD : ViewMode.threeD;
 }
+
+// -------------------------------------------------------------------------------------------
+// The game view through a `Camera2D`
+// -------------------------------------------------------------------------------------------
+
+/** A Lite sprite layer's view as numbers: `Sprite2DView` without the Lite type. */
+export interface LayerView {
+  /** The layer-pixel x that lands at the image's top-left. */
+  readonly x: number;
+  /** The layer-pixel y that lands at the image's top-left. */
+  readonly y: number;
+  /** Screen pixels per layer pixel. */
+  readonly zoom: number;
+  /** The view rotation, in radians. */
+  readonly rotation: number;
+}
+
+/** The view a screen-space layer keeps: no camera at all. */
+export const IDENTITY_LAYER_VIEW: LayerView = { x: 0, y: 0, zoom: 1, rotation: 0 };
+
+/** What a `Camera2D` shows in an image of some size. */
+export interface Camera2DShot {
+  /** The world x at the image's centre, in metres. */
+  readonly centreX: number;
+  /** The world y at the image's centre, in metres, +Y up. */
+  readonly centreY: number;
+  /** Screen pixels per layer pixel. */
+  readonly zoom: number;
+  /** The view rotation, in radians. */
+  readonly rotation: number;
+}
+
+/**
+ * The view of a world layer centred on a point, as `@ignifx/2d`'s sync writes it: Lite's
+ * `positionPx` is the layer pixel at the top-left corner, so the centre is moved back by half the
+ * image, turned by the view's rotation.
+ *
+ * @param shot - What the camera shows.
+ * @param widthPx - The image width.
+ * @param heightPx - The image height.
+ * @param pixelsPerUnit - Layer pixels per metre.
+ * @returns The layer's view.
+ */
+export function centredLayerView(
+  shot: Camera2DShot,
+  widthPx: number,
+  heightPx: number,
+  pixelsPerUnit: number,
+): LayerView {
+  const zoom = shot.zoom === 0 ? 1 : shot.zoom;
+  const halfWidth = (widthPx * 0.5) / zoom;
+  const halfHeight = (heightPx * 0.5) / zoom;
+  const cos = Math.cos(shot.rotation);
+  const sin = Math.sin(shot.rotation);
+  // Layer pixels run +Y down, world metres +Y up.
+  const centreXPx = shot.centreX * pixelsPerUnit;
+  const centreYPx = -shot.centreY * pixelsPerUnit;
+  return {
+    x: centreXPx - halfWidth * cos - halfHeight * sin,
+    y: centreYPx + halfWidth * sin - halfHeight * cos,
+    zoom,
+    rotation: shot.rotation,
+  };
+}
+
+/**
+ * What a `Camera2D` shows in an image of a size: its own `resolve` (orthographic size, pixel-perfect
+ * snapping, bounds) run against that size, else `zoom = heightPx / (2 · size · PPU)` at its
+ * position.
+ *
+ * @remarks
+ * `resolve` stores the size it was given on the camera. The scene view draws through the editor's
+ * own `Camera2D`, so the level's camera keeps those values only until a frame draws through it.
+ *
+ * @param camera - The level's camera.
+ * @param widthPx - The image width.
+ * @param heightPx - The image height.
+ * @param pixelsPerUnit - Layer pixels per metre.
+ * @returns The centre, zoom and rotation.
+ */
+export function camera2DShot(
+  camera: Camera2DLike,
+  widthPx: number,
+  heightPx: number,
+  pixelsPerUnit: number,
+): Camera2DShot {
+  const matrix = camera.entity.transform.worldMatrix;
+  const worldX = matrix[12] ?? 0;
+  const worldY = matrix[13] ?? 0;
+  const rotation = Math.atan2(matrix[1] ?? 0, matrix[0] ?? 1);
+  const resolve: unknown = Reflect.get(camera, "resolve");
+  const centre: unknown = Reflect.get(camera, "centre");
+  if (typeof resolve === "function") {
+    Reflect.apply(resolve, camera, [worldX, worldY, widthPx, heightPx, pixelsPerUnit]);
+    const zoom: unknown = Reflect.get(camera, "zoom");
+    const x: unknown = typeof centre === "object" && centre !== null ? Reflect.get(centre, "x") : undefined;
+    const y: unknown = typeof centre === "object" && centre !== null ? Reflect.get(centre, "y") : undefined;
+    if (typeof zoom === "number" && typeof x === "number" && typeof y === "number") {
+      return { centreX: x, centreY: y, zoom, rotation };
+    }
+  }
+  const size = camera.orthographicSize > 0 ? camera.orthographicSize : 1;
+  return { centreX: worldX, centreY: worldY, zoom: zoomForSize(size, heightPx, pixelsPerUnit), rotation };
+}
+
+/** One of `app.twoD.layers`: a Lite sprite layer and whether it ignores the camera. */
+export interface TwoDLayerLike {
+  /** The Lite `Sprite2DLayer`, untyped outside `src/lite/`. */
+  readonly layer: object;
+  /** Whether the layer is drawn in screen space. */
+  readonly screenSpace: boolean;
+}
+
+/**
+ * The project's sprite layers, in draw order, from `app.twoD.layers`.
+ *
+ * @param app - The app.
+ * @returns The layers, or `null` when the project has no 2D toolkit.
+ */
+export function twoDLayersOf(app: App): readonly TwoDLayerLike[] | null {
+  const service: unknown = Reflect.get(app, "twoD");
+  if (typeof service !== "object" || service === null) {
+    return null;
+  }
+  const layers: unknown = Reflect.get(service, "layers");
+  if (!Array.isArray(layers)) {
+    return null;
+  }
+  const out: TwoDLayerLike[] = [];
+  for (const entry of layers) {
+    const layer: unknown = typeof entry === "object" && entry !== null ? Reflect.get(entry, "layer") : null;
+    if (typeof layer === "object" && layer !== null) {
+      out.push({ layer, screenSpace: Reflect.get(Object(entry), "screenSpace") === true });
+    }
+  }
+  return out;
+}

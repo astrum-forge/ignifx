@@ -78984,6 +78984,38 @@ one costs nothing until then, and a headless app may create one (it can never fi
 IgnifxError with code `IGX-0730` for a side out of range, and `IGX-0106` once the app is
 disposed.
 
+##### nextFrame()
+
+> **nextFrame**(`options?`): `Promise`\<`void`\>
+
+**`Beta`**
+
+Waits for the next frame to be submitted (`docs/architecture/07-rendering.md` §2.11).
+
+###### Parameters
+
+###### options?
+
+`FrameWaitOptions`
+
+How long to wait for an animation frame; absent to wait for one forever.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+A promise that settles once the next frame has been submitted.
+
+###### Remarks
+
+With `options.maxWaitMs`, the renderer renders that frame itself when no animation frame comes
+in time, as [Renderer.renderToTexture](#rendertotexture) does. A frame it renders itself has a delta of zero:
+systems and scripts run, but game time does not advance.
+
+###### Throws
+
+IgnifxError with code `IGX-0729` on a headless app or while no render loop runs.
+
 ##### openOverlay()
 
 > **openOverlay**(): `Promise`\<`RenderOverlay`\>
@@ -79069,7 +79101,7 @@ headless app has no picker and always misses.
 
 ##### renderToTexture()
 
-> **renderToTexture**(`camera`, `texture`): `Promise`\<`void`\>
+> **renderToTexture**(`camera`, `texture`, `options?`): `Promise`\<`void`\>
 
 **`Beta`**
 
@@ -79090,6 +79122,12 @@ A camera attached to an entity of this app's world.
 
 A texture from this renderer's [Renderer.createRenderTexture](#createrendertexture).
 
+###### options?
+
+`FrameWaitOptions`
+
+How long to wait for an animation frame; absent to wait for one forever.
+
 ###### Returns
 
 `Promise`\<`void`\>
@@ -79102,6 +79140,9 @@ The camera need not be the main one, and stays a candidate for it. Requests queu
 same texture render one camera per frame, oldest first. The camera's aspect is the texture's.
 Read the result with RenderTexture.readPixels.
 
+A page that gets no animation frames (a hidden tab, or a `visibility: hidden` iframe) never
+runs that frame; pass `options.maxWaitMs` and the renderer renders it itself when none comes.
+
 ###### Throws
 
 IgnifxError with code `IGX-0729` on a headless app or while no render loop runs,
@@ -79111,7 +79152,7 @@ IgnifxError with code `IGX-0729` on a headless app or while no render loop runs,
 
 ```ts
 const texture = app.renderer.createRenderTexture(128, 128);
-await app.renderer.renderToTexture(previewCamera, texture);
+await app.renderer.renderToTexture(previewCamera, texture, { maxWaitMs: 20 });
 const { data } = await texture.readPixels();
 ```
 
@@ -89931,6 +89972,12 @@ An `InstancedMeshRenderer` setting Lite fixes at scene registration was changed 
 > `readonly` **invalidAssetFile**: `"IGX-0709"`
 
 An asset file does not carry the format header its loader requires.
+
+##### invalidFrameWait
+
+> `readonly` **invalidFrameWait**: `"IGX-0733"`
+
+`maxWaitMs` given to `app.renderer.renderToTexture` or `app.renderer.nextFrame` is not a finite number of 0 or more.
 
 ##### invalidGeometryUpdate
 

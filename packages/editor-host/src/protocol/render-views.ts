@@ -19,7 +19,9 @@ import type { RpcRequestWithParams } from "./scene.js";
  * @remarks
  * A host lists `HostCapability.gameView` when it answers the first two and
  * `HostCapability.thumbnails` when it answers the third; one that does not answers
- * `RpcErrorCode.methodNotFound`. Additive in 0.3.
+ * `RpcErrorCode.methodNotFound`. Additive in 0.3. `HostCapability.gameViewOnDemand`,
+ * `HostCapability.gameViewSize` and `HostCapability.gameView2d` mark what a newer host's
+ * `gameViewFrame` does beyond that.
  *
  * @public
  */
@@ -30,6 +32,10 @@ export const RenderViewMethod = {
    * Renders the open scene through its own main camera, the one the game would use, and answers
    * the image: {@link GameViewFrameResult}. Fails with `RpcErrorCode.noScene` while no scene is
    * open and `RpcErrorCode.invalidRequest` while the game view is off.
+   *
+   * A host with `HostCapability.gameViewOnDemand` answers without waiting for an animation frame
+   * (a hidden host gets none); one with `HostCapability.gameViewSize` takes the image size in the
+   * request; one with `HostCapability.gameView2d` renders a `Camera2D` document camera too.
    */
   gameViewFrame: "gameViewFrame",
   /** Renders one model or prefab asset on its own and answers the image: {@link ThumbnailResult}. */
@@ -109,6 +115,14 @@ export interface GameViewFrameParams {
   readonly format: ScreenshotFormat;
   /** The JPEG quality, from 0 to 1; the host's default (0.9) when absent. Ignored for PNG. */
   readonly quality?: number;
+  /**
+   * The image width in pixels, 1 to {@link GAME_VIEW_MAX_SIZE}: the view resizes to it first, as
+   * `setGameView` would, so the frame has the Game panel's aspect. Absent to keep the current one.
+   * Needs `HostCapability.gameViewSize`; an older host ignores it and answers its own size.
+   */
+  readonly width?: number;
+  /** The image height in pixels, as {@link GameViewFrameParams.width}. */
+  readonly height?: number;
 }
 
 /**
@@ -268,12 +282,17 @@ export function isGameViewState(value: unknown): value is GameViewState {
  * Checks the parameters of `gameViewFrame`.
  *
  * @param value - The received `params`.
- * @returns True for a known format and a quality from 0 to 1 when given.
+ * @returns True for a known format, a quality from 0 to 1 and sizes in range when given.
  *
  * @public
  */
 export function isGameViewFrameParams(value: unknown): value is GameViewFrameParams {
-  return isRecord(value) && hasImageFormat(value);
+  return (
+    isRecord(value) &&
+    hasImageFormat(value) &&
+    optionalField(value, "width", (width) => isSide(width, GAME_VIEW_MAX_SIZE)) &&
+    optionalField(value, "height", (height) => isSide(height, GAME_VIEW_MAX_SIZE))
+  );
 }
 
 /**

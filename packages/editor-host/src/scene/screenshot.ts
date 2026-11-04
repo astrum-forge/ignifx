@@ -59,6 +59,17 @@ export async function encodeCapture(
   targetContext.drawImage(source, 0, 0, size.width, size.height);
   const type = format === "png" ? "image/png" : "image/jpeg";
   const blob = await target.convertToBlob(format === "png" ? { type } : { type, quality });
+  return encodeBlob(blob, type);
+}
+
+/**
+ * Writes an encoded image as a data URL.
+ *
+ * @param blob - The PNG or JPEG bytes.
+ * @param type - `"image/png"` or `"image/jpeg"`.
+ * @returns The data URL.
+ */
+export async function encodeBlob(blob: Blob, type: string): Promise<string> {
   return `data:${type};base64,${toBase64(new Uint8Array(await blob.arrayBuffer()))}`;
 }
 

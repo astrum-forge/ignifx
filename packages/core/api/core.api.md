@@ -723,6 +723,7 @@ export const CoreErrorCode: {
     readonly invalidRenderTextureSize: "IGX-0730";
     readonly renderTextureUnusable: "IGX-0731";
     readonly renderTextureCameraDetached: "IGX-0732";
+    readonly invalidFrameWait: "IGX-0733";
     readonly cryptoUnavailable: "IGX-1420";
     readonly storageInvalidNamespace: "IGX-1421";
     readonly storageInvalidKey: "IGX-1422";
@@ -1502,6 +1503,11 @@ export interface FrameSample {
 export interface FrameState {
     readonly isInsideCallback: boolean;
     readonly isInsideFixedStep: boolean;
+}
+
+// @beta
+export interface FrameWaitOptions {
+    readonly maxWaitMs?: number;
 }
 
 // @public
@@ -2848,12 +2854,14 @@ export interface Renderer {
     readonly features: Readonly<RenderingFeatureSettings>;
     readonly gpuFrameTimeMs: number;
     // @beta
+    nextFrame(options?: FrameWaitOptions): Promise<void>;
+    // @beta
     openOverlay(): Promise<RenderOverlay>;
     pickAsync(x: number, y: number, options?: RenderPickOptions): Promise<RenderPick | null>;
     pixelRatio: number;
     profileTasks: boolean;
     // @beta
-    renderToTexture(camera: Camera, texture: RenderTexture): Promise<void>;
+    renderToTexture(camera: Camera, texture: RenderTexture, options?: FrameWaitOptions): Promise<void>;
     requireFeature(feature: RenderingFeature): void;
     resetTemporalHistory(): void;
     resolutionScale: number;

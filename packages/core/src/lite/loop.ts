@@ -1,6 +1,7 @@
 import {
   onBeforeRender,
   registerScene,
+  renderFrame,
   startEngine,
   stepScene,
   stopEngine,
@@ -157,6 +158,24 @@ export async function startRenderLoop(engine: EngineContext, scene: SceneContext
  */
 export async function startEngineLoop(engine: EngineContext): Promise<void> {
   await startEngine(engine);
+}
+
+/**
+ * Renders one frame now, outside the requestAnimationFrame loop: every registered surface, with a
+ * delta of zero, so game time does not advance.
+ *
+ * @remarks
+ * For a page that gets no animation frames (a hidden tab or a `visibility: hidden` iframe) but
+ * still needs a frame, such as a render-to-texture request. Lite's `renderFrame` (`index.d.ts`
+ * 11509) runs the scene's before-render callbacks, so the ignifx frame runs too. Never call it from
+ * inside a frame: call it from a timer or an event.
+ *
+ * @param engine - The started WebGPU engine.
+ *
+ * @internal
+ */
+export function renderFrameNow(engine: EngineContext): void {
+  renderFrame(engine, 0);
 }
 
 /**

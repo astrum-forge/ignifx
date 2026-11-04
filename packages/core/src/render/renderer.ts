@@ -8,6 +8,7 @@ import { disposeScenePicker } from "../lite/gpu/picker.js";
 import { setSurfaceSizePx } from "../lite/gpu/render-diagnostics-gpu.js";
 import { captureFrame } from "../lite/gpu/screenshot-capture.js";
 import { discardMaterialWarmUp } from "../lite/gpu/warm-up.js";
+import { renderFrameNow } from "../lite/loop.js";
 import { readPbrDeformers } from "../lite/pbr-deformers.js";
 import { readPickedIdentity, readPickedMeshName, readPickedTag } from "../lite/picking.js";
 import { disableGpuTiming, readDrawCallCount, readGpuFrameTimeMs } from "../lite/render-diagnostics.js";
@@ -238,6 +239,47 @@ export interface RenderPickOptions {
 }
 
 /**
+ * How long a frame request waits for an animation frame before the renderer renders one itself.
+ *
+ * @remarks
+ * A page that gets no animation frames (a hidden tab, or a `visibility: hidden` iframe such as an
+ * editor's) would otherwise never serve the request.
+ *
+ * @beta
+ */
+export interface FrameWaitOptions {
+  /**
+   * The longest wait, in milliseconds, for an animation frame; after it, and again every
+   * `maxWaitMs` until the request is served, the renderer renders a frame itself with a delta of
+   * zero. A finite number of 0 or more.
+   */
+  readonly maxWaitMs?: number;
+}
+
+/**
+ * Reads and checks a frame request's wait.
+ *
+ * @param options - The options, if any.
+ * @param member - The API member asking, for the error.
+ * @returns The wait in milliseconds, or `null` to wait for an animation frame forever.
+ * @throws IgnifxError with code `IGX-0733` for a wait that is not a finite number of 0 or more.
+ */
+function frameWaitMs(options: FrameWaitOptions | undefined, member: string): number | null {
+  const maxWaitMs = options?.maxWaitMs;
+  if (maxWaitMs === undefined) {
+    return null;
+  }
+  if (!Number.isFinite(maxWaitMs) || maxWaitMs < 0) {
+    throw new IgnifxError(
+      CoreErrorCode.invalidFrameWait,
+      `${member}: maxWaitMs must be a finite number of milliseconds, 0 or more.`,
+      { context: { member, maxWaitMs } },
+    );
+  }
+  return maxWaitMs;
+}
+
+/**
  * A captured frame (`docs/architecture/07-rendering.md` §5).
  *
  * @remarks
@@ -463,8 +505,12 @@ export interface Renderer {
    * same texture render one camera per frame, oldest first. The camera's aspect is the texture's.
    * Read the result with {@link RenderTexture.readPixels}.
    *
+   * A page that gets no animation frames (a hidden tab, or a `visibility: hidden` iframe) never
+   * runs that frame; pass `options.maxWaitMs` and the renderer renders it itself when none comes.
+   *
    * @param camera - A camera attached to an entity of this app's world.
    * @param texture - A texture from this renderer's {@link Renderer.createRenderTexture}.
+   * @param options - How long to wait for an animation frame; absent to wait for one forever.
    * @returns A promise that settles once the frame that rendered it has been submitted.
    * @throws IgnifxError with code `IGX-0729` on a headless app or while no render loop runs,
    * `IGX-0731` for a disposed or foreign texture, and `IGX-0732` for a detached camera.
@@ -472,13 +518,28 @@ export interface Renderer {
    * @example
    * ```ts
    * const texture = app.renderer.createRenderTexture(128, 128);
-   * await app.renderer.renderToTexture(previewCamera, texture);
+   * await app.renderer.renderToTexture(previewCamera, texture, { maxWaitMs: 20 });
    * const { data } = await texture.readPixels();
    * ```
    *
    * @beta
    */
-  renderToTexture(camera: Camera, texture: RenderTexture): Promise<void>;
+  renderToTexture(camera: Camera, texture: RenderTexture, options?: FrameWaitOptions): Promise<void>;
+  /**
+   * Waits for the next frame to be submitted (`docs/architecture/07-rendering.md` §2.11).
+   *
+   * @remarks
+   * With `options.maxWaitMs`, the renderer renders that frame itself when no animation frame comes
+   * in time, as {@link Renderer.renderToTexture} does. A frame it renders itself has a delta of zero:
+   * systems and scripts run, but game time does not advance.
+   *
+   * @param options - How long to wait for an animation frame; absent to wait for one forever.
+   * @returns A promise that settles once the next frame has been submitted.
+   * @throws IgnifxError with code `IGX-0729` on a headless app or while no render loop runs.
+   *
+   * @beta
+   */
+  nextFrame(options?: FrameWaitOptions): Promise<void>;
   /**
    * The latest per-task GPU timing snapshot. Check `status` before reading `tasks`.
    *
@@ -686,6 +747,9 @@ export class RendererImpl implements Renderer {
   #isSceneRegistered = false;
 
   #isLoopRunning = false;
+
+  /** The `nextFrame` calls waiting for the next frame's `PreRender` sync. */
+  readonly #frameWaiters: (() => void)[] = [];
 
   #isDisposed = false;
 
@@ -1176,11 +1240,13 @@ export class RendererImpl implements Renderer {
    *
    * @param camera - The camera.
    * @param texture - The texture.
+   * @param options - How long to wait for an animation frame.
    * @returns A promise that settles once the frame has been submitted.
    * @throws IgnifxError with code `IGX-0729`, `IGX-0731` or `IGX-0732`; see the interface.
    */
-  async renderToTexture(camera: Camera, texture: RenderTexture): Promise<void> {
+  async renderToTexture(camera: Camera, texture: RenderTexture, options?: FrameWaitOptions): Promise<void> {
     const member = "app.renderer.renderToTexture()";
+    const maxWaitMs = frameWaitMs(options, member);
     const owned = this.#ownedRenderTexture(texture, member);
     const lite = camera.lite.camera;
     if (lite === null) {
@@ -1195,7 +1261,60 @@ export class RendererImpl implements Renderer {
     }
     this.#assertRenderLoop(member);
     await owned.pass(member);
-    await owned.request(lite);
+    await this.#awaitFrame(owned.request(lite), maxWaitMs);
+  }
+
+  /**
+   * Waits for the next frame to be submitted.
+   *
+   * @param options - How long to wait for an animation frame.
+   * @returns A promise that settles once the frame has been submitted.
+   * @throws IgnifxError with code `IGX-0729`; see the interface.
+   */
+  async nextFrame(options?: FrameWaitOptions): Promise<void> {
+    const member = "app.renderer.nextFrame()";
+    const maxWaitMs = frameWaitMs(options, member);
+    this.#assertRenderLoop(member);
+    const frame = new Promise<void>((resolve) => {
+      this.#frameWaiters.push(resolve);
+    });
+    await this.#awaitFrame(frame, maxWaitMs);
+  }
+
+  /**
+   * Waits for a promise a frame settles, rendering frames itself every `maxWaitMs` while none
+   * settles it, as long as the render loop runs.
+   *
+   * @param frame - Settles once its frame has been submitted.
+   * @param maxWaitMs - How long to wait for an animation frame, or `null` to wait forever.
+   */
+  async #awaitFrame(frame: Promise<void>, maxWaitMs: number | null): Promise<void> {
+    if (maxWaitMs === null) {
+      await frame;
+      return;
+    }
+    const wait: { isServed: boolean; timer: ReturnType<typeof setTimeout> | undefined } = {
+      isServed: false,
+      timer: undefined,
+    };
+    const tick = (): void => {
+      if (wait.isServed || this.#isDisposed || !this.#isLoopRunning) {
+        return;
+      }
+      try {
+        renderFrameNow(this.engine);
+      } catch {
+        // A lost device or a failed frame: the next frame, forced or animated, tries again.
+      }
+      wait.timer = setTimeout(tick, maxWaitMs);
+    };
+    wait.timer = setTimeout(tick, maxWaitMs);
+    try {
+      await frame;
+    } finally {
+      wait.isServed = true;
+      clearTimeout(wait.timer);
+    }
   }
 
   /**
@@ -1207,6 +1326,15 @@ export class RendererImpl implements Renderer {
    * @internal
    */
   syncRenderTextures(cameras: readonly Camera[]): void {
+    if (this.#frameWaiters.length > 0) {
+      const waiters = this.#frameWaiters.splice(0);
+      // As for a render texture's request: the frame is submitted once this frame callback returns.
+      queueMicrotask(() => {
+        for (const resolve of waiters) {
+          resolve();
+        }
+      });
+    }
     if (this.isHeadless || this.#renderTextures.size === 0) {
       return;
     }
@@ -1841,6 +1969,10 @@ export class RendererImpl implements Renderer {
     // Each texture removes itself from the set as it is disposed, which a `Set` iteration allows.
     for (const texture of this.#renderTextures) {
       texture.dispose();
+    }
+    // No frame will come now; settling beats leaving `nextFrame` callers waiting forever.
+    for (const resolve of this.#frameWaiters.splice(0)) {
+      resolve();
     }
     const picker = this.#picker;
     this.#picker = null;

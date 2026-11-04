@@ -1,15 +1,32 @@
 /**
  * The Game panel's view (engine ask E8): the open scene through its own main camera, rendered into
- * a render texture beside the editor camera's frame (`setGameView`, `gameViewFrame`).
+ * a render texture beside the editor camera's frame (`setGameView`, `gameViewFrame`). A 2D scene's
+ * `Camera2D` is drawn by a second sprite pass instead (`../lite/sprite-game-view.ts`). Neither waits
+ * on an animation frame for long: a hidden host gets none, so the renderer draws the frame itself.
  */
 
-import { Camera } from "@ignifx/core";
+import { Camera, RENDERING_SETTINGS_SECTION } from "@ignifx/core";
 import { InvalidParamsError, RpcFailure } from "../channel.js";
 import { GAME_VIEW_DEFAULT_SIZE, isGameViewFrameParams, isSetGameViewParams, RpcErrorCode } from "../protocol/index.js";
-import { encodeCapture } from "./screenshot.js";
+import { encodeBlob, encodeCapture } from "./screenshot.js";
+import {
+  camera2DShot,
+  centredLayerView,
+  IDENTITY_LAYER_VIEW,
+  levelCamera2D,
+  twoDLayersOf,
+  twoDServiceOf,
+} from "./view-2d.js";
 import type { DocumentMirror } from "./document.js";
+import type { SpriteGameView, SpriteLayerDraw } from "../lite/sprite-game-view.js";
 import type { GameViewFrameResult, GameViewState } from "../protocol/index.js";
-import type { App, RenderTexture } from "@ignifx/core";
+import type { App, RenderingSettings, RenderTexture } from "@ignifx/core";
+
+/**
+ * How long a frame request waits for an animation frame before the renderer draws one itself, in
+ * milliseconds: a little over one frame at 60 Hz, so a visible view still renders on its own beat.
+ */
+export const GAME_VIEW_FRAME_WAIT_MS = 20;
 
 /** The JPEG quality when the request gives none, as for `screenshot`. */
 const DEFAULT_JPEG_QUALITY = 0.9;
@@ -46,6 +63,9 @@ export class GameView {
 
   #texture: RenderTexture | null = null;
 
+  /** The 2D sprite pass, once a `Camera2D` scene's view has rendered. */
+  #sprites: SpriteGameView | null = null;
+
   /**
    * `setGameView`: turns the view on or off, or resizes it. Off frees the texture.
    *
@@ -75,41 +95,82 @@ export class GameView {
   }
 
   /**
-   * `gameViewFrame`: renders the document camera into the texture on the next frame and answers it
-   * as an image.
+   * `gameViewFrame`: renders the document camera, a `Camera` into the texture or a `Camera2D`
+   * through the sprite pass, and answers it as an image.
    *
    * @param app - The scene view's app.
    * @param mirror - The open document.
-   * @param params - `{ format, quality? }`.
+   * @param params - `{ format, quality?, width?, height? }`.
    * @returns The image and the camera's document uid, or no image when the document has no camera.
    */
   async frame(app: App, mirror: DocumentMirror, params: unknown): Promise<GameViewFrameResult> {
     if (!isGameViewFrameParams(params)) {
-      throw new InvalidParamsError('gameViewFrame takes { format: "png" | "jpeg", quality? }.');
+      throw new InvalidParamsError(
+        'gameViewFrame takes { format: "png" | "jpeg", quality?, width?, height? } with sides from 1 to 2048.',
+      );
     }
-    const texture = this.#texture;
-    if (!this.#enabled || texture === null) {
+    if (!this.#enabled || this.#texture === null) {
       throw new RpcFailure(
         RpcErrorCode.invalidRequest,
         'The game view is off; send "setGameView" with enabled: true first.',
       );
     }
+    if (params.width !== undefined || params.height !== undefined) {
+      this.set(app, { enabled: true, width: params.width ?? this.#width, height: params.height ?? this.#height });
+    }
+    const texture = this.#texture;
     const size = { width: this.#width, height: this.#height };
+    const quality = params.quality ?? DEFAULT_JPEG_QUALITY;
     const camera = documentCamera(app, mirror);
-    if (camera === null) {
+    if (camera !== null) {
+      const uid = (mirror.documentEntityOf(camera.entity) ?? camera.entity).uid;
+      await app.renderer.renderToTexture(camera, texture, { maxWaitMs: GAME_VIEW_FRAME_WAIT_MS });
+      const capture = await texture.readPixels();
+      const dataUrl = await encodeCapture(capture, size, params.format, quality);
+      return { dataUrl, ...size, camera: uid };
+    }
+    const camera2D = levelCamera2D(app, mirror.scene);
+    const layers = twoDLayersOf(app);
+    const twoD = twoDServiceOf(app);
+    if (camera2D === null || layers === null || twoD === null) {
       return { dataUrl: null, ...size, camera: null };
     }
-    const uid = (mirror.documentEntityOf(camera.entity) ?? camera.entity).uid;
-    await app.renderer.renderToTexture(camera, texture);
-    const capture = await texture.readPixels();
-    const dataUrl = await encodeCapture(capture, size, params.format, params.quality ?? DEFAULT_JPEG_QUALITY);
-    return { dataUrl, ...size, camera: uid };
+    const uid = (mirror.documentEntityOf(camera2D.entity) ?? camera2D.entity).uid;
+    // A frame first, so the sprites show the document as it is now, not as the last frame left it.
+    await app.renderer.nextFrame({ maxWaitMs: GAME_VIEW_FRAME_WAIT_MS });
+    const shot = camera2DShot(camera2D, size.width, size.height, twoD.pixelsPerUnit);
+    const world = centredLayerView(shot, size.width, size.height, twoD.pixelsPerUnit);
+    const draws: SpriteLayerDraw[] = layers.map(({ layer, screenSpace }) => {
+      const view = screenSpace ? IDENTITY_LAYER_VIEW : world;
+      return { layer, x: view.x, y: view.y, zoom: view.zoom, rotation: view.rotation };
+    });
+    const sprites = await this.#spritePass(app);
+    const type = params.format === "png" ? "image/png" : "image/jpeg";
+    const blob = await sprites.render(draws, size.width, size.height, type, quality);
+    return { dataUrl: await encodeBlob(blob, type), ...size, camera: uid };
   }
 
-  /** Frees the texture. */
+  /**
+   * The 2D sprite pass, loaded and built on first use.
+   *
+   * @param app - The scene view's app.
+   * @returns The pass.
+   */
+  async #spritePass(app: App): Promise<SpriteGameView> {
+    if (this.#sprites === null) {
+      const { createSpriteGameView } = await import("../lite/sprite-game-view.js");
+      const { clearColor } = app.settings.section<RenderingSettings>(RENDERING_SETTINGS_SECTION);
+      this.#sprites ??= createSpriteGameView(app.lite.engine, clearColor);
+    }
+    return this.#sprites;
+  }
+
+  /** Frees the texture and the 2D sprite pass. */
   dispose(): void {
     this.#texture?.dispose();
     this.#texture = null;
+    this.#sprites?.dispose();
+    this.#sprites = null;
     this.#enabled = false;
   }
 }
